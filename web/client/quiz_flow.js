@@ -500,6 +500,10 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //                             at the LEAST, for an explanation longer than the usual one line (Quiz mix's
 //                             Word Forge questions read every option's meaning). The longer of this and
 //                             `celebrateMs` / `answerMs` is used; a press still moves on sooner. Absent: 0.
+//   yesNo(item)               (2026-10-07, row 2.63) true when the question's own answers ARE yes and no (the
+//                             word games' yes / no quiz, inside Quiz mix): in the yes / no shape the Yes and
+//                             No stops answer "yes" and "no" directly, instead of judging an offered
+//                             candidate. Absent: false, everything as before.
 //
 // `onResult` (added for row 2.45's adaptive games): called ONCE per question when it is finished —
 // `{ game, item, right, misses, hintsGiven, revealed, skipped, via }`. Right; answer heard after the
@@ -987,6 +991,8 @@ export function createQuizEngine({
       }
       case 'yes': {
         if (phase !== 'asking' || entryMode()) return;
+        // A question whose own answers ARE yes and no (the adapter's `yesNo`, the header): Yes answers "yes".
+        if (call('yesNo', item)) { judgeValue('yes', 'switch'); return; }
         const cand = candidate();
         if (cand == null) return;
         if (call('judge', item, cand) === true) { onRight(cand); return; }
@@ -997,6 +1003,7 @@ export function createQuizEngine({
       }
       case 'no': {
         if (phase !== 'asking' || entryMode()) return;
+        if (call('yesNo', item)) { judgeValue('no', 'switch'); return; }
         const cand = candidate();
         if (cand == null) return;
         if (call('judge', item, cand) === true) { onMiss({ heard: cand, via: 'switch' }); return; }

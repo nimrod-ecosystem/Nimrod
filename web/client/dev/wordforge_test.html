@@ -1110,6 +1110,42 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
       check('...and it is not the pair contested before the retitle', qq && !qq.options.includes(DEFAULT_PAIRS[0].better), JSON.stringify(qq?.options));
       rb.publish('wordforge/answer', qq.answer); await sleep(300);
       check('a sentence pair adds no meaning lines (two sentences, nothing to define)', meanings().every((m) => m === ''));
+      await leave();
+
+      // *** KEEP GUESSING ('multi', the default). Mike, 2026-10-07: "a wrong answer would only show you
+      // for that answer. You still keep guessing until you get it right." So a wrong guess fills in that
+      // one button and no other; the right answer fills in every one.
+      rst.set({ guessMode: 'multi' }); await rst.flush(); await sleep(300);
+      for (const kind of ['define', 'blank']) {
+        qq = await nextOf([kind]);
+        if (!qq) { check(`(a ${kind} question came up in keep-guessing mode)`, false); continue; }
+        const wrongs = qq.options.map((_, i) => i).filter((i) => i !== qq.answer);
+        const exp = expected(qq);
+        rb.publish('wordforge/answer', wrongs[0]); await sleep(300);
+        let m = meanings();
+        check(`*** KEEP GUESSING (${kind}): a wrong guess shows what THAT option means, straight away ***`,
+          m[wrongs[0]] === exp[wrongs[0]] && !!exp[wrongs[0]], JSON.stringify({ shown: m[wrongs[0]], want: exp[wrongs[0]] }));
+        check(`...and no other button shows one (${kind}), the right one least of all`,
+          m.every((x, i) => i === wrongs[0] || x === ''), JSON.stringify(m));
+        check('...and the question is still open: the other buttons can still be pressed',
+          [...rhost.querySelectorAll('[data-opt]:not(:disabled)')].length === qq.options.length - 1 && !rhost.querySelector('[data-next]'));
+        rb.publish('wordforge/answer', wrongs[1]); await sleep(300);
+        m = meanings();
+        check(`a second wrong guess (${kind}) adds its own meaning, the first stays, the rest still bare`,
+          m[wrongs[0]] === exp[wrongs[0]] && m[wrongs[1]] === exp[wrongs[1]]
+            && m.every((x, i) => i === wrongs[0] || i === wrongs[1] || x === ''), JSON.stringify(m));
+        rb.publish('wordforge/answer', qq.answer); await sleep(300);
+        check(`*** then the RIGHT answer (${kind}): every button shows its meaning ***`, allShown(qq),
+          JSON.stringify({ shown: meanings(), want: exp }));
+        await leave();
+      }
+      qq = await nextOf(['define', 'blank']);
+      if (qq) {
+        rb.publish('wordforge/answer', qq.options.findIndex((_, i) => i !== qq.answer)); await sleep(300);
+        rb.publish('wordforge/answer', 'idk'); await sleep(300);
+        check(`*** KEEP GUESSING, then "I don't know" (${qq.kind}): the shown answer brings every meaning ***`, allShown(qq),
+          JSON.stringify({ shown: meanings(), want: expected(qq) }));
+      }
       ri.destroy(); rhost.remove();
     }
 

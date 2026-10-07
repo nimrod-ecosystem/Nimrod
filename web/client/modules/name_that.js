@@ -37,6 +37,24 @@
 // previous one's files, which would blank a photo or a message already on screen from the same
 // folder (see `folder_source.js` on `listFolderNames`). On Mike's list.
 // Needs at least two people: a choice of one is not a question. Said plainly when it is not met.
+//
+// LEVELS, AND EACH PLAYER AT THEIR OWN (row 2.63, Mike 2026-10-07: "Games like Name That, Opposites,
+// Rhyming, etc. should have harder levels as well."). Every question has a difficulty in the words
+// question packs use (very easy, easy, medium, hard: packs.js DIFFICULTY_LEVELS), and the three games
+// are on the shared ladder exactly as Thinking games are (adaptive_play.js: each player's own level,
+// kept with the person, "Start this game at", turns). What "harder" is, per game (chat's ideas on the
+// row, and what this build can do without pictures it does not have):
+//   ANIMAL  very easy: the sound it makes. easy: what it looks like or does (a trunk, a pouch).
+//           medium: animals less often met (a bat, a beaver, a chameleon). hard: less common animals and
+//           facts (the fastest runner, a mammal that lays eggs), offered beside animals that are easy
+//           to mix them up with (`decoys`). Chat's photo, close-up and outline levels wait for pictures.
+//   STATE   very easy / easy / medium: how well known the nickname is (the Sunshine State is very easy,
+//           the Old Line State is not). hard: named from its CAPITAL instead ("Which state has
+//           Montpelier as its capital?"), offered beside states from the same region. Chat's outline
+//           and blank-map levels wait for Design's maps.
+//   PERSON  two levels, from what the messages already are: seeing them (a video, or a voice with its
+//           picture), then hearing them only (the same message with nothing on screen). Chat's older
+//           picture and "by relation" levels need data the messages do not carry yet.
 
 import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
@@ -45,9 +63,13 @@ import {
 } from '../media_sources.js';
 import { flowSettings, answerByField, fill, esc, normalize, shuffle } from '../quiz_flow.js';
 import { quizModule, up } from '../quiz_view.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
+import { difficultyLevel } from '../packs.js';
 
 export const GAME = 'name_that';
 export const GAMES = ['animal', 'state', 'person'];
+/** Each game's name on the ladder (the `ratings` row): its own, so it never shares a level with another game. */
+export const ladderGame = (g) => `name_${g}`;
 
 export const LINES = Object.freeze({
   offerLine: 'Is it {candidate}?',
@@ -56,6 +78,8 @@ export const LINES = Object.freeze({
   hintRegion: 'it is in {region}',
   hintCapital: 'its capital is {capital}',
   explainState: '{state} is {nickname}. Its capital is {capital}.',
+  askCapital: 'Which state has {capital} as its capital?',
+  explainCapital: '{capital} is the capital of {state}.',
   askPerson: 'Who is this?',
   explainPerson: 'That was {name}.',
   gentleLine: "That was {name}'s message. Let's listen again?",
@@ -63,6 +87,7 @@ export const LINES = Object.freeze({
 const LINE_LABELS = {
   offerLine: 'Offering one answer', hintFirst: 'Hint: the first letter', askState: 'State: the question',
   hintRegion: 'State: first hint', hintCapital: 'State: second hint', explainState: 'State: the answer',
+  askCapital: 'State, from its capital: the question', explainCapital: 'State, from its capital: the answer',
   askPerson: 'Person: the question', explainPerson: 'Person: the answer',
   gentleLine: 'Person: a miss, the gentle way',
 };
@@ -79,6 +104,8 @@ export const DEFAULTS = Object.freeze({
   personMiss: 'gentle',
   sourceId: '',
   album: '',
+  // The ladder's own defaults (adaptive_play.js argues each).
+  ...ADAPTIVE_DEFAULTS,
   ...LINES,
 });
 
@@ -87,7 +114,7 @@ const SETTINGS = [
     options: [{ value: 'animal', label: 'Name that animal' }, { value: 'state', label: 'Name that state' },
               { value: 'person', label: 'Name that person' }] },
   answerByField({ on: 'choices', example: 'Is it a cow?' }),
-  ownScoreField({ level: 'essential', note: 'How many are right. A Scoreboard on the same screen can show it instead.' }),
+  ownScoreField({ level: 'essential', note: 'How many are right (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
   { key: 'personMiss', label: 'Name that person: when a name is missed', kind: 'choice', default: 'gentle',
     level: 'standard',
     options: [{ value: 'gentle', label: 'Say whose message it was, and offer to listen again' },
@@ -98,8 +125,14 @@ const SETTINGS = [
   { key: 'album', label: 'Name that person: folder', kind: 'text', default: '', level: 'standard',
     placeholder: 'The top folder',
     note: 'Name each video after the person in it ("Annie - how we met.mp4"), or on a media agent, give each person a folder.' },
+  // Players, "Start this game at", and how the level moves: the same rows every ladder game has.
+  ...adaptiveSettings({ ai: false, startLevels: 4 }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS }),
 ];
+
+const tier = (difficulty, list) => list.map((x) => ({ ...x, difficulty }));
+const levelOfWord = (d) => difficultyLevel(d) || 1;
+const slug = (s) => normalize(s).replace(/\s+/g, '-');
 
 // ---------------------------------------------------------------------------------------
 // THE STATES — nickname, capital, Census region. Text only (see the header).
@@ -132,43 +165,94 @@ const STATE_ROWS = [
   ['Washington', 'Olympia', 'the Evergreen State', WE], ['West Virginia', 'Charleston', 'the Mountain State', SO],
   ['Wisconsin', 'Madison', 'the Badger State', MW], ['Wyoming', 'Cheyenne', 'the Equality State', WE],
 ];
+// HOW WELL KNOWN EACH NICKNAME IS — a judgement, and only where a state STARTS: the ratings find the real
+// order by play. Very easy: nicknames most people have heard, or that name a landmark (Grand Canyon, Mount
+// Rushmore, the Great Lakes). Easy: nicknames often heard (on licence plates, in songs). Medium: every other
+// state (team nicknames like the Hoosiers are known to sports fans, and nobody else).
+const STATE_DIFFICULTY = {
+  'very easy': ['Florida', 'Texas', 'California', 'New York', 'Hawaii', 'Arizona', 'Georgia', 'Alaska',
+    'South Dakota', 'Michigan'],
+  easy: ['New Jersey', 'Washington', 'Kentucky', 'Missouri', 'Pennsylvania', 'Delaware', 'Massachusetts', 'Kansas',
+    'Rhode Island', 'Vermont', 'Minnesota', 'Utah', 'New Mexico', 'West Virginia', 'Louisiana', 'Tennessee', 'Ohio',
+    'Wisconsin', 'Colorado'],
+};
+const stateDifficulty = (s) => Object.keys(STATE_DIFFICULTY).find((d) => STATE_DIFFICULTY[d].includes(s)) || 'medium';
 // A capital that contains its state's name (Oklahoma City, Indianapolis) would BE the answer, so
-// that state's second hint is its first letter instead.
-const capitalHint = (state, capital, c) => (capital.toLowerCase().includes(state.toLowerCase())
+// that state's second hint is its first letter instead, and it is never asked from its capital.
+const capitalNames = (state, capital) => capital.toLowerCase().includes(state.toLowerCase());
+const capitalHint = (state, capital, c) => (capitalNames(state, capital)
   ? fill(c.hintFirst, { letter: state[0] }) : fill(c.hintCapital, { capital }));
 export const STATES = Object.freeze(STATE_ROWS.map(([answer, capital, nickname, region]) => Object.freeze({
-  answer, capital, nickname, region,
+  id: `state:${slug(answer)}`, kind: 'nickname', answer, capital, nickname, region,
+  difficulty: stateDifficulty(answer), level: levelOfWord(stateDifficulty(answer)),
   hints: Object.freeze([fill(LINES.hintRegion, { region }), capitalHint(answer, capital, LINES)]),
 })));
+// THE HARD LEVEL: the state from its capital (the header).
+export const STATE_CAPITALS = Object.freeze(STATE_ROWS.filter(([answer, capital]) => !capitalNames(answer, capital))
+  .map(([answer, capital, nickname, region]) => Object.freeze({
+    id: `capital:${slug(answer)}`, kind: 'capital', answer, capital, nickname, region,
+    difficulty: 'hard', level: levelOfWord('hard'),
+    hints: Object.freeze([fill(LINES.hintRegion, { region }), fill(LINES.hintFirst, { letter: answer[0] })]),
+  })));
+export const STATE_BANK = Object.freeze([...STATES, ...STATE_CAPITALS]);
 
 // ---------------------------------------------------------------------------------------
-// THE ANIMALS — a question, a fact for the hint, and the sentence the answer is said in.
+// THE ANIMALS — a question, a fact for the hint, and the sentence the answer is said in. `decoys`
+// (optional): the two other animals offered beside it, chosen to be easy to mix up with it; without
+// them, two at random.
 // ---------------------------------------------------------------------------------------
 export const ANIMALS = Object.freeze([
-  { answer: 'cow', a: 'a cow', ask: 'Which animal says moo?', hint: 'it gives us milk', explain: 'A cow says moo.' },
-  { answer: 'dog', a: 'a dog', ask: 'Which animal says woof?', hint: 'it wags its tail', explain: 'A dog says woof.' },
-  { answer: 'cat', a: 'a cat', ask: 'Which animal says meow?', hint: 'it purrs when it is happy', explain: 'A cat says meow.' },
-  { answer: 'duck', a: 'a duck', ask: 'Which animal says quack?', hint: 'it swims on ponds', explain: 'A duck says quack.' },
-  { answer: 'pig', a: 'a pig', ask: 'Which animal says oink?', hint: 'it rolls in the mud', explain: 'A pig says oink.' },
-  { answer: 'sheep', a: 'a sheep', ask: 'Which animal says baa?', hint: 'its wool keeps us warm', explain: 'A sheep says baa.' },
-  { answer: 'horse', a: 'a horse', ask: 'Which animal says neigh?', hint: 'people ride it', explain: 'A horse says neigh.' },
-  { answer: 'rooster', a: 'a rooster', ask: 'Which animal says cock-a-doodle-doo?', hint: 'it wakes the farm up in the morning', explain: 'A rooster says cock-a-doodle-doo.' },
-  { answer: 'owl', a: 'an owl', ask: 'Which animal says hoot?', hint: 'it is awake all night', explain: 'An owl says hoot.' },
-  { answer: 'lion', a: 'a lion', ask: 'Which animal roars?', hint: 'it has a big mane', explain: 'A lion roars.' },
-  { answer: 'frog', a: 'a frog', ask: 'Which animal says ribbit?', hint: 'it hops and lives near water', explain: 'A frog says ribbit.' },
-  { answer: 'bee', a: 'a bee', ask: 'Which animal buzzes?', hint: 'it makes honey', explain: 'A bee buzzes.' },
-  { answer: 'snake', a: 'a snake', ask: 'Which animal hisses?', hint: 'it has no legs', explain: 'A snake hisses.' },
-  { answer: 'donkey', a: 'a donkey', ask: 'Which animal says hee-haw?', hint: 'it has long ears', explain: 'A donkey says hee-haw.' },
-  { answer: 'mouse', a: 'a mouse', ask: 'Which animal squeaks?', hint: 'it is small and likes cheese', explain: 'A mouse squeaks.' },
-  { answer: 'elephant', a: 'an elephant', ask: 'Which animal has a long trunk?', hint: 'it is the biggest animal on land', explain: 'An elephant has a long trunk.' },
-  { answer: 'giraffe', a: 'a giraffe', ask: 'Which animal has a very long neck?', hint: 'it eats leaves from the tops of trees', explain: 'A giraffe has a very long neck.' },
-  { answer: 'zebra', a: 'a zebra', ask: 'Which animal has black and white stripes?', hint: 'it looks like a horse', explain: 'A zebra has black and white stripes.' },
-  { answer: 'kangaroo', a: 'a kangaroo', ask: 'Which animal hops and carries its baby in a pouch?', hint: 'it lives in Australia', explain: 'A kangaroo carries its baby in a pouch.' },
-  { answer: 'turtle', a: 'a turtle', ask: 'Which animal carries its home on its back?', hint: 'it is very slow', explain: 'A turtle carries its shell on its back.' },
-  { answer: 'penguin', a: 'a penguin', ask: 'Which bird cannot fly but swims very well?', hint: 'it lives where it is very cold', explain: 'A penguin swims but cannot fly.' },
-  { answer: 'monkey', a: 'a monkey', ask: 'Which animal swings from trees and loves bananas?', hint: 'it has a long tail', explain: 'A monkey swings from trees.' },
-].map((a) => Object.freeze(a)));
+  ...tier('very easy', [
+    { answer: 'cow', a: 'a cow', ask: 'Which animal says moo?', hint: 'it gives us milk', explain: 'A cow says moo.' },
+    { answer: 'dog', a: 'a dog', ask: 'Which animal says woof?', hint: 'it wags its tail', explain: 'A dog says woof.' },
+    { answer: 'cat', a: 'a cat', ask: 'Which animal says meow?', hint: 'it purrs when it is happy', explain: 'A cat says meow.' },
+    { answer: 'duck', a: 'a duck', ask: 'Which animal says quack?', hint: 'it swims on ponds', explain: 'A duck says quack.' },
+    { answer: 'pig', a: 'a pig', ask: 'Which animal says oink?', hint: 'it rolls in the mud', explain: 'A pig says oink.' },
+    { answer: 'sheep', a: 'a sheep', ask: 'Which animal says baa?', hint: 'its wool keeps us warm', explain: 'A sheep says baa.' },
+    { answer: 'horse', a: 'a horse', ask: 'Which animal says neigh?', hint: 'people ride it', explain: 'A horse says neigh.' },
+    { answer: 'rooster', a: 'a rooster', ask: 'Which animal says cock-a-doodle-doo?', hint: 'it wakes the farm up in the morning', explain: 'A rooster says cock-a-doodle-doo.' },
+    { answer: 'owl', a: 'an owl', ask: 'Which animal says hoot?', hint: 'it is awake all night', explain: 'An owl says hoot.' },
+    { answer: 'lion', a: 'a lion', ask: 'Which animal roars?', hint: 'it has a big mane', explain: 'A lion roars.' },
+    { answer: 'frog', a: 'a frog', ask: 'Which animal says ribbit?', hint: 'it hops and lives near water', explain: 'A frog says ribbit.' },
+    { answer: 'bee', a: 'a bee', ask: 'Which animal buzzes?', hint: 'it makes honey', explain: 'A bee buzzes.' },
+    { answer: 'snake', a: 'a snake', ask: 'Which animal hisses?', hint: 'it has no legs', explain: 'A snake hisses.' },
+    { answer: 'donkey', a: 'a donkey', ask: 'Which animal says hee-haw?', hint: 'it has long ears', explain: 'A donkey says hee-haw.' },
+    { answer: 'mouse', a: 'a mouse', ask: 'Which animal squeaks?', hint: 'it is small and likes cheese', explain: 'A mouse squeaks.' },
+  ]),
+  ...tier('easy', [
+    { answer: 'elephant', a: 'an elephant', ask: 'Which animal has a long trunk?', hint: 'it is the biggest animal on land', explain: 'An elephant has a long trunk.' },
+    { answer: 'giraffe', a: 'a giraffe', ask: 'Which animal has a very long neck?', hint: 'it eats leaves from the tops of trees', explain: 'A giraffe has a very long neck.' },
+    { answer: 'zebra', a: 'a zebra', ask: 'Which animal has black and white stripes?', hint: 'it looks like a horse', explain: 'A zebra has black and white stripes.' },
+    { answer: 'kangaroo', a: 'a kangaroo', ask: 'Which animal hops and carries its baby in a pouch?', hint: 'it lives in Australia', explain: 'A kangaroo carries its baby in a pouch.' },
+    { answer: 'turtle', a: 'a turtle', ask: 'Which animal carries its home on its back?', hint: 'it is very slow', explain: 'A turtle carries its shell on its back.' },
+    { answer: 'penguin', a: 'a penguin', ask: 'Which bird cannot fly but swims very well?', hint: 'it lives where it is very cold', explain: 'A penguin swims but cannot fly.' },
+    { answer: 'monkey', a: 'a monkey', ask: 'Which animal swings from trees and loves bananas?', hint: 'it has a long tail', explain: 'A monkey swings from trees.' },
+    { answer: 'rabbit', a: 'a rabbit', ask: 'Which animal has long ears, a fluffy tail and loves carrots?', hint: 'it lives in a burrow', explain: 'A rabbit has long ears and a fluffy tail.' },
+    { answer: 'camel', a: 'a camel', ask: 'Which animal has a hump and lives in the desert?', hint: 'it can go a long time without water', explain: 'A camel has a hump.' },
+  ]),
+  ...tier('medium', [
+    { answer: 'bat', a: 'a bat', ask: 'Which animal sleeps hanging upside down?', hint: 'it flies at night', explain: 'A bat sleeps hanging upside down.', decoys: ['owl', 'monkey'] },
+    { answer: 'panda', a: 'a panda', ask: 'Which black and white bear eats bamboo?', hint: 'it comes from China', explain: 'A panda eats bamboo.', decoys: ['zebra', 'penguin'] },
+    { answer: 'octopus', a: 'an octopus', ask: 'Which sea animal has eight arms?', hint: 'it can squirt ink', explain: 'An octopus has eight arms.', decoys: ['turtle', 'penguin'] },
+    { answer: 'chameleon', a: 'a chameleon', ask: 'Which lizard can change its colour?', hint: 'its eyes can look two ways at once', explain: 'A chameleon can change colour.', decoys: ['snake', 'frog'] },
+    { answer: 'beaver', a: 'a beaver', ask: 'Which animal builds dams across rivers?', hint: 'it has big front teeth and a flat tail', explain: 'A beaver builds dams.', decoys: ['rabbit', 'squirrel'] },
+    { answer: 'squirrel', a: 'a squirrel', ask: 'Which animal has a bushy tail and buries nuts?', hint: 'it climbs the trees in the park', explain: 'A squirrel buries nuts.', decoys: ['rabbit', 'mouse'] },
+    { answer: 'hedgehog', a: 'a hedgehog', ask: 'Which small animal is covered in spines?', hint: 'it rolls into a ball', explain: 'A hedgehog is covered in spines.', decoys: ['mouse', 'turtle'] },
+    { answer: 'eagle', a: 'an eagle', ask: 'Which big bird with a white head is a symbol of the United States?', hint: 'it catches fish with its sharp claws', explain: 'The bald eagle is a symbol of the United States.', decoys: ['owl', 'rooster'] },
+  ]),
+  ...tier('hard', [
+    { answer: 'cheetah', a: 'a cheetah', ask: 'Which animal is the fastest runner on land?', hint: 'it is a big spotted cat', explain: 'A cheetah is the fastest animal on land.', decoys: ['lion', 'horse'] },
+    { answer: 'platypus', a: 'a platypus', ask: 'Which furry animal has a bill like a bird and lays eggs?', hint: 'it swims in rivers in Australia', explain: 'A platypus has a bill and lays eggs.', decoys: ['beaver', 'duck'] },
+    { answer: 'whale', a: 'a whale', ask: 'Which animal is the biggest that has ever lived?', hint: 'it lives in the sea and breathes air', explain: 'The blue whale is the biggest animal ever known.', decoys: ['elephant', 'octopus'] },
+    { answer: 'sloth', a: 'a sloth', ask: 'Which very slow animal hangs from the trees of the rainforest?', hint: 'it comes down to the ground about once a week', explain: 'A sloth moves very slowly.', decoys: ['monkey', 'koala'] },
+    { answer: 'flamingo', a: 'a flamingo', ask: 'Which pink bird often stands on one leg?', hint: 'its colour comes from what it eats', explain: 'A flamingo is pink and stands on one leg.', decoys: ['ostrich', 'penguin'] },
+    { answer: 'koala', a: 'a koala', ask: 'Which animal from Australia lives on eucalyptus leaves?', hint: 'it sleeps most of the day in a tree', explain: 'A koala eats eucalyptus leaves.', decoys: ['kangaroo', 'sloth'] },
+    { answer: 'ostrich', a: 'an ostrich', ask: 'Which is the biggest bird, and cannot fly?', hint: 'it runs very fast on two long legs', explain: 'An ostrich is the biggest bird, and it cannot fly.', decoys: ['penguin', 'flamingo'] },
+    { answer: 'hummingbird', a: 'a hummingbird', ask: 'Which tiny bird can fly backwards?', hint: 'it drinks nectar from flowers', explain: 'A hummingbird can fly backwards.', decoys: ['bee', 'bat'] },
+  ]),
+].map((a) => Object.freeze({ ...a, id: `animal:${slug(a.answer)}`, level: levelOfWord(a.difficulty) })));
 const ANIMAL_A = Object.fromEntries(ANIMALS.map((a) => [a.answer, a.a]));
+export const ANIMAL_BANK = ANIMALS;
 
 // ---------------------------------------------------------------------------------------
 // NAMES — matching what was heard to one of them
@@ -200,11 +284,11 @@ function pickOthers(answer, pool, rand, n = 2) {
   return shuffle(pool.filter((x) => normalize(x) !== normalize(answer)), rand).slice(0, n);
 }
 
-function nameGame({ items, names, ask, hint, explain, offerName = (x) => x }) {
+// Everything but `items` (the host deals: this module off its ladder, Quiz mix off each player's).
+function nameGame({ names, ask, hint, explain, offerName = (x) => x, others = null }) {
   return {
-    items,
     ask,
-    candidates: (it, c, rand) => shuffle([it.answer, ...pickOthers(it.answer, names(), rand)], rand),
+    candidates: (it, c, rand) => shuffle([it.answer, ...(others ? others(it, rand) : pickOthers(it.answer, names(), rand))], rand),
     offer: (it, cand, c) => fill(c.offerLine, { candidate: offerName(cand) }),
     judge(it, v) {
       const s = normalize(v);
@@ -222,28 +306,44 @@ function nameGame({ items, names, ask, hint, explain, offerName = (x) => x }) {
 }
 
 const firstLetter = (it, c) => fill(c.hintFirst, { letter: up(it.answer[0]) });
+const ANIMAL_NAMES = ANIMALS.map((a) => a.answer);
+const STATE_NAMES = STATES.map((s) => s.answer);
 
-const animal = nameGame({
-  items: () => ANIMALS,
-  names: () => ANIMALS.map((a) => a.answer),
+export const ANIMAL_ADAPTER = Object.freeze(nameGame({
+  names: () => ANIMAL_NAMES,
   ask: (it) => it.ask,
   hint: (it, n, c) => (n === 1 ? it.hint : n === 2 ? firstLetter(it, c) : ''),
   explain: (it) => it.explain,
   offerName: (x) => ANIMAL_A[x] || x,
-});
+  // The item's own decoys when it has two that are real animals here; else two at random.
+  others(it, rand) {
+    const d = (it.decoys || []).filter((x) => ANIMAL_NAMES.includes(x) && x !== it.answer);
+    return d.length >= 2 ? shuffle(d, rand).slice(0, 2) : pickOthers(it.answer, ANIMAL_NAMES, rand);
+  },
+}));
 
-const state = nameGame({
-  items: () => STATES,
-  names: () => STATES.map((s) => s.answer),
-  ask: (it, c) => fill(c.askState, { nickname: it.nickname }),
-  hint: (it, n, c) => (n === 1 ? fill(c.hintRegion, { region: it.region })
-    : n === 2 ? capitalHint(it.answer, it.capital, c) : ''),
-  explain: (it, answer, c) => fill(c.explainState, { state: it.answer, nickname: it.nickname, capital: it.capital }),
-});
+export const STATE_ADAPTER = Object.freeze(nameGame({
+  names: () => STATE_NAMES,
+  ask: (it, c) => (it.kind === 'capital' ? fill(c.askCapital, { capital: it.capital }) : fill(c.askState, { nickname: it.nickname })),
+  hint: (it, n, c) => {
+    if (n === 1) return fill(c.hintRegion, { region: it.region });
+    if (n !== 2) return '';
+    return it.kind === 'capital' ? firstLetter(it, c) : capitalHint(it.answer, it.capital, c);
+  },
+  explain: (it, answer, c) => (it.kind === 'capital' ? fill(c.explainCapital, { state: it.answer, capital: it.capital })
+    : fill(c.explainState, { state: it.answer, nickname: it.nickname, capital: it.capital })),
+  // From its capital (the hard level): the other two from the same region, which is what makes it hard.
+  others(it, rand) {
+    const near = it.kind === 'capital' ? STATES.filter((s) => s.region === it.region).map((s) => s.answer) : [];
+    return near.length > 2 ? pickOthers(it.answer, near, rand) : pickOthers(it.answer, STATE_NAMES, rand);
+  },
+}));
+/** The clue card: the nickname, or (asked from its capital) the capital. */
+export const stateCardHtml = (it) => `<p class="qz-card" data-clue>${esc(it.kind === 'capital' ? it.capital : it.nickname)}</p>`;
 
 // ---------------------------------------------------------------------------------------
-// THE MODULE — the person game's messages are loaded per instance, so the view is built per
-// mount; the animal and state games are shared data.
+// NAME THAT PERSON — the messages, the clip, and the question, for any host (this module, and Quiz
+// mix, which deals each player their own people). One per set of people.
 // ---------------------------------------------------------------------------------------
 
 // What the screen says when person has nothing to ask. For whoever sets the screen up — shown,
@@ -259,12 +359,29 @@ const UNREADABLE = 'Could not read the messages from that media source. It may b
 // stranded behind a frozen frame. The same number `personal.js` uses, for the same reason.
 const STALL_MS = 20000;
 
+// THE PERSON LEVELS (the header): 1 sees them, 2 hears them only.
+export const PERSON_SEEN = 1;
+export const PERSON_VOICE = 2;
+
+/**
+ * A short fixed code for a name (FNV-1a), for the question ids on the ladder. *** NOT THE NAME ITSELF: ***
+ * the ladder's rows are saved off this screen, and the people in somebody's messages are theirs, not the
+ * ladder's. Two names with the same code would share a question's rating, which is harmless.
+ */
+export function nameCode(name) {
+  let h = 0x811c9dc5;
+  for (const ch of normalize(name)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(36);
+}
+
 function defaultPlayClip(host, clip, h) {
   const doc = host.ownerDocument || document;
   host.innerHTML = '';
-  const tag = clip.kind === 'audio' ? 'audio' : 'video';
+  // VOICE ONLY (the harder level): the same message as sound, nothing on screen but the sound mark.
+  // A video file plays as sound in an <audio> element too.
+  const tag = clip.kind === 'audio' || clip.voiceOnly ? 'audio' : 'video';
   if (tag === 'audio') {
-    if (clip.pictureUrl) {
+    if (clip.pictureUrl && !clip.voiceOnly) {
       const img = doc.createElement('img');
       img.src = clip.pictureUrl;
       img.alt = '';
@@ -319,8 +436,17 @@ function playable(files) {
   }));
 }
 
-function factory(ctx) {
+/**
+ * ONE SET OF PEOPLE: whose messages, the clip on screen, and the person question.
+ *   ctx         the panel's ctx (`sources`, `listItemNames`, `resolveListing`, `resolveItemUrl`, `playClip`,
+ *               `setTimer` / `clearTimer` may be injected; `mount` for the document)
+ *   personId    whose media sources (null: the screen's, as `createMediaSourcesClient` reads it)
+ *   getApi()    quiz_view.js's api (release / reannounce / render / dropHeld), or null
+ *   onPeople()  the people changed (loading, loaded, none)
+ */
+export function createPersonGame(ctx, { personId = ctx?.personId || null, getApi = () => null, onPeople = () => {} } = {}) {
   let people = null;          // null: not loaded; [] and up: loaded
+  let bank = [];
   let emptyText = '';
   let knownSources = [];
   let source = null;
@@ -333,15 +459,15 @@ function factory(ctx) {
   let stallTimer = null;
   let urls = [];
   let mediaHost = null;
-  let leftHtml = null;
-  let apiRef = null;
   let dead = false;
 
-  const client = () => ctx.sources || createMediaSourcesClient({ user: ctx.user, cache: true, personId: ctx.personId || null });
+  const client = () => (ctx.sources && (personId || null) === (ctx.personId || null) ? ctx.sources
+    : createMediaSourcesClient({ user: ctx.user, cache: true, personId: personId || null }));
   const listNames = ctx.listItemNames || listItemNames;
   const listAlbums = ctx.resolveListing || resolveListing;
   const itemUrl = ctx.resolveItemUrl || resolveItemUrl;
   const playClip = ctx.playClip || defaultPlayClip;
+  const tell = () => { try { onPeople(); } catch (err) { console.error('name_that: people', err); } };
 
   async function discover(src, album) {
     const byKey = new Map();
@@ -364,10 +490,26 @@ function factory(ctx) {
     return [...byKey.values()].sort((x, y) => x.name.localeCompare(y.name));
   }
 
-  async function loadPeople(cfg, api) {
+  // THE LADDER'S QUESTIONS from the people: each person seen (a video, or a voice with its picture), and each
+  // person heard only (any of their messages, as sound). A person whose messages are all sound with no picture
+  // has only the second.
+  const faced = (c) => c.kind === 'video' || (c.kind === 'audio' && !!c.picturePath);
+  function buildBank() {
+    bank = Object.freeze((people || []).flatMap((p) => {
+      const code = nameCode(p.name);
+      const seen = p.clips.filter(faced);
+      const out = [];
+      if (seen.length) out.push(Object.freeze({ id: `person:${code}:${PERSON_SEEN}`, level: PERSON_SEEN, answer: p.name, clips: seen, voiceOnly: false }));
+      out.push(Object.freeze({ id: `person:${code}:${PERSON_VOICE}`, level: PERSON_VOICE, answer: p.name, clips: p.clips, voiceOnly: true }));
+      return out;
+    }));
+  }
+
+  async function loadPeople(cfg) {
     const seq = ++loadSeq;
     people = null;
-    api.engine.refresh();
+    buildBank();
+    tell();
     let found = [];
     try {
       const sources = await client().list();
@@ -375,39 +517,20 @@ function factory(ctx) {
       knownSources = sources || [];
       source = cfg.sourceId ? knownSources.find((s) => s.id === cfg.sourceId) || null
         : (knownSources.length === 1 ? knownSources[0] : null);
-      if (!source) { emptyText = knownSources.length > 1 ? MANY_SOURCES : NO_SOURCE; people = []; api.engine.refresh(); return; }
+      if (!source) { emptyText = knownSources.length > 1 ? MANY_SOURCES : NO_SOURCE; people = []; buildBank(); tell(); return; }
       found = await discover(source, cfg.album || '');
     } catch (err) {
       if (seq !== loadSeq || dead) return;
       console.error('name_that: messages', err);
-      emptyText = UNREADABLE; people = []; api.engine.refresh(); return;
+      emptyText = UNREADABLE; people = []; buildBank(); tell(); return;
     }
     if (seq !== loadSeq || dead) return;
     people = found;
     emptyText = found.length < 2 ? TOO_FEW : '';
-    api.engine.refresh();
+    buildBank();
+    tell();
   }
-
-  const personItems = () => {
-    if (people == null) return null;
-    if (people.length < 2) return [];
-    return people.map((p) => Object.freeze({ answer: p.name, clips: p.clips }));
-  };
-  const personNames = () => (people || []).map((p) => p.name);
-
-  const person = {
-    ...nameGame({
-      items: personItems,
-      names: personNames,
-      ask: (it, c) => c.askPerson,
-      hint: (it, n, c) => (n === 1 ? firstLetter(it, c) : ''),
-      explain: (it, answer, c) => fill(c.explainPerson, { name: it.answer }),
-    }),
-    empty: () => emptyText,
-    canReplay: true,
-    missStyle: (c) => (c.personMiss === 'standard' ? 'standard' : 'gentle'),
-    gentle: (it, c) => fill(c.gentleLine, { name: it.answer }),
-  };
+  const names = () => (people || []).map((p) => p.name);
 
   // ---- the clip ----
   function clearStall() {
@@ -418,7 +541,7 @@ function factory(ctx) {
   }
   // Stopped without finishing (hidden, or another game dealt): whatever was waiting to be said
   // after the clip is dropped, not said later to a panel nobody is looking at.
-  function abandonClip() { if (!playing) return; playing = false; stopClip(); apiRef?.dropHeld(); }
+  function abandonClip() { if (!playing) return; playing = false; stopClip(); getApi()?.dropHeld(); }
   function armStall() {
     clearStall();
     const set = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
@@ -435,11 +558,11 @@ function factory(ctx) {
     if (!playing) return;
     playing = false;
     stopClip();
-    apiRef?.release();
+    getApi()?.release();
   }
   function host() {
     if (!mediaHost) {
-      mediaHost = (ctx.mount.ownerDocument || document).createElement('div');
+      mediaHost = (ctx.mount?.ownerDocument || document).createElement('div');
       mediaHost.className = 'qz-media';
       mediaHost.dataset.media = '';
     }
@@ -450,13 +573,13 @@ function factory(ctx) {
     if (!c || !source) { if (playing) finishClip(); return; }
     playing = true;
     muted = false;
-    apiRef?.reannounce();
-    apiRef?.render();
+    getApi()?.reannounce();
+    getApi()?.render();
     const mine = c;
     try {
       const main = await itemUrl(source, c.path);
       if (main) urls.push(main);
-      const pic = c.picturePath ? await itemUrl(source, c.picturePath) : null;
+      const pic = c.picturePath && !c.voiceOnly ? await itemUrl(source, c.picturePath) : null;
       if (pic) urls.push(pic);
       if (dead || clip !== mine || !playing) { releaseUrls(); return; }
       armStall();
@@ -464,7 +587,7 @@ function factory(ctx) {
         onEnded: () => { if (clip === mine) finishClip(); },
         onError: () => { if (clip === mine) finishClip(); },
         onProgress: () => { if (clip === mine && playing) armStall(); },
-        onMuted: () => { muted = true; apiRef?.render(); },
+        onMuted: () => { muted = true; getApi()?.render(); },
       });
     } catch (err) {
       console.error('name_that: clip', err);
@@ -472,76 +595,177 @@ function factory(ctx) {
     }
   }
 
-  const views = {
-    animal: { left: () => '' },
-    state: { left: (s) => `<p class="qz-card" data-clue>${esc(s.item.nickname)}</p>` },
+  // The person question, everything but `items` (the host deals off the ladder's `bank`).
+  const adapter = {
+    ...nameGame({
+      names,
+      ask: (it, c) => c.askPerson,
+      hint: (it, n, c) => (n === 1 ? firstLetter(it, c) : ''),
+      explain: (it, answer, c) => fill(c.explainPerson, { name: it.answer }),
+    }),
+    empty: () => emptyText,
+    canReplay: true,
+    missStyle: (c) => (c.personMiss === 'standard' ? 'standard' : 'gentle'),
+    gentle: (it, c) => fill(c.gentleLine, { name: it.answer }),
   };
 
-  const view = {
-    init(api) { apiRef = api; },
-    onConfig(cfg, prev, api) {
-      if (cfg.game !== 'person') return;
-      const ref = `${cfg.sourceId}|${cfg.album}`;
+  return {
+    adapter,
+    /** The ladder's questions from these people (see buildBank). */
+    bank: () => bank,
+    /** null while loading; else the people found (each { name, clips }). */
+    people: () => people,
+    loading: () => people == null,
+    /** At least two people: a choice of one is not a question. */
+    enough: () => Array.isArray(people) && people.length >= 2,
+    emptyText: () => emptyText,
+    /** Read the people from `cfg.sourceId` / `cfg.album` ('' / '': the one connected source, its top folder). */
+    load(cfg = {}) {
+      const ref = `${cfg.sourceId || ''}|${cfg.album || ''}`;
       if (ref === loadedRef) return;
       loadedRef = ref;
-      loadPeople(cfg, api);
+      loadPeople({ sourceId: cfg.sourceId || '', album: cfg.album || '' });
     },
-    onDeal(item, api) {
-      if (api.engine.game() !== 'person') { abandonClip(); return; }
-      const list = item.clips || [];
-      clip = list.length ? list[Math.floor(api.rand() * list.length) % list.length] : null;
+    /** A question was dealt: its clip plays, the question held back until it ends. Not a person question: stop. */
+    onDeal(item, rand = Math.random) {
+      if (!item || !Array.isArray(item.clips)) { abandonClip(); return; }
+      const list = item.clips;
+      const picked = list.length ? list[Math.floor(rand() * list.length) % list.length] : null;
+      clip = picked ? { ...picked, voiceOnly: !!item.voiceOnly } : null;
       startClip(clip);
     },
-    onReplay(item) { if (clip) startClip(clip); },
+    replay() { if (clip) startClip(clip); },
     speechGate: () => playing,
-    leftEl(el, s, cfg) {
-      if (s.game === 'person') {
-        if (el.dataset.kind !== 'person') { el.innerHTML = ''; el.dataset.kind = 'person'; leftHtml = null; }
-        const h = host();
-        if (h.parentNode !== el) el.append(h);
-        let note = el.querySelector('[data-muted]');
-        if (muted && !note) {
-          note = (el.ownerDocument || document).createElement('p');
-          note.className = 'qz-note';
-          note.dataset.muted = '';
-          note.textContent = 'Sound is off for this message — this screen blocked it.';
-          el.append(note);
-        } else if (!muted && note) note.remove();
-        const q = s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss';
-        return !!s.item && (q || playing);
-      }
-      if (el.dataset.kind === 'person') { el.innerHTML = ''; delete el.dataset.kind; }
-      const q = s.item && (s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss');
-      const html = q ? String(views[s.game]?.left(s, cfg) || '') : '';
-      if (html !== leftHtml) { el.innerHTML = html; leftHtml = html; }
-      return !!html;
+    away: () => abandonClip(),
+    /** The left of the panel while a person question is up: the clip (never rebuilt, or it would restart). */
+    leftEl(el, s) {
+      if (el.dataset.kind !== 'person') { el.innerHTML = ''; el.dataset.kind = 'person'; }
+      const h = host();
+      if (h.parentNode !== el) el.append(h);
+      let note = el.querySelector('[data-muted]');
+      if (muted && !note) {
+        note = (el.ownerDocument || document).createElement('p');
+        note.className = 'qz-note';
+        note.dataset.muted = '';
+        note.textContent = 'Sound is off for this message — this screen blocked it.';
+        el.append(note);
+      } else if (!muted && note) note.remove();
+      const q = s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss';
+      return !!s.item && (q || playing);
     },
-    pointNote: (game, item, answer) => (game === 'person' ? 'name that person: right' : `name that ${game}: ${answer}`),
-    settingsChoices: () => ({
-      sourceId: knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id })),
-    }),
-    destroy() { dead = true; playing = false; stopClip(); },
-    // Hidden: the clip stops (a message nobody is watching is a message missed). Shown again
-    // mid-question: it plays again from the start, and the question follows it as before.
-    onHide() { abandonClip(); },
+    // Shown again mid-question: it plays again from the start, and the question follows it as before.
     onShow(api) {
       const s = api.engine.snapshot();
-      if (s.game === 'person' && s.phase === 'asking' && clip && !playing) {
+      if (s.phase === 'asking' && clip && !playing && Array.isArray(s.item?.clips)) {
         api.dropHeld();
         startClip(clip);                // sets `playing` at once, so the question below is held
         api.engine.press('repeat');
       }
     },
+    settingsChoices: () => ({
+      sourceId: knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id })),
+    }),
+    destroy() { dead = true; playing = false; stopClip(); },
+  };
+}
+
+/** Each game's questions for the ladder; `persons` is a createPersonGame (or null: no people). */
+export function nameBank(game, persons = null) {
+  if (game === ladderGame('animal')) return ANIMAL_BANK;
+  if (game === ladderGame('state')) return STATE_BANK;
+  if (game === ladderGame('person')) return persons ? persons.bank() : [];
+  return [];
+}
+
+// ---------------------------------------------------------------------------------------
+// THE MODULE
+// ---------------------------------------------------------------------------------------
+function factory(ctx) {
+  const rand = ctx.rand || Math.random;
+  let cfgNow = { ...DEFAULTS };
+  let api = null;
+  let leftHtml = null;
+  const persons = createPersonGame(ctx, { getApi: () => api, onPeople: () => api?.engine.refresh() });
+
+  // THE LADDER, opened exactly as Thinking games opens it (adaptive_play.js openPersonLadder): the screen's
+  // person's level kept with them, their own start in this game, else their usual one.
+  const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
+  const session = createAdaptiveSession({
+    cfg: () => cfgNow,
+    bankFor: (g) => nameBank(g, persons),
+    store: ladderRows.store,
+    rand,
+    now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
+    personId: () => ctx.personId || null,
+    startFor: ladderRows.startFor, startMark: ladderRows.startMark,
+    playersHost: ladderRows.playersHost,
+    onChange: () => api?.render(),
+  });
+  ladderRows.attach(session);
+
+  const deal = (g) => { const q = session.deal(ladderGame(g)); return q ? [q] : []; };
+  // "Ann, your turn. " in front of the question when there are two or more players.
+  const withTurn = (A) => ({ ...A, ask: (it, c) => session.askPrefix() + A.ask(it, c) });
+  const games = {
+    animal: { ...withTurn(ANIMAL_ADAPTER), items: () => deal('animal') },
+    state: { ...withTurn(STATE_ADAPTER), items: () => deal('state') },
+    person: {
+      ...withTurn(persons.adapter),
+      items: () => {
+        if (persons.loading()) return null;
+        if (!persons.enough()) return [];
+        return deal('person');
+      },
+    },
   };
 
-  return quizModule({ type: GAME, title: 'Name that', scoreLabel: 'Name that: right answers',
-    games: { animal, state, person }, defaults: DEFAULTS, gameKey: 'game', view })(ctx);
+  const view = {
+    init(a) { api = a; },
+    onConfig(cfg) {
+      cfgNow = cfg;
+      ladderRows.onConfig(cfg);
+      if (cfg.game === 'person') persons.load(cfg);
+    },
+    onDeal(item, a) {
+      if (a.engine.game() !== 'person') { persons.away(); return; }
+      persons.onDeal(item, a.rand);
+    },
+    onReplay() { persons.replay(); },
+    speechGate: () => persons.speechGate(),
+    leftEl(el, s, cfg) {
+      if (s.game === 'person') { leftHtml = null; return persons.leftEl(el, s); }
+      if (el.dataset.kind === 'person') { el.innerHTML = ''; delete el.dataset.kind; }
+      const q = s.item && (s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss');
+      const html = q && s.game === 'state' ? stateCardHtml(s.item) : '';
+      if (html !== leftHtml) { el.innerHTML = html; leftHtml = html; }
+      return !!html;
+    },
+    turnHtml: (s) => session.turnHtml(s, s.game ? ladderGame(s.game) : null),
+    onResult: (r) => { session.record(r); },
+    allowAward: () => session.allowAward(),
+    scoreDetail: (s) => session.scoreDetail() || (s.asked ? `${s.rightCount} of ${s.asked}` : ''),
+    scoreLine: (s) => session.scoreDetail() || `${s.rightCount} right so far.`,
+    pointNote: (game, item, answer) => (game === 'person' ? 'name that person: right' : `name that ${game}: ${answer}`),
+    settingsChoices: () => persons.settingsChoices(),
+    destroy() { persons.destroy(); session.destroy(); ladderRows.destroy(); },
+    // Hidden: the clip stops (a message nobody is watching is a message missed). Shown again
+    // mid-question: it plays again from the start, and the question follows it as before.
+    onHide() { persons.away(); },
+    onShow(a) { if (a.engine.snapshot().game === 'person') persons.onShow(a); },
+  };
+
+  const inner = quizModule({ type: GAME, title: 'Name that', scoreLabel: 'Name that: right answers',
+    games, defaults: DEFAULTS, gameKey: 'game', view })(ctx);
+  // The test escape hatch: the ladder, the same object the module plays with.
+  inner.__session = session;
+  return inner;
 }
 
 registerModule(
   { type: GAME, title: 'Name that', core: 'new',
     description: 'Name that animal, state, or person. Person plays the family’s own recorded '
-      + 'messages and asks who it is. Answer with a switch, the screen, or aloud.',
+      + 'messages and asks who it is. Each player gets questions at their own level. Answer with a '
+      + 'switch, the screen, or aloud.',
     // `local`: the animals and states are built in; the person game's clips come from a media
     // source on the person's own machine, exactly like Personal videos.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },

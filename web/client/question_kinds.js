@@ -21,6 +21,10 @@
 //   adapter, view, cfg()  quiz_flow.js's adapter (no `items`: the mix deals), quiz_view.js's view pieces, and the
 //                         settings those read (the game's own DEFAULTS, with the mix's choices over them)
 //   onConfig(cfg), destroy()
+//   (2026-10-07, row 2.63, for Name that person's clips; each optional) view.leftEl / speechGate / onReplay /
+//                         onHide / onShow as quiz_view.js has them, view.onAway() (another game's turn came up),
+//                         view.onLeftReset() (the mix started the left of the panel over); adapter.canReplay(item)
+//                         and adapter.missStyle(cfg, item) may answer per question
 //
 // THE HOST each source is handed (modules/quiz_mix.js builds it):
 //   ctx         the panel's ctx (bus, makeEvents, makePackReviews, personId, screenPlayers)
@@ -50,9 +54,11 @@ import * as Think from './modules/think_games.js';
 import * as Spell from './modules/spelling.js';
 import * as Trivia from './modules/trivia.js';
 import * as Forge from './modules/wordforge.js';
+import * as Name from './modules/name_that.js';
+import * as WG from './modules/word_games.js';
 import { mathAdapter, mathView, mathBank, RATING_GAME as MATH_GAME, GAME as MATH_KEY, DEFAULTS as MATH_DEFAULTS } from './math_beginner.js';
 
-export const SOURCE_IDS = Object.freeze(['trivia', 'math', 'words', 'spelling', 'brain', 'think']);
+export const SOURCE_IDS = Object.freeze(['trivia', 'math', 'words', 'spelling', 'brain', 'think', 'name', 'wordgames']);
 
 // ---------------------------------------------------------------------------------------------------
 // THE LADDER, for a game kept on the `ratings` row (everything but Trivia)
@@ -429,6 +435,21 @@ export const wordsAdapter = Object.freeze({
 });
 export const wordsView = Object.freeze({
   ...mcqView,
+  // *** A WRONG GUESS SHOWS WHAT THAT ONE ANSWER MEANS, ON ITS TILE, AND THE QUESTION STAYS OPEN (row 2.59, Mike
+  // 2026-10-07: "a wrong answer would only show you for that answer. You still keep guessing until you get it
+  // right."). Only the guess just made: the shared engine keeps the last wrong answer heard, not every one, so a
+  // second miss (which offers the answer) or "Try again" starts the tiles bare again. The full list comes with the
+  // answer (explainHtml below).
+  left: (s) => {
+    const it = s.item;
+    const heard = s.phase === 'asking' && s.feedback?.kind === 'wrong' ? optionIn(it, s.feedback.heard) : null;
+    const kind = it.wfKind || 'blank';
+    return `<div class="qz-picks qm-opts" data-choices>${it.options.map((o, i) => {
+      const m = o === heard ? (it.meanings || [])[i] : null;
+      const line = m ? `<span class="qm-mean" data-mean="${i}">${esc(Forge.meaningLine(kind, m))}</span>` : '';
+      return `<button type="button" class="qz-pick qm-opt" data-pick="${esc(o)}" data-small>${esc(o)}${line}</button>`;
+    }).join('')}</div>`;
+  },
   explainHtml: (s) => {
     const it = s.item || {};
     const kind = it.wfKind || 'blank';
@@ -481,10 +502,152 @@ export function wordsSource(host) {
   };
 }
 
+// ---------------------------------------------------------------------------------------------------
+// NAME THAT: animal, state and person, on each player's own ladder in Name that (row 2.63)
+// ---------------------------------------------------------------------------------------------------
+// The animal and state questions are Name that's own (modules/name_that.js ANIMAL_ADAPTER, STATE_ADAPTER, their
+// banks and levels). NAME THAT PERSON plays recorded messages, so here EACH SEAT BRINGS ITS OWN PEOPLE: somebody picked
+// from this login (the screen's person included) gets the messages in their own media sources; the screen's one
+// player, on a screen with no person, the screen's; a GUEST (a typed name) has none. *** A SEAT WITH NO PEOPLE (no
+// source, or fewer than two people in it) IS NEVER DEALT A PERSON QUESTION: *** `dealFor` says there is nothing, and
+// the mix deals that turn from another category (quiz_mix.js `items`, "another category for this turn only"). A round
+// is only drawn as Name that person when at least one seat here has people (`has`).
+// [Guesses, on Mike's list: a guest gets no person questions (the case for the opposite: a visitor who knows the
+// family could play the screen's people); the messages are each seat's media sources' top folder, with no source or
+// folder setting in the mix (Name that's own panel has both; the case for adding them here: a family whose messages
+// sit in one folder of a source with photos in it).]
+export const NAME_CATEGORIES = Object.freeze([
+  { id: 'animal', label: 'Name that animal' }, { id: 'state', label: 'Name that state' }, { id: 'person', label: 'Name that person' },
+]);
+export function nameSource(host) {
+  const ctx = host.ctx;
+  const seats = new Map();      // seat id -> its people (Name.createPersonGame), or null: none of its own
+  const owner = new WeakMap();  // a dealt person question -> whose people it came from
+  let dealingFor = null;        // whose people the ladder's person questions are, while dealing and recording
+  let leftHtml = null;
+  const idOf = (pid) => (typeof pid === 'string' && pid.startsWith('person:') ? pid.slice(7) : null);
+  function peopleOf(pid) {
+    if (seats.has(pid)) return seats.get(pid);
+    const id = idOf(pid);
+    let pg = null;
+    if (id || pid === 'player') {
+      try {
+        pg = Name.createPersonGame(ctx, { personId: id || null, getApi: host.getApi, onPeople: () => host.changed() });
+        pg.load({ sourceId: '', album: '' });
+      } catch (err) { console.error('quiz mix: name that person', err); pg = null; }
+    }
+    seats.set(pid, pg);
+    return pg;
+  }
+  const localSeats = () => {
+    try { return resolvePlayers(host.cfg().players, { personId: ctx.personId || null, host: ctx.screenPlayers || null }); }
+    catch { return []; }
+  };
+  const { cfg, rows, session } = ladderParts(host, { gameKey: Name.GAME, defaults: Name.DEFAULTS,
+    bankFor: (g) => Name.nameBank(g, dealingFor ? peopleOf(dealingFor) : null) });
+  const kindOfCat = (cat) => String(cat).replace(/^name:/, '');
+  const kindOf = (it) => (it && Array.isArray(it.clips) ? 'person'
+    : (it && (it.kind === 'nickname' || it.kind === 'capital') ? 'state' : 'animal'));
+  const adapterOf = (it) => {
+    const k = kindOf(it);
+    if (k === 'person') return owner.get(it)?.adapter || null;
+    return k === 'state' ? Name.STATE_ADAPTER : Name.ANIMAL_ADAPTER;
+  };
+  const fwd = (fn) => (it, ...rest) => { const f = adapterOf(it)?.[fn]; return typeof f === 'function' ? f(it, ...rest) : undefined; };
+  const others = (fn) => { for (const pg of seats.values()) { try { if (pg) fn(pg); } catch { /* gone */ } } };
+  return {
+    id: 'name', label: 'Name that', session,
+    categories: () => NAME_CATEGORIES.map((c) => ({ ...c, id: `name:${c.id}` })),
+    loading: () => localSeats().some((p) => !!peopleOf(p.id)?.loading()),
+    has: (cat) => (kindOfCat(cat) !== 'person' || localSeats().some((p) => !!peopleOf(p.id)?.enough())),
+    dealFor(player, cat) {
+      const kind = kindOfCat(cat);
+      if (kind !== 'person') return dealLadder(host, session, Name.ladderGame(kind), player);
+      const pg = peopleOf(player.id);
+      if (!pg || !pg.enough()) return null;
+      dealingFor = player.id;
+      const d = dealLadder(host, session, Name.ladderGame('person'), player);
+      if (d) owner.set(d.item, pg);
+      return d;
+    },
+    record(r) {
+      const p = session.dealt()?.player;
+      if (p) dealingFor = p.id;
+      return session.record(r);
+    },
+    adapter: {
+      empty: () => 'There are no questions here yet.',
+      ask: fwd('ask'), candidates: fwd('candidates'), offer: fwd('offer'), judge: fwd('judge'), hint: fwd('hint'),
+      answer: fwd('answer'), explain: fwd('explain'), vocab: fwd('vocab'), fromVoice: fwd('fromVoice'), gentle: fwd('gentle'),
+      heardText: (v) => String(v),
+      // PER QUESTION (quiz_mix.js asks with the question on screen): only a person's message can be played again,
+      // and only a person's miss is gentle (Name that's `personMiss`, gentle unless set otherwise).
+      canReplay: (it) => kindOf(it) === 'person',
+      missStyle: (c, it) => (kindOf(it) === 'person' && c?.personMiss !== 'standard' ? 'gentle' : 'standard'),
+    },
+    view: {
+      // The clip for a person question (never rebuilt, or it would restart); the clue card for a state.
+      leftEl(el, s) {
+        const it = s.item;
+        const pg = it ? owner.get(it) : null;
+        if (pg && kindOf(it) === 'person') { leftHtml = null; return pg.leftEl(el, s); }
+        if (el.dataset.kind === 'person') { el.innerHTML = ''; delete el.dataset.kind; leftHtml = null; }
+        const q = !!it && (s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss');
+        const html = q && kindOf(it) === 'state' ? Name.stateCardHtml(it) : '';
+        if (html !== leftHtml) { el.innerHTML = html; leftHtml = html; }
+        return !!html;
+      },
+      onLeftReset() { leftHtml = null; },
+      onDeal(item, api) {
+        const pg = item ? owner.get(item) : null;
+        others((x) => { if (x !== pg) x.away(); });
+        if (pg) pg.onDeal(item, api?.rand || host.rand);
+      },
+      onReplay: (item) => { owner.get(item)?.replay(); },
+      speechGate: () => [...seats.values()].some((pg) => !!pg?.speechGate()),
+      // Another game's turn, or the panel hidden: a message nobody is watching is stopped.
+      onAway: () => others((x) => x.away()),
+      onHide: () => others((x) => x.away()),
+      onShow(api) { const it = api?.engine?.snapshot?.().item; if (it) owner.get(it)?.onShow(api); },
+    },
+    cfg,
+    onConfig: (c) => rows.onConfig(c),
+    destroy() { others((x) => x.destroy()); seats.clear(); session.destroy(); rows.destroy(); },
+  };
+}
+
+// ---------------------------------------------------------------------------------------------------
+// WORD GAMES: opposites, rhyming and the yes / no quiz, on each player's own ladder in Word games (row 2.63)
+// ---------------------------------------------------------------------------------------------------
+// Word games' own questions and levels (modules/word_games.js `wordBank`), asked through its `WORD_ADAPTER` and
+// `WORD_VIEW`: built from the same pieces as that game's own engine, so a question is asked, judged and hinted here
+// exactly as there. The yes / no quiz is answered Yes or No directly (quiz_flow.js `yesNo`).
+export const WORD_GAME_CATEGORIES = Object.freeze([
+  { id: 'opposites', label: 'Opposites' }, { id: 'rhyming', label: 'Rhyming' }, { id: 'yesno', label: 'Yes or no' },
+]);
+export function wordGamesSource(host) {
+  const { cfg, rows, session } = ladderParts(host, { gameKey: WG.GAME, defaults: WG.DEFAULTS,
+    bankFor: (g) => WG.wordBank(String(g).replace(/^wg_/, '')) });
+  const kindOf = (cat) => String(cat).replace(/^wg:/, '');
+  return {
+    id: 'wordgames', label: 'Word games', session,
+    categories: () => WORD_GAME_CATEGORIES.map((c) => ({ ...c, id: `wg:${c.id}` })),
+    loading: () => false,
+    has: (cat) => WG.wordBank(kindOf(cat)).length > 0,
+    dealFor: (player, cat) => dealLadder(host, session, WG.ladderGame(kindOf(cat)), player),
+    record: (r) => session.record(r),
+    adapter: WG.WORD_ADAPTER, view: WG.WORD_VIEW, cfg,
+    onConfig: (c) => rows.onConfig(c),
+    destroy() { session.destroy(); rows.destroy(); },
+  };
+}
+
 /** Every source, by id. */
 export const SOURCES = Object.freeze({
   trivia: triviaSource, math: mathSource, words: wordsSource, spelling: spellingSource, brain: brainSource, think: thinkSource,
+  name: nameSource, wordgames: wordGamesSource,
 });
 export const SOURCE_LABELS = Object.freeze({
   trivia: 'Trivia', math: 'Math', words: 'Word Forge', spelling: 'Spelling', brain: 'Brain games', think: 'Thinking games',
+  name: 'Name that', wordgames: 'Word games',
 });

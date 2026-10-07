@@ -911,7 +911,10 @@ registerModule(
         // Row 2.59: once the question is over, however it ended (right, a wrong guess in 'reveal'
         // mode, or "I don't know"), every button also says what its word means. Inside the button it
         // was already on, so a switch user meets no new stop and nothing new to step past.
-        const ml = answered ? meaningLine(q.kind, (q.optionMeanings || [])[i]) : '';
+        // While it is still open in 'multi' mode, a spent option says what IT means and no other
+        // (Mike, 2026-10-07: "a wrong answer would only show you for that answer. You still keep
+        // guessing until you get it right."). The untried ones stay bare: theirs would give it away.
+        const ml = (answered || missed) ? meaningLine(q.kind, (q.optionMeanings || [])[i]) : '';
         const mean = ml ? `<span class="wf-mean" data-mean>${esc(ml)}</span>` : '';
         return `<button class="${cls}" data-opt="${i}"${on} ${(answered || missed) ? 'disabled' : ''}>${esc(o)}${answerMarkHtml(mark)}${mean}</button>`;
       }).join('');
