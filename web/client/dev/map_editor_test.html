@@ -671,8 +671,27 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
       const press = (v) => bus.publish(verbTopic(v));
       const walk = (pred) => { for (let i = 0; i < 200; i++) { const c = ed.scan.current(); if (c && pred(c)) return true; press('next'); } return false; };
       check('(walk) next reaches Driven by', walk((n) => !!n.matches?.('[data-auto-row="kind"]')));
-      press('select'); press('select');
-      check('*** two selects step it: bus -> link -> a verb ***', aw.el.querySelector('[data-a="kind"]').value === 'verb');
+      // 2026-10-07: this used to be two selects stepping bus -> link -> a verb. 7045e26 added a sixth kind ("what's
+      // been played"), and a choice of more than five (settings_fields.js PICKER_OVER) opens the choice picker for
+      // somebody who points -- the 2026-10-02 "How you choose things" rule, which is what this person has (nobody set
+      // it). Somebody who chose "Step through" still steps it (automation_test, chooseMode 'step'). So the press opens
+      // the picker of kinds, and the switch takes "a switch or key" there, the same way 6d takes a message name.
+      press('select');
+      const verbLabel = [...aw.el.querySelectorAll('[data-a="kind"] option')].find((o) => o.value === 'verb')?.textContent;
+      check('*** a press opens the picker of what drives it (six kinds, more than five) ***', !!aw.el.querySelector('[data-choice-picker]')
+        && [...aw.el.querySelectorAll('[data-chp-pick] .chp-name')].some((n) => n.textContent === verbLabel));
+      let tookKind = false;
+      for (let g = 0; g < 30 && !tookKind; g++) {
+        const cur = ed.scan.current();
+        if (!cur) { press('select'); continue; }
+        const tiles = [...cur.querySelectorAll('[data-chp-pick]')];
+        const i = tiles.findIndex((t) => t.querySelector('.chp-name')?.textContent === verbLabel);
+        if (i >= 0) { if (tiles.length > 1) { press('select'); for (let n = 0; n < i; n++) press('next'); } press('select'); tookKind = true; }
+        else press('next');
+      }
+      check('*** taken by switch: a verb drives it, and the picker is put away ***', tookKind
+        && aw.el.querySelector('[data-a="kind"]').value === 'verb' && !aw.el.querySelector('[data-choice-picker]'),
+        aw.el.querySelector('[data-a="kind"]').value);
       check('(walk) next reaches Add', walk((n) => n.dataset?.autoRow === 'add'));
       press('select');
       const eng = k.automation();
