@@ -2380,3 +2380,21 @@ Mike, through chat (inbox AY-BC; rows 2.54-2.58).
    never used as a lock.
 7. **Open, waiting for Mike:** whether his walkthrough recordings are kept with their corrected text so his voice
    can be learned ("Should Cici be learning my voice? I feel like this should be part of the corpus").
+
+## Sources after the answer; every question gets a real source; spelling spelled out; home vs Modules pages; default theme -- 2026-10-07 (evening)
+
+Mike, live, after playing the review packs.
+
+1. **Source links are clickable and open in a new window.**
+2. **The source isn't shown until the correct answer is.** It can give the answer away (a NASA "jupiter" address).
+3. **"Which spelling is right" spells each option out loud** instead of pronouncing it. *"Saying the word makes it
+   obvious bc the answer is the one it pronounces right."*
+4. **No "common knowledge" sources.** Mike had to look one up himself. *"It could be a good way to reinforce the idea
+   of checking the source on something you get from your AI."* Every question carries a page that supports it.
+   This supersedes the packs' earlier allowance of common knowledge for universal facts.
+5. **The page that was "Modules" (the Your people landing and Home) becomes the homepage / profiles page.** The old
+   Modules page comes back: the modules library with settings on the side and a transport bar below, *"a webpage
+   version of it for people that are more comfortable with that."*
+6. **The home/profile page's theme setting is the regular theme picker.** It's there because it's the first page
+   people see. Panels default to a transparent background. A live theme by default where the device can take it,
+   otherwise the Nimrod theme. Mike asked whether people would mind; Code is weighing both sides in the build.
