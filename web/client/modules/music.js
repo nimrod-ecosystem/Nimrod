@@ -62,7 +62,7 @@
 //      reading playlists if the shuffle is on. A feature turned on later says "Spotify needs one more permission" with
 //      "Connect again". Listening history is asked for by nothing yet (`historyWanted`).
 
-import { registerModule } from '../module.js';
+import { registerModule, extendCtx } from '../module.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createYtPlayer } from './youtube.js';
 import { createMediaSourcesClient } from '../media_sources.js';
@@ -247,8 +247,17 @@ registerModule(
         { onChange: () => { if (!dead && view === 'edit') loadSources(); } })
       : null);
     const sources = ctx.sources || scopedSources;
+    // *** A FOLDER SONG IS A PLAY TOO (row 2.62 step 2: the charts). *** Filed on this device as source `folder`, with
+    // the file's name (a folder's names are the person's own, plays.js `keepText`), under this same panel. Its own
+    // handle with NO server events: the one-time move (plays.js) would otherwise file this panel's old Spotify rows a
+    // second time, as folder plays.
+    const folderLog = panelPlays(extendCtx(ctx, { events: null }), 'folder');
     const local = createLocalMusic({
       audio, audioId: `music:${instanceId}:local`, sources,
+      onTrack: ({ sourceId, path, title }) => {
+        if (!path) return;
+        folderLog.played(sourceId ? `${sourceId}:${path}` : path, { title });
+      },
       ...(ctx.makeAudio ? { makeAudio: ctx.makeAudio } : {}),
       ...(ctx.resolveListing ? { resolve: ctx.resolveListing } : {}),
       ...(ctx.resolveItem ? { resolveItem: ctx.resolveItem } : {}),
@@ -838,6 +847,7 @@ registerModule(
         try { spotifyPlayer?.destroy(); } catch { /* gone */ }
         try { picker.destroy(); } catch { /* gone */ }
         try { playLog.destroy(); } catch { /* gone */ }
+        try { folderLog.destroy(); } catch { /* gone */ }
         try { local.destroy(); } catch { /* gone */ }
         try { ytActive(false); audio?.unregister?.(YT_AUDIO); } catch { /* gone */ }
         try { yt?.destroy?.(); } catch { /* gone */ }

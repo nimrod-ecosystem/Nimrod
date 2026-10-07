@@ -42,6 +42,12 @@ export const LOCAL_MESSAGES = Object.freeze({
   blocked: 'The browser is waiting for a press before it will play sound.',
 });
 
+/** A track's name from its path: the file name, without its folder or its extension. Pure. */
+export function trackTitle(path) {
+  const tail = String(path || '').split(/[\\/]/).pop() || '';
+  return tail.replace(/\.[a-z0-9]{2,5}$/i, '').trim();
+}
+
 export function createLocalMusic({
   audio = null,
   audioId = 'music:local',
@@ -53,6 +59,10 @@ export function createLocalMusic({
   order = 'shuffle',
   rand = Math.random,
   channel = MUSIC_CHANNEL,
+  // Told once per track that ACTUALLY STARTS (its element's first `playing`), with { sourceId, path, title }: the
+  // folder's plays, for the charts (row 2.62 step 2; music.js files them as source `folder`). A file that will not
+  // play is never counted. `title` is the file's name without its folder or extension; no tags are read yet.
+  onTrack = null,
 } = {}) {
   let vol = clamp01(volume);
   let gain = 1;                    // what the arbiter last said; 1 until it says otherwise
@@ -118,6 +128,15 @@ export function createLocalMusic({
     el = makeAudio(track.url);
     if (!el) { finish(); return; }
     const mine = el;
+    if (typeof onTrack === 'function') {
+      let told = false;
+      mine.addEventListener?.('playing', () => {
+        if (told || el !== mine || g !== gen) return;
+        told = true;
+        try { onTrack({ sourceId: now?.sourceId || null, path: track.path || '', title: trackTitle(track.path) }); }
+        catch (err) { console.error('music: play log', err); }
+      });
+    }
     mine.addEventListener?.('ended', () => {
       if (el !== mine || g !== gen) return;
       if (queue.length > 1 && at < queue.length - 1) playAt(at + 1, g);

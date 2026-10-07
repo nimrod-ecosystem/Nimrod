@@ -29,7 +29,7 @@ import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick } from '../rng.js';
-import { panelPlays } from '../plays.js';
+import { panelPlays, PLAY_LABELS_TOPIC } from '../plays.js';
 import { createHeldSignal } from '../held.js';
 import { createPresetLibrary } from '../presets.js';
 import { followPerson } from '../person_known.js';
@@ -1527,6 +1527,21 @@ registerModule(
         // playlist, and the picker draws from it (plus any pinned videos) until this panel's own
         // settings or schedule next change it back.
         bus.subscribe('youtube/who', () => bus.publish('youtube/here', { instanceId: ctx.instanceId || null }));
+        // *** A CHART ASKS WHAT ITS IDS ARE CALLED (row 2.62, play_charts.js PLAY_LABELS_TOPIC). *** A YouTube play
+        // keeps only its video id (plays.js: the API terms' 30-day line), so a chart asks the panels on the screen
+        // for names when it draws. This panel answers from its own playlist - titles it already holds - and the
+        // chart keeps them in memory only.
+        bus.subscribe(PLAY_LABELS_TOPIC, (ask) => {
+          try {
+            const want = ask && typeof ask.answer === 'function' && Array.isArray(ask.ids?.youtube) ? ask.ids.youtube : null;
+            if (!want || !want.length) return;
+            const out = {};
+            for (const v of effectivePlaylist()) {
+              if (v && v.id && want.includes(v.id) && v.title && v.title !== v.id) out[v.id] = String(v.title);
+            }
+            if (Object.keys(out).length) ask.answer('youtube', out);
+          } catch (e) { console.error('youtube: labels', e); }
+        });
         bus.subscribe('youtube/load', (p) => {
           const vid = parseVideoId((p && p.videoId) || '');
           const list = vid ? '' : parsePlaylistId((p && p.playlistId) || '');

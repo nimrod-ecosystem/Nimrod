@@ -204,6 +204,7 @@ import './modules/button.js';     // registers 'button' (the game's name sign an
 import './modules/wordforge.js';
 import './modules/trivia.js';    // registers 'trivia'
 import './modules/scoreboard.js';      // registers 'scoreboard'
+import './modules/charts.js';          // registers 'charts' (row 2.62: what played, drawn and read aloud)
 import './modules/room.js';            // registers 'room'
 import './modules/word_games.js';      // registers 'word_games'
 import './modules/spelling.js';        // registers 'spelling' (row 2.45)

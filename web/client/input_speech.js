@@ -383,6 +383,16 @@ export const ROUTES = {
               'the question is wrong'] },
   'review-fine': { action: 'review/fine', label: 'Reviewing: this question is fine',
     phrases: ['question is fine', 'question fine', 'the question is fine'] },
+  // *** THE CHARTS, ASKED ALOUD (row 2.62 step 2; actions.js CHART_ACTIONS, modules/charts.js). *** Mike's sentence,
+  // "what did I play most this week", is seven words; the table holds four at most (a small model's whole phrases),
+  // so these are its shortest plain forms. Each is a question nobody says to a video or a game, and none is a verb
+  // phrase or "play <game>". Nothing answers unless a Charts panel is on the screen. Vocabulary [unverified on the
+  // bench]: all common words; "played" is the one to check in the small Vosk model.
+  'charts-week': { action: 'charts/say-week', label: 'Charts: what played most this week',
+    phrases: ['what played most', 'what played the most', 'what did i play', 'my most played', 'most played this week',
+              'top played this week'] },
+  'charts-today': { action: 'charts/say-today', label: 'Charts: what played most today',
+    phrases: ['what played most today', 'most played today', 'top played today'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

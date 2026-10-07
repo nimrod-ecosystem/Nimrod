@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>charts - what played, drawn, read and said - test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host > div{width:560px;height:420px;position:relative;margin:8px 0}
+</style>
+</head>
+<body>
+<h1>charts - what played on this screen, drawn, read and said (row 2.62, step 2)</h1>
+<p>The query layer (<code>play_charts.js</code>: windows, sources, top-N, counts over time, the table, the spoken
+answer, the colours that read on each theme), then the panel (<code>modules/charts.js</code>): the five ways of
+showing, the hidden table and "Show as a list", "Say it", the switch walk, "computer please, what played most" end to
+end, whose plays it shows, the example, the YouTube panel naming its own ids, and folder songs as plays. No server.</p>
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="host"></div>
+
+<script type="module">
+import {
+  WINDOWS, windowRange, countedPlays, topPlays, withRest, totalPlays, playsOverTime, chartModel, chartTable,
+  spokenAnswer, normalizeChart, chartTitle, labelFor, seriesColours, SERIES_TOKENS, SHAPE_MIN, CHART_DEFAULTS,
+  LEFT_OUT, WHAT_CHOICES, PLAY_LABELS_TOPIC,
+} from '../play_charts.js';
+import { PLAY_KIND, createPlays, memoryPlayStore, panelPlays, PLAY_LABELS_TOPIC as PLAYS_LABELS_TOPIC } from '../plays.js';
+import { VIEWS, nextView, barSvg, lineSvg, pieSvg, examplePlays, CHART_SETTINGS } from '../modules/charts.js';
+import '../modules/youtube.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { expectFor } from '../health.js';
+import { verbsFor, createDefaultRegistry, CHART_ACTIONS, CHARTS_SAY_TOPIC } from '../actions.js';
+import { ROUTES, routeFor, routeAction, attachSpeech, SPEECH_BINDINGS, normalize, duplicatePhrases, spokenTable, PHRASES }
+  from '../input_speech.js';
+import { createInputBus } from '../input.js';
+import { THEMES, applyTheme, contrast, TEXT_MIN } from '../theme.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import { createLocalMusic, trackTitle } from '../music_local.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+
+// Wednesday 7 October 2026, 3 PM, LOCAL time: the week began Monday the 5th, the month on the 1st.
+const NOW = new Date(2026, 9, 7, 15, 0, 0).getTime();
+const at = (d, h, m = 0) => new Date(2026, 9, d, h, m, 0).getTime();
+const ev = (data, t) => ({ kind: PLAY_KIND, created_at: new Date(t).toISOString(), data });
+const S = 'scr-1';
+const FIX = [
+  // today
+  ev({ source: 'folder', id: 's1:Music/Song One.mp3', title: 'Song One', screen: S }, at(7, 9)),
+  ev({ source: 'folder', id: 's1:Music/Song One.mp3', title: 'Song One', screen: S }, at(7, 10)),
+  ev({ source: 'folder', id: 's1:Music/Song One.mp3', title: 'Song One', screen: S }, at(7, 11)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(7, 14)),
+  // Tuesday
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(6, 10)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(6, 11)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(6, 12)),
+  ev({ source: 'youtube', id: 'vidB', screen: S }, at(6, 13)),
+  ev({ source: 'youtube', id: 'vidB', screen: S }, at(6, 14)),
+  // earlier this month, and last month
+  ev({ source: 'photos', id: 'Pictures/beach.jpg', screen: S }, at(2, 10)),
+  ev({ source: 'photos', id: 'Pictures/beach.jpg', screen: S }, at(2, 11)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, new Date(2026, 8, 20, 10).getTime()),
+  // Spotify (never counted) and another screen's plays (never shown here)
+  ...Array.from({ length: 10 }, (_, i) => ev({ source: 'spotify', id: 'spotify:track:x', screen: S }, at(6, 15, i))),
+  ...Array.from({ length: 9 }, (_, i) => ev({ source: 'youtube', id: 'vidZ', screen: 'scr-2' }, at(6, 16, i))),
+];
+const LABELS = new Map([['youtube:vidA', 'Morning hymns']]);
+
+function fakeRow(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set: (p) => { v = { ...v, ...p }; },
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    push: (p) => { v = { ...v, ...p }; subs.forEach((f) => f(v)); },
+    flush: async () => {}, load: async () => v, startPolling() {}, destroy() {},
+  };
+}
+function fakeOutput() {
+  const said = [];
+  return { said, say(text) { said.push(text); return `u${said.length}`; }, cancel() {} };
+}
+// A memory plays handle holding FIX, filed the way the players file them.
+async function fixturePlays(rows = FIX) {
+  let clock = 0;
+  const p = createPlays({ store: memoryPlayStore(), now: () => clock });
+  for (const e of rows) { clock = Date.parse(e.created_at); await p.log({ ...e.data, panel: `${e.data.source}-${e.data.screen}` }); }
+  return p;
+}
+function host() { const h = document.createElement('div'); document.getElementById('host').append(h); return h; }
+function mountChart(extra = {}) {
+  const h = host();
+  const bus = extra.bus || createBus();
+  const output = extra.output || fakeOutput();
+  const state = extra.state || fakeRow();
+  const inst = mountModule('charts', { mount: h, bus, state, instanceId: extra.instanceId || 'ch-1', personId: null,
+    profileId: S, now: () => NOW, output, ...extra });
+  inst.init();
+  return { h, bus, output, state, inst, probe: () => inst.impl.__probe(), done() { inst.destroy(); h.remove(); } };
+}
+
+(async () => {
+  try {
+    // =================================================================================================
+    section('the windows: local calendar time, a week from Monday (points.js), the month from the 1st');
+    {
+      const t = windowRange('today', NOW), w = windowRange('week', NOW), m = windowRange('month', NOW), a = windowRange('all', NOW);
+      check('today starts at local midnight', t.since === new Date(2026, 9, 7).getTime());
+      check('this week starts Monday the 5th (the scoreboard\'s week)', w.since === new Date(2026, 9, 5).getTime());
+      check('this month starts on the 1st', m.since === new Date(2026, 9, 1).getTime());
+      check('all time has no start', a.since === null && a.until === null);
+      check('an unknown window is a week', windowRange('fortnight', NOW).since === w.since);
+    }
+
+    section('which plays count: this screen only, Spotify never, the window');
+    {
+      const week = countedPlays(FIX, { win: 'week', screen: S, now: NOW });
+      check('this week on this screen: 9 plays (Spotify\'s 10 and the other screen\'s 9 left out)', week.length === 9, week.length);
+      check('*** no Spotify play is ever counted under "everything" ***', !week.some((e) => e.data.source === 'spotify') && LEFT_OUT.includes('spotify'));
+      check('*** no other screen\'s play is counted ***', !week.some((e) => e.data.screen !== S));
+      check('Spotify is not one of the choices a person is offered', !WHAT_CHOICES.includes('spotify'));
+      check('today 4, this month 11, all time 12', totalPlays(FIX, { win: 'today', screen: S, now: NOW }) === 4
+        && totalPlays(FIX, { win: 'month', screen: S, now: NOW }) === 11 && totalPlays(FIX, { win: 'all', screen: S, now: NOW }) === 12);
+      check('one source: YouTube this week is 6', totalPlays(FIX, { win: 'week', what: 'youtube', screen: S, now: NOW }) === 6);
+    }
+
+    section('top-N, with names');
+    {
+      const top = topPlays(FIX, { win: 'week', screen: S, now: NOW, labels: LABELS });
+      check('most first: vidA 4, Song One 3, vidB 2', J(top.map((r) => [r.key, r.value])) === J([['vidA', 4], ['s1:Music/Song One.mp3', 3], ['vidB', 2]]), J(top));
+      check('a name a player gave is used ("Morning hymns")', top[0].label === 'Morning hymns');
+      check('a folder song keeps its own title', top[1].label === 'Song One');
+      check('an id with no name says what it is ("YouTube video vidB")', top[2].label === 'YouTube video vidB');
+      check('a file\'s id is shown as its name without folder or extension', labelFor({ key: 'Pictures/beach.jpg', source: 'photos' }) === 'beach');
+      check('top 2 keeps two', topPlays(FIX, { win: 'week', top: 2, screen: S, now: NOW }).length === 2);
+      const kinds = topPlays(FIX, { win: 'week', count: 'source', screen: S, now: NOW });
+      check('by kind: YouTube 6, Music from folders 3', J(kinds.map((r) => [r.label, r.value])) === J([['YouTube', 6], ['Music from folders', 3]]), J(kinds));
+      const rest = withRest(kinds, 1);
+      check('a pie\'s rest adds up: YouTube 6 and Everything else 3', rest.length === 2 && rest[1].rest && rest[1].value === 3 && rest[1].label === 'Everything else');
+      check('no rest row when everything fits', withRest(kinds, 5).length === 2);
+      const artists = chartModel(FIX, { count: 'by' }, { screen: S, now: NOW });
+      check('*** by artist with none kept says so plainly, and invents none ***', artists.empty && /Only music from folders/.test(artists.emptyText), artists.emptyText);
+    }
+
+    section('counts over time: every bucket present');
+    {
+      const today = playsOverTime(FIX, { win: 'today', screen: S, now: NOW });
+      check('today: one bucket per hour up to 3 PM (16), hours 9, 10, 11 and 2 PM have one each', today.unit === 'hour' && today.buckets.length === 16
+        && J(today.buckets.filter((b) => b.value).map((b) => b.label)) === J(['9 AM', '10 AM', '11 AM', '2 PM']), J(today.buckets.filter((b) => b.value)));
+      const week = playsOverTime(FIX, { win: 'week', screen: S, now: NOW });
+      check('this week: Mon 0, Tue 5, Wed 4 (a day with none is a 0, not a gap)', week.unit === 'day' && J(week.buckets.map((b) => [b.label, b.value])) === J([['Mon', 0], ['Tue', 5], ['Wed', 4]]), J(week.buckets));
+      check('the long name is for the table and the voice ("Tuesday October 6")', week.buckets[1].long === 'Tuesday October 6');
+      const month = playsOverTime(FIX, { win: 'month', screen: S, now: NOW });
+      check('this month: 7 days, the 2nd has 2', month.buckets.length === 7 && month.buckets[1].value === 2);
+      const all = playsOverTime(FIX, { win: 'all', screen: S, now: NOW });
+      check('all time: by month from the first play - September 1, October 11', all.unit === 'month' && J(all.buckets.map((b) => b.value)) === J([1, 11]), J(all.buckets));
+      check('nothing at all: no buckets', playsOverTime([], { win: 'all', now: NOW }).buckets.length === 0);
+    }
+
+    section('the model, the table and the spoken answer agree');
+    {
+      check('the default is "Top played this week", bars, five', J(normalizeChart({})) === J(CHART_DEFAULTS)
+        && chartTitle({}) === 'Top played this week' && CHART_DEFAULTS.show === 'bar' && CHART_DEFAULTS.top === 5);
+      check('titles say what is shown', chartTitle({ show: 'line', win: 'month' }) === 'Plays each day this month'
+        && chartTitle({ show: 'number', win: 'today' }) === 'Plays today' && chartTitle({ show: 'pie', count: 'source' }) === 'What played, by kind, this week'
+        && chartTitle({ what: 'youtube', win: 'all' }) === 'YouTube: top played, all time');
+      const m = chartModel(FIX, {}, { screen: S, now: NOW, labels: LABELS });
+      const t = chartTable(m);
+      check('the table: caption is the title, two columns, one row per bar', t.caption === m.title && t.head.length === 2 && t.rows.length === 3
+        && t.rows[0][0] === '1. Morning hymns' && t.rows[0][1] === '4', J(t));
+      check('*** the spoken answer reads the same rows: "This week, the most played was Morning hymns, 4 plays; then Song One, 3 plays; then YouTube video vidB, 2 plays." ***',
+        spokenAnswer(m) === 'This week, the most played was Morning hymns, 4 plays; then Song One, 3 plays; then YouTube video vidB, 2 plays.', spokenAnswer(m));
+      check('it says no more than asked', spokenAnswer(m, { limit: 1 }) === 'This week, the most played was Morning hymns, 4 plays.');
+      const pie = chartModel(FIX, { show: 'pie', count: 'source', top: 1 }, { screen: S, now: NOW });
+      check('a pie\'s table carries the share', J(chartTable(pie).rows) === J([['1. YouTube', '6 (67%)'], ['Everything else', '3 (33%)']]), J(chartTable(pie).rows));
+      const line = chartModel(FIX, { show: 'line', win: 'week' }, { screen: S, now: NOW });
+      check('a line\'s table is day by day, and its answer names the busiest day',
+        chartTable(line).head[0] === 'Day' && chartTable(line).rows.length === 3
+          && spokenAnswer(line) === 'This week, 9 plays. The most was Tuesday October 6, 5 plays.', spokenAnswer(line));
+      const num = chartModel(FIX, { show: 'number', win: 'today' }, { screen: S, now: NOW });
+      check('one number: "Today, 4 plays."', num.total === 4 && spokenAnswer(num) === 'Today, 4 plays.', spokenAnswer(num));
+      const none = chartModel([], {}, { screen: S, now: NOW });
+      check('nothing played: "Nothing has played this week." in the model and aloud', none.empty && spokenAnswer(none) === 'Nothing has played this week.', spokenAnswer(none));
+      check('one play is "1 play", not "1 plays"', /1 play\./.test(spokenAnswer(chartModel([FIX[3]], { win: 'today' }, { screen: S, now: NOW }))));
+    }
+
+    section('the drawings: SVG, theme colours only, hidden from a screen reader (the table is read)');
+    {
+      const m = chartModel(FIX, {}, { screen: S, now: NOW, labels: LABELS });
+      const bar = barSvg(m.rows);
+      check('bars: one bar per row, aria-hidden, drawn in a theme variable', (bar.match(/<rect /g) || []).length === 3 && /aria-hidden="true"/.test(bar) && /fill="var\(--pc-1, var\(--link\)\)"/.test(bar));
+      check('*** no literal colour in any drawing ***', ![bar, lineSvg(playsOverTime(FIX, { win: 'week', screen: S, now: NOW })), pieSvg(withRest(m.rows, 2))].some((s) => /#[0-9a-f]{3,8}\b|rgb\(/i.test(s)));
+      const pie = pieSvg(withRest(topPlays(FIX, { count: 'source', screen: S, now: NOW }), 1), { colours: 3 });
+      check('a pie: two slices, the top one numbered, the rest dashed', (pie.match(/<path /g) || []).length === 2 && /class="pc-slice-num"[^>]*>1</.test(pie) && /pc-rest/.test(pie));
+      check('a pie of one thing is a whole circle', /<circle /.test(pieSvg([{ key: 'a', label: 'A', value: 3 }])));
+      check('a line: points for every bucket', (lineSvg(playsOverTime(FIX, { win: 'week', screen: S, now: NOW })).match(/<circle /g) || []).length === 3);
+    }
+
+    section('*** colours that read: the main series clears 3:1 against the surface on EVERY theme, still and moving ***');
+    {
+      const ids = Object.keys(THEMES);
+      const bad = ids.filter((id) => { const c = seriesColours(THEMES[id].vars); return !c.length || (c[0].contrast != null && c[0].contrast < SHAPE_MIN); });
+      check(`all ${ids.length} themes have a series colour at 3:1 or better (normal vision and deuteranopia)`, bad.length === 0, bad.join(','));
+      const moving = ids.filter((id) => THEMES[id].scene);
+      check('...and that includes the moving themes', moving.length > 0, String(moving.length));
+      const textBad = ids.filter((id) => contrast(THEMES[id].vars['--text'], THEMES[id].vars['--surface']) < TEXT_MIN);
+      check('the chart\'s words (--text on --surface, its own card) clear 4.5:1 on every theme', textBad.length === 0, textBad.join(','));
+      check('Nimrod (light): bars in --link', seriesColours(THEMES.default.vars)[0].token === '--link');
+      check('a token that does not read on the surface is skipped', seriesColours({ '--surface': '#ffffff', '--link': '#fefefe', '--accent': '#105666' })[0].token === '--accent');
+    }
+
+    // =================================================================================================
+    section('the module: registered, described, reachable');
+    {
+      const m = getManifest('charts');
+      check('registered, on the new core, dependsOn local', m && m.core === 'new' && m.dependsOn === 'local');
+      check('described in the catalog under Keeping track, and tagged for the library', CATALOG.some((c) => c.type === 'charts' && c.group === 'record')
+        && J(MODULE_CATEGORIES.charts) === J(['tracking', 'visual']));
+      check('it has decided what its silence means', expectFor('charts').idle === true);
+      check('a switch reaches it: next / prev / select', ['next', 'prev', 'select'].every((v) => verbsFor('charts').includes(v)));
+      check('every setting is a short choice (cheap to walk with one switch)', CHART_SETTINGS.every((s) => s.kind === 'choice' && s.options.length <= 5));
+      const words = J(CATALOG.find((c) => c.type === 'charts')) + J(m) + J(CHART_SETTINGS) + J(VIEWS);
+      check('*** site copy names nobody: no "her screen", no Christine, no Cici ***', !/her screen|christine|cici/i.test(words));
+    }
+
+    section('a panel on a screen: the default card, the hidden table, the buttons');
+    {
+      const plays = await fixturePlays();
+      const answering = createBus();
+      answering.subscribe(PLAY_LABELS_TOPIC, (ask) => ask.answer('youtube', { vidA: 'Morning hymns' }));
+      let fetches = 0;
+      const realFetch = window.fetch;
+      window.fetch = (...a) => { fetches += 1; return realFetch(...a); };
+      const c = mountChart({ plays, bus: answering });
+      await tick(5);
+      const root = () => c.h.querySelector('[data-charts]');
+      check('*** a new panel shows "Top played this week" with nothing wired ***', c.h.querySelector('[data-title]')?.textContent === 'Top played this week');
+      check('bars drawn', (c.h.querySelectorAll('.pc-svg rect').length === 3));
+      const table = c.h.querySelector('table[data-reading]');
+      check('*** a real table is there for a screen reader, hidden from sight only ***', table && table.classList.contains('pc-sr')
+        && table.querySelector('caption')?.textContent === 'Top played this week' && table.querySelectorAll('tbody tr').length === 3);
+      check('...and the drawing is aria-hidden, so it is read once, as the table', c.h.querySelector('.pc-svg')?.getAttribute('aria-hidden') === 'true');
+      check('the YouTube panel\'s name for its own video is used, in memory only', table.textContent.includes('Morning hymns') && c.probe().labels['youtube:vidA'] === 'Morning hymns'
+        && !J(plays.get().events).includes('Morning hymns'));
+      check('*** the other screen\'s plays and Spotify\'s are nowhere in it ***', !root().textContent.includes('vidZ') && !/spotify/i.test(table.textContent));
+      // Say it
+      c.h.querySelector('[data-act="say"]').click();
+      check('*** "Say it" says the chart: "This week, the most played was Morning hymns, 4 plays; ..." ***',
+        c.output.said.at(-1) === 'This week, the most played was Morning hymns, 4 plays; then Song One, 3 plays; then YouTube video vidB, 2 plays.', c.output.said.at(-1));
+      check('...and what it said stays on screen, in a polite live region', c.h.querySelector('[data-said]')?.getAttribute('aria-live') === 'polite'
+        && c.h.querySelector('[data-said]').textContent.startsWith('This week'));
+      // Show as a list
+      c.h.querySelector('[data-act="aslist"]').click();
+      check('*** "Show as a list": the same table, now visible, and the drawing gone ***', !c.h.querySelector('table[data-reading]').classList.contains('pc-sr')
+        && !c.h.querySelector('.pc-svg') && c.state.get().asList === true
+        && c.h.querySelector('[data-act="aslist"]').getAttribute('aria-pressed') === 'true' && c.h.querySelector('[data-act="aslist"]').textContent === 'Show the chart');
+      c.h.querySelector('[data-act="aslist"]').click();
+      check('...and back to the chart', !!c.h.querySelector('.pc-svg') && c.state.get().asList === false);
+      // Next view walks the ready-made ones
+      check('the ready-made views start at the default', VIEWS[0].id === 'top-week' && nextView({}).id === 'each-day');
+      c.h.querySelector('[data-act="view"]').click();
+      check('*** "Next view": plays each day this month, as a line, saved on the panel ***', c.h.querySelector('[data-title]').textContent === 'Plays each day this month'
+        && !!c.h.querySelector('.pc-line') && c.state.get().show === 'line' && c.state.get().win === 'month');
+      c.h.querySelector('[data-act="view"]').click();
+      check('...then today in one number: 4', c.h.querySelector('[data-total]')?.textContent === '4' && !c.h.querySelector('[data-act="aslist"]'));
+      c.h.querySelector('[data-act="view"]').click();
+      check('...then by kind, as a pie with a legend', !!c.h.querySelector('.pc-pie') && c.h.querySelectorAll('.pc-legend li').length === 2);
+      c.h.querySelector('[data-act="view"]').click();
+      check('...then of all time, as a list (the table, visible)', c.h.querySelector('[data-kind]').dataset.kind === 'list'
+        && !c.h.querySelector('table[data-reading]').classList.contains('pc-sr') && c.h.querySelector('[data-title]').textContent === 'Top played, all time');
+      c.h.querySelector('[data-act="view"]').click();
+      check('...and round to the start', c.h.querySelector('[data-title]').textContent === 'Top played this week');
+      // A setting changed in the menu reaches the panel.
+      c.state.push({ show: 'pie', count: 'item', top: 2 });
+      check('a setting changed elsewhere redraws it (a pie of the top 2 and the rest)', c.h.querySelectorAll('.pc-legend li').length === 3);
+      // A new play on this screen shows without anybody pressing anything.
+      c.state.push({ show: 'bar', top: 5 });
+      await plays.log({ source: 'youtube', id: 'vidB', panel: 'youtube-scr-1', screen: S });
+      await tick(5);
+      check('a new play redraws it by itself', c.probe().model.rows.find((r) => r.key === 'vidB')?.value === 3);
+      check('*** nothing was fetched: the chart reads this device and nothing else ***', fetches === 0, String(fetches));
+      window.fetch = realFetch;
+      c.done();
+    }
+
+    section('a switch: the first select says it; next / prev walk the buttons');
+    {
+      const plays = await fixturePlays();
+      const c = mountChart({ plays });
+      await tick(5);
+      c.bus.publish('charts/select');
+      check('*** one press with nothing lit says the chart ***', c.output.said.length === 1 && c.output.said[0].startsWith('This week, the most played was'));
+      c.bus.publish('charts/next');
+      check('next lights the first button', c.h.querySelector('[data-on="1"]')?.dataset.act === 'say');
+      c.bus.publish('charts/next');
+      c.bus.publish('charts/select');
+      check('select presses the lit one ("Show as a list")', c.probe().asList === true);
+      c.bus.publish('charts/prev'); c.bus.publish('charts/prev');
+      check('prev wraps to the last button', c.h.querySelector('[data-on="1"]')?.dataset.act === 'view');
+      c.done();
+    }
+
+    section('*** "computer please, what played most": the phrase, the action, the answer, end to end ***');
+    {
+      check('the phrases are routes to two screen actions', routeFor('what played most') === 'charts-week' && routeFor('most played today') === 'charts-today'
+        && routeAction('charts-week') === 'charts/say-week' && routeAction('charts-today') === 'charts/say-today');
+      const reg = createDefaultRegistry();
+      check('both actions are registered, on charts/say', CHART_ACTIONS.every((a) => reg.has(a.id) && reg.get(a.id).topic === CHARTS_SAY_TOPIC));
+      const mine = ['charts-week', 'charts-today'].flatMap((id) => ROUTES[id].phrases);
+      check('every phrase is plain, four words at most', mine.every((p) => p === normalize(p) && p.split(' ').length <= 4), mine.join('|'));
+      check('no phrase clashes with any other', duplicatePhrases(spokenTable(PHRASES, ROUTES)).length === 0);
+      const bus = createBus();
+      const input = createInputBus({ bus, actions: reg });
+      SPEECH_BINDINGS.forEach((b) => input.addBinding(b));
+      let feed = null;
+      const rec = { start(cb) { feed = cb; this.running = true; }, stop() {}, running: false };
+      const sp = attachSpeech(input, { recognizer: rec, confirm: 'off' });
+      sp.start();
+      const plays = await fixturePlays();
+      const a = mountChart({ plays, bus, instanceId: 'ch-a' });
+      const b = mountChart({ plays, bus, instanceId: 'ch-b', state: fakeRow({ win: 'all' }) });
+      await tick(5);
+      feed('Computer please, what played most?');
+      check('*** said aloud: this week\'s top three ***', a.output.said.length === 1 && a.output.said[0].startsWith('This week, the most played was'), J(a.output.said));
+      check('*** only ONE panel answers (the first), so two never talk over each other ***', b.output.said.length === 0);
+      feed('computer please most played today');
+      check('"most played today": today\'s - "Today, the most played was Song One, 3 plays; then YouTube video vidA, 1 play."',
+        a.output.said[1] === 'Today, the most played was Song One, 3 plays; then YouTube video vidA, 1 play.', a.output.said[1]);
+      feed('what played most');
+      check('behind the wake phrase like every other command', a.output.said.length === 2);
+      a.done();
+      feed('computer please what played most');
+      check('the first panel gone, the next one answers', b.output.said.length === 1 && b.output.said[0].startsWith('This week'));
+      b.done();
+      sp.destroy(); input.destroy();
+    }
+
+    section('whose plays: this screen\'s own; with no screen, an example and never the device\'s');
+    {
+      const plays = await fixturePlays();
+      const other = mountChart({ plays, profileId: 'scr-2', instanceId: 'ch-o' });
+      await tick(5);
+      check('*** the other screen sees only its own: vidZ, 9 ***', J(other.probe().model.rows.map((r) => [r.key, r.value])) === J([['vidZ', 9]]));
+      other.done();
+      const empty = mountChart({ plays, profileId: 'scr-3', instanceId: 'ch-e' });
+      await tick(5);
+      check('a screen that has played nothing says so', empty.h.querySelector('[data-empty]')?.textContent === 'Nothing has played this week.');
+      empty.done();
+      const ex = mountChart({ profileId: null, instanceId: 'ch-x' });
+      await tick(5);
+      check('*** no screen (trying it out): an example, labelled, not this device\'s plays ***', ex.probe().example === true
+        && !!ex.h.querySelector('[data-example]') && ex.h.querySelector('table[data-reading]').textContent.includes('Example song A'));
+      check('the example is all made up', examplePlays(NOW).every((e) => /^example-/.test(e.data.id)));
+      ex.done();
+    }
+
+    section('the YouTube panel names its own videos when a chart asks');
+    {
+      const h = host();
+      const mem = (seed) => { let d = { ...seed }; const subs = new Set();
+        return { load: async () => d, get: () => d, set: (p) => { d = { ...d, ...p }; subs.forEach((f) => f(d)); },
+          subscribe: (f) => { subs.add(f); f(d); return () => subs.delete(f); }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} }; };
+      const evs = { load: async () => {}, get: () => ({ events: [], total: 0 }), append: async () => {}, subscribe: () => () => {}, startPolling() {}, destroy() {} };
+      const factory = () => ({ load() {}, cue() {}, cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} });
+      const bus = createBus();
+      const yt = mountModule('youtube', { mount: h, bus, instanceId: 'yt-lab', user: 'charts-test', events: evs, playerFactory: factory,
+        plays: createPlays({ store: memoryPlayStore() }), state: mem({ autostart: false, playlist: [{ id: 'vidA', title: 'Morning hymns' }, { id: 'vidQ', title: 'vidQ' }] }) });
+      yt.init();
+      await tick(20);
+      const got = [];
+      bus.publish(PLAY_LABELS_TOPIC, { ids: { youtube: ['vidA', 'vidQ', 'vidNope'] }, answer: (src, map) => got.push([src, map]) });
+      check('*** it answers with the titles it holds, and only real ones ***', J(got) === J([['youtube', { vidA: 'Morning hymns' }]]), J(got));
+      check('the topic is the one plays.js names', PLAY_LABELS_TOPIC === PLAYS_LABELS_TOPIC && PLAY_LABELS_TOPIC === 'plays/labels');
+      yt.destroy(); h.remove();
+    }
+
+    section('folder songs are plays now (source "folder", with the file\'s name)');
+    {
+      check('the name is the file without folder or extension', trackTitle('Music/Hits/Song One.mp3') === 'Song One' && trackTitle('x.flac') === 'x');
+      const told = [];
+      const els = [];
+      const makeAudio = () => { const l = {}; const el = { volume: 1, paused: true,
+        addEventListener: (t, f) => { (l[t] = l[t] || []).push(f); }, fire: (t) => (l[t] || []).forEach((f) => f()),
+        play() { this.paused = false; return Promise.resolve(); }, pause() { this.paused = true; }, removeAttribute() {}, load() {} };
+        els.push(el); return el; };
+      const lm = createLocalMusic({ sources: { list: async () => [{ id: 's1' }] }, resolveItem: async () => ({ url: 'blob:x' }),
+        makeAudio, onTrack: (t) => told.push(t) });
+      await lm.playFile({ sourceId: 's1', path: 'Music/Song One.mp3' });
+      check('not counted until it actually plays', told.length === 0);
+      els[0].fire('playing'); els[0].fire('playing');
+      check('*** counted once when it starts playing, with source, path and name ***', told.length === 1
+        && J(told[0]) === J({ sourceId: 's1', path: 'Music/Song One.mp3', title: 'Song One' }), J(told));
+      lm.destroy();
+      const plays = createPlays({ store: memoryPlayStore() });
+      const fl = panelPlays({ plays, instanceId: 'music-1', profileId: S }, 'folder');
+      await fl.played('s1:Music/Song One.mp3', { title: 'Song One' });
+      const row = plays.plays({ source: 'folder' })[0];
+      check('the panel handle files it with its title (a folder keeps text)', row && row.data.title === 'Song One' && row.data.screen === S);
+      const yl = panelPlays({ plays, instanceId: 'yt-1', profileId: S }, 'youtube');
+      await yl.played('vidA', { title: 'Morning hymns' });
+      check('*** a YouTube play still keeps no title, even when one is handed in ***', !('title' in plays.plays({ source: 'youtube' })[0].data));
+      fl.destroy(); yl.destroy();
+    }
+
+    section('on a themed page: the panel picks its bar colour from the theme in front of it');
+    {
+      const plays = await fixturePlays();
+      for (const id of ['default', Object.keys(THEMES).find((k) => THEMES[k].scene)]) {
+        const wrap = host();
+        applyTheme(wrap, id);
+        const inner = document.createElement('div'); wrap.append(inner);
+        const inst = mountModule('charts', { mount: inner, bus: createBus(), state: fakeRow(), instanceId: `ch-t-${id}`, personId: null, profileId: S,
+          now: () => NOW, plays, output: fakeOutput() });
+        inst.init();
+        await tick(5);
+        const root = inner.querySelector('[data-charts-root]');
+        const set = root.style.getPropertyValue('--pc-1').trim();
+        const token = set.replace(/^var\((--[a-z-]+)\)$/, '$1');
+        const cs = getComputedStyle(root);
+        const c = contrast(cs.getPropertyValue(token).trim(), cs.getPropertyValue('--surface').trim());
+        check(`${THEMES[id].label}: bars in ${token}, ${c.toFixed(2)}:1 against the chart's surface`, /^--/.test(token) && c >= SHAPE_MIN, `${set} ${c}`);
+        inst.destroy(); wrap.remove();
+      }
+    }
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+  }
+  const s = document.getElementById('summary');
+  s.textContent = failed === 0 ? `ALL PASS - ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  s.className = failed === 0 ? 'pass' : 'fail';
+})();
+</script>
+</body>
+</html>

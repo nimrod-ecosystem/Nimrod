@@ -104,6 +104,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   word_builder: ['games', 'learning'], brain_games: ['games', 'learning'], name_that: ['games', 'learning', 'people'],
   solitaire: ['games'], brickbreaker: ['games'], rhythm: ['games'], sprint: ['tools'], quests: ['games', 'tracking'],
   progress: ['tracking'], calculator: ['tools'], reading_log: ['tracking'], scoreboard: ['tracking', 'games'],
+  charts: ['tracking', 'visual'],   // (2026-10-07, row 2.62) what played, drawn: keeping track, and something to look at
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
   themes: ['visual', 'tools'],   // (2026-10-06) the theme picker as a panel: something to look at, and a setting

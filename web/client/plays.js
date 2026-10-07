@@ -62,6 +62,10 @@ export const PLAYS_STREAM = 'plays';          // the stream name the server now 
 export const PLAYS_TOPIC = 'plays/logged';    // bus topic - a live nudge, NOT the record
 export const PLAY_KIND = 'play';
 export const PLAYS_DB = 'nimrod-plays';       // this browser's IndexedDB database
+// A chart asking the players on the screen what its ids are called (play_charts.js; row 2.62, step 2). Payload:
+// { ids: { <source>: [id, ...] }, answer(source, { id: name }) }. Here, not in play_charts.js, so a player module
+// answering it imports nothing a chart needs. Names answered are held in memory while drawing and never kept.
+export const PLAY_LABELS_TOPIC = 'plays/labels';
 
 // EVERY NUMBER HERE IS A DEFAULT (Rule 1), overridable per handle.
 //   keepText  sources whose title/artist may be kept in the record (argued above)
@@ -403,7 +407,7 @@ export function devicePlays() {
 
 /**
  * ONE PANEL'S PLAYS, for a player module: what it calls instead of appending `play` to its events.
- *   played(id)        file a play of `id` from this panel
+ *   played(id, more?) file a play of `id` from this panel (`more.title` / `more.by` where the source keeps text)
  *   stats()           the picker's stats for this panel and source
  *   subscribe(fn)     fn(stats) now, when the panel's rows load, and after every play
  *   rows()            this panel's plays (the suites read them)
@@ -439,7 +443,9 @@ export function panelPlays(ctx = {}, source) {
   return {
     panel,
     source,
-    played: (id) => log.log({ source, id, panel, screen })
+    // `more`: { title, by } - kept only for a source in `keepText` (a folder's own file names; row 2.62 step 2).
+    played: (id, more = null) => log.log({ ...(more && typeof more === 'object' ? { title: more.title, by: more.by } : {}),
+      source, id, panel, screen })
       .then((data) => { if (data && history && log.store) history.sync('plays', log.store, panel, { soon: true }); return data; })
       .catch((e) => { console.error(`${source}: play log`, e); return null; }),
     stats,
