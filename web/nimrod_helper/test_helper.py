@@ -114,9 +114,10 @@ def plan_tests(tmp: Path):
           len(p5) == 1 and p5[0]['argv'] is None and 'no folder' in p5[0]['why'])
     s6 = S.merged(S.DEFAULTS, {'speech': {'on': False}, 'media': {'on': True, 'folder': 'D:/Pics', 'name': 'Den'}})
     a6 = SV.plan(s6, app, 'PY', data)[0]['argv']
-    check('plan: media with a folder runs the agent on it, allowing the person\'s Nimrod, on 8770',
+    check('plan: media with a folder runs the agent on it, allowing the sites the status page allows, on 8770',
           a6 == ['PY', str(app / 'media_agent' / 'agent.py'), '--root', 'D:/Pics', '--port', '8770',
-                 '--platform', 'https://nimrodecosystem.com', '--name', 'Den'], a6)
+                 '--platform', 'https://nimrodecosystem.com',
+                 '--origin', 'https://nimrodecosystem.com,https://nimrod.onrender.com', '--name', 'Den'], a6)
     check('plan: nothing on -> nothing runs', SV.plan(S.merged(S.DEFAULTS, {'speech': {'on': False}}), app, 'PY', data) == [])
     pyw = tmp / 'pythonw.exe'
     pyw.write_text('')
@@ -144,7 +145,8 @@ def origin_tests():
              'http://127.0.0.1.evil.example', 'https://nimrodecosystem.com.evil.example', 'https://localhost:8000']
     differ = [o for o in cases if ok(o, st) != SP.origin_allowed(o, SP.DEFAULT_SITES)]
     check('*** speech program and status page agree on every site (a page with an Origin) ***', not differ, differ)
-
+    check('status page: "on this computer" and the Host check are the speech program\'s own, not a copy',
+          SV.LOCAL_ORIGIN is SP.LOCAL_ORIGIN and SV.host_refusal is SP.host_refusal)
 
 # ---------------------------------------------------------------------- one part, restarted ----
 class FakeProc:
@@ -250,6 +252,26 @@ def part_tests(tmp: Path):
     check('*** part: the other copy is gone -> the helper starts its own ***',
           len(bprocs) == 1 and bp.state == 'starting' and bp.note == '', (bprocs, bp.state, bp.note))
 
+    # A part that STOPPED, whose port is then taken by a copy started by hand: the helper's look finds the port
+    # busy, and nothing restarted - so nothing is counted until the helper really starts its own again.
+    rbusy = [False]
+    rprocs = []
+    rp = SV.Part(mspec, tmp / 'logs', popen=lambda argv, **kw: (rprocs.append(argv), FakeProc())[1],
+                 clock=lambda: t[0], probe=lambda port: rbusy[0])
+    rp.start()
+    rp.proc.code = 1
+    rp.poll()
+    rbusy[0] = True
+    t[0] = rp.next_at
+    rp.poll()
+    check('*** part: stopped, then its port is busy when it would start again -> no restart counted ***',
+          rp.state == 'waiting' and rp.restarts == 0 and len(rprocs) == 1, (rp.state, rp.restarts, len(rprocs)))
+    rbusy[0] = False
+    t[0] = rp.next_at
+    rp.poll()
+    check('part: ...and counted once when the helper does start it again', rp.restarts == 1 and len(rprocs) == 2
+          and rp.state == 'starting', (rp.restarts, len(rprocs), rp.state))
+
     def bad_popen(argv, **kw):
         raise OSError('no such program')
     b = SV.Part(spec, tmp / 'logs', popen=bad_popen, clock=lambda: t[0], probe=lambda port: False)
@@ -314,6 +336,22 @@ def live_tests(tmp: Path):
                                               'Access-Control-Request-Private-Network': 'true'})
         with urllib.request.urlopen(req, timeout=2) as r:
             check('live: the private-network preflight is answered', r.headers.get('Access-Control-Allow-Private-Network') == 'true')
+
+        # DNS rebinding: a site whose name points at 127.0.0.1 sends ITS name as Host (and no Origin).
+        def status_with_host(host, method='GET'):
+            req = urllib.request.Request(f'http://127.0.0.1:{hport}/status', method=method, headers={'Host': host})
+            try:
+                with urllib.request.urlopen(req, timeout=2) as r:
+                    return r.status, r.read()
+            except urllib.error.HTTPError as err:
+                return err.code, err.read()
+        code, body = status_with_host('evil.example')
+        check('*** live: /status with a Host that is not this computer -> 403, and nothing about the parts ***',
+              code == 403 and b'parts' not in body, (code, body[:200]))
+        code, _ = status_with_host('evil.example', 'OPTIONS')
+        check('live: ...its preflight too', code == 403, code)
+        code, _ = status_with_host(f'localhost:{hport}')
+        check('live: a Host naming this computer goes on', code == 200, code)
         # The speech program speaks its protocol (a real WebSocket hello).
         try:
             from websockets.sync.client import connect

@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import signal
 import socket
 import subprocess
@@ -28,6 +27,8 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+from speech_service.service import LOCAL_ORIGIN, host_refusal
 
 from . import VERSION
 from . import settings as S
@@ -47,7 +48,9 @@ LOG_MAX_BYTES = 2 * 1024 * 1024
 # to say "getting the speech model ready" while it downloads.
 MODEL_REPOS = {'small.en': 'models--Systran--faster-whisper-small.en'}
 
-LOCAL_ORIGIN = re.compile(r'^http://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$')
+# Which pages count as "on this computer" (LOCAL_ORIGIN) and the Host check (host_refusal) are the speech
+# program's own (speech_service/service.py, "WHICH WEB PAGES"), imported rather than copied: the helper always
+# ships beside it (install_windows.py APP_PARTS), and one copy cannot drift from the other.
 CREATE_NO_WINDOW = 0x08000000
 
 
@@ -108,8 +111,11 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
             out.append({'name': 'media', 'label': 'Media agent', 'argv': None, 'cwd': str(app), 'port': port,
                         'env': {}, 'why': 'no folder chosen yet'})
         else:
+            # --origin: the same sites the status page and the speech program allow, so all three agree on what
+            # "the person's Nimrod" is (the agent alone would allow only --platform).
             argv = [python, str(app / 'media_agent' / 'agent.py'), '--root', folder, '--port', str(port),
                     '--platform', str(settings.get('platform') or S.DEFAULTS['platform']),
+                    '--origin', ','.join(allowed_sites(settings)),
                     '--name', str(md.get('name') or S.DEFAULTS['media']['name'])]
             out.append({'name': 'media', 'label': 'Media agent', 'argv': argv, 'cwd': str(app), 'port': port,
                         'env': {'PYTHONUNBUFFERED': '1'}, 'why': ''})
@@ -161,6 +167,7 @@ class Part:
         self.proc = None
         self.state = 'waiting' if spec.get('argv') is None else 'starting'
         self.restarts = 0
+        self.again = False      # the next real start is a restart (counted in start(), when it starts)
         self.fails = 0          # stops in a row, each sooner than STABLE_S after its start
         self.started_at = None
         self.next_at = 0.0
@@ -204,6 +211,9 @@ class Part:
         finally:
             f.close()
         self.started_at = self.clock()
+        if self.again:
+            self.restarts += 1
+            self.again = False
         self.state = 'starting'
         self.note = self._starting_note()
 
@@ -241,8 +251,10 @@ class Part:
         now = self.clock()
         if self.proc is None:
             if now >= self.next_at:
+                # A start after a stop (or a failed start) is a restart, COUNTED ONLY WHEN start() actually
+                # starts it: when it finds the port busy instead, nothing restarted (found 2026-10-07).
                 if self.state in ('restarting', 'failed'):
-                    self.restarts += 1
+                    self.again = True
                 self.start()
             return
         code = self.proc.poll()
@@ -385,7 +397,24 @@ def make_handler(sup: Supervisor):
                 if self.headers.get('Access-Control-Request-Private-Network') == 'true':
                     self.send_header('Access-Control-Allow-Private-Network', 'true')
 
+        def _refused(self) -> bool:
+            # DNS REBINDING (found 2026-10-07). A site can point its own name at 127.0.0.1; its page is then
+            # "same-site" with this server, sends no Origin, and could read /status. The server listens only on
+            # this computer, so a Host naming anything else is refused - the speech program's check, shared.
+            why = host_refusal(self.headers.get('Host'))
+            if not why:
+                return False
+            body = json.dumps({'ok': False, 'error': why}).encode()
+            self.send_response(403)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return True
+
         def do_OPTIONS(self):  # noqa: N802
+            if self._refused():
+                return
             self.send_response(204)
             self._cors()
             self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
@@ -393,6 +422,8 @@ def make_handler(sup: Supervisor):
             self.end_headers()
 
         def do_GET(self):  # noqa: N802
+            if self._refused():
+                return
             path = self.path.split('?')[0]
             if path == '/status':
                 body, kind = json.dumps(sup.status()).encode(), 'application/json'

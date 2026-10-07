@@ -120,13 +120,19 @@ def origin_allowed(origin, sites=DEFAULT_SITES) -> bool:
     return o in {str(s).rstrip('/') for s in (sites or ()) if s}
 
 
+def host_refusal(host) -> str:
+    """'' when a Host header names this computer (or there is none), else why not. For a server that listens
+    only on this computer; the helper's status page uses it too (nimrod_helper/supervisor.py)."""
+    if host and not LOCAL_HOST.match(str(host).strip()):
+        return f'host {str(host)[:200]} is not this computer'
+    return ''
+
+
 def refusal(origin, host, sites=DEFAULT_SITES, loopback: bool = True) -> str:
     """'' when the request may go on, else why not (said in the 403 and the log, never anything heard)."""
     if not origin_allowed(origin, sites):
         return f'origin {str(origin)[:200]} is not allowed'
-    if loopback and host and not LOCAL_HOST.match(str(host).strip()):
-        return f'host {str(host)[:200]} is not this computer'
-    return ''
+    return host_refusal(host) if loopback else ''
 
 
 def secrets_match(expected: str | None, given) -> bool:
@@ -337,6 +343,33 @@ class Session:
 _last_refusal = [0.0]
 
 
+# ONE COPY PER PORT (2026-10-07, the same fix as media_agent/agent.py "one copy per port"). uvicorn turns on
+# SO_REUSEADDR, and on Windows that lets a second program bind a port another is already listening on: a copy
+# started by hand beside the helper's both "start", and a page's socket goes to either one. So the service
+# makes its own socket and hands it to the server:
+#   * Windows: SO_EXCLUSIVEADDRUSE (Windows' own answer), so the second bind fails.
+#   * Elsewhere: SO_REUSEADDR, as uvicorn and asyncio set it there. It never lets two programs LISTEN on one
+#     port, and it lets a service that was just restarted bind again straight away.
+# It only BINDS here; the server starts listening once the model has loaded. Bound is enough to hold the port
+# (on Windows), and the helper reads "something answers on the port" as "running", so listening before the
+# model is ready would tell its status page the speech program is running while it is still loading.
+# Elsewhere two copies started in the same second can both bind; the second then fails when it starts to listen.
+def listen_socket(host: str, port: int):
+    """A TCP socket bound to host:port, for the server to listen on. Raises OSError when the port is taken."""
+    import socket
+    sock = socket.socket(socket.AF_INET6 if ':' in host else socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        if sys.platform == 'win32' and hasattr(socket, 'SO_EXCLUSIVEADDRUSE'):
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        else:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((host, int(port)))
+    except OSError:
+        sock.close()
+        raise
+    return sock
+
+
 def note_refusal(why: str, every_s: float = 10.0) -> None:
     """One line in the log for a refused page, at most one per 10 s: a page that keeps trying must not fill
     the log (the helper moves a log aside only when the part starts again)."""
@@ -411,7 +444,8 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
 
 async def serve_websockets(backend, host: str, port: int, secret: str | None = None,
                            max_utterance_s: float = MAX_UTTERANCE_S, ready=None, wake=None,
-                           sites=DEFAULT_SITES, loopback: bool | None = None):
+                           sites=DEFAULT_SITES, loopback: bool | None = None, sock=None):
+    """`sock`: a socket from listen_socket() to serve on (host and port are then only what it was bound to)."""
     from http import HTTPStatus
     from websockets.asyncio.server import serve
 
@@ -450,7 +484,8 @@ async def serve_websockets(backend, host: str, port: int, secret: str | None = N
         except Exception:  # noqa: BLE001 - the screen hung up
             pass
 
-    async with serve(handler, host, port, max_size=2 ** 20, process_request=guard) as server:
+    where = {'sock': sock} if sock is not None else {'host': host, 'port': port}
+    async with serve(handler, max_size=2 ** 20, process_request=guard, **where) as server:
         if ready is not None:
             ready.set()
         await server.serve_forever()

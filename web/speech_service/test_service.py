@@ -241,6 +241,10 @@ def origin_tests():
           all(refusal(SITE, h) == '' for h in ('127.0.0.1:8797', 'localhost:8797', 'LOCALHOST', '[::1]:8797', None, '')))
     check('*** host: listening on this computer, a Host naming another site is refused (DNS rebinding) ***',
           'host' in refusal(None, 'evil.example:8797') and 'host' in refusal(None, '127.0.0.1.evil.example'))
+    from speech_service.service import host_refusal
+    check('host_refusal (the check the helper\'s status page shares): this computer or no Host goes on; any other '
+          'name does not', all(host_refusal(h) == '' for h in ('127.0.0.1:8790', 'localhost', '[::1]:8790', None, ''))
+          and 'not this computer' in host_refusal('evil.example:8790') and host_refusal('127.0.0.1.evil.example') != '')
     check('host: listening on another address (Tailscale, with a secret), the name used is not checked',
           refusal(SITE, 'desk:8797', loopback=False) == '' and 'origin' in refusal(EVIL, 'desk:8797', loopback=False))
     import os
@@ -437,6 +441,94 @@ def websockets_tests():
     check('plain websockets: a page from the person\'s Nimrod -> hello', got == 'hello', got)
     got = asyncio.run(from_site('http://127.0.0.1:8000'))
     check('plain websockets: a page on this computer -> hello', got == 'hello', got)
+
+
+def port_lock_tests():
+    """ONE COPY PER PORT (2026-10-07): uvicorn's own bind sets SO_REUSEADDR, which on Windows let a copy started by
+    hand bind the port the helper's copy was already listening on. The service now binds its own socket."""
+    import subprocess
+    from speech_service import __main__ as cli
+    from speech_service.service import listen_socket
+
+    def answers(port):
+        try:
+            with socket.create_connection(('127.0.0.1', port), timeout=0.5):
+                return True
+        except OSError:
+            return False
+
+    port = free_port()
+    s = listen_socket('127.0.0.1', port)
+    try:
+        check('the port is held from the bind, but nothing answers until the server listens (so the helper does not '
+              'call it "running" while the model loads)', not answers(port))
+        if sys.platform == 'win32':
+            try:
+                listen_socket('127.0.0.1', port).close()
+                second = 'bound'
+            except OSError:
+                second = 'refused'
+            check('*** Windows: a second bind of the same port is refused (SO_EXCLUSIVEADDRUSE) ***', second == 'refused',
+                  second)
+    finally:
+        s.close()
+
+    err = OSError('taken')
+    same = cli.already_running('127.0.0.1', 1, err, probe=lambda h, p: {'ok': True, 'engine': 'fake', 'protocol': 1})
+    other = cli.already_running('127.0.0.1', 1, err, probe=lambda h, p: {})
+    none = cli.already_running('127.0.0.1', 1, err, probe=lambda h, p: None)
+    check('a taken port: this service -> 0 "already running"; another program, or nothing answering -> 3, each said',
+          same[0] == 0 and 'already running' in same[1] and other[0] == none[0] == cli.EXIT_PORT_TAKEN
+          and 'another program' in other[1] and 'loading its model' in none[1], (same, other, none))
+
+    web = Path(__file__).resolve().parent.parent
+
+    def run(port, *extra, wait=None):
+        argv = [sys.executable, '-m', 'speech_service', '--backend', 'fake', '--port', str(port), *extra]
+        p = subprocess.Popen(argv, cwd=str(web), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        if wait is None:
+            return p
+        try:
+            out, _ = p.communicate(timeout=wait)
+            return p.returncode, out
+        except subprocess.TimeoutExpired:
+            p.kill()
+            return None, p.communicate()[0]
+
+    def up(port, timeout=30):
+        end = time.time() + timeout
+        while time.time() < end:
+            if answers(port):
+                return True
+            time.sleep(0.2)
+        return False
+
+    for server in ('fastapi', 'websockets'):
+        port = free_port()
+        first = run(port, '--server', server)
+        try:
+            ok = up(port)
+            check(f'{server}: the first copy starts and listens', ok)
+            if not ok:
+                continue
+            code, out = run(port, wait=30)
+            want = 0 if server == 'fastapi' else cli.EXIT_PORT_TAKEN     # websockets serves no /health to ask
+            check(f'*** {server}: a second copy started by hand does not start beside it (exit {want}), and says so ***',
+                  code == want and 'not starting' in out, (code, out[-400:]))
+            check(f'{server}: ...and the first copy is still the one answering', first.poll() is None and answers(port))
+        finally:
+            first.kill()
+            first.wait(timeout=10)
+
+    holder = socket.socket()
+    holder.bind(('127.0.0.1', 0))
+    holder.listen(1)
+    try:
+        code, out = run(holder.getsockname()[1], wait=30)
+    finally:
+        holder.close()
+    check('a port another program holds: exit 3, said plainly', code == cli.EXIT_PORT_TAKEN and 'not starting' in out,
+          (code, out[-400:]))
 
 
 def read_wav(p: Path) -> bytes:
@@ -813,6 +905,7 @@ if __name__ == '__main__':
     fastapi_tests()
     fastapi_origin_tests()
     websockets_tests()
+    port_lock_tests()
     print(f'\n{"ALL PASS" if not failed else "FAILED"} - {passed} passed, {failed} failed')
     if '--real-whisper' in sys.argv:
         real_whisper(sys.argv[sys.argv.index('--real-whisper') + 1])

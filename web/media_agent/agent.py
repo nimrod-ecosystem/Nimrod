@@ -45,6 +45,7 @@ import argparse
 import json
 import os
 import posixpath
+import re
 import socket
 import sys
 import threading
@@ -71,7 +72,67 @@ MEDIA_EXTS = IMAGE_EXTS | VIDEO_EXTS | AUDIO_EXTS
 # Set once in main(); the handler reads them. Kept as globals because
 # BaseHTTPRequestHandler is instantiated per-request by the server.
 ROOT: Path = Path(".")
-ORIGIN: str = "*"
+SITES: tuple = ()          # the sites whose pages may use the agent (--origin); see "WHICH WEB PAGES" below
+CHECK_HOST: bool = True    # listening only on this computer: the Host header must name it too
+
+
+# ------------------------------------------------------------------ which web pages may use it
+# (found 2026-10-07: the agent answered any request, and sent its one CORS origin to every one of them.)
+#
+# *** THE SECURITY INVARIANT: a page from a site that is not on the list is refused (403) before the agent
+# lists, serves or says anything. ***
+#
+# THE SAME RULES AS THE SPEECH PROGRAM AND THE HELPER'S STATUS PAGE (speech_service/service.py, "WHICH WEB
+# PAGES"), so the three cannot disagree about which pages are the person's:
+#   * the sites given with --origin (the person's Nimrod; the helper passes its own list),
+#   * any page on this computer itself (http://127.0.0.1, localhost, [::1], any port: the dev server),
+#   * no Origin header at all: allowed. A plain <img>/<video> load sends none, nor does a program (curl, the
+#     helper's port check); a program can send any Origin it likes, so refusing it would guard nothing.
+#   * the literal Origin "null" (a sandboxed frame, a file opened from disk): refused, it names no site.
+#   * '*' in the list: any site (the old open setting, kept for anybody who chooses it; printed at start).
+# HOST, while the agent listens only on this computer: the Host header must name this computer too. That
+# stops DNS rebinding (a site pointing its own name at 127.0.0.1, so its page counts as same-site and sends
+# no Origin). With --lan or another --host the name a screen uses cannot be known here, so Host is not checked.
+#
+# COPIED, NOT IMPORTED, from speech_service/service.py (origin_allowed, refusal), argued: this agent is ONE
+# FILE with nothing to install - the helper ships only media_agent/agent.py, the Linux and Windows installers
+# run it on its own, and it promises Python 3.8, which service.py cannot be imported on (it uses `str | None`
+# at run time). test_agent.py runs both checks over the same table of origins and hosts and fails if they drift.
+LOCAL_ORIGIN = re.compile(r"^http://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$")
+LOCAL_HOST = re.compile(r"^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$", re.IGNORECASE)
+LOOPBACK = ("127.0.0.1", "localhost", "::1")
+
+
+def site_list(values) -> tuple:
+    """--origin values (each may be comma-separated) as a clean tuple, no repeats, no trailing slashes."""
+    out = []
+    for v in values or ():
+        for s in str(v).split(","):
+            s = s.strip().rstrip("/")
+            if s and s not in out:
+                out.append(s)
+    return tuple(out)
+
+
+def origin_allowed(origin, sites) -> bool:
+    """May a page from `origin` use the agent? None or '' (no header: not a CORS request) may."""
+    if origin is None or origin == "":
+        return True
+    if "*" in (sites or ()):
+        return True
+    o = str(origin).rstrip("/")
+    if LOCAL_ORIGIN.match(o):
+        return True
+    return o in {str(s).rstrip("/") for s in (sites or ()) if s}
+
+
+def refusal(origin, host, sites, check_host: bool = True) -> str:
+    """'' when the request may go on, else why not (said in the 403; never a file name or the folder)."""
+    if not origin_allowed(origin, sites):
+        return f"origin {str(origin)[:200]} is not allowed"
+    if check_host and host and not LOCAL_HOST.match(str(host).strip()):
+        return f"host {str(host)[:200]} is not this computer"
+    return ""
 
 
 def kind_of(name: str) -> str | None:
@@ -153,13 +214,30 @@ class Handler(SimpleHTTPRequestHandler):
     server_version = "NimrodMediaAgent/1.0"
 
     # --- CORS on every response, including file bytes and errors ---------------
+    # The page's own Origin is echoed when it is allowed (several sites can be, so one fixed value no longer
+    # fits); a request with no Origin needs no CORS header, and a refused one gets none.
     def end_headers(self):
-        self.send_header("Access-Control-Allow-Origin", ORIGIN)
+        allow = getattr(self, "_allow", "")
+        if allow:
+            self.send_header("Access-Control-Allow-Origin", allow)
         self.send_header("Vary", "Origin")
         self.send_header("Cross-Origin-Resource-Policy", "cross-origin")
         super().end_headers()
 
+    def _refused(self) -> bool:
+        """Checks the page (WHICH WEB PAGES, above). Refused: answers 403 itself and returns True."""
+        origin = self.headers.get("Origin")
+        why = refusal(origin, self.headers.get("Host"), SITES, CHECK_HOST)
+        if why:
+            self._allow = ""
+            self._json({"ok": False, "error": why}, HTTPStatus.FORBIDDEN)
+            return True
+        self._allow = origin or ""
+        return False
+
     def do_OPTIONS(self):  # CORS preflight
+        if self._refused():
+            return
         # PRIVATE NETWORK ACCESS. Chrome treats a request from a public page (the Nimrod
         # site) to a private address (this agent, on a LAN IP or localhost) as something
         # that needs explicit consent, and sends this preflight to ask for it. Without the
@@ -178,14 +256,18 @@ class Handler(SimpleHTTPRequestHandler):
         return urlparse(self.path).path
 
     def do_GET(self):
+        if self._refused():
+            return
         path = self._route()
         if path == "/health":
             # AGENT_ID is what lets the client tell "something is answering on this
             # address" apart from "the thing I just paired with is answering". Without it a
             # different agent on the same port, on a machine that took the same DHCP lease,
             # silently becomes somebody's photo source.
-            return self._json({"ok": True, "root": str(ROOT.resolve()), "origin": ORIGIN,
-                               "agent_id": AGENT_ID})
+            # ONLY WHAT THE SITE READS (media_sources.js: `ok` and `agent_id`). The folder's full path used
+            # to be here too: it names a person's folders (often their name) and no page uses it. The agent
+            # prints it when it starts, for the person running it.
+            return self._json({"ok": True, "agent_id": AGENT_ID})
         if path == "/list":
             qs = parse_qs(urlparse(self.path).query)
             album = (qs.get("album", [""])[0] or "").strip("/")
@@ -205,6 +287,8 @@ class Handler(SimpleHTTPRequestHandler):
         return self._json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
 
     def do_HEAD(self):
+        if self._refused():
+            return
         path = self._route()
         if path == "/files" or path.startswith("/files/"):
             return self._serve_file(head=True)
@@ -537,7 +621,7 @@ def pair(platform: str, label: str, aid: str, urls: list, poll_seconds: float = 
 
 
 def main(argv=None):
-    global ROOT, ORIGIN, AGENT_ID
+    global ROOT, SITES, CHECK_HOST, AGENT_ID
     ap = argparse.ArgumentParser(description="Nimrod local media agent (BYO storage).")
     # CLI args take precedence; each falls back to an env var so the agent can run as
     # an always-on service (systemd / Windows task) configured from an env file.
@@ -561,10 +645,12 @@ def main(argv=None):
     # instance instead meant a self-hosted Nimrod, or a local one, paired successfully and
     # then could not fetch a single photo — the browser blocking on CORS looks identical to
     # a broken agent, and there is nothing on either console to say otherwise.
-    ap.add_argument("--origin", default=os.environ.get("NIMROD_MEDIA_ORIGIN", ""),
-                    help="CORS Access-Control-Allow-Origin (defaults to --platform, which is the "
-                         "site the browser loads Nimrod from; use '*' to allow any site, which you "
-                         "should not need; or NIMROD_MEDIA_ORIGIN)")
+    ap.add_argument("--origin", action="append", default=None, metavar="SITE[,SITE...]",
+                    help="the sites whose pages may use this agent (comma-separated or given more than "
+                         "once; defaults to --platform, which is the site the browser loads Nimrod from; "
+                         "or NIMROD_MEDIA_ORIGIN). Pages on this computer itself (http://127.0.0.1, "
+                         "localhost) are always allowed; every other site is refused with 403. '*' allows "
+                         "any site, which you should not need.")
     ap.add_argument("--pair", action="store_true",
                     help="show a pairing code and wait for someone to type it into Nimrod. "
                          "Do this once; afterwards just run the agent.")
@@ -580,9 +666,11 @@ def main(argv=None):
     if not root.is_dir():
         ap.error(f"--root is not a folder: {root}")
     ROOT = root
-    ORIGIN = args.origin or args.platform.rstrip("/")
+    SITES = (site_list(args.origin or [os.environ.get("NIMROD_MEDIA_ORIGIN", "")])
+             or site_list([args.platform]))
     AGENT_ID = agent_id(root)
     host = "0.0.0.0" if args.lan else args.host
+    CHECK_HOST = host in LOOPBACK
 
     # SimpleHTTPRequestHandler serves relative to `directory`; point it at ROOT so
     # the inherited translate_path guard keeps every file request inside it.
@@ -606,15 +694,16 @@ def main(argv=None):
                          daemon=True).start()
     resolved = ROOT.resolve()
     print(f"Nimrod media agent serving:  {resolved}")
-    print(f"  listening on  http://{host}:{args.port}  (CORS origin: {ORIGIN})")
+    print(f"  listening on  http://{host}:{args.port}")
+    print(f"  pages allowed from {', '.join(SITES)} and this computer; other sites get 403")
     print(f"  try           http://localhost:{args.port}/list")
     # Say the exposure out loud, every time. Someone who typed --lan months ago and left
     # it running in a facility should be reminded what that means whenever they look.
     if host == "0.0.0.0":
         print("  NOTE: reachable by ANY device on this network. Everything in the folder "
               "above is readable by them.")
-    if ORIGIN == "*":
-        print("  NOTE: CORS is open to any website.")
+    if "*" in SITES:
+        print("  NOTE: open to any website (--origin '*'): any page you visit can list and read this folder.")
     print("  Ctrl+C to stop.")
     try:
         httpd.serve_forever()

@@ -21,7 +21,9 @@ DEFAULTS = {
     # deploy check); a self-hosted Nimrod changes this one line.
     'platform': 'https://nimrodecosystem.com',
     # Other sites allowed to read /status besides `platform` (and any page on this computer itself).
-    # The older address still serves the same site.
+    # The older address still serves the same site. www.nimrodecosystem.com is NOT here: checked 2026-10-07, it
+    # answers every path with a 301 to the bare address, so no page is ever served from it. If it ever serves
+    # pages itself, add it here and to speech_service/service.py DEFAULT_SITES (test_helper.py keeps them equal).
     'alsoAllow': ['https://nimrod.onrender.com'],
     # The helper's own status page. 8790: free beside the ports already used here (8765 a receiver,
     # 8770-8773 media agents, 8791 corpus desk, 8796 own voice model, 8797 speech, 8798 the wake example).
