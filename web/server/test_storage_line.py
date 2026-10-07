@@ -58,6 +58,25 @@ check("case does not get round it", refused(lambda: sl.check_event("Device-Data"
       and refused(lambda: sl.check_event("s", "DEVICE-BLOB", {})))
 check("an ordinary event passes", refused(lambda: sl.check_event("gameplay", "trial", {"ms": 812, "ok": True})) is None)
 
+# ---------------------------------------------------------------- rule 4: play history
+section("rule 4 - play history (which photo, video or song played when) is refused (row 2.58)")
+r = refused(lambda: sl.check_event("0f3c9a2b7d", "play", {"id": "dQw4w9WgXcQ", "at": 1759800000000}))
+check("*** a panel's `play {id, at}` is refused, whatever the stream (a panel's stream is its instance id) ***",
+      r and r[0] == 400, r)
+check("...and the sentence says where it is kept (the screen that played it)", r and "screen that played it" in r[1], r)
+r = refused(lambda: sl.check_event("plays", "play", {"source": "spotify", "id": "spotify:track:1", "panel": "m-1"}))
+check("*** the shared `plays` stream is refused ***", r and r[0] == 400, r)
+check("...whatever kind is sent on it", refused(lambda: sl.check_event("plays", "note", {"x": 1})))
+check("case does not get round it", refused(lambda: sl.check_event("s", "PLAY", {"id": "a"}))
+      and refused(lambda: sl.check_event("Plays", "x", {})))
+check("*** NOT refused: game results (a trial), the talk board's words, a `held` notice - not ruled, left alone ***",
+      refused(lambda: sl.check_event("gameplay", "trial", {"ms": 812, "ok": True})) is None
+      and refused(lambda: sl.check_event("aac", "pressed", {"word": "drink"})) is None
+      and refused(lambda: sl.check_event("0f3c9a2b7d", "held", {"id": "v", "at": 1, "afterMs": 60000})) is None)
+check("a kind that merely starts with 'play' is its own kind (only `play` itself is play history)",
+      refused(lambda: sl.check_event("gameplay", "player-joined", {"seat": 1})) is None
+      and refused(lambda: sl.check_event("playlists", "added", {"id": "x"})) is None)
+
 # ---------------------------------------------------------------- rule 2: pictures, sound, video
 section("rule 2 - no picture, sound or video inside the JSON")
 for prefix in ("data:image/png;base64,iVBOR", "data:audio/webm;base64,GkXf", "data:video/mp4;base64,AAAA"):
@@ -208,8 +227,15 @@ for name, url in event_urls.items():
     check(f"{name}: a sound inside an event is refused", r.status_code == 400, r.text)
     r = c.post(url, json={"kind": "trial", "data": sized(sl.EVENT_MAX_BYTES + 10)}, headers=H)
     check(f"*** {name}: an event too big is refused, 413 ***", r.status_code == 413, f"{r.status_code} {r.text[:200]}")
+    r = c.post(url, json={"kind": "play", "data": {"id": "dQw4w9WgXcQ", "at": 1759800000000}}, headers=H)
+    check(f"*** {name}: a `play` (what played when) is refused, 400 ***",
+          r.status_code == 400 and "screen that played it" in r.json().get("detail", ""), r.text)
+    plays_url = url.rsplit("/", 1)[0] + "/plays"
+    r = c.post(plays_url, json={"kind": "play", "data": {"source": "youtube", "id": "dQw4w9WgXcQ"}}, headers=H)
+    check(f"{name}: the shared `plays` stream is refused", r.status_code == 400, r.text)
     check(f"{name}: ...and nothing refused was appended", c.get(url, headers=H).json()["total"] == before)
     check(f"{name}: ...nor on device-data", c.get(blob_url, headers=H).json()["total"] == 0)
+    check(f"{name}: ...nor on plays", c.get(plays_url, headers=H).json()["total"] == 0)
 
 
 # ---------------------------------------------------------------- the collector, end to end
@@ -241,6 +267,12 @@ section("the privacy page no longer says sensor readings arrive here")
 text = str(c.get("/api/what-we-store").json())
 check("*** /api/what-we-store does not say sensor readings arrive here ***",
       "Sensor readings" not in text and "run a logger" not in text, "found the old sentence")
+store_page = c.get("/api/what-we-store").json()
+events_row = next((row["what"] for row in store_page["stores"] if row["table"] == "events"), "")
+check("*** the event log's description no longer says which photo was shown when ***",
+      events_row and "which photo was shown" not in events_row, events_row[:200])
+check("*** ...and the never-stored list says what played is kept on the screen that played it ***",
+      any("played" in n and "screen that played" in n for n in store_page["never"]), str(store_page["never"]))
 
 
 print(f"\n{passed} passed, {failed} failed")

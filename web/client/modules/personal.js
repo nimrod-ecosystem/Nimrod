@@ -63,7 +63,8 @@ import {
 import { personSources, personOf } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
-import { pick, statsFromEvents } from '../rng.js';
+import { pick } from '../rng.js';
+import { panelPlays } from '../plays.js';
 import { createHeldSignal } from '../held.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 
@@ -146,6 +147,8 @@ registerModule(
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {};
     let stats = {};
+    // Where the plays go (row 2.58): this device, never the server. The panel's old server rows come down once.
+    const playLog = panelPlays(ctx, 'personal');
     let recent = [];
     let history = [], histPos = -1;
     let currentId = null;
@@ -462,7 +465,7 @@ registerModule(
         if (recent.length > RECENT_CAP) recent.shift();
         history = history.slice(0, histPos + 1);
         history.push(id); histPos = history.length - 1;
-        events.append('play', { id, at: Date.now() }).catch((e) => console.error('personal: play log', e));
+        playLog.played(id);
       }
     }
 
@@ -477,13 +480,6 @@ registerModule(
     }
 
     function prev() { if (histPos > 0) { histPos -= 1; show(history[histPos], false); } }
-
-    function deriveStats(cache) {
-      const plays = (cache.events || [])
-        .filter((e) => e.kind === 'play')
-        .map((e) => ({ id: e.data?.id, at: e.data?.at || Date.parse(e.created_at) || 0 }));
-      return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
-    }
 
     // `{ source, chosenId, sources }`, as in photos.js: a stored choice missing from the list is kept
     // (`chosenId`) and a stand-in shown, never replaced by "the only source there" (§3e).
@@ -718,7 +714,7 @@ registerModule(
         mount.querySelector('[data-next]').addEventListener('click', () => nav.emit('next'));
         mount.querySelector('[data-prev]').addEventListener('click', () => nav.emit('prev'));
 
-        events.subscribe((cache) => { stats = deriveStats(cache); });
+        playLog.subscribe((s) => { stats = s; });   // play history (this device) -> picker stats
 
         state.subscribe((s) => {
           cfg = { ...DEFAULTS, ...s };
@@ -731,6 +727,7 @@ registerModule(
       onHide() { active = false; clearStall(); state.flush(); },
       destroy() {
         destroyed = true;
+        playLog.destroy();
         clearRecheck();
         scoped?.dispose();
         clearTimer(pollTimer); pollTimer = null;

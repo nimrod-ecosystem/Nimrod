@@ -9,8 +9,8 @@
 //     come from the agent, never the platform server.
 //   * rng.js picks the next item (freshness × recency × duration × album-diversity),
 //     with an in-memory `recent` list giving an immediate "don't repeat" guarantee.
-//   * play history is APPEND-ONLY events; the picker's long-run stats DERIVE from
-//     them (statsFromEvents), so nothing is a mutable store of record.
+//   * play history (which photo was shown when) is kept ON THIS DEVICE (plays.js `panelPlays`, row 2.58);
+//     the picker's long-run stats derive from those plays.
 //
 // Inputs are interchangeable via the bus: the module opens sinks on `photos/next`
 // and `photos/prev`, fed by its own buttons AND by an auto-advance timer AND by any
@@ -31,7 +31,8 @@ import {
 import { personSources, personOf } from '../person_known.js';
 import { cacheGet, cacheSet } from '../cache.js';
 import { createWatchdog } from '../watchdog.js';
-import { pick, statsFromEvents } from '../rng.js';
+import { pick } from '../rng.js';
+import { panelPlays } from '../plays.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 import { applyGrade } from '../lut.js';
 import {
@@ -221,7 +222,7 @@ registerModule(
     // at creation - see module.js `seedFromSibling`.
     copyFromSibling: ['intervalMs'] },
   (ctx) => {
-    const { mount, bus, state, events, user } = ctx;
+    const { mount, bus, state, user } = ctx;
     // `ctx.sources` is injectable so a page can supply its own registry — signed out, the
     // kiosk hands in one holding the bundled sample images, which is how a stranger sees a
     // working screen without being asked for their own photos before they trust the site.
@@ -254,7 +255,9 @@ registerModule(
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, channels = {};
-    let stats = {};                 // derived from play events
+    let stats = {};                 // derived from this panel's plays on this device
+    // Where the plays go (row 2.58): this device, never the server. The panel's old server rows come down once.
+    const playLog = panelPlays(ctx, 'photos');
     let recent = [];                // ids recently shown (in-memory, immediate)
     let history = [], histPos = -1; // for prev()
     let currentId = null;
@@ -631,13 +634,13 @@ registerModule(
         // truncate any forward history (we branched) and append
         history = history.slice(0, histPos + 1);
         history.push(id); histPos = history.length - 1;
-        // durable, append-only play record; picker stats derive from these. A picture shown while the
+        // the play record (this device); picker stats derive from these. A picture shown while the
         // slideshow WAITS for Start is logged when it starts (`carryOn`), not before: it has not played.
         if (!waiting) logPlay(id);
       }
     }
     function logPlay(id) {
-      events.append('play', { id, at: Date.now() }).catch((e) => console.error('photos: play log', e));
+      playLog.played(id);
     }
 
     function advance() {
@@ -716,13 +719,6 @@ registerModule(
 
     function prev() {
       if (histPos > 0) { histPos -= 1; show(history[histPos], false); }
-    }
-
-    function deriveStats(cache) {
-      const plays = (cache.events || [])
-        .filter((e) => e.kind === 'play')
-        .map((e) => ({ id: e.data?.id, at: e.data?.at || Date.parse(e.created_at) || 0 }));
-      return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
     }
 
     // WHICH SOURCE THIS PANEL MEANS: `{ source, chosenId, sources }`. `source` is the row to list (the
@@ -1120,8 +1116,8 @@ registerModule(
           });
         });
 
-        // play history -> picker stats
-        events.subscribe((cache) => { stats = deriveStats(cache); });
+        // play history (this device) -> picker stats
+        playLog.subscribe((s) => { stats = s; });
 
         // config: adopt saved settings; reload the listing only when the source ref
         // (sourceId/album) changes — interval/fit are applied without a reload.
@@ -1165,6 +1161,7 @@ registerModule(
       // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
       // arm a timer after it was gone.
       destroy() {
+        playLog.destroy();
         loadSeq += 1; clearAdvance(); clearResume(); clearRecheck(); writeSeen(); degraded = null;
         scoped?.dispose(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; }
       },

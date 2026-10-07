@@ -43,6 +43,7 @@ import { authHeaders } from './auth.js';
 import { mountModule, getManifest, extendCtx } from './module.js';
 import { createBus } from './bus.js';
 import { qrSVG } from './qr.js';
+import { createPlays } from './plays.js';
 
 export const REC_ACT = 'recommend';
 export const MAX_MESSAGE = 280;            // = server recommend.MAX_MESSAGE = the note's own limit (one limit to learn)
@@ -568,7 +569,9 @@ export async function mountRecommendedVideo(host, { rec, baseCtx = {}, instanceI
     bus.subscribe('segment/done', (p) => { try { onDone?.(p || {}); } catch (err) { console.error('recommend: done', err); } }),
   ];
   const instance = mountModule('youtube', extendCtx(baseCtx, {
-    mount: host, bus, instanceId, events: noEvents(),
+    // Plays are kept on the device now (plays.js, row 2.58), not in `events`; a memory-only handle keeps this
+    // one-off out of the device's play history too, as noEvents() keeps it off the server.
+    mount: host, bus, instanceId, events: noEvents(), plays: createPlays(),
     // One video, played once: no shuffle, nothing after it.
     state: memState({ playlist: [], playlistId: '', schedule: [], shuffle: false, autoAdvance: false }),
   }));

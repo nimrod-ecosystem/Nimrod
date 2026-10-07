@@ -181,7 +181,10 @@ registerModule(
             // has to be handed down or the child silently loses the feature — which is not a
             // crash, just a capability that is present on one surface and absent on the other.
             // `output` is here because a provider whose segment has stopped needs somewhere to
-            // say so; `personId` because media is per-person.
+            // say so; `personId` because media is per-person. `plays`/`playsPanel`: where the child's plays are
+            // filed on this device (plays.js `panelPlays`, row 2.58), under the key its events stream had, so its
+            // picker keeps its own history and its old server rows come down once. It gets no `instanceId` for
+            // this: that would change what the child says on the bus.
             // *** STILL MISSING, DELIBERATELY, AND WRITTEN DOWN RATHER THAN QUIETLY ADDED:
             // `audio` and `cameraOwner`. A video mounted under the director never joins the
             // speaker arbiter, so a game's music plays over it and a spoken cue cannot duck
@@ -189,6 +192,8 @@ registerModule(
             // SOUNDS like, so it wants its own bench test rather than riding in on this one.
             output: ctx.output,
             get personId() { return ctx.personId; },
+            plays: ctx.plays,
+            playsPanel: `${instanceId}-${p.id}`,
           });
           child.init();
           cState.startPolling(); cEvents.startPolling();

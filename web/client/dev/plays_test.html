@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>plays stream - one shape for every player - test</title>
+<title>plays - one shape for every player, kept on this device - test</title>
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem}
@@ -13,10 +13,11 @@
 </style>
 </head>
 <body>
-<h1>plays stream - one shape for every player (row 2.62)</h1>
-<p>Pure helpers in <code>plays.js</code>, plus the handle over an IN-MEMORY stream (no server). One append-only
-<code>plays</code> stream that YouTube, Spotify and folders will write to; the table it answers with (plays per
-item, per artist, per source, in a time window); the same table as words; and the picker's stats from it.</p>
+<h1>plays - one shape for every player, kept on this device (rows 2.62, 2.58)</h1>
+<p>Pure helpers in <code>plays.js</code>; the table it answers with (plays per item, per artist, per source, in a
+time window); the same table as words; the picker's stats from it. Then the handle over this device's own storage
+(a memory store and the browser's real IndexedDB, no server), the one-time move of a panel's old server rows, and
+the panel handle every player module uses.</p>
 <div id="results"></div>
 <div id="summary">running...</div>
 
@@ -24,6 +25,7 @@ item, per artist, per source, in a time window); the same table as words; and th
 import {
   PLAYS_STREAM, PLAYS_TOPIC, PLAY_KIND, PLAYS_DEFAULTS, TALLY_BY,
   normalizePlay, playsOf, tally, tableReading, statsFromPlays, createPlays,
+  memoryPlayStore, idbPlayStore, devicePlays, panelPlays, rowFromServer, PLAYS_DB,
 } from '../plays.js';
 import { pick } from '../rng.js';
 
@@ -43,30 +45,26 @@ const DAY = 864e5;
 const T0 = Date.parse('2026-10-01T12:00:00Z');
 const ev = (data, t) => ({ kind: PLAY_KIND, created_at: new Date(t).toISOString(), data });
 
-// An in-memory stand-in for ctx.makeEvents: the same append/load/get/subscribe surface events.js offers, with
-// the server's `id` + `created_at` stamping, and a record of which stream key and options it was opened with.
-function memoryEvents(opened) {
-  return (key, opts) => {
-    const events = [];
-    const subs = new Set();
-    let n = 0;
-    opened.push({ key, opts, events });
-    return {
-      async append(kind, data) { events.push({ id: ++n, kind, data: JSON.parse(JSON.stringify(data)), created_at: new Date().toISOString() }); subs.forEach((f) => f({ events })); },
-      async load() { return { events }; },
-      get: () => ({ events: [...events] }),
-      subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
-      startPolling() {},
-      destroy() { opened.find((o) => o.key === key).destroyed = true; },
-    };
+// A panel's own server events handle, as the screen hands it to a module (events.js): `subscribe` calls back
+// only once the handle holds the server's answer, at once if it already does.
+function serverEvents(events, { loaded = true } = {}) {
+  let cache = { events, total: events.length };
+  const subs = new Set();
+  let unsubs = 0;
+  return {
+    subscribe(fn) { subs.add(fn); if (loaded) fn(cache); return () => { unsubs += 1; subs.delete(fn); }; },
+    answer(list) { loaded = true; cache = { events: list, total: list.length }; [...subs].forEach((f) => f(cache)); },
+    get: () => cache,
+    unsubs: () => unsubs,
+    subs: () => subs.size,
   };
 }
-
+const tick = () => new Promise((r) => setTimeout(r, 0));
 (async () => {
   try {
-    section('the stream is a well-known shared key, like gameplay and points');
-    check('stream key is "plays", kind "play", nudge topic "plays/logged"',
-      PLAYS_STREAM === 'plays' && PLAY_KIND === 'play' && PLAYS_TOPIC === 'plays/logged');
+    section('the names: kind "play" (what the server now refuses), the old stream name, the nudge, the database');
+    check('kind "play", stream "plays", nudge topic "plays/logged", database "nimrod-plays"',
+      PLAYS_STREAM === 'plays' && PLAY_KIND === 'play' && PLAYS_TOPIC === 'plays/logged' && PLAYS_DB === 'nimrod-plays');
 
     section('one shape: { source, id, panel?, title?, by? }');
     check('a YouTube play keeps source and id', J(normalizePlay({ source: 'youtube', id: 'dQw4w9WgXcQ' })) === J({ source: 'youtube', id: 'dQw4w9WgXcQ' }));
@@ -77,6 +75,9 @@ function memoryEvents(opened) {
     check('...and any such word is accepted: a new player needs no change here', normalizePlay({ source: 'radio', id: 'bbc6' })?.source === 'radio');
     check('a source is lower-cased', normalizePlay({ source: 'Spotify', id: 'spotify:track:1' })?.source === 'spotify');
     check('the panel rides along when given', normalizePlay({ source: 'youtube', id: 'a', panel: 'yt-1' })?.panel === 'yt-1');
+    check('...and the screen, so a per-screen or per-person table needs no second record',
+      normalizePlay({ source: 'youtube', id: 'a', screen: 'scr-1' })?.screen === 'scr-1'
+      && !('screen' in normalizePlay({ source: 'youtube', id: 'a', screen: 's'.repeat(65) })));
     check('extra keys are dropped (only the declared shape is kept)', J(Object.keys(normalizePlay({ source: 'youtube', id: 'a', image: 'x', at: 5 }))) === J(['source', 'id']));
 
     section('*** which sources keep a title: folder yes; YouTube and Spotify no, by default (their terms) ***');
@@ -90,7 +91,7 @@ function memoryEvents(opened) {
       && !('title' in normalizePlay({ source: 'folder', id: 'x', title: 'T' }, { keepText: [] })));
     check('the default list is folder only', J(PLAYS_DEFAULTS.keepText) === J(['folder']));
 
-    section('*** a play is small text, inside the storage line by orders of magnitude ***');
+    section('*** a play is small text (on the device now; the bound still keeps one panel\'s plays tiny) ***');
     const worst = normalizePlay({ source: 'folder', id: 'a'.repeat(5000), panel: 'p'.repeat(64), title: 't'.repeat(5000), by: 'b'.repeat(5000) });
     check('long text is cut: id to idMax, title and by to textMax', worst.id.length === PLAYS_DEFAULTS.idMax
       && worst.title.length === PLAYS_DEFAULTS.textMax && worst.by.length === PLAYS_DEFAULTS.textMax);
@@ -101,7 +102,7 @@ function memoryEvents(opened) {
     const typical = new TextEncoder().encode(JSON.stringify(normalizePlay({ source: 'spotify', id: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC', panel: 'music-1' }))).length;
     check(`a typical Spotify play is ${typical} bytes (the old {id, at} row is ~60)`, typical < 130, String(typical));
 
-    section('playsOf: filter by source, panel and a time window (server time)');
+    section('playsOf: filter by source, panel and a time window (each row\'s own time)');
     const log = [
       ev({ source: 'youtube', id: 'v1', panel: 'yt-1' }, T0 - 9 * DAY),
       ev({ source: 'youtube', id: 'v1', panel: 'yt-1' }, T0 - 2 * DAY),
@@ -146,38 +147,164 @@ function memoryEvents(opened) {
     section('the picker reads its stats from this stream (the bridge to music_pick.js / youtube.js)');
     const st = statsFromPlays(log, { source: 'youtube' });
     check('rng.js shape: { id: { n, last } }, counted per source', st.v1.n === 2 && st.v2.n === 1 && !st['spotify:track:1'], J(st));
-    check('last is the server time of the latest play', st.v1.last === T0 - 2 * DAY);
+    check('last is the time of the latest play', st.v1.last === T0 - 2 * DAY);
     check('one panel only, when asked', J(Object.keys(statsFromPlays(log, { source: 'youtube', panel: 'yt-2' }))) === J(['v2']));
     const chosen = pick(['v1', 'v2', 'v3'], st, { now: T0, rand: () => 0.5, recent: [] });
     check('rng.pick accepts these stats unchanged', ['v1', 'v2', 'v3'].includes(chosen), String(chosen));
 
-    section('the handle: record first, then the nudge; only the source appends');
-    const opened = [];
-    const seen = [];
-    const order = [];
-    const bus = { publish: (topic, data) => { seen.push({ topic, data }); order.push('nudge'); } };
-    let threw = false;
-    try { createPlays({}); } catch { threw = true; }
-    check('ctx.makeEvents is required', threw);
-    const plays = createPlays({ makeEvents: memoryEvents(opened), bus });
-    check('it opens the shared "plays" stream with the server\'s read cap', opened.length === 1 && opened[0].key === 'plays' && opened[0].opts.limit === 500, J(opened.map((o) => [o.key, o.opts])));
-    const origAppend = opened[0].events.push.bind(opened[0].events);
-    opened[0].events.push = (...a) => { order.push('record'); return origAppend(...a); };
-    const kept = await plays.log({ source: 'spotify', id: 'spotify:track:1', panel: 'music-1', title: 'Song', by: 'Band' });
-    check('log resolves the row as kept (Spotify text dropped)', J(kept) === J({ source: 'spotify', id: 'spotify:track:1', panel: 'music-1' }), J(kept));
-    check('one `play` row in the stream', opened[0].events.length === 1 && opened[0].events[0].kind === 'play');
-    check('*** the record is written BEFORE the nudge ***', J(order) === J(['record', 'nudge']), J(order));
-    check('the nudge carries the same data on plays/logged', seen.length === 1 && seen[0].topic === PLAYS_TOPIC && J(seen[0].data) === J(kept));
-    check('not a play: nothing written, nothing published, null back', (await plays.log({ source: 'youtube' })) === null
-      && opened[0].events.length === 1 && seen.length === 1);
-    await plays.log({ source: 'folder', id: 'f/a.mp3', title: 'Song A', by: 'Band X' });
-    await plays.log({ source: 'folder', id: 'f/a.mp3', title: 'Song A', by: 'Band X' });
-    check('the handle answers from what it holds: plays(), tally(), stats()', plays.plays({ source: 'folder' }).length === 2
-      && plays.tally({ by: 'by' })[0].key === 'Band X' && plays.stats({ source: 'folder' })['f/a.mp3'].n === 2);
-    const badBus = createPlays({ makeEvents: memoryEvents([]), bus: { publish: () => { throw new Error('bus down'); } } });
-    check('a broken bus does not lose the record', J(await badBus.log({ source: 'youtube', id: 'a' })) === J({ source: 'youtube', id: 'a' }));
-    plays.destroy();
-    check('destroy closes the stream', opened[0].destroyed === true);
+    section('the handle: counted now, then kept on the device, then the nudge');
+    {
+      const store = memoryPlayStore();
+      const seen = [];
+      const order = [];
+      const realUpdate = store.update;
+      store.update = (...a) => { order.push('record'); return realUpdate(...a); };
+      const bus = { publish: (topic, data) => { seen.push({ topic, data }); order.push('nudge'); } };
+      const plays = createPlays({ store, bus });
+      const told = [];
+      plays.subscribe((panel) => told.push(panel));
+      const pending = plays.log({ source: 'spotify', id: 'spotify:track:1', panel: 'music-1', title: 'Song', by: 'Band' });
+      check('*** counted in memory BEFORE the store answers (the picker sees it at once) ***',
+        plays.stats({ source: 'spotify' })['spotify:track:1']?.n === 1 && told[0] === 'music-1');
+      const kept = await pending;
+      check('log resolves the row as kept (Spotify text dropped)', J(kept) === J({ source: 'spotify', id: 'spotify:track:1', panel: 'music-1' }), J(kept));
+      const rec = await store.get('music-1');
+      check('one `play` row in the panel\'s record on the device, filed by panel', rec.rows.length === 1 && rec.rows[0].kind === 'play'
+        && rec.rows[0].data.panel === 'music-1' && Number.isFinite(Date.parse(rec.rows[0].created_at)), J(rec));
+      check('*** the record is written BEFORE the nudge ***', J(order) === J(['record', 'nudge']), J(order));
+      check('the nudge carries the same data on plays/logged', seen.length === 1 && seen[0].topic === PLAYS_TOPIC && J(seen[0].data) === J(kept));
+      check('not a play: nothing written, nothing published, null back', (await plays.log({ source: 'youtube' })) === null
+        && (await store.get('music-1')).rows.length === 1 && seen.length === 1);
+      await plays.log({ source: 'folder', id: 'f/a.mp3', title: 'Song A', by: 'Band X' });
+      await plays.log({ source: 'folder', id: 'f/a.mp3', title: 'Song A', by: 'Band X' });
+      check('the handle answers from what it holds: plays(), tally(), stats()', plays.plays({ source: 'folder' }).length === 2
+        && plays.tally({ by: 'by' })[0].key === 'Band X' && plays.stats({ source: 'folder' })['f/a.mp3'].n === 2);
+      const badBus = createPlays({ bus: { publish: () => { throw new Error('bus down'); } } });
+      check('a broken bus does not lose the record', J(await badBus.log({ source: 'youtube', id: 'a' })) === J({ source: 'youtube', id: 'a' }));
+      const broken = { async get() { throw new Error('no'); }, async update() { throw new Error('private browsing'); }, async all() { return []; } };
+      const nowhere = createPlays({ store: broken });
+      const r = await nowhere.log({ source: 'youtube', id: 'v', panel: 'p' });
+      check('*** a store that cannot be written (private browsing): the play still counts for this session ***',
+        J(r) === J({ source: 'youtube', id: 'v', panel: 'p' }) && nowhere.stats({ source: 'youtube', panel: 'p' }).v?.n === 1);
+      const fresh = createPlays({ store });
+      await fresh.load('music-1');
+      check('a new handle on the same store reads the panel back (what a reload does)', fresh.plays({ panel: 'music-1' }).length === 1);
+      const everything = createPlays({ store });
+      await everything.loadAll();
+      check('loadAll reads every panel on the device (for a table over all of them)', everything.plays().length === 3, String(everything.plays().length));
+    }
+
+    section('*** the bound: the newest `keep` plays per panel ***');
+    {
+      let t = 0;
+      const plays = createPlays({ keep: 5, now: () => (t += 1000) });
+      for (let i = 0; i < 8; i++) await plays.log({ source: 'photos', id: `p${i}`, panel: 'ph-1' });
+      const ids = plays.plays({ panel: 'ph-1' }).map((e) => e.data.id);
+      check('only the newest five are kept, oldest first', J(ids) === J(['p3', 'p4', 'p5', 'p6', 'p7']), J(ids));
+      check('the default is 500 a panel: ten times the 50 the picker read from the server', PLAYS_DEFAULTS.keep === 500);
+    }
+
+    section('*** the one-time move: a panel\'s old server rows come down once, then the server is not read for plays ***');
+    {
+      const T = Date.parse('2026-10-06T08:00:00Z');
+      const old = [
+        { id: 1, kind: 'play', created_at: new Date(T + 5000).toISOString(), data: { id: 'v1', at: T } },
+        { id: 2, kind: 'held', created_at: new Date(T + 6000).toISOString(), data: { id: 'v1', at: T + 6000, afterMs: 60000 } },
+        { id: 3, kind: 'play', created_at: new Date(T + 9000).toISOString(), data: { id: 'v2' } },
+        { id: 4, kind: 'play', created_at: new Date(T + 9500).toISOString(), data: { at: T } },
+      ];
+      check('an old row becomes a row here: its own `at` is its time; no `at`, the server\'s time; no id, nothing',
+        rowFromServer(old[0], { source: 'youtube', panel: 'yt-1' }).created_at === new Date(T).toISOString()
+        && rowFromServer(old[2], { source: 'youtube', panel: 'yt-1' }).created_at === old[2].created_at
+        && rowFromServer(old[3], { source: 'youtube' }) === null && rowFromServer(old[1], { source: 'youtube' }) === null);
+      const store = memoryPlayStore();
+      const plays = createPlays({ store });
+      await plays.log({ source: 'youtube', id: 'v3', panel: 'yt-1' });      // played here before the server answered
+      const ev = serverEvents(old);
+      const mv = plays.moveFromServer({ events: ev, source: 'youtube', panel: 'yt-1', screen: 'scr-1' });
+      const n = await mv.done;
+      const rows = plays.plays({ source: 'youtube', panel: 'yt-1' });
+      check('*** the two old plays came down (not the `held` row), beside the one played here ***', n === 2 && rows.length === 3, `${n} ${J(rows)}`);
+      check('...in time order, oldest first', J(rows.map((e) => e.data.id)) === J(['v1', 'v2', 'v3']), J(rows.map((e) => e.data.id)));
+      check('...filed under the panel and the screen, with this source', rows.slice(0, 2).every((e) => e.data.source === 'youtube'
+        && e.data.panel === 'yt-1' && e.data.screen === 'scr-1'));
+      check('*** the picker\'s stats now include the old plays (it does not lose its memory) ***',
+        plays.stats({ source: 'youtube', panel: 'yt-1' }).v1?.n === 1 && plays.stats({ source: 'youtube', panel: 'yt-1' }).v1.last === T);
+      check('it let go of the server events once it had them', ev.subs() === 0 && ev.unsubs() === 1);
+      const again = createPlays({ store });
+      const ev2 = serverEvents(old);
+      const n2 = await again.moveFromServer({ events: ev2, source: 'youtube', panel: 'yt-1' }).done;
+      await again.load('yt-1');
+      check('*** done once: a second mount (or a reload) brings nothing down again, and does not even listen ***',
+        n2 === 0 && ev2.subs() === 0 && again.plays({ panel: 'yt-1' }).length === 3);
+      const other = await again.moveFromServer({ events: serverEvents([{ id: 9, kind: 'play', created_at: old[0].created_at, data: { id: 'pic1', at: T } }]),
+        source: 'photos', panel: 'yt-1' }).done;
+      check('marked per panel AND source: the same panel switched to photos still brings photos\' rows down', other === 1);
+      const offline = serverEvents([], { loaded: false });
+      const pending = plays.moveFromServer({ events: offline, source: 'youtube', panel: 'yt-9' });
+      await tick();
+      check('*** a screen that could not reach the server marks nothing: it waits for the first real answer ***',
+        !((await store.get('yt-9'))?.moved?.youtube) && offline.subs() === 1);
+      offline.answer([old[0]]);
+      check('...and moves when the answer comes', (await pending.done) === 1 && (await store.get('yt-9')).moved.youtube === true);
+      const stopped = serverEvents([], { loaded: false });
+      const st = plays.moveFromServer({ events: stopped, source: 'youtube', panel: 'yt-8' });
+      await tick();
+      st.stop();
+      check('stop() (the panel destroyed first) lets go of the events and marks nothing',
+        stopped.subs() === 0 && !((await store.get('yt-8'))?.moved?.youtube));
+      check('no events handle (a host with none): nothing to move', (await plays.moveFromServer({ source: 'youtube', panel: 'x' }).done) === 0);
+    }
+
+    section('*** the panel handle a player uses (panelPlays) ***');
+    {
+      const plays = createPlays();
+      const ev = serverEvents([{ id: 1, kind: 'play', created_at: '2026-10-06T08:00:00Z', data: { id: 'old', at: 1 } }]);
+      const pp = panelPlays({ plays, instanceId: 'yt-1', profileId: 'scr-1', events: ev }, 'youtube');
+      const heard = [];
+      pp.subscribe((s) => heard.push(s));
+      check('subscribe answers at once', heard.length >= 1);
+      check('the old server row came down', (await pp.moved) === 1 && pp.stats().old?.n === 1);
+      await pp.played('v1');
+      check('played(id) files it under this panel, this screen and this source', J(pp.rows().at(-1).data) === J({ source: 'youtube', id: 'v1', panel: 'yt-1', screen: 'scr-1' }));
+      check('...and the subscriber hears the new stats', heard.at(-1).v1?.n === 1);
+      const other = panelPlays({ plays, instanceId: 'yt-2' }, 'youtube');
+      await other.played('v9');
+      check('*** another panel\'s plays are not this panel\'s (the picker stays per panel, as it was) ***',
+        !pp.stats().v9 && !other.stats().v1 && other.stats().v9.n === 1);
+      const n = heard.length;
+      pp.destroy();
+      await other.played('v1');
+      check('destroy: no more callbacks', heard.length === n);
+      const lone = panelPlays({}, 'youtube');
+      await lone.played('a');
+      const lone2 = panelPlays({}, 'youtube');
+      check('*** a panel with no identity keeps plays in memory only (nothing to file them under) ***',
+        lone.stats().a?.n === 1 && !lone2.stats().a);
+      check('a panel with an identity and no host handle uses THIS DEVICE\'s store (IndexedDB)', devicePlays().store.kind === 'indexeddb');
+    }
+
+    section('*** this browser\'s real IndexedDB: kept across handles, one record per panel ***');
+    {
+      const name = `nimrod-plays-test-${Date.now()}`;
+      const a = createPlays({ store: idbPlayStore({ name }) });
+      await a.log({ source: 'photos', id: 'p1', panel: 'ph-1', screen: 's1' });
+      await a.log({ source: 'photos', id: 'p2', panel: 'ph-1', screen: 's1' });
+      const b = createPlays({ store: idbPlayStore({ name }) });
+      await b.load('ph-1');
+      check('a second handle (a reload) reads both plays back from IndexedDB', J(b.plays({ panel: 'ph-1' }).map((e) => e.data.id)) === J(['p1', 'p2']));
+      await b.log({ source: 'photos', id: 'p3', panel: 'ph-1' });
+      await a.log({ source: 'photos', id: 'p4', panel: 'ph-1' });
+      check('*** two handles writing one panel (two tabs) lose nothing: each write adds to what is stored ***',
+        J(a.plays({ panel: 'ph-1' }).map((e) => e.data.id)) === J(['p1', 'p2', 'p3', 'p4']), J(a.plays({ panel: 'ph-1' }).map((e) => e.data.id)));
+      const n = await a.moveFromServer({ events: serverEvents([{ id: 1, kind: 'play', created_at: '2026-10-01T00:00:00Z', data: { id: 'p0', at: Date.parse('2026-10-01T00:00:00Z') } }]),
+        source: 'photos', panel: 'ph-1' }).done;
+      const c = createPlays({ store: idbPlayStore({ name }) });
+      await c.load('ph-1');
+      check('the move is kept in IndexedDB too, marked done', n === 1 && c.plays({ panel: 'ph-1' })[0].data.id === 'p0'
+        && (await idbPlayStore({ name }).get('ph-1')).moved.photos === true);
+      await new Promise((r) => { const q = indexedDB.deleteDatabase(name); q.onsuccess = q.onerror = q.onblocked = () => r(); });
+    }
   } catch (err) {
     check('unexpected error', false, String((err && err.stack) || err));
   }

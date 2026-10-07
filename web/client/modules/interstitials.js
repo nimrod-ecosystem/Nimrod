@@ -38,7 +38,8 @@
 import { registerModule } from '../module.js';
 import { readWithLegacy } from '../settings_fields.js';
 import { createState } from '../state.js';
-import { pick, statsFromEvents } from '../rng.js';
+import { pick } from '../rng.js';
+import { panelPlays } from '../plays.js';
 import { speak as speakDefault, cancel as cancelSpeak } from '../voice.js';
 
 // A small default library so a fresh instance shows something immediately. Data
@@ -90,12 +91,14 @@ registerModule(
   { type: 'interstitials', title: 'Interstitials',
     dependsOn: 'server', description: 'between-video segments — educational (generated) for now' },
   (ctx) => {
-    const { mount, bus, state, events, user, profileId } = ctx;
+    const { mount, bus, state, user, profileId } = ctx;
     const speak = ctx.speak || speakDefault;         // injectable for tests (no audio)
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, kinds = {};
     let stats = {};
+    // Where the plays go (row 2.58): this device, never the server. The panel's old server rows come down once.
+    const playLog = panelPlays(ctx, 'interstitials');
     let recent = [], history = [], histPos = -1;
     let currentId = null;
     let timer = null;
@@ -137,7 +140,7 @@ registerModule(
         if (recent.length > RECENT_CAP) recent.shift();
         history = history.slice(0, histPos + 1);
         history.push(id); histPos = history.length - 1;
-        events.append('play', { id, at: Date.now() }).catch((e) => console.error('interstitials: play log', e));
+        playLog.played(id);
       }
       scheduleNext();
     }
@@ -183,13 +186,6 @@ registerModule(
       if (camStream) { camStream.getTracks().forEach((t) => t.stop()); camStream = null; }
     }
 
-    function deriveStats(cache) {
-      const plays = (cache.events || [])
-        .filter((e) => e.kind === 'play')
-        .map((e) => ({ id: e.data?.id, at: e.data?.at || Date.parse(e.created_at) || 0 }));
-      return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
-    }
-
     return {
       init() {
         mount.innerHTML = `
@@ -214,8 +210,8 @@ registerModule(
         bus.addBinding({ source: 'interstitial-nav', signal: 'skip', topic: 'interstitial/skip' });
         mount.querySelector('[data-skip]').addEventListener('click', () => nav.emit('skip'));
 
-        // play history -> picker stats
-        events.subscribe((cache) => { stats = deriveStats(cache); });
+        // play history (this device) -> picker stats
+        playLog.subscribe((s) => { stats = s; });
 
         // read the profile's VOICE from its settings blob (self-contained; see header)
         settings = createState({ url: `/api/profiles/${profileId}/state/settings`, user });
@@ -238,6 +234,7 @@ registerModule(
       onResize() {},
       onHide() { try { cancelSpeak(); } catch { /* noop */ } state.flush(); },
       destroy() {
+        playLog.destroy();
         clearTimer();
         stopSelfView();
         try { cancelSpeak(); } catch { /* noop */ }
