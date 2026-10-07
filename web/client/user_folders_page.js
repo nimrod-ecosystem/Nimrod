@@ -55,6 +55,12 @@
 // place reads "<your Nimrod folder>/Voice model" unless the person types the root's full path once (kept on
 // this device only, user_folders.js `saveRootPath`); then it is a full path. "Copy" copies a sentence saying
 // what to save where; "Copy the path" (only with a full path) copies the path alone, for a Save dialog.
+//
+// *** ARTWORK AND DATA (2026-10-07, rows 2.64 and 2.62). *** Two more kinds (user_folders.js argues them). The Artwork
+// section carries "Make your own artwork": the art kit's kinds in one line each, "Copy the art kit", and the checker -
+// "Check pictures…", "Check a folder…" (the browser's own file inputs, so every browser) and "Check the Artwork
+// folder". Results are plain sentences per file (art_check.js), shown on this page only and kept nowhere. Artwork can
+// be "Connected for pictures" like Pictures can for photos, so every picture chooser browses it.
 
 import {
   FOLDER_KINDS, SUBFOLDERS, ROOT_KEY, ROOT_MODE, POINTER_KINDS, available, handleStore, permissionOf, allowAgain,
@@ -73,6 +79,9 @@ import { openChoiceDialog } from './choice_picker.js';
 import { themeFont, refreshUserFont } from './theme.js';
 // The folder name only - a constant. wam_loader.js's top level defines functions and runs nothing.
 import { SDK_FOLDER } from './wam_loader.js';
+// The art kit and its checker (2026-10-07, row 2.64): the Artwork section.
+import { ART_KINDS, ART_FOLDER, artKitText, shapeWords, typesWords } from './art_kit.js';
+import { checkArtFiles, checkArtFolder, summaryWords, verdictWords } from './art_check.js';
 
 export const USER_FOLDERS_PAGE = 'user-folders';
 
@@ -95,6 +104,11 @@ export const KIND_WORDS = Object.freeze({
     none: 'No voice model in it yet. You only have one after step 4 (convert) of “Your own voice model” in Voice recordings.' }),
   recordings: Object.freeze({ title: 'Recordings', what: 'recordings', noun: ['item', 'items'],
     none: 'Nothing saved in it yet.' }),
+  // 2026-10-07 (rows 2.64, 2.62).
+  artwork: Object.freeze({ title: 'Artwork', what: 'pictures you make for Nimrod', noun: ['picture', 'pictures'],
+    none: 'No pictures in it yet. The art kit below says what you can make, and which folder each goes in.' }),
+  data: Object.freeze({ title: 'Data', what: 'your own Nimrod data', noun: ['file', 'files'],
+    none: 'Nothing kept in it yet.' }),
   fonts: Object.freeze({ title: 'Fonts', what: 'fonts',
     none: 'No font files in it yet (.woff2, .woff, .ttf or .otf).' }),
   luts: Object.freeze({ title: 'Colour looks (LUTs)', what: 'colour looks',
@@ -144,7 +158,27 @@ export async function scanFolder(kind, dir) {
       for await (const [name] of dir.entries()) names.push(String(name));
       return { items: [], voice: checkModelFiles(names), names };
     }
-    if (kind === 'recordings') {
+    if (kind === 'artwork') {
+      // The pictures in each kind's folder (one level down), and any loose in Artwork itself. Names only.
+      const isPic = (n) => kindOf(n) === 'image' || /\.svg$/i.test(n);
+      let count = 0;
+      const per = [];
+      for await (const [name, entry] of dir.entries()) {
+        if (name.startsWith('.')) continue;
+        if (entry.kind === 'directory') {
+          let n = 0;
+          try { for await (const [inner, e2] of entry.entries()) if (e2.kind !== 'directory' && !inner.startsWith('.') && isPic(inner)) n += 1; } catch { /* unreadable: 0 */ }
+          per.push({ folder: String(name), count: n });
+          count += n;
+        } else if (isPic(name)) { count += 1; per.push({ folder: '', count: 1 }); }
+      }
+      return { items: [], count, art: per.filter((p) => p.count).reduce((acc, p) => {
+        const hit = acc.find((x) => x.folder === p.folder);
+        if (hit) hit.count += p.count; else acc.push({ ...p });
+        return acc;
+      }, []) };
+    }
+    if (kind === 'recordings' || kind === 'data') {
       let count = 0;
       let exported = false;
       for await (const [name] of dir.entries()) {
@@ -431,9 +465,12 @@ export const SAVE_WORDS = Object.freeze({
   fonts: 'Save font files (.woff2, .woff, .ttf, .otf) in', luts: 'Save colour look files (.cube) in',
   plugins: 'Save audio plugins (one folder each) in', voice: 'Put the files of your converted voice model in',
   recordings: 'Save recordings and voice-training exports in',
+  artwork: 'Save pictures you make for Nimrod (each kind in its own folder) in',
+  data: 'Keep your own Nimrod data (play history, exports) in',
 });
-// What "Connect it for ..." connects it for: the panels that read a media source of that kind.
-export const CONNECT_WORDS = Object.freeze({ pictures: 'photos', music: 'music', videos: 'videos' });
+// What "Connect it for ..." connects it for: the panels that read a media source of that kind. Artwork (2026-10-07):
+// connected, every picture chooser can browse it (a subfolder at a time) and the Photos panel can show it.
+export const CONNECT_WORDS = Object.freeze({ pictures: 'photos', music: 'music', videos: 'videos', artwork: 'pictures' });
 const POINTER_WORDS = Object.freeze({ pictures: 'your photos are', music: 'your music is', videos: 'your videos are' });
 
 /**
@@ -470,6 +507,11 @@ export function foundWords(kind, found) {
     if (r.kind === 'checkpoint') return 'A training checkpoint is here: it still needs converting (step 4 of “Your own voice model”).';
     if ((found.names || []).includes('model.bin')) return `A model is here, but it is missing ${r.missing.join(', ')}. Convert it again (step 4).`;
     return w.none;
+  }
+  if (kind === 'artwork' && Array.isArray(found.art)) {
+    if (!found.count) return w.none;
+    const where = found.art.map((p) => `${p.folder || 'loose in Artwork'} ${p.count}`).join(', ');
+    return `In it: ${found.count} ${found.count === 1 ? 'picture' : 'pictures'} (${where}).`;
   }
   if (typeof found.count === 'number') {
     const [one, many] = w.noun || ['item', 'items'];
@@ -532,6 +574,54 @@ function lookChoiceHtml(c, items, mode) {
   if (c.look.grade) {
     out.push(say(c.look.fit, 'data-uf-look-fit'));
     for (const it of items) if (it.key.startsWith('look:')) out.push(fieldButton(it, mode));
+  }
+  return out.join('\n');
+}
+
+// ---------------------------------------------------------------------------------------------
+// MAKE YOUR OWN ARTWORK (2026-10-07, row 2.64): the art kit and the checker, in the Artwork section.
+// The kit is art_kit.js (the same words as Artwork's README.txt); the checker is art_check.js. A file is checked in
+// this browser and goes nowhere: no request is made by checking (dev/art_check_test.html counts them).
+// "Check pictures…" and "Check a folder…" are the browser's own file inputs, so they work in every browser, not only
+// the ones with a folder picker; "Check the Artwork folder" reads the connected one.
+// ---------------------------------------------------------------------------------------------
+const LEVEL_WORDS = Object.freeze({ no: '', warn: '', tip: 'Tip: ' });
+
+/** One checked file, as markup. Every name in it is the person's own and is escaped. Pure. */
+export function artResultHtml(r) {
+  const where = r.folder ? ` (${esc(r.folder)})` : '';
+  const notes = (r.notes || []).map((n) => `<li data-level="${esc(n.level)}">${esc(LEVEL_WORDS[n.level] || '')}${esc(n.text)}</li>`).join('');
+  return `<div class="st-hint" style="display:block;margin:0 0 8px" data-uf-art-result data-verdict="${esc(r.verdict)}">`
+    + `<b>${esc(r.name)}</b>${where}: ${esc(verdictWords(r))}${notes ? `<ul style="margin:4px 0 0 1.2em;padding:0">${notes}</ul>` : ''}</div>`;
+}
+
+function artworkHtml(k, s) {
+  const out = [];
+  out.push(say('Make your own artwork: pictures for Nimrod, made with your own AI or by hand. The art kit says, for each kind, '
+    + 'the size, the file type, whether the background is clear, the name and the folder. Give it to your AI with what you want.', 'data-uf-art-intro'));
+  out.push(`<ul class="st-hint" style="display:block;margin:0 0 8px 1.2em;padding:0" data-uf-art-kinds>${ART_KINDS.map((a) => `<li data-art-kind="${esc(a.id)}">`
+    + `<b>${esc(a.plural)}</b>: ${esc(`${a.width} × ${a.height}`)}, ${esc(shapeWords(a))}, ${esc(typesWords(a))}${a.clear === 'wanted' ? ' with a clear background' : ''}`
+    + ` - in ${esc(ART_FOLDER)}/${esc(a.folder)}. For ${esc(a.use)}.</li>`).join('')}</ul>`);
+  out.push(say('Not read from files yet: room objects, posters and frames in a room, trophies and badges, theme scenes, module icons, game pieces. '
+    + 'Pictures of real people, or of other people’s characters or brands, are yours to answer for.', 'data-uf-art-notyet'));
+  out.push(button('copy-kit', 'Copy the art kit', 'to paste into your AI; the README.txt in Artwork is the kit as it was when the folder was made'));
+  out.push(say('Check pictures before you use them: it says what is wrong with each one, if anything. Nothing is uploaded; the files are read on this device. '
+    + '(Choosing a folder, your browser may say “upload”: nothing leaves this computer.)', 'data-uf-art-checknote'));
+  const sel = (s.artKind || '');
+  out.push(`<p class="st-hint" style="display:block;margin:0 0 8px"><label>Check as <select data-uf-art-kind style="font:inherit;min-height:36px">`
+    + `<option value=""${sel ? '' : ' selected'}>worked out from the folder or name</option>`
+    + ART_KINDS.map((a) => `<option value="${esc(a.id)}"${sel === a.id ? ' selected' : ''}>${esc(a.title)}</option>`).join('')
+    + '</select></label></p>');
+  out.push(button('check-files', 'Check pictures…', 'one or several files'));
+  out.push(button('check-dir', 'Check a folder…', 'every picture in it, and one folder down'));
+  if (k.dir) out.push(button('check-artwork', 'Check the Artwork folder', 'every kind’s folder'));
+  out.push('<input type="file" multiple hidden data-uf-art-files accept="image/*,.svg,.heic,.heif" aria-hidden="true" tabindex="-1">');
+  out.push('<input type="file" multiple hidden data-uf-art-dir webkitdirectory aria-hidden="true" tabindex="-1">');
+  const c = s.artCheck;
+  if (c) {
+    out.push(`<div data-uf-art-results aria-live="polite">${say(c.busy ? 'Checking…' : c.error || summaryWords(c), 'data-uf-art-summary')}`
+      + (c.results || []).filter((r) => r.verdict !== 'skip').map(artResultHtml).join('') + '</div>');
+    if (!c.busy) out.push(button('clear-check', 'Clear the results'));
   }
   return out.join('\n');
 }
@@ -605,6 +695,7 @@ export function userFoldersHtml(s) {
       }
       parts.push(say('Listed only: nothing on this page runs a plugin. A plugin is a program, so only add ones you trust.', 'data-uf-plugins-note'));
     }
+    if (k.kind === 'artwork') parts.push(artworkHtml(k, s));
     // Where to save things of this kind, and the words to copy.
     const place = placeOf(k, rootPath);
     parts.push(`<p class="st-hint" style="display:block;margin:0 0 8px" data-uf-place="${esc(k.kind)}">Save ${esc(w.what)} in: `
@@ -646,6 +737,9 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
   let last = null;
   let message = '';
   let fontsFailed = [];
+  // The art checker (2026-10-07): the last results shown, and the "Check as" choice. This page's only, kept nowhere.
+  let artCheck = null;
+  let artKind = '';
   const modeNow = () => {
     try { return chooseModeOf(typeof chooseMode === 'function' ? chooseMode() : chooseMode); } catch { return DEFAULT_CHOOSE_MODE; }
   };
@@ -659,6 +753,8 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
     const s = await readUserFolders({ view, store, names, storage, fontSet, fontsFailed });
     if (torn) return s;
     s.mode = modeNow();
+    s.artCheck = artCheck;
+    s.artKind = artKind;
     last = s;
     el.innerHTML = userFoldersHtml(s);
     const m = el.querySelector('[data-uf-msg]');
@@ -715,9 +811,45 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
     }
   }
 
+  // THE ART CHECKER. Results replace the last ones; a check never changes a file or the folders.
+  async function runArtCheck(job) {
+    artCheck = { busy: true, results: [], more: 0 };
+    await draw({ load: false });
+    try {
+      const r = await job();
+      artCheck = { results: r.results || [], more: r.more || 0 };
+    } catch (err) {
+      artCheck = { results: [], more: 0, error: failed(err) || 'Could not check those files.' };
+    }
+    if (!torn) await draw({ load: false });
+    return artCheck;
+  }
+  const checkPicked = (files) => runArtCheck(() => checkArtFiles(files, { kind: artKind }));
+
   async function act(name, kind) {
     if (name === 'set') { press(kind); return; }
     if (name === 'copy' || name === 'copy-path') { await copy(kind, name === 'copy-path'); return; }
+    if (name === 'copy-kit') {
+      const text = artKitText();
+      try {
+        if (!clipboard || typeof clipboard.writeText !== 'function') throw new Error('no clipboard');
+        await clipboard.writeText(text);
+        tell('Copied the art kit. Paste it into your AI, then ask for what you want.');
+      } catch { tell('Could not copy here. The same kit is the README.txt in your Artwork folder.'); }
+      return;
+    }
+    if (name === 'check-files' || name === 'check-dir') {
+      // The browser's own file chooser: a real dialog, so only from this press.
+      el.querySelector(name === 'check-files' ? '[data-uf-art-files]' : '[data-uf-art-dir]')?.click();
+      return;
+    }
+    if (name === 'check-artwork') {
+      const k = last?.kinds?.find((x) => x.kind === 'artwork');
+      if (!k?.dir) { tell('The Artwork folder cannot be read right now. Allow it again, or set up your Nimrod folder.'); return; }
+      await runArtCheck(() => checkArtFolder(k.dir));
+      return;
+    }
+    if (name === 'clear-check') { artCheck = null; await draw({ load: false }); return; }
     message = '';
     try {
       if (name === 'pick-root') {
@@ -767,6 +899,18 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
     act(b.dataset.act, b.dataset.act === 'set' ? (b.dataset.key || '') : (b.dataset.kind || ''));
   };
   el.addEventListener('click', onClick);
+  // The art checker's inputs and its "Check as" choice: one listener, the controls redrawn under it.
+  const onChangeEvt = (e) => {
+    const t = e.target;
+    if (!t || !el.contains(t)) return;
+    if (t.matches?.('[data-uf-art-kind]')) { artKind = String(t.value || ''); return; }
+    if (t.matches?.('[data-uf-art-files],[data-uf-art-dir]')) {
+      const files = [...(t.files || [])];
+      t.value = '';
+      if (files.length) checkPicked(files);
+    }
+  };
+  el.addEventListener('change', onChangeEvt);
   el.innerHTML = say('Looking at this device’s folders…');
   const ready = draw().catch((err) => { if (!torn) { el.innerHTML = say(failed(err) || 'Could not read the folders.'); } return null; });
   return {
@@ -774,7 +918,9 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
     refresh: draw,
     act,
     tell,
-    destroy() { torn = true; el.removeEventListener('click', onClick); },
+    // For a suite (and anything that already has files in hand): check these as if they were picked.
+    checkFiles: checkPicked,
+    destroy() { torn = true; el.removeEventListener('click', onClick); el.removeEventListener('change', onChangeEvt); },
   };
 }
 

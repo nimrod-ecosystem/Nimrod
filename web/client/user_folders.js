@@ -15,6 +15,7 @@
 // (it cannot be sent — see folder_source.js); files are read into memory on this device. The
 // server never sees a font, a LUT or a plugin.
 //
+// (2026-10-07: ten - Artwork and Data added, with one folder per kind of artwork inside Artwork.)
 // (2026-10-04: the tree is now eight folders with plain names - SUBFOLDERS below says which and why - and
 // "Set up your Nimrod folder", `setUpRoot`, makes whatever is missing. The paragraph below is the first tree's.)
 // THE TREE, on first choice: `fonts/`, `luts/`, `audio-plugins/`, each with a short README.txt saying
@@ -28,6 +29,8 @@
 import { rememberFolder, recallFolder, forgetFolder } from './fs_sink.js';
 // Only for `checkDeviceLook` at the bottom (a look whose file is gone). lut.js imports nothing.
 import { reconcileGrade, refreshGrade } from './lut.js';
+// The art kit (2026-10-07): the Artwork folder's name, its inner folders and its README. art_kit.js imports nothing.
+import { ART_FOLDER, ART_KINDS, artKitText } from './art_kit.js';
 
 export const ROOT_KEY = 'root';
 
@@ -50,6 +53,20 @@ export const ROOT_KEY = 'root';
 // LEFT OUT, argued: Notes and Question packs. Notes live with the account, not in files; question packs are
 // imported through their own screen. A folder that nothing reads is a promise nothing keeps. (On Mike's list.)
 //
+// TWO MORE, 2026-10-07 (rows 2.62 and 2.64; chat's suggestion, note BF item 3):
+//   artwork    pictures a person makes for the site, with their own AI or by hand. NOT a pointer: it is where the
+//              art kit (art_kit.js) says to SAVE them, and it holds one folder per kind of artwork (ART_INNER below:
+//              Avatars, Buttons, Board cards, Wallpapers), so a picture's folder says what it is for. Its README IS
+//              the art kit, so the folder carries the file a person gives to their AI. "Connect it for pictures"
+//              (user_folders_page.js) makes it a media folder, and every picture chooser can then browse it.
+//   data       a person's own data from Nimrod, kept on their own system: play history and exports (Mike, row
+//              2.58: *"This is the kind of data people should keep on their own system"*). Only the folder and its
+//              README here: what writes into it is the play-history work (plays.js and its writers), not this file.
+//   Argued against: "a folder nothing reads" (above). Artwork is read today (the picture chooser, the Photos
+//   panel). Data is not read or written by anything YET - kept anyway because the move that will write it is in
+//   progress now, and an empty, explained folder is the decided shape (DECISIONS 2026-08-30: "Photos, media, model
+//   files, the inbox, notes, exports - each gets a subfolder"). If that work lands elsewhere, take Data out.
+//
 // THE NAMES are plain words, capitalised as a file manager shows its own folders ("Pictures", "Music"). They
 // replace the first tree's `fonts`, `luts`, `audio-plugins` (2026-10-01), which are still FOUND (LEGACY_SUBFOLDERS):
 // a tree made before today keeps working, and setting up again makes no second fonts folder beside it.
@@ -61,7 +78,11 @@ export const SUBFOLDERS = Object.freeze({
   pictures: 'Pictures', music: 'Music', videos: 'Videos',
   fonts: 'Fonts', luts: 'Colour looks', plugins: 'Audio plugins',
   voice: 'Voice model', recordings: 'Recordings',
+  artwork: ART_FOLDER, data: 'Data',
 });
+// Folders made INSIDE a kind's folder (2026-10-07): one per kind of artwork, from the art kit's own table. Made by
+// `ensureTree` like the rest - only what is missing, nothing changed.
+export const ART_INNER = Object.freeze({ artwork: Object.freeze(ART_KINDS.map((k) => k.folder)) });
 export const LEGACY_SUBFOLDERS = Object.freeze({ fonts: Object.freeze(['fonts']), luts: Object.freeze(['luts']),
   plugins: Object.freeze(['audio-plugins']) });
 // The kinds whose folder is only POINTED AT: their files are read where they are, never copied anywhere.
@@ -88,6 +109,11 @@ export const README = Object.freeze({
     + 'The speech service loads it with: --my-voice --root "<the full path of your Nimrod folder>".\n',
   recordings: 'Save recordings here, and the phrases you export to train a voice model, when Nimrod asks for a folder.\n'
     + 'They stay on this device. Nimrod uploads none of it.\n',
+  // The art kit itself (art_kit.js): this README is the file a person gives to their own AI.
+  artwork: artKitText(),
+  data: 'Your own data from Nimrod, kept on this computer: your play history (what played, and when) and things you\n'
+    + 'export. When Nimrod keeps something here, the place you turn it on says so. Nothing in this folder is uploaded,\n'
+    + 'and deleting it here deletes it.\n',
 });
 
 export function available(view = (typeof window !== 'undefined' ? window : null)) {
@@ -114,7 +140,7 @@ async function existingSub(root, kind, name, legacy = LEGACY_SUBFOLDERS) {
  * alone. Returns `{ made: [names created], ok }`; a folder that could not be made is simply missing
  * from `made` (a read-only root still works for reading).
  */
-export async function ensureTree(root, { names = SUBFOLDERS, readme = README, legacy = LEGACY_SUBFOLDERS } = {}) {
+export async function ensureTree(root, { names = SUBFOLDERS, readme = README, legacy = LEGACY_SUBFOLDERS, inner = ART_INNER } = {}) {
   const made = [];
   if (!root?.getDirectoryHandle) return { made, ok: false };
   for (const [kind, name] of Object.entries(names)) {
@@ -123,6 +149,12 @@ export async function ensureTree(root, { names = SUBFOLDERS, readme = README, le
     const dir = existed || await dirIn(root, name, true);
     if (!dir) continue;
     if (!existed) made.push(name);
+    // The folders inside it (ART_INNER): a new kind's are part of making it; one missing from a kind already
+    // there is said as "Artwork/Buttons", so "Everything was already there" is never said over a folder just made.
+    for (const sub of (inner && inner[kind]) || []) {
+      if (await dirIn(dir, sub, false)) continue;
+      if (await dirIn(dir, sub, true) && existed) made.push(`${dir.name || name}/${sub}`);
+    }
     if (readme[kind]) {
       let has = false;
       try { await dir.getFileHandle('README.txt'); has = true; } catch { has = false; }
