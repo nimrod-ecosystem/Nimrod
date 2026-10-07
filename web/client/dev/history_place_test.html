@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>history place - where a person's history is kept - test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>history place - this device, the Nimrod folder, or with us (row 2.58)</h1>
+<p>The person's setting, the words the page uses, the Data folder written by the page itself (a fake folder, no
+picker), the server half (a fake fetch), the host's copy / fill / route, the plays handle going through it, and the
+page.</p>
+<div id="results"></div>
+<div id="page" style="max-width:640px"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  HISTORY_KEY, HISTORY_KINDS, KIND_IDS, PLACE_WORDS, HISTORY_DEFAULTS, normalizePlaces, whereWords, secondPlaceOffer,
+  folderSink, serverSink, createHistoryHost, scopeOf,
+} from '../history_place.js';
+import { historyHtml, renderHistoryPage, HISTORY_ITEMS, HISTORY_PAGE } from '../history_page.js';
+import { memoryPlayStore, createPlays, panelPlays } from '../plays.js';
+import { ROOT_KEY } from '../user_folders.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+// ---- a fake folder: just enough of FileSystemDirectoryHandle / FileSystemFileHandle ----
+function fakeFile(name) {
+  let text = '';
+  return {
+    kind: 'file', name,
+    async getFile() { const t = text; return { size: new TextEncoder().encode(t).length, text: async () => t }; },
+    async createWritable({ keepExistingData = false } = {}) {
+      let buf = keepExistingData ? text : '';
+      let pos = keepExistingData ? buf.length : 0;
+      return {
+        async seek(n) { pos = n; },
+        async write(s) { buf = buf.slice(0, pos) + s + buf.slice(pos + s.length); pos += s.length; },
+        async close() { text = buf; },
+      };
+    },
+    _text: () => text,
+  };
+}
+function fakeDir(name, { permission = 'granted' } = {}) {
+  const kids = new Map();
+  const d = {
+    kind: 'directory', name, perm: permission, asked: 0,
+    async getDirectoryHandle(n, o) { if (!kids.has(n)) { if (!o?.create) throw new DOMException('no', 'NotFoundError'); kids.set(n, fakeDir(n)); } const k = kids.get(n); if (k.kind !== 'directory') throw new TypeError('file'); return k; },
+    async getFileHandle(n, o) { if (!kids.has(n)) { if (!o?.create) throw new DOMException('no', 'NotFoundError'); kids.set(n, fakeFile(n)); } return kids.get(n); },
+    async *entries() { for (const [k, v] of kids) yield [k, v]; },
+    async *values() { for (const v of kids.values()) yield v; },
+    async queryPermission() { return d.perm; },
+    async requestPermission() { d.asked += 1; d.perm = 'granted'; return 'granted'; },
+    _kids: kids,
+  };
+  return d;
+}
+const mapStore = (entries = {}) => { const m = new Map(Object.entries(entries)); return { get: async (k) => m.get(k) || null, put: async (k, h) => { m.set(k, h); return true; }, del: async (k) => m.delete(k) }; };
+
+// ---- a fake person row (state.js's shape) ----
+function fakeRow(initial = {}) {
+  let data = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => data, set(p) { data = { ...data, ...p }; [...subs].forEach((f) => f(data)); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, load: async () => data, flush: async () => { flushed += 1; },
+    startPolling() {}, destroy() {},
+  };
+}
+let flushed = 0;
+
+// ---- a fake server for the history route ----
+function fakeServer({ refuse = null } = {}) {
+  const calls = [];
+  const kept = [];
+  let optedIn = true;
+  const fetchImpl = async (url, init = {}) => {
+    const method = init.method || 'GET';
+    calls.push({ url, method, body: init.body ? JSON.parse(init.body) : null });
+    const res = (status, json) => ({ ok: status < 300, status, json: async () => json });
+    if (method === 'POST') {
+      if (refuse) return res(refuse, { detail: 'refused' });
+      if (!optedIn) return res(403, { detail: 'not kept here' });
+      const b = JSON.parse(init.body);
+      kept.push(...b.rows);
+      return res(200, { kept: b.rows.length, rolled: 0, rows: kept.length });
+    }
+    if (method === 'DELETE') { const n = kept.length; kept.length = 0; return res(200, { rows: n, totals: 0 }); }
+    if (/\/history$/.test(url.split('?')[0])) return res(200, { place: {}, kept: { plays: { rows: kept.length, counted: 0 } }, cap: { rows: 10000 } });
+    const scope = new URL(url, 'http://x').searchParams.get('scope');
+    return res(200, { rows: kept.filter((r) => !scope || r.scope === scope).map((r, i) => ({ id: i + 1, ...r })), total: kept.length, totals: [] });
+  };
+  return { fetchImpl, calls, kept, setOptedIn: (v) => { optedIn = v; } };
+}
+const urlFor = (pid, stream) => `/api/people/${pid}/history${stream ? `/${stream}` : ''}`;
+const play = (id, t) => ({ kind: 'play', created_at: new Date(t).toISOString(), data: { source: 'youtube', id, panel: 'yt-1' } });
+const T0 = Date.parse('2026-10-07T10:00:00Z');
+
+(async () => {
+  try {
+    section('the setting: one row on the person, one place per kind');
+    check('the row is "history-place" (the server reads the same key: storage_line.HISTORY_KEY)', HISTORY_KEY === 'history-place');
+    check('three kinds, named for the server\'s streams', J(KIND_IDS) === J(['plays', 'games', 'words'])
+      && HISTORY_KINDS.plays.stream === 'plays' && HISTORY_KINDS.games.stream === 'gameplay' && HISTORY_KINDS.words.stream === 'words');
+    check('*** defaults: what played stays on this device (ruled); game results and words stay on the site\'s log as now (not ruled) ***',
+      J(normalizePlaces(null)) === J({ plays: 'device', games: 'log', words: 'log' }));
+    check('a place a kind cannot have falls back to its default (what played can never go back to the log)',
+      J(normalizePlaces({ plays: 'log', games: 'mars', words: 'us' })) === J({ plays: 'device', games: 'log', words: 'us' }));
+
+    section('the words: where it lives, plainly');
+    check('this device only: says what loses it', /reset/.test(whereWords('plays', 'device')) && /lose it/.test(whereWords('plays', 'device')));
+    check('the folder, ready: says it is copied to the Data folder', /Data folder/.test(whereWords('plays', 'folder', { folder: 'ready' })));
+    check('the folder, permission lapsed: says how to fix it and that nothing is lost',
+      /Allow it again/.test(whereWords('plays', 'folder', { folder: 'permission' })) && /Nothing is lost/.test(whereWords('plays', 'folder', { folder: 'permission' })));
+    check('the folder in a browser that cannot write one: says so, and offers "with us"',
+      /cannot write to a folder/.test(whereWords('plays', 'folder', { folder: 'unavailable' })) && /with us/.test(whereWords('plays', 'folder', { folder: 'unavailable' })));
+    check('with us: states the cap and the roll-up, and how many are kept',
+      /10,000/.test(whereWords('plays', 'us', { cap: 10000, withUs: { rows: 42 } })) && /counted/.test(whereWords('plays', 'us', {}))
+      && /42 kept with us/.test(whereWords('plays', 'us', { cap: 10000, withUs: { rows: 42 } })));
+    check('the site\'s log: says it is as it has been, and cannot be removed yet', /as it has been/.test(whereWords('games', 'log')) && /cannot be removed/.test(whereWords('games', 'log')));
+    const offer = secondPlaceOffer('plays', 'device', { folder: 'none', canUs: true });
+    check('*** only on this device: the offer line, word for word, with both second places ***',
+      offer && offer.text === 'Only on this screen. A reset would lose it. Keep a copy in your Nimrod folder?' && J(offer.offers) === J(['folder', 'us']), J(offer));
+    check('a browser that cannot write a folder is offered "with us" only',
+      J(secondPlaceOffer('plays', 'device', { folder: 'unavailable', canUs: true })?.offers) === J(['us'])
+      && /Keep a copy with us\?/.test(secondPlaceOffer('plays', 'device', { folder: 'unavailable', canUs: true }).text));
+    check('the folder chosen but not set up on this device: offered "with us"',
+      J(secondPlaceOffer('plays', 'folder', { folder: 'none', canUs: true })?.offers) === J(['us']));
+    check('nothing offered when it already has a second place, or there is none to offer',
+      secondPlaceOffer('plays', 'us', {}) === null && secondPlaceOffer('plays', 'folder', { folder: 'ready', canUs: true }) === null
+      && secondPlaceOffer('plays', 'device', { folder: 'unavailable', canUs: false }) === null && secondPlaceOffer('games', 'log', {}) === null);
+    check('what a record is filed under: its panel, without a routed record\'s stream prefix, id-shaped',
+      scopeOf('yt-1') === 'yt-1' && scopeOf('gameplay:prof-9') === 'prof-9' && scopeOf('a b/c') === 'a_b_c');
+
+    section('the Data folder, written by the page itself (a fake folder)');
+    const root = fakeDir('Nimrod');
+    const fstore = mapStore({ [ROOT_KEY]: root });
+    const fs = folderSink({ store: fstore, view: { showDirectoryPicker() {} }, fileMax: 400 });
+    check('no Data folder in the Nimrod folder yet: "missing"', await fs.status() === 'missing');
+    await root.getDirectoryHandle('Data', { create: true });
+    check('with one: "ready"', await fs.status() === 'ready');
+    check('no Nimrod folder on this device: "none"; a browser with no folder picker: "unavailable"',
+      await folderSink({ store: mapStore(), view: { showDirectoryPicker() {} } }).status() === 'none'
+      && await folderSink({ store: mapStore(), view: {} }).status() === 'unavailable');
+    let r = await fs.append('plays', 'yt-1', [play('a', T0), play('b', T0 + 1000)]);
+    const hist = await (await root.getDirectoryHandle('Data')).getDirectoryHandle('History');
+    const f1 = hist._kids.get('plays-yt-1-2026-10.jsonl');
+    check('*** appended as JSON lines: Data/History/plays-yt-1-2026-10.jsonl, one entry a line ***',
+      r.ok && f1 && f1._text().trim().split('\n').length === 2 && JSON.parse(f1._text().split('\n')[0]).data.id === 'a', f1 && f1._text());
+    check('a README in History says what the files are and that Nimrod does not delete them',
+      /does not delete/.test(hist._kids.get('README.txt')?._text() || ''));
+    await fs.append('plays', 'yt-1', [play('c', T0 + 2000)]);
+    check('*** a second write APPENDS (the first two are still there) ***', f1._text().trim().split('\n').length === 3);
+    await fs.append('plays', 'yt-1', [play('d', T0 + 3000), play('e', T0 + 4000)]);
+    check('*** past its size (a small cap here) the next part is started, nothing overwritten ***',
+      hist._kids.has('plays-yt-1-2026-10.part2.jsonl') && f1._text().trim().split('\n').length === 3, [...hist._kids.keys()].join(','));
+    await fs.append('plays', 'yt-1', [play('nov', Date.parse('2026-11-02T00:00:00Z'))]);
+    check('a new month is a new file', hist._kids.has('plays-yt-1-2026-11.jsonl'));
+    hist._kids.get('plays-yt-1-2026-11.jsonl')._text = hist._kids.get('plays-yt-1-2026-11.jsonl')._text; // (unchanged)
+    let back = await fs.read('plays', 'yt-1', 500);
+    check('*** read back oldest first across months and parts ***', J(back.map((x) => x.data.id)) === J(['a', 'b', 'c', 'd', 'e', 'nov']), J(back.map((x) => x.data.id)));
+    back = await fs.read('plays', 'yt-1', 2);
+    check('...the newest N when asked for N', J(back.map((x) => x.data.id)) === J(['e', 'nov']));
+    check('another panel\'s file is not read as this one\'s', (await fs.read('plays', 'yt-2', 500)).length === 0);
+    root.perm = 'prompt';
+    check('*** permission lapsed: "permission", and a write is refused without prompting ***',
+      await fs.status() === 'permission' && (await fs.append('plays', 'yt-1', [play('x', T0)])).why === 'permission' && root.asked === 0);
+    check('allow() (a press) asks the browser, and then it is ready', await fs.allow() === 'granted' && root.asked === 1 && await fs.status() === 'ready');
+
+    section('with us: the server\'s history route (a fake fetch)');
+    const srv = fakeServer();
+    const ss = serverSink({ urlFor, user: 'u1', fetchImpl: srv.fetchImpl });
+    await ss.post('p1', 'plays', [{ kind: 'play', data: { id: 'a' }, at: 'x', scope: 'yt-1' }]);
+    await ss.list('p1', 'plays', { scope: 'yt-1', limit: 50 });
+    await ss.summary('p1');
+    await ss.remove('p1', 'gameplay');
+    check('POST /api/people/p1/history/plays with {rows}; GET ?limit&scope; GET the summary; DELETE ?stream',
+      srv.calls[0].method === 'POST' && srv.calls[0].url === '/api/people/p1/history/plays' && srv.calls[0].body.rows.length === 1
+      && srv.calls[1].url === '/api/people/p1/history/plays?limit=50&scope=yt-1' && srv.calls[2].url === '/api/people/p1/history'
+      && srv.calls[3].method === 'DELETE' && srv.calls[3].url === '/api/people/p1/history?stream=gameplay', J(srv.calls.map((c) => c.url)));
+    check('no address for it, no server half', serverSink({}) === null);
+    const down = serverSink({ urlFor, fetchImpl: async () => { throw new Error('offline'); } });
+    check('offline is an answer (status 0), never a throw', (await down.post('p1', 'plays', [])).status === 0);
+
+    section('the host: no person yet');
+    const lonely = createHistoryHost({ personId: () => null, makePersonState: () => fakeRow() });
+    check('defaults, and choosing is refused in words (the screen does not know whose it is)',
+      J(lonely.places()) === J(normalizePlaces(null)) && await lonely.setPlace('plays', 'us').then(() => false, (e) => /whose/.test(e.message)));
+
+    section('the host: copying what played to the Nimrod folder');
+    flushed = 0;
+    const row = fakeRow();
+    const timers = [];
+    const root2 = fakeDir('Nimrod'); await root2.getDirectoryHandle('Data', { create: true });
+    const fs2 = folderSink({ store: mapStore({ [ROOT_KEY]: root2 }), view: { showDirectoryPicker() {} } });
+    const srv2 = fakeServer();
+    const host = createHistoryHost({ personId: () => 'p1', makePersonState: (pid, key) => (key === HISTORY_KEY ? row : null),
+      folder: fs2, server: serverSink({ urlFor, fetchImpl: srv2.fetchImpl }),
+      setTimer: (f) => { timers.push(f); return timers.length; }, clearTimer: () => {} });
+    const dev = memoryPlayStore();
+    await dev.update('yt-1', (r) => ({ ...r, rows: [play('a', T0), play('b', T0 + 1)] }));
+    let s = await host.sync('plays', dev, 'yt-1');
+    check('on this device only (the default): nothing is copied anywhere', s.sent === 0 && srv2.calls.length === 0);
+    await host.setPlace('plays', 'folder');
+    check('choosing writes the person\'s row, and saves it at once', row.get().plays === 'folder' && flushed === 1);
+    await host.sync('plays', dev, 'yt-1');
+    const hist2 = await (await root2.getDirectoryHandle('Data')).getDirectoryHandle('History');
+    check('*** what is already on the device is copied when the folder is chosen ***',
+      hist2._kids.get('plays-yt-1-2026-10.jsonl')._text().trim().split('\n').length === 2);
+    check('...and the device record remembers how far (so it is never sent twice)', (await dev.get('yt-1')).sent.folder === play('b', T0 + 1).created_at);
+    s = await host.sync('plays', dev, 'yt-1');
+    check('a second copy sends nothing new', s.sent === 0);
+    await dev.update('yt-1', (r) => ({ ...r, rows: [...r.rows, play('c', T0 + 2)] }));
+    s = await host.sync('plays', dev, 'yt-1');
+    check('a new play: only it is copied', s.sent === 1 && hist2._kids.get('plays-yt-1-2026-10.jsonl')._text().trim().split('\n').length === 3);
+    root2.perm = 'prompt';
+    await dev.update('yt-1', (r) => ({ ...r, rows: [...r.rows, play('d', T0 + 3)] }));
+    s = await host.sync('plays', dev, 'yt-1');
+    check('*** permission lapsed: nothing copied, nothing prompted, the marker stays (it waits) ***',
+      s.sent === 0 && s.why === 'permission' && root2.asked === 0 && (await dev.get('yt-1')).sent.folder === play('c', T0 + 2).created_at);
+    check('the page reads it: folder "permission"', (await host.status()).folder === 'permission');
+    check('*** "Allow it again" (a press) lets it in and catches up what waited ***',
+      await host.allowFolder() === 'granted' && (await tick(), await tick(), true));
+    await host.sync('plays', dev, 'yt-1');
+    check('...the waiting play is in the folder now', hist2._kids.get('plays-yt-1-2026-10.jsonl')._text().includes('"d"'));
+
+    section('the host: with us (opted in)');
+    await host.setPlace('plays', 'us');
+    await host.sync('plays', dev, 'yt-1');
+    check('*** choosing "with us" sends what is on the device, filed under its panel ***',
+      srv2.kept.length === 4 && srv2.kept[0].scope === 'yt-1' && srv2.kept[0].at === play('a', T0).created_at, J(srv2.kept.length));
+    srv2.setOptedIn(false);
+    await dev.update('yt-1', (r) => ({ ...r, rows: [...r.rows, play('e', T0 + 4)] }));
+    s = await host.sync('plays', dev, 'yt-1');
+    check('*** the server says not opted in (403): the marker stays, it tries again later ***',
+      s.sent === 0 && s.why === 'not opted in' && (await dev.get('yt-1')).sent.us === play('d', T0 + 3).created_at);
+    srv2.setOptedIn(true);
+    s = await host.sync('plays', dev, 'yt-1');
+    check('...and goes once it is', s.sent === 1 && srv2.kept.length === 5);
+    await dev.update('yt-1', (r) => ({ ...r, rows: [...r.rows, { kind: 'play', created_at: new Date(T0 + 5).toISOString(), data: { source: 'folder', id: 'x'.repeat(2000) } }] }));
+    s = await host.sync('plays', dev, 'yt-1');
+    check('an entry bigger than the server takes stays on this device, and does not hold up the rest',
+      s.sent === 0 && !s.why && (await dev.get('yt-1')).sent.us === new Date(T0 + 5).toISOString());
+    const st = await host.status();
+    check('the page reads what is kept with us', st.withUs && st.withUs.plays.rows === 5 && st.canUs === true, J(st.withUs));
+    let rm = await host.removeWithUs('plays');
+    check('*** "Remove what is kept with us": the DELETE, and the marker forgotten so a later copy starts again ***',
+      rm.ok && srv2.kept.length === 0 && !('us' in (await dev.get('yt-1')).sent));
+
+    section('the host: an empty device fills itself from the second place (a re-imaged Pi)');
+    srv2.kept.push({ kind: 'play', data: { source: 'youtube', id: 'old1' }, at: '2026-10-01T00:00:00.000Z', scope: 'yt-9' },
+      { kind: 'play', data: { source: 'youtube', id: 'old2' }, at: '2026-10-02T00:00:00.000Z', scope: 'yt-9' });
+    const fresh = memoryPlayStore();
+    let filled = await host.restore('plays', fresh, 'yt-9');
+    let rec = await fresh.get('yt-9');
+    check('*** with us: filled from the server, oldest first, marked so it is not sent back ***',
+      filled && J(rec.rows.map((x) => x.data.id)) === J(['old1', 'old2']) && rec.restored && rec.sent.us === '2026-10-02T00:00:00.000Z', J(rec));
+    check('once only: a second try does nothing', await host.restore('plays', fresh, 'yt-9') === false);
+    check('a device that already has plays is never overwritten', await host.restore('plays', dev, 'yt-1') === false);
+    await host.setPlace('plays', 'folder');
+    const fresh2 = memoryPlayStore();
+    filled = await host.restore('plays', fresh2, 'yt-1');
+    rec = await fresh2.get('yt-1');
+    check('*** from the Nimrod folder too: the panel\'s files read back (all six copied there by now) ***', filled && rec.rows.length === 6 && rec.rows[0].data.id === 'a', J(rec && rec.rows.length));
+    root2.perm = 'prompt';
+    const fresh3 = memoryPlayStore();
+    check('a folder that cannot be read right now is not "empty": nothing marked, it tries again later',
+      await host.restore('plays', fresh3, 'yt-1') === false && (await fresh3.get('yt-1')) === null);
+    root2.perm = 'granted';
+
+    section('game results and board words: routed only when the person moved them');
+    const baseRows = [];
+    const subsB = new Set();
+    const base = {
+      get: () => ({ events: [...baseRows], total: baseRows.length }),
+      async append(kind, data) { baseRows.push({ id: baseRows.length + 1, kind, data, created_at: new Date(Date.now() - 60000 + baseRows.length).toISOString() }); [...subsB].forEach((f) => f(base.get())); },
+      async load() { return base.get(); }, subscribe(f) { subsB.add(f); return () => subsB.delete(f); }, startPolling() {}, destroy() { base.destroyed = true; },
+    };
+    const gstore = memoryPlayStore();
+    const routed = host.route('games', base, { key: 'prof-1', store: gstore });
+    await routed.load();
+    await routed.append('trial', { game: 'trivia', correct: true });
+    check('*** the default (the site\'s log): a trial goes to the log exactly as before, and get() is the log\'s own ***',
+      baseRows.length === 1 && routed.get().events.length === 1 && (await gstore.get('gameplay:prof-1')) === null);
+    let told = 0;
+    routed.subscribe(() => { told += 1; });
+    await host.setPlace('games', 'device');
+    await routed.append('trial', { game: 'trivia', correct: false });
+    check('*** moved to this device: the trial stays here, the log is untouched ***',
+      baseRows.length === 1 && (await gstore.get('gameplay:prof-1')).rows.length === 1, J(baseRows.length));
+    check('...and a reader sees both, as one list, oldest first (progress.js reads get().events)',
+      routed.get().events.length === 2 && routed.get().events[1].data.correct === false && told >= 1);
+    await routed.append('session-note', { x: 1 });
+    check('a kind this history does not hold still goes to the log', baseRows.length === 2 && baseRows[1].kind === 'session-note');
+    await host.setPlace('games', 'folder');
+    await host.sync('games', gstore, 'gameplay:prof-1');
+    check('*** and copied to the Nimrod folder under the screen, not the device key ***',
+      hist2._kids.has('gameplay-prof-1-' + new Date().toISOString().slice(0, 7) + '.jsonl'), [...hist2._kids.keys()].join(','));
+    routed.destroy();
+    check('destroy reaches the log handle', base.destroyed === true);
+    check('a host with no route for a kind hands the base back', host.route('nope', base, { key: 'k' }) === base);
+
+    section('plays.js through the host: a play is copied a moment later');
+    timers.length = 0;
+    await host.setPlace('plays', 'folder');
+    const plays = createPlays({ store: memoryPlayStore() });
+    const handle = panelPlays({ plays, instanceId: 'yt-7', history: host }, 'youtube');
+    await handle.ready;
+    await handle.played('vid-1');
+    check('*** played: the copy is queued for a moment later (one write for a run of plays) ***', timers.length >= 1);
+    timers.splice(0).forEach((f) => f());
+    await tick(); await tick(); await tick();
+    check('...and lands in the folder', hist2._kids.has('plays-yt-7-' + new Date().toISOString().slice(0, 7) + '.jsonl'), [...hist2._kids.keys()].join(','));
+    const handle2 = panelPlays({ plays: createPlays({ store: memoryPlayStore() }), instanceId: 'yt-7', history: host }, 'youtube');
+    await handle2.ready;
+    check('*** a fresh device fills the panel from the folder, and the picker sees it ***',
+      handle2.rows().length === 1 && handle2.stats()['vid-1']?.n === 1, J(handle2.stats()));
+    handle.destroy(); handle2.destroy();
+
+    section('the page: "Where your history is kept"');
+    check('a menu row on its own page', HISTORY_ITEMS[0].page === HISTORY_PAGE && /history/.test(HISTORY_ITEMS[0].label));
+    const html = historyHtml({ places: { plays: 'device', games: 'log', words: 'log' }, folder: 'none', withUs: null, cap: 10000,
+      canUs: true, person: true, last: {} });
+    check('*** only on this device: the offer line and its two buttons ***',
+      html.includes('Only on this screen. A reset would lose it. Keep a copy in your Nimrod folder?')
+      && html.includes('Keep a copy in your Nimrod folder') && html.includes('Keep a copy with us'));
+    check('every place is a button, the current one marked', html.includes(`${PLACE_WORDS.device} (now)`) && html.includes(PLACE_WORDS.us));
+    check('game results and words say they are not decided yet', (html.match(/Not decided yet/g) || []).length === 2);
+    check('site copy never says "her screen"', !/her screen/i.test(html));
+    const noUs = historyHtml({ places: normalizePlaces(null), folder: 'unavailable', withUs: null, cap: null, canUs: false, person: true, last: {} });
+    check('no way to reach the site (a local page): no "with us" button', !noUs.includes(PLACE_WORDS.us));
+    const kept = historyHtml({ places: { plays: 'us', games: 'log', words: 'log' }, folder: 'ready', withUs: { plays: { rows: 12, counted: 3 } }, cap: 10000, canUs: true, person: true, last: {} });
+    check('kept with us: how many, and a Remove button', /Kept with us: 12 entries, and 3 older ones counted/.test(kept) && kept.includes('Remove what is kept with us'));
+    const nobody = historyHtml({ places: normalizePlaces(null), folder: 'none', withUs: null, cap: null, canUs: false, person: false, last: {} });
+    check('a screen for nobody yet says so, and offers no choices', /does not know whose it is/.test(nobody) && !nobody.includes('data-act="place"'));
+    const el = document.getElementById('page');
+    await host.setPlace('plays', 'device');
+    const page = renderHistoryPage(el, { host });
+    await page.ready;
+    el.querySelector('[data-act="place"][data-kind="plays"][data-place="folder"]').click();
+    await tick(); await tick(); await tick(); await tick();
+    check('*** pressing a place sets it on the person\'s row ***', row.get().plays === 'folder', J(row.get()));
+    await page.refresh();
+    check('...and the page says where it lives now', /copied to the Data folder/.test(el.querySelector('[data-hp-where="plays"]')?.textContent || ''));
+    page.destroy();
+  } catch (err) {
+    check('suite ran to the end', false, String((err && err.stack) || err));
+  }
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  document.title = `${failed ? 'FAIL' : 'PASS'} ${passed}/${passed + failed}`;
+})();
+</script>
+</body>
+</html>

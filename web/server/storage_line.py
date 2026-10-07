@@ -15,12 +15,19 @@ check in front of them. These are the server's half of it - security invariants,
      (BASE64_RUN_MAX, argued below) - which is what such a thing looks like once it is text.
   3. EVERY ROW HAS A SIZE CAP: STATE_MAX_BYTES for a saved setting, EVENT_MAX_BYTES for an event.
      The cap is the backstop for whatever the two pattern rules cannot see (numbers in a list, say).
-  4. PLAY HISTORY IS REFUSED (Mike, 2026-10-07, row 2.58: "This is the kind of data people should keep on
-     their own system though"): which photo, video or song played when. Event kind `play` (what every
-     player appended to its panel's events: `{id, at}`) and stream `plays` (plays.js's shared stream, never
-     written to before this). They are kept on the device that played them now (client/plays.js). A
-     panel's stream is named by its instance id, so the kind is the only thing that says "a play".
-     The rows already here are removed by remove_play_history.py, which Mike runs.
+  4. PLAY HISTORY IS REFUSED ON THE EVENT ROUTES (Mike, 2026-10-07, row 2.58: "This is the kind of data
+     people should keep on their own system though"): which photo, video or song played when. Event kind
+     `play` (what every player appended to its panel's events: `{id, at}`) and stream `plays` (plays.js's
+     shared stream, never written to before this). They are kept on the device that played them now
+     (client/plays.js). A panel's stream is named by its instance id, so the kind is the only thing that
+     says "a play". The rows already here are removed by remove_play_history.py, which Mike runs.
+     *** CONDITIONAL SINCE 2026-10-07 (later), Mike: "maybe make having us save it as an option if it's not
+     going to take a lot of space or cost us anything. It has to be scalable though." *** History MAY be kept
+     here, but only (a) through the history route, never the append-only event log, (b) when the person has
+     chosen "with us" for that kind in their own row (HISTORY_KEY), and (c) under a cap per person, the
+     oldest rows rolled into totals (check_history and db.py history_append). The event routes still refuse
+     `play` whatever the person chose: the event log cannot be deleted from or capped, so a history row in
+     it would grow without end - which is the one thing "scalable" rules out.
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -41,6 +48,22 @@ THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not
     smallest useful thumbnail is 1-2 KB (1,400-2,700 characters) and a second of the most compressed speech
     about 750 bytes, so 1,024 sits above every legitimate run and below nearly every real picture or sound.
     Runs that are wrapped over several lines (MIME style, lines of 60+ characters) are measured as one.
+
+  THE HISTORY CAP (rule 4, opted in) - argued, Mike's "scalable" is the test it is held to:
+  HISTORY_MAX_ROWS = 10,000 rows per PERSON, every kind of history together. Measured row sizes: a play
+    ~130 bytes, a game trial under 300, a board word ~200; HISTORY_ROW_MAX_BYTES (1 KiB) is the most one
+    may be. So one person costs at most ~10 MB and typically 1.5-3 MB, and a thousand people opted in are
+    1.5-10 GB whatever gets added later - flat, not growing (chat's figure: $0.30 per GB a month on
+    Render). 10,000 is about a month of heavy use (300 a day) and a year of light use: enough for the
+    picker's memory and a "this month" chart; older entries are not dropped, they are COUNTED (totals).
+    For a smaller cap: cost and how much we hold about people in care. For a larger one: a year of a
+    heavy user's results in full. Mike's call; one number.
+  HISTORY_ROLL_BATCH = 1,000: when a person goes over the cap, the oldest (over + 1,000) rows are folded
+    into totals at once, so the roll-up runs about once per thousand writes, not on every one.
+  HISTORY_TOTALS_MAX = 2,000 totals rows per person per kind (one per song, video, game-and-topic, or
+    board word). Bounded by the size of a person's library in practice; the cap is the backstop against a
+    client that invents a new name on every row. Past it, rows are counted under "(other)".
+  HISTORY_POST_MAX = 200 rows in one request: a screen that was offline for a day sends in batches.
 
 Sizes are measured as the client sent them: compact JSON, UTF-8 - so a name in Chinese costs what it
 weighs, not the six bytes per character the database's own escaping would charge.
@@ -68,8 +91,93 @@ _RUN = re.compile(r"[A-Za-z0-9+/_-]+={0,2}")
 WRAP_MIN = 60
 
 SAY_KEEP_IT_HOME = "Pictures, sound, video and recordings stay on your own machine, not on this site."
-SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, not on "
-                       "this site.")
+SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, or where "
+                       "its person chose in \"Where your history is kept\" - not in this site's log.")
+
+# ---- rule 4, opted in: the history route (db.py history_*, app.py /api/people/{id}/history) ----
+# The person's own row that says where each kind of history is kept: { plays, games, words } -> a place.
+HISTORY_KEY = "history-place"
+HISTORY_PLACE_US = "us"
+# stream -> (the kind's name in the person's row, the event kinds that stream takes). A closed list: the
+# history table is not a general store, and anything else sent to it is refused.
+HISTORY_STREAMS = {
+    "plays": ("plays", frozenset({"play"})),
+    "gameplay": ("games", frozenset({"trial"})),
+    "words": ("words", frozenset({"select"})),
+}
+HISTORY_ROW_MAX_BYTES = 1024
+HISTORY_MAX_ROWS = 10_000
+HISTORY_ROLL_BATCH = 1_000
+HISTORY_TOTALS_MAX = 2_000
+HISTORY_POST_MAX = 200
+HISTORY_GROUP_MAX = 200          # characters of a totals row's name (a file path can be long)
+HISTORY_SCOPE_MAX = 64           # characters of what a row is filed under (a panel or screen id)
+OTHER_GROUP = "(other)"
+
+
+def history_kind(stream: str) -> str:
+    """The person-row name for a history stream, or Refused(400) for a stream that is not history."""
+    hit = HISTORY_STREAMS.get((stream or "").lower())
+    if not hit:
+        raise Refused(400, "That is not a kind of history this site can keep. It keeps what played, game "
+                           "results and the talk board's words, and only when you choose to.")
+    return hit[0]
+
+
+def opted_in(place_doc, stream: str) -> bool:
+    """Has the person chosen "with us" for this stream's kind? `place_doc` is their HISTORY_KEY row's data."""
+    kind = history_kind(stream)
+    return isinstance(place_doc, dict) and place_doc.get(kind) == HISTORY_PLACE_US
+
+
+def group_of(stream: str, kind: str, data) -> str:
+    """The totals row a history row is counted under when it is rolled up: what played, which game and topic,
+    which word on which board. Plain text, capped. A row that names nothing is counted under its kind."""
+    d = data if isinstance(data, dict) else {}
+    s = (stream or "").lower()
+    if s == "plays":
+        parts = [d.get("source"), d.get("id")]
+        sep = ":"
+    elif s == "gameplay":
+        parts = [d.get("game"), d.get("concept")]
+        sep = "|"
+    elif s == "words":
+        parts = [d.get("board"), d.get("word")]
+        sep = "|"
+    else:
+        parts = []
+        sep = ":"
+    words = [str(p).strip() for p in parts if p is not None and str(p).strip()]
+    return (sep.join(words) if words else (kind or "?"))[:HISTORY_GROUP_MAX]
+
+
+def check_history(stream: str, rows, place_doc) -> None:
+    """Everything a batch for the history route must pass. Raises Refused; returns None when it may be kept.
+
+    *** THE OPT-IN IS THE PERSON'S OWN ROW, READ BY THE SERVER, NOT A FLAG IN THE REQUEST. *** A client that
+    sends history for somebody who never chose "with us" is refused (403) and nothing is kept."""
+    kind_name = history_kind(stream)
+    if not opted_in(place_doc, stream):
+        raise Refused(403, f"This person's {HISTORY_WORDS.get(kind_name, 'history')} is not kept on this site. "
+                           "It stays on their own device or in their Nimrod folder unless they choose "
+                           "\"With us\" in \"Where your history is kept\".")
+    if not isinstance(rows, list) or not rows:
+        raise Refused(400, "Nothing to keep.")
+    if len(rows) > HISTORY_POST_MAX:
+        raise Refused(413, f"Send at most {HISTORY_POST_MAX} at a time.")
+    kinds = HISTORY_STREAMS[stream.lower()][1]
+    for r in rows:
+        if not isinstance(r, dict) or (r.get("kind") or "") not in kinds or not isinstance(r.get("data"), dict):
+            raise Refused(400, "Each entry needs a kind this history takes and its data.")
+        size = row_bytes(r.get("data"))
+        if size > HISTORY_ROW_MAX_BYTES:
+            raise Refused(413, f"One entry is {size:,} bytes, and the most one can be is {HISTORY_ROW_MAX_BYTES:,}. "
+                               "History entries are small facts: what, when, right or wrong.")
+        check_content(r.get("data"))
+
+
+# The words a refusal uses for each kind (the same words the site's own setting uses).
+HISTORY_WORDS = {"plays": "record of what played", "games": "game results", "words": "talk board words"}
 
 
 class Refused(Exception):

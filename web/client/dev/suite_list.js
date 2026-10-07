@@ -87,6 +87,8 @@ export const SUITES = [
   'game', 'game_teardown', 'points', 'scoreboard', 'contests', 'word_games', 'transcript_quiz', 'reading_log',
   // Row 2.62: the shared `plays` stream (one shape for YouTube, Spotify, folders) and the table it answers with.
   'plays',
+  // Row 2.58 (2026-10-07, later): where a person's history is kept - this device, the Nimrod folder, or with us.
+  'history_place',
   // Row 2.45: the shared miss-flow engine and the games on it, and the sing-along frame.
   'quiz_flow', 'rating', 'think_games', 'word_builder', 'brain_games', 'spelling', 'simple_math', 'name_that', 'karaoke',
   // Row 2.37: Klondike on one switch, and a note from someone.
