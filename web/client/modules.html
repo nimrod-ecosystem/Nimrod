@@ -628,6 +628,7 @@ import './modules/quests.js';
 import './modules/reading_log.js';
 import './modules/scoreboard.js';
 import './modules/charts.js';
+import './modules/play_objects.js';
 import './modules/word_games.js';
 import './modules/spelling.js';
 import './modules/think_games.js';
@@ -2130,7 +2131,8 @@ async function editOp(fn, { rebuild = true, full = false, undo = true } = {}) {
 }
 
 const pieceOrType = (key) => {
-  const piece = HP.ADD_PIECES.find((p) => p.key === key);
+  // (Row 2.62 step 4: the ready-made "Top played this week" pieces too, home_profile.js ADD_READY.)
+  const piece = HP.findPiece(key);
   return { piece, type: piece ? piece.type : key, label: piece ? piece.label : typeTitle(key) };
 };
 async function addModuleFor(key) {
@@ -2582,7 +2584,9 @@ function homeGate() {
   HOME.gate.load().catch(() => {});
   return HOME.gate;
 }
-const gateCheck = (key) => { try { return homeGate()?.check(itemForAddKey(key)) || null; } catch { return null; } };
+// What the game locks for an Add key: a ready-made piece (row 2.62 step 4) is its module, so one unlock opens all three.
+const addItem = (key) => { const r = HP.readyPiece(key); return r ? `module:${r.type}` : itemForAddKey(key); };
+const gateCheck = (key) => { try { return homeGate()?.check(addItem(key)) || null; } catch { return null; } };
 /** Add or switch to `key` — or, when the game has it locked, show its unlock choices first. */
 function gatedDo(act, key) {
   if (gateCheck(key)?.locked) {
@@ -2615,7 +2619,7 @@ async function unlockAnswer(how) {
   const gate = homeGate();
   if (!ask || !gate || how === 'cancel') { HOME.unlockAsk = null; HOME.unlockArmed = false; paintEdit(); hostChanged(); return; }
   if (how === 'buy' && !HOME.unlockArmed) { HOME.unlockArmed = true; paintEdit(); hostChanged(); return; }
-  const item = itemForAddKey(ask.key);
+  const item = addItem(ask.key);
   let r = null;
   try {
     if (how === 'buy') r = await gate.buy(item, { label: pieceOrType(ask.key).label });
@@ -2635,7 +2639,12 @@ function moduleButtons(attr, { except = null, disabled = false } = {}) {
   const pieces = `<div class="grp">The old profile’s pieces</div><div class="hbtns">${HP.ADD_PIECES.map((p) => {
     const m = mark(p.key, p.label);
     return ebtn(`${attr}="${esc(p.key)}"`, esc(m.label), { disabled, hint: m.hint || p.hint });
-  }).join('')}</div>`;
+  }).join('')}</div>`
+    // Row 2.62 step 4 (row 2.53): ready-made, nothing to wire -- what played most, as a thing on the wall.
+    + `<div class="grp">Ready-made: what played most</div><div class="hbtns">${HP.ADD_READY.map((p) => {
+      const m = mark(p.key, p.label);
+      return ebtn(`${attr}="${esc(p.key)}"`, esc(m.label), { disabled, hint: m.hint || p.hint });
+    }).join('')}</div>`;
   const groups = GROUPS.map((g) => {
     const xs = ITEMS.filter((m) => m.group.id === g.id && m.type !== except);
     if (!xs.length) return '';

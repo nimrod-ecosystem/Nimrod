@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>play objects - a stack, a pie, posters, and a room's furniture driven - test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host > div{width:560px;height:420px;position:relative;margin:8px 0}
+  #host > div.kiosk{width:960px;height:540px}
+</style>
+</head>
+<body>
+<h1>play objects - what played, as things in a room; and a room's furniture driven by a rule (row 2.62, step 4)</h1>
+<p>The objects (<code>modules/play_objects.js</code>): the same answer as Charts as a stack of Nimrod bricks, a pie and
+posters, bounded, rebuilt only when the answer changes, each with its table reading and spoken answer on one press; the
+ready-made pieces in Home's Add (<code>home_profile.js</code>). Then the furniture target (<code>room_drive.js</code>):
+<code>{ room, item, key }</code> in <code>automation.js</code>, the overlay in <code>room_scene.js</code> and
+<code>room3d.js</code>, registered by a real arrangement, never writing the recipe, put back exactly. No server.</p>
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="host"></div>
+
+<script type="module">
+import {
+  MAX_ITEMS, MAX_BLOCKS, BLOCK_STEPS, READING_MS, SHAPES, OBJECT_DEFAULTS, normalizeObjects, playsPerBlock, objectModel,
+  brickKey, twoLines, stackSvg, pieSvg3d, postersHtml, BRICK_URL, BRICK_RISE, OBJECT_SETTINGS,
+} from '../modules/play_objects.js';
+import { chartModel, chartTable, spokenAnswer } from '../play_charts.js';
+import { PLAY_KIND, createPlays, memoryPlayStore } from '../plays.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { expectFor } from '../health.js';
+import { verbsFor, MODULE_VERBS } from '../actions.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import { ADD_READY, ADD_PIECES, readyPiece, findPiece, pieceState, addToLayout } from '../home_profile.js';
+import { ROOM_DRIVE_FIELDS, ROOM3D_DRIVE_FIELDS, ROOM_DRIVE_KEYS, roomDriveOf, roomTargetId, emptyHandle } from '../room_drive.js';
+import { createAutomation, normalizeBinding, bindableSettings } from '../automation.js';
+import { describeBinding, mountAutomationPanel } from '../automation_panel.js';
+import { mountRoomScene, drivenBox, itemBox } from '../room_scene.js';
+import { mountRoom3d, boxTransform, viewOf, normalizeRoom3d } from '../room3d.js';
+import { presetRecipe } from '../room_presets.js';
+import { createArrangement } from '../arrangement.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 4000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await tick(20); } return false; };
+
+// Wednesday 7 October 2026, 3 PM local: the week began Monday the 5th (charts_test's fixture, the same answers).
+const NOW = new Date(2026, 9, 7, 15, 0, 0).getTime();
+const at = (d, h, m = 0) => new Date(2026, 9, d, h, m, 0).getTime();
+const ev = (data, t) => ({ kind: PLAY_KIND, created_at: new Date(t).toISOString(), data });
+const S = 'scr-1';
+const FIX = [
+  ev({ source: 'folder', id: 's1:Music/Song One.mp3', title: 'Song One', screen: S }, at(7, 9)),
+  ev({ source: 'folder', id: 's1:Music/Song One.mp3', title: 'Song One', screen: S }, at(7, 10)),
+  ev({ source: 'folder', id: 's1:Music/Song One.mp3', title: 'Song One', screen: S }, at(7, 11)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(7, 14)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(6, 10)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(6, 11)),
+  ev({ source: 'youtube', id: 'vidA', screen: S }, at(6, 12)),
+  ev({ source: 'youtube', id: 'vidB', screen: S }, at(6, 13)),
+  ev({ source: 'youtube', id: 'vidB', screen: S }, at(6, 14)),
+  ev({ source: 'photos', id: 'Pictures/beach.jpg', screen: S }, at(2, 10)),
+  ...Array.from({ length: 10 }, (_, i) => ev({ source: 'spotify', id: 'spotify:track:x', screen: S }, at(6, 15, i))),
+  ...Array.from({ length: 9 }, (_, i) => ev({ source: 'youtube', id: 'vidZ', screen: 'scr-2' }, at(6, 16, i))),
+];
+// Many plays of many things: what bounds the drawing.
+const MANY = Array.from({ length: 12 }, (_, k) => Array.from({ length: 40 + k * 7 }, (_, j) =>
+  ev({ source: 'folder', id: `s1:Music/Track ${k}.mp3`, title: `Track ${k}`, screen: S }, at(6, 1 + (j % 20), j % 60)))).flat();
+
+function fakeRow(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v, set: (p) => { v = { ...v, ...p }; }, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    push: (p) => { v = { ...v, ...p }; subs.forEach((f) => f(v)); },
+    flush: async () => {}, load: async () => v, startPolling() {}, destroy() {},
+  };
+}
+function fakeOutput() { const said = []; return { said, say(text) { said.push(text); return `u${said.length}`; }, cancel() {} }; }
+async function fixturePlays(rows = FIX) {
+  let clock = 0;
+  const p = createPlays({ store: memoryPlayStore(), now: () => clock });
+  for (const e of rows) { clock = Date.parse(e.created_at); await p.log({ ...e.data, panel: `${e.data.source}-${e.data.screen}` }); }
+  return p;
+}
+function host(cls = '') { const h = document.createElement('div'); if (cls) h.className = cls; document.getElementById('host').append(h); return h; }
+function mountObj(extra = {}) {
+  const h = host();
+  const bus = extra.bus || createBus();
+  const output = extra.output || fakeOutput();
+  const state = extra.state || fakeRow(extra.initial || {});
+  const inst = mountModule('play_objects', { mount: h, bus, state, instanceId: 'po-1', personId: null, profileId: S,
+    now: () => NOW, output, ...extra });
+  inst.init();
+  return { h, bus, output, state, inst, probe: () => inst.impl.__probe(), done() { inst.destroy(); h.remove(); } };
+}
+
+(async () => {
+  try {
+    // =================================================================================================
+    section('the settings: Charts\' defaults, three shapes, at most six things');
+    {
+      const d = normalizeObjects({});
+      check('a new object is "Top played this week" as a stack of bricks', d.shape === 'stack' && d.win === 'week' && d.count === 'item' && d.what === 'all' && d.look === 'bricks');
+      check('three shapes: a stack, a pie, posters', J(SHAPES) === J(['stack', 'pie', 'posters']));
+      check('*** how many is never above MAX_ITEMS (6) ***', normalizeObjects({ top: 20 }).top === MAX_ITEMS && MAX_ITEMS === 6);
+      check('an unknown shape / per-brick / look is its default', normalizeObjects({ shape: 'cube', perBlock: '7', look: 'x' }).shape === 'stack'
+        && normalizeObjects({ perBlock: '7' }).perBlock === 'auto' && normalizeObjects({ look: 'x' }).look === 'bricks');
+      check('every setting has a label and a level', OBJECT_SETTINGS.every((f) => f.label && f.level));
+    }
+
+    section('a brick for every N plays: N from 1, 2, 5, 10 ..., the tallest stack at most ten bricks');
+    {
+      check('7 plays at most: one brick each', playsPerBlock(7) === 1);
+      check('10 plays: still one each (ten bricks)', playsPerBlock(10) === 1);
+      check('11 plays: two each', playsPerBlock(11) === 2);
+      check('47 plays: five each', playsPerBlock(47) === 5);
+      check('*** a chosen size that would build past ten bricks steps up instead ***', playsPerBlock(30, '1') === 5 && playsPerBlock(30, '5') === 5);
+      check('a chosen size that fits is kept', playsPerBlock(6, '2') === 2);
+      check('nothing played: one each', playsPerBlock(0) === 1);
+      check('the steps read without arithmetic', J(BLOCK_STEPS.slice(0, 5)) === J([1, 2, 5, 10, 20]));
+      check('the key says it plainly', brickKey(1) === '1 brick = 1 play' && brickKey(5) === '1 brick = 5 plays, rounded up');
+    }
+
+    section('the answer is Charts\' answer: this screen only, Spotify never');
+    {
+      const m = objectModel(FIX, {}, { screen: S, now: NOW });
+      const c = chartModel(FIX, { show: 'bar' }, { screen: S, now: NOW });
+      check('the same rows as the Charts bar chart (vidA 4, Song One 3, vidB 2)', J(m.rows.map((r) => [r.key, r.value])) === J(c.rows.map((r) => [r.key, r.value]))
+        && J(m.rows.map((r) => r.value)) === J([4, 3, 2]), J(m.rows.map((r) => [r.key, r.value])));
+      check('*** no Spotify play and no other screen\'s play is in it ***', !m.rows.some((r) => r.source === 'spotify' || r.key === 'vidZ'));
+      check('a stack: a brick a play here, each thing at least one brick', m.per === 1 && J(m.rows.map((r) => r.blocks)) === J([4, 3, 2]));
+      const pie = objectModel(FIX, { shape: 'pie', top: 1 }, { screen: S, now: NOW });
+      check('a pie adds up to the whole: the top one and "Everything else"', pie.rows.length === 2 && pie.rows[1].rest && pie.rows[0].value + pie.rows[1].value === 9);
+      const big = objectModel(MANY, { top: 6 }, { screen: S, now: NOW });
+      check('*** many plays: six stacks, none above ten bricks, each brick more plays ***',
+        big.rows.length === 6 && big.rows.every((r) => r.blocks <= MAX_BLOCKS) && big.per === 20, J({ per: big.per, b: big.rows.map((r) => r.blocks), v: big.rows.map((r) => r.value) }));
+    }
+
+    section('the drawings: bounded, one picture, no art, no per-item images');
+    {
+      const big = objectModel(MANY, { top: 20 }, { screen: S, now: NOW });
+      const svg = stackSvg(big, { uid: 't' });
+      const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+      const uses = doc.querySelectorAll('use').length;
+      const total = big.rows.reduce((n, r) => n + r.blocks, 0);
+      check('*** a brick for every brick in the model, and never more than 60 ***', uses === total && uses <= MAX_ITEMS * MAX_BLOCKS, `${uses} ${total}`);
+      check('*** ONE picture of the brick (the printed one), the rest are copies of it ***',
+        doc.querySelectorAll('image').length === 1 && doc.querySelector('image').getAttribute('href') === BRICK_URL && /brick_40x40x40_v1/.test(BRICK_URL));
+      check('one tint for all of them (one filter group)', doc.querySelectorAll('filter').length === 1 && doc.querySelectorAll('g[filter]').length === 1);
+      check('the drawing is a picture of the reading: aria-hidden', doc.documentElement.getAttribute('aria-hidden') === 'true');
+      check('each stack carries its number above it and its name below', doc.querySelectorAll('.po-svg-value').length === big.rows.length
+        && /1\. Track/.test(doc.querySelector('.po-svg-label').textContent));
+      check('bricks stack on the brick\'s own measured rise (0.555 of a brick)', BRICK_RISE === 0.555);
+      const drawn = new DOMParser().parseFromString(stackSvg(big, { uid: 't', look: 'drawn' }), 'image/svg+xml');
+      check('"Drawn": a plain cube per brick (three faces), no picture at all', drawn.querySelectorAll('polygon').length === total * 3 && !drawn.querySelector('image'));
+      const pie = objectModel(FIX, { shape: 'pie', top: 2 }, { screen: S, now: NOW });
+      const pd = new DOMParser().parseFromString(pieSvg3d(pie.rows, { uid: 'p', colours: 3 }), 'image/svg+xml');
+      check('the pie: a slice each (top 2 and "Everything else"), numbered like the legend, with a crust and a plate',
+        pd.querySelectorAll('.po-slice').length === 3 && pd.querySelectorAll('.po-slice-num').length === 2 && !!pd.querySelector('.po-crust') && !!pd.querySelector('.po-plate'));
+      check('...and its edge in front, shaded (the slices that reach the front)', pd.querySelectorAll('g[filter] path').length >= 1);
+      check('a pie of one thing is a whole pie', /<ellipse/.test(pieSvg3d([{ key: 'a', label: 'A', value: 3 }], { uid: 'q' })));
+      const posters = postersHtml(objectModel(FIX, { shape: 'posters' }, { screen: S, now: NOW }).rows);
+      const ph = new DOMParser().parseFromString(posters, 'text/html');
+      check('*** posters: names and counts in text, NO picture of any kind (covers and thumbnails unchecked) ***',
+        ph.querySelectorAll('.po-poster').length === 3 && !ph.querySelector('img,svg,image,picture') && !/url\(/.test(posters)
+        && ph.querySelector('.po-count').textContent === '4 plays');
+      check('a name too long for under a stack: two lines, clipped', twoLines('One two three four five six seven eight', 10).length === 2);
+      check('no literal colour in any drawing (theme tokens only)', !/#[0-9a-f]{3,8}\b|rgb\(/i.test(svg + posters + pieSvg3d(pie.rows, { uid: 'p' })));
+    }
+
+    // =================================================================================================
+    section('the module: the reading in the page, one press says it and shows it, again puts it away');
+    {
+      const plays = await fixturePlays();
+      const t = mountObj({ plays });
+      await tick(30);
+      const root = t.h.querySelector('[data-play-objects]');
+      check('it draws "Top played this week" as a stack', root?.dataset.shape === 'stack' && t.h.querySelector('[data-title]').textContent === 'Top played this week');
+      const table = t.h.querySelector('table[data-reading]');
+      const want = chartTable(chartModel(FIX, { show: 'bar' }, { screen: S, now: NOW }));
+      check('*** a real table is in the page for a screen reader: the same rows Charts reads ***',
+        !!table && table.getAttribute('aria-hidden') === null && J([...table.querySelectorAll('tbody tr')].map((tr) => [tr.cells[0].textContent, tr.cells[1].textContent])) === J(want.rows),
+        table?.outerHTML?.slice(0, 200));
+      check('the drawing itself is hidden from a screen reader', t.h.querySelector('.po-svg')?.getAttribute('aria-hidden') === 'true');
+      const btn = t.h.querySelector('[data-act="press"]');
+      check('the whole object is one labelled button', btn?.tagName === 'BUTTON' && /Top played this week, as a stack of bricks/.test(btn.getAttribute('aria-label')));
+      check('the key: 1 brick = 1 play', t.h.querySelector('[data-key]')?.textContent === '1 brick = 1 play');
+      btn.click(); await tick(5);
+      const spoken = spokenAnswer(chartModel(FIX, { show: 'bar' }, { screen: S, now: NOW }), { limit: 3 });
+      check('*** a press says Charts\' own answer aloud ***', t.output.said.at(-1) === spoken, `${t.output.said.at(-1)} | ${spoken}`);
+      const card = t.h.querySelector('[data-reading-card]');
+      check('...and shows it as a list over the object (a visual copy, hidden from a screen reader)', !!card && !card.hidden && card.querySelector('table')?.getAttribute('aria-hidden') === 'true');
+      check('...which goes by itself (a timer is waiting, READING_MS = a minute)', t.probe().reading && t.probe().timers === 2 && READING_MS === 60000);
+      t.h.querySelector('[data-act="press"]').click(); await tick(5);
+      check('pressed again: the list goes, nothing said again', !t.probe().reading && t.h.querySelector('[data-reading-card]').hidden && t.output.said.length === 1);
+      t.bus.publish('play_objects/select', {}); await tick(5);
+      check('a switch\'s select presses it (play_objects/select)', t.probe().reading && t.output.said.length === 2);
+      t.bus.publish('play_objects/back', {}); await tick(5);
+      check('back puts the list away (play_objects/back)', !t.probe().reading);
+      // Rebuilt only when the answer changes.
+      const r0 = t.probe().renders;
+      await plays.loadAll(); await tick(10);
+      t.inst.impl.onShow(); await tick(10);
+      check('*** the record read again with nothing new: nothing is rebuilt ***', t.probe().renders === r0, `${r0} -> ${t.probe().renders}`);
+      await plays.log({ source: 'youtube', id: 'vidB', screen: S, panel: 'youtube-scr-1' });
+      await tick(20);
+      // `now` is NOW, and the new row is stamped at the store's clock (the fixture's last time), inside this week.
+      check('*** a play lands: rebuilt once with the new numbers ***', t.probe().renders > r0 && t.probe().model.rows.find((r) => r.key === 'vidB')?.value === 3,
+        J(t.probe().model.rows.map((r) => [r.key, r.value])));
+      t.state.push({ shape: 'posters' }); await tick(5);
+      check('its shape is a setting: posters', t.h.querySelector('[data-play-objects]').dataset.shape === 'posters' && t.h.querySelectorAll('.po-poster').length === 3);
+      t.state.push({ shape: 'pie' }); await tick(5);
+      check('...or a pie, with its legend', t.h.querySelector('[data-play-objects]').dataset.shape === 'pie' && !!t.h.querySelector('.po-legend'));
+      t.done();
+      check('destroyed: no timer left', t.probe().timers === 0);
+    }
+
+    section('whose plays, an example with no screen, nothing fetched, a brick that will not load');
+    {
+      const realFetch = window.fetch;
+      let fetches = 0;
+      window.fetch = (...a) => { fetches += 1; return realFetch(...a); };
+      const plays = await fixturePlays();
+      const t = mountObj({ plays, profileId: 'scr-2' });
+      await tick(20);
+      check('on the other screen: only its own plays (vidZ, 9)', J(t.probe().model.rows.map((r) => [r.key, r.value])) === J([['vidZ', 9]]));
+      t.done();
+      window.fetch = realFetch;
+      check('*** no server call while drawing ***', fetches === 0, fetches);
+      const h = host();
+      const inst = mountModule('play_objects', { mount: h, bus: createBus(), state: fakeRow(), instanceId: 'po-x', personId: null, now: () => NOW, output: fakeOutput() });
+      inst.init(); await tick(10);
+      check('no screen at all: an example, labelled as one', !!h.querySelector('[data-example]') && inst.impl.__probe().example);
+      inst.destroy(); h.remove();
+      const t2 = mountObj({ plays, brickUrl: '/nope/missing_brick.png' });
+      const fell = await until(() => !t2.probe().brickOk && t2.h.querySelector('.po-svg')?.dataset.look === 'drawn');
+      check('*** the brick picture will not load: the stack is drawn instead, never empty ***', fell, J({ ok: t2.probe().brickOk, look: t2.h.querySelector('.po-svg')?.dataset.look }));
+      t2.done();
+    }
+
+    section('registered everywhere a module is, and ready-made in Home\'s Add');
+    {
+      const man = getManifest('play_objects');
+      check('registered on the new core, with its settings', man?.core === 'new' && Array.isArray(man.settings) && man.settings.length === OBJECT_SETTINGS.length);
+      check('in the catalog, plainly, saying no covers or thumbnails', CATALOG.some((c) => c.type === 'play_objects' && /no covers or thumbnails/.test(c.note)));
+      check('the health watch expects it idle', expectFor('play_objects')?.idle === true);
+      check('a switch reaches it: select and back', J(verbsFor('play_objects')) === J(['select', 'back']) && J(MODULE_VERBS.play_objects) === J({ select: 'play_objects/select', back: 'play_objects/back' }), J(verbsFor('play_objects')));
+      check('the library files it with Charts', J(MODULE_CATEGORIES.play_objects) === J(['tracking', 'visual']));
+      check('*** three ready-made pieces: a stack, a pie, posters, each the play_objects module ***',
+        J(ADD_READY.map((p) => [p.key, p.type, p.start.shape])) === J([['piece:plays-stack', 'play_objects', 'stack'], ['piece:plays-pie', 'play_objects', 'pie'], ['piece:plays-posters', 'play_objects', 'posters']]));
+      check('each is named for what it is ("Top played this week: ...")', ADD_READY.every((p) => /^Top played this week: /.test(p.label)));
+      check('*** each starts in its shape with NO panel around it (its own background clear) ***',
+        J(pieceState('piece:plays-pie')) === J({ shape: 'pie', instancePanelSurface: 'clear' }));
+      check('the old profile\'s pieces are unchanged, and found the same way', ADD_PIECES.length === 2 && findPiece('piece:sign') === ADD_PIECES[1]
+        && findPiece('piece:plays-stack') === readyPiece('piece:plays-stack') && readyPiece('piece:sign') === null);
+      const L = addToLayout({ preset: 'full', slots: [null], scene: { kind: 'room', preset: 'theRoom' } }, 'po-new');
+      check('added to a room: it goes on the wall (placed in the scene), not into the backdrop\'s cell',
+        L.placed?.[0]?.id === 'po-new' && L.placed[0].place === 'scene' && L.slots[0] === null);
+    }
+
+    // =================================================================================================
+    section('*** the furniture target: { room, item, key } ***');
+    {
+      const b = normalizeBinding({ id: 'r1', target: { room: 'scr-A', item: 'lamp', key: 'driveScale' }, source: { kind: 'bus', topic: 't/x' } });
+      check('a room target keeps room, item and key, and is given its engine key', b && b.target.room === 'scr-A' && b.target.item === 'lamp'
+        && b.target.key === 'driveScale' && b.target.instance === roomTargetId('scr-A', 'lamp') && b.target.instance === 'room:scr-A:lamp', J(b?.target));
+      check('*** the engine key is DERIVED, never read from storage ***',
+        normalizeBinding({ target: { room: 'scr-A', item: 'lamp', key: 'driveTurn', instance: 'somebody-else' }, source: { kind: 'clock' } }).target.instance === 'room:scr-A:lamp');
+      check('a room target with no room or no item is refused', !normalizeBinding({ target: { room: '', item: 'lamp', key: 'driveScale' }, source: { kind: 'clock' } })
+        && !normalizeBinding({ target: { room: 'r', item: '  ', key: 'driveScale' }, source: { kind: 'clock' } }));
+      check('a panel target is exactly as it was', J(normalizeBinding({ id: 'p1', target: { instance: 'abc', key: 'volume' }, source: { kind: 'clock' } }).target) === J({ instance: 'abc', key: 'volume' }));
+      check('the same five keys as a panel\'s, in the 2D and the 3D room', J(ROOM_DRIVE_FIELDS.map((f) => f.key)) === J(ROOM_DRIVE_KEYS) && J(ROOM3D_DRIVE_FIELDS.map((f) => f.key)) === J(ROOM_DRIVE_KEYS));
+      check('...in plain words for an object ("This object: its size"; 3D "toward you or away")', ROOM_DRIVE_FIELDS[0].label === 'This object: its size'
+        && /toward you or away/.test(ROOM3D_DRIVE_FIELDS[4].label));
+      check('every one can be driven', bindableSettings(null, null, { fields: ROOM_DRIVE_FIELDS }).every((s) => s.ok));
+      check('a row: clamped, and "nothing driven" when it carries none', roomDriveOf({ driveScale: 9000 }).scale === 4 && !roomDriveOf({}).any && roomDriveOf({ driveHue: 0 }).any);
+      check('the list says which object in which room when its room is not showing',
+        /^In the room: lamp: driveScale/.test(describeBinding(b)));
+    }
+
+    section('*** the 2D room draws ONE object driven, from its recipe entry, and puts it back exactly ***');
+    {
+      const h = host('kiosk');
+      const recipe = presetRecipe('theRoom');
+      const sc = mountRoomScene(h, recipe, { light: 'night', motionFps: 0 });
+      const before = J(sc.baseRecipe());
+      const el = (id) => h.querySelector(`.rs-item[data-id="${id}"]`);
+      const lamp0 = { left: el('lamp').style.left, top: el('lamp').style.top, transform: el('lamp').style.transform, filter: el('lamp').style.filter };
+      const others0 = [...h.querySelectorAll('.rs-item')].filter((e) => e.dataset.id !== 'lamp').map((e) => e.style.cssText);
+      const glow0 = h.querySelector('.rm-glow[data-glow-for="lamp"]')?.style.cssText;
+      check('(setup) the lamp is drawn, with its glow at night', !!el('lamp') && !!glow0);
+      check('a module placed in the room is not an object to drive', sc.driveItem('nope', { driveScale: 200 }) === false);
+      sc.driveItem('lamp', { driveScale: 200, driveTurn: 30, driveHue: 90, driveAcross: 50 });
+      const L = el('lamp');
+      check('*** the lamp grows and turns ON TOP of its own transform (its foot stays its foot) ***',
+        L.style.transform.startsWith(lamp0.transform) && /rotate\(30deg\) scale\(2\)/.test(L.style.transform), L.style.transform);
+      check('...moves right by half its drawn width', parseFloat(L.style.left) > parseFloat(lamp0.left) && L.style.top === lamp0.top);
+      check('...its colours shift', L.style.filter === 'hue-rotate(90deg)' && L.dataset.driven === '1');
+      check('...and its glow went with it', h.querySelector('.rm-glow[data-glow-for="lamp"]').style.cssText !== glow0);
+      check('*** nothing else in the room was touched ***', J([...h.querySelectorAll('.rs-item')].filter((e) => e.dataset.id !== 'lamp').map((e) => e.style.cssText)) === J(others0));
+      check('*** the recipe is not written ***', J(sc.baseRecipe()) === before && !JSON.stringify(sc.baseRecipe()).includes('drive'));
+      const b0 = itemBox(sc.recipe().items.find((i) => i.id === 'lamp'));
+      const db = drivenBox(b0, { driveScale: 200 });
+      check('a floor object keeps its depth size when moved: only driveScale grows it', db.k === b0.k * 2 && drivenBox(b0, { driveDown: 50 }).k === b0.k);
+      sc.driveItem('clock', { driveTurn: -20 });
+      check('a thing on a side wall turns inside its own perspective', /matrix\(.*\) rotate\(-20deg\)/.test(el('clock').style.transform), el('clock').style.transform);
+      sc.setOptions({ showSlots: true });
+      check('*** a rebuild of the room keeps what drives it ***', /scale\(2\)/.test(el('lamp').style.transform) && sc.driven('lamp').driveScale === 200);
+      sc.setOptions({ showSlots: false });
+      sc.driveItem('lamp', {}); sc.driveItem('clock', {});
+      const back = el('lamp');
+      check('*** an empty row: back EXACTLY where its recipe puts it ***', back.style.left === lamp0.left && back.style.top === lamp0.top
+        && back.style.transform === lamp0.transform && back.style.filter === lamp0.filter && !back.dataset.driven, J([back.style.transform, lamp0.transform]));
+      check('...its glow too', h.querySelector('.rm-glow[data-glow-for="lamp"]').style.cssText === glow0);
+      sc.destroy(); h.remove();
+    }
+
+    section('*** the 3D room: a piece moved on the floor, turned about its foot, its faces recoloured; back exactly ***');
+    {
+      const h = host('kiosk');
+      const r3 = mountRoom3d(h, { kind: 'room3d', preset: 'box' }, { lod: 'full' });
+      const box = (id) => h.querySelector(`.r3-box[data-object="${id}"]`);
+      const t0 = box('cabinet').style.transform;
+      const faces0 = [...box('cabinet').querySelectorAll('.r3-bf')].map((f) => f.style.filter);
+      const others0 = [...h.querySelectorAll('.r3-box')].filter((b) => b.dataset.object !== 'cabinet').map((b) => b.style.transform);
+      const rec0 = J(r3.recipe());
+      r3.driveItem('cabinet', { driveTurn: 45, driveScale: 150, driveDown: 20, driveHue: 120 });
+      const view = viewOf(normalizeRoom3d({ preset: 'box' }));
+      const want = boxTransform(normalizeRoom3d({ preset: 'box' }).furniture.find((f) => f.id === 'cabinet'), view, { driveTurn: 45, driveScale: 150, driveDown: 20 });
+      check('the piece stands where the numbers say: toward you, turned on the floor, grown', /rotateY\(45deg\) scale3d\(1\.5, 1\.5, 1\.5\)/.test(box('cabinet').style.transform)
+        && /rotateY\(45deg\)/.test(want), box('cabinet').style.transform);
+      check('*** its colour shift is on each FACE, never the box (a filter would flatten it) ***',
+        [...box('cabinet').querySelectorAll('.r3-bf')].every((f) => f.style.filter === 'hue-rotate(120deg)') && !box('cabinet').style.filter);
+      check('nothing else moved, and the recipe is as it was', J([...h.querySelectorAll('.r3-box')].filter((b) => b.dataset.object !== 'cabinet').map((b) => b.style.transform)) === J(others0)
+        && J(r3.recipe()) === rec0);
+      r3.setObjectOpens('cabinet', 'dash-2');
+      check('a piece redrawn (made a door) stays driven', /rotateY\(45deg\)/.test(box('cabinet').style.transform) && box('cabinet').dataset.driven === '1');
+      r3.setObjectOpens('cabinet', null);
+      r3.driveItem('cabinet', {});
+      check('*** an empty row: back exactly ***', box('cabinet').style.transform === t0
+        && J([...box('cabinet').querySelectorAll('.r3-bf')].map((f) => f.style.filter)) === J(faces0) && !box('cabinet').dataset.driven);
+      r3.destroy(); h.remove();
+    }
+
+    section('*** end to end: a real arrangement registers its room\'s objects; a rule drives one; removing it restores it ***');
+    {
+      for (const kind of ['room', 'room3d']) {
+        const h = host('kiosk');
+        const el = (cls) => { const e = document.createElement('div'); e.className = cls; h.append(e); return e; };
+        const kioskEl = el('kiosk'), stageEl = el('k-stage'), mirrorEl = el('k-mirror'), clockEl = el('k-clock'), ambientEl = el('k-ambient');
+        mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
+        kioskEl.style.cssText = 'position:relative;width:960px;height:540px';
+        const bus = createBus();
+        const saved = [];
+        const engine = createAutomation({ bus, onChange: (list) => saved.push(list) });
+        let layoutWrites = 0;
+        let data = { kiosk: { layout: { preset: 'full', slots: [null] } } };
+        const arr = createArrangement({
+          bus, user: 'u', storage: null, settings: { get: () => data, set: (p) => { data = { ...data, ...p }; } },
+          kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+          mountInstance: async (def, hh) => ({ id: def.id, type: def.type, title: def.type, el: hh,
+            instance: { manifest: { title: def.type }, destroy() {}, onResize() {} }, state: { get: () => ({}), set() {}, destroy() {} }, events: { destroy() {} } }),
+          destroyRec: () => {}, renderMods: () => {}, runtime: () => ({ router: { focused: () => null, setFocus() {}, focusNext() {}, reachable: () => [] } }),
+          health: () => ({ forget() {} }), profileId: () => 'scr-A',
+          layoutStore: { get: () => data.kiosk.layout, save: () => { layoutWrites += 1; } },
+          driveRoom: (id, handle, fields) => engine.wrapState(id, handle, { fields }),
+        });
+        arr.setProfile({ id: 'scr-A', name: 'A', modules: [{ id: 'p1', type: 'photos' }] });
+        const scene = kind === 'room' ? { kind: 'room', preset: 'theRoom' } : { kind: 'room3d', preset: 'box' };
+        arr.resolve({ preset: 'full', slots: [null], scene, placed: [{ id: 'p1', place: 'scene', x: 60, y: 45, surface: 'back', w: 16, h: 16 }] });
+        arr.partition(); await arr.mountOverlays(); await arr.mountLayout();
+        const ok = await until(() => !!arr.roomScene() && arr.roomDriveTargets().length > 0);
+        const item = kind === 'room' ? 'lamp' : 'shelf';
+        const targets = arr.roomDriveTargets();
+        check(`(${kind}) every object of the room is a target, named, in this room (scr-A)`, ok && targets.some((t) => t.target.item === item && t.target.room === 'scr-A'
+          && t.id === roomTargetId('scr-A', item) && t.title.startsWith('In the room: ')) && engine.targets().includes(roomTargetId('scr-A', item)), J(targets.map((t) => t.id)));
+        check(`(${kind}) the modules placed in it are not (they have their panel numbers)`, !targets.some((t) => t.target.item === 'p1'));
+        const pick = () => (kind === 'room' ? kioskEl.querySelector(`.rs-item[data-id="${item}"]`) : kioskEl.querySelector(`.r3-box[data-object="${item}"]`));
+        const t0 = pick().style.transform;
+        const res = engine.add({ id: `drive-${kind}`, target: { room: 'scr-A', item, key: 'driveScale' }, source: { kind: 'bus', topic: 'test/plays' },
+          map: { outMin: 100, outMax: 300 } });
+        bus.publish('test/plays', 1);
+        const moved = await until(() => /scale(3d)?\(3/.test(pick().style.transform));
+        check(`(${kind}) *** a rule on { room, item, key } drives the real object ***`, res.ok && moved, `${J(res)} ${pick().style.transform}`);
+        check(`(${kind}) the rule is saved as the screen's (room, item, key)`, J(saved.at(-1)?.[0]?.target) === J({ room: 'scr-A', item, key: 'driveScale', instance: roomTargetId('scr-A', item) }));
+        check(`(${kind}) *** nothing was written to the layout ***`, layoutWrites === 0 && !J(data).includes('drive'));
+        // The Automation window lists the object and makes a rule on it as an object.
+        const ah = host();
+        const panel = mountAutomationPanel(ah, { engine, panels: () => targets });
+        check(`(${kind}) the Automation window offers the room's objects`, [...ah.querySelectorAll('option')].some((o) => o.value === roomTargetId('scr-A', item) && /In the room:/.test(o.textContent)));
+        check(`(${kind}) ...and lists the rule by the object's name`, /In the room: .*: This (object|piece): its size/.test(ah.textContent), ah.textContent.slice(0, 300));
+        panel.destroy?.(); ah.remove();
+        engine.remove(`drive-${kind}`);
+        check(`(${kind}) *** the rule removed: the object is back EXACTLY ***`, await until(() => pick().style.transform === t0), `${pick().style.transform} vs ${t0}`);
+        // A rule saved while the room is not up waits, and lands when it comes back.
+        engine.add({ id: `wait-${kind}`, target: { room: 'scr-A', item, key: 'driveTurn' }, source: { kind: 'bus', topic: 'test/turn' }, map: { outMin: 0, outMax: 90 } });
+        arr.destroy();
+        check(`(${kind}) the room taken down: its targets go, the rule stays (waiting)`, !engine.targets().includes(roomTargetId('scr-A', item))
+          && engine.status(`wait-${kind}`) === 'waiting for its panel' && engine.list().length === 1);
+        engine.destroy();
+        h.remove();
+      }
+    }
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+  }
+  const s = document.getElementById('summary');
+  s.textContent = failed === 0 ? `ALL PASS - ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  s.className = failed === 0 ? 'pass' : 'fail';
+})();
+</script>
+</body>
+</html>

@@ -231,6 +231,8 @@ function dashboardFactory(ctx) {
     const hostEmbedded = nested ? true : ctx.embedded === true;
     const hostChrome = nested ? [] : ctx.chrome;
     const hostWrapState = nested ? null : ctx.wrapState;
+    // Row 2.62 step 4: the host's engine, for this dashboard's room objects (room_drive.js). Never a nested one's.
+    const hostWrapTarget = nested ? null : (typeof ctx.wrapTarget === 'function' ? ctx.wrapTarget : null);
     const hostStartIndex = nested ? 0 : ctx.startIndex;
 
     let root = null, stageEl = null, mirrorEl = null, clockEl = null, ambientEl = null;
@@ -963,6 +965,8 @@ function dashboardFactory(ctx) {
           profileId: () => viewId,
           // The host screen's flash limit (flash_limit.js), for this dashboard's room, read live.
           flashLimit: () => flashLimit(ctx),
+          // Row 2.62 step 4: this dashboard's room objects, drivable by the host screen's automation rules.
+          driveRoom: hostWrapTarget,
           // 2026-10-02: the "make it bigger" corner on each panel -- not on a NESTED one's panels: its
           // opener covers them, and going in is how they are reached (arrangement.js says why).
           corners: !nested,

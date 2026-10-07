@@ -244,11 +244,13 @@ export function openDashboardEditor(opts = {}) {
   // Windows whose own Close puts only THEM away (the editing goes on); Close on any other ends the editing.
   const SIDE = new Set(['map', 'automation']);
   // Row 2.41: what is on this dashboard, for the Automation window -- every module, slotted or placed.
-  const autoPanels = () => (((arr.profile && arr.profile()) || { modules: [] }).modules || []).filter((m) => m && m.id).map((m) => {
+  // (Row 2.62 step 4: then the room's own objects, while the dashboard's scene is a room -- room_drive.js. Each comes with
+  // its own numbers, `fields`, and a rule made on one targets that object in that room, never the recipe.)
+  const autoPanels = () => [...(((arr.profile && arr.profile()) || { modules: [] }).modules || []).filter((m) => m && m.id).map((m) => {
     const rec = arr.recFor?.(m.id) || null;
     const manifest = getManifest(m.type) || null;
     return { id: m.id, title: rec?.title || manifest?.title || m.type || m.id, manifest, instance: rec?.instance || null };
-  });
+  }), ...(() => { try { return arr.roomDriveTargets?.() || []; } catch { return []; } })()];
   const chosenPanel = () => { const it = model.selected(); return it && !it.fixed ? it.id : null; };
   function close() {
     if (closed) return;

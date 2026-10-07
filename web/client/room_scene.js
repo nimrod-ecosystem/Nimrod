@@ -67,6 +67,14 @@ import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
 import { renderBackdrop, normalizeBackdrop, quadMatrix, PAINTS } from './room_backdrop.js';
 import { moveKeeping } from './dom_move.js';
 import { buildBrickArt, buildFor, lookOf } from './brick_builds.js';
+import { roomDriveOf, ROOM_DRIVE_KEYS } from './room_drive.js';
+
+// *** AN OBJECT AN AUTOMATION DRIVES (row 2.62 step 4, room_drive.js). *** `driveItem(id, row)` draws ONE object again
+// from its recipe entry plus the driven numbers (its size, turn, colour shift and move) -- its art, its button, its chip,
+// its window panes and its lamp glow follow it -- and touches nothing else: not the recipe (`baseRecipe` is never
+// changed by it), not the saved layout, not any other object. An empty row draws it from its recipe entry again, which
+// is how removing the rule puts it back exactly. The move and the turn are added to the object's own transform (a side
+// wall's perspective included), never instead of it.
 
 // *** A FLATTENED 3D ROOM IS AN ORDINARY ROOM (2026-10-02, room_flat.js). *** Three small additions make it so,
 // each data on the recipe and each ignored by a recipe that does not use it:
@@ -226,6 +234,26 @@ export function itemBox(it, shell = ROOM_SHELLS.room) {
     left: it.x, top: it.y, w, h, k, transform, origin: floor ? '50% 100%' : '50% 50%',
     floor, side, cx, anchorY: cy,
     visible: { w: vw, h: vh, left: cx - vw / 2, top: floor ? cy - vh : cy - vh / 2 },
+  };
+}
+
+/**
+ * An item's box DRIVEN (room_drive.js): `base` (its itemBox) moved by `across` / `down` percent of its own drawn width /
+ * height, turned and grown about its own transform origin (a floor thing's foot, a wall thing's middle). A floor thing
+ * keeps the size its place gave it. With nothing driven it is `base` itself. Pure.
+ */
+export function drivenBox(base, row) {
+  const d = roomDriveOf(row);
+  if (!d.any || !base) return base;
+  const dx = (d.across / 100) * base.visible.w, dy = (d.down / 100) * base.visible.h;
+  const cx = base.cx + dx, anchorY = base.anchorY + dy;
+  const vw = base.visible.w * d.scale, vh = base.visible.h * d.scale;
+  return {
+    ...base,
+    left: base.left + (dx / W) * 100, top: base.top + (dy / H) * 100,
+    transform: `${base.transform}${d.turn ? ` rotate(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale(${d.scale})` : ''}`,
+    k: base.k * d.scale, cx, anchorY, hue: d.hue,
+    visible: { w: vw, h: vh, left: cx - vw / 2, top: base.floor ? anchorY - vh : anchorY - vh / 2 },
   };
 }
 
@@ -925,6 +953,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   let visitTimer = null;
   const petTimers = new Map();
   const busOffs = [];
+  // Row 2.62 step 4: object id -> the driven numbers on it now (only the keys a rule drives). Memory only.
+  const drives = new Map();
 
   // ------------------------------------------------------------------ fitting the stage
   let scale = 1;
@@ -1039,6 +1069,25 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     rec.box = box;
     return rec;
   }
+
+  // ------------------------------------------------------------------ an object an automation drives
+  /** Draw `rec` where its recipe entry and its driven numbers put it (see the header's note). */
+  function applyDrive(rec) {
+    if (!rec || !rec.el) return;
+    const row = drives.get(rec.it.id) || null;
+    const box = drivenBox(itemBox(rec.it, shell), row);
+    rec.box = box;
+    placeEl(rec.el, box);
+    const hue = box.hue == null ? '' : `hue-rotate(${box.hue}deg)`;
+    if (rec.el.style.filter !== hue) rec.el.style.filter = hue;
+    if (row) rec.el.dataset.driven = '1'; else delete rec.el.dataset.driven;
+    if (rec.wrap) placeEl(rec.wrap, box);
+    if (rec.chip) applyStyle(rec.chip, { left: box.visible.left + box.visible.w / 2, top: box.visible.top - 8 });
+    if (rec.panes) { placeEl(rec.panes.host, box); rec.panes.host.style.filter = hue; }
+    const g = glowL.querySelector(`.rm-glow[data-glow-for="${CSS.escape(rec.it.id)}"]`);
+    if (g) placeGlow(g, rec);
+  }
+
 
   // ------------------------------------------------------------------ the window's panes
   // Each pane can hold an overlay (room-add-ons §4: `panes: [{ overlay: 'weather' }, …]`; here a pane is
@@ -1437,7 +1486,11 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     });
     const order = drawOrder(items);
     const recByIndex = new Map();
-    const make = (i) => { const r = buildItem(items[i], i); r.grew = items[i]._grew || 1; r.capped = !!items[i]._capped; recByIndex.set(i, r); return r; };
+    const make = (i) => {
+      const r = buildItem(items[i], i); r.grew = items[i]._grew || 1; r.capped = !!items[i]._capped; recByIndex.set(i, r);
+      if (drives.has(r.it.id)) applyDrive(r);        // row 2.62 step 4: a driven object stays driven through a rebuild
+      return r;
+    };
     for (const i of order.wall) roomL.append(make(i).el);
     for (const i of order.floor) roomL.append(make(i).el);
     for (const i of order.content) contentL.append(make(i).el);
@@ -1452,6 +1505,17 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   }
 
   // ------------------------------------------------------------------ light
+  /** A lamp's or a fire's glow, where its object is drawn (`r.box`: driven or not -- room_drive.js). */
+  function placeGlow(s, r) {
+    const g = FURNITURE[r.it.part]?.glow;
+    if (!g) return;
+    const def = FURNITURE[r.it.part];
+    const k = r.box.k;
+    const cx = r.box.cx + (g.x / 100 - 0.5) * def.box[0] * k;
+    const cy = r.box.anchorY - (1 - g.y / 100) * def.box[1] * k;
+    const rad = g.r * k * (light === 'night' ? 1.3 : 1);
+    applyStyle(s, { left: cx - rad, top: cy - rad, width: rad * 2, height: rad * 2 });
+  }
   function currentLight() { return lightFor(o.light && o.light !== 'recipe' ? o.light : recipe.light, now()); }
   function applyLight(force = false, views = true) {
     const next = currentLight();
@@ -1467,16 +1531,12 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       for (const r of recs) {
         const g = r.it.kind === 'furniture' ? FURNITURE[r.it.part]?.glow : null;
         if (!g) continue;
-        const def = FURNITURE[r.it.part];
-        const k = r.box.k;
-        const cx = (r.it.x / 100) * W + (g.x / 100 - 0.5) * def.box[0] * k;
-        const cy = (r.it.y / 100) * H - (1 - g.y / 100) * def.box[1] * k;
-        const rad = g.r * k * (light === 'night' ? 1.3 : 1);
         const s = doc.createElement('span');
         s.className = 'rm-glow';
         s.dataset.glowFor = r.it.id;
-        applyStyle(s, { position: 'absolute', left: cx - rad, top: cy - rad, width: rad * 2, height: rad * 2, borderRadius: '50%',
+        applyStyle(s, { position: 'absolute', borderRadius: '50%',
           background: `radial-gradient(circle,${g.c},transparent 70%)`, mixBlendMode: 'screen', pointerEvents: 'none' });
+        placeGlow(s, r);
         glowL.prepend(s);
       }
     }
@@ -1960,8 +2020,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         const def = rec.it.kind === 'furniture' ? FURNITURE[rec.it.part] : null;
         const g = def?.glow || { x: 50, y: 30, r: 150 };
         const k = b.k || 1;
-        const cx = def ? (rec.it.x / 100) * W + (g.x / 100 - 0.5) * def.box[0] * k : cxp;
-        const cy = def ? (rec.it.y / 100) * H - (1 - g.y / 100) * def.box[1] * k : b.visible.top;
+        const cx = def ? b.cx + (g.x / 100 - 0.5) * def.box[0] * k : cxp;
+        const cy = def ? b.anchorY - (1 - g.y / 100) * def.box[1] * k : b.visible.top;
         const rad = Math.max(120, g.r * k * 1.15);
         const s = doc.createElement('span');
         s.className = `rs-react-glow${does === 'fire' ? ' fire' : ''}`;
@@ -2163,6 +2223,25 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       if (rec) rebuildOverlay(rec, recipe.items.find((it) => it.id === id) || next);
       return true;
     },
+    /**
+     * ROW 2.62 STEP 4 (room_drive.js): draw object `id` with these driven numbers (`{ driveScale?, driveTurn?, driveHue?,
+     * driveAcross?, driveDown? }`; an empty row: as its recipe entry says). Only that object is drawn again; the recipe is
+     * not changed. A module placed in the room is not an object (it has its own panel numbers, panel_drive.js): false.
+     */
+    driveItem(id, row) {
+      if (destroyed) return false;
+      const it = baseRecipe.items.find((x) => x.id === id);
+      if (!it || it.kind === 'module') return false;
+      const keep = {};
+      for (const k of ROOM_DRIVE_KEYS) if (row && row[k] !== undefined && row[k] !== null && row[k] !== '') keep[k] = row[k];
+      const was = JSON.stringify(drives.get(id) || null);
+      if (roomDriveOf(keep).any) drives.set(id, keep); else drives.delete(id);
+      if (JSON.stringify(drives.get(id) || null) === was) return true;
+      applyDrive(recOf(id));
+      return true;
+    },
+    /** What drives object `id` now (a copy; {} when nothing does), or every driven object's, by id. */
+    driven: (id) => (id ? { ...(drives.get(id) || {}) } : Object.fromEntries([...drives].map(([k, v]) => [k, { ...v }]))),
     setOptions(next = {}) {
       const rebuild = ['showSlots', 'signWords', 'zoom', 'pictureFor', 'assetBase', 'books', 'looks', ...OPTION_KEYS].some((k) => k in next && JSON.stringify(next[k]) !== JSON.stringify(o[k]));
       Object.assign(o, next);

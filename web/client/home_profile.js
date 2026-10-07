@@ -95,8 +95,33 @@ export const ADD_PIECES = Object.freeze([
   Object.freeze({ key: 'piece:sign', type: 'button', start: 'sign', label: 'Name sign',
     hint: 'your name, on a sign' }),
 ]);
+// =====================================================================================================
+// *** READY-MADE: WHAT PLAYED MOST (row 2.62 step 4; row 2.53: "most people never wire anything"). *** Three things to
+// add with nothing to set up: "Top played this week" as a stack of bricks, a pie, or posters on the wall. Each is the
+// `play_objects` module (modules/play_objects.js) starting in that shape, with its OWN PANEL BACKGROUND CLEAR
+// (`instancePanelSurface`, the per-panel row kiosk.js and view.js read), so on a room's wall it is an object, not a card.
+// Argued: FOR clear -- a stack of bricks in a box is a picture of a stack, not a stack; every piece of its text carries
+// its own backing (play_objects.css). AGAINST -- on a busy photo wallpaper a clear panel has no ground; the ⚙ menu's
+// panel background row puts one back. In the game (unlocks.js) each locks and unlocks as that one module does, so one
+// unlock opens all three (modules.html `addItem`).
+// =====================================================================================================
+export const ADD_READY = Object.freeze([
+  Object.freeze({ key: 'piece:plays-stack', type: 'play_objects', start: Object.freeze({ shape: 'stack' }),
+    label: 'Top played this week: a stack of bricks', hint: 'a stack of Nimrod bricks for each thing played most' }),
+  Object.freeze({ key: 'piece:plays-pie', type: 'play_objects', start: Object.freeze({ shape: 'pie' }),
+    label: 'Top played this week: a pie', hint: 'a slice for each thing played most' }),
+  Object.freeze({ key: 'piece:plays-posters', type: 'play_objects', start: Object.freeze({ shape: 'posters' }),
+    label: 'Top played this week: posters', hint: 'a poster with the name of each thing played most' }),
+]);
+/** A ready-made piece by its Add key, or null. */
+export const readyPiece = (key) => ADD_READY.find((x) => x.key === key) || null;
+/** Any piece by its Add key (the profile's old ones, or a ready-made one), or null. */
+export const findPiece = (key) => ADD_PIECES.find((x) => x.key === key) || readyPiece(key);
+
 /** The starting settings for one piece (null for a plain module, which starts as it always does). */
 export function pieceState(key, personName = '') {
+  const r = readyPiece(key);
+  if (r) return { ...r.start, instancePanelSurface: 'clear' };
   const p = ADD_PIECES.find((x) => x.key === key);
   if (!p) return null;
   const s = profileSetup(personName);

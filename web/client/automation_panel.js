@@ -137,7 +137,9 @@ export function describeBinding(b, { panelTitle = null, settingLabel = null, mes
     : s.kind === 'data' ? `what’s been played (${playNumberWords(s)})`
     : 'nothing';
   const curve = b.map?.curve && b.map.curve !== 'linear' ? `, ${CURVE_LABELS[b.map.curve] || b.map.curve}` : '';
-  return `${panelTitle || b.target.instance}: ${settingLabel || b.target.key} ← ${from}${curve}`;
+  // A room object with no panel listed for it (its room is not showing) is named by its id in its room (row 2.62 step 4).
+  const who = panelTitle || (b.target.item ? `In the room: ${b.target.item}` : b.target.instance);
+  return `${who}: ${settingLabel || b.target.key} ← ${from}${curve}`;
 }
 
 const decimals = (n) => { const s = String(n); const i = s.indexOf('.'); return i < 0 ? 0 : Math.min(6, s.length - i - 1); };
@@ -187,7 +189,10 @@ export function mountAutomationPanel(root, {
   // The panel's own settings, then the host's numbers on every panel (its size, turn, colour shift: panel_drive.js),
   // when the engine was given any.
   const extraNow = () => { try { return engine.extraFields?.() || null; } catch { return null; } };
-  const settingsOf = (p) => (p ? bindableSettings(p.manifest, p.instance || null, { extra: extraNow() }) : []);
+  // (Row 2.62 step 4: a room's object comes as `{ id, title, fields, target: { room, item } }` - its own numbers,
+  // room_drive.js - and a rule made on it targets the object, not a panel.)
+  const settingsOf = (p) => (!p ? [] : Array.isArray(p.fields) ? bindableSettings(null, null, { fields: p.fields, extra: extraNow() })
+    : bindableSettings(p.manifest, p.instance || null, { extra: extraNow() }));
   const modeNow = () => { try { return autoScanModeOf(typeof chooseMode === 'function' ? chooseMode() : chooseMode); } catch { return 'one'; } };
 
   // ---- the list ----
@@ -334,7 +339,10 @@ export function mountAutomationPanel(root, {
     const map = { outMin: n('outMin'), outMax: n('outMax'), curve: curveSel.value, whenQuiet: quietSel.value };
     if (kind === 'bus' || kind === 'data') Object.assign(map, { inMin: n('inMin'), inMax: n('inMax') });
     if (curveSel.value === 'peak') Object.assign(map, { center: n('center'), width: n('width') });
-    return { target: { instance: panelSel.value, key: keySel.value }, source, map };
+    const chosen = panelById(panelSel.value);
+    const target = chosen && chosen.target && chosen.target.item != null
+      ? { room: chosen.target.room, item: chosen.target.item, key: keySel.value } : { instance: panelSel.value, key: keySel.value };
+    return { target, source, map };
   }
 
   const REASONS = {

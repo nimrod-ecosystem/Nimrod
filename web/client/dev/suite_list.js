@@ -92,6 +92,9 @@ export const SUITES = [
   // Row 2.62 step 2 (2026-10-07): charts of what played - the query layer, the panel, its table reading and the
   // spoken answer ("computer please, what played most"), end to end. No server.
   'charts',
+  // Row 2.62 step 4 (2026-10-07): what played as things in a room (a stack of bricks, a pie, posters), ready-made from
+  // Home's Add, each with its reading; and a room's own furniture driven by an automation rule, never written. No server.
+  'play_objects',
   // Row 2.45: the shared miss-flow engine and the games on it, and the sing-along frame.
   'quiz_flow', 'rating', 'think_games', 'word_builder', 'brain_games', 'spelling', 'simple_math', 'name_that', 'karaoke',
   // Row 2.37: Klondike on one switch, and a note from someone.

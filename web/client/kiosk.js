@@ -207,6 +207,7 @@ import './modules/wordforge.js';
 import './modules/trivia.js';    // registers 'trivia'
 import './modules/scoreboard.js';      // registers 'scoreboard'
 import './modules/charts.js';          // registers 'charts' (row 2.62: what played, drawn and read aloud)
+import './modules/play_objects.js';    // registers 'play_objects' (row 2.62 step 4: a stack, a pie, posters)
 import './modules/room.js';            // registers 'room'
 import './modules/word_games.js';      // registers 'word_games'
 import './modules/spelling.js';        // registers 'spelling' (row 2.45)
@@ -1808,6 +1809,8 @@ export async function mountKiosk(root, {
     flashLimit: flashLimitNow,
     layoutStore: ownLayoutStore,          // (above)
     listDashboards: () => listDashboards(),
+    // Row 2.62 step 4: the room's own objects, drivable by this screen's automation rules (room_drive.js).
+    driveRoom: (id, handle, fields) => automation.wrapState(id, handle, { fields }),
   });
   // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
   // `dashboardModule` on (embedded only), the panels are mounted by a dashboard MODULE, and the bar,
@@ -7088,6 +7091,8 @@ export async function mountKiosk(root, {
           note: (text) => sayNote(text),
           // (2026-10-02: layered by "every <module> panel" on this screen first -- `withTypeLayer`.)
           wrapState: (mid, st, type) => automation.wrapState(mid, withTypeLayer(st, type), { manifest: getManifest(type) }),
+          // Row 2.62 step 4: the dashboard's room objects, registered with the same engine (room_drive.js).
+          wrapTarget: (id, st, fields) => automation.wrapState(id, st, { fields }),
           ...(id === bootProfileId ? {
             settingsHandle: settings,
             // A layout the dashboard writes to this doc AND applies itself (edit mode redrawing its room):

@@ -11,7 +11,9 @@
 //
 //   { id, target: { instance, key }, source: {...}, map: {...} }
 //
-//   target   one module instance's numeric setting (the instance id the kiosk mounts it under).
+//   target   one module instance's numeric setting (the instance id the kiosk mounts it under), or - row 2.62
+//            step 4 - one object in a room, `{ room, item, key }` (room_drive.js: the host registers each object
+//            through `wrapState` with an empty handle, so it is driven as a panel's setting is).
 //   source   where the number comes from:
 //              bus    { kind:'bus', topic, path?, range? }   any topic with a numeric payload -
 //                     a sensor, a game event, a score. A `links.js` value envelope ({value, ...})
@@ -69,6 +71,7 @@ import { floorKey } from './mixer.js';
 import { CHANNELS } from './audio_bus.js';
 import { FLASH_LIMIT_DEFAULT, FRAME_MS, minFlashPeriodMs, normalizeFlashLimit } from './flash_limit.js';
 import { NUMBER_QUERIES, WINDOWS as DATA_WINDOWS, playNumber } from './play_charts.js';
+import { roomTargetId } from './room_drive.js';
 
 const ID_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 
@@ -333,16 +336,34 @@ export function normalizeMap(raw = {}) {
 }
 
 let seq = 0;
+// A room's id and an object's id, as a room target names them (row 2.62 step 4): ids, not prose, and never empty.
+const ROOM_ID_MAX = 200;
+const roomIdOf = (v) => { const s = typeof v === 'string' || typeof v === 'number' ? String(v).trim() : ''; return s && s.length <= ROOM_ID_MAX ? s : ''; };
+/**
+ * One binding, checked. Its target is a panel's setting `{ instance, key }`, or - row 2.62 step 4 (room_drive.js) - an
+ * object in a room `{ room, item, key }`: `room` the dashboard whose room it is, `item` the object's id in that room's
+ * recipe. A room target is given its engine key as `instance` (`roomTargetId`), so one driver per number, the overlay
+ * and the guards are the same code for both; that `instance` is always derived here, never read from storage.
+ */
 export function normalizeBinding(raw) {
-  const instance = String(raw?.target?.instance || '').trim();
   const key = String(raw?.target?.key || '').trim();
-  if (!instance || !key) return null;
+  let target;
+  if (raw?.target && raw.target.item != null) {
+    const room = roomIdOf(raw.target.room), item = roomIdOf(raw.target.item);
+    if (!room || !item || !key) return null;
+    target = { room, item, key, instance: roomTargetId(room, item) };
+  } else {
+    const instance = String(raw?.target?.instance || '').trim();
+    if (!instance || !key) return null;
+    target = { instance, key };
+  }
   const source = normalizeSource(raw?.source);
   if (!source) return null;
   let id = String(raw?.id || '').trim();
   if (!ID_RE.test(id)) id = `auto-${Date.now().toString(36)}-${(seq += 1).toString(36)}`;
-  return { id, target: { instance, key }, source, map: normalizeMap(raw?.map) };
+  return { id, target, source, map: normalizeMap(raw?.map) };
 }
+export { roomTargetId };
 
 // ---------------------------------------------------------------------------------------
 // THE CURVE. `t` is 0..1 (the input, already mapped); the answer is 0..1 of the output range.

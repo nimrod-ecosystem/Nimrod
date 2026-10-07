@@ -71,6 +71,8 @@ import { SHELL_PROMOTE, SHELL_DEMOTE } from './shell_verbs.js';
 // on this dashboard, the ✎ corner beside ⤢, and the `shell/edit-panel` verb.
 import { createEditMode, EDIT_PANEL_TOPIC, editSettingsFrom, ensureEditCss } from './edit_mode.js';
 import { moveKeeping } from './dom_move.js';
+// Row 2.62 step 4: a room's own objects as things an automation can drive (room_drive.js argues the shape).
+import { ROOM_DRIVE_FIELDS, ROOM3D_DRIVE_FIELDS, roomTargetId, emptyHandle } from './room_drive.js';
 
 // =====================================================================================================
 // *** MAKE A PANEL BIGGER, ONE LEVEL AT A TIME (2026-10-02). *** Mike: "something that pops up in the
@@ -248,6 +250,10 @@ export function createArrangement({
   //   listDashboards() -> Promise<[{ id, name }]>: the choices for what a room object opens.
   layoutStore = null,
   listDashboards = null,
+  // ROW 2.62 STEP 4 (room_drive.js): `driveRoom(id, handle, fields)` -> a wrapped handle, the host's automation engine's
+  // `wrapState`. Each object of this dashboard's room is registered through it while the room is mounted, so a rule can
+  // drive its size, turn, colour and place. Absent (a preview, an embed with no engine): nothing is registered.
+  driveRoom = null,
 } = {}) {
   // THE ARRANGEMENT'S OWN STATE (see the header). Set by `setProfile` and `resolve`, read by every
   // caller through `arr.profile()` / `arr.layout()`.
@@ -830,6 +836,7 @@ export function createArrangement({
         console.error('arrangement: the 3D room could not be drawn', err);
         roomScene = null;
       }
+      attachRoomDrive();
       return;
     }
     try {
@@ -851,7 +858,52 @@ export function createArrangement({
       console.error('arrangement: the room could not be drawn', err);
       roomScene = null;
     }
+    attachRoomDrive();
   }
+
+  // =================================================================================================
+  // *** THE ROOM'S OWN OBJECTS, DRIVABLE (row 2.62 step 4; room_drive.js argues the shape). *** While a room is
+  // mounted, each of its objects (not the modules placed in it: they have their own panel numbers) is registered with
+  // the host's automation engine (`driveRoom`, its `wrapState`) under `roomTargetId(room, item)`, through a handle that
+  // holds nothing. What the engine drives comes back on that handle and is handed to the renderer's `driveItem` - one
+  // object drawn again, the recipe and the layout never written. `room` is this dashboard's screen id, so two
+  // dashboards' rooms with a "sofa0" each are two targets. A room drawn again (`redrawRoom`) or taken down unregisters
+  // them first (the engine keeps the RULES, as it does for a panel that goes, and starts them again when they return).
+  // =================================================================================================
+  let roomDrives = [];
+  const roomKey = () => { try { return String(profileId() || 'here'); } catch { return 'here'; } };
+  function attachRoomDrive() {
+    detachRoomDrive();
+    const scene = roomScene;
+    if (!scene || typeof driveRoom !== 'function' || typeof scene.driveItem !== 'function') return;
+    const three = scene.kind === 'room3d';
+    const fields = three ? ROOM3D_DRIVE_FIELDS : ROOM_DRIVE_FIELDS;
+    const room = roomKey();
+    let objs = [];
+    try { objs = scene.objects?.() || []; } catch { objs = []; }
+    for (const o of objs) {
+      if (!o || !o.id) continue;
+      const id = roomTargetId(room, o.id);
+      let h = null;
+      try { h = driveRoom(id, emptyHandle(), fields); } catch (err) { console.error('arrangement: room drive', err); h = null; }
+      if (!h || typeof h.subscribe !== 'function') continue;
+      const draw = (row) => { try { if (roomScene === scene) scene.driveItem(o.id, row || {}); } catch (err) { console.error('arrangement: room drive', err); } };
+      const off = h.subscribe(draw);
+      draw(h.get?.());                       // a rule already running when the room mounts lands now
+      roomDrives.push({ id, room, item: o.id, name: o.name || o.id, fields, handle: h, off });
+    }
+  }
+  function detachRoomDrive() {
+    const list = roomDrives;
+    roomDrives = [];
+    for (const d of list) {
+      try { d.off?.(); } catch { /* gone */ }
+      try { d.handle.destroy?.(); } catch { /* gone */ }
+    }
+  }
+  /** The room's objects as the Automation window lists them: `{ id, title, fields, target: { room, item } }`. */
+  const roomDriveTargets = () => roomDrives.map((d) => ({ id: d.id, title: `In the room: ${d.name}`, fields: d.fields,
+    target: { room: d.room, item: d.item } }));
 
   // Where one entry goes: `{ el, where }`, where is 'slot' | 'room' | 'flat'.
   function containerFor(entry) {
@@ -1047,6 +1099,7 @@ export function createArrangement({
     for (const m of placedMeta.values()) dropDoor(m);
     placedMeta.clear();
     dropPieceSubs();                        // the room's stops go with the room
+    detachRoomDrive();                      // ...and its objects' targets (row 2.62 step 4; the rules stay)
     try { roomScene?.destroy(); } catch { /* already gone */ }
     roomScene = null; roomFree = null; roomHost = null;
     for (const k of Object.keys(placedLayers)) { placedLayers[k].remove(); delete placedLayers[k]; }
@@ -1935,6 +1988,7 @@ export function createArrangement({
     if (!r || !isRoomScene(r.scene)) return false;
     const oldScene = roomScene, oldHost = roomHost;
     dropPieceSubs();
+    detachRoomDrive();                      // the new room registers its own objects as it mounts (row 2.62 step 4)
     roomScene = null; roomFree = null; roomHost = null;
     layout = { ...layout, scene: r.scene };
     try {
@@ -2087,6 +2141,8 @@ export function createArrangement({
     // Row 2.38, the map editor: the room's objects (not the modules in it) and the door each one is,
     // while this dashboard's scene is a mounted room; [] otherwise.
     roomObjects: () => { try { return roomScene?.objects?.() || []; } catch { return []; } },
+    // Row 2.62 step 4: the room's objects an automation can drive, for the Automation window (room_drive.js).
+    roomDriveTargets,
     panelRecs,                         // every panel on a laid-out screen, in ring order
     roomScene: () => roomScene,        // the room renderer, while the dashboard's scene is a room
     cameraRec: () => cameraRec,
