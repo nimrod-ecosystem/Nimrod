@@ -32,6 +32,7 @@ import {
   convertCommand, serviceCommand, parsePhrases, createPhrasePrompter, prompterBlocker, mountVoiceModel,
   MY_VOICE_PATH, MY_VOICE_FROM_WEB, checkModelFiles, describeModelCheck, folderNames,
   STEPS, voiceModelStatus, VOICE_PLACE, VOICE_FOLDER, NIMROD_ROOT_WORDS, RECORDINGS_PLACE,
+  TRAIN_SCRIPT, TRAIN_PLAIN, trainCheckCommand, trainCommand, scoreCommand,
 } from '../voice_model.js';
 import { SUBFOLDERS } from '../user_folders.js';
 // No Nimrod folder on this device, for the pages below that are not about it (they must not read the real one).
@@ -104,6 +105,18 @@ try {
       && EUPHONIA.phrases === 'https://github.com/google/project-euphonia-app/blob/main/assets/phrases.txt'
       && EUPHONIA.licence === 'Apache-2.0', JSON.stringify(EUPHONIA));
     check('*** the base model matches the one the speech service runs (small.en) ***', BASE_MODEL === 'openai/whisper-small.en');
+    // home voice training (2026-10-07): web/tools/train_my_voice.py, run in the web folder.
+    check('*** the training script\'s exact commands ***',
+      TRAIN_SCRIPT === 'tools/train_my_voice.py' && trainCheckCommand() === 'py -3.13 tools/train_my_voice.py --check'
+      && trainCommand({ data: 'D:\\Nimrod\\Recordings', root: 'D:\\Nimrod' }) === 'py -3.13 tools/train_my_voice.py --data "D:\\Nimrod\\Recordings" --root "D:\\Nimrod"'
+      && scoreCommand({ data: 'D:\\Nimrod\\Recordings', root: 'D:\\Nimrod' }) === 'py -3.13 tools/train_my_voice.py --score --data "D:\\Nimrod\\Recordings" --root "D:\\Nimrod"',
+      trainCommand({ data: 'D:\\Nimrod\\Recordings', root: 'D:\\Nimrod' }));
+    check('with no path known, the placeholders say what to put there', trainCommand({}) === 'py -3.13 tools/train_my_voice.py --data "<the folder you exported to>" --root "<your Nimrod folder>"');
+    const sneakyTrain = trainCommand({ data: 'a" --out "C:\\x', root: 'r' });
+    check('*** a quote in a folder cannot add an option to the training command ***', (sneakyTrain.match(/"/g) || []).length === 4 && !/--out/.test(sneakyTrain.replace(/"[^"]*"/g, '')), sneakyTrain);
+    check('*** the training words say the recordings stay home and why not Colab; no step says "Google account" ***',
+      /uploads nothing/.test(TRAIN_PLAIN.stays) && /uploads your recordings to Google/.test(TRAIN_PLAIN.whyNot)
+      && !Object.values(TRAIN_PLAIN).some((s) => /Google account/.test(s)) && STEPS[2] === 'Train the model (at home, with the training script)');
     check('its own port, beside the shared service (8797)', VOICE_MODEL_PORT === 8796 && voiceModelUrl(8796) === 'ws://127.0.0.1:8796/speech'
       && LOCAL_URL.includes(':8797/'));
     check('*** the exact conversion command (Euphonia\'s own, with the tokenizer files copied) ***',
@@ -334,28 +347,64 @@ try {
     await add({ ...mk('o', 50, { prompt: { text: 'Somebody else', index: 0 } }), personId: 'other' }, [{ ear: 'room', wav: wav(1) }]);
 
     const s = euphoniaSamples(await store.list({ personId: 'mike' }));
-    check('*** samples: everything with what was meant AND audio, oldest first, numbered 001.. ***',
-      s.map((x) => `${x.folder}:${x.pairId}`).join() === '001:b,002:c,003:a,004:f', JSON.stringify(s));
+    // home voice training (2026-10-07): the notebook opens data/0, data/1, ... (str(i) for i in range(count)).
+    check('*** samples: everything with what was meant AND audio, oldest first, numbered 0..N-1, bare ***',
+      s.map((x) => `${x.folder}:${x.pairId}`).join() === '0:b,1:c,2:a,3:f', JSON.stringify(s));
     check('the room\'s microphone is preferred when there are two ears', s[3].ear === 'room');
-    check('"only read phrases" leaves out typed ones', euphoniaSamples(await store.list({ personId: 'mike' }), { which: 'prompted' }).map((x) => x.pairId).join() === 'b,a,f');
+    check('"only read phrases" leaves out typed ones, and is numbered 0..N-1 itself (no gap where a typed one was)',
+      euphoniaSamples(await store.list({ personId: 'mike' }), { which: 'prompted' }).map((x) => `${x.folder}:${x.pairId}`).join() === '0:b,1:a,2:f');
 
     const dir = fakeDir();
     const r = await exportEuphonia(dir, store, { personId: 'mike' });
     const paths = dir.files.map((f) => f.path);
-    check('*** the layout: data/001/recording.wav, data/001/phrase.txt, ... ***',
-      paths.slice(0, 8).join() === 'data/001/recording.wav,data/001/phrase.txt,data/002/recording.wav,data/002/phrase.txt,data/003/recording.wav,data/003/phrase.txt,data/004/recording.wav,data/004/phrase.txt',
+    check('*** the layout: data/0/recording.wav, data/0/phrase.txt, ... data/3 (the notebook\'s own numbering) ***',
+      paths.slice(0, 8).join() === 'data/0/recording.wav,data/0/phrase.txt,data/1/recording.wav,data/1/phrase.txt,data/2/recording.wav,data/2/phrase.txt,data/3/recording.wav,data/3/phrase.txt',
       paths.join());
+    check('*** no padded name and nothing numbered from 1 ***', !paths.some((p) => /^data\/0\d/.test(p)) && !paths.some((p) => p.startsWith('data/4/')));
     const file = (p) => dir.files.find((f) => f.path === p)?.data;
-    check('*** phrase.txt holds exactly what was meant ***', file('data/001/phrase.txt') === 'Good morning' && file('data/002/phrase.txt') === 'I want a drink'
-      && file('data/004/phrase.txt') === 'Two ears');
-    check('recording.wav is that pair\'s audio, byte for byte (16 kHz mono 16-bit WAV)', file('data/001/recording.wav')?.byteLength === 48
-      && file('data/004/recording.wav')?.byteLength === 56);
+    check('*** phrase.txt holds exactly what was meant ***', file('data/0/phrase.txt') === 'Good morning' && file('data/1/phrase.txt') === 'I want a drink'
+      && file('data/3/phrase.txt') === 'Two ears');
+    check('recording.wav is that pair\'s audio, byte for byte (16 kHz mono 16-bit WAV)', file('data/0/recording.wav')?.byteLength === 48
+      && file('data/3/recording.wav')?.byteLength === 56);
     check('*** another person\'s recordings are never in it ***', !dir.files.some((f) => f.data === 'Somebody else'));
     const index = JSON.parse(file('nimrod-export.json') || '{}');
     check('*** a map back to the recordings, written LAST, beside data/ (not inside it) ***',
-      paths[paths.length - 1] === 'nimrod-export.json' && index.samples?.length === 4 && index.samples[0].folder === '001' && index.samples[0].pairId === 'b'
-      && /recording\.wav/.test(index.layout), JSON.stringify(index).slice(0, 300));
+      paths[paths.length - 1] === 'nimrod-export.json' && index.samples?.length === 4 && index.samples[0].folder === '0' && index.samples[0].pairId === 'b'
+      && /recording\.wav/.test(index.layout) && index.v === 2 && index.count === 4, JSON.stringify(index).slice(0, 300));
     check('it reports what it wrote', r.written.join() === 'b,c,a,f' && r.failed.length === 0);
+
+    // *** A recording whose audio is gone (or cannot be written) leaves NO GAP: the notebook would crash on it. ***
+    await add(mk('g', 250, { prompt: { text: 'Lost audio', index: 3 } }), []);   // listed with a clip, but no audio stored
+    const dir2 = fakeDir();
+    const r2 = await exportEuphonia(dir2, store, { personId: 'mike' });
+    const folders2 = [...new Set(dir2.files.map((f) => f.path).filter((p) => p.startsWith('data/')).map((p) => p.split('/')[1]))];
+    check('*** a recording with no audio is skipped, and the ones after it close up: 0,1,2,3 with no gap ***',
+      folders2.join() === '0,1,2,3' && r2.failed.join() === 'g' && r2.written.join() === 'b,c,a,f'
+      && dir2.files.find((f) => f.path === 'data/2/phrase.txt')?.data === 'Turn on the lights', `${folders2.join()} ${r2.failed.join()}`);
+    const index2 = JSON.parse(dir2.files.find((f) => f.path === 'nimrod-export.json')?.data || '{}');
+    check('...and the index says so: four samples 0..3, the skipped one under failed',
+      index2.count === 4 && index2.samples.map((x) => x.folder).join() === '0,1,2,3' && index2.failed.join() === 'g', JSON.stringify(index2).slice(0, 300));
+
+    // A sample that fails PART-WAY (its audio written, its phrase not): the half folder is taken away where the
+    // browser can, and the next sample takes that number.
+    const files3 = [];
+    const removed = [];
+    let failOnce = true;
+    const failing = (path = '') => ({
+      async getDirectoryHandle(name) { return failing(path ? `${path}/${name}` : name); },
+      async removeEntry(name) { removed.push(path ? `${path}/${name}` : name); for (let i = files3.length - 1; i >= 0; i--) if (files3[i].path.startsWith(`${path}/${name}/`)) files3.splice(i, 1); },
+      async getFileHandle(f) {
+        const full = path ? `${path}/${f}` : f;
+        if (full === 'data/1/phrase.txt' && failOnce) { failOnce = false; throw new Error('disk full'); }
+        return { async createWritable() { let data = null; return { async write(d) { data = d; }, async close() { files3.push({ path: full, data }); } }; } };
+      },
+    });
+    const r3 = await exportEuphonia(failing(), store, { personId: 'mike' });
+    const folders3 = [...new Set(files3.map((f) => f.path).filter((p) => p.startsWith('data/')).map((p) => p.split('/')[1]))];
+    check('*** half written: removed, and the next sample reuses its number (0,1,2 - no gap, no half folder) ***',
+      removed.join() === 'data/1' && r3.failed.join() === 'c,g' && folders3.join() === '0,1,2'
+      && files3.find((f) => f.path === 'data/1/phrase.txt')?.data === 'Turn on the lights'
+      && files3.filter((f) => f.path.startsWith('data/1/')).length === 2, `${removed.join()} ${r3.failed.join()} ${folders3.join()}`);
   }
 
   // ======================================================================================
@@ -377,8 +426,11 @@ try {
       values: () => row, save: (patch) => { saved.push(patch); row = { ...row, ...patch }; return true; } });
     await page.ready;
     const text = root.textContent;
+    const codes0 = () => [...root.querySelectorAll('code[data-cmd]')].map((c) => c.textContent);
     const hrefs = [...root.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
-    check('*** links to the Euphonia repo, its notebook and its phrase list ***', [EUPHONIA.repo, EUPHONIA.notebook, EUPHONIA.phrases].every((h) => hrefs.includes(h)), hrefs.join());
+    check('*** links to the Euphonia repo (the method followed) and its phrase list ***', [EUPHONIA.repo, EUPHONIA.phrases].every((h) => hrefs.includes(h)), hrefs.join());
+    // home voice training (2026-10-07): the notebook runs on Google Colab, where the recordings go to Google.
+    check('*** the training notebook is NOT linked any more (Colab uploads the recordings) ***', !hrefs.some((h) => /\.ipynb|colab/i.test(h)), hrefs.join());
     check('links open apart from the screen and pass nothing back', [...root.querySelectorAll('a[href^="https:"]')].every((a) => a.target === '_blank' && /noopener/.test(a.rel)));
     check('*** says plainly what it is: ~100 phrases, a Whisper fine-tune, run yourself, nothing uploaded by us ***',
       /100 (short )?phrases/.test(text) && /Whisper/.test(text) && /yourself/.test(text) && /Nothing you record here is uploaded/.test(text), text.slice(0, 400));
@@ -387,8 +439,16 @@ try {
     check('*** the six steps: record, export, train (with the base model named), convert, put in place, start ***',
       /Record/.test(text) && /Export them/.test(text) && /Train/.test(text) && /Convert/.test(text) && /Put the folder in place/.test(text)
         && /Start the speech service/.test(text) && text.includes('openai/whisper-small.en'));
-    check('*** training says plainly what it needs: a Google account (Colab) or a computer with a graphics card ***',
-      /Google account/.test(text) && /Colab/.test(text) && /graphics card/.test(text));
+    const train = root.querySelector('[data-vm-train]').textContent;
+    check('*** training is AT HOME: the recordings stay on your own computers, nothing uploaded, which computer and card ***',
+      /Your recordings stay on your own computers/.test(train) && /uploads nothing/.test(train) && /NVIDIA graphics card/.test(train)
+      && /8 GB/.test(train) && /--cpu/.test(train) && /hours/.test(train) && !/Google account/.test(text), train.slice(0, 500));
+    check('*** Colab is named only as the reason not to: it uploads the recordings to Google ***',
+      /Colab, and used there it uploads your recordings to Google/.test(train) && /The method it follows/.test(train));
+    check('*** the training step\'s exact commands: --check, then train, then --score (placeholders until a path is known) ***',
+      codes0().includes(trainCheckCommand()) && codes0().includes(trainCommand({ data: RECORDINGS_PLACE, root: NIMROD_ROOT_WORDS }))
+      && codes0().includes(scoreCommand({ data: RECORDINGS_PLACE, root: NIMROD_ROOT_WORDS })), codes0().join(' | '));
+    check('convert says the training script has already done it', /already converted the model/.test(text));
     const now = root.querySelector('[data-vm-now]').textContent;
     check('*** "Where you are" answers "do I have it yet?": step 1, and the folder comes only after step 4 ***',
       /Step 1 of 6/.test(now) && !root.querySelector('[data-vm-notyet]').hidden && /until step 4/.test(root.querySelector('[data-vm-notyet]').textContent)

@@ -32,7 +32,7 @@
 // 3. ON A SCREEN. Recording is step 1's whole point and happens on the screen with its microphone. Steps 3, 4 and
 //    6 are commands typed on a computer, and step 5's folder picker wants a mouse: on a real screen (`ctx.isScreen`)
 //    those steps open with "Do this on your computer", links show their address (and a code to scan, for the
-//    notebook) instead of opening a tab over the dashboard (page_links.js's rule), and Copy is not offered. What
+//    method the training script follows) instead of opening a tab over the dashboard (page_links.js's rule), and Copy is not offered. What
 //    can be done from a screen still can: re-reading its own Nimrod folder, the "is it answering?" probe, the switch.
 //
 // 4. WHAT IF NOBODY ANSWERS? Nothing waits: a step is words and buttons, the panel never covers anything, and the
@@ -60,6 +60,7 @@ import {
   VOICE_MODEL_PORT, PHRASES_KEY, voiceModelFrom, voiceModelStatus, convertCommand, serviceCommand, checkModelFiles,
   describeModelCheck, folderNames, parsePhrases, createPhrasePrompter, prompterBlocker, mountVoiceModel,
   modelFolderPicker, nimrodVoiceFolder, voiceModelStorage,
+  TRAIN_PLAIN, trainCheckCommand, trainCommand, scoreCommand,
 } from '../voice_model.js';
 import { exportEuphonia, createIdbPairStore, createMemoryPairStore, EUPHONIA_DATA } from '../voice_recording.js';
 import {
@@ -94,12 +95,14 @@ export const STEP_GUIDE = Object.freeze([
       + 'turned on in this person’s settings; and the list of phrases to read.' }),
   Object.freeze({ n: 2, where: 'either',
     need: 'The recordings from step 1, on this screen, and a folder to save them in.' }),
+  // home voice training (2026-10-07): trained at home with the script, no longer on Google Colab.
   Object.freeze({ n: 3, where: 'computer',
-    need: 'A free Google account, to run the training notebook on Google Colab (a computer Google lends you, with a '
-      + 'graphics card, in your web browser), or a computer with a graphics card of its own. An ordinary laptop alone '
-      + 'takes a very long time.' }),
+    need: 'The folder you exported to, on a computer with an NVIDIA graphics card (about 8 GB of graphics memory), '
+      + 'Python 3.13 and the packages the training script names. Without such a card it can use the processor, '
+      + 'which takes hours.' }),
   Object.freeze({ n: 4, where: 'computer',
-    need: 'The checkpoint training left, and Python with the ctranslate2 and transformers packages.' }),
+    need: 'Nothing, if you trained with the training script: it converts at the end. A checkpoint made some other '
+      + 'way needs Python with the ctranslate2 and transformers packages.' }),
   Object.freeze({ n: 5, where: 'computer',
     need: 'The folder the conversion wrote, and the computer that runs the speech service.' }),
   Object.freeze({ n: 6, where: 'computer',
@@ -435,19 +438,24 @@ export function mountVoiceModelGuide(root, {
         <p class="vmg-soft">Then take that folder to the computer that trains (or leave it where it is, if that is this one).</p>`;
     }
     if (n === 3) {
+      // home voice training (2026-10-07): the script, at home. The toolkit is linked only as the method followed.
       return `${head}
-        <p>Open ${linkHtml(EUPHONIA.notebook, 'the training notebook', { qr: true })} (Google’s Project Euphonia toolkit,
-          ${linkHtml(EUPHONIA.repo, 'its home page')}, ${esc(EUPHONIA.licence)}).</p>
-        <p>Set its model to this (type it; the list does not offer it), so the result matches the recogniser the speech
-          service already runs:</p>
-        ${cmdHtml('base', BASE_MODEL)}
-        <p>Its data cell copies from a Firebase bucket: point it at the <code>${esc(EUPHONIA_DATA)}</code> folder you
-          exported instead. On your own computer, skip the three Colab-only cells (sign-in, Google Drive, TensorBoard), and
-          turn fp16 off if there is no graphics card. Training leaves a <b>checkpoint</b>: a folder named like
-          <code>checkpoint-200</code>.</p>`;
+        <p><b>Your recordings stay on your own computers.</b> ${esc(TRAIN_PLAIN.stays)}</p>
+        <p><b>Which computer:</b> ${esc(TRAIN_PLAIN.which)}</p>
+        <p><b>Once, on that computer:</b> ${esc(TRAIN_PLAIN.once)}</p>
+        ${cmdHtml('train-check', trainCheckCommand())}
+        <p><b>Then train</b>, in the same folder:</p>
+        ${cmdHtml('train', trainCommand({ data: pl.recordings, root: pl.root }))}
+        <p class="vmg-soft">It starts from <code>${esc(BASE_MODEL)}</code>, the recogniser the speech service already runs.
+          ${esc(TRAIN_PLAIN.after)}</p>
+        ${cmdHtml('score', scoreCommand({ data: pl.recordings, root: pl.root }))}
+        <p class="vmg-soft">${esc(TRAIN_PLAIN.keep)}</p>
+        <p class="vmg-soft">${esc(TRAIN_PLAIN.whyNot)} ${linkHtml(EUPHONIA.repo, 'The method it follows', { qr: true })}
+          (Google’s Project Euphonia, ${esc(EUPHONIA.licence)}).</p>`;
     }
     if (n === 4) {
       return `${head}
+        <p class="vmg-soft">${esc(TRAIN_PLAIN.converted)}</p>
         <p>The speech service cannot load a checkpoint; converting makes the folder it can. <b>This is the step that makes
           your voice model folder.</b> Run this, with the checkpoint’s folder in place of the first name:</p>
         ${cmdHtml('convert', convertCommand({ folder: pl.voice }))}

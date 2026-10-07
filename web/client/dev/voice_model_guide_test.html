@@ -37,7 +37,7 @@ import {
   VOICE_MODEL_GUIDE_CSS,
 } from '../modules/voice_model.js';
 import { STEPS, BASE_MODEL, convertCommand, serviceCommand, voiceModelStatus, checkModelFiles, VOICE_PLACE, NIMROD_ROOT_WORDS,
-  PHRASES_KEY } from '../voice_model.js';
+  PHRASES_KEY, RECORDINGS_PLACE, trainCheckCommand, trainCommand, scoreCommand } from '../voice_model.js';
 import { createMemoryPairStore, buildPair, encodeWav16 } from '../voice_recording.js';
 import { ROOT_KEY, kindKey, ROOT_PATH_KEY } from '../user_folders.js';
 import { getManifest, mountModule } from '../module.js';
@@ -296,12 +296,12 @@ try {
     answer = { dir: recDir, name: 'Nimrod/Recordings', source: 'root' };
     act(root, 'export-default').click(); await settle(10);
     check('*** with one: the recordings go into Recordings, in the notebook\'s layout ***',
-      recDir.files.map((f) => f.path).join() === 'data/001/recording.wav,data/001/phrase.txt,nimrod-export.json', recDir.files.map((f) => f.path).join());
+      recDir.files.map((f) => f.path).join() === 'data/0/recording.wav,data/0/phrase.txt,nimrod-export.json', recDir.files.map((f) => f.path).join());
     check('*** ...it says so, remembers the export, and moves on to step 3 (train) ***', /Exported 1 recording to Nimrod\/Recordings/.test(q(root, '[data-vmg-export-msg]')?.textContent || J(page.__probe().notes))
       && !!JSON.parse(storage.getItem(PHRASES_KEY('mike'))).exportedAt && count(root) === 'Step 3 of 6', `${count(root)} ${J(page.__probe().notes)}`);
     act(root, 'back').click();
     act(root, 'export-pick').click(); await settle(10);
-    check('*** "Choose a different folder": the same export, where somebody chose ***', picked.files.some((f) => f.path === 'data/001/phrase.txt')
+    check('*** "Choose a different folder": the same export, where somebody chose ***', picked.files.some((f) => f.path === 'data/0/phrase.txt')
       && /Elsewhere/.test(q(root, '[data-vmg-export-msg]').textContent));
     page.destroy();
     const nostore = mountVoiceModelGuide(root, { personId: 'mike', storage: memStorage({ [PHRASES_KEY('mike')]: J({ text: 'a', index: 1 }) }),
@@ -320,13 +320,21 @@ try {
       nimrodFolder: NO_NIMROD, pickModelFolder: null, copy: async (t) => { copied.push(t); return true; }, every: () => 1, stopEvery: () => {} });
     check('opens on step 3 after "Done" on 2', count(root) === 'Step 3 of 6');
     const hrefs = [...root.querySelectorAll('[data-vmg-step] a[href]')].map((a) => a.getAttribute('href'));
-    check('*** the training notebook and the toolkit, opening apart from this page ***', hrefs.some((h) => /Project_Euphonia_Finetuning\.ipynb/.test(h))
-      && hrefs.some((h) => /project-euphonia-app$/.test(h)) && [...root.querySelectorAll('[data-vmg-step] a[href]')].every((a) => a.target === '_blank' && /noopener/.test(a.rel)));
-    check('*** the base model, exactly, with Copy ***', q(root, 'code[data-cmd="base"]').textContent === BASE_MODEL);
-    q(root, '[data-vmg-copy="base"]').click(); await settle();
-    check('Copy copies it', copied[0] === BASE_MODEL && /Copied/.test(q(root, '[data-vmg-copy="base"]').textContent));
-    check('training says what it needs: a Google account or a graphics card', /Google account/.test(root.textContent) && /graphics card/.test(root.textContent));
+    // home voice training (2026-10-07): trained at home with the script; the toolkit only as the method followed.
+    check('*** the toolkit as the method followed, opening apart from this page; the Colab notebook NOT linked ***',
+      hrefs.some((h) => /project-euphonia-app$/.test(h)) && !hrefs.some((h) => /\.ipynb|colab/i.test(h))
+      && [...root.querySelectorAll('[data-vmg-step] a[href]')].every((a) => a.target === '_blank' && /noopener/.test(a.rel)), hrefs.join());
+    check('*** the training commands, exactly: --check, train, --score ***', q(root, 'code[data-cmd="train-check"]').textContent === trainCheckCommand()
+      && q(root, 'code[data-cmd="train"]').textContent === trainCommand({ data: RECORDINGS_PLACE, root: NIMROD_ROOT_WORDS })
+      && q(root, 'code[data-cmd="score"]').textContent === scoreCommand({ data: RECORDINGS_PLACE, root: NIMROD_ROOT_WORDS }));
+    q(root, '[data-vmg-copy="train"]').click(); await settle();
+    check('Copy copies the training command', copied[0] === trainCommand({ data: RECORDINGS_PLACE, root: NIMROD_ROOT_WORDS }) && /Copied/.test(q(root, '[data-vmg-copy="train"]').textContent));
+    const t3 = root.textContent;
+    check('*** training says the recordings stay on your own computers, which card, the base model, and never "Google account" ***',
+      /Your recordings stay on your own computers/.test(t3) && /NVIDIA graphics card/.test(t3) && t3.includes(BASE_MODEL)
+      && /uploads your recordings to Google/.test(t3) && !/Google account/.test(t3));
     act(root, 'done').click();
+    check('step 4 says the training script already converted it', /already converted the model/.test(root.textContent));
     check('*** step 4: the exact conversion command, into the Nimrod folder\'s Voice model ***', q(root, 'code[data-cmd="convert"]').textContent === convertCommand({ folder: VOICE_PLACE }));
     q(root, '[data-vmg-copy="convert"]').click(); await settle();
     check('...and Copy copies that', copied[1] === convertCommand({ folder: VOICE_PLACE }));
@@ -449,8 +457,8 @@ try {
     check('...and its phrase-list link is an address, not a tab', !q(root, '[data-vmg-step] a[href]') && !!q(root, '[data-vmg-addr]'));
     act(root, 'skip').click(); act(root, 'skip').click();
     check('*** step 3 says "Do this on your computer" ***', count(root) === 'Step 3 of 6' && /Do this on your computer/.test(q(root, '[data-vmg-where]')?.textContent || ''));
-    check('*** the notebook: its address, and a code to scan; nothing opens ***', !q(root, '[data-vmg-step] a[href]')
-      && /colab|github\.com/.test(q(root, '.vmg-address').textContent) && !!q(root, '[data-vmg-qr] svg'));
+    check('*** the method followed: its address, and a code to scan; nothing opens ***', !q(root, '[data-vmg-step] a[href]')
+      && /github\.com/.test(q(root, '.vmg-address').textContent) && !/colab/i.test(q(root, '.vmg-address').textContent) && !!q(root, '[data-vmg-qr] svg'));
     check('*** no Copy on a screen ***', !q(root, '[data-vmg-act="copy"]'));
     act(root, 'skip').click(); act(root, 'skip').click();
     check('step 5 on a screen: no folder picker, but its own Nimrod folder can still be looked in', act(root, 'check').hidden && !act(root, 'look').hidden);
