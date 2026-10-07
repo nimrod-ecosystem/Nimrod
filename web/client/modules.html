@@ -39,6 +39,9 @@
     font-size:.92rem}
   .top nav .ghost{border:1px solid var(--border);color:var(--text)}
   .top nav .solid{background:var(--link);color:#fff}
+  /* 2026-10-07: the tabs. The one you are on is marked; a hidden tab stays hidden at a phone's width too. */
+  .top nav a[aria-current="page"]{background:var(--surface);font-weight:800}
+  .top nav a[hidden]{display:none!important}
   .theme-pick{padding:7px 10px;border-radius:10px;border:1px solid var(--border);
     background:transparent;color:var(--text);font-size:.92rem;cursor:pointer;max-width:120px}
 
@@ -483,6 +486,9 @@
            takes over (see the IIFE below). Mike, 2026-09-21: "It would be nice if they could
            change themes without signing in." -->
       <select id="theme-pick" class="theme-pick" aria-label="Theme"></select>
+      <!-- 2026-10-07: the site's tabs. This page is Home (/home); the Modules page is its own page again (/modules). -->
+      <a class="ghost" href="/home" data-nav="home" aria-current="page" hidden>Home</a>
+      <a class="ghost" href="/modules" data-nav="modules">Modules</a>
       <a class="ghost" href="/kiosk.html">Try it</a>
       <a class="solid" href="/auth/login">Sign in</a>
     </nav>
@@ -712,6 +718,7 @@ import { CAT_STEPS, HOME_PAGE as CAT_HOME, CAT_BAR_SELECTOR, catGoThere, remembe
 // the visitor's real dashboard or just demo it -- see `liveHost()` and the `§three-live-
 // findings, item 3` writeup in MIKE_CHANGE_LIST.md for why this stopped being optional.
 let currentUser = null;
+let signedOutForSure = false;   // 2026-10-07: /api/me said 401 (not offline): see the hand-over at the bottom
 
 // A PROMISE, NOT JUST A CALL — the theme step below has to wait for THIS to actually finish
 // resolving `currentUser` before it can check it. Two separate `(async () => {})()` blocks
@@ -721,6 +728,8 @@ let currentUser = null;
 const signedIn = (async () => {
   try {
     const r = await fetch('/api/me', { headers: authHeaders(new URLSearchParams(location.search).get('user')) });
+    // 2026-10-07: a definite "not signed in" (401) is remembered: this page then hands over to the Modules page.
+    if (r.status === 401) signedOutForSure = true;
     if (!r.ok) return;   // 401 or offline -- leave the signed-out header exactly as it was
     const me = await r.json();
     currentUser = me.user;
@@ -728,7 +737,10 @@ const signedIn = (async () => {
     const signIn = document.querySelector('.top nav a.solid');
     // Home is THIS page for a signed-in visitor since 2026-09-30 (row 2.29); their list of screens
     // stays one link away.
-    if (brand) brand.href = '/modules.html';
+    // 2026-10-07: Home's plain address. The Home tab shows (it is this page).
+    if (brand) brand.href = '/home';
+    const homeTab = document.querySelector('.top nav [data-nav="home"]');
+    if (homeTab) homeTab.hidden = false;
     if (signIn) { signIn.textContent = 'My dashboards'; signIn.href = '/home.html'; }
   } catch { /* offline or blocked -- the signed-out header is still correct in that case */ }
 })();
@@ -3470,6 +3482,11 @@ Promise.allSettled([
       undoHome();
     }
   }
+  // 2026-10-07: NOT SIGNED IN, THE MODULES PAGE IS WHERE THIS LINK WAS GOING. A signed-out visitor here has always
+  // got the list of parts and one to try -- which is the Modules page now (/modules, library.html), so they are
+  // handed to it with the same `?m=`. Only on a definite 401: offline, the parts below are still a working page.
+  // The audit (`?all=1`) stays here.
+  if (!currentUser && signedOutForSure && !auditMode) { location.replace(`/modules${location.search}`); return; }
   if (ITEMS.length) select(ITEMS.some((m) => m.type === wanted) ? wanted : ITEMS[0].type);
 });
 

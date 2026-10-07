@@ -143,8 +143,15 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
              draft of it wrote /modules.html in backticks - which closed the string and made
              home.js a syntax error, which made home_test hang forever with no summary. -->
         <ul class="s-nav s-out">
-          <li><a class="s-navb s-link" href="/modules.html"
-            title="what each part does, and a live one to try">What you can add ↗</a></li>
+          <!-- 2026-10-07 (Mike: "What you have as the modules page now should be the homepage/profiles. I still
+               want the old Modules tab"): the two pages by their plain names and addresses. Home is Your people
+               and the editor; Modules is the library with one to try, its settings beside it and its bar under
+               it. "Modules" again rather than "What you can add" (the 2026-09-08 name): it is Mike's word for the
+               tab now, and the page's own heading still says what you can put on a screen. -->
+          <li><a class="s-navb s-link" href="/home" data-nav="home"
+            title="your people, and your Home to make your own">Home ↗</a></li>
+          <li><a class="s-navb s-link" href="/modules" data-nav="modules"
+            title="everything you can put on a screen, and one to try with its settings">Modules ↗</a></li>
           <!-- THE GAME HAD NO WAY IN (Mike, 2026-09-29: "I don't see anything for the game or
                profiles... I don't see Nimrod anywhere"). Game step 1 and Nimrod the cat's
                walkthrough both live on /game/, which nothing linked to - reachable only by typing

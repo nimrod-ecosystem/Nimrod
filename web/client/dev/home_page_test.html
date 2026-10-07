@@ -1119,13 +1119,14 @@ try {
   check('*** ?example=study opens the examples with the Study on the stage ***',
     await until(() => !ex().hidden && card('study')?.getAttribute('aria-current') === 'true' && /Study/.test($('#stagenote').textContent), 15000));
   const r = await fetch(`/?user=${encodeURIComponent(USER)}`, { headers: authHeaders(USER) });
-  check('*** / sends a signed-in visitor to the modules page (Home) ***', new URL(r.url).pathname === '/modules.html', r.url);
+  // 2026-10-07: Home's plain address is /home (the same page, served from modules.html).
+  check('*** / sends a signed-in visitor to Home, at /home ***', new URL(r.url).pathname === '/home', r.url);
   const anon = await fetch('/api/me');
   if (anon.status === 401) {
+    // 2026-10-07: signed out, the parts list is the Modules page now: this address hands over to it, ?m= and all.
     await open('m=photos');
-    check('*** signed OUT: no Home bar, no examples; the parts page as it was ***',
-      await until(() => kiosks() === 1) && $('#stage-bar').hidden && ex().hidden && !doc.body.classList.contains('is-home')
-      && win.getComputedStyle($('.legend')).display !== 'none');
+    check('*** signed OUT: handed to the Modules page (/modules), with its ?m= ***',
+      await until(() => { try { return ifr.contentWindow.location.pathname === '/modules' && /m=photos/.test(ifr.contentWindow.location.search); } catch { return false; } }));
   } else {
     check('(skipped) this server signs everybody in, so there is no signed-out visitor to test', true);
   }

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — Modules</title>
+<link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
+<meta name="description" content="Everything you can put on a Nimrod screen: look through it, try any one here with its settings beside it and its controls under it.">
+<!-- modules.css: the modules mounted here need their own styles (and settings.css, which it imports).
+     kiosk.css: the try box is the REAL kiosk, so its bar and its menu are styled by the kiosk's own sheet. -->
+<link rel="stylesheet" href="./modules.css">
+<link rel="stylesheet" href="./kiosk.css">
+<style>
+  /* Fallbacks only: theme.js writes the real values on <html> before anything is drawn. */
+  :root{
+    --accent:#839958; --link:#105666; --on-link:#fff; --bg:#F7F4D5; --surface-alt:#FBF9E9; --surface:#FFFFFF;
+    --text:#0A3323; --text-soft:#3c5346; --text-muted:#5d7064; --border:#e4e0c2; --accent-warm-deep:#a85f52;
+    --radius:16px; --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    /* How tall the three columns are. A setting would be one more thing to explain; argued in the report. */
+    --mp-h:min(80vh,820px);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+  a{color:var(--link)}
+  .wrap{max-width:1680px;margin:0 auto;padding:0 22px}
+
+  /* ---- the site's tabs ---- */
+  .top{border-bottom:1px solid var(--border);background:var(--surface-alt)}
+  .top .wrap{display:flex;align-items:center;gap:14px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;text-decoration:none;color:var(--text)}
+  .brand span{color:var(--accent-warm-deep)}
+  .top nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .top nav a{display:inline-flex;align-items:center;min-height:44px;padding:6px 14px;border-radius:10px;
+    text-decoration:none;font-weight:650;font-size:.95rem;color:var(--text);border:1px solid transparent}
+  .top nav a:hover{border-color:var(--border)}
+  .top nav a[aria-current="page"]{background:var(--link);color:var(--on-link);border-color:var(--link)}
+  .top nav a.solid{background:var(--link);color:var(--on-link)}
+  .top nav a[hidden]{display:none}
+  .theme-pick{min-height:44px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);
+    background:transparent;color:var(--text);font-size:.92rem;cursor:pointer;max-width:140px}
+
+  header.hero{padding:22px 0 4px}
+  .eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);margin:0 0 4px}
+  h1{font-size:clamp(1.6rem,3.4vw,2.2rem);line-height:1.15;letter-spacing:-.02em;margin:0 0 .25em}
+  .lede{color:var(--text-soft);max-width:80ch;margin:0 0 10px}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;list-style:none;margin:0 0 14px;padding:0;font-size:.9rem;color:var(--text-soft)}
+  .legend b{color:var(--text)}
+
+  /* ---- THE PAGE: the library, the module being tried, its settings ----
+     Three columns of one height, so the module keeps most of the window and neither side scrolls the page. */
+  .mp{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr) minmax(280px,340px);gap:14px;align-items:start}
+  .mp-lib,.mp-set{height:var(--mp-h);min-height:0;border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--surface);overflow:hidden;position:relative}
+  .mp-lib > *{height:100%}
+  .mp-try{height:var(--mp-h);display:flex;flex-direction:column;gap:8px;min-width:0}
+  .mp-head h2{margin:0;font-size:1.35rem;letter-spacing:-.01em;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .mp-head p{margin:2px 0 0;color:var(--text-soft)}
+  .pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.75rem;font-weight:800;
+    border:1px solid var(--border);color:var(--text-soft);white-space:nowrap}
+  /* The stage is a `mod-box`, so container queries inside a module resolve against it. No `overflow` here:
+     the kiosk inside sizes itself to this box (kiosk.css `.k-embed`) and its bar sits along the bottom. */
+  .mp-stage{position:relative;flex:1 1 auto;min-height:320px;border:1px solid var(--border);border-radius:14px;
+    background:var(--surface);overflow:hidden}
+  .mp-note{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.9rem;color:var(--text-muted);min-height:44px}
+  .mp-btn{min-height:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--link);background:var(--link);
+    color:var(--on-link);font:650 .92rem var(--font);cursor:pointer}
+  .mp-btn[disabled]{opacity:.6;cursor:default}
+  .mp-set{display:flex;flex-direction:column}
+  .mp-set h2{margin:0;padding:12px 14px 0;font-size:1.05rem}
+  .mp-set > p{margin:2px 14px 8px;font-size:.85rem;color:var(--text-muted)}
+  .mp-setbox{position:relative;flex:1 1 auto;min-height:0;overflow:auto;border-top:1px solid var(--border)}
+  .mp-setbox > *{min-height:100%}
+
+  .gaps{margin:22px 0 0;padding:12px 16px;border-radius:var(--radius);background:var(--surface-alt);
+    border:1px solid var(--border);font-size:.9rem;color:var(--text-soft)}
+  .gaps h2{font-size:.95rem;margin:0 0 4px;color:var(--text)}
+  .gaps p{margin:0 0 4px}
+  .gaps code{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0 5px}
+  footer{margin:24px 0 40px;padding-top:14px;border-top:1px solid var(--border);color:var(--text-muted);font-size:.9rem}
+
+  /* Narrower: the library and the module side by side, the settings under the module. */
+  @media (max-width:1180px){
+    .mp{grid-template-columns:minmax(260px,320px) minmax(0,1fr)}
+    /* A real height, not auto: the menu inside fills its box, so an auto box measured 0 and showed nothing. */
+    .mp-set{grid-column:2;height:70vh;min-height:320px}
+  }
+  /* A phone: one column, in the order you use them -- choose, look, then change. 16px gutter. */
+  @media (max-width:760px){
+    .wrap{padding:0 16px}
+    .mp{grid-template-columns:minmax(0,1fr)}
+    .mp-lib{height:60vh;height:60svh}
+    .mp-try{height:auto}
+    .mp-stage{height:72vh;height:72svh;flex:none}
+    .mp-set{grid-column:auto;height:80vh;height:80svh}
+  }
+</style>
+</head>
+<body>
+<!--
+  THE MODULES PAGE (2026-10-07). Mike: "What you have as the modules page now should be the homepage/profiles.
+  I still want the old Modules tab which would just basically be the modules module with settings on the side
+  and a transport bar below. ... we want a webpage version of it for people that are more comfortable with that."
+
+  It is put together from the parts a screen already uses, not copies of them:
+    * the library on the left IS the Modules module (modules/library.js, the shared sort and filter);
+    * the box in the middle IS the real kiosk with the one module in it (module_try.js mountEmbeddedKiosk), so
+      the bar under it is the screen's own transport bar;
+    * the settings on the right ARE the Settings panel (modules/settings.js), drawing that kiosk's own ⚙ menu.
+  So there is no second list of modules, no second bar and no second settings menu to keep in step.
+
+  The old page this replaces (before Home took over modules.html on 2026-09-30) is commit 61a81cc's
+  modules.html: a list on the left, one module large, its bar under it. Its "run every one of them" audit
+  stays where it is, at /modules.html?all=1.
+-->
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/">Nimrod<span>.</span></a>
+    <nav aria-label="Pages">
+      <!-- A visitor who is not signed in can still pick a theme (kept in this browser). Hidden once signed in:
+           then the theme is the one on their own screen. -->
+      <select id="theme-pick" class="theme-pick" aria-label="Theme"></select>
+      <a data-nav="home" href="/home" hidden>Home</a>
+      <a data-nav="modules" href="/modules" aria-current="page">Modules</a>
+      <a data-nav="dashboards" href="/home.html" hidden>My dashboards</a>
+      <a data-nav="landing" href="/">What Nimrod is</a>
+      <a data-nav="signin" class="solid" href="/auth/login?next=/modules">Sign in</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">What you can put on a screen</p>
+    <h1>Modules</h1>
+    <p class="lede">Everything you can put on a screen. Pick one in the list to try it here: its settings are on the
+      side, and the bar under it has the same controls it has on a screen.</p>
+  </header>
+  <ul class="legend" id="legend" aria-label="What each one asks of the person using it"></ul>
+
+  <section class="mp" aria-label="Modules">
+    <aside class="mp-lib" id="lib" aria-label="The modules library"></aside>
+    <div class="mp-try">
+      <div class="mp-head" id="try-head"></div>
+      <div class="mp-stage mod-box" id="stage"></div>
+      <div class="mp-note">
+        <span id="stagenote" role="status" aria-live="polite"></span>
+        <button type="button" class="mp-btn" id="add-btn" hidden>Add it to my screen</button>
+      </div>
+    </div>
+    <aside class="mp-set" aria-labelledby="set-h">
+      <h2 id="set-h">Settings</h2>
+      <p>The same settings as the ⚙ button on the bar under the module.</p>
+      <div class="mp-setbox" id="settings"></div>
+    </aside>
+  </section>
+
+  <div class="gaps">
+    <h2>What this page does not cover</h2>
+    <p id="recon">Checking this page against what is actually installed…</p>
+    <p>This list comes from the software that is running. If a part exists and nobody has written about it yet, it
+      is named here rather than left out.</p>
+  </div>
+
+  <footer>
+    Nimrod is free and open source. Your photos, video and camera stay on your own hardware —
+    <a href="/api/what-we-store">here is everything the server holds</a>.
+    <br><a href="/">What Nimrod is</a> · <a href="/kiosk.html">Try a whole screen</a> ·
+    <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
+  </footer>
+</div>
+
+<script type="module">
+import { mountVersionChip } from './version_watch.js';
+mountVersionChip();
+import { listManifests, mountModule } from './module.js';
+import { GROUPS, USE, groupItems, reconcile } from './modules_catalog.js';
+// THE MODULES THIS PAGE OFFERS: the same imports Home (modules.html) makes, so the two describe the same build.
+// dev/library_page_test.html compares the two lists and fails when they drift.
+import './modules/algebra.js';
+import './modules/camera.js';
+import './modules/clock.js';
+import './modules/comet.js';
+import './modules/comet_ambient.js';
+import './modules/pressgame.js';
+import './modules/call.js';
+import './modules/director.js';
+import './modules/educational.js';
+import './modules/lessons.js';
+import './modules/personal.js';
+import './modules/photos.js';
+import './modules/pond.js';
+import './modules/wallpaper.js';
+import './modules/scene.js';
+import './modules/room.js';
+import './modules/board.js';
+import './modules/progress.js';
+import './modules/quests.js';
+import './modules/reading_log.js';
+import './modules/scoreboard.js';
+import './modules/word_games.js';
+import './modules/spelling.js';
+import './modules/think_games.js';
+import './modules/word_builder.js';
+import './modules/brain_games.js';
+import './modules/quiz_mix.js';
+import './modules/name_that.js';
+import './modules/solitaire.js';
+import './modules/note.js';
+import './modules/weather.js';
+import './modules/music.js';
+import './modules/brickbreaker.js';
+import './modules/rhythm.js';
+import './modules/avatar.js';
+import './modules/voice_review.js';
+import './modules/voice_model.js';
+import './modules/calculator.js';
+import './modules/button.js';
+import './modules/sprint.js';
+import './modules/wordforge.js';
+import './modules/youtube.js';
+import './modules/karaoke.js';
+import './modules/trivia.js';
+import './modules/bank.js';
+import './modules/nimrod.js';
+import './modules/devices.js';
+import './modules/whats_new.js';
+import './modules/library.js';
+import './modules/card_sort.js';
+import './modules/profile.js';
+import './modules/edit_options.js';
+import './modules/people.js';
+import './modules/helper.js';
+import './modules/themes.js';
+// Not offered in the list: the Settings panel, which is this page's own right-hand column.
+import './modules/settings.js';
+import { libraryItems } from './library.js';
+import { mountEmbeddedKiosk, ensureModuleInstance } from './module_try.js';
+import { createBus } from './bus.js';
+import { createLocalBackend } from './local_store.js';
+import { authHeaders } from './auth.js';
+import { createProfilesClient, ensureProfile } from './profile.js';
+import { createState } from './state.js';
+import { pickCurrent, readLastPerson } from './people.js';
+import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const qs = new URLSearchParams(location.search);
+const devUser = qs.get('user');            // a dev server's `?user=`: rides along on every link, as home.js does
+const withUser = (href) => (devUser ? `${href}${href.includes('?') ? '&' : '?'}user=${encodeURIComponent(devUser)}` : href);
+const manifests = listManifests();
+
+// ---- who is looking ------------------------------------------------------------------------------
+// Signed in, the module you try is the one ON YOUR SCREEN when it is there (its real settings, saved as you change
+// them, exactly like the screen). A module that is not on your screen is a try, and "Add it to my screen" puts it
+// there: nothing is added just by looking (Home's rule since 2026-09-30). Signed out, everything is a try.
+let user = null;
+const signedIn = (async () => {
+  try {
+    const r = await fetch('/api/me', { headers: authHeaders(devUser) });
+    if (r.ok) user = (await r.json()).user || null;
+  } catch { /* offline: the signed-out page is still a working page */ }
+})();
+
+// The screen the module is looked up on: the person picked on My dashboards (people.js), their first screen.
+// Read only; nothing is made until somebody presses "Add it to my screen".
+const SCREEN = { profiles: null, person: null, id: null, types: new Set() };
+async function readScreen() {
+  SCREEN.profiles = createProfilesClient({ user });
+  try { SCREEN.person = pickCurrent(await SCREEN.profiles.people(), readLastPerson()); } catch { SCREEN.person = null; }
+  const list = await (SCREEN.person ? SCREEN.profiles.list(SCREEN.person.id) : SCREEN.profiles.list());
+  SCREEN.id = list?.[0]?.id || null;
+  SCREEN.types = new Set();
+  if (SCREEN.id) {
+    const p = await SCREEN.profiles.get(SCREEN.id);
+    for (const m of p.modules || []) SCREEN.types.add(m.type);
+  }
+}
+
+// ---- the tabs and the theme -------------------------------------------------------------------------
+const themePick = $('theme-pick');
+mountThemePicker(themePick);
+applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+function paintNav() {
+  const nav = (k) => document.querySelector(`[data-nav="${k}"]`);
+  for (const a of document.querySelectorAll('.top nav a')) a.href = withUser(a.getAttribute('href'));
+  if (!user) return;
+  document.querySelector('.top a.brand').href = withUser('/home');
+  nav('home').hidden = false;
+  nav('dashboards').hidden = false;
+  nav('signin').hidden = true;
+  nav('landing').hidden = true;
+  themePick.style.display = 'none';
+}
+
+// ---- the legend: what each one asks of the person using it -------------------------------------------
+$('legend').innerHTML = Object.values(USE).map((v) => `<li><b>${esc(v.label)}</b> — ${esc(v.hint)}</li>`).join('')
+  + '<li>(The library’s Filters… sort by this: “Asks of them”.)</li>';
+
+// ---- the page's own small host: the library and the Settings panel -------------------------------------
+// Not module_try.js's createTryHost: that one starts an input runtime listening on the whole window, and the kiosk
+// in the middle runs its own, so every arrow key would move two things. These two panels need no bindings (the
+// library takes its own keys inside its box; the settings are pressed). Their rows are this browser's own
+// (the library's order and filters), under a scope no screen reads. No unlock game here (no makeState): this page
+// is for looking, and nothing on it is locked.
+const pageBus = createBus();
+const backend = createLocalBackend();
+const PAGE_SCOPE = 'modules-page';
+function mountPanel(type, el, extra = {}) {
+  const instanceId = `${PAGE_SCOPE}-${type}`;
+  const state = backend.makeState(instanceId, {}, PAGE_SCOPE);
+  const rec = mountModule(type, {
+    mount: el, bus: pageBus, rootBus: pageBus, user: null, profileId: PAGE_SCOPE, personId: null, instanceId,
+    state, events: backend.makeEvents(instanceId, {}, PAGE_SCOPE), ...extra,
+  });
+  rec.init();
+  return rec;
+}
+
+// ---- what is on the stage ------------------------------------------------------------------------------
+const ITEMS = () => libraryItems();
+const itemFor = (type) => ITEMS().find((it) => it.kind === 'module' && it.type === type) || null;
+const recent = [];                 // what was tried here, newest first (the library's Recent row)
+let shown = null;                  // { item, live }
+let embed = null;
+let boundKiosk = null;
+let settingsRec = null;
+let seq = 0;
+
+function noteFor(item, live) {
+  if (live) return 'This is the one on your screen: what you change here, and in the settings beside it, is saved to it.';
+  if (user) return 'Trying it: nothing you change here is saved.';
+  return 'Trying it on this device: nothing here is saved. Sign in to put it on a screen.';
+}
+function paintHead(item, live) {
+  const u = item.use && USE[item.use] ? USE[item.use].label : '';
+  $('try-head').innerHTML = `<h2>${esc(item.title)}${u ? ` <span class="pill">${esc(u)}</span>` : ''}</h2>
+    <p>${esc(item.lead || '')}</p>`;
+  $('stagenote').textContent = noteFor(item, live);
+  const add = $('add-btn');
+  add.hidden = !user || live || SCREEN.types.has(item.type);
+  add.disabled = false;
+  add.textContent = 'Add it to my screen';
+}
+
+// THE SETTINGS COLUMN: the Settings panel, handed the kiosk's own menu (kiosk.js `settingsMenu`). Mounted again
+// whenever the kiosk in the middle is a new one -- a pick, or the kiosk rebuilding itself -- because the menu it
+// draws belongs to that kiosk and goes with it.
+function mountSettings() {
+  const k = embed?.kiosk || null;
+  if (k === boundKiosk && settingsRec) return;
+  try { settingsRec?.destroy(); } catch { /* gone */ }
+  settingsRec = null;
+  boundKiosk = k;
+  const box = $('settings');
+  box.innerHTML = '';
+  if (!k) return;
+  settingsRec = mountPanel('settings', box, {
+    settingsMenu: (host, opts) => (typeof k.settingsMenu === 'function' ? k.settingsMenu(host, opts) : Promise.resolve(null)),
+  });
+}
+new MutationObserver(() => { if (embed && embed.kiosk && embed.kiosk !== boundKiosk) mountSettings(); })
+  .observe($('stage'), { childList: true });
+
+// A scene from the library (a room, a live scene) is its module with one choice made. Tried, that choice is written
+// into the try's own row first -- the throwaway scope mountEmbeddedKiosk reads (`try-<type>`, `<type>-try`).
+async function seedTry(item) {
+  if (!item.settings) return;
+  try {
+    const s = backend.makeState(`${item.type}-try`, {}, `try-${item.type}`);
+    await s.load?.();
+    s.set(item.settings);
+    await s.flush?.();
+    s.destroy?.();
+  } catch (err) { console.error('modules page: the scene’s choice', err); }
+}
+
+async function show(item) {
+  if (!item || !item.placeable || !item.type) return false;
+  const mine = ++seq;
+  const live = !!user && !!SCREEN.id && SCREEN.types.has(item.type) && !item.settings;
+  shown = { item, live };
+  paintHead(item, live);
+  const i = recent.indexOf(item.type); if (i >= 0) recent.splice(i, 1); recent.unshift(item.type); recent.length = Math.min(recent.length, 6);
+  // One at a time: several of these want the camera, the microphone or the speakers.
+  try { settingsRec?.destroy(); } catch { /* gone */ }
+  settingsRec = null; boundKiosk = null; $('settings').innerHTML = '';
+  if (embed) { try { embed.destroy(); } catch { /* gone */ } embed = null; }
+  const stage = $('stage');
+  try {
+    if (!live) await seedTry(item);
+    const e = await mountEmbeddedKiosk({ stage, user: live ? user : null, type: item.type, profileId: live ? SCREEN.id : null });
+    if (mine !== seq) { e.destroy(); return false; }
+    embed = e;
+    mountSettings();
+    document.body.dataset.shown = item.type;
+    document.body.dataset.live = String(live);
+    return true;
+  } catch (err) {
+    console.error(`modules page: ${item.type} would not start`, err);
+    if (mine === seq) $('stagenote').textContent = 'This one needs something this browser will not give a page here — usually a camera, a microphone, or your own files.';
+    return false;
+  }
+}
+
+// "Add it to my screen": the one press on this page that changes a screen. The person's first screen, made for
+// them if they have none (as Home does on a first visit), then the module, then the scene's choice on it.
+$('add-btn').addEventListener('click', async () => {
+  const item = shown?.item;
+  if (!item || !user) return;
+  const btn = $('add-btn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    const profiles = SCREEN.profiles || createProfilesClient({ user });
+    const pid = SCREEN.id || await ensureProfile(profiles, user, null, SCREEN.person ? { personId: SCREEN.person.id } : {});
+    const profile = await profiles.get(pid);
+    const had = (profile.modules || []).some((m) => m.type === item.type);
+    const mod = await ensureModuleInstance(profiles, pid, profile, item.type);
+    if (!had && item.settings) {
+      const s = createState({ url: profiles.stateURL(pid, mod.id), user });
+      try { await s.load(); s.set(item.settings); await s.flush?.(); } finally { s.destroy?.(); }
+    }
+    // What that screen has now (a screen made just now came with its starter modules, which then open live too).
+    SCREEN.id = pid;
+    SCREEN.types = new Set((profile.modules || []).map((m) => m.type));
+    SCREEN.types.add(item.type);
+    await show(item);
+    $('stagenote').textContent = `${item.title} is on your screen now. ${noteFor(item, shown?.live)}`;
+  } catch (err) {
+    console.error('modules page: add', err);
+    btn.disabled = false; btn.textContent = 'Add it to my screen';
+    $('stagenote').textContent = `${item.title} could not be added. Nothing changed; press it again to retry.`;
+  }
+});
+
+// ---- the canary: a part that is installed and nobody has described is named, not missed ------------------
+{
+  // (The Settings panel is this page's own column, not a part offered in the list.)
+  const r = reconcile(manifests.filter((m) => m && m.type !== 'settings'));
+  const bits = [`${r.described.length} parts described`];
+  bits.push(r.undescribed.length
+    ? `${r.undescribed.length} installed but not yet described: ${r.undescribed.map((t) => `<code>${esc(t)}</code>`).join(', ')}`
+    : 'nothing installed is left unexplained');
+  if (r.stale.length) bits.push(`${r.stale.length} described but no longer installed: ${r.stale.map((t) => `<code>${esc(t)}</code>`).join(', ')}`);
+  $('recon').innerHTML = bits.join(' · ');
+}
+
+// ---- start ------------------------------------------------------------------------------------------------
+const wanted = qs.get('m');
+const firstType = (() => {
+  if (wanted && itemFor(wanted)) return wanted;
+  for (const g of GROUPS) { const m = groupItems(g.id, manifests).find((c) => itemFor(c.type)); if (m) return m.type; }
+  return ITEMS().find((it) => it.kind === 'module')?.type || null;
+})();
+
+// The library's host: a pick (its "Use it here", a double click) tries it in the middle. A single press on a card
+// ALSO tries it (below), the way the old page's list did: a webpage reader expects a click to show the thing.
+const LIB_HOST = {
+  mode: 'panel', target: null,
+  focus: wanted && itemFor(wanted) ? wanted : null,
+  usage: () => ({ recent: [...recent], counts: {} }),
+  place: (it) => show(it),
+};
+const libRec = mountPanel('library', $('lib'), { libraryHost: () => LIB_HOST });
+$('lib').addEventListener('click', (e) => {
+  const card = e.target instanceof Element ? e.target.closest('.lib-card[data-lib-key], [data-lib-recent-key]') : null;
+  if (!card) return;
+  const it = ITEMS().find((x) => x.key === card.dataset.libKey);
+  if (it && it.placeable && it.type && !(shown && shown.item.key === it.key)) show(it);
+});
+
+// For the suite: what is shown, the kiosk and the two panels.
+window.__modulesPage = {
+  shown: () => (shown ? { type: shown.item.type, key: shown.item.key, live: shown.live } : null),
+  kiosk: () => embed?.kiosk || null,
+  settings: () => settingsRec?.impl?.__probe?.() || null,
+  library: () => libRec?.impl?.__probe?.() || null,
+  show: (type) => show(itemFor(type)),
+  screen: () => ({ id: SCREEN.id, types: [...SCREEN.types] }),
+  user: () => user,
+};
+
+await signedIn;
+paintNav();
+if (user) {
+  try {
+    await readScreen();
+    if (SCREEN.id) {
+      const s = createState({ url: SCREEN.profiles.stateURL(SCREEN.id, 'settings'), user });
+      try { const theme = ((await s.load()) || {}).theme; if (theme) applyTheme(document.documentElement, theme); } finally { s.destroy(); }
+    }
+  } catch (err) { console.error('modules page: your screen could not be read; everything is a try', err); }
+}
+if (firstType) await show(itemFor(firstType));
+document.body.dataset.ready = 'true';
+</script>
+</body>
+</html>

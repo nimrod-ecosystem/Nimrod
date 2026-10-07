@@ -161,6 +161,9 @@ export const SUITES = [
   // 2026-10-02: "Modules", the library of everything addable (categories, sort, filter, the game's locks,
   // the AI's place / swap); transport_test drives it in a panel's place in a real kiosk.
   'library',
+  // 2026-10-07: the Modules page again (library.html, /modules): the library, the real kiosk and its bar, the
+  // Settings panel beside it; /home and the old addresses. Mounts real kiosks (needs the server).
+  'library_page',
   // 2026-10-02: settings at every level, Pause / Play on the bar, a panel made bigger, a call's controls,
   // more layouts. Mounts real kiosks (needs the server).
   'screen_controls',
