@@ -1,0 +1,63 @@
+/* charts.css - the look of `modules/charts.js`. Loaded by the module itself, from a <link> inside its own mount,
+   the way weather.css and scoreboard.css are.
+
+   THEME TOKENS ONLY - no literal colour in this file. The chart sits on the theme's own --surface, a card of its
+   own, so it reads on a clear panel over a moving scene as well as on a still theme. The series colours --pc-1 ...
+   are set on the panel by the module (play_charts.js `seriesColours`: the theme tokens that stand out from that
+   surface by 3:1, with normal vision and with deuteranopia), each falling back to a theme token here.
+
+   SIZE: container units, so the same panel reads as a whole screen, a quarter, or a small window. */
+
+.pc-wrap{width:100%;min-height:100%;container-type:inline-size;font-family:var(--font);color:var(--text)}
+.pc-wrap *{box-sizing:border-box}
+.pc{min-height:100%;display:flex;flex-direction:column;gap:clamp(6px, 2cqw, 14px);padding:clamp(8px, 3cqw, 22px);
+  background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px}
+.pc-title{margin:0;font-size:clamp(16px, 5cqw, 34px);font-weight:800;color:var(--text-strong)}
+.pc-note{margin:0;font-size:clamp(12px, 3cqw, 18px);color:var(--text-muted)}
+.pc-empty{margin:0;padding:clamp(8px, 4cqw, 30px) 0;font-size:clamp(14px, 4cqw, 26px);color:var(--text-muted);text-align:center}
+.pc-body{flex:1 1 auto;min-height:0}
+
+.pc-svg{display:block;width:100%;height:auto;max-height:70vh}
+.pc-svg-label,.pc-svg-value{font-size:24px;font-family:var(--font);fill:var(--text)}
+.pc-svg-value{font-weight:800;fill:var(--text-strong)}
+.pc-svg-axis{font-size:20px;font-family:var(--font);fill:var(--text-muted)}
+.pc-grid{stroke:var(--border);stroke-width:1}
+.pc-slice{stroke:var(--surface);stroke-width:3}
+.pc-rest{stroke:var(--text-muted);stroke-width:1;stroke-dasharray:4 3}
+.pc-slice-num{font-size:24px;font-weight:800;font-family:var(--font);fill:var(--surface)}
+
+.pc-pie-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:clamp(8px, 3cqw, 24px)}
+.pc-pie{width:clamp(120px, 42cqw, 320px);flex:none}
+.pc-legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;flex:1 1 14em;min-width:0}
+.pc-legend li{display:flex;align-items:center;gap:8px;font-size:clamp(13px, 3.4cqw, 22px)}
+.pc-sw{flex:none;width:1.1em;height:1.1em;border-radius:4px;border:1px solid var(--border)}
+.pc-sw.pc-rest{border-style:dashed;border-color:var(--text-muted)}
+.pc-leg-label{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.pc-leg-value{flex:none;font-weight:700;color:var(--text-strong)}
+
+.pc-num{margin:auto 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:.3em}
+.pc-big{font-size:clamp(40px, 22cqw, 180px);font-weight:800;line-height:1;color:var(--text-strong);font-variant-numeric:tabular-nums}
+.pc-num-words{font-size:clamp(16px, 6cqw, 48px);font-weight:700}
+
+/* THE READING. Hidden from sight, never from a screen reader - and shown as the list. */
+.pc-sr{position:absolute !important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);
+  clip-path:inset(50%);white-space:nowrap;border:0}
+.pc-table{width:100%;border-collapse:collapse;font-size:clamp(14px, 3.8cqw, 24px)}
+.pc-table caption{text-align:left;font-weight:700;color:var(--text-muted);padding-bottom:4px;font-size:.8em}
+/* Shown as the list, the title above already says what the caption says: kept for a screen reader, not shown twice. */
+.pc-table:not(.pc-sr) caption{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.pc-table th,.pc-table td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;color:var(--text)}
+.pc-table thead th{font-size:.8em;color:var(--text-muted)}
+.pc-table td{text-align:right;font-weight:800;color:var(--text-strong);white-space:nowrap}
+.pc-table tbody th{font-weight:600;overflow-wrap:anywhere}
+.pc-table td[colspan]{text-align:left;font-weight:600;color:var(--text-muted)}
+
+.pc-btns{display:flex;flex-wrap:wrap;gap:6px}
+.pc-btn{min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);
+  color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.pc-btn:hover{border-color:var(--accent)}
+/* THE SWITCH CURSOR: an outline AND a leading marker, so the lit button reads without colour (scoreboard.css's). */
+.pc-btn[data-on="1"]{outline:3px solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px}
+.pc-btn[data-on="1"]::before{content:"\25B8\00a0"}
+.pc-said{margin:0;font-size:clamp(12px, 3cqw, 18px);color:var(--text-muted)}
+.pc-said:empty{display:none}

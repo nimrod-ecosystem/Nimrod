@@ -89,6 +89,9 @@ export const SUITES = [
   'plays',
   // Row 2.58 (2026-10-07, later): where a person's history is kept - this device, the Nimrod folder, or with us.
   'history_place',
+  // Row 2.62 step 2 (2026-10-07): charts of what played - the query layer, the panel, its table reading and the
+  // spoken answer ("computer please, what played most"), end to end. No server.
+  'charts',
   // Row 2.45: the shared miss-flow engine and the games on it, and the sing-along frame.
   'quiz_flow', 'rating', 'think_games', 'word_builder', 'brain_games', 'spelling', 'simple_math', 'name_that', 'karaoke',
   // Row 2.37: Klondike on one switch, and a note from someone.

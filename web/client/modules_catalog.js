@@ -789,6 +789,21 @@ export const CATALOG = [
       + 'so nothing turns red for being under it. It can also show a single count, large, on its '
       + 'own.',
   },
+  // Row 2.62 step 2: charts of what played (play_charts.js). `watch`: it keeps itself up to date and asks nothing;
+  // its buttons only say it aloud or show it another way.
+  {
+    type: 'charts',
+    title: 'Charts',
+    group: 'record',
+    use: 'watch',
+    lead: 'What played on this screen, as a chart or graph: bars, a line over time, a pie, one number or a list.',
+    needs: 'Nothing to set up. It counts what YouTube, photos, personal videos and music from folders play here.',
+    why: 'It starts as “Top played this week”, and “Next view” shows the same plays other ways: each day this '
+      + 'month, today in one number, by kind, of all time. Every chart can be read as a plain list and said '
+      + 'aloud - press “Say it”, or say “computer please, what played most”.',
+    note: 'Counted on this device from this screen’s own plays, and nothing is sent anywhere. Spotify plays are '
+      + 'left out: Spotify’s developer rules say an app should not make listening statistics from them.',
+  },
   // Row 2.44: the recordings voice_recording.js kept on this device, reviewed a pair at a time. `touch`: it
   // plays nothing until somebody presses Play, and left alone it is a list.
   {
