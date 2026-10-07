@@ -32,3 +32,9 @@
 .mu-favs li{display:flex;flex-direction:column;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
 .mu-spot{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--border)}
 .mu-devs{margin:0;padding-left:1.2em}
+/* The song-info card (row 2.55): the cover whole and uncropped (Spotify's artwork rule), the name and artists beside it. */
+.mu-song{display:flex;gap:clamp(8px, 2cqmin, 18px);align-items:center;min-width:0}
+.mu-cover{flex:0 0 auto;width:clamp(56px, 22cqmin, 180px);height:auto;aspect-ratio:auto;object-fit:contain;border-radius:6px}
+.mu-song > div{min-width:0}
+.mu-song-name{font-size:clamp(15px, 4.4cqmin, 34px);font-weight:700;color:var(--text-strong);overflow-wrap:anywhere}
+.mu-song-who{font-size:clamp(13px, 3.4cqmin, 26px);color:var(--text);overflow-wrap:anywhere}

@@ -7,7 +7,9 @@
 //                else this panel's own YouTube player, else it says there is nowhere to play it
 //   file      -> music_local.js, through the audio bus
 //   folder    -> music_local.js, through the audio bus
-//   spotify   -> music_spotify.js, on a Spotify device that is already on (only when turned on)
+//   spotify   -> music_spotify.js, on a Spotify device that is already on (only when turned on); the
+//                music panel hands over a player that picks a playlist's songs with the site's own weighted
+//                picker (createSpotifyPlayer, row 2.55), and a bare connector still works here
 //
 // Starting one kind stops whatever kind was playing before, so "play jazz" after "play the Beatles"
 // never leaves two things going. (Two things of the SAME kind replace each other in their own player.)
@@ -43,7 +45,10 @@ export const MESSAGES = Object.freeze({
   'not-found': 'There is no favourite called “{name}”.',
   'did-you-mean': 'Did you mean “{name}”?',
   'no-youtube': 'There is no YouTube panel on this screen to play it in.',
-  'spotify-off': 'Spotify is turned off for this panel.',
+  // (row 2.55, Mike hit this with no way forward) Says where the switch is. The panel shows a "Turn Spotify on"
+  // button beside it too.
+  'spotify-off': 'Spotify is turned off for this panel. Switch it on in this panel’s settings (the “Spotify” row), '
+    + 'or press “Turn Spotify on” here.',
   'bad-source': 'That favourite does not say where its music is.',
 });
 export const messageFor = (reason, name = '') =>
@@ -106,7 +111,12 @@ export function createMusicRouter({
       if (c.kind === 'youtube-panel') bus.publish(instanceTopic(c.instanceId, 'youtube/pause'));
       else if (c.kind === 'youtube-here') ownYoutube?.stop?.();
       else if (c.kind === 'local') local?.stop?.();
-      else if (c.kind === 'spotify') await read(spotify, null)?.pause?.();
+      else if (c.kind === 'spotify') {
+        // A player that steers its own order (music_spotify.js createSpotifyPlayer) is told it is finished
+        // with, not just paused; a bare connector only has pause.
+        const sp = read(spotify, null);
+        await (typeof sp?.stop === 'function' ? sp.stop() : sp?.pause?.());
+      }
     } catch (err) { console.error('music: stop', err); }
   }
 
@@ -160,7 +170,7 @@ export function createMusicRouter({
       if (!r.ok) return fail(r.reason, entry.name);
       current = { kind: 'spotify', name: entry.name };
       changed();
-      return { ok: true, kind: 'spotify', device: r.device };
+      return { ok: true, kind: 'spotify', device: r.device, ...(r.order ? { order: r.order, note: r.note || '' } : {}) };
     }
     return fail('bad-source', entry.name);
   }

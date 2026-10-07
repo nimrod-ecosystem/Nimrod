@@ -108,13 +108,33 @@ export function parseLink(raw) {
     return null;
   }
   if (host === 'open.spotify.com') {
-    let segs = path.split('/').filter(Boolean);
-    if (segs.length && /^intl-[a-z]{2}(-[a-z]{2})?$/i.test(segs[0])) segs = segs.slice(1);
-    if (segs[0] === 'embed') segs = segs.slice(1);
-    if (segs.length === 2 && SPOTIFY_KIND[segs[0]] && SPOTIFY_ID.test(segs[1])) return { provider: 'spotify', kind: SPOTIFY_KIND[segs[0]], id: segs[1] };
-    return null;
+    const sp = spotifyRef(u.href);
+    return sp && SPOTIFY_KIND[sp.type] ? { provider: 'spotify', kind: SPOTIFY_KIND[sp.type], id: sp.id } : null;
   }
   return null;
+}
+
+// Every kind of thing a Spotify address can name. A recommendation takes three of them (SPOTIFY_KIND); a music
+// favourite takes all six.
+export const SPOTIFY_TYPES = Object.freeze(['track', 'album', 'playlist', 'artist', 'episode', 'show']);
+
+/**
+ * THE ONE SPOTIFY-LINK READER (row 2.55, 2026-10-07): parseLink above and music_favourites.js both use it, so
+ * a link one accepts the other accepts too. Any Spotify address or URI -> { type, id }, or null. PURE.
+ * Takes `spotify:<type>:<id>` and open.spotify.com/(intl-xx/)(embed/)<type>/<id>, with or without https:// and
+ * whatever follows the `?` (Share adds `?si=`). The `embed/` form is what Spotify's "Embed playlist" gives.
+ */
+export function spotifyRef(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  const m = s.match(/^spotify:([a-z]+):([A-Za-z0-9]+)$/);
+  if (m) return SPOTIFY_TYPES.includes(m[1]) && SPOTIFY_ID.test(m[2]) ? { type: m[1], id: m[2] } : null;
+  const u = urlOf(s);
+  if (!u || u.hostname.toLowerCase().replace(/\.$/, '') !== 'open.spotify.com') return null;
+  let segs = u.pathname.split('/').filter(Boolean);
+  if (segs.length && /^intl-[a-z]{2}(-[a-z]{2})?$/i.test(segs[0])) segs = segs.slice(1);
+  if (segs[0] === 'embed') segs = segs.slice(1);
+  return segs.length === 2 && SPOTIFY_TYPES.includes(segs[0]) && SPOTIFY_ID.test(segs[1])
+    ? { type: segs[0], id: segs[1] } : null;
 }
 
 /** Is { provider, kind, id } a shape this rule produces? PURE. A row read back is checked again, not trusted. */
