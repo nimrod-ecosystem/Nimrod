@@ -24,7 +24,7 @@ Spotify, Remove, and the screen variant. Needs the server (<code>SUITE_BASE</cod
 import {
   parseLink, validRef, canonicalURL, thumbOk, kindWords, titleOf, recLine, playPlan, REC_WORDS, PREVIEW_URL, MAX_MESSAGE,
   recommendationsURL, markURL, mountRecommend, recThumbHTML, recElsewhereHTML,
-  SEARCH_KEYS_URL, SEARCH_URL, SEARCH_KEYS_PAGE,
+  SEARCH_KEYS_URL, SEARCH_URL, SEARCH_KEYS_PAGE, spotifyRef, SPOTIFY_TYPES,
 } from '../recommend.js';
 import { mountSearchKeys, SEARCH_KEYS_WORDS, SEARCH_KEYS_API } from '../search_keys.js';
 import { PEOPLE_TYPE, plainWordProblems, PEOPLE_SETTINGS } from '../people_page.js';
@@ -134,6 +134,23 @@ try {
   check('*** every word it can put on the page is plain (no module, dashboard, panel or grant), and names nobody ***',
     !plainWordProblems(words).length && !/her screen|christine|cici/i.test(words), J(plainWordProblems(words)));
   check('the message limit is the note’s', MAX_MESSAGE === 280);
+  {
+    // Row 2.55: ONE Spotify-link reader, `spotifyRef`, under parseLink here and the music favourites.
+    const embed = `https://open.spotify.com/embed/playlist/${SP}?utm_source=generator&si=abc`;
+    check('*** Spotify’s embed address (“Embed playlist”) is the same playlist here ***',
+      J(parseLink(embed)) === J({ provider: 'spotify', kind: 'playlist', id: SP }), J(parseLink(embed)));
+    const all = ['track', 'album', 'playlist', 'artist', 'episode', 'show'];
+    check('spotifyRef reads all six kinds, from an address, an embed address or a spotify: URI',
+      all.every((t) => J(spotifyRef(`https://open.spotify.com/${t}/${SP}`)) === J({ type: t, id: SP })
+        && J(spotifyRef(`https://open.spotify.com/intl-fr/embed/${t}/${SP}?si=1`)) === J({ type: t, id: SP })
+        && J(spotifyRef(`spotify:${t}:${SP}`)) === J({ type: t, id: SP })) && SPOTIFY_TYPES.join() === all.join());
+    const refused = [`https://open.spotify.com.evil.example/embed/playlist/${SP}`, `https://open.spotify.com@evil.example/playlist/${SP}`,
+      `https://open.spotify.com/embed/user/${SP}`, `spotify:user:${SP}`, `spotify:track:short`, `https://open.spotify.com/track/${SP}/extra`,
+      `javascript:alert('https://open.spotify.com/track/${SP}')`];
+    check('*** look-alikes and other shapes are still refused by the shared reader ***', refused.every((s) => spotifyRef(s) === null),
+      J(refused.filter((s) => spotifyRef(s))));
+    check('a recommendation still takes only songs, albums and playlists', parseLink(`https://open.spotify.com/embed/artist/${SP}`) === null);
+  }
 
   // ============================================================================================
   section('*** the window, with a fake fetch ***');

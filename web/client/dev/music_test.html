@@ -45,8 +45,13 @@ import {
   createSpotify, completeLogin, playBody, pickDevice, base64url, PENDING_KEY, tokenKey,
   SPOTIFY_SCOPES, SPOTIFY_AUTHORIZE_URL, SPOTIFY_TOKEN_URL, safeReturn,
 } from '../music_spotify.js';
-import { createMusicRouter } from '../music_player.js';
-import '../modules/music.js';
+import { createMusicRouter, messageFor } from '../music_player.js';
+import { createSpotifyPlayer, imageOf, SPOTIFY_MESSAGES, FIRST_LOOK_MS, END_SLACK_MS, IDLE_LOOK_MS } from '../music_spotify.js';
+import { createMusicPicker, statsFromCache, RECENT_CAP } from '../music_pick.js';
+import { pick, mulberry32, statsFromEvents } from '../rng.js';
+import { spotifyRef } from '../recommend.js';
+import { showsAtLevel } from '../settings_fields.js';
+import { SETTINGS as MUSIC_SETTINGS } from '../modules/music.js';
 import '../modules/youtube.js';
 
 const out = document.getElementById('results');
@@ -129,6 +134,21 @@ const FAVS = normalizeFavourites([
       parseSpotifyUri('https://open.spotify.com/intl-de/album/4aawyAB9vmqN3uQ7FjRGTy?si=x') === 'spotify:album:4aawyAB9vmqN3uQ7FjRGTy');
     check('a spotify: URI is kept', J(parseSource('spotify:track:6rqhFgbbKwnb9MLmUQDhG6')) === J({ kind: 'spotify', uri: 'spotify:track:6rqhFgbbKwnb9MLmUQDhG6' }));
     check('junk is nothing', parseSource('play something nice') === null && parseSpotifyUri('https://evil.example/track/abcdefghijk') === '');
+    {
+      // Row 2.55 (Mike's screenshot, note BC2): the Favourites form refused Spotify's "Embed playlist" address.
+      const P = '37i9dQZF1DX4xuWVBs4FgJ';
+      const embed = `https://open.spotify.com/embed/playlist/${P}?utm_source=generator&si=x`;
+      check('*** Spotify\'s embed address is the same playlist (it used to be "not a YouTube or Spotify link") ***',
+        J(parseSource(embed)) === J({ kind: 'spotify', uri: `spotify:playlist:${P}` }), J(parseSource(embed)));
+      check('...for every kind a favourite takes (track, album, playlist, artist, episode, show)',
+        ['track', 'album', 'playlist', 'artist', 'episode', 'show'].every((t) => parseSpotifyUri(`https://open.spotify.com/embed/${t}/${P}`) === `spotify:${t}:${P}`));
+      check('an address pasted without https:// is still read', parseSpotifyUri(`open.spotify.com/album/${P}`) === `spotify:album:${P}`);
+      check('*** ONE reader: the favourites and a recommendation read the same Spotify address the same way ***',
+        [embed, `https://open.spotify.com/intl-de/track/${P}?si=1`, `spotify:album:${P}`, `https://open.spotify.com.evil.example/playlist/${P}`]
+          .every((s) => { const r = spotifyRef(s); return parseSpotifyUri(s) === (r ? `spotify:${r.type}:${r.id}` : ''); }));
+      check('look-alike hosts are refused', parseSpotifyUri(`https://open.spotify.com.evil.example/embed/playlist/${P}`) === ''
+        && parseSpotifyUri(`https://open.spotify.com@evil.example/playlist/${P}`) === '');
+    }
     check('four good entries survive, in order', FAVS.map((f) => f.id).join() === 'fbeatles,fjazz,fhymn,fspot', J(FAVS.map((f) => f.id)));
     {
       const n = normalizeFavourites([{ name: 'X', source: 'nope' }, { name: '', source: `${YT}` },
@@ -376,6 +396,201 @@ const FAVS = normalizeFavourites([
     }
 
     // ============================================================================================
+    section('Spotify, row 2.55: listing a playlist\'s songs, what is playing, the queue (a fake fetch)');
+    const PL = 'spotify:playlist:37i9dQZF1DX4xuWVBs4FgJ';
+    const T22 = (n) => `${'t'.repeat(20)}${String(n).padStart(2, '0')}`;     // a 22-character track id
+    const tr = (n, artist = `ar${n % 3}`) => ({ uri: `spotify:track:${T22(n)}`, duration_ms: 180000 + n * 1000, artists: [{ id: artist, name: `Artist ${artist}` }] });
+    {
+      const storage = mem();
+      storage.setItem(tokenKey('abc'), JSON.stringify({ access: 'A', refresh: 'R', expiresAt: Date.now() + 3600e3 }));
+      const page1 = Array.from({ length: 50 }, (_, i) => ({ item: tr(i) }));
+      page1[3] = { track: tr(3) };                                  // the pre-February-2026 field name
+      page1[4] = { is_local: true, item: { uri: 'spotify:local:x:y:z:1', duration_ms: 1 } };
+      page1[5] = { item: tr(0) };                                   // the same song twice in a playlist
+      const f = fakeSpotifyFetch({
+        'GET https://api.spotify.com/v1/playlists/37i9dQZF1DX4xuWVBs4FgJ/items': (url) => (new URL(url).searchParams.get('offset') === '0'
+          ? { json: { items: page1, next: 'more' } } : { json: { items: [{ item: tr(60) }, { item: tr(61) }], next: null } }),
+        'GET https://api.spotify.com/v1/albums/4aawyAB9vmqN3uQ7FjRGTy/tracks': { json: { items: [tr(70), tr(71)], next: null } },
+        'GET https://api.spotify.com/v1/me/player/devices': { json: { devices: [{ id: 'd1', name: 'Speaker', is_active: true }] } },
+        'PUT https://api.spotify.com/v1/me/player/play': { status: 204 },
+        'POST https://api.spotify.com/v1/me/player/queue': { status: 204 },
+      });
+      const sp = createSpotify({ clientId: 'abc', storage, fetchFn: f });
+      const t = await sp.tracks(PL);
+      check('*** a playlist\'s songs are read page by page, 50 at a time, from /playlists/{id}/items ***',
+        t.ok && t.tracks.length === 50 && f.calls.filter((c) => c.url.includes('/items?limit=50')).length === 2, J({ n: t.tracks?.length, calls: f.calls.map((c) => c.url) }));
+      check('both field names (item, and the older track) are read; local files and repeats are left out',
+        t.tracks.some((x) => x.id === `spotify:track:${T22(3)}`) && !t.tracks.some((x) => /local/.test(x.id))
+        && t.tracks.filter((x) => x.id === `spotify:track:${T22(0)}`).length === 1);
+      check('each song carries its artist (the diversity factor) and its length in seconds',
+        t.tracks[0].channel === 'ar0' && t.tracks[0].durationSec === 180, J(t.tracks[0]));
+      const al = await sp.tracks('spotify:album:4aawyAB9vmqN3uQ7FjRGTy');
+      check('an album\'s songs come from /albums/{id}/tracks', al.ok && al.tracks.length === 2);
+      check('an artist is not listed (Spotify removed top tracks): it plays in Spotify\'s order', (await sp.tracks('spotify:artist:4aawyAB9vmqN3uQ7FjRGTy')).reason === 'no-tracks');
+      await sp.playTracks({ uris: [`spotify:track:${T22(9)}`], device: '' });
+      const put = f.calls.filter((c) => c.method === 'PUT').at(-1);
+      check('one chosen song is played as uris, on the device', put.url.endsWith('/me/player/play?device_id=d1') && J(JSON.parse(put.body)) === J({ uris: [`spotify:track:${T22(9)}`] }));
+      check('a playlist cannot be "played as songs"', (await sp.playTracks({ uris: [PL] })).reason === 'bad-uri');
+      await sp.queue(`spotify:track:${T22(8)}`);
+      const qc = f.calls.at(-1);
+      check('the next one goes in the queue, on the same device', qc.method === 'POST'
+        && qc.url === `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(`spotify:track:${T22(8)}`)}&device_id=d1`, qc.url);
+      check('*** still every request to Spotify, none to this site ***', f.calls.every((c) => /^https:\/\/(accounts|api)\.spotify\.com\//.test(c.url)));
+    }
+    {
+      const storage = mem();
+      storage.setItem(tokenKey('abc'), JSON.stringify({ access: 'A', refresh: 'R', expiresAt: Date.now() + 3600e3 }));
+      const one = (script) => createSpotify({ clientId: 'abc', storage, fetchFn: fakeSpotifyFetch(script) });
+      check('*** a playlist somebody else made (403) is "not-listable", not "needs Premium" ***',
+        (await one({ 'GET https://api.spotify.com/v1/playlists/37i9dQZF1DX4xuWVBs4FgJ/items': { status: 403 } }).tracks(PL)).reason === 'not-listable');
+      check('nothing playing anywhere (204) is no song, not a failure',
+        J(await one({ 'GET https://api.spotify.com/v1/me/player': { status: 204 } }).nowPlaying()) === J({ ok: true, uri: null, isPlaying: false }));
+      const np = await one({ 'GET https://api.spotify.com/v1/me/player': { json: { is_playing: true, progress_ms: 1000, item: {
+        uri: `spotify:track:${T22(1)}`, name: 'Blue Moon', duration_ms: 200000, artists: [{ name: 'Billie' }, { name: 'Ella' }],
+        album: { images: [{ url: 'https://i.scdn.co/image/big', width: 640 }, { url: 'https://i.scdn.co/image/mid', width: 300 }, { url: 'https://i.scdn.co/image/small', width: 64 }] } } } } }).nowPlaying();
+      check('*** what is playing: name, every artist, a cover of a sensible size, and where it has got to ***',
+        np.ok && np.name === 'Blue Moon' && np.artists.join() === 'Billie,Ella' && np.image === 'https://i.scdn.co/image/mid'
+        && np.durationMs === 200000 && np.progressMs === 1000 && np.isPlaying, J(np));
+      check('a cover from anywhere but Spotify\'s own image hosts is not used', imageOf([{ url: 'https://evil.example/x.jpg', width: 300 }]) === ''
+        && imageOf([{ url: 'http://i.scdn.co/x', width: 300 }]) === '');
+    }
+
+    // ============================================================================================
+    section('*** the site\'s weighted picker for Spotify: rng.js exactly as YouTube uses it ***');
+    {
+      const pool = [{ id: 'a', channel: 'x', durationSec: 200 }, { id: 'b', channel: 'x', durationSec: 200 },
+        { id: 'c', channel: 'y', durationSec: 200 }, { id: 'd', channel: 'z', durationSec: 400 }];
+      const cache = { events: [{ kind: 'play', data: { id: 'a', at: 1000 } }, { kind: 'play', data: { id: 'a', at: 2000 } },
+        { kind: 'held', data: { id: 'b' } }, { kind: 'play', data: { id: 'c' }, created_at: '1970-01-01T00:00:03Z' }] };
+      check('the play history is read from the same `play` rows the YouTube panel writes',
+        J(statsFromCache(cache)) === J({ a: { n: 2, last: 2000 }, c: { n: 1, last: 3000 } }), J(statsFromCache(cache)));
+      let fn = null;
+      const appended = [];
+      const events = { subscribe: (f) => { fn = f; return () => { fn = null; }; }, append: async (k, d) => { appended.push([k, d]); } };
+      const NOW = 10 * 3600e3;
+      const p = createMusicPicker({ events, now: () => NOW, rand: mulberry32(7) });
+      fn(cache);
+      const got = p.next(pool);
+      const want = pick(pool.map((t) => t.id), statsFromCache(cache), { now: NOW, rand: mulberry32(7), recent: [],
+        channels: { a: 'x', b: 'x', c: 'y', d: 'z' }, durations: { a: 200, b: 200, c: 200, d: 400 } });
+      check('*** the same draw as rng.js `pick` with YouTube\'s inputs (freshness, recency, duration, channel) ***', got === want, J({ got, want }));
+      p.played('c');
+      check('a played song is counted now and written as a `play` event for next time',
+        p.state().stats.c.n === 2 && p.state().recent.at(-1) === 'c' && appended[0][0] === 'play' && appended[0][1].id === 'c' && appended[0][1].at === NOW, J(appended));
+      for (let i = 0; i < 20; i++) p.played(`z${i}`);
+      check('the "just played" list is YouTube\'s twelve', p.state().recent.length === RECENT_CAP && RECENT_CAP === 12);
+      // Over many draws: the much-played song comes up least.
+      const counts = { a: 0, b: 0, c: 0, d: 0 };
+      const heavy = createMusicPicker({ events: { subscribe: (f) => { f({ events: Array.from({ length: 8 }, () => ({ kind: 'play', data: { id: 'a', at: 1 } })) }); }, append: async () => {} },
+        rand: mulberry32(11), now: () => 1 + 3600e3 * 24 * 30 });
+      for (let i = 0; i < 400; i++) counts[heavy.next(pool)]++;
+      check('*** freshness: a song played eight times comes up far less than the others ***', counts.a < counts.b / 2 && counts.a < counts.c / 2, J(counts));
+      const dv = createMusicPicker({ rand: mulberry32(2), now: () => NOW });
+      dv.played('a', 'x');                              // artist x just played
+      const dc = { b: 0, c: 0 };
+      for (let i = 0; i < 300; i++) dc[dv.next([{ id: 'b', channel: 'x' }, { id: 'c', channel: 'y' }])]++;
+      check('*** diversity: right after artist x, another song by x is much less likely ***', dc.b < dc.c / 3, J(dc));
+      // The Spotify player's real shape: the song playing is left out of the next pool, and its artist is still known.
+      const dv2 = createMusicPicker({ rand: mulberry32(4), now: () => NOW });
+      const full = [{ id: 'a', channel: 'x' }, { id: 'b', channel: 'x' }, { id: 'c', channel: 'y' }];
+      dv2.next(full); dv2.played('a');
+      const dc2 = { b: 0, c: 0 };
+      for (let i = 0; i < 300; i++) dc2[dv2.next(full.filter((t) => t.id !== 'a'))]++;
+      check('...and still when the song playing is left out of the next pool', dc2.b < dc2.c / 3, J(dc2));
+      dv2.destroy();
+      heavy.destroy(); p.destroy(); dv.destroy();
+      check('destroy lets go of the events', fn === null);
+    }
+
+    // A fake connector, so the player's steering is checked on its own; the timers are held and run by hand.
+    function heldTimers() {
+      const live = new Map();
+      let n = 0;
+      return {
+        live,
+        setTimer: (fn, ms) => { const id = ++n; live.set(id, { fn, ms }); return id; },
+        clearTimer: (id) => { live.delete(id); },
+        async fire() { const all = [...live.entries()]; live.clear(); for (const [, t] of all) await t.fn(); await tick(); },
+        lastMs: () => [...live.values()].at(-1)?.ms,
+      };
+    }
+    function fakeConnector({ songs = [tr(1), tr(2, 'other'), tr(3, 'third')], listable = true } = {}) {
+      const log = [];
+      let now = { ok: true, uri: null, isPlaying: false };
+      const c = {
+        log,
+        setNow: (n) => { now = { ok: true, durationMs: 200000, progressMs: 10000, isPlaying: true, name: 'Song', artists: ['Someone'], image: 'https://i.scdn.co/image/c', ...n }; },
+        available: () => true, connected: () => true,
+        async tracks(uri) { log.push(['tracks', uri]); return listable ? { ok: true, tracks: songs.map((s) => ({ id: s.uri, channel: s.artists[0].id, durationSec: s.duration_ms / 1000 })) } : { ok: false, reason: 'not-listable' }; },
+        async playTracks({ uris, device }) { log.push(['playTracks', uris.join(), device]); return { ok: true, device: 'Speaker' }; },
+        async play({ uri, device }) { log.push(['play', uri, device]); return { ok: true, device: 'Speaker' }; },
+        async queue(uri) { log.push(['queue', uri]); return { ok: true }; },
+        async nowPlaying() { log.push(['now']); return now; },
+        async pause() { log.push(['pause']); return { ok: true }; },
+        async resume() { log.push(['resume']); return { ok: true }; },
+      };
+      return c;
+    }
+    {
+      const T2 = heldTimers();
+      const c = fakeConnector();
+      const p = createMusicPicker({ rand: mulberry32(5) });
+      const seen = [];
+      let ended = 0;
+      const player = createSpotifyPlayer({ spotify: c, picker: p, setTimer: T2.setTimer, clearTimer: T2.clearTimer,
+        songInfo: () => true, onNow: (i) => seen.push(i), onEnded: () => { ended++; } });
+      const r = await player.play({ uri: PL, device: 'kitchen' });
+      const first = c.log.find((l) => l[0] === 'playTracks');
+      check('*** a playlist with shuffle on: its songs are read, ONE chosen song is played, on the named speaker ***',
+        r.ok && r.order === 'ours' && c.log[0][0] === 'tracks' && first && first[1].split(',').length === 1 && first[2] === 'kitchen', J(c.log));
+      check('...the chosen one is counted as played', p.state().recent.at(-1) === first[1]);
+      check('...and Spotify is asked what is playing a moment later, not on a steady tick', T2.live.size === 1 && T2.lastMs() === FIRST_LOOK_MS);
+      c.setNow({ uri: first[1] });
+      await T2.fire();
+      const q1 = c.log.filter((l) => l[0] === 'queue');
+      check('*** the next pick goes in Spotify\'s queue (one ahead), and it is not the song playing ***', q1.length === 1 && q1[0][1] !== first[1], J(c.log));
+      check('the next look is just after this song should end', T2.lastMs() === 190000 + END_SLACK_MS, String(T2.lastMs()));
+      check('the song-info card heard the song', seen.at(-1)?.name === 'Song' && seen.at(-1)?.artists[0] === 'Someone');
+      c.setNow({ uri: q1[0][1] });
+      await T2.fire();
+      check('*** when the queued song starts it is counted, and another is queued ***',
+        p.state().recent.at(-1) === q1[0][1] && c.log.filter((l) => l[0] === 'queue').length === 2 && player.state().current === q1[0][1], J(player.state()));
+      c.setNow({ uri: 'spotify:track:somebodyelsechose0000' });
+      await T2.fire();
+      check('*** something nobody here chose (picked on a phone): the run ends, their choice is left alone ***',
+        ended === 1 && !player.state().steering && T2.live.size === 0 && !c.log.some((l) => l[0] === 'pause'), J(player.state()));
+      // Stop and pause.
+      await player.play({ uri: PL });
+      check('(setup) playing again', player.state().steering && T2.live.size === 1);
+      await player.pause();
+      check('pause: nothing looks while it is paused', T2.live.size === 0 && c.log.at(-1)[0] === 'pause');
+      await player.resume();
+      check('carry on: it looks again', T2.live.size === 1);
+      c.setNow({ uri: player.state().current, isPlaying: false });
+      await T2.fire();
+      check('paused somewhere else: it looks again a minute later', T2.lastMs() === IDLE_LOOK_MS);
+      await player.stop();
+      check('*** stop: no timer left, Spotify paused ***', T2.live.size === 0 && !player.state().steering && c.log.at(-1)[0] === 'pause');
+      player.destroy();
+    }
+    {
+      const T2 = heldTimers();
+      const c = fakeConnector({ listable: false });
+      const player = createSpotifyPlayer({ spotify: c, picker: createMusicPicker(), setTimer: T2.setTimer, clearTimer: T2.clearTimer });
+      const r = await player.play({ uri: PL });
+      check('*** a playlist Spotify will not list plays whole in Spotify\'s order, and says why ***',
+        r.ok && r.order === 'spotify' && r.note === SPOTIFY_MESSAGES['not-listable'] && c.log.at(-1)[0] === 'play' && c.log.at(-1)[1] === PL, J({ r, log: c.log }));
+      check('with the song-info card off, nothing looks', T2.live.size === 0);
+      const c2 = fakeConnector();
+      const off = createSpotifyPlayer({ spotify: c2, picker: createMusicPicker(), shuffle: () => false, setTimer: T2.setTimer, clearTimer: T2.clearTimer });
+      const r2 = await off.play({ uri: PL });
+      check('shuffle off: the playlist goes to Spotify whole, as before', r2.order === 'spotify' && !c2.log.some((l) => l[0] === 'tracks') && c2.log.at(-1)[1] === PL);
+      const r3 = await createSpotifyPlayer({ spotify: fakeConnector(), picker: createMusicPicker() }).play({ uri: 'spotify:track:6rqhFgbbKwnb9MLmUQDhG6' });
+      check('a single song plays as itself', r3.ok && r3.order === 'spotify');
+      player.destroy(); off.destroy();
+    }
+
+    // ============================================================================================
     section('the router: one verb, the right player, one answer per screen');
     {
       const bus = createBus();
@@ -419,6 +634,8 @@ const FAVS = normalizeFavourites([
       check('...and a yes plays the one it asked about', res.reason === 'no-youtube' && r.status().asking === null, J(res));
       res = await r.play({ name: 'Dinner music' });
       check('a Spotify favourite with Spotify off says so', res.reason === 'spotify-off');
+      check('*** ...and says where the switch is (row 2.55: it used to stop there) ***',
+        /settings/.test(spoke.at(-1)) && /“Spotify” row/.test(spoke.at(-1)) && /Turn Spotify on/.test(messageFor('spotify-off')), spoke.at(-1));
       r.destroy();
       const r2 = createMusicRouter({ bus, favourites: () => FAVS, nearMatch: () => 'play', ownYoutube: { play() {}, stop() {} } });
       check('with "play the close one", a near miss plays', (await r2.play('the beetles')).ok);
@@ -527,6 +744,83 @@ const FAVS = normalizeFavourites([
     check('*** teardown: nothing of the music panels left on the audio bus ***', left.length === 0, J(left));
     check('*** teardown: no audio element left playing ***', (alog.els || []).every((e) => e.paused));
     check('the panel\'s own YouTube player was destroyed', yp.destroyed === 1);
+
+    // ============================================================================================
+    section('*** row 2.55 on the panel: the embed address, Spotify off, the switch, the song-info card ***');
+    {
+      const fields = fieldsFor(getManifest('music'));
+      const f = (k) => fields.find((x) => x.key === k);
+      check('*** the Spotify switch shows at the STANDARD detail level (it was advanced) ***',
+        f('spotifyOn').level === 'standard' && showsAtLevel(f('spotifyOn'), 'standard') && !showsAtLevel(f('spotifyOn'), 'essential'));
+      check('the client ID is standard too, and with the shuffle and card rows shows only while Spotify is on',
+        ['spotifyClientId', 'spotifyShuffle', 'songInfo'].every((k) => f(k).level === 'standard' && f(k).appliesWhen({ spotifyOn: true }) === true
+          && f(k).appliesWhen({ spotifyOn: false }) === false) && f('spotifyDevice').level === 'advanced');
+      check('defaults: shuffled by the site\'s picker ON, the song-info card OFF', f('spotifyShuffle').default === true && f('songInfo').default === false);
+      const words = MUSIC_SETTINGS.map((s) => [s.label, s.note, s.onLabel, s.offLabel].filter(Boolean).join(' ')).join(' ')
+        + Object.values(SPOTIFY_MESSAGES).join(' ') + messageFor('spotify-off');
+      check('no new words name anybody', !/her screen|christine|cici/i.test(words));
+
+      const T3 = heldTimers();
+      const c = fakeConnector();
+      const st = fakeState({});
+      const h = document.getElementById('host2');
+      const asked = [];
+      const m = mountModule('music', ctxFor(h, 'mu5', { personId: null, makePersonState: null, state: st,
+        setTimer: T3.setTimer, clearTimer: T3.clearTimer, spotifyFactory: () => c,
+        describeLink: async (l) => { asked.push(l); return { title: 'Dinner Jazz (from oEmbed)', thumb: 'https://i.scdn.co/image/pl' }; } }));
+      m.init();
+      await tick();
+      const hq = (s) => h.querySelector(s);
+      const typeIn = (sel, v) => { const el = hq(sel); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
+      hq('[data-act="edit"]').click();
+      await tick();
+      typeIn('[data-fav-name]', 'Dinner music');
+      typeIn('[data-fav-link]', 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4xuWVBs4FgJ?utm_source=generator&si=abc');
+      hq('[data-act="add"]').click();
+      await tick();
+      const fav = m.impl.__probe().favs[0];
+      check('*** Mike\'s embed address goes in through the form, as the playlist ***', fav?.source?.uri === PL, J(fav));
+      check('*** with Spotify off the form says so, instead of taking it silently ***', /Spotify is turned off/.test(h.textContent), h.textContent.slice(0, 400));
+      check('...and offers to turn it on', !!hq('[data-spotify-off] [data-act="spotify-on"]'));
+      hq('[data-act="close"]').click();
+      await tick();
+      [...h.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Dinner music').click();
+      await tick();
+      check('pressing it with Spotify off says where the switch is, with the button beside it',
+        /“Spotify” row/.test(hq('[data-msg]')?.textContent || '') && !!hq('[data-act="spotify-on"]'), h.textContent.slice(0, 300));
+      hq('[data-act="spotify-on"]').click();
+      await tick();
+      check('*** "Turn Spotify on" turns it on (the same value as the settings row) and shows what is still needed ***',
+        st.get().spotifyOn === true && m.impl.__probe().cfg.spotifyOn === true && m.impl.__probe().view === 'edit' && !!hq('[data-spotify]:not([data-spotify-off])'), J(st.get()));
+      // The song-info card, on; playing through the fake connector with held timers.
+      st.set({ songInfo: true });
+      hq('[data-act="close"]').click();
+      await tick();
+      [...h.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Dinner music').click();
+      await tick(); await tick();
+      check('*** the panel\'s Spotify plays through the site\'s picker: one chosen song ***',
+        c.log.some((l) => l[0] === 'tracks') && c.log.some((l) => l[0] === 'playTracks') && m.impl.__probe().status.kind === 'spotify', J(c.log));
+      check('the card\'s first moment is the favourite\'s own title and picture, from oEmbed through this site',
+        asked[0] === 'https://open.spotify.com/playlist/37i9dQZF1DX4xuWVBs4FgJ' && /Dinner Jazz/.test(hq('[data-song-name]')?.textContent || '')
+        && hq('[data-song-cover]')?.getAttribute('src') === 'https://i.scdn.co/image/pl', h.innerHTML.slice(0, 600));
+      const firstSong = c.log.find((l) => l[0] === 'playTracks')[1];
+      c.setNow({ uri: firstSong, name: 'Take Five', artists: ['Dave Brubeck'], image: 'https://i.scdn.co/image/tf' });
+      await T3.fire();
+      check('*** then the song itself: its name, its artist and its cover, "from Spotify" ***',
+        hq('[data-song-name]')?.textContent === 'Take Five' && hq('[data-song-who]')?.textContent === 'Dave Brubeck'
+        && hq('[data-song-cover]')?.getAttribute('src') === 'https://i.scdn.co/image/tf' && /from Spotify/.test(h.textContent), h.innerHTML.slice(0, 600));
+      c.setNow({ uri: c.log.filter((l) => l[0] === 'queue').at(-1)[1], name: 'Blue Rondo', artists: ['Dave Brubeck'], image: 'https://evil.example/x.jpg' });
+      await T3.fire();
+      check('a cover from anywhere but Spotify\'s image hosts is not drawn', hq('[data-song-name]')?.textContent === 'Blue Rondo' && !hq('[data-song-cover]'));
+      st.set({ songInfo: false });
+      await tick();
+      check('with the card off, the panel shows the favourite\'s name only', !hq('[data-song]') && /Playing: Dinner music/.test(hq('[data-now]').textContent));
+      hq('[data-act="stop"]').click();
+      await tick();
+      check('*** stop: the steering ends and no timer is left ***', T3.live.size === 0 && c.log.at(-1)[0] === 'pause', J(c.log.slice(-3)));
+      m.destroy();
+      check('teardown: still no timer', T3.live.size === 0);
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;

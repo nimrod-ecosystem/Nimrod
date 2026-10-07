@@ -42,16 +42,33 @@
 //   reference/pause-a-users-playback      PUT /v1/me/player/pause?device_id=  same scope; 204; Premium.
 //   reference/get-a-users-available-devices  GET /v1/me/player/devices; scope user-read-playback-state;
 //                                          devices[] { id, is_active, is_restricted, name, type, ... }.
+// ADDED 2026-10-07 for row 2.55 (the weighted picker and the song-info card), read that day:
+//   reference/get-playlists-items         GET /v1/playlists/{id}/items  limit 1-50, offset; each row's song is
+//                                          `item` (it was `track` before Spotify's February 2026 rename; both
+//                                          are read). ONLY for a playlist the user owns or collaborates on: 403
+//                                          otherwise, and the old /tracks path is gone for Development Mode apps.
+//   reference/get-an-albums-tracks        GET /v1/albums/{id}/tracks  limit 1-50, offset.
+//   reference/add-to-queue                POST /v1/me/player/queue?uri=&device_id=  204; Premium.
+//   reference/get-information-about-the-users-current-playback  GET /v1/me/player  (user-read-playback-state)
+//                                          item { uri, name, duration_ms, artists[], album.images[] },
+//                                          progress_ms, is_playing; 204 when nothing is playing anywhere.
+//   An artist's "top tracks" was removed in February 2026, so an artist favourite plays in Spotify's order.
 // UNTESTED AGAINST REAL SPOTIFY: the suite drives all of it through a fake fetch. Nobody has signed in.
 
 import { parseSpotifyUri } from './music_favourites.js';
 import { screenLockedHere } from './screen_lock.js';
+import { thumbOk } from './recommend.js';
 
 export const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 export const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 export const SPOTIFY_API = 'https://api.spotify.com/v1';
-// The two scopes the three endpoints above need, and nothing else: no library, no profile, no email.
-export const SPOTIFY_SCOPES = Object.freeze(['user-read-playback-state', 'user-modify-playback-state']);
+// The scopes the endpoints above need, and nothing else: no library, no profile, no email. The third,
+// `playlist-read-private`, is for row 2.55's weighted picker: Spotify lists a playlist's songs only to its
+// owner or a collaborator, and asks for this scope to do it [developer.spotify.com get-playlists-items, read
+// 2026-10-07]. A device connected before it was added is simply not given the list, and its playlists play in
+// Spotify's own order until somebody presses Disconnect and Connect again.
+export const SPOTIFY_SCOPES = Object.freeze(['user-read-playback-state', 'user-modify-playback-state',
+  'playlist-read-private']);
 export const CALLBACK_PAGE = 'spotify_callback.html';
 export const PENDING_KEY = 'nimrod.spotify.pending';
 export const tokenKey = (clientId) => `nimrod.spotify.tokens.${clientId}`;
@@ -60,12 +77,18 @@ export const tokenKey = (clientId) => `nimrod.spotify.tokens.${clientId}`;
 const EXPIRY_SKEW_MS = 60000;
 // How long a started sign-in may take before its saved verifier is thrown away.
 const PENDING_TTL_MS = 15 * 60000;
+// Songs read per request (Spotify's own most, 50), and the most read for one playlist: ten requests. A playlist
+// longer than 500 songs is picked from its first 500. A bound, so a huge playlist is not a hundred requests
+// before anything plays; listed for Mike rather than made a setting (nobody is served by tuning it).
+export const TRACK_PAGE = 50;
+export const MAX_TRACKS = 500;
 
 export const SPOTIFY_MESSAGES = Object.freeze({
+  // (row 2.55) Names the row it means, so nobody has to hunt the settings for it.
   'no-client-id': 'Spotify is not set up here. It needs your household’s own Spotify client ID: '
     + 'make an app at developer.spotify.com (the account that makes it needs Spotify Premium), add this '
-    + 'site’s Spotify callback address as a redirect URI, and paste the app’s client ID into this '
-    + 'panel’s settings.',
+    + 'site’s Spotify callback address as a redirect URI, and paste the app’s client ID into the '
+    + '“Your household’s Spotify client ID” row of this panel’s settings.',
   'signed-out': 'Spotify needs connecting on this device. Open the music panel’s settings and press '
     + 'Connect Spotify.',
   'premium-needed': 'Spotify only lets other apps start music for Premium accounts.',
@@ -79,6 +102,10 @@ export const SPOTIFY_MESSAGES = Object.freeze({
   // (2026-10-05, screen_lock.js: signing in leaves this page for Spotify's, and a locked screen does not leave.)
   locked: 'This screen is locked, so connecting Spotify waits until it is unlocked.',
   denied: 'Spotify was not connected.',
+  // (row 2.55) Why a playlist played in Spotify's own order rather than through the site's weighted picker.
+  'not-listable': 'Spotify only lists the songs of playlists you made or share, so this one plays in Spotify’s '
+    + 'own order.',
+  'no-tracks': 'Spotify gave no songs for this, so it plays in Spotify’s own order.',
 });
 
 export const callbackUrl = (loc = (typeof location !== 'undefined' ? location : null)) =>
@@ -115,6 +142,17 @@ export function playBody(uri) {
   if (!u) return null;
   const type = u.split(':')[1];
   return (type === 'track' || type === 'episode') ? { uris: [u] } : { context_uri: u };
+}
+
+/**
+ * The cover to show for a song: the smallest of Spotify's pictures that is at least 200 pixels wide (or the
+ * largest when none is), and only from Spotify's own image hosts (recommend.js `thumbOk`). '' for none.
+ */
+export function imageOf(images) {
+  const list = (Array.isArray(images) ? images : []).filter((i) => i && thumbOk(i.url));
+  if (!list.length) return '';
+  const wide = list.filter((i) => Number(i.width) >= 200).sort((a, b) => Number(a.width) - Number(b.width));
+  return (wide[0] || list.sort((a, b) => Number(b.width || 0) - Number(a.width || 0))[0]).url;
 }
 
 /** A device by name, forgiving case and spacing; null for none. An empty name means "no preference". */
@@ -231,6 +269,14 @@ export function createSpotify({
   const q = (deviceId) => (deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : '');
   let lastDeviceId = null;
 
+  async function start(body, device) {
+    const d = await deviceFor(device);
+    if (!d.device) return { ok: false, reason: d.reason };
+    const r = await api('PUT', `/me/player/play${q(d.device.id)}`, body);
+    if (r.ok) lastDeviceId = d.device.id;
+    return r.ok ? { ok: true, device: d.device.name } : { ok: false, reason: r.reason };
+  }
+
   return {
     available: () => !!id,
     connected: () => !!(id && tokens()?.access),
@@ -270,11 +316,75 @@ export function createSpotify({
     async play({ uri, device = '' } = {}) {
       const body = playBody(uri);
       if (!body) return { ok: false, reason: 'bad-uri' };
-      const d = await deviceFor(device);
-      if (!d.device) return { ok: false, reason: d.reason };
-      const r = await api('PUT', `/me/player/play${q(d.device.id)}`, body);
-      if (r.ok) lastDeviceId = d.device.id;
-      return r.ok ? { ok: true, device: d.device.name } : { ok: false, reason: r.reason };
+      return start(body, device);
+    },
+
+    /** Play these songs, in this order, on a named device (row 2.55: the site's picker chose them). */
+    async playTracks({ uris = [], device = '' } = {}) {
+      const list = (Array.isArray(uris) ? uris : []).map(parseSpotifyUri)
+        .filter((u) => /^spotify:(track|episode):/.test(u));
+      if (!list.length) return { ok: false, reason: 'bad-uri' };
+      return start({ uris: list }, device);
+    },
+
+    /** One song after the one playing now, on the device it was started on. */
+    async queue(uri) {
+      const u = parseSpotifyUri(uri);
+      if (!/^spotify:(track|episode):/.test(u)) return { ok: false, reason: 'bad-uri' };
+      const dev = lastDeviceId ? `&device_id=${encodeURIComponent(lastDeviceId)}` : '';
+      const r = await api('POST', `/me/player/queue?uri=${encodeURIComponent(u)}${dev}`);
+      return r.ok ? { ok: true } : { ok: false, reason: r.reason };
+    },
+
+    /**
+     * The songs of a playlist or an album, for the site's own picker: `{ ok, tracks: [{ id, channel,
+     * durationSec }] }` - `id` is the song's URI, `channel` its first artist (the diversity factor, as a
+     * YouTube channel is). A playlist somebody else made is refused by Spotify ('not-listable').
+     */
+    async tracks(uri) {
+      const u = parseSpotifyUri(uri);
+      if (!u) return { ok: false, reason: 'bad-uri' };
+      const [, type, sid] = u.split(':');
+      const path = type === 'playlist' ? `/playlists/${sid}/items` : type === 'album' ? `/albums/${sid}/tracks` : '';
+      if (!path) return { ok: false, reason: 'no-tracks' };
+      const out = [];
+      const seen = new Set();
+      for (let offset = 0; offset < MAX_TRACKS; offset += TRACK_PAGE) {
+        const r = await api('GET', `${path}?limit=${TRACK_PAGE}&offset=${offset}`);
+        if (!r.ok) {
+          if (out.length) break;       // a later page failing still leaves a pool to pick from
+          return { ok: false, reason: r.status === 403 || r.status === 404 ? 'not-listable' : r.reason };
+        }
+        const items = Array.isArray(r.body?.items) ? r.body.items : [];
+        for (const it of items) {
+          const t = type === 'playlist' ? (it?.item || it?.track) : it;
+          const id = parseSpotifyUri(t?.uri);
+          if (!t || it?.is_local || t.is_local || !/^spotify:(track|episode):/.test(id) || seen.has(id)) continue;
+          seen.add(id);
+          out.push({ id, channel: t.artists?.[0]?.id || t.show?.id || null,
+            durationSec: Number(t.duration_ms) > 0 ? Number(t.duration_ms) / 1000 : 0 });
+        }
+        if (!r.body?.next || items.length < TRACK_PAGE) break;
+      }
+      return out.length ? { ok: true, tracks: out } : { ok: false, reason: 'no-tracks' };
+    },
+
+    /**
+     * What the account is playing now, anywhere: `{ ok, uri, name, artists, image, durationMs, progressMs,
+     * isPlaying }`, with `uri: null` when nothing is. The song-info card and the picker's watch both read it.
+     */
+    async nowPlaying() {
+      const r = await api('GET', '/me/player');
+      if (!r.ok) return { ok: false, reason: r.reason };
+      const it = r.body?.item;
+      if (!it || !it.uri) return { ok: true, uri: null, isPlaying: false };
+      return {
+        ok: true, uri: it.uri, name: String(it.name || ''),
+        artists: (Array.isArray(it.artists) ? it.artists : []).map((a) => String(a?.name || '')).filter(Boolean),
+        image: imageOf(it.album?.images || it.images),
+        durationMs: Number(it.duration_ms) || 0, progressMs: Number(r.body.progress_ms) || 0,
+        isPlaying: !!r.body.is_playing,
+      };
     },
     async pause() {
       const r = await api('PUT', `/me/player/pause${q(lastDeviceId)}`);
@@ -324,4 +434,170 @@ export async function completeLogin(search, { storage = undefined, fetchFn = (..
     expiresAt: now() + Math.max(0, Number(body.expires_in) || 3600) * 1000,
   });
   return { ok: true, returnTo };
+}
+
+// ---- the site's own order, and what is playing (row 2.55) -------------------------------------
+//
+// Mike, 2026-10-07: *"Are we using our randomizer for a Spotify option? I like ours better for it's weights."*
+// So a Spotify PLAYLIST or ALBUM favourite, with the panel's "shuffle" on, is not handed to Spotify whole. Its
+// songs are read (`tracks`), the site's weighted picker (music_pick.js over rng.js, exactly YouTube's) chooses
+// one, Spotify is told to play that one song, and the next pick is put in Spotify's queue. Each time the queued
+// song starts, it is counted as played and another is queued: ONE AHEAD, so the change from song to song is
+// Spotify's own, with no gap, and stopping leaves at most one song of ours in that account's queue.
+//
+// HOW IT KNOWS A SONG HAS CHANGED: it asks Spotify what is playing (`nowPlaying`) once per song, just after
+// that song should have ended - not on a steady tick. Paused or stopped somewhere else, it looks again once a
+// minute, and after half an hour of that it stops steering. When something that is not ours is playing,
+// somebody chose it on their phone or speaker: the run ends there and their choice is left alone.
+//
+// Spotify's own order is used when the shuffle is off, for a single song, an artist (Spotify removed the call
+// that listed an artist's top songs in February 2026), an episode or a show, and when Spotify will not list a
+// playlist's songs (only its owner or a collaborator may read them) - and the panel says why.
+//
+// THE SONG-INFO CARD reads the same `nowPlaying`. With the site steering, the look per song is already made;
+// in Spotify's own order the card turns the same once-a-song look on, and with the card off nothing looks.
+//
+// These waits are plumbing, not settings (nobody is served by tuning them); listed for Mike with the argument.
+export const FIRST_LOOK_MS = 3000;     // after starting: long enough for Spotify to report the new song
+export const END_SLACK_MS = 1500;      // after a song should have ended, so the next one has begun
+export const IDLE_LOOK_MS = 60000;     // paused or stopped elsewhere: look again a minute later
+export const RETRY_MS = 30000;         // a look that failed (offline, a busy minute): try again
+export const GIVE_UP_AFTER = 5;        // failed looks in a row before it stops steering
+export const IDLE_LIMIT = 30;          // idle looks in a row (half an hour) before it stops steering
+
+/**
+ * A Spotify player for the music router: `{ available, play, pause, resume, stop, state, destroy }`, over a
+ * `createSpotify` connector. `picker` is a music_pick.js picker (null: always Spotify's own order);
+ * `shuffle()` and `songInfo()` are read at each play. `onNow(info|null)` hears what is playing, for the card;
+ * `onEnded()` hears that somebody chose something else on Spotify and the run is over.
+ */
+export function createSpotifyPlayer({
+  spotify,
+  picker = null,
+  shuffle = () => true,
+  songInfo = () => false,
+  setTimer = (fn, ms) => setTimeout(fn, ms),
+  clearTimer = (id) => clearTimeout(id),
+  onNow = null,
+  onEnded = null,
+} = {}) {
+  let run = null;        // { ours, pool, current, queued, fails, idles }
+  let gen = 0;
+  let timer = null;
+  let info = null;
+  let note = '';
+  let dead = false;
+  const read = (f, d) => { try { const v = typeof f === 'function' ? f() : f; return v ?? d; } catch { return d; } };
+  const tell = (next) => {
+    info = next;
+    try { onNow?.(info ? { ...info } : null); } catch (err) { console.error('spotify: onNow', err); }
+  };
+  function clear() { if (timer != null) { try { clearTimer(timer); } catch { /* gone */ } timer = null; } }
+  function later(ms, g) {
+    clear();
+    if (dead || g !== gen) return;
+    timer = setTimer(() => { timer = null; look(g); }, Math.max(250, ms));
+  }
+  function quit(ended = false) {
+    gen++; clear(); run = null;
+    if (ended) { try { onEnded?.(); } catch (err) { console.error('spotify: onEnded', err); } }
+  }
+
+  async function queueNext(g) {
+    if (!run || !run.ours || run.queued || !picker) return;
+    const pool = run.pool.filter((t) => t.id !== run.current);
+    const nxt = picker.next(pool.length ? pool : run.pool);
+    if (!nxt) return;
+    const r = await spotify.queue(nxt);
+    if (run && g === gen && r.ok) run.queued = nxt;
+  }
+
+  async function look(g) {
+    if (!run || g !== gen || dead) return;
+    let r;
+    try { r = await spotify.nowPlaying(); } catch { r = { ok: false }; }
+    if (!run || g !== gen || dead) return;
+    if (!r.ok) {
+      run.fails += 1;
+      if (run.fails >= GIVE_UP_AFTER) { quit(false); return; }
+      later(RETRY_MS, g);
+      return;
+    }
+    run.fails = 0;
+    if (!r.uri || !r.isPlaying) {
+      if (read(songInfo, false)) tell(r.uri ? { uri: r.uri, name: r.name, artists: r.artists, image: r.image } : null);
+      run.idles += 1;
+      if (run.idles >= IDLE_LIMIT) { quit(false); return; }
+      later(IDLE_LOOK_MS, g);
+      return;
+    }
+    run.idles = 0;
+    if (run.ours) {
+      if (r.uri === run.queued) {
+        picker.played(r.uri);
+        run.current = r.uri;
+        run.queued = null;
+      } else if (r.uri !== run.current) {
+        // Something we did not choose: somebody picked it on their phone or speaker. Theirs now.
+        tell(null);
+        quit(true);
+        return;
+      }
+    }
+    if (read(songInfo, false)) tell({ uri: r.uri, name: r.name, artists: r.artists, image: r.image });
+    if (run.ours && !run.queued) await queueNext(g);
+    if (!run || g !== gen) return;
+    // A queue that failed is tried again within RETRY_MS, before the song it should follow has ended.
+    const left = Math.max(0, r.durationMs - r.progressMs) + END_SLACK_MS;
+    later(run.ours && !run.queued ? Math.min(left, RETRY_MS) : left, g);
+  }
+
+  return {
+    available: () => !!spotify?.available?.(),
+    connected: () => !!spotify?.connected?.(),
+
+    /** Start a favourite: `{ ok, device, order: 'ours'|'spotify', note }` or `{ ok: false, reason }`. */
+    async play({ uri, device = '' } = {}) {
+      quit(false);
+      tell(null);
+      note = '';
+      const g = gen;
+      const u = parseSpotifyUri(uri);
+      if (!u) return { ok: false, reason: 'bad-uri' };
+      const type = u.split(':')[1];
+      if (picker && read(shuffle, true) && (type === 'playlist' || type === 'album')) {
+        const t = await spotify.tracks(u);
+        if (g !== gen || dead) return { ok: false, reason: 'superseded' };
+        if (t.ok && t.tracks.length) {
+          const first = picker.next(t.tracks);
+          const r = await spotify.playTracks({ uris: [first], device });
+          if (g !== gen || dead) return { ok: false, reason: 'superseded' };
+          if (!r.ok) return r;
+          picker.played(first);
+          run = { ours: true, pool: t.tracks, current: first, queued: null, fails: 0, idles: 0 };
+          later(FIRST_LOOK_MS, g);
+          return { ok: true, device: r.device, order: 'ours', note: '' };
+        }
+        note = SPOTIFY_MESSAGES[t.reason] || '';
+      }
+      const r = await spotify.play({ uri: u, device });
+      if (g !== gen || dead) return { ok: false, reason: 'superseded' };
+      if (!r.ok) return r;
+      run = { ours: false, pool: [], current: null, queued: null, fails: 0, idles: 0 };
+      if (read(songInfo, false)) later(FIRST_LOOK_MS, g);
+      return { ok: true, device: r.device, order: 'spotify', note };
+    },
+    /** Hold: Spotify pauses, and nothing looks until it carries on. */
+    async pause() { clear(); return spotify.pause(); },
+    async resume() {
+      const r = await spotify.resume();
+      if (run && (run.ours || read(songInfo, false))) later(FIRST_LOOK_MS, gen);
+      return r;
+    },
+    /** Finished with: stop steering, then pause Spotify. */
+    async stop() { quit(false); tell(null); return spotify.pause(); },
+    state: () => ({ steering: !!run, ours: !!run?.ours, current: run?.current || null, queued: run?.queued || null,
+      timer: timer != null, note, info: info ? { ...info } : null }),
+    destroy() { dead = true; quit(false); },
+  };
 }

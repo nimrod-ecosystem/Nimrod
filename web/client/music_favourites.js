@@ -28,6 +28,7 @@
 
 import { normalize, nearMiss, spokenTable, routeAction, phraseControl, SPEECH_DEVICE } from './input_speech.js';
 import { parseVideoId, parsePlaylistId } from './modules/youtube.js';
+import { spotifyRef } from './recommend.js';
 
 export const FAVOURITES_KEY = 'music-favourites';
 export const SOURCE_KINDS = Object.freeze(['youtube', 'file', 'folder', 'spotify']);
@@ -53,20 +54,13 @@ export const STOP_ROUTE_ID = 'music-stop';
 
 /**
  * A Spotify link or URI as a canonical `spotify:<type>:<id>`, or '' when it is not one. Accepts
- * `spotify:track:...` and `https://open.spotify.com/(intl-xx/)track/...?si=...`.
+ * `spotify:track:...`, `https://open.spotify.com/(intl-xx/)track/...?si=...` and Spotify's embed address
+ * `https://open.spotify.com/embed/playlist/...` (row 2.55: the Favourites form used to refuse that one).
+ * The reading itself is recommend.js's `spotifyRef`, the one Spotify-link reader on the site.
  */
 export function parseSpotifyUri(input) {
-  const s = String(input || '').trim();
-  if (!s) return '';
-  const TYPES = 'track|album|playlist|artist|episode|show';
-  let m = s.match(new RegExp(`^spotify:(${TYPES}):([A-Za-z0-9]{10,40})$`));
-  if (m) return `spotify:${m[1]}:${m[2]}`;
-  try {
-    const u = new URL(s);
-    if (u.hostname !== 'open.spotify.com') return '';
-    m = u.pathname.match(new RegExp(`^/(?:intl-[a-z-]+/)?(${TYPES})/([A-Za-z0-9]{10,40})/?$`));
-    return m ? `spotify:${m[1]}:${m[2]}` : '';
-  } catch { return ''; }
+  const r = spotifyRef(input);
+  return r ? `spotify:${r.type}:${r.id}` : '';
 }
 
 /**

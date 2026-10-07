@@ -27,7 +27,26 @@
 //   * a YouTube favourite goes to the YouTube panel when there is one, else plays here;
 //   * a folder plays shuffled;
 //   * a problem is SAID out loud (it answers a spoken request, and silence reads as "broken");
-//   * Spotify is OFF, and needs the household's own client ID.
+//   * Spotify is OFF, and needs the household's own client ID;
+//   * (row 2.55) a Spotify playlist or album is SHUFFLED BY THE SITE'S OWN WEIGHTED PICKER (music_pick.js,
+//     YouTube's rng.js weights) - Mike: "I like ours better for it's weights" - and off plays Spotify's order;
+//   * (row 2.55) the song-info card (name, artist, cover) is OFF: Mike asked for it as an OPTION ("have
+//     options for a song info overlay"), and it does not yet carry the Spotify logo and link back that
+//     Spotify's design guidelines ask for (see `songCardHtml`). AGAINST off: once Spotify is steered by the
+//     site, the look that feeds it is already being made, so it costs nothing, and a person watching the screen
+//     is better off knowing what is playing. Off wins for now on his word and the open attribution question.
+//
+// SPOTIFY'S SWITCH IS AT THE STANDARD DETAIL LEVEL (row 2.55, moved from advanced 2026-10-07). Mike added a
+// Spotify favourite, was told "Spotify is turned off for this panel", and could not find the switch: it sat at
+// the highest level, and the form had taken the link without a word. settings_fields.js says what each level is
+// for - standard is "what an average user expects", advanced is "sequences, precedence and raw timings" - and a
+// switch that says whether a service is used is the first kind, not the second. The client ID moved with it,
+// because the switch alone does nothing and every Spotify message points at that row; AGAINST: it is a
+// developer's value an average user will not have, and it lengthens the standard menu. It loses because a
+// message pointing at a row the menu is not showing is the same dead end again, and the length is answered by
+// showing the Spotify rows only while the switch is on (`spotifyIsOn`). The speaker name stays advanced (blank
+// already works). The form now says when Spotify is off and has a "Turn Spotify on" button, as
+// does the panel next to that message.
 
 import { registerModule } from '../module.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
@@ -39,7 +58,10 @@ import {
   musicSpeechRoutes, DEFAULT_STARTERS, MAX_NAME,
 } from '../music_favourites.js';
 import { createLocalMusic, FOLDER_ORDERS } from '../music_local.js';
-import { createSpotify, SPOTIFY_MESSAGES, callbackUrl } from '../music_spotify.js';
+import { createSpotify, createSpotifyPlayer, SPOTIFY_MESSAGES, callbackUrl } from '../music_spotify.js';
+import { createMusicPicker } from '../music_pick.js';
+import { spotifyRef, thumbOk, PREVIEW_URL } from '../recommend.js';
+import { authHeaders } from '../auth.js';
 import { createMusicRouter, NEAR_MATCH_MODES, YOUTUBE_WHERE, messageFor } from '../music_player.js';
 
 export const MUSIC_VOLUME_MIN = 10;
@@ -53,7 +75,13 @@ const DEFAULTS = {
   spotifyOn: false,
   spotifyClientId: '',
   spotifyDevice: '',
+  spotifyShuffle: true,
+  songInfo: false,
 };
+
+// The Spotify rows other than the switch show only while it is on (settings_fields.js `appliesWhen`), so the
+// standard menu is one row longer with Spotify off, not five. Their values are kept either way.
+const spotifyIsOn = (v) => v?.spotifyOn === true;
 
 export const SETTINGS = [
   { key: 'nearMatch', label: 'When a name is close but not exact', kind: 'choice', default: 'ask',
@@ -79,14 +107,22 @@ export const SETTINGS = [
     ] },
   { key: 'sayProblems', label: 'When it cannot play something', kind: 'toggle', default: true,
     level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show it on the panel only' },
-  { key: 'spotifyOn', label: 'Spotify', kind: 'toggle', default: false, level: 'advanced',
+  { key: 'spotifyOn', label: 'Spotify', kind: 'toggle', default: false, level: 'standard',
     onLabel: 'On (needs Spotify Premium)', offLabel: 'Off' },
   { key: 'spotifyClientId', label: 'Your household’s Spotify client ID', kind: 'text', default: '',
-    level: 'advanced',
+    level: 'standard', appliesWhen: spotifyIsOn,
     note: 'Make an app at developer.spotify.com with the account that has Premium, add this site’s '
       + 'Spotify callback address as a redirect URI, and paste the app’s client ID here.' },
+  { key: 'spotifyShuffle', label: 'Spotify playlists and albums play', kind: 'toggle', default: true,
+    level: 'standard', appliesWhen: spotifyIsOn,
+    onLabel: 'Shuffled the way YouTube is (fewer repeats)', offLabel: 'In Spotify’s own order',
+    note: 'Shuffling needs Spotify to list the songs, which it does only for playlists you made or share. '
+      + 'Others play in Spotify’s own order.' },
+  { key: 'songInfo', label: 'While Spotify plays, show', kind: 'toggle', default: false, level: 'standard',
+    appliesWhen: spotifyIsOn,
+    onLabel: 'The song’s name, artist and picture', offLabel: 'The favourite’s name only' },
   { key: 'spotifyDevice', label: 'Spotify speaker to play on (blank: whichever is on)', kind: 'text',
-    default: '', level: 'advanced' },
+    default: '', level: 'advanced', appliesWhen: spotifyIsOn },
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -186,15 +222,60 @@ registerModule(
     });
 
     let spotify = null;
+    let spotifyPlayer = null;
     let spotifySig = '';
+    let songNow = null;            // { name, artists, image } while the song-info card has something to show
+    // The site's own weighted picker for Spotify (row 2.55): one per panel, its play history in this panel's
+    // events, as the YouTube panel keeps its own.
+    const picker = createMusicPicker({ events: ctx.events || null });
+    const setT = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
+    const clearT = ctx.clearTimer || ((id) => clearTimeout(id));
     function spotifyFor() {
-      if (!cfg.spotifyOn) { spotify = null; spotifySig = ''; return null; }
+      if (!cfg.spotifyOn) {
+        try { spotifyPlayer?.destroy(); } catch { /* gone */ }
+        spotify = null; spotifyPlayer = null; spotifySig = ''; return null;
+      }
       const sig = String(cfg.spotifyClientId || '').trim();
       if (!spotify || sig !== spotifySig) {
         spotifySig = sig;
+        try { spotifyPlayer?.destroy(); } catch { /* gone */ }
         spotify = (ctx.spotifyFactory || createSpotify)({ clientId: sig, redirectUri: callbackUrl() });
+        spotifyPlayer = createSpotifyPlayer({
+          spotify, picker, setTimer: setT, clearTimer: clearT,
+          shuffle: () => cfg.spotifyShuffle !== false,
+          songInfo: () => cfg.songInfo === true,
+          onNow: (info) => {
+            if (info) songNow = { name: info.name, artists: info.artists || [], image: info.image || '' };
+            else if (!status.playing || status.kind !== 'spotify') songNow = null;
+            render();
+          },
+          onEnded: () => { songNow = null; router?.ended('spotify'); },
+        });
       }
       return spotify;
+    }
+    const spotifyPlayerFor = () => (spotifyFor() ? spotifyPlayer : null);
+
+    // THE FIRST MOMENT OF THE SONG-INFO CARD: before Spotify has said which song is playing, the favourite's own
+    // name and picture, from Spotify's public oEmbed - asked through this site's server, the recommend preview
+    // (server/recommend.py `describe`), which needs no Spotify app or sign-in. Only playlists, albums and songs:
+    // the preview takes nothing else. A failure leaves the card on the favourite's name.
+    const describeLink = ctx.describeLink || (async (link) => {
+      try {
+        const res = await fetch(PREVIEW_URL, { method: 'POST', credentials: 'same-origin',
+          headers: { ...authHeaders(ctx.user), 'Content-Type': 'application/json' }, body: JSON.stringify({ link }) });
+        if (!res.ok) return null;
+        const b = await res.json();
+        return b && (b.title || b.thumb) ? { title: String(b.title || ''), thumb: String(b.thumb || '') } : null;
+      } catch { return null; }
+    });
+    async function cardFromLink(fav) {
+      const ref = spotifyRef(fav?.source?.uri);
+      if (!cfg.songInfo || !ref || !['playlist', 'album', 'track'].includes(ref.type)) return;
+      const about = await describeLink(`https://open.spotify.com/${ref.type}/${ref.id}`);
+      if (dead || !about || songNow || status.kind !== 'spotify' || status.name !== fav.name) return;
+      songNow = { name: about.title, artists: [], image: about.thumb, from: 'link' };
+      render();
     }
 
     // The panel's own YouTube player: made the first time a YouTube favourite plays here, and on the
@@ -249,26 +330,57 @@ registerModule(
       busKey: ctx.rootBus || null,
       favourites: () => favs,
       local,
-      spotify: () => spotifyFor(),
+      spotify: () => spotifyPlayerFor(),
       spotifyDevice: () => cfg.spotifyDevice,
       ownYoutube,
       youtubeWhere: () => (YOUTUBE_WHERE.includes(cfg.youtubeWhere) ? cfg.youtubeWhere : 'panel'),
       nearMatch: () => (NEAR_MATCH_MODES.includes(cfg.nearMatch) ? cfg.nearMatch : 'ask'),
       instanceTopic: (id, topic) => (typeof ctx.rootBus?.instanceTopic === 'function'
         ? ctx.rootBus.instanceTopic(id, topic) : (id ? `${topic}#${id}` : topic)),
-      onChange: (s) => { status = s; render(); },
+      onChange: (s) => {
+        const was = status;
+        status = s;
+        if (!s.playing || s.kind !== 'spotify') songNow = null;
+        else if (was.kind !== 'spotify' || was.name !== s.name || !was.playing) {
+          songNow = null;
+          cardFromLink(favs.find((f) => f.name === s.name));
+        }
+        render();
+      },
       say,
     });
 
     // ---- the view ------------------------------------------------------------------------------
     const btn = (act, label, extra = '') => `<button type="button" class="mu-btn" data-act="${act}" data-walk${extra}>${esc(label)}</button>`;
 
+    // THE SONG-INFO CARD (row 2.55, the "song info overlay"): the song's name, its artists and its cover, while a
+    // Spotify favourite plays and the panel's "While Spotify plays, show" row says so. It is drawn IN this panel,
+    // so a music panel put "Over the dashboard" (the Add tray's choice, layout.js) is the overlay - one way to
+    // float a panel, not a second one. The picture is drawn only from Spotify's own image hosts (thumbOk), whole
+    // and unchanged. NOT YET MET, and part of why the card is off by default: Spotify's design guidelines
+    // [developer.spotify.com/documentation/design, read 2026-10-07] ask that its metadata be attributed with
+    // Spotify's LOGO and LINK BACK to Spotify. The card says "from Spotify" in words, and has no link (a link that
+    // leaves the page is what a locked screen takes away; page_links.js's address-and-code is the likely answer).
+    // On Mike's list.
+    function songCardHtml() {
+      if (!cfg.songInfo || !songNow || !status.playing || status.kind !== 'spotify') return '';
+      const img = songNow.image && thumbOk(songNow.image)
+        ? `<img class="mu-cover" data-song-cover src="${esc(songNow.image)}" alt="" width="96" height="96">` : '';
+      const who = (songNow.artists || []).join(', ');
+      return `<div class="mu-song" data-song>${img}<div><p class="mu-song-name" data-song-name>${esc(songNow.name || status.name)}</p>
+          ${who ? `<p class="mu-song-who" data-song-who>${esc(who)}</p>` : ''}<p class="mu-hint">from Spotify</p></div></div>`;
+    }
+
     function mainHtml() {
       const now = status.playing ? `Playing: ${status.name}` : 'Nothing playing';
       const msg = status.reason && status.reason !== 'did-you-mean' ? status.message : '';
+      const why = status.playing && status.kind === 'spotify' ? (spotifyPlayer?.state().note || '') : '';
       return `
         <p class="mu-now" data-now>${esc(now)}</p>
+        ${songCardHtml()}
+        ${why ? `<p class="mu-hint" data-order-note role="status">${esc(why)}</p>` : ''}
         ${msg ? `<p class="mu-msg" data-msg role="status">${esc(msg)}</p>` : ''}
+        ${status.reason === 'spotify-off' ? `<div class="mu-btns">${btn('spotify-on', 'Turn Spotify on')}</div>` : ''}
         ${status.asking ? `<div class="mu-ask" data-ask><p>${esc(messageFor('did-you-mean', status.asking))}</p>
             <div class="mu-btns">${btn('confirm', 'Yes, play it')}${btn('decline', 'No')}</div></div>` : ''}
         <div class="mu-list" data-list>${favs.length
@@ -277,8 +389,17 @@ registerModule(
         <div class="mu-btns">${btn('stop', 'Stop')}${btn('edit', 'Change the list')}</div>`;
     }
 
+    const hasSpotifyFav = () => favs.some((f) => f.source?.kind === 'spotify');
     function spotifyHtml() {
-      if (!cfg.spotifyOn) return '';
+      if (!cfg.spotifyOn) {
+        // (row 2.55) A Spotify favourite on the list with Spotify off is a favourite that cannot play: say so
+        // where the list is changed, with the way to turn it on.
+        return hasSpotifyFav() ? `<div class="mu-spot" data-spotify data-spotify-off>
+            <p class="mu-head">Spotify</p>
+            <p class="mu-hint">Spotify is turned off for this panel, so the Spotify favourites will not play. Turn it on
+              here, or with the “Spotify” row in this panel’s settings.</p>
+            <div class="mu-btns">${btn('spotify-on', 'Turn Spotify on')}</div></div>` : '';
+      }
       const sp = spotifyFor();
       const state = !sp || !sp.available() ? SPOTIFY_MESSAGES['no-client-id']
         : sp.connected() ? 'Spotify is connected on this device.' : 'Spotify is not connected on this device yet.';
@@ -373,7 +494,9 @@ registerModule(
       const next = normalizeFavourites([...favs, { id: newFavouriteId(), name, source }]);
       if (next.length === before) { editMsg = `There is already a favourite called “${name}”.`; render(); return; }
       draft = { name: '', link: '', sourceId: draft.sourceId, kind: draft.kind, path: '' };
-      editMsg = `Added “${name}”.`;
+      editMsg = source.kind === 'spotify' && !cfg.spotifyOn
+        ? `Added “${name}”. Spotify is turned off for this panel, so it will not play until Spotify is on (below).`
+        : `Added “${name}”.`;
       saveList(next);
     }
 
@@ -407,6 +530,17 @@ registerModule(
       if (a === 'close') { view = 'main'; lit = -1; render(); return; }
       if (a === 'add') { addFromDraft(); return; }
       if (a === 'remove') { saveList(favs.filter((f) => f.id !== b.dataset.id)); return; }
+      if (a === 'spotify-on') {
+        // The same value the settings menu's "Spotify" row writes. Then the panel says what is still missing
+        // (the household's client ID) where the switch was.
+        state?.set?.({ spotifyOn: true });
+        cfg = { ...cfg, spotifyOn: true };
+        if (status.reason === 'spotify-off') status = { ...status, reason: null, message: '' };
+        if (view === 'main') { view = 'edit'; lit = -1; loadSources(); }
+        editMsg = '';
+        render();
+        return;
+      }
       if (a.startsWith('spotify-')) { spotifyAct(a.slice(8)); }
     }
 
@@ -477,6 +611,8 @@ registerModule(
         mount.removeEventListener('change', onInput);
         mount.removeEventListener('keydown', onKey);
         try { router.destroy(); } catch { /* gone */ }
+        try { spotifyPlayer?.destroy(); } catch { /* gone */ }
+        try { picker.destroy(); } catch { /* gone */ }
         try { local.destroy(); } catch { /* gone */ }
         try { ytActive(false); audio?.unregister?.(YT_AUDIO); } catch { /* gone */ }
         try { yt?.destroy?.(); } catch { /* gone */ }
