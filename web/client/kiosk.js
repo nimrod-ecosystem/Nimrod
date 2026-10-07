@@ -7285,6 +7285,9 @@ export async function mountKiosk(root, {
     // 2026-10-03, for the suites: each Settings panel's view of this menu ({ instanceId, view }: the view is the
     // same `mountSettings` handle as `menu`, drawn as a panel).
     settingsViews: () => [...menuViews].map((e) => ({ instanceId: e.instanceId, view: e.view })),
+    // 2026-10-07 (the Modules page, library.html): the same menu-as-a-panel a Settings panel on this screen gets
+    // (`ctx.settingsMenu`), for a Settings panel the hosting PAGE draws beside the kiosk. Same views, same sync.
+    settingsMenu: (host, opts = {}) => menuReady.then(() => settingsMenuFor(host, opts || {})),
     effects: () => fxReal,
     soundScene: () => soundScene,
     listening: () => listening,

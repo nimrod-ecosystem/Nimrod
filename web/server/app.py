@@ -2458,7 +2458,21 @@ def auth_logout(request: Request):
 # arrival there is the landing DASHBOARD filling the browser window (modules.html's land view, the
 # person's "When I arrive, show" row); its bar's Edit is the editing page, /modules.html?edit=1. No
 # route changed: the page decides, because only the page knows the person's row.
-HOME_PAGE = "/modules.html"
+#
+# 2026-10-07 (Mike: "What you have as the modules page now should be the homepage/profiles. I still want the
+# old Modules tab"): TWO PLAIN ADDRESSES, one per tab, and the old file names keep working.
+#   /home     Home: Your people and the editor. The SAME page as /modules.html -- it is served from that file,
+#             so every link to /modules.html (?edit=1, ?m=, ?example=, ?all=1) still opens exactly what it did.
+#   /modules  the Modules page: the modules library, a module to try, its settings beside it and its bar
+#             under it (library.html). /library.html is the same page.
+# Argued, an alias rather than renaming the files: modules.html is Home's whole editor and it is linked from
+# the cat's walkthrough, the game, My dashboards, the trial strip and some twenty suites; renaming it moves
+# every one of those links for nothing a visitor would see. AGAINST: /modules and /modules.html are now two
+# different pages (and /home and /home.html, which is My dashboards). The navigation only ever uses the plain
+# addresses, so the .html names are what an old link or bookmark reaches, and each of those still works.
+# `/` still sends a signed-in visitor to Home, now by its plain address; signed out it is the landing, as before.
+HOME_PAGE = "/home"
+PAGE_ALIASES = {"/home": "modules.html", "/modules": "library.html"}
 
 
 @app.get("/")
@@ -2466,6 +2480,16 @@ def root(request: Request):
     if optional_user(request):
         return RedirectResponse(url=HOME_PAGE)
     return FileResponse(CLIENT_DIR / "landing.html")
+
+
+@app.get("/home")
+def home_page():
+    return FileResponse(CLIENT_DIR / PAGE_ALIASES["/home"])
+
+
+@app.get("/modules")
+def modules_page():
+    return FileResponse(CLIENT_DIR / PAGE_ALIASES["/modules"])
 
 
 # Make the browser REVALIDATE code and pages instead of guessing.
@@ -2483,7 +2507,8 @@ CODE_TYPES = ('.html', '.js', '.css', '.json')
 async def revalidate_code(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
-    if path.endswith(CODE_TYPES) or path.endswith('/'):
+    # (2026-10-07) The plain page addresses (/home, /modules) are pages too, without an .html to say so.
+    if path.endswith(CODE_TYPES) or path.endswith('/') or path in PAGE_ALIASES:
         response.headers.setdefault("Cache-Control", "no-cache")
     return response
 

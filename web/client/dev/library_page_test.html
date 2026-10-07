@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the Modules page (library.html, /modules) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>the Modules page (library.html, /modules) — test</h1>
+<p>Mike, 2026-10-07: what was the modules page is Home now; the old Modules tab comes back as its own page — the
+modules library, a module to try, its settings on the side and a transport bar below. This checks the addresses
+(/home, /modules, and the old .html names), that the page is made of the real parts (the Modules module, the real
+kiosk and its bar, the Settings panel drawing that kiosk's menu), that looking adds nothing to a screen and
+"Add it to my screen" does, the tabs on both pages, and a phone's width. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createProfilesClient } from '../profile.js';
+import { authHeaders } from '../auth.js';
+
+const USER = 'modules-page-' + Math.floor(Math.random() * 1e6);
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 15000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+
+let ifr = null, doc = null, win = null;
+const pageErrors = [];
+async function open(path, { w = 1400, h = 950 } = {}) {
+  ifr?.remove();
+  ifr = document.createElement('iframe');
+  ifr.style.cssText = `position:fixed;left:-9999px;top:0;width:${w}px;height:${h}px;border:0`;
+  document.body.append(ifr);
+  await new Promise((res) => { ifr.onload = res; ifr.src = path; });
+  doc = ifr.contentDocument; win = ifr.contentWindow;
+  const orig = win.console.error.bind(win.console);
+  // (A frame removed while its page is still starting logs "inactive browsing context": that is this suite moving on.)
+  win.console.error = (...a) => { if (/inactive browsing context/.test(a.map(String).join(' '))) return orig(...a); pageErrors.push(a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 300)); orig(...a); };
+}
+const $ = (s) => doc.querySelector(s);
+const $$ = (s) => [...doc.querySelectorAll(s)];
+const P = () => win.__modulesPage;
+const rect = (el) => el.getBoundingClientRect();
+
+try {
+  // ==========================================================================================
+  section('the addresses: /home is Home, /modules is the Modules page, the old names still work');
+  {
+    const mod = await fetch(`/modules?user=${USER}`);
+    const modBody = await mod.text();
+    check('/modules answers with the Modules page', mod.ok && /<title>Nimrod — Modules<\/title>/.test(modBody) && /id="lib"/.test(modBody), mod.status);
+    check('/modules is revalidated like any page (no-cache)', /no-cache/.test(mod.headers.get('cache-control') || ''), mod.headers.get('cache-control'));
+    const lib = await (await fetch('/library.html')).text();
+    check('/library.html is the same page', lib === modBody);
+    const home = await fetch(`/home?user=${USER}`);
+    const homeBody = await home.text();
+    check('/home answers with Home (the editor and Your people)', home.ok && /id="stage-bar"/.test(homeBody) && /bootHome/.test(homeBody));
+    check('/home is revalidated like any page (no-cache)', /no-cache/.test(home.headers.get('cache-control') || ''), home.headers.get('cache-control'));
+    const old = await (await fetch('/modules.html')).text();
+    check('*** /modules.html is still Home: every old link (?edit=1, ?m=, ?example=, ?all=1) opens what it did ***', old === homeBody);
+    const root = await fetch(`/?user=${USER}`, { headers: authHeaders(USER) });
+    check('/ sends a signed-in visitor to /home', new URL(root.url).pathname === '/home', root.url);
+    const dash = await (await fetch('/home.html')).text();
+    check('/home.html is still My dashboards', /id="app"|mountHome|home\.js/.test(dash) && !/id="stage-bar"/.test(dash));
+  }
+
+  // ==========================================================================================
+  section('one list of modules: this page imports what Home imports');
+  {
+    const imports = (src) => new Set([...src.matchAll(/^import '\.\/modules\/([a-z_]+)\.js';/gm)].map((m) => m[1]));
+    const page = imports(await (await fetch('/library.html')).text());
+    const home = imports(await (await fetch('/modules.html')).text());
+    page.delete('settings');   // the page's own right-hand column, not a part it offers
+    const onlyPage = [...page].filter((t) => !home.has(t));
+    const onlyHome = [...home].filter((t) => !page.has(t));
+    check(`*** the same module imports (${page.size}) ***`, page.size > 40 && !onlyPage.length && !onlyHome.length,
+      `only here: ${onlyPage.join(', ')} | only on Home: ${onlyHome.join(', ')}`);
+  }
+
+  // ==========================================================================================
+  section('the page: the library, the real kiosk with its bar below, the Settings panel beside it');
+  await open(`/modules?user=${USER}&m=photos`);
+  check('it starts (nothing threw on the way)', await until(() => doc.body.dataset.ready === 'true', 30000), pageErrors.join(' | '));
+  check('?m=photos: Photos is on the stage', P()?.shown()?.type === 'photos', JSON.stringify(P()?.shown()));
+  check('the library IS the Modules module (its own markup, in the left column)', !!$('#lib .lib') && $$('#lib .lib-card').length > 15, $$('#lib .lib-card').length);
+  check('...with the shared search, order and filters (sort_filter.js)', !!$('#lib [data-lib-q]') && !!$('#lib [data-lib-sort]') && !!$('#lib .sf-tools'));
+  check('...opened on Photos (its details)', P().library()?.detail === 'module:photos', JSON.stringify(P().library()?.detail));
+  const k = P().kiosk();
+  check('the stage holds the REAL kiosk', !!k && !!$('#stage .kiosk.k-embed'));
+  // The bar is the screen's own transport bar (transport_bar.js `.tb-bar`), placed by the dashboard; the module is
+  // the dashboard's cell for it (`data-kind`). Below means below, not floating over the module.
+  const bar = await until(() => !!$('#stage .tb-bar')) && $('#stage .tb-bar');
+  const cell = $('#stage .view .k-stage') || $('#stage [data-kind="photos"]');
+  check('*** its transport bar is BELOW the module, not over it ***', !!bar && !!cell && rect(bar).top >= rect(cell).bottom - 2 && rect(bar).height > 20,
+    bar && cell ? `${rect(bar).top} vs ${rect(cell).bottom}` : `bar ${!!bar} cell ${!!cell}: kinds ${$$('#stage [data-kind]').map((e) => e.dataset.kind)}; `
+      + `bar's ancestors ${(() => { const a = []; for (let e = bar; e && e.id !== 'stage'; e = e.parentElement) a.push(`${e.tagName}.${e.className}`.slice(0, 40)); return a.join(' < '); })()}; `
+      + `stage children ${[...($('#stage .k-dash, #stage .kiosk')?.querySelectorAll('*') || [])].slice(0, 25).map((e) => `${e.tagName}.${String(e.className).slice(0, 20)}${Object.keys(e.dataset).join('/')}`).join(' ')}`);
+  check('the kiosk offers its menu as a panel (kiosk.settingsMenu)', typeof k?.settingsMenu === 'function');
+  check('*** the settings on the side ARE the Settings panel, drawing that kiosk’s ⚙ menu ***',
+    await until(() => P().settings()?.hosted === true) && !!$('#settings [data-settings-root]') && !$('#settings [data-settings-bare]'),
+    JSON.stringify(P().settings()));
+  check('...set to the module on the stage', await until(() => {
+    const id = (k.panels() || []).find((p) => p.type === 'photos')?.id;
+    return !!id && P().settings()?.subject === id;
+  }, 8000), JSON.stringify({ subject: P().settings()?.subject, panels: k.panels() }));
+  check('...and it is a view of the same menu (the kiosk lists it)', (k.settingsViews?.() || []).length === 1);
+  {
+    const L = rect($('#lib')), S = rect($('#stage')), T = rect($('#settings'));
+    check('*** at 1400 wide: library left, module middle, settings right ***', L.right <= S.left && S.right <= T.left && S.width > 500,
+      JSON.stringify({ L: [L.left, L.right], S: [S.left, S.right], T: [T.left, T.right] }));
+  }
+
+  // ==========================================================================================
+  section('the tabs');
+  {
+    const tab = (n) => $(`.top nav [data-nav="${n}"]`);
+    check('Modules is the tab you are on', tab('modules')?.getAttribute('aria-current') === 'page');
+    check('signed in: Home and My dashboards show, Sign in does not', !tab('home').hidden && !tab('dashboards').hidden && tab('signin').hidden);
+    check('the tabs go to the plain addresses', new URL(tab('home').href).pathname === '/home' && new URL(tab('modules').href).pathname === '/modules');
+    check('the brand goes to Home', new URL($('.top a.brand').href).pathname === '/home');
+    // The PAGE's own words (the hero, the tabs, the notes, the columns' headings) -- not what a module draws.
+    const own = [...doc.querySelectorAll('.top, header.hero, #legend, #try-head, .mp-note, .mp-set > h2, .mp-set > p, .gaps, footer')]
+      .map((e) => e.textContent).join(' ');
+    const hit = own.match(/.{0,40}(\bher screen\b|christine|cici).{0,40}/i);
+    check('no "her screen" and no name in the page’s words', !hit, hit?.[0]);
+  }
+
+  // ==========================================================================================
+  section('looking adds nothing; "Add it to my screen" does');
+  {
+    check('a fresh account has no screen, so Photos is a try', P().shown().live === false && P().screen().id === null, JSON.stringify(P().screen()));
+    check('"Add it to my screen" is offered', !$('#add-btn').hidden);
+    // A press on a card tries it (the old page's one click).
+    const card = $('#lib .lib-card[data-lib-key="module:trivia"]') || (() => {
+      const q = $('#lib [data-lib-q]'); q.value = 'trivia'; q.dispatchEvent(new win.Event('input', { bubbles: true }));
+      return $('#lib .lib-card[data-lib-key="module:trivia"]');
+    })();
+    check('search finds Trivia', !!card);
+    card?.click();
+    check('one press on a card tries it on the stage', await until(() => P().shown()?.type === 'trivia' && !!P().kiosk()), JSON.stringify(P().shown()));
+    check('...and the settings follow it to the new kiosk', await until(() => P().settings()?.hosted === true && (P().kiosk().settingsViews?.() || []).length === 1));
+    const profiles = createProfilesClient({ user: USER });
+    check('*** nothing was made by looking: still no screen ***', (await profiles.list()).length === 0);
+    $('#add-btn').click();
+    check('pressed: Trivia is on the stage live, from the screen', await until(() => P().shown()?.type === 'trivia' && P().shown().live === true && !!P().screen().id, 20000),
+      JSON.stringify({ shown: P().shown(), screen: P().screen() }));
+    const list = await profiles.list();
+    const mods = list.length ? ((await profiles.get(list[0].id)).modules || []).map((m) => m.type) : [];
+    check('*** the screen really has Trivia now ***', mods.includes('trivia'), mods.join(','));
+    const triviaId = list.length ? ((await profiles.get(list[0].id)).modules || []).find((m) => m.type === 'trivia')?.id : null;
+    check('the live kiosk shows THAT screen’s Trivia (its real instance)', await until(() => (P().kiosk()?.panels?.() || []).some((p) => p.id === triviaId)),
+      `${triviaId} vs ${JSON.stringify(P().kiosk()?.panels?.())}`);
+    check('...and the button is gone (it is on your screen)', $('#add-btn').hidden);
+    check('the settings beside it are that screen’s menu', await until(() => P().settings()?.hosted === true));
+    // A module already on the screen (the first screen came with Photos) opens live straight away.
+    await P().show('photos');
+    check('Photos, already on the new screen, opens live', await until(() => P().shown()?.type === 'photos' && P().shown().live === true));
+  }
+
+  // ==========================================================================================
+  section('Home has the tabs too');
+  await open(`/home?user=${USER}&edit=1`);
+  check('Home has a Modules tab to /modules', await until(() => { const a = $('.top nav [data-nav="modules"]'); return !!a && new URL(a.href).pathname === '/modules'; }));
+  check('...and its own Home tab, marked, once it knows who is looking', await until(() => { const a = $('.top nav [data-nav="home"]'); return !!a && !a.hidden && a.getAttribute('aria-current') === 'page'; }));
+  check('...and the brand goes to /home', await until(() => new URL($('.top a.brand').href).pathname === '/home'));
+
+  // ==========================================================================================
+  section('a phone: one column, in the order you use them, nothing sideways');
+  await open(`/modules?user=${USER}`, { w: 375, h: 812 });
+  check('it starts', await until(() => doc.body.dataset.ready === 'true', 30000));
+  {
+    const L = rect($('#lib')), S = rect($('#stage')), T = rect($('#settings'));
+    check('library, then the module, then its settings', L.bottom <= S.top + 1 && S.bottom <= T.top + 60,
+      JSON.stringify({ L: [L.top, L.bottom], S: [S.top, S.bottom], T: [T.top] }));
+    check('*** no sideways scroll ***', doc.documentElement.scrollWidth <= win.innerWidth + 1, `${doc.documentElement.scrollWidth} > ${win.innerWidth}`);
+    check('a 16px gutter', Math.round(L.left) === 16, L.left);
+    check('*** the settings show at this width (their box is not squeezed to nothing) ***',
+      await until(() => rect($('#settings')).height > 250 && P().settings()?.hosted === true), rect($('#settings')).height);
+    const small = $$('.top nav a:not([hidden])').filter((a) => a.getBoundingClientRect().height < 44);
+    check('the tabs are 44px targets', !small.length, small.map((a) => a.textContent).join(','));
+  }
+
+  // ==========================================================================================
+  section('signed out');
+  const anon = await fetch('/api/me');
+  if (anon.status === 401) {
+    await open('/modules');
+    check('signed out: a try, Sign in shows, Home does not', await until(() => doc.body.dataset.ready === 'true') && P().shown().live === false
+      && !$('.top nav [data-nav="signin"]').hidden && $('.top nav [data-nav="home"]').hidden);
+  } else {
+    check('(skipped) this server signs everybody in, so there is no signed-out visitor to test', true);
+  }
+  check('nothing the page logged as an error', !pageErrors.length, pageErrors.slice(0, 3).join(' | '));
+} catch (err) {
+  check('the suite ran to the end', false, err?.stack || String(err));
+} finally {
+  ifr?.remove();
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

@@ -71,8 +71,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     // Row 2.29 (2026-09-30): Home, for a signed-in visitor, is the MODULES page (a dashboard that
     // opens on their profile). Their list of screens is still here, one link away.
     const signedIn = await fetch(`/?user=${encodeURIComponent(USER)}`);
-    check('/ sends a signed-IN visitor to HOME (the modules page, row 2.29), not the kiosk',
-      new URL(signedIn.url).pathname === '/modules.html', signedIn.url);
+    // 2026-10-07: by Home's plain address, /home (the same page, served from modules.html).
+    check('/ sends a signed-IN visitor to HOME (/home, row 2.29), not the kiosk',
+      new URL(signedIn.url).pathname === '/home', signedIn.url);
     const homeBody = await signedIn.text();
     check('...and that really is the modules page', /id="stage-bar"/.test(homeBody) && /id="list"/.test(homeBody));
     check('...and NOT the kiosk', !/id="kiosk"/.test(homeBody));
