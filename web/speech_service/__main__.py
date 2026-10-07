@@ -47,9 +47,11 @@ import sys
 from .backends import (MY_VOICE_DIR, MY_VOICE_PORT, NIMROD_FOLDER_FILE, VOICE_MODEL_SUBFOLDER, WAKE_REFRACTORY_S,
                        WAKE_THRESHOLD, WHISPER_FOLDER_FILES, ModelFolderError, check_whisper_folder, default_threads,
                        is_model_folder, make_backend, make_wake)
-from .service import DEFAULT_SITES, MAX_UTTERANCE_S, site_list
+from .service import DEFAULT_SITES, MAX_UTTERANCE_S, PROTOCOL, listen_socket, site_list
 
 LOOPBACK = {'127.0.0.1', 'localhost', '::1'}
+# The port was taken by something that is not this service (the same code the media agent uses for it).
+EXIT_PORT_TAKEN = 3
 
 
 def parse(argv=None):
@@ -164,6 +166,41 @@ def allowed_sites(a) -> tuple:
     return site_list(given)
 
 
+def who_holds(host: str, port: int, timeout: float = 1.5):
+    """What answers /health on host:port: its JSON, {} when something answers but not with JSON, or None when
+    nothing answers at all. (media_agent/agent.py has its own: it runs as one file, with nothing imported.)"""
+    import json
+    import socket
+    import urllib.request
+    ask = '127.0.0.1' if host in ('', '0.0.0.0') else ('::1' if host == '::' else host)
+    try:
+        with socket.create_connection((ask, int(port)), timeout=timeout):
+            pass
+    except OSError:
+        return None
+    url_host = f'[{ask}]' if ':' in ask else ask
+    try:
+        with urllib.request.urlopen(f'http://{url_host}:{port}/health', timeout=timeout) as r:
+            j = json.loads(r.read().decode('utf-8'))
+            return j if isinstance(j, dict) else {}
+    except (OSError, ValueError):   # an HTTP error, no answer in time, not JSON
+        return {}
+
+
+def already_running(host: str, port: int, err: OSError, probe=who_holds) -> tuple:
+    """The port could not be bound: (exit code, the one line to print)."""
+    there = probe(host, port)
+    if there and there.get('protocol') == PROTOCOL and 'engine' in there:
+        return 0, (f'speech service: not starting a second copy: the speech service is already running on port '
+                   f'{port} (engine {there.get("engine")}).')
+    if there is not None:
+        return EXIT_PORT_TAKEN, (f'speech service: not starting: port {port} is already in use by another program '
+                                 '(or a speech service with no /health). Stop it, or pass --port with a free one.')
+    return EXIT_PORT_TAKEN, (f'speech service: not starting: could not listen on {host}:{port} ({err}). If another '
+                             'copy is still loading its model, it is holding the port; otherwise pass --port with a '
+                             'free one.')
+
+
 def main(argv=None):
     a = parse(argv)
     if a.my_voice and a.backend != 'whisper':
@@ -220,6 +257,21 @@ def main(argv=None):
     if a.backend == 'none' and not a.wake:
         print('--backend none needs --wake (otherwise the service would do nothing)', file=sys.stderr)
         return 2
+    # THE PORT IS THE LOCK (service.py listen_socket). Taken BEFORE the model loads, so a second copy says so at
+    # once instead of loading a model it cannot serve.
+    try:
+        sock = listen_socket(a.host, a.port)
+    except OSError as err:
+        code, line = already_running(a.host, a.port, err)
+        print(line, file=sys.stderr, flush=True)
+        return code
+    try:
+        return _serve(a, kw, sock, remote)
+    finally:
+        sock.close()
+
+
+def _serve(a, kw, sock, remote) -> int:
     backend = make_backend(a.backend, **kw)
     wake = make_wake([w.strip() for w in (a.wake or '').split(',') if w.strip()],
                      threshold=a.wake_threshold, refractory_s=a.wake_refractory_s, vad_threshold=a.wake_vad)
@@ -239,17 +291,22 @@ def main(argv=None):
     if server == 'fastapi':
         import uvicorn
         from .service import create_app
-        uvicorn.run(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s, wake=wake,
-                               sites=sites, loopback=loopback),
-                    host=a.host, port=a.port, log_level='warning', ws_max_size=2 ** 20)
-    else:
-        from .service import serve_websockets
+        # uvicorn.Server on our own socket, not uvicorn.run(host, port): uvicorn's own bind sets SO_REUSEADDR.
+        userver = uvicorn.Server(uvicorn.Config(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s,
+                                                           wake=wake, sites=sites, loopback=loopback),
+                                                host=a.host, port=a.port, log_level='warning', ws_max_size=2 ** 20))
         try:
-            asyncio.run(serve_websockets(backend, a.host, a.port, secret=a.secret,
-                                         max_utterance_s=a.max_utterance_s, wake=wake,
-                                         sites=sites, loopback=loopback))
+            userver.run(sockets=[sock])
         except KeyboardInterrupt:
             pass
+        return 0 if userver.started else 3     # 3: what uvicorn.run exits with when its server never started
+    from .service import serve_websockets
+    try:
+        asyncio.run(serve_websockets(backend, a.host, a.port, secret=a.secret,
+                                     max_utterance_s=a.max_utterance_s, wake=wake,
+                                     sites=sites, loopback=loopback, sock=sock))
+    except KeyboardInterrupt:
+        pass
     return 0
 
 

@@ -46,18 +46,51 @@ def free_port() -> int:
     return p
 
 
-def get(url: str):
+def get(url: str, headers: dict | None = None, method: str = "GET"):
     """Return (status, headers, body_bytes). Never raises on HTTP error codes."""
     try:
-        r = urllib.request.urlopen(url, timeout=5)
+        r = urllib.request.urlopen(urllib.request.Request(url, headers=headers or {}, method=method), timeout=5)
         return r.status, dict(r.headers), r.read()
     except urllib.error.HTTPError as e:
         return e.code, dict(e.headers), e.read()
 
 
-def get_json(url: str):
-    status, headers, body = get(url)
+def get_json(url: str, headers: dict | None = None):
+    status, headers, body = get(url, headers)
     return status, headers, json.loads(body.decode("utf-8"))
+
+
+EVIL = "https://evil.example"
+
+
+def check_origin_rules():
+    """PURE - no agent process. The agent's page check is a COPY of the speech program's (agent.py, "WHICH WEB
+    PAGES", says why it is not imported); this runs both over one table and fails if they ever disagree."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent))
+    import agent  # noqa: E402
+    from speech_service import service as SP  # noqa: E402
+
+    sites = ("https://nimrodecosystem.com", "https://nimrod.onrender.com")
+    origins = [None, "", "https://nimrodecosystem.com", "https://nimrodecosystem.com/", "https://nimrod.onrender.com",
+               "http://127.0.0.1:8680", "http://localhost:8000", "http://localhost", "http://[::1]:9", EVIL, "null",
+               "http://127.0.0.1.evil.example", "http://localhost.evil.example:8000",
+               "https://nimrodecosystem.com.evil.example", "http://nimrodecosystem.com", "https://localhost:8000",
+               "https://www.nimrodecosystem.com"]
+    hosts = [None, "", "127.0.0.1:8770", "localhost:8770", "LOCALHOST", "[::1]:8770", "evil.example:8770",
+             "127.0.0.1.evil.example", "desk:8770"]
+    differ = [(o, h, lb) for o in origins for h in hosts for lb in (True, False)
+              if (agent.refusal(o, h, sites, lb) == "") != (SP.refusal(o, h, sites, lb) == "")]
+    check("*** the agent and the speech program allow exactly the same pages and hosts (a table of "
+          f"{len(origins) * len(hosts) * 2}) ***", not differ, detail=repr(differ[:6]))
+    check("origins: another site, a look-alike, http for https and 'null' are refused",
+          not any(agent.origin_allowed(o, sites) for o in (EVIL, "null", "http://nimrodecosystem.com",
+                                                           "https://nimrodecosystem.com.evil.example")))
+    check("origins: '*' (chosen on purpose) lets any site in, as the old open setting did",
+          agent.origin_allowed(EVIL, ("*",)) and agent.origin_allowed("null", ("*",)))
+    check("--origin values: comma-separated or repeated, no repeats, no trailing slash",
+          agent.site_list(["https://a.example/, https://b.example", "https://a.example"])
+          == ("https://a.example", "https://b.example") and agent.site_list([""]) == () and agent.site_list(None) == ())
 
 
 CLIENT = HERE.parent / "client"
@@ -122,7 +155,7 @@ def double_start_tests(root: Path, tmp: Path, port: int, base: str, origin: str)
     code, out = run_agent(root, port)
     check("*** double start: a second copy for the same folder steps aside (exit 0), saying it is already running ***",
           code == 0 and "already running for this folder" in out, detail=f"code={code} out={out[-300:]!r}")
-    s, h, j = get_json(f"{base}/health")
+    s, h, j = get_json(f"{base}/health", {"Origin": origin})
     check("double start: ...and the first copy still answers, unchanged",
           s == 200 and h.get("Access-Control-Allow-Origin") == origin, detail=f"status={s}")
 
@@ -155,8 +188,41 @@ def double_start_tests(root: Path, tmp: Path, port: int, base: str, origin: str)
           detail=repr((same, diff, some, none)))
 
 
+def page_tests(base: str, origin: str):
+    """WHICH WEB PAGES, over HTTP. The agent was started with --origin `origin` (a site that is not on this
+    computer), so --platform's default is NOT allowed: --origin replaces it."""
+    for path in ("/health", "/list", "/files/apple.jpg"):
+        s, h, body = get(f"{base}{path}", {"Origin": EVIL})
+        check(f"*** {path}: a page from another site -> 403, no CORS header, nothing listed or served ***",
+              s == 403 and "Access-Control-Allow-Origin" not in h and b"apple" not in body and b"JPEGDATA" not in body,
+              detail=f"status={s} {body[:120]!r}")
+    s, h, _ = get(f"{base}/list", {"Origin": EVIL, "Access-Control-Request-Private-Network": "true"}, method="OPTIONS")
+    check("the private-network preflight from another site -> 403, not answered",
+          s == 403 and "Access-Control-Allow-Private-Network" not in h, detail=f"status={s}")
+    s, h, _ = get(f"{base}/list", {"Origin": origin, "Access-Control-Request-Private-Network": "true"}, method="OPTIONS")
+    check("...and from the person's Nimrod it is answered, its Origin echoed",
+          s == 204 and h.get("Access-Control-Allow-Private-Network") == "true"
+          and h.get("Access-Control-Allow-Origin") == origin, detail=f"status={s} {h}")
+    s, h, _ = get(f"{base}/list", {"Origin": "http://localhost:8000"})
+    check("a page on this computer (the dev server) may, its Origin echoed",
+          s == 200 and h.get("Access-Control-Allow-Origin") == "http://localhost:8000", detail=f"status={s}")
+    s, h, _ = get(f"{base}/list", {"Origin": "https://nimrod.onrender.com"})
+    check("--origin replaces the --platform default (that site is not allowed here)", s == 403, detail=f"status={s}")
+    s, h, _ = get(f"{base}/files/apple.jpg")
+    check("no Origin (an <img> load, a program) is served, with no CORS header needed",
+          s == 200 and "Access-Control-Allow-Origin" not in h, detail=f"status={s}")
+    s, _, body = get(f"{base}/list", {"Host": "evil.example:8770"})
+    check("*** listening on this computer: a Host naming another site -> 403 (DNS rebinding) ***",
+          s == 403 and b"apple" not in body, detail=f"status={s}")
+    s, _, _ = get(f"{base}/files/apple.jpg", {"Host": f"localhost:{base.rsplit(':', 1)[1]}"})
+    check("...a Host naming this computer goes on", s == 200, detail=f"status={s}")
+    s, h, _ = get(f"{base}/files/apple.jpg", {"Origin": EVIL}, method="HEAD")
+    check("HEAD from another site -> 403 too", s == 403, detail=f"status={s}")
+
+
 def main():
     check_kinds_agree()
+    check_origin_rules()
 
     tmp = Path(tempfile.mkdtemp(prefix="nimrod_media_"))
     root = tmp / "photos"
@@ -176,7 +242,7 @@ def main():
     (tmp / "secret.txt").write_bytes(b"TOP SECRET should never be served") # outside root
 
     port = free_port()
-    origin = "http://localhost:8000"
+    origin = "https://self.example"    # a site that is NOT on this computer: those are always allowed anyway
     proc = subprocess.Popen(
         [sys.executable, str(AGENT), "--root", str(root),
          "--host", "127.0.0.1", "--port", str(port), "--origin", origin],
@@ -201,8 +267,12 @@ def main():
             return
 
         # /health
-        s, h, j = get_json(f"{base}/health")
-        check("/health ok + reports root", s == 200 and j.get("ok") and "photos" in j.get("root", ""))
+        s, h, j = get_json(f"{base}/health", {"Origin": origin})
+        check("/health: ok and the agent's id - what the site reads (media_sources.js)",
+              s == 200 and j.get("ok") is True and bool(j.get("agent_id")), detail=repr(j))
+        check("*** /health does not say the folder's path (nor anything else the site does not use) ***",
+              set(j) == {"ok", "agent_id"} and str(root) not in json.dumps(j) and "photos" not in json.dumps(j),
+              detail=repr(j))
         check("/health carries CORS origin", h.get("Access-Control-Allow-Origin") == origin,
               detail=repr(h.get("Access-Control-Allow-Origin")))
 
@@ -222,7 +292,7 @@ def main():
         check("items carry relative path as id", all(i["id"] == i["path"] for i in j["items"]))
 
         # CORS preflight
-        req = urllib.request.Request(f"{base}/list", method="OPTIONS")
+        req = urllib.request.Request(f"{base}/list", method="OPTIONS", headers={"Origin": origin})
         r = urllib.request.urlopen(req, timeout=5)
         check("OPTIONS preflight returns CORS + 204",
               r.status == 204 and "GET" in (r.headers.get("Access-Control-Allow-Methods") or ""))
@@ -234,7 +304,7 @@ def main():
         check("album item path is nested", j["items"] and j["items"][0]["path"] == "trip/cliff.png")
 
         # /files/<rel> serves the real bytes with CORS
-        s, h, body = get(f"{base}/files/apple.jpg")
+        s, h, body = get(f"{base}/files/apple.jpg", {"Origin": origin})
         check("/files/apple.jpg serves the bytes", s == 200 and body == b"\xff\xd8\xff\xe0JPEGDATA")
         check("/files carries CORS origin", h.get("Access-Control-Allow-Origin") == origin)
         s, h, body = get(f"{base}/files/trip/cliff.png")
@@ -262,6 +332,7 @@ def main():
         s, _, j = get_json(f"{base}/list?album=../")
         check("/list traversal album rejected", s in (403, 404), detail=f"status={s}")
 
+        page_tests(base, origin)
         double_start_tests(root, tmp, port, base, origin)
 
     finally:
