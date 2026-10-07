@@ -4,6 +4,8 @@
 // on the kitchen speaker"). It does not play Spotify through this screen - that would need Spotify's
 // Web Playback SDK, a script loaded from Spotify's own site into this page, and this connector does
 // not load one. Controlling an existing device needs nothing but the Web API over fetch.
+// (spotify sdk, 2026-10-07) spotify_sdk.js is that script's half, for "this screen is the speaker"; it uses this
+// connector for the sign-in, the token, `transfer` and `playOn`. Only dev/spotify_sdk_try.html loads it so far.
 //
 // WHO IT IS FOR, stated up front because it is the whole constraint [verified 2026-09-30 on
 // developer.spotify.com - see the list below]:
@@ -84,6 +86,13 @@ export const SPOTIFY_SCOPE_SETS = Object.freeze({
   play: Object.freeze(['user-read-playback-state', 'user-modify-playback-state']),
   shuffle: Object.freeze(['playlist-read-private']),
   history: Object.freeze(['user-read-recently-played', 'user-top-read']),
+  // (spotify sdk, 2026-10-07) THIS SCREEN IS THE SPEAKER: Spotify's Web Playback SDK (spotify_sdk.js) makes the page
+  // itself a Spotify device. `streaming` is "currently available to the Web Playback SDK" and is the only scope
+  // Spotify's scopes page lists the SDK under [developer.spotify.com/documentation/web-api/concepts/scopes, read
+  // 2026-10-07]. Spotify's older quick-start asked for `user-read-email` and `user-read-private` too; they are NOT
+  // asked for here (no profile, no email - the rule above). If the bench test shows the player refusing without
+  // them, dev/spotify_sdk_try.html has a box that adds them, and this line gains them with that evidence.
+  screen: Object.freeze(['streaming']),
 });
 // What a device connected BEFORE the split was given (2123e6e asked for these three at every connect). Its saved
 // sign-in carries no list of what was granted, so this is what it is taken to have.
@@ -151,7 +160,53 @@ export const FEATURE_WORDS = Object.freeze({
   play: 'starting and stopping music on your speakers',
   shuffle: 'reading your playlists’ songs, so they can be shuffled here',
   history: 'reading what you have listened to, for a picture of it',
+  screen: 'playing Spotify through this screen’s own speaker',     // spotify sdk
 });
+
+// ---- spotify sdk: HOW LONG A SIGN-IN LASTS, AND THE REMINDER (2026-10-07) ------------------------------------
+// Spotify, developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens, read 2026-10-07: refresh tokens
+// for dashboard-registered apps "have a lifetime of 6 months"; the lifetime "starts when the user authorizes your
+// app", and "Refreshing an access token does not extend the refresh token's lifetime." So the date that matters is
+// the sign-in itself, kept with the tokens on this device (`signedInAt`), carried across every refresh, and replaced
+// only by signing in again.
+// The reminder shows where settings live (the Music panel's settings and its "Change the list"), never as a box over
+// the screen: from SIGN_IN_WARN_DAYS before the end. Both numbers are listed for Mike with their argument:
+//   SIGN_IN_MONTHS 6     - Spotify's own number, quoted above. Calendar months, so "around" the same day.
+//   SIGN_IN_WARN_DAYS 14 - two weeks: long enough that a family visiting weekly sees it at least once, short
+//                          enough that it is not a standing line people learn to ignore.
+export const SIGN_IN_MONTHS = 6;
+export const SIGN_IN_WARN_DAYS = 14;
+const DAY_MS = 86400000;
+
+/** When a sign-in made at `signedInAt` (ms) stops working: SIGN_IN_MONTHS calendar months later. null when unknown. PURE. */
+export function signInEndsAt(signedInAt, months = SIGN_IN_MONTHS) {
+  const t = Number(signedInAt);
+  if (!Number.isFinite(t) || t <= 0) return null;
+  const d = new Date(t);
+  d.setMonth(d.getMonth() + (Number(months) > 0 ? Number(months) : SIGN_IN_MONTHS));
+  return d.getTime();
+}
+
+/** A date in words, e.g. "12 April 2027" (the browser's own language). PURE apart from the locale. */
+export function dayWords(ms) {
+  try { return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }); }
+  catch { return new Date(ms).toDateString(); }
+}
+
+/**
+ * The reminder for a sign-in: `{ due, ended, endsAt, line }`. `due` from `warnDays` before the end; `line` is the
+ * sentence to show then ('' before, and '' when the date is unknown - a sign-in made before the date was kept). PURE.
+ */
+export function signInReminder(signedInAt, { now = Date.now(), warnDays = SIGN_IN_WARN_DAYS, months = SIGN_IN_MONTHS } = {}) {
+  const endsAt = signInEndsAt(signedInAt, months);
+  if (endsAt == null) return { due: false, ended: false, endsAt: null, line: '' };
+  const due = now >= endsAt - Math.max(0, Number(warnDays) || 0) * DAY_MS;
+  const ended = now >= endsAt;
+  const line = !due ? ''
+    : ended ? `Spotify sign-in ended around ${dayWords(endsAt)} — sign in again.`
+      : `Spotify sign-in ends around ${dayWords(endsAt)} — sign in again.`;
+  return { due, ended, endsAt, line };
+}
 
 export const callbackUrl = (loc = (typeof location !== 'undefined' ? location : null)) =>
   (loc ? `${loc.origin}/${CALLBACK_PAGE}` : '');
@@ -276,6 +331,8 @@ export function createSpotify({
     // (row 2.61) A refresh may say which permissions the new token carries; when it does not, they are unchanged.
     const sc = typeof body.scope === 'string' && body.scope.trim() ? scopeList(body.scope) : prev?.scopes;
     if (Array.isArray(sc)) t.scopes = sc;
+    // (spotify sdk) A refresh does not extend the sign-in's six months, so its date carries across unchanged.
+    if (prev && Number(prev.signedInAt) > 0) t.signedInAt = Number(prev.signedInAt);
     store.set(tokenKey(id), t);
     return t;
   }
@@ -352,7 +409,9 @@ export function createSpotify({
      * features on now (`features`, else `wants()`), and nothing else (row 2.61). Pressing it again later, with a
      * feature newly on, is the "Connect again" - Spotify shows its consent page with the one more permission.
      */
-    async beginLogin({ returnTo = '/', features = wanted() } = {}) {
+    // (spotify sdk) `extraScopes`: more Spotify permission names to ask for this once, for a test page proving
+    // whether a feature needs them (dev/spotify_sdk_try.html's "account type and email" box). Names only.
+    async beginLogin({ returnTo = '/', features = wanted(), extraScopes = [] } = {}) {
       if (!id) return { ok: false, reason: 'no-client-id' };
       if (isLocked()) return { ok: false, reason: 'locked' };   // (2026-10-05, screen_lock.js)
       let verifier, challenge;
@@ -362,6 +421,9 @@ export function createSpotify({
       } catch { return { ok: false, reason: 'not-secure' }; }
       const state = makeVerifier(cryptoImpl, 24);
       const scopes = scopesFor(features);
+      for (const s of (Array.isArray(extraScopes) ? extraScopes : [])) {        // spotify sdk
+        if (/^[a-z][a-z-]{2,40}$/.test(String(s)) && !scopes.includes(s)) scopes.push(String(s));
+      }
       store.set(PENDING_KEY, { clientId: id, redirectUri, verifier, state, returnTo: safeReturn(returnTo), at: now(), scopes });
       const url = `${SPOTIFY_AUTHORIZE_URL}?${new URLSearchParams({
         response_type: 'code', client_id: id, scope: scopes.join(' '),
@@ -369,6 +431,38 @@ export function createSpotify({
       }).toString()}`;
       navigate(url);
       return { ok: true, url, scopes };
+    },
+
+    // ---- spotify sdk (2026-10-07) ----
+    /** When this device signed in (ms), or null: not connected, or a sign-in made before the date was kept. */
+    signedInAt: () => { const t = tokens(); return t && Number(t.signedInAt) > 0 ? Number(t.signedInAt) : null; },
+    /** The six-month reminder for this device's sign-in (`signInReminder`); nothing due when not connected. */
+    reminder: (opts = {}) => {
+      const t = tokens();
+      return t?.access ? signInReminder(Number(t.signedInAt) > 0 ? Number(t.signedInAt) : null, { now: now(), ...opts })
+        : { due: false, ended: false, endsAt: null, line: '' };
+    },
+    /** A fresh access token for Spotify's own player script (its `getOAuthToken`), or null. Handed only to that
+     *  script, which sends it only to Spotify; never logged. */
+    token: () => accessToken(false),
+    /** Move this account's playback to a device by id (PUT /me/player; 204; Premium). `play: false` leaves it as it
+     *  was - playing or paused - on the new device. */
+    async transfer(deviceId, { play = false } = {}) {
+      if (!deviceId) return { ok: false, reason: 'no-device' };
+      const r = await api('PUT', '/me/player', { device_ids: [String(deviceId)], play: !!play });
+      if (r.ok) lastDeviceId = String(deviceId);
+      return r.ok ? { ok: true } : { ok: false, reason: r.reason };
+    },
+    /** Play on a device known by ID (this page's own player), with no device list asked for: these songs (`uris`),
+     *  or one link in Spotify's own order (`uri`: a playlist, album, artist or a song). */
+    async playOn({ uris = [], uri = '', deviceId = '' } = {}) {
+      const list = (Array.isArray(uris) ? uris : []).map(parseSpotifyUri).filter((u) => /^spotify:(track|episode):/.test(u));
+      const body = list.length ? { uris: list } : (uri ? playBody(uri) : null);
+      if (!body) return { ok: false, reason: 'bad-uri' };
+      if (!deviceId) return { ok: false, reason: 'no-device' };
+      const r = await api('PUT', `/me/player/play${q(deviceId)}`, body);
+      if (r.ok) lastDeviceId = String(deviceId);
+      return r.ok ? { ok: true } : { ok: false, reason: r.reason };
     },
 
     /** Forget this device's Spotify sign-in. Spotify's own "remove access" is on the account page. */
@@ -510,6 +604,7 @@ export async function completeLogin(search, { storage = undefined, fetchFn = (..
     access: body.access_token, refresh: body.refresh_token || null,
     expiresAt: now() + Math.max(0, Number(body.expires_in) || 3600) * 1000,
     scopes,
+    signedInAt: now(),     // (spotify sdk) the start of Spotify's six months (SIGN_IN_MONTHS)
   });
   return { ok: true, returnTo };
 }

@@ -28,6 +28,8 @@ export const SUITES = [
   'output_panel',
   'output_remote', 'pair', 'pairing', 'panel_fit', 'panel_gap', 'people', 'personal', 'photos', 'pond',
   'audio_bus', 'automation', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'music', 'pressgame', 'records', 'rules',
+  // spotify sdk (2026-10-07): this page as a Spotify speaker, and the Test B page, against a fake Spotify global.
+  'spotify_sdk',
   // FIRST-ISH ON PURPOSE would be better still, but the list is alphabetical-ish and this is
   // close enough: `imports` proves every client module PARSES, and it is the check that tells
   // you which file is broken when half this page reports `no summary`. A module that will not

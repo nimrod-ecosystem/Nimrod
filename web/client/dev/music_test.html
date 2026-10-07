@@ -45,6 +45,7 @@ import {
   createSpotify, completeLogin, playBody, pickDevice, base64url, PENDING_KEY, tokenKey,
   SPOTIFY_SCOPE_SETS, SCOPES_BEFORE_SPLIT, scopesFor, missingFeatures, FEATURE_WORDS,
   SPOTIFY_AUTHORIZE_URL, SPOTIFY_TOKEN_URL, safeReturn,
+  SIGN_IN_MONTHS, SIGN_IN_WARN_DAYS, signInEndsAt, signInReminder, dayWords,   // spotify sdk
 } from '../music_spotify.js';
 import { connectHelperHtml, callbackAccepted, copyText, CONNECT_WORDS, SPOTIFY_DASHBOARD_URL, SPOTIFY_DASHBOARD_ADDRESS } from '../spotify_connect.js';
 import { createMusicRouter, messageFor } from '../music_player.js';
@@ -899,6 +900,68 @@ const FAVS = normalizeFavourites([
     }
 
     // ============================================================================================
+    section('*** spotify sdk: the screen as a speaker (streaming), the sign-in date, and Spotify\'s six months ***');
+    {
+      check('*** the screen feature asks for streaming only - no profile, no email ***',
+        J(SPOTIFY_SCOPE_SETS.screen) === '["streaming"]' && J(scopesFor({ screen: true })) === J([...SPOTIFY_SCOPE_SETS.play, 'streaming']));
+      check('...and nothing asks for it unless the screen feature is on', !scopesFor({ shuffle: true, history: true }).includes('streaming'));
+      check('the six months and the two weeks are Spotify\'s number and the house\'s', SIGN_IN_MONTHS === 6 && SIGN_IN_WARN_DAYS === 14);
+      const T0 = new Date(2026, 9, 7, 12, 0, 0).getTime();
+      const ends = signInEndsAt(T0);
+      check('a sign-in on 7 October ends around 7 April, six calendar months on', new Date(ends).getMonth() === 3 && new Date(ends).getDate() === 7
+        && new Date(ends).getFullYear() === 2027, new Date(ends).toString());
+      check('an unknown date has no end', signInEndsAt(null) === null && signInEndsAt('x') === null && signInEndsAt(0) === null);
+      const DAY = 86400000;
+      const early = signInReminder(T0, { now: ends - 15 * DAY });
+      const due = signInReminder(T0, { now: ends - 13 * DAY });
+      const over = signInReminder(T0, { now: ends + DAY });
+      check('*** fifteen days before: nothing to say ***', !early.due && early.line === '' && early.endsAt === ends);
+      check('*** thirteen days before: "Spotify sign-in ends around <date> — sign in again" ***',
+        due.due && !due.ended && due.line === `Spotify sign-in ends around ${dayWords(ends)} — sign in again.`, J(due));
+      check('after the end: "ended around", still a line, still sign in again', over.due && over.ended && /^Spotify sign-in ended around .+ — sign in again\.$/.test(over.line));
+      check('a sign-in with no date (made before the date was kept) says nothing rather than guessing', signInReminder(null, { now: T0 }).line === '');
+      check('the words name nobody', !/her screen|christine|cici/i.test(due.line + over.line + FEATURE_WORDS.screen));
+
+      // The date is kept at sign-in, and a refresh carries it across (Spotify: a refresh does not extend the six months).
+      let clockNow = T0;
+      const storage = mem();
+      let went = null;
+      const sp = createSpotify({ clientId: 'abc', redirectUri: 'https://nimrod.test/spotify_callback.html', storage,
+        navigate: (u) => { went = u; }, now: () => clockNow,
+        fetchFn: fakeSpotifyFetch({ [`POST ${SPOTIFY_TOKEN_URL}`]: { json: { access_token: 'AT9', expires_in: 3600 } },
+          'PUT https://api.spotify.com/v1/me/player': { status: 204 }, 'PUT https://api.spotify.com/v1/me/player/play': { status: 204 } }) });
+      check('not connected: no date, and no reminder', sp.signedInAt() === null && sp.reminder().line === '' && !sp.reminder().due);
+      await sp.beginLogin({ features: { screen: true }, extraScopes: ['user-read-private', 'Bad Scope!'] });
+      const sc = new URL(went).searchParams.get('scope');
+      check('*** extraScopes adds a named permission for a test, and refuses anything that is not a name ***',
+        sc === [...SPOTIFY_SCOPE_SETS.play, 'streaming', 'user-read-private'].join(' '), sc);
+      const pend = JSON.parse(storage.getItem(PENDING_KEY));
+      await completeLogin(`?code=c&state=${pend.state}`, { storage, now: () => clockNow,
+        fetchFn: fakeSpotifyFetch({ [`POST ${SPOTIFY_TOKEN_URL}`]: { json: { access_token: 'AT1', refresh_token: 'RT1', expires_in: 3600 } } }) });
+      check('*** the sign-in\'s date is kept with the tokens on this device ***', sp.signedInAt() === T0 && JSON.parse(storage.getItem(tokenKey('abc'))).signedInAt === T0);
+      clockNow = T0 + 2 * 3600e3;                                       // the access token has expired: a refresh
+      const tok = await sp.token();
+      check('*** a refresh keeps the original date (it does not restart Spotify\'s six months) ***', tok === 'AT9' && sp.signedInAt() === T0);
+      clockNow = ends - 10 * DAY;
+      check('the connector\'s own reminder, ten days before', sp.reminder().due && /ends around/.test(sp.reminder().line));
+      clockNow = T0 + 3 * 3600e3;
+      const f = fakeSpotifyFetch({ 'PUT https://api.spotify.com/v1/me/player': { status: 204 }, 'PUT https://api.spotify.com/v1/me/player/play': { status: 204 } });
+      storage.setItem(tokenKey('abc'), JSON.stringify({ access: 'A', refresh: 'R', expiresAt: clockNow + 3600e3, scopes: ['streaming'], signedInAt: T0 }));
+      const sp2 = createSpotify({ clientId: 'abc', storage, fetchFn: f, now: () => clockNow });
+      const tr1 = await sp2.transfer('dev42');
+      check('*** transfer: PUT /me/player with this device\'s id, play false ***', tr1.ok && f.calls[0].url === 'https://api.spotify.com/v1/me/player'
+        && J(JSON.parse(f.calls[0].body)) === J({ device_ids: ['dev42'], play: false }), J(f.calls[0]));
+      const p1 = await sp2.playOn({ uris: [`spotify:track:${T22(4)}`], deviceId: 'dev42' });
+      check('playOn: one song on the device by id, no device list asked for', p1.ok && f.calls[1].url === 'https://api.spotify.com/v1/me/player/play?device_id=dev42'
+        && J(JSON.parse(f.calls[1].body)) === J({ uris: [`spotify:track:${T22(4)}`] }) && !f.calls.some((c) => c.url.includes('/devices')));
+      const p2 = await sp2.playOn({ uri: PL, deviceId: 'dev42' });
+      check('playOn: a playlist in Spotify\'s order is a context', p2.ok && J(JSON.parse(f.calls[2].body)) === J({ context_uri: PL }));
+      check('playOn and transfer refuse with no device or nothing to play', (await sp2.playOn({ uris: [] , deviceId: 'd' })).reason === 'bad-uri'
+        && (await sp2.playOn({ uri: PL })).reason === 'no-device' && (await sp2.transfer('')).reason === 'no-device');
+      check('a legacy sign-in with no date: signedInAt is null', (storage.setItem(tokenKey('abc'), JSON.stringify({ access: 'A', refresh: 'R', expiresAt: clockNow + 3600e3 })), sp2.signedInAt() === null && sp2.reminder().line === ''));
+    }
+
+    // ============================================================================================
     section('*** row 2.61: the Connect Spotify steps, and the Client ID entered once ***');
     {
       const cb = 'https://nimrod.test/spotify_callback.html';
@@ -1006,6 +1069,28 @@ const FAVS = normalizeFavourites([
       hq('[data-act="sp-keep-id"]').click();
       await settle();
       check('...and "Keep the saved Client ID" goes back', !hq('[data-sp-helper]'));
+      // (spotify sdk) The six-month reminder: a quiet line where the list is changed, and words on the "Spotify" row.
+      const ENDS = new Date(2027, 3, 12).getTime();
+      conn.reminder = () => ({ due: true, ended: false, endsAt: ENDS, line: 'Spotify sign-in ends around 12 April 2027 — sign in again.' });
+      hq('[data-act="close"]').click(); hq('[data-act="edit"]').click();
+      await settle();
+      check('*** spotify sdk: two weeks before, "Change the list" says "Spotify sign-in ends around <date> — sign in again", with Connect again ***',
+        /ends around 12 April 2027 — sign in again/.test(hq('[data-sp-renew]')?.textContent || '')
+        && hq('[data-act="spotify-connect"]')?.textContent === 'Connect again', h.textContent.slice(0, 500));
+      check('...as a line in the panel, not a box over the screen', !h.querySelector('[role="dialog"], dialog, [aria-modal]'));
+      check('*** ...and the "Spotify" settings row carries it too ***', /ends around 12 April 2027/.test(m.impl.settingsChoices().spotifyOn?.note || ''), J(m.impl.settingsChoices().spotifyOn));
+      hq('[data-act="close"]').click();
+      await settle();
+      check('the panel\'s own view (what the screen shows) does not', !hq('[data-sp-renew]') && !/sign in again/.test(h.textContent));
+      conn.reminder = () => ({ due: false, ended: false, endsAt: ENDS, line: '' });
+      hq('[data-act="edit"]').click();
+      await settle();
+      check('before then: only a quiet "ends around" hint, no "Connect again", nothing on the settings row',
+        !hq('[data-sp-renew]') && /around/.test(hq('[data-sp-ends]')?.textContent || '') && !hq('[data-act="spotify-connect"]')
+        && m.impl.settingsChoices().spotifyOn === undefined);
+      delete conn.reminder;
+      hq('[data-act="close"]').click(); hq('[data-act="edit"]').click();
+      await settle();
       // The settings row: typed there, saved on the server; the row says which is in use.
       const ch = m.impl.settingsChoices();
       check('*** the settings row says which Client ID is in use, from the server ***', /ending …cdef/.test(ch.spotifyClientId.emptyLabel), J(ch));

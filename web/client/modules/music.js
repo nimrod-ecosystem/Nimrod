@@ -72,7 +72,7 @@ import {
   musicSpeechRoutes, DEFAULT_STARTERS, MAX_NAME,
 } from '../music_favourites.js';
 import { createLocalMusic, FOLDER_ORDERS } from '../music_local.js';
-import { createSpotify, createSpotifyPlayer, SPOTIFY_MESSAGES, FEATURE_WORDS, callbackUrl } from '../music_spotify.js';
+import { createSpotify, createSpotifyPlayer, SPOTIFY_MESSAGES, FEATURE_WORDS, callbackUrl, dayWords } from '../music_spotify.js';
 import { connectHelperHtml, copyText, CONNECT_WORDS } from '../spotify_connect.js';
 import { createSearchKeyClient, KEY_LEVEL_WORDS } from '../search_key.js';
 import { themeQrColours, hasBrowserWindow } from '../page_links.js';
@@ -557,6 +557,11 @@ registerModule(
       const line = connected ? 'Spotify is connected on this device.' : 'Spotify is not connected on this device yet.';
       // (row 2.61) A feature turned on after connecting, whose permission that sign-in was not asked for.
       const more = connected && typeof sp.missingFor === 'function' ? sp.missingFor(wantsNow()).filter((f) => f !== 'play') : [];
+      // (spotify sdk) Spotify ends a sign-in six months after it is made (music_spotify.js SIGN_IN_MONTHS): said here,
+      // where the list is changed, as a quiet line - from two weeks before, with "Connect again" - never over the screen.
+      const renew = connected && typeof sp.reminder === 'function' ? sp.reminder() : null;
+      const renewHtml = renew?.line ? `<p class="mu-msg" data-sp-renew role="status">${esc(renew.line)} Press “Connect again”.</p>`
+        : (renew?.endsAt ? `<p class="mu-hint" data-sp-ends>Spotify ends this sign-in around ${esc(dayWords(renew.endsAt))}, six months after it was made.</p>` : '');
       const where = spId?.clientId && spId.level
         ? `Using the Client ID saved for ${KEY_LEVEL_WORDS[spId.level] || spId.level}, ending …${esc(spId.clientId.slice(-4))}.`
         : `Using the Client ID kept in this panel’s settings, ending …${esc(id.slice(-4))}.`;
@@ -567,8 +572,9 @@ registerModule(
           <p class="mu-head">Spotify</p>
           <p class="mu-hint" data-sp-state>${esc(line)}</p>
           ${more.length ? `<p class="mu-msg" data-sp-more role="status">Spotify needs one more permission for this: ${esc(more.map((f) => FEATURE_WORDS[f] || f).join('; '))}. Connect again to allow it.</p>` : ''}
+          ${renewHtml}
           <div class="mu-btns">${connected
-            ? (more.length ? btn('spotify-connect', 'Connect again') : '') + btn('spotify-devices', 'Find speakers') + btn('spotify-disconnect', 'Disconnect Spotify')
+            ? (more.length || renew?.due ? btn('spotify-connect', 'Connect again') : '') + btn('spotify-devices', 'Find speakers') + btn('spotify-disconnect', 'Disconnect Spotify')
             : btn('spotify-connect', 'Connect Spotify')}${btn('sp-change-id', 'Change the Client ID')}</div>
           <p class="mu-hint" data-sp-where>${where}</p>
           ${spNote ? `<p class="mu-hint" data-sp-note role="status">${esc(spNote)}</p>` : ''}
@@ -776,7 +782,11 @@ registerModule(
         const lv = cfg.spotifyClientIdFor || 'account';
         const screenOnly = !!spId && spId.canChange === false && !(spId.screenLevels || []).includes(lv);
         const base = SETTINGS.find((f) => f.key === 'spotifyClientId').note;
+        // (spotify sdk) The six-month reminder on the "Spotify" row too, from two weeks before - words, not a box.
+        let renew = null;
+        try { renew = cfg.spotifyOn ? spotify?.reminder?.() : null; } catch { renew = null; }
         return {
+          ...(renew?.line ? { spotifyOn: { note: `${renew.line} Press “Change the list”, then “Connect again”.` } } : {}),
           spotifyClientId: { emptyLabel: inUse, note: [spNote, screenOnly ? 'Nobody has signed in on this browser, so '
             + 'a Client ID typed here is saved for this device.' : '', base].filter(Boolean).join(' ') },
           spotifyClientIdFor: SETTINGS.find((f) => f.key === 'spotifyClientIdFor').options

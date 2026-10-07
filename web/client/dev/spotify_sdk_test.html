@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>spotify sdk — this page as a Spotify speaker, with no Spotify</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px}
+</style>
+</head>
+<body>
+<h1>spotify sdk — <code>spotify_sdk.js</code> and the Test B page, against a fake <code>Spotify</code> global</h1>
+<p>Nothing here reaches Spotify: the player script, the Web API and the sign-in are all fakes. What it holds: the
+player reports every status Spotify can raise, plays the song our picker chose on this page's own device, registers
+with the audio bus and PAUSES (not ducks) under a spoken cue, and the page never navigates by itself.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { loadSdk, createScreenPlayer, trackOf, clock, SDK_URL, SDK_WORDS, ERROR_EVENTS, PAST_MS, POLL_MS, PLAYER_NAME } from '../spotify_sdk.js';
+import { mountSdkTry, statusLines, storedClientId, TRY_FEATURES, PROFILE_SCOPES, TYPED_ID_KEY, CUE_MAX_MS } from './spotify_sdk_try.js';
+import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
+import { tokenKey, SPOTIFY_TOKEN_URL, SPOTIFY_SCOPE_SETS } from '../music_spotify.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const settle = async (n = 6) => { for (let i = 0; i < n; i++) await tick(); };
+
+// ---- fakes -----------------------------------------------------------------------------------------------------
+function fakeTimers() {
+  const q = new Map(); let n = 0;
+  return {
+    set: (fn, ms) => { const id = ++n; q.set(id, { fn, ms }); return id; },
+    clear: (id) => { q.delete(id); },
+    pending: () => [...q.values()],
+    async run(filter = () => true) { for (const [id, t] of [...q]) if (filter(t)) { q.delete(id); await t.fn(); } },
+  };
+}
+// The `Spotify` global: Spotify.Player, recording what it was asked.
+function fakeSdk({ connectOk = true, throwOnNew = false } = {}) {
+  const made = [];
+  class Player {
+    constructor(opts) {
+      if (throwOnNew) throw new Error('no EME here');
+      this.opts = opts; this.ls = {}; this.calls = []; this.cur = null; made.push(this);
+    }
+    addListener(ev, fn) { (this.ls[ev] ||= []).push(fn); return true; }
+    emit(ev, payload) { for (const fn of this.ls[ev] || []) fn(payload); }
+    async connect() { this.calls.push(['connect']); return connectOk; }
+    disconnect() { this.calls.push(['disconnect']); }
+    async getCurrentState() { this.calls.push(['getCurrentState']); return this.cur; }
+    async setVolume(v) { this.calls.push(['setVolume', v]); }
+    async pause() { this.calls.push(['pause']); }
+    async resume() { this.calls.push(['resume']); }
+    async activateElement() { this.calls.push(['activateElement']); }
+    token() { return new Promise((res) => this.opts.getOAuthToken(res)); }
+  }
+  return { Player, made };
+}
+// A connector stand-in (music_spotify.js's shape).
+function fakeConn({ connected = true, granted = ['user-read-playback-state', 'user-modify-playback-state', 'streaming'] } = {}) {
+  const log = [];
+  return {
+    log,
+    connected: () => connected,
+    granted: () => granted,
+    token: async () => (connected ? 'TOKEN-1' : null),
+    async transfer(id, o) { log.push(['transfer', id, J(o)]); return { ok: true }; },
+    async playOn(o) { log.push(['playOn', J(o)]); return { ok: true }; },
+  };
+}
+const song = (n, { paused = false, position = 0 } = {}) => ({ paused, position, duration: 200000,
+  track_window: { current_track: { uri: `spotify:track:${'s'.repeat(20)}${String(n).padStart(2, '0')}`, name: `Song ${n}`,
+    duration_ms: 200000, artists: [{ name: 'Ella' }, { name: 'Louis' }],
+    album: { images: [{ url: 'https://i.scdn.co/image/a', width: 300 }] } } } });
+const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)),
+  removeItem: (k) => m.delete(k), key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, m }; };
+
+(async () => {
+  try {
+    // ==========================================================================================================
+    section('loading Spotify\'s script (a fake window and document)');
+    {
+      const win = { Spotify: { Player: function P() {} } };
+      const r = await loadSdk({ win, doc: null });
+      check('already on the page: used as it is, nothing loaded', r.ok && r.Spotify === win.Spotify);
+      const added = [];
+      const doc = { head: { appendChild: (s) => added.push(s) }, createElement: () => ({}) };
+      let prevCalled = false;
+      const w2 = { onSpotifyWebPlaybackSDKReady: () => { prevCalled = true; } };
+      const t = fakeTimers();
+      const p = loadSdk({ win: w2, doc, setTimer: t.set, clearTimer: t.clear });
+      check('*** the script is Spotify\'s own, from sdk.scdn.co ***', added.length === 1 && added[0].src === SDK_URL && SDK_URL === 'https://sdk.scdn.co/spotify-player.js');
+      check('asking twice while it loads loads it once', loadSdk({ win: w2, doc }) === p && added.length === 1);
+      w2.Spotify = { Player: function P() {} };
+      w2.onSpotifyWebPlaybackSDKReady();
+      const r2 = await p;
+      check('when Spotify says it is ready: loaded, and an earlier ready handler still runs', r2.ok && r2.Spotify === w2.Spotify && prevCalled);
+      check('...and its timeout is cleared', t.pending().length === 0);
+      const w3 = {}; const a3 = [];
+      const p3 = loadSdk({ win: w3, doc: { head: { appendChild: (s) => a3.push(s) }, createElement: () => ({}) } });
+      a3[0].onerror();
+      check('*** a blocked script (an ad blocker, offline) is "did not load", never a throw ***', (await p3).ok === false && (await p3).reason === 'sdk-load-failed');
+      const t4 = fakeTimers(); const w4 = {};
+      const p4 = loadSdk({ win: w4, doc: { head: { appendChild: () => {} }, createElement: () => ({}) }, setTimer: t4.set, clearTimer: t4.clear });
+      await t4.run();
+      check('a script that never answers gives up after its wait', (await p4).reason === 'sdk-load-failed' && !w4.__nimrodSpotifySdk);
+    }
+
+    // ==========================================================================================================
+    section('the player: every status Spotify can raise, in plain lines');
+    {
+      check('no Spotify global: "not on this page"', (await createScreenPlayer({ spotify: fakeConn(), Sdk: null }).start()).reason === 'sdk-missing');
+      check('not signed in: says so, makes no player', (await createScreenPlayer({ spotify: fakeConn({ connected: false }), Sdk: fakeSdk() }).start()).reason === 'signed-out');
+      const noStream = createScreenPlayer({ spotify: fakeConn({ granted: SPOTIFY_SCOPE_SETS.play }), Sdk: fakeSdk() });
+      check('*** a sign-in without `streaming`: says so plainly ("sign in again with it") ***',
+        (await noStream.start()).reason === 'no-streaming' && /sign in again/i.test(SDK_WORDS['no-streaming']) && noStream.state().lastError === 'no-streaming');
+      const sdk = fakeSdk();
+      const seen = [];
+      const p = createScreenPlayer({ spotify: fakeConn(), Sdk: sdk, onChange: (s) => seen.push(s.status) });
+      const r = await p.start();
+      const pl = sdk.made[0];
+      check('*** the player is named for the device list, and asked to connect ***', r.ok && pl.opts.name === PLAYER_NAME && PLAYER_NAME === 'Nimrod (this screen)' && pl.calls[0][0] === 'connect');
+      check('its token comes from the household\'s sign-in', (await pl.token()) === 'TOKEN-1');
+      pl.emit('ready', { device_id: 'DEV-9' });
+      check('*** "ready" gives the device ID ***', p.state().status === 'ready' && p.state().deviceId === 'DEV-9' && seen.includes('connecting') && seen.at(-1) === 'ready');
+      for (const ev of ERROR_EVENTS) pl.emit(ev, { message: `msg for ${ev}` });
+      const st = p.state();
+      check('*** initialization_error, authentication_error, account_error and playback_error are each kept, in Spotify\'s own words ***',
+        ERROR_EVENTS.every((ev) => st.errors[ev] === `msg for ${ev}`) && ERROR_EVENTS.join() === 'initialization_error,authentication_error,account_error,playback_error', J(st.errors));
+      check('account_error says Premium', /Premium/.test(SDK_WORDS.account_error));
+      pl.emit('autoplay_failed');
+      check('autoplay_failed says to press Play once', p.state().errors.autoplay_failed === '' && /Press Play/.test(SDK_WORDS.autoplay_failed));
+      pl.emit('not_ready', { device_id: 'DEV-9' });
+      check('not_ready: offline as a speaker', p.state().status === 'offline');
+      const bad = createScreenPlayer({ spotify: fakeConn(), Sdk: fakeSdk({ throwOnNew: true }) });
+      check('a player Spotify cannot make here is initialization_error, not a throw', (await bad.start()).reason === 'initialization_error' && bad.state().errors.initialization_error === 'no EME here');
+      const refused = createScreenPlayer({ spotify: fakeConn(), Sdk: fakeSdk({ connectOk: false }) });
+      check('connect() false is "would not connect"', (await refused.start()).reason === 'connect-refused');
+      check('clock and trackOf read plainly', clock(61000) === '1:01' && trackOf(song(3)).name === 'Song 3' && trackOf(song(3)).artists.join() === 'Ella,Louis'
+        && trackOf(song(3)).image === 'https://i.scdn.co/image/a' && trackOf(null) === null);
+    }
+
+    // ==========================================================================================================
+    section('*** playing here: transfer to this page, then the one song ***');
+    {
+      const sdk = fakeSdk(); const conn = fakeConn(); const t = fakeTimers();
+      const bus = createAudioBus();
+      const p = createScreenPlayer({ spotify: conn, Sdk: sdk, audio: bus, setTimer: t.set, clearTimer: t.clear });
+      check('before ready: "not ready"', (await (async () => { await p.start(); return p.play('spotify:track:4uLU6hMCjMI75M1A2tKUQC'); })()).reason === 'not-ready');
+      const pl = sdk.made[0];
+      pl.emit('ready', { device_id: 'DEV-1' });
+      const r = await p.play('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=x');
+      check('*** transfer to this page\'s device first (play false), then that one song on it ***',
+        r.ok && conn.log[0][0] === 'transfer' && conn.log[0][1] === 'DEV-1' && conn.log[0][2] === J({ play: false })
+        && conn.log[1][0] === 'playOn' && conn.log[1][1] === J({ uris: ['spotify:track:4uLU6hMCjMI75M1A2tKUQC'], deviceId: 'DEV-1' }), J(conn.log));
+      check('the press unlocks sound first (activateElement)', pl.calls.some((c) => c[0] === 'activateElement'));
+      await p.play('spotify:playlist:37i9dQZF1DX4xuWVBs4FgJ');
+      check('a playlist link (no picker) goes as itself', conn.log.at(-1)[1] === J({ uri: 'spotify:playlist:37i9dQZF1DX4xuWVBs4FgJ', deviceId: 'DEV-1' }));
+      check('not a Spotify link: refused', (await p.play('hello')).reason === 'bad-uri');
+      pl.emit('player_state_changed', song(1, { position: 1000 }));
+      check('*** playing: it registers with the audio bus (music group, video priority, media) and is active ***',
+        bus.isActive('spotify:screen') && bus.state()['spotify:screen'].group === MUSIC_GROUP && bus.state()['spotify:screen'].gp === VIDEO_PRIORITY
+        && bus.state()['spotify:screen'].tier === 'media' && bus.whenDucked('spotify:screen') === 'pause', J(bus.state()));
+      check('the song is known: name, artists, where it is', p.state().track.name === 'Song 1' && p.state().positionMs === 1000 && !p.state().pastThirty);
+      check('while playing it looks once a second', t.pending().some((x) => x.ms === POLL_MS));
+      pl.cur = song(1, { position: PAST_MS + 1000 });
+      await t.run((x) => x.ms === POLL_MS);
+      await settle();
+      check('*** past 0:30 while playing: "sound past 0:30" (a full song, not a preview) ***', p.state().pastThirty === true && p.state().positionMs === 31000);
+      pl.emit('player_state_changed', song(1, { paused: true, position: 40000 }));
+      check('paused by somebody: quiet on the bus, and it stops looking', !bus.isActive('spotify:screen') && !t.pending().some((x) => x.ms === POLL_MS));
+      pl.emit('player_state_changed', null);
+      check('moved to another device (null state): nothing playing here', p.state().track === null && p.state().paused);
+      p.destroy();
+      check('destroy: disconnects the player and leaves the bus', pl.calls.some((c) => c[0] === 'disconnect') && !('spotify:screen' in bus.state()));
+    }
+
+    // ==========================================================================================================
+    section('*** the audio bus: a spoken cue PAUSES Spotify, then it carries on ***');
+    {
+      const sdk = fakeSdk(); const t = fakeTimers();
+      const bus = createAudioBus();
+      const p = createScreenPlayer({ spotify: fakeConn(), Sdk: sdk, audio: bus, setTimer: t.set, clearTimer: t.clear });
+      await p.start();
+      const pl = sdk.made[0];
+      pl.emit('ready', { device_id: 'D' });
+      pl.emit('player_state_changed', song(2, { position: 5000 }));
+      bus.register('cue', { tier: 'voice' });
+      bus.setActive('cue', true);
+      await settle();
+      check('*** the cue starts: Spotify is PAUSED (not turned down) ***', pl.calls.some((c) => c[0] === 'pause') && p.state().busPaused
+        && !pl.calls.some((c) => c[0] === 'setVolume' && c[1] === DUCK_TO), J(pl.calls));
+      pl.emit('player_state_changed', song(2, { paused: true, position: 5200 }));
+      check('...and it stays on the bus while paused by it, so the bus can carry it on', bus.isActive('spotify:screen'));
+      const n = pl.calls.length;
+      pl.emit('player_state_changed', song(2, { position: 5300 }));   // a "playing" report that crossed the pause
+      await settle();
+      check('a "playing" report while the bus says silent is paused again', pl.calls.slice(n).some((c) => c[0] === 'pause') && p.state().busPaused);
+      bus.setActive('cue', false);
+      await settle();
+      check('*** the cue ends: Spotify carries on (resume), at full ***', pl.calls.some((c) => c[0] === 'resume') && !p.state().busPaused
+        && pl.calls.filter((c) => c[0] === 'setVolume').at(-1)?.[1] === 1, J(pl.calls.slice(-4)));
+      // A video winning the music group pauses it too; it carries on after.
+      pl.emit('player_state_changed', song(2, { position: 6000 }));
+      bus.register('yt', { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY });
+      const m = pl.calls.length;
+      bus.setActive('yt', true);
+      await settle();
+      check('another source winning the music group pauses it', pl.calls.slice(m).some((c) => c[0] === 'pause') && p.state().busPaused);
+      bus.setActive('yt', false);
+      await settle();
+      check('...and it carries on after', pl.calls.slice(m).some((c) => c[0] === 'resume'));
+      // Switched to duck: the usual bed.
+      pl.emit('player_state_changed', song(2, { position: 7000 }));
+      check('setWhenDucked("duck") is told to the bus', p.setWhenDucked('duck') === 'duck' && bus.whenDucked('spotify:screen') === 'duck');
+      const k = pl.calls.length;
+      bus.setActive('cue', true);
+      await settle();
+      check('*** with "duck": turned down to the duck depth, not paused ***', pl.calls.slice(k).some((c) => c[0] === 'setVolume' && c[1] === DUCK_TO)
+        && !pl.calls.slice(k).some((c) => c[0] === 'pause'), J(pl.calls.slice(k)));
+      bus.setActive('cue', false);
+      check('a word it does not know changes nothing', p.setWhenDucked('loud') === 'duck');
+      p.destroy();
+      // No bus at all: it still plays (a missing arbiter never silences anything).
+      const s2 = fakeSdk();
+      const lone = createScreenPlayer({ spotify: fakeConn(), Sdk: s2, audio: null, setTimer: t.set, clearTimer: t.clear });
+      await lone.start(); s2.made[0].emit('ready', { device_id: 'X' });
+      s2.made[0].emit('player_state_changed', song(4));
+      check('no audio bus: no throw, still playing', !lone.state().paused && !s2.made[0].calls.some((c) => c[0] === 'pause'));
+      lone.destroy();
+    }
+
+    // ==========================================================================================================
+    section('*** the Test B page: sign-in is a button, the picker chooses, the lines say what happened ***');
+    {
+      const ID = '0123456789abcdef0123456789abcdef';
+      check('a Spotify sign-in already in this browser names its Client ID', (() => { const s = mem(); s.setItem('other', '1'); s.setItem(tokenKey(ID), '{}'); return storedClientId(s) === ID; })()
+        && storedClientId(mem()) === '' && storedClientId(null) === '');
+      const lines0 = statusLines({});
+      check('*** before anything: every error line says "None." and nothing claims success ***',
+        ERROR_EVENTS.every((ev) => lines0.find((l) => l.id === ev)?.value === 'None.') && lines0.find((l) => l.id === 'past').value === 'Not yet.'
+        && lines0.find((l) => l.id === 'ready').tone !== 'good');
+      const allWords = Object.values(SDK_WORDS).join(' ') + document.title;
+      check('no words name anybody or say "her screen"', !/her screen|christine|cici/i.test(allWords));
+
+      // Signed out: nothing navigates until Connect is pressed.
+      const host = document.getElementById('host');
+      const storage = mem();
+      const went = [];
+      const t = fakeTimers();
+      const sdk = fakeSdk();
+      let loads = 0;
+      const page = mountSdkTry(host, { getClientId: async () => ID, storage, navigate: (u) => went.push(u),
+        loadSdkFn: async () => { loads++; return { ok: true, Spotify: sdk }; }, audio: createAudioBus(), setTimer: t.set, clearTimer: t.clear,
+        fetchFn: async () => ({ ok: false, status: 500, json: async () => ({}) }) });
+      await page.ready; await settle();
+      check('*** opened signed out: the page went nowhere, and loaded no player ***', went.length === 0 && loads === 0 && page.state().clientId === ID);
+      check('the sign-in line says to press Connect Spotify', /Connect Spotify/.test(host.querySelector('[data-line="signin"]')?.textContent || ''));
+      host.querySelector('[data-act="connect"]').click();
+      await settle();
+      const scope1 = went[0] ? new URL(went[0]).searchParams.get('scope') : '';
+      check('*** Connect: Spotify\'s sign-in, asking for playing, playlists (our picker) and streaming - no email, no profile ***',
+        went.length === 1 && /^https:\/\/accounts\.spotify\.com\/authorize\?/.test(went[0])
+        && scope1 === [...SPOTIFY_SCOPE_SETS.play, 'playlist-read-private', 'streaming'].join(' '), scope1);
+      check('...coming back to this test page', JSON.parse(storage.getItem('nimrod.spotify.pending')).returnTo === '/dev/spotify_sdk_try.html');
+      host.querySelector('[data-profile]').checked = true;
+      host.querySelector('[data-act="connect"]').click();
+      await settle();
+      const scope2 = new URL(went[1]).searchParams.get('scope');
+      check('the box adds the account type and email, for the test to prove either way', PROFILE_SCOPES.every((s) => scope2.split(' ').includes(s)), scope2);
+      page.destroy();
+
+      // Signed in with streaming: the player starts by itself (Test B step 5), and plays our pick.
+      const s2 = mem();
+      s2.setItem(tokenKey(ID), J({ access: 'AT', refresh: 'RT', expiresAt: Date.now() + 3600e3, signedInAt: Date.now(),
+        scopes: [...SPOTIFY_SCOPE_SETS.play, 'playlist-read-private', 'streaming'] }));
+      const calls = [];
+      const items = Array.from({ length: 5 }, (_, i) => ({ item: { uri: `spotify:track:${'p'.repeat(20)}${String(i).padStart(2, '0')}`, duration_ms: 180000, artists: [{ id: `a${i}` }] } }));
+      const fetchFn = async (url, init = {}) => {
+        calls.push({ url, method: init.method || 'GET', body: init.body || null });
+        const u = new URL(url);
+        if (u.pathname.endsWith('/items')) return { ok: true, status: 200, json: async () => ({ items, next: null }) };
+        if (u.pathname === '/v1/me/player' || u.pathname === '/v1/me/player/play') return { ok: true, status: 204, json: async () => null };
+        return { ok: false, status: 404, json: async () => ({}) };
+      };
+      const sdk2 = fakeSdk();
+      const bus = createAudioBus();
+      let endCue = null; const spoken = [];
+      const went2 = [];
+      const pg = mountSdkTry(host, { getClientId: async () => null, storage: s2, fetchFn, navigate: (u) => went2.push(u),
+        loadSdkFn: async () => ({ ok: true, Spotify: sdk2 }), audio: bus, setTimer: t.set, clearTimer: t.clear,
+        speak: (text, onEnd) => { spoken.push(text); endCue = onEnd; } });
+      await pg.ready; await settle();
+      check('*** no server answer: the Client ID of the sign-in already in this browser is used ***', pg.state().clientId === ID && /already in this browser/.test(pg.state().idFrom));
+      check('*** signed in already: the player started by itself, with no navigation ***', sdk2.made.length === 1 && went2.length === 0 && pg.state().sdk === 'loaded');
+      const pl = sdk2.made[0];
+      pl.emit('ready', { device_id: 'DEV-PAGE' });
+      await settle();
+      check('*** "Ready" with the device ID, as a big line ***', /Device ID DEV-PAGE/.test(host.querySelector('[data-line="ready"]')?.textContent || ''));
+      host.querySelector('[data-uri]').value = 'https://open.spotify.com/playlist/37i9dQZF1DX4xuWVBs4FgJ?si=abc';
+      host.querySelector('[data-act="play"]').click();
+      await settle(12);
+      const put = calls.filter((c) => c.method === 'PUT');
+      const playBody = put.find((c) => c.url.includes('/me/player/play'));
+      const chosen = playBody ? JSON.parse(playBody.body).uris : null;
+      check('*** the playlist\'s songs were read, playback moved here, and ONE song our picker chose was played here ***',
+        calls.some((c) => c.url.includes('/playlists/37i9dQZF1DX4xuWVBs4FgJ/items')) && put[0]?.url === 'https://api.spotify.com/v1/me/player'
+        && J(JSON.parse(put[0].body)) === J({ device_ids: ['DEV-PAGE'], play: false })
+        && playBody?.url.endsWith('/me/player/play?device_id=DEV-PAGE') && Array.isArray(chosen) && chosen.length === 1
+        && items.some((it) => it.item.uri === chosen[0]), J(calls.map((c) => `${c.method} ${c.url}`)));
+      check('every request went to Spotify, none to this site', calls.every((c) => /^https:\/\/(accounts|api)\.spotify\.com\//.test(c.url)));
+      pl.emit('player_state_changed', { ...song(7, { position: 31000 }) });
+      await settle();
+      check('*** the 0:30 line says YES once sound is past it ***', /^Sound past 0:30: YES/.test(host.querySelector('[data-line="past"]')?.textContent || ''), host.querySelector('[data-line="past"]')?.textContent);
+      check('the song line names it', /Song 7 - Ella, Louis/.test(host.querySelector('[data-line="song"]')?.textContent || ''));
+      pl.emit('initialization_error', { message: 'Failed to initialize player' });
+      await settle();
+      check('an error shows in its own line in Spotify\'s words', /Failed to initialize player/.test(host.querySelector('[data-line="initialization_error"]')?.textContent || ''));
+      // The spoken cue: pause, then carry on.
+      const before = pl.calls.length;
+      host.querySelector('[data-act="cue"]').click();
+      await settle();
+      check('*** "Say something over it": the cue is spoken and Spotify PAUSES ***', spoken.length === 1 && pl.calls.slice(before).some((c) => c[0] === 'pause'));
+      endCue();
+      await settle();
+      check('...and carries on when the cue ends', pl.calls.slice(before).some((c) => c[0] === 'resume'));
+      host.querySelector('[data-act="cue"]').click();
+      await settle();
+      await t.run((x) => x.ms === CUE_MAX_MS);
+      await settle();
+      check('a cue whose end never comes is ended anyway', !bus.isActive('try:cue'));
+      const dd = host.querySelector('[data-duck]'); dd.value = 'duck'; dd.dispatchEvent(new Event('change', { bubbles: true }));
+      check('the "when something speaks" box switches the player to duck', bus.whenDucked('spotify:screen') === 'duck');
+      check('the typed Client ID box remembers only in this browser', TYPED_ID_KEY.startsWith('nimrod.') && TRY_FEATURES.screen === true);
+      pg.destroy();
+      check('destroy: the player disconnects', pl.calls.some((c) => c[0] === 'disconnect'));
+      void SPOTIFY_TOKEN_URL;
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
