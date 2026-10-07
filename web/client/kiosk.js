@@ -309,6 +309,9 @@ export async function mountKiosk(root, {
   // pollMs, checkMs, quietWaitMs, inputQuietMs, storage }`, every one optional; `false` turns the watch off
   // for this mount. Never on an embed. The setting a person changes is the screen row's, not this.
   versionWatch: versionWatchOpts = undefined,
+  // A game's "being played" ends this long after the last press (game_start.js GAME_IDLE_MS, 5 minutes, argued there).
+  // A seam for the suites, the same reason `burnInIdleMs` is one: null = the module's own constant.
+  gameIdleMs = null,
   // Burn-in protection's own idle wait (2.18) — real default below, ten minutes. A test that
   // actually waited that long to prove the dim/drift class appears would be a test nobody
   // runs; this seam lets it use milliseconds instead, the same reason `recoveryTick` is one.
@@ -1496,6 +1499,8 @@ export async function mountKiosk(root, {
     // A SCREEN, OR A PAGE SHOWING ONE (2026-10-02, profile.js): true on a real screen, false when this kiosk is
     // embedded in another page (Home, the modules page). "A screen never places a call" reads this first.
     isScreen: !embedded,
+    // How long after the last press a game stops counting as being played (game_start.js gameIdleMsOf; a suite's seam).
+    ...(Number.isFinite(gameIdleMs) && gameIdleMs > 0 ? { gameIdleMs } : {}),
     // HOW MANY PANELS SHARE THIS PANEL'S DASHBOARD (game_start.js `panelAlone`: "when it is the only thing on
     // the dashboard"), or null when this panel is not one of the showing dashboard's (a nested one, a library).
     // A getter, read when asked; `this.instanceId` so a ctx extended for a dashboard's child asks about the child.
@@ -6792,6 +6797,9 @@ export async function mountKiosk(root, {
   // button follows the game, not the last press.
   offsScreen.push(bus.subscribe(PLAY_STATE_TOPIC, (p) => {
     if (!p || !p.id) return;
+    // `rest` (game_start.js createPlayWatch): nobody has pressed it for a while, or the sitting ended. Not paused:
+    // the button stays as it was (a "Play" on a game that is not paused would do nothing).
+    if (!p.playing && p.rest) return;
     if (p.playing) pausedPanels.delete(p.id); else pausedPanels.add(p.id);
     syncPlayPause();
   }));
@@ -6953,7 +6961,11 @@ export async function mountKiosk(root, {
       if (vRecording) return 'recording';
       {
         const ids = onScreenIds();
-        const open = [...vGrammars.values()].filter((g) => !g.instanceId || ids.has(g.instanceId));
+        // (2026-10-07, game_start.js createPlayWatch) A GAME'S question waiting for a spoken answer is the game's own
+        // hold: 'game' above, while somebody is playing it. Counted here as well, an answer game left open (its grammar
+        // stays open while a question waits) held every reload for ever. A dictation window still holds by itself.
+        const open = [...vGrammars.values()].filter((g) => (!g.instanceId || ids.has(g.instanceId))
+          && (g.dictation || !g.instanceId));
         if (open.length) return 'dictation';
       }
       try { if (drive?.presence?.().drivers > 0) return 'helping'; } catch { /* no socket */ }

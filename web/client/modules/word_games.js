@@ -87,6 +87,7 @@ import {
 } from '../word_games_words.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
 import { ensureQuizStyle, afterAnswerHtml, verdictLine } from '../quiz_view.js';
+import { createPlayWatch } from '../game_start.js';
 // *** THE PURE HELPERS LIVE IN quiz_flow.js NOW (row 2.45), and are re-exported below. *** Three
 // more answer games arrived with "the same miss flow as row 2.31", so the wording, `reasonFor`
 // (Y only ever a true signal), the chime and the stars have one home instead of four. Moved, not
@@ -1112,6 +1113,11 @@ registerModule(
       prefix: () => session.askPrefix(),
     });
 
+    // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): no Start button here, so from a press or an answer
+    // until nobody has pressed for GAME_IDLE_MS, or the sitting ends. Never merely for being open.
+    const plays = createPlayWatch(bus, ctx);
+    const pressCounts = () => !dead && engine.snapshot().phase !== 'done';
+
     const pic = picHtml;
     const btn = (s, i, on) => `<button type="button" class="wg-btn" data-act="${esc(s.act)}" data-stop="${i}"${on ? ' data-on="1"' : ''}>${
       s.heard ? `${esc(s.label)}, <q>${esc(s.heard)}</q>` : esc(s.label)}</button>`;
@@ -1120,6 +1126,7 @@ registerModule(
     function render() {
       if (dead) return;
       const s = engine.snapshot();
+      if (s.phase === 'done') plays.rest();     // the sitting ended: nobody is playing it now, until Play again
       const it = s.item;
       if (!it) { mount.innerHTML = '<div class="wg" data-state="idle"></div>'; return; }
       const stops = engine.stops();
@@ -1222,7 +1229,8 @@ registerModule(
       // The ladder, the same object the module plays with (quiz_test_rig.js personLadderChecks).
       __session: session,
       __probe: () => engine.snapshot(),
-      hear: (result) => engine.hear(result),
+      __plays: plays,
+      hear: (result) => { engine.hear(result); if (pressCounts()) plays.active(); },
       init() {
         ensureQuizStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         try { ledger = typeof ctx.makeEvents === 'function' ? createPointsLedger({ makeEvents: ctx.makeEvents, bus }) : null; }
@@ -1239,6 +1247,9 @@ registerModule(
           const p = e.target.closest?.('button[data-pick]');
           if (p) engine.answer(p.dataset.pick, 'touch');
         });
+        // Being played: every way it is pressed or answered (after the game's own, so a press that ends it is seen ended).
+        plays.watch({ topics: [`${GAME}/next`, `${GAME}/prev`, `${GAME}/select`, `${GAME}/skip`, PLAY_TOPIC, ANSWER_TOPIC],
+          mount, when: pressCounts });
         let started = false;
         if (state?.subscribe) {
           state.subscribe((snap) => {
@@ -1254,10 +1265,11 @@ registerModule(
         if (!started) { started = true; engine.start(); }
       },
       onResize() {},
-      onHide() { hidden = true; reannounce(); state?.flush?.(); },
+      onHide() { hidden = true; plays.rest(); reannounce(); state?.flush?.(); },
       onShow() { hidden = false; reannounce(); },
       destroy() {
         dead = true;
+        plays.destroy();
         reannounce();
         engine.destroy();
         speech.destroy();

@@ -23,14 +23,17 @@
 //   call       a live call, a call ringing (a Call panel's or the screen's own notice), the call view up
 //   intercom   an intercom open (it is a call by another name)
 //   game       a game started and not finished: a panel told the shell it is PLAYING (game_start.js
-//              `PLAY_STATE_TOPIC`) and is not a slideshow or a video (see `playKindOf`)
+//              `PLAY_STATE_TOPIC`) and is not a slideshow or a video (see `playKindOf`). Since 2026-10-07 a game
+//              says so only while somebody is playing it: from a press until `GAME_IDLE_MS` (5 minutes) with
+//              none (game_start.js `createPlayWatch`), so a game left open does not hold a reload for ever
 //   menu       the settings menu, or the dashboards tray, open
 //   edit       an edit view or the map open
 //   library    the Modules library standing in a panel's place
 //   recording  a voice recording IN PROGRESS: an utterance heard and not yet saved, or a reading phrase
 //              armed. NOT "recording is switched on" - that is a standing setting, and holding on it would
 //              mean a screen that records never updates
-//   dictation  a dictation window open, or a question waiting for a spoken answer (an open grammar)
+//   dictation  a dictation window open. (A GAME's question waiting for a spoken answer counted here too until
+//              2026-10-07; it is the game's own hold now, above - counted here, an open answer game never reloaded)
 //   helping    somebody driving this screen from another one
 //   unlocked   (2026-10-05, screen_lock.js) somebody unlocked this screen to use it for something else (a film):
 //              the site stays out of it until it is locked again. A screen nobody ever locked never holds for this

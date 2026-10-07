@@ -37,7 +37,7 @@ import {
   esc, fill, fillHtml, defaultChime, STARS, CAT_URL,
 } from './quiz_flow.js';
 import {
-  shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, ensureStartStyle, startOverlayHtml,
+  shouldAutostart, panelAlone, createPlayWatch, demoLimitMs, ensureStartStyle, startOverlayHtml,
 } from './game_start.js';
 import { gameAgentFor, askAgent } from './game_agent.js';
 
@@ -234,8 +234,11 @@ export function quizModule(spec) {
     let demoMemory = {};
     let agentNow = null;
     let lastOverlay = null;
-    const reportNow = createPlayReporter(bus, ctx);
-    const report = (p) => { if (gate) reportNow(p); };
+    // *** BEING PLAYED (2026-10-07, game_start.js createPlayWatch): from a press until GAME_IDLE_MS with none. ***
+    // A game with Start says so from Start (as before) and while it is pressed; a game without one (Spelling, Name
+    // that, Math) from its first press. Either way nobody pressing for a while ends it, so an open game - started
+    // and left, or never touched - neither keeps the bar away nor holds a new version for ever.
+    const plays = createPlayWatch(bus, ctx);
     const reducedMotion = () => {
       if (typeof ctx.reducedMotion === 'boolean') return ctx.reducedMotion;
       try { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; }
@@ -341,7 +344,8 @@ export function quizModule(spec) {
       if (begun || dead) return false;
       stopDemo();
       begun = true; paused = false;
-      report(true);
+      // Start pressed (or "starts by itself"): being played. A game with no Start begins at once, unpressed: not yet.
+      if (gate) plays.active();
       engine.start(gameOf(cfg));
       render();
       return true;
@@ -352,7 +356,7 @@ export function quizModule(spec) {
       try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }
       lastSpeech = null;
       held = [];
-      report(false);
+      plays.pause();
       reannounce();
       render();
     }
@@ -360,7 +364,7 @@ export function quizModule(spec) {
       if (begin()) return;
       if (!paused || dead) return;
       paused = false;
-      report(true);
+      plays.active();
       reannounce();
       engine.press('repeat');      // the question again, if one is waiting
       render();
@@ -427,6 +431,10 @@ export function quizModule(spec) {
       const k = board.select();
       if (k) handleKey(k); else render();
     };
+
+    // A press or an answer counts as playing while the game is going (not waiting for Start, paused, or ended).
+    const pressCounts = () => begun && !paused && !dead && engine.snapshot().phase !== 'done';
+    const playedNow = () => { if (pressCounts()) plays.active(); };
 
     const api = {
       engine, cfg: () => cfg, render: () => render(), release, reannounce,
@@ -507,6 +515,8 @@ export function quizModule(spec) {
       // Waiting for Start with a demo running: the demo's engine is what is drawn. Never scored.
       const E = !begun && demoEng ? demoEng : engine;
       const s = E.snapshot();
+      // The sitting ended ("stop", "I'm done"): nobody is playing it now, until Play again.
+      if (begun && s.phase === 'done') plays.rest();
       if (begun) {
         try {
           const detail = view.scoreDetail ? String(view.scoreDetail(s, cfg) || '')
@@ -674,7 +684,8 @@ export function quizModule(spec) {
       // Start, pause and the demo, for the suites.
       __gate: () => ({ begun, paused, demo: !!demoEng, demoRested, demoSteps, agent: agentNow?.id || null,
         demoSnap: demoEng ? demoEng.snapshot() : null }),
-      hear: (result) => { if (begun && !paused) engine.hear(result); },
+      __plays: plays,
+      hear: (result) => { if (begun && !paused) { engine.hear(result); playedNow(); } },
       init() {
         ensureQuizStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         try { ledger = typeof ctx.makeEvents === 'function' ? createPointsLedger({ makeEvents: ctx.makeEvents, bus }) : null; }
@@ -723,6 +734,14 @@ export function quizModule(spec) {
             handleKey(rows?.[ri]?.[ci]);
           }
         });
+        // BEING PLAYED: every way this game is pressed or answered (subscribed after the game's own, so a press that
+        // ends the sitting is seen ended).
+        plays.watch({
+          topics: [`${type}/next`, `${type}/prev`, `${type}/select`, `${type}/skip`, ANSWER_TOPIC,
+            ...(gameKey ? [`${type}/play`] : []),
+            ...Object.values(extraTopics || {}).flatMap((t) => (Array.isArray(t) ? t : [t]))],
+          mount, when: pressCounts,
+        });
         try { view.init?.(api); } catch (err) { console.error(`${type}: view init`, err); }
         if (gate) ensureStartStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         let configured = false;
@@ -745,11 +764,12 @@ export function quizModule(spec) {
         configured = true;
         // OPENS WAITING FOR START (a game that opts in), unless the panel starts by itself (game_start.js).
         if (!gate || shouldAutostart(cfg, { fallback: autostartDefault, alone: panelAlone(ctx) })) begin();
-        else { report(false); startDemo(); }
+        else { plays.pause(); startDemo(); }
       },
       onResize() {},
       onHide() {
         hidden = true;
+        plays.rest();          // a game nobody can see is not being played
         if (!begun) stopDemo();
         reannounce(); state?.flush?.(); try { view.onHide?.(api); } catch { /* noop */ }
       },
@@ -761,6 +781,7 @@ export function quizModule(spec) {
       settingsChoices: () => (view.settingsChoices ? view.settingsChoices() : {}),
       destroy() {
         dead = true;
+        plays.destroy();
         stopDemo();
         reannounce();
         engine.destroy();

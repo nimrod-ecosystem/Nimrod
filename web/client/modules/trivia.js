@@ -90,6 +90,7 @@ import { createPackReviews, isReviewPackId, playableBank, REVIEW_STATUS, REVIEW_
          REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC, sourceHtml } from '../pack_reviews.js';
 import { linksOpenHere } from '../page_links.js';
 import { spellPaceField, spellPace, spellsAloud, spellAloud, spelledOptions, SPELL_PACE_DEFAULT } from '../spell_aloud.js';
+import { createPlayWatch } from '../game_start.js';
 
 export const GAME = 'trivia';
 
@@ -795,6 +796,7 @@ registerModule(
     // resolves after destroy() would also call startPolling() and bring a destroyed handle back.
     let dead = false;
     let onClick = null;
+    let plays = null;            // being played: from a press until nobody presses for a while (game_start.js createPlayWatch)
     // *** THE LADDER (QUESTIONS AT EVERY LEVEL, above). *** `ladder` is made in init(). `levelled`: this round
     // is dealt by level (the bank has levels and nobody is reviewing). Then `deck` is the round's SLOTS, each
     // filled as it goes up for whoever's turn it is (pickNext), from `roundPool`. `ladderBank` is what the
@@ -1770,6 +1772,11 @@ registerModule(
           return undefined;
         };
         mount.addEventListener('click', onClick);
+        // BEING PLAYED (2026-10-07): Trivia has no Start button, so it says it is being played from a press on it (a
+        // tap, a switch's next / select / skip) until nobody has pressed for GAME_IDLE_MS. Never merely for being open:
+        // a Trivia panel left open must not keep the bar away, or hold a new version, for ever.
+        plays = createPlayWatch(bus, ctx);
+        plays.watch({ topics: ['trivia/next', 'trivia/prev', 'trivia/select', 'trivia/skip'], mount, when: () => !dead });
 
         // THE SHARED ROW, opened by name — the same document the Questions module edits and
         // Word Forge reads. A game's own state still wins where somebody set it, so nothing
@@ -1854,9 +1861,10 @@ registerModule(
         } catch (err) { lessons = null; mode = null; console.error('trivia: no lessons handle', err); }
       },
       onResize() {},
-      onHide() { state?.flush?.(); },
+      onHide() { plays?.rest(); state?.flush?.(); },
       destroy() {
         dead = true;
+        if (plays) { plays.destroy(); plays = null; }
         recorder = null;
         // A line still queued or being said goes with the panel.
         try { if (lastSpeech && typeof ctx.output?.cancel === 'function') ctx.output.cancel(lastSpeech); } catch { /* gone */ }

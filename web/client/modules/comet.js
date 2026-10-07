@@ -47,6 +47,7 @@ import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
 import { hitCircle, nearest } from '../pressable.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
+import { createPlayWatch } from '../game_start.js';
 
 const DEFAULTS = {
   hearts: 4,        // how many balloons are up at once
@@ -165,6 +166,9 @@ registerModule(
     // test that depends on it fails for reasons that have nothing to do with the module.
     let simT = 0;
     const offs = [];
+    // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): from a press, or an aim on its sky, while it is started,
+    // until nobody has done either for GAME_IDLE_MS. Never merely for being open.
+    let plays = null;
 
     const nowMs = () => performance.now();
     const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -297,6 +301,7 @@ registerModule(
 
     function enterMenu() {
       started = false;
+      plays?.rest();      // back on its own start screen: nobody is playing it
       // The container carries the darkened sky; the menu inside it carries the rows. Both,
       // because the scrim's own backdrop is scoped to the panel and the gradient behind it is
       // what keeps the sky readable through the menu rather than blacked out.
@@ -670,6 +675,9 @@ registerModule(
           steer = null;                       // a real aim always wins over a glide
           audioInit();
           moveTo(p.x, p.y, true);
+          // Being played: an aim ON the sky, while it is started. Not one wandering elsewhere on the screen (the comet
+          // follows that too, but a hand working another panel is not playing this one).
+          if (started && aimIn(a, canvas, { inside: true })) plays?.active();
         };
         // *** SETTINGS TAKE EFFECT WHILE IT IS RUNNING. THEY DID NOT. ***
         //
@@ -723,6 +731,10 @@ registerModule(
         // what Comet's data IS. Mike is settling that separately (2026-09-03). Exit is wired
         // now because leaving a game should not wait on that.
         offs.push(bus.subscribe('comet/exit', () => { if (started) enterMenu(); }));
+        // Being played: its presses (after its own handlers, so the press that starts it counts).
+        plays = createPlayWatch(bus, ctx);
+        plays.watch({ topics: ['comet/spark', 'comet/seek'], mount, when: () => started });
+        offs.push(() => { plays?.destroy(); plays = null; });
 
         // Only animate while actually on screen — see the header.
         observer = new IntersectionObserver((entries) => {
@@ -735,7 +747,7 @@ registerModule(
         start();
       },
       onResize() { resize(); },
-      onHide() { stop(); },
+      onHide() { stop(); plays?.rest(); },
       destroy() {
         stop();
         observer?.disconnect();
