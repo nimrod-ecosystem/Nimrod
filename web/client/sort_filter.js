@@ -144,6 +144,11 @@ export const SORT_FILTER_CSS = `
 .sf-chip{flex:0 0 auto;border:1px solid var(--border);background:var(--surface-alt,var(--surface));border-radius:999px;
   padding:5px 12px;cursor:pointer;min-height:36px;min-width:44px;white-space:nowrap;font:inherit;color:var(--text)}
 .sf-chip[aria-pressed=true]{border-color:var(--focus, var(--accent));font-weight:600;box-shadow:inset 0 0 0 1px var(--focus, var(--accent))}
+/* AT A PHONE'S WIDTH THE CHIP ROWS WRAP (2026-10-06). One sideways row cut the last chips off at the panel's side
+   (dev/home_phone_test.html: the picker's "Seasons" and "Holidays" in the Theme tab at 375 wide; the library's
+   "Learning" onward the same), with nothing on a phone to say there were more. Behind the same width as
+   modules.html's phone layout (620px), so a desktop panel keeps its one row exactly as it was. */
+@media (max-width:620px){.sf-row{flex-wrap:wrap}}
 `;
 export function ensureSortFilterCss(doc = (typeof document !== 'undefined' ? document : null)) {
   if (!doc || doc.getElementById(SORT_FILTER_CSS_ID)) return;
