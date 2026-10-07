@@ -51,7 +51,7 @@ import {
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
-import { BAR_KEY_HIDDEN } from '../bar_toggle.js';
+import { BAR_KEY_HIDDEN, onModuleControl } from '../bar_toggle.js';
 
 // How near the pointer has to come to bring a tucked bar back: the kiosk's own rule for its bar
 // (kiosk.js BAR_REVEAL_MARGIN_PX, Mike 2026-09-20: "pop up when you put your cursor near"), not a new
@@ -358,7 +358,14 @@ registerModule(
           }
         });
         if (typeof off2 === 'function') offs.push(off2);
-        const offCall = say?.subscribe?.(CALL_CONTROLS_TOPIC, (s) => { callState = s && s.live ? { ...s } : null; draw(); });
+        // bar while playing (row 2.65): a call going live brings this bar up, put away or not -- its controls are what
+        // somebody on a call reaches for (the plain bar's own rule, kiosk.js `if (callState) poke()`).
+        const offCall = say?.subscribe?.(CALL_CONTROLS_TOPIC, (s) => {
+          const was = !!callState;
+          callState = s && s.live ? { ...s } : null;
+          draw();
+          if (callState && !was) reveal();
+        });
         if (typeof offCall === 'function') offs.push(offCall);
         if (host && typeof host.subscribe === 'function') {
           try {
@@ -383,12 +390,16 @@ registerModule(
           const onAny = (e) => {
             if (!tucked && !hideT) return;
             if (e?.type === 'keydown' && toggleKey(e)) return;   // bar toggle: that key toggles; it does not wake first
+            // bar while playing (row 2.65, measured: a touch on a Quiz mix answer brought this bar back): a press on a
+            // module's own control is aimed at it. The kiosk's hold still brings the bar from there (bar_toggle.js).
+            if (e?.type === 'pointerdown' && onModuleControl(e.target)) return;
             const was = tucked;
             if (!autoReveal()) return;                           // bar toggle: put away by its key, and staying away
             if (was && !tucked && e?.type === 'pointerdown' && root) endWakePress = sitOutWakePress(root, e);
           };
           const onMove = (e) => {
             if (!tucked && !hideT) return;
+            if (onModuleControl(e.target)) return;   // bar while playing: resting on a module's button is aiming at it
             const r = root?.getBoundingClientRect?.();
             if (!r) return;
             if (e.clientX >= r.left - REVEAL_MARGIN_PX && e.clientX <= r.right + REVEAL_MARGIN_PX

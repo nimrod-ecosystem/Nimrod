@@ -140,11 +140,32 @@ async function wakePressChecks(tag, { barEl, down, waitDown, barBtn }) {
     root.querySelector('[data-key="C"]')?.click();     // a clean display (a click with no hit-test: not a wake)
     at = aim(key);
     const r = await realPress(...at, type);
-    check(`[${tag}] *** a ${type.toUpperCase()} there wakes the bar ***`, !down());
+    // bar while playing (row 2.65, 2026-10-07), DELIBERATELY changed: this used to say the key's press woke the bar. A press
+    // on a module's own control is aimed at the control now, so the bar stays away (bar_toggle.js `onModuleControl`).
+    check(`[${tag}] *** a ${type.toUpperCase()} on the key does NOT wake the bar (it was aimed at the key) ***`, down());
     check(`[${tag}] *** ...and the press is the KEY's, not the bar's (down, release and click) ***`,
       r.down === key && r.up === key && r.click === key, `${r.down?.className} / ${r.up?.className} / ${r.click?.className}`);
     if (/^[0-9]$/.test(key.dataset.key)) check(`[${tag}] ...the calculator took it`, readout().endsWith(key.dataset.key), readout());
   }
+  // The sit-out still matters for a press that DOES wake the bar: one on the panel's own surface (a gap between the keys)
+  // where the put-away bar sits. It wakes the bar, and the press stays with what was under it.
+  {
+    root.scrollIntoView({ block: 'nearest' });
+    const bb = barEl().getBoundingClientRect();
+    let gap = null;
+    for (let i = 1; i < 40 && !gap; i++) for (let j = 1; j < 6 && !gap; j++) {
+      const x = bb.left + bb.width * i / 40, y = bb.top + bb.height * j / 6;
+      const under = document.elementFromPoint(x, y);
+      if (under && root.contains(under) && !under.closest(OPERABLE) && !barEl().contains(under)) gap = [x, y];
+    }
+    if (gap && await waitDown()) {
+      const r = await realPress(...gap, 'touch');
+      check(`[${tag}] *** a touch on the panel's own surface where the bar sits wakes it ***`, !down());
+      check(`[${tag}] ...and that press is not the bar's`, !!r.click && !barEl().contains(r.click), `${r.click?.className}`);
+    } else check(`[${tag}] (no bare spot of the panel under the put-away bar to press: nothing to check)`, true);
+  }
+  // Bring the bar up for the next checks with a key (any key wakes it).
+  root.querySelector('.kiosk')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
   // The bar is up now, and a press meant for it is its own: the sit-out is only for the press that woke it.
   await sleep(600);
   const btn = barBtn();
