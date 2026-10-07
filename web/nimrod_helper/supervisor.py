@@ -91,6 +91,10 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
         # The same sites the status page allows (allowed_origin): the speech program refuses pages from any
         # other site with 403. Passed every time, so these settings are the one list, not the program's own.
         argv += ['--allow-origin', ','.join(allowed_sites(settings))]
+        # VOICEPRINTS (row 2.56) in the helper's own data folder: on this computer, never synced, kept when the
+        # program is updated (the installer replaces app\ wholesale) and removed with it (speech_service/speakers.py
+        # argues the place). Passed every time, so the speech program never falls back to a folder inside app\.
+        argv += ['--voiceprints', str(Path(data) / 'voiceprints')]
         # A model that came IN the package (build_windows.py --with-model) sits beside app/; used unless the
         # settings name another place.
         bundled = app.parent / 'models'

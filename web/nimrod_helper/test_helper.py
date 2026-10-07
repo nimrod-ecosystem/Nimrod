@@ -89,8 +89,14 @@ def plan_tests(tmp: Path):
     check('plan: speech is `-m speech_service --port 8797`, from the app folder (whisper, small.en: its own defaults), '
           'allowing the sites the status page allows',
           sp['argv'] == ['PY', '-m', 'speech_service', '--port', '8797',
-                         '--allow-origin', 'https://nimrodecosystem.com,https://nimrod.onrender.com']
+                         '--allow-origin', 'https://nimrodecosystem.com,https://nimrod.onrender.com',
+                         '--voiceprints', str(data / 'voiceprints')]
           and sp['cwd'] == str(app), sp['argv'])
+    check('*** plan: voiceprints (row 2.56) are kept in the helper\'s DATA folder - never inside app\\, which an '
+          'update replaces wholesale ***', sp['argv'][sp['argv'].index('--voiceprints') + 1] == str(data / 'voiceprints')
+          and str(app) not in sp['argv'][sp['argv'].index('--voiceprints') + 1], sp['argv'])
+    check('*** the installer never copies voiceprints made beside the speech program into the app ***',
+          W.skipped('voiceprints'))
     s1 = S.merged(S.DEFAULTS, {'platform': 'https://self.example/', 'alsoAllow': ['https://self.example', 'http://box:8000']})
     a1 = SV.plan(s1, app, 'PY', data)[0]['argv']
     check('plan: a self-hosted Nimrod is what the speech program allows (no repeats, no trailing slash)',

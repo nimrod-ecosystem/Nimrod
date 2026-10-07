@@ -71,6 +71,13 @@
 
 import { CAPTURE_RATE, FRAME_MS } from './speech_capture.js';
 import { voiceModelFrom } from './voice_model.js';
+// WHO IS TALKING (row 2.56): the speech program says who on every final; this file carries it to the captions and
+// the command path, and gives the screen the seam to set up or forget a voice (`rec.voiceId`). voice_id.js argues it.
+import { voiceIdOptionsFrom, speakerFrom, speakerDetail } from './voice_id.js';
+
+// The messages a screen may send about voices, and the answers it hears back (speech_service/service.py).
+export const VOICE_ID_SEND = Object.freeze(['enrol', 'enrol-done', 'enrol-cancel', 'forget', 'voiceprints']);
+export const VOICE_ID_KINDS = Object.freeze(['enrol-heard', 'enrolled', 'enrol-failed', 'forgotten', 'voiceprints']);
 
 // Port 8797, not the more obvious 8765: 8765 is already the Cici session receiver on Mike's desktop
 // (cici_receiver.py, bound 0.0.0.0), 8770-8773 the media agents, 8791 corpus_desk (all checked
@@ -217,6 +224,8 @@ export function enginePlanFrom(values = {}) {
     waitMs: num(v.speechWaitMs, 0, 60000, ENGINE_DEFAULTS.waitMs),
     endSilenceMs: num(v.speechEndMs, 200, 10000, ENGINE_DEFAULTS.endSilenceMs),
     ears: EAR_CHOICES.includes(v.speechEars) ? v.speechEars : ENGINE_DEFAULTS.ears,
+    // Who is talking (voice_id.js): asked of every engine that offers it, with the person's own "how sure".
+    speakers: voiceIdOptionsFrom(v),
   };
   const first = typeof v.speechEngine === 'string' ? v.speechEngine : 'local';
   if (first === 'browser') return { browser: true, passes: [], skipped: [], ...common };
@@ -350,9 +359,16 @@ export function connectEngine({
   // frame (no utterances), and `onWake` hears { word, score, atMs, ... }. A service with no detector
   // leaves it 'refused' (why: 'no wake detector') - said in the status, nothing streamed.
   wake = false, onWake = null,
+  // WHO IS TALKING (row 2.56): { on, sureAt } - asked for after hello, only of a service that offers it (hello's
+  // `speakers`). `onControl` hears the voice set-up answers (VOICE_ID_KINDS); never a voiceprint's numbers.
+  speakers = null, onControl = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
+  let spk = speakers && typeof speakers === 'object' ? { ...speakers } : null;
+  const askSpeakers = () => {
+    if (!wake && info?.speakers && spk) sendJson({ type: 'speakers', on: !!spk.on, sureAt: spk.sureAt });
+  };
   let ws = null;
   let state = 'connecting';
   let info = null;
@@ -397,16 +413,24 @@ export function connectEngine({
       if (!m || typeof m !== 'object') return;
       if (m.kind === 'hello') {
         info = { engine: m.engine || null, grammar: !!m.grammar, partials: !!m.partials,
-                 wake: Array.isArray(m.wake) ? m.wake.slice() : [] };
+                 wake: Array.isArray(m.wake) ? m.wake.slice() : [],
+                 speakers: typeof m.speakers === 'string' && m.speakers ? m.speakers : null };
         tries = 0;
         if (wake) {
           if (!info.wake.length) { set('refused', 'no wake detector'); return; }
           sendJson({ type: 'wake', on: true });
-        } else if (mode) sendJson({ type: 'mode', mode: mode.mode, grammar: mode.grammar || null });
+        } else {
+          if (mode) sendJson({ type: 'mode', mode: mode.mode, grammar: mode.grammar || null });
+          if (spk?.on) askSpeakers();
+        }
         set('ready');
         return;
       }
       if (m.kind === 'error' && m.error === 'secret') { set('refused', 'secret'); return; }
+      if (VOICE_ID_KINDS.includes(m.kind)) {
+        try { onControl?.({ ...m, slot, name }); } catch (err) { console.error('speech engine: onControl', err); }
+        return;
+      }
       if (m.kind === 'wake') {
         if (wake) { try { onWake?.({ ...m, slot, name }); } catch (err) { console.error('speech engine: onWake', err); } }
         return;
@@ -455,6 +479,16 @@ export function connectEngine({
     setMode(m) {
       mode = m && typeof m === 'object' ? { mode: m.mode, grammar: Array.isArray(m.grammar) ? m.grammar : null } : null;
       if (state === 'ready' && mode) sendJson({ type: 'mode', mode: mode.mode, grammar: mode.grammar });
+    },
+    /** Who is talking: { on, sureAt }, from the next utterance on. */
+    setSpeakers(cfg) {
+      spk = cfg && typeof cfg === 'object' ? { ...cfg } : null;
+      if (state === 'ready') askSpeakers();
+    },
+    /** A voice set-up message (VOICE_ID_SEND) to a service that offers it. False when it could not be sent. */
+    control(msg) {
+      if (wake || state !== 'ready' || !info?.speakers || !msg || !VOICE_ID_SEND.includes(msg.type)) return false;
+      return sendJson(msg);
     },
     close() {
       closed = true;
@@ -589,6 +623,22 @@ export function createRanker({
   const conf = (r) => (r && Number.isFinite(r.confidence) ? r.confidence : null);
   const allAnswered = (g) => [...g.ears.values()].every((e) => e.endedAt !== null
     && [...e.asked].every((s) => e.results.get(s)?.final));
+  // WHO SAID IT, for a group (row 2.56): `prefer`'s own answer when it has one, else the latest pass's that does
+  // (an engine with no voice engine says nothing; another may). Named beats unnamed at the same pass.
+  function speakerOf(g, prefer = null) {
+    if (prefer?.speaker) return prefer.speaker;
+    let best = null;
+    for (const e of g.ears.values()) {
+      for (const r of e.results.values()) {
+        if (!r.final || !r.speaker) continue;
+        const k = [prefer && e.ear === prefer.ear ? 1 : 0, rank(r.slot), r.speaker.who ? 1 : 0];
+        if (!best || k[0] > best.k[0] || (k[0] === best.k[0] && (k[1] > best.k[1] || (k[1] === best.k[1] && k[2] > best.k[2])))) {
+          best = { s: r.speaker, k };
+        }
+      }
+    }
+    return best?.s || null;
+  }
 
   function caption(g) {
     const bests = [...g.ears.values()].map((e) => ({ ear: e.ear, r: earBest(e) })).filter((x) => x.r);
@@ -607,6 +657,8 @@ export function createRanker({
       confidence: conf(p.r), engine: p.r.engine || null, slot: p.r.slot, pass: rank(p.r.slot),
       passes: passes.length, partial: !p.r.final, final: g.done, revised: revised || !!g.shown?.revised,
       agreed, others, ears: bests.map((x) => x.ear), decided: g.decided ? g.decided.text : null,
+      // subtitles.js reads { name, confidence }: who, or "Unsure (maybe ...)", or nothing ("Unknown").
+      speaker: speakerOf(g, { ...p.r, ear: p.ear }),
     };
     g.shown = { text, final: !!p.r.final, revised: c.revised };
     try { onCaption?.(c); } catch (err) { console.error('speech ranker: onCaption', err); }
@@ -629,8 +681,11 @@ export function createRanker({
     const es = [...g.ears.values()];
     const voiceFrom = Math.min(...es.map((e) => e.voiceFrom));
     const voiceTo = Math.max(...es.map((e) => (e.voiceTo ?? now())));
+    const who = speakerDetail(speakerOf(g, pick));
     const detail = { ...(conf(pick) !== null ? { confidence: conf(pick) } : {}), ...(alts.length ? { alternatives: alts } : {}),
-                     ...(Number.isFinite(voiceFrom) && Number.isFinite(voiceTo) ? { voiceFrom, voiceTo } : {}) };
+                     ...(Number.isFinite(voiceFrom) && Number.isFinite(voiceTo) ? { voiceFrom, voiceTo } : {}),
+                     // Who said it (row 2.56): every AI and game that hears this command or answer gets it.
+                     ...(who ? { speaker: who } : {}) };
     try { onCommand?.(text, detail, { group: g.id, slot: pick.slot, ear: pick.ear, why }); }
     catch (err) { console.error('speech ranker: onCommand', err); }
   }
@@ -672,7 +727,10 @@ export function createRanker({
     const c = Number(r.confidence);
     e.results.set(r.slot, { slot: r.slot, final, text: String(r.text || ''), engine: r.engine || null,
                             confidence: r.confidence != null && Number.isFinite(c) ? Math.max(0, Math.min(1, c)) : null,
-                            words: Array.isArray(r.words) ? r.words : [], at: now() });
+                            words: Array.isArray(r.words) ? r.words : [], at: now(),
+                            // Who said it (row 2.56), when this engine was asked and could tell. A LABEL ONLY:
+                            // nothing in this ranker looks at it to decide anything.
+                            speaker: final ? speakerFrom(r.speaker) : null });
     if (!final) { if (!g.done) caption(g); return; }
     if (g.decided) {
       const again = e.results.get(r.slot);
@@ -762,6 +820,8 @@ export function rankedRecognizer({
   // Nothing listens unless a person turned recording on; this opens nothing and sends nothing anywhere.
   const utteranceFns = new Set();
   const wakeFns = new Set();
+  // Who is talking (row 2.56): the voice set-up answers (enrol-heard, enrolled, enrol-failed, forgotten, voiceprints).
+  const voiceFns = new Set();
   let lastWakeAt = -Infinity;
   const emit = (set, x) => { for (const fn of [...set]) { try { fn(x); } catch (err) { console.error('speech recogniser', err); } } };
 
@@ -779,6 +839,7 @@ export function rankedRecognizer({
   const ears = new Map();          // ear -> { seg, node, src, keep, stream, open: {uid, asked}|null }
   let mode = null;
   const firstEar = plan.ears === 'phone' ? 'phone1' : 'room';
+  const voiceId = makeVoiceId({ conns, firstEar, fns: voiceFns });
 
   const slots = () => plan.passes.map((p) => p.slot);
   const connsOf = (slot) => [...conns.entries()].filter(([k]) => k.startsWith(`${slot}|`)).map(([, c]) => c);
@@ -867,6 +928,8 @@ export function rankedRecognizer({
       if (conns.has(key)) continue;
       const c = connectEngine({ slot: p.slot, name: p.name, url: p.url, key: p.key, WebSocketImpl, retryMs,
                                 setTimer, clearTimer,
+                                speakers: plan.speakers || null,
+                                onControl: (m) => emit(voiceFns, { ...m, ear }),
                                 onResult: (r) => ranker?.result(ear, r),
                                 onState: (s) => engineState(p.slot, ear, s) });
       conns.set(key, c);
@@ -1063,5 +1126,29 @@ export function rankedRecognizer({
     connections: () => [...conns.entries()].map(([k, c]) => ({ slot: c.slot, ear: k.split('|')[1], name: c.name,
                                                                state: c.state(), info: c.info() })),
     plan: () => plan,
+    voiceId,
+  };
+}
+
+// ---------------------------------------------------------------------------------------
+// *** SETTING UP AND FORGETTING A VOICE (row 2.56) - THE SEAM voice_id.js's createEnrolment TAKES. ***
+// ---------------------------------------------------------------------------------------
+// Sent on THE FIRST EAR's connection to every engine that offers it: the sentences are read to this screen's own
+// microphone, and each engine keeps the voiceprint ON ITS OWN COMPUTER (a second computer the person chose for
+// recognising keeps its own, so it can name them too). Events come back from each; `available()` says whether any
+// engine up right now can do it.
+function makeVoiceId({ conns, firstEar, fns }) {
+  const able = () => [...conns.entries()].filter(([k, c]) => !k.startsWith('wake|') && k.endsWith(`|${firstEar}`)
+    && c.ready() && c.info()?.speakers).map(([, c]) => c);
+  const send = (msg) => able().map((c) => c.control(msg)).some(Boolean);
+  return {
+    available: () => able().length > 0,
+    engines: () => able().map((c) => ({ slot: c.slot, name: c.name, engine: c.info()?.speakers || null })),
+    enrol: (person, name = '') => send({ type: 'enrol', person: String(person || ''), name: String(name || '') }),
+    done: (person) => send({ type: 'enrol-done', person: String(person || '') }),
+    cancel: () => send({ type: 'enrol-cancel' }),
+    forget: (person) => send({ type: 'forget', person: String(person || '') }),
+    list: () => send({ type: 'voiceprints' }),
+    onEvent(fn) { fns.add(fn); return () => fns.delete(fn); },
   };
 }

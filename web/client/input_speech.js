@@ -697,6 +697,8 @@ export function textAfterWords(text, skip) {
 //                 engine actually knows. A voice game reads this back to a person ("because it was
 //                 very quiet"), so a guessed reason is a lie told to somebody about their own
 //                 voice. Anything outside the four is dropped here rather than passed on.
+//   speaker       WHO said it (row 2.56): { who, person, sure[, maybe] }, when the speech program
+//                 recognised a voice somebody set up. who null = "Unknown". A label, never a gate.
 export const RECOGNITION_REASONS = ['quiet', 'noise', 'cutoff', 'alternative'];
 
 /** Keep only what a recogniser really said, in the shape the games take. Never invents a field. */
@@ -712,6 +714,17 @@ export function cleanDetail(detail) {
   }
   const r = String(detail.reason || '').toLowerCase().replace(/[\s_-]+/g, '');
   if (RECOGNITION_REASONS.includes(r)) out.reason = r;
+  // WHO SAID IT (row 2.56, voice_id.js): { who, person, sure[, maybe] } from the speech program. Kept only in that
+  // shape; `who` null is "Unknown". A label for the game or AI - never a reason to refuse anything.
+  const sp = detail.speaker;
+  if (sp && typeof sp === 'object') {
+    const s = Number(sp.sure);
+    const str = (x) => (typeof x === 'string' && x.trim() ? x.trim() : null);
+    const who = str(sp.who);
+    out.speaker = { who, person: who ? str(sp.person) : null,
+                    sure: sp.sure != null && typeof sp.sure !== 'boolean' && Number.isFinite(s) ? Math.max(0, Math.min(1, s)) : null,
+                    ...(!who && str(sp.maybe) ? { maybe: str(sp.maybe) } : {}) };
+  }
   return out;
 }
 
@@ -1522,7 +1535,7 @@ export function attachSpeech(input, {
     return true;
   }
   // "ask <name> ..." / "make a note ..." heard, said to the screen. Only the words after the prefix travel.
-  function asked(a, text, woke) {
+  function asked(a, text, woke, detail = {}) {
     const t = askTarget(a);
     let words = '';
     if (a.text) {
@@ -1539,6 +1552,9 @@ export function attachSpeech(input, {
       kind: a.kind, name: a.name, text: words, to: t.instanceId, source: t.source,
       // The prefix alone: open a one-utterance window when the engine can write a sentence down.
       listen: !words && dictation, dictation, ms: Math.max(0, Number(wakeWindowMs) || 0),
+      // WHO ASKED (row 2.56), when the speech program could tell: an AI can answer the person by name. A label,
+      // never a permission - nothing may be refused because of it.
+      ...(detail && detail.speaker ? { speaker: detail.speaker } : {}),
     });
   }
 
@@ -1720,7 +1736,7 @@ export function attachSpeech(input, {
       const a = toScreen ? askFor(rest, askNow()) : null;
       if (a) {
         closeWindow('command');   // one wake, one command
-        asked(a, text, w.woke);
+        asked(a, text, w.woke, detail);
         return;
       }
       if (toScreen) logMiss(rest);

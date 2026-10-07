@@ -126,6 +126,8 @@ export const SUITES = [
   'phone_mic_show',
   // Row 2.44: voice recording for training, and the two-way phone intercom limited to an approved list.
   'voice_recording', 'intercom',
+  // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
+  'voice_id',
   // 2026-10-02: a speech model trained on one person's own voice (Euphonia): the page, reading phrases, the export.
   'voice_model',
   // 2026-10-04: the Voice model module - the six steps one at a time, worked out from evidence; export to Recordings;

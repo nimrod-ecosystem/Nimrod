@@ -33,6 +33,11 @@ WHICH PAGES MAY CONNECT: pages from the person's Nimrod (https://nimrodecosystem
 https://nimrod.onrender.com by default; `--allow-origin` or NIMROD_SPEECH_ORIGINS for a self-hosted one)
 and pages on this computer. Any other site is refused with 403 (service.py, "WHICH WEB PAGES").
 
+WHO IS TALKING (row 2.56, speakers.py): `--speakers auto` (the default) offers it when the WeSpeaker model is already
+on this computer (the Hugging Face cache, or --speaker-model) and pyannote.audio loads; the model loads the first time a
+screen asks. Voiceprints are kept in --voiceprints (default speech_service/voiceprints/, kept out of git; the helper
+passes its own data folder). Nothing is downloaded. `--speakers none` turns it off.
+
 Port 8797: nothing else here uses it (checked 2026-09-30: 8000 the site's dev server, 8080 the Cici
 dashboard, 8765 the Cici session receiver on the desktop, 8770-8773 the media agents, 8791
 corpus_desk). `--port` and the screen's "address" setting both change it.
@@ -48,6 +53,31 @@ from .backends import (MY_VOICE_DIR, MY_VOICE_PORT, NIMROD_FOLDER_FILE, VOICE_MO
                        WAKE_THRESHOLD, WHISPER_FOLDER_FILES, ModelFolderError, check_whisper_folder, default_threads,
                        is_model_folder, make_backend, make_wake)
 from .service import DEFAULT_SITES, MAX_UTTERANCE_S, PROTOCOL, listen_socket, site_list
+from .speakers import (SPEAKER_MARGIN, SPEAKER_MATCH, SPEAKER_MAYBE, SPEAKER_MIN_S, VOICEPRINTS_DIR, find_wespeaker,
+                       make_speakers)
+
+
+def speakers_from(a, backend_kind: str):
+    """(the Speakers to serve, a line to print). None when it is off, or 'auto' finds no model or library here.
+    Cheap: whether the libraries EXIST is asked without importing them, and the model is only looked for."""
+    import importlib.util
+    kind = getattr(a, 'speakers', 'auto') or 'auto'
+    if kind == 'none' or backend_kind == 'none':
+        return None, ''
+    rules = dict(folder=getattr(a, 'voiceprints', None), checkpoint=getattr(a, 'speaker_model', None),
+                 match=a.speaker_match, maybe=a.speaker_maybe, margin=a.speaker_margin, min_s=a.speaker_min_s)
+    if kind == 'fake':
+        return make_speakers('fake', **rules), 'who-is-talking: the fake engine'
+    try:
+        have_libs = all(importlib.util.find_spec(m) is not None for m in ('torch', 'pyannote.audio'))
+    except (ImportError, ValueError):
+        have_libs = False
+    model = find_wespeaker(rules['checkpoint'])
+    if kind == 'auto' and not (have_libs and model):
+        why = 'its model is not on this computer' if not model else 'pyannote.audio / torch are not installed'
+        return None, f'who-is-talking: off ({why}; nothing is downloaded)'
+    sp = make_speakers('wespeaker', **rules)
+    return sp, f'who-is-talking: offered (WeSpeaker, loaded when a screen first asks); voiceprints in {sp.store.folder}'
 
 LOOPBACK = {'127.0.0.1', 'localhost', '::1'}
 # The port was taken by something that is not this service (the same code the media agent uses for it).
@@ -86,6 +116,24 @@ def parse(argv=None):
     p.add_argument('--root', default=None,
                    help='your Nimrod folder (the one the site set up). Without it, the first line of '
                         'speech_service/nimrod_folder.txt is used, if that file exists')
+    # WHO IS TALKING (row 2.56, speakers.py). Nothing loads until a screen asks; nothing is ever downloaded.
+    p.add_argument('--speakers', choices=['auto', 'wespeaker', 'fake', 'none'], default='auto',
+                   help="who-is-talking: 'auto' (default) offers it when the speaker model is already on this "
+                        "computer and its libraries load; 'none' never; 'fake' for tests")
+    p.add_argument('--voiceprints', default=None, metavar='FOLDER',
+                   help=f'where voiceprints are kept on this computer (default {VOICEPRINTS_DIR}; the helper passes '
+                        'its own data folder). A folder that a cloud drive syncs sends them there: your choice.')
+    p.add_argument('--speaker-model', default=None, metavar='PATH',
+                   help='the WeSpeaker checkpoint (a pytorch_model.bin, or a folder holding one); default: looked '
+                        'for in the Hugging Face cache and speech_service/models/speaker/')
+    p.add_argument('--speaker-match', type=float, default=SPEAKER_MATCH,
+                   help=f'the engine score that counts as "named" (default {SPEAKER_MATCH})')
+    p.add_argument('--speaker-maybe', type=float, default=SPEAKER_MAYBE,
+                   help=f'the engine score below which nobody is even suggested (default {SPEAKER_MAYBE})')
+    p.add_argument('--speaker-margin', type=float, default=SPEAKER_MARGIN,
+                   help=f'how far ahead of the next voiceprint the closest must be (default {SPEAKER_MARGIN})')
+    p.add_argument('--speaker-min-s', type=float, default=SPEAKER_MIN_S,
+                   help=f'utterances shorter than this (seconds) are not compared (default {SPEAKER_MIN_S})')
     p.add_argument('--host', default='127.0.0.1')
     p.add_argument('--allow-origin', action='append', default=None, metavar='SITE[,SITE...]',
                    help='the sites whose pages may use this service, e.g. https://nimrodecosystem.com; comma-'
@@ -277,6 +325,9 @@ def _serve(a, kw, sock, remote) -> int:
                      threshold=a.wake_threshold, refractory_s=a.wake_refractory_s, vad_threshold=a.wake_vad)
     names = ' + '.join(x.name for x in (backend, wake) if x is not None)
     print(f'speech service: {names} on ws://{a.host}:{a.port}/speech', file=sys.stderr)
+    speakers, said = speakers_from(a, a.backend)
+    if said:
+        print(f'speech service: {said}', file=sys.stderr)
     sites, loopback = allowed_sites(a), not remote
     print(f'speech service: pages allowed from {", ".join(sites) + " and " if sites else ""}this computer; '
           'other sites get 403', file=sys.stderr)
@@ -293,7 +344,8 @@ def _serve(a, kw, sock, remote) -> int:
         from .service import create_app
         # uvicorn.Server on our own socket, not uvicorn.run(host, port): uvicorn's own bind sets SO_REUSEADDR.
         userver = uvicorn.Server(uvicorn.Config(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s,
-                                                           wake=wake, sites=sites, loopback=loopback),
+                                                           wake=wake, sites=sites, loopback=loopback,
+                                                           speakers=speakers),
                                                 host=a.host, port=a.port, log_level='warning', ws_max_size=2 ** 20))
         try:
             userver.run(sockets=[sock])
@@ -304,7 +356,7 @@ def _serve(a, kw, sock, remote) -> int:
     try:
         asyncio.run(serve_websockets(backend, a.host, a.port, secret=a.secret,
                                      max_utterance_s=a.max_utterance_s, wake=wake,
-                                     sites=sites, loopback=loopback, sock=sock))
+                                     sites=sites, loopback=loopback, sock=sock, speakers=speakers))
     except KeyboardInterrupt:
         pass
     return 0
