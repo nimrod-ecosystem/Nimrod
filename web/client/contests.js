@@ -32,8 +32,9 @@
 //   - The question as the player SAW it, normalized the way `grounded` compares text (case,
 //     punctuation, spacing, `1,500` = `1500`), so "What is 2+2?" and "what is 2 + 2" are one question.
 //   - WITH the answer, for two reasons found while building this: Word Forge asks every sentence
-//     pair with the same prompt ("Which sentence is better writing?"), so text alone would hold all
-//     of them at once; and a caregiver who FIXES a wrong answer in their bank gets the corrected row
+//     pair with the same prompt (keyed on "Which sentence is better writing?", the words it was asked
+//     with when contests began; the screen now says "Which is better writing?" and wordforge.js's
+//     BETTER_KEY_TEXT keeps the key where it was), so text alone would hold all of them at once; and a caregiver who FIXES a wrong answer in their bank gets the corrected row
 //     back in play by itself — what was contested was that question with that answer, not the words
 //     of the question. The cost: fixing only a wrong DISTRACTOR leaves the key unchanged, so that
 //     row stays held until somebody presses Clear, which is the review list's job anyway.

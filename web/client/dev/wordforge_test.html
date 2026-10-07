@@ -40,7 +40,9 @@ import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source
 import {
   GAME, DEFAULTS, DEFAULT_WORDS, DEFAULT_PAIRS, CONCEPT_PAIRS,
   shuffle, buildDeck, makeQuestion, scoreFor, parseWords, parsePairs, bandOf, packToWordBank,
+  BETTER_PROMPT, BETTER_KEY_TEXT, itemKey, meaningLine, othersSaid,
 } from '../modules/wordforge.js';
+import { contestKey } from '../contests.js';
 import '../modules/quests.js';
 import '../modules/progress.js';
 
@@ -231,6 +233,60 @@ a || b || c`);
       qd.optionNotes.length === qd.options.length
         && qb.optionNotes.length === qb.options.length
         && qp.optionNotes.length === qp.options.length);
+
+    // *** ROW 2.59 (Mike, 2026-10-07): "When you get the answer right in word forge, it should show
+    // the definitions next to all the words on their buttons." *** Every option carries the row it
+    // was dealt from, so each button can show its word's meaning (or, on a what-does-it-mean round,
+    // whose meaning it is) -- the right one too.
+    section('*** row 2.59: every option knows what it means ***');
+    {
+      const byWord = new Map(DEFAULT_WORDS.map((x) => [x.word, x]));
+      check('*** fill the blank: every option, the right one included, carries its own word\'s meaning ***',
+        qb.optionMeanings.length === qb.options.length
+          && qb.options.every((o, i) => qb.optionMeanings[i]?.word === o && qb.optionMeanings[i]?.meaning === byWord.get(o)?.meaning),
+        JSON.stringify(qb.optionMeanings));
+      check('*** what does it mean: every option carries the word that meaning belongs to ***',
+        qd.optionMeanings.length === qd.options.length
+          && qd.options.every((o, i) => qd.optionMeanings[i]?.meaning === o && byWord.get(qd.optionMeanings[i]?.word)?.meaning === o)
+          && qd.optionMeanings[qd.answer].word === w.word,
+        JSON.stringify(qd.optionMeanings));
+      check('a which-is-better round has none (two sentences, no words to define)',
+        qp.optionMeanings.length === 2 && qp.optionMeanings.every((m) => m === null));
+      check('the line under a word button is its meaning',
+        meaningLine('blank', qb.optionMeanings[0]) === `means ${qb.optionMeanings[0].meaning}`, meaningLine('blank', qb.optionMeanings[0]));
+      check('the line under a meaning button names whose meaning it is',
+        meaningLine('define', qd.optionMeanings[0]) === `what “${qd.optionMeanings[0].word}” means`, meaningLine('define', qd.optionMeanings[0]));
+      check('no row, no line', meaningLine('blank', null) === '' && meaningLine('define', { word: 'x' }) === '');
+      // Two words sharing one meaning text: the button names the word it was DEALT for, not the first match.
+      const twins = [{ word: 'big', meaning: 'large', sentence: 'A big dog.' }, { word: 'large', meaning: 'large', sentence: 'A large dog.' },
+        { word: 'tiny', meaning: 'very small', sentence: 'A tiny ant.' }, { word: 'swift', meaning: 'fast', sentence: 'A swift fox.' }];
+      const qt = makeQuestion({ kind: 'define', word: twins[1] }, twins, fixedRand);
+      const twinSlot = qt.options.findIndex((o, i) => o === 'large' && i !== qt.answer);
+      check('the right option names the word asked about, and the twin meaning names the OTHER word',
+        qt.optionMeanings[qt.answer].word === 'large' && twinSlot >= 0 && qt.optionMeanings[twinSlot].word === 'big',
+        JSON.stringify(qt.optionMeanings));
+      const said = othersSaid(qb);
+      const others = qb.options.filter((_, i) => i !== qb.answer);
+      check('*** said aloud where answers are read (Quiz mix): the other three words and their meanings ***',
+        /^The others: /.test(said) && others.every((o) => said.includes(`“${o}” means ${byWord.get(o).meaning}.`)),
+        said);
+      check('...not the right one again: the explanation already said it', !said.includes(`“${w.word}”`), said);
+      check('nothing to say for a sentence pair', othersSaid(qp) === '');
+    }
+
+    // *** ROW 2.60 (Mike, 2026-10-07): "Which sentence is better writing" becomes "Which is better
+    // writing". *** contests.js keys a challenged question on its text plus the right answer, and every
+    // pair shares the prompt -- so the key must stay on the OLD text, or every pair somebody already
+    // said was wrong would come straight back into the deck.
+    section('*** row 2.60: the new question, the old contest key ***');
+    check('*** a sentence pair now asks "Which is better writing?" ***',
+      qp.prompt === 'Which is better writing?' && BETTER_PROMPT === 'Which is better writing?', qp.prompt);
+    check('*** its contest key is still the one filed under "Which sentence is better writing?" ***',
+      itemKey({ kind: 'better', pair: DEFAULT_PAIRS[0] }) === contestKey('Which sentence is better writing?', DEFAULT_PAIRS[0].better)
+        && BETTER_KEY_TEXT === 'Which sentence is better writing?');
+    check('...which the new prompt alone would NOT have matched (so the test is not vacuous)',
+      contestKey(BETTER_PROMPT, DEFAULT_PAIRS[0].better) !== contestKey(BETTER_KEY_TEXT, DEFAULT_PAIRS[0].better));
+    check('two pairs still have two keys', itemKey({ kind: 'better', pair: DEFAULT_PAIRS[0] }) !== itemKey({ kind: 'better', pair: DEFAULT_PAIRS[1] }));
 
     section('grade bands — the bank’s own labels');
     check('every seeded word carries a grade', DEFAULT_WORDS.every((w) => Number(w.grade) > 0));
@@ -956,6 +1012,105 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
         c.probe().deck === fullDeck - 1, `${c.probe().deck} vs ${fullDeck - 1}`);
       c.i.destroy(); chost.remove();
       cLedger.destroy(); cTel.destroy();
+    }
+
+    // ============================================================================================
+    // *** ROWS 2.59 AND 2.60 ON THE REAL PANEL. *** Meanings on every button once a word question is
+    // over (right, wrong, or "I don't know"), none before, no new stops; the new question text on a
+    // pair; and a pair contested under the OLD text still held out. Real server, its own profile.
+    {
+      section('*** rows 2.59 / 2.60 on the panel: meanings once it is over, the old contests still hold ***');
+      const rProfiles = createProfilesClient({ user: USER });
+      const rp = await rProfiles.create('TEST-wordforge-reveal');
+      const rmod = await rProfiles.addModule(rp.id, 'wordforge');
+      const rMakeState = (key, opts) => createState({ url: rProfiles.stateURL(rp.id, key), user: USER, ...opts });
+      const rMakeEvents = (key, opts) => createEvents({ url: rProfiles.eventsURL(rp.id, key), user: USER, ...opts });
+      // Filed BEFORE the retitle, exactly as Word Forge filed it then: keyed on the old question text.
+      const oldText = 'Which sentence is better writing?';
+      const rContests = rMakeEvents('contests');
+      await rContests.load();
+      await rContests.append('contest', { key: contestKey(oldText, DEFAULT_PAIRS[0].better), module: 'wordforge',
+        question: oldText, answer: DEFAULT_PAIRS[0].better, at: new Date().toISOString(), cid: 'before-retitle' });
+      const rst = createState({ url: rProfiles.stateURL(rp.id, rmod.id), user: USER });
+      await rst.load();
+      rst.set({ contentSource: 'bank', roundLength: 40, guessMode: 'reveal' });
+      await rst.flush();
+      const rhost = document.createElement('div');
+      rhost.style.cssText = 'width:460px;background:#fff;padding:12px';
+      document.body.append(rhost);
+      const rb = createBus();
+      const ri = mountModule('wordforge', {
+        mount: rhost, bus: rb, state: rst, events: rMakeEvents(rmod.id),
+        user: USER, profileId: rp.id, makeState: rMakeState, makeEvents: rMakeEvents, rand: seeded(11),
+      });
+      ri.init();
+      await sleep(900);
+      const probe = () => ri.impl.__probe();
+      const fullDeck = DEFAULT_WORDS.length + DEFAULT_PAIRS.length;
+      check('*** a pair contested under the OLD question text is still held out after the retitle ***',
+        probe().deck === fullDeck - 1, `${probe().deck} vs ${fullDeck - 1}`);
+
+      const meanings = () => [...rhost.querySelectorAll('[data-opt]')].map((b) => b.querySelector('[data-mean]')?.textContent || '');
+      const expected = (qq) => qq.options.map((_, i) => meaningLine(qq.kind, qq.optionMeanings[i]));
+      const allShown = (qq) => { const m = meanings(); const e = expected(qq); return m.length === e.length && e.every((x, i) => x && m[i] === x); };
+      // Past anything that is not the kind wanted: "I don't know", then "Got it".
+      async function nextOf(kinds) {
+        for (let n = 0; n < 40; n++) {
+          const qq = probe().question;
+          if (!qq) return null;
+          if (kinds.includes(qq.kind)) return qq;
+          rb.publish('wordforge/answer', 'idk'); await sleep(60);
+          rb.publish('wordforge/select'); await sleep(350);
+        }
+        return null;
+      }
+      const leave = async () => { rb.publish('wordforge/select'); await sleep(350); };
+
+      let qq = await nextOf(['define', 'blank']);
+      check('(a word question came up)', !!qq);
+      check('*** before it is answered, no button shows a meaning (it would give the answer away) ***',
+        meanings().every((m) => m === ''), JSON.stringify(meanings()));
+      rb.publish('wordforge/answer', qq.answer); await sleep(300);
+      check(`*** RIGHT (${qq.kind}): every button, the right one too, shows what its word means ***`, allShown(qq),
+        JSON.stringify({ shown: meanings(), want: expected(qq) }));
+      check('...on the button it was already on: no new stops (the live buttons are still just Next and the contest)',
+        [...rhost.querySelectorAll('button:not(:disabled)')].length === 2 && !!rhost.querySelector('[data-next]') && !!rhost.querySelector('[data-contest]'),
+        [...rhost.querySelectorAll('button:not(:disabled)')].map((b) => b.textContent).join(' | '));
+      await leave();
+
+      qq = await nextOf(['define', 'blank']);
+      const wrong = qq.options.findIndex((_, i) => i !== qq.answer);
+      rb.publish('wordforge/answer', wrong); await sleep(300);
+      check(`*** WRONG (${qq.kind}): every button shows its meaning, the one picked included ***`, allShown(qq),
+        JSON.stringify({ shown: meanings(), want: expected(qq) }));
+      check('...and the old "You picked:" line is gone (it said the same thing as the button)', !rhost.querySelector('.wf-picked'));
+      await leave();
+
+      qq = await nextOf(['define', 'blank']);
+      rb.publish('wordforge/answer', 'idk'); await sleep(300);
+      check(`*** "I DON'T KNOW" (${qq.kind}): every button shows its meaning ***`, allShown(qq),
+        JSON.stringify({ shown: meanings(), want: expected(qq) }));
+      await leave();
+
+      // Both kinds, so neither line is untested: a fill-the-blank's says "means ...", a meaning's names the word.
+      const kindsSeen = new Set();
+      for (let n = 0; n < 6 && kindsSeen.size < 2; n++) {
+        qq = await nextOf(['define', 'blank'].filter((k) => !kindsSeen.has(k)));
+        if (!qq) break;
+        rb.publish('wordforge/answer', qq.answer); await sleep(300);
+        if (allShown(qq)) kindsSeen.add(qq.kind);
+        await leave();
+      }
+      check('both word kinds show their meanings on the panel (fill the blank, and what does it mean)', kindsSeen.size === 2, [...kindsSeen].join());
+
+      qq = await nextOf(['better']);
+      check('(a sentence pair came up)', !!qq);
+      check('*** a sentence pair asks "Which is better writing?" on the panel ***',
+        rhost.querySelector('.wf-prompt')?.textContent === 'Which is better writing?', rhost.querySelector('.wf-prompt')?.textContent);
+      check('...and it is not the pair contested before the retitle', qq && !qq.options.includes(DEFAULT_PAIRS[0].better), JSON.stringify(qq?.options));
+      rb.publish('wordforge/answer', qq.answer); await sleep(300);
+      check('a sentence pair adds no meaning lines (two sentences, nothing to define)', meanings().every((m) => m === ''));
+      ri.destroy(); rhost.remove();
     }
 
     document.getElementById('summary').textContent =

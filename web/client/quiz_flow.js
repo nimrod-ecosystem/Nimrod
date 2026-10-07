@@ -496,6 +496,10 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //                             next question, it ends the sitting as "stop" does (the done line and Play
 //                             again) instead of dealing one. Absent: a game goes on until somebody stops.
 //   doneLine(cfg)             what is said when the sitting ends ('' or absent: the `doneLine` setting)
+//   holdMs(item, cfg)         (2026-10-07, row 2.59) how long a celebration or a shown answer must stay
+//                             at the LEAST, for an explanation longer than the usual one line (Quiz mix's
+//                             Word Forge questions read every option's meaning). The longer of this and
+//                             `celebrateMs` / `answerMs` is used; a press still moves on sooner. Absent: 0.
 //
 // `onResult` (added for row 2.45's adaptive games): called ONCE per question when it is finished —
 // `{ game, item, right, misses, hintsGiven, revealed, skipped, via }`. Right; answer heard after the
@@ -553,6 +557,8 @@ export function createQuizEngine({
   }
   const answerOf = () => String(call('answer', item) ?? '');
   const explainOf = (answer) => String(call('explain', item, answer, c()) || '');
+  // The adapter's `holdMs` (the header), 0 when it has none or answers nonsense.
+  const holdFor = () => { try { const n = Number(call('holdMs', item, c())); return Number.isFinite(n) && n > 0 ? n : 0; } catch { return 0; } };
   function hintAt(n) { return n >= 1 ? String(call('hint', item, n, c()) || '') : ''; }
   function nextHint() {
     const h = hintAt(hintsGiven + 1);
@@ -686,7 +692,7 @@ export function createQuizEngine({
     report({ right: true, answer });
     speak(fill(c().rightLine, { explain: pair.explain }));
     try { chime(); } catch (err) { console.error('quiz: chime', err); }
-    const ms = Math.max(0, Number(c().celebrateMs) || FLOW_DEFAULTS.celebrateMs);
+    const ms = Math.max(0, Number(c().celebrateMs) || FLOW_DEFAULTS.celebrateMs, holdFor());
     timer = setTimer(() => { timer = null; onward(); }, ms);
     changed();
   }
@@ -729,7 +735,7 @@ export function createQuizEngine({
     highlight = 0;
     feedback = null;
     speak(fill(c().answerLine, { explain: pair.explain }));
-    const ms = Math.max(0, Number(c().answerMs) || FLOW_DEFAULTS.answerMs);
+    const ms = Math.max(0, Number(c().answerMs) || FLOW_DEFAULTS.answerMs, holdFor());
     timer = setTimer(() => { timer = null; onward(); }, ms);
     changed();
   }

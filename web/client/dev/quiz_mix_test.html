@@ -31,6 +31,7 @@ import { pickQuestion, fitOf, turnPoints, ladderChooser, FIT_DEFAULTS, chanceOf 
 import { pick, mulberry32 } from '../rng.js';
 import { createAdaptiveSession, LADDER_KEY } from '../adaptive_play.js';
 import { levelRating } from '../rating.js';
+import { wordsAdapter, speakingMs, SPEAK_WPM } from '../question_kinds.js';
 import { SOURCE_IDS, BRAIN_CATEGORIES, THINK_CATEGORIES, optionIn, mcqAdapter, spellingBank, spellingLevel, gradeLevel,
   triviaSource } from '../question_kinds.js';
 import { TRIVIA_LADDER_KEY } from '../modules/trivia.js';
@@ -383,6 +384,36 @@ try {
     check('the answers are tiles to tap', w.host.querySelectorAll('[data-pick]').length === 4);
     w.host.querySelector(`[data-pick="${CSS.escape(it.answer)}"]`)?.click();
     check('tapped right: Word Forge\'s ladder hears it', w.phase() === 'celebrate' && gameRow(w.ratings, 'name:ann', 'wordforge')?.n === 1, w.phase());
+    // *** ROW 2.59 (Mike, 2026-10-07): after a Word Forge answer, what every answer means. *** The tiles are gone
+    // by the celebration, so the meanings are listed under the explanation, one line per answer, and read aloud
+    // after it, the way this game reads its answers.
+    {
+      const lines = [...w.host.querySelectorAll('[data-means] [data-mean]')];
+      check('*** a right answer lists all four answers with what each means ***', lines.length === 4
+        && it.options.every((o, i) => lines[i]?.textContent.startsWith(`${o}: `)
+          && lines[i].textContent.includes(it.wfKind === 'define' ? `“${it.meanings[i].word}”` : it.meanings[i].meaning)),
+        lines.map((l) => l.textContent).join(' | '));
+      const others = it.options.map((o, i) => [o, i]).filter(([o]) => o !== it.answer);
+      check('*** and reads the other three aloud after the explanation ***', /The others: /.test(w.last())
+        && others.every(([, i]) => w.last().includes(`“${it.meanings[i].word}” means ${it.meanings[i].meaning}.`)), w.last());
+      check('*** the celebration stays long enough to hear it (a press still moves on sooner) ***',
+        wordsAdapter.holdMs(it) === speakingMs(wordsAdapter.explain(it)) && wordsAdapter.holdMs(it) > 3000, String(wordsAdapter.holdMs(it)));
+      check('the speaking pace is the tour narration\'s, 145 words a minute', SPEAK_WPM === 145 && speakingMs('') === 0
+        && speakingMs(Array(145).fill('word').join(' ')) === 60450);
+    }
+    // ...and after a miss, when the answer is shown ("hear the answer").
+    w.timers.flush();
+    await until(() => w.phase() === 'asking');
+    {
+      const it2 = w.item();
+      const wrongs = it2.options.filter((o) => o !== it2.answer);
+      w.eng.answer(wrongs[0]); w.eng.answer(wrongs[1]);
+      w.eng.press('reveal');
+      const lines = [...w.host.querySelectorAll('[data-means] [data-mean]')];
+      check('*** the shown answer after misses lists every answer\'s meaning too ***', w.phase() === 'answer' && lines.length === 4,
+        `${w.phase()} ${lines.length}`);
+      check('...and reads the others aloud', /Here is the answer\..*The others: /.test(w.last()), w.last());
+    }
     check('the grade -> level map: very easy 1 .. hard 4', gradeLevel(4) === 1 && gradeLevel(6) === 2 && gradeLevel(8) === 3 && gradeLevel(10) === 4);
     w.inst.destroy();
     check('a spoken answer that names an option is that option', optionIn({ options: ['Paris', 'Rome'] }, 'I think it is paris') === 'Paris'

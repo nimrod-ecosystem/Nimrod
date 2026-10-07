@@ -933,11 +933,11 @@
 .wordforge .wf-fb.is-right{background:var(--ok-surface);border:1px solid var(--accent)}
 .wordforge .wf-fb.is-wrong{background:var(--surface-alt);border:1px solid var(--border)}
 .wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--link);font-weight:600}
-/* WHAT THE PERSON PICKED, AND WHAT IT ACTUALLY MEANS. Set apart from the explanation above it
-   rather than run together: they are answers to two different questions — “what was right” and
-   “what was I thinking of” — and a reader has to be able to tell which is which. */
-.wordforge .wf-picked{display:block;margin-top:6px;padding-left:9px;
-  border-left:3px solid var(--border);font-size:.82rem;color:var(--text-soft, var(--link))}
+/* WHAT EACH OPTION MEANS, on its own button once the question is over (row 2.59). Its own line under
+   the option, a step smaller, in the button's own text colour: the button's wash is green, pink or
+   plain, and the meaning has to read on each of them exactly as the option's own words do. In em, so
+   it follows the option's size. (`.wf-picked`, the old "You picked:" line, went with it.) */
+.wordforge .wf-mean{display:block;margin-top:3px;font-size:.88em;font-weight:400;line-height:1.35}
 /* "I think this question is wrong" (contests.js) — a quieter second stop after Next / Got it. The
    lit stop gets the same border + arrow treatment as a lit option, never color alone. */
 .wordforge .wf-after{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
