@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Join a game of Quiz mix that another screen started, and play your own turns here, at your own level.">
+<meta name="robots" content="noindex">
+<title>Play together — Nimrod</title>
+<link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
+<link rel="stylesheet" href="./layers.css">
+<link rel="stylesheet" href="./modules.css">
+<style>
+  /* Theme variables only, the call page's shape. The game gets the rest of the height. */
+  html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text);
+    font:17px/1.45 var(--font, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif); }
+  #app { min-height:100vh; box-sizing:border-box;
+    padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px); }
+  .pp { max-width:900px; margin:0 auto; display:flex; flex-direction:column; gap:10px; min-height:calc(100vh - 24px); }
+  .pp h1 { font-size:1.2rem; margin:0; }
+  .pp-code { font-weight:600; color:var(--text-soft); }
+  .pp-note { color:var(--text-soft); }
+  .pp-btn { display:inline-flex; align-items:center; min-height:48px; padding:0 18px; border-radius:12px;
+    border:1px solid var(--accent); background:var(--accent); color:var(--on-accent); font:700 1rem/1.2 inherit; text-decoration:none; cursor:pointer; }
+  .pp input { min-height:44px; font:inherit; padding:0 10px; border-radius:10px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); letter-spacing:.15em; text-transform:uppercase; width:8em; }
+  .pp-game { flex:1 1 auto; min-height:420px; position:relative; container-type:size; border-radius:12px; overflow:hidden;
+    background:var(--surface); }
+  /* The game fills its box, as it fills a panel on a screen. */
+  .pp-game > [data-quiz-root] { position:absolute; inset:0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+  import { applyTheme, getStoredTheme, resolveThemeId } from './theme.js';
+  import { mountPlayPage } from './play_page.js';
+  applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+  mountPlayPage(document.getElementById('app'))
+    .then((page) => { window.__play = page; })
+    .catch((err) => { console.error('play: failed to start', err); });
+</script>
+</body>
+</html>

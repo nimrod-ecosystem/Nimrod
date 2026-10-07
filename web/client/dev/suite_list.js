@@ -87,6 +87,8 @@ export const SUITES = [
   'game_start', 'card_sort',
   // 2026-10-06: Quiz mix - every kind of question round by round, each player at their own level, on the shared draw.
   'quiz_mix',
+  // 2026-10-06: Quiz mix played together - with another screen or on a call (game_room.js; game_rooms.py on the server).
+  'quiz_together',
   // 2026-10-02: "person known" -- panels that read the person once at mount end up with the person on a slow boot.
   'person_known',
   // The room, the cat, ambient motion and sound.

@@ -142,7 +142,14 @@ export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? documen
  *                      allowAward(p)      false keeps a right answer from paying points
  *                      scoreDetail(s), scoreLine(s)  the published detail / the panel's own line
  *                      onKey(k, api)      a board key carrying `view` (not `key`/`cmd`): the view's own
- *                      doneHtml(s, cfg)   more to show when the sitting has ended (Quiz mix's final table) }
+ *                      doneHtml(s, cfg)   more to show when the sitting has ended (Quiz mix's final table)
+ *                      — added for Quiz mix playing together (2026-10-06), each optional and absent = unchanged:
+ *                      waitingHtml(s, cfg)  while 'loading', what to show instead of "Getting ready…" (a turn
+ *                                           being played on another screen)
+ *                      sheetHtml(s, cfg)    a layer of the view's own over the panel ('' = none), drawn on
+ *                                           every render: Quiz mix's "Play together" bar and sheet
+ *                      onClick(e, api)      a click, asked FIRST (before Start / the game): true = handled
+ *                      onMove(move, api)    'next' | 'prev' | 'select' | 'skip', asked first: true = handled }
  *   spec.extraTopics { next: [...], prev: [...], select: [...], skip: [...] } — more bus topics that
  *                    drive the same moves (Math keeps `algebra/submit` answering as select)
  *   spec.startGate   true: open waiting for Start (the header). Absent = starts at once, as before.
@@ -357,9 +364,12 @@ export function quizModule(spec) {
       if (demoEng) demoTimer = setTimer(demoStep, DEMO_STEP_MS);
     }
 
-    const onNext = () => { if (gateInput()) return; if (boardActive()) { board.next(); render(); } else engine.next(); };
-    const onPrev = () => { if (gateInput()) return; if (boardActive()) { board.prev(); render(); } else engine.prev(); };
+    // The view's own layer (Quiz mix's "Play together" sheet) takes a move first, when it wants one.
+    const viewMove = (m) => { try { return view.onMove?.(m, api) === true; } catch (err) { console.error(`${type}: move`, err); return false; } };
+    const onNext = () => { if (viewMove('next')) return; if (gateInput()) return; if (boardActive()) { board.next(); render(); } else engine.next(); };
+    const onPrev = () => { if (viewMove('prev')) return; if (gateInput()) return; if (boardActive()) { board.prev(); render(); } else engine.prev(); };
     const onSelect = () => {
+      if (viewMove('select')) return;
       if (gateInput()) return;
       if (!boardActive()) { engine.select(); return; }
       const k = board.select();
@@ -371,6 +381,8 @@ export function quizModule(spec) {
       dropHeld: () => { held = []; },
       setTimer, clearTimer, bus, ctx, mount, rand,
       begun: () => begun, paused: () => paused, start: () => begin(),
+      // Say a line through the panel's own voice (silent before Start, while paused, or with speech off).
+      say: (text) => say([text]),
     };
 
     function ensureSkeleton() {
@@ -380,7 +392,17 @@ export function quizModule(spec) {
       mount.innerHTML = `<div class="wg gs-host" data-quiz-root data-quiz="${esc(type)}"><div class="qz-body" data-body>
         <h2 class="wg-ask" data-ask></h2>
         <div class="wg-mid" data-mid><div class="qz-left" data-left hidden></div><div class="wg-st" data-st aria-live="polite"></div></div>
-        <div data-foot></div></div><div data-extra></div><div data-start-host hidden></div></div>`;
+        <div data-foot></div></div><div data-extra></div><div data-start-host hidden></div><div data-sheet-host hidden></div></div>`;
+    }
+    // The view's own layer (`view.sheetHtml`), redrawn only when what it shows changed (an input in it keeps its focus).
+    let lastSheet = null;
+    function paintSheet(root, s) {
+      if (!view.sheetHtml) return;
+      const host = root.querySelector('[data-sheet-host]');
+      if (!host) return;
+      let html = '';
+      try { html = String(view.sheetHtml(s, cfg) || ''); } catch (err) { console.error(`${type}: sheet`, err); }
+      if (html !== lastSheet) { host.innerHTML = html; lastSheet = html; host.hidden = !html; }
     }
     // The Start / Go on overlay, over whatever is showing (the demo, or the still first screen).
     function paintOverlay(root) {
@@ -486,10 +508,15 @@ export function quizModule(spec) {
       }
       const tilesShowPicks = s.offers === 'choices' && pickTiles.length > 0;
 
-      if (!s.item) {
+      // (A sitting ended from outside - `engine.end()` while waiting - is 'done' with no question: drawn as done.)
+      if (!s.item && s.phase !== 'done') {
         ask = esc(title);
+        let waiting = '';
+        if (s.phase === 'loading' && view.waitingHtml) {
+          try { waiting = String(view.waitingHtml(s, cfg) || ''); } catch (err) { console.error(`${type}: waiting`, err); }
+        }
         const text = s.phase === 'loading' ? 'Getting ready…' : (s.feedback?.text || '');
-        st = text ? `<p class="wg-say wg-soft" data-${esc(s.phase)}>${esc(text)}</p>` : '';
+        st = waiting || (text ? `<p class="wg-say wg-soft" data-${esc(s.phase)}>${esc(text)}</p>` : '');
       } else if (s.phase === 'asking') {
         ask = view.askHtml ? view.askHtml(s, cfg) : esc(s.askLine);
         const f = s.feedback;
@@ -562,6 +589,7 @@ export function quizModule(spec) {
       footEl.innerHTML = foot;
       extraEl.innerHTML = extra;
       paintOverlay(root);
+      paintSheet(root, s);
     }
 
     function explainHtml(s) {
@@ -589,7 +617,7 @@ export function quizModule(spec) {
         catch (err) { ledger = null; console.error(`${type}: no points ledger`, err); }
         score = createScoreSource(bus, { source: type, label: scoreLabel, instance: ctx.instanceId || null,
           onShownChange: () => render() });
-        const onSkip = () => { if (gateInput()) return; engine.skip(); };
+        const onSkip = () => { if (viewMove('skip')) return; if (gateInput()) return; engine.skip(); };
         bus.subscribe(`${type}/next`, onNext);
         bus.subscribe(`${type}/prev`, onPrev);
         bus.subscribe(`${type}/select`, onSelect);
@@ -616,6 +644,8 @@ export function quizModule(spec) {
         }
         bus.subscribe(ANSWER_TOPIC, (r) => { if (begun && !paused) engine.hear(r); });
         mount.addEventListener('click', (e) => {
+          // The view's own layer first (Quiz mix's "Play together"): a press there is not Start.
+          try { if (view.onClick?.(e, api) === true) return; } catch (err) { console.error(`${type}: click`, err); }
           // Waiting or paused: a press anywhere on it (Start, Go on, a demo tile) starts or goes on.
           if (gate && (!begun || paused) && mount.contains(e.target)) { gateInput(); return; }
           const a = e.target.closest?.('button[data-act]');

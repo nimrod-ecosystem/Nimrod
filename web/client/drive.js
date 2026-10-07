@@ -52,6 +52,9 @@ export const STATES = ['offline', 'connecting', 'connected'];
 // payloads onto a bedside screen, which is exactly what the verb allowlist exists to stop.
 export const SIGNAL_KINDS = ['offer', 'answer', 'bye', 'ice'];
 
+// The games a call may be offered (game_rooms.py GAMES). An invitation for anything else is ignored.
+export const GAME_INVITE_GAMES = ['quiz_mix'];
+
 const wsURL = (base, personId, ticket, role) => {
   const origin = base
     || (typeof location !== 'undefined' ? `${location.protocol}//${location.host}` : '');
@@ -97,6 +100,7 @@ export function connectDrive({
   // for the whole session — which is why only this one is a set.
   const signalSubs = new Set();
   if (onSignal) signalSubs.add(onSignal);
+  const inviteSubs = new Set();     // a game offered to the call (drivers only; see onmessage)
   const fanSignal = (sig) => {
     for (const fn of [...signalSubs]) {
       try { fn(sig); } catch (err) { console.error('drive: signal subscriber', err); }
@@ -170,6 +174,15 @@ export function connectDrive({
       if (msg.type === 'answerer' && role === 'screen' && typeof msg.session === 'string') {
         fanSignal({ kind: 'answerer', purpose: msg.purpose, session: msg.session, you: msg.you === true });
       }
+      // A GAME OFFERED TO THE CALL (2026-10-06, game_rooms.py): the screen chose Quiz mix's "On this call", and the
+      // SERVER built this from its own record - a code, the game, the host's first player's name. Only a DRIVER
+      // hears it (the people calling); a screen never does. Handed to its own listeners and never to the bus or to
+      // the call transport: it is a code to show beside the video, not a press and not a signal.
+      if (msg.type === 'game-invite' && role === 'driver' && typeof msg.code === 'string' && /^[A-Z0-9]{6}$/.test(msg.code)
+        && GAME_INVITE_GAMES.includes(msg.game)) {
+        const inv = { code: msg.code, game: msg.game, name: String(msg.name || '').slice(0, 40) };
+        for (const fn of [...inviteSubs]) { try { fn(inv); } catch (err) { console.error('drive: game invite', err); } }
+      }
     };
     sock.onclose = () => {
       sock = null;
@@ -217,11 +230,18 @@ export function connectDrive({
       signalSubs.add(cb);
       return () => signalSubs.delete(cb);
     },
+    /** A game the screen offered to this call (`{ code, game, name }`). Drivers only. Returns an unsubscribe. */
+    onGameInvite(cb) {
+      if (typeof cb !== 'function') return () => {};
+      inviteSubs.add(cb);
+      return () => inviteSubs.delete(cb);
+    },
     state: () => state,
     presence: () => ({ ...presence }),
     close() {
       closed = true;
       signalSubs.clear();
+      inviteSubs.clear();
       clearTimer(timer);
       try { sock?.close(); } catch { /* already gone */ }
       sock = null;

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quiz mix together — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .dev{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>Quiz mix: playing together (2026-10-06)</h1>
+<p>Online and over a call. Two screens, each simulated here with its own panel, its own rows and its own socket: the
+host draws the rounds and keeps the table; the other screen plays its own seat on its own ladder and sends back only
+the result. The waits end by themselves. Then the same against the real server (the socket, the same login, a
+stranger refused, a whole turn end to end).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="hostA" class="dev"></div>
+<div id="hostB" class="dev"></div>
+<div id="hostC" class="dev"></div>
+
+<script type="module">
+import { harness, rig, sleep, liveRow, fakeTimers } from './quiz_test_rig.js';
+import { mulberry32 } from '../rng.js';
+import { LADDER_KEY } from '../adaptive_play.js';
+import { TRIVIA_LADDER_KEY } from '../modules/trivia.js';
+import { SOURCE_IDS } from '../question_kinds.js';
+import '../modules/quiz_mix.js';
+import { GAME, USE_KEYS, LOBBY_MS, REMOTE_TURN_MS, NOTE_MS, playPath, scoreWords } from '../modules/quiz_mix.js';
+import { connectGameRoom, createRoomClient, normalizeCode, codeWords, sendable, GAME_KINDS, MAX_GAME_BYTES, END_WORDS,
+  LOST_MS, ASK_BACKSTOP_MS, REPLY_MS } from '../game_room.js';
+import { connectDrive, GAME_INVITE_GAMES } from '../drive.js';
+
+const { check, section, finish } = harness();
+const tick = () => sleep(0);
+async function until(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (fn()) return true; await sleep(20); } return !!fn(); }
+const ONLY = (...ids) => Object.fromEntries(SOURCE_IDS.map((id) => [USE_KEYS[id], ids.includes(id)]));
+const BANNED = /\b(module|dashboard|panel|grant|widget|account|token|websocket|socket|server)s?\b|christine|cici|\bher screen\b/i;
+
+// ---------------------------------------------------------------------------------------------------
+// A ROOM HUB IN THE PAGE: the server's rules for one room, small (the real ones are game_rooms.py, proven by
+// test_game_rooms.py and by the live section below). Every message that crosses is logged.
+// ---------------------------------------------------------------------------------------------------
+function fakeHub() {
+  const log = [];
+  let room = null;
+  const view = (d) => ({ kind: 'room', code: room.code, game: 'quiz_mix', host: 'd0', you: d.id,
+    seats: room.seats.map((s) => ({ ...s, away: !!room.devices.find((x) => x.id === s.device)?.away })),
+    state: room.state, admit: 'ask', call: !!room.person, hostAway: !!room.devices[0].away, ...(d.id === 'd0' ? { waiting: [] } : {}) });
+  const tell = (L, m) => queueMicrotask(() => L.deliver(JSON.parse(JSON.stringify(m))));
+  const all = () => { for (const d of room.devices) if (!d.away && d.L) tell(d.L, view(d)); };
+  function handle(L, m) {
+    if (m.kind === 'ping') { tell(L, { kind: 'pong' }); return; }
+    if (m.kind === 'room' && m.open) {
+      room = { code: 'KX49PM', person: m.open.person || null, devices: [{ id: 'd0', L, key: 'hostkeyhostkeyhostkey' }], seats: [],
+        state: { phase: 'lobby', round: 0, rounds: 0, category: null, turn: null, totals: {} }, turn: null, n: 1 };
+      m.open.seats.forEach((s, i) => room.seats.push({ id: `d0.${i}`, name: s.name || `Player ${i + 1}`, device: 'd0' }));
+      tell(L, { kind: 'opened', code: room.code, key: 'hostkeyhostkeyhostkey', you: 'd0' }); all(); return;
+    }
+    if (!room) { tell(L, { kind: 'refused', why: 'no-room' }); return; }
+    const me = room.devices.find((d) => d.L === L);
+    if (m.kind === 'room' && m.resume && room.devices[0].key === m.resume.key) {
+      room.devices[0].L = L; room.devices[0].away = false; tell(L, { kind: 'opened', code: room.code, key: m.resume.key, you: 'd0' }); all(); return;
+    }
+    if (m.kind === 'room' && me?.id === 'd0') { if (m.state) room.state = m.state; all(); return; }
+    if (m.kind === 'join') {
+      if (m.code !== room.code || L.account === 'mallory') { tell(L, { kind: 'refused', why: 'no-room' }); return; }
+      const back = m.key && room.devices.find((d) => d.key === m.key);
+      if (back) { back.L = L; back.away = false; tell(L, { kind: 'joined', code: room.code, key: back.key, you: back.id }); all(); return; }
+      const id = `d${room.n++}`;
+      const key = `${id}keykeykeykeykeykey`;
+      room.devices.push({ id, L, key });
+      m.seats.forEach((s, i) => room.seats.push({ id: `${id}.${i}`, name: s.name, device: id }));
+      tell(L, { kind: 'joined', code: room.code, key, you: id }); all(); return;
+    }
+    if (m.kind === 'turn' && me?.id === 'd0') {
+      const seat = room.seats.find((s) => s.id === m.seat);
+      if (!seat || seat.device === 'd0') return;
+      const d = room.devices.find((x) => x.id === seat.device);
+      room.turn = { seat: m.seat, serial: m.serial, device: d.id };
+      if (d && !d.away) tell(d.L, { kind: 'turn', seat: m.seat, serial: m.serial, round: m.round, category: m.category });
+      return;
+    }
+    if (m.kind === 'answer') {
+      const t = room.turn;
+      if (!t || !me || t.device !== me.id || t.seat !== m.seat || t.serial !== m.serial) return;
+      room.turn = null;
+      tell(room.devices[0].L, { kind: 'answer', seat: m.seat, serial: m.serial, category: m.category, right: m.right, points: m.right ? m.points : 0 });
+      return;
+    }
+    if (m.kind === 'leave') {
+      if (me?.id === 'd0') { for (const d of room.devices.slice(1)) if (d.L && !d.away) tell(d.L, { kind: 'closed', code: room.code, why: 'host-left' }); room = null; return; }
+      if (me) {
+        room.devices = room.devices.filter((d) => d !== me);
+        room.seats = room.seats.filter((s) => s.device !== me.id);
+        if (room.turn?.device === me.id) { const t = room.turn; room.turn = null; tell(room.devices[0].L, { kind: 'answer', seat: t.seat, serial: t.serial, category: { group: 'x', id: 'x' }, right: false, points: 0, skipped: true, why: 'left' }); }
+        all();
+      }
+    }
+  }
+  function link(account) {
+    const subs = new Set(), ssubs = new Set();
+    let state = 'connected';
+    const L = {
+      account,
+      send(msg) {
+        if (state !== 'connected') return false;
+        const text = sendable(msg);
+        if (!text) return false;
+        const m = JSON.parse(text);
+        log.push({ from: account, msg: m });
+        queueMicrotask(() => handle(L, m));
+        return true;
+      },
+      state: () => state, authFailed: () => false,
+      onMessage(cb) { subs.add(cb); return () => subs.delete(cb); },
+      onState(cb) { ssubs.add(cb); return () => ssubs.delete(cb); },
+      close() { state = 'offline'; L.closed = true; },
+      deliver(m) { for (const f of [...subs]) f(m); },
+      drop() { state = 'offline'; const d = room?.devices.find((x) => x.L === L); if (d) d.away = true; for (const f of [...ssubs]) f('offline'); },
+      up() { state = 'connected'; for (const f of [...ssubs]) f('connected'); },
+    };
+    return L;
+  }
+  return { link, log, room: () => room, handle };
+}
+
+/** One simulated screen: Quiz mix mounted with its own rows, its own socket (from the hub), its own room clock. */
+function screen(hostId, { players, account = 'pat', hub, saved = {}, extra = {}, seed = 7 }) {
+  const ratings = liveRow();
+  const trivia = liveRow();
+  const roomTimers = fakeTimers();
+  const links = [];
+  const r = rig(GAME, { hostId, saved: { autostart: false, players, rounds: 2, ...ONLY('math', 'think'), ...saved }, rand: mulberry32(seed),
+    extra: { makeState: (k) => (k === LADDER_KEY ? ratings : k === TRIVIA_LADDER_KEY ? trivia : null), roomTimers,
+      gameLink: () => { const l = hub.link(account); links.push(l); return l; }, ...extra } });
+  return Object.assign(r, { ratings, roomTimers, links, link: () => links[links.length - 1], mix: () => r.inst.impl.__mix(),
+    text: () => r.host.textContent, cur: () => r.inst.impl.__mix().current });
+}
+const rightOf = (s) => { const c = s.cur(); return String(c.source.adapter.answer(c.item)); };
+const ladderPlayers = (row) => Object.keys(row.get()?.ladder?.players || {});
+
+try {
+  // =====================================================================================
+  section('the wire, from this end: a fixed list of kinds, a size cap, a code people can type');
+  {
+    check('*** the kinds are the server\'s seven, and none is a drive verb or a signal ***',
+      GAME_KINDS.join() === 'room,join,admit,turn,answer,leave,ping' && !GAME_KINDS.some((k) => ['verb', 'signal', 'select', 'offer'].includes(k)));
+    check('a message of any other kind is never sent', sendable({ kind: 'verb', verb: 'select' }) === null && sendable({ type: 'signal' }) === null);
+    check(`a message over ${MAX_GAME_BYTES} bytes is never sent`, sendable({ kind: 'join', code: 'KX49PM', seats: [{ name: 'x'.repeat(MAX_GAME_BYTES) }] }) === null);
+    check('codes: read as typed, shown in two halves', normalizeCode(' kx4-9pm ') === 'KX49PM' && normalizeCode('KX49P0') === ''
+      && codeWords('KX49PM') === 'KX4 9PM');
+    const words = JSON.stringify(END_WORDS);
+    check('*** every ending is said in plain words (no account, token, server, socket...) ***', !BANNED.test(words), (words.match(BANNED) || [])[0]);
+    check('the join page\'s address carries the code', playPath('KX49PM') === '/play.html?room=KX49PM');
+  }
+
+  // =====================================================================================
+  section('one screen\'s view of a room: opening, refusals, and the clocks that end a wait');
+  {
+    const hub = fakeHub();
+    const t = fakeTimers();
+    let ended = null;
+    const L = hub.link('pat');
+    const rc = createRoomClient({ link: L, setTimer: t.set, clearTimer: t.clear, onEnd: (w) => { ended = w; } });
+    rc.open({ seats: ['Ann'] });
+    await tick(); await tick();
+    check('open: in the room as its host, with a code', rc.phase() === 'in' && rc.role() === 'host' && rc.code() === 'KX49PM', rc.phase());
+    const g = createRoomClient({ link: hub.link('mallory'), setTimer: t.set, clearTimer: t.clear, onEnd: (w) => { ended = w; } });
+    g.join('KX49PM', ['M']);
+    await tick(); await tick();
+    check('*** refused: the screen that asked is told, in the words for a code that does not exist ***', g.phase() === 'ended'
+      && ended === 'no-room' && /no game with that code/.test(END_WORDS[ended]), `${g.phase()} ${ended}`);
+    // Asking, and nobody ever answers: the client's own clock ends it.
+    const silent = { send: () => true, state: () => 'connected', authFailed: () => false, onMessage: () => () => {}, onState: () => () => {} };
+    const t2 = fakeTimers();
+    let e2 = null;
+    const q = createRoomClient({ link: silent, setTimer: t2.set, clearTimer: t2.clear, onEnd: (w) => { e2 = w; } });
+    q.join('KX49PM', ['Ann']);
+    check('joining with no reply at all...', q.phase() === 'joining');
+    t2.flush();
+    check(`*** ...ends by itself (${REPLY_MS / 1000} s): "Could not reach the site" ***`, q.phase() === 'ended' && e2 === 'no-site', `${q.phase()} ${e2}`);
+    let sub = null;
+    const t3 = fakeTimers();
+    const asking = { send: () => true, state: () => 'connected', authFailed: () => false, onMessage: (f) => { sub = f; return () => {}; }, onState: () => () => {} };
+    let e3 = null;
+    const a = createRoomClient({ link: asking, setTimer: t3.set, clearTimer: t3.clear, onEnd: (w) => { e3 = w; } });
+    a.join('KX49PM', ['Ann']);
+    sub({ kind: 'waiting', code: 'KX49PM', id: 'w1' });
+    check('asked to join: waiting to be let in', a.phase() === 'asking');
+    t3.flush();
+    check(`*** nobody lets them in: it ends by itself (${ASK_BACKSTOP_MS / 1000} s, after the server's own 120 s) ***`,
+      a.phase() === 'ended' && e3 === 'no-answer', `${a.phase()} ${e3}`);
+    // In a room and the socket goes: back after a blip with its key; gone for good, it ends.
+    const sent = [];
+    let ssub = null, msub = null, st = 'connected';
+    const flaky = { send: (m) => { sent.push(m); return true; }, state: () => st, authFailed: () => false,
+      onMessage: (f) => { msub = f; return () => {}; }, onState: (f) => { ssub = f; return () => {}; } };
+    const t4 = fakeTimers();
+    let e4 = null;
+    const h = createRoomClient({ link: flaky, setTimer: t4.set, clearTimer: t4.clear, onEnd: (w) => { e4 = w; } });
+    h.open({ seats: ['Ann'] });
+    msub({ kind: 'opened', code: 'KX49PM', key: 'hostkeyhostkeyhostkey', you: 'd0' });
+    st = 'offline'; ssub('offline');
+    st = 'connected'; ssub('connected');
+    check('*** back after a blip: the host asks for ITS room back, by its key ***', JSON.stringify(sent[sent.length - 1])
+      === JSON.stringify({ kind: 'room', resume: { code: 'KX49PM', key: 'hostkeyhostkeyhostkey' } }), JSON.stringify(sent));
+    st = 'offline'; ssub('offline');
+    t4.flush();
+    check(`*** no site for ${LOST_MS / 1000} s: the game together ends here ***`, h.phase() === 'ended' && e4 === 'lost');
+  }
+
+  // =====================================================================================
+  section('*** two screens: the host opens, the other joins by code, each plays its own seat ***');
+  const hub = fakeHub();
+  const A = screen('hostA', { players: 'Ann', hub, seed: 7 });
+  const B = screen('hostB', { players: 'Bob', hub, seed: 9 });
+  {
+    await tick();
+    check('the way in: "Play together" in the corner, before the game starts', !!A.host.querySelector('[data-qm="open"]'));
+    A.host.querySelector('[data-qm="open"]').click();
+    const opts = [...A.host.querySelectorAll('[data-qm-sheet="choose"] [data-qm]')].map((b) => b.textContent);
+    check('*** the choice in plain words: on this screen, with another screen, join a game (no call: none is on) ***',
+      opts.join('|') === 'On this screen|With another screen|Join a game|Back', opts.join('|'));
+    check('pressing it did NOT start the game', A.inst.impl.__gate().begun === false);
+    A.host.querySelector('[data-qm="host"]').click();
+    await until(() => A.mix().room?.phase === 'in');
+    const lobby = A.host.querySelector('[data-qm-sheet="lobby"]');
+    check('*** the host\'s lobby: the code shown big, in two halves ***', lobby && A.host.querySelector('.qm-code')?.textContent === 'KX4 9PM',
+      lobby?.textContent?.slice(0, 120));
+    check('the code is also there to scan, and the address in words', /play\.html\?room=KX49PM/.test(lobby.textContent));
+    check('the seats: Ann, on this screen', /Ann\s+on this screen/.test(A.host.querySelector('[data-seats]')?.textContent || ''));
+    check('*** the lobby has its way out: "Stop playing together" ***', !!A.host.querySelector('[data-qm-sheet="lobby"] [data-qm="stop"]'));
+    const sheetWords = lobby.textContent;
+    check('*** plain words in the lobby ***', !BANNED.test(sheetWords), (sheetWords.match(BANNED) || [])[0]);
+
+    B.host.querySelector('[data-qm="open"]').click();
+    B.host.querySelector('[data-qm="joinform"]').click();
+    const input = B.host.querySelector('[data-qm-input]');
+    check('"Join a game": a box for the code', !!input);
+    input.value = 'kx4 9pm';
+    B.host.querySelector('[data-qm="join"]').click();
+    await until(() => B.mix().room?.phase === 'in' && A.mix().room?.seats.length === 2);
+    check('*** the other screen joins with the code as typed ***', B.mix().room?.role === 'guest' && B.mix().room.you === 'd1');
+    check('*** the host sees Bob, on Bob\'s screen ***', /Bob\s+on Bob's screen/.test(A.host.querySelector('[data-seats]')?.textContent || ''),
+      A.host.querySelector('[data-seats]')?.textContent);
+    check('the joined screen waits for the host to start, with "Leave the game"', /starts when they press Start/.test(B.text())
+      && !!B.host.querySelector('[data-qm="stop"]'));
+    check('joining sent only the code and the seat names', JSON.stringify(hub.log.find((x) => x.msg.kind === 'join')?.msg)
+      === JSON.stringify({ kind: 'join', code: 'KX49PM', seats: [{ name: 'Bob' }] }), JSON.stringify(hub.log.find((x) => x.msg.kind === 'join')));
+  }
+  {
+    A.host.querySelector('[data-qm="start"]').click();
+    await until(() => B.inst.impl.__gate().begun);
+    check('*** the host presses Start: both screens start ***', A.inst.impl.__gate().begun && B.inst.impl.__gate().begun);
+    check('round 1, Ann first, on the host', A.mix().round === 1 && A.cur()?.player.name === 'Ann' && A.phase() === 'asking', A.phase());
+    await until(() => /Ann's turn/.test(B.text()));
+    check('*** the joined screen shows whose turn and where: "Ann\'s turn, on Ann\'s screen" ***', /Ann's turn, on Ann's screen\./.test(B.text()), B.text().slice(0, 200));
+    check('...and the round', !!B.host.querySelector('[data-round="1"]'));
+    A.eng.answer(rightOf(A));
+    A.timers.flush();
+    await until(() => B.phase() === 'asking');
+    check('*** then Bob\'s turn: the host waits, saying so, with "Skip their turn" ***', A.phase() === 'loading'
+      && /Bob's turn, on Bob's screen\./.test(A.text()) && !!A.host.querySelector('[data-qm="skip"]'), A.text().slice(0, 200));
+    check('the host says it aloud too', /Bob, your turn\./.test(A.said.join(' ')), A.last());
+    const turnMsg = hub.log.find((x) => x.msg.kind === 'turn')?.msg;
+    check('*** the turn carries the round\'s category, never a question ***', turnMsg && turnMsg.seat === 'd1.0' && turnMsg.category?.group
+      && !('item' in turnMsg) && !('question' in turnMsg), JSON.stringify(turnMsg));
+    check('*** Bob\'s screen asks Bob\'s question, dealt from BOB\'s screen, in the round\'s game ***', B.cur()?.player.name === 'Bob'
+      && B.cur().cat.group === turnMsg.category.group, JSON.stringify(B.cur()?.cat));
+    B.eng.answer(rightOf(B));
+    await until(() => A.phase() === 'asking' || A.phase() === 'done');
+    const ans = hub.log.find((x) => x.msg.kind === 'answer')?.msg;
+    check('*** what came back: seat, serial, category, right, points - nothing else ***',
+      ans && Object.keys(ans).sort().join() === 'category,kind,points,right,seat,serial' && ans.right === true && ans.points >= 1, JSON.stringify(ans));
+    check('*** Bob\'s answer is on BOB\'s screen\'s ladder ***', ladderPlayers(B.ratings).includes('name:bob'), JSON.stringify(ladderPlayers(B.ratings)));
+    check('*** ...and nowhere on the host\'s: no level crossed ***', !ladderPlayers(A.ratings).some((p) => /bob|seat/.test(p)), JSON.stringify(ladderPlayers(A.ratings)));
+    check('the host\'s table has Bob\'s points, by his seat', (A.mix().totals['d1.0'] || 0) === ans.points, JSON.stringify(A.mix().totals));
+    await until(() => (B.mix().totalsNow['d1.0'] || 0) === ans.points);
+    check('*** the joined screen shows the host\'s table ***', (B.mix().totalsNow['d1.0'] || 0) === ans.points, JSON.stringify(B.mix().totalsNow));
+    B.timers.flush();
+    await tick();
+    check('after its turn, the joined screen waits again, showing whose turn it is', B.phase() === 'loading' && /Ann's turn/.test(B.text()), `${B.phase()} ${B.text().slice(0, 120)}`);
+  }
+  {
+    // Round 2: Ann, then Bob - and Bob's turn is skipped from the host this time.
+    check('round 2: Ann again', A.mix().round === 2 && A.cur()?.player.name === 'Ann', `${A.mix().round} ${A.cur()?.player.name}`);
+    A.eng.answer(rightOf(A));
+    A.timers.flush();
+    await until(() => B.phase() === 'asking');
+    A.host.querySelector('[data-qm="skip"]').click();
+    await until(() => A.phase() === 'done');
+    check('*** "Skip their turn": the turn passes on - here it was the last, so the game ends ***', A.phase() === 'done' && A.mix().ended, A.phase());
+    await until(() => B.phase() === 'done');
+    check('*** the host\'s end reaches the other screen: its game ends too, with the table ***', B.phase() === 'done'
+      && !!B.host.querySelector('[data-table]'), B.phase());
+    check('the final table on both, by name', /Ann/.test(A.host.querySelector('[data-table]')?.textContent || '')
+      && /Bob/.test(B.host.querySelector('[data-table]')?.textContent || ''),
+      `${A.host.querySelector('[data-table]')?.textContent} | ${B.host.querySelector('[data-table]')?.textContent}`);
+    check('a skipped turn earned Bob nothing', (A.mix().totals['d1.0'] || 0) === hub.log.find((x) => x.msg.kind === 'answer').msg.points);
+  }
+  {
+    section('*** the waits end by themselves ***');
+    A.eng.press('restart');
+    await until(() => A.phase() === 'loading' || A.phase() === 'asking');
+    // Get to a turn on Bob's screen.
+    if (A.cur()?.player.name === 'Ann') { A.eng.answer(rightOf(A)); A.timers.flush(); }
+    await until(() => A.phase() === 'loading' && A.cur()?.remote);
+    check('a new game: waiting on Bob\'s screen again', A.cur()?.remote && A.phase() === 'loading',
+      `${A.phase()} round ${A.mix().round} turn ${A.mix().turn} cur ${A.cur()?.player?.name} ended ${A.mix().ended}`);
+    A.roomTimers.flush();
+    await tick();
+    check(`*** the host's own backstop (${REMOTE_TURN_MS / 1000} s, after the server's 150 s): the turn passes on ***`,
+      A.phase() === 'asking' && A.cur()?.player.name === 'Ann', `${A.phase()} ${A.cur()?.player.name}`);
+    // The joined screen loses the site: after a while it goes back to its own game.
+    B.link().drop();
+    B.roomTimers.flush();
+    await until(() => !B.mix().room);
+    check(`*** a joined screen that lost the site for ${LOST_MS / 1000} s goes back to its own game ***`, !B.mix().room
+      && (B.phase() === 'done' || B.phase() === 'idle'), `${B.phase()} ${JSON.stringify(B.mix().room)}`);
+    check('...and says why, in the corner, by itself', /Lost touch with the site/.test(B.text()), B.text().slice(0, 160));
+    check('...with Play again, to play on its own', !!B.host.querySelector('[data-act="restart"]'));
+    B.roomTimers.flush();
+    check(`the note goes by itself (${NOTE_MS / 1000} s)`, !B.mix().note);
+    A.inst.destroy(); B.inst.destroy();
+  }
+  {
+    section('the host stops; a lobby nobody starts closes');
+    const hub2 = fakeHub();
+    const H = screen('hostA', { players: 'Ann', hub: hub2 });
+    const G = screen('hostB', { players: 'Bob', hub: hub2 });
+    await tick();
+    H.mix().open({});
+    await until(() => H.mix().room?.phase === 'in');
+    G.mix().join('KX49PM');
+    await until(() => G.mix().room?.phase === 'in');
+    H.host.querySelector('[data-qm-sheet="lobby"] [data-qm="stop"]').click();
+    await until(() => !G.mix().room);
+    check('*** the host stops: the other screen is told, plainly, and is back to its own game ***', !G.mix().room
+      && /The game together has ended\./.test(G.text()), G.text().slice(0, 160));
+    check('the host is back to its own game, nothing left open', !H.mix().room && H.links[0].closed === true);
+    H.mix().open({});
+    await until(() => H.mix().room?.phase === 'in');
+    H.roomTimers.flush();
+    await until(() => !H.mix().room);
+    check(`*** a lobby nobody starts closes by itself (${LOBBY_MS / 60000} minutes) ***`, !H.mix().room
+      && /nobody started it/.test(H.text()), H.text().slice(0, 160));
+    H.inst.destroy(); G.inst.destroy();
+  }
+  {
+    section('on this call: offered only while a call is live on this screen');
+    const hub3 = fakeHub();
+    let live = true;
+    const C = screen('hostC', { players: 'Robin', hub: hub3, extra: { personId: 'p-robin', callTransport: { isLive: () => live } } });
+    await tick();
+    C.host.querySelector('[data-qm="open"]').click();
+    check('*** a call is live: "On this call" is offered ***', !!C.host.querySelector('[data-qm="call"]'));
+    C.host.querySelector('[data-qm="call"]').click();
+    await until(() => C.mix().room?.phase === 'in');
+    const open = hub3.log.find((x) => x.msg.kind === 'room' && x.msg.open)?.msg;
+    check('*** the room is opened for this screen\'s person, so the server can offer it to that call ***', open?.open?.person === 'p-robin', JSON.stringify(open));
+    check('the lobby says where it went', /Offered to the call/.test(C.text()));
+    C.mix().stop();
+    await tick();
+    live = false;
+    C.host.querySelector('[data-qm="open"]')?.click();
+    check('no call: not offered', !C.host.querySelector('[data-qm="call"]'));
+    C.inst.destroy();
+  }
+  {
+    section('a switch can step through the sheet');
+    const hub4 = fakeHub();
+    const S = screen('hostC', { players: 'Ann', hub: hub4 });
+    await tick();
+    S.host.querySelector('[data-qm="open"]').click();
+    S.publish(`${GAME}/next`);
+    check('next lights the next choice', S.host.querySelector('[data-qm-sheet] [data-on="1"]')?.dataset.qm === 'host');
+    S.publish(`${GAME}/select`);
+    await until(() => S.mix().room?.phase === 'in');
+    check('*** select presses it (and does not start the game underneath) ***', S.mix().room?.role === 'host' && !S.inst.impl.__gate().begun);
+    S.inst.destroy();
+  }
+  check('scores by seat in words', scoreWords([{ id: 'name:ann', seat: 'd0.0', name: 'Ann' }, { id: 'seat:d1.0', seat: 'd1.0', name: 'Bob' }], { 'd0.0': 2, 'd1.0': 3 }) === 'Ann 2, Bob 3');
+
+  // =====================================================================================
+  section('the call page\'s socket: a game invitation is for a caller, and never a press');
+  {
+    const subs = [];
+    class FakeSock { constructor() { subs.push(this); queueMicrotask(() => this.onopen?.()); } send() {} close() {} }
+    const fetchOk = async () => ({ ok: true, json: async () => ({ ticket: 't' }) });
+    const verbs = [];
+    const drv = connectDrive({ personId: 'p1', role: 'driver', fetchImpl: fetchOk, SocketImpl: FakeSock });
+    const scr = connectDrive({ personId: 'p1', role: 'screen', fetchImpl: fetchOk, SocketImpl: FakeSock, onVerb: (v) => verbs.push(v) });
+    await sleep(10);
+    const got = { drv: [], scr: [] };
+    drv.onGameInvite((i) => got.drv.push(i));
+    scr.onGameInvite((i) => got.scr.push(i));
+    const inv = JSON.stringify({ type: 'game-invite', code: 'KX49PM', game: 'quiz_mix', name: 'Robin' });
+    for (const s of subs) s.onmessage?.({ data: inv });
+    for (const s of subs) s.onmessage?.({ data: JSON.stringify({ type: 'game-invite', code: '<b>', game: 'quiz_mix' }) });
+    for (const s of subs) s.onmessage?.({ data: JSON.stringify({ type: 'game-invite', code: 'KX49PM', game: 'poker' }) });
+    check('*** the caller hears the invitation (code, game, name) ***', got.drv.length === 1 && got.drv[0].code === 'KX49PM' && got.drv[0].name === 'Robin', JSON.stringify(got.drv));
+    check('*** a screen never does, and it never becomes a press ***', got.scr.length === 0 && verbs.length === 0);
+    check('a mangled code or another game: ignored', GAME_INVITE_GAMES.join() === 'quiz_mix');
+    drv.close(); scr.close();
+  }
+
+  // =====================================================================================
+  section('*** the real server: the socket, the same login, a stranger refused, a whole turn ***');
+  {
+    const ping = await fetch('/api/game/ticket', { method: 'POST', headers: { 'X-Dev-User': 'suite-together' } }).catch(() => null);
+    if (!ping || !ping.ok) {
+      check('(the live checks need the server this page is served from; skipped: no /api/game/ticket here)', true);
+    } else {
+      const mk = (user) => connectGameRoom({ user });
+      const hostL = mk('suite-together'), phoneL = mk('suite-together'), strangerL = mk('suite-stranger');
+      await until(() => [hostL, phoneL, strangerL].every((l) => l.state() === 'connected'), 6000);
+      check('three sockets open, each by its own ticket', [hostL, phoneL, strangerL].every((l) => l.state() === 'connected'));
+      const got = { h: [], p: [], s: [] };
+      hostL.onMessage((m) => got.h.push(m)); phoneL.onMessage((m) => got.p.push(m)); strangerL.onMessage((m) => got.s.push(m));
+      hostL.send({ kind: 'room', open: { game: 'quiz_mix', seats: [{ name: 'Ann' }] } });
+      await until(() => got.h.some((m) => m.kind === 'opened'));
+      const code = got.h.find((m) => m.kind === 'opened')?.code;
+      check('the host is given a code', /^[A-Z0-9]{6}$/.test(code || ''), code);
+      strangerL.send({ kind: 'join', code, seats: [{ name: 'M' }] });
+      await until(() => got.s.length > 0);
+      check('*** a login that is not connected: refused, as for a code that does not exist ***', got.s[0]?.kind === 'refused' && got.s[0].why === 'no-room', JSON.stringify(got.s));
+      phoneL.send({ kind: 'join', code, seats: [{ name: 'Sam' }] });
+      await until(() => got.p.some((m) => m.kind === 'joined'));
+      check('*** the same login joins by code ***', got.p.some((m) => m.kind === 'joined' && m.you === 'd1'));
+      hostL.send({ kind: 'turn', seat: 'd1.0', serial: 1, round: 1, category: { group: 'math', id: 'math', label: 'Numbers' } });
+      await until(() => got.p.some((m) => m.kind === 'turn'));
+      check('the turn reaches the phone', got.p.some((m) => m.kind === 'turn' && m.seat === 'd1.0'));
+      phoneL.send({ kind: 'answer', seat: 'd1.0', serial: 1, category: { group: 'math', id: 'math' }, right: true, points: 2 });
+      await until(() => got.h.some((m) => m.kind === 'answer'));
+      check('*** the answer reaches the host: five fields ***', JSON.stringify(got.h.find((m) => m.kind === 'answer'))
+        === JSON.stringify({ kind: 'answer', seat: 'd1.0', serial: 1, category: { group: 'math', id: 'math' }, right: true, points: 2 }));
+      hostL.send({ kind: 'leave' });
+      await until(() => got.p.some((m) => m.kind === 'closed'));
+      check('the host ends it: the phone is told', got.p.some((m) => m.kind === 'closed' && m.why === 'host-left'));
+      hostL.close(); phoneL.close(); strangerL.close();
+
+      // Two panels, end to end, over the real server (the same login: no letting in).
+      const real = (hostId, players, seed) => {
+        const ratings = liveRow();
+        const roomTimers = fakeTimers();
+        const r = rig(GAME, { hostId, saved: { autostart: false, players, rounds: 1, ...ONLY('math') }, rand: mulberry32(seed),
+          extra: { makeState: (k) => (k === LADDER_KEY ? ratings : null), roomTimers, gameLink: () => connectGameRoom({ user: 'suite-together' }) } });
+        return Object.assign(r, { ratings, mix: () => r.inst.impl.__mix(), cur: () => r.inst.impl.__mix().current });
+      };
+      const RA = real('hostA', 'Ann', 3), RB = real('hostB', 'Bob', 5);
+      RA.mix().open({});
+      await until(() => RA.mix().room?.phase === 'in', 6000);
+      RB.mix().join(RA.mix().room.code);
+      await until(() => RB.mix().room?.phase === 'in' && RA.mix().room?.seats.length === 2, 6000);
+      check('*** two panels over the real server: in one room ***', RA.mix().room?.seats.length === 2);
+      RA.mix().act('start');
+      await until(() => RA.phase() === 'asking', 6000);
+      RA.eng.answer(String(RA.cur().source.adapter.answer(RA.cur().item)));
+      RA.timers.flush();
+      await until(() => RB.phase() === 'asking', 6000);
+      check('*** Bob\'s turn arrives on Bob\'s panel through the server ***', RB.cur()?.player.name === 'Bob');
+      RB.eng.answer(String(RB.cur().source.adapter.answer(RB.cur().item)));
+      await until(() => RA.phase() === 'done', 6000);
+      check('*** ...his answer comes back, and the last turn of the last round ends the game on both ***', RA.phase() === 'done'
+        && (RA.mix().totals['d1.0'] || 0) >= 1, `${RA.phase()} ${JSON.stringify(RA.mix().totals)}`);
+      await until(() => RB.phase() === 'done', 6000);
+      check('the joined panel ends with it', RB.phase() === 'done');
+      check('*** Bob\'s level is on Bob\'s panel\'s rows only ***', ladderPlayers(RB.ratings).includes('name:bob') && !ladderPlayers(RA.ratings).includes('name:bob'));
+      RA.inst.destroy(); RB.inst.destroy();
+    }
+  }
+  finish();
+} catch (err) {
+  finish(err);
+}
+</script>
+</body>
+</html>
