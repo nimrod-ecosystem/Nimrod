@@ -2309,3 +2309,28 @@ Mike, live.
 3. **The bench's lock link to the Pi stays off.** *"Leave it off."* The Chromium local-network policy is not
    applied, and the page passes `lockHelper=off`. The site-side lock works, but closing the dashboard while
    unlocked still lets the kiosk service relaunch it.
+
+## Mixed questions, ranks per subject, very easy, the bar's own key, reviewing earns points -- 2026-10-06 (later)
+
+Mike, live. Items 1-8 are his. Code's proposal for the ranking model (item 3) is in the private repo, at
+docs/for_chat/question_ranking_design_20261006.md, for Mike and chat to discuss before it is built.
+
+1. **A mixed mode with every type of question** (math, trivia, Word Forge and more), multiplayer **local, online
+   or over calls**. It picks a random category per round, then goes through turns asking each player their own
+   question. It uses **the same randomizer as everything else** (rng.js), and also takes into account the
+   difficulty of the questions it asks each user.
+2. **Reviewing links to the source page and opens it in another window.** Reviewing earns **education points**
+   for the person reviewing, and opening the source can earn some too. *"That can be a feature for everyone to
+   incentivize reviewing their own questions."* Oscar may review questions for his schoolwork.
+3. **A rank per category or subject, "kind of like a multi Elo system."** Different factors can account for a
+   question's difficulty: category (math, language), type (multiple choice, yes/no) and others.
+4. **The starting level is a starting point.** Each category or type adjusts from there with performance. A
+   start set in a game's own settings affects that person in that game only; the global setting lives in the
+   global settings.
+5. **Even easier questions for children and Christine** (a "very easy" level), and a good starter set for
+   everything to use. More could be downloadable later if that's advisable.
+6. **Keep making questions for everything at every level.**
+7. **H shows and hides the transport bar.** Hiding it with H keeps it from popping up again for 30 s by default.
+   "Never pop up on its own" is an option for people who only want the key. The key can be rebound like any
+   other.
+8. **Oscar is 13** (logged above): questions and starting levels take that into account.
