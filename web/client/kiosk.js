@@ -157,6 +157,7 @@ import { mountChoicePicker } from './choice_picker.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
 import { pageRow, elsewhereMenuPage, ELSEWHERE_PAGES, ELSEWHERE_PAGE_PREFIX } from './page_links.js';
+import { browserVoiceMaker, browserHasVoiceTyping, browserVoiceLabel } from './nimrod_helper.js';
 import { createHealthWatch } from './health.js';
 import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
          RECOVERY_SETTINGS } from './recovery.js';
@@ -3811,7 +3812,8 @@ export async function mountKiosk(root, {
     const ready = (st?.engines || []).filter((e) => e.state === 'ready');
     const firstPass = (st?.engines || [])[0] || null;
     const away = ready.filter((e) => e.slot !== 'local').map((e) => e.name);
-    const goes = browser ? 'the room’s sound goes to the browser’s maker'
+    const maker = browserVoiceMaker();
+    const goes = browser ? `the room’s sound goes to ${maker === 'the browser’s maker' ? maker : `${maker}, the browser’s maker`}`
       : away.length ? `the room’s sound goes to: ${away.join(', ')}` : '';
     const online = onlineCap ? 'subtitles also send the room’s sound to the browser’s maker' : '';
     const hints = (...xs) => xs.filter(Boolean).join('; ');
@@ -3822,7 +3824,7 @@ export async function mountKiosk(root, {
       if (firstPass && firstPass.slot !== 'local') {
         return row(`Not listening: ${firstPass.name} is not answering`, 'nothing is recorded until it answers');
       }
-      return row('Not listening: no recogniser on this screen is answering', hints('the room’s sound is not sent anywhere', online));
+      return row('Not listening: no speech program is running on this computer', hints('the room’s sound is not sent anywhere', online));
     }
     if (speechStatus === 'no-browser') return row('Not listening: this browser has no recogniser of its own');
     if (speechStatus === 'no-mic') return row('Not listening: the microphone could not be opened');
@@ -3832,6 +3834,29 @@ export async function mountKiosk(root, {
     }
     if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(goes, online));
     return null;
+  }
+  // *** NO SPEECH PROGRAM ON THIS COMPUTER: SAY HOW TO GET ONE, AND OFFER THE NO-INSTALL CHOICE (DECISIONS 2026-10-07
+  // item 3; nimrod_helper.js). *** Under the status row, two rows a person can press: the helper's page (a screen shows
+  // its address and a code, page_links.js), and this browser's own voice typing, its row naming who receives the
+  // sound. Only for "this computer" being the one not answering - a chosen other computer, or one with no address,
+  // has its own status line and nothing here would fix it. Nothing switches to the browser's by itself.
+  function noSpeechProgramHere() {
+    if (speechStatus !== 'no-local') return false;
+    let st = null;
+    try { st = speechRec?.status?.() || null; } catch { st = null; }
+    if (st && !(st.engines || []).length && (st.skipped || []).length) return false;
+    const firstPass = (st?.engines || [])[0] || null;
+    return !firstPass || firstPass.slot === 'local';
+  }
+  function noSpeechProgramItems() {
+    if (!noSpeechProgramHere()) return [];
+    const rows = [pageRow('helper', { isScreen: !embedded })];
+    if (browserHasVoiceTyping()) {
+      rows.push({ kind: 'item', id: 'voice-use-browser', label: browserVoiceLabel(browserVoiceMaker()),
+        hint: 'nothing to install; it is used only once you choose it here',
+        run: () => { try { personInputs?.set?.({ speechEngine: 'browser' }); } catch (err) { console.error('kiosk: voice typing', err); } } });
+    }
+    return rows.filter(Boolean);
   }
   function voiceItems() {
     if (!personInputs || !personRow || embedded) return [];
@@ -3885,7 +3910,9 @@ export async function mountKiosk(root, {
     const t = MENU_TAB;
     return [
       ...(dev.length || status ? [{ kind: 'heading', id: 'voice-head', label: 'Voice', ...t.devices(0) },
-        ...(status ? [{ ...status, ...t.devices(0) }] : []), ...dev.map((it) => ({ ...it, ...t.devices(0) }))] : []),
+        ...(status ? [{ ...status, ...t.devices(0) }] : []),
+        ...noSpeechProgramItems().map((it) => ({ ...it, ...t.devices(0) })),
+        ...dev.map((it) => ({ ...it, ...t.devices(0) }))] : []),
       ...(subs.length ? [{ kind: 'heading', id: 'subtitles-head', label: 'Subtitles', ...t.display(4) },
         ...subs.map((it) => ({ ...it, ...t.display(4) }))] : []),
       ...(amp.length ? [{ kind: 'heading', id: 'amplify-head', label: 'Amplify the room', ...t.audio(3) },

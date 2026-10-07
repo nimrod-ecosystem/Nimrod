@@ -58,6 +58,8 @@ export const SUITES = [
   // Rows 2.46/2.47: ranked recognisers and two ears, against fake sockets (plus the real capture path
   // on the browser's fake microphone). Needs no speech service running.
   'speech_engines',
+  // DECISIONS 2026-10-07 item 3: the Nimrod helper's page, its probes (fakes) and the ⚙ menu row to it.
+  'nimrod_helper',
   'sprint',
   'statemachine', 'talk', 'theme', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
   'youtube_watchdog',

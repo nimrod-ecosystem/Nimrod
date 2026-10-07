@@ -3118,16 +3118,44 @@ const toTab = (m, id) => {
         await settled(() => vk.speechStatus() === 'no-local', 5000), vk.speechStatus());
       check('*** voice: on, with the default recogniser (on this screen, none yet): still no microphone, no browser recogniser ***',
         gum.n === 0 && recog.made === 0, JSON.stringify({ gum: gum.n, ...recog }));
-      check('voice: ...and the menu says why it is not listening (not a row you can press)',
-        /no recogniser on this screen/i.test(item(vk, 'voice-status')?.label || '') && item(vk, 'voice-status')?.disabled === true,
+      check('voice: ...and the menu says why it is not listening, in plain words (not a row you can press)',
+        /no speech program is running on this computer/i.test(item(vk, 'voice-status')?.label || '') && item(vk, 'voice-status')?.disabled === true,
         JSON.stringify(item(vk, 'voice-status') || null));
+      // DECISIONS 2026-10-07 item 3 (nimrod_helper.js): no speech program -> how to get one, and the no-install choice.
+      {
+        const rows = vk.menu.items();
+        const at = (id) => rows.findIndex((r) => r.id === id);
+        const helperRow = item(vk, 'helper-page');
+        const useBrowser = item(vk, 'voice-use-browser');
+        check('*** voice: no speech program -> "Get the Nimrod helper for this computer…" right under the status ***',
+          !!helperRow && helperRow.label === 'Get the Nimrod helper for this computer…' && at('helper-page') === at('voice-status') + 1
+          && helperRow.tab === item(vk, 'voice-status')?.tab, JSON.stringify(helperRow));
+        check('voice: ...on a screen it shows the page’s address and a code (nothing opens on the screen)',
+          helperRow?.page === 'elsewhere:helper' && typeof helperRow?.run !== 'function' && /\/helper\.html/.test(helperRow?.hint || ''),
+          JSON.stringify(helperRow));
+        check('*** voice: ...and the browser’s own voice typing is OFFERED, its row saying who receives the sound ***',
+          !!useBrowser && /^Use this browser’s own voice typing \(it sends what it hears to .+\)$/.test(useBrowser.label)
+          && !useBrowser.disabled && typeof useBrowser.run === 'function' && at('voice-use-browser') === at('helper-page') + 1,
+          JSON.stringify(useBrowser));
+        check('*** voice: ...offered, never picked: still no browser recogniser made, no microphone ***',
+          recog.made === 0 && gum.n === 0 && vk.speechStatus() === 'no-local', JSON.stringify({ gum: gum.n, ...recog }));
+      }
       check('voice: with spoken commands on, their rows appear -- the recogniser, the confirmation, the listening cue',
         !!item(vk, 'set:speechEngine') && !!item(vk, 'set:speechConfirm') && !!item(vk, 'set:listenVisual') && !!item(vk, 'set:speechWindowMs'));
-      vk.menu.close();
-      await setRow({ speechEngine: 'browser' });
-      check('*** voice: the browser’s recogniser is made and started ONLY when it is chosen by name ***',
+      check('(setup) the voice-typing row is on the walk', walkTo(vk, 'voice-use-browser'), vk.menu.focusId());
+      vk.menu.select();
+      check('*** voice: pressing it chooses the browser’s recogniser by name: made and started ***',
         await settled(() => vk.speechStatus() === 'listening', 9000) && recog.made === 1 && recog.started >= 1,
         `${vk.speechStatus()} ${JSON.stringify(recog)}`);
+      check('voice: ...and once it is chosen, the no-speech-program rows go',
+        !item(vk, 'helper-page') && !item(vk, 'voice-use-browser'), vk.menu.items().map((r) => r.id).filter((x) => /voice|helper/.test(x || '')).join());
+      vk.menu.close();
+      // The press wrote the PERSON's row from the kiosk; let that write land before this test writes the same row.
+      const readRow = async () => { const s = createState({ url: vProfiles.personStateURL(vFull.person_id, INPUTS_KEY), user: vUser });
+        await s.load().catch(() => {}); const v = s.get(); s.destroy(); return v || {}; };
+      let landed = false;
+      for (let i = 0; i < 40 && !landed; i += 1) { landed = (await readRow()).speechEngine === 'browser'; if (!landed) await sleep(150); }
+      check('voice: the choice is saved on the person’s row (it follows them to every screen)', landed);
       check('voice: ...and the status says where the room’s sound goes', /maker/.test(item(vk, 'voice-status')?.hint || ''),
         JSON.stringify(item(vk, 'voice-status') || null));
       await setRow({ speechOn: false });
@@ -3402,9 +3430,9 @@ const toTab = (m, id) => {
       await settled(() => !!item('set:speechOn'), 9000);
       await setRow({ speechOn: true, subtitlesOn: true, speechPass2: 'remote1', speechRemote1Url: 'ws://desk:8797/speech',
         speechRemote1Name: 'Desk' });
-      check('*** ranked: nothing answering yet -> "no-local", and the menu says no recogniser answers ***',
+      check('*** ranked: nothing answering yet -> "no-local", and the menu says no speech program is running ***',
         await settled(() => rk3.speechStatus() === 'no-local' && rk.running, 9000)
-        && /no recogniser on this screen/i.test(item('voice-status')?.label || ''), `${rk3.speechStatus()} ${item('voice-status')?.label}`);
+        && /no speech program is running on this computer/i.test(item('voice-status')?.label || ''), `${rk3.speechStatus()} ${item('voice-status')?.label}`);
       check('ranked: the recogniser was handed the person’s row, the microphone owner and the phone streams',
         made.length >= 1 && made.at(-1).values?.speechPass2 === 'remote1' && !!made.at(-1).micOwner && typeof made.at(-1).phoneStreams === 'function');
       check('*** ranked: a "sure" guess that means nothing does not act at once (actsOn is the phrase table) ***',

@@ -135,6 +135,9 @@ web/speech_service/my_voice_model/
 # The one line naming somebody's Nimrod folder for `--my-voice` (2026-10-04): a path on their computer, which usually
 # names them. test_service.py asks git that it is ignored.
 web/speech_service/nimrod_folder.txt
+# The Nimrod helper's BUILD (2026-10-07): build_windows.py writes a downloaded Python, its libraries and the setup.exe
+# here. Hundreds of MB, rebuilt from the repo; published as a download, never committed.
+web/nimrod_helper/build/
 
 # *** THE BRICK RENDERS (2026-10-02). *** The same narrow kind of exception as the board's audio and the demo photos,
 # for the same reason. `*.png` above would silently keep these off the site. SAFE UNDER THE RULE AT THE TOP OF THIS
