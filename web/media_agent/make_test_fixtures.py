@@ -84,8 +84,10 @@ def main():
 
     print('fixtures written under %s\n' % BASE)
     print('Now run BOTH agents (each in its own terminal), then open the suites:\n')
-    print('  python agent.py --root "%s" --port 8770 --origin http://localhost:8000' % photos)
-    print('  python agent.py --root "%s" --port 8771 --origin http://localhost:8000' % personal)
+    # No --origin (2026-10-07): a page on this computer (the dev server, any port) is always allowed.
+    print('  python agent.py --root "%s" --port 8770' % photos)
+    print('  python agent.py --root "%s" --port 8771' % personal)
+    print('\n(Pages on this computer - http://localhost or 127.0.0.1, any port - are always allowed, so no --origin.)')
     print('\n  http://localhost:8000/dev/photos_test.html')
     print('  http://localhost:8000/dev/personal_test.html')
     print('  http://localhost:8000/dev/media_sources_test.html')

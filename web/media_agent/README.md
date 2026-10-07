@@ -25,7 +25,7 @@ It prints a six-character code:
      K K G J F T
 =======================
 
-  Type that code into Nimrod:  https://nimrod.onrender.com/home.html  ->  Media
+  Type that code into Nimrod:  https://nimrodecosystem.com/home.html  ->  Media
 ```
 
 Type those six characters into **Media** on the Nimrod site, signed in. That is the whole
@@ -50,11 +50,11 @@ Leave it running. On a machine that should serve media unattended, make it a ser
 | `--root` | *(required)* | the folder whose media you want to serve |
 | `--pair` | off | show a pairing code and wait for someone to type it in. Do this once. |
 | `--name` | `Media device` | what this device is called in Nimrod |
-| `--platform` | `https://nimrod.onrender.com` | where Nimrod is running (a self-hosted one goes here) |
+| `--platform` | `https://nimrodecosystem.com` | where Nimrod is running (a self-hosted one goes here) |
 | `--host` | `127.0.0.1` | bind address. **This machine only, by default.** |
 | `--lan` | off | serve to your whole local network. Needed only when the screen is a *different* machine. |
 | `--port` | `8770` | port to listen on |
-| `--origin` | *(same as `--platform`)* | CORS `Access-Control-Allow-Origin` |
+| `--origin` | *(follows `--platform`)* | the sites whose pages may use it; pages on this computer always may, every other site gets 403 |
 
 Each also has an environment variable (`NIMROD_MEDIA_ROOT`, `NIMROD_MEDIA_HOST`,
 `NIMROD_MEDIA_PORT`, `NIMROD_MEDIA_ORIGIN`, `NIMROD_MEDIA_NAME`, `NIMROD_PLATFORM`) so it
@@ -71,7 +71,9 @@ prints what it is exposing every time it starts.
 
 **`--origin` follows `--platform`.** The only site that ever needs to be allowed is the
 one your browser loads Nimrod from, and `--platform` already names it. Point `--platform`
-at a self-hosted Nimrod and CORS follows automatically.
+at a self-hosted Nimrod and CORS follows automatically. For the default Nimrod both
+addresses it is served at are allowed (`https://nimrodecosystem.com` and the older
+`https://nimrod.onrender.com`), the same list the Nimrod helper allows.
 
 ### The pairing code, and what it is worth
 
@@ -89,7 +91,7 @@ It is not listed as media and contains nothing but a random id.
 
 | endpoint | returns |
 | --- | --- |
-| `GET /health` | `{ok, root, origin}` — liveness + what it's serving |
+| `GET /health` | `{ok, agent_id}` — liveness, and which agent this is (no folder path) |
 | `GET /list` | media in the root folder + subfolders as albums (see below) |
 | `GET /list?album=<sub>` | media inside subfolder `<sub>` |
 | `GET /files/<relpath>` | the raw image/video bytes (Range-aware, so video seeks) |
