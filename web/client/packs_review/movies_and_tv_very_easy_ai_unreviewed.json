@@ -4,7 +4,7 @@
   "name": "Movies & TV - very easy (AI-written, not yet reviewed)",
   "description": "17 very easy questions on movies and tv, written by Claude on 2026-10-06 as the gentlest level of the 'Movies & TV' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 1 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 16 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 1 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 16 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 1 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -351,13 +351,14 @@
       "category": "Movies & TV",
       "explain": "Movie theaters often sell it by the bucket.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the everyday snack of a trip to the cinema; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Popcorn",
+        "note": "Fetched 2026-10-07; the page says: 'Popcorn is a popular snack food at sporting events and in movie theaters'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {

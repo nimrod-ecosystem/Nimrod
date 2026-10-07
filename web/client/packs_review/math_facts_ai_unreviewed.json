@@ -4,7 +4,7 @@
   "name": "Math facts (AI-written, not yet reviewed)",
   "description": "43 questions on math as trivia: number words, shapes, measurement, famous numbers (not arithmetic drills - the math game does those) (8 very easy, 10 easy, 11 medium, 14 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 43 of 44 written, fixed 12 and deleted 1. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 6 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 6 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -52,13 +52,14 @@
       "category": "Math facts",
       "explain": "A cylinder has a flat circle at each end and one curved side.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a soup can is a cylinder; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Tin_can",
+        "note": "Fetched 2026-10-07; the page says: 'Most cans are right circular cylinders'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -74,13 +75,14 @@
       "category": "Math facts",
       "explain": "Its partner, the minus sign, tells you to subtract.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the plus sign means add, taught in the first school years; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Plus_and_minus_signs",
+        "note": "Fetched 2026-10-07; the page says: 'the symbol + represents the operation of addition'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -96,13 +98,14 @@
       "category": "Math facts",
       "explain": "An even number of things can always be split into two equal groups.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: 2, 4, 6, 8 are the even numbers; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Parity_(mathematics)",
+        "note": "Fetched 2026-10-07; the page says: 'For example, −4, 0, and 82 are even numbers, while −7, 5, and 23 are odd numbers.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -118,13 +121,14 @@
       "category": "Math facts",
       "explain": "Its opposite sides are the same length, and every corner is square.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a rectangle has four sides and square corners; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Rectangle",
+        "note": "Fetched 2026-10-07; the page says: 'a rectangle is a rectilinear convex polygon or a quadrilateral with four right angles'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -163,13 +167,14 @@
       "category": "Math facts",
       "explain": "The 1960s, for example, were one decade.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a decade is ten years; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Decade",
+        "note": "Fetched 2026-10-07; the page says: 'Any period of ten years is a 'decade''."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -185,13 +190,14 @@
       "category": "Math facts",
       "explain": "A ruler can also measure how long something is.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a ruler is the everyday straight-edge and measuring tool; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Ruler",
+        "note": "Fetched 2026-10-07; the page says: 'used to draw a straight line with a pen'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {

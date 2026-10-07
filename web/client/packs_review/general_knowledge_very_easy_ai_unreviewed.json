@@ -4,7 +4,7 @@
   "name": "General knowledge - very easy (AI-written, not yet reviewed)",
   "description": "17 very easy questions on general knowledge, written by Claude on 2026-10-06 as the gentlest level of the 'General knowledge' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 1 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 2 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 15 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 2 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 15 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "General knowledge",
       "explain": "On a cloudy day the same sky usually looks gray.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday sight; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Diffuse_sky_radiation",
+        "note": "Fetched 2026-10-07; the page says: 'the sky is blue due to Rayleigh scattering'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -50,13 +51,14 @@
       "category": "General knowledge",
       "explain": "Cats, horses and cows also walk on four legs.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday sight; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/four-legged_friend",
+        "note": "Fetched 2026-10-07; the page says: 'four-legged friend'; 'An animal that is regarded as a good friend, usually a dog or a horse.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -72,13 +74,14 @@
       "category": "General knowledge",
       "explain": "Bananas are usually picked green and turn yellow as they ripen.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday food; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Banana",
+        "note": "Fetched 2026-10-07; the page says: 'The vivid yellow color many consumers in temperate climates associate with bananas is caused by ripening'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -94,13 +97,14 @@
       "category": "General knowledge",
       "explain": "Its bright, turning light helps ships find their way at night.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday sight on a coast; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Lighthouse",
+        "note": "Fetched 2026-10-07; the page says: 'Lighthouses mark dangerous coastlines, hazardous shoals, reefs, rocks, and safe entries to harbors'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -116,13 +120,14 @@
       "category": "General knowledge",
       "explain": "Cereal, eggs and toast are popular breakfast foods.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday routine; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Breakfast",
+        "note": "Fetched 2026-10-07; the page says: 'Breakfast is the first meal of the day, usually eaten in the morning.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -138,13 +143,14 @@
       "category": "General knowledge",
       "explain": "Snowflakes are made of tiny ice crystals.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday weather; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Snow",
+        "note": "Fetched 2026-10-07; the page says: 'consisting of individual ice crystals that grow while suspended in the air—usually within clouds—and then fall'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -160,13 +166,14 @@
       "category": "General knowledge",
       "explain": "Their flashing lights and sirens tell traffic to move aside.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday sight; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Fire_engine_red",
+        "note": "Fetched 2026-10-07; the page says: 'is an informal name for a bright red commonly used on emergency vehicles in many countries on fire service vehicles, such as fire engines'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -182,13 +189,14 @@
       "category": "General knowledge",
       "explain": "The crisp cone is edible, so you can eat the whole thing.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday food; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Ice_cream_cone",
+        "note": "Fetched 2026-10-07; the page says: 'An ice cream cone or poke (Northern Ireland) is a brittle, cone-shaped pastry'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -204,13 +212,14 @@
       "category": "General knowledge",
       "explain": "Inside the hive, bees build wax combs made of six-sided cells.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday nature; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Beehive",
+        "note": "Fetched 2026-10-07; the page says: 'A beehive is an enclosed structure in which honey bees raise their young and produce honey'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -249,13 +258,14 @@
       "category": "General knowledge",
       "explain": "The post office marks used stamps so they cannot be used again.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday errand; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Postage_stamp",
+        "note": "Fetched 2026-10-07; the page says: 'A postage stamp is a small piece of paper issued by a post office'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -271,13 +281,14 @@
       "category": "General knowledge",
       "explain": "On most maps, north is at the top and south is at the bottom.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the four compass directions; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/South",
+        "note": "Fetched 2026-10-07; the page says: 'The direction is the opposite of north'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -316,13 +327,14 @@
       "category": "General knowledge",
       "explain": "Saturday and Sunday together make up the weekend.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the days of the week; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Saturday",
+        "note": "Fetched 2026-10-07; the page says: 'Saturday is the day of the week between Friday and Sunday.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -338,13 +350,14 @@
       "category": "General knowledge",
       "explain": "Tea can be served hot, or cold over ice as iced tea.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday drink; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Tea",
+        "note": "Fetched 2026-10-07; the page says: 'Tea is an aromatic beverage prepared by infusion of hot or boiling fresh water with fresh or cured leaves of Camellia sinensis'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -360,14 +373,14 @@
       "category": "General knowledge",
       "explain": "December ends one year and January starts the next.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the months of the year; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/January",
+        "note": "Fetched 2026-10-07; the page says: 'January is the first month of the year in the Julian and Gregorian calendars.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-06",
-        "fixed": "Explain rewritten: it named New Year's Day on January 1, the answer to an existing holidays question."
+        "fixed": "Explain rewritten: it named New Year's Day on January 1, the answer to an existing holidays question.; source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -383,13 +396,14 @@
       "category": "General knowledge",
       "explain": "Bakers often start work in the early hours so the bread is fresh by morning.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday job; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Baker",
+        "note": "Fetched 2026-10-07; the page says: 'A baker is a tradesperson who bakes and sometimes sells breads'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     }
   ]

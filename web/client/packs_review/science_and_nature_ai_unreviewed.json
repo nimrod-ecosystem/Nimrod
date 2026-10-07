@@ -4,7 +4,7 @@
   "name": "Science and nature (AI-written, not yet reviewed)",
   "description": "65 questions on science & nature, written by Claude, spread across every level the game understands: 7 very easy, 9 easy, 27 medium, 22 hard. A second writing pass on 2026-10-05 added 15 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 12 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "Science & nature",
       "explain": "We live on Earth, the third planet from the Sun.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known; every reader knows they live on Earth."
+        "url": "https://en.wikipedia.org/wiki/Earth",
+        "note": "Fetched 2026-10-07; the page says: 'Earth is the third planet from the Sun and the only astronomical object known to harbor life.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-05"
+        "at": "2026-10-05",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -96,13 +97,14 @@
       "category": "Science & nature",
       "explain": "Rain is water that falls from clouds.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known everyday weather fact."
+        "url": "https://en.wiktionary.org/wiki/rain",
+        "note": "Fetched 2026-10-07; the page says: 'Condensed water falling from a cloud.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-05"
+        "at": "2026-10-05",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {

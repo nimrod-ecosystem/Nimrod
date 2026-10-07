@@ -4,7 +4,7 @@
   "name": "Words and spelling - very easy (AI-written, not yet reviewed)",
   "description": "17 very easy questions on words and spelling, written by Claude on 2026-10-06 as the gentlest level of the 'Words and spelling' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 1 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 1 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 16 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 1 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 16 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "Words & spelling",
       "explain": "That is why dictionaries begin with words that start with A.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the alphabet's order; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/A",
+        "note": "Fetched 2026-10-07; the page says: 'is the first letter and the first vowel letter of the Latin alphabet, used in the modern English alphabet'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -73,13 +74,14 @@
       "category": "Words & spelling",
       "explain": "Tall and short usually describe height, like that of people or trees.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of opposites; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/tall",
+        "note": "Fetched 2026-10-07; the page says: 'Antonym: short'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -95,13 +97,14 @@
       "category": "Words & spelling",
       "explain": "Other words for sad include unhappy and gloomy.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of opposites; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/happy",
+        "note": "Fetched 2026-10-07; the page says: 'Antonyms: blue, depressed, down, miserable, moody, morose, sad, unhappy'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -117,13 +120,14 @@
       "category": "Words & spelling",
       "explain": "Clothes go into a dryer to go from wet to dry.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of opposites; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/wet",
+        "note": "Fetched 2026-10-07; the page says: 'Antonym: dry'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -139,13 +143,14 @@
       "category": "Words & spelling",
       "explain": "Libraries usually ask visitors to keep quiet.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of opposites; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/loud",
+        "note": "Fetched 2026-10-07; the page says: '(antonym(s) of “sound”): quiet, silent, soft'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -161,13 +166,14 @@
       "category": "Words & spelling",
       "explain": "Moon and spoon share the same 'oon' sound at the end.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday rhyme; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/Rhymes:English/u%CB%90n",
+        "note": "Fetched 2026-10-07; the page's list of words rhyming in -uːn includes: 'moon'; 'spoon'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -183,13 +189,14 @@
       "category": "Words & spelling",
       "explain": "Rhyming words end with the same sound, like bake, cake and lake.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday rhyme; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/Rhymes:English/e%C9%AAk",
+        "note": "Fetched 2026-10-07; the page's list of words rhyming in -eɪk includes: 'bake'; 'cake'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -205,14 +212,14 @@
       "category": "Words & spelling",
       "explain": "It changes its vowel sound instead of adding an s.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a common everyday plural; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/mouse",
+        "note": "Fetched 2026-10-07; the page says: 'mouse (plural mice'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-06",
-        "fixed": "Distractor 'Mouses' replaced with 'Mices' (dictionaries accept 'mouses' for computer mice, so it was arguably right)."
+        "fixed": "Distractor 'Mouses' replaced with 'Mices' (dictionaries accept 'mouses' for computer mice, so it was arguably right).; source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -228,13 +235,14 @@
       "category": "Words & spelling",
       "explain": "Kid is a casual word for child, and its plural is simply kids.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a common everyday plural; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/child",
+        "note": "Fetched 2026-10-07; the page says: 'child (plural children'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -250,13 +258,14 @@
       "category": "Words & spelling",
       "explain": "Tooth changes the same way, becoming teeth.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a common everyday plural; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/foot",
+        "note": "Fetched 2026-10-07; the page says: 'foot (plural feet'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -272,13 +281,14 @@
       "category": "Words & spelling",
       "explain": "The usual five vowels in English are A, E, I, O and U.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the vowels are taught in every first school year; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/English_alphabet",
+        "note": "Fetched 2026-10-07; the page says: 'There are 5 vowel letters (A, E, I, O, U)'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -295,13 +305,14 @@
       "spell": true,
       "explain": "Two, too and to all sound the same but mean different things.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: spelling of a basic number; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/two",
+        "note": "Fetched 2026-10-07; the page says: 'cardinal number 2'; 'The digit/figure 2.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -317,13 +328,14 @@
       "category": "Words & spelling",
       "explain": "You can say a little dog or a small dog and mean the same thing.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of same-meaning words; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/small",
+        "note": "Fetched 2026-10-07; the page says: 'Synonyms: little, microscopic, minuscule, minute, tiny'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -339,13 +351,14 @@
       "category": "Words & spelling",
       "explain": "Many storybooks close with the words 'The End.'",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of same-meaning words; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/finish",
+        "note": "Fetched 2026-10-07; the page says: 'An end; the end of anything.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -361,13 +374,14 @@
       "category": "Words & spelling",
       "explain": "Shops buy goods from makers and sell them to customers.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of opposites; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/buy",
+        "note": "Fetched 2026-10-07; the page says: '(antonym(s) of “obtain in exchange for money”): cheap (obsolete), sell, vend'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -383,13 +397,14 @@
       "category": "Words & spelling",
       "explain": "A frown turns the corners of the mouth down.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a basic pair of opposites; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Frown",
+        "note": "Fetched 2026-10-07; the page says: 'is a facial expression in which the eyebrows are brought together, and the forehead is wrinkled, usually indicating displeasure, sadness or worry'; '\"turn that frown upside down\" which indicates changing from sad to happy'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     }
   ]

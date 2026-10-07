@@ -4,7 +4,7 @@
   "name": "Words and spelling (AI-written, not yet reviewed)",
   "description": "59 questions on words & spelling, written by Claude, spread across every level the game understands: 8 very easy, 12 easy, 21 medium, 18 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "Words & spelling",
       "explain": "Up and down are opposites.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Basic English opposites; known to any English speaker."
+        "url": "https://en.wiktionary.org/wiki/up",
+        "note": "Fetched 2026-10-07; the page says: '(antonym(s) of “away from the centre of the Earth”): down'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-05"
+        "at": "2026-10-05",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -96,13 +97,14 @@
       "category": "Words & spelling",
       "explain": "Day and night are opposites.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Basic English opposites; known to any English speaker."
+        "url": "https://en.wiktionary.org/wiki/day",
+        "note": "Fetched 2026-10-07; the page says: 'Antonyms: night'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-05"
+        "at": "2026-10-05",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -142,13 +144,14 @@
       "category": "Words & spelling",
       "explain": "Cat and hat end with the same sound.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Rhyme is self-evident from the sound of the words."
+        "url": "https://en.wiktionary.org/wiki/Rhymes:English/%C3%A6t",
+        "note": "Fetched 2026-10-07; the page's list of words rhyming in -æt includes: 'cat'; 'hat'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-05"
+        "at": "2026-10-05",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -187,13 +190,14 @@
       "category": "Words & spelling",
       "explain": "A door is either open or closed.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Basic English opposites; known to any English speaker."
+        "url": "https://en.wiktionary.org/wiki/open",
+        "note": "Fetched 2026-10-07; the page says: '(antonym(s) of “accessible”): closed, shut'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-05"
+        "at": "2026-10-05",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {

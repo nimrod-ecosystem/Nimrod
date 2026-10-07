@@ -4,7 +4,7 @@
   "name": "School subjects (grades 7-8) (AI-written, not yet reviewed)",
   "description": "58 questions on grade 7-8 science, social studies and English language arts, for schoolwork review (3 very easy, 8 easy, 35 medium, 12 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 58 of 59 written, fixed 35 and deleted 1. The first fact-check left only 5 hard items standing, so two more small rounds of hard questions (15 items) were written by a separate pass and checked by fresh checkers; 7 of those survived as hard and 8 went to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 55 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 3 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 55 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 3 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "School subjects (grades 7-8)",
       "explain": "A plain statement ends with a period instead.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: questions end with a question mark; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Question_mark",
+        "note": "Fetched 2026-10-07; the page says: 'is a punctuation mark that indicates a question'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -50,14 +51,14 @@
       "category": "School subjects (grades 7-8)",
       "explain": "Grammar books call action words verbs, like run, sing and swim.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: jump is an everyday action word; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Verb",
+        "note": "Fetched 2026-10-07; the page says: 'A verb is a word that generally conveys an action (bring, read, walk, run, learn)'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-06",
-        "fixed": "distractors Chair/Green replaced with Lamp/Purple (chair and green can also be verbs); explain now names verbs"
+        "fixed": "distractors Chair/Green replaced with Lamp/Purple (chair and green can also be verbs); explain now names verbs; source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -73,13 +74,14 @@
       "category": "School subjects (grades 7-8)",
       "explain": "Indexes at the back of books are ordered the same way.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: dictionaries are in alphabetical order; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Dictionary",
+        "note": "Fetched 2026-10-07; the page says: 'often arranged alphabetically'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {

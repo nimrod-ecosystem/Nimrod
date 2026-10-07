@@ -4,7 +4,7 @@
   "name": "Everyday life & home (AI-written, not yet reviewed)",
   "description": "44 questions on everyday life and the home: the kitchen, tools, money, time, weather (8 very easy, 12 easy, 13 medium, 11 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 44 of 44 written, fixed 12 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 36 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 8 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 36 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 8 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "Everyday life & home",
       "explain": "Many kettles switch themselves off once the water boils.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: boiling water in a kettle is an everyday kitchen task; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Kettle",
+        "note": "Fetched 2026-10-07; the page says: 'is a device specialized for boiling water'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -50,13 +51,14 @@
       "category": "Everyday life & home",
       "explain": "Raking leaves into piles is a classic fall chore.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: raking leaves is an everyday yard job; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Rake_(tool)",
+        "note": "Fetched 2026-10-07; the page says: 'consisting of a toothed bar fixed transversely to a handle, or tines fixed to a handle, and used to collect leaves'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -72,13 +74,14 @@
       "category": "Everyday life & home",
       "explain": "Many sinks have two bowls, one for washing and one for rinsing.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: washing dishes in the sink is an everyday kitchen task; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Kitchen_sink",
+        "note": "Fetched 2026-10-07; the page says: 'A sink in a kitchen for washing dishes'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -94,14 +97,14 @@
       "category": "Everyday life & home",
       "explain": "Unlike mittens, gloves give each finger its own sleeve.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: wearing gloves in cold weather is universal; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Glove",
+        "note": "Fetched 2026-10-07; the page says: 'Gloves protect and comfort hands against cold or heat'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-06",
-        "fixed": "explain reworded (less cutesy)"
+        "fixed": "explain reworded (less cutesy); source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -117,13 +120,14 @@
       "category": "Everyday life & home",
       "explain": "For many people, Monday starts the work week.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: the order of the days of the week; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Monday",
+        "note": "Fetched 2026-10-07; the page says: 'Monday is the day of the week that takes place between Sunday and Tuesday.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -139,13 +143,14 @@
       "category": "Everyday life & home",
       "explain": "The stove and oven are usually found there.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: cooking happens in the kitchen; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Kitchen",
+        "note": "Fetched 2026-10-07; the page says: 'A kitchen is a room or part of a room used for cooking and food preparation'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -161,13 +166,14 @@
       "category": "Everyday life & home",
       "explain": "It fills with water and soap, then spins the clothes clean.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: doing laundry in a washing machine is an everyday chore; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Washing_machine",
+        "note": "Fetched 2026-10-07; the page says: 'is a machine designed to launder clothing'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -183,13 +189,14 @@
       "category": "Everyday life & home",
       "explain": "Its long spout and sprinkler head let water fall gently.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: watering plants with a watering can is an everyday garden task; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Watering_can",
+        "note": "Fetched 2026-10-07; the page says: 'Container used for watering plants'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {

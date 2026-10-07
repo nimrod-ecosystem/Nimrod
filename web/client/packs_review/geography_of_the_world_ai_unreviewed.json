@@ -4,7 +4,7 @@
   "name": "Geography of the world (AI-written, not yet reviewed)",
   "description": "59 questions on geography, written by Claude, spread across every level the game understands: 7 very easy, 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -166,13 +166,14 @@
       "category": "Geography",
       "explain": "On a map, Italy looks like a boot kicking a ball (Sicily).",
       "source": {
-        "ref": "common knowledge",
-        "note": "Italy's boot shape is one of the best-known map outlines; taught in schools everywhere."
+        "url": "https://en.wikipedia.org/wiki/Italian_Peninsula",
+        "note": "Fetched 2026-10-07; the page says: 'The peninsula is also known as the Italic Peninsula (Italian: penisola italica), Apennine Peninsula, Italian Boot, or Mainland Italy.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-05"
+        "at": "2026-10-05",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {

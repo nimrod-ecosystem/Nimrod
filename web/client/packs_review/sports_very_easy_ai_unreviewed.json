@@ -4,7 +4,7 @@
   "name": "Sports - very easy (AI-written, not yet reviewed)",
   "description": "17 very easy questions on sports, written by Claude on 2026-10-06 as the gentlest level of the 'Sports' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 3 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 14 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 3 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 14 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,14 +28,14 @@
       "category": "Sports",
       "explain": "A tennis racket has a frame with strings pulled tight across it.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Tennis",
+        "note": "Fetched 2026-10-07; the page says: 'Equipment Ball, racket, net'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-06",
-        "fixed": "Distractor 'A paddle' replaced with 'A mallet' (table tennis and padel players use paddles, so it was arguably right)."
+        "fixed": "Distractor 'A paddle' replaced with 'A mallet' (table tennis and padel players use paddles, so it was arguably right).; source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -51,14 +51,14 @@
       "category": "Sports",
       "explain": "Golfers carry a set of different clubs in a golf bag.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Golf_club",
+        "note": "Fetched 2026-10-07; the page says: 'A golf club is a club used to hit a golf ball in a game of golf.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-06",
-        "fixed": "Distractor 'A stick' replaced with 'A paddle' ('sticks' is common golf slang for clubs)."
+        "fixed": "Distractor 'A stick' replaced with 'A paddle' ('sticks' is common golf slang for clubs).; source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -74,13 +74,14 @@
       "category": "Sports",
       "explain": "A baseball glove is padded leather with a deep pocket for the ball.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Baseball_glove",
+        "note": "Fetched 2026-10-07; the page says: 'A baseball glove or mitt is a large glove worn by baseball players of the defending team, which assists players in catching and fielding balls'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -96,13 +97,14 @@
       "category": "Sports",
       "explain": "Surfers paddle out lying on the board, then stand up to ride a wave.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday description of a familiar sport; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Surfing",
+        "note": "Fetched 2026-10-07; the page says: 'uses a board to ride on the forward section, or face, of a moving wave of water'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -118,13 +120,14 @@
       "category": "Sports",
       "explain": "Skiers often hold a pole in each hand to help them balance and turn.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday description of a familiar sport; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Ski",
+        "note": "Fetched 2026-10-07; the page says: 'Narrow strip of semi-rigid material for skiing'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -163,13 +166,14 @@
       "category": "Sports",
       "explain": "There are four bases in all, counting home plate.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: how a familiar game is played; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Base_running",
+        "note": "Fetched 2026-10-07; the page says: 'base running is the act of running from base to base'; 'with the goal of eventually reaching home base (home plate) to score a run'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -185,13 +189,14 @@
       "category": "Sports",
       "explain": "Table tennis is also widely known as ping-pong.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday description of a familiar game; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Table_tennis",
+        "note": "Fetched 2026-10-07; the page says: 'players take alternating turns returning a light, hollow ball over the table's net onto the opposing half of the court using small rackets'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -207,13 +212,14 @@
       "category": "Sports",
       "explain": "Some races stretch a tape across the finish line for the winner to break.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: how a race ends; no citation needed."
+        "url": "https://en.wiktionary.org/wiki/finish_line",
+        "note": "Fetched 2026-10-07; the page says: 'A line marking the end of a race.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wiktionary.org (2026-10-07)"
       }
     },
     {
@@ -229,13 +235,14 @@
       "category": "Sports",
       "explain": "The white ball you strike with the cue is called the cue ball.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday description of a familiar game; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Pool_(cue_sports)",
+        "note": "Fetched 2026-10-07; the page says: 'The table has six pockets along the rails, into which balls are shot.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -275,13 +282,14 @@
       "category": "Sports",
       "explain": "The thin blade lets skaters glide and turn on the ice.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Ice_skate",
+        "note": "Fetched 2026-10-07; the page says: 'Ice skates are metal blades attached underfoot'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -297,13 +305,14 @@
       "category": "Sports",
       "explain": "The hoop is a metal ring with a net hanging below it.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: how a familiar game is scored; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Basketball",
+        "note": "Fetched 2026-10-07; the page says: 'Players compete with the primary objective of shooting a basketball through a hoop'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -319,17 +328,18 @@
       "category": "Sports",
       "explain": "A short, sharp blast is loud enough to be heard over a noisy crowd.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: familiar sight at any game; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Whistle",
+        "note": "Fetched 2026-10-07; the page says: 'This became the first referee whistle used at association football matches'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
-      "question": "In which sport do players hit a ball over a high net using only their hands?",
+      "question": "In which sport do players hit a ball over a high net, mostly with their hands?",
       "answers": [
         "Tennis",
         "Badminton",
@@ -341,13 +351,14 @@
       "category": "Sports",
       "explain": "Volleyball is also played on sand as beach volleyball.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday description of a familiar sport; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Volleyball",
+        "note": "Fetched 2026-10-07; the page says: 'Volleyball is a team sport in which two teams of six players are separated by a net.'; 'The ball is usually played with the hands or arms'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07); question: \"using only their hands\" became \"mostly with their hands\" (the rules allow any part of the body; 2026-10-07)"
       }
     },
     {
@@ -363,13 +374,14 @@
       "category": "Sports",
       "explain": "Gutters run along both sides of the lane to catch stray balls.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: everyday description of a familiar game; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Ten-pin_bowling",
+        "note": "Fetched 2026-10-07; the page says: 'a bowler rolls a bowling ball down a wood or synthetic lane toward ten pins'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
