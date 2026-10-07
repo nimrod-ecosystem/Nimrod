@@ -1,0 +1,396 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "General knowledge - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on general knowledge, written by Claude on 2026-10-06 as the gentlest level of the 'General knowledge' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 1 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 2 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 15 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What color is the sky on a clear day?",
+      "answers": [
+        "Green",
+        "Blue",
+        "Gray",
+        "Purple"
+      ],
+      "correct": "Blue",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "On a cloudy day the same sky usually looks gray.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday sight; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many legs does a dog have?",
+      "answers": [
+        "Two",
+        "Six",
+        "Four",
+        "Eight"
+      ],
+      "correct": "Four",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Cats, horses and cows also walk on four legs.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday sight; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color is a ripe banana?",
+      "answers": [
+        "Green",
+        "Yellow",
+        "Red",
+        "Purple"
+      ],
+      "correct": "Yellow",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Bananas are usually picked green and turn yellow as they ripen.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday food; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Where would you usually find a lighthouse?",
+      "answers": [
+        "In a desert",
+        "On a farm",
+        "In a forest",
+        "By the sea"
+      ],
+      "correct": "By the sea",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Its bright, turning light helps ships find their way at night.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday sight on a coast; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which meal do most people eat in the morning?",
+      "answers": [
+        "Lunch",
+        "Dinner",
+        "Supper",
+        "Breakfast"
+      ],
+      "correct": "Breakfast",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Cereal, eggs and toast are popular breakfast foods.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday routine; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What falls from winter clouds as soft white flakes?",
+      "answers": [
+        "Rain",
+        "Snow",
+        "Hail",
+        "Fog"
+      ],
+      "correct": "Snow",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Snowflakes are made of tiny ice crystals.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday weather; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color are most fire trucks?",
+      "answers": [
+        "Blue",
+        "Green",
+        "Red",
+        "Brown"
+      ],
+      "correct": "Red",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Their flashing lights and sirens tell traffic to move aside.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday sight; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which frozen dessert is often served in a cone?",
+      "answers": [
+        "Pie",
+        "Ice cream",
+        "Cake",
+        "Pudding"
+      ],
+      "correct": "Ice cream",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "The crisp cone is edible, so you can eat the whole thing.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday food; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Where do honeybees live?",
+      "answers": [
+        "In a nest of twigs",
+        "In a burrow",
+        "In a hive",
+        "In a cave"
+      ],
+      "correct": "In a hive",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Inside the hive, bees build wax combs made of six-sided cells.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday nature; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which US coin is worth one cent?",
+      "answers": [
+        "The nickel",
+        "The penny",
+        "The dime",
+        "The quarter"
+      ],
+      "correct": "The penny",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "The penny was first made in 1793.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Penny_(United_States_coin)",
+        "title": "Wikipedia: Penny (United States coin)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a United States coin worth one cent'; 'Introduced in 1793'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do you stick on an envelope to pay for mailing it?",
+      "answers": [
+        "A bookmark",
+        "A coin",
+        "A stamp",
+        "A ribbon"
+      ],
+      "correct": "A stamp",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "The post office marks used stamps so they cannot be used again.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday errand; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which direction is the opposite of north?",
+      "answers": [
+        "East",
+        "West",
+        "Northeast",
+        "South"
+      ],
+      "correct": "South",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "On most maps, north is at the top and south is at the bottom.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the four compass directions; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What colors are on the flag of the United States?",
+      "answers": [
+        "Green, white and red",
+        "Red, white and blue",
+        "Black, red and yellow",
+        "Blue and yellow"
+      ],
+      "correct": "Red, white and blue",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "The flag is also nicknamed Old Glory.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Flag_of_the_United_States",
+        "title": "Wikipedia: Flag of the United States",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Red, White and Blue'; 'Old Glory'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which day comes after Friday?",
+      "answers": [
+        "Thursday",
+        "Sunday",
+        "Saturday",
+        "Monday"
+      ],
+      "correct": "Saturday",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Saturday and Sunday together make up the weekend.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the days of the week; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which drink is made by soaking leaves in hot water?",
+      "answers": [
+        "Tea",
+        "Milk",
+        "Juice",
+        "Soda"
+      ],
+      "correct": "Tea",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Tea can be served hot, or cold over ice as iced tea.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday drink; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which month comes right after December?",
+      "answers": [
+        "November",
+        "March",
+        "June",
+        "January"
+      ],
+      "correct": "January",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "December ends one year and January starts the next.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the months of the year; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "Explain rewritten: it named New Year's Day on January 1, the answer to an existing holidays question."
+      }
+    },
+    {
+      "question": "What do you call a person who bakes bread for a living?",
+      "answers": [
+        "A butcher",
+        "A plumber",
+        "A baker",
+        "A tailor"
+      ],
+      "correct": "A baker",
+      "difficulty": "very easy",
+      "category": "General knowledge",
+      "explain": "Bakers often start work in the early hours so the bread is fresh by morning.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday job; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

@@ -1,0 +1,412 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Finish the saying - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on finish the saying, written by Claude on 2026-10-06 as the gentlest level of the 'Finish the saying' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 2 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Finish the saying: An apple a day keeps the ... away.",
+      "answers": [
+        "dentist",
+        "baker",
+        "doctor",
+        "farmer"
+      ],
+      "correct": "doctor",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "It means eating well helps keep you healthy.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'An apple a day keeps the doctor away'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: The early bird catches the ...",
+      "answers": [
+        "worm",
+        "seed",
+        "train",
+        "bus"
+      ],
+      "correct": "worm",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Getting up early gives you the first chance at good things.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'The early bird catches the worm'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "Source note now quotes the page's exact matching form, 'The early bird catches the worm'."
+      }
+    },
+    {
+      "question": "Finish the saying: Actions speak louder than ...",
+      "answers": [
+        "songs",
+        "words",
+        "bells",
+        "drums"
+      ],
+      "correct": "words",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "What you do shows more about you than what you say.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Actions speak louder than words'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Better late than ...",
+      "answers": [
+        "early",
+        "sooner",
+        "never",
+        "later"
+      ],
+      "correct": "never",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Doing something late is better than not doing it at all.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Better late than never'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Practice makes ...",
+      "answers": [
+        "noise",
+        "money",
+        "friends",
+        "perfect"
+      ],
+      "correct": "perfect",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Doing something again and again is how you get good at it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Practice makes perfect'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Every cloud has a silver ...",
+      "answers": [
+        "lining",
+        "edge",
+        "spoon",
+        "coin"
+      ],
+      "correct": "lining",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Even a bad situation usually has something good in it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Every cloud has a silver lining'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Where there's a will, there's a ...",
+      "answers": [
+        "road",
+        "way",
+        "door",
+        "plan"
+      ],
+      "correct": "way",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "If you want something badly enough, you will find a way to do it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Where there is a will there is a way'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Two heads are better than ...",
+      "answers": [
+        "none",
+        "four",
+        "one",
+        "ten"
+      ],
+      "correct": "one",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Two people working together can often solve a problem better than one alone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Two heads are better than one'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Don't count your chickens before they ...",
+      "answers": [
+        "grow",
+        "sing",
+        "fly",
+        "hatch"
+      ],
+      "correct": "hatch",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Don't count on something good until it has really happened.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/don%27t_count_your_chickens_before_they_hatch",
+        "title": "Wiktionary: don't count your chickens before they hatch",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'don't count your chickens before they hatch' (listed form of the proverb)."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "Source changed to Wiktionary, which carries the exact wording 'before they hatch' (the list page only had 'are hatched')."
+      }
+    },
+    {
+      "question": "Finish the saying: You can lead a horse to water, but you can't make it ...",
+      "answers": [
+        "drink",
+        "swim",
+        "run",
+        "sleep"
+      ],
+      "correct": "drink",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "You can give someone a chance, but you cannot force them to take it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'You can lead a horse to water, but you cannot make it drink'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Many hands make light ...",
+      "answers": [
+        "days",
+        "work",
+        "music",
+        "meals"
+      ],
+      "correct": "work",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "A job goes quickly when lots of people help.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Many hands make light work'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: The more, the ...",
+      "answers": [
+        "louder",
+        "busier",
+        "merrier",
+        "smaller"
+      ],
+      "correct": "merrier",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "People say it to welcome extra guests to join in.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The more the merrier'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Better safe than ...",
+      "answers": [
+        "quick",
+        "rich",
+        "brave",
+        "sorry"
+      ],
+      "correct": "sorry",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "It is wiser to be careful now than to wish you had been later.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Better safe than sorry'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: A friend in need is a friend ...",
+      "answers": [
+        "indeed",
+        "forever",
+        "always",
+        "inside"
+      ],
+      "correct": "indeed",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Someone who helps you through hard times is a true friend.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A friend in need (is a friend indeed)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: Like father, like ...",
+      "answers": [
+        "uncle",
+        "son",
+        "brother",
+        "cousin"
+      ],
+      "correct": "son",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Children often grow up to be a lot like their parents.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Like father, like son'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: If at first you don't succeed, try, try ...",
+      "answers": [
+        "harder",
+        "later",
+        "again",
+        "once"
+      ],
+      "correct": "again",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "Keep going even when the first attempt does not work.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'If at first you do not succeed, try, try again'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Finish the saying: There's no time like the ...",
+      "answers": [
+        "future",
+        "past",
+        "morning",
+        "present"
+      ],
+      "correct": "present",
+      "difficulty": "very easy",
+      "category": "Finish the saying",
+      "explain": "If something needs doing, now is the best time to do it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_proverbial_phrases",
+        "title": "Wikipedia: List of proverbial phrases",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'There is no time like the present'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

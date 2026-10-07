@@ -1,0 +1,411 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Music - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on music, written by Claude on 2026-10-06 as the gentlest level of the 'Music' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 1 of them merely easy and took off their note, so the pack is 16 very easy, 1 easy. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 15 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 2 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "How many performers make a duet?",
+      "answers": [
+        "One",
+        "Two",
+        "Three",
+        "Four"
+      ],
+      "correct": "Two",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "A duet is often for two singers or two players.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Duet",
+        "title": "Wikipedia: Duet",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a musical composition for two performers' and 'two singers or two'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which instrument do you hit with sticks?",
+      "answers": [
+        "Violin",
+        "Guitar",
+        "Drum",
+        "Trumpet"
+      ],
+      "correct": "Drum",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Drummers help keep the beat for the rest of the band.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: an everyday instrument everyone has seen played; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which large instrument has many strings plucked with the fingers?",
+      "answers": [
+        "Tuba",
+        "Harp",
+        "Accordion",
+        "Saxophone"
+      ],
+      "correct": "Harp",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Harps can be played sitting or standing.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Harp",
+        "title": "Wikipedia: Harp",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the strings are plucked with the fingers' and 'Harps can be played in either a seated or standing position'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is a group of singers who perform together called?",
+      "answers": [
+        "An orchestra",
+        "An audience",
+        "A jury",
+        "A choir"
+      ],
+      "correct": "A choir",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Another word for a choir is a chorus.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Choir",
+        "title": "Wikipedia: Choir",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a musical ensemble of singers' and 'chorale or chorus'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which brass instrument has a long slide you push in and out?",
+      "answers": [
+        "Trombone",
+        "Trumpet",
+        "Tuba",
+        "French horn"
+      ],
+      "correct": "Trombone",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Moving the slide changes the pitch of the note.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Trombone",
+        "title": "Wikipedia: Trombone",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Nearly all trombones use a telescoping slide mechanism to alter the pitch'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A ukulele looks like a small what?",
+      "answers": [
+        "Drum",
+        "Piano",
+        "Guitar",
+        "Trumpet"
+      ],
+      "correct": "Guitar",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "The ukulele became popular in Hawaii.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ukulele",
+        "title": "Wikipedia: Ukulele",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Musical instrument of the guitar family' and 'popularized in Hawaii'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Bagpipes are most famously linked with which country?",
+      "answers": [
+        "Japan",
+        "Brazil",
+        "Mexico",
+        "Scotland"
+      ],
+      "correct": "Scotland",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "The player squeezes air from a bag into the pipes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bagpipes",
+        "title": "Wikipedia: Bagpipes",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Scottish Great Highland bagpipe is well known' and 'reservoir of air in the form of a bag'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which singer was called the King of Pop?",
+      "answers": [
+        "Frank Sinatra",
+        "Michael Jackson",
+        "Johnny Cash",
+        "Ray Charles"
+      ],
+      "correct": "Michael Jackson",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "He was also famous as a dancer.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Michael_Jackson",
+        "title": "Wikipedia: Michael Jackson",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Dubbed the \" King of Pop \"' and 'singer, songwriter, dancer'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the person who leads an orchestra called?",
+      "answers": [
+        "The usher",
+        "The conductor",
+        "The drummer",
+        "The referee"
+      ],
+      "correct": "The conductor",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Conductors guide the players mostly without words during a concert.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Conducting",
+        "title": "Wikipedia: Conducting",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the art of directing a musical performance , such as an orchestral' and 'Communication is typically non-verbal during a performance'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which instrument is held sideways and played by blowing across a hole?",
+      "answers": [
+        "Trumpet",
+        "Clarinet",
+        "Flute",
+        "Tuba"
+      ],
+      "correct": "Flute",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Its full name, the transverse flute, means side-blown flute.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Western_concert_flute",
+        "title": "Wikipedia: Western concert flute",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'transverse (side-blown) flutes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call the words of a song?",
+      "answers": [
+        "Lyrics",
+        "Chords",
+        "Notes",
+        "Tempo"
+      ],
+      "correct": "Lyrics",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "A person who writes them is called a lyricist.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lyrics",
+        "title": "Wikipedia: Lyrics",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Lyrics are words that make up a song' and 'The writer of lyrics is a lyricist'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is a soft song sung to help a baby fall asleep?",
+      "answers": [
+        "An anthem",
+        "A march",
+        "A lullaby",
+        "A jingle"
+      ],
+      "correct": "A lullaby",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Lullabies are found in many countries and go back to ancient times.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lullaby",
+        "title": "Wikipedia: Lullaby",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a sleep aid for infants' and 'Lullabies can be found in many countries and have existed since ancient times'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Jazz music was born in which American city?",
+      "answers": [
+        "Nashville",
+        "Seattle",
+        "Boston",
+        "New Orleans"
+      ],
+      "correct": "New Orleans",
+      "difficulty": "easy",
+      "category": "Music",
+      "explain": "It began there in the late 1800s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Jazz",
+        "title": "Wikipedia: Jazz",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Late 19th century, New Orleans'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (most adults, not almost everyone, know jazz began in New Orleans)"
+      }
+    },
+    {
+      "question": "Which small instrument do you play by blowing into a row of holes?",
+      "answers": [
+        "Harmonica",
+        "Triangle",
+        "Tambourine",
+        "Banjo"
+      ],
+      "correct": "Harmonica",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "It is a favorite in blues and American folk music.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Harmonica",
+        "title": "Wikipedia: Harmonica",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'is a free reed wind instrument used worldwide in many musical genres, notably in blues , American folk music'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain changed: 'mouth organ' hinted the answer to the organ question in the same file"
+      }
+    },
+    {
+      "question": "Which big keyboard instrument with tall pipes is often heard in churches?",
+      "answers": [
+        "Accordion",
+        "Organ",
+        "Piano",
+        "Harpsichord"
+      ],
+      "correct": "Organ",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "It is a wind instrument played from a keyboard.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pipe_organ",
+        "title": "Wikipedia: Pipe organ",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Wind instrument controlled by keyboard' and '\"Church organ\" redirects here'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a singer sing into so a big crowd can hear?",
+      "answers": [
+        "A telescope",
+        "A calculator",
+        "A flashlight",
+        "A microphone"
+      ],
+      "correct": "A microphone",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "It turns sound into an electrical signal.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Microphone",
+        "title": "Wikipedia: Microphone",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Device that converts sound into an electrical signal'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain trimmed to what the page supports (dropped the speakers clause)"
+      }
+    },
+    {
+      "question": "What do you wear over your ears to listen to music by yourself?",
+      "answers": [
+        "Goggles",
+        "Headphones",
+        "A scarf",
+        "A hat"
+      ],
+      "correct": "Headphones",
+      "difficulty": "very easy",
+      "category": "Music",
+      "explain": "Small ones that fit inside the ear are called earbuds.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: an everyday household object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

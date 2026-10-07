@@ -1,0 +1,1014 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Math facts (AI-written, not yet reviewed)",
+  "description": "43 questions on math as trivia: number words, shapes, measurement, famous numbers (not arithmetic drills - the math game does those) (8 very easy, 10 easy, 11 medium, 14 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 43 of 44 written, fixed 12 and deleted 1. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 6 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What shape is an egg?",
+      "answers": [
+        "Square",
+        "Triangle",
+        "Oval",
+        "Star"
+      ],
+      "correct": "Oval",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "The word 'oval' comes from the Latin word for egg.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Oval",
+        "title": "Wikipedia: Oval",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'An oval ( from Latin ovum ' egg ' ) is a closed curve in a plane which resembles the outline of an egg'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain was an ellipse description, not true of an egg; now the 'oval' etymology, cited to Wikipedia: Oval"
+      }
+    },
+    {
+      "question": "What shape is a can of soup?",
+      "answers": [
+        "Cube",
+        "Cylinder",
+        "Pyramid",
+        "Cone"
+      ],
+      "correct": "Cylinder",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "A cylinder has a flat circle at each end and one curved side.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a soup can is a cylinder; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does the plus sign (+) tell you to do?",
+      "answers": [
+        "Subtract",
+        "Divide",
+        "Multiply",
+        "Add"
+      ],
+      "correct": "Add",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "Its partner, the minus sign, tells you to subtract.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the plus sign means add, taught in the first school years; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What are numbers like 2, 4, 6 and 8 called?",
+      "answers": [
+        "Odd numbers",
+        "Even numbers",
+        "Fractions",
+        "Negative numbers"
+      ],
+      "correct": "Even numbers",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "An even number of things can always be split into two equal groups.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: 2, 4, 6, 8 are the even numbers; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many sides does a rectangle have?",
+      "answers": [
+        "Three",
+        "Five",
+        "Six",
+        "Four"
+      ],
+      "correct": "Four",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "Its opposite sides are the same length, and every corner is square.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a rectangle has four sides and square corners; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What shape is a standard game die?",
+      "answers": [
+        "Cube",
+        "Sphere",
+        "Cone",
+        "Cylinder"
+      ],
+      "correct": "Cube",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "Its six faces show from one to six dots.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dice",
+        "title": "Wikipedia: Dice",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A traditional die is a cube with each of its six faces marked with a different number of dots ( pips ) from 1 to 6'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many years are in a decade?",
+      "answers": [
+        "Five",
+        "Ten",
+        "Twenty",
+        "Fifty"
+      ],
+      "correct": "Ten",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "The 1960s, for example, were one decade.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a decade is ten years; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which tool do people use to draw a straight line?",
+      "answers": [
+        "Scissors",
+        "Eraser",
+        "Ruler",
+        "Stapler"
+      ],
+      "correct": "Ruler",
+      "difficulty": "very easy",
+      "category": "Math facts",
+      "explain": "A ruler can also measure how long something is.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a ruler is the everyday straight-edge and measuring tool; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many degrees are in a right angle?",
+      "answers": [
+        "45",
+        "180",
+        "90",
+        "360"
+      ],
+      "correct": "90",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "A right angle is a quarter of a full turn.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Right_angle",
+        "title": "Wikipedia: Right angle",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a right angle is an angle of exactly 90 degrees' and 'corresponding to a quarter turn'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many centimeters are in a meter?",
+      "answers": [
+        "Ten",
+        "Twelve",
+        "One thousand",
+        "One hundred"
+      ],
+      "correct": "One hundred",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "A centimeter is about the width of an adult's fingernail.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Centimetre",
+        "title": "Wikipedia: Centimetre",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'there are 100 centimetres in 1 metre' and 'A centimetre is approximately the width of the fingernail of an average adult person'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many feet are in a yard?",
+      "answers": [
+        "Three",
+        "Two",
+        "Four",
+        "Ten"
+      ],
+      "correct": "Three",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "That makes a yard 36 inches long.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yard",
+        "title": "Wikipedia: Yard",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'equalling 3 feet or 36 inches'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the distance around the edge of a shape called?",
+      "answers": [
+        "Area",
+        "Volume",
+        "Perimeter",
+        "Diameter"
+      ],
+      "correct": "Perimeter",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "The word comes from Greek words meaning 'around' and 'measure.'",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Perimeter",
+        "title": "Wikipedia: Perimeter",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Perimeter is the distance around a two-dimensional shape' and 'from περί peri \"around\" and μέτρον metron \"measure\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What number does the Roman numeral X stand for?",
+      "answers": [
+        "Five",
+        "Fifty",
+        "One hundred",
+        "Ten"
+      ],
+      "correct": "Ten",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "In the same system, V means 5 and I means 1.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roman_numerals",
+        "title": "Wikipedia: Roman numerals",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'I meaning 1, V meaning 5, X meaning 10'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A percent is a part out of how many?",
+      "answers": [
+        "Ten",
+        "One hundred",
+        "One thousand",
+        "Twelve"
+      ],
+      "correct": "One hundred",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "It comes from the Latin 'per centum,' meaning 'by a hundred.'",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Percentage",
+        "title": "Wikipedia: Percentage",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'from Latin per centum ' by a hundred ' ) is a number or ratio expressed as a fraction of 100'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many degrees make one full turn around a circle?",
+      "answers": [
+        "90",
+        "180",
+        "100",
+        "360"
+      ],
+      "correct": "360",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "One likely reason for 360 is that it divides evenly by 24 different whole numbers.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Degree_(angle)",
+        "title": "Wikipedia: Degree (angle)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'one full rotation is assigned the value of 360 degrees' and 'Another motivation for choosing the number 360 may have been that it is readily divisible : 360 has 24 divisors'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain stated a disputed calendar claim as fact; replaced with the page's divisibility point"
+      }
+    },
+    {
+      "question": "Which tool is used to measure angles?",
+      "answers": [
+        "Ruler",
+        "Thermometer",
+        "Protractor",
+        "Scale"
+      ],
+      "correct": "Protractor",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "Many protractors are simple half-circles of clear plastic.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Protractor",
+        "title": "Wikipedia: Protractor",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A protractor is a measuring instrument , typically made of transparent plastic, for measuring angles . Some protractors are simple half-discs or full circles'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many sides does a pentagon have?",
+      "answers": [
+        "Four",
+        "Six",
+        "Five",
+        "Seven"
+      ],
+      "correct": "Five",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "Its name comes from the Greek word for five, 'pente.'",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pentagon",
+        "title": "Wikipedia: Pentagon",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'from Greek πέντε (pente) ' five '' and 'is any five-sided polygon'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the longest side of a right triangle called?",
+      "answers": [
+        "Leg",
+        "Hypotenuse",
+        "Radius",
+        "Chord"
+      ],
+      "correct": "Hypotenuse",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "The name comes from a Greek word meaning 'stretching under.'",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hypotenuse",
+        "title": "Wikipedia: Hypotenuse",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a hypotenuse is the side of a right triangle that is opposite to the right angle . [ 1 ] It is always the longest side' and 'lit. ' stretching under ''."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractors Diagonal and Base could be argued; replaced with Leg and Chord"
+      }
+    },
+    {
+      "question": "Rounded to two decimal places, what is the value of pi?",
+      "answers": [
+        "2.72",
+        "3.14",
+        "1.62",
+        "3.41"
+      ],
+      "correct": "3.14",
+      "difficulty": "easy",
+      "category": "Math facts",
+      "explain": "Pi is the distance around any circle divided by its distance across.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pi",
+        "title": "Wikipedia: Pi",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '3.14159 26535' and 'the ratio of a circle's circumference to its diameter'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy (most adults know pi is 3.14)"
+      }
+    },
+    {
+      "question": "What number does the Roman numeral D stand for?",
+      "answers": [
+        "50",
+        "1,000",
+        "500",
+        "100"
+      ],
+      "correct": "500",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "M, meaning 1,000, is the largest of the seven basic Roman symbols.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roman_numerals",
+        "title": "Wikipedia: Roman numerals",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'uses only seven letters from the Latin alphabet as symbols' and 'D meaning 500, and M meaning 1000'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The theorem a² + b² = c² is named after which ancient Greek?",
+      "answers": [
+        "Aristotle",
+        "Socrates",
+        "Plato",
+        "Pythagoras"
+      ],
+      "correct": "Pythagoras",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "Pythagoras was born around 570 BC.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pythagorean_theorem",
+        "title": "Wikipedia: Pythagorean theorem",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a 2 + b 2 = c 2' and 'The theorem is named for the Greek philosopher Pythagoras , born around 570 BC'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does the metric prefix 'kilo-' mean?",
+      "answers": [
+        "One hundred",
+        "One thousand",
+        "One million",
+        "One tenth"
+      ],
+      "correct": "One thousand",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "At the small end, 'milli-' means one-thousandth.",
+      "source": {
+        "url": "https://www.nist.gov/pml/owm/metric-si-prefixes",
+        "title": "NIST: Metric (SI) Prefixes",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the prefixes deka , hecto , and kilo meaning, respectively, 10, 100, and 1000, and deci , centi , and milli , meaning, respectively, one-tenth, one-hundredth, and one-thousandth'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many feet are in a mile?",
+      "answers": [
+        "1,760",
+        "3,000",
+        "5,000",
+        "5,280"
+      ],
+      "correct": "5,280",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "England fixed the mile at that length in 1593.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mile",
+        "title": "Wikipedia: Mile",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the statute mile was made equivalent to 8 furlongs or 5,280 feet in 1593'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the only even prime number?",
+      "answers": [
+        "Two",
+        "Four",
+        "Zero",
+        "Ten"
+      ],
+      "correct": "Two",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "It is also the smallest prime number.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/2_(number)",
+        "title": "Wikipedia: 2 (number)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is the smallest and the only even prime number'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is an angle smaller than a right angle called?",
+      "answers": [
+        "Obtuse",
+        "Acute",
+        "Reflex",
+        "Straight"
+      ],
+      "correct": "Acute",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "An angle between a right angle and a straight angle is called obtuse.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Acute_angle",
+        "title": "Wikipedia: Angle (redirected from Acute angle)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'An angle smaller than a right angle (less than 90°) is called an acute angle' and 'An angle larger than a right angle and smaller than a straight angle (between 90° and 180°)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain said 'straight line'; the page says 'straight angle'"
+      }
+    },
+    {
+      "question": "What is a triangle with all three sides the same length called?",
+      "answers": [
+        "Right",
+        "Scalene",
+        "Equilateral",
+        "Obtuse"
+      ],
+      "correct": "Equilateral",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "Each of its three angles is 60 degrees.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Equilateral_triangle",
+        "title": "Wikipedia: Equilateral triangle",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'An equilateral triangle is a triangle with three sides of equal length and three equal angles' and 'Its internal angle is 60 degrees'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many items are in a gross?",
+      "answers": [
+        "100",
+        "120",
+        "144",
+        "1,000"
+      ],
+      "correct": "144",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "A gross is a dozen dozens.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gross_(unit)",
+        "title": "Wikipedia: Gross (unit)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Group of 144; a dozen dozen'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In old-fashioned counting, how many is a 'score'?",
+      "answers": [
+        "Ten",
+        "Twelve",
+        "Fifty",
+        "Twenty"
+      ],
+      "correct": "Twenty",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "So 'fourscore' means eighty.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/20_(number)",
+        "title": "Wikipedia: 20 (number)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A 'score' is a group of twenty (often used in combination with a cardinal number , e.g. fourscore to mean 80)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In a fraction, what is the bottom number called?",
+      "answers": [
+        "Numerator",
+        "Denominator",
+        "Exponent",
+        "Quotient"
+      ],
+      "correct": "Denominator",
+      "difficulty": "medium",
+      "category": "Math facts",
+      "explain": "It comes from a Latin word meaning 'namer,' since it names the kind of part.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fraction",
+        "title": "Wikipedia: Fraction",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a non-zero integer denominator , displayed below (or after) that line' and 'dēnōminātor being Latin for a \"namer\" or \"designator\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many faces does a regular icosahedron have?",
+      "answers": [
+        "12",
+        "20",
+        "30",
+        "8"
+      ],
+      "correct": "20",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "It also has 30 edges and 12 corners.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Regular_icosahedron",
+        "title": "Wikipedia: Regular icosahedron",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'has 20 equilateral triangles as its faces, 30 edges, and 12 vertices'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Who is credited with the first known proof that there are infinitely many primes?",
+      "answers": [
+        "Thales",
+        "Plato",
+        "Euclid",
+        "Zeno"
+      ],
+      "correct": "Euclid",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "The result is still called Euclid's theorem.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Prime_number",
+        "title": "Wikipedia: Prime number",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'This statement is referred to as Euclid's theorem in honor of the ancient Greek mathematician Euclid , since the first known proof for this statement is attributed to him'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "As Fibonacci numbers grow, the ratio of neighboring ones approaches what?",
+      "answers": [
+        "Pi",
+        "The square root of 2",
+        "The golden ratio",
+        "Exactly 2"
+      ],
+      "correct": "The golden ratio",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "Johannes Kepler noticed it long ago, comparing 5 to 8 and 8 to 13.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fibonacci_sequence",
+        "title": "Wikipedia: Fibonacci sequence",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'the ratio of two consecutive Fibonacci numbers tends to the golden ratio as n increases' and 'He wrote that \"as 5 is to 8 so is 8 to 13, practically'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain now quotes what the page says Kepler actually observed"
+      }
+    },
+    {
+      "question": "What is a googolplex?",
+      "answers": [
+        "1 followed by 100 zeros",
+        "1 followed by 1,000 zeros",
+        "A googol times a googol",
+        "1 followed by a googol zeros"
+      ],
+      "correct": "1 followed by a googol zeros",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "The name was suggested by the nine-year-old nephew of mathematician Edward Kasner.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Googolplex",
+        "title": "Wikipedia: Googolplex",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'it would be 1 followed by a googol (10 100 ) zeroes' and 'Edward Kasner 's nine-year-old nephew, Milton Sirotta, coined the term googol , which is 10 100 , and then proposed the further term googolplex'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which famous equation links e, i, pi, 1 and 0?",
+      "answers": [
+        "Heron's formula",
+        "Euler's identity",
+        "Fermat's Last Theorem",
+        "Bayes' theorem"
+      ],
+      "correct": "Euler's identity",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "A 1990 readers' poll named it the most beautiful theorem in mathematics.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Euler%27s_identity",
+        "title": "Wikipedia: Euler's identity",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The identity also links five fundamental mathematical constants' and 'A 1990 poll of readers by The Mathematical Intelligencer named Euler's identity the \"most beautiful theorem in mathematics\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the smallest perfect number?",
+      "answers": [
+        "1",
+        "12",
+        "6",
+        "28"
+      ],
+      "correct": "6",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "Its divisors other than itself, 1, 2 and 3, add up to exactly 6.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Perfect_number",
+        "title": "Wikipedia: Perfect number",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '6 has proper divisors 1, 2, and 3, and 1 + 2 + 3 = 6, so 6 is a perfect number' and 'because 6 is the smallest perfect number'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which mathematician invented the equals sign (=) in 1557?",
+      "answers": [
+        "Isaac Newton",
+        "Robert Recorde",
+        "John Napier",
+        "René Descartes"
+      ],
+      "correct": "Robert Recorde",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "He chose two parallel lines because no two things could be more equal.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Equals_sign",
+        "title": "Wikipedia: Equals sign",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It was invented in 1557 by the Welsh mathematician Robert Recorde' and 'because no 2 things can be more equal'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "'introduced' -> 'invented', as the source states it"
+      }
+    },
+    {
+      "question": "Who made the earliest known use of π alone for the circle ratio, in 1706?",
+      "answers": [
+        "Gottfried Leibniz",
+        "Archimedes",
+        "Isaac Newton",
+        "William Jones"
+      ],
+      "correct": "William Jones",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "Leonhard Euler later made the symbol popular in works of 1736 and 1748.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pi",
+        "title": "Wikipedia: Pi",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'The earliest known use of the Greek letter π alone to represent the ratio of a circle's circumference to its diameter was by Welsh mathematician William Jones in his 1706 work' and 'Leonhard Euler popularized the use of the Greek letter π in works he published in 1736 and 1748'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question now says 'earliest known use' as the source does; explain (book subtitle) replaced with Euler's popularization"
+      }
+    },
+    {
+      "question": "The word 'algorithm' comes from the name of which mathematician?",
+      "answers": [
+        "Al-Khwarizmi",
+        "Fibonacci",
+        "Omar Khayyam",
+        "Hypatia"
+      ],
+      "correct": "Al-Khwarizmi",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "Around 825 AD he wrote a book whose title means 'Book of Indian computation.'",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Algorithm",
+        "title": "Wikipedia: Algorithm",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The 9th-century mathematician whose name is the origin of the word 'algorithm'' and 'Around 825 AD, Persian scientist and polymath al-Khwarizmi wrote kitāb al-ḥisāb al-hindī (\"Book of Indian computation\")'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain said 'Indian numerals'; now the page's own title translation"
+      }
+    },
+    {
+      "question": "Who released the first successful proof of Fermat's Last Theorem, in 1994?",
+      "answers": [
+        "Carl Friedrich Gauss",
+        "Andrew Wiles",
+        "Pierre de Fermat",
+        "Henri Poincaré"
+      ],
+      "correct": "Andrew Wiles",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "Mathematicians had tried to prove it for 358 years.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem",
+        "title": "Wikipedia: Fermat's Last Theorem",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'After 358 years of effort by mathematicians, the first successful proof was released in 1994 by Andrew Wiles'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The number 1729 is nicknamed after which Indian mathematician?",
+      "answers": [
+        "Aryabhata",
+        "Srinivasa Ramanujan",
+        "Bhaskara",
+        "Madhava"
+      ],
+      "correct": "Srinivasa Ramanujan",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "It is the smallest number that is the sum of two positive cubes in two different ways.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/1729_(number)",
+        "title": "Wikipedia: 1729 (number)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'It is known as the Ramanujan number or Hardy–Ramanujan number after G. H. Hardy and Srinivasa Ramanujan' and 'the first nontrivial taxicab number , expressed as the sum of two cubic positive integers in two different ways'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain said 'two cubes' (false if negative cubes count: 91 works); now 'two positive cubes'"
+      }
+    },
+    {
+      "question": "Whose book, dated 628 AD, was the first to give rules for arithmetic with zero?",
+      "answers": [
+        "Pingala",
+        "Aryabhata",
+        "Brahmagupta",
+        "Bhaskara"
+      ],
+      "correct": "Brahmagupta",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "His book treated zero as a number in its own right, not just a placeholder.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Brahmagupta",
+        "title": "Wikipedia: Brahmagupta",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'dated 628' and 'Brahmagupta's Brahmasphuṭasiddhānta is the first book that provides rules for arithmetic manipulations that apply to zero' and 'the earliest known text to treat zero as a number in its own right, rather than as simply a placeholder digit'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question reworded to match the source ('the first book that provides rules')"
+      }
+    },
+    {
+      "question": "Which English mathematician first used the symbol ∞ in mathematics?",
+      "answers": [
+        "John Wallis",
+        "Isaac Newton",
+        "Robert Hooke",
+        "Edmond Halley"
+      ],
+      "correct": "John Wallis",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "His first known use of the symbol was in 1655.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Infinity_symbol",
+        "title": "Wikipedia: Infinity symbol",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'This symbol was first used mathematically by John Wallis in the 17th century, although it has a longer history of other uses' and 'First known usage of the infinity symbol, by John Wallis in 1655'. https://en.wikipedia.org/wiki/John_Wallis contains 'English mathematician (1616–1703)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "'introduced' -> 'first used in mathematics', as the source states it (the shape is older)"
+      }
+    },
+    {
+      "question": "Archimedes estimated pi using polygons with how many sides?",
+      "answers": [
+        "64",
+        "100",
+        "360",
+        "96"
+      ],
+      "correct": "96",
+      "difficulty": "hard",
+      "category": "Math facts",
+      "explain": "He started with hexagons inside and outside a circle and kept doubling the sides.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Archimedes",
+        "title": "Wikipedia: Archimedes",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'drawing a larger regular hexagon outside a circle then a smaller regular hexagon inside the circle, and progressively doubling the number of sides' and 'when the polygons had 96 sides each, he was able to determine that the value of π lay between'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

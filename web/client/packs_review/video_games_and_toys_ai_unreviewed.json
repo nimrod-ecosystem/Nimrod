@@ -1,0 +1,1016 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Video games & toys (AI-written, not yet reviewed)",
+  "description": "43 questions on video games, board games and toys, classic and current-but-stable facts (8 very easy, 10 easy, 15 medium, 10 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 43 of 44 written, fixed 8 and deleted 1. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 43 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What color is Sonic the Hedgehog?",
+      "answers": [
+        "Red",
+        "Blue",
+        "Green",
+        "Yellow"
+      ],
+      "correct": "Blue",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "Sonic is a blue hedgehog famous for running at supersonic speed.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sonic_the_Hedgehog_(character)",
+        "title": "Wikipedia: Sonic the Hedgehog (character)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Sonic is an anthropomorphic blue hedgehog who runs at supersonic speed'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What letter is on Mario's red cap?",
+      "answers": [
+        "S",
+        "P",
+        "N",
+        "M"
+      ],
+      "correct": "M",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "The cap goes with his classic red shirt and blue overalls.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mario",
+        "title": "Wikipedia: Mario",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a red cap with the letter M, a red shirt, blue overalls'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "To clear a maze, what must Pac-Man eat all of?",
+      "answers": [
+        "Coins",
+        "Dots",
+        "Stars",
+        "Mushrooms"
+      ],
+      "correct": "Dots",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "Once every dot is gone, the player moves on to the next level.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pac-Man",
+        "title": "Wikipedia: Pac-Man",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'When Pac-Man eats all of the dots, the player advances to the next level'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In chess, which piece must you trap to win the game?",
+      "answers": [
+        "Queen",
+        "Rook",
+        "King",
+        "Pawn"
+      ],
+      "correct": "King",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "Trapping the king so it has no way out of check is called checkmate.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chess",
+        "title": "Wikipedia: Chess",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'this occurs when the opponent's king is in check, and there is no legal way to get it out of check'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A yo-yo spins down and back up on a what?",
+      "answers": [
+        "Chain",
+        "Ribbon",
+        "Wire",
+        "String"
+      ],
+      "correct": "String",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "The string is tied around a small axle between the yo-yo's two disks.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yo-yo",
+        "title": "Wikipedia: Yo-yo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a toy consisting of an axle connected to two disks' and 'a string is fastened around the axle'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the world in Minecraft built out of?",
+      "answers": [
+        "Blocks",
+        "Marbles",
+        "Ropes",
+        "Bubbles"
+      ],
+      "correct": "Blocks",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "Players gather materials from the blocks and use them to build structures.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Minecraft",
+        "title": "Wikipedia: Minecraft",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'terrain made up of three-dimensional blocks' and 'extract raw materials, craft tools and items, build structures'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Monopoly, what do you roll to move your piece?",
+      "answers": [
+        "A coin",
+        "A spinner",
+        "Dice",
+        "A marble"
+      ],
+      "correct": "Dice",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "Rolling the same number on both dice, called doubles, earns another turn.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Monopoly_(game)",
+        "title": "Wikipedia: Monopoly (game)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'they roll the dice and advance their piece' and 'Rolling the same number on both dice (doubles) allows a player to take another turn'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Play-Doh is a soft dough used for what?",
+      "answers": [
+        "Baking bread",
+        "Painting walls",
+        "Modeling shapes",
+        "Sealing envelopes"
+      ],
+      "correct": "Modeling shapes",
+      "difficulty": "very easy",
+      "category": "Video games & toys",
+      "explain": "It is a modeling compound sold for arts and crafts projects.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Play-Doh",
+        "title": "Wikipedia: Play-Doh",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'modeling compound marketed for young children to make arts and crafts projects'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name of Mario's brother?",
+      "answers": [
+        "Wario",
+        "Luigi",
+        "Toad",
+        "Waluigi"
+      ],
+      "correct": "Luigi",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "Luigi is Mario's younger twin, and the taller of the two.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mario",
+        "title": "Wikipedia: Mario",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'his younger twin brother, Luigi' and 'Luigi, his younger, taller brother'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is Mario's main job?",
+      "answers": [
+        "Chef",
+        "Mail carrier",
+        "Firefighter",
+        "Plumber"
+      ],
+      "correct": "Plumber",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "He lives in the Mushroom Kingdom and often rescues Princess Peach.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mario",
+        "title": "Wikipedia: Mario",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Mario is an Italian-American plumber who lives in the Mushroom Kingdom' and 'rescuing Princess Peach'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Sonic the Hedgehog is the mascot of which video game company?",
+      "answers": [
+        "Nintendo",
+        "Sega",
+        "Atari",
+        "Capcom"
+      ],
+      "correct": "Sega",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "Sega wanted a speedy mascot to compete with Nintendo's Mario.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sonic_the_Hedgehog_(character)",
+        "title": "Wikipedia: Sonic the Hedgehog (character)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the mascot of the Japanese video game company Sega' and 'Sega sought a mascot to compete with'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name of the hero in The Legend of Zelda games?",
+      "answers": [
+        "Samus",
+        "Marth",
+        "Link",
+        "Pit"
+      ],
+      "correct": "Link",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "Zelda is the princess he saves, not the hero himself.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Link_(The_Legend_of_Zelda)",
+        "title": "Wikipedia: Link (The Legend of Zelda)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Link was introduced as the hero of the original The Legend of Zelda video game' and 'saves Princess Zelda'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Monopoly, which square pays you $200 each time you pass it?",
+      "answers": [
+        "Go",
+        "Free Parking",
+        "Chance",
+        "Community Chest"
+      ],
+      "correct": "Go",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "Each player starts the game with $1,500.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Monopoly_(game)",
+        "title": "Wikipedia: Monopoly (game)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'collect $200 for passing Go' and 'Each player starts with $1,500'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color is Nintendo's round hero, Kirby?",
+      "answers": [
+        "Blue",
+        "Yellow",
+        "Green",
+        "Pink"
+      ],
+      "correct": "Pink",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "Kirby first appeared in the 1992 game Kirby's Dream Land.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kirby_(character)",
+        "title": "Wikipedia: Kirby (character)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Sakurai always intended the character to be pink' and 'First game Kirby's Dream Land (1992)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which chess piece moves in an L shape?",
+      "answers": [
+        "Bishop",
+        "Knight",
+        "Rook",
+        "King"
+      ],
+      "correct": "Knight",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "The knight can also jump over other pieces on its way.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Knight_(chess)",
+        "title": "Wikipedia: Knight (chess)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'forming the shape of a capital L' and 'the knight can jump over pieces'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What type of Pokémon is Pikachu?",
+      "answers": [
+        "Fire",
+        "Water",
+        "Grass",
+        "Electric"
+      ],
+      "correct": "Electric",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "The red sacs on its cheeks can make large amounts of electricity.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pikachu",
+        "title": "Wikipedia: Pikachu",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Classified as an Electric-type Pokémon' and 'red sacs on its cheek which can generate large amounts of electricity'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Nintendo's headquarters are in which country?",
+      "answers": [
+        "Japan",
+        "South Korea",
+        "China",
+        "United States"
+      ],
+      "correct": "Japan",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "The company is based in the city of Kyoto.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nintendo",
+        "title": "Wikipedia: Nintendo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a Japanese multinational video game company headquartered in Kyoto'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name of the friendly dinosaur that Mario rides?",
+      "answers": [
+        "Rex",
+        "Spike",
+        "Yoshi",
+        "Dino"
+      ],
+      "correct": "Yoshi",
+      "difficulty": "easy",
+      "category": "Video games & toys",
+      "explain": "Yoshi first appeared in Super Mario World in 1990.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yoshi",
+        "title": "Wikipedia: Yoshi",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Super Mario World (1990)', 'as a rideable companion for Mario' and 'a species of dinosaur-like creatures'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Bowser, the villain of the Mario games, is called the King of the what?",
+      "answers": [
+        "Goombas",
+        "Boos",
+        "Koopas",
+        "Toads"
+      ],
+      "correct": "Koopas",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "He is also sometimes called King Koopa, or simply Koopa.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bowser_(character)",
+        "title": "Wikipedia: Bowser (character)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'King Koopa , Koopa , or King of the Koopas'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain rewritten: the Japanese name Kuppa is just Koopa romanized, so 'his name is Kuppa' was misleading"
+      }
+    },
+    {
+      "question": "Which game studio created Minecraft?",
+      "answers": [
+        "Epic Games",
+        "Valve",
+        "Mojang Studios",
+        "Ubisoft"
+      ],
+      "correct": "Mojang Studios",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Mojang Studios is a Swedish company.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Minecraft",
+        "title": "Wikipedia: Minecraft",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'developed and published by the Swedish company Mojang Studios'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Minecraft, which block is used to build a portal to the Nether?",
+      "answers": [
+        "Diamond",
+        "Bedrock",
+        "Gold",
+        "Obsidian"
+      ],
+      "correct": "Obsidian",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "The Nether is a fiery dimension made up mainly of lava.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Minecraft",
+        "title": "Wikipedia: Minecraft",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'accessed via an obsidian portal and composed mainly of lava'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Charmander evolves into which Pokémon?",
+      "answers": [
+        "Ivysaur",
+        "Charmeleon",
+        "Wartortle",
+        "Raichu"
+      ],
+      "correct": "Charmeleon",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Charmeleon later evolves into Charizard, the final form.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Charmander",
+        "title": "Wikipedia: Charmander",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'which includes Charmeleon and its final form Charizard'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The name Pokémon is short for what?",
+      "answers": [
+        "Power Monsters",
+        "Pocket Mountains",
+        "Puppet Monsters",
+        "Pocket Monsters"
+      ],
+      "correct": "Pocket Monsters",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "The accent over the e was added to help people say it correctly.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pok%C3%A9mon",
+        "title": "Wikipedia: Pokémon",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The original full name of the franchise is Pocket Monsters' and 'to aid in pronunciation'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In most Legend of Zelda games, the hero travels through which land?",
+      "answers": [
+        "Avalon",
+        "Hyrule",
+        "Mushroom Kingdom",
+        "Atlantis"
+      ],
+      "correct": "Hyrule",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Exploring dungeons and solving puzzles are big parts of each adventure.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Link_(The_Legend_of_Zelda)",
+        "title": "Wikipedia: Link (The Legend of Zelda)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'travelling through Hyrule whilst exploring dungeons, battling creatures, and solving puzzles'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Rubik's Cube was invented in which country?",
+      "answers": [
+        "Poland",
+        "Austria",
+        "Czechoslovakia",
+        "Hungary"
+      ],
+      "correct": "Hungary",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Its inventor was a sculptor and a professor of architecture.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rubik%27s_Cube",
+        "title": "Wikipedia: Rubik's Cube",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'invented in 1974 [ 2 ] [ 3 ] by Hungarian sculptor and professor of architecture'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "At the start of Scrabble, how many tiles does each player draw?",
+      "answers": [
+        "Five",
+        "Six",
+        "Seven",
+        "Eight"
+      ],
+      "correct": "Seven",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Using all seven tiles in one turn is called a bingo in North America.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Scrabble",
+        "title": "Wikipedia: Scrabble",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Each player then draws seven tiles and places them on their rack' and 'Playing all seven tiles is officially called a \"bingo\" in North America'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which handheld system came packaged with Tetris in the U.S. in 1989?",
+      "answers": [
+        "Game Boy",
+        "Game Gear",
+        "Atari Lynx",
+        "Nintendo DS"
+      ],
+      "correct": "Game Boy",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Tetris became the main reason many people wanted the system.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tetris",
+        "title": "Wikipedia: Tetris",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Tetris was the pack-in game and the primary game promoted for the Game Boy in the United States' and 'for the Game Boy and Nintendo Entertainment System (NES); both versions were released in 1989'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now also quotes the 1989 Game Boy release"
+      }
+    },
+    {
+      "question": "What are the little Lego people figures called?",
+      "answers": [
+        "Brickmen",
+        "Block Buddies",
+        "Minifigures",
+        "Mini-mates"
+      ],
+      "correct": "Minifigures",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Lego made the first ones in 1978.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lego",
+        "title": "Wikipedia: Lego",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'figurines called minifigures' and 'In 1978, Lego produced the first minifigures'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Roblox hosts millions of games made mostly by whom?",
+      "answers": [
+        "Movie studios",
+        "Its own users",
+        "Nintendo",
+        "Toy companies"
+      ],
+      "correct": "Its own users",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Creators build their games in a free tool called Roblox Studio.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roblox",
+        "title": "Wikipedia: Roblox",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The platform hosts millions of user-created games' and 'the platform's game engine, Roblox Studio'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The game Tetris was created in which country?",
+      "answers": [
+        "Japan",
+        "United States",
+        "Finland",
+        "Soviet Union"
+      ],
+      "correct": "Soviet Union",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "A software engineer named Alexey Pajitnov made it in the mid-1980s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tetris",
+        "title": "Wikipedia: Tetris",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'created by Alexey Pajitnov , a Soviet software engineer , in the mid-1980s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: Tetris being Russian/Soviet is widely known"
+      }
+    },
+    {
+      "question": "The name Tetris blends the word tetra with which sport?",
+      "answers": [
+        "Chess",
+        "Golf",
+        "Tennis",
+        "Cricket"
+      ],
+      "correct": "Tennis",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "Tetra means four, the number of blocks in every falling piece.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tetris",
+        "title": "Wikipedia: Tetris",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a combination of \"tetra\" (meaning \"four\") and Pajitnov's favorite sport, tennis' and 'falling pieces consisting of four connected blocks'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name of the red ghost in Pac-Man?",
+      "answers": [
+        "Pinky",
+        "Blinky",
+        "Inky",
+        "Clyde"
+      ],
+      "correct": "Blinky",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "Of the other three, Pinky is pink, Inky is cyan, and Clyde is orange.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pac-Man",
+        "title": "Wikipedia: Pac-Man",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Blinky (red), Pinky (pink), Inky (cyan), and Clyde (orange)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Japan, Pac-Man was first released under what title?",
+      "answers": [
+        "Munch Man",
+        "Chomp Man",
+        "Puck Man",
+        "Gobble Man"
+      ],
+      "correct": "Puck Man",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "The name comes from paku paku, a Japanese phrase for gobbling something up.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pac-Man",
+        "title": "Wikipedia: Pac-Man",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'originally titled Puck Man' and 'paku paku taberu , which refers to gobbling something up'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractor Pakkun replaced with Chomp Man (the page says the game was initially titled Pakkuman, so Pakkun was arguably right)"
+      }
+    },
+    {
+      "question": "In the 1981 arcade game Donkey Kong, what was Mario called?",
+      "answers": [
+        "Jumpman",
+        "Hammer Joe",
+        "Plumber Pete",
+        "Barrel Boy"
+      ],
+      "correct": "Jumpman",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "In that first game he was a carpenter climbing a construction site.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)",
+        "title": "Wikipedia: Donkey Kong (1981 video game)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'As Mario (occasionally referred to as \"Jumpman\" at the time)' and 'The hero is a carpenter originally unnamed in the Japanese arcade release, later called Jumpman, then Mario'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which Pokémon is number 001 in the Pokédex?",
+      "answers": [
+        "Pikachu",
+        "Mew",
+        "Charmander",
+        "Bulbasaur"
+      ],
+      "correct": "Bulbasaur",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "It is one of the three Pokémon a player can choose at the start of the first games.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bulbasaur",
+        "title": "Wikipedia: Bulbasaur",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Bulbasaur is the first Pokémon entry in the Pokédex' and 'Bulbasaur is one of the initial three Pokémon the player can choose from at the beginning of the games'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: Bulbasaur #001 is well known to anyone who grew up with Pokemon"
+      }
+    },
+    {
+      "question": "The Lego company began in 1932 making toys out of what?",
+      "answers": [
+        "Tin",
+        "Wood",
+        "Rubber",
+        "Cardboard"
+      ],
+      "correct": "Wood",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Its founder, Ole Kirk Christiansen, was a carpenter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lego",
+        "title": "Wikipedia: Lego",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Ole Kirk Christiansen (1891–1958), a carpenter' and 'who began making wooden toys in 1932'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: wood is the natural guess for 1932 toys; a familiar fun fact"
+      }
+    },
+    {
+      "question": "What was Minecraft called in its very first test versions?",
+      "answers": [
+        "Block World",
+        "Dig Craft",
+        "Mine Land",
+        "Cave Game"
+      ],
+      "correct": "Cave Game",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "Those first 2009 versions had a world made of grass and cobblestone blocks.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Minecraft",
+        "title": "Wikipedia: Minecraft",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Minecraft originated in May 2009' and 'then called Cave Game , featuring a world composed of grass and cobblestone blocks'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain: dropped 'only', which the source does not say"
+      }
+    },
+    {
+      "question": "The property names on the original Monopoly board come from which city?",
+      "answers": [
+        "Chicago",
+        "Atlantic City",
+        "Philadelphia",
+        "Boston"
+      ],
+      "correct": "Atlantic City",
+      "difficulty": "medium",
+      "category": "Video games & toys",
+      "explain": "Marvin Gardens on the board is a misspelling of the real Marven Gardens.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Monopoly_(game)",
+        "title": "Wikipedia: Monopoly (game)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The properties on the original game board were named after locations in and around Atlantic City' and 'is a misspelling of its actual name, Marven Gardens'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: Atlantic City is widely known, and the board itself has Atlantic Avenue"
+      }
+    },
+    {
+      "question": "Nintendo was founded in 1889 to make what?",
+      "answers": [
+        "Bicycles",
+        "Sewing machines",
+        "Umbrellas",
+        "Playing cards"
+      ],
+      "correct": "Playing cards",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "The company did not start making toys until the 1960s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nintendo",
+        "title": "Wikipedia: Nintendo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'founded the company in 1889 to produce handmade hanafuda playing cards' and 'Nintendo began producing toys in the 1960s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the full name of Tails, Sonic's two-tailed fox friend?",
+      "answers": [
+        "Max Velocity",
+        "Miles Prower",
+        "Felix Fox",
+        "Rusty Rocket"
+      ],
+      "correct": "Miles Prower",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "The name is a pun on miles per hour.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tails_(Sonic_the_Hedgehog)",
+        "title": "Wikipedia: Tails (Sonic the Hedgehog)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'His full name, Miles Prower, is a pun on \" miles per hour \"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Zelda: Ocarina of Time, what is the name of the hero's fairy guide?",
+      "answers": [
+        "Tatl",
+        "Midna",
+        "Navi",
+        "Fi"
+      ],
+      "correct": "Navi",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "The name grew out of a staff nickname, the Fairy Navigation System.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Ocarina_of_Time",
+        "title": "Wikipedia: The Legend of Zelda: Ocarina of Time",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the Great Deku Tree instructs the fairy Navi to be his guide' and 'The fairy gained the name of the \"Fairy Navigation System\" amongst staff'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Before it was renamed Scrabble, what did its inventor call the game?",
+      "answers": [
+        "Word Square",
+        "Letter Lines",
+        "Spell It",
+        "Criss-Crosswords"
+      ],
+      "correct": "Criss-Crosswords",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "Its inventor, Alfred Mosher Butts, was an architect.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Scrabble",
+        "title": "Wikipedia: Scrabble",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The new game, which he called Criss-Crosswords', 'he also renamed the game Scrabble' and 'American architect Alfred Mosher Butts invented the game in 1931'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In the 1700s, the yo-yo was also known by what name?",
+      "answers": [
+        "Whirligig",
+        "Bandalore",
+        "Spinaroo",
+        "Twirlabout"
+      ],
+      "correct": "Bandalore",
+      "difficulty": "hard",
+      "category": "Video games & toys",
+      "explain": "The yo-yo is an ancient toy, recorded as far back as 440 BC.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yo-yo",
+        "title": "Wikipedia: Yo-yo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is an ancient toy documented since 440 BC. It was also called a bandalore in the 18th century'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Holidays and seasons - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on holidays and seasons, written by Claude on 2026-10-06 as the gentlest level of the 'Holidays and seasons' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 2 of them merely easy and took off their note, so the pack is 15 very easy, 2 easy. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which animals pull Santa's sleigh?",
+      "answers": [
+        "Horses",
+        "Reindeer",
+        "Huskies",
+        "Ponies"
+      ],
+      "correct": "Reindeer",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "A famous 1823 poem names eight of them, including Dasher and Prancer.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Santa_Claus%27s_reindeer",
+        "title": "Wikipedia: Santa Claus's reindeer",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Santa Claus's reindeer are said to pull a sleigh through the night sky' and 'pulled by a team of eight reindeer , best known as Dasher, Dancer, Prancer'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do people hang up on Christmas Eve for Santa to fill?",
+      "answers": [
+        "Mittens",
+        "Hats",
+        "Stockings",
+        "Scarves"
+      ],
+      "correct": "Stockings",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Stockings are often hung on the fireplace mantel.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Christmas_stocking",
+        "title": "Wikipedia: Christmas stocking",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'hung on Saint Nicholas Day or Christmas Eve so that Saint Nicholas (or the related figures of Santa Claus' and 'Stockings on a fireplace mantel'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which holiday is the very first day of the year?",
+      "answers": [
+        "Groundhog Day",
+        "Valentine's Day",
+        "Mother's Day",
+        "New Year's Day"
+      ],
+      "correct": "New Year's Day",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "It is day one of the Gregorian calendar, the calendar most of the world uses.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/New_Year%27s_Day",
+        "title": "Wikipedia: New Year's Day",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'First day of the year in the Gregorian calendar'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is usually used for a snowman's nose?",
+      "answers": [
+        "A carrot",
+        "A potato",
+        "A pine cone",
+        "An apple"
+      ],
+      "correct": "A carrot",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Branches are often used for the snowman's arms.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Snowman",
+        "title": "Wikipedia: Snowman",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Common accessories include branches for arms and a smiling face made of stones, with a carrot used for a nose'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On Independence Day, what do Americans traditionally watch light up the night sky?",
+      "answers": [
+        "Lightning",
+        "Fireworks",
+        "Rainbows",
+        "Comets"
+      ],
+      "correct": "Fireworks",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Displays like the one over the Washington Monument are held all across the country.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Independence_Day_(United_States)",
+        "title": "Wikipedia: Independence Day (United States)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Fireworks displays, such as this one over the Washington Monument in 1986, take place annually across the United States'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which three-leaf plant is a symbol of St. Patrick's Day?",
+      "answers": [
+        "Holly",
+        "Rose",
+        "Shamrock",
+        "Ivy"
+      ],
+      "correct": "Shamrock",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "The shamrock is also a symbol of Ireland.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Shamrock",
+        "title": "Wikipedia: Shamrock",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'used as a symbol of Ireland' and '\"Three-leaf clover\" redirects here' and 'shamrock is said to have been used by Saint Patrick'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many seasons do we usually count in a year?",
+      "answers": [
+        "Two",
+        "Three",
+        "Five",
+        "Four"
+      ],
+      "correct": "Four",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Ecologists sometimes split the year into six seasons instead.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Season",
+        "title": "Wikipedia: Season",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'four seasons based on the Gregorian calendar are generally recognized' and 'Ecologists often use a six-season model'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What warm drink, often topped with marshmallows, is a winter favorite?",
+      "answers": [
+        "Hot chocolate",
+        "Lemonade",
+        "Iced tea",
+        "Orange juice"
+      ],
+      "correct": "Hot chocolate",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "In the US and Canada, hot chocolate has long been linked with cold weather.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hot_chocolate",
+        "title": "Wikipedia: Hot chocolate",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A cup of hot chocolate with marshmallows' and 'hot chocolate has been associated with cold weather and winter in the United States and Canada'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Earth Day is held in which month?",
+      "answers": [
+        "July",
+        "April",
+        "October",
+        "December"
+      ],
+      "correct": "April",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "The first Earth Day was held on April 22, 1970.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Earth_Day",
+        "title": "Wikipedia: Earth Day",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Earth Day is an annual event on April 22' and 'First held on April 22, 1970'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly"
+      }
+    },
+    {
+      "question": "Cinco de Mayo is a celebration that comes from which country?",
+      "answers": [
+        "Portugal",
+        "Brazil",
+        "Italy",
+        "Mexico"
+      ],
+      "correct": "Mexico",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Its name is Spanish for \"Fifth of May.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cinco_de_Mayo",
+        "title": "Wikipedia: Cinco de Mayo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Spanish for ' Fifth of May '' and 'Public holidays in Mexico'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which flowers are a classic Valentine's Day gift?",
+      "answers": [
+        "Red roses",
+        "Sunflowers",
+        "Daffodils",
+        "Dandelions"
+      ],
+      "correct": "Red roses",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "The rhyme \"Roses are red\" has roots in English poetry from the 1500s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Valentine%27s_Day",
+        "title": "Wikipedia: Valentine's Day",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Flowers, such as red roses (pictured), are often sent on Valentine's Day' and 'The verse \" Roses are red \" echoes conventions traceable as far back as Edmund Spenser 's epic The Faerie Queene (1590)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which season is also known as autumn?",
+      "answers": [
+        "Spring",
+        "Fall",
+        "Summer",
+        "Winter"
+      ],
+      "correct": "Fall",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Autumn marks the change from summer to winter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Autumn",
+        "title": "Wikipedia: Autumn",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Autumn , also known as fall in North American English' and 'autumn marks the transition from summer to winter'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do people blow out on a birthday cake?",
+      "answers": [
+        "Balloons",
+        "Napkins",
+        "Candles",
+        "Streamers"
+      ],
+      "correct": "Candles",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Tradition says a wish comes true if all the candles go out in one breath.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Birthday_cake",
+        "title": "Wikipedia: Birthday cake",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'blow out the candles and make a wish, which is thought to come true if all the candles are extinguished in a single breath'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In which season do people most often take beach trips and picnics?",
+      "answers": [
+        "Summer",
+        "Winter",
+        "Fall",
+        "Spring"
+      ],
+      "correct": "Summer",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "With many schools closed, travel and vacations tend to peak in summer.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Summer",
+        "title": "Wikipedia: Summer",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Activities such as travelling to the beach and picnics occur during the summer months' and 'With many schools closed, especially in Western countries, travel and vacationing tend to peak during the summer'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which orange-colored pie is often served at Thanksgiving?",
+      "answers": [
+        "Cherry pie",
+        "Blueberry pie",
+        "Key lime pie",
+        "Pumpkin pie"
+      ],
+      "correct": "Pumpkin pie",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Pumpkin pie is also a common Christmas dessert.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pumpkin_pie",
+        "title": "Wikipedia: Pumpkin pie",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'In the United States and Canada it is usually prepared for Thanksgiving' and 'Christmas , and other occasions when pumpkin is in season'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "At the Jewish New Year, many people dip apples in what?",
+      "answers": [
+        "Chocolate",
+        "Honey",
+        "Caramel",
+        "Salt"
+      ],
+      "correct": "Honey",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "The sweet treat stands for a wish for a sweet and happy new year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rosh_Hashanah",
+        "title": "Wikipedia: Rosh Hashanah",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'usually include apples dipped in honey to symboli' and 'Also called Jewish New Year' and 'to symbolise the wish for a sweet and happy new year'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly (caramel apples make Caramel a tempting guess)"
+      }
+    },
+    {
+      "question": "Which day is famous for harmless jokes and pranks?",
+      "answers": [
+        "Flag Day",
+        "Arbor Day",
+        "April Fools' Day",
+        "Labor Day"
+      ],
+      "correct": "April Fools' Day",
+      "difficulty": "very easy",
+      "category": "Holidays & seasons",
+      "explain": "Pranksters often give the joke away by calling out \"April Fools.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/April_Fools%27_Day",
+        "title": "Wikipedia: April Fools' Day",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is an annual custom in many Western countries on 1 April consisting of practical jokes , hoaxes , and pranks' and 'Jokesters often expose their actions by shouting \"April Fool[s]!\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain reworded to drop the exclamation mark (house rule 9)"
+      }
+    }
+  ]
+}

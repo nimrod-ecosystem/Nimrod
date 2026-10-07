@@ -1,0 +1,399 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Sports - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on sports, written by Claude on 2026-10-06 as the gentlest level of the 'Sports' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 3 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 14 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What do tennis players use to hit the ball?",
+      "answers": [
+        "A bat",
+        "A racket",
+        "A club",
+        "A mallet"
+      ],
+      "correct": "A racket",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "A tennis racket has a frame with strings pulled tight across it.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "Distractor 'A paddle' replaced with 'A mallet' (table tennis and padel players use paddles, so it was arguably right)."
+      }
+    },
+    {
+      "question": "What do golfers swing to hit the ball?",
+      "answers": [
+        "A racket",
+        "A bat",
+        "A paddle",
+        "A club"
+      ],
+      "correct": "A club",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Golfers carry a set of different clubs in a golf bag.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "Distractor 'A stick' replaced with 'A paddle' ('sticks' is common golf slang for clubs)."
+      }
+    },
+    {
+      "question": "What does a baseball player wear on one hand to catch the ball?",
+      "answers": [
+        "A glove",
+        "A ring",
+        "A watch",
+        "A bracelet"
+      ],
+      "correct": "A glove",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "A baseball glove is padded leather with a deep pocket for the ball.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which sport means riding ocean waves while standing on a board?",
+      "answers": [
+        "Sailing",
+        "Surfing",
+        "Diving",
+        "Skating"
+      ],
+      "correct": "Surfing",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Surfers paddle out lying on the board, then stand up to ride a wave.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday description of a familiar sport; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which winter sport has you slide down snowy hills on two long, narrow boards?",
+      "answers": [
+        "Hockey",
+        "Curling",
+        "Skiing",
+        "Bowling"
+      ],
+      "correct": "Skiing",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Skiers often hold a pole in each hand to help them balance and turn.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday description of a familiar sport; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color medal does the winner get at the Olympic Games?",
+      "answers": [
+        "Silver",
+        "Bronze",
+        "Gold",
+        "Copper"
+      ],
+      "correct": "Gold",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Olympic gold medals are mostly silver, coated with a thin layer of gold.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Olympic_medal",
+        "title": "Wikipedia: Olympic medal",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'First place (the gold medal)'; '92.5% of silver , plated with 6 grams of gold'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In baseball, what does a runner touch on the way around to home plate?",
+      "answers": [
+        "The hoops",
+        "The bases",
+        "The goalposts",
+        "The nets"
+      ],
+      "correct": "The bases",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "There are four bases in all, counting home plate.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: how a familiar game is played; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which sport is played on a table with small paddles and a light white ball?",
+      "answers": [
+        "Badminton",
+        "Squash",
+        "Table tennis",
+        "Golf"
+      ],
+      "correct": "Table tennis",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Table tennis is also widely known as ping-pong.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday description of a familiar game; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do runners cross at the end of a race?",
+      "answers": [
+        "The starting line",
+        "The center line",
+        "The foul line",
+        "The finish line"
+      ],
+      "correct": "The finish line",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Some races stretch a tape across the finish line for the winner to break.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: how a race ends; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which game uses a long stick called a cue to knock balls into pockets?",
+      "answers": [
+        "Pool",
+        "Croquet",
+        "Golf",
+        "Bowling"
+      ],
+      "correct": "Pool",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "The white ball you strike with the cue is called the cue ball.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday description of a familiar game; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which sport moves a boat through the water by pulling on oars?",
+      "answers": [
+        "Sailing",
+        "Water polo",
+        "Rowing",
+        "Swimming"
+      ],
+      "correct": "Rowing",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Rowers sit facing backward, toward the back of the boat.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rowing_(sport)",
+        "title": "Wikipedia: Rowing (sport)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'the athlete sits in the boat facing toward the stern and uses the oars'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "Source changed from common knowledge to a fetched page: the explain's 'rowers face backward' is not universal knowledge."
+      }
+    },
+    {
+      "question": "What is on the bottom of an ice skate?",
+      "answers": [
+        "Four wheels",
+        "A rubber sole",
+        "A spring",
+        "A metal blade"
+      ],
+      "correct": "A metal blade",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "The thin blade lets skaters glide and turn on the ice.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: basic equipment of a familiar sport; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In basketball, how does a team score points?",
+      "answers": [
+        "By kicking the ball into a net",
+        "By shooting the ball through the hoop",
+        "By hitting the ball over a fence",
+        "By rolling the ball at pins"
+      ],
+      "correct": "By shooting the ball through the hoop",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "The hoop is a metal ring with a net hanging below it.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: how a familiar game is scored; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a referee blow to stop play?",
+      "answers": [
+        "A trumpet",
+        "A flute",
+        "A whistle",
+        "A harmonica"
+      ],
+      "correct": "A whistle",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "A short, sharp blast is loud enough to be heard over a noisy crowd.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: familiar sight at any game; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In which sport do players hit a ball over a high net using only their hands?",
+      "answers": [
+        "Tennis",
+        "Badminton",
+        "Basketball",
+        "Volleyball"
+      ],
+      "correct": "Volleyball",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Volleyball is also played on sand as beach volleyball.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday description of a familiar sport; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In bowling, what do you roll the ball down?",
+      "answers": [
+        "A lane",
+        "A track",
+        "A runway",
+        "A court"
+      ],
+      "correct": "A lane",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "Gutters run along both sides of the lane to catch stray balls.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday description of a familiar game; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is carried from place to place in the Olympic torch relay?",
+      "answers": [
+        "A flag",
+        "A trophy",
+        "A flame",
+        "A banner"
+      ],
+      "correct": "A flame",
+      "difficulty": "very easy",
+      "category": "Sports",
+      "explain": "The flame is lit at Olympia, in Greece, before each Games.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Olympic_flame",
+        "title": "Wikipedia: Olympic flame",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Olympic flame is lit at Olympia, Greece'; 'This ceremony starts the Olympic torch relay'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

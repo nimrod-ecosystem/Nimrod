@@ -1,0 +1,413 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "US states - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on us states, written by Claude on 2026-10-06 as the gentlest level of the 'US states' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 2 of them merely easy and took off their note, so the pack is 15 very easy, 2 easy. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which state is famous for its giant redwood trees?",
+      "answers": [
+        "Florida",
+        "California",
+        "Kansas",
+        "Arizona"
+      ],
+      "correct": "California",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Coast redwoods can live for about 2,000 years.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sequoia_sempervirens",
+        "title": "Wikipedia: Sequoia sempervirens",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Natural range of California subfamily Sequoioideae' and 'California redwood' and 'has reached ages of about 2,000 years'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now quotes the range phrase that ties redwoods to California (old quote was only a redirect line)"
+      }
+    },
+    {
+      "question": "Walt Disney World is in which state?",
+      "answers": [
+        "Florida",
+        "Georgia",
+        "Texas",
+        "Arizona"
+      ],
+      "correct": "Florida",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "The resort lies just southwest of downtown Orlando.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Walt_Disney_World",
+        "title": "Wikipedia: Walt Disney World",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Entertainment resort in Florida' and 'southwest of Downtown Orlando'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which city is known as the Motor City?",
+      "answers": [
+        "Chicago",
+        "Pittsburgh",
+        "Detroit",
+        "Boston"
+      ],
+      "correct": "Detroit",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Detroit is the most populous city in Michigan.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Detroit",
+        "title": "Wikipedia: Detroit",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Most populous city in Michigan, United States \"Motor City\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Houston is in which state?",
+      "answers": [
+        "Oklahoma",
+        "Louisiana",
+        "Arizona",
+        "Texas"
+      ],
+      "correct": "Texas",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Houston is the largest city in Texas.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Houston",
+        "title": "Wikipedia: Houston",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Largest city in Texas'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which state is famous for its cheese?",
+      "answers": [
+        "Arizona",
+        "Wisconsin",
+        "Florida",
+        "Nevada"
+      ],
+      "correct": "Wisconsin",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Wisconsin is nicknamed America's Dairyland.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wisconsin",
+        "title": "Wikipedia: Wisconsin",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is known as \"America's Dairyland\"; it is particularly famous for its cheese'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which state is famous for its lobsters?",
+      "answers": [
+        "Arizona",
+        "Kansas",
+        "Maine",
+        "Colorado"
+      ],
+      "correct": "Maine",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Maine is also known for its wild blueberries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Maine",
+        "title": "Wikipedia: Maine",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'wild lowbush blueberries and seafood such as lobster'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The chocolate town of Hershey is in which state?",
+      "answers": [
+        "Pennsylvania",
+        "Ohio",
+        "Oregon",
+        "Iowa"
+      ],
+      "correct": "Pennsylvania",
+      "difficulty": "easy",
+      "category": "US states",
+      "explain": "Visitors there can tour Hershey's Chocolate World.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hershey,_Pennsylvania",
+        "title": "Wikipedia: Hershey, Pennsylvania",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Hershey's Chocolate World is a factory store and virtual tour ride of the Hershey Company'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly"
+      }
+    },
+    {
+      "question": "Atlanta is in which state?",
+      "answers": [
+        "Alabama",
+        "Georgia",
+        "Tennessee",
+        "South Carolina"
+      ],
+      "correct": "Georgia",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Atlanta is both the capital and the biggest city of Georgia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atlanta",
+        "title": "Wikipedia: Atlanta",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Capital and most populous city of Georgia'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Honolulu is in which state?",
+      "answers": [
+        "Alaska",
+        "Florida",
+        "Hawaii",
+        "California"
+      ],
+      "correct": "Hawaii",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Honolulu sits on the southeast coast of the island of Oʻahu.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Honolulu",
+        "title": "Wikipedia: Honolulu",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the capital and most populous city of the U.S. state of Hawaii' and 'situated along the southeast coast of the island of Oʻahu'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Indianapolis is the capital of which state?",
+      "answers": [
+        "Iowa",
+        "Illinois",
+        "Ohio",
+        "Indiana"
+      ],
+      "correct": "Indiana",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "It is also the state's most populous city.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Indianapolis",
+        "title": "Wikipedia: Indianapolis",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Capital and most populous city of Indiana'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which ocean lies along the West Coast of the United States?",
+      "answers": [
+        "Atlantic Ocean",
+        "Pacific Ocean",
+        "Indian Ocean",
+        "Arctic Ocean"
+      ],
+      "correct": "Pacific Ocean",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "That shoreline is also called the Pacific Coast.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/West_Coast_of_the_United_States",
+        "title": "Wikipedia: West Coast of the United States",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'also known as the Pacific Coast' and 'meets the North Pacific Ocean'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Phoenix is in which state?",
+      "answers": [
+        "Arizona",
+        "Nevada",
+        "New Mexico",
+        "Utah"
+      ],
+      "correct": "Arizona",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Phoenix is Arizona's capital as well as its largest city.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Phoenix,_Arizona",
+        "title": "Wikipedia: Phoenix, Arizona",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Capital and most populous city of Arizona'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which city is nicknamed the Big Apple?",
+      "answers": [
+        "Chicago",
+        "Boston",
+        "New York City",
+        "Philadelphia"
+      ],
+      "correct": "New York City",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "The nickname was made popular by a sportswriter in the 1920s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Big_Apple",
+        "title": "Wikipedia: Big Apple",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a nickname for New York City' and 'It was first popularized in the 1920s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which city is nicknamed the Windy City?",
+      "answers": [
+        "Denver",
+        "Seattle",
+        "Boston",
+        "Chicago"
+      ],
+      "correct": "Chicago",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "One explanation is the breeze off Lake Michigan, right on the city's shore.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Windy_City_(nickname)",
+        "title": "Wikipedia: Windy City (nickname)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is widely known as the \"Windy City\"' and 'Chicago being a naturally breezy area is that it is on the shores of Lake Michigan'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which state is called the Land of 10,000 Lakes?",
+      "answers": [
+        "Arizona",
+        "Minnesota",
+        "Texas",
+        "Florida"
+      ],
+      "correct": "Minnesota",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Minnesota is also nicknamed the North Star State.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Minnesota",
+        "title": "Wikipedia: Minnesota",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'North Star State; Gopher State; Land of 10,000 Lakes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which state reaches farther north than any other?",
+      "answers": [
+        "Alaska",
+        "Maine",
+        "Washington",
+        "Minnesota"
+      ],
+      "correct": "Alaska",
+      "difficulty": "very easy",
+      "category": "US states",
+      "explain": "Alaska also reaches farther west than any other state.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Alaska",
+        "title": "Wikipedia: Alaska",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Alaska is considered to be the northernmost, westernmost'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Salt Lake City is the capital of which state?",
+      "answers": [
+        "Idaho",
+        "Nevada",
+        "Utah",
+        "Wyoming"
+      ],
+      "correct": "Utah",
+      "difficulty": "easy",
+      "category": "US states",
+      "explain": "The city's name is often shortened to SLC.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Salt_Lake_City",
+        "title": "Wikipedia: Salt Lake City",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'often shortened to Salt Lake or SLC , is the capital and most populous city of the U.S. state of Utah'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly (Idaho/Nevada/Wyoming are close neighbors)"
+      }
+    }
+  ]
+}

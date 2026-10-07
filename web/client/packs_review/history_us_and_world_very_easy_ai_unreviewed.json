@@ -1,0 +1,411 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "History, US and world - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on history, us and world, written by Claude on 2026-10-06 as the gentlest level of the 'History, US and world' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 1 of them merely easy and took off their note, so the pack is 16 very easy, 1 easy. The independent fact-check kept 17 of 17 written, fixed 1 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What does the Statue of Liberty hold high in her right hand?",
+      "answers": [
+        "A flag",
+        "A torch",
+        "A star",
+        "A bell"
+      ],
+      "correct": "A torch",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "The statue was dedicated in 1886.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Statue_of_Liberty",
+        "title": "Wikipedia: Statue of Liberty",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'She holds a torch above her head with her right hand' and 'The statue was dedicated on October 28, 1886'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Liberty Bell is famous for having what?",
+      "answers": [
+        "A golden handle",
+        "Two clappers",
+        "A large crack",
+        "A painted face"
+      ],
+      "correct": "A large crack",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "The big crack appeared sometime in the first half of the 1800s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Liberty_Bell",
+        "title": "Wikipedia: Liberty Bell",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It acquired its distinctive large crack sometime in the first half of the 19th century'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What did Pony Express riders carry across the West?",
+      "answers": [
+        "Mail",
+        "Gold",
+        "Water",
+        "Lumber"
+      ],
+      "correct": "Mail",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Riders on horseback passed the mail along in relays between Missouri and California.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pony_Express",
+        "title": "Wikipedia: Pony Express",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'express mail service that used relays of horse-mounted riders between Missouri and California'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Henry Ford is famous for making affordable what?",
+      "answers": [
+        "Radios",
+        "Airplanes",
+        "Bicycles",
+        "Cars"
+      ],
+      "correct": "Cars",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "His Model T was built by mass production so ordinary families could buy one.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Henry_Ford",
+        "title": "Wikipedia: Henry Ford",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'mass production and sale of affordable automobiles to the public' and 'Model T'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Johnny Appleseed is remembered for planting what?",
+      "answers": [
+        "Corn",
+        "Apple trees",
+        "Roses",
+        "Pumpkins"
+      ],
+      "correct": "Apple trees",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "One of his first orchards was in Licking County, Ohio.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Johnny_Appleseed",
+        "title": "Wikipedia: Johnny Appleseed",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'planting apple trees' and 'His first orchard was on the farm of Isaac Stadden in Licking County'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What language did the ancient Romans speak?",
+      "answers": [
+        "Latin",
+        "German",
+        "French",
+        "Italian"
+      ],
+      "correct": "Latin",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Latin later grew into the Romance languages.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Latin",
+        "title": "Wikipedia: Latin",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Native to Latium Ancient Rome Ethnicity Latins Romans' and 'evolved into distinct Romance languages'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Abraham Lincoln was known for wearing what kind of tall hat?",
+      "answers": [
+        "A cowboy hat",
+        "A baseball cap",
+        "A stovepipe hat",
+        "A beret"
+      ],
+      "correct": "A stovepipe hat",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Lincoln stood 6 feet 4 inches even without the hat.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Abraham_Lincoln",
+        "title": "Wikipedia: Abraham Lincoln",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'his customary stovepipe hat' and 'Height 6 ft 4 in'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What did Roman aqueducts carry into cities?",
+      "answers": [
+        "Grain",
+        "Olive oil",
+        "Sand",
+        "Water"
+      ],
+      "correct": "Water",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Aqueduct water supplied public baths, fountains and homes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roman_aqueduct",
+        "title": "Wikipedia: Roman aqueduct",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'to bring water from outside sources into cities and towns' and 'Aqueduct water supplied public baths'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Pioneers on the Oregon Trail mostly traveled in what?",
+      "answers": [
+        "Covered wagons",
+        "Trains",
+        "Canoes",
+        "Hot-air balloons"
+      ],
+      "correct": "Covered wagons",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Many families used oxen to pull them, since mules cost about three times as much.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Oregon_Trail",
+        "title": "Wikipedia: Oregon Trail",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Conestoga wagons , a heavy type of covered wagon' and 'Mules also cost about three times as much as oxen'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which was the first national park in the United States?",
+      "answers": [
+        "Grand Canyon",
+        "Yellowstone",
+        "Everglades",
+        "Acadia"
+      ],
+      "correct": "Yellowstone",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "It was created in 1872 and is widely seen as the world's first national park too.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yellowstone_National_Park",
+        "title": "Wikipedia: Yellowstone National Park",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Yellowstone was the first national park in the US, and is also widely understood to be the first national park in the world' and 'March 1, 1872'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly"
+      }
+    },
+    {
+      "question": "Whose face is on the US one-dollar bill?",
+      "answers": [
+        "Abraham Lincoln",
+        "Thomas Jefferson",
+        "George Washington",
+        "Benjamin Franklin"
+      ],
+      "correct": "George Washington",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Washington's portrait has been in the center of the dollar since the 1869 design.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/United_States_one-dollar_bill",
+        "title": "Wikipedia: United States one-dollar bill",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The portrait of George Washington is displayed in the center of the obverse of the one-dollar bill, as it has been since the 1869 design'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Old West cowboys drove big herds of which animals?",
+      "answers": [
+        "Sheep",
+        "Goats",
+        "Pigs",
+        "Cattle"
+      ],
+      "correct": "Cattle",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "A long drive often moved about 3,000 head with a crew of at least 10 cowboys.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cattle_drives_in_the_United_States",
+        "title": "Wikipedia: Cattle drives in the United States",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'numbered about 3,000 head' and 'To herd the cattle, a crew of at least 10 cowboys was needed'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Golden Gate Bridge is in which city?",
+      "answers": [
+        "San Francisco",
+        "Los Angeles",
+        "Seattle",
+        "San Diego"
+      ],
+      "correct": "San Francisco",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "The bridge opened to the public in 1937.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Golden_Gate_Bridge",
+        "title": "Wikipedia: Golden Gate Bridge",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Bridge in the San Francisco Bay Area' and 'The bridge opened to the public on May 27, 1937'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Ellis Island in New York welcomed millions of new arrivals called what?",
+      "answers": [
+        "Astronauts",
+        "Immigrants",
+        "Tourists",
+        "Students"
+      ],
+      "correct": "Immigrants",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "About 12 million immigrants were processed there between 1892 and 1954.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ellis_Island",
+        "title": "Wikipedia: Ellis Island",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'From 1892 to 1954, about 12 million immigrants arriving at the Port of New York and New Jersey were processed there'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A blacksmith mainly shapes which material?",
+      "answers": [
+        "Wood",
+        "Glass",
+        "Iron",
+        "Clay"
+      ],
+      "correct": "Iron",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Blacksmiths heat the metal, then hammer, bend and cut it into shape.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Blacksmith",
+        "title": "Wikipedia: Blacksmith",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'creates objects primarily from wrought iron or steel' and 'by forging the metal , using tools to hammer, bend, and cut'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Stonehenge, the ancient ring of giant stones, is in which country?",
+      "answers": [
+        "Egypt",
+        "Greece",
+        "Mexico",
+        "England"
+      ],
+      "correct": "England",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "Stonehenge stands on Salisbury Plain in Wiltshire.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Stonehenge",
+        "title": "Wikipedia: Stonehenge",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Stonehenge is a prehistoric megalithic structure on Salisbury Plain in Wiltshire, England'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What draped garment did the ancient Romans wear?",
+      "answers": [
+        "A kimono",
+        "A toga",
+        "A kilt",
+        "A poncho"
+      ],
+      "correct": "A toga",
+      "difficulty": "very easy",
+      "category": "History",
+      "explain": "A toga was a long, roughly half-circle cloth wrapped around the body.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Toga",
+        "title": "Wikipedia: Toga",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a distinctive garment of Ancient Rome , was a roughly semicircular cloth' and 'draped over the shoulders and around the body'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

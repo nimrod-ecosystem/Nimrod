@@ -1,0 +1,410 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Animals - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on animals, written by Claude on 2026-10-06 as the gentlest level of the 'Animals' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 0 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which farm animal rolls in mud to stay cool?",
+      "answers": [
+        "Sheep",
+        "Pig",
+        "Goat",
+        "Duck"
+      ],
+      "correct": "Pig",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Pigs have few sweat glands, so a mud bath helps them cool down.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pig",
+        "title": "Wikipedia: Pig",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'pigs lose heat by wallowing in mud' and 'Because of their relative lack of sweat glands'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many legs does a spider have?",
+      "answers": [
+        "Six",
+        "Eight",
+        "Four",
+        "Ten"
+      ],
+      "correct": "Eight",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Spiders belong to a group of animals called arachnids.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Spider",
+        "title": "Wikipedia: Spider",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Each of the eight legs of a spider' and 'Order of arachnids'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which farm animal is famous for giving milk?",
+      "answers": [
+        "Duck",
+        "Turkey",
+        "Llama",
+        "Cow"
+      ],
+      "correct": "Cow",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Breeds such as the Holstein are raised especially for their milk.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cattle",
+        "title": "Wikipedia: Cattle",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Certain breeds of cattle, such as the Holstein-Friesian , are used to produce milk'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which reptile carries a hard shell on its back?",
+      "answers": [
+        "Turtle",
+        "Snake",
+        "Lizard",
+        "Crocodile"
+      ],
+      "correct": "Turtle",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "A turtle's shell grows mainly from its ribs.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Turtle",
+        "title": "Wikipedia: Turtle",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'reptiles characterized by a special shell developed mainly from their ribs'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which animal has long ears and hops on strong back legs?",
+      "answers": [
+        "Mouse",
+        "Rabbit",
+        "Cat",
+        "Goat"
+      ],
+      "correct": "Rabbit",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Long back legs let a rabbit hop quickly away from danger.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rabbit",
+        "title": "Wikipedia: Rabbit",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'allows for quick hopping, which is beneficial for escaping predators'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which animal wears metal shoes nailed to its hooves?",
+      "answers": [
+        "Sheep",
+        "Goat",
+        "Horse",
+        "Deer"
+      ],
+      "correct": "Horse",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Horseshoes are usually made of steel and protect the hoof from wear.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Horseshoe",
+        "title": "Wikipedia: Horseshoe",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Device attached to a horse's hoof to protect it from wear' and 'Horseshoes are commonly made of steel'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color are most flamingos?",
+      "answers": [
+        "Blue",
+        "Pink",
+        "Green",
+        "Black"
+      ],
+      "correct": "Pink",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Flamingos get their pink color from the food they eat.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Flamingo",
+        "title": "Wikipedia: Flamingo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The pink or reddish colour of flamingos comes from carotenoids in their diet'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which black-and-white bird cannot fly but swims very well?",
+      "answers": [
+        "Seagull",
+        "Pelican",
+        "Duck",
+        "Penguin"
+      ],
+      "correct": "Penguin",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Penguins use flippers to swim through the water.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Penguin",
+        "title": "Wikipedia: Penguin",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'flightless' and 'penguins have countershaded dark and white plumage and flippers for swimming'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do squirrels bury to eat later?",
+      "answers": [
+        "Nuts",
+        "Pebbles",
+        "Feathers",
+        "Shells"
+      ],
+      "correct": "Nuts",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Squirrels also tuck food away inside hollow trees.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Squirrel",
+        "title": "Wikipedia: Squirrel",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'squirrels commonly cache nuts beneath leaf litter, inside hollow trees, or underground'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which dog breed is white with black spots?",
+      "answers": [
+        "Poodle",
+        "Beagle",
+        "Dalmatian",
+        "Golden retriever"
+      ],
+      "correct": "Dalmatian",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Dalmatian puppies are born plain white, and their spots appear later.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dalmatian_dog",
+        "title": "Wikipedia: Dalmatian dog",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'White background with black or brown spots' and 'Dalmatian puppies are born with plain white coats'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which small orange fish is a popular pet kept in a bowl or tank?",
+      "answers": [
+        "Goldfish",
+        "Shark",
+        "Tuna",
+        "Salmon"
+      ],
+      "correct": "Goldfish",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Goldfish were first bred for their color in China over 1,000 years ago.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Goldfish",
+        "title": "Wikipedia: Goldfish",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Goldfish in a bowl' and 'first selectively bred for color in imperial China more than 1,000 years ago'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which bird spreads out a colorful fan of tail feathers?",
+      "answers": [
+        "Crow",
+        "Pigeon",
+        "Peacock",
+        "Robin"
+      ],
+      "correct": "Peacock",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "The peacock's fan is really long feathers that grow above its tail.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Peafowl",
+        "title": "Wikipedia: Peafowl",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The peacock train consists not of tail quill feathers but highly elongated upper tail coverts' and 'a peacock fans his tail'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which slow garden creature carries a spiral shell?",
+      "answers": [
+        "Worm",
+        "Ant",
+        "Snail",
+        "Ladybug"
+      ],
+      "correct": "Snail",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "A snail can pull its whole body inside its shell.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Snail",
+        "title": "Wikipedia: Snail",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a coiled shell that is large enough for the animal to retract completely into'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which farm bird lays most of the eggs people eat?",
+      "answers": [
+        "Owl",
+        "Parrot",
+        "Swan",
+        "Chicken"
+      ],
+      "correct": "Chicken",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "A hen bred for laying can produce over 300 eggs a year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chicken",
+        "title": "Wikipedia: Chicken",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Chickens are primarily kept for their meat and eggs' and 'A hen bred for laying can produce over 300 eggs per year'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which animal is often called man's best friend?",
+      "answers": [
+        "Dog",
+        "Cat",
+        "Parrot",
+        "Hamster"
+      ],
+      "correct": "Dog",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Dogs were the first animals people tamed, over 14,000 years ago.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dog",
+        "title": "Wikipedia: Dog",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'man's best friend' and 'Dogs were the first species to be domesticated over 14,000 years ago'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which big cat has orange fur with black stripes?",
+      "answers": [
+        "Lion",
+        "Leopard",
+        "Tiger",
+        "Cheetah"
+      ],
+      "correct": "Tiger",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "No two tigers have exactly the same stripe pattern.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tiger",
+        "title": "Wikipedia: Tiger",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'orange fur that fades to white in parts, with black, mostly vertical stripes' and 'uniquely patterned in each individual'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Where do polar bears live?",
+      "answers": [
+        "Hot deserts",
+        "Tropical rainforests",
+        "Grassy plains",
+        "The icy Arctic"
+      ],
+      "correct": "The icy Arctic",
+      "difficulty": "very easy",
+      "category": "Animals",
+      "explain": "Polar bears prefer life out on the frozen sea ice.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Polar_bear",
+        "title": "Wikipedia: Polar bear",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Species of bear native to the Arctic' and 'They prefer the annual sea ice'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1035 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Everyday life & home (AI-written, not yet reviewed)",
+  "description": "44 questions on everyday life and the home: the kitchen, tools, money, time, weather (8 very easy, 12 easy, 13 medium, 11 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 44 of 44 written, fixed 12 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 36 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 8 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What do you use to boil water for a cup of tea?",
+      "answers": [
+        "A toaster",
+        "A kettle",
+        "A frying pan",
+        "A blender"
+      ],
+      "correct": "A kettle",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "Many kettles switch themselves off once the water boils.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: boiling water in a kettle is an everyday kitchen task; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which garden tool has long teeth for gathering fallen leaves?",
+      "answers": [
+        "A hose",
+        "A rake",
+        "A trowel",
+        "A flowerpot"
+      ],
+      "correct": "A rake",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "Raking leaves into piles is a classic fall chore.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: raking leaves is an everyday yard job; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Where in the kitchen do you usually wash the dishes?",
+      "answers": [
+        "The oven",
+        "The freezer",
+        "The sink",
+        "The pantry"
+      ],
+      "correct": "The sink",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "Many sinks have two bowls, one for washing and one for rinsing.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: washing dishes in the sink is an everyday kitchen task; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do you wear on your hands to keep them warm in winter?",
+      "answers": [
+        "Socks",
+        "Gloves",
+        "A scarf",
+        "A hat"
+      ],
+      "correct": "Gloves",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "Unlike mittens, gloves give each finger its own sleeve.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: wearing gloves in cold weather is universal; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain reworded (less cutesy)"
+      }
+    },
+    {
+      "question": "Which day comes right after Sunday?",
+      "answers": [
+        "Tuesday",
+        "Friday",
+        "Saturday",
+        "Monday"
+      ],
+      "correct": "Monday",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "For many people, Monday starts the work week.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the order of the days of the week; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In which room of a home are meals usually cooked?",
+      "answers": [
+        "Bedroom",
+        "Bathroom",
+        "Garage",
+        "Kitchen"
+      ],
+      "correct": "Kitchen",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "The stove and oven are usually found there.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: cooking happens in the kitchen; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which machine do you put dirty clothes in to clean them?",
+      "answers": [
+        "Dishwasher",
+        "Washing machine",
+        "Oven",
+        "Vacuum cleaner"
+      ],
+      "correct": "Washing machine",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "It fills with water and soap, then spins the clothes clean.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: doing laundry in a washing machine is an everyday chore; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do gardeners fill with water to give plants a drink?",
+      "answers": [
+        "A wheelbarrow",
+        "A flowerpot",
+        "A shovel",
+        "A watering can"
+      ],
+      "correct": "A watering can",
+      "difficulty": "very easy",
+      "category": "Everyday life & home",
+      "explain": "Its long spout and sprinkler head let water fall gently.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: watering plants with a watering can is an everyday garden task; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Turning a typical jar lid clockwise does what?",
+      "answers": [
+        "Loosens it",
+        "Tightens it",
+        "Locks it for good",
+        "Nothing at all"
+      ],
+      "correct": "Tightens it",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "Most screws, nuts and bolts tighten the same way.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Clockwise",
+        "title": "Wikipedia: Clockwise",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Typical nuts , screws , bolts , bottle caps , and jar lids are tightened (moved away from the observer) clockwise'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which kitchen tool is a bowl with holes for draining pasta?",
+      "answers": [
+        "Ladle",
+        "Colander",
+        "Whisk",
+        "Rolling pin"
+      ],
+      "correct": "Colander",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "It is also handy for rinsing vegetables.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Colander",
+        "title": "Wikipedia: Colander",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a kitchen utensil perforated with holes used to strain foods such as pasta or to rinse vegetables'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "When daylight saving time ends in the fall, which way do clocks move?",
+      "answers": [
+        "Forward one hour",
+        "Back two hours",
+        "Back one hour",
+        "Forward two hours"
+      ],
+      "correct": "Back one hour",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "The memory aid is \"spring forward and fall back.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Daylight_saving_time",
+        "title": "Wikipedia: Daylight saving time",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'set clocks back by one hour in the autumn' and 'spring forward and fall back'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many cents is a US quarter worth?",
+      "answers": [
+        "10",
+        "25",
+        "50",
+        "20"
+      ],
+      "correct": "25",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "Four quarters make one dollar.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Quarter_(United_States_coin)",
+        "title": "Wikipedia: Quarter (United States coin)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a United States coin valued at 25 cents , equal to 1 ⁄ 4 of a dollar'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do gardeners call rotted plant and food scraps used to enrich soil?",
+      "answers": [
+        "Gravel",
+        "Sod",
+        "Topiary",
+        "Compost"
+      ],
+      "correct": "Compost",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "It feeds plants and helps the soil hold water and air.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Compost",
+        "title": "Wikipedia: Compost",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'prepared by decomposing plant and food waste' and 'used as plant fertilizer and to improve soil'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which tool grips and turns nuts and bolts?",
+      "answers": [
+        "Chisel",
+        "Wrench",
+        "Saw",
+        "File"
+      ],
+      "correct": "Wrench",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "In Britain and Australia it is usually called a spanner.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wrench",
+        "title": "Wikipedia: Wrench",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'such as nuts and bolts' and 'In the UK , Ireland , Australia , and New Zealand , spanner is the standard term'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a dehumidifier take out of the air?",
+      "answers": [
+        "Dust",
+        "Moisture",
+        "Smoke",
+        "Pollen"
+      ],
+      "correct": "Moisture",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "It is often used to keep damp basements dry.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dehumidifier",
+        "title": "Wikipedia: Dehumidifier",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Device which reduces humidity' and 'which thrive in damp conditions (basements'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note extended to support the basement claim in explain"
+      }
+    },
+    {
+      "question": "Which tool shows whether a shelf is perfectly horizontal?",
+      "answers": [
+        "Tape measure",
+        "Stud finder",
+        "Hacksaw",
+        "Level"
+      ],
+      "correct": "Level",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "It can also show whether something stands straight up and down.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Spirit_level",
+        "title": "Wikipedia: Spirit level",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'designed to indicate whether a surface is horizontal (level) or vertical'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question: 'flat' -> 'horizontal' (a straightedge also checks flatness)"
+      }
+    },
+    {
+      "question": "What does a rain gauge measure?",
+      "answers": [
+        "Rainfall",
+        "Sunshine",
+        "Cloud cover",
+        "Frost depth"
+      ],
+      "correct": "Rainfall",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "Rainfall is read as the depth of water collected, in inches or millimeters.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rain_gauge",
+        "title": "Wikipedia: Rain gauge",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Instrument for measuring liquid precipitation' and 'measure the precipitation in millimetres in height collected' and 'Previously rain was recorded as inches'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain tightened; note now supports the inches/millimeters claim"
+      }
+    },
+    {
+      "question": "Which rooftop device shows which way the wind is blowing?",
+      "answers": [
+        "Chimney",
+        "Weather vane",
+        "Lightning rod",
+        "Gutter"
+      ],
+      "correct": "Weather vane",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "A rooster is a traditional figure on top of one.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Weather_vane",
+        "title": "Wikipedia: Weather vane",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'used for showing the direction of the wind' and 'A cockerel is a traditional figure'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On a clothing care label, what does a triangle symbol refer to?",
+      "answers": [
+        "Ironing",
+        "Dry cleaning",
+        "Bleaching",
+        "Tumble drying"
+      ],
+      "correct": "Bleaching",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "A crossed-out triangle means do not bleach at all.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Laundry_symbol",
+        "title": "Wikipedia: Laundry symbol",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'An empty triangle (formerly lettered Cl) allows the bleaching' and 'A crossed triangle prohibits any bleaching'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What was the old laundry machine with two hand-cranked rollers called?",
+      "answers": [
+        "Washboard",
+        "Churn",
+        "Mangle",
+        "Spinning jenny"
+      ],
+      "correct": "Mangle",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "Besides squeezing out water, mangles were used to press sheets flat.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mangle_(machine)",
+        "title": "Wikipedia: Mangle (machine)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a mechanical laundry aid consisting of two rollers in a sturdy frame' and 'powered by a hand crank' and 'upright mangles for wringing water out of laundry' and 'Mangles are used to press or flatten sheets'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many days are in a fortnight?",
+      "answers": [
+        "Ten",
+        "Twelve",
+        "Fourteen",
+        "Twenty"
+      ],
+      "correct": "Fourteen",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "The word comes from Old English for \"fourteen nights.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fortnight",
+        "title": "Wikipedia: Fortnight",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A fortnight is a unit of time equal to 14 days' and 'meaning \" fourteen nights \"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a barometer measure?",
+      "answers": [
+        "Ocean depth",
+        "Sunlight hours",
+        "Air pressure",
+        "Soil moisture"
+      ],
+      "correct": "Air pressure",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "Changes in its reading can hint at coming changes in the weather.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Barometer",
+        "title": "Wikipedia: Barometer",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A barometer is a scientific instrument that is used to measure air pressure' and 'can forecast short term changes in the weather'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does an anemometer measure?",
+      "answers": [
+        "Snow depth",
+        "Wind speed",
+        "Cloud height",
+        "Rainfall"
+      ],
+      "correct": "Wind speed",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "A common type has spinning cups that catch the wind.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Anemometer",
+        "title": "Wikipedia: Anemometer",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Instrument for measuring wind speed' and 'A hemispherical-cup anemometer'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Whose portrait was put on the US dime in 1946?",
+      "answers": [
+        "Thomas Jefferson",
+        "Abraham Lincoln",
+        "Benjamin Franklin",
+        "Franklin D. Roosevelt"
+      ],
+      "correct": "Franklin D. Roosevelt",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "His portrait replaced the Winged Liberty, or \"Mercury,\" design.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dime_(United_States_coin)",
+        "title": "Wikipedia: Dime (United States coin)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Winged Liberty Head (\"Mercury\") (1916–1945)' and 'Franklin D. Roosevelt (1946–present)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question no longer implies FDR is on every dime since 1946 (the 2026 Semiquincentennial dime has a capped Liberty); explain swapped from a 'currently minted' size claim to a stable one"
+      }
+    },
+    {
+      "question": "A Phillips screwdriver fits a screw head with what shape of slot?",
+      "answers": [
+        "A single straight slot",
+        "A square",
+        "A cross",
+        "A star"
+      ],
+      "correct": "A cross",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "It is named for Henry F. Phillips, who bought the design and promoted it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Phillips_screw",
+        "title": "Wikipedia: Screw drive (Phillips)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Phillips screw drive (specified as an ANSI Type I Cross Recess' and 'sold his design to businessman Henry F. Phillips'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy (most adults know a Phillips head is a cross)"
+      }
+    },
+    {
+      "question": "An Allen key fits a screw socket with how many sides?",
+      "answers": [
+        "Four",
+        "Five",
+        "Six",
+        "Eight"
+      ],
+      "correct": "Six",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "That is why it is also called a hex key.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hex_key",
+        "title": "Wikipedia: Hex key",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Driver for hexagonal socketed bolts or screws' and '\"Allen keys\" redirects here'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "September's name comes from the Latin word for which number?",
+      "answers": [
+        "Nine",
+        "Seven",
+        "Six",
+        "Ten"
+      ],
+      "correct": "Seven",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "It was the seventh month in the oldest Roman calendar, which began in March.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/September",
+        "title": "Wikipedia: September",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'September (from Latin septem , \"seven\") was originally the seventh month' and 'March (Latin Martius ) being the fir'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "January is named after which Roman god?",
+      "answers": [
+        "Jupiter",
+        "Juno",
+        "Mars",
+        "Janus"
+      ],
+      "correct": "Janus",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "Janus was the god of beginnings and transitions.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/January",
+        "title": "Wikipedia: January",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is named after Janus , the god of beginnings and transitions'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which day of the week is named after the Roman god Saturn?",
+      "answers": [
+        "Saturday",
+        "Sunday",
+        "Tuesday",
+        "Thursday"
+      ],
+      "correct": "Saturday",
+      "difficulty": "easy",
+      "category": "Everyday life & home",
+      "explain": "The Romans called it \"Saturn's Day.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Saturday",
+        "title": "Wikipedia: Saturday",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '(\"Saturn's Day\") for the god Saturn'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy (the answer is audible in the question)"
+      }
+    },
+    {
+      "question": "The month of July is named in honor of which Roman leader?",
+      "answers": [
+        "Augustus",
+        "Nero",
+        "Julius Caesar",
+        "Mark Antony"
+      ],
+      "correct": "Julius Caesar",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "It was the month of his birth, and was once called Quintilis.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/July",
+        "title": "Wikipedia: July",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'in honour of Roman general and statesman Julius Caesar in 44 B.C., being the month of his birth. Before then it was called Quintilis'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the small sheath on each end of a shoelace called?",
+      "answers": [
+        "Grommet",
+        "Eyelet",
+        "Aglet",
+        "Toggle"
+      ],
+      "correct": "Aglet",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "It keeps the lace's fibers from unraveling.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Aglet",
+        "title": "Wikipedia: Aglet",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a small sheath, often made of plastic or metal, attached at each end of a shoelace' and 'keeps the fibers of the lace or cord from unraveling'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (aglet is a famous 'fun fact' word)"
+      }
+    },
+    {
+      "question": "What is the metal sleeve that holds the eraser on a pencil called?",
+      "answers": [
+        "Ferrule",
+        "Collet",
+        "Bezel",
+        "Grommet"
+      ],
+      "correct": "Ferrule",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "The metal band holding a paintbrush's bristles is also a ferrule.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ferrule",
+        "title": "Wikipedia: Ferrule",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The metal sleeve which is crimped to hold the eraser in place on a pencil' and 'The metal band that binds the bristles or hair of a brush to its handle'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On a knife, what is the part of the blade that runs into the handle called?",
+      "answers": [
+        "Bolster",
+        "Spine",
+        "Heel",
+        "Tang"
+      ],
+      "correct": "Tang",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "A \"full tang\" runs the whole length of the handle.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tang_(tools)",
+        "title": "Wikipedia: Tang (blade)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Part of the blade protruding into the handle' and 'A full tang extends the full length of the grip-portion of a handle'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the part of a sundial that casts the shadow called?",
+      "answers": [
+        "Bezel",
+        "Gnomon",
+        "Escapement",
+        "Crown"
+      ],
+      "correct": "Gnomon",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "The name comes from a Greek word meaning \"one that knows.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gnomon",
+        "title": "Wikipedia: Gnomon",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the stationary part of a sundial that casts a shadow' and 'one that knows or examines'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which pointed garden tool pokes holes in the soil for seeds and bulbs?",
+      "answers": [
+        "Hoe",
+        "Edger",
+        "Dibber",
+        "Rake"
+      ],
+      "correct": "Dibber",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "It is also called a dibble.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dibber",
+        "title": "Wikipedia: Dibber",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A dibber or dibble or dibbler is a pointed wooden stick for making holes in the ground so that seeds, seedlings or small bulbs can be planted'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name for the earthy smell when rain falls on dry ground?",
+      "answers": [
+        "Patina",
+        "Zephyr",
+        "Halcyon",
+        "Petrichor"
+      ],
+      "correct": "Petrichor",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "The word joins the Greek words for stone and ichor, the fluid of the gods.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Petrichor",
+        "title": "Wikipedia: Petrichor",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Earthy smell when rain falls on dry soil' and 'a compound of two Greek words, πέτρα (meaning “ rock ” or “stone”) and ἰχώρ'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A US nickel is actually made mostly of which metal?",
+      "answers": [
+        "Copper",
+        "Nickel",
+        "Zinc",
+        "Steel"
+      ],
+      "correct": "Copper",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "The mix is 75 percent copper and only 25 percent nickel.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nickel_(United_States_coin)",
+        "title": "Wikipedia: Nickel (United States coin)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'cupronickel (75% copper and 25% nickel )'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name for the fine ridges on the edge of a US quarter?",
+      "answers": [
+        "Beading",
+        "Reeding",
+        "Relief",
+        "Legend"
+      ],
+      "correct": "Reeding",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "In Britain the same ridged edge is usually called milling.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Reeding",
+        "title": "Wikipedia: Reeding",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'narrow ridges called \"reeds\"' and 'Some coins, such as United States quarters and dimes' and 'or \"milled\" (British usage)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "rewritten: the old item asked about coin clipping (a crime, against the house rules); now asks the name of the ridges, same page; 'milling' kept out of the distractors as a synonym"
+      }
+    },
+    {
+      "question": "Older dial thermostats use a strip that bends with heat. What is it made of?",
+      "answers": [
+        "Glass and rubber",
+        "Two different metals",
+        "Wax and paper",
+        "Two plastics"
+      ],
+      "correct": "Two different metals",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "The metals expand at different rates, so the strip bends and opens or closes a contact.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bimetallic_strip",
+        "title": "Wikipedia: Bimetallic strip",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'two strips of different metals which expand at different rates as they are heated' and 'The strip bends with temperature changes to open or close electrical contacts'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (bimetallic strip is school science and the answer can be reasoned)"
+      }
+    },
+    {
+      "question": "In 1883, who put standard time zones into use across the US and Canada?",
+      "answers": [
+        "The post office",
+        "The railroads",
+        "The navy",
+        "The telephone companies"
+      ],
+      "correct": "The railroads",
+      "difficulty": "medium",
+      "category": "Everyday life & home",
+      "explain": "Before then, each railroad chose its own time.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Standard_time",
+        "title": "Wikipedia: Standard time",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'on Sunday, November 18, 1883, all United States and Canadian railroads would readjust their clocks' and 'Until 1883, each United States railroad chose its own time standards'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (railroad time is well known and the obvious guess among the options)"
+      }
+    },
+    {
+      "question": "When Britain changed calendars in 1752, how many days were skipped?",
+      "answers": [
+        "Three",
+        "Seven",
+        "Eleven",
+        "Fourteen"
+      ],
+      "correct": "Eleven",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "The change brought Britain onto the Gregorian calendar.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Calendar_(New_Style)_Act_1750",
+        "title": "Wikipedia: Calendar (New Style) Act 1750",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'it ordered that eleven calendar days be skipped' and 'Britain implicitly adopted the Gregorian calendar'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do the letters WD stand for in WD-40?",
+      "answers": [
+        "Wire Degreaser",
+        "Wood Defender",
+        "Water Displacement",
+        "Weather Defense"
+      ],
+      "correct": "Water Displacement",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "The 40 means it came from the 40th formula tried.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/WD-40",
+        "title": "Wikipedia: WD-40",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '\"WD-40\" is abbreviated from the term \"Water Displacement, 40th formula\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Microplane kitchen grater began as a tool for which craft?",
+      "answers": [
+        "Pottery",
+        "Woodworking",
+        "Knitting",
+        "Jewelry making"
+      ],
+      "correct": "Woodworking",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "Its inventors were trying to make a wood-carving rasp.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Microplane",
+        "title": "Wikipedia: Microplane",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Grace brothers set out to make a wood-carving rasp' and 'Microplane originally made wood rasps and shaving disks, and they still do'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain trimmed (dropped 'still make', which can go stale)"
+      }
+    },
+    {
+      "question": "Delegates chose Greenwich as the world's prime meridian in 1884 in which city?",
+      "answers": [
+        "London",
+        "Paris",
+        "Geneva",
+        "Washington, D.C."
+      ],
+      "correct": "Washington, D.C.",
+      "difficulty": "hard",
+      "category": "Everyday life & home",
+      "explain": "The conference was held at the request of President Chester A. Arthur.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/International_Meridian_Conference",
+        "title": "Wikipedia: International Meridian Conference",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'held in October 1884 in Washington, D.C.' and 'Agreement of the Greenwich meridian as the international standard for 0° longitude' and 'held at the request of U.S. president Chester A. Arthur'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}
