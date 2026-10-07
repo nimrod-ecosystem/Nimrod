@@ -202,6 +202,7 @@ import './modules/simple_math.js';     // registers 'simple_math' (kept so old s
 import './modules/think_games.js';     // registers 'think_games' (row 2.45: her SLP's exercises, adaptive)
 import './modules/word_builder.js';    // registers 'word_builder' (row 2.45: letters to words, adaptive)
 import './modules/brain_games.js';     // registers 'brain_games' (row 2.45: quick rounds, adaptive)
+import './modules/quiz_mix.js';        // registers 'quiz_mix' (2026-10-06: every kind of question, round by round)
 import './modules/name_that.js';       // registers 'name_that' (animal / state / person)
 import './modules/karaoke.js';         // registers 'karaoke'
 import './modules/solitaire.js';       // registers 'solitaire' (row 2.37, Klondike)

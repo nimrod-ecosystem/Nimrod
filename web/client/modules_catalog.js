@@ -545,6 +545,18 @@ export const CATALOG = [
     needs: 'Nothing. The questions are built in.',
     why: 'Short rounds, each player at their own level. Nothing is timed unless that is turned on.',
   },
+  // 2026-10-06 (Mike): every kind of question in one game, round by round.
+  {
+    type: 'quiz_mix',
+    title: 'Quiz mix',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Trivia, math, words, spelling, brain and thinking games in one game: a new kind each round.',
+    needs: 'Nothing. The questions are built in or come with the site.',
+    why: 'Two to four people take turns on one screen, and each gets their own question at their own level, so a '
+      + 'grandparent and a teenager can play each other. A harder question for that player is worth more. Every answer '
+      + 'moves the player in the game it came from, too. It waits for Start.',
+  },
   // 2026-10-02: name the suit, then put the card in order among the ones already done.
   {
     type: 'card_sort',

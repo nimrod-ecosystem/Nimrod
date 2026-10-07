@@ -90,6 +90,7 @@ export const HEALTH_EXPECT = {
   think_games: { idle: true },
   word_builder: { idle: true },
   brain_games: { idle: true },
+  quiz_mix: { idle: true },
   name_that:   { idle: true },
   // Row 2.37's card game: a table nobody is playing is a table, not a stalled panel.
   solitaire:   { idle: true },

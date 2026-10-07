@@ -464,6 +464,25 @@ function loadPackCached(id) {
   return p;
 }
 
+/**
+ * EVERY WORDS PACK'S WORDS, as this game's rows ({ word, meaning, sentence, grade }), each word once (Quiz mix's
+ * word rounds, modules/quiz_mix.js). A pack that does not load is left out; none at all is DEFAULT_WORDS, so a
+ * round is never empty for want of a network.
+ */
+export async function wordPackRows() {
+  const built = await Promise.all(packsFor('words').map((p) => loadPackCached(p.id)
+    .then((pack) => packToWordBank(pack))
+    .catch((err) => { console.error(`wordforge: pack "${p.id}" did not load`, err); return []; })));
+  const seen = new Set();
+  const out = built.flat().filter((w) => {
+    const k = String(w?.word || '').toLowerCase();
+    if (!k || !w.meaning || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  return out.length ? out : DEFAULT_WORDS.slice();
+}
+
 const SETTINGS = [
   ...(WORD_PACKS.length ? [
     { key: 'contentSource', label: 'Where words come from', kind: 'choice', default: 'pack',

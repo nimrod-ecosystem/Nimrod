@@ -928,11 +928,22 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
    * The next question for whoever's turn it is. Due reviews first, then the pool.
    * `again`: deal THIS question again (row 2.45's word builder: one set of letters is several answers,
    * each rated on its own, so the same question is dealt once per word until it is used up).
+   * `player` (Quiz mix, 2026-10-06): deal to THIS player (an id, or `{ id, name }`) instead of whoever's turn it
+   *   is here: a host that keeps its own turns (one round, every player, in one category) asks for each in turn.
+   * `chooser(pool, opts)`: picks one from the player's pool instead of `choose` (same arguments, same return);
+   *   due reviews still come first. Quiz mix passes question_pick.js's, the shared randomizer with difficulty.
    */
-  function deal(game, { again = null } = {}) {
+  function pickPlayer(player) {
+    if (player == null) return currentPlayer();
+    const id = typeof player === 'object' ? player.id : player;
+    const found = players().find((x) => x.id === id);
+    if (found) return found;
+    return typeof player === 'object' && player.id ? { index: 0, name: '', ...player } : currentPlayer();
+  }
+  function deal(game, { again = null, player = null, chooser = null } = {}) {
     const list = allQuestions(game);
     if (!list.length) return null;
-    const p = currentPlayer();
+    const p = pickPlayer(player);
     const row = playerRow(p.id, game);
     const rated = list.map((q) => ({ id: q.id, rating: questionRow(q).rating, item: q }));
     const byId = new Map(rated.map((q) => [q.id, q]));
@@ -947,8 +958,14 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     const win = windowFor(p.id, game);
     const pool = poolFor(rated, win.floor, ladderOpts(win.maxLevel));
     if (!pick) {
-      pick = choose(pool.length ? pool : rated, { playerRating: row.rating, recentIds: mine, rand, ...R,
-        target: LADDER_DEFAULTS.target, spread: LADDER_DEFAULTS.spread, avoidRecent: LADDER_DEFAULTS.avoidRecent });
+      const from = pool.length ? pool : rated;
+      const opts = { playerRating: row.rating, recentIds: mine, rand, ...R,
+        target: LADDER_DEFAULTS.target, spread: LADDER_DEFAULTS.spread, avoidRecent: LADDER_DEFAULTS.avoidRecent };
+      if (typeof chooser === 'function') {
+        try { pick = chooser(from, opts) || null; } catch (err) { pick = null; console.error('ladder: chooser', err); }
+        if (pick && !byId.has(pick.id)) pick = null;
+      }
+      if (!pick) pick = choose(from, opts);
     }
     asked += 1;
     recent[p.id] = [...mine, pick.id].slice(-8);

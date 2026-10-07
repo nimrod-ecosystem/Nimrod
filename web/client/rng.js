@@ -116,6 +116,10 @@ export function weightOf(id, st, now, o, lastChannel) {
 //                      //   are hard-excluded, and the newest sets the diversity channel
 //   channels,          // id -> channelId (for the diversity factor)
 //   durations,         // id -> seconds (optional)
+//   factor,            // (id) => number >= 0 (optional): one more multiplier on the weight, for a
+//                      //   caller with its own reason to favour some ids. The question games pass how
+//                      //   well a question fits the player (question_pick.js), so mixing, freshness
+//                      //   and difficulty are ONE draw through this picker. Absent: exactly as before.
 //   ...DEFAULTS overrides
 // }
 // Returns the chosen id, or null for an empty pool.
@@ -142,7 +146,14 @@ export function pick(ids, stats, opts) {
   const lastId = recent.length ? recent[recent.length - 1] : null;
   const lastChannel = lastId != null && opts.channels ? opts.channels[lastId] : null;
 
-  const weights = pool.map((id) => Math.max(weightOf(id, stats[id], now, opts, lastChannel), 1e-9));
+  const factor = typeof opts.factor === 'function' ? opts.factor : null;
+  const extra = (id) => {
+    if (!factor) return 1;
+    let f;
+    try { f = Number(factor(id)); } catch { f = 0; }
+    return Number.isFinite(f) && f > 0 ? f : 0;
+  };
+  const weights = pool.map((id) => Math.max(weightOf(id, stats[id], now, opts, lastChannel) * extra(id), 1e-9));
   const total = weights.reduce((a, b) => a + b, 0);
   let x = rand() * total;
   for (let i = 0; i < pool.length; i++) {

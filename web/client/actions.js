@@ -672,6 +672,9 @@ export const MODULE_VERBS = {
   // Row 2.45: brain games. next/prev walk the offered answers (or things to pick), select answers, back skips.
   brain_games:   { next: 'brain_games/next', prev: 'brain_games/prev', select: 'brain_games/select', back: 'brain_games/skip',
                    play: 'brain_games/resume', pause: 'brain_games/pause' },
+  // Quiz mix (2026-10-06, a quiz_view game): the same moves as every answer game.
+  quiz_mix:      { next: 'quiz_mix/next', prev: 'quiz_mix/prev', select: 'quiz_mix/select', back: 'quiz_mix/skip',
+                   play: 'quiz_mix/resume', pause: 'quiz_mix/pause' },
   // Card sort (a quiz_view game): next / prev walk the piles, select sorts the card, back skips it.
   card_sort:     { next: 'card_sort/next', prev: 'card_sort/prev', select: 'card_sort/select', back: 'card_sort/skip',
                    play: 'card_sort/resume', pause: 'card_sort/pause' },

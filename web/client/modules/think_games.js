@@ -178,6 +178,130 @@ const andWords = (xs) => (xs.length < 2 ? String(xs[0] ?? '') : `${xs.slice(0, -
 const cap = (s) => String(s).charAt(0).toUpperCase() + String(s).slice(1);
 
 // ---------------------------------------------------------------------------------------
+// THE QUESTIONS AND THEIR PICTURES, for any host (2026-10-06, Quiz mix)
+// ---------------------------------------------------------------------------------------
+// What a thinking-games question IS - dealing one exercise off the ladder (with "smallest" or "biggest" chosen
+// as the settings say), how it is asked, judged, hinted and drawn - lifted out of the module unchanged, so Quiz
+// mix (modules/quiz_mix.js) asks these same questions rather than a copy. The module keeps the mix order, turns
+// and points.
+//   session  the ladder (adaptive_play.js createAdaptiveSession);  cfg()  the settings these read
+export function createThinkPlay({ session, cfg = () => DEFAULTS, rand = Math.random } = {}) {
+  let dealt = null;              // the item on screen (a dealt copy, with `want`)
+  /** One question of `kind` off the ladder (`opts`: adaptive_play.js `deal`'s, e.g. the player). null: none. */
+  function dealKind(kind, opts = {}) {
+    const q = session.deal(kind, opts);
+    if (!q) { dealt = null; return null; }
+    const k = cfg();
+    const askFor = q.kind === 'numbers' ? k.numbersAsk : k.thingsAsk;
+    const want = askFor === 'both' ? (rand() < 0.5 ? 'smallest' : 'biggest') : (askFor === 'biggest' ? 'biggest' : 'smallest');
+    dealt = Object.freeze({ ...q, want: q.kind === 'numbers' || q.kind === 'things' ? want : null });
+    return dealt;
+  }
+  const shownWords = (it) => shownOf(it).map(String);
+  // Everything but `items` (the host deals).
+  const adapter = {
+    empty: () => 'There are no questions for this game yet.',
+    ask(it, c) {
+      const pre = session.askPrefix();
+      if (it.kind === 'numbers' || it.kind === 'things') {
+        return pre + fill(it.want === 'biggest' ? c.askBiggest : c.askSmallest, { list: listWords(shownWords(it)) });
+      }
+      if (it.kind === 'groups') return pre + fill(c.askGroup, { list: cap(listWords(it.things).replace(/ or /, ', ')) });
+      return pre + fill(c.askFinish, { stem: it.stem });
+    },
+    candidates(it, c, r) {
+      if (it.kind === 'numbers' || it.kind === 'things') return shownWords(it);
+      if (it.kind === 'groups') {
+        const others = shuffle(otherGroups(it), r).slice(0, 2);
+        return shuffle([it.group, ...others], r);
+      }
+      return shuffle([it.accept[0], ...it.wrong.slice(0, 2)], r);
+    },
+    offer(it, cand, c) {
+      if (it.kind === 'numbers') return fill(c.offerNumber, { candidate: cand });
+      if (it.kind === 'things') return fill(c.offerThing, { candidate: cand });
+      if (it.kind === 'groups') return fill(c.offerGroup, { candidate: cand });
+      return fill(c.offerFinish, { stem: it.stem, candidate: cand });
+    },
+    judge: (it, v) => judgeItem(it, v),
+    hint(it, n, c) {
+      if (it.kind === 'numbers' || it.kind === 'things') {
+        // Take a wrong one away each time: two hints leave only the answer.
+        const t = targetOf(it);
+        const wrong = shownOf(it).filter((x) => x !== t);
+        const x = wrong[n - 1];
+        if (x == null) return '';
+        return fill(it.kind === 'numbers' ? c.hintNotNumber : c.hintNotThing, { x });
+      }
+      // A meaning cue first, then a sound cue.
+      if (n === 1) return it.cue || '';
+      if (n === 2) {
+        const a = it.kind === 'groups' ? it.group : it.accept[0];
+        return fill(c.hintFirst, { letter: a.charAt(0).toUpperCase() });
+      }
+      return '';
+    },
+    answer(it) {
+      if (it.kind === 'numbers' || it.kind === 'things') return String(targetOf(it));
+      if (it.kind === 'groups') return it.group;
+      return it.accept[0];
+    },
+    explain(it, answer, c) {
+      if (it.kind === 'numbers') return fill(c.explainNumber, { answer: targetOf(it), want: it.want });
+      if (it.kind === 'things') return fill(c.explainThing, { answer: targetOf(it), want: it.want });
+      if (it.kind === 'groups') return fill(c.explainGroup, { list: cap(andWords(it.things)), group: it.group });
+      const said = longestFirst(it.accept).find((a) => saysPhrase(answer, a)) || it.accept[0];
+      return fill(c.explainFinish, { sentence: `${it.stem} ${said}` });
+    },
+    vocab(it) {
+      if (it.kind === 'numbers') return it.nums.map((n) => numberWord(n));
+      if (it.kind === 'things') return [...it.things];
+      if (it.kind === 'groups') return [...new Set([...it.accept, ...GROUP_NAMES])];
+      return [...it.accept, ...it.wrong];
+    },
+    heardText: (v) => String(v),
+    fromVoice(it, { text, raw }) {
+      if (it.kind === 'numbers') { const n = parseNumber(raw); return n == null ? null : { value: String(n) }; }
+      return text ? { value: text } : null;
+    },
+    unknownLine(value, c) {
+      const it = dealt;
+      const heard = String(value);
+      return it && (it.kind === 'numbers' || it.kind === 'things') ? fill(c.notAnOption, { heard }) : fill(c.notSure, { heard });
+    },
+  };
+
+  // ---- the pictures: the three as tiles, the things as cards, the sentence with its gap ----
+  const tile = (v, small = false) => `<button type="button" class="qz-pick" data-pick="${esc(v)}"${small ? ' data-small' : ''}>${esc(v)}</button>`;
+  const view = {
+    askHtml(s) {
+      const it = s.item;
+      if (it.kind === 'numbers' || it.kind === 'things') return esc(it.want === 'biggest' ? 'Which is the biggest?' : 'Which is the smallest?');
+      if (it.kind === 'groups') return esc('What group do they all belong to?');
+      return `${esc(it.stem)} <span class="qz-blank" data-gap>___</span>`;
+    },
+    left(s) {
+      const it = s.item;
+      if (it.kind === 'numbers' || it.kind === 'things') {
+        return `<div class="qz-picks" data-three>${shownWords(it).map((v) => tile(v, it.kind === 'things')).join('')}</div>`;
+      }
+      const picks = `<div class="qz-picks" data-choices>${(s.candidates || []).map((v) => tile(v, true)).join('')}</div>`;
+      if (it.kind === 'groups') {
+        return `<div class="qz-left-stack"><div class="qz-things" data-things>${it.things.map((t) => `<p class="qz-card">${esc(t)}</p>`).join('')}</div>${picks}</div>`;
+      }
+      // The sentence itself is the question line above; here are only the endings to touch.
+      return picks;
+    },
+    pairHtml(s) {
+      const it = s.item;
+      if (it.kind === 'finish') return `<div class="wg-pair" data-pair>${esc(s.pair.explain)}</div>`;
+      return `<div class="wg-pair" data-pair>${esc(String(s.pair.answer).toUpperCase())}</div>`;
+    },
+  };
+  return { dealKind, adapter, view, dealt: () => dealt };
+}
+
+// ---------------------------------------------------------------------------------------
 // THE MODULE
 // ---------------------------------------------------------------------------------------
 registerModule(
@@ -191,7 +315,6 @@ registerModule(
     const rand = ctx.rand || Math.random;
     let cfgNow = { ...DEFAULTS };
     let mixAt = 0;
-    let dealt = null;              // the item on screen (a dealt copy, with `want`)
     let api = null;
     // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
     // start in this game, else their usual one; everybody else's stays on this screen's row; a refused save merges, entry by
@@ -213,118 +336,22 @@ registerModule(
       writer: async (req) => (await writeQuestions({ ai: getAI(), ...req })).items,
     });
     ladderRows.attach(session);
+    // The questions themselves (createThinkPlay above).
+    const play = createThinkPlay({ session, cfg: () => cfgNow, rand });
 
     function deal(game) {
-      const q = session.deal(game);
-      if (!q) { dealt = null; return []; }
-      const k = cfgNow;
-      const askFor = q.kind === 'numbers' ? k.numbersAsk : k.thingsAsk;
-      const want = askFor === 'both' ? (rand() < 0.5 ? 'smallest' : 'biggest') : (askFor === 'biggest' ? 'biggest' : 'smallest');
-      dealt = Object.freeze({ ...q, want: q.kind === 'numbers' || q.kind === 'things' ? want : null });
-      return [dealt];
+      const q = play.dealKind(game);
+      return q ? [q] : [];
     }
 
-    const shownWords = (it) => shownOf(it).map(String);
     const adapterFor = (gameId) => ({
+      ...play.adapter,
       items: () => deal(gameId === 'mix' ? MIX_ORDER[(mixAt++) % MIX_ORDER.length] : gameId),
-      empty: () => 'There are no questions for this game yet.',
-      ask(it, c) {
-        const pre = session.askPrefix();
-        if (it.kind === 'numbers' || it.kind === 'things') {
-          return pre + fill(it.want === 'biggest' ? c.askBiggest : c.askSmallest, { list: listWords(shownWords(it)) });
-        }
-        if (it.kind === 'groups') return pre + fill(c.askGroup, { list: cap(listWords(it.things).replace(/ or /, ', ')) });
-        return pre + fill(c.askFinish, { stem: it.stem });
-      },
-      candidates(it, c, r) {
-        if (it.kind === 'numbers' || it.kind === 'things') return shownWords(it);
-        if (it.kind === 'groups') {
-          const others = shuffle(otherGroups(it), r).slice(0, 2);
-          return shuffle([it.group, ...others], r);
-        }
-        return shuffle([it.accept[0], ...it.wrong.slice(0, 2)], r);
-      },
-      offer(it, cand, c) {
-        if (it.kind === 'numbers') return fill(c.offerNumber, { candidate: cand });
-        if (it.kind === 'things') return fill(c.offerThing, { candidate: cand });
-        if (it.kind === 'groups') return fill(c.offerGroup, { candidate: cand });
-        return fill(c.offerFinish, { stem: it.stem, candidate: cand });
-      },
-      judge: (it, v) => judgeItem(it, v),
-      hint(it, n, c) {
-        if (it.kind === 'numbers' || it.kind === 'things') {
-          // Take a wrong one away each time: two hints leave only the answer.
-          const t = targetOf(it);
-          const wrong = shownOf(it).filter((x) => x !== t);
-          const x = wrong[n - 1];
-          if (x == null) return '';
-          return fill(it.kind === 'numbers' ? c.hintNotNumber : c.hintNotThing, { x });
-        }
-        // A meaning cue first, then a sound cue.
-        if (n === 1) return it.cue || '';
-        if (n === 2) {
-          const a = it.kind === 'groups' ? it.group : it.accept[0];
-          return fill(c.hintFirst, { letter: a.charAt(0).toUpperCase() });
-        }
-        return '';
-      },
-      answer(it) {
-        if (it.kind === 'numbers' || it.kind === 'things') return String(targetOf(it));
-        if (it.kind === 'groups') return it.group;
-        return it.accept[0];
-      },
-      explain(it, answer, c) {
-        if (it.kind === 'numbers') return fill(c.explainNumber, { answer: targetOf(it), want: it.want });
-        if (it.kind === 'things') return fill(c.explainThing, { answer: targetOf(it), want: it.want });
-        if (it.kind === 'groups') return fill(c.explainGroup, { list: cap(andWords(it.things)), group: it.group });
-        const said = longestFirst(it.accept).find((a) => saysPhrase(answer, a)) || it.accept[0];
-        return fill(c.explainFinish, { sentence: `${it.stem} ${said}` });
-      },
-      vocab(it) {
-        if (it.kind === 'numbers') return it.nums.map((n) => numberWord(n));
-        if (it.kind === 'things') return [...it.things];
-        if (it.kind === 'groups') return [...new Set([...it.accept, ...GROUP_NAMES])];
-        return [...it.accept, ...it.wrong];
-      },
-      heardText: (v) => String(v),
-      fromVoice(it, { text, raw }) {
-        if (it.kind === 'numbers') { const n = parseNumber(raw); return n == null ? null : { value: String(n) }; }
-        return text ? { value: text } : null;
-      },
-      unknownLine(value, c) {
-        const it = dealt;
-        const heard = String(value);
-        return it && (it.kind === 'numbers' || it.kind === 'things') ? fill(c.notAnOption, { heard }) : fill(c.notSure, { heard });
-      },
     });
     const games = Object.fromEntries(GAMES.map((g) => [g, adapterFor(g)]));
 
-    // ---- the view: the three as tiles, the things as cards, the sentence with its gap ----
-    const tile = (v, small = false) => `<button type="button" class="qz-pick" data-pick="${esc(v)}"${small ? ' data-small' : ''}>${esc(v)}</button>`;
     const view = {
-      askHtml(s, c) {
-        const it = s.item;
-        if (it.kind === 'numbers' || it.kind === 'things') return esc(it.want === 'biggest' ? 'Which is the biggest?' : 'Which is the smallest?');
-        if (it.kind === 'groups') return esc('What group do they all belong to?');
-        return `${esc(it.stem)} <span class="qz-blank" data-gap>___</span>`;
-      },
-      left(s) {
-        const it = s.item;
-        if (it.kind === 'numbers' || it.kind === 'things') {
-          return `<div class="qz-picks" data-three>${shownWords(it).map((v) => tile(v, it.kind === 'things')).join('')}</div>`;
-        }
-        const picks = `<div class="qz-picks" data-choices>${(s.candidates || []).map((v) => tile(v, true)).join('')}</div>`;
-        if (it.kind === 'groups') {
-          return `<div class="qz-left-stack"><div class="qz-things" data-things>${it.things.map((t) => `<p class="qz-card">${esc(t)}</p>`).join('')}</div>${picks}</div>`;
-        }
-        // The sentence itself is the question line above; here are only the endings to touch.
-        return picks;
-      },
-      pairHtml(s) {
-        const it = s.item;
-        if (it.kind === 'finish') return `<div class="wg-pair" data-pair>${esc(s.pair.explain)}</div>`;
-        return `<div class="wg-pair" data-pair>${esc(String(s.pair.answer).toUpperCase())}</div>`;
-      },
+      ...play.view,
       turnHtml: (s) => session.turnHtml(s, s.item?.kind || null),
       onResult: (r) => { session.record(r); },
       allowAward: () => session.allowAward(),

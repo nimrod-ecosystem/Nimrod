@@ -230,6 +230,9 @@ export const ROUTES = {
     phrases: ['play word builder', 'word builder'] },
   'play-brain': { topic: 'brain_games/play', payload: { game: 'mix' }, label: 'Play Brain games',
     phrases: ['play brain games', 'brain games'] },
+  // 2026-10-06: Quiz mix, every kind of question in one game.
+  'play-quiz-mix': { topic: 'quiz_mix/play', payload: { game: 'mix' }, label: 'Play Quiz mix',
+    phrases: ['play quiz mix', 'quiz mix'] },
   'play-different': { topic: 'brain_games/play', payload: { game: 'odd' }, label: 'Play Which one is different',
     phrases: ['play odd one out', 'play which is different'] },
   'play-order': { topic: 'brain_games/play', payload: { game: 'order' }, label: 'Play Remember the order',
