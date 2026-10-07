@@ -95,6 +95,24 @@ async function realPress(x, y, pointerType = 'mouse') {
   return { down, up, click };
 }
 const pressAt = (el, type) => { el.scrollIntoView({ block: 'nearest' }); const [x, y] = centre(el); return realPress(x, y, type); };
+// *** A PRESS ON THE PANEL ITSELF, NOT ON ONE OF ITS CONTROLS (2026-10-06). *** "A tap on a panel lands on the
+// panel" failed about one run in three, detail `tv-opt`: the centre of the Trivia panel is wherever this
+// question's answers happen to fall, so the tap sometimes ANSWERED it -- which is right -- and Trivia redraws on an
+// answer, so the button the tap went down on was no longer in the page and `contains` said no. Measured: never
+// promoted, `isConnected` false. So the press aims at a spot inside `el` where what is under the point is the
+// panel's own surface (no button, link, field or anything else a press would operate), scanned from the centre out.
+// null if there is none.
+const OPERABLE = 'button, a[href], input, select, textarea, label, summary, [role="button"], [contenteditable=""], [contenteditable="true"]';
+function quietSpot(el) {
+  el.scrollIntoView({ block: 'nearest' });
+  const r = el.getBoundingClientRect();
+  const pts = [];
+  for (let i = 1; i < 10; i++) for (let j = 1; j < 10; j++) pts.push([r.left + r.width * i / 10, r.top + r.height * j / 10]);
+  const [cx, cy] = centre(el);
+  pts.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(b[0] - cx, b[1] - cy));
+  return pts.find(([x, y]) => { const at = document.elementFromPoint(x, y); return at && el.contains(at) && !at.closest(OPERABLE); }) || null;
+}
+const pressQuiet = async (el, type) => { const at = quietSpot(el); return at ? realPress(...at, type) : { down: null, up: null, click: null }; };
 // *** A PRESS THAT WAKES THE BAR IS NOT ALSO A PRESS ON IT (2026-10-02, late). *** Measured: a tap on the
 // calculator's "=" where the hidden plain bar sits sent its click to `.k-controls`. The bar woke on the press's
 // pointerdown, and the tap was hit-tested again at its release -- by which time the bar was there. A mouse did
@@ -593,8 +611,10 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
         getComputedStyle(corner(0)).opacity === '0' && document.elementFromPoint(cx, cy) !== corner(0)
         && !!document.elementFromPoint(cx, cy)?.closest('.k-mod'), String(document.elementFromPoint(cx, cy)?.className));
       // A tap in the middle of a panel: the bar comes up (that is right), and so do the corners.
-      const mid = await pressAt(cells[1].querySelector('.k-mod'), 'touch');
-      check('a tap on a panel lands on the panel', cells[1].contains(mid.down) && kiosk.promoted().dashboard === null, String(mid.down?.className));
+      // (On the panel's own surface, not on one of its answers: see pressQuiet.)
+      const mid = await pressQuiet(cells[1].querySelector('.k-mod'), 'touch');
+      check('a tap on a panel lands on the panel', !!mid.down && cells[1].contains(mid.down) && kiosk.promoted().dashboard === null,
+        `${mid.down?.className} ${J(kiosk.promoted())}`);
       check('...the bar comes up with it', !root.querySelector('.k-controls').classList.contains('hidden'));
       // A finger is not a hover: Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
       // the hover rule must stand down after a touch, or a hidden corner wakes in time to take the tap.
