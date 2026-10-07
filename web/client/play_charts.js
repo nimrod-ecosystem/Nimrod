@@ -129,6 +129,43 @@ export function withRest(allRows, top, { restLabel = 'Everything else' } = {}) {
 /** How many plays in the window. Pure. */
 export function totalPlays(events, opts = {}) { return countedPlays(events, opts).length; }
 
+// ---------------------------------------------------------------------------------------------
+// ONE NUMBER (row 2.62, step 3: "the data source kind in automation, so any existing setting can follow data").
+// automation.js's "what's been played" source asks one of these and drives a setting with the answer. Same windows,
+// same sources, same screen filter and the same Spotify rule as every chart here, so a lamp that follows "plays this
+// week" and a chart of "plays this week" can never disagree. Always a finite number: an empty device is 0, never NaN.
+//   plays  how many plays                           ("plays today", "YouTube plays this week")
+//   top    how many times the most played thing played
+//   items  how many different things played
+// ---------------------------------------------------------------------------------------------
+export const NUMBER_QUERIES = Object.freeze(['plays', 'top', 'items']);
+export const NUMBER_WORDS = Object.freeze({
+  plays: 'How many plays',
+  top: 'Plays of the most played thing',
+  items: 'How many different things played',
+});
+
+/** The answer to one NUMBER_QUERIES question over these rows. Pure; 0 for nothing, never NaN. */
+export function playNumber(events, { query = 'plays', win = 'week', what = 'all', screen = null, now = Date.now(),
+  leftOut = LEFT_OUT } = {}) {
+  const rows = countedPlays(events, { win, what, screen, now, leftOut });
+  const q = NUMBER_QUERIES.includes(query) ? query : 'plays';
+  if (q === 'plays') return rows.length;
+  const groups = tally(rows, { by: 'id' });
+  if (q === 'items') return groups.length;
+  const n = Number(groups[0]?.value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** The question in words, for a list of what drives what: "plays this week", "YouTube: different things played today". */
+export function playNumberWords({ query = 'plays', win = 'week', what = 'all' } = {}) {
+  const q = NUMBER_QUERIES.includes(query) ? query : 'plays';
+  const w = WINDOWS.includes(win) ? win : 'week';
+  const head = q === 'top' ? 'plays of the most played thing' : q === 'items' ? 'different things played' : 'plays';
+  const t = `${head} ${w === 'all' ? 'of all time' : WINDOW_WORDS[w]}`;
+  return what && what !== 'all' ? `${sourceWord(what)}: ${t}` : t;
+}
+
 /**
  * COUNTS OVER TIME: plays per bucket across the window, every bucket present (a day with none is a 0, not a gap).
  *   today -> each hour up to now; week, month -> each day up to today; all -> each month from the first play.

@@ -40,15 +40,19 @@
 //   panel / output (another panel's output) the panels that SEND a number (links.js portsFor: an `out` port
 //                  of type number), by name; choosing one fills its first number output in.
 //   up / down with the verbs (actions.js), down with "none" first.
+// (2026-10-07, row 2.62 step 3) "What's been played" is choices only - Count, Over, Which plays - so a data rule is
+// made by switch alone; and the Setting list ends with the host's numbers on every panel (its size, turn, colour
+// shift and move: panel_drive.js) when the engine was given them.
 //
 // Nothing here writes a setting. It adds and removes BINDINGS through the engine, and the engine's
 // `onChange` is where the host saves them.
 
-import { SOURCE_KINDS, CURVES, QUIET, LFO_SHAPES, AUTOMATION_DEFAULTS, LFO_MIN_PERIOD_MS, bindableSettings } from './automation.js';
+import { SOURCE_KINDS, CURVES, QUIET, LFO_SHAPES, AUTOMATION_DEFAULTS, LFO_MIN_PERIOD_MS, bindableSettings, dataRangeFor } from './automation.js';
 import { VERBS, MEDIA_VERBS } from './actions.js';
 import { portsFor } from './links.js';
 import { opensPicker, chooseModeOf } from './settings_fields.js';
 import { mountChoicePicker } from './choice_picker.js';
+import { NUMBER_QUERIES, NUMBER_WORDS, WINDOWS, WINDOW_WORDS, WHAT_CHOICES, sourceWord, playNumberWords } from './play_charts.js';
 
 const KIND_LABELS = {
   bus: 'a message (a sensor, a game, a score)',
@@ -56,7 +60,11 @@ const KIND_LABELS = {
   verb: 'a switch or key (a verb)',
   clock: 'the time of day',
   lfo: 'a slow wave',
+  // Row 2.62 step 3. Plain words for the question it asks; the three questions and the windows are its own rows.
+  data: 'what’s been played (plays today, this week …)',
 };
+// The windows in words, as the Charts panel's "Over" row says them.
+const WIN_LABELS = Object.fromEntries(WINDOWS.map((w) => [w, w === 'all' ? 'All time' : WINDOW_WORDS[w].charAt(0).toUpperCase() + WINDOW_WORDS[w].slice(1)]));
 const CURVE_LABELS = {
   linear: 'straight', 'ease-in': 'slow then fast', 'ease-out': 'fast then slow',
   steps: 'in steps', peak: 'only when it is right (hidden writing)',
@@ -126,6 +134,7 @@ export function describeBinding(b, { panelTitle = null, settingLabel = null, mes
     : s.kind === 'verb' ? `the ${s.up} verb${s.down ? ` (and ${s.down} back)` : ''}`
     : s.kind === 'clock' ? 'the time of day'
     : s.kind === 'lfo' ? `a ${s.shape} wave every ${Math.round((s.periodMs || 0) / 100) / 10} s`
+    : s.kind === 'data' ? `what’s been played (${playNumberWords(s)})`
     : 'nothing';
   const curve = b.map?.curve && b.map.curve !== 'linear' ? `, ${CURVE_LABELS[b.map.curve] || b.map.curve}` : '';
   return `${panelTitle || b.target.instance}: ${settingLabel || b.target.key} ← ${from}${curve}`;
@@ -175,7 +184,10 @@ export function mountAutomationPanel(root, {
   const say = (t) => { statusEl.textContent = t || ''; };
   const allPanels = () => { try { return panels() || []; } catch { return []; } };
   const panelById = (id) => allPanels().find((p) => p.id === id) || null;
-  const settingsOf = (p) => (p ? bindableSettings(p.manifest, p.instance || null) : []);
+  // The panel's own settings, then the host's numbers on every panel (its size, turn, colour shift: panel_drive.js),
+  // when the engine was given any.
+  const extraNow = () => { try { return engine.extraFields?.() || null; } catch { return null; } };
+  const settingsOf = (p) => (p ? bindableSettings(p.manifest, p.instance || null, { extra: extraNow() }) : []);
   const modeNow = () => { try { return autoScanModeOf(typeof chooseMode === 'function' ? chooseMode() : chooseMode); } catch { return 'one'; } };
 
   // ---- the list ----
@@ -286,6 +298,26 @@ export function mountAutomationPanel(root, {
         field('Wave', select('shape', LFO_SHAPES.map((s) => ({ value: s, label: s })), AUTOMATION_DEFAULTS.lfoShape)));
     } else if (k === 'clock') {
       srcBox.append(el('span', { class: 'auto-note', text: 'Low at night, high by day.' }));
+    } else if (k === 'data') {
+      // Row 2.62 step 3: one number from what has played on this screen. Its lowest / highest start at the window's
+      // own (AUTOMATION_DEFAULTS.dataRanges: about ten plays a day) and follow the window when it changes.
+      const D = AUTOMATION_DEFAULTS;
+      const winSel = select('win', WINDOWS.map((w) => ({ value: w, label: WIN_LABELS[w] })), D.dataWin);
+      const [lo, hi] = dataRangeFor(D.dataWin);
+      srcBox.append(
+        field('Count', select('query', NUMBER_QUERIES.map((q) => ({ value: q, label: NUMBER_WORDS[q] })), D.dataQuery)),
+        field('Over', winSel),
+        field('Which plays', select('what', WHAT_CHOICES.map((w) => ({ value: w, label: w === 'all' ? 'Everything played on this screen' : sourceWord(w) })), D.dataWhat)),
+        numField('Its lowest', 'inMin', lo, '1'),
+        numField('Its highest', 'inMax', hi, '1'),
+        el('span', { class: 'auto-note', text: 'Counted on this device, for this screen only. Spotify plays are not counted.' }));
+      winSel.addEventListener('change', () => {
+        const [a, b] = dataRangeFor(winSel.value);
+        for (const [name, v] of [['inMin', a], ['inMax', b]]) {
+          const box = form.querySelector(`[data-a="${name}"]`);
+          if (box) { box.value = String(v); box.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+      });
     }
   }
 
@@ -298,8 +330,9 @@ export function mountAutomationPanel(root, {
     if (kind === 'link') Object.assign(source, { instance: v('instance').trim(), port: v('port').trim() });
     if (kind === 'verb') Object.assign(source, { up: v('up').trim(), down: v('down').trim() || null, step: n('step') });
     if (kind === 'lfo') Object.assign(source, { periodMs: (n('periodS') || 0) * 1000, shape: v('shape') });
+    if (kind === 'data') Object.assign(source, { query: v('query'), win: v('win'), what: v('what') });
     const map = { outMin: n('outMin'), outMax: n('outMax'), curve: curveSel.value, whenQuiet: quietSel.value };
-    if (kind === 'bus') Object.assign(map, { inMin: n('inMin'), inMax: n('inMax') });
+    if (kind === 'bus' || kind === 'data') Object.assign(map, { inMin: n('inMin'), inMax: n('inMax') });
     if (curveSel.value === 'peak') Object.assign(map, { center: n('center'), width: n('width') });
     return { target: { instance: panelSel.value, key: keySel.value }, source, map };
   }
@@ -510,6 +543,11 @@ export function mountAutomationPanel(root, {
       const own = Number(s.field?.step);
       if (own > 0) step = own * Math.max(1, Math.round(step / own));
       return { step, min: s.min, max: s.max };
+    }
+    if ((name === 'inMin' || name === 'inMax') && kindSel.value === 'data') {
+      // A count: whole plays, a twentieth of the window's own default span a press (70 a week -> 4 a press).
+      const [lo, hi] = dataRangeFor(form.querySelector('[data-a="win"]')?.value);
+      return { step: Math.max(1, Math.round(Math.abs(hi - lo) / across)), min: 0 };
     }
     if (name === 'inMin' || name === 'inMax') {
       // A chosen message's own span (held 0..2000 ms nudges by 100, not by 0.05); otherwise 0..1.

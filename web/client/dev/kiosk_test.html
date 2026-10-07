@@ -3724,6 +3724,34 @@ const toTab = (m, id) => {
       await setRow({ flashLimitPerSecond: null });
       await settled(() => wk.flashLimit() === 2, 9000);
 
+      // ---- 3b. A PANEL'S OWN SIZE, TURN AND COLOUR, AND WHAT'S BEEN PLAYED (row 2.62, 2026-10-07) ----
+      // The kiosk hands its engine the host's numbers on every panel (panel_drive.js) and this device's plays for
+      // this screen; a rule on one drives the panel's real box, and goes cleanly. (automation_test has the detail.)
+      {
+        const auto = wk.automation();
+        // A panel that is mounted (the call panel or the probe; photos waits its turn on this one-at-a-time screen):
+        // the numbers are the host's, on every panel, so any mounted one shows it.
+        const panelId = auto.targets()[0];
+        const driven = () => [...wbox.querySelectorAll('.k-mod')].filter((el) => el.dataset.driven === '1');
+        check('(setup) a mounted panel is one of the engine\'s targets', !!panelId, JSON.stringify(auto.targets()));
+        check('the kiosk\'s engine carries a panel\'s size, turn, colour shift and move', auto.extraFields().map((f) => f.key).join() === 'driveScale,driveTurn,driveHue,driveAcross,driveDown');
+        check('no rule: no panel box carries a driven style', driven().length === 0);
+        const r = auto.add({ id: 'k-hue', target: { instance: panelId, key: 'driveHue' }, source: { kind: 'bus', topic: 'test/hue' } });
+        wBus.publish('test/hue', 0.5);
+        check('*** a rule on a mounted panel\'s colour shift turns its real box half way round the wheel ***',
+          r.ok && await settled(() => driven().length === 1 && driven()[0].style.filter === 'hue-rotate(180deg)', 4000),
+          `${JSON.stringify(r)} ${driven().map((el) => el.style.filter)}`);
+        auto.remove('k-hue');
+        check('removed: the box is plain again', await settled(() => driven().length === 0, 4000));
+        const d = auto.add({ id: 'k-data', target: { instance: panelId, key: 'driveScale' }, source: { kind: 'data', win: 'today' },
+          map: { outMin: 100, outMax: 200 } });
+        check('*** "what\'s been played" on a real screen drives the panel\'s size to a NUMBER (no plays here: 100%) ***',
+          d.ok && await settled(() => driven().length === 1 && driven()[0].style.scale === '1', 4000),
+          `${JSON.stringify(d)} ${JSON.stringify(auto.overlay(panelId))}`);
+        auto.remove('k-data');
+        check('...and goes cleanly', await settled(() => driven().length === 0, 4000) && !auto.list().some((b) => b.id.startsWith('k-')));
+      }
+
       // ---- 4. ZOOM ON FOCUS ----
       const kEl = wbox.querySelector('.kiosk');
       check('zoom on focus: off by default', !('zoomFocus' in kEl.dataset));

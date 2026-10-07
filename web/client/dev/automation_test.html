@@ -640,6 +640,168 @@ try {
     mv.destroy(); eng.destroy();
   }
 
+  // ================= what's been played (row 2.62 step 3, 2026-10-07) =================
+  section('2026-10-07: "what\'s been played" drives a setting - this device\'s record, this screen\'s plays, never NaN');
+  {
+    const { createPlays, memoryPlayStore } = await import('../plays.js');
+    const { playNumber, playNumberWords, NUMBER_QUERIES } = await import('../play_charts.js');
+    const { dataRangeFor } = await import('../automation.js');
+    const J = (v) => JSON.stringify(v);
+    // Shapes.
+    const s0 = normalizeSource({ kind: 'data' });
+    check('a data source normalizes with every default named (plays, this week, every player, once a minute)',
+      s0 && s0.query === 'plays' && s0.win === 'week' && s0.what === 'all' && s0.tickMs === AUTOMATION_DEFAULTS.dataTickMs
+        && s0.tickMs === 60000, J(s0));
+    check('its lowest / highest default to the window\'s own (0..70 this week, 0..10 today)',
+      s0.range[0] === 0 && s0.range[1] === 70 && normalizeSource({ kind: 'data', win: 'today' }).range[1] === 10
+        && dataRangeFor('month')[1] === 300 && dataRangeFor('nonsense')[1] === 70);
+    check('an unknown question or window reads as the default, not a dropped rule',
+      normalizeSource({ kind: 'data', query: 'vibes', win: 'decade' }).query === 'plays'
+        && normalizeSource({ kind: 'data', query: 'vibes', win: 'decade' }).win === 'week');
+    check('a refresh faster than a second is held to a second', normalizeSource({ kind: 'data', tickMs: 5 }).tickMs === 1000);
+    check('a player name that is not id-shaped reads as every player', normalizeSource({ kind: 'data', what: 'Not An Id!' }).what === 'all');
+    check('*** an empty record is 0 for every question - never NaN ***',
+      NUMBER_QUERIES.every((q) => playNumber([], { query: q, screen: 's1' }) === 0 && playNumber(null, { query: q }) === 0));
+    check('the question in plain words', playNumberWords({ query: 'plays', win: 'today' }) === 'plays today'
+      && playNumberWords({ query: 'top', win: 'all', what: 'youtube' }) === 'YouTube: plays of the most played thing of all time',
+      playNumberWords({ query: 'top', win: 'all', what: 'youtube' }));
+
+    // The engine, on a hand-run clock, over a memory record that counts its own subscribers and reloads.
+    const clk = fakeClock(Date.UTC(2026, 9, 7, 12, 0, 0));
+    const rec = createPlays({ store: memoryPlayStore(), now: clk.now });
+    let liveSubs = 0, loads = 0;
+    const plays = {
+      get: () => rec.get(),
+      loadAll: () => { loads += 1; return rec.loadAll(); },
+      subscribe: (fn) => { liveSubs += 1; const off = rec.subscribe(fn); let done = false; return () => { if (!done) { done = true; liveSubs -= 1; off(); } }; },
+    };
+    const settle = () => sleep(0);
+    const eng = createAutomation({ bus: countingBus(), now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer,
+      plays, screen: () => 's1' });
+    const base = memState({ level: 30, fine: 1 });
+    const st = eng.wrapState('p1', base, { fields: NUM_FIELDS });
+    const r1 = eng.add({ id: 'd1', target: { instance: 'p1', key: 'level' }, source: { kind: 'data', query: 'plays', win: 'week' },
+      map: { inMin: 0, inMax: 10 } });
+    await settle();
+    check('a data rule is added and running', r1.ok && eng.status('d1') === 'running', J(r1));
+    check('*** an EMPTY device drives the setting to its lowest - a number (0), not NaN ***',
+      st.get().level === 0 && Number.isFinite(eng.overlay('p1').level), J(eng.overlay('p1')));
+    const log = (id, screen = 's1', source = 'folder') => rec.log({ source, id, panel: `panel-${screen}`, screen });
+    await log('song-a'); await log('song-a'); await log('song-a'); await log('song-b'); await log('song-b');
+    await log('song-c', 's2');                                   // another screen's play
+    await log('spotify:track:x', 's1', 'spotify');                // left out of every count (play_charts.js)
+    await settle();
+    check('*** five plays of 0..10 drive level to 50 - another screen\'s play and Spotify not counted ***',
+      st.get().level === 50, String(st.get().level));
+    check('*** the hand-set value in storage never saw any of it ***', base.get().level === 30 && base.writes.length === 0);
+    const r2 = eng.add({ id: 'd2', target: { instance: 'p1', key: 'fine' }, source: { kind: 'data', query: 'top', win: 'today' },
+      map: { inMin: 0, inMax: 3 } });
+    await settle();
+    check('"plays of the most played thing" (3 of song-a, of 0..3) drives fine to its top (2)', r2.ok && st.get().fine === 2,
+      String(st.get().fine));
+    check('"how many different things" counts two (this screen, Spotify left out)',
+      playNumber(rec.get().events, { query: 'items', screen: 's1', now: clk.now() }) === 2);
+    await log('song-d');
+    await settle();
+    check('*** a play landing moves it at once (6 plays -> 60) ***', st.get().level === 60, String(st.get().level));
+    const before = loads;
+    clk.advance(AUTOMATION_DEFAULTS.dataTickMs);
+    await settle(); await settle();
+    check('once a minute it reloads the device\'s whole record (another tab, midnight)', loads > before, `${before} -> ${loads}`);
+    check('...and still reads the same', st.get().level === 60);
+    eng.remove('d1');
+    check('*** rule removed: the setting is EXACTLY its own again (the base row itself) ***',
+      st.get().level === 30 && eng.overlay('p1').level === undefined);
+    // No screen: fail shut on whose listening it shows.
+    const lonely = createAutomation({ bus: countingBus(), now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer, plays, screen: null });
+    const st2 = lonely.wrapState('p9', memState({ level: 30 }), { fields: NUM_FIELDS });
+    lonely.add({ target: { instance: 'p9', key: 'level' }, source: { kind: 'data' }, map: { inMin: 0, inMax: 10 } });
+    await settle();
+    check('with no screen a data rule counts nothing (0), never the whole device\'s plays', st2.get().level === 0, String(st2.get().level));
+    lonely.destroy();
+    eng.destroy();
+    await log('song-e');
+    await settle();
+    check('*** destroyed: no timers, no runners, no subscription left on the record ***',
+      eng.activeTimers() === 0 && eng.running() === 0 && liveSubs === 0, `${eng.activeTimers()} ${eng.running()} ${liveSubs}`);
+    check('destroyed: the setting is its own again, and a play after that moves nothing', st.get().fine === 1, String(st.get().fine));
+    // No record at all (a page with no plays handle): still a number.
+    const bare = createAutomation({ bus: countingBus(), now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer, screen: 's1' });
+    const st3 = bare.wrapState('p8', memState({ level: 30 }), { fields: NUM_FIELDS });
+    bare.add({ target: { instance: 'p8', key: 'level' }, source: { kind: 'data' }, map: { outMin: 20, outMax: 40 } });
+    check('with no record at all it is the lowest of its range, not NaN', st3.get().level === 20, String(st3.get().level));
+    bare.destroy();
+    check('...and leaves no timer behind', bare.activeTimers() === 0);
+  }
+
+  // ================= a panel's own size, turn, colour and move (row 2.62's question) =================
+  section('2026-10-07: a panel\'s size, turn, colour shift and move can be driven - layered over its place, never written');
+  {
+    const { PANEL_DRIVE_FIELDS, PANEL_DRIVE_KEYS, panelDriveStyle, watchPanelDrive } = await import('../panel_drive.js');
+    const J = (v) => JSON.stringify(v);
+    check('five host numbers, each a bounded number at the advanced level',
+      PANEL_DRIVE_KEYS.length === 5 && PANEL_DRIVE_FIELDS.every((f) => f.kind === 'number' && f.min < f.max && f.level === 'advanced'));
+    const rows = bindableSettings(null, null, { fields: NUM_FIELDS, extra: PANEL_DRIVE_FIELDS });
+    check('given to the list, each can be driven (after the panel\'s own)',
+      PANEL_DRIVE_KEYS.every((k) => rows.find((r) => r.key === k)?.ok) && rows[0].key === NUM_FIELDS[0].key, J(rows.map((r) => r.key)));
+    const clash = bindableSettings(null, null, { fields: [{ key: 'driveScale', label: 'Mine', kind: 'number', min: 0, max: 5 }], extra: PANEL_DRIVE_FIELDS });
+    check('a module\'s own key wins a clash (listed once, as the module declared it)',
+      clash.filter((r) => r.key === 'driveScale').length === 1 && clash.find((r) => r.key === 'driveScale').label === 'Mine');
+    check('without them, nothing changes for anybody', bindableSettings(null, null, { fields: NUM_FIELDS }).length === NUM_FIELDS.length);
+    check('nothing driven = no style at all (the panel exactly as before)',
+      Object.values(panelDriveStyle({})).every((v) => v === ''));
+    check('a driven value past its range is held to it (scale 900% -> 400%)', panelDriveStyle({ driveScale: 900 }).scale === '4');
+
+    const bus = countingBus();
+    const eng = createAutomation({ bus, extraFields: PANEL_DRIVE_FIELDS });
+    check('the engine hands the editor the same list', eng.extraFields().length === 5);
+    const base = memState({ level: 30 });
+    const st = eng.wrapState('panel', base, { fields: NUM_FIELDS });
+    const box = document.createElement('div');
+    box.style.transform = 'translate(-50%, -50%) rotate(10deg)';      // its PLACE's own transform (arrangement.js)
+    const hostEl = document.getElementById('host');                 // (`host` is declared further down)
+    hostEl.append(box);
+    const stop = watchPanelDrive(box, st);
+    check('a panel with no rule has no driven style', box.style.scale === '' && box.style.filter === '' && !box.dataset.driven);
+    const a = eng.add({ id: 'sz', target: { instance: 'panel', key: 'driveScale' }, source: { kind: 'bus', topic: 'm/size' }, map: { outMin: 100, outMax: 200 } });
+    const b = eng.add({ id: 'tn', target: { instance: 'panel', key: 'driveTurn' }, source: { kind: 'bus', topic: 'm/turn' } });
+    const c = eng.add({ id: 'hu', target: { instance: 'panel', key: 'driveHue' }, source: { kind: 'bus', topic: 'm/hue' } });
+    const d = eng.add({ id: 'mv', target: { instance: 'panel', key: 'driveDown' }, source: { kind: 'bus', topic: 'm/down' } });
+    check('size, turn, colour and move are each bound', a.ok && b.ok && c.ok && d.ok, J([a, b, c, d]));
+    bus.publish('m/size', 0.5); bus.publish('m/turn', 0.75); bus.publish('m/hue', 0.5); bus.publish('m/down', 0.25);
+    check('*** half way: the panel is drawn at 150% ***', box.style.scale === '1.5', box.style.scale);
+    check('*** turned 90 degrees (0.75 of -180..180) ***', box.style.rotate === '90deg', box.style.rotate);
+    check('*** its colours shifted half way round the wheel ***', box.style.filter === 'hue-rotate(180deg)', box.style.filter);
+    check('moved up by half its height (0.25 of -100..100), not across', box.style.translate === '0% -50%' || box.style.translate === '0px -50%', box.style.translate);
+    check('*** its place\'s own transform is untouched: the drive is ON TOP of where it was put ***',
+      box.style.transform === 'translate(-50%, -50%) rotate(10deg)', box.style.transform);
+    check('the computed size really is 1.5 (the browser drew it)', getComputedStyle(box).scale === '1.5', getComputedStyle(box).scale);
+    check('*** the stored row never held any of it ***', base.writes.length === 0 && PANEL_DRIVE_KEYS.every((k) => base.get()[k] === undefined));
+    eng.remove('sz'); eng.remove('tn');
+    check('*** a rule removed: that property is cleared (the panel back as it was) ***', box.style.scale === '' && box.style.rotate === '');
+    check('...the others still drive', box.style.filter === 'hue-rotate(180deg)');
+    stop();
+    check('the watch stopped: everything it set is cleared', box.style.filter === '' && box.style.translate === '' && !box.dataset.driven);
+    eng.destroy();
+    box.remove();
+
+    // Data on a panel: the thing Mike asked for, end to end - plays drive a panel's size.
+    const { createPlays, memoryPlayStore } = await import('../plays.js');
+    const rec = createPlays({ store: memoryPlayStore() });
+    const eng2 = createAutomation({ bus: countingBus(), plays: rec, screen: 'scr', extraFields: PANEL_DRIVE_FIELDS });
+    const st2 = eng2.wrapState('frame', memState({}), { fields: [] });
+    const box2 = document.createElement('div'); hostEl.append(box2);
+    const stop2 = watchPanelDrive(box2, st2);
+    eng2.add({ target: { instance: 'frame', key: 'driveScale' }, source: { kind: 'data', win: 'today' }, map: { inMin: 0, inMax: 4, outMin: 100, outMax: 200 } });
+    await sleep(0);
+    check('no plays yet: the panel at its smallest driven size (100%)', box2.style.scale === '1', box2.style.scale);
+    for (let i = 0; i < 2; i += 1) await rec.log({ source: 'youtube', id: `v${i}`, screen: 'scr', panel: 'yt' });
+    await sleep(0);
+    check('*** two plays today of 0..4: the panel grows to 150% ***', box2.style.scale === '1.5', box2.style.scale);
+    stop2(); eng2.destroy(); box2.remove();
+    check('...and stops cleanly', eng2.activeTimers() === 0 && eng2.running() === 0);
+  }
+
   // ================= the demo =================
   section('THE DEMO: hidden writing - the words appear only when the dial is right');
   const th = await createTryHost();
@@ -877,6 +1039,48 @@ try {
     check('*** nothing is chosen for the person: a stray Add makes nothing ***',
       (panel.form.requestSubmit(), eng.list().length === 0) && /missing/.test(root.querySelector('[data-status]').textContent));
     panel.destroy(); root.remove(); eng.destroy();
+  }
+
+  section('2026-10-07: the editor offers "what\'s been played" in plain words, by choices alone, and a panel\'s own size');
+  {
+    const { PANEL_DRIVE_FIELDS } = await import('../panel_drive.js');
+    const FIELD = { settings: [{ key: 'level', label: 'Level', kind: 'number', min: 0, max: 100, default: 50 }] };
+    const eng = createAutomation({ bus: createBus(), extraFields: PANEL_DRIVE_FIELDS, screen: 's1' });
+    eng.wrapState('p', memState({ level: 50 }), { manifest: FIELD });
+    const root = document.createElement('div');
+    host.append(root);
+    const panel = mountAutomationPanel(root, { engine: eng, panels: () => [{ id: 'p', title: 'The lamp', manifest: FIELD }], chooseMode: 'step' });
+    const kindOpt = [...root.querySelectorAll('[data-a="kind"] option')].find((o) => o.value === 'data');
+    check('"what\'s been played" is a choice of what drives it, in plain words', kindOpt && /played/.test(kindOpt.textContent) && !/data/i.test(kindOpt.textContent),
+      kindOpt?.textContent);
+    const keys = [...root.querySelectorAll('[data-a="key"] option')];
+    check('*** the Setting list ends with the whole panel\'s size, turn, colour shift and move ***',
+      ['driveScale', 'driveTurn', 'driveHue', 'driveAcross', 'driveDown'].every((k) => keys.some((o) => o.value === k && !o.disabled))
+        && keys[0].value === 'level', JSON.stringify(keys.map((o) => o.value)));
+    const kind = root.querySelector('[data-a="kind"]');
+    kind.value = 'data'; kind.dispatchEvent(new Event('change'));
+    const stops = panel.scan.stops().map((n) => n.dataset.autoRow);
+    check('*** its rows are choices a switch reaches (Count, Over, Which plays) - nothing to type ***',
+      ['query', 'win', 'what', 'inMin', 'inMax'].every((r) => stops.includes(r)), JSON.stringify(stops));
+    check('its lowest / highest start at this week\'s (0..70)', root.querySelector('[data-a="inMin"]').value === '0' && root.querySelector('[data-a="inMax"]').value === '70');
+    const win = root.querySelector('[data-a="win"]');
+    win.value = 'today'; win.dispatchEvent(new Event('change'));
+    check('choosing "Today" moves its highest to today\'s (10)', root.querySelector('[data-a="inMax"]').value === '10');
+    root.querySelector('[data-a="query"]').value = 'top';
+    root.querySelector('[data-a="what"]').value = 'youtube';
+    const keySel = root.querySelector('[data-a="key"]');
+    keySel.value = 'driveScale'; keySel.dispatchEvent(new Event('change'));
+    panel.form.requestSubmit();
+    const b = eng.list()[0];
+    check('Add made a data rule on the panel\'s size, as chosen',
+      b && b.target.key === 'driveScale' && b.source.kind === 'data' && b.source.query === 'top' && b.source.win === 'today'
+        && b.source.what === 'youtube' && b.map.inMax === 10, JSON.stringify(b));
+    const line = root.querySelector('[data-binding] span')?.textContent || '';
+    check('the list says it in words', /what’s been played \(YouTube: plays of the most played thing today\)/.test(line) && /its size/.test(line), line);
+    check('*** with no plays on this page it drives the size to its lowest (10%), a number ***', eng.overlay('p').driveScale === 10,
+      JSON.stringify(eng.overlay('p')));
+    panel.destroy(); root.remove(); eng.destroy();
+    check('...and leaves nothing running', eng.activeTimers() === 0 && eng.running() === 0);
   }
   th.destroy();
 
