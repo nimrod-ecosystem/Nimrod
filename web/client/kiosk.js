@@ -1480,9 +1480,10 @@ export async function mountKiosk(root, {
     // *** REVIEW BY PLAYING (pack_reviews.js). *** The ACCOUNT's review log - not this screen's, not the
     // person's: a question passed on a phone counts on every screen of the account - plus the packs waiting
     // for review. A local backend (the suites, signed out) keeps the log in its own store under `_account`.
+    // `lazy`: a pack is fetched when something here plays from it, not every pack for every panel (pack_reviews.js).
     makePackReviews: () => createPackReviews({
       events: makeEvents ? makeEvents('question-reviews', { pollMs: 30000 }, '_account') : null,
-      user, push, bus, pollMs: 30000,
+      user, push, bus, pollMs: 30000, lazy: true,
     }),
     // *** THE MODULES LIBRARY AS A PANEL OF ITS OWN (2026-10-02, modules/library.js). *** A function of the
     // instance id, not a value bound to `mod`: a dashboard module hands its children THIS ctx (extended), so a
