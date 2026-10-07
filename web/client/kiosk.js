@@ -130,6 +130,7 @@ import {
   VOICE_RECORDING_TOPIC,
 } from './voice_recording.js';
 import { VOICE_MODEL_FIELDS } from './voice_model.js';
+import { VOICE_ID_FIELDS, voiceIdOptionsFrom, createEnrolment, mountEnrolment } from './voice_id.js';
 import {
   createIntercomReceiver, mountIntercomNotice, intercomOptionsFrom, normalizeAllowed, INTERCOM_ACTIONS, INTERCOM_FIELDS,
 } from './intercom.js';
@@ -806,6 +807,9 @@ export async function mountKiosk(root, {
   let micPill = null;            // "Microphone on: <phone>" -- NO SETTING HIDES IT (see where it is mounted)
   let personRow = null;          // the person's row as last seen; null = no person row on this screen
   let onVoiceChange = null;      // the menu's refresh, once the menu exists (it is built further down)
+  let voicePrints = null;        // who is set up on this computer (row 2.56): [{ person, name }], null = not asked yet
+  let enrolment = null;          // a voice being set up right now (voice_id.js), and its panel
+  let enrolPanel = null;
   // ---- VOICE RECORDING FOR TRAINING, AND THE INTERCOM (row 2.44; wired 2026-09-30) ---------------------
   // Built as pieces in bbd206a; constructed here. Both OFF for everybody: recording keeps nothing unless
   // the person's row says `voiceRecording: true` AND a ranked recogniser is running (it opens no
@@ -918,7 +922,8 @@ export async function mountKiosk(root, {
   // `subtitlesRoute` is here too: the online captioner starts and stops with the recogniser.
   // The person's own voice model (voice_model.js): its switch and port change where "this screen" listens.
   // (Its folder is the speech service's own, `--my-voice`, not a setting here.)
-  const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...SPEECH_PASS_FIELDS, ...MISS_FIELDS]
+  // Who is talking (voice_id.js, row 2.56): its two keys are sent to the speech program when the recogniser connects.
+  const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...SPEECH_PASS_FIELDS, ...MISS_FIELDS, ...VOICE_ID_FIELDS]
     .map((f) => f.key).concat('subtitlesRoute', 'voiceModelOn', 'voiceModelPort');
   const AMP_KEYS = AMPLIFY_FIELDS.map((f) => f.key);
   const SUBS_KEYS = SUBTITLES_FIELDS.map((f) => f.key);
@@ -932,6 +937,8 @@ export async function mountKiosk(root, {
     speechOffs = [];
     // The recorder lets go of the recogniser first (it saves what it has already heard whole).
     try { voiceRec?.detach(); } catch (err) { console.error('kiosk: voice recording', err); }
+    // A voice being set up stops with the recogniser it was talking through (nothing is saved; its panel says so).
+    try { enrolment?.cancel(); } catch { /* already over */ }
     try { speech?.destroy(); } catch (err) { console.error('kiosk: speech', err); }
     speech = null;
     speechRec = null;
@@ -996,6 +1003,27 @@ export async function mountKiosk(root, {
         const next = fromRec(st);
         if (next !== speechStatus) { speechStatus = next; onVoiceChange?.(); }
       }));
+    }
+    // WHO IS TALKING (row 2.56, voice_id.js): who is set up on this computer, for the Voice rows' wording - names and
+    // dates only (the speech program never sends a voiceprint's numbers). Asked once an engine that offers it is up.
+    voicePrints = null;
+    if (rec.voiceId && typeof rec.voiceId.onEvent === 'function') {
+      speechOffs.push(rec.voiceId.onEvent((m) => {
+        if (speechRec !== rec || !m) return;
+        if (m.kind === 'voiceprints') {
+          voicePrints = (Array.isArray(m.people) ? m.people : []).filter((p) => p && p.usable !== false)
+            .map((p) => ({ person: String(p.person || ''), name: String(p.name || '') }));
+          onVoiceChange?.();
+        } else if (m.kind === 'enrolled' || m.kind === 'forgotten') {
+          try { rec.voiceId.list(); } catch { /* the next status asks again */ }
+        }
+      }));
+      if (typeof rec.onStatus === 'function') {
+        speechOffs.push(rec.onStatus(() => {
+          if (speechRec !== rec || voicePrints !== null) return;
+          try { if (rec.voiceId.available()) rec.voiceId.list(); } catch { /* not up yet */ }
+        }));
+      }
     }
     // Captions: every pass of every utterance, corrected in place (row 2.47). With them, `onHeard` does
     // not also write lines - one utterance, one line.
@@ -1478,6 +1506,9 @@ export async function mountKiosk(root, {
     // so reading phrases arms it, and a writer for ONLY that person's own voice-model rows - the panel can
     // flip "Use my own voice model" and set its port, and nothing else on the row.
     get voiceRecorder() { return voiceRec; },
+    // WHO IS TALKING (row 2.56): the recogniser's voice seam (speech_engines.js makeVoiceId) - so a module can set
+    // up or forget a voice, and list who is set up here (names, never numbers). null while nothing listens.
+    get voiceId() { return speechRec?.voiceId || null; },
     saveVoiceModel: (patch) => {
       const keys = new Set(VOICE_MODEL_FIELDS.map((f) => f.key));
       const clean = Object.fromEntries(Object.entries(patch || {}).filter(([k]) => keys.has(k)));
@@ -3963,6 +3994,41 @@ export async function mountKiosk(root, {
     }
     return rows.filter(Boolean);
   }
+  // *** SETTING UP AND FORGETTING THIS PERSON'S VOICE ON THIS COMPUTER (row 2.56, voice_id.js). *** Under the Voice
+  // heading, only when the speech program answering here offers it: "Set up my voice" - THE OPT-IN, reading five
+  // sentences aloud - and, once set up, "Forget my voice". The voiceprint is kept by the speech program, on its own
+  // computer; this page never holds it. Never a lock: nothing on the site is allowed or refused by it.
+  function voiceIdItems(r) {
+    if (!personId || !speechRec?.voiceId || !voiceIdOptionsFrom(r).on) return [];
+    let able = false;
+    try { able = !!speechRec.voiceId.available(); } catch { able = false; }
+    if (!able) return [];
+    const name = (whoState && whoState.name) || '';
+    const mine = (voicePrints || []).some((p) => p.person === String(personId));
+    const rows = [{ kind: 'item', id: 'voice-id-setup',
+      label: mine ? 'Set up my voice again' : 'Set up my voice, so what I say is labelled with my name',
+      hint: 'read five sentences aloud; only numbers that describe the voice are kept, on this computer',
+      run: () => startEnrolment(name) }];
+    if (mine) {
+      rows.push({ kind: 'item', id: 'voice-id-forget', label: 'Forget my voice on this computer',
+        hint: 'deletes it; what you say is still written down, as "Unknown"',
+        run: () => { try { speechRec?.voiceId?.forget(String(personId)); } catch (err) { console.error('kiosk: forget voice', err); } } });
+    }
+    return rows;
+  }
+  function startEnrolment(name) {
+    try { menu.close(); } catch { /* already closed */ }
+    try { enrolment?.cancel(); } catch { /* already over */ }
+    try { enrolPanel?.close(); } catch { /* already closed */ }
+    const voice = speechRec?.voiceId;
+    if (!voice || !personId) return;
+    const mine = createEnrolment({ voice, person: String(personId), name,
+      onChange: (s) => { if (enrolment === mine) { try { enrolPanel?.draw(s); } catch { /* panel gone */ } } } });
+    enrolment = mine;
+    try { enrolPanel = mountEnrolment(kioskEl, mine, { onClosed: () => { if (enrolment === mine) { enrolment = null; enrolPanel = null; } } }); }
+    catch (err) { console.error('kiosk: voice set-up panel', err); enrolPanel = null; }
+    mine.start();
+  }
   function voiceItems() {
     if (!personInputs || !personRow || embedded) return [];
     const r = personInputs.get?.() || personRow || {};
@@ -3976,6 +4042,8 @@ export async function mountKiosk(root, {
       ...(sw.on || subsOn ? SPEECH_PASS_FIELDS.filter(keep) : []),
       // THIS PERSON'S OWN VOICE MODEL (voice_model.js): with the other "what listens" rows, while anything listens.
       ...(sw.on || subsOn ? VOICE_MODEL_FIELDS : []),
+      // WHO IS TALKING (voice_id.js, row 2.56): the switch while anything listens; "how sure" only while it is on.
+      ...(sw.on || subsOn ? VOICE_ID_FIELDS.filter((f) => f.key === 'voiceIdOn' || voiceIdOptionsFrom(r).on) : []),
       ...(sw.on ? [...SPEECH_FIELDS, ...LISTENING_FIELDS, ...MISS_FIELDS].filter(keep) : []),
       ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || (subsOn && (!/^subtitles(Shrink|SmallestPx)$/.test(f.key) || r.subtitlesStyle === 'eyechart' || subtitles?.style?.() === 'eyechart'))),
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
@@ -4017,7 +4085,8 @@ export async function mountKiosk(root, {
       ...(dev.length || status ? [{ kind: 'heading', id: 'voice-head', label: 'Voice', ...t.devices(0) },
         ...(status ? [{ ...status, ...t.devices(0) }] : []),
         ...noSpeechProgramItems().map((it) => ({ ...it, ...t.devices(0) })),
-        ...dev.map((it) => ({ ...it, ...t.devices(0) }))] : []),
+        ...dev.map((it) => ({ ...it, ...t.devices(0) })),
+        ...((sw.on || subsOn) ? voiceIdItems(r).map((it) => ({ ...it, ...t.devices(0) })) : [])] : []),
       ...(subs.length ? [{ kind: 'heading', id: 'subtitles-head', label: 'Subtitles', ...t.display(4) },
         ...subs.map((it) => ({ ...it, ...t.display(4) }))] : []),
       ...(amp.length ? [{ kind: 'heading', id: 'amplify-head', label: 'Amplify the room', ...t.audio(3) },
@@ -7538,6 +7607,7 @@ export async function mountKiosk(root, {
       // The recogniser first: no microphone left open, no miss-log schedule left pruning.
       onVoiceChange = null;
       stopSpeech();
+      try { enrolPanel?.close(); } catch { /* already gone */ } enrolPanel = null; enrolment = null;
       // A call hosted over the panels hangs up (its module tells the far end), and the notice goes.
       try { closeCallView('gone'); } catch { /* already gone */ }
       try { callNotice?.destroy(); } catch { /* already gone */ } callNotice = null;

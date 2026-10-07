@@ -159,6 +159,43 @@ check("a recommendation-sized event passes", refused(lambda: sl.check_event("rec
 about = {"sections": [{"kind": "about", "text": "word " * 400}], "theme": {"bg": "#123456"}}
 check("a page with a full 2,000-character About me passes", refused(lambda: sl.check_state(about)) is None)
 
+# ---------------------------------------------------------------- rule 5: voiceprints
+section("rule 5 - a voiceprint is refused, everywhere (row 2.56)")
+import random  # noqa: E402
+rnd = random.Random(7)
+emb = [round(rnd.gauss(0, 0.06), 6) for _ in range(256)]
+vp_file = {"format": "nimrod-voiceprint", "v": 1, "person": "p_1", "name": "Alex", "engine": "wespeaker:resnet34-LM",
+           "dims": 256, "vector": emb, "enrolledAt": 1759800000000, "clips": 5, "seconds": 21.4}
+r = refused(lambda: sl.check_state({"me": vp_file}))
+check("*** the speech program's own voiceprint file, put in a setting: refused, 400, with a sentence ***",
+      r and r[0] == 400 and "voiceprint" in r[1].lower(), r)
+check("...in an event as well", refused(lambda: sl.check_event("anything", "note", {"x": vp_file})))
+check("*** the tag alone is enough, whatever else is there (even no numbers) ***",
+      refused(lambda: sl.check_state({"format": "nimrod-voiceprint"})) and
+      refused(lambda: sl.check_state({"a": [{"FORMAT": " Nimrod-Voiceprint "}]})))
+check("a key named voiceprint or voiceprints (any case) is refused, whatever it holds",
+      refused(lambda: sl.check_state({"voiceprint": "x"})) and refused(lambda: sl.check_state({"VoicePrints": []})))
+check("*** a bare list of 256 fractional numbers (an embedding with every label stripped) is refused ***",
+      refused(lambda: sl.check_event("s", "k", {"v": emb})))
+check(f"...and of exactly {sl.VOICEPRINT_NUMBERS_MIN}", refused(lambda: sl.check_state({"v": emb[:sl.VOICEPRINT_NUMBERS_MIN]})))
+check(f"{sl.VOICEPRINT_NUMBERS_MIN - 1} of them pass (the floor, argued in storage_line.py)",
+      refused(lambda: sl.check_state({"v": emb[:sl.VOICEPRINT_NUMBERS_MIN - 1]})) is None)
+check("deep inside lists and objects", refused(lambda: sl.check_state({"a": [{"b": [1, {"c": emb}]}]})))
+check("as 32-bit floats in base64 it is rule 2's (refused as encoded data)",
+      refused(lambda: sl.check_state({"v": base64.b64encode(bytes(1024)).decode()})))
+check("NOT refused: 500 reaction times in whole milliseconds (the site's long numeric facts are whole numbers)",
+      refused(lambda: sl.check_event("gameplay", "trial", {"ms": [800 + i for i in range(500)]})) is None)
+check("NOT refused: a list of 300 mixed numbers that are mostly whole",
+      refused(lambda: sl.check_state({"v": [i if i % 4 else i + 0.5 for i in range(300)]})) is None)
+check("NOT refused: the site's own who-is-talking settings (voiceIdOn / voiceIdSureAt)",
+      refused(lambda: sl.check_state({"voiceIdOn": True, "voiceIdSureAt": 0.8})) is None)
+check("NOT refused: the word in a sentence", refused(lambda: sl.check_state({"note": "set up my voiceprint today"})) is None)
+check("NOT refused: a transcript's speaker label ({who, sure}) - a name and one number, not a voiceprint",
+      refused(lambda: sl.check_event("s", "said", {"text": "hi", "speaker": {"who": "Alex", "sure": 0.91}})) is None)
+spk_src = (Path(__file__).resolve().parents[1] / "speech_service" / "speakers.py").read_text(encoding="utf-8")
+check("*** the tag here is the speech program's own (speakers.py FORMAT) - one name, two files ***",
+      f"FORMAT = '{sl.VOICEPRINT_FORMAT}'" in spk_src)
+
 deep = {}
 cur = deep
 for _ in range(5000):
@@ -204,6 +241,9 @@ for name, url in state_urls.items():
           r.status_code == 400 and "picture" in r.json().get("detail", ""), r.text)
     r = c.put(url, json={"data": {"blob": b64ish(5000)}, "base_version": v}, headers=H)
     check(f"{name}: a long base64 run is refused", r.status_code == 400, r.text)
+    r = c.put(url, json={"data": {"theme": "warm", "me": vp_file}, "base_version": v}, headers=H)
+    check(f"*** {name}: a voiceprint inside is refused, 400, with a sentence (rule 5) ***",
+          r.status_code == 400 and "voiceprint" in r.json().get("detail", "").lower(), r.text)
     r = c.put(url, json={"data": sized(sl.STATE_MAX_BYTES + 10), "base_version": v}, headers=H)
     check(f"*** {name}: too big is refused, 413 ***", r.status_code == 413 and "too big" in r.json().get("detail", ""),
           f"{r.status_code} {r.text[:200]}")
@@ -225,6 +265,9 @@ for name, url in event_urls.items():
     check(f"{name}: the device-data stream refuses any kind", r.status_code == 400, r.text)
     r = c.post(url, json={"kind": "trial", "data": {"clip": "data:audio/webm;base64,GkXfo"}}, headers=H)
     check(f"{name}: a sound inside an event is refused", r.status_code == 400, r.text)
+    r = c.post(url, json={"kind": "trial", "data": {"v": emb}}, headers=H)
+    check(f"*** {name}: a voiceprint's numbers in an event are refused, 400 (rule 5) ***",
+          r.status_code == 400 and "voiceprint" in r.json().get("detail", "").lower(), r.text)
     r = c.post(url, json={"kind": "trial", "data": sized(sl.EVENT_MAX_BYTES + 10)}, headers=H)
     check(f"*** {name}: an event too big is refused, 413 ***", r.status_code == 413, f"{r.status_code} {r.text[:200]}")
     r = c.post(url, json={"kind": "play", "data": {"id": "dQw4w9WgXcQ", "at": 1759800000000}}, headers=H)

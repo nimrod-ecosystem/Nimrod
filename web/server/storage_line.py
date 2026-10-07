@@ -28,6 +28,18 @@ check in front of them. These are the server's half of it - security invariants,
      oldest rows rolled into totals (check_history and db.py history_append). The event routes still refuse
      `play` whatever the person chose: the event log cannot be deleted from or capped, so a history row in
      it would grow without end - which is the one thing "scalable" rules out.
+  5. A VOICEPRINT IS REFUSED, EVERYWHERE (row 2.56; Mike, 2026-10-07: "Nothing should ever be going to us anyway").
+     A voiceprint is the list of numbers that recognises a person by their voice (web/speech_service/speakers.py).
+     The site's own code never holds one - the speech program never sends the numbers to a screen - so this is the
+     server's half of that invariant, for a client that tries anyway. Refused, in state, events and history alike
+     (it is part of check_content):
+       (a) anything carrying the speech program's own tag, `"format": "nimrod-voiceprint"`, or a key named
+           `voiceprint` / `voiceprints` (any case) - whatever its size or shape;
+       (b) any flat list of VOICEPRINT_NUMBERS_MIN or more numbers of which nearly all (VOICEPRINT_FRACTION) have a
+           fractional part - which is what a voiceprint, or a face print, looks like once it is JSON.
+     A voiceprint as base64 is rule 2's (256 numbers as 32-bit floats is 1,368 characters); one split into pairs or
+     rounded to whole numbers is the size cap's. No pattern catches every disguise; the point is that nothing the
+     site sends trips it, and the obvious shapes are refused with a sentence.
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -48,6 +60,15 @@ THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not
     smallest useful thumbnail is 1-2 KB (1,400-2,700 characters) and a second of the most compressed speech
     about 750 bytes, so 1,024 sits above every legitimate run and below nearly every real picture or sound.
     Runs that are wrapped over several lines (MIME style, lines of 60+ characters) are measured as one.
+
+  VOICEPRINT_NUMBERS_MIN = 128 (rule 5b). Speaker embeddings are 128 to 512 numbers (WeSpeaker and d-vectors 256,
+    ECAPA 192, x-vectors 512 [training knowledge]; the one this project uses is 256, measured). The dev database holds
+    NO list of numbers at all, of any length, in any state, event or history row (measured 2026-10-07: 20,356 state
+    rows, 45,277 events). For a lower floor: compact embeddings exist. Against: a chart's points or a drawing's path
+    sent as one flat list could reach 128 - which is why (c) below also has to hold.
+  VOICEPRINT_FRACTION = 0.9: of those numbers, at least 90% have a fractional part. An embedding's numbers are almost
+    never whole; the site's own long numeric facts (milliseconds, counts, ids) are whole, so a list of 500 reaction
+    times passes.
 
   THE HISTORY CAP (rule 4, opted in) - argued, Mike's "scalable" is the test it is held to:
   HISTORY_MAX_ROWS = 10,000 rows per PERSON, every kind of history together. Measured row sizes: a play
@@ -91,6 +112,13 @@ _RUN = re.compile(r"[A-Za-z0-9+/_-]+={0,2}")
 WRAP_MIN = 60
 
 SAY_KEEP_IT_HOME = "Pictures, sound, video and recordings stay on your own machine, not on this site."
+# ---- rule 5: voiceprints ----
+VOICEPRINT_FORMAT = "nimrod-voiceprint"           # web/speech_service/speakers.py FORMAT (test_storage_line.py holds them equal)
+VOICEPRINT_KEYS = frozenset({"voiceprint", "voiceprints"})
+VOICEPRINT_NUMBERS_MIN = 128
+VOICEPRINT_FRACTION = 0.9
+SAY_VOICEPRINT = ("This looks like a voiceprint (the numbers that recognise somebody by their voice). Voiceprints stay "
+                  "on the computer that made them and are never kept on this site.")
 SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, or where "
                        "its person chose in \"Where your history is kept\" - not in this site's log.")
 
@@ -231,8 +259,38 @@ def _strings(data):
             stack.extend(v)
 
 
+def _fractional(x) -> bool:
+    return isinstance(x, float) and x == x and x not in (float("inf"), float("-inf")) and not x.is_integer()
+
+
+def looks_like_voiceprint(data) -> bool:
+    """Rule 5: the speech program's tag, a key named voiceprint(s), or a long flat list of fractional numbers.
+    Iterative, like _strings, so a deeply nested body cannot blow the stack."""
+    stack = [data]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            for k, x in v.items():
+                if isinstance(k, str) and k.strip().lower() in VOICEPRINT_KEYS:
+                    return True
+                if isinstance(k, str) and k.lower() == "format" and isinstance(x, str) \
+                        and x.strip().lower() == VOICEPRINT_FORMAT:
+                    return True
+                stack.append(x)
+        elif isinstance(v, (list, tuple)):
+            if len(v) >= VOICEPRINT_NUMBERS_MIN:
+                nums = [x for x in v if isinstance(x, (int, float)) and not isinstance(x, bool)]
+                if len(nums) == len(v) and sum(1 for x in nums if _fractional(x)) >= VOICEPRINT_FRACTION * len(v):
+                    return True
+            stack.extend(v)
+    return False
+
+
 def check_content(data) -> None:
-    """Rule 2: no picture, sound or video inside the JSON, as a data: address or as a long base64 run."""
+    """Rule 2: no picture, sound or video inside the JSON, as a data: address or as a long base64 run.
+    Rule 5: no voiceprint."""
+    if looks_like_voiceprint(data):
+        raise Refused(400, SAY_VOICEPRINT)
     for s in _strings(data):
         if s.lstrip()[:11].lower().startswith(_MEDIA_PREFIXES):
             raise Refused(400, "This has a picture, a sound or a video inside it. " + SAY_KEEP_IT_HOME

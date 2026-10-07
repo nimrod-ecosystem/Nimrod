@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>voice id - who is talking (row 2.56)</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>voice id - who is talking</h1>
+<p>Row 2.56: a person who opts in reads a few sentences; the speech program keeps a voiceprint on its own computer and
+says who on every transcript. This suite proves the screen's half with a fake speech program: the settings, the label,
+setting up and forgetting a voice, that the words are never dropped for it, and that no voiceprint ever reaches the page.
+The speech program's own half is <code>web/speech_service/test_speakers.py</code>.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  VOICE_ID_DEFAULTS, VOICE_ID_FIELDS, voiceIdOptionsFrom, speakerFrom, speakerDetail, ENROL_SENTENCES, createEnrolment,
+  mountEnrolment, enrolmentText, SURE_NAMED, SURE_MAYBE,
+} from '../voice_id.js';
+import { rankedRecognizer, enginePlanFrom, connectEngine, VOICE_ID_SEND } from '../speech_engines.js';
+import { CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
+import { speakerLabel, SUBTITLES_DEFAULTS } from '../subtitles.js';
+import { cleanDetail } from '../input_speech.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const settle = () => new Promise((r) => setTimeout(r, 0));
+function fakeClock() {
+  let t = 0; let n = 1; const timers = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = n++; timers.set(id, { at: t + ms, fn }); return id; },
+    clearTimer: (id) => { timers.delete(id); },
+    advance(ms) {
+      const end = t + ms;
+      for (;;) {
+        const due = [...timers].filter(([, x]) => x.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+        if (!due) break;
+        timers.delete(due[0]); t = Math.max(t, due[1].at); due[1].fn();
+      }
+      t = end;
+    },
+    pending: () => timers.size,
+  };
+}
+// Every list of 8+ plain numbers in a value: what a voiceprint looks like.
+function numberLists(x, found = []) {
+  if (Array.isArray(x)) {
+    if (x.length >= 8 && x.every((v) => typeof v === 'number')) found.push(x);
+    x.forEach((v) => numberLists(v, found));
+  } else if (x && typeof x === 'object') Object.values(x).forEach((v) => numberLists(v, found));
+  return found;
+}
+
+// ---- a fake speech program that speaks the who-is-talking part of the protocol ----------------------
+function makeService({ speakers = 'fake-speaker', who = () => null } = {}) {
+  const s = { conns: new Set(), received: [], sentToPage: [], enrolling: null, prints: new Map(), speakersAsked: [] };
+  class FakeWS {
+    constructor(url) {
+      this.url = url; this.readyState = 0; this.bufferedAmount = 0;
+      queueMicrotask(() => { this.readyState = 1; s.conns.add(this); this.onopen?.(); });
+    }
+    send(data) {
+      if (this.readyState !== 1) throw new Error('not open');
+      if (typeof data !== 'string') { if (this.cur) this.cur.bytes += data.byteLength; return; }
+      const m = JSON.parse(data);
+      s.received.push(m);
+      const reply = (x) => { s.sentToPage.push(x); queueMicrotask(() => this.onmessage?.({ data: JSON.stringify(x) })); };
+      if (m.type === 'hello') reply({ kind: 'hello', engine: 'fake', grammar: false, partials: false, protocol: 1, wake: [], speakers });
+      else if (m.type === 'speakers') { this.spk = m; s.speakersAsked.push(m); }
+      else if (m.type === 'begin') this.cur = { id: m.utteranceId, bytes: 0 };
+      else if (m.type === 'end') {
+        const c = this.cur; this.cur = null;
+        if (s.enrolling) {
+          reply({ kind: 'final', utteranceId: m.utteranceId, text: 'a sentence read aloud', confidence: 0.9, words: [], engine: 'fake', speaker: null });
+          s.enrolling.n += 1;
+          reply({ kind: 'enrol-heard', person: s.enrolling.person, utteranceId: m.utteranceId, clips: s.enrolling.n, seconds: s.enrolling.n * 4 });
+        } else {
+          const sp = this.spk?.on ? (who(c) || { who: null, person: null, sure: null, maybe: null, engine: speakers, why: 'nobody' }) : null;
+          reply({ kind: 'final', utteranceId: m.utteranceId, text: 'turn it up please', confidence: 0.9, words: [], engine: 'fake', speaker: sp });
+        }
+      } else if (m.type === 'enrol') s.enrolling = { person: m.person, name: m.name, n: 0 };
+      else if (m.type === 'enrol-cancel') s.enrolling = null;
+      else if (m.type === 'enrol-done') {
+        const e = s.enrolling; s.enrolling = null;
+        if (!e) reply({ kind: 'enrol-failed', person: m.person, error: 'Nothing was saved.' });
+        else { s.prints.set(e.person, e.name); reply({ kind: 'enrolled', person: e.person, name: e.name, clips: e.n, seconds: e.n * 4, enrolledAt: 1, dropped: 0 }); }
+      } else if (m.type === 'forget') { const had = s.prints.delete(m.person); reply({ kind: 'forgotten', person: m.person, existed: had }); }
+      else if (m.type === 'voiceprints') reply({ kind: 'voiceprints', people: [...s.prints].map(([person, name]) => ({ person, name, engine: speakers, enrolledAt: 1, clips: 5, seconds: 20, usable: true })) });
+    }
+    close() { this.readyState = 3; s.conns.delete(this); queueMicrotask(() => this.onclose?.({ code: 1000 })); }
+  }
+  s.FakeWS = FakeWS;
+  return s;
+}
+const SPF = CAPTURE_RATE * FRAME_MS / 1000;
+function frame(amp, k = 0) {
+  const f = new Int16Array(SPF);
+  for (let i = 0; i < SPF; i++) f[i] = Math.round(amp * Math.sin(2 * Math.PI * 300 * (k * SPF + i) / CAPTURE_RATE));
+  return f;
+}
+// One utterance into the recogniser: quiet, ~0.8 s of voice, then enough quiet to end it.
+async function speak(rec, c) {
+  let k = 0;
+  for (let i = 0; i < 20; i++) { rec.feed('room', frame(30, k++), c.now()); c.advance(FRAME_MS); }
+  for (let i = 0; i < 40; i++) { rec.feed('room', frame(8000, k++), c.now()); c.advance(FRAME_MS); }
+  for (let i = 0; i < 60; i++) { rec.feed('room', frame(30, k++), c.now()); c.advance(FRAME_MS); }
+  await settle(); await settle(); await settle();
+}
+
+(async () => {
+  let fetched = 0;
+  const realFetch = window.fetch;
+  window.fetch = (...a) => { fetched++; return realFetch(...a); };
+
+  section('the person\'s settings');
+  {
+    const on = VOICE_ID_FIELDS.find((f) => f.key === 'voiceIdOn');
+    const sure = VOICE_ID_FIELDS.find((f) => f.key === 'voiceIdSureAt');
+    check('two rows: "Say who is talking" (on) and how sure (0.8, advanced)', on && on.default === true && sure
+      && sure.default === 0.8 && sure.level === 'advanced', J(VOICE_ID_FIELDS));
+    check('the "sure" choices include the default', sure.options.some((o) => o.value === sure.default));
+    const bad = auditFields(VOICE_ID_FIELDS.map(normalizeField).filter(Boolean), { type: 'voice' }).filter((x) => x.severity === 'error');
+    check('they pass the settings audit', bad.length === 0, J(bad));
+    const copy = J(VOICE_ID_FIELDS) + J(ENROL_SENTENCES) + J(['reading', 'saving', 'done', 'failed', 'cancelled', 'unavailable']
+      .map((state) => enrolmentText({ state, index: 0, total: 5, sentence: 'x', error: 'e' })));
+    check('site copy never says "her screen" and names nobody the project was built for',
+      !/her screen|christine|cici/i.test(copy), copy.match(/her screen|christine|cici/i)?.[0]);
+    check('the copy says it never unlocks anything', /never unlocks/i.test(on.note));
+    check('voiceIdOptionsFrom: defaults', J(voiceIdOptionsFrom({})) === J({ on: true, sureAt: 0.8 }));
+    check('...a person\'s choices', J(voiceIdOptionsFrom({ voiceIdOn: false, voiceIdSureAt: 0.9 })) === J({ on: false, sureAt: 0.9 }));
+    check('...broken values are the defaults', J(voiceIdOptionsFrom({ voiceIdOn: 'yes', voiceIdSureAt: 'x' })) === J({ on: true, sureAt: 0.8 })
+      && voiceIdOptionsFrom({ voiceIdSureAt: 7 }).sureAt === 0.8 && voiceIdOptionsFrom({ voiceIdSureAt: true }).sureAt === 0.8);
+    check('the plan the recogniser is built from carries them', J(enginePlanFrom({ voiceIdSureAt: 0.6 }).speakers) === J({ on: true, sureAt: 0.6 }));
+    check('*** the scale\'s anchors are subtitles.js\'s own (named 0.8, maybe 0.4) ***',
+      SURE_NAMED === SUBTITLES_DEFAULTS.sureAt && SURE_MAYBE === SUBTITLES_DEFAULTS.maybeAt);
+    check('a voice set-up panel goes by itself (idle and done timers are not zero)', VOICE_ID_DEFAULTS.idleMs > 0 && VOICE_ID_DEFAULTS.doneMs > 0);
+  }
+
+  section('the label: what the speech program says -> what the screen shows');
+  {
+    const named = speakerFrom({ who: 'Alex', person: 'p1', sure: 0.93, maybe: null, engine: 'w' });
+    check('named: who, person, sure, and subtitles\' { name, confidence }', named.who === 'Alex' && named.person === 'p1'
+      && named.name === 'Alex' && named.confidence === 0.93 && named.via === 'voice', J(named));
+    check('...subtitles shows the name plainly', speakerLabel(named).kind === 'named' && speakerLabel(named).label === 'Alex');
+    const maybe = speakerFrom({ who: null, person: null, sure: 0.55, maybe: 'Alex' });
+    check('a maybe: who null, the name only as "maybe"', maybe.who === null && maybe.person === null && maybe.name === 'Alex', J(maybe));
+    check('...subtitles shows "Unsure (maybe Alex)"', speakerLabel(maybe).label === 'Unsure (maybe Alex)', J(speakerLabel(maybe)));
+    const nobody = speakerFrom({ who: null, person: null, sure: 0.1, maybe: null, why: 'nobody' });
+    check('nobody: no name at all -> "Unknown"', !('name' in nobody) && speakerLabel(nobody).label === 'Unknown', J(nobody));
+    check('null / garbage -> null ("Unknown"), never a guess', speakerFrom(null) === null && speakerFrom('Alex') === null
+      && speakerLabel(speakerFrom(null)).label === 'Unknown');
+    check('a person id is only ever passed with a name (a maybe is not a person)', speakerFrom({ who: null, person: 'p1', maybe: 'A', sure: 0.5 }).person === null);
+    check('sure is clipped to 0..1, and a non-number is null', speakerFrom({ who: 'A', sure: 7 }).sure === 1 && speakerFrom({ who: 'A', sure: 'x' }).sure === null);
+    check('speakerDetail: what a game or an AI gets', J(speakerDetail(named)) === J({ who: 'Alex', person: 'p1', sure: 0.93 })
+      && J(speakerDetail(maybe)) === J({ who: null, person: null, sure: 0.55, maybe: 'Alex' }) && speakerDetail(null) === null);
+    const cd = cleanDetail({ confidence: 0.9, speaker: { who: 'Alex', person: 'p1', sure: 0.9, junk: 'x' } });
+    check('input_speech keeps the speaker on what it passes to games and AIs, in its own shape only',
+      J(cd) === J({ confidence: 0.9, speaker: { who: 'Alex', person: 'p1', sure: 0.9 } }), J(cd));
+    check('...and a detail with no speaker is unchanged', J(cleanDetail({ confidence: 0.5 })) === J({ confidence: 0.5 }));
+  }
+
+  section('the recogniser: asks for "who", carries it, never drops words');
+  {
+    const c = fakeClock();
+    let who = null;
+    const svc = makeService({ who: () => who });
+    const rec = rankedRecognizer({ plan: enginePlanFrom({ voiceIdSureAt: 0.9 }), WebSocketImpl: svc.FakeWS, setTimer: c.setTimer,
+                                   clearTimer: c.clearTimer, now: c.now, capture: false });
+    const caps = []; const cmds = [];
+    rec.onCaption((x) => caps.push(x));
+    rec.start((text, detail) => cmds.push({ text, detail }));
+    await settle(); await settle(); await settle();
+    check('after hello it asks the program for "who", with the person\'s own "how sure"',
+      svc.speakersAsked.length === 1 && svc.speakersAsked[0].on === true && svc.speakersAsked[0].sureAt === 0.9, J(svc.speakersAsked));
+    check('voiceId is available (the program offers it)', rec.voiceId.available() === true);
+    who = { who: 'Alex', person: 'p1', sure: 0.95, maybe: null, engine: 'fake-speaker' };
+    await speak(rec, c);
+    const last = caps.filter((x) => x.final || !x.partial).at(-1);
+    check('the caption carries who said it, in subtitles\' shape', last && last.speaker && last.speaker.name === 'Alex'
+      && last.speaker.confidence === 0.95, J(last && last.speaker));
+    check('the command carries who said it, for the games and AIs', cmds.at(-1)?.detail?.speaker?.who === 'Alex'
+      && cmds.at(-1).detail.speaker.person === 'p1', J(cmds.at(-1)));
+    who = { who: null, person: null, sure: 0.2, maybe: null, engine: 'fake-speaker' };
+    await speak(rec, c);
+    const last2 = caps.at(-1);
+    check('*** a stranger: no name - and the words are still captioned and still act ***',
+      last2.text === 'turn it up please' && (!last2.speaker || !last2.speaker.name) && cmds.length === 2
+      && cmds[1].text === 'turn it up please' && cmds[1].detail.speaker.who === null, J({ last2, c: cmds[1] }));
+    check('*** nothing the program sent this page carried a list of numbers (no voiceprint ever reaches it) ***',
+      numberLists(svc.sentToPage).length === 0);
+    rec.stop();
+  }
+  {
+    const c = fakeClock();
+    const svc = makeService();
+    const rec = rankedRecognizer({ plan: enginePlanFrom({ voiceIdOn: false }), WebSocketImpl: svc.FakeWS, setTimer: c.setTimer,
+                                   clearTimer: c.clearTimer, now: c.now, capture: false });
+    rec.start(() => {});
+    await settle(); await settle(); await settle();
+    check('turned off on the person\'s row: it never asks for "who"', svc.speakersAsked.length === 0, J(svc.speakersAsked));
+    rec.stop();
+  }
+  {
+    const c = fakeClock();
+    const svc = makeService({ speakers: null });
+    const rec = rankedRecognizer({ plan: enginePlanFrom({}), WebSocketImpl: svc.FakeWS, setTimer: c.setTimer,
+                                   clearTimer: c.clearTimer, now: c.now, capture: false });
+    rec.start(() => {});
+    await settle(); await settle(); await settle();
+    check('a program with no voice engine: never asked, and voiceId says it is not available',
+      svc.speakersAsked.length === 0 && rec.voiceId.available() === false);
+    check('...and set-up messages are not sent to it', rec.voiceId.enrol('p1', 'A') === false
+      && !svc.received.some((m) => VOICE_ID_SEND.includes(m.type)), J(svc.received.map((m) => m.type)));
+    rec.stop();
+  }
+
+  section('setting up a voice');
+  {
+    const c = fakeClock();
+    const svc = makeService();
+    const rec = rankedRecognizer({ plan: enginePlanFrom({}), WebSocketImpl: svc.FakeWS, setTimer: c.setTimer,
+                                   clearTimer: c.clearTimer, now: c.now, capture: false });
+    rec.start(() => {});
+    await settle(); await settle(); await settle();
+    const states = [];
+    const en = createEnrolment({ voice: rec.voiceId, person: 'p1', name: 'Alex', onChange: (s) => states.push(s),
+                                 setTimer: c.setTimer, clearTimer: c.clearTimer });
+    const host = document.getElementById('host');
+    const panel = mountEnrolment(host, en, { who: 'Alex', setTimer: c.setTimer, clearTimer: c.clearTimer });
+    en.start();
+    panel.draw(en.state());
+    check('start: the program is told who is being set up', svc.received.some((m) => m.type === 'enrol' && m.person === 'p1' && m.name === 'Alex'));
+    check('the panel shows the first sentence, and which of how many', host.textContent.includes(ENROL_SENTENCES[0])
+      && /sentence 1 of 5/.test(host.textContent), host.textContent);
+    check('*** the panel is not a modal: a status, no aria-modal, nothing else on the page is blocked ***',
+      panel.element.getAttribute('role') === 'status' && !panel.element.hasAttribute('aria-modal'));
+    for (let i = 0; i < 5; i++) { await speak(rec, c); panel.draw(en.state()); }
+    check('each sentence heard moves to the next; after the fifth it asks the program to make the voiceprint',
+      svc.received.some((m) => m.type === 'enrol-done' && m.person === 'p1'), J(svc.received.map((m) => m.type)));
+    await settle(); await settle();
+    panel.draw(en.state());
+    check('"enrolled": done, and the panel says it is kept only on this computer', en.state().state === 'done'
+      && /only on this computer/.test(host.textContent), J(en.state()));
+    c.advance(VOICE_ID_DEFAULTS.doneMs + 10);
+    check('the panel goes by itself after a few seconds', !panel.isOpen() && !host.querySelector('[data-voice-id-panel]'));
+    rec.voiceId.list();
+    let listed = null;
+    const off = rec.voiceId.onEvent((m) => { if (m.kind === 'voiceprints') listed = m.people; });
+    rec.voiceId.list();
+    await settle(); await settle();
+    check('voiceprints: names and dates, never numbers', listed && listed[0]?.person === 'p1' && numberLists(listed).length === 0, J(listed));
+    let gone = null;
+    rec.voiceId.onEvent((m) => { if (m.kind === 'forgotten') gone = m; });
+    rec.voiceId.forget('p1');
+    await settle(); await settle();
+    check('forget: the program deletes it and says so', gone && gone.person === 'p1' && gone.existed === true && !svc.prints.has('p1'), J(gone));
+    off();
+
+    // A short sentence; then nothing heard: it stops by itself.
+    const en2 = createEnrolment({ voice: { available: () => true, enrol: () => true, done: () => true, cancel: () => { en2cancel += 1; return true; },
+      onEvent: (fn) => { feed = fn; return () => { feed = null; }; } }, person: 'p2', setTimer: c.setTimer, clearTimer: c.clearTimer });
+    let en2cancel = 0; let feed = null;
+    en2.start();
+    feed({ kind: 'enrol-heard', person: 'p2', short: true, clips: 0, seconds: 0 });
+    check('a sentence too short to use: it says so and stays on the same sentence', en2.state().index === 0 && /short/.test(en2.state().note));
+    feed({ kind: 'enrol-heard', person: 'someone-else', clips: 1, seconds: 4 });
+    check('news about somebody else\'s set-up is ignored', en2.state().index === 0);
+    c.advance(VOICE_ID_DEFAULTS.idleMs + 10);
+    check('*** nothing heard for a while: it cancels itself and says nothing was saved (never a state only a press can leave) ***',
+      en2.state().state === 'cancelled' && en2cancel === 1 && /Nothing was saved/.test(en2.state().note), J(en2.state()));
+    const en3 = createEnrolment({ voice: { available: () => true, enrol: () => true, done: () => true, cancel: () => true,
+      onEvent: (fn) => { feed = fn; return () => {}; } }, person: 'p3', setTimer: c.setTimer, clearTimer: c.clearTimer });
+    en3.start();
+    feed({ kind: 'enrol-failed', person: 'p3', error: 'Not enough clear speech yet. Nothing was saved.' });
+    check('the program refusing: failed, with its sentence', en3.state().state === 'failed' && /clear speech/.test(en3.state().error));
+    const en4 = createEnrolment({ voice: { available: () => false }, person: 'p4' });
+    en4.start();
+    check('no voice engine here: "unavailable", in words, and nothing sent', en4.state().state === 'unavailable' && en4.state().error);
+    const host2 = document.createElement('div'); document.body.append(host2);
+    const en5 = createEnrolment({ voice: { available: () => true, enrol: () => true, done: () => true, cancel: () => true, onEvent: () => () => {} },
+                                  person: 'p5', setTimer: c.setTimer, clearTimer: c.clearTimer });
+    const p5 = mountEnrolment(host2, en5, { setTimer: c.setTimer, clearTimer: c.clearTimer });
+    en5.start(); p5.draw(en5.state());
+    p5.element.querySelector('button').click(); p5.draw(en5.state());
+    check('Stop: cancelled, nothing saved, and the panel then closes by itself', en5.state().state === 'cancelled');
+    c.advance(VOICE_ID_DEFAULTS.doneMs + 10);
+    check('...gone', !p5.isOpen());
+    host2.remove();
+    rec.stop();
+  }
+
+  section('connectEngine on its own');
+  {
+    const svc = makeService();
+    const sent = [];
+    const en = connectEngine({ slot: 'local', url: 'ws://x/speech', WebSocketImpl: svc.FakeWS, speakers: { on: true, sureAt: 0.8 },
+                               onControl: (m) => sent.push(m) });
+    await settle(); await settle();
+    check('control() sends only the voice set-up messages', en.control({ type: 'voiceprints' }) === true
+      && en.control({ type: 'begin', utteranceId: 'x' }) === false && en.control({ type: 'speakers', on: false }) === false);
+    await settle(); await settle();
+    check('...and their answers come back through onControl', sent.some((m) => m.kind === 'voiceprints'), J(sent));
+    en.setSpeakers({ on: false, sureAt: 0.8 });
+    check('setSpeakers turns it off on a live connection', svc.speakersAsked.at(-1)?.on === false, J(svc.speakersAsked));
+    en.close();
+  }
+
+  window.fetch = realFetch;
+  check('*** and nothing in this suite touched the network ***', fetched === 0, String(fetched));
+  document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+})().catch((e) => {
+  console.error(e);
+  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+});
+</script>
+</body>
+</html>

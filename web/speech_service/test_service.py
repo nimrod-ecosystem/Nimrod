@@ -316,7 +316,7 @@ def fastapi_tests():
     c = TestClient(app, base_url='http://127.0.0.1:8797')
     h = c.get('/health').json()
     check('/health: up, which engine, whether a secret is needed - and nothing heard',
-          h == {'ok': True, 'engine': 'fake', 'protocol': 1, 'secret': True, 'wake': []}, h)
+          h == {'ok': True, 'engine': 'fake', 'protocol': 1, 'secret': True, 'wake': [], 'speakers': None}, h)
     with c.websocket_connect(WS_URL) as ws:
         ws.send_text(json.dumps({'type': 'hello', 'secret': 'k'}))
         check('fastapi: hello', ws.receive_json()['kind'] == 'hello')

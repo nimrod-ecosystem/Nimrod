@@ -20,16 +20,14 @@
 //   source   where the words came from: 'screen' (the site said it, through the output bus),
 //            'room' (the recogniser heard the room microphone), 'phone' (a phone joined as a
 //            microphone, phone_mic.js). Informational; it never filters.
-//   speaker  a GUESS about who. Absent is normal - NO SPEAKER IDENTIFICATION ENGINE EXISTS YET.
-//            This is the seam one plugs into. See `speakerLabel` for the display rule.
+//   speaker  a GUESS about who. Absent is normal. See `speakerLabel` for the display rule.
 //
-// WHAT IDENTIFICATION WOULD NEED (not built; for Mike's list): an enrolment step where a person
-// who wants to be named records a few sentences (voice recording is row 2.44, OFF by default); a
-// speaker-embedding model run locally on each utterance (the Cici pipeline already does voice
-// identification offline in `cici_server.py` - that is the one to port, not a new one); and the
-// audio of the utterance ALONGSIDE the recogniser's text, which the browser's recogniser does not
-// give (it hands back text only). So identification arrives with a local recogniser that owns the
-// audio (Vosk/whisper on a stream), not before.
+// WHERE IT COMES FROM (row 2.56, 2026-10-07): the speech program (web/speech_service/speakers.py) compares each
+// utterance with the voiceprints of people who set up their voice on its computer (voice_id.js, the same
+// WeSpeaker model the old Cici pipeline used) and says who on every final; speech_engines.js hands it to
+// `caption(c)` as `c.speaker` = { name, confidence }. Its "how sure" scale is anchored on THIS file's sureAt
+// and maybeAt (test_speakers.py holds them equal). The browser's own recogniser gives text only, so with it
+// every line is "Unknown" - and still shown.
 //
 // ---------------------------------------------------------------------------------------
 // WHAT ELSE IT IS, AND IS NOT

@@ -26,12 +26,32 @@ ONE PROTOCOL, over one WebSocket at /speech. Text frames are JSON; binary frames
                                                        inside an utterance or not - is also scored by
                                                        the wake detector. Not stored: the detector
                                                        holds its last ~10 s of features in memory.
+  WHO IS TALKING (row 2.56, speakers.py - only on a service with a speaker engine, see hello's "speakers"):
+    {"type":"speakers", "on":bool, "sureAt"?:0..1}     from the next utterance on, every final says who
+                                                       ("speaker", below). sureAt: the person's own "how
+                                                       sure before naming" (default 0.8).
+    {"type":"enrol", "person":id, "name":str}          SETTING UP A VOICE: each utterance from now on is
+                                                       also turned into numbers, and its audio let go.
+    {"type":"enrol-done", "person":id}                 make the voiceprint from them and keep it HERE
+    {"type":"enrol-cancel"}                            never mind: everything collected is dropped
+    {"type":"forget", "person":id}                     delete that person's voiceprint from this computer
+    {"type":"voiceprints"}                             who is set up here (names and dates, never numbers)
 
   service -> client
-    {"kind":"hello", "engine", "grammar":bool, "partials":bool, "protocol":1, "wake":[words]}
+    {"kind":"hello", "engine", "grammar":bool, "partials":bool, "protocol":1, "wake":[words],
+       "speakers":engine name|null}
     {"kind":"partial", "utteranceId", "text", "engine"}                (backends that have them)
     {"kind":"final", "utteranceId", "text", "confidence":0..1|null,
-       "words":[{"w","conf"}], "engine", "ms":decode ms, "audioMs", "cut":bool}
+       "words":[{"w","conf"}], "engine", "ms":decode ms, "audioMs", "cut":bool,
+       "speaker": null (not asked) | {"who":name|null, "person":id|null, "sure":0..1|null,
+                                      "maybe":name|null, "engine"[, "why"]}}
+         *** who is a LABEL on the words, never a condition on them: a final is sent whatever who is. ***
+    {"kind":"enrol-heard", "person", "utteranceId", "clips", "seconds"[, "short":true]}
+    {"kind":"enrolled", "person", "name", "clips", "seconds", "enrolledAt", "dropped"}
+    {"kind":"enrol-failed", "person", "error":a sentence}
+    {"kind":"forgotten", "person", "existed":bool}
+    {"kind":"voiceprints", "people":[{"person","name","engine","enrolledAt","clips","seconds","usable"}]}
+         *** NO MESSAGE EVER CARRIES A VOICEPRINT'S NUMBERS (speakers.py, invariant 1). ***
     {"kind":"wake", "word", "score":0..1, "atMs":where in the stream, "ms":compute ms,
        "detector", "utteranceId"?:the one open on this socket}           (once per crossing)
     {"kind":"error", "error":str, "utteranceId"?}
@@ -55,8 +75,11 @@ import re
 import sys
 import time
 
+from .speakers import ENROL_MAX_CLIPS, SURE_NAMED, person_ok
+
 PROTOCOL = 1
 SAMPLE_RATE = 16000
+SPEAKER_TYPES = frozenset({'speakers', 'enrol', 'enrol-done', 'enrol-cancel', 'forget', 'voiceprints'})
 # The longest one utterance may be before later audio is dropped (and `cut` says so). 30 s: Whisper
 # reads a fixed 30 s window, so audio past it would be ignored anyway, and a stuck "begin" with no
 # "end" must not grow memory forever. A flag (`--max-utterance-s`).
@@ -148,10 +171,14 @@ class Session:
     server hands in, and `on_text` / `on_bytes` are called with what arrives."""
 
     def __init__(self, backend, send, close, secret: str | None = None,
-                 max_utterance_s: float = MAX_UTTERANCE_S, wake=None):
+                 max_utterance_s: float = MAX_UTTERANCE_S, wake=None, speakers=None):
         self.b = backend
         self.wake = wake              # a detector (backends.make_wake) or None
         self.wake_stream = None       # this socket's stream, while the screen asked for one
+        self.speakers = speakers      # speakers.Speakers or None (row 2.56)
+        self.spk_on = False           # this screen asked for "who" on its finals
+        self.spk_sure_at = SURE_NAMED
+        self.enrolling = None         # {'person', 'name', 'clips': [(embedding, seconds)]} while setting up a voice
         self._send = send
         self._close = close
         self.secret = secret or None
@@ -205,7 +232,12 @@ class Session:
                              'protocol': PROTOCOL,
                              'grammar': bool(getattr(self.b, 'supports_grammar', False)),
                              'partials': bool(getattr(self.b, 'partials', False)),
-                             'wake': list(getattr(self.wake, 'words', None) or [])})
+                             'wake': list(getattr(self.wake, 'words', None) or []),
+                             'speakers': self.speakers.name if self.speakers is not None and self.b is not None
+                             else None})
+            return
+        if t in SPEAKER_TYPES:
+            await self._speaker_message(t, msg)
             return
         if t == 'wake':
             if msg.get('on') is False:
@@ -237,7 +269,13 @@ class Session:
             except Exception as err:  # noqa: BLE001
                 await self.send({'kind': 'error', 'error': f'open: {err}', 'utteranceId': uid})
                 return
-            self.cur = {'id': uid, 'utt': utt, 'bytes': 0, 'cut': False, 'last_partial': None}
+            self.cur = {'id': uid, 'utt': utt, 'bytes': 0, 'cut': False, 'last_partial': None,
+                        # Who-is-talking needs the audio itself: a copy is kept for this utterance ONLY when this
+                        # screen asked for "who" or is setting up a voice, and let go when the final is sent.
+                        'spk': self.spk_on and self.speakers is not None,
+                        'enrol': dict(person=self.enrolling['person']) if self.enrolling else None}
+            if self.cur['spk'] or self.cur['enrol']:
+                self.cur['pcm'] = bytearray()
         elif t == 'end':
             uid = str(msg.get('utteranceId') or '')
             if self.cur and self.cur['id'] == uid:
@@ -271,6 +309,8 @@ class Session:
         if not data:
             return
         c['bytes'] += len(data)
+        if 'pcm' in c:
+            c['pcm'].extend(data)
         try:
             partial = c['utt'].feed(data)
         except Exception as err:  # noqa: BLE001
@@ -318,18 +358,121 @@ class Session:
             except Exception:  # noqa: BLE001 - its own error was already sent
                 pass
         t0 = time.perf_counter()
+        pcm = bytes(c.pop('pcm', b'') or b'')
+        # The words and the voice are worked out SIDE BY SIDE (two threads), so "who" costs the final no more than
+        # whichever is slower - on the desktop the voice (~0.1 s) finishes well inside Whisper's ~2 s.
+        spk_job = None
+        if c.get('enrol') and pcm:
+            spk_job = asyncio.ensure_future(self._enrol_clip(c, pcm))
+        elif c.get('spk') and self.speakers is not None:
+            spk_job = asyncio.ensure_future(self._who(pcm))
         try:
             r = await asyncio.to_thread(c['utt'].finish)
         except Exception as err:  # noqa: BLE001
+            if spk_job is not None:
+                await asyncio.gather(spk_job, return_exceptions=True)
             await self.send({'kind': 'error', 'error': f'finish: {err}', 'utteranceId': c['id']})
             return
+        speaker = None
+        if spk_job is not None:
+            try:
+                speaker = await spk_job
+            except Exception as err:  # noqa: BLE001 - who failing never costs the words
+                speaker = {'who': None, 'person': None, 'sure': None, 'maybe': None,
+                           'engine': getattr(self.speakers, 'name', None), 'why': 'error', 'error': str(err)[:200]}
         r = r or {}
         await self.send({
             'kind': 'final', 'utteranceId': c['id'], 'text': str(r.get('text') or ''),
             'confidence': r.get('confidence'), 'words': list(r.get('words') or []),
             'engine': self.b.name, 'ms': round((time.perf_counter() - t0) * 1000),
             'audioMs': round(c['bytes'] / 2 / SAMPLE_RATE * 1000), 'cut': bool(c['cut']),
+            'speaker': speaker if c.get('spk') and not c.get('enrol') else None,
         })
+        if c.get('enrol') and isinstance(speaker, dict) and speaker.get('progress'):
+            await self.send(speaker['progress'])
+
+    # ---- who is talking (row 2.56) ------------------------------------------------------------
+    async def _who(self, pcm: bytes):
+        return await asyncio.to_thread(self.speakers.identify, pcm, self.spk_sure_at)
+
+    async def _enrol_clip(self, c, pcm: bytes):
+        """One sentence of a voice being set up: its numbers are kept (in memory, for this socket) and its audio
+        is not. Returns a holder whose `progress` is the enrol-heard message (sent after the final)."""
+        e = self.enrolling
+        person = c['enrol']['person']
+        secs = len(pcm) / 2 / SAMPLE_RATE
+        heard = {'kind': 'enrol-heard', 'person': person, 'utteranceId': c['id']}
+        if e is None or e['person'] != person:
+            return {'progress': None}                 # cancelled meanwhile: nothing kept
+        if secs < self.speakers.min_s:
+            return {'progress': {**heard, 'clips': len(e['clips']), 'seconds': round(sum(s for _, s in e['clips']), 1),
+                                 'short': True}}
+        try:
+            vec = await asyncio.to_thread(self.speakers.embed, pcm)
+        except Exception as err:  # noqa: BLE001
+            return {'progress': {'kind': 'enrol-failed', 'person': person, 'error': str(err)[:300]}}
+        if self.enrolling is e and len(e['clips']) < ENROL_MAX_CLIPS:
+            e['clips'].append((vec, secs))
+        return {'progress': {**heard, 'clips': len(e['clips']), 'seconds': round(sum(s for _, s in e['clips']), 1)}}
+
+    async def _speaker_message(self, t: str, msg: dict):
+        sp = self.speakers
+        if sp is None or self.b is None:
+            await self.send({'kind': 'error', 'error': 'no speaker identification on this service'})
+            return
+        if t == 'speakers':
+            self.spk_on = msg.get('on') is not False
+            try:
+                v = float(msg.get('sureAt', SURE_NAMED))
+                self.spk_sure_at = v if 0 < v <= 1.01 else SURE_NAMED
+            except (TypeError, ValueError):
+                self.spk_sure_at = SURE_NAMED
+            return
+        if t == 'voiceprints':
+            people = await asyncio.to_thread(sp.store.summary, sp.name)
+            await self.send({'kind': 'voiceprints', 'people': people})
+            return
+        person = msg.get('person')
+        if t == 'enrol-cancel':
+            self.enrolling = None
+            return
+        if not person_ok(person):
+            await self.send({'kind': 'enrol-failed' if t != 'forget' else 'error', 'person': None,
+                             'error': 'That person cannot be set up here (their id is not one this computer can '
+                                      'store).'})
+            return
+        if t == 'forget':
+            existed = await asyncio.to_thread(sp.forget, person)
+            await self.send({'kind': 'forgotten', 'person': person, 'existed': bool(existed)})
+            return
+        if t == 'enrol':
+            self.enrolling = {'person': person, 'name': str(msg.get('name') or '').strip()[:80], 'clips': []}
+            return
+        if t == 'enrol-done':
+            # After every sentence already said has been worked out: chained behind the decodes, in order.
+            task = asyncio.ensure_future(self._enrol_done(person, self._last))
+            self._last = task
+            self.tasks.add(task)
+            task.add_done_callback(self.tasks.discard)
+
+    async def _enrol_done(self, person: str, before=None):
+        if before is not None:
+            try:
+                await before
+            except Exception:  # noqa: BLE001
+                pass
+        e = self.enrolling
+        if e is None or e['person'] != person:
+            await self.send({'kind': 'enrol-failed', 'person': person, 'error': 'Setting up that voice was not started '
+                             'on this connection, or it was cancelled. Nothing was saved.'})
+            return
+        self.enrolling = None
+        try:
+            done = await asyncio.to_thread(self.speakers.enrol, person, e['name'], e['clips'])
+        except (ValueError, OSError) as err:
+            await self.send({'kind': 'enrol-failed', 'person': person, 'error': str(err)[:300]})
+            return
+        await self.send({'kind': 'enrolled', **done})
 
     async def drain(self):
         if self.tasks:
@@ -380,7 +523,7 @@ def note_refusal(why: str, every_s: float = 10.0) -> None:
 
 
 def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_UTTERANCE_S, wake=None,
-               sites=DEFAULT_SITES, loopback: bool = True):
+               sites=DEFAULT_SITES, loopback: bool = True, speakers=None):
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect
     from fastapi.responses import JSONResponse, Response
 
@@ -413,7 +556,8 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
     def health():
         # Says only that it is up and which engine. Never anything heard.
         return {'ok': True, 'engine': backend.name if backend is not None else 'none', 'protocol': PROTOCOL,
-                'secret': bool(secret), 'wake': list(getattr(wake, 'words', None) or [])}
+                'secret': bool(secret), 'wake': list(getattr(wake, 'words', None) or []),
+                'speakers': speakers.name if speakers is not None and backend is not None else None}
 
     @app.websocket('/speech')
     async def speech(ws: WebSocket):
@@ -425,7 +569,7 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
             return
         await ws.accept()
         s = Session(backend, ws.send_json, lambda code: ws.close(code=code), secret=secret,
-                    max_utterance_s=max_utterance_s, wake=wake)
+                    max_utterance_s=max_utterance_s, wake=wake, speakers=speakers)
         try:
             while not s.closed:
                 m = await ws.receive()
@@ -444,7 +588,7 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
 
 async def serve_websockets(backend, host: str, port: int, secret: str | None = None,
                            max_utterance_s: float = MAX_UTTERANCE_S, ready=None, wake=None,
-                           sites=DEFAULT_SITES, loopback: bool | None = None, sock=None):
+                           sites=DEFAULT_SITES, loopback: bool | None = None, sock=None, speakers=None):
     """`sock`: a socket from listen_socket() to serve on (host and port are then only what it was bound to)."""
     from http import HTTPStatus
     from websockets.asyncio.server import serve
@@ -471,7 +615,8 @@ async def serve_websockets(backend, host: str, port: int, secret: str | None = N
         async def close(code):
             await ws.close(code=code)
 
-        s = Session(backend, send, close, secret=secret, max_utterance_s=max_utterance_s, wake=wake)
+        s = Session(backend, send, close, secret=secret, max_utterance_s=max_utterance_s, wake=wake,
+                    speakers=speakers)
         try:
             async for m in ws:
                 if isinstance(m, (bytes, bytearray)):
