@@ -30,6 +30,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from drive import ROLES, Answerers, Rooms, Tickets, parse_message, stamp_signal
+from game_rooms import SWEEP_S as GAME_SWEEP_S, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
@@ -1311,6 +1312,83 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         if role == "screen":
             _answerers.left((room_key, person_id), ws)
         await announce()
+
+
+# ------------------------------------------------------------- playing together (game rooms)
+# Mike, 2026-10-06: "multiplayer that you can play local, online or over calls." The rules are pure and live in
+# game_rooms.py (test_game_rooms.py); it argues why this is a socket of its own rather than the drive socket (the
+# drive socket's door is "may press this screen's buttons", which a friend you play a quiz with should not need).
+# The ticket is the drive socket's: single use, thirty seconds, then worthless - here bound to the login only.
+GAME_TICKET_SCOPE = "game-room"
+_game_tickets = Tickets()
+
+
+def _game_relation(account: str, host_account: str, call_person: str | None) -> str | None:
+    """Who may join a room (game_rooms.py header): the same login, a connected one, or one on the room's call."""
+    if not account or not host_account:
+        return None
+    if account == host_account:
+        return "same"
+    try:
+        if links.linked(store.get_link(account, host_account), account, host_account):
+            return "connected"
+    except Exception:
+        pass
+    if call_person and _may_drive(account, call_person):
+        return "call"
+    return None
+
+
+_games = GameRooms(relation=_game_relation, may_person=lambda a, p: _may_drive(a, p),
+                   name_of=lambda a: _inviter_name(a))
+
+
+async def _game_send(out) -> None:
+    for target, payload in out or []:
+        if isinstance(target, tuple):
+            # ("call", person_id): the DRIVERS of that person's drive room - the people calling - and never a
+            # screen. A server-built invitation (game_rooms.py `_open`), not anything a page wrote.
+            if target[0] != "call":
+                continue
+            owner = _person_owner(target[1])
+            room = _rooms.get(owner, target[1]) if owner else None
+            if room:
+                await _tell(room.drivers, payload)
+            continue
+        try:
+            await target.send_json(payload)
+        except Exception:
+            pass                               # gone: its own loop's `finally` tidies it up
+
+
+@app.post("/api/game/ticket")
+def game_ticket(user: str = Depends(current_user)):
+    """Trade ordinary sign-in (a person's cookie, or a screen's device key) for a ticket the socket can carry."""
+    return {"ticket": _game_tickets.issue(user, GAME_TICKET_SCOPE), "expires_in": 30}
+
+
+@app.websocket("/api/game")
+async def game_socket(ws: WebSocket, t: str = ""):
+    user = _game_tickets.redeem(t, GAME_TICKET_SCOPE)
+    if not user:
+        await ws.close(code=4401)              # the same "get a fresh ticket" signal as the drive socket
+        return
+    await ws.accept()
+    try:
+        while True:
+            try:
+                raw = await asyncio.wait_for(ws.receive_text(), timeout=GAME_SWEEP_S)
+            except asyncio.TimeoutError:
+                # Nothing arrived: run the clocks (a join nobody answered, a host that never came back...).
+                await _game_send(_games.sweep())
+                continue
+            await _game_send(_games.handle(ws, user, raw))
+    except WebSocketDisconnect:
+        pass
+    except Exception as exc:                   # a malformed frame ends this socket, never the room
+        log.info("game socket ended: %s", exc)
+    finally:
+        await _game_send(_games.dropped(ws))
 
 
 # ------------------------------------------------- a note left from another account

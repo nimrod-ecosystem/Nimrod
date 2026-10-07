@@ -182,6 +182,10 @@ function pageConnect(room, { screens = 1 } = {}) {
     l.close = () => { l.closed = true; st = 'offline'; l.subs.clear(); room.drivers.delete(l); };
     l.drop = () => { st = 'offline'; onState?.('offline'); };
     l.up = () => { st = 'connected'; onState?.('connected'); };
+    // A game the screen offered to the call (drive.js onGameInvite; the server builds it, game_rooms.py).
+    const invites = new Set();
+    l.onGameInvite = (cb) => { invites.add(cb); return () => invites.delete(cb); };
+    l.invite = (inv) => { for (const f of [...invites]) f(inv); };
     queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens, drivers: 1 }); });
     made.push(l);
     return l;
@@ -542,6 +546,31 @@ try {
     M.win.fire('pagehide');
     check('*** pagehide: the call ends at the screen, and the camera and microphone are let go ***',
       !S.t.isLive() && M.media.allTracks().every((t) => t.stopped) && M.page.state() === 'idle');
+    M.page.destroy(); S.t.destroy();
+  }
+
+  section('*** a game offered to the call (Quiz mix "On this call"): shown beside the video, joined only on Play ***');
+  {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room });
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    M.peers.last().fire('connected');
+    check('no offer, nothing shown', root.querySelector('[data-game]')?.hidden === true);
+    M.connect.made[0].invite({ code: 'KX49PM', game: 'quiz_mix', name: 'Robin' });
+    check('*** the offer appears beside the video, in plain words, and nothing has opened yet ***',
+      /Robin's screen would like to play Quiz mix with you\./.test(text()) && !root.querySelector('[data-game-frame]'), text().slice(0, 300));
+    press('[data-game-join]');
+    const frame = root.querySelector('[data-game-frame]');
+    check('*** "Play": the game opens beside the video, on the join page, with the code ***',
+      frame && frame.getAttribute('src') === '/play.html?room=KX49PM', frame?.getAttribute('src'));
+    check('...and the call carries on', M.page.state() === 'in-call');
+    press('[data-game-close]');
+    check('"Close the game": gone, the call still on', !root.querySelector('[data-game-frame]') && M.page.state() === 'in-call');
+    M.page.hangup();
+    check('hanging up takes the game with it', M.page.game() === null);
     M.page.destroy(); S.t.destroy();
   }
 

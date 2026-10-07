@@ -561,7 +561,7 @@ export function createQuizEngine({
   }
 
   function grammar() {
-    if (!item) return [];
+    if (!item && phase !== 'done') return [];     // done needs no question: "play again" is heard either way
     const words = new Set();
     const add = (list) => (list || []).forEach((w) => w && words.add(String(w)));
     const answers = () => {
@@ -967,7 +967,8 @@ export function createQuizEngine({
   }
 
   function press(act, stop = null) {
-    if (dead || !item) return;
+    // Play again needs no question on screen: a sitting ended from outside (`end`, while waiting) has none.
+    if (dead || (!item && !(act === 'restart' && phase === 'done'))) return;
     switch (act) {
       // A walked-to answer ('choices'): judged exactly like a heard or touched one; wrong says the
       // switch line, never "It sounded like you said".
@@ -1094,6 +1095,10 @@ export function createQuizEngine({
     next: () => move(1),
     prev: () => move(-1),
     skip: () => { if (A && !dead && phase !== 'loading' && phase !== 'empty') nextItem(); },
+    // (Quiz mix playing together, 2026-10-06) END THE SITTING FROM OUTSIDE, as "stop" would: the last turn of the
+    // last round was answered on ANOTHER screen, so no question here closes it. Unlike the 'finish' press it works
+    // while the engine is waiting ('loading') - which is exactly where a screen waiting on another one sits.
+    end: () => { if (A && !dead && phase !== 'done' && phase !== 'idle') finish(); },
     game: () => gameId,
     entryMode,
     snapshot: () => ({

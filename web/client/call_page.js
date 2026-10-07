@@ -212,6 +212,7 @@ export async function mountCallPage(root, {
           <video class="cp-self" data-self autoplay playsinline muted hidden></video>
         </div>
         <p class="cp-callnote" data-note hidden></p>
+        <section class="cp-game" data-game hidden aria-label="A game together"></section>
         <div class="cp-controls" role="group" aria-label="Call controls">
           <button type="button" class="cp-btn cp-ctl" data-mute aria-pressed="false">Mute</button>
           <button type="button" class="cp-btn cp-ctl" data-cam aria-pressed="false" hidden>Camera off</button>
@@ -335,6 +336,9 @@ export async function mountCallPage(root, {
         wasDown = false;
       },
     });
+    // A GAME OFFERED TO THIS CALL (2026-10-06): the screen chose Quiz mix's "On this call". The server tells the
+    // callers (never a screen) with a code; this page shows it beside the video, and joins only when "Play" is pressed.
+    offs.push(link.onGameInvite?.((inv) => { if (my === run) showGame(inv); }) || (() => {}));
     const up = await waitFor(() => link && link.state?.() === 'connected', connectMs);
     if (my !== run) return;
     if (!up) { finish('Could not reach the site. Check the connection and try again.'); return; }
@@ -376,12 +380,39 @@ export async function mountCallPage(root, {
     later(() => { if (my === run && !answered) { try { transport?.hangup('unanswered'); } catch { /* gone */ } finish(CALLER_END_TEXT.unanswered); } }, giveUpMs);
   }
 
+  // ---- a game beside the video (game_rooms.py; the game itself is play.html, on this login's own levels) ----
+  let game = null;                     // { code, game, name, playing }
+  function paintGame() {
+    const el = q('[data-game]');
+    if (!el) return;
+    if (!game) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    const who = game.name ? `${game.name}'s screen` : 'The screen';
+    if (!game.playing) {
+      el.innerHTML = `<p class="cp-game-line" data-game-offer="${esc(game.code)}">${esc(who)} would like to play Quiz mix with you.</p>
+        <div class="cp-game-btns"><button type="button" class="cp-btn cp-primary" data-game-join>Play</button>
+        <button type="button" class="cp-btn" data-game-close>Not now</button></div>`;
+      return;
+    }
+    if (el.querySelector('[data-game-frame]')) return;     // already playing: never reload the game under them
+    el.innerHTML = `<iframe class="cp-game-frame" data-game-frame title="Quiz mix" src="${esc(`/play.html?room=${encodeURIComponent(game.code)}`)}"></iframe>
+      <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>Close the game</button></div>`;
+  }
+  function showGame(inv) {
+    if (!inv || !inv.code) return;
+    if (game && game.playing && game.code === inv.code) return;
+    game = { code: inv.code, game: inv.game, name: inv.name || '', playing: false };
+    paintGame();
+  }
+  function closeGame() { game = null; paintGame(); }
+
   function stopTracks(stream) {
     for (const t of stream?.getTracks?.() || []) { try { t.stop(); } catch { /* stopped */ } }
   }
 
   function finish(message = null) {
     run++;
+    game = null;
     clearAll();
     waiters.clear();
     wake.release();
@@ -442,7 +473,9 @@ export async function mountCallPage(root, {
     if (e.target.closest?.('[data-hangup]')) { finish('The call ended.'); return; }
     if (e.target.closest?.('[data-mute]')) { toggleMic(); return; }
     if (e.target.closest?.('[data-cam]')) { toggleCam(); return; }
-    if (e.target.closest?.('[data-flip]')) flip();
+    if (e.target.closest?.('[data-flip]')) { flip(); return; }
+    if (e.target.closest?.('[data-game-join]')) { if (game) { game.playing = true; paintGame(); } return; }
+    if (e.target.closest?.('[data-game-close]')) closeGame();
   });
   on(root, 'change', (e) => {
     if (!e.target.closest?.('[data-person]')) return;
@@ -471,6 +504,7 @@ export async function mountCallPage(root, {
     opened: () => ({ ...opened }),
     people: () => people.map((p) => ({ ...p })),
     transport: () => transport,
+    game: () => (game ? { ...game } : null),
     call: (want = 'video') => start(want),
     hangup: () => finish('The call ended.'),
     destroy() { finish(null); wake.destroy(); ac.abort(); },
