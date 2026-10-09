@@ -159,7 +159,7 @@ const SETTINGS = [
     'Name that person asks about known people and characters; with our own people turned on, each player also gets '
       + 'their own recorded messages at the easiest level.'),
   personWhoField({ on: 'known', appliesWhen: (v) => v.useNameThat !== false }),
-  onOff('useWordGames', 'Word games (opposites and word logic, rhyming, yes or no)'),
+  onOff('useWordGames', 'Word games (Opposites/Logic, rhyming, yes or no)'),   // opposites/logic (row 2.63)
   { key: 'boards', label: 'Questions answered on a letter board', default: true, level: 'standard',
     onLabel: 'In the mix', offLabel: 'Left out', note: 'Spelling, and remembering the order of things.' },
   { key: 'repeatGame', label: 'The same game two rounds running', default: false, level: 'standard',

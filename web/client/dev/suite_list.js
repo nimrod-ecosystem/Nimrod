@@ -39,7 +39,7 @@ export const SUITES = [
   'fit',
   // Is every panel on a screen reachable from the transport bar? (G9) Mounts real kiosks.
   'transport',
-  // bar toggle (2026-10-06): H shows or hides the bar; hidden that way, it stays hidden a while. Mounts real kiosks.
+  // bar toggle (2026-10-06): T shows or hides the bar (H until row 2.72); hidden that way, it stays hidden a while. Mounts real kiosks.
   'bar_toggle',
   'press_overlay', 'preview', 'progress', 'record_panel', 'recorder', 'qr', 'quests', 'recovery', 'resilience',
   'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',

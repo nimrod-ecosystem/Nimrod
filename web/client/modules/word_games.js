@@ -199,9 +199,9 @@ const LINE_LABELS = {
 
 const SETTINGS = [
   { key: 'game', label: 'Which game', kind: 'choice', default: DEFAULTS.game, level: 'essential',
-    // "Opposites and word logic" (row 2.63): chat's suggested name, a guess on Mike's list. The value stays
-    // 'opposites', so saved panels and "computer please play opposites" are unchanged.
-    options: [{ value: 'opposites', label: 'Opposites and word logic' }, { value: 'rhyming', label: 'Rhyming' },
+    // opposites/logic: "Opposites/Logic" (row 2.63, Mike's name 2026-10-08, note BI; it was chat's "Opposites and word
+    // logic"). The value stays 'opposites', so saved panels and "computer please play opposites" are unchanged.
+    options: [{ value: 'opposites', label: 'Opposites/Logic' }, { value: 'rhyming', label: 'Rhyming' },
               { value: 'yesno', label: 'Yes or no' }],
     note: 'Opposites at the easy levels; above them, word puzzles such as "hot is to cold as up is to what?".' },
   answerByField({ on: 'choices', example: 'Is it COLD?',
@@ -1013,7 +1013,8 @@ export const WORD_VIEW = Object.freeze({
 
 registerModule(
   { type: GAME, title: 'Word games', core: 'new',
-    description: 'Opposites (and word logic as it gets harder), Rhyming and a Yes/No quiz, asked aloud with a picture. Answer with '
+    // opposites/logic: the game's name, Opposites/Logic (row 2.63)
+    description: 'Opposites/Logic (opposites, then word logic as it gets harder), Rhyming and a Yes/No quiz, asked aloud with a picture. Answer with '
       + 'a switch, the screen, or (later) your voice.',
     // `local`: the words, pictures and rules are all in this build; nothing is fetched.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },

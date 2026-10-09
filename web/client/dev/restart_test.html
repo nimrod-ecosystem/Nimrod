@@ -23,7 +23,10 @@ real browser and every case runs in isolation.</p>
 <script type="module">
 import {
   MODES, DEFAULT_MODE, readConfig, writeConfig, readPosition, writePosition,
-  bootPlan, markHopped, hasHopped, restartItems,
+  bootPlan, markHopped, hasHopped,
+  // after a restart (row 2.70)
+  RESTART_HEADING, RESTART_KEY, restartField, restartValue, restartPatch,
+  isColdStart, markTab, hasBootParam, withoutBootParam, markKeepPlace, takeKeepPlace,
 } from '../restart.js';
 
 const out = document.getElementById('results');
@@ -168,37 +171,83 @@ section('SCREEN — the cold-boot escape hatch');
 }
 
 // =====================================================================
-section('what the menu shows');
+section('what the menu shows: ONE row, "After a restart, open" (row 2.70)');
 
 {
   const cfg = { mode: 'top', screenId: '', positions: {} };
-  const items = restartItems(cfg, { screenName: '“Bedside”', onChange: () => {} });
-  check('a heading plus exactly three choices',
-    items.filter((i) => i.kind === 'item').length === 3 && items[0].kind === 'heading');
-  check('the current choice is ticked',
-    items.find((i) => i.id === 'restart-top').label.startsWith('✓'));
-  check('and the others are not',
-    !items.find((i) => i.id === 'restart-resume').label.startsWith('✓'));
-  check('the third option NAMES the screen you are standing on — no picker to scan',
-    items.find((i) => i.id === 'restart-screen').label.includes('“Bedside”'),
-    items.find((i) => i.id === 'restart-screen').label);
-  check('every choice is actionable',
-    items.filter((i) => i.kind === 'item').every((i) => typeof i.run === 'function'));
+  const screens = [{ id: 'home', name: 'Bedside' }, { id: 'pics', name: 'Her pictures' }, { id: 'games', name: 'Games' }];
+  const f = restartField({ cfg, screens, homeId: 'home', homeName: 'Bedside' });
+  check('*** one choice row, worded as Mike asked: "After a restart, open" ***',
+    f.key === RESTART_KEY && f.kind === 'choice' && f.label === 'After a restart, open', JSON.stringify(f));
+  check('*** the default is Home -- today\'s behavior, and a chosen dashboard, never "the last one used" ***',
+    f.default === 'top' && f.options[0].value === 'top' && f.options[0].label === 'Home, “Bedside”', JSON.stringify(f.options[0]));
+  check('then "Where it left off", then every OTHER dashboard by name (Home is not listed twice)',
+    JSON.stringify(f.options.map((o) => o.value)) === JSON.stringify(['top', 'resume', 'screen:pics', 'screen:games'])
+    && f.options[2].label === '“Her pictures”', JSON.stringify(f.options));
+  check('shown at every level, as the three rows it replaces were (part of the way out)', f.level === 'essential');
+  check('the heading is the same', RESTART_HEADING.kind === 'heading' && RESTART_HEADING.id === 'restart');
 }
 {
-  let got = null;
-  const items = restartItems({ mode: 'top', screenId: '', positions: {} },
-    { onChange: (p) => { got = p; } });
-  items.find((i) => i.id === 'restart-resume').run();
-  check('choosing resume reports it', got?.mode === 'resume');
-  items.find((i) => i.id === 'restart-screen').run();
-  check('choosing "come back here" reports the mode; the caller supplies WHICH screen',
-    got?.mode === 'screen');
+  check('the row\'s value for each config', restartValue({ mode: 'top' }) === 'top' && restartValue({ mode: 'resume' }) === 'resume'
+    && restartValue({ mode: 'screen', screenId: 'pics' }) === 'screen:pics' && restartValue({ mode: 'screen', screenId: '' }) === 'top'
+    && restartValue(null) === 'top');
+  check('*** and back: choosing a dashboard names it ***', JSON.stringify(restartPatch('screen:pics')) === JSON.stringify({ mode: 'screen', screenId: 'pics' })
+    && restartPatch('resume').mode === 'resume' && restartPatch('top').mode === 'top' && restartPatch('screen:').mode === 'top'
+    && restartPatch('junk').mode === 'top');
+  const st = fakeStore();
+  writeConfig('u1', restartPatch('screen:pics'), st);
+  check('...written where the boot plan reads it', bootPlan({ config: readConfig('u1', st), currentProfileId: 'home' }).redirectTo === 'pics');
 }
 {
-  const items = restartItems({ mode: 'screen', screenId: 'p1', positions: {} }, { onChange: () => {} });
-  check('when a screen is set, that row is the ticked one',
-    items.find((i) => i.id === 'restart-screen').label.startsWith('✓'));
+  // Offline, or before the list has loaded: the dashboard chosen before is still a choice, so opening the menu can
+  // never quietly change what the device does.
+  const f = restartField({ cfg: { mode: 'screen', screenId: 'gone' }, screens: [], homeId: 'home', homeName: '' });
+  check('*** a chosen dashboard the list does not have stays a choice (offline, not loaded) ***',
+    f.options.some((o) => o.value === 'screen:gone' && o.label === 'The dashboard chosen before') && f.options[0].label === 'Home', JSON.stringify(f.options));
+  const named = restartField({ cfg: { mode: 'screen', screenId: 'gone' }, screens: [], names: new Map([['gone', 'Old one']]) });
+  check('...by its name, when the screen knows it', named.options.some((o) => o.value === 'screen:gone' && o.label === '“Old one”'));
+  const homeChosen = restartField({ cfg: { mode: 'screen', screenId: 'home' }, screens: [{ id: 'home', name: 'Bedside' }], homeId: 'home', homeName: 'Bedside' });
+  check('Home chosen BY NAME (the page was opened on it after a restart) is listed, so the row can show it',
+    homeChosen.options.some((o) => o.value === 'screen:home'), JSON.stringify(homeChosen.options));
+}
+
+// =====================================================================
+section('A RESTART, TOLD FROM A RELOAD (row 2.70)');
+
+{
+  const ss = fakeStore();
+  check('*** a tab that never started the screen: a restart ***', isColdStart({ search: '', session: ss }) === true);
+  markTab(ss);
+  check('*** once it has: a reload (a refresh, a new version) is NOT a restart ***', isColdStart({ search: '', session: ss }) === false);
+  check('*** the launcher\'s ?boot=1 is a restart, whatever the tab says ***', isColdStart({ search: '?key=x&boot=1', session: ss }) === true);
+  check('boot=0, or no flag, is not the launcher\'s', !hasBootParam('?boot=0') && !hasBootParam('') && hasBootParam('?lockHelper=off&boot=1'));
+  check('*** kiosk.html reloading ITSELF before the screen started (waiting for the server after a power cut) is still the restart ***',
+    isColdStart({ search: '', session: fakeStore(), navType: 'reload' }) === true);
+  check('no sessionStorage to read: the browser\'s word decides', isColdStart({ search: '', session: hostileStore, navType: 'reload' }) === false
+    && isColdStart({ search: '', session: hostileStore, navType: 'navigate' }) === true);
+  check('the flag comes out of the address, the rest stays',
+    withoutBootParam('https://site.test/kiosk.html?key=k&boot=1&lockHelper=off') === 'https://site.test/kiosk.html?key=k&lockHelper=off'
+    && withoutBootParam('/kiosk.html?boot=1') === '/kiosk.html', withoutBootParam('/kiosk.html?boot=1'));
+}
+{
+  const st = fakeStore();
+  writeConfig('u1', { mode: 'screen', screenId: 'pics' }, st);
+  const cfg = readConfig('u1', st);
+  check('*** a chosen dashboard: a restart goes there ***', bootPlan({ config: cfg, currentProfileId: 'home', cold: true }).redirectTo === 'pics');
+  check('*** a reload does not (it stays on the screen the page shows) ***', bootPlan({ config: cfg, currentProfileId: 'home', cold: false }).redirectTo === null);
+  check('a caller that never says is a restart (today\'s behavior)', bootPlan({ config: cfg, currentProfileId: 'home' }).redirectTo === 'pics');
+}
+{
+  const ss = fakeStore();
+  check('nothing kept: nothing to bring back', takeKeepPlace(ss) === null);
+  markKeepPlace(ss, { boot: 'home', id: 'games' });
+  const got = takeKeepPlace(ss);
+  check('*** a new version\'s reload keeps the place: the screen it was opened on and the one showing ***', got && got.boot === 'home' && got.id === 'games', JSON.stringify(got));
+  check('...ONCE (the next reload is an ordinary one)', takeKeepPlace(ss) === null);
+  const st = fakeStore();
+  writePosition('u1', 'home', 2, st);
+  check('*** ...on the panel it was on, whatever the mode ***', bootPlan({ config: readConfig('u1', st), currentProfileId: 'home', stageCount: 4, cold: false, keep: true }).stageIndex === 2
+    && bootPlan({ config: readConfig('u1', st), currentProfileId: 'home', stageCount: 4, cold: false }).stageIndex === 0);
 }
 
 const s = document.getElementById('summary');

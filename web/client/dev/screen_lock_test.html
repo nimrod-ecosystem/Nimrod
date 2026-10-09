@@ -496,8 +496,8 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
       check('kept: Volume, Colours, the panel\'s own rows', got.includes('set:masterVolume') && got.includes('set:theme') && got.some((id) => /^set:/.test(id) && !['set:masterVolume', 'set:theme', 'set:complexity'].includes(id)),
         got.join());
       check('*** kept: Switch, Edit this panel, Edit this dashboard, recovery, What can I press, where the power lands ***',
-        ['switch-module', 'edit-panel', 'edit-view', 'controls', 'restart-screen'].every((id) => got.includes(id)),
-        ['switch-module', 'edit-panel', 'edit-view', 'controls', 'restart-screen'].filter((id) => !got.includes(id)).join());
+        ['switch-module', 'edit-panel', 'edit-view', 'controls', 'restart-open'].every((id) => got.includes(id)),
+        ['switch-module', 'edit-panel', 'edit-view', 'controls', 'restart-open'].filter((id) => !got.includes(id)).join());
       check('*** gone: the keys pages, Your own folders, who this screen is for, and the lock\'s own setup rows ***',
         ['claude-page', 'search-page', 'user-folders', 'who-pick', 'screen-lock', 'screen-lock-pin'].every((id) => !got.includes(id)),
         got.filter((id) => ['claude-page', 'search-page', 'user-folders', 'who-pick', 'screen-lock', 'screen-lock-pin'].includes(id)).join());
