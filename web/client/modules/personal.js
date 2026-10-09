@@ -493,8 +493,10 @@ registerModule(
     // `{ source, chosenId, sources }`, as in photos.js: a stored choice missing from the list is kept
     // (`chosenId`) and a stand-in shown, never replaced by "the only source there" (§3e).
     async function ensureSource() {
-      const sources = await client.list();
-      knownSources = Array.isArray(sources) ? sources : [];   // backup source
+      // photo sources first (2026-10-09): pictures added on this device are pictures, never videos - not offered here,
+      // so a screen whose only source is those pictures still says "no source" instead of adopting them.
+      const sources = ((await client.list()) || []).filter((s) => !(s && s.kind === 'device'));
+      knownSources = sources;   // backup source
       for (const s of sources) if (s && s.id) labels[s.id] = s.label || s.base_url || s.id;
       if (cfg.sourceId) {
         const found = sources.find((s) => s.id === cfg.sourceId);

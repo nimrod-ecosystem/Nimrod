@@ -31,6 +31,7 @@
 // and the picker treat it the same, but it is deliberately NOT in `createMediaSourcesClient().list()`:
 // that list is what `photos` reads, and adding a source there would change which source a new
 // photos panel adopts by itself. `media_sources.sourceById` finds it by id instead.
+// (photo sources first, 2026-10-09: UNLESS somebody added pictures here FOR PHOTOS - `devicePhotosOn`, below.)
 
 import { kindOf, isSvgFile, svgDataUrl } from './folder_source.js';
 
@@ -121,6 +122,79 @@ export async function devicePictureUrl(path, { idb, dbName } = {}) {
   if (isSvgFile(row.blob, row.name || row.path)) return { url: await svgDataUrl(row.blob), release: () => {} };
   const url = URL.createObjectURL(row.blob);
   return { url, release: () => { try { URL.revokeObjectURL(url); } catch { /* gone */ } } };
+}
+
+// ------------------------------------------------------------- photo sources first (2026-10-09)
+// Mike, 2026-10-09, on the media agent: *"So everyone needs to download software to look at photos?"* No: the
+// everyday ways in are a folder on this computer (Chrome/Edge) and PICTURES ADDED FROM THIS DEVICE, which works in
+// every browser, phones included. So the pictures kept here can now be a PHOTO SOURCE too, played by a photos panel
+// like a folder - but only once somebody asked for that, on the Media tab or a photos panel ("Add pictures from this
+// device"). Argued:
+//   FOR "always a source when there are pictures here": one less switch.
+//   AGAINST, and it wins: a picture added for a button or a talk-board card would then put a SECOND source on the
+//     screen, and a photos panel that quietly showed the one folder would start saying "more than one photo source
+//     is connected" (photos.js `multiSource`) - a change nobody asked for, the reason this header keeps the source
+//     out of the list at all. A per-device switch, set by the press that adds pictures FOR PHOTOS, keeps both.
+// Per device (localStorage) because the pictures are per device. Cleared by "Disconnect" on the Media tab; the
+// pictures themselves stay (a button may still use one).
+export const DEVICE_PHOTOS_KEY = 'nimrod-device-pictures-as-photos';
+const storeOf = (s) => s || (typeof localStorage !== 'undefined' ? localStorage : null);
+
+/** Are the pictures added on this device one of the photo sources here? Never throws. */
+export function devicePhotosOn({ storage } = {}) {
+  try { return storeOf(storage)?.getItem(DEVICE_PHOTOS_KEY) === '1'; } catch { return false; }
+}
+
+/** Turn the device's pictures on (or off) as a photo source here. Never throws. */
+export function setDevicePhotosOn(on, { storage } = {}) {
+  try {
+    const s = storeOf(storage);
+    if (!s) return;
+    if (on) s.setItem(DEVICE_PHOTOS_KEY, '1'); else s.removeItem(DEVICE_PHOTOS_KEY);
+  } catch { /* private mode: the pictures are kept, the panel just won't list them */ }
+}
+
+/**
+ * Keep several pictures (a file input with `multiple`). Resolves `{ added, skipped }`: a file that is not a
+ * picture is skipped, not an error, so one stray PDF in a phone's selection does not lose the rest.
+ */
+export async function addDevicePictures(files, opts = {}) {
+  const added = [];
+  let skipped = 0;
+  let n = 0;
+  const base = opts.now || (() => Date.now());
+  for (const f of Array.from(files || [])) {
+    if (!isPictureFile(f)) { skipped += 1; continue; }
+    const k = n++;
+    // one stamp per file: two pictures added in the same millisecond must not share a path.
+    added.push(await addDevicePicture(f, { ...opts, now: () => Number(base()) + k }));
+  }
+  return { added, skipped };
+}
+
+// Object URLs for the LISTING a photos panel plays, released by the next listing (folder_source.js `revokeFor`,
+// the same bookkeeping and the same reason: a screen re-lists for weeks).
+let listedUrls = [];
+
+/**
+ * The pictures kept here as a LISTING, the shape `media_sources.resolveListing` returns for every source, so the
+ * photos panel cannot tell this from a folder. No albums. An SVG is a data: URL (folder_source.js's invariant).
+ */
+export async function resolveDeviceListing(source = DEVICE_SOURCE, album = '', { idb, dbName } = {}) {
+  const rows = (await run('readonly', (s) => s.getAll(), { idb, dbName })) || [];
+  const urls = [];
+  const items = [];
+  for (const r of rows.sort((a, b) => (b.added_at || 0) - (a.added_at || 0))) {
+    if (!r || !r.blob) continue;
+    let url;
+    if (isSvgFile(r.blob, r.name || r.path)) { try { url = await svgDataUrl(r.blob); } catch { continue; } }
+    else { url = URL.createObjectURL(r.blob); urls.push(url); }
+    items.push({ id: r.path, name: r.name || r.path, path: r.path, kind: 'image', size: Number(r.size) || 0,
+      mtime: Math.floor((Number(r.added_at) || 0) / 1000), url, sourceId: (source && source.id) || DEVICE_SOURCE_ID });
+  }
+  for (const u of listedUrls) { try { URL.revokeObjectURL(u); } catch { /* gone */ } }
+  listedUrls = urls;
+  return { album: '', albums: [], items, count: items.length };
 }
 
 /** Take one away. Used by tests and by anything that later offers "remove this picture". */

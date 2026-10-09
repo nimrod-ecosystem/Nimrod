@@ -225,8 +225,10 @@ function fakeFetch(answers) {
         });
         await m.refresh();
 
-        check('the code box is the FIRST way in, not hidden under advanced',
-          !!host.querySelector('[data-code]'));
+        // photo sources first (Mike, 2026-10-09): the helper, pairing included, is now "an advanced option" -- the
+        // everyday ways (a folder, pictures from this device) come first. It was "the FIRST way in" before that.
+        check('the code box is in the helper section, the first thing in it after who it is for',
+          !!host.querySelector('[data-helper] [data-code]'));
         check('the raw address form is still there, marked advanced',
           !!host.querySelector('[data-advanced] [data-url]'));
 

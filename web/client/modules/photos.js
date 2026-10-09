@@ -30,6 +30,7 @@ import {
   backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
+import { addDevicePictures, setDevicePhotosOn } from '../device_pictures.js';   // photo sources first
 import { cacheGet, cacheSet } from '../cache.js';
 import { createWatchdog } from '../watchdog.js';
 import { pick } from '../rng.js';
@@ -984,7 +985,18 @@ registerModule(
           // same function, same IndexedDB-backed folder handle, same one-user-gesture rule.
           // Browsers that cannot show a directory picker at all (`isFolderPickerSupported()`
           // false — iOS Safari, Firefox) still get the words with no dead button.
-          const { isFolderPickerSupported: canPick } = await import('../folder_source.js');
+          const { isFolderPickerSupported } = await import('../folder_source.js');
+          const canPick = typeof ctx.canPickFolder === 'function' ? ctx.canPickFolder : isFolderPickerSupported;
+          // photo sources first (2026-10-09): a browser with no folder picker (Firefox, Safari, a phone) is offered
+          // pictures from this device instead of no button at all - the file input opens from this press.
+          if (!canPick()) {
+            setStatus('No photo source connected.', false, {
+              label: 'Add pictures from this device',
+              run: () => pickDevicePictures(),
+            });
+            items = ids = []; byId = channels = {};
+            return;
+          }
           setStatus('No photo source connected.', false, canPick() ? {
             label: 'Connect a folder',
             run: async () => {
@@ -1005,6 +1017,29 @@ registerModule(
         items = ids = []; byId = channels = {};
         return;
       }
+    }
+
+    // photo sources first (2026-10-09): pictures chosen here are kept in this browser (device_pictures.js) and the
+    // device's pictures become a photo source on this device, then the panel lists again. SYNCHRONOUS up to the
+    // click: the file input only opens inside the press.
+    function pickDevicePictures() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.addEventListener('change', async () => {
+        try {
+          const { added } = await addDevicePictures(input.files);
+          if (!added.length) { setStatus('Those weren’t pictures. No photo source connected.', false,
+            { label: 'Add pictures from this device', run: () => pickDevicePictures() }); return; }
+          setDevicePhotosOn(true);
+          reload();
+        } catch (err) {
+          console.error('photos: could not keep those pictures', err);
+          setStatus('Those pictures couldn’t be kept in this browser.', true);
+        }
+      });
+      input.click();
     }
 
     // `keepFailed`: a reload BECAUSE a source's files stopped loading keeps it set aside. Any other

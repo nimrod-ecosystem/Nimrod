@@ -120,7 +120,7 @@ section('choosing a folder (no install)');
   await p.refresh();
   check('a browser that supports it is offered a folder picker', !!host.querySelector('[data-pick]'));
   check('and is not told to install anything first',
-        !/media agent below/.test(host.textContent));
+        !/media agent below/.test(host.textContent) && !host.querySelector('[data-helper]').open);
 
   // picking adds it to the device-local list
   client._push({ id: 'f1', label: 'Pictures', kind: 'folder' });
@@ -141,7 +141,8 @@ section('saying which sources are shared and which are not');
   const p = mount({ client, folders: fakeFolders(), resolve: okListing(5) });
   await p.refresh();
   await settle();
-  const cards = [...host.querySelectorAll('.h-card')].map((c) => c.textContent);
+  // [data-list] only: since 2026-10-09 the "Add photos" card above says "this device only" too.
+  const cards = [...host.querySelectorAll('[data-list] .h-card')].map((c) => c.textContent);
   check('a folder is marked as this device only', cards.some((t) => /Pictures/.test(t) && /this device only/.test(t)));
   check('an agent is marked as all your devices', cards.some((t) => /Bedside/.test(t) && /all your devices/.test(t)));
   check('both report how many items they actually have', (host.textContent.match(/ready — 5 items/g) || []).length === 2);
@@ -195,8 +196,100 @@ section('a browser that cannot open folders');
   const p = mount({ client: fakeClient([]), folders: fakeFolders({ supported: false }), resolve: okListing(0) });
   await p.refresh();
   check('no folder picker is offered', !host.querySelector('[data-pick]'));
-  check('and it explains what to use instead', /media agent below/.test(host.textContent));
-  check('the agent form is still available', !!host.querySelector('[data-new]'));
+  // photo sources first (2026-10-09): what to use instead is pictures from this device, not the media agent.
+  check('*** and it explains what to use instead: pictures from this device, not an install ***',
+        /can’t open a folder/.test(text(host.querySelector('[data-way="folder"]')))
+          && /Add pictures from this device instead/.test(text(host.querySelector('[data-way="folder"]')))
+          && !!host.querySelector('[data-add-pictures]'), text(host.querySelector('[data-way="folder"]')));
+  check('the agent form is still available, under the helper', !!host.querySelector('[data-helper] [data-new]'));
+}
+
+// ---------------------------------------- photo sources first (2026-10-09): what a new person sees
+// Mike, 2026-10-09: "So everyone needs to download software to look at photos?" -- no. The two ways that need
+// nothing installed come first; the helper (pairing, an address) is one closed "advanced" section.
+section('photo sources first: the everyday ways first, the helper under advanced');
+{
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0), helperReady: false });
+  await p.refresh();
+  const add = host.querySelector('[data-add-photos]');
+  const helper = host.querySelector('[data-helper]');
+  check('*** the first card is "Add photos" ***', host.querySelector('.h-card') === add && /Add photos/.test(text(add)));
+  check('...with "A folder on this computer" first and "Pictures from this device" second',
+        /A folder on this computer[\s\S]*Pictures from this device/.test(text(add)));
+  check('...both inside it: a folder button and an add-pictures button',
+        !!add.querySelector('[data-pick]') && !!add.querySelector('[data-add-pictures]'));
+  check('...and it says nothing about installing a program, pairing or an address',
+        !/install a program|pairing|address|helper|agent/i.test(text(add)), text(add));
+  check('it names Google Drive’s folder, so a G drive is not a mystery', /G:\\My Drive/.test(text(add)));
+  check('*** the helper is ONE section, closed, marked advanced, AFTER the add-photos card ***',
+        helper && helper.tagName === 'DETAILS' && !helper.open && /advanced/.test(text(helper.querySelector('summary')))
+          && !!(add.compareDocumentPosition(helper) & Node.DOCUMENT_POSITION_FOLLOWING));
+  check('...named "Use the Nimrod helper instead"', /Use the Nimrod helper instead/.test(text(helper.querySelector('summary'))));
+  check('...and the pairing code box and the address form both live inside it',
+        !!helper.querySelector('[data-code]') && !!helper.querySelector('[data-advanced] [data-url]'));
+  check('*** it says who it is for: a screen nobody can press Allow on after a restart, and other devices ***',
+        /nobody can press Allow on after a restart/.test(text(helper)) && /Other devices/.test(text(helper)));
+  check('it links the helper’s own page', helper.querySelector('[data-helper-link]')?.getAttribute('href') === '/helper.html');
+  check('*** and says plainly the download is not ready, rather than implying it is ***',
+        /download isn’t ready yet/.test(text(helper)));
+  check('the hand set-up notes are linked too, for somebody with a terminal',
+        /media_agent\/deploy\/README\.md$/.test(helper.querySelector('[data-agent-notes]')?.getAttribute('href') || ''));
+  check('the site copy never names a person or "her screen"', !/\bher screen|\bChristine\b|\bCici\b/i.test(host.textContent));   // \b: "another screen" is fine
+}
+{
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0), helperReady: true });
+  await p.refresh();
+  check('a published download: the "not ready" words go away', !/download isn’t ready yet/.test(text(host.querySelector('[data-helper]'))));
+}
+
+section('photo sources first: pictures from this device');
+{
+  const client = fakeClient([]);
+  const calls = { add: [], on: [] };
+  const devicePics = {
+    add: async (files) => { calls.add.push(files.length);
+      const pics = files.filter((f) => /^image\//.test(f.type));
+      return { added: pics.map((f, i) => ({ sourceId: 'device-pictures', path: `p${i}`, name: f.name })), skipped: files.length - pics.length }; },
+    setOn: (v) => { calls.on.push(v); if (v) client._push({ id: 'device-pictures', label: 'Added on this device', kind: 'device' }); },
+  };
+  const p = mount({ client, folders: fakeFolders(), resolve: okListing(2), devicePics });
+  await p.refresh();
+  const input = host.querySelector('[data-picture-file]');
+  check('the file input takes several pictures', input && input.multiple && input.accept === 'image/*');
+  let opened = 0;
+  input.click = () => { opened += 1; };
+  host.querySelector('[data-add-pictures]').click();
+  check('"Add pictures…" opens it', opened === 1);
+  const dt = new DataTransfer();
+  dt.items.add(new File(['a'], 'a.jpg', { type: 'image/jpeg' }));
+  dt.items.add(new File(['b'], 'b.jpg', { type: 'image/jpeg' }));
+  dt.items.add(new File(['c'], 'c.txt', { type: 'text/plain' }));
+  input.files = dt.files;
+  input.dispatchEvent(new Event('change'));
+  for (let i = 0; i < 10; i++) await settle();
+  check('*** choosing pictures keeps them and turns them on as a photo source ***',
+        calls.add[0] === 3 && calls.on[0] === true, JSON.stringify(calls));
+  check('...it says how many, and what was not a picture',
+        /Added 2 pictures \(1 file wasn’t a picture\)/.test(text(host.querySelector('[data-msg]'))), text(host.querySelector('[data-msg]')));
+  const cardText = [...host.querySelectorAll('[data-list] .h-card')].map((c) => c.textContent).join(' ');
+  check('...and the list shows them as this device’s, this device only',
+        /pictures added on this device/.test(cardText) && /this device only/.test(cardText), cardText);
+  check('...ready, with the pictures counted', /ready — 2 items/.test(cardText), cardText);
+}
+{
+  const client = fakeClient([]);
+  const on = [];
+  const devicePics = { add: async (files) => ({ added: [], skipped: files.length }), setOn: (v) => on.push(v) };
+  const p = mount({ client, folders: fakeFolders(), resolve: okListing(0), devicePics });
+  await p.refresh();
+  const input = host.querySelector('[data-picture-file]');
+  const dt = new DataTransfer();
+  dt.items.add(new File(['c'], 'c.txt', { type: 'text/plain' }));
+  input.files = dt.files;
+  input.dispatchEvent(new Event('change'));
+  for (let i = 0; i < 10; i++) await settle();
+  check('nothing that is a picture: says so, and turns nothing on',
+        /weren’t pictures/.test(text(host.querySelector('[data-msg]'))) && on.length === 0, text(host.querySelector('[data-msg]')));
 }
 
 // ------------------------------------- the trap: media sits in a SUBfolder
