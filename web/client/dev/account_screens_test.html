@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>account_screens — the screens on an account, on My dashboards → Devices — test</title>
+<style>
+  :root{--bg:#F7F4D5;--surface:#fff;--surface-alt:#f1eed3;--text:#0A3323;--text-soft:#3c5346;--text-muted:#5d7064;
+    --border:#e4e0c2;--accent:#839958;--accent-warm:#D3968C;--accent-warm-deep:#a85f52;--link:#105666;--radius:16px}
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* home.html's own button and message rules, so the panel here looks and measures as it does there. */
+  .h-btn{padding:9px 15px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .h-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .h-quiet{font-weight:500;font-size:.82rem;padding:7px 11px;color:var(--text-soft)}
+  .h-msg{min-height:1.4em;font-size:.85rem;font-weight:600;color:var(--link);margin-bottom:10px}
+  .h-msg.bad{color:var(--accent-warm-deep)}
+  .h-none{font-size:.8rem;color:var(--text-muted)}
+  #host{width:900px}
+  #phone{width:320px;overflow:visible}
+</style>
+</head>
+<body>
+<h1>account_screens — the screens on an account</h1>
+<p>Every screen added with a code, on My dashboards → Devices: its name, when it was last heard from in plain
+words, when it was added, Rename, and Remove (two presses, no modal). The row for the screen the page is open on
+says "(this one)". A screen with no sign-in may look but not change. The last section runs against the real server
+(dev mode): pairs a screen, renames it, and removes it.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>at phone width (320px)</h2>
+<div id="phone"></div>
+
+<script type="module">
+import { mountAccountScreens, agoWords, seenWords, addedWords, removeQuestion, parseWhen, QUIET_AFTER_MS }
+  from '../account_screens.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const MIN = 60e3, HOUR = 3600e3, DAY = 86400e3;
+const NOW = Date.parse('2026-10-09T12:00:00Z');
+const iso = (ms) => new Date(ms).toISOString().replace('Z', '123+00:00');   // Python's six-digit shape, near enough
+
+// A server in a few lines. `rows` is mutated by PATCH/DELETE, like the real one.
+function fakeServer({ rows, canChange = true, fail = null } = {}) {
+  const seen = [];
+  const state = { rows: rows.map((r) => ({ ...r })), canChange };
+  const res = (status, body) => ({ ok: status < 400, status, json: async () => body });
+  return {
+    seen, state,
+    fetch: async (url, opts = {}) => {
+      const method = opts.method || 'GET';
+      seen.push({ method, url, body: opts.body ? JSON.parse(opts.body) : null, headers: opts.headers });
+      if (fail && fail(method, url)) return fail(method, url);
+      const m = url.match(/\/api\/screens(?:\/([^/?]+))?$/);
+      if (!m) throw new Error('unexpected url ' + url);
+      const id = m[1] && decodeURIComponent(m[1]);
+      if (method === 'GET') return res(200, { screens: state.rows.map((r) => ({ ...r })), can_change: state.canChange });
+      if (!state.canChange) return res(403, { detail: 'Rename or remove a screen from your own phone or computer, signed in - not from a screen in a room.' });
+      const r = state.rows.find((x) => x.id === id);
+      if (!r) return res(404, { detail: 'no such screen' });
+      if (method === 'PATCH') { r.label = JSON.parse(opts.body).label.trim(); return res(200, { ok: true, label: r.label }); }
+      if (method === 'DELETE') { state.rows = state.rows.filter((x) => x !== r); return res(200, { ok: true }); }
+      return res(405, {});
+    },
+  };
+}
+
+const ROWS = [
+  { id: 'aaaa1111', label: 'Living room', created_at: iso(NOW - 20 * DAY), last_seen: iso(NOW - 90e3), this: false },
+  { id: 'bbbb2222', label: 'Bedroom', created_at: iso(NOW - 40 * DAY), last_seen: iso(NOW - 3 * DAY), this: false },
+  { id: 'cccc3333', label: 'Hall <b>', created_at: iso(NOW - 2 * DAY), last_seen: iso(NOW - 5 * MIN), this: true },
+];
+
+function mount(server, extra = {}, where = document.getElementById('host')) {
+  const el = document.createElement('div');
+  where.append(el);
+  let forgot = 0;
+  const p = mountAccountScreens(el, {
+    fetchImpl: server.fetch, headers: () => ({ 'X-Dev-User': 'suite' }), now: () => NOW,
+    forgetThis: () => { forgot += 1; }, origin: 'https://example.test', ...extra,
+  });
+  return { el, p, forgot: () => forgot };
+}
+const row = (el, id) => el.querySelector(`[data-as-id="${id}"]`);
+
+(async () => {
+try {
+
+// =====================================================================
+section('how long ago, in words');
+for (const [ms, want] of [
+  [0, 'just now'], [59e3, 'just now'], [60e3, 'a minute ago'], [90e3, 'a minute ago'], [5 * MIN, '5 minutes ago'],
+  [59 * MIN, '59 minutes ago'], [HOUR, 'an hour ago'], [5 * HOUR, '5 hours ago'], [DAY, 'yesterday'],
+  [47 * HOUR, 'yesterday'], [3 * DAY, '3 days ago'], [13 * DAY, '13 days ago'], [14 * DAY, '2 weeks ago'],
+  [70 * DAY, '2 months ago'], [400 * DAY, 'over a year ago'], [-5000, 'just now'],
+]) check(`${ms} ms → "${want}"`, agoWords(ms) === want, agoWords(ms));
+
+section('last seen, and when it has gone quiet');
+{
+  const s1 = seenWords(iso(NOW - 90e3), iso(NOW - DAY), NOW);
+  check('a screen seen a minute ago: "Last seen a minute ago", not quiet', s1.text === 'Last seen a minute ago' && !s1.quiet, JSON.stringify(s1));
+  const s2 = seenWords(iso(NOW - 3 * DAY), iso(NOW - 9 * DAY), NOW);
+  check('*** seen 3 days ago: quiet ***', s2.text === 'Last seen 3 days ago' && s2.quiet, JSON.stringify(s2));
+  const s3 = seenWords(iso(NOW - 12 * HOUR), iso(NOW - 9 * DAY), NOW);
+  check('*** switched off overnight (12 hours) is NOT quiet ***', !s3.quiet, JSON.stringify(s3));
+  check('the line is drawn at QUIET_AFTER_MS (a day)', QUIET_AFTER_MS === DAY
+    && !seenWords(iso(NOW - DAY), null, NOW).quiet && seenWords(iso(NOW - DAY - 1000), null, NOW).quiet);
+  check('...and is an option', !seenWords(iso(NOW - 3 * DAY), null, NOW, { quietAfterMs: 7 * DAY }).quiet);
+  const s4 = seenWords(null, iso(NOW - 5 * MIN), NOW);
+  check('never checked in, just added: says so, not quiet', /not checked in/.test(s4.text) && !s4.quiet, JSON.stringify(s4));
+  check('never checked in, added days ago: quiet', seenWords(null, iso(NOW - 3 * DAY), NOW).quiet);
+  check('a Python timestamp (six fractional digits) parses', parseWhen('2026-10-09T12:00:00.123456+00:00') === NOW + 123);
+  check('nothing parses as nothing', Number.isNaN(parseWhen(null)) && Number.isNaN(parseWhen('soon')));
+}
+
+section('when it was added, and the Remove question');
+check('"Added" with the year', /^Added .*2026/.test(addedWords('2026-10-03T09:00:00+00:00')), addedWords('2026-10-03T09:00:00+00:00'));
+check('no date, no line', addedWords(null) === '');
+check('*** the Remove question, as worded ***',
+  removeQuestion('Living room') === 'Remove “Living room”? It will show a code until it’s added again.', removeQuestion('Living room'));
+
+// =====================================================================
+section('the list');
+{
+  const srv = fakeServer({ rows: ROWS });
+  const { el, p } = mount(srv);
+  await p.refresh();
+  check('the heading says what it is', el.querySelector('h2')?.textContent === 'Screens on this account');
+  check('one row per screen', el.querySelectorAll('[data-as-id]').length === 3);
+  check('each with its name', row(el, 'aaaa1111').querySelector('.as-name').textContent === 'Living room');
+  check('*** a name is text, never markup ***', row(el, 'cccc3333').querySelector('.as-name').textContent === 'Hall <b>'
+    && !row(el, 'cccc3333').querySelector('.as-name b'));
+  check('last seen in words', row(el, 'aaaa1111').querySelector('[data-as-seen]').textContent === 'Last seen a minute ago',
+    row(el, 'aaaa1111').querySelector('[data-as-seen]').textContent);
+  check('*** "3 days ago — gone quiet" ***',
+    row(el, 'bbbb2222').querySelector('[data-as-seen]').textContent === 'Last seen 3 days ago — gone quiet',
+    row(el, 'bbbb2222').querySelector('[data-as-seen]').textContent);
+  check('...and it looks different from a screen that is fine', row(el, 'bbbb2222').querySelector('.as-seen.quiet')
+    && !row(el, 'aaaa1111').querySelector('.as-seen.quiet'));
+  check('when it was added', /^Added /.test(row(el, 'aaaa1111').querySelector('[data-as-added]').textContent));
+  check('*** "(this one)" on the screen this page is open on, and only there ***',
+    row(el, 'cccc3333').querySelector('[data-as-this]')?.textContent === '(this one)'
+    && el.querySelectorAll('[data-as-this]').length === 1);
+  check('every row has Rename and Remove', [...el.querySelectorAll('[data-as-id]')].every((r) =>
+    r.querySelector('[data-as-rename]') && r.querySelector('[data-as-remove]')));
+  check('the request carried this page\'s sign-in headers', srv.seen[0].headers['X-Dev-User'] === 'suite');
+  check('the read-only line is hidden when this page may change things', el.querySelector('[data-as-readonly]').hidden);
+  check('it says how to add one, and links to Add a screen',
+    /kiosk\.html\?pair=key/.test(el.textContent) && el.querySelector('a[href="/pair.html"]'));
+
+  section('the words on it');
+  const words = el.querySelector('[data-account-screens]').textContent.replace(/\S*kiosk\.html\?pair=key/g, '');
+  check('no "token", "key", "credential" in what a person reads', !/\b(token|key|keys|credential)\b/i.test(words), words.slice(0, 200));
+  check('never names the person the project was first built for, or "her screen"', !/christine|cici|her screen/i.test(words));
+
+  section('every control is a real button or box, reachable by Tab and by a switch stepping through');
+  const ctrls = [...el.querySelectorAll('button, input, a')];
+  check('all of them are focusable (tabIndex >= 0) and none is a div pretending', ctrls.length >= 7
+    && ctrls.every((c) => c.tabIndex >= 0), String(ctrls.length));
+  check('every button says what it does in words', [...el.querySelectorAll('button')].every((b) => b.textContent.trim().length > 2));
+
+  // ===================================================================
+  section('Rename');
+  row(el, 'aaaa1111').querySelector('[data-as-rename]').click();
+  await sleep(0);
+  const box = row(el, 'aaaa1111').querySelector('[data-as-name]');
+  check('Rename opens a box in the row, holding the current name', box && box.value === 'Living room');
+  check('*** ...with the focus in it, ready to type ***', document.activeElement === box);
+  check('...labelled with the screen it renames', /New name for “Living room”/.test(row(el, 'aaaa1111').textContent));
+  check('...no longer than the server allows', box.maxLength === 60);
+  check('nothing was sent yet', srv.seen.filter((s) => s.method !== 'GET').length === 0);
+  box.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(0);
+  check('Escape leaves it as it was', !row(el, 'aaaa1111').querySelector('[data-as-name]')
+    && document.activeElement === row(el, 'aaaa1111').querySelector('[data-as-rename]'));
+  row(el, 'aaaa1111').querySelector('[data-as-rename]').click();
+  await sleep(0);
+  row(el, 'aaaa1111').querySelector('[data-as-cancel]').click();
+  await sleep(0);
+  check('so does Cancel, and the focus goes back to Rename',
+    !row(el, 'aaaa1111').querySelector('[data-as-name]') && document.activeElement === row(el, 'aaaa1111').querySelector('[data-as-rename]'));
+
+  row(el, 'aaaa1111').querySelector('[data-as-rename]').click();
+  await sleep(0);
+  row(el, 'aaaa1111').querySelector('[data-as-name]').value = '  Christine’s room ';
+  row(el, 'aaaa1111').querySelector('[data-as-renameform]').requestSubmit();
+  await sleep(20);
+  const patch = srv.seen.find((s) => s.method === 'PATCH');
+  check('*** Save sends the new name, trimmed, for that screen ***', patch && patch.url === '/api/screens/aaaa1111'
+    && patch.body.label === 'Christine’s room', JSON.stringify(patch));
+  check('...the row shows it', row(el, 'aaaa1111').querySelector('.as-name').textContent === 'Christine’s room');
+  check('...and the page says so', /Renamed to “Christine’s room”/.test(el.querySelector('[data-as-msg]').textContent));
+  check('...and the focus is back on that row\'s Rename', document.activeElement === row(el, 'aaaa1111').querySelector('[data-as-rename]'));
+
+  row(el, 'aaaa1111').querySelector('[data-as-rename]').click();
+  await sleep(0);
+  row(el, 'aaaa1111').querySelector('[data-as-name]').value = '   ';
+  row(el, 'aaaa1111').querySelector('[data-as-renameform]').requestSubmit();
+  await sleep(10);
+  check('an empty name is not sent, and the page says a screen needs one',
+    srv.seen.filter((s) => s.method === 'PATCH').length === 1 && /needs a name/.test(el.querySelector('[data-as-msg]').textContent));
+  row(el, 'aaaa1111').querySelector('[data-as-cancel]').click();
+  await sleep(0);
+
+  // ===================================================================
+  section('Remove: two presses in the row, no modal');
+  row(el, 'bbbb2222').querySelector('[data-as-remove]').click();
+  await sleep(0);
+  check('*** the first press asks, in the row, as worded ***',
+    row(el, 'bbbb2222').querySelector('[data-as-ask] p')?.textContent === 'Remove “Bedroom”? It will show a code until it’s added again.');
+  check('...and removes nothing', !srv.seen.some((s) => s.method === 'DELETE'));
+  check('...the focus is on "Keep it", so a second stray press keeps it',
+    document.activeElement === row(el, 'bbbb2222').querySelector('[data-as-keep]'));
+  check('...and the rest of the page still works (no modal): the other rows still have their buttons',
+    row(el, 'aaaa1111').querySelector('[data-as-rename]') && !document.querySelector('dialog[open]'));
+  row(el, 'bbbb2222').querySelector('[data-as-keep]').click();
+  await sleep(0);
+  check('"Keep it" puts the row back, nothing removed', row(el, 'bbbb2222').querySelector('[data-as-remove]')
+    && !srv.seen.some((s) => s.method === 'DELETE') && document.activeElement === row(el, 'bbbb2222').querySelector('[data-as-remove]'));
+
+  row(el, 'bbbb2222').querySelector('[data-as-remove]').click();
+  await sleep(0);
+  row(el, 'bbbb2222').querySelector('[data-as-yes]').click();
+  await sleep(20);
+  const del = srv.seen.find((s) => s.method === 'DELETE');
+  check('*** "Yes, remove" removes that screen ***', del && del.url === '/api/screens/bbbb2222', JSON.stringify(del));
+  check('...it is gone from the list', !row(el, 'bbbb2222') && el.querySelectorAll('[data-as-id]').length === 2);
+  check('...and the page says what happens to it', /“Bedroom” is removed\. It will show a code/.test(el.querySelector('[data-as-msg]').textContent),
+    el.querySelector('[data-as-msg]').textContent);
+  check('...and the focus lands somewhere real', el.contains(document.activeElement));
+  p.destroy();
+}
+
+section('removing the screen this page is open on forgets its key here');
+{
+  const srv = fakeServer({ rows: ROWS });
+  const { el, p, forgot } = mount(srv);
+  await p.refresh();
+  row(el, 'cccc3333').querySelector('[data-as-remove]').click();
+  await sleep(0);
+  row(el, 'cccc3333').querySelector('[data-as-yes]').click();
+  await sleep(20);
+  check('*** removing "(this one)" tells the page to forget it ***', forgot() === 1);
+  row(el, 'aaaa1111').querySelector('[data-as-remove]').click();
+  await sleep(0);
+  row(el, 'aaaa1111').querySelector('[data-as-yes]').click();
+  await sleep(20);
+  check('removing another screen does not', forgot() === 1);
+  row(el, 'bbbb2222').querySelector('[data-as-remove]').click();
+  await sleep(0);
+  row(el, 'bbbb2222').querySelector('[data-as-yes]').click();
+  await sleep(20);
+  check('an empty account says so', /No screens on this account yet/.test(el.textContent));
+  p.destroy();
+}
+
+section('*** on a screen with no sign-in: it may look, not change ***');
+{
+  const srv = fakeServer({ rows: ROWS, canChange: false });
+  const { el, p } = mount(srv);
+  await p.refresh();
+  check('the rows are listed', el.querySelectorAll('[data-as-id]').length === 3);
+  check('*** no Rename, no Remove ***', !el.querySelector('[data-as-rename], [data-as-remove]'));
+  check('...and it says where to do it instead', !el.querySelector('[data-as-readonly]').hidden
+    && /your own phone or computer, signed in/.test(el.querySelector('[data-as-readonly]').textContent));
+  p.destroy();
+}
+
+section('a refusal is said in the server\'s words; a dead network blames the connection');
+{
+  const srv = fakeServer({ rows: ROWS });
+  const { el, p } = mount(srv);
+  await p.refresh();
+  srv.state.canChange = false;      // e.g. the sign-in ran out between loading and pressing
+  row(el, 'aaaa1111').querySelector('[data-as-remove]').click();
+  await sleep(0);
+  row(el, 'aaaa1111').querySelector('[data-as-yes]').click();
+  await sleep(20);
+  check('a 403 shows the server\'s sentence', /phone or computer, signed in/.test(el.querySelector('[data-as-msg]').textContent)
+    && el.querySelector('[data-as-msg]').classList.contains('bad'));
+  check('...and the screen is still listed', !!row(el, 'aaaa1111'));
+  p.destroy();
+
+  let netUp = true;
+  const flaky = fakeServer({ rows: ROWS });
+  const realFetch = flaky.fetch;
+  const m2 = mount({ fetch: (u, o) => (netUp ? realFetch(u, o) : Promise.reject(new TypeError('Failed to fetch'))) });
+  await m2.p.refresh();
+  netUp = false;
+  m2.el.querySelector('[data-as-id="aaaa1111"] [data-as-remove]').click();
+  await sleep(0);
+  m2.el.querySelector('[data-as-id="aaaa1111"] [data-as-yes]').click();
+  await sleep(20);
+  check('a dead network while removing blames the connection, and the screen stays',
+    /check your connection/.test(m2.el.querySelector('[data-as-msg]').textContent) && !!m2.el.querySelector('[data-as-id="aaaa1111"]'));
+  const m3 = mount({ fetch: async () => { throw new TypeError('Failed to fetch'); } });
+  await m3.p.refresh();
+  check('a list that could not be loaded says so, and what to do', /could not be loaded/.test(m3.el.textContent));
+  m2.p.destroy(); m3.p.destroy();
+}
+
+section('*** at phone width: no sideways scroll, 44px targets ***');
+{
+  const srv = fakeServer({ rows: [...ROWS, { id: 'dddd4444', label: 'A very long screen name that goes on and on and on for a while', created_at: iso(NOW - DAY), last_seen: null, this: false }] });
+  const phone = document.getElementById('phone');
+  const { el, p } = mount(srv, {}, phone);
+  await p.refresh();
+  const wide = (n) => n.scrollWidth > n.clientWidth + 0.5;
+  const sec = el.querySelector('[data-account-screens]');
+  check('the section fits 320px', !wide(sec) && sec.getBoundingClientRect().width <= 320.5, `${sec.scrollWidth} > ${sec.clientWidth}`);
+  const out = [...el.querySelectorAll('*')].filter((n) => n.getBoundingClientRect().right > phone.getBoundingClientRect().right + 0.5);
+  check('nothing sticks out past the right edge', out.length === 0, out.map((n) => n.className || n.tagName).slice(0, 5).join(' ; '));
+  const small = [...el.querySelectorAll('button')].filter((b) => b.getBoundingClientRect().height < 43.5);
+  check('every button is at least 44px tall', small.length === 0, small.map((b) => `${b.textContent} ${b.getBoundingClientRect().height}`).join(' ; '));
+  row(el, 'aaaa1111').querySelector('[data-as-remove]').click();
+  await sleep(0);
+  row(el, 'bbbb2222').querySelector('[data-as-rename]').click();
+  await sleep(0);
+  const out2 = [...el.querySelectorAll('*')].filter((n) => n.getBoundingClientRect().right > phone.getBoundingClientRect().right + 0.5);
+  check('...still none with a question and a rename box open', out2.length === 0, out2.map((n) => n.className || n.tagName).slice(0, 5).join(' ; '));
+  // left mounted, to look at
+}
+
+// =====================================================================
+section('against the real server (dev mode): add, list, rename, remove');
+{
+  const USER = `as-suite-${Date.now().toString(36)}`;
+  const H = { 'Content-Type': 'application/json', 'X-Dev-User': USER };
+  const req = await (await fetch('/api/screen-pair/request', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label: 'This screen' }) })).json();
+  const cl = await fetch('/api/screen-pair/claim', { method: 'POST', headers: H, body: JSON.stringify({ code: req.code, label: 'Suite room' }) });
+  check('a screen is added with a name', cl.ok && (await cl.json()).label === 'Suite room');
+  const st = await (await fetch('/api/screen-pair/status', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: req.code, poll_token: req.poll_token }) })).json();
+  const KEY = st.device_key;
+  const el = document.createElement('div');
+  document.getElementById('host').append(el);
+  const p = mountAccountScreens(el, { headers: () => ({ 'X-Dev-User': USER }), forgetThis: () => {} });
+  await p.refresh();
+  check('the real list shows it by its name', el.querySelector('.as-name')?.textContent === 'Suite room', el.textContent.slice(0, 200));
+  check('...with Rename and Remove (signed in, not a screen)', !!el.querySelector('[data-as-rename]'));
+  const onIt = await (await fetch('/api/screens', { headers: { 'X-Device-Key': KEY } })).json();
+  check('*** opened on the screen itself: (this one), and look-only ***',
+    onIt.screens.length === 1 && onIt.screens[0].this === true && onIt.can_change === false, JSON.stringify(onIt));
+  el.querySelector('[data-as-rename]').click();
+  await sleep(0);
+  el.querySelector('[data-as-name]').value = 'Suite den';
+  el.querySelector('[data-as-renameform]').requestSubmit();
+  await sleep(300);
+  check('renaming reaches the server', (await (await fetch('/api/screens', { headers: H })).json()).screens[0]?.label === 'Suite den');
+  el.querySelector('[data-as-remove]').click();
+  await sleep(0);
+  el.querySelector('[data-as-yes]').click();
+  await sleep(300);
+  check('removing reaches the server', (await (await fetch('/api/screens', { headers: H })).json()).screens.length === 0);
+  // (dev mode: a dead key falls through to the dev stand-in user rather than a 401, so the check is "not this account")
+  const after = await fetch('/api/me', { headers: { 'X-Device-Key': KEY } });
+  check('*** and that screen is no longer on the account, at once ***',
+    !after.ok || (await after.json()).user !== USER);
+  p.destroy();
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+  const s = document.getElementById('summary');
+  s.textContent = `${failed} FAILED / ${passed} passed`;
+  s.className = 'fail'; s.dataset.done = 'true'; s.dataset.failed = String(failed);
+}
+})();
+</script>
+</body>
+</html>

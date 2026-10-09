@@ -283,6 +283,25 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       // whose. `mountInputs` re-mounts fresh on every person switch (this whole `mount`
       // function does), so a name read once at mount time is never stale.
       const i = mountInputs(host, { profiles, user, makeUserState, personId, personName });
+
+      // SCREENS ON THIS ACCOUNT (2026-10-09, account_screens.js argues why here and not its own sidebar entry):
+      // under the Devices heading, above the bindings. On an account only (a sign-in, or a screen's own key) -
+      // signed out, this page runs on this browser's own storage and there is no account to have screens on.
+      let screens = null;
+      if (isSignedIn) {
+        const scrHost = document.createElement('div');
+        scrHost.dataset.accountScreensHost = '';
+        const intro = host.querySelector('.h-intro');
+        if (intro) intro.after(scrHost); else host.prepend(scrHost);
+        try {
+          const { mountAccountScreens } = await import('./account_screens.js');
+          screens = mountAccountScreens(scrHost, { user });
+          screens.refresh().catch((err) => console.error('home: account screens', err));   // not awaited: the bindings need not wait
+        } catch (err) {
+          console.error('home: account screens', err);
+          scrHost.remove();
+        }
+      }
       await i.refresh();
 
       // WHICH MICROPHONE, and what to fall back to. Above the marker panel because it needs no
@@ -311,6 +330,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       return {
         async refresh() {
           await i.refresh();
+          await screens?.refresh?.();
           await mics?.refresh?.();
           await marker?.refresh?.();
           return this;
@@ -318,6 +338,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         destroy() {
           try { marker?.destroy?.(); } catch (e) { console.error(e); }
           try { mics?.destroy?.(); } catch (e) { console.error(e); }
+          try { screens?.destroy?.(); } catch (e) { console.error(e); }
           try { i.destroy?.(); } catch (e) { console.error(e); }
         },
       };

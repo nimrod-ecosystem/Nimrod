@@ -1417,9 +1417,13 @@ class _Store:
         "drive_grants":    ("Which other accounts you have allowed to drive a screen, and "
                             "until when.", True,
                             "when you let somebody drive a screen"),
-        "device_keys":     ("A credential for each unattended screen you set up, and the name "
-                            "you gave it. Only a scrambled form of the credential is kept, which "
-                            "cannot be turned back into a working one.", True,
+        # 2026-10-09: the list of screens on My dashboards -> Devices shows the name, when it was added
+        # and when it last checked in, so all three are said here.
+        "device_keys":     ("A credential for each unattended screen you set up, the name "
+                            "you gave it, when it was added, and when it last checked in (so the "
+                            "list of your screens can say which one has gone quiet). Only a scrambled "
+                            "form of the credential is kept, which cannot be turned back into a "
+                            "working one.", True,
                             "when you adopt an unattended screen"),
         "links":           ("Who you are connected to - one entry for each pair of people. "
                             "It is a relationship, not a permission: it lasts until one of "
@@ -1595,9 +1599,15 @@ class _Store:
                 n += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
         return n
 
-    def claim_screen_pairing(self, code: str, account_id: str) -> tuple[str, dict | None]:
+    def claim_screen_pairing(self, code: str, account_id: str,
+                             label: str | None = None) -> tuple[str, dict | None]:
         """A signed-in person adopts the screen. Mints the key HERE, not at request time -
-        an unclaimed row must never contain a usable credential."""
+        an unclaimed row must never contain a usable credential.
+
+        `label` (2026-10-09): the name the person approving it gave it on pair.html. It wins over
+        the name the screen asked with, because the screen asked unauthenticated and every kiosk
+        asks as "This screen" - so without this, every screen on an account was "This screen".
+        Empty or None keeps the screen's own. The caller validates it (app.py, NAME_RE)."""
         with self._tx() as cur:
             cur.execute(self._q(
                 "SELECT label, expires_at, claimed_by FROM screen_pairings WHERE code=?"),
@@ -1611,17 +1621,18 @@ class _Store:
                 return ("expired", None)
             key = "nk_" + secrets.token_urlsafe(32)
             ts = _now()
+            name = (label or "").strip() or r[0]
             # The account keeps only the fingerprint. The working key goes to the screen once, through
             # the pairing row below (gated by the poll token, swept within a day).
             cur.execute(self._q(
                 "INSERT INTO device_keys(key, user_id, label, created_at) VALUES(?,?,?,?)"),
-                (self._key_fingerprint(key), account_id, r[0], ts))
+                (self._key_fingerprint(key), account_id, name, ts))
             cur.execute(self._q(
                 "UPDATE screen_pairings SET claimed_by=?, claimed_at=?, device_key=? "
                 "WHERE code=? AND claimed_by IS NULL"), (account_id, ts, key, code))
             if cur.rowcount != 1:
                 return ("claimed", None)     # somebody claimed it between the read and the write
-        return ("ok", {"label": r[0]})
+        return ("ok", {"label": name})
 
     def device_key_user(self, key: str) -> str | None:
         """Which account owns this key, or None. The database half of `X-Device-Key`."""
@@ -1635,18 +1646,42 @@ class _Store:
                     return r[0]
         return None
 
-    def list_device_keys(self, user_id: str) -> list[dict]:
+    def list_device_keys(self, user_id: str, presented_key: str | None = None) -> list[dict]:
         """What screens this account has adopted. NEVER returns the secret - a list that
-        hands back credentials is a list that leaks them into logs and screenshots."""
+        hands back credentials is a list that leaks them into logs and screenshots.
+
+        `presented_key` (2026-10-09): the X-Device-Key on the request asking, if any. The row it
+        matches comes back with `this: True`, so the list can say "(this one)" on the screen you
+        are standing at. Matched on the server against what is stored, so the key never has to be
+        handed to the page or compared in it."""
         with self._tx() as cur:
             cur.execute(self._q(
                 "SELECT key, label, created_at, last_seen FROM device_keys WHERE user_id=? "
                 "ORDER BY created_at"), (user_id,))
             rows = cur.fetchall()
+        mine = set(self._key_forms(presented_key or ""))
         # An id a person can revoke by: the end of what is STORED, which is the fingerprint (an
         # unconverted old row's own key until `_hash_device_keys` has run; revoke matches the same).
-        return [{"id": r[0][-8:], "label": r[1], "created_at": r[2], "last_seen": r[3]}
+        return [{"id": r[0][-8:], "label": r[1], "created_at": r[2], "last_seen": r[3],
+                 "this": str(r[0]) in mine}
                 for r in rows]
+
+    def rename_device_key(self, user_id: str, key_id: str, label: str) -> bool:
+        """Give an adopted screen a new name. Owner-only by construction: the row must be this
+        account's. Suffix-matched in Python for the same reason as `revoke_device_key`. The caller
+        validates the name (app.py, NAME_RE); an empty one is refused here as well."""
+        name = (label or "").strip()
+        if not key_id or not name:
+            return False
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT key FROM device_keys WHERE user_id=?"), (user_id,))
+            rows = cur.fetchall()
+            hit = next((r[0] for r in rows if str(r[0])[-8:] == key_id), None)
+            if hit is None:
+                return False
+            cur.execute(self._q("UPDATE device_keys SET label=? WHERE key=? AND user_id=?"),
+                        (name, hit, user_id))
+            return cur.rowcount > 0
 
     def revoke_device_key(self, user_id: str, key_id: str) -> bool:
         """Unadopt a screen. Immediate: the next request it makes is a 401.

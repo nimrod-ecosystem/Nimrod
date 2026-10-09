@@ -27,6 +27,8 @@
 import { authHeaders } from './auth.js';
 
 const STASH = 'nimrod:pairCode';
+// The longest screen name: the server's SCREEN_NAME_MAX (app.py), so a long name stops while typing.
+const SCREEN_NAME_MAX = 60;
 
 // Six characters, upper case, no spaces or dashes however somebody typed them. The screen
 // prints the code grouped ("9K4 2QX") and people copy the space along with it.
@@ -74,6 +76,8 @@ export function claimMessage(state, { code = '', label = '', error = '' } = {}) 
       + 'the current one off it and try again.',
     claimed: 'That code has already been used. If the screen is still asking to be set up, '
       + 'wait for it to show a new code.',
+    badname: 'That name has a character a screen name cannot have. Use letters, numbers, spaces '
+      + 'and . , \' - (or leave the name empty).',
   };
   return { title: 'Not added', body: known[error] || error || 'Something went wrong.' };
 }
@@ -97,6 +101,11 @@ export function mountPairClaim(root, {
   let state = 'ready';
   let error = '';
   let label = '';
+  // THE NAME IT GETS ON THE ACCOUNT (2026-10-09). Optional: left empty, the screen keeps the name it asked with,
+  // which on every kiosk is "This screen" -- so with two screens, the list on My dashboards -> Devices could not
+  // tell them apart. Asked HERE because this is the one moment the person is standing at the screen and knows
+  // which one it is. Kept in a variable because paint() redraws the card.
+  let name = '';
 
   root.innerHTML = '<div class="pc-card" data-card></div>';
   const card = root.querySelector('[data-card]');
@@ -111,6 +120,9 @@ export function mountPairClaim(root, {
         <label class="pc-label" for="pc-code">Code from the screen</label>
         <input id="pc-code" class="pc-input" data-code inputmode="latin" autocapitalize="characters"
                autocomplete="off" spellcheck="false" maxlength="12" value="${escapeHTML(code)}">
+        <label class="pc-label pc-label-name" for="pc-name">A name for it (optional)</label>
+        <input id="pc-name" class="pc-name" data-name type="text" maxlength="${SCREEN_NAME_MAX}" autocomplete="off"
+               placeholder="This screen" value="${escapeHTML(name)}">
         <button class="pc-go" data-go>Add this screen</button>` : '')
       + (state === 'signed-out' ? '<button class="pc-go" data-signin>Sign in</button>' : '')
       + (state === 'working' ? '<div class="pc-wait" role="status">Working…</div>' : '');
@@ -122,6 +134,10 @@ export function mountPairClaim(root, {
     card.querySelector('[data-go]')?.addEventListener('click', () => { claim(); });
     card.querySelector('[data-signin]')?.addEventListener('click', () => { signIn(); });
     card.querySelector('[data-code]')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') claim();
+    });
+    card.querySelector('[data-name]')?.addEventListener('input', (e) => { name = e.target.value; });
+    card.querySelector('[data-name]')?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') claim();
     });
   }
@@ -151,7 +167,8 @@ export function mountPairClaim(root, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         credentials: 'same-origin',
-        body: JSON.stringify({ code }),
+        // The name rides along only when one was typed; no name is the screen's own, as before.
+        body: JSON.stringify(name.trim() ? { code, label: name.trim() } : { code }),
       });
       if (res.status === 401) { state = 'signed-out'; paint(); return; }
       const data = await res.json().catch(() => ({}));
@@ -161,7 +178,8 @@ export function mountPairClaim(root, {
         const detail = String(data.detail || '');
         error = /expired/i.test(detail) ? 'expired'
           : /already been used/i.test(detail) ? 'claimed'
-          : /no such code/i.test(detail) ? 'unknown' : detail;
+          : /no such code/i.test(detail) ? 'unknown'
+          : /screen name/i.test(detail) ? 'badname' : detail;
         state = 'failed'; paint(); return;
       }
       label = data.label || '';

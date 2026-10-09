@@ -378,6 +378,37 @@ def main() -> None:
     b2._conn.close()
     check("what-we-store says only a scrambled form is kept",
           "scrambled" in {r["table"]: r for r in fstore.describe_storage()["stores"]}["device_keys"]["what"])
+    dk_what = {r["table"]: r for r in fstore.describe_storage()["stores"]}["device_keys"]["what"]
+    # 2026-10-09: the list of screens shows all three, so the privacy page has to say all three.
+    check("*** what-we-store names every column the screens list shows: the name, when added, when last seen ***",
+          "name" in dk_what and "when it was added" in dk_what and "last checked in" in dk_what, dk_what)
+    with fstore._tx() as cur:
+        cur.execute("PRAGMA table_info(device_keys)")
+        dk_cols = sorted(r[1] for r in cur.fetchall())
+    check("...and device_keys has no column beyond those four (key, user, name, added, last seen) - a new one "
+          "fails here until the line above says it", dk_cols == ["created_at", "key", "label", "last_seen", "user_id"],
+          str(dk_cols))
+
+    section("naming, renaming and (this one), in the store")
+    nstore = SQLiteStore(":memory:")
+    np_ = nstore.create_screen_pairing("This screen")
+    st, info = nstore.claim_screen_pairing(np_["code"], "fam@example.com", "Kitchen")
+    check("a name given when claiming wins over the screen's own", st == "ok" and info["label"] == "Kitchen", str(info))
+    _, nkey = nstore.screen_pairing_status(np_["code"], np_["poll_token"])
+    np2 = nstore.create_screen_pairing("This screen")
+    st, info = nstore.claim_screen_pairing(np2["code"], "fam@example.com", "  ")
+    check("an empty name keeps the screen's own", info["label"] == "This screen", str(info))
+    rows = nstore.list_device_keys("fam@example.com", nkey)
+    check("the presented key's row is `this`, the other is not",
+          [r["this"] for r in rows] == [True, False], str(rows))
+    check("no key: nothing is `this`", not any(r["this"] for r in nstore.list_device_keys("fam@example.com")))
+    kid = rows[0]["id"]
+    check("the owner renames", nstore.rename_device_key("fam@example.com", kid, " Pantry ") is True)
+    check("...trimmed", nstore.list_device_keys("fam@example.com")[0]["label"] == "Pantry")
+    check("another account cannot", nstore.rename_device_key("other@example.com", kid, "Mine") is False)
+    check("an empty name is refused", nstore.rename_device_key("fam@example.com", kid, "  ") is False)
+    check("no id is refused", nstore.rename_device_key("fam@example.com", "", "x") is False)
+    check("renaming leaves the key working", nstore.device_key_user(nkey) == "fam@example.com")
 
     # -----------------------------------------------------------------
     section("*** device keys over HTTP: a screen's own key, and /api/me's `screen` (?pair=key) ***")
@@ -425,6 +456,93 @@ def main() -> None:
         check("the owner's account lists the screen, without the key", len(lst) == 1 and hk not in json.dumps(lst), str(lst))
         check("the owner can turn it off", owner.delete(f"/api/screens/{lst[0]['id']}").status_code == 200)
         check("*** and the screen's very next request is signed out ***", bare.get("/api/me", headers=KEYH).status_code == 401)
+
+        # -----------------------------------------------------------------
+        section("*** the list of screens on My dashboards: a name when approving, rename, (this one) ***")
+        # -----------------------------------------------------------------
+        def adopt(claim_body_extra=None, client=owner):
+            q = bare.post("/api/screen-pair/request", json={"label": "This screen"}).json()
+            c = client.post("/api/screen-pair/claim", json={"code": q["code"], **(claim_body_extra or {})})
+            s = bare.post("/api/screen-pair/status", json={"code": q["code"], "poll_token": q["poll_token"]}).json()
+            return c, s.get("device_key", "")
+
+        c, k_living = adopt({"label": "Living room"})
+        check("a name typed when approving is accepted", c.status_code == 200, c.text)
+        check("...and the answer says the name it got", c.json().get("label") == "Living room", c.text)
+        rows = owner.get("/api/screens").json()["screens"]
+        living = next((r for r in rows if r["label"] == "Living room"), None)
+        check("*** the screen is listed under the name it was given, not 'This screen' ***", living is not None, str(rows))
+        c, k_plain = adopt({})
+        rows = owner.get("/api/screens").json()["screens"]
+        check("no name when approving keeps the screen's own ('This screen')",
+              c.status_code == 200 and any(r["label"] == "This screen" for r in rows), str(rows))
+        c, _ = adopt({"label": "   "})
+        check("a name of only spaces is the same as no name", c.status_code == 200 and c.json().get("label") == "This screen", c.text)
+        for bad in ("<script>", "a" * 61, "line\nbreak", "tab\there"):
+            q = bare.post("/api/screen-pair/request", json={"label": "This screen"}).json()
+            c = owner.post("/api/screen-pair/claim", json={"code": q["code"], "label": bad})
+            check(f"an approving name {bad[:12]!r} is refused (400) and nothing is adopted",
+                  c.status_code == 400 and bare.post("/api/screen-pair/status", json={
+                      "code": q["code"], "poll_token": q["poll_token"]}).json().get("state") == "pending", c.text)
+        q = bare.post("/api/screen-pair/request", json={"label": "This screen"}).json()
+        c = owner.post("/api/screen-pair/claim", json={"code": q["code"], "label": "a" * 60})
+        check("a 60-character name is fine", c.status_code == 200, c.text)
+
+        lst = owner.get("/api/screens").json()
+        check("signed in with no screen key: no row is (this one)", not any(r["this"] for r in lst["screens"]), str(lst))
+        check("...and this browser may rename and remove", lst["can_change"] is True)
+
+        r = owner.patch(f"/api/screens/{living['id']}", json={"label": "Christine’s room"})
+        check("*** the owner renames a screen ***", r.status_code == 200 and r.json().get("label") == "Christine’s room", r.text)
+        check("...and the list says the new name",
+              any(x["id"] == living["id"] and x["label"] == "Christine’s room" for x in owner.get("/api/screens").json()["screens"]))
+        r = owner.patch(f"/api/screens/{living['id']}", json={"label": "  Den  "})
+        check("a new name is trimmed", r.status_code == 200 and r.json().get("label") == "Den", r.text)
+        for bad in ("", "   ", "<b>x</b>", "a" * 61, "a\nb"):
+            r = owner.patch(f"/api/screens/{living['id']}", json={"label": bad})
+            check(f"renaming to {bad[:12]!r} is refused (400)", r.status_code == 400, f"{r.status_code} {r.text}")
+        check("an id that is not an id is refused (400)",
+              owner.patch("/api/screens/a.b", json={"label": "x"}).status_code == 400
+              and owner.patch("/api/screens/" + "a" * 70, json={"label": "x"}).status_code == 400)
+        check("a screen id nobody has is 404", owner.patch("/api/screens/zzzzzzzz", json={"label": "x"}).status_code == 404)
+
+        stranger = TestClient(appmod.app)
+        stranger.cookies.set("session", session_cookie("google:stranger-9"))
+        r = stranger.patch(f"/api/screens/{living['id']}", json={"label": "Mine now"})
+        check("*** ANOTHER ACCOUNT CANNOT RENAME YOUR SCREEN - the same 404 as no such screen ***", r.status_code == 404, r.text)
+        check("*** ...nor remove it ***", stranger.delete(f"/api/screens/{living['id']}").status_code == 404)
+        check("...nor see it", stranger.get("/api/screens").json()["screens"] == [])
+        check("...and it is still yours, by its name",
+              any(x["id"] == living["id"] and x["label"] == "Den" for x in owner.get("/api/screens").json()["screens"]))
+
+        KL = {"X-Device-Key": k_living}
+        on_screen = bare.get("/api/screens", headers=KL).json()
+        mine = [x for x in on_screen["screens"] if x["this"]]
+        check("*** opened ON a screen (its own key): that screen's row is (this one), and only that one ***",
+              len(mine) == 1 and mine[0]["id"] == living["id"], str(on_screen))
+        check("...and the key is still nowhere in the list", k_living not in json.dumps(on_screen))
+        check("*** a screen with no sign-in may LIST but not change (can_change false) ***", on_screen["can_change"] is False)
+        r = bare.patch(f"/api/screens/{living['id']}", headers=KL, json={"label": "Renamed by a passer-by"})
+        check("*** ...renaming from a screen in a room is refused (403), in words ***",
+              r.status_code == 403 and "phone or computer" in r.json().get("detail", ""), r.text)
+        r = bare.delete(f"/api/screens/{living['id']}", headers=KL)
+        check("*** ...and so is removing (403): a passer-by cannot take a screen off the account ***", r.status_code == 403, r.text)
+        check("...and the screen still works", bare.get("/api/me", headers=KL).status_code == 200)
+        check("a fingerprint presented as a key marks nothing as (this one)",
+              not any(x["this"] for x in owner.get("/api/screens", headers={
+                  "X-Device-Key": "sha256:" + "0" * 64}).json()["screens"]))
+        both2 = TestClient(appmod.app)
+        both2.cookies.set("session", session_cookie("google:owner-1"))
+        lst2 = both2.get("/api/screens", headers=KL).json()
+        check("the owner's own computer holding a screen's key AND signed in: (this one) and may change",
+              lst2["can_change"] is True and any(x["this"] for x in lst2["screens"]), str(lst2))
+        r = both2.patch(f"/api/screens/{living['id']}", headers=KL, json={"label": "Hall"})
+        check("...so it can rename", r.status_code == 200, r.text)
+        r = both2.delete(f"/api/screens/{living['id']}", headers=KL)
+        check("...and remove, even the screen it is on", r.status_code == 200, r.text)
+        check("...which is then signed out on that key alone", bare.get("/api/me", headers=KL).status_code == 401)
+        check("the other screens on the account are untouched",
+              bare.get("/api/me", headers={"X-Device-Key": k_plain}).status_code == 200)
 
         section("*** a database blip while checking a key is a 503, not a 401 ***")
         saved_lookup = appmod.store.device_key_user

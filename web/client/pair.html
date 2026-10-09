@@ -31,6 +31,12 @@
     font:800 1.9rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;
     text-align:center;text-transform:uppercase}
   .pc-input:focus{outline:none;border-color:var(--accent)}
+  /* The optional name (2026-10-09): an ordinary text box under the code, smaller than it -- the code is still the
+     one thing on the page that has to be right. 16px text so a phone does not zoom in on it. */
+  .pc-label-name{margin-top:14px}
+  .pc-name{width:100%;padding:12px;border:2px solid var(--border);border-radius:12px;
+    background:var(--surface);color:var(--text);font:inherit;font-size:1rem}
+  .pc-name:focus{outline:none;border-color:var(--accent)}
   /* 48px+ tall: a thumb, not a mouse. */
   .pc-go{margin-top:14px;width:100%;padding:14px 16px;border:0;border-radius:12px;
     background:var(--link);color:#fff;font:inherit;font-weight:700;font-size:1.05rem;
@@ -55,7 +61,7 @@
 <main id="root"></main>
 <p class="pc-foot">
   Adding a screen lets it show what you put on it. It does not give the screen access to
-  anything else in your account. <a href="/home.html">Your screens</a>
+  anything else in your account. <a href="/home.html?tab=inputs">Your screens</a>
 </p>
 <script type="module">
   import { mountPairClaim } from './pair.js';
