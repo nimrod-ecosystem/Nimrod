@@ -2428,8 +2428,12 @@ def api_me(request: Request, user: str = Depends(current_user)):
     # `display_name`: what this account's notes are signed with ('' = "Someone"). See notes.py.
     # `signed_in` (row 2.57): this browser carries this account's own sign-in, even if it is showing a screen page
     # (identity.signed_in_here). page_links.js offers "Open it here" on a screen page only when it is true.
+    # `screen` (device key, 2026-10-09): THIS request was let in by a screen's own device key, not a person's sign-in.
+    # kiosk.html's `?pair=key` reads it: a screen meant to hold its own key that is running on somebody's sign-in
+    # instead shows the pairing code, so it gets a key before that sign-in runs out (screen_pair.js `shouldPair`).
     return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK,
-            "display_name": _display_name(user), "signed_in": signed_in_here(request, user)}
+            "display_name": _display_name(user), "signed_in": signed_in_here(request, user),
+            "screen": via_device_key(request)}
 
 
 def _safe_next(path: str | None) -> str | None:

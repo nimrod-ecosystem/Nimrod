@@ -15,10 +15,16 @@ not fine for collecting the key.
 """
 from __future__ import annotations
 
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+# The app is imported further down (the return trip, and device keys over HTTP). A throwaway
+# database for it, so this suite never writes into the repo's own nimrod.db.
+_TMP = tempfile.mkdtemp(prefix="nimrod_screen_pair_")
+os.environ.setdefault("NIMROD_DB", os.path.join(_TMP, "app.db"))
 import db  # noqa: E402
 from db import SQLiteStore  # noqa: E402
 
@@ -291,6 +297,157 @@ def main() -> None:
     check("a javascript: url is refused", _safe_next("javascript:alert(1)") is None)
     check("a very long next is truncated rather than passed through whole",
           len(_safe_next("/" + "a" * 5000)) == 300)
+
+    # -----------------------------------------------------------------
+    section("*** device keys are kept as a FINGERPRINT, never as the key (2026-10-09) ***")
+    # -----------------------------------------------------------------
+    # A copy of the database (a backup, an export) used to hold a working, never-expiring login
+    # to every adopted screen's account. Now it holds only sha256 fingerprints.
+    fstore = SQLiteStore(":memory:")
+    fp = fstore.create_screen_pairing("Hall")
+    fstore.claim_screen_pairing(fp["code"], "family@example.com")
+    _, fkey = fstore.screen_pairing_status(fp["code"], fp["poll_token"])
+    with fstore._tx() as cur:
+        cur.execute("SELECT key FROM device_keys")
+        stored = [r[0] for r in cur.fetchall()]
+    check("the screen still gets a working key", bool(fkey) and fkey.startswith("nk_"), str(fkey))
+    check("*** THE KEY ITSELF IS NOT IN device_keys ***", fkey not in stored and stored, str(stored))
+    check("what is stored is its fingerprint", stored == [SQLiteStore._key_fingerprint(fkey)], str(stored))
+    check("...which says what it is", stored[0].startswith("sha256:"), stored[0])
+    check("and the key still resolves to the account that claimed it",
+          fstore.device_key_user(fkey) == "family@example.com")
+    check("*** PRESENTING THE STORED FINGERPRINT AS IF IT WERE A KEY FINDS NOBODY *** - otherwise "
+          "hashing would protect nothing", fstore.device_key_user(stored[0]) is None)
+    fstore.touch_device_key(fkey)
+    check("last seen still updates through the fingerprint",
+          bool(fstore.list_device_keys("family@example.com")[0]["last_seen"]))
+    fid = fstore.list_device_keys("family@example.com")[0]["id"]
+    check("the id to revoke by is the end of the fingerprint, not of the key",
+          stored[0].endswith(fid) and not fkey.endswith(fid), fid)
+    check("revoking by that id works", fstore.revoke_device_key("family@example.com", fid) is True)
+    check("...and the key stops working at once", fstore.device_key_user(fkey) is None)
+
+    section("an OLD key, stored as itself before fingerprints, keeps working and is converted")
+    with fstore._tx() as cur:
+        cur.execute("INSERT INTO device_keys(key, user_id, label, created_at) VALUES(?,?,?,?)",
+                    ("nk_old-screen-key-from-before", "old@example.com", "Old", "2026-10-01T00:00:00Z"))
+    check("*** an unconverted old row still lets its screen in *** (a Postgres boot that skipped "
+          "migrations must not lock every screen out)",
+          fstore.device_key_user("nk_old-screen-key-from-before") == "old@example.com")
+    fstore.touch_device_key("nk_old-screen-key-from-before")
+    check("...and its last seen updates", bool(fstore.list_device_keys("old@example.com")[0]["last_seen"]))
+    n = fstore._hash_device_keys()
+    check("converting turns it into its fingerprint", n == 1, str(n))
+    with fstore._tx() as cur:
+        cur.execute("SELECT key FROM device_keys WHERE user_id='old@example.com'")
+        conv = [r[0] for r in cur.fetchall()]
+    check("...so the old key is no longer in the table",
+          conv == [SQLiteStore._key_fingerprint("nk_old-screen-key-from-before")], str(conv))
+    check("*** and the screen that holds it still gets in, with nothing done on the screen ***",
+          fstore.device_key_user("nk_old-screen-key-from-before") == "old@example.com")
+    check("converting again changes nothing (a boot cut short finishes on the next)",
+          fstore._hash_device_keys() == 0)
+    check("a key that does not look minted is never matched as itself",
+          SQLiteStore._key_forms("sha256:abc") == (SQLiteStore._key_fingerprint("sha256:abc"),))
+
+    section("the conversion runs at boot")
+    bdir = tempfile.mkdtemp(prefix="nimrod_keyboot_")
+    bpath = os.path.join(bdir, "boot.db")
+    b1 = SQLiteStore(bpath)
+    with b1._tx() as cur:
+        cur.execute("INSERT INTO device_keys(key, user_id, label, created_at) VALUES(?,?,?,?)",
+                    ("nk_boot-key", "boot@example.com", "Boot", "2026-10-01T00:00:00Z"))
+        # A claimed pairing row two days old, still holding the working key it handed over.
+        cur.execute("INSERT INTO screen_pairings(code, label, poll_token, created_at, expires_at, claimed_by, "
+                    "claimed_at, device_key) VALUES(?,?,?,?,?,?,?,?)",
+                    ("OLDONE", "Boot", "tok", db._later(-3 * 86400), db._later(-3 * 86400 + 600),
+                     "boot@example.com", db._later(-2 * 86400), "nk_boot-key"))
+    b1._conn.close()
+    b2 = SQLiteStore(bpath)
+    with b2._tx() as cur:
+        cur.execute("SELECT key FROM device_keys")
+        after_boot = [r[0] for r in cur.fetchall()]
+    check("*** a database opened with old keys in it holds only fingerprints afterwards ***",
+          after_boot == [SQLiteStore._key_fingerprint("nk_boot-key")], str(after_boot))
+    check("...and the screen still gets in", b2.device_key_user("nk_boot-key") == "boot@example.com")
+    with b2._tx() as cur:
+        cur.execute("SELECT COUNT(*) FROM screen_pairings WHERE device_key IS NOT NULL")
+        left = cur.fetchone()[0]
+    check("*** a boot also sweeps a day-old claimed pairing row, the other place a working key sat *** "
+          "(the sweep used to run only when somebody asked for a new code)", left == 0, str(left))
+    b2._conn.close()
+    check("what-we-store says only a scrambled form is kept",
+          "scrambled" in {r["table"]: r for r in fstore.describe_storage()["stores"]}["device_keys"]["what"])
+
+    # -----------------------------------------------------------------
+    section("*** device keys over HTTP: a screen's own key, and /api/me's `screen` (?pair=key) ***")
+    # -----------------------------------------------------------------
+    import base64
+    import json
+    import app as appmod  # noqa: E402
+    from fastapi.testclient import TestClient  # noqa: E402
+    from itsdangerous import TimestampSigner  # noqa: E402
+
+    def session_cookie(user):
+        signer = TimestampSigner(os.environ.get("SESSION_SECRET", "dev-only-insecure-change-me"))
+        return signer.sign(base64.b64encode(json.dumps({"user": user}).encode("utf-8"))).decode("utf-8")
+
+    saved_env = os.environ.get("NIMROD_ENV")
+    os.environ["NIMROD_ENV"] = "prod"      # read per request by identity.py: no dev stand-in user
+    try:
+        bare = TestClient(appmod.app)       # the screen, with NO sign-in
+        owner = TestClient(appmod.app)      # the owner's phone, signed in
+        owner.cookies.set("session", session_cookie("google:owner-1"))
+        check("a bare screen is signed out (401), which is what puts ?pair= on the code",
+              bare.get("/api/me").status_code == 401)
+        r = bare.post("/api/screen-pair/request", json={"label": "Bedroom"})
+        req = r.json()
+        check("the bare screen may ask for a code", r.status_code == 200 and req.get("code"), r.text)
+        r = owner.post("/api/screen-pair/claim", json={"code": req["code"]})
+        check("the signed-in owner claims it", r.status_code == 200, r.text)
+        r = bare.post("/api/screen-pair/status", json={"code": req["code"], "poll_token": req["poll_token"]})
+        hk = r.json().get("device_key", "")
+        check("the screen's next poll collects its key", r.json().get("state") == "claimed" and hk.startswith("nk_"))
+        KEYH = {"X-Device-Key": hk}
+        me = bare.get("/api/me", headers=KEYH)
+        check("*** COLD BOOT, KEY AND NO SIGN-IN: the screen is the owner's account ***",
+              me.status_code == 200 and me.json()["user"] == "google:owner-1", me.text)
+        check("*** ...and /api/me says it was let in by its own key (`screen`) ***", me.json().get("screen") is True)
+        check("...and that nobody is signed in on it", me.json().get("signed_in") is False)
+        me2 = owner.get("/api/me")
+        check("the owner's own sign-in, no key: `screen` is false (what ?pair=key pairs on)",
+              me2.status_code == 200 and me2.json().get("screen") is False, me2.text)
+        both = TestClient(appmod.app)
+        both.cookies.set("session", session_cookie("google:owner-1"))
+        me3 = both.get("/api/me", headers=KEYH)
+        check("a screen holding its key AND the old sign-in: the key is what let it in", me3.json().get("screen") is True)
+        lst = owner.get("/api/screens").json()["screens"]
+        check("the owner's account lists the screen, without the key", len(lst) == 1 and hk not in json.dumps(lst), str(lst))
+        check("the owner can turn it off", owner.delete(f"/api/screens/{lst[0]['id']}").status_code == 200)
+        check("*** and the screen's very next request is signed out ***", bare.get("/api/me", headers=KEYH).status_code == 401)
+
+        section("*** a database blip while checking a key is a 503, not a 401 ***")
+        saved_lookup = appmod.store.device_key_user
+
+        def _down(k):
+            raise RuntimeError("database not answering")
+        import identity  # noqa: E402
+        identity.set_device_key_lookup(_down)
+        try:
+            r = bare.get("/api/me", headers={"X-Device-Key": "nk_any-key"})
+            check("*** a screen whose key could not be checked hears 503 (Connecting...), not 401 (signed out) ***",
+                  r.status_code == 503, f"{r.status_code} {r.text}")
+            check("...and is still let in nowhere", "user" not in r.text)
+            check("a request with no key at all is still a plain 401", bare.get("/api/me").status_code == 401)
+            check("the owner's sign-in still works while the key lookup is down",
+                  both.get("/api/me", headers={"X-Device-Key": "nk_any-key"}).status_code == 200)
+        finally:
+            identity.set_device_key_lookup(saved_lookup)
+    finally:
+        if saved_env is None:
+            os.environ.pop("NIMROD_ENV", None)
+        else:
+            os.environ["NIMROD_ENV"] = saved_env
 
     print(f"\n{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)

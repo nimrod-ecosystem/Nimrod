@@ -79,7 +79,12 @@ def set_device_key_touch(fn) -> None:
 
 
 def _match_device_key(provided: str | None) -> str | None:
-    """Which account this device key belongs to, or None.
+    """Which account this device key belongs to, or None. See `_resolve_device_key`."""
+    return _resolve_device_key(provided)[0]
+
+
+def _resolve_device_key(provided: str | None) -> tuple[str | None, bool]:
+    """(the account this device key belongs to or None, whether the lookup itself FAILED).
 
     TWO SOURCES, AND THE ENVIRONMENT ONE IS THE OLDER OF THEM.
 
@@ -95,36 +100,38 @@ def _match_device_key(provided: str | None) -> str | None:
     it needs no query, and it must keep working even if the database is unreachable.
 
     compare_digest for the env keys because we are iterating over a handful of secrets and
-    timing is free to avoid. The table lookup is an indexed primary-key match on a
-    high-entropy secret, where a timing signal would have to leak a hash comparison inside
-    the database - not a realiztic path, and the alternative is loading every key on every
-    request.
+    timing is free to avoid. The table lookup is an indexed primary-key match on the key's
+    fingerprint (db.py `_key_fingerprint`), so there is no secret-dependent comparison to time.
+
+    *** "THE LOOKUP FAILED" IS RETURNED, NOT SWALLOWED (2026-10-09). *** A DATABASE HICCUP MUST
+    NOT LOOK LIKE A REVOKED SCREEN. The old version returned None here and its comment said the
+    request would then "error honestly" - but with no sign-in on the screen, the next stop in prod
+    is a 401, and a 401 is exactly "this screen is no longer trusted": the kiosk takes it as
+    signed out, and a `?pair=` screen puts up a pairing code while any other one falls to the
+    signed-out demo. `current_user` now answers a failed lookup with a 503, which the kiosk reads
+    as "Connecting..." and retries - the truth.
     """
     if not provided:
-        return None
+        return (None, False)
     for secret, user in _device_keys().items():
         if hmac.compare_digest(provided, secret):
-            return user
-    if _key_lookup is not None:
+            return (user, False)
+    if _key_lookup is None:
+        return (None, False)
+    try:
+        user = _key_lookup(provided) or None
+    except Exception:
+        return (None, True)
+    if user and _key_touch is not None:
         try:
-            user = _key_lookup(provided) or None
+            _key_touch(provided)
         except Exception:
-            # A DATABASE HICCUP MUST NOT LOOK LIKE A REVOKED SCREEN. Returning None here
-            # would 401 a bedside kiosk over a blip; falling through leaves it to the
-            # session/dev paths, which will also fail, so the request errors honestly
-            # rather than telling the screen it is no longer trusted.
-            return None
-        if user and _key_touch is not None:
-            try:
-                _key_touch(provided)
-            except Exception:
-                # SEEING THE SCREEN DOES NOT DEPEND ON REMEMBERING THAT WE SAW IT. A failed
-                # touch must not turn a request that just authenticated successfully into a
-                # 401 — the exact same reasoning as the lookup's own except clause above,
-                # applied to a write instead of a read.
-                pass
-        return user
-    return None
+            # SEEING THE SCREEN DOES NOT DEPEND ON REMEMBERING THAT WE SAW IT. A failed
+            # touch must not turn a request that just authenticated successfully into a
+            # 401 - the same reasoning as the lookup's own failure above, applied to a
+            # write instead of a read.
+            pass
+    return (user, False)
 
 
 def _session_user(request: Request) -> str | None:
@@ -185,7 +192,7 @@ def signed_in_here(request: Request, user: str) -> bool:
 
 def current_user(request: Request) -> str:
     # A valid device secret (unattended kiosk) always wins — works in dev + prod.
-    user = _match_device_key(request.headers.get("X-Device-Key"))
+    user, lookup_failed = _resolve_device_key(request.headers.get("X-Device-Key"))
     if user:
         return user
 
@@ -198,6 +205,11 @@ def current_user(request: Request) -> str:
     if not _is_prod():
         override = request.headers.get("X-Dev-User") or request.query_params.get("user")
         return override.strip() if override else DEV_USER
+
+    # A screen's key could not be checked (the database did not answer): say so, rather than
+    # telling the screen it is signed out. See `_resolve_device_key`. Still closed - nothing is served.
+    if lookup_failed:
+        raise HTTPException(status_code=503, detail="could not check this screen's key just now - try again")
 
     # Prod with no key and no session: fail closed.
     raise HTTPException(status_code=401, detail="sign in, or provide a valid device key")

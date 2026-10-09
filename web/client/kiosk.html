@@ -51,14 +51,14 @@
 <script type="module">
 import { createProfilesClient, ensureProfile } from './profile.js';
 import { cachedFetch } from './cache.js';
-import { setDeviceKey, authHeaders } from './auth.js';
+import { setDeviceKey, getDeviceKey, authHeaders } from './auth.js';
 import { mountKiosk } from './kiosk.js';
 import {
   createLocalBackend, createLocalMediaSources, seedStarterScreen,
 } from './local_store.js';
 import { pickFolder, listFolderSources, isFolderPickerSupported } from './folder_source.js';
 import { mountDemoStrip, mountWayOut } from './demo_strip.js';
-import { mountScreenPairing } from './screen_pair.js';
+import { mountScreenPairing, shouldPair, KEY_RECHECK_MS } from './screen_pair.js';
 
 const params = new URLSearchParams(location.search);
 // one-time device-key pairing (unattended-kiosk fallback): launch once with
@@ -77,14 +77,16 @@ async function whoami() {
     const r = await fetch('/api/me', { headers: authHeaders(params.get('user')) });
     if (r.status === 401) return { state: 'anon' };
     if (r.ok) {
-      const u = (await r.json()).user;
+      const j = await r.json();
+      const u = j.user;
       try { localStorage.setItem(LAST_USER, u); } catch { /* private mode */ }
-      return { state: 'in', user: u };
+      // device key: `screen` = let in by this screen's own key, not a person's sign-in (`?pair=key`).
+      return { state: 'in', user: u, screen: j.screen === true };
     }
     return { state: 'error' };
   } catch {
     let u = null; try { u = localStorage.getItem(LAST_USER); } catch { /* noop */ }
-    return u ? { state: 'in', user: u } : { state: 'error' };
+    return u ? { state: 'in', user: u, cached: true } : { state: 'error' };
   }
 }
 
@@ -236,8 +238,27 @@ function offerCat(kiosk) {
   // getting exactly the demo it already gets; this is a second, deliberate entry point, not a
   // replacement for the first one. Reloads (dropping the param) once paired, so the normal
   // signed-in boot path below picks up the freshly stored device key on its own.
-  if (params.get('pair') === '1' && who.state !== 'in') {
+  // *** DEVICE KEY (2026-10-09): WHEN to pair is `shouldPair` in screen_pair.js, pure and tested. *** Two changes
+  // from `who.state !== 'in'`: a screen that HAS a key is not put back to a code by a server error (it waits below,
+  // "Connecting..."), and `?pair=key` - a screen meant to hold its own key - also pairs while it is running on a
+  // person's sign-in, so it has its key before that sign-in runs out.
+  const pairMode = params.get('pair');
+  if (shouldPair({ pair: pairMode, who, hasKey: !!getDeviceKey() })) {
     boot.remove();
+    // A screen that already holds a key and was told "signed out" may only have caught a deploy changing over or a
+    // blip: look again now and then, and go back to the dashboard as soon as the key works. A revoked key keeps
+    // the code up, which is right. (No key stored: nothing could come back, so nothing to watch.)
+    if (getDeviceKey()) {
+      const recheck = setInterval(async () => {
+        const again = await whoami();
+        // `cached`: no answer from the server at all (offline) - not a reason to leave the code.
+        if (again.state === 'in' && !again.cached
+            && !shouldPair({ pair: pairMode, who: again, hasKey: !!getDeviceKey() })) {
+          clearInterval(recheck);
+          location.reload();
+        }
+      }, KEY_RECHECK_MS);
+    }
     mountScreenPairing(root, {
       label: 'This screen',
       // (2026-10-05, screen_lock.js: the Pi launcher's `?lockHelper=` is kept through the reload, so a screen

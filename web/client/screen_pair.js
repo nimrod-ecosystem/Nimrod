@@ -152,6 +152,44 @@ export function pairMessage(state, { code = '', label = '', error = '',
 }
 
 // ---------------------------------------------------------------------------------------
+// *** WHEN kiosk.html SHOWS THE PAIRING SCREEN (device key, 2026-10-09). *** PURE, so every
+// case below is asserted in dev/screen_pair_test.html rather than living in an inline script.
+//
+//   pair    the page's `?pair=` value: '1' or 'key' (anything else: never pair)
+//   who     kiosk.html's whoami(): { state: 'in'|'anon'|'error', screen?: boolean }
+//           (`screen` is /api/me's: this request was let in by the screen's own device key)
+//   hasKey  a device key is stored in this browser (auth.js getDeviceKey)
+//
+// `?pair=1` (unchanged): set up a screen nobody is signed in on. Shows the code only when the
+// server answered "signed out" (401) - or could not be reached at all and the screen has never had
+// a key, so a brand-new screen still shows "check the wifi" from the pairing card.
+//
+// `?pair=key`: THIS SCREEN HOLDS ITS OWN KEY. The same, plus: signed in by a PERSON's sign-in
+// (a cookie) rather than by its own key, it shows the code too. Why it exists: a screen set up by
+// signing in runs on that person's sign-in, which runs out (Google's session cookie has a date on
+// it), and when it does a `?pair=1` screen silently turns into a code nobody in the room can
+// answer. `?pair=key` asks for its key while the sign-in still works, while somebody is there to
+// approve it. Once it has its key, every later start goes straight to the dashboard.
+//
+// WHAT NEITHER DOES: put the code up on a screen that HAS a key over a server error. A 5xx, a
+// database blip (identity.py answers that with a 503 now) or an offline start ('in' from the cached
+// last user, with no `screen` field) is "Connecting...", not "set me up again".
+// ---------------------------------------------------------------------------------------
+export const PAIR_OWN_KEY = 'key';
+// While the pairing card is up on a screen that HAS a key, ask again this often: a 401 that was
+// only a deploy changing over (or a blip) must not leave the code up after the server is back.
+export const KEY_RECHECK_MS = 30000;
+
+export function shouldPair({ pair = null, who = null, hasKey = false } = {}) {
+  if (pair !== '1' && pair !== PAIR_OWN_KEY) return false;
+  const state = who && who.state;
+  if (state === 'anon') return true;
+  if (state === 'error') return !hasKey;
+  if (state === 'in') return pair === PAIR_OWN_KEY && who.screen === false;
+  return false;
+}
+
+// ---------------------------------------------------------------------------------------
 // mountScreenPairing — the DOM half. Returns when the screen has a key.
 // ---------------------------------------------------------------------------------------
 export function mountScreenPairing(root, {

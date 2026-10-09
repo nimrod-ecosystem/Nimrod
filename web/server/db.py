@@ -1418,7 +1418,8 @@ class _Store:
                             "until when.", True,
                             "when you let somebody drive a screen"),
         "device_keys":     ("A credential for each unattended screen you set up, and the name "
-                            "you gave it.", True,
+                            "you gave it. Only a scrambled form of the credential is kept, which "
+                            "cannot be turned back into a working one.", True,
                             "when you adopt an unattended screen"),
         "links":           ("Who you are connected to - one entry for each pair of people. "
                             "It is a relationship, not a permission: it lasts until one of "
@@ -1553,6 +1554,47 @@ class _Store:
             return ("expired", None)
         return ("pending", None)
 
+    # *** DEVICE KEYS ARE KEPT AS A FINGERPRINT, NOT AS THE KEY (2026-10-09). ***
+    # Until now `device_keys.key` held the working secret itself, so anybody who saw a copy of the
+    # database - a backup, a support dump, a leaked export - held a working, NEVER-EXPIRING login to
+    # every adopted screen's account. Invite links were already stored scrambled (claims.hash_token);
+    # these were not. A device key is 32 random bytes, so a plain SHA-256 is enough (there is nothing
+    # to guess, so a slow password hash would buy nothing and cost a hash per request).
+    #
+    # The stored form is `sha256:<hex>`. A minted key always starts `nk_`, so the two can never be
+    # confused: `_hash_device_keys` turns every old `nk_` row into its fingerprint at boot, and until
+    # it has (a Postgres boot where the database was not answering skips migrations - see
+    # PostgresStore.__init__), `device_key_user` still finds an old row by the key itself. That
+    # fallback is ONLY for a presented key that looks like a minted one: presenting a stored
+    # fingerprint as if it were a key must find nothing, or hashing would protect nothing.
+    _KEY_HASH_PREFIX = "sha256:"
+
+    @classmethod
+    def _key_fingerprint(cls, key: str) -> str:
+        return cls._KEY_HASH_PREFIX + claim_rules.hash_token(key)
+
+    @classmethod
+    def _key_forms(cls, key: str) -> tuple[str, ...]:
+        """The stored forms a presented key may match: its fingerprint, and - for a minted-looking
+        key only - itself, for a row written before fingerprints that has not been converted yet."""
+        if not key:
+            return ()
+        fp = cls._key_fingerprint(key)
+        return (fp, key) if key.startswith("nk_") else (fp,)
+
+    def _hash_device_keys(self) -> int:
+        """Turn every device key still stored as itself into its fingerprint. Idempotent: a row that
+        is already a fingerprint is left alone, so a boot that is cut short finishes on the next."""
+        n = 0
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT key FROM device_keys"))
+            old = [r[0] for r in cur.fetchall() if not str(r[0]).startswith(self._KEY_HASH_PREFIX)]
+            for k in old:
+                cur.execute(self._q("UPDATE device_keys SET key=? WHERE key=?"),
+                            (self._key_fingerprint(k), k))
+                n += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
+        return n
+
     def claim_screen_pairing(self, code: str, account_id: str) -> tuple[str, dict | None]:
         """A signed-in person adopts the screen. Mints the key HERE, not at request time -
         an unclaimed row must never contain a usable credential."""
@@ -1569,9 +1611,11 @@ class _Store:
                 return ("expired", None)
             key = "nk_" + secrets.token_urlsafe(32)
             ts = _now()
+            # The account keeps only the fingerprint. The working key goes to the screen once, through
+            # the pairing row below (gated by the poll token, swept within a day).
             cur.execute(self._q(
                 "INSERT INTO device_keys(key, user_id, label, created_at) VALUES(?,?,?,?)"),
-                (key, account_id, r[0], ts))
+                (self._key_fingerprint(key), account_id, r[0], ts))
             cur.execute(self._q(
                 "UPDATE screen_pairings SET claimed_by=?, claimed_at=?, device_key=? "
                 "WHERE code=? AND claimed_by IS NULL"), (account_id, ts, key, code))
@@ -1584,9 +1628,12 @@ class _Store:
         if not key:
             return None
         with self._tx() as cur:
-            cur.execute(self._q("SELECT user_id FROM device_keys WHERE key=?"), (key,))
-            r = cur.fetchone()
-        return r[0] if r else None
+            for form in self._key_forms(key):
+                cur.execute(self._q("SELECT user_id FROM device_keys WHERE key=?"), (form,))
+                r = cur.fetchone()
+                if r:
+                    return r[0]
+        return None
 
     def list_device_keys(self, user_id: str) -> list[dict]:
         """What screens this account has adopted. NEVER returns the secret - a list that
@@ -1596,7 +1643,8 @@ class _Store:
                 "SELECT key, label, created_at, last_seen FROM device_keys WHERE user_id=? "
                 "ORDER BY created_at"), (user_id,))
             rows = cur.fetchall()
-        # An id a person can revoke by, derived from the secret rather than being it.
+        # An id a person can revoke by: the end of what is STORED, which is the fingerprint (an
+        # unconverted old row's own key until `_hash_device_keys` has run; revoke matches the same).
         return [{"id": r[0][-8:], "label": r[1], "created_at": r[2], "last_seen": r[3]}
                 for r in rows]
 
@@ -1622,9 +1670,14 @@ class _Store:
 
     def touch_device_key(self, key: str) -> None:
         """Last seen, so a list of screens can say which one has gone quiet."""
+        if not key:
+            return
         with self._tx() as cur:
-            cur.execute(self._q("UPDATE device_keys SET last_seen=? WHERE key=?"),
-                        (_now(), key))
+            ts = _now()
+            for form in self._key_forms(key):     # the fingerprint first; the old form only if that missed
+                cur.execute(self._q("UPDATE device_keys SET last_seen=? WHERE key=?"), (ts, form))
+                if cur.rowcount and cur.rowcount > 0:
+                    break
 
     def sweep_screen_pairings(self) -> int:
         """Unclaimed codes are worthless but they are rows, and /screen-pair/request is
@@ -2182,6 +2235,8 @@ class SQLiteStore(_Store):
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._migrate()
         self._migrate_old_claims()
+        self._hash_device_keys()
+        self.sweep_screen_pairings()     # device key: see PostgresStore.__init__ for why at boot
 
     @contextlib.contextmanager
     def _tx(self):
@@ -2564,6 +2619,18 @@ class PostgresStore(_Store):
             # Each old claim is carried over idempotently and the table is dropped only at the end, so
             # a failure here leaves person_claims in place for the next boot to finish.
             log.error("Carrying old claims into the home model did not finish (%s) -- "
+                      "the next restart tries again", err)
+        try:
+            self._hash_device_keys()
+            # *** AND THE OTHER COPY. *** A claimed pairing row holds the working key until the screen has
+            # collected it, and is swept a day later - but the sweep only ran when somebody asked for a NEW
+            # code, so on a quiet install the last screen's working key sat in screen_pairings indefinitely.
+            # Sweeping at boot too bounds it by the next deploy or restart.
+            self.sweep_screen_pairings()
+        except Exception as err:
+            # Not fatal: an unconverted key is still found by `device_key_user` (see _key_forms), so every
+            # screen keeps working; the next boot converts it.
+            log.error("Storing device keys as fingerprints did not finish (%s) -- "
                       "the next restart tries again", err)
 
     def _table_names(self) -> list[str]:
