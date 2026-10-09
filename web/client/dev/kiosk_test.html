@@ -471,8 +471,12 @@ const toTab = (m, id) => {
       // (backup source, 2026-10-08, DELIBERATELY: "Backup folder for this screen" on the This screen tab, after "Your own
       // folders" (media_sources.js argues it; Mike: "backup folder options for everything"). One more of the old rows: 40.
       // The panel's lap is unchanged: the panel's own "If this can't be reached, use" is at "Everything" only.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 40) ***',
-        lapStops.length === 14 && oldStops.length === 40 && oldStops.some((i) => i.id === 'set:speakerMusic')
+      // (panel ring, 2026-10-09, DELIBERATELY: "Show which panel is selected" on the Display tab, beside "Space between
+      // panels" (panel_ring.js argues it; Mike: "That should be an option or maybe the selection turns off after a little
+      // bit"). One more of the old rows: 41. The panel's lap is unchanged. dev/screen_controls_test.html walks its choices.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 41) ***',
+        lapStops.length === 14 && oldStops.length === 41 && oldStops.some((i) => i.id === 'set:panelRing') /* panel ring */
+        && oldStops.some((i) => i.id === 'set:speakerMusic')
         && oldStops.some((i) => i.id === 'set:backupSource') /* backup source */ && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
