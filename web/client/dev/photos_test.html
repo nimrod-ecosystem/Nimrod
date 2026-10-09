@@ -690,7 +690,8 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     const blobs = {};
     const killFiles = (sid) => { for (const u of blobs[sid] || []) URL.revokeObjectURL(u); blobs[sid] = []; };
     const streamUrls = [];
-    function rigD({ sources, mode, seed = {}, personId = 'p1', instanceId = `ph-deg-${RUN}`, user = `${USER}-deg-${RUN}` }) {
+    function rigD({ sources, mode, seed = {}, personId = 'p1', instanceId = `ph-deg-${RUN}`, user = `${USER}-deg-${RUN}`,
+      extra = {} }) {   // backup source: `extra` adds to the panel's ctx (the screen's backup row)
       const host = document.createElement('div');
       host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
       document.body.append(host);
@@ -729,6 +730,7 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
         setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
         clearTimer: (t) => { if (t) t.live = false; },
         listingWaitMs: WAIT, sourceRecheckMs: RECHECK,
+        ...extra,
       });
       inst.init();
       const fire = (ms) => { const t = timers.filter((x) => x.live && x.ms === ms).pop(); if (t) { t.live = false; t.fn(); } return !!t; };
@@ -854,6 +856,67 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       check('*** ...but never on somebody else\'s screen: another person\'s panel gets none of them ***',
         !nobody.probe().keptMode && !nobody.img(), JSON.stringify(nobody.probe()));
       nobody.done();
+    }
+
+    // =========================== backup source (2026-10-08) ===========================
+    // Mike: "We should make backup folder options for everything, so people could always have a local fallback."
+    section('*** backup source: "If this can\'t be reached, use", and the screen\'s backup folder ***');
+    {
+      const SD = { id: 'sd', label: 'SD card', kind: 'folder' };
+      // 1. The SCREEN's backup folder, nothing set on the panel: main fails -> the backup, saying so.
+      const mode = { mine: 'down' };
+      let screen = 'sd';
+      const r = rigD({ sources: [S.mine, S.family, SD], mode, seed: { sourceId: 'mine' }, instanceId: `ph-bk-${RUN}`,
+        extra: { screenBackup: () => screen } });
+      check('*** main fails: the SCREEN\'s backup folder plays (not the automatic stand-in "Family") ***',
+        await until(() => /SD card/.test(r.label())), `${r.label()} / ${r.status()}`);
+      check('...with a quiet chip: "Showing the backup: “SD card” — “Her albums” can\'t be reached."',
+        /Showing the backup: “SD card” — “Her albums” can’t be reached/.test(r.status()) && r.chip(), r.status());
+      check('...Family was never asked', !r.asked.some((a) => a.startsWith('family|')), r.asked.join(' '));
+      check('...nothing saved', savedSource(r).length === 0, JSON.stringify(r.sets));
+      const row = r.inst.impl.settingsChoices().backupSource;
+      check('the panel\'s row says what is in force and that the backup is showing',
+        /As This screen says \(“SD card”\)/.test(row.options[0].label) && /Showing the backup now: “SD card”/.test(row.status),
+        JSON.stringify(row));
+      check('...offers the SD card (on this computer) and never the main source itself',
+        row.options.some((o) => o.value === 'sd' && /on this computer/.test(o.label)) && !row.options.some((o) => o.value === 'mine'));
+      // 2. Main comes back: back to it.
+      r.fire(RECHECK); await sleep(30);
+      check('still down at the recheck: the backup stays', /SD card/.test(r.label()) && r.live(RECHECK) === 1);
+      mode.mine = 'up';
+      r.fire(RECHECK);
+      check('*** main back: the main source is shown again, the chip goes ***',
+        await until(() => /Her albums —/.test(r.label()) && !r.status()), `${r.label()} / ${r.status()}`);
+      check('...no more rechecks, nothing saved', r.live(RECHECK) === 0 && savedSource(r).length === 0);
+      r.done();
+      // 3. The PANEL's own choice beats the screen's.
+      const p = rigD({ sources: [S.mine, S.family, SD], mode: { mine: 'down' }, seed: { sourceId: 'mine', backupSource: 'family' },
+        instanceId: `ph-bk2-${RUN}`, extra: { screenBackup: () => 'sd' } });
+      check('*** the panel\'s own backup ("Family") beats the screen\'s ("SD card") ***',
+        await until(() => /Family/.test(p.label())) && /Showing the backup: “Family”/.test(p.status()), `${p.label()} / ${p.status()}`);
+      p.done();
+      // 4. "Nothing": no source stands in (the last pictures may; there are none on this panel).
+      const n = rigD({ sources: [S.mine, S.family, SD], mode: { mine: 'down' }, seed: { sourceId: 'mine', backupSource: 'none' },
+        instanceId: `ph-bk3-${RUN}` });
+      await until(() => /unreachable/i.test(n.status()));
+      check('*** "Nothing": no other source is asked, and the panel says what is wrong ***',
+        /unreachable/i.test(n.status()) && !n.asked.some((a) => !a.startsWith('mine|')), `${n.status()} / ${n.asked.join(' ')}`);
+      n.done();
+      // 5. NO BACKUP CHOSEN ANYWHERE: today's behaviour - the automatic stand-in, with its old words.
+      const t = rigD({ sources: [S.mine, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: `ph-bk4-${RUN}`,
+        extra: { screenBackup: () => '' } });
+      check('*** no backup chosen anywhere: the stand-in as before, in its old words ***',
+        await until(() => /Family/.test(t.label())) && /Showing “Family” — “Her albums”/.test(t.status()) && !/backup/.test(t.status()),
+        `${t.label()} / ${t.status()}`);
+      t.done();
+      // 6. Changing the backup while it shows switches to the new one.
+      screen = 'sd';
+      const c = rigD({ sources: [S.mine, S.family, SD], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: `ph-bk5-${RUN}`,
+        extra: { screenBackup: () => screen } });
+      await until(() => /SD card/.test(c.label()));
+      c.setState({ backupSource: 'family' });
+      check('a backup changed while one shows: the new one plays', await until(() => /Family/.test(c.label())), c.label());
+      c.done();
     }
 
     // =========================== A SOURCE THAT DIES MID-SLIDESHOW ===========================

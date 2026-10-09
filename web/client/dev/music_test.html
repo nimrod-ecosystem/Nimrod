@@ -304,6 +304,84 @@ const FAVS = normalizeFavourites([
     }
 
     // ============================================================================================
+    // backup source (2026-10-08). Mike: "We should make backup folder options for everything, so people could always
+    // have a local fallback." A music folder that can't be reached plays from the backup; back to the main one at the
+    // next song once it answers; with no backup chosen, exactly what it did before.
+    section('backup source: a music folder that can\'t be reached plays from the backup');
+    const BK = {
+      BS: [{ id: 's1', label: 'Family music', kind: 'agent', base_url: 'http://192.168.1.9:8770' },
+        { id: 'sd', label: 'SD card', kind: 'folder' }, { id: 'nd', label: 'Next door', kind: 'agent', person_id: 'p2' }],
+      down: new Set(['s1']),
+      asked: [],
+    };
+    BK.resolve = async (s, album) => {
+      BK.asked.push(`${s.id}|${album}`);
+      if (BK.down.has(s.id)) throw new Error(`${s.id} /list -> 502`);
+      const names = s.id !== 'sd' ? [`${album}/x.mp3`]
+        : ({ Jazz: ['Jazz/b.mp3', 'Jazz/a.mp3'], Hymns: ['Hymns/evening.mp3', 'Hymns/morning.mp3'], '': ['top1.mp3', 'top2.mp3'] })[album];
+      if (!names) { const e = new Error('no album'); e.code = 'album'; throw e; }
+      return { items: names.map((p) => ({ path: p, url: `u:${s.id}:${p}` })) };
+    };
+    {
+      const tm = [];
+      const setTimer = (fn, ms) => { const t = { fn, ms, live: true }; tm.push(t); return t; };
+      const clearTimer = (t) => { if (t) t.live = false; };
+      const fire = async (ms) => { const t = tm.filter((x) => x.live && x.ms === ms).pop(); if (t) { t.live = false; t.fn(); } for (let i = 0; i < 5; i++) await tick(); };
+      let choice = 'sd';
+      const told = [];
+      const log = [];
+      const m = createLocalMusic({ sources: { list: async () => BK.BS }, resolve: BK.resolve, resolveItem, makeAudio: fakeAudioFactory(log),
+        order: 'inorder', backup: () => choice, personId: () => 'p1', onBackup: (b) => told.push(b), setTimer, clearTimer,
+        recheckMs: 777, listingWaitMs: 0 });
+      const r = await m.playFolder({ sourceId: 's1', album: 'Jazz' });
+      check('*** a folder favourite whose source is down plays the SAME folder on the backup ***',
+        r.ok && r.backup === 'SD card' && log.last.src === 'u:sd:Jazz/b.mp3' && log.last.paused === false, J({ r, src: log.last.src }));
+      check('...it says it is the backup, and why (for the panel\'s quiet line)',
+        m.state().backup?.label === 'SD card' && m.state().backup.chosenLabel === 'Family music' && m.state().backup.why === 'unreachable'
+          && told.length === 1 && told[0].label === 'SD card', J({ b: m.state().backup, told }));
+      check('...and it asks after the main source every SOURCE_RECHECK_MS', tm.some((t) => t.live && t.ms === 777));
+      await fire(777);
+      check('still down: the backup plays on, asked again later', m.state().backup && !m.state().backup.mainBack && tm.some((t) => t.live && t.ms === 777));
+      BK.down.delete('s1');
+      await fire(777);
+      check('*** the main source answers: NOT cut off mid-song - the backup song keeps playing ***',
+        m.state().backup?.mainBack === true && log.last.src === 'u:sd:Jazz/b.mp3' && log.last.paused === false, J(m.state()));
+      log.last.fire('ended');
+      for (let i = 0; i < 8; i++) await tick();
+      check('*** at the end of that song: back to the main source, and the backup line goes ***',
+        log.last.src === 'u:s1:Jazz/x.mp3' && m.state().backup === null && m.state().now?.sourceId === 's1' && told.at(-1) === null,
+        J({ src: log.last.src, st: m.state() }));
+      check('...nothing left asking', !tm.some((t) => t.live && t.ms === 777));
+      m.stop();
+      // A FILE favourite: every one of its files fails to play (an agent that stopped serving) -> the same file on the backup.
+      BK.down.add('s1');
+      await m.playFile({ sourceId: 's1', path: 'Hymns/morning.mp3' });
+      log.last.fire('error');
+      for (let i = 0; i < 8; i++) await tick();
+      check('*** a file that won\'t play from the main source: the file of the same name on the backup ***',
+        log.last.src === 'u:sd:Hymns/morning.mp3' && m.state().backup?.why === 'unplayable', J({ src: log.last.src, b: m.state().backup }));
+      m.stop();
+      // Not on the backup by name, and its source not connected here: the backup's own top folder.
+      const g = await m.playFile({ sourceId: 'gone', path: 'Songs/missing.mp3' });
+      check('a source not connected here, a file the backup does not have: the backup\'s own music, saying so',
+        g.ok && log.last.src === 'u:sd:top1.mp3' && m.state().backup?.why === 'not-connected', J({ g, src: log.last.src }));
+      m.stop();
+      // No backup chosen: what it did before.
+      choice = 'none';
+      BK.asked.length = 0;
+      const n = await m.playFolder({ sourceId: 's1', album: 'Jazz' });
+      check('*** no backup chosen: "could not be reached", as before, and nothing else is asked ***',
+        !n.ok && n.reason === 'unreachable' && BK.asked.every((a) => a.startsWith('s1|')) && m.state().backup === null, J({ n, asked: BK.asked }));
+      // Another resident's source is never the backup, whatever the row says.
+      choice = 'nd';
+      BK.asked.length = 0;
+      const x = await m.playFolder({ sourceId: 's1', album: 'Jazz' });
+      check('*** a backup that is another resident\'s is never played ***', !x.ok && !BK.asked.some((a) => a.startsWith('nd|')), J({ x, asked: BK.asked }));
+      m.destroy();
+      check('destroy leaves nothing asking', !tm.some((t) => t.live));
+    }
+
+    // ============================================================================================
     section('Spotify: PKCE in the browser, the household\'s own client ID, tokens on this device');
     const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m }; };
     function fakeSpotifyFetch(script = {}) {
@@ -1180,6 +1258,33 @@ const FAVS = normalizeFavourites([
       await settle();
       check('Spotify off: the panel does not ask for a Client ID', keys.log.length === 0);
       m.destroy();
+    }
+
+    // backup source (2026-10-08): the panel says so, quietly, and its row offers the folders here.
+    {
+      section('backup source: the Music panel\'s quiet line and its row');
+      BK.down.add('s1');
+      const h = document.createElement('div');
+      h.style.cssText = 'position:absolute;left:-9999px;width:360px;height:420px';
+      document.body.append(h);
+      const st = fakeState({ favourites: [{ id: 'fjz', name: 'Jazz', source: { kind: 'folder', sourceId: 's1', album: 'Jazz' } }] });
+      const m = mountModule('music', ctxFor(h, 'mubk', { personId: null, makePersonState: null, state: st,
+        sources: { list: async () => BK.BS }, resolveListing: BK.resolve, screenBackup: () => 'sd' }));
+      m.init();
+      await tick();
+      [...h.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Jazz')?.click();
+      for (let i = 0; i < 10; i++) await tick();
+      const line = h.querySelector('[data-backup]')?.textContent || '';
+      check('*** the screen\'s backup folder plays, and the panel says so quietly ***',
+        line === 'Playing the backup: “SD card” — “Family music” can’t be reached.', `${line} / ${h.textContent.slice(0, 200)}`);
+      const row = fieldsFor(getManifest('music'), m).find((f) => f.key === 'backupSource');
+      check('...the row "If this can\'t be reached, use" offers the SD card, and says the backup is showing',
+        !!row && row.options.some((o) => o.value === 'sd') && /Showing the backup now: “SD card”/.test(row.status || ''), J(row));
+      check('...the row is at "Everything" only (the screen\'s row is the one most people need)', row?.level === 'advanced');
+      h.querySelector('[data-act="stop"]')?.click();
+      await tick();
+      check('stopped: the line goes', !h.querySelector('[data-backup]'));
+      m.destroy(); h.remove();
     }
 
     document.getElementById('summary').textContent =

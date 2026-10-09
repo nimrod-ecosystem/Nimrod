@@ -290,6 +290,37 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
       check('...a next brings no dead clip back', !r3.src());
       r3.done();
     }
+
+    // *** backup source (2026-10-08): "If this can't be reached, use", and the screen's backup folder. ***
+    {
+      const SD = { id: 'sd', label: 'SD card', kind: 'folder' };
+      const bm = { mine: 'down' };
+      const b = rigV({ sources: [S.mine, S.family, SD], mode: bm, seed: { sourceId: 'mine', subjectName: 'Mum' },
+        extra: { screenBackup: () => 'sd' } });
+      check('*** personal, main fails: the SCREEN\'s backup folder plays (not the automatic stand-in) ***',
+        await until(() => /^clip\/sd-/.test(b.src())) && !b.asked.includes('family'), `${b.src()} / ${b.asked.join(' ')}`);
+      check('...the caption says it is the backup, not "From Mum"',
+        /Showing the backup: “SD card” — “Her messages” can’t be reached/.test(b.caption()) && !/Mum/.test(b.caption()), b.caption());
+      const row = b.inst.impl.settingsChoices().backupSource;
+      check('...the panel\'s row says it is showing', /Showing the backup now: “SD card”/.test(row.status) && !row.options.some((o) => o.value === 'mine'),
+        JSON.stringify(row));
+      check('...nothing saved', saved(b).length === 0, JSON.stringify(b.sets));
+      bm.mine = 'up';
+      b.fire(RECHECK);
+      check('*** personal, main back: its clips play again, captioned as before ***',
+        await until(() => /^clip\/mine-/.test(b.src()) && /From Mum/.test(b.caption())), `${b.src()} / ${b.caption()}`);
+      b.done();
+      const nb = rigV({ sources: [S.mine, S.family, SD], mode: { mine: 'down' }, seed: { sourceId: 'mine', backupSource: 'none' },
+        extra: { screenBackup: () => 'sd' } });
+      await until(() => /unreachable/i.test(nb.status()));
+      check('*** personal, the panel says "Nothing": no backup and no stand-in, it says what is wrong ***',
+        !nb.src() && nb.asked.every((a) => a === 'mine') && /unreachable/i.test(nb.status()), `${nb.src()} / ${nb.asked.join(' ')}`);
+      nb.done();
+      const td = rigV({ sources: [S.mine, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, extra: { screenBackup: () => '' } });
+      check('*** personal, no backup chosen anywhere: the stand-in as before, in its old words ***',
+        await until(() => /^clip\/family-/.test(td.src())) && /Showing “Family”/.test(td.caption()) && !/backup/.test(td.caption()), td.caption());
+      td.done();
+    }
   }
 
   // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***

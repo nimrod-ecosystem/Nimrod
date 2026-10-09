@@ -86,7 +86,9 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
       console.warn('media-sources: registry unavailable, using device-local folders only', err);
     }
     const local = await listFolderSources();
-    return [...remote, ...local];
+    const all = [...remote, ...local];
+    noteListed(personId, all);   // backup source: what the screen's "Backup folder" row offers
+    return all;
   }
   // Adding from a person's screen files the source under that person by default, which is
   // what somebody standing at a bedside means. Pass `person_id: null` explicitly to make one
@@ -321,8 +323,10 @@ export function mayShowSource(source, personId = null) {
  * The words for a panel showing something other than what it was set to. Plain text: escape it
  * before it goes into markup. `shownLabel` null means "the last pictures" (photos keeps those).
  */
-export function degradedLine({ shownLabel = null, chosenLabel = null, err = null } = {}) {
-  const shown = shownLabel ? `“${shownLabel}”` : 'the last pictures';
+export function degradedLine({ shownLabel = null, chosenLabel = null, err = null, backup = false, verb = 'Showing' } = {}) {
+  // backup source (2026-10-08): a backup somebody CHOSE says it is the backup ("Showing the backup: ..."); the
+  // automatic stand-in keeps its old words, so a screen nobody has set up reads exactly as it did.
+  const shown = shownLabel ? `${backup ? 'the backup: ' : ''}“${shownLabel}”` : 'the last pictures';
   const chosen = chosenLabel ? `“${chosenLabel}”` : 'the chosen source';
   // photo source (2026-10-08, the bench's Pictures screen): 'gone' -- the chosen id is not in this screen's list at all
   // -- used to say "can't be reached", which sent a helper to check the media agent and the network. The usual cause
@@ -330,9 +334,11 @@ export function degradedLine({ shownLabel = null, chosenLabel = null, err = null
   // another person. Nothing there is unreachable; it is not connected here, and the words now say that.
   const why = err && err.code === 'permission' ? 'needs permission again'
     : err && err.code === 'album' ? 'doesn’t have that album'
-      : err && err.code === 'gone' ? 'isn’t connected here'
-        : 'can’t be reached';
-  return `Showing ${shown} — ${chosen} ${why}.`;
+      : err && (err.code === 'gone' || err.code === 'not-connected') ? 'isn’t connected here'   // backup source: music's word too
+        : err && err.code === 'unplayable' ? 'wouldn’t play'                                   // backup source: music
+          : 'can’t be reached';
+  // backup source: `verb` - music is "Playing", a picture "Showing".
+  return `${verb === 'Playing' ? 'Playing' : 'Showing'} ${shown} — ${chosen} ${why}.`;
 }
 
 function codedError(code, message) { const e = new Error(message); e.code = code; return e; }
@@ -374,8 +380,11 @@ export function listingWithin(resolve, source, album, { accept = (l) => (l && l.
  * any source could be shown. NOTHING HERE SAVES ANYTHING: a stand-in is never written back as the
  * chosen source -- the caller shows it and goes back when the chosen one returns.
  */
+// backup source (2026-10-08): `backup` is the panel's "If this can't be reached, use" in force (`backupChoice`):
+// BACKUP_ANY (the default, and what every caller got before) tries the stand-ins above; BACKUP_NONE tries none; a
+// source id tries that one source only. `byChoice` in the result is true when the source shown is a chosen backup.
 export async function listOrFallback({ sources, chosen = null, chosenId = null, album = '', personId = null,
-  resolve, accept, waitMs = LISTING_WAIT_MS, setTimer, clearTimer, skip = null } = {}) {
+  resolve, accept, waitMs = LISTING_WAIT_MS, setTimer, clearTimer, skip = null, backup = BACKUP_ANY } = {}) {
   const opts = { accept, waitMs, ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}) };
   const cid = (chosen && chosen.id) || chosenId || null;
   // `skip`: sources whose FILES stopped loading mid-slideshow (DOWN_AFTER_FAILURES). Their listing may
@@ -391,14 +400,192 @@ export async function listOrFallback({ sources, chosen = null, chosenId = null, 
   } else {
     failure = codedError('gone', 'the chosen source is not in the list');
   }
-  for (const s of fallbackSources(sources, { chosenId: cid, personId })) {
+  const byChoice = isChosenBackup(backup);
+  for (const s of backupSources(sources, { choice: backup, chosenId: cid, personId })) {
     if (skipped(s)) continue;
     for (const a of (album ? [album, ''] : [''])) {
       const r = await listingWithin(resolve, s, a, opts);
-      if (r.ok && r.items.length) return { source: s, listing: r.listing, items: r.items, album: a, fellBack: true, failure };
+      if (r.ok && r.items.length) return { source: s, listing: r.listing, items: r.items, album: a, fellBack: true, failure, byChoice };
     }
   }
-  return { source: null, listing: null, items: [], album, fellBack: false, failure };
+  return { source: null, listing: null, items: [], album, fellBack: false, failure, byChoice: false };
+}
+
+// ------------------------------------------------------------------------- backup source (2026-10-08)
+// Mike, 2026-10-08, on the bench's Photos panel showing the bench's own folder while its chosen source was not there:
+// *"I think we wanted it like this as a backup folder. We should make backup folder options for everything, so people
+// could always have a local fallback."* So the stand-in is now a CHOICE, the same one on every panel that plays from a
+// source (Photos, Personal videos, Music's folder favourites, Wallpaper), plus one for the whole screen:
+//
+//   a panel's row "If this can't be reached, use" (key BACKUP_KEY, level advanced)
+//       ''            THE DEFAULT: as This screen says (the screen's row below)
+//       BACKUP_ANY    any other source this screen may show: the person's own, then the account's (`fallbackSources`)
+//       BACKUP_NONE   nothing
+//       <source id>   that source, and only that one
+//   the screen's row "Backup folder for this screen" (the same key, on the screen's own settings, This screen tab)
+//       ''            THE DEFAULT: each panel's own default (`panelDefault`, below)
+//       the rest      as above, for every panel on the screen that has not chosen its own
+//
+// THE DEFAULTS, ARGUED. Nothing changes for a screen nobody sets up: a panel's own default is what it did before -
+// Photos and Personal videos BACKUP_ANY (their stand-in since 2026-10-02, §3e), Music and Wallpaper BACKUP_NONE (music
+// said "not connected"; a wallpaper falls to its built-in moving colours, and its own header argues that an unrelated
+// photo folder appearing in it would be the bigger surprise). AGAINST "the first local folder on this screen" as the
+// default everywhere (what Mike's words suggest): it would start a folder of somebody's photographs playing as a
+// wallpaper, and a song nobody asked for in place of "the Beatles", on screens where nobody chose that. One row on the
+// screen, set once, gives every panel that local fallback.
+// A CHOSEN BACKUP REPLACES THE AUTOMATIC STAND-IN rather than coming before it: somebody who names one folder has said
+// which; trying every other source after it would put back what they chose instead of. AGAINST: more tries, fewer
+// blank panels - BACKUP_ANY is one press away for anybody who wants that. Photos still keeps "the last pictures seen"
+// after any of these: those are the panel's own pictures, not another source.
+// NOTHING IS SAVED BY FALLING BACK, and the main source is asked again every SOURCE_RECHECK_MS and taken back when it
+// answers - the same rule the stand-in always had.
+export const BACKUP_KEY = 'backupSource';
+export const BACKUP_FOLLOW = '';
+export const BACKUP_ANY = 'any';
+export const BACKUP_NONE = 'none';
+const isChosenBackup = (c) => !!c && c !== BACKUP_ANY && c !== BACKUP_NONE;
+
+/** The backup in force: the panel's own choice, else the screen's, else the panel's default. PURE. */
+export function backupChoice({ panel = BACKUP_FOLLOW, screen = BACKUP_FOLLOW, panelDefault = BACKUP_NONE } = {}) {
+  const p = String(panel == null ? '' : panel);
+  if (p) return p;
+  const s = String(screen == null ? '' : screen);
+  if (s) return s;
+  return panelDefault === BACKUP_ANY ? BACKUP_ANY : BACKUP_NONE;
+}
+
+/**
+ * The sources to try, in order, when the main one fails. PURE. A chosen source is tried only when this screen may
+ * show it (`mayShowSource`: never another resident's, whatever the row says) and it is not the main source itself.
+ */
+export function backupSources(sources, { choice = BACKUP_ANY, chosenId = null, personId = null } = {}) {
+  if (choice === BACKUP_NONE) return [];
+  if (!choice || choice === BACKUP_ANY) return fallbackSources(sources, { chosenId, personId });
+  if (choice === chosenId) return [];
+  const hit = (Array.isArray(sources) ? sources : []).find((s) => s && s.id === choice);
+  return hit && mayShowSource(hit, personId) ? [hit] : [];
+}
+
+// The sources each panel last listed, per person (`createMediaSourcesClient` records them), so the SCREEN's row can
+// offer them: the settings menu paints synchronously and cannot go and ask. In memory, this page only.
+const listedBy = new Map();
+export function noteListed(personId, list) {
+  try { listedBy.set(personId || '', (Array.isArray(list) ? list : []).filter((s) => s && s.id).map((s) => ({ ...s }))); }
+  catch { /* only the screen row's choices; never load-bearing */ }
+}
+/** What this page has seen listed for this person (or, unknown, the account's), never another resident's source. */
+export function listedSources(personId = null) {
+  const own = listedBy.get(personId || '');
+  const list = own || (personId ? listedBy.get('') : null) || [];
+  return list.filter((s) => mayShowSource(s, personId));
+}
+/** For the suites: forget what was listed. */
+export function forgetListedForTest() { listedBy.clear(); }
+
+const isLocalSource = (s) => !!s && (s.kind === 'folder'
+  || /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(String(s.base_url || '')));
+const sourceWords = (s) => `${s.label || s.base_url || s.id}${isLocalSource(s) ? ' (on this computer)' : ''}`;
+
+/** The words for a backup choice, for a row's "as This screen says (...)" and the screen row. PURE. */
+export function backupWords(choice, sources = [], { panelDefaultWords = 'each panel’s own default' } = {}) {
+  const c = String(choice == null ? '' : choice);
+  if (!c) return panelDefaultWords;
+  if (c === BACKUP_ANY) return 'any other source this screen can see';
+  if (c === BACKUP_NONE) return 'nothing';
+  const s = (Array.isArray(sources) ? sources : []).find((x) => x && x.id === c);
+  return s ? `“${s.label || s.base_url || s.id}”` : 'a source not connected here';
+}
+
+// The choices in the order a person reads them: what is ON THIS COMPUTER first (Mike's "local fallback"), then the rest.
+function sourceChoices(sources, { exclude = null, personId = null } = {}) {
+  const ok = (Array.isArray(sources) ? sources : []).filter((s) => s && s.id && s.id !== exclude && mayShowSource(s, personId));
+  return [...ok.filter(isLocalSource), ...ok.filter((s) => !isLocalSource(s))]
+    .map((s) => ({ value: s.id, label: sourceWords(s) }));
+}
+
+/**
+ * THE PANEL ROW, declared once for the four panels (each adds it to its SETTINGS). Level `advanced`, argued: the screen's
+ * row is the one most people need (one folder covers every panel); this is the exception, and a switch user walks every
+ * standard row of a panel's menu on every lap - the reason Photos' "carry on by itself" is advanced too. The declared
+ * options are the three that need no account; a mounted panel adds the sources (`backupPanelChoices`).
+ */
+export function backupPanelField({ panelDefault = BACKUP_NONE } = {}) {
+  return {
+    key: BACKUP_KEY, label: 'If this can’t be reached, use', kind: 'choice', default: BACKUP_FOLLOW, level: 'advanced',
+    options: [
+      { value: BACKUP_FOLLOW, label: 'As This screen says' },
+      { value: BACKUP_ANY, label: 'Any other source this screen can see' },
+      { value: BACKUP_NONE, label: 'Nothing' },
+    ],
+    note: `Shown, with a quiet note, only while the main one can’t be reached; it goes back by itself when it can. `
+      + `Not set anywhere, this panel uses ${panelDefault === BACKUP_ANY ? 'any other source this screen can see' : 'nothing'}.`,
+  };
+}
+
+/**
+ * A mounted panel's live options for its row, and the line after the value. `sources`: what the panel last listed;
+ * `mainId`: its main source (not offered as its own backup); `current`: the stored choice (kept in the list, saying it is
+ * not here, when it is not - the photo-source rule of c3eb41a: the press that repairs it must stay possible); `screen`:
+ * the screen's row; `showing`: the label of the backup on screen right now, if one is.
+ */
+export function backupPanelChoices({ sources = [], mainId = null, current = BACKUP_FOLLOW, screen = BACKUP_FOLLOW,
+  panelDefault = BACKUP_NONE, personId = null, showing = null } = {}) {
+  const inForce = backupChoice({ panel: '', screen, panelDefault });
+  const options = [
+    { value: BACKUP_FOLLOW, label: `As This screen says (${backupWords(inForce, sources)})` },
+    ...sourceChoices(sources, { exclude: mainId, personId }),
+    { value: BACKUP_ANY, label: 'Any other source this screen can see' },
+    { value: BACKUP_NONE, label: 'Nothing' },
+  ];
+  const cur = String(current == null ? '' : current);
+  if (cur && !options.some((o) => o.value === cur)) options.push({ value: cur, label: 'A source not connected here' });
+  return { options, status: showing ? `Showing the backup now: “${showing}”.` : '' };
+}
+
+/** THE SCREEN ROW (kiosk.js SCREEN_FIELDS, This screen tab). Its choices are what the panels here have listed. */
+export function backupScreenField({ sources = [], personId = null, current = BACKUP_FOLLOW } = {}) {
+  const options = [
+    { value: BACKUP_FOLLOW, label: 'Not set: each panel’s own default' },
+    ...sourceChoices(sources, { personId }),
+    { value: BACKUP_ANY, label: 'Any source this screen can see' },
+    { value: BACKUP_NONE, label: 'None' },
+  ];
+  const cur = String(current == null ? '' : current);
+  if (cur && !options.some((o) => o.value === cur)) options.push({ value: cur, label: 'A source not connected here' });
+  return {
+    key: BACKUP_KEY, label: 'Backup folder for this screen', kind: 'choice', level: 'standard', default: BACKUP_FOLLOW,
+    options,
+    note: 'Used by Photos, Personal videos, Music folders and Wallpaper whenever the one they play from can’t be '
+      + 'reached, unless a panel chose its own. They go back by themselves when it can. Not set: Photos and Personal '
+      + 'videos use any other source here, Music and Wallpaper nothing. A folder connected in Media / Sources appears '
+      + 'here once a panel on this screen has listed it.',
+  };
+}
+
+/**
+ * ASK AFTER THE MAIN SOURCE WHILE A BACKUP IS SHOWING: every SOURCE_RECHECK_MS, `isBack()` (never throws out of here);
+ * true calls `onBack()` once and stops. Photos and Personal videos have their own (older, the same shape); Music and
+ * Wallpaper use this one. `ms` is a function so a suite's seam is read when armed.
+ */
+export function createSourceRecheck({ ms = () => SOURCE_RECHECK_MS, setTimer = (fn, t) => setTimeout(fn, t),
+  clearTimer = (id) => clearTimeout(id), isBack, onBack } = {}) {
+  let t = null;
+  let epoch = 0;
+  function stop() { epoch += 1; if (t != null) { clearTimer(t); t = null; } }
+  function arm() {
+    stop();
+    const wait = Number(typeof ms === 'function' ? ms() : ms);
+    if (!(wait > 0)) return;
+    const mine = epoch;
+    t = setTimer(async () => {
+      t = null;
+      let back = false;
+      try { back = !!(await isBack()); } catch { back = false; }
+      if (mine !== epoch) return;
+      if (back) { try { onBack(); } catch (err) { console.error('media-sources: back to the main source', err); } } else arm();
+    }, wait);
+  }
+  return { arm, stop, armed: () => t != null };
 }
 
 // ---------------------------------------------------------------------- pairing

@@ -59,6 +59,7 @@ import { registerModule } from '../module.js';
 import {
   createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
   LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
+  backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
@@ -117,6 +118,9 @@ export const SETTINGS = [
       { value: 21600000, label: 'after 6 hours' },
       { value: 43200000, label: 'after 12 hours' },
     ] },
+  // backup source (2026-10-08; media_sources.js argues it): "If this can't be reached, use". Its own default is the
+  // stand-in this panel already had (any other source this screen may show); the screen's row applies unless this is set.
+  backupPanelField({ panelDefault: BACKUP_ANY }),
 ];
 
 registerModule(
@@ -183,6 +187,11 @@ registerModule(
     const labels = {};
     const listingWaitMs = () => Number(ctx.listingWaitMs ?? LISTING_WAIT_MS);
     const recheckMs = () => Number(ctx.sourceRecheckMs ?? SOURCE_RECHECK_MS);
+    // backup source: this panel's row, else the screen's (`ctx.screenBackup`), else the stand-in it always had.
+    const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
+    const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_ANY });
+    let knownSources = [];          // backup source: what the last listing held, for the row's choices
+    let lastBackupRef = null;
     const videosOf = (listing) => ((listing && listing.items) || []).filter((it) => it.kind === 'video');
 
     const stage = () => mount.querySelector('[data-stage]');
@@ -215,7 +224,7 @@ registerModule(
     function setName() {
       const el = mount.querySelector('[data-name]');
       if (!el) return;
-      if (standIn() && currentId) el.textContent = degradedLine({ shownLabel: degraded.shownLabel, chosenLabel: degraded.chosenLabel, err: degraded.err });
+      if (standIn() && currentId) el.textContent = degradedLine({ shownLabel: degraded.shownLabel, chosenLabel: degraded.chosenLabel, err: degraded.err, backup: !!degraded.backup });
       else el.textContent = currentId ? `From ${subjectName()}` : '';
     }
 
@@ -485,6 +494,7 @@ registerModule(
     // (`chosenId`) and a stand-in shown, never replaced by "the only source there" (§3e).
     async function ensureSource() {
       const sources = await client.list();
+      knownSources = Array.isArray(sources) ? sources : [];   // backup source
       for (const s of sources) if (s && s.id) labels[s.id] = s.label || s.base_url || s.id;
       if (cfg.sourceId) {
         const found = sources.find((s) => s.id === cfg.sourceId);
@@ -557,6 +567,7 @@ registerModule(
           sources, chosen: chosenSource, chosenId, album: cfg.album, personId: personOf(ctx),
           resolve: ctx.resolveListing || resolveListing, accept: videosOf,
           waitMs: listingWaitMs(), setTimer, clearTimer, skip: loadFailed,
+          backup: backupNow(),   // backup source
         });
         if (seq !== loadSeq) return;
         const cid = (chosenSource && chosenSource.id) || chosenId;
@@ -564,7 +575,7 @@ registerModule(
           source = got.source; listing = got.listing;
           degraded = got.fellBack
             ? { chosenId: cid, chosenLabel: (chosenSource && chosenSource.label) || labels[cid] || null, err: got.failure,
-              shownLabel: got.source.label || got.source.base_url || got.source.id }
+              shownLabel: got.source.label || got.source.base_url || got.source.id, backup: !!got.byChoice }
             : null;
         } else {
           // Nothing from any source: keep asking after the chosen one, and say what is wrong.
@@ -719,10 +730,21 @@ registerModule(
         state.subscribe((s) => {
           cfg = { ...DEFAULTS, ...s };
           const ref = `${cfg.sourceId}|${cfg.album}`;
+          // backup source: a changed backup reloads only while a stand-in is (or should be) playing.
+          const bref = String(cfg[BACKUP_KEY] || '');
+          const backupMoved = bref !== lastBackupRef;
+          lastBackupRef = bref;
           if (ref !== lastSourceRef) { lastSourceRef = ref; reload(); }
+          else if (backupMoved && degraded) reload();
           else { setName(); const lbl = mount.querySelector('[data-source-label]'); if (lbl && ids.length) lbl.textContent = `${subjectName()} — ${ids.length} clip${ids.length === 1 ? '' : 's'}`; }
         });
       },
+      // backup source: the "If this can't be reached, use" row's live choices (media_sources.js backupPanelChoices).
+      settingsChoices: () => ({
+        [BACKUP_KEY]: backupPanelChoices({ sources: knownSources, mainId: cfg.sourceId || null, current: cfg[BACKUP_KEY],
+          screen: screenBackup(), panelDefault: BACKUP_ANY, personId: personOf(ctx),
+          showing: degraded && degraded.backup ? degraded.shownLabel : null }),
+      }),
       onResize() {},
       onHide() { active = false; clearStall(); state.flush(); },
       destroy() {
