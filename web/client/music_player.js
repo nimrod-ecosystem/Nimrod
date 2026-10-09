@@ -10,6 +10,12 @@
 //   spotify   -> music_spotify.js, on a Spotify device that is already on (only when turned on); the
 //                music panel hands over a player that picks a playlist's songs with the site's own weighted
 //                picker (createSpotifyPlayer, row 2.55), and a bare connector still works here
+//   spotify, "Play on: this screen" (play on, rows 2.61/2.68)
+//             -> spotify_embed.js: Spotify's own player in the panel, the way YouTube plays; no app needed
+//
+// *** PLAYING SOMEWHERE ELSE IS ASKED ABOUT, NOT TAKEN OVER (note BK item 4). *** A Spotify player that finds the
+// account already playing on another device answers 'playing-elsewhere'; the router asks "Spotify is already
+// playing on <device>. Play this instead?" the way it asks a near miss, and `music/confirm` plays it anyway.
 //
 // Starting one kind stops whatever kind was playing before, so "play jazz" after "play the Beatles"
 // never leaves two things going. (Two things of the SAME kind replace each other in their own player.)
@@ -31,6 +37,7 @@
 import { findFavourite, MUSIC_PLAY_TOPIC, MUSIC_STOP_TOPIC } from './music_favourites.js';
 import { LOCAL_MESSAGES } from './music_local.js';
 import { SPOTIFY_MESSAGES } from './music_spotify.js';
+import { EMBED_WORDS } from './spotify_embed.js';   // play on
 
 export const MUSIC_TOPICS = Object.freeze({
   play: MUSIC_PLAY_TOPIC, stop: MUSIC_STOP_TOPIC, pause: 'music/pause', resume: 'music/resume',
@@ -42,6 +49,7 @@ export const YOUTUBE_WHERE = Object.freeze(['panel', 'here']);
 export const MESSAGES = Object.freeze({
   ...LOCAL_MESSAGES,
   ...SPOTIFY_MESSAGES,
+  ...EMBED_WORDS,
   'not-found': 'There is no favourite called “{name}”.',
   'did-you-mean': 'Did you mean “{name}”?',
   'no-youtube': 'There is no YouTube panel on this screen to play it in.',
@@ -51,8 +59,8 @@ export const MESSAGES = Object.freeze({
     + 'or press “Turn Spotify on” here.',
   'bad-source': 'That favourite does not say where its music is.',
 });
-export const messageFor = (reason, name = '') =>
-  String(MESSAGES[reason] || MESSAGES.failed || '').replace(/\{name\}/g, name);
+export const messageFor = (reason, name = '', device = '') =>
+  String(MESSAGES[reason] || MESSAGES.failed || '').replace(/\{name\}/g, name).replace(/\{device\}/g, device || 'another device');
 
 const routersByBus = new WeakMap();
 
@@ -63,6 +71,11 @@ export function createMusicRouter({
   local = null,                  // createLocalMusic()
   spotify = null,                // createSpotify(), or null when turned off
   spotifyDevice = () => '',      // the speaker a Spotify favourite plays on when it names none
+  // play on (rows 2.61, 2.68): WHERE a Spotify favourite plays. null (the default, and every older caller) is the app
+  // route as before; { kind: 'here' } is Spotify's embed on this screen (`spotifyHere`, spotify_embed.js);
+  // { kind: 'spotify', device } is the app route on that Spotify speaker ('' = whichever is on).
+  spotifyWhere = () => null,
+  spotifyHere = () => null,
   ownYoutube = null,             // { play(source), stop(), pause(), resume() } - the panel's own player
   youtubeWhere = () => 'panel',
   nearMatch = () => 'ask',
@@ -81,6 +94,7 @@ export function createMusicRouter({
   let current = null;            // { kind: 'youtube-panel'|'youtube-here'|'local'|'spotify', name, instanceId? }
   let lastReason = null;
   let pending = null;            // the "did you mean" entry
+  let pendingDevice = null;      // play on: the device a "playing elsewhere" question names (a yes plays anyway)
   let dead = false;
   let seq = 0;
 
@@ -88,8 +102,9 @@ export function createMusicRouter({
 
   function status() {
     return { playing: !!current, name: current?.name || null, kind: current?.kind || null,
-             reason: lastReason, message: lastReason ? messageFor(lastReason, pending?.name || '') : '',
-             asking: pending ? pending.name : null };
+             reason: lastReason, message: lastReason ? messageFor(lastReason, pending?.name || '', pendingDevice || '') : '',
+             asking: pending ? pending.name : null,
+             askingWhy: pending ? (pendingDevice != null ? 'elsewhere' : 'near') : null, device: pendingDevice };
   }
   function changed() {
     const s = status();
@@ -111,6 +126,7 @@ export function createMusicRouter({
       if (c.kind === 'youtube-panel') bus.publish(instanceTopic(c.instanceId, 'youtube/pause'));
       else if (c.kind === 'youtube-here') ownYoutube?.stop?.();
       else if (c.kind === 'local') local?.stop?.();
+      else if (c.kind === 'spotify-here') await read(spotifyHere, null)?.stop?.();
       else if (c.kind === 'spotify') {
         // A player that steers its own order (music_spotify.js createSpotifyPlayer) is told it is finished
         // with, not just paused; a bare connector only has pause.
@@ -127,10 +143,11 @@ export function createMusicRouter({
     return here.length ? { instanceId: here[0] } : null;
   }
 
-  async function dispatch(entry) {
+  async function dispatch(entry, { force = false } = {}) {
     const src = entry && entry.source;
     const my = ++seq;
     pending = null;
+    pendingDevice = null;
     lastReason = null;
     if (!src) return fail('bad-source', entry?.name);
     const sp = read(spotify, null);
@@ -162,17 +179,41 @@ export function createMusicRouter({
       return { ok: true, kind: 'local' };
     }
     if (src.kind === 'spotify') {
+      const where = read(spotifyWhere, null);
+      const here = where && where.kind === 'here' ? read(spotifyHere, null) : null;
+      if (here) {
+        // play on: Spotify's own player in this panel, the way YouTube plays (spotify_embed.js).
+        await stopCurrent('spotify-here');
+        const r = await here.play({ uri: src.uri, force });
+        if (my !== seq || dead) return { ok: false, reason: 'superseded' };
+        if (!r.ok) return r.reason === 'playing-elsewhere' ? askElsewhere(entry, r.device) : fail(r.reason, entry.name);
+        current = { kind: 'spotify-here', name: entry.name };
+        changed();
+        return { ok: true, kind: 'spotify-here', order: r.order, note: r.note || '' };
+      }
       if (!sp) return fail('spotify-off', entry.name);
       if (!sp.available()) return fail('no-client-id', entry.name);
       await stopCurrent('spotify');
-      const r = await sp.play({ uri: src.uri, device: src.device || String(read(spotifyDevice, '') || '').trim() });
+      const dev = String(src.device || (where && where.kind === 'spotify' ? (where.device || '') : (read(spotifyDevice, '') || ''))).trim();
+      const r = await sp.play({ uri: src.uri, device: dev, ...(force ? { force: true } : {}) });
       if (my !== seq || dead) return { ok: false, reason: 'superseded' };
-      if (!r.ok) return fail(r.reason, entry.name);
+      if (!r.ok) return r.reason === 'playing-elsewhere' ? askElsewhere(entry, r.device) : fail(r.reason, entry.name);
       current = { kind: 'spotify', name: entry.name };
       changed();
       return { ok: true, kind: 'spotify', device: r.device, ...(r.order ? { order: r.order, note: r.note || '' } : {}) };
     }
     return fail('bad-source', entry.name);
+  }
+
+  // play on (note BK item 4): "Spotify is already playing on <device>. Play this instead?" - asked like a near miss,
+  // answered by `music/confirm` ("yes", or the panel's button). Nobody answering leaves both alone: nothing starts.
+  function askElsewhere(entry, device) {
+    pending = entry;
+    pendingDevice = String(device || '');
+    lastReason = 'playing-elsewhere';
+    changed();
+    if (say) { try { say(messageFor('playing-elsewhere', entry.name, pendingDevice)); } catch { /* fine */ } }
+    return { ok: false, reason: 'playing-elsewhere', device: pendingDevice };
   }
 
   async function play(payload) {
@@ -188,6 +229,7 @@ export function createMusicRouter({
       if (mode === 'play') return dispatch(hit.entry);
       if (mode === 'ask') {
         pending = hit.entry;
+        pendingDevice = null;
         lastReason = 'did-you-mean';
         changed();
         if (leader()) { try { bus.publish(MUSIC_TOPICS.didYouMean, { name: hit.entry.name, heard: hit.heard }); } catch { /* fine */ } }
@@ -196,16 +238,18 @@ export function createMusicRouter({
       }
     }
     pending = null;
+    pendingDevice = null;
     return fail('not-found', name);
   }
 
-  async function stop() { pending = null; lastReason = null; ++seq; await stopCurrent(); changed(); return { ok: true }; }
+  async function stop() { pending = null; pendingDevice = null; lastReason = null; ++seq; await stopCurrent(); changed(); return { ok: true }; }
   async function pause() {
     const c = current;
     if (!c) return { ok: false };
     if (c.kind === 'youtube-panel') bus.publish(instanceTopic(c.instanceId, 'youtube/pause'));
     else if (c.kind === 'youtube-here') ownYoutube?.pause?.();
     else if (c.kind === 'local') local?.pause?.();
+    else if (c.kind === 'spotify-here') await read(spotifyHere, null)?.pause?.();
     else if (c.kind === 'spotify') await read(spotify, null)?.pause?.();
     return { ok: true };
   }
@@ -215,14 +259,17 @@ export function createMusicRouter({
     if (c.kind === 'youtube-panel') bus.publish(instanceTopic(c.instanceId, 'youtube/play'));
     else if (c.kind === 'youtube-here') ownYoutube?.resume?.();
     else if (c.kind === 'local') local?.resume?.();
+    else if (c.kind === 'spotify-here') await read(spotifyHere, null)?.resume?.();
     else if (c.kind === 'spotify') await read(spotify, null)?.resume?.();
     return { ok: true };
   }
   async function confirm() {
     if (!pending) return { ok: false, reason: 'nothing-asked' };
     const e = pending;
+    const force = pendingDevice != null;   // a yes to "playing elsewhere" plays anyway
     pending = null;
-    return dispatch(e);
+    pendingDevice = null;
+    return dispatch(e, { force });
   }
 
   // The bus half: only the leader acts on a broadcast, so two panels never both start the song.

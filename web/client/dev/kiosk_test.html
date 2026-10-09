@@ -466,8 +466,10 @@ const toTab = (m, id) => {
       // (row 2.70, 2026-10-09, DELIBERATELY: the three restart rows -- "Pick up where it left off", "Start this screen from
       // the top", "Always come back to ..." -- are ONE choice row, "After a restart, open" ('restart-open'). So the old
       // rows are 38, not 40: two fewer stops. The panel's lap is unchanged. restart.js argues the one row.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 38) ***',
-        lapStops.length === 14 && oldStops.length === 38 && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
+      // (play on, row 2.68, 2026-10-08, DELIBERATELY: "Music plays on" under Devices -> Speakers (speakers.js), Mike's
+      // "Speakers should be under devices". One more of the old rows: 39. The panel's lap is unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 39) ***',
+        lapStops.length === 14 && oldStops.length === 39 && oldStops.some((i) => i.id === 'set:speakerMusic') && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       {

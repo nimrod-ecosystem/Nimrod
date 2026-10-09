@@ -78,6 +78,16 @@ export function createLocalMusic({
 
   function clamp01(v) { const n = Number(v); return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 1; }
 
+  // *** PLAY ON (rows 2.61, 2.68): WHICH SPEAKER THIS SCREEN'S MUSIC FILES COME OUT OF. *** '' is the computer's own
+  // default, which needs nothing set up. A chosen one is an `audiooutput` device id (speakers.js finds it by name);
+  // HTMLMediaElement.setSinkId is in Chromium [measured 2026-10-08, dev/spotify_embed_frame_test.html]. A browser
+  // without it, or a speaker that has gone, keeps the default: a wrong speaker must never mean no sound.
+  let sinkId = '';
+  function applySink(target) {
+    if (!target || typeof target.setSinkId !== 'function') return;
+    try { Promise.resolve(target.setSinkId(sinkId)).catch(() => {}); } catch { /* the default speaker */ }
+  }
+
   if (audio) {
     try {
       audio.register(audioId, {
@@ -128,6 +138,7 @@ export function createLocalMusic({
     el = makeAudio(track.url);
     if (!el) { finish(); return; }
     const mine = el;
+    applySink(mine);   // play on (row 2.68): the speaker chosen for music, before it makes a sound
     if (typeof onTrack === 'function') {
       let told = false;
       mine.addEventListener?.('playing', () => {
@@ -237,6 +248,9 @@ export function createLocalMusic({
     next() { if (!wanted || queue.length < 2) return false; playAt(at + 1, gen); return true; },
     setVolume(v) { vol = clamp01(v); enact(); return vol; },
     setOrder(o) { order = FOLDER_ORDERS.includes(o) ? o : 'shuffle'; return order; },
+    /** play on: the speaker for this music ('' = the computer's default), applied now and to every next song. */
+    setSink(id) { sinkId = id ? String(id) : ''; applySink(el); return sinkId; },
+    sink: () => sinkId,
 
     state: () => ({ playing: wanted && !paused, wanted, paused, blocked, tracks: queue.length, at,
                     now: now ? { ...now } : null, volume: vol, gain, reason: lastReason,

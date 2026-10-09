@@ -222,7 +222,7 @@ export function startersFrom(text) {
  * collide with a command - `duplicatePhrases` over the combined table stays empty.
  */
 export function musicSpeechRoutes(favourites, { starters = DEFAULT_STARTERS, taken = spokenTable(),
-                                                stop = true } = {}) {
+                                                stop = true, speakers = null } = {}) {
   const used = new Map();   // normalized phrase -> owner id
   for (const [id, phrases] of Object.entries(taken || {})) {
     for (const p of Array.isArray(phrases) ? phrases : []) { const k = normalize(p); if (k) used.set(k, `taken:${id}`); }
@@ -254,7 +254,44 @@ export function musicSpeechRoutes(favourites, { starters = DEFAULT_STARTERS, tak
     const phrases = STOP_PHRASES.filter((p) => !used.has(normalize(p)));
     if (phrases.length) routes[STOP_ROUTE_ID] = { topic: MUSIC_STOP_TOPIC, payload: {}, label: 'Stop the music', phrases };
   }
+  // *** PLAY ON BY VOICE (rows 2.61, 2.68; note BI: "One press, remembered per panel, and by voice"). *** Only when the
+  // host passes `speakers` (kiosk.js does, from the favourites record): "play on this screen", and "play on <name>" for
+  // each Spotify speaker a Music panel has found. The same collision rules as the favourites: a phrase that is already
+  // a command or a favourite is skipped and said.
+  if (Array.isArray(speakers)) {
+    const here = PLAY_ON_HERE_PHRASES.filter((p) => !used.has(normalize(p)));
+    for (const p of here) used.set(normalize(p), PLAY_ON_HERE_ROUTE_ID);
+    if (here.length) routes[PLAY_ON_HERE_ROUTE_ID] = { topic: MUSIC_PLAY_ON_TOPIC, payload: { where: 'here' }, label: 'Play music on this screen', phrases: here };
+    for (const name of speakerNames(speakers)) {
+      const nn = normalize(name);
+      if (/\d/.test(name)) { skipped.push({ name, phrase: null, why: 'digits' }); continue; }
+      if (nn.replace(/ /g, '').length < 3) { skipped.push({ name, phrase: null, why: 'short' }); continue; }
+      const p = `play on ${nn}`;
+      const owner = used.get(p);
+      if (owner) { skipped.push({ name, phrase: p, why: owner.startsWith('taken:') ? 'taken' : 'twice' }); continue; }
+      const id = `music-on-${nn.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+      used.set(p, id);
+      routes[id] = { topic: MUSIC_PLAY_ON_TOPIC, payload: { name }, label: `Play on ${name}`, phrases: [p] };
+    }
+  }
   return { routes, skipped };
+}
+
+// play on: the topic, the fixed "this screen" phrases, and a clean list of speaker names (at most 20, no repeats).
+export const MUSIC_PLAY_ON_TOPIC = 'music/play-on';
+export const PLAY_ON_HERE_ROUTE_ID = 'music-on-here';
+export const PLAY_ON_HERE_PHRASES = Object.freeze(['play on this screen', 'play music here']);
+export function speakerNames(list) {
+  const seen = new Set();
+  const out = [];
+  for (const s of Array.isArray(list) ? list : []) {
+    const n = String(s == null ? '' : s).trim().slice(0, MAX_NAME);
+    if (!n || seen.has(n.toLowerCase())) continue;
+    seen.add(n.toLowerCase());
+    out.push(n);
+    if (out.length >= 20) break;
+  }
+  return out;
 }
 
 /** The routes as actions, the same shape as input_speech's SPEECH_ACTIONS, for `registry.registerAll`. */
@@ -302,10 +339,13 @@ export function watchFavourites({ makePersonState, personId, onChange = null } =
   try { handle = makePersonState(personId, FAVOURITES_KEY); } catch { handle = null; }
   if (!handle) return null;
   let list = [];
+  let speakers = [];
   const subs = new Set(onChange ? [onChange] : []);
+  // play on: the record's `speakers` (Spotify speaker names, for "play on <name>") ride along as a second argument.
   const take = (s) => {
     list = normalizeFavourites(s && s.favourites);
-    for (const fn of subs) { try { fn(list); } catch (err) { console.error('music favourites', err); } }
+    speakers = speakerNames(s && s.speakers);
+    for (const fn of subs) { try { fn(list, { speakers }); } catch (err) { console.error('music favourites', err); } }
   };
   const ready = Promise.resolve(handle.load?.()).catch(() => {}).then(() => { take(handle.get?.()); });
   const off = handle.subscribe?.((s) => take(s));
@@ -316,8 +356,18 @@ export function watchFavourites({ makePersonState, personId, onChange = null } =
     set(next) {
       list = normalizeFavourites(next);
       handle.set?.({ favourites: list });
-      for (const fn of subs) { try { fn(list); } catch (err) { console.error('music favourites', err); } }
+      for (const fn of subs) { try { fn(list, { speakers }); } catch (err) { console.error('music favourites', err); } }
       return list;
+    },
+    /** play on: the Spotify speaker names "play on <name>" knows, kept beside the favourites (names only). */
+    speakers: () => [...speakers],
+    setSpeakers(names) {
+      const next = speakerNames(names);
+      if (JSON.stringify(next) === JSON.stringify(speakers)) return speakers;
+      speakers = next;
+      handle.set?.({ speakers: next });
+      for (const fn of subs) { try { fn(list, { speakers }); } catch (err) { console.error('music favourites', err); } }
+      return speakers;
     },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     destroy() {
