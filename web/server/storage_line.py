@@ -40,6 +40,15 @@ check in front of them. These are the server's half of it - security invariants,
      A voiceprint as base64 is rule 2's (256 numbers as 32-bit floats is 1,368 characters); one split into pairs or
      rounded to whole numbers is the size cap's. No pattern catches every disguise; the point is that nothing the
      site sends trips it, and the obvious shapes are refused with a sentence.
+  6. WHAT THE SUBTITLES LEARNED ABOUT A PERSON'S SPEECH IS REFUSED, EVERYWHERE (subtitle learning, 2026-10-09). When a
+     subtitle is corrected ("what I said was ..."), the screen keeps the words it missed and the "heard X, meant Y"
+     fixes, per person (client/subtitle_learning.js) - the names of the people and places in somebody's life, and
+     how their speech is misheard. That is the person's, so it stays on their device or in their Nimrod folder.
+     Refused in state, events and history alike (part of check_content): anything carrying the record's own tag,
+     `"format": "nimrod-learned-words"`, or a key named `learnedWords` / `learned-words` / `learned_words` (any case).
+     NO EXISTING OPT-IN COVERS IT: "Where your history is kept" (rule 4) covers what played, game results and the
+     talk board's words - a person choosing "with us" for those chose nothing about this. The AUDIO a correction
+     attaches to (a voice recording) is rule 2's and never leaves the device either (client/voice_recording.js).
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -119,6 +128,12 @@ VOICEPRINT_NUMBERS_MIN = 128
 VOICEPRINT_FRACTION = 0.9
 SAY_VOICEPRINT = ("This looks like a voiceprint (the numbers that recognise somebody by their voice). Voiceprints stay "
                   "on the computer that made them and are never kept on this site.")
+# ---- rule 6: what the subtitles learned (subtitle learning) ----
+LEARNED_FORMAT = "nimrod-learned-words"           # web/client/subtitle_learning.js LEARNED_FORMAT (the test holds them equal)
+LEARNED_KEYS = frozenset({"learnedwords", "learned-words", "learned_words"})
+SAY_LEARNED = ("This looks like the words the subtitles learned from being corrected (names, places, and how somebody's "
+               "speech is misheard). They stay on the screen that learned them, or in the person's own Nimrod folder, "
+               "and are never kept on this site.")
 SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, or where "
                        "its person chose in \"Where your history is kept\" - not in this site's log.")
 
@@ -286,11 +301,32 @@ def looks_like_voiceprint(data) -> bool:
     return False
 
 
+def looks_like_learned_words(data) -> bool:
+    """Rule 6: the subtitle learning record's own tag, or a key named learnedWords (any spelling above, any case).
+    Iterative, like _strings, so a deeply nested body cannot blow the stack."""
+    stack = [data]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            for k, x in v.items():
+                if isinstance(k, str) and k.strip().lower() in LEARNED_KEYS:
+                    return True
+                if isinstance(k, str) and k.lower() == "format" and isinstance(x, str) \
+                        and x.strip().lower() == LEARNED_FORMAT:
+                    return True
+                stack.append(x)
+        elif isinstance(v, (list, tuple)):
+            stack.extend(v)
+    return False
+
+
 def check_content(data) -> None:
     """Rule 2: no picture, sound or video inside the JSON, as a data: address or as a long base64 run.
-    Rule 5: no voiceprint."""
+    Rule 5: no voiceprint. Rule 6: no record of what the subtitles learned."""
     if looks_like_voiceprint(data):
         raise Refused(400, SAY_VOICEPRINT)
+    if looks_like_learned_words(data):
+        raise Refused(400, SAY_LEARNED)
     for s in _strings(data):
         if s.lstrip()[:11].lower().startswith(_MEDIA_PREFIXES):
             raise Refused(400, "This has a picture, a sound or a video inside it. " + SAY_KEEP_IT_HOME

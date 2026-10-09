@@ -7,7 +7,9 @@ the screen in exactly the same words.
 
     backend.name               e.g. 'whisper:small.en', 'vosk:vosk-model-small-en-us-0.15'
     backend.supports_grammar   True when a word list limits what it can hear (Vosk)
-    backend.open(grammar)      -> Utterance; grammar is a list of phrases or None (open)
+    backend.supports_hints     True when a list of words can LEAN it towards them without limiting it (Whisper)
+    backend.open(grammar[, hints])  -> Utterance; grammar is a list of phrases or None (open); hints is a list
+                               of words, passed only to a backend whose supports_hints is True
     utt.feed(pcm) -> str|None  a partial transcript when the backend has one, else None
     utt.finish() -> dict       { text, confidence (0..1 or None), words: [{w, conf}] }
 
@@ -142,8 +144,21 @@ def whisper_engine_name(model: str) -> str:
     return f'whisper:{os.path.basename(os.path.normpath(m))}' if is_model_folder(m) else f'whisper:{m}'
 
 
+def hint_text(hints) -> str:
+    """subtitle learning (2026-10-09): the learned words as faster-whisper's `hotwords` string, or '' for none.
+
+    faster-whisper 1.2.1 (installed here, read 2026-10-09: transcribe.py get_prompt) puts `hotwords` in the same
+    "previous text" slot `initial_prompt` uses, cut at half the decoder's length (223 tokens). So this is a PROMPT,
+    not a hard constraint: it makes the words likelier, it cannot force them. [Unmeasured here: the 2026-09-30
+    measurement found a COMMAND prompt pulled silence and "pie" onto command words - the same slot. VAD stays on,
+    which stopped every hallucination on silence in that run; whether a list of names does the same is the thing
+    to measure on the desktop.] Comma-separated, the way people write a list of names."""
+    return ', '.join(str(h).strip() for h in (hints or []) if str(h).strip())
+
+
 class WhisperBackend:
     supports_grammar = False
+    supports_hints = True
     partials = False
 
     def __init__(self, model: str = 'small.en', device: str = 'cpu', compute_type: str = 'int8',
@@ -170,18 +185,20 @@ class WhisperBackend:
         # is the later one anyway.
         self._lock = threading.Lock()
 
-    def open(self, grammar=None):
-        return _WhisperUtterance(self)
+    def open(self, grammar=None, hints=None):
+        return _WhisperUtterance(self, hints)
 
-    def transcribe(self, pcm: bytes) -> dict:
+    def transcribe(self, pcm: bytes, hints=None) -> dict:
         import numpy as np
         audio = np.frombuffer(pcm, dtype='<i2').astype(np.float32) / 32768.0
         if audio.size == 0:
             return {'text': '', 'confidence': None, 'words': []}
+        # subtitle learning: the words people corrected the subtitles to, as `hotwords` (hint_text says what it is).
+        extra = {'hotwords': hint_text(hints)} if hint_text(hints) else {}
         with self._lock:
             segments, _info = self._model.transcribe(
                 audio, language='en', beam_size=self.beam_size, vad_filter=True, temperature=0.0,
-                condition_on_previous_text=False, word_timestamps=self.word_confidence)
+                condition_on_previous_text=False, word_timestamps=self.word_confidence, **extra)
             segs = list(segments)
         text = ' '.join(s.text.strip() for s in segs).strip()
         words = []
@@ -201,8 +218,9 @@ class WhisperBackend:
 
 
 class _WhisperUtterance:
-    def __init__(self, backend: WhisperBackend):
+    def __init__(self, backend: WhisperBackend, hints=None):
         self.b = backend
+        self.hints = list(hints or [])
         self.buf = bytearray()
 
     def feed(self, pcm: bytes):
@@ -210,7 +228,7 @@ class _WhisperUtterance:
         return None          # no partials: Whisper encodes a fixed 30 s window, a re-run per chunk costs ~2 s each
 
     def finish(self) -> dict:
-        return self.b.transcribe(bytes(self.buf))
+        return self.b.transcribe(bytes(self.buf), self.hints)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -218,6 +236,14 @@ class _WhisperUtterance:
 # ---------------------------------------------------------------------------------------------
 class VoskBackend:
     supports_grammar = True
+    # subtitle learning (2026-10-09): NO HINTS, argued. Vosk's Python API has no "lean towards these words": in
+    # OPEN mode the recogniser takes the model and nothing else, and its GRAMMAR (a model with a dynamic graph,
+    # like the small English ones) LIMITS what it can hear to the list - a learned name added there could only be
+    # heard as one of the listed phrases, which is the command grammar's job, not a subtitle's. A word the model's
+    # vocabulary lacks is dropped from a grammar with a warning [training knowledge]; adding a NEW word to a Vosk
+    # model means rebuilding its graph with Kaldi's tools, off the Pi. So on the Pi the replacement map
+    # (client/subtitle_learning.js) is what fixes a name Vosk keeps mishearing, and the hello says hints: false.
+    supports_hints = False
     partials = True
 
     def __init__(self, model_path: str):
@@ -283,12 +309,14 @@ class FakeBackend:
     utterance's PCM bytes. Nothing is ever heard - it exists so the protocol can be tested anywhere."""
 
     def __init__(self, script=None, name: str = 'fake', supports_grammar: bool = True,
-                 partials: bool = True, delay_s: float = 0.0):
+                 partials: bool = True, delay_s: float = 0.0, supports_hints: bool = False):
         self.name = name
         self.supports_grammar = supports_grammar
+        self.supports_hints = supports_hints
         self.partials = partials
         self.delay_s = float(delay_s)
         self.grammars = []
+        self.hints = []          # subtitle learning: the hints each utterance was opened with (None = none passed)
         self._script = script if script is not None else ['hello']
         self._i = 0
 
@@ -299,8 +327,9 @@ class FakeBackend:
             r = {'text': r, 'confidence': 0.9 if r else None, 'words': words}
         return r
 
-    def open(self, grammar=None):
+    def open(self, grammar=None, hints=None):
         self.grammars.append(list(grammar) if grammar else None)
+        self.hints.append(list(hints) if hints is not None else None)
         return _FakeUtterance(self, grammar, self._i)
 
     def _pick(self, pcm: bytes, grammar, i: int):

@@ -125,6 +125,11 @@ import {
   createSubtitles, subtitlesOptionsFrom, SUBTITLES_FIELDS, SUBTITLE_ACTIONS, SUBTITLES_EARLIER_TOPIC,
   SUBTITLES_LATEST_TOPIC,
 } from './subtitles.js';
+// subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", "Words it has learned".
+import {
+  createSubtitleLearning, idbLearnedStore, memoryLearnedStore, SUBTITLE_LEARNING_FIELDS, SUBTITLE_LEARNING_ACTIONS,
+  dataFolder,
+} from './subtitle_learning.js';
 import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS } from './speech_engines.js';
 import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
 import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
@@ -816,6 +821,7 @@ export async function mountKiosk(root, {
   let missStore = null;          // speech_misses.js, only while `speechMissLog` is on
   let offMissSchedule = null;
   let subtitles = null;          // subtitles.js: built once (the output bus taps it), a mode off by default
+  let subLearn = null;           // subtitle learning: corrections, and what they teach (subtitle_learning.js)
   let amplifier = null;          // amplify.js: built once (inert until the row turns it on)
   let ampSig = null;
   let subsSig = null;
@@ -942,7 +948,8 @@ export async function mountKiosk(root, {
   const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...SPEECH_PASS_FIELDS, ...MISS_FIELDS, ...VOICE_ID_FIELDS]
     .map((f) => f.key).concat('subtitlesRoute', 'voiceModelOn', 'voiceModelPort');
   const AMP_KEYS = AMPLIFY_FIELDS.map((f) => f.key);
-  const SUBS_KEYS = SUBTITLES_FIELDS.map((f) => f.key);
+  // subtitle learning: its keys ride with the subtitles' own.
+  const SUBS_KEYS = [...SUBTITLES_FIELDS, ...SUBTITLE_LEARNING_FIELDS].map((f) => f.key);
   // The keys whose change adds or removes rows in the Voice section without restarting speech.
   const REC_MENU_KEYS = ['voiceRecording', 'intercomAllowed'];
   let recMenuSig = null;
@@ -953,6 +960,7 @@ export async function mountKiosk(root, {
     speechOffs = [];
     // The recorder lets go of the recogniser first (it saves what it has already heard whole).
     try { voiceRec?.detach(); } catch (err) { console.error('kiosk: voice recording', err); }
+    try { subLearn?.detach(); } catch (err) { console.error('kiosk: subtitle learning', err); }
     // A voice being set up stops with the recogniser it was talking through (nothing is saved; its panel says so).
     try { enrolment?.cancel(); } catch { /* already over */ }
     try { speech?.destroy(); } catch (err) { console.error('kiosk: speech', err); }
@@ -1004,6 +1012,8 @@ export async function mountKiosk(root, {
     // VOICE RECORDING hears what this recogniser already cut (a ranked one; the browser's own cuts
     // nothing and is never attached). It keeps nothing unless the person's row turned it on.
     try { voiceRec?.attach(rec); } catch (err) { console.error('kiosk: voice recording', err); }
+    // subtitle learning: the learned words go to the engines that can use them (a ranked recogniser's `setHints`).
+    try { subLearn?.attach(rec); } catch (err) { console.error('kiosk: subtitle learning', err); }
     // THE RANKED RECOGNISER SAYS WHETHER ANYTHING IS ANSWERING (rows 2.46/2.47). Until an engine says
     // hello it has opened no microphone, and the menu says "no recogniser on this screen".
     const fromRec = (st) => {
@@ -1072,6 +1082,8 @@ export async function mountKiosk(root, {
         onHeard: (h) => { if (captions) return; try { subtitles?.heard(h); } catch (err) { console.error('kiosk: subtitles', err); } },
       });
       speech.start();
+      // subtitle learning: "what I said was ..." - tell the speech layer just made that corrections are taken.
+      try { subLearn?.announce(); } catch (err) { console.error('kiosk: subtitle learning', err); }
       speechStatus = typeof rec.status === 'function' ? fromRec(rec.status()) : (sw.on ? 'listening' : 'subtitles-only');
       // SUBTITLES' ONLINE ROUTE: only when the row chose it, only while subtitles are on, never a
       // command (its words go straight to the subtitles), and never twice when the browser's own is
@@ -1157,6 +1169,7 @@ export async function mountKiosk(root, {
     if (ss !== subsSig) {
       subsSig = ss;
       try { subtitles?.update(r); } catch (err) { console.error('kiosk: subtitles', err); }
+      try { subLearn?.update(r); } catch (err) { console.error('kiosk: subtitle learning', err); }
     }
     const as = sigOf(r, AMP_KEYS);
     if (as !== ampSig) {
@@ -1298,6 +1311,8 @@ export async function mountKiosk(root, {
       },
       // A new outline starts no faster than the screen's flash limit (subtitles.js).
       flashLimit: flashLimitNow,
+      // subtitle learning: the person's learned "heard X, meant Y" fixes, applied as lines arrive.
+      rewrite: (c) => (subLearn ? subLearn.rewrite(c) : null),
     });
   } catch (err) { console.error('kiosk: subtitles', err); subtitles = null; }
   // VOICE RECORDING (row 2.44): built once, inert. Its store is THIS browser's IndexedDB (opened on first
@@ -1308,6 +1323,17 @@ export async function mountKiosk(root, {
     voiceRec = createVoiceRecorder({ store: voiceStore, bus, screenSpeech });
     recPill = mountRecordingIndicator(kioskEl, { recorder: voiceRec, bus });
   } catch (err) { console.error('kiosk: voice recording', err); voiceRec = null; recPill = null; }
+  // SUBTITLE LEARNING (2026-10-09): built once, inert until somebody corrects a line. Its words live in THIS
+  // browser's IndexedDB (memory where there is none), never on the server; a correction reaches a voice recording
+  // only while that person's recording is on.
+  if (subtitles) {
+    try {
+      let learnStore;
+      try { learnStore = idbLearnedStore(); } catch { learnStore = memoryLearnedStore(); }
+      subLearn = createSubtitleLearning({ subtitles, store: learnStore, bus, host: kioskEl, folder: dataFolder,
+        pairStore: () => (voiceRec?.options?.().on ? voiceStore : null), pairPerson: () => personId });
+    } catch (err) { console.error('kiosk: subtitle learning', err); subLearn = null; }
+  }
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
     // kiosk root has never been tried on this surface and could land on top of her photos.
@@ -4091,6 +4117,18 @@ export async function mountKiosk(root, {
     catch (err) { console.error('kiosk: voice set-up panel', err); enrolPanel = null; }
     mine.start();
   }
+  // subtitle learning (2026-10-09): fix a line by hand, and see or forget what corrections taught. Each opens a panel
+  // (subtitle_learning.js) that goes by itself; the menu closes first so the panel is not under it.
+  function subtitleLearningItems() {
+    if (!subLearn) return [];
+    const open = (fn) => () => { try { menu.close(); } catch { /* already closed */ } try { fn(); } catch (err) { console.error('kiosk: subtitle learning', err); } };
+    return [
+      { kind: 'item', id: 'subtitles-fix-line', label: 'Fix a subtitle line',
+        hint: 'pick a recent line and type, or pick, what was really said', run: open(() => subLearn.openFix()) },
+      { kind: 'item', id: 'subtitles-learned-words', label: 'Words it has learned',
+        hint: 'kept on this screen; forget any of them', run: open(() => subLearn.openWords()) },
+    ];
+  }
   function voiceItems() {
     if (!personInputs || !personRow || embedded) return [];
     const r = personInputs.get?.() || personRow || {};
@@ -4108,6 +4146,8 @@ export async function mountKiosk(root, {
       ...(sw.on || subsOn ? VOICE_ID_FIELDS.filter((f) => f.key === 'voiceIdOn' || voiceIdOptionsFrom(r).on) : []),
       ...(sw.on ? [...SPEECH_FIELDS, ...LISTENING_FIELDS, ...MISS_FIELDS].filter(keep) : []),
       ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || (subsOn && (!/^subtitles(Shrink|SmallestPx)$/.test(f.key) || r.subtitlesStyle === 'eyechart' || subtitles?.style?.() === 'eyechart'))),
+      // subtitle learning: its switch while subtitles are on; its two other rows only while it learns.
+      ...(subsOn ? SUBTITLE_LEARNING_FIELDS.filter((f) => f.key === 'subtitlesLearn' || r.subtitlesLearn !== false) : []),
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
       // VOICE RECORDING (row 2.44): the switch always (so anybody can SEE it is off, and a guardian
       // can find it); its retention rows only while it is on - the same rule as every mode above.
@@ -4135,7 +4175,7 @@ export async function mountKiosk(root, {
     // through the speaker); the intercom is PEOPLE (who may talk in). Every row is in exactly one, under
     // its own heading; the rules above for which rows show are unchanged.
     const keyOf = (it) => String(it.id || '').replace(/^set:/, '');
-    const SUBS = new Set(SUBTITLES_FIELDS.map((f) => f.key));
+    const SUBS = new Set([...SUBTITLES_FIELDS, ...SUBTITLE_LEARNING_FIELDS].map((f) => f.key));   // + subtitle learning
     const AMP = new Set(AMPLIFY_FIELDS.map((f) => f.key));
     const IC = new Set(INTERCOM_FIELDS.map((f) => f.key));
     const OTH = new Set(OTHERS_AVATAR_FIELDS.map((f) => f.key));
@@ -4150,7 +4190,8 @@ export async function mountKiosk(root, {
         ...dev.map((it) => ({ ...it, ...t.devices(0) })),
         ...((sw.on || subsOn) ? voiceIdItems(r).map((it) => ({ ...it, ...t.devices(0) })) : [])] : []),
       ...(subs.length ? [{ kind: 'heading', id: 'subtitles-head', label: 'Subtitles', ...t.display(4) },
-        ...subs.map((it) => ({ ...it, ...t.display(4) }))] : []),
+        ...subs.map((it) => ({ ...it, ...t.display(4) })),
+        ...(subsOn ? subtitleLearningItems().map((it) => ({ ...it, ...t.display(4) })) : [])] : []),
       ...(amp.length ? [{ kind: 'heading', id: 'amplify-head', label: 'Amplify the room', ...t.audio(3) },
         ...amp.map((it) => ({ ...it, ...t.audio(3) }))] : []),
       ...(ic.length ? [{ kind: 'heading', id: 'intercom-head', label: 'Intercom', ...t.people(1) },
@@ -6246,6 +6287,8 @@ export async function mountKiosk(root, {
   // (And "Intercom: end it": a switch or a phrase bound to it ends an open intercom, one press.)
   try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS, ...SUBTITLE_ACTIONS, ...INTERCOM_ACTIONS]); }
   catch (err) { console.error('kiosk: speech actions', err); }
+  // subtitle learning: "Subtitles: fix a line", for a switch or a key (subtitle_learning.js answers its topic).
+  try { runtime.actions.registerAll(SUBTITLE_LEARNING_ACTIONS); } catch (err) { console.error('kiosk: subtitle learning actions', err); }
   await runtime.load();
   // The menu takes the verbs while it is open and hands them back when it closes.
   menu.attachBus(bus, runtime.router);
@@ -7649,6 +7692,7 @@ export async function mountKiosk(root, {
     speechStatus: () => speechStatus,
     misses: () => missStore,
     subtitles: () => subtitles,
+    subtitleLearning: () => subLearn,   // subtitle learning
     amplifier: () => amplifier,
     automation: () => automation,
     phoneMic: () => phoneRx,
@@ -7776,6 +7820,7 @@ export async function mountKiosk(root, {
       // torn down must not keep talking.
       try { output?.destroy(); } catch { /* already gone */ }
       // After the output bus (whose speech channel it taps): clears its lines and any room it reserved.
+      try { subLearn?.destroy(); } catch { /* already gone */ } subLearn = null;   // subtitle learning
       try { subtitles?.destroy(); } catch { /* already gone */ } subtitles = null;
       // The music favourites' watch (its poll) and the actions it registered.
       try { offMusicActions?.(); } catch { /* already gone */ } offMusicActions = null;

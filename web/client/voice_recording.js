@@ -221,6 +221,9 @@ export function buildPair({
       others: Array.isArray(c.others) ? c.others.map((o) => ({ ear: o.ear || null, text: String(o.text || ''),
         confidence: Number.isFinite(Number(o.confidence)) && o.confidence != null ? Number(o.confidence) : null })) : [],
       words: Array.isArray(c.words) ? c.words.slice(0, 200) : [],
+      // subtitle learning (2026-10-09): the utterance group the subtitles drew this as, so a line corrected on the
+      // screen ("what I said was ...") finds the recording it came from.
+      caption: c.id ? String(c.id) : null,
     },
     unclear: !text,
     meant: pr ? pr.text : '',
@@ -256,6 +259,24 @@ export function pairExpired(pair, now = Date.now()) {
 export function withMeant(pair, meant, at = Date.now()) {
   const m = String(meant ?? '').trim().slice(0, 1000);
   return { ...pair, meant: m, meantAt: at, reviewed: true };
+}
+
+/**
+ * subtitle learning (2026-10-09): a subtitle line was CORRECTED on the screen ("what I said was ...", or "Fix this
+ * line"), and this is the recording it came from. Pure. What was meant is what the person said it was; `by` is how
+ * ('voice' | 'hand'). `ownVoice`: the speech program named the voice as this pair's own person. ONLY THEN is it
+ * counted as reviewed - otherwise it waits in "To review" with the words already filled in, and the Euphonia export
+ * leaves it out until somebody has listened (`euphoniaSamples`), because the recorder keeps ANYBODY near the
+ * microphone under its person, and a correction of a visitor's line must not train this person's model on the
+ * visitor's voice. A pair somebody already reviewed keeps its reviewer's words: a later correction does not overrule
+ * a person who listened.
+ */
+export function withCorrection(pair, meant, { by = 'hand', ownVoice = false, at = Date.now() } = {}) {
+  const m = String(meant ?? '').trim().slice(0, 1000);
+  if (!pair || !m) return pair;
+  if (pair.reviewed && pair.meantFrom !== 'correction') return pair;
+  return { ...pair, meant: m, meantAt: at, meantFrom: 'correction', meantBy: by === 'voice' ? 'voice' : 'hand',
+           reviewed: !!ownVoice && !pair.overlap };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -888,13 +909,15 @@ export const EUPHONIA_INDEX = 'nimrod-export.json';
 /** The training samples among `pairs`, oldest first, numbered 0..N-1 (bare, no gaps: the notebook's own rule,
  * home voice training 2026-10-07). which: 'meant' (default) | 'prompted'. Pure. */
 export function euphoniaSamples(pairs = [], { which = 'meant', ear = 'room' } = {}) {
+  // subtitle learning: a CORRECTED line whose voice was not named as this person waits for a listen (withCorrection).
   const ok = (pairs || []).filter((p) => p && String(p.meant || '').trim() && (p.clips || []).length
-    && (which !== 'prompted' || p.prompt) && !(p.overlap && !p.reviewed));
+    && (which !== 'prompted' || p.prompt) && !(p.overlap && !p.reviewed)
+    && !(p.meantFrom === 'correction' && !p.reviewed));
   ok.sort((a, b) => ((Number(a.at) || 0) - (Number(b.at) || 0)) || String(a.id).localeCompare(String(b.id)));
   return ok.map((p, i) => {
     const clip = p.clips.find((c) => c.ear === ear) || p.clips[0];
     return { folder: String(i), pairId: p.id, ear: clip.ear, phrase: String(p.meant).trim(),
-             at: p.at, prompt: p.prompt || null };
+             at: p.at, prompt: p.prompt || null, ...(p.meantFrom === 'correction' ? { from: 'correction' } : {}) };
   });
 }
 
@@ -940,7 +963,9 @@ export async function exportEuphonia(dir, store, { personId, which = 'meant', ea
     // v2 (2026-10-07): numbered 0..count-1, bare, with no gaps. v1 was 001.. (padded, from 1).
     numbering: '0..count-1', count: done.length,
     samples: done.map((s) => ({ folder: s.folder, pairId: s.pairId, ear: s.ear, at: s.at, phrase: s.phrase,
-                                promptIndex: s.prompt ? s.prompt.index : null })),
+                                promptIndex: s.prompt ? s.prompt.index : null,
+                                // subtitle learning: a sample whose words came from a subtitle correction.
+                                ...(s.from ? { from: s.from } : {}) })),
     failed,
   }, null, 2));
   return { written: done.map((s) => s.pairId), failed, samples: done };

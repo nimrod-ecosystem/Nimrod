@@ -3309,6 +3309,13 @@ const toTab = (m, id) => {
         vk2.subtitles().lines().some((l) => l.text === 'hello there' && l.who.kind === 'unknown')
         && /Unknown:\s*hello there/.test(vbox2.querySelector('.kiosk .subs')?.textContent || ''),
         JSON.stringify(vk2.subtitles().lines()));
+      // subtitle learning (2026-10-09): "what I said was ..." through the real kiosk wiring - the line is replaced, the
+      // word is learned on this device. (Its rows show only while subtitles are on, so the menu walks above are unchanged.)
+      say('computer please what I said was hello Rosalind');
+      check('*** subtitle learning: "computer please, what I said was ..." replaces the line and learns the word ***',
+        await settled(() => vk2.subtitles().history().some((l) => l.text === 'hello Rosalind' && l.fixed?.by === 'voice'), 4000)
+        && (vk2.subtitleLearning()?.records() || []).some((r) => r.words.some((w) => w.w === 'Rosalind')),
+        JSON.stringify(vk2.subtitles().history().map((l) => [l.text, l.fixed])));
       if (window.speechSynthesis) {
         // `alert`, not `say`: the speech channel is one at a time and the near-miss question above may
         // still hold it (a headless speech engine does not always say when it finished); an alert
