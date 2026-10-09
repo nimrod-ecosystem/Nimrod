@@ -15,6 +15,8 @@
      settings menu) rather than a bare module. Its `.k-embed` rules size it to the stage box; the
      rest is unreachable from this page unless the kiosk is mounted. -->
 <link rel="stylesheet" href="./kiosk.css">
+<!-- settings sidebar (2026-10-08): the site's sidebar, the one My dashboards has (site_nav.js). -->
+<link rel="stylesheet" href="./site_nav.css">
 <style>
   :root{
     --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C; --link:#105666;
@@ -42,6 +44,13 @@
   /* 2026-10-07: the tabs. The one you are on is marked; a hidden tab stays hidden at a phone's width too. */
   .top nav a[aria-current="page"]{background:var(--surface);font-weight:800}
   .top nav a[hidden]{display:none!important}
+  /* settings sidebar (2026-10-08; site_nav.js argues it): signed in, the site's sidebar replaces this strip -- every
+     link in it is in the sidebar. While the dashboard fills the window neither shows (`body.is-land`, below). */
+  body.has-side .top{display:none}
+  /* The info line along the bottom (hover_info.js, `body.has-infoline`) is fixed there: the sidebar stops above it, or
+     its last link (Try as a guest) sat under the line (measured at 1920x1080). Wider than a phone only (below 720px
+     the sidebar is a strip on top). */
+  @media (min-width:721px){ body.has-infoline .s-side{height:calc(100dvh - 2.6em)} }
   .theme-pick{padding:7px 10px;border-radius:10px;border:1px solid var(--border);
     background:transparent;color:var(--text);font-size:.92rem;cursor:pointer;max-width:120px}
 
@@ -478,6 +487,10 @@
   the page reconciles that copy against the LIVE REGISTRY, so a module somebody ships and
   nobody explains shows up here as undescribed rather than being quietly missed.
 -->
+<!-- settings sidebar (2026-10-08): the sidebar's slot, drawn once somebody is signed in (site_nav.js). -->
+<div class="shell">
+<div data-site-side hidden></div>
+<div class="s-page">
 <div class="top">
   <div class="wrap">
     <a class="brand" href="/">Nimrod<span>.</span></a>
@@ -596,6 +609,8 @@
     <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
   </footer>
 </div>
+</div><!-- .s-page -->
+</div><!-- .shell -->
 
 <script type="module">
 // 2026-10-04: a new version of the site shows a quiet "A new version is ready" chip here, never a reload by
@@ -677,6 +692,7 @@ import { mountInfoLine } from './hover_info.js';
 import { authHeaders } from './auth.js';
 import { createProfilesClient, ensureProfile } from './profile.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+import { mountSiteSide } from './site_nav.js';   // settings sidebar (2026-10-08)
 // HOME (rows 2.29 / 2.30): what this page is for a signed-in visitor. See the HOME block below.
 import { createState } from './state.js';
 // 2026-10-04, later: Home's layout writes merge a change made elsewhere instead of overwriting it (writeHomeLayout).
@@ -744,6 +760,9 @@ const signedIn = (async () => {
     const homeTab = document.querySelector('.top nav [data-nav="home"]');
     if (homeTab) homeTab.hidden = false;
     if (signIn) { signIn.textContent = 'My dashboards'; signIn.href = '/home.html'; }
+    // settings sidebar (2026-10-08): signed in, the site's sidebar, the same one My dashboards has (site_nav.js). The
+    // strip above stays in the page for the signed-out case, put away by the CSS while the sidebar shows.
+    mountSiteSide(document.querySelector('[data-site-side]'), { here: 'home', signedIn: true, email: me.email || '' });
   } catch { /* offline or blocked -- the signed-out header is still correct in that case */ }
 })();
 

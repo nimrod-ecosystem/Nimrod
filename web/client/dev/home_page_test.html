@@ -190,9 +190,10 @@ try {
       [box($('#stage')), box($('#stage .kiosk'))].every(([l, t, w, h]) => near(l, 0) && near(t, 0) && near(w, vwL) && near(h, vhL)),
       `${J(box($('#stage')))} ${J(box($('#stage .kiosk')))} window ${vwL}x${vhL}`);
     const gone = (sel) => { const el = $(sel); return !el || win.getComputedStyle(el).display === 'none'; };
-    check('*** no page chrome: no site header, no "Start here" heading, no edit bar, no caption, no starting points ***',
-      ['.top', '#detail > h2', '#detail .lead', '#home-edit', '#stagenote', '#examples', '.pick', '#stage-bar', 'footer'].every(gone),
-      ['.top', '#detail > h2', '#detail .lead', '#home-edit', '#stagenote', '#examples', '.pick', '#stage-bar', 'footer'].filter((s) => !gone(s)).join(', '));
+    // (settings sidebar, 2026-10-08: the site's sidebar, `[data-site-side]`, is page chrome too -- gone here.)
+    check('*** no page chrome: no site header, no sidebar, no "Start here" heading, no edit bar, no caption, no starting points ***',
+      ['.top', '[data-site-side]', '#detail > h2', '#detail .lead', '#home-edit', '#stagenote', '#examples', '.pick', '#stage-bar', 'footer'].every(gone),
+      ['.top', '[data-site-side]', '#detail > h2', '#detail .lead', '#home-edit', '#stagenote', '#examples', '.pick', '#stage-bar', 'footer'].filter((s) => !gone(s)).join(', '));
     check('*** no page scroll ***', doc.documentElement.scrollHeight <= vhL + 0.5 && win.getComputedStyle(doc.body).overflowY === 'hidden',
       `${doc.documentElement.scrollHeight} > ${vhL}`);
     check('*** the bar: Edit first, then My Home and Save (the editing tools are one press away, not here) ***',
@@ -280,10 +281,12 @@ try {
     const ep = await realPress(...mid(editBtn), 'mouse');
     check('*** ...and Edit is then one real press away (the press reaches it) ***', ep.click === editBtn,
       `${ep.click?.className} ${ep.click?.textContent}`);
-    check('*** Edit: the page comes back as the EDITOR (the edit bar, the starting points, Modules), the address says ?edit=1 ***',
+    // settings sidebar (2026-10-08), DELIBERATELY changed: this asked for the site header (`.top`) back. Signed in, the
+    // site's navigation is the sidebar now (the header's links are all in it, and it is put away while the sidebar shows).
+    check('*** Edit: the page comes back as the EDITOR (the edit bar, the starting points, Modules, the site\'s sidebar), the address says ?edit=1 ***',
       await until(() => !doc.body.classList.contains('is-land') && !gone('#home-edit') && !!hb('picker') && !!hb('land'), 8000)
-      && new URL(win.location.href).searchParams.get('edit') === '1' && !gone('.top'),
-      `land=${doc.body.classList.contains('is-land')} url=${win.location.search}`);
+      && new URL(win.location.href).searchParams.get('edit') === '1' && !!$('.s-side') && $('.s-side').getBoundingClientRect().width > 150,
+      `land=${doc.body.classList.contains('is-land')} url=${win.location.search} side=${$('.s-side') ? $('.s-side').getBoundingClientRect().width : 'none'}`);
     check('...the dashboard is a box on the page there, not the window', $('#stage').getBoundingClientRect().top > 20);
     check('*** ...and there its bar is a ROW of the dashboard again, up, not tucked (a page being used shows its bar) ***',
       !$('#stage').dataset.barOver && win.getComputedStyle(dockOf()).position !== 'absolute' && !tucked()

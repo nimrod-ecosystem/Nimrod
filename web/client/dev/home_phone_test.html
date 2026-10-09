@@ -183,7 +183,12 @@ async function phoneChecks(W, label) {
     `${css($('.top .wrap')).paddingLeft} / ${css($('section.browser').parentElement).paddingRight}`);
   check(`[${label}] ...and Home's boxes sit inside it`, inGutter($('#detail')) && (!shown($('#examples')) || inGutter($('#examples'))),
     `${J(R($('#detail')))} ${J(R($('#examples')))}`);
-  check(`[${label}] *** the top links are 44px targets ***`, smallTargets($('.top')).length === 0, smallTargets($('.top')).join(' ; '));
+  // settings sidebar (2026-10-08), DELIBERATELY changed: signed in, the site's links are the sidebar (a strip on top at
+  // this width) and the `.top` strip is put away -- so its pages and tabs are what must be 44px. (The foot's small text
+  // links -- Sign out and the like -- are as they were on My dashboards; not counted here.)
+  const topLinks = $('.s-side') && R($('.s-side')).width > 0 ? [...doc.querySelectorAll('.s-side .s-nav')] : [$('.top')];
+  const smallTop = topLinks.flatMap((el) => smallTargets(el));
+  check(`[${label}] *** the top links (the sidebar's pages and tabs, signed in) are 44px targets ***`, smallTop.length === 0, smallTop.join(' ; '));
   check(`[${label}] *** the bar in the stage: every button at least 44px ***`, smallTargets($('#stage .tb-bar')).length === 0, smallTargets($('#stage .tb-bar')).join(' ; '));
   const bar = $('#stage .tb-bar');
   check(`[${label}] *** the bar is ONE row that scrolls sideways inside itself (not a tower of rows over the dashboard) ***`,

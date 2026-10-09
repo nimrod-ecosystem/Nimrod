@@ -6,6 +6,8 @@
 <title>Nimrod — your screens</title>
 <link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
 <link rel="stylesheet" href="./layers.css">
+<!-- settings sidebar (2026-10-08): the sidebar's look, shared with Home and Modules (site_nav.js draws it). -->
+<link rel="stylesheet" href="./site_nav.css">
   <style>
   :root{
     --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C; --link:#105666;
@@ -17,25 +19,8 @@
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased}
   .home{max-width:880px}
 
-  /* ---- the shell: sidebar + one panel ---- */
-  .shell{display:grid;grid-template-columns:212px 1fr;min-height:100vh}
-  .s-side{display:flex;flex-direction:column;gap:18px;padding:20px 14px;
-    background:var(--surface-alt);border-right:1px solid var(--border)}
-  .s-brand{font-weight:800;font-size:1.25rem;letter-spacing:-.02em;padding:0 8px}
-  .s-brand span{color:var(--accent-warm-deep)}
-  .s-nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
-  .s-navb{width:100%;text-align:left;padding:9px 11px;border:0;border-radius:9px;background:transparent;
-    color:var(--text-soft);font:inherit;font-size:.93rem;font-weight:600;cursor:pointer}
-  .s-navb:hover{background:rgba(0,0,0,.05);color:var(--text)}
-  .s-navb.on{background:var(--accent);color:#fff}
-  /* The one item in the sidebar that LEAVES the shell. Same shape as a tab so it does not
-     look bolted on, quieter than one so it does not read as a fifth place to be. */
-  /* The rule under it, not over it: this list sits ABOVE the tabs now (PRIORITY.md #4 moved
-     it up), so the divider that separates "leaves the shell" from "stays in it" has to move
-     to the other edge with it. */
-  .s-out{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border,#e4e0c2)}
-  .s-link{display:block;text-decoration:none;color:var(--link);font-weight:650}
-  .s-link:hover{background:rgba(0,0,0,.05)}
+  /* ---- the shell: sidebar + one panel ---- (settings sidebar, 2026-10-08: the sidebar's own rules moved to
+     site_nav.css, shared with Home and Modules) */
   /* A BUTTON NOW, NOT A LINK — it mounts the module here instead of navigating away. Styled
      like the quiet link it replaced, because it is the same offer in the same place; what
      changed is that taking it no longer costs somebody the dashboard they were building. */
@@ -52,9 +37,6 @@
   .h-modstage{position:relative;height:320px;overflow:hidden;
     border:1px solid var(--border,#e4e0c2);border-radius:var(--radius,10px);
     background:var(--surface,#fff)}
-  .s-foot{margin-top:auto;padding:0 8px;font-size:.8rem;display:flex;flex-direction:column;gap:4px}
-  .s-email{color:var(--text-muted);word-break:break-all}
-  .s-signout{color:var(--link)}
   .s-main{padding:22px 26px 64px;max-width:900px}
 
   /* ---- the person bar: who am I setting this up for? ----
@@ -121,16 +103,10 @@
   .composer .c-primary{background:var(--accent);border-color:var(--accent);color:#fff}
 
   @media (max-width:720px){
-    .shell{grid-template-columns:1fr}
-    .s-side{flex-direction:row;align-items:center;gap:10px;border-right:0;border-bottom:1px solid var(--border);
-      padding:10px 14px;flex-wrap:wrap}
-    .s-nav{flex-direction:row}
-    /* Side by side with the tabs when the sidebar is a strip along the top. */
-    .s-out{margin-bottom:0;padding-bottom:0;border-bottom:0;
-      border-right:1px solid var(--border,#e4e0c2);margin-right:6px;padding-right:6px}
-    .s-foot{margin-top:0;margin-left:auto;flex-direction:row;gap:10px;align-items:center}
-    .s-email{display:none}
     .s-main{padding:16px}
+    /* (settings sidebar, 2026-10-08, measured at 390 wide) Devices' "add a binding" list was as wide as its longest
+       verb, 462px, and pushed the page sideways. */
+    .i-add select{max-width:100%;min-width:0}
   }
 
 
@@ -552,6 +528,8 @@ applyTheme(document.documentElement, DEFAULT_THEME);
     await mountHome(root, {
       email: signedIn ? (me.email || '') : '',
       signedIn,
+      // settings sidebar (2026-10-08): a sidebar tab on Home or Modules opens this page on that tab (site_nav.js).
+      startTab: new URLSearchParams(location.search).get('tab'),
       profiles,
       manifests: listManifests(),
       // The composer edits each screen's `settings` blob — the same key the kiosk reads
