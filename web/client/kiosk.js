@@ -94,6 +94,8 @@ import {
   SCREEN_HOME_TOPIC, NEST_LIVE_DEPTH_FIELD, nestLiveDepthFrom, TRAY_OPEN_FIELD, trayOpenMsFrom, BAR_HIDE_MS,
   trailAfter, crumbName, createBreadcrumb, EDIT_IDLE_FIELD, editIdleMsFrom,
 } from './dashboard_nest.js';
+// corner on hover (2026-10-09): when a panel's ⤢ / ✎ corner shows (the panel under the mouse, the one tapped).
+import { watchCorners } from './panel_corners.js';
 // Row 2.38, the map editor: the edit view on a screen the kiosk mounts itself, and the map window.
 import { openDashboardEditor } from './dashboard_editor.js';
 import { mountMapWindow } from './edit_windows.js';
@@ -4922,23 +4924,14 @@ export async function mountKiosk(root, {
   };
   window.addEventListener('keydown', onEscDemote, true);
   // *** THE CORNERS COME UP WITH A PRESS (2026-10-02 evening; arrangement.js's corner header has the bug). ***
-  // The corners showed on hover or focus only, so a screen with no hover (touch) never showed one. Now a
-  // press anywhere brings them up for the bar's own time (BAR_HIDE_MS) -- the same press that brings the
-  // bar up -- and the next press, on a corner, takes it. Set AFTER the click, never on pointerdown: a corner
-  // appearing under a press already under way would take its release (a mouse's click goes to what the
-  // press and the release share) or its tap (a touch's is hit-tested again), and the press meant for the
-  // panel would be lost. Only for a pointer's click (`detail` > 0): a key or a switch activating a button
-  // clicks with detail 0, and a switch user's every select is no reason to flash the corners.
-  let cornersT = null;
-  function revealCorners() {
-    if (torn) return;
-    kioskEl.dataset.corners = 'up';
-    liftCorners();
-    clearTimeout(cornersT);
-    cornersT = setTimeout(() => { cornersT = null; delete kioskEl.dataset.corners; }, BAR_HIDE_MS);
-  }
-  const onClickForCorners = (e) => { if (e && e.detail > 0) setTimeout(revealCorners, 0); };
-  root.addEventListener('click', onClickForCorners, { capture: true, passive: true });
+  // The corners showed on hover or focus only, so a screen with no hover (touch) never showed one. A tap
+  // brings one up for the bar's own time (BAR_HIDE_MS) -- the same press that brings the bar up -- and the
+  // next press, on a corner, takes it. Set AFTER the click, never on pointerdown: a corner appearing under a
+  // press already under way would take its release or its tap, and the press meant for the panel is lost.
+  // corner on hover (Mike, 2026-10-09: "should only show when you have the cursor in the area"): no longer
+  // EVERY panel's corner after ANY click -- the panel under the mouse (with a short grace), the one a finger
+  // tapped. panel_corners.js has the whole rule and its numbers.
+  const cornerWatch = watchCorners(root, { tapMs: BAR_HIDE_MS, onChange: () => { if (!torn) liftCorners(); } });
   // A FINGER IS NOT A HOVER. Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
   // the corner's hover rule woke a hidden corner just in time to take a tap meant for the panel under it
   // (measured, real touch input). The hover rules (arrangement.js, edit_mode.js) stand down while the last
@@ -7837,11 +7830,10 @@ export async function mountKiosk(root, {
       window.removeEventListener('keydown', onKey);
       // 2026-10-02: Escape-to-smaller, full screen left, and the device level's listener.
       window.removeEventListener('keydown', onEscDemote, true);
-      root.removeEventListener('click', onClickForCorners, true);
+      try { cornerWatch.stop(); } catch { /* already gone */ }   // corner on hover (2026-10-09)
       root.removeEventListener('pointerdown', onPressKind, true);
       root.removeEventListener('pointerover', onPointerOverForCorners, true);
       controlsEl.removeEventListener('transitionend', onBarFaded);
-      clearTimeout(cornersT);
       try { document.removeEventListener('fullscreenchange', onFsChange); } catch { /* no document */ }
       try { offDeviceRow?.(); } catch { /* already gone */ }
       try { skyFollow?.stop(); } catch { /* already gone */ }   // seasons and the sky (sky.js): its minute timer

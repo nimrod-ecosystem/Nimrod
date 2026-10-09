@@ -71,6 +71,7 @@ import { SHELL_PROMOTE, SHELL_DEMOTE } from './shell_verbs.js';
 // on this dashboard, the ✎ corner beside ⤢, and the `shell/edit-panel` verb.
 import { createEditMode, EDIT_PANEL_TOPIC, editSettingsFrom, ensureEditCss } from './edit_mode.js';
 import { moveKeeping } from './dom_move.js';
+import { cornerShowCss } from './panel_corners.js';   // corner on hover (2026-10-09): when the corner shows
 // Row 2.62 step 4: a room's own objects as things an automation can drive (room_drive.js argues the shape).
 import { ROOM_DRIVE_FIELDS, ROOM3D_DRIVE_FIELDS, roomTargetId, emptyHandle } from './room_drive.js';
 
@@ -109,6 +110,11 @@ import { ROOM_DRIVE_FIELDS, ROOM3D_DRIVE_FIELDS, roomTargetId, emptyHandle } fro
 // panel (a calculator's "=" sits right there). Shown = hovered, focused, promoted, or `data-corners="up"`
 // on the kiosk, which kiosk.js sets for the bar's time after any press, so a screen with no hover (touch)
 // gets them too: tap once, the bar AND the corners come up; tap a corner.
+//   *** CORNER ON HOVER (Mike, 2026-10-09): "should only show when you have the cursor in the area." ***
+// Superseded what the paragraph above and "THE WAY BACK" below say about WHEN it shows: panel_corners.js
+// decides now -- the panel under the mouse (with a short grace), the panel a finger tapped (the bar's
+// time), keyboard focus inside it. Not every panel after any click, not a mouse click's leftover focus,
+// and not a ⤡ left up on a panel made bigger (it still reads ⤡ and still goes down: hover or tap it).
 //   NOT HOVER AFTER A TOUCH: Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
 // the hover rule woke a hidden corner in time to take a tap meant for the panel (measured with real touch
 // input). kiosk.js marks `<html data-press="touch">` on a touch/pen press and clears it on a mouse's.
@@ -143,11 +149,7 @@ function ensurePromoteCss() {
   width:${PROMOTE_PX}px;height:${PROMOTE_PX}px;margin:0;padding:0;border-radius:10px;cursor:pointer;
   border:1px solid var(--border);background:var(--surface);color:var(--text);
   font:600 22px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}
-:root:not([data-press="touch"]) .k-cell:hover>.k-promote,:root:not([data-press="touch"]) .k-pcell:hover>.k-promote,
-:root:not([data-press="touch"]) .k-stage:hover>.k-promote,
-.k-cell:focus-within>.k-promote,.k-pcell:focus-within>.k-promote,.k-stage:focus-within>.k-promote,
-.k-promote:focus-visible,[data-promoted]>.k-promote,.k-promote[data-down="1"],
-.kiosk[data-corners="up"] .k-promote{opacity:1;pointer-events:auto}
+${cornerShowCss('.k-promote')}
 @media (prefers-reduced-motion: reduce){.k-promote{transition:none}}
 [data-promoted-panel]>.k-stage>.k-cell:not([data-promoted]),
 [data-promoted-panel]>.k-placed:not(.k-placed-overlay)>.k-pcell:not([data-promoted]){visibility:hidden}

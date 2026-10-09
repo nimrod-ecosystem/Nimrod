@@ -96,6 +96,10 @@ async function realPress(x, y, pointerType = 'mouse') {
   return { down, up, click };
 }
 const pressAt = (el, type) => { el.scrollIntoView({ block: 'nearest' }); const [x, y] = centre(el); return realPress(x, y, type); };
+// corner on hover (2026-10-09): a mouse ARRIVING over an element, and leaving it -- what a real pointer does
+// before it presses (realPress does not: it is also the press that arrives with no hover, a finger's).
+const hoverOn = (el) => el.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, composed: true, pointerType: 'mouse', isPrimary: true, pointerId: 1 }));
+const hoverOff = (el, to = null) => el.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, composed: true, pointerType: 'mouse', isPrimary: true, pointerId: 1, relatedTarget: to }));
 // *** A PRESS ON THE PANEL ITSELF, NOT ON ONE OF ITS CONTROLS (2026-10-06). *** "A tap on a panel lands on the
 // panel" failed about one run in three, detail `tv-opt`: the centre of the Trivia panel is wherever this
 // question's answers happen to fall, so the tap sometimes ANSWERED it -- which is right -- and Trivia redraws on an
@@ -651,9 +655,18 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
         && hoverRules.every((r) => r.selectorText.split(',').filter((s) => /:hover/.test(s)).every((s) => /:root:not\(\[data-press="touch"\]\)/.test(s))),
         `${document.documentElement.dataset.press} ${hoverRules.map((r) => r.selectorText).join(' | ')}`);
       await sleep(300);                 // (their fade is .15s)
-      check('*** ...and so do the corners, for a screen with no hover ***', kEl.dataset.corners === 'up'
-        && cells.every((c, i) => getComputedStyle(corner(i)).opacity === '1' && getComputedStyle(corner(i)).pointerEvents === 'auto'),
-        `${kEl.dataset.corners} ${cells.map((c, i) => getComputedStyle(corner(i)).opacity).join()}`);
+      // corner on hover (Mike, 2026-10-09: "should only show when you have the cursor in the area"; DELIBERATELY
+      // changed from "every panel's corner comes up"): the TAPPED panel's corner, and only that one.
+      const up = (i) => getComputedStyle(corner(i)).opacity === '1' && getComputedStyle(corner(i)).pointerEvents === 'auto';
+      const down = (i) => getComputedStyle(corner(i)).opacity === '0' && getComputedStyle(corner(i)).pointerEvents === 'none';
+      check('*** ...and so does THAT panel\'s corner, for a screen with no hover -- not every panel\'s ***',
+        cells[1].dataset.cornerShow === 'tap' && up(1) && [0, 2, 3].every(down) && !kEl.dataset.corners,
+        `${cells.map((c) => c.dataset.cornerShow || '-').join()} ${cells.map((c, i) => getComputedStyle(corner(i)).opacity).join()}`);
+      // A tap on another panel moves it there.
+      await pressQuiet(cells[0].querySelector('.k-mod'), 'touch');
+      await sleep(300);
+      check('*** a tap on another panel: its corner comes up, the first one goes ***', up(0) && down(1) && !cells[1].dataset.cornerShow,
+        cells.map((c) => c.dataset.cornerShow || '-').join());
       // THE BUG: a tap on the corner went to the panel underneath and only summoned the bar.
       const t = await pressAt(corner(0), 'touch');
       check('*** a TOUCH on the corner reaches the corner (not the panel under it) ***', t.down === corner(0) && t.click === corner(0),
@@ -661,22 +674,32 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** ...and the panel fills its dashboard ***', kiosk.promoted().dashboard === ids[0] && getComputedStyle(cells[1]).visibility === 'hidden', J(kiosk.promoted()));
       // THE WAY BACK (2026-10-03, Mike: "no way to demote it"): the promoted panel's corner reads ⤡, stays shown
       // after the bar and the other corners have gone, sits clear of the bar, and a real press on it goes back down.
-      await settled(() => !kEl.dataset.corners, 6000);
+      // corner on hover (2026-10-09, DELIBERATELY changed from "STILL SHOWN once the bar has gone"): a ⤡ left up on a
+      // panel made bigger is a button left on the photos of a screen nobody points at. It still reads ⤡ and still
+      // goes down -- the mouse over it, or a tap, brings it back (and the bar's Smaller, Escape and Back need neither).
+      await settled(() => !cells[0].dataset.cornerShow, 6000);
       await sleep(300);
+      check('*** promoted, nobody pointing: its ⤡ corner goes too (it still reads ⤡) ***',
+        corner(0).textContent === '⤡' && down(0), `${corner(0).textContent} ${getComputedStyle(corner(0)).opacity}`);
       root.scrollIntoView({ block: 'nearest' });
+      hoverOn(cells[0].querySelector('.k-mod'));
+      await sleep(300);
       const [px, py] = centre(corner(0));
-      check('*** promoted: its ⤡ corner is STILL SHOWN once the bar and the other corners have gone, and nothing is over it ***',
-        !kEl.dataset.corners && corner(0).textContent === '⤡' && getComputedStyle(corner(0)).opacity === '1'
-        && getComputedStyle(corner(0)).pointerEvents === 'auto' && document.elementFromPoint(px, py) === corner(0),
-        `${kEl.dataset.corners} ${corner(0).textContent} ${getComputedStyle(corner(0)).opacity} at=${document.elementFromPoint(px, py)?.className}`);
+      check('*** ...the mouse over the panel brings it back, and nothing is over it ***',
+        cells[0].dataset.cornerShow === 'near' && up(0) && document.elementFromPoint(px, py) === corner(0),
+        `${cells[0].dataset.cornerShow} ${getComputedStyle(corner(0)).opacity} at=${document.elementFromPoint(px, py)?.className}`);
       const m = await pressAt(corner(0), 'mouse');
       check('*** a MOUSE press on ⤡: back DOWN, all four panels again ***', m.click === corner(0) && !kiosk.promoted().dashboard && !kiosk.promoted().screen
         && cells.every((c) => getComputedStyle(c).visibility === 'visible'), `${m.click?.className} ${J(kiosk.promoted())}`);
       check('...and a mouse press gives hover back', document.documentElement.dataset.press === 'mouse');
       // The same by touch, from the screen level too: each ⤡ is one level down, never back up.
-      await pressAt(cells[2].querySelector('.k-mod'), 'touch');
+      // (corner on hover, 2026-10-09: the tap must land IN the calculator -- its centre is under the bar the first
+      // tap woke, and a tap on the bar brings up no panel's corner now -- so a spot on the panel itself.)
+      await pressQuiet(cells[2].querySelector('.k-mod'), 'touch');
       await sleep(300);
-      await pressAt(corner(2), 'touch');
+      const c2 = await pressAt(corner(2), 'touch');
+      check('(setup) a tap in the calculator, then on its corner: it fills its dashboard', c2.click === corner(2) && kiosk.promoted().dashboard === ids[2],
+        `${c2.click?.className} ${cells.map((c) => c.dataset.cornerShow || '-').join()} ${J(kiosk.promoted())}`);
       kiosk.promote(ids[2]);
       check('(setup) the calculator fills the screen', kiosk.promoted().screen === ids[2], J(kiosk.promoted()));
       await sleep(300);
@@ -688,11 +711,16 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** ...and again: all the way back ***', s2.click === corner(2) && !kiosk.promoted().dashboard && corner(2).textContent === '⤢',
         `${s2.click?.className} ${J(kiosk.promoted())}`);
       // ESCAPE, with nothing focused (a key after a mouse press on a panel lands on the body).
+      // (corner on hover, 2026-10-09: the touches above put the mouse's corner away; it comes back over the panel.)
+      hoverOn(cells[0].querySelector('.k-mod'));
+      await sleep(200);
       await pressAt(corner(0), 'mouse');
+      check('(setup) the mouse over the panel, a press on its corner: it fills the dashboard', kiosk.promoted().dashboard === ids[0], J(kiosk.promoted()));
       document.activeElement?.blur?.();
       document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
       await sleep(30);
       check('*** Escape with nothing focused: back down ***', !kiosk.promoted().dashboard, J(kiosk.promoted()));
+      hoverOff(cells[0].querySelector('.k-mod'));          // the mouse goes off the screen
       // BACK (the verb a switch, a voice or a mouse's back button sends).
       kiosk.promote(ids[1]);
       bus.publish('verb/back');
@@ -700,9 +728,9 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** Back: back down ***', !kiosk.promoted().dashboard, J(kiosk.promoted()));
       // Once the corners have gone again, a press where one sits is the panel's -- the corner never
       // swallows a press it was not showing for (nor does it appear under the press and take its release).
-      const gone = await settled(() => !kEl.dataset.corners, 6000);
+      const gone = await settled(() => !root.querySelector('[data-corner-show]'), 6000);
       await sleep(300);
-      check('the corners go again with the bar\'s own time', gone && getComputedStyle(corner(1)).opacity === '0'
+      check('the corners go again (the tap\'s time, the mouse\'s grace)', gone && getComputedStyle(corner(1)).opacity === '0'
         && getComputedStyle(corner(1)).pointerEvents === 'none', `${gone} ${getComputedStyle(corner(1)).opacity}`);
       const under = await pressAt(corner(1), 'mouse');
       check('*** a press where an unseen corner sits is the PANEL\'s (down, up and click) ***', cells[1].contains(under.down)
@@ -730,6 +758,21 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
         `${sm.click?.dataset?.act} ${J(kiosk.promoted())}`);
       await pressAt(small(), 'touch');
       check('*** ...and a tap: all the way back, Smaller dimmed again ***', !kiosk.promoted().dashboard && small().disabled, J(kiosk.promoted()));
+      // corner on hover (2026-10-09): with every corner hidden, a keyboard or a switch still reaches both presses as
+      // menu rows on the selected panel (they are scan stops too: kiosk_test) -- the corner is never the only way.
+      await settled(() => !root.querySelector('[data-corner-show]'), 6000);
+      kiosk.menu.open(); kiosk.menu.showTab('module');
+      const mrows = kiosk.menu.items().map((i) => i.id);
+      check('*** corners all hidden: the menu still has "Edit this panel" and "Make ... bigger" ***',
+        !root.querySelector('[data-corner-show]') && mrows.includes('edit-panel') && mrows.includes('promote'), mrows.join());
+      kiosk.menu.focusRow('edit-panel'); kiosk.menu.select();
+      const editingNow = await settled(() => !!root.querySelector('[data-editing]'), 2000);
+      const edBox = root.querySelector('[data-editing]');
+      check('*** ..."Edit this panel" puts the selected panel in edit mode, its ✎ up with nobody pointing ***', editingNow && !kiosk.menu.isOpen()
+        && edBox === cells[3] && getComputedStyle(edBox.querySelector(':scope > .k-editc')).pointerEvents === 'auto',
+        `${editingNow} ${edBox?.className} ${kiosk.menu.isOpen()}`);
+      bus.publish('shell/edit-panel', { id: ids[3], on: false });
+      await settled(() => !root.querySelector('[data-editing]'), 2000);
       kiosk.holdBar(false);
       kiosk.destroy(); root.innerHTML = '';
     }
@@ -1036,11 +1079,13 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('...and back', !kiosk.promoted().dashboard);
       // The bench's case: a real screen is the dashboard path. A REAL tap, then a real tap on the corner.
       root.scrollIntoView({ block: 'nearest' });
-      const dtap = await pressAt(cells[1].querySelector('.k-mod'), 'touch');
+      // (corner on hover, 2026-10-09: the TAPPED panel's corner, not every panel's -- so the tap is on the panel whose corner it then presses.)
+      const dtap = await pressAt(cells[0].querySelector('.k-mod'), 'touch');
       await sleep(300);
-      check('*** dashboard path: a tap brings the corners up too ***', root.querySelector('.kiosk').dataset.corners === 'up'
-        && getComputedStyle(cells[0].querySelector('.k-promote')).pointerEvents === 'auto',
-        `${root.querySelector('.kiosk').dataset.corners} down=${dtap.down?.className} click=${dtap.click?.className} ${getComputedStyle(cells[0].querySelector('.k-promote')).pointerEvents}`);
+      check('*** dashboard path: a tap brings that panel\'s corner up too (and not the other\'s) ***', cells[0].dataset.cornerShow === 'tap'
+        && getComputedStyle(cells[0].querySelector('.k-promote')).pointerEvents === 'auto'
+        && getComputedStyle(cells[1].querySelector('.k-promote')).pointerEvents === 'none',
+        `${cells.map((c) => c.dataset.cornerShow || '-').join()} down=${dtap.down?.className} click=${dtap.click?.className} ${getComputedStyle(cells[0].querySelector('.k-promote')).pointerEvents}`);
       // NEVER UNDER THE BAR: on 'side' this corner sits at the bottom middle, where the placed bar is.
       const overlaps = (a, b) => a.right > b.left && a.left < b.right && a.bottom > b.top && a.top < b.bottom;
       const barR = root.querySelector('.tb-bar')?.getBoundingClientRect();
@@ -1082,6 +1127,7 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       const cells = [...root.querySelectorAll('.view .k-stage > .k-cell')];
       check('(setup) an embedded 2x2 on the dashboard path', kiosk.dashboardPath() && cells.length === 4, String(cells.length));
       root.scrollIntoView({ block: 'nearest' });
+      hoverOn(cells[0].querySelector('.k-mod'));          // corner on hover (2026-10-09): a mouse arrives before it presses
       await pressAt(cells[0].querySelector('.k-mod'), 'mouse');
       await sleep(300);
       const c0 = () => cells[0].querySelector(':scope > .k-promote');
