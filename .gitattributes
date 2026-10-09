@@ -4,6 +4,8 @@
 *.sh text eol=lf
 *.py text eol=lf
 *.service text eol=lf
+*.timer text eol=lf
+web/kiosk_installer/deploy/*.conf text eol=lf
 
 # Markdown is documents, not scripts - let the platform decide locally.
 *.md text

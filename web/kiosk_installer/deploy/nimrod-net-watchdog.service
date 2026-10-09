@@ -1,0 +1,8 @@
+[Unit]
+Description=Nimrod network watchdog - notes when the network drops, and reconnects Wi-Fi or Tailscale
+After=network.target NetworkManager.service tailscaled.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/nimrod/net-watchdog.env
+ExecStart=/usr/local/bin/nimrod-net-watchdog.sh

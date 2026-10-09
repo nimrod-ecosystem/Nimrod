@@ -243,6 +243,25 @@ if [ "$LOCK" = "1" ] && [ "${NIMROD_LOCK_POLICY:-0}" = "1" ]; then
   echo "wrote $POLICY_FILE (allows $SITE_ORIGIN to reach this computer's helper); restart the kiosk to apply"
 fi
 
+# 7. (2026-10-09, Mike: "yes to the watchdog and keeping the log") THE NETWORK WATCHDOG AND A LOG THAT SURVIVES A POWER
+#    CUT. A unit in a care room went offline for days with no trace: Raspberry Pi OS keeps the journal in memory only.
+#    Both are system-wide (sudo), so they are written only when asked: NIMROD_NET_WATCHDOG=1. The watchdog notes every
+#    change (`journalctl -t nimrod-net`) and reconnects Wi-Fi or restarts tailscaled after a few minutes down, with a
+#    wait between tries; it never reboots and never answers a guest network's sign-in page.
+if [ "${NIMROD_NET_WATCHDOG:-0}" = "1" ]; then
+  sudo install -m 0755 "$HERE/nimrod-net-watchdog.sh" /usr/local/bin/nimrod-net-watchdog.sh
+  sudo install -m 0644 "$HERE/nimrod-net-watchdog.service" /etc/systemd/system/nimrod-net-watchdog.service
+  sudo install -m 0644 "$HERE/nimrod-net-watchdog.timer" /etc/systemd/system/nimrod-net-watchdog.timer
+  sudo mkdir -p /etc/systemd/journald.conf.d
+  sudo install -m 0644 "$HERE/nimrod-journal-persistent.conf" /etc/systemd/journald.conf.d/50-nimrod-persistent.conf
+  sudo systemd-tmpfiles --create --prefix /var/log/journal
+  sudo systemctl restart systemd-journald
+  sudo journalctl --flush || true
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now nimrod-net-watchdog.timer
+  echo "network watchdog on (journalctl -t nimrod-net); the log now keeps across power cuts (100 MB at most)"
+fi
+
 echo
 echo "installed. kiosk will launch $URL via systemd --user on next boot."
 echo "  start it now:  systemctl --user start nimrod-kiosk"
