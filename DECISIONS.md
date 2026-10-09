@@ -2441,3 +2441,35 @@ Mike, through chat (note BG item 1; row 2.58), after the play-history move (1d13
 - **Not built, planned:** the person's own cloud drive (Google Drive first) and their own always-on computer as places.
   Google Drive needs a sign-in that lasts on a screen nobody types on; see Code's report for what that takes.
   (2026-10-07)
+
+## Mike's rulings on the bar, word logic, Spotify and restarts -- 2026-10-08
+
+Mike, through chat (notes BI, BK, BL), after playing the 2026-10-07 builds. Each records his words; where it changes
+a default Code had guessed, it says what it supersedes.
+
+- **The bar stays away by default while a game fills the screen** (row 2.65). Supersedes Code's 2026-10-07 guess
+  (35ea084) that "While a game is being played, the bar" defaults to "comes up as usual". Code had argued that a
+  visitor who only taps would get nothing; Mike decided the other way. The ways back (hold still, the bar's key, a
+  long switch press, a call) stay, so nobody is stranded. (2026-10-08)
+- **T shows and hides the bar; H is freed** (row 2.72). Mike: *"No one used H yet. I'm the only person using the site
+  as far as I know."* So no need to keep H working beside it. Supersedes the H key from 7066b4c. (2026-10-08)
+- **After a restart, a chosen dashboard opens, per screen** (row 2.70). Mike: *"Yes, have a chosen one. I want cold
+  boot to be there for anyone that gets lost."* A chosen one rather than the last one used, so a cold boot is a known
+  place to come back to. What each screen chooses is that screen's own content, not a code default. (2026-10-08)
+- **"Opposites/Logic" is the name** for Opposites with word logic at its harder levels (row 2.63). Supersedes Code's
+  guess "Opposites and word logic" (a54d82c); the saved value stays `opposites`. (2026-10-08)
+- **Spotify: the song-info card is on by default, and our weighted shuffle keeps counting Spotify plays** (row 2.61).
+  Mike: *"Song info by default & count our shuffle."* This answers Code's two terms questions (Developer Policy II.5
+  and III.13), taking option A on the second. It covers the shuffle's own counts; whether Charts and automation count
+  Spotify (left out in b1c1956 / 7045e26) is not covered by these words and stays as built until he says. (2026-10-08)
+- **Spotify should work like YouTube does, with an easy way to choose the speakers** (rows 2.61, 2.68). Mike: *"I want
+  it to work like youtube does as much as possible ... There needs to be an easy way to make it play through
+  whichever speakers you want."* And: *"Speakers should be under devices. Whatever is set up as default for any
+  screen should work out of the box."* The embed in a frame is tried first; the Web Playback SDK and a Connect
+  receiver are fallbacks only if needed. (2026-10-08)
+- **Spotify tells you it is playing somewhere else instead of taking over** (row 2.61). Mike: *"Can we make it so
+  Spotify tells you it's playing somewhere else instead of stopping it anywhere?"* (2026-10-08)
+- **The storage shape for history is fine** (row 2.58, the 2026-10-07 section above). Mike also: *"We can have her
+  info save to the drive in her room."* Chat reads his words as making the person's own system the default for game
+  results and the talk board's words too, with the server the opt-in; the build that moves those defaults logs its
+  own entry. (2026-10-08)
