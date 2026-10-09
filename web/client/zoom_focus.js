@@ -19,6 +19,10 @@
 //
 // NO COLOUR, NO LAYOUT: only `scale`, on top of whatever the panel already is, so turning it off leaves
 // nothing behind. The stylesheet is injected once per document (no .css file for three rules).
+//
+// (fullscreen border, 2026-10-08) NOT ON THE ONLY PANEL a press could go to (`data-ring-alone`, arrangement.js
+// `syncRingAlone`): growing is a "which panel" marker like the ring, and a panel that fills the screen grown 1.2x
+// would only push its own edges off the screen.
 
 export const ZOOM_FOCUS_KEY = 'zoomFocus';
 export const ZOOM_FOCUS_OPTIONS = Object.freeze([
@@ -47,6 +51,8 @@ const STYLE_ID = 'zoom-focus-style';
 export const ZOOM_FOCUS_CSS = `
 [data-zoom-focus] .k-cell[data-focused], [data-zoom-focus] [data-placed][data-focused]{
   scale: var(--zoom-focus, 1); z-index: 3; }
+[data-zoom-focus] .k-cell[data-focused][data-ring-alone], [data-zoom-focus] [data-placed][data-focused][data-ring-alone]{
+  scale: 1; }
 @media (prefers-reduced-motion: no-preference){
   [data-zoom-focus] .k-cell, [data-zoom-focus] [data-placed]{ transition: scale .15s ease-out; }
 }
