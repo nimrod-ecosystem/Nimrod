@@ -155,6 +155,14 @@
     outline:3px solid var(--focus,var(--accent,#839958));outline-offset:var(--k-ring-offset,-3px)}
   /* fullscreen border: the only panel a press could go to gets no "which panel" ring (its own controls keep theirs). */
   .k-stage.k-grid > .k-cell[data-focused][data-ring-alone] > .k-mod{outline:none}
+  /* panel ring (2026-10-09; panel_ring.js argues the setting and its default): "Show which panel is selected" --
+     Never, or gone a while after the last press. The ring's own selector with the screen's mark in front, so only
+     the panel's ring goes and a control inside keeps its focus ring. A placed box's ring is inline (arrangement.js
+     `syncRingAlone`), hence `!important`; its box-shadow is only ever the ring's band. */
+  [data-panel-ring="never"] .k-stage.k-grid .k-cell[data-focused] .k-mod,
+  [data-panel-ring-idle] .k-stage.k-grid .k-cell[data-focused] .k-mod{outline:none}
+  [data-panel-ring="never"] [data-placed][data-focused],
+  [data-panel-ring-idle] [data-placed][data-focused]{outline:none !important;box-shadow:none !important}
   /* NO TRANSITION ON THE RING, and it is not a style preference. The first version faded
      `outline-color` in over 150ms, and the ring then rendered in the element's own text colour
      instead of the moss — because a transition sits at its START value until the page

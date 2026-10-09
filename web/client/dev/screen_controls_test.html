@@ -42,8 +42,9 @@ import {
 } from '../hide_sound.js';
 import {
   PLAY_PAUSE_TOPIC, PROMOTE_TOPIC, DEMOTE_TOPIC, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_ACTIONS,
-  SYSTEM_ACTIONS, createDefaultRegistry, verbTarget,
+  SYSTEM_ACTIONS, createDefaultRegistry, verbTarget, verbTopic,
 } from '../actions.js';
+import { createPanelRing, panelRingMode, PANEL_RING_FIELD, PANEL_RING_DEFAULT } from '../panel_ring.js';   // panel ring
 import { SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE } from '../shell_verbs.js';
 import { ROUTES, routeAction, routeFor, duplicatePhrases, spokenTable, normalize } from '../input_speech.js';
 import { paintPlayPause, drawCallControls } from '../transport_bar.js';
@@ -812,6 +813,149 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** the no-ring rule is on the panel box itself (`> .k-mod`), never on what is inside it ***', rules.length >= 1
         && rules.every((r) => r.selectorText.split(',').every((s) => /\[data-ring-alone\]\s*>\s*\.k-mod\s*$/.test(s.trim()) || /zoom-focus/.test(s))),
         rules.map((r) => r.selectorText).join(' | '));
+    }
+
+    // panel ring (Mike, 2026-10-09, on 29b238e's exception): "That should be an option or maybe the selection turns off
+    // after a little bit. Don't assume everyone is a switch user or even that every switch user would always want the
+    // highlight." "Show which panel is selected" (panel_ring.js argues the choices and the default): Always / for 30, 10
+    // or 3 seconds after a press / Never. The wait runs on a fake clock here (`ringTimers`), so nothing waits for real.
+    section('*** panel ring: "Show which panel is selected" -- always, for a while after a press, or never ***');
+    {
+      const ringOf = (cell) => getComputedStyle(cell.querySelector(':scope > .k-mod')).outlineStyle;
+      const ringOn = (cell) => !!cell && ringOf(cell) !== 'none';
+      const fakeClock = () => {
+        let n = 0; const q = new Map();
+        return { set(fn, ms) { n += 1; q.set(n, { fn, ms }); return n; }, clear(id) { q.delete(id); },
+          waits: () => [...q.values()].map((e) => e.ms),
+          run() { const all = [...q.values()]; q.clear(); for (const e of all) e.fn(); return all.length; } };
+      };
+
+      // (a) the pieces, on their own
+      check('the row: "Show which panel is selected", five choices, most shown to least, on the screen\'s row',
+        PANEL_RING_FIELD.key === 'panelRing' && PANEL_RING_FIELD.label === 'Show which panel is selected'
+        && J(PANEL_RING_FIELD.options.map((o) => o.value)) === J(['always', 'after-30', 'after-10', 'after-3', 'never']), J(PANEL_RING_FIELD));
+      check('*** the default: for 10 seconds after a press (argued in panel_ring.js) ***', PANEL_RING_DEFAULT === 'after-10'
+        && J(panelRingMode(undefined)) === J({ mode: 'after', ms: 10000 }) && J(panelRingMode('nonsense')) === J({ mode: 'after', ms: 10000 }));
+      check('...each choice as what it does', J(['always', 'after-30', 'after-3', 'never'].map(panelRingMode))
+        === J([{ mode: 'always', ms: 0 }, { mode: 'after', ms: 30000 }, { mode: 'after', ms: 3000 }, { mode: 'never', ms: 0 }]));
+      check('the row says what still shows where you are, with Never (the bar)', /bar/.test(PANEL_RING_FIELD.help) && !/her screen|Christine|Cici/i.test(
+        PANEL_RING_FIELD.label + PANEL_RING_FIELD.help + PANEL_RING_FIELD.options.map((o) => o.label).join()));
+      {
+        const el = document.createElement('div');
+        const clk = fakeClock();
+        const b = createBus();
+        const pr = createPanelRing({ el, root: el, keyTarget: el, bus: b, timers: clk });
+        pr.apply('after-3');
+        const armed = clk.waits().length;
+        pr.apply('after-3');   // the screen's row is re-read on every poll: the same choice again
+        check('*** the same choice applied again (a poll) does not bring the ring back or start a second wait ***',
+          armed === 1 && clk.waits().length === 1, J(clk.waits()));
+        clk.run();
+        pr.apply('after-3');
+        check('...and leaves a ring that has gone, gone', el.dataset.panelRingIdle === '1');
+        b.publish(verbTopic('select'));
+        check('any verb on the bus brings it back (a switch that is not a keyboard)', !el.dataset.panelRingIdle && clk.waits().length === 1);
+        pr.destroy();
+        check('destroyed: its marks and its wait are gone', !('panelRing' in el.dataset) && !('panelRingIdle' in el.dataset) && clk.waits().length === 0);
+        b.publish(verbTopic('next'));
+        check('...and a verb after that does nothing', clk.waits().length === 0 && !('panelRingIdle' in el.dataset));
+      }
+
+      // (b) on a real screen, a 2x2
+      const p = await profiles.create('SC-panelring');
+      for (const t of ['photos', 'trivia', 'calculator', 'wordforge']) await profiles.addModule(p.id, t);
+      const ids = (await profiles.get(p.id)).modules.map((m) => m.id);
+      stashPreviewLayout(p.id, { preset: 'quad', slots: ids });
+      const clock = fakeClock();
+      const bus = createBus();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ringTimers: clock, ...seams(fakeStorage()) });
+      await sleep(600);
+      const kEl = root.querySelector('.kiosk');
+      const lit = () => root.querySelector('.k-stage > .k-cell[data-focused]');
+      check('(setup) a 2x2 with a selected panel', root.querySelectorAll('.k-stage > .k-cell').length === 4 && !!lit());
+      check('*** by default: the ring shows when the screen comes up, and a 10 second wait is running ***',
+        kiosk.panelRing()?.mode === 'after' && kiosk.panelRing()?.ms === 10000 && ringOn(lit()) && clock.waits().includes(10000),
+        `${J(kiosk.panelRing())} ${J(clock.waits())} ${lit() && ringOf(lit())}`);
+      clock.run();
+      check('*** the wait runs out with no press: the ring goes ***', kiosk.panelRing()?.idle === true && !ringOn(lit()), lit() && ringOf(lit()));
+      check('...the panel is still the selected one (the bar and the menu read it)', lit()?.dataset.focused === '1');
+      root.querySelector('.kiosk').dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+      check('*** the mouse moves: the ring is back, and the wait starts again ***', ringOn(lit()) && clock.waits().length === 1, J(clock.waits()));
+      clock.run();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
+      check('*** gone again; a key brings it back ***', ringOn(lit()) && kiosk.panelRing()?.idle === false);
+      clock.run();
+      const before = lit();
+      bus.publish(verbTopic('focus-next'));
+      await sleep(30);
+      check('*** gone again; a switch step brings it back, on the panel the step moved to ***',
+        ringOn(lit()) && lit() !== before && clock.waits().length === 1, `${lit() && ringOf(lit())} ${J(clock.waits())}`);
+      clock.run();
+      root.querySelector('.kiosk').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      check('...and a touch or a press', ringOn(lit()));
+
+      // Through the menu, one press a step, as a switch user sets it.
+      kiosk.menu.open();
+      kiosk.menu.setChooseMode('step');
+      kiosk.menu.showTab('display');
+      const row = () => kiosk.menu.items().find((i) => i.id === 'set:panelRing');
+      check('the row is on the Display tab of the screen\'s menu', row()?.tab === 'display', J(row()));
+      const stepTo = async (v) => {
+        for (let i = 0; i < 8 && kiosk.panelRing()?.value !== v; i += 1) {
+          kiosk.menu.focusRow('set:panelRing'); kiosk.menu.select();
+          await settled(() => kiosk.panelRing()?.value !== null, 500);
+          await sleep(30);
+        }
+        return kiosk.panelRing()?.value === v;
+      };
+      check('(setup) stepped to Never', await stepTo('never'), J(kiosk.panelRing()));
+      kiosk.menu.close();
+      check('*** Never: no ring, and no wait running ***', !ringOn(lit()) && kiosk.panelRing()?.mode === 'never' && clock.waits().length === 0,
+        `${lit() && ringOf(lit())} ${J(clock.waits())}`);
+      root.querySelector('.kiosk').dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
+      const beforeN = lit();
+      bus.publish(verbTopic('focus-next'));
+      await sleep(30);
+      check('*** Never: a mouse move, a key and a switch step bring no ring -- but the scan still moves ***',
+        !ringOn(lit()) && !!lit() && lit() !== beforeN, `${lit() && ringOf(lit())}`);
+      const litId = () => ids[Number(lit()?.dataset.slot)];
+      const onDot = root.querySelector('[data-mods] .k-dot.on');
+      check('*** ...and the bar still lights the selected panel\'s name (what says where you are, with Never) ***',
+        !!onDot && !!litId() && onDot.dataset.id === litId(), `${onDot && onDot.dataset.id} / ${litId()}`);
+
+      kiosk.menu.open(); kiosk.menu.setChooseMode('step'); kiosk.menu.showTab('display');
+      check('(setup) stepped to Always', await stepTo('always'), J(kiosk.panelRing()));
+      kiosk.menu.close();
+      check('*** Always: the ring, and no wait to take it away ***', ringOn(lit()) && clock.waits().length === 0, J(clock.waits()));
+      clock.run();
+      check('...still there with nothing pressed', ringOn(lit()));
+      kiosk.promote(litId());
+      await sleep(30);
+      check('*** Always still has no ring round the only panel (made bigger: 29b238e\'s rule holds in every choice) ***',
+        !!kiosk.promoted().dashboard && !ringOn(lit()), `${J(kiosk.promoted())} ${lit() && ringOf(lit())}`);
+      kiosk.demote();
+      await sleep(30);
+      check('...and back down to four, it is back', !kiosk.promoted().dashboard && ringOn(lit()));
+
+      kiosk.menu.open(); kiosk.menu.setChooseMode('step'); kiosk.menu.showTab('display');
+      check('(setup) stepped to 3 seconds', await stepTo('after-3'), J(kiosk.panelRing()));
+      kiosk.menu.close();
+      check('*** 3 seconds: picked, the ring shows and a 3 second wait runs ***', ringOn(lit()) && J(clock.waits()) === J([3000]), J(clock.waits()));
+      clock.run();
+      check('...and runs out', !ringOn(lit()));
+      kiosk.destroy(); root.innerHTML = '';
+      check('the screen gone: no wait left running', clock.waits().length === 0, J(clock.waits()));
+
+      // (c) only the PANEL's ring: every rule the setting adds is the ring's own panel box, or a placed box
+      const rules = [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules]; } catch { return []; } })
+        .filter((r) => /data-panel-ring/.test(r.selectorText || ''));
+      check('*** the setting takes the panel\'s ring only, never a control\'s inside it (the selectors end on the panel box) ***',
+        rules.length >= 2 && rules.every((r) => r.selectorText.split(',').every((s) => /\.k-cell\[data-focused\] \.k-mod$/.test(s.trim())
+          || /\[data-placed\]\[data-focused\]$/.test(s.trim()))),
+        rules.map((r) => r.selectorText).join(' | '));
+      check('...a placed box\'s inline ring is out-ranked (it is set inline by arrangement.js)', rules.some((r) => /data-placed/.test(r.selectorText)
+        && r.style.getPropertyPriority('outline-style') === 'important' && r.style.getPropertyPriority('box-shadow') === 'important'));
     }
 
     section('*** (6) a press that WAKES the plain bar is the panel\'s, never the bar\'s -- touch and mouse ***');

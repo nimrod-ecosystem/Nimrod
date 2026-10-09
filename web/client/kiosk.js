@@ -155,6 +155,7 @@ import { createMediaSourcesClient } from './media_sources.js';                  
 import { GAMEPLAY_STREAM } from './telemetry.js';
 import { historyPage, HISTORY_ITEMS, HISTORY_PAGE } from './history_page.js';
 import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
+import { createPanelRing, PANEL_RING_FIELD } from './panel_ring.js';   // panel ring
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
 import { LAYERS } from './layers.js';
@@ -331,6 +332,9 @@ export async function mountKiosk(root, {
   // actually waited that long to prove the dim/drift class appears would be a test nobody
   // runs; this seam lets it use milliseconds instead, the same reason `recoveryTick` is one.
   burnInIdleMs = 10 * 60 * 1000,
+  // panel ring (2026-10-09, panel_ring.js): the clock "Show which panel is selected" waits on -- `{ set(fn, ms),
+  // clear(t) }` -- so a suite can run the wait out without waiting. Null: the page's own timers.
+  ringTimers = null,
   // *** `embedded`: "THIS KIOSK IS A PREVIEW HOST ON SOMEBODY ELSE'S PAGE." Default false, and
   // false is byte-for-byte today's behavior. `modules.html` mounts the real kiosk inside a box on
   // a public page so the transport bar and settings menu are the ONE implementation rather than
@@ -2124,6 +2128,14 @@ export async function mountKiosk(root, {
   offDeviceRow = deviceRow?.subscribe?.(() => { if (!torn) syncShownTheme(); }) || null;
   // ZOOM ON FOCUS (row 2.37 item 6): the focused panel grows a little. Off unless the screen's row says.
   applyZoomFocus(kioskEl, settings.get()?.zoomFocus);
+  // panel ring (2026-10-09; panel_ring.js argues the setting, its default and what brings the ring back): "Show
+  // which panel is selected". Keys on the window for a real screen (a key with nothing focused lands on the body),
+  // inside the box for an embed (a host page's keys are not ours). Guarded: never worth the screen not coming up.
+  let panelRing = null;
+  try {
+    panelRing = createPanelRing({ el: kioskEl, root, keyTarget: embedded ? root : window, bus, timers: ringTimers });
+    panelRing.apply(settings.get()?.[PANEL_RING_FIELD.key]);
+  } catch (err) { console.error('kiosk: panel ring', err); }
   // The listening cue starts on its defaults (the visual cue on, the tone off, duck): the person's own
   // row replaces them once whoever this screen is for has been resolved (below).
   attachListen({});
@@ -2132,6 +2144,7 @@ export async function mountKiosk(root, {
     applyLayout(s);
     applyPanelSurface(s);
     try { applyZoomFocus(kioskEl, s?.zoomFocus); } catch (err) { console.error('kiosk: zoom on focus', err); }
+    try { panelRing?.apply(s?.[PANEL_RING_FIELD.key]); } catch (err) { console.error('kiosk: panel ring', err); }   // panel ring
     // A volume or a mix changed from the menu, or from another device, is heard now.
     try { master?.sync(); } catch (err) { console.error('kiosk: master volume', err); }
     try { mixer?.sync(); } catch (err) { console.error('kiosk: mixer', err); }
@@ -3353,6 +3366,7 @@ export async function mountKiosk(root, {
   const SCREEN_FIELD_TABS = {
     theme: ['theme', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],   // themes: theme on Theme
     [SMALL_CLOCK_KEY]: ['display', 0],
+    [PANEL_RING_FIELD.key]: ['display', 0],   // panel ring: "How it looks", with the panels' framing
     [HOLIDAYS_KEY]: ['theme', 0], [SKY_FOLLOW_KEY]: ['theme', 0],   // seasons and the sky (sky.js); themes: on Theme
     ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['theme', 0]])),   // seasons: one row per holiday; themes: on Theme
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
@@ -3807,6 +3821,10 @@ export async function mountKiosk(root, {
     ...(sceneTakesSky(paintedTheme(shownTheme()).scene) ? [{ ...SKY_FIELD, options: SKY_FIELD.options.map((o) => ({ ...o })) }] : []),
     // Space between panels (2026-10-02 evening): none by default, so four up is four quarters.
     { ...PANEL_GAP_FIELD, options: PANEL_GAP_FIELD.options.map((o) => ({ ...o })) },
+    // panel ring (2026-10-09; panel_ring.js argues it): "Show which panel is selected" -- always, for a while after a
+    // press (the default), or never. Beside "Space between panels": both are about how the panels are framed. The
+    // SCREEN's, as "Grow the panel the cursor is on" is: what a room's screen shows is the place's to choose.
+    { ...PANEL_RING_FIELD, options: PANEL_RING_FIELD.options.map((o) => ({ ...o })) },
     // "Show a small clock" (2026-10-03; arrangement.js SMALL_CLOCK_FIELD argues it): off or a corner. Only where
     // it can act (`canOverlayHere`: Home, or a screen whose arrangement this menu may change).
     ...(hostHandles('smallclock') || canAddHere() ? [{ ...SMALL_CLOCK_FIELD, options: SMALL_CLOCK_FIELD.options.map((o) => ({ ...o })) }] : []),
@@ -5782,7 +5800,8 @@ export async function mountKiosk(root, {
   const PLAIN_PART = 'This part';
   const PLAIN_MENU_DROPS = new Set(['switch-module', 'edit-panel', 'promote', 'demote', 'play-pause', 'scan-lap', 'piece-edit',
     'set:instancePanelSurface', 'set:panelSurface', `set:${PANEL_GAP_FIELD.key}`, `set:${ZOOM_FOCUS_FIELD.key}`,
-    `set:${SMALL_CLOCK_KEY}`, `set:${HIDE_ASK_TIMEOUT_FIELD.key}`, 'edit-view', 'dashboard-map']);
+    `set:${SMALL_CLOCK_KEY}`, `set:${HIDE_ASK_TIMEOUT_FIELD.key}`, 'edit-view', 'dashboard-map',
+    `set:${PANEL_RING_FIELD.key}`]);   // panel ring: acts only on the panels, like Grow the panel the cursor is on
   const PLAIN_MENU_WORDS = {
     'claude-page': { label: 'Claude…', hint: (h) => h.replace('the account’s key', 'the key it uses') },
     'screen-name': { hint: () => 'renamed on the home page' },
@@ -7591,6 +7610,8 @@ export async function mountKiosk(root, {
     promote: (id) => promotePanel(id || null),
     demote: () => demotePanel(),
     promoted: () => ({ screen: promotedScreen, dashboard: arr.promotedId?.() || null }),
+    // panel ring (2026-10-09), for the suites: "Show which panel is selected" as in force ({ value, mode, ms, idle, shown }).
+    panelRing: () => panelRing?.state() || null,
     callControls: () => (callState ? { ...callState } : null),
     levels: () => levelsHere(),
     levelLayers: () => levelLayers(),
@@ -7686,6 +7707,7 @@ export async function mountKiosk(root, {
       try { document.removeEventListener('fullscreenchange', onFsChange); } catch { /* no document */ }
       try { offDeviceRow?.(); } catch { /* already gone */ }
       try { skyFollow?.stop(); } catch { /* already gone */ }   // seasons and the sky (sky.js): its minute timer
+      try { panelRing?.destroy(); } catch { /* already gone */ }   // panel ring: its wait and its listeners
       for (const off of offVerbSnap) { try { off?.(); } catch { /* already gone */ } }
       root.removeEventListener('mousemove', pokeIfNearBar);
       // The pointerdown/keydown pair were never detached here even before today - a real,
