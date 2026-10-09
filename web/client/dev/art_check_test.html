@@ -275,8 +275,8 @@ try {
     // =====================================================================================================
     section('*** the tree: Artwork (with a folder per kind) and Data, made by "Set up your Nimrod folder" ***');
     {
-      check('*** ten kinds: Artwork and Data after the eight ***', J(Object.values(SUBFOLDERS).slice(-2)) === J(['Artwork', 'Data'])
-        && SUBFOLDERS.artwork === ART_FOLDER && FOLDER_KINDS.length === 10 && !POINTER_KINDS.includes('artwork'));
+      check('*** Artwork and Data after the eight (and Board sounds after them: own board clips, 2026-10-09) ***', J(Object.values(SUBFOLDERS).slice(8, 10)) === J(['Artwork', 'Data'])
+        && SUBFOLDERS.artwork === ART_FOLDER && FOLDER_KINDS.length === 11 && !POINTER_KINDS.includes('artwork'));
       check('Artwork holds a folder per kind of artwork', J(ART_INNER.artwork) === J(['Avatars', 'Buttons', 'Board cards', 'Wallpapers']));
       const tree = {};
       const root = fdir('Nimrod', tree);

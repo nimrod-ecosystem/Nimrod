@@ -67,6 +67,16 @@ export const ROOT_KEY = 'root';
 //   progress now, and an empty, explained folder is the decided shape (DECISIONS 2026-08-30: "Photos, media, model
 //   files, the inbox, notes, exports - each gets a subfolder"). If that work lands elsewhere, take Data out.
 //
+// own board clips (2026-10-09): ONE MORE, "Board sounds" - the sounds people record or choose for the cards of the
+//   boards they make (board_sounds.js). Written when somebody presses Keep in the board editor, read by a board on
+//   any device with this folder. Argued against the places that already existed:
+//     Artwork/Board cards: a card's picture and its sound side by side reads well, but Artwork's README is the art
+//       kit (pictures, for a person's AI) and its checker would report every sound as a bad picture.
+//     Recordings: those are training recordings with a keep-for date; somebody tidying them would delete a board's
+//       words with them.
+//   For "no new folder at all" (keep sounds on the device only): then a board made on one device speaks in the
+//   browser's voice on every other one. Not a pointer kind: the site writes into it.
+//
 // THE NAMES are plain words, capitalised as a file manager shows its own folders ("Pictures", "Music"). They
 // replace the first tree's `fonts`, `luts`, `audio-plugins` (2026-10-01), which are still FOUND (LEGACY_SUBFOLDERS):
 // a tree made before today keeps working, and setting up again makes no second fonts folder beside it.
@@ -79,6 +89,8 @@ export const SUBFOLDERS = Object.freeze({
   fonts: 'Fonts', luts: 'Colour looks', plugins: 'Audio plugins',
   voice: 'Voice model', recordings: 'Recordings',
   artwork: ART_FOLDER, data: 'Data',
+  // own board clips (2026-10-09): see above.
+  boardSounds: 'Board sounds',
 });
 // Folders made INSIDE a kind's folder (2026-10-07): one per kind of artwork, from the art kit's own table. Made by
 // `ensureTree` like the rest - only what is missing, nothing changed.
@@ -114,6 +126,11 @@ export const README = Object.freeze({
   data: 'Your own data from Nimrod, kept on this computer: your play history (what played, and when) and things you\n'
     + 'export. When Nimrod keeps something here, the place you turn it on says so. Nothing in this folder is uploaded,\n'
     + 'and deleting it here deletes it.\n',
+  // own board clips (2026-10-09)
+  boardSounds: 'The sounds of your own talk board cards: words you recorded, or sound files you chose, in the board editor\n'
+    + '("Record this word", "Use a sound file"). Nimrod saves them here when you press Keep, so another device with this\n'
+    + 'folder can play them too. A device without them uses its own voice for that card. Nothing here is uploaded.\n'
+    + 'Removing a sound in the editor leaves its file here; delete it by hand if nothing uses it.\n',
 });
 
 export function available(view = (typeof window !== 'undefined' ? window : null)) {

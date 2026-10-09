@@ -59,7 +59,17 @@ export function createSpeechChannel({
   pollMs = 250,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
+  // own board clips (2026-10-09): A WORD WITH A RECORDED SOUND IS SAID IN THAT SOUND. `item.data.clips` is a list of
+  // URLs, best first (board_sounds.js clipChoices: the card's own sound, then the shipped clip); each is tried in turn
+  // and the synthesiser speaks only when none of them plays. Through THIS channel rather than an <audio> the board
+  // plays itself, so everything a spoken word gets, a recorded one gets too: one word at a time, the music ducked, the
+  // aac channel's level, the screen marked as talking (so the voice recorder never keeps it as the person), and the
+  // subtitles. A clip that fails with an error (missing, will not decode) is remembered and not asked for again this
+  // visit - most words have no shipped clip, and the word should not wait on a missing file every time.
+  // `makeAudio` is the seam a suite uses instead of a real <audio>; null turns clips off (synthesiser only).
+  makeAudio = (typeof Audio !== 'undefined' ? () => new Audio() : null),
 } = {}) {
+  const missingClips = new Set();
   // The voice tier itself makes no sound of its own - it exists so everything else can hear
   // that it is talking. No onGain: nothing ducks a voice.
   audio?.register?.(audioId, { tier: 'voice' });
@@ -77,11 +87,84 @@ export function createSpeechChannel({
     } catch { return 1; }
   }
 
-  return {
+  // own board clips (2026-10-09): the clips this word may be said in, minus the ones already found missing.
+  function clipsOf(item) {
+    const list = item && item.data && Array.isArray(item.data.clips) ? item.data.clips : [];
+    return typeof makeAudio === 'function'
+      ? list.filter((u) => typeof u === 'string' && u && !missingClips.has(u)) : [];
+  }
+
+  // own board clips: each clip in turn; the voice when none plays. Marked, ducked and bounded exactly like speech.
+  function viaClips(item, clips, done) {
+    const aac = isAac(item);
+    const sid = aac ? aacId : audioId;
+    let volume = 1;
+    if (audio && (typeof audio.channelLevel === 'function' || typeof audio.master === 'function')) {
+      const m = levelFor(aac);
+      volume = Number.isFinite(m) ? Math.max(0, Math.min(1, m)) : 1;
+    }
+    audio?.setActive?.(sid, true);
+    let said = null;
+    try { said = screenSpeech?.begin?.(item.text) ?? null; } catch (err) { console.error('speech: screen speech', err); }
+    const quiet = () => {
+      audio?.setActive?.(sid, false);
+      if (said !== null) { try { screenSpeech?.end?.(said); } catch (err) { console.error('speech: screen speech', err); } said = null; }
+    };
+    let finished = false;          // over: played, cancelled, or handed to the voice
+    let el = null;
+    let handed = null;             // the voice's cancel, once this word went to the synthesiser
+    const stopEl = () => { const a = el; el = null; if (a) { try { a.pause(); } catch { /* stopped */ } } };
+    const guard = setTimer(() => end(), maxMs);
+    function end() { if (finished) return; finished = true; clearTimer(guard); stopEl(); quiet(); done(); }
+    function toVoice() {
+      if (finished) return;
+      finished = true; clearTimer(guard); stopEl(); quiet();
+      const rest = { ...item, data: { ...(item.data || {}), clips: [] } };
+      const c = channel.present(rest, { done });
+      handed = typeof c === 'function' ? c : null;
+    }
+    function attempt(i) {
+      if (finished) return;
+      if (i >= clips.length) { toVoice(); return; }
+      const url = clips[i];
+      let a;
+      try { a = makeAudio(); } catch { toVoice(); return; }
+      el = a;
+      let moved = false;
+      // `missing`: the file itself failed (an error event), so it is not asked for again. A refused play() (the
+      // browser's autoplay rule) is not the file's fault and is tried again next time.
+      const next = (missing) => {
+        if (moved || finished || el !== a) return;
+        moved = true;
+        if (missing) missingClips.add(url);
+        stopEl();
+        attempt(i + 1);
+      };
+      try {
+        a.addEventListener('error', () => next(true));
+        a.addEventListener('ended', () => { if (!moved && el === a) { moved = true; end(); } });
+        try { a.volume = volume; } catch { /* a fixed-volume element */ }
+        a.src = url;
+        const p = a.play();
+        if (p && typeof p.catch === 'function') p.catch(() => next(false));
+      } catch { next(false); }
+    }
+    attempt(0);
+    return () => {                       // cancel
+      if (handed) { const h = handed; handed = null; try { h(); } catch { /* gone */ } return; }
+      if (finished) return;
+      finished = true; clearTimer(guard); stopEl(); quiet();
+    };
+  }
+
+  const channel = {
     name: 'speech',
     concurrency: 1,
     available: () => !!(synth || (typeof window !== 'undefined' && window.speechSynthesis)),
     present(item, { done }) {
+      // own board clips (2026-10-09): a recorded sound first, when the word has one.
+      const clips = clipsOf(item);
+      if (clips.length) return viaClips(item, clips, done);
       const opts = {};
       if (synth) opts.synth = synth;
       if (Utterance) opts.Utterance = Utterance;
@@ -150,6 +233,7 @@ export function createSpeechChannel({
       };
     },
   };
+  return channel;
 }
 
 // ---------------------------------------------------------------------------------

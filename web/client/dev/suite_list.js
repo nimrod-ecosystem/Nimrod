@@ -37,6 +37,9 @@ export const SUITES = [
   // call_loadouts mounts a real kiosk and real sockets (needs the server). call_mix's last section needs the page's
   // audio to run: in headless Chrome it is reported NOT RUN unless the browser allows sound without a touch.
   'call_mix', 'call_loadouts',
+  // own board clips (2026-10-09): a card's own sound - recorded or a file - on the device and in the Nimrod folder,
+  // played before the shipped clip and the voice, and into a call. Fakes throughout; counts every request.
+  'board_sounds',
   // spotify sdk (2026-10-07): this page as a Spotify speaker, and the Test B page, against a fake Spotify global.
   'spotify_sdk',
   // play on (2026-10-08): Spotify's own player in the Music panel, the Play on chooser, Devices -> Speakers, by voice.

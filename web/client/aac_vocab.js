@@ -134,6 +134,23 @@ export function slotCenter(i, tier) {
  * already have learned, and "tidying" it here would be the exact failure this file exists to
  * prevent.
  */
+// own board clips (2026-10-09): what a card's `sound` may be - a plain file NAME in "Board sounds", with a sound's
+// extension, and how it was made. Nothing with a folder, an address or a colon in it (so not a URL, not a path that
+// could reach outside that folder, and never `data:audio/...`). Here rather than in board_sounds.js because this file
+// is the one every board passes through and it imports nothing heavy; board_sounds.js re-exports it. Pure.
+export const SOUND_EXTS = Object.freeze(['wav', 'mp3', 'm4a', 'aac', 'ogg', 'oga', 'opus', 'webm', 'flac']);
+export const SOUND_FROM = Object.freeze(['recorded', 'file']);
+export const SOUND_NAME_MAX = 120;
+export function cleanSoundRef(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const file = String(raw.file == null ? '' : raw.file).trim();
+  if (!file || file.length > SOUND_NAME_MAX) return null;
+  if (/[\\/:\u0000-\u001f]/.test(file) || file.startsWith('.') || file.includes('..')) return null;
+  const dot = file.lastIndexOf('.');
+  if (dot <= 0 || !SOUND_EXTS.includes(file.slice(dot + 1).toLowerCase())) return null;
+  return { file, from: SOUND_FROM.includes(raw.from) ? raw.from : 'recorded' };
+}
+
 export function normalizeBoard(raw) {
   const b = raw || {};
   // *** A HOLE STAYS A HOLE. *** The first version of this FILTERED empty entries out, which
@@ -166,6 +183,10 @@ export function normalizeBoard(raw) {
         ? { sourceId: String(c.image.sourceId || ''), path: String(c.image.path) }
         : null,
       kind: KINDS.includes(c.kind) ? c.kind : 'plain',
+      // own board clips (2026-10-09): THE CARD'S OWN SOUND, by NAME (board_sounds.js keeps the sound itself on the
+      // device and in the person's Nimrod folder, never here). Only on a card that has one, so every board without
+      // sounds - the built-ins, every board made before today - comes out of this function exactly as before.
+      ...(cleanSoundRef(c.sound) ? { sound: cleanSoundRef(c.sound) } : {}),
     };
   });
   while (cells.length && cells[cells.length - 1] == null) cells.pop();

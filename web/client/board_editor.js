@@ -51,6 +51,27 @@
 
 import { normalizeBoard, gridOf, checkBoard } from './aac_vocab.js';
 import { mountPicturePicker } from './picture_picker.js';
+// own board clips (2026-10-09): a card's own sound - recorded here, or a sound file - kept on the device and in the
+// person's Nimrod folder (board_sounds.js), never sent anywhere from this file.
+import { isSoundFile, MAX_FILE_BYTES, MAX_RECORD_MS } from './board_sounds.js';
+
+// ---------------------------------------------------------------------------------------
+// *** A CARD'S OWN SOUND (own board clips, 2026-10-09). ***
+// ---------------------------------------------------------------------------------------
+//
+// Per card: "Record this word", "Use a sound file", "Remove the sound". Only when the host hands in `sounds` (the
+// board does); without it the editor is exactly what it was.
+//
+// WHOSE VOICE, AND HOW THE FORM HANDLES IT. The recorder says, beside the button that starts it, who to record: the
+// person this board speaks for, or somebody they have said may lend their voice. Nothing records until "Start
+// recording" is pressed; the form says "Recording" while it does; it stops by itself after MAX_RECORD_MS; and nothing
+// is kept until somebody has heard it back and pressed Keep. No tick-box "they agreed": argued - a box nobody can
+// check the truth of is a click, not consent, and it would sit between a person and their own words every time. The
+// case for one: a record that somebody said yes. If Mike wants it, it is one line in `recorderMarkup`.
+//
+// THE FILES. A sound kept here and then replaced, removed or cancelled before the board is saved is deleted from this
+// device (nothing else can be using it). A sound the SAVED board stops using is the board's to tidy (modules/board.js).
+// The copy in the Nimrod folder is never deleted from here (board_sounds.js `remove` says why).
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -110,6 +131,17 @@ export function mountBoardEditor(root, {
   idleMs = IDLE_MS,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
+  // own board clips (2026-10-09). `sounds`: board_sounds.js createBoardSounds() (keep/url/remove). `recorder`: a
+  // factory for one recording (board_sounds.js createWordRecorder). `playSound(url)`: plays a sound, returns a stop.
+  sounds = null,
+  recorder = null,
+  playSound = (url) => {
+    const a = new Audio(url);
+    try { const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch { /* will not play here */ }
+    return () => { try { a.pause(); } catch { /* stopped */ } };
+  },
+  makeUrl = (b) => URL.createObjectURL(b),
+  dropUrl = (u) => { try { URL.revokeObjectURL(u); } catch { /* gone */ } },
 } = {}) {
   // The board being edited is a COPY. Cancel has to mean cancel, and an editor holding a
   // reference to the live board would have already changed it by the time somebody pressed it.
@@ -121,6 +153,15 @@ export function mountBoardEditor(root, {
   let warnId = null;
   let warning = false;            // the last stretch, when it says so on screen
   let dead = false;
+  // own board clips: the recorder while it is open ({ phase, api, blob, url, error }), the sounds kept in THIS
+  // session (deleted again if they never reach a saved board), what the sound row says, what plays now, and which
+  // control takes the focus after a redraw (so a keyboard or switch user is not dropped back to the top of the page).
+  let rec = null;
+  const fresh = new Set();
+  let soundNote = '';
+  let stopPlay = null;
+  let heldUrl = null;             // a URL made to play a kept sound, released at the next one
+  let focusSel = null;
 
   const gone = new AbortController();
   const listen = (t, type, fn) => t.addEventListener(type, fn, { signal: gone.signal });
@@ -146,8 +187,8 @@ export function mountBoardEditor(root, {
       idleId = null;
       // The draft goes back to the caller INTACT. Not saved over the board — a half-finished
       // board written on a timer is worse than the one it replaced — and not discarded either.
-      if (onIdle) onIdle(current());
-      else onCancel();
+      if (onIdle) { const d = current(); handOver(d); onIdle(d); }
+      else { dropAllFresh(); onCancel(); }
     }, idleMs);
   }
   function disarmIdle() {
@@ -249,6 +290,158 @@ export function mountBoardEditor(root, {
   }
 
   // ---------------------------------------------------------------------------------------
+  // A CARD'S OWN SOUND (own board clips, 2026-10-09)
+  // ---------------------------------------------------------------------------------------
+
+  const secs = Math.round(MAX_RECORD_MS / 1000);
+
+  function stopPlaying() {
+    const s = stopPlay; stopPlay = null;
+    try { s?.(); } catch { /* stopped */ }
+  }
+  function play(url) {
+    stopPlaying();
+    try { stopPlay = playSound(url) || null; } catch { stopPlay = null; }
+  }
+
+  function closeRecorder() {
+    const r = rec; rec = null;
+    if (!r) return;
+    try { if (r.api && r.api.state() !== 'done') r.api.cancel(); } catch { /* gone */ }
+    if (r.url) dropUrl(r.url);
+  }
+
+  // A sound made in this session and no longer wanted: nothing else can be using it, so it goes.
+  function dropFreshFile(file) {
+    if (!file || !fresh.has(file)) return;
+    fresh.delete(file);
+    try { sounds?.remove?.(file); } catch { /* gone */ }
+  }
+  function dropAllFresh() { for (const f of [...fresh]) dropFreshFile(f); }
+
+  async function startRecording() {
+    if (!rec || typeof recorder !== 'function') return;
+    let api;
+    try { api = recorder(); } catch { api = null; }
+    if (!api) { rec.error = 'This browser cannot record sound here. Use a sound file instead.'; render(); return; }
+    rec.api = api; rec.phase = 'starting'; rec.error = ''; render();
+    try {
+      const ok = await api.start({
+        onStop: (blob) => {
+          if (dead || !rec || rec.api !== api) return;
+          rec.phase = 'heard'; rec.blob = blob || null;
+          focusSel = blob ? '[data-rec-play]' : '[data-rec-redo]';
+          render();
+        },
+      });
+      if (dead || !rec || rec.api !== api) { try { api.cancel(); } catch { /* gone */ } return; }
+      if (ok && rec.phase === 'starting') { rec.phase = 'recording'; focusSel = '[data-rec-stop]'; render(); }
+    } catch (err) {
+      if (dead || !rec || rec.api !== api) return;
+      rec.phase = 'ready'; rec.api = null; rec.error = String(err && err.message || err);
+      focusSel = '[data-rec-start]';
+      render();
+    }
+  }
+
+  const KEPT_WORDS = {
+    saved: 'Kept on this device and in your Nimrod folder (Board sounds), so another device with that folder plays it too.',
+    'no-folder': 'Kept on this device. Another device says this word in its own voice: set up your Nimrod folder to share it.',
+    'not-allowed': 'Kept on this device. The Nimrod folder was not allowed, so another device says this word in its own voice.',
+    failed: 'Kept on this device. It could not be saved in your Nimrod folder, so another device says this word in its own voice.',
+  };
+
+  async function keepSound(blob, from, name = '') {
+    const slot = picked;
+    const cell = draft.cells[slot];
+    if (!cell || !sounds) return;
+    if (from === 'file') {
+      if (!isSoundFile(blob)) { soundNote = 'That file is not a sound. Choose a sound file (.mp3, .wav, .m4a, .ogg and the like).'; render(); return; }
+      if (Number(blob.size) > MAX_FILE_BYTES) {
+        soundNote = `That file is too big for a card (the most is ${MAX_FILE_BYTES / 1024 / 1024} MB). A word or a short sound is what fits.`;
+        render(); return;
+      }
+    }
+    soundNote = 'Keeping it…'; render();
+    let r;
+    try { r = await sounds.keep(blob, { word: cell.say || cell.word, from, name }); }
+    catch (err) { if (!dead) { soundNote = String(err && err.message || err); render(); } return; }
+    // The editor went away while it was being kept (idle, cancel): nothing will ever point at it.
+    if (dead) { try { sounds.remove(r.file); } catch { /* gone */ } return; }
+    const prev = draft.cells[slot] && draft.cells[slot].sound ? draft.cells[slot].sound.file : null;
+    if (prev && prev !== r.file) dropFreshFile(prev);
+    fresh.add(r.file);
+    setCell(slot, { sound: { file: r.file, from: r.from } });
+    closeRecorder();
+    soundNote = KEPT_WORDS[r.folder] || KEPT_WORDS.failed;
+    focusSel = '[data-sound-play]';
+    render();
+  }
+
+  async function playKept(file) {
+    if (!sounds || !file) return;
+    let r = null;
+    try { r = await sounds.url(file); } catch { r = null; }
+    if (dead) { try { r?.release?.(); } catch { /* gone */ } return; }
+    if (!r) { soundNote = 'That sound is not on this device or in its Nimrod folder. Record it again, or remove it.'; render(); return; }
+    if (heldUrl) { try { heldUrl(); } catch { /* gone */ } }
+    heldUrl = r.release || null;
+    play(r.url);
+  }
+
+  function soundMarkup(c) {
+    if (!sounds) return '';
+    if (rec) return recorderMarkup(c);
+    const has = c && c.sound;
+    const canRecord = typeof recorder === 'function';
+    return `
+        <div class="be-field be-picrow be-soundrow" data-sound-row>
+          <span>Sound</span>
+          <div class="be-picwrap">
+            ${has
+              ? `<span class="be-hint" data-sound-has>${c.sound.from === 'file' ? 'A sound file' : 'A recording'}</span>
+                 <button type="button" class="be-btn" data-sound-play>Play it</button>
+                 <button type="button" class="be-btn" data-sound-remove>Remove the sound</button>`
+              : '<span class="be-hint" data-sound-none>none: the board says the word in its own voice</span>'}
+            ${canRecord ? `<button type="button" class="be-btn" data-sound-record>${has ? 'Record it again' : 'Record this word'}</button>` : ''}
+            <button type="button" class="be-btn" data-sound-file>Use a sound file…</button>
+            <input type="file" accept="audio/*,.wav,.mp3,.m4a,.aac,.ogg,.oga,.opus,.webm,.flac" data-sound-input hidden tabindex="-1">
+          </div>
+          ${soundNote ? `<p class="be-hint" role="status" data-sound-note>${esc(soundNote)}</p>` : ''}
+        </div>`;
+  }
+
+  function recorderMarkup(c) {
+    const word = c ? (c.say || c.word) : '';
+    const r = rec;
+    let body;
+    if (r.phase === 'ready') {
+      body = `<button type="button" class="be-btn be-primary" data-rec-start>Start recording</button>
+              <button type="button" class="be-btn" data-rec-cancel>Cancel</button>`;
+    } else if (r.phase === 'starting') {
+      body = `<span class="be-hint" role="status">Opening the microphone…</span>
+              <button type="button" class="be-btn" data-rec-cancel>Cancel</button>`;
+    } else if (r.phase === 'recording') {
+      body = `<span class="be-warn be-rec-on" role="status" data-rec-on>Recording now. It stops by itself after ${secs} seconds.</span>
+              <button type="button" class="be-btn be-primary" data-rec-stop>Stop</button>`;
+    } else {
+      body = `<span class="be-hint" role="status" data-rec-heard>${r.blob ? 'Recorded. Play it back, then keep it or record again.' : 'Nothing was recorded. Try again.'}</span>
+              ${r.blob ? `<button type="button" class="be-btn" data-rec-play>Play it back</button>
+              <button type="button" class="be-btn be-primary" data-rec-keep>Keep</button>` : ''}
+              <button type="button" class="be-btn" data-rec-redo>Record again</button>
+              <button type="button" class="be-btn" data-rec-cancel>Cancel</button>`;
+    }
+    return `
+        <div class="be-field be-recorder" data-recorder role="group" aria-label="Record this word">
+          <p class="be-hint" data-rec-whose>Record the person this board speaks for, or somebody they have said may lend
+            their voice. Say “${esc(word)}” once. Nothing is kept until you press Keep.</p>
+          <div class="be-picwrap">${body}</div>
+          ${r.error ? `<p class="be-warn" role="status" data-rec-error>${esc(r.error)}</p>` : ''}
+          ${soundNote ? `<p class="be-hint" role="status" data-sound-note>${esc(soundNote)}</p>` : ''}
+        </div>`;
+  }
+
+  // ---------------------------------------------------------------------------------------
   // RENDER
   // ---------------------------------------------------------------------------------------
 
@@ -290,6 +483,7 @@ export function mountBoardEditor(root, {
             <button type="button" class="be-btn" data-pic>Choose a picture…</button>
           </div>
         </div>
+        ${soundMarkup(c)}
         <div class="be-field be-picrow">
           <button type="button" class="be-btn" data-clear-slot>Empty this card</button>
         </div>
@@ -336,6 +530,12 @@ export function mountBoardEditor(root, {
               : 'This stays open until you close it.'}</p>`}
       </div>`;
     if (picking) root.querySelector('[data-picker-slot]')?.replaceWith(picking.el);
+    // own board clips: the redraw replaced the control somebody was on; the next one they need takes the focus.
+    if (focusSel) {
+      const f = root.querySelector(focusSel);
+      focusSel = null;
+      try { f?.focus?.(); } catch { /* not focusable here */ }
+    }
   }
 
   // ---------------------------------------------------------------------------------------
@@ -348,20 +548,72 @@ export function mountBoardEditor(root, {
     // The shared picker handles its own presses; a click in it only counts as somebody being here.
     if (t.closest('[data-picture-picker]')) return;
     const slot = t.closest('[data-slot]');
-    if (slot) { picked = Number(slot.dataset.slot); closePicker(); note = ''; render(); return; }
+    if (slot) { picked = Number(slot.dataset.slot); closePicker(); closeRecorder(); stopPlaying(); note = ''; soundNote = ''; render(); return; }
+    // own board clips (2026-10-09): the card's sound, and the recorder.
+    if (sounds && picked >= 0) {
+      const cell = draft.cells[picked] || null;
+      // A sound belongs to a word: an empty card has nothing to say yet (and a wordless card is not kept).
+      if (!cell && t.closest('[data-sound-record],[data-sound-file]')) { soundNote = 'Give the card a word first, then its sound.'; render(); return; }
+      if (t.closest('[data-sound-record]')) { soundNote = ''; rec = { phase: 'ready', api: null, blob: null, url: null, error: '' }; focusSel = '[data-rec-start]'; render(); return; }
+      if (t.closest('[data-rec-start]')) { startRecording(); return; }
+      if (t.closest('[data-rec-stop]')) { try { rec?.api?.stop(); } catch { /* gone */ } return; }
+      if (t.closest('[data-rec-play]')) {
+        if (rec && rec.blob) { if (!rec.url) rec.url = makeUrl(rec.blob); play(rec.url); }
+        return;
+      }
+      if (t.closest('[data-rec-keep]')) { if (rec && rec.blob) { stopPlaying(); keepSound(rec.blob, 'recorded'); } return; }
+      if (t.closest('[data-rec-redo]')) {
+        stopPlaying(); closeRecorder();
+        rec = { phase: 'ready', api: null, blob: null, url: null, error: '' };
+        startRecording();
+        return;
+      }
+      if (t.closest('[data-rec-cancel]')) { stopPlaying(); closeRecorder(); focusSel = '[data-sound-record]'; render(); return; }
+      if (t.closest('[data-sound-file]')) { root.querySelector('[data-sound-input]')?.click(); return; }
+      if (t.closest('[data-sound-play]')) { if (cell && cell.sound) playKept(cell.sound.file); return; }
+      if (t.closest('[data-sound-remove]')) {
+        if (cell && cell.sound) {
+          stopPlaying();
+          dropFreshFile(cell.sound.file);
+          setCell(picked, { sound: null });
+          soundNote = 'The sound is off this card. It says its word in the board’s own voice.';
+          focusSel = '[data-sound-record]';
+          render();
+        }
+        return;
+      }
+    }
     // `armIdle` at the top of this handler has already reset the clock and cleared the warning;
     // the button exists so somebody who is reading rather than pressing has something to press.
     if (t.closest('[data-stay]')) return;
     if (t.closest('[data-pic]')) { openPicker(); return; }
     if (t.closest('[data-pic-clear]')) { setCell(picked, { image: null }); render(); return; }
     if (t.closest('[data-clear-slot]')) { setCell(picked, { word: '' }); render(); return; }
-    if (t.closest('[data-cancel]')) { disarmIdle(); onCancel(); return; }
+    if (t.closest('[data-cancel]')) { disarmIdle(); dropAllFresh(); onCancel(); return; }
     if (t.closest('[data-save]')) {
       const out = current();
       if (!out.cells.some(Boolean)) { note = 'Give at least one card a word first.'; render(); return; }
       disarmIdle();
+      handOver(out);
       onSave(out);
     }
+  });
+
+  // own board clips: the board leaves this editor (saved, or kept as a draft). Sounds made here that it does not use
+  // go; the rest are the board's now.
+  function handOver(board) {
+    const used = new Set((board.cells || []).filter((c) => c && c.sound).map((c) => c.sound.file));
+    for (const f of [...fresh]) if (!used.has(f)) dropFreshFile(f);
+    fresh.clear();
+  }
+
+  // own board clips: a sound file chosen with the file input.
+  listen(root, 'change', (e) => {
+    const t = e.target;
+    if (!t.matches || !t.matches('[data-sound-input]')) return;
+    const file = t.files && t.files[0];
+    t.value = '';
+    if (file) keepSound(file, 'file', file.name || '');
   });
 
   // `input`, not `change`: a caregiver typing a word is using this, and an idle clock that only
@@ -389,7 +641,7 @@ export function mountBoardEditor(root, {
 
   listen(root, 'keydown', (e) => {
     armIdle();
-    if (e.key === 'Escape') { e.stopPropagation(); disarmIdle(); onCancel(); }
+    if (e.key === 'Escape') { e.stopPropagation(); disarmIdle(); dropAllFresh(); onCancel(); }
   });
 
   render();
@@ -402,12 +654,22 @@ export function mountBoardEditor(root, {
       picking: picking ? (({ cur, items }) => ({ sourceId: cur.sourceId, album: cur.album, items }))(picking.api.__probe()) : null,
       warning,
       slots: [...root.querySelectorAll('[data-slot]')].length,
+      // own board clips
+      recorder: rec ? rec.phase : null,
+      fresh: [...fresh],
+      soundNote,
     }),
     draft: () => current(),
     destroy() {
       dead = true;
       disarmIdle();
       closePicker();
+      // own board clips: a microphone left open by a recorder nobody stopped is let go, and so is anything playing.
+      closeRecorder();
+      stopPlaying();
+      if (heldUrl) { try { heldUrl(); } catch { /* gone */ } heldUrl = null; }
+      // Closed without Save or a draft (the board was locked, the panel went): this session's sounds point nowhere.
+      dropAllFresh();
       gone.abort();
       root.innerHTML = '';
     },

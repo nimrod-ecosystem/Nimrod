@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>a board card's own sound - test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+  #host,#board{position:relative;width:520px;height:560px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>a board card's own sound (own board clips, 2026-10-09)</h1>
+<div class="note">
+  A person's own board can have its own sounds: "Record this word", "Use a sound file", "Remove the sound" in the board
+  editor. The sound is kept on this device and in the person's Nimrod folder ("Board sounds"), <b>never on our
+  server</b>; the card plays its own sound first, then the shipped clip by the naming rule, then the browser's voice;
+  and the same sound goes into a call through the call mixer. Every check here runs on fakes - a fake recorder, fake
+  folders, a fake speaker - and the suite counts every request it makes.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="board"></div>
+
+<script type="module">
+import { soundFileName, soundExt, cleanSoundRef, clipChoices, soundFilesOf, isSoundFile, createBoardSounds,
+  createWordRecorder, MAX_RECORD_MS, MAX_FILE_BYTES, SOUND_KIND, SOUND_FOLDER } from '../board_sounds.js';
+import { normalizeBoard } from '../aac_vocab.js';
+import { clipUrl } from '../aac_clips.js';
+import { CLIP_MAX_MS, createClipMixer } from '../call_mix.js';
+import { SUBFOLDERS, README, FOLDER_KINDS, ROOT_KEY, kindKey } from '../user_folders.js';
+import { KIND_WORDS, SAVE_WORDS } from '../user_folders_page.js';
+import { mountBoardEditor } from '../board_editor.js';
+import { createSpeechChannel } from '../output_channels.js';
+import { encodeWav } from '../recorder.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const ticks = async (n = 10) => { for (let i = 0; i < n; i++) await sleep(0); };
+const J = (x) => JSON.stringify(x);
+
+// *** EVERY REQUEST THIS PAGE MAKES FROM HERE ON IS COUNTED. *** A blob: or data: URL is this browser talking to itself
+// (the call mixer reads a card's sound that way); anything else would be a sound leaving the device.
+const sent = [];
+const realFetch = window.fetch.bind(window);
+window.fetch = (u, ...rest) => { sent.push(String(u && u.url || u)); return realFetch(u, ...rest); };
+const realOpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function (m, u, ...rest) { sent.push(`xhr ${u}`); return realOpen.call(this, m, u, ...rest); };
+if (navigator.sendBeacon) { const b = navigator.sendBeacon.bind(navigator); navigator.sendBeacon = (u, d) => { sent.push(`beacon ${u}`); return b(u, d); }; }
+const offDevice = () => sent.filter((u) => !/^(blob|data):/.test(u.replace(/^(xhr|beacon) /, '')));
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// ---- fake folders (the File System Access shapes user_folders.js uses) ----
+const notFound = () => { const e = new Error('not found'); e.name = 'NotFoundError'; return e; };
+function fakeFile(name) {
+  const f = { kind: 'file', name, blob: null,
+    async getFile() { if (!f.blob) throw notFound(); return new File([f.blob], name, { type: f.blob.type }); },
+    async createWritable() { const parts = []; return { async write(x) { parts.push(x); }, async close() { f.blob = new Blob(parts, { type: parts[0]?.type || '' }); } }; },
+  };
+  return f;
+}
+function fakeDir(name, perm = 'granted') {
+  const kids = new Map();
+  const d = { kind: 'directory', name, kids, perm, answer: null, asked: 0,
+    async queryPermission() { return d.perm; },
+    async requestPermission() { d.asked += 1; if (d.answer) d.perm = d.answer; return d.perm; },
+    async getDirectoryHandle(n, o) {
+      if (kids.has(n)) return kids.get(n);
+      if (!o || !o.create) throw notFound();
+      const k = fakeDir(n); kids.set(n, k); return k;
+    },
+    async getFileHandle(n, o) {
+      if (kids.has(n)) return kids.get(n);
+      if (!o || !o.create) throw notFound();
+      const k = fakeFile(n); kids.set(n, k); return k;
+    },
+    async *entries() { for (const e of kids) yield e; },
+  };
+  return d;
+}
+const mapStore = (entries = []) => { const m = new Map(entries); return { m, get: async (k) => m.get(k) || null, put: async (k, h) => { m.set(k, h); }, del: async (k) => { m.delete(k); } }; };
+
+// ---- a short real WAV, and a fake recorder ----
+function wavBlob(ms = 300) {
+  const n = Math.round(16000 * ms / 1000);
+  const s = new Float32Array(n);
+  for (let i = 0; i < n; i++) s[i] = 0.3 * Math.sin(2 * Math.PI * 440 * i / 16000);
+  return new Blob([encodeWav(s, 16000)], { type: 'audio/wav' });
+}
+class FakeMediaRecorder {
+  constructor(stream) { this.stream = stream; this.state = 'inactive'; this.mimeType = 'audio/webm;codecs=opus'; FakeMediaRecorder.last = this; }
+  start() { this.state = 'recording'; }
+  stop() {
+    if (this.state !== 'recording') return;
+    this.state = 'inactive';
+    this.ondataavailable?.({ data: new Blob(['fake-opus-bytes'], { type: 'audio/webm' }) });
+    this.onstop?.();
+  }
+}
+function fakeMicOwner() {
+  const o = { acquired: [], released: [], stream: { getTracks: () => [] },
+    acquire: async (id) => { o.acquired.push(id); return o.stream; },
+    release: (id) => { o.released.push(id); } };
+  return o;
+}
+
+const dbName = (s) => `nimrod-board-sounds-test-${s}-${Date.now()}`;
+const usedDbs = [];
+const soundsOn = (opts = {}) => { const n = dbName(opts.tag || 'x'); usedDbs.push(n); return createBoardSounds({ dbName: n, ...opts }); };
+
+(async () => {
+try {
+  // ===================================================================================
+  section('the name rule, the reference, and the one lookup order (pure)');
+  {
+    check('"Thank you" -> thank_you-<stamp>.webm: the shipped clips\' naming rule, plus a stamp',
+      soundFileName('Thank you', 'webm', 36 ** 3) === 'thank_you-1000.webm', soundFileName('Thank you', 'webm', 36 ** 3));
+    check('an unknown extension becomes webm; a word with nothing to slug is "word"',
+      soundFileName('Hi', 'exe', 1) === 'hi-1.webm' && soundFileName('?!', 'mp3', 1) === 'word-1.mp3');
+    check('the extension: the file\'s own name first, then its type, then webm',
+      soundExt({ name: 'Mum.M4A', type: 'audio/mpeg' }) === 'm4a' && soundExt({ type: 'audio/ogg;codecs=opus' }) === 'ogg'
+      && soundExt({ type: 'audio/mpeg' }) === 'mp3' && soundExt({}) === 'webm');
+    check('a sound file is known by its type or its name; a picture is not one',
+      isSoundFile({ type: 'audio/x-wav', name: 'a' }) && isSoundFile({ type: '', name: 'tea.OPUS' })
+      && !isSoundFile({ type: 'image/png', name: 'tea.png' }) && !isSoundFile(null));
+    check('*** a card\'s sound is a plain NAME: never a path, a URL or a data: address ***',
+      J(cleanSoundRef({ file: 'tea-1.mp3', from: 'file' })) === J({ file: 'tea-1.mp3', from: 'file' })
+      && ['../tea.mp3', 'a/b.mp3', 'C:\\x.mp3', 'blob:http://x/1.webm', 'data:audio/webm;base64,AAAA', '.hidden.mp3', 'tea.exe', 'tea', 'x'.repeat(130) + '.mp3']
+        .every((f) => cleanSoundRef({ file: f }) === null));
+    const b = normalizeBoard({ id: 'own', cells: [
+      { word: 'Tea', sound: { file: 'tea-1.mp3', from: 'file' } },
+      { word: 'Mum', sound: { file: 'https://example.org/mum.mp3' } },
+      { word: 'Yes' }] });
+    check('*** a board keeps a valid sound on its card, drops a bad one, and a card with none is unchanged ***',
+      J(b.cells[0].sound) === J({ file: 'tea-1.mp3', from: 'file' }) && !('sound' in b.cells[1]) && !('sound' in b.cells[2]), J(b.cells));
+    check('soundFilesOf lists what a board names', J([...soundFilesOf(b)]) === J(['tea-1.mp3']) && soundFilesOf(null).size === 0);
+    const base = '/aac/audio';
+    check('*** THE ORDER: the card\'s own sound, then the shipped clip by the naming rule ***',
+      J(clipChoices({ text: 'Thank you', own: 'blob:own', base })) === J([{ url: 'blob:own', from: 'own' }, { url: clipUrl('Thank you', base), from: 'shipped' }]));
+    check('...no own sound: the shipped clip; shipped clips off: the own sound only; neither: nothing, so the voice',
+      J(clipChoices({ text: 'Yes', base }).map((c) => c.from)) === J(['shipped'])
+      && J(clipChoices({ text: 'Yes', own: 'blob:o', base, shipped: false }).map((c) => c.from)) === J(['own'])
+      && clipChoices({ text: 'Yes', base, shipped: false }).length === 0 && clipChoices({ text: 'Yes', base: '' }).length === 0);
+    check('the longest recording is the longest clip a call carries (call_mix.js CLIP_MAX_MS)', MAX_RECORD_MS === CLIP_MAX_MS && MAX_RECORD_MS === 8000);
+    check('the biggest sound file is 5 MB', MAX_FILE_BYTES === 5 * 1024 * 1024);
+  }
+
+  // ===================================================================================
+  section('where it lives: "Board sounds" in the Nimrod folder');
+  {
+    check('a kind of its own, "Board sounds", with a README and words on the folders page',
+      SUBFOLDERS[SOUND_KIND] === 'Board sounds' && SOUND_FOLDER === 'Board sounds' && FOLDER_KINDS.includes(SOUND_KIND)
+      && /Board sounds|board editor/.test(README[SOUND_KIND]) && /Nothing here is uploaded/.test(README[SOUND_KIND])
+      && KIND_WORDS[SOUND_KIND]?.title === 'Board sounds' && !!SAVE_WORDS[SOUND_KIND]);
+    check('site words never name a person or "her screen"', !/Christine|Cici|her screen/i.test(README[SOUND_KIND] + J(KIND_WORDS[SOUND_KIND]) + SAVE_WORDS[SOUND_KIND]));
+  }
+
+  // ===================================================================================
+  section('the store: this device first, the Nimrod folder second, nothing anywhere else');
+  {
+    const before = offDevice().length;
+    // No Nimrod folder on this device.
+    const lone = soundsOn({ tag: 'lone', store: mapStore() });
+    const k1 = await lone.keep(wavBlob(), { word: 'Thank you', from: 'recorded' });
+    check('*** kept on this device; no Nimrod folder, so it says so (another device uses its own voice) ***',
+      k1.device === true && k1.folder === 'no-folder' && /^thank_you-[0-9a-z]+\.wav$/.test(k1.file), J(k1));
+    const u1 = await lone.url(k1.file);
+    check('...and plays from this device', u1 && u1.where === 'device' && /^blob:/.test(u1.url), J(u1));
+    u1?.release?.();
+    let threw = '';
+    try { await lone.keep(new Blob([new Uint8Array(MAX_FILE_BYTES + 1)], { type: 'audio/wav' }), { word: 'x' }); } catch (e) { threw = e.message; }
+    check('a sound bigger than 5 MB is refused, with a sentence', /most a card can have is 5 MB/.test(threw), threw);
+    threw = '';
+    try { await lone.keep(new Blob([]), { word: 'x' }); } catch (e) { threw = e.message; }
+    check('an empty recording is refused', /no sound to keep/.test(threw), threw);
+
+    // A Nimrod folder chosen on this device, allowed.
+    const root = fakeDir('Nimrod');
+    const store = mapStore([[ROOT_KEY, root]]);
+    const home = soundsOn({ tag: 'home', store });
+    const k2 = await home.keep(wavBlob(), { word: 'Tea', from: 'file', name: 'tea.wav' });
+    const inFolder = root.kids.get('Board sounds')?.kids.get(k2.file);
+    check('*** with a Nimrod folder: kept on this device AND written into "Board sounds" ***',
+      k2.folder === 'saved' && !!inFolder && inFolder.blob && inFolder.blob.size > 44, J({ k2, kids: [...root.kids.keys()] }));
+
+    // A SECOND DEVICE: its own (empty) storage, the same folder (a synced folder, a USB drive).
+    const other = soundsOn({ tag: 'other', store });
+    check('the second device does not have it on its own storage', !(await other.has(k2.file)));
+    const u2 = await other.url(k2.file);
+    check('*** ...but finds it in the Nimrod folder ***', u2 && u2.where === 'folder' && /^blob:/.test(u2.url), J(u2));
+    u2?.release?.();
+    check('...and keeps a copy on itself, so it still plays after a restart lapses the folder\'s permission', await other.has(k2.file));
+
+    // A SECOND DEVICE WITHOUT THE FOLDER: the board arrived, the sound did not.
+    const bare = soundsOn({ tag: 'bare', store: mapStore() });
+    const u3 = await bare.url(k2.file);
+    check('*** a device without the file: no sound, and the card falls back (shipped clip, else the voice) ***',
+      u3 === null && J(clipChoices({ text: 'Tea', own: null, base: '/aac/audio' }).map((c) => c.from)) === J(['shipped'])
+      && J(clipChoices({ text: 'Thank you', own: null, base: '/aac/audio' })) === J([{ url: '/aac/audio/thank_you.wav', from: 'shipped' }]));
+
+    // A folder the browser will not let this page write into.
+    const shut = fakeDir('Nimrod', 'prompt'); shut.answer = 'denied';
+    const k4 = await soundsOn({ tag: 'shut', store: mapStore([[ROOT_KEY, shut]]) }).keep(wavBlob(), { word: 'No' });
+    check('a folder that was not allowed: kept on the device, and it says "not-allowed" (it asked, from the press)',
+      k4.device && k4.folder === 'not-allowed' && shut.asked === 1 && !shut.kids.has('Board sounds'), J(k4));
+
+    // A kind pointed at a folder of its own.
+    const own = fakeDir('My board sounds');
+    const k5 = await soundsOn({ tag: 'own', store: mapStore([[kindKey(SOUND_KIND), own]]) }).keep(wavBlob(), { word: 'Hello' });
+    check('a "Board sounds" pointed at its own folder is written there', k5.folder === 'saved' && own.kids.has(k5.file), J(k5));
+
+    await home.remove(k2.file);
+    check('*** remove: off this device; the Nimrod folder\'s copy is left for the person ***',
+      !(await home.has(k2.file)) && !!root.kids.get('Board sounds').kids.get(k2.file));
+    check('*** none of that made a single request off this device ***', offDevice().length === before, J(offDevice().slice(before)));
+  }
+
+  // ===================================================================================
+  section('the recorder: press to start, press to stop, and it stops by itself');
+  {
+    const clock = fakeClock();
+    const mic = fakeMicOwner();
+    const r = createWordRecorder({ micOwner: mic, Recorder: FakeMediaRecorder, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    let heard = null;
+    await r.start({ onStop: (b) => { heard = b; } });
+    check('start opens the microphone through the screen\'s arbiter, and records', mic.acquired.length === 1 && r.state() === 'recording');
+    const blob = await r.stop();
+    check('stop: the recording, and the microphone let go', blob && blob.size > 0 && heard === blob && mic.released.length === 1 && r.state() === 'done', J({ s: r.state(), rel: mic.released }));
+    const r2 = createWordRecorder({ micOwner: mic, Recorder: FakeMediaRecorder, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    let auto = null;
+    await r2.start({ onStop: (b) => { auto = b; } });
+    clock.advance(MAX_RECORD_MS - 1);
+    const still = r2.state();
+    clock.advance(1);
+    check(`*** nobody presses Stop: it stops by itself at ${MAX_RECORD_MS / 1000} s, and the microphone is let go ***`,
+      still === 'recording' && r2.state() === 'done' && auto && mic.released.length === 2, J({ still, now: r2.state() }));
+    const r3 = createWordRecorder({ micOwner: mic, Recorder: FakeMediaRecorder, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    let cancelled = 'untouched';
+    await r3.start({ onStop: (b) => { cancelled = b; } });
+    const c = await r3.cancel();
+    check('cancel: nothing kept, nothing handed back, microphone let go', c === null && cancelled === 'untouched' && mic.released.length === 3);
+    let gumStopped = 0;
+    const r4 = createWordRecorder({ getUserMedia: async () => ({ getTracks: () => [{ stop: () => { gumStopped += 1; } }] }),
+      Recorder: FakeMediaRecorder, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    await r4.start(); await r4.stop();
+    check('with no arbiter (talk.html): its own microphone, stopped afterwards', gumStopped === 1);
+    let msg = '';
+    try { await createWordRecorder({ getUserMedia: async () => { throw new Error('NotAllowedError'); }, Recorder: FakeMediaRecorder }).start(); } catch (e) { msg = e.message; }
+    check('a microphone that will not open says so in plain words', /microphone could not be opened/.test(msg), msg);
+    msg = '';
+    try { await createWordRecorder({ Recorder: null }).start(); } catch (e) { msg = e.message; }
+    check('a browser that cannot record says to use a sound file', /Use a sound file/.test(msg), msg);
+  }
+
+  // ===================================================================================
+  section('the editor: record, hear it back, keep or redo, remove; a sound file; cancel tidies');
+  {
+    const host = document.getElementById('host');
+    const kept = [], removed = [], played = [];
+    let n = 0;
+    const sounds = {
+      keep: async (blob, o) => { n += 1; const file = `${o.word.toLowerCase().replace(/\W+/g, '_')}-${n}.${o.from === 'file' ? 'mp3' : 'webm'}`; kept.push({ file, ...o, size: blob.size }); return { file, from: o.from, device: true, folder: 'no-folder' }; },
+      url: async (f) => ({ url: `blob:fake/${f}`, where: 'device', release: () => {} }),
+      remove: async (f) => { removed.push(f); return { ok: true }; },
+    };
+    const clock = fakeClock();
+    const mic = fakeMicOwner();
+    let saved = null, cancelled = 0;
+    const ed = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'own', name: 'Mine', cols: 2, rows: 1, cells: [{ word: 'Tea' }, { word: 'Mum', say: 'Mum, come here' }] }),
+      sounds, idleMs: 0,
+      recorder: () => createWordRecorder({ micOwner: mic, Recorder: FakeMediaRecorder, setTimer: clock.setTimer, clearTimer: clock.clearTimer }),
+      playSound: (u) => { played.push(u); return () => {}; },
+      makeUrl: () => 'blob:fake/preview', dropUrl: () => {},
+      onSave: (b) => { saved = b; }, onCancel: () => { cancelled += 1; },
+    });
+    const q = (s) => host.querySelector(s);
+    const press = (s) => q(s).click();
+    check('no card open: no sound row yet', !q('[data-sound-row]'));
+    press('[data-slot="0"]');
+    check('*** a card open: "Record this word", "Use a sound file", and it says it has none ***',
+      /Record this word/.test(q('[data-sound-record]')?.textContent) && /Use a sound file/.test(q('[data-sound-file]')?.textContent) && !!q('[data-sound-none]'));
+    check('they are buttons (keyboard and switch reachable), and the file input is not a separate tab stop',
+      q('[data-sound-record]').tagName === 'BUTTON' && q('[data-sound-file]').tagName === 'BUTTON' && q('[data-sound-input]').tabIndex === -1);
+    press('[data-sound-record]');
+    check('*** the recorder says whose voice, before anything records: the person, or somebody they have said may ***',
+      /the person this board speaks for, or somebody they have said may lend\s+their voice/.test(q('[data-rec-whose]')?.textContent)
+      && /Nothing is kept until you press Keep/.test(q('[data-rec-whose]').textContent) && mic.acquired.length === 0);
+    check('...and the focus is on "Start recording"', document.activeElement === q('[data-rec-start]'));
+    press('[data-rec-start]'); await ticks();
+    check('*** recording: it says so, and that it stops by itself ***', /Recording now\. It stops by itself after 8 seconds/.test(q('[data-rec-on]')?.textContent)
+      && ed.__probe().recorder === 'recording' && document.activeElement === q('[data-rec-stop]'));
+    press('[data-rec-stop]'); await ticks();
+    check('stopped: play it back, keep, record again', !!q('[data-rec-play]') && !!q('[data-rec-keep]') && !!q('[data-rec-redo]') && kept.length === 0);
+    press('[data-rec-play]');
+    check('play it back plays the recording, not anything kept', played.at(-1) === 'blob:fake/preview' && kept.length === 0);
+    press('[data-rec-keep]'); await ticks();
+    check('*** keep: kept under the card\'s word, the card names it, and it says where it went ***',
+      kept.length === 1 && kept[0].word === 'Tea' && kept[0].from === 'recorded' && J(ed.draft().cells[0].sound) === J({ file: 'tea-1.webm', from: 'recorded' })
+      && /Kept on this device\. Another device says this word in its own voice/.test(q('[data-sound-note]')?.textContent), J({ kept, s: ed.draft().cells[0] }));
+    press('[data-sound-play]'); await ticks();
+    check('"Play it" plays the kept sound', played.at(-1) === 'blob:fake/tea-1.webm');
+    // Record it again: the first (made in this session, used by nothing else) goes.
+    press('[data-sound-record]'); press('[data-rec-start]'); await ticks(); press('[data-rec-stop]'); await ticks();
+    press('[data-rec-redo]'); await ticks();
+    check('"Record again" goes straight back to recording', ed.__probe().recorder === 'recording');
+    press('[data-rec-stop]'); await ticks(); press('[data-rec-keep]'); await ticks();
+    check('*** re-recorded and kept: the earlier sound from this session is deleted ***',
+      ed.draft().cells[0].sound.file === 'tea-2.webm' && J(removed) === J(['tea-1.webm']), J(removed));
+    // The second card says something different from its word: the sound is named for what it SAYS.
+    press('[data-slot="1"]');
+    const input = q('[data-sound-input]');
+    const dt = new DataTransfer();
+    dt.items.add(new File([new Uint8Array(2000)], 'mum.mp3', { type: 'audio/mpeg' }));
+    input.files = dt.files; input.dispatchEvent(new Event('change', { bubbles: true })); await ticks();
+    check('*** "Use a sound file": a picked file is kept for the card, named for what the card says ***',
+      kept.length === 3 && kept[2].from === 'file' && kept[2].name === 'mum.mp3' && kept[2].word === 'Mum, come here'
+      && ed.draft().cells[1].sound.from === 'file' && /A sound file/.test(q('[data-sound-has]')?.textContent), J(kept[2]));
+    const dt2 = new DataTransfer();
+    dt2.items.add(new File(['x'], 'mum.png', { type: 'image/png' }));
+    const inp2 = q('[data-sound-input]'); inp2.files = dt2.files; inp2.dispatchEvent(new Event('change', { bubbles: true })); await ticks();
+    check('a picture is not a sound: refused with a sentence, nothing kept', kept.length === 3 && /not a sound/.test(q('[data-sound-note]')?.textContent));
+    const dt3 = new DataTransfer();
+    dt3.items.add(new File([new Uint8Array(MAX_FILE_BYTES + 10)], 'album.mp3', { type: 'audio/mpeg' }));
+    const inp = q('[data-sound-input]'); inp.files = dt3.files; inp.dispatchEvent(new Event('change', { bubbles: true })); await ticks();
+    check('a file over 5 MB is refused with a sentence, nothing kept', kept.length === 3 && /too big for a card/.test(q('[data-sound-note]')?.textContent));
+    press('[data-sound-remove]');
+    check('*** "Remove the sound": the card has none, and the file (made in this session) is deleted ***',
+      !('sound' in ed.draft().cells[1]) && removed.includes('mum_come_here-3.mp3') && /board’s own voice/.test(q('[data-sound-note]')?.textContent));
+    press('[data-save]');
+    check('*** Save: the board names its sound; the one it uses is NOT deleted ***',
+      saved && saved.cells[0].sound?.file === 'tea-2.webm' && !removed.includes('tea-2.webm'), J({ saved: saved?.cells, removed }));
+    ed.destroy();
+    check('...and destroying the editor afterwards deletes nothing more', !removed.includes('tea-2.webm'));
+
+    // Cancel: every sound made in the session goes.
+    const removed2 = [];
+    const ed2 = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'own', cols: 1, rows: 1, cells: [{ word: 'Hi', sound: { file: 'hi-old.webm' } }] }),
+      sounds: { ...sounds, remove: async (f) => { removed2.push(f); } }, idleMs: 0,
+      recorder: () => createWordRecorder({ micOwner: mic, Recorder: FakeMediaRecorder, setTimer: clock.setTimer, clearTimer: clock.clearTimer }),
+      playSound: () => () => {}, makeUrl: () => 'blob:p', dropUrl: () => {}, onCancel: () => { cancelled += 1; },
+    });
+    host.querySelector('[data-slot="0"]').click();
+    check('a card that already has a sound offers "Record it again" and "Remove the sound"',
+      /Record it again/.test(host.querySelector('[data-sound-record]').textContent) && !!host.querySelector('[data-sound-remove]'));
+    host.querySelector('[data-sound-record]').click(); host.querySelector('[data-rec-start]').click(); await ticks();
+    host.querySelector('[data-rec-stop]').click(); await ticks(); host.querySelector('[data-rec-keep]').click(); await ticks();
+    host.querySelector('[data-cancel]').click();
+    check('*** Cancel: the sound made in this session is deleted; the board\'s earlier sound is not ***',
+      cancelled === 1 && removed2.length === 1 && removed2[0] !== 'hi-old.webm', J(removed2));
+    ed2.destroy();
+
+    // An editor left recording is put away (idle, a lock): the microphone is let go.
+    const mic2 = fakeMicOwner();
+    const ed3 = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'own', cols: 1, rows: 1, cells: [{ word: 'Hi' }] }), sounds, idleMs: 0,
+      recorder: () => createWordRecorder({ micOwner: mic2, Recorder: FakeMediaRecorder, setTimer: clock.setTimer, clearTimer: clock.clearTimer }),
+      playSound: () => () => {}, makeUrl: () => 'blob:p', dropUrl: () => {},
+    });
+    host.querySelector('[data-slot="0"]').click(); host.querySelector('[data-sound-record]').click(); host.querySelector('[data-rec-start]').click(); await ticks();
+    ed3.destroy();
+    check('*** an editor closed while recording lets the microphone go ***', mic2.acquired.length === 1 && mic2.released.length === 1);
+
+    const ed4 = mountBoardEditor(host, { board: normalizeBoard({ id: 'own', cols: 1, rows: 1, cells: [{ word: 'Hi' }] }), idleMs: 0 });
+    host.querySelector('[data-slot="0"]').click();
+    check('an editor given no `sounds` is exactly what it was: no sound row', !host.querySelector('[data-sound-row]'));
+    ed4.destroy();
+  }
+
+  // ===================================================================================
+  section('the room: the speech channel plays the clips in order, then the voice');
+  {
+    const spoken = [];
+    const synth = { speaking: false, pending: false, speak: (u) => { spoken.push(u.text); setTimeout(() => u.onend?.(), 0); }, cancel: () => {}, getVoices: () => [] };
+    function Utterance(text) { this.text = text; }
+    const tried = [];
+    const fail = new Set();
+    const makeAudio = () => {
+      const l = {};
+      const a = { volume: 1, addEventListener: (t, f) => { (l[t] = l[t] || []).push(f); }, pause: () => {},
+        play() { const u = a.src; tried.push(u); setTimeout(() => (fail.has(u) ? l.error : l.ended)?.forEach((f) => f()), 0); return Promise.resolve(); } };
+      return a;
+    };
+    const active = [];
+    const marks = [];
+    const audio = { register: () => {}, setActive: (id, on) => active.push([id, on]), channelLevel: () => 0.8 };
+    const screenSpeech = { begin: (t) => { marks.push(['begin', t]); return 1; }, end: () => marks.push(['end']) };
+    const ch = createSpeechChannel({ synth, Utterance, makeAudio, audio, screenSpeech, pollMs: 0 });
+    const say = (text, clips) => new Promise((res) => ch.present({ text, source: 'board', data: { clips } }, { done: res }));
+    await say('Tea', ['blob:own', '/aac/audio/tea.wav']);
+    check('*** the card\'s own sound plays, and nothing else: no shipped clip, no voice ***', J(tried) === J(['blob:own']) && spoken.length === 0, J({ tried, spoken }));
+    check('...marked as the screen talking, and on the board\'s own (aac) channel, like a spoken word',
+      J(marks) === J([['begin', 'Tea'], ['end']]) && active[0][0] === 'speech-aac' && active[0][1] === true && active.at(-1)[1] === false, J({ marks, active }));
+    fail.add('blob:gone'); tried.length = 0;
+    await say('Yes', ['blob:gone', '/aac/audio/yes.wav']);
+    check('*** own sound will not play: the shipped clip ***', J(tried) === J(['blob:gone', '/aac/audio/yes.wav']) && spoken.length === 0, J(tried));
+    fail.add('/aac/audio/tea_please.wav'); tried.length = 0;
+    await say('Tea please', ['/aac/audio/tea_please.wav']);
+    check('*** no clip plays: the browser\'s voice says it ***', J(spoken) === J(['Tea please']), J(spoken));
+    tried.length = 0; spoken.length = 0;
+    await say('Tea please', ['/aac/audio/tea_please.wav']);
+    check('a missing clip is not asked for again this visit (the voice, at once)', tried.length === 0 && J(spoken) === J(['Tea please']));
+    tried.length = 0; spoken.length = 0;
+    await say('Hello', []);
+    check('a word with no clips is spoken exactly as before', tried.length === 0 && J(spoken) === J(['Hello']));
+  }
+
+  // ===================================================================================
+  section('the board: a card\'s own sound in the room and into a call');
+  {
+    const host = document.getElementById('board');
+    const said = [];
+    const words = [];
+    const wav = wavBlob(250);
+    const ownUrl = URL.createObjectURL(wav);
+    const fakeSounds = { url: async (f) => (f === 'tea-1.wav' ? { url: ownUrl, where: 'device', release: () => {} } : null),
+      keep: async () => { throw new Error('not here'); }, remove: async () => ({ ok: true }) };
+    const board = { id: 'own', name: 'Mine', cols: 3, rows: 1, cells: [
+      { word: 'Tea', sound: { file: 'tea-1.wav', from: 'recorded' } }, { word: 'Thank you' }, { word: 'Biscuit', sound: { file: 'gone-1.wav' } }] };
+    const mount = (extra = {}) => {
+      const inst = mountModule('board', {
+        mount: host, bus: createBus(), events: { append: () => Promise.resolve() },
+        state: { get: () => ({ board, boardId: 'custom', ...extra }), set: () => {}, subscribe: () => {}, flush: () => {} },
+        output: { say: (t, o) => said.push({ t, o }) },
+        callTransport: { sendWords: (t, o) => { words.push({ t, o }); return true; } },
+        boardSounds: fakeSounds,
+      });
+      inst.init();
+      return inst;
+    };
+    const press = (i) => host.querySelectorAll('.ab-card')[i].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    let inst = mount();
+    await sleep(30);
+    check('the board found the card\'s own sound before anybody pressed', J(inst.impl.__probe().ownSounds) === J({ 'tea-1.wav': 'device' }), J(inst.impl.__probe().ownSounds));
+    press(0); await ticks();
+    const base = new URL('../aac/audio', new URL('../modules/board.js', import.meta.url)).href;
+    check('*** in the room: the own sound first, then the shipped clip by the naming rule ***',
+      said.at(-1)?.t === 'Tea' && J(said.at(-1).o.data.clips) === J([ownUrl, clipUrl('Tea', base)]) && said.at(-1).o.data.ownClip === ownUrl
+      && said.at(-1).o.source === 'board', J(said.at(-1)));
+    check('*** into the call: the card\'s own sound is the clip sent with the word ***', words.at(-1)?.t === 'Tea' && words.at(-1).o.clip === ownUrl, J(words.at(-1)));
+    press(1); await ticks();
+    check('a card with no own sound: the shipped clip, in the room and into the call (as before)',
+      J(said.at(-1).o.data.clips) === J([clipUrl('Thank you', base)]) && !('ownClip' in said.at(-1).o.data) && words.at(-1).o.clip === clipUrl('Thank you', base));
+    press(2); await ticks();
+    check('*** a card whose sound is not on this device: falls back to the shipped clip / the voice, no error ***',
+      said.at(-1).t === 'Biscuit' && J(said.at(-1).o.data.clips) === J([clipUrl('Biscuit', base)]));
+    inst.destroy();
+    inst = mount({ shippedClips: false });
+    await sleep(30);
+    press(0); press(1); await ticks();
+    check('"Common words use the built-in recorded voice" off: own sound only; a card without one is the voice alone',
+      J(said.at(-2).o.data.clips) === J([ownUrl]) && !said.at(-1).o.data && !words.at(-1).o.clip, J(said.slice(-2)));
+    inst.destroy();
+
+    // *** THE CALL MIXER'S OWN LOOKUP, with its own fetch: a card's own sound decodes there like a shipped clip. ***
+    let ctxOk = true;
+    let buf = null;
+    try {
+      const mixer = createClipMixer();
+      buf = await mixer.load(ownUrl);
+      mixer.destroy();
+    } catch (e) { ctxOk = false; }
+    check('*** a card\'s own sound reaches the call mixer\'s lookup: it loads and decodes there (an AudioBuffer) ***',
+      ctxOk && buf && buf.duration > 0.2 && buf.duration < 0.3, J({ ctxOk, d: buf && buf.duration }));
+    URL.revokeObjectURL(ownUrl);
+  }
+
+  // ===================================================================================
+  section('*** nothing is sent to the server ***');
+  {
+    check('*** in this whole suite, no request left this device (only blob: reads of its own sounds) ***', offDevice().length === 0, J(offDevice()));
+    const src = await Promise.all(['../board_sounds.js', '../board_editor.js'].map(async (p) => (await realFetch(p)).text()));
+    check('board_sounds.js and board_editor.js have no fetch, FormData, XMLHttpRequest or sendBeacon',
+      src.every((s) => !/new FormData|\bfetch\(|XMLHttpRequest|sendBeacon\(/.test(s)));
+  }
+
+  // A live editor to look at: a card with its own sound, and one being recorded.
+  {
+    const host = document.getElementById('host');
+    const look = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'demo', name: 'My board', cols: 3, rows: 1,
+        cells: [{ word: 'Tea', sound: { file: 'tea-1.webm', from: 'recorded' } }, { word: 'Thank you' }, { word: 'Biscuit' }] }),
+      sounds: { keep: async () => ({}), url: async () => null, remove: async () => ({}) }, idleMs: 0,
+      recorder: () => createWordRecorder({ micOwner: fakeMicOwner(), Recorder: FakeMediaRecorder }),
+      playSound: () => () => {},
+    });
+    host.querySelector('[data-slot="0"]').click();
+    void look;
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+for (const n of usedDbs) { try { indexedDB.deleteDatabase(n); } catch { /* gone */ } }
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
