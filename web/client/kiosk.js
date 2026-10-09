@@ -119,6 +119,7 @@ import {
   watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
 } from './music_favourites.js';
 import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS } from './speakers.js';   // play on (row 2.68)
+import { backupScreenField, listedSources, BACKUP_KEY } from './media_sources.js';   // backup source (2026-10-08)
 import { createMissStore, MISS_FIELDS } from './speech_misses.js';
 import {
   createSubtitles, subtitlesOptionsFrom, SUBTITLES_FIELDS, SUBTITLE_ACTIONS, SUBTITLES_EARLIER_TOPIC,
@@ -1572,6 +1573,9 @@ export async function mountKiosk(root, {
     // play on (row 2.68): the screen's Devices -> Speakers choice for a kind of sound ('' = the computer's default).
     // Read when asked; `settings` is declared further down (nestLiveDepth's pattern).
     speakerRoute: (kind) => { try { return String((settings.get() || {})[speakerKey(kind)] || ''); } catch { return ''; } },
+    // backup source (2026-10-08): the screen's "Backup folder for this screen" ('' = each panel's own default), read when
+    // a panel's source fails; media_sources.js argues it. Read when asked, like `speakerRoute`.
+    screenBackup: () => { try { return String((settings.get() || {})[BACKUP_KEY] || ''); } catch { return ''; } },
     // How long after the last press a game stops counting as being played (game_start.js gameIdleMsOf; a suite's seam).
     ...(Number.isFinite(gameIdleMs) && gameIdleMs > 0 ? { gameIdleMs } : {}),
     // HOW MANY PANELS SHARE THIS PANEL'S DASHBOARD (game_start.js `panelAlone`: "when it is the only thing on
@@ -5622,6 +5626,18 @@ export async function mountKiosk(root, {
       // site talks to, with a key kept on the server. Until now only the recommend window linked to it.)
       ...(complexity() !== 'essential' ? tagged([pageRow('search', { isScreen: !embedded })], 'devices', 3) : []),
       ...tagged(USER_FOLDER_ITEMS, 'screen', 2),
+      // *** backup source (2026-10-08; media_sources.js argues the row and its default). *** "Backup folder for this
+      // screen": every panel that plays from a source uses it when its own can't be reached, unless the panel chose its
+      // own. ON THIS SCREEN, right after "Your own folders", argued: it is about the folders on this computer, which is
+      // that row's subject, and the Wallpaper panel already sends people here for folder matters. AGAINST Devices,
+      // beside Speakers (the other place considered): Devices is what this computer presses, hears and talks to; a
+      // folder is the Media / Sources and Your own folders side. One row (+1 on This screen at "The usual" and up).
+      ...tagged(fieldItems([normalizeField(backupScreenField({ sources: listedSources(screenPersonNow()),
+        personId: screenPersonNow(), current: (settings.get() || {})[BACKUP_KEY] }))].filter(Boolean), {
+        values: () => settings.get() || {},
+        level: complexity(),
+        onStep: (key, value) => { settings.set({ [key]: value }); },
+      }), 'screen', 2),
       // Where this person's history is kept (history_page.js argues the People tab).
       ...tagged(HISTORY_ITEMS, 'people', 3),
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used

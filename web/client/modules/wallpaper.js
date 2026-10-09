@@ -56,6 +56,32 @@ import { kindFolder, handleStore } from '../user_folders.js';
 import { entriesIn, fileUrlIn } from '../folder_source.js';
 import { ART_KINDS } from '../art_kit.js';
 import { SOURCE_RECHECK_MS } from '../media_sources.js';
+// backup source (2026-10-08)
+import { personOf } from '../person_known.js';
+import {
+  backupChoice, backupSources, backupPanelField, backupPanelChoices, createSourceRecheck, listingWithin, degradedLine,
+  BACKUP_KEY, BACKUP_NONE, LISTING_WAIT_MS,
+} from '../media_sources.js';
+
+// ---------------------------------------------------------------------------------------
+// backup source (2026-10-08; media_sources.js argues the rows and the defaults)
+// ---------------------------------------------------------------------------------------
+// "If this can't be reached, use": when the chosen folder can't be read, a backup plays instead, and the panel goes back
+// to the chosen one by itself (asked every SOURCE_RECHECK_MS). This panel's own default is NOTHING - the built-in
+// wallpaper, as before - so a screen nobody sets up is unchanged; the screen's "Backup folder for this screen" applies
+// unless this row is set.
+// THE WORDS ARE NOT ON SCREEN. This module's rule (below: "never says anything on screen") is kept: a wallpaper is what
+// shows when something else has stopped, so "Showing the backup" is the quiet line after the "Pictures from a folder"
+// row's value, where every other reason this panel gives already is. AGAINST: nobody looking at the screen learns that
+// it is the backup - but on a wallpaper nobody needs to; somebody setting it up does, and that is where they look.
+// WHAT COUNTS AS "CAN'T BE REACHED" for the Nimrod folder: a lapsed permission, or a read that failed. NOT "there is no
+// Nimrod folder on this device" or "no Artwork/Wallpapers in it": those are a folder nobody set up here, and the default
+// row pointing at it is not somebody's choice failing. AGAINST: a screen with a backup folder and no Nimrod folder then
+// shows the built-in wallpaper rather than the backup; choosing that folder in "Pictures from a folder" shows it.
+// A connected folder counts every failure (gone from this screen, permission, missing, album, unreadable); reachable and
+// EMPTY does not - that is a fact about the folder, the rule Photos has.
+const NIMROD_FAILS = Object.freeze(['permission', 'error']);
+const wallpaperItemsOf = (l) => ((l && l.items) || []).filter((it) => it.kind === 'image' || it.kind === 'video');
 
 // ---------------------------------------------------------------------------------------
 // folder art: PICTURES FROM A FOLDER (2026-10-07)
@@ -200,6 +226,8 @@ export const SETTINGS = [
   { key: 'album', label: 'Album', kind: 'text', default: '', level: 'advanced', placeholder: 'Everything',
     note: 'a folder inside the chosen one, such as Wallpapers',
     appliesWhen: (v) => !!v && !!v.sourceId && v.sourceId !== NIMROD_FOLDER && v.sourceId !== NO_FOLDER },
+  // backup source: not shown under "None: just the built-in wallpaper" - nothing is chosen there to fail.
+  { ...backupPanelField({ panelDefault: BACKUP_NONE }), appliesWhen: (v) => !v || v.sourceId !== NO_FOLDER },
 ];
 
 registerModule(
@@ -215,9 +243,21 @@ registerModule(
     const now = ctx.now || (() => Date.now());
     // Whose sources: whoever the screen is for, once it knows (person_known.js) -- the ambient draws at
     // once regardless; only the folder's pictures wait, and they re-list if the answer changes.
-    const client = personSources(ctx,
+    // backup source: `ctx.sources` and `ctx.resolveListing` are injectable, as in photos.js, so a suite can make the
+    // chosen folder fail and a backup answer without a media agent. Production is unchanged with nothing injected.
+    const scoped = ctx.sources ? null : personSources(ctx,
       (pid) => createMediaSourcesClient({ user, cache: true, personId: pid }),
       { onChange: () => { if (!destroyed) reload().catch((e) => console.warn('wallpaper: reload', e)); } });
+    const client = ctx.sources || scoped;
+    const resolveList = ctx.resolveListing || resolveListing;
+    // backup source: the panel's row, else the screen's (`ctx.screenBackup`, kiosk.js), else nothing.
+    const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
+    const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_NONE });
+    let backupShown = null;         // { label, chosenLabel, why } while a backup is on screen
+    const mainCheck = createSourceRecheck({
+      ms: () => Number(ctx.sourceRecheckMs ?? SOURCE_RECHECK_MS), setTimer, clearTimer,
+      isBack: () => mainAnswers(), onBack: () => { if (!destroyed) reload().catch((e) => console.warn('wallpaper: back', e)); },
+    });
 
     let cfg = { ...DEFAULTS };
     let items = [];
@@ -410,6 +450,7 @@ registerModule(
       // not ask for a wallpaper in the first place turns a calm screen into a fault report.
       // The ambient is always underneath, so every failure here has somewhere to land.
       clearRecheck();
+      mainCheck.stop(); backupShown = null;   // backup source: every reload tries the chosen folder first
       showSeq += 1;          // folder art: a picture still being read for the old listing lands on nothing
       // folder art: '' (a panel saved before the row existed) means the default, like any unset row.
       const choice = cfg.sourceId || NIMROD_FOLDER;
@@ -423,6 +464,7 @@ registerModule(
         try { r = await readNimrodWallpapers({ store: folderStore }); }
         catch (e) { console.warn('wallpaper: the Nimrod folder', e); }
         if (seq !== loadSeq || destroyed) return;
+        if (NIMROD_FAILS.includes(r.status) && await useBackup(seq, choice, r.status)) return;   // backup source
         source = r.dir ? { kind: 'nimrod', dir: r.dir } : null;
         items = r.dir ? r.items : [];
         folderState = { choice, status: r.status, count: items.length };
@@ -432,21 +474,67 @@ registerModule(
         return;
       }
       if (!src) {
+        if (choice !== NO_FOLDER && await useBackup(seq, choice, 'gone')) return;   // backup source
         source = null; items = [];
         folderState = { choice, status: choice === NO_FOLDER ? 'ok' : 'gone', count: 0 };
         render(); return;
       }
       let listing = null;
       let failed = null;
-      try { listing = await resolveListing(src, cfg.album); }
+      try { listing = await resolveList(src, cfg.album); }
       catch (e) { console.warn('wallpaper: listing', e); failed = e; }
       if (seq !== loadSeq || destroyed) return;
-      source = src;
-      items = (listing?.items || []).filter((it) => it.kind === 'image' || it.kind === 'video');
       const code = failed ? (['permission', 'missing', 'album'].includes(failed.code) ? failed.code : 'error') : null;
+      if (code && await useBackup(seq, choice, code, src.label || src.base_url || src.id)) return;   // backup source
+      source = src;
+      items = wallpaperItemsOf(listing);
       folderState = { choice, status: code || (items.length ? 'ok' : 'empty'), count: items.length };
       render();
       if (pool().length) { advance(); startSwap(); }
+    }
+
+    // backup source: the chosen folder could not be read. Try the backup in force (the panel's row, else the screen's),
+    // with the panel's album and then without it; the first with a picture plays, and the main one is asked after.
+    // True when it handled the reload (a backup is showing, or a newer reload took over). Nothing is saved.
+    async function useBackup(seq, choice, why, chosenLabel = null) {
+      const pick = backupNow();
+      if (pick === BACKUP_NONE) return false;
+      const mainLabel = chosenLabel || (choice === NIMROD_FOLDER ? 'Wallpapers in your Nimrod folder'
+        : ((knownSources.find((s) => s && s.id === choice) || {}).label || null));
+      const tries = backupSources(knownSources, { choice: pick, chosenId: choice, personId: personOf(ctx) });
+      for (const s of tries) {
+        for (const a of (cfg.album ? [cfg.album, ''] : [''])) {
+          const r = await listingWithin(resolveList, s, a, { accept: wallpaperItemsOf,
+            waitMs: Number(ctx.listingWaitMs ?? LISTING_WAIT_MS), setTimer, clearTimer });
+          if (seq !== loadSeq || destroyed) return true;
+          if (!r.ok || !r.items.length) continue;
+          source = s;
+          items = r.items;
+          backupShown = { label: s.label || s.base_url || s.id, chosenLabel: mainLabel, why };
+          folderState = { choice, status: why, count: items.length, backup: backupShown.label };
+          render();
+          if (pool().length) { advance(); startSwap(); }
+          mainCheck.arm();
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // backup source: is the chosen folder back? The same reading `reload` makes, quietly; reachable and empty counts.
+    async function mainAnswers() {
+      const choice = cfg.sourceId || NIMROD_FOLDER;
+      if (choice === NO_FOLDER) return true;
+      if (choice === NIMROD_FOLDER) {
+        const r = await readNimrodWallpapers({ store: folderStore });
+        return r.status === 'ok' || r.status === 'empty';
+      }
+      const rows = (await client.list()) || [];
+      const src = rows.find((s) => s && s.id === choice);
+      if (!src) return false;
+      const r = await listingWithin(resolveList, src, cfg.album, { accept: wallpaperItemsOf,
+        waitMs: Number(ctx.listingWaitMs ?? LISTING_WAIT_MS), setTimer, clearTimer });
+      return r.ok;
     }
 
     // folder art: a lapsed permission comes back only when somebody presses Allow elsewhere; look again now and then.
@@ -474,6 +562,7 @@ registerModule(
         ticking: tick != null, swapping: swap != null,
         css: el('[data-ambient]')?.style.background || '',
         folder: { ...folderState }, rechecking: recheck != null,   // folder art
+        backup: backupShown ? { ...backupShown } : null, checkingMain: mainCheck.armed(),   // backup source
         shownSrc: layers.map((l) => l.querySelector('img,video')?.getAttribute('src') || ''),
       }),
 
@@ -485,8 +574,15 @@ registerModule(
             ...knownSources.filter((s) => s && s.id).map((s) => ({ value: s.id, label: s.label || s.base_url || s.id })),
             { value: NO_FOLDER, label: 'None: just the built-in wallpaper' },
           ],
-          status: folderNote(folderState.choice, folderState.status, folderState.count),
+          // backup source: while the backup plays, the line says so (never on screen: see the note at the top).
+          status: backupShown
+            ? degradedLine({ shownLabel: backupShown.label, chosenLabel: backupShown.chosenLabel,
+              err: { code: backupShown.why }, backup: true })
+            : folderNote(folderState.choice, folderState.status, folderState.count),
         },
+        [BACKUP_KEY]: backupPanelChoices({ sources: knownSources, mainId: cfg.sourceId || null, current: cfg[BACKUP_KEY],
+          screen: screenBackup(), panelDefault: BACKUP_NONE, personId: personOf(ctx),
+          showing: backupShown ? backupShown.label : null }),
       }),
 
       init() {
@@ -523,19 +619,20 @@ registerModule(
       },
 
       onResize() { /* the layers are CSS-sized; nothing to recompute */ },
-      onHide() { stopTick(); stopSwap(); clearRecheck(); },
+      onHide() { stopTick(); stopSwap(); clearRecheck(); mainCheck.stop(); },
       // folder art: shown again, a Nimrod folder that was not ready (set up, allowed or filled since) is read again.
+      // backup source: and a panel that was showing its backup tries its chosen folder again.
       onShow() {
         applyConfig();
-        if ((cfg.sourceId || NIMROD_FOLDER) === NIMROD_FOLDER && folderState.status !== 'ok') {
+        if (backupShown || ((cfg.sourceId || NIMROD_FOLDER) === NIMROD_FOLDER && folderState.status !== 'ok')) {
           reload().catch((e) => console.warn('wallpaper: reload', e));
         }
       },
 
       destroy() {
         destroyed = true;
-        client.dispose();
-        stopTick(); stopSwap(); clearRecheck();
+        scoped?.dispose();
+        stopTick(); stopSwap(); clearRecheck(); mainCheck.stop();
         mq?.removeEventListener?.('change', onMq);
         for (const l of layers) { try { clearLayer(l); } catch { /* already gone */ } }
         layers = [];

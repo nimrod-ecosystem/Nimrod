@@ -27,6 +27,7 @@ import { normalizeField, fieldValue } from '../settings_fields.js';
 import {
   createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
   LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
+  backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
 import { cacheGet, cacheSet } from '../cache.js';
@@ -128,6 +129,10 @@ const SETTINGS = [
     emptyLabel: 'No source connected' },
   { key: 'album', label: 'Album', kind: 'text', default: '', level: 'standard',
     placeholder: 'Everything', readOnly: true, note: 'set in Media / Sources' },
+  // backup source (2026-10-08, media_sources.js argues the rows and defaults): "If this can't be reached, use". Its own
+  // default is the stand-in this panel has had since §3e (any other source this screen may show), so nothing changes
+  // until somebody chooses; the screen's "Backup folder for this screen" applies unless this row is set.
+  backupPanelField({ panelDefault: BACKUP_ANY }),
   // *** WHEN IT OPENS (Mike, 2026-10-02: autostart "on for youtube/picture slideshow"). *** game_start.js's
   // two rows, ON by default -- exactly what this panel did before the row existed. Off: the first picture
   // shows and stays, with a Start button, until Play (the bar's button, Space, a switch) or a press on it.
@@ -318,6 +323,7 @@ registerModule(
     const OWN = { slideshow: ownTag };
     const isMine = (meta) => !meta || !meta.slideshow || meta.slideshow === ownTag;
     let lastSourceRef = null;       // to reload only when sourceId/album change
+    let lastBackupRef = null;       // backup source: the panel's row, as last seen
     // The account's sources, cached from the listing call `reload` already makes. THE MENU
     // PAINTS SYNCHRONOUSLY, so `settingsChoices` cannot go to the network: a row that waits
     // on a facility connection to draw is a row that looks broken.
@@ -342,6 +348,9 @@ registerModule(
     let seenDirty = false, seenWrittenAt = 0;
     const listingWaitMs = () => Number(ctx.listingWaitMs ?? LISTING_WAIT_MS);
     const recheckMs = () => Number(ctx.sourceRecheckMs ?? SOURCE_RECHECK_MS);
+    // backup source: this panel's row, else the screen's (`ctx.screenBackup`, kiosk.js), else the stand-in it always had.
+    const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
+    const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_ANY });
 
     const stage = () => mount.querySelector('[data-stage]');
 
@@ -857,7 +866,8 @@ registerModule(
     function sayDegraded() {
       if (!degraded) return;
       const d = degraded;
-      const text = escapeHtml(degradedLine({ shownLabel: keptMode ? null : d.shownLabel, chosenLabel: d.chosenLabel, err: d.err }));
+      const text = escapeHtml(degradedLine({ shownLabel: keptMode ? null : d.shownLabel, chosenLabel: d.chosenLabel, err: d.err,
+        backup: !keptMode && !!d.backup }));   // backup source: "Showing the backup: ..." for a chosen one
       const perm = d.err && d.err.code === 'permission' && d.chosenSource;
       setStatus(text, keptMode && !perm, perm ? allowAction(d.chosenSource) : null);
     }
@@ -1025,11 +1035,12 @@ registerModule(
         sources, chosen: source, chosenId, album: cfg.album, personId: personOf(ctx),
         resolve: resolveList, accept: (l) => slideshowItems(l && l.items),
         waitMs: listingWaitMs(), setTimer, clearTimer, skip: loadFailed,
+        backup: backupNow(),   // backup source
       });
       if (seq !== loadSeq) return;
       const cid = (source && source.id) || chosenId;
       const chosenRef = { chosenId: cid, chosenLabel: (source && source.label) || labels[cid] || null,
-        err: got.failure, chosenSource: source };
+        err: got.failure, chosenSource: source, backup: !!got.byChoice };
       if (got.source) { applyListing(got.source, got.listing, got.album, got.fellBack ? chosenRef : null); return; }
       // NOTHING FROM ANY SOURCE. Keep asking after the chosen one, show the last pictures if there are
       // any, and otherwise say what is wrong -- over the picture already there, which is left up.
@@ -1138,7 +1149,13 @@ registerModule(
           for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, s || {});
           syncControls();
           const ref = `${cfg.sourceId}|${cfg.album}`;
+          // backup source: a changed backup matters only while one is (or should be) showing; a panel showing its main
+          // source is left alone rather than reloaded under somebody watching it.
+          const bref = String(cfg[BACKUP_KEY] || '');
+          const backupMoved = bref !== lastBackupRef;
+          lastBackupRef = bref;
           if (ref !== lastSourceRef) { lastSourceRef = ref; reload(); }
+          else if (backupMoved && degraded) reload();
           // FIT CHANGES RE-RENDER THE CURRENT PHOTO, they do not poke a style. This used to
           // write `objectFit` onto `stage().firstChild`, and in `contain` mode the first child
           // is the BLURRED BACKDROP, not the photo - so switching contain -> cover set the
@@ -1181,7 +1198,7 @@ registerModule(
         const label = mount.querySelector('[data-source-label]');
         const st = stage();
         const out = [];
-        if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album'] });
+        if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album', BACKUP_KEY] });   // backup source
         if (st) out.push({ id: 'picture', label: 'The picture', el: st, keys: ['fit', 'intervalMs', 'autostart', 'autostartAlone', 'resumeAfterMs'],
           help: 'The picture on screen: how it fits the panel, how long each one stays, and whether the slideshow starts by itself.' });
         return out;
@@ -1209,7 +1226,11 @@ registerModule(
         if (want && !opts.some((o) => o.value === want)) {
           opts.push({ value: want, label: `${labels[want] ? `“${labels[want]}”` : 'A source'} — not connected here` });
         }
-        return { sourceId: opts };
+        // backup source: every source this screen may show but the main one, and a line while the backup is on screen.
+        return { sourceId: opts,
+          [BACKUP_KEY]: backupPanelChoices({ sources: knownSources, mainId: cfg.sourceId || null, current: cfg[BACKUP_KEY],
+            screen: screenBackup(), panelDefault: BACKUP_ANY, personId: personOf(ctx),
+            showing: degraded && degraded.backup && !keptMode ? degraded.shownLabel : null }) };
       },
     };
   },

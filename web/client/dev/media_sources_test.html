@@ -114,6 +114,105 @@ async function loadsAsImage(url) {
       shown.join() === 'a.jpg,b.mp4,e.PNG', shown.join());
   }
 
+  // *** backup source (2026-10-08): ONE HELPER FOR THE FOUR PANELS - PURE, SO IT RUNS WITH NO AGENT. ***
+  // Mike: "We should make backup folder options for everything, so people could always have a local fallback."
+  {
+    const M = await import('../media_sources.js');
+    const S = {
+      main:   { id: 'main',   label: 'The drive',    kind: 'agent', base_url: 'http://192.168.1.9:8770', person_id: null },
+      sd:     { id: 'sd',     label: 'SD card',      kind: 'folder' },
+      here:   { id: 'here',   label: 'This computer', kind: 'agent', base_url: 'http://127.0.0.1:8770', person_id: 'p1' },
+      family: { id: 'family', label: 'Family',       kind: 'agent', base_url: 'https://family.example', person_id: null },
+      next:   { id: 'next',   label: 'Next door',    kind: 'agent', base_url: 'http://127.0.0.1:8771', person_id: 'p2' },
+    };
+    const all = Object.values(S);
+    const ids = (l) => l.map((s) => s.id).join();
+    // Which backup is in force.
+    check('backup: the panel\'s own choice wins, else the screen\'s, else the panel\'s default',
+      M.backupChoice({ panel: 'sd', screen: 'family', panelDefault: M.BACKUP_ANY }) === 'sd'
+        && M.backupChoice({ panel: '', screen: 'family', panelDefault: M.BACKUP_ANY }) === 'family'
+        && M.backupChoice({ panel: '', screen: '', panelDefault: M.BACKUP_ANY }) === M.BACKUP_ANY
+        && M.backupChoice({ panel: '', screen: '', panelDefault: M.BACKUP_NONE }) === M.BACKUP_NONE);
+    check('*** nothing set anywhere: Photos and videos keep their stand-in, Music and Wallpaper have none (unchanged) ***',
+      M.backupChoice({ panelDefault: M.BACKUP_ANY }) === 'any' && M.backupChoice({}) === 'none');
+    check('a panel can say "nothing" even when the screen has a backup',
+      M.backupChoice({ panel: M.BACKUP_NONE, screen: 'sd', panelDefault: M.BACKUP_ANY }) === 'none');
+    // Which sources are tried.
+    check('backup "any": the same stand-ins as before (own, then the account\'s, never next door\'s)',
+      ids(M.backupSources(all, { choice: 'any', chosenId: 'main', personId: 'p1' })) === 'here,sd,family',
+      ids(M.backupSources(all, { choice: 'any', chosenId: 'main', personId: 'p1' })));
+    check('backup "none": nothing is tried', M.backupSources(all, { choice: 'none', chosenId: 'main', personId: 'p1' }).length === 0);
+    check('*** a chosen backup: that one only (it replaces the automatic stand-in) ***',
+      ids(M.backupSources(all, { choice: 'sd', chosenId: 'main', personId: 'p1' })) === 'sd');
+    check('*** a chosen backup that is another resident\'s is never tried, whatever the row says ***',
+      M.backupSources(all, { choice: 'next', chosenId: 'main', personId: 'p1' }).length === 0
+        && M.backupSources(all, { choice: 'here', chosenId: 'main', personId: null }).length === 0);
+    check('the main source is not its own backup, and a backup not connected here is nothing',
+      M.backupSources(all, { choice: 'main', chosenId: 'main' }).length === 0 && M.backupSources(all, { choice: 'gone' }).length === 0);
+    // The words.
+    check('*** the quiet line: "Showing the backup: <name> — <main> can\'t be reached." ***',
+      M.degradedLine({ shownLabel: 'SD card', chosenLabel: 'The drive', backup: true }) === 'Showing the backup: “SD card” — “The drive” can’t be reached.',
+      M.degradedLine({ shownLabel: 'SD card', chosenLabel: 'The drive', backup: true }));
+    check('...music says "Playing", and a song that would not play says so',
+      M.degradedLine({ shownLabel: 'SD card', chosenLabel: 'The drive', backup: true, verb: 'Playing', err: { code: 'unplayable' } })
+        === 'Playing the backup: “SD card” — “The drive” wouldn’t play.');
+    check('...the automatic stand-in keeps its old words', M.degradedLine({ shownLabel: 'Family', chosenLabel: 'The drive' })
+      === 'Showing “Family” — “The drive” can’t be reached.');
+    // The rows.
+    const pf = M.backupPanelField({ panelDefault: M.BACKUP_ANY });
+    check('the panel row: "If this can\'t be reached, use", at Everything, defaulting to the screen\'s',
+      pf.key === 'backupSource' && pf.level === 'advanced' && pf.default === '' && pf.options.map((o) => o.value).join() === ',any,none', JSON.stringify(pf));
+    const pc = M.backupPanelChoices({ sources: all, mainId: 'main', current: 'gone', screen: 'sd', panelDefault: M.BACKUP_ANY, personId: 'p1', showing: 'SD card' });
+    const pv = pc.options.map((o) => o.value);
+    check('*** its choices: "as This screen says (<what that is>)", what is ON THIS COMPUTER first, then the rest ***',
+      pv.join() === ',sd,here,family,any,none,gone' && /As This screen says \(“SD card”\)/.test(pc.options[0].label)
+        && /on this computer/.test(pc.options[1].label) && !/on this computer/.test(pc.options[3].label), JSON.stringify(pc.options));
+    check('...never the main source, never next door\'s; a choice not here stays, last, saying so',
+      !pv.includes('main') && !pv.includes('next') && /not connected here/.test(pc.options.at(-1).label));
+    check('...and while the backup shows, the line after the value says so', /Showing the backup now: “SD card”/.test(pc.status), pc.status);
+    const sf = M.backupScreenField({ sources: all, personId: 'p1' });
+    check('the screen row: "Backup folder for this screen", at The usual, not set by default',
+      sf.key === 'backupSource' && sf.label === 'Backup folder for this screen' && sf.level === 'standard' && sf.default === ''
+        && sf.options[0].value === '' && sf.options.at(-2).value === 'any' && sf.options.at(-1).value === 'none', JSON.stringify(sf.options));
+    check('*** site words: never "her screen", never a name ***',
+      !/her screen|christine|cici/i.test(JSON.stringify([pf, pc, sf])));
+    // What the screen row can offer: what the panels here listed, for this person, never another resident's.
+    M.forgetListedForTest();
+    M.noteListed('p1', [S.here, S.next, S.family]);
+    M.noteListed('', [S.here, S.next, S.family, S.sd]);
+    check('listed sources: the person\'s own list, and never another resident\'s source in it',
+      ids(M.listedSources('p1')) === 'here,family', ids(M.listedSources('p1')));
+    check('...whose screen unknown: the account\'s list, with no resident\'s source at all',
+      ids(M.listedSources(null)) === 'family,sd', ids(M.listedSources(null)));
+    M.forgetListedForTest();
+    // Asking after the main source.
+    const timers = [];
+    const setTimer = (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; };
+    const clearTimer = (t) => { if (t) t.live = false; };
+    let up = false, backs = 0;
+    const rc = M.createSourceRecheck({ ms: () => 777, setTimer, clearTimer, isBack: async () => up, onBack: () => { backs += 1; } });
+    rc.arm();
+    const fire = async () => { const t = timers.filter((x) => x.live).pop(); if (t) { t.live = false; t.fn(); } await new Promise((r) => setTimeout(r, 0)); };
+    check('the recheck waits SOURCE_RECHECK_MS (the seam here: 777)', rc.armed() && timers.at(-1).ms === 777);
+    await fire();
+    check('still down: it asks again later, and does not go back', backs === 0 && rc.armed());
+    up = true;
+    await fire();
+    check('*** back: it goes back once, and stops asking ***', backs === 1 && !rc.armed());
+    rc.arm(); rc.stop();
+    check('stopped: nothing left running', !rc.armed() && timers.every((t) => !t.live));
+    // listOrFallback with a chosen backup, and with none.
+    const resolve = async (s) => { if (s.id === 'main') throw new Error('down'); return { items: [{ id: `${s.id}.jpg`, kind: 'image' }] }; };
+    const got = await M.listOrFallback({ sources: all, chosen: S.main, album: '', personId: 'p1', resolve, backup: 'family', waitMs: 0 });
+    check('*** main down, a chosen backup: that backup, marked as the chosen one ***',
+      got.source?.id === 'family' && got.fellBack && got.byChoice === true, JSON.stringify({ id: got.source?.id, by: got.byChoice }));
+    const none = await M.listOrFallback({ sources: all, chosen: S.main, album: '', personId: 'p1', resolve, backup: 'none', waitMs: 0 });
+    check('main down, backup "nothing": nothing, and the failure kept for the words', !none.source && !!none.failure);
+    const auto = await M.listOrFallback({ sources: all, chosen: S.main, album: '', personId: 'p1', resolve, waitMs: 0 });
+    check('no backup given (every older caller): the stand-in as before, not marked chosen',
+      auto.source?.id === 'here' && auto.byChoice === false, auto.source?.id);
+  }
+
   // *** folder art (2026-10-07): AN SVG FROM A FOLDER IS LISTED, AND NOTHING IN IT RUNS IN THIS SITE. ***
   // The security invariant over folder_source.js IMAGE_EXTS. A drawing that tries everything - an onload, a <script>,
   // a picture from elsewhere - is listed, shown as a picture (nothing runs, nothing loads), and even opened as a page

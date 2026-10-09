@@ -73,7 +73,9 @@ import { registerModule, extendCtx } from '../module.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createYtPlayer } from './youtube.js';
 import { createMediaSourcesClient } from '../media_sources.js';
-import { followPerson, personSources } from '../person_known.js';
+import { followPerson, personSources, personOf } from '../person_known.js';
+// backup source (2026-10-08; media_sources.js and music_local.js argue it)
+import { backupChoice, backupPanelField, backupPanelChoices, listedSources, degradedLine, BACKUP_KEY, BACKUP_NONE } from '../media_sources.js';
 import {
   watchFavourites, normalizeFavourites, parseSource, normalizeSource, describeSource, newFavouriteId,
   musicSpeechRoutes, DEFAULT_STARTERS, MAX_NAME,
@@ -109,6 +111,7 @@ const DEFAULTS = {
   songInfo: true,          // Mike, 2026-10-08: "Song info by default"
   playOn: '',              // play on: '' follows the screen's Devices -> Speakers row
   whenElsewhere: 'ask',    // play on (note BK item 4)
+  backupSource: '',        // backup source: '' follows the screen's "Backup folder for this screen"
 };
 
 // The Spotify rows other than the switch show only while it is on (settings_fields.js `appliesWhen`), so the
@@ -188,6 +191,9 @@ export const SETTINGS = [
       { value: 'ask', label: 'Ask first (“Play this instead?”)' },
       { value: 'play', label: 'Play it anyway (what is playing there stops)' },
     ] },
+  // backup source (2026-10-08): for music FILE and FOLDER favourites whose folder can't be reached. Its own default is
+  // nothing - music said "not connected" before - and the screen's "Backup folder for this screen" applies unless set.
+  backupPanelField({ panelDefault: BACKUP_NONE }),
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -220,6 +226,7 @@ registerModule(
     let draft = { name: '', link: '', sourceId: '', kind: 'file', path: '' };
     let editMsg = '';
     let sourcesList = [];
+    let sourcesAsked = false;      // backup source: the settings row asked for the list once
     let spotifyDevices = null;
     let spotifyNote = '';
     let dead = false;
@@ -288,8 +295,16 @@ registerModule(
     // handle with NO server events: the one-time move (plays.js) would otherwise file this panel's old Spotify rows a
     // second time, as folder plays.
     const folderLog = panelPlays(extendCtx(ctx, { events: null }), 'folder');
+    // backup source: this panel's row, else the screen's (`ctx.screenBackup`, kiosk.js), else nothing.
+    const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
+    const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_NONE });
     const local = createLocalMusic({
       audio, audioId: `music:${instanceId}:local`, sources,
+      // backup source
+      backup: () => backupNow(), personId: () => personOf(ctx), onBackup: () => { if (!dead) render(); },
+      ...(ctx.setTimer ? { setTimer: ctx.setTimer } : {}), ...(ctx.clearTimer ? { clearTimer: ctx.clearTimer } : {}),
+      ...(Number.isFinite(Number(ctx.sourceRecheckMs)) && ctx.sourceRecheckMs != null ? { recheckMs: Number(ctx.sourceRecheckMs) } : {}),
+      ...(Number.isFinite(Number(ctx.listingWaitMs)) && ctx.listingWaitMs != null ? { listingWaitMs: Number(ctx.listingWaitMs) } : {}),
       onTrack: ({ sourceId, path, title }) => {
         if (!path) return;
         folderLog.played(sourceId ? `${sourceId}:${path}` : path, { title });
@@ -621,8 +636,13 @@ registerModule(
         parsePlayOn(playOnValue()).kind === 'out' ? EMBED_WORDS['default-speaker'] : '',
       ].filter(Boolean) : [];
       const elsewhere = status.asking && status.askingWhy === 'elsewhere';
+      // backup source: a quiet line while a folder favourite plays from the backup ("Playing the backup: ...").
+      const bk = status.playing && status.kind === 'local' ? local.state().backup : null;
+      const bkLine = bk ? degradedLine({ shownLabel: bk.label, chosenLabel: bk.chosenLabel, err: { code: bk.why },
+        backup: true, verb: 'Playing' }) : '';
       return `
         <p class="mu-now" data-now>${esc(now)}</p>
+        ${bkLine ? `<p class="mu-hint" data-backup role="status">${esc(bkLine)}</p>` : ''}
         ${songCardHtml()}
         ${why ? `<p class="mu-hint" data-order-note role="status">${esc(why)}</p>` : ''}
         ${here.map((t) => `<p class="mu-hint" data-here-note role="status">${esc(t)}</p>`).join('')}
@@ -952,7 +972,13 @@ registerModule(
         // (spotify sdk) The six-month reminder on the "Spotify" row too, from two weeks before - words, not a box.
         let renew = null;
         try { renew = cfg.spotifyOn ? spotify?.reminder?.() : null; } catch { renew = null; }
+        // backup source: the folders this panel can see (its editor's list, else what this page last listed for the person).
+        if (!sourcesList.length && !sourcesAsked) { sourcesAsked = true; loadSources(); }
+        const bk = local.state().backup;
         return {
+          [BACKUP_KEY]: backupPanelChoices({ sources: sourcesList.length ? sourcesList : listedSources(personOf(ctx)),
+            current: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_NONE, personId: personOf(ctx),
+            showing: bk ? bk.label : null }),
           playOn: playOnChoicesNow(),   // play on: the same choices as the panel's "Play on" button
           ...(renew?.line ? { spotifyOn: { note: `${renew.line} Press “Change the list”, then “Connect again”.` } } : {}),
           spotifyClientId: { emptyLabel: inUse, note: [spNote, screenOnly ? 'Nobody has signed in on this browser, so '
@@ -1006,6 +1032,10 @@ registerModule(
         bus.subscribe('music/back', () => { if (view !== 'main') { view = 'main'; lit = -1; render(); } });
         offPerson = followPerson(ctx, usePerson);
         render();
+        // backup source: the folders here, read once in the background, so the settings row (which paints at once and
+        // cannot wait) can offer them the first time it is opened. The client is the cached one the editor uses.
+        sourcesAsked = true;
+        loadSources();
       },
       onResize() {},
       onHide() { try { state?.flush?.(); } catch { /* nothing to do */ } },

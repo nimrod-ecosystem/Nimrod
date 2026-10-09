@@ -479,6 +479,98 @@ try {
     check('*** "None: just the built-in wallpaper" leaves the folder alone ***', p.mode === 'ambient' && p.items === 0, J(p));
     inst.destroy();
     check('folder art: the drawing never ran, start to end', window.__wpSvgRan === undefined);
+
+    // ===================================================================================
+    // backup source (2026-10-08). Mike: "We should make backup folder options for everything, so people could always
+    // have a local fallback." The chosen folder can't be read -> the backup plays; it comes back -> the chosen one; no
+    // backup chosen -> the built-in wallpaper, exactly as before. Still nothing written on screen: the words are the row's.
+    section('*** backup source: the wallpaper\'s backup folder ***');
+    {
+      const BS = [{ id: 'main', label: 'The drive', kind: 'agent', base_url: 'http://192.168.1.9:8770' },
+        { id: 'sd', label: 'SD card', kind: 'folder' }];
+      const down = new Set(['main']);
+      const asked = [];
+      const pic = (tag) => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
+      const resolveListing = async (s, album) => {
+        asked.push(s.id);
+        if (down.has(s.id)) throw new Error(`${s.id} /list -> 502`);
+        return { items: [1, 2].map((i) => ({ id: `${s.id}-${i}.png`, path: `${s.id}-${i}.png`, name: `${s.id} ${i}`, kind: 'image', url: pic(`${s.id}-${i}`) })) };
+      };
+      const tm = [];
+      const setTimer = (fn, ms) => { const t = { fn, ms, live: true }; tm.push(t); return t; };
+      const clearTimer = (t) => { if (t) t.live = false; };
+      const fire = async (ms) => { const t = tm.filter((x) => x.live && x.ms === ms).pop(); if (t) { t.live = false; t.fn(); } await sleep(120); };
+      const RECHECK = 777;
+      const mkB = (s, screen = 'sd', fstore = store) => {
+        const b = createBus();
+        const st2 = { ...s };
+        const w = mountModule('wallpaper', {
+          mount: host, bus: b, state: { get: () => st2, set: (p) => Object.assign(st2, p), subscribe: () => {} },
+          events: null, user: USER, folderStore: fstore, rand: mulberry32(9), now: () => 0, setTimer, clearTimer,
+          sources: { list: async () => BS.slice() }, resolveListing, screenBackup: () => screen,
+          sourceRecheckMs: RECHECK, listingWaitMs: 0,
+        });
+        w.init();
+        return { w, st: st2 };
+      };
+      const statusOf = (w, st2) => fieldItems(fieldsFor({ settings: WP_SETTINGS }, w), { values: st2, level: 'advanced' })
+        .find((it) => /sourceId$/.test(it.id))?.hint || '';
+      // 1. A connected folder that is down; the SCREEN's backup folder.
+      let { w, st: s1 } = mkB({ sourceId: 'main' });
+      await sleep(200);
+      let q = w.impl.__probe();
+      check('*** the chosen folder can\'t be read: the screen\'s backup folder plays ***',
+        q.mode === 'media' && q.backup?.label === 'SD card' && q.shownSrc.some((x) => /sd-/.test(decodeURIComponent(x))), J(q));
+      check('...and STILL nothing written on screen (a wallpaper never reports on screen)', host.textContent.trim() === '');
+      const hint = statusOf(w, s1);
+      check('*** ...the row says it instead: "Showing the backup: “SD card” — “The drive” can\'t be reached." ***',
+        /Showing the backup: “SD card” — “The drive” can’t be reached/.test(hint), hint);
+      check('...and asks after the chosen folder', q.checkingMain === true);
+      down.delete('main');
+      await fire(RECHECK);
+      q = w.impl.__probe();
+      check('*** the chosen folder answers again: it is what shows, and the backup is gone ***',
+        q.backup === null && q.folder.status === 'ok' && q.shownSrc.some((x) => /main-/.test(decodeURIComponent(x))) && q.checkingMain === false, J(q));
+      w.destroy();
+      // 2. NO BACKUP CHOSEN ANYWHERE: the built-in wallpaper, and the backup is never asked.
+      down.add('main'); asked.length = 0;
+      ({ w, st: s1 } = mkB({ sourceId: 'main' }, ''));
+      await sleep(200);
+      q = w.impl.__probe();
+      check('*** no backup chosen: the built-in wallpaper as before, nothing else asked ***',
+        q.mode === 'ambient' && q.backup === null && q.folder.status === 'error' && !asked.includes('sd'), J({ q, asked }));
+      w.destroy();
+      // 3. The Nimrod folder's permission lapsed: the backup plays; allowed again, the Nimrod folder's pictures come back.
+      perm.state = 'prompt';
+      ({ w, st: s1 } = mkB({}));
+      await sleep(200);
+      q = w.impl.__probe();
+      check('*** the Nimrod folder needs permission again: the backup plays meanwhile ***',
+        q.mode === 'media' && q.backup?.label === 'SD card' && q.backup.why === 'permission', J(q));
+      check('...the row names the reason', /“Wallpapers in your Nimrod folder” needs permission again/.test(statusOf(w, s1)), statusOf(w, s1));
+      perm.state = 'granted';
+      await fire(RECHECK);
+      q = w.impl.__probe();
+      check('*** allowed again: the Nimrod folder\'s own pictures, the backup gone ***',
+        q.backup === null && q.folder.status === 'ok' && q.folder.count === 2, J(q));
+      w.destroy();
+      // 4. No Nimrod folder on this device at all: nobody set one up here, so the built-in, not the backup (argued in the module).
+      ({ w } = mkB({}, 'sd', storeOf(null)));
+      await sleep(200);
+      q = w.impl.__probe();
+      check('no Nimrod folder on this device (nothing set up): the built-in wallpaper, not the backup',
+        q.mode === 'ambient' && q.backup === null && q.folder.status === 'none', J(q));
+      w.destroy();
+      // 5. The panel's own "Nothing" beats the screen's backup; and under "None: just the built-in" the row is not offered.
+      ({ w, st: s1 } = mkB({ sourceId: 'main', backupSource: 'none' }));
+      await sleep(200);
+      check('the panel\'s own "Nothing" beats the screen\'s backup folder', w.impl.__probe().backup === null && w.impl.__probe().mode === 'ambient');
+      w.destroy();
+      const rowOn = (v) => fieldItems(fieldsFor({ settings: WP_SETTINGS }), { values: v, level: 'advanced' }).some((it) => /backupSource$/.test(it.id));
+      check('the row is offered for a folder, and left out under "None: just the built-in wallpaper"',
+        rowOn({ sourceId: 'main' }) && !rowOn({ sourceId: NO_FOLDER }));
+      check('destroy leaves no recheck running', !tm.some((t) => t.live && t.ms === RECHECK));
+    }
   }
 
   // =====================================================================================
