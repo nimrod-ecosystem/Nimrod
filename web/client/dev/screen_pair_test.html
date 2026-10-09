@@ -39,8 +39,8 @@ this line is.</b></p>
 <div id="live"></div>
 
 <script type="module">
-import { mountScreenPairing, pairMessage, groupCode, siteHost, pairURL, PAIR_STATES, POLL_MS }
-  from '../screen_pair.js';
+import { mountScreenPairing, pairMessage, groupCode, siteHost, pairURL, PAIR_STATES, POLL_MS,
+  shouldPair, PAIR_OWN_KEY, KEY_RECHECK_MS } from '../screen_pair.js';
 import { getDeviceKey, setDeviceKey } from '../auth.js';
 
 const out = document.getElementById('results');
@@ -348,6 +348,42 @@ check('it percent-encodes rather than concatenating blindly',
 check('with no origin available it degrades to a path rather than throwing',
   pairURL('ABC123', { origin: 'null' }).startsWith('/pair.html'),
   pairURL('ABC123', { origin: 'null' }));
+
+// *** DEVICE KEY (2026-10-09): WHEN kiosk.html PUTS THE PAIRING CODE UP. *** `?pair=key` exists because a screen set
+// up by signing in runs on that sign-in, which runs out, and then a `?pair=1` screen turns into a code nobody in the
+// room can answer. And a screen that HAS a key must not be sent back to a code by a server error.
+section('device key: when the kiosk shows the pairing code (shouldPair)');
+{
+  const IN_KEY = { state: 'in', user: 'u', screen: true };      // let in by its own device key
+  const IN_COOKIE = { state: 'in', user: 'u', screen: false };  // let in by a person's sign-in
+  const OFFLINE = { state: 'in', user: 'u', cached: true };     // no server answer; the cached last user
+  const ANON = { state: 'anon' };
+  const ERR = { state: 'error' };
+  check('no ?pair= never pairs, whatever the state',
+    [IN_KEY, IN_COOKIE, ANON, ERR].every((who) => !shouldPair({ pair: null, who, hasKey: false })));
+  check('an unknown ?pair= value never pairs', !shouldPair({ pair: 'yes', who: ANON }));
+  check('?pair=1, signed out: pairs (unchanged)', shouldPair({ pair: '1', who: ANON }));
+  check('?pair=1, signed in by a person: the dashboard (unchanged)', !shouldPair({ pair: '1', who: IN_COOKIE }));
+  check('?pair=1, signed in by its key: the dashboard', !shouldPair({ pair: '1', who: IN_KEY, hasKey: true }));
+  check('?pair=1, server unreachable, never had a key: the pairing card (it says "check the wifi")',
+    shouldPair({ pair: '1', who: ERR, hasKey: false }));
+  check('*** ?pair=1, a screen WITH a key and a server error: NOT a code - it waits and retries ***',
+    !shouldPair({ pair: '1', who: ERR, hasKey: true }));
+  check(`the own-key value is '${PAIR_OWN_KEY}'`, PAIR_OWN_KEY === 'key');
+  check('*** ?pair=key, running on a PERSON\'s sign-in: pairs, so it has its own key before that sign-in runs out ***',
+    shouldPair({ pair: 'key', who: IN_COOKIE, hasKey: false }));
+  check('...and when its stored key no longer works but the sign-in does: pairs again',
+    shouldPair({ pair: 'key', who: IN_COOKIE, hasKey: true }));
+  check('*** ?pair=key, let in by its own key: the dashboard, every start from then on ***',
+    !shouldPair({ pair: 'key', who: IN_KEY, hasKey: true }));
+  check('?pair=key, signed out: pairs', shouldPair({ pair: 'key', who: ANON, hasKey: true }));
+  check('?pair=key, a server error with a key: waits, no code', !shouldPair({ pair: 'key', who: ERR, hasKey: true }));
+  check('*** ?pair=key OFFLINE (cached last user, no `screen` from the server): no code ***',
+    !shouldPair({ pair: 'key', who: OFFLINE, hasKey: true }));
+  check('no arguments at all: no code, no throw', shouldPair() === false);
+  check('a screen with a key showing the code looks again within a minute', KEY_RECHECK_MS > 0 && KEY_RECHECK_MS <= 60000,
+    String(KEY_RECHECK_MS));
+}
 
 const s = document.getElementById('summary');
 s.textContent = `${passed} passed, ${failed} failed`;

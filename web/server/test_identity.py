@@ -122,6 +122,22 @@ def main():
     check("*** a touch that throws does not break authentication ***",
           user_of({"X-Device-Key": "nk_real"}) == "family@example.com")
 
+    # --- device key (2026-10-09): a lookup that FAILS is a 503, not a 401 ----------------------
+    # A 401 tells a paired screen it is signed out (a ?pair= screen then shows a code, any other the
+    # demo). A database that did not answer is not that.
+    set_device_key_touch(None)
+    set_device_key_lookup(_boom)
+    try:
+        user_of({"X-Device-Key": "nk_real"})
+        code = None
+    except HTTPException as e:
+        code = e.status_code
+    check("*** prod: a key that could not be checked -> 503, not 401 ***", code == 503, str(code))
+    check("...a sign-in on the same request still gets in",
+          user_of({"X-Device-Key": "nk_real"}, session={"user": "google:1"}) == "google:1")
+    check("...an env-var key still gets in (it needs no database)", user_of({"X-Device-Key": "abc"}) == "robin")
+    check("...no key at all is still 401", raises_401())
+
     set_device_key_lookup(None)
     set_device_key_touch(None)
     setenv()
