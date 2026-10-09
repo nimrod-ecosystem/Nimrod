@@ -729,6 +729,91 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       kiosk.destroy(); root.innerHTML = '';
     }
 
+    // fullscreen border (Mike, 2026-10-08): "There is a thin yellow border around the fullscreen modules... I don't think
+    // there should be any border on a full screen module." The ring says WHICH panel the next press acts on; with only
+    // one panel a press could reach, there is no "which" (arrangement.js `syncRingAlone` argues the exact rule).
+    section('*** fullscreen border: no "which panel" ring when there is no "which" ***');
+    {
+      const ringOf = (cell) => getComputedStyle(cell.querySelector(':scope > .k-mod')).outlineStyle;
+      const ringOn = (cell) => ringOf(cell) !== 'none';
+      // (a) a 2x2, plain path: the ring is there, until the panel fills its dashboard / the screen
+      const p = await profiles.create('SC-ring');
+      for (const t of ['photos', 'trivia', 'calculator', 'wordforge']) await profiles.addModule(p.id, t);
+      const ids = (await profiles.get(p.id)).modules.map((m) => m.id);
+      stashPreviewLayout(p.id, { preset: 'quad', slots: ids });
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), ...seams(fakeStorage()) });
+      await sleep(600);
+      const cells = [...root.querySelectorAll('.k-stage > .k-cell')];
+      const at = cells.findIndex((c) => c.dataset.focused);
+      const lit = cells[at];
+      check('(setup) a 2x2 with a selected panel', cells.length === 4 && at >= 0, String(cells.length));
+      check('*** four panels: the selected one has its ring ***', !!lit && ringOn(lit) && !lit.dataset.ringAlone, lit && ringOf(lit));
+      kiosk.promote(ids[at]);
+      await sleep(30);
+      check('*** made bigger to fill its dashboard (the others hidden): NO ring ***', kiosk.promoted().dashboard === ids[at]
+        && lit.dataset.ringAlone === '1' && !ringOn(lit), `${J(kiosk.promoted())} ${ringOf(lit)}`);
+      check('...it is still the selected panel (data-focused stays: the bar, the cat and the info line read it)', lit.dataset.focused === '1');
+      kiosk.promote(ids[at]);
+      await sleep(30);
+      check('*** bigger again, the screen: still no ring ***', kiosk.promoted().screen === ids[at] && !ringOn(lit), `${J(kiosk.promoted())} ${ringOf(lit)}`);
+      kiosk.demote(); kiosk.demote();
+      await sleep(30);
+      check('*** back down to four: the ring is back ***', !kiosk.promoted().dashboard && ringOn(lit) && !lit.dataset.ringAlone, `${J(kiosk.promoted())} ${ringOf(lit)}`);
+      kiosk.destroy(); root.innerHTML = '';
+
+      // (b) ONE panel filling the screen ("Full screen" layout): on a screen, and as Home's landing draws it (an
+      //     embedded dashboard, the dashboard path)
+      const p1 = await profiles.create('SC-ring-one');
+      await profiles.addModule(p1.id, 'photos');
+      const id1 = (await profiles.get(p1.id)).modules[0].id;
+      stashPreviewLayout(p1.id, { preset: 'full', slots: [id1] });
+      for (const how of ['a screen', 'an embedded dashboard']) {
+        kiosk = await mountKiosk(root, how === 'a screen'
+          ? { user: USER, profileId: p1.id, profiles, bus: createBus(), ...seams(fakeStorage()) }
+          : { user: USER, profileId: p1.id, profiles, bus: createBus(), embedded: true, dashboardModule: true,
+            embedLayout: { preset: 'full', slots: [id1] }, ...seams(fakeStorage()) });
+        await sleep(600);
+        const sel = '.k-stage > .k-cell[data-focused]';
+        const one = await settled(() => root.querySelector(sel), 4000) && root.querySelector(sel);
+        check(`*** one panel filling ${how}: selected, and NO ring ***`, !!one && one.dataset.ringAlone === '1' && !ringOn(one),
+          one ? ringOf(one) : `cells ${root.querySelectorAll('.k-stage > .k-cell').length}`);
+        kiosk.destroy(); root.innerHTML = '';
+      }
+
+      // (c) two panels, one floated over the other: in the switch scan, "which one" is a question again (ring);
+      //     taken out of the scan, the panel underneath is the only stop (no ring).
+      const p2 = await profiles.create('SC-ring-float');
+      for (const t of ['photos', 'calculator']) await profiles.addModule(p2.id, t);
+      const ids2 = (await profiles.get(p2.id)).modules.map((m) => m.id);
+      stashPreviewLayout(p2.id, { preset: 'side', slots: ids2 });
+      const bus2 = createBus();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p2.id, profiles, bus: bus2, ...seams(fakeStorage()) });
+      await sleep(600);
+      const place = (q) => new Promise((res) => { bus2.publish('shell/place', { ...q, reply: res }); setTimeout(() => res(null), 3000); });
+      const fl = await place({ id: ids2[1], place: 'overlay', scan: true });
+      await sleep(60);
+      root.querySelector(`[data-mods] .k-dot[data-id="${ids2[0]}"]`)?.click();   // the photos selected, as the bar's chip does
+      await sleep(30);
+      const photoCell = () => root.querySelector('.k-stage > .k-cell[data-kind="photos"]');
+      const pc = photoCell();
+      check('(setup) the calculator floats over the photos, in the switch scan', fl?.ok === true && !!root.querySelector('[data-placed][data-place="overlay"]'), J(fl));
+      check('*** the floating panel is a second stop: the selected panel keeps its ring ***', !!pc && (!pc.dataset.focused || ringOn(pc))
+        && [...root.querySelectorAll('[data-ring-alone]')].length === 0, pc ? `${pc.dataset.focused} ${ringOf(pc)}` : 'no photos cell');
+      const off = await place({ id: ids2[1], scan: false });
+      await sleep(120);
+      const pc2 = photoCell();
+      check('*** the floating panel taken out of the scan: the panel under it is the only stop -- no ring ***', off?.ok === true
+        && !!pc2 && pc2.dataset.focused === '1' && pc2.dataset.ringAlone === '1' && !ringOn(pc2), `${J(off)} ${pc2 && pc2.dataset.focused} ${pc2 && ringOf(pc2)}`);
+      kiosk.destroy(); root.innerHTML = '';
+
+      // (d) the rule takes the PANEL's ring only: what is inside keeps its own focus ring (the selector is the panel box)
+      const rules = [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules]; } catch { return []; } })
+        .filter((r) => /data-ring-alone/.test(r.selectorText || ''));
+      check('*** the no-ring rule is on the panel box itself (`> .k-mod`), never on what is inside it ***', rules.length >= 1
+        && rules.every((r) => r.selectorText.split(',').every((s) => /\[data-ring-alone\]\s*>\s*\.k-mod\s*$/.test(s.trim()) || /zoom-focus/.test(s))),
+        rules.map((r) => r.selectorText).join(' | '));
+    }
+
     section('*** (6) a press that WAKES the plain bar is the panel\'s, never the bar\'s -- touch and mouse ***');
     {
       const p = await profiles.create('SC-wake');

@@ -143,7 +143,9 @@
      `outline` rather than `border` because a border would resize the cell and shift the grid
      every time focus moved, which on a bedside screen is the panels twitching under a hand.
      Only ever visible when there is more than one panel: on a single-panel screen "which one"
-     is not a question anybody has. */
+     is not a question anybody has. (fullscreen border, 2026-10-08: that sentence was not true -- nothing
+     enforced it, and Mike saw the ring round a panel filling the screen. Now `data-ring-alone`, set by
+     arrangement.js `syncRingAlone`, takes it off; the rule that says when is argued there.) */
   /* `--focus`, not `--accent` (2026-10-02, MIKE_LIST_20260930): the accent ring measured 2.83:1 in
      the default theme. theme.js derives --focus from the accent, a shade deeper only where needed. */
   /* With no space between panels (`panelGap` none or thin) there is no outside to draw on -- the cell clips
@@ -151,6 +153,8 @@
      panel's edge under a ring, against no ring at all. Roomy keeps it outside, as it always was. */
   .k-stage.k-grid .k-cell[data-focused] .k-mod{
     outline:3px solid var(--focus,var(--accent,#839958));outline-offset:var(--k-ring-offset,-3px)}
+  /* fullscreen border: the only panel a press could go to gets no "which panel" ring (its own controls keep theirs). */
+  .k-stage.k-grid > .k-cell[data-focused][data-ring-alone] > .k-mod{outline:none}
   /* NO TRANSITION ON THE RING, and it is not a style preference. The first version faded
      `outline-color` in over 150ms, and the ring then rendered in the element's own text colour
      instead of the moss — because a transition sits at its START value until the page

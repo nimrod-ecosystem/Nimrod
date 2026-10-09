@@ -707,18 +707,60 @@ export function createArrangement({
     const cell = rec?.el?.closest?.('.k-cell');
     if (cell) cell.dataset.focused = '1';
     const pm = placedMeta.get(id);
-    if (pm && placedRecs.some((r) => r.id === id)) {
-      pm.wrap.dataset.focused = '1';
-      pm.wrap.style.outline = '3px solid var(--focus, var(--accent,#839958))';
-      pm.wrap.style.outlineOffset = '2px';
-      pm.wrap.style.boxShadow = '0 0 0 2px var(--surface, Canvas)';
-    }
+    if (pm && placedRecs.some((r) => r.id === id)) pm.wrap.dataset.focused = '1';
+    syncRingAlone();   // fullscreen border: the ring itself (placed boxes inline, cells by kiosk.css)
     // A piece of the dashboard's room (THE ROOM'S PIECES, below): the room draws it, in its own scan look;
     // focus anywhere else takes that off.
     if (roomScene && typeof roomScene.focusTarget === 'function') {
       const stop = isPieceId(id) ? roomStops().find((s) => s.id === id) : null;
       try { roomScene.focusTarget(stop ? stop.el : null); } catch (err) { console.error('arrangement: the room\'s focus', err); }
     }
+  }
+
+  // ---- fullscreen border (Mike, 2026-10-08) -------------------------------------------------------------
+  // "There is a thin yellow border around the fullscreen modules... That's not necessary bc they are the only
+  // module. I don't think there should be any border on a full screen module." The ring (kiosk.css, and inline on
+  // a placed box above) answers ONE question: which panel will the next press act on. THE RULE: no ring while the
+  // focused panel is the only panel a press could move to that can be seen -- a one-panel dashboard, a panel made
+  // bigger to fill its dashboard or the screen (the others are hidden then), a dashboard whose other modules are
+  // all kept out of the switch scan. A control INSIDE the panel keeps its own focus ring; only "which panel" goes.
+  //   NOT "no ring whenever a panel fills the screen" (Mike's words, read literally): a panel made bigger still has
+  //   the overlays someone put over it (a small clock, the scoreboard), and while one of those is in the switch scan
+  //   a press can go to it -- so "which one" is a real question again, and the ring stays to answer it. The case
+  //   for the literal reading: one rule, nothing to count. Against it: a switch user stepping between the photos and
+  //   a floating scoreboard would see a ring on the scoreboard and then NOTHING when the scan comes back, which reads
+  //   as the scan having stopped.
+  // Marked on the focused cell / placed box as `data-ring-alone`, never by taking `data-focused` away: the bar, the
+  // cat and the info line all read `data-focused` to know what is selected, and it IS still selected.
+  function ringStopsShown() {
+    const ontop = (r) => placedMeta.get(r.id)?.entry?.place === 'overlay';
+    let n = 0;
+    for (const r of slotRecs) if (r && (!promoted || promoted === r.id)) n++;
+    for (const r of placedRecs) {
+      if (!r || scanOff(r.id)) continue;
+      if (promoted && promoted !== r.id && !ontop(r)) continue;          // hidden under a panel filling the dashboard
+      if (promoteTop && promoteTop !== r.id && promoted !== r.id && ontop(r)) continue;   // overlays step aside at the screen level
+      n++;
+    }
+    return n + roomStops().length;
+  }
+  function syncRingAlone() {
+    if (!layout || !stageEl) return false;
+    let alone = false;
+    try { alone = ringStopsShown() <= 1; } catch { alone = false; }   // (counting is never worth a missing ring)
+    for (const cell of stageEl.querySelectorAll(':scope > .k-cell')) {
+      if (alone && cell.dataset.focused) cell.dataset.ringAlone = '1'; else delete cell.dataset.ringAlone;
+    }
+    for (const m of placedMeta.values()) {
+      const on = !!m.wrap.dataset.focused && !alone;
+      if (alone && m.wrap.dataset.focused) m.wrap.dataset.ringAlone = '1'; else delete m.wrap.dataset.ringAlone;
+      // The placed box's ring is inline (kiosk.css's rule is for `.k-cell`): the theme's --focus, 3:1 on every surface
+      // (theme.js); a 2px band of --surface between box and ring, because a box can sit on the room's wood.
+      m.wrap.style.outline = on ? '3px solid var(--focus, var(--accent,#839958))' : '';
+      m.wrap.style.outlineOffset = on ? '2px' : '';
+      m.wrap.style.boxShadow = on ? '0 0 0 2px var(--surface, Canvas)' : '';
+    }
+    return alone;
   }
 
   // =================================================================================================
@@ -1756,6 +1798,7 @@ export function createArrangement({
     delete kioskEl.dataset.promotedPanel;
     const rec = recFor(promoted);
     promoted = null;
+    syncRingAlone();   // fullscreen border: the others are back, so "which panel" is a question again
     try { rec?.instance?.onResize?.(); } catch { /* not load-bearing */ }
   }
   /** Fill this dashboard with panel `id`. `{ level: 'dashboard' }` if it now does; `{ level: 'top' }` when
@@ -1769,6 +1812,7 @@ export function createArrangement({
     promoted = id;
     pb.box.dataset.promoted = '1';
     kioskEl.dataset.promotedPanel = id;
+    syncRingAlone();   // fullscreen border
     try { recFor(id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
     renderMods();
     return { level: 'dashboard', id };
@@ -1781,7 +1825,11 @@ export function createArrangement({
     return true;
   }
   /** The shell's level above this one: the panel it took up (its corner then reads "smaller"), or null. */
-  function setPromoteTop(id) { promoteTop = id || null; try { ensureCorners(); } catch { /* not load-bearing */ } }
+  function setPromoteTop(id) {
+    promoteTop = id || null;
+    syncRingAlone();   // fullscreen border: at the screen level the overlays step aside too
+    try { ensureCorners(); } catch { /* not load-bearing */ }
+  }
   // The room's own ✎ corner (edit mode on the dashboard's room, ROOM_PANEL_ID): bottom right of the room,
   // shown on hover or focus as a panel's is. Only while the scene is a mounted room.
   function ensureRoomCorner() {
