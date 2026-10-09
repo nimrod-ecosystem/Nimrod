@@ -209,6 +209,13 @@ class ScreenPairPoll(BaseModel):
 
 class ScreenPairClaim(BaseModel):
     code: str
+    # 2026-10-09: the name the person approving it gives it on pair.html. Optional: empty keeps the
+    # name the screen asked with (every kiosk asks as "This screen").
+    label: str | None = None
+
+
+class ScreenRename(BaseModel):
+    label: str
 
 
 class PairRequest(BaseModel):
@@ -561,7 +568,8 @@ def screen_pair_status(body: ScreenPairPoll):
 def screen_pair_claim(body: ScreenPairClaim, user: str = Depends(current_user)):
     """A signed-in person adopts the screen. Requires an account - that IS the security."""
     _check(body.code, ID_RE, "code")
-    state, info = store.claim_screen_pairing(body.code.strip().upper(), user)
+    label = _screen_name(body.label) if (body.label or "").strip() else None
+    state, info = store.claim_screen_pairing(body.code.strip().upper(), user, label)
     if state == "ok":
         return {"ok": True, **(info or {})}
     detail = {
@@ -592,18 +600,64 @@ def what_we_store():
     return store.describe_storage()
 
 
+# A screen's name: the same characters as any other name here (NAME_RE), trimmed, and at most
+# SCREEN_NAME_MAX long. 60, not NAME_RE's 64, because that is what a screen asking for a code has
+# always been cut to (`screen_pair_request`), so a name means the same thing whichever way it came in.
+SCREEN_NAME_MAX = 60
+
+
+def _screen_name(raw: str | None) -> str:
+    name = (raw or "").strip()
+    if not name or len(name) > SCREEN_NAME_MAX or not NAME_RE.fullmatch(name):
+        raise HTTPException(status_code=400, detail="invalid screen name")
+    return name
+
+
+# *** RENAMING AND REMOVING A SCREEN NEED A PERSON, NOT A SCREEN (2026-10-09). *** A request let in
+# only by a screen's own key - a screen in a room, which anybody walking past can press - may LIST the
+# account's screens but not change them. The same line the Claude key and invites already draw
+# (claims.REFUSAL_TEXT["screen"]). A browser that holds a screen's key AND a sign-in for the same
+# account (the owner's own computer that once opened a screen page, identity.signed_in_here) is a
+# person, so it may. If nobody answers, nothing happens: the screen keeps working.
+SCREEN_CHANGE_REFUSAL = "Rename or remove a screen from your own phone or computer, signed in - not from a screen in a room."
+
+
+def _screen_may_change(request: Request, user: str) -> bool:
+    return not via_device_key(request) or signed_in_here(request, user)
+
+
 @app.get("/api/screens")
-def list_screens(user: str = Depends(current_user)):
-    """The screens this account has adopted. NEVER returns the secrets."""
-    return {"screens": store.list_device_keys(user)}
+def list_screens(request: Request, user: str = Depends(current_user)):
+    """The screens this account has adopted. NEVER returns the secrets.
+
+    `this` on a row: the request came in on that screen's own key (the list says "(this one)").
+    `can_change`: whether this request may rename or remove (see SCREEN_CHANGE_REFUSAL), so the page
+    can say so instead of offering buttons that will be refused."""
+    return {"screens": store.list_device_keys(user, request.headers.get("X-Device-Key")),
+            "can_change": _screen_may_change(request, user)}
+
+
+@app.patch("/api/screens/{key_id}")
+def rename_screen(key_id: str, body: ScreenRename, request: Request, user: str = Depends(current_user)):
+    """Give a screen on this account a new name. Owner-only: another account's screen is the same 404
+    as no screen at all."""
+    _check(key_id, ID_RE, "screen id")
+    name = _screen_name(body.label)
+    if not _screen_may_change(request, user):
+        raise HTTPException(status_code=403, detail=SCREEN_CHANGE_REFUSAL)
+    if not store.rename_device_key(user, key_id, name):
+        raise HTTPException(status_code=404, detail="no such screen")
+    return {"ok": True, "label": name}
 
 
 @app.delete("/api/screens/{key_id}")
-def revoke_screen(key_id: str, user: str = Depends(current_user)):
+def revoke_screen(key_id: str, request: Request, user: str = Depends(current_user)):
     """Unadopt a screen. Immediate - the next request it makes is a 401.
 
     THE ONLY WAY TO TURN A LOST SCREEN OFF, so it matters that it exists before anybody
     has a screen to lose."""
+    if not _screen_may_change(request, user):
+        raise HTTPException(status_code=403, detail=SCREEN_CHANGE_REFUSAL)
     if not store.revoke_device_key(user, key_id):
         raise HTTPException(status_code=404, detail="no such screen")
     return {"ok": True}

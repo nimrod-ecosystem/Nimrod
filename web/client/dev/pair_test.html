@@ -293,6 +293,78 @@ for (const [kind, want] of [
     inst.state() === 'signed-out', inst.state());
 }
 
+section('*** a name for the screen, given while approving it (2026-10-09) ***');
+{
+  const w = fakeWorld({ signedIn: true, label: 'Kitchen' });
+  w.loc.search = '?c=ABC123';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  const nm = el.querySelector('[data-name]');
+  check('there is a name box, before the button', !!nm
+    && (nm.compareDocumentPosition(el.querySelector('[data-go]')) & Node.DOCUMENT_POSITION_FOLLOWING));
+  check('...labelled, and saying it is optional', /optional/i.test(el.querySelector('label[for="pc-name"]')?.textContent || ''));
+  check('...empty, showing what it will be called otherwise', nm.value === '' && nm.placeholder === 'This screen', nm.placeholder);
+  check('...no longer than the server allows', nm.maxLength === 60, String(nm.maxLength));
+  nm.value = '  Kitchen ';
+  nm.dispatchEvent(new Event('input'));
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('*** the name goes with the claim, trimmed ***', w.seen.claims[0]?.label === 'Kitchen', JSON.stringify(w.seen.claims));
+  check('...and done names it', inst.state() === 'done' && el.textContent.includes('Kitchen'), el.textContent.slice(0, 120));
+}
+{
+  const w = fakeWorld({ signedIn: true });
+  w.loc.search = '?c=ABC123';
+  const { el } = mount(w);
+  await sleep(30);
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('no name typed: the claim carries no name at all (the screen keeps its own)',
+    w.seen.claims[0] && !('label' in w.seen.claims[0]), JSON.stringify(w.seen.claims));
+}
+{
+  const w = fakeWorld({ signedIn: true });
+  w.loc.search = '?c=ABC123';
+  const { el } = mount(w);
+  await sleep(30);
+  const nm = el.querySelector('[data-name]');
+  nm.value = '   ';
+  nm.dispatchEvent(new Event('input'));
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('only spaces is the same as no name', w.seen.claims[0] && !('label' in w.seen.claims[0]), JSON.stringify(w.seen.claims));
+}
+{
+  const w = fakeWorld({ signedIn: true });
+  w.loc.search = '?c=ABC123';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  const nm = el.querySelector('[data-name]');
+  nm.value = 'Den';
+  nm.dispatchEvent(new Event('input'));
+  nm.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  await sleep(30);
+  check('Enter in the name box adds it too', inst.state() === 'done' && w.seen.claims[0]?.label === 'Den', JSON.stringify(w.seen.claims));
+}
+{
+  const w = fakeWorld({ signedIn: true });
+  w.fetch = async (url, opts = {}) => {
+    if (url.endsWith('/api/me')) return { ok: true, status: 200, json: async () => ({}) };
+    return { ok: false, status: 400, json: async () => ({ detail: 'invalid screen name' }) };
+  };
+  w.loc.search = '?c=ABC123';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  const nm = el.querySelector('[data-name]');
+  nm.value = '<b>';
+  nm.dispatchEvent(new Event('input'));
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('a name the server refuses says what a name may have, in words',
+    inst.state() === 'failed' && /letters, numbers/i.test(el.textContent), el.textContent.slice(0, 160));
+  check('...and keeps what was typed, to fix', el.querySelector('[data-name]')?.value === '<b>');
+}
+
 section('nothing on this page ever touches the device key');
 {
   const w = fakeWorld({ signedIn: true });
