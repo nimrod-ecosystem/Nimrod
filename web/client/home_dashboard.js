@@ -26,8 +26,8 @@
 //                           version they wanted. Choices 5 / 10 / 20 / 50, Design's.
 //   warnOverwrite true      Design: "Warn before saving over", On by default.
 //   chromeSurface 'follow'  Mike: "follow scene settings ... Make see through the default". Following
-//                           reads the screen's own panel background; a screen that never chose one
-//                           gets see-through here (see `chromeSurfaceFor`).
+//                           reads the screen's own panel background; a screen that never chose one,
+//                           or chose clear panels, gets see-through here (see `chromeSurfaceFor`).
 //   welcomeDone false       the welcome card shows until somebody says "Don't show this again".
 //   barHideMs 6000          in full screen the bar tucks itself away after this long (Design: 6 s). FOR
 //                           6: entering full screen is itself a press on the bar, and the next thing
@@ -162,11 +162,19 @@ export function homeSettingLabel(settings, key) {
 }
 
 /** The menu and bar background on this page. "Follow" takes the screen's own panel background when it
- *  chose one, and see-through when it did not (Mike: see-through is the default). */
+ *  chose one, and see-through when it did not (Mike: see-through is the default).
+ *
+ *  *** CLEAR PANELS GIVE A SEE-THROUGH MENU, NOT A CLEAR ONE (2026-10-09). *** Panels became clear by default on
+ *  2026-10-07 (a2b73f1), so "follow" turned every new account's ⚙ menu Fully clear -- a choice nobody made -- and on
+ *  the editing page its rows were white words with no ground on the page's white: 1.00:1, invisible
+ *  (dev/menu_contrast_test.html measures it). The menu is not a panel: what is behind it is the panels themselves
+ *  (photos, a scene), so it keeps a ground of its own. FOR: the default reads on every theme, and clear panels stay
+ *  clear. AGAINST: somebody who made their panels clear on purpose and wants the menu and bar to match now picks
+ *  "Fully clear" here -- one row, and it is still offered, with its halo now on every word. */
 export function chromeSurfaceFor(settings, screenPanelSurface) {
   const pick = settings && settings.chromeSurface;
   if (CHROME_SURFACES.includes(pick)) return pick;
-  return CHROME_SURFACES.includes(screenPanelSurface) ? screenPanelSurface : 'veil';
+  return screenPanelSurface === 'solid' ? 'solid' : 'veil';
 }
 
 // ---------------------------------------------------------------------------------------------------

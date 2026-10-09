@@ -102,6 +102,9 @@ try {
     check('follow + a screen that never chose -> SEE-THROUGH (Mike: the default)',
       chromeSurfaceFor({ chromeSurface: 'follow' }, undefined) === 'veil');
     check('an explicit choice wins over the screen', chromeSurfaceFor({ chromeSurface: 'clear' }, 'solid') === 'clear');
+    // 2026-10-09: clear panels (the default since 2026-10-07) made every new menu Fully clear, and unreadable.
+    check('*** follow + CLEAR panels -> see-through: the menu is not a panel ***',
+      chromeSurfaceFor({ chromeSurface: 'follow' }, 'clear') === 'veil');
   }
 
   // ============================================================================================
