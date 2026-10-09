@@ -2500,3 +2500,23 @@ Mike, through chat (note BK item 1; row 2.58). The entry the section above says 
 - **What waits is bounded by what the device keeps:** the newest 500 plays and 1,000 game results or words per panel,
   as before. Not raised while a folder is waiting, argued: each play rewrites the panel's whole record, on a Pi's SD
   card. Code's call; open to Mike. (2026-10-08)
+
+## Backup folders, a screen's own key, and the kiosk Pi's network -- 2026-10-09
+
+Mike, 2026-10-08/09, after the swap checks on the bench.
+
+- **Every source can have a local backup** (row 2.15 follow-up). Mike: *"We should make backup folder options for
+  everything, so people could always have a local fallback."* This narrows the 2026-06 line that media is "not a
+  local copy baked onto each Pi": a copy is still never baked in, but a person may CHOOSE a local folder as the
+  backup for a panel or a whole screen ("If this can't be reached, use" / "Backup folder for this screen", 10ecdaf).
+  With nothing chosen, panels behave as before. (2026-10-09)
+- **A screen in a care room runs on its own device key, not a person's sign-in** (Mike: "Yes"). A person's sign-in
+  lapses, and a lapsed one would put a pairing code on a screen nobody there can answer. `?pair=key` asks for a key
+  while the sign-in still works; Mike approves the code himself; keys are stored as fingerprints (64a44f7). Code
+  recommends a "Screens on this account" page next, as the only off switch for a key that never expires. (2026-10-09)
+- **A kiosk Pi keeps its log across power cuts and runs a network watchdog** (Mike: "yes to the watchdog and keeping
+  the log"). The watchdog reconnects Wi-Fi or Tailscale after a few minutes down, never reboots, and never answers a
+  guest network's sign-in page; installed only when asked (`NIMROD_NET_WATCHDOG=1`, bfb5e4a). (2026-10-09)
+- **History on a kiosk Pi is written by the media agent on that computer, not through a browser permission**
+  (Mike asked for "auto allow"). Code's route: an opt-in, append-only, this-computer-only write path on the agent
+  (dfa3153), rather than automating the browser's Allow button or adding a browser policy. Open to Mike. (2026-10-09)
