@@ -24,6 +24,8 @@ export const SUITES = [
   'educational', 'events', 'fs_sink', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
   'input_dwell', 'input_scan', 'longpress',
   'kiosk', 'arrangement', 'placement', 'dashboard_stage4', 'dashboards', 'dashboard_nest', 'edit_mode', 'map_editor', 'lessons', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
+  // corner on hover (2026-10-09): a panel's ⤢ / ✎ corner shows only where somebody is pointing (panel_corners.js).
+  'panel_corners',
   'marker', 'mic_owner', 'modules_catalog', 'output',
   'output_panel',
   'output_remote', 'pair', 'pairing', 'panel_fit', 'panel_gap', 'people', 'personal', 'photos', 'pond',

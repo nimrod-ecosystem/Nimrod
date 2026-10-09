@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>panel corners — shown only where somebody is pointing — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{display:flex;gap:8px}
+  .k-cell{position:relative;width:200px;height:140px;border:1px solid #ccc}
+  .k-mod{position:absolute;inset:0}
+  /* The ⤢ corner's own base, as arrangement.js draws it (hidden until shown). */
+  .k-promote{position:absolute;right:6px;bottom:6px;width:44px;height:44px;opacity:0;pointer-events:none;transition:opacity .15s}
+</style>
+</head>
+<body>
+<h1>panel corners — corner on hover (Mike, 2026-10-09)</h1>
+<p>"The edit and promote buttons at the bottom right of every module should only show when you have the cursor in the
+area." A panel's ⤢ / ✎ corner shows while a mouse is over that panel (and a short grace after), for a while after a
+finger taps that panel, and while keyboard focus is inside it -- never every panel's at once, never on a screen nobody
+points at. No server needed; the real kiosk's presses are in screen_controls_test.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { watchCorners, cornerShowCss, cornerBoxesAt, CORNER_ATTR, CORNER_GRACE_MS, CORNER_TAP_MS } from '../panel_corners.js';
+import { ensureEditCss } from '../edit_mode.js';
+import { BAR_HIDE_MS } from '../dashboard_nest.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const P = (type, el, extra = {}) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, composed: true, isPrimary: true,
+  pointerId: extra.pointerType === 'mouse' || !extra.pointerType ? 1 : 7, pointerType: 'mouse', ...extra }));
+const over = (el) => P('pointerover', el, { pointerType: 'mouse' });
+const outTo = (el, to) => P('pointerout', el, { pointerType: 'mouse', relatedTarget: to || null });
+async function tap(el, detail = 1) {
+  P('pointerdown', el, { pointerType: 'touch' });
+  P('pointerup', el, { pointerType: 'touch' });
+  el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail }));
+  await sleep(10);                   // the corner comes up AFTER the click (setTimeout 0)
+}
+
+(async () => {
+  try {
+    // The real CSS: ✎ from edit_mode.js as the page gets it, ⤢ through the same rule arrangement.js uses.
+    ensureEditCss(document);
+    const s = document.createElement('style');
+    s.textContent = cornerShowCss('.k-promote');
+    document.head.append(s);
+
+    const host = document.getElementById('host');
+    function box(name) {
+      const c = document.createElement('div'); c.className = 'k-cell'; c.dataset.name = name;
+      const m = document.createElement('div'); m.className = 'k-mod';
+      const btn = document.createElement('button'); btn.textContent = name; m.append(btn);
+      const pr = document.createElement('button'); pr.className = 'k-promote'; pr.textContent = '⤢';
+      const ed = document.createElement('button'); ed.className = 'k-editc'; ed.textContent = '✎';
+      c.append(m, pr, ed); host.append(c);
+      return { c, m, btn, pr, ed };
+    }
+    const A = box('A'), B = box('B'), C = box('C');
+    // C holds a NESTED dashboard: its own cells draw no corner (arrangement.js `corners: false`).
+    const inner = document.createElement('div'); inner.className = 'k-cell'; inner.style.cssText = 'width:80px;height:60px';
+    const innerMod = document.createElement('div'); innerMod.className = 'k-mod'; inner.append(innerMod); C.m.append(inner);
+
+    const shown = (b) => getComputedStyle(b.pr).pointerEvents === 'auto' && getComputedStyle(b.ed).pointerEvents === 'auto';
+    const hidden = (b) => getComputedStyle(b.pr).pointerEvents === 'none' && getComputedStyle(b.ed).pointerEvents === 'none';
+    const opac = (b) => [getComputedStyle(b.pr).opacity, getComputedStyle(b.ed).opacity].join('/');
+    const GRACE = 150, TAP = 400;
+    let changes = 0;
+    const w = watchCorners(host, { graceMs: GRACE, tapMs: () => TAP, onChange: () => { changes++; } });
+
+    section('the numbers, and the rule itself');
+    check('grace and tap times are the argued ones (600 ms; the bar\'s own 3 s)', CORNER_GRACE_MS === 600 && CORNER_TAP_MS === BAR_HIDE_MS && BAR_HIDE_MS === 3000,
+      `${CORNER_GRACE_MS} ${CORNER_TAP_MS} ${BAR_HIDE_MS}`);
+    const rules = [...document.styleSheets].flatMap((ss) => { try { return [...ss.cssRules]; } catch { return []; } })
+      .map((r) => r.selectorText || '').filter((t) => /\.k-(promote|editc)/.test(t));
+    check('*** nothing shows a corner for a mouse click\'s leftover focus (no :focus-within rule) ***', rules.length > 0 && !rules.some((t) => /focus-within/.test(t)), rules.join(' | '));
+    check('*** nothing shows EVERY panel\'s corner at once (no .kiosk[data-corners] rule) ***', !rules.some((t) => /data-corners/.test(t)), rules.join(' | '));
+    check('*** a panel made bigger does not keep its ⤡ up on its own ***', !rules.some((t) => /data-promoted|data-down/.test(t)), rules.join(' | '));
+    check('every :hover rule stands down after a touch', rules.flatMap((t) => t.split(',')).filter((t) => /:hover/.test(t))
+      .every((t) => /:root:not\(\[data-press="touch"\]\)/.test(t)));
+    check('a nested dashboard\'s cell (no corner of its own) is not a corner box; its holder is',
+      cornerBoxesAt(innerMod, host).length === 1 && cornerBoxesAt(innerMod, host)[0] === C.c);
+
+    section('hidden by default');
+    await sleep(250);
+    check('*** nobody pointing: every corner hidden, taking no press ***', [A, B, C].every(hidden) && [A, B, C].every((b) => opac(b) === '0/0'),
+      [A, B, C].map(opac).join(' '));
+
+    section('a mouse');
+    over(A.btn);
+    await sleep(250);
+    check('*** the mouse comes onto A: A\'s corner shows (⤢ and ✎), only A\'s ***', shown(A) && hidden(B) && hidden(C)
+      && A.c.getAttribute(CORNER_ATTR) === 'near' && opac(A) === '1/1', `${opac(A)} ${opac(B)}`);
+    check('...and the bar is told (kiosk.js lifts a corner the bar would cover)', changes > 0, String(changes));
+    over(A.ed);                        // moving onto the buttons themselves
+    await sleep(GRACE + 100);
+    check('*** moving onto the buttons keeps them ***', shown(A) && A.c.getAttribute(CORNER_ATTR) === 'near');
+    outTo(A.ed, B.btn); over(B.btn);   // across to B
+    await sleep(40);
+    check('*** leaving A for B: A\'s corner stays for the grace (and B\'s shows) ***', shown(A) && shown(B));
+    await sleep(GRACE + 100);
+    check('*** ...then A\'s goes, B\'s stays ***', hidden(A) && shown(B) && !A.c.hasAttribute(CORNER_ATTR), `${opac(A)} ${A.c.getAttribute(CORNER_ATTR)}`);
+    outTo(B.btn, B.btn); over(B.btn);  // a move inside B: nothing changes
+    outTo(B.btn, null);                // off the page
+    await sleep(40);
+    check('the mouse leaves the page: B\'s stays for the grace', shown(B));
+    await sleep(GRACE + 100);
+    check('*** ...then it goes: hidden after pointerleave + grace ***', hidden(B) && !host.querySelector(`[${CORNER_ATTR}]`));
+    over(innerMod);
+    await sleep(40);
+    check('the mouse over a nested dashboard\'s panel: the corner of the panel holding it', shown(C) && hidden(A) && hidden(B));
+    outTo(innerMod, null);
+    await sleep(GRACE + 100);
+    P('pointerover', A.btn, { pointerType: 'touch' });
+    await sleep(40);
+    check('a finger passing over is not a hover (no corner)', hidden(A));
+
+    section('a finger (and a pen)');
+    await tap(A.btn);
+    check('*** a tap on A: A\'s corner comes up, only A\'s ***', shown(A) && hidden(B) && hidden(C) && A.c.getAttribute(CORNER_ATTR) === 'tap');
+    await tap(B.m);
+    check('*** a tap on B: B\'s comes up, A\'s goes at once ***', shown(B) && hidden(A), `${A.c.getAttribute(CORNER_ATTR)} ${B.c.getAttribute(CORNER_ATTR)}`);
+    await sleep(TAP + 100);
+    check('*** ...and goes after the tap\'s time ***', hidden(B) && !host.querySelector(`[${CORNER_ATTR}]`));
+    // A module that redraws on a press (a calculator's key, a trivia answer): the pressed element leaves the page.
+    const gone1 = document.createElement('button'); gone1.textContent = '7'; C.m.append(gone1);
+    gone1.addEventListener('click', () => gone1.remove());
+    await tap(gone1);
+    check('*** a tap on a key the module redraws on the click: still that panel\'s corner ***', shown(C) && hidden(A) && hidden(B));
+    w.hideAll();
+    await tap(A.btn, 0);
+    check('a click with detail 0 (a key, a switch activating a button) shows nothing', hidden(A));
+    P('pointerdown', C.btn, { pointerType: 'pen' }); C.btn.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    await sleep(10);
+    check('a pen tap is a tap', shown(C) && C.c.getAttribute(CORNER_ATTR) === 'tap');
+    w.hideAll();
+    over(A.btn); await sleep(20);
+    P('pointerdown', B.btn, { pointerType: 'touch' });
+    await sleep(20);
+    check('a finger pressing puts the mouse\'s corner away (as the hover rule does)', hidden(A) && !A.c.hasAttribute(CORNER_ATTR));
+    P('pointerdown', B.btn, { pointerType: 'mouse' });
+    B.btn.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    await sleep(20);
+    check('*** a mouse CLICK is not a reveal (only hover is): no corner from the click itself ***', hidden(B) && hidden(A));
+
+    section('the keyboard');
+    // The keyboard rule as the browser PARSED it (a rule it could not parse would be missing here), for every box.
+    const keyRule = (btn) => ['.k-cell', '.k-pcell', '.k-stage', '.k-room'].every((b) =>
+      rules.some((t) => t.split(',').map((x) => x.replace(/\s+/g, '')).includes(`${b}:has(:focus-visible)>${btn}`)));
+    check('*** keyboard focus inside a panel shows ITS corner: the rule is there, parsed, for ⤢ and ✎ ***', keyRule('.k-promote') && keyRule('.k-editc'),
+      rules.join(' | '));
+    // Live, where this browser lets a page make :focus-visible (a script's focus() does not count in every
+    // headless Chrome: measured here, it did not -- so that half reports itself rather than passing quietly).
+    B.btn.focus({ focusVisible: true });
+    await sleep(20);
+    const fv = B.btn.matches(':focus-visible');
+    if (fv) {
+      check('*** keyboard focus inside B (live): B\'s corner shows, no other ***', shown(B) && hidden(A) && hidden(C));
+    } else {
+      check('(live keyboard focus NOT RUN: this browser gives a script\'s focus no :focus-visible) a script\'s focus alone shows no corner', hidden(B) && hidden(A));
+    }
+    B.btn.blur();
+    await sleep(20);
+    check('focus gone: hidden again', hidden(A) && hidden(B));
+
+    section('edit mode keeps its ✎; the switch to hide ✎ altogether still works');
+    B.c.setAttribute('data-editing', '1');
+    await sleep(20);
+    check('the panel being edited keeps its ✎ up ("Stop editing") with nobody pointing', getComputedStyle(B.ed).pointerEvents === 'auto' && hidden(A));
+    B.c.removeAttribute('data-editing');
+    B.ed.remove();                     // `editCorner: false`: arrangement.js removes the button
+    over(B.btn); await sleep(20);
+    check('with ✎ turned off, the mouse over B shows only ⤢ (there is no ✎ to show)', getComputedStyle(B.pr).pointerEvents === 'auto' && !B.c.querySelector('.k-editc'));
+    outTo(B.btn, null);
+
+    section('prefers-reduced-motion');
+    const arrSrc = await (await fetch('../arrangement.js')).text();
+    const editCss = document.getElementById('em-css')?.textContent || [...document.querySelectorAll('style')].map((x) => x.textContent).join('\n');
+    check('*** both corners drop their fade under prefers-reduced-motion ***',
+      /prefers-reduced-motion: reduce\)\{\.k-promote\{transition:none\}\}/.test(arrSrc) && /prefers-reduced-motion: reduce\)\{\.k-editc\{transition:none\}\}/.test(editCss));
+    check('arrangement.js draws ⤢ through the same rule (cornerShowCss)', /\$\{cornerShowCss\('\.k-promote'\)\}/.test(arrSrc));
+
+    section('stop');
+    over(A.btn); await sleep(20);
+    w.stop();
+    check('stop(): marks cleared, nothing listens', !host.querySelector(`[${CORNER_ATTR}]`));
+    await tap(A.btn);
+    check('...a tap after stop shows nothing', hidden(A));
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+  document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

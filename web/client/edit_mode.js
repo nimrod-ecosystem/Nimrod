@@ -48,6 +48,7 @@
 import { getManifest } from './module.js';
 import { fieldsFor, normalizeField, fieldItems, fieldValue, stepValue, displayValue, showsAtLevel } from './settings_fields.js';
 import { explainModule, selectionAt, explain } from './cat_help.js';
+import { cornerShowCss } from './panel_corners.js';   // corner on hover (2026-10-09): when the ✎ corner shows
 
 export const EDIT_PANEL_TOPIC = 'shell/edit-panel';   // { id?, on?: true|false } -- absent `on` toggles
 export const EDIT_SELECTED_TOPIC = 'edit/selected';   // the selection (below), with claim()
@@ -68,6 +69,8 @@ export const EDIT_CORNER_KEY = 'editCorner';   // false: no ✎ corner on this d
 //                  written). 0 = never. A dashboard setting (`editIdleMs`).
 //   corner on      the ✎ corner shows wherever the ⤢ corner does (hover, keyboard focus), which a scanning
 //                  switch never lands on, so it costs a switch user nothing. `editCorner: false` hides it.
+//                  (corner on hover, 2026-10-09: WHEN both show is panel_corners.js's; on the panel being
+//                  edited the ✎ stays up -- "Stop editing" -- until edit mode ends.)
 //   level          the options card shows the 'standard' rows, as the ⚙ menu does; the builder's options
 //                  panel has its own Show row (essential / standard / advanced).
 // =====================================================================================================
@@ -316,10 +319,8 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
 .k-editc{position:absolute;right:56px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
   margin:0;padding:0;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);
   font:600 20px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}
-:root:not([data-press="touch"]) .k-cell:hover>.k-editc,:root:not([data-press="touch"]) .k-pcell:hover>.k-editc,
-:root:not([data-press="touch"]) .k-stage:hover>.k-editc,:root:not([data-press="touch"]) .k-room:hover>.k-editc,
-.k-cell:focus-within>.k-editc,.k-pcell:focus-within>.k-editc,.k-stage:focus-within>.k-editc,.k-room:focus-within>.k-editc,
-.k-editc:focus-visible,[data-editing]>.k-editc,.kiosk[data-corners="up"] .k-editc{opacity:1;pointer-events:auto}
+${cornerShowCss('.k-editc')}
+[data-editing]>.k-editc{opacity:1;pointer-events:auto}
 .k-room>.k-editc{right:6px}
 @media (prefers-reduced-motion: reduce){.k-editc{transition:none}}`;
   (doc.head || doc.documentElement).append(s);
