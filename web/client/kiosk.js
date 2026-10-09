@@ -148,7 +148,9 @@ import { loadDeviceFonts } from './user_fonts.js';
 import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE, createDeviceLookRows } from './user_folders_page.js';
 // Where a person's history is kept (row 2.58, 2026-10-07): the host every player and game reaches as `ctx.history`,
 // and its page on the People tab.
-import { createHistoryHost, folderSink, serverSink, deviceSweep } from './history_place.js';   // deviceSweep: history to the drive
+import { createHistoryHost, folderSink, serverSink, deviceSweep,   // deviceSweep: history to the drive
+  agentSink, nimrodFolder, localAgentBases } from './history_place.js';   // agent history (2026-10-08)
+import { createMediaSourcesClient } from './media_sources.js';                   // agent history: finds the agent
 import { GAMEPLAY_STREAM } from './telemetry.js';
 import { historyPage, HISTORY_ITEMS, HISTORY_PAGE } from './history_page.js';
 import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
@@ -1433,7 +1435,14 @@ export async function mountKiosk(root, {
     makePersonState: (pid, key) => (pid && profiles.personStateURL && !makeState
       ? createState({ url: profiles.personStateURL(pid, key), user, cacheKey: `person:${user}:${pid}:${key}`, push })
       : null),
-    folder: folderSink(),
+    // agent history (2026-10-08): "your Nimrod folder" is written by the media agent on this computer when it offers
+    // it (no browser folder permission to lapse after a restart), else by the browser as before. The agent is found
+    // among this screen's media sources on this computer. None on a local backend (the suites): no registry there.
+    folder: nimrodFolder({
+      browser: folderSink(),
+      agent: makeState ? null : agentSink({ candidates: async () => localAgentBases(
+        await createMediaSourcesClient({ user, cache: true, personId: screenPersonNow() || null }).list()) }),
+    }),
     server: !makeState && profiles.personHistoryURL ? serverSink({ urlFor: profiles.personHistoryURL, user }) : null,
     // History to the drive (2026-10-08): every record of this person's on the device is copied when their Nimrod folder
     // becomes reachable (chosen, allowed again, a drive plugged in), not only the panels mounted now.

@@ -31,6 +31,9 @@ DESIGN CHOICES:
     hid ~497 `.JPG` files behind a case-sensitive filter — never again).
   * Read-only. It lists and serves; it never writes, deletes, or executes. Requests
     are path-traversal guarded to the root you chose.
+    (agent history, 2026-10-08: ONE opt-in exception, off unless --data-dir is given -
+    it may APPEND a person's history to History/ inside that Data folder and nowhere
+    else. See "AGENT HISTORY" below.)
 
 RUN IT:
     python agent.py --root "D:/Photos"
@@ -93,6 +96,7 @@ SVG_TYPE = "image/svg+xml"
 ROOT: Path = Path(".")
 SITES: tuple = ()          # the sites whose pages may use the agent (--origin); see "WHICH WEB PAGES" below
 CHECK_HOST: bool = True    # listening only on this computer: the Host header must name it too
+DATA_DIR = None            # agent history: the Data folder history is appended to (--data-dir); None = off
 
 
 # ------------------------------------------------------------------ which web pages may use it
@@ -222,6 +226,235 @@ def list_album(album: str) -> dict:
     return {"album": album, "albums": albums, "items": items, "count": len(items)}
 
 
+# ------------------------------------------------------------------ AGENT HISTORY: a person's history, to their Data folder
+# (2026-10-08.) When a person chose "your Nimrod folder" for their history (web/client/history_place.js), the page
+# writes it to the Data folder through the browser's own folder access - and Chrome can ask for that permission again
+# after a restart, so after a power cut a screen nobody is at would wait for someone to press "Allow it again". This
+# agent already runs on that computer as a service, so with --data-dir it writes the files itself and the page needs
+# no folder permission. The page uses it when it finds an agent on this computer that offers it; otherwise it goes on
+# using the browser folder (history_place.js `nimrodFolder`).
+#
+# OFF UNLESS GIVEN (--data-dir, or NIMROD_MEDIA_DATA). Then, and only then:
+#   POST /history/<stream>  {"scope": "<panel or screen>", "rows": [{"at": "<ISO>", "kind": "...", "data": {...}}],
+#                            "folder_id": "<optional: refused with 409 unless it is this folder's>"}
+#                           -> appends one JSON line per row to <data-dir>/History/<stream>-<scope>-<YYYY-MM>.jsonl
+#   GET  /history/status    -> whether it can write now, the folder's id (History/folder-id.txt, made when missing),
+#                              and how many files and bytes each stream has
+# THE FILES ARE THE PAGE'S OWN (history_place.js folderSink): the same names, the same line, the same rotation at
+# 512 KiB (<base>.part2.jsonl, ...), the same folder-id.txt - so a folder written by either is read by the other, and
+# the page's markers (one per folder id) mean nothing is written twice when it moves from one writer to the other.
+#
+# *** THE SECURITY INVARIANTS: ***
+#   * APPEND-ONLY. No route deletes, renames, truncates or overwrites anything. A history file is only ever opened to
+#     append; README.txt and folder-id.txt are only ever created (an EMPTY folder-id.txt is appended to). PUT, DELETE
+#     and PATCH do not exist here (501).
+#   * NEVER OUTSIDE THE DATA DIR. <stream> and <scope> must match a strict pattern (letters, digits, _ and -; never a
+#     dot or a slash), the month is taken from the row's date and is digits only, and every path is resolved and must
+#     sit inside <data-dir>/History - a symlink pointing elsewhere is refused.
+#   * THE DATA DIR ITSELF IS NEVER CREATED, only History inside it. A drive that is not mounted is "missing" - never
+#     a fresh empty folder made on the SD card where the drive's mount point should be.
+#   * FROM THIS COMPUTER ONLY. The same page checks as /list (WHICH WEB PAGES, above), and on top of them the request
+#     must come from this computer's own address, so an agent run with --lan for a screen elsewhere still takes no
+#     history from the network. Only JSON is taken (Content-Type: application/json), so a plain form on another site
+#     cannot post here without the browser asking first (a preflight).
+#   * A SIZE CAP: a body over HISTORY_BODY_MAX is refused (413) without being read.
+# NO READ ROUTE, argued: the narrowest opening that solves the power cut is a write. Reading a person's history back
+# (an empty device filling itself) still works through the browser folder when it is allowed; adding a reader here
+# is a separate decision.
+#
+# HARD-CODED, each argued (Rule 1):
+#   HISTORY_FILE_MAX  512 KiB - the page's own rotation (history_place.js HISTORY_DEFAULTS.fileMax); test_agent.py
+#                     fails if they differ, because two writers rotating at different sizes would still work but
+#                     would split the same month differently depending on who wrote last.
+#   HISTORY_BODY_MAX  256 KiB - the page sends at most 192 KiB at once (history_place.js AGENT_HISTORY_DEFAULTS
+#                     .postBytes); anything bigger is not the page. Small enough that a bad caller cannot make the
+#                     agent hold much in memory.
+HISTORY_FOLDER = "History"
+FOLDER_ID_FILE = "folder-id.txt"
+HISTORY_FILE_MAX = 512 * 1024
+HISTORY_BODY_MAX = 256 * 1024
+HISTORY_STREAM_RE = re.compile(r"^[a-z][a-z0-9_]{0,31}$")          # plays, gameplay, words - never a dash (it splits names)
+HISTORY_SCOPE_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")             # history_place.js safeName()
+HISTORY_ROW_KIND_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")        # play, trial, select
+HISTORY_MONTH_RE = re.compile(r"^(\d{4}-\d{2})")
+FOLDER_ID_RE = re.compile(r"^[A-Za-z0-9-]{6,64}$")                  # history_place.js ID_RE
+HISTORY_README = (
+    "Your history from Nimrod, kept on this computer because you chose your Nimrod folder for it.\n"
+    "One file per kind, per panel or screen, per month: plays-..., gameplay-..., words-... Each line is one entry:\n"
+    "when it happened (\"at\"), what kind it is, and its data. Nothing here is uploaded, and Nimrod does not delete these\n"
+    "files: they are yours, and deleting them here deletes them.\n"
+    "folder-id.txt names this folder, so a device knows what it has already copied here. Deleting it only means\n"
+    "each device copies everything it still holds here again.\n"
+)
+HISTORY_LOCK = threading.Lock()     # one writer at a time: a rotation decision and its append are one step
+LOOPBACK_PEERS = ("127.0.0.1", "::1", "::ffff:127.0.0.1")
+
+
+def from_this_computer(peer) -> bool:
+    """Did the request come from this computer's own address? (agent history: writes are taken from nowhere else.)"""
+    p = str(peer or "")
+    return p in LOOPBACK_PEERS or p.startswith("127.") or p.startswith("::ffff:127.")
+
+
+def _history_path(hdir: Path, name: str) -> Path:
+    """<History>/<name>, refused (ValueError) unless it resolves inside History - a symlink pointing out included."""
+    p = hdir / name
+    if not _within(p.resolve(), hdir.resolve()):
+        raise ValueError("outside the History folder")
+    return p
+
+
+def history_dir(data_dir):
+    """(<data-dir>/History, '') when it can be written now; else (None, why): 'off', 'missing' or 'write'.
+    Creates History (and its README) inside the data dir; NEVER the data dir itself."""
+    if data_dir is None:
+        return None, "off"
+    d = Path(data_dir)
+    if not d.is_dir():
+        return None, "missing"
+    h = d / HISTORY_FOLDER
+    try:
+        h.mkdir(exist_ok=True)
+        if not h.is_dir() or not _within(h.resolve(), d.resolve()):
+            return None, "write"
+    except OSError:
+        return None, "write"
+    try:
+        with open(_history_path(h, "README.txt"), "x", encoding="utf-8", newline="\n") as f:
+            f.write(HISTORY_README)
+    except (OSError, ValueError):
+        pass    # already there, or not writable: the history works without it
+    return h, ""
+
+
+def history_folder_id(hdir: Path):
+    """The folder's id from History/folder-id.txt, made when missing (or when the file is empty); None when the
+    file holds something else (never overwritten - it is the person's file) or cannot be read."""
+    try:
+        p = _history_path(hdir, FOLDER_ID_FILE)
+    except ValueError:
+        return None
+    for _ in range(2):
+        try:
+            text = p.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            text = None
+        except OSError:
+            return None
+        if text is not None and text.strip():
+            got = text.strip().split()[0]
+            return got if FOLDER_ID_RE.match(got) else None
+        new = str(uuid.uuid4())
+        try:
+            # "x": made only when missing; "a": an empty file is appended to. Never "w".
+            with open(p, "x" if text is None else "a", encoding="utf-8", newline="\n") as f:
+                f.write(new + "\n")
+            return new
+        except FileExistsError:
+            continue    # another request made it a moment ago: read it
+        except OSError:
+            return None
+    return None
+
+
+def history_status(data_dir) -> dict:
+    """GET /history/status. Never says the folder's path."""
+    if data_dir is None:
+        return {"ok": True, "enabled": False}
+    with HISTORY_LOCK:
+        h, why = history_dir(data_dir)
+        if h is None:
+            return {"ok": True, "enabled": True, "ready": False, "why": why}
+        fid = history_folder_id(h)
+        if not fid:
+            return {"ok": True, "enabled": True, "ready": False, "why": "id",
+                    "error": f"History/{FOLDER_ID_FILE} does not hold a folder id; delete it and one is made"}
+        streams = {}
+        try:
+            with os.scandir(h) as it:
+                for e in it:
+                    if not e.name.endswith(".jsonl") or not e.is_file(follow_symlinks=False):
+                        continue
+                    s = e.name.split("-", 1)[0]
+                    if not HISTORY_STREAM_RE.match(s):
+                        continue
+                    got = streams.setdefault(s, {"files": 0, "bytes": 0})
+                    got["files"] += 1
+                    try:
+                        got["bytes"] += e.stat(follow_symlinks=False).st_size
+                    except OSError:
+                        pass
+        except OSError:
+            return {"ok": True, "enabled": True, "ready": False, "why": "write"}
+        return {"ok": True, "enabled": True, "ready": True, "folder_id": fid, "streams": streams}
+
+
+def _append_rotating(hdir: Path, base: str, data: bytes, file_max: int) -> None:
+    """Append `data` to <base>.jsonl, or the first <base>.partN.jsonl with room - the page's own rule
+    (history_place.js appendLines): an empty file always takes it; else it must fit under file_max."""
+    path = None
+    for part in range(1, 1000):
+        name = f"{base}.jsonl" if part == 1 else f"{base}.part{part}.jsonl"
+        path = _history_path(hdir, name)
+        size = path.stat().st_size if path.exists() else 0
+        if size == 0 or size + len(data) <= file_max:
+            break
+    with open(path, "ab") as f:      # APPEND ONLY
+        f.write(data)
+
+
+def history_append(data_dir, stream, scope, rows, expect_id=None, file_max: int = HISTORY_FILE_MAX):
+    """POST /history/<stream>: (answer, HTTP status). Rows that are not an entry (no date, no kind, data not an
+    object) are skipped and counted, so one bad row never stops the ones after it."""
+    if data_dir is None:
+        return {"ok": False, "why": "off"}, HTTPStatus.NOT_FOUND
+    if not isinstance(stream, str) or not HISTORY_STREAM_RE.match(stream):
+        return {"ok": False, "why": "bad", "error": "not a history stream"}, HTTPStatus.BAD_REQUEST
+    if not isinstance(scope, str) or not HISTORY_SCOPE_RE.match(scope):
+        return {"ok": False, "why": "bad", "error": "not a scope"}, HTTPStatus.BAD_REQUEST
+    if not isinstance(rows, list):
+        return {"ok": False, "why": "bad", "error": "rows must be a list"}, HTTPStatus.BAD_REQUEST
+    months = {}         # month -> [lines, newest at]; insertion order = the rows' order
+    skipped = 0
+    for r in rows:
+        at = r.get("at") if isinstance(r, dict) else None
+        kind = r.get("kind") if isinstance(r, dict) else None
+        data = r.get("data") if isinstance(r, dict) else None
+        if not isinstance(at, str) or len(at) > 64 or not isinstance(kind, str) \
+                or not HISTORY_ROW_KIND_RE.match(kind) or not isinstance(data, dict):
+            skipped += 1
+            continue
+        m = HISTORY_MONTH_RE.match(at)
+        month = m.group(1) if m else "undated"
+        line = json.dumps({"at": at, "kind": kind, "data": data}, ensure_ascii=False, separators=(",", ":"))
+        got = months.setdefault(month, [[], None])
+        got[0].append(line)
+        got[1] = at
+    with HISTORY_LOCK:
+        h, why = history_dir(data_dir)
+        if h is None:
+            return {"ok": False, "why": why}, HTTPStatus.SERVICE_UNAVAILABLE
+        fid = history_folder_id(h)
+        if not fid:
+            return {"ok": False, "why": "id"}, HTTPStatus.SERVICE_UNAVAILABLE
+        if expect_id and expect_id != fid:
+            # A different folder than the page counted on (a drive swapped): its markers are for the other one.
+            return {"ok": False, "why": "changed", "folder_id": fid}, HTTPStatus.CONFLICT
+        written = 0
+        up_to = None
+        for month, (lines, newest) in months.items():
+            try:
+                _append_rotating(h, f"{stream}-{scope}-{month}", ("\n".join(lines) + "\n").encode("utf-8"), file_max)
+            except (OSError, ValueError) as e:
+                out = {"ok": False, "why": "write", "error": str(e)[:200], "written": written}
+                if up_to:
+                    out["up_to"] = up_to
+                return out, HTTPStatus.INTERNAL_SERVER_ERROR
+            written += len(lines)
+            up_to = newest
+        return {"ok": True, "written": written, "skipped": skipped, "folder_id": fid}, HTTPStatus.OK
+
+
 class Handler(SimpleHTTPRequestHandler):
     """Serves /list + /health as JSON and /files/<rel> as bytes.
 
@@ -263,7 +496,9 @@ class Handler(SimpleHTTPRequestHandler):
         # header below, pairing works perfectly right up until the browser silently
         # refuses to fetch a single photo - which looks exactly like a broken agent.
         self.send_response(HTTPStatus.NO_CONTENT)
-        self.send_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+        # agent history: POST only on /history/... (and only when it is on); everything else stays read-only.
+        writes = DATA_DIR is not None and self._route().startswith("/history/")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS" if writes else "GET, HEAD, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Range, Content-Type")
         self.send_header("Access-Control-Max-Age", "600")
         if self.headers.get("Access-Control-Request-Private-Network") == "true":
@@ -298,12 +533,56 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(result)
         if path == "/files" or path.startswith("/files/"):
             return self._serve_file(head=False)
+        if path == "/history/status":    # agent history
+            if not from_this_computer(self.client_address[0]):
+                return self._json({"ok": False, "error": "history is only for this computer"}, HTTPStatus.FORBIDDEN)
+            return self._json(history_status(DATA_DIR))
         if path == "/":
             return self._json({
                 "service": "nimrod-media-agent",
-                "endpoints": ["/health", "/list?album=<sub>", "/files/<relpath>"],
+                "endpoints": ["/health", "/list?album=<sub>", "/files/<relpath>"]
+                + (["/history/status", "POST /history/<stream>"] if DATA_DIR is not None else []),
             })
         return self._json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+
+    def do_POST(self):
+        """agent history: POST /history/<stream>, and nothing else (AGENT HISTORY, above)."""
+        if self._refused():
+            return
+        self.close_connection = True     # a refused body is never read, so the connection is not reused
+        path = self._route()
+        if not path.startswith("/history/") or path == "/history/status":
+            return self._json({"ok": False, "error": "not_found"}, HTTPStatus.NOT_FOUND)
+        if not from_this_computer(self.client_address[0]):
+            return self._json({"ok": False, "why": "refused", "error": "history is only taken from this computer"},
+                              HTTPStatus.FORBIDDEN)
+        if DATA_DIR is None:
+            return self._json({"ok": False, "why": "off"}, HTTPStatus.NOT_FOUND)
+        stream = unquote(path[len("/history/"):])
+        if not HISTORY_STREAM_RE.match(stream):
+            return self._json({"ok": False, "why": "bad", "error": "not a history stream"}, HTTPStatus.BAD_REQUEST)
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            return self._json({"ok": False, "why": "bad", "error": "JSON only"}, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+        try:
+            n = int(self.headers.get("Content-Length") or "")
+        except ValueError:
+            return self._json({"ok": False, "why": "bad", "error": "a length is needed"}, HTTPStatus.LENGTH_REQUIRED)
+        if n > HISTORY_BODY_MAX:
+            return self._json({"ok": False, "why": "too big", "error": f"at most {HISTORY_BODY_MAX} bytes at once"},
+                              HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+        if n <= 0:
+            return self._json({"ok": False, "why": "bad", "error": "empty"}, HTTPStatus.BAD_REQUEST)
+        try:
+            body = json.loads(self.rfile.read(n).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError, OSError):
+            return self._json({"ok": False, "why": "bad", "error": "not JSON"}, HTTPStatus.BAD_REQUEST)
+        if not isinstance(body, dict):
+            return self._json({"ok": False, "why": "bad", "error": "not an object"}, HTTPStatus.BAD_REQUEST)
+        expect = body.get("folder_id")
+        answer, status = history_append(DATA_DIR, stream, body.get("scope"), body.get("rows"),
+                                        expect_id=expect if isinstance(expect, str) else None)
+        return self._json(answer, status)
 
     def do_HEAD(self):
         if self._refused():
@@ -662,7 +941,7 @@ def pair(platform: str, label: str, aid: str, urls: list, poll_seconds: float = 
 
 
 def main(argv=None):
-    global ROOT, SITES, CHECK_HOST, AGENT_ID
+    global ROOT, SITES, CHECK_HOST, AGENT_ID, DATA_DIR
     ap = argparse.ArgumentParser(description="Nimrod local media agent (BYO storage).")
     # CLI args take precedence; each falls back to an env var so the agent can run as
     # an always-on service (systemd / Windows task) configured from an env file.
@@ -700,6 +979,12 @@ def main(argv=None):
                     help=f"where Nimrod is running (default {DEFAULT_ORIGIN}; or NIMROD_PLATFORM)")
     ap.add_argument("--name", default=os.environ.get("NIMROD_MEDIA_NAME", "Media device"),
                     help="what to call this device in Nimrod (e.g. \"the bedside screen\")")
+    # agent history (2026-10-08): off unless given. See "AGENT HISTORY" above.
+    ap.add_argument("--data-dir", default=os.environ.get("NIMROD_MEDIA_DATA") or None, metavar="FOLDER",
+                    help="the Data folder in your Nimrod folder (e.g. /media/you/drive/Nimrod/Data; or "
+                         "NIMROD_MEDIA_DATA). When given, a Nimrod page on this computer may APPEND history there "
+                         "(History/*.jsonl) without asking the browser for folder permission. Off when not given. "
+                         "The folder itself is never created: a drive not plugged in just waits.")
     args = ap.parse_args(argv)
 
     if not args.root:
@@ -708,6 +993,7 @@ def main(argv=None):
     if not root.is_dir():
         ap.error(f"--root is not a folder: {root}")
     ROOT = root
+    DATA_DIR = Path(args.data_dir).expanduser().absolute() if args.data_dir else None   # agent history
     SITES = sites_for(args.origin, args.platform, os.environ.get("NIMROD_MEDIA_ORIGIN", ""))
     AGENT_ID = agent_id(root)
     host = "0.0.0.0" if args.lan else args.host
@@ -745,6 +1031,14 @@ def main(argv=None):
               "above is readable by them.")
     if "*" in SITES:
         print("  NOTE: open to any website (--origin '*'): any page you visit can list and read this folder.")
+    if DATA_DIR is not None:    # agent history
+        print(f"  history:      appended to {DATA_DIR / HISTORY_FOLDER} (from pages on this computer only)")
+        if not DATA_DIR.is_dir():
+            print("  NOTE: that Data folder is not there right now (a drive not plugged in?). History waits on the "
+                  "screen until it is; this agent never creates it.")
+        elif _within(DATA_DIR.resolve(), resolved):
+            print("  NOTE: the Data folder is inside the media folder, so its history files can be fetched from "
+                  "/files like a photo. A Data folder beside the media folder keeps them out of it.")
     print("  Ctrl+C to stop.")
     try:
         httpd.serve_forever()
