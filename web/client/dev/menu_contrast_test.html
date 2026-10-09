@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>menu contrast (the ⚙ menu is readable on every theme) — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  /* The results sit in their own fixed colours: a kiosk mounted below repaints this page's theme. */
+  #report{position:relative;z-index:99999;background:#F7F4D5;color:#0A3323;padding:16px;
+    font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif}
+  #report h1{font-size:1.2rem} #report h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<div id="report">
+<h1>menu contrast — the ⚙ menu's words against what is really behind them, on every theme</h1>
+<p>2026-10-09: on Home's editing page the docked ⚙ menu's rows were invisible — white words, no ground, on the
+page's white. The cause: Home's "Menu and bar background" follows the screen's panel background, panels became
+clear by default (a2b73f1), and Fully clear's halo never reached the rows (a browser gives every button
+<code>text-shadow: none</code>). The menu is not a panel. This measures, on every theme in <code>THEMES</code>:
+the docked menu on Home's editing page (as it arrives, and with each "Menu and bar background" choice), and the
+kiosk's own menu (the usual path and a docked dashboard), with every panel background. The floor is WCAG AA, the
+project's existing bar (<code>TEXT_MIN</code> 4.5:1; 3:1 for large text: 24px, or 18.66px bold).
+Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { mountKiosk, DASHBOARD_MODULE_KEY } from '../kiosk.js';
+import { THEMES, TEXT_MIN, applyTheme } from '../theme.js';
+import { chromeSurfaceFor, CHROME_SURFACES } from '../home_dashboard.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('menu-contrast-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+
+// *** WCAG's large text (1.4.3): 18pt (24px), or 14pt (18.66px) bold. *** Its AA floor is 3:1. The cursor row is
+// bold and, at kiosk sizes, large (settings.css `.st-item.on` says so); everything else is held to TEXT_MIN.
+const LARGE_TEXT_MIN = 3;
+const isLarge = (cs) => { const px = parseFloat(cs.fontSize); return px >= 24 || (px >= 18.66 && Number(cs.fontWeight) >= 700); };
+
+// ---- colour arithmetic on COMPUTED styles (rgb(), rgba(), and color(srgb ...) for a color-mix) ----------------
+function parseColor(s) {
+  s = String(s || '').trim();
+  let m = s.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/);
+  if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] === undefined ? 1 : (m[4].endsWith('%') ? parseFloat(m[4]) / 100 : +m[4]) };
+  m = s.match(/^color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.]+%?))?\s*\)$/);
+  if (m) return { r: +m[1] * 255, g: +m[2] * 255, b: +m[3] * 255, a: m[4] === undefined ? 1 : (m[4].endsWith('%') ? parseFloat(m[4]) / 100 : +m[4]) };
+  if (s === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
+  return null;
+}
+const over = (top, bottom) => {               // `top` (with its alpha) composited over an OPAQUE `bottom`
+  const a = top.a;
+  return { r: top.r * a + bottom.r * (1 - a), g: top.g * a + bottom.g * (1 - a), b: top.b * a + bottom.b * (1 - a), a: 1 };
+};
+const lum = ({ r, g, b }) => {
+  const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
+const hex = ({ r, g, b }) => '#' + [r, g, b].map((c) => Math.round(c).toString(16).padStart(2, '0')).join('');
+const BLACK = { r: 0, g: 0, b: 0, a: 1 }, WHITE = { r: 255, g: 255, b: 255, a: 1 };
+
+/**
+ * *** WHAT IS REALLY BEHIND ONE PIECE OF MENU TEXT. *** The grounds from the text up to the menu's own host,
+ * nearest first; the first opaque one is the base and the nearer ones are laid over it. If the menu has no
+ * opaque ground of its own, what shows through is whatever is behind the menu -- a panel, a photo, a scene --
+ * so it is measured over BLACK and over WHITE and the worse counts. The text's own alpha and every opacity on
+ * the way up are applied to the words. A Fully clear menu has no ground by design: there, the words' own halo
+ * (their text-shadow, measured ON THE ELEMENT, because a browser resets it on a button) is what they are read
+ * against, so text-vs-halo is the number, and a missing halo falls through to black/white and fails.
+ */
+function measure(win, el, host) {
+  const cs = win.getComputedStyle(el);
+  let alpha = 1;
+  const layers = [];
+  for (let e = el; e; e = e.parentElement) {
+    const s = win.getComputedStyle(e);
+    alpha *= Number(s.opacity);
+    const bg = parseColor(s.backgroundColor);
+    if (bg && bg.a > 0) layers.push(bg);
+    if (e === host) break;
+  }
+  const fg0 = parseColor(cs.color) || BLACK;
+  const fgOn = (base) => over({ ...fg0, a: fg0.a * alpha }, base);
+  const iBase = layers.findIndex((l) => l.a >= 0.999);
+  const compose = (base) => layers.slice(0, iBase < 0 ? layers.length : iBase).reduceRight((acc, l) => over(l, acc), base);
+  let grounds;
+  if (iBase >= 0) grounds = [compose(layers[iBase])];
+  else {
+    const halo = cs.textShadow && cs.textShadow !== 'none' ? parseColor((cs.textShadow.match(/^(rgba?\([^)]*\)|color\([^)]*\))/) || [])[1]) : null;
+    grounds = halo && halo.a >= 0.999 ? [compose(halo)] : [compose(BLACK), compose(WHITE)];
+  }
+  let worst = Infinity, at = null;
+  for (const g of grounds) { const r = ratio(fgOn(g), g); if (r < worst) { worst = r; at = g; } }
+  const floor = isLarge(cs) ? LARGE_TEXT_MIN : TEXT_MIN;
+  return { ratio: worst, floor, ok: worst >= floor, fg: hex(fgOn(at)), bg: hex(at),
+    how: iBase >= 0 ? 'its ground' : grounds.length === 1 ? 'its halo' : 'black/white behind' };
+}
+
+// *** ONE NAMED EXEMPTION, AT ITS MEASURED FLOOR (theme_test.html's, for the same colour pair). *** The cursor row and
+// the current tab are `--bg` on `--link`; forge's --link (#B5651D) measures 3.98:1 against its --bg, and no text
+// colour on that amber clears 4.5 -- the accent has to move, which is Design's palette (D19). Held at 3.95 so a
+// regression still fails; delete it the day the accent changes. Only the cursor row and the current tab, only forge.
+const EXEMPT_ON_LINK = { forge: 3.95 };
+
+/** Every piece of menu text showing in `host`: row labels and hints, section heads, tabs. The worst one. */
+function menuWorst(win, host, themeId = '') {
+  const els = [...host.querySelectorAll('.st-item:not(:disabled) .st-label, .st-item:not(:disabled) .st-hint, .st-head, .st-tab')]
+    .filter((e) => e.getClientRects().length && e.textContent.trim());
+  let worst = null;
+  for (const e of els) {
+    const m = { ...measure(win, e, host), what: (e.className + ' "' + e.textContent.trim().slice(0, 24) + '"') };
+    if (EXEMPT_ON_LINK[themeId] && e.closest('.st-item.on, .st-tab.on') && m.how === 'its ground') {
+      m.floor = Math.min(m.floor, EXEMPT_ON_LINK[themeId]); m.ok = m.ratio >= m.floor; m.what += ' (D19: forge\'s accent)';
+    }
+    if (!worst || m.ratio / m.floor < worst.ratio / worst.floor) worst = m;
+  }
+  return { n: els.length, worst };
+}
+const say = (w) => w ? `worst ${w.ratio.toFixed(2)}:1 (needs ${w.floor}) ${w.fg} on ${w.bg} (${w.how}) at ${w.what}` : 'nothing measured';
+
+try {
+  // ==============================================================================================================
+  section('*** the cause, pure: "Follow the screen" does not make the menu clear when the PANELS are clear ***');
+  check('follow + clear panels (the default since 2026-10-07) -> see-through, not Fully clear',
+    chromeSurfaceFor({ chromeSurface: 'follow' }, 'clear') === 'veil', chromeSurfaceFor({ chromeSurface: 'follow' }, 'clear'));
+  check('...Fully clear is still there for anybody who picks it', CHROME_SURFACES.includes('clear')
+    && chromeSurfaceFor({ chromeSurface: 'clear' }, 'solid') === 'clear');
+
+  // ==============================================================================================================
+  section('*** HOME\'S EDITING PAGE: the docked ⚙ menu, every theme, as it arrives and with each background ***');
+  {
+    const ifr = document.createElement('iframe');
+    ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1300px;height:950px;border:0';
+    document.body.append(ifr);
+    await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?user=${encodeURIComponent(USER + '-home')}&edit=1`; });
+    const doc = ifr.contentDocument, win = ifr.contentWindow;
+    const host = () => doc.querySelector('#stage .v-dock-left [data-settings]');
+    const shown = () => !!host()?.querySelector('.st-scrim:not([hidden]) .st-item');
+    check('(setup) the editing page opens with the ⚙ menu docked and open', await until(shown, 60000),
+      `homeError=${doc.body?.dataset.homeError || '-'}`);
+    // The page's OWN theme.js (the same module the page paints with), so a theme here is the page's theme.
+    const T = await win.eval('import("/theme.js")');
+    // A TEST SEAM, NOT A LOOK: the rows fade their colours (settings.css `transition`), so a style read right after
+    // a theme or background change would measure the colour on its way out. Every read below is of where it lands.
+    doc.head.append(Object.assign(doc.createElement('style'), { textContent: '*,*::before,*::after{transition:none !important;animation-play-state:paused !important}' }));
+    const stage = doc.getElementById('stage');
+    const arrived = stage.dataset.chrome;
+    const first = menuWorst(win, host());
+    check(`*** as it arrives (the page's own theme, menu background "${arrived}"): every word of the menu reads ***`,
+      first.n > 5 && first.worst.ok, `${first.n} pieces, ${say(first.worst)}`);
+    check('...and as it arrives the menu has a ground of its own (it is not a panel: clear panels stay clear)',
+      arrived !== 'clear' && doc.querySelector('#stage .kiosk')?.dataset.panelSurface === 'clear',
+      `chrome=${arrived} panels=${doc.querySelector('#stage .kiosk')?.dataset.panelSurface}`);
+    for (const id of Object.keys(T.THEMES)) {
+      T.applyTheme(doc.documentElement, id);
+      for (const mode of [arrived, 'solid', 'veil', 'clear'].filter((m, i, a) => a.indexOf(m) === i)) {
+        stage.dataset.chrome = mode;
+        const r = menuWorst(win, host(), id);
+        check(`${id}, menu background ${mode}${mode === arrived ? ' (as it arrives)' : ''}: ${r.worst ? r.worst.ratio.toFixed(2) : '-'}:1`,
+          r.n > 5 && r.worst.ok, `${r.n} pieces, ${say(r.worst)}`);
+      }
+      stage.dataset.chrome = arrived;
+    }
+    // THE BAR, in Fully clear: the same browser reset took its buttons' halo too (seen in the same screenshot).
+    stage.dataset.chrome = 'clear';
+    const bb = [...doc.querySelectorAll('#stage .tb-bar button')].filter((b) => b.getClientRects().length && b.textContent.trim());
+    const noHalo = bb.filter((b) => win.getComputedStyle(b).textShadow === 'none');
+    check('the placed bar in Fully clear: every button carries the halo itself', bb.length > 2 && !noHalo.length,
+      `${bb.length} buttons, without: ${noHalo.map((b) => b.textContent.trim()).join(' | ')}`);
+    stage.dataset.chrome = arrived;
+    ifr.remove();
+  }
+
+  // ==============================================================================================================
+  section('*** THE KIOSK\'S MENU: the usual path and a docked dashboard, every theme, every panel background ***');
+  {
+    const profiles = createProfilesClient({ user: USER });
+    const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const seams = () => ({ storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {} });
+    document.head.append(Object.assign(document.createElement('style'), { textContent: '*,*::before,*::after{transition:none !important;animation-play-state:paused !important}' }));
+    for (const docked of [false, true]) {
+      const P = await profiles.create(docked ? 'TEST-menu-docked' : 'TEST-menu-usual');
+      await profiles.addModule(P.id, 'clock');
+      await profiles.addModule(P.id, 'trivia');
+      if (docked) {
+        const st = createState({ url: profiles.stateURL(P.id, 'settings'), user: USER });
+        await st.load().catch(() => {}); st.set({ [DASHBOARD_MODULE_KEY]: true }); await st.flush(); st.destroy();
+      }
+      const box = document.createElement('div');
+      document.body.append(box);
+      const k = await mountKiosk(box, { user: USER, profileId: P.id, profiles, bus: createBus(), ...seams() });
+      const where = docked ? 'docked dashboard' : 'usual path';
+      k.menu.open();
+      const host = box.querySelector(docked ? '.view .v-dock-left [data-settings]' : '.kiosk > [data-settings]');
+      check(`(setup) ${where}: the menu is open${docked ? ', in the dashboard\'s dock' : ''}`,
+        await until(() => !!host.querySelector('.st-scrim:not([hidden]) .st-item'), 15000)
+        && (!docked || !!box.querySelector('.view .v-dock-left [data-settings]')));
+      const kioskEl = box.querySelector('.kiosk');
+      const surf0 = kioskEl.dataset.panelSurface;
+      for (const id of Object.keys(THEMES)) {
+        applyTheme(document.documentElement, id);
+        for (const ps of ['solid', 'veil', 'clear']) {
+          kioskEl.dataset.panelSurface = ps;
+          const r = menuWorst(window, host, id);
+          check(`${where}, ${id}, panels ${ps}: ${r.worst ? r.worst.ratio.toFixed(2) : '-'}:1`, r.n > 5 && r.worst.ok, `${r.n} pieces, ${say(r.worst)}`);
+        }
+      }
+      if (surf0 === undefined) delete kioskEl.dataset.panelSurface; else kioskEl.dataset.panelSurface = surf0;
+      k.destroy();
+      box.remove();
+    }
+  }
+} catch (e) {
+  failed++;
+  out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (e.stack || e) }));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

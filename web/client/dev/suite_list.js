@@ -182,6 +182,9 @@ export const SUITES = [
   // 2026-10-07: the Modules page again (library.html, /modules): the library, the real kiosk and its bar, the
   // Settings panel beside it; /home and the old addresses. Mounts real kiosks (needs the server).
   'library_page',
+  // 2026-10-09: the ⚙ menu's words against what is really behind them, every theme: Home's docked menu with each
+  // "Menu and bar background", and the kiosk's own menu (usual and docked). Mounts real kiosks (needs the server).
+  'menu_contrast',
   // 2026-10-02: settings at every level, Pause / Play on the bar, a panel made bigger, a call's controls,
   // more layouts. Mounts real kiosks (needs the server).
   'screen_controls',

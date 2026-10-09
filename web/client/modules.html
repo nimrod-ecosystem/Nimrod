@@ -382,6 +382,24 @@
      light row and could not be read -- seen on the room examples, whose screens choose Fully clear. No
      ground at all, as Design specifies: the halo and the outline carry it. */
   .trystage[data-chrome="clear"] .v-dock-left .st-item{background:transparent}
+  /* *** THE HALO ON THE WORDS THEMSELVES (2026-10-09). *** The halo above sat on the bar and the menu's panel and was
+     meant to reach every word by inheritance. It never reached a BUTTON: the browser's own stylesheet gives every
+     button `text-shadow: none`, and every row and every bar button is one. So in Fully clear the rows were bare white
+     words, and over the page's white they measured 1.00:1 (dev/menu_contrast_test.html; the screenshot was a menu of
+     blank rows). Now the halo is set on the buttons, and the section heads and hints -- which keep their own muted
+     colour, a dark one on the light themes, and so were dark words in a black halo -- are white like the rest.
+     The halo is Design's, unchanged; only where it is set moved. */
+  .trystage[data-chrome="clear"] .tb-bar button,
+  .trystage[data-chrome="clear"] .v-dock-left .st-item,
+  .trystage[data-chrome="clear"] .v-dock-left .st-head,
+  .trystage[data-chrome="clear"] .v-dock-left .st-hint{
+    text-shadow:0 0 2px #000,0 0 3px #000,0 0 5px #000,0 0 8px #000,0 1px 1px #000;color:#fff}
+  /* *** SEE-THROUGH: THE SECTION HEADS IN THE THEME'S OWN WORDS COLOUR (2026-10-09). *** The rows keep their own
+     ground in see-through; the heads sit on the panel itself, 80% of the theme's surface and 20% of whatever is
+     behind the menu (the panels: a photo, a scene). `--text-muted` is tuned to reach 4.5:1 on the SOLID surfaces, so
+     that 20% took it to 2.69-3.88:1 at worst across the themes. `--text` holds it with room to spare. AGAINST: the
+     heads lose a little of their quieter look in this one mode; they are still small capitals, set apart by size. */
+  .trystage[data-chrome="veil"] .v-dock-left .st-head{color:var(--text)}
 </style>
 <!-- *** HOME ON A PHONE (MIKE_LIST_20260930 "a phone layout", 2026-10-02). ***
      Its own <style>, and EVERY rule in it sits inside the media query below: nothing here can reach a desktop

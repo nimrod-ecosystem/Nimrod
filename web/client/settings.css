@@ -181,7 +181,10 @@
   /* A path or an address has no spaces to break at; it must still not run off the row. */
   overflow-wrap: anywhere;
 }
-.st-item.on .st-hint { color: var(--bg, #F7F4D5); opacity: 0.8; }
+/* (2026-10-09) Full strength, no longer `opacity: 0.8`: faded toward the accent, the cursor row's hint measured
+ * 3.13-4.50:1 on warm, forge, fall, spring, easter and stPatricks (dev/menu_contrast_test.html), under the 4.5 its
+ * size needs. It is still smaller than the label, so it still reads as the secondary line. */
+.st-item.on .st-hint { color: var(--bg, #F7F4D5); }
 
 /* ---- 2026-09-28: the text box and the colour chip. Token-first with KEYWORD fallbacks
  * (currentColor / Canvas / CanvasText), never hex - so a page that never applied a theme still
