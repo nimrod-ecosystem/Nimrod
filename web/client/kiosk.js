@@ -147,7 +147,7 @@ import { loadDeviceFonts } from './user_fonts.js';
 import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE, createDeviceLookRows } from './user_folders_page.js';
 // Where a person's history is kept (row 2.58, 2026-10-07): the host every player and game reaches as `ctx.history`,
 // and its page on the People tab.
-import { createHistoryHost, folderSink, serverSink } from './history_place.js';
+import { createHistoryHost, folderSink, serverSink, deviceSweep } from './history_place.js';   // deviceSweep: history to the drive
 import { GAMEPLAY_STREAM } from './telemetry.js';
 import { historyPage, HISTORY_ITEMS, HISTORY_PAGE } from './history_page.js';
 import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
@@ -1424,7 +1424,7 @@ export async function mountKiosk(root, {
   // *** WHERE THE PERSON'S HISTORY IS KEPT (row 2.58, 2026-10-07; history_place.js). *** One host per screen: it
   // reads the person's own `history-place` row (lazily - the person is resolved in the background), copies what
   // played to their Nimrod folder or, opted in, to us, and routes game results and board words when the person has
-  // moved them off the site's log. Their default is the log, so until somebody chooses, nothing here changes them.
+  // moved them off the site's log. (2026-10-08: their default is this device too - Mike's ruling, DECISIONS.)
   // No server half on a local backend (the suites, signed out): nothing can be kept with us there.
   const historyHost = createHistoryHost({
     personId: () => screenPersonNow(),
@@ -1433,7 +1433,13 @@ export async function mountKiosk(root, {
       : null),
     folder: folderSink(),
     server: !makeState && profiles.personHistoryURL ? serverSink({ urlFor: profiles.personHistoryURL, user }) : null,
+    // History to the drive (2026-10-08): every record of this person's on the device is copied when their Nimrod folder
+    // becomes reachable (chosen, allowed again, a drive plugged in), not only the panels mounted now.
+    screenId: () => profileId,
+    sweep: deviceSweep(),
+    view: window,
   });
+  historyHost.watch();   // history to the drive: looks for the folder while it is the chosen place; never prompts
 
   const childCtx = (mod) => ({
     bus, user, profileId,

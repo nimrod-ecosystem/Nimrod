@@ -199,10 +199,13 @@ export function rowFromServer(e, { source, panel = '', screen = null } = {}) {
 // `sent` and `restored` (2026-10-07, history_place.js): how far this record has been copied to the person's second
 // place ({ folder: <ISO>, us: <ISO> }), and whether it was filled from there on an empty device. Kept on the record
 // so a reload, a closed tab or a lapsed folder permission never re-sends or loses track.
+// `who` (2026-10-08, history to the drive): the person the record is theirs, stamped by history_place.js, so copying
+// a whole device's records to a person's folder takes theirs and never another person's on a shared browser.
 const objOr = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
 const emptyRecord = (panel) => ({ k: panel, rows: [], moved: {}, sent: {} });
 const asRecord = (panel, r) => (r && Array.isArray(r.rows)
-  ? { k: panel, rows: r.rows, moved: objOr(r.moved), sent: objOr(r.sent), ...(r.restored ? { restored: true } : {}) }
+  ? { k: panel, rows: r.rows, moved: objOr(r.moved), sent: objOr(r.sent), ...(r.restored ? { restored: true } : {}),
+    ...(typeof r.who === 'string' && r.who ? { who: r.who } : {}) }
   : emptyRecord(panel));
 export { asRecord as playRecord };
 

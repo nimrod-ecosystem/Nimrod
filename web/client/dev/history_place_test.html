@@ -25,6 +25,7 @@ page.</p>
 import {
   HISTORY_KEY, HISTORY_KINDS, KIND_IDS, PLACE_WORDS, HISTORY_DEFAULTS, normalizePlaces, whereWords, secondPlaceOffer,
   folderSink, serverSink, createHistoryHost, scopeOf,
+  markFor, folderMarkKey, kindOfKey, FOLDER_ID_FILE,   // history to the drive (2026-10-08)
 } from '../history_place.js';
 import { historyHtml, renderHistoryPage, HISTORY_ITEMS, HISTORY_PAGE } from '../history_page.js';
 import { memoryPlayStore, createPlays, panelPlays } from '../plays.js';
@@ -127,22 +128,38 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
     check('the row is "history-place" (the server reads the same key: storage_line.HISTORY_KEY)', HISTORY_KEY === 'history-place');
     check('three kinds, named for the server\'s streams', J(KIND_IDS) === J(['plays', 'games', 'words'])
       && HISTORY_KINDS.plays.stream === 'plays' && HISTORY_KINDS.games.stream === 'gameplay' && HISTORY_KINDS.words.stream === 'words');
-    check('*** defaults: what played stays on this device (ruled); game results and words stay on the site\'s log as now (not ruled) ***',
-      J(normalizePlaces(null)) === J({ plays: 'device', games: 'log', words: 'log' }));
+    check('*** defaults (2026-10-08, Mike\'s ruling): all three on this device - the person\'s own system; the server the opt-in ***',
+      J(normalizePlaces(null)) === J({ plays: 'device', games: 'device', words: 'device' }));
     check('a place a kind cannot have falls back to its default (what played can never go back to the log)',
-      J(normalizePlaces({ plays: 'log', games: 'mars', words: 'us' })) === J({ plays: 'device', games: 'log', words: 'us' }));
+      J(normalizePlaces({ plays: 'log', games: 'mars', words: 'us' })) === J({ plays: 'device', games: 'device', words: 'us' }));
+    check('a person whose row says the site\'s log for game results or words is still honoured (nothing moved for them)',
+      J(normalizePlaces({ games: 'log', words: 'log' })) === J({ plays: 'device', games: 'log', words: 'log' }));
+    check('which folder a record has gone to: its own marker; an old single marker taken for the first folder only',
+      markFor({ folder: 'A' }, 'folder', 'x') === 'A' && markFor({ folder: 'A', 'folder@y': 'B' }, 'folder', 'x') === ''
+      && markFor({ 'folder@x': 'C', folder: 'Z' }, 'folder', 'x') === 'C' && markFor({ us: 'U' }, 'us') === 'U'
+      && markFor({ folder: 'A' }, 'folder') === 'A' && folderMarkKey('x') === 'folder@x');
+    check('a routed record\'s key says its kind (for a sweep of the whole device)',
+      kindOfKey('gameplay:scr-1') === 'games' && kindOfKey('words:b-1') === 'words' && kindOfKey('yt-1') === null && kindOfKey('plays:x') === null);
 
     section('the words: where it lives, plainly');
     check('this device only: says what loses it', /reset/.test(whereWords('plays', 'device')) && /lose it/.test(whereWords('plays', 'device')));
     check('the folder, ready: says it is copied to the Data folder', /Data folder/.test(whereWords('plays', 'folder', { folder: 'ready' })));
-    check('the folder, permission lapsed: says how to fix it and that nothing is lost',
-      /Allow it again/.test(whereWords('plays', 'folder', { folder: 'permission' })) && /Nothing is lost/.test(whereWords('plays', 'folder', { folder: 'permission' })));
+    check('the folder, permission lapsed: says how to fix it and that it is copied then',
+      /Allow it again/.test(whereWords('plays', 'folder', { folder: 'permission' })) && /Will be copied/.test(whereWords('plays', 'folder', { folder: 'permission' })));
     check('the folder in a browser that cannot write one: says so, and offers "with us"',
       /cannot write to a folder/.test(whereWords('plays', 'folder', { folder: 'unavailable' })) && /with us/.test(whereWords('plays', 'folder', { folder: 'unavailable' })));
     check('with us: states the cap and the roll-up, and how many are kept',
       /10,000/.test(whereWords('plays', 'us', { cap: 10000, withUs: { rows: 42 } })) && /counted/.test(whereWords('plays', 'us', {}))
       && /42 kept with us/.test(whereWords('plays', 'us', { cap: 10000, withUs: { rows: 42 } })));
-    check('the site\'s log: says it is as it has been, and cannot be removed yet', /as it has been/.test(whereWords('games', 'log')) && /cannot be removed/.test(whereWords('games', 'log')));
+    check('the site\'s log: says it is as it was before, and cannot be removed yet', /as it was before/.test(whereWords('games', 'log')) && /cannot be removed/.test(whereWords('games', 'log')));
+    check('*** the folder chosen but not connected here: "Will be copied to your Nimrod folder when it\'s connected", with what waits ***',
+      ['none', 'missing', 'permission'].every((f) => whereWords('plays', 'folder', { folder: f }).includes('Will be copied to your Nimrod folder when it\'s connected'))
+      && /42 entries are waiting/.test(whereWords('plays', 'folder', { folder: 'none', waiting: 42 }))
+      && /1 entry is waiting/.test(whereWords('games', 'folder', { folder: 'missing', waiting: 1 }))
+      && !/waiting/.test(whereWords('plays', 'folder', { folder: 'none', waiting: 0 })));
+    check('...and says plainly what the device keeps meanwhile, and that a drive may just be unplugged',
+      /newest 500 for each panel/.test(whereWords('plays', 'folder', { folder: 'none' })) && /newest 1,000/.test(whereWords('words', 'folder', { folder: 'none' }))
+      && /drive not plugged in/.test(whereWords('plays', 'folder', { folder: 'missing' })) && /Allow it again/.test(whereWords('plays', 'folder', { folder: 'permission' })));
     const offer = secondPlaceOffer('plays', 'device', { folder: 'none', canUs: true });
     check('*** only on this device: the offer line, word for word, with both second places ***',
       offer && offer.text === 'Only on this screen. A reset would lose it. Keep a copy in your Nimrod folder?' && J(offer.offers) === J(['folder', 'us']), J(offer));
@@ -283,6 +300,7 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
     check('once only: a second try does nothing', await host.restore('plays', fresh, 'yt-9') === false);
     check('a device that already has plays is never overwritten', await host.restore('plays', dev, 'yt-1') === false);
     await host.setPlace('plays', 'folder');
+    await host.backfill();   // what setPlace starts without waiting for (2026-10-08): the copy itself
     const fresh2 = memoryPlayStore();
     filled = await host.restore('plays', fresh2, 'yt-1');
     rec = await fresh2.get('yt-1');
@@ -293,7 +311,7 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       await host.restore('plays', fresh3, 'yt-1') === false && (await fresh3.get('yt-1')) === null);
     root2.perm = 'granted';
 
-    section('game results and board words: routed only when the person moved them');
+    section('game results and board words: on this device by default (2026-10-08), the site\'s log only for a person on it');
     const baseRows = [];
     const subsB = new Set();
     const base = {
@@ -302,10 +320,24 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       async load() { return base.get(); }, subscribe(f) { subsB.add(f); return () => subsB.delete(f); }, startPolling() {}, destroy() { base.destroyed = true; },
     };
     const gstore = memoryPlayStore();
+    // The default first (nothing chosen for game results on this person's row): this device.
+    {
+      const dstore = memoryPlayStore();
+      const dbase = { ...base, rows: [], async append() { dbase.hit = (dbase.hit || 0) + 1; }, get: () => ({ events: [], total: 0 }) };
+      const drouted = host.route('games', dbase, { key: 'prof-0', store: dstore });
+      await drouted.load();
+      await drouted.append('trial', { game: 'trivia', correct: true });
+      const drec = await dstore.get('gameplay:prof-0');
+      check('*** the default now (2026-10-08): a trial stays on this device, the site\'s log gets nothing ***',
+        !dbase.hit && drec && drec.rows.length === 1 && drouted.get().events.length === 1, J(drec));
+      check('...and the record says whose it is (so a whole-device copy takes only this person\'s)', drec.who === 'p1');
+      check('the place reads "device" for a person who never chose', host.placeOf('games') === 'device' && host.placeOf('words') === 'device');
+    }
+    await host.setPlace('games', 'log');
     const routed = host.route('games', base, { key: 'prof-1', store: gstore });
     await routed.load();
     await routed.append('trial', { game: 'trivia', correct: true });
-    check('*** the default (the site\'s log): a trial goes to the log exactly as before, and get() is the log\'s own ***',
+    check('*** a person whose row says the site\'s log: a trial goes to the log exactly as before, and get() is the log\'s own ***',
       baseRows.length === 1 && routed.get().events.length === 1 && (await gstore.get('gameplay:prof-1')) === null);
     let told = 0;
     routed.subscribe(() => { told += 1; });
@@ -313,6 +345,8 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
     await routed.append('trial', { game: 'trivia', correct: false });
     check('*** moved to this device: the trial stays here, the log is untouched ***',
       baseRows.length === 1 && (await gstore.get('gameplay:prof-1')).rows.length === 1, J(baseRows.length));
+    check('*** what the log already held still shows, with the new one (the family\'s view on this device) ***',
+      routed.get().events.length === 2 && routed.get().events.some((e) => e.id === 1));
     check('...and a reader sees both, as one list, oldest first (progress.js reads get().events)',
       routed.get().events.length === 2 && routed.get().events[1].data.correct === false && told >= 1);
     await routed.append('session-note', { x: 1 });
@@ -446,6 +480,123 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       box.remove();
     }
 
+    section('history to the drive: what built up at home is copied when the folder is first connected (2026-10-08)');
+    {
+      // A screen set up at home: the person chose the Nimrod folder for all three kinds, and this device has no Nimrod
+      // folder yet (the drive is in the room). Everything waits on the device.
+      const homeStore = mapStore();
+      const fsH = folderSink({ store: homeStore, view: { showDirectoryPicker() {} } });
+      const hrow = fakeRow({ plays: 'folder', games: 'folder', words: 'folder' });
+      const htimers = [];
+      const pstore = memoryPlayStore();
+      const rstore = memoryPlayStore();
+      const hhost = createHistoryHost({ personId: () => 'p-home', makePersonState: (pid, key) => (key === HISTORY_KEY ? hrow : null),
+        folder: fsH, screenId: () => 'scr-home', sweep: [{ kind: 'plays', store: pstore }, { kind: null, store: rstore }],
+        setTimer: (f) => { htimers.push(f); return htimers.length; }, clearTimer: () => {} });
+      const sp = (id, t, panel, screen) => ({ kind: 'play', created_at: new Date(t).toISOString(), data: { source: 'photos', id, panel, screen } });
+      const N = 40;
+      await pstore.update('ph-1', (r) => ({ ...r, rows: Array.from({ length: N }, (_, i) => sp(`p${i}`, T0 + i * 1000, 'ph-1', 'scr-home')) }));
+      // a panel removed before the drive came: never mounted on this page, its plays are this screen's
+      await pstore.update('ph-gone', (r) => ({ ...r, rows: [sp('g1', T0, 'ph-gone', 'scr-home'), sp('g2', T0 + 1, 'ph-gone', 'scr-home')] }));
+      // another person's panel on the same browser, and a panel of another screen with no owner stamped: never copied here
+      await pstore.update('ph-other', (r) => ({ ...r, who: 'p-other', rows: [sp('o1', T0, 'ph-other', 'scr-home')] }));
+      await pstore.update('ph-stranger', (r) => ({ ...r, rows: [sp('s1', T0, 'ph-stranger', 'scr-x')] }));
+      const fakeBase = () => ({ get: () => ({ events: [], total: 0 }), async append() { throw new Error('the log must not be written'); },
+        async load() { return { events: [], total: 0 }; }, subscribe: () => () => {}, startPolling() {}, destroy() {} });
+      const games = hhost.route('games', fakeBase(), { key: 'scr-home', store: rstore });
+      const words = hhost.route('words', fakeBase(), { key: 'b-1', store: rstore });
+      await games.load(); await words.load();
+      for (let i = 0; i < 3; i += 1) await games.append('trial', { game: 'press', correct: i % 2 === 0 });
+      for (const w of ['yes', 'more']) await words.append('select', { word: w });
+      const mounted = await hhost.sync('plays', pstore, 'ph-1');
+      const w = hhost.watch({ everyMs: 30000 });
+      check('(setup) the watch looks at once and then on its timer', htimers.length >= 1);
+      check('*** at home: nothing copied, nothing prompted, the reason kept ***', mounted.sent === 0 && mounted.why === 'none' && await w.check() === 'none');
+      const st = await hhost.status();
+      check('*** the page counts what waits: every play of this person\'s on the device (a removed panel too), not another\'s ***',
+        st.folder === 'none' && st.waiting.plays === N + 2 && st.waiting.games === 3 && st.waiting.words === 2, J(st.waiting));
+      check('...and says it will be copied when the folder is connected',
+        /Will be copied to your Nimrod folder when it's connected/.test(whereWords('plays', 'folder', { folder: st.folder, waiting: st.waiting.plays }))
+        && /42 entries are waiting/.test(whereWords('plays', 'folder', { folder: st.folder, waiting: st.waiting.plays })));
+      check('the records are stamped with whose they are', (await pstore.get('ph-1')).who === 'p-home' && (await rstore.get('gameplay:scr-home')).who === 'p-home');
+
+      // On site: the drive's Nimrod folder is chosen (or plugged in, or allowed again).
+      const drive = fakeDir('Nimrod');
+      await drive.getDirectoryHandle('Data', { create: true });
+      await homeStore.put(ROOT_KEY, drive);
+      check('*** the watch sees the folder reachable ***', await w.check() === 'ready');
+      const dh = await (await drive.getDirectoryHandle('Data')).getDirectoryHandle('History');
+      const month = new Date().toISOString().slice(0, 7);
+      const lines = (dir, name) => { const f = dir._kids.get(name); return f ? f._text().trim().split('\n').filter(Boolean).length : 0; };
+      check('*** ALL of it is copied: the 40 plays of the panel on the screen, the 2 of the panel removed since ***',
+        lines(dh, 'plays-ph-1-2026-10.jsonl') === N && lines(dh, 'plays-ph-gone-2026-10.jsonl') === 2, [...dh._kids.keys()].join(','));
+      check('*** ...the game results and the board\'s words ***',
+        lines(dh, `gameplay-scr-home-${month}.jsonl`) === 3 && lines(dh, `words-b-1-${month}.jsonl`) === 2, [...dh._kids.keys()].join(','));
+      check('*** another person\'s records on this browser, and another screen\'s, are NOT copied ***',
+        !dh._kids.has('plays-ph-other-2026-10.jsonl') && !dh._kids.has('plays-ph-stranger-2026-10.jsonl'));
+      check('the folder carries its id (so a device knows what it copied here)', /^[A-Za-z0-9-]{6,64}$/.test((dh._kids.get(FOLDER_ID_FILE)?._text() || '').trim()));
+      check('the page counts nothing waiting once it is there', J((await hhost.status()).waiting) === J({}));
+
+      // Unplugged and plugged back in (or a restart and "Allow it again"): nothing sent twice.
+      drive.perm = 'prompt';
+      check('a lapsed permission: the watch sees it, nothing prompted', await w.check() === 'permission' && drive.asked === 0);
+      drive.perm = 'granted';
+      await w.check();
+      check('*** connected again: no duplicates ***', lines(dh, 'plays-ph-1-2026-10.jsonl') === N && lines(dh, `gameplay-scr-home-${month}.jsonl`) === 3);
+      await w.check(); await hhost.backfill();
+      check('...however many times it looks', lines(dh, 'plays-ph-1-2026-10.jsonl') === N && lines(dh, 'plays-ph-gone-2026-10.jsonl') === 2);
+      await pstore.update('ph-1', (r) => ({ ...r, rows: [...r.rows, sp('new', T0 + N * 1000, 'ph-1', 'scr-home')] }));
+      await hhost.sync('plays', pstore, 'ph-1');
+      check('a new play on site: only it goes', lines(dh, 'plays-ph-1-2026-10.jsonl') === N + 1);
+
+      // A different folder: say a Nimrod folder on the screen's own card at home, then the drive in the room.
+      const card = fakeDir('Nimrod');
+      await card.getDirectoryHandle('Data', { create: true });
+      await homeStore.put(ROOT_KEY, card);
+      check('*** a DIFFERENT folder is seen as one (its own id) ***', await w.check() === 'ready');
+      const ch = await (await card.getDirectoryHandle('Data')).getDirectoryHandle('History');
+      check('*** ...and gets everything the device still holds, though another folder already had it ***',
+        lines(ch, 'plays-ph-1-2026-10.jsonl') === N + 1 && lines(ch, 'plays-ph-gone-2026-10.jsonl') === 2 && lines(ch, `words-b-1-${month}.jsonl`) === 2);
+      await homeStore.put(ROOT_KEY, drive);
+      await w.check();
+      check('*** back to the first folder: nothing it already had is written again ***',
+        lines(dh, 'plays-ph-1-2026-10.jsonl') === N + 1 && lines(dh, 'plays-ph-gone-2026-10.jsonl') === 2 && lines(dh, `gameplay-scr-home-${month}.jsonl`) === 3);
+      const marks = (await pstore.get('ph-1')).sent;
+      check('the record keeps one marker per folder, and the newest copied anywhere', Object.keys(marks).filter((k) => k.startsWith('folder@')).length === 2 && marks.folder === sp('new', T0 + N * 1000).created_at, J(marks));
+
+      // Nobody chose the folder: the watch does nothing at all.
+      hrow.set({ plays: 'device', games: 'device', words: 'device' });
+      check('no kind in the folder: the watch does not even look', await w.check() === 'unused');
+      hhost.destroy();
+      const before = htimers.length;
+      htimers.splice(0).forEach((f) => f());
+      await tick(); await tick();
+      check('destroyed: the watch stops (no new look scheduled)', htimers.length === 0 && before >= 1);
+    }
+    {
+      // A write that stops part-way (October written, November refused): the marker moves past October only.
+      const proot = fakeDir('Nimrod');
+      await proot.getDirectoryHandle('Data', { create: true });
+      const pfs = folderSink({ store: mapStore({ [ROOT_KEY]: proot }), view: { showDirectoryPicker() {} } });
+      await pfs.id();
+      const ph = await (await proot.getDirectoryHandle('Data')).getDirectoryHandle('History');
+      const real = ph.getFileHandle;
+      let refuse = true;
+      ph.getFileHandle = async (n, o) => { if (refuse && /2026-11/.test(n)) throw new DOMException('gone', 'NotAllowedError'); return real(n, o); };
+      const prow = fakeRow({ plays: 'folder' });
+      const phost = createHistoryHost({ personId: () => 'p2', makePersonState: (pid, key) => (key === HISTORY_KEY ? prow : null), folder: pfs });
+      const ps = memoryPlayStore();
+      await ps.update('ph-9', (r) => ({ ...r, rows: [play('oct1', T0), play('oct2', T0 + 1), play('nov1', Date.parse('2026-11-01T00:00:00Z'))] }));
+      const r1 = await phost.sync('plays', ps, 'ph-9');
+      const n = (name) => (ph._kids.get(name)?._text() || '').trim().split('\n').filter(Boolean).length;
+      check('*** part-way: October is in the folder, the marker says so ***', r1.why === 'write' && r1.sent === 2 && n('plays-ph-9-2026-10.jsonl') === 2
+        && Object.entries((await ps.get('ph-9')).sent).some(([k, v]) => k.startsWith('folder@') && v === play('oct2', T0 + 1).created_at), J(r1));
+      refuse = false;
+      await phost.sync('plays', ps, 'ph-9');
+      check('*** the next copy sends November only: October is not written twice ***', n('plays-ph-9-2026-10.jsonl') === 2 && n('plays-ph-9-2026-11.jsonl') === 1);
+      phost.destroy();
+    }
+
     section('the page: "Where your history is kept"');
     check('a menu row on its own page', HISTORY_ITEMS[0].page === HISTORY_PAGE && /history/.test(HISTORY_ITEMS[0].label));
     const html = historyHtml({ places: { plays: 'device', games: 'log', words: 'log' }, folder: 'none', withUs: null, cap: 10000,
@@ -454,7 +605,17 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       html.includes('Only on this screen. A reset would lose it. Keep a copy in your Nimrod folder?')
       && html.includes('Keep a copy in your Nimrod folder') && html.includes('Keep a copy with us'));
     check('every place is a button, the current one marked', html.includes(`${PLACE_WORDS.device} (now)`) && html.includes(PLACE_WORDS.us));
-    check('game results and words say they are not decided yet', (html.match(/Not decided yet/g) || []).length === 2);
+    check('a person on the site\'s log is shown it as their place, and can move off it', html.includes(`${PLACE_WORDS.log} (now)`) && !/Not decided yet/.test(html));
+    const moved = historyHtml({ places: normalizePlaces(null), folder: 'none', withUs: null, cap: 10000, canUs: true, person: true, last: {}, waiting: {} });
+    check('*** a person not on the log is not offered it (with us is the opt-in now) ***', !moved.includes(PLACE_WORDS.log));
+    check('*** game results and words say the log\'s old entries still show, and what another device does not see ***',
+      (moved.match(/data-hp-before=/g) || []).length === 2 && /already held stays there and still shows/.test(moved)
+      && /another device/.test(moved) && !/data-hp-before="plays"/.test(moved));
+    const pend = historyHtml({ places: { plays: 'folder', games: 'folder', words: 'device' }, folder: 'none', withUs: null, cap: 10000,
+      canUs: false, person: true, last: {}, waiting: { plays: 7, games: 2 } });
+    check('*** the folder chosen, not connected: the page says it will be copied when it is, and how many wait ***',
+      /Will be copied to your Nimrod folder when it&#39;s connected|Will be copied to your Nimrod folder when it's connected/.test(pend)
+      && /7 entries are waiting/.test(pend) && /2 entries are waiting/.test(pend));
     check('site copy never says "her screen"', !/her screen/i.test(html));
     const noUs = historyHtml({ places: normalizePlaces(null), folder: 'unavailable', withUs: null, cap: null, canUs: false, person: true, last: {} });
     check('no way to reach the site (a local page): no "with us" button', !noUs.includes(PLACE_WORDS.us));
