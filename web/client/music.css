@@ -6,6 +6,10 @@
 .mu-wrap *{box-sizing:border-box}
 .mu-stage{flex:0 0 auto;width:100%;aspect-ratio:16/9;max-height:55%;background:var(--surface-alt);border-radius:10px;overflow:hidden}
 .mu-stage[hidden]{display:none}
+/* play on: Spotify's own player, at its compact height (152px), shown whole and never covered (Spotify's widget terms). */
+.mu-spstage{flex:0 0 auto;width:100%;min-height:152px;border-radius:12px;overflow:hidden}
+.mu-spstage[hidden]{display:none}
+.mu-spstage iframe{display:block;width:100%;border:0}
 .mu-root{flex:1 1 auto;min-height:0;overflow:auto}
 .mu{display:flex;flex-direction:column;gap:clamp(6px, 1.8cqmin, 16px);padding:clamp(6px, 2.2cqmin, 22px)}
 .mu [hidden]{display:none !important}

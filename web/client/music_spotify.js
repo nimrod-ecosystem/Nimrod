@@ -150,6 +150,8 @@ export const SPOTIFY_MESSAGES = Object.freeze({
   'not-listable': 'Spotify only lists the songs of playlists you made or share, so this one plays in Spotify’s '
     + 'own order.',
   'no-tracks': 'Spotify gave no songs for this, so it plays in Spotify’s own order.',
+  // play on (note BK item 4): asked, never taken over. {device} is Spotify's name for it ("Mike's iPhone").
+  'playing-elsewhere': 'Spotify is already playing on {device}. Play this instead? What is playing there stops.',
   // (row 2.61) A feature turned on after connecting, whose permission was not asked for then.
   'needs-permission': 'Spotify needs one more permission to shuffle this playlist here, so it plays in Spotify’s own '
     + 'order for now. Press “Connect again” under Spotify in “Change the list”.',
@@ -545,14 +547,36 @@ export function createSpotify({
       const r = await api('GET', '/me/player');
       if (!r.ok) return { ok: false, reason: r.reason };
       const it = r.body?.item;
-      if (!it || !it.uri) return { ok: true, uri: null, isPlaying: false };
+      // play on (note BK item 4): WHERE it is playing - the same answer, no new permission (user-read-playback-state).
+      const dev = r.body?.device ? { id: String(r.body.device.id || ''), name: String(r.body.device.name || '') } : null;
+      if (!it || !it.uri) return { ok: true, uri: null, isPlaying: false, ...(dev ? { device: dev } : {}) };
       return {
-        ok: true, uri: it.uri, name: String(it.name || ''),
+        ok: true, uri: it.uri, name: String(it.name || ''), ...(dev ? { device: dev } : {}),
         artists: (Array.isArray(it.artists) ? it.artists : []).map((a) => String(a?.name || '')).filter(Boolean),
         image: imageOf(it.album?.images || it.images),
         durationMs: Number(it.duration_ms) || 0, progressMs: Number(r.body.progress_ms) || 0,
         isPlaying: !!r.body.is_playing,
       };
+    },
+    /**
+     * *** PLAY ON (note BK item 4, Mike 2026-10-08: "Can we make it so Spotify tells you it's playing somewhere else
+     * instead of stopping it anywhere?") *** The name of the Spotify device playing NOW, when it is not `target` (a
+     * device name; '' = "this screen", so any device counts). null when nothing plays, when it is the target, or when
+     * Spotify cannot be asked (offline, signed out): a look that fails never stops music starting.
+     * One GET /me/player, the call the song card already makes; its permission (user-read-playback-state) is in
+     * every sign-in since the start (SPOTIFY_SCOPE_SETS.play), so nobody connects again for it.
+     */
+    async elsewhere(target = '') {
+      if (!id || !tokens()?.access) return null;
+      let r;
+      try { r = await api('GET', '/me/player'); } catch { return null; }
+      const dev = r?.ok ? r.body?.device : null;
+      if (!dev || !r.body?.is_playing) return null;
+      const name = String(dev.name || '');
+      const want = String(target || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      const have = name.toLowerCase().replace(/\s+/g, ' ').trim();
+      if (want && (have === want || have.includes(want))) return null;
+      return name || 'another device';
     },
     async pause() {
       const r = await api('PUT', `/me/player/pause${q(lastDeviceId)}`);
@@ -730,13 +754,21 @@ export function createSpotifyPlayer({
     connected: () => !!spotify?.connected?.(),
 
     /** Start a favourite: `{ ok, device, order: 'ours'|'spotify', note }` or `{ ok: false, reason }`. */
-    async play({ uri, device = '' } = {}) {
+    async play({ uri, device = '', force = false, ask = true } = {}) {
       quit(false);
       tell(null);
       note = '';
       const g = gen;
       const u = parseSpotifyUri(uri);
       if (!u) return { ok: false, reason: 'bad-uri' };
+      // play on (note BK item 4): something already playing on this account, on a device other than the one named,
+      // is ASKED about, not taken over. "Whichever is on" ('') counts any device: starting there replaces what plays.
+      if (!force && ask && typeof spotify.elsewhere === 'function') {
+        let other = null;
+        try { other = await spotify.elsewhere(device); } catch { other = null; }
+        if (g !== gen || dead) return { ok: false, reason: 'superseded' };
+        if (other) return { ok: false, reason: 'playing-elsewhere', device: other };
+      }
       const type = u.split(':')[1];
       if (picker && read(shuffle, true) && (type === 'playlist' || type === 'album')) {
         const t = await spotify.tracks(u);

@@ -30,11 +30,18 @@
 //   * Spotify is OFF, and needs the household's own client ID;
 //   * (row 2.55) a Spotify playlist or album is SHUFFLED BY THE SITE'S OWN WEIGHTED PICKER (music_pick.js,
 //     YouTube's rng.js weights) - Mike: "I like ours better for it's weights" - and off plays Spotify's order;
-//   * (row 2.55) the song-info card (name, artist, cover) is OFF: Mike asked for it as an OPTION ("have
-//     options for a song info overlay"), and it does not yet carry the Spotify logo and link back that
-//     Spotify's design guidelines ask for (see `songCardHtml`). AGAINST off: once Spotify is steered by the
-//     site, the look that feeds it is already being made, so it costs nothing, and a person watching the screen
-//     is better off knowing what is playing. Off wins for now on his word and the open attribution question.
+//   * (row 2.55) the song-info card (name, artist, cover) is ON - RULED BY MIKE 2026-10-08 (note BI): "Song info by
+//     default & count our shuffle." It was off while it was only an option he had asked for and the Spotify logo and
+//     link back were open (see `songCardHtml`; still open, on Mike's list). The embed route (below) draws no card:
+//     Spotify's own player is visible there and shows the song itself.
+//   * (play on, rows 2.61 and 2.68) WHERE MUSIC PLAYS is one "Play on" choice, a button on the panel and a row in its
+//     settings, remembered per panel. Blank follows the screen's Devices -> Speakers row, whose blank is the
+//     computer's own default speaker: nothing to set up. "This screen" plays a Spotify favourite in SPOTIFY'S OWN
+//     PLAYER IN THIS PANEL (spotify_embed.js), the way a YouTube favourite plays in YouTube's - no Spotify app needed,
+//     so the Spotify switch no longer stops a Spotify favourite playing; it turns on the household's own app route
+//     (other Spotify speakers, our shuffle of a playlist, the song card). A Spotify speaker plays through that route.
+//   * (note BK item 4) Spotify already playing on another device is ASKED about ("Play this instead?"), not taken
+//     over; a setting can make it play anyway.
 //
 // SPOTIFY'S SWITCH IS AT THE STANDARD DETAIL LEVEL (row 2.55, moved from advanced 2026-10-07). Mike added a
 // Spotify favourite, was told "Spotify is turned off for this panel", and could not find the switch: it sat at
@@ -81,6 +88,10 @@ import { panelPlays } from '../plays.js';
 import { spotifyRef, thumbOk, PREVIEW_URL } from '../recommend.js';
 import { authHeaders } from '../auth.js';
 import { createMusicRouter, NEAR_MATCH_MODES, YOUTUBE_WHERE, messageFor } from '../music_player.js';
+// play on (rows 2.61, 2.68)
+import { createEmbedPlayer, EMBED_WORDS } from '../spotify_embed.js';
+import { parsePlayOn, playOnWords, playOnChoices, sinkIdFor, refreshOutputs, watchOutputs, rememberSpotifySpeakers,
+  knownSpotifySpeakers, PLAY_ON_HERE, SPOTIFY_PREFIX } from '../speakers.js';
 
 export const MUSIC_VOLUME_MIN = 10;
 
@@ -95,7 +106,9 @@ const DEFAULTS = {
   spotifyClientIdFor: 'account',
   spotifyDevice: '',
   spotifyShuffle: true,
-  songInfo: false,
+  songInfo: true,          // Mike, 2026-10-08: "Song info by default"
+  playOn: '',              // play on: '' follows the screen's Devices -> Speakers row
+  whenElsewhere: 'ask',    // play on (note BK item 4)
 };
 
 // The Spotify rows other than the switch show only while it is on (settings_fields.js `appliesWhen`), so the
@@ -150,11 +163,31 @@ export const SETTINGS = [
     onLabel: 'Shuffled the way YouTube is (fewer repeats)', offLabel: 'In Spotify’s own order',
     note: 'Shuffling needs Spotify to list the songs, which it does only for playlists you made or share. '
       + 'Others play in Spotify’s own order.' },
-  { key: 'songInfo', label: 'While Spotify plays, show', kind: 'toggle', default: false, level: 'standard',
+  { key: 'songInfo', label: 'While Spotify plays, show', kind: 'toggle', default: true, level: 'standard',
     appliesWhen: spotifyIsOn,
     onLabel: 'The song’s name, artist and picture', offLabel: 'The favourite’s name only' },
+  // (play on) The older typed speaker name. Still read when "Play on" is left blank, so a panel set up with it
+  // keeps playing where it did; the "Play on" row is the way to choose now.
   { key: 'spotifyDevice', label: 'Spotify speaker to play on (blank: whichever is on)', kind: 'text',
     default: '', level: 'advanced', appliesWhen: spotifyIsOn },
+  // *** PLAY ON (rows 2.61, 2.68; Mike 2026-10-08: "an easy way to make it play through whichever speakers you
+  // want"). *** STANDARD, and not behind the Spotify switch: it also sends music files to an attached speaker. Its
+  // choices are live (`settingsChoices`): this screen, each attached speaker the browser can send to, and each
+  // Spotify speaker "Find speakers" has seen. The same choice is one press away on the panel ("Play on: ...").
+  { key: 'playOn', label: 'Play on', kind: 'choice', default: '', level: 'standard',
+    options: [{ value: '', label: 'As Devices → Speakers says' }, { value: PLAY_ON_HERE, label: 'This screen' }],
+    note: 'Spotify and YouTube’s own players always use this computer’s own speaker. Music files can go to any '
+      + 'speaker listed. A Spotify speaker needs your own Spotify app connected (the Spotify row).' },
+  // (note BK item 4, Mike 2026-10-08: "tells you it's playing somewhere else instead of stopping it") Ask is the
+  // default, as he asked. AGAINST: a person alone with the screen who says "play jazz" hears a question, and a
+  // question nobody answers means nothing plays - which is inaction, not a stuck screen (the music elsewhere goes on).
+  // "Play it anyway" is for a screen whose account nobody else uses.
+  { key: 'whenElsewhere', label: 'When Spotify is already playing somewhere else', kind: 'choice', default: 'ask',
+    level: 'standard', appliesWhen: spotifyIsOn,
+    options: [
+      { value: 'ask', label: 'Ask first (“Play this instead?”)' },
+      { value: 'play', label: 'Play it anyway (what is playing there stops)' },
+    ] },
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -192,6 +225,9 @@ registerModule(
     let dead = false;
     let rootEl = null;
     let stageEl = null;
+    let spStageEl = null;          // play on: where Spotify's own player is drawn (spotify_embed.js)
+    let speakersFound = [];        // play on: the Spotify speakers the last "Find speakers" listed
+    let offOutputs = null;
 
     const volume = () => {
       const n = Number(cfg.volume);
@@ -395,7 +431,63 @@ registerModule(
       }
       return spotify;
     }
-    const spotifyPlayerFor = () => (spotifyFor() ? spotifyPlayer : null);
+    // (note BK item 4) The app route asks before taking over another device unless "When Spotify is already playing
+    // somewhere else" says play anyway.
+    const spotifyPlayerFor = () => {
+      if (!spotifyFor() || !spotifyPlayer) return null;
+      const p = spotifyPlayer;
+      return { ...p, play: (o = {}) => p.play({ ...o, ask: cfg.whenElsewhere !== 'play' }) };
+    };
+
+    // ---- play on (rows 2.61, 2.68) ---------------------------------------------------------------------------
+    // WHERE: this panel's own choice; blank follows the screen's Devices -> Speakers row (kiosk.js, `speakerRoute`);
+    // blank there too is "this screen" through the computer's default speaker. An older panel with a typed Spotify
+    // speaker and nothing chosen keeps playing there.
+    const screenRoute = () => { try { return String(ctx.speakerRoute?.('music') || ''); } catch { return ''; } };
+    function playOnValue() {
+      const own = String(cfg.playOn || '');
+      if (own) return own;
+      const screen = screenRoute();
+      if (screen) return screen;
+      const typed = String(cfg.spotifyDevice || '').trim();
+      return cfg.spotifyOn && typed ? `${SPOTIFY_PREFIX}${typed}` : PLAY_ON_HERE;
+    }
+    function applySinkNow() {
+      const p = parsePlayOn(playOnValue());
+      try { local.setSink?.(p.kind === 'out' ? sinkIdFor(p.name) : ''); } catch { /* the default speaker */ }
+    }
+    // SPOTIFY'S OWN PLAYER IN THIS PANEL ("This screen"), made the first time it is needed. Its plays are this panel's
+    // Spotify plays (the same `picker`, so our shuffle counts them: Mike, "count our shuffle").
+    let embed = null;
+    let embedState = null;
+    let embedKey = '';
+    function embedFor() {
+      if (embed || !spStageEl || dead) return embed;
+      embed = (ctx.spotifyEmbedFactory || createEmbedPlayer)({
+        host: () => spStageEl, audio, audioId: `music:${instanceId}:spotify`, picker,
+        tracksFor: (u) => {
+          const sp = cfg.spotifyOn ? spotifyFor() : null;
+          return sp?.connected?.() ? sp.tracks(u) : null;
+        },
+        shuffle: () => cfg.spotifyShuffle !== false,
+        // Only with the app connected can anything see where else the account plays; replacing our own song is no question.
+        elsewhere: () => {
+          if (cfg.whenElsewhere === 'play' || !cfg.spotifyOn) return null;
+          if (status.playing && status.kind === 'spotify-here') return null;
+          const sp = spotifyFor();
+          return sp?.connected?.() && typeof sp.elsewhere === 'function' ? sp.elsewhere('') : null;
+        },
+        onChange: (s) => {
+          embedState = s;
+          // A report comes about once a second: draw only when something shown changed.
+          const key = `${s.preview}|${s.note}|${s.status}`;
+          if (key !== embedKey) { embedKey = key; render(); }
+        },
+        onEnded: () => router?.ended('spotify-here'),
+        setTimer: setT, clearTimer: clearT,
+      });
+      return embed;
+    }
 
     // THE FIRST MOMENT OF THE SONG-INFO CARD: before Spotify has said which song is playing, the favourite's own
     // name and picture, from Spotify's public oEmbed - asked through this site's server, the recommend preview
@@ -473,6 +565,12 @@ registerModule(
       local,
       spotify: () => spotifyPlayerFor(),
       spotifyDevice: () => cfg.spotifyDevice,
+      // play on: "This screen" is Spotify's own player here; a Spotify speaker is the app route on it.
+      spotifyWhere: () => {
+        const p = parsePlayOn(playOnValue());
+        return p.kind === 'spotify' ? { kind: 'spotify', device: p.name } : { kind: 'here' };
+      },
+      spotifyHere: () => embedFor(),
       ownYoutube,
       youtubeWhere: () => (YOUTUBE_WHERE.includes(cfg.youtubeWhere) ? cfg.youtubeWhere : 'panel'),
       nearMatch: () => (NEAR_MATCH_MODES.includes(cfg.nearMatch) ? cfg.nearMatch : 'ask'),
@@ -514,21 +612,65 @@ registerModule(
 
     function mainHtml() {
       const now = status.playing ? `Playing: ${status.name}` : 'Nothing playing';
-      const msg = status.reason && status.reason !== 'did-you-mean' ? status.message : '';
+      const msg = status.reason && status.reason !== 'did-you-mean' && status.reason !== 'playing-elsewhere' ? status.message : '';
       const why = status.playing && status.kind === 'spotify' ? (spotifyPlayer?.state().note || '') : '';
+      // play on: what Spotify's own player here should be known about - previews, its order, its speaker.
+      const here = status.playing && status.kind === 'spotify-here' ? [
+        embedState?.preview ? EMBED_WORDS.preview : '',
+        embedState?.note || '',
+        parsePlayOn(playOnValue()).kind === 'out' ? EMBED_WORDS['default-speaker'] : '',
+      ].filter(Boolean) : [];
+      const elsewhere = status.asking && status.askingWhy === 'elsewhere';
       return `
         <p class="mu-now" data-now>${esc(now)}</p>
         ${songCardHtml()}
         ${why ? `<p class="mu-hint" data-order-note role="status">${esc(why)}</p>` : ''}
+        ${here.map((t) => `<p class="mu-hint" data-here-note role="status">${esc(t)}</p>`).join('')}
         ${why && why === SPOTIFY_MESSAGES['needs-permission'] ? `<div class="mu-btns">${btn('spotify-connect', 'Connect again')}</div>` : ''}
         ${msg ? `<p class="mu-msg" data-msg role="status">${esc(msg)}</p>` : ''}
         ${status.reason === 'spotify-off' ? `<div class="mu-btns">${btn('spotify-on', 'Turn Spotify on')}</div>` : ''}
-        ${status.asking ? `<div class="mu-ask" data-ask><p>${esc(messageFor('did-you-mean', status.asking))}</p>
-            <div class="mu-btns">${btn('confirm', 'Yes, play it')}${btn('decline', 'No')}</div></div>` : ''}
+        ${status.asking ? `<div class="mu-ask" data-ask${elsewhere ? ' data-elsewhere' : ''}><p>${esc(elsewhere ? status.message : messageFor('did-you-mean', status.asking))}</p>
+            <div class="mu-btns">${elsewhere ? btn('confirm', 'Yes, play it here') + btn('decline', 'No, leave it')
+              : btn('confirm', 'Yes, play it') + btn('decline', 'No')}</div></div>` : ''}
         <div class="mu-list" data-list>${favs.length
           ? favs.map((f) => btn('play', f.name, ` data-id="${esc(f.id)}"`)).join('')
           : '<p class="mu-empty">No favourites yet. Add some with “Change the list”.</p>'}</div>
-        <div class="mu-btns">${btn('stop', 'Stop')}${btn('edit', 'Change the list')}</div>`;
+        <div class="mu-btns">${btn('stop', 'Stop')}${btn('play-on', `Play on: ${playOnWords(playOnValue())}`, ' data-play-on')}${btn('edit', 'Change the list')}</div>`;
+    }
+
+    // *** THE "PLAY ON" CHOOSER (play on, rows 2.61 and 2.68). *** One press on the panel opens it; one press on a
+    // choice keeps it for this panel and moves what is playing there. The switch walks it like every other list.
+    function playOnChoicesNow() {
+      const screen = screenRoute();
+      return playOnChoices({
+        inherit: `As Devices → Speakers says (${playOnWords(screen || PLAY_ON_HERE)})`,
+        spotify: [...new Set([...speakersFound, ...knownSpotifySpeakers()])],
+        spotifyOn: cfg.spotifyOn === true,
+      });
+    }
+    function playOnHtml() {
+      const now = String(cfg.playOn || '');
+      const connected = cfg.spotifyOn && !!spotify?.connected?.();
+      return `
+        <p class="mu-head">Play on</p>
+        <p class="mu-hint">Now: ${esc(playOnWords(playOnValue()))}. Spotify and YouTube’s own players use this computer’s own speaker.</p>
+        <div class="mu-list" data-play-on-list>${playOnChoicesNow().map((c) =>
+          btn('play-on-pick', `${c.value === now ? '✓ ' : ''}${c.label}`, ` data-value="${esc(c.value)}"`)).join('')}</div>
+        ${spotifyNote ? `<p class="mu-hint" role="status">${esc(spotifyNote)}</p>` : ''}
+        <div class="mu-btns">${connected ? btn('spotify-devices', 'Find Spotify speakers') : ''}${btn('close', 'Back')}</div>`;
+    }
+
+    function choosePlayOn(value) {
+      const v = String(value == null ? '' : value);
+      const was = playOnValue();
+      state?.set?.({ playOn: v });
+      cfg = { ...cfg, playOn: v };
+      applySinkNow();
+      // What is playing moves with the choice: a Spotify favourite starts again where it now plays.
+      if (playOnValue() !== was && status.playing && (status.kind === 'spotify' || status.kind === 'spotify-here') && status.name) {
+        router.play({ name: status.name });
+      }
+      render();
     }
 
     const hasSpotifyFav = () => favs.some((f) => f.source?.kind === 'spotify');
@@ -536,10 +678,13 @@ registerModule(
       if (!cfg.spotifyOn) {
         // (row 2.55) A Spotify favourite on the list with Spotify off is a favourite that cannot play: say so
         // where the list is changed, with the way to turn it on.
+        // (play on) They DO play now - here, in Spotify's own player - so this says what turning it on adds.
         return hasSpotifyFav() ? `<div class="mu-spot" data-spotify data-spotify-off>
             <p class="mu-head">Spotify</p>
-            <p class="mu-hint">Spotify is turned off for this panel, so the Spotify favourites will not play. Turn it on
-              here, or with the “Spotify” row in this panel’s settings.</p>
+            <p class="mu-hint">Spotify favourites play here in Spotify’s own player, with nothing to set up (whole songs
+              when this browser is signed in to Spotify Premium, 30-second previews otherwise). To play them on other
+              Spotify speakers, shuffle them the site’s way and show the song card, turn on your own Spotify app here,
+              or with the “Spotify” row in this panel’s settings.</p>
             <div class="mu-btns">${btn('spotify-on', 'Turn Spotify on')}</div></div>` : '';
       }
       loadClientId();
@@ -631,7 +776,8 @@ registerModule(
       const had = mount.ownerDocument?.activeElement;
       const focusSel = had && mount.contains(had) && had.matches?.('[data-fav-name],[data-fav-link],[data-fav-path],[data-sp-id]')
         ? ['[data-fav-name]', '[data-fav-link]', '[data-fav-path]', '[data-sp-id]'].find((s) => had.matches(s)) : null;
-      rootEl.innerHTML = `<div class="mu" data-music data-view="${view}">${view === 'edit' ? editHtml() : mainHtml()}</div>`;
+      rootEl.innerHTML = `<div class="mu" data-music data-view="${view}">${view === 'edit' ? editHtml()
+        : view === 'playon' ? playOnHtml() : mainHtml()}</div>`;
       if (focusSel) { const el = mount.querySelector(focusSel); el?.focus?.({ preventScroll: true }); }
       paintLit();
     }
@@ -670,7 +816,7 @@ registerModule(
       if (next.length === before) { editMsg = `There is already a favourite called “${name}”.`; render(); return; }
       draft = { name: '', link: '', sourceId: draft.sourceId, kind: draft.kind, path: '' };
       editMsg = source.kind === 'spotify' && !cfg.spotifyOn
-        ? `Added “${name}”. Spotify is turned off for this panel, so it will not play until Spotify is on (below).`
+        ? `Added “${name}”. It plays here in Spotify’s own player; your own Spotify app (below) adds other speakers.`
         : `Added “${name}”.`;
       saveList(next);
     }
@@ -690,6 +836,14 @@ registerModule(
         if (dead) return;
         spotifyDevices = r.ok ? r.devices : null;
         spotifyNote = r.ok ? '' : (SPOTIFY_MESSAGES[r.reason] || SPOTIFY_MESSAGES.failed);
+        // play on: the names go in the Play on choices (this device) and, for "play on <name>" by voice, beside the
+        // person's favourites (music_favourites.js `setSpeakers`; names only).
+        if (r.ok) {
+          speakersFound = r.devices.filter((d) => !d.restricted).map((d) => d.name).filter(Boolean);
+          const all = rememberSpotifySpeakers([...speakersFound, ...knownSpotifySpeakers()]);
+          try { personList?.setSpeakers?.(all); } catch { /* voice keeps the old names */ }
+          if (!speakersFound.length) spotifyNote = 'No Spotify speakers are switched on.';
+        }
         render();
       }
     }
@@ -703,6 +857,8 @@ registerModule(
       if (a === 'decline') { router.stop(); return; }
       if (a === 'edit') { view = 'edit'; lit = -1; editMsg = ''; render(); loadSources(); return; }
       if (a === 'close') { view = 'main'; lit = -1; render(); return; }
+      if (a === 'play-on') { view = 'playon'; lit = -1; spotifyNote = ''; render(); return; }               // play on
+      if (a === 'play-on-pick') { view = 'main'; lit = -1; choosePlayOn(b.dataset.value); return; }      // play on
       if (a === 'add') { addFromDraft(); return; }
       if (a === 'remove') { saveList(favs.filter((f) => f.id !== b.dataset.id)); return; }
       if (a === 'spotify-on') {
@@ -757,6 +913,7 @@ registerModule(
       else if (t.matches?.('[data-sp-id]')) spDraft = t.value;
     }
     function onKey(e) {
+      if (view === 'playon' && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); view = 'main'; render(); return; }
       if (view !== 'edit') return;
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); view = 'main'; render(); return; }
       if (e.key === 'Enter' && e.target.matches?.('[data-sp-id]')) { e.preventDefault(); saveAndConnect(); return; }
@@ -771,6 +928,7 @@ registerModule(
       local.setVolume(volume());
       local.setOrder(FOLDER_ORDERS.includes(cfg.folderOrder) ? cfg.folderOrder : 'shuffle');
       ytPush();
+      applySinkNow();   // play on
       if (!personList) favs = normalizeFavourites(snap.favourites);
       // (row 2.61) Only a panel with Spotify on asks the server for the Client ID.
       if (cfg.spotifyOn) { loadClientId(); adoptOldId(); }
@@ -795,6 +953,7 @@ registerModule(
         let renew = null;
         try { renew = cfg.spotifyOn ? spotify?.reminder?.() : null; } catch { renew = null; }
         return {
+          playOn: playOnChoicesNow(),   // play on: the same choices as the panel's "Play on" button
           ...(renew?.line ? { spotifyOn: { note: `${renew.line} Press “Change the list”, then “Connect again”.` } } : {}),
           spotifyClientId: { emptyLabel: inUse, note: [spNote, screenOnly ? 'Nobody has signed in on this browser, so '
             + 'a Client ID typed here is saved for this device.' : '', base].filter(Boolean).join(' ') },
@@ -815,14 +974,30 @@ registerModule(
         let cssHref = '';
         try { cssHref = new URL('../music.css', import.meta.url).href; } catch { /* unstyled, still works */ }
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-music-css href="${esc(cssHref)}">` : ''}`
-          + '<div class="mu-wrap"><div class="mu-stage" data-stage hidden></div><div class="mu-root" data-music-root></div></div>';
+          + '<div class="mu-wrap"><div class="mu-stage" data-stage hidden></div>'
+          + '<div class="mu-spstage" data-sp-stage hidden></div><div class="mu-root" data-music-root></div></div>';
         // One delegated listener per event, on the mount: every button carries `data-act`.
         mount.addEventListener('click', onClick);
         mount.addEventListener('input', onInput);
         mount.addEventListener('change', onInput);
         mount.addEventListener('keydown', onKey);
         stageEl = mount.querySelector('[data-stage]');
+        spStageEl = mount.querySelector('[data-sp-stage]');
         rootEl = mount.querySelector('[data-music-root]');
+        // play on: this computer's speakers, read once (and again when one is plugged in), so a chosen one is found by name.
+        offOutputs = watchOutputs(() => { if (!dead) { applySinkNow(); if (view === 'playon') render(); } });
+        if (!ctx.speakersOffline) refreshOutputs().catch(() => {});
+        // "play on <name>" / "play on this screen" by voice (music_favourites.js musicSpeechRoutes `speakers`). The
+        // leader answers, as for every music verb, so two panels never both move.
+        bus.subscribe('music/play-on', (p) => {
+          if (dead || !router.isLeader()) return;
+          const want = String((p && (p.name || p.where)) || '').toLowerCase().trim();
+          if (!want || want === 'here') { choosePlayOn(PLAY_ON_HERE); return; }
+          const list = playOnChoicesNow().filter((c) => c.value.startsWith(SPOTIFY_PREFIX) || c.value.startsWith('out:'));
+          const hit = list.find((c) => parsePlayOn(c.value).name.toLowerCase() === want)
+            || list.find((c) => parsePlayOn(c.value).name.toLowerCase().includes(want));
+          if (hit) choosePlayOn(hit.value); else say(`There is no speaker called “${p?.name || want}” here.`);
+        });
         applyCfg(state?.get?.());
         state?.subscribe?.((s) => { applyCfg(s); render(); });
         bus.subscribe('music/next', () => moveLit(1));
@@ -845,6 +1020,9 @@ registerModule(
         mount.removeEventListener('keydown', onKey);
         try { router.destroy(); } catch { /* gone */ }
         try { spotifyPlayer?.destroy(); } catch { /* gone */ }
+        try { embed?.destroy(); } catch { /* gone */ }          // play on
+        embed = null;
+        try { offOutputs?.(); } catch { /* gone */ }
         try { picker.destroy(); } catch { /* gone */ }
         try { playLog.destroy(); } catch { /* gone */ }
         try { folderLog.destroy(); } catch { /* gone */ }

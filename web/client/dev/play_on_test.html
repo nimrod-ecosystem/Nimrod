@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>play on — Spotify on this screen, the Play on chooser, and Devices → Speakers</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#stage{width:360px;height:420px;margin-top:12px;position:relative}
+</style>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../music.css">
+</head>
+<body>
+<h1>play on — rows 2.61 and 2.68, notes BI, BJ and BK</h1>
+<p>Spotify's own player in the Music panel (<code>spotify_embed.js</code>), our shuffle choosing and counting its songs,
+the audio bus pausing it; one "Play on" choice per panel, the screen's Devices → Speakers row, and "play on &lt;name&gt;"
+by voice; and "Spotify is already playing somewhere else" asked, not taken over. <b>No network:</b> Spotify's iFrame API,
+its Web API and the speakers are fakes. The real frame is <code>spotify_embed_frame_test.html</code> (run by hand).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stage"></div><div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { fieldsFor, showsAtLevel } from '../settings_fields.js';
+import { createAudioBus, MUSIC_GROUP } from '../audio_bus.js';
+import { spokenTable, duplicatePhrases, PHRASES, ROUTES } from '../input_speech.js';
+import {
+  loadIframeApi, createEmbedPlayer, atEnd, isPreview, EMBED_WORDS, IFRAME_API_URL, NEXT_WAIT_MS, PREVIEW_MAX_MS,
+} from '../spotify_embed.js';
+import {
+  parsePlayOn, playOnWords, playOnChoices, sinkIdFor, speakerFields, setOutputsForTest, rememberSpotifySpeakers,
+  knownSpotifySpeakers, SPEAKER_KINDS, speakerKey, PLAY_ON_HERE,
+} from '../speakers.js';
+import { musicSpeechRoutes, watchFavourites, MUSIC_PLAY_ON_TOPIC, PLAY_ON_HERE_ROUTE_ID } from '../music_favourites.js';
+import { createMusicRouter, messageFor } from '../music_player.js';
+import { createSpotify, createSpotifyPlayer, SPOTIFY_MESSAGES, SPOTIFY_SCOPE_SETS } from '../music_spotify.js';
+import { createLocalMusic } from '../music_local.js';
+import { createMusicPicker } from '../music_pick.js';
+import { SETTINGS as MUSIC_SETTINGS } from '../modules/music.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const settle = async (n = 6) => { for (let i = 0; i < n; i++) await tick(); };
+const J = (v) => JSON.stringify(v);
+
+const PL = 'spotify:playlist:37i9dQZF1DX4xuWVBs4FgJ';
+const T1 = 'spotify:track:1111111111111111111111';
+const T2 = 'spotify:track:2222222222222222222222';
+const T3 = 'spotify:track:3333333333333333333333';
+const POOL = [T1, T2, T3].map((id, i) => ({ id, channel: `a${i}`, durationSec: 200 }));
+
+// ---- fakes ---------------------------------------------------------------------------------------------------
+function fakeState(initial = {}) {
+  let cfg = { ...initial };
+  const subs = new Set();
+  return {
+    load: async () => {}, get: () => cfg,
+    set: (p) => { cfg = { ...cfg, ...p }; for (const f of [...subs]) f(cfg); },
+    subscribe: (fn) => { subs.add(fn); fn(cfg); return () => subs.delete(fn); },
+    flush: async () => {}, destroy: () => { subs.clear(); }, startPolling() {},
+  };
+}
+function heldTimers() {
+  const live = new Map(); let n = 0;
+  return {
+    live,
+    setTimer: (fn, ms) => { const id = ++n; live.set(id, { fn, ms }); return id; },
+    clearTimer: (id) => { live.delete(id); },
+    async fire(pred = () => true) { for (const [id, t] of [...live]) if (pred(t)) { live.delete(id); await t.fn(); } },
+  };
+}
+// Spotify's iFrame API: createController(slot, opts, cb) -> a controller that records what it was told.
+function fakeIframeApi() {
+  const rec = { made: 0, ctl: null, opts: null, slot: null };
+  rec.api = {
+    createController(slot, opts, cb) {
+      rec.made += 1; rec.opts = opts; rec.slot = slot;
+      const ls = {};
+      const ctl = {
+        log: [],
+        addListener: (k, fn) => { (ls[k] = ls[k] || []).push(fn); },
+        emit: (k, data) => { for (const fn of ls[k] || []) fn({ data }); },
+        loadUri(u) { this.log.push(['loadUri', u]); },
+        play() { this.log.push(['play']); }, pause() { this.log.push(['pause']); }, resume() { this.log.push(['resume']); },
+        destroy() { this.log.push(['destroy']); },
+      };
+      rec.ctl = ctl;
+      cb(ctl);
+      Promise.resolve().then(() => ctl.emit('ready', {}));
+    },
+  };
+  rec.load = async () => ({ ok: true, api: rec.api });
+  return rec;
+}
+const upd = (uri, { pos = 1000, dur = 200000, paused = false } = {}) => ({ playingURI: uri, position: pos, duration: dur, isPaused: paused, isBuffering: false });
+
+try {
+  // ============================================================================================================
+  section('1. loading Spotify\'s iFrame API (once, never throwing, never waiting forever)');
+  {
+    const appended = [];
+    const doc = { createElement: () => ({}), head: { appendChild: (s) => appended.push(s) } };
+    const win = {};
+    const T = heldTimers();
+    const p = loadIframeApi({ win, doc, setTimer: T.setTimer, clearTimer: T.clearTimer });
+    check('it adds Spotify\'s script, from Spotify\'s address', appended.length === 1 && appended[0].src === IFRAME_API_URL);
+    check('a second ask while loading is the same promise (one script)', loadIframeApi({ win, doc }) === p && appended.length === 1);
+    const api = { createController() {} };
+    win.onSpotifyIframeApiReady(api);
+    const r = await p;
+    check('*** Spotify calling onSpotifyIframeApiReady resolves it, with the API ***', r.ok && r.api === api);
+    win.__nimrodSpotifyIframe = null;
+    const again = await loadIframeApi({ win, doc });
+    check('*** later asks get the SAME API with no new script (measured: Spotify calls ready once per page) ***', again.ok && again.api === api && appended.length === 1);
+    const win2 = {};
+    const T2b = heldTimers();
+    const p2 = loadIframeApi({ win: win2, doc, setTimer: T2b.setTimer, clearTimer: T2b.clearTimer });
+    await T2b.fire();
+    check('*** a script that never answers is "did not load" after its wait, not a hang ***', (await p2).reason === 'api-load-failed' && win2.__nimrodSpotifyIframe === null);
+  }
+
+  // ============================================================================================================
+  section('2. the embed player: our shuffle chooses, every song is counted, the end is seen (measured shapes)');
+  {
+    check('the end is "position reached duration" (measured: isPaused stays false)', atEnd(upd(T1, { pos: 200000 })) && !atEnd(upd(T1, { pos: 100000 })) && atEnd(upd(T1, { pos: 199500 })));
+    check('a preview is 30 s (measured 29713 ms); a song is not', isPreview(29713) && !isPreview(200000) && !isPreview(0) && PREVIEW_MAX_MS === 31000);
+    const fi = fakeIframeApi();
+    const stage = document.getElementById('stage');
+    stage.hidden = true;
+    const picker = createMusicPicker();
+    const audio = createAudioBus();
+    const states = [];
+    let ended = 0;
+    const T = heldTimers();
+    const tracksAsked = [];
+    const emb = createEmbedPlayer({ host: () => stage, loadApi: fi.load, audio, audioId: 'music:t:spotify', picker,
+      tracksFor: async (u) => { tracksAsked.push(u); return { ok: true, tracks: POOL }; },
+      onChange: (s) => states.push(s), onEnded: () => { ended += 1; }, setTimer: T.setTimer, clearTimer: T.clearTimer });
+    const r = await emb.play({ uri: 'https://open.spotify.com/playlist/37i9dQZF1DX4xuWVBs4FgJ?si=x' });
+    await settle();
+    const first = fi.ctl?.log.find((l) => l[0] === 'loadUri')?.[1];
+    check('*** a playlist with the app\'s song list: OUR picker chooses one song and the frame loads it ***',
+      r.ok && r.order === 'ours' && tracksAsked[0] === PL && [T1, T2, T3].includes(first) && fi.ctl.log.some((l) => l[0] === 'play'), J({ r, log: fi.ctl?.log }));
+    check('the frame is made once, with that song, at Spotify\'s compact size, and the stage is shown',
+      fi.made === 1 && fi.opts.uri === first && fi.opts.height === 152 && stage.hidden === false && stage.contains(fi.slot));
+    fi.ctl.emit('playback_update', upd(first));
+    check('*** the song starting is COUNTED by our shuffle (Mike: "count our shuffle") ***', picker.state().recent.at(-1) === first, J(picker.state().recent));
+    check('*** and it is on the audio bus: music group, playing ***', audio.state()['music:t:spotify']?.active === true && audio.state()['music:t:spotify'].group === MUSIC_GROUP, J(audio.state()));
+    fi.ctl.emit('playback_update', upd(first, { pos: 2000 }));
+    check('a second report of the same song is not a second play', picker.state().recent.filter((x) => x === first).length === 1);
+    fi.ctl.emit('playback_update', upd(first, { pos: 200000 }));
+    const second = fi.ctl.log.filter((l) => l[0] === 'loadUri').at(-1)[1];
+    check('*** at the end OUR picker chooses the next, and it is not the one that just played ***', second !== first && [T1, T2, T3].includes(second), J(fi.ctl.log));
+    fi.ctl.emit('playback_update', upd(first, { pos: 200000 }));
+    check('repeated end reports choose only once (measured: the frame repeats it)', fi.ctl.log.filter((l) => l[0] === 'loadUri').length === 2);
+    fi.ctl.emit('playback_update', upd(second));
+    check('...and that one is counted when it starts', picker.state().recent.at(-1) === second);
+
+    section('2b. the audio bus pauses it under a spoken cue, and only the bus starts it again');
+    audio.register('cue', { tier: 'talk' });
+    audio.setActive('cue', true);
+    check('*** a cue: the frame is PAUSED (no volume to turn down; Spotify\'s rules: no overlapping) ***', fi.ctl.log.at(-1)[0] === 'pause' && emb.state().busPaused === true, J(fi.ctl.log.slice(-2)));
+    fi.ctl.emit('playback_update', upd(second, { pos: 3000, paused: true }));
+    check('the paused report does not take it off the bus (the bus carries it on)', audio.state()['music:t:spotify']?.active === true);
+    audio.setActive('cue', false);
+    check('*** the cue ends: the bus resumes it ***', fi.ctl.log.at(-1)[0] === 'resume' && emb.state().busPaused === false, J(fi.ctl.log.slice(-2)));
+    audio.unregister('cue');
+
+    section('2c. without the app: Spotify\'s own order, still counted, and the end of the list ends the run');
+    const fi2 = fakeIframeApi();
+    const p2 = createMusicPicker();
+    const T2b = heldTimers();
+    let ended2 = 0;
+    const emb2 = createEmbedPlayer({ host: () => stage, loadApi: fi2.load, picker: p2, tracksFor: async () => null,
+      onEnded: () => { ended2 += 1; }, setTimer: T2b.setTimer, clearTimer: T2b.clearTimer });
+    const r2 = await emb2.play({ uri: PL });
+    await settle();
+    check('*** no song list: the playlist itself goes to the frame, in Spotify\'s order, and it says so ***',
+      r2.ok && r2.order === 'spotify' && fi2.ctl.log.find((l) => l[0] === 'loadUri')[1] === PL && r2.note === EMBED_WORDS['own-order'], J(r2));
+    fi2.ctl.emit('playback_update', upd(T2));
+    check('*** each song Spotify plays is still counted by our shuffle ***', p2.state().recent.at(-1) === T2);
+    fi2.ctl.emit('playback_update', upd(T2, { pos: 200000 }));
+    check('an end in Spotify\'s order waits for Spotify to move on by itself', T2b.live.size === 1 && [...T2b.live.values()][0].ms === NEXT_WAIT_MS && ended2 === 0);
+    fi2.ctl.emit('playback_update', upd(T3));
+    await T2b.fire();
+    check('...and when it does, nothing ends', ended2 === 0 && p2.state().recent.at(-1) === T3);
+    fi2.ctl.emit('playback_update', upd(T3, { pos: 200000 }));
+    await T2b.fire();
+    check('*** when it does not (the last song), the run is over ***', ended2 === 1 && emb2.state().playing === false);
+    fi2.ctl.emit('playback_update', upd(T1, { dur: 29713 }));
+    check('a 30-second song is a preview, and the state says so (for "sign in for whole songs")', emb2.state().preview === true);
+
+    section('2d. "playing somewhere else" (note BK item 4) and stopping');
+    const fi3 = fakeIframeApi();
+    let other = 'Mike’s phone';
+    const emb3 = createEmbedPlayer({ host: () => stage, loadApi: fi3.load, elsewhere: async () => other });
+    const r3 = await emb3.play({ uri: T1 });
+    check('*** another device playing: it ASKS (nothing loads, nothing stops there) ***', !r3.ok && r3.reason === 'playing-elsewhere' && r3.device === 'Mike’s phone' && fi3.made === 0, J(r3));
+    const r4 = await emb3.play({ uri: T1, force: true });
+    await settle();
+    check('...and a yes plays it here', r4.ok && fi3.ctl.log.find((l) => l[0] === 'loadUri')[1] === T1);
+    other = null;
+    await emb3.stop();
+    check('stop pauses it and puts the frame away', fi3.ctl.log.at(-1)[0] === 'pause' && stage.hidden === true);
+    emb.destroy(); emb2.destroy(); emb3.destroy();
+    check('*** destroy: the frame is destroyed and nothing is left on the bus ***', fi.ctl.log.at(-1)[0] === 'destroy' && !audio.state()['music:t:spotify']);
+    check('no timer left', T.live.size === 0 && T2b.live.size === 0);
+  }
+
+  // ============================================================================================================
+  section('3. the app route asks too, with no new permission');
+  {
+    const store = new Map();
+    const storage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) };
+    storage.setItem('nimrod.spotify.tokens.abc', JSON.stringify({ access: 'tok', refresh: 'r', expiresAt: Date.now() + 3600000, scopes: [...SPOTIFY_SCOPE_SETS.play] }));
+    let body = { is_playing: true, device: { id: 'd1', name: 'Mike’s phone' }, item: { uri: T1, name: 'x' } };
+    let status = 200;
+    const fetchFn = async (url) => ({ ok: status < 300, status, json: async () => body, url });
+    const sp = createSpotify({ clientId: 'abc', storage, fetchFn });
+    check('*** something playing on another device: its name ***', await sp.elsewhere('') === 'Mike’s phone');
+    check('the device asked for is not "elsewhere"', await sp.elsewhere('mike’s phone') === null);
+    body = { is_playing: false, device: { id: 'd1', name: 'Mike’s phone' } };
+    check('paused there is not playing', await sp.elsewhere('') === null);
+    status = 204;
+    check('nothing anywhere (204) is null', await sp.elsewhere('') === null);
+    status = 500;
+    check('*** a look that fails never stops music starting (null) ***', await sp.elsewhere('') === null);
+    check('it uses the permission every sign-in already has (user-read-playback-state)', SPOTIFY_SCOPE_SETS.play.includes('user-read-playback-state'));
+    check('the question names the device and says what happens', /Mike’s phone/.test(messageFor('playing-elsewhere', 'Jazz', 'Mike’s phone')) && /stops/.test(SPOTIFY_MESSAGES['playing-elsewhere']));
+    // createSpotifyPlayer: asks unless told not to.
+    const log = [];
+    const conn = { available: () => true, connected: () => true, elsewhere: async () => 'Kitchen',
+      play: async (o) => { log.push(['play', o.device]); return { ok: true, device: 'x' }; }, pause: async () => ({ ok: true }) };
+    const pl = createSpotifyPlayer({ spotify: conn, picker: null });
+    const a = await pl.play({ uri: T1, device: 'Bedroom' });
+    check('*** the app route asks before taking over ***', a.reason === 'playing-elsewhere' && a.device === 'Kitchen' && !log.length);
+    const b = await pl.play({ uri: T1, device: 'Bedroom', ask: false });
+    check('"play it anyway" (the setting) plays', b.ok && log.at(-1)[1] === 'Bedroom');
+    const c = await pl.play({ uri: T1, device: 'Bedroom', force: true });
+    check('a yes plays', c.ok);
+    pl.destroy();
+  }
+
+  // ============================================================================================================
+  section('4. the router: "This screen" is the embed; a yes to "playing elsewhere" plays anyway');
+  {
+    const bus = createBus();
+    const FAVS = [{ id: 'f1', name: 'Dinner music', source: { kind: 'spotify', uri: PL } }];
+    const hereLog = [];
+    let elsewhere = 'Mike’s phone';
+    const here = {
+      async play({ uri, force }) { hereLog.push(['play', uri, !!force]); return !force && elsewhere ? { ok: false, reason: 'playing-elsewhere', device: elsewhere } : { ok: true, order: 'spotify' }; },
+      async stop() { hereLog.push(['stop']); return { ok: true }; }, async pause() { hereLog.push(['pause']); }, async resume() { hereLog.push(['resume']); },
+    };
+    const spoke = [];
+    const r = createMusicRouter({ bus, favourites: () => FAVS, spotify: () => null, spotifyWhere: () => ({ kind: 'here' }), spotifyHere: () => here, say: (t) => spoke.push(t) });
+    const a = await r.play({ name: 'Dinner music' });
+    check('*** asked, said out loud, and nothing playing ***', a.reason === 'playing-elsewhere' && r.status().askingWhy === 'elsewhere'
+      && /already playing on Mike’s phone/.test(r.status().message) && /Mike’s phone/.test(spoke.at(-1)) && !r.status().playing, J(r.status()));
+    const b = await r.confirm();
+    check('*** "yes" (music/confirm) plays it here, forced ***', b.ok && b.kind === 'spotify-here' && hereLog.at(-1)[2] === true && r.status().playing);
+    await r.pause(); await r.resume();
+    check('pause and resume reach it', hereLog.some((l) => l[0] === 'pause') && hereLog.some((l) => l[0] === 'resume'));
+    await r.stop();
+    check('stop reaches it', hereLog.at(-1)[0] === 'stop');
+    const off = createMusicRouter({ bus: createBus(), favourites: () => FAVS });
+    check('an older caller with no Play on keeps the old answer (the switch is off)', (await off.play({ name: 'Dinner music' })).reason === 'spotify-off');
+    r.destroy(); off.destroy();
+  }
+
+  // ============================================================================================================
+  section('5. speakers.js: the Play on words, choices and attached speakers');
+  {
+    check('blank is "default"; here; out:<name>; spotify:<name>',
+      parsePlayOn('').kind === 'default' && parsePlayOn('here').kind === 'here' && parsePlayOn('out:USB').name === 'USB' && parsePlayOn('spotify:Kitchen').name === 'Kitchen' && parsePlayOn('spotify:').name === '');
+    check('the words', playOnWords('here') === 'This screen' && playOnWords('spotify:') === 'Spotify: whichever is on' && playOnWords('out:USB') === 'This screen, through USB');
+    setOutputsForTest([{ deviceId: 'a1', label: 'USB Composite Device' }, { deviceId: 'b2', label: 'HDMI' }]);
+    const ch = playOnChoices({ inherit: 'As the screen says', spotify: ['Kitchen'], canRoute: true });
+    check('*** choices: the screen\'s, this screen, each attached speaker, Spotify whichever and each found ***',
+      J(ch.map((c) => c.value)) === J(['', 'here', 'out:USB Composite Device', 'out:HDMI', 'spotify:', 'spotify:Kitchen']), J(ch));
+    check('no attached speakers listed when the browser cannot send sound to one', !playOnChoices({ canRoute: false }).some((c) => c.value.startsWith('out:')));
+    check('no Spotify choices with the Spotify switch off', !playOnChoices({ spotifyOn: false, spotify: ['Kitchen'] }).some((c) => c.value.startsWith('spotify:')));
+    check('a speaker is found by name, forgiving case; none is the default ("")', sinkIdFor('hdmi') === 'b2' && sinkIdFor('usb') === 'a1' && sinkIdFor('nope') === '' && sinkIdFor('') === '');
+    const f = speakerFields();
+    check('*** Devices -> Speakers: one row per kind that can be routed (music), default "" = the computer\'s own speaker ***',
+      f.length === SPEAKER_KINDS.length && f[0].key === 'speakerMusic' && f[0].default === '' && f[0].options[0].value === '' && /whatever the computer uses/.test(f[0].options[0].label)
+      && !f[0].options.some((o) => o.value === PLAY_ON_HERE) && speakerKey('music') === 'speakerMusic', J(f));
+    rememberSpotifySpeakers(['Kitchen', 'Kitchen', ' ', 'Bedroom']);
+    check('Spotify speaker names are kept on this device, cleaned', J(knownSpotifySpeakers()) === J(['Kitchen', 'Bedroom']));
+    // music files go to the chosen speaker.
+    const sinks = [];
+    const makeAudio = (src) => ({ src, setSinkId: async (id) => { sinks.push(id); }, addEventListener() {}, play: async () => {}, pause() {}, removeAttribute() {}, load() {} });
+    const local = createLocalMusic({ makeAudio, resolveItem: async () => ({ url: 'blob:x' }), sources: { list: async () => [{ id: 's' }] } });
+    local.setSink('b2');
+    await local.playFile({ sourceId: 's', path: 'a.mp3' });
+    check('*** a music file plays on the chosen speaker (setSinkId before it sounds) ***', sinks.includes('b2'), J(sinks));
+    local.setSink('');
+    check('...and back to the default', sinks.at(-1) === '');
+    local.destroy();
+  }
+
+  // ============================================================================================================
+  section('6. "play on <name>" by voice');
+  {
+    const none = musicSpeechRoutes([]);
+    check('without speakers (an older host) no play-on routes are made', !Object.values(none.routes).some((r) => r.topic === MUSIC_PLAY_ON_TOPIC));
+    const made = musicSpeechRoutes([{ id: 'f1', name: 'Dinner music', source: { kind: 'spotify', uri: PL } }], { speakers: ['Kitchen speaker', 'TV 2', 'Kitchen speaker'] });
+    const here = made.routes[PLAY_ON_HERE_ROUTE_ID];
+    check('*** "play on this screen" ***', here?.topic === MUSIC_PLAY_ON_TOPIC && here.payload.where === 'here' && here.phrases.includes('play on this screen'));
+    const k = Object.values(made.routes).find((r) => r.payload?.name === 'Kitchen speaker');
+    check('*** "play on kitchen speaker", once ***', k?.phrases[0] === 'play on kitchen speaker' && Object.values(made.routes).filter((r) => r.payload?.name === 'Kitchen speaker').length === 1);
+    check('a name with numbers is skipped and said (the recogniser writes words)', made.skipped.some((s) => s.name === 'TV 2' && s.why === 'digits'));
+    const table = spokenTable(PHRASES, { ...ROUTES, ...made.routes });
+    check('*** nothing collides with a command or a favourite ***', duplicatePhrases(table).length === 0, J(duplicatePhrases(table)));
+    // watchFavourites carries the names to the host.
+    const st = fakeState({ favourites: [], speakers: ['Kitchen'] });
+    const seen = [];
+    const w = watchFavourites({ makePersonState: () => st, personId: 'p', onChange: (l, extra) => seen.push(extra) });
+    await w.ready;
+    w.setSpeakers(['Kitchen', 'Bedroom']);
+    check('*** the favourites watcher hands the host the speaker names, and keeps new ones beside the favourites ***',
+      J(seen[0]) === J({ speakers: ['Kitchen'] }) && J(st.get().speakers) === J(['Kitchen', 'Bedroom']) && J(seen.at(-1)) === J({ speakers: ['Kitchen', 'Bedroom'] }), J({ seen, st: st.get() }));
+    w.destroy();
+  }
+
+  // ============================================================================================================
+  section('7. the Music panel: the defaults, the Play on button, the chooser, and voice');
+  {
+    const fields = fieldsFor(getManifest('music'));
+    const f = (k) => fields.find((x) => x.key === k);
+    check('*** the song card is ON by default (Mike, 2026-10-08: "Song info by default") ***', f('songInfo').default === true);
+    check('*** "Play on" is a standard row, not behind the Spotify switch, blank = follow Devices -> Speakers ***',
+      f('playOn').level === 'standard' && !f('playOn').appliesWhen && f('playOn').default === '' && showsAtLevel(f('playOn'), 'standard'));
+    check('"When Spotify is already playing somewhere else" asks by default, with the Spotify rows',
+      f('whenElsewhere').default === 'ask' && f('whenElsewhere').appliesWhen({ spotifyOn: true }) && !f('whenElsewhere').appliesWhen({ spotifyOn: false }));
+    const words = MUSIC_SETTINGS.map((s) => [s.label, s.note, s.onLabel, s.offLabel, ...(s.options || []).map((o) => o.label)].filter(Boolean).join(' ')).join(' ')
+      + Object.values(EMBED_WORDS).join(' ') + speakerFields().map((x) => `${x.label} ${x.note}`).join(' ');
+    check('no new words name anybody or say "her screen"', !/her screen|christine|cici/i.test(words));
+
+    rememberSpotifySpeakers(['Kitchen']);
+    const bus = createBus();
+    const audio = createAudioBus();
+    const st = fakeState({ spotifyOn: true, favourites: [{ id: 'f1', name: 'Dinner music', source: { kind: 'spotify', uri: PL } }] });
+    const conLog = [];
+    const conn = {
+      available: () => true, connected: () => true, clientId: () => 'x', missingFor: () => [], reminder: () => null,
+      elsewhere: async () => null,
+      tracks: async () => ({ ok: false, reason: 'not-listable' }),
+      play: async (o) => { conLog.push(['play', o.uri, o.device]); return { ok: true, device: o.device || 'Kitchen' }; },
+      playTracks: async (o) => { conLog.push(['playTracks', o.device]); return { ok: true }; },
+      nowPlaying: async () => ({ ok: true, uri: null, isPlaying: false }), pause: async () => { conLog.push(['pause']); return { ok: true }; },
+      devices: async () => ({ ok: true, devices: [{ id: '1', name: 'Kitchen', active: true }, { id: '2', name: 'Bedroom' }] }),
+    };
+    const embLog = [];
+    const embFactory = () => ({
+      async play({ uri }) { embLog.push(['play', uri]); return { ok: true, order: 'spotify', note: '' }; },
+      async stop() { embLog.push(['stop']); return { ok: true }; }, async pause() {}, async resume() {},
+      state: () => ({}), available: () => true, destroy() {},
+    });
+    const host = document.getElementById('host');
+    let screenRow = '';
+    const m = mountModule('music', { mount: host, bus, rootBus: bus, instanceId: 'po1', state: st, audio,
+      events: { append: async () => {}, subscribe() {} }, user: 'u', personId: null, makePersonState: null,
+      sources: { list: async () => [] }, spotifyFactory: () => conn, spotifyEmbedFactory: embFactory, speakersOffline: true,
+      searchKeys: { spotifyClientId: async () => ({ clientId: '0123456789abcdef0123456789abcdef', level: 'account' }), save: async () => ({ ok: true }) },
+      speakerRoute: (k) => (k === 'music' ? screenRow : ''), output: { say() {} } });
+    m.init();
+    await settle();
+    const q = (s) => host.querySelector(s);
+    check('*** the panel shows "Play on: This screen" out of the box ***', /Play on: This screen/.test(q('[data-act="play-on"]')?.textContent || ''), host.textContent.slice(0, 200));
+    [...host.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Dinner music').click();
+    await settle();
+    check('*** with Spotify ON and nothing chosen, a Spotify favourite plays HERE in Spotify\'s own player (like YouTube) ***',
+      embLog.at(-1)?.[1] === PL && !conLog.some((l) => l[0] === 'play') && m.impl.__probe().status.kind === 'spotify-here', J({ embLog, conLog }));
+    q('[data-act="play-on"]').click();
+    await settle();
+    const opts = [...host.querySelectorAll('[data-act="play-on-pick"]')].map((b) => b.dataset.value);
+    check('*** one press opens the chooser: the screen\'s, this screen, Spotify whichever, and the Spotify speakers found ***',
+      opts[0] === '' && opts.includes('here') && opts.includes('spotify:') && opts.includes('spotify:Kitchen'), J(opts));
+    [...host.querySelectorAll('[data-act="play-on-pick"]')].find((b) => b.dataset.value === 'spotify:Kitchen').click();
+    await settle();
+    check('*** one press chooses it, keeps it for this panel, and moves what is playing there ***',
+      st.get().playOn === 'spotify:Kitchen' && conLog.some((l) => l[0] === 'play' && l[2] === 'Kitchen') && embLog.at(-1)[0] === 'stop'
+      && /Play on: Spotify: Kitchen/.test(q('[data-act="play-on"]')?.textContent || ''), J({ st: st.get(), conLog, embLog }));
+    check('the settings row offers the same choices (live)', J(m.impl.settingsChoices().playOn.map((c) => c.value)) === J(opts));
+    bus.publish(MUSIC_PLAY_ON_TOPIC, { where: 'here' });
+    await settle();
+    check('*** by voice: "play on this screen" ***', st.get().playOn === 'here' && embLog.at(-1)[0] === 'play', J({ st: st.get().playOn, embLog }));
+    bus.publish(MUSIC_PLAY_ON_TOPIC, { name: 'kitchen' });
+    await settle();
+    check('*** by voice: "play on kitchen" finds the Spotify speaker by name ***', st.get().playOn === 'spotify:Kitchen');
+    screenRow = 'spotify:Bedroom';
+    st.set({ playOn: '' });
+    await settle();
+    check('*** blank follows Devices -> Speakers (the screen\'s row) ***', /Play on: Spotify: Bedroom/.test(q('[data-act="play-on"]')?.textContent || ''), q('[data-act="play-on"]')?.textContent);
+    screenRow = '';
+    st.set({ playOn: '', spotifyDevice: 'Old speaker' });
+    await settle();
+    check('an older panel with a typed Spotify speaker and nothing chosen keeps playing there', /Spotify: Old speaker/.test(q('[data-act="play-on"]')?.textContent || ''));
+    m.destroy();
+  }
+} catch (err) {
+  check('unexpected error', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

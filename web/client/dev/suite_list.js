@@ -30,6 +30,8 @@ export const SUITES = [
   'audio_bus', 'automation', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'music', 'pressgame', 'records', 'rules',
   // spotify sdk (2026-10-07): this page as a Spotify speaker, and the Test B page, against a fake Spotify global.
   'spotify_sdk',
+  // play on (2026-10-08): Spotify's own player in the Music panel, the Play on chooser, Devices -> Speakers, by voice.
+  'play_on',
   // FIRST-ISH ON PURPOSE would be better still, but the list is alphabetical-ish and this is
   // close enough: `imports` proves every client module PARSES, and it is the check that tells
   // you which file is broken when half this page reports `no summary`. A module that will not
@@ -207,6 +209,9 @@ export const SUITES = [
 export const EXCLUDED = {
   ai: 'live section runs the local model: 240s alone here, over the 180s budget - run it with run_suite.py',
   wikipedia: 'live section runs the local model + real Wikipedia: 152s alone, over budget in a batch - run it with run_suite.py',
+  // play on (2026-10-08): note BI's frame test. It plays from REAL Spotify, so it needs the network and Spotify up, and
+  // starting with no press needs the kiosk's autoplay flag, which run_all's browser does not have.
+  spotify_embed_frame: 'reaches real Spotify over the network, and needs the kiosk autoplay flag to play - run it with run_suite.py',
 };
 
 const SUFFIX = '_test.html';

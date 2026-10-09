@@ -771,7 +771,8 @@ const FAVS = normalizeFavourites([
       check('the client ID is standard too, and with the shuffle and card rows shows only while Spotify is on',
         ['spotifyClientId', 'spotifyShuffle', 'songInfo'].every((k) => f(k).level === 'standard' && f(k).appliesWhen({ spotifyOn: true }) === true
           && f(k).appliesWhen({ spotifyOn: false }) === false) && f('spotifyDevice').level === 'advanced');
-      check('defaults: shuffled by the site\'s picker ON, the song-info card OFF', f('spotifyShuffle').default === true && f('songInfo').default === false);
+      // (play on, 2026-10-08) Mike: "Song info by default & count our shuffle." - the card is ON now.
+      check('*** defaults: shuffled by the site\'s picker ON, the song-info card ON (Mike, 2026-10-08) ***', f('spotifyShuffle').default === true && f('songInfo').default === true);
       const words = MUSIC_SETTINGS.map((s) => [s.label, s.note, s.onLabel, s.offLabel].filter(Boolean).join(' ')).join(' ')
         + Object.values(SPOTIFY_MESSAGES).join(' ') + messageFor('spotify-off');
       check('no new words name anybody', !/her screen|christine|cici/i.test(words));
@@ -781,7 +782,17 @@ const FAVS = normalizeFavourites([
       const st = fakeState({});
       const h = document.getElementById('host2');
       const asked = [];
+      // (play on) Spotify's own player, faked: never the real one from a suite.
+      const emb = { log: [] };
+      const embFactory = () => ({
+        async play({ uri }) { emb.log.push(['play', uri]); return { ok: true, order: 'spotify', note: '' }; },
+        async stop() { emb.log.push(['stop']); return { ok: true }; },
+        async pause() { emb.log.push(['pause']); return { ok: true }; },
+        async resume() { emb.log.push(['resume']); return { ok: true }; },
+        state: () => ({}), available: () => true, destroy() { emb.log.push(['destroy']); },
+      });
       const m = mountModule('music', ctxFor(h, 'mu5', { personId: null, makePersonState: null, state: st,
+        spotifyEmbedFactory: embFactory, speakersOffline: true,
         setTimer: T3.setTimer, clearTimer: T3.clearTimer, spotifyFactory: () => c,
         // (row 2.61) No server here: nothing saved, nothing can be saved.
         searchKeys: { spotifyClientId: async () => null, save: async () => ({ ok: false }), adoptSpotify: async () => ({ ok: false }) },
@@ -798,20 +809,29 @@ const FAVS = normalizeFavourites([
       await tick();
       const fav = m.impl.__probe().favs[0];
       check('*** Mike\'s embed address goes in through the form, as the playlist ***', fav?.source?.uri === PL, J(fav));
-      check('*** with Spotify off the form says so, instead of taking it silently ***', /Spotify is turned off/.test(h.textContent), h.textContent.slice(0, 400));
+      // (play on, 2026-10-08) With the switch off a Spotify favourite PLAYS - here, in Spotify's own player, the way a
+      // YouTube favourite does - so the form says that, and what the switch adds, instead of "it will not play".
+      check('*** with Spotify off the form says it plays HERE in Spotify\'s own player, and what turning it on adds ***',
+        /plays?\s+here\s+in\s+Spotify’s\s+own\s+player/.test(h.textContent) && /other\s+Spotify\s+speakers/.test(h.textContent), h.textContent.slice(0, 600));
       check('...and offers to turn it on', !!hq('[data-spotify-off] [data-act="spotify-on"]'));
       hq('[data-act="close"]').click();
       await tick();
       [...h.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Dinner music').click();
+      await tick(); await tick();
+      check('*** pressing it with Spotify off plays it in Spotify\'s own player in this panel (play on: "This screen") ***',
+        m.impl.__probe().status.kind === 'spotify-here' && emb.log.some((l) => l[0] === 'play' && l[1] === PL) && !hq('[data-msg]'), J({ st: m.impl.__probe().status, log: emb.log }));
+      hq('[data-act="stop"]').click();
       await tick();
-      check('pressing it with Spotify off says where the switch is, with the button beside it',
-        /“Spotify” row/.test(hq('[data-msg]')?.textContent || '') && !!hq('[data-act="spotify-on"]'), h.textContent.slice(0, 300));
+      check('...and Stop stops it there', emb.log.at(-1)?.[0] === 'stop', J(emb.log));
+      hq('[data-act="edit"]').click();
+      await tick();
       hq('[data-act="spotify-on"]').click();
       await tick();
       check('*** "Turn Spotify on" turns it on (the same value as the settings row) and shows what is still needed ***',
         st.get().spotifyOn === true && m.impl.__probe().cfg.spotifyOn === true && m.impl.__probe().view === 'edit' && !!hq('[data-spotify]:not([data-spotify-off])'), J(st.get()));
-      // The song-info card, on; playing through the fake connector with held timers.
-      st.set({ songInfo: true });
+      // The song-info card, on; playing through the fake connector with held timers - on a Spotify speaker ("Play on:
+      // Spotify, whichever is on"), the app route; "This screen" would be the embed.
+      st.set({ songInfo: true, playOn: 'spotify:' });
       hq('[data-act="close"]').click();
       await tick();
       [...h.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Dinner music').click();

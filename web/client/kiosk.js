@@ -118,6 +118,7 @@ import { attachCursorDrive } from './cursor_drive.js';
 import {
   watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
 } from './music_favourites.js';
+import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS } from './speakers.js';   // play on (row 2.68)
 import { createMissStore, MISS_FIELDS } from './speech_misses.js';
 import {
   createSubtitles, subtitlesOptionsFrom, SUBTITLES_FIELDS, SUBTITLE_ACTIONS, SUBTITLES_EARLIER_TOPIC,
@@ -1086,9 +1087,10 @@ export async function mountKiosk(root, {
   // The person's music favourites, kept current: each change rebuilds the "play <name>" routes, swaps
   // their actions and runtime bindings, and re-attaches speech (only if the spoken names changed - the
   // signature above). No person, no favourites: `watchFavourites` returns null and nothing is added.
-  function applyMusic(list) {
+  function applyMusic(list, extra = null) {
     let made = {};
-    try { made = musicSpeechRoutes(list || []).routes || {}; } catch (err) { console.error('kiosk: music routes', err); made = {}; }
+    // play on: "play on this screen" and "play on <Spotify speaker>" ride with the favourites (music_favourites.js).
+    try { made = musicSpeechRoutes(list || [], { speakers: extra?.speakers || [] }).routes || {}; } catch (err) { console.error('kiosk: music routes', err); made = {}; }
     musicRoutes = made;
     try { offMusicActions?.(); } catch { /* gone */ }
     offMusicActions = null;
@@ -1133,7 +1135,7 @@ export async function mountKiosk(root, {
     if (musicFavs || torn || !personId) return;
     try {
       musicFavs = watchFavourites({ makePersonState: childCtx({ id: 'music' }).makePersonState, personId,
-                                    onChange: (list) => { if (!torn) applyMusic(list); } });
+                                    onChange: (list, extra) => { if (!torn) applyMusic(list, extra); } });   // play on: extra
     } catch (err) { console.error('kiosk: music favourites', err); musicFavs = null; }
   }
   // Everything the person's row drives, in one place: the listening cue, subtitles, amplify, speech.
@@ -1558,6 +1560,9 @@ export async function mountKiosk(root, {
     // A SCREEN, OR A PAGE SHOWING ONE (2026-10-02, profile.js): true on a real screen, false when this kiosk is
     // embedded in another page (Home, the modules page). "A screen never places a call" reads this first.
     isScreen: !embedded,
+    // play on (row 2.68): the screen's Devices -> Speakers choice for a kind of sound ('' = the computer's default).
+    // Read when asked; `settings` is declared further down (nestLiveDepth's pattern).
+    speakerRoute: (kind) => { try { return String((settings.get() || {})[speakerKey(kind)] || ''); } catch { return ''; } },
     // How long after the last press a game stops counting as being played (game_start.js gameIdleMsOf; a suite's seam).
     ...(Number.isFinite(gameIdleMs) && gameIdleMs > 0 ? { gameIdleMs } : {}),
     // HOW MANY PANELS SHARE THIS PANEL'S DASHBOARD (game_start.js `panelAlone`: "when it is the only thing on
@@ -2060,6 +2065,8 @@ export async function mountKiosk(root, {
   catch (err) { console.error('kiosk: master volume', err); master = null; }
   try { mixer = attachMixer({ audio, fx: fxLazy, read: readScreen, write: writeScreen }); }
   catch (err) { console.error('kiosk: mixer', err); mixer = null; }
+  // play on (row 2.68): this computer's speakers, listed once (and on a plug-in) for Devices -> Speakers. No prompt.
+  try { refreshOutputs().catch(() => {}); } catch (err) { console.error('kiosk: speakers', err); }
   // "BEST FOR THIS DEVICE" (2026-10-07, theme_default.js) asks this screen what the browser cannot know: its motion
   // settings and flash limit (the faces' own context, avatarContextNow) and its "3D detail" row. Not from an embed:
   // the hints are the page's, and an embed is a guest on somebody else's.
@@ -3339,6 +3346,8 @@ export async function mountKiosk(root, {
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
     [BAR_QUIET_FIELD.key]: ['devices', 2], [BAR_SELF_FIELD.key]: ['devices', 2],
     [BAR_PLAY_FIELD.key]: ['devices', 2],   // bar while playing (row 2.65): under "The bar" with the other two
+    // play on (row 2.68, Mike: "Speakers should be under devices"): under "Speakers", after the rest of Devices.
+    ...Object.fromEntries(SPEAKER_KINDS.map((k) => [k.key, ['devices', 4]])),
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
   // THE SUBJECT: the panel the menu's panel rows are about. The focused one unless "Settings for" was
@@ -3803,6 +3812,9 @@ export async function mountKiosk(root, {
     { ...BAR_SELF_FIELD, options: BAR_SELF_FIELD.options.map((o) => ({ ...o })) },
     // bar while playing (row 2.65; bar_toggle.js argues the default): the screen's too, for the same reason.
     { ...BAR_PLAY_FIELD, options: BAR_PLAY_FIELD.options.map((o) => ({ ...o })) },
+    // play on (row 2.68; speakers.js argues the rows): where this screen's music goes. Its first choice is the computer's
+    // own default speaker, so nothing needs setting up; the choices are read fresh each time the menu draws.
+    ...speakerFields(),
     // Hide = mute (ad7dc49): how long the "hidden panel: keep playing / mute / pause?" card waits.
     HIDE_ASK_TIMEOUT_FIELD,
     // STEP 6 STAGE 4: which way a real screen is put together (`dashboardPathFor`). `advanced`: it is a
@@ -5149,6 +5161,7 @@ export async function mountKiosk(root, {
       { kind: 'heading', id: 'look-head', label: 'How it looks', ...MENU_TAB.display(0) },
       { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
       { kind: 'heading', id: 'bar-key-head', label: 'The bar', ...MENU_TAB.devices(2) },   // bar toggle
+      { kind: 'heading', id: 'speakers-head', label: 'Speakers', ...MENU_TAB.devices(4) },   // play on (row 2.68)
       { kind: 'heading', id: 'hide-head', label: 'Hidden panels', ...MENU_TAB.audio(2) },
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
         // (Stage 4: Colours shows -- and sets -- the theme of the dashboard that is SHOWING, `themeDoc`.

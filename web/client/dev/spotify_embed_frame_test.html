@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>play on: Spotify's embed in a frame on this site, against REAL Spotify, signed out</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#33506b}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #embed{width:420px}
+</style>
+</head>
+<body>
+<h1>play on (row 2.61, note BI): does Spotify's embed work in a frame on a Nimrod page?</h1>
+<p>THIS PAGE REACHES SPOTIFY OVER THE NETWORK, so it is not in <code>run_all.html</code> (suite_list.js EXCLUDED says why).
+Run it by hand: <code>py -3.13 tools/run_suite.py spotify_embed_frame</code>. Nothing is signed in to, nothing is saved,
+nothing is sent to Nimrod. A browser that is NOT signed in to Spotify gets previews, so a preview here is the expected
+result, and full songs are a test for a signed-in browser (Mike's).</p>
+<p>It also answers note BI item 3 by trying it: can this page choose the speaker for a player inside Spotify's or
+YouTube's own frame? Lines marked INFO are facts recorded, not pass or fail.</p>
+<div id="embed"></div>
+<div id="yt"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function line(cls, text) { const d = document.createElement('div'); d.className = cls; d.textContent = text; out.append(d); }
+function check(name, cond, detail = '') { const ok = !!cond; ok ? passed++ : failed++; line(ok ? 'pass' : 'fail', `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`); }
+const info = (t) => line('info', `INFO  ${t}`);
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function until(fn, ms, step = 200) { const end = Date.now() + ms; while (Date.now() < end) { const v = fn(); if (v) return v; await wait(step); } return fn(); }
+
+const TRACK_A = 'spotify:track:4uLU6hMCjMI75M1A2tKUQC';
+const TRACK_B = 'spotify:track:3n3Ppam7vgaVa1iaRUc9Lp';
+
+try {
+  section('1. the iFrame API loads into a Nimrod page');
+  let api = null;
+  window.onSpotifyIframeApiReady = (a) => { api = a; };
+  const s = document.createElement('script');
+  s.src = 'https://open.spotify.com/embed/iframe-api/v1';
+  s.async = true;
+  let loadErr = false;
+  s.onerror = () => { loadErr = true; };
+  document.head.appendChild(s);
+  await until(() => api || loadErr, 20000);
+  check('*** Spotify\'s iFrame API script loads and calls onSpotifyIframeApiReady ***', !!api, loadErr ? 'script error (blocked or offline)' : 'timed out');
+  if (api) {
+    section('2. a player in a frame, with no sign-in');
+    const ev = { ready: 0, started: [], updates: [] };
+    let ctl = null;
+    api.createController(document.getElementById('embed'), { uri: TRACK_A, width: '100%', height: 152 }, (c) => {
+      ctl = c;
+      c.addListener('ready', () => { ev.ready += 1; });
+      c.addListener('playback_started', (e) => { ev.started.push(e?.data || {}); });
+      c.addListener('playback_update', (e) => { ev.updates.push(e?.data || {}); });
+    });
+    await until(() => ctl && ev.ready, 20000);
+    check('the controller is made', !!ctl);
+    check('*** the frame reports "ready" ***', ev.ready > 0);
+    // The API puts its iframe IN PLACE OF the element it was given, so it is found by its address.
+    const frame = document.querySelector('iframe[src*="open.spotify.com"]');
+    check('the API drew an iframe from open.spotify.com', !!frame && /^https:\/\/open\.spotify\.com\//.test(frame.src), frame?.src);
+    info(`the iframe's allow attribute: "${frame?.getAttribute('allow') || '(none)'}"`);
+    check('*** the API asks for encrypted-media itself (Spotify: without it, previews only) ***',
+      /encrypted-media/.test(frame?.getAttribute('allow') || ''), frame?.getAttribute('allow'));
+    info(`methods on the controller: ${['loadUri', 'loadEntity', 'play', 'pause', 'resume', 'togglePlay', 'seek', 'restart', 'destroy', 'setVolume']
+      .map((m) => `${m}=${typeof ctl?.[m] === 'function' ? 'yes' : 'no'}`).join(' ')}`);
+
+    section('3. play, with no press (as the kiosk plays)');
+    try { ctl.play(); } catch (e) { info(`play() threw: ${e?.message}`); }
+    const moving = await until(() => ev.updates.some((u) => !u.isPaused && Number(u.position) > 1500), 20000);
+    const last = ev.updates.at(-1) || {};
+    info(`playback_update count ${ev.updates.length}; last ${J(last)}`);
+    info(`playback_started events: ${J(ev.started)}`);
+    if (moving) {
+      check('*** it PLAYS in the frame: playback_update position moves past 1.5 s ***', true);
+      check('playback_update carries the playing song (playingURI) - how our picker counts a play with no app',
+        ev.updates.some((u) => u.playingURI === TRACK_A), J(ev.updates.map((u) => u.playingURI).slice(-3)));
+      const dur = Math.max(...ev.updates.map((u) => Number(u.duration) || 0));
+      info(`duration reported: ${dur} ms (${dur > 0 && dur <= 31000 ? 'a PREVIEW (30 s), as expected signed out' : 'a FULL song'})`);
+    } else {
+      info('it did not start with no press. This test browser has no "--autoplay-policy=no-user-gesture-required" flag, which the kiosk has; not a frame failure.');
+      check('...but the frame still reports position and duration', ev.updates.length > 0 || ev.ready > 0);
+    }
+
+    section('4. loadUri switches songs inside the same frame (what our picker does)');
+    const before = ev.updates.length;
+    try { ctl.loadUri(TRACK_B); } catch (e) { info(`loadUri threw: ${e?.message}`); }
+    await wait(600);
+    try { ctl.play(); } catch { /* recorded above */ }
+    const switched = await until(() => ev.updates.slice(before).some((u) => u.playingURI === TRACK_B), 15000);
+    check('*** after loadUri the frame reports the new song ***', !!switched, J(ev.updates.slice(before).map((u) => u.playingURI).slice(-3)));
+    try { ctl.pause(); } catch { /* fine */ }
+    await wait(800);
+    check('pause() reaches the frame', (ev.updates.at(-1) || {}).isPaused === true || !moving, J(ev.updates.at(-1)));
+
+    section('4b. what the frame says when a song ENDS (how the panel knows to pick the next one)');
+    if (moving) {
+      const durB = Math.max(...ev.updates.filter((u) => u.playingURI === TRACK_B).map((u) => Number(u.duration) || 0), 0);
+      try { ctl.resume(); } catch { /* fine */ }
+      await wait(500);
+      try { ctl.seek(Math.max(0, Math.floor(durB / 1000) - 3)); } catch (e) { info(`seek threw: ${e?.message}`); }
+      const mark = ev.updates.length;
+      // MEASURED 2026-10-08 (signed out, a preview): at the end the frame reports position === duration, and
+      // isPaused stays FALSE, repeated. So the end is "position reached duration" (spotify_embed.js `atEnd`).
+      const atEnd = (u) => Number(u.duration) > 0 && Number(u.position) >= Number(u.duration) - 1000;
+      await until(() => ev.updates.slice(mark).some(atEnd), 12000);
+      await wait(1500);
+      const tail = ev.updates.slice(mark).map((u) => `${u.isPaused ? 'paused' : 'playing'} ${u.position}/${u.duration}`);
+      info(`after seeking to 3 s before the end: ${tail.slice(-6).join(' | ')}`);
+      check('*** the end is visible: a report with the position at the duration ***', ev.updates.slice(mark).some(atEnd), tail.join(' | '));
+    } else info('skipped: nothing played here');
+
+    section('5. note BI item 3: choosing the speaker for a player inside someone else\'s frame');
+    info(`HTMLMediaElement.setSinkId: ${'setSinkId' in HTMLMediaElement.prototype ? 'yes' : 'no'}`);
+    info(`AudioContext.setSinkId: ${typeof AudioContext !== 'undefined' && 'setSinkId' in AudioContext.prototype ? 'yes' : 'no'}`);
+    info(`navigator.mediaDevices.selectAudioOutput: ${typeof navigator.mediaDevices?.selectAudioOutput === 'function' ? 'yes' : 'no'}`);
+    const feats = (() => { try { return document.featurePolicy?.features?.() || []; } catch { return []; } })();
+    info(`this browser knows the "speaker-selection" permission: ${feats.includes('speaker-selection') ? 'yes' : 'no'} (${feats.length} features listed)`);
+    let reach = 'unknown';
+    try { reach = frame.contentDocument ? 'document readable' : 'null (cross-origin)'; } catch (e) { reach = `threw ${e?.name}`; }
+    check('*** the page cannot reach into Spotify\'s frame (cross-origin): no element of its to call setSinkId on ***', reach !== 'document readable', reach);
+    let audioEls = 'n/a';
+    try { audioEls = String(frame.contentWindow.document.querySelectorAll('audio,video').length); } catch (e) { audioEls = `threw ${e?.name}`; }
+    info(`frame.contentWindow.document: ${audioEls}`);
+    // YouTube's frame, the same question.
+    const yt = document.createElement('iframe');
+    yt.src = 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ';
+    yt.allow = 'autoplay; encrypted-media; speaker-selection';
+    yt.width = '320'; yt.height = '180';
+    document.getElementById('yt').append(yt);
+    await new Promise((r) => { yt.onload = r; setTimeout(r, 8000); });
+    let ytReach = 'unknown';
+    try { ytReach = yt.contentDocument ? 'document readable' : 'null (cross-origin)'; } catch (e) { ytReach = `threw ${e?.name}`; }
+    check('*** the same for YouTube\'s frame ***', ytReach !== 'document readable', ytReach);
+    const allowsSel = (() => { try { return yt.featurePolicy?.allowsFeature?.('speaker-selection'); } catch { return 'threw'; } })();
+    info(`allow="speaker-selection" on YouTube's frame: featurePolicy.allowsFeature says ${allowsSel}. Even granted, only a script INSIDE that frame can call setSinkId, and YouTube's and Spotify's players do not offer it.`);
+    try { ctl.destroy(); } catch { /* fine */ }
+
+    section('6. the Music panel\'s own embed player (spotify_embed.js) against the real frame');
+    const { createEmbedPlayer } = await import('../spotify_embed.js');
+    const { createMusicPicker } = await import('../music_pick.js');
+    const { createAudioBus } = await import('../audio_bus.js');
+    const stage = document.createElement('div');
+    document.body.append(stage);
+    const picker = createMusicPicker();
+    const audio = createAudioBus();
+    // Spotify's script hands its API over once per page, and this page took it above (as the Music panel's loader
+    // keeps it, spotify_embed.js), so the same API is handed in here.
+    const emb = createEmbedPlayer({ host: () => stage, audio, audioId: 'check:spotify', picker, loadApi: async () => ({ ok: true, api }) });
+    const r = await emb.play({ uri: TRACK_A });
+    check('*** it plays a song through the real frame ***', r.ok, J(r));
+    const going = await until(() => emb.state().playing, 20000);
+    if (going) {
+      check('*** the song that started is counted by our picker ***', picker.state().recent.includes(TRACK_A), J(picker.state().recent));
+      check('it is on the audio bus while it plays', audio.state()['check:spotify']?.active === true);
+      check('signed out, it knows it is a preview', emb.state().preview === true, J(emb.state()));
+      audio.register('cue', { tier: 'talk' });
+      audio.setActive('cue', true);
+      const paused = await until(() => emb.state().busPaused, 3000);
+      check('*** a spoken cue pauses the real frame ***', !!paused);
+      audio.setActive('cue', false);
+      const back = await until(() => emb.state().playing && !emb.state().busPaused, 8000);
+      check('...and the bus carries it on after', !!back, J(emb.state()));
+    } else info('it did not start with no press (no kiosk autoplay flag here); the rest of this section needs it.');
+    emb.destroy();
+  }
+} catch (err) {
+  check('the page ran to the end', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+</script>
+</body>
+</html>
