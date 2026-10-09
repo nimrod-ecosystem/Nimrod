@@ -26,7 +26,8 @@ import { mountPeople } from './people.js';
 import { createAvatarCache } from './avatar_display.js';
 import { createBus } from './bus.js';
 import { mountPackLoader } from './pack_loader.js';
-import { CLAUDE_PAGE, REVIEWS_PAGE } from './page_links.js';
+// settings sidebar (2026-10-08): the sidebar, its tabs and its look are site_nav.js's, shared with Home and Modules.
+import { SITE_TABS, VISIBLE_SITE_TABS, siteSideHTML } from './site_nav.js';
 // "Try it as someone new" (2026-10-04): a test person, and the strip that says so (try_new.js argues it).
 import { readTrialRecord, startTrial, startOver, backToMe, removeTrial, syncTrial, mountTrialBar } from './try_new.js';
 import { localScopeRows, clearLocalScope } from './local_store.js';
@@ -46,53 +47,13 @@ export function kioskURL(profileId) {
   return `/kiosk.html?profile=${encodeURIComponent(profileId)}`;
 }
 
-// The tabs in the sidebar. Adding one means adding a `mount` here — the shell doesn't
-// need to know anything else about it. (An "Audio hub" tab belongs here when it exists;
-// an empty tab is worse than no tab, so it isn't stubbed.)
-// `hidden: true` takes a tab out of the sidebar WITHOUT removing it. It stays in TABS, it
-// stays mountable, and `show('<id>')` still reaches it — so a bookmark, a saved tab, or
-// somebody who was using it is never met with a dead end.
-//
-// *** ADULTING IS GONE (hidden 2026-08-27, removed 2026-09-02, Mike). *** It was a personal
-// points board for a carer, connected to nothing else on this page — not to a screen, not to
-// a person, not to the patient — so every first-time visitor paid to read a tab about THEIR
-// OWN chores while working out what the product is. It was kept hidden on the theory that the
-// idea might come back attached to something. It did, and the thing it came back as already
-// exists: a carer who wants their own board makes a screen and puts a quest board on it. So
-// there is nothing left for this tab to be, and it is out of TABS rather than hidden in it.
-export const TABS = [
-  // *** THE LABEL IS "Dashboards". THE ID STAYS `screens`. *** (PRIORITY.md #4.)
-  //
-  // Same rule the `inputs`/Devices row below already follows: a tab id is a stable
-  // identifier -- it is in URLs, in saved state and in tests -- and renaming it is a
-  // migration, not a label change. Only the word a person reads moves.
-  //
-  // Not to be confused with the transport bar's button, which Mike separately decided is
-  // "Home" -- that one is the way OUT of a running screen and "the familiar exit word"
-  // was his reasoning. This is the place you build them.
-  { id: 'screens',  label: 'Dashboards', hint: 'make and fill your dashboards' },
-  { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
-  // The ID STAYS `inputs`. A tab id is a stable identifier - it is in URLs, in tests and in
-  // `INPUTS_KEY` on the server - and renaming it is a migration, not a label change. Only the
-  // word a person reads moved to Devices.
-  { id: 'inputs',   label: 'Devices',  hint: 'the switches, controllers and keys you use — and what each one does' },
-  // "Output" is engineering's word for it. What the tab configures is how the screen TELLS
-  // somebody something -- spoken, on screen, a sound -- which is a notification in
-  // everybody else's vocabulary. Id unchanged, for the reason above.
-  { id: 'output',   label: 'Notifications',
-    hint: 'how this dashboard answers — spoken, on screen, a sound' },
-  { id: 'remote',   label: 'Remote',   hint: 'drive their screen from here, while they are at it' },
-  // ON HOME, NOT ON THE KIOSK. Reviewing what a module recorded is a different job in a
-  // different room, and a table of somebody's performance has no business on the screen
-  // they cannot walk away from.
-  { id: 'records',  label: 'Records',  hint: 'what a module wrote down, and vouching for it' },
-  // The state machine, in sentences. The engine has always been authorable; what was missing
-  // was that nobody could READ the config. See rules.js.
-  { id: 'rules',    label: 'Rules',    hint: 'what each screen does on its own, and when' },
-];
+// The tabs in the sidebar. (settings sidebar, 2026-10-08: the list and its history moved to site_nav.js, which draws
+// the one sidebar for My dashboards, Home and Modules -- Mike: "Every tab should have the sidebar like the devices and
+// Dashboards tab." The names stay exported here, unchanged, for everything that already reads them.)
+export const TABS = SITE_TABS;
 
 // What the sidebar actually draws.
-export const VISIBLE_TABS = TABS.filter((t) => !t.hidden);
+export const VISIBLE_TABS = VISIBLE_SITE_TABS;
 
 // The shell: sidebar + one mounted panel. `mountTab` is injectable so a test can drive
 // the navigation without the real panels.
@@ -108,6 +69,9 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
                                        user = null, bus = null, mountTab = null,
                                        makePersonState = null, makePersonEvents = null,
                                        signedIn = null, storage = undefined,
+                                       // settings sidebar (2026-10-08): the tab to open on, so a sidebar tab on
+                                       // Home or Modules (/home.html?tab=inputs) lands on that tab. Unknown: Dashboards.
+                                       startTab = null,
                                        navigate = (url) => {
                                          // A dev `?user=` rides along (a signed-in browser's cookie needs nothing).
                                          const u = new URLSearchParams(location.search).get('user');
@@ -122,81 +86,23 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
   let personId = '';
   let personName = '';
 
+  // THE SIDEBAR (settings sidebar, 2026-10-08): site_nav.js draws it, the same one Home and Modules now have. Its
+  // history -- why the pages sit ABOVE the tabs and are marked as leaving this shell (B4), "Modules" and "Make your
+  // profile" (2026-10-07, 2026-09-29), Switch account and Try as a guest (PRIORITY.md #6), the account's own pages
+  // (2026-10-04) -- moved there with it. What stays here is this page's own: the tabs are BUTTONS that change the
+  // panel in place, and "Try it as someone new" (try_new.js) in the foot.
   root.innerHTML = `
     <div class="shell">
-      <nav class="s-side">
-        <div class="s-brand">Nimrod<span>.</span></div>
-        <!-- B4: "I don't know where the modules tab is." There ISN'T one, and there should not
-             be - /modules.html is a page, not a panel, and building a second copy of it inside
-             the shell would be two catalogs to keep in step. What was missing is a way to GET
-             there: the page was reachable only from the landing nav, which is hidden below
-             860px, and from the wallpapers page. So it is a link, marked as leaving the shell
-             rather than dressed as a tab it is not.
-             RENAMED "Modules" TO "What you can add" (Mike, 2026-09-08, reopening PRIORITY.md
-             #4). The earlier call here was the opposite - "somebody hunting for the modules
-             page is hunting for the word modules" - and that reasoning is not wrong, it was
-             just overridden, not disproven. Recorded rather than silently swapped so the
-             earlier argument stays visible if this gets reopened again. It sits ABOVE the tab
-             list, because it is what a new person needs first and it was underneath everything
-             else.
-             NO BACKTICKS IN THIS COMMENT. It lives inside a template literal, and the first
-             draft of it wrote /modules.html in backticks - which closed the string and made
-             home.js a syntax error, which made home_test hang forever with no summary. -->
-        <ul class="s-nav s-out">
-          <!-- 2026-10-07 (Mike: "What you have as the modules page now should be the homepage/profiles. I still
-               want the old Modules tab"): the two pages by their plain names and addresses. Home is Your people
-               and the editor; Modules is the library with one to try, its settings beside it and its bar under
-               it. "Modules" again rather than "What you can add" (the 2026-09-08 name): it is Mike's word for the
-               tab now, and the page's own heading still says what you can put on a screen. -->
-          <li><a class="s-navb s-link" href="/home" data-nav="home"
-            title="your people, and your Home to make your own">Home ↗</a></li>
-          <li><a class="s-navb s-link" href="/modules" data-nav="modules"
-            title="everything you can put on a screen, and one to try with its settings">Modules ↗</a></li>
-          <!-- THE GAME HAD NO WAY IN (Mike, 2026-09-29: "I don't see anything for the game or
-               profiles... I don't see Nimrod anywhere"). Game step 1 and Nimrod the cat's
-               walkthrough both live on /game/, which nothing linked to - reachable only by typing
-               the address. Beside "What you can add" for the same reason that link is here: it is
-               what a new person needs first. -->
-          <li><a class="s-navb s-link" href="/game/"
-            title="make your own profile screen, with Nimrod the cat to show you how">Make your profile ↗</a></li>
-        </ul>
-        <ul class="s-nav">
-          ${VISIBLE_TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}
-        </ul>
-        <div class="s-foot">
-          ${email ? `<div class="s-email">${esc(email)}</div>` : ''}
-          ${isSignedIn
-            ? '<a class="s-signout" href="/auth/logout">Sign out</a>'
-              // PRIORITY.md #6, the other two thirds of it. SIGN OUT existed and the other two
-              // did not.
-              //
-              // SWITCH ACCOUNT: /auth/logout clears our session and not Google's, so signing
-              // back in silently picks the same account up again. ?switch=1 asks Google to show
-              // the chooser. Without it there is no way to be anybody else.
-              //
-              // TRY AS A GUEST: this is not new machinery, it is machinery nobody could reach.
-              // ?demo=1 already boots the kiosk on a local throwaway backend with seeded sample
-              // media -- nothing it does touches an account. That is exactly the "every test he
-              // runs pollutes the record" problem, already solved and linked from nowhere but
-              // the landing page's iframe.
-              + '<a class="s-signout" href="/auth/login?switch=1">Switch account</a>'
-              // THE ACCOUNT'S OWN PAGES (2026-10-04, page_links.js): Mike asked how to get to the Claude settings
-              // page, which nothing linked to. Here because this is where the account's things live (who is signed
-              // in, sign out); a page, not a screen, so plain links. After Sign out, which stays first.
-              + `<a class="s-signout s-acct" data-acct="claude" href="${CLAUDE_PAGE}">Claude on this account</a>`
-              + `<a class="s-signout s-acct" data-acct="reviews" href="${REVIEWS_PAGE}">Review questions</a>`
-              // TRY IT AS SOMEONE NEW (try_new.js): the site as a brand-new person meets it, on a test person,
-              // nothing of yours touched. While one is being tried, the strip above the people bar has its actions.
-              + (canTry
-                ? '<button type="button" class="s-signout s-acct" data-trynew hidden title="A test person on this account: the landing as their first visit. Nothing of yours changes; your notes stay yours.">Try it as someone new</button>'
-                  + '<button type="button" class="s-signout s-acct" data-tryremove hidden title="The test person and their dashboards go; any notes they hold move to you first.">Remove the test person</button>'
-                  + '<span class="s-signout" data-trymsg hidden></span>'
-                : '')
-              + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'
-            : '<a class="s-signout" href="/auth/login">Sign in</a>'
-              + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'}
-        </div>
-      </nav>
+      ${siteSideHTML({
+        here: 'dashboards', signedIn: isSignedIn, email,
+        // TRY IT AS SOMEONE NEW (try_new.js): the site as a brand-new person meets it, on a test person, nothing of
+        // yours touched. While one is being tried, the strip above the people bar has its actions.
+        footExtra: canTry
+          ? '<button type="button" class="s-signout s-acct" data-trynew hidden title="A test person on this account: the landing as their first visit. Nothing of yours changes; your notes stay yours.">Try it as someone new</button>'
+            + '<button type="button" class="s-signout s-acct" data-tryremove hidden title="The test person and their dashboards go; any notes they hold move to you first.">Remove the test person</button>'
+            + '<span class="s-signout" data-trymsg hidden></span>'
+          : '',
+      })}
       <main class="s-main">
         <div data-trial></div>
         <div data-people></div>
@@ -581,7 +487,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       if (panel && panel.destroy) panel.destroy();
     },
   };
-  await show('screens');
+  await show(startTab || 'screens');   // (`show` falls back to Dashboards for a tab it does not know)
   return api;
 }
 

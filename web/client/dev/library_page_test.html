@@ -122,9 +122,14 @@ try {
   }, 8000), JSON.stringify({ subject: P().settings()?.subject, panels: k.panels() }));
   check('...and it is a view of the same menu (the kiosk lists it)', (k.settingsViews?.() || []).length === 1);
   {
-    const L = rect($('#lib')), S = rect($('#stage')), T = rect($('#settings'));
-    check('*** at 1400 wide: library left, module middle, settings right ***', L.right <= S.left && S.right <= T.left && S.width > 500,
-      JSON.stringify({ L: [L.left, L.right], S: [S.left, S.right], T: [T.left, T.right] }));
+    // settings sidebar (2026-10-08), DELIBERATELY changed: this said "at 1400 wide: library left, module middle, settings
+    // right". Signed in, the site's sidebar now takes 212px of the left, and three columns in what is left put the
+    // module under 450px -- so at 1400 the settings go UNDER the module (the old 1180px shape, 212px sooner). Three side
+    // by side is checked at the Pi's 1920x1080 below.
+    const L = rect($('#lib')), S = rect($('#stage')), T = rect($('#settings')), D = rect($('.s-side'));
+    check('*** at 1400 wide, signed in: the sidebar, then the library, the module beside it, its settings under it ***',
+      D.right <= L.left && L.right <= S.left && T.top >= S.bottom - 2 && T.left >= L.right && S.width > 600,
+      JSON.stringify({ D: [D.left, D.right], L: [L.left, L.right], S: [S.left, S.right, S.bottom], T: [T.left, T.top] }));
   }
 
   // ==========================================================================================
@@ -135,6 +140,33 @@ try {
     check('signed in: Home and My dashboards show, Sign in does not', !tab('home').hidden && !tab('dashboards').hidden && tab('signin').hidden);
     check('the tabs go to the plain addresses', new URL(tab('home').href).pathname === '/home' && new URL(tab('modules').href).pathname === '/modules');
     check('the brand goes to Home', new URL($('.top a.brand').href).pathname === '/home');
+  }
+
+  // ==========================================================================================
+  // settings sidebar (Mike, 2026-10-08): "Every tab should have the sidebar like the devices and Dashboards tab."
+  section('*** the sidebar: the same one My dashboards has ***');
+  const sideChecks = (here) => {
+    const side = $('.s-side');
+    const link = (sel) => side?.querySelector(sel);
+    check(`[${here}] signed in: the site's sidebar is drawn, left of everything`, !!side && rect(side).left === 0 && rect(side).width >= 200
+      && doc.body.classList.contains('has-side'), side ? JSON.stringify(rect(side)) : 'no sidebar');
+    check(`[${here}] ...and the strip of tabs along the top is put away (the sidebar has every one of its links)`,
+      win.getComputedStyle($('.top')).display === 'none');
+    check(`[${here}] *** this page is marked in it, and goes nowhere ***`, link(`[data-nav="${here}"]`)?.getAttribute('aria-current') === 'page'
+      && !/↗/.test(link(`[data-nav="${here}"]`).textContent));
+    check(`[${here}] Home and Modules by their plain addresses`, new URL(link('[data-nav="home"]').href).pathname === '/home'
+      && new URL(link('[data-nav="modules"]').href).pathname === '/modules');
+    const tabs = [...side.querySelectorAll('[data-side-tab]')];
+    check(`[${here}] *** every tab of My dashboards, each opening it on that tab ***`,
+      tabs.map((a) => a.dataset.sideTab).join() === 'screens,media,inputs,output,remote,records,rules'
+      && tabs.every((a) => { const u = new URL(a.href); return u.pathname === '/home.html' && u.searchParams.get('tab') === a.dataset.sideTab; }),
+      tabs.map((a) => a.getAttribute('href')).join(' '));
+    check(`[${here}] the foot: Sign out`, !!link('a[href="/auth/logout"]'));
+    const small = [...side.querySelectorAll('.s-navb')].filter((a) => a.getBoundingClientRect().height < 44);
+    check(`[${here}] every entry is a 44px target`, !small.length, small.map((a) => a.textContent).join(','));
+  };
+  sideChecks('modules');
+  {
     // The PAGE's own words (the hero, the tabs, the notes, the columns' headings) -- not what a module draws.
     const own = [...doc.querySelectorAll('.top, header.hero, #legend, #try-head, .mp-note, .mp-set > h2, .mp-set > p, .gaps, footer')]
       .map((e) => e.textContent).join(' ');
@@ -180,6 +212,29 @@ try {
   check('Home has a Modules tab to /modules', await until(() => { const a = $('.top nav [data-nav="modules"]'); return !!a && new URL(a.href).pathname === '/modules'; }));
   check('...and its own Home tab, marked, once it knows who is looking', await until(() => { const a = $('.top nav [data-nav="home"]'); return !!a && !a.hidden && a.getAttribute('aria-current') === 'page'; }));
   check('...and the brand goes to /home', await until(() => new URL($('.top a.brand').href).pathname === '/home'));
+  // settings sidebar (2026-10-08): Home's editing page has the same sidebar...
+  check('(setup) Home\'s editing page has drawn its sidebar', await until(() => !!$('.s-side'), 15000));
+  if ($('.s-side')) sideChecks('home');
+  // ...and Home's landing -- the dashboard filling the window -- has none (Mike, 2026-10-02: "the dashboard should be the
+  // whole screen").
+  await open(`/home?user=${USER}`);
+  check('*** Home\'s landing (the dashboard filling the window): NO sidebar ***',
+    await until(() => doc.body.classList.contains('is-land'), 20000) && (!$('.s-side') || rect($('.s-side')).width === 0),
+    `${doc.body.className} ${$('.s-side') ? JSON.stringify(rect($('.s-side'))) : 'none'}`);
+
+  // ==========================================================================================
+  section('*** the Pi\'s 1920x1080, signed in: the sidebar, then all three side by side ***');
+  await open(`/modules?user=${USER}&m=photos`, { w: 1920, h: 1080 });
+  check('it starts', await until(() => doc.body.dataset.ready === 'true', 30000));
+  {
+    const D = rect($('.s-side')), L = rect($('#lib')), S = rect($('#stage')), T = rect($('#settings'));
+    check('*** sidebar, library, module, settings: left to right, and the module the widest ***',
+      D.right <= L.left && L.right <= S.left && S.right <= T.left && S.width > 800 && S.width > L.width && S.width > T.width,
+      JSON.stringify({ D: [D.left, D.right], L: [L.left, L.right], S: [S.left, S.right], T: [T.left, T.right] }));
+    check('...nothing sideways', doc.documentElement.scrollWidth <= win.innerWidth + 1, `${doc.documentElement.scrollWidth} > ${win.innerWidth}`);
+    check('...and the three columns end inside the screen (nothing to scroll down to reach the module\'s bar)',
+      rect($('.mp')).bottom <= 1080, rect($('.mp')).bottom);
+  }
 
   // ==========================================================================================
   section('a phone: one column, in the order you use them, nothing sideways');
@@ -193,8 +248,13 @@ try {
     check('a 16px gutter', Math.round(L.left) === 16, L.left);
     check('*** the settings show at this width (their box is not squeezed to nothing) ***',
       await until(() => rect($('#settings')).height > 250 && P().settings()?.hosted === true), rect($('#settings')).height);
-    const small = $$('.top nav a:not([hidden])').filter((a) => a.getBoundingClientRect().height < 44);
-    check('the tabs are 44px targets', !small.length, small.map((a) => a.textContent).join(','));
+    // settings sidebar (2026-10-08), DELIBERATELY changed: the tabs were the strip along the top; signed in they are the
+    // sidebar, a strip on top at this width, each list one row that scrolls sideways inside itself.
+    const small = $$('.s-side .s-navb').filter((a) => a.getBoundingClientRect().height < 44);
+    check('the tabs are 44px targets', $$('.s-side .s-navb').length >= 10 && !small.length, small.map((a) => a.textContent).join(','));
+    const D = rect($('.s-side'));
+    check('*** the sidebar is a strip ABOVE the library at this width, inside the screen ***', D.bottom <= L.top + 1 && D.width <= win.innerWidth + 1,
+      JSON.stringify({ D: [D.top, D.bottom, D.width], L: L.top }));
   }
 
   // ==========================================================================================

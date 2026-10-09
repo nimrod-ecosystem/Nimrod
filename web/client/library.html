@@ -10,6 +10,8 @@
      kiosk.css: the try box is the REAL kiosk, so its bar and its menu are styled by the kiosk's own sheet. -->
 <link rel="stylesheet" href="./modules.css">
 <link rel="stylesheet" href="./kiosk.css">
+<!-- settings sidebar (2026-10-08): the site's sidebar, the one My dashboards has (site_nav.js). -->
+<link rel="stylesheet" href="./site_nav.css">
 <style>
   /* Fallbacks only: theme.js writes the real values on <html> before anything is drawn. */
   :root{
@@ -84,6 +86,28 @@
     /* A real height, not auto: the menu inside fills its box, so an auto box measured 0 and showed nothing. */
     .mp-set{grid-column:2;height:70vh;min-height:320px}
   }
+  /* ---- settings sidebar (2026-10-08) ---- Mike: "Every tab should have the sidebar like the devices and Dashboards
+     tab. You might have to make some changes to the modules tab to fit everything correctly." Signed in, the site's
+     sidebar (site_nav.js) takes the left 212px and the strip of tabs along the top goes: every one of its links is in
+     the sidebar, and a page with both says where to go twice. The three columns then have 212px less, so each
+     narrower shape starts that much sooner -- measured, not guessed: three columns need ~1180px of page (two 280-340px
+     sides and a module worth looking at), which with the sidebar is a 1400px window; one column below ~980px, where
+     the module beside the library would be under 450px. At 1920x1080 (the Pi) all three stay side by side, the module
+     about 950px wide. Under 720px the sidebar is a strip on top and the phone layout below applies as it did. */
+  body.has-side .top{display:none}
+  body.has-side header.hero{padding-top:18px}
+  @media (max-width:1400px){
+    body.has-side .mp{grid-template-columns:minmax(260px,320px) minmax(0,1fr)}
+    body.has-side .mp-set{grid-column:2;height:70vh;min-height:320px}
+  }
+  @media (max-width:980px){
+    body.has-side .mp{grid-template-columns:minmax(0,1fr)}
+    body.has-side .mp-lib{height:60vh;height:60svh}
+    body.has-side .mp-try{height:auto}
+    body.has-side .mp-stage{height:72vh;height:72svh;flex:none}
+    body.has-side .mp-set{grid-column:auto;height:80vh;height:80svh}
+  }
+
   /* A phone: one column, in the order you use them -- choose, look, then change. 16px gutter. */
   @media (max-width:760px){
     .wrap{padding:0 16px}
@@ -112,6 +136,10 @@
   modules.html: a list on the left, one module large, its bar under it. Its "run every one of them" audit
   stays where it is, at /modules.html?all=1.
 -->
+<!-- settings sidebar (2026-10-08): the sidebar's slot, drawn once somebody is signed in (paintNav, site_nav.js). -->
+<div class="shell">
+<div data-site-side hidden></div>
+<div class="s-page">
 <div class="top">
   <div class="wrap">
     <a class="brand" href="/">Nimrod<span>.</span></a>
@@ -168,6 +196,8 @@
     <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
   </footer>
 </div>
+</div><!-- .s-page -->
+</div><!-- .shell -->
 
 <script type="module">
 import { mountVersionChip } from './version_watch.js';
@@ -244,6 +274,7 @@ import { createProfilesClient, ensureProfile } from './profile.js';
 import { createState } from './state.js';
 import { pickCurrent, readLastPerson } from './people.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+import { mountSiteSide } from './site_nav.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -257,10 +288,11 @@ const manifests = listManifests();
 // them, exactly like the screen). A module that is not on your screen is a try, and "Add it to my screen" puts it
 // there: nothing is added just by looking (Home's rule since 2026-09-30). Signed out, everything is a try.
 let user = null;
+let userEmail = '';   // settings sidebar: shown in the sidebar's foot, as My dashboards does
 const signedIn = (async () => {
   try {
     const r = await fetch('/api/me', { headers: authHeaders(devUser) });
-    if (r.ok) user = (await r.json()).user || null;
+    if (r.ok) { const me = await r.json(); user = me.user || null; userEmail = me.email || ''; }
   } catch { /* offline: the signed-out page is still a working page */ }
 })();
 
@@ -293,6 +325,9 @@ function paintNav() {
   nav('signin').hidden = true;
   nav('landing').hidden = true;
   themePick.style.display = 'none';
+  // settings sidebar (2026-10-08): signed in, the site's sidebar, the same one My dashboards has (site_nav.js argues
+  // why signed in only). The strip above stays in the page, put away by the CSS while the sidebar shows.
+  mountSiteSide(document.querySelector('[data-site-side]'), { here: 'modules', signedIn: true, email: userEmail });
 }
 
 // ---- the legend: what each one asks of the person using it -------------------------------------------

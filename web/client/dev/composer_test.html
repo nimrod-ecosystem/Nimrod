@@ -200,6 +200,40 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       !host.querySelector('[data-tab="screens"]').classList.contains('on'));
     shell.destroy();
 
+    // settings sidebar (2026-10-08): ONE sidebar for My dashboards, Home and Modules (site_nav.js). A sidebar tab on Home
+    // or Modules is a link to /home.html?tab=<id>, so this page opens on the tab it names.
+    section('the sidebar is shared (settings sidebar, 2026-10-08)');
+    {
+      const { siteSideHTML, SITE_TABS } = await import('../site_nav.js');
+      check('home.js\'s TABS ARE the shared list (one list, not two to keep in step)', TABS === SITE_TABS);
+      const opened = [];
+      host.innerHTML = '';
+      const s2 = await mountHome(host, { email: 'mike@example.com', profiles, manifests: listManifests(), makeSettings, startTab: 'inputs',
+        mountTab: async (id, el) => { opened.push(id); el.textContent = `panel:${id}`; return { id, destroy() {} }; } });
+      check('*** ?tab=inputs: My dashboards opens on Devices, marked ***', s2.active() === 'inputs' && opened[0] === 'inputs'
+        && host.querySelector('[data-tab="inputs"]').classList.contains('on'), `${s2.active()} ${opened.join()}`);
+      s2.destroy();
+      host.innerHTML = '';
+      const s3 = await mountHome(host, { email: 'mike@example.com', profiles, manifests: listManifests(), makeSettings, startTab: 'nonsense',
+        mountTab: async (id, el) => { el.textContent = `panel:${id}`; return { id, destroy() {} }; } });
+      check('...a tab it does not know: Dashboards, as before', s3.active() === 'screens');
+      s3.destroy();
+      host.innerHTML = '';
+      const box = document.createElement('div');
+      box.innerHTML = siteSideHTML({ here: 'modules', signedIn: true, email: 'mike@example.com', search: '' });
+      const here = [...box.querySelectorAll('[data-side-tab]')].map((a) => a.dataset.sideTab).join();
+      check('*** on another page: the same tabs, as links ***', here === VISIBLE_TABS.map((t) => t.id).join()
+        && [...box.querySelectorAll('[data-side-tab]')].every((a) => a.getAttribute('href') === `/home.html?tab=${a.dataset.sideTab}`), here);
+      check('...that page marked, without the "leaves" arrow; the others keep theirs', box.querySelector('[data-nav="modules"]').getAttribute('aria-current') === 'page'
+        && !/↗/.test(box.querySelector('[data-nav="modules"]').textContent) && /↗/.test(box.querySelector('[data-nav="home"]').textContent));
+      check('...and the same foot (Sign out, the account\'s pages, a guest)', !!box.querySelector('a[href="/auth/logout"]')
+        && box.querySelector('[data-acct="claude"]')?.getAttribute('href') === '/claude.html' && !!box.querySelector('a[href="/kiosk.html?demo=1"]'));
+      const dev = document.createElement('div');
+      dev.innerHTML = siteSideHTML({ here: 'home', signedIn: true, search: '?user=dev-a' });
+      check('a dev server\'s ?user= rides along on the page and tab links', new URL(dev.querySelector('[data-side-tab="inputs"]').href).searchParams.get('user') === 'dev-a'
+        && new URL(dev.querySelector('[data-nav="modules"]').href).searchParams.get('user') === 'dev-a');
+    }
+
     // ================= the composer =================
     section('the composer');
     const profile = await profiles.create('Composed');

@@ -1,0 +1,58 @@
+/* site_nav.css — THE SITE'S SIDEBAR (settings sidebar, 2026-10-08; site_nav.js draws it and argues it).
+ *
+ * My dashboards' sidebar, moved out of home.html so Home (/home) and Modules (/modules) wear the same one. Theme
+ * tokens with keyword fallbacks only, so a page that never applied a theme still draws it.
+ *
+ * The page lays itself out as `.shell`: the sidebar, then everything else. On Home and Modules the sidebar's slot is
+ * an empty `<div data-site-side hidden>` until the page knows somebody is signed in (`mountSiteSide`); with the slot
+ * hidden, `.shell` is a plain block and the page is exactly what it was. */
+
+.shell{display:grid;grid-template-columns:212px minmax(0,1fr);min-height:100vh}
+/* A page whose sidebar is not drawn (signed out; Home while a dashboard fills the window) is one column. */
+.shell:has(> [data-site-side][hidden]),body.is-land .shell{display:block;min-height:0}
+[data-site-side]{display:contents}
+[data-site-side][hidden],body.is-land [data-site-side]{display:none}
+
+/* STICKY, so the way to every other page stays on screen down a long page (Devices, the Modules library). New with the
+   move: before, the sidebar grew with the page and its foot -- Sign out -- sat at the bottom of the whole page. */
+/* (gap 12px, was 18: with every entry a 44px target the whole sidebar fits a 1280x720 window without scrolling.) */
+.s-side{display:flex;flex-direction:column;gap:12px;padding:16px 14px;box-sizing:border-box;
+  background:var(--surface-alt,Canvas);border-right:1px solid var(--border,GrayText);
+  position:sticky;top:0;align-self:start;height:100vh;height:100dvh;overflow-y:auto;scrollbar-width:thin}
+.s-brand{display:block;font-weight:800;font-size:1.25rem;letter-spacing:-.02em;padding:0 8px;
+  color:var(--text,CanvasText);text-decoration:none}
+.s-brand span{color:var(--accent-warm-deep,CanvasText)}
+.s-nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+/* 44px: the touch-target floor every other control on these pages keeps (the old top bar's tabs had it). */
+.s-navb{display:flex;align-items:center;box-sizing:border-box;width:100%;min-height:44px;text-align:left;
+  padding:9px 11px;border:0;border-radius:9px;background:transparent;text-decoration:none;
+  color:var(--text-soft,CanvasText);font:inherit;font-size:.93rem;font-weight:600;line-height:1.3;cursor:pointer}
+.s-navb:hover{background:color-mix(in srgb,var(--text,CanvasText) 6%,transparent);color:var(--text,CanvasText)}
+/* `--on-accent` (theme.js derives it against the accent), not the literal white this was: white on a light accent
+   was the one place the sidebar could not be read. */
+.s-navb.on{background:var(--accent,Highlight);color:var(--on-accent,Canvas)}
+.s-navb:focus-visible{outline:3px solid var(--focus,var(--accent,Highlight));outline-offset:2px}
+/* The pages, ABOVE the tabs, a rule under them: "leaves this list" from "stays in it" (PRIORITY.md #4). Same shape as
+   a tab so they do not look bolted on, quieter than one so they do not read as another place to be. */
+.s-out{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border,GrayText)}
+.s-link{color:var(--link,LinkText);font-weight:650}
+.s-link.on{color:var(--on-accent,Canvas)}
+.s-foot{margin-top:auto;padding:0 8px;font-size:.8rem;display:flex;flex-direction:column;gap:4px}
+.s-email{color:var(--text-muted,GrayText);word-break:break-all}
+.s-signout{color:var(--link,LinkText)}
+
+/* A PHONE (and anything under 720px): a strip along the top. Each list is ONE row that scrolls sideways inside
+   itself (the next entry peeking), so the page never scrolls sideways -- before this, My dashboards was 602px wide
+   on a 390px phone, its tabs running off the edge. Wrapped instead, the ten entries were five rows of strip before
+   the page began. The foot's small links wrap: they are few and short. */
+@media (max-width:720px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .s-side{position:static;height:auto;overflow:visible;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 10px;
+    border-right:0;border-bottom:1px solid var(--border,GrayText);padding:10px 16px}
+  .s-nav{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;max-width:100%;min-width:0;overscroll-behavior-x:contain}
+  .s-nav > li{flex:none}
+  .s-navb{width:auto;white-space:nowrap}
+  .s-out{margin:0;padding:0 6px 0 0;border-bottom:0;border-right:1px solid var(--border,GrayText)}
+  .s-foot{margin-top:0;flex-direction:row;flex-wrap:wrap;gap:4px 12px;align-items:center;flex-basis:100%;padding:0}
+  .s-email{display:none}
+}
