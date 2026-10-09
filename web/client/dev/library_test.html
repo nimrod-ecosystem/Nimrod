@@ -36,7 +36,7 @@ import { isStarter } from '../unlocks.js';
 import { allowedActions, parseReply, createActionQueue, BUILTIN_ACTIONS } from '../nimrod_ai.js';
 import {
   LIBRARY_TYPE, CATEGORIES, CATEGORY_IDS, MODULE_CATEGORIES, categoriesFor, moduleItems, sceneItems, furnitureItems,
-  brickItems, libraryItems, filterItems, sortItems, normName, resolveModuleName, resolvePanel, parsePlaceArg,
+  brickKeyItem, libraryItems, filterItems, sortItems, normName, resolveModuleName, resolvePanel, parsePlaceArg,
   parseSwapArg, LIBRARY_AI_ACTIONS, LIBRARY_SETTINGS, LIBRARY_DEFAULTS, CARD_SIZES, mountLibrary,
 } from '../library.js';
 import '../modules/clock.js';
@@ -67,12 +67,8 @@ function fakeState(initial = {}) {
 // Every catalog module, as if registered: the pure parts are checked against the whole catalog, not only
 // against the few modules this page imports.
 const ALL = [...CATALOG.map((c) => ({ type: c.type, title: c.title || c.type })), { type: 'room' }, { type: 'scene' }];
-const SAMPLE_BRICKS = { objects: [
-  { id: 'brick_40x40x40_v1', title: 'Brick 40 x 40 x 40 mm', dims_mm: [40, 40, 40], sockets: 6, glb: '/design-assets/bricks/brick_40x40x40_v1.glb', fits_bed_256: true },
-  { id: 'brick_40x40x320_v1', title: 'Brick 40 x 40 x 320 mm', dims_mm: [40, 40, 320], sockets: 34, glb: '/x.glb', fits_bed_256: false },
-  { title: 'no id: skipped' }, null,
-] };
-const items = () => libraryItems({ manifests: ALL, bricks: SAMPLE_BRICKS });
+// bricks module (row 2.76): no per-part cards any more, so no parts list is handed in.
+const items = () => libraryItems({ manifests: ALL });
 
 try {
   // ===================================================================================================
@@ -94,12 +90,19 @@ try {
     const furn = furnitureItems();
     check('*** furniture: every piece the rooms are built from ***', furn.length === Object.keys(FURNITURE).length && furn.every((f) => f.cats.includes('furniture')));
     check('*** ...shown and explained, never put in a panel’s place (it says why) ***', furn.every((f) => f.placeable === false && /room/.test(f.whyNot)));
-    const b = brickItems(SAMPLE_BRICKS);
-    check('*** 3D bricks from the published parts list; anything malformed skipped ***', b.length === 2 && b.every((x) => x.cats.includes('3d') && x.link),
-      J(b.map((x) => x.key)));
-    check('...with their size and sockets in words', /40 × 40 × 40 mm, 6 sockets/.test(b[0].lead) && /bigger than 256/.test(b[1].needs), b[0].lead);
-    check('...and a brick is not something for a panel', b.every((x) => !x.placeable && x.whyNot));
-    check('brickItems of nothing is nothing, not a crash', brickItems(null).length === 0 && brickItems({}).length === 0);
+    // bricks module (row 2.76). Mike: "there shouldn't be a separate module for each brick. Just a bricks module."
+    const in3d = its.filter((i) => (i.cats || []).includes('3d'));
+    check('*** 3D bricks: ONE item, the Bricks module, and it can be put in a panel’s place ***',
+      in3d.length === 1 && in3d[0].key === 'module:bricks' && in3d[0].placeable === true, J(in3d.map((x) => x.key)));
+    check('...no card per published part is left (no `brick:` keys, no "3D brick" kind)', !its.some((i) => i.kind === 'brick' || String(i.key).startsWith('brick:')));
+    check('...and its details still reach every part, on the bricks page', in3d[0]?.page === '/bricks.html');
+    const old = brickKeyItem('brick:brick_40x80x160_v1', its);
+    check('*** an OLD per-part key reads as the Bricks module with that part chosen ***',
+      old?.type === 'bricks' && J(old.settings) === J({ part: 'brick', width: 40, length: 80, height: 160 }), J(old));
+    check('...a bracket and a plate too', brickKeyItem('brick:bracket_L80x40x5_v1', its)?.settings?.part === 'lbracket'
+      && brickKeyItem('brick:plate_T120x80x5_v1', its)?.settings?.part === 'plateT');
+    check('...and a key that never was a part is nothing, not a crash', brickKeyItem('brick:nonsense', its) === null
+      && brickKeyItem('module:clock', its) === null && brickKeyItem(null, its) === null);
     check('every item has a unique key', new Set(its.map((i) => i.key)).size === its.length);
     const words = J(its) + J(CATEGORIES) + J(LIBRARY_SETTINGS);
     check('*** no site copy says "her screen", Christine or Cici; no money words (shop, buy, price, coins) ***',
@@ -360,14 +363,26 @@ try {
     check('...its button says "Use it here" (this panel becomes it)', b.querySelector('[data-lib-act="place"]').textContent === 'Use it here');
     lib.destroy(); b.remove();
     const b2 = box();
-    const lib2 = mountLibrary(b2, { items, host: null, moreItems: async () => brickItems({ objects: [{ id: 'brick_x', title: 'Brick X', dims_mm: [40, 80, 40], glb: '/b.glb' }] }) });
+    // (bricks module, row 2.76: the parts list no longer arrives this way; the mechanism is checked with any item.)
+    const lib2 = mountLibrary(b2, { items, host: null, moreItems: async () => [{ key: 'extra:x', kind: 'furniture', id: 'x', type: null,
+      title: 'Extra X', lead: 'Arrives later.', why: 'A test item.', needs: 'Nothing.', note: '', use: null, cats: ['furniture'],
+      settings: null, placeable: false, whyNot: 'A test item.', link: '/b.glb', lockKey: null }] });
     b2.querySelector('.lib-card[data-lib-key="module:photos"]').click();
     check('*** browse only (no host): no button that cannot work, and a sentence saying where to go ***',
       !b2.querySelector('[data-lib-act="place"]') && /Open Modules on a dashboard/.test(b2.querySelector('[data-lib-detail]').textContent));
     await tick(); await tick();
-    check('*** what arrives later (the bricks list) joins the grid ***', !!b2.querySelector('.lib-card[data-lib-key="brick:brick_x"]'));
-    b2.querySelector('.lib-card[data-lib-key="brick:brick_x"]').click();
-    check('...and a brick’s details open its 3D model', b2.querySelector('[data-lib-detail] a[data-lib-act="link"]')?.getAttribute('href') === '/b.glb');
+    check('*** what arrives later joins the grid ***', !!b2.querySelector('.lib-card[data-lib-key="extra:x"]'));
+    b2.querySelector('.lib-card[data-lib-key="extra:x"]').click();
+    check('...and an item’s link opens from its details', b2.querySelector('[data-lib-detail] a[data-lib-act="link"]')?.getAttribute('href') === '/b.glb');
+    // bricks module (row 2.76): an old per-part key put somewhere is the Bricks module, with that part chosen.
+    {
+      const b3 = box(); const placed = [];
+      const lib3 = mountLibrary(b3, { items, host: { mode: 'panel', target: null, place: async (it) => { placed.push(it); return true; } } });
+      await lib3.place('brick:bracket_L80x40x5_v1');
+      check('*** an old per-part key, put in a place, puts the Bricks module there with that part chosen ***',
+        placed.length === 1 && placed[0].type === 'bricks' && J(placed[0].settings) === J({ part: 'lbracket', width: 80 }), J(placed));
+      lib3.destroy(); b3.remove();
+    }
     const css = document.getElementById('library-css')?.textContent || '';
     check('*** no hard-coded colours: every colour is a theme token ***', css.length > 200 && !/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(css));
     check('the card size is a setting, not a number in the CSS', CARD_SIZES[LIBRARY_DEFAULTS.cardSize] === 150 && /var\(--lib-card/.test(css));

@@ -346,8 +346,13 @@ try {
 
   section('a game nobody is playing comes to rest');
   {
-    const t = mount({ saved: { control: 'steps', autoLaunch: 2 } });
+    const restBus = createBus();
+    const plays = [];
+    restBus.subscribe(PLAY_STATE_TOPIC, (p) => plays.push(p));
+    const t = mount({ bus: restBus, saved: { control: 'steps', autoLaunch: 2 } });
     t.pub('prev'); for (let i = 0; i < 8; i++) t.pub('prev');   // paddle hard left; the ball will be missed
+    check('(brick games, 2026-10-09: createPlayWatch) a press: the shell is told it is being played',
+      plays.length && plays[plays.length - 1].playing === true, JSON.stringify(plays));
     t.pub('select');
     let tries = 0;
     while (t.probe().game.misses < IDLE_BALLS && tries++ < 5000) {
@@ -359,8 +364,42 @@ try {
     t.clock.run(20000);
     check('*** it stops launching, and the loop stops ***', t.probe().idle && t.probe().game.phase === 'ready' && !t.clock.pending());
     check('and says press to play', t.say() === 'Press to play.', t.say());
+    check('*** come to rest, the shell is told it is not being played any more (rest, not paused) ***',
+      plays[plays.length - 1].playing === false && plays[plays.length - 1].rest === true, JSON.stringify(plays[plays.length - 1]));
     t.pub('select');
     check('the next press picks it up again', t.probe().game.phase === 'play' && !t.probe().idle && t.clock.pending());
+    check('...and it is being played again', plays[plays.length - 1].playing === true);
+    t.inst.destroy();
+  }
+
+  section('*** MADE OF NIMROD BRICKS, IN THE THEME\'S COLOURS (brick games, 2026-10-09) ***');
+  {
+    const host = scratch(960, 540);
+    host.style.setProperty('--accent', 'rgb(4, 5, 6)');
+    host.style.setProperty('--link', 'rgb(7, 8, 9)');
+    const t = mount({ host });
+    await cssReady(host);
+    const b0 = host.querySelector('.bb-brick[data-row="0"]');
+    const b1 = host.querySelector('.bb-brick[data-row="1"]');
+    const bg = (el) => getComputedStyle(el).backgroundColor;
+    check('every brick is a Nimrod brick (brick_face.js)', [...host.querySelectorAll('.bb-brick')].every((el) => el.classList.contains('nb-face')));
+    check('*** a keyed socket per 40 mm cell: drawn, not a flat slab ***', getComputedStyle(b0).backgroundImage.includes('radial-gradient'),
+      getComputedStyle(b0).backgroundImage.slice(0, 60));
+    check('a whole brick of the bond is three cells long, a half brick at a row\'s end two',
+      b0.style.getPropertyValue('--nb-cells') === '3' && host.querySelector('.bb-brick[data-row="1"]').style.getPropertyValue('--nb-cells') === '2');
+    check('*** the first row is the theme\'s first brick colour (its accent) ***', bg(b0) === 'rgb(4, 5, 6)', bg(b0));
+    // color-mix comes back as color(srgb r g b): the link's 7/255 at 88% is 0.0242.
+    const ch = (s) => (s.match(/[\d.]+/g) || []).map(Number);
+    check('the next row is the theme\'s next colour, a shade darker (its link)', bg(b1) !== bg(b0)
+      && Math.abs(ch(bg(b1))[0] - (7 / 255) * 0.88) < 0.002, bg(b1));
+    host.style.setProperty('--brick-1', 'rgb(1, 2, 3)');
+    check('*** a theme that declares its own brick colours gets them (brick_colours.js: --brick-N) ***', bg(b0) === 'rgb(1, 2, 3)', bg(b0));
+    host.style.setProperty('--wall-brick', 'rgb(10, 20, 30)');
+    check('a room\'s --wall-brick still wins: one colour for the whole wall', bg(b0) === 'rgb(10, 20, 30)', bg(b0));
+    check('defaults: the Nimrod look', DEFAULTS.look === 'nimrod' && host.querySelector('.bb').dataset.look === 'nimrod');
+    t.state.set({ look: 'plain' });
+    check('"Plain bricks": the old flat brick, no sockets', host.querySelector('.bb').dataset.look === 'plain'
+      && getComputedStyle(b0).backgroundImage === 'none', getComputedStyle(b0).backgroundImage.slice(0, 40));
     t.inst.destroy();
   }
 

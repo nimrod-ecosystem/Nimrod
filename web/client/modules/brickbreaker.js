@@ -37,6 +37,12 @@
 //     That is inaction, not a gate - nothing on the panel is waiting behind a press but the game.
 //   * No sound before the first press, and music only while somebody is playing.
 //
+// *** MADE OF NIMROD BRICKS, IN THE THEME'S COLOURS (brick games, 2026-10-09; Mike: "the Brick Breaker game should
+// be made of Nimrod bricks and you can have it follow your theme"). *** Every brick in the wall is the printed brick
+// seen from the front (../brick_face.js), each row a colour from the theme's palette; the paddle is the theme's accent
+// and the ball its strongest text colour. Nothing in it blinks: a brick that goes, goes once (a short fade, none at
+// all with reduced motion), so the screen's flash limit has nothing to hold back. `look: plain` is the old wall.
+//
 // THE SCORE is bricks broken this game, on the score contract (`../score_source.js`); drawn here
 // only when no scoreboard shows it. A cleared wall pays NOTHING by default (see `wallPoints`).
 //
@@ -82,10 +88,11 @@ import { SYSTEM_TOPICS } from '../actions.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
 import { SHELL_STATE } from '../shell_verbs.js';
 import {
-  autostartFields, attractFields, shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, demoReturnMs,
+  autostartFields, attractFields, shouldAutostart, panelAlone, createPlayWatch, demoLimitMs, demoReturnMs,
   ATTRACT_DEFAULTS, START_VOICE, START_LINES, ensureStartStyle, startOverlayHtml,
 } from '../game_start.js';
 import { gameAgentFor, askAgent } from '../game_agent.js';
+import { ensureBrickFaceStyle, cellsAlong } from '../brick_face.js';
 import {
   FIELD_W, FIELD_H, BALL_R, PADDLE_H, PADDLE_Y, BALL_SPEEDS, PADDLE_WIDTHS, SWEEP_SPEEDS, STEP_SIZES,
   CONTROLS, newGame, launch, step, setPaddleX, nudgePaddle, landingX, togglePause, setPaused, nextWall, aliveCount,
@@ -144,6 +151,11 @@ export const DEFAULTS = Object.freeze({
   lives: 0,               // 0 = off
   rows: 4,
   cols: 8,
+  // brick games (2026-10-09). 'nimrod': each brick drawn as a Nimrod brick, one keyed socket per 40 mm cell, a theme
+  // colour a row. 'plain': the flat bricks it had before. FOR nimrod by default: Mike asked for it ("made of Nimrod
+  // bricks"), and on this site the bricks ARE the product. AGAINST: busier bricks, a little harder to read as
+  // targets on a small panel. One setting away.
+  look: 'nimrod',
   sounds: true,
   music: 'ambient',       // Mike, 2026-08-29: "The games should still have music."
   musicVolume: 0.3,
@@ -196,6 +208,8 @@ const SETTINGS = [
     options: [2, 3, 4, 5, 6].map((v) => ({ value: v, label: String(v) })), note: 'Starts with the next wall.' },
   { key: 'cols', label: 'Bricks across', kind: 'choice', default: 8, level: 'advanced',
     options: [5, 6, 8, 10].map((v) => ({ value: v, label: String(v) })), note: 'Starts with the next wall.' },
+  { key: 'look', label: 'The bricks', kind: 'choice', default: 'nimrod', level: 'standard',
+    options: [{ value: 'nimrod', label: 'Nimrod bricks, in the theme\'s colours' }, { value: 'plain', label: 'Plain bricks' }] },
   { key: 'sounds', label: 'Bounce sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
   { key: 'music', label: 'Music', kind: 'choice', default: 'ambient', level: 'standard',
     options: [{ value: 'ambient', label: 'Quiet background music' }, { value: 'off', label: 'No music' }] },
@@ -281,7 +295,10 @@ registerModule(
     let agent = null;
     let restTimer = null;         // a real game come to rest: when the demo comes back
     let overlayEl = null, lastOverlay = null;
-    const report = createPlayReporter(bus, ctx);
+    // BEING PLAYED (brick games, 2026-10-09: game_start.js createPlayWatch, which replaced createPlayReporter here):
+    // from Start and every press (or aim) until nobody has pressed for GAME_IDLE_MS, or the game comes to rest, so a
+    // wall somebody started and walked away from no longer holds the screen's reload for ever. Pause says paused.
+    const plays = createPlayWatch(bus, ctx);
     const setT = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
     const clearT = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (h) => clearTimeout(h);
 
@@ -389,7 +406,7 @@ registerModule(
         sound(ev);
         if (ev === 'miss') {
           missesSinceInput++;
-          if (missesSinceInput >= IDLE_BALLS) { idle = true; g.paddle.moving = false; scheduleDemo(); }
+          if (missesSinceInput >= IDLE_BALLS) { idle = true; g.paddle.moving = false; plays.rest(); scheduleDemo(); }
         }
         if (ev === 'cleared') {
           stats = { ...stats, walls: (Number(stats.walls) || 0) + 1 };
@@ -415,6 +432,7 @@ registerModule(
       idle = false; missesSinceInput = 0;
       clearRest();
       if (!armed) { armed = true; tones?.resume(); }
+      plays.active();
     }
 
     // ---- Start, and back to the Start screen ----------------------------------------------------------
@@ -436,7 +454,7 @@ registerModule(
       demo = demoWanted();
       demoMs = 0; demoRested = false; demoMemory = {}; readyMs = 0;
       agent = demo ? gameAgentFor(GAME, 'paddle') : null;
-      report(false);
+      plays.pause();            // a game waiting for Start says it is not playing (game_start.js)
       syncAudio(); render(); ensureLoop();
     }
     // ANY PRESS STARTS A REAL GAME: a fresh wall, the ball on the paddle, waiting for select to launch it.
@@ -445,8 +463,7 @@ registerModule(
       stopLoop();
       started = true; demo = false; agent = null; demoMemory = {};
       fresh();
-      markInput();
-      report(true);
+      markInput();              // ...which tells the shell it is being played
       syncAudio(); render(); ensureLoop();
       return true;
     }
@@ -493,7 +510,7 @@ registerModule(
       if (dead || !started) return;      // nothing to pause while it waits for Start
       markInput();
       togglePause(g);
-      report(g.phase !== 'paused');
+      if (g.phase === 'paused') plays.pause();
       syncAudio(); render();
       if (g.phase === 'paused') stopLoop(); else ensureLoop();
     }
@@ -513,7 +530,7 @@ registerModule(
     function pauseGame({ menu = false } = {}) {
       if (dead || !g || !started) return;   // a game waiting for Start is not going: nothing to pause
       if (setPaused(g, true)) stopLoop();
-      report(false);
+      plays.pause();
       syncAudio(); render();
       if (menu && cfg.pauseOpensMenu !== false) openMenu();
     }
@@ -523,7 +540,6 @@ registerModule(
       if (startGame()) return;
       markInput();
       setPaused(g, false);
-      report(true);
       syncAudio(); render(); ensureLoop();
     }
     // "Stop": the gliding paddle stops where it is. Nothing else changes - the ball keeps going.
@@ -552,6 +568,7 @@ registerModule(
       // Not while it waits for Start: an aim is a position, not a press, and the demo's paddle is the demo's.
       if (!Number.isFinite(x) || dead || !g || !started || cfg.control === 'follow' || g.phase === 'paused') return;
       missesSinceInput = 0;
+      plays.active();
       g.paddle.moving = false;
       setPaddleX(g, Math.max(0, Math.min(1, x)) * FIELD_W);
       render();
@@ -590,6 +607,7 @@ registerModule(
       const x = fieldX(e);
       if (x == null) return;
       missesSinceInput = 0;
+      plays.active();
       g.paddle.moving = false;
       setPaddleX(g, x);
       render();
@@ -608,8 +626,11 @@ registerModule(
     // ---- drawing ---------------------------------------------------------------------------------
     function buildField() {
       if (!fieldEl) return;
-      const bricks = g.bricks.map((b) => `<div class="bb-brick" data-id="${esc(b.id)}" data-row="${b.row % 4}"`
-        + ` style="left:${pct(b.x, FIELD_W)};top:${pct(b.y, FIELD_H)};width:${pct(b.w, FIELD_W)};height:${pct(b.h, FIELD_H)}"></div>`).join('');
+      // brick games (2026-10-09): each brick is a Nimrod brick (brick_face.js), one socket per 40 mm cell - a whole
+      // brick of the running bond comes out three cells long, a half brick at a row's end two.
+      const bricks = g.bricks.map((b) => `<div class="bb-brick nb-face" data-id="${esc(b.id)}" data-row="${b.row % 4}"`
+        + ` data-cells="${cellsAlong(b.w, b.h)}" style="left:${pct(b.x, FIELD_W)};top:${pct(b.y, FIELD_H)};width:${pct(b.w, FIELD_W)};`
+        + `height:${pct(b.h, FIELD_H)};--nb-cells:${cellsAlong(b.w, b.h)}"></div>`).join('');
       fieldEl.innerHTML = `${bricks}<div class="bb-paddle" data-paddle><span class="bb-aim" data-aim aria-hidden="true"></span></div>`
         + '<div class="bb-ball" data-ball></div>'
         // PAUSED, ON THE FIELD: a sign in the middle, the field dimmed. A sign and not a dialog - nothing
@@ -633,6 +654,7 @@ registerModule(
         bb.dataset.motion = reducedMotion() ? 'reduce' : 'full';
         bb.dataset.started = started ? '1' : '0';
         bb.dataset.demo = !started && demo && !demoRested ? '1' : '0';
+        bb.dataset.look = cfg.look === 'plain' ? 'plain' : 'nimrod';
       }
       // THE START BUTTON, over the field, while it waits. The words are under the field, as always.
       if (overlayEl) {
@@ -697,8 +719,9 @@ registerModule(
         let cssHref = '';
         try { cssHref = new URL('../brickbreaker.css', import.meta.url).href; } catch { /* unstyled, still works */ }
         ensureStartStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
+        ensureBrickFaceStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-bb-css href="${esc(cssHref)}">` : ''}`
-          + '<div class="bb-wrap gs-host" data-bb-root tabindex="0" aria-label="Brick breaker"><div class="bb" data-bb>'
+          + '<div class="bb-wrap gs-host nb-bricks" data-bb-root tabindex="0" aria-label="Brick breaker"><div class="bb" data-bb>'
           + '<div class="bb-stage"><div class="bb-field" data-field role="img" aria-label="A wall of bricks, a ball and a paddle"></div></div>'
           + '<div class="bb-bar"><p class="bb-say" role="status" aria-live="polite"></p><p class="bb-score" data-score hidden></p></div>'
           + '</div><div data-start-host hidden></div></div>';
@@ -773,13 +796,13 @@ registerModule(
 
         // OPENS WAITING FOR START, unless this panel starts by itself (game_start.js).
         if (shouldAutostart(state?.get?.() || {}, { fallback: DEFAULTS.autostart, alone: panelAlone(ctx) })) {
-          started = true; report(true); render();
+          started = true; plays.active(); render();
         } else toStartScreen();
       },
       onResize() { render(); },
       onHide() {
         hidden = true;
-        if (started && g && g.phase === 'play') { togglePause(g); report(false); }   // somebody coming back finds it paused, not lost
+        if (started && g && g.phase === 'play') { togglePause(g); plays.pause(); }   // somebody coming back finds it paused, not lost
         stopLoop(); syncAudio(); render();
         try { state?.flush?.(); } catch { /* nothing to do */ }
       },
@@ -791,6 +814,7 @@ registerModule(
         mount.removeEventListener('pointermove', onPointerMove);
         mount.removeEventListener('pointerdown', onPointerDown);
         mount.removeEventListener('keydown', onKey);
+        try { plays.destroy(); } catch { /* gone */ }
         try { tones?.destroy(); } catch { /* gone */ }
         tones = null;
         try { music?.destroy(); } catch { /* gone */ }

@@ -97,6 +97,10 @@ export const HEALTH_EXPECT = {
   // Row 2.37 item 10's two games come to rest when nobody plays: a still wall or a stopped beat is not a stall.
   brickbreaker: { idle: true },
   rhythm:      { idle: true },
+  // brick games (2026-10-09): Brick Drop comes to rest when nobody presses, like brick breaker. A still wall is not a stall.
+  brickdrop:   { idle: true },
+  // bricks module (row 2.76): a picture of one part. It publishes nothing, and a still picture is not a stall.
+  bricks:      { idle: true },
   karaoke:     { expectMs: 90 * 60 * 1000 },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //

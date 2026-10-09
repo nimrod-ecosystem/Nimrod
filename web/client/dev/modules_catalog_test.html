@@ -83,6 +83,8 @@ import '../modules/weather.js';
 import '../modules/music.js';
 import '../modules/brickbreaker.js';
 import '../modules/rhythm.js';
+import '../modules/brickdrop.js';   // brick games (row 2.76): Brick Drop (new core)
+import '../modules/bricks.js';   // bricks module (row 2.76): every Nimrod part, one module (new core)
 import '../modules/avatar.js';
 import '../modules/voice_review.js';
 import '../modules/voice_model.js';   // 2026-10-04: the voice-model steps (new core)
@@ -185,7 +187,9 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-09-30: row 2.45's `karaoke`, `name_that`, `simple_math` and `spelling` are built on the new core.
   // 2026-09-30: row 2.37's `note` and `solitaire` are built on the new core.
   // 2026-09-30: row 2.37 item 10's `brickbreaker` and `rhythm` are built on the new core.
-  const PORTED = ['avatar', 'brain_games', 'brickbreaker', 'button', 'calculator', 'card_sort', 'charts', 'devices', 'helper', 'karaoke', 'library', 'name_that', 'nimrod', 'note',
+  // 2026-10-09: `bricks` (row 2.76: every Nimrod part, one module) is built on the new core.
+  // 2026-10-09: `brickdrop` (brick games, row 2.76: Brick Drop) is built on the new core.
+  const PORTED = ['avatar', 'brain_games', 'brickbreaker', 'brickdrop', 'bricks', 'button', 'calculator', 'card_sort', 'charts', 'devices', 'helper', 'karaoke', 'library', 'name_that', 'nimrod', 'note',
     'options', 'people', 'play_objects', 'profile', 'quiz_mix', 'rhythm', 'room', 'scoreboard', 'simple_math', 'solitaire', 'spelling', 'themes', 'think_games', 'voice_model', 'voice_review', 'weather', 'whats_new',
     'word_builder', 'word_games'];
   // 2026-10-07: `play_objects` (row 2.62 step 4: what played, as a stack of bricks, a pie or posters) is built on the new core.
@@ -201,7 +205,7 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-10-01: row 2.45's `think_games` (the SLP exercises) is built on the new core.
   // 2026-09-30: row 2.37's `weather` is built on the new core.
   // 2026-09-30: row 2.44's `voice_review` (the voice recordings kept on this screen) is built on the new core.
-  check('exactly thirty-three modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, button, calculator, card_sort, charts, devices, helper, karaoke, library, name_that, nimrod, note, options, people, play_objects, profile, quiz_mix, rhythm, room, scoreboard, simple_math, solitaire, spelling, themes, think_games, voice_model, voice_review, weather, whats_new, word_builder and word_games',
+  check('exactly thirty-five modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, brickdrop, bricks, button, calculator, card_sort, charts, devices, helper, karaoke, library, name_that, nimrod, note, options, people, play_objects, profile, quiz_mix, rhythm, room, scoreboard, simple_math, solitaire, spelling, themes, think_games, voice_model, voice_review, weather, whats_new, word_builder and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length

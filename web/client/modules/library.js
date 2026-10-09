@@ -20,7 +20,7 @@ import { normalizeField, fieldValue } from '../settings_fields.js';
 import { createUnlockGate } from '../unlocks.js';
 import { MENU_TAB_TOPIC } from '../actions.js';
 import {
-  LIBRARY_TYPE, LIBRARY_TITLE, LIBRARY_SETTINGS, LIBRARY_DEFAULTS, libraryItems, brickItems, mountLibrary,
+  LIBRARY_TYPE, LIBRARY_TITLE, LIBRARY_SETTINGS, LIBRARY_DEFAULTS, libraryItems, mountLibrary,
   registerLibraryAIActions, CATEGORY_IDS, USE_FILTERS,
 } from '../library.js';
 
@@ -28,17 +28,8 @@ export const LIBRARY_VERB_TOPICS = Object.freeze(Object.fromEntries(
   ['next', 'prev', 'select', 'back', 'up', 'down', 'left', 'right'].map((v) => [v, `library/${v}`]),
 ));
 const FIELDS = LIBRARY_SETTINGS.map((f) => normalizeField(f)).filter(Boolean);
-const BRICKS_URL = new URL('../design-assets/bricks/bricks.json', import.meta.url).href;
-
-/** The published bricks, as library items (empty when the list cannot be read: the 3D chip says so). */
-export async function loadBricks(fetchImpl = (typeof fetch === 'function' ? fetch : null)) {
-  if (!fetchImpl) return [];
-  try {
-    const r = await fetchImpl(BRICKS_URL, { cache: 'force-cache' });
-    if (!r || !r.ok) return [];
-    return brickItems(await r.json());
-  } catch { return []; }
-}
+// bricks module (row 2.76): the published parts list is no longer fetched here -- one Bricks module stands for every
+// part (modules/bricks.js), and it reads the list itself when it draws one.
 
 /** What the module reads off its state row: the declared settings, plus the category and the filter. */
 export function libraryPrefsFrom(values = {}) {
@@ -84,7 +75,6 @@ registerModule(
         const ready = gate ? gate.load().catch(() => null) : Promise.resolve(null);
         lib = mountLibrary(mount, {
           items: () => libraryItems(),
-          moreItems: () => loadBricks(),
           host, gate, say,
           // The person's "How you choose things" (6fd7575): "step through" scans the library by rows.
           chooseMode: () => (typeof ctx.chooseMode === 'function' ? ctx.chooseMode() : ctx.chooseMode),

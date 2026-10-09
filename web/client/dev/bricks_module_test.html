@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>bricks_module — one Bricks module for every Nimrod part, and each theme's brick colours</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#3c5346}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  .box{position:relative;width:480px;height:360px;margin:8px 0;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>bricks_module — one Bricks module for every Nimrod part, and each theme's brick colours</h1>
+<p>Row 2.76. Mike, 2026-10-09: <i>"In the modules module, there shouldn't be a separate module for each brick. Just a
+bricks module. Also, there should be brick colors to match each theme."</i> This checks: the catalog and the library
+show ONE Bricks entry; every part, size and height choice draws; the published parts show their picture (mirrored
+when width and length are the other way round) and every other size is drawn; an old per-part reference becomes the
+Bricks module with that part chosen; and every theme's five brick colours clear 3:1 against the theme's surfaces
+(the drawing's shaded faces included) and stay CIEDE2000 10 apart, normal vision and simulated deuteranopia both.</p>
+<p>Needs the server (it fetches the published parts list and pictures).</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { THEMES, luminance, worstContrast, contrast, applyTheme, FOCUS_MIN } from '../theme.js';
+import { BRICK_COLOURS, BRICK_COLOUR_COUNT, BRICK_MIN_DE, BRICK_SHADES, brickColoursFor, brickVars, brickColourVar,
+  brickColourCss } from '../brick_colours.js';
+import { mountModule, getManifest, listManifests } from '../module.js';
+import { normalizeField } from '../settings_fields.js';
+import { CATALOG } from '../modules_catalog.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { isStarter } from '../unlocks.js';
+import { libraryItems } from '../library.js';
+import { createBus } from '../bus.js';
+import {
+  BRICKS_TYPE, PARTS, PART_IDS, SIZES, THICKNESSES, GRID, BRICKS_SETTINGS, BRICKS_DEFAULTS, COLOUR_CHOICES, bricksOptions,
+  colourCss, partSpec, publishedFor, pictureFor, partBoxes, drawPart, setPartDrawer, settingsForPartId, migrateBrickRef, plateCells,
+  BRICKS_JSON,
+} from '../modules/bricks.js';
+import { partUrls } from '../brick_builds.js';
+import { baseplateIds } from '../baseplate_art.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function info(t) { const d = document.createElement('div'); d.className = 'info'; d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 4000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(25); } return false; };
+const box = () => { const b = document.createElement('div'); b.className = 'box'; document.getElementById('host').append(b); return b; };
+function memState(seed = {}) {
+  let data = { ...seed };
+  const subs = new Set();
+  return { load: () => Promise.resolve(data), get: () => data,
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f(data); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, flush: async () => {}, destroy() {} };
+}
+
+// ---- colour maths, as theme.js does it (and checked against it below) ----
+const DEUTAN = [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.011820, 0.042940, 0.968881]];
+const rgbOf = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+const lin = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+function linRgb(h, deutan = false) {
+  let [r, g, b] = rgbOf(h).map(lin);
+  if (deutan) [r, g, b] = DEUTAN.map(([x, y, z]) => Math.min(1, Math.max(0, x * r + y * g + z * b)));
+  return [r, g, b];
+}
+function lab(h, deutan = false) {
+  const [r, g, b] = linRgb(h, deutan);
+  const X = 0.4124 * r + 0.3576 * g + 0.1805 * b; const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b; const Z = 0.0193 * r + 0.1192 * g + 0.9505 * b;
+  const f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+  const fx = f(X / 0.95047); const fy = f(Y); const fz = f(Z / 1.08883);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+const rad = (d) => (d * Math.PI) / 180; const deg = (r) => (r * 180) / Math.PI;
+// CIEDE2000 (Sharma, Wu & Dalal 2005).
+function de00([L1, a1, b1], [L2, a2, b2]) {
+  const C1 = Math.hypot(a1, b1); const C2 = Math.hypot(a2, b2); const Cb = (C1 + C2) / 2;
+  const G = 0.5 * (1 - Math.sqrt(Cb ** 7 / (Cb ** 7 + 25 ** 7)));
+  const a1p = (1 + G) * a1; const a2p = (1 + G) * a2;
+  const C1p = Math.hypot(a1p, b1); const C2p = Math.hypot(a2p, b2);
+  const h1p = C1p ? (deg(Math.atan2(b1, a1p)) + 360) % 360 : 0; const h2p = C2p ? (deg(Math.atan2(b2, a2p)) + 360) % 360 : 0;
+  const dLp = L2 - L1; const dCp = C2p - C1p;
+  let dh = h2p - h1p; if (C1p * C2p === 0) dh = 0; else if (dh > 180) dh -= 360; else if (dh < -180) dh += 360;
+  const dHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(rad(dh / 2));
+  const Lbp = (L1 + L2) / 2; const Cbp = (C1p + C2p) / 2;
+  let hbp; if (C1p * C2p === 0) hbp = h1p + h2p; else if (Math.abs(h1p - h2p) <= 180) hbp = (h1p + h2p) / 2;
+  else hbp = h1p + h2p < 360 ? (h1p + h2p + 360) / 2 : (h1p + h2p - 360) / 2;
+  const T = 1 - 0.17 * Math.cos(rad(hbp - 30)) + 0.24 * Math.cos(rad(2 * hbp)) + 0.32 * Math.cos(rad(3 * hbp + 6)) - 0.20 * Math.cos(rad(4 * hbp - 63));
+  const dth = 30 * Math.exp(-(((hbp - 275) / 25) ** 2));
+  const Rc = 2 * Math.sqrt(Cbp ** 7 / (Cbp ** 7 + 25 ** 7));
+  const Sl = 1 + (0.015 * (Lbp - 50) ** 2) / Math.sqrt(20 + (Lbp - 50) ** 2); const Sc = 1 + 0.045 * Cbp; const Sh = 1 + 0.015 * Cbp * T;
+  const Rt = -Math.sin(rad(2 * dth)) * Rc;
+  return Math.sqrt((dLp / Sl) ** 2 + (dCp / Sc) ** 2 + (dHp / Sh) ** 2 + Rt * (dCp / Sc) * (dHp / Sh));
+}
+const apart = (a, b) => Math.min(de00(lab(a), lab(b)), de00(lab(a, true), lab(b, true)));
+const toHex = (rgb) => `#${rgb.map((c) => Math.round(c * 255).toString(16).padStart(2, '0')).join('')}`;
+const shade = (h, t) => toHex(rgbOf(h).map((c) => c * (1 - t)));
+
+try {
+  // ===============================================================================================================
+  section('*** each theme’s brick colours: 3:1 on its surfaces, CIEDE2000 10 apart, colour-blind too ***');
+  {
+    check('the colour maths here is theme.js’s: the same luminance for every brick colour, deuteranopia included',
+      Object.values(BRICK_COLOURS).flat().every((c) => {
+        const L = (h, d) => { const [r, g, b] = linRgb(h, d); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+        return Math.abs(L(c.hex, false) - luminance(c.hex)) < 1e-9 && Math.abs(L(c.hex, true) - luminance(c.hex, { deutan: true })) < 1e-9;
+      }));
+    check('CIEDE2000 matches Sharma’s published test pair (2.0425)', Math.abs(de00([50, 2.6772, -79.7751], [50, 0, -82.7485]) - 2.0425) < 1e-3);
+    const ids = Object.keys(THEMES);
+    const missing = ids.filter((id) => !Object.prototype.hasOwnProperty.call(BRICK_COLOURS, id));
+    check(`*** every theme (${ids.length}) has a set of its own ***`, missing.length === 0, missing.join(','));
+    const stale = Object.keys(BRICK_COLOURS).filter((id) => !THEMES[id]);
+    check('...and no set is left for a theme that is gone', stale.length === 0, stale.join(','));
+    const shapeBad = Object.entries(BRICK_COLOURS).filter(([, set]) => set.length !== BRICK_COLOUR_COUNT
+      || set.some((c) => !/^#[0-9a-f]{6}$/.test(c.hex) || !c.name) || new Set(set.map((c) => c.name)).size !== set.length);
+    check(`each set: ${BRICK_COLOUR_COUNT} colours, each a #rrggbb with a name of its own`, shapeBad.length === 0, shapeBad.map(([id]) => id).join(','));
+    const onPage = ids.filter((id) => brickColoursFor(id).some((c, i) => THEMES[id].vars[brickColourVar(i)] !== c.hex));
+    check('*** theme.js carries every set as --brick-1 .. --brick-5 on its theme ***', onPage.length === 0, onPage.join(','));
+    const lowC = []; const close = []; const rows = [];
+    for (const id of ids) {
+      const vars = THEMES[id].vars; const set = brickColoursFor(id);
+      let worst = Infinity; let near = Infinity;
+      for (const c of set) for (const s of BRICK_SHADES) {
+        const w = worstContrast(shade(c.hex, s), vars);
+        worst = Math.min(worst, w);
+        if (w < FOCUS_MIN) lowC.push(`${id}/${c.name}${s ? ` (face ${s})` : ''} ${w.toFixed(2)}`);
+      }
+      for (let i = 0; i < set.length; i++) for (let j = i + 1; j < set.length; j++) {
+        const d = apart(set[i].hex, set[j].hex);
+        near = Math.min(near, d);
+        if (d < BRICK_MIN_DE) close.push(`${id}: ${set[i].name}/${set[j].name} ${d.toFixed(1)}`);
+      }
+      rows.push(`${id}: ${set.map((c) => `${c.name} ${c.hex}`).join(', ')} | worst ${worst.toFixed(2)}:1, nearest ${near.toFixed(1)}`);
+    }
+    check(`*** every colour, and both shaded faces of the drawn brick, clear ${FOCUS_MIN}:1 on --bg, --surface and --surface-alt, normal vision and deuteranopia ***`,
+      lowC.length === 0, lowC.join(' | '));
+    check(`*** every two colours of a set are at least ${BRICK_MIN_DE} apart (CIEDE2000), normal vision and deuteranopia ***`,
+      close.length === 0, close.join(' | '));
+    for (const r of rows) info(r);
+    console.log('brick colours per theme:\n' + rows.join('\n'));
+    check('an unknown theme gets the default theme’s set, not nothing', J(brickColoursFor('nope')) === J(BRICK_COLOURS.default)
+      && Object.keys(brickVars('nope')).length === BRICK_COLOUR_COUNT);
+    check('brickColourCss clamps to the set', brickColourCss(0) === 'var(--brick-1)' && brickColourCss(99) === `var(--brick-${BRICK_COLOUR_COUNT})`
+      && brickColourCss(-3) === 'var(--brick-1)');
+    const el = document.createElement('div');
+    applyTheme(el, 'dusk');
+    check('*** applying a theme puts its brick colours on the element ***', el.style.getPropertyValue('--brick-1').trim() === BRICK_COLOURS.dusk[0].hex
+      && el.style.getPropertyValue('--brick-5').trim() === BRICK_COLOURS.dusk[4].hex);
+    applyTheme(el, 'default');
+    check('...and switching theme overwrites them', el.style.getPropertyValue('--brick-1').trim() === BRICK_COLOURS.default[0].hex);
+    check('the set never names the person it was first built for', !/her screen|christine|cici/i.test(J(BRICK_COLOURS)));
+  }
+
+  // ===============================================================================================================
+  section('*** ONE Bricks entry: the catalog, the library, the registry ***');
+  {
+    const m = getManifest(BRICKS_TYPE);
+    check('registered as "Bricks", on the new core', m && m.title === 'Bricks' && m.core === 'new');
+    const cat = CATALOG.filter((c) => c.type === BRICKS_TYPE);
+    check('*** the catalog has exactly one Bricks entry, and none per part ***', cat.length === 1
+      && !CATALOG.some((c) => /^(brick_|bracket_|plate_|modl_)/.test(c.type)), J(cat));
+    const its = libraryItems({ manifests: listManifests() });
+    const in3d = its.filter((i) => (i.cats || []).includes('3d'));
+    check('*** the library’s 3D chip holds one thing: the Bricks module ***', in3d.length === 1 && in3d[0].key === 'module:bricks' && in3d[0].placeable,
+      J(in3d.map((i) => i.key)));
+    check('...and nothing in the library is a per-part card any more', !its.some((i) => i.kind === 'brick' || /^brick:/.test(i.key)));
+    check('health: a still picture is not a stall (idle)', HEALTH_EXPECT[BRICKS_TYPE]?.idle === true);
+    check('the Nimrod Game never locks it (the parts are given away)', isStarter('module:bricks'));
+  }
+
+  // ===============================================================================================================
+  section('*** the settings: part, size, height, colour; only the rows that apply ***');
+  {
+    const fields = BRICKS_SETTINGS.map((f) => normalizeField(f));
+    const shown = (part) => fields.filter((f) => !f.appliesWhen || f.appliesWhen({ part })).map((f) => f.key);
+    const want = { brick: ['width', 'length', 'height'], baseplate: ['width', 'length', 'thickness'], lbracket: ['width'], corner3: [],
+      plateI: ['width'], plateL: ['width', 'length'], plateT: ['width', 'length'] };
+    const bad = PART_IDS.filter((p) => J(shown(p).filter((k) => ['width', 'length', 'height', 'thickness'].includes(k))) !== J(want[p]));
+    check('*** each part shows only its own size rows ***', bad.length === 0, bad.map((p) => `${p}: ${shown(p)}`).join(' | '));
+    check('the Part row offers every part', J(fields.find((f) => f.key === 'part').options.map((o) => o.value)) === J(PART_IDS));
+    check('sizes: 40 to 320 in 40 mm steps; a baseplate 5 or 10 mm thick',
+      J(fields.find((f) => f.key === 'width').options.map((o) => o.value)) === J([40, 80, 120, 160, 200, 240, 280, 320])
+      && J(fields.find((f) => f.key === 'thickness').options.map((o) => o.value)) === J([5, 10]));
+    check('colour: the theme’s five, or your own (and its row only then)', J(fields.find((f) => f.key === 'colour').options.map((o) => o.value)) === J(COLOUR_CHOICES)
+      && !shown('brick').includes('ownColour') && fields.find((f) => f.key === 'ownColour').appliesWhen({ colour: 'own' }));
+    const words = J(BRICKS_SETTINGS.map((f) => [f.label, f.help || '', (f.options || []).map((o) => o.label)]))
+      + J(CATALOG.find((c) => c.type === BRICKS_TYPE));
+    check('*** PLAIN WORDS: no module, dashboard, panel, token, widget, account or grant in its rows or its catalog words ***',
+      !/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/i.test(words), words.match(/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/ig));
+    check('...and never "her screen", Christine or Cici', !/her screen|christine|cici/i.test(words));
+    check('garbage reads as the defaults', J(bricksOptions({ part: 'sofa', width: 'x', thickness: 7, colour: 'pink', ownColour: 'red' }))
+      === J({ ...BRICKS_DEFAULTS }));
+    const o = bricksOptions({ part: 'baseplate', width: '120', length: 310, thickness: '10', colour: 'own', ownColour: '#ABCDEF' });
+    check('strings from a form read as numbers; an off-grid size snaps to the grid; your own colour as written',
+      o.width === 120 && o.length === 320 && o.thickness === 10 && colourCss(o) === '#abcdef', J(o));
+    check('a theme colour is a variable, so the theme changes it', colourCss(bricksOptions({ colour: 'theme3' })) === 'var(--brick-3)');
+    check('*** a joiner plate is never less than it can be: I and L 80, T 120 across ***',
+      partSpec({ ...BRICKS_DEFAULTS, part: 'plateI', width: 40 }).dims[0] === 80
+      && J(partSpec({ ...BRICKS_DEFAULTS, part: 'plateL', width: 40, length: 40 }).dims) === J([80, 80, 5])
+      && J(partSpec({ ...BRICKS_DEFAULTS, part: 'plateT', width: 40, length: 40 }).dims) === J([120, 80, 5]));
+  }
+
+  // ===============================================================================================================
+  section('*** every part, size and height choice draws ***');
+  {
+    const combos = [];
+    for (const part of PART_IDS) {
+      const rows = PARTS[part].rows;
+      const ws = rows.includes('width') ? SIZES : [40];
+      const ls = rows.includes('length') ? SIZES : [40];
+      const hs = rows.includes('height') ? SIZES : [40];
+      const ts = rows.includes('thickness') ? THICKNESSES : [5];
+      for (const width of ws) for (const length of ls) for (const height of hs) for (const thickness of ts) {
+        combos.push({ ...BRICKS_DEFAULTS, part, width, length, height, thickness });
+      }
+    }
+    const expectSockets = (spec) => {
+      const [w, d, h] = spec.dims; const n = (v) => v / GRID;
+      if (spec.part === 'brick') return n(w) * n(d) + n(w) * n(h) + n(d) * n(h);
+      if (spec.part === 'baseplate') return n(w) * n(d);
+      if (spec.part === 'lbracket') return 2 * n(w);
+      if (spec.part === 'corner3') return 3;
+      return plateCells(spec.shape, w, d).length;
+    };
+    const bad = [];
+    for (const o of combos) {
+      const spec = partSpec(o);
+      const svg = drawPart(spec, colourCss(o));
+      const vb = (svg.match(/viewBox="([^"]+)"/) || [])[1] || '';
+      const nums = vb.split(' ').map(Number);
+      const sockets = [...svg.matchAll(/data-sockets="(\d+)"/g)].reduce((s, m) => s + Number(m[1]), 0);
+      if (!svg.startsWith('<svg') || /NaN|Infinity|undefined/.test(svg) || nums.length !== 4 || !nums.every(Number.isFinite)
+        || nums[2] <= 0 || nums[3] <= 0 || sockets !== expectSockets(spec) || !svg.includes('fill:var(--bk)')) {
+        bad.push(`${spec.title} (sockets ${sockets}/${expectSockets(spec)})`);
+      }
+    }
+    check(`*** all ${combos.length} choices (${PART_IDS.length} parts × their sizes and heights) draw: a real picture, a socket on every cell ***`,
+      bad.length === 0 && combos.length === 512 + 128 + 8 + 1 + 8 + 64 + 64, `${combos.length} ${bad.slice(0, 6).join(' | ')}`);
+    const parsed = new DOMParser().parseFromString(drawPart(partSpec({ ...BRICKS_DEFAULTS, part: 'brick', width: 80, length: 120, height: 40 }), 'var(--brick-1)'), 'image/svg+xml');
+    check('a drawing is well-formed SVG, labelled with what it is', !parsed.querySelector('parsererror')
+      && parsed.documentElement.getAttribute('aria-label') === 'Brick, 80 × 120 × 40 mm', (parsed.querySelector('parsererror')?.textContent || '').slice(0, 300));
+    const big = drawPart(partSpec({ ...BRICKS_DEFAULTS, part: 'brick', width: 320, length: 320, height: 320 }), '#000000');
+    check('the biggest brick stays a modest drawing (under 120 kB of markup)', big.length < 120000, String(big.length));
+    check('no colour is written into the drawing but the one it is given (and black for shading)',
+      !/#[0-9a-f]{3,6}\b|rgba?\(/i.test(drawPart(partSpec(BRICKS_DEFAULTS), 'var(--brick-1)')));
+    check('boxes are on the grid: a 120 × 80 T plate is a row of three and a stem', J(partBoxes(partSpec({ ...BRICKS_DEFAULTS, part: 'plateT', width: 120, length: 80 }))
+      .map((b) => [b.x0, b.z0, b.x1, b.z1]).sort()) === J([[0, 40, 120, 80], [40, 0, 80, 40]].sort()));
+    // The seam a procedural plate (CAD side) plugs into.
+    const prev = setPartDrawer('baseplate', () => '<svg data-mine></svg>');
+    check('*** a part drawer, once set, draws that part ***', drawPart(partSpec({ ...BRICKS_DEFAULTS, part: 'baseplate' }), 'red') === '<svg data-mine></svg>');
+    setPartDrawer('baseplate', (spec) => [{ x0: 0, y0: 0, z0: 0, x1: spec.dims[0], y1: 1, z1: spec.dims[1], sockets: [] }]);
+    check('...or hands back boxes, drawn the same way', /data-drawn/.test(drawPart(partSpec({ ...BRICKS_DEFAULTS, part: 'baseplate' }), 'red')));
+    setPartDrawer('baseplate', prev);
+    check('...and removed, the boxes here draw it again', /data-sockets="1"/.test(drawPart(partSpec({ ...BRICKS_DEFAULTS, part: 'baseplate' }), 'red')));
+  }
+
+  // ===============================================================================================================
+  section('*** the published parts: every one reachable, by its old id too, and its picture there ***');
+  let doc = null;
+  {
+    doc = await (await fetch(BRICKS_JSON, { cache: 'no-cache' })).json();
+    const objs = doc.objects || [];
+    check('the parts list is there', objs.length >= 20, String(objs.length));
+    const unreachable = objs.filter((o) => {
+      const s = settingsForPartId(o.id);
+      const m = s && publishedFor(partSpec(bricksOptions(s)), doc);
+      return !(m && m.obj.id === o.id && !m.mirror);
+    }).map((o) => o.id);
+    check(`*** every published part (${objs.length}) is one setting away, and its old id migrates to exactly it ***`, unreachable.length === 0, unreachable.join(','));
+    const pics = await Promise.all(objs.map(async (o) => { try { return (await fetch(partUrls(o.id).picture, { method: 'HEAD' })).ok; } catch { return false; } }));
+    check('every published part has its picture where the module looks', pics.every(Boolean), objs.filter((o, i) => !pics[i]).map((o) => o.id).join(','));
+    const lying = publishedFor(partSpec({ ...BRICKS_DEFAULTS, width: 80, length: 40, height: 40 }), doc);
+    check('*** a brick lying down is not its standing picture: it is drawn ***', lying === null);
+    const turned = publishedFor(partSpec({ ...BRICKS_DEFAULTS, width: 80, length: 40, height: 80 }), doc);
+    check('*** width and length the other way round: the same picture, mirrored ***', turned?.obj.id === 'brick_40x80x80_v1' && turned.mirror === true, J(turned));
+    // The CAD helper's 72 baseplates (W <= D, 40..320, 5 and 10 mm): every one pictured from its numbers, by its own id.
+    const ids = baseplateIds();
+    const got = [];
+    for (const w of SIZES) for (const l of SIZES) for (const t of THICKNESSES) {
+      const pf = pictureFor(partSpec({ ...BRICKS_DEFAULTS, part: 'baseplate', width: w, length: l, thickness: t }), doc);
+      if (pf && pf.from === 'baseplate' && /^data:image\/svg\+xml/.test(pf.url)) got.push(pf.id);
+    }
+    check(`*** every baseplate choice (128) has a picture, and together they are exactly the ${ids.length} catalogued baseplates ***`,
+      got.length === 128 && ids.length === 72 && J([...new Set(got)].sort()) === J([...ids].sort()), `${got.length} ${new Set(got).size}`);
+    check('...a brick with no published picture still has none (it is drawn)', pictureFor(partSpec({ ...BRICKS_DEFAULTS, width: 120, length: 120, height: 120 }), doc) === null);
+    const fakeBase = { objects: [{ id: 'modl_040x320x10_sockets_v1', kind: 'baseplate', dims_mm: [40, 320, 10] }] };
+    check('a baseplate published by the CAD side’s name is found by kind and size (and turned)',
+      publishedFor(partSpec({ ...BRICKS_DEFAULTS, part: 'baseplate', width: 40, length: 320, thickness: 10 }), fakeBase)?.mirror === false
+      && publishedFor(partSpec({ ...BRICKS_DEFAULTS, part: 'baseplate', width: 320, length: 40, thickness: 10 }), fakeBase)?.mirror === true
+      && publishedFor(partSpec({ ...BRICKS_DEFAULTS, part: 'baseplate', width: 40, length: 320, thickness: 5 }), fakeBase) === null);
+  }
+
+  // ===============================================================================================================
+  section('*** old per-part references migrate to the Bricks module ***');
+  {
+    check('a brick id', J(settingsForPartId('brick_40x80x160_v1')) === J({ part: 'brick', width: 40, length: 80, height: 160 }));
+    check('an L bracket, the corner, each joiner plate', settingsForPartId('bracket_L120x40x5_v1')?.width === 120
+      && settingsForPartId('bracket_corner3_40_v1')?.part === 'corner3' && settingsForPartId('plate_I120x40x5_v1')?.part === 'plateI'
+      && settingsForPartId('plate_L80x80x5_v1')?.part === 'plateL' && settingsForPartId('plate_T120x80x5_v1')?.part === 'plateT');
+    check('a baseplate, by the CAD side’s name', J(settingsForPartId('modl_040x320x10_sockets_v1')) === J({ part: 'baseplate', width: 40, length: 320, thickness: 10 }));
+    check('*** a library key `brick:<id>` becomes the Bricks module with that part ***',
+      J(migrateBrickRef('brick:brick_40x40x120_v1')) === J({ type: 'bricks', settings: { part: 'brick', width: 40, length: 40, height: 120 } }));
+    check('*** a saved { type, settings } keeps its own settings, the part chosen on top ***',
+      J(migrateBrickRef({ type: 'brick:plate_I80x40x5_v1', settings: { look: 'drawn', colour: 'theme2' } }))
+      === J({ type: 'bricks', settings: { look: 'drawn', colour: 'theme2', part: 'plateI', width: 80, length: 40 } }));
+    check('anything that never was a part is nothing', migrateBrickRef('clock') === null && migrateBrickRef(null) === null
+      && migrateBrickRef({ type: 'photos' }) === null && settingsForPartId('brick_banana_v1') === null);
+  }
+
+  // ===============================================================================================================
+  section('*** the module on a page: picture, mirror, drawing, colour, words, and a picture that fails ***');
+  {
+    const host = box();
+    applyTheme(host, 'dusk');
+    const state = memState({});
+    const inst = mountModule(BRICKS_TYPE, { mount: host, bus: createBus(), state, personId: null, instanceId: 'bk1', profileId: 'p' });
+    await inst.init();
+    const p = () => inst.impl.__probe();
+    check('*** the default, a 40 mm cube, is its published picture ***', await until(() => p().how === 'picture' && p().published === 'brick_40x40x40_v1'), J(p()));
+    const img = host.querySelector('.bk-pic img');
+    check('...the picture the bricks page uses, and it loads', !!img && /renders\/brick_40x40x40_v1\.png$/.test(img.src)
+      && await until(() => img.complete && img.naturalWidth > 0));
+    check('...tinted with the theme’s first brick colour', host.querySelector('.bk-pic [data-tint]')?.style.background.includes('var(--brick-1)'));
+    check('the words say what it is', host.querySelector('[data-words]').textContent === 'Brick, 40 × 40 × 40 mm' && !host.querySelector('[data-words]').hidden);
+    state.set({ width: 80, height: 80 });
+    check('*** 80 × 40 × 80: the 40 × 80 × 80 picture, mirrored ***', await until(() => p().published === 'brick_40x80x80_v1' && p().mirror
+      && host.querySelector('.bk-pic')?.style.transform === 'scaleX(-1)'), J(p()));
+    state.set({ width: 120, length: 120, height: 120, colour: 'theme3' });
+    check('*** a size with no picture is drawn, in the colour chosen ***', await until(() => p().how === 'drawn' && !!host.querySelector('svg[data-drawn]')
+      && host.querySelector('svg[data-drawn]').getAttribute('style').includes('var(--brick-3)')), J(p()));
+    const face = host.querySelector('svg[data-drawn] .bk-face');
+    check('...and the colour on the page is the theme’s (dusk’s third brick colour)', !!face
+      && getComputedStyle(face).fill === (() => { const [r, g, b] = rgbOf(BRICK_COLOURS.dusk[2].hex).map((c) => Math.round(c * 255)); return `rgb(${r}, ${g}, ${b})`; })(),
+      face && getComputedStyle(face).fill);
+    state.set({ part: 'baseplate', width: 320, length: 40, thickness: 10, colour: 'own', ownColour: '#123456', words: false });
+    check('*** a baseplate, your own colour, no words ***', await until(() => p().spec.part === 'baseplate' && J(p().spec.dims) === J([320, 40, 10])
+      && p().colour === '#123456' && host.querySelector('[data-words]').hidden), J(p()));
+    check('*** ...pictured by baseplate_art.js (the CAD id, no model fetched), tinted with that colour, and the picture loads ***',
+      await until(() => p().how === 'picture' && p().from === 'baseplate' && p().published === 'modl_040x320x10_sockets_v1'
+        && /^data:image\/svg\+xml/.test(host.querySelector('.bk-pic img')?.src || '')
+        && host.querySelector('.bk-pic img').naturalWidth > 0
+        && host.querySelector('.bk-pic [data-tint]').style.background.replace(/\s/g, '') === 'rgb(18,52,86)'), J(p()));
+    state.set({ part: 'brick', width: 40, length: 40, height: 40, look: 'drawn', words: true });
+    check('*** Look: Drawn draws even a part that has a picture ***', await until(() => p().how === 'drawn' && !host.querySelector('.bk-pic')));
+    inst.destroy();
+    check('destroy empties the place', host.innerHTML === '');
+    // A picture that will not load: drawn instead, never an empty box.
+    const host2 = box();
+    const inst2 = mountModule(BRICKS_TYPE, { mount: host2, bus: createBus(), state: memState({}), personId: null, instanceId: 'bk2',
+      bricksDoc: { objects: [{ id: 'brick_missing_picture_v1', kind: 'brick', dims_mm: [40, 40, 40] }] } });
+    await inst2.init();
+    check('*** a picture that will not load is drawn instead ***', await until(() => inst2.impl.__probe().how === 'drawn' && !!host2.querySelector('svg[data-drawn]')),
+      J(inst2.impl.__probe()));
+    inst2.destroy();
+    check('mounting without a personId key is refused (core:new contract)', (() => {
+      try { mountModule(BRICKS_TYPE, { mount: box(), bus: createBus(), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+
+// To look at: a few parts, live, on two themes (not checked; a person's eye is the check here).
+for (const theme of ['default', 'dusk']) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px;margin:8px 0';
+  document.getElementById('host').append(row);
+  applyTheme(row, theme);
+  row.style.background = 'var(--surface)';
+  const looks = [{ width: 80, length: 120, height: 40, colour: 'theme1' }, { width: 40, length: 40, height: 40, colour: 'theme2' },
+    { part: 'baseplate', width: 160, length: 120, thickness: 10, colour: 'theme3' }, { part: 'lbracket', width: 120, colour: 'theme4' },
+    { part: 'plateT', width: 120, length: 80, colour: 'theme5', look: 'drawn' }, { part: 'corner3', colour: 'theme1', look: 'drawn' }];
+  looks.forEach((seed, i) => {
+    const b = document.createElement('div'); b.style.cssText = 'position:relative;width:180px;height:180px';
+    row.append(b);
+    try { mountModule(BRICKS_TYPE, { mount: b, bus: createBus(), state: memState(seed), personId: null, instanceId: `show-${theme}-${i}` }).init(); }
+    catch (err) { console.error(err); }
+  });
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>baseplate_art — any Nimrod baseplate drawn from its size</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  #gallery{display:grid;grid-template-columns:repeat(4,160px);gap:10px}
+  #gallery figure{margin:0;font-size:12px}
+  #gallery .pic{position:relative;width:160px;height:120px;background:#fff;border:1px solid #ccc;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>baseplate_art — any Nimrod baseplate drawn from its size</h1>
+<p>Row 2.76: 72 baseplates (W ≤ D, 40 to 320 mm, 5 and 10 mm thick). Instead of 72 GLBs and baked pictures,
+the site draws a baseplate from its numbers: an isometric grey picture with one socket per 40 mm cell, tinted by
+the theme through <code>tintedPicture</code>, like the brick pictures. Ids match the CAD's
+(<code>modl_&lt;WWW&gt;x&lt;D&gt;x&lt;H&gt;_sockets_v1</code>). Needs no server data.</p>
+<div id="gallery"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { baseplateId, parseBaseplateId, baseplateIds, baseplateSvg, baseplateDataUrl, BASEPLATE_SIDES, BASEPLATE_HEIGHTS, CELL_MM } from '../baseplate_art.js';
+import { tintedPicture } from '../brick_builds.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const parse = (svg) => new DOMParser().parseFromString(svg, 'image/svg+xml');
+const inPoly = ([x, y], pts) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+
+try {
+  section('ids are the CAD\'s ids');
+  check('320 x 40 x 10 -> modl_040x320x10_sockets_v1 (turned, W padded)', baseplateId(320, 40, 10) === 'modl_040x320x10_sockets_v1', baseplateId(320, 40, 10));
+  check('80 x 80 x 5 is the existing tile file\'s name', baseplateId(80, 80, 5) === 'modl_080x80x5_sockets_v1');
+  check('160 x 160 x 5', baseplateId(160, 160, 5) === 'modl_160x160x5_sockets_v1');
+  for (const [w, d, h] of [[50, 40, 5], [0, 40, 5], [40, 40, 1], [40, 40, 7.5], [-40, 40, 5], ['40', 40, 5]]) {
+    check(`${w} x ${d} x ${h} is not a baseplate`, baseplateId(w, d, h) === null);
+  }
+  check('unpadded id refused', parseBaseplateId('modl_40x40x5_sockets_v1') === null);
+  check('not-a-multiple id refused', parseBaseplateId('modl_050x80x5_sockets_v1') === null);
+  const all = baseplateIds();
+  check('72 catalogued (36 footprints x 2 heights)', all.length === 72 && new Set(all).size === 72, String(all.length));
+  check('sides 40..320, heights 5 and 10', BASEPLATE_SIDES.join() === '40,80,120,160,200,240,280,320' && BASEPLATE_HEIGHTS.join() === '5,10');
+  check('every id parses back to itself', all.every((id) => { const p = parseBaseplateId(id); return p && baseplateId(p.w, p.d, p.h) === id; }));
+
+  section('the picture');
+  let bad = [];
+  for (const id of all) {
+    const { w, d, h } = parseBaseplateId(id);
+    const doc = parse(baseplateSvg(w, d, h));
+    const svg = doc.documentElement;
+    const cells = (w / CELL_MM) * (d / CELL_MM);
+    const vb = (svg.getAttribute('viewBox') || '').split(' ').map(Number);
+    const sockets = svg.querySelectorAll('[data-socket]').length;
+    const top = svg.querySelectorAll('polygon')[2].getAttribute('points').split(' ').map((p) => p.split(',').map(Number));
+    const firstSocket = svg.querySelector('[data-socket] ellipse');
+    const centre = [Number(firstSocket.getAttribute('cx')), Number(firstSocket.getAttribute('cy'))];
+    if (doc.querySelector('parsererror') || svg.nodeName !== 'svg') bad.push(`${id}: not SVG`);
+    else if (vb.length !== 4 || !vb.every(Number.isFinite) || vb[2] <= 0 || vb[3] <= 0) bad.push(`${id}: viewBox ${vb}`);
+    else if (sockets !== cells) bad.push(`${id}: ${sockets} sockets, want ${cells}`);
+    else if (svg.getAttribute('data-baseplate') !== id) bad.push(`${id}: data-baseplate ${svg.getAttribute('data-baseplate')}`);
+    else if (!inPoly(centre, top)) bad.push(`${id}: a socket is off the top face`);
+    else if ((h < 7) !== !!svg.querySelector('[data-through]')) bad.push(`${id}: through-view wrong for ${h} mm`);
+  }
+  check('all 72 draw: valid SVG, one socket per cell, sockets on the top face, named by id', bad.length === 0, bad.slice(0, 5).join(' | '));
+  check('a size that is not a baseplate draws nothing', baseplateSvg(50, 40, 5) === '' && baseplateDataUrl(40, 40, 0) === '');
+  const big = parse(baseplateSvg(320, 320, 10, { span: 320 })).documentElement.getAttribute('viewBox');
+  const small = parse(baseplateSvg(40, 40, 5, { span: 320 })).documentElement.getAttribute('viewBox');
+  check('span: a small plate is drawn in the big plate\'s frame (sizes compare)', big === small, `${big} vs ${small}`);
+  check('the title is the plain size', /<title>Baseplate 40 × 320 × 10 mm<\/title>/.test(baseplateSvg(40, 320, 10)));
+
+  section('as a picture, and tinted by the theme');
+  const loads = await Promise.all(['modl_040x40x5_sockets_v1', 'modl_160x160x10_sockets_v1', 'modl_320x320x5_sockets_v1'].map((id) => new Promise((res) => {
+    const { w, d, h } = parseBaseplateId(id);
+    const img = new Image();
+    img.onload = () => res(true); img.onerror = () => res(false);
+    img.src = baseplateDataUrl(w, d, h);
+  })));
+  check('the data: URL loads as an image', loads.every(Boolean), String(loads));
+  const g = document.getElementById('gallery');
+  const show = [[40, 40, 5], [40, 160, 5], [160, 160, 5], [160, 160, 10], [80, 320, 10], [320, 320, 5], [120, 240, 10], [40, 320, 5]];
+  const colors = ['#2f7d4f', '#b5462f', '#3b5ba5', '#c49a00'];
+  show.forEach(([w, d, h], k) => {
+    const fig = document.createElement('figure');
+    const pic = document.createElement('div');
+    pic.className = 'pic';
+    pic.append(tintedPicture(document, baseplateDataUrl(w, d, h), colors[k % colors.length], { position: 'center' }));
+    fig.append(pic, Object.assign(document.createElement('figcaption'), { textContent: baseplateId(w, d, h) }));
+    g.append(fig);
+  });
+  const tint = g.querySelector('[data-tint]');
+  check('tintedPicture masks the theme colour to the drawn plate', tint && /data:image\/svg\+xml/.test(tint.style.getPropertyValue('mask') || tint.style.getPropertyValue('-webkit-mask')));
+} catch (err) {
+  check('suite ran without throwing', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
