@@ -637,7 +637,8 @@ export function nameSource(host) {
 // HAND-OVER): opposites at the easy levels on `wg_opposites`, word logic above them on `wg_wordlogic`, so a player
 // here moves up and back exactly as in the game itself, and the answer is recorded on the ladder it was dealt from.
 export const WORD_GAME_CATEGORIES = Object.freeze([
-  { id: 'opposites', label: 'Opposites and word logic' }, { id: 'rhyming', label: 'Rhyming' }, { id: 'yesno', label: 'Yes or no' },
+  // opposites/logic: the category's name is Mike's, "Opposites/Logic" (row 2.63, note BI); its id stays 'opposites'.
+  { id: 'opposites', label: 'Opposites/Logic' }, { id: 'rhyming', label: 'Rhyming' }, { id: 'yesno', label: 'Yes or no' },
 ]);
 export function wordGamesSource(host) {
   const { cfg, rows, session } = ladderParts(host, { gameKey: WG.GAME, defaults: WG.DEFAULTS,

@@ -5,6 +5,14 @@
 // probably be an option for people that only want to use a hotkey. Hotkeys like that could of course be bound to
 // anything."*
 //
+// *** T, NOT H (row 2.72, Mike 2026-10-09). *** Mike asked whether T ("transport") should show and hide the bar; chat
+// suggested T with H kept working. His ruling: *"No one used H yet. I'm the only person using the site as far as I
+// know."* So T is the default and H is freed -- not kept as a second key. Nothing else ships on T: no default binding
+// (input_keyboard.js DEFAULT_BINDINGS, pack_reviews.js W / O, the lock's chord) and no bare key of the kiosk's own (1-9,
+// S, C, F, [, ], \). A saved record that carried the shipped H binding (`default/bar-toggle` on H) has it on T, in
+// memory, unless T is already the person's for something else (`moveOldBarToggleKey`: theirs wins, and H then stays).
+// Read the rest of this header with T where it says H: the reasoning is unchanged.
+//
 // *** WHAT IT DOES. *** One action, `system/bar-toggle` (actions.js SYSTEM_ACTIONS), H by default and movable to any
 // key or switch from Devices like every other binding. Pressed while the bar is showing, it puts the bar away and
 // starts a QUIET PERIOD: for that long, nothing brings the bar back BY ITSELF -- not the pointer coming near it, not
@@ -49,7 +57,9 @@
 
 export const BAR_TOGGLE_ACTION = 'system/bar-toggle';
 export const BAR_TOGGLE_TOPIC = 'system/bar-toggle';      // = actions.js SYSTEM_ACTIONS (bar_toggle_test checks they agree)
-export const BAR_TOGGLE_CONTROL = 'key:h';
+export const BAR_TOGGLE_CONTROL = 'key:t';     // T for the bar (row 2.72); was 'key:h'
+/** The key it shipped on before row 2.72, for `moveOldBarToggleKey`. */
+export const BAR_TOGGLE_OLD_CONTROL = 'key:h';
 /** Published on the screen's bus (shell_verbs.js SHELL_STATE) as `{ barKeyHidden }` when the key hides or shows the bar. */
 export const BAR_KEY_HIDDEN = 'barKeyHidden';
 
@@ -72,6 +82,24 @@ export function missingBarToggleBindings(bindings) {
   const list = Array.isArray(bindings) ? bindings : [];
   return BAR_TOGGLE_KEY_BINDINGS.filter((b) => !list.some((x) => x && (
     (x.device === b.device && x.control === b.control) || x.actionId === b.actionId))).map((b) => ({ ...b }));
+}
+
+/**
+ * T for the bar (row 2.72): a saved record's SHIPPED toggle binding (its id is the default's) still on H, moved to T --
+ * in memory, never written back. Left on H when T is already bound to something else in the record (the person's use
+ * of T wins). Any binding the person made themselves (another id) is theirs and untouched. Returns the same array when
+ * nothing moves.
+ */
+export function moveOldBarToggleKey(bindings) {
+  if (!Array.isArray(bindings)) return bindings;
+  const id = BAR_TOGGLE_KEY_BINDINGS[0].id;
+  const at = bindings.findIndex((b) => b && b.id === id && b.actionId === BAR_TOGGLE_ACTION
+    && b.device === 'keyboard' && b.control === BAR_TOGGLE_OLD_CONTROL);
+  if (at < 0) return bindings;
+  if (bindings.some((b) => b && b.device === 'keyboard' && b.control === BAR_TOGGLE_CONTROL)) return bindings;
+  const out = bindings.slice();
+  out[at] = { ...bindings[at], control: BAR_TOGGLE_CONTROL };
+  return out;
 }
 
 /** Whether this physical control is bound to the toggle right now (so the press that toggles never also wakes the bar). */
@@ -137,21 +165,38 @@ export const BAR_SELF_FIELD = Object.freeze({
 //        the one who knows the setting is there; one row turns it on. [Mike's list: his call.]
 //      Not "on when the game fills the screen, off when it shares" (chat's middle): two rules where one would do, and
 //        a game on Home fills the window whether or not a visitor is the one playing it.
+//    *** SUPERSEDED BY MIKE'S RULING (row 2.65, 2026-10-08): chat asked "does the bar stay away by default while a game
+//    fills the screen?" -- Mike: *"Yes"*. *** So the default is chat's middle after all, as a third choice:
+//      'full'   (the default) stays away while a game FILLS THE SCREEN; comes up as usual while a game shares the
+//               screen with other panels -- the visitor or carer beside a game in one quarter still gets the bar by
+//               tapping, as they always did.
+//      'usual'  comes up as usual, game or no game (what a screen that chose it keeps).
+//      'away'   stays away while any game is played, filling the screen or not (what a screen that chose it keeps).
+//    A game FILLS THE SCREEN (kiosk.js `gameFillsScreen`) when it is the panel on a one-at-a-time stage (no
+//    arrangement: the screen shows one panel), the only panel in its arrangement's slots (a 'full' dashboard; a small
+//    overlay placed over it, like Nimrod on Your people, does not count -- it covers a corner, not the game), or a
+//    panel made bigger to fill its dashboard or the screen. A game in a room's scene, or beside other panels, shares.
+//    The cost argued above for "stays away" (a visitor tapping and getting nothing) is now paid only where the game is
+//    all there is to see, and the ways back are the same: the hold, T, Escape, the long switch press, the cat, a call.
+//    Saved values stay what they are: 'usual' and 'away' mean what they meant; a row that never chose follows 'full'.
 export const BAR_PLAY_KEY = 'barWhilePlaying';
 export const BAR_PLAY_USUAL = 'usual';
 export const BAR_PLAY_AWAY = 'away';
+export const BAR_PLAY_FULL = 'full';
 export const BAR_PLAY_FIELD = Object.freeze({
   key: BAR_PLAY_KEY,
   label: 'While a game is being played, the bar',
-  kind: 'choice', level: 'standard', default: BAR_PLAY_USUAL,
+  kind: 'choice', level: 'standard', default: BAR_PLAY_FULL,
   options: Object.freeze([
+    Object.freeze({ value: BAR_PLAY_FULL, label: 'Stays away while the game fills the screen, until I ask (its key, or hold still on the screen)' }),
     Object.freeze({ value: BAR_PLAY_USUAL, label: 'Comes up as usual' }),
-    Object.freeze({ value: BAR_PLAY_AWAY, label: 'Stays away until I ask (its key, or hold still on the screen)' }),
+    Object.freeze({ value: BAR_PLAY_AWAY, label: 'Stays away while any game is played, until I ask (its key, or hold still on the screen)' }),
   ]),
 });
-/** "While a game is being played", from a settings row: 'usual' (the default) or 'away'. */
+/** "While a game is being played", from a settings row: 'full' (the default), 'usual' or 'away'. */
 export function barPlayFrom(row) {
-  return row && row[BAR_PLAY_KEY] === BAR_PLAY_AWAY ? BAR_PLAY_AWAY : BAR_PLAY_USUAL;
+  const v = row && row[BAR_PLAY_KEY];
+  return v === BAR_PLAY_AWAY || v === BAR_PLAY_USUAL ? v : BAR_PLAY_FULL;
 }
 
 // What a module's own control is: anything a press OPERATES. The same list screen_controls_test.html's `quietSpot`
@@ -189,12 +234,20 @@ export function barSelfFrom(row) {
  *   mayPopUp()   may the bar come up BY ITSELF right now (a touch, a key, the pointer near it, a switch press)
  *   hiddenByKey() the key hid it and nothing has shown it since
  */
-export function createBarQuiet({ settings = () => ({}), now = () => Date.now(), playing = () => false } = {}) {
+export function createBarQuiet({ settings = () => ({}), now = () => Date.now(), playing = () => false,
+  fills = () => false } = {}) {
   let hidden = false;
   let until = 0;
   const row = () => { try { return settings() || {}; } catch { return {}; } };
   // bar while playing: is a game being played on this screen right now (the kiosk's reading of PLAY_STATE_TOPIC).
   const gameOn = () => { try { return !!playing(); } catch { return false; } };
+  // (row 2.65) ...and does one being played fill the screen (kiosk.js `gameFillsScreen`). Unreadable: it shares.
+  const gameFills = () => { try { return !!fills(); } catch { return false; } };
+  const playKeepsAway = () => {
+    const mode = barPlayFrom(row());
+    if (mode === BAR_PLAY_USUAL || !gameOn()) return false;
+    return mode === BAR_PLAY_AWAY || gameFills();
+  };
   return {
     hide() {
       const ms = barQuietMsFrom(row());
@@ -205,11 +258,11 @@ export function createBarQuiet({ settings = () => ({}), now = () => Date.now(), 
     hiddenByKey: () => hidden,
     mayPopUp() {
       if (barSelfFrom(row()) === BAR_SELF_ASKED) return false;
-      if (barPlayFrom(row()) === BAR_PLAY_AWAY && gameOn()) return false;   // bar while playing
+      if (playKeepsAway()) return false;   // bar while playing (row 2.65: by default, while a game fills the screen)
       return !(hidden && now() < until);
     },
     /** For a suite and a diagnostic page. */
     probe: () => ({ hiddenByKey: hidden, until, self: barSelfFrom(row()), quietMs: barQuietMsFrom(row()),
-      whilePlaying: barPlayFrom(row()), playing: gameOn() }),
+      whilePlaying: barPlayFrom(row()), playing: gameOn(), fills: gameFills() }),
   };
 }

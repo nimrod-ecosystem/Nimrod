@@ -181,7 +181,7 @@ export const SYSTEM_ACTIONS = [
   // the reason the rest of this list is not.
   { id: 'system/screen-lock', label: 'Lock or unlock this screen', topic: 'system/screen-lock', group: 'System' },
   // bar toggle (2026-10-06; bar_toggle.js BAR_TOGGLE_ACTION, the same string, written out here so this file imports
-  // nothing). H by default, movable to any key or switch from Devices. Hiding the bar with it keeps it from coming
+  // nothing). T by default (row 2.72; it was H), movable to any key or switch from Devices. Hiding the bar with it keeps it from coming
   // up by itself for a while (the screen's setting). Not a system/* topic of the room's (kiosk_test holds
   // SYSTEM_TOPICS equal to room_scene's ROOM_ACTIONS), and not on the remote-drive allowlist, for the reason the rest
   // of this list is not.

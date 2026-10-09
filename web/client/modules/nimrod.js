@@ -151,7 +151,7 @@ export const GUIDE_SETTINGS = Object.freeze([
     help: 'His words also go to the screen’s voice, if this screen speaks.' },
   // notesKey ON (2026-10-03): "a notes view he can reach from anywhere ... or a hotkey". N, argued: not a
   //   browser's (Ctrl+N is, and is left alone: any Ctrl/Alt/Cmd press is ignored), not the screen's (its keys
-  //   are 1-9, H, C, F, M, [, ], \), never while typing, and it only OPENS a list — nothing is sent or saved.
+  //   are 1-9, S, T, C, F, M, [, ], \ -- T the bar's since row 2.72, H free), never while typing, and it only OPENS a list — nothing is sent or saved.
   //   AGAINST, and why it is a setting: a letter game on the same dashboard that reads keys from the page
   //   would lose its N to the notes. Somebody playing one turns this off.
   { key: 'notesKey', label: 'The N key opens your notes', kind: 'toggle', default: true, level: 'standard',

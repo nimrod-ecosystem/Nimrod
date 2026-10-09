@@ -391,7 +391,9 @@ const toTab = (m, id) => {
         `${twice.join(',')} | ${JSON.stringify([...placed].filter(([k]) => every.includes(k)))}`);
       const BEFORE_4EDEEAE = ['who-pick', 'set:speechOn', 'set:subtitlesOn', 'set:amplifyOn', 'set:voiceRecording',
         'set:instancePanelSurface', 'set:intervalMs', 'set:fit', 'set:sourceId', 'set:album', 'controls', 'activity',
-        'connections', 'set:on', 'restart-resume', 'restart-top', 'restart-screen', 'screen-name', 'set:theme',
+        // (row 2.70, 2026-10-09, deliberately: the three restart rows are ONE choice row, 'restart-open', "After a restart,
+        // open" -- Home, where it left off, or any dashboard by name. restart.js argues it.)
+        'connections', 'set:on', 'restart-open', 'screen-name', 'set:theme',
         'set:complexity', 'set:burnIn', 'set:panelSurface', 'set:zoomFocus', 'set:flashLimitPerSecond',
         'set:avatarMotion', 'set:masterVolume', 'edit-view', 'fullscreen', 'home', 'close'];
       const gone = BEFORE_4EDEEAE.filter((id) => !all.includes(id));
@@ -461,8 +463,11 @@ const toTab = (m, id) => {
       // page, like 'game' -- outside the panel's lap, which is unchanged.)
       // ('search-page' on Devices, 2026-10-04, page_links.js: the song and video search keys, beside Claude. It makes
       // the old rows 40; the panel's lap is unchanged.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 40) ***',
-        lapStops.length === 14 && oldStops.length === 40 && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
+      // (row 2.70, 2026-10-09, DELIBERATELY: the three restart rows -- "Pick up where it left off", "Start this screen from
+      // the top", "Always come back to ..." -- are ONE choice row, "After a restart, open" ('restart-open'). So the old
+      // rows are 38, not 40: two fewer stops. The panel's lap is unchanged. restart.js argues the one row.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 38) ***',
+        lapStops.length === 14 && oldStops.length === 38 && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       {
@@ -804,15 +809,15 @@ const toTab = (m, id) => {
     // ---- WHERE A COLD BOOT LANDS ----
     // The menu grew its first real content, and it is a setting somebody actually needs.
     await press('Escape');
-    const labels = kiosk.menu.items().map((i) => i.label);
-    check('the menu offers the restart choices',
-      labels.some((l) => l.includes('Pick up where it left off'))
-      && labels.some((l) => l.includes('Start this screen from the top'))
-      && labels.some((l) => l.includes('Always come back to')), JSON.stringify(labels));
-    check('and it names THIS screen, so there is no list to scan',
-      labels.some((l) => l.includes('TEST-bedside')), JSON.stringify(labels));
-    check('today’s behavior is the one ticked by default',
-      labels.some((l) => l === '✓ Start this screen from the top'), JSON.stringify(labels));
+    // (row 2.70: one row, "After a restart, open", its value in the hint -- Home by default, named.)
+    const rrow = kiosk.menu.items().find((i) => i.id === 'restart-open');
+    check('*** the menu offers "After a restart, open", on This screen ***', !!rrow && rrow.label === 'After a restart, open'
+      && rrow.tab === 'screen' && !rrow.disabled, JSON.stringify(rrow && [rrow.label, rrow.tab, rrow.hint]));
+    check('*** today’s behavior is the default, and it names THIS screen: Home ***',
+      !!rrow && /^Home, “TEST-bedside”/.test(rrow.hint || ''), rrow?.hint);
+    check('*** the choices: Home, where it left off, and the account\'s other dashboards by name ***',
+      !!rrow && rrow.field.options[0].value === 'top' && rrow.field.options[1].value === 'resume'
+      && rrow.field.options.slice(2).every((o) => /^screen:/.test(o.value)), JSON.stringify(rrow?.field?.options));
     await press('Escape');
 
     // Remount the SAME screen with a device that remembers module 2 and is set to resume.
@@ -842,6 +847,32 @@ const toTab = (m, id) => {
       went === `kiosk.html?profile=${encodeURIComponent(other.id)}`, String(went));
     check('and it marks the hop, so two screens naming each other cannot ping-pong',
       sess.getItem('nimrod.restart.hopped') === '1');
+
+    // AFTER A RESTART (row 2.70): only a restart goes to the chosen dashboard; a reload stays put.
+    {
+      const tabbed = () => fakeStore({ 'nimrod.restart.tab': '1' });
+      let went2 = null;
+      kiosk.destroy();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(),
+        storage: store2, session: tabbed(), navigate: (u) => { went2 = u; }, launch: { search: '', navType: 'reload' } });
+      await sleep(200);
+      check('*** a reload (this tab started the screen before) does NOT go to the chosen dashboard ***', went2 === null, String(went2));
+      let went3 = null;
+      kiosk.destroy();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(),
+        storage: store2, session: tabbed(), navigate: (u) => { went3 = u; }, launch: { search: '?boot=1', navType: 'navigate' } });
+      await sleep(200);
+      check('*** the launcher\'s ?boot=1 is a restart: it does ***', went3 === `kiosk.html?profile=${encodeURIComponent(other.id)}`, String(went3));
+      // A new version picked up while a dashboard opened from Home was showing: back to it, in place.
+      const kept = fakeStore({ 'nimrod.restart.tab': '1', 'nimrod.restart.keep': JSON.stringify({ boot: p.id, id: other.id }) });
+      let went4 = null;
+      kiosk.destroy();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(),
+        storage: fakeStore({}), session: kept, navigate: (u) => { went4 = u; }, launch: { search: '', navType: 'reload' } });
+      check('*** a new version\'s reload brings back the dashboard that was showing, in place ***',
+        await settled(() => kiosk.screenId() === other.id, 6000) && went4 === null, `${kiosk.screenId()} ${went4}`);
+      check('...once: the mark is used up', !kept.getItem('nimrod.restart.keep'));
+    }
 
     // =====================================================================
     // RECOVERY — the actuators. OFF BY DEFAULT, which IS the deployment plan.

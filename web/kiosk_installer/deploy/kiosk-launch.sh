@@ -57,6 +57,14 @@ if [ -n "$LOCK_HELPER_URL" ]; then
   if [ -f "$POLICY_FILE" ]; then LH="$LOCK_HELPER_URL"; else LH="off"; LOCK_HELPER_URL=""; fi
   case "$PAGE" in *\?*) PAGE="$PAGE&lockHelper=$LH" ;; *) PAGE="$PAGE?lockHelper=$LH" ;; esac
 fi
+# AFTER A RESTART (row 2.70, 2026-10-09): `boot=1` tells the page this is a restart -- the computer started, or Chromium
+# was relaunched after a crash -- so it opens the dashboard chosen under "After a restart, open" (restart.js). The page
+# takes the flag out of its address at once, so its own reloads (a new version, a refresh) are not restarts. Every
+# launch of this script IS a restart, which is why the flag is added here and nowhere else. NIMROD_KIOSK_BOOT_FLAG=0
+# leaves it off (the page then tells a restart by its own tab having started before, which also works).
+if [ "${NIMROD_KIOSK_BOOT_FLAG:-1}" = "1" ]; then
+  case "$PAGE" in *\?*) PAGE="$PAGE&boot=1" ;; *) PAGE="$PAGE?boot=1" ;; esac
+fi
 
 # *** CHROMIUM AS A CHILD, NOT `exec` (2026-10-05). *** Before, this script `exec`ed Chromium so systemd tracked its PID
 # directly. Now it waits for Chromium and then decides HOW it exits, which is the one thing systemd reads:

@@ -49,11 +49,12 @@ import {
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
 import { PRESETS as LAYOUT_PRESETS, withPreset, HUD_TYPES, addAsOverlay } from './layout.js';
 import { createLongPress, clampHoldMs } from './input_longpress.js';
-// bar toggle (2026-10-06): H shows or hides the bar; hidden that way, it stays hidden a while (bar_toggle.js).
+// bar toggle (2026-10-06): T shows or hides the bar (H until row 2.72); hidden that way, it stays hidden a while (bar_toggle.js).
 import {
   BAR_TOGGLE_TOPIC, BAR_TOGGLE_KEY_BINDINGS, missingBarToggleBindings, isBarToggleControl, createBarQuiet,
   BAR_QUIET_FIELD, BAR_SELF_FIELD, BAR_KEY_HIDDEN, BAR_HOLD_SLOP_PX,
   BAR_PLAY_FIELD, onModuleControl,   // bar while playing (row 2.65)
+  moveOldBarToggleKey,   // T for the bar (row 2.72)
 } from './bar_toggle.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
@@ -178,7 +179,9 @@ import { DEFAULT_BINDINGS, isTyping, keyControl } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
 import { createCallTransport, CALL_TRANSPORT_READY } from './call_transport.js';
 import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
-         restartItems } from './restart.js';
+         // after a restart (row 2.70): one row, and a restart told from a reload
+         RESTART_HEADING, restartField, restartValue, restartPatch, RESTART_KEY,
+         isColdStart, hasBootParam, withoutBootParam, markTab, markKeepPlace, takeKeepPlace } from './restart.js';
 import { takePreviewLayout } from './preview.js';
 import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
 import { syncScene } from './livescene.js';
@@ -299,6 +302,9 @@ export async function mountKiosk(root, {
   // Seams for the restart behavior: the test needs its own storage and must never be
   // navigated away from mid-run.
   storage = undefined, session = undefined,
+  // after a restart (row 2.70): how this page was opened -- `{ search, navType }` -- for a suite; the page's own
+  // address and navigation entry when absent. See `isColdStart` (restart.js).
+  launch = undefined,
   navigate = (url) => { if (typeof location !== 'undefined') location.replace(url); },
   // RECOVERY SEAMS. All three exist so the test can walk the whole ladder without anything
   // actually happening - a suite that reloads the page cannot report its own results, and
@@ -438,6 +444,8 @@ export async function mountKiosk(root, {
   // Read before anything else renders: if this screen is not where the device is meant to
   // come back to, the cheapest possible outcome is to leave before mounting a whole kiosk.
   let restart = readConfig(user, storage);
+  // after a restart (row 2.70): the account's dashboards, for the row's list (read after boot, and whenever the tray is).
+  let restartScreens = [];
   // LOCK THIS SCREEN (2026-10-05; screen_lock.js): read here, before anything is drawn, so a screen that was
   // locked comes back locked and every guard below can ask. This device's own record (the `storage` seam).
   // Never on an embed: a preview on somebody else's page is not a screen anybody locks.
@@ -1169,13 +1177,17 @@ export async function mountKiosk(root, {
   // memory only - never written back). Binding any phrase yourself takes over the whole device.
   function withSpeechBindings(handle) {
     const add = (s) => {
-      const rec = s && s[INPUTS_KEY];
-      if (!rec || rec.v !== RECORD_VERSION || !Array.isArray(rec.bindings)) return s;
+      const rec0 = s && s[INPUTS_KEY];
+      if (!rec0 || rec0.v !== RECORD_VERSION || !Array.isArray(rec0.bindings)) return s;
+      // T for the bar (row 2.72): a record that saved the shipped H binding has it on T, in memory (bar_toggle.js).
+      const movedT = moveOldBarToggleKey(rec0.bindings);
+      const rec = movedT === rec0.bindings ? rec0 : { ...rec0, bindings: movedT };
+      if (rec !== rec0) s = { ...s, [INPUTS_KEY]: rec };
       // The reviewing keys (W / O, pack_reviews.js) the same way: added in memory where the record does
       // not already use that key or bind that action. What a person set up wins.
       // (2026-10-05) ...and the lock's chord (screen_lock.js `missingLockBindings`), the same rule, on a real screen.
       const review = [...missingReviewBindings(rec.bindings), ...(screenLock ? missingLockBindings(rec.bindings) : []),
-        ...missingBarToggleBindings(rec.bindings)];   // bar toggle: H, the same rule (bar_toggle.js)
+        ...missingBarToggleBindings(rec.bindings)];   // bar toggle: T (row 2.72), the same rule (bar_toggle.js)
       if (rec.bindings.some((b) => b && b.device === SPEECH_DEVICE)) {
         return review.length ? { ...s, [INPUTS_KEY]: { ...rec, bindings: [...rec.bindings, ...review] } } : s;
       }
@@ -2700,6 +2712,7 @@ export async function mountKiosk(root, {
   async function drawScreensNow() {
     const got = await listDashboards();
     const list = got || [];
+    if (got) restartScreens = got;     // after a restart (row 2.70): the row's list, kept current
     let offers = [];
     const maker = !embedded && got && offersOn(settings.get()) ? dashboardMaker() : null;
     if (maker) {
@@ -5596,17 +5609,22 @@ export async function mountKiosk(root, {
             settings.set({ recovery: { ...cur, [key]: value } });
           },
         })], 'screen', 2),
-      ...tagged(restartItems(restart, {
-      screenName: arr.profile()?.name ? `“${arr.profile().name}”` : 'this screen',
-      onChange: ({ mode }) => {
-        // Choosing "always come back here" names THE SCREEN YOU ARE STANDING ON. That is
-        // the gesture: walk to the one that works, and say come back here.
-        restart = writeConfig(user, mode === 'screen'
-          ? { mode, screenId: profileId }
-          : { mode }, storage);
-        menu.refresh();
-      },
-    }), 'screen', 3)],
+      // after a restart (row 2.70; restart.js argues the one row, its list and the default): Home, where it left off,
+      // or any dashboard on the account, by name. Device-local, as it always was.
+      ...tagged([RESTART_HEADING, ...fieldItems([normalizeField(restartField({
+        cfg: restart, screens: restartScreens, homeId: bootProfileId,
+        homeName: screenNames.get(bootProfileId) || restartScreens.find((d) => d && d.id === bootProfileId)?.name
+          || (profileId === bootProfileId ? arr.profile()?.name : '') || '',
+        names: screenNames,
+      }))].filter(Boolean), {
+        values: () => ({ [RESTART_KEY]: restartValue(restart) }),
+        level: complexity(),
+        idPrefix: '',
+        onStep: (_key, value) => {
+          restart = writeConfig(user, restartPatch(value), storage);
+          menu.refresh();
+        },
+      })], 'screen', 3)],
     // Still ungated at the bedside, deliberately. The three-way switch in input.js gates
     // which BINDINGS fire; it does not answer "is a moderator standing here", and inventing
     // that mapping would be guessing at semantics nobody has decided. Open, and recorded as
@@ -6126,7 +6144,7 @@ export async function mountKiosk(root, {
       ...REVIEW_KEY_BINDINGS,
       // Ctrl+Shift+L: lock / unlock this screen (2026-10-05, screen_lock.js). Not on an embed (nothing to lock).
       ...(screenLock ? LOCK_KEY_BINDINGS.map((b) => ({ ...b })) : []),
-      // bar toggle (2026-10-06): H shows or hides the bar (bar_toggle.js). Every screen, an embed's too.
+      // bar toggle (2026-10-06): T shows or hides the bar (row 2.72; H before, bar_toggle.js). Every screen, an embed's too.
       ...BAR_TOGGLE_KEY_BINDINGS.map((b) => ({ ...b })),
     ],
     ignore: isKioskChrome,
@@ -6409,7 +6427,26 @@ export async function mountKiosk(root, {
     for (const id of barGames.keys()) if (ids.has(id)) return true;
     return false;
   }
-  const barQuiet = createBarQuiet({ settings: () => settings.get() || {}, playing: gamePlaying });
+  // (row 2.65) Does a game being played FILL THE SCREEN (bar_toggle.js argues the reading): the panel on a one-at-a-time
+  // stage, the only panel in the arrangement's slots (an overlay over it covers a corner, not the game), or a panel made
+  // bigger to fill its dashboard or the screen. In a room's scene, or beside other panels, it shares the screen.
+  function gameFillsScreen() {
+    if (!gamePlaying()) return false;
+    let lay = null;
+    try { lay = arr.layout(); } catch { return false; }
+    let ids;
+    try { ids = new Set(menuPanelRecs().map((r) => r.id)); } catch { return false; }
+    for (const id of barGames.keys()) {
+      if (!ids.has(id)) continue;
+      if (promotedScreen === id) return true;
+      try { if (arr.promotedId?.() === id) return true; } catch { /* no arrangement */ }
+      if (!lay) { try { if (arr.stageRec()?.id === id) return true; } catch { /* none */ } continue; }
+      const slots = (Array.isArray(lay.slots) ? lay.slots : []).filter(Boolean);
+      if (slots.length === 1 && slots[0] === id) return true;
+    }
+    return false;
+  }
+  const barQuiet = createBarQuiet({ settings: () => settings.get() || {}, playing: gamePlaying, fills: gameFillsScreen });
   const placedBarEl = () => (useDashboard && plainBarState === 'off' ? kioskEl.querySelector('.tb-bar') : null);
   function barShowing() {
     const placed = placedBarEl();
@@ -6626,8 +6663,8 @@ export async function mountKiosk(root, {
     // a digit switched panels -- out from under the very field somebody was typing in.
     if (isTyping(e.target)) return;
     if (e.key >= '1' && e.key <= '9') { const i = Number(e.key) - 1; if (i < arr.stageDefs().length) showPrimary(i); else return; }
-    // bar toggle (2026-10-06): the screen picker moved from H to S ("your Screens"); H is the bar's key now, an
-    // ordinary binding (bar_toggle.js argues the move). It brings the bar it hangs off with it, as H's keydown did.
+    // bar toggle (2026-10-06): the screen picker moved from H to S ("your Screens"); the bar's key is an ordinary
+    // binding (T since row 2.72; bar_toggle.js argues both moves). It brings the bar it hangs off with it, as H's keydown did.
     // Not with Ctrl / Alt / Meta: Ctrl+S is the browser's save, pressed by habit.
     else if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) { poke(); toggleScreens(); return; }
     else if (e.key.toLowerCase() === 'c') toggleMirrorFull();
@@ -6643,11 +6680,30 @@ export async function mountKiosk(root, {
   // ---- WHERE A COLD BOOT LANDS -------------------------------------------
   // `stageDefs.length` clamps a remembered position: a screen can lose modules between
   // boots, and restoring slot 4 of a two-module screen is a blank stage.
+  // AFTER A RESTART (row 2.70; restart.js argues it): a chosen dashboard is opened only on a COLD start -- the launcher's
+  // `?boot=1`, or the first load in this tab. The flag is taken out of the address at once, so this page's own reloads
+  // (a refresh, the recovery ladder, a new version) are reloads. A new version's reload also brings back where the
+  // person was (`keepPlace`, below the first mount). Never on an embed: a page holding a preview is not restarting.
+  const launchSearch = launch?.search ?? (typeof location !== 'undefined' ? location.search : '');
+  let launchNav = launch?.navType ?? '';
+  if (launch?.navType === undefined) {
+    try { launchNav = performance.getEntriesByType('navigation')[0]?.type || ''; } catch { launchNav = ''; }
+  }
+  const coldStart = !embedded && isColdStart({ search: launchSearch, session, navType: launchNav });
+  const keepPlace = embedded || coldStart ? null : takeKeepPlace(session);
+  if (!embedded) {
+    markTab(session);
+    if (!launch && hasBootParam(launchSearch)) {
+      try { history.replaceState(history.state, '', withoutBootParam(location.href)); } catch { /* the next reload is still told apart by the tab mark */ }
+    }
+  }
   const plan = bootPlan({
     config: restart,
     currentProfileId: profileId,
     stageCount: arr.stageDefs().length,
     hopped: hasHopped(session),
+    cold: coldStart,
+    keep: !!keepPlace && keepPlace.boot === profileId,
   });
   if (plan.redirectTo) {
     markHopped(session);
@@ -7074,7 +7130,8 @@ export async function mountKiosk(root, {
         enabled: () => !torn && pickUpVersionsOf(settings.get() || {}),
         hold: versionHold,
         quietKind: quietKindNow,
-        act: () => { if (!torn) reloadPage(); },
+        // after a restart (row 2.70): a new version is not a restart -- the person comes back where they were.
+        act: () => { if (!torn) { markKeepPlace(session, { boot: bootProfileId, id: profileId }); reloadPage(); } },
         storage: vo.storage !== undefined ? vo.storage
           : (session || (() => { try { return typeof sessionStorage !== 'undefined' ? sessionStorage : null; } catch { return null; } })()),
         ...(vo.pollMs != null ? { pollMs: vo.pollMs } : {}),
@@ -7299,6 +7356,15 @@ export async function mountKiosk(root, {
   }
   if (useDashboard) await mountDashboard();
   else if (arr.layout()) await mountLayout(); else await showPrimary(plan.stageIndex);
+  // after a restart (row 2.70): a new version picked up while a dashboard opened from Home was showing -- back to it, in
+  // place, with Home behind it on the trail. One that has gone since (or will not load) leaves Home showing.
+  if (keepPlace && keepPlace.boot === bootProfileId && keepPlace.id && keepPlace.id !== profileId && !plan.redirectTo) {
+    try { await showScreen(keepPlace.id); } catch (err) { console.error('kiosk: back to where it was', err); }
+  }
+  // The row's list of dashboards, read once now (the tray keeps it current after). Not on an embed (no other screens).
+  if (!embedded && !torn && typeof profiles?.list === 'function') {
+    listDashboards().then((l) => { if (l && !torn) restartScreens = l; }).catch(() => {});
+  }
 
   // Links, once the modules exist: sync now, and again whenever the settings doc changes (links
   // written after boot are picked up without a reload, since they are not part of the layout). The
