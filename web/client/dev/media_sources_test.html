@@ -292,6 +292,53 @@ async function loadsAsImage(url) {
       !/script|onload|href|svgprobe|parent/i.test(markup), markup.slice(0, 200));
   } catch (e) { check('folder art: the hostile SVG checks threw', false, String((e && e.stack) || e)); }
 
+  // *** PHOTO SOURCES FIRST (2026-10-09): THE PICTURES ADDED ON THIS DEVICE, AS A PHOTO SOURCE ONLY WHEN ASKED. ***
+  // device_pictures.js argues why it is a switch and not "whenever there are pictures here": a picture added for a
+  // button must not put a second source on a screen whose photos panel adopted its one folder.
+  try {
+    const DP = await import('../device_pictures.js');
+    const mem = (() => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null),
+      setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; })();
+    check('photo sources first: off until somebody adds pictures for photos', DP.devicePhotosOn({ storage: mem }) === false);
+    DP.setDevicePhotosOn(true, { storage: mem });
+    check('...on after the press that adds them', DP.devicePhotosOn({ storage: mem }) === true);
+    DP.setDevicePhotosOn(false, { storage: mem });
+    check('...and off again', DP.devicePhotosOn({ storage: mem }) === false);
+
+    let on = false;
+    const devClient = createMediaSourcesClient({ user: USER, devicePhotos: () => on, setDevicePhotos: (v) => { on = !!v; } });
+    const off = await devClient.list();
+    check('*** photo sources first: switched off, the device’s pictures are NOT in the list a photos panel reads ***',
+      !off.some((s) => s.id === DP.DEVICE_SOURCE_ID), JSON.stringify(off.map((s) => s.id)));
+    on = true;
+    const withDev = await devClient.list();
+    check('*** switched on, they are, LAST, as kind "device" ***',
+      withDev.length && withDev[withDev.length - 1].id === DP.DEVICE_SOURCE_ID && withDev[withDev.length - 1].kind === 'device',
+      JSON.stringify(withDev.map((s) => s.id)));
+    await devClient.remove(DP.DEVICE_SOURCE_ID);
+    check('Disconnect turns the switch off (the pictures themselves stay)', on === false);
+
+    const tag = Math.random().toString(36).slice(2, 8);
+    const dbName = `nimrod-pictures-photostest-${tag}`;
+    const png = await (await fetch('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')).blob();
+    const { added, skipped: skippedFiles } = await DP.addDevicePictures([
+      new File([png], 'a.png', { type: 'image/png' }), new File(['x'], 'notes.txt', { type: 'text/plain' }),
+      new File([png], 'b.png', { type: 'image/png' })], { dbName, now: () => 1000 });
+    check('addDevicePictures keeps the pictures and skips what is not one', added.length === 2 && skippedFiles === 1,
+      JSON.stringify({ added: added.length, skippedFiles }));
+    check('...two pictures added in the same moment get different paths', added[0].path !== added[1].path);
+    const listing = await DP.resolveDeviceListing(DP.DEVICE_SOURCE, '', { dbName });
+    check('*** a listing in the shape every source gives: items with a url, the source id, kind image ***',
+      listing.count === 2 && listing.items.every((it) => it.url && it.sourceId === DP.DEVICE_SOURCE_ID && it.kind === 'image'
+        && it.id === it.path) && Array.isArray(listing.albums), JSON.stringify(listing.items.map((i) => i.name)));
+    check('...and the picture actually draws', await loadsAsImage(listing.items[0].url));
+    check('...which the slideshow takes (photos.js slideshowItems)', slideshowItems(listing.items).length === 2);
+    const viaResolver = await resolveListing(DP.DEVICE_SOURCE);
+    check('resolveListing hands a device source to that listing (no fetch to any agent)',
+      Array.isArray(viaResolver.items) && viaResolver.albums.length === 0);
+    try { indexedDB.deleteDatabase(dbName); } catch { /* left for the browser */ }
+  } catch (e) { check('photo sources first: the device-pictures checks threw', false, String((e && e.stack) || e)); }
+
   const client = createMediaSourcesClient({ user: USER });
   try {
     // Clean slate: remove any leftover TEST- sources from a prior run.

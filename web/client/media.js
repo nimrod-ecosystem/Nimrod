@@ -5,12 +5,23 @@
 // registry API (/api/media-sources) and its client have existed since the start;
 // the only missing piece was somewhere for a person to say where their photos are.
 //
-// TWO WAYS IN, and which one is RIGHT depends on a question, not on which is easier to
-// set up — so the panel now leads with that question, the same pattern modules.html uses
+// *** THE EVERYDAY WAYS FIRST; THE HELPER UNDER "ADVANCED" (photo sources first, 2026-10-09). *** Mike: *"So
+// everyone needs to download software to look at photos? ... the download is just to avoid the permissions popup,
+// so it's something we can just leave a connection to and a link for the download as an advanced option."* This
+// panel used to open on a question ("is this the screen you're using right now?") with the media agent's pairing
+// card as one of two equal answers. Now a new person sees ONE card, "Add photos", with the two ways that need
+// nothing installed: a folder on this computer (Chrome/Edge) and pictures from this device (any browser, phones
+// too). Pairing, typing an address and the helper's page sit in one closed "Use the Nimrod helper instead",
+// which names who it is for. AGAINST, argued: somebody setting up a screen nobody can press Allow on now has to
+// open a closed section to find the only path that survives a restart unattended. The section's first line names
+// exactly that case, and that person is setting up a screen deliberately; a newcomer reading "install a program"
+// first is the commoner and costlier mistake. The 2026-09-10 finding below still stands; it is now the helper's
+// first bullet rather than the panel's opening question.
+//
+// (Before 2026-10-09:) TWO WAYS IN, and which one is RIGHT depends on a question, not on which is easier to
+// set up — so the panel led with that question, the same pattern modules.html uses
 // ("Start here: can they press anything?"): is this the screen you're on right now, or a
-// screen somewhere else nobody sits at to answer a permission prompt? Both cards stay
-// visible either way — this isn't a hard fork that hides one path, just a reordering of
-// which one gets described first and which risk gets named up front.
+// screen somewhere else nobody sits at to answer a permission prompt?
 //
 // WHY THE QUESTION MATTERS AND ISN'T JUST FRAMING: tested directly (2026-09-10, see
 // MIKE_CHANGE_LIST.md §3b-update) that a folder-picker grant does NOT survive a Chromium
@@ -61,6 +72,9 @@ import {
   isFolderPickerSupported, pickFolder, folderPermission, requestFolderAccess,
 } from './folder_source.js';
 import { createPresetLibrary } from './presets.js';
+// photo sources first (2026-10-09): the second everyday way in, and the helper's page for the advanced one.
+import { addDevicePictures, setDevicePhotosOn } from './device_pictures.js';
+import { HELPER_PAGE, HELPER_DOWNLOADS } from './nimrod_helper.js';
 // Reused rather than re-implemented (§0g/register #255 point 4: "one code path, not two") —
 // the exact parsing `youtube.js`'s own Add-video/Use-playlist controls already do. Importing
 // this file is safe here: ES modules are evaluated once per resolved URL, so on every page
@@ -72,6 +86,12 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DEFAULT_URL = 'http://localhost:8770';
+
+// photo sources first (2026-10-09): where somebody setting the media agent up by hand reads how. The public repo's own
+// copy of web/media_agent/deploy/README.md, because nothing else public explains it yet; the helper's page
+// (HELPER_PAGE) is the plain one, and says when its download is not ready. A constant, not a setting: it is where the
+// project keeps its notes, not a choice anybody using the site makes. Change it here if the notes move.
+export const AGENT_SETUP_NOTES = 'https://github.com/nimrod-ecosystem/Nimrod/blob/main/web/media_agent/deploy/README.md';
 
 // `client`, `resolve` and `folders` are injectable so the test can drive every state
 // without a server, a media agent, or a real folder-permission prompt.
@@ -95,6 +115,10 @@ export function mountMedia(root, {
   presets = null,
   personId = null,
   makeUserState = null,
+  // photo sources first: `devicePics` keeps pictures from this device and turns them on as a photo source; `helper`
+  // is whether the helper's download is published (HELPER_DOWNLOADS). Both injectable for the suite.
+  devicePics = { add: addDevicePictures, setOn: setDevicePhotosOn },
+  helperReady = !!(HELPER_DOWNLOADS && HELPER_DOWNLOADS.windows && HELPER_DOWNLOADS.windows.url),
 } = {}) {
   const sources = client || createMediaSourcesClient({ user });
   const pairClient = pairs || createProfilesClient({ user });
@@ -123,47 +147,55 @@ export function mountMedia(root, {
           <b>where</b> they are. Nothing is uploaded.</p>
       </div>
 
-      <div class="h-card h-fork">
-        <div class="h-card-head"><b>Start here: is this the screen you're using right now?</b></div>
-        <p class="h-quiet">Or is it somewhere else — a bedside kiosk, a spare tablet, any
-          screen nobody sits at to tap a permission prompt? That's the question that decides
-          which option below actually holds up, more than which one is easier to set up.</p>
-        <p class="h-quiet">Really, the test underneath it is narrower still: <b>will someone be
-          there to tap Allow again if the connection ever lapses?</b> Your own laptop, closed for
-          a month, hits the same lapse a bedside screen does — you're just there to clear it in
-          one click. "Which screen" is just the readable way to tell those two cases apart.</p>
-      </div>
+      <div class="h-card" data-add-photos>
+        <div class="h-card-head"><b>Add photos</b> <span class="h-tag">nothing to install</span></div>
 
-      <div class="h-card">
-        <div class="h-card-head"><b>This screen, right now</b> <span class="h-tag">no install</span></div>
-        ${supported
-          ? `<p class="h-quiet">Choose a folder and the browser reads it directly. Nothing to
-               install. This folder is remembered <b>on this device only</b> — and only for as
-               long as this browser keeps the permission, which a restart can clear. Fine if
-               you're sitting here to grant it again; not the right choice for a screen nobody
-               watches.</p>
-             <p class="h-quiet"><b>Sharing photos with the rest of the family?</b> Pick a folder
-               that Google Drive, OneDrive or Dropbox already syncs onto this computer. Anyone
-               you share that folder with can drop photos in from their own phone, and they
-               turn up on the screen. Nothing else to set up.</p>
-             <button class="h-btn h-primary" data-pick>Choose a folder…</button>`
-          : `<p class="h-quiet">This browser can’t open a folder directly — that needs Chrome,
-               Edge, or another Chromium browser. Use the media agent below instead.</p>`}
+        <div data-way="folder">
+          <p><b>A folder on this computer</b></p>
+          ${supported
+            ? `<p class="h-quiet">The browser opens the folder and asks you to press <b>Allow</b>.
+                 Your photos stay where they are, and the folder is remembered on this device. After
+                 the browser restarts it may ask again: one press of Allow on this screen.</p>
+               <p class="h-quiet"><b>Photos in Google Drive, OneDrive or Dropbox?</b> If their app is
+                 on this computer, your photos are already a folder here (Google Drive’s is usually
+                 <b>G:\\My Drive</b>). Choose a folder inside it. Anyone you share that folder with can
+                 add photos from their phone, and they turn up here.</p>
+               <button class="h-btn h-primary" data-pick>Choose a folder…</button>`
+            : `<p class="h-quiet">This browser can’t open a folder (that needs Chrome or Edge).
+                 Add pictures from this device instead, just below.</p>`}
+        </div>
+
+        <div data-way="device">
+          <p><b>Pictures from this device</b></p>
+          <p class="h-quiet">Choose pictures and a copy is kept in this browser, on this device only.
+            Works in any browser, phones and tablets too. Nothing is uploaded to Nimrod. Clearing this
+            site’s data in the browser removes them.</p>
+          <button class="h-btn" data-add-pictures>Add pictures…</button>
+          <input type="file" data-picture-file accept="image/*" multiple hidden>
+        </div>
       </div>
 
       <div class="h-msg" data-msg></div>
       <div class="h-list" data-list><p class="h-loading">Loading…</p></div>
 
-      <div class="h-card">
-        <div class="h-card-head"><b>A screen somewhere else</b> <span class="h-tag">survives a restart</span></div>
-        <p class="h-quiet">This is the one for a bedside kiosk or any screen that boots up with
-          nobody there to answer a prompt: once connected, it keeps working through a reboot or
-          a power cut, with nothing to re-click. It does need something installed on that
-          machine — a real setup step, not hidden here, just worth it for a screen that has to
-          run unattended.</p>
-        <p class="h-quiet">If someone has already set up the Nimrod media agent on that
-          machine, it shows a <b>six-character code</b>. Type it here and the two find each
-          other. You never need to know its address.</p>
+      <details class="h-card" data-helper>
+        <summary><b>Use the Nimrod helper instead</b> <span class="h-tag">advanced</span></summary>
+        <p class="h-quiet">A small program you install on a computer. Most people don’t need it.
+          It is for:</p>
+        <ul class="h-quiet">
+          <li><b>A screen nobody can press Allow on after a restart</b>, like a screen on a wall
+            that turns itself on. With the helper, a restart leaves no Allow to press.</li>
+          <li><b>Other devices showing this computer’s folders</b>: a tablet or another screen in
+            the house. (The helper doesn’t do this by itself yet. Its media agent can, set up by
+            hand: see its setup notes below.)</li>
+        </ul>
+        <p class="h-quiet"><a href="${esc(HELPER_PAGE)}" data-helper-link>About the Nimrod helper</a>
+          ${helperReady ? '' : '(the download isn’t ready yet)'}
+          · <a href="${esc(AGENT_SETUP_NOTES)}" target="_blank" rel="noopener" data-agent-notes>Media agent setup notes</a>
+          (for someone comfortable with a terminal)</p>
+
+        <p class="h-quiet">Once it is running, it shows a <b>six-character code</b>. Type it here
+          and the two find each other. You never need to know its address.</p>
         <form class="h-new" data-pair>
           <input type="text" data-code placeholder="Pairing code (e.g. 7KJ4QW)"
                  aria-label="pairing code" maxlength="12" autocomplete="off"
@@ -171,27 +203,23 @@ export function mountMedia(root, {
           <button type="submit" class="h-btn h-primary">Connect</button>
         </form>
         <div class="h-msg" data-pairmsg></div>
-      </div>
 
-      <details class="h-card" data-advanced>
-        <summary><b>Type an address instead</b> <span class="h-tag">advanced</span></summary>
-        <p class="h-quiet"><b>Only if pairing will not do.</b> Pairing above is the same thing
-          without needing an address, so this is here for an agent that cannot reach the
-          internet to get a code, or one behind a fixed address you already know.</p>
-        <p class="h-quiet">Setting the agent up on that machine is a job in itself: install
-          Python, download the Nimrod media agent, and leave it running. Then either run it
-          once with <code>--pair</code> and use the box above, or type its address here.</p>
-        <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole account</b>.
-          <b>${DEFAULT_URL}</b> is a special case: it means “whichever machine is showing the
-          screen, ask the agent running on it” — so one entry covers every kiosk that runs its
-          own agent. For one specific machine, give its address on the network instead.</p>
-        <form class="h-new" data-new>
-          <input type="text" data-label placeholder="Name it (e.g. the bedside screen)"
-                 aria-label="source name" required>
-          <input type="text" data-url placeholder="${DEFAULT_URL}" value="${DEFAULT_URL}"
-                 aria-label="agent address" required>
-          <button type="submit" class="h-btn">Connect</button>
-        </form>
+        <details data-advanced>
+          <summary><b>Type an address instead</b></summary>
+          <p class="h-quiet"><b>Only if pairing will not do</b>: an agent that cannot reach the
+            internet to get a code, or one behind a fixed address you already know.</p>
+          <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole account</b>.
+            <b>${DEFAULT_URL}</b> is a special case: it means “whichever machine is showing the
+            screen, ask the agent running on it”, so one entry covers every screen that runs its
+            own agent. For one specific machine, give its address on the network instead.</p>
+          <form class="h-new" data-new>
+            <input type="text" data-label placeholder="Name it (e.g. the living room screen)"
+                   aria-label="source name" required>
+            <input type="text" data-url placeholder="${DEFAULT_URL}" value="${DEFAULT_URL}"
+                   aria-label="agent address" required>
+            <button type="submit" class="h-btn">Connect</button>
+          </form>
+        </details>
       </details>
 
       <div class="h-card h-presets">
@@ -270,7 +298,8 @@ export function mountMedia(root, {
     } catch {
       cell.textContent = src.kind === 'folder'
         ? 'could not read this folder'
-        : 'not reachable — is the agent running on that machine?';
+        : src.kind === 'device' ? 'could not read the pictures kept on this device'   // photo sources first
+          : 'not reachable — is the helper (media agent) running on that machine?';
       cell.classList.add('bad');
     }
   }
@@ -284,8 +313,9 @@ export function mountMedia(root, {
   function card(s) {
     const where = s.kind === 'folder'
       ? 'a folder on this device'
-      : esc(s.base_url || '');
-    const scope = s.kind === 'folder' ? 'this device only' : 'all your devices';
+      : s.kind === 'device' ? 'pictures added on this device'   // photo sources first
+        : esc(s.base_url || '');
+    const scope = (s.kind === 'folder' || s.kind === 'device') ? 'this device only' : 'all your devices';
     return `
       <div class="h-card">
         <div class="h-card-head">
@@ -300,9 +330,9 @@ export function mountMedia(root, {
   function render() {
     listEl.innerHTML = list.length
       ? list.map(card).join('')
-      : `<p class="h-loading">No photos connected yet.${supported
-            ? ' Choose a folder above to get started.'
-            : ''}</p>`;
+      : `<p class="h-loading">No photos connected yet. ${supported
+            ? 'Choose a folder or add pictures above to get started.'
+            : 'Add pictures above to get started.'}</p>`;
 
     for (const b of root.querySelectorAll('[data-remove]')) {
       b.addEventListener('click', () => remove(b.dataset.remove));
@@ -533,6 +563,28 @@ export function mountMedia(root, {
     } finally { busy = false; }
   }
 
+  // photo sources first (2026-10-09): pictures from this device. The files are copied into this browser
+  // (device_pictures.js), then the device's pictures are turned on as a photo source here, so a photos panel lists them.
+  async function addPictures(files) {
+    if (busy) return;
+    const list0 = Array.from(files || []);
+    if (!list0.length) return;
+    busy = true;
+    say('Adding…');
+    try {
+      const { added, skipped } = await devicePics.add(list0);
+      if (!added.length) { say('Those weren’t pictures, so nothing was added.', true); return; }
+      devicePics.setOn(true);
+      await refresh();
+      say(`Added ${added.length} picture${added.length === 1 ? '' : 's'}`
+        + `${skipped ? ` (${skipped} file${skipped === 1 ? ' wasn’t a picture' : 's weren’t pictures'})` : ''}. `
+        + 'A photos panel on this device can show them: “Added on this device”.');
+    } catch (err) {
+      console.error(err);
+      say('Those pictures couldn’t be kept in this browser.', true);
+    } finally { busy = false; }
+  }
+
   async function add(label, base_url) {
     if (busy) return;
     busy = true;
@@ -610,6 +662,10 @@ export function mountMedia(root, {
   });
 
   if (supported) el('[data-pick]').addEventListener('click', choose);
+  // photo sources first: the button opens the file input (the click is the gesture the browser wants).
+  const fileIn = el('[data-picture-file]');
+  el('[data-add-pictures]').addEventListener('click', () => fileIn.click());
+  fileIn.addEventListener('change', () => { const f = fileIn.files; addPictures(f).finally(() => { fileIn.value = ''; }); });
 
   el('[data-new]').addEventListener('submit', (e) => {
     e.preventDefault();

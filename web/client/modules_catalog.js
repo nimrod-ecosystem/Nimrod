@@ -401,8 +401,9 @@ export const CATALOG = [
     // `touch`: left alone it is a sign or a picture on the wall, and nothing waits on anybody.
     use: 'touch',
     lead: 'Words, a picture, or both, on something you can press.',
-    needs: 'Nothing for words. A picture comes from your Media — a folder on this computer, or '
-      + 'your media agent.',
+    // photo sources first (2026-10-09): the everyday ways named, not the media agent.
+    needs: 'Nothing for words. A picture comes from this device, or from a folder on this computer '
+      + 'connected in Media.',
     why: 'A name on a sign, a photo in a frame, a label on the wall: one button, set up entirely '
       + 'from the settings menu — the words, a font, the colours, a frame, and whether pressing '
       + 'it says the words out loud. The first step of the Nimrod game builds a profile out of two '

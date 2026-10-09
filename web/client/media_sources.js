@@ -21,7 +21,8 @@ import { cachedFetch } from './cache.js';
 import { authHeaders, httpError } from './auth.js';
 import { listFolderSources, removeFolderSource, resolveFolderListing,
          folderFileUrl, listFolderEntries } from './folder_source.js';
-import { DEVICE_SOURCE, DEVICE_SOURCE_ID, listDevicePictures, devicePictureUrl } from './device_pictures.js';
+import { DEVICE_SOURCE, DEVICE_SOURCE_ID, listDevicePictures, devicePictureUrl,
+         devicePhotosOn, setDevicePhotosOn, resolveDeviceListing } from './device_pictures.js';
 
 const trimSlash = (u) => String(u || '').replace(/\/+$/, '');
 
@@ -50,7 +51,10 @@ export function mediaUrl(baseUrl, path) {
 // boundary between people who did not choose each other is across ACCOUNTS, which `user_id`
 // already enforced, and any finer-grained "who may see whose media" belongs on the grants
 // table beside "who may drive" rather than in a column here.
-export function createMediaSourcesClient({ user, base = '', cache = false, personId = null } = {}) {
+// photo sources first (2026-10-09): `devicePhotos` (a seam, default `devicePhotosOn`) - whether the pictures added on
+// this device are one of the photo sources here (device_pictures.js argues why that is a press, not automatic).
+export function createMediaSourcesClient({ user, base = '', cache = false, personId = null,
+  devicePhotos = devicePhotosOn, setDevicePhotos = setDevicePhotosOn } = {}) {
   const scope = personId ? `?person_id=${encodeURIComponent(personId)}` : '';
   async function fetchList() {
     const res = await fetch(`${base}/api/media-sources${scope}`, { headers: authHeaders(user) });
@@ -86,7 +90,9 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
       console.warn('media-sources: registry unavailable, using device-local folders only', err);
     }
     const local = await listFolderSources();
-    const all = [...remote, ...local];
+    // photo sources first: the device's own pictures, LAST, and only once somebody added them for photos.
+    const device = devicePhotos() ? [DEVICE_SOURCE] : [];
+    const all = [...remote, ...local, ...device];
     noteListed(personId, all);   // backup source: what the screen's "Backup folder" row offers
     return all;
   }
@@ -118,6 +124,9 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
   // A folder source only exists on this device, so it is removed from IndexedDB — asking
   // the platform to delete an id it has never seen would just 404.
   async function remove(id) {
+    // photo sources first: "Disconnect" on the device's pictures stops listing them as photos; the pictures stay
+    // (a button or a card may still show one), the way a disconnected folder's files stay.
+    if (id === DEVICE_SOURCE_ID) { setDevicePhotos(false); return { ok: true }; }
     const local = await listFolderSources();
     if (local.some((s) => s.id === id)) return removeFolderSource(id);
     const res = await fetch(`${base}/api/media-sources/${id}`, {
@@ -137,6 +146,7 @@ export async function resolveListing(source, album = '', { fetchImpl = fetch } =
   // A folder source has no base_url to fetch — the browser reads the files directly.
   // Same return shape, so photos.js and personal.js are unchanged.
   if (source && source.kind === 'folder') return resolveFolderListing(source, album);
+  if (source && source.kind === 'device') return resolveDeviceListing(source, album);   // photo sources first
   const base = trimSlash(source.base_url);
   const q = album ? `?album=${encodeURIComponent(album)}` : '';
   const res = await fetchImpl(`${base}/list${q}`);
@@ -482,9 +492,9 @@ export function listedSources(personId = null) {
 /** For the suites: forget what was listed. */
 export function forgetListedForTest() { listedBy.clear(); }
 
-const isLocalSource = (s) => !!s && (s.kind === 'folder'
+const isLocalSource = (s) => !!s && (s.kind === 'folder' || s.kind === 'device'   // photo sources first: device too
   || /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(String(s.base_url || '')));
-const sourceWords = (s) => `${s.label || s.base_url || s.id}${isLocalSource(s) ? ' (on this computer)' : ''}`;
+const sourceWords = (s) => `${s.label || s.base_url || s.id}${isLocalSource(s) && s.kind !== 'device' ? ' (on this computer)' : ''}`;
 
 /** The words for a backup choice, for a row's "as This screen says (...)" and the screen row. PURE. */
 export function backupWords(choice, sources = [], { panelDefaultWords = 'each one’s own choice' } = {}) {

@@ -1206,6 +1206,37 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     inst.destroy();
     host.remove();
   }
+  // photo sources first (2026-10-09): a browser with NO folder picker (Firefox, Safari, a phone) used to get the words
+  // and no button. Now it is offered pictures from this device, and the press opens a file input for pictures.
+  {
+    const host = document.createElement('div');
+    document.body.append(host);
+    let cfg = { sourceId: null };
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; },
+                    subscribe: (f) => { f(cfg); return () => {}; }, flush() {} };
+    const inst = mountModule('photos', {
+      mount: host, bus: createBus(), state,
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: USER, profileId: 'p', canPickFolder: () => false,
+      sources: { list: async () => [], add: async () => { throw new Error('no add in test'); }, remove: async () => {} },
+    });
+    inst.init();
+    await sleep(120);
+    const status = host.querySelector('[data-status]');
+    const btn = host.querySelector('[data-status] [data-action]');
+    check('*** photo sources first: no folder picker -> "Add pictures from this device", not a dead end ***',
+      /no photo source connected/i.test(status?.textContent || '') && !!btn && /add pictures from this device/i.test(btn.textContent),
+      status?.innerHTML);
+    // The press opens a file input for pictures. HTMLInputElement.click is watched, not run (no OS dialog headless).
+    const realClick = HTMLInputElement.prototype.click;
+    let opened = null;
+    HTMLInputElement.prototype.click = function () { opened = this; };
+    try { btn?.click(); } finally { HTMLInputElement.prototype.click = realClick; }
+    check('...and the press opens a file input for several pictures',
+      !!opened && opened.type === 'file' && opened.accept === 'image/*' && opened.multiple === true);
+    inst.destroy();
+    host.remove();
+  }
 
   // The RECOVERY control - the one somebody reaches for when something is already wrong.
   await pressRetry('photos', check);
