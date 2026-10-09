@@ -676,6 +676,10 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     check('the words name both: what is showing, and what cannot be reached',
       degradedLine({ shownLabel: 'Family', chosenLabel: 'Her albums' }) === 'Showing “Family” — “Her albums” can’t be reached.',
       degradedLine({ shownLabel: 'Family', chosenLabel: 'Her albums' }));
+    // photo source (2026-10-08): a chosen source missing from the list is not "unreachable" -- nothing was asked.
+    check('photo source: a chosen source NOT IN THE LIST says it is not connected here, not that it cannot be reached',
+      degradedLine({ shownLabel: 'Family', err: { code: 'gone' } }) === 'Showing “Family” — the chosen source isn’t connected here.',
+      degradedLine({ shownLabel: 'Family', err: { code: 'gone' } }));
 
     const RUN = Date.now().toString(36);
     const WAIT = 555, RECHECK = 777;
@@ -772,9 +776,26 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       const r = rigD({ sources: [S.family], mode: {}, seed: { sourceId: 'gone-id' } });
       check('*** MISSING: a source that is no longer listed: another one stands in ***',
         await until(() => /Family/.test(r.label())), r.label() + ' / ' + r.status());
-      check('...and says the chosen one cannot be reached', /Showing “Family” — the chosen source can’t be reached/.test(r.status()), r.status());
+      check('...and says the chosen one is not connected here', /Showing “Family” — the chosen source isn’t connected here/.test(r.status()), r.status());
       check('*** ...and the choice is NOT overwritten with the only source left ***',
         savedSource(r).length === 0, JSON.stringify(r.sets));
+      // photo source (2026-10-08, the bench): ONE source here and a choice that is not here used to make the
+      // "Photos from" row a disabled one-option row, so the one press that repairs a dead choice was impossible.
+      const { fieldsFor, stepValue } = await import('../settings_fields.js');
+      const ch = r.inst.impl.settingsChoices().sourceId || [];
+      check('*** photo source: the chosen-but-absent source stays in the list, last, saying so ***',
+        ch.length === 2 && ch[0].value === 'family' && ch[1].value === 'gone-id' && /not connected here/.test(ch[1].label),
+        JSON.stringify(ch));
+      const row = fieldsFor(r.inst.manifest || { settings: [{ key: 'sourceId', label: 'Photos from', kind: 'choice', default: '' }] }, r.inst)
+        .find((f) => f.key === 'sourceId');
+      check('*** ...so the row is LIVE, and one press lands on the source that is here ***',
+        !!row && row.cycleable === true && stepValue(row, 'gone-id', 1) === 'family',
+        JSON.stringify(row && { cycleable: row.cycleable, why: row.why, options: row.options }));
+      r.setState({ sourceId: 'family' });
+      await until(() => /Family —/.test(r.label()) && !r.status());
+      check('...and once the choice is here, the not-here entry is gone (one source: nothing to choose)',
+        JSON.stringify((r.inst.impl.settingsChoices().sourceId || []).map((o) => o.value)) === '["family"]',
+        JSON.stringify(r.inst.impl.settingsChoices().sourceId));
       r.done();
     }
     // 4. HUNG: the chosen agent never answers. After the wait, a stand-in.
