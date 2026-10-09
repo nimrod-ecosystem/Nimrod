@@ -203,13 +203,24 @@ export function sitOutWakePress(el, ev, { settleMs = WAKE_PRESS_SETTLE_MS } = {}
 // thing is off, so somebody walking in can see why nobody hears them. A video control on an audio-only
 // call is DIMMED rather than missing (D16). `send(payload)` is the bar's way to say CALL_CONTROL_TOPIC.
 // The group is `display:contents` inside the bar's own row of buttons, so it wraps with them.
-export function drawCallControls(el, s, send) {
+// *** AND HANG UP (call loadouts, 2026-10-09). *** Mike: "the transport bar has standard buttons for mic/cam on/off".
+// The mic and camera were here; Hang up was not ("nothing on this bar is destructive", createBarScan's header).
+// It is now, LAST in the group, when the host hands `hangUp` (the topic every Call panel and the call view hang up
+// on, actions.js CALL_HANGUP_TOPIC). ONE PRESS with a pointer, as every call app has it. From a SWITCH OR A KEY (a
+// click with no pointer behind it, `detail === 0` - the bar scan presses with `el.click()`), the first press only
+// asks: "Press again to hang up", for HANG_CONFIRM_MS, and a second press inside it hangs up. Argued:
+//   FOR asking every time: a hang-up cannot be undone. AGAINST, for a pointer: the person pointing at "Hang up"
+//   meant it, and a second click on the most-used button in a call is the friction people leave apps over.
+//   FOR asking from a switch: a select a moment late lands on whatever the scan lit next, and on a bar where Hang up
+//   is the last stop that is a call ended by accident. If nobody presses again, nothing happens: the call goes on.
+export const HANG_CONFIRM_MS = 5000;
+export function drawCallControls(el, s, send, hangUp = null) {
   if (!el) return;
   el.innerHTML = '';
   const live = !!(s && s.live);
   el.hidden = !live;
   el.style.display = live ? 'contents' : 'none';
-  if (!live) return;
+  if (!live) { if (el.__hangArm) { try { clearTimeout(el.__hangArm.timer); } catch { /* gone */ } el.__hangArm = null; } return; }
   el.setAttribute('role', 'group');
   el.setAttribute('aria-label', 'this call');
   const pct = Math.round((Number(s.volume) || 0) * 100);
@@ -239,6 +250,35 @@ export function drawCallControls(el, s, send) {
     { myVideo: 'toggle' }, !s.sending);
   b('quieter', 'Call quieter', false, `the call is at ${pct}%`, { volume: -1 });
   b('louder', 'Call louder', false, `the call is at ${pct}%`, { volume: 1 });
+  if (typeof hangUp === 'function') {
+    const armed = !!el.__hangArm;
+    const btn = el.ownerDocument.createElement('button');
+    btn.type = 'button';
+    btn.dataset.call = 'hangup';
+    btn.textContent = armed ? 'Press again to hang up' : 'Hang up';
+    btn.title = armed ? 'press again to end this call; wait and nothing happens' : 'end this call';
+    btn.style.minWidth = '7.4em';
+    if (armed) btn.dataset.on = '1';
+    btn.addEventListener('click', (e) => {
+      const disarm = () => { if (el.__hangArm) { try { clearTimeout(el.__hangArm.timer); } catch { /* gone */ } el.__hangArm = null; } };
+      if (el.__hangArm || (e && e.detail > 0)) {
+        disarm();
+        btn.textContent = 'Hang up'; btn.title = 'end this call'; delete btn.dataset.on;
+        try { hangUp(); } catch (err) { console.error('transport bar: hang up', err); }
+        return;
+      }
+      // From a switch or a key: ask first. The label changes in place; the wait ends by itself.
+      const timer = setTimeout(() => {
+        el.__hangArm = null;
+        if (btn.isConnected) { btn.textContent = 'Hang up'; btn.title = 'end this call'; delete btn.dataset.on; }
+      }, HANG_CONFIRM_MS);
+      el.__hangArm = { timer };
+      btn.textContent = 'Press again to hang up';
+      btn.title = 'press again to end this call; wait and nothing happens';
+      btn.dataset.on = '1';
+    });
+    el.append(btn);
+  }
 }
 
 // *** A PIECE OF THE ROOM, SELECTED (2026-10-02; Mike's list 09-30 ~1341). *** When the switch scan is on a
@@ -487,7 +527,9 @@ export function drawChips(modsEl, m) {
 //         not gets the walk with nothing to learn, which can never strand them.
 // A STRAY PRESS DOES NOTHING: the press that hands the bar the switch lights nothing; the next lights a
 // group (rows) or the first button (one); only a select on something already lit presses it. And nothing
-// on this bar is destructive anyway -- the call's Hang up is not on it, every toggle says which way it is.
+// on this bar is destructive anyway -- every toggle says which way it is. (2026-10-09, call loadouts: the call's
+// Hang up IS on it now, last in the call's group, and a press from this scan only ASKS - "Press again to hang
+// up" - so a late select can never end a call by itself. See HANG_CONFIRM_MS.)
 //
 // TWO QUIET ROUNDS GO BACK UP (Design: "After two quiet rounds the scan goes back up to rows"): two full
 // laps of a group with no select and the groups are lit again; two laps of the groups (or of every button,

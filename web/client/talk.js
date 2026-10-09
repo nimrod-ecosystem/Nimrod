@@ -59,6 +59,7 @@ import './modules/board.js';
 import { mountThemePicker } from './theme.js';
 import { createMixerFx } from './mixer_fx.js';
 import { MIXER_DEFAULTS } from './mixer.js';
+import { clipSlug, clipUrl } from './aac_clips.js';   // call loadouts: the clip rule's one home
 
 const STORE_KEY = 'nimrod.talk.v1';
 const LOG_KEY = 'nimrod.talk.log.v1';
@@ -163,18 +164,10 @@ export const DEFAULTS = {
  * A word to the file that says it. Same rule as `cici_voice.js` so one set of recordings
  * serves both builds: lowercase, every run of anything else becomes one underscore.
  * "Thank you" -> thank_you, "Change me" -> change_me.
+ * (call loadouts, 2026-10-09: the rule moved to aac_clips.js so the board module can use it too -
+ * talk.js imports the board, so the board cannot import talk.js. Re-exported here unchanged.)
  */
-export function clipSlug(text) {
-  return String(text == null ? '' : text).toLowerCase().trim()
-    .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-}
-
-/** The URL a word's recording would live at, or null when clips are off. */
-export function clipUrl(text, base) {
-  const b = String(base == null ? '' : base).replace(/\/+$/, '');
-  const s = clipSlug(text);
-  return b && s ? `${b}/${s}.wav` : null;
-}
+export { clipSlug, clipUrl };
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const num = (v, dflt) => (Number.isFinite(Number(v)) ? Number(v) : dflt);

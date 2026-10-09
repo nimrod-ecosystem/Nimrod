@@ -30,6 +30,11 @@ export const SUITES = [
   'audio_bus', 'automation', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'music', 'pressgame', 'records', 'rules',
   // board into call (2026-10-08): an AAC board word chosen during a live call reaches the caller, as text.
   'call_words',
+  // call loadouts (2026-10-09): a board word's recorded clip mixed into the call's sound (call_mix.js); and what a
+  // screen with no Call panel answers into - video / audio / either with a talk board, captions, Hang up on the bar.
+  // call_loadouts mounts a real kiosk and real sockets (needs the server). call_mix's last section needs the page's
+  // audio to run: in headless Chrome it is reported NOT RUN unless the browser allows sound without a touch.
+  'call_mix', 'call_loadouts',
   // spotify sdk (2026-10-07): this page as a Spotify speaker, and the Test B page, against a fake Spotify global.
   'spotify_sdk',
   // play on (2026-10-08): Spotify's own player in the Music panel, the Play on chooser, Devices -> Speakers, by voice.

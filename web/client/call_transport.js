@@ -76,6 +76,8 @@
 // two, and with a TURN server in the list it can take longer.
 
 import { SIGNAL_KINDS } from './drive.js';
+// call loadouts (2026-10-09): a board word's recorded clip mixed into the call's outgoing sound (call_mix.js).
+import { createClipMixer } from './call_mix.js';
 
 // Free, public, stateless. Two of them because one being down should not mean no calls, and
 // they are from different operators for the same reason.
@@ -209,6 +211,11 @@ const LOST_KEEP = 32;
 //     no buffer. Mixing needs a voice that makes audio we hold (Piper, voice.js's target, not built).
 //     When it is, mixing can go beside this; the text stays, because it also shows the word when the
 //     sound is bad.
+//     *** 2026-10-09 (call loadouts): IT IS, FOR THE WORDS THAT HAVE A RECORDED CLIP. *** The seventeen
+//     board clips (aac/audio, Piper on the desktop) are audio we hold, so a word with one is ALSO mixed
+//     into the call's outgoing sound (`sendWords(text, { clip })`, call_mix.js) and its text says
+//     `audio: true`, so the far end shows it and does not read it out again. Words without a clip are
+//     text only, exactly as here.
 //   * Why a data channel and not the drive socket: the words never touch the server at all - they go
 //     the same way the call's sound goes, end to end (row 2.58, "I don't want anything from users on
 //     my server"); the server needs no change and keeps no new kind of signal; and "the channel is
@@ -237,7 +244,9 @@ export function cleanWords(text) {
   return String(text).replace(/\s+/g, ' ').trim().slice(0, WORDS_MAX_CHARS);
 }
 
-/** A message from the channel, as `{ text, source }`, or null when it is not one. Pure. */
+/** A message from the channel, as `{ text, source }`, or null when it is not one. Pure.
+ *  call loadouts (2026-10-09): `audio: true` is added when the sender says the word's recorded clip is going
+ *  into the call's sound at the same time (call_mix.js), so the far end does not read it out a second time. */
 export function parseWords(data) {
   if (typeof data !== 'string' || data.length > WORDS_MAX_CHARS * 8) return null;
   let m = null;
@@ -246,7 +255,7 @@ export function parseWords(data) {
   const text = cleanWords(m.text);
   if (!text) return null;
   const source = typeof m.source === 'string' ? m.source.slice(0, 32) : null;
-  return { text, source };
+  return { text, source, ...(m.audio === true ? { audio: true } : {}) };
 }
 
 /** A fresh call id: "call-" + 16 hex, inside drive.py's session rules. */
@@ -341,6 +350,10 @@ export function createCallTransport({
   busy = () => false,
   claimMs = CALL_CLAIM_MS,
   connectMs = ANSWER_CONNECT_MS,
+  // call loadouts (2026-10-09): what mixes a board word's recorded clip into this call's outgoing sound
+  // (call_mix.js). undefined: one is made on the first clip asked for; null: clips are never mixed (words go
+  // as text only, exactly as before); an object: that mixer (a suite's fake).
+  clipMixer = undefined,
 } = {}) {
   if (!link) throw new Error('createCallTransport: a drive link is required');
 
@@ -384,6 +397,16 @@ export function createCallTransport({
   let words = null;
   const wordsQueue = [];
   const wordsCbs = new Set();
+  // call loadouts (2026-10-09): a word WITH a clip waits for the clip to start (call_mix.js CLIP_WAIT_MS at most)
+  // so its message can say whether its sound is in the call; words after it wait in line behind it, so the
+  // order they were chosen in is the order they arrive. `callSeq` changes at every ending, so nothing still
+  // waiting from a call that ended is sent into the next one. `remoteCbs`: who hears the far end's stream
+  // (call_captions.js), which a reconnect replaces.
+  let mixer = clipMixer === undefined ? null : clipMixer;
+  let wordsChain = Promise.resolve();
+  let wordsPending = 0;
+  let callSeq = 0;
+  const remoteCbs = new Set();
 
   const log = (...a) => { try { onLog?.(...a); } catch { /* a logger must not break a call */ } };
 
@@ -480,6 +503,9 @@ export function createCallTransport({
     placed = null;
     answeredOnce = false;
     wordsQueue.length = 0;              // words said for this call go with it
+    callSeq += 1;                       // ...and so do words still waiting for their clip (call loadouts)
+    if (mixer) { try { mixer.stop({ swapBack: false }); } catch { /* gone */ } }
+    if (remoteCbs.size) emit(remoteCbs, null);
     if (was || (!local && (wasRinging || wasAnswering))) {
       try { endedCb?.(reason, { why }); } catch (e) { log('onEnded threw', e); }
     }
@@ -556,6 +582,9 @@ export function createCallTransport({
       }
       if (attached && remoteStream) { try { attached.srcObject = remoteStream; } catch { /* gone */ } }
       log('remote track', e.track && e.track.kind);
+      // call loadouts: the far end's sound, for captions (call_captions.js). Told on every track, so an audio
+      // track that arrives after the video one is heard too.
+      if (remoteCbs.size && remoteStream) emit(remoteCbs, remoteStream);
     };
     const mine = pc;
     // WORDS INTO THE CALL (WORDS_LABEL): the caller makes the channel before its offer, so the offer
@@ -711,6 +740,59 @@ export function createCallTransport({
     return pc.getSenders?.().map((s) => s.track).filter(Boolean) || [];
   }
 
+  // Swap the track being SENT of one kind, without a new offer (the API's `replaceTrack`, and the clip mixer's
+  // way on and off the call's audio sender).
+  async function swapTrack(kind, track) {
+    if (destroyed || !pc || !track) return false;
+    const sender = (pc.getSenders?.() || []).find((s) => s.track && s.track.kind === kind);
+    if (!sender || typeof sender.replaceTrack !== 'function') return false;
+    try { await sender.replaceTrack(track); } catch (e) { log('replaceTrack failed', e); return false; }
+    if (placed) placed.tracks = placed.tracks.map((t) => (t && t.kind === kind ? track : t));
+    return true;
+  }
+
+  // ---- WORDS WITH THEIR RECORDED CLIP (call loadouts, 2026-10-09; call_mix.js) ------------------------------
+  function mixerNow() {
+    if (mixer || clipMixer === null || destroyed) return mixer;
+    try { mixer = createClipMixer({ Stream, setTimer, clearTimer, onLog: (...a) => log(...a) }); }
+    catch (e) { log('words: no clip mixer', e); mixer = null; }
+    return mixer;
+  }
+  function queueWord(msg) {
+    wordsQueue.push(msg);
+    while (wordsQueue.length > WORDS_QUEUE_MAX) wordsQueue.shift();
+    flushWords();
+  }
+  // A word whose clip is to go into the call: the clip starts first (or is found missing, slow or refused), then
+  // the text goes, saying whether its sound is in the call. In line behind any word still waiting.
+  function wordWithClip(msg, url) {
+    const mine = callSeq;
+    wordsPending += 1;
+    wordsChain = wordsChain.then(async () => {
+      if (mine !== callSeq || destroyed || !live) return;
+      let r = { ok: false };
+      const m = mixerNow();
+      if (m) {
+        try {
+          r = await m.play(url, {
+            getTrack: () => (pc?.getSenders?.() || []).map((s) => s.track).find((t) => t && t.kind === 'audio') || null,
+            swap: (t) => swapTrack('audio', t),
+          });
+        } catch (e) { log('words: clip failed', e); r = { ok: false }; }
+      }
+      if (mine !== callSeq || destroyed || !live) return;
+      if (!r.ok) log('words: clip not sent', url, r.why || '');
+      queueWord(r.ok ? { ...msg, audio: true } : msg);
+    }).catch((e) => log('words: clip line', e)).finally(() => { wordsPending -= 1; });
+  }
+  // A word with no clip, said while one with a clip is still starting, waits behind it.
+  function wordAfter(msg) {
+    const mine = callSeq;
+    wordsPending += 1;
+    wordsChain = wordsChain.then(() => { if (mine === callSeq && !destroyed && live) queueWord(msg); })
+      .finally(() => { wordsPending -= 1; });
+  }
+
   async function answerWith(sdp, tracks, session) {
     const mine = makePc(tracks);
     // THE CONNECT CLOCK STARTS AT THE ANSWER (ANSWER_CONNECT_MS) and runs until 'connected' - through
@@ -805,14 +887,7 @@ export function createCallTransport({
      * Swap the track being SENT of one kind (a phone switching between its cameras), without a new offer:
      * the far end keeps the same picture slot. Resolves true when it was swapped.
      */
-    async replaceTrack(kind, track) {
-      if (destroyed || !pc || !track) return false;
-      const sender = (pc.getSenders?.() || []).find((s) => s.track && s.track.kind === kind);
-      if (!sender || typeof sender.replaceTrack !== 'function') return false;
-      try { await sender.replaceTrack(track); } catch (e) { log('replaceTrack failed', e); return false; }
-      if (placed) placed.tracks = placed.tracks.map((t) => (t && t.kind === kind ? track : t));
-      return true;
-    },
+    replaceTrack: (kind, track) => swapTrack(kind, track),
 
     hangup(reason = 'hangup') {
       // Tell the other end BEFORE tearing down, or they sit watching a frozen frame until
@@ -840,17 +915,28 @@ export function createCallTransport({
      * that is live now. Returns false - and sends and keeps nothing - when no call is live; true when
      * it was sent, or waits for the channel to open (the first second of a call, a reconnect).
      */
-    sendWords(text, { source = null } = {}) {
+    // call loadouts (2026-10-09): `clip`, the URL of the word's recorded clip (aac_clips.js clipUrl). When given,
+    // the clip is mixed into this call's outgoing sound (call_mix.js) and the text says `audio: true` once it is
+    // going; a clip that is missing, slow or refused leaves the word as text only. Still true/false at once:
+    // true = it will be sent (it may wait for its clip, CLIP_WAIT_MS at most).
+    sendWords(text, { source = null, clip = null } = {}) {
       if (destroyed || !live) return false;
       const t = cleanWords(text);
       if (!t) return false;
-      wordsQueue.push({ type: 'say', text: t, ...(typeof source === 'string' && source ? { source: source.slice(0, 32) } : {}) });
-      while (wordsQueue.length > WORDS_QUEUE_MAX) wordsQueue.shift();
-      flushWords();
+      const msg = { type: 'say', text: t, ...(typeof source === 'string' && source ? { source: source.slice(0, 32) } : {}) };
+      if (typeof clip === 'string' && clip && clipMixer !== null) wordWithClip(msg, clip);
+      else if (wordsPending > 0) wordAfter(msg);
+      else queueWord(msg);
       return true;
     },
-    /** `cb({ text, source })` for each word the other end of the call sent. Returns an unsubscribe. */
+    /** `cb({ text, source, audio? })` for each word the other end of the call sent. Returns an unsubscribe. */
     onWords(cb) { if (typeof cb !== 'function') return () => {}; wordsCbs.add(cb); return () => { wordsCbs.delete(cb); }; },
+    // call loadouts (2026-10-09): the far end's stream, for captions (call_captions.js). `remote()` is the one now
+    // (null outside a call); `onRemote(cb)` hears it each time a track arrives, and null when the call ends.
+    remote: () => remoteStream,
+    onRemote(cb) { if (typeof cb !== 'function') return () => {}; remoteCbs.add(cb); return () => { remoteCbs.delete(cb); }; },
+    /** Whether a board word's clip is going into the call right now (call_mix.js). */
+    clipPlaying: () => !!(mixer && mixer.playing && mixer.playing()),
 
     // For the panel and for tests. `live` is the honest one: a peer connection can exist
     // and be connecting, which is not the same as a call.
@@ -859,13 +945,18 @@ export function createCallTransport({
                       connecting: connectTimer != null,
                       session: currentSession || pendingSession, claiming: claims.size > 0,
                       answered: answeredOnce,
-                      words: words ? (words.readyState || 'unknown') : null, wordsWaiting: wordsQueue.length }),
+                      words: words ? (words.readyState || 'unknown') : null, wordsWaiting: wordsQueue.length,
+                      wordsPending }),
 
     destroy() {
       destroyed = true;
       try { off?.(); } catch { /* already gone */ }
       for (const c of [...claims.values()]) c.settle(false);
       finish('destroyed');
+      // call loadouts: the clip mixer's audio context goes with the transport (one it was handed is the giver's).
+      if (mixer && clipMixer === undefined) { try { mixer.destroy?.(); } catch { /* gone */ } }
+      mixer = null;
+      remoteCbs.clear();
     },
   };
 }

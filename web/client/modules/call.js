@@ -239,6 +239,8 @@ registerModule(
     // pick (see `answer`): a ring that ended or was replaced while asking must open nothing.
     let ringSeq = 0;
     let claiming = false;
+    // call loadouts: how the call `takeCall` hands over should start (camera, their video); null = all on.
+    let answerWith = null;
     let outgoing = null;         // the cloned track we send; NOT the one the PiP shows
     // *** ON-SCREEN, NOT JUST console.error. *** Found answering an open question: "does a
     // failed connection fail silently, or with a message?" It failed silently -- `end()` always
@@ -664,11 +666,16 @@ registerModule(
       } catch (err) { console.error('call: log', err); }
       phase = 'connected';
       // Every control starts ON for every call (see CALL_CONTROL_KEYS): nothing muted carries over.
-      ctl = { mic: true, speaker: true, theirVideo: true, myVideo: true };
+      // call loadouts (2026-10-09): EXCEPT what the screen's own "Calls open as" chose for a call it hosts
+      // (`takeCall`'s `camera` / `theirVideo`, call_loadouts.js) - a choice made for every call on this screen,
+      // not a mute left over from the last one. "Audio only" never opens the camera at all.
+      const want = answerWith || { camera: true, theirVideo: true };
+      answerWith = null;
+      ctl = { mic: true, speaker: true, theirVideo: want.theirVideo !== false, myVideo: want.camera !== false };
       takeSpeaker(true);
       // BOTH, and in parallel: two sequential permission-gated opens is two round trips
       // before anybody can speak, on a screen where the caller is already waiting.
-      const [track, mic] = await Promise.all([takeCamera(), takeMic()]);
+      const [track, mic] = await Promise.all([want.camera !== false ? takeCamera() : Promise.resolve(null), takeMic()]);
       render();
       const v = el('.call-remote');
       // *** THE ROOM'S MICROPHONE GOES TO THE CALL. *** (Found 2026-09-30.) `takeMic` opened it and
@@ -691,7 +698,9 @@ registerModule(
     // `answer()` - the claim is already won, so the transport says yes at once, and the camera and the
     // microphone open exactly as they do for a panel's own answer. `ringStartedAt`: when the notice began
     // ringing, so the answer's latency in the record is the person's, not this mount's.
-    async function takeCall(from, { ringStartedAt = null } = {}) {
+    // call loadouts (2026-10-09): `camera` false = this room's camera is not opened for this call; `theirVideo`
+    // false = their name card instead of their picture (the bar's "Show their video" brings it back).
+    async function takeCall(from, { ringStartedAt = null, camera = true, theirVideo = true } = {}) {
       if (phase !== 'idle') return false;
       stopDemo();
       clearRing();
@@ -702,7 +711,9 @@ registerModule(
       render();
       // The same pair of topics a panel's call publishes (`incoming`, then `ended` from `end()`).
       bus.publish(CALL_INCOMING, { from: who });
+      answerWith = { camera: camera !== false, theirVideo: theirVideo !== false };
       await answer();
+      answerWith = null;
       return phase === 'connected';
     }
 

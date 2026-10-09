@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>call loadouts — what a screen shows when it answers a call — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#7a5c00;font-weight:600}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #root{position:relative;width:800px;height:450px;margin-top:12px;border:1px solid #ccc}
+  #root .kiosk{position:absolute}
+  #host,#bar{position:absolute;left:-9999px;top:0;width:500px;height:400px}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>call loadouts (2026-10-09)</h1>
+<div class="note">
+  Mike: "I guess it would just want to be one call dashboard with different loadouts? So the settings you could
+  choose audio/video/AAC and the transport bar has standard buttons for mic/cam on/off." Checked here: the four
+  loadouts as data (call_loadouts.js) and the two screen rows; captions of the person on the call (call_captions.js)
+  never act as commands and are labelled with the caller's name; the Call module answering with no camera; the bar's
+  Hang up (one press with a pointer, asks again from a switch); and, live through the real server, a screen with no
+  Call panel answering into "Audio + talk board": the board beside the call, no camera opened, a board word reaching
+  the caller, Hang up on the bar, and everything back as it was.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="bar"></div>
+<div id="root"></div>
+
+<script type="module">
+import {
+  CALL_LOADOUTS, CALL_LOADOUT_ORDER, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_OPENS_KEY, CALL_CAPTIONS_KEY,
+  CALL_OPENS_DEFAULT, CALL_CAPTIONS_DEFAULT, CALL_CAPTION_MODES, callLoadoutOf, callCaptionsOf, boardPreset, callViewPlan,
+} from '../call_loadouts.js';
+import { callCaptionPlan, createCallCaptions } from '../call_captions.js';
+import { PRESETS, normalizeLayout } from '../layout.js';
+import { createSubtitles } from '../subtitles.js';
+import { drawCallControls, HANG_CONFIRM_MS } from '../transport_bar.js';
+import { createCallTransport } from '../call_transport.js';
+import { mountModule } from '../module.js';
+import { connectDrive } from '../drive.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { verbTopic } from '../actions.js';
+import '../modules/call.js';
+
+const out = document.getElementById('results');
+const root = document.getElementById('root');
+let passed = 0, failed = 0, skipped = 0, skipWhy = '';
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function skip(name, why) {
+  skipped += 1; skipWhy = why;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `NOT RUN  ${name}   ${why}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 4000) => { const until = Date.now() + ms; while (Date.now() < until) { if (fn()) return true; await sleep(30); } return !!fn(); };
+const ticks = async (n = 5) => { for (let i = 0; i < n; i++) await Promise.resolve(); await sleep(0); };
+const track = (id, kind = 'audio') => ({ id, kind, enabled: true, stop() { this.stopped = true; } });
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { this.tracks.push(t); }
+  getTracks() { return [...this.tracks]; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the four loadouts, as data in the dashboard records\' shape');
+  check('four, in order: video, audio, video + board, audio + board', CALL_LOADOUT_ORDER.join() === 'video,audio,video_board,audio_board');
+  for (const k of CALL_LOADOUT_ORDER) {
+    const lo = CALL_LOADOUTS[k];
+    const refs = Object.fromEntries(lo.modules.map((m) => [m.ref, `id-${m.ref}`]));
+    const lay = normalizeLayout({ preset: lo.layout.preset, slots: lo.layout.slots.map((r) => refs[r]) }, Object.values(refs));
+    check(`${k}: a layout.js preset, and normalizeLayout keeps every one of its modules`,
+      PRESETS.some((p) => p.id === lo.layout.preset) && lay.slots.filter(Boolean).length === lo.modules.length, JSON.stringify(lay));
+    check(`${k}: the call is always in it; a board only in the board loadouts; "audio" never sends the camera`,
+      lo.modules.some((m) => m.type === 'call') && lo.board === lo.modules.some((m) => m.type === 'board')
+      && (k.startsWith('audio') ? lo.camera === false && lo.theirVideo === false : lo.camera === true));
+  }
+  check('*** the default is "Video" - what a call view did before this, so no screen changes the day it ships ***',
+    CALL_OPENS_DEFAULT === 'video' && CALL_OPENS_FIELD.default === 'video' && callLoadoutOf({}).key === 'video' && callLoadoutOf({ [CALL_OPENS_KEY]: 'nonsense' }).key === 'video');
+  check('the row: a choice of the four, by name, at "standard"', CALL_OPENS_FIELD.kind === 'choice' && CALL_OPENS_FIELD.level === 'standard'
+    && CALL_OPENS_FIELD.options.map((o) => o.value).join() === CALL_LOADOUT_ORDER.join() && CALL_OPENS_FIELD.options[3].label === 'Audio + talk board');
+  check('captions: off by default; "this computer only" and "and the other computers" are separate choices',
+    CALL_CAPTIONS_DEFAULT === 'off' && CALL_CAPTION_MODES.join() === 'off,here,any' && callCaptionsOf({}) === 'off'
+    && callCaptionsOf({ [CALL_CAPTIONS_KEY]: 'any' }) === 'any' && callCaptionsOf({ [CALL_CAPTIONS_KEY]: true }) === 'off');
+  check('site copy in the rows never says "her screen" or a name', !/her screen|Christine|Cici/i.test(JSON.stringify([CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD])));
+  check('*** the board sits beside the call on a wide screen, under it on a tall one ***',
+    boardPreset({ width: 1280, height: 720 }) === 'side' && boardPreset({ width: 390, height: 844 }) === 'stack' && boardPreset({ width: 500, height: 500 }) === 'side');
+  const wide = callViewPlan({ [CALL_OPENS_KEY]: 'audio_board', [CALL_CAPTIONS_KEY]: 'here' }, { width: 1280, height: 720 });
+  check('*** side by side: the board LEFT, the call RIGHT (under the mirror\'s corner) ***', wide.preset === 'side' && wide.slots.join() === 'board,call' && wide.grid.cols === '1fr 1fr');
+  const tall = callViewPlan({ [CALL_OPENS_KEY]: 'video_board' }, { width: 390, height: 844 });
+  check('*** stacked: the call on TOP ***', tall.preset === 'stack' && tall.slots.join() === 'call,board' && tall.grid.rows === '1fr 1fr');
+  check('the plan carries the camera, their video and the captions', wide.camera === false && wide.theirVideo === false && wide.captions === 'here' && tall.camera === true);
+  const plain = callViewPlan({}, { width: 1280, height: 720 });
+  check('the default plan: the call alone, full', plain.preset === 'full' && plain.slots.join() === 'call' && plain.board === false && plain.captions === 'off');
+  check('a board loadout with no board to give: the call alone', callViewPlan({ [CALL_OPENS_KEY]: 'video_board' }, { boardAvailable: false }).slots.join() === 'call');
+
+  // =====================================================================================
+  section('*** captions of the person on the call: heard, labelled with their name, never a command ***');
+  {
+    const row = { speechPass2: 'remote1', speechRemote1Url: 'ws://100.64.0.2:8797/speech' };
+    const here = callCaptionPlan(row, 'here');
+    check('*** "this computer only": only this screen\'s own recogniser hears the call ***',
+      here.passes.map((p) => p.slot).join() === 'local' && here.skipped.some((s) => s.slot === 'remote1'), JSON.stringify(here.passes));
+    const any = callCaptionPlan(row, 'any');
+    check('"and the other computers": the other computer too', any.passes.map((p) => p.slot).join() === 'local,remote1');
+    check('the call\'s ear only: no room microphone, no wake phrase, no voiceprints', here.ears === 'phone' && here.wake === null && here.speakers === null);
+    const br = callCaptionPlan({ speechEngine: 'browser' }, 'here');
+    check('*** the browser\'s own recogniser cannot hear a call: the local speech program is asked instead, and it says why ***',
+      br.browser === false && br.passes[0]?.slot === 'local' && br.skipped.some((s) => s.slot === 'browser' && /cannot hear a call/.test(s.why)));
+
+    const sinkHost = document.getElementById('host');
+    const subs = createSubtitles(sinkHost, { settings: { subtitlesOn: true } });
+    let made = null, started = 0, stopped = 0;
+    const fakeRec = (opts) => {
+      made = opts;
+      const caps = new Set();
+      return {
+        onCaption: (fn) => { caps.add(fn); return () => caps.delete(fn); },
+        start: (cb) => { started += 1; made.onText = cb; },
+        stop: () => { stopped += 1; },
+        sourcesChanged: () => { made.changed = (made.changed || 0) + 1; },
+        status: () => ({ state: 'listening' }),
+        say: (c) => { for (const fn of caps) fn(c); },
+      };
+    };
+    let rec = null;
+    const cc = createCallCaptions({ row: {}, mode: 'here', sink: subs, who: () => 'Ann',
+      recognizer: (o) => { rec = fakeRec(o); return rec; } });
+    const far = new FakeStream([track('their-voice')]);
+    cc.start(far);
+    check('the recogniser is built for the call\'s stream only', started === 1 && made.phoneStreams().length === 1 && made.phoneStreams()[0] === far && made.plan.ears === 'phone');
+    check('*** nothing heard on a call can act: actsOn refuses everything ***', made.actsOn('hang up') === false && made.actsOn('computer please pause') === false);
+    rec.say({ id: 'g1', text: 'hang up the phone', ear: 'phone1', words: [], partial: false, others: [{ ear: 'room', text: 'x' }] });
+    const h = subs.history();
+    check('*** the caller\'s words are written, labelled with their name (sure: we know who is on the call) ***',
+      h.length === 1 && h[0].text === 'hang up the phone' && h[0].who.label === 'Ann' && h[0].source === 'call', JSON.stringify(h));
+    check('...a later pass corrects the same line in place', (rec.say({ id: 'g1', text: 'hang on the phone', ear: 'phone1', words: [] }), subs.history().length === 1 && subs.history()[0].text === 'hang on the phone'));
+    const far2 = new FakeStream([track('their-voice-2')]);
+    cc.start(far2);
+    check('a reconnect\'s new stream is picked up (no second recogniser)', started === 1 && made.changed === 1 && made.phoneStreams()[0] === far2);
+    cc.stop();
+    check('the call ends: the recogniser stops', stopped === 1);
+    const none = createCallCaptions({ row: { speechLocalUrl: 'not a url', speechEngine: 'local' }, mode: 'here', sink: subs, recognizer: () => { throw new Error('should not be built'); } });
+    none.start(far);
+    check('nothing to send it to: nothing is opened, and the status says so', none.status().state === 'no-recogniser');
+    subs.destroy?.();
+  }
+
+  // =====================================================================================
+  section('*** the Call module answers a hosted call with the loadout\'s camera and picture ***');
+  for (const [camera, theirVideo] of [[false, false], [true, true]]) {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    let camAsked = 0;
+    const cameraOwner = { acquireTrack: async () => { camAsked += 1; return track('cam', 'video'); }, release() {} };
+    const micOwner = { acquire: async () => new FakeStream([track('mic')]), release() {}, status: () => ({}) };
+    const answered = [];
+    const transport = { claim: async () => true, answer: async (x) => { answered.push(x); return true; }, onIncoming: () => () => {}, onEnded: () => () => {}, hangup() {} };
+    const bus = createBus();
+    const inst = mountModule('call', { mount: host, bus, instanceId: 'cv', state: { get: () => ({}), set() {}, subscribe: () => () => {} },
+      cameraOwner, micOwner, callTransport: transport, audio: null, output: null });
+    inst.init();
+    const ok = await inst.impl.takeCall({ name: 'Ann', video: true }, { camera, theirVideo });
+    const c = inst.impl.controls();
+    if (!camera) {
+      check('*** "audio" loadout: the camera is never opened, and nothing video is sent ***', ok && camAsked === 0 && !answered[0].outgoing && !!answered[0].audio, JSON.stringify({ camAsked, a: answered[0] && Object.keys(answered[0]) }));
+      check('...the bar says so: my video off and not sending, their video hidden (their name card shows)', c.myVideo === false && c.sending === false && c.theirVideo === false && c.mic === true
+        && !!host.querySelector('[data-their-card]'));
+      inst.impl.control({ theirVideo: 'on' });
+      check('...and "Show their video" still shows it (it is a starting point, not a lock)', inst.impl.controls().theirVideo === true && !host.querySelector('[data-their-card]'));
+    } else {
+      check('"video" loadout: as before - camera opened and sent, everything on', ok && camAsked === 1 && !!answered[0].outgoing && c.myVideo && c.theirVideo && c.sending);
+    }
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** Hang up on the bar: one press with a pointer; from a switch it asks first ***');
+  {
+    const el = document.getElementById('bar');
+    const live = { live: true, mic: true, speaker: true, theirVideo: true, myVideo: true, video: true, sending: true, hasMic: true, volume: 0.8 };
+    let hung = 0;
+    drawCallControls(el, live, () => {});
+    check('a host that hands no hang-up gets the bar as before (no Hang up)', !el.querySelector('[data-call="hangup"]'));
+    drawCallControls(el, live, () => {}, () => { hung += 1; });
+    const btn = () => el.querySelector('[data-call="hangup"]');
+    check('*** with one: Hang up, LAST in the call\'s group ***', btn()?.textContent === 'Hang up' && el.lastElementChild === btn());
+    check('...after Mute my mic and Hide my video (the standard mic / camera buttons)', !!el.querySelector('[data-call="mic"]') && !!el.querySelector('[data-call="mine"]'));
+    btn().dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    check('*** a pointer press hangs up at once ***', hung === 1);
+    btn().click();      // what the bar scan does (detail 0)
+    check('*** a press from a switch (no pointer) only ASKS ***', hung === 1 && btn().textContent === 'Press again to hang up' && btn().dataset.on === '1');
+    drawCallControls(el, { ...live, mic: false }, () => {}, () => { hung += 1; });
+    check('...and still asks after the bar redraws (a mute pressed meanwhile)', btn().textContent === 'Press again to hang up');
+    btn().click();
+    check('*** a second press inside the wait hangs up ***', hung === 2 && btn().textContent === 'Hang up');
+    btn().click();
+    await sleep(HANG_CONFIRM_MS + 150);
+    check(`*** nobody presses again: after ${HANG_CONFIRM_MS / 1000} s it goes back, and the call goes on ***`, hung === 2 && btn().textContent === 'Hang up');
+    btn().click(); btn().click();
+    check('...and asks afresh next time', hung === 3);
+    drawCallControls(el, null, () => {}, () => { hung += 1; });
+    check('the call ends: the group goes', el.hidden === true && !btn());
+  }
+
+  // =====================================================================================
+  section('*** LIVE, through the real server: a screen with no Call panel answers into "Audio + talk board" ***');
+  let k = null, ph = null, media = null, d = null;
+  try {
+    const KUSER = 'call-loadouts-' + Math.floor(Math.random() * 1e9);
+    const profiles = createProfilesClient({ user: KUSER });
+    const person = (await profiles.people())[0];
+    check('(setup) the account has a person', !!person);
+    const p = await profiles.create('TEST-call-loadouts', person.id);
+    await profiles.addModule(p.id, 'photos');
+    await profiles.addModule(p.id, 'clock');
+    const kbus = createBus();
+    k = await mountKiosk(root, { user: KUSER, profileId: p.id, profiles, bus: kbus });
+    check('(setup) the screen attached its drive socket and built the notice', await settled(() => !!k.drive() && !!k.callNotice(), 12000));
+    // The screen's row: "Calls open as" -> Audio + talk board, by its menu row (as a person would).
+    k.menu.open();
+    try { k.menu.showTab?.('screen'); } catch { /* no tabs */ }
+    const row = (key) => k.menu.items().find((i) => i.id === `set:${key}`);
+    check('*** both rows are on This screen, beside "Calls when there\'s no Call panel" ***', !!row(CALL_OPENS_KEY) && !!row(CALL_CAPTIONS_KEY) && !!row('callNotice'),
+      JSON.stringify(k.menu.items().filter((i) => i.tab === 'screen').map((i) => i.id)));
+    // Set outright, as the menu's choice picker does (`commit`): stepping reads the row's value, which the
+    // menu only refreshes when it draws.
+    row(CALL_OPENS_KEY)?.commit?.('audio_board');
+    await settled(() => row(CALL_OPENS_KEY)?.value === 'audio_board', 3000);
+    check('(setup) "Calls open as: Audio + talk board"', row(CALL_OPENS_KEY)?.value === 'audio_board', row(CALL_OPENS_KEY)?.value);
+    k.menu.close();
+    const callMedia = (re) => {
+      const mic = (k.micOwner()?.status?.().consumers || []).filter((c) => re.test(c));
+      const cam = (k.cameraOwner()?.consumers?.() || []).filter((c) => re.test(c));
+      return { mic, cam };
+    };
+    ph = connectDrive({ personId: person.id, role: 'driver', user: KUSER });
+    check('(setup) a caller is in the room', await settled(() => ph.state() === 'connected' && ph.presence().screens >= 1, 12000));
+    try { media = await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); } catch { media = null; }
+    d = createCallTransport({ link: ph, role: 'driver' });
+    const dEnded = [], dAns = [], words = [];
+    d.onEnded((r, x) => dEnded.push((x && x.why) || r));
+    d.onAnswered((a) => dAns.push(a));
+    d.onWords((w) => words.push(w));
+    await d.call({ tracks: media ? media.getTracks() : [], from: { name: 'Tess', video: true } });
+    check('(setup) the notice rings', await settled(() => k.callNotice().showing(), 9000));
+    kbus.publish('call/answer');
+    check('*** LIVE: answered: the caller hears it ***', await settled(() => dAns.length > 0, 15000));
+    const view = () => root.querySelector('[data-call-view]');
+    check('*** LIVE: the call view opens as "Audio + talk board" ***', await settled(() => view()?.dataset.loadout === 'audio_board', 6000), view()?.dataset.loadout);
+    check('*** LIVE: the board beside the call, left, in layout.js\'s side-by-side grid ***',
+      await settled(() => !!view()?.querySelector('[data-call-board] .ab-card'), 6000)
+      && view().firstElementChild?.hasAttribute('data-call-board') && /1fr 1fr/.test(view().style.gridTemplateColumns || ''),
+      `${view()?.style.gridTemplateColumns} ${view()?.firstElementChild?.outerHTML.slice(0, 60)}`);
+    check('LIVE: Hang up is over the call\'s half', !!view()?.querySelector('[data-call-area] [data-call-hangup]'));
+    check('*** LIVE: the microphone opened for the call; the CAMERA did not ("audio only") ***',
+      await settled(() => callMedia(/^call:/).mic.length > 0, 4000) && callMedia(/^call:/).cam.length === 0, JSON.stringify(callMedia(/^call:/)));
+    check('LIVE: the bar\'s controls: my video off, not sending; their name card shown', await settled(() => k.callControls()?.live === true, 3000)
+      && k.callControls().myVideo === false && k.callControls().sending === false && k.callControls().theirVideo === false, JSON.stringify(k.callControls()));
+    check('*** LIVE: the bar has Hang up beside the mic and camera buttons ***', await settled(() => !!root.querySelector('[data-call-controls] [data-call="hangup"]'), 3000));
+    check('LIVE: the panels are still there underneath', k.primaryType() === 'photos', k.primaryType());
+    // A word on the board in the call view goes into the call.
+    await settled(() => d.__probe().words === 'open', 8000);
+    const card = view().querySelector('[data-call-board] .ab-card');
+    const said = (card?.textContent || '').trim();
+    card?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('*** LIVE: a card pressed on the call view\'s board reaches the caller ***', await settled(() => words.length > 0, 8000), JSON.stringify(words));
+    check('...as the board says it, from the board', words[0]?.source === 'board' && said.toLowerCase().includes((words[0]?.text || '#').toLowerCase()), `${JSON.stringify(words[0])} / ${said}`);
+    // A switch in the call view drives THIS board, not one under it.
+    let mine = 0, bare = 0;
+    const offA = kbus.subscribe('board/select#call:board', () => { mine += 1; });
+    const offB = kbus.subscribe('board/select', () => { bare += 1; });   // bare-topic-ok: proving NOTHING is published to the bare topic (no Board panel under the call view hears it)
+    kbus.publish(verbTopic('select'));
+    await sleep(100);
+    check('*** a switch\'s select in the call view goes to the call view\'s board, and to no Board panel under it ***', mine === 1 && bare === 0, `${mine} ${bare}`);
+    offA?.(); offB?.();
+    // Hang up from the bar, with a pointer.
+    root.querySelector('[data-call-controls] [data-call="hangup"]').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    check('*** LIVE: Hang up on the bar ends the call: the caller hears it ***', await settled(() => dEnded.at(-1) === 'hangup', 6000), JSON.stringify(dEnded));
+    check('*** LIVE: the view goes, the board with it, and the screen is as it was ***',
+      await settled(() => !k.callView() && !k.callScanHeld(), 4000) && !root.querySelector('[data-call-board]') && k.primaryType() === 'photos');
+    check('LIVE: the microphone is let go', await settled(() => callMedia(/^call:/).mic.length === 0, 4000), JSON.stringify(callMedia(/^call:/)));
+  } catch (e) {
+    check('live section ran', false, String((e && e.stack) || e));
+  } finally {
+    try { k?.destroy(); } catch { /* gone */ }
+    try { d?.destroy(); } catch { /* gone */ }
+    try { ph?.close(); } catch { /* gone */ }
+    try { media?.getTracks().forEach((t) => t.stop()); } catch { /* gone */ }
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? (skipped ? `PASS WITH SKIPS — ${passed} checks, ${skipped} SKIPPED (${skipWhy})` : `ALL PASS — ${passed} checks`) : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
