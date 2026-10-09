@@ -233,6 +233,28 @@ check("*** the tag here is the client's own (subtitle_learning.js LEARNED_FORMAT
       f"export const LEARNED_FORMAT = '{sl.LEARNED_FORMAT}';" in sl_src)
 
 
+# ---------------------------------------------------------------- own board clips (2026-10-09)
+section("own board clips - a board's card sounds stay on the device and in the Nimrod folder (board_sounds.js)")
+own_board = {"board": {"id": "own-x", "name": "My board", "cols": 3, "rows": 2, "cells": [
+    {"id": "c0", "word": "Thank you", "sound": {"file": "thank_you-lq3k2a.webm", "from": "recorded"}},
+    {"id": "c1", "word": "Tea", "sound": {"file": "tea-lq3k9z.mp3", "from": "file"}}]}, "boardId": "custom"}
+check("a board whose cards NAME their sounds passes (a name is small text the site needs on every device)",
+      refused(lambda: sl.check_state(own_board)) is None)
+one_second = base64.b64encode(os.urandom(6000)).decode()     # ~1 s of compressed speech, as text
+inline = {"board": {**own_board["board"], "cells": [{"id": "c0", "word": "Thank you",
+                                                     "sound": {"file": "thank_you.webm", "data": "data:audio/webm;base64," + one_second}}]}}
+r = refused(lambda: sl.check_state(inline))
+check("*** the same board with the recording INSIDE it (data:audio/...): refused, 400, keep it at home ***",
+      r and r[0] == 400 and "own machine" in r[1], r)
+bare = {"board": {**own_board["board"], "cells": [{"id": "c0", "word": "Thank you", "sound": {"file": "thank_you.webm", "bytes": one_second}}]}}
+r = refused(lambda: sl.check_state(bare))
+check("*** ...and as bare base64 with no data: address: refused too ***", r and r[0] == 400, r)
+check("...in an event as well", refused(lambda: sl.check_event("s", "select", {"word": "hi", "clip": "data:audio/ogg;base64," + one_second})))
+bs_src = (Path(__file__).resolve().parents[1] / "client" / "board_sounds.js").read_text(encoding="utf-8")
+check("*** board_sounds.js has no way to send a sound anywhere (no fetch, FormData, XMLHttpRequest, sendBeacon) ***",
+      not any(s in bs_src for s in ("fetch(", "new FormData", "XMLHttpRequest", "sendBeacon(")))
+
+
 # ---------------------------------------------------------------- the six routes
 section("the six routes refuse, and keep nothing")
 tmp = tempfile.mkdtemp(prefix="nimrod_storage_line_")

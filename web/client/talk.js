@@ -356,7 +356,8 @@ export function startTalk({
     // The board asks its host to speak rather than reaching for a synthesiser, which is what
     // lets this page put the word on screen as well — and lets a device with no voice at all
     // still communicate.
-    output: { say: (text) => sayIt(text) },
+    // own board clips (2026-10-09): with the card's own sound, when it has one (`opts.data.ownClip`).
+    output: { say: (text, opts) => sayIt(text, opts) },
   });
   inst.init();
 
@@ -378,8 +379,11 @@ export function startTalk({
     try { speak(word, voicePref); } catch (err) { console.error('talk: speak', err); }
   }
 
-  function sayIt(text) {
+  function sayIt(text, opts = null) {
     const word = String(text == null ? '' : text);
+    // own board clips (2026-10-09): a card's own sound (recorded or chosen in the board editor) comes first, ahead of
+    // this page's own clip rule; this page's `useClips`/`clipBase` still decide the shipped clips. Sound off is off.
+    const ownClip = opts && opts.data && typeof opts.data.ownClip === 'string' ? opts.data.ownClip : null;
     if (!word) return;
 
     // The written word goes up FIRST and unconditionally, before anything that can fail. A
@@ -395,8 +399,17 @@ export function startTalk({
 
     if (!cfg.speakAloud) { lastHeard = 'sound is off — the word is on screen'; return; }
 
-    const url = cfg.useClips ? clipUrl(word, cfg.clipBase) : null;
-    if (!url) { synthesise(word); return; }
+    const shipped = cfg.useClips ? clipUrl(word, cfg.clipBase) : null;
+    // own board clips: the card's own sound, and when that will not play, the shipped clip, then the voice.
+    const urls = [ownClip, shipped].filter(Boolean);
+    if (!urls.length) { synthesise(word); return; }
+    playFrom(urls, 0, word);
+  }
+
+  // own board clips (2026-10-09): the clips in turn (the card's own, then the shipped one), the voice after them.
+  function playFrom(urls, i, word) {
+    if (i >= urls.length) { synthesise(word); return; }
+    const url = urls[i];
 
     // A recording, and the synthesiser only if it is not there. `error` covers a missing file;
     // the rejected `play()` promise covers an autoplay policy or a format the device will not
@@ -405,7 +418,7 @@ export function startTalk({
     try {
       const a = makeAudio();
       let fellBack = false;
-      const fallBack = () => { if (fellBack) return; fellBack = true; playing = null; synthesise(word); };
+      const fallBack = () => { if (fellBack) return; fellBack = true; if (playing === a) playing = null; playFrom(urls, i + 1, word); };
       a.addEventListener('error', fallBack);
       a.addEventListener('ended', () => { playing = null; });
       a.src = url;
@@ -416,7 +429,7 @@ export function startTalk({
       lastHeard = 'a recording';
       const p = a.play();
       if (p && p.catch) p.catch(fallBack);
-    } catch { synthesise(word); }
+    } catch { playFrom(urls, i + 1, word); }
   }
 
   function showBanner(word) {

@@ -71,6 +71,9 @@ import { clipUrl } from '../aac_clips.js';
 // The shipped clips, found from THIS file rather than from the page, so any page that mounts a board (the
 // kiosk, talk.html, a suite under dev/) points at the same folder.
 const DEFAULT_CLIP_BASE = new URL('../aac/audio', import.meta.url).href;
+// own board clips (2026-10-09): a card's own sound (recorded in the editor, or a sound file), kept on the device and in
+// the person's Nimrod folder - and the one lookup order, own -> shipped -> the browser's voice (board_sounds.js).
+import { createBoardSounds, createWordRecorder, clipChoices, soundFilesOf } from '../board_sounds.js';
 import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { personSources } from '../person_known.js';
@@ -263,6 +266,15 @@ const DEFAULTS = {
   // Where the recordings are: the same folder as talk.html's default (aac/audio), so one set serves both. Not a menu row:
   // pointing it elsewhere (a bucket, a CDN) is a setup job, the same as talk.html's `clipBase`.
   callClipBase: DEFAULT_CLIP_BASE,
+  // *** own board clips (2026-10-09): THE SEVENTEEN SHIPPED CLIPS IN THE ROOM TOO. *** A card with its own sound always
+  // plays that (somebody recorded or chose it for that card). A card without one now plays the shipped clip when its
+  // word is one of the seventeen (aac/audio, the same folder as `callClipBase`), and the browser's voice otherwise -
+  // the order talk.html has always used. DEFAULT YES, argued: those clips already go into a call (`callClips`), and the
+  // person on the call and the person in the room should hear the same voice say the same word; on a device whose
+  // browser voice is poor or missing (a Pi), it is a real voice for the commonest words. The case for no: a person
+  // whose board otherwise speaks in a browser voice they chose hears seventeen words in a different voice. One
+  // setting away; it turns the shipped clips off for the call as well, and never touches a card's own sound.
+  shippedClips: true,
 
   // *** TURN THE GRID WHEN THE SCREEN SHAPE WOULD MAKE THE CARDS INTO STRIPES. DEFAULT ON,
   // AND THIS ONE NEEDS MIKE'S EYES BECAUSE IT LEANS ON THE FILE'S OWN RULE. ***
@@ -493,6 +505,10 @@ export const SETTINGS = [
   { key: 'callClips', label: 'Recorded words are heard on a call', kind: 'toggle', default: true,
     level: 'advanced', onLabel: 'Yes — a word with a recording is sent as sound as well as text', offLabel: 'No — text only',
     note: 'Only the words that have a recording. The person on the call sees every word either way.' },
+  // own board clips (2026-10-09): see `shippedClips` in DEFAULTS.
+  { key: 'shippedClips', label: 'Common words use the built-in recorded voice', kind: 'toggle', default: true,
+    level: 'advanced', onLabel: 'Yes — seventeen common words, like Yes and Thank you', offLabel: 'No — the device’s own voice',
+    note: 'A card with its own sound (recorded or chosen in the board editor) always uses that.' },
 ];
 
 registerModule(
@@ -527,6 +543,39 @@ registerModule(
 
     let cfg = { ...DEFAULTS };
     let board = normalizeBoard(YESNO);
+    // own board clips (2026-10-09): where this screen keeps the cards' own sounds (board_sounds.js; a host or a suite
+    // may hand one in), and the playable URL of each sound on the board now, made ahead of a press because choosing a
+    // card must not wait on storage. A sound not ready yet (the first second after load, or not on this device) is
+    // simply not there: the card falls back to the shipped clip or the voice, as it always did.
+    let sounds = null;
+    const soundsNow = () => {
+      if (sounds) return sounds;
+      try { sounds = ctx.boardSounds || createBoardSounds(); } catch (err) { console.error('board: sounds', err); sounds = null; }
+      return sounds;
+    };
+    const ownUrls = new Map();               // file -> { url, release } | { pending: true }
+    function loadOwnSounds() {
+      const want = soundFilesOf(board);
+      for (const [file, got] of [...ownUrls]) {
+        if (want.has(file)) continue;
+        ownUrls.delete(file);
+        try { got.release?.(); } catch { /* gone */ }
+      }
+      if (!want.size) return;
+      const s = soundsNow();
+      if (!s) return;
+      for (const file of want) {
+        if (ownUrls.has(file)) continue;
+        const slot = { pending: true };
+        ownUrls.set(file, slot);
+        Promise.resolve().then(() => s.url(file)).then((r) => {
+          if (destroyed || ownUrls.get(file) !== slot) { try { r?.release?.(); } catch { /* gone */ } return; }
+          if (r && r.url) ownUrls.set(file, { url: r.url, release: r.release, where: r.where });
+          else ownUrls.delete(file);          // not here: asked again the next time the board is drawn
+        }).catch(() => { if (ownUrls.get(file) === slot) ownUrls.delete(file); });
+      }
+    }
+    const ownUrlOf = (cell) => (cell && cell.sound ? (ownUrls.get(cell.sound.file)?.url || null) : null);
     let scan = null;
     let boardScene = null;   // the live scene mounted in .ab-surface, when the card surface asks for one
     let cardEls = [];
@@ -880,16 +929,24 @@ registerModule(
       // *** `say`, NEVER `notify`. *** See the header: the verb is the boundary between a
       // talking aid and a nurse call. `say` routes to speech and stays in this room.
       const text = cell.say || cell.word;
+      // own board clips (2026-10-09): the card's own sound, then the shipped clip, then the voice (board_sounds.js
+      // clipChoices - the one place the order is written). The speech channel tries the clips in turn
+      // (output_channels.js); `ownClip` is for a host that keeps its own shipped-clip rules (talk.html).
+      const own = ownUrlOf(cell);
+      const clips = clipChoices({ text, own, base: cfg.callClipBase ?? DEFAULT_CLIP_BASE, shipped: cfg.shippedClips !== false });
       try {
-        if (ctx.output?.say) ctx.output.say(text, { source: 'board' });
-        else speak(text);
+        if (ctx.output?.say) {
+          ctx.output.say(text, { source: 'board',
+            ...(clips.length ? { data: { clips: clips.map((c) => c.url), ...(own ? { ownClip: own } : {}) } } : {}) });
+        } else speak(text);
       } catch (err) { console.error('board: say', err); }
 
       // board into call (2026-10-08): and to the person on a call that is LIVE now, as text. The
       // transport refuses when there is no call, so nothing is sent outside one. See the header.
       if (cfg.intoCall !== false) {
         // call loadouts (2026-10-09): with its recorded clip, when the card's word has one (`callClips`).
-        const clip = cfg.callClips !== false ? clipUrl(text, cfg.callClipBase ?? DEFAULT_CLIP_BASE) : null;
+        // own board clips: the first of the same choices - a card's own sound goes into the call the same way.
+        const clip = cfg.callClips !== false ? (clips[0]?.url || null) : null;
         try { ctx.callTransport?.sendWords?.(text, { source: 'board', ...(clip ? { clip } : {}) }); }
         catch (err) { console.error('board: into the call', err); }
       }
@@ -1236,6 +1293,10 @@ registerModule(
           : Math.max(0, Number(cfg.editorIdleSec) || 0) * 1000 || undefined,
         sources: ctx.mediaSources || scoped,
         setTimer, clearTimer,
+        // own board clips (2026-10-09): "Record this word" / "Use a sound file" / "Remove the sound". The microphone
+        // through the screen's arbiter when there is one (ctx.micOwner), so a recogniser already listening shares it.
+        sounds: soundsNow(),
+        recorder: ctx.wordRecorder || (() => createWordRecorder({ micOwner: ctx.micOwner || null })),
         onCancel: () => closeEditor(),
         onIdle: (draftBoard) => {
           // Keep the work, give the board back. Tagged with what it was editing so reopening
@@ -1245,6 +1306,14 @@ registerModule(
         },
         onSave: (made) => {
           closeEditor();
+          // own board clips: the sounds the board (or its draft) used and the saved board does not are off this
+          // device now - the board being replaced is the only thing that named them. The Nimrod folder's copies stay.
+          try {
+            const was = state?.get?.() || {};
+            const keep = soundFilesOf(made);
+            const gone = new Set([...soundFilesOf(was.board), ...soundFilesOf(was.boardDraft)]);
+            for (const f of gone) if (!keep.has(f)) soundsNow()?.remove?.(f);
+          } catch (err) { console.error('board: tidying sounds', err); }
           // Two writes in one, because they are one decision: the board somebody just made,
           // and the choice to be looking at it. Saving a board and leaving the screen on the
           // old one is the sort of thing that reads as "it did not save".
@@ -1267,6 +1336,7 @@ registerModule(
 
     function applyConfig() {
       board = boardFor(cfg.boardId);
+      loadOwnSounds();                       // own board clips: the cards' own sounds, ready before a press
       drawBoards();
       // The gear goes with the row when locked. It is the other caregiver control sitting on
       // the communication surface, and hiding one while leaving the other is half a lock.
@@ -1338,6 +1408,8 @@ registerModule(
         cardHTML: cardEls.map((b) => b.innerHTML),
         card: card && card.shown ? card.probe() : null,
         cardEl: card && card.shown ? card.el : null,
+        // own board clips: which cards' own sounds are ready to play (file -> where it was found).
+        ownSounds: Object.fromEntries([...ownUrls].filter(([, v]) => v && v.url).map(([f, v]) => [f, v.where || 'device'])),
       }),
 
       init() {
@@ -1555,6 +1627,9 @@ registerModule(
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
         releaseImages();
         closeEditor();
+        // own board clips: the cards' sound URLs go with the board.
+        for (const got of ownUrls.values()) { try { got.release?.(); } catch { /* gone */ } }
+        ownUrls.clear();
         boardScene?.destroy(); boardScene = null;
         try { card?.close?.('gone'); } catch { /* already gone */ } card = null;
         try { themeWatch?.disconnect(); } catch { /* already gone */ } themeWatch = null;

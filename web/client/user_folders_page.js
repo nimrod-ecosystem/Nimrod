@@ -109,6 +109,9 @@ export const KIND_WORDS = Object.freeze({
     none: 'No pictures in it yet. The art kit below says what you can make, and which folder each goes in.' }),
   data: Object.freeze({ title: 'Data', what: 'your own Nimrod data', noun: ['file', 'files'],
     none: 'Nothing kept in it yet.' }),
+  // own board clips (2026-10-09): board_sounds.js.
+  boardSounds: Object.freeze({ title: 'Board sounds', what: 'the sounds of your own talk board cards', noun: ['sound', 'sounds'],
+    none: 'No sounds in it yet. In the board editor, press a card, then “Record this word” or “Use a sound file”.' }),
   fonts: Object.freeze({ title: 'Fonts', what: 'fonts',
     none: 'No font files in it yet (.woff2, .woff, .ttf or .otf).' }),
   luts: Object.freeze({ title: 'Colour looks (LUTs)', what: 'colour looks',
@@ -178,7 +181,8 @@ export async function scanFolder(kind, dir) {
         return acc;
       }, []) };
     }
-    if (kind === 'recordings' || kind === 'data') {
+    // own board clips (2026-10-09): Board sounds is counted the same way (its README is not a sound).
+    if (kind === 'recordings' || kind === 'data' || kind === 'boardSounds') {
       let count = 0;
       let exported = false;
       for await (const [name] of dir.entries()) {
@@ -467,6 +471,7 @@ export const SAVE_WORDS = Object.freeze({
   recordings: 'Save recordings and voice-training exports in',
   artwork: 'Save pictures you make for Nimrod (each kind in its own folder) in',
   data: 'Keep your own Nimrod data (play history, exports) in',
+  boardSounds: 'The sounds of your own talk board cards are kept in',     // own board clips (2026-10-09)
 });
 // What "Connect it for ..." connects it for: the panels that read a media source of that kind. Artwork (2026-10-07):
 // connected, every picture chooser can browse it (a subfolder at a time) and the Photos panel can show it.
