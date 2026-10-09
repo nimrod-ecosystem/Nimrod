@@ -134,6 +134,8 @@ export const SUITES = [
   'voice_recording', 'intercom',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
+  // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.
+  'subtitle_learning',
   // 2026-10-02: a speech model trained on one person's own voice (Euphonia): the page, reading phrases, the export.
   'voice_model',
   // 2026-10-04: the Voice model module - the six steps one at a time, worked out from evidence; export to Recordings;

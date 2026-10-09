@@ -173,6 +173,18 @@ def listing_tests():
         data = make_export(ex, ['a', 'b', 'c'], index=False)
         clips, notes = T.list_clips(data, None)
         check('*** the new export (0..N-1, no gaps): no note at all ***', len(clips) == 3 and not notes, notes)
+    with tempfile.TemporaryDirectory() as d:
+        # subtitle learning (2026-10-09): a corrected subtitle line's recording, exported by voice_recording.js
+        # exportEuphonia with `from: "correction"` in its index entry - the same data/N/recording.wav + phrase.txt.
+        ex = Path(d)
+        data = make_export(ex, ['Good morning', 'I am seeing Rosalind today'])
+        idx = json.loads((ex / 'nimrod-export.json').read_text(encoding='utf-8'))
+        idx['samples'][1]['from'] = 'correction'
+        (ex / 'nimrod-export.json').write_text(json.dumps(idx), encoding='utf-8')
+        clips, notes = T.list_clips(data, T.read_index(ex))
+        check('*** a sample whose words came from a subtitle correction is trained on like any other ***',
+              [c['folder'] for c in clips] == ['0', '1'] and clips[1]['phrase'] == 'I am seeing Rosalind today' and not notes,
+              (clips, notes))
 
 
 def split_tests():

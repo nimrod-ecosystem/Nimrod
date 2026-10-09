@@ -206,6 +206,33 @@ check("a very deeply nested body is walked without blowing the stack (and the pi
       refused(lambda: sl.check_content(deep)) is not None)
 
 
+# ---------------------------------------------------------------- rule 6: what the subtitles learned
+section("rule 6 - what the subtitles learned from corrections is refused, everywhere (subtitle learning)")
+learned = {"format": "nimrod-learned-words", "v": 1, "key": "p_1", "name": "Alex",
+           "words": [{"w": "Rosalind", "n": 2, "at": 1759800000000}],
+           "fixes": [{"from": "rose lind", "to": "Rosalind", "n": 2, "at": 1759800000000}], "updatedAt": 1759800000000}
+r = refused(lambda: sl.check_state(learned))
+check("*** a learned-words record, put in a setting: refused, 400, with a sentence ***",
+      r and r[0] == 400 and "never kept on this site" in r[1], r)
+check("...inside anything, in any case, and as a key named learnedWords / learned-words / learned_words",
+      refused(lambda: sl.check_state({"a": [{"FORMAT": " Nimrod-Learned-Words "}]}))
+      and refused(lambda: sl.check_state({"learnedWords": []})) and refused(lambda: sl.check_state({"x": {"Learned-Words": {}}}))
+      and refused(lambda: sl.check_state({"learned_words": "Rosalind"})))
+check("*** in an event, and through the history route even for a person who chose \"with us\" ***",
+      refused(lambda: sl.check_event("s", "said", {"learned": learned}))
+      and refused(lambda: sl.check_history("words", [{"kind": "select", "data": {"word": "hi", "learnedWords": ["Rosalind"]}}],
+                                           {"words": "us"})))
+check("NOT refused: the site's own subtitle-learning settings (subtitlesLearn / subtitlesFixAfter / subtitlesHints)",
+      refused(lambda: sl.check_state({"subtitlesLearn": True, "subtitlesFixAfter": 2, "subtitlesHints": True})) is None)
+check("NOT refused: the words in a sentence, or a talk-board word",
+      refused(lambda: sl.check_state({"note": "the learned words list is long"})) is None
+      and refused(lambda: sl.check_history("words", [{"kind": "select", "data": {"board": "home", "word": "drink"}}],
+                                           {"words": "us"})) is None)
+sl_src = (Path(__file__).resolve().parents[1] / "client" / "subtitle_learning.js").read_text(encoding="utf-8")
+check("*** the tag here is the client's own (subtitle_learning.js LEARNED_FORMAT) - one name, two files ***",
+      f"export const LEARNED_FORMAT = '{sl.LEARNED_FORMAT}';" in sl_src)
+
+
 # ---------------------------------------------------------------- the six routes
 section("the six routes refuse, and keep nothing")
 tmp = tempfile.mkdtemp(prefix="nimrod_storage_line_")
@@ -244,6 +271,9 @@ for name, url in state_urls.items():
     r = c.put(url, json={"data": {"theme": "warm", "me": vp_file}, "base_version": v}, headers=H)
     check(f"*** {name}: a voiceprint inside is refused, 400, with a sentence (rule 5) ***",
           r.status_code == 400 and "voiceprint" in r.json().get("detail", "").lower(), r.text)
+    r = c.put(url, json={"data": {"theme": "warm", "subs": learned}, "base_version": v}, headers=H)
+    check(f"*** {name}: what the subtitles learned is refused, 400 (rule 6) ***",
+          r.status_code == 400 and "never kept on this site" in r.json().get("detail", ""), r.text)
     r = c.put(url, json={"data": sized(sl.STATE_MAX_BYTES + 10), "base_version": v}, headers=H)
     check(f"*** {name}: too big is refused, 413 ***", r.status_code == 413 and "too big" in r.json().get("detail", ""),
           f"{r.status_code} {r.text[:200]}")
@@ -268,6 +298,9 @@ for name, url in event_urls.items():
     r = c.post(url, json={"kind": "trial", "data": {"v": emb}}, headers=H)
     check(f"*** {name}: a voiceprint's numbers in an event are refused, 400 (rule 5) ***",
           r.status_code == 400 and "voiceprint" in r.json().get("detail", "").lower(), r.text)
+    r = c.post(url, json={"kind": "trial", "data": {"learned": learned}}, headers=H)
+    check(f"*** {name}: what the subtitles learned, in an event: refused, 400 (rule 6) ***",
+          r.status_code == 400 and "never kept on this site" in r.json().get("detail", ""), r.text)
     r = c.post(url, json={"kind": "trial", "data": sized(sl.EVENT_MAX_BYTES + 10)}, headers=H)
     check(f"*** {name}: an event too big is refused, 413 ***", r.status_code == 413, f"{r.status_code} {r.text[:200]}")
     r = c.post(url, json={"kind": "play", "data": {"id": "dQw4w9WgXcQ", "at": 1759800000000}}, headers=H)

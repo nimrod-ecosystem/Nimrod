@@ -362,10 +362,18 @@ export function connectEngine({
   // WHO IS TALKING (row 2.56): { on, sureAt } - asked for after hello, only of a service that offers it (hello's
   // `speakers`). `onControl` hears the voice set-up answers (VOICE_ID_KINDS); never a voiceprint's numbers.
   speakers = null, onControl = null,
+  // subtitle learning (2026-10-09): words people corrected the subtitles to (subtitle_learning.js `hintsFor`), sent
+  // after hello ONLY to a service whose hello says `hints: true` (a Whisper-class engine). An older service, or a
+  // Vosk one, is never sent them - so it never answers "unknown type". [] clears them.
+  hints = [],
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
   let spk = speakers && typeof speakers === 'object' ? { ...speakers } : null;
+  let hintList = Array.isArray(hints) ? hints.slice() : [];
+  const sendHints = () => {
+    if (!wake && info?.hints && state === 'ready') sendJson({ type: 'hints', words: hintList });
+  };
   const askSpeakers = () => {
     if (!wake && info?.speakers && spk) sendJson({ type: 'speakers', on: !!spk.on, sureAt: spk.sureAt });
   };
@@ -414,7 +422,8 @@ export function connectEngine({
       if (m.kind === 'hello') {
         info = { engine: m.engine || null, grammar: !!m.grammar, partials: !!m.partials,
                  wake: Array.isArray(m.wake) ? m.wake.slice() : [],
-                 speakers: typeof m.speakers === 'string' && m.speakers ? m.speakers : null };
+                 speakers: typeof m.speakers === 'string' && m.speakers ? m.speakers : null,
+                 hints: m.hints === true };
         tries = 0;
         if (wake) {
           if (!info.wake.length) { set('refused', 'no wake detector'); return; }
@@ -424,6 +433,7 @@ export function connectEngine({
           if (spk?.on) askSpeakers();
         }
         set('ready');
+        if (hintList.length) sendHints();
         return;
       }
       if (m.kind === 'error' && m.error === 'secret') { set('refused', 'secret'); return; }
@@ -479,6 +489,11 @@ export function connectEngine({
     setMode(m) {
       mode = m && typeof m === 'object' ? { mode: m.mode, grammar: Array.isArray(m.grammar) ? m.grammar : null } : null;
       if (state === 'ready' && mode) sendJson({ type: 'mode', mode: mode.mode, grammar: mode.grammar });
+    },
+    /** subtitle learning: the learned words, from the next utterance on (sent only where hello said hints). */
+    setHints(words) {
+      hintList = Array.isArray(words) ? words.filter((w) => typeof w === 'string' && w.trim()) : [];
+      sendHints();
     },
     /** Who is talking: { on, sureAt }, from the next utterance on. */
     setSpeakers(cfg) {
@@ -838,6 +853,7 @@ export function rankedRecognizer({
   let micState = 'closed';         // closed | opening | open | failed
   const ears = new Map();          // ear -> { seg, node, src, keep, stream, open: {uid, asked}|null }
   let mode = null;
+  let hintWords = [];              // subtitle learning: the learned words, handed to every engine connection
   const firstEar = plan.ears === 'phone' ? 'phone1' : 'room';
   const voiceId = makeVoiceId({ conns, firstEar, fns: voiceFns });
 
@@ -928,7 +944,7 @@ export function rankedRecognizer({
       if (conns.has(key)) continue;
       const c = connectEngine({ slot: p.slot, name: p.name, url: p.url, key: p.key, WebSocketImpl, retryMs,
                                 setTimer, clearTimer,
-                                speakers: plan.speakers || null,
+                                speakers: plan.speakers || null, hints: hintWords,
                                 onControl: (m) => emit(voiceFns, { ...m, ear }),
                                 onResult: (r) => ranker?.result(ear, r),
                                 onState: (s) => engineState(p.slot, ear, s) });
@@ -1099,6 +1115,13 @@ export function rankedRecognizer({
     },
     get running() { return running; },
     setMode(m) { mode = m; for (const c of conns.values()) c.setMode(m); },
+    /** subtitle learning: lean the engines that can towards these words (a connection made later gets them too). */
+    setHints(words) {
+      hintWords = Array.isArray(words) ? words.filter((w) => typeof w === 'string' && w.trim()) : [];
+      for (const [k, c] of conns) if (!k.startsWith('wake|')) { try { c.setHints(hintWords); } catch { /* gone */ } }
+    },
+    /** The learned words being sent right now. */
+    hints: () => hintWords.slice(),
     // CAN A FREE SENTENCE BE WRITTEN DOWN HERE? (input_speech.js: "ask <name>" / "make a note" said alone.)
     // True when an engine that is up says it has NO grammars (a whisper-class engine: it writes down whatever
     // is said); false when every engine up is grammar-capable (a Vosk-class engine). ARGUED: Vosk CAN run open,

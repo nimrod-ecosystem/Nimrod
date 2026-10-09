@@ -424,6 +424,7 @@ const prefersStill = (view) => {
  *
  *   add(line)        show a line (returns the stored line, or null when off / no words)
  *   caption(c)       a recogniser pass (speech_engines.js): a new line, or the SAME line corrected
+ *   fix(id, text)    a person says what a line said (subtitle learning, 2026-10-09): replaced in place
  *   earlier(n) / latest()   scroll back through what was said since the mode came on, and return
  *   heard(h, extra)  the adapter for input_speech.js's `onHeard` - what the recogniser wrote down
  *   tap(adapter)     wrap an output channel (the speech one) so what the screen says is written
@@ -446,6 +447,10 @@ export function createSubtitles(host, {
   // The theme's named style: a string or a getter. null = read the theme's own `--subtitles-style`
   // where the subtitles sit, so any page that applies a theme gets its default with no wiring.
   themeStyle = null,
+  // subtitle learning (2026-10-09, subtitle_learning.js): `(c) => c'` applied to every line's words before they are
+  // drawn - the person's own "heard X, meant Y" fixes. null = none. One that throws, or returns no words, leaves
+  // the words as heard: a fix can change a line, never lose it.
+  rewrite = null,
 } = {}) {
   if (!host || !doc) throw new Error('createSubtitles: a host element is required');
   const limitNow = () => {
@@ -612,6 +617,8 @@ export function createSubtitles(host, {
     p.className = `subs-line subs-${line.who.kind}${line.partial ? ' subs-partial' : ''}`
       + `${line.agreed ? ' subs-agreed' : ''}${line.revised ? ' subs-revised' : ''}`;
     if (line.cid) p.dataset.caption = line.cid;
+    // subtitle learning: a line a person fixed says so (by voice or by hand), for a screen reader and the suites.
+    if (line.fixed) p.dataset.fixed = line.fixed.by; else delete p.dataset.fixed;
     p.textContent = '';
     const who = doc.createElement('span');
     who.className = 'subs-who';
@@ -686,7 +693,32 @@ export function createSubtitles(host, {
   const pub = (line) => ({ id: line.id, at: line.at, text: line.text, source: line.source, speaker: line.speaker,
                            who: { ...line.who }, ...(line.cid ? { caption: line.cid, partial: !!line.partial,
                            revised: !!line.revised, agreed: !!line.agreed, others: (line.others || []).map((o) => ({ ...o })),
-                           low: (line.pieces || []).filter((x) => x.low).map((x) => x.w) } : {}) });
+                           low: (line.pieces || []).filter((x) => x.low).map((x) => x.w) } : {}),
+                           // subtitle learning: what the recognisers heard (each pass, each ear), what a person fixed it
+                           // to, and the learned fixes applied on the way in.
+                           ...(line.heard && line.heard !== line.text ? { heard: line.heard } : {}),
+                           ...(line.alts && line.alts.length ? { alts: line.alts.slice() } : {}),
+                           ...(line.fixed ? { fixed: { ...line.fixed } } : {}),
+                           ...(line.learned && line.learned.length ? { learned: line.learned.map((x) => ({ ...x })) } : {}) });
+
+  // subtitle learning: the person's learned fixes, applied to words on their way in. Never loses a line.
+  function rewritten(c) {
+    if (typeof rewrite !== 'function') return { c, learned: [] };
+    try {
+      const r = rewrite(c);
+      if (r && typeof r === 'object' && String(r.text ?? '').trim()) return { c: { ...c, ...r }, learned: Array.isArray(r.learned) ? r.learned : [] };
+    } catch (err) { console.error('subtitles: rewrite', err); }
+    return { c, learned: [] };
+  }
+  // Every reading a line has had (each pass, each ear), newest last, without repeats - what "Fix this line" offers.
+  function noteAlts(line, texts) {
+    const have = line.alts || (line.alts = []);
+    for (const t of texts) {
+      const s = String(t || '').trim();
+      if (s && s !== SUBTITLES_DEFAULTS.unclearText && !have.some((x) => x.toLowerCase() === s.toLowerCase())) have.push(s);
+    }
+    while (have.length > 8) have.shift();
+  }
 
   function add(input = {}) {
     if (!opts.on) return null;                 // a mode that is off keeps nothing
@@ -694,10 +726,14 @@ export function createSubtitles(host, {
     let text = String(raw.text == null ? '' : raw.text).trim();
     if (!text) return null;                    // no words: nothing to show
     if (text.toLowerCase() === '[unk]') text = SUBTITLES_DEFAULTS.unclearText;
+    // subtitle learning: the person's learned fixes (never for the screen's own words - it knows what it said).
+    const heard = text;
+    const rw = raw.source === 'screen' ? { c: { text }, learned: [] } : rewritten({ text, speaker: raw.speaker || null, source: raw.source || null });
+    text = String(rw.c.text).trim() || heard;
     // THE SPEAKER IS LOOKED AT FOR THE LABEL ONLY. Nothing below this line can return null.
     const who = whoOf(raw.speaker);
     const line = { id: `s${++seq}`, at: now(), text, source: raw.source || null,
-                   speaker: raw.speaker || null, who, el: null, timer: null };
+                   speaker: raw.speaker || null, who, el: null, timer: null, heard, learned: rw.learned };
     show(line);
     return pub(line);
   }
@@ -718,8 +754,18 @@ export function createSubtitles(host, {
     const others = opts.ears === 'both' && Array.isArray(c.others)
       ? c.others.filter((o) => o && String(o.text || '').trim()).map((o) => ({ ear: o.ear, text: String(o.text).trim(), confidence: o.confidence ?? null }))
       : [];
+    // subtitle learning: what the recognisers heard is kept (each reading, for "Fix this line"); what is DRAWN has the
+    // person's learned fixes applied.
+    const heard = text;
+    const rw = text ? rewritten({ ...c, text }) : { c, learned: [] };
+    if (text) { c = rw.c; text = String(rw.c.text).trim() || heard; }
     if (known) {
       if (!text) return pub(known);            // a later pass heard nothing: keep what was shown
+      noteAlts(known, [heard, ...(Array.isArray(c.others) ? c.others.map((o) => o && o.text) : [])]);
+      // A PERSON FIXED THIS LINE: their words stand. A later recogniser pass is kept as a reading, never drawn over it.
+      if (known.fixed) return pub(known);
+      known.heard = heard;
+      known.learned = rw.learned;
       const pieces = captionPieces({ ...c, text }, { lowAt: opts.lowAt, before: known.pieces });
       // THE SAME WORDS AGAIN (a pass confirming, or the line closing): nothing is redrawn, so a word
       // that was just corrected keeps its highlight and nothing on screen flickers.
@@ -737,7 +783,8 @@ export function createSubtitles(host, {
     const line = { id: `s${++seq}`, at: now(), text, source: c.ear && String(c.ear).startsWith('phone') ? 'phone' : (c.source || 'room'),
                    speaker: c.speaker || null, who: whoOf(c.speaker), el: null, timer: null, cid: cid || null,
                    pieces: captionPieces({ ...c, text }, { lowAt: opts.lowAt }), others,
-                   partial: !!c.partial, agreed: !!c.agreed, revised: false };
+                   partial: !!c.partial, agreed: !!c.agreed, revised: false, heard, learned: rw.learned };
+    noteAlts(line, [heard, ...(Array.isArray(c.others) ? c.others.map((o) => o && o.text) : [])]);
     line.sig = JSON.stringify([text, line.pieces.map((x) => [x.w, x.low]), others, line.partial, line.agreed]);
     show(line);
     return pub(line);
@@ -789,6 +836,31 @@ export function createSubtitles(host, {
 
   function clear() { latest(); for (const l of [...lines]) drop(l); hist = []; }
 
+  /**
+   * subtitle learning (2026-10-09): A PERSON SAYS WHAT A LINE SHOULD HAVE SAID - by voice ("what I said was ...") or
+   * by hand ("Fix this line"). `id` is the line's id or its caption id. The line is replaced IN PLACE, on screen and
+   * in the scroll back, its changed words outlined once (the flash limit applies); later recogniser passes for it are
+   * kept as readings and never drawn over a person's words. Returns the line, or null (mode off, no such line - it
+   * may have scrolled out of the history - or no words). What the line LEARNS from it is subtitle_learning.js's.
+   */
+  function fix(id, text, { by = 'hand' } = {}) {
+    const t = String(text ?? '').trim().slice(0, 1000);
+    const key = String(id || '');
+    if (!opts.on || !t || !key) return null;
+    const line = hist.find((l) => l.id === key || (l.cid && l.cid === key)) || null;
+    if (!line) return null;
+    const before = line.text;
+    line.fixed = { by: by === 'voice' ? 'voice' : 'hand', from: before, heard: line.heard || before, at: now() };
+    noteAlts(line, [before]);
+    line.text = t;
+    line.pieces = line.cid ? captionPieces({ text: t }, { lowAt: 0, before: line.pieces }) : null;
+    line.partial = false;
+    line.sig = null;
+    if (line.el) { fill(line.el, line); arm(line); place(); pin(); }
+    if (back) drawBack();
+    return pub(line);
+  }
+
   function speakerForItem(item) {
     const src = item && item.source;
     if (src && Array.isArray(aacSources) && aacSources.includes(src)) {
@@ -810,6 +882,8 @@ export function createSubtitles(host, {
     scrolledBack: () => back,
     /** What was said since the mode came on (in memory only), oldest first. */
     history: () => hist.map(pub),
+    // subtitle learning: replace a line's words with what a person says it said (see `fix` above).
+    fix,
     clear,
     place,
     /** The adapter for input_speech.js's `onHeard`: everything the recogniser wrote down. */

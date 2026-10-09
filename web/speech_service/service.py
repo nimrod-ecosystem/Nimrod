@@ -16,6 +16,11 @@ ONE PROTOCOL, over one WebSocket at /speech. Text frames are JSON; binary frames
     {"type":"mode", "mode":"open"|"grammar", "grammar":[..]|null}
                                                        how to listen from the next utterance on. A
                                                        backend without grammars ignores it (hello says).
+    {"type":"hints", "words":[str]}                    subtitle learning (2026-10-09): words people corrected the
+                                                       subtitles to, from the next utterance on. Only a backend
+                                                       that leans towards words without being limited to them
+                                                       uses them (Whisper's hotwords; hello's "hints"); [] clears.
+                                                       Kept in memory for this socket only, never written down.
     {"type":"begin", "utteranceId":str}                somebody started talking
     <binary>                                           16 kHz mono 16-bit little-endian PCM, for the
                                                        utterance begun last
@@ -39,7 +44,7 @@ ONE PROTOCOL, over one WebSocket at /speech. Text frames are JSON; binary frames
 
   service -> client
     {"kind":"hello", "engine", "grammar":bool, "partials":bool, "protocol":1, "wake":[words],
-       "speakers":engine name|null}
+       "speakers":engine name|null, "hints":bool}
     {"kind":"partial", "utteranceId", "text", "engine"}                (backends that have them)
     {"kind":"final", "utteranceId", "text", "confidence":0..1|null,
        "words":[{"w","conf"}], "engine", "ms":decode ms, "audioMs", "cut":bool,
@@ -84,7 +89,33 @@ SPEAKER_TYPES = frozenset({'speakers', 'enrol', 'enrol-done', 'enrol-cancel', 'f
 # reads a fixed 30 s window, so audio past it would be ignored anyway, and a stuck "begin" with no
 # "end" must not grow memory forever. A flag (`--max-utterance-s`).
 MAX_UTTERANCE_S = 30.0
+# subtitle learning (2026-10-09): the most learned words one screen may lean the recogniser towards, and the
+# longest one may be. NOT settings, argued: plumbing nobody in a room can judge. 40 words of a few tokens each,
+# comma-separated, stays well inside the 223 tokens faster-whisper keeps of its prompt (backends.hint_text); a
+# longer list would be cut there anyway, and a longer prompt is more for the decoder to copy onto silence.
+# 40 characters is longer than any one name or place.
+HINTS_MAX = 40
+HINT_CHARS_MAX = 40
 CLOSE_UNAUTHORISED = 4401
+
+
+def clean_hints(words) -> list:
+    """A screen's hint list as the service keeps it: strings only, trimmed, no control characters, no repeats
+    (case-insensitively), each at most HINT_CHARS_MAX characters, at most HINTS_MAX of them. Anything else: []."""
+    if not isinstance(words, list):
+        return []
+    out, seen = [], set()
+    for w in words:
+        if not isinstance(w, str):
+            continue
+        s = ''.join(ch for ch in w if ch.isprintable()).strip()[:HINT_CHARS_MAX].strip()
+        if not s or s.lower() in seen:
+            continue
+        seen.add(s.lower())
+        out.append(s)
+        if len(out) >= HINTS_MAX:
+            break
+    return out
 CLOSE_PROTOCOL = 4400
 
 
@@ -185,6 +216,7 @@ class Session:
         self.max_bytes = int(max(0.5, float(max_utterance_s)) * SAMPLE_RATE * 2)
         self.greeted = False
         self.grammar = None
+        self.hints = []               # subtitle learning: this screen's learned words (memory only, this socket)
         self.cur = None               # {'id', 'utt', 'bytes', 'cut'}
         self.tasks = set()
         self._last = None
@@ -234,7 +266,8 @@ class Session:
                              'partials': bool(getattr(self.b, 'partials', False)),
                              'wake': list(getattr(self.wake, 'words', None) or []),
                              'speakers': self.speakers.name if self.speakers is not None and self.b is not None
-                             else None})
+                             else None,
+                             'hints': bool(getattr(self.b, 'supports_hints', False))})
             return
         if t in SPEAKER_TYPES:
             await self._speaker_message(t, msg)
@@ -258,6 +291,9 @@ class Session:
             g = msg.get('grammar')
             ok = msg.get('mode') == 'grammar' and isinstance(g, list) and all(isinstance(x, str) for x in g)
             self.grammar = [x for x in g if x] if ok else None
+        elif t == 'hints':
+            # subtitle learning: accepted from any screen, used only by a backend that says it can (hello's hints).
+            self.hints = clean_hints(msg.get('words'))
         elif t == 'begin':
             await self._end_current(abandon=True)
             uid = str(msg.get('utteranceId') or '')
@@ -265,7 +301,13 @@ class Session:
                 await self.send({'kind': 'error', 'error': 'begin needs an utteranceId'})
                 return
             try:
-                utt = self.b.open(self.grammar if getattr(self.b, 'supports_grammar', False) else None)
+                g = self.grammar if getattr(self.b, 'supports_grammar', False) else None
+                # A GRAMMAR WINS: while the screen asks for a closed list (even of a backend that cannot keep to
+                # one), nothing leans it towards names instead of the commands it is waiting for.
+                if self.hints and self.grammar is None and getattr(self.b, 'supports_hints', False):
+                    utt = self.b.open(g, hints=list(self.hints))
+                else:
+                    utt = self.b.open(g)
             except Exception as err:  # noqa: BLE001
                 await self.send({'kind': 'error', 'error': f'open: {err}', 'utteranceId': uid})
                 return

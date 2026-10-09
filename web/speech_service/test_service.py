@@ -137,6 +137,68 @@ async def session_tests():
           got == [('a', 'one'), ('b', 'two')], got)
 
 
+# ------------------------------------------------------------------ subtitle learning: hints ----
+async def hints_tests():
+    print('\n-- subtitle learning: the learned words reach the engine --')
+    from speech_service.backends import hint_text
+    from speech_service.service import HINTS_MAX, HINT_CHARS_MAX, clean_hints
+    sent = []
+
+    async def send(m):
+        sent.append(m)
+
+    async def close(code):
+        pass
+
+    leans = FakeBackend(script=['hello'], partials=False, supports_grammar=False, supports_hints=True)
+    s = Session(leans, send, close)
+    await s.on_text(json.dumps({'type': 'hello'}))
+    check('*** hello says whether this engine uses learned words (a Whisper-class one does) ***',
+          sent[-1].get('hints') is True, sent[-1])
+
+    async def one(sess, uid):
+        await sess.on_text(json.dumps({'type': 'begin', 'utteranceId': uid}))
+        await sess.on_bytes(pcm(40))
+        await sess.on_text(json.dumps({'type': 'end', 'utteranceId': uid}))
+        await sess.drain()
+
+    await one(s, 'h0')
+    check('no hints sent: the engine is opened with none', leans.hints[-1] is None, leans.hints)
+    await s.on_text(json.dumps({'type': 'hints', 'words': ['Christine', 'Oscar', 'Lake Geneva']}))
+    await one(s, 'h1')
+    check('*** the words a screen sends reach the next utterance, in order ***',
+          leans.hints[-1] == ['Christine', 'Oscar', 'Lake Geneva'], leans.hints)
+    check('...as one comma-separated hotwords string for faster-whisper',
+          hint_text(leans.hints[-1]) == 'Christine, Oscar, Lake Geneva')
+    await s.on_text(json.dumps({'type': 'mode', 'mode': 'grammar', 'grammar': ['pause', 'play']}))
+    await one(s, 'h2')
+    check('*** a GRAMMAR wins: while the screen waits for a command, no names are leaned towards ***',
+          leans.hints[-1] is None, leans.hints)
+    await s.on_text(json.dumps({'type': 'mode', 'mode': 'open', 'grammar': None}))
+    await s.on_text(json.dumps({'type': 'hints', 'words': []}))
+    await one(s, 'h3')
+    check('an empty list clears them', leans.hints[-1] is None, leans.hints)
+    check('a hints message is never answered with an error (old or new screen alike)',
+          not any(m.get('kind') == 'error' for m in sent), [m for m in sent if m.get('kind') == 'error'])
+
+    sent.clear()
+    vosky = FakeBackend(script=['hello'], partials=False, supports_grammar=True, supports_hints=False)
+    s2 = Session(vosky, send, close)
+    await s2.on_text(json.dumps({'type': 'hello'}))
+    check('*** a Vosk-class engine says hints: false ***', sent[-1].get('hints') is False, sent[-1])
+    await s2.on_text(json.dumps({'type': 'hints', 'words': ['Christine']}))
+    await one(s2, 'v1')
+    check('...and is never handed them', vosky.hints[-1] is None, vosky.hints)
+
+    many = [f'name{i}' for i in range(HINTS_MAX + 10)]
+    junk = ['  Christine ', 'christine', 7, None, '', '\x00\x07', 'x' * (HINT_CHARS_MAX + 20), {'w': 'a'}]
+    c = clean_hints(junk + many)
+    check('*** what a screen sends is cleaned: strings only, trimmed, no repeats, no control characters, capped ***',
+          c[0] == 'Christine' and 'christine' not in c and len(c[1]) == HINT_CHARS_MAX and len(c) == HINTS_MAX
+          and all(isinstance(x, str) and x.isprintable() for x in c), c[:4])
+    check('not a list: nothing', clean_hints('Christine') == [] and clean_hints(None) == [])
+
+
 # ------------------------------------------------------------------ the wake stream ------------
 def mark(ms: int = 20) -> bytes:
     """Audio the fake wake detector 'hears' as its phrase."""
@@ -896,6 +958,7 @@ if __name__ == '__main__':
         live(sys.argv[i + 1], sys.argv[i + 2], grammar=g, secret=sec)
         sys.exit(0)
     asyncio.run(session_tests())
+    asyncio.run(hints_tests())
     asyncio.run(wake_tests())
     wake_model_tests()
     model_folder_tests()

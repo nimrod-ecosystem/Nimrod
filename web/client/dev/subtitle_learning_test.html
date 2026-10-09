@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>subtitle learning - corrections, and what they teach - test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>subtitle learning</h1>
+<p>Mike, 2026-10-09: <i>"Can the subtitles learn, if I correct what they're saying? Like 'What I/they said was...'"</i>
+A correction by voice or by hand replaces the line; the words it missed and the "heard X, meant Y" fixes are kept per
+person on this device, sent to the recognisers that can use them, and attached to a voice recording only when that
+person records. Nothing reaches the server.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  diffRuns, lessonsFrom, learn, applyFixes, fixApplies, hintsFor, personKeyOf, pickLine, isCorrectionLine,
+  emptyRecord, cleanRecord, createSubtitleLearning, memoryLearnedStore, idbLearnedStore, saveLearnedToFolder,
+  learningOptionsFrom, SUBTITLE_LEARNING_FIELDS, SUBTITLE_LEARNING_ACTIONS, LEARNING_DEFAULTS, LEARNED_FORMAT, ROOM_KEY,
+  FIX_TARGET, SUBTITLES_FIX_TOPIC, PANEL_IDLE_MS, PAIR_RETRY_MS, COMMON_WORDS, HINTS_MAX, LEARNED_FILE,
+} from '../subtitle_learning.js';
+import { createSubtitles } from '../subtitles.js';
+import {
+  attachSpeech, FIX_PHRASES, askPhrases, askFor, normalize, spokenTable, duplicatePhrases, SPEECH_ASK_TARGET_TOPIC,
+} from '../input_speech.js';
+import { connectEngine } from '../speech_engines.js';
+import {
+  buildPair, createMemoryPairStore, encodeWav16, euphoniaSamples, exportEuphonia, withCorrection,
+} from '../voice_recording.js';
+import { createBus } from '../bus.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const settle = async (n = 4) => { for (let i = 0; i < n; i++) await new Promise((r) => setTimeout(r, 0)); };
+function fakeClock(t0 = 1_000_000) {
+  let t = t0; let n = 1; const timers = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = n++; timers.set(id, { at: t + ms, fn }); return id; },
+    clearTimer: (id) => { timers.delete(id); },
+    advance(ms) { t += ms; for (const [id, x] of [...timers].sort((a, b) => a[1].at - b[1].at)) if (x.at <= t) { timers.delete(id); x.fn(); } },
+  };
+}
+// *** NOTHING ON THE SERVER: every fetch and beacon made while this page runs is counted. ***
+const netCalls = [];
+const realFetch = window.fetch;
+window.fetch = (...a) => { netCalls.push(String(a[0])); return realFetch(...a); };
+const realBeacon = navigator.sendBeacon?.bind(navigator);
+if (realBeacon) navigator.sendBeacon = (...a) => { netCalls.push(String(a[0])); return realBeacon(...a); };
+
+const host = document.getElementById('host');
+// A subtitles + learning pair on a fake clock, with a bus and a speech layer driven by a fake recogniser.
+function rig({ canDictate = true, store = memoryLearnedStore(), pairs = null, person = null, row = {} } = {}) {
+  const clock = fakeClock();
+  const bus = createBus();
+  let learning = null;
+  const subs = createSubtitles(host, { reducedMotion: true, now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+                                       rewrite: (c) => (learning ? learning.rewrite(c) : null) });
+  subs.setOn(true);
+  learning = createSubtitleLearning({ subtitles: subs, store, bus, host, now: clock.now, setTimer: clock.setTimer,
+                                      clearTimer: clock.clearTimer, pairStore: () => pairs, pairPerson: () => person });
+  const hinted = [];
+  const rec = { cb: null, running: false, canDictate, start(cb) { this.cb = cb; this.running = true; }, stop() { this.running = false; },
+                setHints(w) { hinted.push(w.slice()); } };
+  const speech = attachSpeech({ down() {}, up() {} }, { recognizer: rec, bus, confirm: 'off', nearMiss: false,
+                                                        now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+  speech.start();
+  learning.attach(rec);
+  learning.update({ subtitlesOn: true, ...row });
+  const say = (text, detail = {}) => rec.cb(text, detail);
+  const done = () => { learning.destroy(); speech.destroy(); subs.destroy(); };
+  return { clock, bus, subs, learning, rec, speech, say, hinted, done };
+}
+
+(async () => {
+try {
+  // ======================================================================================
+  section('what one correction teaches (pure)');
+  {
+    const runs = diffRuns("I'm seeing Kristen today", "I'm seeing Rosalind today");
+    check('*** the runs that differ: "Kristen" -> "Rosalind", the rest lined up ***',
+      J(runs) === J([{ heard: ['Kristen'], meant: ['Rosalind'] }]), J(runs));
+    const l = lessonsFrom("I'm seeing Kristen today", "I'm seeing Rosalind today");
+    check('*** a misheard name: the word it missed, and the fix heard -> meant ***',
+      J(l) === J({ words: ['Rosalind'], fixes: [{ from: 'kristen', to: 'Rosalind' }] }), J(l));
+    const two = lessonsFrom('we went to lake jenny va', 'we went to Lake Geneva');
+    check('a misheard phrase: words on both sides, one fix', J(two.fixes) === J([{ from: 'jenny va', to: 'Geneva' }]) && two.words.includes('Geneva'), J(two));
+    const small = lessonsFrom('put it in the box', 'put it on the box');
+    check('*** common little words are never learned as words ("on" is not a name) ***', small.words.length === 0, J(small));
+    const ins = lessonsFrom('call Oscar', 'call Oscar Smith now');
+    check('it heard NOTHING where words were said: words learned, no fix (nothing to replace)', J(ins) === J({ words: ['Smith'], fixes: [] }), J(ins));
+    const del = lessonsFrom('please like and subscribe hello', 'hello');
+    check('it heard words NEVER said: nothing learned (a rule that deletes words is not applied to every line)',
+      J(del) === J({ words: [], fixes: [] }), J(del));
+    check('the same words: nothing at all', J(lessonsFrom('Hello there.', 'hello there')) === J({ words: [], fixes: [] }));
+  }
+
+  // ======================================================================================
+  section('the record: counting, applying, un-learning (pure)');
+  {
+    let r = emptyRecord(ROOM_KEY);
+    r = learn(r, 'Kristen is here', 'Rosalind is here', { at: 1 });
+    check('the record is tagged as what it is (the server refuses that tag: storage_line.py rule 6)',
+      r.format === LEARNED_FORMAT && r.key === ROOM_KEY && r.fixes[0].n === 1 && r.words[0].w === 'Rosalind', J(r));
+    check('*** ONE correction: not applied yet by default (the same fix twice, argued at LEARNING_DEFAULTS) ***',
+      LEARNING_DEFAULTS.fixAfter === 2 && applyFixes('Kristen said hi', r.fixes).text === 'Kristen said hi');
+    check('...applied at once for somebody who chose "after one correction"',
+      applyFixes('Kristen said hi', r.fixes, { fixAfter: 1 }).text === 'Rosalind said hi');
+    r = learn(r, 'ask kristen', 'ask Rosalind', { at: 2 });
+    const a = applyFixes('I think kristen and KRISTEN came', r.fixes, { words: [{ w: 'I', conf: 0.9 }, { w: 'think', conf: 0.4 }, { w: 'kristen', conf: 0.5 }] });
+    check('*** the same fix twice: applied, whole words, any case ***',
+      a.text === 'I think Rosalind and Rosalind came' && J(a.learned) === J([{ from: 'kristen', to: 'Rosalind' }]), J(a));
+    check('...and the engine\'s word confidences kept where the word is unchanged, none where the fix put it',
+      a.words[1].conf === 0.4 && a.words[2].w === 'Rosalind' && a.words[2].conf === null, J(a.words));
+    check('*** whole words only: "Kristens" and "nonkristen" are left alone ***',
+      applyFixes('Kristens and nonkristen', r.fixes).text === 'Kristens and nonkristen');
+    check('a fix set to "never" is never applied', applyFixes('kristen', r.fixes, { fixAfter: 0 }).text === 'kristen');
+    const common = learn(learn(emptyRecord(), 'on the box', 'in the box'), 'on the box', 'in the box');
+    check('*** a lone common word is never rewritten everywhere, however often it was corrected ***',
+      common.fixes.length === 1 && !fixApplies(common.fixes[0], 1) && applyFixes('sit on it', common.fixes, { fixAfter: 1 }).text === 'sit on it');
+    const changed = learn(r, 'kristen', 'Kirsten', { at: 3 });
+    check('a different correction of the same heard words replaces the fix and starts counting again',
+      changed.fixes.length === 1 && changed.fixes[0].to === 'Kirsten' && changed.fixes[0].n === 1, J(changed.fixes));
+    const back = learn(r, 'Rosalind is here', 'Kristen is here', { at: 4, unlearn: [{ from: 'kristen', to: 'Rosalind' }] });
+    check('*** a person fixing a learned fix BACK un-learns it ***', !back.fixes.some((f) => f.from === 'kristen'), J(back.fixes));
+    check('a damaged record is read safely, never throws',
+      J(cleanRecord({ words: [{ w: '' }, 7, { w: 'Ok' }], fixes: 'x' }).words.map((w) => w.w)) === J(['Ok']) && cleanRecord(null).words.length === 0);
+    const many = { words: Array.from({ length: 60 }, (_, i) => ({ w: `Name${i}`, n: i % 5 + 1, at: i })) };
+    const h = hintsFor([many, { words: [{ w: 'name59', n: 1, at: 0 }] }]);
+    check(`hints: every person's words, most used then newest, no repeats, at most ${HINTS_MAX}`,
+      h.length === HINTS_MAX && h[0] === 'Name59' && new Set(h.map((x) => x.toLowerCase())).size === h.length, J(h.slice(0, 3)));
+    check('COMMON_WORDS holds the little words and no names', COMMON_WORDS.has('the') && COMMON_WORDS.has('said') && !COMMON_WORDS.has('rosalind'));
+  }
+
+  // ======================================================================================
+  section('whose list, and which line (speaker-aware)');
+  {
+    check('*** a NAMED voice files under that person; a "maybe" or nobody under the shared list ***',
+      personKeyOf({ who: 'Alex', person: 'p_alex', sure: 0.9 }) === 'p_alex' && personKeyOf({ who: null, maybe: 'Alex' }) === ROOM_KEY
+      && personKeyOf(null) === ROOM_KEY && personKeyOf({ self: true }) === ROOM_KEY && personKeyOf({ who: 'Sam' }) === 'Sam');
+    const t = 100000;
+    const L = [
+      { id: 's1', at: t - 9000, text: 'Kristen came by', source: 'room', speaker: { who: 'Alex', person: 'p_alex' } },
+      { id: 's2', at: t - 8000, text: 'Time for lunch', source: 'screen', speaker: { self: true } },
+      { id: 's3', at: t - 7000, text: 'I want the blue cup', source: 'room', speaker: { who: 'Sam', person: 'p_sam' } },
+      { id: 's4', at: t - 1000, text: 'computer please what I said was the red cup', source: 'room', speaker: { who: 'Sam', person: 'p_sam' } },
+    ];
+    const sam = { who: 'Sam', person: 'p_sam' };
+    check('*** "what I said was": the newest line in the corrector\'s own voice, never the correction itself ***',
+      pickLine(L, 'fix-self', { by: sam, now: t })?.id === 's3');
+    check('*** "what they said was": the newest line in somebody else\'s voice ***', pickLine(L, 'fix-other', { by: sam, now: t })?.id === 's1');
+    check('nobody named: the newest room line (never the screen\'s own words)', pickLine(L, 'fix-other', { by: null, now: t })?.id === 's3');
+    check('too long ago: nothing', pickLine(L, 'fix-self', { by: sam, now: t + 10 * 60 * 1000 }) === null);
+    check('the correction utterance is recognised as one', isCorrectionLine(L[3].text) && !isCorrectionLine(L[0].text));
+  }
+
+  // ======================================================================================
+  section('the voice prefix: four words at most, said to the screen');
+  {
+    const all = Object.values(FIX_PHRASES).flat();
+    check('*** every correction prefix is plain words, four at most (a small model\'s whole phrases) ***',
+      all.every((p) => p === normalize(p) && p.split(' ').length <= 4 && p.replace(/\s/g, '').length >= 2), all.join(' | '));
+    check('none is a command, and none is both kinds', duplicatePhrases({ ...spokenTable(), ...FIX_PHRASES }).length === 0,
+      J(duplicatePhrases({ ...spokenTable(), ...FIX_PHRASES })));
+    check('offered only while something takes corrections', !askPhrases([], {}).some((p) => p.kind.startsWith('fix'))
+      && askPhrases([], { fixes: true }).filter((p) => p.kind.startsWith('fix')).length === all.length);
+    const a = askFor('what they said was the red cup', askPhrases([], { fixes: true }));
+    check('the words after the prefix are what travels', a && a.kind === 'fix-other' && a.text === 'the red cup', J(a));
+  }
+
+  // ======================================================================================
+  section('*** by voice: "computer please, what I said was ..." replaces the line ***');
+  {
+    const R = rig({ row: { subtitlesFixAfter: 1 } });
+    const targets = [];
+    R.bus.subscribe(SPEECH_ASK_TARGET_TOPIC, (p) => targets.push(p));
+    R.learning.announce();
+    check('subtitles say they take corrections (an ask target with fixes)', targets.at(-1)?.fixes === true && targets.at(-1)?.open === true
+      && R.speech.askTargets().some((t) => t.fixes && t.instanceId === FIX_TARGET), J(R.speech.askTargets()));
+    R.subs.caption({ id: 'g1', text: "I'm seeing Kristen today", words: [], final: true });
+    R.say('computer please what I said was I\'m seeing Rosalind today');
+    const line = R.subs.history().find((l) => l.caption === 'g1');
+    const el = host.querySelector('[data-caption="g1"]');
+    check('*** the line is replaced in place, and says a person fixed it (by voice) ***',
+      line.text === "I'm seeing Rosalind today" && line.fixed?.by === 'voice' && el?.dataset.fixed === 'voice'
+      && el.textContent.includes('Rosalind'), J(line));
+    const rec = R.learning.record(ROOM_KEY);
+    check('*** nobody\'s voice named: the shared list learned the word and the fix ***',
+      rec && rec.words.some((w) => w.w === 'Rosalind') && rec.fixes.some((f) => f.from === 'kristen' && f.to === 'Rosalind'), J(rec));
+    check('*** the learned word reaches the recogniser at once (setHints) ***', J(R.hinted.at(-1)) === J(['Rosalind']), J(R.hinted));
+    R.subs.caption({ id: 'g1', text: "I'm seeing Kristen today, yes", final: true });
+    check('a later recogniser pass never draws over a person\'s words (kept as a reading)',
+      R.subs.history().find((l) => l.caption === 'g1').text === "I'm seeing Rosalind today"
+      && R.subs.history().find((l) => l.caption === 'g1').alts.includes("I'm seeing Kristen today, yes"));
+    const next = R.subs.caption({ id: 'g2', text: 'Kristen is on the phone', final: true });
+    check('*** learned (after one, the person\'s choice here): the next line is written right, and what was heard is kept ***',
+      next.text === 'Rosalind is on the phone' && next.heard === 'Kristen is on the phone' && next.learned?.length === 1, J(next));
+    const said = R.subs.add({ text: 'Kristen again', source: 'room' });
+    check('...for lines from the browser\'s recogniser too', said.text === 'Rosalind again', J(said));
+    const scr = R.subs.add({ text: 'Kristen', source: 'screen', speaker: { self: true } });
+    check('...but never the screen\'s own words (it knows what it said)', scr.text === 'Kristen', J(scr));
+    R.say('what I said was nothing');
+    check('*** with the wake phrase required, "what I said was" in conversation corrects nothing ***',
+      R.subs.history().find((l) => l.caption === 'g2').text === 'Rosalind is on the phone');
+    R.done();
+  }
+
+  // ======================================================================================
+  section('by voice, the prefix alone: the NEXT thing said is the words');
+  {
+    const R = rig();
+    R.subs.caption({ id: 'h1', text: 'we went to lake jenny va', final: true });
+    R.say('computer please what I said was');
+    check('a one-utterance window opens (dictation on the speech layer)', R.learning.listening()?.kind === 'fix-self'
+      && R.speech.answerTarget()?.instanceId === FIX_TARGET, J(R.speech.answerTarget()));
+    R.say('we went to Lake Geneva');
+    check('*** the next thing said is the correction; the window shuts after it ***',
+      R.subs.history().find((l) => l.caption === 'h1').text === 'we went to Lake Geneva' && !R.learning.listening()
+      && !R.speech.answerTarget());
+    R.say('computer please what they said was');
+    R.clock.advance(60000);
+    check('nothing said after it: the window shuts by itself (never a state only an input can leave)',
+      !R.learning.listening() && !R.speech.answerTarget());
+    R.done();
+  }
+
+  // ======================================================================================
+  section('a recogniser that cannot write a sentence down: type it');
+  {
+    const R = rig({ canDictate: false });
+    R.subs.caption({ id: 'k1', text: 'pass the salt', final: true });
+    R.say('computer please what I said was');
+    const panel = host.querySelector('[data-subtitle-learning="fix"]');
+    const input = panel?.querySelector('input');
+    check('*** the Fix panel opens on that line, saying why, with the words ready to edit ***',
+      panel && input && input.value === 'pass the salt' && /can only hear its own commands/.test(panel.textContent), panel?.textContent);
+    R.done();
+  }
+
+  // ======================================================================================
+  section('*** by hand: "Fix a subtitle line" ***');
+  {
+    const R = rig();
+    R.subs.caption({ id: 'm1', text: 'Kristen is coming', final: true, others: [{ ear: 'phone1', text: 'Christian is coming' }] });
+    R.subs.caption({ id: 'm1', text: 'Kirsten is coming', final: true });
+    R.subs.caption({ id: 'm2', text: 'see you soon', final: true });
+    R.bus.publish(SUBTITLES_FIX_TOPIC, { claim() {} });
+    let panel = host.querySelector('[data-subtitle-learning="fix"]');
+    const lines = [...(panel?.querySelectorAll('.sl-line') || [])].map((b) => b.textContent);
+    check('the action opens it, newest line first', lines.length === 2 && /see you soon/.test(lines[0]), J(lines));
+    [...panel.querySelectorAll('.sl-line')][1].click();
+    const alts = [...panel.querySelectorAll('.sl-alt')].map((b) => b.textContent);
+    check('*** picking a line: its words to edit, and every other reading the recognisers had (each pass, each ear) ***',
+      panel.querySelector('input').value === 'Kirsten is coming' && alts.includes('Kristen is coming') && alts.includes('Christian is coming'), J(alts));
+    panel.querySelector('input').value = 'Rosalind is coming';
+    panel.querySelector('.sl-save').click();
+    const l = R.subs.history().find((x) => x.caption === 'm1');
+    check('*** Save: the line is replaced, marked as fixed by hand, and the panel goes ***',
+      l.text === 'Rosalind is coming' && l.fixed?.by === 'hand' && !host.querySelector('[data-subtitle-learning="fix"]'), J(l));
+    check('the word was learned from what it LAST heard', R.learning.record(ROOM_KEY).fixes.some((f) => f.from === 'kirsten'));
+    R.learning.openFix();
+    check('the panel is open', !!host.querySelector('[data-subtitle-learning="fix"]'));
+    R.clock.advance(PANEL_IDLE_MS + 1);
+    check('*** nothing pressed: it goes by itself ***', !host.querySelector('[data-subtitle-learning="fix"]'));
+    R.done();
+  }
+
+  // ======================================================================================
+  section('speaker-aware: a named voice\'s corrections are that person\'s');
+  {
+    const R = rig({ row: { subtitlesFixAfter: 1 } });
+    const alex = { who: 'Alex', person: 'p_alex', sure: 0.92, name: 'Alex', confidence: 0.92 };
+    R.subs.caption({ id: 'a1', text: 'my sister jo anne', speaker: alex, final: true });
+    R.say('computer please what they said was my sister Joanne');
+    const rec = R.learning.record('p_alex');
+    check('*** "what they said was" on Alex\'s line: Alex\'s list learned it, not the shared one ***',
+      rec && rec.name === 'Alex' && rec.fixes.some((f) => f.from === 'jo anne') && !R.learning.record(ROOM_KEY), J(R.learning.records()));
+    const theirs = R.subs.caption({ id: 'a2', text: 'jo anne called', speaker: alex, final: true });
+    const other = R.subs.caption({ id: 'a3', text: 'jo anne called', speaker: null, final: true });
+    check('*** applied to Alex\'s lines only ***', theirs.text === 'Joanne called' && other.text === 'jo anne called', J([theirs.text, other.text]));
+    R.done();
+  }
+
+  // ======================================================================================
+  section('the words reach the engine request (a fake speech service)');
+  {
+    class FakeWS {
+      constructor(url) { this.url = url; this.sent = []; this.readyState = 0; FakeWS.all.push(this); setTimeout(() => { this.readyState = 1; this.onopen?.(); }, 0); }
+      send(m) { this.sent.push(typeof m === 'string' ? JSON.parse(m) : m); }
+      close() { this.readyState = 3; }
+      reply(m) { this.onmessage?.({ data: JSON.stringify(m) }); }
+    }
+    FakeWS.all = [];
+    const whisper = connectEngine({ slot: 'local', url: 'ws://x/speech', WebSocketImpl: FakeWS, hints: ['Rosalind'] });
+    await settle();
+    FakeWS.all[0].reply({ kind: 'hello', engine: 'whisper:small.en', grammar: false, hints: true });
+    check('*** an engine that says hints: true is sent the learned words after hello ***',
+      FakeWS.all[0].sent.some((m) => m.type === 'hints' && J(m.words) === J(['Rosalind'])), J(FakeWS.all[0].sent));
+    whisper.setHints(['Rosalind', 'Geneva']);
+    check('...and every change', J(FakeWS.all[0].sent.at(-1)) === J({ type: 'hints', words: ['Rosalind', 'Geneva'] }));
+    const vosk = connectEngine({ slot: 'local', url: 'ws://y/speech', WebSocketImpl: FakeWS, hints: ['Rosalind'] });
+    await settle();
+    FakeWS.all[1].reply({ kind: 'hello', engine: 'vosk:small', grammar: true });
+    vosk.setHints(['Geneva']);
+    check('*** an engine that does not say so (Vosk, or an older service) is never sent them ***',
+      !FakeWS.all[1].sent.some((m) => m.type === 'hints'), J(FakeWS.all[1].sent));
+    whisper.close(); vosk.close();
+    const R = rig({ row: { subtitlesHints: false } });
+    R.subs.caption({ id: 'q1', text: 'call kristen', final: true });
+    R.say('computer please what I said was call Rosalind');
+    check('"tell the recogniser the words it learned" off: nothing is sent, the line still fixed and learned',
+      (R.hinted.at(-1) || []).length === 0 && R.learning.record(ROOM_KEY)?.words.length === 1);
+    R.learning.update({ subtitlesOn: true, subtitlesLearn: false });
+    R.subs.caption({ id: 'q2', text: 'see kristen', final: true });
+    R.say('computer please what I said was see Oscar');
+    check('*** "learn from corrections" off: the line is fixed on screen, NOTHING is kept ***',
+      R.subs.history().find((l) => l.caption === 'q2').text === 'see Oscar'
+      && !R.learning.records().some((r) => r.words.some((w) => w.w === 'Oscar')));
+    R.done();
+  }
+
+  // ======================================================================================
+  section('*** over time: the recording the corrected line came from (only when that person records) ***');
+  {
+    const pairs = createMemoryPairStore();
+    const wav = encodeWav16(Int16Array.of(1, 2, 3));
+    const mk = (id, cid, at) => buildPair({ id, personId: 'p_sam', at, caption: { id: cid, text: 'pass the salt' }, clips: [{ ear: 'room', durationMs: 5 }] });
+    await pairs.add(mk('vp-1', 'r1', 1), [{ ear: 'room', wav }]);
+    check('a recording knows the subtitle line it was (said.caption)', (await pairs.get('vp-1')).said.caption === 'r1');
+    const R = rig({ pairs, person: 'p_sam' });
+    const sam = { who: 'Sam', person: 'p_sam', sure: 0.9, name: 'Sam', confidence: 0.9 };
+    R.subs.caption({ id: 'r1', text: 'pass the salt', speaker: sam, final: true });
+    R.say('computer please what I said was pass the sauce', { speaker: { who: 'Sam', person: 'p_sam', sure: 0.9 } });
+    await settle(8);
+    let p = await pairs.get('vp-1');
+    check('*** Sam\'s own named voice on Sam\'s recording: what was meant is filled in, and it counts as reviewed ***',
+      p.meant === 'pass the sauce' && p.meantFrom === 'correction' && p.meantBy === 'voice' && p.reviewed === true, J(p));
+    // A visitor's line on Sam's screen (the recorder keeps anybody near the microphone under its person).
+    R.subs.caption({ id: 'r2', text: 'nice to see you', speaker: null, final: true });
+    R.say('computer please what they said was nice to meet you');
+    await settle(8);
+    check('the recording was not saved yet: nothing changed, it looks again', !(await pairs.list({})).some((x) => x.said.caption === 'r2'));
+    await pairs.add(mk('vp-2', 'r2', 2), [{ ear: 'room', wav }]);
+    R.clock.advance(PAIR_RETRY_MS[0] + 1);
+    await settle(8);
+    p = await pairs.get('vp-2');
+    check('*** a voice NOT named as Sam: filled in, but it waits for a listen (not reviewed) ***',
+      p.meant === 'nice to meet you' && p.meantFrom === 'correction' && p.reviewed === false, J(p));
+    const s = euphoniaSamples(await pairs.list({ personId: 'p_sam' }));
+    check('*** the export takes the named one and leaves the unheard one out ***',
+      s.length === 1 && s[0].pairId === 'vp-1' && s[0].from === 'correction' && s[0].folder === '0', J(s));
+    const files = {};
+    const dir = { async getDirectoryHandle(name) { return { async getDirectoryHandle(n2) { return { async getFileHandle(f) { return { async createWritable() {
+      return { async write(d) { files[`${name}/${n2}/${f}`] = d; }, async close() {} }; } }; } }; },
+      async getFileHandle(f) { return { async createWritable() { return { async write(d) { files[`${name}/${f}`] = d; }, async close() {} }; } }; } }; },
+      async getFileHandle(f) { return { async createWritable() { return { async write(d) { files[f] = d; }, async close() {} }; } }; } };
+    const ex = await exportEuphonia(dir, pairs, { personId: 'p_sam' });
+    const idx = JSON.parse(files['nimrod-export.json']);
+    check('*** the same Euphonia layout train_my_voice.py reads: data/0/recording.wav + phrase.txt, the index says where the words came from ***',
+      ex.written.length === 1 && files['data/0/phrase.txt'] === 'pass the sauce' && files['data/0/recording.wav']?.byteLength === 50
+      && idx.samples[0].from === 'correction' && idx.numbering === '0..count-1', J(Object.keys(files)));
+    const reviewed = withCorrection({ ...p, reviewed: true, meant: 'what a reviewer typed', meantFrom: undefined }, 'something else');
+    check('a recording a person already reviewed keeps the reviewer\'s words', reviewed.meant === 'what a reviewer typed');
+    R.done();
+    const R2 = rig({ pairs: null, person: 'p_sam' });
+    R2.subs.caption({ id: 'r3', text: 'pass the salt', final: true });
+    R2.say('computer please what I said was pass the sauce');
+    await settle(8);
+    check('*** recording off for this person: no recording is touched ***', !(await pairs.list({})).some((x) => x.said.caption === 'r3'));
+    R2.done();
+  }
+
+  // ======================================================================================
+  section('"Words it has learned": every word and fix, each deletable');
+  {
+    const store = memoryLearnedStore();
+    const R = rig({ store });
+    R.subs.caption({ id: 'w1', text: 'call kristen', final: true });
+    R.say('computer please what I said was call Rosalind');
+    await settle();
+    R.learning.openWords();
+    const panel = host.querySelector('[data-subtitle-learning="words"]');
+    check('the list shows the word and the fix (and says the fix is not applied yet)',
+      /Rosalind/.test(panel.textContent) && /Heard “kristen”, means “Rosalind” \(not yet: corrected 1 time\)/.test(panel.textContent), panel.textContent);
+    [...panel.querySelectorAll('button')].find((b) => b.textContent === 'Forget Rosalind').click();
+    await settle();
+    check('*** Forget a word: gone from the list, the store and what the recogniser is told ***',
+      !R.learning.record(ROOM_KEY).words.length && !(await store.get(ROOM_KEY)).words.length && (R.hinted.at(-1) || []).length === 0);
+    [...host.querySelector('[data-subtitle-learning="words"]').querySelectorAll('button')].find((b) => b.textContent === 'Forget everything it learned here').click();
+    await settle();
+    check('*** Forget everything: the record is deleted from this device ***', !R.learning.record(ROOM_KEY) && (await store.get(ROOM_KEY)) === null);
+    R.done();
+    const fileStore = {};
+    const dataDir = { async getFileHandle(f) { return { async createWritable() { return { async write(d) { fileStore[f] = d; }, async close() {} }; } }; } };
+    await saveLearnedToFolder(dataDir, [learn(emptyRecord('p_alex', 'Alex'), 'jo anne', 'Joanne')]);
+    const saved = JSON.parse(fileStore[LEARNED_FILE]);
+    check('"Save a copy to my Nimrod folder": one file in Data, tagged, every person in it',
+      saved.format === LEARNED_FORMAT && saved.people[0].key === 'p_alex' && saved.people[0].fixes[0].to === 'Joanne', fileStore[LEARNED_FILE]);
+  }
+
+  // ======================================================================================
+  section('where it lives: this device');
+  {
+    const name = `nimrod-learned-words-test-${Date.now()}`;
+    const s = idbLearnedStore({ name });
+    const r = learn(emptyRecord('p1', 'Sam'), 'kristen', 'Rosalind', { at: 5 });
+    await s.put(r);
+    const got = await s.get('p1');
+    const shared = learn(emptyRecord(ROOM_KEY), 'a b', 'a Oscar', { at: 6 });
+    await s.put(shared);
+    check('*** this browser\'s IndexedDB keeps a record per person (and the shared one under "") ***',
+      got && got.fixes[0].to === 'Rosalind' && (await s.get(ROOM_KEY))?.words[0].w === 'Oscar' && (await s.all()).length === 2);
+    await s.remove('p1');
+    check('...and deletes one', (await s.get('p1')) === null);
+    s.close();
+    await new Promise((res) => { const d = indexedDB.deleteDatabase(name); d.onsuccess = d.onerror = d.onblocked = () => res(); });
+    check('*** NOTHING WENT TO A SERVER: not one fetch or beacon on this whole page ***', netCalls.length === 0, J(netCalls));
+  }
+
+  // ======================================================================================
+  section('settings');
+  {
+    check('defaults: learns, fixes after the same correction twice, tells the recogniser',
+      J(learningOptionsFrom({})) === J({ learn: true, fixAfter: 2, hints: true }));
+    check('a broken value is its default; "never" is a choice',
+      J(learningOptionsFrom({ subtitlesLearn: 'yes', subtitlesFixAfter: 9, subtitlesHints: null })) === J({ learn: true, fixAfter: 2, hints: true })
+      && learningOptionsFrom({ subtitlesFixAfter: 0 }).fixAfter === 0);
+    const bad = auditFields(SUBTITLE_LEARNING_FIELDS.map(normalizeField).filter(Boolean), { type: 'subtitles' }).filter((f) => f.severity === 'error');
+    check('the rows pass the settings audit', bad.length === 0, J(bad));
+    check('every row is plain, and none says "her screen" or names anybody',
+      SUBTITLE_LEARNING_FIELDS.every((f) => !/her screen|christine|cici/i.test(`${f.label} ${f.note || ''}`)));
+    check('one action, for a switch or a key: fix a line', SUBTITLE_LEARNING_ACTIONS.length === 1 && SUBTITLE_LEARNING_ACTIONS[0].topic === SUBTITLES_FIX_TOPIC);
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS - ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

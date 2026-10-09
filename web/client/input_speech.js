@@ -607,6 +607,19 @@ export const SPEECH_ASK_TOPIC = 'speech/ask';
 // "the font is small" (the longest prefix wins). None is a phrase in either table (the suite checks).
 export const NOTE_PHRASES = Object.freeze(['make a note', 'make a note that', 'take a note', 'take a note that',
   'add a note', 'write a note', 'note that']);
+// *** subtitle learning (2026-10-09): "WHAT I SAID WAS ..." / "WHAT THEY SAID WAS ...". *** Mike: "Can the subtitles
+// learn, if I correct what they're saying? Like 'What I/they said was...'" The same kind of prefix as "make a note":
+// free words after it, said to the screen (the wake phrase, or inside its window - a sentence that happens to start
+// "what I said was" in conversation is not a correction anybody asked for), and only while something on the screen
+// says it takes corrections (`fixes: true` on SPEECH_ASK_TARGET_TOPIC - subtitle_learning.js, while subtitles are
+// on). Kinds 'fix-self' (the line is the speaker's own) and 'fix-other' (somebody else's). Four words at most, every
+// word one the small Vosk model knows [inferred: all common words; unchecked on the bench like the routes above], so
+// a grammar-limited engine can hear the prefix - and then, because it cannot hear the free words, the correction is
+// typed (the subtitles' "Fix a line" panel), exactly as "ask <name>" alone opens the chat to type into.
+export const FIX_PHRASES = Object.freeze({
+  'fix-self': Object.freeze(['what i said was', 'what i meant was', 'i actually said', 'no i said']),
+  'fix-other': Object.freeze(['what they said was', 'what he said was', 'what she said was', 'they actually said']),
+});
 export const ASK_WORD = 'ask';
 // A name of more than this many words gets no spoken prefix: the table's own limit (VOICE_WORDS_MAX), and a
 // recogniser has to hear it exactly. Under three letters gets none either (the table's rule: a syllable).
@@ -624,7 +637,7 @@ export function askName(name) {
  * whole spoken table (a prefix that IS a command is dropped: the command wins anyway, and it must never look
  * like it could mean both); `wakes` the wake phrases (a bare name that is one, or starts with one, is dropped).
  */
-export function askPhrases(names = [], { table = spokenTable(), wakes = SPEECH_DEFAULTS.wake, notes = true } = {}) {
+export function askPhrases(names = [], { table = spokenTable(), wakes = SPEECH_DEFAULTS.wake, notes = true, fixes = false } = {}) {
   const commands = new Set(Object.values(table || {}).flat().map(normalize));
   const ws = (Array.isArray(wakes) ? wakes : [wakes]).map(normalize).filter(Boolean);
   const out = [];
@@ -635,6 +648,8 @@ export function askPhrases(names = [], { table = spokenTable(), wakes = SPEECH_D
     out.push({ kind, phrase, name });
   };
   if (notes) for (const p of NOTE_PHRASES) add('note', normalize(p), null);
+  // subtitle learning: the correction prefixes, only while something takes corrections.
+  if (fixes) for (const [kind, list] of Object.entries(FIX_PHRASES)) for (const p of list) add(kind, normalize(p), null);
   for (const raw of Array.isArray(names) ? names : [names]) {
     const n = askName(raw);
     if (!n) continue;
@@ -1505,9 +1520,10 @@ export function attachSpeech(input, {
     const key = p.instanceId ? `#${p.instanceId}` : `@${p.source || ''}`;
     const names = (Array.isArray(p.names) ? p.names : []).map(askName).filter(Boolean);
     const notes = p.notes === true;
-    if (p.open !== false && (names.length || notes)) {
+    const fixes = p.fixes === true;     // subtitle learning: takes "what I said was ..." corrections
+    if (p.open !== false && (names.length || notes || fixes)) {
       const had = askTargets.get(key);
-      askTargets.set(key, { key, source: p.source || null, instanceId: p.instanceId || null, names, notes,
+      askTargets.set(key, { key, source: p.source || null, instanceId: p.instanceId || null, names, notes, fixes,
                             seq: had ? had.seq : ++askSeq });
     } else askTargets.delete(key);
     pushMode();
@@ -1519,11 +1535,14 @@ export function attachSpeech(input, {
   function askNow() {
     const list = askList();
     if (!list.length) return [];
-    return askPhrases(list.flatMap((t) => t.names), { table: spoken, wakes, notes: list.some((t) => t.notes) });
+    return askPhrases(list.flatMap((t) => t.names), { table: spoken, wakes, notes: list.some((t) => t.notes),
+                                                      fixes: list.some((t) => t.fixes) });
   }
-  // Which target hears this: the newest that answers to that name (an ask) or keeps notes (a note).
+  // Which target hears this: the newest that answers to that name (an ask), keeps notes (a note) or takes
+  // corrections (subtitle learning's 'fix-self' / 'fix-other').
   function askTarget(a) {
-    return askList().find((t) => (a.kind === 'note' ? t.notes : t.names.includes(a.name))) || null;
+    const isFix = a.kind === 'fix-self' || a.kind === 'fix-other';
+    return askList().find((t) => (isFix ? t.fixes : a.kind === 'note' ? t.notes : t.names.includes(a.name))) || null;
   }
   function canDictateNow() {
     try {
@@ -1769,7 +1788,8 @@ export function attachSpeech(input, {
     // The game an answer would go to right now, or null.
     answerTarget: () => { const x = currentGame(); return x ? { source: x.source, instanceId: x.instanceId, phase: x.phase } : null; },
     // Who "ask <name>" / "make a note" would reach right now, newest first, and the prefixes that mean them.
-    askTargets: () => askList().map((t) => ({ source: t.source, instanceId: t.instanceId, names: [...t.names], notes: t.notes })),
+    askTargets: () => askList().map((t) => ({ source: t.source, instanceId: t.instanceId, names: [...t.names], notes: t.notes,
+                                              ...(t.fixes ? { fixes: true } : {}) })),
     askPhrases: () => askNow().map((p) => ({ ...p })),
     canDictate: () => canDictateNow(),
     // The "did you mean" question up right now ({ id, phrase, question }), or null.
