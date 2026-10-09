@@ -1197,9 +1197,20 @@ registerModule(
       // reason instead of offering a cycle that lands back where it started. That is not a
       // degraded case; it is the common one, and saying it out loud is how somebody learns
       // why the picker will not move.
-      settingsChoices: () => ({
-        sourceId: knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id })),
-      }),
+      // photo source (2026-10-08, the bench's Pictures screen): A CHOICE THAT IS NOT HERE STAYS IN THE LIST, LAST.
+      // The panel was set (from another browser) to a folder that browser had connected; this screen had ONE source
+      // of its own, so the row had one option, was disabled ("only one to choose from"), and the press that repairs a
+      // dead choice (settings_fields.js stepValue: a value not in the list -> the first option) could never happen.
+      // Listing the chosen-but-absent one makes it two options: the row is live, and one press picks a real source.
+      // It drops out by itself once the choice is one that is here. Nothing is saved unless somebody presses.
+      settingsChoices: () => {
+        const opts = knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id }));
+        const want = cfg.sourceId;
+        if (want && !opts.some((o) => o.value === want)) {
+          opts.push({ value: want, label: `${labels[want] ? `“${labels[want]}”` : 'A source'} — not connected here` });
+        }
+        return { sourceId: opts };
+      },
     };
   },
 );

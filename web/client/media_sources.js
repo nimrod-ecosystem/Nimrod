@@ -324,9 +324,14 @@ export function mayShowSource(source, personId = null) {
 export function degradedLine({ shownLabel = null, chosenLabel = null, err = null } = {}) {
   const shown = shownLabel ? `“${shownLabel}”` : 'the last pictures';
   const chosen = chosenLabel ? `“${chosenLabel}”` : 'the chosen source';
+  // photo source (2026-10-08, the bench's Pictures screen): 'gone' -- the chosen id is not in this screen's list at all
+  // -- used to say "can't be reached", which sent a helper to check the media agent and the network. The usual cause
+  // is a folder connected in ANOTHER browser (a folder lives in one browser only), or a source removed or moved to
+  // another person. Nothing there is unreachable; it is not connected here, and the words now say that.
   const why = err && err.code === 'permission' ? 'needs permission again'
     : err && err.code === 'album' ? 'doesn’t have that album'
-      : 'can’t be reached';
+      : err && err.code === 'gone' ? 'isn’t connected here'
+        : 'can’t be reached';
   return `Showing ${shown} — ${chosen} ${why}.`;
 }
 
