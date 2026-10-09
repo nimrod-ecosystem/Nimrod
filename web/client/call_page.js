@@ -27,6 +27,7 @@ import { connectDrive } from './drive.js';
 import { authHeaders, isAuthError, httpError } from './auth.js';
 import { createCallTransport } from './call_transport.js';
 import { createWakeHold } from './phone_mic_show.js';
+import { createSpeechChannel } from './output_channels.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -96,6 +97,32 @@ export function endText(reason, why, { answered = false, connected = false } = {
 
 const AUDIO_CONSTRAINTS = { echoCancellation: true, noiseSuppression: true };
 
+// ---- WORDS FROM THE SCREEN'S AAC BOARD ("board into call", 2026-10-08) -----------------------------
+// A word chosen on the screen's board during the call arrives as text (call_transport.js `onWords`).
+// This page shows it big, with whose board it came from, and - unless this device chose "only show" -
+// reads it out in this device's own voice.
+//
+// WHAT THIS DEVICE DOES WITH THEM: 'speak' (show and read aloud) or 'show' (only show). Remembered on
+// this device. Default 'speak', argued: a caller in a call is listening, not reading, and a word only
+// shown is easy to miss while looking at the picture. The case for 'show': a caller somewhere a voice
+// out of the phone is unwelcome, or one who finds the second voice confusing - one press away, on the
+// setup screen and beside the words themselves.
+export const WORDS_KEY = 'nimrod:call:words';
+export const WORDS_MODES = Object.freeze(['speak', 'show']);
+// How many earlier words stay on show under the newest. 6, argued: enough to follow a sentence built a
+// word at a time, few enough to read at a glance on a phone. Not a setting: nobody can judge it in advance.
+export const WORDS_SHOWN = 6;
+// *** THIS DEVICE'S MICROPHONE IS HELD WHILE IT READS A WORD OUT. *** The browser's voice is not part of
+// what echo cancellation removes (it removes the call's own sound, not the browser's speech), so on a
+// computer with speakers the word read out here would go back into the call and the room would hear its
+// own word again, a moment late. So the microphone stops sending while the word is read, and comes back
+// when it ends - or after WORDS_HOLD_MAX_MS whatever happens, so a voice that never says it finished can
+// never leave this device muted. 8 s, argued: the longest card is a short sentence, read in 2-4 s; a
+// voice engine that never reports its end (row 2.27) then costs the caller at most 8 s of being heard.
+// The case against holding: on a phone, the system's own echo cancellation usually removes it anyway, and
+// the caller cannot be heard for a second or two. Not yet measured either way [training knowledge].
+export const WORDS_HOLD_MAX_MS = 8000;
+
 export async function mountCallPage(root, {
   fetchImpl = (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : null),
   connect = connectDrive,
@@ -113,6 +140,11 @@ export async function mountCallPage(root, {
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   user = null,                         // the dev/test account override (auth.js); null on the real site
+  // Reads a word out in this device's voice: `speakWords(text, done)` calls `done` when the voice has
+  // finished, and returns something truthy when it started (nothing: there is no voice here). By default
+  // the site's own speech channel (output_channels.js), not voice.js directly, so its end-of-speech
+  // watching (row 2.27) applies here too. A seam for the suites.
+  speakWords = null,
   base = '',
   giveUpMs = CALLER_GIVE_UP_MS,
   connectMs = CONNECT_MS,
@@ -137,6 +169,9 @@ export async function mountCallPage(root, {
   let micOn = true;
   let camOn = true;
   let cams = [];                       // videoinput device ids, for switching
+  let said = [];                       // words from the screen's board this call, newest last (WORDS_SHOWN)
+  let heldForWords = false;            // the microphone is held while a word is read out (WORDS_HOLD_MAX_MS)
+  let readTok = 0;
   let run = 0;
   const timers = new Set();
   const offs = [];
@@ -194,6 +229,12 @@ export async function mountCallPage(root, {
       <button type="button" class="cp-btn cp-primary cp-big" data-start="video">Video call</button>
       <button type="button" class="cp-btn cp-big" data-start="audio">Audio call <span class="cp-sub">(sound only, no camera)</span></button>
       <p class="cp-note" data-shown-as>The screen shows the call as from “${esc(shownAs)}”${myName ? '' : ' (the name your notes are signed with, which is not set)'}.</p>
+      <label class="cp-field"><span>Words chosen on the screen’s AAC board during the call</span>
+        <select data-words-mode>
+          <option value="speak"${wordsMode() === 'speak' ? ' selected' : ''}>Show them and read them out here</option>
+          <option value="show"${wordsMode() === 'show' ? ' selected' : ''}>Only show them</option>
+        </select>
+      </label>
       <p class="cp-note">To talk without video and hear the room, <a data-intercom-link href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
@@ -206,6 +247,12 @@ export async function mountCallPage(root, {
         <div class="cp-status" role="status" aria-live="polite">
           <b class="cp-word" data-word></b><span class="cp-who" data-who></span>
         </div>
+        <section class="cp-words" data-words hidden aria-label="Words from the AAC board">
+          <p class="cp-words-from" data-words-from></p>
+          <p class="cp-words-now" data-words-now aria-live="assertive"></p>
+          <p class="cp-words-before" data-words-before></p>
+          <button type="button" class="cp-btn cp-ctl cp-words-aloud" data-words-aloud aria-pressed="true">Read out loud</button>
+        </section>
         <div class="cp-stage">
           <video class="cp-remote" data-remote autoplay playsinline></video>
           <div class="cp-card" data-card><div class="cp-initial" aria-hidden="true" data-initial></div><div class="cp-card-name" data-card-name></div></div>
@@ -252,6 +299,60 @@ export async function mountCallPage(root, {
     if (flip) flip.hidden = !(video && hasKind('video') && cams.length > 1);
     const n = q('[data-note]');
     if (n) { n.textContent = note || ''; n.hidden = !note; }
+  }
+
+  // ---- words from the screen's AAC board (WORDS_KEY above) -------------------------------------------
+  function wordsMode() { const m = get(WORDS_KEY, 'speak'); return WORDS_MODES.includes(m) ? m : 'speak'; }
+  function paintWords() {
+    const box = q('[data-words]');
+    if (!box) return;
+    box.hidden = said.length === 0;
+    const set = (sel, t) => { const el = q(sel); if (el) el.textContent = t; };
+    const name = target ? target.name : '';
+    set('[data-words-from]', name ? `From ${name}’s AAC board` : 'From the AAC board');
+    set('[data-words-now]', said.length ? said[said.length - 1] : '');
+    set('[data-words-before]', said.slice(0, -1).join(' · '));
+    const aloud = q('[data-words-aloud]');
+    if (aloud) {
+      const on = wordsMode() === 'speak';
+      aloud.setAttribute('aria-pressed', String(on));
+    }
+  }
+  function heard(w) {
+    if (!w || typeof w.text !== 'string' || !w.text) return;
+    said = [...said, w.text].slice(-WORDS_SHOWN);
+    paintWords();
+    if (wordsMode() === 'speak') readAloud(w.text);
+  }
+  // The default voice: the site's speech channel, made on the first word (never at load), with its
+  // watchdog at the hold's own ceiling. `source: 'board'` - these are a person's board words.
+  let speech = null;
+  if (typeof speakWords !== 'function') {
+    speakWords = (text, done) => {
+      if (!speech) speech = createSpeechChannel({ maxMs: WORDS_HOLD_MAX_MS, setTimer, clearTimer });
+      if (!speech.available()) return null;
+      return speech.present({ verb: 'say', text, source: 'board' }, { done }) || null;
+    };
+  }
+  // The microphone sends only when the caller has not muted it AND no word is being read out.
+  function applyMic() { for (const t of tracksOf('audio')) { try { t.enabled = micOn && !heldForWords; } catch { /* stopped */ } } }
+  function readAloud(text) {
+    const tok = ++readTok;
+    const release = () => { if (tok !== readTok) return; heldForWords = false; applyMic(); };
+    heldForWords = true;
+    applyMic();
+    later(release, WORDS_HOLD_MAX_MS);
+    // `done` releases when the voice finishes. A newer word interrupts this one: its end then belongs to
+    // the newer word's token and changes nothing.
+    let started = null;
+    try { started = speakWords(text, release); } catch (err) { console.error('call: read a word out', err); started = null; }
+    if (!started) release();
+  }
+  function setWordsMode(m) {
+    if (!WORDS_MODES.includes(m)) return;
+    put(WORDS_KEY, m);
+    if (m === 'show' && heldForWords) { readTok++; heldForWords = false; applyMic(); }
+    paintWords();
   }
 
   const tracksOf = (kind) => { try { return (kind === 'audio' ? local?.getAudioTracks?.() : local?.getVideoTracks?.()) || []; } catch { return []; } };
@@ -310,6 +411,7 @@ export async function mountCallPage(root, {
     mode = CALL_MODES.includes(want) ? want : 'video';
     put(PERSON_KEY, target.id);
     ended = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
+    said = []; heldForWords = false;
     const my = ++run;
     phase = 'checking';
     buildLive(); paintLive();
@@ -362,6 +464,8 @@ export async function mountCallPage(root, {
     // 4. THE CALL, through the driver role (tagged: every screen rings, one answers).
     transport = makeTransport({ link, role: 'driver' });
     offs.push(transport.onEnded((reason, info) => { if (my === run) finish(endText(reason, info?.why, { answered, connected })); }));
+    // board into call: a word chosen on the screen's AAC board during this call.
+    offs.push(transport.onWords?.((w) => { if (my === run) heard(w); }) || (() => {}));
     offs.push(transport.onAnswered?.(() => { if (my !== run) return; answered = true; if (phase === 'ringing') setPhase('answered'); }));
     offs.push(transport.onConnection?.((st) => {
       if (my !== run) return;
@@ -427,6 +531,7 @@ export async function mountCallPage(root, {
     stopTracks(local);
     local = null;
     cams = [];
+    said = []; heldForWords = false; readTok++;
     phase = 'idle';
     ended = message;
     renderSetup();
@@ -435,7 +540,7 @@ export async function mountCallPage(root, {
   function toggleMic() {
     if (!local) return;
     micOn = !micOn;
-    for (const t of tracksOf('audio')) { try { t.enabled = micOn; } catch { /* stopped */ } }
+    applyMic();
     paintLive();
   }
   function toggleCam() {
@@ -474,10 +579,12 @@ export async function mountCallPage(root, {
     if (e.target.closest?.('[data-mute]')) { toggleMic(); return; }
     if (e.target.closest?.('[data-cam]')) { toggleCam(); return; }
     if (e.target.closest?.('[data-flip]')) { flip(); return; }
+    if (e.target.closest?.('[data-words-aloud]')) { setWordsMode(wordsMode() === 'speak' ? 'show' : 'speak'); return; }
     if (e.target.closest?.('[data-game-join]')) { if (game) { game.playing = true; paintGame(); } return; }
     if (e.target.closest?.('[data-game-close]')) closeGame();
   });
   on(root, 'change', (e) => {
+    if (e.target.closest?.('[data-words-mode]')) { setWordsMode(e.target.value); return; }
     if (!e.target.closest?.('[data-person]')) return;
     const a = q('[data-intercom-link]');
     if (a) a.setAttribute('href', `./intercom.html?person=${encodeURIComponent(e.target.value)}`);
@@ -505,6 +612,9 @@ export async function mountCallPage(root, {
     people: () => people.map((p) => ({ ...p })),
     transport: () => transport,
     game: () => (game ? { ...game } : null),
+    words: () => [...said],
+    wordsMode: () => wordsMode(),
+    micHeld: () => heldForWords,
     call: (want = 'video') => start(want),
     hangup: () => finish('The call ended.'),
     destroy() { finish(null); wake.destroy(); ac.abort(); },

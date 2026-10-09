@@ -22,6 +22,14 @@
 // `say` routes to speech (DEFAULT_ROUTING in `output.js`) and stays in the room. `notify`
 // reaches `remote`, which is another device in the house. The verb is the boundary.
 //
+// *** AND INTO A CALL THAT IS ALREADY GOING (2026-10-08, "board into call"). *** Mike: "A talk-board
+// word doesn't go into a live call through the software." A word chosen during a live call now also
+// goes, as text, to the person on that call (`ctx.callTransport.sendWords`, call_transport.js), who
+// sees it and hears it read out. That is the same conversation, with somebody already in it - not a
+// summons. It only ever reaches a call that is LIVE: it never starts one, never rings anybody, and
+// sends nothing at all when there is no call. The card is still a `say`. The `intoCall` setting turns
+// it off for somebody who wants the board kept to the room.
+//
 // ---------------------------------------------------------------------------------------
 // IT MEASURES, AND IT SHOWS THE PERSON NOTHING ABOUT IT
 // ---------------------------------------------------------------------------------------
@@ -231,6 +239,14 @@ const DEFAULTS = {
   // turns dwell on should turn this off, and say so; `talk.html` does exactly that and leaves
   // the caregiver a way to put it back.
   tapSelects: true,
+
+  // *** A WORD CHOSEN DURING A LIVE CALL GOES INTO THE CALL TOO. DEFAULT YES. *** ("board into call",
+  // 2026-10-08.) Yes, because somebody on a call with a person who talks with a board is in the
+  // conversation, and a word they cannot hear is a word that was not said to them - which is what
+  // Mike found. The counter-case is real: a board used for something else during a call (a caregiver
+  // demonstrating cards, a private word to somebody in the room), or a person who simply wants the
+  // board kept to the room. That is one setting away. Nothing goes when there is no call either way.
+  intoCall: true,
 
   // *** TURN THE GRID WHEN THE SCREEN SHAPE WOULD MAKE THE CARDS INTO STRIPES. DEFAULT ON,
   // AND THIS ONE NEEDS MIKE'S EYES BECAUSE IT LEANS ON THE FILE'S OWN RULE. ***
@@ -453,6 +469,10 @@ export const SETTINGS = [
   { key: 'fitScreen', label: 'Turn the grid to fit the screen', kind: 'toggle', default: true,
     level: 'advanced', onLabel: 'Yes', offLabel: 'No — keep the grid as it is',
     note: 'Turn this off once somebody has learned where the cards are.' },
+  // "board into call" (2026-10-08): see `intoCall` in DEFAULTS.
+  { key: 'intoCall', label: 'Words go into a call', kind: 'toggle', default: true,
+    level: 'standard', onLabel: 'Yes — the person on the call sees and hears each word', offLabel: 'No — words stay in this room',
+    note: 'Only during a call that is already going. It never starts a call or reaches anybody else.' },
 ];
 
 registerModule(
@@ -844,6 +864,13 @@ registerModule(
         if (ctx.output?.say) ctx.output.say(text, { source: 'board' });
         else speak(text);
       } catch (err) { console.error('board: say', err); }
+
+      // board into call (2026-10-08): and to the person on a call that is LIVE now, as text. The
+      // transport refuses when there is no call, so nothing is sent outside one. See the header.
+      if (cfg.intoCall !== false) {
+        try { ctx.callTransport?.sendWords?.(text, { source: 'board' }); }
+        catch (err) { console.error('board: into the call', err); }
+      }
 
       // The live nudge, for anything on the same screen that wants to react.
       try { bus?.publish?.(BOARD_TOPIC, { word: cell.word, id: cell.id, board: board.id }); }

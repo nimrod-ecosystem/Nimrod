@@ -28,6 +28,8 @@ export const SUITES = [
   'output_panel',
   'output_remote', 'pair', 'pairing', 'panel_fit', 'panel_gap', 'people', 'personal', 'photos', 'pond',
   'audio_bus', 'automation', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'music', 'pressgame', 'records', 'rules',
+  // board into call (2026-10-08): an AAC board word chosen during a live call reaches the caller, as text.
+  'call_words',
   // spotify sdk (2026-10-07): this page as a Spotify speaker, and the Test B page, against a fake Spotify global.
   'spotify_sdk',
   // play on (2026-10-08): Spotify's own player in the Music panel, the Play on chooser, Devices -> Speakers, by voice.
