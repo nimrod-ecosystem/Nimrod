@@ -33,6 +33,8 @@
 //           loses it - the page says so and offers a second place.
 //   folder  this device AND the Data folder in the person's Nimrod folder (user_folders.js), written by the page
 //           itself through the File System Access API - no helper needed (the answer to chat's question).
+//           (agent history, 2026-10-08: or, when the media agent on this computer offers it, by the agent - no
+//           browser permission to lapse after a restart. `nimrodFolder` picks; the page's choice is the same one.)
 //   us      this device AND the server, opted in, capped per person with the oldest rolled into totals
 //           (web/server/storage_line.py rule 4, db.py history_append). Follows the person to another device.
 //   log     games and words only: the site's full, append-only event log, as before 2026-10-08.
@@ -154,7 +156,11 @@ export function whereWords(kind, place, ctx = {}) {
   }
   if (place === 'folder') {
     const f = ctx.folder;
-    if (f === 'ready') return 'On this device, and copied to the Data folder in your Nimrod folder.';
+    if (f === 'ready') {
+      return 'On this device, and copied to the Data folder in your Nimrod folder.'
+        // agent history: say who writes it, because it is why no "Allow it again" is ever needed here.
+        + (ctx.via === 'agent' ? ' The media agent on this computer writes it, so this browser needs no permission for it.' : '');
+    }
     if (f === 'unavailable') return 'On this device only: this browser cannot write to a folder (Chrome and Edge can). '
       + 'On this device, choose "with us" for a second copy.';
     // NOT CONNECTED YET (2026-10-08, history to the drive): a folder chosen but not reachable here. Everything waits on
@@ -348,6 +354,195 @@ export function folderSink({ store = handleStore(), view = (typeof window !== 'u
 }
 
 // ---------------------------------------------------------------------------------------------
+// agent history (2026-10-08): THE NIMROD FOLDER WRITTEN BY THE MEDIA AGENT ON THIS COMPUTER.
+// The browser folder above needs the browser's folder permission, and Chrome can ask for it again after a restart:
+// after a power cut a screen nobody is at would keep its history on the device until someone pressed "Allow it
+// again". Mike: "Is there any way we can set auto allow?" Pressing the browser's own button by automation is fragile,
+// and a browser policy is a system setting; but the media agent already runs on that computer as a service, so it
+// can write the same files itself (web/media_agent/agent.py "AGENT HISTORY": opt-in with --data-dir, append-only,
+// never outside that folder, from this computer only). No browser permission is involved.
+//
+// WHICH AGENT: a media source on THIS computer (base_url http://localhost, 127.0.0.1 or [::1]) whose agent answers
+// /history/status with `enabled`. An agent elsewhere on the network is never used for this: its Data folder would not
+// be this screen's, and the agent takes history only from its own computer anyway.
+//
+// EVERY NUMBER HERE IS A DEFAULT (Rule 1), argued:
+//   statusMs   how long one answer from the agent is trusted (5 s): a copy of many panels asks once, not per panel;
+//              a drive pulled out is noticed within seconds.
+//   findMs     how often the list of this screen's media sources is read again to look for an agent (5 min): it
+//              changes when somebody adds a source, rarely; the agent already known is asked every statusMs.
+//   postRows / postBytes   one POST carries at most 200 entries and 192 KiB - under the agent's 256 KiB cap
+//              (agent.py HISTORY_BODY_MAX; test_agent.py fails if this one is not smaller). A single entry bigger
+//              than that stays on this device only, rather than stopping every entry after it.
+// ---------------------------------------------------------------------------------------------
+export const AGENT_HISTORY_DEFAULTS = Object.freeze({ statusMs: 5000, findMs: 300000, postRows: 200, postBytes: 192 * 1024 });
+const LOCAL_AGENT = /^http:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?\/?$/i;
+/** Is this media source an agent on this computer? (a browser folder source is not an agent at all) Pure. */
+export const isLocalAgent = (s) => !!s && s.kind !== 'folder' && LOCAL_AGENT.test(String(s.base_url || '').trim());
+/** The base URLs of the agents on this computer among a screen's media sources, no repeats. Pure. */
+export function localAgentBases(sources) {
+  const out = [];
+  for (const s of sources || []) {
+    if (!isLocalAgent(s)) continue;
+    const b = String(s.base_url).trim().replace(/\/+$/, '');
+    if (!out.includes(b)) out.push(b);
+  }
+  return out;
+}
+
+/**
+ * The Data folder, written by the media agent on this computer. The same shape as folderSink:
+ *   status()   'ready' | 'missing' (the agent is there, its Data folder is not: a drive not plugged in) |
+ *              'write' (it cannot write there) | 'none' (no agent on this computer offers it)
+ *   id()       the folder's id (the agent reads or makes History/folder-id.txt); null when not ready
+ *   append(stream, scope, rows, { folderId })   { ok, why?, upTo? } - refused ('changed') when the agent's folder is
+ *              not `folderId` (a drive swapped since the page looked), so a marker is never kept for the wrong folder
+ *   read()     [] - the agent has no read route (agent.py says why); allow()  'unavailable' (nothing to allow)
+ *   candidates()   resolves the base URLs to try (kiosk.js: the screen's media sources on this computer)
+ */
+export function agentSink({ candidates = async () => [], fetchImpl = (...a) => fetch(...a), now = () => Date.now(),
+  ...o } = {}) {
+  const opts = { ...AGENT_HISTORY_DEFAULTS, ...o };
+  let bases = null;
+  let basesAt = -Infinity;
+  let cur = { base: null, st: null, at: -Infinity };    // the newest answer, trusted for statusMs
+  async function ask(base) {
+    try {
+      const res = await fetchImpl(`${base}/history/status`, { method: 'GET', cache: 'no-store' });
+      if (!res || !res.ok) return null;
+      const j = await res.json();
+      return j && j.enabled === true ? j : null;
+    } catch { return null; }
+  }
+  async function look({ fresh = false } = {}) {
+    const t = now();
+    if (!fresh && t - cur.at < opts.statusMs) return cur;
+    if (fresh || !bases || t - basesAt >= opts.findMs) {
+      try { bases = [...new Set(((await candidates()) || []).map((b) => String(b).replace(/\/+$/, '')))]; } catch { bases = bases || []; }
+      basesAt = t;
+    }
+    const order = cur.base ? [cur.base, ...bases.filter((b) => b !== cur.base)] : bases;
+    for (const b of order) {
+      const st = await ask(b);
+      if (st) { cur = { base: b, st, at: t }; return cur; }
+    }
+    cur = { base: null, st: null, at: t };
+    return cur;
+  }
+  const forget = () => { cur = { ...cur, at: -Infinity }; };
+  const stateOf = (st) => (!st ? 'none' : st.ready === true && ID_RE.test(String(st.folder_id || '')) ? 'ready'
+    : st.why === 'missing' ? 'missing' : 'write');
+  async function postOne(base, stream, body) {
+    try {
+      const res = await fetchImpl(`${base}/history/${encodeURIComponent(stream)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      let json = null;
+      try { json = await res.json(); } catch { json = null; }
+      return { ok: !!res.ok, status: res.status, json };
+    } catch (e) { return { ok: false, status: 0, json: null }; }
+  }
+  return {
+    kind: 'agent',
+    async status() { return stateOf((await look()).st); },
+    async id() { const c = await look(); return stateOf(c.st) === 'ready' ? String(c.st.folder_id) : null; },
+    async append(stream, scope, rows, { folderId = null } = {}) {
+      const c = await look();
+      if (stateOf(c.st) !== 'ready') return { ok: false, why: stateOf(c.st) };
+      const fid = String(c.st.folder_id);
+      if (folderId && folderId !== fid) return { ok: false, why: 'changed' };
+      // Batches, in order; `upTo` is the newest entry known to be in the folder when one fails part-way.
+      let upTo = null;
+      let batch = [];
+      let bytes = 0;
+      const send = async () => {
+        if (!batch.length) return null;
+        const res = await postOne(c.base, stream, { scope, rows: batch.map((x) => x.row), folder_id: fid });
+        if (!res.ok) {
+          forget();
+          const j = res.json || {};
+          return { ok: false, why: res.status === 0 ? 'none' : (j.why || 'write'),
+            ...(j.up_to ? { upTo: String(j.up_to) } : upTo ? { upTo } : {}) };
+        }
+        upTo = String(batch[batch.length - 1].at);
+        batch = []; bytes = 0;
+        return null;
+      };
+      for (const r of rows || []) {
+        const row = { at: r.created_at, kind: r.kind, data: r.data };
+        const n = byteLen(JSON.stringify(row));
+        if (n > opts.postBytes) {                      // too big for any post: left on this device only
+          const failed = await send(); if (failed) return failed;
+          upTo = String(r.created_at);
+          continue;
+        }
+        if (batch.length >= opts.postRows || bytes + n > opts.postBytes) { const failed = await send(); if (failed) return failed; }
+        batch.push({ row, at: r.created_at });
+        bytes += n + 1;
+      }
+      const failed = await send();
+      return failed || { ok: true };
+    },
+    async read() { return []; },
+    async allow() { return 'unavailable'; },
+    forget,
+  };
+}
+
+/**
+ * "YOUR NIMROD FOLDER" ON THIS SCREEN (agent history): the media agent on this computer when it offers history and
+ * can write now, else the browser folder - chosen each time, never both for one write. The same shape as folderSink,
+ * so the host does not know the difference, plus `via()` ('agent' | 'browser' | null) for the page.
+ *   * A write carries the folder id the host counted on (`folderId`); it goes only to the side whose folder that is,
+ *     so a marker is never kept for a folder that did not get the rows. (Agent and browser on the SAME folder share
+ *     its folder-id.txt, so moving between them sends nothing twice.)
+ *   * read() (an empty device filling itself) goes through the browser folder, and only when that is the same folder
+ *     the agent writes: the agent has no read route.
+ */
+export function nimrodFolder({ agent = null, browser = null } = {}) {
+  const agentState = async () => { if (!agent) return 'none'; try { return await agent.status(); } catch { return 'none'; } };
+  const browserState = async () => { if (!browser) return 'unavailable'; try { return await browser.status(); } catch { return 'none'; } };
+  return {
+    kind: 'folder',
+    agent, browser,
+    async via() {
+      if (await agentState() === 'ready') return 'agent';
+      return (await browserState()) === 'ready' ? 'browser' : null;
+    },
+    async status() {
+      const a = await agentState();
+      if (a === 'ready') return 'ready';
+      const b = await browserState();
+      if (b === 'ready') return 'ready';
+      // The agent is set up and its folder is not there: say "cannot be found here" (a drive), not "allow it again".
+      if (a === 'missing' || a === 'write') return 'missing';
+      return b;
+    },
+    async id() {
+      if (await agentState() === 'ready') return agent.id();
+      return browser ? browser.id() : null;
+    },
+    async append(stream, scope, rows, o = {}) {
+      const want = (o && o.folderId) || null;
+      if (await agentState() === 'ready') {
+        const aid = await agent.id();
+        if (!want || want === aid) return agent.append(stream, scope, rows, { folderId: aid });
+      }
+      if (!browser) return { ok: false, why: 'none' };
+      if (want && (await browser.id()) !== want) return { ok: false, why: 'changed' };
+      return browser.append(stream, scope, rows);
+    },
+    async read(stream, scope, limit) {
+      if (!browser) return [];
+      if (await agentState() === 'ready') {
+        if ((await browserState()) !== 'ready' || (await browser.id()) !== (await agent.id())) return [];
+      }
+      return browser.read(stream, scope, limit);
+    },
+    async allow() { return browser ? browser.allow() : 'unavailable'; },
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
 // WITH US: the server's history route (web/server/app.py /api/people/{id}/history), opted in on the person's row.
 // ---------------------------------------------------------------------------------------------
 export function serverSink({ urlFor, user = null, fetchImpl = (...a) => fetch(...a) } = {}) {
@@ -407,7 +602,7 @@ export const scopeOf = (key) => safeName(String(key || '').includes(':') ? Strin
 /**
  *   personId()                  whose history (the screen's person); null until known - everything waits quietly
  *   makePersonState(pid, key)   the person's row (kiosk.js ctx.makePersonState); null: defaults, nothing with us
- *   folder                      folderSink() or null;  server  serverSink() or null
+ *   folder                      nimrodFolder() (agent history), folderSink() or null;  server  serverSink() or null
  *   screenId()                  the screen's id: a play record from before `who` was stamped counts as this person's
  *                               when it has a play on this screen (history to the drive, 2026-10-08)
  *   sweep                       [{ kind|null, store }]: every record on the device, for `backfill` (deviceSweep());
@@ -536,7 +731,8 @@ export function createHistoryHost({ personId = () => null, makePersonState = nul
     let why = null;
     let upTo = mark;
     if (place === 'folder') {
-      const res = await folder.append(k.stream, scopeOf(key), todo);
+      // agent history: the folder this marker is for, so a write never lands in another folder (nimrodFolder).
+      const res = await folder.append(k.stream, scopeOf(key), todo, { folderId: fid });
       if (res.ok) { sent = todo.length; upTo = String(todo[todo.length - 1].created_at); } else {
         why = res.why || 'write';
         if (res.upTo) { upTo = String(res.upTo); sent = todo.filter((r) => String(r.created_at || '') <= upTo).length; }
@@ -785,7 +981,10 @@ export function createHistoryHost({ personId = () => null, makePersonState = nul
         waiting[kind] = n;
       }
     }
-    return { places: p, folder: f, withUs, cap, canUs: canUs(), person: !!pid && !!rowNow(), last: { ...last }, waiting };
+    // agent history: who writes the folder on this screen ('agent' | 'browser' | null), for the page's line.
+    let via = null;
+    if (f === 'ready' && typeof folder?.via === 'function') { try { via = await folder.via(); } catch { via = null; } }
+    return { places: p, folder: f, via, withUs, cap, canUs: canUs(), person: !!pid && !!rowNow(), last: { ...last }, waiting };
   }
 
   async function allowFolder() {

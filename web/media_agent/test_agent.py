@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import socket
 import subprocess
 import sys
@@ -168,6 +169,241 @@ def check_kinds_agree():
           agent.AUDIO_EXTS <= agent.MEDIA_EXTS)
 
 
+HISTORY_PLACE = CLIENT / "history_place.js"
+
+
+def check_syntax_38():
+    """PURE. The agent promises Python 3.8 (the installers run it on whatever python3 a machine has): its grammar
+    must still parse as 3.8 - no `match`, no parenthesised context managers - after every change (agent history)."""
+    import ast
+    src = AGENT.read_text(encoding="utf-8")
+    try:
+        ast.parse(src, filename="agent.py", feature_version=(3, 8))
+        ok, why = True, ""
+    except SyntaxError as e:
+        ok, why = False, f"line {e.lineno}: {e.msg}"
+    check("*** agent.py still parses as Python 3.8 ***", ok, detail=why)
+    check("...and uses nothing from 3.9+ by name (removeprefix, is_relative_to, functools.cache)",
+          not any(w in src for w in (".removeprefix(", ".removesuffix(", ".is_relative_to(", "functools.cache\n")))
+
+
+def check_history_pure():
+    """PURE - the functions, no agent process. AGENT HISTORY: append-only, never outside the data dir, the page's
+    own file names and rotation."""
+    sys.path.insert(0, str(HERE))
+    import agent  # noqa: E402
+
+    js = HISTORY_PLACE.read_text(encoding="utf-8")
+    m = re.search(r"fileMax:\s*(\d+)\s*\*\s*(\d+)", js)
+    check("the agent rotates history files at the page's own size (history_place.js fileMax)",
+          m and int(m.group(1)) * int(m.group(2)) == agent.HISTORY_FILE_MAX, detail=repr(m and m.group(0)))
+    m = re.search(r"postBytes:\s*(\d+)\s*\*\s*(\d+)", js)
+    check("the page's biggest post fits under the agent's cap (AGENT_HISTORY_DEFAULTS.postBytes < HISTORY_BODY_MAX)",
+          m and int(m.group(1)) * int(m.group(2)) < agent.HISTORY_BODY_MAX, detail=repr(m and m.group(0)))
+    check("from this computer: 127.x and ::1 only (a LAN peer, an empty peer are not)",
+          all(agent.from_this_computer(p) for p in ("127.0.0.1", "127.0.1.1", "::1", "::ffff:127.0.0.1"))
+          and not any(agent.from_this_computer(p) for p in ("192.168.1.5", "100.97.79.13", "", None, "::ffff:10.0.0.2",
+                                                               "1270.0.0.1")))
+
+    sh = (HERE / "deploy" / "install-linux.sh").read_text(encoding="utf-8")
+    check("the Linux installer takes NIMROD_MEDIA_DATA, and still writes agent.env only when there is none "
+          "(one '>' to it; the history line is only ever appended)",
+          'DATA="${NIMROD_MEDIA_DATA:-}"' in sh and sh.count("> /etc/nimrod/agent.env") - sh.count(">> /etc/nimrod/agent.env") == 1
+          and "cat > /etc/nimrod/agent.env" in sh)
+
+    tmp = Path(tempfile.mkdtemp(prefix="nimrod_hist_"))
+    data = tmp / "Nimrod" / "Data"
+    row = lambda i, at="2026-10-08T10:00:00.000Z": {"at": at, "kind": "play", "data": {"id": f"p{i}", "panel": "ph-1"}}  # noqa: E731
+
+    off = agent.history_status(None)
+    a, s = agent.history_append(None, "plays", "ph-1", [row(0)])
+    check("off (no --data-dir): status says so, a write is refused", off == {"ok": True, "enabled": False}
+          and s == 404 and a["why"] == "off")
+    st = agent.history_status(data)
+    a, s = agent.history_append(data, "plays", "ph-1", [row(0)])
+    check("*** the Data folder not there (a drive not plugged in): 'missing', and it is NOT created ***",
+          st.get("ready") is False and st.get("why") == "missing" and s == 503 and not data.exists()
+          and not (tmp / "Nimrod").exists(), detail=repr((st, a)))
+
+    data.mkdir(parents=True)
+    st = agent.history_status(data)
+    hdir = data / "History"
+    fid = st.get("folder_id", "")
+    check("with it: ready, History made inside it, an id made in folder-id.txt (the page's id shape)",
+          st.get("ready") is True and hdir.is_dir() and re.match(r"^[A-Za-z0-9-]{6,64}$", fid or "")
+          and (hdir / "folder-id.txt").read_text(encoding="utf-8").strip() == fid, detail=repr(st))
+    check("...the same id the next time (it names the folder)", agent.history_status(data).get("folder_id") == fid)
+    check("a README says what the files are and that Nimrod does not delete them",
+          "does not delete" in (hdir / "README.txt").read_text(encoding="utf-8"))
+    check("status never says the folder's path", str(tmp) not in json.dumps(st) and "Nimrod" not in json.dumps(st))
+
+    a, s = agent.history_append(data, "plays", "ph-1", [row(0), row(1, "2026-10-08T10:00:01.000Z")])
+    f1 = hdir / "plays-ph-1-2026-10.jsonl"
+    lines = f1.read_text(encoding="utf-8").splitlines() if f1.exists() else []
+    check("*** appended as JSON lines: History/plays-ph-1-2026-10.jsonl, the page's own line ({at, kind, data}) ***",
+          s == 200 and a["written"] == 2 and len(lines) == 2
+          and lines[0] == '{"at":"2026-10-08T10:00:00.000Z","kind":"play","data":{"id":"p0","panel":"ph-1"}}',
+          detail=repr((a, lines)))
+    agent.history_append(data, "plays", "ph-1", [row(2)])
+    check("*** a second write APPENDS (the first two are still there, unchanged) ***",
+          f1.read_text(encoding="utf-8").splitlines()[:2] == lines and len(f1.read_text(encoding="utf-8").splitlines()) == 3)
+    small = 400
+    for i in range(3, 9):
+        agent.history_append(data, "plays", "ph-1", [row(i)], file_max=small)
+    check("*** past its size the next part is started (.part2.jsonl), nothing in the first rewritten ***",
+          (hdir / "plays-ph-1-2026-10.part2.jsonl").exists()
+          and f1.read_text(encoding="utf-8").splitlines()[:3] == (lines + [f1.read_text(encoding="utf-8").splitlines()[2]]))
+    a, s = agent.history_append(data, "gameplay", "scr-1",
+                                [row(1, "2026-10-31T23:59:59Z"), row(2, "2026-11-01T00:00:00Z"), row(3, "no date")])
+    check("rows of two months go to two files, a row with no date to '-undated'",
+          s == 200 and (hdir / "gameplay-scr-1-2026-10.jsonl").exists() and (hdir / "gameplay-scr-1-2026-11.jsonl").exists()
+          and (hdir / "gameplay-scr-1-undated.jsonl").exists(), detail=repr(a))
+    a, s = agent.history_append(data, "words", "b-1", [row(1), {"at": 5, "kind": "x", "data": {}}, "junk",
+                                                       {"at": "2026-10-08", "kind": "../x", "data": {}},
+                                                       {"at": "2026-10-08", "kind": "select", "data": [1]}])
+    check("a row that is not an entry is skipped and counted; the good ones are still written",
+          s == 200 and a["written"] == 1 and a["skipped"] == 4, detail=repr(a))
+
+    before = sorted(p.name for p in tmp.rglob("*"))
+    bad = [("../plays", "ph-1"), ("plays", "../../x"), ("plays/..", "ph-1"), ("plays", "a/b"), ("plays", "..\\x"),
+           ("plays", ""), ("", "ph-1"), ("Plays", "ph-1"), ("plays.jsonl", "x"), ("plays", "x" * 65),
+           ("plays-x", "ph-1"), ("plays", "C:"), ("plays", "ph 1"), (None, "ph-1"), ("plays", None)]
+    refused = [(k, sc) for k, sc in bad if agent.history_append(data, k, sc, [row(9)])[1] != 400]
+    after = sorted(p.name for p in tmp.rglob("*"))
+    check(f"*** traversal: every bad stream or scope ({len(bad)}) is refused with 400 and nothing is written ***",
+          not refused and before == after and not (tmp / "x").exists(), detail=repr(refused))
+    check("rows that are not a list: 400", agent.history_append(data, "plays", "ph-1", {"a": 1})[1] == 400)
+
+    a, s = agent.history_append(data, "plays", "ph-1", [row(1)], expect_id="some-other-folder")
+    check("*** a page that counted on a different folder (a drive swapped) is refused with 409, nothing written ***",
+          s == 409 and a["why"] == "changed" and a["folder_id"] == fid, detail=repr(a))
+    a, s = agent.history_append(data, "plays", "ph-1", [row(1)], expect_id=fid)
+    check("...and its own folder's id is taken", s == 200, detail=repr(a))
+
+    # folder-id.txt: an empty one is appended to, one with something else is never overwritten
+    d2 = tmp / "D2"
+    (d2 / "History").mkdir(parents=True)
+    (d2 / "History" / "folder-id.txt").write_text("", encoding="utf-8")
+    got = agent.history_status(d2)
+    check("an EMPTY folder-id.txt gets an id (appended, not replaced)", got.get("ready") is True
+          and (d2 / "History" / "folder-id.txt").read_text(encoding="utf-8").strip() == got.get("folder_id"))
+    d3 = tmp / "D3"
+    (d3 / "History").mkdir(parents=True)
+    (d3 / "History" / "folder-id.txt").write_text("not an id!\n", encoding="utf-8")
+    got = agent.history_status(d3)
+    a, s = agent.history_append(d3, "plays", "ph-1", [row(1)])
+    check("*** a folder-id.txt holding something else is never overwritten: not ready, said plainly, nothing written ***",
+          got.get("ready") is False and got.get("why") == "id" and s == 503
+          and (d3 / "History" / "folder-id.txt").read_text(encoding="utf-8") == "not an id!\n"
+          and not (d3 / "History" / "plays-ph-1-2026-10.jsonl").exists(), detail=repr(got))
+
+    # a symlink pointing out of History (where this computer lets a test make one)
+    outside = tmp / "outside.jsonl"
+    outside.write_text("", encoding="utf-8")
+    link = hdir / "plays-evil-2026-10.jsonl"
+    try:
+        os.symlink(str(outside), str(link))
+        made = True
+    except (OSError, NotImplementedError):
+        made = False
+    if made:
+        a, s = agent.history_append(data, "plays", "evil", [row(1)])
+        check("*** a history file that is a symlink pointing outside is refused; the outside file is untouched ***",
+              s == 500 and outside.read_text(encoding="utf-8") == "", detail=repr(a))
+    else:
+        print("  SKIP  symlink escape (this computer does not let a test make a symlink)")
+    hlink_dir = tmp / "D4"
+    hlink_dir.mkdir()
+    try:
+        os.symlink(str(tmp / "D3"), str(hlink_dir / "History"), target_is_directory=True)
+        made = True
+    except (OSError, NotImplementedError):
+        made = False
+    if made:
+        got = agent.history_status(hlink_dir)
+        check("*** a History folder that is a symlink to somewhere else is refused ('write') ***",
+              got.get("ready") is False and got.get("why") == "write", detail=repr(got))
+    st = agent.history_status(data)
+    check("status counts files and bytes per stream", st["streams"]["plays"]["files"] >= 2
+          and st["streams"]["gameplay"]["files"] == 3 and st["streams"]["words"]["bytes"] > 0, detail=repr(st["streams"]))
+    return tmp
+
+
+def history_http_tests(base: str, origin: str, data: Path):
+    """AGENT HISTORY over HTTP: the agent was started with --data-dir `data`."""
+    import http.client
+    port = int(base.rsplit(":", 1)[1])
+
+    def post(path, body, headers=None, raw=None):
+        h = {"Content-Type": "application/json", "Origin": origin}
+        h.update(headers or {})
+        data_bytes = raw if raw is not None else json.dumps(body).encode("utf-8")
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        try:
+            c.request("POST", path, body=data_bytes, headers=h)
+            r = c.getresponse()
+            return r.status, dict(r.getheaders()), r.read()
+        finally:
+            c.close()
+
+    s, h, j = get_json(f"{base}/history/status", {"Origin": origin})
+    fid = j.get("folder_id")
+    check("GET /history/status: ready, the folder's id, its Origin echoed",
+          s == 200 and j.get("enabled") is True and j.get("ready") is True and fid
+          and h.get("Access-Control-Allow-Origin") == origin, detail=repr(j))
+    rows = [{"at": "2026-10-08T12:00:00.000Z", "kind": "play", "data": {"id": "x1"}}]
+    s, h, b = post("/history/plays", {"scope": "ph-7", "rows": rows, "folder_id": fid})
+    f = data / "History" / "plays-ph-7-2026-10.jsonl"
+    check("*** POST /history/plays from the person's Nimrod: appended, its Origin echoed ***",
+          s == 200 and f.exists() and len(f.read_text(encoding="utf-8").splitlines()) == 1
+          and h.get("Access-Control-Allow-Origin") == origin, detail=f"status={s} {b[:200]!r}")
+    size = f.stat().st_size
+
+    def unchanged():
+        return f.stat().st_size == size
+
+    s, h, b = post("/history/plays", {"scope": "ph-7", "rows": rows}, {"Origin": EVIL})
+    check("*** a page from another site: 403, no CORS header, nothing written ***",
+          s == 403 and "Access-Control-Allow-Origin" not in h and unchanged(), detail=f"status={s}")
+    s, _, _ = post("/history/plays", {"scope": "ph-7", "rows": rows}, {"Host": "evil.example:8770"})
+    check("*** a Host naming another site (DNS rebinding): 403, nothing written ***", s == 403 and unchanged())
+    s, _, _ = post("/history/plays", None, {"Content-Type": "text/plain"},
+                   raw=json.dumps({"scope": "ph-7", "rows": rows}).encode())
+    check("*** not JSON (what a plain form can send without asking first): 415, nothing written ***",
+          s == 415 and unchanged(), detail=f"status={s}")
+    s, _, _ = post("/history/plays", None, {"Content-Length": str(10 * 1024 * 1024)}, raw=b"{}")
+    check("*** a body over the cap: 413 before it is read, nothing written ***", s == 413 and unchanged(),
+          detail=f"status={s}")
+    for path in ("/history/..%2f..%2fx", "/history/%2e%2e", "/history/plays/../../x", "/history/Plays"):
+        s, _, _ = post(path, {"scope": "ph-7", "rows": rows})
+        check(f"traversal in the address ({path}) is refused, nothing written", s in (400, 404) and unchanged(),
+              detail=f"status={s}")
+    s, _, _ = post("/history/plays", {"scope": "../ph-7", "rows": rows})
+    check("traversal in the scope: 400", s == 400 and unchanged())
+    s, _, b = post("/history/plays", {"scope": "ph-7", "rows": rows, "folder_id": "another-folder"})
+    check("a page that counted on another folder: 409, nothing written", s == 409 and unchanged(), detail=f"status={s}")
+    for method in ("PUT", "DELETE", "PATCH"):
+        st, _, _ = get(f"{base}/history/plays", {"Origin": origin}, method=method)
+        check(f"*** append-only: {method} does not exist (501), the file is unchanged ***",
+              st == 501 and unchanged(), detail=f"status={st}")
+    s, h, _ = get(f"{base}/history/plays", {"Origin": origin, "Access-Control-Request-Method": "POST",
+                                            "Access-Control-Request-Headers": "content-type",
+                                            "Access-Control-Request-Private-Network": "true"}, method="OPTIONS")
+    check("the POST preflight: 204, POST allowed, Content-Type allowed, private network answered, Origin echoed",
+          s == 204 and "POST" in (h.get("Access-Control-Allow-Methods") or "")
+          and "Content-Type" in (h.get("Access-Control-Allow-Headers") or "")
+          and h.get("Access-Control-Allow-Private-Network") == "true" and h.get("Access-Control-Allow-Origin") == origin,
+          detail=repr(h))
+    s, h, _ = get(f"{base}/list", {"Origin": origin}, method="OPTIONS")
+    check("...while /list's preflight still offers no POST", s == 204 and "POST" not in (h.get("Access-Control-Allow-Methods") or ""))
+    s, _, _ = get(f"{base}/history/plays", {"Origin": EVIL, "Access-Control-Request-Method": "POST"}, method="OPTIONS")
+    check("the preflight from another site: 403", s == 403)
+    s, _, _ = post("/list", {"scope": "x", "rows": []})
+    check("POST anywhere else: 404", s == 404)
+    check("*** nothing was ever written into the media folder ***",
+          not any(p.suffix == ".jsonl" for p in data.parent.parent.joinpath("photos").rglob("*")))
+
+
 def run_agent(root: Path, port: int, timeout: float = 20):
     """Start a copy of the agent and wait for it to end: (exit code, what it printed). None when it kept running
     (a second copy that started instead of stepping aside - the bug)."""
@@ -261,10 +497,14 @@ def main():
     check_kinds_agree()
     check_origin_rules()
     check_default_sites()
+    check_syntax_38()
+    shutil.rmtree(check_history_pure(), ignore_errors=True)
 
     tmp = Path(tempfile.mkdtemp(prefix="nimrod_media_"))
     root = tmp / "photos"
     root.mkdir()
+    data = tmp / "Nimrod" / "Data"     # agent history: beside the media folder, as on a drive
+    data.mkdir(parents=True)
 
     # A representative tree: mixed-case extensions, a video, a subfolder album, a
     # non-media file, a dotfile, and a "secret" OUTSIDE the root for the traversal probe.
@@ -288,7 +528,7 @@ def main():
     origin = "https://self.example"    # a site that is NOT on this computer: those are always allowed anyway
     proc = subprocess.Popen(
         [sys.executable, str(AGENT), "--root", str(root),
-         "--host", "127.0.0.1", "--port", str(port), "--origin", origin],
+         "--host", "127.0.0.1", "--port", str(port), "--origin", origin, "--data-dir", str(data)],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
     )
     base = f"http://127.0.0.1:{port}"
@@ -390,6 +630,7 @@ def main():
         check("/list traversal album rejected", s in (403, 404), detail=f"status={s}")
 
         page_tests(base, origin)
+        history_http_tests(base, origin, data)
         double_start_tests(root, tmp, port, base, origin)
 
     finally:
@@ -398,6 +639,7 @@ def main():
             proc.wait(timeout=5)
         except subprocess.TimeoutExpired:
             proc.kill()
+        shutil.rmtree(tmp, ignore_errors=True)
 
     print(f"\n{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)

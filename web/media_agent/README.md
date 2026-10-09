@@ -55,9 +55,11 @@ Leave it running. On a machine that should serve media unattended, make it a ser
 | `--lan` | off | serve to your whole local network. Needed only when the screen is a *different* machine. |
 | `--port` | `8770` | port to listen on |
 | `--origin` | *(follows `--platform`)* | the sites whose pages may use it; pages on this computer always may, every other site gets 403 |
+| `--data-dir` | off | the Data folder of your Nimrod folder: a page on this computer may append history there (see Safety) |
 
 Each also has an environment variable (`NIMROD_MEDIA_ROOT`, `NIMROD_MEDIA_HOST`,
-`NIMROD_MEDIA_PORT`, `NIMROD_MEDIA_ORIGIN`, `NIMROD_MEDIA_NAME`, `NIMROD_PLATFORM`) so it
+`NIMROD_MEDIA_PORT`, `NIMROD_MEDIA_ORIGIN`, `NIMROD_MEDIA_NAME`, `NIMROD_PLATFORM`,
+`NIMROD_MEDIA_DATA`) so it
 can run as a service configured from an env file.
 
 ### About those defaults
@@ -95,6 +97,8 @@ It is not listed as media and contains nothing but a random id.
 | `GET /list` | media in the root folder + subfolders as albums (see below) |
 | `GET /list?album=<sub>` | media inside subfolder `<sub>` |
 | `GET /files/<relpath>` | the raw image/video bytes (Range-aware, so video seeks) |
+| `GET /history/status` | only with `--data-dir`: `{enabled, ready, folder_id, streams}` - can history be written now |
+| `POST /history/<stream>` | only with `--data-dir`: `{scope, rows: [{at, kind, data}], folder_id?}` appended to `Data/History/<stream>-<scope>-<YYYY-MM>.jsonl` |
 
 `/list` response shape:
 
@@ -130,7 +134,11 @@ Dotfiles and non-media files are skipped.
 
 ## Safety
 
-- **Read-only.** Lists and serves; never writes, deletes, or executes.
+- **Read-only.** Lists and serves; never writes, deletes, or executes. The one exception
+  is opt-in: with `--data-dir`, history is **appended** under that folder's `History/`
+  and nowhere else - never a delete or an overwrite, only from this computer, only JSON,
+  at most 256 KiB at once, and the Data folder itself is never created (a drive not
+  plugged in waits).
 - **Traversal-guarded.** Every `/files` request and every `?album=` is resolved and
   confined to `--root`; `..` escapes are rejected.
 - **CORS on every response**, including preflight and file bytes, so a browser loaded

@@ -51,7 +51,8 @@ export function historyHtml(s) {
     const withUs = s.withUs ? s.withUs[k.stream] || { rows: 0, counted: 0 } : null;
     parts.push(`<div class="st-head" data-hp-section="${kind}">${esc(k.title)}</div>`);
     parts.push(say(`${k.what[0].toUpperCase()}${k.what.slice(1)}.`));
-    parts.push(say(whereWords(kind, place, { folder: s.folder, withUs, cap, waiting: s.waiting ? s.waiting[kind] : undefined }),
+    parts.push(say(whereWords(kind, place, { folder: s.folder, via: s.via || null, withUs, cap,   // via: agent history
+      waiting: s.waiting ? s.waiting[kind] : undefined }),
       `data-hp-where="${kind}"`));
     // GAME RESULTS AND WORDS LEFT THE SITE'S LOG (2026-10-08, Mike's ruling: their own system by default, the server
     // the opt-in). What the log held stays and is still shown; what another device no longer sees, said plainly.

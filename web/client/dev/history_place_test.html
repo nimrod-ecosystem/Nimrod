@@ -26,6 +26,7 @@ import {
   HISTORY_KEY, HISTORY_KINDS, KIND_IDS, PLACE_WORDS, HISTORY_DEFAULTS, normalizePlaces, whereWords, secondPlaceOffer,
   folderSink, serverSink, createHistoryHost, scopeOf,
   markFor, folderMarkKey, kindOfKey, FOLDER_ID_FILE,   // history to the drive (2026-10-08)
+  agentSink, nimrodFolder, localAgentBases, isLocalAgent, AGENT_HISTORY_DEFAULTS,   // agent history (2026-10-08)
 } from '../history_place.js';
 import { historyHtml, renderHistoryPage, HISTORY_ITEMS, HISTORY_PAGE } from '../history_page.js';
 import { memoryPlayStore, createPlays, panelPlays } from '../plays.js';
@@ -595,6 +596,164 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       await phost.sync('plays', ps, 'ph-9');
       check('*** the next copy sends November only: October is not written twice ***', n('plays-ph-9-2026-10.jsonl') === 2 && n('plays-ph-9-2026-11.jsonl') === 1);
       phost.destroy();
+    }
+
+    section('agent history: the Nimrod folder written by the media agent on this computer (2026-10-08)');
+    {
+      // A fake agent: /history/status and POST /history/<stream>, the agent's own answers (agent.py AGENT HISTORY).
+      const fakeAgent = ({ id = 'agent-folder-1', ready = true, why = 'missing', history = true } = {}) => {
+        const a = { id, ready, why, history, down: false, refuseAfter: null, posts: 0, files: new Map(), calls: [] };
+        a.fetchImpl = async (url, init = {}) => {
+          const method = init.method || 'GET';
+          a.calls.push({ url, method, headers: init.headers || {}, body: init.body ? JSON.parse(init.body) : null });
+          if (a.down) throw new TypeError('Failed to fetch');
+          const res = (status, json) => ({ ok: status < 300, status, json: async () => json });
+          const path = new URL(url).pathname;
+          if (!a.history) return res(404, { error: 'not_found' });          // an agent from before 2026-10-08
+          if (path === '/history/status') {
+            return res(200, a.ready ? { ok: true, enabled: true, ready: true, folder_id: a.id, streams: {} }
+              : { ok: true, enabled: true, ready: false, why: a.why });
+          }
+          const m = /^\/history\/([a-z_]+)$/.exec(path);
+          if (method !== 'POST' || !m) return res(404, { error: 'not_found' });
+          const b = JSON.parse(init.body);
+          if (b.folder_id && b.folder_id !== a.id) return res(409, { ok: false, why: 'changed', folder_id: a.id });
+          if (a.refuseAfter != null && a.posts >= a.refuseAfter) return res(500, { ok: false, why: 'write' });
+          a.posts += 1;
+          for (const r of b.rows) {
+            const name = `${m[1]}-${b.scope}-${String(r.at).slice(0, 7)}.jsonl`;
+            a.files.set(name, [...(a.files.get(name) || []), r]);
+          }
+          return res(200, { ok: true, written: b.rows.length, skipped: 0, folder_id: a.id });
+        };
+        return a;
+      };
+      let clock = 1000;
+      const now = () => clock;
+      const writeFake = async (dir, name, text) => { const fh = await dir.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(text); await w.close(); };
+      const posts = (a) => a.calls.filter((c) => c.method === 'POST');
+
+      check('*** which agent: a media source on THIS computer only (localhost, 127.0.0.1, [::1]), never one on the network ***',
+        J(localAgentBases([{ kind: 'agent', base_url: 'http://localhost:8770/' }, { kind: 'agent', base_url: 'http://127.0.0.1:8770' },
+          { kind: 'agent', base_url: 'http://192.168.1.5:8770' }, { kind: 'agent', base_url: 'http://100.97.79.13:8770' },
+          { kind: 'folder', id: 'f1' }, { kind: 'agent', base_url: 'https://localhost:8770' },
+          { kind: 'agent', base_url: 'http://localhost.evil.example:8770' }, { base_url: 'http://localhost:8770' },
+          { kind: 'agent', base_url: 'http://[::1]:8770' }])) === J(['http://localhost:8770', 'http://127.0.0.1:8770', 'http://[::1]:8770']));
+      check('isLocalAgent: a browser folder source is not an agent', !isLocalAgent({ kind: 'folder', base_url: 'http://localhost:1' }) && isLocalAgent({ base_url: 'http://localhost' }));
+
+      const none = fakeAgent();
+      const noAgent = agentSink({ candidates: async () => [], fetchImpl: none.fetchImpl, now });
+      check('no agent on this computer: "none", and nothing is fetched', await noAgent.status() === 'none' && none.calls.length === 0 && await noAgent.id() === null);
+
+      const old = fakeAgent({ history: false });
+      const ag = fakeAgent();
+      let asked = 0;
+      const routes = { 'http://localhost:8771': old.fetchImpl, 'http://localhost:8770': ag.fetchImpl };
+      const both = (url, init) => routes[new URL(url).origin](url, init);
+      const sink = agentSink({ candidates: async () => { asked += 1; return ['http://localhost:8771', 'http://localhost:8770/']; }, fetchImpl: both, now });
+      check('*** an agent that offers history: "ready", with its folder\'s id; an older agent without it is passed over ***',
+        await sink.status() === 'ready' && await sink.id() === 'agent-folder-1' && old.calls.length === 1, J(old.calls));
+      const before = ag.calls.length;
+      await sink.status(); await sink.id();
+      check('one answer is trusted for a few seconds: a copy of many panels asks once', ag.calls.length === before && asked === 1);
+      clock += AGENT_HISTORY_DEFAULTS.statusMs;
+      await sink.status();
+      check('...then asked again - the agent it knows first, the sources list not re-read yet', ag.calls.length === before + 1 && asked === 1 && old.calls.length === 1);
+
+      const many = Array.from({ length: 450 }, (_, i) => play(`m${i}`, T0 + i * 1000));
+      let r = await sink.append('plays', 'ph-1', many, { folderId: 'agent-folder-1' });
+      const ps = posts(ag);
+      check('*** 450 entries: three POSTs to /history/plays in order (200, 200, 50), JSON, carrying the folder id ***',
+        r.ok && ps.length === 3 && ps.map((p) => p.body.rows.length).join() === '200,200,50' && ps.every((p) => p.url === 'http://localhost:8770/history/plays'
+          && p.headers['Content-Type'] === 'application/json' && p.body.folder_id === 'agent-folder-1' && p.body.scope === 'ph-1'), J(r));
+      check('...each entry the page\'s own line: {at, kind, data}', J(ps[0].body.rows[0]) === J({ at: many[0].created_at, kind: 'play', data: many[0].data })
+        && ag.files.get('plays-ph-1-2026-10.jsonl')?.length === 450);
+      ag.calls.length = 0;
+      r = await sink.append('plays', 'ph-1', [play('x', T0)], { folderId: 'another-folder' });
+      check('*** a host that counted on a different folder: refused here ("changed"), nothing posted ***', !r.ok && r.why === 'changed' && posts(ag).length === 0);
+      const tiny = agentSink({ candidates: async () => ['http://localhost:8770'], fetchImpl: ag.fetchImpl, now, postBytes: 400 });
+      const big = { kind: 'play', created_at: new Date(T0 + 5).toISOString(), data: { id: 'big', note: 'x'.repeat(600) } };
+      r = await tiny.append('plays', 'ph-2', [play('s1', T0), play('s2', T0 + 1), play('s3', T0 + 2), big, play('s4', T0 + 6)]);
+      check('posts are cut by size too; an entry bigger than any post stays on this device only, the rest still go',
+        r.ok && posts(ag).length >= 2 && posts(ag).every((p) => JSON.stringify(p.body).length < 700)
+        && !posts(ag).some((p) => p.body.rows.some((x) => x.data.id === 'big')) && ag.files.get('plays-ph-2-2026-10.jsonl').length === 4, J(posts(ag).map((p) => p.body.rows.length)));
+      const flaky = fakeAgent();
+      flaky.refuseAfter = 1;
+      const fsink = agentSink({ candidates: async () => ['http://localhost:8770'], fetchImpl: flaky.fetchImpl, now });
+      r = await fsink.append('plays', 'ph-3', many);
+      check('*** refused part-way: says how far it got (the newest entry in the folder), so nothing is written twice ***',
+        !r.ok && r.why === 'write' && r.upTo === many[199].created_at, J(r));
+      const gone = fakeAgent({ ready: false, why: 'missing' });
+      const gsink = agentSink({ candidates: async () => ['http://localhost:8770'], fetchImpl: gone.fetchImpl, now });
+      check('the agent is there, its Data folder is not (a drive not plugged in): "missing", and nothing is posted',
+        await gsink.status() === 'missing' && (await gsink.append('plays', 'x', many)).why === 'missing' && posts(gone).length === 0);
+      ag.down = true;
+      clock += AGENT_HISTORY_DEFAULTS.statusMs;
+      check('the agent stopped: "none" once its last answer is old', await sink.status() === 'none');
+      ag.down = false;
+      clock += AGENT_HISTORY_DEFAULTS.statusMs;
+      check('...and found again when it is back', await sink.status() === 'ready');
+
+      // ---- the choice: the agent when it offers it, else the browser folder ----
+      const proot = fakeDir('Nimrod', { permission: 'prompt' });   // after a power cut: the browser asks again
+      await proot.getDirectoryHandle('Data', { create: true });
+      const browser = folderSink({ store: mapStore({ [ROOT_KEY]: proot }), view: { showDirectoryPicker() {} } });
+      const ag2 = fakeAgent({ id: 'drive-folder-7' });
+      const asink = agentSink({ candidates: async () => ['http://localhost:8770'], fetchImpl: ag2.fetchImpl, now });
+      const nf = nimrodFolder({ agent: asink, browser });
+      check('*** the browser\'s permission lapsed, the agent offers it: "ready" through the agent, nothing prompted ***',
+        await nf.status() === 'ready' && await nf.via() === 'agent' && await nf.id() === 'drive-folder-7' && proot.asked === 0);
+      const nrow = fakeRow({ plays: 'folder' });
+      const nhost = createHistoryHost({ personId: () => 'p-agent', makePersonState: (pid, key) => (key === HISTORY_KEY ? nrow : null), folder: nf });
+      const nstore = memoryPlayStore();
+      await nstore.update('ph-a', (x) => ({ ...x, rows: [play('a1', T0), play('a2', T0 + 1)] }));
+      let s1 = await nhost.sync('plays', nstore, 'ph-a');
+      check('*** the host copies through the agent: the rows reach the agent\'s folder, the marker is that folder\'s ***',
+        s1.sent === 2 && ag2.files.get('plays-ph-a-2026-10.jsonl')?.length === 2 && (await nstore.get('ph-a')).sent['folder@drive-folder-7'] === play('a2', T0 + 1).created_at
+        && proot.asked === 0, J(s1));
+      s1 = await nhost.sync('plays', nstore, 'ph-a');
+      check('a second copy sends nothing', s1.sent === 0 && ag2.files.get('plays-ph-a-2026-10.jsonl').length === 2);
+      const nst = await nhost.status();
+      check('*** the page: "ready", and says the media agent writes it (no permission needed) ***',
+        nst.folder === 'ready' && nst.via === 'agent' && /media agent on this computer writes it/.test(whereWords('plays', 'folder', { folder: nst.folder, via: nst.via }))
+        && !/media agent/.test(whereWords('plays', 'folder', { folder: 'ready' })), J(nst));
+      check('read(): the agent has no read route, and the browser folder (not allowed, another folder) is not read', (await nf.read('plays', 'ph-a', 50)).length === 0);
+
+      // The drive's own Data folder, the same one the agent writes, reached by the browser too (its folder-id.txt).
+      proot.perm = 'granted';
+      const phist = await (await proot.getDirectoryHandle('Data')).getDirectoryHandle('History', { create: true });
+      await writeFake(phist, FOLDER_ID_FILE, 'drive-folder-7\n');
+      ag2.down = true;
+      clock += AGENT_HISTORY_DEFAULTS.statusMs;
+      s1 = await nhost.sync('plays', nstore, 'ph-a');
+      check('*** the agent stops, the browser reaches the SAME folder: nothing sent twice (one folder id, one marker) ***',
+        s1.sent === 0 && !phist._kids.has('plays-ph-a-2026-10.jsonl') && await nf.via() === 'browser', J(s1));
+      await nstore.update('ph-a', (x) => ({ ...x, rows: [...x.rows, play('a3', T0 + 2)] }));
+      s1 = await nhost.sync('plays', nstore, 'ph-a');
+      check('...and only the new entry goes, through the browser', s1.sent === 1 && phist._kids.get('plays-ph-a-2026-10.jsonl')._text().trim().split('\n').length === 1);
+      ag2.down = false;
+      clock += AGENT_HISTORY_DEFAULTS.statusMs;
+      await nstore.update('ph-a', (x) => ({ ...x, rows: [...x.rows, play('a4', T0 + 3)] }));
+      s1 = await nhost.sync('plays', nstore, 'ph-a');
+      check('the agent back: the next entry goes through it again, still once', s1.sent === 1 && ag2.files.get('plays-ph-a-2026-10.jsonl').length === 3
+        && phist._kids.get('plays-ph-a-2026-10.jsonl')._text().trim().split('\n').length === 1, J(s1));
+      check('read(): the browser reaches the agent\'s own folder, so an empty device can fill itself from it',
+        (await nf.read('plays', 'ph-a', 50)).length === 1);
+
+      // A write meant for one folder never lands in another.
+      r = await nf.append('plays', 'ph-z', [play('z', T0)], { folderId: 'some-third-folder' });
+      check('*** a write counted for a folder neither side has: refused ("changed"), written nowhere ***',
+        !r.ok && r.why === 'changed' && !ag2.files.has('plays-ph-z-2026-10.jsonl') && !phist._kids.has('plays-ph-z-2026-10.jsonl'), J(r));
+
+      // No agent: exactly the browser folder, as before.
+      const plain = nimrodFolder({ agent: noAgent, browser });
+      check('no agent on this computer: the browser folder, unchanged', await plain.status() === 'ready' && await plain.via() === 'browser' && await plain.id() === 'drive-folder-7');
+      proot.perm = 'prompt';
+      check('...its permission lapsed and no agent: "permission" - the "Allow it again" line, as before', await plain.status() === 'permission');
+      const missingAgent = nimrodFolder({ agent: gsink, browser });
+      check('the agent set up but its drive not plugged in: "missing" (the drive line), not "allow it again"', await missingAgent.status() === 'missing');
+      check('allow() is still the browser\'s, a press only', typeof nf.allow === 'function' && proot.asked === 0);
+      nhost.destroy();
     }
 
     section('the page: "Where your history is kept"');

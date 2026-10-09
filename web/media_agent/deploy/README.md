@@ -13,7 +13,36 @@ The agent is configured from **environment variables** (CLI args still override)
 | `NIMROD_MEDIA_PORT` | port to listen on | `8770` |
 | `NIMROD_MEDIA_ORIGIN` | the sites whose pages may use it (comma-separated) | unset: `https://nimrodecosystem.com` and the older address of the same site; pages on this computer always |
 
+| `NIMROD_MEDIA_DATA` | the Data folder of your Nimrod folder; history is appended there (see below) | unset: off |
+
 Set them in an `agent.env` file (copy `agent.env.example`).
+
+## History to your Nimrod folder (optional)
+
+When a person keeps their history in "your Nimrod folder", the page normally writes it
+through the browser's own folder permission, and the browser can ask for that again after
+a restart. Give the agent the Data folder and it writes the files itself, so nothing waits
+for someone to press "Allow it again":
+
+```bash
+sudo NIMROD_MEDIA_DATA=/media/you/drive/Nimrod/Data ./install-linux.sh /path/to/media-folder
+curl http://localhost:8770/history/status       # {"ready": true, "folder_id": ...} once the folder is there
+```
+
+- **Append only.** No route deletes, renames or overwrites anything; files are only added
+  to, under `Data/History/` (one per kind, panel and month, a new part every 512 KiB -
+  the same files the page writes itself).
+- **Only from this computer**, only from the sites allowed above, only JSON, and at most
+  256 KiB at once. Never outside `Data/History/`.
+- **The Data folder is never created.** A drive that is not plugged in is reported as
+  missing and the screen keeps the history until it is; then everything that waited is
+  copied, once.
+- The page uses it when one of the screen's media sources is this agent at
+  `http://localhost:<port>`. Otherwise it uses the browser folder, as before.
+- Keep the Data folder beside the media folder, not inside it: inside, its history files
+  could be fetched from `/files` like a photo (the agent says so when it starts).
+- An existing `/etc/nimrod/agent.env` is kept; the installer adds the line only when the
+  file has none.
 
 ## Raspberry Pi / Linux (systemd)
 
