@@ -32,7 +32,7 @@ const PLACE_HINTS = Object.freeze({
   device: 'nothing to set up; nothing leaves this device',
   folder: 'a copy in the Data folder of your Nimrod folder, on each device that has one',
   us: 'follows the person to another device; what is on this device now is sent too',
-  log: 'as it has been: every entry, in the site\'s log',
+  log: 'as it was before: every entry, in the site\'s log',
 });
 
 /** The page's markup for a `host.status()` reading. Pure. */
@@ -51,10 +51,14 @@ export function historyHtml(s) {
     const withUs = s.withUs ? s.withUs[k.stream] || { rows: 0, counted: 0 } : null;
     parts.push(`<div class="st-head" data-hp-section="${kind}">${esc(k.title)}</div>`);
     parts.push(say(`${k.what[0].toUpperCase()}${k.what.slice(1)}.`));
-    parts.push(say(whereWords(kind, place, { folder: s.folder, withUs, cap }), `data-hp-where="${kind}"`));
-    if (kind !== 'plays' && place === 'log') {
-      parts.push(say('Not decided yet: this stays as it was until it is. Our recommendation is your own system.',
-        `data-hp-notruled="${kind}"`));
+    parts.push(say(whereWords(kind, place, { folder: s.folder, withUs, cap, waiting: s.waiting ? s.waiting[kind] : undefined }),
+      `data-hp-where="${kind}"`));
+    // GAME RESULTS AND WORDS LEFT THE SITE'S LOG (2026-10-08, Mike's ruling: their own system by default, the server
+    // the opt-in). What the log held stays and is still shown; what another device no longer sees, said plainly.
+    if (kind !== 'plays' && place !== 'log') {
+      parts.push(say('What the site\'s log already held stays there and still shows.' + (place === 'us' ? ''
+        : ' New entries are kept where you choose, so another device - a family member\'s phone, say - shows only those '
+          + 'older ones, not new ones from here.'), `data-hp-before="${kind}"`));
     }
     const offer = s.person ? secondPlaceOffer(kind, place, { folder: s.folder, canUs: s.canUs }) : null;
     if (offer) {
@@ -67,6 +71,9 @@ export function historyHtml(s) {
     if (s.person) {
       for (const p of k.places) {
         if (p === 'us' && !s.canUs) continue;
+        // The site's full log is offered only to a person already on it (2026-10-08): it is the place that cannot be
+        // capped or removed from, and "with us" is the opt-in now. Whoever is on it sees it and can move off.
+        if (p === 'log' && place !== 'log') continue;
         parts.push(button('place', `${PLACE_WORDS[p]}${p === place ? ' (now)' : ''}`, PLACE_HINTS[p], { kind, place: p }));
       }
     }

@@ -2473,3 +2473,30 @@ a default Code had guessed, it says what it supersedes.
   info save to the drive in her room."* Chat reads his words as making the person's own system the default for game
   results and the talk board's words too, with the server the opt-in; the build that moves those defaults logs its
   own entry. (2026-10-08)
+
+## Game results and the talk board's words: the person's own system by default; history to the drive -- 2026-10-08 (later)
+
+Mike, through chat (note BK item 1; row 2.58). The entry the section above says the build would log.
+
+- **Game results and the talk board's word log default to the person's own system; keeping them with us is the
+  opt-in.** Supersedes, for those two kinds, the 2026-10-07 "Defaults" line ("the site's full log, AS BEFORE, until
+  Mike rules"). Mike: *"I would lean towards at least recommending they keep stuff like this in their own system"*,
+  then *"We can have her info save to the drive in her room"*; chat passed them on as this ruling and told Mike so.
+  All three kinds of history now default to "this device only" (`history_place.js` HISTORY_KINDS). (2026-10-08)
+- **Nothing already on the server is moved or removed.** What the site's log holds stays there and is still shown
+  beside new entries on any device that reads it; only new entries change place. A person whose own row says "the
+  site's log" keeps it, and is the only person the page offers it to. Code's call, argued in the report: a one-time
+  move down would put the same record in two places, and the log cannot be deleted from anyway. (2026-10-08)
+- **What that costs, said on the page:** a family member on another device sees the results the log already held,
+  not new ones from the screen that made them, unless the person chooses "with us". (2026-10-08)
+- **History built up before the Nimrod folder is connected is copied to it when it is** (Mike: *"That could be an
+  issue bc I'm setting it up at home"*). While a person's place is "your Nimrod folder" and the folder cannot be
+  reached here, everything waits on the device and the page says "Will be copied to your Nimrod folder when it's
+  connected". When it becomes reachable - chosen, allowed again, or a drive plugged in - every record of that person's
+  on the device is copied, not only the panels shown now; another person's records on a shared browser are not. How
+  far each record went is kept per folder (an id file in the folder), so the same drive connected again gets nothing
+  twice and a different folder gets everything the device still holds. Nothing prompts; a look is a permission query.
+  (2026-10-08)
+- **What waits is bounded by what the device keeps:** the newest 500 plays and 1,000 game results or words per panel,
+  as before. Not raised while a folder is waiting, argued: each play rewrites the panel's whole record, on a Pi's SD
+  card. Code's call; open to Mike. (2026-10-08)
