@@ -474,8 +474,12 @@ const toTab = (m, id) => {
       // (panel ring, 2026-10-09, DELIBERATELY: "Show which panel is selected" on the Display tab, beside "Space between
       // panels" (panel_ring.js argues it; Mike: "That should be an option or maybe the selection turns off after a little
       // bit"). One more of the old rows: 41. The panel's lap is unchanged. dev/screen_controls_test.html walks its choices.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 41) ***',
-        lapStops.length === 14 && oldStops.length === 41 && oldStops.some((i) => i.id === 'set:panelRing') /* panel ring */
+      // (call loadouts, 2026-10-09, DELIBERATELY: "Calls open as" and "Captions on calls" on the This screen tab, after
+      // "Calls when there's no Call panel" (call_loadouts.js argues both; Mike: "one call dashboard with different
+      // loadouts"). Two more of the old rows: 43. The panel's lap is unchanged. dev/call_loadouts_test.html uses them.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 43) ***',
+        lapStops.length === 14 && oldStops.length === 43 && oldStops.some((i) => i.id === 'set:panelRing') /* panel ring */
+        && oldStops.some((i) => i.id === 'set:callOpensAs') && oldStops.some((i) => i.id === 'set:callCaptions') /* call loadouts */
         && oldStops.some((i) => i.id === 'set:speakerMusic')
         && oldStops.some((i) => i.id === 'set:backupSource') /* backup source */ && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),

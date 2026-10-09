@@ -68,6 +68,9 @@ import {
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
 // over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
 import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS } from './call_notice.js';
+// call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
+import { callViewPlan, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD } from './call_loadouts.js';
+import { createCallCaptions } from './call_captions.js';
 import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
 // 2026-10-04: the screen picks up a new version of the site by itself, at a quiet moment (version_watch.js).
 import {
@@ -3893,6 +3896,11 @@ export async function mountKiosk(root, {
     // that should not ring at night, a hallway one that should), not the person, who rings on every screen.
     // Not on an embed (an embed never has the drive socket a call arrives on).
     ...(!embedded ? [{ ...CALL_NOTICE_FIELD }] : []),
+    // call loadouts (2026-10-09; call_loadouts.js argues both): what that call opens as - video, audio only, or
+    // either with a talk board - and captions of the person on it. The SCREEN's, beside the row above, for its
+    // reason: a bedside screen with a board and a hallway screen without one are different rooms.
+    ...(!embedded ? [{ ...CALL_OPENS_FIELD, options: CALL_OPENS_FIELD.options.map((o) => ({ ...o })) },
+      { ...CALL_CAPTIONS_FIELD, options: CALL_CAPTIONS_FIELD.options.map((o) => ({ ...o })) }] : []),
     // 2026-10-04 (version_watch.js argues the default, OFF: a live screen is never changed remotely, so following
     // deploys is chosen per screen - the bench turns it on): this screen restarts itself once for a new version
     // of the site, only when nothing is going on. The SCREEN's: it is about this device and its room. Not on an
@@ -4997,7 +5005,8 @@ export async function mountKiosk(root, {
   let callState = null;
   function sendCallControl(payload) { try { bus.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'kiosk' }); } catch (err) { console.error('kiosk: call control', err); } }
   function drawPlainCallControls() {
-    try { drawCallControls(controlsEl.querySelector('[data-call-controls]'), callState, sendCallControl); }
+    // call loadouts (2026-10-09): and Hang up, last (transport_bar.js HANG_CONFIRM_MS argues its one press).
+    try { drawCallControls(controlsEl.querySelector('[data-call-controls]'), callState, sendCallControl, hangUpCallView); }
     catch (err) { console.error('kiosk: call controls', err); }
   }
   function callRows() {
@@ -5044,6 +5053,10 @@ export async function mountKiosk(root, {
   // they are open - whoever has them open is at the screen.
   const CALL_VIEW_ROW = 'call-notice';     // the hosted call's own row: its volume, kept for this screen
   const CALL_VIEW_ID = 'call:notice';
+  // call loadouts (2026-10-09): the talk board in the call view - its own row (empty unless somebody sets it; it
+  // follows the screen's "every AAC board panel" settings through the type layer) and its own instance id.
+  const CALL_BOARD_ROW = 'call-board';
+  const CALL_BOARD_ID = 'call:board';
   function holdCallScan(on) {
     callScanHeld = !!on;
     try {
@@ -5058,9 +5071,20 @@ export async function mountKiosk(root, {
   }
   // While the call view shows: one stop, Hang up. Nothing is lit at first (a stray select does nothing);
   // `back` hangs up, as it does on a Call panel (actions.js `call: { back: 'call/hangup' }`).
+  // call loadouts (2026-10-09): WITH A TALK BOARD in the call view, next / prev / select are the BOARD's (its own
+  // scan and select, addressed to that one board - never a Board panel under the view), and `back` still hangs up.
+  // Argued: the board is what a switch user is there to press during a call, and Hang up stays reachable by `back`,
+  // the bar, a pointer and "hang up" said. A board stop before Hang up would cost every word a press.
   function callViewVerb(v) {
     const cv = callView;
     if (!cv) return;
+    if (cv.boardInst && v !== 'back') {
+      if (v === 'prev') return;          // the board's scan only goes forward (board.js `board/next`)
+      const topic = v === 'select' ? 'board/select' : 'board/next';
+      try { bus.publish(typeof bus.instanceTopic === 'function' ? bus.instanceTopic(CALL_BOARD_ID, topic) : `${topic}#${CALL_BOARD_ID}`, { from: 'kiosk' }); }
+      catch (err) { console.error('kiosk: call board', err); }
+      return;
+    }
     if (v === 'next' || v === 'prev') cv.lit = 0;
     else if (v === 'select') { if (cv.lit === 0) hangUpCallView(); }
     else if (v === 'back') hangUpCallView();
@@ -5109,7 +5133,21 @@ export async function mountKiosk(root, {
     box.dataset.callView = '';
     box.setAttribute('role', 'region');
     box.setAttribute('aria-label', 'Call');
-    box.style.cssText = `position:absolute;inset:0;z-index:${LAYERS.floating};pointer-events:auto;background:var(--bg)`;
+    // call loadouts (2026-10-09; call_loadouts.js): what this call opens as - the call alone, or the call and a
+    // talk board side by side (one above the other on a tall screen), with captions or not. layout.js's own grid.
+    let plan = null;
+    try {
+      plan = callViewPlan(settings.get() || {}, { width: kioskEl.clientWidth || window.innerWidth || 0,
+        height: kioskEl.clientHeight || window.innerHeight || 0 });
+    } catch (err) { console.error('kiosk: call loadout', err); plan = null; }
+    if (!plan) plan = { key: 'video', camera: true, theirVideo: true, board: false, captions: 'off', preset: 'full', grid: { cols: '1fr', rows: '1fr' } };
+    box.dataset.loadout = plan.key;
+    box.style.cssText = `position:absolute;inset:0;z-index:${LAYERS.floating};pointer-events:auto;background:var(--bg);`
+      + `display:grid;grid-template-columns:${plan.grid.cols};grid-template-rows:${plan.grid.rows}`;
+    // The call's half: the Call module, its captions under it, and Hang up over it.
+    const area = document.createElement('div');
+    area.dataset.callArea = '';
+    area.style.cssText = 'position:relative;min-width:0;min-height:0;overflow:hidden';
     const slot = document.createElement('div');
     slot.style.cssText = 'position:absolute;inset:0';
     // The way out, on the screen the whole call (a pointer, a scan, "hang up" said, `back`).
@@ -5117,15 +5155,26 @@ export async function mountKiosk(root, {
     hang.type = 'button';
     hang.dataset.callHangup = '';
     hang.textContent = 'Hang up';
-    hang.style.cssText = 'position:absolute;top:2.5vmin;left:50%;transform:translateX(-50%);z-index:1;'
+    hang.style.cssText = 'position:absolute;top:2.5vmin;left:50%;transform:translateX(-50%);z-index:3;'
       + 'min-height:56px;min-width:8em;padding:.5em 1.4em;border-radius:12px;cursor:pointer;'
       + 'font:600 clamp(16px,2.4vmin,26px) system-ui,-apple-system,Segoe UI,sans-serif;'
       + 'background:var(--surface);color:var(--text);border:2px solid var(--focus)';
     hang.addEventListener('click', () => hangUpCallView());
-    box.append(slot, hang);
+    area.append(slot, hang);
+    // The board's half, when the loadout has one. In the plan's order (call_loadouts.js: side by side the board is
+    // left and the call right, under the mirror's corner; stacked, the call is on top).
+    let boardSlot = null;
+    if (plan.board) {
+      boardSlot = document.createElement('div');
+      boardSlot.dataset.callBoard = '';
+      boardSlot.style.cssText = 'position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--surface)';
+    }
+    for (const s of (plan.slots || ['call'])) box.append(s === 'board' ? boardSlot : area);
+    if (!area.parentNode) box.append(area);
     if (mirrorEl && mirrorEl.parentNode === kioskEl) kioskEl.insertBefore(box, mirrorEl);
     else kioskEl.append(box);
-    const cv = { box, slot, hang, inst: null, state: null, events: null, lit: -1, offs: [] };
+    const cv = { box, slot, hang, area, boardSlot, plan, inst: null, state: null, events: null, lit: -1, offs: [],
+                 boardInst: null, captions: null, subs: null };
     callView = cv;
     holdCallScan(true);
     try {
@@ -5153,17 +5202,62 @@ export async function mountKiosk(root, {
     try {
       cv.offs.push(callTransport?.onLive?.((on) => { if (!on && callView === cv) queueMicrotask(() => { if (callView === cv && !live()) closeCallView('ended'); }); }) || (() => {}));
     } catch { /* no transport */ }
+    // call loadouts: the board and the captions come up beside the call. Neither may stop the call: a failure in
+    // either is logged and the call goes on without it.
+    if (cv.boardSlot) mountCallBoard(cv).catch((err) => console.error('kiosk: call board', err));
+    if (plan.captions !== 'off') startCallCaptions(cv, from);
     let took = false;
-    try { took = await cv.inst.impl.takeCall(from, { ringStartedAt }); }
+    try { took = await cv.inst.impl.takeCall(from, { ringStartedAt, camera: plan.camera, theirVideo: plan.theirVideo }); }
     catch (err) { console.error('kiosk: answering in the call view', err); took = false; }
     if (callView === cv && !took && !live()) closeCallView('failed');
     return true;     // the module had the call: whatever became of it, it hung up its own way
+  }
+  // call loadouts (2026-10-09): the talk board in the call view. Words chosen on it go into the call (board.js
+  // `intoCall`, with the recorded clip when there is one) and are spoken in the room as on any board. Its record is
+  // routed like a Board panel's (history_place.js 'words').
+  async function mountCallBoard(cv) {
+    const state = withTypeLayer(stateFor(CALL_BOARD_ROW), 'board');
+    const events = historyHost.route('words', eventsFor(CALL_BOARD_ROW), { key: CALL_BOARD_ROW });
+    const inst = mountModule('board', extendCtx(childCtx({ id: CALL_BOARD_ID, type: 'board' }), {
+      mount: cv.boardSlot, state, events,
+    }));
+    cv.boardInst = inst;
+    await state.load?.().catch?.(() => {});
+    await events.load?.().catch?.(() => {});
+    if (callView !== cv) return;
+    await inst.init();
+    state.startPolling?.();
+  }
+  // call loadouts (2026-10-09; call_captions.js): captions of the person on the call, in the call's half. Their
+  // own caption box (subtitles.js), on for the call whatever this screen's subtitles mode is, and gone with it.
+  function startCallCaptions(cv, from) {
+    try {
+      const row = personRow || settings.get() || {};
+      cv.subs = createSubtitles(cv.area, {
+        settings: { ...row, subtitlesOn: true, subtitlesScreen: false },
+        flashLimit: flashLimitNow,
+      });
+      cv.subs.setOn(true);
+      // Inside the call's half, not across the whole screen (subtitles.css places a box against the window).
+      const box = cv.area.querySelector('.subs');
+      if (box) { box.style.position = 'absolute'; box.style.width = '92%'; box.style.zIndex = '2'; }
+      cv.captions = createCallCaptions({ row, mode: cv.plan.captions, sink: cv.subs,
+        who: () => (from && typeof from.name === 'string' && from.name.trim()) || 'On the call' });
+      const t = callTransportNow();
+      const now = t?.remote?.();
+      if (now) cv.captions.start(now);
+      cv.offs.push(t?.onRemote?.((s) => { if (callView === cv && s) cv.captions?.start(s); }) || (() => {}));
+    } catch (err) { console.error('kiosk: call captions', err); }
   }
   function closeCallView(why = 'ended') {
     const cv = callView;
     if (!cv) return false;
     callView = null;
     cv.offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+    // call loadouts: the board and the captions go with the call (captions keep nothing).
+    try { cv.captions?.stop(); } catch { /* gone */ }
+    try { cv.subs?.destroy?.(); } catch { /* gone */ }
+    if (cv.boardInst) { try { cv.boardInst.destroy(); } catch (err) { console.error('kiosk: closing the call board', err); } }
     // A call still live is hung up by the module itself on the way out (call.js `destroy`).
     if (cv.inst) { try { cv.inst.destroy(); } catch (err) { console.error('kiosk: closing the call view', err); } }
     else { try { cv.state?.destroy?.(); } catch { /* gone */ } }

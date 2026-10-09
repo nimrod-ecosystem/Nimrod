@@ -322,7 +322,9 @@ export async function mountCallPage(root, {
     if (!w || typeof w.text !== 'string' || !w.text) return;
     said = [...said, w.text].slice(-WORDS_SHOWN);
     paintWords();
-    if (wordsMode() === 'speak') readAloud(w.text);
+    // call loadouts (2026-10-09): a word whose recorded clip is already IN the call's sound (`audio: true`,
+    // call_mix.js) is heard through the call; reading it out here as well would say it twice. Shown either way.
+    if (wordsMode() === 'speak' && w.audio !== true) readAloud(w.text);
   }
   // The default voice: the site's speech channel, made on the first word (never at load), with its
   // watchdog at the hold's own ceiling. `source: 'board'` - these are a person's board words.

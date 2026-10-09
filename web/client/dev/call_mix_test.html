@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>board clips into a call — a recorded word is heard on the other end — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#7a5c00;font-weight:600}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #page,#host{position:absolute;left:-9999px;top:0;width:400px;height:400px}
+</style>
+</head>
+<body>
+<h1>board clips into a call (call loadouts, 2026-10-09)</h1>
+<div class="note">
+  A board card whose word has a recorded clip (aac/audio, Piper) sends that clip INTO the call's outgoing sound
+  (call_mix.js: microphone + clip into one track, swapped onto the call's audio sender with replaceTrack), and its
+  text says so, so the far end shows it and does not read it out a second time. Checked here: the clip rule's one
+  home; the mixer with a fake audio context (a missing, slow or refused clip leaves the call untouched; the room
+  microphone is held while the clip plays and comes back after; a second word reuses the mix; a muted microphone
+  stays muted); the transport (order kept, nothing from an ended call); the board hands the clip; the caller page
+  does not read a word it already heard. The last section uses this browser's REAL audio and a REAL peer
+  connection on this machine, and measures the sound arriving at the other end.
+</div>
+<div id="page"></div>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { clipSlug, clipUrl, DEFAULT_CLIP_BASE } from '../aac_clips.js';
+import * as talk from '../talk.js';
+import { createClipMixer, CLIP_WAIT_MS, CLIP_TAIL_MS, CLIP_MAX_MS, MIC_DURING_CLIP } from '../call_mix.js';
+import { createCallTransport, parseWords } from '../call_transport.js';
+import { mountCallPage } from '../call_page.js';
+import { SIGNAL_KINDS } from '../drive.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { SETTINGS as BOARD_SETTINGS } from '../modules/board.js';
+import '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0, skipped = 0, skipWhy = '', measured = '';
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function skip(name, why) {
+  skipped += 1; skipWhy = why;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `NOT RUN  ${name}   ${why}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 2000) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(10); } return !!fn(); };
+const ticks = async (n = 5) => { for (let i = 0; i < n; i++) await Promise.resolve(); await sleep(0); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    pending: () => armed.length,
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { if (!this.tracks.includes(t)) this.tracks.push(t); }
+  getTracks() { return [...this.tracks]; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+const track = (id, kind = 'audio') => ({ id, kind, enabled: true, stopped: false, stop() { this.stopped = true; } });
+
+// A fake audio context: records the graph it is asked to build. A clip's duration is its byte length / 1000 s.
+function fakeAudio({ state = 'running', resumes = true } = {}) {
+  const made = { dests: [], sources: [], gains: [], clips: [] };
+  const ctx = {
+    state,
+    resume() { if (resumes) this.state = 'running'; return Promise.resolve(); },
+    close() { this.closed = true; },
+    async decodeAudioData(buf) { return { duration: buf.byteLength / 1000 }; },
+    createMediaStreamDestination() { const t = track(`mixed${made.dests.length + 1}`); const d = { stream: { getAudioTracks: () => [t] }, track: t }; made.dests.push(d); return d; },
+    createMediaStreamSource(stream) { const s = { stream, connect(n) { this.to = n; return n; }, disconnect() { this.off = true; } }; made.sources.push(s); return s; },
+    createGain() { const g = { gain: { value: 1 }, connect(n) { this.to = n; return n; }, disconnect() { this.off = true; } }; made.gains.push(g); return g; },
+    createBufferSource() { const c = { buffer: null, connect(n) { this.to = n; }, disconnect() { this.off = true; }, start() { this.started = true; }, stop() { this.stopped = true; } }; made.clips.push(c); return c; },
+  };
+  return { ctx, made };
+}
+
+// ---- the peer connection without a network (call_words_test's) ------------------------------------
+class FakeChannel {
+  constructor(label, opts = {}) { this.label = label; this.opts = opts; this.readyState = 'connecting'; this.peer = null; }
+  send(d) { if (this.readyState !== 'open') throw new Error('not open'); const p = this.peer; if (p) queueMicrotask(() => { if (p.readyState === 'open') p.onmessage?.({ data: d }); }); }
+  open() { this.readyState = 'open'; this.onopen?.(); }
+  close() { if (this.readyState === 'closed') return; this.readyState = 'closed'; this.onclose?.(); const p = this.peer; if (p && p.readyState !== 'closed') { p.readyState = 'closed'; p.onclose?.(); } }
+}
+function fakePeer() {
+  const made = [];
+  class PC {
+    constructor(cfg) { this.cfg = cfg; this.senders = []; this.channels = []; this.log = []; this.iceGatheringState = 'complete'; this.connectionState = 'new'; made.push(this); }
+    addTrack(t, stream) { const s = { track: t, stream, async replaceTrack(n) { this.track = n; } }; this.senders.push(s); return s; }
+    getSenders() { return this.senders; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; }
+    async createAnswer() { return { type: 'answer', sdp: 'A' }; }
+    async createOffer() { this.log.push('offer'); return { type: 'offer', sdp: 'O' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    createDataChannel(label, opts) { const c = new FakeChannel(label, opts); this.channels.push(c); return c; }
+    close() { this.closed = true; for (const c of this.channels) c.close(); }
+    fire(state) { this.connectionState = state; this.onconnectionstatechange?.(); }
+  }
+  return { PC, made, last: () => made[made.length - 1] };
+}
+function meet(callerPc, screenPc) {
+  for (const ch of callerPc.channels) {
+    if (ch.readyState === 'closed') continue;
+    const far = new FakeChannel(ch.label, ch.opts);
+    ch.peer = far; far.peer = ch;
+    screenPc.channels.push(far);
+    screenPc.ondatachannel?.({ channel: far });
+    ch.open(); far.open();
+  }
+  callerPc.fire('connected'); screenPc.fire('connected');
+}
+function linkPair() {
+  const mk = () => ({ subs: new Set(), sent: [], onSignal(cb) { this.subs.add(cb); return () => this.subs.delete(cb); } });
+  const a = mk(), b = mk();
+  const wire = (from, to) => { from.sendSignal = (s) => { if (!SIGNAL_KINDS.includes(s.kind)) return false; from.sent.push(s); const c = JSON.parse(JSON.stringify(s)); queueMicrotask(() => { for (const f of [...to.subs]) f(c); }); return true; }; };
+  wire(a, b); wire(b, a);
+  return [a, b];
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the clip rule has one home (aac_clips.js), and talk.html still uses it');
+  check('a word to its file: lower case, anything else one underscore', clipSlug('Thank you') === 'thank_you' && clipSlug(' Change  me! ') === 'change_me');
+  check('the URL, or null when clips are off', clipUrl('Yes', './aac/audio/') === './aac/audio/yes.wav' && clipUrl('Yes', '') === null && clipUrl('', './a') === null);
+  check('talk.js re-exports the same two (nothing that used them changes)', talk.clipSlug === clipSlug && talk.clipUrl === clipUrl);
+  check('talk.html\'s default folder is still ./aac/audio', DEFAULT_CLIP_BASE === './aac/audio' && talk.DEFAULTS.clipBase === './aac/audio');
+  check('the numbers are sane', CLIP_WAIT_MS >= 500 && CLIP_WAIT_MS <= 5000 && CLIP_TAIL_MS >= 0 && CLIP_TAIL_MS <= 1000 && CLIP_MAX_MS >= 2000 && CLIP_MAX_MS <= 15000 && MIC_DURING_CLIP.join() === 'hold,keep');
+  check('a word message keeps `audio: true` and nothing else new', JSON.stringify(parseWords(JSON.stringify({ type: 'say', text: 'yes', source: 'board', audio: true }))) === '{"text":"yes","source":"board","audio":true}'
+    && !('audio' in parseWords(JSON.stringify({ type: 'say', text: 'yes', audio: 'yes' }))));
+
+  // =====================================================================================
+  section('*** the mixer, with a fake audio context ***');
+  {
+    const clk = fakeClock();
+    const A = fakeAudio();
+    const files = { '/c/yes.wav': new ArrayBuffer(1200) };
+    let fetched = 0;
+    const mixer = createClipMixer({ makeContext: () => A.ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer,
+      fetchClip: async (u) => { fetched += 1; return files[u] || null; } });
+    const mic = track('mic');
+    const swaps = [];
+    let onSender = mic;
+    const swap = async (t) => { swaps.push(t.id); onSender = t; return true; };
+    const getTrack = () => onSender;
+
+    const miss = await mixer.play('/c/nothing.wav', { getTrack, swap });
+    check('*** a word with no recording: not sent as sound, and the call is not touched ***', miss.ok === false && miss.why === 'no-clip' && swaps.length === 0 && onSender === mic, JSON.stringify(miss));
+    const r = await mixer.play('/c/yes.wav', { getTrack, swap });
+    check('*** a word with a recording: it goes into the call ***', r.ok === true && r.ms === 1200, JSON.stringify(r));
+    check('...the mixed track is put on the call\'s audio sender (replaceTrack, no new offer)', swaps.join() === 'mixed1' && onSender.id === 'mixed1' && mixer.playing());
+    const g = A.made.gains[0], src = A.made.sources[0], clip = A.made.clips[0];
+    check('...the room microphone feeds the mix, through a gain', src?.stream?.getAudioTracks?.()[0] === mic && src.to === g && g.to === A.made.dests[0]);
+    check('...and the clip feeds it, started', clip.to === A.made.dests[0] && clip.started && clip.buffer?.duration === 1.2);
+    check('*** the room microphone is HELD while the clip plays (no second copy of the word) ***', g.gain.value === 0);
+    // A second word while the first plays: the same mix, a new clip, the old one stopped.
+    files['/c/no.wav'] = new ArrayBuffer(600);
+    const r2 = await mixer.play('/c/no.wav', { getTrack, swap });
+    check('*** a second word reuses the mix: no second swap; the first clip stops ***', r2.ok && swaps.length === 1 && clip.stopped && A.made.clips[1].started && A.made.dests.length === 1);
+    clk.advance(600 + CLIP_TAIL_MS - 1);
+    check('still held until the clip and its tail are over', g.gain.value === 0 && mixer.playing());
+    clk.advance(1);
+    await ticks();
+    check('*** then the microphone comes back, its own track back on the sender ***', g.gain.value === 1 && onSender === mic && swaps.join() === 'mixed1,mic' && !mixer.playing());
+    check('...and the mix is let go (the mixed track stopped, the graph disconnected)', A.made.dests[0].track.stopped && src.off && g.off);
+    const n = fetched;
+    await mixer.play('/c/yes.wav', { getTrack, swap });
+    check('a clip is fetched once and kept (and so is a missing one)', fetched === n);
+    await mixer.play('/c/nothing.wav', { getTrack, swap });
+    check('...a missing one too', fetched === n);
+    await mixer.stop({ swapBack: false });
+    check('*** the call ended (its connection is gone): stop does not swap, and lets go ***', swaps.at(-1) === 'mixed2' && !mixer.playing());
+    mixer.destroy();
+    check('destroy closes the audio context', A.ctx.closed === true);
+  }
+  {
+    // A MUTED microphone stays muted: the mix reads the same track, and that track goes back as it was.
+    const clk = fakeClock();
+    const A = fakeAudio();
+    const mixer = createClipMixer({ makeContext: () => A.ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer, fetchClip: async () => new ArrayBuffer(500) });
+    const mic = track('mic'); mic.enabled = false;
+    let onSender = mic;
+    await mixer.play('/c/yes.wav', { getTrack: () => onSender, swap: async (t) => { onSender = t; return true; } });
+    clk.advance(500 + CLIP_TAIL_MS); await ticks();
+    check('*** a muted microphone: the clip still goes; the muted track goes back muted ***', onSender === mic && mic.enabled === false && A.made.sources[0].stream.getAudioTracks()[0] === mic);
+  }
+  {
+    // 'keep': the microphone is not held.
+    const clk = fakeClock();
+    const A = fakeAudio();
+    const mixer = createClipMixer({ makeContext: () => A.ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer, fetchClip: async () => new ArrayBuffer(500), micDuringClip: 'keep' });
+    await mixer.play('/c/yes.wav', { getTrack: () => track('mic'), swap: async () => true });
+    check('MIC_DURING_CLIP "keep": the room is not held while the clip plays', A.made.gains[0].gain.value === 1);
+    mixer.destroy();
+  }
+  {
+    // Refusals: each leaves the call exactly as it was.
+    const clk = fakeClock();
+    const swaps = [];
+    const swap = async (t) => { swaps.push(t.id); return true; };
+    const sus = fakeAudio({ state: 'suspended', resumes: false });
+    const m1 = createClipMixer({ makeContext: () => sus.ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer, fetchClip: async () => new ArrayBuffer(500) });
+    const p1 = m1.play('/c/yes.wav', { getTrack: () => track('mic'), swap });
+    await ticks(); clk.advance(CLIP_WAIT_MS); await ticks();
+    const r1 = await p1;
+    check('*** an audio context that will not run (nobody touched the page yet): not sent, call untouched ***', r1.ok === false && r1.why === 'suspended' && swaps.length === 0, JSON.stringify(r1));
+    const okCtx = fakeAudio();
+    const m2 = createClipMixer({ makeContext: () => okCtx.ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer, fetchClip: () => new Promise(() => {}) });
+    const p2 = m2.play('/c/yes.wav', { getTrack: () => track('mic'), swap });
+    await ticks(); clk.advance(CLIP_WAIT_MS); await ticks();
+    const r2 = await p2;
+    check(`*** a clip slower than ${CLIP_WAIT_MS} ms: the word goes without it ***`, r2.ok === false && r2.why === 'slow' && swaps.length === 0, JSON.stringify(r2));
+    const m3 = createClipMixer({ makeContext: () => fakeAudio().ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer, fetchClip: async () => new ArrayBuffer(500) });
+    const r3 = await m3.play('/c/yes.wav', { getTrack: () => null, swap });
+    check('*** no microphone on the call (nothing to send sound on): not sent ***', r3.ok === false && r3.why === 'no-sender' && swaps.length === 0, JSON.stringify(r3));
+    const m4 = createClipMixer({ makeContext: () => fakeAudio().ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer, fetchClip: async () => new ArrayBuffer(500) });
+    const r4 = await m4.play('/c/yes.wav', { getTrack: () => track('mic'), swap: async () => false });
+    check('a sender that refuses the swap: not sent, the mix let go', r4.ok === false && r4.why === 'no-sender' && !m4.playing());
+    const m5 = createClipMixer({ makeContext: () => null, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const r5 = await m5.play('/c/yes.wav', { getTrack: () => track('mic'), swap });
+    check('no Web Audio at all: not sent', r5.ok === false && r5.why === 'no-audio');
+    const long = fakeAudio();
+    const m6 = createClipMixer({ makeContext: () => long.ctx, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer, fetchClip: async () => new ArrayBuffer(60000) });
+    const r6 = await m6.play('/c/long.wav', { getTrack: () => track('mic'), swap: async () => true });
+    check(`a clip longer than ${CLIP_MAX_MS} ms is cut there, so the room is never held longer`, r6.ms === CLIP_MAX_MS);
+  }
+
+  // =====================================================================================
+  section('*** the transport: a word with a clip says its sound is in the call; order is kept ***');
+  {
+    const clk = fakeClock();
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    // A fake mixer the test steers: each play waits until the test lets it go.
+    const plays = [];
+    const mixed = track('mixed');
+    const mixer = {
+      play: (url, { getTrack, swap }) => new Promise((resolve) => plays.push({ url, getTrack, swap, resolve })),
+      stop: () => { mixer.stops = (mixer.stops || 0) + 1; }, playing: () => false, destroy() {},
+    };
+    const o = { PeerConnection: P.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer };
+    const caller = createCallTransport({ link: dl, role: 'driver', ...o });
+    const screen = createCallTransport({ link: sl, role: 'screen', ...o, clipMixer: mixer });
+    const got = []; caller.onWords((w) => got.push(w));
+    check('no call: a word with a clip is refused like any word', screen.sendWords('Yes', { clip: '/c/yes.wav' }) === false && plays.length === 0);
+    await caller.call({ tracks: [track('caller-mic')] }); await ticks();
+    const mic = track('room-mic');
+    await screen.answer({ audio: mic }); await ticks();
+    meet(P.made[0], P.last()); await ticks();
+    check('(setup) the call is live, the room microphone on its sender', screen.isLive() && P.last().senders[0].track === mic);
+    check('a word with a clip is accepted at once', screen.sendWords('Yes', { source: 'board', clip: '/c/yes.wav' }) === true);
+    await ticks();
+    check('...and asks the mixer, handing it the call\'s audio sender', plays.length === 1 && plays[0].url === '/c/yes.wav' && plays[0].getTrack() === mic);
+    check('a word with no clip said meanwhile waits behind it (the order they were chosen in)', screen.sendWords('please') === true && screen.__probe().wordsPending === 2);
+    await ticks();
+    check('nothing has arrived while the clip is starting', got.length === 0);
+    const swapped = await plays[0].swap(mixed);
+    plays[0].resolve({ ok: true, ms: 800 });
+    await ticks(10);
+    check('*** the mixer\'s swap reaches the call\'s own sender ***', swapped === true && P.last().senders[0].track === mixed);
+    check('*** the word arrives saying its sound is in the call (audio: true) ***', got[0]?.text === 'Yes' && got[0]?.audio === true && got[0]?.source === 'board', JSON.stringify(got));
+    check('*** ...and the word after it, after it, with no audio flag ***', got[1]?.text === 'please' && !got[1]?.audio, JSON.stringify(got));
+    screen.sendWords('Hot', { clip: '/c/missing.wav' }); await ticks();
+    plays[1].resolve({ ok: false, why: 'no-clip' }); await ticks(10);
+    check('*** a clip that is missing: the word goes as text only ***', got[2]?.text === 'Hot' && !got[2]?.audio, JSON.stringify(got));
+    screen.sendWords('Cold', { clip: '/c/cold.wav' }); await ticks();
+    caller.hangup(); await ticks();
+    plays[2].resolve({ ok: true }); await ticks(10);
+    check('*** a word still waiting for its clip when the call ends goes with the call ***', got.length === 3 && screen.__probe().wordsWaiting === 0);
+    check('the call ending stops the mixer (no swap: the connection is gone)', mixer.stops >= 1);
+    caller.destroy(); screen.destroy();
+  }
+  {
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const caller = createCallTransport({ link: dl, role: 'driver', PeerConnection: P.PC, Stream: FakeStream });
+    const screen = createCallTransport({ link: sl, role: 'screen', PeerConnection: P.PC, Stream: FakeStream, clipMixer: null });
+    const got = []; caller.onWords((w) => got.push(w));
+    await caller.call({ tracks: [] }); await ticks();
+    await screen.answer({}); await ticks();
+    meet(P.made[0], P.last()); await ticks();
+    screen.sendWords('Yes', { clip: '/c/yes.wav' }); await ticks();
+    check('clipMixer: null: a word with a clip goes as text at once, as before', got.length === 1 && got[0].text === 'Yes' && !got[0].audio);
+    const remotes = [];
+    screen.onRemote((s) => remotes.push(s));
+    P.last().ontrack?.({ track: track('their-mic'), streams: [] });
+    check('the far end\'s stream is handed on (for captions), and null when the call ends', remotes.length === 1 && remotes[0]?.getAudioTracks?.()[0]?.id === 'their-mic' && screen.remote() === remotes[0]);
+    caller.hangup(); await ticks();
+    check('...null when it ends', remotes.at(-1) === null && screen.remote() === null);
+    caller.destroy(); screen.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the board hands the transport its clip ***');
+  {
+    const callClips = BOARD_SETTINGS.find((s) => s.key === 'callClips');
+    check('the board has the setting, a toggle, on by default, and says it is only words with a recording', !!callClips && callClips.kind === 'toggle' && callClips.default === true && /recording/.test(callClips.note || ''));
+    const host = document.getElementById('host');
+    const asked = [];
+    const spy = { sendWords: (t, m) => { asked.push({ t, m }); return true; } };
+    const mountBoard = (state) => {
+      const inst = mountModule('board', {
+        mount: host, bus: createBus(), events: { append: () => Promise.resolve() }, instanceId: 'b1',
+        state: { get: () => state, set: () => {}, subscribe: () => {}, flush: () => {} },
+        output: { say: () => {} }, callTransport: spy,
+      });
+      inst.init();
+      return inst;
+    };
+    let inst = mountBoard({ boardId: 'yesno' });
+    await sleep(20);
+    const cards = [...host.querySelectorAll('.ab-card')];
+    const yes = cards.findIndex((c) => /\byes\b/i.test(c.textContent));
+    cards[yes >= 0 ? yes : 0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await ticks();
+    const clip = asked[0]?.m?.clip || '';
+    check('*** a card is sent with its clip\'s address, in the shipped folder ***', /\/aac\/audio\/[a-z_]+\.wav$/.test(clip) && asked[0].m.source === 'board', JSON.stringify(asked));
+    const res = clip ? await fetch(clip, { method: 'HEAD', cache: 'no-store' }).catch(() => null) : null;
+    check('...and that address is a real file the page can load (the board finds it from its own folder, not the page\'s)', !!res && res.ok, clip);
+    inst.destroy();
+    inst = mountBoard({ boardId: 'yesno', callClips: false });
+    await sleep(20);
+    host.querySelectorAll('.ab-card')[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await ticks();
+    check('*** "Recorded words are heard on a call: No": text only ***', asked.length === 2 && !('clip' in (asked[1].m || {})));
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the caller page does not read out a word it already heard in the call ***');
+  {
+    const clk = fakeClock();
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const screen = createCallTransport({ link: sl, role: 'screen', PeerConnection: P.PC, Stream: FakeStream, clipMixer: null });
+    const rings = []; screen.onIncoming((f) => rings.push(f));
+    const connect = ({ onState, onPresence } = {}) => {
+      dl.state = () => 'connected'; dl.close = () => {}; dl.claim = () => false;
+      queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens: 1, drivers: 1 }); });
+      return dl;
+    };
+    const fetchImpl = async (url) => {
+      const ok = (b, s = 200) => ({ ok: s < 400, status: s, json: async () => b });
+      if (/ticket/.test(url)) return ok({ ticket: 'T' });
+      if (/\/api\/people$/.test(url)) return ok({ people: [{ id: 'p1', name: 'Alex' }] });
+      if (/\/api\/drive\/shared$/.test(url)) return ok({ people: [] });
+      if (/\/api\/me$/.test(url)) return ok({ display_name: 'Ann' });
+      return ok({}, 404);
+    };
+    const tracks = [];
+    const getUserMedia = async (c) => { const ts = []; if (c.audio) ts.push(track(`a${tracks.length + 1}`)); tracks.push(...ts); return new FakeStream(ts); };
+    const store = {}; const storage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+    const spoken = [];
+    const speakWords = (t, done) => { spoken.push(t); setTimeout(() => done(), 0); return () => {}; };
+    const root = document.getElementById('page');
+    const page = await mountCallPage(root, {
+      fetchImpl, connect, getUserMedia, storage, search: '?person=p1', nav: {}, attach: () => {},
+      win: { addEventListener: () => {} }, enumerateDevices: async () => [],
+      makeTransport: (x) => createCallTransport({ ...x, PeerConnection: P.PC, Stream: FakeStream }),
+      setTimer: clk.setTimer, clearTimer: clk.clearTimer, speakWords,
+    });
+    root.querySelector('[data-start="audio"]').click();
+    await settled(() => rings.length === 1);
+    await screen.answer({}); await ticks();
+    meet(P.made.find((p) => p.log.includes('offer')), P.last()); await ticks();
+    // What the screen sends when the clip is in the call: the same message with audio: true.
+    const ch = P.last().channels[0];
+    ch.send(JSON.stringify({ type: 'say', text: 'Yes', source: 'board', audio: true })); await ticks();
+    check('*** a word whose recording is in the call is SHOWN ***', root.querySelector('[data-words-now]')?.textContent === 'Yes');
+    check('*** ...and NOT read out again (it was heard in the call) ***', spoken.length === 0 && !page.micHeld());
+    ch.send(JSON.stringify({ type: 'say', text: 'water', source: 'board' })); await ticks();
+    check('a word with no recording is still read out, as before', spoken.join() === 'water');
+    page.hangup(); page.destroy(); screen.destroy();
+  }
+
+  // =====================================================================================
+  section('the browser\'s REAL audio and a REAL connection on this machine (no network leaves it)');
+  if (typeof RTCPeerConnection !== 'function' || typeof AudioContext !== 'function') {
+    skip('a real clip through a real call', 'this browser has no RTCPeerConnection or AudioContext');
+  } else {
+    const ac = new AudioContext();
+    try { await Promise.race([ac.resume(), sleep(1500)]); } catch { /* reported below */ }
+    if (ac.state !== 'running') {
+      skip('a real clip through a real call', `this page's audio context is "${ac.state}" (the browser holds sound until the page is touched) - the transport then sends the word as text only, which the sections above check`);
+      try { ac.close(); } catch { /* gone */ }
+    } else {
+      // Two silent "microphones" (a real track each, carrying silence), so both ends offer and answer sound.
+      const silent = () => { const o = ac.createOscillator(); const g = ac.createGain(); g.gain.value = 0; const d = ac.createMediaStreamDestination(); o.connect(g); g.connect(d); o.start(); return d.stream.getAudioTracks()[0]; };
+      const callerMic = silent(), roomMic = silent();
+      const [dl, sl] = linkPair();
+      const caller = createCallTransport({ link: dl, role: 'driver', config: { mode: 'direct' } });
+      const screen = createCallTransport({ link: sl, role: 'screen', config: { mode: 'direct' } });
+      const got = []; caller.onWords((w) => got.push(w));
+      let far = null; caller.onRemote((s) => { if (s) far = s; });
+      await caller.call({ tracks: [callerMic], from: { name: 'Ann' } });
+      const rang = await settled(() => screen.__probe().pendingOffer, 6000);
+      if (rang) await screen.answer({ audio: roomMic });
+      const audioIn = await settled(() => !!far && far.getAudioTracks().length > 0 && caller.__probe().words === 'open', 12000);
+      if (!audioIn) {
+        skip('a real clip through a real call', `the two connections did not connect here in 12 s (caller ${caller.__probe().words}); a bench test between two machines is the real proof`);
+      } else {
+        // The far end's sound, measured. A remote stream reaches Web Audio only while an element plays it.
+        const keep = new Audio(); keep.muted = true; keep.srcObject = far; keep.play?.()?.catch?.(() => {});
+        const an = ac.createAnalyser(); an.fftSize = 2048;
+        ac.createMediaStreamSource(far).connect(an);
+        const buf = new Float32Array(an.fftSize);
+        const rms = () => { an.getFloatTimeDomainData(buf); let s = 0; for (const x of buf) s += x * x; return Math.sqrt(s / buf.length); };
+        const peakOver = async (ms) => { let p = 0; const t0 = performance.now(); while (performance.now() - t0 < ms) { p = Math.max(p, rms()); await sleep(20); } return p; };
+        const before = await peakOver(600);
+        check('before the word, the far end hears (near) silence', before < 0.01, before.toFixed(4));
+        const clipUrlReal = new URL('../aac/audio/yes.wav', location.href).href;
+        screen.sendWords('Yes', { source: 'board', clip: clipUrlReal });
+        const arrived = await settled(() => got.length > 0, 6000);
+        check('*** the word arrives as text over the real data channel ***', arrived && got[0].text === 'Yes', JSON.stringify(got));
+        check('*** ...saying its sound is in the call ***', got[0]?.audio === true, JSON.stringify(got));
+        check('the mixed track is on the call while the clip plays', screen.clipPlaying() === true);
+        const during = await peakOver(900);
+        check('*** THE CLIP IS HEARD AT THE OTHER END: real sound arrived over the real connection ***', during > 0.02, `peak ${during.toFixed(4)}`);
+        const back = await settled(() => !screen.clipPlaying(), CLIP_MAX_MS + 2000);
+        check('*** when the clip ends, the room microphone\'s own track goes back on the call ***', back);
+        await sleep(400);
+        const after = await peakOver(600);
+        check('...and the far end hears the room again (silent here), not the clip', after < 0.01, after.toFixed(4));
+        measured = `real call, peak level at the far end: before ${before.toFixed(4)}, during the clip ${during.toFixed(4)}, after ${after.toFixed(4)}`;
+        try { keep.pause(); keep.srcObject = null; } catch { /* gone */ }
+      }
+      caller.hangup(); await sleep(50);
+      caller.destroy(); screen.destroy();
+      try { ac.close(); } catch { /* gone */ }
+    }
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? (skipped ? `PASS WITH SKIPS — ${passed} checks, ${skipped} SKIPPED (${skipWhy})` : `ALL PASS — ${passed} checks${measured ? ` (${measured})` : ''}`) : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

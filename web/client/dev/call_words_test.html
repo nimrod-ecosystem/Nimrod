@@ -286,7 +286,10 @@ try {
     const [dl, sl] = linkPair();
     const o = { PeerConnection: P.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer };
     const caller = createCallTransport({ link: dl, role: 'driver', ...o });
-    const screen = createCallTransport({ link: sl, role: 'screen', ...o });
+    // call loadouts (2026-10-09), DELIBERATELY: `clipMixer: null`. The board now also hands the word's recorded
+    // clip (callClips, on by default); with no mixer the transport sends the text at once, which is what this
+    // section checks. The clip going into the call's sound is dev/call_mix_test.html's.
+    const screen = createCallTransport({ link: sl, role: 'screen', ...o, clipMixer: null });
     const got = []; caller.onWords((w) => got.push(w));
     const asked = [];
     const spy = { sendWords: (t, m) => { const r = screen.sendWords(t, m); asked.push({ t, m, r }); return r; } };

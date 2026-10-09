@@ -66,6 +66,11 @@
 import { registerModule } from '../module.js';
 import { createScan, SCAN_DEFAULTS } from '../input_scan.js';
 import { symbolSvg } from '../aac_symbols.js';
+// call loadouts (2026-10-09): a word's recorded clip, to send into a live call (aac_clips.js, call_mix.js).
+import { clipUrl } from '../aac_clips.js';
+// The shipped clips, found from THIS file rather than from the page, so any page that mounts a board (the
+// kiosk, talk.html, a suite under dev/) points at the same folder.
+const DEFAULT_CLIP_BASE = new URL('../aac/audio', import.meta.url).href;
 import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { personSources } from '../person_known.js';
@@ -247,6 +252,17 @@ const DEFAULTS = {
   // demonstrating cards, a private word to somebody in the room), or a person who simply wants the
   // board kept to the room. That is one setting away. Nothing goes when there is no call either way.
   intoCall: true,
+  // *** AND ITS RECORDED CLIP INTO THE CALL'S SOUND, WHEN IT HAS ONE (call loadouts, 2026-10-09). *** A card whose
+  // word has a recording in `callClipBase` (aac/audio: seventeen Piper clips) is also HEARD on the call - mixed
+  // into the call's outgoing sound (call_mix.js), not played at a speaker for the microphone to catch. DEFAULT
+  // YES, argued: the person on the call is listening, and a word they hear in the same voice the board always
+  // speaks in is the word said to them; the text still goes, and a word with no clip is text only, as before.
+  // The case for no: a caller who finds a voice in the call confusing next to the person's own, or a room whose
+  // recordings are not the voice anybody wants sent. One setting away; `intoCall` off stops both.
+  callClips: true,
+  // Where the recordings are: the same folder as talk.html's default (aac/audio), so one set serves both. Not a menu row:
+  // pointing it elsewhere (a bucket, a CDN) is a setup job, the same as talk.html's `clipBase`.
+  callClipBase: DEFAULT_CLIP_BASE,
 
   // *** TURN THE GRID WHEN THE SCREEN SHAPE WOULD MAKE THE CARDS INTO STRIPES. DEFAULT ON,
   // AND THIS ONE NEEDS MIKE'S EYES BECAUSE IT LEANS ON THE FILE'S OWN RULE. ***
@@ -473,6 +489,10 @@ export const SETTINGS = [
   { key: 'intoCall', label: 'Words go into a call', kind: 'toggle', default: true,
     level: 'standard', onLabel: 'Yes — the person on the call sees and hears each word', offLabel: 'No — words stay in this room',
     note: 'Only during a call that is already going. It never starts a call or reaches anybody else.' },
+  // call loadouts (2026-10-09): see `callClips` in DEFAULTS.
+  { key: 'callClips', label: 'Recorded words are heard on a call', kind: 'toggle', default: true,
+    level: 'advanced', onLabel: 'Yes — a word with a recording is sent as sound as well as text', offLabel: 'No — text only',
+    note: 'Only the words that have a recording. The person on the call sees every word either way.' },
 ];
 
 registerModule(
@@ -868,7 +888,9 @@ registerModule(
       // board into call (2026-10-08): and to the person on a call that is LIVE now, as text. The
       // transport refuses when there is no call, so nothing is sent outside one. See the header.
       if (cfg.intoCall !== false) {
-        try { ctx.callTransport?.sendWords?.(text, { source: 'board' }); }
+        // call loadouts (2026-10-09): with its recorded clip, when the card's word has one (`callClips`).
+        const clip = cfg.callClips !== false ? clipUrl(text, cfg.callClipBase ?? DEFAULT_CLIP_BASE) : null;
+        try { ctx.callTransport?.sendWords?.(text, { source: 'board', ...(clip ? { clip } : {}) }); }
         catch (err) { console.error('board: into the call', err); }
       }
 

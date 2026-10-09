@@ -599,7 +599,11 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       bus.publish(CALL_CONTROLS_TOPIC, { live: true, mic: true, speaker: true, theirVideo: true, myVideo: true, video: true, sending: true, hasMic: true, volume: 1 });
       await sleep(20);
       const group = root.querySelector('.k-actions [data-call-controls]');
-      check('*** a live call: the plain bar shows its controls, first ***', group && !group.hidden && group.querySelectorAll('button').length === 6
+      // (call loadouts, 2026-10-09, DELIBERATELY: SEVEN buttons, was six - Hang up joins the call's group, LAST
+      // (transport_bar.js HANG_CONFIRM_MS: one press with a pointer, asks again from a switch). Mike: "the transport
+      // bar has standard buttons for mic/cam on/off". dev/call_loadouts_test.html checks how it presses.)
+      check('*** a live call: the plain bar shows its controls, first ***', group && !group.hidden && group.querySelectorAll('button').length === 7
+        && group.lastElementChild?.dataset.call === 'hangup'
         && group === root.querySelector('.k-actions').firstElementChild);
       group.querySelector('[data-call="mic"]').click();
       check('...a press says CALL_CONTROL_TOPIC', sent.at(-1)?.mic === 'toggle');

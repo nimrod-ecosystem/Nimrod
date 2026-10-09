@@ -49,7 +49,7 @@ import {
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
   SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE,
 } from '../shell_verbs.js';
-import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
+import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
 import { BAR_KEY_HIDDEN, onModuleControl } from '../bar_toggle.js';
 
@@ -284,7 +284,9 @@ registerModule(
       paintPlayPause(root.querySelector('.tb-actions:not(.tb-host) [data-act="playpause"]'), playPause || {});
       paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
-      drawCallControls(callEl, callState, (payload) => say?.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'transport_bar' }));
+      // call loadouts (2026-10-09): and Hang up, last (transport_bar.js HANG_CONFIRM_MS argues its one press).
+      drawCallControls(callEl, callState, (payload) => say?.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'transport_bar' }),
+        () => say?.publish(CALL_HANGUP_TOPIC, { from: 'transport_bar' }));
       // The plain bar (above): last, so it wins over each button's own rule; undone the moment the host stops asking.
       const plain = plainHost();
       root.dataset.plain = plain ? '1' : '0';
