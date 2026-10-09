@@ -343,10 +343,14 @@ export const ROUTES = {
   // are in it; "unmute" is NOT ("unpause" was not either). So every "unmute" phrase has a two-word "un mute"
   // twin -- both words are in the model, and a small model hears the one word that way. The "unmute" spellings
   // stay for the bigger models and typed commands.
+  // (2026-10-09, measured on the bench through every mic and from clean files: the small model WRITES the word
+  // "mike", never "mic", so no "mic" phrase ever matched. Each has a "mike" twin; the "mic" spellings stay for the
+  // bigger models and typed commands.)
   'call-mic-off': { action: 'call/mic-off', label: 'Call: mute my microphone',
-    phrases: ['mute my mic', 'mute my microphone', 'turn my mic off', 'my microphone off'] },
+    phrases: ['mute my mic', 'mute my mike', 'mute my microphone', 'turn my mic off', 'turn my mike off', 'my microphone off'] },
   'call-mic-on': { action: 'call/mic-on', label: 'Call: unmute my microphone',
-    phrases: ['unmute my mic', 'unmute my microphone', 'un mute my mic', 'un mute my microphone', 'turn my mic on', 'my microphone on'] },
+    phrases: ['unmute my mic', 'unmute my mike', 'unmute my microphone', 'un mute my mic', 'un mute my mike',
+      'un mute my microphone', 'turn my mic on', 'turn my mike on', 'my microphone on'] },
   'call-speaker-off': { action: 'call/speaker-off', label: 'Call: mute the speaker',
     phrases: ['mute the speaker', 'mute the call', 'speaker off', 'turn the speaker off'] },
   'call-speaker-on': { action: 'call/speaker-on', label: 'Call: unmute the speaker',
