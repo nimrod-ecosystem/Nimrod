@@ -4,15 +4,14 @@
    *** THE BRICKS ARE THE ROOM'S BRICKS, LATER. *** Every colour here is a custom property with a
    fallback, and the fallback literal appears ONLY on the declaration line (check_hardcoded_colors.py
    counts declarations as the right place for one). The hooks a room or a theme sets:
-     --wall-brick    the brick colour        (fallback: the room's default brick, room_parts.js)
+     --wall-brick    one brick colour        (fallback, since 2026-10-09: the theme's brick palette, a colour a row)
      --wall-mortar   the gaps between them   (fallback: the theme's surface-alt)
      --game-ball     the ball                (fallback: the theme's strongest text colour)
      --game-paddle   the paddle              (fallback: the theme's accent)
-   Rows alternate a little darker with color-mix, so a wall reads as bricks rather than a slab.
+   With --wall-brick set, rows alternate a little darker with color-mix, so a wall reads as bricks, not a slab.
    The ball and the paddle are told apart by SHAPE (a circle and a long bar), never by colour alone. */
 
 .bb-wrap{
-  --bb-brick: var(--wall-brick, #9b5a44);
   --bb-mortar: var(--wall-mortar, var(--surface-alt, #e8e2cf));
   --bb-ball: var(--game-ball, var(--text-strong, #1c1c1c));
   --bb-paddle: var(--game-paddle, var(--accent, #2c6e49));
@@ -44,11 +43,18 @@
 .bb-field{position:relative;width:min(100cqw, calc(100cqh * 1.6));aspect-ratio:16/10;overflow:hidden;
   background:var(--bb-field);border:2px solid var(--bb-edge);border-radius:6px;touch-action:none;cursor:pointer}
 
-.bb-brick{position:absolute;background:var(--bb-brick);border-radius:2px;
-  box-shadow:inset 0 -3px 0 color-mix(in srgb, var(--bb-brick) 70%, black)}
-.bb-brick[data-row="1"]{background:color-mix(in srgb, var(--bb-brick) 88%, black)}
-.bb-brick[data-row="2"]{background:color-mix(in srgb, var(--bb-brick) 94%, white)}
-.bb-brick[data-row="3"]{background:color-mix(in srgb, var(--bb-brick) 82%, black)}
+/* brick games (2026-10-09, Mike: "the Brick Breaker game should be made of Nimrod bricks and you can have it follow
+   your theme"). Each brick is a Nimrod brick seen from the front (brick_face.js: one keyed socket per 40 mm cell,
+   `--nb-cells` of them), and each row takes a colour from the THEME's palette (`--nb-1` .. `--nb-4`: the theme's
+   brick colours, brick_colours.js; on a page with no theme, its accent, link and warm colours). A room that sets --wall-brick
+   still gets one colour for the whole wall, a shade per row. `look: plain` (a setting) is the old flat brick. */
+.bb-brick{position:absolute}
+.bb-brick[data-row="0"]{--nb-c:var(--wall-brick, var(--nb-1))}
+.bb-brick[data-row="1"]{--nb-c:color-mix(in srgb, var(--wall-brick, var(--nb-2)) 88%, black)}
+.bb-brick[data-row="2"]{--nb-c:color-mix(in srgb, var(--wall-brick, var(--nb-3)) 94%, white)}
+.bb-brick[data-row="3"]{--nb-c:color-mix(in srgb, var(--wall-brick, var(--nb-4)) 82%, black)}
+.bb[data-look="plain"] .bb-brick{background-image:none;border:none;border-radius:2px;
+  box-shadow:inset 0 -3px 0 color-mix(in srgb, var(--nb-c) 70%, black)}
 
 .bb-paddle{position:absolute;background:var(--bb-paddle);border:2px solid var(--bb-paddle-edge);border-radius:999px;
   display:grid;place-items:center}

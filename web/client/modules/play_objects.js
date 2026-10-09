@@ -42,7 +42,7 @@ import {
   WINDOWS, WINDOW_WORDS, WHAT_CHOICES, sourceWord, PLAY_LABELS_TOPIC,
 } from '../play_charts.js';
 import { examplePlays } from './charts.js';
-import { buildUrls } from '../brick_builds.js';
+import { partUrls } from '../brick_builds.js';
 
 // ---------------------------------------------------------------------------------------------
 // THE NUMBERS. Rule 1: each argued; the ones a person would change are settings below.
@@ -143,7 +143,9 @@ export function twoLines(text, width = 14) {
 // last one's top. Geometry of the published render, not a preference; a new render would mean a new number here.
 export const BRICK_RISE = 0.555;
 const B = 100, STEP = B * BRICK_RISE, CW = 140, TOP_PAD = 44, LABEL_H = 64;
-export const BRICK_URL = buildUrls('brick_40x40x40_v1').small;
+// bricks module (row 2.76): a PART's picture, not a build's -- buildUrls named `<id>_34_sm.png`, which no part has (404),
+// so every stack had fallen back to the drawn cube. The brick colours per theme are brick_colours.js, exported for this.
+export const BRICK_URL = partUrls('brick_40x40x40_v1').small;
 
 const shade = (uid) => `<filter id="po-shade1-${uid}" color-interpolation-filters="sRGB"><feComponentTransfer>`
   + '<feFuncR type="linear" slope=".8"/><feFuncG type="linear" slope=".8"/><feFuncB type="linear" slope=".8"/></feComponentTransfer></filter>'

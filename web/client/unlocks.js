@@ -299,6 +299,9 @@ export const STARTER_ITEMS = Object.freeze({
   'module:whats_new': 'what changed on the site',
   // The library (library.js) is where things are unlocked from: locking it would lock the way to unlocking.
   'module:library': 'where everything is found and unlocked',
+  // bricks module (row 2.76): decision 2(c) above -- the parts are published open models, given away; a game lock
+  // on the one module that shows them would be a lie about what they cost.
+  'module:bricks': 'the Nimrod parts, which are given away',
   // The profile's old pieces (home_profile.js ADD_PIECES): a person's picture and their name.
   'piece:picture': 'a person’s own picture',
   'piece:sign': 'a person’s own name',

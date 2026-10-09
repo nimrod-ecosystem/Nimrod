@@ -117,6 +117,8 @@ export const SUITES = [
   'solitaire', 'note', 'note_visit', 'weather', 'brickbreaker', 'rhythm', 'avatar', 'avatar_display', 'svg_sanitize',
   // 2026-10-02 late: games wait for Start (autostart a setting), the computer's demo and its players, card sort.
   'game_start', 'card_sort',
+  // brick games (2026-10-09, row 2.76): Brick Drop - our bricks, our wall, one switch, no game over at the easy levels.
+  'brickdrop',
   // 2026-10-06: Quiz mix - every kind of question round by round, each player at their own level, on the shared draw.
   'quiz_mix',
   // 2026-10-06: Quiz mix played together - with another screen or on a call (game_room.js; game_rooms.py on the server).
@@ -133,6 +135,9 @@ export const SUITES = [
   'room_flat',
   // 2026-10-02: furniture built from Nimrod bricks, drawn in the rooms (its picture), and the bricks page.
   'brick_builds', 'bricks_page',
+  // 2026-10-09 (bricks module, row 2.76): one Bricks module for every part, each theme's brick colours; the CAD
+  // helper's baseplate pictures drawn from their numbers.
+  'bricks_module', 'baseplate_art',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

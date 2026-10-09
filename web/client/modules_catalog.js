@@ -414,6 +414,22 @@ export const CATALOG = [
       + 'quickest.',
   },
 
+  // bricks module (row 2.76): ONE module for every Nimrod part, in place of a card per part in Modules. `watch`: a
+  // picture of a part, asking nothing. `page`: the bricks page, where every part's model is (library "See every brick").
+  {
+    type: 'bricks',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'One Nimrod brick, plate or bracket, in any size, in the theme’s brick colours.',
+    needs: 'Nothing. Every part and size is built in.',
+    why: 'Every Nimrod part is on the same 40 mm grid, so any two fit together. Choose the part, its size in 40 mm '
+      + 'steps (a baseplate also 5 or 10 mm thick) and its colour in the settings menu; the parts that have a printed '
+      + 'model show its picture, and every other size is drawn the same way.',
+    note: 'The theme’s brick colours change with the theme and are chosen to stand out from it and from each other, '
+      + 'colour-blind too. The models themselves are on the bricks page, free to print.',
+    page: '/bricks.html',
+  },
+
   // ------------------------------------------------------------------ practice
   {
     type: 'educational',
@@ -696,10 +712,22 @@ export const CATALOG = [
     type: 'brickbreaker',
     group: 'practice',
     use: 'answer',
-    lead: 'Knock down a wall of bricks with a ball and a paddle.',
+    lead: 'Knock down a wall of Nimrod bricks with a ball and a paddle.',
     needs: 'Nothing. The wall, the ball and the sounds are built in.',
     why: 'One switch can play: the paddle glides by itself and a press stops it where the ball will land. '
-      + 'The ball is slow by default and a missed ball just comes back; there is no losing screen.',
+      + 'The ball is slow by default and a missed ball just comes back; there is no losing screen. '
+      + 'The bricks take the theme’s colours.',
+  },
+  // brick games (2026-10-09, row 2.76): stack Nimrod bricks into a wall.
+  {
+    type: 'brickdrop',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Stack Nimrod bricks into a wall: fill a row and it is built.',
+    needs: 'Nothing. The bricks, the levels and the sounds are built in.',
+    why: 'One switch can play: the brick glides along the top by itself and a press drops it. Or Left, Turn, Right '
+      + 'and Drop light in turn and a press does the lit one. The easiest levels are slow, use small bricks, and '
+      + 'a full wall just starts a fresh one; harder levels are faster, with bigger pieces.',
   },
   {
     type: 'rhythm',

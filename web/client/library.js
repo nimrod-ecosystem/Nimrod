@@ -26,10 +26,14 @@
 //
 // 2. WHAT IS IN IT: modules (the catalog — the same descriptions the modules page shows), SCENES (the
 //    rooms and the live scenes: each is a module with one setting chosen, so it can be put in a place
-//    like any module), FURNITURE (the room's pieces) and 3D BRICKS (the published parts list). Furniture
-//    and bricks are shown, explained and searchable, but CANNOT BE PUT IN A PANEL'S PLACE: a sofa is not a
-//    panel, and putting one piece into a room of your own is not built yet. Their details say exactly
-//    that, rather than the library hiding them (D16: dimmed and explained, never hidden).
+//    like any module) and FURNITURE (the room's pieces). Furniture is shown, explained and searchable, but
+//    CANNOT BE PUT IN A PANEL'S PLACE: a sofa is not a panel, and putting one piece into a room of your own
+//    is not built yet. Its details say exactly that, rather than the library hiding it (D16: dimmed and
+//    explained, never hidden).
+//    3D BRICKS (bricks module, row 2.76): ONE module, Bricks (modules/bricks.js), under the 3D chip — Mike,
+//    2026-10-09: "there shouldn't be a separate module for each brick. Just a bricks module." Until then
+//    every published part was a card of its own here (`brick:<id>`, never placeable); an old key like that
+//    is read as the Bricks module with that part chosen (`byKey`, brick_parts.js `migrateBrickRef`).
 //
 // 3. CATEGORIES ARE TAGS, NOT FOLDERS: Brain games is a game AND learning; Photos is something to look at
 //    AND about your people. One item, several chips. Derived from the catalog's own groups where no table
@@ -61,6 +65,8 @@ import { lockWords, poolLabel, MODE_OPTIONS, POINTS_DISCLAIMER } from './unlocks
 import { registerAIAction } from './nimrod_ai.js';
 import { PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC } from './actions.js';
 import { CLAUDE_PAGE, elsewhereHTML, themeQrColours } from './page_links.js';
+// bricks module (row 2.76): an old per-part key read as the Bricks module (pure; registers nothing).
+import { migrateBrickRef } from './brick_parts.js';
 // (themes, 2026-10-06) The search, the order and the filters are the shared ones now (sort_filter.js): Mike, "use
 // the setup that the modules module has as the global for things we want to sort and filter". Same rules, same
 // markup, same look; the library keeps its own data attributes, its own switch scan and its own saved choices.
@@ -103,9 +109,11 @@ export const MODULE_CATEGORIES = Object.freeze({
   word_games: ['games', 'learning'], spelling: ['learning', 'games'], think_games: ['learning', 'games'], quiz_mix: ['games', 'learning'],
   word_builder: ['games', 'learning'], brain_games: ['games', 'learning'], name_that: ['games', 'learning', 'people'],
   solitaire: ['games'], brickbreaker: ['games'], rhythm: ['games'], sprint: ['tools'], quests: ['games', 'tracking'],
+  brickdrop: ['games'],   // brick games (2026-10-09): Brick Drop, a wall of Nimrod bricks
   progress: ['tracking'], calculator: ['tools'], reading_log: ['tracking'], scoreboard: ['tracking', 'games'],
   charts: ['tracking', 'visual'],   // (2026-10-07, row 2.62) what played, drawn: keeping track, and something to look at
   play_objects: ['tracking', 'visual'],   // (2026-10-07, row 2.62 step 4) the same, as a stack, a pie or posters in a room
+  bricks: ['3d', 'visual'],   // bricks module (row 2.76): every Nimrod part, one module, under the 3D chip
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
   themes: ['visual', 'tools'],   // (2026-10-06) the theme picker as a panel: something to look at, and a setting
@@ -124,13 +132,10 @@ export function categoriesFor(entry) {
 // `type` is the module a pick puts in the place; `settings` the one choice made on it (a scene).
 // `lockKey` is what the Nimrod Game is asked about (only modules are ever locked — unlocks.js).
 // ---------------------------------------------------------------------------------------------------
-const KIND_LABELS = Object.freeze({ module: 'Module', scene: 'Scene', furniture: 'Furniture', brick: '3D brick',
-  page: 'Settings page' });
+const KIND_LABELS = Object.freeze({ module: 'Module', scene: 'Scene', furniture: 'Furniture', page: 'Settings page' });
 export const kindLabel = (k) => KIND_LABELS[k] || k;
 const FURNITURE_WHY_NOT = 'A piece of furniture goes in a room, not in a panel’s place. The rooms under Scenes come '
   + 'furnished; putting one piece into a room of your own is not built yet.';
-const BRICK_WHY_NOT = 'A brick is a printable part, not something a panel shows. Its 3D model is published: open it to '
-  + 'look at it or print it.';
 
 export function moduleItems({ catalog = CATALOG, manifests = listManifests() } = {}) {
   const registered = new Set((manifests || []).map((m) => m && m.type).filter(Boolean));
@@ -138,7 +143,19 @@ export function moduleItems({ catalog = CATALOG, manifests = listManifests() } =
     key: `module:${c.type}`, kind: 'module', id: c.type, type: c.type, title: titleFor(c, manifests),
     lead: c.lead, why: c.why, needs: c.needs, note: c.note || '', use: c.use, group: c.group,
     cats: categoriesFor(c), settings: null, placeable: true, whyNot: '', link: '', lockKey: `module:${c.type}`,
+    // bricks module: a catalog entry's own page (Bricks: every part, on the bricks page) -- "See every brick".
+    ...(typeof c.page === 'string' && c.page ? { page: c.page } : {}),
   }));
+}
+
+/**
+ * bricks module (row 2.76): an OLD per-part key (`brick:<id>`, the library's cards before there was one Bricks
+ * module) as the Bricks module's item with that part chosen -- or null. `items`: the library's items, to find it in.
+ */
+export function brickKeyItem(key, items = []) {
+  const m = String(key || '').startsWith('brick:') ? migrateBrickRef(key) : null;
+  const it = m ? (items || []).find((x) => x && x.key === `module:${m.type}`) : null;
+  return it ? { ...it, settings: m.settings } : null;
 }
 
 export function sceneItems({ presets = ROOM_PRESETS, scenes = null, manifests = listManifests() } = {}) {
@@ -176,25 +193,6 @@ export function furnitureItems({ furniture = FURNITURE, groups = FURNITURE_GROUP
     needs: 'A room.', note: '', use: null, group: null, cats: ['furniture'], settings: null,
     placeable: false, whyNot: FURNITURE_WHY_NOT, link: '', lockKey: `furniture:${id}`,
   }));
-}
-
-/** The published parts list (design-assets/bricks/bricks.json), as items. Anything malformed is skipped. */
-export function brickItems(doc) {
-  const objs = doc && Array.isArray(doc.objects) ? doc.objects : [];
-  return objs.filter((o) => o && typeof o.id === 'string').map((o) => {
-    const dims = Array.isArray(o.dims_mm) ? o.dims_mm.join(' × ') : '';
-    return {
-      key: `brick:${o.id}`, kind: 'brick', id: o.id, type: null, title: String(o.title || o.id),
-      lead: `${dims ? `${dims} mm` : 'A brick'}${Number.isFinite(o.sockets) ? `, ${o.sockets} sockets` : ''}.`,
-      why: 'A basic Nimrod brick: every side in 40 mm steps, with a socket at the centre of every 40 mm cell, '
-        + 'so any two fit together.',
-      needs: o.fits_bed_256 === false ? 'A printer bed bigger than 256 mm.' : 'A 3D printer, if you want one in your hand.',
-      note: '', use: null, group: null, cats: ['3d'], settings: null, placeable: false, whyNot: BRICK_WHY_NOT,
-      link: typeof o.glb === 'string' ? o.glb : '', lockKey: `brick:${o.id}`,
-      // Its picture (Blender/render_bricks.py, beside the GLBs) and its card on the bricks page.
-      picture: `/design-assets/bricks/renders/${o.id}_sm.png`, page: `/bricks.html#${o.id}`,
-    };
-  });
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -237,7 +235,8 @@ export function pageItems({ pages = AI_PAGES } = {}) {
 }
 
 export function libraryItems(opts = {}) {
-  return [...moduleItems(opts), ...sceneItems(opts), ...pageItems(opts), ...furnitureItems(opts), ...brickItems(opts.bricks || null)];
+  // bricks module (row 2.76): no card per published part any more -- the Bricks module (a module item) is all of them.
+  return [...moduleItems(opts), ...sceneItems(opts), ...pageItems(opts), ...furnitureItems(opts)];
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -439,7 +438,7 @@ export const LIBRARY_SETTINGS = Object.freeze([
 // ---------------------------------------------------------------------------------------------------
 // THE GRID (DOM). `mountLibrary(root, opts)` -> { verb, next, prev, select, back, refresh, destroy, __probe }.
 //   items      [] or () => []          what to show (libraryItems)
-//   moreItems  async () => []          added when it resolves (the bricks list, fetched)
+//   moreItems  async () => []          added when it resolves (anything a host fetches; the bricks list was, until row 2.76)
 //   host       { mode: 'switch'|'panel', target: { id, type, title, base }, usage(), place(item), cancel(why),
 //                bigger(), focus, autoPlace }   — null: browse only (nothing can be put anywhere)
 //   gate       an unlocks.js gate handle (or null: everything open)
@@ -514,7 +513,7 @@ export function mountLibrary(root, {
   const win = doc.defaultView;
   let torn = false;
   const base = () => (typeof items === 'function' ? (items() || []) : [...(items || [])]);
-  let extra = [];             // what `moreItems` brought (the bricks), kept across a refresh
+  let extra = [];             // what `moreItems` brought, kept across a refresh
   let all = base();
   const p = { ...LIBRARY_DEFAULTS, category: 'all', use: 'any', ...(prefs || {}) };
   let query = '';
@@ -582,7 +581,8 @@ export function mountLibrary(root, {
     try { onPrefs?.(patch); } catch (err) { console.error('library: prefs', err); }
   }
   const visible = () => sortItems(filterItems(all, { category: p.category, use: p.use, query }), p.sort, usage());
-  const byKey = (k) => all.find((it) => it.key === k) || null;
+  // bricks module: an old per-part key (`brick:<id>`) is the Bricks module with that part chosen.
+  const byKey = (k) => all.find((it) => it.key === k) || brickKeyItem(k, all);
   function recentItems() {
     const u = usage();
     const out = [];
@@ -668,7 +668,7 @@ export function mountLibrary(root, {
     }
     // 2026-10-03: OVER THE DASHBOARD -- a module as a small panel floating in a corner (a clock: the small corner
     // clock), beside "Put it here", wherever the host can do it (Home: kiosk.js hands the press to the page).
-    // Only modules: a scene is a backdrop, and furniture and bricks are not panels. A locked one shows its ways
+    // Only modules: a scene is a backdrop, and furniture is not a panel. A locked one shows its ways
     // to unlock first, as "Put it here" does.
     if (!lock && it.placeable && it.kind === 'module' && canOverlay()) {
       acts.push(`<button type="button" class="lib-btn" data-lib-act="overlay" ${busy ? 'disabled' : ''}

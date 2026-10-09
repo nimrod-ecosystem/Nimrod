@@ -679,6 +679,12 @@ export const MODULE_VERBS = {
   brickbreaker:  { next: 'brickbreaker/next', prev: 'brickbreaker/prev', select: 'brickbreaker/select', back: 'brickbreaker/back',
                    left: 'brickbreaker/left', right: 'brickbreaker/right', stop: 'brickbreaker/stop',
                    launch: 'brickbreaker/launch', pause: 'brickbreaker/pause', play: 'brickbreaker/resume' },
+  // brick games (2026-10-09): Brick Drop. select is the one press (glide: drop it; scan: do the lit choice); next / prev
+  // move the brick (scan: move the light, for two switches); left / right move it; up turns it and down drops it (the
+  // arrow keys' own meaning, so no new verb); launch is drop too; stop stops the glide; back and pause pause.
+  brickdrop:     { next: 'brickdrop/next', prev: 'brickdrop/prev', select: 'brickdrop/select', back: 'brickdrop/back',
+                   left: 'brickdrop/left', right: 'brickdrop/right', up: 'brickdrop/turn', down: 'brickdrop/drop',
+                   launch: 'brickdrop/drop', stop: 'brickdrop/stop', pause: 'brickdrop/pause', play: 'brickdrop/resume' },
   // 2026-10-02 (games wait for Start; Space is Pause / Play): play / pause start-or-resume and pause, on every
   // game below. The quiz games answer `<type>/resume`, not `/play` (quiz_view.js: `/play` names a game).
   rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back',

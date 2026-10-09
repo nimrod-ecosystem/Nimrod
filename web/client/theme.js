@@ -61,6 +61,8 @@ import { userFontStack, USER_FONTS_EVENT } from './user_fonts.js';
 // "Best for this device" (2026-10-07, theme_default.js): the default, a choice that is a rule like "With the seasons".
 import { DEVICE_THEME, DEVICE_THEME_LABEL, isDeviceTheme, startingTheme } from './theme_default.js';
 export { DEVICE_THEME, isDeviceTheme };
+// bricks module (row 2.76): each theme's brick colours, put on the page as --brick-1 .. --brick-5 (below THEMES).
+import { brickVars } from './brick_colours.js';
 
 const SYSTEM_FONT =
   '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
@@ -259,6 +261,10 @@ export const THEMES = {
   // every check that walks THEMES measures them, and applyTheme can paint one when its day comes.
   ...seasonThemes(BASE),
 };
+
+// bricks module (row 2.76): every theme carries its five brick colours (brick_colours.js argues them; a theme with no
+// set of its own gets the default theme's), so "every theme defines every key" still holds and switching overwrites.
+for (const [id, t] of Object.entries(THEMES)) Object.assign(t.vars, brickVars(id));
 
 export const DEFAULT_THEME = 'default';
 

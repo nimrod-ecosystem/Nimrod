@@ -243,6 +243,8 @@ import './modules/weather.js';         // registers 'weather' (row 2.37, the wea
 import './modules/music.js';           // registers 'music' (row 2.32, favourites by name)
 import './modules/brickbreaker.js';    // registers 'brickbreaker' (row 2.37 item 10)
 import './modules/rhythm.js';          // registers 'rhythm' (row 2.37 item 10)
+import './modules/brickdrop.js';       // registers 'brickdrop' (brick games, row 2.76: Brick Drop)
+import './modules/bricks.js';          // registers 'bricks' (bricks module, row 2.76: every Nimrod part, one module)
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
 import './modules/voice_review.js';    // registers 'voice_review' (row 2.44, the voice recordings kept here)
 import './modules/voice_model.js';     // registers 'voice_model' (2026-10-04: the voice-model steps, one at a time)

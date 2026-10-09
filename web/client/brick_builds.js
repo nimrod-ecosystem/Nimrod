@@ -61,6 +61,16 @@ export function buildUrls(id, base = BRICKS_BASE) {
   };
 }
 
+/**
+ * bricks module (row 2.76): the URLs for ONE PUBLISHED PART (a brick, bracket or plate in bricks.json), which are
+ * named differently from a build's: Blender/render_bricks.py writes `renders/<id>.png` (512 px) and `<id>_sm.png`
+ * (128 px), as bricks_page.js reads them -- not a build's `_34` / `_front` names above.
+ */
+export function partUrls(id, base = BRICKS_BASE) {
+  const b = String(base).endsWith('/') ? String(base) : `${base}/`;
+  return { picture: `${b}renders/${id}.png`, small: `${b}renders/${id}_sm.png`, glb: `${b}${id}.glb` };
+}
+
 /** The bricks page, filtered to one build's parts. */
 export const bricksPageFor = (id) => `${BRICKS_PAGE}?build=${encodeURIComponent(id)}`;
 

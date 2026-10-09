@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>brickdrop — Brick Drop: our bricks, our wall, one switch, no game over at the easy levels — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>brickdrop — row 2.76 (brick games)</h1>
+<p><i>"Maybe a Tetris with our bricks."</i> This suite checks the rules on their own (<code>brick_drop.js</code>):
+the pieces are <b>our bricks</b> (every part is in <code>bricks.json</code>, and no piece is one of the seven
+four-square shapes), the levels get harder in order, a full row is built and goes, and at the easy levels a full wall
+starts a fresh one instead of ending the game. Then the panel (<code>modules/brickdrop.js</code>): a row built with
+<b>one switch and nothing else</b> (the glide, and the scan), keys and the brick falling, the theme's colours on the
+bricks, the play state told to the shell, the demo that never scores, and a teardown that leaves nothing running.
+Time is stepped through an injected clock.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540, a quarter of a 1080p kiosk)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/brickdrop.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { createAudioBus } from '../audio_bus.js';
+import { createFakeAudioContext } from '../game_tones.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import { moduleVoiceTable } from '../input_speech.js';
+import { PLAY_STATE_TOPIC, START_LINES } from '../game_start.js';
+import { SCORE_TOPIC } from '../score_source.js';
+import {
+  SHAPES, LEVELS, LEVEL_IDS, SCAN_ORDER, REST_MS, shapeCells, newGame, spawn, move, turn, drop, step, fits,
+  fullRows, settledBricks, wallRows, stackComputer,
+} from '../brick_drop.js';
+import { GAME, TITLE, DEFAULTS, IDLE_MS, VOICE, statusFor } from '../modules/brickdrop.js';
+import { BRICK_FACE_CSS, THEME_BRICK_PROPS, cellsAlong, paletteVar } from '../brick_face.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function manualClock() {
+  let t = 1000, cb = null, id = 0;
+  return {
+    now: () => t,
+    request(f) { cb = f; return ++id; },
+    cancel(h) { if (h === id) cb = null; },
+    pending: () => !!cb,
+    tick(ms) { t += ms; const f = cb; cb = null; if (f) f(t); },
+    run(ms, stepMs = 33) { for (let e = 0; e < ms; e += stepMs) this.tick(stepMs); },
+  };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function fakeStream() {
+  let events = [];
+  const subs = new Set();
+  const snap = () => ({ events: [...events], total: events.length });
+  return {
+    append(kind, data) { events = [...events, { id: events.length + 1, kind, data, created_at: new Date().toISOString() }];
+      for (const fn of [...subs]) fn(snap()); return Promise.resolve(); },
+    load: () => Promise.resolve(), get: snap,
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {},
+    peek: () => events,
+  };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
+                 points = fakeStream(), rand = () => 0, clock = manualClock(), started = true, extra = {} } = {}) {
+  const state = fakeState(started ? { autostart: true, ...saved } : saved);
+  const inst = mountModule(GAME, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
+    instanceId: `bd${++n}`, reducedMotion, rand, audio, clock, ...extra,
+    makeAudioContext: () => createFakeAudioContext(),
+    makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return { inst, host, bus, state, points, probe, clock, id: `bd${n}`,
+    pub: (verb) => bus.publish(`${GAME}/${verb}`),
+    say: () => host.querySelector('.bd-say')?.textContent || '' };
+}
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
+// The seven four-square shapes, every one of them, in every turn and mirror: what no piece of ours may be.
+const TETROMINOES = {
+  I: [[0, 0], [1, 0], [2, 0], [3, 0]], O: [[0, 0], [1, 0], [0, 1], [1, 1]], T: [[0, 0], [1, 0], [2, 0], [1, 1]],
+  S: [[1, 0], [2, 0], [0, 1], [1, 1]], Z: [[0, 0], [1, 0], [1, 1], [2, 1]], J: [[0, 0], [0, 1], [1, 1], [2, 1]],
+  L: [[2, 0], [0, 1], [1, 1], [2, 1]],
+};
+const norm = (cells) => {
+  const mx = Math.min(...cells.map((c) => c[0])), my = Math.min(...cells.map((c) => c[1]));
+  return cells.map(([x, y]) => [x - mx, y - my]).sort((a, b) => a[1] - b[1] || a[0] - b[0]).map((c) => c.join(',')).join(' ');
+};
+const variants = (cells) => {
+  const out = new Set();
+  let cur = cells;
+  for (let m = 0; m < 2; m++) {
+    for (let r = 0; r < 4; r++) { out.add(norm(cur)); cur = cur.map(([x, y]) => [-y, x]); }
+    cur = cells.map(([x, y]) => [-x, y]);
+  }
+  return out;
+};
+const FORBIDDEN = new Set(Object.values(TETROMINOES).flatMap((c) => [...variants(c)]));
+
+(async () => {
+try {
+  // =====================================================================
+  section('*** the pieces are OUR bricks, and none of them is a tetromino ***');
+  {
+    const ids = Object.keys(SHAPES);
+    const cellsOf = (id) => shapeCells(id, 0).map((c) => [c.x, c.y]);
+    check('*** no piece has four squares ***', ids.every((id) => cellsOf(id).length !== 4),
+      ids.map((id) => `${id}:${cellsOf(id).length}`).join(' '));
+    const hits = ids.filter((id) => [...variants(cellsOf(id))].some((v) => FORBIDDEN.has(v)));
+    check('*** no piece, turned or mirrored, is one of the seven four-square shapes ***', hits.length === 0, hits.join(','));
+    check('...and the check can fail: a four-square line IS caught', [...variants([[0, 0], [0, 1], [0, 2], [0, 3]])].some((v) => FORBIDDEN.has(v)));
+    check('every piece is one, two or three real bricks', ids.every((id) => SHAPES[id].bricks.length >= 1 && SHAPES[id].bricks.length <= 3));
+    const straight = (run) => new Set(run.map((c) => c[0])).size === 1 || new Set(run.map((c) => c[1])).size === 1;
+    check('every brick in a piece is a straight run of cells, as a real brick is', ids.every((id) => SHAPES[id].bricks.every(straight)));
+    const res = await fetch('../design-assets/bricks/bricks.json', { cache: 'no-store' });
+    const pub = res.ok ? (await res.json()).objects : [];
+    const byId = new Map(pub.map((o) => [o.id, o]));
+    check('the published bricks list was read', byId.size > 10, String(byId.size));
+    const missing = ids.flatMap((id) => [...SHAPES[id].parts, ...(SHAPES[id].joiner ? [SHAPES[id].joiner] : [])]).filter((p) => !byId.has(p));
+    check('*** every part and every joiner a piece names is a published Nimrod part (bricks.json) ***', missing.length === 0, missing.join(','));
+    const wrongLen = ids.filter((id) => SHAPES[id].bricks.some((run, i) => {
+      const o = byId.get(SHAPES[id].parts[i]);
+      return !o || o.kind !== 'brick' || Math.max(...o.dims_mm) / 40 !== run.length;
+    }));
+    check('each brick is as long as the part it is (a 120 mm brick is three cells)', wrongLen.length === 0, wrongLen.join(','));
+    check('a turned piece turns back after four turns', ids.every((id) => norm(cellsOf(id)) === norm(shapeCells(id, 4).map((c) => [c.x, c.y]))));
+  }
+
+  section('the levels: easy is slow and small, and each one up is harder');
+  {
+    const L = LEVEL_IDS.map((i) => LEVELS[i]);
+    check('five levels, very easy to very hard', L.length === 5 && L[0].label === 'Very easy' && L[4].label === 'Very hard');
+    check('*** the easiest has only one- and two-long bricks ***', LEVELS[1].shapes.every((s) => SHAPES[s].bricks.length === 1 && SHAPES[s].bricks[0].length <= 2));
+    check('each level up is no slower than the one below it', L.every((l, i) => !i || (l.glideMs <= L[i - 1].glideMs && l.fallMs <= L[i - 1].fallMs)));
+    check('each level up has at least as many kinds of piece', L.every((l, i) => !i || l.shapes.length >= L[i - 1].shapes.length));
+    check('*** our own wall: short and wide, never 10 x 20 ***', L.every((l) => !(l.w === 10 && l.h === 20) && l.h <= 13));
+    check('*** no game over at Very easy, Easy and Medium; Hard and Very hard can end ***',
+      LEVELS[1].full === 'fresh' && LEVELS[2].full === 'fresh' && LEVELS[3].full === 'fresh' && LEVELS[4].full === 'again' && LEVELS[5].full === 'again');
+  }
+
+  section('the rules');
+  {
+    const g = newGame({ level: 1 });
+    check('a new game has an empty wall of the level\'s size', g.w === 5 && g.h === 9 && g.cells.flat().every((c) => !c));
+    spawn(g, () => 0);
+    check('a piece comes in at the top, in the middle', g.piece && g.piece.y === 0 && g.piece.x === 2 && g.phase === 'play');
+    check('it moves inside the wall and stops at its sides', move(g, -1) && move(g, -1) && !move(g, -1) && g.piece.x === 0);
+    drop(g, { instant: true, rand: () => 0 });
+    check('dropped, it lands on the floor', g.cells[8][0] && g.placed === 1 && g.piece);
+    const to = (gg, x) => { while (gg.piece.x < x && move(gg, 1)); while (gg.piece.x > x && move(gg, -1)); };
+    for (let x = 1; x < 5; x++) { to(g, x); drop(g, { instant: true, rand: () => 0 }); }
+    check('*** a full row is built and goes, and counts ***', g.rows === 1 && g.cells[8].every((c) => !c) && fullRows(g).length === 0, wallRows(g).join('/'));
+    // a two-long brick, stood up, cut by a row: still one straight brick
+    const h = newGame({ level: 1 });
+    spawn(h, () => 0.9);                       // 'two'
+    check('the second shape at level 1 is the two-long brick', h.piece.shape === 'two');
+    turn(h);
+    while (move(h, -1));
+    drop(h, { instant: true, rand: () => 0 });
+    const tall = settledBricks(h).find((b) => b.len === 2);
+    check('a stood-up brick is drawn as ONE upright brick', tall && tall.dir === 'v' && tall.x === 0 && tall.y === 7, JSON.stringify(settledBricks(h)));
+    for (let x = 1; x < 5; x++) { to(h, x); drop(h, { instant: true, rand: () => 0 }); }
+    const cut = settledBricks(h);
+    check('a row built through it leaves the rest of it, one cell, on the floor', h.rows === 1 && cut.length === 1 && cut[0].len === 1 && cut[0].y === 8,
+      JSON.stringify(cut));
+    // a dropped piece falls a row at a time unless asked to go at once
+    const f = newGame({ level: 1 }); spawn(f, () => 0);
+    drop(f, {});
+    check('a drop that is seen: it is dropping, not yet down', f.phase === 'drop' && f.piece.y === 0);
+    const ev = step(f, 2000, { rand: () => 0 });
+    check('...and a moment later it has landed and the next is in', ev.includes('land') && f.phase === 'play' && f.cells[8][2]);
+  }
+
+  section('*** a full wall: a fresh wall at the easy levels (the score kept), "Again!" at the hard ones ***');
+  {
+    const g = newGame({ level: 1 });
+    g.rows = 4;
+    spawn(g, () => 0);
+    let guard = 30;
+    while (g.phase === 'play' && guard--) drop(g, { instant: true, rand: () => 0 });
+    check('stacking in one column fills it to the top: the wall is full', g.phase === 'full', g.phase);
+    check('the words say a fresh wall is going up', statusFor(g) === 'The wall is full. A fresh wall is going up.');
+    check('nothing happens on its own clock before REST_MS', step(g, REST_MS - 10, {}).length === 0 && g.phase === 'full');
+    const ev = step(g, 20, { rand: () => 0 });
+    check('*** after REST_MS a fresh wall goes up by itself, and the score carries on ***',
+      ev.includes('fresh') && g.phase === 'play' && g.rows === 4 && g.walls === 1 && g.cells.flat().every((c) => !c));
+    const k = newGame({ level: 4 });
+    k.rows = 3;
+    spawn(k, () => 0);
+    guard = 40;
+    while (k.phase === 'play' && guard--) drop(k, { instant: true, rand: () => 0 });
+    check('at Hard a full wall ends the game: "Again!"', k.phase === 'again' && statusFor(k) === 'Again! A new game is starting.');
+    step(k, REST_MS, { rand: () => 0 });
+    check('...and a new game starts by itself, from 0', k.phase === 'play' && k.rows === 0);
+    const w = newGame({ level: 4 }); spawn(w, () => 0); guard = 40;
+    while (w.phase === 'play' && guard--) drop(w, { instant: true, rand: () => 0, whenFull: 'fresh' });
+    check('the setting can make Hard keep going too', w.phase === 'full');
+  }
+
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(GAME);
+    check('registered as "Brick Drop", on the new core, dependsOn local', m && m.title === TITLE && m.core === 'new' && m.dependsOn === 'local');
+    check('the words never say "Tetris"', !/tetris/i.test(`${m.title} ${m.description}`) && !/tetris/i.test(JSON.stringify(m.settings)));
+    const cat = CATALOG.find((c) => c.type === GAME);
+    check('catalog: listed with the games', cat && cat.group === 'practice' && cat.use === 'answer', JSON.stringify(cat));
+    check('health: idle is fine', GAME in HEALTH_EXPECT && expectFor(GAME).idle === true);
+    const verbs = verbsFor(GAME);
+    check('switch verbs: next / prev / select / back / left / right / up / down / stop / pause / play',
+      ['next', 'prev', 'select', 'back', 'left', 'right', 'up', 'down', 'stop', 'pause', 'play'].every((v) => verbs.includes(v))
+      && verbTarget(GAME, 'up').topic === `${GAME}/turn` && verbTarget(GAME, 'down').topic === `${GAME}/drop`, verbs.join(','));
+    const table = moduleVoiceTable(VOICE, { verbs });
+    check('every spoken command survives the voice table ("turn", "drop", "left", "right", "start")',
+      ['turn', 'drop', 'left', 'right', 'start', 'pause', 'resume'].every((p) => p in table), JSON.stringify(table));
+    check('defaults: very easy, glide, waits for Start, a row pays 1', DEFAULTS.level === 1 && DEFAULTS.control === 'glide'
+      && DEFAULTS.autostart === false && DEFAULTS.rowPoints === 1 && DEFAULTS.levelUp === 0);
+    check('every setting row is labelled, and every choice is a short list', m.settings.every((r) => r.key && r.label)
+      && m.settings.filter((r) => r.kind === 'choice').every((r) => r.options.length >= 2 && r.options.length <= 6));
+  }
+
+  section('*** one switch builds a row: select and nothing else (the glide) ***');
+  {
+    const t = mount();
+    check('it starts with a brick at the top, gliding', t.probe().game.phase === 'play' && t.probe().game.piece);
+    check('no loop until somebody presses (nobody has yet)', !t.clock.pending());
+    // The first press: the brick is in the middle; the press drops it there.
+    t.pub('select');
+    t.clock.run(1000);
+    const g = t.probe().game;
+    check('the first select dropped it (it is on the floor, in the middle)', g.cells[8][2] && g.placed === 1, wallRows(g).join('/'));
+    check('the next brick is gliding', g.piece && t.clock.pending() && t.say() === 'Press to drop the brick.', t.say());
+    // Now one press per column: wait (as a switch user does) for it to be over an empty column, then press.
+    let presses = 1, guard = 400;
+    while (t.probe().game.rows === 0 && guard--) {
+      const gg = t.probe().game;
+      const p = gg.piece;
+      if (p && gg.phase === 'play' && !gg.cells[8][p.x] && p.cells.every((c) => fits(gg, [c], p.x, 8 - c.y))) {
+        t.pub('select'); presses++; t.clock.run(600);
+      } else t.clock.tick(100);
+    }
+    check(`*** a row built with ${presses} presses of one switch and nothing else ***`, t.probe().game.rows === 1, wallRows(t.probe().game).join('/'));
+    check('the words say so', t.say() === 'A row built!', t.say());
+    await flush();
+    const pts = t.points.peek().filter((e) => e.kind === 'points');
+    check('*** a row built paid 1 Play point ***', pts.length === 1 && Number(pts[0].data?.amount) === 1 && pts[0].data?.type === 'Play', JSON.stringify(pts.map((e) => e.data)));
+    check('the totals were kept', t.probe().stats.rows === 1 && t.probe().stats.best === 1 && t.state.get().stats?.rows === 1);
+    t.inst.destroy();
+  }
+
+  section('the glide turns the brick round at each side');
+  {
+    const t = mount({ rand: () => 0.9 });            // the two-long brick
+    t.pub('stop');                                    // a press: it is being played (and the glide stops)
+    check('"stop" stops the glide', !t.probe().game.glide.moving);
+    t.pub('drop');
+    t.clock.run(800);
+    const p0 = t.probe().game.piece;
+    check('the next brick glides again', t.probe().game.glide.moving && p0.rot === 0);
+    t.clock.run(1100 * 6);
+    check('*** at a side it turned a quarter (and stood up) ***', t.probe().game.piece.rot % 2 === 1, JSON.stringify(t.probe().game.piece));
+    t.state.set({ glideTurns: false });
+    const before = t.probe().game.piece.rot;
+    t.clock.run(1100 * 12);
+    check('with "turns at each side" off, it does not', t.probe().game.piece.rot === before);
+    t.inst.destroy();
+  }
+
+  section('*** the scan: Left, Turn, Right and Drop light in turn; one press does the lit one ***');
+  {
+    const t = mount({ saved: { control: 'scan' } });
+    t.pub('select');     // lit: Left (the first). The press moves it left.
+    const lit = () => t.host.querySelector('.bd-btn[data-lit="1"]')?.dataset.act;
+    check('a press did the lit choice (Left)', t.probe().game.piece.x === 1, String(t.probe().game.piece.x));
+    check('the lit button is drawn lit', lit() === 'left', String(lit()));
+    check('the words say what a press does now', t.say() === 'Press to move it left.', t.say());
+    t.clock.run(2100);
+    check('two seconds later the next choice is lit (Turn)', lit() === 'turn' && t.say() === 'Press to turn it.', `${lit()} / ${t.say()}`);
+    t.clock.run(4100);
+    check('...and then Drop', lit() === 'drop');
+    t.pub('select');
+    t.clock.run(600);
+    check('*** a press on Drop drops it ***', t.probe().game.placed === 1);
+    check('the brick does not fall by itself in the scan', t.probe().falls === false);
+    const was = SCAN_ORDER.indexOf(lit());
+    t.pub('next');
+    check('a second switch (next) moves the light on by hand', lit() === SCAN_ORDER[(was + 1) % 4], `${SCAN_ORDER[was]} -> ${lit()}`);
+    t.pub('prev');
+    check('...and previous moves it back', lit() === SCAN_ORDER[was], String(lit()));
+    t.inst.destroy();
+    const slow = mount({ saved: { control: 'scan', scanMs: 1000 }, extra: { flashLimitPerSecond: 0.25 } });
+    check('*** the screen\'s flash limit holds the scan back: 1 s asked, at most a quarter a second allowed ***',
+      slow.probe().scanStepMs >= 4000, String(slow.probe().scanStepMs));
+    slow.inst.destroy();
+  }
+
+  section('keys: it falls by itself, and left / right / up (turn) / down (drop) move it');
+  {
+    const t = mount({ saved: { control: 'keys' }, rand: () => 0.9 });
+    t.pub('left');
+    check('left', t.probe().game.piece.x === 0, String(t.probe().game.piece.x));
+    t.pub('right');
+    t.pub('turn');
+    check('turn', t.probe().game.piece.rot === 1);
+    check('it falls by itself with keys', t.probe().falls === true);
+    const y0 = t.probe().game.piece.y;
+    t.clock.run(2500);
+    check('...one row in Very easy\'s 2.4 seconds', t.probe().game.piece.y === y0 + 1, String(t.probe().game.piece.y));
+    const root = t.host.querySelector('[data-bd-root]');
+    root.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    t.clock.run(600);
+    check('the Down arrow drops it', t.probe().game.placed === 1);
+    t.inst.destroy();
+  }
+
+  section('*** a full wall at Very easy: no game over, and nothing waits for a press ***');
+  {
+    const t = mount({ saved: { glideTurns: false } });
+    let guard = 40;
+    while (t.probe().game.phase !== 'full' && guard--) { t.pub('stop'); t.pub('drop'); t.clock.run(500); }
+    check('stacking in the middle fills the wall: "The wall is full"', t.probe().game.phase === 'full' && t.say() === 'The wall is full. A fresh wall is going up.', t.say());
+    t.clock.run(REST_MS + 100);
+    check('*** a fresh wall went up by itself ***', t.probe().game.phase === 'play' && t.probe().game.walls === 1);
+    t.inst.destroy();
+  }
+
+  section('*** the colours are the THEME\'s ***');
+  {
+    const host = scratch(960, 540);
+    host.style.setProperty('--accent', 'rgb(4, 5, 6)');
+    host.style.setProperty('--link', 'rgb(7, 8, 9)');
+    const t = mount({ host, rand: () => 0.9 });
+    t.pub('stop'); t.pub('drop'); t.clock.run(600);
+    const brick = (c) => host.querySelector(`.bd-well .bd-brick[data-c="${c}"]:not(.bd-piece)`);
+    const bg = (el) => (el ? getComputedStyle(el).backgroundColor : 'none');
+    check('a two-long brick takes the theme\'s second brick colour (its link colour)', bg(brick(1)) === 'rgb(7, 8, 9)', bg(brick(1)));
+    host.style.setProperty('--brick-2', 'rgb(1, 2, 3)');
+    check('*** a theme that declares its own brick colours gets them (brick_colours.js: --brick-N) ***', bg(brick(1)) === 'rgb(1, 2, 3)', bg(brick(1)));
+    check('the variable names come from brick_colours.js', THEME_BRICK_PROPS.length === 5 && BRICK_FACE_CSS.includes('var(--brick-1,'));
+    check('every brick is drawn as a Nimrod brick: a keyed socket per cell', getComputedStyle(brick(1)).backgroundImage.includes('radial-gradient')
+      && brick(1).style.getPropertyValue('--nb-cells') === '2');
+    check('*** the wall stands on a long brick, the floor ***', host.querySelector('[data-floor]')?.style.getPropertyValue('--nb-cells') === '5');
+    const fr = host.querySelector('[data-floor]').getBoundingClientRect(), wr = host.querySelector('[data-well]').getBoundingClientRect();
+    check(`...drawn under the wall, one row high (${Math.round(fr.width)} × ${Math.round(fr.height)})`, fr.height > 10
+      && Math.abs(fr.top - wr.bottom) < 2 && Math.abs(fr.height - wr.height / 9) < 2 && Math.abs(fr.width - wr.width) < 2);
+    check('the buttons are there once it has started', !host.querySelector('[data-controls]').hidden);
+    check('no colour is written into the markup', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(host.querySelector('[data-bd-root]').innerHTML));
+    t.state.set({ colours: 'one' });
+    t.pub('turn');
+    check('"all one colour": every brick of the piece is the first colour', [...host.querySelectorAll('.bd-piece')].every((el) => el.dataset.c === '0'));
+    check('the palette helper wraps', paletteVar(0) === 'var(--nb-1)' && paletteVar(5) === 'var(--nb-1)' && paletteVar(-1) === 'var(--nb-5)');
+    check('cells along a brick: whole and half bricks of a running bond', cellsAlong(11, 3.4) === 3 && cellsAlong(5.5, 3.4) === 2 && cellsAlong(1, 3) === 1);
+    t.inst.destroy();
+  }
+
+  section('*** being played: told to the shell (game_start.js createPlayWatch) ***');
+  {
+    const bus = createBus();
+    const states = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+    const t = mount({ bus, started: false });
+    const lastState = () => states[states.length - 1] || {};
+    check('waiting for Start: not playing', lastState().playing === false && lastState().id === t.id, JSON.stringify(states));
+    t.pub('select');
+    check('*** Start: being played ***', lastState().playing === true && t.probe().started);
+    t.pub('pause');
+    check('paused: not playing (a real pause, no rest flag)', lastState().playing === false && !lastState().rest);
+    t.pub('resume');
+    check('resumed: playing', lastState().playing === true);
+    t.clock.run(IDLE_MS + 500, 250);
+    check('*** nobody pressing for IDLE_MS: it comes to rest, and says so ***', lastState().playing === false && lastState().rest === true
+      && t.probe().idle && !t.clock.pending(), JSON.stringify(lastState()));
+    check('...and the words say press to play', t.say() === 'Press to play.', t.say());
+    t.inst.destroy();
+  }
+
+  section('*** it waits for Start; the computer plays a demo meanwhile, and the demo never scores ***');
+  {
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe(SCORE_TOPIC, (p) => scores.push(p));
+    const t = mount({ bus, started: false, rand: (() => { let s = 7; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); })() });
+    check('a Start button, and the words say the computer is playing', !!t.host.querySelector('[data-start]') && t.say() === START_LINES.demo, t.say());
+    check('the demo player is the built-in one for this kind of game', t.probe().agent === 'computer');
+    check('the four buttons wait behind Start (the Start button is what a press presses)', t.host.querySelector('[data-controls]').hidden);
+    t.clock.run(30000, 50);
+    const g = t.probe().game;
+    check('*** half a minute later the computer has placed bricks ***', g.placed >= 3, String(g.placed));
+    check('*** and nothing scored: no score published, no totals, no points ***', scores.every((s) => !s || s.score == null || s.score === 0)
+      && t.probe().stats.rows === 0 && t.points.peek().length === 0, JSON.stringify(scores.slice(-2)));
+    t.pub('select');
+    check('any press starts a real game, a fresh wall', t.probe().started && t.probe().game.placed === 0);
+    t.inst.destroy();
+    const still = mount({ started: false, reducedMotion: true });
+    check('reduced motion: no demo, the still Start screen', !still.probe().demo && !still.clock.pending() && still.say() === START_LINES.still);
+    still.pub('select');
+    still.pub('drop');
+    check('reduced motion: a dropped brick goes straight into place', still.probe().game.placed === 1);
+    still.inst.destroy();
+    // the computer's own choices, on a plain wall
+    const w = newGame({ level: 1 }); spawn(w, () => 0);
+    const obs = { state: { phase: 'play', wall: wallRows(w), w: w.w, h: w.h, piece: { ...w.piece } } };
+    const a = stackComputer.decide(obs, { rand: () => 0.5, memory: {} });
+    check('the computer answers with one of the four actions', ['left', 'right', 'turn', 'drop'].includes(a?.act), JSON.stringify(a));
+  }
+
+  section('pause, Escape, and nothing left behind');
+  {
+    const bus = createBus();
+    let asked = 0;
+    bus.subscribe('system/settings', (p) => { asked++; p?.claim?.(); });
+    const t = mount({ bus });
+    t.pub('select');
+    const root = t.host.querySelector('[data-bd-root]');
+    root.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape pauses and asks for the settings', t.probe().game.phase === 'paused' && t.probe().menuAsks === 1);
+    check('paused is drawn on the wall, in words', !t.host.querySelector('[data-paused]').hidden && t.say() === 'Paused. Press to go on.');
+    t.pub('select');
+    check('a press goes on, where it was (the brick was dropping)', t.probe().game.phase === 'drop', t.probe().game.phase);
+    t.inst.destroy();
+    check('*** after destroy, no frame is asked for ***', !t.clock.pending());
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const live = document.getElementById('host');
+// Started, with a few bricks in, so the wall, its floor and the buttons can be looked at (the Start screen is above).
+const liveBus = createBus();
+const show = mountModule(GAME, { mount: live, bus: liveBus, state: fakeState({ autostart: true, level: 3, control: 'scan' }), personId: null,
+  instanceId: 'live', rand: (() => { let s = 3; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); })(), makeAudioContext: createFakeAudioContext });
+show.init();
+for (const [moves, turns] of [[-3, 0], [-1, 1], [2, 0], [3, 1]]) {
+  for (let i = 0; i < turns; i++) liveBus.publish(`${GAME}/turn`);
+  for (let i = 0; i < Math.abs(moves); i++) liveBus.publish(`${GAME}/${moves < 0 ? 'left' : 'right'}`);
+  liveBus.publish(`${GAME}/drop`);
+  show.impl.__step(1000);
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
