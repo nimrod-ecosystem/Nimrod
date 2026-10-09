@@ -193,6 +193,62 @@ export const CALL_CLAIM_MS = 3000;
 // reconnecting to whoever has it) does not ring here again. Bounded; oldest go first.
 const LOST_KEEP = 32;
 
+// ---------------------------------------------------------------------------------------
+// *** WORDS INTO THE CALL *** (2026-10-08, "board into call")
+// ---------------------------------------------------------------------------------------
+//
+// Mike, 2026-10-08: "A talk-board word doesn't go into a live call through the software." The board
+// spoke through the screen's speaker and the call sent only the microphone, so the far end heard a
+// board word only if the room's microphone happened to pick it up - through echo cancellation, which
+// is built to remove exactly the sound the screen itself is playing.
+//
+// THE ROUTE: the word goes as TEXT, on a data channel on the call's OWN connection (`sendWords` /
+// `onWords`), and the far end shows it and speaks it with its own voice (call_page.js).
+//   * Why not mix the spoken word into the outgoing audio: the board speaks with the browser's voice
+//     (speechSynthesis, voice.js), and the browser gives no way to capture that as audio - no stream,
+//     no buffer. Mixing needs a voice that makes audio we hold (Piper, voice.js's target, not built).
+//     When it is, mixing can go beside this; the text stays, because it also shows the word when the
+//     sound is bad.
+//   * Why a data channel and not the drive socket: the words never touch the server at all - they go
+//     the same way the call's sound goes, end to end (row 2.58, "I don't want anything from users on
+//     my server"); the server needs no change and keeps no new kind of signal; and "the channel is
+//     open" is the same fact as "the call is connected", so nothing can be sent to anybody who is not
+//     in the call.
+//   * The CALLER makes the channel (before its offer, so the offer carries it); the screen takes it
+//     when the connection brings it (`ondatachannel`). An older caller page makes none, and a word on
+//     the screen then simply stays in the room, as it did before.
+// ONLY IN A CALL: `sendWords` refuses (returns false, sends and keeps nothing) unless a call is live.
+// A word said while the call is live but the channel is not open yet (the first second of a call, a
+// reconnect) waits in a short queue and goes when it opens; the queue is emptied when the call ends.
+export const WORDS_LABEL = 'nimrod-words';
+// The longest text one message carries. 500 characters, argued: a board card's text is a word or a
+// short sentence (the longest built-in card is under 60), and a sentence somebody builds on a strip is
+// still a few hundred at most. Longer is cut, not refused, so the start of it still arrives. Not a
+// person's setting: nobody can judge it from a menu.
+export const WORDS_MAX_CHARS = 500;
+// How many words may wait for the channel to open. 20, argued: a person choosing a word a second during
+// a 30 s reconnect (STALL_MS) would say more, but the oldest of those are stale by then, and the queue
+// is there for the first second of a call and a short drop. Oldest go first. Not a person's setting.
+export const WORDS_QUEUE_MAX = 20;
+
+/** Clean a word for sending or showing: a string, spaces collapsed, at most WORDS_MAX_CHARS. Pure. */
+export function cleanWords(text) {
+  if (typeof text !== 'string' && typeof text !== 'number') return '';
+  return String(text).replace(/\s+/g, ' ').trim().slice(0, WORDS_MAX_CHARS);
+}
+
+/** A message from the channel, as `{ text, source }`, or null when it is not one. Pure. */
+export function parseWords(data) {
+  if (typeof data !== 'string' || data.length > WORDS_MAX_CHARS * 8) return null;
+  let m = null;
+  try { m = JSON.parse(data); } catch { return null; }
+  if (!m || typeof m !== 'object' || m.type !== 'say') return null;
+  const text = cleanWords(m.text);
+  if (!text) return null;
+  const source = typeof m.source === 'string' ? m.source.slice(0, 32) : null;
+  return { text, source };
+}
+
 /** A fresh call id: "call-" + 16 hex, inside drive.py's session rules. */
 export function newCallSession(rand = null) {
   let s = '';
@@ -324,8 +380,40 @@ export function createCallTransport({
   // (`panel`: a Call panel is listening and rings for it, so the screen must not ring twice), and
   // `{ type: 'end', reason, why, local }` when a ring, an answer or a live call ends, for any reason.
   const ringCbs = new Set();
+  // Words into the call (WORDS_LABEL above): the channel, what waits for it to open, who hears a word.
+  let words = null;
+  const wordsQueue = [];
+  const wordsCbs = new Set();
 
   const log = (...a) => { try { onLog?.(...a); } catch { /* a logger must not break a call */ } };
+
+  // The words channel: one per connection. A replaced connection's channel says nothing more.
+  function wireWords(ch) {
+    if (!ch || ch.label !== WORDS_LABEL) return;
+    if (words && words !== ch) { try { words.close(); } catch { /* gone */ } }
+    words = ch;
+    ch.onopen = () => { if (words === ch) flushWords(); };
+    ch.onmessage = (e) => {
+      if (words !== ch || destroyed) return;
+      const w = parseWords(e?.data);
+      if (w) emit(wordsCbs, w);
+    };
+    ch.onclose = () => { if (words === ch) words = null; };
+    if (ch.readyState === 'open') flushWords();
+  }
+  function flushWords() {
+    const ch = words;
+    if (!ch || ch.readyState !== 'open') return;
+    while (wordsQueue.length) {
+      try { ch.send(JSON.stringify(wordsQueue[0])); } catch (e) { log('words: send failed', e); return; }
+      wordsQueue.shift();
+    }
+  }
+  function closeWords() {
+    const ch = words;
+    words = null;
+    if (ch) { try { ch.close(); } catch { /* gone */ } }
+  }
   function setLive(on) {
     if (live === on) return;
     live = on;
@@ -359,6 +447,7 @@ export function createCallTransport({
   }
 
   function closePc() {
+    closeWords();
     if (!pc) return;
     try { pc.close(); } catch { /* already closed */ }
     pc = null;
@@ -390,6 +479,7 @@ export function createCallTransport({
     wonSession = null;
     placed = null;
     answeredOnce = false;
+    wordsQueue.length = 0;              // words said for this call go with it
     if (was || (!local && (wasRinging || wasAnswering))) {
       try { endedCb?.(reason, { why }); } catch (e) { log('onEnded threw', e); }
     }
@@ -468,6 +558,13 @@ export function createCallTransport({
       log('remote track', e.track && e.track.kind);
     };
     const mine = pc;
+    // WORDS INTO THE CALL (WORDS_LABEL): the caller makes the channel before its offer, so the offer
+    // carries it; the screen takes it when it arrives. A connection without data channels (a test's
+    // fake, a browser without them) simply has none, and a word stays in the room.
+    if (role === 'driver' && typeof pc.createDataChannel === 'function') {
+      try { wireWords(pc.createDataChannel(WORDS_LABEL, { ordered: true })); } catch (e) { log('words: no channel', e); }
+    }
+    pc.ondatachannel = (e) => { if (pc === mine) wireWords(e?.channel); };
     pc.onconnectionstatechange = () => {
       if (pc !== mine) return;                   // a replaced connection says nothing
       const st = pc?.connectionState;
@@ -738,13 +835,31 @@ export function createCallTransport({
     /** The screen's own view of its rings (see `ringCbs`): `cb({ type: 'ring' | 'end', ... })`. Returns an unsubscribe. */
     onRing(cb) { if (typeof cb !== 'function') return () => {}; ringCbs.add(cb); return () => { ringCbs.delete(cb); }; },
 
+    /**
+     * WORDS INTO THE CALL (WORDS_LABEL, "board into call"). Send `text` to the other end of the call
+     * that is live now. Returns false - and sends and keeps nothing - when no call is live; true when
+     * it was sent, or waits for the channel to open (the first second of a call, a reconnect).
+     */
+    sendWords(text, { source = null } = {}) {
+      if (destroyed || !live) return false;
+      const t = cleanWords(text);
+      if (!t) return false;
+      wordsQueue.push({ type: 'say', text: t, ...(typeof source === 'string' && source ? { source: source.slice(0, 32) } : {}) });
+      while (wordsQueue.length > WORDS_QUEUE_MAX) wordsQueue.shift();
+      flushWords();
+      return true;
+    },
+    /** `cb({ text, source })` for each word the other end of the call sent. Returns an unsubscribe. */
+    onWords(cb) { if (typeof cb !== 'function') return () => {}; wordsCbs.add(cb); return () => { wordsCbs.delete(cb); }; },
+
     // For the panel and for tests. `live` is the honest one: a peer connection can exist
     // and be connecting, which is not the same as a call.
     __probe: () => ({ live, hasPc: !!pc, pendingOffer: !!pendingOffer,
                       ice: ice(), relay: hasRelay(config), stalling: stallTimer != null,
                       connecting: connectTimer != null,
                       session: currentSession || pendingSession, claiming: claims.size > 0,
-                      answered: answeredOnce }),
+                      answered: answeredOnce,
+                      words: words ? (words.readyState || 'unknown') : null, wordsWaiting: wordsQueue.length }),
 
     destroy() {
       destroyed = true;

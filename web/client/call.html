@@ -56,6 +56,15 @@
   .cp-controls { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; }
   .cp-ctl[aria-pressed="true"] { background:var(--text); color:var(--bg); border-color:var(--text); }
   .cp-hang { background:var(--accent-warm-deep); border-color:var(--accent-warm-deep); color:var(--on-accent-warm-deep); }
+  /* WORDS FROM THE SCREEN'S AAC BOARD (board into call): the newest big, the few before it small. */
+  .cp-words { display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:12px;
+    background:var(--surface); border:2px solid var(--accent); }
+  .cp-words[hidden] { display:none; }
+  .cp-words-from { margin:0; font-weight:700; color:var(--text-soft); }
+  .cp-words-now { margin:0; font-size:clamp(28px, 8vw, 52px); line-height:1.15; font-weight:800; overflow-wrap:anywhere; }
+  .cp-words-before { margin:0; color:var(--text-soft); overflow-wrap:anywhere; }
+  .cp-words-before:empty { display:none; }
+  .cp-words-aloud { align-self:flex-start; min-height:44px; }
   /* A GAME BESIDE THE VIDEO (Quiz mix's "On this call"): an offer, then the game itself in a frame. */
   .cp-game { display:flex; flex-direction:column; gap:8px; padding:10px 12px; border-radius:12px; background:var(--surface-alt); }
   .cp-game[hidden] { display:none; }

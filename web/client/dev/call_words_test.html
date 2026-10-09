@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>words into a call — an AAC board word reaches the other end — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#7a5c00;font-weight:600}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #page,#host{position:absolute;left:-9999px;top:0;width:400px;height:400px}
+</style>
+</head>
+<body>
+<h1>words into a call ("board into call", 2026-10-08)</h1>
+<div class="note">
+  Mike: "A talk-board word doesn't go into a live call through the software." A word chosen on a screen's
+  AAC board during a live call now goes to the other end as text, on a data channel on the call's own
+  connection, and the caller page shows it and reads it out. Checked here: the caller makes the channel
+  before its offer; nothing is sent outside a live call (not while ringing, not after it ends); a word
+  said before the channel opens waits and then goes; a reconnect carries on; nothing about the words
+  goes through the site's server; the board sends what it says, and not when its setting is off; the
+  caller page shows the word big with whose board it came from, reads it out or only shows it, and holds
+  its own microphone while it reads. The peer connections are fakes, except the last section, which uses
+  the browser's real one on this machine.
+</div>
+<div id="page"></div>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createCallTransport, WORDS_LABEL, WORDS_MAX_CHARS, WORDS_QUEUE_MAX, cleanWords, parseWords, CALL_PURPOSE,
+} from '../call_transport.js';
+import { mountCallPage, WORDS_KEY, WORDS_MODES, WORDS_SHOWN, WORDS_HOLD_MAX_MS } from '../call_page.js';
+import { SIGNAL_KINDS } from '../drive.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { SETTINGS as BOARD_SETTINGS } from '../modules/board.js';
+import '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function skip(name, why) {
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `NOT RUN  ${name}   ${why}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 2000) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(10); } return !!fn(); };
+const ticks = async (n = 5) => { for (let i = 0; i < n; i++) await Promise.resolve(); await sleep(0); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// ---- a data channel and a peer connection without a network ---------------------------------------
+class FakeChannel {
+  constructor(label, opts = {}) { this.label = label; this.opts = opts; this.readyState = 'connecting'; this.sent = []; this.peer = null; }
+  send(d) {
+    if (this.readyState !== 'open') { const e = new Error('not open'); e.name = 'InvalidStateError'; throw e; }
+    this.sent.push(d);
+    const p = this.peer;
+    if (p) queueMicrotask(() => { if (p.readyState === 'open') p.onmessage?.({ data: d }); });
+  }
+  open() { this.readyState = 'open'; this.onopen?.(); }
+  close() {
+    if (this.readyState === 'closed') return;
+    this.readyState = 'closed'; this.onclose?.();
+    const p = this.peer; if (p && p.readyState !== 'closed') { p.readyState = 'closed'; p.onclose?.(); }
+  }
+}
+function fakePeer({ channels = true } = {}) {
+  const made = [];
+  class PC {
+    constructor(cfg) {
+      this.cfg = cfg; this.senders = []; this.closed = false; this.channels = []; this.log = [];
+      this.iceGatheringState = 'complete'; this.connectionState = 'new';
+      this.localDescription = null; this.remote = null; made.push(this);
+    }
+    addTrack(t, stream) { const s = { track: t, stream, async replaceTrack(n) { this.track = n; } }; this.senders.push(s); return s; }
+    getSenders() { return this.senders; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; this.log.push('remote'); }
+    async createAnswer() { this.log.push('answer'); return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+    async createOffer() { this.log.push('offer'); return { type: 'offer', sdp: 'OFFER-SDP' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; for (const c of this.channels) c.close(); }
+    fire(state) { this.connectionState = state; this.onconnectionstatechange?.(); }
+  }
+  if (channels) PC.prototype.createDataChannel = function (label, opts) { this.log.push('channel'); const c = new FakeChannel(label, opts); this.channels.push(c); return c; };
+  return { PC, made, last: () => made[made.length - 1] };
+}
+// What the browser does once two connections meet: the caller's channels arrive at the screen, both open.
+function meet(callerPc, screenPc) {
+  for (const ch of callerPc.channels) {
+    if (ch.readyState === 'closed') continue;
+    const far = new FakeChannel(ch.label, ch.opts);
+    ch.peer = far; far.peer = ch;
+    screenPc.channels.push(far);
+    screenPc.ondatachannel?.({ channel: far });
+    ch.open(); far.open();
+  }
+  callerPc.fire('connected'); screenPc.fire('connected');
+}
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { if (!this.tracks.includes(t)) this.tracks.push(t); }
+  removeTrack(t) { this.tracks = this.tracks.filter((x) => x !== t); }
+  getTracks() { return [...this.tracks]; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+// Two ends of the site's socket, relaying signals as the server does (a JSON copy, a turn later).
+function linkPair() {
+  const mk = () => ({ subs: new Set(), sent: [], onSignal(cb) { this.subs.add(cb); return () => this.subs.delete(cb); } });
+  const a = mk(), b = mk();
+  const wire = (from, to) => { from.sendSignal = (s) => { if (!SIGNAL_KINDS.includes(s.kind)) return false; from.sent.push(s); const c = JSON.parse(JSON.stringify(s)); queueMicrotask(() => { for (const f of [...to.subs]) f(c); }); return true; }; };
+  wire(a, b); wire(b, a);
+  return [a, b];
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the message, and its numbers, argued');
+  check('a word is cleaned: spaces collapsed, trimmed', cleanWords('  I   want\n water ') === 'I want water');
+  check(`...and cut at ${WORDS_MAX_CHARS} characters, not refused`, cleanWords('x'.repeat(900)).length === WORDS_MAX_CHARS);
+  check('nothing that is not text becomes a word', cleanWords(null) === '' && cleanWords({}) === '' && cleanWords('   ') === '');
+  check('a message is read back', JSON.stringify(parseWords(JSON.stringify({ type: 'say', text: 'water', source: 'board' }))) === '{"text":"water","source":"board"}');
+  check('...anything else is not a word: not JSON, another type, empty, not a string',
+    parseWords('water') === null && parseWords(JSON.stringify({ type: 'other', text: 'x' })) === null
+    && parseWords(JSON.stringify({ type: 'say', text: '' })) === null && parseWords(42) === null);
+  check('the numbers are sane', WORDS_MAX_CHARS >= 100 && WORDS_QUEUE_MAX >= 5 && WORDS_QUEUE_MAX <= 100 && WORDS_SHOWN >= 3 && WORDS_HOLD_MAX_MS >= 3000 && WORDS_HOLD_MAX_MS <= 15000);
+
+  // =====================================================================================
+  section('*** a word said during a live call reaches the other end ***');
+  {
+    const clk = fakeClock();
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const o = { PeerConnection: P.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer };
+    const caller = createCallTransport({ link: dl, role: 'driver', ...o });
+    const screen = createCallTransport({ link: sl, role: 'screen', ...o });
+    const got = [];
+    caller.onWords((w) => got.push(w));
+    check('*** no call: nothing is sent, and sendWords says so ***', screen.sendWords('water', { source: 'board' }) === false && screen.__probe().wordsWaiting === 0);
+    await caller.call({ tracks: [], from: { name: 'Ann' } });
+    await ticks();
+    const cpc = P.made[0];
+    check('*** the caller makes the words channel BEFORE its offer, so the offer carries it ***',
+      cpc.log.indexOf('channel') >= 0 && cpc.log.indexOf('channel') < cpc.log.indexOf('offer'), cpc.log.join());
+    check('...named, and ordered', cpc.channels[0]?.label === WORDS_LABEL && cpc.channels[0]?.opts?.ordered === true);
+    check('the screen is ringing', screen.__probe().pendingOffer === true);
+    check('*** ringing is not a call: nothing is sent ***', screen.sendWords('water') === false && screen.__probe().wordsWaiting === 0);
+    await screen.answer({});
+    await ticks();
+    const spc = P.last();
+    check('the screen answered: the call is live on both ends', screen.isLive() && caller.isLive());
+    check('the screen makes no channel of its own (it takes the caller\'s)', spc.channels.length === 0 && !spc.log.includes('channel'));
+    check('a word said before the channel opens is kept for it', screen.sendWords('hello', { source: 'board' }) === true && screen.__probe().wordsWaiting === 1 && got.length === 0);
+    meet(cpc, spc);
+    await ticks();
+    check('*** ...and goes the moment it opens ***', got.length === 1 && got[0].text === 'hello' && got[0].source === 'board', JSON.stringify(got));
+    check('nothing is left waiting', screen.__probe().wordsWaiting === 0 && screen.__probe().words === 'open');
+    check('*** a word said in the call arrives, with the text ***', screen.sendWords('I want water', { source: 'board' }) === true);
+    await ticks();
+    check('...exactly as said', got.length === 2 && got[1].text === 'I want water', JSON.stringify(got));
+    check('*** none of it went through the site\'s server (the socket carried no word) ***',
+      !/hello|water/.test(JSON.stringify(dl.sent) + JSON.stringify(sl.sent)), JSON.stringify(sl.sent.map((s) => s.kind)));
+
+    // A message that is not a word, or a channel that is not ours, is ignored.
+    spc.channels[0].send('not json'); spc.channels[0].send(JSON.stringify({ type: 'other', text: 'x' }));
+    await ticks();
+    check('something that is not a word is ignored', got.length === 2);
+    const stray = new FakeChannel('someone-else'); cpc.ondatachannel?.({ channel: stray }); stray.open(); stray.onmessage?.({ data: JSON.stringify({ type: 'say', text: 'stray' }) });
+    check('a channel with another name is not the words channel', got.length === 2 && caller.__probe().words === 'open');
+
+    // *** A RECONNECT CARRIES ON. *** The caller re-offers on a dropped connection; the words go on the new one.
+    cpc.fire('failed');
+    await ticks(10);
+    const cpc2 = P.made.find((p, i) => i > 1 && p.log.includes('offer'));
+    check('the caller re-offered, with a new words channel', !!cpc2 && cpc2.channels[0]?.label === WORDS_LABEL);
+    await ticks(10);
+    const spc2 = P.last();
+    check('...the screen re-answered on a new connection', spc2 !== spc && spc2 !== cpc2 && spc.closed);
+    check('a word said during the reconnect waits', screen.sendWords('still here') === true && screen.__probe().wordsWaiting === 1);
+    meet(cpc2, spc2);
+    await ticks();
+    check('*** ...and arrives on the new connection ***', got.length === 3 && got[2].text === 'still here', JSON.stringify(got));
+
+    // *** THE CALL ENDS: nothing more is sent. ***
+    caller.hangup();
+    await ticks();
+    check('the call ended on both ends', !screen.isLive() && !caller.isLive());
+    check('*** after the call, nothing is sent ***', screen.sendWords('water') === false && screen.__probe().wordsWaiting === 0 && screen.__probe().words === null);
+    caller.destroy(); screen.destroy();
+  }
+
+  section('words that never found an open channel go with the call');
+  {
+    const clk = fakeClock();
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const o = { PeerConnection: P.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer };
+    const caller = createCallTransport({ link: dl, role: 'driver', ...o });
+    const screen = createCallTransport({ link: sl, role: 'screen', ...o });
+    const got = []; caller.onWords((w) => got.push(w));
+    await caller.call({ tracks: [] }); await ticks();
+    await screen.answer({}); await ticks();
+    for (let i = 1; i <= WORDS_QUEUE_MAX + 5; i++) screen.sendWords(`w${i}`);
+    check(`*** at most ${WORDS_QUEUE_MAX} wait; the oldest go first ***`, screen.__probe().wordsWaiting === WORDS_QUEUE_MAX);
+    meet(P.made[0], P.last()); await ticks();
+    check('...the newest arrive, in order', got.length === WORDS_QUEUE_MAX && got[0].text === 'w6' && got[got.length - 1].text === `w${WORDS_QUEUE_MAX + 5}`, got.map((w) => w.text).join());
+    caller.hangup(); await ticks();
+    // A second call, words said and never opened, then it ends: the next call must not get them.
+    await caller.call({ tracks: [] }); await ticks();
+    await screen.answer({}); await ticks();
+    screen.sendWords('old');
+    caller.hangup(); await ticks();
+    check('*** words from a call that ended are dropped with it ***', screen.__probe().wordsWaiting === 0);
+    await caller.call({ tracks: [] }); await ticks();
+    await screen.answer({}); await ticks();
+    const before = got.length;
+    meet(P.made[P.made.length - 2], P.last()); await ticks();
+    check('...the next call gets none of them', got.length === before, JSON.stringify(got.slice(before)));
+    caller.destroy(); screen.destroy();
+  }
+
+  section('an older caller page (no words channel): the word stays in the room, as before');
+  {
+    const clk = fakeClock();
+    const old = fakePeer({ channels: false });
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const caller = createCallTransport({ link: dl, role: 'driver', PeerConnection: old.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const screen = createCallTransport({ link: sl, role: 'screen', PeerConnection: P.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    await caller.call({ tracks: [] }); await ticks();
+    check('an older caller still places its call', screen.__probe().pendingOffer === true);
+    await screen.answer({}); await ticks();
+    meet(old.last(), P.last());
+    check('the call connects with no words channel', screen.isLive() && screen.__probe().words === null);
+    for (let i = 0; i < WORDS_QUEUE_MAX + 3; i++) screen.sendWords('x');
+    check('the words wait, bounded, and never break anything', screen.__probe().wordsWaiting === WORDS_QUEUE_MAX && screen.isLive());
+    caller.hangup(); await ticks();
+    check('...and go when the call ends', screen.__probe().wordsWaiting === 0);
+    caller.destroy(); screen.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the AAC board sends what it says, only into a live call ***');
+  {
+    const intoCall = BOARD_SETTINGS.find((s) => s.key === 'intoCall');
+    check('the board has the setting, a toggle, on by default', !!intoCall && intoCall.kind === 'toggle' && intoCall.default === true);
+    check('...and its words say it only ever reaches a call already going', /already going/.test(intoCall?.note || '') && /never starts a call/.test(intoCall?.note || ''));
+    const host = document.getElementById('host');
+    const clk = fakeClock();
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const o = { PeerConnection: P.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer };
+    const caller = createCallTransport({ link: dl, role: 'driver', ...o });
+    const screen = createCallTransport({ link: sl, role: 'screen', ...o });
+    const got = []; caller.onWords((w) => got.push(w));
+    const asked = [];
+    const spy = { sendWords: (t, m) => { const r = screen.sendWords(t, m); asked.push({ t, m, r }); return r; } };
+    const said = [], notified = [];
+    const mountBoard = (state) => {
+      const inst = mountModule('board', {
+        mount: host, bus: createBus(), events: { append: () => Promise.resolve() },
+        state: { get: () => state, set: () => {}, subscribe: () => {}, flush: () => {} },
+        output: { say: (t) => said.push(t), notify: (t) => notified.push(t), alert: (t) => notified.push(t) },
+        callTransport: spy,
+      });
+      inst.init();
+      return inst;
+    };
+    const press = (i) => host.querySelectorAll('.ab-card')[i].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    let inst = mountBoard({ boardId: 'yesno' });
+    await sleep(20);
+    press(1); await ticks();
+    check('outside a call the board still speaks in the room', said.length === 1);
+    check('*** ...and NOTHING is sent: the transport refused, no channel exists ***', asked.length === 1 && asked[0].r === false && got.length === 0 && screen.__probe().wordsWaiting === 0);
+    await caller.call({ tracks: [] }); await ticks();
+    await screen.answer({}); await ticks();
+    meet(P.made[0], P.last()); await ticks();
+    press(0); await ticks();
+    check('*** in a live call, the chosen card goes to the other end, as the board said it ***',
+      got.length === 1 && said.length === 2 && got[0].text === said[1] && got[0].source === 'board', JSON.stringify({ got, said }));
+    check('*** still `say`, never notify or alert: it is conversation, not a summons ***', notified.length === 0);
+    inst.destroy();
+    inst = mountBoard({ boardId: 'yesno', intoCall: false });
+    await sleep(20);
+    const n = asked.length;
+    press(2); await ticks();
+    check('*** "Words go into a call: No": the word stays in this room ***', asked.length === n && got.length === 1 && said.length === 3, JSON.stringify({ asked: asked.length - n, got, said }));
+    inst.destroy();
+    caller.destroy(); screen.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the caller sees the word, big, with whose board it came from, and hears it ***');
+  {
+    // The caller page on a fake site: one screen of "Alex", reached through a relay.
+    const clk = fakeClock();
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const screen = createCallTransport({ link: sl, role: 'screen', PeerConnection: P.PC, Stream: FakeStream });
+    const rings = []; screen.onIncoming((f) => rings.push(f));
+    const connect = ({ onState, onPresence } = {}) => {
+      dl.state = () => 'connected'; dl.close = () => {}; dl.claim = () => false;
+      queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens: 1, drivers: 1 }); });
+      return dl;
+    };
+    const fetchImpl = async (url) => {
+      const ok = (b, s = 200) => ({ ok: s < 400, status: s, json: async () => b });
+      if (/ticket/.test(url)) return ok({ ticket: 'T' });
+      if (/\/api\/people$/.test(url)) return ok({ people: [{ id: 'p1', name: 'Alex' }] });
+      if (/\/api\/drive\/shared$/.test(url)) return ok({ people: [] });
+      if (/\/api\/me$/.test(url)) return ok({ display_name: 'Ann' });
+      return ok({}, 404);
+    };
+    let trackSeq = 0;
+    const tracks = [];
+    const getUserMedia = async (c) => { const ts = []; if (c.audio) ts.push({ id: `a${++trackSeq}`, kind: 'audio', enabled: true, stop() { this.stopped = true; } }); tracks.push(...ts); return new FakeStream(ts); };
+    const store = {}; const storage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+    const spoken = []; let utter = null;
+    // The page's voice: records what it read, and "finishes" when the test says so.
+    const speakWords = (t, done) => { spoken.push(t); utter = { fire: () => done() }; return () => {}; };
+    const root = document.getElementById('page');
+    const page = await mountCallPage(root, {
+      fetchImpl, connect, getUserMedia, storage, search: '?person=p1', nav: {}, attach: () => {},
+      win: { addEventListener: () => {} }, enumerateDevices: async () => [],
+      makeTransport: (x) => createCallTransport({ ...x, PeerConnection: P.PC, Stream: FakeStream }),
+      setTimer: clk.setTimer, clearTimer: clk.clearTimer, speakWords,
+    });
+    const q = (s) => root.querySelector(s);
+    check('*** the setup screen offers what to do with board words: read out (default) or only show ***',
+      q('[data-words-mode]')?.value === 'speak' && [...q('[data-words-mode]').options].map((x) => x.value).join() === WORDS_MODES.join());
+    root.querySelector('[data-start="audio"]').click();
+    await settled(() => rings.length === 1);
+    await screen.answer({}); await ticks();
+    const cpc = P.made.find((p) => p.log.includes('offer'));
+    meet(cpc, P.last()); await ticks();
+    check('in a call', page.state() === 'in-call');
+    check('no word yet: the words box is not shown', q('[data-words]')?.hidden === true);
+    const mic = tracks[0];
+    screen.sendWords('water', { source: 'board' }); await ticks();
+    check('*** the word is shown, big ***', q('[data-words-now]')?.textContent === 'water' && q('[data-words]').hidden === false);
+    check('*** ...with whose board it came from ***', q('[data-words-from]')?.textContent === 'From Alex’s AAC board', q('[data-words-from]')?.textContent);
+    check('*** ...and read out in this device\'s voice ***', spoken.join() === 'water');
+    check('*** this device\'s microphone is held while it reads (so the room does not hear its own word back) ***', mic.enabled === false && page.micHeld());
+    utter.fire('end');
+    check('...and sends again the moment the word is read', mic.enabled === true && !page.micHeld());
+    // Muted by the caller: reading a word must not unmute it.
+    root.querySelector('[data-mute]').click();
+    screen.sendWords('cold'); await ticks();
+    utter.fire('end');
+    check('*** a muted caller stays muted after a word is read ***', mic.enabled === false);
+    root.querySelector('[data-mute]').click();
+    check('...and unmuting works as before', mic.enabled === true);
+    // A voice that never says it finished cannot leave the caller muted.
+    screen.sendWords('blanket'); await ticks();
+    check('held for the next word', mic.enabled === false);
+    clk.advance(WORDS_HOLD_MAX_MS);
+    check(`*** a voice that never ends lets go after ${WORDS_HOLD_MAX_MS} ms ***`, mic.enabled === true && !page.micHeld());
+    check('the newest is big, the ones before it under it, oldest first',
+      q('[data-words-now]').textContent === 'blanket' && q('[data-words-before]').textContent === 'water · cold', q('[data-words-before]').textContent);
+    for (let i = 0; i < WORDS_SHOWN + 2; i++) { screen.sendWords(`w${i}`); await ticks(); utter.fire('end'); }
+    check(`at most ${WORDS_SHOWN} are kept on show`, page.words().length === WORDS_SHOWN && page.words()[WORDS_SHOWN - 1] === `w${WORDS_SHOWN + 1}`);
+    // Only show.
+    root.querySelector('[data-words-aloud]').click();
+    check('*** "Read out loud" off: remembered on this device ***', store[WORDS_KEY] === 'show' && q('[data-words-aloud]').getAttribute('aria-pressed') === 'false');
+    const n = spoken.length;
+    screen.sendWords('tea'); await ticks();
+    check('*** ...the word is shown and NOT read out, and the microphone is not held ***', q('[data-words-now]').textContent === 'tea' && spoken.length === n && mic.enabled === true);
+    check('site copy never says "her screen", "Christine" or "Cici"', !/her screen|Christine|Cici/i.test(root.textContent));
+    page.hangup();
+    check('the call ended: the words go with it', page.words().length === 0);
+    check('the setup screen remembers "only show"', q('[data-words-mode]')?.value === 'show');
+    q('[data-words-mode]').value = 'speak'; q('[data-words-mode]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('...and changing it there is remembered too', store[WORDS_KEY] === 'speak');
+    page.destroy(); screen.destroy();
+  }
+
+  section('the page\'s own voice is the site\'s speech channel');
+  {
+    const src = await fetch('../call_page.js', { cache: 'no-store' }).then((r) => r.text());
+    check('the caller page does not import voice.js directly (check_coupling\'s side door)', !/from '\.\/voice\.js'/.test(src));
+    check('...it reads words out through createSpeechChannel', /createSpeechChannel\(/.test(src));
+  }
+
+  section('the caller page styles its words with the theme only');
+  {
+    const html = await fetch('../call.html', { cache: 'no-store' }).then((r) => r.text());
+    check('call.html has the words styles', /\.cp-words-now/.test(html));
+    check('...and sets no colour of its own', !/#[0-9a-fA-F]{3,8}\b|rgba?\(/.test(html.replace(/<script[\s\S]*?<\/script>/g, '')));
+  }
+
+  // =====================================================================================
+  section('the browser\'s REAL connection on this machine (no network leaves it)');
+  if (typeof RTCPeerConnection !== 'function') {
+    skip('a real words channel', 'this browser has no RTCPeerConnection');
+  } else {
+    const [dl, sl] = linkPair();
+    // 'direct': no STUN, no relay - this machine's own addresses only, so nothing leaves it.
+    const caller = createCallTransport({ link: dl, role: 'driver', config: { mode: 'direct' } });
+    const screen = createCallTransport({ link: sl, role: 'screen', config: { mode: 'direct' } });
+    const got = []; caller.onWords((w) => got.push(w));
+    await caller.call({ tracks: [], from: { name: 'Ann' } });
+    const rang = await settled(() => screen.__probe().pendingOffer, 6000);
+    check('a real offer carrying only the words channel reaches the screen', rang);
+    const offer = dl.sent.find((s) => s.kind === 'offer');
+    check('*** the real offer carries a data channel (m=application) ***', /m=application/.test(offer?.sdp || ''), (offer?.sdp || '').slice(0, 120));
+    if (rang) await screen.answer({});
+    screen.sendWords('water', { source: 'board' });
+    const ok = await settled(() => got.length > 0, 12000);
+    if (ok) {
+      check('*** a REAL data channel carried the word end to end ***', got[0].text === 'water' && got[0].source === 'board', JSON.stringify(got));
+    } else {
+      skip('a real data channel carried the word end to end',
+        `the two connections did not connect here in 12 s (caller ${caller.__probe().words}, screen ${screen.__probe().words}); host addresses may be hidden in this browser - a bench test between two machines is the real proof`);
+    }
+    caller.hangup(); await sleep(50);
+    check('after a real hang-up nothing is sent', screen.sendWords('more') === false);
+    caller.destroy(); screen.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
