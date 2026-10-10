@@ -143,8 +143,10 @@ export function createMusicRouter({
     return here.length ? { instanceId: here[0] } : null;
   }
 
+  let lastEntry = null;          // desktop prompt: what `again()` plays
   async function dispatch(entry, { force = false } = {}) {
     const src = entry && entry.source;
+    lastEntry = entry || null;
     const my = ++seq;
     pending = null;
     pendingDevice = null;
@@ -285,6 +287,8 @@ export function createMusicRouter({
   return {
     play, stop, pause, resume, confirm, status,
     isLeader: leader,
+    // desktop prompt (2026-10-10): the favourite last asked for, again - after "Try on this computer" reached its folder.
+    again() { return lastEntry ? dispatch(lastEntry) : Promise.resolve({ ok: false, reason: 'nothing-asked' }); },
     // Something outside told us the thing we started has finished (the panel's own player ended).
     ended(kind) { if (current && current.kind === kind) { current = null; changed(); } },
     destroy() {

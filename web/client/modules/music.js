@@ -72,7 +72,7 @@
 import { registerModule, extendCtx } from '../module.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createYtPlayer } from './youtube.js';
-import { createMediaSourcesClient } from '../media_sources.js';
+import { createMediaSourcesClient, TRY_HERE_LABEL } from '../media_sources.js';   // desktop prompt: the press's words
 import { followPerson, personSources, personOf } from '../person_known.js';
 // backup source (2026-10-08; media_sources.js and music_local.js argue it)
 import { backupChoice, backupPanelField, backupPanelChoices, listedSources, degradedLine, BACKUP_KEY, BACKUP_NONE } from '../media_sources.js';
@@ -229,6 +229,7 @@ registerModule(
     let sourcesAsked = false;      // backup source: the settings row asked for the list once
     let spotifyDevices = null;
     let spotifyNote = '';
+    let tryNote = '';              // desktop prompt: what the last "Try on this computer" press said
     let dead = false;
     let rootEl = null;
     let stageEl = null;
@@ -312,6 +313,7 @@ registerModule(
       ...(ctx.makeAudio ? { makeAudio: ctx.makeAudio } : {}),
       ...(ctx.resolveListing ? { resolve: ctx.resolveListing } : {}),
       ...(ctx.resolveItem ? { resolveItem: ctx.resolveItem } : {}),
+      ...(ctx.checkFromHere ? { check: ctx.checkFromHere } : {}),   // desktop prompt: the suites' seam
       volume: volume(), order: 'shuffle',
     });
 
@@ -594,6 +596,7 @@ registerModule(
       onChange: (s) => {
         const was = status;
         status = s;
+        tryNote = '';   // desktop prompt: a new answer replaces the press's words
         if (!s.playing || s.kind !== 'spotify') songNow = null;
         else if (was.kind !== 'spotify' || was.name !== s.name || !was.playing) {
           songNow = null;
@@ -649,6 +652,8 @@ registerModule(
         ${why && why === SPOTIFY_MESSAGES['needs-permission'] ? `<div class="mu-btns">${btn('spotify-connect', 'Connect again')}</div>` : ''}
         ${msg ? `<p class="mu-msg" data-msg role="status">${esc(msg)}</p>` : ''}
         ${status.reason === 'spotify-off' ? `<div class="mu-btns">${btn('spotify-on', 'Turn Spotify on')}</div>` : ''}
+        ${status.reason === 'elsewhere' ? `<div class="mu-btns">${btn('try-here', TRY_HERE_LABEL)}</div>`
+          + (tryNote ? `<p class="mu-hint" data-try-note role="status">${esc(tryNote)}</p>` : '') : ''}
         ${status.asking ? `<div class="mu-ask" data-ask${elsewhere ? ' data-elsewhere' : ''}><p>${esc(elsewhere ? status.message : messageFor('did-you-mean', status.asking))}</p>
             <div class="mu-btns">${elsewhere ? btn('confirm', 'Yes, play it here') + btn('decline', 'No, leave it')
               : btn('confirm', 'Yes, play it') + btn('decline', 'No')}</div></div>` : ''}
@@ -868,12 +873,25 @@ registerModule(
       }
     }
 
+    // desktop prompt (2026-10-10): "Try on this computer" for a favourite whose folder is on another computer - one fetch
+    // on purpose (music_local.js tryHere; Chrome may ask now), then the favourite again, which now plays quietly.
+    async function tryHere() {
+      tryNote = 'Trying…';
+      render();
+      const r = await local.tryHere();
+      if (dead) return;
+      tryNote = r.ok ? '' : 'It didn’t answer on this computer.';
+      if (r.ok) await router.again();
+      if (!dead) render();
+    }
+
     function act(b) {
       const a = b?.dataset?.act;
       if (!a) return;
       if (a === 'play') { router.play({ id: b.dataset.id, name: favs.find((f) => f.id === b.dataset.id)?.name }); return; }
       if (a === 'stop') { router.stop(); return; }
       if (a === 'confirm') { router.confirm(); return; }
+      if (a === 'try-here') { tryHere(); return; }   // desktop prompt
       if (a === 'decline') { router.stop(); return; }
       if (a === 'edit') { view = 'edit'; lit = -1; editMsg = ''; render(); loadSources(); return; }
       if (a === 'close') { view = 'main'; lit = -1; render(); return; }

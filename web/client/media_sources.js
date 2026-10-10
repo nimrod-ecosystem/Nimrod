@@ -346,7 +346,8 @@ export function degradedLine({ shownLabel = null, chosenLabel = null, err = null
     : err && err.code === 'album' ? 'doesn’t have that album'
       : err && (err.code === 'gone' || err.code === 'not-connected') ? 'isn’t connected here'   // backup source: music's word too
         : err && err.code === 'unplayable' ? 'wouldn’t play'                                   // backup source: music
-          : 'can’t be reached';
+          : err && err.code === 'elsewhere' ? 'is on another computer'                         // desktop prompt (quietReach)
+            : 'can’t be reached';
   // backup source: `verb` - music is "Playing", a picture "Showing".
   return `${verb === 'Playing' ? 'Playing' : 'Showing'} ${shown} — ${chosen} ${why}.`;
 }
@@ -681,7 +682,117 @@ export async function checkFromHere(url, {
   let state = 'unknown';
   try { state = await permission(scope); } catch { state = 'unknown'; }
   if (state === 'granted') return { check: true, scope, why: 'granted' };
-  return { check: false, scope, why: state === 'denied' ? 'denied' : 'would-ask' };
+  // `state` (2026-10-10, quietReach below): what the browser said, so "won't say" ('unknown') and "would ask" ('prompt')
+  // can be told apart by a caller that needs to.
+  return { check: false, scope, why: state === 'denied' ? 'denied' : 'would-ask', state };
+}
+
+// ------------------------------------------- a panel's source on another computer (2026-10-10, desktop prompt)
+// The same rule as the history host (70e26e4), for the four panels that play from a source: Photos, Personal videos,
+// Music's folder favourites and Wallpaper. An account-wide `http://localhost:8770` (the photo program on a Pi, added from
+// a desktop) is in every screen's list. On a dashboard opened on that DESKTOP, a panel that tried it - as its own source,
+// as a stand-in or a backup ("any other source", the screen's backup), or by adopting the only source there - made Chrome
+// show its local-network Allow/Block box, for an address with nothing behind it on the desktop.
+//
+// SO A PANEL ASKS AN AGENT ONLY WHERE THAT CANNOT MAKE THE BROWSER ASK (`quietReach`): checkFromHere's cases (an address
+// on the internet; a page served from this computer or network; local-network access already allowed, as on the kiosk),
+// plus an address that answered a press here before (`rememberReached`, below). Everything else counts as "on another
+// computer": never fetched by itself. What each kind of try then does:
+//   * a stand-in, a backup, the screen's backup  -> skipped, as if it had not answered; the next one is tried
+//   * adopting the only source                   -> not adopted (and not saved): the panel says the line below
+//   * a source somebody chose for the panel      -> not fetched either; the quiet line ELSEWHERE_LINE and a
+//                                                   "Try on this computer" press (`tryFromHere`), which fetches on purpose:
+//                                                   Chrome's box may come up then, and it is the person's to answer.
+// A folder or the pictures added on this device are never "elsewhere" (nothing is fetched over the network for them).
+// AGAINST: somebody running the photo program on their OWN desktop, using the site from the internet, now sees the line
+// and presses once; after Allow (Chrome) or one answer (a browser that never asks), it is remembered and quiet again.
+export const ELSEWHERE_LINE = 'This source is on another computer — it can’t be shown here.';
+export const TRY_HERE_LABEL = 'Try on this computer';
+
+/**
+ * THE ADDRESSES A PRESS HERE REACHED, kept in this browser: key REACHED_KEY, at most REACHED_MAX. Argued:
+ *   - Kept, not just for the page: a browser that never asks (it reports no permission at all) would otherwise show the
+ *     line and want the press on every visit, for an address that works.
+ *   - Not honoured while the browser says it WOULD ask ('prompt': somebody reset the site's permissions) - then a fetch
+ *     is the box again, and the line and the press come back.
+ *   - 20: more addresses than anybody keeps on one account; past that the oldest goes, which costs one press.
+ */
+export const REACHED_KEY = 'nimrod-reached-here';
+export const REACHED_MAX = 20;
+const reachedMem = new Set();
+function readReached() {
+  try { const v = JSON.parse(globalThis.localStorage?.getItem(REACHED_KEY) || '[]'); return Array.isArray(v) ? v.map(String) : []; }
+  catch { return []; }
+}
+/** This base answered a press on this browser. Never throws. */
+export function rememberReached(base) {
+  const b = trimSlash(base);
+  if (!b) return;
+  reachedMem.add(b);
+  try {
+    const list = [b, ...readReached().filter((x) => x !== b)].slice(0, REACHED_MAX);
+    globalThis.localStorage?.setItem(REACHED_KEY, JSON.stringify(list));
+  } catch { /* a private window: this page only */ }
+}
+export function wasReached(base) { const b = trimSlash(base); return !!b && (reachedMem.has(b) || readReached().includes(b)); }
+/** For the suites: forget every press. */
+export function forgetReachedForTest() { reachedMem.clear(); try { globalThis.localStorage?.removeItem(REACHED_KEY); } catch { /* fine */ } }
+
+/** The address a source is fetched from, or '' for one that is never fetched over the network (folder, device). PURE. */
+export function agentBase(source) {
+  if (!source || source.kind === 'folder' || source.kind === 'device') return '';
+  const b = trimSlash(source.base_url);
+  return /^https?:\/\//i.test(b) ? b : '';
+}
+
+/**
+ * MAY A PANEL FETCH THIS SOURCE WITHOUT THE BROWSER ASKING? `{ quiet, why }`; why: 'not-fetched' (folder/device),
+ * checkFromHere's why, or 'reached' (a press here reached it before). Never throws, never asks. `check` is the seam
+ * (a panel passes `ctx.checkFromHere`), default checkFromHere.
+ */
+export async function quietReach(source, { check = null } = {}) {
+  const base = agentBase(source);
+  if (!base) return { quiet: true, why: 'not-fetched' };
+  let r;
+  try { r = await (check || checkFromHere)(base); } catch { r = null; }
+  if (r && r.check === true) return { quiet: true, why: r.why || 'checked' };  if (wasReached(base) && !(r && r.state === 'prompt')) return { quiet: true, why: 'reached' };
+  return { quiet: false, why: (r && r.why) || 'would-ask' };
+}
+
+/** `sources` split into what this page may fetch quietly (`here`) and what it may not (`elsewhere`), order kept. */
+export async function splitByReach(sources, { check = null } = {}) {
+  const here = [], elsewhere = [];
+  for (const s of (Array.isArray(sources) ? sources : [])) ((await quietReach(s, { check })).quiet ? here : elsewhere).push(s);
+  return { here, elsewhere };
+}
+
+/**
+ * A LISTER THAT NEVER MAKES THE BROWSER ASK: `resolve`, except that a source on another computer rejects at once with
+ * err.code 'elsewhere' and nothing is fetched. Every automatic try in a panel (its own source, the stand-ins and backups
+ * in listOrFallback, the recheck every minute) goes through this, so none of them can bring the box up.
+ */
+export function quietResolve(resolve, { check = null } = {}) {
+  return async (source, album) => {
+    if (!(await quietReach(source, { check })).quiet) {
+      throw codedError('elsewhere', `media source "${source && source.label}": on another computer, not asked from here`);
+    }
+    return resolve(source, album);
+  };
+}
+
+/**
+ * "TRY ON THIS COMPUTER": the one fetch made ON PURPOSE (Chrome's box may come up; the press is the person asking).
+ * Resolves `{ ok, listing, err }`, never rejects. An answer is remembered (`rememberReached`) so the panels fetch it
+ * quietly from then on.
+ */
+export async function tryFromHere(source, { resolve = resolveListing, album = '' } = {}) {
+  try {
+    const listing = await resolve(source, album);
+    rememberReached(agentBase(source));
+    return { ok: true, listing, err: null };
+  } catch (err) {
+    return { ok: false, listing: null, err: err || codedError('unreachable', 'no answer') };
+  }
 }
 
 // ---------------------------------------------------------------------- pairing

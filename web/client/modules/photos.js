@@ -29,6 +29,7 @@ import {
   LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
   backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
   mediaUrl,   // pulled pictures: the pull's last-pull.json, served by the agent like any file
+  quietResolve, quietReach, tryFromHere, ELSEWHERE_LINE, TRY_HERE_LABEL,   // desktop prompt (2026-10-10)
 } from '../media_sources.js';
 // hide picture (2026-10-09): which pictures this slideshow leaves out (hidden_pictures.js), and the screen actions
 // "hide this picture" / "bring it back" press (actions.js PHOTO_ACTIONS; input_speech.js ROUTES).
@@ -370,6 +371,12 @@ registerModule(
     //
     // Production is untouched: with nothing injected this is the same function it always called.
     const resolveList = ctx.resolveListing || resolveListing;
+    // desktop prompt (2026-10-10, media_sources.js quietReach): every automatic listing - this panel's source, the
+    // stand-ins and backups, the recheck - goes through `quietList`, which never asks a source on another computer (an
+    // account-wide localhost seen from a desktop), so Chrome's local-network box cannot come up by itself. Only the
+    // "Try on this computer" press (`tryAction`) fetches one on purpose. `ctx.checkFromHere` is the suites' seam.
+    const reachCheck = ctx.checkFromHere || null;
+    const quietList = quietResolve(resolveList, { check: reachCheck });
 
     // hide picture: the page's one log of hidden pictures (`ctx.hiddenPictures` in the suites), copied to the person's
     // Nimrod folder through the screen's history host when it has one. `allItems` is the listing as it came; `items`
@@ -888,6 +895,9 @@ registerModule(
       // Saved only when the screen KNOWS whose it is: a list made after the person lookup timed out is
       // shown, never saved from (person_known.js `trusted`) -- a late person re-lists and saves then.
       if (sources.length === 1) {
+        // desktop prompt: the only source, on another computer (a Pi's localhost seen from a desktop), is neither
+        // adopted nor saved from here - the panel says so, with the press that tries it (`elsewhere`).
+        if (!(await quietReach(sources[0], { check: reachCheck })).quiet) return { source: null, chosenId: null, sources, elsewhere: sources[0] };
         if (client.trusted?.() !== false) state.set({ sourceId: sources[0].id });
         return { source: sources[0], chosenId: null, sources };
       }
@@ -1021,7 +1031,21 @@ registerModule(
       const text = escapeHtml(degradedLine({ shownLabel: keptMode ? null : d.shownLabel, chosenLabel: d.chosenLabel, err: d.err,
         backup: !keptMode && !!d.backup }));   // backup source: "Showing the backup: ..." for a chosen one
       const perm = d.err && d.err.code === 'permission' && d.chosenSource;
-      setStatus(text, keptMode && !perm, perm ? allowAction(d.chosenSource) : null);
+      const away = d.err && d.err.code === 'elsewhere' && d.chosenSource;   // desktop prompt: the press, not Retry
+      setStatus(text, keptMode && !perm && !away, perm ? allowAction(d.chosenSource) : away ? tryAction(d.chosenSource) : null);
+    }
+    // desktop prompt (2026-10-10): "Try on this computer" - the one fetch of a source on another computer made on
+    // purpose (Chrome may ask now; that is the person's to answer). An answer is remembered and the panel lists again.
+    function tryAction(source) {
+      return {
+        label: TRY_HERE_LABEL,
+        run: async () => {
+          setStatus('Trying…');
+          const r = await tryFromHere(source, { resolve: resolveList, album: cfg.album });
+          if (r.ok) { reload(); return; }
+          setStatus('It didn’t answer on this computer.', false, tryAction(source));
+        },
+      };
     }
     function clearRecheck() { if (recheckTimer != null) { clearTimer(recheckTimer); recheckTimer = null; } }
     function armRecheck() {
@@ -1039,7 +1063,7 @@ registerModule(
         const rows = (await client.list()) || [];
         const chosen = rows.find((s) => s && s.id === want);
         if (chosen) {
-          const r = await listingWithin(resolveList, chosen, cfg.album,
+          const r = await listingWithin(quietList, chosen, cfg.album,   // desktop prompt: never asks by itself
             { accept: (l) => slideshowItems(l && l.items), waitMs: recheckMs(), setTimer, clearTimer });
           back = r.ok;
           // A source whose FILES stopped loading is back only when one of them loads: its listing
@@ -1118,6 +1142,8 @@ registerModule(
         }
         return showNoSource();
       }
+      // desktop prompt: the chosen source is on another computer - never fetched by itself; the quiet line and the press.
+      if (err && err.code === 'elsewhere') { setStatus(ELSEWHERE_LINE, false, tryAction(source)); return; }
       // The words come from `listingFailure` so they can be checked without a browser; this
       // half is only the wiring. See §E-fail for what they used to be.
       const f = listingFailure(err, source, cfg.album);
@@ -1326,11 +1352,18 @@ registerModule(
       await new Promise((resolve) => { Promise.resolve(hides.ready).then(resolve, resolve); setTimeout(resolve, 1500); });
       if (seq !== loadSeq) return;
       const { source, chosenId, sources } = found;
+      if (!source && !chosenId && found.elsewhere) {   // desktop prompt: the only source is on another computer
+        degraded = null; keptMode = false;
+        if (stage()) stage().dataset.showing = '';
+        items = ids = []; byId = channels = {};
+        setStatus(ELSEWHERE_LINE, false, tryAction(found.elsewhere));
+        return;
+      }
       if (!source && !chosenId) { degraded = null; keptMode = false; await showNoSource(); return; }
       // The chosen source -- or, when it cannot be listed, the best stand-in (§3e, media_sources.js).
       const got = await listOrFallback({
         sources, chosen: source, chosenId, album: cfg.album, personId: personOf(ctx),
-        resolve: resolveList, accept: (l) => slideshowItems(l && l.items),
+        resolve: quietList, accept: (l) => slideshowItems(l && l.items),   // desktop prompt: never asks by itself
         waitMs: listingWaitMs(), setTimer, clearTimer, skip: loadFailed,
         backup: backupNow(),   // backup source
       });

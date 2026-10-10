@@ -28,6 +28,11 @@ import { isAudioPath } from './game_music.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from './audio_bus.js';
 // backup source (2026-10-08)
 import { backupSources, listingWithin, createSourceRecheck, BACKUP_NONE, LISTING_WAIT_MS, SOURCE_RECHECK_MS } from './media_sources.js';
+// desktop prompt (2026-10-10, media_sources.js quietReach): a favourite's folder on another computer - an account-wide
+// localhost seen from a desktop - is never fetched by itself (a song's address is fetched by the <audio> element, so
+// the check is made before one is made: `sourceById`). The favourite says 'elsewhere' and the panel offers "Try on this
+// computer" (`tryHere`), the one fetch made on purpose. A backup on another computer is skipped like one that is down.
+import { quietReach, quietResolve, tryFromHere } from './media_sources.js';
 
 // *** BACKUP SOURCE (2026-10-08; media_sources.js argues the rows and defaults). *** A file or folder favourite whose
 // source can't be reached - not connected on this screen, a listing that fails, or not one of its files will play -
@@ -56,6 +61,7 @@ export const LOCAL_MESSAGES = Object.freeze({
   'no-sources': 'No music folders are connected on this screen.',
   'not-connected': 'That music folder is not connected on this screen.',
   unreachable: 'That music folder could not be reached.',
+  elsewhere: 'That music folder is on another computer — it can’t be played here.',   // desktop prompt
   'no-audio': 'There is no music in that folder that this screen can find.',
   unplayable: 'That music file would not play.',
   blocked: 'The browser is waiting for a press before it will play sound.',
@@ -91,7 +97,9 @@ export function createLocalMusic({
   clearTimer = (id) => clearTimeout(id),
   listingWaitMs = LISTING_WAIT_MS,
   recheckMs = SOURCE_RECHECK_MS,
+  check = null,                    // desktop prompt: checkFromHere's seam (media_sources.js quietReach)
 } = {}) {
+  const quietList = quietResolve(resolve, { check });   // desktop prompt: the backup and its rechecks never ask
   let vol = clamp01(volume);
   let gain = 1;                    // what the arbiter last said; 1 until it says otherwise
   let queue = [];                  // [{ url, release, path }]
@@ -239,7 +247,7 @@ export function createLocalMusic({
     if (!req) return false;
     const { source, error } = await sourceById(req.sourceId);
     if (error) return false;
-    const r = await listingWithin(resolve, source, req.kind === 'file' ? dirOf(req.path) : (req.album || ''),
+    const r = await listingWithin(quietList, source, req.kind === 'file' ? dirOf(req.path) : (req.album || ''),
       { accept: audioTracksOf, waitMs: listingWaitMs, setTimer, clearTimer });
     return r.ok && (req.kind !== 'file' || r.items.some((t) => baseOf(t.path) === baseOf(req.path)));
   }
@@ -272,7 +280,7 @@ export function createLocalMusic({
     const here = req.kind === 'file' ? dirOf(req.path) : (req.album || '');
     for (const s of tries) {
       for (const album of (here ? [here, ''] : [''])) {
-        const r = await listingWithin(resolve, s, album, { accept: audioTracksOf, waitMs: listingWaitMs, setTimer, clearTimer });
+        const r = await listingWithin(quietList, s, album, { accept: audioTracksOf, waitMs: listingWaitMs, setTimer, clearTimer });
         if (g !== gen || dead) return { ok: false, reason: 'superseded' };
         if (!r.ok || !r.items.length) continue;
         const same = req.kind === 'file' ? r.items.find((t) => baseOf(t.path) === baseOf(req.path)) : null;
@@ -292,7 +300,10 @@ export function createLocalMusic({
     let all = [];
     try { all = (await sources.list()) || []; } catch { return { error: 'unreachable' }; }
     const s = all.find((x) => x && x.id === sourceId);
-    return s ? { source: s } : { error: 'not-connected' };
+    if (!s) return { error: 'not-connected' };
+    // desktop prompt: on another computer - nothing of it is fetched by itself (see the import's note).
+    if (!(await quietReach(s, { check })).quiet) return { error: 'elsewhere', source: s };
+    return { source: s };
   }
 
   function begin(tracks, what, g) {
@@ -344,6 +355,22 @@ export function createLocalMusic({
         }
       }
       return begin(tracks, { kind: 'folder', sourceId, album }, g);
+    },
+
+    /**
+     * desktop prompt: "Try on this computer" for the favourite that last said 'elsewhere' - ONE fetch of its folder,
+     * on purpose (Chrome may ask now; the person answers). `{ ok }`; an answer is remembered (media_sources.js
+     * rememberReached), so playing the favourite again then works quietly. Never throws.
+     */
+    async tryHere() {
+      const req = lastReq;
+      if (!req || !sources || typeof sources.list !== 'function') return { ok: false };
+      let all = [];
+      try { all = (await sources.list()) || []; } catch { return { ok: false }; }
+      const s = all.find((x) => x && x.id === req.sourceId);
+      if (!s) return { ok: false };
+      const r = await tryFromHere(s, { resolve, album: req.kind === 'file' ? dirOf(req.path) : (req.album || '') });
+      return { ok: r.ok };
     },
 
     stop() { gen++; finish(); },
