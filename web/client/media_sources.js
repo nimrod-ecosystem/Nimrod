@@ -349,6 +349,146 @@ export function leaveOutRows({ idPrefix = 'leave', listing = null, album = '', s
   return rows;
 }
 
+// ------------------------------------------------------------------------------ CHOOSING THE ALBUM (2026-10-10)
+// Found 2026-10-10: the Photos panel's "Album" row was read-only and said "set in Media / Sources" - and Media /
+// Sources has no album chooser; only a dev address (?photoAlbum=) ever set one. So the album is chosen where it lives,
+// on the panel, from the source's own folders: "Album: The whole source / <each folder at its top> ...".
+//
+// THE ROW IS A CHOICE, built from listings the panel already makes (the settings menu paints synchronously):
+//   * "The whole source" (''), then each folder at the source's top, in name order;
+//   * the album chosen now, and the folders directly inside it, right under its top folder - so a press on a folder
+//     inside goes one level down, and its parent (also listed) one level back up;
+//   * a chosen album the source does not have stays on the list, last-but-named ("<name> — not in this source"), so the
+//     row is never a dead id and one press repairs it (settings_fields.js stepValue).
+// Long lists open as a list (settings_fields.js PICKER_OVER); "Step through (for a switch)" steps them, as every choice.
+// WHERE THE TOP FOLDERS COME FROM: the listing of the whole source, when that is what the panel shows; when an album is
+// chosen, ONE quiet listing of the source's top (never one that would make the browser ask: quietResolve), once per
+// source per panel. A browser folder is read for names only (listFolderEntries): a full listing of it would replace
+// the picture addresses the slideshow is showing (folder_source.js revokeFor).
+// HARD-CODED, argued (Rule 1): ALBUM_CHOICES_MAX 200 options. Mike's Pictures folder has 57; past a couple of hundred
+// the list is the wrong folder chosen as the source, and a menu row that builds thousands of options paints slowly on
+// a Pi. The chosen album and its own folders are always on the list, whatever the cap leaves out.
+export const ALBUM_KEY = 'album';
+export const ALBUM_WHOLE_LABEL = 'The whole source';
+export const ALBUM_CHOICES_MAX = 200;
+
+/**
+ * THE DECLARED ROW: "Album". A choice whose live options come from `albumChoices` (each panel's `settingsChoices`).
+ * Declared with the one option every source has, so a panel not mounted still reads as "The whole source".
+ */
+export function albumField({ level = 'standard', appliesWhen = null } = {}) {
+  return { key: ALBUM_KEY, label: 'Album', kind: 'choice', default: '', level, emptyLabel: ALBUM_WHOLE_LABEL,
+    options: [{ value: '', label: ALBUM_WHOLE_LABEL }], ...(appliesWhen ? { appliesWhen } : {}) };
+}
+
+const byName = (x, y) => { const a = x.toLowerCase(), b = y.toLowerCase(); return a < b ? -1 : a > b ? 1 : 0; };
+
+/** The folders at the top of a listing of the whole source, by name. Pure. */
+export function topFoldersOf(listing) {
+  if (!listing) return [];
+  const raw = listing.deep && Array.isArray(listing.folders)
+    ? listing.folders.map(String).filter((f) => f && !f.includes('/'))
+    : (Array.isArray(listing.albums) ? listing.albums.map(String) : []);
+  return [...new Set(raw.map(cleanFolderPath).filter((f) => f && !f.includes('/')))].sort(byName);
+}
+
+/**
+ * The folders DIRECTLY inside `album`, from a listing of that album, as paths from the source's top. An agent names
+ * them from the top ('Trips/Paris'), a browser folder by name ('Paris'); both come out the same. Pure.
+ */
+export function foldersInside(listing, album) {
+  const a = cleanFolderPath(album);
+  if (!listing || !a) return [];
+  const raw = listing.deep && Array.isArray(listing.folders)
+    ? listing.folders.map(String)
+    : (Array.isArray(listing.albums) ? listing.albums.map(String).map((f) => (f.startsWith(`${a}/`) ? f : `${a}/${f}`)) : []);
+  return [...new Set(raw.map(cleanFolderPath).filter((f) => f.startsWith(`${a}/`) && !f.slice(a.length + 1).includes('/')))]
+    .sort(byName);
+}
+
+/**
+ * THE ROW'S OPTIONS (above). `top` the folders at the source's top (null: not known yet); `inside` the folders directly
+ * inside the chosen album. Returns `{ options, note }`: `note` says why there is nothing to choose, when there is not
+ * (the row is then not a stop, and says so). Pure.
+ */
+export function albumChoices({ album = '', top = null, inside = [], max = ALBUM_CHOICES_MAX } = {}) {
+  const a = String(album || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  const clean = cleanFolderPath(a);
+  const shown = (f) => f.split('/').join(' / ');
+  const tops = Array.isArray(top) ? top.map(cleanFolderPath).filter((f) => f && !f.includes('/')) : [];
+  const chain = clean ? clean.split('/').map((_, i, p) => p.slice(0, i + 1).join('/')) : [];
+  const kids = clean ? (inside || []).map(cleanFolderPath).filter((f) => f.startsWith(`${clean}/`)) : [];
+  // Is the chosen album missing from the source? Only said when the top is known and its top folder is not there.
+  const missing = !!a && (!clean || (Array.isArray(top) && !tops.includes(chain[0])));
+  const keep = new Set([...chain, ...kids]);
+  const order = [];
+  for (const t of tops) {
+    order.push(t);
+    if (!missing && chain.length && t === chain[0]) order.push(...chain.slice(1), ...kids);
+  }
+  if (!missing && chain.length && !tops.includes(chain[0])) order.push(...chain, ...kids);   // the top not known yet
+  const seen = new Set(['']);
+  const opts = [{ value: '', label: ALBUM_WHOLE_LABEL }];
+  const room = Math.max(1, Number(max) || ALBUM_CHOICES_MAX);
+  let extra = 0;
+  for (const f of order) {
+    if (seen.has(f)) continue;
+    if (opts.length >= room && !keep.has(f)) { extra += 1; continue; }
+    seen.add(f);
+    opts.push({ value: f, label: shown(f) });
+  }
+  if (missing) opts.push({ value: a, label: `${clean ? shown(clean) : a} — not in this source` });
+  let note = null;
+  if (opts.length < 2) note = Array.isArray(top) ? 'no folders inside this source' : 'its folders show once it has been listed';
+  else if (extra) note = `${extra} more folders are not listed`;
+  return { options: opts, note };
+}
+
+/**
+ * ONE PANEL'S ALBUM CHOICES: it hears each listing of its chosen source (`heard`) and answers the row (`row`). `listTop`
+ * (source) -> top folder names is asked only when the panel shows an album and the top of that source is not known.
+ * `topFoldersLister` below is the production one.
+ */
+export function createAlbumChooser({ listTop = null } = {}) {
+  let top = null;        // { sourceId, folders }
+  let last = null;       // { sourceId, album, listing }
+  let asking = null;     // the source whose top is being asked for
+  return {
+    heard(source, album, listing) {
+      if (!source || !source.id) return;
+      const a = cleanFolderPath(String(album || ''));
+      if (listing) last = { sourceId: source.id, album: a, listing };
+      if (!a) { if (listing) top = { sourceId: source.id, folders: topFoldersOf(listing) }; return; }
+      if ((top && top.sourceId === source.id) || asking === source.id || typeof listTop !== 'function') return;
+      const sid = source.id;
+      asking = sid;
+      Promise.resolve().then(() => listTop(source)).then((folders) => {
+        if (asking === sid) top = { sourceId: sid, folders: topFoldersOf({ albums: Array.isArray(folders) ? folders : [] }) };
+      }, () => {}).then(() => { if (asking === sid) asking = null; });
+    },
+    row(sourceId, album) {
+      const a = cleanFolderPath(String(album || ''));
+      const t = top && top.sourceId === sourceId ? top.folders : null;
+      const l = last && last.sourceId === sourceId && last.album === a ? last.listing : null;
+      return albumChoices({ album, top: t, inside: foldersInside(l, a) });
+    },
+    known: () => ({ top: top ? { ...top, folders: top.folders.slice() } : null, asking }),
+  };
+}
+
+/**
+ * The top folders of a source, never making the browser ask (quietResolve): a media agent's one-level listing, a browser
+ * folder's names (listFolderEntries, which leaves the slideshow's picture addresses alone), nothing for this device's
+ * pictures. `resolve` is a panel's injected lister (the suites'), used for every kind when given.
+ */
+export function topFoldersLister({ resolve = null, check = null } = {}) {
+  return async (source) => {
+    if (!source || source.kind === 'device') return [];
+    if (source.kind === 'folder' && !resolve) return topFoldersOf(await listFolderEntries(source, ''));
+    return topFoldersOf(await quietResolve(resolve || resolveListing, { check })(source, ''));
+  };
+}
+
 /** The words after "N items" when a listing stopped early ('' when it did not). Plain text. */
 export function truncatedWords(listing) {
   const why = listing && listing.truncated;

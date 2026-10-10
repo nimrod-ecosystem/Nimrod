@@ -760,6 +760,129 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     t.inst.destroy(); t.host.remove();
   }
 
+  // *** CHOOSING THE ALBUM (2026-10-10). *** The "Album" row was read-only and said "set in Media / Sources", where
+  // there has never been an album chooser - only a dev address set one. Now it is chosen on the panel, from the source's
+  // own folders (media_sources.js "CHOOSING THE ALBUM"). A listing seam like the agent's: shallow listings name the
+  // folders directly inside (from the top, as the agent does); deep ones carry `folders` too.
+  {
+    section('*** choosing the album: the source\'s own folders, chosen on the panel ***');
+    const M = await import('../media_sources.js');
+    const SF = await import('../settings_fields.js');
+    const TREE = ['top.jpg', '2019-07-04/a.jpg', '2019-07-04/b.jpg', '2019-07-04/beach/c.jpg', '2020-01-01/d.jpg',
+      'Screenshots/s.png', 'Screenshots/more/s2.png'];
+    const FOLDERS = ['2019-07-04', '2019-07-04/beach', '2020-01-01', 'Screenshots', 'Screenshots/more'];
+    const until = async (fn, ms = 1500) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(15); } return !!fn(); };
+    function rigA(cfg0 = {}) {
+      const host = document.createElement('div');
+      host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+      document.body.append(host);
+      const calls = [];
+      let cfg = { sourceId: 'src-1', intervalMs: 8000, ...cfg0 };
+      const subs = [];
+      const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+                      subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+      const source = { id: 'src-1', label: 'Her pictures', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+      const resolveListing = async (src, album = '', opts = {}) => {
+        calls.push({ album, deep: !!opts.deep });
+        const a = album ? `${album}/` : '';
+        if (album && !FOLDERS.includes(album)) { const e = new Error(`no album "${album}"`); e.code = 'album'; throw e; }
+        let paths = TREE.filter((p) => !album || p.startsWith(a));
+        if (!opts.deep) paths = paths.filter((p) => !p.slice(a.length).includes('/'));
+        const items = paths.map((p) => ({ id: p, path: p, name: p.split('/').pop(), kind: 'image', url: OKPIC(p) }));
+        const albums = FOLDERS.filter((f) => f.startsWith(a) && !f.slice(a.length).includes('/'));
+        const listing = { album, albums, items, count: items.length };
+        if (opts.deep) Object.assign(listing, { deep: true, truncated: '', folders: FOLDERS.filter((f) => !album || f.startsWith(a)) });
+        return listing;
+      };
+      const inst = mountModule('photos', {
+        mount: host, bus: createBus(), state, instanceId: `ph-album-${Math.random().toString(36).slice(2)}`,
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        user: USER, profileId: 'p',
+        sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+        resolveListing,
+        setTimer: (fn, ms) => ({ fn, ms, live: true }), clearTimer: (x) => { if (x) x.live = false; },
+      });
+      inst.init();
+      const field = () => SF.fieldsFor(getManifest('photos'), inst).find((f) => f.key === 'album');
+      const row = () => SF.fieldItems(SF.fieldsFor(getManifest('photos'), inst), { values: () => cfg, level: 'standard',
+        onStep: (k, v) => state.set({ [k]: v }) }).find((x) => x.id === 'set:album');
+      return { host, inst, state, calls, cfg: () => cfg, field, row,
+        values: () => (field()?.options || []).map((o) => o.value), labels: () => (field()?.options || []).map((o) => o.label),
+        label: () => host.querySelector('[data-source-label]')?.textContent || '' };
+    }
+
+    const decl = (getManifest('photos').settings || []).find((f) => f.key === 'album');
+    check('*** the Album row is a CHOICE now - not read-only, and no note sending anybody to Media / Sources ***',
+      !!decl && decl.kind === 'choice' && !decl.readOnly && !/Media \/ Sources/.test(decl.note || '') && decl.label === 'Album'
+        && decl.level === 'standard', JSON.stringify(decl));
+
+    const r = rigA();
+    await until(() => /— 7 items$/.test(r.label()));
+    check('*** the whole source listed: the row offers "The whole source" and each folder at the top, in name order ***',
+      JSON.stringify(r.values()) === '["","2019-07-04","2020-01-01","Screenshots"]' && r.labels()[0] === 'The whole source',
+      JSON.stringify(r.labels()));
+    check('the row reads "The whole source" and is a stop a switch can step (four choices: a press steps, no list opens)',
+      r.row()?.hint === 'The whole source' && r.row()?.disabled === false && r.field().cycleable
+        && !SF.opensPicker(r.field(), { mode: 'point' }), JSON.stringify({ h: r.row()?.hint, d: r.row()?.disabled }));
+    r.row().run();
+    check('*** one press chooses the first folder - saved as the panel\'s album, and the slideshow lists it ***',
+      r.cfg().album === '2019-07-04' && await until(() => /· 2019-07-04 — 3 items$/.test(r.label()))
+        && r.calls.at(-1).album === '2019-07-04', `${r.cfg().album} / ${r.label()}`);
+    check('*** inside an album: its own folders are offered right under it ("2019-07-04 / beach"), the parent stays ***',
+      JSON.stringify(r.values()) === '["","2019-07-04","2019-07-04/beach","2020-01-01","Screenshots"]'
+        && r.labels().includes('2019-07-04 / beach'), JSON.stringify(r.labels()));
+    check('no extra listing was needed for the top: the whole-source listing was remembered',
+      !r.calls.some((c) => c.album === '' && !c.deep), JSON.stringify(r.calls));
+    r.row().commit('2019-07-04/beach');
+    check('a folder inside can be chosen outright (the list a pointer opens): one level down',
+      await until(() => /· 2019-07-04\/beach — 1 item$/.test(r.label())), r.label());
+    check('the choice picker would set only one of the offered folders, never a typed name',
+      r.row().commit('Nowhere') === false && r.cfg().album === '2019-07-04/beach');
+    r.inst.destroy(); r.host.remove();
+
+    const q = rigA({ album: 'Screenshots' });
+    await until(() => /· Screenshots — 2 items$/.test(q.label()));
+    check('*** a panel that starts on an album asks for the source\'s top ONCE, quietly and one level only ***',
+      await until(() => q.values().includes('2020-01-01')) && q.calls.filter((c) => c.album === '' && !c.deep).length === 1,
+      JSON.stringify(q.calls));
+    check('...and offers the top folders, with the album\'s own folder under it',
+      JSON.stringify(q.values()) === '["","2019-07-04","2020-01-01","Screenshots","Screenshots/more"]', JSON.stringify(q.values()));
+    q.state.set({ album: '' });
+    await until(() => /— 7 items$/.test(q.label()));
+    check('"The whole source" puts it back to everything', q.cfg().album === '' && q.row().hint === 'The whole source', q.row().hint);
+    q.inst.destroy(); q.host.remove();
+
+    const g = rigA({ album: 'Gone' });
+    check('*** an album the source does not have: the row lists the real folders, and the chosen one LAST, named so ***',
+      await until(() => g.labels().at(-1) === 'Gone — not in this source' && g.values().includes('Screenshots')),
+      JSON.stringify(g.labels()));
+    check('...so ONE press repairs it: back to "The whole source"',
+      (g.row().run(), g.cfg().album === ''), String(g.cfg().album));
+    g.inst.destroy(); g.host.remove();
+
+    // Pure: the cap, a long list, a browser folder's names, nothing to choose.
+    const many = Array.from({ length: 300 }, (_, i) => `F${String(i).padStart(3, '0')}`);
+    const capped = M.albumChoices({ album: 'F299', top: many, inside: ['F299/x'] });
+    check('*** a source of 300 folders: at most 200 choices, the chosen album and its folders always among them, the rest counted ***',
+      capped.options.length <= M.ALBUM_CHOICES_MAX + 2 && capped.options.some((o) => o.value === 'F299')
+        && capped.options.some((o) => o.value === 'F299/x') && /more folders are not listed/.test(capped.note || ''),
+      `${capped.options.length} ${capped.note}`);
+    const fifty7 = SF.normalizeField({ ...decl, options: M.albumChoices({ top: many.slice(0, 57) }).options });
+    check('Mike\'s 57 dated folders: a press opens the list for a pointer; "Step through (for a switch)" steps it',
+      SF.opensPicker(fifty7, { mode: 'point' }) === true && SF.opensPicker(fifty7, { mode: 'step' }) === false);
+    check('a browser folder names the folders inside by name, an agent from the top: both read the same',
+      JSON.stringify(M.foldersInside({ albums: ['beach', 'night'] }, 'Trips')) === '["Trips/beach","Trips/night"]'
+        && JSON.stringify(M.foldersInside({ albums: ['Trips/beach'] }, 'Trips')) === '["Trips/beach"]'
+        && JSON.stringify(M.foldersInside({ deep: true, folders: ['Trips/beach', 'Trips/beach/x', 'Other'] }, 'Trips')) === '["Trips/beach"]');
+    const none = M.albumChoices({ top: [] });
+    const unknown = M.albumChoices({ top: null });
+    check('nothing to choose says why in plain words: "no folders inside this source", or "...once it has been listed"',
+      none.options.length === 1 && none.note === 'no folders inside this source'
+        && unknown.note === 'its folders show once it has been listed', JSON.stringify([none, unknown]));
+    check('a climbing album is never offered as a folder (it reads as not in this source)',
+      M.albumChoices({ album: '../x', top: ['A'] }).options.at(-1).label === '../x — not in this source');
+  }
+
   // *** A SOURCE SHOULD DEGRADE, NOT STOP (MIKE_CHANGE_LIST §3e, Mike 2026-09-08): "If a chosen source
   // can't be reached and an equivalent one can, use it and say so somewhere visible. If none can, show
   // something rather than nothing." *** No agent and no server: a registry of tagged sources, a listing

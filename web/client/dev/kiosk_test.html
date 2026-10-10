@@ -332,10 +332,13 @@ const toTab = (m, id) => {
       check('a choice row shows the LABEL, never the raw enum key',
         byId['set:fit'].hint === 'Show the whole photo', byId['set:fit'].hint);
 
-      check('the free-text album field is present but DISABLED — a fake affordance is worse '
-        + 'than an absent one', byId['set:album']?.disabled === true);
-      check('and it says where it IS changed, so the row is a signpost not a dead end',
-        (byId['set:album']?.hint || '').includes('Media / Sources'), byId['set:album']?.hint);
+      // (choosing the album, 2026-10-10, DELIBERATELY: the Album row is a choice of the source's folders, chosen here on
+      // the panel - it used to say "set in Media / Sources", where there was no such choice. media_sources.js argues it.)
+      check('the album row is present, and with nothing listed it is NOT a stop - there is nothing to choose yet',
+        byId['set:album']?.disabled === true, JSON.stringify(byId['set:album']?.hint));
+      check('...and it says why in plain words, never pointing somewhere else (no "Media / Sources")',
+        /^The whole source · /.test(byId['set:album']?.hint || '') && !/Media \/ Sources/.test(byId['set:album']?.hint || ''),
+        byId['set:album']?.hint);
       check('with no media sources connected the source picker is disabled, and says so',
         byId['set:sourceId']?.disabled === true
         && (byId['set:sourceId']?.hint || '').includes('nothing to choose from yet'),
