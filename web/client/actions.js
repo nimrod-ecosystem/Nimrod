@@ -412,6 +412,20 @@ export const CHART_ACTIONS = [
 ];
 
 // ---------------------------------------------------------------------------------------
+// HIDE PICTURE (2026-10-09; modules/photos.js, hidden_pictures.js). "Hide this picture" and "bring it back" (the newest
+// one hidden). SCREEN actions, like the charts': they work wherever focus is, because a person looking at a picture
+// says it about that picture whatever the switch last selected. With two slideshows on a screen the one showing and
+// last pressed on answers (photos.js `claim`); with none, nothing does. input_speech.js ROUTES carries the phrases; a
+// switch or a key can be bound to either too. NOT verbs, argued: a verb goes to the FOCUSED panel only, and on a
+// screen of four panels "hide this picture" doing nothing because the clock had focus is a command that looks broken.
+export const PHOTOS_HIDE_TOPIC = 'photos/hide';
+export const PHOTOS_UNHIDE_TOPIC = 'photos/unhide';
+export const PHOTO_ACTIONS = [
+  { id: 'photos/hide-picture', label: 'Photos: hide the picture on screen', topic: PHOTOS_HIDE_TOPIC, group: 'Photos' },
+  { id: 'photos/bring-back', label: 'Photos: bring the last hidden picture back', topic: PHOTOS_UNHIDE_TOPIC, group: 'Photos' },
+];
+
+// ---------------------------------------------------------------------------------------
 // CUSTOM VERBS — Mike: *"a verb is just a variable. You bind something to verb X and then
 // verb X performs this action in your module."*
 //
@@ -761,6 +775,7 @@ export function createDefaultRegistry() {
   reg.registerAll(CALL_RING_ACTIONS);
   reg.registerAll(REVIEW_ACTIONS);
   reg.registerAll(CHART_ACTIONS);
+  reg.registerAll(PHOTO_ACTIONS);   // hide picture
   reg.register(ROOM_HOLD_ACTION);
   return reg;
 }

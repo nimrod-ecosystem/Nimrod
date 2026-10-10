@@ -49,6 +49,14 @@ check in front of them. These are the server's half of it - security invariants,
      NO EXISTING OPT-IN COVERS IT: "Where your history is kept" (rule 4) covers what played, game results and the
      talk board's words - a person choosing "with us" for those chose nothing about this. The AUDIO a correction
      attaches to (a voice recording) is rule 2's and never leaves the device either (client/voice_recording.js).
+  7. WHICH PICTURES SOMEBODY HID IS REFUSED, EVERYWHERE (hide picture, 2026-10-09). "Hide this picture" leaves a
+     picture out of a slideshow; the list of hidden pictures (client/hidden_pictures.js) - which family photos
+     somebody chose not to see - is kept on the device and in the person's Nimrod folder, never here. Refused in
+     state, events and history alike (part of check_content, and check_event): anything carrying the record's own tag,
+     `"format": "nimrod-hidden-pictures"`, a key named `hiddenPictures` / `hidden-pictures` / `hidden_pictures` (any
+     case), the row kinds `hide-picture` / `unhide-picture`, and the stream `hidden`. The history route already takes
+     only its three streams, so `hidden` is refused there before this rule is reached. NO OPT-IN COVERS IT ("Where your
+     history is kept" is about plays, game results and board words).
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -134,6 +142,13 @@ LEARNED_KEYS = frozenset({"learnedwords", "learned-words", "learned_words"})
 SAY_LEARNED = ("This looks like the words the subtitles learned from being corrected (names, places, and how somebody's "
                "speech is misheard). They stay on the screen that learned them, or in the person's own Nimrod folder, "
                "and are never kept on this site.")
+# ---- rule 7: which pictures somebody hid (hide picture) ----
+HIDDEN_FORMAT = "nimrod-hidden-pictures"          # web/client/hidden_pictures.js HIDDEN_FORMAT (the test holds them equal)
+HIDDEN_KEYS = frozenset({"hiddenpictures", "hidden-pictures", "hidden_pictures"})
+HIDDEN_EVENT_KINDS = frozenset({"hide-picture", "unhide-picture"})   # hidden_pictures.js HIDE_KIND / UNHIDE_KIND
+HIDDEN_EVENT_STREAMS = frozenset({"hidden"})                          # hidden_pictures.js HIDDEN_STREAM
+SAY_HIDDEN = ("This looks like the list of pictures somebody hid from a slideshow. It stays on the screen where they "
+              "were hidden, or in the person's own Nimrod folder, and is never kept on this site.")
 SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, or where "
                        "its person chose in \"Where your history is kept\" - not in this site's log.")
 
@@ -320,13 +335,34 @@ def looks_like_learned_words(data) -> bool:
     return False
 
 
+def looks_like_hidden_pictures(data) -> bool:
+    """Rule 7: the hidden-pictures record's own tag, or a key named hiddenPictures (any spelling above, any case).
+    Iterative, like _strings, so a deeply nested body cannot blow the stack."""
+    stack = [data]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            for k, x in v.items():
+                if isinstance(k, str) and k.strip().lower() in HIDDEN_KEYS:
+                    return True
+                if isinstance(k, str) and k.lower() == "format" and isinstance(x, str) \
+                        and x.strip().lower() == HIDDEN_FORMAT:
+                    return True
+                stack.append(x)
+        elif isinstance(v, (list, tuple)):
+            stack.extend(v)
+    return False
+
+
 def check_content(data) -> None:
     """Rule 2: no picture, sound or video inside the JSON, as a data: address or as a long base64 run.
-    Rule 5: no voiceprint. Rule 6: no record of what the subtitles learned."""
+    Rule 5: no voiceprint. Rule 6: no record of what the subtitles learned. Rule 7: no list of hidden pictures."""
     if looks_like_voiceprint(data):
         raise Refused(400, SAY_VOICEPRINT)
     if looks_like_learned_words(data):
         raise Refused(400, SAY_LEARNED)
+    if looks_like_hidden_pictures(data):
+        raise Refused(400, SAY_HIDDEN)
     for s in _strings(data):
         if s.lstrip()[:11].lower().startswith(_MEDIA_PREFIXES):
             raise Refused(400, "This has a picture, a sound or a video inside it. " + SAY_KEEP_IT_HOME
@@ -359,6 +395,8 @@ def check_event(stream: str, kind: str, data) -> None:
                            "recordings stay in the collector's own spool.")
     if (kind or "").lower() in PLAY_HISTORY_KINDS or (stream or "").lower() in PLAY_HISTORY_STREAMS:
         raise Refused(400, SAY_PLAYS_STAY_HOME)
+    if (kind or "").lower() in HIDDEN_EVENT_KINDS or (stream or "").lower() in HIDDEN_EVENT_STREAMS:
+        raise Refused(400, SAY_HIDDEN)      # rule 7: a hide / bring-back row, or the stream they are kept in
     size = row_bytes(data)
     if size > EVENT_MAX_BYTES:
         raise _too_big("event", size, EVENT_MAX_BYTES)

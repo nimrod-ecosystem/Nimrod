@@ -1,0 +1,10 @@
+[Unit]
+Description=Look every hour whether a Nimrod photo pull is due (how often one really runs: NIMROD_PULL_EVERY, default daily)
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
