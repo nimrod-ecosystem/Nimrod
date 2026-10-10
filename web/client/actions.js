@@ -745,6 +745,9 @@ export const MODULE_VERBS = {
   avatar:        { next: 'avatar/next', prev: 'avatar/prev', select: 'avatar/select', back: 'avatar/back' },
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.
   music:         { next: 'music/next', prev: 'music/prev', select: 'music/select', back: 'music/back', play: 'music/resume', pause: 'music/pause' },
+  // Row 2.69. The Internet Archive: next / prev move through an item's files (past the last, the next item), play /
+  // pause are the media verbs, and select is Play or Pause, so one switch has something to do there.
+  archive:       { next: 'archive/next', prev: 'archive/prev', select: 'archive/select', play: 'archive/play', pause: 'archive/pause' },
   // The weather: select reads now (or the lit day), next / prev walk the days, back returns to now.
   weather:       { next: 'weather/next', prev: 'weather/prev', select: 'weather/select', back: 'weather/back' },
   // 2026-10-04, the Voice model module (modules/voice_model.js): next / prev walk its buttons (the walk's own Back /

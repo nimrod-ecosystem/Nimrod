@@ -12,6 +12,8 @@
 //                picker (createSpotifyPlayer, row 2.55), and a bare connector still works here
 //   spotify, "Play on: this screen" (play on, rows 2.61/2.68)
 //             -> spotify_embed.js: Spotify's own player in the panel, the way YouTube plays; no app needed
+//   archive   -> (row 2.69) the item's sound files, read from archive.org's public metadata (archive_org.js), played by
+//                music_local.js like a folder: the audio bus, the chosen speaker, the panel's order and volume
 //
 // *** PLAYING SOMEWHERE ELSE IS ASKED ABOUT, NOT TAKEN OVER (note BK item 4). *** A Spotify player that finds the
 // account already playing on another device answers 'playing-elsewhere'; the router asks "Spotify is already
@@ -38,6 +40,7 @@ import { findFavourite, MUSIC_PLAY_TOPIC, MUSIC_STOP_TOPIC } from './music_favou
 import { LOCAL_MESSAGES } from './music_local.js';
 import { SPOTIFY_MESSAGES } from './music_spotify.js';
 import { EMBED_WORDS } from './spotify_embed.js';   // play on
+import { ARCHIVE_MESSAGES, archiveAudioTracks } from './archive_org.js';   // internet archive (row 2.69)
 
 export const MUSIC_TOPICS = Object.freeze({
   play: MUSIC_PLAY_TOPIC, stop: MUSIC_STOP_TOPIC, pause: 'music/pause', resume: 'music/resume',
@@ -50,6 +53,7 @@ export const MESSAGES = Object.freeze({
   ...LOCAL_MESSAGES,
   ...SPOTIFY_MESSAGES,
   ...EMBED_WORDS,
+  ...ARCHIVE_MESSAGES,
   'not-found': 'There is no favourite called “{name}”.',
   'did-you-mean': 'Did you mean “{name}”?',
   'no-youtube': 'There is no YouTube part on this screen to play it in.',
@@ -77,6 +81,8 @@ export function createMusicRouter({
   spotifyWhere = () => null,
   spotifyHere = () => null,
   ownYoutube = null,             // { play(source), stop(), pause(), resume() } - the panel's own player
+  // internet archive (row 2.69): `{ tracks(id) }` -> { ok, tracks } | { ok:false, reason }. null: archive.org itself.
+  archive = null,
   youtubeWhere = () => 'panel',
   nearMatch = () => 'ask',
   instanceTopic = (id, topic) => (id ? `${topic}#${id}` : topic),
@@ -179,6 +185,24 @@ export function createMusicRouter({
       current = { kind: 'local', name: entry.name };
       changed();
       return { ok: true, kind: 'local' };
+    }
+    if (src.kind === 'archive') {
+      // internet archive (row 2.69): the item's sound files, by address, through the same player as a folder.
+      if (!local || typeof local.playTracks !== 'function') return fail('archive-no-audio', entry.name);
+      await stopCurrent('local');
+      try { local.stop?.(); } catch { /* fine */ }   // as playFolder does: the old song stops while the item is read
+      const finder = read(archive, null);
+      let found = null;
+      try { found = await (finder && typeof finder.tracks === 'function' ? finder.tracks(src.id, src) : archiveAudioTracks(src.id)); }
+      catch { found = null; }
+      if (my !== seq || dead) return { ok: false, reason: 'superseded' };
+      if (!found || !found.ok) return fail((found && found.reason) || 'archive-unreachable', entry.name);
+      const r = await local.playTracks({ tracks: found.tracks, what: { kind: 'archive', sourceId: `archive:${src.id}` } });
+      if (my !== seq || dead) return { ok: false, reason: 'superseded' };
+      if (!r.ok) return r.reason === 'superseded' ? r : fail(r.reason === 'no-audio' ? 'archive-no-audio' : r.reason, entry.name);
+      current = { kind: 'local', name: entry.name };
+      changed();
+      return { ok: true, kind: 'local', from: 'archive' };
     }
     if (src.kind === 'spotify') {
       const where = read(spotifyWhere, null);

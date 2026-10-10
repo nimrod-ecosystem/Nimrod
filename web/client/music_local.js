@@ -364,6 +364,22 @@ export function createLocalMusic({
     },
 
     /**
+     * internet archive (row 2.69): A LIST OF SOUND FILES BY ADDRESS - an Internet Archive item's tracks
+     * (archive_org.js archiveAudioTracks). The same player as a folder: the audio bus, the chosen speaker (Play on), the
+     * panel's volume, its "A folder of music plays" order, `next`, and the play log (`onTrack`, with `what.sourceId`).
+     * No backup: there is no folder behind it to stand in for. `{ ok, tracks }` or `{ ok: false, reason: 'no-audio' }`.
+     */
+    async playTracks({ tracks = [], what = {} } = {}) {
+      this.stop();
+      const g = ++gen;
+      lastReq = null;   // backup source: nothing to fall back from
+      const list = (Array.isArray(tracks) ? tracks : []).filter((t) => t && t.url)
+        .map((t) => ({ url: String(t.url), path: String(t.path || t.title || '') }));
+      if (!list.length) return { ok: false, reason: 'no-audio' };
+      return begin(inOrder(list), { kind: 'tracks', ...(what && typeof what === 'object' ? what : {}) }, g);
+    },
+
+    /**
      * desktop prompt: "Try on this computer" for the favourite that last said 'elsewhere' - ONE fetch of its folder,
      * on purpose (Chrome may ask now; the person answers). `{ ok }`; an answer is remembered (media_sources.js
      * rememberReached), so playing the favourite again then works quietly. Never throws.

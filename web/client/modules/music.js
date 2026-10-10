@@ -215,7 +215,7 @@ const WHY_SKIPPED = {
 
 registerModule(
   { dependsOn: 'network',
-    type: 'music', title: 'Music', description: 'Play a favourite by name: YouTube, your own music files, or Spotify',
+    type: 'music', title: 'Music', description: 'Play a favourite by name: YouTube, your own music files, Spotify or the Internet Archive',
     settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, audio = null } = ctx;
@@ -597,6 +597,8 @@ registerModule(
       },
       spotifyHere: () => embedFor(),
       ownYoutube,
+      // internet archive (row 2.69): an archive.org favourite; the suites hand in `ctx.archiveTracks` (no network).
+      archive: typeof ctx.archiveTracks === 'function' ? { tracks: ctx.archiveTracks } : null,
       youtubeWhere: () => (YOUTUBE_WHERE.includes(cfg.youtubeWhere) ? cfg.youtubeWhere : 'panel'),
       nearMatch: () => (NEAR_MATCH_MODES.includes(cfg.nearMatch) ? cfg.nearMatch : 'ask'),
       instanceTopic: (id, topic) => (typeof ctx.rootBus?.instanceTopic === 'function'
@@ -788,7 +790,7 @@ registerModule(
         <p class="mu-head">Favourites</p>
         <p class="mu-hint">Typing needs a keyboard. Each favourite is a name to say and where its music is.</p>
         <label class="mu-field">Name to say <input type="text" data-fav-name maxlength="${MAX_NAME}" value="${esc(draft.name)}" placeholder="the Beatles"></label>
-        <label class="mu-field">A YouTube or Spotify link <input type="text" data-fav-link value="${esc(draft.link)}" placeholder="https://…"></label>
+        <label class="mu-field">A YouTube, Spotify or Internet Archive link <input type="text" data-fav-link value="${esc(draft.link)}" placeholder="https://…"></label>
         <p class="mu-hint">Or music on a connected folder (set up in Media):</p>
         <div class="mu-row">
           <select data-fav-source aria-label="music folder"><option value="">no folder</option>${opts}</select>
@@ -838,7 +840,7 @@ registerModule(
       let source = null;
       if (String(draft.link || '').trim()) {
         source = parseSource(draft.link);
-        if (!source) { editMsg = 'That is not a YouTube or Spotify link.'; render(); return; }
+        if (!source) { editMsg = 'That is not a YouTube, Spotify or Internet Archive link.'; render(); return; }
       } else if (draft.sourceId) {
         source = normalizeSource(draft.kind === 'folder'
           ? { kind: 'folder', sourceId: draft.sourceId, album: draft.path }

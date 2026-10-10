@@ -119,6 +119,8 @@ export const SUITES = [
   'play_objects',
   // Row 2.45: the shared miss-flow engine and the games on it, and the sing-along frame.
   'quiz_flow', 'rating', 'think_games', 'word_builder', 'brain_games', 'spelling', 'simple_math', 'name_that', 'karaoke',
+  // Row 2.69: the Internet Archive panel and the archive.org reader (archive_org.js), with the metadata fetch stubbed.
+  'archive',
   // Row 2.37: Klondike on one switch, and a note from someone.
   'solitaire', 'note', 'note_visit', 'weather', 'brickbreaker', 'rhythm', 'avatar', 'avatar_display', 'svg_sanitize',
   // 2026-10-02 late: games wait for Start (autostart a setting), the computer's demo and its players, card sort.
