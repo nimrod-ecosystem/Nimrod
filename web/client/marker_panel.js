@@ -158,13 +158,13 @@ export function mountMarkerPanel(root, {
         <input type="checkbox" data-opt="enabled">
         <span>Let this move the cursor</span>
       </label>
-      <p class="mk-note">Leave this off while you are setting up. The picture above stays live
-        either way — so one person can move while the other watches, without the cursor being
-        dragged around the screen they are using.</p>
+      <p class="mk-note">Leave this off while you are setting up. The picture above keeps working
+        either way. One person can move while the other watches, and the cursor is not dragged
+        around the screen they are using.</p>
 
       <div class="mk-rows" data-rows></div>
-      <p class="mk-note mk-hint">Green and hot pink work best. Avoid red (too close to skin) and
-        anything white, gray or pale — there is no color there to lock onto.</p>
+      <p class="mk-note mk-hint">Green and hot pink work best. Avoid red (too close to skin). Avoid
+        anything white, gray or pale too. There is no color there for the camera to find.</p>
     </div>`;
 
   const el = (sel) => root.querySelector(sel);

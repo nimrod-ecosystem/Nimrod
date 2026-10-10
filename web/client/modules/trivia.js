@@ -596,10 +596,10 @@ const SETTINGS = [
   //   everywhere (../pack_reviews.js).
   { key: 'includeUnreviewed', label: 'Include unreviewed questions (review as you play)', default: false,
     level: 'standard', onLabel: 'On', offLabel: 'Off',
-    note: 'Adds the packs waiting for review to "Which pack", and their questions to "Every question pack". '
-      + 'Each unreviewed question shows a small ✓ fine / ✗ wrong '
-      + '(or press W / O, or say "that one is wrong"). Playing a question through passes it; ✗ keeps it out '
-      + 'for good. Only for this panel — turn it off when you have finished reviewing.' },
+    note: 'Adds the packs waiting for review to "Which pack", and their questions to "Every question pack". Each unreviewed '
+      + 'question shows a small ✓ fine / ✗ wrong. You can also press '
+      + 'O for fine or W for wrong, or say "that one is wrong". Playing a question through passes it. ✗ keeps it out until '
+      + 'it is fixed. This is only for this part. Turn it off when you have finished reviewing.' },
   { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
     level: 'standard',
     options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
@@ -611,7 +611,7 @@ const SETTINGS = [
     options: [{ value: 2, label: '2' }, { value: 3, label: '3' }, { value: 4, label: '4' }] },
   { key: 'includeWords', label: 'Also ask about the word bank', default: true,
     level: 'standard', onLabel: 'Yes', offLabel: 'Only written questions',
-    note: 'a vocabulary row already holds everything a multiple-choice question needs' },
+    note: 'each word in the word bank can be asked as a question, with its meaning as the answer' },
   // *** THE LADDER'S ROWS (2026-10-05, QUESTIONS AT EVERY LEVEL above), the same rows, words and defaults as
   // every other question game (../adaptive_play.js adaptiveSettings), so a caregiver who set them in Thinking
   // games finds them here. Four starting levels, because a pack's words are four (very easy, 2026-10-06). Two left out: "Missed
@@ -627,10 +627,10 @@ const SETTINGS = [
     options: [{ value: START_SAME, label: 'Their usual starting level' },
               { value: 'very easy', label: 'Very easy questions' }, { value: 'easy', label: 'Easy questions' },
               { value: 'medium', label: 'Medium questions' }, { value: 'hard', label: 'Hard questions' }],
-    note: 'For the person this screen is for, in Trivia only, and kept with them on each of their screens. '
-      + '"Their usual starting level" is the person\'s own, set in this screen\'s settings on the People tab. '
-      + 'Changing it starts them again there; after that, their answers move them. Players typed in by name '
-      + 'start at "A new player starts at level".',
+    note: 'This is for the person this screen is for, in Trivia only. It stays with them on each of their screens. '
+      + '"Their usual starting level" is the person\'s own level, set in this screen\'s settings on the People tab. '
+      + 'Changing it starts them again at that level. After that, their answers move them. Players typed in by '
+      + 'name start at "A new player starts at level".',
     appliesWhen: (v) => v.contentSource !== 'bank' },
   // Mike, 2026-10-04. Per game (this panel's settings, like the score row), not per account: the same quiz on
   // a shared screen and on somebody's phone may want different amounts under the answer.
@@ -647,7 +647,7 @@ const SETTINGS = [
   // themselves (no "Is it this one?"). Hidden while nothing is said at all.
   { key: 'sayChoice', label: 'Say the switch choice too', default: true, level: 'standard',
     onLabel: 'Yes (the answer it lands on)', offLabel: 'Only the question',
-    note: 'Somebody on a switch needs it to know where the scan is.',
+    note: 'Somebody using a switch (one big button) needs it, to know which answer is lit.',
     appliesWhen: (v) => v.speak !== false },
   // *** "SAY WHERE THE ANSWER COMES FROM": OFF BY DEFAULT, AND ADVANCED. *** Argued:
   //   FOR on (matching "Show where the answer comes from", which is on): the same honesty, for somebody who
@@ -660,7 +660,7 @@ const SETTINGS = [
   //   lesson" line, which is the same kind of thing. [Guess, on Mike's list.]
   { key: 'speakSource', label: 'Say where the answer comes from', default: false, level: 'advanced',
     onLabel: 'On', offLabel: 'Off',
-    note: 'Reads the source line under the answer aloud, after why.',
+    note: 'Reads aloud the line under the answer that says where it comes from, after the reason why.',
     appliesWhen: (v) => v.speak !== false && answerSourceMode(v) !== 'off' },
   // A spelling question's answers are read letter by letter (Mike, 2026-10-07); how fast is a row because the
   // right gap depends on the listener. Advanced: the default is the way a person spells aloud. ../spell_aloud.js.
@@ -1037,13 +1037,13 @@ registerModule(
         // knowing its own state.
         mount.innerHTML = held.length
           ? `<div class="tv"><div class="tv-empty">
-              <p><b>Questions are waiting on a lesson.</b></p>
+              <p><b>Questions are waiting until a lesson has been watched.</b></p>
               <p class="tv-held">${heldNote()}</p>
             </div></div>`
           : `<div class="tv"><div class="tv-empty">
               <p><b>No questions yet.</b></p>
-              <p>These come from your bank — the <b>Questions</b> module. Add it to this screen and
-                write some, and anything you write there shows up here.</p>
+              <p>These come from your own questions, in the <b>Questions</b> part. Add it to this
+                screen and write some. Anything you write there shows up here.</p>
               <p class="tv-fmt">One per line:
                 <code>question | answer | wrong | wrong | wrong</code></p>
             </div></div>`;

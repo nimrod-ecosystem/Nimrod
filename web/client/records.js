@@ -51,11 +51,11 @@ export function describe(row) {
     case 'hit':
       return `pressed after ${d.latencyMs}ms`
         + (d.machine?.goDelayMs ? ` (${d.machine.goDelayMs}ms of that was the screen)` : '');
-    case 'omission':    return 'the invite closed with no press';
+    case 'omission':    return 'Go closed with no press';
     case 'commission':  return 'pressed during the wait';
     case 'perseveration': return `kept pressing — echo ${d.n}, ${d.msSinceHit}ms after the win`;
     case 'stop_done':   return `settled after ${d.echoes} echo${d.echoes === 1 ? '' : 'es'}`;
-    case 'go_shown':    return 'the invite opened';
+    case 'go_shown':    return 'the screen said Go';
     case 'session_start': return 'a sitting began';
     case 'edge_up':
       // BOTH NUMBERS OR NEITHER. A hold on its own cannot tell "could not let go" from
@@ -63,9 +63,9 @@ export function describe(row) {
       // of our way not to conclude.
       return `held ${d.heldMs}ms` + (d.requiredHoldMs
         ? ` (${d.requiredHoldMs}ms was asked for)`
-        : ' — nothing asked for a hold')
-        + (d.auto ? ' · released by the watchdog, not by them' : '');
-    case 'edge_down':   return d.bound ? 'a press' : 'a press that was bound to nothing';
+        : ' — no hold was asked for')
+        + (d.auto ? ' · let go by the screen, not by them' : '');
+    case 'edge_down':   return d.bound ? 'a press' : 'a press on something that has no job';
     default:            return d.kind || row.kind;
   }
 }
@@ -165,8 +165,8 @@ export function mountRecords(host, { profiles, user, makeEvents = null } = {}) {
           const c = summary.data?.counts || {};
           const l = summary.data?.latency || {};
           parts.push(`<p class="rec-counts">`
-            + `${c.hits ?? 0} pressed · ${c.omissions ?? 0} missed · ${c.commissions ?? 0} early · `
-            + `${c.perseverationPresses ?? 0} echoes`
+            + `${c.hits ?? 0} pressed · ${c.omissions ?? 0} missed · ${c.commissions ?? 0} `
+            + `early · ${c.perseverationPresses ?? 0} echoes (presses after the win)`
             // MEAN WITH ITS SPREAD, ALWAYS. A bare mean of three trials reads as a finding.
             + (l.n ? ` · latency mean ${l.meanMs}ms across ${l.n} (${l.minMs}–${l.maxMs}ms)` : '')
             + `</p>`);
@@ -181,7 +181,7 @@ export function mountRecords(host, { profiles, user, makeEvents = null } = {}) {
               ? `vouched for by ${who.map(esc).join(', ')}`
               : ''}</span>
             <button class="rec-btn" data-attest="${esc(String(r.id))}"
-              data-pid="${esc(s.pid)}" data-mid="${esc(s.mid)}">Attest</button>
+              data-pid="${esc(s.pid)}" data-mid="${esc(s.mid)}">Vouch for this</button>
           </li>`);
         }
         parts.push('</ul></div>');
@@ -205,7 +205,7 @@ export function mountRecords(host, { profiles, user, makeEvents = null } = {}) {
     } catch (err) {
       console.error('attest failed', err);
       btn.disabled = false;
-      btn.textContent = 'Attest';
+      btn.textContent = 'Vouch for this';
     }
   });
 

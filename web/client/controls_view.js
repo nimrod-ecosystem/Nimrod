@@ -72,9 +72,9 @@ export function whatCanIPress({ bindings = [], targets = {}, gate = 'both', subj
     let says = '';
     if (blocked) {
       status = 'blocked';
-      says = `the gate is set to ${gate} only`;
+      says = `only the ${gate} may act right now`;
     } else if (isFocus) {
-      says = 'moves between panels';
+      says = 'moves between parts';
     } else if (hit) {
       says = subject ? `${VERB_LABEL[verb] || verb} on ${subject}` : (VERB_LABEL[verb] || verb);
     } else {
@@ -156,7 +156,7 @@ export function deviceStatus({ bindings = [], devices = [], activity = [],
       // A GAMEPAD IS ENUMERABLE, so its absence is real information rather than silence -
       // and a great many adaptive switches present as one.
       state = 'missing';
-      why = 'bound, but nothing is plugged in that answers to it';
+      why = 'it has a job, but nothing that answers to it is plugged in';
     } else if (recently) {
       state = 'connected';
       why = 'it was used a moment ago';
@@ -172,12 +172,12 @@ export function deviceStatus({ bindings = [], devices = [], activity = [],
   if (rows.length && rows.every((r) => r.state === 'missing')) {
     // THE HEADLINE. Everything she is bound to is absent, so no amount of reading the
     // binding list will help and somebody should be told that first.
-    verdict = { tone: 'bad', text: 'None of the bound controls is connected to this screen' };
+    verdict = { tone: 'bad', text: 'None of the controls that have a job is connected to this screen' };
   } else if (missing.length) {
     verdict = { tone: 'mixed',
-      text: `${missing.length} of ${rows.length} controls are bound but not connected` };
+      text: `${missing.length} of ${rows.length} controls have a job but are not connected` };
   } else if (rows.length) {
-    verdict = { tone: 'good', text: 'Every bound control is connected, or cannot be checked' };
+    verdict = { tone: 'good', text: 'Every control that has a job is connected, or cannot be checked' };
   }
   return { rows, missing: missing.length, verdict };
 }
@@ -185,7 +185,7 @@ export function deviceStatus({ bindings = [], devices = [], activity = [],
 export function renderDevices(el, opts = {}) {
   const s = deviceStatus(opts);
   if (!s.rows.length) {
-    el.innerHTML = '<p class="cv-none">Nothing is bound yet, so there is nothing to check.</p>';
+    el.innerHTML = '<p class="cv-none">No control has a job yet, so there is nothing to check.</p>';
     return s;
   }
   el.innerHTML = `
@@ -196,7 +196,7 @@ export function renderDevices(el, opts = {}) {
         <td class="cv-verb">${r.state === 'missing' ? 'NOT CONNECTED'
           : r.state === 'unknown' ? 'cannot check' : 'connected'}</td>
         <td class="cv-says">${esc(r.why)}
-          <span class="cv-hint">${r.bound} binding${r.bound === 1 ? '' : 's'}</span></td>
+          <span class="cv-hint">${r.bound} job${r.bound === 1 ? '' : 's'}</span></td>
       </tr>`).join('')}</table>`;
   return s;
 }
@@ -240,13 +240,13 @@ export function explainActivation(rec = {}) {
   // rather than invented - an explanation for a reason the bus never emits is a comforting
   // lie, and one it does emit that is missing here shows up as a bare code at the bedside.
   const say = {
-    unbound: 'is not bound to anything yet',
-    'role-gated': 'is bound, but the gate is refusing it from whoever pressed it',
-    'unknown-action': 'is bound to something that no longer exists',
+    unbound: 'has no job yet',
+    'role-gated': 'has a job, but whoever pressed it may not act right now',
+    'unknown-action': 'has a job that no longer exists',
     // No number recorded: "a longer press", not "a longerms" (BQ item 6).
     'too-short': `was released too quickly — it needs ${rec.holdMs ? `${rec.holdMs}ms` : 'a longer press'}`,
-    debounce: 'came too soon after the last one and was treated as a bounce',
-    lockout: 'is still inside its repeat lockout from the last press',
+    debounce: 'came too soon after the last one, so it was taken as the same press',
+    lockout: 'is not allowed to repeat this soon after the last press',
     'auto-release': 'was let go by the watchdog rather than by a person — usually a stuck switch',
   }[reason] || `was refused (${reason || 'no reason recorded'})`;
 
@@ -301,7 +301,7 @@ export function renderControls(el, { bindings, targets, gate, subject,
 
   const rows = whatCanIPress({ bindings, targets, gate, subject });
   if (!rows.length) {
-    el.innerHTML = '<p class="cv-none">Nothing is bound yet. Set controls up on the Devices page.</p>';
+    el.innerHTML = '<p class="cv-none">No control has a job yet. Set controls up on the Devices page.</p>';
     return rows;
   }
   el.innerHTML = head.innerHTML + `<table class="cv-table">${rows.map((r) => `

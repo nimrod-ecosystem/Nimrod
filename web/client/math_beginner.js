@@ -281,7 +281,7 @@ export function beginnerSettings({ when = null, levelDefault = 'fixed', withScor
                 { value: 'all', label: 'Plus, minus and times' }] }, fixed),
     w({ key: 'maxNumber', label: 'Numbers up to', kind: 'choice', default: 10, level: 'essential',
       options: [5, 10, 12, 20].map((v) => ({ value: v, label: String(v) })),
-      note: 'Plus stays within this total; minus starts from no more than this; times multiplies numbers up to it.' }, fixed),
+      note: 'Plus sums come to no more than this. Minus starts from no more than this. Times multiplies numbers up to this.' }, fixed),
     w({ key: 'answerWith', label: 'Answer by', kind: 'choice', default: 'offer', level: 'standard',
       options: [{ value: 'offer', label: 'A few numbers to choose from' },
                 { value: 'pad', label: 'A number pad' }] }),

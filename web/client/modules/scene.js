@@ -25,7 +25,7 @@ export const SETTINGS = [
     options: [{ value: 'theme', label: 'Follows the screen’s theme' }, ...listScenes()] },
   { key: 'motion', label: 'Movement', kind: 'choice', default: 'gentle', level: 'standard',
     options: [
-      { value: 'gentle', label: 'gentle — as designed' },
+      { value: 'gentle', label: 'gentle — the usual movement' },
       { value: 'calm',   label: 'calm — slower' },
       { value: 'still',  label: 'still — no movement at all' },
     ] },

@@ -97,7 +97,7 @@ export function showChoice(v) {
   return SHOW_CHOICES.some((c) => c.value === v) ? v : DEFAULT_SHOW;
 }
 
-export const labelOf = (type) => (SHOW_CHOICES.find((c) => c.value === type)?.label || 'This module');
+export const labelOf = (type) => (SHOW_CHOICES.find((c) => c.value === type)?.label || 'This part');
 
 // The plain message a failed module leaves behind. Says the one thing somebody at the phone needs:
 // the microphone is not affected.

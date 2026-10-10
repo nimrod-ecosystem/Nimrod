@@ -55,8 +55,8 @@ export function spellPaceField({ level = 'advanced', appliesWhen = null } = {}) 
       { value: 'steady', label: 'Steady (R, H, Y, T, H, M)' },
       { value: 'slow', label: 'Slow (a pause after every letter)' },
     ],
-    note: 'On a question that asks which spelling is right, each answer is read letter by letter instead of '
-      + 'said as a word, since saying it would give the answer away.',
+    note: 'On a question that asks which spelling is right, each answer is read letter by '
+      + 'letter. Saying it as a word would give the answer away.',
     ...(appliesWhen ? { appliesWhen } : {}),
   };
 }

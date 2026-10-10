@@ -173,10 +173,10 @@ export function incomingFrom(screens, { limit = 3, whenOf = (e) => Date.parse(e?
 export const INCOMING_CHOICES = Object.freeze([0, 1, 3, 5]);
 export const CLOSE_CHOICES = Object.freeze([60000, 120000, 300000, 0]);
 export const PEOPLE_SETTINGS = Object.freeze([
-  { key: 'incoming', label: 'Messages for you to show', kind: 'choice', default: 3, level: 'standard',
+  { key: 'incoming', label: 'How many messages for you to show', kind: 'choice', default: 3, level: 'standard',
     options: INCOMING_CHOICES.map((n) => ({ value: n, label: n ? String(n) : 'None' })),
     help: 'The newest message left on each of your screens, newest first.' },
-  { key: 'recommended', label: 'Songs and videos recommended to you to show', kind: 'choice', default: 3, level: 'standard',
+  { key: 'recommended', label: 'How many recommended songs and videos to show', kind: 'choice', default: 3, level: 'standard',
     options: INCOMING_CHOICES.map((n) => ({ value: n, label: n ? String(n) : 'None' })),
     help: 'The newest first, with who sent each one.' },
   // "See older messages", HERE (Mike, 2026-10-05): the page's own "Let this page show older messages" says whether the
@@ -188,5 +188,5 @@ export const PEOPLE_SETTINGS = Object.freeze([
     help: 'No: “See older messages” is not offered here, even when the page allows it. For a screen in a room other people use.' },
   { key: 'closeAfterMs', label: 'On a screen, close Nimrod by himself after', kind: 'choice', default: 120000, level: 'advanced',
     options: CLOSE_CHOICES.map((ms) => ({ value: ms, label: ms ? `${ms / 60000} minute${ms === 60000 ? '' : 's'}` : 'Never' })),
-    help: 'So a window opened on a screen nobody is pressing goes back to the people by itself. A recommended video stays open while it plays.' },
+    help: 'A window left open on a screen that nobody is pressing closes by itself, and the people show again. A recommended video stays open while it plays.' },
 ]);

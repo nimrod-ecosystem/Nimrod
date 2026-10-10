@@ -40,7 +40,7 @@ const STYLE = `
 
 registerModule(
   { type: DEVICES_TYPE, title: 'Devices', core: 'new', dependsOn: 'none', importance: 'normal',
-    description: 'every way of telling the screen what to do — voice, tracking, keys and switches, phones, other screens — and where each is set up',
+    description: 'every way to tell the screen what to do, and where each one is set up. Voice, tracking (a movement used as the pointer), keys and switches, phones and other screens.',
     settings: [] },
   (ctx) => {
     const { mount } = ctx;

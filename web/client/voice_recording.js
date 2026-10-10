@@ -120,10 +120,10 @@ export const SWEEP_EVERY_MS = 6 * 3600 * 1000;
 export const VOICE_RECORDING_FIELDS = [
   { key: 'voiceRecording', label: 'Record this person’s voice for training', kind: 'toggle',
     default: VOICE_RECORDING_DEFAULTS.on, level: 'standard',
-    note: 'Off unless you turn it on. When speech is listening, each thing said is kept ON THIS SCREEN '
-        + 'with what the recogniser wrote, so somebody can add what was meant and a recogniser can '
-        + 'learn this voice. The screen shows when it is recording. Anybody near the microphone is '
-        + 'recorded too.' },
+    note: 'Off unless you turn it on. When the screen is listening for speech, each thing said is kept ON THIS '
+        + 'SCREEN, with what the speech program wrote down. Somebody can then add what was meant, so a speech '
+        + 'program can learn this voice. The screen shows when it is recording. Anybody near the microphone '
+        + 'is recorded too.' },
   { key: 'voiceRecordingKeepDays', label: 'Voice recordings: keep for', kind: 'choice',
     default: VOICE_RECORDING_DEFAULTS.keepDays, level: 'standard',
     options: [
@@ -138,7 +138,7 @@ export const VOICE_RECORDING_FIELDS = [
     note: 'At this many it pauses and says so. It never deletes recordings to make room.' },
   { key: 'voiceRecordingKeepUnclear', label: 'Voice recordings: keep what could not be made out', kind: 'toggle',
     default: VOICE_RECORDING_DEFAULTS.keepUnclear, level: 'advanced',
-    note: 'The recogniser missing somebody’s words is what training is for.' },
+    note: 'When the speech program misses somebody’s words, that is what training is for.' },
 ];
 
 /** A person's row -> this file's options. Each unset or broken key is its default. */

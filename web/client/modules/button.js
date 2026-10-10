@@ -72,7 +72,7 @@ import { userFontOptions, fontStack as familyStack, USER_FONT_PREFIX, USER_FONTS
 // ---------------------------------------------------------------------------------------
 export const FONTS = Object.freeze([
   { value: 'theme',   label: 'The screen’s own',   stack: 'var(--font)' },
-  { value: 'serif',   label: 'Book (serif)',        stack: 'Georgia, Cambria, "Times New Roman", Times, serif' },
+  { value: 'serif',   label: 'Book',        stack: 'Georgia, Cambria, "Times New Roman", Times, serif' },
   { value: 'rounded', label: 'Rounded',             stack: 'ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif' },
   { value: 'hand',    label: 'Handwritten',         stack: '"Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", cursive' },
   { value: 'type',    label: 'Typewriter',          stack: 'ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace' },
@@ -412,8 +412,8 @@ registerModule(
     // platform. So it survives the platform being down, not the picture's folder going away:
     // the same exposure `photos` declares, for the same reason.
     dependsOn: 'local',
-    description: 'Words, a picture, or both, on a button: a sign, a framed picture, anything you '
-      + 'want to press. Its look, and what pressing it does, are in its settings.',
+    description: 'Words, a picture, or both, on a button. It can be a sign, a framed picture, or anything '
+      + 'you want to press. Its look, and what pressing it does, are in its settings.',
     settings: SETTINGS },
   (ctx) => {
     const { mount, state } = ctx;

@@ -161,7 +161,7 @@ export function createEnrolment({
     if (st.state !== 'idle') return { ...st };
     let ok = false;
     try { ok = !!voice?.available?.(); } catch { ok = false; }
-    if (!ok) { set({ state: 'unavailable', error: 'This computer cannot recognise voices yet: its speech program has no voice engine, or it is not running.' }); return { ...st }; }
+    if (!ok) { set({ state: 'unavailable', error: 'This screen cannot recognise voices yet. Its speech program is not running, or it has no way to tell voices apart.' }); return { ...st }; }
     off = voice.onEvent(onEvent);
     try { voice.enrol(person, name); } catch (err) { finish({ state: 'failed', error: String(err?.message || err) }); return { ...st }; }
     set({ state: 'reading', index: 0 });

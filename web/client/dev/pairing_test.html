@@ -284,7 +284,7 @@ function fakeFetch(answers) {
           /cannot reach/.test(t), t);
         check('...and names what to check', /same network/.test(t), t);
         check('...and tells them the code is spent, so they do not retype it',
-          /fresh code|restart the agent/i.test(t), t);
+          /new code|restart the media agent/i.test(t), t);   // site text rewrite 2026-10-09: "a fresh code" now "a new code"
 
         // a typed address (note BO, 2026-10-10): the Media page no longer checks an address on this computer or the home
         // network when the browser would ask first. PAIRING IS NOT THAT: somebody typed a code and pressed Connect, and

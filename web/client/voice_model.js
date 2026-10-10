@@ -122,14 +122,14 @@ export const PHRASE_MAX = 500;
 export const VOICE_MODEL_FIELDS = [
   { key: 'voiceModelOn', label: 'Use my own voice model', kind: 'toggle', default: false, level: 'advanced',
     onLabel: 'On', offLabel: 'Off',
-    note: 'A speech model trained on this person’s own voice, running on this computer. Only this person’s '
-        + 'settings use it. Off: the standard recogniser. Not on a Raspberry Pi. How to make one: the Voice '
-        + 'model panel (Modules, under AI).' },
+    note: 'A speech program trained on this person’s own voice. It runs on this computer. Only this person’s settings use it. Off: your '
+        + 'speech goes to the standard speech program. It does not run on a Raspberry Pi (a small, low-cost computer). To make one, use '
+        + 'the Voice model part (in Modules, under AI).' },
   // No folder row (2026-10-03): the folder belongs to the speech service, which looks in its own place.
   { key: 'voiceModelPort', label: 'My own voice model: its port', kind: 'number', default: VOICE_MODEL_PORT,
     min: 1024, max: 65535, step: 1, level: 'advanced',
-    note: 'Where its speech service listens, beside the standard recogniser’s 8797. The same number as --port '
-        + 'in the command that starts it.' },
+    note: 'The port is the number its speech service answers on. The standard speech program uses 8797. Use the same number as --port '
+        + 'in the command that starts the service.' },
 ];
 
 export const voiceModelUrl = (port = VOICE_MODEL_PORT) => `ws://127.0.0.1:${port}/speech`;
@@ -187,8 +187,8 @@ export function describeModelCheck(r, name = 'That folder', { place = VOICE_PLAC
     return `${n} is ready: it has everything the speech service needs${r.advised.length ? ` (it has no ${r.advised.join(', ')}, which the service can do without)` : ''}. `
       + `Its place is ${place}: put these files directly in that folder (step 5).`;
   }
-  if (r.kind === 'checkpoint') return `${n} is the training checkpoint, not converted yet. Convert it with the command in step 4; the folder that makes is the one you want.`;
-  if (r.kind === 'recordings') return `${n} holds the recordings you exported for training, not a model. The model is the folder step 4’s conversion writes.`;
+  if (r.kind === 'checkpoint') return `${n} is the training result (a checkpoint), not converted yet. Convert it with the command in step 4. The folder that makes is the one you want.`;
+  if (r.kind === 'recordings') return `${n} holds the recordings you exported for training, not a model. The model is the folder that converting makes in step 4.`;
   return `${n} is missing ${r.missing.join(', ')}. If it is the converted folder, convert it again with the command in step 4 (it copies the tokenizer files).`;
 }
 
@@ -276,12 +276,12 @@ export function parsePhrases(text, { max = PHRASE_MAX } = {}) {
 
 /** Why reading phrases cannot record right now, from the recorder's state; '' when nothing is in the way. Pure. */
 export function prompterBlocker(s) {
-  if (!s) return 'Recording happens on the screen you speak to: open this panel there.';
+  if (!s) return 'Recording happens on the screen you speak to. Open this part there.';
   if (!s.on) return 'Turn on “Record this person’s voice for training” in this person’s settings (Devices, Voice) first.';
   if (s.held && s.held.length) return 'Paused while the intercom or a call is open.';
   if (s.paused === 'full') return 'This screen has kept as many recordings as it may. Export them, delete some, or raise the limit.';
   if (s.paused === 'failed') return 'The last recording could not be saved.';
-  if (!s.attached || !s.listening) return 'Nothing is listening: turn on spoken commands or subtitles, and check the recogniser is answering.';
+  if (!s.attached || !s.listening) return 'Nothing is listening. Turn on spoken commands or subtitles, and check the speech program is answering.';
   return '';
 }
 
@@ -432,11 +432,11 @@ export function mountVoiceModel(root, {
   root.innerHTML = `<style>${VOICE_MODEL_CSS}</style>
   <div class="vm">
     <h3>Your own voice model</h3>
-    <p>A speech recogniser trained on one person’s voice, so it understands that person better. You read about
-      100 short phrases aloud; a training script then fine-tunes (further trains) Whisper, the recogniser this site’s
-      speech service runs, on them, on your own computer. You run every step yourself, on computers you choose.
-      Nothing you record here is uploaded by this site: the recordings stay on this screen until you export them,
-      and then on your own computers.</p>
+    <p>A speech program trained on one person’s voice, so it understands that person better. You read about 100 short
+      phrases aloud. A training script (a small program you run) then trains Whisper further on them, on your own
+      computer. Whisper is what this site’s speech service uses to turn speech into words. You run every step
+      yourself, on computers you choose. This site does not send the recordings anywhere. They stay on this screen
+      until you export them (copy them to a folder). After that they stay on your own computers.</p>
     <p class="vm-row">${link(EUPHONIA.repo, 'The method this follows: Google’s Project Euphonia (GitHub, Apache-2.0)')} ·
       ${link(EUPHONIA.phrases, 'its 100 phrases')}</p>
 
@@ -450,19 +450,19 @@ export function mountVoiceModel(root, {
 
     <p class="vm-soft">The toolkit’s own phone app uploads recordings to a Firebase bucket. You do not need it:
       record here instead.</p>
-    <p><b>Who it is for.</b> It is yours. Only your own speech settings use it (“Use my own voice model”); other
-      people’s settings, and every screen but yours, keep the standard recogniser. On your screen it hears whoever is
-      talking, as any recogniser does. It runs where Whisper runs: a desktop or laptop, or a computer with a
-      graphics card. It does not run on a Raspberry Pi: the Pi’s recogniser (Vosk) is a different kind of model
-      and cannot use it.</p>
+    <p><b>Who it is for.</b> It is yours. Only your own speech settings use it (“Use my own voice model”). Other
+      people’s settings, and every screen but yours, keep the standard speech program. On your screen it hears
+      whoever is talking, as any speech program does. It runs where Whisper runs: a desktop or laptop, or a computer
+      with a graphics card. It does not run on a Raspberry Pi (a small, low-cost computer). The Pi’s speech program
+      (Vosk) is a different kind and cannot use it.</p>
 
     <section class="vm-step">
       <h4>1. Record the phrases</h4>
-      <p>Turn on “Record this person’s voice for training” and spoken commands (or subtitles) in your settings, and
-        leave “Use my own voice model” off until the model exists. Paste the phrases below, one per line, or load a
-        text file (Euphonia’s list is linked above; this site does not ship a copy). Press Start and read each
-        phrase as it appears; the next one comes up once it has been saved. A pause mid-phrase ends a recording,
-        so set “A pause this long ends what was said” to Long while you read.</p>
+      <p>In your settings, turn on “Record this person’s voice for training”, and spoken commands or subtitles.
+        Leave “Use my own voice model” off until the model exists. Paste the phrases below, one per line, or load a
+        text file. Euphonia’s list is linked above. This site does not include a copy. Press Start and read each
+        phrase as it appears. The next one comes up once the recording has been saved. A pause in the middle of a
+        phrase ends the recording. So set “A pause this long ends what was said” to Long while you read.</p>
       <textarea data-phrases aria-label="Phrases to read, one per line"></textarea>
       <div class="vm-row">
         <button type="button" data-use-phrases>Use these phrases</button>
@@ -483,16 +483,17 @@ export function mountVoiceModel(root, {
 
     <section class="vm-step">
       <h4>2. Export them</h4>
-      <p>Export saves your recordings, with the phrase each one is, into a folder you choose: choose
-        <code data-vm-recordings></code>. Nothing is uploaded.</p>
+      <p>Export copies your recordings into a folder you choose, each with its phrase. Choose
+        <code data-vm-recordings></code>. Nothing is sent anywhere.</p>
       <div class="vm-row">
         <button type="button" data-export hidden>Export for training</button>
         <span data-export-msg class="vm-soft" role="status" aria-live="polite"></span>
       </div>
-      <p class="vm-soft">It makes a <code>${esc(EUPHONIA_DATA)}</code> folder with one numbered folder per phrase
-        (<code>${esc(EUPHONIA_DATA)}/0/${esc(EUPHONIA_AUDIO)}</code> and <code>${esc(EUPHONIA_PHRASE)}</code>), plus
-        <code>nimrod-export.json</code> saying which recording is which. Every recording with what was meant goes
-        in: the phrases you read, and any you typed in the review.</p>
+      <p class="vm-soft">It makes a <code>${esc(EUPHONIA_DATA)}</code> folder with one numbered folder for each
+        phrase (<code>${esc(EUPHONIA_DATA)}/0/${esc(EUPHONIA_AUDIO)}</code> and
+        <code>${esc(EUPHONIA_PHRASE)}</code>). It also makes <code>nimrod-export.json</code>, a text file that says
+        which recording is which. Every recording that has what was meant goes in: the phrases you read, and any you
+        typed in the review.</p>
     </section>
 
     <section class="vm-step" data-vm-train>
@@ -513,11 +514,11 @@ export function mountVoiceModel(root, {
     <section class="vm-step">
       <h4>4. Convert it</h4>
       <p class="vm-soft">${esc(TRAIN_PLAIN.converted)}</p>
-      <p>Training some other way leaves a <b>checkpoint</b>: a folder named like <code>checkpoint-200</code>, holding
-        <code>model.safetensors</code> - the trained model in the form training writes. The speech service cannot
-        load that; converting makes the folder it can. <b>This is the step that makes your voice model
-        folder.</b> It needs the ctranslate2 and transformers Python packages. Run this, with the checkpoint’s
-        folder in place of the first name:</p>
+      <p>Training some other way leaves a <b>checkpoint</b> (the training result). It is a folder with a name like
+        <code>checkpoint-200</code>, holding <code>model.safetensors</code>. That file is the trained model in the
+        form training writes. The speech service cannot use it as it is. Converting makes the folder it can use.
+        <b>This is the step that makes your voice model folder.</b> It needs the ctranslate2 and transformers Python
+        packages. Run this command, with the checkpoint’s folder in place of the first name:</p>
       <code data-cmd="convert"></code>
       <p class="vm-soft" data-vm-fill></p>
     </section>
@@ -629,7 +630,7 @@ export function mountVoiceModel(root, {
     b.hidden = typeof save !== 'function';
     $('[data-use-note]').textContent = vm.on
       ? `On: your speech goes to ${vm.url}. If it is not running, this screen says no speech program is running.`
-      : 'Off: your speech goes to the standard recogniser.';
+      : 'Off: your speech goes to the standard speech program.';
     renderStatus();
   }
   function renderPhrases() {

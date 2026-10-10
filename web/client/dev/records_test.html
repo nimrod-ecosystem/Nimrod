@@ -130,7 +130,7 @@ function rig() {
         /pressed after 420ms \(18ms of that was the screen\)/.test(text));
 
       check('*** a hold is NEVER shown without what was asked of it ***',
-        /held 900ms — nothing asked for a hold/.test(text) &&
+        /held 900ms — no hold was asked for/.test(text) &&   // site text rewrite 2026-10-09: was "nothing asked for a hold"
         /held 900ms \(800ms was asked for\)/.test(text), text.slice(0, 800));
       check('both sittings are listed', /sess-a/.test(text) && /sess-b/.test(text));
       check('*** no raw machine names are shown at a person reading a clinical record ***',
@@ -169,13 +169,13 @@ function rig() {
     section('describing a row in words');
     {
       check('an omission is described as what happened, not as a failure',
-        describe({ data: { kind: 'omission' } }) === 'the invite closed with no press');
+        describe({ data: { kind: 'omission' } }) === 'Go closed with no press');   // site text rewrite 2026-10-09: was 'the invite closed with no press'
       check('perseveration is named as itself',
         /kept pressing/.test(describe({ data: { kind: 'perseveration', n: 2, msSinceHit: 300 } })));
       check('a watchdog release says nobody let go',
         /not by them/.test(describe({ data: { kind: 'edge_up', heldMs: 12000, requiredHoldMs: 0, auto: true } })));
       check('an unbound press is still described as a press somebody made',
-        /bound to nothing/.test(describe({ data: { kind: 'edge_down', bound: false } })));
+        /on something that has no job/.test(describe({ data: { kind: 'edge_down', bound: false } })));   // site text rewrite 2026-10-09: was "bound to nothing"
     }
 
     section('nothing yet');

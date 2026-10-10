@@ -229,7 +229,7 @@ try {
     check('...and names nobody', !NAMES_RE.test(sp));
     const list = profileEntries({ people: [{ id: 'p1', name: 'Sam' }, { id: 'p2', name: 'Lee' }], characters: allCharacters({}), viewerId: 'p1' });
     check('the picker: people first ("You" for the viewer), then the characters',
-      list[0].kind === 'person' && list[0].line === 'You' && list[1].line === 'On this account' && list[2].kind === 'ai' && list.length === 6);
+      list[0].kind === 'person' && list[0].line === 'You' && list[1].line === 'On this login' && list[2].kind === 'ai' && list.length === 6);   // site text rewrite 2026-10-09: account -> login
     check('a subject is read only when it is whole', J(readSubject({ kind: 'ai', id: 'x' })) === J({ kind: 'ai', id: 'x' }) && readSubject({ kind: 'robot', id: 'x' }) === null && readSubject(null) === null);
   }
 

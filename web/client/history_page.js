@@ -58,8 +58,8 @@ export function historyHtml(s) {
     // the opt-in). What the log held stays and is still shown; what another device no longer sees, said plainly.
     if (kind !== 'plays' && place !== 'log') {
       parts.push(say('What the site\'s log already held stays there and still shows.' + (place === 'us' ? ''
-        : ' New entries are kept where you choose, so another device - a family member\'s phone, say - shows only those '
-          + 'older ones, not new ones from here.'), `data-hp-before="${kind}"`));
+        : ' New entries are kept where you choose. So another device, such as a family member\'s phone, shows only those older '
+          + 'ones. It does not show new ones from here.'), `data-hp-before="${kind}"`));
     }
     const offer = s.person ? secondPlaceOffer(kind, place, { folder: s.folder, canUs: s.canUs }) : null;
     if (offer) {

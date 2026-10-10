@@ -220,7 +220,7 @@ const SETTINGS = [
   { key: 'fit', label: 'How photos fit', kind: 'choice', default: 'contain', level: 'essential',
     options: [
       { value: 'contain', label: 'Show the whole photo' },
-      { value: 'cover', label: 'Fill the panel' },
+      { value: 'cover', label: 'Fill the space' },
     ] },
   { key: 'sourceId', label: 'Photos from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
@@ -316,7 +316,7 @@ export function listingFailure(err, source = {}, album = '') {
   }
   // Anything else genuinely is "we could not reach it" — a real agent that stopped answering,
   // a server that 500ed. The original sentence, now only where it is true.
-  return { text: `Source “${source.label}” unreachable`, retry: true, action: null };
+  return { text: `Could not reach the source “${source.label}”`, retry: true, action: null };
 }
 
 // *** WHAT THE SLIDESHOW MAY SHOW: IMAGES AND VIDEOS, AND NOTHING ELSE. ***
@@ -345,7 +345,7 @@ registerModule(
     // description. This string is what the Add-module picker shows somebody CHOOSING, where the
     // question is what the thing does. The argument still exists where it belongs, in the
     // catalog's `why` on the parts page.
-    description: 'Their own photos, on a loop. Reads them straight off your machine.',
+    description: 'Their own photos, on a loop. Reads them straight from your own computer.',
     importance: 'critical', dependsOn: 'local', settings: SETTINGS,
     // A new photos panel starts at the interval of one already on the same screen (Mike,
     // 2026-09-29: "keep it per panel, copy from existing"). Only the interval, and only once,
@@ -520,7 +520,7 @@ registerModule(
       if (text) {
         s.innerHTML = `<span>${text}</span>`
           + (action ? ` <button data-action>${escapeHtml(action.label)}</button>` : '')
-          + (showRetry ? ` <button data-retry>Retry</button>` : '');
+          + (showRetry ? ` <button data-retry>Try again</button>` : '');
         s.querySelector('[data-retry]')?.addEventListener('click', () => reload());
         // The click IS the user gesture the permission prompt requires. That is the whole
         // reason this is a button on the panel rather than something the module retries on a
@@ -1120,7 +1120,7 @@ registerModule(
       checkPull(source, album);   // pulled pictures: "3 new pictures today", and a new listing after a pull
       // hide picture: a folder whose every picture is hidden says that, not "no photos".
       if (!items.length && allItems.length) { clearStage(); setStatus(HIDE_LINES.allHidden); return; }
-      if (!items.length) { setStatus('No photos in this source/album.'); return; }
+      if (!items.length) { setStatus('No photos in this source or album.'); return; }
       setStatus(null);
       advance();
       sayDegraded();   // after the first picture, so it is a chip over it rather than a sheet
@@ -1373,7 +1373,7 @@ registerModule(
         degraded = cfg.sourceId ? { chosenId: cfg.sourceId, chosenLabel: labels[cfg.sourceId] || null, err: e, chosenSource: null } : null;
         if (degraded && showKept([])) { armRecheck(); return; }
         degraded = null;
-        setStatus('Could not reach the platform', true);
+        setStatus('Could not reach the site', true);
         return;
       }
       if (seq !== loadSeq) return;   // a newer reload superseded us
@@ -1445,7 +1445,7 @@ registerModule(
             </div>
             <button class="gear" data-gear aria-label="photo settings">⚙</button>
             <div class="settings" data-settings hidden>
-              <label>every
+              <label>change photo every
                 <!-- THE SAME FIVE VALUES THE SETTINGS MENU OFFERS. Two surfaces offering
                      different options for one setting is the drift the declared-settings
                      slice exists to remove, and it shows up as a gear dropdown that goes
@@ -1456,8 +1456,8 @@ registerModule(
                   <option value="60000">60s</option>
                 </select>
               </label>
-              <label>fit
-                <select data-opt="fit"><option value="cover">cover</option><option value="contain">contain</option></select>
+              <label>how photos fit
+                <select data-opt="fit"><option value="cover">fill the space</option><option value="contain">show the whole photo</option></select>
               </label>
             </div>
           </div>`;
@@ -1637,7 +1637,7 @@ registerModule(
         const out = [];
         if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album', SUBFOLDERS_KEY, BACKUP_KEY] });   // backup source; every folder inside
         if (st) out.push({ id: 'picture', label: 'The picture', el: st, keys: ['fit', 'intervalMs', 'autostart', 'autostartAlone', 'resumeAfterMs'],
-          help: 'The picture on screen: how it fits the panel, how long each one stays, and whether the slideshow starts by itself.' });
+          help: 'How the picture fits its space, how long each one stays, and whether the slideshow starts by itself.' });
         return out;
       },
       __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice(),

@@ -397,7 +397,7 @@ export function mountLayersWindow(host, model, { onClose, onShownToggle, onAutom
         + `<div class="ew-acts" role="group" aria-label="Edit">${ACTIONS.map(([a, l]) => btn(`act:${a}`, l, { disabled: !can[a] })).join('')}</div>`
         + (typeof onAutomation === 'function'
           ? `<div class="ew-acts" role="group" aria-label="More">${btn('more:automation', 'Automation…', {
-            pressed: autoOpen, aria: 'Automation: settings driven by something else' })}</div>`
+            pressed: autoOpen, aria: 'Automation: settings that something else changes' })}</div>`
           : '');
     },
     onAction(k) {
@@ -462,7 +462,7 @@ export function mountAutomationWindow(host, {
   const w = mountWindow(host, shell, {
     kind: 'automation',
     title: 'Automation',
-    subtitle: () => 'settings driven by something else',
+    subtitle: () => 'settings that something else changes',
     body: () => '<div class="ew-auto" data-ew-auto></div>',
     afterRender(el) {
       try { panel?.destroy(); } catch { /* gone */ }
@@ -552,7 +552,7 @@ export function mountTextEffectsWindow(host, model, { onClose } = {}) {
       }).join('');
       const m = model.measure();
       const line = m && m.ratio !== null
-        ? `<p class="ew-note">Contrast <b data-ew-ratio>${m.ratio.toFixed(1)}:1</b>, measured with every effect off, so switching one off can't make this text harder to read.</p>`
+        ? `<p class="ew-note">Contrast <b data-ew-ratio>${m.ratio.toFixed(1)}:1</b>. That is how clearly the text stands out from what is behind it. It is measured with every effect off, so turning one off can't make this text harder to read.</p>`
         : '<p class="ew-note">Contrast is measured with every effect off. There is no text colour and background to measure yet.</p>';
       const warns = (m?.warnings || []).map((w) => `<p class="ew-warn" role="status" data-ew-warn="${esc(w.code)}"><b>Warning:</b> ${esc(w.text)}</p>`).join('');
       return (dis ? '<p class="ew-note">Locked. Unlock it in the Layers window to change it.</p>' : '') + rows + line + warns;
@@ -642,7 +642,7 @@ export function mountLinksWindow(host, model, { dashboards = () => [], refresh =
     if (it.opens) return `Pressing it goes to ${nameOf(it.opens)}${it.canShow && it.shows ? ', not to what it shows' : ''}.`;
     if (it.canShow && it.shows) return `It shows ${nameOf(it.shows)}, and pressing it goes there.`;
     if (it.fixed) return 'Pressing it does what the room gives it to do.';
-    return 'Pressing it does what this module always does.';
+    return 'Pressing it does what it always does.';
   }
   w = mountWindow(host, model, {
     kind: 'links',

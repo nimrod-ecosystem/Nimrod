@@ -115,9 +115,11 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     // media agent that has stopped answering. For a folder on THIS device whose permission has
     // lapsed it is simply wrong, and it sends whoever reads it to check a network for a problem
     // that is one click away.
+    // site text rewrite 2026-10-09: "Source X unreachable" now reads "Could not reach the source X", so every
+    // /unreachable/ in this file became /could not reach/ (the negative checks stay as strict as they were).
     const perm = listingFailure(folderError('permission', 'x', 'f1'), src);
     check('*** a lapsed folder permission does not claim the source is unreachable ***',
-      !/unreachable/i.test(perm.text), perm.text);
+      !/could not reach/i.test(perm.text), perm.text);
     check('...it says the permission lapsed', /permission/i.test(perm.text), perm.text);
     // "Retry" is ACTIVELY WRONG here: retrying cannot work, because the browser will not
     // re-grant access without a user gesture aimed at asking for it. The button is the gesture.
@@ -136,9 +138,9 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     // friendlier would have thrown away the one case the old wording was right about.
     const down = listingFailure(new Error('/list -> 500'), src);
     check('CONTROL: an agent that really is unreachable still says so',
-      /unreachable/i.test(down.text) && down.retry === true, down.text);
+      /could not reach/i.test(down.text) && down.retry === true, down.text);
     check('...and so does a failure with no code at all',
-      /unreachable/i.test(listingFailure(null, src).text));
+      /could not reach/i.test(listingFailure(null, src).text));
   }
 
   // *** PRESS THE CONTROLS A PERSON ACTUALLY TOUCHES. ***
@@ -1047,9 +1049,9 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     // 5. NEVER ANOTHER RESIDENT'S, whether the person is known or not.
     {
       const r = rigD({ sources: [S.mine, S.other], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: `ph-x-${RUN}` });
-      await until(() => /unreachable/i.test(r.status()));
+      await until(() => /could not reach/i.test(r.status()));
       check('*** the only other source is next door\'s: it is NOT shown, and the panel says what is wrong ***',
-        !/Next door/.test(r.label()) && /unreachable/i.test(r.status()) && !r.asked.some((a) => a.startsWith('other|')),
+        !/Next door/.test(r.label()) && /could not reach/i.test(r.status()) && !r.asked.some((a) => a.startsWith('other|')),
         `${r.label()} / ${r.status()} / ${r.asked.join(' ')}`);
       check('...Retry is still there', !!r.host.querySelector('[data-retry]'));
       r.done();
@@ -1086,7 +1088,7 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       again.done();
       // Remembered per PERSON: the same panel on a screen whose person is unknown does not get them.
       const nobody = rigD({ sources: [S.mine], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: inst, personId: null });
-      await until(() => /unreachable/i.test(nobody.status()));
+      await until(() => /could not reach/i.test(nobody.status()));
       check('*** ...but never on somebody else\'s screen: another person\'s panel gets none of them ***',
         !nobody.probe().keptMode && !nobody.img(), JSON.stringify(nobody.probe()));
       nobody.done();
@@ -1132,9 +1134,9 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       // 4. "Nothing": no source stands in (the last pictures may; there are none on this panel).
       const n = rigD({ sources: [S.mine, S.family, SD], mode: { mine: 'down' }, seed: { sourceId: 'mine', backupSource: 'none' },
         instanceId: `ph-bk3-${RUN}` });
-      await until(() => /unreachable/i.test(n.status()));
+      await until(() => /could not reach/i.test(n.status()));
       check('*** "Nothing": no other source is asked, and the panel says what is wrong ***',
-        /unreachable/i.test(n.status()) && !n.asked.some((a) => !a.startsWith('mine|')), `${n.status()} / ${n.asked.join(' ')}`);
+        /could not reach/i.test(n.status()) && !n.asked.some((a) => !a.startsWith('mine|')), `${n.status()} / ${n.asked.join(' ')}`);
       n.done();
       // 5. NO BACKUP CHOSEN ANYWHERE: today's behaviour - the automatic stand-in, with its old words.
       const t = rigD({ sources: [S.mine, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: `ph-bk4-${RUN}`,
@@ -1175,8 +1177,8 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       // 2. The screen's backup is that source: skipped too, so nothing stands in and the panel says what is wrong.
       const b = rigD({ sources: [S.mine, PIA], mode: { mine: 'down' }, seed: { sourceId: 'mine' },
         instanceId: `ph-lna2-${RUN}`, extra: { checkFromHere: away, screenBackup: () => 'pia' } });
-      await until(() => /unreachable/i.test(b.status()));
-      check('*** the screen\'s backup on another computer: not asked ***', /unreachable/i.test(b.status()) && !asked(b, 'pia'),
+      await until(() => /could not reach/i.test(b.status()));
+      check('*** the screen\'s backup on another computer: not asked ***', /could not reach/i.test(b.status()) && !asked(b, 'pia'),
         `${b.status()} / ${b.asked.join(' ')}`);
       b.done();
       // 3. The only source, nothing chosen: not adopted, not saved, not fetched - the quiet line and the press.
@@ -1302,7 +1304,7 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       killFiles('mine'); mode.mine = 'deadfiles';
       for (let k = 0; k < 3; k++) { next(r); await sleep(90); }
       check('*** DIES, NOTHING ELSE: it says the source is unreachable, with Retry ***',
-        await until(() => /unreachable/i.test(r.status())) && !!r.host.querySelector('[data-retry]'), r.status());
+        await until(() => /could not reach/i.test(r.status())) && !!r.host.querySelector('[data-retry]'), r.status());
       check('*** ...the last good picture stays up rather than a blank or a broken one ***', goodUp(r) && !brokenOnTop(r));
       check('*** ...and NO CYCLE: no slideshow timer, nothing left to advance to ***',
         r.live(8000) === 0 && r.probe().ids.length === 0, JSON.stringify({ t: r.live(8000), ids: r.probe().ids }));

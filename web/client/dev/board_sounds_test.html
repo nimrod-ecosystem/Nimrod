@@ -186,7 +186,7 @@ try {
   {
     check('a kind of its own, "Board sounds", with a README and words on the folders page',
       SUBFOLDERS[SOUND_KIND] === 'Board sounds' && SOUND_FOLDER === 'Board sounds' && FOLDER_KINDS.includes(SOUND_KIND)
-      && /Board sounds|board editor/.test(README[SOUND_KIND]) && /Nothing here is uploaded/.test(README[SOUND_KIND])
+      && /Board sounds|board editor/.test(README[SOUND_KIND]) && /Nothing here is sent to the Nimrod/.test(README[SOUND_KIND]) /* site text rewrite 2026-10-09: was "Nothing here is uploaded" */
       && KIND_WORDS[SOUND_KIND]?.title === 'Board sounds' && !!SAVE_WORDS[SOUND_KIND]);
     check('site words never name a person or "her screen"', !/Christine|Cici|her screen/i.test(README[SOUND_KIND] + J(KIND_WORDS[SOUND_KIND]) + SAVE_WORDS[SOUND_KIND]));
   }

@@ -533,7 +533,7 @@ const SETTINGS = [
   ...(WORD_PACKS.length ? [
     { key: 'contentSource', label: 'Where words come from', kind: 'choice', default: 'pack',
       level: 'standard',
-      options: [{ value: 'bank', label: 'Written words + shared bank' },
+      options: [{ value: 'bank', label: 'Your own words, written in the Questions part' },
                 { value: 'pack', label: 'A built-in pack' }],
       note: 'A pack is ready-made — nobody has to write a word list first.' },
     { key: 'packId', label: 'Which pack', kind: 'choice', default: WORD_PACKS[0].id,
@@ -542,15 +542,15 @@ const SETTINGS = [
   ] : []),
   // The F4 ask, reachable at last. 0 is off, and it is first so that the off state is one
   // press away from wherever somebody has got to.
-  { key: 'dailyCap', label: 'Daily points cap', kind: 'choice', default: 0, level: 'standard',
+  { key: 'dailyCap', label: 'Daily points limit', kind: 'choice', default: 0, level: 'standard',
     options: [
-      { value: 0, label: 'No cap' },
+      { value: 0, label: 'No limit' },
       { value: 20, label: '20 a day' },
       { value: 40, label: '40 a day' },
       { value: 60, label: '60 a day' },
       { value: 100, label: '100 a day' },
     ],
-    note: 'Off by default: this game pays for correct answers, never for time, so a window left open earns nothing.' },
+    note: 'It starts turned off. This game gives points for answers, never for time. So a window left open earns nothing.' },
   { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
     level: 'standard',
     options: [
@@ -565,9 +565,9 @@ const SETTINGS = [
     level: 'standard',
     options: [
       { value: 'multi', label: 'Keep guessing — each try is worth a little less' },
-      { value: 'reveal', label: 'Show the answer right away (original)' },
+      { value: 'reveal', label: 'Show the answer right away' },
     ],
-    note: 'Trivia works the "keep guessing" way — see "Points for a right answer" below for what a clean first guess pays.' },
+    note: 'Trivia works the "keep guessing" way. "Points for a right answer" below sets what a right first guess earns.' },
   // `step: 0.25` since 2026-09-22 — repriced to Trivia's own quartered atom (see DEFAULTS'
   // own comment), so both numbers below are legitimately fractional now, not just whole points.
   { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 1,
@@ -591,7 +591,7 @@ const SETTINGS = [
   // affordance is worse than an absent one.
   { key: 'subject', label: 'Credit counts toward', kind: 'text',
     default: 'English language arts', level: 'advanced',
-    note: 'which subject a point of credit discharges' },
+    note: 'each point also counts as 1 minute of this subject' },
   // Row 2.40 (Mike, 2026-09-30: "we probably have a bunch of modules drawing their own
   // scoreboards. We shouldn't have that."). "N this round" and the streak are PUBLISHED on the
   // score contract (`../score_source.js`); this row decides whether the panel draws them too.
@@ -862,14 +862,14 @@ registerModule(
       el('[data-score]').style.display = own ? '' : 'none';
       el('[data-score]').textContent = `${earned} this round`;
       el('[data-streak]').textContent = capped
-        ? 'daily points reached — still counts for practice'
+        ? 'daily points limit reached — still counts for practice'
         : (own && streak >= 2 ? `${streak} in a row` : '');
       el('[data-progress]').textContent = deck.length ? `${Math.min(at + 1, deck.length)} / ${deck.length}` : '';
       // Never let the deck just be quietly shorter — name what's waiting and why.
       const heldEl = el('[data-held]');
       if (heldEl) {
         heldEl.textContent = held.length
-          ? `${held.reduce((n, h) => n + h.count, 0)} more waiting behind: ${held.map((h) => h.label).join(', ')}`
+          ? `${held.reduce((n, h) => n + h.count, 0)} more open after these lessons: ${held.map((h) => h.label).join(', ')}`
           : '';
       }
 
@@ -951,7 +951,7 @@ registerModule(
           // `optionNotes` still carries that sentence for anything that wants it in words.
           feedback = `<div class="wf-fb is-wrong">
                <b>${answered.declared ? 'Fair enough — here it is.' : 'Not quite.'}</b> ${esc(q.explain)}
-               <span class="wf-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'} — press “Got it” to bank it.</span>
+               <span class="wf-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'}. Press “Got it” to add it to your points.</span>
              </div>
              ${afterStops('Got it')}`;
         }

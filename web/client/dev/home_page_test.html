@@ -1095,7 +1095,7 @@ try {
     check('(the Change tray is on Nimrod)', /Change: Nimrod/.test(tray().textContent), tray().textContent.slice(0, 80));
     const tb = (act) => tray().querySelector(`[data-edit-change="${act}"]`);
     check('*** locked: Remove and Switch module are DIMMED, saying why; Unlock is offered ***',
-      tb('remove')?.disabled && tb('switch')?.disabled && /locks it/.test(tb('remove').title) && !!tb('unlock') && !tb('unlock').disabled);
+      tb('remove')?.disabled && tb('switch')?.disabled && /it is locked/.test(tb('remove').title) /* site text rewrite 2026-10-09: was "this dashboard locks it" */ && !!tb('unlock') && !tb('unlock').disabled);
     tb('unlock').click();
     check('*** Unlock: Nimrod comes off the lock list (the settings stay locked) ***', await until(async () => {
       const d = await row(T.id, 'settings', NU); return J(d.locked) === J([tmods.find((m) => m.type === 'settings').id]);

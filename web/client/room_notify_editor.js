@@ -78,9 +78,9 @@ export function mountNotifyEditor(host, {
         <button type="button" data-scan data-rn-done style="${PRIMARY}">Done</button>
         <h3 style="margin:0;font-size:1.05em">When something happens</h3>
       </div>
-      <p style="margin:8px 0">Pick an event, an object, and what it does. The on-screen cue always comes too;
-        the objects only add to it.</p>
-      ${rows || '<p data-rn-empty style="margin:8px 0">No rules. Nothing in the room reacts; the on-screen cue still comes.</p>'}
+      <p style="margin:8px 0">Pick what happens, an object, and what the object does. The words on the screen
+        come too. The objects only add to them.</p>
+      ${rows || '<p data-rn-empty style="margin:8px 0">No rules. Nothing in the room reacts. The words on the screen still come.</p>'}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button type="button" data-scan data-rn-add style="${BTN}">+ Add a rule</button>
         <button type="button" data-scan data-rn-defaults style="${BTN}">Put back the defaults</button>

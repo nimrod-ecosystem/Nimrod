@@ -255,7 +255,7 @@ export function createBoardSounds({
     async keep(blob, { word = '', from = 'recorded', name = '' } = {}) {
       if (!blob || !(Number(blob.size) > 0)) throw new Error('There is no sound to keep.');
       if (Number(blob.size) > MAX_FILE_BYTES) {
-        throw new Error(`That sound is ${Math.round(blob.size / 1024 / 1024)} MB; the most a card can have is ${MAX_FILE_BYTES / 1024 / 1024} MB.`);
+        throw new Error(`That sound is ${Math.round(blob.size / 1024 / 1024)} MB. The most a card can have is ${MAX_FILE_BYTES / 1024 / 1024} MB.`);
       }
       const file = soundFileName(word, soundExt({ type: blob.type, name }), now());
       const how = FROM.includes(from) ? from : 'recorded';

@@ -47,7 +47,7 @@ export const EMBED_WORDS = Object.freeze({
     + 'whole songs; that needs Spotify Premium.',
   'own-order': 'This plays in Spotify’s own order here. The site’s shuffle needs your own Spotify app connected, and a '
     + 'playlist you made or share.',
-  'default-speaker': 'Spotify’s player always uses this computer’s own speaker; it cannot be sent to another one from '
+  'default-speaker': 'Spotify’s player always uses this computer’s own speaker. Its sound cannot be sent to another one from '
     + 'this page.',
 });
 

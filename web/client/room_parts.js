@@ -286,7 +286,7 @@ export const MOUNT_KINDS = {
   sign: { label: 'Name sign', on: 'wall' },
   clock: { label: 'Clock', on: 'wall' },
   calendar: { label: 'Calendar', on: 'wall' },
-  module: { label: 'Module slot', on: 'wall' },
+  module: { label: 'Place for a part', on: 'wall' },
   cat: { label: 'Nimrod', on: 'floor' },
 };
 export const MODULE_LABELS = { photos: 'Photos', clock: 'Clock', board: 'AAC board', call: 'Call', youtube: 'YouTube', wordforge: 'Word Forge', camera: 'Camera', pond: 'Pond' };

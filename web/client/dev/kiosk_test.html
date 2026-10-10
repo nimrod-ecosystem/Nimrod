@@ -533,7 +533,7 @@ const toTab = (m, id) => {
       kiosk.menu.select();
       const after = kiosk.menu.items().find((i) => i.id === 'set:fit');
       check('select steps the value and it reaches the real instance state',
-        after.hint === 'Fill the panel', after.hint);
+        after.hint === 'Fill the space', after.hint);   // site text rewrite 2026-10-09: was 'Fill the panel'
       check('the cursor did not move out from under the hand', kiosk.menu.focusId() === 'set:fit');
       kiosk.menu.select();
       check('a second press steps on, from the NEW value rather than a stale snapshot',
@@ -3981,7 +3981,7 @@ const toTab = (m, id) => {
       !!chip && chip.classList.contains('on') && chip.textContent === ft?.label, chip?.outerHTML?.slice(0, 160));
     check('*** ...and no panel\'s chip is lit ***', !proot.querySelector('[data-mods] .k-dot.on:not([data-piece])'));
     const sw = proot.querySelector('[data-act="switch"]');
-    check('Switch module is dimmed while a piece is selected, and its title says why', sw.disabled && /part of the room/.test(sw.title), sw.title);
+    check('Switch module is dimmed while a piece is selected, and its title says why', sw.disabled && /piece of the room/.test(sw.title), sw.title);   // site text rewrite 2026-10-09: "part of the room" now "piece of the room"
     check('Pause / Play is about no panel while a piece is selected', pk.playPause().id === null && pk.playPause().can === false, JSON.stringify(pk.playPause()));
     pk.menu.open();
     check('*** the menu: "Settings for" starts on the door ***', pk.menu.subjectId() === doorId, pk.menu.subjectId());

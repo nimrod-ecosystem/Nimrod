@@ -43,7 +43,7 @@ const STYLE = `
 
 registerModule(
   { type: WHATS_NEW_TYPE, title: 'What’s new', core: 'new', dependsOn: 'none', importance: 'optional',
-    description: 'the patch notes: what changed lately, newest first, and where each new thing is',
+    description: 'the list of changes: what changed lately, newest first, and where to find each new thing',
     settings: WHATS_NEW_SETTINGS },
   (ctx) => {
     const { mount } = ctx;
@@ -68,7 +68,7 @@ registerModule(
         <h4 class="wn-day">${esc(dayLabel(e.date))}</h4>
         <ul class="wn-list">${e.items.map((it) => `<li class="wn-item" data-help="${esc(`${it.text} Where: ${it.where}`)}"
           data-help-title="New on ${esc(dayLabel(e.date))}">${esc(it.text)}<span class="wn-where">Where: ${esc(it.where)}</span></li>`).join('')}</ul>`).join('')
-        : '<p>Nothing new in that time. Choose a longer time in this panel’s settings.</p>'}`;
+        : '<p>Nothing new in that time. Choose a longer time in this part’s settings.</p>'}`;
       paint();
     }
     function readAloud() {

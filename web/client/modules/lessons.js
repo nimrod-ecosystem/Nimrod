@@ -191,14 +191,14 @@ const SETTINGS = [
       { value: 30000,  label: '30 seconds' },
       { value: 120000, label: 'Two minutes' },
     ],
-    note: 'Unlocking a topic puts its questions into the game whether or not a video was '
-      + 'watched, so this is a nudge rather than a gate.' },
+    note: 'Unlocking a topic puts its questions into the game, whether or not a video was '
+      + 'watched. So this wait is a reminder, not a lock.' },
   ...(LESSON_PACKS.length ? [
     { key: 'contentSource', label: 'Where topics come from', kind: 'choice', default: 'pack',
       level: 'standard',
       options: [{ value: 'bank', label: 'Written topics' },
                 { value: 'pack', label: 'A built-in pack' }],
-      note: 'A pack is ready-made, video included where one exists \u2014 nobody has to write '
+      note: 'A pack is ready-made. It includes a video where one exists. Nobody has to write '
         + 'topics or find videos first.' },
     { key: 'packId', label: 'Which pack', kind: 'choice', default: LESSON_PACKS[0].id,
       level: 'standard',
@@ -267,14 +267,14 @@ const SETTINGS = [
   // when the transcript went in more than one piece; a failure keeps every piece's questions.
   { key: 'connectPieces', label: 'Also ask about the whole video', kind: 'toggle', default: true,
     level: 'advanced',
-    note: 'For a long transcript sent in pieces: one more pass over short summaries of the pieces, for questions about how the parts connect. Takes one more turn of the AI.' },
+    note: 'This is for a long transcript sent in pieces. The AI (artificial intelligence) then goes over short summaries of the pieces, and writes questions about how the parts connect. This takes one more turn of the AI.' },
   // *** THE CONTEXT WINDOW, SET ON EVERY CALL (same day: "Set the context size explicitly per call"). ***
   // Each call asks for the window its own prompt and answer need (transcript_quiz.js `contextFor`), at
   // least 4,096 (what the model server here used anyway, so an ordinary call never makes it reload)
   // and at most this. 8,192 by default: every piece size offered above fits in it. Bigger costs memory
   // — fine on a desktop, too much for a small computer — so it is a setting, flagged to Mike (Rule 1).
   // Only an Ollama server takes a window per call (measured, ai.js); others ignore it.
-  { key: 'contextMax', label: 'Largest AI window', kind: 'choice', default: 8192, level: 'advanced',
+  { key: 'contextMax', label: 'Most the AI may handle at once, in tokens (pieces of words)', kind: 'choice', default: 8192, level: 'advanced',
     options: [{ value: 4096, label: '4,096 tokens (small computers)' }, { value: 8192, label: '8,192 tokens' },
               { value: 16384, label: '16,384 tokens' }, { value: 32768, label: '32,768 tokens (lots of memory)' }] },
   // §0h, agreed 2026-09-17: the review queue is ON by default; skipping it is opt-in.
@@ -689,7 +689,7 @@ registerModule(
       const mBox = tqEl.querySelector('[data-tq-minutes]');
       if (mBox) {
         mBox.innerHTML = has && auto == null
-          ? `<p class="l-tq-help">No timestamps in this transcript. How long was the video?</p>
+          ? `<p class="l-tq-help">This transcript has no times in it. How long was the video?</p>
              <div class="l-tq-mins">${MINUTE_CHOICES.map((m) => `<button type="button" class="l-btn${tq.minutesChosen === m ? ' l-primary' : ''}"
                data-tq-minute="${m}">${m} min</button>`).join('')}</div>`
           : '';
@@ -719,11 +719,11 @@ registerModule(
       const { baseUrl } = ai().settings();
       return `<details class="l-ai" data-ai>
           <summary>AI on this device</summary>
-          <p class="l-tq-help">Questions are written by a model running on this device, not on the
-            website. The address of its server (Ollama's is filled in):</p>
+          <p class="l-tq-help">The questions are written by an AI program running on this device,
+            not on the website. The address of that program goes here (Ollama's is filled in):</p>
           <div class="l-actions">
             <input class="l-ai-url" data-ai-url type="url" spellcheck="false" value="${esc(baseUrl)}"
-              aria-label="Address of the AI server">
+              aria-label="Address of the AI program">
             <button type="button" class="l-btn" data-ai-save>Save</button>
             <button type="button" class="l-btn" data-ai-check>Check</button>
           </div>
@@ -740,9 +740,10 @@ registerModule(
       let body = '';
       if (s.stage === 'paste') {
         body = `
-          <p class="l-tq-help">Paste the video's transcript. On YouTube it is under the description:
-            <b>Show transcript</b>, then select it all and copy. A model on this device writes
-            questions from it, and each one is checked against the transcript before it is asked.</p>
+          <p class="l-tq-help">Paste the video's transcript (the written words of the video). On
+            YouTube it is under the description. Press <b>Show transcript</b>, then select it all and
+            copy. An AI (artificial intelligence) program on this device writes questions from it.
+            Each one is checked against the transcript before it is asked.</p>
           <textarea class="l-tq-text" data-tq-text rows="7" placeholder="Paste the transcript here"
             aria-label="Transcript of ${esc(t.label)}"></textarea>
           <div data-tq-minutes></div>
@@ -758,7 +759,7 @@ registerModule(
           <p class="l-tq-working" role="status">Writing questions${s.modelName ? ` with ${esc(s.modelName)}` : ''}…
             ${s.videoWorking ? '<span data-tq-part>questions about the whole video</span> · '
               : s.parts > 1 && s.part ? `<span data-tq-part>part ${s.part} of ${s.parts}</span> · ` : ''}<span data-tq-elapsed>0:00</span></p>
-          <p class="l-tq-help">A model on a computer without a graphics card can take several minutes.
+          <p class="l-tq-help">On a computer without a graphics card, the AI can take several minutes.
             Everything else here keeps working while it runs.</p>
           <div class="l-actions"><button type="button" class="l-btn" data-tq-cancel>Cancel</button></div>`;
       } else if (s.stage === 'error') {
@@ -779,12 +780,12 @@ registerModule(
             ? `${plural(s.rejected, 'question was', 'questions were')} dropped because the answer could not be checked against the transcript.`
             : `All ${plural(s.kept, 'question')} checked out against the transcript.`}</p>
           ${s.piecesFailed ? `<p class="l-tq-help" data-tq-pieces-failed>${plural(s.piecesFailed, 'part')} of the transcript
-            could not be read by the model, so there are no questions from ${s.piecesFailed === 1 ? 'it' : 'them'}.</p>` : ''}
+            could not be read by the AI, so there are no questions from ${s.piecesFailed === 1 ? 'it' : 'them'}.</p>` : ''}
           ${s.videoPass && s.videoPass.ran ? `<p class="l-tq-help" data-tq-video>${s.videoPass.ok
             ? `${plural(s.videoPass.count, 'question is', 'questions are')} about the whole video.`
             : `No questions about the whole video this time (${esc(String(s.videoPass.reason || '').replace(/\.$/, ''))}). The questions from each part are all here.`}</p>` : ''}
           ${s.paidAlready ? '<p class="l-tq-help">This video’s points were already earned, so this round is practice.</p>' : ''}
-          ${s.fellBack ? `<p class="l-tq-help">The model chosen in settings is not on this device, so ${esc(s.modelName)} was used.</p>` : ''}
+          ${s.fellBack ? `<p class="l-tq-help">The AI model chosen in settings is not on this device, so ${esc(s.modelName)} was used.</p>` : ''}
           ${factLine}
           ${s.fact ? '' : `<p class="l-tq-help l-fc-off" data-fc-off>Not checked on Wikipedia. ${factBoxHTML()}</p>`}`;
         if (a) {
@@ -831,7 +832,7 @@ registerModule(
           ? 'They are kept for review, but this screen sends lesson questions to neither game.'
           : s.autoApproved
             ? (s.factCheckOn
-              ? `They join ${target} as each one’s Wikipedia check finishes; one Wikipedia seems to disagree with waits for a person.`
+              ? `They join ${target} as each one’s Wikipedia check finishes. A question Wikipedia seems to disagree with waits for a person.`
               : `The questions were added to ${target}.`)
             : `The questions are waiting below for a person to check them before they join ${target}.`;
         body = `
@@ -998,9 +999,9 @@ registerModule(
       const { passed, rejected } = checkQuestions(parsed, text);
       if (!passed.length) {
         failWith(session, { reason: parsed.length
-          ? `The model wrote ${plural(parsed.length, 'question')}, but none could be checked against the transcript `
-            + '(each answer has to be in the transcript line it quotes), so none are used. Trying again often works.'
-          : 'The model answered, but no questions could be read from what it wrote. Trying again often works.' });
+          ? `The AI wrote ${plural(parsed.length, 'question')}, but none could be checked against the transcript `
+            + '(each answer has to be in the transcript line it quotes). None are used. Trying again often works.'
+          : 'The AI answered, but no questions could be read from what it wrote. Trying again often works.' });
         return;
       }
       const seen = new Set();
@@ -1378,8 +1379,10 @@ registerModule(
             return `<p class="l-rq-fact" data-rq-fact="not-checked">Not checked on Wikipedia. ${esc(c.reason)}</p>`;
         }
       };
-      const contestedLine = (mods) => `<p class="l-rq-flag l-rq-contested">Contested while playing${mods.length
-        ? ` (in ${esc(screens(mods))})` : ''}. It stays out of the games until someone clears it.</p>`;
+      const contestedLine = (mods) => `<p class="l-rq-flag l-rq-contested">A player said this question is
+        wrong${mods.length
+        ? ` (in ${esc(screens(mods))})` : ''}. It stays out of the games until
+        someone clears it.</p>`;
       const row = (i, { review }) => {
         const current = i.flags.slice(i.flagsCleared || 0);
         const c = contestOf.get(keyOf(i));
@@ -1436,17 +1439,17 @@ registerModule(
           </div>
         </div>`;
       const contestedGroup = othersHeld.length ? `<div class="l-rv-group" data-rv-contested>
-          <p class="l-rv-topic">Contested while playing</p>
+          <p class="l-rv-topic">Questions a player said were wrong</p>
           ${othersHeld.map((c) => otherRow(c, { out: false })).join('')}
         </div>` : '';
       box.innerHTML = `
         <h3 class="l-rv-title">Questions to check (${waiting.length + othersHeld.length})</h3>
-        ${items.length ? `<p class="l-tq-help">A model wrote the transcript questions, and each one passed a check: its
-          answer is in the transcript line shown. That does not mean the video is right; where a question was
-          looked up on Wikipedia, what was found is shown with it.
+        ${items.length ? `<p class="l-tq-help">An AI (artificial intelligence) wrote the transcript questions. Each one
+          passed a check: its answer is in the transcript line shown. That does not mean the video is right. Where a question
+          was looked up on Wikipedia, what was found is shown with it.
           ${target ? `Approved questions join ${target}.` : 'This screen sends lesson questions to neither game.'}</p>` : ''}
-        ${othersHeld.length || othersOut.length || cList.length ? `<p class="l-tq-help">A question somebody contested while playing is
-          held out of every game on this profile until someone clears it.</p>` : ''}
+        ${othersHeld.length || othersOut.length || cList.length ? `<p class="l-tq-help">When somebody says a question is wrong while
+          playing, it is held out of every game on this profile. It stays out until someone clears it.</p>` : ''}
         ${contestedGroup}
         ${groups || (contestedGroup ? '' : '<p class="l-tq-help">Nothing is waiting.</p>')}
         ${inGames.length ? `<details class="l-rv-in"><summary>In the games (${inGames.length})</summary>

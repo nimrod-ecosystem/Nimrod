@@ -194,7 +194,7 @@ try {
     check('a toggle is not, and says so', !by.on.ok && /yes\/no/.test(by.on.why), by.on.why);
     check('a colour is not, and says so', !by.ink.ok && /color setting/.test(by.ink.why), by.ink.why);
     check('text is not, and says so', !by.name.ok && /text setting/.test(by.name.why));
-    check('an unbounded number is not: nothing to map onto', !by.free.ok && /no range/.test(by.free.why));
+    check('an unbounded number is not: nothing to map onto', !by.free.ok && /no lowest and highest value/.test(by.free.why));   // site text rewrite 2026-10-09: was "no range"
     check('a declaration can opt out with automatable:false', !by.optout.ok);
     check('every refusal carries a reason', rows.filter((r) => !r.ok).every((r) => r.why));
   }
@@ -296,7 +296,7 @@ try {
     check('binding a colour is refused, with why', !col.ok && col.reason === 'not-bindable' && /only numbers/.test(col.why));
     check('a binding to a panel not mounted yet is kept, waiting',
       eng.add({ id: 'later', target: { instance: 'nope', key: 'level' }, source: { kind: 'bus', topic: 'a' } }).ok
-      && eng.status('later') === 'waiting for its panel');
+      && eng.status('later') === 'waiting for its part');   // site text rewrite 2026-10-09
     eng.destroy();
   }
 
@@ -567,7 +567,7 @@ try {
     st.destroy();
     check('*** panel destroyed: no timers, no subscriptions ***', eng.activeTimers() === 0 && bus.live() === 0 && clk.pending() === 0,
       `${eng.activeTimers()} timers, ${bus.live()} subs`);
-    check('the bindings themselves survive (they are the screen\'s)', eng.list().length === 2 && eng.status('l') === 'waiting for its panel');
+    check('the bindings themselves survive (they are the screen\'s)', eng.list().length === 2 && eng.status('l') === 'waiting for its part');   // site text rewrite 2026-10-09
     const st2 = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
     check('remounted: they run again', eng.activeTimers() === 1 && bus.live() === 1 && st2.get().level === 0);
     eng.destroy();
@@ -939,7 +939,7 @@ try {
       JSON.stringify(eng.list()));
     check('the list shows it', root.querySelectorAll('[data-binding]').length === 1);
     panel.form.requestSubmit();
-    check('adding a second driver to the same setting says why not', /already driven/.test(root.querySelector('[data-status]').textContent));
+    check('adding a second driver to the same setting says why not', /already changes that setting/.test(root.querySelector('[data-status]').textContent));   // site text rewrite 2026-10-09: was "already driven"
     th.bus.publish('puzzle/dial', 0.5);
     check('it drives the setting (peak at the default 0.5 -> the field\'s own top, 100)', state.get().inkLightness === 100,
       String(state.get().inkLightness));

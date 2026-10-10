@@ -65,10 +65,10 @@ export const PANEL_RING_DEFAULT = 'after-10';
 
 /** The settings row, as data (settings_fields.js `choice`), for the screen's own settings. */
 export const PANEL_RING_FIELD = Object.freeze({
-  key: PANEL_RING_KEY, label: 'Show which panel is selected', kind: 'choice', default: PANEL_RING_DEFAULT,
+  key: PANEL_RING_KEY, label: 'Show which part you picked', kind: 'choice', default: PANEL_RING_DEFAULT,
   level: 'standard', options: PANEL_RING_OPTIONS,
-  help: 'A ring round the selected panel. It comes back with the next press, key, switch or mouse move. '
-    + 'With Never, the bar still lights the selected panel’s name.',
+  help: 'A ring round the part you picked. It comes back with the next press, key, switch or mouse '
+    + 'move. With Never, the bar still lights that part’s name.',
 });
 
 /** A stored value as { mode: 'always' | 'after' | 'never', ms }. Anything unknown is the default. */

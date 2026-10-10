@@ -158,7 +158,7 @@ function mountChart(extra = {}) {
       check('a pie\'s rest adds up: YouTube 6 and Everything else 3', rest.length === 2 && rest[1].rest && rest[1].value === 3 && rest[1].label === 'Everything else');
       check('no rest row when everything fits', withRest(kinds, 5).length === 2);
       const artists = chartModel(FIX, { count: 'by' }, { screen: S, now: NOW });
-      check('*** by artist with none kept says so plainly, and invents none ***', artists.empty && /Only music from folders/.test(artists.emptyText), artists.emptyText);
+      check('*** by artist with none kept says so plainly, and invents none ***', artists.empty && /only music from folders/i.test(artists.emptyText), artists.emptyText);   // site text rewrite 2026-10-09: now mid-sentence ("For now, only music …")
     }
 
     section('counts over time: every bucket present');

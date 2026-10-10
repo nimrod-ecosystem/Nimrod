@@ -879,7 +879,7 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
 
       // (a) the pieces, on their own
       check('the row: "Show which panel is selected", five choices, most shown to least, on the screen\'s row',
-        PANEL_RING_FIELD.key === 'panelRing' && PANEL_RING_FIELD.label === 'Show which panel is selected'
+        PANEL_RING_FIELD.key === 'panelRing' && PANEL_RING_FIELD.label === 'Show which part you picked' /* site text rewrite 2026-10-09 */
         && J(PANEL_RING_FIELD.options.map((o) => o.value)) === J(['always', 'after-30', 'after-10', 'after-3', 'never']), J(PANEL_RING_FIELD));
       check('*** the default: for 10 seconds after a press (argued in panel_ring.js) ***', PANEL_RING_DEFAULT === 'after-10'
         && J(panelRingMode(undefined)) === J({ mode: 'after', ms: 10000 }) && J(panelRingMode('nonsense')) === J({ mode: 'after', ms: 10000 }));

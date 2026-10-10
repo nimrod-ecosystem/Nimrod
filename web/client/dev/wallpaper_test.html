@@ -397,7 +397,7 @@ try {
       .concat(['ok', 'empty', 'gone', 'permission', 'missing', 'album', 'error'].map((s) => folderNote('src-1', s, 1)));
     check('every state has words, and every one but "ok" says the built-in wallpaper shows',
       words.every(Boolean) && words.filter((w) => !/there\.$/.test(w)).every((w) => /built-in wallpaper shows/.test(w)), J(words));
-    check('a lapsed permission says where to press Allow', /Allow in This screen, Your own folders/.test(folderNote(NIMROD_FOLDER, 'permission')));
+    check('a lapsed permission says where to press Allow', /Allow it again” in This screen, Your own folders/.test(folderNote(NIMROD_FOLDER, 'permission')));   // site text rewrite 2026-10-09
     check('"None" has nothing to say', folderNote(NO_FOLDER, 'ok') === '');
     check('*** site words: never "her screen", never a name ***', !/her screen|christine|cici/i.test(words.join(' ')));
 

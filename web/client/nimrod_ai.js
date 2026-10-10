@@ -153,12 +153,12 @@ export function ollamaOriginLines(origin) {
 export const AI_BACKEND_KEY = 'nimrod.ai.backend';
 export const DEFAULT_BACKEND = 'local';
 export const AI_BACKENDS = Object.freeze([
-  Object.freeze({ id: 'local', label: 'Local (Ollama)',
+  Object.freeze({ id: 'local', label: 'On this computer (Ollama)',
     help: 'Free: an AI program on this computer. Nothing leaves it.' }),
   Object.freeze({ id: 'online', label: 'Online address + your own key',
-    help: 'Any online AI that speaks the OpenAI API, free or with your own key. The key stays in this browser and goes only to that address.' }),
+    help: 'Any online AI that works with the OpenAI API (the way one program talks to another), free or with your own key. The key stays in this browser and goes only to that address.' }),
   Object.freeze({ id: 'claude', label: 'Claude, on this account',
-    help: 'Claude, paid for by this account’s own Claude key, which the account owner saves once on the Claude settings page. The key is kept on the server, never in this browser.' }),
+    help: 'Claude, paid for with this login’s own Claude key. Whoever owns this login saves the key once on the Claude settings page. The key is kept on the site’s server, never in this browser.' }),
 ]);
 const BACKEND_IDS = AI_BACKENDS.map((b) => b.id);
 const backendStorage = () => { try { return globalThis.localStorage || null; } catch { return null; } };
@@ -184,16 +184,16 @@ export const CLAUDE_TIMEOUT_MS = 90 * 1000;
 // the settings page, from this one list.
 export const CLAUDE_PLAIN_WORDS = Object.freeze([
   'What is sent: only the words of the conversation (typed, or what the microphone heard) and the guide’s place, as text, to Anthropic, who make Claude. Never pictures, sound or files.',
-  'The key: saved once by the account owner on the Claude settings page, kept encrypted on the server, and never sent back to any screen or browser. Only its last four characters are ever shown.',
-  'The limit: a daily spending limit for the account, $1 a day unless the owner changes it. Past it, Claude stops answering until midnight UTC; the guide itself keeps working.',
-  'To remove the key: “Remove the key” on the Claude settings page. Also set a monthly spend limit for the key in the Anthropic Console, as a second wall.',
+  'The key: whoever owns this login saves it once on the Claude settings page. It is kept locked (encrypted) on the site’s server. It is never sent back to any screen or browser. Only its last 4 characters are ever shown.',
+  'The limit: a daily spending limit for this login. It is $1 a day unless the owner changes it. Past it, Claude stops answering until midnight UTC (Coordinated Universal Time, the world’s reference clock). The guide itself keeps working.',
+  'To remove the key: press “Remove the key” on the Claude settings page. Also set a monthly spend limit for the key in the Anthropic Console, as a backup.',
 ]);
 
 const money = (n) => `$${(Number(n) || 0).toFixed(2)}`;
 /** One line for a status from GET /api/ai/claude: what answers, and today's spend against the limit. */
 export function claudeStatusLine(st) {
   if (!st || typeof st !== 'object') return 'Could not read the Claude settings.';
-  if (!st.key_set) return 'Claude is not set up on this account yet: the account owner saves a key on the Claude settings page.';
+  if (!st.key_set) return 'Claude is not set up on this login yet. Whoever owns this login saves a key on the Claude settings page.';
   const label = (st.chat_models || []).find((m) => m.id === st.chat_model)?.label || st.chat_model || 'Claude';
   return `Claude is set up (key ending ${st.key_last4 || '????'}), answering with ${label}. Today: ${money(st.today?.usd)} of ${money(st.daily_cap_usd)}.`;
 }
@@ -374,7 +374,7 @@ export const BUILTIN_ACTIONS = Object.freeze([
       if (/^type:[a-z0-9_-]+$/i.test(p) && (!env?.knownTypes || env.knownTypes.has(p.slice(5)))) return p;
       return null;
     },
-    describe: (page) => `Show ${PAGE_LABELS[page] || (page.startsWith('type:') ? `the ${page.slice(5)} settings` : page)} in the settings panel`,
+    describe: (page) => `Show ${PAGE_LABELS[page] || (page.startsWith('type:') ? `the ${page.slice(5)} settings` : page)} in the Settings part`,
     run: (page, env) => env?.publish?.(GUIDE_TOPICS.settingsPage, { page }),
   }),
   Object.freeze({

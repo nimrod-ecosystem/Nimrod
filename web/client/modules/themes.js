@@ -43,7 +43,7 @@ export const THEMES_PANEL_VERBS = Object.freeze({
 
 registerModule(
   { type: THEMES_TYPE, title: THEMES_TITLE, core: 'new', dependsOn: 'server',
-    description: 'every theme, each with a still of what it looks like; choosing one changes the screen' },
+    description: 'every theme, each with a picture of how it looks. Choosing one changes the screen' },
   (ctx) => {
     const { mount } = ctx;
     let view = null;          // the screen's menu, drawn here and opened on its Theme row's list
@@ -59,7 +59,7 @@ registerModule(
     function previewHere(host, why) {
       host.innerHTML = `<div data-themes-preview style="box-sizing:border-box;height:100%;overflow:auto;padding:10px;
         color:var(--text);background:var(--surface)">
-        <p data-themes-note style="margin:0 0 8px;font-size:.9rem;color:var(--text-muted)">${why} Choosing one here colours this panel only, to show it.</p>
+        <p data-themes-note style="margin:0 0 8px;font-size:.9rem;color:var(--text-muted)">${why} Choosing one here colours this part only, to show it.</p>
         <div data-themes-list></div></div>`;
       const box = host.querySelector('[data-themes-preview]');
       let shown = DEFAULT_THEME;

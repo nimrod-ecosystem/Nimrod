@@ -503,7 +503,7 @@ try {
     const s5 = await W.saveToFolder('t', { store: locked.store, view: locked.view, at });
     check('the browser says no: not saved, and said why', !s5.ok && /did not let/.test(s5.reason));
     const s6 = await W.saveToFolder('t', { store: fakeFolders(dir).store, view: {}, at });
-    check('a browser that cannot pick a folder: says to download instead', !s6.ok && /Download it instead/.test(s6.reason));
+    check('a browser that cannot pick a folder: says to download instead', !s6.ok && /Save it in your downloads instead/.test(s6.reason));   // site text rewrite 2026-10-09: was "Download it instead"
     const cancel = await W.saveToFolder('t', { store: fakeFolders(dir).store, view: { showDirectoryPicker: async () => { const e = new Error('x'); e.name = 'AbortError'; throw e; } }, at });
     check('the picker cancelled: nothing written, nothing remembered', !cancel.ok && cancel.cancelled);
   }
@@ -593,7 +593,7 @@ try {
       && /Still cleaning/.test(g.q('[data-ng-pendingclean]').textContent) && g.probe().cleaning);
     g.bus.publish(SPEECH_TOPICS.answer, { text: 'what a lovely day', dictation: true });
     await sleep(30);
-    check('words that are not a decision: nothing decided, and it says what it can hear', /Say use this, or keep mine/.test(g.probe().notice));
+    check('words that are not a decision: nothing decided, and it says what it can hear', /Say “use this” or “keep mine”/.test(g.probe().notice));   // site text rewrite 2026-10-09
     // Leave mid-approval, and come back on a new mount (another screen of the same person).
     g.done();
     ai.release();

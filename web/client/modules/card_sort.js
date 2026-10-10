@@ -256,8 +256,8 @@ export function judgeItem(it, value, aces = 'low') {
 // ---------------------------------------------------------------------------------------------------
 registerModule(
   { type: GAME, title: 'Card sort', core: 'new',
-    description: 'Name the suit of a card, then say whether it is higher or lower than cards you have already '
-      + 'done. More cards to sort among as it gets easy, for each player. Say it, tap it, or use one switch.',
+    description: 'Name the suit of a card, then say whether it is higher or lower than cards you have already done. As '
+      + 'it gets easy, each player gets more cards to sort among. Say it, tap it, or use one switch (one big button).',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;

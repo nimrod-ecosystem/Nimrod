@@ -67,8 +67,8 @@ export function mountIntercomApprovals(root, {
       <div class="ia">
         <h2 class="r-h2">Who may open the intercom into ${esc(personName || 'this room')}</h2>
         <p class="h-hint">They can talk into the room from their phone and hear it back. The room hears a
-          chime and their name first, shows that the intercom is open the whole time, and can end it
-          with one press. Nobody is on this list until you tick them.</p>
+          chime and their name first. The screen shows that the intercom is open the whole time. The room
+          can end it with one press. Nobody is on this list until you tick them.</p>
         ${cands.length ? `<ul class="r-list ia-list">${cands.map((c) => {
           const on = list.find((a) => a.account === c.account);
           return `<li data-account="${esc(c.account)}">

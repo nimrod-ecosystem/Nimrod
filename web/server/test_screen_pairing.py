@@ -243,8 +243,9 @@ def main() -> None:
           "secret_new_thing" in by2)
     check("and an undescribed table is assumed PERSONAL until somebody says otherwise",
           by2["secret_new_thing"]["personal"] is True)
+    # site text rewrite 2026-10-09: "see the source" now reads "Read the code." - same pointer, plainer word.
     check("with text that points at the source rather than pretending to explain",
-          "source" in by2["secret_new_thing"]["what"], by2["secret_new_thing"]["what"])
+          "Read the code" in by2["secret_new_thing"]["what"], by2["secret_new_thing"]["what"])
 
     # *** THE WEATHER TOWN (MIKE_LIST_20260930, Weather item 6). *** The Weather panel saves the
     # place somebody typed, the match they picked with its position rounded to about 11 km, and

@@ -67,7 +67,7 @@ export function itemName(it) {
 export function dashboardLinks({ record = null, layout = null, shows = {}, recipe = null, title = (t) => t } = {}) {
   const out = [];
   const mods = new Map(((record && record.modules) || []).filter((m) => m && m.id).map((m) => [m.id, m]));
-  const modName = (id) => { const m = mods.get(id); return m ? String(title(m.type) || m.type || 'Module') : 'Module'; };
+  const modName = (id) => { const m = mods.get(id); return m ? String(title(m.type) || m.type || 'Part') : 'Part'; };
   for (const e of (layout && Array.isArray(layout.placed) ? layout.placed : [])) {
     const to = target(e && e.opens);
     if (to && e.id) out.push({ kind: OPENS, to, via: { kind: 'module', id: e.id, name: modName(e.id) } });

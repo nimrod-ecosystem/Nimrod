@@ -74,7 +74,7 @@ const SETTINGS = [
     ] },
   { key: 'offer', label: 'Cards to pick from', kind: 'choice', default: 'movable', level: 'standard',
     options: [{ value: 'movable', label: 'Only cards that can move' }, { value: 'all', label: 'Every face-up card' }],
-    note: 'Only cards that can move keeps a switch walk short, and works a little like a hint.' },
+    note: 'Offering only cards that can move means fewer steps with a switch (one big button). It also works a little like a hint.' },
   { key: 'straightThere', label: 'A card with only one place', default: false, level: 'standard',
     onLabel: 'Goes there as soon as it is picked', offLabel: 'Still asks where' },
   { key: 'sayAloud', label: 'Say what is lit, and each move', default: false, level: 'standard',

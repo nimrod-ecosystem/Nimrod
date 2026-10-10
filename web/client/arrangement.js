@@ -521,7 +521,7 @@ export function createArrangement({
       empty.textContent = failedSlots.length
         ? `Nothing on this screen could start (${failedSlots.join(', ')}). Press Home to check it.`
         : layout.slots.length
-          ? 'This screen’s panels were removed. Press Home to add some again.'
+          ? 'The parts on this screen were removed. Press Home to add some again.'
           : 'Nothing has been added to this screen yet. Press Home to add something.';
       stageEl.append(empty);
     }

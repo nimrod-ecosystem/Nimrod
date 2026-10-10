@@ -183,7 +183,8 @@ section('The editor: one button per control, the way out first');
   check('a row per rule, each with Event, Object, Does, Sound, Test, Remove',
     ed.el.querySelectorAll('[data-rn-rule]').length === 5
     && [...ed.el.querySelectorAll('[data-rn-rule]')].every((row) => ['on', 'object', 'does', 'sound', 'test', 'remove'].every((f) => row.querySelector(`[data-rn="${f}"]`))));
-  check('it says the on-screen cue always comes too', /always/i.test(ed.el.textContent) && /on-screen/i.test(ed.el.textContent));
+  // site text rewrite 2026-10-09: "The on-screen cue always comes too" now reads "The words on the screen come too".
+  check('it says the on-screen cue always comes too', /words on the screen\s+come too/i.test(ed.el.textContent));
   check('no modal, no trap', !ed.el.querySelector('[aria-modal]') && ed.el.getAttribute('aria-modal') == null);
   check('buttons are at least 44px tall (Design’s floor for a target)', btns.every((b) => b.getBoundingClientRect().height >= 44), String(Math.min(...btns.map((b) => b.getBoundingClientRect().height))));
   const row1 = ed.el.querySelector('[data-rn-rule]');

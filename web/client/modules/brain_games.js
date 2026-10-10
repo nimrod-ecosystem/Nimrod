@@ -144,7 +144,7 @@ const SETTINGS = [
     options: [{ value: 0, label: 'Never: take your time' }, { value: 2000, label: '2 seconds' },
               { value: 4000, label: '4 seconds' }, { value: 8000, label: '8 seconds' }],
     note: 'A little time pressure, for somebody who wants it. Nothing ever ends a turn.' },
-  { key: 'boardScan', label: 'Picking with a switch', kind: 'choice', default: 'rows', level: 'standard',
+  { key: 'boardScan', label: 'Picking with a switch (one big button)', kind: 'choice', default: 'rows', level: 'standard',
     options: [{ value: 'rows', label: 'A row, then a key' }, { value: 'keys', label: 'One key at a time' }] },
   ...adaptiveSettings({ ai: false, startLevels: 5 }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS }),
@@ -439,7 +439,7 @@ export function createBrainPlay({ session, cfg = () => DEFAULTS, rand = Math.ran
 registerModule(
   { type: GAME, title: 'Brain games', core: 'new',
     description: 'Quick rounds: which one is different, remember the order, how many dots, what comes '
-      + 'next. Each player at their own level; nothing is timed unless that is turned on.',
+      + 'next. Each player plays at their own level. Nothing is timed unless that is turned on.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;

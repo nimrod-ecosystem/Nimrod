@@ -56,8 +56,8 @@ export const CONNECTIONS = [
     id: 'media-agent',
     title: 'Your own photos and videos',
     area: 'media',
-    blurb: 'A folder on your own computer or drive. The platform never holds your media — it '
-      + 'stores a pointer, and the bytes come straight from you.',
+    blurb: 'A folder on your own computer or drive. The site never holds your photos or videos. It only '
+      + 'keeps a note of where they are. They come straight from you.',
     // The one thing on this list that a bedside screen genuinely needs, which is why it is
     // first and why it is not `advanced`.
     level: 'standard',
@@ -80,7 +80,7 @@ export const CONNECTIONS = [
   },
   {
     id: 'ai',
-    title: 'An AI you have connected',
+    title: 'An AI (artificial intelligence) you have connected',
     area: 'ai',
     blurb: 'Used for checking a shared module before you install it, and for writing plain '
       + 'summaries. It advises; it never decides.',

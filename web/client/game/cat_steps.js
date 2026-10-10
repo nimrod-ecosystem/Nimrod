@@ -79,10 +79,10 @@ const EDIT = (act) => `#home-edit:not([hidden]) [data-edit="${act}"]`;
 export const CAT_STEPS = [
   { id: 'cat-profile', page: HOME_PAGE, target: [EXAMPLE_MAKE, HOST('save')], action: 'click', doneWhen: PROFILE_MADE,
     brief: 'Pick an example: Make this my Home.',
-    say: 'First, your Home. It is your profile: a dashboard you make your own. Pick one of the examples '
-       + 'and press Make this my Home. Try it here shows one on the stage first.',
+    say: 'First, your Home. It is your profile, and you make it your own. Pick one of the examples '
+       + 'and press Make this my Home. Try it here shows you one first.',
     more: 'Picking one again never makes a second copy. If the examples are closed, Save on the bar makes '
-        + 'the one on the stage. You can close me any time with Close or the Escape key.',
+        + 'the one that is showing. You can close me any time with Close or the Escape key.',
     note: 'The first step (no hello slide). Done as soon as a Home exists, so it is skipped for somebody '
         + 'who has one already. Points at the first "Make this my Home", or at Save when the examples are shut.' },
 
@@ -90,8 +90,8 @@ export const CAT_STEPS = [
     brief: 'This is the bar.',
     say: 'This is the bar. Every screen has one, with the same buttons in the same places. On Home it '
        + 'also carries Modules, Save, Save as, History and Switch module.',
-    more: 'In full screen it tucks itself away after a few seconds. Touch the screen, press a key or '
-        + 'press a switch to bring it back.',
+    more: 'In full screen it tucks itself away after a few seconds. Touch the screen, press a key or press a switch '
+        + '(one big button) to bring it back.',
     note: 'The kiosk keeps the bar showing while he points at it (`holdBar`), placed bar included.' },
 
   { id: 'cat-modules', page: HOME_PAGE, target: HOST('picker'), action: 'none',
@@ -113,8 +113,8 @@ export const CAT_STEPS = [
 
   { id: 'cat-settings', page: HOME_PAGE, action: 'none', target: [MENU_PANEL, SHELL('settings')],
     brief: 'The menu changes what is outlined.',
-    say: 'The menu changes whatever is outlined. On a picture, Picture opens your pictures: the ones you used '
-       + 'last, one from this device, or a folder; Frame hangs it in a picture frame, on a TV or on a monitor. '
+    say: 'The menu changes whatever is outlined. On a picture, Picture opens your pictures. You can pick one you used '
+       + 'last, one from this device, or one from a folder. Frame hangs it in a picture frame, on a TV or on a monitor. '
        + 'On a sign, Words changes what it says.',
     more: 'Each press of a row steps to its next choice. What you change here waits for Save, so trying '
         + 'things costs nothing.' },
@@ -126,22 +126,22 @@ export const CAT_STEPS = [
     more: 'Things on the screen come along: going to a room hangs them on its wall.' },
 
   { id: 'cat-add', page: HOME_PAGE, action: 'none', target: [EDIT('add'), SHELL('settings')],
-    brief: 'Add puts a module on.',
-    say: 'Add puts a module on your Home: photos, a clock, a game, a picture frame or a name sign. That is '
+    brief: 'Add puts a part on.',
+    say: 'Add puts a part on your Home: photos, a clock, a game, a picture frame or a name sign. That is '
        + 'how it becomes yours.',
-    more: 'Change, next to it, moves a thing, makes it bigger or smaller, or takes it off. Transform types '
-        + 'the numbers.' },
+    more: 'Change, next to it, moves a thing, makes it bigger or smaller, or takes it off. Transform lets you type its place and '
+        + 'size as numbers.' },
 
   { id: 'cat-switch', page: HOME_PAGE, action: 'none', target: [HOST('switch'), EDIT('change')],
     brief: 'Switch module swaps the outlined thing.',
-    say: 'Switch module, on the bar, swaps the outlined thing for another module in exactly the same place. '
+    say: 'Switch module, on the bar, swaps the outlined thing for another part in exactly the same place. '
        + 'Choose the new one, and it is done.',
     more: 'Undo puts the old one back, with its settings.' },
 
   { id: 'cat-save', page: HOME_PAGE, action: 'none', target: HOST('save'),
     brief: 'Press Save to keep settings.',
-    say: 'What is on your Home, and where, keeps as you change it. Settings wait for Save: press Save to '
-       + 'keep them, or Save as… for a copy under a new name. History has your last saves.',
+    say: 'What is on your Home, and where, is saved as you change it. Settings wait for Save. Press Save '
+       + 'to keep them, or Save as… for a copy under a new name. History has your last saves.',
     more: 'Restoring an old save deletes nothing: it opens as unsaved changes, and saving it adds a new '
         + 'one on top.' },
 
@@ -162,7 +162,7 @@ export function catGoThere(storage = null) { // eslint-disable-line no-unused-va
       return { say: 'I show you around on Home, on your own Home. Open it and I’ll carry on there.',
         label: 'Open my Home', href: HOME_PROFILE_URL };
     }
-    if (page === GAME_PAGE) return { say: 'This part is on the game page.', label: 'The game', href: GAME_PAGE };
+    if (page === GAME_PAGE) return { say: 'This step is on the game page.', label: 'The game', href: GAME_PAGE };
     return null;
   };
 }

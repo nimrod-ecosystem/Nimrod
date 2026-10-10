@@ -336,7 +336,7 @@ export function buildItems({
     id: 'subject',
     // (2026-10-02, levels: a subject that is a LEVEL rather than a panel -- "Every Photos panel", "This
     // screen" -- names itself with `heading`.)
-    label: subject ? (subject.heading || `This panel — ${subject.title || subject.type}`) : 'No panel selected',
+    label: subject ? (subject.heading || `This panel — ${subject.title || subject.type}`) : 'No part picked',
   });
   if (subject && fields.length) {
     out.push(...fields);

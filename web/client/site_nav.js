@@ -50,15 +50,15 @@ export const SITE_TABS = [
   { id: 'screens',  label: 'Dashboards', hint: 'make and fill your dashboards' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   // The ID STAYS `inputs` (it is in URLs, in tests and in `INPUTS_KEY` on the server). Only the word moved to Devices.
-  { id: 'inputs',   label: 'Devices',  hint: 'the switches, controllers and keys you use — and what each one does' },
+  { id: 'inputs',   label: 'Devices',  hint: 'the switches (big buttons), controllers and keys you use — and what each one does' },
   // "Output" is engineering's word for it. What the tab configures is how the screen TELLS somebody something --
   // spoken, on screen, a sound -- which is a notification in everybody else's vocabulary. Id unchanged.
   { id: 'output',   label: 'Notifications',
     hint: 'how this dashboard answers — spoken, on screen, a sound' },
-  { id: 'remote',   label: 'Remote',   hint: 'drive their screen from here, while they are at it' },
+  { id: 'remote',   label: 'Remote',   hint: 'control their screen from here, while they are at it' },
   // ON HOME, NOT ON THE KIOSK. Reviewing what a module recorded is a different job in a different room, and a table
   // of somebody's performance has no business on the screen they cannot walk away from.
-  { id: 'records',  label: 'Records',  hint: 'what a module wrote down, and vouching for it' },
+  { id: 'records',  label: 'Records',  hint: 'what a part wrote down, and vouching for it' },
   // The state machine, in sentences. The engine has always been authorable; what was missing was that nobody could
   // READ the config. See rules.js.
   { id: 'rules',    label: 'Rules',    hint: 'what each screen does on its own, and when' },
@@ -117,7 +117,7 @@ export function siteSideHTML({ here = 'dashboards', active = null, signedIn = fa
       + '<a class="s-signout" href="/auth/logout">Sign out</a>'
       // SWITCH ACCOUNT: /auth/logout clears our session and not Google's, so signing back in silently picks the same
       // account up again. ?switch=1 asks Google to show the chooser. (PRIORITY.md #6.)
-      + '<a class="s-signout" href="/auth/login?switch=1">Switch account</a>'
+      + '<a class="s-signout" href="/auth/login?switch=1">Use a different login</a>'
       // THE ACCOUNT'S OWN PAGES (2026-10-04, page_links.js): here because this is where the account's things live.
       + `<a class="s-signout s-acct" data-acct="claude" href="${esc(CLAUDE_PAGE)}">Claude on this account</a>`
       + `<a class="s-signout s-acct" data-acct="reviews" href="${esc(REVIEWS_PAGE)}">Review questions</a>`

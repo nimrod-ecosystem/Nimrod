@@ -514,7 +514,7 @@ export function normalizeField(raw = {}) {
     f.editable = false;
     f.opens = false;
     f.readOnly = true;
-    f.why = f.why || 'changed where it lives';
+    f.why = f.why || 'changed somewhere else, not here';
   }
   if (f.note) f.why = f.note;
   return f;
@@ -759,7 +759,7 @@ export function fieldItems(fields = [], {
       // way round to undo the answer.
       // The requirement rides in the hint, so it is visible WHERE THE SETTING IS SET rather
       // than only when it fails.
-      hint: [...says, f.status, f.requires === 'direct' ? 'needs a direct connection (VPN)' : f.requires]   // folder art: status
+      hint: [...says, f.status, f.requires === 'direct' ? 'needs a direct connection (a VPN, a virtual private network)' : f.requires]   // folder art: status
         .filter(Boolean).join(' · '),
       // An editable text row is a real stop: a keyboard user reaches it with the same arrows. So is
       // a picture row: `select` opens the picker.

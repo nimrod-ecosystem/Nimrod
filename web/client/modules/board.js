@@ -359,10 +359,10 @@ export const SETTINGS = [
   // a sentence on. That is the same person `tapSelects` exists for, and the note says so — but
   // it is a separate switch, because coupling two settings means changing one silently changes
   // what the other does, which is exactly the kind of thing nobody can debug from a bedside.
-  { key: 'showBoards', label: 'Show the board switcher', kind: 'toggle', default: false,
+  { key: 'showBoards', label: 'Show the row for changing boards', kind: 'toggle', default: false,
     level: 'standard', onLabel: 'Yes — a row of boards above the cards', offLabel: 'No',
-    note: 'The row sits above the cards, where a resting hand can reach it. Switching is in '
-      + 'the board’s own settings either way.' },
+    note: 'The row sits above the cards, where a resting hand can reach it. You can change boards '
+      + 'in the board’s own settings either way.' },
   // *** LOCK. AND THE ONLY QUESTION THAT MATTERS ABOUT A LOCK IS HOW YOU GET BACK OUT. ***
   //
   // `CLAUDE.md`: *"a caregiver locked out of their own lock is worse than no lock at all."*
@@ -377,8 +377,8 @@ export const SETTINGS = [
   { key: 'locked', label: 'Lock the board', kind: 'toggle', default: false, level: 'standard',
     onLabel: 'Yes — hide the board row and the settings button',
     offLabel: 'No — leave the settings button on the board',
-    note: 'The cards are unaffected. Unlock from this menu — it is the way back in, which is '
-      + 'why it is here rather than only on the board.' },
+    note: 'The cards still work the same. Unlock from this menu. It is the way back '
+      + 'in, so it is here and not only on the board.' },
   // *** THE EDITOR PUTS ITSELF AWAY, AND WHETHER IT SHOULD DEPENDS ENTIRELY ON WHOSE SCREEN
   // THIS IS. *** Mike asked why it does this at all, which was the right question.
   //
@@ -397,14 +397,14 @@ export const SETTINGS = [
   { key: 'editorIdleSec', label: 'Put the board editor away if nobody is using it',
     kind: 'choice', default: 180, level: 'advanced',
     options: [
-      { value: 180, label: 'After about three minutes' },
-      { value: 600, label: 'After about ten minutes' },
+      { value: 180, label: 'After about 3 minutes' },
+      { value: 600, label: 'After about 10 minutes' },
       { value: 0,   label: 'Never — it stays open until it is closed' },
     ],
-    note: 'Leave this on for a screen somebody uses to talk: an editor left open over their '
-      + 'board is a form they cannot dismiss. “Never” is the right answer on a machine nobody '
+    note: 'Leave this on for a screen somebody uses to talk. An editor left open over '
+      + 'their board is a form they cannot close. “Never” is right for a computer nobody '
       + 'depends on.' },
-  { key: 'scan', label: 'Scan the cards automatically', kind: 'toggle', default: false,
+  { key: 'scan', label: 'Scan the cards automatically (each card lights in turn; press when yours is lit)', kind: 'toggle', default: false,
     level: 'standard' },
   { key: 'stepMs', label: 'Time on each card', kind: 'choice', default: SCAN_DEFAULTS.stepMs,
     level: 'standard',
@@ -446,8 +446,8 @@ export const SETTINGS = [
           : s.card === 'light' ? ' (for light cards)' : ''}`,
       })),
     ],
-    note: 'Following the theme, a drawing that would be hard to see on this board’s cards uses '
-      + 'the board’s own instead. A set chosen here is always used as it is. The words never change.' },
+    note: 'When symbols follow the theme, a hard-to-see drawing is swapped for the '
+      + 'board’s own. A set chosen here is always used as it is. The words never change.' },
   // *** THE CHOICE CARD GOES BY ITSELF, AND THIS IS HOW SOON. ***
   //
   // Thirty seconds by default: long enough to close a settings menu, look at the board and read
@@ -492,7 +492,7 @@ export const SETTINGS = [
   // the list: almost nobody needs to turn touch off, and the person who does will be looking
   // for it deliberately.
   { key: 'tapSelects', label: 'Touching a card chooses it', kind: 'toggle', default: true,
-    level: 'advanced', onLabel: 'Yes', offLabel: 'No — use dwell, a switch or the scan',
+    level: 'advanced', onLabel: 'Yes', offLabel: 'No — choose by holding still (dwell), with a switch (one big button) or by scanning',
     note: 'Turn this off for somebody who rests or drags a hand across the screen.' },
   { key: 'fitScreen', label: 'Turn the grid to fit the screen', kind: 'toggle', default: true,
     level: 'advanced', onLabel: 'Yes', offLabel: 'No — keep the grid as it is',
@@ -507,7 +507,7 @@ export const SETTINGS = [
     note: 'Only the words that have a recording. The person on the call sees every word either way.' },
   // own board clips (2026-10-09): see `shippedClips` in DEFAULTS.
   { key: 'shippedClips', label: 'Common words use the built-in recorded voice', kind: 'toggle', default: true,
-    level: 'advanced', onLabel: 'Yes — seventeen common words, like Yes and Thank you', offLabel: 'No — the device’s own voice',
+    level: 'advanced', onLabel: 'Yes — 17 common words, like Yes and Thank you', offLabel: 'No — the device’s own voice',
     note: 'A card with its own sound (recorded or chosen in the board editor) always uses that.' },
 ];
 
@@ -526,8 +526,8 @@ registerModule(
   // bindings and in tests — and renaming it is a migration, not a label change. Same rule the
   // `inputs` tab followed when it became "Devices".
   { type: 'board', title: 'AAC board',
-    description: 'An AAC communication board. Big cards that say the word out loud when they '
-      + 'are chosen — touched, or walked one at a time for a single switch.',
+    description: 'A talk board, also called an AAC communication board. AAC is augmentative and alternative communication: ways to say something when speaking is hard. Big '
+      + 'cards say the word out loud when they are chosen. They can be touched, or lit one at a time for somebody using a switch (one big button).',
     // `normal`, not `critical` — and the distinction is not modesty. `importance` feeds the
     // recovery ladder's fallback RANKING (`recovery.js`), so `critical` does not mean "matters
     // a lot", it means "swap to this when something breaks". A board is a tool somebody uses on
@@ -1451,7 +1451,7 @@ registerModule(
           <div class="aboard">
             <div class="ab-surface" data-surface aria-hidden="true"></div>
             <div class="ab-boards" data-boards role="group" aria-label="which board" hidden></div>
-            <div class="ab-grid" data-grid role="group" aria-label="communication board"></div>
+            <div class="ab-grid" data-grid role="group" aria-label="talk board"></div>
             <div class="ab-flight" data-flight aria-hidden="true"></div>
             <button type="button" class="ab-gear" data-gear aria-expanded="false"
                     aria-label="board settings">⚙</button>
@@ -1469,14 +1469,14 @@ registerModule(
                 <input type="checkbox" data-popt="showBoards">
                 <span>Show the row of boards above the cards</span>
               </label>
-              <p class="ab-pnote">The row is quick, and it is within reach of somebody who
-                rests a hand on the screen. Switching is here either way.</p>
+              <p class="ab-pnote">The row is quick, and it is within reach of somebody who rests a
+                hand on the screen. You can change boards here either way.</p>
               <label class="ab-prow ab-pcheck">
                 <input type="checkbox" data-popt="locked">
                 <span>Lock — hide the row and this button</span>
               </label>
-              <p class="ab-pnote">The cards are unaffected. To unlock, open this panel’s
-                settings from the screen it is on — that menu is the way back in.</p>
+              <p class="ab-pnote">The cards still work the same. To unlock, open this part’s
+                settings from the screen it is on. That menu is the way back in.</p>
               <div class="ab-prow ab-pbtns">
                 <button type="button" class="ab-pbtn ab-pdone" data-pclose>Done</button>
               </div>

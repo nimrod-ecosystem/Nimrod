@@ -200,7 +200,7 @@ const CELEBRATION_MS = 1500;
 const MAX_SPARKS = 260;
 
 const SETTINGS = [
-  { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
+  { key: 'openToMenu', label: 'When this part opens', default: true, level: 'essential',
     onLabel: 'Show a start screen first', offLabel: 'Start playing straight away' },
   { key: 'confirmExit', label: 'Leaving a session', default: false, level: 'standard',
     onLabel: 'Ask before ending it', offLabel: 'Leave straight away' },
@@ -212,7 +212,7 @@ const SETTINGS = [
       { value: 40000, label: 'A very long wait' },
     ] },
   { key: 'challenge', label: 'Mode', default: false, level: 'essential',
-    onLabel: 'Challenge — the invite can time out', offLabel: 'Calm — the invite waits for them' },
+    onLabel: 'Challenge — Go closes if they wait too long', offLabel: 'Calm — Go waits for them' },
   { key: 'sound', label: 'Sound', default: true, level: 'essential',
     onLabel: 'Tones on', offLabel: 'Silent' },
   { key: 'speak', label: 'Say the cues out loud', default: true, level: 'essential',
@@ -262,7 +262,7 @@ const SETTINGS = [
     options: [
       { value: 0.15, label: 'Very quiet' },
       { value: 0.3, label: 'Quiet' },
-      { value: 0.55, label: 'Present' },
+      { value: 0.55, label: 'Louder' },
     ] },
   { key: 'calm', label: 'Motion', default: true, level: 'standard',
     onLabel: 'Calm — less movement', offLabel: 'Normal',
@@ -280,7 +280,7 @@ const SETTINGS = [
   // none of them means anything until the setting above it is on.
   { key: 'minWaitMs', label: 'Never wait less than', kind: 'choice', default: 2500,
     level: 'advanced',
-    note: 'the floor the adaptive wait may never go below; a flashing limit on the screen can hold it longer',
+    note: 'the wait never gets shorter than this, even when it adjusts itself. The screen’s “Flashing limit” setting can make it longer',
     options: [
       { value: 1000, label: '1 second' },
       { value: 2500, label: '2.5 seconds' },
@@ -291,12 +291,12 @@ const SETTINGS = [
     level: 'advanced', onLabel: 'Yes — longer after a slip, shorter after a clean wait',
     offLabel: 'No — always the same wait',
     note: 'challenge only; a calm wait is not timed against anybody' },
-  { key: 'confirmMs', label: 'How long the “end this session?” ask waits', kind: 'choice',
+  { key: 'confirmMs', label: 'How long the “End this session?” question waits', kind: 'choice',
     default: 12000, level: 'advanced',
     // It TIMES OUT BACK INTO PLAY rather than sitting there, which is the invariant that
     // makes an optional confirm safe at all: nobody can be held on a prompt they cannot
     // answer. So there is no "wait forever" option here, and there must not be one.
-    note: 'it always times out back into the game — nobody is ever held on it',
+    note: 'if nobody answers, the game carries on. Nobody is ever stuck on it',
     options: [
       { value: 6000, label: '6 seconds' },
       { value: 12000, label: '12 seconds' },
@@ -318,7 +318,7 @@ function readTheme(el) {
 
 registerModule(
   { type: 'pressgame', title: 'Wait and Go',
-    description: 'Hold off while a charge builds, then press when the invite opens',
+    description: 'Wait while a charge builds, then press when the screen says Go',
     // `local` rather than `none`: the visuals and tones need nothing, but the trial records
     // want somewhere to go. It still RUNS with no server — it just stops being evidence.
     importance: 'optional', dependsOn: 'local', settings: SETTINGS },
@@ -1160,7 +1160,7 @@ registerModule(
                   if (!el.isConnected) return;       // the caregiver already left this page
                   const combined = combineHeldOff(datas);
                   if (!combined) {
-                    el.innerHTML = '<p>Not enough recorded sessions yet — this needs a few '
+                    el.innerHTML = '<p>Not enough recorded sessions yet. This needs a few '
                       + 'early presses on record before it can suggest anything.</p>';
                     return;
                   }

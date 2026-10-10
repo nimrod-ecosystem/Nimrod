@@ -50,8 +50,8 @@ registerLibraryAIActions();
 
 registerModule(
   { type: LIBRARY_TYPE, title: LIBRARY_TITLE, core: 'new', dependsOn: 'none', importance: 'optional',
-    description: 'everything you can put on a screen — modules, scenes, furniture and 3D bricks — to look '
-      + 'through, filter and sort; pick one and it takes this place',
+    description: 'everything you can put on a screen, to look through, filter and sort. That is parts, scenes, '
+      + 'furniture and 3D bricks. Pick one and it takes this place.',
     settings: LIBRARY_SETTINGS },
   (ctx) => {
     const { mount } = ctx;

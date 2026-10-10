@@ -357,7 +357,7 @@ export function createCharacter({ name = '', persona = '', goodAt = '', drawn = 
 // THE FIELDS EDIT MAY CHANGE. Not the id (a made room is found by it), not owner/seed/copiedFrom (who
 // made it), not sharedWith (sharing is its own step).
 export const EDITABLE = Object.freeze(['name', 'persona', 'goodAt', 'drawn', 'voice', 'room']);
-export const SEED_EDIT_REASON = 'A ready-made character is not changed: copy it, and change the copy.';
+export const SEED_EDIT_REASON = 'A ready-made character cannot be changed. Copy it, and change the copy.';
 
 /** One character, changed. `{ ok, rec }` or `{ ok: false, reason }` (a seed is never changed in place). */
 export function editCharacter(rec, patch = {}, { now = Date.now() } = {}) {
@@ -457,7 +457,7 @@ export function characterSystemPrompt(char, { actions = [] } = {}) {
 export function profileEntries({ people = [], characters = [], viewerId = null } = {}) {
   const persons = (Array.isArray(people) ? people : []).filter((p) => p && p.id).map((p) => ({
     kind: 'person', id: p.id, name: oneLine(p.name, NAME_MAX) || 'Somebody',
-    line: viewerId && p.id === viewerId ? 'You' : 'On this account',
+    line: viewerId && p.id === viewerId ? 'You' : 'On this login',
   }));
   const ais = (Array.isArray(characters) ? characters : []).map((c) => ({
     kind: 'ai', id: c.id, name: c.name, line: c.goodAt, seed: !!c.seed,

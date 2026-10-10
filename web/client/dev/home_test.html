@@ -116,7 +116,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('creating a screen adds a card', cards().length === 1, String(cards().length));
     check('the card is named what you typed', txt('.h-card h2') === 'Living room', txt('.h-card h2'));
     check('an EMPTY screen cannot be opened', q('[data-open]').disabled);
-    check('...and it says why', /at least one module/.test(txt('.h-add') || ''), txt('.h-add'));
+    // site text rewrite 2026-10-09: "at least one module" now reads "at least one part".
+    check('...and it says why', /at least one part/.test(txt('.h-add') || ''), txt('.h-add'));
 
     // add modules
     q('[data-pick]').value = 'quests';
@@ -234,7 +235,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     q('[data-new]').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     await sleep(700);
     check('a name containing markup is REFUSED, not stored', cards().length === before, String(cards().length));
-    check('...and the refusal is shown, not swallowed', /didn.t save/i.test(txt('[data-msg]') || ''), txt('[data-msg]'));
+    // site text rewrite 2026-10-09: "didn’t save" now reads "did not save".
+    check('...and the refusal is shown, not swallowed', /did not save/i.test(txt('[data-msg]') || ''), txt('[data-msg]'));
     check('...and nothing was injected into the page', host.querySelectorAll('.h-card img').length === 0);
     check('the typed name is kept so it can be corrected', q('[data-name]').value.startsWith('X <'), q('[data-name]').value);
 
@@ -315,7 +317,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       const find = (re) => links.find((l) => re.test(l.t));
       const all = JSON.stringify(links);
       check('signed in, the sidebar offers Sign out', !!find(/sign out/i), all);
-      const sw = find(/switch account/i);
+      const sw = find(/use a different login/i);   // site text rewrite 2026-10-09: was "Switch account"
       check('*** ...and Switch account, which did not exist at all ***', !!sw, all);
       check('*** ...asking Google for the chooser, which is the whole feature ***',
         !!sw && /[?&]switch=1\b/.test(sw.h), sw ? sw.h : 'no link');

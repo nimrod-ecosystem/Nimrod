@@ -226,14 +226,14 @@ export function homeStatusText({ target = null, dirty = false, docCurrent = null
 export function placeButton({ onHome = false, hasHome = false, landingTitle = LANDING_TITLE_DEFAULT } = {}) {
   return onHome
     ? { act: 'myhome', label: landingTitle, title: landingTitle === START_TITLE
-      ? 'the landing dashboard: your profile, the settings, your devices and Nimrod'
-      : `${landingTitle}: where you land` }
+      ? 'four to begin with: your profile, the settings, your devices and Nimrod'
+      : `${landingTitle}: the page you see first` }
     : { act: 'myhome', label: 'My Home', title: hasHome ? 'the Home you made your own' : 'you have not made a Home yet: this shows the starting points' };
 }
 // *** "MORE" AND THE WAY BACK (2026-10-04). *** Your people's "More" shows Start here, filling the window as the landing
 // does; the bar then carries the way back, first, in words. Only after More (`moreFrom`): somebody whose "Open on" is
 // Start here lands there with the bar they had.
-export const PEOPLE_ITEM = Object.freeze({ act: 'people', label: '‹ Your people', title: 'back to your people: where you land' });
+export const PEOPLE_ITEM = Object.freeze({ act: 'people', label: '‹ Your people', title: 'back to your people: the page you see first' });
 
 // *** THE DASHBOARD, FILLING THE WINDOW, AND THE EDITOR (2026-10-02 evening, `arriveIn`). *** One button, in
 // the SAME first place on both, says where it goes: on the dashboard it is Edit (this page, as the editor), on
@@ -310,21 +310,21 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     item('picker', `Modules: ${title || '…'}`, { hint: 'choose what you are looking at' }),
     item('myhome', place.label, { hint: place.title }),
     // 2026-10-04: the two places you can land, each a row (a switch reaches both; "Open on" picks which is first).
-    item('people', 'Your people', { hint: 'you and your people, with ways to reach them: where you land' }),
+    item('people', 'Your people', { hint: 'you and your people, with ways to reach them: the page you see first' }),
     item('more', 'Start here…', { hint: 'four to begin with: your profile, the settings, your devices and Nimrod' }),
     // EDIT MODE (edit_mode.js): the chosen panel (the bar's Panel ▸), edited in place -- press a thing in it
     // and its options show. The same as its ✎ corner. `canEditPanel`: a dashboard with panels is on the stage.
     item('editpanel', 'Edit the chosen panel', { hint: 'press a thing in it to see its options; Done or Escape stops', disabled: !canEditPanel }),
     // THE BUILDER (dashboards.js `builder`): what you edit, its options, the modules library and Nimrod.
-    item('builder', 'The builder…', { hint: 'edit one thing at a time: it top left, its options top right' }),
+    item('builder', 'The builder…', { hint: 'edit one thing at a time: what you are editing top left, its options top right' }),
     item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent, land, autosave }) || 'nothing open', disabled: !t || busy }),
     item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
     item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
-    item('switch', 'Switch module…', { hint: 'another module in the place of the chosen one', disabled: !canSwitch || busy }),
+    item('switch', 'Switch module…', { hint: 'show something else in the part you picked', disabled: !canSwitch || busy }),
     // The edit bar (Scene / Add / Change…) sits above the stage, outside this menu: this row is how a switch
     // walking the menu gets to it -- the bar then takes the scan and the menu goes (one holder at a time).
     // `canEdit`: the page says whether Your Home is on the stage (on a module page there is no bar).
-    item('editbar', 'Edit bar…', { hint: 'scene, add, change: the bar above, walked by your switch', disabled: !canEdit }),
+    item('editbar', 'Edit bar…', { hint: 'scene, add, change: go to the bar above, so a switch (one big button) can use it', disabled: !canEdit }),
     // The starting points are up front on the page; this row is how a switch (or the plain bar's ⚙) gets
     // back to them once a Home exists.
     item('examples', 'Start from an example…', { hint: 'ready-made Homes to begin from' }),

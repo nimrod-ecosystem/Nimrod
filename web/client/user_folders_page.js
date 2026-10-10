@@ -114,7 +114,7 @@ export const KIND_WORDS = Object.freeze({
     none: 'No sounds in it yet. In the board editor, press a card, then “Record this word” or “Use a sound file”.' }),
   fonts: Object.freeze({ title: 'Fonts', what: 'fonts',
     none: 'No font files in it yet (.woff2, .woff, .ttf or .otf).' }),
-  luts: Object.freeze({ title: 'Colour looks (LUTs)', what: 'colour looks',
+  luts: Object.freeze({ title: 'Colour looks (colour filter files, called look-up tables or LUTs)', what: 'colour looks',
     none: 'No colour look files in it yet (.cube).' }),
   plugins: Object.freeze({ title: 'Audio plugins (Web Audio Modules)', what: 'audio plugins',
     none: 'No plugin folders in it yet (one folder per plugin).' }),
@@ -220,7 +220,7 @@ export async function scanFolder(kind, dir) {
 export const THEME_FONT = '';          // the "theme's own" option: no user font in front
 export const NO_LOOK = '';
 const KEPT_LOOK = '\u0000kept';         // a look in force whose file cannot be listed right now
-export const TARGET_WORDS = Object.freeze({ photos: 'Look on photos', video: 'Look on videos', wallpaper: 'Look on the wallpaper' });
+export const TARGET_WORDS = Object.freeze({ photos: 'Use the look on photos', video: 'Use the look on videos', wallpaper: 'Use the look on the wallpaper' });
 
 /**
  * `{ font: { value, options, failed }, look: { value, options, grade, fit } }`. `lutFiles` are the .cube
@@ -509,7 +509,7 @@ export function foundWords(kind, found) {
     const r = found.voice;
     if (!r) return w.none;
     if (r.ok) return 'A voice model is here, ready for the speech service.';
-    if (r.kind === 'checkpoint') return 'A training checkpoint is here: it still needs converting (step 4 of “Your own voice model”).';
+    if (r.kind === 'checkpoint') return 'A training result (a checkpoint) is here. It still needs converting (step 4 of “Your own voice model”).';
     if ((found.names || []).includes('model.bin')) return `A model is here, but it is missing ${r.missing.join(', ')}. Convert it again (step 4).`;
     return w.none;
   }
@@ -602,16 +602,16 @@ export function artResultHtml(r) {
 
 function artworkHtml(k, s) {
   const out = [];
-  out.push(say('Make your own artwork: pictures for Nimrod, made with your own AI or by hand. The art kit says, for each kind, '
-    + 'the size, the file type, whether the background is clear, the name and the folder. Give it to your AI with what you want.', 'data-uf-art-intro'));
+  out.push(say('Make your own artwork: pictures for Nimrod, made by hand or with your own AI (artificial intelligence). For each kind of picture, '
+    + 'the art kit says the size, the file type, whether the background is clear, the name and the folder. Give it to your AI with what you want.', 'data-uf-art-intro'));
   out.push(`<ul class="st-hint" style="display:block;margin:0 0 8px 1.2em;padding:0" data-uf-art-kinds>${ART_KINDS.map((a) => `<li data-art-kind="${esc(a.id)}">`
     + `<b>${esc(a.plural)}</b>: ${esc(`${a.width} × ${a.height}`)}, ${esc(shapeWords(a))}, ${esc(typesWords(a))}${a.clear === 'wanted' ? ' with a clear background' : ''}`
     + ` - in ${esc(ART_FOLDER)}/${esc(a.folder)}. For ${esc(a.use)}.</li>`).join('')}</ul>`);
-  out.push(say('Not read from files yet: room objects, posters and frames in a room, trophies and badges, theme scenes, module icons, game pieces. '
+  out.push(say('Not read from files yet: room objects, posters and frames in a room, trophies and badges, theme scenes, icons for parts, game pieces. '
     + 'Pictures of real people, or of other people’s characters or brands, are yours to answer for.', 'data-uf-art-notyet'));
   out.push(button('copy-kit', 'Copy the art kit', 'to paste into your AI; the README.txt in Artwork is the kit as it was when the folder was made'));
-  out.push(say('Check pictures before you use them: it says what is wrong with each one, if anything. Nothing is uploaded; the files are read on this device. '
-    + '(Choosing a folder, your browser may say “upload”: nothing leaves this computer.)', 'data-uf-art-checknote'));
+  out.push(say('Check pictures before you use them. The check says what is wrong with each one, if anything. Nothing is sent anywhere. The files are read on this device. '
+    + '(When you choose a folder, your browser may say “upload”. Nothing leaves this computer.)', 'data-uf-art-checknote'));
   const sel = (s.artKind || '');
   out.push(`<p class="st-hint" style="display:block;margin:0 0 8px"><label>Check as <select data-uf-art-kind style="font:inherit;min-height:36px">`
     + `<option value=""${sel ? '' : ' selected'}>worked out from the folder or name</option>`
@@ -636,18 +636,18 @@ export function userFoldersHtml(s) {
   const parts = [];
   const items = s.choices ? choiceItems(s.choices) : [];
   const rootPath = s.rootPath || '';
-  parts.push(say('Files in these folders are read on this device and never uploaded. Everything here is off until somebody chooses it.'));
+  parts.push(say('Files in these folders are read on this device and never sent to the site. Everything here is off until somebody chooses it.'));
   parts.push(say('Folder access belongs to this device and this browser. On a second computer, or in another browser, set up '
-    + 'the Nimrod folder there once too; every kind below then finds its own folder in it.', 'data-uf-per-device'));
+    + 'the Nimrod folder there once too. Every kind below then finds its own folder in it.', 'data-uf-per-device'));
   if (!s.available) {
     parts.push(say('This browser cannot open a folder you choose (Chrome and Edge can; Firefox and Safari cannot yet).', 'data-uf-unavailable'));
   }
   // --- the root ---
   parts.push('<div class="st-head" data-uf-section="root">Your Nimrod folder</div>');
   if (!s.root.chosen) {
-    parts.push(say(`Not set up yet. “Set up your Nimrod folder” asks you to choose or make one folder (anywhere: Documents, `
-      + `a USB drive), then makes ${Object.values(SUBFOLDERS).join(', ')} inside it, each with a README.txt saying what goes there. `
-      + 'Nothing else is touched, and there is nothing to download.', 'data-uf-root-state'));
+    parts.push(say(`Not set up yet. “Set up your Nimrod folder” asks you to choose or make one folder. `
+      + `It can be anywhere: in Documents, or on a USB drive. It then makes these folders inside it: ${Object.values(SUBFOLDERS).join(', ')}. Each has a README.txt file saying what goes there. `
+      + 'Nothing else is touched, and you do not have to get any file from the internet.', 'data-uf-root-state'));
   } else {
     parts.push(say([`Using “${s.root.name}”.`, permissionWords(s.root.permission)].filter(Boolean).join(' '), 'data-uf-root-state'));
   }
@@ -660,8 +660,8 @@ export function userFoldersHtml(s) {
   if (s.root.chosen) parts.push(button('forget-root', 'Stop using it on this device', 'the folder and its files stay where they are'));
   // Its full path: optional, this device only. A browser never tells a page where a folder really is.
   parts.push(say('A browser never tells a web page where a folder really is, so the places below read “<your Nimrod folder>/…”. '
-    + 'Type its full path once to get full paths you can copy (in Windows: Shift + right-click the folder, “Copy as path”). '
-    + 'Optional; kept on this device only.', 'data-uf-path-note'));
+    + 'Type its full path once to get full paths you can copy. The full path says where the folder is on this computer. In Windows, hold Shift and right-click the folder, then choose “Copy as '
+    + 'path”. This is optional, and it is kept on this device only.', 'data-uf-path-note'));
   parts.push(`<p style="display:block;margin:0 0 8px"><input type="text" data-uf-path aria-label="Your Nimrod folder's full path"
     placeholder="for example D:\\Nimrod" value="${esc(rootPath)}" spellcheck="false" autocomplete="off"
     style="width:100%;box-sizing:border-box;min-height:44px;font:inherit;padding:6px 10px;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit"></p>`);
@@ -679,8 +679,8 @@ export function userFoldersHtml(s) {
     else where = 'No folder yet: set up your Nimrod folder above, or choose a folder just for these.';
     parts.push(say([where, k.source !== 'none' ? permissionWords(k.permission) : ''].filter(Boolean).join(' '), `data-uf-where="${esc(k.kind)}"`));
     if (POINTER_KINDS.includes(k.kind)) {
-      parts.push(say(`Nothing is copied. Use the ${SUBFOLDERS[k.kind]} folder in your Nimrod folder, or point at the folder `
-        + `${POINTER_WORDS[k.kind]} already in: it is read where it is.`, `data-uf-pointer="${esc(k.kind)}"`));
+      parts.push(say(`Nothing is copied. Use the ${SUBFOLDERS[k.kind]} folder in your Nimrod `
+        + `folder, or choose the folder ${POINTER_WORDS[k.kind]} already in. It is read where it is.`, `data-uf-pointer="${esc(k.kind)}"`));
     }
     let found;
     if (k.found) {
@@ -706,13 +706,13 @@ export function userFoldersHtml(s) {
     parts.push(`<p class="st-hint" style="display:block;margin:0 0 8px" data-uf-place="${esc(k.kind)}">Save ${esc(w.what)} in: `
       + `<code style="user-select:all;word-break:break-all">${esc(place.text)}</code>${k.source === 'none' && !place.own ? ' (once it is set up)' : ''}</p>`);
     parts.push(button('copy', 'Copy', 'what to save, and where', k.kind));
-    if (place.path) parts.push(button('copy-path', 'Copy the path', 'just the path, for a Save dialog', k.kind));
+    if (place.path) parts.push(button('copy-path', 'Copy the path', 'just the path, to paste when you save a file', k.kind));
     if (CONNECT_WORDS[k.kind] && k.dir) {
       parts.push(button('connect', `Connect it for ${CONNECT_WORDS[k.kind]}`, 'kept as a media folder on this device; nothing is copied', k.kind));
     }
     // THE OVERRIDE, on every kind: point this kind somewhere else, or back at the Nimrod folder.
     if (s.available) {
-      parts.push(button('pick-kind', POINTER_KINDS.includes(k.kind) ? `Point at the folder ${POINTER_WORDS[k.kind]} already in…`
+      parts.push(button('pick-kind', POINTER_KINDS.includes(k.kind) ? `Choose the folder ${POINTER_WORDS[k.kind]} already in…`
         : `Choose a different folder for ${w.what}…`, 'for this kind only', k.kind));
     }
     if (k.source === 'own') {
@@ -876,7 +876,7 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
         } else {
           const label = k.source === 'own' ? k.name : `${k.sub || SUBFOLDERS[kind]} (your Nimrod folder)`;
           const src = await media.add(k.dir, label);
-          message = `Connected as “${(src && src.label) || label}”. Nothing was copied. Choose it in a panel’s settings where it asks which folder to use.`;
+          message = `Connected as “${(src && src.label) || label}”. Nothing was copied. Choose it in a part’s settings, where it asks which folder to use.`;
         }
       } else if (name === 'allow-root') {
         const p = await allowAgain(last?.root?.handle, ROOT_MODE);

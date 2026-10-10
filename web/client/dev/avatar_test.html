@@ -543,7 +543,7 @@ try {
     t.press('[data-act="to-own"]');
     const words = t.host.textContent.replace(/\s+/g, ' ');
     check('it no longer says the drawing will only ever be still', !/For now it shows as a still picture/.test(words)
-      && /SVG file can move/.test(words) && /cannot be made safe shows as a still picture/.test(words));
+      && /picture file \(SVG\) can move/.test(words) && /cannot be made safe shows as a still picture/.test(words));   // site text rewrite 2026-10-09: "an SVG file" now "a picture file (SVG)"
     t.inst.destroy();
   }
 

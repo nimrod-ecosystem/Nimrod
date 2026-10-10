@@ -159,8 +159,8 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       && /1 entry is waiting/.test(whereWords('games', 'folder', { folder: 'missing', waiting: 1 }))
       && !/waiting/.test(whereWords('plays', 'folder', { folder: 'none', waiting: 0 })));
     check('...and says plainly what the device keeps meanwhile, and that a drive may just be unplugged',
-      /newest 500 for each panel/.test(whereWords('plays', 'folder', { folder: 'none' })) && /newest 1,000/.test(whereWords('words', 'folder', { folder: 'none' }))
-      && /drive not plugged in/.test(whereWords('plays', 'folder', { folder: 'missing' })) && /Allow it again/.test(whereWords('plays', 'folder', { folder: 'permission' })));
+      /newest 500 for each part/.test(whereWords('plays', 'folder', { folder: 'none' })) /* site text rewrite 2026-10-09 */ && /newest 1,000/.test(whereWords('words', 'folder', { folder: 'none' }))
+      && /drive may not be plugged in/.test(whereWords('plays', 'folder', { folder: 'missing' })) /* site text rewrite 2026-10-09 */ && /Allow it again/.test(whereWords('plays', 'folder', { folder: 'permission' })));
     const offer = secondPlaceOffer('plays', 'device', { folder: 'none', canUs: true });
     check('*** only on this device: the offer line, word for word, with both second places ***',
       offer && offer.text === 'Only on this screen. A reset would lose it. Keep a copy in your Nimrod folder?' && J(offer.offers) === J(['folder', 'us']), J(offer));
@@ -723,7 +723,7 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       check('a second copy sends nothing', s1.sent === 0 && ag2.files.get('plays-ph-a-2026-10.jsonl').length === 2);
       const nst = await nhost.status();
       check('*** the page: "ready", and says the media agent writes it (no permission needed) ***',
-        nst.folder === 'ready' && nst.via === 'agent' && /media agent on this computer writes it/.test(whereWords('plays', 'folder', { folder: nst.folder, via: nst.via }))
+        nst.folder === 'ready' && nst.via === 'agent' && /\(media agent\) on this computer writes it/.test(whereWords('plays', 'folder', { folder: nst.folder, via: nst.via })) /* site text rewrite 2026-10-09: "The Nimrod helper (media agent)" */
         && !/media agent/.test(whereWords('plays', 'folder', { folder: 'ready' })), J(nst));
       check('read(): the agent has no read route, and the browser folder (not allowed, another folder) is not read', (await nf.read('plays', 'ph-a', 50)).length === 0);
 

@@ -31,14 +31,14 @@ export const SEARCH_URL = '/api/recommend/search';
 // Saved for, as the server names them. "account" is the default every other level falls back to.
 export const KEY_LEVELS = Object.freeze(['account', 'person', 'device', 'panel']);
 export const KEY_LEVEL_WORDS = Object.freeze({
-  account: 'the whole account (every screen and search)',
+  account: 'the whole login (every screen and search)',
   person: 'this person only',
   device: 'this device only',
   panel: 'this panel only',
 });
 // Whose key it is, in a sentence ("the account's key, ending …4f2a").
 const OWNER_WORDS = Object.freeze({
-  account: 'the account’s key', person: 'this person’s own key', device: 'this device’s own key', panel: 'this panel’s own key',
+  account: 'this login’s key', person: 'this person’s own key', device: 'this device’s own key', panel: 'this panel’s own key',
 });
 
 /** The places a request is made from, the empty ones left out. PURE. */
@@ -112,7 +112,7 @@ export function createSearchKeyClient({
       }
       const body = provider === 'spotify' ? { ...key } : { key };
       const r = keep(await call('PUT', `${KEYS_URL}/${provider}`, { ...body, level, ref: level === 'account' ? '' : c[level], label: label(level) || '' }));
-      if (r.ok) { await api.status(); return { ok: true, message: 'Saved. It is kept encrypted and will not be shown again.' }; }
+      if (r.ok) { await api.status(); return { ok: true, message: 'Saved. It is kept locked (encrypted) and will not be shown again.' }; }
       return { ok: false, status: r.status, message: detail(r, r.status === 0 ? 'Could not reach this website’s server.' : 'The key was not saved.') };
     },
     /** Remove the key at `level`, so that level uses the next one up. */

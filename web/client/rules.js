@@ -77,7 +77,7 @@ export function describeConfig(config) {
       out.push({
         scope, stateId, kind: then ? 'transition' : 'unknown',
         when: `when ${topicWords(topic)}`
-          + (scope === 'global' ? ', from any screen' : ` while showing ${labelOf(stateId)}`)
+          + (scope === 'global' ? ', whatever the screen is showing' : ` while showing ${labelOf(stateId)}`)
           + (tr.when ? ` (only if ${tr.when})` : ''),
         then: then || JSON.stringify(tr),
         topic, raw: tr,
@@ -202,8 +202,8 @@ export function mountRules(host, { profiles, user, makeState = null } = {}) {
       parts.push(`<section class="rul-screen"><h2>${esc(s.name)}</h2>`);
       parts.push(`<label class="rul-switch">
         <input type="checkbox" data-call="${i}"${call ? ' checked' : ''}>
-        <span><b>A call interrupts this screen.</b> When a call comes in the screen shows it,
-        from whatever it was doing, and goes back afterwards.</span></label>`);
+        <span><b>A call interrupts this screen.</b> When a call comes in, the screen shows it,
+        whatever it was doing. When the call ends, it goes back to what was on before.</span></label>`);
       parts.push('<ul class="rul-list">');
       for (const r of rules) {
         parts.push(`<li class="rul-${esc(r.kind)}">

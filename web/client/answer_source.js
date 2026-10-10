@@ -57,7 +57,7 @@ export function answerSourceField({ level = 'standard', note = null } = {}) {
       { value: 'all', label: 'On, and say "common knowledge" too' },
       { value: 'off', label: 'Off' },
     ],
-    note: note || 'A small line under the answer, once it is given, naming what the question rests on. '
+    note: note || 'A small line under the answer, once it is given. It names where the answer comes from. '
       + 'Only questions that name a source show one.',
   };
 }

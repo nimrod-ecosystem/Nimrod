@@ -94,7 +94,7 @@ export const POINTS_DISCLAIMER = 'Points have no real-world value, and we do not
 // `href`: the page that sets it up (opened in a new tab: a screen nobody is at must not navigate away).
 // ---------------------------------------------------------------------------------------------------
 export const DEVICE_KINDS = Object.freeze([
-  Object.freeze({ id: 'voice', label: 'Voice commands', lead: 'Say “computer please”, then what you want.',
+  Object.freeze({ id: 'voice', label: 'Voice commands', lead: 'Say “computer please”, wait, then say what you want.',
     say: 'You can talk to the screen. Say “computer please”, then a command: “next”, “go home”, “play music”. '
       + 'Every command it knows is listed on the voice commands page. Listening is off until somebody turns it '
       + 'on in the settings menu, and the screen shows when it is listening.',
@@ -104,18 +104,18 @@ export const DEVICE_KINDS = Object.freeze([
       + 'Each one is calibrated once, on the Devices tab of My dashboards, and then works on every screen.',
     tab: 'devices', href: '/home.html', hrefLabel: 'My dashboards: Devices' }),
   Object.freeze({ id: 'keys', label: 'Mouse, keyboard and switches', lead: 'Which key, button or switch does what.',
-    say: 'A mouse and a keyboard work as they always do. A switch, a game controller or any key can be given a '
-      + 'job: next, back, select, or one of yours. Bindings belong to the person, so they follow you to every '
-      + 'screen. Set them up on the Devices tab of My dashboards; the settings menu’s Devices tab shows what '
+    say: 'A mouse and a keyboard work as they always do. A switch (one big button), a game controller or any key can '
+      + 'be given a job: next, back, select, or one of yours. These jobs belong to the person, so they follow you to '
+      + 'every screen. Set them up on the Devices tab of My dashboards. The settings menu’s Devices tab shows what '
       + 'each one does right now.',
     tab: 'devices', href: '/home.html', hrefLabel: 'My dashboards: Devices' }),
   Object.freeze({ id: 'phones', label: 'Phones', lead: 'A phone as a microphone, a remote, or for a call.',
-    say: 'A phone can be the microphone in the room, which often hears far better than one across it. It can '
-      + 'also drive a screen from somewhere else, or call it. None of that needs an app: it is a web page.',
+    say: 'A phone can be the microphone in the room. A phone close by often hears far better than a microphone across the '
+      + 'room. A phone can also control a screen from somewhere else, or call it. None of that needs an app. It is a web page.',
     tab: null, href: '/phone_mic.html', hrefLabel: 'Use this phone as a microphone' }),
   Object.freeze({ id: 'computers', label: 'Computers, and screens in other rooms', lead: 'Another screen, set up from here.',
-    say: 'A screen that nobody signs into, like one in another room, is set up by showing a code on it and '
-      + 'typing that code here. After that it comes back by itself whenever it restarts.',
+    say: 'Some screens have nobody signed in, like one in another room. To set one up, the screen shows a code '
+      + 'and you type that code here. After that it comes back by itself whenever it restarts.',
     tab: null, href: '/pair.html', hrefLabel: 'Set up a screen somewhere else' }),
 ]);
 
@@ -149,9 +149,9 @@ export const LANDING_INTRO = 'Hi, I’m Nimrod. I’m here to show you around an
 // records seed it); a guide added anywhere else has none and gets the plain one.
 export const INTROS = Object.freeze({
   landing: LANDING_INTRO,
-  tutorial: 'Hi, I’m Nimrod. This is the tutorial dashboard. I live here with the settings, in the bottom two '
-    + 'places, so you can always find us: say “tutorial”, or choose it from your dashboards. Everything here '
-    + 'is safe to try. Would you like to:',
+  tutorial: 'Hi, I’m Nimrod. This is the tutorial dashboard. I live here with the settings, in the bottom two places, so you can always find us. '
+    + 'To find us, say the wake phrase (the words that tell the screen to listen), wait, then say “tutorial”. Or choose it from your dashboards. '
+    + 'Everything here is safe to try. Would you like to:',
   plain: 'Hi, I’m Nimrod. I’m here to show you around and help out whenever you want. Point at anything and '
     + 'I will tell you what it does. Would you like to:',
 });
@@ -166,7 +166,7 @@ const NODES = [
       { label: 'Set your theme, and learn about the settings', to: 'theme' },
       { label: 'Set up your guide / AI', to: 'ai-setup' },
       { label: 'Walk the site with your AI and take notes', to: 'notes-walk' },
-      { label: 'See some other modules', to: 'other' },
+      { label: 'See some other parts', to: 'other' },
     ]),
   },
 
@@ -199,10 +199,10 @@ const NODES = [
   },
   {
     id: 'mode-game', title: 'The game',
-    say: 'With the game on you earn game points for what you do here, this tour included: each new step pays once. '
-      + 'A “Nimrod Game” card on the scoreboard keeps the score. The things you can build with unlock as you go: '
-      + 'that is only for the game, and sandbox mode or a single unlock opens anything sooner. With learning off, '
-      + 'every point you earn is a game point. Press Turn the game on to begin.',
+    say: 'With the game on you earn game points for what you do here, this tour included. Each new step pays once. A '
+      + '“Nimrod Game” card on the scoreboard keeps the score. The things you can build with unlock as you go. That is '
+      + 'only for the game. Sandbox mode (the game turned off) or a single unlock opens anything sooner. With learning '
+      + 'off, every point you earn is a game point. Press Turn the game on to begin.',
     choices: withKeys([
       { label: 'Learning too', to: 'mode-learning' },
       { label: 'Sandbox instead', to: 'mode-sandbox' },
@@ -216,10 +216,10 @@ const NODES = [
   },
   {
     id: 'mode-learning', title: 'Learning',
-    say: 'Learning adds a second kind of points. With it on, the tour and the lessons pay School points, kept apart '
-      + 'from the game points, and the scoreboard shows both. It works with the game on or off: in sandbox you '
-      + 'still earn School points, and nothing is locked. Whether lesson topics open as you go (Quest) or all at '
-      + 'once is a separate setting, on the settings panel’s Lesson topics page.',
+    say: 'Learning adds a second kind of points. With it on, the tour and the lessons pay School points. They are kept apart '
+      + 'from the game points, and the scoreboard shows both. It works with the game on or off. In sandbox (the game '
+      + 'turned off) you still earn School points, and nothing is locked. Lesson topics can open as you go (Quest) or all '
+      + 'at once. That is a separate setting, on the Settings part’s Lesson topics page.',
     choices: withKeys([
       { label: 'The game too', to: 'mode-game' },
       { label: 'What are points for?', to: 'points' },
@@ -249,9 +249,9 @@ const NODES = [
   {
     id: 'points', title: 'Points',
     say: `Points keep score of what you do: a game finished, a lesson watched, a step of this tour. ${POINTS_DISCLAIMER} `
-      + 'They cannot be bought, sold or cashed in. With the game on they unlock things to build with, and the '
-      + 'scoreboard shows them. With learning on, the tour and lessons pay School points, a second kind kept apart '
-      + 'from the game points; with learning off, every point is a game point.',
+      + 'They cannot be bought, sold or cashed in. With the game on they unlock things to build with, and the scoreboard '
+      + 'shows them. With learning on, the tour and lessons pay School points. That is a second kind of points, kept '
+      + 'apart from the game points. With learning off, every point is a game point.',
     choices: withKeys([
       { label: 'The game', to: 'mode-game' },
       { label: 'Learning', to: 'mode-learning' },
@@ -262,8 +262,8 @@ const NODES = [
   // ---- B. devices ---------------------------------------------------------------------------------
   {
     id: 'devices', title: 'Set up a device',
-    say: 'A device is anything you use to tell the screen what to do, or that it talks through. The devices '
-      + 'panel lists them too. Which kind?',
+    say: 'A device is anything you use to tell the screen what to do, or that it talks through. The Devices '
+      + 'part lists them too. Which kind?',
     choices: withKeys([
       ...DEVICE_KINDS.map((d) => ({ label: d.label, to: `dev-${d.id}` })),
       BACK_TO_START,
@@ -275,14 +275,14 @@ const NODES = [
   // ---- C. theme and the settings ------------------------------------------------------------------
   {
     id: 'theme', title: 'Your theme',
-    say: 'Your theme is the colours and the look of everything: the background, the panels and the words. The '
-      + 'settings beside me are open on Theme: each one shows a picture of how it looks, and the seasons and the '
+    say: 'Your theme is the colours and the look of everything: the background, the parts and the words. The '
+      + 'settings beside me are open on Theme. Each theme shows a picture of how it looks. The seasons and the '
       + 'holidays are there too. Pick one and the whole dashboard changes. There are many more settings in the '
       + 'settings menu, in tabs: sound, display, theme, devices, people. Point at any setting and I will tell you '
       + 'what it does.',
     choices: withKeys([
       { label: 'Show me the settings menu’s tabs', to: 'settings-tabs' },
-      { label: 'Make the panels see-through or solid', to: 'look' },
+      { label: 'Make the parts see-through or solid', to: 'look' },
       BACK_TO_START,
     ]),
     acts: [
@@ -292,10 +292,10 @@ const NODES = [
   },
   {
     id: 'settings-tabs', title: 'The settings menu',
-    say: 'The settings menu opens from the gear on the bar. Its first tab is the panel you picked; then Sound, '
-      + 'Display, Theme, Devices and People. At the top, “Settings for” chooses which panel, and “How much this menu '
-      + 'shows” keeps the rarer settings out of the way until you want them. A switch steps through the tabs '
-      + 'from the Tab row, and you can say “next tab”.',
+    say: 'The settings menu opens from the gear on the bar. Its first tab is the part you picked. Then come Sound, Display, Theme, Devices and '
+      + 'People. At the top, “Settings for” chooses which part. “How much this menu shows” keeps the settings you rarely need out of the way until '
+      + 'you want them. With a switch (one big button), you step through the tabs from the Tab row. By voice, say the wake phrase (the words '
+      + 'that tell the screen to listen), wait, then say “next tab”.',
     choices: withKeys([
       { label: 'Sound', to: 'tab-audio' },
       { label: 'Display', to: 'tab-display' },
@@ -315,8 +315,8 @@ const NODES = [
   },
   {
     id: 'tab-display', title: 'Display',
-    say: 'The Display tab has the panel backgrounds, the space between them, movement and flashing, and the slow '
-      + 'drift that keeps a screen left on all day from burning in. The theme has a tab of its own, next to it.',
+    say: 'The Display tab has the part backgrounds, the space between parts, and movement and flashing. It also has the slow drift that '
+      + 'protects a screen left on all day from burn-in (a still picture leaving a mark). The theme has a tab of its own, next to it.',
     choices: withKeys([{ label: 'Another tab', to: 'settings-tabs' }, BACK_TO_START]),
     acts: [{ kind: 'menu-tab', tab: 'display', label: 'Open the Display tab' }],
   },
@@ -384,10 +384,10 @@ const NODES = [
   },
   {
     id: 'ai-blocked', title: 'When the website cannot reach it', form: 'ai-origins',
-    say: 'Ollama only answers the websites it has been told to. A page from this computer itself (an address '
-      + 'starting http://127.0.0.1 or http://localhost) is allowed already. For a website, add its address to '
-      + 'Ollama’s OLLAMA_ORIGINS setting and restart Ollama: the exact lines are below. Some browsers, Chrome '
-      + 'among them, also ask once whether this website may reach devices on your network; choose Allow.',
+    say: 'Ollama only answers the websites it has been told to answer. A page from this computer itself (an '
+      + 'address starting http://127.0.0.1 or http://localhost) is allowed already. For a website, add its address '
+      + 'to Ollama’s OLLAMA_ORIGINS setting and restart Ollama. The exact lines are below. Some browsers, Chrome '
+      + 'among them, also ask once whether this website may reach devices on your network. Choose Allow.',
     choices: withKeys([
       { label: 'Back to connecting it', to: 'ai-connect' },
       BACK_TO_START,
@@ -404,9 +404,9 @@ const NODES = [
   },
   {
     id: 'ai-done', title: 'You’re set',
-    say: 'You’re set. Press “Talk to” at my bottom whenever you want to talk, typed or spoken; anything it '
-      + 'wants to do is a button you press first. You can change all of this later, under “About” when you '
-      + 'talk. Would you like to walk the site with it and take notes?',
+    say: 'You’re set. Press “Talk to” at the bottom of my part whenever you want to talk, typed or spoken. '
+      + 'Anything it wants to do is a button you press first. You can change all of this later, under “About” when '
+      + 'you talk. Would you like to walk the site with it and take notes?',
     choices: withKeys([
       { label: 'Walk the site with your AI and take notes', to: 'notes-walk' },
       BACK_TO_START,
@@ -439,10 +439,10 @@ const NODES = [
   // as a file. modules/nimrod.js draws it (walkthrough_wrap.js).
   {
     id: 'walk-wrap', title: 'Wrap up the walkthrough',
-    say: 'When you are done, the AI on this computer cleans up your notes from the walk, as much as you choose: from '
-      + 'word for word to one line each. You see each one beside your own words: use it, change it, or keep yours. '
-      + 'Then it sorts them into three lists: for chat, for Code and for Design, each line saying which note it came '
-      + 'from, and we go through them together: keep, change, move or drop. Your notes stay exactly as you wrote them. '
+    say: 'When you are done, the AI on this computer cleans up your notes from the walk. You choose how much: from '
+      + 'word for word to one line each. You see each cleaned note beside your own words. Use it, change it, or keep '
+      + 'yours. Then it sorts them into 3 lists: for chat, for Code and for Design. Each line says which note it came '
+      + 'from. We go through the lists together: keep, change, move or drop. Your notes stay exactly as you wrote them. '
       + 'At the end, save it as a file in a folder you pick. Only the notes you choose are sent, only when you press, '
       + 'and to Claude only if you choose it.',
     choices: withKeys([
@@ -459,10 +459,10 @@ const NODES = [
   // it is that address and a code to scan, like every link here (modules/nimrod.js, page_links.js).
   {
     id: 'someone-new', title: 'See it as someone new',
-    say: 'To see the site the way somebody new does, as often as you like: on My dashboards, press “Try it as '
-      + 'someone new”. It adds a test person to your account and opens this page as their first visit: no tour, no '
-      + 'points, no Home, the usual settings. Your own things are not touched, and your notes still go to your '
-      + 'notes. “Start over” makes them new again; “Back to me” brings you back.',
+    say: 'You can see the site the way somebody new does, as often as you like. On My dashboards, press “Try it '
+      + 'as someone new”. It adds a test person to your login and opens this page as their first visit: no tour, no '
+      + 'points, no Home, the usual settings. Your own things are not touched, and your notes still go to your notes. '
+      + '“Start over” makes the test person new again. “Back to me” brings you back.',
     choices: withKeys([
       { label: 'Back to walking the site', to: 'notes-walk' },
       BACK_TO_START,
@@ -473,28 +473,28 @@ const NODES = [
   // ---- a photo album (under "other modules" since 2026-10-03: photos are not on the first dashboard) ----
   {
     id: 'album', title: 'A photo album',
-    say: 'Your pictures come from a folder: on this computer, on a drive plugged into it, or from your media '
-      + 'agent. They are never uploaded. The pictures panel’s settings choose which folder, as “Photos from”, '
-      + 'and which album in it. They are open beside me.',
+    say: 'Your pictures come from a folder. It can be on this computer, or on a drive plugged into it. Or it can come from the Nimrod helper’s '
+      + 'media agent (it reads a folder of photos and videos). They are never sent to the site. The Photos part’s settings choose which folder, '
+      + 'as “Photos from”, and which album in it. They are open beside me.',
     choices: withKeys([
       { label: 'How do I connect a folder?', to: 'album-connect' },
       { label: 'How fast the pictures change', to: 'album-speed' },
-      { label: 'Other modules', to: 'other' },
+      { label: 'Other parts', to: 'other' },
       BACK_TO_START,
     ]),
     acts: [{ kind: 'settings-page', page: 'type:photos', label: 'Show the pictures’ settings', auto: true }],
   },
   {
     id: 'album-connect', title: 'Connecting a folder',
-    say: 'Folders are connected once, on the Media tab of My dashboards. After that, every pictures panel can '
+    say: 'Folders are connected once, on the Media tab of My dashboards. After that, every Photos part can '
       + 'choose one, and an album inside it.',
     choices: withKeys([{ label: 'Back to the album', to: 'album' }, BACK_TO_START]),
     acts: [{ kind: 'link', href: '/home.html', label: 'My dashboards: Media' }],
   },
   {
     id: 'album-speed', title: 'How fast they change',
-    say: 'The pictures panel’s “Change photo every” sets how long each picture stays: from four seconds to a '
-      + 'minute. A new pictures panel starts at the speed of the one already there.',
+    say: 'The Photos part’s “Change photo every” sets how long each picture stays, from 4 seconds to a '
+      + 'minute. A new Photos part starts at the speed of the one already there.',
     choices: withKeys([{ label: 'Back to the album', to: 'album' }, BACK_TO_START]),
     acts: [{ kind: 'settings-page', page: 'type:photos', label: 'Show the pictures’ settings', auto: true }],
   },
@@ -504,12 +504,12 @@ const NODES = [
   // tab; on a screen the guide shows its address and a code to scan instead (modules/nimrod.js).
   {
     id: 'reviews', title: 'Checking trivia questions',
-    say: 'New trivia questions wait to be checked before anybody plays them. Check them by playing: in a Trivia '
-      + 'panel’s settings, turn on “Include unreviewed questions”, then play. Playing a question through passes '
-      + 'it; “that one is wrong” keeps it out for good. The review page lists the packs waiting, how far each has '
-      + 'got, and every question marked wrong, with its note.',
+    say: 'New trivia questions wait to be checked before anybody plays them. Check them by playing. In a Trivia '
+      + 'part’s settings, turn on “Include unreviewed questions”, then play. Playing a question through passes it. '
+      + 'Marking one “that one is wrong” keeps it out for good. The review page lists the packs waiting, how far each '
+      + 'has got, and every question marked wrong, with its note.',
     choices: withKeys([
-      { label: 'Other modules', to: 'other' },
+      { label: 'Other parts', to: 'other' },
       BACK_TO_START,
     ]),
     acts: [{ kind: 'link', href: '/reviews.html', label: 'Questions waiting for review' }],
@@ -517,16 +517,16 @@ const NODES = [
 
   // ---- E. other modules ---------------------------------------------------------------------------
   {
-    id: 'other', title: 'Other modules',
-    say: 'There are lots of other modules: pictures, games, videos, music, a clock, the weather, an AAC board and more. '
-      + 'Try replacing your profile with something else: pick it, then press Switch module. You can replace any '
-      + 'module whenever you want, including me. Do you want to change:',
+    id: 'other', title: 'Other parts',
+    say: 'There are lots of other parts: pictures, games, videos, music, a clock, the weather, a talk board and more. A talk board is also called an AAC board. AAC is '
+      + 'augmentative and alternative communication: ways to say something when speaking is hard. Try replacing your profile with something else. Pick it, then press '
+      + 'Switch module. You can replace any part whenever you want, including me. Do you want to change:',
     choices: withKeys([
       { label: 'Play it as a game, learn with it, or both', to: 'mode' },
-      { label: 'A module', to: 'change-module' },
+      { label: 'A part', to: 'change-module' },
       { label: 'A dashboard', to: 'change-dashboard' },
       { label: 'A scene (a collection of dashboards)', to: 'change-scene' },
-      { label: 'How a module works (editing a module)', to: 'edit-module' },
+      { label: 'How a part works (editing a part)', to: 'edit-module' },
       { label: 'Connect the AI of your choice', to: 'ai' },
       { label: 'Pictures: choose a photo album', to: 'album' },
       { label: 'Trivia: check its questions', to: 'reviews' },
@@ -537,11 +537,11 @@ const NODES = [
       // pictures there until then; nimrod_guide_test checks both records). On a dashboard with no profile the
       // Switch falls back to the chosen panel (modules.html openSwitch), so the button still does something there.
       { kind: 'switch', type: 'profile', label: 'Replace the profile' },
-      { kind: 'host', act: 'picker', label: 'See every module' },
+      { kind: 'host', act: 'picker', label: 'See what you can put on a screen' },
     ],
   },
   {
-    id: 'change-module', title: 'Changing a module',
+    id: 'change-module', title: 'Changing a part',
     say: 'To change a module, pick it (Panel on the bar, or point at it), then press Switch module. The new one '
       + 'takes exactly its place and nothing else moves; Undo puts the old one back. Any module can be '
       + 'switched, me included. If you switch me away, say “tutorial” to find me again.',
@@ -552,12 +552,12 @@ const NODES = [
     ]),
     acts: [
       { kind: 'switch', type: 'profile', label: 'Switch module' },
-      { kind: 'host', act: 'picker', label: 'See every module' },
+      { kind: 'host', act: 'picker', label: 'See what you can put on a screen' },
     ],
   },
   {
     id: 'change-dashboard', title: 'Changing a dashboard',
-    say: 'A dashboard is one screenful: the modules on it, where they sit, and what is behind them. Change this '
+    say: 'A dashboard is one screenful: the parts on it, where they sit, and what is behind them. Change this '
       + 'one with the edit bar (Scene, Add, Change), or start another from an example. Your dashboards are '
       + 'one press away from the Home button on the bar.',
     choices: withKeys([
@@ -569,8 +569,8 @@ const NODES = [
   },
   {
     id: 'change-scene', title: 'Scenes',
-    say: 'A scene is a collection of dashboards you can move between: a door in a room, a picture frame or a '
-      + 'button can open another dashboard, and Back and Home always bring you back. The map of your '
+    say: 'A scene is a collection of dashboards you can move between. A door in a room, a picture frame or '
+      + 'a button can open another dashboard. Back and Home always bring you back. The map of your '
       + 'dashboards shows what opens what.',
     choices: withKeys([
       { label: 'A dashboard', to: 'change-dashboard' },
@@ -579,34 +579,34 @@ const NODES = [
     acts: [{ kind: 'menu-tab', tab: 'screen', label: 'Open the map (This screen tab)' }],
   },
   {
-    id: 'edit-module', title: 'Editing a module',
+    id: 'edit-module', title: 'Editing a part',
     say: 'Every module has its own settings. Pick it and open the settings menu: the first tab is that module. '
       + 'Point at a setting and I will tell you what it does. A change you make here waits for Save.',
     choices: withKeys([
-      { label: 'Changing a module for another', to: 'change-module' },
+      { label: 'Changing a part for another', to: 'change-module' },
       BACK_TO_START,
     ]),
-    acts: [{ kind: 'menu-tab', tab: 'module', label: 'Open this module’s settings' }],
+    acts: [{ kind: 'menu-tab', tab: 'module', label: 'Open this part’s settings' }],
   },
   {
     id: 'ai', title: 'Your own AI',
-    say: 'I can be your AI. Press “Talk to” at my bottom (it carries your AI’s name once you give it one) to talk '
-      + 'things over, typed or spoken. Connect whichever AI you like: one that runs free on your own computer, a '
-      + 'free online one, or your own key. It can walk this guide with you, and anything it wants to do is a '
-      + 'button you press first.',
+    say: 'I can be your AI (artificial intelligence). Press “Talk to” at the bottom of my part to talk things over, typed or spoken. '
+      + 'The button carries your AI’s name once you give it one. Connect whichever AI you like: one that runs free on your own computer, '
+      + 'a free online one, or one you use with your own key. It can go through this guide with you. Anything it wants to do '
+      + 'is a button you press first.',
     choices: withKeys([
       { label: 'Set it up, step by step', to: 'ai-setup' },
       { label: 'Walk the site with it and take notes', to: 'notes-walk' },
-      { label: 'Other modules', to: 'other' },
+      { label: 'Other parts', to: 'other' },
       BACK_TO_START,
     ]),
   },
   {
     id: 'tutorial', title: 'The tutorial dashboard',
-    say: 'There is a tutorial dashboard you can always go to. It keeps me and the settings in its bottom two '
-      + 'places, so you can always find us. Say “tutorial”, or choose it from your dashboards.',
+    say: 'There is a tutorial dashboard you can always go to. It keeps me and the settings in its bottom two places, so you can always find us. To go there, '
+      + 'say the wake phrase (the words that tell the screen to listen), wait, then say “tutorial”. Or choose it from your dashboards.',
     choices: withKeys([
-      { label: 'Changing a module', to: 'change-module' },
+      { label: 'Changing a part', to: 'change-module' },
       BACK_TO_START,
     ]),
     acts: [{ kind: 'tutorial', label: 'Go to the tutorial' }],

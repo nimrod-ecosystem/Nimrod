@@ -530,7 +530,7 @@ function unreachableChips() {
     kiosk.openSwitch(photosId);
     await sleep(500);
     check('*** the recent row offers what the panel WAS, first, marked so ***',
-      lib()?.recent?.[0]?.key === 'module:photos' && lib().recent[0].hint === 'what this panel was', JSON.stringify(lib()?.recent));
+      lib()?.recent?.[0]?.key === 'module:photos' && lib().recent[0].hint === 'what this part was', JSON.stringify(lib()?.recent));   // site text rewrite 2026-10-09
     dbl(slot()?.querySelector('[data-lib-recent-key="module:photos"]'));
     await sleep(600);
     const back = kiosk.panels().find((x) => x.id === photosId);
@@ -629,9 +629,9 @@ function unreachableChips() {
         barEl()?.querySelector('[data-mods], .tb-mods')?.innerHTML?.slice(0, 200));
       check(`(${path}) ...and no panel's chip is lit`, !barEl().querySelector('.k-dot.on:not([data-piece])'));
       check(`(${path}) *** Switch module is dimmed, its title saying a piece is not a panel ***`,
-        act('switch')?.disabled === true && /part of the room, not a panel/.test(act('switch').title), act('switch')?.title);
+        act('switch')?.disabled === true && /piece of the room, not a part/.test(act('switch').title), act('switch')?.title);   // site text rewrite 2026-10-09
       check(`(${path}) *** Back and Next are dimmed, saying why ***`,
-        ['back', 'next'].every((a) => act(a)?.disabled === true && /is for panels/.test(act(a).title)),
+        ['back', 'next'].every((a) => act(a)?.disabled === true && /is for parts/.test(act(a).title)),   /* site text rewrite 2026-10-09 */
         ['back', 'next'].map((a) => `${act(a)?.disabled} ${act(a)?.title}`).join(' | '));
       check(`(${path}) Pause is dimmed (the shell says it can't, for a piece)`, await until(() => act('playpause')?.disabled === true, 3000));
       barEl().querySelector('[data-piece]').click();
@@ -809,7 +809,7 @@ function unreachableChips() {
       check(`(${path}) point and click (the default): the bar scans one button at a time`, bs().mode === 'one', JSON.stringify(bs()));
       const row = (id) => kiosk.menu.items().find((r) => r.id === id);
       check(`(${path}) *** the setting is in the menu, beside "How you choose things", following it by default ***`,
-        /As you choose things/.test(row('set:barScan')?.hint || '') && !!row('set:chooseMode'), JSON.stringify(row('set:barScan')));
+        /The same way as “How you choose things”/.test(row('set:barScan')?.hint || '') /* site text rewrite 2026-10-09 */ && !!row('set:chooseMode'), JSON.stringify(row('set:barScan')));
       kiosk.menu.open(); kiosk.menu.showTab('devices'); kiosk.menu.focusRow('set:chooseMode'); kiosk.menu.select();
       kiosk.menu.close();
       await sleep(60);

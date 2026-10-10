@@ -36,21 +36,21 @@ const SETTINGS = [
   // ESSENTIAL: whether the picture is the right way up is not decoration on a mirror somebody
   // uses to see who has walked into their room.
   { key: 'mirror', label: 'Mirror the picture', default: true, level: 'essential',
-    onLabel: 'Yes \u2014 like a mirror', offLabel: 'No \u2014 as the camera sees it',
-    note: 'A mirror is what somebody expects when looking at themselves. Turn it off when the '
-      + 'camera is pointed at the room rather than the bed.' },
+    onLabel: 'Yes, like a mirror', offLabel: 'No, as the camera sees it',
+    note: 'A mirror is what somebody expects when looking at themselves. Turn it off when '
+      + 'the camera points at the room, not at the person.' },
   { key: 'rotation', label: 'Rotate the picture', kind: 'choice', default: 0, level: 'essential',
     options: [
       { value: 0, label: 'Not at all' },
       { value: 90, label: 'A quarter turn' },
       { value: 180, label: 'Upside down' },
-      { value: 270, label: 'Three quarters' },
+      { value: 270, label: 'Three quarters of a turn' },
     ],
-    note: 'For a camera that is physically mounted on its side.' },
-  { key: 'fit', label: 'How the picture fills the panel', kind: 'choice', default: 'cover',
+    note: 'For a camera that is mounted on its side.' },
+  { key: 'fit', label: 'How the picture fills its part', kind: 'choice', default: 'cover',
     level: 'standard',
     options: [
-      { value: 'cover', label: 'Fill the panel (edges may be cropped)' },
+      { value: 'cover', label: 'Fill the part (edges may be cut off)' },
       { value: 'contain', label: 'Show the whole picture' },
     ] },
   // The live options come from the device, so the row is declared and `settingsChoices` fills it.
@@ -91,7 +91,7 @@ registerModule(
       if (!s) return;
       s.hidden = !text;
       if (text) {
-        s.innerHTML = `<span>${text}</span>` + (showRetry ? ` <button data-retry>Retry</button>` : '');
+        s.innerHTML = `<span>${text}</span>` + (showRetry ? ` <button data-retry>Try again</button>` : '');
         const retry = s.querySelector('[data-retry]');
         if (retry) retry.addEventListener('click', () => start());
       }
@@ -148,7 +148,7 @@ registerModule(
 
     async function start() {
       if (starting) return;
-      if (!navigator.mediaDevices?.getUserMedia) { setStatus('Camera not supported here'); return; }
+      if (!navigator.mediaDevices?.getUserMedia) { setStatus('The camera cannot be used here'); return; }
       starting = true;
       setStatus('Starting camera…');
       stopStream();
@@ -199,9 +199,9 @@ registerModule(
         stopStream();
         const name = err?.name;
         // No picture: the message IS the panel now.
-        if (name === 'NotAllowedError' || name === 'SecurityError') setStatus('Camera permission needed', true);
+        if (name === 'NotAllowedError' || name === 'SecurityError') setStatus('The browser needs permission to use the camera', true);
         else if (name === 'NotFoundError' || name === 'OverconstrainedError') setStatus('No camera found');
-        else setStatus('Camera unavailable', true);
+        else setStatus('The camera could not start', true);
       } finally {
         starting = false;
       }
@@ -237,8 +237,8 @@ registerModule(
                   <option value="180">180°</option><option value="270">270°</option>
                 </select>
               </label>
-              <label>fit
-                <select data-opt="fit"><option value="cover">cover</option><option value="contain">contain</option></select>
+              <label>how the picture fits
+                <select data-opt="fit"><option value="cover">fill the space</option><option value="contain">show the whole picture</option></select>
               </label>
             </div>
           </div>`;

@@ -152,7 +152,7 @@ section('1. scanned, and already signed in — the common case');
   check('and it lands on done', inst.state() === 'done', inst.state());
   check('*** the confirmation points at the SCREEN, not at this page *** — the person is '
     + 'standing next to it and the screen is the convincing proof',
-    /look up/i.test(el.textContent), el.textContent.slice(0, 120));
+    /look at it/i.test(el.textContent), el.textContent.slice(0, 120));   // site text rewrite 2026-10-09: "Look up" now "Look at it"
   check('...and says the pairing is permanent, since the CODE expiring is the loud thing '
     + 'they just read on the screen', /restart/i.test(el.textContent));
 }

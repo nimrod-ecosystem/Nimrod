@@ -35,9 +35,9 @@ export const ZOOM_FOCUS_DEFAULT = 'off';
 
 /** The settings row, as data (settings_fields.js `choice`), for the screen's own settings. */
 export const ZOOM_FOCUS_FIELD = Object.freeze({
-  key: ZOOM_FOCUS_KEY, label: 'Grow the panel the cursor is on', kind: 'choice', default: ZOOM_FOCUS_DEFAULT,
+  key: ZOOM_FOCUS_KEY, label: 'Grow the part the cursor is on', kind: 'choice', default: ZOOM_FOCUS_DEFAULT,
   level: 'standard', options: ZOOM_FOCUS_OPTIONS,
-  help: 'The panel the cursor or the scan is on grows a little. It does not move when movement is turned off.',
+  help: 'The part the cursor or the scan is on grows a little. When movement is turned off, it changes size in one step.',
 });
 
 /** A stored value as a scale, or null for off / anything unknown. */

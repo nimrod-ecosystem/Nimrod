@@ -305,14 +305,14 @@ async function removeTestPerson({ profiles, makePersonState, personId, localScop
   if (!rec) throw new Error('That is not a test person, so nothing was removed.');
   const people = (await profiles.people()) || [];
   const me = people.find((p) => p.id === personId);
-  if (!me) throw new Error('That test person is not on this account any more.');
+  if (!me) throw new Error('That test person is not on this login any more.');
   const screens = (await profiles.list(personId)) || [];
   // A screen made BEFORE the test person existed was handed to them: it is somebody's own. Checked for all
   // before anything is removed, so a refusal removes nothing.
   const older = screens.filter((s) => String(s.created_at || '') < String(me.created_at || ''));
   if (older.length) {
-    throw new Error(`“${older[0].name}” was made before the test person, so it is one of your own: `
-      + 'move it back to yourself on My dashboards first. Nothing was removed.');
+    throw new Error(`“${older[0].name}” was made before the test person, so it is one of your own. `
+      + 'Move it back to yourself on My dashboards first. Nothing was removed.');
   }
   // The notes first: on their record, then in the preview's local store.
   let moved = 0;
@@ -420,13 +420,13 @@ export function mountTrialBar(el, { onStartOver, onBack, landing = '', fixed = f
   function render() {
     el.innerHTML = `<div class="tn-bar${fixed ? ' tn-fixed' : ''}" data-trial-bar role="status">
       <b>${esc(TRYING_LABEL)}</b><span class="tn-msg">as “${esc(name)}”</span>
-      ${landing ? `<a href="${esc(landing)}" data-tn-open>Open the landing</a>` : ''}
+      ${landing ? `<a href="${esc(landing)}" data-tn-open>Open the page a new person sees first</a>` : ''}
       ${armed
         ? `<button type="button" data-tn-start data-tn-armed ${busy ? 'disabled' : ''}>Yes, start over as someone new</button>
            <button type="button" data-tn-cancel ${busy ? 'disabled' : ''}>Keep going</button>`
         : `<button type="button" data-tn-start ${busy ? 'disabled' : ''}
-             title="Make them new again: no tour, no points, no Home. Your notes stay with you.">Start over</button>`}
-      <button type="button" data-tn-back ${busy ? 'disabled' : ''} title="Back to your own person; this browser’s own settings come back">Back to me</button>
+             title="Make the test person new again, with no tour, no points and no Home. Your notes stay with you.">Start over</button>`}
+      <button type="button" data-tn-back ${busy ? 'disabled' : ''} title="Go back to your own person. This browser’s own settings come back.">Back to me</button>
       ${msg ? `<span class="tn-msg" data-tn-msg>${esc(msg)}</span>` : ''}
     </div>`;
   }

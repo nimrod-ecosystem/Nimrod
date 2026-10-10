@@ -862,7 +862,7 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
       check(`*** quest mode: unchanged from today — 4 ungated words + ${DEFAULT_PAIRS.length} pairs, "roots" held back ***`,
         mDeckSize() === 4 + DEFAULT_PAIRS.length, `deck=${mDeckSize()}`);
       check('...and the game says so, same as it always has',
-        /waiting behind/i.test(mHost.textContent), mHost.textContent.slice(0, 200));
+        /open after these lessons/i.test(mHost.textContent), mHost.textContent.slice(0, 200));   // site text rewrite 2026-10-09: was "waiting behind"
       quest.destroy();
 
       mSettings.set({ questMode: 'sandbox' });

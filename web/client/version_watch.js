@@ -85,8 +85,8 @@ export const PICK_UP_FIELD = Object.freeze({
   default: PICK_UP_DEFAULT,
   onLabel: 'Yes, at a quiet moment',
   offLabel: 'No',
-  note: 'When the site is updated, this screen restarts itself once, only when nothing is going on: no call, '
-      + 'no game, no menu or editing, nobody pressing. It waits for the next photo, or the end of a video.',
+  note: 'When the site is updated, this screen restarts itself once. It does that only when nothing is going on: no '
+      + 'call, no game, no menu or editing, nobody pressing. It waits for the next photo, or the end of a video.',
 });
 
 /** Whether a screen's row wants it. A row that never chose follows the default (off). */

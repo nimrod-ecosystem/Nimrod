@@ -64,7 +64,7 @@ registerModule(
     // "Skip" control - and NOTHING ELSE. It is a container whose job is running a schedule, and
     // the schedule comes from the platform, so without it there is nothing to direct.
   { type: 'director', title: 'Lineup',
-    dependsOn: 'server', description: 'Rotates videos, personal messages and learning by time of day, so the screen changes on its own' },
+    dependsOn: 'server', description: 'Takes turns between videos, personal messages and learning by time of day, so the screen changes by itself' },
   (ctx) => {
     const { mount, bus, state, user, profileId } = ctx;
     const rootBus = ctx.rootBus || bus;                 // children mount here (re-scoped per child)
@@ -299,7 +299,7 @@ registerModule(
             <div class="d-wall" data-wall hidden></div>
             <div class="d-bar">
               <span class="d-label" data-dlabel></span>
-              <button class="d-skip" data-skip aria-label="skip this segment">Skip ▸</button>
+              <button class="d-skip" data-skip aria-label="skip this one">Skip ▸</button>
             </div>
           </div>`;
         for (const p of PROVIDERS) {

@@ -32,7 +32,7 @@ const DOT_COUNT = 4;
 registerModule(
   { type: 'ambient_drift', title: 'Ambient drift', mount: 'ambient', core: 'new',
     dependsOn: 'none', importance: 'optional',
-    description: 'a few soft shapes drifting behind the panels — proves the ambient layer works, nothing more' },
+    description: 'a few soft shapes drifting behind the other parts. It is only a test piece and does nothing else' },
   (ctx) => {
     const { mount } = ctx;
     let torn = false;

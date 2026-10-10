@@ -87,7 +87,7 @@ const LABELS = Object.freeze({ keep: 'Keep playing', mute: 'Mute while hidden', 
 
 // The panel-level row (kiosk.js PANEL_INSTANCE_FIELDS, beside "This panel's background").
 export const WHEN_HIDDEN_FIELD = Object.freeze({
-  key: WHEN_HIDDEN_KEY, label: 'When this panel is hidden', kind: 'choice', level: 'standard',
+  key: WHEN_HIDDEN_KEY, label: 'When this part is hidden', kind: 'choice', level: 'standard',
   default: WHEN_HIDDEN_DEFAULT,
   options: Object.freeze([
     Object.freeze({ value: 'keep', label: 'Keep playing' }),

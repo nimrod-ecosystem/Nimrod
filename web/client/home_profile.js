@@ -531,9 +531,9 @@ export function editBarModel({ live = false, thing = null, count = 0, canUndo = 
     // Its way out, FIRST and not dimmed (2026-10-02, the bar by switch): a stray select lands on it.
     b('closebar', 'Close', { hint: 'put the edit bar away' }),
     b('scene', 'Scene', { expanded: tray === 'scene', disabled: !live, hint: 'the room or the scene behind everything' }),
-    b('add', 'Add', { expanded: tray === 'add', disabled: !live, hint: 'put a module on' }),
+    b('add', 'Add', { expanded: tray === 'add', disabled: !live, hint: 'put a part on' }),
     b('change', thing ? `Change: ${thing.title || thing.type}` : 'Choose a thing',
-      { expanded: tray === 'change' || tray === 'switch', disabled: !live || !count, hint: 'switch, move or remove one thing' }),
+      { expanded: tray === 'change' || tray === 'switch', disabled: !live || !count, hint: 'swap, move or remove one thing' }),
     b('transform', 'Transform…', { disabled: !live || !count, hint: 'position, size, turn and layer, as numbers' }),
     b('undo', 'Undo', { disabled: !live || !canUndo }),
     b('redo', 'Redo', { disabled: !live || !canRedo }),
@@ -555,7 +555,7 @@ export function editBarModel({ live = false, thing = null, count = 0, canUndo = 
 //   NOT ENFORCED YET: the kiosk's own Switch list and its edit windows (kiosk.js, dashboard_editor.js) --
 //   the exact lines are with the coordinator. Undo and the composer do not consult it either.
 // =====================================================================================================
-export const LOCKED_HINT = 'kept here: this dashboard locks it (Unlock, below, if you mean to change it)';
+export const LOCKED_HINT = 'kept here: it is locked (Unlock, below, if you mean to change it)';
 export const isLocked = (locked, id) => Array.isArray(locked) && !!id && locked.includes(id);
 /** The lock list without `id` (Unlock). */
 export const unlockIn = (locked, id) => (Array.isArray(locked) ? locked.filter((x) => x !== id) : []);
@@ -571,7 +571,7 @@ export function changeTrayModel({ thing = null, placed = false, count = 0, locke
     b('close', 'Close'),
     b('prev', '‹ Previous thing', { disabled: !count }),
     b('next', 'Next thing ›', { disabled: !count }),
-    b('switch', 'Switch module…', { disabled: none || held, hint: held ? LOCKED_HINT : 'another module, in exactly this place' }),
+    b('switch', 'Switch module…', { disabled: none || held, hint: held ? LOCKED_HINT : 'show something else, in exactly this place' }),
     b('move', 'Move left', { d: [-MOVE_STEP, 0], disabled: none || !placed || held, ...why }),
     b('move', 'Move right', { d: [MOVE_STEP, 0], disabled: none || !placed || held, ...why }),
     b('move', 'Move up', { d: [0, -MOVE_STEP], disabled: none || !placed || held, ...why }),

@@ -95,8 +95,9 @@ section('what it actually says');
   const text = el.textContent;
   check('it says these are SAMPLES — the thing nobody was being told', /sample photos/i.test(text), text.slice(0, 90));
   check('it says what you can do instead', /folder of your own/i.test(text), text.slice(0, 140));
+  // site text rewrite 2026-10-09: "Nothing is uploaded" now reads "Nothing is sent anywhere".
   check('*** and that nothing is uploaded ***, which is the objection they have not raised yet',
-    /nothing is uploaded/i.test(text) && /never leave this device/i.test(text), text.slice(0, 220));
+    /nothing is sent\s+anywhere/i.test(text) && /never leave this device/i.test(text), text.slice(0, 220));
   check('there is one obvious action', !!el.querySelector('[data-pick]'));
   check('...and a way to sign in without it being the only option',
     el.querySelector('.d-in')?.getAttribute('href') === '/auth/login');

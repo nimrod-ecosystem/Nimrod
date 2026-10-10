@@ -99,7 +99,7 @@ try {
       ART_KINDS.every((k) => t.includes(`Artwork/${k.folder}`) && t.includes(`${k.width} × ${k.height}`) && t.includes(k.example)), t.slice(0, 300));
     // folder art (2026-10-07): the SVG limit is gone (a folder lists SVG), so the kit no longer sends anybody round it.
     check('*** says how a picture reaches the site (connect, then choose), that nothing is uploaded, and no SVG limit any more ***',
-      /Connect it for pictures/.test(t) && /Nothing is uploaded/.test(t) && !/does not list SVG/.test(t) && !/Add one from this device/.test(t));
+      /Connect it for pictures/.test(t) && /Nothing is sent anywhere/.test(t) /* site text rewrite 2026-10-09: was "Nothing is uploaded" */ && !/does not list SVG/.test(t) && !/Add one from this device/.test(t));
     check('folder art: the kit says the Wallpaper panel shows Artwork/Wallpapers by itself',
       /Wallpaper panel/.test(t) && /Artwork\/Wallpapers|Wallpapers folder/.test(t), t.slice(t.indexOf('WALLPAPERS'), t.indexOf('WALLPAPERS') + 400));
     check('*** says what is NOT read from files yet (trophies, room objects ...), and who answers for real people and brands ***',
@@ -206,7 +206,7 @@ try {
     const wide = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace('0 0 512 512', '0 0 800 400')), { folder: 'Avatars' });
     check('the SVG\'s shape is its viewBox (2:1, not square)', has(wide, 'warn', /2:1; avatars are square/), texts(wide));
     const bad = await checkArtFile(svgFile('avatar-x.svg', '<svg <<<'), { folder: 'Avatars' });
-    check('*** a broken SVG: will not work, said why ***', bad.verdict === 'no' && has(bad, 'no', /not a well-formed SVG/), texts(bad));
+    check('*** a broken SVG: will not work, said why ***', bad.verdict === 'no' && has(bad, 'no', /has a mistake in it, so it cannot be read/), texts(bad));   // site text rewrite 2026-10-09: was "not a well-formed SVG"
     const dt = await checkArtFile(svgFile('avatar-x.svg', `<!DOCTYPE svg><svg ${NS} viewBox="0 0 10 10"/>`), { folder: 'Avatars' });
     check('*** a DOCTYPE: shown only as a still picture (it still shows; the sanitizer refuses to draw it inline) ***',
       dt.verdict === 'works' && has(dt, 'warn', /only as a still picture.*DOCTYPE/), texts(dt));
@@ -214,7 +214,7 @@ try {
     check('*** folder art: an SVG card works (a folder lists it), but cards are best as PNG or WebP ***',
       card.verdict === 'works' && has(card, 'warn', /SVG works, but board cards are best as PNG or WebP/)
         && !has(card, 'warn', /Add one from this device/), texts(card));
-    check('droppedWords: a script and a filter', J(droppedWords(['element script', 'handler', 'element feGaussianBlur'])) === J(['a script', 'a filter effect (blur or shadow)']));
+    check('droppedWords: a script and a filter', J(droppedWords(['element script', 'handler', 'element feGaussianBlur'])) === J(['a script (a small program)', 'a filter effect (blur or shadow)']));   // site text rewrite 2026-10-09
   }
 
   // =====================================================================================================
@@ -288,7 +288,7 @@ try {
       check('*** Artwork\'s README IS the art kit (the file to give an AI) ***', (await readText(tree.Artwork['README.txt'])) === artKitText() && README.artwork === artKitText());
       const dataReadme = await readText(tree.Data['README.txt']);
       check('*** Data\'s README: play history and exports, on this computer, nothing uploaded ***',
-        /play history/.test(dataReadme) && /export/.test(dataReadme) && /Nothing in this folder is uploaded/.test(dataReadme), dataReadme);
+        /play history/.test(dataReadme) && /export/.test(dataReadme) && /Nothing in this folder is sent/.test(dataReadme), dataReadme);   // site text rewrite 2026-10-09: was "is uploaded"
       tree.Artwork.Avatars['avatar-me.png'] = new Blob(['x']);
       delete tree.Artwork.Buttons;
       const r2 = await ensureTree(root);
@@ -329,7 +329,7 @@ try {
       check('*** what is not read yet, and the real-people line ***', /trophies/.test(host.querySelector('[data-uf-art-notyet]')?.textContent || '') && /brands/.test(text()));
       check('*** the checker\'s buttons: pictures, a folder (every browser), the Artwork folder ***', !!btn('check-files') && !!btn('check-dir') && !!btn('check-artwork')
         && !!host.querySelector('input[type=file][data-uf-art-files][multiple]') && host.querySelector('input[data-uf-art-dir]')?.hasAttribute('webkitdirectory'));
-      check('says nothing is uploaded', /Nothing is uploaded/.test(host.querySelector('[data-uf-art-checknote]')?.textContent || ''));
+      check('says nothing is uploaded', /Nothing is sent anywhere/.test(host.querySelector('[data-uf-art-checknote]')?.textContent || ''));   // site text rewrite 2026-10-09: was "Nothing is uploaded"
       btn('copy-kit').click();
       await settle();
       check('*** "Copy the art kit" copies the kit ***', copied[copied.length - 1] === artKitText() && /Copied the art kit/.test(text()));

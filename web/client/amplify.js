@@ -69,8 +69,8 @@ export const AMPLIFY_DEFAULTS = Object.freeze({
 export const AMPLIFY_FIELDS = [
   { key: 'amplifyOn', label: 'Amplify: play the microphone louder through this screen', kind: 'toggle',
     default: AMPLIFY_DEFAULTS.on, level: 'standard',
-    note: 'For somebody hard of hearing. A microphone near a speaker can howl: this turns itself '
-        + 'off if it does. A microphone close to the person and far from the speaker works best.' },
+    note: 'For somebody hard of hearing. A microphone near a speaker can howl (a loud whistle). This turns '
+        + 'itself off if it does. A microphone close to the person and far from the speaker works best.' },
   { key: 'amplifyGain', label: 'Amplify: how much louder', kind: 'number', unit: '%',
     default: AMPLIFY_DEFAULTS.gain, min: 100, max: AMPLIFY_DEFAULTS.maxGain, step: 50, level: 'standard' },
   { key: 'amplifySource', label: 'Amplify: which microphone', kind: 'choice',

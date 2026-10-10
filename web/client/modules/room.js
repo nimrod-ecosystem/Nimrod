@@ -127,18 +127,18 @@ export const SETTINGS = [
     placeholder: 'The room’s own words', maxLength: 40 },
   { key: 'motion', label: 'Movement', kind: 'choice', default: DEFAULTS.motion, level: 'standard',
     options: [
-      { value: 'gentle', label: 'gentle — as designed' },
+      { value: 'gentle', label: 'gentle — the usual movement' },
       { value: 'calm', label: 'calm — slower' },
       { value: 'still', label: 'still — no movement at all' },
     ] },
   { key: 'motionRate', label: 'How smoothly it moves', kind: 'choice', default: DEFAULTS.motionRate, level: 'advanced',
-    help: 'Smoother redraws the room more often, which is more work for a small computer.',
+    help: 'A smoother setting redraws the room more often. That is more work for a small computer.',
     options: [
       { value: 'light', label: 'Light on the computer (looks the same)' },
       { value: 'smooth', label: 'Smoother (about twice the work)' },
-      { value: 'full', label: 'Every frame (the most work)' },
+      { value: 'full', label: 'As often as the screen can (the most work)' },
     ] },
-  { key: 'liftReturnMs', label: 'Put a lifted panel back after', kind: 'choice', default: DEFAULTS.liftReturnMs,
+  { key: 'liftReturnMs', label: 'Put a part lifted out of the furniture back after', kind: 'choice', default: DEFAULTS.liftReturnMs,
     level: 'standard',
     options: [
       { value: 30000, label: '30 seconds' },
@@ -153,26 +153,26 @@ export const SETTINGS = [
       { value: '1.25', label: 'Some (1.25×)' },
       { value: '1.5', label: 'A lot (1.5×)' },
     ] },
-  { key: 'showSlots', label: 'Show slot sizes', kind: 'toggle', default: DEFAULTS.showSlots, level: 'advanced',
+  { key: 'showSlots', label: 'Show the size of each space in the furniture', kind: 'toggle', default: DEFAULTS.showSlots, level: 'advanced',
     onLabel: 'Shown', offLabel: 'Hidden' },
   // ---- the second pass ----
   { key: 'shelf', label: 'The bookshelf', kind: 'choice', default: DEFAULTS.shelf, level: 'standard',
-    help: 'A library: each book is a module, and pressing a book opens it.',
+    help: 'A library. Each book is a part, such as Photos or Clock. Pressing a book opens it.',
     options: [
-      { value: 'library', label: 'A library of modules' },
+      { value: 'library', label: 'A library of parts' },
       { value: 'recipe', label: 'As the room has it' },
     ] },
   { key: 'books', label: 'Books on the shelf', kind: 'choice', default: DEFAULTS.books, level: 'standard',
     options: [
-      { value: 'screen', label: 'This screen’s modules' },
+      { value: 'screen', label: 'This screen’s parts' },
       { value: 'few', label: 'A few common ones' },
       { value: 'named', label: 'The ones named below' },
     ] },
   { key: 'bookList', label: 'Name the books', kind: 'text', default: DEFAULTS.bookList, level: 'advanced',
     placeholder: 'Photos, Clock, Weather', maxLength: 300,
-    help: 'Module names, separated by commas. Used when "Books on the shelf" is "The ones named below".' },
+    help: 'The names of parts, separated by commas. Used when "Books on the shelf" is "The ones named below".' },
   { key: 'windowShows', label: 'The window shows', kind: 'choice', default: DEFAULTS.windowShows, level: 'standard',
-    help: 'The weather comes from the Weather module, once it has a place. The room sends nothing itself.',
+    help: 'The weather comes from the Weather part, once it has a place set. The room sends nothing itself.',
     options: [
       { value: 'weather', label: 'The view and the weather' },
       { value: 'view', label: 'Just the view' },
@@ -387,7 +387,7 @@ registerModule(
         // The window's weather: what the room already knows says itself, even with no Weather panel here.
         if (module === 'weather') {
           const w = api?.weather?.();
-          api?.toast(w?.spoken ? `Now: ${w.spoken}` : 'Add the Weather module to this screen and set a place, and the weather shows here.');
+          api?.toast(w?.spoken ? `Now: ${w.spoken}` : 'Add the Weather part to this screen and set a place, and the weather shows here.');
           return;
         }
         api?.toast(`${moduleLabel(module)} is not on this screen. Add it, and this book opens it.`);

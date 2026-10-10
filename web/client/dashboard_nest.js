@@ -62,7 +62,7 @@ export const NEST_LIVE_DEPTH_DEFAULT = 1;
 export const NEST_LIVE_DEPTH_MAX = 4;
 export const NEST_LIVE_DEPTH_FIELD = Object.freeze({
   key: NEST_LIVE_DEPTH_KEY,
-  label: 'Dashboards shown inside other dashboards: how many levels move live',
+  label: 'Dashboards shown inside other dashboards: how many levels deep keep running',
   kind: 'choice', level: 'advanced', default: NEST_LIVE_DEPTH_DEFAULT,
   options: Object.freeze([
     { value: 0, label: 'None: show a card for each' },

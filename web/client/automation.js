@@ -161,7 +161,7 @@ export const DEFAULT_GUARDS = Object.freeze({
     // A live microphone's gain. Its howl guard (amplify.js) is what protects the room, and a gain
     // that an LFO or a sensor keeps moving is exactly the thing that sets a howl off. A guess, on
     // Mike's list: the argument FOR allowing it is a hearing aid that follows the room's noise.
-    ['amplifyGain', 'a live microphone: a moving gain fights the howl guard that protects the room'],
+    ['amplifyGain', 'a live microphone: a loudness that keeps moving works against the guard that turns it off if it howls'],
   ]),
   floorFrom: new Map([
     // The master never goes under the screen's own "never quieter than" (master_volume.js /
@@ -451,11 +451,11 @@ export function bindable(field, raw = null, guards = DEFAULT_GUARDS) {
   // the day somebody makes it a number.
   if (guards?.locked?.has(field.key)) return { ok: false, why: guards.locked.get(field.key) };
   if (field.kind !== 'number') {
-    return { ok: false, why: `a ${field.kind === 'toggle' ? 'yes/no' : field.kind} setting: only numbers can be driven` };
+    return { ok: false, why: `a ${field.kind === 'toggle' ? 'yes/no' : field.kind} setting: only numbers can be changed by something else` };
   }
-  if (raw && raw.automatable === false) return { ok: false, why: 'this setting cannot be driven' };
-  if (field.readOnly) return { ok: false, why: 'changed where it lives' };
-  if (field.min === null || field.max === null) return { ok: false, why: 'it has no range to drive it across' };
+  if (raw && raw.automatable === false) return { ok: false, why: 'this setting cannot be changed by something else' };
+  if (field.readOnly) return { ok: false, why: 'changed somewhere else, not here' };
+  if (field.min === null || field.max === null) return { ok: false, why: 'it has no lowest and highest value' };
   if (field.min === field.max) return { ok: false, why: 'it has only one value' };
   return { ok: true, why: null };
 }
@@ -560,10 +560,10 @@ export function createAutomation({
   function startRunner(b) {
     stopRunner(b.id);
     const t = targets.get(b.target.instance);
-    if (!t) { setStatus(b.id, 'waiting for its panel'); return; }
+    if (!t) { setStatus(b.id, 'waiting for its part'); return; }
     const field = t.fields.get(b.target.key);
     const ok = bindable(field, t.raw.get(b.target.key), guards);
-    if (!ok.ok) { setStatus(b.id, `not bindable: ${ok.why}`); return; }
+    if (!ok.ok) { setStatus(b.id, `not working: ${ok.why}`); return; }
 
     const m = b.map;
     const src = b.source;
@@ -876,7 +876,7 @@ export function createAutomation({
         if (targets.get(instance) === t) {
           for (const b of bindings.values()) if (b.target.instance === instance) stopRunner(b.id, { restore: false });
           targets.delete(instance);
-          for (const b of bindings.values()) if (b.target.instance === instance) setStatus(b.id, 'waiting for its panel');
+          for (const b of bindings.values()) if (b.target.instance === instance) setStatus(b.id, 'waiting for its part');
         }
         t.listeners.clear();
         return handle.destroy?.();

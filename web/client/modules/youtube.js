@@ -142,9 +142,9 @@ export const SETTINGS = [
   // stays empty. A key an older panel kept here is handed over once (`adoptOldKey`).
   { key: 'apiKey', label: 'YouTube key (for searching)', kind: 'text', default: '',
     level: 'advanced', secret: true,
-    note: 'Typed once, kept encrypted on this site’s server and never shown again; every YouTube '
-      + 'panel and search uses it. Get one from Google Cloud (YouTube Data API v3). Searching '
-      + 'sends what you type to YouTube; nothing else here does.' },
+    note: 'Type it once. It is kept locked (encrypted) on this site’s server and never shown again. '
+      + 'Every YouTube part and search uses it. Get one from Google Cloud (YouTube Data API v3). Searching '
+      + 'sends what you type to YouTube. Nothing else here does.' },
   // WHERE A TYPED KEY IS SAVED. A CHOICE (so a switch can step it), the account first: Mike's
   // "entering it in either place should set it as the default everywhere". The narrower ones are
   // for a person, a device or one panel that should search on a different key (a household
@@ -153,10 +153,10 @@ export const SETTINGS = [
   { key: 'apiKeyFor', label: 'A key typed above is saved for', kind: 'choice', default: 'account',
     level: 'advanced',
     options: [
-      { value: 'account', label: 'the whole account (every screen and search)' },
+      { value: 'account', label: 'the whole login (every screen and search)' },
       { value: 'person', label: 'this person only' },
       { value: 'device', label: 'this device only' },
-      { value: 'panel', label: 'this panel only' },
+      { value: 'panel', label: 'this part only' },
     ] },
   { key: 'heldNotifyMs', label: 'If someone pauses it, let people know after', kind: 'choice',
     default: 21600000, level: 'standard',
@@ -172,7 +172,7 @@ export const SETTINGS = [
   // one-button/input-bus menu `sourceId` already is, so "switching preset is a verb" (register
   // #255) needs no new bus wiring here: this menu is already switch- and input-bus-operable.
   { key: 'presetId', label: 'Use a saved preset', kind: 'choice', default: '', level: 'standard',
-    emptyLabel: 'No preset — this instance’s own playlist, schedule and shuffle' },
+    emptyLabel: 'No preset. This part’s own playlist, schedule and shuffle' },
   // *** VOLUME (row 2.28: "volume up, volume down ... mostly for Youtube right now"). ***
   //
   // *** THIS IS THE VIDEO'S OWN LEVEL, AND IT IS NO LONGER WHAT "LOUDER" MOVES. *** The first
@@ -572,8 +572,8 @@ registerModule(
       const screenOnly = !!keyStatus && keyStatus.can_change === false
         && !(keyStatus.screen_levels || []).includes(lv);
       const note = [keyMsg,
-        screenOnly ? 'Nobody has signed in on this browser, so a key typed here can be saved for this device '
-          + 'or this panel (the next row), or for the whole account once you sign in.' : '',
+        screenOnly ? 'Nobody has signed in on this browser. A key typed here can be saved for this device or this '
+          + 'part (the next row). Once you sign in, it can be saved for the whole login.' : '',
         API_KEY_NOTE].filter(Boolean).join(' ');
       return { emptyLabel, note };
     }
@@ -594,8 +594,8 @@ registerModule(
           state.set({ apiKey: '' });
           keyStatus = keyClient.last() || keyStatus;
           keyMsg = r.where === 'panel'
-            ? 'The key this panel kept is now kept on the server, for this panel.'
-            : 'The key this panel kept is now the account’s key, kept on the server.';
+            ? 'The key this part kept is now kept on this site’s server, for this part.'
+            : 'The key this part kept is now this login’s key, kept on this site’s server.';
         }
         return r;
       }).catch(() => null).finally(() => { adopting = null; });
@@ -1098,7 +1098,7 @@ registerModule(
       // keys page; the server's own sentence is shown instead when it sends one.
       'no-key': 'Searching needs a YouTube key. Type one in this panel’s advanced settings (it is '
         + 'then used by every YouTube panel), or paste a video link above.',
-      'key-refused': 'YouTube refused the key — usually the day’s searches are used up, or the key '
+      'key-refused': 'YouTube refused the key. Usually the day’s searches are used up, or the key '
         + 'does not have YouTube Data API v3 turned on.',
       busy: 'That is a lot of searches in a minute. Wait a moment and try again.',
       failed: 'Could not reach YouTube. You can still paste a video link above.',
@@ -1330,7 +1330,7 @@ registerModule(
                    NO BACKTICKS IN THIS COMMENT — see the identical warning above this panel's
                    schedule editor; it lives inside the same template literal. -->
               <div class="yt-schhead" data-preset-note hidden></div>
-              <label class="chk"><input type="checkbox" data-opt="autoAdvance"> auto-advance when a video ends</label>
+              <label class="chk"><input type="checkbox" data-opt="autoAdvance"> play the next video when one ends</label>
               <label class="chk"><input type="checkbox" data-opt="shuffle"> shuffle (off = play the playlist in order)</label>
               <div class="addrow">
                 <input type="text" data-add-url placeholder="YouTube link or id">
@@ -1576,7 +1576,7 @@ registerModule(
         mount.querySelector('[data-set-list]').addEventListener('click', () => {
           const el = mount.querySelector('[data-list-url]');
           const id = parsePlaylistId(el.value);
-          if (!id) { setStatus('That is not a playlist link — a playlist URL has "list=PL…" in it.'); return; }
+          if (!id) { setStatus('That is not a playlist link. A playlist’s web address has "list=PL…" in it.'); return; }
           el.value = '';
           state.set({ playlistId: id });
         });

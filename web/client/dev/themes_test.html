@@ -398,7 +398,7 @@ try {
     await inst.init();
     const pr = inst.impl.__probe();
     check('*** on its own (no screen): the gallery as a PREVIEW, and it says so ***', pr.mode === 'preview' && pr.picker?.gallery === true
-      && /colours this panel only/.test(mount.textContent), J({ mode: pr.mode }));
+      && /colours this part only/.test(mount.textContent), J({ mode: pr.mode }));   // site text rewrite 2026-10-09
     mount.querySelector('[data-chp-pick="halloween"]').click();
     const pbox = mount.querySelector('[data-themes-preview]');
     check('...a choice colours the panel’s own box, nothing else', pbox.style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.halloween.vars['--bg'].toLowerCase()

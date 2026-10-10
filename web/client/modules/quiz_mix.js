@@ -138,8 +138,8 @@ const onOff = (key, label, note) => ({ key, label, default: true, level: 'standa
 const SETTINGS = [
   ...autostartFields({ on: false }),
   { key: 'players', label: 'Players', kind: 'players', default: '', level: 'essential', max: MAX_PLAYERS,
-    note: 'Each takes a turn every round, with a question at their own level. Somebody picked from this login plays as '
-      + 'themselves; a guest is a name. Up to four.' },
+    note: 'Each player takes a turn every round, with a question at their own level. A person picked from this login plays as '
+      + 'themselves. A guest is only a name. Up to 4 players.' },
   { key: 'rounds', label: 'Rounds in a game', kind: 'choice', default: 10, level: 'essential',
     options: [5, 10, 15, 20].map((v) => ({ value: v, label: String(v) })).concat([{ value: 0, label: 'No end: keep going' }]),
     note: 'A round is one question for every player.' },
@@ -156,7 +156,7 @@ const SETTINGS = [
   onOff('useBrain', 'Brain games'),
   onOff('useThink', 'Thinking games'),
   onOff('useNameThat', 'Name that (animals, states, people)',
-    'Name that person asks about known people and characters; with our own people turned on, each player also gets '
+    'Name that person asks about well-known people and characters. With your own people turned on, each player also gets '
       + 'their own recorded messages at the easiest level.'),
   personWhoField({ on: 'known', appliesWhen: (v) => v.useNameThat !== false }),
   onOff('useWordGames', 'Word games (Opposites/Logic, rhyming, yes or no)'),   // opposites/logic (row 2.63)
@@ -164,17 +164,17 @@ const SETTINGS = [
     onLabel: 'In the mix', offLabel: 'Left out', note: 'Spelling, and remembering the order of things.' },
   { key: 'repeatGame', label: 'The same game two rounds running', default: false, level: 'standard',
     onLabel: 'Can happen', offLabel: 'A different game each round' },
-  { key: 'scoring', label: 'Points on the table', kind: 'choice', default: 'harder', level: 'standard',
+  { key: 'scoring', label: 'Score for a right answer', kind: 'choice', default: 'harder', level: 'standard',
     options: [{ value: 'harder', label: 'More for a question that was harder for that player' },
               { value: 'plain', label: 'One for every right answer' }],
-    note: 'Harder: one point for a question they were expected to get, two for a toss-up, three for a stretch. A right '
-      + 'answer after a hint is one.' },
+    note: 'Harder: 1 point for a question they were expected to get right. 2 points for one that could go either way. 3 points for one that was hard for them. '
+      + 'A right answer after a hint is 1 point.' },
   { key: 'answerTime', label: 'Time to answer', kind: 'choice', default: 0, level: 'standard',
     options: [{ value: 0, label: 'No time limit' }, ...[20, 30, 60].map((v) => ({ value: v, label: `${v} seconds` }))],
     note: 'When the time is up, the turn passes to the next player.' },
   { key: 'pointsFor', label: 'Right answers earn points for', kind: 'choice', default: 'first', level: 'advanced',
     options: [{ value: 'first', label: 'The first player only' }, { value: 'all', label: 'Every player' }],
-    note: 'Points as every question game pays them: game points, or School points while Learning is on.' },
+    note: 'These are the same points every question game gives. They are game points, or School points while Learning is on.' },
   ...flowSettings({ lines: LINES, labels: LINE_LABELS }),
 ];
 
@@ -285,7 +285,7 @@ function sharedRows(ctx) {
 registerModule(
   { type: GAME, title: 'Quiz mix', core: 'new',
     description: 'Every kind of question in one game: trivia, math, words, spelling, brain and thinking games, name '
-      + 'that, and the word games. Each round a new kind; each player answers their own question at their own level.',
+      + 'that, and the word games. Each round is a new kind. Each player answers their own question at their own level.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;
@@ -843,7 +843,7 @@ registerModule(
         const p = current.player;
         const away = room.seats().find((s) => s.id === p.seat)?.away;
         return `<p class="wg-say" data-remote-turn="${esc(p.seat)}">${esc(`${p.name}'s turn, on ${whereOf(p)}.`)}</p>`
-          + (away ? '<p class="wg-say wg-soft" data-away>That screen has dropped off. If it does not come back soon, the turn passes on by itself.</p>' : '')
+          + (away ? '<p class="wg-say wg-soft" data-away>That screen has stopped answering. If it does not come back soon, the turn passes on by itself.</p>' : '')
           + `<div class="wg-btns"><button type="button" class="wg-btn" data-qm="skip">Skip their turn</button></div>${tableLine()}`;
       }
       if (isGuest()) {
@@ -872,7 +872,7 @@ registerModule(
           b.push({ act: 'deny', arg: w.id, label: 'Not now' });
         }
         b.push(api?.begun?.() ? { act: 'hide', label: 'Back to the game' } : { act: 'start', label: 'Start the game' });
-        b.push({ act: 'admitmode', label: room.admit() === 'connected' ? 'Ask me before each one joins' : 'Let anyone connected join without asking' });
+        b.push({ act: 'admitmode', label: room.admit() === 'connected' ? 'Ask me before each one joins' : 'Let anyone connected to this login join without asking' });
         b.push({ act: 'stop', label: 'Stop playing together' });
         return b;
       }
@@ -894,7 +894,7 @@ registerModule(
       + `${x.arg ? ` data-qm-arg="${esc(x.arg)}"` : ''}${i === sheetLit ? ' data-on="1"' : ''}>${esc(x.label)}</button>`).join('')}</div>`;
     const seatList = () => `<ul class="qm-seats" data-seats>${room.seats().map((st) => {
       const p = { here: st.device === room.you(), remote: st.device };
-      return `<li data-seat="${esc(st.id)}"${st.away ? ' data-away' : ''}><b>${esc(st.name)}</b> <span class="qm-soft">on ${esc(whereOf(p))}${st.away ? ' (dropped off)' : ''}</span></li>`;
+      return `<li data-seat="${esc(st.id)}"${st.away ? ' data-away' : ''}><b>${esc(st.name)}</b> <span class="qm-soft">on ${esc(whereOf(p))}${st.away ? ' (stopped answering)' : ''}</span></li>`;
     }).join('')}</ul>`;
     function barHtml(s) {
       if (inRoom() && !(isHost() && (!api?.begun?.() || showLobby)) && !(isGuest() && room.state().phase === 'lobby')) {
@@ -937,7 +937,7 @@ registerModule(
           ${waiting ? `<ul class="qm-seats" data-qm-waiting>${waiting}</ul>` : ''}`);
       }
       if (isGuest() && room.state().phase === 'lobby') {
-        return wrap('joined', `<h3>Play together</h3><p data-qm-status>${esc(`You are in ${hostName()}'s game. It starts when they press Start.`)}</p>${seatList()}`);
+        return wrap('joined', `<h3>Play together</h3><p data-qm-status>${esc(`You are in ${hostName()}'s game. It starts when they press Start the game.`)}</p>${seatList()}`);
       }
       if (inRoom()) return '';
       if (sheet === 'choose') {

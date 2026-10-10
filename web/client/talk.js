@@ -372,9 +372,9 @@ export function startTalk({
   let lastHeard = 'nothing said yet';
 
   function synthesise(word) {
-    if (!cfg.speakAloud) { lastHeard = 'sound is off — the word is on screen'; return; }
+    if (!cfg.speakAloud) { lastHeard = 'sound is off'; return; }
     const voices = listVoices();
-    if (!voices.length) { lastHeard = 'no clip, and this device has no voice'; return; }
+    if (!voices.length) { lastHeard = 'no recording, and this device has no voice'; return; }
     lastHeard = 'the device voice';
     try { speak(word, voicePref); } catch (err) { console.error('talk: speak', err); }
   }
@@ -397,7 +397,7 @@ export function startTalk({
     playing = null;
     try { cancelSpeech(); } catch { /* no engine */ }
 
-    if (!cfg.speakAloud) { lastHeard = 'sound is off — the word is on screen'; return; }
+    if (!cfg.speakAloud) { lastHeard = 'sound is off'; return; }
 
     const shipped = cfg.useClips ? clipUrl(word, cfg.clipBase) : null;
     // own board clips: the card's own sound, and when that will not play, the shipped clip, then the voice.
@@ -498,16 +498,16 @@ export function startTalk({
   // number you changed and cannot see is a number you have to change twice.
   const KEYS = [
     ['s', 'scanning on / off', () => { save({ scan: !cfg.scan }); toast(`Scanning ${cfg.scan ? 'ON' : 'off'}`); }],
-    ['d', 'dwell on / off', () => { setDwell(!cfg.dwell); }],
-    ['-', 'scan step shorter', () => bumpScan(-1)],
-    ['=', 'scan step longer', () => bumpScan(1)],
-    ['_', 'scan step shorter', () => bumpScan(-1)],
-    ['+', 'scan step longer', () => bumpScan(1)],
-    [';', 'dwell shorter', () => bumpDwell(-1)],
-    ["'", 'dwell longer', () => bumpDwell(1)],
+    ['d', 'choose by holding still (dwell) on / off', () => { setDwell(!cfg.dwell); }],
+    ['-', 'less time on each card', () => bumpScan(-1)],
+    ['=', 'more time on each card', () => bumpScan(1)],
+    ['_', 'less time on each card', () => bumpScan(-1)],
+    ['+', 'more time on each card', () => bumpScan(1)],
+    [';', 'hold still for less time', () => bumpDwell(-1)],
+    ["'", 'hold still for more time', () => bumpDwell(1)],
     ['[', 'cursor smaller', () => bumpCursor(-1)],
     [']', 'cursor bigger', () => bumpCursor(1)],
-    ['b', 'switch board', () => { save({ boardId: cfg.boardId === 'care' ? 'yesno' : 'care' }); toast(cfg.boardId === 'care' ? 'Care board' : 'Yes / No / Other'); }],
+    ['b', 'change to the other board', () => { save({ boardId: cfg.boardId === 'care' ? 'yesno' : 'care' }); toast(cfg.boardId === 'care' ? 'Care board' : 'Yes / No / Other'); }],
     ['k', 'high contrast', () => { save({ highContrast: !cfg.highContrast }); toast(`High contrast ${cfg.highContrast ? 'ON' : 'off'}`); }],
     ['m', 'open or close settings', () => toggleSheet()],
     ['f', 'full screen', () => toggleFullscreen()],
@@ -534,7 +534,7 @@ export function startTalk({
     save({ dwell: !!on, tapSelects: !on });
     cursor?.progress?.(0);
     toast(on ? `Dwell ON — hold still ${(cfg.dwellMs / 1000).toFixed(1)}s. Tap is off.`
-             : 'Dwell off. Tap chooses again.');
+             : 'Holding still (dwell) is off. A tap chooses again.');
   }
 
   function onKey(e) {
@@ -643,7 +643,7 @@ export function startTalk({
           <div class="row"><div class="lab">Which board</div>
             <div class="seg">
               <button data-board="yesno" class="${cfg.boardId === 'yesno' ? 'on' : ''}">Yes / No / Other</button>
-              <button data-board="care" class="${cfg.boardId === 'care' ? 'on' : ''}">Care board (16)</button>
+              <button data-board="care" class="${cfg.boardId === 'care' ? 'on' : ''}">Care board (16 words)</button>
             </div></div>
           ${rowToggle('highContrast', 'High contrast', cfg.highContrast, 'Black on white, 21:1')}
           ${rowToggle('followTheme', 'Colours', cfg.followTheme,
@@ -653,51 +653,50 @@ export function startTalk({
           ${rowToggle('speakAloud', 'Speak out loud', cfg.speakAloud,
             `last said with: ${lastHeard}`)}
           ${rowToggle('sayBanner', 'Show the word on screen', cfg.sayBanner,
-            'reaches somebody across the room, or hard of hearing — not only a fallback')}
+            'so somebody across the room, or hard of hearing, can read it. Not only a backup for the voice')}
           <div class="row"><div class="lab">Try it</div>
             <button class="btn" data-test>Say “Yes”</button></div>
         </div>
 
         <details class="grp adv" ${clipReport ? 'open' : ''}>
           <summary>Recorded voice<span>${cfg.useClips ? (clipReport || 'not checked') : 'off'}</span></summary>
-          ${rowToggle('useClips', 'Use recorded clips when there is one', cfg.useClips,
+          ${rowToggle('useClips', 'Play a recording when there is one', cfg.useClips,
             'a real voice beats a synthesised one; it falls back on its own when there is no file')}
-          <div class="row"><div class="lab">Where the recordings are<span class="note">${esc(cfg.clipBase || 'nowhere — clips are off')}</span></div>
+          <div class="row"><div class="lab">Where the recordings are<span class="note">${esc(cfg.clipBase || 'nowhere. Recordings are off')}</span></div>
             <button class="btn" data-checkclips>Check</button></div>
-          <p class="why">This device has <b>${voices.length}</b> synthesised
-            ${voices.length === 1 ? 'voice' : 'voices'}${voices.length ? '' : ' — so without recordings this board is silent, and the written word is doing all the work'}.
-            A word becomes a file name the same way it does on the bedside build: lower case,
-            anything else becomes an underscore. <b>Thank you</b> → <code>thank_you.wav</code>.</p>
+          <p class="why">This device has <b>${voices.length}</b> ${voices.length === 1 ? 'voice' : 'voices'} of its
+            own${voices.length ? '' : ' (so without recordings this board is silent, and the written word does all the work)'}. A recording’s file name is the word in
+            lower case. Anything that is not a letter or a number becomes an underscore. <b>Thank you</b> → <code>thank_you.wav</code>.</p>
         </details>
 
         <details class="grp adv" ${cfg.scan ? 'open' : ''}>
           <summary>Scanning<span>${cfg.scan ? `on · ${secs(cfg.stepMs)} a card` : 'off'}</span></summary>
-          ${rowToggle('scan', 'Scan the cards automatically', cfg.scan)}
+          ${rowToggle('scan', 'Scan the cards automatically (each card lights in turn; press when yours is lit)', cfg.scan)}
           ${rowRange('stepMs', 'Time on each card', cfg.stepMs, SCAN_MIN, SCAN_MAX, SCAN_STEP, secs)}
           <div class="row"><div class="lab">While scanning, show</div>
             <div class="seg">
               <button data-reveal="all" class="${cfg.reveal === 'all' ? 'on' : ''}">all the cards</button>
               <button data-reveal="one" class="${cfg.reveal === 'one' ? 'on' : ''}">one at a time</button>
             </div></div>
-          <p class="why">Fifteen seconds is the starting point because the step is set by how long
-            a <b>response</b> takes, not how long understanding takes. A rate that feels right to
-            the person setting it up is usually far too fast for the person using it.</p>
+          <p class="why">It starts at 15 seconds. The time has to fit how long a <b>response</b>
+            takes, not how long understanding takes. A speed that feels right to you is usually far
+            too fast for the person using it.</p>
         </details>
 
         <details class="grp adv" ${cfg.dwell ? 'open' : ''}>
-          <summary>Dwell — holding still is the click<span>${cfg.dwell ? `on · ${secs(cfg.dwellMs)}` : 'off'}</span></summary>
+          <summary>Choose by holding still (dwell)<span>${cfg.dwell ? `on · ${secs(cfg.dwellMs)}` : 'off'}</span></summary>
           ${rowToggle('dwell', 'Choose by holding still', cfg.dwell, 'turns tap-to-choose off')}
           ${rowRange('dwellMs', 'How long to hold', cfg.dwellMs, DWELL_MIN, DWELL_MAX, DWELL_STEP, secs)}
-          ${rowRange('dwellRadius', 'How much wander is allowed', cfg.dwellRadius, 10, 200, 5, (v) => `${v}px`)}
+          ${rowRange('dwellRadius', 'How much movement still counts as holding still', cfg.dwellRadius, 10, 200, 5, (v) => `${v}px`)}
           ${rowToggle('tapSelects', 'Touching a card still chooses it', cfg.tapSelects,
-            'leave this off while dwell is on, or the tap wins')}
+            'leave this off while choosing by holding still, or the touch chooses first')}
         </details>
 
         <details class="grp adv">
           <summary>Cursor<span>${cfg.cursorShow === 'never' ? 'off' : `${cfg.cursorSize}px`}</span></summary>
           <div class="row"><div class="lab">Show a big cursor</div>
             <div class="seg">
-              <button data-cshow="tracking" class="${cfg.cursorShow === 'tracking' ? 'on' : ''}">when tracking</button>
+              <button data-cshow="tracking" class="${cfg.cursorShow === 'tracking' ? 'on' : ''}">when not using a mouse</button>
               <button data-cshow="always" class="${cfg.cursorShow === 'always' ? 'on' : ''}">always</button>
               <button data-cshow="never" class="${cfg.cursorShow === 'never' ? 'on' : ''}">never</button>
             </div></div>
@@ -709,16 +708,16 @@ export function startTalk({
         </details>
 
         <details class="grp adv">
-          <summary>Keys, for a screen with a keyboard or a switch<span>${KEYS.length}</span></summary>
+          <summary>Keys, for a screen with a keyboard or a switch (one big button)<span>${KEYS.length}</span></summary>
           <ul class="keys">${KEYS.map(([k, what]) => `<li><kbd>${esc(k)}</kbd> ${esc(what)}</li>`).join('')}
             <li><kbd>space</kbd> choose what is lit</li><li><kbd>tab</kbd> move to the next card</li></ul>
         </details>
 
         <div class="grp">
-          <div class="row"><div class="lab">Full screen<span class="note">hides the browser bars — bigger cards</span></div>
+          <div class="row"><div class="lab">Full screen<span class="note">hides the browser bars, so the cards are bigger</span></div>
             <button class="btn" data-fs>Go full screen</button></div>
-          <p class="why">Settings and the log of what was chosen stay on <b>this device</b>. Nothing
-            here is sent anywhere, and this page never asks anyone to sign in.</p>
+          <p class="why">Settings and the list of what was chosen stay on <b>this device</b>.
+            Nothing here is sent anywhere. This page never asks anyone to sign in.</p>
         </div>
       </div>`;
     // Rebuilt into a fresh element every render (innerHTML above), so mountThemePicker's own
@@ -785,7 +784,7 @@ export function startTalk({
   // differently. That is not something to discover in front of somebody.
   let clipReport = '';
   async function checkClips() {
-    if (!cfg.useClips || !cfg.clipBase) { clipReport = 'clips are off'; renderSheet(); return; }
+    if (!cfg.useClips || !cfg.clipBase) { clipReport = 'recordings are off'; renderSheet(); return; }
     const words = (inst.impl.__probe().words || []).map((w) => String(w).trim()).filter(Boolean);
     clipReport = 'checking…'; renderSheet();
     const missing = [];
@@ -798,7 +797,7 @@ export function startTalk({
       if (!ok) missing.push(w);
     }
     clipReport = missing.length
-      ? `${words.length - missing.length} of ${words.length} — missing: ${missing.join(', ')}`
+      ? `${words.length - missing.length} of ${words.length} have a recording. Missing: ${missing.join(', ')}`
       : `all ${words.length} words have a recording`;
     renderSheet();
   }

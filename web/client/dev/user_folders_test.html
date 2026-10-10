@@ -208,7 +208,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       check('a 1D cube is read', one.ok && one.lut.kind === '1d' && one.lut.size === 2);
       check('*** wrong count, junk, no size: a plain reason, never a throw ***',
         /expected 8 colours/.test(parseCube('LUT_3D_SIZE 2\n0 0 0').why) && /not three numbers/.test(parseCube('LUT_1D_SIZE 2\n0 0\n1 1 1').why)
-          && /no LUT_3D_SIZE/.test(parseCube('0 0 0').why) && /empty/.test(parseCube('').why) && !parseCube(null).ok);
+          && /no size line, LUT_3D_SIZE/.test(parseCube('0 0 0').why) /* site text rewrite 2026-10-09 */ && /empty/.test(parseCube('').why) && !parseCube(null).ok);
       check('DOMAIN lines are read', parseCube('DOMAIN_MIN 0 0 0\nDOMAIN_MAX 2 2 2\nLUT_1D_SIZE 2\n0 0 0\n1 1 1').lut.max[0] === 2);
     }
 
@@ -996,16 +996,16 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const text = () => host.textContent.replace(/\s+/g, ' ');
       const btn = (act, kind) => host.querySelector(`[data-act="${act}"]${kind ? `[data-kind="${kind}"]` : ''}`);
       check('*** before: "Set up your Nimrod folder…", saying it makes the eight with a README each, nothing to download ***',
-        /Set up your Nimrod folder…/.test(btn('pick-root')?.textContent || '') && /README\.txt/.test(text()) && /nothing to download/.test(text())
-          && /Voice model, Recordings, Artwork, Data, Board sounds inside it/.test(text()), text().slice(0, 500));
+        /Set up your Nimrod folder…/.test(btn('pick-root')?.textContent || '') && /README\.txt/.test(text()) && /do not have to get any file from the internet/.test(text()) /* site text rewrite 2026-10-09: was "nothing to download" */
+          && /folders inside it: [^.]*Voice model, Recordings, Artwork, Data, Board sounds\./.test(text()), text().slice(0, 500));   // site text rewrite 2026-10-09
       check('*** says folder access is per device and per browser: a second computer sets it up once too ***',
         /this device and this browser/.test(host.querySelector('[data-uf-per-device]')?.textContent || '') && /second computer/.test(text()));
       check('*** every kind is on the page, each with its place to save things and a Copy button ***',
         FOLDER_KINDS.every((k) => host.querySelector(`[data-uf-section="${k}"]`) && host.querySelector(`[data-uf-place="${k}"]`) && btn('copy', k)), text().slice(0, 200));
       check('*** Pictures, Music, Videos say nothing is copied, and offer to point at the folder they are already in ***',
         POINTER_KINDS.every((k) => /Nothing is copied/.test(host.querySelector(`[data-uf-pointer="${k}"]`)?.textContent || ''))
-          && /Point at the folder your photos are already in/.test(btn('pick-kind', 'pictures')?.textContent || '')
-          && /Point at the folder your music is already in/.test(btn('pick-kind', 'music')?.textContent || ''), text());
+          && /Choose the folder your photos are already in/.test(btn('pick-kind', 'pictures')?.textContent || '')
+          && /Choose the folder your music is already in/.test(btn('pick-kind', 'music')?.textContent || ''), text());   // site text rewrite 2026-10-09: "Point at" now "Choose"
       btn('pick-root').click();
       await settle();
       check('*** set up: the tree made, the page says so ***', view.picks === 1 && Object.keys(rootTree).length === 11 && /each with a README\.txt/.test(text()));

@@ -42,8 +42,8 @@ export const VERB_ROWS = ['alert', 'notify', 'say', 'status'];
 const VERB_LABEL = {
   alert:  { name: 'Urgent',   hint: 'something needs attention now' },
   notify: { name: 'Worth knowing', hint: 'not urgent, but do not miss it' },
-  say:    { name: 'Read aloud', hint: 'content being spoken — a message, a caption' },
-  status: { name: 'Ambient',  hint: 'the current state of something; stays put, never interrupts' },
+  say:    { name: 'Read aloud', hint: 'words being spoken, such as a message or a caption' },
+  status: { name: 'Ambient',  hint: 'how something is right now; stays put, never interrupts' },
 };
 
 const CHANNEL_LABEL = {
@@ -84,9 +84,9 @@ export function mountOutput(root, {
     <div class="home">
       <div class="h-intro">
         <h1>Notifications</h1>
-        <p>How this screen answers. You choose what kind of message reaches which way —
-          spoken, on screen, a sound — and it follows you to every screen you own.
-          The buttons below really speak, because that is the only way to pick.</p>
+        <p>How this screen tells you things. You choose which kind of message comes which way:
+          spoken, on screen, or as a sound. Your choices follow you to every screen you own. The
+          buttons below really speak, because hearing them is the only way to pick.</p>
       </div>
       <div data-body><p class="h-loading">Loading…</p></div>
     </div>`;
@@ -165,8 +165,8 @@ export function mountOutput(root, {
       <div class="h-card">
         <div class="h-card-head"><h2>How you are told</h2>
           <span class="h-hint">shared by every screen</span></div>
-        <p class="h-hint">A kind of message can go several ways at once, and an urgent one
-          usually should — if the room is noisy, the screen still says it.</p>
+        <p class="h-hint">A kind of message can go several ways at once. An urgent one usually
+          should. If the room is noisy, the screen still says it.</p>
         <div data-grid></div>
       </div>
 

@@ -128,8 +128,8 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
     // '' ("This screen's players", set on the Players tab of the screen's menu) or the seats picked for this game; a
     // list typed into the old row reads as guests. Standard: it is the row somebody sitting down with a friend wants.
     w({ key: 'players', label: 'Players', kind: 'players', default: '', level: 'standard', max: MAX_PLAYERS,
-      note: 'Each takes a turn and gets questions at their own level. Somebody picked from this login plays as '
-        + 'themselves, at their own level; a guest is a name. Up to four.' }),
+      note: 'Each player takes a turn and gets questions at their own level. Somebody picked from this login plays as '
+        + 'themselves, at their own level. A guest is only a name. Up to 4 players.' }),
     // THE PERSON'S OWN START IN THIS GAME (openPersonLadder below; Mike, 2026-10-06: "if they change it in a game
     // mode that would more likely default to just affecting that user on that game"). Standard: it is the one a
     // caregiver setting up somebody new reaches for; "A new player starts at level" stays advanced. Their usual
@@ -138,10 +138,10 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
     // `personStartLevel`: Math passes 'advanced' (its menu is at the press budget; see math_beginner.js).
     ...(personStart ? [w({ key: GAME_START_KEY, label: 'Start this game at', kind: 'choice', default: START_USUAL,
       level: personStartLevel, options: [{ value: START_USUAL, label: 'Their usual starting level' }, ...startOptions()],
-      note: 'For the person this screen is for, in this game only, and kept with them on each of their screens. '
-        + '"Their usual starting level" is the person\'s own, set in this screen\'s settings on the People tab. '
-        + 'Changing it starts them again there; after that, their answers move them. Other people picked to play '
-        + 'start where their own settings say; guests start at "A new player starts at level".' })] : []),
+      note: 'For the person this screen is for, in this game only. It is kept with them on each of their screens. '
+        + '"Their usual starting level" is the person\'s own. It is set in this screen\'s settings, on the People tab. '
+        + 'Changing this starts them again at the new level. After that, their answers move them. Other people picked to '
+        + 'play start where their own settings say. Guests start at "A new player starts at level".' })] : []),
     w({ key: 'adapt', label: 'Questions get harder and easier by themselves', default: true, level: 'standard',
       onLabel: 'Yes, for each player', offLabel: 'No, stay at the starting level' }),
     w({ key: 'startLevel', label: 'A new player starts at level', kind: 'choice', default: 1, level: 'advanced',
@@ -171,13 +171,13 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
       options: [{ value: 'standard', label: 'Soon, then after 1, 3, 7, 14 and 30 days' },
                 { value: 'days', label: 'After 1, 3, 7, 14 and 30 days' },
                 { value: 'off', label: 'Never on purpose' }],
-      note: '"Soon" is two questions later, then five: short gaps first, longer ones as it sticks.' }),
+      note: '"Soon" is 2 questions later, then 5. Short gaps come first, then longer ones as the answer is remembered.' }),
     w({ key: 'showLevel', label: 'Show each player’s level', default: false, level: 'advanced',
       onLabel: 'Yes', offLabel: 'Names only' }),
     w({ key: 'pointsFor', label: 'Right answers earn points for', kind: 'choice', default: 'first', level: 'advanced',
       options: [{ value: 'first', label: 'The first player only' }, { value: 'all', label: 'Every player' }] }),
     ...(ai ? [
-      w({ key: 'aiWrite', label: 'Write more questions with AI', kind: 'choice', default: 'off', level: 'advanced',
+      w({ key: 'aiWrite', label: 'Write more questions with AI (artificial intelligence)', kind: 'choice', default: 'off', level: 'advanced',
         options: [{ value: 'off', label: 'Off' }, { value: 'local', label: 'With this device’s own AI' }],
         note: 'Uses the AI address set on this device (an open model such as one in Ollama). Questions are kept on this screen.' }),
       w({ key: 'aiWhenFewer', label: 'Write more when a player has fewer than', kind: 'choice', default: 6,
@@ -504,9 +504,9 @@ export function usualStartField() {
   return {
     key: 'start', label: 'Usual starting level for games', kind: 'choice', default: 'very easy', level: 'standard',
     options: startOptions(),
-    note: 'Where their question games start, in every game that has no starting level of its own for them '
-      + '("Start this game at", in each game\'s settings). Changing it starts them again there in those games; '
-      + 'after that, their answers move them, each game on its own.',
+    note: 'Where their question games start. It is used in every game that has no starting level of its own for them. A game '
+      + 'gets its own with "Start this game at", in that game\'s settings. Changing this starts them again at the new level in '
+      + 'those games. After that, their answers move them, each game on its own.',
   };
 }
 

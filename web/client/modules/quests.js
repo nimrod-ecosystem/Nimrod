@@ -237,7 +237,7 @@ const nameOf = (id, currencies = DEFAULT_CURRENCIES) =>
 export function chooseCurrency(reward, balances = {}, { currencies = DEFAULT_CURRENCIES, order = SPEND_ORDER } = {}) {
   const accepted = acceptsOf(reward, currencies);
   const cost = Number(reward && reward.cost) || 0;
-  if (!accepted.length) return { currency: null, why: 'No currency can buy this' };
+  if (!accepted.length) return { currency: null, why: 'No kind of points can buy this' };
   const ranked = [...order.filter((id) => accepted.includes(id)),
                   ...accepted.filter((id) => !order.includes(id))];
   for (const id of ranked) {
@@ -625,7 +625,7 @@ registerModule(
 
     function renderLog() {
       const evs = [...events()].reverse().slice(0, 40);
-      if (!evs.length) return `<p class="q-empty">Nothing logged yet. Finish a sprint or tap a task.</p>`;
+      if (!evs.length) return `<p class="q-empty">Nothing logged yet. Finish a sprint on the Focus timer or tap a task.</p>`;
       return `
         <table class="q-log">
           <thead><tr><th>When</th><th>What</th><th>Base</th><th>x</th><th>Points</th></tr></thead>

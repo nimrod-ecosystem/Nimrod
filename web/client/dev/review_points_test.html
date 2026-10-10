@@ -140,9 +140,10 @@ try {
       && sourcePay({ key: 'c-1', prefs: { ...P, reviewSourcePoints: 0 } }).reason === 'off');
     check('the source pays its own smaller amount, once', sourcePay({ key: 'c-1', prefs: P }).amount === 0.5
       && sourcePay({ events: [{ kind: 'points', data: { source: REVIEW_POINTS_SOURCE, tags: [sourceTag('c-1')] } }], key: 'c-1', prefs: P }).reason === 'paid');
+    // site text rewrite 2026-10-09: too-fast now says "too quick to count as a real look" (was "quicker than the wait").
     check('the words: what it earned and for whom, or why not', paidWords({ amount: 1, source: { amount: 0.5 } }, { name: 'Robin' })
       === '+1.5 points for Robin (0.5 of it for opening where it comes from).'
-      && /quicker than the wait/.test(paidWords({ amount: 0, reason: 'too-fast' })) && /all earned/.test(paidWords({ amount: 0, reason: 'cap' })));
+      && /too quick to count as a real look/.test(paidWords({ amount: 0, reason: 'too-fast' })) && /all earned/.test(paidWords({ amount: 0, reason: 'cap' })));
     check('the page\'s line says it is the same whatever the verdict', /the same whether you say it is right or wrong/.test(payLine(P, 'School points'))
       && /0\.5 more for opening where it comes from/.test(payLine(P)) && /Up to 50 a day/.test(payLine(P)) && /5 seconds/.test(payLine(P)));
     check('what the points are called follows the switches (the record is the same)', pointsName({ learningOn: true }) === 'School points'

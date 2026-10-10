@@ -66,8 +66,8 @@ export function cardHtml(o, { count = null } = {}) {
     ${count ? `<span class="count" data-count>× ${esc(count)}</span>` : ''}
     <h3>${esc(o.title || o.id)}</h3>
     <p class="size" data-size>${esc(size)}</p>
-    <p class="meta">${Number.isFinite(o.sockets) ? `${esc(o.sockets)} sockets` : ''}${o.fits_bed_256 === false ? ' · needs a printer bed over 256 mm' : ''}</p>
-    ${glb ? `<a class="btn" href="${esc(glb)}" download data-glb>Download the 3D model (GLB${kb(o.bytes_glb) ? `, ${esc(kb(o.bytes_glb))}` : ''})</a>` : ''}
+    <p class="meta">${Number.isFinite(o.sockets) ? `${esc(o.sockets)} sockets` : ''}${o.fits_bed_256 === false ? ' · needs a 3D printer bed (the plate it prints on) over 256 mm' : ''}</p>
+    ${glb ? `<a class="btn" href="${esc(glb)}" download data-glb>Save the 3D model (GLB${kb(o.bytes_glb) ? `, ${esc(kb(o.bytes_glb))}` : ''})</a>` : ''}
   </article>`;
 }
 
@@ -136,7 +136,7 @@ export function mountBricksPage(doc = document, { search = (doc.defaultView || w
         <div class="build-text">
           <p class="meta">${asm.bbox_mm ? esc(`${(asm.bbox_mm.max[0] - asm.bbox_mm.min[0])} × ${(asm.bbox_mm.max[1] - asm.bbox_mm.min[1])} × ${(asm.bbox_mm.max[2] - asm.bbox_mm.min[2])} mm`) : ''}</p>
           <p class="actions">${merged ? `<a class="btn" href="${esc(merged)}" download data-merged>The whole piece as one 3D model (GLB)</a>` : ''}
-            <a class="btn" href="${esc(u.assembly)}" data-assembly>Its parts list (JSON)</a>
+            <a class="btn" href="${esc(u.assembly)}" data-assembly>Its parts list (JSON, a kind of text file)</a>
             <a class="btn" href="/bricks.html" data-all>Every brick</a></p>
         </div>`;
       head.hidden = false;

@@ -282,12 +282,12 @@ const SETTINGS = [
   { key: 'shape', label: 'Shown as', kind: 'choice', default: OBJECT_DEFAULTS.shape, level: 'essential',
     options: SHAPES.map((v) => ({ value: v, label: SHAPE_WORDS[v] })) },
   { key: 'what', label: 'Which plays', kind: 'choice', default: OBJECT_DEFAULTS.what, level: 'standard',
-    note: 'Spotify plays are left out: Spotify’s developer rules say an app should not make listening statistics from them.',
+    note: 'Spotify plays are left out. Spotify’s developer rules say an app should not make listening statistics from them.',
     options: WHAT_CHOICES.map((v) => ({ value: v, label: v === 'all' ? 'Everything played on this screen' : sourceWord(v) })) },
   { key: 'count', label: 'Count each', kind: 'choice', default: OBJECT_DEFAULTS.count, level: 'standard',
     options: [{ value: 'item', label: 'Song, video or photo' }, { value: 'source', label: 'Kind (YouTube, photos, music …)' },
       { value: 'by', label: 'Artist or channel (where one was kept)' }] },
-  { key: 'win', label: 'Over', kind: 'choice', default: OBJECT_DEFAULTS.win, level: 'standard',
+  { key: 'win', label: 'Over what time', kind: 'choice', default: OBJECT_DEFAULTS.win, level: 'standard',
     options: WINDOWS.map((v) => ({ value: v, label: v === 'all' ? 'All time' : WINDOW_WORDS[v].charAt(0).toUpperCase() + WINDOW_WORDS[v].slice(1) })) },
   { key: 'top', label: 'How many to show', kind: 'choice', default: OBJECT_DEFAULTS.top, level: 'standard',
     options: [1, 3, 5, MAX_ITEMS].map((n) => ({ value: n, label: String(n) })) },
@@ -306,7 +306,7 @@ let uidSeq = 0;
 
 registerModule(
   { type: 'play_objects', title: 'Plays as objects', core: 'new',
-    description: 'What played on this screen as things in a room: a stack of bricks for each, a pie, or posters on the wall - read aloud on a press',
+    description: 'What played on this screen, shown as things in a room. It can be a stack of bricks for each, a pie, or posters on the wall. Press it to hear it read aloud.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
@@ -394,7 +394,7 @@ registerModule(
       sig = next;
       renders += 1;
       const shapeWords = SHAPE_SHORT[m.shape];
-      const example = plays ? '' : '<p class="po-note" data-example>An example, not real plays: on a screen, this shows that screen’s own plays.</p>';
+      const example = plays ? '' : '<p class="po-note" data-example>An example, not real plays. On a screen, this shows that screen’s own plays.</p>';
       const key = m.shape === 'stack' && (m.rows || []).length ? `<p class="po-key" data-key>${esc(brickKey(m.per))}</p>` : '';
       const more = m.more && m.shape !== 'pie' ? `<p class="po-note" data-more>${m.more} more in the list.</p>` : '';
       rootEl.innerHTML = `

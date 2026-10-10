@@ -254,7 +254,7 @@ try {
     const panel = host.querySelector('[data-subtitle-learning="fix"]');
     const input = panel?.querySelector('input');
     check('*** the Fix panel opens on that line, saying why, with the words ready to edit ***',
-      panel && input && input.value === 'pass the salt' && /can only hear its own commands/.test(panel.textContent), panel?.textContent);
+      panel && input && input.value === 'pass the salt' && /only understands commands/.test(panel.textContent), panel?.textContent);   // site text rewrite 2026-10-09: was "can only hear its own commands"
     R.done();
   }
 

@@ -34,7 +34,7 @@ const STYLE = `
 
 registerModule(
   { type: HELPER_TYPE, title: 'Nimrod, the helper', core: 'new', dependsOn: 'none', importance: 'optional',
-    description: 'Nimrod’s face and “Ask Nimrod”, small, over a page: a press opens him', settings: [] },
+    description: 'A small button with Nimrod’s face and “Ask Nimrod”, on top of a page. A press opens him.', settings: [] },
   (ctx) => {
     const { mount } = ctx;
     let root = null;

@@ -72,12 +72,12 @@ const SETTINGS = [
   { key: 'show', label: 'Show as', kind: 'choice', default: CHART_DEFAULTS.show, level: 'standard',
     options: SHOW_AS.map((v) => ({ value: v, label: SHOW_WORDS[v] })) },
   { key: 'what', label: 'Which plays', kind: 'choice', default: CHART_DEFAULTS.what, level: 'standard',
-    note: 'Spotify plays are left out: Spotify’s developer rules say an app should not make listening statistics from them.',
+    note: 'Spotify plays are left out. Spotify’s developer rules say an app should not make listening statistics from them.',
     options: WHAT_CHOICES.map((v) => ({ value: v, label: v === 'all' ? 'Everything played on this screen' : sourceWord(v) })) },
   { key: 'count', label: 'Count each', kind: 'choice', default: CHART_DEFAULTS.count, level: 'standard',
     options: [{ value: 'item', label: 'Song, video or photo' }, { value: 'source', label: 'Kind (YouTube, photos, music …)' },
       { value: 'by', label: 'Artist or channel (where one was kept)' }] },
-  { key: 'win', label: 'Over', kind: 'choice', default: CHART_DEFAULTS.win, level: 'standard',
+  { key: 'win', label: 'Over what time', kind: 'choice', default: CHART_DEFAULTS.win, level: 'standard',
     options: WINDOWS.map((v) => ({ value: v, label: v === 'all' ? 'All time' : WINDOW_WORDS[v].charAt(0).toUpperCase() + WINDOW_WORDS[v].slice(1) })) },
   { key: 'top', label: 'How many to show', kind: 'choice', default: CHART_DEFAULTS.top, level: 'standard',
     options: [3, 5, 10, 20].map((n) => ({ value: n, label: String(n) })) },
@@ -207,7 +207,7 @@ const live = [];
 
 registerModule(
   { type: 'charts', title: 'Charts', core: 'new',
-    description: 'What played on this screen, as bars, a line over time, a pie, one number or a list - read aloud on request',
+    description: 'What played on this screen, as bars, a line over time, a pie, one number or a list. It is read aloud when asked.',
     // `local`: it reads this device's own record and needs no server at all.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },
   (ctx) => {
@@ -298,7 +298,7 @@ registerModule(
       const listShown = m.kind === 'list' || (asList && m.kind !== 'number');
       const btn = (act, label, extra = '') => `<button type="button" class="pc-btn" data-walk data-act="${act}"${extra}>${esc(label)}</button>`;
       const more = m.more && (m.kind === 'bar' || m.kind === 'list') ? `<p class="pc-note">${m.more} more not shown.</p>` : '';
-      const example = plays ? '' : '<p class="pc-note" data-example>An example, not real plays: on a screen, this shows that screen’s own plays.</p>';
+      const example = plays ? '' : '<p class="pc-note" data-example>An example, not real plays. On a screen, this shows that screen’s own plays.</p>';
       rootEl.innerHTML = `
         <div class="pc" data-charts data-kind="${esc(m.kind)}" data-list="${listShown ? '1' : '0'}">
           <p class="pc-title" data-title>${esc(m.title)}</p>

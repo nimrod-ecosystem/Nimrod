@@ -47,7 +47,7 @@ export const SKY_TICK_MS = 60 * 1000;
  */
 export const SKY_FIELD = Object.freeze({
   key: SKY_FOLLOW_KEY, label: 'Wallpaper follows the sky outside', kind: 'choice', level: 'standard', default: 'both',
-  note: 'A moving scene shows the time of day, and the weather from a Weather panel on this screen.',
+  note: 'A moving scene shows the time of day, and the weather from a Weather part on this screen.',
   options: [
     { value: 'both', label: 'The weather and the time of day' },
     { value: 'weather', label: 'Just the weather' },
@@ -70,7 +70,7 @@ export const holidayKey = (id) => `holiday${id.charAt(0).toUpperCase()}${id.slic
 export const HOLIDAY_FIELDS = Object.freeze(HOLIDAY_IDS.map((id) => Object.freeze({
   key: holidayKey(id), holiday: id, label: `${HOLIDAYS[id].label} look`, kind: 'toggle', level: 'standard',
   default: !!HOLIDAYS[id].starter, onLabel: 'On', offLabel: 'Off',
-  note: 'With the seasons: shown on its dates.',
+  note: 'When the theme is With the seasons, this look shows on its dates.',
 })));
 
 /**

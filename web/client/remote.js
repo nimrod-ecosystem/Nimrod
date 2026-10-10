@@ -78,14 +78,14 @@ export function statusLine({ state, presence }) {
     return { text: 'Connected — but none of their screens is open', tone: 'bad' };
   }
   const n = presence.screens;
-  return { text: `Driving ${n} screen${n === 1 ? '' : 's'}`, tone: 'good' };
+  return { text: `Controlling ${n} screen${n === 1 ? '' : 's'}`, tone: 'good' };
 }
 
 export const DAY_CHOICES = [
   { days: 1, label: 'today' },
   { days: 7, label: 'a week' },
   { days: 30, label: 'a month' },
-  { days: 0, label: 'until I revoke it' },
+  { days: 0, label: 'as long as I allow it' },
 ];
 
 export function mountRemote(root, {
@@ -119,16 +119,17 @@ export function mountRemote(root, {
     <div class="home">
       <div class="h-intro">
         <h1>Remote</h1>
-        <p>Drive ${personName ? `<b>${esc(personName)}</b>’s` : 'their'} screen from here, while
-          they are sitting at it. Useful for showing someone what a control does, and for
-          checking a binding actually works on the screen they really use.</p>
+        <p>Control ${personName ? `<b>${esc(personName)}</b>’s` : 'their'} screen from here, while
+          they are sitting at it. It is useful for showing someone what a button or key does. It
+          also lets you check that a key or a switch (one big button) does its job on the screen
+          they really use.</p>
       </div>
       <div class="r-who" data-shared></div>
       <div class="r-status" data-status></div>
       <div class="r-pad" data-pad></div>
       <label class="r-fwd">
         <input type="checkbox" data-forward>
-        <span>Send what <b>I</b> press — my keyboard and switches drive their screen</span>
+        <span>Send what <b>I</b> press — my keyboard and switches control their screen</span>
       </label>
       <p class="h-hint" data-fwd-note></p>
       <div class="r-grants" data-note-visit></div>
@@ -145,7 +146,7 @@ export function mountRemote(root, {
     const host = el('[data-shared]');
     if (!shared.length) { host.innerHTML = ''; return; }
     const all = [{ id: personId, name: personName || 'my person', mine: true }, ...shared];
-    host.innerHTML = `<span class="r-lead">Driving for</span>
+    host.innerHTML = `<span class="r-lead">Whose screen</span>
       <div class="r-chips">${all.map((p) => `
         <button class="r-chip${p.id === target.id ? ' on' : ''}" data-target="${esc(p.id)}"
                 aria-pressed="${p.id === target.id}">${esc(p.name)}${p.mine ? '' : ' ·'}</button>`).join('')}
@@ -174,10 +175,10 @@ export function mountRemote(root, {
         <li>
           <b>${esc(g.subject_id)}</b>
           ${g.label ? `<span class="h-hint"> — ${esc(g.label)}</span>` : ''}
-          <span class="h-hint"> ${g.expires_at ? `until ${esc(String(g.expires_at).slice(0, 10))}` : 'until revoked'}</span>
-          <button class="h-btn h-danger p-small" data-revoke="${esc(g.id)}">Revoke</button>
+          <span class="h-hint"> ${g.expires_at ? `until ${esc(String(g.expires_at).slice(0, 10))}` : 'until you take it back'}</span>
+          <button class="h-btn h-danger p-small" data-revoke="${esc(g.id)}">Take it back</button>
         </li>`).join('')}</ul>`
-        : '<p class="h-hint">Nobody yet. Only you can drive these screens.</p>'}`;
+        : '<p class="h-hint">Nobody yet. Only you can control these screens.</p>'}`;
   }
 
   // WHO MAY OPEN THE INTERCOM (row 2.44). Owner-only, for the owner's own person, exactly like the
@@ -250,7 +251,7 @@ export function mountRemote(root, {
   function renderForward() {
     el('[data-forward]').checked = forwarding;
     el('[data-fwd-note]').textContent = forwarding
-      ? 'On. Every control bound on THIS machine is now also pressing their screen.'
+      ? 'On. Every key, switch or other control that has a job on THIS device is now also pressing their screen.'
       : 'Off. Nothing you press here reaches their screen unless you use the buttons above.';
   }
 

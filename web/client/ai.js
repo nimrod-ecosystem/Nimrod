@@ -154,8 +154,8 @@ const isLocalOrigin = (o) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)
 export function explainFailure({ kind, status, message, baseUrl = DEFAULT_BASE_URL, pageOrigin = '', timeoutMs } = {}) {
   const site = pageOrigin || 'this website';
   const notAllowed = `The AI program at ${baseUrl} has not been told to accept requests from ${site}. `
-    + 'Whoever looks after this computer can add this website to the AI program\'s allowed websites '
-    + '(Ollama calls this setting OLLAMA_ORIGINS) and then restart it.';
+    + 'Whoever looks after this computer can add this website to the AI program\'s allowed websites, '
+    + 'then restart it. Ollama calls this setting OLLAMA_ORIGINS.';
   switch (kind) {
     case 'forbidden':
       return `The AI program is running, but it said no. ${notAllowed}`;
@@ -168,7 +168,7 @@ export function explainFailure({ kind, status, message, baseUrl = DEFAULT_BASE_U
         + `or it is running but ${notAllowed.charAt(0).toLowerCase()}${notAllowed.slice(1)}`;
     case 'timeout': {
       const mins = Math.max(1, Math.round((Number(timeoutMs) || DEFAULT_TIMEOUT_MS) / 60000));
-      return `The model took longer than ${mins} minute${mins === 1 ? '' : 's'} and was stopped. `
+      return `The AI model took longer than ${mins} minute${mins === 1 ? '' : 's'} and was stopped. `
         + 'A smaller model, or a shorter transcript, will be quicker.';
     }
     case 'cancelled':
@@ -178,8 +178,8 @@ export function explainFailure({ kind, status, message, baseUrl = DEFAULT_BASE_U
     case 'unreadable':
       return 'The AI program answered, but its answer could not be read.';
     case 'nomodel':
-      return 'The AI program has no model that can write text installed (only models that cannot, '
-        + 'such as embedding models). Whoever looks after this computer can add one.';
+      return 'The AI program has no model installed that can write text. It only has models that '
+        + 'cannot, such as embedding models. Whoever looks after this computer can add one.';
     default:
       return 'Something went wrong talking to the AI program.';
   }

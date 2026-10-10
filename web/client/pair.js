@@ -65,15 +65,15 @@ export function claimMessage(state, { code = '', label = '', error = '' } = {}) 
     title: 'Done',
     // The person is standing next to the screen. Tell them to look at it — the screen
     // itself is the confirmation, and it is more convincing than this page is.
-    body: `${label || 'The screen'} is yours. Look up — it should be starting now. `
+    body: `${label || 'The screen'} is yours. Look at it. It should be starting now. `
       + 'It will come back on its own after a restart.',
   };
   // Each failure names what to DO, because "error" on a phone in a corridor is useless.
   const known = {
     unknown: 'No screen is showing that code. Check the characters, or wait for the screen '
       + 'to show a new one.',
-    expired: 'That code has expired. The screen shows a new one every few minutes — read '
-      + 'the current one off it and try again.',
+    expired: 'That code has expired. The screen shows a new one when the old one runs out. '
+      + 'Read the one showing now and try again.',
     claimed: 'That code has already been used. If the screen is still asking to be set up, '
       + 'wait for it to show a new code.',
     badname: 'That name has a character a screen name cannot have. Use letters, numbers, spaces '
@@ -188,7 +188,7 @@ export function mountPairClaim(root, {
       onDone?.(data);
     } catch (err) {
       state = 'failed';
-      error = 'Could not reach the server. Check your connection and try again.';
+      error = 'Could not reach the site. Check your connection and try again.';
       paint();
     }
   }

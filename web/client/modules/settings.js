@@ -58,7 +58,7 @@ export const settingsTarget = (page) => {
 
 registerModule(
   { type: 'settings', title: 'Settings', core: 'new', dependsOn: 'server',
-    description: 'the screen’s settings menu, as a panel: the same rows, tabs and levels as ⚙' },
+    description: 'the screen’s settings menu, shown as a part: the same rows, tabs and levels as ⚙' },
   (ctx) => {
     const { mount } = ctx;
     let view = null;           // the screen's menu, drawn here (kiosk.js `settingsMenuFor`), or null
@@ -87,8 +87,8 @@ registerModule(
       mount.innerHTML = `<div data-settings-root data-settings-bare style="height:100%;box-sizing:border-box;padding:16px;
         display:flex;flex-direction:column;justify-content:center;gap:8px;color:var(--text);background:var(--surface)">
         <strong>Settings</strong>
-        <p style="margin:0">This panel is the screen’s settings menu: the same rows and tabs as the ⚙ button.
-        Put it on a dashboard to use it there.</p>
+        <p style="margin:0">This part is the screen’s settings menu. It has the same rows and tabs as the ⚙
+        button. Put it on a dashboard to use it there.</p>
         <p style="margin:0;opacity:.8">${why}</p></div>`;
     }
 

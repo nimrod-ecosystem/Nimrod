@@ -182,7 +182,7 @@ try {
   {
     const t = await mountCard({ subject: { kind: 'person', id: 'p2' }, personRows: { [`p2/${HOME_STATE_KEY}`]: { homeId: 'home-p2' } } });
     await until(() => !t.doBtn('visit-home').disabled);
-    check('*** the person\'s name, "On this account", Person ***', t.q('[data-pf-name]').textContent === 'Lee' && t.q('[data-pf-line]').textContent === 'On this account');
+    check('*** the person\'s name, "On this account", Person ***', t.q('[data-pf-name]').textContent === 'Lee' && t.q('[data-pf-line]').textContent === 'On this login');   // site text rewrite 2026-10-09: account -> login
     check('*** off a screen, Call is a link to the caller page for them ***',
       t.doBtn('call').tagName === 'A' && t.doBtn('call').getAttribute('href') === '/call.html?person=p2' && t.doBtn('call').title === CALL_HELP);
     check('their Home is offered once it is found', !t.doBtn('visit-home').disabled && /Visit their Home/.test(t.doBtn('visit-home').textContent));

@@ -382,9 +382,10 @@ section('what the panel says — the distinction that matters');
   check('connected with no screen open is reported as a PROBLEM, not as success',
     lonely.tone === 'bad' && /none of their screens/i.test(lonely.text), lonely.text);
   const live = statusLine({ state: 'connected', presence: { screens: 1 } });
-  check('and driving one screen reads plainly', live.tone === 'good' && live.text === 'Driving 1 screen');
+  // site text rewrite 2026-10-09: "Driving N screens" now reads "Controlling N screens".
+  check('and driving one screen reads plainly', live.tone === 'good' && live.text === 'Controlling 1 screen');
   check('two screens pluralise',
-    statusLine({ state: 'connected', presence: { screens: 2 } }).text === 'Driving 2 screens');
+    statusLine({ state: 'connected', presence: { screens: 2 } }).text === 'Controlling 2 screens');
 }
 
 // =====================================================================

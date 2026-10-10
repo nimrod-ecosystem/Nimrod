@@ -33,10 +33,11 @@ export const VOICE_MODEL_MODULE = 'voice_model';
 export function voiceModelPointerHTML({ canSwitch = false } = {}) {
   return `<div data-vm-pointer>
     <h3 class="vr-h">Your own voice model</h3>
-    <p>It has a panel of its own now: <b>Voice model</b>, in Modules under AI. It walks the six steps one at a time
-      (record the phrases, export them, train, convert, put the folder in place, start the service), works out which
-      step you are on, and keeps its settings afterwards. Anything you already did here carries over.</p>
-    ${canSwitch ? '<div class="vr-bar"><button type="button" data-vm-switch>Switch this panel to Voice model</button></div>'
+    <p>It has a part of its own now: <b>Voice model</b>, in Modules under AI (artificial intelligence). It takes you
+      through the 6 steps one at a time. They are: record the phrases, export them, train, convert, put the folder
+      in place, start the service. It works out which step you are on. It keeps its settings afterwards. Anything
+      you already did here carries over.</p>
+    ${canSwitch ? '<div class="vr-bar"><button type="button" data-vm-switch>Show Voice model in this part</button></div>'
       : '<p class="vr-said">Add it to a dashboard from Modules (AI).</p>'}
   </div>`;
 }
@@ -62,9 +63,9 @@ const CSS = `
 
 registerModule(
   { type: 'voice_review', title: 'Voice recordings', core: 'new',
-    description: 'Play the voice recordings this screen kept, see what the recogniser wrote, and say '
-      + 'what was meant - so a recogniser can learn this voice. Recording is off unless it is turned '
-      + 'on for a person. Nothing leaves this screen unless you export it to a folder.',
+    description: 'Play the voice recordings this screen kept. See what the speech program wrote, and type what '
+      + 'was meant. That is how a speech program can learn this voice. Recording is off unless it is turned '
+      + 'on for a person. Nothing leaves this screen unless you export it (copy it to a folder).',
     dependsOn: 'none', importance: 'optional' },
   (ctx) => {
     const { mount } = ctx;

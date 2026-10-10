@@ -63,8 +63,9 @@ const sentences = (c) => describeConfig(c).map((r) => `${r.when} → ${r.then}`)
       const s = sentences(DIRECTOR_CONFIG);
       check('the starting screen is a rule somebody can read',
         s.some((x) => /when the screen starts → show Video/.test(x)), JSON.stringify(s.slice(0, 2)));
+      // site text rewrite 2026-10-09: "from any screen" now reads "whatever the screen is showing".
       check('the rotation says what it draws from and that the clock gates it',
-        s.some((x) => /when one finishes, from any screen → pick another one from Video, Personal video/.test(x)
+        s.some((x) => /when one finishes, whatever the screen is showing → pick another one from Video, Personal video/.test(x)
                    && /time of day allows/.test(x)), JSON.stringify(s));
       check('*** the daypart gate is listed too — it is the rule people most want to read, '
         + 'and it is not a transition ***',
@@ -122,8 +123,8 @@ const sentences = (c) => describeConfig(c).map((r) => `${r.when} → ${r.then}`)
 
       const s = sentences(on);
       check('and it reads as one sentence a caregiver could check',
-        s.some((x) => /when a call comes in, from any screen → show Call/.test(x)) &&
-        s.some((x) => /when the call ends, from any screen → go back to whatever was on before/.test(x)),
+        s.some((x) => /when a call comes in, whatever the screen is showing → show Call/.test(x)) &&
+        s.some((x) => /when the call ends, whatever the screen is showing → go back to whatever was on before/.test(x)),
         JSON.stringify(s.filter((x) => /call/.test(x))));
 
       // Only the TARGET side: "when the call ends" is ordinary English, but a target

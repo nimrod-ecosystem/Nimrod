@@ -38,11 +38,11 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 // Every word this page can show, in one place, so the suite can hold them to the plain-word rule.
 export const SEARCH_KEYS_WORDS = Object.freeze({
   title: 'Search for songs and videos by name',
-  intro: 'With your own YouTube or Spotify key you can search by name: when you recommend a song or video to one of '
-    + 'your people, and (YouTube) in a YouTube player’s own settings on your screens. The keys are yours: searches '
-    + 'count against your own free allowance, and nobody else’s searches use them.',
-  kept: 'Each key is sent once, kept encrypted, and never shown again: only its last four characters.',
-  once: 'Enter the YouTube key once, here or in any YouTube player’s settings: every screen and search of yours then '
+  intro: 'With your own YouTube or Spotify key, you can search by name. A key is a code the service gives you. You can search when you recommend '
+    + 'a song or video to one of your people. With a YouTube key, you can also search in a YouTube player’s own settings on your screens. The keys '
+    + 'are yours. Searches count against your own free allowance. Nobody else’s searches use your keys.',
+  kept: 'Each key is sent once and kept locked (encrypted). It is never shown again. You only see its last 4 characters.',
+  once: 'Enter the YouTube key once, here or in any YouTube player’s settings. After that, every screen and search of yours '
     + 'uses it.',
   ytHeading: 'YouTube',
   ytSteps: [
@@ -50,14 +50,14 @@ export const SEARCH_KEYS_WORDS = Object.freeze({
     'Make a project (any name will do), or pick one you already have.',
     'Open APIs & Services, then Library. Find YouTube Data API v3 and press Enable.',
     'Open APIs & Services, then Credentials. Press Create credentials, then API key, and copy the key.',
-    'Under the key’s restrictions, leave Application restrictions at None (this site asks YouTube from its own '
-      + 'server, not from your browser). Limiting the key to YouTube Data API v3 is fine, and safer.',
+    'Under the key’s restrictions, leave Application restrictions at None. This is because the site’s server '
+      + 'asks YouTube, not your browser. Limiting the key to YouTube Data API v3 is fine, and safer.',
   ],
   ytQuota: 'YouTube’s free allowance is about 100 searches a day for each key. It starts again after midnight, '
     + 'Pacific time. Checking the key uses almost none of it.',
   ytLabel: 'YouTube key',
   ytFilter: 'What YouTube may show in search',
-  ytFilterHelp: 'Strict is the starting choice: a recommendation lands on somebody else’s page.',
+  ytFilterHelp: 'Strict is the starting choice, because what you recommend lands on somebody else’s page.',
   filters: { strict: 'Strict: hide videos YouTube marks as not for everyone', moderate: 'Moderate', none: 'Off: no filter' },
   spHeading: 'Spotify',
   // (row 2.57) The Redirect URI step names this site's own Spotify return address, so the SAME Spotify app serves
@@ -65,17 +65,17 @@ export const SEARCH_KEYS_WORDS = Object.freeze({
   // in from where the page is served.
   spSteps: [
     'Go to developer.spotify.com and sign in with your Spotify login.',
-    'Press Create app. Give it any name and description. Spotify asks for a Redirect URI: put {callback} (the Music '
-      + 'player’s Connect Spotify comes back there; search does not use it). Tick Web API, agree to Spotify’s terms, '
+    'Press Create app. Give it any name and description. Spotify asks for a Redirect URI. Put {callback} there. The Music '
+      + 'player’s Connect Spotify comes back to that address. Search does not use it. Tick Web API, agree to Spotify’s terms, '
       + 'and save.',
     'Open the app’s Settings. Copy the Client ID, then press View client secret and copy that too.',
   ],
-  spNote: 'Searching Spotify this way needs nobody to sign in to Spotify here, and plays nothing: it only finds the '
-    + 'song’s link.',
+  spNote: 'Searching Spotify this way plays nothing. It only finds the song’s link. Nobody needs to sign in to Spotify '
+    + 'here for it.',
   // (row 2.61) The Client ID saved here IS the Music player's: entered once, read back by it.
-  spBoth: 'Search needs both the Client ID and the Client secret. Playing music through the Music player’s Connect '
-    + 'Spotify needs only the Client ID and your own Spotify sign-in on that device: the Music player uses the Client '
-    + 'ID saved here by itself, and the secret never goes there. To play without searching, leave the secret empty.',
+  spBoth: 'Search needs both the Client ID and the Client secret. Playing music with the Music player’s Connect '
+    + 'Spotify needs only the Client ID and your own Spotify sign-in on that device. The Music player gets the Client '
+    + 'ID saved here by itself. The secret never goes there. To play without searching, leave the secret empty.',
   spCallback: 'The Redirect URI to paste into Spotify:',
   copy: 'Copy',
   copied: 'Copied.',
@@ -99,16 +99,16 @@ export const SEARCH_KEYS_WORDS = Object.freeze({
   ownEnding: (last4) => `ending …${last4}`,
   useMain: 'Use the main key instead',
   usingMain: 'Removed. That place uses the main key again.',
-  screenOnly: 'This browser is set up as a screen and nobody has signed in on it, so the main keys can be read here '
-    + 'but not changed.',
+  screenOnly: 'This browser is set up as a screen and nobody has signed in on it. So the main keys cannot '
+    + 'be changed here.',
   signInLink: 'Sign in to change them',
-  savedSP: (last4) => `Saved: the Client ID ends …${last4}. Paste new ones to replace them.`,
-  savedSPIdOnly: (last4) => `Saved: the Client ID ends …${last4}, with no Client secret. Playing works; search needs `
+  savedSP: (last4) => `Saved. The Client ID ends …${last4}. Paste new ones to replace them.`,
+  savedSPIdOnly: (last4) => `Saved. The Client ID ends …${last4}. There is no Client secret. Playing works. Search needs `
     + 'the secret too.',
-  cannotStore: 'This server is not set up to keep keys yet (it needs its NIMROD_AI_KEY_SECRET setting), so a key cannot be saved.',
-  signIn: 'Sign in first: this page is for whoever these keys belong to.',
+  cannotStore: 'This site is not set up to keep keys yet, so a key cannot be saved. Whoever runs the site needs to set NIMROD_AI_KEY_SECRET.',
+  signIn: 'Sign in first. This page is for whoever these keys belong to.',
   unreachable: 'Could not reach this website’s server.',
-  savedMsg: 'Saved. It is kept encrypted and will not be shown again.',
+  savedMsg: 'Saved. It is kept locked (encrypted) and will not be shown again.',
   removedMsg: (name) => `The ${name} key is removed. Search will not use ${name} until a new one is saved.`,
   works: (name) => `The ${name} key works.`,
   didNotWork: 'The key did not work.',
@@ -167,7 +167,7 @@ export function mountSearchKeys(el, {
     try { res = await fetchImpl(`${SEARCH_KEYS_API}${path}`, init); } catch { return { ok: false, detail: W.unreachable }; }
     let j = null;
     try { j = await res.json(); } catch { j = null; }
-    if (!res.ok) return { ok: false, status: res.status, detail: (j && typeof j.detail === 'string' && j.detail) || `Error ${res.status}.` };
+    if (!res.ok) return { ok: false, status: res.status, detail: (j && typeof j.detail === 'string' && j.detail) || `That did not work. Error ${res.status}.` };
     return { ok: true, body: j };
   }
 

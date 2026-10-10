@@ -71,8 +71,8 @@ export const PROMPT_DESCRIBE = [
 const SETTINGS = [
   { key: 'animate', label: 'Gentle movement', default: true, level: 'standard',
     onLabel: 'Blinks and breathes', offLabel: 'Still',
-    note: 'Off keeps the face still on this panel, whatever the person chose. It is always still when this device asks for reduced motion.' },
-  { key: 'allowChange', label: 'Change the avatar from this panel', default: true, level: 'standard',
+    note: 'Off keeps the face still in this part, whatever the person chose. It is always still when this device is set to reduce motion.' },
+  { key: 'allowChange', label: 'Change the avatar from this part', default: true, level: 'standard',
     onLabel: 'Allowed', offLabel: 'Only shows it' },
   { key: 'warnBelow', label: 'Warn when a colour is this close to the background', kind: 'number',
     default: DEFAULT_WARN_BELOW, min: 1, max: 3, step: 0.1, unit: ':1', level: 'advanced',
@@ -103,8 +103,8 @@ export const MAKE_ACTIONS = Object.freeze([
 
 registerModule(
   { type: 'avatar', title: 'Avatar maker', core: 'new',
-    description: 'Make a drawn avatar for a person a part at a time, like a game character, or use a '
-      + 'picture instead. It is kept on the person and follows them to every screen. Optional.',
+    description: 'Make a drawn face for a person (an avatar), one piece at a time, like a game character. Or '
+      + 'use a picture instead. It is kept with the person and follows them to every screen. It is optional.',
     // `local`: the drawing needs nothing but this file; keeping it on the person needs the platform,
     // and without it the avatar is kept on this panel.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },
@@ -409,10 +409,10 @@ registerModule(
 
     function ownHtml() {
       return `<div class="av-own">
-        <p class="av-head">Make your own avatar with an AI</p>
+        <p class="av-head">Make your own avatar with an AI (artificial intelligence) program</p>
         <p class="av-hint"><b>Only make an avatar of yourself, or of someone who has said yes.</b> A photo sent to an
-          online image AI leaves your computer. If that is not all right, use the second prompt: it needs a
-          description, not a photo, or use an AI that runs on your own computer.</p>
+          online image AI leaves your computer. If that is not all right, use the second prompt (a prompt is the
+          words you give the AI). It needs a description, not a photo. Or use an AI that runs on your own computer.</p>
         <p class="av-head">From a photo</p>
         <pre class="av-prompt" data-prompt="photo">${esc(PROMPT_PHOTO)}</pre>
         ${btn('copy', 'Copy the photo prompt', ' data-which="photo"')}
@@ -420,11 +420,11 @@ registerModule(
         <pre class="av-prompt" data-prompt="describe">${esc(PROMPT_DESCRIBE)}</pre>
         ${btn('copy', 'Copy the description prompt', ' data-which="describe"')}
         ${msg ? `<p class="av-msg" role="status" data-avatar-msg>${esc(msg)}</p>` : ''}
-        <p class="av-hint">Save what the AI makes into one of your picture folders, then choose it with
-          <b>Use a picture instead</b>. A drawing saved as an SVG file can move: if its eyes are in a group
-          named eyes they blink, and the figure breathes gently. Anything in the file that could run, or
-          reach another website, is taken out before it is shown; a file that cannot be made safe shows as
-          a still picture. Photos and other pictures stay still.</p>
+        <p class="av-hint">Save what the AI makes into one of your picture folders. Then choose it with
+          <b>Use a picture instead</b>. A drawing saved as a picture file (SVG) can move. If its eyes are
+          in a group named eyes, they blink, and the figure breathes gently. Anything in the file that
+          could run, or reach another website, is taken out before it is shown. A file that cannot be made
+          safe shows as a still picture. Photos and other pictures stay still.</p>
         <div class="av-btns">${btn('to-picture', 'Use a picture instead')}${btn('back', draft ? 'Back to making one' : 'Back')}</div>
       </div>`;
     }

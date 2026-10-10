@@ -115,7 +115,7 @@ export function pairMessage(state, { code = '', label = '', error = '',
   if (state === 'asking') return { title: 'Setting this screen up…', body: '', code: '' };
   if (state === 'waiting') {
     return {
-      title: 'Add this screen to your account',
+      title: 'Add this screen to your login',
       // The instruction names the whole task, because somebody who has never done it before
       // needs to know where they are going before they are given a number to remember.
       //
@@ -143,7 +143,7 @@ export function pairMessage(state, { code = '', label = '', error = '',
     };
   }
   return {
-    title: 'Could not reach the server',
+    title: 'Could not reach the site',
     // NOT "an error occurred". The repair is almost always the wifi, and saying so is the
     // difference between somebody fixing it and somebody phoning for help.
     body: `${esc(error) || 'No connection.'} Check the wifi. This will keep trying.`,
@@ -239,7 +239,7 @@ export function mountScreenPairing(root, {
     const m = pairMessage(state, { code, label: claimedLabel, error: lastError, host: siteHost() });
     card.innerHTML = `<h1 class="sp-title">${esc(m.title)}</h1>`
       + (m.code ? qrHTML() : '')
-      + (m.code ? `<div class="sp-code" aria-label="pairing code">${esc(m.code)}</div>` : '')
+      + (m.code ? `<div class="sp-code" aria-label="code to set this screen up">${esc(m.code)}</div>` : '')
       + (m.body ? `<p class="sp-body">${m.body}</p>` : '');
     card.dataset.state = state;
   }
