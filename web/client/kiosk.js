@@ -248,6 +248,8 @@ import './modules/brickdrop.js';       // registers 'brickdrop' (brick games, ro
 import './modules/bricks.js';          // registers 'bricks' (bricks module, row 2.76: every Nimrod part, one module)
 import './modules/brickbuilder.js';    // registers 'brickbuilder' (brick builder, 2026-10-09: make a model from Nimrod parts)
 import './modules/buildit.js';         // registers 'buildit' (brick builder, 2026-10-09: Build it, see a model and build it)
+import './modules/stackline.js';       // registers 'stackline' (brick games, 2026-10-10: Stack to the line)
+import './modules/brickmosaic.js';     // registers 'brickmosaic' (brick games, 2026-10-10: Brick mosaic)
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
 import './modules/voice_review.js';    // registers 'voice_review' (row 2.44, the voice recordings kept here)
 import './modules/voice_model.js';     // registers 'voice_model' (2026-10-04: the voice-model steps, one at a time)

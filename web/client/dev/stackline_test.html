@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>stackline — Stack to the line: one press drops a sliding brick; build to the line — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>stackline — row 2.76 (brick games, 2026-10-10)</h1>
+<p>Chat's idea for Mike's <i>"Any other ideas for games with our bricks?"</i>: <b>stack to the line</b>. This suite checks
+the rules on their own (<code>stack_line.js</code>): the levels get harder in order, every size and speed can be set, a
+dropped brick lands on a whole cell by default so what is cut off is a whole brick, a miss costs nothing by default, and
+reaching the line starts a fresh tower. Then the panel (<code>modules/stackline.js</code>): a tower built to the line with
+<b>one switch and nothing else</b>, every other input as the same press, the theme's colours, the play state told to the
+shell, the demo that never scores, and a teardown that leaves nothing running. Time is stepped through an injected clock.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540, a quarter of a 1080p kiosk)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/stackline.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { createAudioBus } from '../audio_bus.js';
+import { createFakeAudioContext } from '../game_tones.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import { moduleVoiceTable } from '../input_speech.js';
+import { PLAY_STATE_TOPIC, START_LINES } from '../game_start.js';
+import { SCORE_TOPIC } from '../score_source.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import {
+  LEVELS, LEVEL_IDS, LIMITS, REST_MS, CUT_FALL_MS, sizesFor, newGame, deal, drop, step, height, topLayer, landingX,
+  colourOf, lineComputer,
+} from '../stack_line.js';
+import { GAME, TITLE, DEFAULTS, IDLE_MS, VOICE, statusFor } from '../modules/stackline.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+
+function manualClock() {
+  let t = 1000, cb = null, id = 0;
+  return {
+    now: () => t,
+    request(f) { cb = f; return ++id; },
+    cancel(h) { if (h === id) cb = null; },
+    pending: () => !!cb,
+    tick(ms) { t += ms; const f = cb; cb = null; if (f) f(t); },
+    run(ms, stepMs = 33) { for (let e = 0; e < ms; e += stepMs) this.tick(stepMs); },
+  };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function fakeStream() {
+  let events = [];
+  const subs = new Set();
+  const snap = () => ({ events: [...events], total: events.length });
+  return {
+    append(kind, data) { events = [...events, { id: events.length + 1, kind, data, created_at: new Date().toISOString() }];
+      for (const fn of [...subs]) fn(snap()); return Promise.resolve(); },
+    load: () => Promise.resolve(), get: snap,
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {},
+    peek: () => events,
+  };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
+                 points = fakeStream(), rand = () => 0, clock = manualClock(), started = true, extra = {} } = {}) {
+  const state = fakeState(started ? { autostart: true, ...saved } : saved);
+  const inst = mountModule(GAME, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
+    instanceId: `sl${++n}`, reducedMotion, rand, audio, clock, ...extra,
+    makeAudioContext: () => createFakeAudioContext(),
+    makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return { inst, host, bus, state, points, probe, clock, id: `sl${n}`,
+    pub: (verb) => bus.publish(`${GAME}/${verb}`),
+    // a switch's verb, the way the router sends it (actions.js MODULE_VERBS)
+    verb: (v) => bus.publish(verbTarget(GAME, v).topic),
+    say: () => host.querySelector('.sl-say')?.textContent || '' };
+}
+const flush = () => new Promise((r) => setTimeout(r, 0));
+// Wait (as a switch user does) until the sliding brick is over the top, then press. Returns the presses it took.
+function pressWhenOver(t, { press = () => t.pub('drop'), within = 0.25, guard = 400 } = {}) {
+  while (guard-- > 0) {
+    const g = t.probe().game;
+    if (g.phase === 'play' && g.piece && Math.abs(g.piece.x - topLayer(g).x) <= within) { press(); return true; }
+    t.clock.tick(40);
+  }
+  return false;
+}
+
+(async () => {
+try {
+  // =====================================================================
+  section('the levels: easy is slow and wide, and each one up is harder');
+  {
+    const L = LEVEL_IDS.map((i) => LEVELS[i]);
+    check('five levels, Very easy to Very hard', L.length === 5 && L[0].label === 'Very easy' && L[4].label === 'Very hard');
+    check('*** Very easy is gentle: 1 cell a second, a brick half the track, the line 5 high ***',
+      L[0].speed === 1 && L[0].width * 2 === L[0].track && L[0].line === 5, J(L[0]));
+    check('each level is at least as fast as the one below', L.every((l, i) => i === 0 || l.speed >= L[i - 1].speed));
+    check('...its first brick no wider', L.every((l, i) => i === 0 || l.width <= L[i - 1].width));
+    check('...and its line no lower', L.every((l, i) => i === 0 || l.line >= L[i - 1].line));
+    check('every level\'s brick fits its track', L.every((l) => l.width <= l.track));
+  }
+
+  section('*** every speed and size is a setting: the level says, a setting overrides ***');
+  {
+    check('nothing set: the level\'s own numbers', J(sizesFor(1)) === J({ track: 8, width: 4, line: 5, speed: 1 }), J(sizesFor(1)));
+    check('0 and "" mean "as the level says"', J(sizesFor(3, { speed: 0, width: '', line: 0, track: 0 })) === J(sizesFor(3)));
+    const s = sizesFor(1, { speed: 0.5, width: 6, line: 12, track: 12 });
+    check('each one set is used', s.speed === 0.5 && s.width === 6 && s.line === 12 && s.track === 12, J(s));
+    check('a width wider than the track is held to the track', sizesFor(1, { width: 8, track: 6 }).width === 6);
+    const wild = sizesFor(1, { speed: 999, width: -3, line: 1000, track: 1 });
+    check('a stored value outside the ranges is clamped, never trusted', wild.speed === LIMITS.speed[1] && wild.width === 4
+      && wild.line === LIMITS.line[1] && wild.track === LIMITS.track[0], J(wild));
+  }
+
+  section('the tower: a base, a brick that slides from side to side, and the press');
+  {
+    const g = newGame({ level: 1 });
+    check('a new game stands on one base brick, in the middle, on whole cells', g.layers.length === 1 && g.layers[0].x === 2 && g.layers[0].w === 4);
+    check('the base is the theme\'s fifth brick colour (Brick Drop\'s floor)', g.layers[0].c === 4 && colourOf(0) === 4);
+    deal(g);
+    check('the first brick comes from the left, as wide as the top, sliding right', g.piece.x === 0 && g.piece.w === 4 && g.piece.dir === 1);
+    step(g, 1000);
+    check('*** at Very easy it slides one cell a second ***', Math.abs(g.piece.x - 1) < 1e-9, String(g.piece.x));
+    step(g, 3500);
+    check('at the far side it turns round (it never leaves the track)', g.piece.dir === -1 && g.piece.x <= 4 && g.piece.x >= 0, J(g.piece));
+    step(g, 60000);
+    check('a long step still keeps it on the track', g.piece.x >= 0 && g.piece.x <= g.track - g.piece.w, String(g.piece.x));
+    const s2 = newGame({ level: 1 }); deal(s2);
+    step(s2, 600, { slide: 'steps' });
+    check('"one cell at a time": nothing moved before a whole cell\'s time', s2.piece.x === 0);
+    step(s2, 500, { slide: 'steps' });
+    check('...then one whole cell', s2.piece.x === 1);
+    const i2 = newGame({ level: 1 }); deal(i2);
+    step(i2, 5000, { idle: true });
+    check('nothing slides while nobody is playing (idle)', i2.piece.x === 0);
+  }
+
+  section('*** a dropped brick lands on a whole cell, and what hangs over is cut off as whole bricks ***');
+  {
+    const g = newGame({ level: 1 }); deal(g);
+    g.piece.x = 2.4;
+    check('within half a cell of right, it lands right', landingX(g) === 2);
+    const ev = drop(g);
+    check('*** "just right": nothing is cut, the brick is as wide as the one below ***', ev.includes('perfect') && topLayer(g).w === 4 && topLayer(g).x === 2, J(ev));
+    check('the next brick comes from the other side', g.piece.x === g.track - g.piece.w && g.piece.dir === -1);
+    g.piece.x = 3.3;    // lands on 3: one cell over the right edge
+    const ev2 = drop(g);
+    check('one cell over: one cell is cut off', ev2.includes('cut') && topLayer(g).x === 3 && topLayer(g).w === 3, J(topLayer(g)));
+    check('...and it falls away, a whole brick', g.falling.length === 1 && g.falling[0].w === 1 && g.falling[0].x === 6, J(g.falling));
+    check('the next brick is as wide as what is left', g.piece.w === 3);
+    step(g, CUT_FALL_MS + 10);
+    check('the cut piece is gone once it has fallen', g.falling.length === 0);
+    // A random game in whole cells: every brick stays a whole number of cells, on whole cells.
+    const r = newGame({ level: 1 }); deal(r);
+    let s = 7; const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+    for (let k = 0; k < 300; k++) {
+      if (r.phase === 'won') step(r, REST_MS);
+      if (r.phase !== 'play') continue;
+      r.piece.x = rnd() * (r.track - r.piece.w);
+      drop(r, { perfectGrows: k % 2 === 0 });
+    }
+    const whole = r.layers.every((l) => Number.isInteger(l.x) && Number.isInteger(l.w) && l.w >= 1);
+    check(`*** 300 random drops: every brick is a whole number of cells, on whole cells (${r.placed} placed, ${r.misses} missed) ***`, whole && r.placed > 0, J(r.layers));
+    // exact
+    const e = newGame({ level: 1 }); deal(e);
+    e.piece.x = 2.5;
+    drop(e, { cut: 'exact' });
+    check('"exactly where it is": half a cell over cuts half a cell', Math.abs(topLayer(e).w - 3.5) < 1e-9 && Math.abs(e.falling[0].w - 0.5) < 1e-9, J(topLayer(e)));
+  }
+
+  section('*** a miss costs nothing by default; a perfect drop grows back a cell ***');
+  {
+    const g = newGame({ level: 1 }); deal(g);
+    g.piece.x = 2; drop(g);                // perfect: height 1
+    g.piece.x = 0;                          // lands 0..4 on 2..6: overlap 2
+    drop(g);
+    check('a cut leaves two cells', topLayer(g).w === 2);
+    const h = height(g);
+    g.piece.x = g.track - g.piece.w;        // 6..8, over 2..4: nothing under it
+    const ev = drop(g);
+    check('*** a brick over nothing misses ***', ev[0] === 'miss' && height(g) === h, J(ev));
+    check('*** ...and the same brick comes again: nothing is lost ***', g.piece && g.piece.w === 2 && g.phase === 'play');
+    const ev2 = (g.piece.x = topLayer(g).x, drop(g));
+    check('*** a perfect drop grows back a cell (to 3) ***', ev2.includes('perfect') && ev2.includes('grow') && topLayer(g).w === 3, J(topLayer(g)));
+    g.piece.x = topLayer(g).x; drop(g); g.piece.x = topLayer(g).x; drop(g);
+    check('...never wider than the first brick', topLayer(g).w <= 4 && g.layers.every((l) => l.w <= 4));
+    const nog = newGame({ level: 1 }); deal(nog); nog.piece.x = 3; drop(nog); nog.piece.x = topLayer(nog).x; drop(nog, { perfectGrows: false });
+    check('with "grows back" off, a perfect drop stays as wide', topLayer(nog).w === 3);
+    const rs = newGame({ level: 1 }); deal(rs); rs.piece.x = 2; drop(rs); rs.piece.x = 6.4; drop(rs, { onMiss: 'restart' });
+    check('"the tower starts again": a miss puts it back to the base', height(rs) === 0 && rs.misses === 1 && rs.phase === 'play');
+  }
+
+  section('*** reaching the line: a tower built, then a fresh one by itself ***');
+  {
+    const g = newGame({ level: 1 }); deal(g);
+    let ev = [];
+    for (let k = 0; k < 5; k++) { g.piece.x = topLayer(g).x; ev = drop(g); }
+    check('five bricks at Very easy reach the line', ev.includes('line') && g.phase === 'won' && g.towers === 1, J(ev));
+    check('the words say so', statusFor(g) === 'You reached the line! A new tower is going up.');
+    step(g, REST_MS - 10);
+    check('it rests a moment', g.phase === 'won');
+    step(g, 20);
+    check('*** then a fresh tower goes up by itself, the score kept ***', g.phase === 'play' && height(g) === 0 && g.towers === 1);
+    for (let k = 0; k < 5; k++) { g.piece.x = topLayer(g).x; drop(g); }
+    step(g, REST_MS, { afterLine: 'up', sizesFor: (lv) => sizesFor(lv) });
+    check('"one level up": the next tower is Easy, with its own sizes', g.level === 2 && g.line === LEVELS[2].line && g.speed === LEVELS[2].speed);
+  }
+
+  section('the computer that plays the demo');
+  {
+    const obs = (x, top = 2, id = 1) => ({ state: { phase: 'play', piece: { x, w: 4, id }, top: { x: top, w: 4 }, height: 0, line: 5, track: 8 } });
+    const mem = {};
+    check('it does not drop far from the top', lineComputer.decide(obs(5), { rand: () => 0.5, memory: mem }) === null);
+    check('it drops close to the top', lineComputer.decide(obs(2.05), { rand: () => 0.5, memory: mem })?.act === 'drop');
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(GAME);
+    check('registered as "Stack to the line", on the new core, dependsOn local', m && m.title === TITLE && m.core === 'new' && m.dependsOn === 'local');
+    check('the words never name another game', !/tetris|stack(er)?\s*(game)?\s*by|ketchapp|lego/i.test(`${m.title} ${m.description} ${J(m.settings)}`));
+    check('the words never say "her screen" or name anybody', !/taylor|cici|her screen/i.test(`${m.description} ${J(m.settings)}`));
+    const cat = CATALOG.find((c) => c.type === GAME);
+    check('catalog: listed with the games, asks for an answer', cat && cat.group === 'practice' && cat.use === 'answer' && cat.title === TITLE, J(cat));
+    check('library: under Games', J(MODULE_CATEGORIES[GAME]) === J(['games']));
+    check('health: idle is fine', GAME in HEALTH_EXPECT && expectFor(GAME).idle === true);
+    const verbs = verbsFor(GAME);
+    check('*** one press, whatever the switch is bound to: select, next, prev, down and launch all drop ***',
+      ['select', 'next', 'prev', 'down', 'launch'].every((v) => verbTarget(GAME, v)?.topic === `${GAME}/drop`), verbs.join(','));
+    check('back and pause pause; play starts', verbTarget(GAME, 'pause')?.topic === `${GAME}/pause` && verbTarget(GAME, 'play')?.topic === `${GAME}/resume`);
+    const table = moduleVoiceTable(VOICE, { verbs });
+    check('spoken: "drop", "now", "start", "pause"', ['drop', 'now', 'start', 'pause'].every((p) => p in table), J(table));
+    check('defaults: Very easy, waits for Start, whole cells, a miss costs nothing, a tower pays 1', DEFAULTS.level === 1
+      && DEFAULTS.autostart === false && DEFAULTS.cut === 'cell' && DEFAULTS.onMiss === 'again' && DEFAULTS.linePoints === 1
+      && DEFAULTS.afterLine === 'same');
+    const sizeRows = m.settings.filter((r) => ['speed', 'width', 'line', 'track'].includes(r.key));
+    check('*** every speed and size row is there, "As the level says" by default ***', sizeRows.length === 4
+      && sizeRows.every((r) => r.default === 0 && r.options[0].value === 0 && /level says/.test(r.options[0].label)), J(sizeRows.map((r) => r.key)));
+    check('every setting row is labelled, and every choice is a short list', m.settings.every((r) => r.key && r.label)
+      && m.settings.filter((r) => r.kind === 'choice').every((r) => r.options.length >= 2 && r.options.length <= 6));
+  }
+
+  section('*** one switch builds a tower to the line: select and nothing else ***');
+  {
+    const t = mount();
+    check('it starts with a brick waiting, and nothing moves until somebody presses', t.probe().game.phase === 'play' && !t.clock.pending()
+      && t.say() === 'Press to play.', t.say());
+    t.verb('select');
+    check('the first press wakes it: the brick slides (no brick spent on a brick nobody was watching)', t.clock.pending()
+      && t.probe().game.placed === 0 && t.say() === 'Press to drop the brick.', t.say());
+    let presses = 1;
+    for (let k = 0; k < 5; k++) { if (pressWhenOver(t, { press: () => t.verb('select') })) presses++; t.clock.tick(40); }
+    const g = t.probe().game;
+    check(`*** a tower built to the line with ${presses} presses of one switch and nothing else ***`, g.towers === 1 && g.phase === 'won', J({ h: height(g), towers: g.towers, phase: g.phase }));
+    check('the words say so', t.say() === 'You reached the line! A new tower is going up.', t.say());
+    await flush();
+    const pts = t.points.peek().filter((e) => e.kind === 'points');
+    check('*** reaching the line paid 1 Play point ***', pts.length === 1 && Number(pts[0].data?.amount) === 1 && pts[0].data?.type === 'Play', J(pts.map((e) => e.data)));
+    check('the totals were kept', t.probe().stats.towers === 1 && t.state.get().stats?.towers === 1);
+    t.verb('select');
+    check('a press skips the rest: a fresh tower', t.probe().game.phase === 'play' && height(t.probe().game) === 0);
+    t.inst.destroy();
+  }
+
+  section('*** every other input is the same press: next, prev, down, launch, Enter, the Down arrow, a click, a touch, the button ***');
+  {
+    const t = mount();
+    t.verb('select');                                  // wake
+    const inputs = {
+      'a switch\'s next': () => t.bus.publish(verbTarget(GAME, 'next').topic),
+      'a switch\'s previous': () => t.bus.publish(verbTarget(GAME, 'prev').topic),
+      'down': () => t.bus.publish(verbTarget(GAME, 'down').topic),
+      'launch': () => t.bus.publish(verbTarget(GAME, 'launch').topic),
+      'Enter': () => t.host.querySelector('[data-sl-root]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })),
+      'the Down arrow': () => t.host.querySelector('[data-sl-root]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })),
+      'a click on the tower': () => t.host.querySelector('[data-static]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' })),
+      'a touch': () => t.host.querySelector('.sl-well').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })),
+      'the Drop button': () => t.host.querySelector('[data-act="drop"]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })),
+    };
+    const worked = [];
+    for (const [name, fire] of Object.entries(inputs)) {
+      const g = t.probe().game;
+      if (g.phase === 'won') { t.verb('select'); }
+      const before = t.probe().game.placed + t.probe().game.misses;
+      fire();
+      const after = t.probe().game.placed + t.probe().game.misses;
+      if (after === before + 1) worked.push(name);
+      t.clock.run(300);
+    }
+    check(`*** each one dropped a brick (${worked.length} of ${Object.keys(inputs).length}) ***`, worked.length === Object.keys(inputs).length,
+      Object.keys(inputs).filter((k) => !worked.includes(k)).join(', '));
+    check('the Drop button is shown by default', !t.host.querySelector('[data-controls]').hidden);
+    t.state.set({ button: false });
+    check('...and can be hidden', t.host.querySelector('[data-controls]').hidden);
+    t.inst.destroy();
+  }
+
+  section('the cut piece is drawn falling, then goes; reduced motion just takes it away');
+  {
+    const t = mount();
+    t.verb('select');
+    t.clock.run(500);               // 0.5 cells from the left: lands on 0, two cells over the left edge
+    t.verb('select');
+    check('a cut: a falling piece is drawn', t.host.querySelectorAll('[data-fall]').length === 1 && t.probe().game.cuts === 1);
+    check('the words say a bit was cut off', t.say() === 'A bit was cut off.', t.say());
+    t.clock.run(CUT_FALL_MS + 100);
+    check('...and it is gone once it has fallen', t.host.querySelectorAll('[data-fall]').length === 0);
+    t.inst.destroy();
+    const r = mount({ reducedMotion: true });
+    r.verb('select'); r.clock.run(500); r.verb('select');
+    check('reduced motion: nothing is drawn falling', r.probe().game.cuts === 1 && r.host.querySelectorAll('[data-fall]').length === 0);
+    r.inst.destroy();
+  }
+
+  section('*** the colours are the THEME\'s ***');
+  {
+    const host = scratch(960, 540);
+    host.style.setProperty('--accent', 'rgb(4, 5, 6)');
+    const t = mount({ host });
+    t.verb('select');
+    pressWhenOver(t);
+    const layer1 = host.querySelector('[data-layer="1"]');
+    const bg = (el) => (el ? getComputedStyle(el).backgroundColor : 'none');
+    check('the first brick on the base takes the theme\'s first brick colour', layer1?.dataset.c === '0' && bg(layer1) === 'rgb(4, 5, 6)', bg(layer1));
+    host.style.setProperty('--brick-1', 'rgb(1, 2, 3)');
+    check('*** a theme that declares its brick colours gets them (brick_colours.js: --brick-N) ***', bg(layer1) === 'rgb(1, 2, 3)', bg(layer1));
+    check('every brick is drawn as a Nimrod brick: a keyed socket per cell', getComputedStyle(layer1).backgroundImage.includes('radial-gradient')
+      && layer1.style.getPropertyValue('--nb-cells') === '4.000');
+    check('each row takes the next colour', host.querySelector('[data-piece]').dataset.c === '1');
+    check('no colour is written into the markup', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(host.querySelector('[data-sl-root]').innerHTML));
+    const line = host.querySelector('[data-line]');
+    const well = host.querySelector('.sl-well').getBoundingClientRect(), lr = line.getBoundingClientRect();
+    check(`*** the line is drawn across the tower, five bricks above the base (${Math.round(well.bottom - lr.top)} px up of ${Math.round(well.height)}) ***`,
+      Math.abs((well.bottom - lr.top) - well.height * 6 / 7) < 3 && /The line/.test(line.textContent));
+    t.state.set({ colours: 'one' });
+    t.pub('new');
+    t.verb('select'); pressWhenOver(t);
+    check('"all one colour": every brick takes the first colour', host.querySelector('[data-layer="1"]')?.dataset.c === '0' && t.probe().game.piece.c === 0);
+    t.inst.destroy();
+  }
+
+  section('settings take effect with the next tower');
+  {
+    const t = mount({ saved: { width: 6, line: 3, speed: 0.5, track: 10 } });
+    const g = t.probe().game;
+    check('a 6-wide brick, the line 3 high, on a 10-cell track, half a cell a second', g.startWidth === 6 && g.line === 3 && g.track === 10 && g.speed === 0.5, J({ w: g.startWidth, l: g.line, t: g.track, s: g.speed }));
+    t.state.set({ width: 2 });
+    check('changing one does not change the tower being built', t.probe().game.startWidth === 6);
+    t.verb('select');
+    for (let k = 0; k < 3; k++) { pressWhenOver(t); t.clock.tick(40); }
+    t.verb('select');                   // skip the rest
+    check('*** ...the next tower uses it ***', t.probe().game.startWidth === 2 && topLayer(t.probe().game).w === 2, String(t.probe().game.startWidth));
+    t.inst.destroy();
+  }
+
+  section('*** being played: told to the shell (game_start.js createPlayWatch) ***');
+  {
+    const bus = createBus();
+    const states = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+    const t = mount({ bus, started: false });
+    const lastState = () => states[states.length - 1] || {};
+    check('waiting for Start: not playing', lastState().playing === false && lastState().id === t.id, J(states));
+    t.pub('drop');
+    check('*** Start: being played ***', lastState().playing === true && t.probe().started);
+    t.pub('pause');
+    check('paused: not playing (a real pause, no rest flag)', lastState().playing === false && !lastState().rest);
+    t.pub('resume');
+    check('resumed: playing', lastState().playing === true);
+    t.clock.run(IDLE_MS + 500, 250);
+    check('*** nobody pressing for IDLE_MS: it comes to rest, says so, and nothing moves ***', lastState().playing === false && lastState().rest === true
+      && t.probe().idle && !t.clock.pending(), J(lastState()));
+    check('...and the words say press to play', t.say() === 'Press to play.', t.say());
+    t.inst.destroy();
+  }
+
+  section('*** it waits for Start; the computer plays a demo meanwhile, and the demo never scores ***');
+  {
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe(SCORE_TOPIC, (p) => scores.push(p));
+    const t = mount({ bus, started: false, rand: (() => { let s = 7; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); })() });
+    check('a Start button, and the words say the computer is playing', !!t.host.querySelector('[data-start]') && t.say() === START_LINES.demo, t.say());
+    check('the demo player is the built-in one for this kind of game', t.probe().agent === 'computer');
+    check('the Drop button waits behind Start', t.host.querySelector('[data-controls]').hidden);
+    t.clock.run(30000, 50);
+    const g = t.probe().game;
+    check(`*** half a minute later the computer has stacked bricks (${g.placed + g.towers * g.line}) ***`, g.placed >= 3, String(g.placed));
+    check('*** and nothing scored: no score published, no totals, no points ***', scores.every((s) => !s || s.score == null || s.score === 0)
+      && t.probe().stats.towers === 0 && t.points.peek().length === 0, J(scores.slice(-2)));
+    t.verb('select');
+    check('any press starts a real game, a fresh tower', t.probe().started && t.probe().game.placed === 0 && height(t.probe().game) === 0);
+    t.inst.destroy();
+    const still = mount({ started: false, reducedMotion: true });
+    check('reduced motion: no demo, the still Start screen', !still.probe().demo && !still.clock.pending() && still.say() === START_LINES.still);
+    still.inst.destroy();
+  }
+
+  section('pause, Escape, and nothing left behind');
+  {
+    const bus = createBus();
+    bus.subscribe('system/settings', (p) => { p?.claim?.(); });
+    const t = mount({ bus });
+    t.verb('select');
+    const root = t.host.querySelector('[data-sl-root]');
+    root.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape pauses and asks for the settings', t.probe().game.phase === 'paused' && t.probe().menuAsks === 1);
+    check('paused is drawn on the tower, in words', !t.host.querySelector('[data-paused]').hidden && t.say() === 'Paused. Press to go on.');
+    const x = t.probe().game.piece.x;
+    t.clock.run(2000);
+    check('nothing slides while paused', t.probe().game.piece.x === x && !t.clock.pending());
+    t.verb('select');
+    check('a press goes on, without dropping the brick', t.probe().game.phase === 'play' && t.probe().game.placed === 0);
+    t.inst.destroy();
+    check('*** after destroy, no frame is asked for ***', !t.clock.pending());
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const live = document.getElementById('host');
+const liveBus = createBus();
+const show = mountModule(GAME, { mount: live, bus: liveBus, state: fakeState({ autostart: true, level: 2 }), personId: null,
+  instanceId: 'live', rand: () => 0.5, makeAudioContext: createFakeAudioContext, clock: manualClock() });
+show.init();
+liveBus.publish(`${GAME}/drop`);
+for (let k = 0; k < 3; k++) {
+  for (let i = 0; i < 200; i++) { const g = show.impl.__probe().game; if (g.piece && Math.abs(g.piece.x - topLayer(g).x - (k === 1 ? 1 : 0)) < 0.2) break; show.impl.__step(40); }
+  liveBus.publish(`${GAME}/drop`);
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

@@ -147,6 +147,9 @@ export const SUITES = [
   // brick builder (2026-10-09): make a model from Nimrod parts (place, turn, stack, colour, undo, save, the match), and
   // Build it, the game of building a model you are shown.
   'brick_builder', 'buildit',
+  // brick games (2026-10-10): Stack to the line (one press drops a sliding brick; build to the line), and Brick mosaic
+  // (a photo built from bricks in the theme's brick colours, one brick at a time).
+  'stackline', 'brickmosaic',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>brickmosaic — Brick mosaic: a photo built from Nimrod bricks, one brick at a time — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>brickmosaic — row 2.76 (brick games, 2026-10-10)</h1>
+<p>Chat's idea for Mike's <i>"Any other ideas for games with our bricks?"</i>: <b>a photo turned into a brick mosaic,
+built a brick at a time</b>. This suite checks the arithmetic on its own (<code>brick_mosaic.js</code>): the colours, the
+nearest-colour match in Lab, fitting light and dark, runs joined into real brick lengths, and the order. Then the panel
+(<code>modules/brickmosaic.js</code>): it builds by itself with nobody pressing, a press lays a row or finishes it, a
+press-at-a-time mode, the picture from the person's own source the way Photos gets one (never asking a source on another
+computer, never guessing between several), the built-in painting otherwise, the theme's brick colours, and nothing left
+running. The real built-in picture is read once, for real.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540: the built-in picture, finished)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/brickmosaic.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import { moduleVoiceTable } from '../input_speech.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import { BRICK_COLOURS } from '../brick_colours.js';
+import {
+  ALL_BRICK_COLOURS, JOIN_MAX, parseColour, toHex, rgbToLab, paletteFrom, nearest, gridFor, cellColours, matchCells,
+  bricksFrom, layOrder, makeMosaic, restOfRow,
+} from '../brick_mosaic.js';
+import { GAME, TITLE, DEFAULTS, VOICE, SAMPLE, SAMPLE_URL, WHY, LINES, drawnPicture, themeBrickColours } from '../modules/brickmosaic.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const flush = () => new Promise((r) => setTimeout(r, 0));
+const settle = async () => { for (let i = 0; i < 30; i++) await flush(); };
+
+// A picture from numbers: `fn(x, y) -> [r, g, b]`, w x h, RGBA.
+function picture(w, h, fn) {
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const [r, g, b] = fn(x, y); const i = (y * w + x) * 4;
+    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255;
+  }
+  return { data, w, h };
+}
+function fakeTimers() {
+  let id = 0;
+  const m = new Map();
+  return {
+    set: (fn, ms) => { const h = ++id; m.set(h, { fn, ms }); return h; },
+    clear: (h) => { m.delete(h); },
+    count: (ms = null) => [...m.values()].filter((t) => ms == null || t.ms === ms).length,
+    fire(ms) { const hit = [...m.entries()].filter(([, t]) => t.ms === ms); for (const [h] of hit) m.delete(h); for (const [, t] of hit) t.fn(); return hit.length; },
+  };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  let writes = 0;
+  return {
+    get: () => v,
+    set(p) { writes++; v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    // a person changing a setting (the panel's own writes are counted apart)
+    change(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    writes: () => writes,
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function fakeStream() {
+  let events = [];
+  return {
+    append(kind, data) { events = [...events, { id: events.length + 1, kind, data }]; return Promise.resolve(); },
+    load: () => Promise.resolve(), get: () => ({ events: [...events], total: events.length }),
+    subscribe() { return () => {}; }, startPolling() {}, destroy() {}, peek: () => events,
+  };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+// The two pictures the fake source holds, and a reader that records every address it was asked for.
+const PICS = {
+  'http://localhost:8770/files/a.jpg': picture(64, 48, (x, y) => [x * 4, y * 5, 120]),
+  'http://localhost:8770/files/b.jpg': picture(48, 64, (x) => (x < 24 ? [200, 40, 40] : [40, 40, 200])),
+};
+function makeReader({ refuse = [] } = {}) {
+  const asked = [];
+  const read = async (url) => {
+    asked.push(url);
+    if (refuse.includes(url)) throw Object.assign(new Error('tainted'), { name: 'SecurityError' });
+    const same = String(url).replace(/^http:\/\/localhost:\d+\//, 'http://localhost:8770/');   // both fake sources hold a.jpg and b.jpg
+    if (PICS[same]) return PICS[same];
+    if (url === SAMPLE_URL) return picture(60, 40, (x, y) => [100 + x, 80 + y, 60]);
+    throw new Error('no such picture');
+  };
+  return { read, asked };
+}
+const AGENT = { id: 'src1', label: 'Family photos', base_url: 'http://localhost:8770', kind: 'agent' };
+const AGENT2 = { id: 'src2', label: 'Holiday', base_url: 'http://localhost:8771', kind: 'agent' };
+function lister() {
+  const calls = [];
+  const fn = async (source, album, opts) => {
+    calls.push({ id: source.id, album, opts });
+    return { album, albums: [], items: [
+      { id: 'a', path: 'a.jpg', name: 'a.jpg', kind: 'image', url: `${source.base_url}/files/a.jpg` },
+      { id: 'b', path: 'b.jpg', name: 'b.jpg', kind: 'image', url: `${source.base_url}/files/b.jpg` },
+      { id: 'v', path: 'v.mp4', name: 'v.mp4', kind: 'video', url: `${source.base_url}/files/v.mp4` },
+    ] };
+  };
+  return { fn, calls };
+}
+let n = 0;
+async function mount({ host = scratch(), bus = createBus(), saved = {}, sources = [], reader = makeReader(), list = lister(),
+                       check: chk = async () => ({ check: true, why: 'test' }), rand = () => 0, points = fakeStream(), real = false, hidden = [] } = {}) {
+  const state = fakeState(saved);
+  const timers = fakeTimers();
+  const ctx = {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null, instanceId: `bm${++n}`, rand,
+    setTimer: timers.set, clearTimer: timers.clear,
+    sources: { list: async () => sources }, resolveListing: list.fn, checkFromHere: chk,
+    hiddenPictures: { ready: Promise.resolve(), paths: () => new Set(hidden) },
+    makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+  };
+  if (!real) ctx.readPixels = reader.read;
+  const inst = mountModule(GAME, ctx);
+  inst.init();
+  await settle();
+  const probe = () => inst.impl.__probe();
+  return { inst, host, bus, state, timers, probe, reader, list, points, id: `bm${n}`,
+    verb: (v) => bus.publish(verbTarget(GAME, v).topic),
+    pace: () => timers.fire(Number(probe().cfg.paceMs)) };
+}
+
+// The built-in picture, finished, to look at. Started first and not waited for, so it is up while the checks run.
+(async () => {
+  const liveBus = createBus();
+  const show = mountModule(GAME, { mount: document.getElementById('host'), bus: liveBus,
+    state: fakeState({ pressDoes: 'finish', holdMs: 0 }), personId: null, instanceId: 'live', sources: { list: async () => [] }, rand: () => 0.5 });
+  show.init();
+  for (let i = 0; i < 100 && show.impl.__probe().phase === 'loading'; i++) await new Promise((r) => setTimeout(r, 50));
+  liveBus.publish(`${GAME}/press`);
+})();
+
+(async () => {
+try {
+  // =====================================================================
+  section('the colours: the theme\'s five, or every brick colour once');
+  {
+    const all = new Set(Object.values(BRICK_COLOURS).flatMap((s) => s.map((c) => c.hex.toLowerCase())));
+    check(`*** "every brick colour" is every theme's, each once (${ALL_BRICK_COLOURS.length}) ***`, ALL_BRICK_COLOURS.length === all.size
+      && ALL_BRICK_COLOURS.every((c) => all.has(c.hex)), String(ALL_BRICK_COLOURS.length));
+    check('colours read as written: #rgb, #rrggbb, rgb()', J(parseColour('#fff')) === J([255, 255, 255]) && J(parseColour('#105666')) === J([16, 86, 102])
+      && J(parseColour('rgb(1, 2, 3)')) === J([1, 2, 3]) && parseColour('nonsense') === null && toHex([16, 86, 102]) === '#105666');
+    const red = rgbToLab([255, 0, 0]);
+    check('Lab is right: white 100, black 0, pure red about L 53, a 80, b 67', Math.abs(rgbToLab([255, 255, 255])[0] - 100) < 0.1
+      && Math.abs(rgbToLab([0, 0, 0])[0]) < 0.1 && Math.abs(red[0] - 53.24) < 0.2 && Math.abs(red[1] - 80.09) < 0.3 && Math.abs(red[2] - 67.2) < 0.3, J(red));
+    const pal = paletteFrom(BRICK_COLOURS.default);
+    check('a palette from the theme\'s set: five colours', pal.length === 5 && pal[0].hex === '#4f5c35');
+    check('each colour is nearest itself', pal.every((p, i) => nearest(p.lab, pal) === i));
+  }
+
+  section('the grid: square cells, as many rows as the picture\'s shape asks');
+  {
+    check('a 4:3 picture at 24 across: 18 rows', J(gridFor(640, 480, 24)) === J({ cols: 24, rows: 18 }));
+    check('a very tall one stops at 64 rows, a very wide one at 4', gridFor(10, 1000, 24).rows === 64 && gridFor(1000, 10, 24).rows === 4);
+    const two = cellColours(picture(4, 2, (x) => (x < 2 ? [255, 0, 0] : [0, 0, 255])).data, 4, 2, 2, 1);
+    check('each cell is the average of its pixels', J(two) === J([[255, 0, 0], [0, 0, 255]]), J(two));
+    const half = cellColours(picture(2, 1, (x) => (x ? [0, 0, 0] : [255, 255, 255])).data, 2, 1, 1, 1);
+    check('...a half-and-half cell is the middle', Math.round(half[0][0]) === 128, J(half));
+  }
+
+  section('*** the match: nearest in Lab; light and dark fitted to the colours; mixing off by default ***');
+  {
+    const pal = paletteFrom(BRICK_COLOURS.default);
+    const cells = pal.map((p) => parseColour(p.hex));
+    check('a picture made of the palette\'s own colours comes back as them (stretch off)', J(matchCells(cells, pal, { stretch: false })) === J([0, 1, 2, 3, 4]));
+    // A dull, low-contrast picture: greys from 150 to 190.
+    const greys = Array.from({ length: 40 }, (_, i) => [150 + i, 150 + i, 150 + i]);
+    const used = (arr) => new Set(arr).size;
+    const flat = matchCells(greys, pal, { stretch: false }), fitted = matchCells(greys, pal, { stretch: true });
+    check(`*** a dull picture matched as it is is nearly one colour (${used(flat)}); fitted, it uses the range (${used(fitted)}) ***`,
+      used(flat) <= 2 && used(fitted) >= 3, `${J(flat)} / ${J(fitted)}`);
+    const bw = paletteFrom(['#000000', '#ffffff']);
+    const mid = Array.from({ length: 64 }, () => [119, 119, 119]);
+    check('a flat mid grey between black and white: one colour without mixing', used(matchCells(mid, bw, { cols: 8, stretch: false })) === 1);
+    const mixed = matchCells(mid, bw, { cols: 8, stretch: false, dither: true });
+    check('...and both, mixed, with "mix bricks for shades"', used(mixed) === 2 && mixed.filter((k) => k === 1).length > 16, J(mixed));
+  }
+
+  section('*** runs of one colour join into real Nimrod brick lengths ***');
+  {
+    const idx = [0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0];      // one row of 12
+    const b = bricksFrom(idx, 12, 1);
+    check('six of one colour: a 4-cell brick (160 mm) and a 2-cell one', b[0].len === 4 && b[1].len === 2 && b[1].c === 0, J(b));
+    check('every cell is in exactly one brick', b.reduce((s, x) => s + x.len, 0) === 12);
+    check('no brick is longer than the longest (4 cells by default)', b.every((x) => x.len >= 1 && x.len <= JOIN_MAX));
+    check('"join" off: every cell its own brick', bricksFrom(idx, 12, 1, { join: false }).every((x) => x.len === 1));
+    check('the longest can be set (8 cells, 320 mm)', bricksFrom(Array(12).fill(3), 12, 1, { joinMax: 8 })[0].len === 8);
+    const two = bricksFrom([0, 1, 1, 0, 0, 1], 3, 2);
+    check('rows are joined on their own, never across', two.every((x) => x.x + x.len <= 3) && two.filter((x) => x.y === 1).length === 2, J(two));
+    const order = layOrder(two, 'rows');
+    check('*** "like a wall": the bottom row first, left to right ***', order[0].y === 1 && order[0].x === 0 && order[order.length - 1].y === 0, J(order));
+    check('restOfRow: a press lays the rest of the row being built', restOfRow(order, 0) === 2 && restOfRow(order, 1) === 2 && restOfRow(order, 2) === 4);
+    let s = 3; const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+    const big = bricksFrom(Array.from({ length: 96 }, (_, i) => i % 5), 12, 8);
+    const sc = layOrder(big, 'scatter', rnd);
+    check('"here and there": every brick, in another order', sc.length === big.length && J(sc.map((x) => `${x.x},${x.y}`).sort()) === J(big.map((x) => `${x.x},${x.y}`).sort())
+      && J(sc) !== J(layOrder(big, 'rows')));
+    const m = makeMosaic(picture(64, 48, (x, y) => [x * 4, y * 5, 100]), BRICK_COLOURS.default.map((c) => c.hex), { cols: 16 });
+    check('the whole thing: 16 x 12, every cell covered once', m.cols === 16 && m.rows === 12 && m.bricks.reduce((t, x) => t + x.len, 0) === 192);
+    check('the drawn stand-in picture is a picture', drawnPicture().data.length === 96 * 64 * 4);
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(GAME);
+    check('registered as "Brick mosaic", on the new core', m && m.title === TITLE && m.core === 'new');
+    check('the words never say "her screen" or name anybody', !/taylor|cici|her screen/i.test(`${m.description} ${J(m.settings)}`));
+    const cat = CATALOG.find((c) => c.type === GAME);
+    check('catalog: something to look at, fine if never touched', cat && cat.group === 'comfort' && cat.use === 'touch' && cat.title === TITLE, J(cat));
+    check('library: under Games, and something to look at', J(MODULE_CATEGORIES[GAME]) === J(['games', 'visual']));
+    check('health: idle is fine', GAME in HEALTH_EXPECT && expectFor(GAME).idle === true);
+    check('a switch: select (and launch, down) presses, next is the next picture, play starts',
+      ['select', 'launch', 'down'].every((v) => verbTarget(GAME, v)?.topic === `${GAME}/press`) && verbTarget(GAME, 'next')?.topic === `${GAME}/next`
+      && verbTarget(GAME, 'play')?.topic === `${GAME}/resume`);
+    const table = moduleVoiceTable(VOICE, { verbs: verbsFor(GAME) });
+    check('spoken: "more", "next picture", "start"', ['more', 'next picture', 'start'].every((p) => p in table), J(table));
+    check('defaults: builds by itself, a brick a second, 24 across, the theme\'s colours, a minute to look, starts by itself',
+      DEFAULTS.mode === 'watch' && DEFAULTS.paceMs === 1000 && DEFAULTS.cols === 24 && DEFAULTS.palette === 'theme'
+      && DEFAULTS.holdMs === 60000 && DEFAULTS.autostart === true && DEFAULTS.stretch === true && DEFAULTS.dither === false);
+    check('every setting row is labelled, and every choice is a short list', m.settings.every((r) => r.key && r.label)
+      && m.settings.filter((r) => r.kind === 'choice').every((r) => r.options.length >= 1 && r.options.length <= 6));
+  }
+
+  section('*** no photo source: the built-in painting, read for real, built a brick at a time with nobody pressing ***');
+  {
+    const t = await mount({ real: true });
+    for (let i = 0; i < 100 && t.probe().phase === 'loading'; i++) await new Promise((r) => setTimeout(r, 50));
+    const p = t.probe();
+    check('*** the built-in picture (Church, "Twilight in the Wilderness", CC0) was read and turned into bricks ***', p.phase === 'building'
+      && p.picture?.url === SAMPLE_URL && p.picture?.why === 'none' && p.total > 50, J({ phase: p.phase, pic: p.picture, total: p.total }));
+    check(`...24 across, as many rows as the painting's shape (${p.mosaic?.rows})`, p.mosaic?.cols === 24 && p.mosaic.rows >= 12 && p.mosaic.rows <= 18);
+    check('the settings row says why it is the built-in picture', t.inst.impl.settingsChoices().sourceId.status === WHY.none);
+    check('nothing laid yet; the first brick is a second away', p.laid === 0 && t.timers.count(1000) === 1);
+    t.pace();
+    check('*** a second later: one brick ***', t.probe().laid === 1);
+    t.pace(); t.pace();
+    check('...and one more each second', t.probe().laid === 3);
+    check('nobody pressed: it is not "being played"', t.probe().playing === false);
+    check('no words on a calm picture', t.host.querySelector('[data-say]').hidden);
+    t.inst.destroy();
+    check('*** after destroy, nothing is left timed ***', t.timers.count() === 0);
+  }
+
+  section('*** a press lays the rest of the row, or finishes it; on a finished picture, the next one ***');
+  {
+    const bus = createBus();
+    const states = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (s) => states.push(s));
+    const t = await mount({ bus });
+    t.pace();
+    const row = t.probe().mosaic.bricks[0].y;
+    t.verb('select');
+    const p = t.probe();
+    check('*** one press: the whole bottom row is laid ***', p.laid > 1 && p.mosaic.bricks.slice(0, p.laid).every((b) => b.y === row)
+      && p.mosaic.bricks[p.laid].y !== row, `${p.laid}`);
+    check('a press is "being played" (told to the shell)', states.length && states[states.length - 1].playing === true);
+    check('...and it carries on by itself afterwards', t.timers.count(1000) === 1);
+    t.state.change({ pressDoes: 'finish' });
+    t.verb('select');
+    check('*** "finishes the picture": one press and it is done ***', t.probe().phase === 'done' && t.probe().laid === t.probe().total);
+    check('finished, it stays a minute', t.timers.count(60000) === 1 && t.timers.count(1000) === 0);
+    await flush();
+    check('a picture the clock helped build pays nothing', t.points.peek().length === 0);
+    const before = t.reader.asked.length;
+    t.timers.fire(60000);
+    await settle();
+    check('*** after the minute, the next picture, from the first brick ***', t.probe().phase === 'building' && t.probe().laid === 0 && t.reader.asked.length === before + 1);
+    t.verb('select');   // finish
+    t.verb('select');   // next picture
+    await settle();
+    check('a press on a finished picture starts the next', t.probe().phase === 'building' && t.probe().laid === 0);
+    t.state.change({ holdMs: 0 });
+    t.verb('select');
+    check('"until a press": a finished picture stays, and says a press brings the next', t.probe().phase === 'done' && t.timers.count() === 0
+      && t.host.querySelector('[data-say]').textContent === LINES.done);
+    const click = t.reader.asked.length;
+    t.host.querySelector('[data-canvas]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await settle();
+    check('a click or a touch is a press too', t.reader.asked.length === click + 1 && t.probe().phase === 'building');
+    t.host.querySelector('[data-bm-root]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    check('...and Enter', t.probe().phase === 'done');
+    t.inst.destroy();
+  }
+
+  section('*** a press at a time: nothing is laid without one; a picture built by presses pays 1 ***');
+  {
+    const t = await mount({ saved: { mode: 'press' } });
+    check('no clock: nothing will be laid by itself', t.timers.count(1000) === 0 && t.probe().laid === 0);
+    check('the words say what a press does', t.host.querySelector('[data-say]').textContent === LINES.press);
+    let presses = 0;
+    while (t.probe().phase === 'building' && presses < 100) { t.verb('select'); presses++; }
+    check(`*** ${presses} presses, one row each, build the whole picture (${t.probe().mosaic.rows} rows) ***`, t.probe().phase === 'done' && presses === t.probe().mosaic.rows);
+    await flush();
+    const pts = t.points.peek().filter((e) => e.kind === 'points');
+    check('*** a picture built a press at a time paid 1 Play point ***', pts.length === 1 && Number(pts[0].data?.amount) === 1 && pts[0].data?.type === 'Play', J(pts.map((e) => e.data)));
+    check('finished: no timer, it waits for a press', t.timers.count() === 0);
+    t.inst.destroy();
+  }
+
+  section('*** the picture comes from the person\'s own source, the way Photos gets one ***');
+  {
+    const t = await mount({ sources: [AGENT] });
+    const p = t.probe();
+    check('*** the screen\'s only photo source is used ***', p.picture?.sourceId === 'src1' && !p.picture.why && /^http:\/\/localhost:8770\/files\/[ab]\.jpg$/.test(p.picture.url), J(p.picture));
+    check('...a picture, never the video', t.reader.asked.every((u) => !/\.mp4$/.test(u)));
+    check('...listed with "every folder inside", as Photos does', t.list.calls[0]?.opts?.deep === true, J(t.list.calls[0]));
+    check('*** nothing goes to the server: the panel saves nothing, and reads the picture straight from the source ***',
+      t.state.writes() === 0 && t.reader.asked.length === 1 && t.reader.asked[0].startsWith(AGENT.base_url));
+    check('the settings row offers the source by name', t.inst.impl.settingsChoices().sourceId.options.some((o) => o.value === 'src1' && o.label === 'Family photos'));
+    t.verb('select'); t.state.change({ pressDoes: 'finish' }); t.verb('select'); t.verb('select');
+    await settle();
+    check('the next picture is a different one (the last ones are not picked again)', t.reader.asked.length === 2 && t.reader.asked[0] !== t.reader.asked[1], J(t.reader.asked));
+    t.inst.destroy();
+
+    const many = await mount({ sources: [AGENT, AGENT2] });
+    check('*** more than one source and none chosen: it does not guess (the built-in picture, and why) ***',
+      many.probe().picture?.why === 'many' && many.list.calls.length === 0 && many.inst.impl.settingsChoices().sourceId.status === WHY.many);
+    many.state.change({ sourceId: 'src2' });
+    await settle();
+    check('choosing one uses it', many.probe().picture?.sourceId === 'src2' && many.list.calls[0]?.id === 'src2');
+    many.state.change({ sourceId: SAMPLE });
+    await settle();
+    check('"The built-in picture" chosen: that, and no source is asked', many.probe().picture?.why === 'sample' && many.list.calls.length === 1);
+    many.inst.destroy();
+
+    const away = await mount({ sources: [AGENT], check: async () => ({ check: false, why: 'would-ask', state: 'prompt' }) });
+    check('*** a source on another computer is never asked (no box from the browser): the built-in picture ***',
+      away.probe().picture?.why === 'elsewhere' && away.list.calls.length === 0);
+    away.inst.destroy();
+
+    const gone = await mount({ sources: [AGENT], saved: { sourceId: 'nope' } });
+    check('a chosen source that is not connected any more: the built-in picture, and says so', gone.probe().picture?.why === 'gone');
+    gone.inst.destroy();
+
+    const hid = await mount({ sources: [AGENT], hidden: ['a.jpg'] });
+    hid.verb('select'); hid.state.change({ pressDoes: 'finish' }); hid.verb('select'); hid.verb('select'); await settle();
+    check('*** a picture hidden from the slideshow (Hide this picture) is never made into a mosaic ***',
+      hid.reader.asked.length === 2 && hid.reader.asked.every((u) => /b\.jpg$/.test(u)), JSON.stringify(hid.reader.asked));
+    hid.inst.destroy();
+    const allHid = await mount({ sources: [AGENT], hidden: ['a.jpg', 'b.jpg'] });
+    check('...and with every picture hidden: the built-in picture', allHid.probe().picture?.why === 'empty' && allHid.reader.asked.every((u) => u === SAMPLE_URL));
+    allHid.inst.destroy();
+
+    const shut = await mount({ sources: [AGENT], reader: makeReader({ refuse: Object.keys(PICS) }) });
+    check('*** a picture the browser will not let the page read: the built-in picture instead, never a blank ***',
+      shut.probe().picture?.why === 'unreadable' && shut.probe().picture.url === SAMPLE_URL && shut.probe().total > 0);
+    shut.inst.destroy();
+  }
+
+  section('*** the colours are the THEME\'s brick colours, read off the panel ***');
+  {
+    const host = scratch(960, 540);
+    const set = ['#112233', '#445566', '#778899', '#aabbcc', '#ddeeff'];
+    set.forEach((c, i) => host.style.setProperty(`--brick-${i + 1}`, c));
+    const t = await mount({ host });
+    check('*** the mosaic\'s colours are the five the theme put on the panel ***', J(t.probe().mosaic.palette.map((p) => p.hex)) === J(set), J(t.probe().mosaic.palette));
+    check('read where nothing is set: the default theme\'s', J(themeBrickColours(scratch())) === J(BRICK_COLOURS.default.map((c) => c.hex)));
+    t.pace(); t.pace(); t.pace();
+    host.style.setProperty('--brick-1', '#010203');
+    t.inst.impl.__recolour();
+    check('*** the theme changes: the same picture in the new colours, the bricks laid kept ***', t.probe().mosaic.palette[0].hex === '#010203' && t.probe().laid === 3);
+    // the canvas: a laid brick is drawn in its colour
+    const m = t.probe().mosaic, cv = t.host.querySelector('[data-canvas]');
+    const b = m.bricks[0];
+    const cw = cv.clientWidth, ch = cv.clientHeight;
+    const cell = Math.floor(Math.min(cw / m.cols, ch / m.rows)), ox = Math.floor((cw - cell * m.cols) / 2), oy = Math.floor((ch - cell * m.rows) / 2);
+    const k = cv.width / cw;
+    const px = cv.getContext('2d').getImageData(Math.round((ox + (b.x + 0.5) * cell) * k), Math.round((oy + (b.y + 0.25) * cell) * k), 1, 1).data;
+    const want = parseColour(m.palette[b.c].hex);
+    check(`*** the first brick is drawn on the canvas, in its colour (${toHex([px[0], px[1], px[2]])} for ${m.palette[b.c].hex}) ***`,
+      Math.abs(px[0] - want[0]) + Math.abs(px[1] - want[1]) + Math.abs(px[2] - want[2]) <= 6);
+    t.state.change({ palette: 'all' });
+    check('"every brick colour": the full set', t.probe().mosaic.palette.length === ALL_BRICK_COLOURS.length && t.probe().laid === 0);
+    t.state.change({ cols: 16 });
+    check('16 across: bigger bricks, from the first brick', t.probe().mosaic.cols === 16 && t.probe().laid === 0);
+    t.inst.destroy();
+  }
+
+  section('starting by itself, or waiting for Start');
+  {
+    const t = await mount({ saved: { autostart: false } });
+    check('"waits for Start": a Start button, and nothing laid or timed', !!t.host.querySelector('[data-start]') && t.timers.count(1000) === 0 && t.probe().laid === 0);
+    t.verb('select');
+    check('a press starts it building', t.probe().started && t.timers.count(1000) === 1 && t.probe().laid === 0);
+    t.inst.impl.onHide();
+    check('hidden: nothing timed', t.timers.count() === 0);
+    t.inst.impl.onShow();
+    check('shown again: it carries on', t.timers.count(1000) === 1);
+    t.inst.destroy();
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const s =document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
