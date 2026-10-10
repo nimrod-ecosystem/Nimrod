@@ -2537,3 +2537,10 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
 - **Voice commands must work in two steps: the wake phrase, then the command on its own.** Mike: *"I thought I said
   that Christine won't be able to say everything in one breath."* A sign or guide that says "in one breath" is wrong;
   measurements and the sign use the two-step. (2026-10-09)
+
+## Following deletions is per drive or per direction -- 2026-10-10
+
+- **Each copy direction decides on its own whether deletions follow** (row 2.77). Mike: *"I won't set it to delete the
+  photo from my desktop. That way it will delete from all the screens, but she'll still have a copy of everything."*
+  So a household can have deletions flow out to every screen while one drive (his desktop) keeps everything as the
+  archive. Copy stays the default (8697ae7); mirroring is chosen per drive or direction, never globally. (2026-10-10)
