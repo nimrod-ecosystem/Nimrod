@@ -213,6 +213,56 @@ async function loadsAsImage(url) {
       auto.source?.id === 'here' && auto.byChoice === false, auto.source?.id);
   }
 
+  // *** a typed address (note BO, 2026-10-10): CHECKED FROM HERE ONLY WHEN THAT CAN'T MAKE THE BROWSER ASK. PURE. ***
+  // Mike typed http://localhost:8770 (the bench's photo program) from his desktop; checking it there asked about the
+  // local network and then said "not reachable" about the desktop.
+  {
+    const M = await import('../media_sources.js');
+    const cases = [
+      ['http://localhost:8770', 'loopback'], ['http://127.0.0.1:8770', 'loopback'], ['http://127.9.9.9', 'loopback'],
+      ['http://[::1]:8770', 'loopback'], ['http://pi.localhost:8770', 'loopback'],
+      ['http://192.168.1.44:8770', 'private'], ['http://10.0.0.5:8770', 'private'], ['http://172.16.0.1', 'private'],
+      ['http://172.31.255.1', 'private'], ['http://169.254.1.1', 'private'], ['http://100.109.161.5:8770', 'private'],
+      ['http://pi400.local:8770', 'private'], ['http://bench:8770', 'private'], ['http://box.home.arpa', 'private'],
+      ['http://bench.tail1234.ts.net:8770', 'private'], ['http://[fd12::1]:8770', 'private'], ['http://[fe80::1]', 'private'],
+      ['https://photos.example.org', 'public'], ['http://172.32.0.1', 'public'], ['http://100.128.0.1', 'public'],
+      ['http://8.8.8.8', 'public'], ['https://[2001:db8::1]', 'public'],
+      ['localhost:8770', 'invalid'], ['', 'invalid'], [null, 'invalid'],
+    ];
+    const wrong = cases.filter(([u, want]) => M.addressScope(u) !== want).map(([u, want]) => `${u}: want ${want}, got ${M.addressScope(u)}`);
+    check(`addressScope: this computer, the home network or the internet (${cases.length} addresses)`, wrong.length === 0, wrong.join('; '));
+
+    // The permission query: never a prompt, and a name the browser doesn't know is skipped.
+    const perms = (known) => ({ query: async ({ name }) => { if (!(name in known)) throw new TypeError('unknown'); return { state: known[name] }; } });
+    check('permission: the split name is read first',
+      await M.localNetworkPermission('loopback', { permissions: perms({ 'loopback-network': 'granted', 'local-network-access': 'prompt' }) }) === 'granted');
+    check('permission: else the single name Chrome shipped first',
+      await M.localNetworkPermission('private', { permissions: perms({ 'local-network-access': 'denied' }) }) === 'denied');
+    check('permission: a browser with no such permission says "unknown"',
+      await M.localNetworkPermission('private', { permissions: perms({}) }) === 'unknown'
+        && await M.localNetworkPermission('private', { permissions: null }) === 'unknown');
+
+    const at = (pageHost, state) => ({ pageHost, permission: async () => state });
+    const r1 = await M.checkFromHere('http://localhost:8770', at('nimrodecosystem.com', 'prompt'));
+    check('*** the desktop case: a site on the internet, "localhost", the browser would ask -> NOT checked ***',
+      r1.check === false && r1.why === 'would-ask' && r1.scope === 'loopback', JSON.stringify(r1));
+    const r2 = await M.checkFromHere('http://localhost:8770', at('nimrodecosystem.com', 'unknown'));
+    check('...a browser that won\'t say counts as "would ask" (the safe way round)', r2.check === false && r2.why === 'would-ask', JSON.stringify(r2));
+    const r3 = await M.checkFromHere('http://192.168.1.44:8770', at('nimrodecosystem.com', 'denied'));
+    check('..."no" is not checked either, and is told apart', r3.check === false && r3.why === 'denied', JSON.stringify(r3));
+    const r4 = await M.checkFromHere('http://localhost:8770', at('nimrodecosystem.com', 'granted'));
+    check('...already allowed (a screen installed with the policy) -> checked', r4.check === true && r4.why === 'granted', JSON.stringify(r4));
+    const r5 = await M.checkFromHere('https://photos.example.org', at('nimrodecosystem.com', 'prompt'));
+    check('an address on the internet is checked, as before', r5.check === true && r5.why === 'public', JSON.stringify(r5));
+    for (const host of ['127.0.0.1', 'localhost', '192.168.1.10', '[::1]', '::1']) {
+      const r = await M.checkFromHere('http://localhost:8770', at(host, 'prompt'));
+      check(`a page served from this computer or network (${host}) checks a local address`, r.check === true && r.why === 'local-page', JSON.stringify(r));
+    }
+    let threw = false;
+    const r6 = await M.checkFromHere('http://localhost:8770', { pageHost: 'x.example', permission: async () => { threw = true; throw new Error('boom'); } });
+    check('a permission lookup that throws is "would ask", never an exception', threw && r6.check === false, JSON.stringify(r6));
+  }
+
   // *** folder art (2026-10-07): AN SVG FROM A FOLDER IS LISTED, AND NOTHING IN IT RUNS IN THIS SITE. ***
   // The security invariant over folder_source.js IMAGE_EXTS. A drawing that tries everything - an onload, a <script>,
   // a picture from elsewhere - is listed, shown as a picture (nothing runs, nothing loads), and even opened as a page
