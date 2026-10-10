@@ -94,6 +94,33 @@ export function symbolSet(id) { return BY_ID[id] || null; }
 // A theme added later without a line here follows to NOTHING (the board's own drawings), and
 // `dev/aac_sets_test.html` fails until somebody decides — a silent fallback would be the
 // board changing under somebody for a reason nobody wrote down.
+//
+// (2026-10-10) THE SEASONS AND HOLIDAYS. 71a3fa1 (2026-10-05, Design's seasons-holidays handoff)
+// put 13 themes into THEMES with no line here, so aac_sets_test has failed since. It was not only
+// a red test: a board following "With the seasons" swapped from the fall set to its own drawings
+// on Oct 25, when the Halloween look starts, and back on Nov 1 - the board changing under somebody
+// for a week, which is what the paragraph above exists to stop. Design drew no set for any of the
+// 13, so each gets an existing set, by one rule, BEST GUESS, NOT SIGNED OFF (Mike's list, 10-10):
+//
+//   KEEP THE SEASON'S SET THROUGH ITS HOLIDAYS WHERE IT READS, so the symbols somebody relies on
+//   do not change for a week while the picture behind them does. Where it does not read (the card
+//   flips light/dark), the nearest set that does.
+//
+//   light cards (#ffffff) - only cozy (5.50) and mono (21:1) read on them; cozy is the colour one:
+//     spring, summer, valentines, stPatricks, easter, harvest  -> cozy   (cozy's palette already
+//                                       carries valentines' #9c3357 and summer's #14636a)
+//   in fall:   halloween -> fall (6.83), diwali -> fall (6.98)  (harvest is light: cozy, above)
+//   in winter: christmas -> winter (8.14), hanukkah -> winter (7.97),
+//              newYear -> winter (9.28), lunarNewYear -> winter (9.43)
+//   in summer: july4 is a DARK card, and summer's cozy reads 1.36 on it -> night (8.73), the same
+//              family as its fireworks-at-night scene
+//   (Seasons named as north of the equator. South of it Christmas falls in summer, but its card is
+//   dark and summer's cozy reads 1.28 there, so the nearest that reads is still winter.)
+//
+// AGAINST the rule: lunarNewYear's red lanterns and newYear's fireworks would suit a warm set
+// (steampunk, 8.18 / 8.05) or night (9.52 / 9.37) better as a picture. Not taken, because a board's
+// words matter more than matching the scene; change any single line here and the suite still holds
+// every line to 3:1 on its own theme's card.
 export const THEME_SETS = Object.freeze({
   default: 'color',
   dusk: 'night',
@@ -107,6 +134,20 @@ export const THEME_SETS = Object.freeze({
   winter: 'winter',
   ocean: 'ocean',
   night: 'night',
+  // the seasons and holidays (71a3fa1), by the rule above
+  spring: 'cozy',
+  summer: 'cozy',
+  valentines: 'cozy',
+  stPatricks: 'cozy',
+  easter: 'cozy',
+  harvest: 'cozy',
+  halloween: 'fall',
+  diwali: 'fall',
+  christmas: 'winter',
+  hanukkah: 'winter',
+  newYear: 'winter',
+  lunarNewYear: 'winter',
+  july4: 'night',
 });
 
 export function setForTheme(themeId) {
