@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>storage_view — Storage on My dashboards → Devices — test</title>
+<style>
+  :root{--bg:#F7F4D5;--surface:#fff;--surface-alt:#f1eed3;--text:#0A3323;--text-soft:#3c5346;--text-muted:#5d7064;
+    --border:#e4e0c2;--accent:#839958;--accent-warm:#D3968C;--accent-warm-deep:#a85f52;--link:#105666;--radius:16px}
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* home.html's own button and message rules, so the section here looks and measures as it does there. */
+  .h-btn{padding:9px 15px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .h-quiet{font-weight:500;font-size:.82rem;padding:7px 11px;color:var(--text-soft)}
+  .h-msg{min-height:1.4em;font-size:.85rem;font-weight:600;color:var(--link);margin-bottom:10px}
+  .h-none{font-size:.8rem;color:var(--text-muted)}
+  #host{width:900px}
+  #phone{width:320px;overflow:visible}
+</style>
+</head>
+<body>
+<h1>storage_view — what the drives show</h1>
+<p>Storage roles Stage 4 (row 2.77) and row 2.73: each picture source this page knows, with its role, which computer
+it is on, free space, the last copy and how long ago, and how many pictures were left out for space - read in the
+browser from each source, never from the site. Every agent fetch here is a stub: status files present, missing, a
+source that does not answer, one on another computer (never fetched by itself), a late copy, pictures left out.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>at phone width (320px)</h2>
+<div id="phone"></div>
+
+<script type="module">
+import {
+  mountStorageView, readSource, readCopyStatus, bytesWords, whereWords, roleWords, isLate, copyLine,
+  readViewSettings, writeViewSettings, STATUS_FILES, STORAGE_VIEW_KEY, RECHECK_DEFAULT_MS, LATE_DEFAULT_MS,
+  READ_WAIT_MS, STATUS_FOLDERS_MAX, SETTINGS_WHERE, STATE_WORDS,
+} from '../storage_view.js';
+import { forgetReachedForTest, wasReached } from '../media_sources.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUR = 3600e3, DAY = 86400e3, MIN = 60e3;
+const NOW = Date.parse('2026-10-10T12:00:00Z');
+const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+// The two files the pull writes (nimrod-photo-pull.sh, 8544ea1), with the fields each one carries.
+const PULL = (over = {}) => ({ at: iso(NOW - 3 * HOUR), today: '2026-10-10', new: 12, changed: 1, removed: 0, new_today: 12,
+  heic_converter: 'heif-convert', heic_not_shown: 0, mode: 'copy', ok: true, why: '', job: 'drive', role: 'primary',
+  from_role: 'sync', free_bytes: 41.2e9, ...over });
+const FALLBACK = (over = {}) => ({ at: iso(NOW - 8 * HOUR), today: '2026-10-10', job: 'fallback', role: 'fallback',
+  from_role: 'primary', mode: 'copy', limit: 'newest:1000', new: 30, changed: 0, removed: 0, left_for_space: 312,
+  files: 1000, free_bytes: 2.3e9, keep_free_bytes: 2048 * 1048576, ok: true, why: '', ...over });
+
+// An agent in a few lines: `files` maps a path under /files/ to JSON; `albums` is its top listing. Every request is kept.
+function fakeAgents(agents) {
+  const seen = [];
+  const res = (status, body) => ({ ok: status < 400, status, json: async () => body });
+  const fetchImpl = async (url) => {
+    seen.push(String(url));
+    const u = new URL(url);
+    const a = agents[u.origin];
+    if (!a || a.down) throw new TypeError('Failed to fetch');
+    if (a.hang) return new Promise(() => {});
+    if (u.pathname === '/health') return res(200, { ok: true, agent_id: 'x' });
+    if (u.pathname === '/list') return res(200, { album: '', albums: a.albums || [], items: [] });
+    if (u.pathname.startsWith('/files/')) {
+      const rel = decodeURIComponent(u.pathname.slice(7));
+      return rel in (a.files || {}) ? res(200, a.files[rel]) : res(404, { error: 'not_found' });
+    }
+    return res(404, {});
+  };
+  return { seen, fetchImpl };
+}
+const quietCheck = async () => ({ check: true, why: 'local-page' });
+const wouldAsk = async () => ({ check: false, scope: 'private', why: 'would-ask', state: 'prompt' });
+
+(async () => {
+try {
+forgetReachedForTest();
+
+// =====================================================================
+section('the status files, read');
+{
+  const p = readCopyStatus(PULL());
+  check('job 1 (last-pull.json): role main, filled from Drive, its counts and free space',
+    p && p.job === 'drive' && p.role === 'primary' && p.fromRole === 'sync' && p.new === 12 && p.changed === 1
+    && p.freeBytes === 41.2e9 && p.ok, JSON.stringify(p));
+  const f = readCopyStatus(FALLBACK());
+  check('job 2 (last-fallback.json): role backup, from the main drive, files, left out for space, keep-free',
+    f && f.role === 'fallback' && f.fromRole === 'primary' && f.files === 1000 && f.leftForSpace === 312
+    && f.keepFreeBytes === 2048 * 1048576 && f.freeBytes === 2.3e9, JSON.stringify(f));
+  const old = readCopyStatus({ at: iso(NOW - DAY), today: '2026-10-09', new: 3, new_today: 0, ok: true, why: '' });
+  check('an older last-pull.json (before the job fields) is still job 1: main, from Drive',
+    old && old.job === 'drive' && old.role === 'primary' && old.fromRole === 'sync', JSON.stringify(old));
+  check('job 1\'s free_bytes may be null (df had no answer): no free space, not 0', readCopyStatus(PULL({ free_bytes: null })).freeBytes === null);
+  check('not a status file: null', readCopyStatus(null) === null && readCopyStatus({}) === null
+    && readCopyStatus({ at: 'soon' }) === null && readCopyStatus('x') === null);
+  check('a failed copy keeps its reason, cut to 120', (() => { const c = readCopyStatus(PULL({ ok: false, why: 'y'.repeat(300) })); return !c.ok && c.why.length === 120; })());
+  const keys = Object.keys(readCopyStatus({ ...FALLBACK(), names: ['grandma.jpg'], path: '/media/x' }));
+  check('*** only counts, times, roles and free space are kept, never a name or a path ***',
+    !keys.includes('names') && !keys.includes('path'), keys.join(','));
+  check('the files it looks for are the two the pull writes', STATUS_FILES.join() === '.nimrod-pull/last-pull.json,.nimrod-pull/last-fallback.json');
+}
+
+section('words: space, where, role');
+check('bytes in words', bytesWords(41.2e9) === '41.2 GB' && bytesWords(2.3e9) === '2.3 GB' && bytesWords(850e6) === '850 MB'
+  && bytesWords(123.4e9) === '123 GB' && bytesWords(500) === '500 bytes' && bytesWords(-1) === '' && bytesWords('x') === '',
+  [bytesWords(41.2e9), bytesWords(850e6), bytesWords(123.4e9)].join(' | '));
+check('a folder this browser opened is on this computer', /^On this computer: a folder/.test(whereWords({ kind: 'folder', id: 'f' })));
+check('pictures added here are on this device', /^On this device/.test(whereWords({ kind: 'device', id: 'd' })));
+check('localhost, read quietly: this computer, with its address',
+  whereWords({ id: 'a', base_url: 'http://localhost:8771' }, { quiet: true }) === 'On this computer (localhost:8771)');
+check('*** localhost NOT read from here: the screen\'s own computer, not "this one" ***',
+  whereWords({ id: 'a', base_url: 'http://localhost:8770' }, { quiet: false }) === 'On the computer of the screen that uses it (localhost:8770)');
+check('a home-network address: another computer, by address',
+  whereWords({ id: 'a', base_url: 'http://192.168.1.20:8770/' }) === 'On another computer, at 192.168.1.20:8770');
+check('a Tailscale address is another computer too', /^On another computer, at 100\.97\.79\.13:8770/.test(whereWords({ id: 'a', base_url: 'http://100.97.79.13:8770' })));
+check('an internet address says so', whereWords({ id: 'a', base_url: 'https://photos.example.com' }) === 'On the internet, at photos.example.com');
+check('roles: main from job 1, backup copy from job 2, and the dashboards that name it',
+  roleWords([readCopyStatus(PULL())], ['Living room', 'Bedroom']).join(' · ') === 'Main · Backup folder for “Living room”, “Bedroom”',
+  roleWords([readCopyStatus(PULL())], ['Living room', 'Bedroom']).join(' · '));
+check('a backup copy', roleWords([readCopyStatus(FALLBACK())]).join() === 'Backup copy');
+check('no status and no dashboard: no role words (none invented)', roleWords([], []).length === 0);
+
+section('the last copy, and late in plain words');
+{
+  const l = copyLine(readCopyStatus(PULL()), NOW);
+  check('job 1: "From Google Drive: last copy 3 hours ago, 12 new, 1 changed." and the free space',
+    l.text === 'From Google Drive: last copy 3 hours ago, 12 new, 1 changed. 41.2 GB free then.' && !l.late, l.text);
+  const f = copyLine(readCopyStatus(FALLBACK()), NOW);
+  check('*** job 2: pictures in it, how many left out for space, free space and what it keeps free ***',
+    f.text === 'Copy of the main drive: last copy 8 hours ago, 30 new. 1,000 pictures in it, 312 pictures left out for space. 2.3 GB free then (it keeps 2.1 GB free).',
+    f.text);
+  const none = copyLine(readCopyStatus(PULL({ new: 0, changed: 0 })), NOW);
+  check('nothing new says so', /last copy 3 hours ago, nothing new\./.test(none.text), none.text);
+  const bad = copyLine(readCopyStatus(PULL({ ok: false, why: 'the drive is not mounted' })), NOW);
+  check('a copy that did not finish says so, with its reason', /the last copy did not finish \(3 hours ago: the drive is not mounted\)/.test(bad.text), bad.text);
+  const late = copyLine(readCopyStatus(FALLBACK({ at: iso(NOW - 3 * DAY) })), NOW);
+  check('*** no copy for 3 days, on the daily default: "later than expected", flagged late ***',
+    late.late && /last copy 3 days ago/.test(late.text) && /That is later than expected\.$/.test(late.text), late.text);
+  check('36 hours (one missed night) is NOT late at the 2-day default', !isLate(readCopyStatus(FALLBACK({ at: iso(NOW - 36 * HOUR) })), NOW));
+  check('the line is LATE_DEFAULT_MS, two days', LATE_DEFAULT_MS === 2 * DAY
+    && !isLate(readCopyStatus(FALLBACK({ at: iso(NOW - 2 * DAY) })), NOW) && isLate(readCopyStatus(FALLBACK({ at: iso(NOW - 2 * DAY - MIN) })), NOW));
+  check('...and is a choice: 1 day calls 36 hours late; Never calls nothing late',
+    isLate(readCopyStatus(FALLBACK({ at: iso(NOW - 36 * HOUR) })), NOW, DAY) && !isLate(readCopyStatus(FALLBACK({ at: iso(NOW - 90 * DAY) })), NOW, 0));
+  check('a job that says it runs weekly is not late after 3 days (two periods first)',
+    !isLate(readCopyStatus(FALLBACK({ every: 'weekly', at: iso(NOW - 3 * DAY) })), NOW)
+    && isLate(readCopyStatus(FALLBACK({ every: 'weekly', at: iso(NOW - 15 * DAY) })), NOW));
+}
+
+section('the two timing choices: defaults, kept in this browser only');
+{
+  const mem = new Map();
+  const store = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)) };
+  const v = readViewSettings(store);
+  check('defaults: look again every 10 minutes, late after 2 days', v.recheckMs === 10 * MIN && v.lateAfterMs === 2 * DAY
+    && RECHECK_DEFAULT_MS === 10 * MIN, JSON.stringify(v));
+  writeViewSettings({ recheckMs: HOUR, lateAfterMs: 0 }, store);
+  check('a choice is kept and read back', JSON.stringify(readViewSettings(store)) === JSON.stringify({ recheckMs: HOUR, lateAfterMs: 0 }));
+  mem.set(STORAGE_VIEW_KEY, JSON.stringify({ recheckMs: 7, lateAfterMs: 'x' }));
+  check('a value that is not one of the choices is the default', readViewSettings(store).recheckMs === 10 * MIN && readViewSettings(store).lateAfterMs === 2 * DAY);
+  mem.set(STORAGE_VIEW_KEY, '{not json');
+  check('a broken entry is the defaults, not an error', readViewSettings(store).recheckMs === 10 * MIN);
+  const throwing = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
+  check('blocked storage (a private window) is the defaults, and writing does not throw',
+    readViewSettings(throwing).lateAfterMs === 2 * DAY && (writeViewSettings({ recheckMs: 0, lateAfterMs: 0 }, throwing), true));
+  check('the hard-coded waits are as argued', READ_WAIT_MS === 10000 && STATUS_FOLDERS_MAX === 8);
+}
+
+// =====================================================================
+section('reading one source (agents stubbed)');
+{
+  const A = 'http://localhost:8770', B = 'http://localhost:8771', C = 'http://192.168.1.20:8770', D = 'http://localhost:8772';
+  const ag = fakeAgents({
+    [A]: { albums: ['Trips', 'family_drive'], files: { 'family_drive/.nimrod-pull/last-pull.json': PULL() } },
+    [B]: { files: { '.nimrod-pull/last-fallback.json': FALLBACK() } },
+    [C]: { files: {} },
+    [D]: { down: true },
+  });
+  const opts = { fetchImpl: ag.fetchImpl, check: quietCheck };
+  const fb = await readSource({ id: 'b', base_url: B, label: 'Backup folder' }, opts);
+  check('status file at the top: read, state ok', fb.state === 'ok' && fb.copies.length === 1 && fb.copies[0].role === 'fallback', JSON.stringify(fb));
+  check('...after asking /health first', ag.seen.some((u) => u === `${B}/health`));
+  const drv = await readSource({ id: 'a', base_url: A, label: 'Photo drive' }, opts);
+  check('*** the Drive pull\'s file in a folder inside the agent\'s (photos/family_drive): found by looking in its top folders ***',
+    drv.state === 'ok' && drv.copies[0].job === 'drive', JSON.stringify(drv));
+  const empty = await readSource({ id: 'c', base_url: C, label: 'Desk' }, opts);
+  check('reached, no status files: "none", not an error', empty.state === 'none' && empty.copies.length === 0);
+  const down = await readSource({ id: 'd', base_url: D, label: 'Gone' }, opts);
+  check('*** an agent that does not answer: unreachable ***', down.state === 'unreachable');
+  check('...and nothing past its /health was asked', !ag.seen.some((u) => u.startsWith(`${D}/files`)));
+
+  const n0 = ag.seen.length;
+  const far = await readSource({ id: 'c', base_url: C, label: 'Desk' }, { fetchImpl: ag.fetchImpl, check: wouldAsk });
+  check('*** on another computer, where asking would make the browser ask: "elsewhere", and NOTHING fetched ***',
+    far.state === 'elsewhere' && ag.seen.length === n0, `${far.state}, ${ag.seen.length - n0} requests`);
+  const pressed = await readSource({ id: 'c', base_url: C, label: 'Desk' }, { fetchImpl: ag.fetchImpl, check: wouldAsk, onPurpose: true });
+  check('the press ("Check on this computer") does fetch, and is remembered as reached here',
+    pressed.state === 'none' && ag.seen.length > n0 && wasReached(C));
+  forgetReachedForTest();
+
+  const hang = fakeAgents({ [A]: { hang: true } });
+  const t0 = performance.now();
+  const h = await readSource({ id: 'a', base_url: A }, { fetchImpl: hang.fetchImpl, check: quietCheck, waitMs: 60 });
+  check('an agent that hangs is unreachable after the wait, not forever', h.state === 'unreachable' && performance.now() - t0 < 2000);
+
+  const folderOk = await readSource({ id: 'f', kind: 'folder', label: 'Pi folder' }, {
+    folderPerm: async () => 'granted', readFolderFile: async (id, rel) => (rel === STATUS_FILES[1] ? FALLBACK() : null) });
+  check('a browser folder this browser may read: its status file is read', folderOk.state === 'ok' && folderOk.copies[0].role === 'fallback');
+  const folderAsk = await readSource({ id: 'f', kind: 'folder' }, { folderPerm: async () => 'prompt', readFolderFile: async () => { throw new Error('must not read'); } });
+  check('*** a folder whose OK lapsed: "permission", and it is NOT asked for (no prompt) ***', folderAsk.state === 'permission');
+  check('a folder gone from this browser: "missing"', (await readSource({ id: 'f', kind: 'folder' }, { folderPerm: async () => 'missing' })).state === 'missing');
+  const dev = await readSource({ id: 'device-pictures', kind: 'device' }, { estimate: async () => ({ quota: 5e9, usage: 1e9 }) });
+  check('pictures added here: the free space in this browser\'s own storage', dev.freeBytes === 4e9 && dev.freeHere);
+}
+
+// =====================================================================
+section('the section: one row per source, read in the browser, nothing to the site');
+const A = 'http://localhost:8770', B = 'http://localhost:8771', C = 'http://192.168.1.20:8770', D = 'http://localhost:8772';
+const SOURCES = [
+  { id: 'src-drive', label: 'Photo drive', base_url: A, kind: 'agent' },
+  { id: 'src-fallback', label: 'Pi folder <b>', base_url: B, kind: 'agent' },
+  { id: 'src-desk', label: 'Desk pictures', base_url: C, kind: 'agent' },
+  { id: 'src-gone', label: 'Old laptop', base_url: D, kind: 'agent' },
+  { id: 'device-pictures', label: 'Added on this device', kind: 'device' },
+];
+function makeWorld(extra = {}) {
+  const ag = fakeAgents({
+    [A]: { files: { '.nimrod-pull/last-pull.json': PULL() } },
+    [B]: { files: { '.nimrod-pull/last-fallback.json': FALLBACK({ at: iso(NOW - 3 * DAY) }) } },
+    [C]: { files: { '.nimrod-pull/last-pull.json': PULL() } },
+    [D]: { down: true },
+  });
+  const timers = [];
+  const mem = new Map();
+  const store = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)) };
+  return { ag, timers, mem, store, opts: {
+    listSources: async () => SOURCES,
+    screenBackups: async () => [{ label: 'Living room', choice: 'src-fallback' }, { label: 'Hall', choice: 'any' }, { label: 'Den', choice: '' }],
+    fetchImpl: ag.fetchImpl,
+    check: async (url) => (String(url).startsWith(C) ? wouldAsk() : quietCheck()),
+    estimate: async () => ({ quota: 3.2e9, usage: 0 }),
+    now: () => NOW, storage: store,
+    setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer: () => {},
+    ...extra,
+  } };
+}
+const row = (el, id) => el.querySelector(`[data-sv-id="${id}"]`);
+{
+  const w = makeWorld();
+  const el = document.createElement('div');
+  document.getElementById('host').append(el);
+  const p = mountStorageView(el, w.opts);
+  await p.refresh();
+  check('the heading is "Storage"', el.querySelector('h2')?.textContent === 'Storage');
+  check('one row per source this page knows', el.querySelectorAll('[data-sv-id]').length === 5);
+  check('*** a name is text, never markup ***', row(el, 'src-fallback').querySelector('.sv-name').textContent === 'Pi folder <b>' && !row(el, 'src-fallback').querySelector('.sv-name b'));
+  const drive = row(el, 'src-drive');
+  check('the drive: on this computer, by address', drive.querySelector('[data-sv-where-row]').textContent === 'On this computer (localhost:8770)');
+  check('...role Main (from its status file)', drive.querySelector('[data-sv-role]')?.textContent === 'Main');
+  check('...its last copy from Google Drive, how long ago, and the free space then',
+    drive.querySelector('[data-sv-copies]')?.textContent === 'From Google Drive: last copy 3 hours ago, 12 new, 1 changed. 41.2 GB free then.',
+    drive.querySelector('[data-sv-copies]')?.textContent);
+  const fb = row(el, 'src-fallback');
+  check('*** the backup: "Backup copy · Backup folder for “Living room”" (the status file and the dashboard that names it) ***',
+    fb.querySelector('[data-sv-role]')?.textContent === 'Backup copy · Backup folder for “Living room”', fb.querySelector('[data-sv-role]')?.textContent);
+  check('...a dashboard set to "any" or not set does not claim it', !/Hall|Den/.test(el.textContent));
+  check('...pictures left out for space are said', /312 pictures left out for space/.test(fb.textContent));
+  const lateLi = fb.querySelector('[data-sv-lateline]');
+  check('*** a copy 3 days old is said plainly: "later than expected" ***', lateLi && /later than expected/.test(lateLi.textContent));
+  check('*** ...and not as an alarm: no alert role, no colour change, nothing that moves ***',
+    !el.querySelector('[role="alert"]') && getComputedStyle(lateLi).color === getComputedStyle(drive.querySelector('[data-sv-copies] li')).color
+    && getComputedStyle(lateLi).animationName === 'none');
+  const desk = row(el, 'src-desk');
+  check('*** on another computer: says so in plain words, with its address ***',
+    desk.dataset.svState === 'elsewhere' && desk.querySelector('[data-sv-where-row]').textContent === 'On another computer, at 192.168.1.20:8770'
+    && desk.querySelector('[data-sv-statetext]').textContent === STATE_WORDS.elsewhere);
+  check('*** ...and it was NEVER fetched by itself ***', !w.ag.seen.some((u) => u.startsWith(C)), w.ag.seen.filter((u) => u.startsWith(C)).join(' '));
+  check('...with a press to check on purpose', !!desk.querySelector('[data-sv-check="src-desk"]'));
+  const gone = row(el, 'src-gone');
+  check('a source that can\'t be reached says so in plain words', gone.dataset.svState === 'unreachable'
+    && /Can’t be reached right now/.test(gone.textContent));
+  const dev = row(el, 'device-pictures');
+  check('pictures added here: on this device, with the room left in this browser', /On this device/.test(dev.textContent)
+    && dev.querySelector('[data-sv-free]')?.textContent === 'About 3.2 GB free for pictures added here');
+  check('*** it says where the settings live, and that it changes nothing ***',
+    el.querySelector('[data-sv-where]').textContent === SETTINGS_WHERE && /set when the screen was installed/.test(SETTINGS_WHERE)
+    && /Nothing here changes a drive/.test(SETTINGS_WHERE));
+  check('*** NOTHING went to the site: every request was to an agent ***',
+    w.ag.seen.every((u) => /^http:\/\/(localhost:877\d|192\.168\.1\.20:8770)\//.test(u)) && w.ag.seen.length > 0, w.ag.seen.filter((u) => !/877\d/.test(u)).join(' '));
+  check('...and only GETs of /health, /list and /files', w.ag.seen.every((u) => /\/(health|list|files\/)/.test(new URL(u).pathname)));
+  check('no button or control writes anything: the only buttons are Look again and Check on this computer',
+    [...el.querySelectorAll('button')].every((b) => /^(Look again|Check on this computer)$/.test(b.textContent.trim())));
+
+  section('the words on it');
+  const words = el.querySelector('[data-storage-view]').textContent;
+  check('never names the person the project was first built for, or "her screen"', !/taylor|cici|her screen/i.test(words));
+  check('no "agent", "token", "JSON", "status file" in what a person reads', !/\b(agent|token|json|status file|role:)\b/i.test(words), words.slice(0, 200));
+
+  section('"Check on this computer" (the person asking)');
+  row(el, 'src-desk').querySelector('[data-sv-check]').focus();
+  row(el, 'src-desk').querySelector('[data-sv-check]').click();
+  await sleep(30);
+  check('*** the press fetches it on purpose and shows what it found ***',
+    w.ag.seen.some((u) => u.startsWith(C)) && row(el, 'src-desk').dataset.svState === 'ok'
+    && /From Google Drive/.test(row(el, 'src-desk').textContent));
+  check('...says so', /answered/.test(el.querySelector('[data-sv-msg]').textContent));
+  check('...the focus lands in that row, not lost', row(el, 'src-desk').contains(document.activeElement) || document.activeElement === row(el, 'src-desk'));
+  check('...it is now remembered as reached here, so the next look is quiet', wasReached(C));
+  forgetReachedForTest();
+
+  section('timing');
+  check('*** it looks again by itself, every 10 minutes by default ***', p.armed() && w.timers.at(-1).ms === 10 * MIN);
+  const sel = el.querySelector('[data-sv-recheck]');
+  sel.value = String(30 * MIN); sel.dispatchEvent(new Event('change', { bubbles: true }));
+  check('changing it re-arms at the new time, and keeps the choice in this browser',
+    w.timers.at(-1).ms === 30 * MIN && JSON.parse(w.mem.get(STORAGE_VIEW_KEY)).recheckMs === 30 * MIN);
+  const late = el.querySelector('[data-sv-late]');
+  late.value = '0'; late.dispatchEvent(new Event('change', { bubbles: true }));
+  check('"Call a copy late: Never" takes the sentence away at once', !el.querySelector('[data-sv-lateline]') && !/later than expected/.test(el.textContent));
+  late.value = String(2 * DAY); late.dispatchEvent(new Event('change', { bubbles: true }));
+  const before = w.ag.seen.length;
+  await w.timers.at(-1).fn();
+  await sleep(20);
+  check('when the time comes, it reads every source again', w.ag.seen.length > before);
+  check('both choices are in a closed "Timing" box, not in the way', el.querySelector('[data-sv-timing]') && !el.querySelector('[data-sv-timing]').open);
+  p.destroy();
+}
+{
+  const w = makeWorld({ hidden: () => true });
+  const el = document.createElement('div');
+  const p = mountStorageView(el, w.opts);
+  await p.refresh();
+  const n = w.ag.seen.length;
+  await w.timers.at(-1).fn();
+  await sleep(10);
+  check('a tab in the background skips its look (and takes the next one)', w.ag.seen.length === n && p.armed());
+  p.destroy();
+  const w2 = makeWorld();
+  w2.mem.set(STORAGE_VIEW_KEY, JSON.stringify({ recheckMs: 0, lateAfterMs: 2 * DAY }));
+  const el2 = document.createElement('div');
+  const p2 = mountStorageView(el2, w2.opts);
+  await p2.refresh();
+  check('"Only when this tab opens": no clock at all', !p2.armed() && w2.timers.length === 0);
+  p2.destroy();
+}
+{
+  const w = makeWorld({ listSources: async () => [] });
+  const el = document.createElement('div');
+  const p = mountStorageView(el, w.opts);
+  await p.refresh();
+  check('no sources: says so, and where to add one', /No picture sources yet/.test(el.textContent) && el.querySelector('a[href*="tab=media"]'));
+  p.destroy();
+  const w2 = makeWorld({ listSources: async () => { throw new Error('offline'); } });
+  const el2 = document.createElement('div');
+  const p2 = mountStorageView(el2, w2.opts);
+  await p2.refresh();
+  check('a list that could not be had says so, in plain words', /could not be listed/.test(el2.textContent));
+  p2.destroy();
+  const w3 = makeWorld({ screenBackups: async () => { throw new Error('no settings'); } });
+  const el3 = document.createElement('div');
+  const p3 = mountStorageView(el3, w3.opts);
+  await p3.refresh();
+  check('the dashboards\' settings unreadable: the rows still show, without the backup words', el3.querySelectorAll('[data-sv-id]').length === 5 && !/Backup folder for/.test(el3.textContent));
+  p3.destroy();
+}
+
+section('focus rings, and every control a real one');
+{
+  const css = document.getElementById('sv-style')?.textContent || '';
+  check('*** focus outlines go through var(--focus, currentColor), never the raw --accent ***',
+    /outline:3px solid var\(--focus, currentColor\)/.test(css) && !/outline[^;}]*var\(--accent/.test(css));
+}
+
+section('*** at phone width: no sideways scroll, 44px targets ***');
+{
+  const w = makeWorld({ listSources: async () => [...SOURCES, { id: 'long', label: 'A very long drive name that goes on and on and on for a while', base_url: 'http://192.168.100.200:8770', kind: 'agent' }] });
+  const phone = document.getElementById('phone');
+  const el = document.createElement('div');
+  phone.append(el);
+  const p = mountStorageView(el, w.opts);
+  await p.refresh();
+  el.querySelector('[data-sv-timing]').open = true;
+  await sleep(0);
+  const sec = el.querySelector('[data-storage-view]');
+  check('the section fits 320px', !(sec.scrollWidth > sec.clientWidth + 0.5) && sec.getBoundingClientRect().width <= 320.5, `${sec.scrollWidth} > ${sec.clientWidth}`);
+  const outside = [...el.querySelectorAll('*')].filter((n) => n.getBoundingClientRect().right > phone.getBoundingClientRect().right + 0.5);
+  check('nothing sticks out past the right edge', outside.length === 0, outside.map((n) => n.className || n.tagName).slice(0, 5).join(' ; '));
+  const small = [...el.querySelectorAll('button, select, summary')].filter((b) => b.getBoundingClientRect().height < 43.5);
+  check('every button, list and the Timing box is at least 44px tall', small.length === 0, small.map((b) => `${b.textContent.slice(0, 20)} ${b.getBoundingClientRect().height}`).join(' ; '));
+  // left mounted, to look at
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+  const s = document.getElementById('summary');
+  s.textContent = `${failed} FAILED / ${passed} passed`;
+  s.className = 'fail'; s.dataset.done = 'true'; s.dataset.failed = String(failed);
+}
+})();
+</script>
+</body>
+</html>

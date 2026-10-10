@@ -302,6 +302,40 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
           scrHost.remove();
         }
       }
+      // STORAGE (2026-10-10, storage roles Stage 4; storage_view.js argues it): the drives and folders pictures come
+      // from, read by this browser from each one - role, which computer, free space, the last copy. Under the screens
+      // (a drive is a device too, Mike 2026-10-09), above the bindings. Signed out as well: a folder opened in this
+      // browser and the pictures added here are this browser's, with or without an account. Read-only; nothing is
+      // sent to the site. Each dashboard's "Backup folder for this screen" is read once per look, never written.
+      let storage = null;
+      {
+        const stHost = document.createElement('div');
+        stHost.dataset.storageViewHost = '';
+        const after = host.querySelector('[data-account-screens-host]') || host.querySelector('.h-intro');
+        if (after) after.after(stHost); else host.prepend(stHost);
+        try {
+          const [{ mountStorageView }, { BACKUP_KEY }] = await Promise.all([import('./storage_view.js'), import('./media_sources.js')]);
+          const pid = personId;
+          storage = mountStorageView(stHost, {
+            user, personId: pid || null,
+            screenBackups: async () => {
+              if (!makeSettings || typeof profiles?.list !== 'function') return [];
+              const list = await profiles.list(pid);
+              const rows = await Promise.all((Array.isArray(list) ? list : []).map(async (p) => {
+                const s = makeSettings(p.id);
+                try { await s.load(); return { label: p.name, choice: String((s.get() || {})[BACKUP_KEY] || '') }; }
+                catch { return null; }
+                finally { try { s.destroy?.(); } catch { /* fine */ } }
+              }));
+              return rows.filter(Boolean);
+            },
+          });
+          storage.refresh().catch((err) => console.error('home: storage', err));   // not awaited, like the screens
+        } catch (err) {
+          console.error('home: storage', err);
+          stHost.remove();
+        }
+      }
       await i.refresh();
 
       // WHICH MICROPHONE, and what to fall back to. Above the marker panel because it needs no
@@ -331,6 +365,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         async refresh() {
           await i.refresh();
           await screens?.refresh?.();
+          await storage?.refresh?.();
           await mics?.refresh?.();
           await marker?.refresh?.();
           return this;
@@ -339,6 +374,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
           try { marker?.destroy?.(); } catch (e) { console.error(e); }
           try { mics?.destroy?.(); } catch (e) { console.error(e); }
           try { screens?.destroy?.(); } catch (e) { console.error(e); }
+          try { storage?.destroy?.(); } catch (e) { console.error(e); }
           try { i.destroy?.(); } catch (e) { console.error(e); }
         },
       };

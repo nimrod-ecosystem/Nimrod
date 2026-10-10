@@ -62,6 +62,9 @@ export const SUITES = [
   'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',
   // screens on the account (2026-10-09): My dashboards -> Devices lists the screens added with a code; rename, remove.
   'account_screens',
+  // storage (2026-10-10, storage roles Stage 4): My dashboards -> Devices -> Storage - each picture source's role, computer,
+  // free space and last copy, read in the browser from stubbed agents (present, missing, unreachable, elsewhere, late).
+  'storage_view',
   // 2026-10-02: the one picture picker (recent, add from this device, a folder's thumbnails).
   'picture_picker',
   // 2026-10-07 (row 2.64): the art kit (sizes, types, names, folders) and the checker that says what is wrong with a file.
