@@ -50,7 +50,7 @@ export const SITE_TABS = [
   { id: 'screens',  label: 'Dashboards', hint: 'make and fill your dashboards' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   // The ID STAYS `inputs` (it is in URLs, in tests and in `INPUTS_KEY` on the server). Only the word moved to Devices.
-  { id: 'inputs',   label: 'Devices',  hint: 'the switches (big buttons), controllers and keys you use — and what each one does' },
+  { id: 'inputs',   label: 'Devices',  hint: 'the switches (big buttons), controllers and keys you use, and what each one does; the screens and picture drives on this login' },
   // "Output" is engineering's word for it. What the tab configures is how the screen TELLS somebody something --
   // spoken, on screen, a sound -- which is a notification in everybody else's vocabulary. Id unchanged.
   { id: 'output',   label: 'Notifications',
