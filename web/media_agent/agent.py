@@ -31,7 +31,8 @@ DESIGN CHOICES:
   * Case-INSENSITIVE extension match, and videos are first-class (a real past bug
     hid ~497 `.JPG` files behind a case-sensitive filter — never again).
   * Read-only. It lists and serves; it never writes, deletes, or executes. Requests
-    are path-traversal guarded to the root you chose.
+    are path-traversal guarded to the root you chose - a symlink or junction pointing
+    out of it included (WHICH FILE /files/<rel> SERVES, below).
     (agent history, 2026-10-08: ONE opt-in exception, off unless --data-dir is given -
     it may APPEND a person's history to History/ inside that Data folder and nowhere
     else. See "AGENT HISTORY" below.)
@@ -177,6 +178,62 @@ def _within(child: Path, parent: Path) -> bool:
         return True
     except ValueError:
         return False
+
+
+# ------------------------------------------------------------------ WHICH FILE /files/<rel> SERVES (2026-10-10)
+# Found 2026-10-10: /files served a symlinked file even when the link pointed outside --root. The inherited
+# translate_path only tidied the WORDS of the address (dropping '..'); a link inside the folder named in those words
+# was then followed wherever it went, so a link to ~/.ssh/id_ed25519 left in a Pictures folder was one address away.
+#
+# *** THE PATH-SAFETY INVARIANT (security): /files serves a file only when its REAL path - every symlink and junction
+# followed - is inside --root's real path. The same rule list_deep (above) and ?album= use. *** A link that stays
+# inside the folder is still served (a "Favourites" link to a picture elsewhere in the same folder, a junction from one
+# album to another); one that leaves it is answered 404, the same as a file that is not there, so the answer does not
+# say whether the outside file exists.
+# THE ADDRESS ITSELF, before anything is opened (`files_rel`), the same on every computer except where noted:
+#   * decoded ONCE (a '%252e%252e' is a folder literally named '%2e%2e', never '..');
+#   * a part that is '.' or '..', or holds a NUL, is refused - not dropped, as the inherited guard did: no page of
+#     Nimrod ever asks for one, so one that does is not a picture somebody wants;
+#   * ON WINDOWS ONLY: a '\' (a folder separator there) or a ':' (a drive, 'C:', or a file's hidden stream) in a part
+#     is refused. ELSEWHERE both are ordinary letters in a file name, and such a file is listed, so it is served.
+# Not covered, said so: a HARD link is the file itself, inside the folder, and nothing can tell it apart; and a link
+# swapped in the instant between the check and the open needs somebody who can already write into the folder.
+def files_rel(url_path: str, windows: bool = os.name == "nt"):
+    """The parts of a /files/<rel> address as a list of names, or None when the address is refused (above).
+    `url_path` is the address's path after /files (still percent-encoded). Pure: nothing is opened."""
+    # surrogateescape: bytes that are not UTF-8 become the same stand-ins this computer's own file names use, so a
+    # name that is listed can be asked for; nothing raises.
+    rest = unquote(str(url_path or ""), errors="surrogateescape")
+    parts = []
+    for part in rest.split("/"):
+        if part == "":
+            continue                    # '//' and the leading '/' are nothing, as they always were
+        if part in (".", "..") or "\x00" in part:
+            return None
+        if windows and ("\\" in part or ":" in part):
+            return None
+        parts.append(part)
+    return parts or None
+
+
+def served_file(url_path: str, root: Path = None, windows: bool = os.name == "nt"):
+    """The real path of the file /files/<url_path> serves, or None (404). The invariant above."""
+    parts = files_rel(url_path, windows=windows)
+    if not parts:
+        return None
+    try:
+        base = Path(root if root is not None else ROOT).resolve()
+        real = base.joinpath(*parts).resolve()
+    except (OSError, RuntimeError, ValueError):
+        return None
+    if real == base or not _within(real, base):
+        return None                     # *** outside --root once every link is followed: never served ***
+    try:
+        if not real.is_file():
+            return None
+    except OSError:
+        return None
+    return str(real)
 
 
 def list_album(album: str) -> dict:
@@ -753,8 +810,10 @@ class Handler(SimpleHTTPRequestHandler):
     # (and Safari playback at all) needs 206 partial responses, so we serve media
     # ourselves. translate_path (below) still does the traversal guard.
     def _serve_file(self, head: bool):
-        fs_path = self.translate_path(self.path)
-        if os.path.isdir(fs_path) or not os.path.isfile(fs_path):
+        # WHICH FILE /files/<rel> SERVES (above): the real path, inside --root once every link is followed, or 404. The
+        # file opened is that real path, so the check and the open name the same file.
+        fs_path = served_file(self._route()[len("/files"):])
+        if fs_path is None:
             return self._json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
         try:
             f = open(fs_path, "rb")
@@ -832,11 +891,10 @@ class Handler(SimpleHTTPRequestHandler):
             return None
         return start, min(end, size - 1)
 
-    # --- Map /files/<rel> onto ROOT, with the inherited traversal guard --------
+    # --- Map /files/<rel> onto ROOT ---------------------------------------------
+    # No longer what decides which file is served (`served_file` does, WHICH FILE /files/<rel> SERVES above); kept so
+    # nothing inherited from SimpleHTTPRequestHandler can map an address outside ROOT's words either.
     def translate_path(self, path):
-        # Only /files/* reaches here (do_GET routes everything else). Strip the
-        # prefix, then defer to the parent's translate_path, which collapses "..",
-        # drops leading slashes, and joins to `directory` (= ROOT) — the guard.
         parsed = urlparse(path).path
         if parsed.startswith("/files"):
             rest = parsed[len("/files"):]

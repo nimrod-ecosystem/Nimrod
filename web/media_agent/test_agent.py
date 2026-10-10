@@ -347,6 +347,126 @@ def link_dir(link: Path, target: Path) -> str:
     return ""
 
 
+def file_link(link: Path, target: Path) -> bool:
+    """A FILE symlink, where this computer lets a test make one (Windows: Developer Mode or an administrator)."""
+    try:
+        os.symlink(str(target), str(link))
+        return True
+    except (OSError, NotImplementedError, AttributeError):
+        return False
+
+
+def unlink_all(links):
+    """Remove test links without following them (a junction is removed as a folder, its target untouched)."""
+    for link in links:
+        try:
+            if os.path.islink(str(link)):
+                os.unlink(str(link))
+            elif os.path.isdir(str(link)):
+                os.rmdir(str(link))
+        except OSError:
+            pass
+
+
+def check_files_pure():
+    """PURE - the functions, no agent process. WHICH FILE /files/<rel> SERVES (2026-10-10): the address's parts, read
+    with Windows' rules and with everybody else's whatever computer runs this, then the real-path rule on a real tree."""
+    sys.path.insert(0, str(HERE))
+    import agent  # noqa: E402
+    fr = agent.files_rel
+
+    # The address, both ways
+    for win in (True, False):
+        say = "Windows" if win else "POSIX"
+        check(f"files_rel ({say}): an ordinary address is its parts; '//' is nothing, as it always was",
+              fr("/apple.jpg", windows=win) == ["apple.jpg"] and fr("/trip/cliff.png", windows=win) == ["trip", "cliff.png"]
+              and fr("//trip//cliff.png", windows=win) == ["trip", "cliff.png"]
+              and fr("/My%20Pictures/a%23b.jpg", windows=win) == ["My Pictures", "a#b.jpg"])
+        check(f"*** files_rel ({say}): a '..' part is refused, plain or percent-encoded (any case), not dropped ***",
+              all(fr(p, windows=win) is None for p in ("/../secret.txt", "/trip/../../secret.txt", "/%2e%2e/secret.txt",
+                                                        "/%2E%2E%2Fsecret.txt", "/trip/%2e%2e%2f%2e%2e%2fsecret.txt",
+                                                        "/.%2e/secret.txt", "/..")))
+        check(f"files_rel ({say}): a '.' part, a NUL, and an empty address are refused",
+              fr("/./apple.jpg", windows=win) is None and fr("/apple.jpg%00.png", windows=win) is None
+              and fr("", windows=win) is None and fr("/", windows=win) is None)
+        check(f"*** files_rel ({say}): decoded ONCE - '%252e%252e' is a folder named '%2e%2e', never '..' ***",
+              fr("/%252e%252e/secret.txt", windows=win) == ["%2e%2e", "secret.txt"])
+    check("*** files_rel (Windows): a '\\' or a ':' in a part is refused (a separator, a drive, a hidden stream) ***",
+          all(fr(p, windows=True) is None for p in ("/..%5csecret.txt", "/..%5Csecret.txt", "/trip%5c..%5c..%5csecret.txt",
+                                                    "/C:/Windows/win.ini", "/C:%5cWindows%5cwin.ini", "/apple.jpg:secret",
+                                                    "/apple.jpg::$DATA", "/%5c%5cserver%5cshare%5cx.jpg")))
+    check("files_rel (POSIX): '\\' and ':' are letters in a file name there, so such a listed file can be asked for",
+          fr("/..%5csecret.txt", windows=False) == ["..\\secret.txt"] and fr("/12:30.jpg", windows=False) == ["12:30.jpg"])
+
+    # The real path, on a real tree
+    tmp = Path(tempfile.mkdtemp(prefix="nimrod_files_"))
+    root = tmp / "photos"
+    (root / "trip").mkdir(parents=True)
+    (root / "apple.jpg").write_bytes(b"APPLE")
+    (root / "trip" / "cliff.png").write_bytes(b"CLIFF")
+    (tmp / "secret.jpg").write_bytes(b"SECRET")
+    (tmp / "outside").mkdir()
+    (tmp / "outside" / "secret.jpg").write_bytes(b"SECRET")
+    (tmp / "photos2").mkdir()                     # a sibling whose name STARTS with the root's: the prefix trick
+    (tmp / "photos2" / "x.jpg").write_bytes(b"SECRET")
+    links = []
+    sf = agent.served_file
+    inside = lambda p: p is not None and agent._within(Path(p), root.resolve())   # noqa: E731
+    try:
+        check("served_file: a file inside is its real path; a folder, the root itself and a missing file are not served",
+              inside(sf("/apple.jpg", root=root)) and inside(sf("/trip/cliff.png", root=root))
+              and sf("/trip", root=root) is None and sf("/", root=root) is None and sf("/nope.jpg", root=root) is None)
+        check("*** served_file: '..' to the file beside the root is refused (plain and encoded) ***",
+              sf("/../secret.jpg", root=root) is None and sf("/%2e%2e/secret.jpg", root=root) is None
+              and sf("/trip/%2e%2e/%2e%2e/secret.jpg", root=root) is None)
+        if sys.platform == "win32":
+            upper = Path(str(root.parent) + os.sep + root.name.upper())
+            check("served_file (Windows): the root named in another case is the same folder, so its file is served"
+                  " - the check compares real paths, never letters",
+                  inside(sf("/apple.jpg", root=upper)) and inside(sf("/TRIP/CLIFF.PNG", root=root)))
+        made = link_dir(root / "linked-out", tmp / "outside")
+        links.append(root / "linked-out")
+        if made:
+            check(f"*** served_file: a file through a folder {made} pointing OUTSIDE the root is refused ***",
+                  sf("/linked-out/secret.jpg", root=root) is None)
+        else:
+            print("  SKIP  folder link out (this computer makes neither a symlink nor a junction)")
+        made = link_dir(root / "sibling", tmp / "photos2")
+        links.append(root / "sibling")
+        if made:
+            check(f"*** served_file: a {made} to a sibling folder whose name starts like the root's (photos2) is refused ***",
+                  sf("/sibling/x.jpg", root=root) is None)
+        made = link_dir(root / "upper-sibling", Path(str(tmp) + os.sep + "PHOTOS2"))
+        links.append(root / "upper-sibling")
+        if made:
+            check(f"*** served_file: ...and named in capitals (PHOTOS2) too ***", sf("/upper-sibling/x.jpg", root=root) is None)
+        made = link_dir(root / "alias", root / "trip")
+        links.append(root / "alias")
+        if made:
+            got = sf("/alias/cliff.png", root=root)
+            check(f"*** served_file: a folder {made} that stays INSIDE the root is served (its real path) ***",
+                  inside(got) and Path(got).read_bytes() == b"CLIFF", detail=repr(got))
+        else:
+            print("  SKIP  folder link inside (this computer makes neither a symlink nor a junction)")
+        if file_link(root / "out.jpg", tmp / "secret.jpg"):
+            links += [root / "out.jpg"]
+            check("*** served_file: a file symlink pointing OUTSIDE the root is refused ***", sf("/out.jpg", root=root) is None)
+            if file_link(root / "fav.jpg", root / "trip" / "cliff.png"):
+                links += [root / "fav.jpg"]
+                got = sf("/fav.jpg", root=root)
+                check("*** served_file: a file symlink that stays INSIDE the root is served ***",
+                      inside(got) and Path(got).read_bytes() == b"CLIFF", detail=repr(got))
+            if file_link(root / "loop.jpg", root / "loop.jpg"):
+                links += [root / "loop.jpg"]
+                check("served_file: a symlink pointing at itself is not served (and nothing raises)",
+                      sf("/loop.jpg", root=root) is None)
+        else:
+            print("  SKIP  file symlinks (this computer does not let a test make one; the folder links above cover the rule)")
+    finally:
+        unlink_all(links)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def check_deep_mirrors():
     """PURE. EVERY FOLDER INSIDE: the agent's caps and skipped names are copied in folder_source.js (a folder read by
     the browser walks the same way); fail if the copies drift."""
@@ -675,6 +795,7 @@ def main():
     check_syntax_38()
     check_deep_mirrors()
     check_deep_pure()
+    check_files_pure()
     shutil.rmtree(check_history_pure(), ignore_errors=True)
 
     tmp = Path(tempfile.mkdtemp(prefix="nimrod_media_"))
@@ -826,6 +947,48 @@ def main():
         s, _, j = get_json(f"{base}/list")
         check("without deep=1 nothing changed: one level, no 'deep' key", s == 200 and "deep" not in j
               and not any("/" in i["path"] for i in j.get("items", [])))
+
+        # WHICH FILE /files/<rel> SERVES (2026-10-10), over HTTP. Links made only now, after the listing checks above
+        # (a link inside would be walked as a folder and change what those count).
+        outside = tmp / "outside"
+        outside.mkdir()
+        (outside / "secret.jpg").write_bytes(b"TOP SECRET outside the root")
+        links = [root / "linked-out", root / "alias", root / "out.jpg", root / "fav.jpg"]
+        try:
+            made = link_dir(root / "linked-out", outside)
+            if made:
+                s, _, body = get(f"{base}/files/linked-out/secret.jpg", {"Origin": origin})
+                check(f"*** /files through a folder {made} pointing OUTSIDE the root -> 404, nothing served ***",
+                      s == 404 and b"SECRET" not in body, detail=f"status={s} {body[:80]!r}")
+                s, _, body = get(f"{base}/files/linked-out/secret.jpg", method="HEAD")
+                check("...HEAD too", s == 404, detail=f"status={s}")
+            made = link_dir(root / "alias", album)
+            if made:
+                s, _, body = get(f"{base}/files/alias/cliff.png")
+                check(f"*** /files through a folder {made} that stays INSIDE the root -> served ***",
+                      s == 200 and body.startswith(b"\x89PNG"), detail=f"status={s}")
+            if file_link(root / "out.jpg", outside / "secret.jpg"):
+                s, _, body = get(f"{base}/files/out.jpg")
+                check("*** /files: a file symlink pointing OUTSIDE the root -> 404 (it used to be served) ***",
+                      s == 404 and b"SECRET" not in body, detail=f"status={s} {body[:80]!r}")
+                if file_link(root / "fav.jpg", root / "apple.jpg"):
+                    s, _, body = get(f"{base}/files/fav.jpg")
+                    check("*** /files: a file symlink that stays INSIDE the root -> served ***",
+                          s == 200 and body == b"\xff\xd8\xff\xe0JPEGDATA", detail=f"status={s}")
+            else:
+                print("  SKIP  file symlinks over HTTP (this computer does not let a test make one)")
+            for probe in ("/files/..%5csecret.txt", "/files/..%5Csecret.txt", "/files/%252e%252e/secret.txt",
+                          "/files/trip/%2e%2e/%2e%2e/secret.txt", "/files/%2E%2E/secret.txt", "/files/secret.txt%00.jpg"):
+                s, _, body = get(f"{base}{probe}")
+                check(f"*** {probe}: refused, nothing outside served ***", s in (403, 404) and b"SECRET" not in body,
+                      detail=f"status={s}")
+            s, _, body = get(f"{base}/files/TRIP/CLIFF.PNG")
+            check("a name in another case: served where the disk ignores case (Windows), 404 where it does not - never"
+                  " anything outside", (s == 200 and body.startswith(b"\x89PNG"))
+                  or (sys.platform != "win32" and s == 404),
+                  detail=f"status={s}")
+        finally:
+            unlink_all(links)
 
         page_tests(base, origin)
         history_http_tests(base, origin, data)
