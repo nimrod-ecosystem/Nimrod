@@ -18,6 +18,17 @@
 // first is the commoner and costlier mistake. The 2026-09-10 finding below still stands; it is now the helper's
 // first bullet rather than the panel's opening question.
 //
+// *** "TYPE ITS ADDRESS" IS ONE LINE AT THE FOOT OF "ADD PHOTOS" (note BO, 2026-10-10). *** Mike looked for "Type an
+// address instead" in Add photos and couldn't find it: it was two closed sections deep. The line names who it is for
+// ("Photos from another computer on your network, or a Nimrod helper?") and opens the form where it already lives.
+// FOR this placement: it is where a person adding photos looks; it comes AFTER the two everyday ways, so a newcomer
+// still reads those first; and the form stays beside the words that say what an address means (localhost = whichever
+// screen shows it). AGAINST: it brings the words "address" and "helper" back into the card that 2026-10-09 cleared of
+// them, and somebody may follow it when a folder would have done. Rejected alternatives: lifting the address form
+// itself into Add photos (a technical form among the everyday ways, and pairing - the better path for a helper -
+// left behind in the closed section); a separate third card (one more card to read past for everybody).
+// What happens after it is typed, from a computer that isn't the screen: media_sources.js checkFromHere.
+//
 // (Before 2026-10-09:) TWO WAYS IN, and which one is RIGHT depends on a question, not on which is easier to
 // set up — so the panel led with that question, the same pattern modules.html uses
 // ("Start here: can they press anything?"): is this the screen you're on right now, or a
@@ -65,7 +76,7 @@
 // up on the other screen?" is otherwise a genuinely confusing afternoon.
 
 import {
-  createMediaSourcesClient, resolveListing, findReachable, normalizeCode, PAIR_CODE_LEN,
+  createMediaSourcesClient, resolveListing, findReachable, normalizeCode, PAIR_CODE_LEN, checkFromHere, addressScope,
 } from './media_sources.js';
 import { createProfilesClient } from './profile.js';
 import {
@@ -86,6 +97,15 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DEFAULT_URL = 'http://localhost:8770';
+
+// a typed address (2026-10-10, note BO): the words when an address can't be checked from this computer without the
+// browser asking. The same sentence on the card and after saving, so a person reads one thing, not two.
+export const CANT_CHECK_HERE = 'This address is on the screen that uses it — it can’t be checked from here.';
+function cantCheckWords(reach) {
+  return reach && reach.why === 'denied'
+    ? 'This address is on the screen that uses it — this browser is set not to reach your network, so it can’t be checked from here.'
+    : CANT_CHECK_HERE;
+}
 
 // photo sources first (2026-10-09): where somebody setting the media agent up by hand reads how. The public repo's own
 // copy of web/media_agent/deploy/README.md, because nothing else public explains it yet; the helper's page
@@ -119,6 +139,9 @@ export function mountMedia(root, {
   // is whether the helper's download is published (HELPER_DOWNLOADS). Both injectable for the suite.
   devicePics = { add: addDevicePictures, setOn: setDevicePhotosOn },
   helperReady = !!(HELPER_DOWNLOADS && HELPER_DOWNLOADS.windows && HELPER_DOWNLOADS.windows.url),
+  // a typed address (2026-10-10): may this page check a helper's address without the browser asking first?
+  // (media_sources.js checkFromHere). Injectable so the suite can be "another computer" while it runs on 127.0.0.1.
+  checkHere = (src) => checkFromHere(src && src.base_url),
 } = {}) {
   const sources = client || createMediaSourcesClient({ user });
   const pairClient = pairs || createProfilesClient({ user });
@@ -173,6 +196,9 @@ export function mountMedia(root, {
           <button class="h-btn" data-add-pictures>Add pictures…</button>
           <input type="file" data-picture-file accept="image/*" multiple hidden>
         </div>
+
+        <p class="h-quiet" data-way="address">Photos from another computer on your network, or a Nimrod helper?
+          <a href="#" role="button" data-open-address>Type its address</a></p>
       </div>
 
       <div class="h-msg" data-msg></div>
@@ -212,6 +238,9 @@ export function mountMedia(root, {
             <b>${DEFAULT_URL}</b> is a special case: it means “whichever machine is showing the
             screen, ask the agent running on it”, so one entry covers every screen that runs its
             own agent. For one specific machine, give its address on the network instead.</p>
+          <p class="h-quiet">You can type it from any computer. The screen that uses it checks it.
+            An address on this computer or your home network isn’t checked from here unless the
+            browser already allows it, so the browser doesn’t stop to ask you; it is saved either way.</p>
           <form class="h-new" data-new>
             <input type="text" data-label placeholder="Name it (e.g. the living room screen)"
                    aria-label="source name" required>
@@ -261,11 +290,27 @@ export function mountMedia(root, {
   // Probe a source the way a module will, so "saved" and "actually works" are not confused.
   // A stopped agent or a lapsed folder permission otherwise shows up much later as a blank
   // screen at a bedside, which is the worst possible place to discover it.
-  async function probe(src) {
+  async function probe(src, { here = false } = {}) {
     const cell = root.querySelector(`[data-probe="${CSS.escape(src.id)}"]`);
     if (!cell) return;
     cell.textContent = 'checking…';
     cell.classList.remove('bad');
+
+    // a typed address (2026-10-10, note BO): an address on this computer or the home network is checked from here
+    // only when that can't make the browser ask (media_sources.js checkFromHere argues it). Otherwise it says so -
+    // not in red: nothing is known to be wrong - and offers the check as a press, which is somebody asking for it.
+    const isAgent = src.kind !== 'folder' && src.kind !== 'device';
+    const scope = isAgent ? addressScope(src.base_url) : null;
+    if (isAgent && !here) {
+      let reach;
+      try { reach = await checkHere(src); } catch { reach = { check: false, why: 'would-ask' }; }
+      if (!reach || reach.check === false) {
+        cell.innerHTML = `${esc(cantCheckWords(reach))} `
+          + `<button class="h-btn" data-check-here="${esc(src.id)}">Check on this computer</button>`;
+        cell.querySelector('[data-check-here]').addEventListener('click', () => probe(src, { here: true }));
+        return;
+      }
+    }
 
     if (src.kind === 'folder') {
       const perm = await fs.permission(src.id);
@@ -290,7 +335,7 @@ export function mountMedia(root, {
       const albums = listing.albums || [];
       const n = listing.count;
       cell.textContent = n
-        ? `ready — ${n} item${n === 1 ? '' : 's'}`
+        ? `ready — ${n} item${n === 1 ? '' : 's'}${scope === 'loopback' ? ', on this computer' : ''}`
         : (albums.length
             ? `no photos at the top level — folders inside: ${albums.join(', ')}`
             : 'this folder is empty');
@@ -299,7 +344,10 @@ export function mountMedia(root, {
       cell.textContent = src.kind === 'folder'
         ? 'could not read this folder'
         : src.kind === 'device' ? 'could not read the pictures kept on this device'   // photo sources first
-          : 'not reachable — is the helper (media agent) running on that machine?';
+          // a typed address: "localhost" checked from here is THIS computer, which may not be the screen that uses it.
+          : scope === 'loopback'
+            ? 'not reachable on this computer: no helper answers here. A screen running its own helper checks it there.'
+            : 'not reachable — is the helper (media agent) running on that machine?';
       cell.classList.add('bad');
     }
   }
@@ -592,8 +640,12 @@ export function mountMedia(root, {
     try {
       await sources.add({ label, base_url, kind: 'agent' });
       el('[data-label]').value = '';
+      // a typed address (2026-10-10, note BO): saved for the account whether or not it can be checked here; it used
+      // to say "Connected." either way, and then "not reachable" in red from a computer it was never meant for.
+      let reach;
+      try { reach = await checkHere({ base_url, kind: 'agent' }); } catch { reach = { check: false, why: 'would-ask' }; }
       await refresh();
-      say('Connected.');
+      say(!reach || reach.check === false ? `${cantCheckWords(reach)} Saved.` : 'Saved. Whether it answers is shown below.');
     } catch (err) {
       console.error(err);
       // The server validates base_url, so a failure here is almost always a typo'd address.
@@ -666,6 +718,18 @@ export function mountMedia(root, {
   const fileIn = el('[data-picture-file]');
   el('[data-add-pictures]').addEventListener('click', () => fileIn.click());
   fileIn.addEventListener('change', () => { const f = fileIn.files; addPictures(f).finally(() => { fileIn.value = ''; }); });
+
+  // a typed address (2026-10-10, note BO): "Type its address" in the Add photos card opens the form where it lives -
+  // inside the helper section, with the words that say what an address means - and puts the cursor in it.
+  el('[data-open-address]').addEventListener('click', (e) => {
+    e.preventDefault();
+    const helper = el('[data-helper]');
+    const adv = el('[data-advanced]');
+    if (helper) helper.open = true;
+    if (adv) adv.open = true;
+    try { adv?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }); } catch { /* not scrollable here */ }
+    try { el('[data-label]')?.focus?.({ preventScroll: true }); } catch { /* fine */ }
+  });
 
   el('[data-new]').addEventListener('submit', (e) => {
     e.preventDefault();

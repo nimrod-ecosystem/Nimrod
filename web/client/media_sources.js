@@ -598,6 +598,92 @@ export function createSourceRecheck({ ms = () => SOURCE_RECHECK_MS, setTimer = (
   return { arm, stop, armed: () => t != null };
 }
 
+// ------------------------------------------- a typed address, checked where it can be (2026-10-10, note BO item 3)
+// Mike, 2026-10-10: he typed http://localhost:8770 - the photo program on the BENCH screen - from his DESKTOP. Before
+// this, Media saved it, said "Connected.", and then asked for it FROM THE DESKTOP: on a page served from the internet,
+// Chrome (142 and later) first asks "allow this site to reach devices on your network?" [inferred from Chrome's Local
+// Network Access rollout], and then nothing answered on the desktop, so the card read "not reachable" in red - about an
+// address that was never meant for the desktop at all. "localhost" means the computer showing the page; an address on
+// the home network may be one this computer cannot reach, or one the browser asks about first.
+//
+// SO: AN ADDRESS ON THIS COMPUTER OR THIS NETWORK IS CHECKED HERE ONLY WHEN THAT CANNOT MAKE THE BROWSER ASK. It is saved
+// for the account either way, and the screen that uses it checks it every time it lists it (its Photos panel says when
+// it can't be reached, listOrFallback above). The cases, in `checkFromHere`:
+//   * an address on the internet                      -> checked, as before (no prompt is involved)
+//   * the page itself is on this computer or network   -> checked (a local page reaching a local address is not asked about)
+//   * the browser says the permission is already given -> checked (a kiosk installed with the policy that grants it)
+//   * given "no", "would ask", or the browser won't say -> NOT checked; "it can't be checked from here", and a press to
+//     check anyway ("Check on this computer"), which is the person asking, so the browser asking back is fine.
+// "Won't say" counts as "would ask", argued: guessing wrong that way costs one line of text and a button; guessing wrong
+// the other way is the prompt on the desktop that this exists to stop. AGAINST: Firefox and Safari, which have no such
+// prompt [inferred], no longer check a home-network address here by themselves; the press does it.
+// Pairing (`findReachable`, below) is not changed: it runs after somebody typed a code and pressed Connect, and it must
+// try the addresses to know which one answers.
+
+const IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+
+/**
+ * WHERE AN ADDRESS POINTS, from its host name alone (no lookup): 'loopback' (this computer: localhost, 127.x, ::1),
+ * 'private' (the home or facility network: 10.x, 172.16-31.x, 192.168.x, 169.254.x, 100.64-127.x - Tailscale's - fc/fd
+ * and fe80 IPv6, a name ending .local, .lan, .home.arpa, .internal or .ts.net, or a name with no dot), 'public', or
+ * 'invalid'. PURE. A public-looking name that a home router resolves to a home address is called public here; the
+ * browser then asks or doesn't, and the check simply fails - the same as before this existed.
+ */
+export function addressScope(url) {
+  let host;
+  try { host = new URL(String(url || '').trim()).hostname.toLowerCase(); } catch { return 'invalid'; }
+  if (!host) return 'invalid';
+  host = host.replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.localhost') || host === '::1') return 'loopback';
+  const v4 = IPV4.exec(host);
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])];
+    if (a === 127) return 'loopback';
+    if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254)
+      || (a === 100 && b >= 64 && b <= 127)) return 'private';
+    return 'public';
+  }
+  if (host.includes(':')) return /^(fc|fd|fe8|fe9|fea|feb)/.test(host) ? 'private' : 'public';
+  if (/\.(local|lan|home\.arpa|internal|ts\.net)$/.test(host) || !host.includes('.')) return 'private';
+  return 'public';
+}
+
+/**
+ * WHAT THIS BROWSER SAYS ABOUT REACHING `scope` ('loopback' | 'private'), WITHOUT ASKING THE PERSON: 'granted', 'denied',
+ * 'prompt', or 'unknown' when it has no such permission to report. A permission QUERY never shows a prompt. The names
+ * tried, in order: Chrome's split ones and then the single one it shipped first [inferred: the names have changed
+ * between releases, so each is tried and a name the browser doesn't know is skipped].
+ */
+export async function localNetworkPermission(scope, { permissions = (typeof navigator !== 'undefined' ? navigator.permissions : null) } = {}) {
+  if (!permissions || typeof permissions.query !== 'function') return 'unknown';
+  const names = scope === 'loopback' ? ['loopback-network', 'local-network-access'] : ['local-network', 'local-network-access'];
+  for (const name of names) {
+    try {
+      const st = await permissions.query({ name });
+      if (st && typeof st.state === 'string') return st.state;
+    } catch { /* this browser doesn't know that name; try the next */ }
+  }
+  return 'unknown';
+}
+
+/**
+ * MAY THIS PAGE CHECK `url` WITHOUT THE BROWSER ASKING? Returns `{ check, scope, why }`; `why` is one of 'public',
+ * 'local-page', 'granted', 'denied', 'would-ask'. Never asks, never throws. `pageHost` and `permission` are seams.
+ */
+export async function checkFromHere(url, {
+  pageHost = (typeof location !== 'undefined' ? location.hostname : ''),
+  permission = localNetworkPermission,
+} = {}) {
+  const scope = addressScope(url);
+  if (scope === 'public' || scope === 'invalid') return { check: true, scope, why: 'public' };
+  const page = addressScope(`http://${String(pageHost || '').includes(':') && !String(pageHost).startsWith('[') ? `[${pageHost}]` : pageHost}/`);
+  if (page === 'loopback' || page === 'private') return { check: true, scope, why: 'local-page' };
+  let state = 'unknown';
+  try { state = await permission(scope); } catch { state = 'unknown'; }
+  if (state === 'granted') return { check: true, scope, why: 'granted' };
+  return { check: false, scope, why: state === 'denied' ? 'denied' : 'would-ask' };
+}
+
 // ---------------------------------------------------------------------- pairing
 // SIX CHARACTERS INSTEAD OF AN IP ADDRESS.
 //

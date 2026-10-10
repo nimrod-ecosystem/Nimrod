@@ -218,8 +218,10 @@ section('photo sources first: the everyday ways first, the helper under advanced
         /A folder on this computer[\s\S]*Pictures from this device/.test(text(add)));
   check('...both inside it: a folder button and an add-pictures button',
         !!add.querySelector('[data-pick]') && !!add.querySelector('[data-add-pictures]'));
-  check('...and it says nothing about installing a program, pairing or an address',
-        !/install a program|pairing|address|helper|agent/i.test(text(add)), text(add));
+  // note BO (2026-10-10): the two everyday ways still say nothing technical; ONE line after them points to an address.
+  const ways = text(add.querySelector('[data-way="folder"]')) + text(add.querySelector('[data-way="device"]'));
+  check('...and the two ways say nothing about installing a program, pairing or an address',
+        !/install a program|pairing|address|helper|agent/i.test(ways), ways);
   check('it names Google Drive’s folder, so a G drive is not a mystery', /G:\\My Drive/.test(text(add)));
   check('*** the helper is ONE section, closed, marked advanced, AFTER the add-photos card ***',
         helper && helper.tagName === 'DETAILS' && !helper.open && /advanced/.test(text(helper.querySelector('summary')))
@@ -290,6 +292,124 @@ section('photo sources first: pictures from this device');
   for (let i = 0; i < 10; i++) await settle();
   check('nothing that is a picture: says so, and turns nothing on',
         /weren’t pictures/.test(text(host.querySelector('[data-msg]'))) && on.length === 0, text(host.querySelector('[data-msg]')));
+}
+
+// ---------------------------------------- a typed address (note BO, 2026-10-10)
+// Mike could not find "Type an address instead" (two closed sections deep), and he typed http://localhost:8770 - the
+// photo program on the BENCH - from his DESKTOP. It must be findable, saved for the account, and NOT checked from a
+// computer where checking would make the browser ask about the local network.
+section('a typed address: "Type its address" is findable from Add photos');
+{
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0) });
+  await p.refresh();
+  const add = host.querySelector('[data-add-photos]');
+  const line = add.querySelector('[data-way="address"]');
+  check('*** a visible line in Add photos: another computer on your network, or a Nimrod helper ***',
+        !!line && /Photos from another computer on your network, or a Nimrod helper\?/.test(text(line)), text(line));
+  check('...the LAST thing in the card, after the two everyday ways',
+        line && add.lastElementChild === line
+          && !!(add.querySelector('[data-way="device"]').compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING));
+  const link = line && line.querySelector('[data-open-address]');
+  check('...with "Type its address" to press', !!link && /Type its address/.test(text(link)));
+  const helper = host.querySelector('[data-helper]');
+  const adv = host.querySelector('[data-advanced]');
+  check('both sections start closed', !helper.open && !adv.open);
+  const ev = new MouseEvent('click', { bubbles: true, cancelable: true });
+  link.dispatchEvent(ev);
+  check('*** pressing it opens the helper section AND the address form inside it ***', helper.open && adv.open);
+  check('...puts the cursor in the form', document.activeElement === host.querySelector('[data-label]'));
+  check('...and does not follow the "#" link', ev.defaultPrevented);
+  check('the form says it can be typed from any computer, and that the screen that uses it checks it',
+        /type it from any computer/.test(text(adv)) && /screen that uses it checks it/.test(text(adv)), text(adv));
+}
+
+section('a typed address from ANOTHER computer: saved, not checked, no prompt');
+{
+  const client = fakeClient([]);
+  let listings = 0;
+  const resolve = async () => { listings += 1; return { albums: [], items: Array(3).fill({}), count: 3 }; };
+  const asked = [];
+  const checkHere = async (src) => { asked.push(src.base_url); return { check: false, scope: 'loopback', why: 'would-ask' }; };
+  const p = mount({ client, folders: fakeFolders(), resolve, checkHere });
+  await p.refresh();
+  host.querySelector('[data-label]').value = 'Bench pictures';
+  host.querySelector('[data-url]').value = 'http://localhost:8770';
+  host.querySelector('[data-new]').dispatchEvent(new Event('submit', { cancelable: true }));
+  for (let i = 0; i < 5; i++) await settle();
+  check('*** it is SAVED for the account, as a helper address ***',
+        client.calls.add.length === 1 && client.calls.add[0].base_url === 'http://localhost:8770' && client.calls.add[0].kind === 'agent',
+        JSON.stringify(client.calls.add));
+  check('*** and says so plainly: "This address is on the screen that uses it — it can’t be checked from here. Saved." ***',
+        text(host.querySelector('[data-msg]')) === 'This address is on the screen that uses it — it can’t be checked from here. Saved.',
+        text(host.querySelector('[data-msg]')));
+  check('...not in red', !host.querySelector('[data-msg]').classList.contains('bad'));
+  check('*** and nothing tried to reach it from this computer (no listing, so no network prompt) ***', listings === 0, String(listings));
+  check('it asked whether it COULD check, which never prompts', asked.includes('http://localhost:8770'));
+  const probe = host.querySelector('[data-probe]');
+  check('the card says the same, not "not reachable"',
+        /on the screen that uses it — it can’t be checked from here/.test(text(probe)) && !/not reachable/.test(text(probe)), text(probe));
+  check('...not flagged as a problem', !probe.classList.contains('bad'));
+  check('...and the card still says it is for all your devices', /all your devices/.test(text(host.querySelector('[data-list]'))));
+  const btn = probe.querySelector('[data-check-here]');
+  check('a press offers the check anyway: "Check on this computer"', !!btn && /Check on this computer/.test(text(btn)));
+  btn.click();
+  for (let i = 0; i < 5; i++) await settle();
+  check('*** pressing it checks from here (somebody asked, so the browser asking back is fine) ***', listings === 1, String(listings));
+  check('...and says what answered is on THIS computer', /ready — 3 items, on this computer/.test(text(host.querySelector('[data-probe]'))),
+        text(host.querySelector('[data-probe]')));
+}
+{
+  // checked, from this computer, and nothing answered: "localhost" means THIS computer, so it says that, not "that machine"
+  const p = mount({
+    client: fakeClient([{ id: 'a1', label: 'Bench', base_url: 'http://localhost:8770', kind: 'agent' }]),
+    folders: fakeFolders(),
+    resolve: async () => { throw new Error('failed to fetch'); },
+    checkHere: async () => ({ check: true, scope: 'loopback', why: 'granted' }),
+  });
+  await p.refresh();
+  await settle();
+  const t = text(host.querySelector('[data-probe]'));
+  check('a "localhost" helper that does not answer here says "on this computer", and that a screen running its own checks it',
+        /not reachable on this computer/.test(t) && /screen running its own helper checks it there/.test(t), t);
+}
+{
+  const p = mount({
+    client: fakeClient([{ id: 'a1', label: 'Bench', base_url: 'http://192.168.1.44:8770', kind: 'agent' }]),
+    folders: fakeFolders(), resolve: okListing(2),
+    checkHere: async () => ({ check: false, scope: 'private', why: 'denied' }),
+  });
+  await p.refresh();
+  await settle();
+  check('a browser set to refuse local addresses: it says that, still not in red',
+        /set not to reach your network/.test(text(host.querySelector('[data-probe]')))
+          && !host.querySelector('[data-probe]').classList.contains('bad'), text(host.querySelector('[data-probe]')));
+}
+{
+  const client = fakeClient([]);
+  let listings = 0;
+  const p = mount({ client, folders: fakeFolders(),
+    resolve: async () => { listings += 1; return { albums: [], items: [{}], count: 1 }; },
+    checkHere: async () => ({ check: true, scope: 'public', why: 'public' }) });
+  await p.refresh();
+  host.querySelector('[data-label]').value = 'Family server';
+  host.querySelector('[data-url]').value = 'https://photos.example.org';
+  host.querySelector('[data-new]').dispatchEvent(new Event('submit', { cancelable: true }));
+  for (let i = 0; i < 5; i++) await settle();
+  check('an address that CAN be checked from here is saved and checked, as before',
+        /^Saved\./.test(text(host.querySelector('[data-msg]'))) && listings === 1
+          && /ready — 1 item$/.test(text(host.querySelector('[data-probe]'))),
+        `${text(host.querySelector('[data-msg]'))} / ${listings} / ${text(host.querySelector('[data-probe]'))}`);
+}
+{
+  // the default, on THIS suite's page (served from 127.0.0.1): a local page checks a local address, no prompt involved
+  let listings = 0;
+  const p = mount({ client: fakeClient([{ id: 'a1', label: 'Here', base_url: 'http://localhost:8770', kind: 'agent' }]),
+    folders: fakeFolders(), resolve: async () => { listings += 1; return { albums: [], items: [{}, {}], count: 2 }; } });
+  await p.refresh();
+  for (let i = 0; i < 5; i++) await settle();
+  check('the default check on a page served from this computer: checked, as before',
+        listings === 1 && /ready — 2 items, on this computer/.test(text(host.querySelector('[data-probe]'))),
+        `${listings} / ${text(host.querySelector('[data-probe]'))}`);
 }
 
 // ------------------------------------- the trap: media sits in a SUBfolder

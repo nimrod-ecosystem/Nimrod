@@ -285,6 +285,38 @@ function fakeFetch(answers) {
         check('...and names what to check', /same network/.test(t), t);
         check('...and tells them the code is spent, so they do not retype it',
           /fresh code|restart the agent/i.test(t), t);
+
+        // a typed address (note BO, 2026-10-10): the Media page no longer checks an address on this computer or the home
+        // network when the browser would ask first. PAIRING IS NOT THAT: somebody typed a code and pressed Connect, and
+        // the candidates have to be tried to know which one answers. So a page where checking "would ask" still pairs.
+        const lan = await askForCode('Bench screen', ['http://localhost:8770', 'http://192.168.1.60:8770'], 'agent-bench');
+        const m3host = document.createElement('div');
+        host.append(m3host);
+        const added3 = [];
+        const tried = [];
+        const answers = { 'http://192.168.1.60:8770': { ok: true, agent_id: 'agent-bench' } };
+        const m3 = mountMedia(m3host, {
+          user: ACCOUNT,
+          client: { list: async () => added3.slice(), add: async (src) => { added3.push({ id: 'src3', ...src }); return added3[0]; }, remove: async () => ({}) },
+          resolve: async () => ({ items: [], albums: [], count: 0 }),
+          folders: { isSupported: () => false, permission: async () => 'granted', pick: async () => {}, request: async () => 'granted' },
+          pairs: createProfilesClient({ user: ACCOUNT }),
+          fetchAgent: async (url, o) => { tried.push(String(url)); return fakeFetch(answers)(url, o); },
+          checkHere: async () => ({ check: false, scope: 'private', why: 'would-ask' }),
+        });
+        await m3.refresh();
+        m3host.querySelector('[data-code]').value = lan.code;
+        m3host.querySelector('[data-pair]').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        for (let i = 0; i < 60 && !added3.length; i++) await sleep(100);
+        check('*** pairing still tries the addresses where a plain check "would ask": the press is the asking ***',
+          tried.some((u) => u.startsWith('http://192.168.1.60:8770')) && added3.length === 1
+            && added3[0].base_url === 'http://192.168.1.60:8770', `${tried.join(',')} / ${JSON.stringify(added3)}`);
+        check('...and says Connected', /Connected/.test(m3host.querySelector('[data-pairmsg]').textContent),
+          m3host.querySelector('[data-pairmsg]').textContent);
+        await sleep(50);
+        check('...while the saved address card, on a page that would be asked, does not reach out by itself',
+          /can’t be checked from here/.test(m3host.querySelector('[data-probe]')?.textContent || ''),
+          m3host.querySelector('[data-probe]')?.textContent);
       }
     }
   } catch (e) {
