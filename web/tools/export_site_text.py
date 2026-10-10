@@ -36,22 +36,31 @@ stopped and the scratch folder deleted afterwards.
 code. Lines kept on looks alone and lines that only show when something fails are marked `?`.
 Exit status is 0.
 
-THE IDS, AND HOW A LATER `--apply` WORKS (not built yet):
+THE IDS, AND HOW `--apply` WORKS (built 2026-10-10; tests: web/tools/test_export_site_text.py):
   id = 't' + first 8 hex of sha1("<path relative to repo>\\0<the exported text>").
   It depends on the file and the words, NOT the line number, so it survives code moving around. The
   same words twice in one file are ONE row (all their lines listed) and one rewrite changes them all.
-  An apply mode would: read `<id> => <new text>` lines; re-run this same scan to rebuild id -> exact
-  source spans; refuse any id whose current text no longer equals the exported original (changed
-  since export - report it, do not guess); re-encode the new text for where it sits (escape the
-  literal's quote and backslashes in JS, `&`/`<` as entities inside markup, `{expr}` back to
-  `${expr}` in a template - by exact name, else by order); and write edits from the end of each file
-  backwards so earlier offsets stay valid. Python (server) strings are listed with their line but an
-  apply there would be by exact-string replace, since implicit concatenation spans lines.
+  `--apply` reads `<id> => <new text>` lines; re-runs this same scan to rebuild id -> exact source
+  spans (the id is a hash of the exported words, so an id that is not found means the words changed
+  since the export: it is REFUSED and reported, never guessed - and the export's trimmed ends and
+  collapsed double spaces match automatically, because the scan computes the same display text);
+  re-encodes the new text for where it sits (the literal's own quote and backslashes in JS, `&`/`<`
+  and the attribute's quote as entities in markup, `{expr}` back to `${expr}` in a template - by
+  exact name, else by order - and inline tags put back in order, the n-th <a> to the n-th <a>); keeps
+  the spaces a literal had at its ends ('Error: ' + x); cuts a `+`-joined sentence back into its
+  pieces at spaces; and writes edits from the end of each file backwards so earlier offsets stay
+  valid. Python (server) strings are put back by exact string on the row's lines. AND IT CHECKS ITS
+  OWN WORK: each file is re-scanned (every literal, shown or not) and must differ from before by
+  exactly the rows applied; a row that breaks that is taken back out and refused. When the old
+  words are still in the file afterwards - in code the export skipped, like an `===` compare - the
+  row is applied and a WARNING says to look at that code by hand.
 
 USAGE, from the repo root:
     py -3.13 web/tools/export_site_text.py --out site_text.md
     py -3.13 web/tools/export_site_text.py --out site_text.md --runtime      (+ headless pass)
     py -3.13 web/tools/export_site_text.py --out site_text.md --json items.json
+    py -3.13 web/tools/export_site_text.py --apply changes.txt [--skip ids.txt ...] [--dry-run]
+        [--export site_text.md] [--report apply_report.txt]
 """
 import argparse
 import ast
@@ -562,12 +571,19 @@ def _classify_js(src, s, e, quote, disp):
 # Items
 # --------------------------------------------------------------------------------------------
 class Item:
-    __slots__ = ('file', 'text', 'lines', 'conf', 'how', 'spans', 'seen', 'id', 'section')
+    __slots__ = ('file', 'text', 'lines', 'conf', 'how', 'spans', 'seen', 'id', 'section', 'metas')
 
-    def __init__(self, file, text, line, conf, how, span, section):
+    def __init__(self, file, text, line, conf, how, span, section, meta=None):
         self.file, self.text, self.lines, self.conf, self.how = file, text, [line], conf, how
         self.spans, self.seen, self.section = [span], set(), section
-        self.id = 't' + hashlib.sha1(f'{file}\0{text}'.encode('utf-8')).hexdigest()[:8]
+        # `metas` runs beside `spans`: what --apply needs to write each place back (its quote, its
+        # template parts, its inline tags). Not part of the id and not in the export.
+        self.metas = [meta]
+        self.id = item_id(file, text)
+
+
+def item_id(file, text):
+    return 't' + hashlib.sha1(f'{file}\0{text}'.encode('utf-8')).hexdigest()[:8]
 
 
 CONF_RANK = {'strong': 3, 'normal': 2, 'weak': 1}
@@ -579,17 +595,18 @@ class Collector:
         self.order = []
         self.skipped_content = {}
 
-    def add(self, file, text, line, conf, how, span, section=None):
+    def add(self, file, text, line, conf, how, span, section=None, meta=None):
         k = (file, text)
         it = self.by_key.get(k)
         if it:
             if line not in it.lines:
                 it.lines.append(line)
             it.spans.append(span)
+            it.metas.append(meta)
             if CONF_RANK[conf] > CONF_RANK[it.conf]:
                 it.conf, it.how = conf, how
             return
-        it = Item(file, text, line, conf, how, span, section)
+        it = Item(file, text, line, conf, how, span, section, meta)
         self.by_key[k] = it
         self.order.append(it)
 
@@ -642,17 +659,19 @@ def concat_groups(src, lits):
     return groups
 
 
-def scan_js_into(col, rel, src, lo=0, hi=None, decl=None):
+def scan_js_into(col, rel, src, lo=0, hi=None, decl=None, keep_all=False):
+    """`keep_all` (used by --apply to check its own work): every literal with letters is a row, shown
+    or not - the classifier's guesses are skipped, so nothing written back can hide from the check."""
     lineof = line_index(src)
     lits = sorted(js_literals(src, lo, hi))
     for grp in concat_groups(src, lits):
         if len(grp) > 1:
             s, e = grp[0][0], grp[-1][1]
             d = ' '.join(''.join(display_raw(src, a, b, ex, js=True, markup=False) for a, b, _, ex in grp).split())
-            conf = classify_js(src, s, grp[0][1], grp[0][2], d)
+            conf = classify_js(src, s, grp[0][1], grp[0][2], d) or ('weak' if keep_all and letters(d) else None)
             if conf:
                 col.add(rel, d, lineof(s), conf, 'joined string', [(a, b) for a, b, _, _ in grp],
-                        decl(s) if decl else None)
+                        decl(s) if decl else None, {'kind': 'joined', 'pieces': list(grp)})
             continue
         s, e, q, exprs = grp[0]
         if e <= s:
@@ -667,40 +686,43 @@ def scan_js_into(col, rel, src, lo=0, hi=None, decl=None):
         if LOOKS_HTML.search(masked):
             for fs, fe, how, tags in markup_fragments(masked, s):
                 d = markup_display(src, fs, fe, tags, exprs, js=True)
-                if letters(d) < 2 or CSSISH.search(d) and how == 'text' and '{' in d and ' ' not in d:
-                    continue
-                if how == 'text' and (CODEY.search(re.sub(r'\{[^{}]*\}', '', d)) or re.search(r'[{};]\s*$', re.sub(r'\{[^{}]*\}', '', d))):
-                    continue
-                col.add(rel, d, lineof(fs), 'strong', 'markup ' + how, (fs, fe), sect)
+                if not keep_all:
+                    if letters(d) < 2 or CSSISH.search(d) and how == 'text' and '{' in d and ' ' not in d:
+                        continue
+                    if how == 'text' and (CODEY.search(re.sub(r'\{[^{}]*\}', '', d)) or re.search(r'[{};]\s*$', re.sub(r'\{[^{}]*\}', '', d))):
+                        continue
+                col.add(rel, d, lineof(fs), 'strong', 'markup ' + how, (fs, fe), sect,
+                        {'kind': 'markup', 'how': how, 'tags': tags, 'exprs': exprs, 'lit': (s, e, q)})
             continue
         d = display(src, s, e, exprs, js=True, markup=False)
-        conf = classify_js(src, s, e, q, d)
+        conf = classify_js(src, s, e, q, d) or ('weak' if keep_all and letters(d) else None)
         if conf:
-            col.add(rel, d, lineof(s), conf, 'string', (s, e), sect)
+            col.add(rel, d, lineof(s), conf, 'string', (s, e), sect, {'kind': 'js', 'q': q, 'exprs': exprs})
 
 
-def scan_html_into(col, rel, src):
+def scan_html_into(col, rel, src, keep_all=False):
     lineof = line_index(src)
     for m in re.finditer(r'<script\b([^>]*)>(.*?)</script\s*>', src, re.S | re.I):
         attrs = m.group(1)
         t = re.search(r'type\s*=\s*["\']([^"\']+)', attrs)
         if t and t.group(1).lower() not in ('module', 'text/javascript', 'application/javascript'):
             continue
-        scan_js_into(col, rel, src, m.start(2), m.end(2))
+        scan_js_into(col, rel, src, m.start(2), m.end(2), keep_all=keep_all)
     for fs, fe, how, tags in markup_fragments(src, 0):
         d = markup_display(src, fs, fe, tags, [], js=False)
-        if letters(d) < 2:
+        if letters(d) < 2 and not keep_all:
             continue
-        col.add(rel, d, lineof(fs), 'strong', 'html ' + how, (fs, fe))
+        col.add(rel, d, lineof(fs), 'strong', 'html ' + how, (fs, fe), None, {'kind': 'html', 'how': how, 'tags': tags})
 
 
-def scan_css_into(col, rel, src):
+def scan_css_into(col, rel, src, keep_all=False):
     lineof = line_index(src)
     nocom = re.sub(r'/\*.*?\*/', lambda m: ' ' * len(m.group(0)), src, flags=re.S)
     for m in re.finditer(r'\bcontent\s*:\s*(["\'])((?:\\.|(?!\1).)*)\1', nocom):
         d = ' '.join(m.group(2).split())
         if letters(d) >= 2 and not d.startswith('\\'):
-            col.add(rel, d, lineof(m.start(2)), 'normal', 'css content', (m.start(2), m.end(2)))
+            col.add(rel, d, lineof(m.start(2)), 'normal', 'css content', (m.start(2), m.end(2)), None,
+                    {'kind': 'css', 'q': m.group(1)})
 
 
 SERVER_NAMES = re.compile(r'(NOTES|STORED|TEXT|REFUSAL|MESSAGE|MESSAGES|COPY|HELP|LABELS?|WORDS|SAYS|REASONS?)$')
@@ -735,7 +757,7 @@ def scan_py_into(col, rel, src):
     def add(node, conf, how):
         d = ' '.join(node.value.split())
         if letters(d) >= 2 and ' ' in d and not (URLISH.search(d) and ' ' not in d):
-            col.add(rel, d, node.lineno, conf, how, (node.lineno, node.end_lineno))
+            col.add(rel, d, node.lineno, conf, how, (node.lineno, node.end_lineno), None, {'kind': 'py'})
 
     for node in ast.walk(tree):
         if isinstance(node, (ast.Assign, ast.AnnAssign)):
@@ -850,6 +872,22 @@ def client_files(suffixes):
         yield p
 
 
+def scan_one(col, rel, src, keep_all=False):
+    """One file's rows into `col`. `rel` is relative to web/client, or 'server/<name>.py'."""
+    if rel.endswith('.js'):
+        scan_js_into(col, rel, src, decl=decl_index(src), keep_all=keep_all)
+    elif rel.endswith('.html'):
+        scan_html_into(col, rel, src, keep_all=keep_all)
+    elif rel.endswith('.css'):
+        scan_css_into(col, rel, src, keep_all=keep_all)
+    elif rel.endswith('.py'):
+        scan_py_into(col, rel, src)
+
+
+def source_path(rel):
+    return WEB / rel if rel.startswith('server/') else CLIENT / rel
+
+
 def scan():
     col = Collector()
     content_counts = {}
@@ -859,16 +897,11 @@ def scan():
         if p.name in CONTENT_FILES:
             content_counts[rel] = (len(js_literals(src)), CONTENT_FILES[p.name])
             continue
-        if p.suffix == '.js':
-            scan_js_into(col, rel, src, decl=decl_index(src))
-        elif p.suffix == '.html':
-            scan_html_into(col, rel, src)
-        else:
-            scan_css_into(col, rel, src)
+        scan_one(col, rel, src)
     for p in sorted(SERVER.glob('*.py')):
         if p.name.startswith('test_') or p.name.startswith('migrate_'):
             continue
-        scan_py_into(col, 'server/' + p.name, p.read_text(encoding='utf-8', errors='replace'))
+        scan_one(col, 'server/' + p.name, p.read_text(encoding='utf-8', errors='replace'))
     packs = {}
     for d in ('packs', 'packs_local', 'packs_review'):
         for p in (CLIENT / d).rglob('*.json') if (CLIENT / d).exists() else []:
@@ -1053,6 +1086,640 @@ def match_runtime(col, got):
             if letters(rest) >= 3:
                 only.setdefault(page, []).append(ln)
     return only
+
+
+# --------------------------------------------------------------------------------------------
+# --apply: put rewritten lines back where they came from.
+# --------------------------------------------------------------------------------------------
+class Refuse(Exception):
+    """A row that would need a guess to write back. It is reported, never applied."""
+
+
+ROW_LINE = re.compile(r'^(t[0-9a-f]{8})\s*=>\s?(.*)$')
+INLINE_TOKEN = re.compile(r'</?([a-z]+)>')
+BRACE_TOKEN = re.compile(r'\{[^{}]*\}')
+
+
+def read_changes(path):
+    """`<id> => new text` lines; anything else (comments, blanks) is ignored. Returns ({id: text}, [dup ids])."""
+    out, dups = {}, []
+    for ln in Path(path).read_text(encoding='utf-8-sig').splitlines():
+        m = ROW_LINE.match(ln)
+        if m:
+            if m.group(1) in out:
+                dups.append(m.group(1))
+            out[m.group(1)] = m.group(2).strip()
+    return out, dups
+
+
+def read_ids(path):
+    """A skip file: every line that starts with an id - a bare list, a changes file, or the names-undo file
+    (whose rows are skipped whatever they say: an undo row is not text to apply)."""
+    ids = set()
+    for ln in Path(path).read_text(encoding='utf-8-sig').splitlines():
+        m = re.match(r'^\s*(t[0-9a-f]{8})\b', ln)
+        if m:
+            ids.add(m.group(1))
+    return ids
+
+
+def norm_text(s):
+    return ' '.join(s.split())
+
+
+def new_tokens(new, old, phs, tags):
+    """Split the new words into [('t', text) | ('x', k) | ('g', k)]. `phs` are the placeholder displays
+    (`{name}`) and `tags` the inline tag names (`<a>`, `</a>`, `<br>`), each in source order; k indexes them.
+
+    A placeholder is matched by its exact `{name}`, else by order (the rewrite renamed it); the n-th <a> in
+    the new words is the n-th <a> in the code. Anything that would need a guess raises Refuse."""
+    used_x, used_g = [False] * len(phs), [False] * len(tags)
+    out, buf = [], []
+    by_len = sorted(set(phs), key=len, reverse=True)
+
+    def flush():
+        if buf:
+            out.append(('t', ''.join(buf)))
+            buf.clear()
+    i = 0
+    while i < len(new):
+        c = new[i]
+        if c == '{' and phs:
+            hit = None
+            for d in by_len:
+                if new.startswith(d, i):
+                    k = next((k for k, p in enumerate(phs) if p == d and not used_x[k]), None)
+                    if k is not None:
+                        hit = (k, d)
+                        break
+            if hit:
+                flush()
+                out.append(('x', hit[0]))
+                used_x[hit[0]] = True
+                i += len(hit[1])
+                continue
+        elif c == '<':
+            m = INLINE_TOKEN.match(new, i)
+            if m and m.group(1) in INLINE_TAGS:
+                k = next((k for k, t in enumerate(tags) if t == m.group(0) and not used_g[k]), None)
+                if k is None:
+                    raise Refuse(f'the new words have {m.group(0)}, and the code has no such tag (left) on that line')
+                flush()
+                out.append(('g', k))
+                used_g[k] = True
+                i = m.end()
+                continue
+        buf.append(c)
+        i += 1
+    flush()
+    left = [k for k in range(len(phs)) if not used_x[k]]
+    if left:   # by order: the rewrite renamed a placeholder
+        loose = sum(1 for kind, v in out if kind == 't' for m in BRACE_TOKEN.finditer(v) if m.group(0) not in old)
+        if loose != len(left):
+            raise Refuse('placeholder ' + ', '.join(phs[k] for k in left) + ' is not in the new words')
+        it = iter(left)
+        out2 = []
+        for kind, v in out:
+            if kind != 't':
+                out2.append((kind, v))
+                continue
+            pos = 0
+            for m in BRACE_TOKEN.finditer(v):
+                if m.group(0) in old:
+                    continue
+                if m.start() > pos:
+                    out2.append(('t', v[pos:m.start()]))
+                out2.append(('x', next(it)))
+                pos = m.end()
+            if pos < len(v):
+                out2.append(('t', v[pos:]))
+        out = out2
+    for kind, v in out:
+        if kind == 't':
+            for m in BRACE_TOKEN.finditer(v):
+                if m.group(0) not in old:
+                    raise Refuse(f'the new words have {m.group(0)}, which the code would show as written')
+    missing = [tags[k] for k in range(len(tags)) if not used_g[k]]
+    if missing:
+        raise Refuse('the new words leave out the tag(s) ' + ' '.join(missing) + ' (the link or the markup would be lost)')
+    # Tags must nest no worse than they did: a run can start inside an <a> opened before it (then its
+    # `</a>` comes first in the code too), but the rewrite must not close a tag it has not opened.
+    def lowest(seq):
+        depth, low = {}, {}
+        for t in seq:
+            if t in VOID_INLINE:
+                continue
+            nm = t.strip('</>')
+            depth[nm] = depth.get(nm, 0) + (-1 if t.startswith('</') else 1)
+            low[nm] = min(low.get(nm, 0), depth[nm])
+        return low
+    was = lowest(tags)
+    for nm, low in lowest([tags[v] for k, v in out if k == 'g']).items():
+        if low < was.get(nm, 0):
+            raise Refuse(f'the new words close </{nm}> before opening it')
+    return out
+
+
+def expected_display(toks, phs, tags):
+    return norm_text(''.join(v if k == 't' else (phs[v] if k == 'x' else tags[v]) for k, v in toks))
+
+
+def esc_js(t, q):
+    """Text -> the inside of a JS literal quoted with q. A backslash already followed by n/t/r/... is the
+    export's own `\\n` (kept as an escape); any other backslash is a real one."""
+    t = re.sub(r'\\(?![ntrbfv0])', lambda m: '\\\\', t)
+    if q == '`':
+        return t.replace('`', '\\`').replace('${', '\\${')
+    return t.replace(q, '\\' + q)
+
+
+def esc_markup(t, attrq=None):
+    """Text -> markup. Only what would be read as markup is escaped: `&` before a name or `#`, `<` before
+    a tag, and the attribute's own quote."""
+    t = re.sub(r'&(?=[#A-Za-z0-9])', '&amp;', t)
+    t = re.sub(r'<(?=[A-Za-z/!?])', '&lt;', t)
+    if attrq:
+        t = t.replace(attrq, '&quot;' if attrq == '"' else '&#39;')
+    return t
+
+
+def split_like(text, weights):
+    """Cut `text` into len(weights) pieces at spaces, near the old pieces' proportions."""
+    total = sum(weights) or 1
+    cuts, acc = [0], 0
+    spaces = [m.end() for m in re.finditer(' ', text)]
+    for w in weights[:-1]:
+        acc += w
+        target = round(len(text) * acc / total)
+        cand = [p for p in spaces if p > cuts[-1]]
+        cuts.append(min(cand, key=lambda p: abs(p - target)) if cand else len(text))
+    cuts.append(len(text))
+    return [text[cuts[k]:cuts[k + 1]] for k in range(len(weights))]
+
+
+def _edges(raw):
+    return raw[:len(raw) - len(raw.lstrip())], raw[len(raw.rstrip()):]
+
+
+def _in_pre(src, at):
+    """Inside <pre> or <textarea>, where line breaks show."""
+    for t in ('pre', 'textarea'):
+        o = src.lower().rfind('<' + t, 0, at)
+        if o >= 0 and src.lower().rfind('</' + t, o, at) < 0:
+            return True
+    return False
+
+
+def wrap_like(chunks, src, fs, fe):
+    """Markup text that sat over several source lines goes back over several lines (HTML folds the
+    breaks into spaces): wrapped at spaces in the text - never inside a tag or a `${...}` - at the
+    width and the indent the old lines had."""
+    old = src[fs:fe]
+    nl = '\r\n' if '\r\n' in old else '\n'
+    first = old.index('\n')
+    indent = re.match(r'[ \t]*', old[first + 1:]).group(0)
+    line_start = src.rfind('\n', 0, fs) + 1
+    line_end = src.find('\n', fe)
+    region = src[line_start:len(src) if line_end < 0 else line_end].replace('\r', '')
+    width = max([100] + [len(x) for x in region.split('\n')])
+    units, cur, gap, unit_gap = [], '', False, False   # units: (a space before it?, text)
+    for atomic, v in chunks:
+        for piece in ([v] if atomic else list(v)):
+            if not atomic and piece in ' \t':
+                if cur:
+                    units.append((unit_gap, cur))
+                    cur = ''
+                gap = True
+                continue
+            if not cur:
+                unit_gap, gap = gap, False
+            cur += piece
+    if cur:
+        units.append((unit_gap, cur))
+    return _greedy(units, fs - line_start, indent, width, nl)
+
+
+def _greedy(units, col, indent, width, nl):
+    out = []
+    first = True
+    for gap, u in units:
+        if first:
+            out.append(u)
+            col += len(u)
+            first = False
+            continue
+        if gap and col + 1 + len(u) > width:
+            out.append(nl + indent + u)
+            col = len(indent) + len(u)
+        else:
+            out.append((' ' if gap else '') + u)
+            col += (1 if gap else 0) + len(u)
+    return ''.join(out)
+
+
+def encode_span(src, span, meta, new, old):
+    """[(start, end, replacement)] for one place a row sits, plus the display the new source will have."""
+    kind = meta['kind']
+    if kind == 'js':
+        s, e = span
+        q, exprs = meta['q'], [x for x in meta['exprs'] if s <= x[0] and x[1] <= e]
+        phs = [placeholder(src[a + 2:b - 1]) for a, b in exprs]
+        toks = new_tokens(new, old, phs, [])
+        lead, trail = _edges(src[s:e])
+        body = ''.join(esc_js(v, q) if k == 't' else src[exprs[v][0]:exprs[v][1]] for k, v in toks)
+        return [(s, e, lead + body + trail)], expected_display(toks, phs, [])
+    if kind == 'joined':
+        # 'One sentence ' + `over ${n} lines`: the new words are cut back into the same pieces at spaces.
+        # A placeholder must land in the template piece its `${expr}` came from, so the text between
+        # two placeholders is shared only among the pieces between their owners.
+        pieces = meta['pieces']
+        exprs, owner = [], []
+        for n, (a, b, _, ex) in enumerate(pieces):
+            for x in ex:
+                if a <= x[0] and x[1] <= b:
+                    exprs.append(x)
+                    owner.append(n)
+        phs = [placeholder(src[a + 2:b - 1]) for a, b in exprs]
+        toks = new_tokens(new, old, phs, [])
+        weights = [len(norm_text(display_raw(src, a, b, ex, True, False))) or 1 for a, b, _, ex in pieces]
+        content = [[] for _ in pieces]
+        segs, cur = [], []
+        for k, v in toks:
+            if k == 'x':
+                segs.append((''.join(cur), v))
+                cur = []
+            else:
+                cur.append(v)
+        segs.append((''.join(cur), None))
+        lo = 0
+        used = [0] * len(pieces)   # how much of each piece's old length is already filled
+        for text, x in segs:
+            hi = owner[x] if x is not None else len(pieces) - 1
+            if hi < lo:
+                raise Refuse('the placeholders are in a different order than the code can hold')
+            w = weights[lo:hi + 1]
+            w[0] = max(1, w[0] - used[lo])
+            for n, part in zip(range(lo, hi + 1), split_like(text, w)):
+                if part:
+                    content[n].append(('t', part))
+                    used[n] += len(part)
+            if x is not None:
+                content[hi].append(('x', x))
+                used[hi] += len(phs[x])
+            lo = hi
+        lead, _ = _edges(src[pieces[0][0]:pieces[0][1]])
+        _, trail = _edges(src[pieces[-1][0]:pieces[-1][1]])
+        content[0].insert(0, ('t', lead))
+        content[-1].append(('t', trail))
+        edits = []
+        for (a, b, q, _), parts in zip(pieces, content):
+            edits.append((a, b, ''.join(esc_js(v, q) if k == 't' else src[exprs[v][0]:exprs[v][1]] for k, v in parts)))
+        return edits, expected_display(toks, phs, [])
+    if kind in ('markup', 'html'):
+        fs, fe = span
+        tags = [t for t in meta['tags'] if fs <= t[0] and t[1] <= fe]
+        if any(t[2] == '' for t in tags):
+            raise Refuse('the line has a comment or a script inside it; put it back by hand')
+        exprs = [x for x in meta.get('exprs', []) if fs <= x[0] and x[1] <= fe
+                 and not any(t[0] <= x[0] < t[1] for t in tags)]
+        phs = [placeholder(src[a + 2:b - 1]) for a, b in exprs]
+        names = [t[2] for t in tags]
+        toks = new_tokens(new, old, phs, names)
+        attrq = None
+        if meta['how'].startswith('attr'):
+            j = fs - 1
+            while j > 0 and src[j] in ' \t\r\n':
+                j -= 1
+            attrq = src[j] if src[j] in '"\'' else None
+        q = meta['lit'][2] if kind == 'markup' else None
+        out = []
+        for k, v in toks:
+            if k == 't':
+                t = esc_markup(v, attrq)
+                out.append((False, esc_js(t, q) if q else t))
+            elif k == 'x':
+                out.append((True, src[exprs[v][0]:exprs[v][1]]))
+            else:
+                out.append((True, src[tags[v][0]:tags[v][1]]))
+        old_src = src[fs:fe]
+        if '\n' in old_src and q in (None, '`') and not attrq and not _in_pre(src, fs):
+            text = wrap_like(out, src, fs, fe)
+        else:
+            text = ''.join(v for _, v in out)
+        return [(fs, fe, text)], expected_display(toks, phs, names)
+    if kind == 'css':
+        s, e = span
+        toks = new_tokens(new, old, [], [])
+        lead, trail = _edges(src[s:e])
+        text = ''.join(v for _, v in toks)
+        if meta['q'] in text or '\\' in text:
+            raise Refuse('CSS content with its own quote or a backslash in the new words; put it back by hand')
+        return [(s, e, lead + text + trail)], norm_text(text)
+    raise Refuse(f'no writer for a {kind} row')
+
+
+def _py_offsets(src):
+    starts = [0]
+    for m in re.finditer('\n', src):
+        starts.append(m.end())
+
+    def at(line, col_bytes):
+        ls = starts[line - 1]
+        le = starts[line] if line < len(starts) else len(src)
+        return ls + len(src[ls:le].encode('utf-8')[:col_bytes].decode('utf-8', errors='ignore'))
+    return at
+
+
+def py_strings(src):
+    """Every str constant / f-string in a Python file, normalized - what the check compares."""
+    out = set()
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            out.add(norm_text(node.value))
+        elif isinstance(node, ast.JoinedStr):
+            out.add(norm_text(''.join(str(v.value) if isinstance(v, ast.Constant) else '{' + ast.unparse(v.value) + '}'
+                                      for v in node.values)))
+    return out
+
+
+def encode_py(src, item, new):
+    """Python: by exact string, as designed - the str constant(s) on the row's lines whose words are the
+    row's. Implicitly joined pieces are cut at spaces like a JS `+` join; f-strings, raw, bytes and
+    triple-quoted strings are refused (put back by hand)."""
+    import io
+    import tokenize
+    at = _py_offsets(src)
+    lines = set()
+    for a, b in item.spans:
+        lines.update(range(a, b + 1))
+    edits = []
+    found = 0
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.JoinedStr) and node.lineno in lines:
+            disp = norm_text(''.join(str(v.value) if isinstance(v, ast.Constant) else '{' + ast.unparse(v.value) + '}'
+                                     for v in node.values))
+            if disp == item.text:
+                raise Refuse('a Python f-string; put it back by hand')
+        if not (isinstance(node, ast.Constant) and isinstance(node.value, str) and node.lineno in lines):
+            continue
+        if norm_text(node.value) != item.text:
+            continue
+        found += 1
+        s, e = at(node.lineno, node.col_offset), at(node.end_lineno, node.end_col_offset)
+        seg = src[s:e]
+        toks = [t for t in tokenize.generate_tokens(io.StringIO(seg).readline) if t.type == tokenize.STRING]
+        if not toks:
+            raise Refuse('could not read the Python string')
+        seg_lines = seg.split('\n')
+        seg_starts = [0]
+        for ln in seg_lines[:-1]:
+            seg_starts.append(seg_starts[-1] + len(ln) + 1)
+        pieces = []
+        for t in toks:
+            m = re.match(r'^([A-Za-z]*)(\'\'\'|"""|\'|")', t.string)
+            pre, q = m.group(1), m.group(2)
+            if set(pre.lower()) & set('rbf') or len(q) == 3:
+                raise Refuse('a raw, bytes or triple-quoted Python string; put it back by hand')
+            ps = s + seg_starts[t.start[0] - 1] + t.start[1]
+            pe = s + seg_starts[t.end[0] - 1] + t.end[1]
+            pieces.append((ps, pe, pre, q, ast.literal_eval(t.string)))
+        toks_new = new_tokens(new, item.text, [], [])
+        text = ''.join(v for _, v in toks_new)
+        parts = split_like(text, [len(norm_text(p[4])) or 1 for p in pieces])
+        parts[0] = _edges(pieces[0][4])[0] + parts[0]
+        parts[-1] = parts[-1] + _edges(pieces[-1][4])[1]
+        for (ps, pe, pre, q, _), part in zip(pieces, parts):
+            body = part.replace('\\', '\\\\').replace(q, '\\' + q).replace('\n', '\\n')
+            edits.append((ps, pe, pre + q + body + q))
+    if not found:
+        raise Refuse('the Python string was not found on its lines')
+    return edits, norm_text(new)
+
+
+def apply_edits(src, edits):
+    """Write edits from the end of the file backwards, so earlier offsets stay valid."""
+    for s, e, rep in sorted(edits, key=lambda x: x[0], reverse=True):
+        src = src[:s] + rep + src[e:]
+    return src
+
+
+def file_texts(rel, src):
+    if rel.endswith('.py'):
+        return py_strings(src)
+    col = Collector()
+    scan_one(col, rel, src, keep_all=True)
+    return {it.text for it in col.order}
+
+
+def plan_file(rel, src, items, wanted):
+    """Rows of one file -> (new source, {id: new display}, {id: reason refused}, {id: [warnings]}).
+
+    Every row is encoded; the file is re-scanned (every literal, shown or not) and must differ from the
+    old scan by exactly the rows applied - old words out, new words in. A row that breaks that (an
+    escape gone wrong would move a literal's end) is taken back out and refused."""
+    refused, warn, plans = {}, {}, {}
+    for it in items:
+        new = wanted[it.id]
+        try:
+            if rel.endswith('.py'):
+                edits, disp = encode_py(src, it, new)
+            else:
+                edits, disp = [], None
+                for span, meta in zip(it.spans, it.metas):
+                    e, d = encode_span(src, span, meta, new, it.text)
+                    if disp is not None and d != disp:
+                        raise Refuse('the same words sit in places that would read differently after the rewrite')
+                    edits += e
+                    disp = d
+            plans[it.id] = (edits, disp, it.text)
+            # A short word in several places may be a code value in one of them (clock.js ['UTC', 'UTC']:
+            # the first is the zone name handed to the browser) - the scan cannot tell, so say so.
+            if len(it.spans) > 1 and len(it.text.split()) <= 2:
+                warn.setdefault(it.id, []).append(f'written in {len(it.spans)} places; a short word - check that '
+                                                  'each one is shown text, not a value the code uses')
+            if not rel.endswith('.py') and any('\n' in src[s:e].strip() and '\n' not in r for s, e, r in edits):
+                warn.setdefault(it.id, []).append('a line written over several source lines is now on one line')
+        except Refuse as ex:
+            refused[it.id] = str(ex)
+    # A row inside another row's `${...}` (a string in a template's placeholder): the outer row is
+    # written now (it copies the placeholder as it is) and the inner one is DEFERRED to the next pass.
+    deferred = []
+    while True:
+        spans = sorted((s, e, i) for i, (edits, _, _) in plans.items() for s, e, _ in edits)
+        clash = next(((a, b) for a, b in zip(spans, spans[1:]) if b[0] < a[1] and a[2] != b[2]), None)
+        if not clash:
+            break
+        size = {i: sum(e - s for s, e, _ in plans[i][0]) for i in (clash[0][2], clash[1][2])}
+        inner = min(size, key=size.get)
+        deferred.append(inner)
+        plans.pop(inner)
+    before = file_texts(rel, src)
+
+    def attempt(ids):
+        new_src = apply_edits(src, [x for i in ids for x in plans[i][0]])
+        try:
+            after = file_texts(rel, new_src)
+        except SyntaxError as ex:
+            return new_src, None, f'the file no longer parses ({ex})'
+        added = after - before - {plans[i][1] for i in ids}
+        gone = before - after - {plans[i][2] for i in ids}
+        # A row's words can also show inside ANOTHER line's placeholder (`{st.away ? ' (dropped off)' : ''}`
+        # is part of that line's display); that line changes with it, and only inside its placeholders.
+        for g in list(gone):
+            flat = BRACE_TOKEN.sub('{}', g)
+            a = next((a for a in added if BRACE_TOKEN.sub('{}', a) == flat), None)
+            if a is not None:
+                gone.discard(g)
+                added.discard(a)
+        missing = [i for i in ids if plans[i][1] not in after]
+        return new_src, (added, gone, missing), None
+
+    ids = list(plans)
+    new_src, res, err = attempt(ids)
+    if err or res[0] or res[1] or res[2]:
+        # Find the culprits one at a time, then try the good ones together.
+        good = []
+        for i in ids:
+            _, r, er = attempt([i])
+            if er or r[0] or r[1] or r[2]:
+                why = er or ('the re-scan does not find the new words' if r[2] else
+                             'writing it changes other text in the file (an escape went wrong)')
+                refused[i] = why
+            else:
+                good.append(i)
+        ids = good
+        new_src, res, err = attempt(ids)
+        if err or res[0] or res[1] or res[2]:
+            for i in ids:
+                refused[i] = 'fine alone, not together with the other rows of this file'
+            ids, new_src = [], src
+    after = file_texts(rel, new_src) if ids else before
+    for i in ids:
+        old = plans[i][2]
+        if old != plans[i][1] and old in after:
+            warn.setdefault(i, []).append('the old words are still in this file, in code the export skipped '
+                                          '(a compare or a lookup?) - check it by hand')
+    return new_src, {i: plans[i][1] for i in ids}, refused, warn, deferred
+
+
+def apply_to_file(rel, src, items, wanted):
+    """plan_file, pass after pass, until no row is left deferred. Returns (new src, done, refused, warn)."""
+    done, refused, warn = {}, {}, {}
+    pending = items
+    while pending:
+        src2, d, r, w, deferred = plan_file(rel, src, pending, wanted)
+        done.update(d)
+        refused.update(r)
+        warn.update(w)
+        if not deferred:
+            src = src2
+            break
+        if not d:
+            refused.update({i: 'overlaps another row in the code' for i in deferred})
+            break
+        src = src2
+        col = Collector()
+        scan_one(col, rel, src)
+        now = {it.id: it for it in col.order}
+        refused.update({i: 'its words changed when the line around it was rewritten' for i in deferred if i not in now})
+        pending = [now[i] for i in deferred if i in now]
+    return src, done, refused, warn
+
+
+def read_export(path):
+    """{id: (file, text)} from an exported Markdown file (only used to explain a refusal)."""
+    out, cur = {}, None
+    for ln in Path(path).read_text(encoding='utf-8').splitlines():
+        m = re.match(r'^`web/(?:client/)?([^`]+)` · \d+ rows', ln)
+        if m:
+            cur = m.group(1)
+        m = re.match(r'^- (t[0-9a-f]{8}) · [^·]* · [^·]* · (.*)$', ln)
+        if m:
+            out[m.group(1)] = (cur, m.group(2))
+    return out
+
+
+def raw_scan():
+    """The same scan as scan(), on files read byte-for-byte (newlines kept), so offsets are true."""
+    col, srcs = Collector(), {}
+    paths = [(p.relative_to(CLIENT).as_posix(), p) for p in client_files({'.js', '.html', '.css'})
+             if p.name not in CONTENT_FILES]
+    paths += [('server/' + p.name, p) for p in sorted(SERVER.glob('*.py'))
+              if not (p.name.startswith('test_') or p.name.startswith('migrate_'))]
+    for rel, p in paths:
+        with open(p, encoding='utf-8', newline='') as f:
+            srcs[rel] = f.read()
+        scan_one(col, rel, srcs[rel])
+    return col, srcs
+
+
+def apply_changes(changes_path, skip_paths=(), dry_run=False, export_path=None, report_path=None):
+    import difflib
+    wanted, dups = read_changes(changes_path)
+    skip = set()
+    for p in skip_paths or ():
+        skip |= read_ids(p)
+    skipped = sorted(i for i in wanted if i in skip)
+    wanted = {i: t for i, t in wanted.items() if i not in skip}
+    col, srcs = raw_scan()
+    by_id = {it.id: it for it in col.order}
+    export = read_export(export_path) if export_path else {}
+    refused, warns, applied = {}, {}, {}
+    per_file = {}
+    for i in wanted:
+        it = by_id.get(i)
+        if it is None:
+            why = 'not found: the words (or the file) changed since the export'
+            if i in export:
+                f, old = export[i]
+                if f and f in {x.file for x in col.order}:
+                    cands = [x.text for x in col.order if x.file == f]
+                    best = difflib.get_close_matches(old, cands, n=1, cutoff=0.6)
+                    why = f'{f}: the words changed since the export' + (f'; it now reads: {best[0]}' if best else
+                                                                        '; no line like it is left in that file')
+                else:
+                    why = f'{f}: the file is gone or holds no rows'
+            refused[i] = why
+            continue
+        if norm_text(wanted[i]) == it.text:
+            refused[i] = 'the new words are the same as the old'
+            continue
+        per_file.setdefault(it.file, []).append(it)
+    for rel, items in per_file.items():
+        src = srcs[rel]
+        if not dry_run:   # somebody may have edited the file since the scan: plan on what is there now
+            with open(source_path(rel), encoding='utf-8', newline='') as f:
+                now_src = f.read()
+            if now_src != src:
+                c2 = Collector()
+                scan_one(c2, rel, now_src)
+                now = {it.id: it for it in c2.order}
+                refused.update({it.id: 'the file changed while applying and these words with it'
+                                for it in items if it.id not in now})
+                items = [now[it.id] for it in items if it.id in now]
+                src = now_src
+        new_src, done, ref, warn = apply_to_file(rel, src, items, wanted)
+        refused.update(ref)
+        warns.update(warn)
+        applied.update({i: (rel, by_id[i].text, d) for i, d in done.items()})
+        if done and not dry_run:
+            with open(source_path(rel), 'w', encoding='utf-8', newline='') as f:
+                f.write(new_src)
+    lines = [f'{"DRY RUN - nothing written. " if dry_run else ""}{len(applied)} applied, {len(refused)} refused, '
+             f'{len(skipped)} skipped (--skip), {len(dups)} duplicate ids in the changes file.']
+    for i, (rel, old, new) in sorted(applied.items(), key=lambda x: (x[1][0], x[0])):
+        lines.append(f'APPLIED  {i}  {rel}\n    was: {old}\n    now: {new}')
+        for w in warns.get(i, []):
+            lines.append(f'    WARNING: {w}')
+    for i, why in sorted(refused.items(), key=lambda x: x[0]):
+        f = by_id[i].file if i in by_id else (export.get(i, ('?',))[0])
+        lines.append(f'REFUSED  {i}  {f}  {why}')
+    if dups:
+        lines.append('DUPLICATE ids (the last one was used): ' + ' '.join(dups))
+    text = '\n'.join(lines) + '\n'
+    if report_path:
+        Path(report_path).write_text(text, encoding='utf-8')
+    return {'applied': applied, 'refused': refused, 'warnings': warns, 'skipped': skipped, 'report': text}
 
 
 # --------------------------------------------------------------------------------------------
@@ -1270,12 +1937,25 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
 
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    ap.add_argument('--out', required=True, help='the Markdown file to write')
+    ap.add_argument('--out', help='the Markdown file to write')
     ap.add_argument('--json', help='also write every item (id, file, lines, spans, text) as JSON')
     ap.add_argument('--runtime', action='store_true', help='also run the headless pass')
     ap.add_argument('--port', type=int, default=8944)
     ap.add_argument('--wait', type=float, default=5.0, help='seconds to let each page settle')
+    ap.add_argument('--apply', metavar='CHANGES', help='write `<id> => new text` lines back into the code')
+    ap.add_argument('--skip', action='append', default=[], metavar='IDS',
+                    help='with --apply: leave out every id this file lists (repeatable)')
+    ap.add_argument('--dry-run', action='store_true', help='with --apply: report, write nothing')
+    ap.add_argument('--export', metavar='MD', help='with --apply: the export the changes were made from '
+                    '(only to say what a refused row reads like now)')
+    ap.add_argument('--report', metavar='FILE', help='with --apply: write the full report here')
     a = ap.parse_args(argv)
+    if a.apply:
+        r = apply_changes(a.apply, a.skip, a.dry_run, a.export, a.report)
+        print(r['report'] if not a.report else r['report'].split('\n')[0])
+        return 0
+    if not a.out:
+        ap.error('--out is required (or --apply)')
     col, content_counts, packs, learn_json = scan()
     print(f'static scan: {len(col.order)} rows', file=sys.stderr)
     only, ran = {}, False
