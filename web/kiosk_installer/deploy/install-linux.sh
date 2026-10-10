@@ -290,6 +290,9 @@ NIMROD_PULL_MOUNT=
 NIMROD_PULL_EVERY=daily
 # A picture removed from Drive: 0 = it stays here (default); 1 = it is moved to a backup folder beside the target
 NIMROD_PULL_MIRROR_DELETES=0
+# The jobs to run, in order. drive = the Drive pull above. A copy of the drive on this computer's own storage (the
+# backup folder) is a second job, "fallback": install-linux.sh NIMROD_FALLBACK=1 adds its settings below, off.
+NIMROD_PULL_JOBS=drive
 EOF
     chmod 600 "$PULL_ENV"
   fi
@@ -298,6 +301,80 @@ EOF
   echo "photo pull timer on (journalctl --user -u nimrod-photo-pull); settings: $PULL_ENV"
   command -v rclone >/dev/null 2>&1 || echo "  NOTE: rclone is not installed yet (sudo apt install rclone); see README.md, Pictures from Google Drive"
   command -v heif-convert >/dev/null 2>&1 || echo "  NOTE: no heif-convert: iPhone pictures (HEIC) are kept aside, not shown (sudo apt install libheif-examples)"
+fi
+
+# 9. (2026-10-10, storage roles Stage 1, row 2.77) THIS COMPUTER'S OWN COPY: THE FALLBACK. A folder on this computer's
+#    own storage, filled at night from her drive by the photo pull's "fallback" job, and served by a second media agent
+#    so the screen can choose it as "Backup folder for this screen" (Media / Sources: http://localhost:<port>). Only when
+#    asked: NIMROD_FALLBACK=1. A USER unit, like the pull's (the folder is in this user's home), so no sudo.
+#    It installs the agent and adds the copy job's settings to photo-pull.env (when that file exists and has none),
+#    but leaves the job OFF: it writes to the SD card, so it is switched on by hand once the card's free space has been
+#    looked at (nimrod-photo-pull.sh --check says how much there is). Its folder and port are settings:
+#      NIMROD_FALLBACK_DIR   default ~/nimrod-fallback
+#      NIMROD_FALLBACK_PORT  default 8771: the next after the drive's agent (8770); nothing scans ports, the screen is
+#                            told the address once, and an agent already on that port refuses to start and says so.
+FALLBACK_DIR="${NIMROD_FALLBACK_DIR:-$HOME/nimrod-fallback}"
+FALLBACK_PORT="${NIMROD_FALLBACK_PORT:-8771}"
+if [ "${NIMROD_FALLBACK:-0}" = "1" ]; then
+  AGENT_SRC="$HERE/../../media_agent/agent.py"
+  for f in "$AGENT_SRC" "$HERE/nimrod-fallback-agent.service"; do
+    [ -f "$f" ] || { echo "not found: $f" >&2; exit 1; }
+  done
+  case "$FALLBACK_PORT" in ''|*[!0-9]*) echo "NIMROD_FALLBACK_PORT '$FALLBACK_PORT' is not a port number" >&2; exit 1 ;; esac
+  FB_ENV="$HOME/.config/nimrod/fallback-agent.env"
+  mkdir -p "$(dirname "$FB_ENV")"
+  if [ ! -f "$FB_ENV" ]; then      # never overwritten: it holds the person's own choices
+    cat > "$FB_ENV" <<EOF
+# Nimrod fallback media agent - serves this computer's own copy of the pictures. Edit, then:
+#   systemctl --user restart nimrod-fallback-agent
+# The folder (the same one as NIMROD_PULL_JOB_FALLBACK_TO in photo-pull.env):
+NIMROD_MEDIA_ROOT=$FALLBACK_DIR
+# The port the screen reaches it on (http://localhost:<port>):
+NIMROD_MEDIA_PORT=$FALLBACK_PORT
+# This computer only:
+NIMROD_MEDIA_HOST=127.0.0.1
+EOF
+  else
+    echo "kept existing $FB_ENV"
+    FALLBACK_DIR="$(sed -n 's/^NIMROD_MEDIA_ROOT=//p' "$FB_ENV" | tail -n 1)"
+    FALLBACK_PORT="$(sed -n 's/^NIMROD_MEDIA_PORT=//p' "$FB_ENV" | tail -n 1)"
+    [ -n "$FALLBACK_DIR" ] || { echo "$FB_ENV has no NIMROD_MEDIA_ROOT line; add one (the folder to serve)" >&2; exit 1; }
+    [ -n "$FALLBACK_PORT" ] || FALLBACK_PORT=8770    # the agent's own default when the line is missing
+  fi
+  mkdir -p "$FALLBACK_DIR"
+  install -m 0755 "$AGENT_SRC" "$BIN_DIR/nimrod-media-agent.py"
+  install -m 0644 "$HERE/nimrod-fallback-agent.service" "$UNIT_DIR/nimrod-fallback-agent.service"
+  # The copy job's settings, OFF, beside the pull's. FROM is the drive's agent's folder when one is installed, so a
+  # picture has the same path in both and an album or a hidden picture means the same on the backup.
+  PULL_ENV="$HOME/.config/nimrod/photo-pull.env"
+  if [ -f "$PULL_ENV" ] && ! grep -q '^NIMROD_PULL_JOB_FALLBACK_TO=' "$PULL_ENV"; then
+    PRIMARY_DIR="$(sed -n 's/^NIMROD_MEDIA_ROOT=//p' /etc/nimrod/agent.env 2>/dev/null | tail -n 1 || true)"
+    [ -n "$(tail -c 1 "$PULL_ENV")" ] && echo >> "$PULL_ENV"
+    cat >> "$PULL_ENV" <<EOF
+# --- This computer's own copy of the drive (the fallback), added by install-linux.sh NIMROD_FALLBACK=1 on $(date +%F).
+# OFF until "fallback" is added to NIMROD_PULL_JOBS above (NIMROD_PULL_JOBS=drive fallback, or just fallback).
+# Look first: ~/.local/bin/nimrod-photo-pull.sh --check   (with the job on: how much room the card has)
+# The folder to copy from (the drive's media agent's folder), and the drive's mount point:
+NIMROD_PULL_JOB_FALLBACK_FROM=$PRIMARY_DIR
+NIMROD_PULL_JOB_FALLBACK_FROM_MOUNT=
+# The folder to copy to, on this computer's own storage - on purpose, so it is allowed here and nowhere else:
+NIMROD_PULL_JOB_FALLBACK_TO=$FALLBACK_DIR
+NIMROD_PULL_JOB_FALLBACK_ALLOW_SYSTEM_DISK=1
+# How much: all | newest:<number> | album:<folder inside FROM>. And what it never goes below, free, on the card:
+NIMROD_PULL_JOB_FALLBACK_LIMIT=newest:1000
+NIMROD_PULL_JOB_FALLBACK_KEEP_FREE_MB=2048
+# A picture gone from the drive: 0 = it stays in the copy (default); 1 = it is moved beside it, to .nimrod-removed
+NIMROD_PULL_JOB_FALLBACK_MIRROR_DELETES=0
+EOF
+    echo "  added the fallback copy job's settings to $PULL_ENV (off until NIMROD_PULL_JOBS names it)"
+  elif [ ! -f "$PULL_ENV" ]; then
+    echo "  NOTE: nothing fills $FALLBACK_DIR yet: the copy job is part of the photo pull (NIMROD_PHOTO_PULL=1)."
+  fi
+  systemctl --user daemon-reload
+  systemctl --user enable nimrod-fallback-agent.service
+  systemctl --user restart nimrod-fallback-agent.service || true
+  echo "fallback agent on: http://localhost:$FALLBACK_PORT serves $FALLBACK_DIR (systemctl --user status nimrod-fallback-agent)"
+  echo "  on the screen: Media / Sources, add http://localhost:$FALLBACK_PORT; then This screen, Backup folder for this screen"
 fi
 
 echo

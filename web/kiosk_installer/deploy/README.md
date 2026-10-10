@@ -155,11 +155,43 @@ by your account alone. Nobody else signs in to it.
 | `NIMROD_PULL_BWLIMIT` | `08:00,1M 22:00,off` | 1 MB/s by day, so a family member's big upload never stalls a video call on the facility wifi; no cap at night. |
 | `NIMROD_PULL_CONVERT_HEIC` | `auto` | iPhone pictures (HEIC) cannot be shown by browsers. With a converter here (`heif-convert` from `libheif-examples`, or ImageMagick with HEIC) each becomes `<name>.HEIC.jpg` beside the others; the original is kept aside in `.nimrod-pull/heic`. With none, they are kept aside, not shown, and each pull says so. Nothing is installed for you. |
 | `NIMROD_PULL_SHARED` | `0` | `1` when the folder was shared with this account rather than owned by it. |
+| `NIMROD_PULL_JOBS` | `drive` | The jobs to run, in order. `drive` is the Drive pull above, and with this left out it is the only one, exactly as before. Add `fallback` for the copy below. |
 
 Exit codes for a script that watches it: 0 pulled or not due, 2 not set up or refused (a login that could write), 3
-the drive is not mounted, 4 rclone failed (it tries again at the next hourly look), 5 another pull is running.
-`test_photo_pull.py` checks the guards and the commands with a stand-in rclone (`py -3.13 -m unittest
+the drive is not mounted, 4 rclone or a copy failed (it tries again at the next hourly look), 5 another pull is
+running, 6 no room on this computer's own storage (the copy below). With two jobs, the first one's failure, after both
+have run. `test_photo_pull.py` checks the guards and the commands with a stand-in rclone (`py -3.13 -m unittest
 test_photo_pull.py`; it needs a bash, and skips without one).
+
+### This computer's own copy: the fallback (opt-in, storage roles Stage 1)
+
+Each screen has a **primary** (the drive), a **fallback** (a folder on its own storage, shown when the drive can't be
+reached) and a **sync** (Google Drive). The photo pull's second job, `fallback`, fills the fallback from the drive at
+night; a second media agent serves it, so the screen can pick it as **Backup folder for this screen**.
+
+```bash
+NIMROD_PHOTO_PULL=1 NIMROD_FALLBACK=1 bash install-linux.sh https://nimrodecosystem.com/kiosk.html
+nano ~/.config/nimrod/photo-pull.env       # check NIMROD_PULL_JOB_FALLBACK_FROM (and _FROM_MOUNT, the drive's mount point)
+#   then switch it on:  NIMROD_PULL_JOBS=drive fallback   (or just: fallback, with no Drive pull)
+~/.local/bin/nimrod-photo-pull.sh --check   # "ready (fallback): ... N MB free there, keeps 2048 MB free"
+set -a; . ~/.config/nimrod/photo-pull.env; set +a; ~/.local/bin/nimrod-photo-pull.sh --dry-run   # how much it would copy
+```
+
+On the screen: Media / Sources, add `http://localhost:8771`; once a panel has listed it, This screen, **Backup folder
+for this screen**. The copy keeps the drive's folder layout, so albums mean the same on both.
+
+| Setting (`NIMROD_PULL_JOB_FALLBACK_...`) | Default | Why that default |
+|---|---|---|
+| `LIMIT` | `newest:1000` | Her photo set's size against the card's free space has not been measured, and a copy that fills the card stops the whole computer (the journal, Chromium, updates). 1000 pictures is over four hours of slideshow without a repeat (at the Photos panel's default 15 seconds each), and about 3 to 5 GB at a phone's usual size. `all` once the card is known to hold them; `album:<folder>` for one album. |
+| `KEEP_FREE_MB` | `2048` | Never leaves less than this free: an `apt` upgrade (up to about 1 GB while unpacking), Chromium's cache, and the kept journal (100 MB) all at once. It copies the newest pictures that fit, says how many it left out, or copies nothing and says so (exit 6). |
+| `ALLOW_SYSTEM_DISK` | `0` (the installer writes `1`) | A copy onto this computer's own storage is made only on purpose, by this job. Job 1's `NIMROD_PULL_ALLOW_SYSTEM_DISK` does not count. |
+| `MIRROR_DELETES` | `0` | Copy: a picture removed from the drive stays in the copy (DECISIONS 2026-10-10: each direction decides). `1`: it is moved to `.nimrod-removed/` beside the folder, at most `MAX_DELETE` (50) a run, or none. A picture still on the drive but no longer among the newest is not a removal. |
+| `EVERY`, `HOUR`, `UNTIL` | `daily`, `3`, `7` | At night, after the Drive pull in the same run (so the night's new pictures reach the copy the same night), and never past 7: a long first copy does not share the drive with the slideshow by day. A missed night waits for the next. `UNTIL=none` for no end. |
+| `EXTENSIONS` | `jpg jpeg png gif webp bmp avif` | The pictures a browser shows. iPhone originals are left out (the Drive pull keeps a JPEG of each). |
+| `FROM_MOUNT` | empty | The drive's mount point: nothing is copied (or mirrored) from an empty mount folder. Empty: the source must simply not be on this computer's own storage. A source with no pictures at all is refused too. |
+
+The agent's own settings are in `~/.config/nimrod/fallback-agent.env` (folder, `NIMROD_MEDIA_PORT=8771`, address
+`127.0.0.1`); `systemctl --user status nimrod-fallback-agent`. It never writes history: the drive's agent does.
 
 ## Windows (Task Scheduler)
 
