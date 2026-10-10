@@ -71,6 +71,31 @@
   .cp-game-line { margin:0; font-weight:700; }
   .cp-game-btns { display:flex; flex-wrap:wrap; gap:8px; }
   .cp-game-frame { width:100%; height:min(70vh, 560px); border:0; border-radius:10px; background:var(--bg); }
+  /* GROUP CALLS (2026-10-09): a tile per person, at most 2 x 2; two side by side, or stacked on a tall screen. */
+  .cp-stage.cp-grid { display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:minmax(0, 1fr); gap:6px; padding:6px;
+    align-items:stretch; justify-items:stretch; }
+  .cp-stage.cp-grid[data-n="1"] { grid-template-columns:1fr; }
+  @media (max-aspect-ratio: 3/4) { .cp-stage.cp-grid[data-n="2"] { grid-template-columns:1fr; } }
+  .cp-grid > .cp-remote, .cp-grid > .cp-card { min-width:0; min-height:0; border-radius:10px; }
+  .cp-tile { position:relative; min-width:0; min-height:140px; border-radius:10px; overflow:hidden; background:var(--letterbox, var(--surface)); }
+  .cp-tile video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .cp-tile-initial { display:none; }
+  .cp-tile-audio video { visibility:hidden; }
+  .cp-tile-audio .cp-tile-initial { display:flex; position:absolute; inset:0; align-items:center; justify-content:center;
+    font-size:clamp(36px, 10vw, 64px); font-weight:800; color:var(--text); }
+  .cp-tile-name { position:absolute; left:0; right:0; bottom:0; padding:6px 10px; font-weight:700; font-size:.95rem;
+    background:var(--surface); color:var(--text); opacity:.92; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cp-knocks, .cp-add { display:flex; flex-direction:column; gap:8px; padding:10px 12px; border-radius:12px;
+    background:var(--surface); border:2px solid var(--accent); }
+  .cp-knocks[hidden], .cp-add[hidden] { display:none; }
+  .cp-knock-line { margin:0; font-weight:700; }
+  .cp-relay { padding:10px 12px; border-radius:12px; background:var(--surface-alt); }
+  .cp-relay summary { font-weight:700; cursor:pointer; min-height:32px; }
+  .cp-relay > * + * { margin-top:10px; }
+  .cp-relay input[type="url"] { min-height:44px; font:inherit; padding:0 12px; border-radius:10px;
+    border:1px solid var(--border); background:var(--surface); color:var(--text); }
+  .cp-check { display:flex; gap:8px; align-items:center; font-weight:600; }
+  .cp-check input { width:22px; height:22px; }
 </style>
 </head>
 <body>

@@ -23,9 +23,18 @@
 // device has more than one), hang up. The camera and microphone are released on hang-up, on every end,
 // and when the page is hidden for good (`pagehide`: the tab closed or navigated away).
 
+//
+// GROUP CALLS (2026-10-09; call_group.js). With a site that knows them, every call this page places is tagged as a
+// group, so during it the person can ADD SOMEONE - ring another of their people's screens into the call (another
+// call, on that person's socket, tagged with the group) - and LET IN another caller who knocks. A caller whose call
+// is refused because the screen is already on a call is offered "Ask to join that call" (a knock). Each other person
+// is a tile beside the first (up to 3 others on video, 5 with sound only - call_group.js MESH_MAX_OTHERS). When the
+// first screen leaves and others stay, the call carries on. With an older site (no group messages on the socket),
+// nothing here changes: the page places one call, exactly as before.
 import { connectDrive } from './drive.js';
 import { authHeaders, isAuthError, httpError } from './auth.js';
-import { createCallTransport } from './call_transport.js';
+import { createCallTransport, newCallSession } from './call_transport.js';
+import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_group.js';
 import { createWakeHold } from './phone_mic_show.js';
 import { createSpeechChannel } from './output_channels.js';
 
@@ -69,7 +78,12 @@ export const CALLER_END_TEXT = Object.freeze({
   ended: 'The call ended.',
 });
 
+// group calls: how long a knock waits before this page gives up on it. The server's own limit is 90 s (drive.py
+// KNOCK_WAIT_S) and it says "unanswered" itself; this is the backstop for a server that never replies, a little longer.
+export const KNOCK_GIVE_UP_MS = 95000;
+
 const STATE_TEXT = {
+  knocking: 'Asking to join…',
   checking: 'Checking…',
   connecting: 'Connecting…',
   media: 'Asking for the camera and microphone…',
@@ -127,6 +141,9 @@ export async function mountCallPage(root, {
   fetchImpl = (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : null),
   connect = connectDrive,
   makeTransport = (o) => createCallTransport(o),
+  // group calls: what makes this page's part in a group call (call_group.js). Returns null on a link with no group
+  // messages (an older site, a suite's fake link), and then nothing about the call changes.
+  makeGroup = (o) => createCallGroup(o),
   getUserMedia = (c) => navigator.mediaDevices.getUserMedia(c),
   enumerateDevices = () => (typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices
     ? navigator.mediaDevices.enumerateDevices() : Promise.resolve([])),
@@ -173,6 +190,15 @@ export async function mountCallPage(root, {
   let heldForWords = false;            // the microphone is held while a word is read out (WORDS_HOLD_MAX_MS)
   let readTok = 0;
   let run = 0;
+  // group calls (see the header): this page's group, the other screens it rang into the call (call id -> leg), the
+  // first screen gone while others stay, a call joined by knocking (no first screen of its own), the knock offered
+  // after a "busy", and whether the Add someone box is open.
+  let group = null;
+  const legs = new Map();
+  let primaryGone = false;
+  let joinedByKnock = false;
+  let knockOffer = null;
+  let adding = false;
   const timers = new Set();
   const offs = [];
   const opened = { media: 0, sockets: 0 };   // counted for the suites: nothing opens before a press
@@ -222,6 +248,8 @@ export async function mountCallPage(root, {
       <p class="cp-lead">A video or audio call to a screen. Every screen of that person rings, and whoever
         is there can answer or decline. The camera and microphone open only when you press a call button.</p>
       ${ended ? `<p class="cp-ended" role="status" data-ended>${esc(ended)}</p>` : ''}
+      ${knockOffer ? `<button type="button" class="cp-btn cp-primary cp-big" data-knock>Ask to join that call
+        <span class="cp-sub">(somebody already in it lets you in)</span></button>` : ''}
       ${people.length ? `
       <label class="cp-field"><span>Who to call</span>
         <select data-person>${people.map((p) => `<option value="${esc(p.id)}"${pick && pick.id === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
@@ -235,8 +263,61 @@ export async function mountCallPage(root, {
           <option value="show"${wordsMode() === 'show' ? ' selected' : ''}>Only show them</option>
         </select>
       </label>
-      <p class="cp-note">To talk without video and hear the room, <a data-intercom-link href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>`
+      <p class="cp-note">To talk without video and hear the room, <a data-intercom-link href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>
+      <p class="cp-note">During a call you can add more people: up to ${MESH_MAX_OTHERS.video} others on a video call,
+        ${MESH_MAX_OTHERS.audio} on an audio call. Everybody connects straight to everybody else.</p>
+      ${relaySection()}`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
+  }
+
+  // ---- group calls: "a relay server for bigger calls" - the account's setting (server/call_relay.py) -------------
+  // A SKELETON: it saves where the household's relay is and where its tokens come from, and says plainly that nothing
+  // uses it yet. Read from the site only when it is opened, so a page that never opens it asks for nothing.
+  let relay = null;
+  let relayMsg = '';
+  function relaySection() {
+    const r = relay || {};
+    return `<details class="cp-relay" data-relay${relay ? ' open' : ''}>
+      <summary>Bigger calls: a relay server (advanced)</summary>
+      <p class="cp-note">Calls connect every device straight to every other one, so a call is kept to
+        ${MESH_MAX_OTHERS.video + 1} people on video (${MESH_MAX_OTHERS.audio + 1} with sound only). A relay server
+        that you run or rent could carry bigger calls, with every call encrypted so the relay cannot see or hear it.
+        <b>This is not built yet:</b> whatever is set here, calls stay direct.</p>
+      ${relay ? `
+      <label class="cp-check"><input type="checkbox" data-relay-on${r.enabled ? ' checked' : ''}> Use a relay server for bigger calls</label>
+      <label class="cp-field"><span>Relay address (starts with wss://)</span>
+        <input type="url" data-relay-url value="${esc(r.url || '')}" placeholder="wss://relay.example.org" autocomplete="off"></label>
+      <label class="cp-field"><span>Where its tokens come from</span>
+        <select data-relay-from>
+          <option value="own-server"${r.token_from !== 'this-site' ? ' selected' : ''}>Our own token server (this site never holds the relay’s secret)</option>
+          <option value="this-site" disabled>This site, holding the secret encrypted (not built)</option>
+        </select></label>
+      <label class="cp-field"><span>Token address (starts with https://)</span>
+        <input type="url" data-relay-token value="${esc(r.token_url || '')}" placeholder="https://relay.example.org/token" autocomplete="off"></label>
+      <button type="button" class="cp-btn" data-relay-save>Save</button>` : '<p class="cp-note">Loading…</p>'}
+      ${relayMsg ? `<p class="cp-note" role="status" data-relay-msg>${esc(relayMsg)}</p>` : ''}
+    </details>`;
+  }
+  async function loadRelay() {
+    try { relay = await getJSON('/api/me/call-relay'); relayMsg = ''; }
+    catch { relay = null; relayMsg = 'Could not read this setting from the site.'; }
+    if (phase === 'idle') renderSetup();
+  }
+  async function saveRelay() {
+    const body = {
+      enabled: !!q('[data-relay-on]')?.checked,
+      url: q('[data-relay-url]')?.value || '',
+      token_from: q('[data-relay-from]')?.value || 'own-server',
+      token_url: q('[data-relay-token]')?.value || '',
+    };
+    try {
+      const res = await fetchImpl(`${base}/api/me/call-relay`, { method: 'PUT', credentials: 'same-origin',
+        headers: { ...authHeaders(user), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { relayMsg = (data && typeof data.detail === 'string') ? data.detail : 'That was not saved.'; }
+      else { relay = data; relayMsg = 'Saved. Calls still connect directly until relay calls are built.'; }
+    } catch { relayMsg = 'Could not reach the site. Nothing was saved.'; }
+    if (phase === 'idle') renderSetup();
   }
 
   // ---- the live view -----------------------------------------------------------------------------
@@ -259,14 +340,261 @@ export async function mountCallPage(root, {
           <video class="cp-self" data-self autoplay playsinline muted hidden></video>
         </div>
         <p class="cp-callnote" data-note hidden></p>
+        <section class="cp-knocks" data-knocks hidden aria-label="Asking to join" aria-live="polite"></section>
+        <section class="cp-add" data-add-box hidden aria-label="Add someone to the call"></section>
         <section class="cp-game" data-game hidden aria-label="A game together"></section>
         <div class="cp-controls" role="group" aria-label="Call controls">
           <button type="button" class="cp-btn cp-ctl" data-mute aria-pressed="false">Mute</button>
           <button type="button" class="cp-btn cp-ctl" data-cam aria-pressed="false" hidden>Camera off</button>
           <button type="button" class="cp-btn cp-ctl" data-flip hidden>Switch camera</button>
+          <button type="button" class="cp-btn cp-ctl" data-add hidden>Add someone</button>
           <button type="button" class="cp-btn cp-hang" data-hangup>Hang up</button>
         </div>
       </div>`;
+  }
+
+  // ---- GROUP CALLS: tiles, knocks, adding someone (see the header) ---------------------------------------------
+  const streamHasVideo = (s) => { try { return (s?.getVideoTracks?.() || []).length > 0; } catch { return false; } };
+  const primaryShown = () => !primaryGone && !joinedByKnock;
+  // Everybody besides the first screen: the screens this page rang in (their own calls), then the people connected
+  // through the group.
+  function tileList() {
+    const out = [];
+    for (const [session, l] of legs) {
+      out.push({ key: `leg-${session}`, name: l.person.name, stream: l.stream, video: streamHasVideo(l.stream),
+        state: l.answered ? (l.state === 'connected' ? 'connected' : 'connecting') : 'ringing' });
+    }
+    let mesh = [];
+    try { mesh = group?.tiles?.() || []; } catch { mesh = []; }
+    for (const t of mesh) out.push({ key: `peer-${t.peer}`, name: t.name, stream: t.stream, video: t.video, state: t.state });
+    return out;
+  }
+  function othersInCall() {
+    let mesh = 0;
+    try { mesh = (group?.tiles?.() || []).length; } catch { mesh = 0; }
+    return legs.size + mesh + (primaryShown() ? 1 : 0);
+  }
+  function groupKind() { try { return group?.kind?.() === 'audio' ? 'audio' : 'video'; } catch { return 'video'; } }
+  function roomForMore() { return othersInCall() < MESH_MAX_OTHERS[groupKind()]; }
+  function addable() {
+    const taken = new Set([...legs.values()].map((l) => l.person.id));
+    if (primaryShown() && target) taken.add(target.id);
+    return people.filter((p) => !taken.has(p.id));
+  }
+  function paintTiles() {
+    const stage = q('.cp-stage');
+    if (!stage) return;
+    const showing = ['in-call', 'answered', 'reconnecting', 'ringing'].includes(phase);
+    const list = showing ? tileList() : [];
+    stage.classList.toggle('cp-grid', list.length > 0 || !primaryShown());
+    stage.dataset.n = String(list.length + (primaryShown() ? 1 : 0));
+    const keep = new Set(list.map((t) => t.key));
+    for (const box of [...stage.querySelectorAll('.cp-tile')]) {
+      if (keep.has(box.dataset.tile)) continue;
+      attach(box.querySelector('video'), null);
+      box.remove();
+    }
+    for (const t of list) {
+      let box = [...stage.querySelectorAll('.cp-tile')].find((b) => b.dataset.tile === t.key);
+      if (!box) {
+        box = doc.createElement('div');
+        box.className = 'cp-tile';
+        box.dataset.tile = t.key;
+        box.innerHTML = '<video autoplay playsinline></video><div class="cp-tile-initial" aria-hidden="true"></div><div class="cp-tile-name"></div>';
+        const self = stage.querySelector('[data-self]');
+        stage.insertBefore(box, self || null);
+      }
+      const v = box.querySelector('video');
+      if (box.__stream !== (t.stream || null)) { box.__stream = t.stream || null; attach(v, t.stream || null); }
+      // A sound-only call shows the initial; the element still plays their sound.
+      box.classList.toggle('cp-tile-audio', !t.video || mode !== 'video');
+      box.dataset.state = t.state || '';
+      const how = t.state === 'connected' ? '' : t.state === 'ringing' ? ' — ringing…'
+        : (t.state === 'failed' || t.state === 'lost' || t.state === 'disconnected') ? ' — connection lost' : ' — connecting…';
+      box.querySelector('.cp-tile-initial').textContent = ((t.name || '').trim()[0] || '?').toUpperCase();
+      box.querySelector('.cp-tile-name').textContent = (t.name || 'Someone') + how;
+    }
+  }
+  function paintKnocks() {
+    const box = q('[data-knocks]');
+    if (!box) return;
+    let ks = [];
+    try { ks = group?.state?.().knocks || []; } catch { ks = []; }
+    box.hidden = ks.length === 0;
+    box.innerHTML = ks.map((k) => `<div class="cp-knock" data-knock-row="${esc(k.knock)}">
+        <p class="cp-knock-line">${esc(k.name)} would like to join the call.</p>
+        <div class="cp-game-btns"><button type="button" class="cp-btn cp-primary" data-knock-yes="${esc(k.knock)}">Let in</button>
+        <button type="button" class="cp-btn" data-knock-no="${esc(k.knock)}">Not now</button></div></div>`).join('');
+  }
+  function paintAdd() {
+    const btn = q('[data-add]');
+    const can = phase === 'in-call' && !!group?.id?.() && roomForMore() && addable().length > 0;
+    if (btn) btn.hidden = !can;
+    const box = q('[data-add-box]');
+    if (!box) return;
+    if (!adding || !can) { adding = adding && can; box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    if (box.querySelector('[data-add-person]')) return;      // already open: keep what was picked
+    box.innerHTML = `<label class="cp-field"><span>Who to add</span>
+        <select data-add-person>${addable().map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label>
+      <div class="cp-game-btns"><button type="button" class="cp-btn cp-primary" data-add-ring>Ring them</button>
+      <button type="button" class="cp-btn" data-add-cancel>Cancel</button></div>`;
+  }
+  function paintGroup() { paintTiles(); paintKnocks(); paintAdd(); }
+
+  // Nobody else is left (the first screen gone, or never there, and every other person gone): the call is over.
+  function checkAlone() {
+    if (!(primaryGone || joinedByKnock) || phase !== 'in-call') return;
+    if (legs.size === 0 && tileList().length === 0) finish('Everyone else has left the call.');
+  }
+
+  function wireGroup(my) {
+    if (!group) return;
+    offs.push(group.onChange(() => { if (my !== run) return; paintGroup(); checkAlone(); }));
+    // Words from any screen's AAC board in the call, with whose board it was.
+    offs.push(group.onWords((w) => { if (my === run) heard(w); }));
+    offs.push(group.onJoined(() => {
+      if (my !== run) return;
+      if (phase === 'knocking') { connected = true; answered = true; setPhase('in-call'); }
+      paintGroup();
+    }));
+    offs.push(group.onRefused((r) => {
+      if (my !== run) return;
+      if (phase === 'knocking') { finish(r.text); return; }
+      note = r.text;
+      paintLive();
+    }));
+  }
+
+  // The first screen ended its part (hung up, or its connection is gone) while others are still here: carry on.
+  function primaryLeft(text) {
+    primaryGone = true;
+    note = text;
+    const t = transport;
+    transport = null;
+    try { t?.destroy?.(); } catch { /* gone */ }
+    attach(q('[data-remote]'), null);
+    paintLive();
+    checkAlone();
+  }
+
+  // Ring another of this account's people's screens into the call: another call, on THAT person's socket, tagged with
+  // this group (the server lets it through only for a caller already in the call, and only into a call with room).
+  async function addLeg(personId) {
+    const person = people.find((p) => p.id === personId);
+    const gid = group?.id?.();
+    if (!person || !gid || phase !== 'in-call' || !roomForMore()) return;
+    adding = false;
+    const my = run;
+    const session = newCallSession();
+    const leg = { person, link: null, transport: null, stream: null, state: 'connecting', answered: false, offs: [] };
+    legs.set(session, leg);
+    paintGroup();
+    if (!(await allowed(person.id))) { if (my === run) endLeg(session, `This account is not allowed to call ${person.name}.`); return; }
+    if (my !== run || legs.get(session) !== leg) return;
+    let pres = null;
+    opened.sockets++;
+    leg.link = connect({ personId: person.id, role: 'driver', user, base,
+      onPresence: (p) => { pres = p; poke(); }, onState: () => poke() });
+    // The site refusing this ring (the call is full, or this login is not in it) is said on THIS socket.
+    leg.offs.push(leg.link.onGroup?.((m) => {
+      if (my === run && m && m.op === 'refused' && legs.get(session) === leg) {
+        endLeg(session, `${person.name}: ${GROUP_REFUSED_TEXT[m.reason] || 'could not be added.'}`);
+      }
+    }) || (() => {}));
+    const up = await waitFor(() => leg.link && leg.link.state?.() === 'connected', connectMs);
+    if (my !== run || legs.get(session) !== leg) return;
+    if (!up) { endLeg(session, `Could not reach ${person.name}’s screen.`); return; }
+    await waitFor(() => pres != null, presenceMs);
+    if (my !== run || legs.get(session) !== leg) return;
+    if (pres && pres.screens === 0) { endLeg(session, `None of ${person.name}’s screens are connected right now.`); return; }
+    const t = makeTransport({ link: leg.link, role: 'driver' });
+    leg.transport = t;
+    leg.state = 'ringing';
+    leg.offs.push(t.onEnded((reason, info) => {
+      if (my !== run || legs.get(session) !== leg) return;
+      const why = info?.why;
+      const text = leg.answered ? `${person.name} left the call.`
+        : why === 'busy' ? `${person.name} is on another call.`
+          : why === 'declined' ? `${person.name} declined.` : `${person.name} did not answer.`;
+      endLeg(session, text);
+    }));
+    leg.offs.push(t.onAnswered?.(() => { if (my === run) { leg.answered = true; paintGroup(); } }) || (() => {}));
+    leg.offs.push(t.onConnection?.((st) => {
+      if (my !== run) return;
+      if (st === 'connected') leg.answered = true;
+      leg.state = st;
+      paintGroup();
+    }) || (() => {}));
+    leg.offs.push(t.onRemote?.((s) => { if (my === run && s) { leg.stream = s; paintGroup(); } }) || (() => {}));
+    // Words from that screen's AAC board, with whose board it was.
+    leg.offs.push(t.onWords?.((w) => { if (my === run && w) heard({ ...w, name: person.name }); }) || (() => {}));
+    paintGroup();
+    let sent = false;
+    try {
+      sent = await t.call({ tracks: [...tracksOf('audio'), ...tracksOf('video')], session, group: gid,
+        from: { name: myName || 'Someone', video: mode === 'video' } });
+    } catch (err) { console.error('call: add someone', err); sent = false; }
+    if (my !== run || legs.get(session) !== leg) return;
+    if (!sent) { endLeg(session, `${person.name} could not be rung.`); return; }
+    later(() => {
+      if (my === run && legs.get(session) === leg && !leg.answered) {
+        try { t.hangup('unanswered'); } catch { /* gone */ }
+        endLeg(session, `${person.name} did not answer.`);
+      }
+    }, giveUpMs);
+  }
+  function endLeg(session, text) {
+    const leg = legs.get(session);
+    if (!leg) return;
+    legs.delete(session);
+    for (const off of leg.offs.splice(0)) { try { off?.(); } catch { /* gone */ } }
+    try { if (leg.transport?.__probe?.().live) leg.transport.hangup('hangup'); } catch { /* gone */ }
+    try { leg.transport?.destroy?.(); } catch { /* gone */ }
+    try { leg.link?.close?.(); } catch { /* gone */ }
+    if (text && phase !== 'idle') note = text;
+    paintGroup();
+    paintLive();
+    checkAlone();
+  }
+
+  // ---- asking to join a call that is already going (a knock) ---------------------------------------------------
+  async function knockStart() {
+    if (phase !== 'idle' || !knockOffer) return;
+    const want = knockOffer;
+    knockOffer = null;
+    target = people.find((p) => p.id === want.personId) || null;
+    if (!target) { renderSetup(); return; }
+    mode = CALL_MODES.includes(want.mode) ? want.mode : 'video';
+    ended = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
+    said = []; heldForWords = false; joinedByKnock = true; primaryGone = false;
+    const my = ++run;
+    phase = 'checking';
+    buildLive(); paintLive();
+    if (!(await allowed(target.id))) { if (my === run) finish('This account is not allowed to call that screen.'); return; }
+    if (my !== run) return;
+    setPhase('connecting');
+    opened.sockets++;
+    link = connect({ personId: target.id, role: 'driver', user, base, onState: () => poke() });
+    const up = await waitFor(() => link && link.state?.() === 'connected', connectMs);
+    if (my !== run) return;
+    if (!up) { finish('Could not reach the site. Check the connection and try again.'); return; }
+    setPhase('media');
+    const got = await openMedia(mode);
+    if (my !== run) { stopTracks(got?.stream); return; }
+    if (!got) { finish('This device did not allow its microphone, so it cannot join. Check the browser’s permission for this site.'); return; }
+    local = got.stream;
+    if (got.fellBack) { mode = 'audio'; note = 'The camera could not be opened, so you are joining with sound only.'; }
+    if (mode === 'video') await listCams();
+    if (my !== run) return;
+    attach(q('[data-self]'), mode === 'video' ? local : null);
+    wake.hold();
+    group = makeGroup({ link, role: 'driver', getTracks: () => [...tracksOf('audio'), ...tracksOf('video')], setTimer, clearTimer });
+    if (!group) { finish('This site cannot join a call that is already going.'); return; }
+    wireGroup(my);
+    setPhase('knocking');
+    group.knock();
+    later(() => { if (my === run && phase === 'knocking') { try { group?.cancel(); } catch { /* gone */ } finish(GROUP_REFUSED_TEXT.unanswered); } }, KNOCK_GIVE_UP_MS);
   }
 
   function paintLive() {
@@ -285,6 +613,8 @@ export async function mountCallPage(root, {
     if (remote) remote.hidden = !(video && (phase === 'in-call' || phase === 'answered' || phase === 'reconnecting'));
     const card = q('[data-card]');
     if (card) card.hidden = !!(remote && !remote.hidden);
+    // group calls: the first screen gone (others stayed), or a call joined by knocking: no first-screen place.
+    if (!primaryShown()) { if (remote) remote.hidden = true; if (card) card.hidden = phase !== 'knocking'; }
     const self = q('[data-self]');
     if (self) self.hidden = !(video && local && hasKind('video'));
     const mute = q('[data-mute]');
@@ -299,6 +629,7 @@ export async function mountCallPage(root, {
     if (flip) flip.hidden = !(video && hasKind('video') && cams.length > 1);
     const n = q('[data-note]');
     if (n) { n.textContent = note || ''; n.hidden = !note; }
+    if (group || legs.size) paintGroup();       // group calls: tiles, knocks, Add someone
   }
 
   // ---- words from the screen's AAC board (WORDS_KEY above) -------------------------------------------
@@ -308,7 +639,8 @@ export async function mountCallPage(root, {
     if (!box) return;
     box.hidden = said.length === 0;
     const set = (sel, t) => { const el = q(sel); if (el) el.textContent = t; };
-    const name = target ? target.name : '';
+    // group calls: a word from another screen in the call says whose board it came from.
+    const name = saidFrom || (target ? target.name : '');
     set('[data-words-from]', name ? `From ${name}’s AAC board` : 'From the AAC board');
     set('[data-words-now]', said.length ? said[said.length - 1] : '');
     set('[data-words-before]', said.slice(0, -1).join(' · '));
@@ -318,8 +650,10 @@ export async function mountCallPage(root, {
       aloud.setAttribute('aria-pressed', String(on));
     }
   }
+  let saidFrom = '';
   function heard(w) {
     if (!w || typeof w.text !== 'string' || !w.text) return;
+    saidFrom = typeof w.name === 'string' ? w.name : '';      // group calls: set when it came through the group
     said = [...said, w.text].slice(-WORDS_SHOWN);
     paintWords();
     // call loadouts (2026-10-09): a word whose recorded clip is already IN the call's sound (`audio: true`,
@@ -414,6 +748,7 @@ export async function mountCallPage(root, {
     put(PERSON_KEY, target.id);
     ended = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
     said = []; heldForWords = false;
+    knockOffer = null; primaryGone = false; joinedByKnock = false;     // group calls
     const my = ++run;
     phase = 'checking';
     buildLive(); paintLive();
@@ -465,7 +800,21 @@ export async function mountCallPage(root, {
     wake.hold();
     // 4. THE CALL, through the driver role (tagged: every screen rings, one answers).
     transport = makeTransport({ link, role: 'driver' });
-    offs.push(transport.onEnded((reason, info) => { if (my === run) finish(endText(reason, info?.why, { answered, connected })); }));
+    // group calls: this page's part in a group (null on a link without group messages - then nothing below changes).
+    group = makeGroup({ link, role: 'driver', getTracks: () => [...tracksOf('audio'), ...tracksOf('video')], setTimer, clearTimer });
+    wireGroup(my);
+    const primaryT = transport;
+    offs.push(transport.onEnded((reason, info) => {
+      if (my !== run || transport !== primaryT) return;
+      const text = endText(reason, info?.why, { answered, connected });
+      // group calls: the first screen left, and somebody else is still in the call - it carries on without it.
+      if (answered && (legs.size > 0 || tileList().length > 0)) { primaryLeft(`${target?.name || 'They'} left the call.`); return; }
+      // ...and a screen already on a call: offer to ask to join that call instead (a knock), on a site that can.
+      const knockable = info?.why === 'busy' && !!group;
+      const want = { personId: target?.id, mode };
+      finish(text);
+      if (knockable && want.personId) { knockOffer = want; renderSetup(); }
+    }));
     // board into call: a word chosen on the screen's AAC board during this call.
     offs.push(transport.onWords?.((w) => { if (my === run) heard(w); }) || (() => {}));
     offs.push(transport.onAnswered?.(() => { if (my !== run) return; answered = true; if (phase === 'ringing') setPhase('answered'); }));
@@ -478,7 +827,10 @@ export async function mountCallPage(root, {
     const tracks = [...tracksOf('audio'), ...tracksOf('video')];
     let sent = false;
     try {
-      sent = await transport.call({ tracks, from: { name: myName || 'Someone', video: mode === 'video' }, remoteVideo: q('[data-remote]') });
+      // group calls: tagged as a group (its id is this call's own), so more people can be added to it.
+      const s = group ? newCallSession() : null;
+      sent = await transport.call({ tracks, from: { name: myName || 'Someone', video: mode === 'video' }, remoteVideo: q('[data-remote]'),
+        ...(s ? { session: s, group: s } : {}) });
     } catch (err) { console.error('call: place', err); sent = false; }
     if (my !== run) return;
     if (!sent) { finish('The call could not be placed. Check the connection and try again.'); return; }
@@ -523,6 +875,12 @@ export async function mountCallPage(root, {
     waiters.clear();
     wake.release();
     for (const off of offs.splice(0)) { try { off?.(); } catch { /* gone */ } }
+    // group calls: every screen this page rang in is hung up, and this page leaves the group. (The flags first, so
+    // ending a leg here cannot decide the call is "alone" and finish it a second time.)
+    primaryGone = false; joinedByKnock = false; adding = false; saidFrom = '';
+    const g = group; group = null;
+    for (const session of [...legs.keys()]) endLeg(session, null);
+    try { g?.destroy?.(); } catch { /* gone */ }
     const t = transport; transport = null;
     const l = link; link = null;
     try { if (t && t.__probe?.().live) t.hangup('hangup'); } catch { /* gone */ }
@@ -552,7 +910,7 @@ export async function mountCallPage(root, {
     paintLive();
   }
   async function flip() {
-    if (!local || cams.length < 2 || !transport) return;
+    if (!local || cams.length < 2 || (!transport && !group && !legs.size)) return;
     const old = tracksOf('video')[0];
     let curId = '';
     try { curId = old?.getSettings?.().deviceId || ''; } catch { curId = ''; }
@@ -564,7 +922,12 @@ export async function mountCallPage(root, {
     const track = s?.getVideoTracks?.()[0];
     if (my !== run || !track || !local) { stopTracks(s); return; }
     track.enabled = camOn;
-    if (!(await transport?.replaceTrack?.('video', track))) { stopTracks(s); return; }
+    // group calls: the new camera goes to everybody - the first screen, every screen rung in, every group connection.
+    let swapped = !!(await transport?.replaceTrack?.('video', track));
+    for (const l of legs.values()) { try { swapped = !!(await l.transport?.replaceTrack?.('video', track)) || swapped; } catch { /* gone */ } }
+    try { if (group) swapped = (await group.swap('video', track)) > 0 || swapped; } catch { /* gone */ }
+    if (my !== run) { stopTracks(s); return; }
+    if (!swapped) { stopTracks(s); return; }
     try { old?.stop?.(); local.removeTrack?.(old); local.addTrack?.(track); } catch { /* gone */ }
     const self = q('[data-self]');
     let facing = '';
@@ -583,8 +946,22 @@ export async function mountCallPage(root, {
     if (e.target.closest?.('[data-flip]')) { flip(); return; }
     if (e.target.closest?.('[data-words-aloud]')) { setWordsMode(wordsMode() === 'speak' ? 'show' : 'speak'); return; }
     if (e.target.closest?.('[data-game-join]')) { if (game) { game.playing = true; paintGame(); } return; }
-    if (e.target.closest?.('[data-game-close]')) closeGame();
+    if (e.target.closest?.('[data-game-close]')) { closeGame(); return; }
+    // group calls: a knock, Add someone, letting a knock in, the relay setting.
+    if (e.target.closest?.('[data-knock]')) { knockStart(); return; }
+    if (e.target.closest?.('[data-add-ring]')) { const v = q('[data-add-person]')?.value; if (v) addLeg(v); return; }
+    if (e.target.closest?.('[data-add-cancel]')) { adding = false; paintAdd(); return; }
+    if (e.target.closest?.('[data-add]')) { adding = !adding; paintAdd(); return; }
+    const yes = e.target.closest?.('[data-knock-yes]');
+    if (yes) { group?.admit?.(yes.dataset.knockYes); return; }
+    const no = e.target.closest?.('[data-knock-no]');
+    if (no) { group?.deny?.(no.dataset.knockNo); return; }
+    if (e.target.closest?.('[data-relay-save]')) { saveRelay(); return; }
   });
+  // `toggle` does not bubble, so it is heard on the way down.
+  root.addEventListener?.('toggle', (e) => {
+    if (e.target?.matches?.('[data-relay]') && e.target.open && !relay) loadRelay();
+  }, { capture: true, signal: ac.signal });
   on(root, 'change', (e) => {
     if (e.target.closest?.('[data-words-mode]')) { setWordsMode(e.target.value); return; }
     if (!e.target.closest?.('[data-person]')) return;
@@ -619,6 +996,14 @@ export async function mountCallPage(root, {
     micHeld: () => heldForWords,
     call: (want = 'video') => start(want),
     hangup: () => finish('The call ended.'),
+    // group calls, for the suites: the group, the screens rung in, add one, ask to join, how many others.
+    group: () => group,
+    legs: () => [...legs.entries()].map(([session, l]) => ({ session, person: l.person.id, answered: l.answered, transport: l.transport })),
+    addSomeone: (personId) => addLeg(personId),
+    knock: () => knockStart(),
+    knockOffered: () => !!knockOffer,
+    others: () => othersInCall(),
+    tiles: () => tileList().map(({ stream, ...t }) => ({ ...t, hasStream: !!stream })),
     destroy() { finish(null); wake.destroy(); ac.abort(); },
   };
 }

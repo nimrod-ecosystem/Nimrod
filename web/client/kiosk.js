@@ -193,6 +193,7 @@ import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS, isTyping, keyControl } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
 import { createCallTransport, CALL_TRANSPORT_READY } from './call_transport.js';
+import { createCallGroup } from './call_group.js';      // group calls (2026-10-09)
 import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
          // after a restart (row 2.70): one row, and a restart told from a reload
          RESTART_HEADING, restartField, restartValue, restartPatch, RESTART_KEY,
@@ -712,6 +713,7 @@ export async function mountKiosk(root, {
   // capture null forever — and that only works if the binding exists from the start.
   let drive = null;
   let callTransport = null;
+  let callGroup = null;          // group calls (2026-10-09; call_group.js): the group this screen's call may grow into
   // A call arriving at this screen with no Call panel on it (call_notice.js, 2026-10-02): the notice, the
   // call it answered (the Call module hosted over the panels until hang-up), and whether either has the scan.
   let callNotice = null;
@@ -879,7 +881,17 @@ export async function mountKiosk(root, {
   // get all three of those right.
   function callTransportNow() {
     if (!callTransport && drive) {
+      // group calls (2026-10-09; call_group.js): more people joining this screen's call - a connection each, straight
+      // to them, set up over this same socket. It sends what the call sends; null on an older link (no group calls).
+      try {
+        callGroup = createCallGroup({
+          link: drive, role: 'screen', ready: false, config: (settings.get() || {}).call || {},
+          getTracks: () => { try { return callTransport?.sending?.() || []; } catch { return []; } },
+          onLog: (...a) => console.debug('call group:', ...a),
+        });
+      } catch (err) { console.error('kiosk: call group', err); callGroup = null; }
       callTransport = createCallTransport({
+        group: callGroup,
         link: drive,
         role: 'screen',              // a bedside screen answers; it never places a call
         // ICE comes from the person's own settings when they have any, and falls back to
@@ -7884,6 +7896,7 @@ export async function mountKiosk(root, {
       try { callNotice?.destroy(); } catch { /* already gone */ } callNotice = null;
       // Before the socket, so the far end is told rather than left watching a frozen frame.
       try { callTransport?.destroy(); } catch { /* already gone */ } callTransport = null;
+      try { callGroup?.destroy(); } catch { /* already gone */ } callGroup = null;     // group calls
       // A phone joined as a microphone is told the screen has gone (before the socket closes).
       try { phoneRx?.destroy(); } catch { /* already gone */ } phoneRx = null;
       try { micPill?.destroy(); } catch { /* already gone */ } micPill = null;

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>group calls - several people, every device connected straight to every other - test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #page,#host{position:absolute;left:-9999px;top:0;width:640px;height:480px}
+</style>
+</head>
+<body>
+<h1>group calls (2026-10-09)</h1>
+<div class="note">
+  Mike: "So for the group calls they'd need their own VPN or something?" No - a small call is a mesh: each person holds
+  one connection per other person, set up through the site's socket, which carries only the setting-up. Checked here,
+  with fake connections and a fake server that routes group messages the way drive.py CallGroups does: who offers to
+  whom (the member who was there first; never to somebody already connected by the call that rang); a screen holds
+  its answers until its call is live; a talk-board word and a board clip reach every other person; a tile per person;
+  leaving cleans up; the screen's call outlives the caller who rang while others stay; the caller page adds a screen,
+  lets a knock in, carries on when the first screen leaves, and offers "Ask to join" after a busy; the screen's Call
+  panel draws a tile per person. The server's own rules are tested in web/server/test_call_groups.py.
+</div>
+<div id="page"></div>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT, MESH_RETRIES } from '../call_group.js';
+import { createCallTransport, WORDS_LABEL, CALL_PURPOSE, STALL_MS } from '../call_transport.js';
+import { mountCallPage, KNOCK_GIVE_UP_MS } from '../call_page.js';
+import { SIGNAL_KINDS } from '../drive.js';
+import { mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import '../modules/call.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settle = async (n = 8) => { for (let i = 0; i < n; i++) { await Promise.resolve(); await sleep(0); } };
+const until = async (fn, ms = 2000) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(5); } return !!fn(); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// ---- tracks, streams, channels, and peer connections that find each other by their SDP -------------------------
+let trackSeq = 0;
+const track = (kind) => ({ id: `t${++trackSeq}`, kind, enabled: true, stop() { this.stopped = true; } });
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { if (!this.tracks.includes(t)) this.tracks.push(t); }
+  removeTrack(t) { this.tracks = this.tracks.filter((x) => x !== t); }
+  getTracks() { return [...this.tracks]; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+class FakeChannel {
+  constructor(label) { this.label = label; this.readyState = 'connecting'; this.sent = []; this.peer = null; }
+  send(d) {
+    if (this.readyState !== 'open') throw new Error('not open');
+    this.sent.push(d);
+    const p = this.peer;
+    if (p) queueMicrotask(() => { if (p.readyState === 'open') p.onmessage?.({ data: d }); });
+  }
+  open() { this.readyState = 'open'; this.onopen?.(); }
+  close() { if (this.readyState === 'closed') return; this.readyState = 'closed'; this.onclose?.(); }
+}
+let pcSeq = 0;
+const allPcs = new Map();
+class PC {
+  constructor(cfg) {
+    this.id = ++pcSeq; allPcs.set(this.id, this);
+    this.cfg = cfg; this.senders = []; this.channels = []; this.closed = false; this.met = false; this.far = null;
+    this.iceGatheringState = 'complete'; this.connectionState = 'new'; this.localDescription = null; this.offers = 0;
+  }
+  addTrack(t, stream) { const s = { track: t, stream, replaced: [], async replaceTrack(n) { this.replaced.push(n); this.track = n; } }; this.senders.push(s); return s; }
+  getSenders() { return this.senders; }
+  addEventListener() {}
+  createDataChannel(label) { const c = new FakeChannel(label); this.channels.push(c); return c; }
+  async createOffer() { this.offers += 1; return { type: 'offer', sdp: `OFFER-${this.id}` }; }
+  async createAnswer() { return { type: 'answer', sdp: `ANSWER-${this.id}` }; }
+  async setLocalDescription(d) { this.localDescription = d; }
+  async setRemoteDescription(d) { this.remote = d; const m = /^(OFFER|ANSWER)-(\d+)$/.exec(d?.sdp || ''); if (m) this.far = allPcs.get(Number(m[2])) || null; }
+  close() { this.closed = true; for (const c of this.channels) c.close(); }
+  fire(st) { this.connectionState = st; this.onconnectionstatechange?.(); }
+}
+// What the browser does once an offer and its answer have both been applied: channels open, tracks arrive, connected.
+function meet(a, b) {
+  a.met = b.met = true;
+  for (const ch of a.channels) {
+    if (ch.readyState === 'closed') continue;
+    const far = new FakeChannel(ch.label); ch.peer = far; far.peer = ch;
+    b.channels.push(far); b.ondatachannel?.({ channel: far });
+    ch.open(); far.open();
+  }
+  const give = (from, to) => { const s = new FakeStream(from.senders.map((x) => x.track)); for (const x of from.senders) to.ontrack?.({ track: x.track, streams: [s] }); };
+  give(a, b); give(b, a);
+  a.fire('connected'); b.fire('connected');
+}
+function meetAll() {
+  let n = 0;
+  for (const pc of allPcs.values()) {
+    if (pc.closed || pc.met || pc.localDescription?.type !== 'offer') continue;
+    const far = pc.far;
+    if (far && !far.closed && far.far === pc) { meet(pc, far); n += 1; }
+  }
+  return n;
+}
+
+// ---- a fake server for group messages, the way drive.py CallGroups routes them ----------------------------------
+let peerSeq = 0;
+const hex8 = () => (++peerSeq).toString(16).padStart(8, '0');
+function groupServer({ gid: gid0 = 'call-g1', kind = 'video' } = {}) {
+  let gid = gid0;
+  const members = new Map();          // peer -> { link, view }
+  const knocks = new Map();           // kid -> { link, name }
+  const max = MESH_MAX_OTHERS[kind] + 1;
+  const g = (op, o = {}) => ({ type: 'group', op, ...o });
+  const peerOf = (link) => { for (const [p, v] of members) if (v.link === link) return p; return null; };
+  function link(label) {
+    const subs = new Set();
+    const l = { label, sent: [], st: 'connected',
+      state: () => l.st,
+      onGroup(cb) { subs.add(cb); return () => subs.delete(cb); },
+      sendGroup(m) { l.sent.push(JSON.parse(JSON.stringify(m))); handle(l, m); return true; },
+      deliver(m) { for (const f of [...subs]) f(JSON.parse(JSON.stringify(m))); },
+    };
+    return l;
+  }
+  function add(l, { name, role = 'driver', leg = null, session = null }) {
+    const peer = hex8();
+    const view = { peer, name, role, leg, ...(session ? { session } : {}) };
+    const others = [...members.values()];
+    members.set(peer, { link: l, view });
+    l.deliver(g('joined', { group: gid, you: peer, kind, max, leg, members: others.map((o) => o.view) }));
+    for (const o of others) o.link.deliver(g('peer-joined', { group: gid, peer: view }));
+    return peer;
+  }
+  function remove(peer) {
+    if (!members.delete(peer)) return;
+    for (const o of members.values()) o.link.deliver(g('peer-left', { group: gid, peer }));
+  }
+  function handle(l, m) {
+    const me = peerOf(l);
+    if (m.op === 'signal') {
+      if (!me || m.group !== gid) return;
+      const t = members.get(m.to);
+      if (t && m.to !== me) t.link.deliver(g('signal', { group: gid, from: me, signal: m.signal }));
+    } else if (m.op === 'leave') { if (me) remove(me); }
+    else if (m.op === 'knock') {
+      const kid = hex8(); knocks.set(kid, { link: l, name: l.label });
+      for (const v of members.values()) if (v.view.role === 'driver') v.link.deliver(g('knock', { group: gid, knock: kid, name: l.label }));
+      l.deliver(g('knocking', { group: gid }));
+    } else if (m.op === 'admit' || m.op === 'deny') {
+      const k = knocks.get(m.knock);
+      if (!me || !k || members.get(me).view.role !== 'driver') return;
+      knocks.delete(m.knock);
+      for (const v of members.values()) if (v.view.role === 'driver') v.link.deliver(g('knock-ended', { group: gid, knock: m.knock }));
+      if (m.op === 'deny') k.link.deliver(g('refused', { group: gid, reason: 'declined' }));
+      else add(k.link, { name: k.name });
+    } else if (m.op === 'cancel') { /* nothing to do here */ }
+  }
+  return { get gid() { return gid; }, setGid: (x) => { gid = x; }, link, add, remove, members, knocks };
+}
+const opts = (o = {}) => ({ PeerConnection: PC, Stream: FakeStream, ...o });
+const pcsOf = (grp) => grp.__probe().pcs;
+const offersSent = (l) => l.sent.filter((m) => m.op === 'signal' && m.signal.kind === 'offer');
+const answersSent = (l) => l.sent.filter((m) => m.op === 'signal' && m.signal.kind === 'answer');
+
+(async () => {
+try {
+  // ===============================================================================================================
+  section('the cap, and an older link');
+  check('3 others on video, 5 with sound only (drive.py says the same; test_call_groups.py checks)',
+    MESH_MAX_OTHERS.video === 3 && MESH_MAX_OTHERS.audio === 5);
+  check('every refusal has plain words', ['no-call', 'full', 'declined', 'unanswered', 'ended', 'not-in-call'].every((r) => typeof GROUP_REFUSED_TEXT[r] === 'string'));
+  check('*** a link with no group messages (an older site): no group, so nothing about a call changes ***',
+    createCallGroup({ link: { sendSignal() {}, onSignal() {} } }) === null && createCallGroup({}) === null);
+  check('one retry for a failed mesh connection', MESH_RETRIES === 1);
+
+  // ===============================================================================================================
+  section('*** three people: Mike rang Robin\'s screen; Sam knocked and was let in ***');
+  const S1 = groupServer();
+  const lA = S1.link('Mike'), lP = S1.link('Robin'), lS = S1.link('Sam');
+  const aMic = track('audio'), aCam = track('video'), pMic = track('audio'), pCam = track('video'), sMic = track('audio'), sCam = track('video');
+  const A = createCallGroup(opts({ link: lA, role: 'driver', getTracks: () => [aMic, aCam] }));
+  const P = createCallGroup(opts({ link: lP, role: 'screen', getTracks: () => [pMic, pCam] }));
+  const S = createCallGroup(opts({ link: lS, role: 'driver', getTracks: () => [sMic, sCam] }));
+  const aPeer = S1.add(lA, { name: 'Mike' });
+  S1.add(lP, { name: 'Robin', role: 'screen', leg: aPeer, session: 'call-g1' });
+  await settle();
+  check('Mike and Robin\'s screen are in the group', A.id() === 'call-g1' && P.id() === 'call-g1' && P.leg() === aPeer);
+  check('*** no mesh connection between them: the call that rang IS their connection ***', pcsOf(A) === 0 && pcsOf(P) === 0
+    && offersSent(lA).length === 0 && offersSent(lP).length === 0);
+  check('...and no tile for each other (the call draws that one)', A.tiles().length === 0 && P.tiles().length === 0);
+  check('Robin\'s screen counts nobody besides the caller who rang it', P.othersBesidesLeg() === 0 && P.others() === 1);
+  const sPeer = S1.add(lS, { name: 'Sam' });
+  await settle();
+  check('*** those already there offer to Sam (Mike and Robin\'s screen); Sam offers to nobody ***',
+    offersSent(lA).length === 1 && offersSent(lP).length === 1 && offersSent(lS).length === 0,
+    `${offersSent(lA).length} ${offersSent(lP).length} ${offersSent(lS).length}`);
+  check('each offer is addressed to Sam only', offersSent(lA)[0].to === sPeer && offersSent(lP)[0].to === sPeer);
+  check('Sam answered both', answersSent(lS).length === 2);
+  check('*** one connection per other person: Sam holds two, Mike one, the screen one ***', pcsOf(S) === 2 && pcsOf(A) === 1 && pcsOf(P) === 1);
+  check('the offerer made the words channel before its offer', [...allPcs.values()].filter((p) => p.localDescription?.type === 'offer' && !p.closed).every((p) => p.channels.some((c) => c.label === WORDS_LABEL)));
+  check('this device\'s own tracks go to each connection (camera and microphone)',
+    [...allPcs.values()].filter((p) => !p.closed && p.senders.some((s) => s.track === pCam)).length === 1);
+  meetAll();
+  await settle();
+  check('Sam sees two tiles, named by the server', S.tiles().map((t) => t.name).sort().join() === 'Mike,Robin', JSON.stringify(S.tiles().map((t) => t.name)));
+  check('...each with their picture', S.tiles().every((t) => t.video && t.stream && t.state === 'connected'));
+  check('Mike and Robin\'s screen each see Sam', A.tiles().map((t) => t.name).join() === 'Sam' && P.tiles().map((t) => t.name).join() === 'Sam');
+  check('Robin\'s screen now has somebody besides the caller who rang', P.othersBesidesLeg() === 1);
+  check('room for one more (4 on video)', A.hasRoom() && A.max() === 4);
+
+  section('*** words: a word from Robin\'s board reaches everybody it is connected to through the group ***');
+  const heardS = [];
+  S.onWords((w) => heardS.push(w));
+  const n = P.say({ type: 'say', text: 'Hello Sam', source: 'board' });
+  await settle();
+  check('sent on each mesh connection (one: Sam)', n === 1);
+  check('Sam hears it, with whose board it came from', heardS.length === 1 && heardS[0].text === 'Hello Sam' && heardS[0].name === 'Robin', JSON.stringify(heardS));
+  check('a word as plain text works too', P.say('again') === 1);
+  check('*** nothing outside a group ***', createCallGroup(opts({ link: S1.link('x') })).say('x') === 0);
+
+  section('*** a board clip goes into every connection\'s sound at once (swap) ***');
+  const mixed = track('audio');
+  const swapped = await P.swap('audio', mixed);
+  check('the screen\'s audio sender on every mesh connection now sends the mixed track', swapped === 1
+    && [...allPcs.values()].filter((p) => !p.closed && p.senders.some((s) => s.track === mixed)).length === 1);
+  check('...and its camera is untouched', [...allPcs.values()].some((p) => !p.closed && p.senders.some((s) => s.track === pCam)));
+
+  section('Gran\'s screen rung into the call by Mike (its own call): only the others connect to it');
+  const lQ = S1.link('Gran');
+  const Q = createCallGroup(opts({ link: lQ, role: 'screen', getTracks: () => [track('audio'), track('video')] }));
+  const offersA = offersSent(lA).length;
+  const qPeer = S1.add(lQ, { name: 'Gran', role: 'screen', leg: aPeer, session: 'call-g2' });
+  await settle();
+  check('*** Mike does not offer (his call to Gran IS that connection) ***', offersSent(lA).length === offersA);
+  check('Robin\'s screen and Sam offer to Gran', offersSent(lP).some((m) => m.to === qPeer) && offersSent(lS).some((m) => m.to === qPeer));
+  check('Gran\'s screen answers both, offers to nobody', answersSent(lQ).length === 2 && offersSent(lQ).length === 0);
+  meetAll(); await settle();
+  check('Gran\'s screen: tiles for Robin and Sam (Mike comes through its call)', Q.tiles().map((t) => t.name).sort().join() === 'Robin,Sam');
+  check('Mike\'s page: Gran is reached through his call, not a tile here', A.tiles().map((t) => t.name).join() === 'Sam'
+    && A.memberBySession('call-g2')?.name === 'Gran');
+  check('*** the call is full: nobody has room for more ***', !A.hasRoom() && !P.hasRoom() && A.others() === 3);
+
+  section('leaving cleans up');
+  const sPcs = [...allPcs.values()].filter((p) => !p.closed && p.senders.some((s) => s.track === sCam));
+  S.leave();
+  await settle();
+  check('Sam\'s leaving is sent to the server', lS.sent.some((m) => m.op === 'leave' && m.group === 'call-g1'));
+  check('*** every connection Sam had (Mike, Robin\'s screen, Gran\'s screen) is closed, on his side ***', sPcs.length === 3 && sPcs.every((p) => p.closed) && pcsOf(S) === 0);
+  check('...and on everybody else\'s: their tile for Sam is gone', !A.tiles().some((t) => t.name === 'Sam') && !P.tiles().some((t) => t.name === 'Sam')
+    && !Q.tiles().some((t) => t.name === 'Sam'));
+  check('Sam is in no group now', S.id() === null && S.others() === 0);
+  for (const x of [A, P, Q, S]) x.destroy();
+
+  // ===============================================================================================================
+  section('a screen still opening its camera holds its answers until its call is live');
+  const S2 = groupServer();
+  const l2a = S2.link('Mike'), l2p = S2.link('Robin'), l2s = S2.link('Sam');
+  const A2 = createCallGroup(opts({ link: l2a, getTracks: () => [track('audio')] }));
+  const S2g = createCallGroup(opts({ link: l2s, getTracks: () => [track('audio')] }));
+  const ap = S2.add(l2a, { name: 'Mike' });
+  S2.add(l2s, { name: 'Sam' });
+  await settle();
+  const P2 = createCallGroup(opts({ link: l2p, role: 'screen', ready: false, getTracks: () => [track('audio'), track('video')] }));
+  S2.add(l2p, { name: 'Robin', role: 'screen', leg: ap, session: 's' });
+  await settle();
+  check('Sam offered to the screen', offersSent(l2s).length >= 1);
+  check('*** the screen answers nothing yet (no tracks to send) ***', answersSent(l2p).length === 0 && P2.__probe().deferred === 1);
+  P2.setReady(true);
+  await settle();
+  check('live: it answers the offer that waited', answersSent(l2p).length === 1 && P2.__probe().deferred === 0);
+  for (const x of [A2, S2g, P2]) x.destroy();
+
+  section('an audio-only call sends sound only');
+  const S3 = groupServer({ kind: 'audio' });
+  const l3a = S3.link('A'), l3b = S3.link('B');
+  const cam3 = track('video'), mic3 = track('audio');
+  const A3 = createCallGroup(opts({ link: l3a, getTracks: () => [mic3, cam3] }));
+  const B3 = createCallGroup(opts({ link: l3b, getTracks: () => [track('audio')] }));
+  S3.add(l3a, { name: 'A' }); S3.add(l3b, { name: 'B' });
+  await settle();
+  const pc3 = [...allPcs.values()].find((p) => !p.closed && p.senders.some((s) => s.track === mic3));
+  check('*** the camera is open on this device and still not sent ***', pc3 && !pc3.senders.some((s) => s.track === cam3));
+  check('6 people in an audio-only call', A3.max() === 6 && A3.kind() === 'audio');
+  for (const x of [A3, B3]) x.destroy();
+
+  section('a mesh connection that fails: offered again once, then given up and shown as lost');
+  const clk = fakeClock();
+  const S4 = groupServer();
+  const l4a = S4.link('A'), l4b = S4.link('B');
+  const A4 = createCallGroup(opts({ link: l4a, getTracks: () => [track('audio')], setTimer: clk.setTimer, clearTimer: clk.clearTimer }));
+  const B4 = createCallGroup(opts({ link: l4b, getTracks: () => [track('audio')], setTimer: clk.setTimer, clearTimer: clk.clearTimer }));
+  S4.add(l4a, { name: 'A' }); S4.add(l4b, { name: 'B' });
+  await settle();
+  const firstOffers = offersSent(l4a).length;
+  let pcA = [...allPcs.values()].filter((p) => !p.closed && p.localDescription?.type === 'offer').pop();
+  pcA.fire('failed');
+  await settle();
+  check('the offerer offers again, once', offersSent(l4a).length === firstOffers + 1);
+  pcA = [...allPcs.values()].filter((p) => !p.closed && p.localDescription?.type === 'offer').pop();
+  pcA.fire('failed');
+  await settle();
+  check('...not twice', offersSent(l4a).length === firstOffers + 1);
+  clk.advance(STALL_MS + 1);
+  await settle();
+  check('*** after the stall time, it is given up: the tile says lost, the connection is closed ***',
+    A4.tiles()[0]?.state === 'lost' && pcsOf(A4) === 0, JSON.stringify(A4.tiles()));
+  for (const x of [A4, B4]) x.destroy();
+
+  section('knocking: asking, waiting, let in or told no');
+  const S5 = groupServer();
+  const l5a = S5.link('Mike'), l5k = S5.link('Sam'), l5n = S5.link('Nia');
+  const A5 = createCallGroup(opts({ link: l5a, getTracks: () => [track('audio')] }));
+  const K5 = createCallGroup(opts({ link: l5k, getTracks: () => [track('audio')] }));
+  const N5 = createCallGroup(opts({ link: l5n, getTracks: () => [track('audio')] }));
+  S5.add(l5a, { name: 'Mike' });
+  await settle();
+  check('a knock is sent as a bare op (the server writes the name)', K5.knock() && l5k.sent.at(-1).op === 'knock' && Object.keys(l5k.sent.at(-1)).join() === 'op');
+  check('the knocker is told it is waiting', K5.state().knocking === 'waiting');
+  check('the caller in the call sees who is asking', A5.state().knocks.length === 1 && A5.state().knocks[0].name === 'Sam');
+  check('*** a screen-role group cannot knock ***', createCallGroup(opts({ link: S5.link('scr'), role: 'screen' })).knock() === false);
+  check('a knock id this page does not know is not sent', A5.admit('ffffffff') === false);
+  A5.admit(A5.state().knocks[0].knock);
+  await settle();
+  check('let in: the knocker is in the group', K5.id() === S5.gid && K5.state().knocking === null);
+  check('...and the prompt is gone from the caller\'s page', A5.state().knocks.length === 0);
+  const refused = [];
+  N5.onRefused((r) => refused.push(r));
+  N5.knock();
+  await settle();
+  A5.deny(A5.state().knocks[0].knock);
+  await settle();
+  check('told no: the knocker hears it in plain words, and is in no group', refused.length === 1 && refused[0].text === GROUP_REFUSED_TEXT.declined
+    && refused[0].knock === true && N5.id() === null, JSON.stringify(refused));
+  for (const x of [A5, K5, N5]) x.destroy();
+
+  // ===============================================================================================================
+  section('*** a screen\'s call with a group: everything it sends goes to everybody; it outlives the caller who rang ***');
+  {
+    const S6 = groupServer();
+    const lp = S6.link('Robin');
+    const sigSubs = new Set(), sigSent = [];
+    lp.sendSignal = (s) => { if (!SIGNAL_KINDS.includes(s.kind)) return false; sigSent.push(s); return true; };
+    lp.onSignal = (cb) => { sigSubs.add(cb); return () => sigSubs.delete(cb); };
+    const sig = (s) => { for (const f of [...sigSubs]) f(s); };
+    let t = null;
+    const grp = createCallGroup(opts({ link: lp, role: 'screen', ready: false, getTracks: () => t?.sending?.() || [] }));
+    t = createCallTransport({ link: lp, role: 'screen', group: grp, PeerConnection: PC, Stream: FakeStream });
+    const ended = [];
+    t.onEnded((r, i) => ended.push([r, i?.why]));
+    const legs = [];
+    t.onLeg((x) => legs.push(x));
+    check('the transport hands its group to the panel', t.group() === grp);
+    const lm = S6.link('Mike'), ls = S6.link('Sam');
+    const gm = createCallGroup(opts({ link: lm, getTracks: () => [track('audio'), track('video')] }));
+    const gs = createCallGroup(opts({ link: ls, getTracks: () => [track('audio'), track('video')] }));
+    const mp = S6.add(lm, { name: 'Mike' });
+    sig({ kind: 'offer', sdp: 'OFFER-0', purpose: CALL_PURPOSE, session: 'call-x', from: { name: 'Mike', video: true } });
+    S6.add(lp, { name: 'Robin', role: 'screen', leg: mp, session: 'call-x' });
+    S6.add(ls, { name: 'Sam' });
+    await settle();
+    check('*** ringing: the screen\'s offer to Sam waits (it has nothing to send yet) ***', offersSent(lp).length === 0 && grp.__probe().toOffer === 1, JSON.stringify(grp.__probe()));
+    const cam = track('video'), mic = track('audio');
+    const ok = await t.answer({ outgoing: cam, audio: mic });
+    await settle();
+    check('answered and live', ok && t.isLive());
+    check('*** live: the offer to Sam goes, with what the call sends ***', offersSent(lp).length === 1
+      && [...allPcs.values()].some((p) => !p.closed && p.senders.some((s) => s.track === cam) && p.localDescription?.type === 'offer' && p.channels.length === 1));
+    check('sending() is the call\'s camera and microphone', t.sending().includes(cam) && t.sending().includes(mic));
+    meetAll(); await settle();
+    const heard = [];
+    gs.onWords((w) => heard.push(w));
+    check('a board word goes into the call...', t.sendWords('Hi everyone', { source: 'board' }) === true);
+    await settle();
+    check('*** ...and to Sam, through the group, with whose board it is ***', heard.length === 1 && heard[0].text === 'Hi everyone' && heard[0].name === 'Robin', JSON.stringify(heard));
+    const t2 = track('audio');
+    const sw = await t.replaceTrack('audio', t2);
+    check('*** a swapped audio track (a board clip) goes onto every connection ***', sw
+      && [...allPcs.values()].filter((p) => !p.closed && p.senders.some((s) => s.track === t2)).length === 2);
+    // Mike hangs up; Sam is still here.
+    sig({ kind: 'bye', reason: 'hangup', purpose: CALL_PURPOSE, session: 'call-x' });
+    await settle();
+    check('*** the caller who rang hangs up while Sam is still here: the call stays live ***', t.isLive() && ended.length === 0, JSON.stringify(ended));
+    check('...without its own connection to the caller, and says so', t.legOn() === false && legs.join() === 'left');
+    check('...still sending, so somebody else joining still gets the camera', t.sending().includes(cam));
+    check('words still reach Sam', t.sendWords('still here') === true);
+    const t3 = track('audio');
+    check('a clip can still go in (onto the group connections) with no connection to the caller', await t.replaceTrack('audio', t3));
+    S6.remove(mp);
+    await settle();
+    check('Mike\'s socket leaves the group: still live (Sam is here)', t.isLive());
+    gs.leave();
+    await settle();
+    check('*** the last other person leaves: the call ends, as a hang-up ***', !t.isLive() && ended.length === 1 && ended[0][0] === 'remote', JSON.stringify(ended));
+    check('...and the screen has left the group', lp.sent.some((m) => m.op === 'leave') && grp.id() === null);
+    t.destroy(); grp.destroy(); gm.destroy(); gs.destroy();
+  }
+  {
+    // A two-person call with a group nobody else joined ends with the caller exactly as before.
+    const S7 = groupServer();
+    const lp = S7.link('Robin');
+    const sigSubs = new Set();
+    lp.sendSignal = () => true;
+    lp.onSignal = (cb) => { sigSubs.add(cb); return () => sigSubs.delete(cb); };
+    let t = null;
+    const grp = createCallGroup(opts({ link: lp, role: 'screen', ready: false, getTracks: () => t?.sending?.() || [] }));
+    t = createCallTransport({ link: lp, role: 'screen', group: grp, PeerConnection: PC, Stream: FakeStream });
+    const ended = [];
+    t.onEnded((r) => ended.push(r));
+    const lm = S7.link('Mike');
+    const mp = S7.add(lm, { name: 'Mike' });
+    for (const f of [...sigSubs]) f({ kind: 'offer', sdp: 'OFFER-0', purpose: CALL_PURPOSE, session: 'c7' });
+    S7.add(lp, { name: 'Robin', role: 'screen', leg: mp, session: 'c7' });
+    await t.answer({ outgoing: track('video') });
+    for (const f of [...sigSubs]) f({ kind: 'bye', purpose: CALL_PURPOSE, session: 'c7' });
+    await settle();
+    check('*** nobody else in the group: the caller hanging up ends it, as it always did ***', !t.isLive() && ended.join() === 'remote');
+    check('...and the screen leaves the group', lp.sent.some((m) => m.op === 'leave'));
+    t.destroy(); grp.destroy();
+  }
+  {
+    const t = createCallTransport({ link: { sendSignal: () => true, onSignal: () => () => {} }, role: 'screen', PeerConnection: PC, Stream: FakeStream });
+    check('no group handed in: group() is null and nothing else changes', t.group() === null && t.legOn() === false && Array.isArray(t.sending()));
+    t.destroy();
+  }
+
+  // ===============================================================================================================
+  section('*** the caller page: tagged as a group, add someone, let a knock in, carry on, ask to join ***');
+  {
+    const S8 = groupServer({ gid: 'unused' });
+    let srv = S8;
+    const links = [];
+    // The page's sockets: signals are recorded and can be answered; group messages go through S8, except that the
+    // first TAGGED offer makes the group (the server's job) with this page as its first member.
+    let gidSeen = null;
+    const connect = ({ personId, onState, onPresence } = {}) => {
+      const l = srv.link(`page:${personId}`);
+      const subs = new Set();
+      l.person = personId; l.signals = [];
+      l.sendSignal = (s) => {
+        l.signals.push(JSON.parse(JSON.stringify(s)));
+        if (s.kind === 'offer' && s.group && !gidSeen) { gidSeen = s.group; srv.setGid(s.group); srv.add(l, { name: 'Ann' }); }
+        return true;
+      };
+      l.onSignal = (cb) => { subs.add(cb); return () => subs.delete(cb); };
+      l.signal = (s) => { for (const f of [...subs]) f(s); };
+      l.close = () => { l.closed = true; l.st = 'offline'; };
+      l.presence = () => ({ screens: 1, drivers: 1 });
+      queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens: 1, drivers: 1 }); });
+      links.push(l);
+      return l;
+    };
+    const fetchImpl = async (url, o = {}) => {
+      const ok = (b, st = 200) => ({ ok: st < 400, status: st, json: async () => b });
+      if (/\/api\/drive\/ticket\//.test(url)) return ok({ ticket: 'T' });
+      if (/\/api\/people$/.test(url)) return ok({ people: [{ id: 'p1', name: 'Alex' }, { id: 'p2', name: 'Gran' }] });
+      if (/\/api\/drive\/shared$/.test(url)) return ok({ people: [] });
+      if (/\/api\/me$/.test(url)) return ok({ display_name: 'Ann' });
+      return ok({}, 404);
+    };
+    const media = async (c) => new FakeStream([...(c.audio ? [track('audio')] : []), ...(c.video ? [track('video')] : [])]);
+    const root = document.getElementById('page');
+    const attached = [];
+    const page = await mountCallPage(root, { fetchImpl, connect, getUserMedia: media, attach: (el, s) => attached.push([el, s]),
+      storage: null, search: '?person=p1', nav: {}, win: { addEventListener() {} }, enumerateDevices: async () => [],
+      makeTransport: (x) => createCallTransport({ ...x, PeerConnection: PC, Stream: FakeStream }),
+      makeGroup: (x) => createCallGroup({ ...x, PeerConnection: PC, Stream: FakeStream }) });
+    check('*** the setup page says how many can be in a call, and offers the relay setting folded away ***',
+      /up to 3 others on a video call/.test(root.textContent) && root.querySelector('details[data-relay]') && !root.querySelector('details[data-relay]').open);
+    check('...which says plainly it is not built, and asks the site for nothing until opened',
+      /not built yet/i.test(root.querySelector('[data-relay]').textContent));
+    const call = page.call('video');
+    await until(() => links[0]?.signals.some((s) => s.kind === 'offer'));
+    await call;
+    const offer = links[0].signals.find((s) => s.kind === 'offer');
+    check('*** the call is tagged as a group: its own id is the group\'s ***', offer && offer.group && offer.group === offer.session, JSON.stringify(offer));
+    await settle();
+    check('the page is in the group', page.group()?.id() === offer.group);
+    // The screen answers (the call that rang).
+    const pc0 = [...allPcs.values()].filter((p) => p.localDescription?.sdp === `OFFER-${p.id}`).pop();
+    links[0].signal({ kind: 'answer', sdp: 'ANSWER-0', purpose: CALL_PURPOSE, session: offer.session });
+    await settle();
+    pc0.fire('connected');
+    await settle();
+    const lScreen = S8.link('screen-Alex');
+    createCallGroup(opts({ link: lScreen, role: 'screen' }));
+    S8.add(lScreen, { name: 'Alex', role: 'screen', leg: page.group().me(), session: offer.session });
+    await settle();
+    check('in a call', page.state() === 'in-call');
+    check('*** "Add someone" is offered (room for more, somebody to add) ***', !root.querySelector('[data-add]').hidden);
+    root.querySelector('[data-add]').click();
+    await settle();
+    check('it lists who can be added - not the person already in the call',
+      [...root.querySelectorAll('[data-add-person] option')].map((o) => o.textContent).join() === 'Gran');
+    const pcBefore = pcSeq;
+    root.querySelector('[data-add-ring]').click();
+    await until(() => links[1]?.signals.some((s) => s.kind === 'offer'));
+    const offer2 = links[1].signals.find((s) => s.kind === 'offer');
+    check('*** Gran is rung on HER socket, as a new call tagged with this group ***', links[1].person === 'p2' && offer2.group === offer.group
+      && offer2.session !== offer.session, JSON.stringify(offer2));
+    check('a tile says Gran is ringing', page.tiles().some((t) => t.name === 'Gran' && t.state === 'ringing'), JSON.stringify(page.tiles()));
+    // Gran's screen answers.
+    links[1].signal({ kind: 'answer', sdp: 'ANSWER-0', purpose: CALL_PURPOSE, session: offer2.session });
+    await settle();
+    const lGran = S8.link('screen-Gran');
+    const gGran = createCallGroup(opts({ link: lGran, role: 'screen', getTracks: () => [track('audio')] }));
+    S8.add(lGran, { name: 'Gran', role: 'screen', leg: page.group().me(), session: offer2.session });
+    await settle();
+    check('Gran answered: her tile is there, and the page did not offer to her through the group (its call is the connection)',
+      page.tiles().some((t) => t.name === 'Gran' && t.state !== 'ringing') && !links[0].sent.some((m) => m.op === 'signal' && m.signal.kind === 'offer'));
+    const legPc = [...allPcs.values()].find((x) => x.id > pcBefore && x.localDescription?.type === 'offer' && x.channels.length);
+    legPc.channels[0].readyState = 'open';
+    legPc.channels[0].onmessage?.({ data: JSON.stringify({ type: 'say', text: 'Hi from Gran' }) });
+    await settle();
+    check('*** a word from Gran\'s board (through her call) shows on the page, with whose board it is ***',
+      /Hi from Gran/.test(root.textContent) && /From Gran’s AAC board/.test(root.textContent));
+    // Sam knocks.
+    const lSam = S8.link('Sam');
+    const gSam = createCallGroup(opts({ link: lSam, getTracks: () => [track('audio')] }));
+    gSam.knock();
+    await settle();
+    check('*** a knock shows on the page with Let in / Not now ***', /Sam would like to join the call/.test(root.textContent) && root.querySelector('[data-knock-yes]'));
+    root.querySelector('[data-knock-yes]').click();
+    await settle();
+    check('Let in sends the admit', links[0].sent.some((m) => m.op === 'admit'));
+    check('Sam joined: the page offered to him (he has no call of his own to it)', links[0].sent.some((m) => m.op === 'signal' && m.signal.kind === 'offer'));
+    meetAll(); await settle();
+    check('two tiles besides the first screen\'s place: Gran and Sam', page.tiles().map((t) => t.name).sort().join() === 'Gran,Sam', JSON.stringify(page.tiles()));
+    check('*** full (3 others on video): Add someone is gone ***', page.others() === 3 && root.querySelector('[data-add]').hidden);
+    const stage = root.querySelector('.cp-stage');
+    check('the stage is a grid of 3', stage.classList.contains('cp-grid') && stage.dataset.n === '3' && stage.querySelectorAll('.cp-tile').length === 2);
+    // The first screen hangs up; Gran and Sam stay.
+    links[0].signal({ kind: 'bye', reason: 'hangup', purpose: CALL_PURPOSE, session: offer.session });
+    await settle();
+    check('*** the first screen left: the call carries on with the others ***', page.state() === 'in-call' && /Alex left the call/.test(root.textContent));
+    check('...its place goes from the grid', root.querySelector('[data-remote]').hidden && stage.dataset.n === '2');
+    // Gran's screen ends its call; then Sam leaves.
+    links[1].signal({ kind: 'bye', reason: 'hangup', purpose: CALL_PURPOSE, session: offer2.session });
+    await settle();
+    check('Gran left: her tile goes, and her socket closes', !page.tiles().some((t) => t.name === 'Gran') && links[1].closed);
+    gSam.leave();
+    await settle();
+    check('*** everybody else gone: the call is over, and says so ***', page.state() === 'idle' && /Everyone else has left the call/.test(root.textContent), page.state());
+    check('the page left the group', links[0].sent.some((m) => m.op === 'leave'));
+    gGran.destroy(); gSam.destroy();
+
+    // A screen already on a call: "Ask to join that call".
+    gidSeen = null;
+    srv = groupServer();
+    const call2 = page.call('audio');
+    await until(() => links[2]?.signals.some((s) => s.kind === 'offer'));
+    await call2;
+    const o3 = links[2].signals.find((s) => s.kind === 'offer');
+    links[2].signal({ kind: 'bye', reason: 'busy', purpose: CALL_PURPOSE, session: o3.session });
+    await settle();
+    check('busy: "On another call", and "Ask to join that call" is offered', /another call/i.test(root.textContent) && page.knockOffered() && root.querySelector('[data-knock]'));
+    root.querySelector('[data-knock]').click();
+    await until(() => links[3]?.sent.some((m) => m.op === 'knock'));
+    check('*** pressing it knocks on that person\'s socket ***', links[3].person === 'p1' && links[3].sent.some((m) => m.op === 'knock'));
+    check('the page says it is asking', page.state() === 'knocking' && /Asking to join/.test(root.textContent));
+    srv.add(srv.link('screen-Alex2'), { name: 'Alex', role: 'screen' });
+    srv.add(links[3], { name: 'Ann' });
+    await settle();
+    check('let in: in the call, with no first-screen place (joined by knocking)', page.state() === 'in-call' && root.querySelector('[data-remote]').hidden);
+    page.hangup();
+    await settle();
+    check('hang up: idle, the group left', page.state() === 'idle' && links[3].sent.some((m) => m.op === 'leave'));
+    check('a knock waits a little longer than the server\'s 90 s', KNOCK_GIVE_UP_MS > 90000);
+    page.destroy();
+  }
+
+  // ===============================================================================================================
+  section('*** the screen\'s Call panel: a tile per person, beside whoever rang ***');
+  {
+    const host = document.getElementById('host');
+    const box = document.createElement('div'); box.style.cssText = 'position:relative;width:640px;height:480px'; host.append(box);
+    const changeCbs = new Set(), legCbs = new Set();
+    let tiles = [];
+    let legOn = true;
+    const fakeGroup = { tiles: () => tiles, onChange: (cb) => { changeCbs.add(cb); return () => changeCbs.delete(cb); } };
+    const fire = () => { for (const f of [...changeCbs]) f(); };
+    const fakeT = {
+      onIncoming: () => () => {}, onEnded: () => () => {}, answer: async () => true, hangup() {},
+      group: () => fakeGroup, legOn: () => legOn, onLeg: (cb) => { legCbs.add(cb); return () => legCbs.delete(cb); },
+    };
+    const inst = mountModule('call', {
+      mount: box, bus: createBus(), audio: null, cameraOwner: null, micOwner: null, instanceId: 'g1', callTransport: fakeT,
+      state: { get: () => ({ declineSeconds: 0, demo: false }), set: () => Promise.resolve(), subscribe: () => () => {},
+        load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+    });
+    inst.init();
+    const impl = inst.impl || inst;
+    await impl.__incoming({ name: 'Mike', video: true });
+    await settle();
+    const stage = box.querySelector('[data-stage]');
+    check('connected, one person: no grid (exactly as before)', impl.__probe().phase === 'connected' && !stage.classList.contains('call-grid') && !stage.querySelector('.call-tile'));
+    tiles = [{ peer: 'aaaa0001', name: 'Sam', stream: new FakeStream([track('audio'), track('video')]), video: true, state: 'connected' }];
+    fire();
+    check('*** Sam joins: a grid of two - the caller and Sam, named ***', stage.classList.contains('call-grid') && stage.dataset.tiles === '2'
+      && stage.querySelectorAll('.call-tile').length === 1 && /Sam/.test(stage.querySelector('.call-tile .call-tile-name').textContent)
+      && stage.querySelector('.call-leg-label')?.textContent === 'Mike', stage.outerHTML.slice(0, 300));
+    tiles = [...tiles, { peer: 'aaaa0002', name: 'Gran', stream: new FakeStream([track('audio')]), video: false, state: 'connecting' }];
+    fire();
+    check('Gran (sound only, still connecting): her initial, and it says so', stage.dataset.tiles === '3'
+      && stage.querySelector('[data-peer="aaaa0002"]').classList.contains('call-tile-audio')
+      && /connecting/.test(stage.querySelector('[data-peer="aaaa0002"] .call-tile-name').textContent));
+    impl.control({ speaker: 'off' });
+    check('*** the speaker control mutes every tile too ***', [...stage.querySelectorAll('.call-tile video')].every((v) => v.muted));
+    impl.control({ speaker: 'on' });
+    legOn = false;
+    for (const f of [...legCbs]) f('left');
+    check('*** the caller who rang left (the others stayed): their place goes ***', stage.classList.contains('call-leg-gone') && stage.dataset.tiles === '2'
+      && !stage.querySelector('.call-leg-label'));
+    tiles = tiles.slice(1);
+    fire();
+    check('Sam left: his tile is gone', !stage.querySelector('[data-peer="aaaa0001"]') && stage.querySelectorAll('.call-tile').length === 1);
+    impl.__end('remote');
+    check('the call ends: no tiles, no grid', !stage.querySelector('.call-tile') && !stage.classList.contains('call-grid'));
+    inst.destroy();
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+})();
+</script>
+</body>
+</html>

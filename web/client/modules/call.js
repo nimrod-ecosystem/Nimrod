@@ -355,6 +355,74 @@ registerModule(
         applyCallGain();
       }
       root.dataset.phase = phase;
+      paintTiles();                 // group calls: everybody else in the call, beside whoever rang
+    }
+
+    // ---- GROUP CALLS (2026-10-09; call_group.js) --------------------------------------------------------------
+    // More people in this call than the one who rang: each is a TILE beside the caller's picture - up to 3 others on
+    // video (call_group.js MESH_MAX_OTHERS), so at most a 2 x 2 grid, side by side for two on a wide panel and one
+    // above the other on a tall one. This room stays in the picture-in-picture as always (no tile of its own: the
+    // header's "one webcam, one place on screen"). A tile with no picture shows the person's initial; every tile
+    // carries the server's name for them. Their sound plays through their tile, at the call's level, and the call's
+    // controls (speaker, their video) act on every tile. When the caller who rang leaves and the others stay
+    // (call_transport.js "THE CALL OUTLIVES ITS CALLER"), that caller's place goes and the tiles fill the panel.
+    let group = null;
+    const groupOffs = [];
+    function bindGroup() {
+      const g = (typeof transport?.group === 'function' ? transport.group() : null) || null;
+      if (g === group) return;
+      groupOffs.splice(0).forEach((off) => { try { off(); } catch { /* gone */ } });
+      group = g;
+      if (!g) return;
+      groupOffs.push(g.onChange(() => paintTiles()));
+      const offLeg = transport?.onLeg?.(() => paintTiles());
+      if (typeof offLeg === 'function') groupOffs.push(offLeg);
+    }
+    function paintTiles() {
+      const stage = el('[data-stage]');
+      if (!stage) return;
+      let tiles = [];
+      try { tiles = phase === 'connected' && group ? (group.tiles() || []) : []; } catch { tiles = []; }
+      const legGone = tiles.length > 0 && typeof transport?.legOn === 'function' && !transport.legOn();
+      stage.classList.toggle('call-grid', tiles.length > 0);
+      stage.classList.toggle('call-leg-gone', legGone);
+      if (tiles.length) stage.dataset.tiles = String(tiles.length + (legGone ? 0 : 1));
+      else delete stage.dataset.tiles;
+      // Whoever rang, named on their picture once there is more than one picture to tell apart.
+      let label = stage.querySelector(':scope > .call-leg-label');
+      if (tiles.length && who?.video && !legGone) {
+        if (!label) { label = document.createElement('div'); label.className = 'call-tile-name call-leg-label'; stage.appendChild(label); }
+        label.textContent = who?.name || 'Someone';
+      } else if (label) label.remove();
+      const keep = new Set(tiles.map((t) => t.peer));
+      for (const box of [...stage.querySelectorAll(':scope > .call-tile')]) {
+        if (keep.has(box.dataset.peer)) continue;
+        try { const v = box.querySelector('video'); if (v) v.srcObject = null; } catch { /* gone */ }
+        box.remove();
+      }
+      for (const t of tiles) {
+        let box = [...stage.querySelectorAll(':scope > .call-tile')].find((b) => b.dataset.peer === t.peer);
+        if (!box) {
+          box = document.createElement('div');
+          box.className = 'call-tile';
+          box.dataset.peer = t.peer;
+          box.innerHTML = '<video autoplay playsinline></video><div class="call-tile-initial" aria-hidden="true"></div>'
+            + '<div class="call-tile-name"></div>';
+          stage.appendChild(box);
+        }
+        const v = box.querySelector('video');
+        if (v && v.srcObject !== (t.stream || null)) {
+          try { v.srcObject = t.stream || null; if (t.stream) v.play?.()?.catch?.(() => {}); } catch { /* a fake stream */ }
+        }
+        box.classList.toggle('call-tile-audio', !t.video);
+        box.dataset.state = t.state || '';
+        const name = t.name || 'Someone';
+        const how = t.state === 'connected' ? '' : (t.state === 'failed' || t.state === 'lost' || t.state === 'disconnected')
+          ? ' — connection lost' : ' — connecting…';
+        box.querySelector('.call-tile-initial').textContent = (name.trim()[0] || '?').toUpperCase();
+        box.querySelector('.call-tile-name').textContent = name + how;
+      }
+      applyCallGain();
     }
 
     // *** THE CALL ON THE MIXER (row 2.35). *** The bus decides how loud the call is heard - the
@@ -370,6 +438,8 @@ registerModule(
       const n = callLevel === null || callLevel === undefined ? NaN : Number(callLevel);
       const v = Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1;
       try { el.volume = v; } catch { /* a media element with no volume: it plays as it is */ }
+      // group calls: every other person's tile plays at the same level.
+      for (const t of root.querySelectorAll('.call-tile video')) { try { t.volume = v; } catch { /* no volume */ } }
       applyControls();
     }
 
@@ -384,6 +454,8 @@ registerModule(
       // The far end in this room: the element that plays them.
       const remote = root.querySelector('.call-remote');
       if (remote) { try { remote.muted = !ctl.speaker; } catch { /* nothing to mute */ } }
+      // group calls: the speaker is everybody's sound, every tile included.
+      for (const t of root.querySelectorAll('.call-tile video')) { try { t.muted = !ctl.speaker; } catch { /* nothing to mute */ } }
       // Their picture, or their name card in its place (only a VIDEO call has a picture to hide).
       const hide = phase === 'connected' && !!who?.video && !ctl.theirVideo;
       root.classList.toggle('call-their-hidden', hide);
@@ -738,6 +810,9 @@ registerModule(
       // other person hanging up normally. Mike's own ruling on this feature — no relay server,
       // ever, "say so honestly" when a direct connection can't be made — applies exactly as much
       // to a connection that dies mid-call as to one that never starts.
+      // (group calls, 2026-10-09: small group calls keep to this - every device straight to every
+      // other (call_group.js). A relay for BIGGER calls is only ever a household's own, optional,
+      // carrying media it cannot read - server/call_relay.py has the plan; nothing uses one yet.)
       'connection-lost': 'The connection was lost.',
       // ADDED 2026-10-02: the ring stopped because another screen of the same person answered it - or
       // refused it first (the server does not say which, so the words cover both). Without this the
@@ -798,9 +873,12 @@ registerModule(
           : reason === 'stalled' || reason === 'failed' ? 'connection-lost'
           : reason === 'elsewhere' ? 'elsewhere' : 'remote'));
       for (const off of [a, b]) if (typeof off === 'function') transportOffs.push(off);
+      bindGroup();                  // group calls: the tiles follow the screen's group (call_group.js)
     }
     function unbindTransport() {
       transportOffs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
+      groupOffs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
+      group = null;
     }
 
     return {
@@ -892,7 +970,27 @@ registerModule(
           // Their video hidden (the call's controls): the picture goes, their name card shows in its
           // place, and the element keeps PLAYING their sound (visibility, not display or removal).
           + '.m-call.call-their-hidden .call-remote{visibility:hidden}'
-          + '.m-call .call-their-card{position:relative;z-index:1}';
+          + '.m-call .call-their-card{position:relative;z-index:1}'
+          // group calls (2026-10-09): a tile per person, at most 2 x 2; two side by side, or stacked on a tall panel.
+          + '.m-call [data-stage].call-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);'
+          + 'gap:1cqmin;padding:1cqmin;align-items:stretch;justify-items:stretch}'
+          + '@container (max-aspect-ratio: 3/4){.m-call [data-stage].call-grid[data-tiles="2"]{grid-template-columns:1fr}}'
+          + '.m-call .call-grid>.call-remote{position:relative;inset:auto;grid-row:1;grid-column:1;min-height:0;border-radius:1.5cqmin}'
+          + '.m-call .call-grid>audio.call-remote{display:none}'
+          + '.m-call .call-grid>.call-who{grid-row:1;grid-column:1;min-height:0;justify-content:center;'
+          + 'border-radius:1.5cqmin;background:rgba(255,255,255,.05)}'
+          + '.m-call .call-grid>.call-leg-label{grid-row:1;grid-column:1;align-self:end;position:relative;z-index:1}'
+          + '.m-call .call-leg-gone>.call-remote,.m-call .call-leg-gone>.call-who{display:none}'
+          + '.m-call .call-tile{position:relative;min-width:0;min-height:0;overflow:hidden;border-radius:1.5cqmin;background:#000}'
+          + '.m-call .call-tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}'
+          + '.m-call .call-tile-name{position:absolute;left:0;right:0;bottom:0;padding:.8cqmin 1.4cqmin;'
+          + 'background:rgba(0,0,0,.55);color:#fff3d9;font:600 2.6cqmin/1.25 system-ui,sans-serif;text-align:left;'
+          + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+          + '.m-call .call-tile-initial{display:none}'
+          + '.m-call .call-tile-audio video,.m-call.call-their-hidden .call-tile video{visibility:hidden}'
+          + '.m-call .call-tile-audio .call-tile-initial,.m-call.call-their-hidden .call-tile-initial{display:flex;'
+          + 'position:absolute;inset:0;align-items:center;justify-content:center;font:600 9cqmin/1 system-ui,sans-serif;'
+          + 'color:#fff3d9;background:rgba(255,255,255,.06)}';
         root.appendChild(style);
         const stage = document.createElement('div');
         stage.setAttribute('data-stage', '');

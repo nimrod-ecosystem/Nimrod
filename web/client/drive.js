@@ -101,6 +101,7 @@ export function connectDrive({
   const signalSubs = new Set();
   if (onSignal) signalSubs.add(onSignal);
   const inviteSubs = new Set();     // a game offered to the call (drivers only; see onmessage)
+  const groupSubs = new Set();      // group calls (2026-10-09): the server's group messages (call_group.js)
   const fanSignal = (sig) => {
     for (const fn of [...signalSubs]) {
       try { fn(sig); } catch (err) { console.error('drive: signal subscriber', err); }
@@ -183,6 +184,11 @@ export function connectDrive({
         const inv = { code: msg.code, game: msg.game, name: String(msg.name || '').slice(0, 40) };
         for (const fn of [...inviteSubs]) { try { fn(inv); } catch (err) { console.error('drive: game invite', err); } }
       }
+      // GROUP CALLS (2026-10-09, drive.py CallGroups): built by the SERVER (who is in the call, a signal from one member
+      // to this one, a knock). Both roles. Handed to the group's own listeners - never to the bus, never as a verb.
+      if (msg.type === 'group' && typeof msg.op === 'string') {
+        for (const fn of [...groupSubs]) { try { fn(msg); } catch (err) { console.error('drive: group', err); } }
+      }
     };
     sock.onclose = () => {
       sock = null;
@@ -218,12 +224,27 @@ export function connectDrive({
     try { sock.send(JSON.stringify({ type: 'claim', purpose, session })); return true; } catch { return false; }
   }
 
+  // GROUP CALLS (2026-10-09): one group op to the server (drive.py GROUP_OPS - a signal to one member, leave, knock,
+  // admit / deny a knock, cancel). The server checks every one; this only refuses what is plainly not an op.
+  function sendGroup(msg = {}) {
+    if (!msg || typeof msg.op !== 'string') return false;
+    if (!sock || state !== 'connected') return false;
+    try { sock.send(JSON.stringify({ ...msg, type: 'group' })); return true; } catch { return false; }
+  }
+
   open();
 
   return {
     send,
     sendSignal,
     claim,
+    sendGroup,
+    /** group calls: the server's group messages (`{ type:'group', op, ... }`). Returns an unsubscribe. */
+    onGroup(cb) {
+      if (typeof cb !== 'function') return () => {};
+      groupSubs.add(cb);
+      return () => groupSubs.delete(cb);
+    },
     /** Listen for call signals. Returns an unsubscribe, like every other listener here. */
     onSignal(cb) {
       if (typeof cb !== 'function') return () => {};
@@ -242,6 +263,7 @@ export function connectDrive({
       closed = true;
       signalSubs.clear();
       inviteSubs.clear();
+      groupSubs.clear();
       clearTimer(timer);
       try { sock?.close(); } catch { /* already gone */ }
       sock = null;
