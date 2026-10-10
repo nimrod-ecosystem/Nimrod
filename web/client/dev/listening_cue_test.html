@@ -143,6 +143,14 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
     check('the question is shown as text, never as markup', el.querySelector('b') === null && el.textContent === '<b>x</b>', el.innerHTML);
     bus.publish(LISTENING_TOPIC, { on: false, reason: 'timeout' });
     check('...and still takes no focus', document.activeElement !== el);
+    // two-step (2026-10-09): input_speech.js's "Say it again?" window carries its line the same way.
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'retry', ms: 8000, question: 'Say it again?' });
+    check('*** a “Say it again?” window shows its line ***', el.hidden === false && el.textContent === 'Say it again?',
+      el.textContent);
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000, question: 'Say it again?' });
+    check('...but a plain wake window says “Listening” even if something put a question on it',
+      /^listening$/i.test(el.textContent.trim()), el.textContent);
+    bus.publish(LISTENING_TOPIC, { on: false, reason: 'timeout' });
 
     section('*** reduced motion, and every theme ***');
     {

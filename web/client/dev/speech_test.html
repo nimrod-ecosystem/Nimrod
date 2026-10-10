@@ -457,7 +457,8 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   section('*** the listening window is an EVENT: anything can show it (row 2.36) ***');
   check('the topic is speech/listening', LISTENING_TOPIC === 'speech/listening', LISTENING_TOPIC);
   {
-    const r = lrig();
+    // retries: 0 - the window as it was before "Say it again?" (two-step, 2026-10-09; tested below).
+    const r = lrig({ retries: 0 });
     r.say('computer please');
     check('*** the wake phrase on its own opens the window, as an event ***',
       r.listen().length === 1 && r.listen()[0].on === true && r.listen()[0].reason === 'wake',
@@ -636,6 +637,153 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('...and one breath still works', JSON.stringify(r.pressed()) === '["phrase:pause"]');
   }
 
+  // =====================================================================================
+  // TWO-STEP, MADE MORE FORGIVING (2026-10-09). Mike: "Taylor won't be able to say everything in one
+  // breath." On the bench a two-step command lost to a clipped first sound was simply silence, and a slow
+  // command that began just inside the window arrived after it.
+  // =====================================================================================
+  section('*** two-step: “Say it again?” when what was said to the screen matched nothing ***');
+  {
+    check('one “Say it again?” per wake phrase by default', SPEECH_DEFAULTS.retries === 1
+      && SPEECH_DEFAULTS.retryLine === 'Say it again?', `${SPEECH_DEFAULTS.retries} ${SPEECH_DEFAULTS.retryLine}`);
+    const n = normalize(SPEECH_DEFAULTS.retryLine);
+    check('*** the line is not a command or a wake phrase, so the screen cannot command itself with it ***',
+      !Object.values(spokenTable()).flat().some((p) => normalize(p) === n) && !SPEECH_DEFAULTS.wake.includes(n), n);
+    const keys = SPEECH_FIELDS.map((f) => f.key);
+    check('how many times, and the line, are settings', keys.includes('speechRetries') && keys.includes('speechRetryLine'),
+      keys.join(','));
+    const o = speechOptionsFrom({});
+    const o0 = speechOptionsFrom({ speechRetries: 0, speechRetryLine: 'Pardon?' });
+    const ox = speechOptionsFrom({ speechRetries: 9 });
+    const ob = speechOptionsFrom({ speechRetries: true, speechRetryLine: '  ' });
+    check('...with their defaults from an empty row, a person’s own values, and nonsense falling back',
+      o.retries === 1 && o.retryLine === 'Say it again?' && o0.retries === 0 && o0.retryLine === 'Pardon?'
+        && ox.retries === 1 && ob.retries === 1 && ob.retryLine === 'Say it again?',
+      JSON.stringify([o.retries, o0, ox.retries, ob]));
+  }
+  {
+    const said = [];
+    const r = lrig({ output: { say: (t, o) => { said.push([t, o]); } } });
+    r.say('computer please');
+    r.advance(3000);
+    r.say('the weather is nice');
+    const L = r.listen();
+    check('*** nothing matched inside the window: a fresh window carrying the line, for the cue to show ***',
+      L.length === 2 && L[1].on === true && L[1].reason === 'retry' && L[1].question === 'Say it again?'
+        && L[1].ms === SPEECH_DEFAULTS.wakeWindowMs, JSON.stringify(L));
+    check('...and the line said aloud, once, marked as coming from speech',
+      said.length === 1 && said[0][0] === 'Say it again?' && said[0][1].source === 'speech', JSON.stringify(said));
+    check('...and nothing pressed', r.pressed().length === 0);
+    r.advance(7000);   // 10 s after the wake phrase: past the first window, inside the fresh one
+    r.say('louder');
+    check('*** the command said again lands in the FRESH window (10 s after the wake phrase) ***',
+      JSON.stringify(r.pressed()) === '["phrase:volume-up"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const said = [];
+    const r = lrig({ output: { say: (t) => { said.push(t); } } });
+    r.say('computer please');
+    r.say('mumble mumble');
+    r.say('on the mat today');
+    check('*** once per wake phrase: a second miss asks nothing more (it cannot loop) ***',
+      said.length === 1 && r.listen().length === 2, JSON.stringify([said, r.listen()]));
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs + 1);
+    check('...nobody answering closes it, and nothing fired (inaction, not a gate)',
+      r.listen().length === 3 && r.listen()[2].on === false && r.listen()[2].reason === 'timeout' && r.pressed().length === 0,
+      JSON.stringify(r.listen()));
+    r.say('computer please');
+    r.say('mumble');
+    check('...and the next wake phrase has its own one', said.length === 2, JSON.stringify(said));
+  }
+  {
+    const r = lrig({ output: { say() {} } });
+    r.say('computer please');
+    r.say('mumble');
+    r.say('Say it again?');
+    check('*** the screen hearing its own line is reported as an echo and changes nothing ***',
+      r.pressed().length === 0 && r.listen().length === 2 && r.speech.windowOpen === true, JSON.stringify(r.listen()));
+    r.say('pause');
+    check('...and the command still lands', JSON.stringify(r.pressed()) === '["phrase:pause"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please the weather is nice');
+    check('the wake phrase with words that are no command, in one breath, asks too (opening the window)',
+      r.listen().length === 1 && r.listen()[0].reason === 'retry', JSON.stringify(r.listen()));
+    r.say('next');
+    check('...so the command alone then works', JSON.stringify(r.pressed()) === '["phrase:next"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.say('paws');
+    check('*** a near miss still ASKS “did you mean”, not “say it again” ***',
+      r.listen().length === 2 && r.listen()[1].reason === 'confirm', JSON.stringify(r.listen()));
+  }
+  {
+    const r = lrig({ retries: 0 });
+    r.say('computer please');
+    r.say('mumble');
+    check('retries 0: the old silence - the window simply stays open', r.listen().length === 1 && r.speech.windowOpen === true,
+      JSON.stringify(r.listen()));
+    const r2 = lrig({ twoStep: false });
+    r2.say('computer please mumble');
+    check('two-step off: nothing is opened or said (a window needs the two-step path)', r2.listen().length === 0,
+      JSON.stringify(r2.listen()));
+    r.say('i was telling her about the weekend');
+    const r3 = lrig();
+    r3.say('i was telling her about the weekend');
+    check('*** talk NOT said to the screen never asks anything ***', r3.listen().length === 0, JSON.stringify(r3.listen()));
+  }
+  {
+    const said = [];
+    const r = lrig({ retryLine: 'pause', output: { say: (t) => { said.push(t); } } });
+    r.say('computer please');
+    r.say('mumble');
+    check('*** a line that is itself a command is refused: the default line is said instead ***',
+      JSON.stringify(said) === '["Say it again?"]', JSON.stringify(said));
+  }
+
+  section('*** two-step: a command whose voice BEGAN inside the window counts, even when its words arrive after ***');
+  {
+    check('ten seconds of lateness by default', SPEECH_DEFAULTS.lateMs === 10000, String(SPEECH_DEFAULTS.lateMs));
+    const r = lrig();
+    r.say('computer please');                  // t = 1000: the window runs to 9000
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs);   // t = 9000: closed by its timer
+    check('the window closed on time', r.listen().length === 2 && r.listen()[1].reason === 'timeout', JSON.stringify(r.listen()));
+    r.advance(1500);
+    r.say('make it bigger', { voiceFrom: 8500, voiceTo: 9900 });
+    check('*** a slow “make it bigger” begun at 7.5 s and written down at 9.5 s still fires ***',
+      r.pressed().length === 1, JSON.stringify(r.pressed()));
+    r.say('pause', { voiceFrom: 8600 });
+    check('...once: the late window is used up by the command', r.pressed().length === 1, JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs + 500);
+    r.say('pause', { voiceFrom: 9200 });
+    check('*** a voice that began AFTER the window closed is not a command ***', r.pressed().length === 0);
+    r.say('pause');
+    check('...nor is one with no start time (a recogniser that cannot tell: exactly as before)', r.pressed().length === 0);
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs + SPEECH_DEFAULTS.lateMs + 1);
+    r.say('pause', { voiceFrom: 8000 });
+    check('...nor words arriving more than lateMs after the close, however they began', r.pressed().length === 0);
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.say('next');
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs + 1000);
+    r.say('pause', { voiceFrom: 5000 });
+    check('*** a window a command already closed leaves nothing late behind (one wake, one command) ***',
+      JSON.stringify(r.pressed()) === '["phrase:next"]', JSON.stringify(r.pressed()));
+  }
+
   section('*** how the recogniser should listen: OPEN everywhere by default; grammar only when a person chose it ***');
   {
     const g = commandGrammar();
@@ -744,15 +892,18 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     good.speak('hello there');
     check('*** OPEN inside the window: “hello there” is written down as it is and matches nothing ***',
       good.pressed().length === 0, JSON.stringify(good.pressed()));
-    check('...and it is not close enough to any command to be asked about', good.said.length === 0, JSON.stringify(good.said));
+    // two-step (2026-10-09): nothing near is not asked "did you mean" - it gets "Say it again?" instead.
+    check('...and it is not close enough to any command to be asked about (only “Say it again?”)',
+      good.said.length === 1 && good.said[0][0] === SPEECH_DEFAULTS.retryLine, JSON.stringify(good.said));
     good.speak('louder');
     check('...while the real command, said next, still fires (one mis-hearing does not close the window)',
       JSON.stringify(good.pressed()) === '["phrase:volume-up"]', JSON.stringify(good.pressed()));
     const good1 = vosky({});
     check('by default the one-breath path listens open too', good1.mode().mode === 'open', JSON.stringify(good1.mode()));
     good1.speak('computer please hello there', 'computer please louder');
-    check('*** OPEN, one breath: “computer please hello there” fires nothing and asks nothing ***',
-      good1.pressed().length === 0 && good1.said.length === 0, `${JSON.stringify(good1.pressed())} ${JSON.stringify(good1.said)}`);
+    check('*** OPEN, one breath: “computer please hello there” fires nothing and asks nothing but “Say it again?” ***',
+      good1.pressed().length === 0 && good1.said.length === 1 && good1.said[0][0] === SPEECH_DEFAULTS.retryLine,
+      `${JSON.stringify(good1.pressed())} ${JSON.stringify(good1.said)}`);
   }
 
   // =====================================================================================
@@ -924,10 +1075,16 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   }
   {
     const said = [];
-    const r = lrig({ nearMiss: false, output: { say: (t) => { said.push(t); return 'x'; } } });
+    // retries: 0 - "Say it again?" (two-step, 2026-10-09) is its own setting; see the next block.
+    const r = lrig({ nearMiss: false, retries: 0, output: { say: (t) => { said.push(t); return 'x'; } } });
     r.say('computer please paws');
     check('*** asking turned off: a near miss does nothing at all ***', r.pressed().length === 0 && said.length === 0
       && r.listen().length === 0, `${JSON.stringify(said)} ${JSON.stringify(r.listen())}`);
+    const said2 = [];
+    const r2 = lrig({ nearMiss: false, output: { say: (t) => { said2.push(t); return 'x'; } } });
+    r2.say('computer please paws');
+    check('...and with “did you mean” off, a near miss is like any other miss: “Say it again?”, never fired',
+      r2.pressed().length === 0 && JSON.stringify(said2) === JSON.stringify([SPEECH_DEFAULTS.retryLine]), JSON.stringify(said2));
   }
   {
     const said = [];
@@ -941,8 +1098,9 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   {
     const r = lrig();
     r.say('computer please go');
+    // two-step (2026-10-09): no "did you mean" - only the "Say it again?" window, which asks about nothing.
     check('*** ambiguous (“go”): nothing asked, nothing fired ***', r.speech.nearMissPending?.() === null
-      && r.pressed().length === 0 && r.listen().length === 0, JSON.stringify(r.listen()));
+      && r.pressed().length === 0 && r.listen().length === 1 && r.listen()[0].reason === 'retry', JSON.stringify(r.listen()));
   }
   {
     // A SWITCH YES: the bus topics an ordinary binding drives, and the host API.

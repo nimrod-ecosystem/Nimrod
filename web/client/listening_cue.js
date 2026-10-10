@@ -181,7 +181,8 @@ export function mountListeningCue(host, {
   // The cue stays non-modal: the answer is a spoken yes, or a switch bound to Yes.
   const off = subscribe(bus, (p) => {
     if (p.on) {
-      word.textContent = p.reason === 'confirm' && typeof p.question === 'string' && p.question.trim()
+      // two-step (2026-10-09): input_speech.js's "Say it again?" window carries its line the same way.
+      word.textContent = (p.reason === 'confirm' || p.reason === 'retry') && typeof p.question === 'string' && p.question.trim()
         ? p.question : plain;
       el.hidden = false;
       dog.arm(p.ms);
