@@ -30,7 +30,7 @@
 // skip button and no "now playing". A game that draws attention to its soundtrack is a game
 // competing with itself.
 
-import { resolveListing } from './media_sources.js';
+import { resolveListing, quietResolve } from './media_sources.js';
 import { MUSIC_GROUP, GAME_MUSIC_PRIORITY } from './audio_bus.js';
 
 export const MUSIC_MODES = ['ambient', 'folder', 'off'];
@@ -40,7 +40,9 @@ export const isAudioPath = (p) => AUDIO_EXT.test(String(p || ''));
 
 export function createGameMusic({
   sources = null,                 // a media-sources client, or null for ambient only
-  resolve = resolveListing,
+  // (2026-10-10) the quiet lister: a folder on another computer is never asked from here (no local-network box); the
+  // music falls back to the ambient bed, as for any folder that does not answer. ef10c19 did the same for the photo panels.
+  resolve = quietResolve(resolveListing),
   volume = 0.3,
   // *** THE SPEAKER ARBITER. *** Optional, and the module keeps working without one - but
   // WITHOUT it this bed plays at full volume under a spoken cue and alongside a video, which
