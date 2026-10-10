@@ -729,6 +729,29 @@ export const CATALOG = [
       + 'and Drop light in turn and a press does the lit one. The easiest levels are slow, use small bricks, and '
       + 'a full wall just starts a fresh one; harder levels are faster, with bigger pieces.',
   },
+  // brick builder (2026-10-09): make a model from Nimrod parts, and a game of building one you are shown.
+  {
+    type: 'brickbuilder',
+    title: 'Brick builder',   // title-casing the type would say "Brickbuilder" (composer_reach checks it is the manifest's)
+    group: 'practice',
+    use: 'touch',
+    lead: 'Make a model from Nimrod bricks, plates and brackets: any size, stacked, turned and coloured.',
+    needs: 'Nothing. Every part is built in. Models are kept for you, and can be saved to your Nimrod folder.',
+    why: 'Every part is on the same 40 mm grid, so anything put down fits. A cursor shows where the next part goes, and '
+      + 'everything is a button: a mouse, a finger, the keys or one switch can build. Parts fall onto what is under '
+      + 'them, Undo takes back any step, and on screen there is no printer size limit.',
+  },
+  {
+    type: 'buildit',
+    title: 'Build it',   // not "Buildit"
+    group: 'practice',
+    use: 'answer',
+    lead: 'See a finished model of Nimrod bricks and build the same, from two bricks up to twelve.',
+    needs: 'Nothing. The models, the levels and the sounds are built in.',
+    why: 'At the easy levels the next part is offered as two or three pictures that light in turn: one press takes the '
+      + 'lit one and the right one snaps into place, so one switch can build every model. A wrong one just is not '
+      + 'offered again. From the middle level the model is built in the brick builder and checked as it goes.',
+  },
   {
     type: 'rhythm',
     group: 'practice',

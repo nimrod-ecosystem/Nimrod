@@ -8,7 +8,7 @@
 // Until today the library (Modules) listed every published part as its own card -- twenty-one of them, from
 // bricks.json -- none of which could be put anywhere. Now there is one Bricks module, and its settings choose:
 //   Part       a brick, a baseplate, an L bracket, the three-way corner, or a straight / corner / T joiner plate
-//   Width, Length, Height   in 40 mm steps, 40 to 320 (the grid every Nimrod part is on)
+//   Width, Length, Height   in 40 mm steps, 40 to 1280 on screen (the grid every Nimrod part is on; was 320)
 //   Thickness  a baseplate's: 5 or 10 mm (the two heights the CAD side catalogues, 40..320 x 40..320 at each)
 //   Colour     one of the theme's five brick colours (brick_colours.js), or your own
 //   Look       the part's published picture where there is one, or drawn
@@ -38,8 +38,17 @@
 // library reads an old key through it (library.js `byKey`).
 //
 // HARD-CODED, each with its argument (Rule 1) -- the ones a person might want are settings above:
-//   GRID 40, SIZES 40..320       the Nimrod grid and the catalogue's largest size (CATALOGUE_MAX in the CAD source:
-//                                "mostly virtual" past the 256 mm bed); a size past 320 is drawn, not offered.
+//   GRID 40, SIZES 40..320       the Nimrod grid and the CATALOGUE's largest size (CATALOGUE_MAX in the CAD source:
+//                                "mostly virtual" past the 256 mm bed). Used only where a part is matched to a
+//                                published model or picture -- never as a limit on what is drawn.
+//   MENU_SIZES 40..1280          brick builder (2026-10-09). Mike: "We aren't limited to A1 sizes now that it's for
+//                                the site." On screen no printer limits anything, so the menu goes past the
+//                                catalogue: to 1280, a desk top in one piece. AGAINST: 32 choices is a long menu
+//                                for a switch (one press each); the default is still 40 and the list is in order.
+//                                Past 1280 the brick builder (brick_builder.js) takes any size in 40 mm steps.
+//   SIZE_MAX 2560                not a printer: only so a stored typo cannot ask for a 40-metre drawing. A stored
+//                                size is kept as it is (to the nearest 40 mm) up to here, menu or not.
+//   (Printability is said where printing is talked about: the bricks page's "needs a printer bed over 256 mm".)
 //   THICKNESSES 5, 10            the CAD side's BASEPLATE_HEIGHTS (row 2.76).
 //   PANEL_T 5, SOCKET_D 10       a bracket's or plate's thickness and the socket's bore, from the CAD source.
 //   minimum plate sizes          a joiner plate joins at least two cells (I, L: 80) and a T needs three across (120).
@@ -57,6 +66,9 @@ export const BRICKS_TYPE = 'bricks';
 export const BRICKS_TITLE = 'Bricks';
 export const GRID = 40;
 export const SIZES = Object.freeze([40, 80, 120, 160, 200, 240, 280, 320]);
+// brick builder (2026-10-09): the on-screen sizes (see the header) -- no printer cap.
+export const MENU_SIZES = Object.freeze(Array.from({ length: 32 }, (_, i) => (i + 1) * 40));
+export const SIZE_MAX = 2560;
 export const THICKNESSES = Object.freeze([5, 10]);
 export const PANEL_T = 5;
 export const SOCKET_D = 10;
@@ -88,12 +100,12 @@ export const BRICKS_SETTINGS = Object.freeze([
     options: PART_IDS.map((id) => ({ value: id, label: PARTS[id].label })),
     help: 'Which Nimrod part to show. Every part is on the same 40 mm grid, so any two fit together.' },
   { key: 'width', label: 'Width', kind: 'choice', default: BRICKS_DEFAULTS.width, level: 'essential',
-    options: SIZES.map(mm), appliesWhen: applies('width'),
+    options: MENU_SIZES.map(mm), appliesWhen: applies('width'),
     help: 'In 40 mm steps. A joiner plate is at least two steps long, a T plate three.' },
   { key: 'length', label: 'Length', kind: 'choice', default: BRICKS_DEFAULTS.length, level: 'essential',
-    options: SIZES.map(mm), appliesWhen: applies('length') },
+    options: MENU_SIZES.map(mm), appliesWhen: applies('length') },
   { key: 'height', label: 'Height', kind: 'choice', default: BRICKS_DEFAULTS.height, level: 'essential',
-    options: SIZES.map(mm), appliesWhen: applies('height') },
+    options: MENU_SIZES.map(mm), appliesWhen: applies('height') },
   { key: 'thickness', label: 'Thickness', kind: 'choice', default: BRICKS_DEFAULTS.thickness, level: 'essential',
     options: THICKNESSES.map(mm), appliesWhen: applies('thickness') },
   { key: 'colour', label: 'Colour', kind: 'choice', default: BRICKS_DEFAULTS.colour, level: 'essential',
@@ -109,10 +121,10 @@ export const BRICKS_SETTINGS = Object.freeze([
 ]);
 const FIELDS = BRICKS_SETTINGS.map((f) => normalizeField(f)).filter(Boolean);
 
-const nearest = (list, n) => list.reduce((best, x) => (Math.abs(x - n) < Math.abs(best - n) ? x : best), list[0]);
+// brick builder (2026-10-09): any size on the 40 mm grid, to SIZE_MAX -- it used to snap to the catalogue (<= 320).
 const sizeOf = (v, fallback) => {
   const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? nearest(SIZES, n) : fallback;
+  return Number.isFinite(n) && n > 0 ? Math.min(SIZE_MAX, Math.max(GRID, Math.round(n / GRID) * GRID)) : fallback;
 };
 const hexOf = (v) => {
   const s = String(v ?? '').trim().toLowerCase();
@@ -384,6 +396,10 @@ export function drawPart(spec, colour) {
   }
   return boxesSvg(partBoxes(spec), colour, { title: spec.title });
 }
+
+// brick builder (2026-10-09): the same view, for a drawing of many parts (brick_builder.js `buildSvg`), so a model
+// and a single part are drawn the same way from one set of numbers.
+export { project as isoProject, pathOf as isoPath, socketPts as isoSocketPts, gridLines as isoGridLines };
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));

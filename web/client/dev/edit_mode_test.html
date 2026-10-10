@@ -362,7 +362,9 @@ try {
       sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J(['look', 'opens']), J(sel()?.fields?.map((f) => f.key)));
     check(`(${kind}) Look reads Brick-built to begin with`, sel().values().look === 'bricks', J(sel().values()));
     check(`(${kind}) *** "Built from 32 Nimrod parts" and "Open its bricks" → the bricks page for desk_v1 ***`,
-      J(sel().actions) === J([{ id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' }]), J(sel().actions));
+      J(sel().actions) === J([{ id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' },
+        // brick builder (2026-10-09): the way to build your own, second.
+        { id: 'builder', label: 'Build your own in the brick builder', href: '/modules.html?m=brickbuilder', note: '' }]), J(sel().actions));
     const card = () => host.querySelector('.k-room .em-card');
     check(`(${kind}) the card draws the Look row and the link`, !!card()?.querySelector('[data-em-row="look"]') && card()?.querySelector('[data-em-act="bricks"] a')?.getAttribute('href') === '/bricks.html?build=desk_v1');
     const savedScene = () => store.get('settings')?.kiosk?.layout?.scene;

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>brick_builder — make a model from Nimrod parts: place, turn, stack, colour, undo, save, open, match</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#3c5346}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  .box{position:relative;width:900px;height:560px;margin:8px 0;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>brick_builder — make a model from Nimrod parts</h1>
+<p>Mike, 2026-10-09: <i>"We aren't limited to A1 sizes now that it's for the site. ... We need some sort of builder on the
+site for making models out of the bricks."</i> This checks the model (parts on the 40 mm grid, turning, things falling
+onto what is under them), every move of the editor (put, pick up, turn, paint, take away, undo and redo, the hand's
+part, size and colour, the floor), that no size is capped at a printer's bed, the drawing (well formed, back to front,
+the cursor and the part in your hand), where a press lands, the match Build it uses, files in and out (the published
+desk's own file too), and the Brick builder on a page: saved per person, opened again, every move reachable by a
+switch and by keys. Needs the server (it fetches the published desk).</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  SCHEMA, MAX_PARTS, HISTORY_MAX, HAND_DEFAULT, normalizePart, normalizeBuild, footprint,
+  worldBoxes, restingY, settle, topAt, heightAt, createEditor, newBuild, buildSvg, orderBoxes, modelBoxes, pickAt, matchBuilds,
+  toFile, fromFile, fromAssembly, fileNameFor, exampleBuild, colourCss, normalizeColour, roomItemFor, roomBoxFor, freshRoomBuilds,
+} from '../brick_builder.js';
+import { mountRoomScene, isFloor, isContent, itemBox } from '../room_scene.js';
+import { presetRecipe } from '../room_presets.js';
+import { isoProject, SIZE_MAX } from '../brick_parts.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { MODULE_VERBS } from '../actions.js';
+import { applyTheme } from '../theme.js';
+import { builtActions, BRICK_BUILDS, BUILDER_PAGE } from '../brick_builds.js';
+import { TYPE, SHARED_KEY, BUILD_PREFIX, savedBuilds, nextName } from '../modules/brickbuilder.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function info(t) { const d = document.createElement('div'); d.className = 'info'; d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+async function until(fn, ms = 3000) { const end = Date.now() + ms; while (Date.now() < end) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(20); } return false; }
+function memState(seed = {}) {
+  let data = { ...seed };
+  const subs = new Set();
+  return { load: () => Promise.resolve(data), get: () => structuredClone(data),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f(structuredClone(data)); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, flush: async () => {}, destroy() {} };
+}
+function box() { const b = document.createElement('div'); b.className = 'box'; document.getElementById('host').append(b); return b; }
+const brick = (x, z, w = 40, l = 40, h = 40, extra = {}) => ({ part: 'brick', x, z, w, l, h, ...extra });
+
+try {
+  // ===============================================================================================================
+  section('*** the model: parts on the 40 mm grid, turned, and falling onto what is under them ***');
+  {
+    const p = normalizePart({ part: 'brick', w: 83, l: 40, h: 40, x: 61, z: 19, y: -5, rot: 5, colour: 'pink' });
+    check('a part is made safe: sizes and places on the 40 mm grid, a quarter turn 0..3, a colour it can be',
+      p.w === 80 && p.x === 80 && p.z === 0 && p.y === 0 && p.rot === 1 && p.colour === 'theme1', J(p));
+    check('anything that is not a part is nothing', normalizePart({ part: 'sofa' }) === null && normalizePart(null) === null);
+    check('a joiner plate is never less than it can be (I 80, T 120 x 80), as on the Bricks module',
+      normalizePart({ part: 'plateI', w: 40 }).w === 80 && J([normalizePart({ part: 'plateT', w: 40, l: 40 }).w, normalizePart({ part: 'plateT', w: 40, l: 40 }).l]) === J([120, 80]));
+    check('a turned part\'s footprint is the other way round', J(footprint({ ...p, rot: 1 })) === J({ w: 40, d: 80 }) && J(footprint({ ...p, rot: 0 })) === J({ w: 80, d: 40 }));
+    const wb = worldBoxes(normalizePart(brick(40, 80, 80, 40, 40, { rot: 1 })));
+    check('*** a turned brick is the same box, the other way round, where it was put ***', J([wb[0].x0, wb[0].z0, wb[0].x1, wb[0].z1, wb[0].y1]) === J([40, 80, 80, 160, 40]), J(wb[0]));
+    check('...with a socket on every cell of the three faces we see (2 on top, 1 at the front, 2 on the side)',
+      wb[0].sockets.length === 2 + 1 + 2, String(wb[0].sockets.length));
+    const lb0 = worldBoxes(normalizePart({ part: 'lbracket', w: 80 }));
+    const lb1 = worldBoxes(normalizePart({ part: 'lbracket', w: 80, rot: 1 }));
+    check('*** an L bracket turned is a different shape (its upright moves to another side) ***', J(lb0.map((b) => [b.x0, b.z0, b.x1, b.z1])) !== J(lb1.map((b) => [b.x0, b.z0, b.x1, b.z1])));
+    const a = normalizePart(brick(0, 0), 0); const b2 = normalizePart(brick(0, 0, 40, 40, 40, { id: 'p2' }), 1);
+    check('*** a part put where another stands rests on top of it ***', restingY(b2, [a]) === 40);
+    const tower = settle([normalizePart(brick(0, 0, 40, 40, 80, { id: 'p1' })), normalizePart(brick(0, 0, 80, 40, 40, { id: 'p2', y: 999 }))]);
+    check('settle: a part high in the air comes down onto what is under it', tower[1].y === 80, J(tower));
+    const lifted = settle([tower[1]]);
+    check('*** take away what it stood on, and it comes down to the floor ***', lifted[0].y === 0);
+    const bridge = settle([normalizePart(brick(0, 0, 40, 40, 40, { id: 'p1' })), normalizePart(brick(80, 0, 40, 40, 40, { id: 'p2' })), normalizePart(brick(0, 0, 120, 40, 40, { id: 'p3', y: 40 }))]);
+    check('a slab resting on two legs stays up (it rests on any part under any of its cells)', bridge[2].y === 40 && heightAt(bridge, 1, 0) === 80 && heightAt(bridge, 3, 0) === 0);
+    check('the part on top of a cell', topAt(bridge, 0, 0).id === 'p3' && topAt(bridge, 1, 0).id === 'p3' && topAt(bridge, 5, 5) === null);
+    const t = normalizePart({ part: 'plateT', w: 120, l: 80, x: 0, z: 0, id: 'p1' });
+    check('a T plate holds up only where it has cells (not its empty corners)', restingY(normalizePart(brick(0, 0, 40, 40, 40, { id: 'p2' })), [t]) === 0
+      && restingY(normalizePart(brick(0, 40, 40, 40, 40, { id: 'p3' })), [t]) === 5);
+  }
+
+  // ===============================================================================================================
+  section('*** the editor: put, pick up, turn, paint, take away, undo and redo ***');
+  {
+    const changes = [];
+    const ed = createEditor(newBuild({ floorCells: 8 }), { onChange: (b, what) => changes.push(what) });
+    check('a new model is empty, on its floor, with an 80 mm brick in your hand', ed.get().parts.length === 0 && ed.get().floor.w === 320 && J(ed.hand()) === J(HAND_DEFAULT));
+    check('*** the part in your hand is shown where it would go: at the cursor, on the floor ***', ed.ghost().x === 0 && ed.ghost().y === 0);
+    check('put', ed.put() && ed.get().parts.length === 1 && changes.at(-1) === 'put');
+    check('*** put again at the same place: it goes on top ***', ed.put() && ed.get().parts[1].y === 40);
+    ed.moveCursor(5, 0);
+    check('the cursor moves a cell at a time', J(ed.cursor()) === J({ x: 5, z: 0 }));
+    ed.moveCursor(99, 99);
+    check('...and never off the floor', J(ed.cursor()) === J({ x: 7, z: 7 }));
+    check('*** a part near the edge is kept on the floor (an 80 brick at the last cell starts a cell in) ***', ed.ghost().x === 240);
+    ed.setCursor(0, 0);
+    check('pick up: the part on top goes into your hand, off the model', ed.pickUp() && ed.get().parts.length === 1 && ed.hand().part === 'brick');
+    ed.setCursor(4, 4); ed.put();
+    check('*** ...and put down somewhere else: that is how a part is moved ***', ed.get().parts.some((q) => q.x === 160 && q.z === 160 && q.y === 0));
+    ed.setColour('theme3');
+    check('paint: the part here takes your colour', ed.paint() && ed.here().colour === 'theme3');
+    check('paint again: nothing changes (it is that colour)', !ed.paint());
+    const before = ed.here().rot;
+    check('turn this one: a quarter, where it stands', ed.turnHere() && ed.here() && ed.here().rot === (before + 1) % 4);
+    check('take away', ed.remove() && ed.get().parts.length === 1);
+    ed.setCursor(6, 6);
+    check('nothing here: pick up, paint, turn and take away do nothing', !ed.pickUp() && !ed.paint() && !ed.turnHere() && !ed.remove());
+    const n = ed.get().parts.length;
+    check('*** undo takes back the last step ***', ed.undo() && ed.get().parts.length === n + 1);
+    check('*** redo does it again ***', ed.redo() && ed.get().parts.length === n);
+    while (ed.undo()) { /* all the way */ }
+    check('undo all the way: the empty model', ed.get().parts.length === 0 && !ed.canUndo() && ed.canRedo());
+    ed.put();
+    check('a new step forgets what could be redone', !ed.canRedo());
+    for (let i = 0; i < HISTORY_MAX + 20; i++) { ed.turnHand(); ed.put(); }
+    let k = 0; while (ed.undo()) k++;
+    check(`history keeps the last ${HISTORY_MAX} steps`, k === HISTORY_MAX, String(k));
+    // the hand
+    const h = createEditor(newBuild());
+    check('the hand: the part changes, in the Bricks module\'s order', h.cyclePart(1) && h.hand().part === 'baseplate' && h.cyclePart(-1) && h.hand().part === 'brick');
+    check('sizes: wider / narrower in 40 mm steps', h.resize('w', 1) && h.hand().w === 120 && h.resize('w', -1) && h.hand().w === 80);
+    h.cyclePart(1);
+    check('a baseplate is 5 or 10 mm thick: "taller" makes it 10, and no more', h.resize('h', 1) && h.hand().h === 10 && !h.resize('h', 1) && h.resize('h', -1) && h.hand().h === 5);
+    h.setHand({ part: 'corner3' });
+    check('the three-way corner has no size to change', !h.resize('w', 1) && !h.resize('h', 1));
+    h.setHand({ part: 'plateI', w: 80 });
+    check('a straight joiner plate cannot be shorter than 80', !h.resize('w', -1) && h.hand().w === 80);
+    h.setHand({ part: 'brick', w: 40 });
+    check('a brick cannot be narrower than 40', !h.resize('w', -1));
+    check('your own colour', h.setColour('#ABCDEF') && h.hand().colour === '#abcdef' && colourCss('#abcdef') === '#abcdef');
+    check('a theme colour is the theme\'s variable, so the theme changes it', colourCss('theme4') === 'var(--brick-4)' && normalizeColour('nope') === 'theme1');
+  }
+
+  // ===============================================================================================================
+  section('*** no printer cap: on screen any size in 40 mm steps (Mike: "We aren\'t limited to A1 sizes") ***');
+  {
+    const ed = createEditor(newBuild({ floorCells: 8 }));
+    ed.setHand({ part: 'brick', w: 1280, l: 640, h: 40 });
+    check('*** a 1280 x 640 slab in one piece: the hand keeps it ***', ed.hand().w === 1280 && ed.hand().l === 640);
+    check('...and putting it makes the floor big enough for it', ed.put() && ed.get().floor.w >= 1280 && ed.get().floor.d >= 640, J(ed.get().floor));
+    for (let i = 0; i < 80; i++) ed.resize('h', 1);
+    check('a brick can be taller than any printer bed (2 m and more), to the sanity bound', ed.hand().h > 2000 && ed.hand().h <= SIZE_MAX, String(ed.hand().h));
+    const big = normalizeBuild({ parts: [brick(0, 0, 2000, 40, 40)] });
+    check('a stored size past the catalogue\'s 320 is kept', big.parts[0].w === 2000 && big.floor.w === 2000);
+    const ex = exampleBuild('desk');
+    check('*** the example desk: its top is ONE 1280 x 640 slab, on 720 mm legs ***', ex.parts.length === 5 && ex.parts.some((q) => q.w === 1280 && q.l === 640 && q.y === 720), J(ex.parts.map((q) => [q.w, q.l, q.h, q.y])));
+  }
+
+  // ===============================================================================================================
+  section('*** the drawing: well formed, back to front, the cursor and the part in your hand ***');
+  {
+    const parts = settle([normalizePart(brick(0, 0, 80, 40, 40, { id: 'p1' })), normalizePart(brick(0, 0, 40, 40, 40, { id: 'p2', colour: 'theme2' })),
+      normalizePart({ part: 'lbracket', w: 80, x: 80, z: 80, id: 'p3', colour: '#123456' })]);
+    const svg = buildSvg(parts, { floor: { w: 320, d: 320 }, cursor: { x: 0, z: 0 }, ghost: normalizePart(brick(160, 160, 40, 40, 40, { id: 'g' })), title: 'Test' });
+    const d = new DOMParser().parseFromString(svg, 'image/svg+xml');
+    check('a drawing is well-formed SVG with its words', !d.querySelector('parsererror') && d.documentElement.getAttribute('aria-label') === 'Test', (d.querySelector('parsererror')?.textContent || '').slice(0, 200));
+    check('one group per box, with its part\'s id', d.querySelectorAll('[data-pid="p1"]').length === 1 && d.querySelectorAll('[data-pid="p3"]').length === 2);
+    check('*** the part in your hand is drawn see-through, dashed ***', d.querySelector('[data-ghost]')?.getAttribute('opacity') === '0.55' && /stroke-dasharray/.test(d.querySelector('[data-ghost]').innerHTML));
+    check('*** the cursor is a ring on the top of its stack ***', !!d.querySelector('[data-cursor]'));
+    check('the floor is drawn, with its grid', !!d.querySelector('[data-floor]'));
+    check('a theme colour stays a variable in the drawing (it follows the theme); your own is its hex',
+      /--bk:var\(--brick-2\)/.test(svg) && /--bk:#123456/.test(svg));
+    check('no NaN, no Infinity', !/NaN|Infinity|undefined/.test(svg));
+    const order = orderBoxes(modelBoxes([normalizePart(brick(40, 0, 40, 40, 40, { id: 'front' })), normalizePart(brick(0, 0, 40, 40, 40, { id: 'back' }))])).map((b) => b.pid);
+    check('*** back to front: the part behind is drawn first ***', J(order) === J(['back', 'front']), J(order));
+    const stack = settle([normalizePart(brick(0, 0, 40, 40, 40, { id: 'low' })), normalizePart(brick(0, 0, 40, 40, 40, { id: 'high' }))]);
+    check('...and a part under another first', J(orderBoxes(modelBoxes([...stack].reverse())).map((b) => b.pid)) === J(['low', 'high']));
+    const many = [];
+    for (let i = 0; i < MAX_PARTS; i++) many.push(brick((i % 15) * 40, Math.floor(i / 15) % 15 * 40, 40, 40, 40, { id: `m${i}` }));
+    const t0 = performance.now();
+    const bigSvg = buildSvg(settle(many.map(normalizePart)), { floor: { w: 640, d: 640 } });
+    const ms = performance.now() - t0;
+    check(`a full model (${MAX_PARTS} parts) draws in good time`, ms < 2500, `${ms.toFixed(0)} ms`);
+    info(`${MAX_PARTS} parts: ${ms.toFixed(0)} ms, ${(bigSvg.length / 1024).toFixed(0)} KB of drawing`);
+    const plain = buildSvg(parts, { floor: { w: 320, d: 320 }, sockets: false });
+    check('"Draw the sockets: no" leaves them out', !/data-sockets/.test(plain) && /data-sockets/.test(svg));
+  }
+
+  // ===============================================================================================================
+  section('*** where a press lands: the floor, a part\'s top, a part\'s side ***');
+  {
+    const parts = settle([normalizePart(brick(80, 120, 40, 40, 40, { id: 'p1' }))]);
+    const floor = { w: 320, d: 320 };
+    const [tx, ty] = isoProject(100, 40, 140);
+    check('*** a press on a part\'s top: that cell, that part ***', J(pickAt(parts, floor, tx, ty)) === J({ x: 2, z: 3, pid: 'p1' }), J(pickAt(parts, floor, tx, ty)));
+    const [sx, sy] = isoProject(120, 20, 140);
+    check('a press on its side: its cell (the part is chosen)', J(pickAt(parts, floor, sx, sy)) === J({ x: 2, z: 3, pid: 'p1' }), J(pickAt(parts, floor, sx, sy)));
+    const [fx, fy] = isoProject(300, 0, 60);
+    check('a press on the floor: the cell under it', J(pickAt(parts, floor, fx, fy)) === J({ x: 7, z: 1, pid: null }), J(pickAt(parts, floor, fx, fy)));
+    const [ox, oy] = isoProject(500, 0, 500);
+    check('off the floor: nothing', pickAt(parts, floor, ox, oy) === null);
+  }
+
+  // ===============================================================================================================
+  section('*** the match (Build it): same parts, places and colours; anywhere on the floor; turned any way ***');
+  {
+    const target = settle([brick(0, 0, 40, 40, 40, { id: 'a' }), brick(80, 0, 40, 40, 40, { id: 'b' }), brick(0, 0, 120, 40, 40, { id: 'c', colour: 'theme2' })].map(normalizePart));
+    check('itself: the same', matchBuilds(target, target).same);
+    const moved = settle(target.map((p) => ({ ...p, x: p.x + 120, z: p.z + 80, y: 0 })));
+    check('*** built somewhere else on the floor: the same ***', matchBuilds(target, moved).same);
+    const turned = settle([brick(0, 0, 40, 40, 40, { id: 'a' }), brick(0, 80, 40, 40, 40, { id: 'b' }), brick(0, 0, 40, 120, 40, { id: 'c', colour: 'theme2' })].map(normalizePart));
+    check('*** the whole model turned a quarter: the same ***', matchBuilds(target, turned).same);
+    check('...unless turning is not allowed', !matchBuilds(target, turned, { turns: false }).same);
+    const turnedBrick = settle([brick(0, 0, 40, 40, 40, { id: 'a' }), brick(80, 0, 40, 40, 40, { id: 'b' }), { part: 'brick', w: 40, l: 120, h: 40, rot: 1, x: 0, z: 0, colour: 'theme2', id: 'c' }].map(normalizePart));
+    check('a brick turned a quarter is the same brick (the same box)', matchBuilds(target, turnedBrick).same);
+    const recol = target.map((p) => ({ ...p, colour: 'theme5' }));
+    check('*** another colour: not the same ... ***', !matchBuilds(target, recol).same && matchBuilds(target, recol).right === 0);
+    check('...unless colours do not have to match', matchBuilds(target, recol, { colours: false }).same);
+    const part = matchBuilds(target, target.slice(0, 2));
+    check('a model half built: how many are right, and how many are missing', part.right === 2 && part.missing === 1 && part.extra === 0 && !part.same, J(part));
+    const more = matchBuilds(target, settle([...target, normalizePart(brick(200, 200, 40, 40, 40, { id: 'z' }))]));
+    check('an extra part: every one right, one too many, not the same', more.right === 3 && more.extra === 1 && !more.same, J(more));
+    const lb = [normalizePart({ part: 'lbracket', w: 40, id: 'l' })];
+    check('a bracket turned is NOT the same bracket (its upright faces another way) -- unless the whole model may turn',
+      !matchBuilds(lb, [normalizePart({ part: 'lbracket', w: 40, rot: 1, id: 'l' })], { turns: false }).same
+      && matchBuilds(lb, [normalizePart({ part: 'lbracket', w: 40, rot: 1, id: 'l' })], { turns: true }).same);
+  }
+
+  // ===============================================================================================================
+  section('*** files: a model to the Nimrod folder and back; the published furniture read in ***');
+  {
+    const b = normalizeBuild({ name: 'My desk!', parts: [brick(0, 0, 80, 40, 40, { colour: '#abcdef' })] });
+    const text = toFile(b);
+    const back = fromFile(text);
+    check('*** to a file and back: the same parts, sizes, places and colours ***', !!back && J(back.parts) === J(b.parts) && back.name === 'My desk!' && back.schema === SCHEMA);
+    check('...with a new id (a file opened is a model of its own)', back.id !== b.id);
+    check('the file says what it is, for a person who opens it', JSON.parse(text).about.includes('40 mm grid'));
+    check('a file name from its name', fileNameFor(b) === 'my-desk.json' && fileNameFor({ name: '' }) === 'my-build.json');
+    check('anything else is not a model', fromFile('not json') === null && fromFile('{"schema":"other/1","parts":[]}') === null && fromFile('{"x":1}') === null);
+    const asm = await (await fetch('/design-assets/bricks/scenes/desk_v1.json')).json();
+    const { build, left } = fromAssembly(asm);
+    check('*** the published desk read in: its 24 bricks, exactly where the CAD side put them ***', build.parts.length === 24 && build.floor.w === 1280 && build.floor.d === 640, `${build.parts.length} ${J(build.floor)}`);
+    check('...its eight brackets said, not drawn somewhere they are not (they hold to the side: the builder cannot yet)', left.bracket === 6 && left.corner === 2, J(left));
+    check('*** and it answers Mike\'s question: the desk is built from pieces no bigger than 320 mm ***', build.parts.every((q) => Math.max(q.w, q.l, q.h) <= 320), J(build.parts.map((q) => [q.w, q.l, q.h])));
+    const sizes = [...new Set(build.parts.map((q) => [q.w, q.l, q.h].sort((x, y) => x - y).join('x')))].sort();
+    info(`the published desk's bricks: ${sizes.join(', ')} (mm)`);
+    const fromText = fromFile(J(asm));
+    check('"Open a file" reads a published assembly too', !!fromText && fromText.parts.length === 24);
+    const asText = J(normalizeBuild({ parts: Array.from({ length: MAX_PARTS }, (_, i) => brick((i % 16) * 40, Math.floor(i / 16) * 40, 40, 40, 40, { colour: 'theme3' })) }));
+    check(`*** a full model (${MAX_PARTS} parts) is small JSON: well under the server's 2 MB row ***`, asText.length < 64 * 1024, `${asText.length} bytes`);
+    check('...of whole numbers and short words only (the server\'s storage line refuses long fractions and media)', !/\d\.\d|data:|base64/.test(asText));
+  }
+
+  // ===============================================================================================================
+  section('*** a model in a room (the seam): its recipe entry and its size; the room links to the builder ***');
+  {
+    const desk = exampleBuild('desk');
+    const it = roomItemFor(desk, { x: 30 });
+    check('the recipe entry a room draws: kind build, its id', it.kind === 'build' && it.id === `build:${desk.id}` && it.build === desk.id && it.x === 30);
+    const [w, h] = roomBoxFor(desk);
+    check('a built desk is about the size of the drawn one in a room (210 px)', w > 150 && w < 260 && h > 80, `${w.toFixed(0)} x ${h.toFixed(0)}`);
+    check('*** and a room\'s brick-built piece links to the builder ***', builtActions(BRICK_BUILDS.desk).some((a) => a.id === 'builder' && a.href === BUILDER_PAGE) && BUILDER_PAGE === '/modules.html?m=brickbuilder');
+    check('the entry carries its parts (a room draws it with nothing to look up)', J(it.parts) === J(desk.parts));
+    check('a 2D room counts it as a thing on the floor, not a picture on the wall', isFloor(it) && !isContent(it));
+    const bx = itemBox(it);
+    check('its box in the room is the model\'s size, standing on its feet', bx.floor && Math.abs(bx.w - w * bx.k) < 0.01 && /-100%/.test(bx.transform), J(bx));
+    const host = box();
+    applyTheme(host, 'default');
+    const recipe = presetRecipe('living');
+    const scene = mountRoomScene(host, { ...recipe, items: [...recipe.items, it] }, { now: () => new Date(2026, 9, 9, 12) });
+    const el = host.querySelector(`[data-id="${CSS.escape(it.id)}"]`);
+    check('*** a 2D room draws the model, from its parts, in the theme\'s brick colours ***', !!el && el.dataset.item === 'build' && !!el.querySelector('.rm-build svg[data-parts="5"]')
+      && /var\(--brick-2\)/.test(el.innerHTML), el ? el.outerHTML.slice(0, 200) : 'none');
+    scene.destroy();
+    const fresh = freshRoomBuilds({ items: [it, { kind: 'furniture', part: 'desk', id: 'd' }] }, (id) => (id === desk.id ? { ...desk, parts: desk.parts.slice(0, 4) } : null));
+    check('freshRoomBuilds: an entry brought up to date from the saved model; anything else untouched',
+      fresh.items[0].parts.length === 4 && fresh.items[1].part === 'desk' && freshRoomBuilds({ items: [it] }, () => null).items[0] === it);
+  }
+
+  // ===============================================================================================================
+  section('*** the Brick builder on a page: saved per person, opened again, a switch and keys reach every move ***');
+  {
+    const m = getManifest(TYPE);
+    check('registered on the new core', !!m && m.core === 'new' && m.title === 'Brick builder');
+    check('in the catalog, and its silence means nothing is wrong', !!CATALOG.find((c) => c.type === TYPE) && HEALTH_EXPECT[TYPE]?.idle === true);
+    check('a switch reaches it (next / prev / select, and the cursor)', MODULE_VERBS?.[TYPE]?.select === `${TYPE}/select` && MODULE_VERBS[TYPE].next === `${TYPE}/next` && MODULE_VERBS[TYPE].left === `${TYPE}/left`,
+      J(MODULE_VERBS?.[TYPE]));
+    const words = J([m.description, (m.settings || []).map((f) => [f.label, f.note || '', (f.options || []).map((o) => o.label)]), CATALOG.find((c) => c.type === TYPE)]);
+    check('*** PLAIN WORDS: no module, dashboard, panel, token, widget, account or grant ***', !/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/i.test(words), words.match(/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/ig));
+    check('...and never "her screen", Christine or Cici', !/her screen|christine|cici/i.test(words));
+
+    const host = box();
+    applyTheme(host, 'default');
+    const bus = createBus();
+    const shared = memState({});
+    const state = memState({});
+    const made = [];
+    const ctx = { mount: host, bus, state, personId: null, instanceId: 'bb1', profileId: 'p', makeState: (k) => { made.push(k); return shared; } };
+    const inst = mountModule(TYPE, ctx);
+    await inst.init();
+    const p = () => inst.impl.__probe();
+    check('it keeps models in the person\'s shared row (one for all their builders)', J(made) === J([SHARED_KEY]));
+    check('*** opening it makes no empty model ***', p().unsavedNew && Object.keys(shared.get()).length === 0);
+    check('it draws the floor, the cursor and the part in your hand', !!host.querySelector('[data-board] svg [data-floor]') && !!host.querySelector('[data-cursor]') && !!host.querySelector('[data-ghost]'));
+    bus.publish(`${TYPE}/select`, {});
+    check('*** a switch\'s select with nothing lit puts the part ***', p().build.parts.length === 1, J(p().build.parts));
+    const key = `${BUILD_PREFIX}${p().build.id}`;
+    check('*** ...and the model is saved, by itself, in the shared row ***', await until(() => shared.get()[key]?.parts?.length === 1) && p().saved.length === 1, J(Object.keys(shared.get())));
+    check('the model opened is remembered for this place', state.get().open === p().build.id);
+    bus.publish(`${TYPE}/next`, {});
+    check('*** next lights the first button (Back), and select presses it ***', p().lit === 'up', String(p().lit));
+    bus.publish(`${TYPE}/next`, {}); bus.publish(`${TYPE}/next`, {});
+    check('the light walks the buttons in order', p().lit === 'right', String(p().lit));
+    bus.publish(`${TYPE}/select`, {});
+    check('select pressed the lit button (the cursor moved right)', J(p().cursor) === J({ x: 1, z: 0 }), J(p().cursor));
+    const seen = new Set();
+    for (let i = 0; i < 60; i++) { bus.publish(`${TYPE}/next`, {}); seen.add(p().lit); }
+    const need = ['up', 'left', 'right', 'down', 'put', 'partPrev', 'partNext', 'turn', 'h-', 'h+', 'colour', 'undo', 'modelNew', 'toFolder', 'openFile'];
+    check('*** every move is a stop for a switch ***', need.every((a) => seen.has(a)), `missing: ${need.filter((a) => !seen.has(a)).join(', ')} (ring: ${[...seen].join(' ')})`);
+    // keys
+    const view = inst.impl.__view();
+    const key2 = (k, o = {}) => view.el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...o }));
+    const c0 = p().cursor;
+    key2('ArrowRight'); key2('ArrowDown');
+    check('the arrow keys move the cursor', J(p().cursor) === J({ x: c0.x + 1, z: c0.z + 1 }), J(p().cursor));
+    const n0 = p().build.parts.length;
+    key2('Enter');
+    check('Enter puts the part', p().build.parts.length === n0 + 1);
+    const r0 = p().hand.rot;
+    key2('r');
+    check('R turns your part', p().hand.rot === (r0 + 1) % 4);
+    key2('z', { ctrlKey: true });
+    check('Ctrl+Z undoes', p().build.parts.length === n0);
+    key2('y', { ctrlKey: true });
+    check('Ctrl+Y redoes', p().build.parts.length === n0 + 1);
+    key2('Delete');
+    check('Delete takes away the part here', p().build.parts.length === n0);
+    // buttons
+    host.querySelector('[data-act="partNext"]').click();
+    check('a click on Part ▶ changes the part in your hand, and says so', p().hand.part === 'baseplate' && /In your hand: Baseplate/.test(p().say), p().say);
+    host.querySelector('[data-colour="theme4"]').click();
+    check('a click on a colour', p().hand.colour === 'theme4' && host.querySelector('[data-colour="theme4"]').getAttribute('aria-pressed') === 'true');
+    check('size buttons only for the sizes the part has (a baseplate: thicker / thinner)', !host.querySelector('[data-act="h+"]').hidden && host.querySelector('[data-act="h+"]').textContent === 'Thicker');
+    // a second model, and back
+    host.querySelector('[data-act="modelNew"]').click();
+    const first = Object.keys(shared.get()).find((k) => k.startsWith(BUILD_PREFIX));
+    check('New model: an empty one, not saved until something is put in it', p().unsavedNew && p().build.parts.length === 0 && Object.keys(shared.get()).length === 1);
+    view.press('put');
+    check('...and saved once it is', await until(() => Object.keys(shared.get()).filter((k) => k.startsWith(BUILD_PREFIX)).length === 2));
+    check('it is named for you ("Model 2")', p().build.name === 'Model 2', p().build.name);
+    host.querySelector('[data-act="modelPrev"]').click();
+    check('Previous opens the other model', `${BUILD_PREFIX}${p().open}` === first && /Opened/.test(p().say), `${p().open} ${first} ${p().say}`);
+    // examples, rename, delete (twice)
+    host.querySelector('[data-act="example:desk"]').click();
+    check('*** Start from: a desk — a model of your own, saved ***', p().build.parts.length === 5 && await until(() => savedBuilds(shared.get()).some((s) => s.name === 'Desk')));
+    const name = host.querySelector('[data-name]');
+    name.value = 'Grandad\'s desk'; name.dispatchEvent(new Event('change'));
+    check('renamed, and saved under its new name', await until(() => savedBuilds(shared.get()).some((s) => s.name === 'Grandad\'s desk')));
+    const count = savedBuilds(shared.get()).length;
+    host.querySelector('[data-act="modelDelete"]').click();
+    check('*** Delete asks once more, and nothing is deleted if nobody presses again ***', savedBuilds(shared.get()).length === count && /again/.test(host.querySelector('[data-act="modelDelete"]').textContent));
+    host.querySelector('[data-act="modelDelete"]').click();
+    check('...pressed again: deleted, and another model is opened', savedBuilds(shared.get()).length === count - 1 && !savedBuilds(shared.get()).some((s) => s.name === 'Grandad\'s desk'));
+    // open a file
+    const file = new File([toFile(normalizeBuild({ name: 'From a file', parts: [brick(0, 0), brick(40, 0)] }))], 'from-a-file.json', { type: 'application/json' });
+    await inst.impl.__readFile(file);
+    check('*** Open a file: the model opens and is kept ***', p().build.name === 'From a file' && p().build.parts.length === 2 && savedBuilds(shared.get()).some((s) => s.name === 'From a file'));
+    await inst.impl.__readFile(new File(['nonsense'], 'x.json'));
+    check('a file that is not a model says so', /not a model/.test(p().say));
+    inst.destroy();
+    check('destroy empties the place', host.innerHTML === '');
+    // opened again: the same person's models
+    const host2 = box();
+    const inst2 = mountModule(TYPE, { ...ctx, mount: host2, state, instanceId: 'bb1' });
+    await inst2.init();
+    check('*** opened again: the model it had open, from the shared row ***', inst2.impl.__probe().build.name === 'From a file' && inst2.impl.__probe().saved.length === savedBuilds(shared.get()).length,
+      inst2.impl.__probe().build.name);
+    check('nextName finds the first free name', nextName([{ name: 'Model 1' }, { name: 'Model 3' }]) === 'Model 2');
+    inst2.destroy();
+    // with no shared row (an older host): kept in its own row
+    const host3 = box();
+    const own = memState({});
+    const inst3 = mountModule(TYPE, { mount: host3, bus: createBus(), state: own, personId: null, instanceId: 'bb3' });
+    await inst3.init();
+    inst3.impl.__view().press('put');
+    check('with no shared row, a model is kept in its own row', await until(() => Object.keys(own.get()).some((k) => k.startsWith(BUILD_PREFIX))));
+    inst3.destroy();
+    check('mounting without a personId key is refused (core:new contract)', (() => {
+      try { mountModule(TYPE, { mount: box(), bus: createBus(), state: memState({}), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+
+// To look at (not checked): the example desk in the builder.
+try {
+  const b = document.createElement('div'); b.className = 'box'; document.getElementById('host').append(b);
+  applyTheme(b, 'default'); b.style.background = 'var(--bg)';
+  const inst = mountModule(TYPE, { mount: b, bus: createBus(), state: memState({}), personId: null, instanceId: 'show', makeState: () => memState({}) });
+  await inst.init();
+  b.querySelector('[data-act="example:desk"]')?.click();
+} catch (err) { console.error(err); }
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>
