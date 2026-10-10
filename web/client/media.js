@@ -77,6 +77,7 @@
 
 import {
   createMediaSourcesClient, resolveListing, findReachable, normalizeCode, PAIR_CODE_LEN, checkFromHere, addressScope,
+  rememberReached,   // desktop prompt (2026-10-10)
 } from './media_sources.js';
 import { createProfilesClient } from './profile.js';
 import {
@@ -332,6 +333,9 @@ export function mountMedia(root, {
 
     try {
       const listing = await resolve(src, '');
+      // desktop prompt (2026-10-10): an address that answered "Check on this computer" is remembered, so the panels
+      // here (Photos, Personal videos, Music, Wallpaper) use it from then on without asking again (quietReach).
+      if (here && isAgent) rememberReached(src.base_url);
       const albums = listing.albums || [];
       const n = listing.count;
       cell.textContent = n

@@ -501,7 +501,7 @@ try {
       const clearTimer = (t) => { if (t) t.live = false; };
       const fire = async (ms) => { const t = tm.filter((x) => x.live && x.ms === ms).pop(); if (t) { t.live = false; t.fn(); } await sleep(120); };
       const RECHECK = 777;
-      const mkB = (s, screen = 'sd', fstore = store) => {
+      const mkB = (s, screen = 'sd', fstore = store, extra = {}) => {   // desktop prompt: `extra` adds to the ctx
         const b = createBus();
         const st2 = { ...s };
         const w = mountModule('wallpaper', {
@@ -509,6 +509,7 @@ try {
           events: null, user: USER, folderStore: fstore, rand: mulberry32(9), now: () => 0, setTimer, clearTimer,
           sources: { list: async () => BS.slice() }, resolveListing, screenBackup: () => screen,
           sourceRecheckMs: RECHECK, listingWaitMs: 0,
+          ...extra,
         });
         w.init();
         return { w, st: st2 };
@@ -570,6 +571,50 @@ try {
       check('the row is offered for a folder, and left out under "None: just the built-in wallpaper"',
         rowOn({ sourceId: 'main' }) && !rowOn({ sourceId: NO_FOLDER }));
       check('destroy leaves no recheck running', !tm.some((t) => t.live && t.ms === RECHECK));
+
+      // desktop prompt (2026-10-10): a source on another computer (a home-network or localhost address, seen from a page
+      // on the internet where the browser would ask) is never read by itself - not as the chosen folder, not as a backup.
+      const MS = await import('../media_sources.js');
+      MS.forgetReachedForTest();
+      const away = async (b) => (/^https?:\/\/(localhost|192\.168\.)/.test(String(b)) ? { check: false, why: 'would-ask', state: 'prompt' } : { check: true, why: 'public' });
+      down.delete('main'); asked.length = 0;
+      ({ w, st: s1 } = mkB({ sourceId: 'main' }, 'sd', store, { checkFromHere: away }));
+      await sleep(200);
+      q = w.impl.__probe();
+      check('*** would ask: the chosen folder on another computer is NOT read; the backup plays ***',
+        !asked.includes('main') && q.backup?.label === 'SD card' && q.backup.why === 'elsewhere', J({ q, asked }));
+      check('...the row says why: "Showing the backup: “SD card” — “The drive” is on another computer."',
+        /Showing the backup: “SD card” — “The drive” is on another computer/.test(statusOf(w, s1)), statusOf(w, s1));
+      await fire(RECHECK);
+      check('...and the check for it coming back never reads it either', !asked.includes('main'), asked.join(' '));
+      check('...still nothing written on screen', host.textContent.trim() === '');
+      w.destroy();
+      asked.length = 0;
+      ({ w, st: s1 } = mkB({ sourceId: 'main' }, '', store, { checkFromHere: away }));
+      await sleep(200);
+      q = w.impl.__probe();
+      check('no backup: the built-in wallpaper, and the row says it is on another computer',
+        !asked.includes('main') && q.mode === 'ambient' && q.folder.status === 'elsewhere' && /on another computer/.test(statusOf(w, s1)),
+        J({ q, asked, hint: statusOf(w, s1) }));
+      w.destroy();
+      // The screen's backup is an agent on another computer: skipped, so the built-in wallpaper shows.
+      const PIB = { id: 'pib', label: 'Pi pictures', kind: 'agent', base_url: 'http://localhost:8797' };
+      down.add('main'); asked.length = 0;
+      ({ w } = mkB({ sourceId: 'main' }, 'pib', store, { checkFromHere: away, sources: { list: async () => [...BS, PIB] } }));
+      await sleep(200);
+      q = w.impl.__probe();
+      check('*** the screen\'s backup on another computer: never read; the built-in wallpaper ***',
+        !asked.includes('pib') && q.backup === null && q.mode === 'ambient', J({ q, asked }));
+      w.destroy();
+      // Granted (the kiosk): unchanged.
+      down.delete('main'); asked.length = 0;
+      ({ w } = mkB({ sourceId: 'main' }, 'sd', store, { checkFromHere: async () => ({ check: true, why: 'granted' }) }));
+      await sleep(200);
+      q = w.impl.__probe();
+      check('*** granted: unchanged - the chosen folder is read and shown ***',
+        asked.includes('main') && q.backup === null && q.folder.status === 'ok', J({ q, asked }));
+      w.destroy();
+      down.add('main');
     }
   }
 

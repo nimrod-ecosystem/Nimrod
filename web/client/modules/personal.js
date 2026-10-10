@@ -60,6 +60,7 @@ import {
   createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
   LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
   backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
+  quietResolve, quietReach, tryFromHere, ELSEWHERE_LINE, TRY_HERE_LABEL,   // desktop prompt (2026-10-10)
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
@@ -190,6 +191,11 @@ registerModule(
     // backup source: this panel's row, else the screen's (`ctx.screenBackup`), else the stand-in it always had.
     const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
     const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_ANY });
+    // desktop prompt (2026-10-10, as photos.js): every automatic listing goes through `quietList`, which never asks a
+    // source on another computer; only "Try on this computer" fetches one on purpose. `ctx.checkFromHere`: the seam.
+    const resolveList = ctx.resolveListing || resolveListing;
+    const reachCheck = ctx.checkFromHere || null;
+    const quietList = quietResolve(resolveList, { check: reachCheck });
     let knownSources = [];          // backup source: what the last listing held, for the row's choices
     let lastBackupRef = null;
     const videosOf = (listing) => ((listing && listing.items) || []).filter((it) => it.kind === 'video');
@@ -216,6 +222,20 @@ registerModule(
         s.querySelector('[data-retry]')?.addEventListener('click', () => reload());
         s.querySelector('[data-action]')?.addEventListener('click', () => action.run());
       }
+    }
+    // desktop prompt (2026-10-10): "Try on this computer" - the one fetch of a source on another computer made on purpose
+    // (Chrome may ask now; the person answers). An answer is remembered and the panel lists again. As photos.js.
+    function tryAction(source) {
+      return {
+        label: TRY_HERE_LABEL,
+        run: async () => {
+          setStatus('Trying…');
+          const r = await tryFromHere(source, { resolve: resolveList, album: cfg.album });
+          if (destroyed) return;
+          if (r.ok) { reload(); return; }
+          setStatus('It didn’t answer on this computer.', false, tryAction(source));
+        },
+      };
     }
     function escapeHtml(t) {
       return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -514,6 +534,8 @@ registerModule(
       if (cfg.sourceId) return { source: null, chosenId: cfg.sourceId, sources };
       // Not saved from a list made after the person lookup timed out (person_known.js `trusted`; photos.js).
       if (sources.length === 1) {
+        // desktop prompt: the only source, on another computer, is neither adopted nor saved from here (photos.js).
+        if (!(await quietReach(sources[0], { check: reachCheck })).quiet) return { source: null, chosenId: null, sources, elsewhere: sources[0] };
         if (client.trusted?.() !== false) state.set({ sourceId: sources[0].id });
         return { source: sources[0], chosenId: null, sources };
       }
@@ -536,7 +558,7 @@ registerModule(
         const rows = (await client.list()) || [];
         const chosen = rows.find((s) => s && s.id === want);
         if (chosen) {
-          const r = await listingWithin(ctx.resolveListing || resolveListing, chosen, cfg.album,
+          const r = await listingWithin(quietList, chosen, cfg.album,   // desktop prompt: never asks by itself
             { accept: videosOf, waitMs: recheckMs(), setTimer, clearTimer });
           back = r.ok;
           // Set aside because its CLIPS stopped loading: back only when one of them loads for real.
@@ -563,11 +585,19 @@ registerModule(
       const { source: chosenSource, chosenId, sources } = found;
       let source = chosenSource;
       let listing = null;
+      if (!source && !chosenId && found.elsewhere) {   // desktop prompt: the only source is on another computer
+        degraded = null;
+        items = ids = []; byId = {}; currentId = null; shownSourceId = null;
+        if (stage()) stage().innerHTML = '';
+        setName();
+        setStatus(ELSEWHERE_LINE, false, tryAction(found.elsewhere));
+        return;
+      }
       if (source || chosenId) {
         // The chosen source -- or, when it cannot be listed, the best stand-in (media_sources.js).
         const got = await listOrFallback({
           sources, chosen: chosenSource, chosenId, album: cfg.album, personId: personOf(ctx),
-          resolve: ctx.resolveListing || resolveListing, accept: videosOf,
+          resolve: quietList, accept: videosOf,   // desktop prompt: never asks by itself
           waitMs: listingWaitMs(), setTimer, clearTimer, skip: loadFailed,
           backup: backupNow(),   // backup source
         });
@@ -589,6 +619,8 @@ registerModule(
           items = ids = []; byId = {}; currentId = null; shownSourceId = null;
           if (stage()) stage().innerHTML = '';
           setName();
+          // desktop prompt: the chosen source is on another computer - the quiet line and the press, not "unreachable".
+          if (chosenSource && got.failure && got.failure.code === 'elsewhere') { setStatus(ELSEWHERE_LINE, false, tryAction(chosenSource)); return; }
           if (chosenSource) { setStatus(`Source “${escapeHtml(chosenSource.label)}” unreachable`, true); return; }
           const mine = (sources || []).filter((x) => mayShowSource(x, personOf(ctx)));
           if (mine.length) {

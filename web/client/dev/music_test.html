@@ -380,6 +380,43 @@ const FAVS = normalizeFavourites([
       m.destroy();
       check('destroy leaves nothing asking', !tm.some((t) => t.live));
     }
+    // desktop prompt (2026-10-10): a favourite's folder on another computer (a home-network address seen from a page on the
+    // internet, where the browser would ask) is never fetched by itself - not the favourite, not a backup. The seam plays
+    // that page; this suite is on 127.0.0.1, where it never would ask.
+    {
+      const MS = await import('../media_sources.js');
+      MS.forgetReachedForTest();
+      const away = async (b) => (/^https?:\/\/(localhost|192\.168\.)/.test(String(b)) ? { check: false, why: 'would-ask', state: 'unknown' } : { check: true, why: 'public' });
+      const PIM = { id: 'pim', label: 'Pi music', kind: 'agent', base_url: 'http://localhost:8796' };
+      const log = [];
+      BK.down.delete('s1'); BK.asked.length = 0;
+      let made = 0;
+      const m = createLocalMusic({ sources: { list: async () => [...BK.BS, PIM] }, resolve: BK.resolve, resolveItem: async (s, p) => { made++; return resolveItem(s, p); },
+        makeAudio: fakeAudioFactory(log), order: 'inorder', backup: () => 'none', personId: () => 'p1', listingWaitMs: 0, check: away });
+      const f = await m.playFolder({ sourceId: 's1', album: 'Jazz' });
+      check('*** would ask: a folder favourite on another computer is NOT fetched; it says "elsewhere" ***',
+        !f.ok && f.reason === 'elsewhere' && BK.asked.length === 0 && !m.state().hasElement, J({ f, asked: BK.asked }));
+      const fi = await m.playFile({ sourceId: 's1', path: 'Hymns/morning.mp3' });
+      check('...a file favourite: no address made, no <audio> (which would fetch it)', !fi.ok && fi.reason === 'elsewhere' && made === 0 && log.length === 0, J({ fi, made, log }));
+      const m2 = createLocalMusic({ sources: { list: async () => [...BK.BS, PIM] }, resolve: BK.resolve, resolveItem, makeAudio: fakeAudioFactory(log),
+        order: 'inorder', backup: () => 'pim', personId: () => 'p1', listingWaitMs: 0, check: away });
+      BK.asked.length = 0;
+      const n = await m2.playFile({ sourceId: 'gone', path: 'x.mp3' });   // not connected here; the backup is the Pi's
+      check('*** a backup on another computer is never asked ***', !n.ok && !BK.asked.some((a) => a.startsWith('pim|')), J({ n, asked: BK.asked }));
+      BK.down.delete('s1');
+      const t = await m.tryHere();
+      check('*** "Try on this computer": the one fetch on purpose, remembered ***', t.ok && BK.asked.includes('s1|Hymns') && MS.wasReached('http://192.168.1.9:8770'),
+        J({ t, asked: BK.asked }));
+      const again = await m.playFolder({ sourceId: 's1', album: 'Jazz' });
+      check('...and the favourite then plays quietly', again.ok && log.last?.src === 'u:s1:Jazz/x.mp3', J({ again, src: log.last?.src }));
+      const g = createLocalMusic({ sources: { list: async () => BK.BS }, resolve: BK.resolve, resolveItem, makeAudio: fakeAudioFactory(log),
+        listingWaitMs: 0, check: async () => ({ check: true, why: 'granted' }) });
+      MS.forgetReachedForTest();
+      check('*** granted (the kiosk): unchanged - the favourite plays ***', (await g.playFolder({ sourceId: 's1', album: 'Jazz' })).ok);
+      [m, m2, g].forEach((x) => x.destroy());
+      BK.down.add('s1');
+      MS.forgetReachedForTest();
+    }
 
     // ============================================================================================
     section('Spotify: PKCE in the browser, the household\'s own client ID, tokens on this device');
@@ -1285,6 +1322,41 @@ const FAVS = normalizeFavourites([
       await tick();
       check('stopped: the line goes', !h.querySelector('[data-backup]'));
       m.destroy(); h.remove();
+    }
+
+    // desktop prompt (2026-10-10): on the panel, a favourite whose folder is on another computer says so and offers the
+    // press; the press fetches it on purpose and the favourite plays.
+    {
+      section('desktop prompt: the Music panel\'s "Try on this computer"');
+      const MS = await import('../media_sources.js');
+      MS.forgetReachedForTest();
+      BK.down.delete('s1'); BK.asked.length = 0;
+      const h = document.createElement('div');
+      h.style.cssText = 'position:absolute;left:-9999px;width:360px;height:420px';
+      document.body.append(h);
+      const st = fakeState({ favourites: [{ id: 'fjz', name: 'Jazz', source: { kind: 'folder', sourceId: 's1', album: 'Jazz' } }] });
+      const m = mountModule('music', ctxFor(h, 'mulna', { personId: null, makePersonState: null, state: st,
+        sources: { list: async () => BK.BS }, resolveListing: BK.resolve, screenBackup: () => '',
+        checkFromHere: async (b) => (/^https?:\/\/192\.168\./.test(String(b)) ? { check: false, why: 'would-ask', state: 'unknown' } : { check: true, why: 'public' }) }));
+      m.init();
+      await tick();
+      [...h.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Jazz')?.click();
+      for (let i = 0; i < 10; i++) await tick();
+      const msg = h.querySelector('[data-msg]')?.textContent || '';
+      const btnTry = h.querySelector('[data-act="try-here"]');
+      check('*** the panel says the folder is on another computer, offers "Try on this computer", and fetched nothing ***',
+        msg === 'That music folder is on another computer — it can’t be played here.' && btnTry?.textContent === 'Try on this computer'
+          && BK.asked.length === 0, `${msg} / ${btnTry?.textContent} / ${BK.asked.join(' ')}`);
+      btnTry?.click();
+      for (let i = 0; i < 12; i++) await tick();
+      check('*** the press fetches it on purpose, and the favourite plays ***',
+        BK.asked.includes('s1|Jazz') && /Playing: Jazz/.test(h.querySelector('[data-now]')?.textContent || '') && !h.querySelector('[data-act="try-here"]'),
+        `${BK.asked.join(' ')} / ${h.querySelector('[data-now]')?.textContent}`);
+      h.querySelector('[data-act="stop"]')?.click();
+      await tick();
+      m.destroy(); h.remove();
+      BK.down.add('s1');
+      MS.forgetReachedForTest();
     }
 
     document.getElementById('summary').textContent =

@@ -919,6 +919,70 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       c.done();
     }
 
+    // =========================== desktop prompt (2026-10-10) ===========================
+    // An account-wide http://localhost:8770 (the photo program on a Pi) seen from a dashboard on a DESKTOP: fetching it
+    // brings Chrome's local-network box up for nothing. The seam `checkFromHere` plays "a page on the internet, the
+    // browser would ask" (this suite is served from 127.0.0.1, where it never would).
+    section('*** desktop prompt: a source on another computer is never asked by itself ***');
+    {
+      const MS = await import('../media_sources.js');
+      MS.forgetReachedForTest();
+      const PIA = { id: 'pia', label: 'Pi photos', kind: 'agent', person_id: null, base_url: 'http://localhost:8799' };
+      const away = async (b) => (/localhost/.test(String(b)) ? { check: false, why: 'would-ask', state: 'unknown' } : { check: true, why: 'public' });
+      const asked = (r, id) => r.asked.some((a) => a.startsWith(`${id}|`));
+      // 1. The stand-in skips it: the chosen source is down, the account's Pi source is NOT tried, Family stands in.
+      const s = rigD({ sources: [S.mine, PIA, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' },
+        instanceId: `ph-lna1-${RUN}`, extra: { checkFromHere: away } });
+      check('*** would ask: the stand-in skips the source on another computer (never fetched) and the next one shows ***',
+        await until(() => /Family/.test(s.label())) && !asked(s, 'pia'), `${s.label()} / ${s.asked.join(' ')}`);
+      s.fire(RECHECK); await sleep(30);
+      check('...and the minute\'s recheck never asks it either', !asked(s, 'pia'), s.asked.join(' '));
+      s.done();
+      // 2. The screen's backup is that source: skipped too, so nothing stands in and the panel says what is wrong.
+      const b = rigD({ sources: [S.mine, PIA], mode: { mine: 'down' }, seed: { sourceId: 'mine' },
+        instanceId: `ph-lna2-${RUN}`, extra: { checkFromHere: away, screenBackup: () => 'pia' } });
+      await until(() => /unreachable/i.test(b.status()));
+      check('*** the screen\'s backup on another computer: not asked ***', /unreachable/i.test(b.status()) && !asked(b, 'pia'),
+        `${b.status()} / ${b.asked.join(' ')}`);
+      b.done();
+      // 3. The only source, nothing chosen: not adopted, not saved, not fetched - the quiet line and the press.
+      const a = rigD({ sources: [PIA], mode: {}, seed: {}, instanceId: `ph-lna3-${RUN}`, extra: { checkFromHere: away } });
+      await until(() => /another computer/.test(a.status()));
+      check('*** the only source is on another computer: "This source is on another computer — it can’t be shown here." ***',
+        a.status().includes(MS.ELSEWHERE_LINE) && !asked(a, 'pia'), `${a.status()} / ${a.asked.join(' ')}`);
+      check('...with "Try on this computer", and nothing saved',
+        a.host.querySelector('[data-action]')?.textContent === 'Try on this computer' && savedSource(a).length === 0, JSON.stringify(a.sets));
+      a.done();
+      // 4. CHOSEN in "Photos from": still not fetched by itself; the line and the press. The press fetches on purpose.
+      const c = rigD({ sources: [PIA, S.family], mode: {}, seed: { sourceId: 'pia', backupSource: 'none' }, instanceId: `ph-lna4-${RUN}`,
+        extra: { checkFromHere: away } });
+      await until(() => /another computer/.test(c.status()));
+      check('*** chosen, would ask: the quiet line and the press, nothing fetched, no Retry ***',
+        c.status().includes(MS.ELSEWHERE_LINE) && !asked(c, 'pia') && !c.host.querySelector('[data-retry]')
+          && c.host.querySelector('[data-action]')?.textContent === 'Try on this computer', `${c.status()} / ${c.asked.join(' ')}`);
+      c.host.querySelector('[data-action]').click();
+      check('*** the press fetches it (on purpose), and the pictures show ***',
+        await until(() => /Pi photos —/.test(c.label())) && asked(c, 'pia'), `${c.label()} / ${c.status()} / ${c.asked.join(' ')}`);
+      check('...remembered, so it stays quiet from then on', MS.wasReached('http://localhost:8799'));
+      c.done();
+      MS.forgetReachedForTest();
+      // 5. Chosen, a stand-in showing: the chip says so and carries the press.
+      const d = rigD({ sources: [PIA, S.family], mode: {}, seed: { sourceId: 'pia' }, instanceId: `ph-lna5-${RUN}`,
+        extra: { checkFromHere: away } });
+      check('chosen, would ask, a stand-in on: "Showing “Family” — “Pi photos” is on another computer." with the press',
+        await until(() => /Showing “Family” — “Pi photos” is on another computer/.test(d.status()))
+          && d.host.querySelector('[data-action]')?.textContent === 'Try on this computer' && !asked(d, 'pia'), `${d.status()} / ${d.asked.join(' ')}`);
+      d.done();
+      // 6. GRANTED (the kiosk) / a page on this computer: unchanged - fetched and shown, adopted as before.
+      const g = rigD({ sources: [PIA], mode: {}, seed: {}, instanceId: `ph-lna6-${RUN}`,
+        extra: { checkFromHere: async () => ({ check: true, why: 'granted' }) } });
+      check('*** granted: unchanged - the only source is fetched, shown, and adopted ***',
+        await until(() => /Pi photos —/.test(g.label())) && asked(g, 'pia') && savedSource(g).some((p) => p.sourceId === 'pia'),
+        `${g.label()} / ${JSON.stringify(g.sets)}`);
+      g.done();
+      MS.forgetReachedForTest();
+    }
+
     // =========================== A SOURCE THAT DIES MID-SLIDESHOW ===========================
     // (The coordinator, 2026-10-02: "a source that dies mid-slideshow, so broken images keep cycling.")
     section('*** a source that dies mid-slideshow: no broken pictures, no cycle, a stand-in ***');

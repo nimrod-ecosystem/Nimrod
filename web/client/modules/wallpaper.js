@@ -44,7 +44,7 @@
 // that mode, which also makes it the honest last resort when everything else is unreachable.
 
 import { registerModule } from '../module.js';
-import { createMediaSourcesClient, resolveListing, mediaUrl } from '../media_sources.js';
+import { createMediaSourcesClient, resolveListing, mediaUrl, quietResolve } from '../media_sources.js';
 import { personSources } from '../person_known.js';
 import {
   MOTIONS, SCENES, VIDEO_POLICIES, ambientFrame, frameToCss, motionOf,
@@ -162,6 +162,9 @@ export function folderNote(choice, status, count = 0) {
     permission: 'That folder needs permission again (Media / Sources). Until then the built-in wallpaper shows.',
     missing: 'This device no longer has that folder, so the built-in wallpaper shows. Reconnect it in Media / Sources.',
     album: 'That folder has no album by that name, so the built-in wallpaper shows.',
+    // desktop prompt (2026-10-10): not asked from here, so the browser never asks about the local network by itself.
+    elsewhere: 'That source is on another computer, so it isn’t read here and the built-in wallpaper shows. '
+      + '“Try on this computer” on a Photos panel, or “Check on this computer” in Media / Sources, lets this computer use it.',
     error: 'That folder could not be read just now, so the built-in wallpaper shows.',
   }[status] || '';
 }
@@ -249,7 +252,14 @@ registerModule(
       (pid) => createMediaSourcesClient({ user, cache: true, personId: pid }),
       { onChange: () => { if (!destroyed) reload().catch((e) => console.warn('wallpaper: reload', e)); } });
     const client = ctx.sources || scoped;
-    const resolveList = ctx.resolveListing || resolveListing;
+    // desktop prompt (2026-10-10, media_sources.js quietReach): every listing here - the chosen folder, the backup, the
+    // check for the chosen one coming back - never asks a source on another computer (an account-wide localhost seen
+    // from a desktop), so Chrome's local-network box cannot come up by itself. A chosen one there falls to the backup or
+    // the built-in wallpaper, with the reason under the row ('elsewhere'). NO "Try on this computer" PRESS HERE, argued:
+    // this panel never puts words or buttons on screen (the note at the top), and a settings row has no button. The
+    // press on a Photos panel, or Media / Sources' "Check on this computer", lets this computer use it, and then this
+    // panel does too. AGAINST: a screen with only a wallpaper needs one of those first. `ctx.checkFromHere`: the seam.
+    const resolveList = quietResolve(ctx.resolveListing || resolveListing, { check: ctx.checkFromHere || null });
     // backup source: the panel's row, else the screen's (`ctx.screenBackup`, kiosk.js), else nothing.
     const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
     const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_NONE });
@@ -482,9 +492,9 @@ registerModule(
       let listing = null;
       let failed = null;
       try { listing = await resolveList(src, cfg.album); }
-      catch (e) { console.warn('wallpaper: listing', e); failed = e; }
+      catch (e) { if (e?.code !== 'elsewhere') console.warn('wallpaper: listing', e); failed = e; }
       if (seq !== loadSeq || destroyed) return;
-      const code = failed ? (['permission', 'missing', 'album'].includes(failed.code) ? failed.code : 'error') : null;
+      const code = failed ? (['permission', 'missing', 'album', 'elsewhere'].includes(failed.code) ? failed.code : 'error') : null;
       if (code && await useBackup(seq, choice, code, src.label || src.base_url || src.id)) return;   // backup source
       source = src;
       items = wallpaperItemsOf(listing);

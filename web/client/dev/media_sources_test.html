@@ -263,6 +263,65 @@ async function loadsAsImage(url) {
     check('a permission lookup that throws is "would ask", never an exception', threw && r6.check === false, JSON.stringify(r6));
   }
 
+  // *** desktop prompt (2026-10-10): A PANEL NEVER ASKS A SOURCE ON ANOTHER COMPUTER BY ITSELF. THE SHARED RULE. ***
+  // An account-wide http://localhost:8770 (a Pi's photo program) seen from a desktop: Photos, Personal videos, Music and
+  // Wallpaper all list through quietResolve, so none of them can bring Chrome's local-network box up unasked.
+  {
+    const M = await import('../media_sources.js');
+    M.forgetReachedForTest();
+    const PI = { id: 'pi', label: 'Pi photos', kind: 'agent', base_url: 'http://localhost:8799/' };
+    const NET = { id: 'net', label: 'Online', kind: 'agent', base_url: 'https://photos.example.org' };
+    const FOLDER = { id: 'f', label: 'Folder', kind: 'folder' };
+    const DEV = { id: 'dev', label: 'This device', kind: 'device' };
+    const wouldAsk = async () => ({ check: false, why: 'would-ask', state: 'prompt' });
+    const wontSay = async () => ({ check: false, why: 'would-ask', state: 'unknown' });
+    const granted = async () => ({ check: true, why: 'granted' });
+    check('agentBase: an agent\'s address, trimmed; nothing for a folder or this device\'s pictures',
+      M.agentBase(PI) === 'http://localhost:8799' && M.agentBase(FOLDER) === '' && M.agentBase(DEV) === '' && M.agentBase(null) === '');
+    const q1 = await M.quietReach(PI, { check: wouldAsk });
+    check('*** a localhost agent the browser would ask about: NOT quiet ***', q1.quiet === false && q1.why === 'would-ask', JSON.stringify(q1));
+    check('...granted (the kiosk): quiet', (await M.quietReach(PI, { check: granted })).quiet === true);
+    check('...a folder / this device\'s pictures: quiet, nothing is fetched over the network',
+      (await M.quietReach(FOLDER, { check: wouldAsk })).quiet && (await M.quietReach(DEV, { check: wouldAsk })).quiet);
+    check('...a check that throws counts as "would ask"', (await M.quietReach(PI, { check: async () => { throw new Error('x'); } })).quiet === false);
+    // The default (no seam) is checkFromHere itself: this page is served from 127.0.0.1, so it is a local page.
+    check('...with no seam, checkFromHere decides (this page is on this computer: quiet)', (await M.quietReach(PI)).quiet === true);
+    const sp = await M.splitByReach([PI, NET, FOLDER], { check: async (b) => (b.startsWith('https') ? { check: true, why: 'public' } : { check: false, why: 'would-ask' }) });
+    check('splitByReach: what may be fetched quietly, and what is on another computer, order kept',
+      sp.here.map((s) => s.id).join() === 'net,f' && sp.elsewhere.map((s) => s.id).join() === 'pi');
+    const asked = [];
+    const lister = async (s, a) => { asked.push(`${s.id}|${a}`); return { items: [{ id: 'a.jpg', path: 'a.jpg' }], albums: [], album: a, count: 1 }; };
+    const gated = M.quietResolve(lister, { check: wouldAsk });
+    let err = null;
+    try { await gated(PI, 'x'); } catch (e) { err = e; }
+    check('*** quietResolve: a source on another computer rejects at once, code "elsewhere", and NOTHING IS FETCHED ***',
+      err && err.code === 'elsewhere' && asked.length === 0, `${err && err.code} / ${asked.join()}`);
+    check('...a folder goes straight through', (await gated(FOLDER, '')).count === 1 && asked.join() === 'f|');
+    // listOrFallback with the gate: the stand-in that would ask is skipped, the next one shows.
+    asked.length = 0;
+    const PI2 = { id: 'pi2', label: 'Pi 2', kind: 'agent', base_url: 'http://192.168.1.44:8770', person_id: null };
+    const got = await M.listOrFallback({ sources: [PI, PI2, FOLDER], chosen: PI, chosenId: 'pi', resolve: gated, waitMs: 0 });
+    check('*** listOrFallback through the gate: the chosen one and a stand-in on another computer are never asked; the folder stands in ***',
+      got.source?.id === 'f' && got.fellBack && got.failure?.code === 'elsewhere' && asked.join() === 'f|',
+      `${got.source?.id} ${got.failure?.code} ${asked.join()}`);
+    check('degradedLine says so: "is on another computer"',
+      M.degradedLine({ shownLabel: 'Folder', chosenLabel: 'Pi photos', err: { code: 'elsewhere' } }) === 'Showing “Folder” — “Pi photos” is on another computer.',
+      M.degradedLine({ shownLabel: 'Folder', chosenLabel: 'Pi photos', err: { code: 'elsewhere' } }));
+    // "Try on this computer": the one fetch on purpose; an answer is remembered.
+    const t1 = await M.tryFromHere(PI, { resolve: lister, album: '' });
+    check('*** tryFromHere fetches on purpose, and an answer is remembered ***', t1.ok && asked.includes('pi|') && M.wasReached('http://localhost:8799'));
+    check('...remembered: quiet afterwards in a browser that won\'t say ("unknown")', (await M.quietReach(PI, { check: wontSay })).quiet === true);
+    check('...but NOT while the browser says it would ask ("prompt": a fetch is the box again)', (await M.quietReach(PI, { check: wouldAsk })).quiet === false);
+    M.forgetReachedForTest();
+    const t2 = await M.tryFromHere(PI, { resolve: async () => { throw new Error('refused'); } });
+    check('...a try that gets no answer is not remembered, and never throws', !t2.ok && !M.wasReached('http://localhost:8799'));
+    check('the words: the quiet line and the press', M.ELSEWHERE_LINE === 'This source is on another computer — it can’t be shown here.'
+      && M.TRY_HERE_LABEL === 'Try on this computer');
+    const cf = await M.checkFromHere('http://localhost:8770', { pageHost: 'x.example', permission: async () => 'prompt' });
+    check('checkFromHere now also says the state it read ("prompt"), for quietReach', cf.check === false && cf.state === 'prompt', JSON.stringify(cf));
+    M.forgetReachedForTest();
+  }
+
   // *** folder art (2026-10-07): AN SVG FROM A FOLDER IS LISTED, AND NOTHING IN IT RUNS IN THIS SITE. ***
   // The security invariant over folder_source.js IMAGE_EXTS. A drawing that tries everything - an onload, a <script>,
   // a picture from elsewhere - is listed, shown as a picture (nothing runs, nothing loads), and even opened as a page

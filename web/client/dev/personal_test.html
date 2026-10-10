@@ -321,6 +321,39 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
         await until(() => /^clip\/family-/.test(td.src())) && /Showing “Family”/.test(td.caption()) && !/backup/.test(td.caption()), td.caption());
       td.done();
     }
+
+    // *** desktop prompt (2026-10-10): a source on another computer is never asked by itself (photos.js's twin). ***
+    // The seam `checkFromHere` plays "a page on the internet, the browser would ask" (this suite is on 127.0.0.1).
+    {
+      const MS = await import('../media_sources.js');
+      MS.forgetReachedForTest();
+      const PIV = { id: 'piv', label: 'Pi videos', kind: 'agent', person_id: null, base_url: 'http://localhost:8798' };
+      const away = async (b) => (/localhost/.test(String(b)) ? { check: false, why: 'would-ask', state: 'unknown' } : { check: true, why: 'public' });
+      const s = rigV({ sources: [S.mine, PIV, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, extra: { checkFromHere: away } });
+      check('*** personal, would ask: the stand-in skips the source on another computer; the next one plays ***',
+        await until(() => /^clip\/family-/.test(s.src())) && !s.asked.includes('piv'), `${s.src()} / ${s.asked.join(' ')}`);
+      s.done();
+      const a = rigV({ sources: [PIV], mode: {}, seed: {}, extra: { checkFromHere: away } });
+      await until(() => /another computer/.test(a.status()));
+      check('*** personal, the only source on another computer: not adopted, not fetched, the quiet line and the press ***',
+        a.status().includes(MS.ELSEWHERE_LINE) && !a.asked.includes('piv') && saved(a).length === 0
+          && a.host.querySelector('[data-action]')?.textContent === 'Try on this computer', `${a.status()} / ${a.asked.join(' ')}`);
+      a.done();
+      const c = rigV({ sources: [PIV], mode: {}, seed: { sourceId: 'piv' }, extra: { checkFromHere: away } });
+      await until(() => /another computer/.test(c.status()));
+      check('*** personal, CHOSEN, would ask: the quiet line and the press, nothing fetched ***',
+        c.status().includes(MS.ELSEWHERE_LINE) && !c.asked.includes('piv') && !c.host.querySelector('[data-retry]'), `${c.status()} / ${c.asked.join(' ')}`);
+      c.host.querySelector('[data-action]').click();
+      check('*** personal, the press fetches it on purpose and its clips play ***',
+        await until(() => /^clip\/piv-/.test(c.src())) && c.asked.includes('piv'), `${c.src()} / ${c.status()}`);
+      c.done();
+      MS.forgetReachedForTest();
+      const gr = rigV({ sources: [PIV], mode: {}, seed: {}, extra: { checkFromHere: async () => ({ check: true, why: 'granted' }) } });
+      check('*** personal, granted (the kiosk): unchanged - the only source is fetched, played and adopted ***',
+        await until(() => /^clip\/piv-/.test(gr.src())) && saved(gr).some((p) => p.sourceId === 'piv'), `${gr.src()} / ${JSON.stringify(gr.sets)}`);
+      gr.done();
+      MS.forgetReachedForTest();
+    }
   }
 
   // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***
