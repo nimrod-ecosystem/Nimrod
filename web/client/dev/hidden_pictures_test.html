@@ -363,12 +363,24 @@ try {
     const e = hides.entries('p1')[0];
     check('*** "only on this person\'s screens": the row is for that person ***', e && e.scope === 'person' && e.person === 'p1', J(e));
     check('...and another person\'s slideshow still shows that picture', theirs.probe().ids.length === 4 && mine.probe().ids.length === 3);
+    // The other slideshow picks its next picture at random, so 1 time in 4 it landed on the very picture `mine` had
+    // already hidden for p1 - hiding that one "for everybody" then left `mine` at 3, correctly, and this check read
+    // "3 3" (found 2026-10-10, about 1 run in 5, on unchanged HEAD too). Not a timing race: a coincidence the check
+    // assumed away. So step `theirs` on until it shows a picture `mine` still shows, and say so as a precondition.
+    const pathOf = (name) => (ITEMS.find((it) => it.name === name) || {}).path || null;
+    const idOf = (path) => (ITEMS.find((it) => it.path === path) || {}).id || null;
     theirs.host.querySelector('[data-next]').click();
+    for (let i = 0; i < 12 && pathOf(theirs.shown()) === e.path; i += 1) theirs.host.querySelector('[data-next]').click();
+    const everyPath = pathOf(theirs.shown());
+    check('PRECONDITION: the other slideshow shows a picture the first one still shows',
+      everyPath && everyPath !== e.path && mine.probe().ids.includes(idOf(everyPath)), `${everyPath} vs ${e.path}`);
     bus.publish(PHOTOS_HIDE_TOPIC, undefined, SPEECH);
     await sleep(30);
     check('pressed on the other one, the other one answers next time', hides.rows().length === 2 && hides.rows()[1].data.panel === 'photos-p2');
     check('*** a hide "for everybody" leaves it out of every slideshow on the page, of every person ***',
-      mine.probe().ids.length === 2 && theirs.probe().ids.length === 3, `${mine.probe().ids.length} ${theirs.probe().ids.length}`);
+      mine.probe().ids.length === 2 && theirs.probe().ids.length === 3
+        && !mine.probe().ids.includes(idOf(everyPath)) && !theirs.probe().ids.includes(idOf(everyPath)),
+      `${mine.probe().ids.length} ${theirs.probe().ids.length} ${everyPath}`);
     check('pickAnswerer: on screen first, then the newest press, then the oldest',
       pickAnswerer([{ entry: { visible: false, touchedAt: 9, order: 1 }, n: 1 }, { entry: { visible: true, touchedAt: 1, order: 2 }, n: 2 }]).n === 2
       && pickAnswerer([{ entry: { visible: true, touchedAt: 1, order: 1 }, n: 1 }, { entry: { visible: true, touchedAt: 5, order: 2 }, n: 2 }]).n === 2
