@@ -74,6 +74,8 @@ import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { EDGE_TOPIC } from '../input.js';
 import { createGameMusic } from '../game_music.js';
 import { createMediaSourcesClient } from '../media_sources.js';
+// choosing the music folder (2026-10-10; media_sources.js "CHOOSING THE ALBUM" argues the row)
+import { albumField, createAlbumChooser, topFoldersLister } from '../media_sources.js';
 import { personSources } from '../person_known.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 import { createPlayWatch } from '../game_start.js';
@@ -246,12 +248,15 @@ const SETTINGS = [
       { value: 'folder', label: 'From a folder of music' },
       { value: 'off', label: 'No music' },
     ] },
+  // "Music from": this account's media sources, live (`settingsChoices`). Until 2026-10-10 nothing supplied them, so
+  // the row was empty everywhere ("No source connected") and the folder music could only be set by hand in the data.
   { key: 'musicSourceId', label: 'Music from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
-  // readOnly since 2026-09-28, when a text field became editable by default: this is a pick over
-  // live data owned in Media / Sources (photos.js's `album`, same reasoning), not free text.
-  { key: 'musicAlbum', label: 'Music folder', kind: 'text', default: '', level: 'standard',
-    placeholder: 'Everything', readOnly: true, note: 'set in Media / Sources' },
+  // "Music folder" IS A CHOICE SINCE 2026-10-10, as Photos' "Album" (media_sources.js "CHOOSING THE ALBUM"): "The whole
+  // source", then the source's own folders, from the listings the music already makes. It was text, read-only, saying
+  // "set in Media / Sources" - which has no folder chooser, so nobody could set it. Level 'standard', where it was.
+  // AGAINST: once the source has folders it is one more stop on a switch user's walk of this menu.
+  albumField({ key: 'musicAlbum', label: 'Music folder', level: 'standard' }),
   { key: 'musicVolume', label: 'How loud the music is', kind: 'choice', default: 0.3,
     level: 'standard',
     options: [
@@ -346,6 +351,26 @@ registerModule(
     let theme = null, observer = null, visible = true;
     let ac = null, sfx = null;
     let music = null;
+    // "Music from" / "Music folder": the sources this screen may play music from (listed at mount and when whose
+    // sources they are changes), and the folder row's choices from the music's own listings (media_sources.js).
+    let musicSources = null;
+    let knownSources = [];
+    const albumChooser = createAlbumChooser({ listTop: topFoldersLister({ resolve: ctx.resolveListing || null,
+      check: ctx.checkFromHere || null }) });
+    const refreshSources = () => {
+      if (!musicSources || typeof musicSources.list !== 'function') return;
+      Promise.resolve().then(() => musicSources.list())
+        .then((all) => { knownSources = Array.isArray(all) ? all.filter((s) => s && s.id) : []; }, () => {});
+    };
+    const settingsChoices = () => {
+      const opts = knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id }));
+      const want = cfg.musicSourceId;
+      // A chosen source that is not here stays on the list, last (photos.js, same reason: one press repairs it).
+      if (want && !opts.some((o) => o.value === want)) opts.push({ value: want, label: 'A source — not connected here' });
+      const folder = want ? albumChooser.row(want, cfg.musicAlbum)
+        : { options: [{ value: '', label: 'The whole source' }], note: 'choose where the music is from first' };
+      return { musicSourceId: opts, musicAlbum: folder };
+    };
     const offs = [];
     // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): from a press, out of the menu, until nobody has pressed
     // for GAME_IDLE_MS (longer than its longest wait, 40 s, so holding off through a wait is still playing). Never
@@ -1024,7 +1049,10 @@ registerModule(
         askingExit,
         goPaintedAt, machine: machine(),
         music: music ? music.state() : null,
+        knownSources: knownSources.map((s) => s.id),
       }),
+      // LIVE OPTIONS for "Music from" and "Music folder" (settings_fields.js fieldsFor), synchronous from what is held.
+      settingsChoices,
       __rows: () => sessionRows.slice(),
       __evidence: () => evidenceRecord(),
       // Calibration test hooks — the pure math directly, and the async read-back, without
@@ -1115,7 +1143,7 @@ registerModule(
             { kind: 'item', id: 'pg-start', label: 'Start' },
             { kind: 'item', id: 'pg-calibrate', label: 'Suggested wait time', page: 'pg-calibrate' },
           ],
-          fields: () => fieldItems(fieldsFor(getManifest('pressgame'), null), {
+          fields: () => fieldItems(fieldsFor(getManifest('pressgame'), { settingsChoices }), {
             values: () => state?.get?.() || {},
             level: 'standard',
             onStep: (key, value) => { state?.set?.({ [key]: value }); },
@@ -1187,11 +1215,20 @@ registerModule(
         const scopedMusic = (!ctx.sources && ctx.user) ? personSources(ctx,
           (pid) => createMediaSourcesClient({ user: ctx.user, personId: pid }),
           { onChange: () => {
+            refreshSources();
             if (cfg.music === 'folder') music?.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
           } }) : null;
         if (scopedMusic) offs.push(() => scopedMusic.dispose());
+        musicSources = ctx.sources || scopedMusic;
+        refreshSources();
         music = createGameMusic({
-          sources: ctx.sources || scopedMusic,
+          sources: musicSources,
+          ...(ctx.resolveListing ? { resolve: ctx.resolveListing } : {}),
+          // the "Music folder" row's choices, from each listing of the chosen source (an album it does not have: its top)
+          onListing: (source, album, listing, err) => {
+            if (listing) albumChooser.heard(source, album, listing);
+            else if (err && err.code === 'album') albumChooser.heard(source, album, null);
+          },
           volume: cfg.musicVolume,
           // THE ARBITER. Without it this bed plays over a spoken cue and alongside a video.
           // The id carries the instance so two pressgames are two sources, and the newest
