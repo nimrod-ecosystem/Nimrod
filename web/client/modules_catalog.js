@@ -752,6 +752,30 @@ export const CATALOG = [
       + 'lit one and the right one snaps into place, so one switch can build every model. A wrong one just is not '
       + 'offered again. From the middle level the model is built in the brick builder and checked as it goes.',
   },
+  // brick games (2026-10-10, row 2.76): a one-press tower game, and a picture built from bricks.
+  {
+    type: 'stackline',
+    title: 'Stack to the line',   // title-casing the type would say "Stackline"
+    group: 'practice',
+    use: 'answer',
+    lead: 'A brick slides along above a tower. One press drops it. Build up to the line.',
+    needs: 'Nothing. The bricks, the levels and the sounds are built in.',
+    why: 'One press is the whole game, so one switch (one big button) can play: a key, a click or a touch works too. '
+      + 'What hangs over the edge is cut off. The easy levels are slow and wide, a brick lands on the nearest whole '
+      + 'cell, and a miss just brings the same brick again.',
+  },
+  {
+    type: 'brickmosaic',
+    title: 'Brick mosaic',   // not "Brickmosaic"
+    group: 'comfort',
+    use: 'touch',
+    lead: 'One of your photos, built from Nimrod bricks one brick at a time, in the theme’s brick colours.',
+    needs: 'Nothing. It uses a photo source if there is one, and a built-in painting if not. The picture never leaves '
+      + 'the browser.',
+    why: 'It builds by itself, slowly, from the bottom row up, so there is nothing to press. A press lays the rest of '
+      + 'the row at once, or finishes the picture, and on a finished one it starts the next. It can also be set to '
+      + 'build only when pressed.',
+  },
   {
     type: 'rhythm',
     group: 'practice',

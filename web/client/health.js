@@ -104,6 +104,9 @@ export const HEALTH_EXPECT = {
   // brick builder (2026-10-09): a model nobody is building is a model, and a game nobody is playing comes to rest.
   brickbuilder: { idle: true },
   buildit:     { idle: true },
+  // brick games (2026-10-10): Stack to the line comes to rest when nobody presses; a finished brick mosaic is a picture.
+  stackline:   { idle: true },
+  brickmosaic: { idle: true },
   karaoke:     { expectMs: 90 * 60 * 1000 },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //

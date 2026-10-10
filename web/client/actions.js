@@ -705,7 +705,14 @@ export const MODULE_VERBS = {
   brickbuilder:  { next: 'brickbuilder/next', prev: 'brickbuilder/prev', select: 'brickbuilder/select',
                    left: 'brickbuilder/left', right: 'brickbuilder/right', up: 'brickbuilder/up', down: 'brickbuilder/down',
                    launch: 'brickbuilder/put' },
-  buildit:       { next: 'buildit/next', prev: 'buildit/prev', select: 'buildit/select',
+  // brick games (2026-10-10, row 2.76): Stack to the line is ONE press - select, next, prev, down and launch all drop the
+  // sliding brick, so whatever one switch is bound to plays it; back and pause pause, play starts or goes on. Brick
+  // mosaic: select (and launch, down) lays a row at once or finishes the picture, next is the next picture, play starts.
+  stackline:     { select: 'stackline/drop', next: 'stackline/drop', prev: 'stackline/drop', down: 'stackline/drop',
+                   launch: 'stackline/drop', back: 'stackline/back', pause: 'stackline/pause', play: 'stackline/resume' },
+  brickmosaic:   { select: 'brickmosaic/press', launch: 'brickmosaic/press', down: 'brickmosaic/press',
+                   next: 'brickmosaic/next', play: 'brickmosaic/resume' },
+  buildit:      { next: 'buildit/next', prev: 'buildit/prev', select: 'buildit/select',
                    left: 'buildit/left', right: 'buildit/right', up: 'buildit/up', down: 'buildit/down',
                    play: 'buildit/resume', pause: 'buildit/pause' },
   // 2026-10-02 (games wait for Start; Space is Pause / Play): play / pause start-or-resume and pause, on every
