@@ -403,9 +403,12 @@ export const ROUTES = {
   // the small Vosk model lacks "unpause" and "unmute", and "unhide" is rarer still. Vocabulary [unverified on the bench,
   // inferred]: every word is a common one (hide, this, that, the, picture, photo, one, bring, it, back, show, again).
   // Nothing happens unless a Photos panel is on the screen.
+  // (2026-10-10, measured on the bench, two-step, even on clean audio: the small model WRITES "hide this ..." said on
+  // its own as "hi this ...", like "mic" -> "mike". So each has a "hi this" twin. Without it, "hi this one" is one word
+  // off "this one" (select): the screen would ask "did you mean 'this one'?" and a yes would select, not hide.)
   'photos-hide': { action: 'photos/hide-picture', label: 'Photos: hide this picture',
     phrases: ['hide this picture', 'hide this one', 'hide this photo', 'hide that picture', 'hide that one',
-              'hide the picture'] },
+              'hide the picture', 'hi this picture', 'hi this one', 'hi this photo'] },
   'photos-unhide': { action: 'photos/bring-back', label: 'Photos: bring the last hidden picture back',
     phrases: ['bring it back', 'bring that back', 'bring the picture back', 'bring back the picture', 'show it again'] },
 };
@@ -857,6 +860,24 @@ export const SPEECH_DEFAULTS = Object.freeze({
   // A SETTING (`speechWindowMs`): somebody who stops to think wants longer on their own profile
   // (her profile: try 15 s - Code's suggestion, not measured).
   wakeWindowMs: 8000,
+  // *** TWO-STEP: A COMMAND THAT BEGAN INSIDE THE WINDOW STILL COUNTS (2026-10-09). *** The window is
+  // judged by when the VOICE began (the recogniser's `voiceFrom`), not when its words came back: a slow
+  // "make it bigger" started at 7.5 s is written down after the pause that ends it (0.9 s) and the
+  // recogniser's own time, so it used to arrive after an 8 s window and be lost. Words that arrive more
+  // than this long after the window closed are not taken, however they began - long enough for a long
+  // utterance plus a slow second pass (`waitMs`, 4 s), short enough that a stale result cannot surprise
+  // anybody. An option, not a menu row: nobody in a room can judge it. A recogniser that gives no
+  // `voiceFrom` changes nothing.
+  lateMs: 10000,
+  // *** TWO-STEP: "SAY IT AGAIN?" (2026-10-09, after the bench: a two-step command lost to a clipped
+  // first sound was simply silence). *** Something said TO THE SCREEN (after the wake phrase, or inside
+  // its window) that matched no command and was not a near miss: the screen says this line, shows it in
+  // the listening cue, and opens a fresh window - this many times per wake phrase, so it can never loop.
+  // Nobody answering is inaction: the window closes and nothing fires. NOT A GATE: nothing waits on it.
+  // 0 = the old behaviour (silence; the window stays open for whatever time it had left).
+  // The person who wants it off: a busy room where talk inside the window is often not for the screen.
+  retries: 1,
+  retryLine: 'Say it again?',
   // *** HOW THE RECOGNISER LISTENS: OPEN, EVERYWHERE, BY DEFAULT (note AO). *** The bench fault,
   // exactly: with the recogniser limited to the command list, "hello there" came back as "louder"
   // at confidence 1.0 - a grammar can only answer with one of its own phrases, and [unk] did not
@@ -1051,6 +1072,12 @@ export const SPEECH_FIELDS = [
   { key: 'speechWindowMs', label: 'How long it waits for the command', kind: 'number',
     default: SPEECH_DEFAULTS.wakeWindowMs, level: 'standard', min: 3000, max: 30000, step: 1000,
     displayScale: 1000, unit: 'seconds', unitOne: 'second' },
+  // two-step: "Say it again?" when a command said to the screen matched nothing (2026-10-09).
+  { key: 'speechRetries', label: 'When it did not understand, how many times it asks to hear it again',
+    kind: 'number', default: SPEECH_DEFAULTS.retries, level: 'standard', min: 0, max: 3, step: 1,
+    unit: 'times', unitOne: 'time', note: '0: it stays quiet, and you can simply say it again.' },
+  { key: 'speechRetryLine', label: 'What it says when it did not understand', kind: 'text',
+    default: SPEECH_DEFAULTS.retryLine, level: 'advanced' },
   { key: 'speechHearing', label: 'How it listens', kind: 'choice',
     default: SPEECH_DEFAULTS.recognition, level: 'advanced',
     options: [
@@ -1134,7 +1161,13 @@ export function speechOptionsFrom(values = {}) {
   const v = values || {};
   const ms = Number(v.speechWindowMs);
   const nms = Number(v.speechNearMissWindowMs);
+  const rt = Number(v.speechRetries);   // two-step: "Say it again?"
   return {
+    retries: (typeof v.speechRetries === 'number' || (typeof v.speechRetries === 'string' && v.speechRetries.trim()))
+      && Number.isInteger(rt) && rt >= 0 && rt <= 3
+      ? rt : SPEECH_DEFAULTS.retries,
+    retryLine: typeof v.speechRetryLine === 'string' && v.speechRetryLine.trim()
+      ? v.speechRetryLine : SPEECH_DEFAULTS.retryLine,
     wake: wakeFrom(v),
     confirm: pickChoice(v.speechConfirm, CONFIRM_MODES, SPEECH_DEFAULTS.confirm),
     twoStep: typeof v.speechTwoStep === 'boolean' ? v.speechTwoStep : SPEECH_DEFAULTS.twoStep,
@@ -1313,6 +1346,9 @@ export function attachSpeech(input, {
   requireWake = SPEECH_DEFAULTS.requireWake,
   twoStep = SPEECH_DEFAULTS.twoStep,
   wakeWindowMs = SPEECH_DEFAULTS.wakeWindowMs,
+  lateMs = SPEECH_DEFAULTS.lateMs,          // two-step: see SPEECH_DEFAULTS
+  retries = SPEECH_DEFAULTS.retries,        // two-step: "Say it again?"
+  retryLine = SPEECH_DEFAULTS.retryLine,
   recognition = SPEECH_DEFAULTS.recognition,
   armedRecognition = null,  // null = follow `recognition`
   answerRecognition = null, // null = follow `recognition`
@@ -1370,6 +1406,21 @@ export function attachSpeech(input, {
   let armedUntil = null;   // set by the wake phrase said on its own
   let closeTimer = null;   // closes the window as an EVENT; `armedUntil` stays the gate itself
   let open = false;
+  // two-step: when the open window began; the window that ran out ({ from, until }), for words whose voice
+  // began inside it but arrived after; the "Say it again?" prompts left for this wake; whether one is up.
+  let windowFrom = null;
+  let late = null;
+  let retriesLeft = 0;
+  let retryUp = false;
+  const retryMax = Math.max(0, Math.min(3, Math.floor(Number(retries) || 0)));
+  // A line that is itself a command or a wake phrase would let the screen's own speaker command it: the default then.
+  const retryText = (() => {
+    const t = typeof retryLine === 'string' && retryLine.trim() ? retryLine.trim() : SPEECH_DEFAULTS.retryLine;
+    const n = normalize(t);
+    const bad = !n || wakes.includes(n) || Object.values(spoken).flat().some((p) => normalize(p) === n);
+    return bad ? SPEECH_DEFAULTS.retryLine : t;
+  })();
+  const lateLimit = Math.max(0, Number(lateMs) || 0);
   // THE "DID YOU MEAN" QUESTION: { id, phrase, question, until } while one is up. `until` is the
   // gate (a timer that never fires cannot keep it up); `askTimer` only announces its end.
   let pending = null;
@@ -1390,9 +1441,12 @@ export function attachSpeech(input, {
   function clearClose() {
     if (closeTimer !== null) { try { clearTimer(closeTimer); } catch { /* already gone */ } closeTimer = null; }
   }
-  function openWindow(ms) {
+  function openWindow(ms, reason = 'wake') {
     clearAsk();
     pending = null;
+    windowFrom = now();
+    late = null;
+    retryUp = reason === 'retry';
     armedUntil = now() + ms;
     open = true;
     clearClose();
@@ -1404,10 +1458,14 @@ export function attachSpeech(input, {
       try { closeTimer = setTimer(() => { closeTimer = null; closeWindow('timeout'); }, ms); }
       catch { closeTimer = null; }
     }
-    announce({ on: true, reason: 'wake', ms });
+    announce(reason === 'retry' ? { on: true, reason, ms, question: retryText } : { on: true, reason: 'wake', ms });
     pushMode();
   }
   function closeWindow(reason) {
+    // two-step: a window that RAN OUT is remembered, for words that began inside it and arrive late.
+    late = reason === 'timeout' && armedUntil !== null && windowFrom !== null ? { from: windowFrom, until: armedUntil } : null;
+    windowFrom = null;
+    retryUp = false;
     armedUntil = null;
     clearClose();
     if (open) {
@@ -1427,6 +1485,7 @@ export function attachSpeech(input, {
   // on-screen cue can show it to somebody who did not hear it.
   function ask(nm) {
     armedUntil = null;
+    late = null; windowFrom = null; retryUp = false;   // two-step: the question replaces the window
     clearClose();
     clearAsk();
     const question = nearMissQuestion(nearMissLine, nm.phrase);
@@ -1718,6 +1777,17 @@ export function attachSpeech(input, {
     confirmed(id);
   }
 
+  // two-step: "Say it again?" - a fresh window carrying the line (the on-screen cue shows it), and the line
+  // said aloud when there is an output bus, the way the "did you mean" question is.
+  function sayAgain() {
+    retriesLeft -= 1;
+    openWindow(Math.max(0, Number(wakeWindowMs) || 0), 'retry');
+    if (output && typeof output.say === 'function') {
+      try { output.say(retryText, { source: 'speech', ttlMs: confirmTtlMs }); }
+      catch (err) { console.error('speech: say it again', err); }
+    }
+  }
+
   function heard(text, rawDetail) {
     const detail = cleanDetail(rawDetail);
     const w = splitWake(text, wakes);
@@ -1733,9 +1803,23 @@ export function attachSpeech(input, {
       if (!pendingLive()) endPending('timeout');
       else if (heardWhileAsking(text, w)) return;
     }
-    const inWindow = armedUntil !== null && now() <= armedUntil;
+    let inWindow = armedUntil !== null && now() <= armedUntil;
     // A window whose time is up is closed now, whether or not its timer has fired yet.
     if (armedUntil !== null && !inWindow) closeWindow('timeout');
+    // two-step: words whose VOICE began inside a window that has since run out - a slow speaker, a slow pass -
+    // are still said to the screen. Once, and only within `lateMs` of the close (SPEECH_DEFAULTS.lateMs).
+    if (!inWindow && !w.woke && late) {
+      const began = rawDetail && rawDetail.voiceFrom != null ? Number(rawDetail.voiceFrom) : NaN;
+      if (now() - late.until > lateLimit) late = null;
+      else if (Number.isFinite(began) && began >= late.from && began <= late.until) { inWindow = true; late = null; }
+    }
+    // two-step: the screen hearing its own "Say it again?" is not somebody answering it.
+    if (inWindow && retryUp && !w.woke && normalize(text) === normalize(retryText)) {
+      report({ text, verb: null, woke: false, echo: true });
+      return;
+    }
+    // two-step: every wake phrase, alone or with words after it, gets its own "Say it again?" allowance.
+    if (w.woke) retriesLeft = retryMax;
     // ANSWER MODE: a game is waiting, and this was not said to the screen as a command (no wake
     // phrase, no command window open). It goes to the game, not the phrase table - "next" said to
     // a quiz is an answer, and with the gate turned off it would otherwise skip the video too.
@@ -1775,8 +1859,12 @@ export function attachSpeech(input, {
       }
       if (toScreen) logMiss(rest);
       const nm = toScreen && asking ? nearMiss(rest, spoken) : null;
-      report(nm ? { text, verb: null, woke: w.woke, nearMiss: nm.phrase } : { text, verb: null, woke: w.woke });
+      // two-step: nothing matched and nothing was near - ask to hear it again (a bounded number of times).
+      const again = !nm && toScreen && twoStep && retriesLeft > 0;
+      report(nm ? { text, verb: null, woke: w.woke, nearMiss: nm.phrase }
+        : { text, verb: null, woke: w.woke, ...(again ? { retry: true } : {}) });
       if (nm) ask(nm);
+      else if (again) sayAgain();
       return;
     }
     report(route ? { text, verb: null, route, woke: w.woke } : { text, verb, woke: w.woke });

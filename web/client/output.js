@@ -221,7 +221,14 @@ export function createOutputBus({
     if (muted.has(name)) return report(item, name, { reason: 'muted' });
 
     if (runningOf(name).length < concurrencyOf(name)) { start(name, item); return null; }
-    if (preemptFor(name, item)) { queueOf(name).push(item); pump(name); return null; }
+    // QUEUED BEFORE THE VICTIM IS EVICTED (2026-10-09, found by the two-step "Say it again?" work): evicting pumps
+    // the channel, and the slot it frees must go to THIS item - the most urgent - not to whatever was already
+    // waiting. Pushed after, an alert lost the slot it had just won to an older queued `say`. If nothing can be
+    // evicted, it comes straight back out and takes the ordinary queue path below.
+    const q0 = queueOf(name);
+    q0.push(item);
+    if (preemptFor(name, item)) { pump(name); return null; }
+    q0.splice(q0.indexOf(item), 1);
 
     const q = queueOf(name);
     if (q.length >= queueLimit) {

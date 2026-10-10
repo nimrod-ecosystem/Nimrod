@@ -1096,7 +1096,7 @@ export async function mountKiosk(root, {
         scoped: sw.on ? focusedVoice : null,
         // Subtitles-only: no commands, so nothing is confirmed, asked, logged or announced -- the
         // recogniser is there to write the room down, and a wake phrase does nothing.
-        ...(sw.on ? {} : { confirm: 'off', nearMiss: false }),
+        ...(sw.on ? {} : { confirm: 'off', nearMiss: false, retries: 0 }),   // two-step: no "Say it again?" either
         output: sw.on ? output : null,
         bus: sw.on ? bus : null,
         misses: sw.on ? missStore : null,
@@ -4026,6 +4026,9 @@ export async function mountKiosk(root, {
   //   * "Everything": the same rule, plus each file's own advanced rows (wake phrases, grammar mode...).
   const VOICE_DEPENDS = {
     speechWindowMs: (r) => speechOptionsFrom(r).twoStep,
+    // two-step: "Say it again?" opens a window, so it means nothing with the two-step path off; its line, only while it asks.
+    speechRetries: (r) => speechOptionsFrom(r).twoStep,
+    speechRetryLine: (r) => speechOptionsFrom(r).twoStep && speechOptionsFrom(r).retries > 0,
     speechNearMissLine: (r) => speechOptionsFrom(r).nearMiss,
     speechNearMissWindowMs: (r) => speechOptionsFrom(r).nearMiss,
     speechMissKeepDays: (r) => r.speechMissLog === true,

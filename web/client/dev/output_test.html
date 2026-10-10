@@ -184,6 +184,21 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
         r.chans.speech.speaking().join() === 'a long rambling sentence');
     }
     {
+      // 2026-10-09 (found by the two-step "Say it again?" work): evicting the running sentence used to hand the freed
+      // slot to whatever was ALREADY QUEUED, so the alert that won the slot still waited behind a plain sentence.
+      const r = rig({ routing: { say: ['speech'], alert: ['speech'] } });
+      r.output.say('a long rambling sentence');
+      r.output.say('a queued sentence');
+      r.output.alert('your brakes are gone');
+      check('*** an alert takes the channel even with a plain sentence already waiting — it does not queue behind it ***',
+        r.chans.speech.speaking().join() === 'your brakes are gone', r.chans.speech.speaking().join());
+      check('...and both plain sentences still wait their turn', r.output.pending('speech') === 2,
+        String(r.output.pending('speech')));
+      r.chans.speech.finish();
+      check('...and a plain sentence is said once it is done', r.chans.speech.speaking().join() === 'a queued sentence'
+        || r.chans.speech.speaking().join() === 'a long rambling sentence', r.chans.speech.speaking().join());
+    }
+    {
       // A message that keeps losing the channel goes stale. Saying it late is worse.
       const r = rig({ routing: { say: ['speech'], alert: ['speech'] }, maxPreemptions: 2 });
       r.output.say('poor thing');
