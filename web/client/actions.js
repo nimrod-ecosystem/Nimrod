@@ -753,6 +753,8 @@ export const MODULE_VERBS = {
   // Row 2.69. The Internet Archive: next / prev move through an item's files (past the last, the next item), play /
   // pause are the media verbs, and select is Play or Pause, so one switch has something to do there.
   archive:       { next: 'archive/next', prev: 'archive/prev', select: 'archive/select', play: 'archive/play', pause: 'archive/pause' },
+  // Row 2.69. livecams (Live nature cams): next / prev change cam, play / pause, and select is Play or Pause.
+  livecams:      { next: 'livecams/next', prev: 'livecams/prev', select: 'livecams/select', play: 'livecams/play', pause: 'livecams/pause' },
   // The weather: select reads now (or the lit day), next / prev walk the days, back returns to now.
   weather:       { next: 'weather/next', prev: 'weather/prev', select: 'weather/select', back: 'weather/back' },
   // 2026-10-04, the Voice model module (modules/voice_model.js): next / prev walk its buttons (the walk's own Back /

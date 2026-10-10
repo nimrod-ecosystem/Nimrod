@@ -101,6 +101,7 @@ const GROUP_CATEGORY = Object.freeze({ comfort: 'visual', practice: 'learning', 
 export const MODULE_CATEGORIES = Object.freeze({
   photos: ['visual', 'people'], personal: ['visual', 'people'], youtube: ['visual'], music: ['visual'],
   archive: ['visual', 'games'],   // (row 2.69) the Internet Archive: films, radio and books, and its old games when turned on
+  livecams: ['visual'],           // (row 2.69) livecams: live nature cams from explore.org
   karaoke: ['visual', 'games'], director: ['visual'], camera: ['visual'], clock: ['visual', 'tools'],
   board: ['people', 'tools'], wallpaper: ['visual'], scene: ['visual', 'scenes'], room: ['visual', 'scenes'],
   note: ['people', 'visual'], avatar: ['people', 'visual'], weather: ['visual'], pond: ['visual', 'games'],

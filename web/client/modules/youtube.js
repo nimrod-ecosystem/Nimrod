@@ -370,9 +370,10 @@ function loadIframeApi() {
     const s = document.createElement('script');
     s.src = 'https://www.youtube.com/iframe_api';
     s.async = true;
-    s.onerror = () => reject(new Error('failed to load YouTube IFrame API'));
+    // A failure is forgotten (row 2.69, livecams), so the next player made asks again rather than failing for good.
+    s.onerror = () => { _apiPromise = null; s.remove(); reject(new Error('failed to load YouTube IFrame API')); };
     document.head.append(s);
-    setTimeout(() => { if (!(window.YT && window.YT.Player)) reject(new Error('YouTube IFrame API timeout')); }, 12000);
+    setTimeout(() => { if (!(window.YT && window.YT.Player)) { _apiPromise = null; reject(new Error('YouTube IFrame API timeout')); } }, 12000);
   });
   return _apiPromise;
 }
@@ -397,8 +398,15 @@ function loadIframeApi() {
 // one that paused. Both mean "stopped, and not coming back on its own".
 // Exported for the music panel (row 2.32), which plays a YouTube favourite in its own panel when no
 // YouTube panel is on the screen - the same player, not a second copy of it.
-export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }) {
+// `opts.muted` (row 2.69, the live nature cams, modules/livecams.js): start with the sound off, which a browser always
+// lets play by itself; `setMuted` turns it on or off later. Left out, nothing changes for anybody else using this.
+export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }, opts = {}) {
   let player = null, ready = false, pending = null, pendingList = null, pendingCue = false, destroyed = false;
+  let wantMuted = !!(opts && opts.muted), muteAsked = !!(opts && opts.muted);   // livecams: mute only when asked
+  const applyMute = () => {   // livecams: the asked-for sound, once the player can take it
+    if (!muteAsked || !ready || !player) return;
+    try { if (wantMuted) player.mute?.(); else player.unMute?.(); } catch { /* not ready */ }
+  };
   const host = document.createElement('div');
   mountEl.append(host);
 
@@ -407,10 +415,11 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
     player = new YT.Player(host, {
       host: 'https://www.youtube-nocookie.com',
       width: '100%', height: '100%',
-      playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3 },
+      playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, ...(wantMuted ? { mute: 1 } : {}) },
       events: {
         onReady: () => {
           ready = true;
+          applyMute();   // livecams
           if (pendingList) { player.cuePlaylist({ list: pendingList, listType: 'playlist' }); pendingList = null; }
           else if (pending) { if (pendingCue) player.cueVideoById(pending); else player.loadVideoById(pending); pending = null; pendingCue = false; }
         },
@@ -468,6 +477,8 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
       try { player?.setVolume?.(Math.round(Math.max(0, Math.min(1, level)) * 100)); }
       catch { /* not ready */ }
     },
+    // livecams (row 2.69): sound off (true) or on (false); kept until the player is ready.
+    setMuted(on) { if (destroyed) return; wantMuted = !!on; muteAsked = true; applyMute(); },
     stop() { pending = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
     destroy() { destroyed = true; pending = null; try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
   };
