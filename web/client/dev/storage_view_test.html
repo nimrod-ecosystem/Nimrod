@@ -159,6 +159,8 @@ section('the last copy, and late in plain words');
   check('a job that says it runs weekly is not late after 3 days (two periods first)',
     !isLate(readCopyStatus(FALLBACK({ every: 'weekly', at: iso(NOW - 3 * DAY) })), NOW)
     && isLate(readCopyStatus(FALLBACK({ every: 'weekly', at: iso(NOW - 15 * DAY) })), NOW));
+  check('a job that runs only by hand (every: manual) is never called late, however old its copy',
+    !isLate(readCopyStatus(FALLBACK({ every: 'manual', at: iso(NOW - 90 * DAY) })), NOW, DAY));
 }
 
 section('the two timing choices: defaults, kept in this browser only');

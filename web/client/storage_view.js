@@ -108,7 +108,7 @@ export function readCopyStatus(j) {
     job,
     role: word(j.role) || (job === 'drive' ? 'primary' : ''),
     fromRole: word(j.from_role) || (job === 'drive' ? 'sync' : ''),
-    every: PERIOD[word(j.every)] ? word(j.every) : '',
+    every: PERIOD[word(j.every)] || word(j.every) === 'manual' ? word(j.every) : '',
     new: count(j.new) ?? 0,
     changed: count(j.changed) ?? 0,
     removed: count(j.removed) ?? 0,
@@ -166,6 +166,8 @@ export function roleWords(copies = [], backupFor = []) {
 /** Is a copy late? `lateAfterMs` 0 = never. A job that says how often it runs is never late before two periods. Pure. */
 export function isLate(copy, now = Date.now(), lateAfterMs = LATE_DEFAULT_MS) {
   if (!copy || !(lateAfterMs > 0)) return false;
+  // A job set to run only by hand (`every: manual`, 2026-10-10) has no schedule to be late against.
+  if (copy.every === 'manual') return false;
   const at = Date.parse(copy.at);
   if (!Number.isFinite(at)) return false;
   const line = Math.max(lateAfterMs, copy.every ? 2 * PERIOD[copy.every] : 0);

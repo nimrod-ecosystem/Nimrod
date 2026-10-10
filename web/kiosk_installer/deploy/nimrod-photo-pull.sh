@@ -315,8 +315,8 @@ prev_new="$(sed -n 's/.*"new_today": *\([0-9]*\).*/\1/p' "$STATUS" 2>/dev/null |
 new_today=$((prev_new + new))
 okw=true; [ "$ok" = 1 ] || okw=false
 free_now="$(free_bytes "$TARGET")"; [ -n "$free_now" ] || free_now=null
-printf '{"at": "%s", "today": "%s", "new": %d, "changed": %d, "removed": %d, "new_today": %d, "heic_converter": "%s", "heic_not_shown": %d, "mode": "%s", "ok": %s, "why": "%s", "job": "drive", "role": "%s", "from_role": "sync", "free_bytes": %s}\n' \
-  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$today" "$new" "$changed" "$removed" "$new_today" "$CONVERTER" "$unshown" "$MODE" "$okw" "$why" "$(json_text "$ROLE")" "$free_now" \
+printf '{"at": "%s", "today": "%s", "new": %d, "changed": %d, "removed": %d, "new_today": %d, "heic_converter": "%s", "heic_not_shown": %d, "mode": "%s", "ok": %s, "why": "%s", "job": "drive", "role": "%s", "from_role": "sync", "free_bytes": %s, "every": "%s"}\n' \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$today" "$new" "$changed" "$removed" "$new_today" "$CONVERTER" "$unshown" "$MODE" "$okw" "$why" "$(json_text "$ROLE")" "$free_now" "$EVERY" \
   > "$STATUS.part" && mv -f "$STATUS.part" "$STATUS"
 
 secs=$(( $(date +%s) - started ))
@@ -557,9 +557,9 @@ job_local() {
   files_now=$(list_tree "$TO" "" | wc -l | tr -d ' ')
   free_now="$(free_bytes "$TO")"; [ -n "$free_now" ] || free_now=0
   [ "$ok" = 1 ] || okw=false
-  printf '{"at": "%s", "today": "%s", "job": "%s", "role": "%s", "from_role": "%s", "mode": "%s", "limit": "%s", "new": %d, "changed": %d, "removed": %d, "left_for_space": %d, "files": %d, "free_bytes": %s, "keep_free_bytes": %s, "ok": %s, "why": "%s"}\n' \
+  printf '{"at": "%s", "today": "%s", "job": "%s", "role": "%s", "from_role": "%s", "mode": "%s", "limit": "%s", "new": %d, "changed": %d, "removed": %d, "left_for_space": %d, "files": %d, "free_bytes": %s, "keep_free_bytes": %s, "ok": %s, "why": "%s", "every": "%s"}\n' \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(date +%F)" "$NAME" "$(json_text "$JROLE")" "$(json_text "$FROM_ROLE")" "$JMODE" \
-    "$(json_text "$LIMIT")" "$c_new" "$c_changed" "$removed" "$left" "$files_now" "$free_now" "$KEEP" "$okw" "$(json_text "$why")" \
+    "$(json_text "$LIMIT")" "$c_new" "$c_changed" "$removed" "$left" "$files_now" "$free_now" "$KEEP" "$okw" "$(json_text "$why")" "$JEVERY" \
     > "$STATUS.part" && mv -f "$STATUS.part" "$STATUS"
 
   local secs=$(( $(date +%s) - started )) line

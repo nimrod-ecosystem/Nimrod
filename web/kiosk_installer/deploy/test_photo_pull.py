@@ -347,6 +347,7 @@ class CopyJobTest(unittest.TestCase):
         self.assertEqual((s['new'], s['new_today'], s['mode']), (2, 2, 'copy'), s)
         self.assertEqual((s['job'], s['role'], s['from_role']), ('drive', 'primary', 'sync'), 'job 1 now says its role too')
         self.assertIsInstance(s['free_bytes'], int)
+        self.assertEqual(s['every'], 'daily', 'says how often it runs, so Devices > Storage knows when a copy is late')
 
     # ---- what it copies
     def test_the_fallback_job_copies_pictures_from_the_primary(self):
@@ -365,6 +366,7 @@ class CopyJobTest(unittest.TestCase):
         self.assertEqual((s['new'], s['changed'], s['removed'], s['left_for_space'], s['files'], s['ok']), (3, 0, 0, 0, 3, True), s)
         self.assertEqual(s['free_bytes'], 104857600 * 1024)
         self.assertEqual(s['keep_free_bytes'], 2048 * 1048576)
+        self.assertEqual(s['every'], 'daily', 'says how often it runs, so Devices > Storage knows when a copy is late')
         self.assertFalse(os.path.exists(self.in_fallback('.nimrod-pull/last-pull.json')),
                          "never job 1's file: the Photos panel would say 'new pictures today' about a backup copy")
         self.assertEqual(self.rclone_calls(), [], 'a local job needs no rclone')
