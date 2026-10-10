@@ -83,6 +83,84 @@ on; this installer only takes over from the moment `autostart` runs. If a fresh 
 reach that point on its own, that is a `raspi-config` / autologin setup question, separate from
 this installer.
 
+## Pictures from Google Drive (Raspberry Pi, opt-in)
+
+Family add pictures to one shared Google Drive folder from their phones; `nimrod-photo-pull.sh` copies the new ones
+to the drive the screen reads. The screen never talks to Google, and keeps playing when the internet is down. One way
+(Drive to here), read-only (it refuses a login that could write), and nothing is deleted unless you ask
+(`NIMROD_PULL_MIRROR_DELETES=1`, and even then a removed picture is moved to a backup folder beside the target).
+
+**Why your own Google Cloud app, once (about 15 minutes).** rclone's shared login is being retired during 2026, and
+reading a folder other people add to needs the `drive.readonly` scope, which Google only gives freely to an app used
+by its own maker (fewer than 100 users, personal use). So the "app" is a Google Cloud project in your account, used
+by your account alone. Nobody else signs in to it.
+
+### One-time setup (Mike)
+
+1. **Google Cloud project.** At console.cloud.google.com, signed in as the account that owns (or was given) the shared
+   folder: create a project, for example "Nimrod photos".
+2. **Turn on the Drive API.** APIs & Services, Library, "Google Drive API", Enable.
+3. **The consent screen.** Google Auth Platform (or "OAuth consent screen"): app name "Nimrod photos", your email as
+   support and contact; audience **External**. Under Data access, add the scope `.../auth/drive.readonly`. Then, under
+   Audience, press **Publish app** ("In production"). In "Testing" the login stops working after 7 days. Publishing
+   a personal app does not need Google's review.
+4. **The client.** Clients, Create client, type **Desktop app**, any name. Copy the **Client ID** and **Client secret**.
+5. **rclone on the Pi** (installed already, or `sudo apt install rclone`). On the Pi, as the kiosk user:
+   ```bash
+   rclone config
+   #   n (new remote)  name: nimrod-photos   storage: drive
+   #   client_id / client_secret: the two from step 4
+   #   scope: drive.readonly           (option 2 - "Read-only access to file metadata and file contents")
+   #   service_account_file: (empty)   Edit advanced config: n
+   #   Use web browser to automatically authenticate? n      (the Pi has no browser to spare)
+   ```
+   rclone then prints a line starting `rclone authorize "drive" "eyJ..."`. **Run that line on a computer with a
+   browser and rclone** (your desktop), sign in as the same Google account, and allow it. Google warns that the app is
+   unverified: Advanced, "Go to Nimrod photos (unsafe)", Continue - it is your own app. Paste the long answer it prints
+   back into the Pi. "Configure this as a Shared Drive?" n. Then lock the login file down:
+   ```bash
+   chmod 600 ~/.config/rclone/rclone.conf
+   ```
+6. **Point it at the folder.** Open the folder in Drive; its id is the last part of the address
+   (`.../folders/<id>`). Then `rclone config`, edit `nimrod-photos`, advanced: `root_folder_id = <id>` (or add that
+   line to `~/.config/rclone/rclone.conf` under `[nimrod-photos]`). Check: `rclone lsf nimrod-photos: | head` lists
+   the pictures. If the folder belongs to someone else and was shared with you, set `NIMROD_PULL_SHARED=1` below and
+   use `nimrod-photos:<folder name>` instead of `root_folder_id`.
+7. **Install the timer** and fill in its settings:
+   ```bash
+   NIMROD_PHOTO_PULL=1 bash install-linux.sh https://nimrodecosystem.com/kiosk.html
+   nano ~/.config/nimrod/photo-pull.env
+   #   NIMROD_PULL_REMOTE=nimrod-photos:
+   #   NIMROD_PULL_TARGET=/media/<user>/<drive>/photos/family_drive
+   #   NIMROD_PULL_MOUNT=/media/<user>/<drive>
+   ~/.local/bin/nimrod-photo-pull.sh --check     # the guards only: "ready: ..." or what is missing
+   set -a; . ~/.config/nimrod/photo-pull.env; set +a; ~/.local/bin/nimrod-photo-pull.sh --now   # the first pull, now
+   journalctl --user -u nimrod-photo-pull        # one line per pull: "3 new pictures, 0 changed, 0 set aside ..."
+   ```
+   Point the Photos panel at the target folder (its media agent's folder, or an album in it).
+8. **The login file is a secret on that Pi.** It can read everything in that Google account's Drive, not only the
+   folder (`root_folder_id` limits what rclone looks at, not what the login allows). Keeping the shared folder in an
+   account that holds little else limits what a lost Pi gives away. Clean it off a Pi that leaves the house:
+   `rm ~/.config/rclone/rclone.conf`, and remove the app's access at myaccount.google.com, Security, Third-party access.
+
+### Settings (`~/.config/nimrod/photo-pull.env`), each a default
+
+| Setting | Default | Why that default |
+|---|---|---|
+| `NIMROD_PULL_EVERY` | `daily` | Mike: new pictures are not expected often. Checking costs nothing that matters: one listing is a few requests against Google's quota of a million a minute, and rclone downloads only what is new or changed. `hourly` for faster, `weekly`, or `manual`. The timer looks every hour; this decides. |
+| `NIMROD_PULL_HOUR` | `3` | Daily and weekly pulls wait until this hour (this computer's time): overnight, when nobody is on a video call on the facility wifi. A Pi that was off then pulls at its first look after. |
+| `NIMROD_PULL_MIRROR_DELETES` | `0` | Mike: a picture removed from Drive stays on the screen, so Drive's space can be freed. `1`: it is moved off the screen too, into the backup folder. |
+| `NIMROD_PULL_MAX_DELETE` | `50` | With mirroring: a pull that would move more than this stops instead (a whole folder emptied by mistake). |
+| `NIMROD_PULL_BACKUP_DIR` | beside the target | `<parent>/.nimrod-removed/<target name>/<date>`: beside, never inside (rclone refuses that), and a dot-folder the agent does not list. |
+| `NIMROD_PULL_BWLIMIT` | `08:00,1M 22:00,off` | 1 MB/s by day, so a family member's big upload never stalls a video call on the facility wifi; no cap at night. |
+| `NIMROD_PULL_CONVERT_HEIC` | `auto` | iPhone pictures (HEIC) cannot be shown by browsers. With a converter here (`heif-convert` from `libheif-examples`, or ImageMagick with HEIC) each becomes `<name>.HEIC.jpg` beside the others; the original is kept aside in `.nimrod-pull/heic`. With none, they are kept aside, not shown, and each pull says so. Nothing is installed for you. |
+| `NIMROD_PULL_SHARED` | `0` | `1` when the folder was shared with this account rather than owned by it. |
+
+Exit codes for a script that watches it: 0 pulled or not due, 2 not set up or refused (a login that could write), 3
+the drive is not mounted, 4 rclone failed (it tries again at the next hourly look), 5 another pull is running.
+`test_photo_pull.py` checks the guards and the commands with a stand-in rclone (`py -3.13 -m unittest
+test_photo_pull.py`; it needs a bash, and skips without one).
+
 ## Windows (Task Scheduler)
 
 ```powershell

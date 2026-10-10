@@ -5530,6 +5530,13 @@ export async function mountKiosk(root, {
       }
       // "See reviews…" under "Include unreviewed questions" (Trivia's), 2026-10-04 (`withReviewsLink`).
       withReviewsLink(items);
+      // hide picture (2026-10-09): A PANEL'S OWN ROWS (`menuItems()` on the panel; photos.js "Hide this picture" and the
+      // hidden pictures to bring back). Plain items with `run`, and headings, on this panel's tab; none from a panel
+      // without it, and a panel that throws adds nothing rather than taking the menu with it.
+      try {
+        const own = (rec.instance?.impl || rec.instance)?.menuItems?.();
+        if (Array.isArray(own)) items.push(...own.filter((it) => it && it.id && it.label).map((it) => ({ ...it, ...MENU_TAB.module(0) })));
+      } catch (err) { console.error('kiosk: panel rows', err); }
       // players: a game's "Players" row names the people as this login knows them.
       items.splice(0, items.length, ...withPlayerNames(items));
       // PAUSE / PLAY for this panel (2026-10-02; `playPauseSelected` argues it): only on a panel that can.

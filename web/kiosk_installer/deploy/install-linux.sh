@@ -262,6 +262,44 @@ if [ "${NIMROD_NET_WATCHDOG:-0}" = "1" ]; then
   echo "network watchdog on (journalctl -t nimrod-net); the log now keeps across power cuts (100 MB at most)"
 fi
 
+# 8. (2026-10-09) PICTURES FROM GOOGLE DRIVE: nimrod-photo-pull.sh copies new pictures from one Drive folder to the drive
+#    the screen reads - read-only, one way, nothing deleted unless asked (its header says what it never does). Only when
+#    asked: NIMROD_PHOTO_PULL=1. A USER unit, like the kiosk's (rclone's login lives in this user's home, and the drive is
+#    mounted for this user's session), so no sudo. It needs rclone set up first - README.md, "Pictures from Google Drive";
+#    until then every hourly look says "not pulling: ..." once a day and does nothing else.
+if [ "${NIMROD_PHOTO_PULL:-0}" = "1" ]; then
+  for f in nimrod-photo-pull.sh nimrod-photo-pull.service nimrod-photo-pull.timer; do
+    [ -f "$HERE/$f" ] || { echo "$f not found next to this script: $HERE/$f" >&2; exit 1; }
+  done
+  install -m 0755 "$HERE/nimrod-photo-pull.sh" "$BIN_DIR/nimrod-photo-pull.sh"
+  install -m 0644 "$HERE/nimrod-photo-pull.service" "$UNIT_DIR/nimrod-photo-pull.service"
+  install -m 0644 "$HERE/nimrod-photo-pull.timer" "$UNIT_DIR/nimrod-photo-pull.timer"
+  PULL_ENV="$HOME/.config/nimrod/photo-pull.env"
+  if [ ! -f "$PULL_ENV" ]; then      # never overwritten: it holds the person's own choices
+    mkdir -p "$(dirname "$PULL_ENV")"
+    cat > "$PULL_ENV" <<'EOF'
+# Nimrod photo pull - settings (nimrod-photo-pull.sh has every one, and its default). Edit, then:
+#   systemctl --user start nimrod-photo-pull     (pulls now if due; or run: nimrod-photo-pull.sh --now)
+# The rclone remote (rclone config: Google Drive, scope drive.readonly, root_folder_id = the folder's id):
+NIMROD_PULL_REMOTE=
+# The folder the screen reads, on the drive:
+NIMROD_PULL_TARGET=
+# The drive's mount point (it refuses to run when this is not mounted):
+NIMROD_PULL_MOUNT=
+# How often: hourly | daily | weekly | manual
+NIMROD_PULL_EVERY=daily
+# A picture removed from Drive: 0 = it stays here (default); 1 = it is moved to a backup folder beside the target
+NIMROD_PULL_MIRROR_DELETES=0
+EOF
+    chmod 600 "$PULL_ENV"
+  fi
+  systemctl --user daemon-reload
+  systemctl --user enable --now nimrod-photo-pull.timer
+  echo "photo pull timer on (journalctl --user -u nimrod-photo-pull); settings: $PULL_ENV"
+  command -v rclone >/dev/null 2>&1 || echo "  NOTE: rclone is not installed yet (sudo apt install rclone); see README.md, Pictures from Google Drive"
+  command -v heif-convert >/dev/null 2>&1 || echo "  NOTE: no heif-convert: iPhone pictures (HEIC) are kept aside, not shown (sudo apt install libheif-examples)"
+fi
+
 echo
 echo "installed. kiosk will launch $URL via systemd --user on next boot."
 echo "  start it now:  systemctl --user start nimrod-kiosk"

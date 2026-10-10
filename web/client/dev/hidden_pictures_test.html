@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hidden_pictures - "hide this picture", kept on the device and in the Nimrod folder</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+<link rel="stylesheet" href="../modules.css">
+</head>
+<body>
+<h1>hidden_pictures - "hide this picture", kept on the device and in the Nimrod folder, never the server</h1>
+<p>The log (hide / bring back rows, replayed), its copy to a Nimrod folder and back, and the real Photos module:
+hidden by voice, by a long press and from its settings rows; brought back the same ways; one slideshow answers when
+two hear it; and the pull's "new pictures today" line. No server, no media agent: everything is injected.</p>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  pictureKey, normalizeHideData, hiddenEntries, hiddenPaths, compactRows, createHiddenPictures,
+  HIDE_KIND, UNHIDE_KIND, HIDDEN_STREAM, HIDDEN_FILE_SCOPE, HIDDEN_FORMAT, HIDDEN_RECORD,
+} from '../hidden_pictures.js';
+import { memoryPlayStore } from '../plays.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/photos.js';
+import { HIDE_LINES, pickAnswerer, readPullStatus, pullNewsLine, PULL_STATUS_PATH } from '../modules/photos.js';
+import { ROUTES, routeFor, routeAction, duplicatePhrases, normalize } from '../input_speech.js';
+import { createDefaultRegistry, PHOTO_ACTIONS, PHOTOS_HIDE_TOPIC, PHOTOS_UNHIDE_TOPIC } from '../actions.js';
+import { senderMeta } from '../sender.js';
+import { getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = JSON.stringify;
+const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
+const row = (kind, at, data) => ({ kind, created_at: at, data });
+
+// A Nimrod folder in memory, the shape history_place.js's sinks have (id / append / read).
+function fakeFolder({ id = 'folder-aaaa-1' } = {}) {
+  const files = [];          // { stream, scope, rows }
+  let up = true;
+  return {
+    files,
+    setUp(v) { up = v; },
+    async id() { return up ? id : null; },
+    async status() { return up ? 'ready' : 'missing'; },
+    async append(stream, scope, rows, o = {}) {
+      if (!up) return { ok: false, why: 'missing' };
+      if (o.folderId && o.folderId !== id) return { ok: false, why: 'changed' };
+      files.push({ stream, scope, rows: JSON.parse(JSON.stringify(rows)) });
+      return { ok: true };
+    },
+    async read(stream, scope) {
+      return files.filter((f) => f.stream === stream && f.scope === scope).flatMap((f) => f.rows);
+    },
+  };
+}
+
+try {
+  // ------------------------------------------------------------------------------------------------
+  section('the log, replayed (pure)');
+  check('a picture is hidden by its path inside the source: slashes forward, no leading ./ or /',
+    pictureKey({ id: 'x', path: '\\family_drive\\a.jpg' }) === 'family_drive/a.jpg'
+    && pictureKey({ path: './b.jpg' }) === 'b.jpg' && pictureKey({ id: 'c.jpg' }) === 'c.jpg');
+  check('...and nothing can be hidden for an item with no path or id', pictureKey({}) === '' && pictureKey(null) === '');
+  check('a row with an unknown scope is "everyone"; a person row keeps its person; a row with no path is nothing',
+    normalizeHideData({ path: 'a.jpg', scope: 'mars' }).scope === 'everyone'
+    && normalizeHideData({ path: 'a.jpg', scope: 'person', person: 'p1' }).person === 'p1'
+    && normalizeHideData({ scope: 'everyone' }) === null);
+  const log = [
+    row(HIDE_KIND, '2026-10-09T10:00:00.000Z', { id: '1', path: 'a.jpg', name: 'a', scope: 'everyone' }),
+    row(HIDE_KIND, '2026-10-09T10:01:00.000Z', { id: '2', path: 'b.jpg', scope: 'person', person: 'p1' }),
+    row(HIDE_KIND, '2026-10-09T10:02:00.000Z', { id: '3', path: 'c.jpg', scope: 'everyone' }),
+    row(UNHIDE_KIND, '2026-10-09T10:03:00.000Z', { id: '4', path: 'c.jpg', scope: 'everyone' }),
+    row('play', '2026-10-09T10:04:00.000Z', { id: '5', path: 'd.jpg' }),
+  ];
+  check('*** the newest row for a picture wins: a brought-back picture is not hidden ***',
+    J([...hiddenPaths(log, { person: 'p1' })].sort()) === J(['a.jpg', 'b.jpg']));
+  check('*** a hide "for everybody" applies to every person; one "only on this person\'s screens" only to theirs ***',
+    J([...hiddenPaths(log, { person: 'p2' })]) === J(['a.jpg']) && J([...hiddenPaths(log, { person: '' })]) === J(['a.jpg']));
+  check('the entries come newest first, with the name kept for the list',
+    J(hiddenEntries(log, { person: 'p1' }).map((e) => e.path)) === J(['b.jpg', 'a.jpg']) && hiddenEntries(log)[1].name === 'a');
+  check('rows out of order are read by their time, not their place',
+    J([...hiddenPaths([log[3], log[2]])]) === J([]));
+  check('hiding again after bringing back hides it again',
+    hiddenPaths([...log, row(HIDE_KIND, '2026-10-09T10:05:00.000Z', { id: '6', path: 'c.jpg', scope: 'everyone' })]).has('c.jpg'));
+  const compact = compactRows(log);
+  check('*** compacting keeps exactly what is in force: one hide per hidden picture, nothing else ***',
+    J(compact.map((r) => r.data.path)) === J(['a.jpg', 'b.jpg'])
+    && J([...hiddenPaths(compact, { person: 'p1' })].sort()) === J([...hiddenPaths(log, { person: 'p1' })].sort()));
+
+  // ------------------------------------------------------------------------------------------------
+  section('the handle: in force at once, on the device, then in the Nimrod folder');
+  {
+    const store = memoryPlayStore();
+    const folder = fakeFolder();
+    const timers = [];
+    let t = Date.parse('2026-10-09T12:00:00.000Z');
+    const h = createHiddenPictures({ store, folder: () => folder, now: () => t,
+      setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer: () => {} });
+    await h.ready;
+    let told = 0;
+    h.subscribe(() => { told += 1; });
+    const p = h.hide({ path: 'trip/a.jpg', name: 'a.jpg', scope: 'everyone', person: 'p1', screen: 's1' });
+    check('*** a hide is in force before anything is saved (the slideshow moves on at once) ***',
+      h.paths('p1').has('trip/a.jpg') && told === 1);
+    await p;
+    const rec = await store.get(HIDDEN_RECORD);
+    check('...and on the device, in its own record, each row with its own id',
+      rec && rec.rows.length === 1 && rec.rows[0].kind === HIDE_KIND && !!rec.rows[0].data.id);
+    check('a copy of the list as one object carries its tag (storage_line.py rule 7 refuses it on sight)',
+      h.snapshot().format === HIDDEN_FORMAT && h.snapshot().rows.length === 1 && !('src' in h.snapshot().rows[0]));
+    check('...with a copy to the folder waiting a moment (a run of hides is one write)',
+      timers.length === 1 && timers[0].ms === 1500 && folder.files.length === 0);
+    let r = await h.sync();
+    check('*** the folder gets the row, as stream `hidden`, scope `pictures` (hidden-pictures-<month>.jsonl) ***',
+      r.sent === 1 && folder.files.length === 1 && folder.files[0].stream === HIDDEN_STREAM
+      && folder.files[0].scope === HIDDEN_FILE_SCOPE && folder.files[0].rows[0].data.path === 'trip/a.jpg', J(r));
+    r = await h.sync();
+    check('...and never twice (a marker per folder)', r.sent === 0 && folder.files.length === 1, J(r));
+    t += 1000;
+    await h.unhide(h.entries('p1')[0]);
+    check('bringing it back is a new row, not a deletion: the log only grows',
+      h.rows().length === 2 && h.rows()[1].kind === UNHIDE_KIND && !h.paths('p1').has('trip/a.jpg'));
+    folder.setUp(false);
+    r = await h.sync();
+    check('a folder that cannot be reached now (a drive unplugged) gets nothing, and loses nothing',
+      r.sent === 0 && folder.files.length === 1, J(r));
+    folder.setUp(true);
+    r = await h.sync();
+    check('*** ...and gets what waited when it is back ***',
+      r.sent === 1 && folder.files.length === 2 && folder.files[1].rows[0].kind === UNHIDE_KIND, J(r));
+
+    // Another screen on the same folder: it reads what this one wrote, and does not write it back.
+    const store2 = memoryPlayStore();
+    const h2 = createHiddenPictures({ store: store2, folder: () => folder, now: () => t + 5000,
+      setTimer: () => 0, clearTimer: () => {} });
+    await h2.ready;
+    folder.files.push({ stream: HIDDEN_STREAM, scope: HIDDEN_FILE_SCOPE,
+      rows: [row(HIDE_KIND, '2026-10-09T12:30:00.000Z', { id: 'other-1', path: 'b.jpg', scope: 'everyone' })] });
+    const merged = await h2.pull();
+    check('*** a second screen on the same Nimrod folder takes the rows it has not seen ***',
+      merged === 3 && h2.paths('').has('b.jpg') && !h2.paths('').has('trip/a.jpg'), `${merged}`);
+    check('...and reading again adds nothing', (await h2.pull()) === 0);
+    const before = folder.files.length;
+    r = await h2.sync();
+    check('*** ...and does not write them back to the folder they came from ***', r.sent === 0 && folder.files.length === before, J(r));
+    await h2.hide({ path: 'c.jpg', scope: 'everyone' });
+    r = await h2.sync();
+    check('its own hide does go there', r.sent === 1 && folder.files.length === before + 1, J(r));
+    check('rows read back from a folder are taken as they were written (kind, time, data)',
+      h2.rows().some((x) => x.data.id === 'other-1' && x.created_at === '2026-10-09T12:30:00.000Z'));
+
+    // No folder at all: everything still works on the device.
+    const lonely = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    await lonely.hide({ path: 'z.jpg' });
+    check('with no Nimrod folder it is kept on the device only, and says why nothing was copied',
+      lonely.paths('').has('z.jpg') && (await lonely.sync()).why === 'no folder');
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('said aloud: two phrases, screen actions any switch can be bound to');
+  check('"hide this picture" and "hide this one" press photos/hide-picture',
+    routeAction(routeFor('hide this picture')) === 'photos/hide-picture' && routeAction(routeFor('Hide this one.')) === 'photos/hide-picture');
+  check('"bring it back" presses photos/bring-back', routeAction(routeFor('bring it back')) === 'photos/bring-back');
+  check('*** "this one" alone is still select, "back" alone still back: no phrase means two things ***',
+    routeFor('this one') === null && routeFor('back') === null && duplicatePhrases().length === 0, J(duplicatePhrases()));
+  const words = [...ROUTES['photos-hide'].phrases, ...ROUTES['photos-unhide'].phrases];
+  check('every phrase is plain lowercase words, four at most (a small engine can hear it)',
+    words.every((p) => normalize(p) === p && p.split(' ').length <= 4));
+  check('no phrase uses "unhide" (the small Vosk model has no "unpause" or "unmute" either)', !words.some((p) => /unhide/.test(p)));
+  const reg = createDefaultRegistry();
+  check('both actions are registered, so a binding to them fires (input.js refuses an unknown action)',
+    PHOTO_ACTIONS.every((a) => reg.get?.(a.id) || reg.list().some((x) => x.id === a.id)));
+
+  // ------------------------------------------------------------------------------------------------
+  section('the Photos module: hide the picture on screen, bring it back');
+  const ITEMS = [1, 2, 3, 4].map((i) => ({ id: 'id' + i, path: 'trip/p' + i + '.jpg', name: 'p' + i + '.jpg',
+    kind: 'image', url: OKPIC('p' + i) }));
+  const source = { id: 'src-1', label: 'Test source', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+  function panel({ bus = createBus(), hides, id = 'photos-h1', person = 'p1', cfg0 = {}, fetchImpl = null, items = ITEMS,
+    lists = null } = {}) {
+    const host = document.createElement('div');
+    host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+    document.body.append(host);
+    let cfg = { sourceId: 'src-1', intervalMs: 3600000, ...cfg0 };
+    const subs = [];
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+      subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+    const said = [];
+    const timers = [];
+    const inst = mountModule('photos', {
+      mount: host, bus, state, instanceId: id, personId: person,
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: 'hidden-test', profileId: 's-' + id,
+      sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+      resolveListing: async () => { if (lists) lists.n += 1; return { items: items.map((it) => ({ ...it })), albums: [], album: '', count: items.length }; },
+      hiddenPictures: hides,
+      output: { say: (text) => { said.push(text); return null; } },
+      fetchImpl: fetchImpl || (async () => ({ ok: false })),
+      setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+      clearTimer: (t) => { if (t) t.live = false; },
+    });
+    inst.init();
+    return { host, inst, state, said, timers, bus, probe: () => inst.impl.__probe(),
+      shown: () => host.querySelector('.stage')?.firstChild?.alt || null };
+  }
+  const SPEECH = senderMeta({ kind: 'local', id: 'speech:phrase:photos-hide', role: 'universal' });
+  {
+    const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const a = panel({ hides });
+    await sleep(150);
+    const first = a.shown();
+    check('PRECONDITION: a picture is on screen', !!first, a.host.innerHTML.slice(0, 200));
+    a.bus.publish(PHOTOS_HIDE_TOPIC, undefined, SPEECH);
+    await sleep(30);
+    const firstPath = ITEMS.find((it) => it.name === first).path;
+    check('*** "hide this picture": that picture is hidden, by its path ***', hides.paths('p1').has(firstPath), J([...hides.paths('p1')]));
+    check('*** ...and the next picture is already on screen ***', a.shown() && a.shown() !== first, `${first} -> ${a.shown()}`);
+    const note = a.host.querySelector('[data-notice]');
+    check('...it says so on screen, with the undo', note && !note.hidden && note.textContent === HIDE_LINES.hiddenVoice, note && note.textContent);
+    check('...and aloud, because it was asked for aloud', a.said.length === 1 && a.said[0] === HIDE_LINES.hiddenVoice, J(a.said));
+    check('...the words go by themselves (8 s), never waiting on anybody',
+      a.timers.some((t) => t.live && t.ms === 8000));
+    let again = false;
+    for (let i = 0; i < 30; i += 1) { a.host.querySelector('[data-next]').click(); if (a.shown() === first) again = true; }
+    check('*** the hidden picture never comes round again ***', !again && a.probe().ids.length === 3 && a.probe().all === 4);
+    check('the hide is for everybody by default (Mike: "make the default for everyone")', hides.entries('p1')[0].scope === 'everyone');
+
+    a.bus.publish(PHOTOS_UNHIDE_TOPIC, undefined, SPEECH);
+    await sleep(30);
+    check('*** "bring it back": it is back, and on screen ***', !hides.paths('p1').has(firstPath) && a.shown() === first, a.shown());
+    check('...said and shown', a.said[1] === HIDE_LINES.back && a.host.querySelector('[data-notice]').textContent === HIDE_LINES.back);
+    a.bus.publish(PHOTOS_UNHIDE_TOPIC, undefined, SPEECH);
+    await sleep(30);
+    check('"bring it back" with nothing hidden says so, and changes nothing',
+      a.host.querySelector('[data-notice]').textContent === HIDE_LINES.nothingHidden && a.probe().ids.length === 4);
+
+    // A press (not voice) says it on screen only, by default.
+    const n = a.said.length;
+    await a.probe().hideCurrent();
+    check('hidden by a press: shown, not said (the default "say it when asked aloud")',
+      a.said.length === n && a.host.querySelector('[data-notice]').textContent === HIDE_LINES.hidden);
+
+    // The settings menu's rows.
+    const rows = a.inst.impl.menuItems();
+    check('*** the panel offers "Hide this picture", then the hidden pictures, each with Bring back ***',
+      rows[0].id === 'photos-hide' && rows.some((r) => r.kind === 'heading' && /Hidden pictures \(1\)/.test(r.label))
+      && rows.some((r) => /^Bring back p\d\.jpg$/.test(r.label)), J(rows.map((r) => r.label)));
+    const back = rows.find((r) => /^Bring back/.test(r.label));
+    back.run();
+    await sleep(10);
+    check('*** a Bring back row brings it back (undo never depends on a voice) ***', hides.paths('p1').size === 0 && a.probe().ids.length === 4);
+    rows[0].run();
+    a.inst.impl.menuItems()[0].run();
+    await sleep(10);
+    const r2 = a.inst.impl.menuItems();
+    check('two hidden: listed newest first, with "Bring back all 2"', r2.some((r) => r.id === 'photos-unhide-all' && /all 2/.test(r.label)));
+    r2.find((r) => r.id === 'photos-unhide-all').run();
+    await sleep(20);
+    check('...which brings them all back', hides.paths('p1').size === 0 && a.probe().ids.length === 4);
+
+    // Every picture hidden: it says so; one back and it starts again.
+    for (let i = 0; i < 4; i += 1) await a.probe().hideCurrent();
+    await sleep(10);
+    const status = a.host.querySelector('[data-status]');
+    check('*** every picture hidden: nothing on the stage, and the words say where to bring them back ***',
+      !a.shown() && status && !status.hidden && status.textContent.includes(HIDE_LINES.allHidden), status && status.textContent);
+    await hides.unhide(hides.entries('p1')[0]);
+    await sleep(20);
+    check('...one brought back and the slideshow starts again', !!a.shown() && status.hidden, a.host.innerHTML.slice(0, 200));
+    for (const e of hides.entries('p1')) await hides.unhide(e);
+
+    // Long press, and a right click.
+    const stage = a.host.querySelector('[data-stage]');
+    const menu = a.host.querySelector('[data-photo-menu]');
+    stage.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', clientX: 5, clientY: 5 }));
+    await sleep(700);
+    check('*** a long press on the picture opens "Hide this picture" / "Bring it back" ***', !menu.hidden);
+    check('...and they close by themselves (10 s), so the screen never waits on an answer',
+      a.timers.some((t) => t.live && t.ms === 10000));
+    stage.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' }));
+    stage.click();
+    check('...the release of the long press is not also a press on the picture', !menu.hidden);
+    const onScreen = a.shown();
+    menu.querySelector('[data-photo-hide]').click();
+    await sleep(10);
+    check('"Hide this picture" there hides it and closes', menu.hidden && hides.paths('p1').size === 1 && a.shown() !== onScreen);
+    stage.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+    check('a right click opens them at once', !menu.hidden);
+    menu.querySelector('[data-photo-unhide]').click();
+    await sleep(10);
+    check('"Bring it back" there brings it back', menu.hidden && hides.paths('p1').size === 0);
+    stage.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', clientX: 5, clientY: 5 }));
+    await sleep(100);
+    stage.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' }));
+    await sleep(650);
+    check('a short press does not open them', menu.hidden);
+    a.inst.destroy(); a.host.remove();
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('who a hide is for, and which slideshow answers');
+  {
+    const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const bus = createBus();
+    const mine = panel({ hides, bus, id: 'photos-p1', person: 'p1', cfg0: { hideFor: 'person' } });
+    const theirs = panel({ hides, bus, id: 'photos-p2', person: 'p2' });
+    await sleep(150);
+    mine.host.querySelector('[data-next]').click();     // a person pressed on this one last
+    const was = mine.shown();
+    const theirsWas = theirs.shown();
+    bus.publish(PHOTOS_HIDE_TOPIC, undefined, SPEECH);
+    await sleep(30);
+    check('*** two slideshows hear "hide this picture": only one hides (the one pressed on last) ***',
+      hides.rows().length === 1 && mine.shown() !== was && theirs.shown() === theirsWas, J(hides.rows().map((r) => r.data.panel)));
+    const e = hides.entries('p1')[0];
+    check('*** "only on this person\'s screens": the row is for that person ***', e && e.scope === 'person' && e.person === 'p1', J(e));
+    check('...and another person\'s slideshow still shows that picture', theirs.probe().ids.length === 4 && mine.probe().ids.length === 3);
+    theirs.host.querySelector('[data-next]').click();
+    bus.publish(PHOTOS_HIDE_TOPIC, undefined, SPEECH);
+    await sleep(30);
+    check('pressed on the other one, the other one answers next time', hides.rows().length === 2 && hides.rows()[1].data.panel === 'photos-p2');
+    check('*** a hide "for everybody" leaves it out of every slideshow on the page, of every person ***',
+      mine.probe().ids.length === 2 && theirs.probe().ids.length === 3, `${mine.probe().ids.length} ${theirs.probe().ids.length}`);
+    check('pickAnswerer: on screen first, then the newest press, then the oldest',
+      pickAnswerer([{ entry: { visible: false, touchedAt: 9, order: 1 }, n: 1 }, { entry: { visible: true, touchedAt: 1, order: 2 }, n: 2 }]).n === 2
+      && pickAnswerer([{ entry: { visible: true, touchedAt: 1, order: 1 }, n: 1 }, { entry: { visible: true, touchedAt: 5, order: 2 }, n: 2 }]).n === 2
+      && pickAnswerer([{ entry: { visible: true, touchedAt: 0, order: 3 }, n: 1 }, { entry: { visible: true, touchedAt: 0, order: 2 }, n: 2 }]).n === 2
+      && pickAnswerer([]) === null);
+    mine.inst.destroy(); theirs.inst.destroy(); mine.host.remove(); theirs.host.remove();
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('the settings rows');
+  {
+    const fields = fieldsFor(getManifest('photos'));
+    const hideFor = fields.find((f) => f.key === 'hideFor');
+    const hideSay = fields.find((f) => f.key === 'hideSay');
+    check('"Hiding a picture hides it": for everybody (default) or only on this person\'s screens; advanced',
+      hideFor && hideFor.default === 'everyone' && J(hideFor.options.map((o) => o.value)) === J(['everyone', 'person']) && hideFor.level === 'advanced');
+    check('"When a picture is hidden": said when asked aloud (default), always, or only shown; advanced',
+      hideSay && hideSay.default === 'voice' && J(hideSay.options.map((o) => o.value)) === J(['voice', 'always', 'never']) && hideSay.level === 'advanced');
+    check('no row\'s words name a person the site was built for (site copy)',
+      !fields.some((f) => /\bher\b|Taylor|Cici/i.test(`${f.label} ${(f.options || []).map((o) => o.label).join(' ')}`)));
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('pulled pictures: "3 new pictures today", and a new listing after a pull');
+  {
+    const now = new Date(2026, 9, 9, 15, 0, 0).getTime();
+    const today = '2026-10-09';
+    check('the pull\'s file is read: when, today\'s count, the run\'s count',
+      J(readPullStatus({ at: '2026-10-09T03:02:00Z', today, new_today: 3, new: 3, ok: true }))
+        === J({ at: '2026-10-09T03:02:00Z', today, newToday: 3, new: 3, ok: true, why: '' }));
+    check('...and something that is not one is nothing', readPullStatus({ at: 'soon' }) === null && readPullStatus(null) === null);
+    check('*** the line: "3 new pictures today" / "1 new picture today" / none / an older day / a failed run ***',
+      pullNewsLine(readPullStatus({ at: '2026-10-09T03:00:00Z', today, new_today: 3 }), now) === '3 new pictures today'
+      && pullNewsLine(readPullStatus({ at: '2026-10-09T03:00:00Z', today, new_today: 1 }), now) === '1 new picture today'
+      && pullNewsLine(readPullStatus({ at: '2026-10-09T03:00:00Z', today, new_today: 0 }), now) === 'Checked for new pictures today: none'
+      && pullNewsLine(readPullStatus({ at: '2026-10-07T03:00:00Z', today: '2026-10-07' }), now) === 'Last checked for new pictures 3 days ago'
+      && /did not finish \(no drive\)/.test(pullNewsLine(readPullStatus({ at: '2026-10-09T03:00:00Z', today, ok: false, why: 'no drive' }), now)));
+    const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const asked = [];
+    let file = { at: new Date(now - 3600000).toISOString(), today: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })(), new_today: 3, new: 3, ok: true };
+    const fetchImpl = async (url) => { asked.push(url); return /last-pull\.json$/.test(url) ? { ok: true, json: async () => file } : { ok: false }; };
+    const lists = { n: 0 };
+    const p = panel({ hides, id: 'photos-pull', fetchImpl, lists });
+    await sleep(200);
+    check(`it reads <agent>/files/${PULL_STATUS_PATH} (served like any file; the listing leaves dot-folders out)`,
+      asked.includes(`http://127.0.0.1:9/files/${PULL_STATUS_PATH}`), J(asked));
+    const choices = p.inst.impl.settingsChoices();
+    check('*** "3 new pictures today" on the "Photos from" row ***',
+      choices.sourceId && choices.sourceId.status === '3 new pictures today' && Array.isArray(choices.sourceId.options), J(choices.sourceId));
+    const listed = lists.n;
+    await p.probe().checkPull();
+    check('looking again at the same pull lists nothing again', lists.n === listed);
+    file = { ...file, at: new Date(now).toISOString(), new_today: 5, new: 2 };
+    await p.probe().checkPull();
+    await sleep(100);
+    check('*** a newer pull that brought pictures: the panel lists again, so they join the slideshow ***', lists.n === listed + 1, `${listed} -> ${lists.n}`);
+    file = { ...file, at: new Date(now + 1000).toISOString(), new: 0 };
+    const l2 = lists.n;
+    await p.probe().checkPull();
+    await sleep(50);
+    check('...a newer pull that brought none does not', lists.n === l2);
+    p.inst.destroy(); p.host.remove();
+    const plain = panel({ hides, id: 'photos-nopull' });
+    await sleep(150);
+    check('a source with no pull: no line, the row is as it always was', Array.isArray(plain.inst.impl.settingsChoices().sourceId));
+    plain.inst.destroy(); plain.host.remove();
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+</script>
+</body>
+</html>

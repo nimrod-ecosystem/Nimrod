@@ -233,6 +233,42 @@ check("*** the tag here is the client's own (subtitle_learning.js LEARNED_FORMAT
       f"export const LEARNED_FORMAT = '{sl.LEARNED_FORMAT}';" in sl_src)
 
 
+# ---------------------------------------------------------------- rule 7: which pictures somebody hid (hide picture)
+section("rule 7 - the list of hidden pictures is refused, everywhere (hide picture, 2026-10-09)")
+hidden_rec = {"k": "hidden:pictures", "format": "nimrod-hidden-pictures", "rows": [
+    {"kind": "hide-picture", "created_at": "2026-10-09T10:00:00.000Z",
+     "data": {"id": "a1", "path": "family_drive/IMG_0001.jpg", "name": "IMG_0001.jpg", "scope": "everyone"}}]}
+r = refused(lambda: sl.check_state(hidden_rec))
+check("*** the device's hidden-pictures record, put in a setting: refused, 400, with a sentence ***",
+      r and r[0] == 400 and "never kept on this site" in r[1], r)
+check("...inside anything, in any case, and as a key named hiddenPictures / hidden-pictures / hidden_pictures",
+      refused(lambda: sl.check_state({"a": [{"Format": " NIMROD-hidden-pictures "}]}))
+      and refused(lambda: sl.check_state({"hiddenPictures": []})) and refused(lambda: sl.check_state({"x": {"Hidden-Pictures": {}}}))
+      and refused(lambda: sl.check_state({"hidden_pictures": "a.jpg"})))
+r = refused(lambda: sl.check_event("photos-1", "hide-picture", {"path": "a.jpg", "scope": "everyone"}))
+check("*** a hide row as an event, on any stream: refused, 400 ***", r and r[0] == 400 and "hid" in r[1], r)
+check("...and a bring-back row, and anything on the `hidden` stream, in any case",
+      refused(lambda: sl.check_event("s", "UNHIDE-picture", {"path": "a.jpg"}))
+      and refused(lambda: sl.check_event("Hidden", "note", {"x": 1})))
+r = refused(lambda: sl.check_history("hidden", [{"kind": "hide-picture", "data": {"path": "a.jpg"}}], {"plays": "us"}))
+check("*** the history route does not take a `hidden` stream, whatever the person chose ***", r and r[0] == 400, r)
+check("...nor a hide row smuggled into a stream it does take",
+      refused(lambda: sl.check_history("plays", [{"kind": "play", "data": {"source": "photos", "id": "a.jpg",
+                                                                            "hiddenPictures": ["a.jpg"]}}], {"plays": "us"})))
+check("NOT refused: the slideshow's own settings (hideFor / hideSay), and the words in a sentence",
+      refused(lambda: sl.check_state({"hideFor": "everyone", "hideSay": "voice", "intervalMs": 15000})) is None
+      and refused(lambda: sl.check_state({"note": "some hidden pictures came back"})) is None
+      and refused(lambda: sl.check_event("photos-1", "trial", {"hidden": True})) is None)
+hp_src = (Path(__file__).resolve().parents[1] / "client" / "hidden_pictures.js").read_text(encoding="utf-8")
+check("*** the tag, the kinds and the stream here are the client's own (hidden_pictures.js) - one name, two files ***",
+      f"export const HIDDEN_FORMAT = '{sl.HIDDEN_FORMAT}';" in hp_src
+      and "export const HIDE_KIND = 'hide-picture';" in hp_src and "export const UNHIDE_KIND = 'unhide-picture';" in hp_src
+      and "export const HIDDEN_STREAM = 'hidden';" in hp_src
+      and sl.HIDDEN_EVENT_KINDS == {"hide-picture", "unhide-picture"} and sl.HIDDEN_EVENT_STREAMS == {"hidden"})
+check("*** hidden_pictures.js has no way to reach the site (no fetch, XMLHttpRequest, sendBeacon; only the folder) ***",
+      not any(s in hp_src for s in ("fetch(", "XMLHttpRequest", "sendBeacon(", "/api/")))
+
+
 # ---------------------------------------------------------------- own board clips (2026-10-09)
 section("own board clips - a board's card sounds stay on the device and in the Nimrod folder (board_sounds.js)")
 own_board = {"board": {"id": "own-x", "name": "My board", "cols": 3, "rows": 2, "cells": [
@@ -296,6 +332,9 @@ for name, url in state_urls.items():
     r = c.put(url, json={"data": {"theme": "warm", "subs": learned}, "base_version": v}, headers=H)
     check(f"*** {name}: what the subtitles learned is refused, 400 (rule 6) ***",
           r.status_code == 400 and "never kept on this site" in r.json().get("detail", ""), r.text)
+    r = c.put(url, json={"data": {"theme": "warm", "photos": hidden_rec}, "base_version": v}, headers=H)
+    check(f"*** {name}: the list of hidden pictures is refused, 400 (rule 7) ***",
+          r.status_code == 400 and "hid" in r.json().get("detail", ""), r.text)
     r = c.put(url, json={"data": sized(sl.STATE_MAX_BYTES + 10), "base_version": v}, headers=H)
     check(f"*** {name}: too big is refused, 413 ***", r.status_code == 413 and "too big" in r.json().get("detail", ""),
           f"{r.status_code} {r.text[:200]}")
@@ -331,7 +370,13 @@ for name, url in event_urls.items():
     plays_url = url.rsplit("/", 1)[0] + "/plays"
     r = c.post(plays_url, json={"kind": "play", "data": {"source": "youtube", "id": "dQw4w9WgXcQ"}}, headers=H)
     check(f"{name}: the shared `plays` stream is refused", r.status_code == 400, r.text)
+    r = c.post(url, json={"kind": "hide-picture", "data": {"path": "a.jpg", "scope": "everyone"}}, headers=H)
+    check(f"*** {name}: a hidden picture (`hide-picture`) is refused, 400 (rule 7) ***", r.status_code == 400, r.text)
+    hidden_url = url.rsplit("/", 1)[0] + "/hidden"
+    r = c.post(hidden_url, json={"kind": "note", "data": {"x": 1}}, headers=H)
+    check(f"{name}: the `hidden` stream is refused, whatever the kind (rule 7)", r.status_code == 400, r.text)
     check(f"{name}: ...and nothing refused was appended", c.get(url, headers=H).json()["total"] == before)
+    check(f"{name}: ...nor on hidden", c.get(hidden_url, headers=H).json()["total"] == 0)
     check(f"{name}: ...nor on device-data", c.get(blob_url, headers=H).json()["total"] == 0)
     check(f"{name}: ...nor on plays", c.get(plays_url, headers=H).json()["total"] == 0)
 

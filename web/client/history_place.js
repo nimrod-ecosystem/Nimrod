@@ -1012,6 +1012,9 @@ export function createHistoryHost({ personId = () => null, makePersonState = nul
 
   return {
     places, placeOf, setPlace, sync, syncAll, backfill, watch, restore, route, status, allowFolder, removeWithUs,
+    // hide picture (2026-10-09): the person's Nimrod folder itself, for a record that is not one of the kinds above
+    // and always goes there when it can (hidden_pictures.js: which pictures a slideshow leaves out). Never the server.
+    folder,
     canUs, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
     destroy() {
       try { watching?.stop(); } catch { /* gone */ }

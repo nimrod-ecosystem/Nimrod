@@ -105,6 +105,9 @@ export const SUITES = [
   'plays',
   // Row 2.58 (2026-10-07, later): where a person's history is kept - this device, the Nimrod folder, or with us.
   'history_place',
+  // hide picture (2026-10-09): "hide this picture" / "bring it back" - the log on the device and in the Nimrod folder,
+  // the Photos module's three ways in, which slideshow answers, and the Drive pull's "new pictures today". No server.
+  'hidden_pictures',
   // Row 2.62 step 2 (2026-10-07): charts of what played - the query layer, the panel, its table reading and the
   // spoken answer ("computer please, what played most"), end to end. No server.
   'charts',

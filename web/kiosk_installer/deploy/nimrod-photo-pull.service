@@ -1,0 +1,12 @@
+[Unit]
+Description=Nimrod photo pull - copies new pictures from a Google Drive folder to the drive the screen reads (read-only, one way)
+Documentation=file:%h/.local/bin/nimrod-photo-pull.sh
+
+[Service]
+Type=oneshot
+EnvironmentFile=-%h/.config/nimrod/photo-pull.env
+ExecStart=%h/.local/bin/nimrod-photo-pull.sh
+SyslogIdentifier=nimrod-photo-pull
+# A pull is background work: the slideshow, a video call and the kiosk come first.
+Nice=10
+IOSchedulingClass=idle

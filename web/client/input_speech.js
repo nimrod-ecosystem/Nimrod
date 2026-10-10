@@ -397,6 +397,17 @@ export const ROUTES = {
               'top played this week'] },
   'charts-today': { action: 'charts/say-today', label: 'Charts: what played most today',
     phrases: ['what played most today', 'most played today', 'top played today'] },
+  // *** HIDE PICTURE (2026-10-09; actions.js PHOTO_ACTIONS, modules/photos.js). *** "Hide this picture" leaves the
+  // picture on screen out of the slideshow; "bring it back" undoes the newest one still hidden (said again, the one
+  // before). Whole utterances, four words at most: "this one" alone stays select, "back" alone stays back. No "unhide":
+  // the small Vosk model lacks "unpause" and "unmute", and "unhide" is rarer still. Vocabulary [unverified on the bench,
+  // inferred]: every word is a common one (hide, this, that, the, picture, photo, one, bring, it, back, show, again).
+  // Nothing happens unless a Photos panel is on the screen.
+  'photos-hide': { action: 'photos/hide-picture', label: 'Photos: hide this picture',
+    phrases: ['hide this picture', 'hide this one', 'hide this photo', 'hide that picture', 'hide that one',
+              'hide the picture'] },
+  'photos-unhide': { action: 'photos/bring-back', label: 'Photos: bring the last hidden picture back',
+    phrases: ['bring it back', 'bring that back', 'bring the picture back', 'bring back the picture', 'show it again'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

@@ -28,7 +28,13 @@ import {
   createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
   LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
   backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
+  mediaUrl,   // pulled pictures: the pull's last-pull.json, served by the agent like any file
 } from '../media_sources.js';
+// hide picture (2026-10-09): which pictures this slideshow leaves out (hidden_pictures.js), and the screen actions
+// "hide this picture" / "bring it back" press (actions.js PHOTO_ACTIONS; input_speech.js ROUTES).
+import { deviceHiddenPictures, pictureKey, HIDE_SCOPES, DEFAULT_HIDE_SCOPE } from '../hidden_pictures.js';
+import { PHOTOS_HIDE_TOPIC, PHOTOS_UNHIDE_TOPIC } from '../actions.js';
+import { senderOf } from '../sender.js';
 import { personSources, personOf } from '../person_known.js';
 import { addDevicePictures, setDevicePhotosOn } from '../device_pictures.js';   // photo sources first
 import { cacheGet, cacheSet } from '../cache.js';
@@ -81,6 +87,90 @@ const KEEP_WRITE_MS = 60 * 1000;
 // when its folder cannot be read - it was not before today either (a folder's pictures were blob: URLs).
 const KEEP_DATA_URL_MAX = 8000;
 const keepableUrl = (u) => !/^blob:/.test(u) && !(/^data:/.test(u) && u.length > KEEP_DATA_URL_MAX);
+
+// *** HIDE THIS PICTURE (2026-10-09; hidden_pictures.js has the record and where it lives). *** Said ("hide this
+// picture" / "bring it back"), held (a long press or a right click on the picture opens two buttons), or chosen in this
+// panel's settings, where every hidden picture can be brought back. The words, shown and (see `hideSay`) said:
+export const HIDE_LINES = Object.freeze({
+  hiddenVoice: 'Hidden. Say “bring it back” to undo.',
+  hidden: 'Hidden. “Bring it back” is in this panel’s settings.',
+  back: 'Brought back.',
+  nothingOn: 'There is no picture on screen to hide.',
+  nothingHidden: 'No hidden picture to bring back.',
+  allHidden: 'Every picture here is hidden. Bring them back in this panel’s settings.',
+});
+// HARD-CODED, each argued (Rule 1; none is a setting because nobody is served by tuning it):
+//   NOTICE_MS 8 s        how long "Hidden. Say ... to undo." stays: long enough to read twice and say the undo, short
+//                        enough not to sit on the next picture. It never blocks anything.
+//   LONG_PRESS_MS 600    a touch held this long opens the two buttons: past a tap (~150 ms) and the browsers' own
+//                        long-press (~500 ms), short of feeling stuck. A right click opens them at once.
+//   PHOTO_MENU_MS 10 s   the two buttons close by themselves (a screen never waits on an answer); the slideshow
+//                        carries on underneath them meanwhile.
+//   HIDDEN_LIST_MAX 12   hidden pictures listed one per row in the settings menu, newest first; past that the menu is
+//                        a scroll nobody with one switch should walk, and "Bring back all" covers the rest.
+const NOTICE_MS = 8000;
+const LONG_PRESS_MS = 600;
+const PHOTO_MENU_MS = 10000;
+const HIDDEN_LIST_MAX = 12;
+
+// *** WHICH SLIDESHOW ANSWERS "HIDE THIS PICTURE". *** The words press a SCREEN action (actions.js PHOTO_ACTIONS), not
+// a verb, so they work wherever focus is - but a screen may have two slideshows, and only one should hide a picture.
+// Every panel that hears it in the same moment puts in a claim; the one that answers is the one showing (not hidden),
+// then the one a person pressed on last, then the oldest. A claim arriving alone (a screen's own verb map pointing at
+// one panel) is simply that panel. Module scope on purpose: it is a fact about the page (charts.js does the same).
+const slideshows = [];
+let claims = null;
+/** The claim that answers, from `[{ entry: { visible, touchedAt, order } }]`. Pure. */
+export function pickAnswerer(list) {
+  const xs = (Array.isArray(list) ? list : []).filter((c) => c && c.entry);
+  if (!xs.length) return null;
+  return [...xs].sort((a, b) => (Number(!!b.entry.visible) - Number(!!a.entry.visible))
+    || ((b.entry.touchedAt || 0) - (a.entry.touchedAt || 0)) || ((a.entry.order || 0) - (b.entry.order || 0)))[0];
+}
+function claim(entry, run) {
+  if (!claims) {
+    claims = [];
+    queueMicrotask(() => {
+      const list = claims;
+      claims = null;
+      const win = pickAnswerer(list);
+      try { win?.run(); } catch (e) { console.error('photos: hide', e); }
+    });
+  }
+  claims.push({ entry, run });
+}
+let slideshowOrder = 0;
+// Did a person say it? A spoken press arrives from the speech device (input.js senderMeta: "speech:<control>").
+const byVoice = (meta) => /^speech:/.test(senderOf(meta).id || '');
+
+// *** "3 NEW PICTURES TODAY" (2026-10-09, the Drive pull; web/kiosk_installer/deploy/nimrod-photo-pull.sh). *** The
+// pull writes `.nimrod-pull/last-pull.json` inside the folder it fills. When the panel's source is a media agent, the
+// panel reads it (the agent serves it like any file; its listing leaves dot-folders out) to say one quiet line on
+// the "Photos from" row, and to LIST AGAIN when a pull brought new pictures - without that, pictures copied in
+// overnight would not appear until the panel happened to be reopened.
+//   PULL_CHECK_MS 1 hour: the pull runs daily by default and hourly at most, so an hour notices any pull within an
+//   hour; one small file read an hour costs nothing. Not a setting: nobody is served by tuning it.
+export const PULL_STATUS_PATH = '.nimrod-pull/last-pull.json';
+const PULL_CHECK_MS = 60 * 60 * 1000;
+/** The pull's file, read: `{ at, today, newToday, new, ok, why }` or null when it is not one. Pure. */
+export function readPullStatus(j) {
+  if (!j || typeof j !== 'object' || typeof j.at !== 'string' || !Number.isFinite(Date.parse(j.at))) return null;
+  const n = (v) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Math.floor(Number(v)) : 0);
+  return { at: j.at, today: typeof j.today === 'string' ? j.today : j.at.slice(0, 10), newToday: n(j.new_today),
+    new: n(j.new), ok: j.ok !== false, why: typeof j.why === 'string' ? j.why.slice(0, 120) : '' };
+}
+const localDay = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+/** The line for the "Photos from" row. Pure; `nowMs` is the clock. */
+export function pullNewsLine(news, nowMs = Date.now()) {
+  if (!news) return '';
+  if (!news.ok) return `The last check for new pictures did not finish${news.why ? ` (${news.why})` : ''}.`;
+  if (news.today === localDay(nowMs)) {
+    const k = news.newToday;
+    return k ? `${k} new picture${k === 1 ? '' : 's'} today` : 'Checked for new pictures today: none';
+  }
+  const days = Math.max(1, Math.round((nowMs - Date.parse(news.at)) / 86400000));
+  return `Last checked for new pictures ${days === 1 ? 'yesterday' : `${days} days ago`}`;
+}
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
 // WHAT THE SETTINGS MENU SHOWS.
@@ -152,6 +242,22 @@ const SETTINGS = [
       { value: 30 * 60 * 1000, label: 'after 30 minutes' },
       { value: 2 * 60 * 60 * 1000, label: 'after 2 hours' },
       { value: 0, label: 'never: stay paused until Play' },
+    ] },
+  // hide picture (2026-10-09). WHO A HIDE IS FOR: everybody by default (Mike: "Let's make the default for everyone"),
+  // one person as the option. Level 'advanced', for `resumeAfterMs`'s reason: a switch user walks every 'standard' row.
+  { key: 'hideFor', label: 'Hiding a picture hides it', kind: 'choice', default: DEFAULT_HIDE_SCOPE, level: 'advanced',
+    options: [
+      { value: 'everyone', label: 'for everybody, on every screen that shows these pictures here' },
+      { value: 'person', label: 'only on this person’s screens' },
+    ] },
+  // WHETHER "HIDDEN" IS SAID ALOUD as well as shown. Default: when it was asked for aloud (whoever spoke is listening
+  // for an answer; whoever pressed is looking). 'always' for somebody who cannot read the screen, 'never' for a room
+  // where the screen must stay quiet.
+  { key: 'hideSay', label: 'When a picture is hidden or brought back', kind: 'choice', default: 'voice', level: 'advanced',
+    options: [
+      { value: 'voice', label: 'show it, and say it when it was asked for aloud' },
+      { value: 'always', label: 'show it and always say it' },
+      { value: 'never', label: 'only show it' },
     ] },
 ];
 // The words over a slideshow that is waiting, or that somebody paused. Site copy: no names.
@@ -264,6 +370,21 @@ registerModule(
     //
     // Production is untouched: with nothing injected this is the same function it always called.
     const resolveList = ctx.resolveListing || resolveListing;
+
+    // hide picture: the page's one log of hidden pictures (`ctx.hiddenPictures` in the suites), copied to the person's
+    // Nimrod folder through the screen's history host when it has one. `allItems` is the listing as it came; `items`
+    // is what the slideshow may show (the listing less what is hidden for whoever this screen is for).
+    const hides = ctx.hiddenPictures || deviceHiddenPictures({ history: ctx.history || null });
+    const viewer = () => personOf(ctx) || '';
+    const hiddenNow = () => { try { return hides.paths(viewer()); } catch { return new Set(); } };
+    let allItems = [];
+    let offHides = null;
+    let noticeTimer = null, menuTimer = null, pressTimer = null, longPressed = false;
+    const me = { tag: null, touchedAt: 0, visible: true, order: (slideshowOrder += 1) };
+    const touch = () => { me.touchedAt = Date.now(); };
+    // pulled pictures: what the pull last wrote, and the timer that reads it again.
+    let pullNews = null, pullFrom = null, pullTimer = null;
+    const fetchImpl = ctx.fetchImpl || ((...a) => fetch(...a));
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, channels = {};
@@ -831,11 +952,41 @@ registerModule(
       return out;
     }
     function useItems(list) {
-      items = list;
+      allItems = list;
+      setVisible();
+      recent = []; history = []; histPos = -1;
+    }
+    // hide picture: what may be shown is the listing less what is hidden here.
+    function setVisible() {
+      const hidden = hiddenNow();
+      items = hidden.size ? allItems.filter((it) => !hidden.has(pictureKey(it))) : allItems;
       byId = Object.fromEntries(items.map((it) => [it.id, it]));
       ids = items.map((it) => it.id);
       channels = Object.fromEntries(items.map((it) => [it.id, albumOf(it.path)]));
-      recent = []; history = []; histPos = -1;
+    }
+    // hide picture: the log changed (a hide or a bring-back here, on another panel, or merged from the Nimrod folder).
+    // The picture on screen moves on if it is now hidden; a panel with every picture hidden says so, and starts again
+    // when one comes back.
+    function refilter() {
+      const was = items;
+      setVisible();
+      if (items.length === was.length && items.every((it, i) => it === was[i])) return;
+      history = history.filter((id) => byId[id]); histPos = history.length - 1;
+      recent = recent.filter((id) => byId[id]);
+      if (currentId && !byId[currentId]) {
+        if (ids.length) { advance(); return; }
+        clearStage();
+        setStatus(HIDE_LINES.allHidden);
+        return;
+      }
+      if (!currentId && !was.length && ids.length && allItems.length) { setStatus(null); advance(); }
+    }
+    // Nothing on the stage at all (every picture here is hidden): not even the last good one, which may be the hidden one.
+    function clearStage() {
+      clearAdvance();
+      const st = stage();
+      if (st) { st.innerHTML = ''; st.dataset.showing = ''; }
+      currentEl = null; currentId = null;
     }
     function setLabel(text) {
       const el = mount.querySelector('[data-source-label]');
@@ -912,13 +1063,17 @@ registerModule(
       setLabel(`${source.label}${album ? ' · ' + album : ''} — ${items.length} item${items.length === 1 ? '' : 's'}`);
       degraded = fb ? { ...fb, shownLabel: source.label || source.base_url || source.id } : null;
       if (degraded) armRecheck(); else clearRecheck();
+      checkPull(source, album);   // pulled pictures: "3 new pictures today", and a new listing after a pull
+      // hide picture: a folder whose every picture is hidden says that, not "no photos".
+      if (!items.length && allItems.length) { clearStage(); setStatus(HIDE_LINES.allHidden); return; }
       if (!items.length) { setStatus('No photos in this source/album.'); return; }
       setStatus(null);
       advance();
       sayDegraded();   // after the first picture, so it is a chip over it rather than a sheet
     }
     function showKept(sources) {
-      const kept = keptPictures(sources);
+      const hidden = hiddenNow();   // hide picture: a hidden picture is not fallen back on either
+      const kept = keptPictures(sources).filter((it) => !hidden.has(pictureKey(it)));
       if (!kept.length) return false;
       keptMode = true;
       shownSourceId = null;
@@ -935,6 +1090,7 @@ registerModule(
     function keptFailed(id) {
       if (!keptMode || !byId[id]) return;
       items = items.filter((it) => it.id !== id);
+      allItems = allItems.filter((it) => it.id !== id);   // hide picture: the listing as it came, too
       delete byId[id];
       ids = ids.filter((x) => x !== id);
       seen = seen.filter((s) => s.id !== id);
@@ -1042,6 +1198,108 @@ registerModule(
       input.click();
     }
 
+    // ---- hide picture (2026-10-09) ---------------------------------------------------------------
+    // Shown at once in a corner of its own (it never covers the status line about the source), said aloud per `hideSay`.
+    function notice(text, voice = false) {
+      const el = mount.querySelector('[data-notice]');
+      if (el) { el.textContent = text; el.hidden = false; }
+      if (noticeTimer != null) clearTimer(noticeTimer);
+      noticeTimer = setTimer(() => { noticeTimer = null; const n = mount.querySelector('[data-notice]'); if (n) n.hidden = true; }, NOTICE_MS);
+      const say = cfg.hideSay === 'always' || (cfg.hideSay !== 'never' && voice);
+      if (say && ctx.output && typeof ctx.output.say === 'function') {
+        try { ctx.output.say(text, { source: 'photos' }); } catch (e) { console.error('photos: say', e); }
+      }
+    }
+    /** Hide the picture on screen. Resolves the row kept, or null (nothing on screen). */
+    function hideCurrent({ voice = false } = {}) {
+      touch();
+      closePhotoMenu();
+      const item = currentId && byId[currentId] ? byId[currentId] : null;
+      const path = item ? pictureKey(item) : '';
+      if (!path) { notice(HIDE_LINES.nothingOn, voice); return Promise.resolve(null); }
+      const scope = HIDE_SCOPES.includes(cfg.hideFor) ? cfg.hideFor : DEFAULT_HIDE_SCOPE;
+      // In force at once (the log tells every slideshow on the page, this one included, before this returns), so the
+      // next picture is already up when the words appear.
+      const row = hides.hide({ path, name: item.name || '', scope, person: viewer(), screen: ctx.profileId || '',
+        panel: ctx.instanceId || '' });
+      notice(voice ? HIDE_LINES.hiddenVoice : HIDE_LINES.hidden, voice);
+      return row;
+    }
+    /** "Bring it back": the newest picture still hidden here comes back, and onto the screen when it is in this panel's
+     *  pictures. Said again, the one before it. */
+    function unhideLast({ voice = false } = {}) {
+      touch();
+      closePhotoMenu();
+      let e = null;
+      try { e = hides.entries(viewer())[0] || null; } catch { e = null; }
+      if (!e) { notice(HIDE_LINES.nothingHidden, voice); return Promise.resolve(null); }
+      const row = hides.unhide(e);
+      const back = items.find((it) => pictureKey(it) === e.path);
+      if (back) show(back.id, true);
+      notice(HIDE_LINES.back, voice);
+      return row;
+    }
+    function unhideAll() {
+      touch();
+      let list = [];
+      try { list = hides.entries(viewer()); } catch { list = []; }
+      return Promise.all(list.map((e) => hides.unhide(e)));
+    }
+    // The two buttons a long press (or a right click) on the picture opens. They close by themselves.
+    function openPhotoMenu() {
+      const m = mount.querySelector('[data-photo-menu]');
+      if (!m) return;
+      touch();
+      let any = false;
+      try { any = hides.entries(viewer()).length > 0; } catch { any = false; }
+      const hideBtn = m.querySelector('[data-photo-hide]');
+      const backBtn = m.querySelector('[data-photo-unhide]');
+      if (hideBtn) hideBtn.disabled = !(currentId && byId[currentId]);
+      if (backBtn) backBtn.disabled = !any;
+      m.hidden = false;
+      if (menuTimer != null) clearTimer(menuTimer);
+      menuTimer = setTimer(() => { menuTimer = null; closePhotoMenu(); }, PHOTO_MENU_MS);
+    }
+    function closePhotoMenu() {
+      const m = mount.querySelector('[data-photo-menu]');
+      if (m) m.hidden = true;
+      if (menuTimer != null) { clearTimer(menuTimer); menuTimer = null; }
+    }
+    const clearPress = () => { if (pressTimer != null) { clearTimeout(pressTimer); pressTimer = null; } };
+
+    // ---- pulled pictures: the pull's last-pull.json (see PULL_STATUS_PATH) ---------------------------
+    // Only a media agent's folder (a browser folder or this device's pictures has no pull). The album's own file first,
+    // then the source's top. Never throws; a missing file is simply no line.
+    async function readPull(source, album) {
+      if (!source || source.kind === 'folder' || !/^https?:\/\//i.test(String(source.base_url || ''))) return null;
+      const rels = [album ? `${album}/${PULL_STATUS_PATH}` : null, PULL_STATUS_PATH].filter(Boolean);
+      for (const rel of rels) {
+        try {
+          const res = await fetchImpl(mediaUrl(source.base_url, rel), { cache: 'no-store' });
+          if (!res || !res.ok) continue;
+          const got = readPullStatus(await res.json());
+          if (got) return got;
+        } catch { /* not there, or not reachable: no line */ }
+      }
+      return null;
+    }
+    function checkPull(source, album) {
+      const from = source ? `${source.id}|${album || ''}` : null;
+      if (from !== pullFrom) { pullFrom = from; pullNews = null; }
+      // The page's own clock, not `ctx.setTimer`: that seam is the slideshow's timing, which the suites drive by hand.
+      if (pullTimer != null) { clearTimeout(pullTimer); pullTimer = null; }
+      if (!source) return Promise.resolve(null);
+      const seq = loadSeq;
+      return readPull(source, album).then((news) => {
+        if (seq !== loadSeq || pullFrom !== from) return;
+        const before = pullNews;
+        pullNews = news;
+        // A pull since the last look that brought pictures: list again, so they join the slideshow.
+        if (before && news && news.at !== before.at && news.new > 0) { reload(); return; }
+        pullTimer = setTimeout(() => { pullTimer = null; if (pullFrom === from) checkPull(source, album); }, PULL_CHECK_MS);
+      });
+    }
+
     // `keepFailed`: a reload BECAUSE a source's files stopped loading keeps it set aside. Any other
     // reload -- a Retry, a changed source or album, a person arriving, the recheck -- tries everything.
     async function reload({ keepFailed = false } = {}) {
@@ -1063,6 +1321,10 @@ registerModule(
         return;
       }
       if (seq !== loadSeq) return;   // a newer reload superseded us
+      // hide picture: the hidden list is read before the first picture, so a hidden one never flashes up. Bounded
+      // (1.5 s, the real clock: a store that never answers must not hold the pictures back), then it goes on.
+      await new Promise((resolve) => { Promise.resolve(hides.ready).then(resolve, resolve); setTimeout(resolve, 1500); });
+      if (seq !== loadSeq) return;
       const { source, chosenId, sources } = found;
       if (!source && !chosenId) { degraded = null; keptMode = false; await showNoSource(); return; }
       // The chosen source -- or, when it cannot be listed, the best stand-in (§3e, media_sources.js).
@@ -1105,6 +1367,12 @@ registerModule(
             <div class="stage" data-stage></div>
             <div class="photos-start" data-start-host hidden></div>
             <div class="status" data-status hidden></div>
+            <div class="status chip photos-notice" data-notice role="status" hidden></div>
+            <div class="photo-menu" data-photo-menu hidden>
+              <button type="button" data-photo-hide>Hide this picture</button>
+              <button type="button" data-photo-unhide>Bring it back</button>
+              <button type="button" data-photo-menu-close>Close</button>
+            </div>
             <div class="nav">
               <button class="pbtn" data-prev aria-label="previous photo">‹</button>
               <span class="source-label" data-source-label></span>
@@ -1142,7 +1410,37 @@ registerModule(
         mount.querySelector('[data-start-host]').addEventListener('click', (e) => {
           if (e.target instanceof Element && e.target.closest('[data-start]')) carryOn();
         });
-        mount.querySelector('[data-stage]').addEventListener('click', () => { if (holding()) carryOn(); });
+        mount.querySelector('[data-stage]').addEventListener('click', () => {
+          if (longPressed) { longPressed = false; return; }   // hide picture: the release of a long press is not a press
+          touch();
+          if (holding()) carryOn();
+        });
+
+        // hide picture: "hide this picture" / "bring it back" (screen actions; the answering slideshow is picked from
+        // every one that heard it, see `claim`), the log changing, and the two buttons on a long press.
+        me.tag = ownTag;
+        slideshows.push(me);
+        bus.subscribe(PHOTOS_HIDE_TOPIC, (_p, _t, meta) => claim(me, () => hideCurrent({ voice: byVoice(meta) })));
+        bus.subscribe(PHOTOS_UNHIDE_TOPIC, (_p, _t, meta) => claim(me, () => unhideLast({ voice: byVoice(meta) })));
+        offHides = hides.subscribe(() => refilter());
+        const stg = mount.querySelector('[data-stage]');
+        let pressAt = null;
+        stg.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          clearPress();
+          longPressed = false;
+          pressAt = { x: e.clientX, y: e.clientY };
+          pressTimer = setTimeout(() => { pressTimer = null; longPressed = true; openPhotoMenu(); }, LONG_PRESS_MS);
+        });
+        stg.addEventListener('pointermove', (e) => {
+          if (pressAt && Math.hypot(e.clientX - pressAt.x, e.clientY - pressAt.y) > 10) clearPress();
+        });
+        for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) stg.addEventListener(ev, () => { clearPress(); pressAt = null; });
+        stg.addEventListener('contextmenu', (e) => { e.preventDefault(); clearPress(); openPhotoMenu(); });
+        const pm = mount.querySelector('[data-photo-menu]');
+        pm.querySelector('[data-photo-hide]').addEventListener('click', () => { hideCurrent(); });
+        pm.querySelector('[data-photo-unhide]').addEventListener('click', () => { unhideLast(); });
+        pm.querySelector('[data-photo-menu-close]').addEventListener('click', () => { closePhotoMenu(); });
 
         // its own buttons are just another source - ONE PER PANEL. Bindings live on the
         // screen's shared bus, so a source name two panels both bind fans a single press out
@@ -1151,8 +1449,8 @@ registerModule(
         const nav = bus.createSource(navName);
         bus.addBinding({ source: navName, signal: 'next', topic: 'photos/next' });
         bus.addBinding({ source: navName, signal: 'prev', topic: 'photos/prev' });
-        mount.querySelector('[data-next]').addEventListener('click', () => nav.emit('next', undefined, OWN));
-        mount.querySelector('[data-prev]').addEventListener('click', () => nav.emit('prev', undefined, OWN));
+        mount.querySelector('[data-next]').addEventListener('click', () => { touch(); nav.emit('next', undefined, OWN); });
+        mount.querySelector('[data-prev]').addEventListener('click', () => { touch(); nav.emit('prev', undefined, OWN); });
 
         mount.querySelector('[data-gear]').addEventListener('click', () => {
           const s = mount.querySelector('[data-settings]');
@@ -1215,7 +1513,8 @@ registerModule(
         });
       },
       onResize() {},
-      onHide() { videoStall.disarm(); writeSeen(); state.flush(); },
+      onHide() { videoStall.disarm(); writeSeen(); state.flush(); me.visible = false; closePhotoMenu(); },
+      onShow() { me.visible = true; },   // hide picture: a slideshow on screen answers before one that is not
       // `loadSeq` moves on so a listing still in flight lands on nothing: without it a panel
       // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
       // arm a timer after it was gone.
@@ -1223,12 +1522,46 @@ registerModule(
         playLog.destroy();
         loadSeq += 1; clearAdvance(); clearResume(); clearRecheck(); writeSeen(); degraded = null;
         scoped?.dispose(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; }
+        // hide picture / pulled pictures
+        try { offHides?.(); } catch { /* gone */ }
+        const at = slideshows.indexOf(me); if (at >= 0) slideshows.splice(at, 1);
+        if (noticeTimer != null) { clearTimer(noticeTimer); noticeTimer = null; }
+        closePhotoMenu(); clearPress();
+        if (pullTimer != null) { clearTimeout(pullTimer); pullTimer = null; }
+      },
+
+      // *** HIDE PICTURE: THIS PANEL'S OWN ROWS IN THE SETTINGS MENU (kiosk.js `menuItems`, 2026-10-09). *** "Hide this
+      // picture", then every picture hidden here, each with its own "Bring back" - so undoing never depends on a voice.
+      // Text rows (the menu draws no pictures): the file's name, and when it was hidden.
+      menuItems: () => {
+        const out = [];
+        const item = currentId && byId[currentId] ? byId[currentId] : null;
+        out.push({ kind: 'item', id: 'photos-hide', label: 'Hide this picture',
+          hint: item ? `${item.name || 'the picture on screen'}; it can be brought back from this list` : 'no picture on screen now',
+          disabled: !item, run: () => { hideCurrent(); } });
+        let list = [];
+        try { list = hides.entries(viewer()); } catch { list = []; }
+        if (!list.length) return out;
+        out.push({ kind: 'heading', id: 'photos-hidden-head', label: `Hidden pictures (${list.length})` });
+        for (const e of list.slice(0, HIDDEN_LIST_MAX)) {
+          const when = (() => { const t = Date.parse(e.at); return Number.isFinite(t) ? new Date(t).toLocaleDateString() : ''; })();
+          out.push({ kind: 'item', id: `photos-unhide:${e.key}`, label: `Bring back ${e.name || e.path}`,
+            hint: `hidden${when ? ` ${when}` : ''}${e.scope === 'person' ? ', on this person’s screens only' : ', for everybody'}`,
+            run: () => { touch(); hides.unhide(e); } });
+        }
+        if (list.length > 1) {
+          out.push({ kind: 'item', id: 'photos-unhide-all', label: `Bring back all ${list.length}`,
+            hint: list.length > HIDDEN_LIST_MAX ? `${list.length - HIDDEN_LIST_MAX} more are not listed above` : 'every picture hidden here',
+            run: () => { unhideAll(); } });
+        }
+        return out;
       },
 
       // EDIT MODE (edit_mode.js, 2026-10-02). The picture on screen, and the line naming where the photos come
       // from, each with the rows about it -- this panel's own declared settings, nothing new. A picture has no
-      // caption of its own here and the slideshow has no "leave this one out" yet, so neither is offered (a
-      // row that does nothing is a lie). The source line first: it is the smaller, inside the bar.
+      // caption of its own here, so none is offered (a row that does nothing is a lie). ("Leave this one out" exists
+      // since 2026-10-09: "Hide this picture", in this panel's menu rows and on a long press.) The source line first:
+      // it is the smaller, inside the bar.
       editTargets: () => {
         const label = mount.querySelector('[data-source-label]');
         const st = stage();
@@ -1239,7 +1572,10 @@ registerModule(
         return out;
       },
       __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice(),
-        loadFails, setAside: [...loadFailed], shownSourceId }),
+        loadFails, setAside: [...loadFailed], shownSourceId,
+        all: allItems.length, pullNews, hideCurrent, unhideLast,   // hide picture / pulled pictures
+        // pulled pictures: look at the pull's file now (the hourly look, on demand), for the suite.
+        checkPull: () => checkPull(knownSources.find((s) => s && s.id === shownSourceId) || null, cfg.album) }),
 
       // LIVE OPTIONS for a declared field. The manifest stays static - it is the contract, and
       // a modules tab will want to read it off a module that is not even running - while the
@@ -1262,7 +1598,9 @@ registerModule(
           opts.push({ value: want, label: `${labels[want] ? `“${labels[want]}”` : 'A source'} — not connected here` });
         }
         // backup source: every source this screen may show but the main one, and a line while the backup is on screen.
-        return { sourceId: opts,
+        // pulled pictures: "3 new pictures today" after the value, when the source's folder is filled by a pull.
+        const pulled = pullNewsLine(pullNews);
+        return { sourceId: pulled ? { options: opts, status: pulled } : opts,
           [BACKUP_KEY]: backupPanelChoices({ sources: knownSources, mainId: cfg.sourceId || null, current: cfg[BACKUP_KEY],
             screen: screenBackup(), panelDefault: BACKUP_ANY, personId: personOf(ctx),
             showing: degraded && degraded.backup && !keptMode ? degraded.shownLabel : null }) };
