@@ -30,6 +30,8 @@ import {
   backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
   mediaUrl,   // pulled pictures: the pull's last-pull.json, served by the agent like any file
   quietResolve, quietReach, tryFromHere, ELSEWHERE_LINE, TRY_HERE_LABEL,   // desktop prompt (2026-10-10)
+  // every folder inside (2026-10-10, row 2.78; media_sources.js "EVERY FOLDER INSIDE" argues the two settings)
+  subfoldersField, listOptions, withListOptions, leaveOutRows, truncatedWords, SUBFOLDERS_KEY, LEAVE_OUT_KEY,
 } from '../media_sources.js';
 // hide picture (2026-10-09): which pictures this slideshow leaves out (hidden_pictures.js), and the screen actions
 // "hide this picture" / "bring it back" press (actions.js PHOTO_ACTIONS; input_speech.js ROUTES).
@@ -221,6 +223,13 @@ const SETTINGS = [
     emptyLabel: 'No source connected' },
   { key: 'album', label: 'Album', kind: 'text', default: '', level: 'standard',
     placeholder: 'Everything', readOnly: true, note: 'set in Media / Sources' },
+  // every folder inside (2026-10-10, row 2.78): the source's (or the album's) folders too - ON, Mike's Pictures folder
+  // of 57 dated folders being the case. Which folders are left out are this panel's own rows (`menuItems`, at every
+  // level: the everyday control). LEVEL 'advanced', argued as `resumeAfterMs` is: a switch user walks every 'standard'
+  // row of this panel's menu, and kiosk_test holds that lap to 14 stops on purpose; ON is what nearly everybody wants, so
+  // the row exists for turning it off, which is rare. AGAINST: at 'standard' (and in edit mode) the switch is not seen;
+  // the "Folders inside" row is, and leaving out every folder is the same as off.
+  subfoldersField({ on: true, what: 'pictures', level: 'advanced' }),
   // backup source (2026-10-08, media_sources.js argues the rows and defaults): "If this can't be reached, use". Its own
   // default is the stand-in this panel has had since §3e (any other source this screen may show), so nothing changes
   // until somebody chooses; the screen's "Backup folder for this screen" applies unless this row is set.
@@ -339,7 +348,9 @@ registerModule(
     // A new photos panel starts at the interval of one already on the same screen (Mike,
     // 2026-09-29: "keep it per panel, copy from existing"). Only the interval, and only once,
     // at creation - see module.js `seedFromSibling`.
-    copyFromSibling: ['intervalMs'] },
+    // every folder inside: the two folder settings too (the leave-out list is kept per source, so a new panel on
+    // another source simply finds nothing of its own in it).
+    copyFromSibling: ['intervalMs', SUBFOLDERS_KEY, LEAVE_OUT_KEY] },
   (ctx) => {
     const { mount, bus, state, user } = ctx;
     // `ctx.sources` is injectable so a page can supply its own registry — signed out, the
@@ -370,7 +381,11 @@ registerModule(
     // module import there was no way to make that happen from outside.
     //
     // Production is untouched: with nothing injected this is the same function it always called.
-    const resolveList = ctx.resolveListing || resolveListing;
+    // every folder inside (row 2.78): every listing this panel makes - its source, a stand-in, a backup, the recheck,
+    // "Try on this computer" - carries the panel's two folder settings for that source (`listOptions`).
+    const resolveList = withListOptions(ctx.resolveListing || resolveListing, (s) => listOptions(cfg, s && s.id));
+    let lastListing = null;         // { sourceId, album, listing } from the chosen source: the "Leave out" rows
+    let foldersOpen = false;        // whether the menu's folder rows are showing (not saved)
     // desktop prompt (2026-10-10, media_sources.js quietReach): every automatic listing - this panel's source, the
     // stand-ins and backups, the recheck - goes through `quietList`, which never asks a source on another computer (an
     // account-wide localhost seen from a desktop), so Chrome's local-network box cannot come up by itself. Only the
@@ -1002,6 +1017,14 @@ registerModule(
       const el = mount.querySelector('[data-source-label]');
       if (el) el.textContent = text;
     }
+    // every folder inside: "Leave out" rows for the chosen source, from its last listing (media_sources.js leaveOutRows).
+    function folderRows() {
+      const ll = lastListing;
+      if (!ll || ll.sourceId !== cfg.sourceId) return [];
+      return leaveOutRows({ idPrefix: 'photos-leave', listing: ll.listing, album: cfg.album, sourceId: ll.sourceId, cfg,
+        open: foldersOpen, onOpen: (v) => { foldersOpen = !!v; }, onSet: (map) => { touch(); state.set({ [LEAVE_OUT_KEY]: map }); },
+        what: 'pictures' });
+    }
     // The Allow button for a folder whose permission lapsed. The click IS the user gesture the prompt
     // requires -- which is the whole reason this is a button and not a retry on a timer.
     function allowAction(source) {
@@ -1084,7 +1107,9 @@ registerModule(
       lastGoodAt = Date.now();
       useItems(slideshowItems(listing.items)   // songs in the same folder are not photos
         .map((it) => (it.sourceId ? it : { ...it, sourceId: source.id })));
-      setLabel(`${source.label}${album ? ' · ' + album : ''} — ${items.length} item${items.length === 1 ? '' : 's'}`);
+      // every folder inside: the chosen source's folders, for the "Leave out" rows (a stand-in's are not this panel's).
+      if (!fb) lastListing = { sourceId: source.id, album, listing };
+      setLabel(`${source.label}${album ? ' · ' + album : ''} — ${items.length} item${items.length === 1 ? '' : 's'}${truncatedWords(listing)}`);
       degraded = fb ? { ...fb, shownLabel: source.label || source.base_url || source.id } : null;
       if (degraded) armRecheck(); else clearRecheck();
       checkPull(source, album);   // pulled pictures: "3 new pictures today", and a new listing after a pull
@@ -1514,7 +1539,9 @@ registerModule(
           cfg = { ...DEFAULTS, ...s };
           for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, s || {});
           syncControls();
-          const ref = `${cfg.sourceId}|${cfg.album}`;
+          // every folder inside: the two folder settings are part of what is listed, so a change lists again.
+          const lo = listOptions(cfg, cfg.sourceId);
+          const ref = `${cfg.sourceId}|${cfg.album}|${lo.deep}|${lo.leaveOut.join('\n')}`;
           // backup source: a changed backup matters only while one is (or should be) showing; a panel showing its main
           // source is left alone rather than reloaded under somebody watching it.
           const bref = String(cfg[BACKUP_KEY] || '');
@@ -1572,6 +1599,8 @@ registerModule(
         out.push({ kind: 'item', id: 'photos-hide', label: 'Hide this picture',
           hint: item ? `${item.name || 'the picture on screen'}; it can be brought back from this list` : 'no picture on screen now',
           disabled: !item, run: () => { hideCurrent(); } });
+        // every folder inside (row 2.78): the chosen source's folders, each one press to leave out or put back.
+        out.push(...folderRows());
         let list = [];
         try { list = hides.entries(viewer()); } catch { list = []; }
         if (!list.length) return out;
@@ -1599,7 +1628,7 @@ registerModule(
         const label = mount.querySelector('[data-source-label]');
         const st = stage();
         const out = [];
-        if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album', BACKUP_KEY] });   // backup source
+        if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album', SUBFOLDERS_KEY, BACKUP_KEY] });   // backup source; every folder inside
         if (st) out.push({ id: 'picture', label: 'The picture', el: st, keys: ['fit', 'intervalMs', 'autostart', 'autostartAlone', 'resumeAfterMs'],
           help: 'The picture on screen: how it fits the panel, how long each one stays, and whether the slideshow starts by itself.' });
         return out;
@@ -1607,6 +1636,7 @@ registerModule(
       __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice(),
         loadFails, setAside: [...loadFailed], shownSourceId,
         all: allItems.length, pullNews, hideCurrent, unhideLast,   // hide picture / pulled pictures
+        folders: lastListing?.listing?.folders || null, foldersOpen,   // every folder inside
         // pulled pictures: look at the pull's file now (the hourly look, on demand), for the suite.
         checkPull: () => checkPull(knownSources.find((s) => s && s.id === shownSourceId) || null, cfg.album) }),
 

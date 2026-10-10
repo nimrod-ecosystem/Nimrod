@@ -96,6 +96,7 @@ It is not listed as media and contains nothing but a random id.
 | `GET /health` | `{ok, agent_id}` — liveness, and which agent this is (no folder path) |
 | `GET /list` | media in the root folder + subfolders as albums (see below) |
 | `GET /list?album=<sub>` | media inside subfolder `<sub>` |
+| `GET /list?deep=1[&album=<sub>][&skip=<folder>...]` | media in the folder **and every folder inside it** (paths still relative to the root), less the folders named by `skip`; adds `deep`, `folders` and `truncated` ('' or why it stopped early: `items` past 20 000, `folders` past 5 000, `depth` past 8, `time` past 10 s). Dot-folders, a drive's recycle bin and the `--data-dir` folder are never listed; a folder resolving outside the root is never walked, nor any folder twice. |
 | `GET /files/<relpath>` | the raw image/video bytes (Range-aware, so video seeks) |
 | `GET /history/status` | only with `--data-dir`: `{enabled, ready, folder_id, streams}` - can history be written now |
 | `POST /history/<stream>` | only with `--data-dir`: `{scope, rows: [{at, kind, data}], folder_id?}` appended to `Data/History/<stream>-<scope>-<YYYY-MM>.jsonl` |

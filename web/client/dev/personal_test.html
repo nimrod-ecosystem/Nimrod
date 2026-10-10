@@ -356,6 +356,55 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     }
   }
 
+  // *** EVERY FOLDER INSIDE (2026-10-10, row 2.78): a person's messages kept in folders by year still play. *** A listing
+  // seam that behaves like the media agent's /list?deep=1; the panel's own "Leave out" rows in the settings menu.
+  {
+    const MS = await import('../media_sources.js');
+    const { getManifest } = await import('../module.js');
+    const { fieldsFor } = await import('../settings_fields.js');
+    const TREE = ['top.mp4', '2019/a.mp4', '2019/b.mp4', '2020/summer/c.mp4', 'Outtakes/x.mp4'];
+    const FOLDERS = ['2019', '2020', '2020/summer', 'Outtakes'];
+    const host = document.createElement('div');
+    document.body.append(host);
+    const calls = [];
+    let cfg = { sourceId: 's1', autoplay: false };
+    const subs = [];
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+      subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+    const source = { id: 's1', label: 'Her messages', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+    const inst = mountModule('personal', {
+      mount: host, bus: createBus(), state, user: 'personal-deep', profileId: 'p',
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+      resolveListing: async (src, album = '', opts = {}) => {
+        calls.push({ deep: !!opts.deep, leaveOut: (opts.leaveOut || []).slice() });
+        let paths = opts.deep ? TREE : TREE.filter((p) => !p.includes('/'));
+        const items = MS.applyLeaveOut(paths.map((p) => ({ id: p, path: p, name: p, kind: 'video', url: `clip/${p}` })), opts.leaveOut || []);
+        return { album, albums: [], items, count: items.length,
+          ...(opts.deep ? { deep: true, truncated: '', folders: FOLDERS.filter((f) => !(opts.leaveOut || []).some((l) => f === l || f.startsWith(`${l}/`))) } : {}) };
+      },
+      setTimer: (fn, ms) => ({ fn, ms }), clearTimer: () => {}, progressMs: 1e9,
+    });
+    inst.init();
+    const label = () => inst.impl.__probe().label;
+    const until = async (fn, ms = 1500) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(15); } return !!fn(); };
+    check('*** every folder inside: personal videos ask for the folders inside by default, and play all 5 clips ***',
+      await until(() => /— 5 clips$/.test(label())) && calls.at(-1).deep === true && inst.impl.__probe().ids.includes('2020/summer/c.mp4'),
+      `${label()} ${JSON.stringify(calls.at(-1))}`);
+    const row = fieldsFor(getManifest('personal'), inst).find((f) => f.key === 'subfolders');
+    check('the "Include every folder inside" row is one of this panel\'s settings, on by default',
+      !!row && row.kind === 'toggle' && row.default === true && /videos in its folders/.test(row.onLabel));
+    let rows = inst.impl.menuItems();
+    rows[0].run(); rows = inst.impl.menuItems();
+    rows.find((x) => x.label === 'Leave out Outtakes').run();
+    check('*** "Leave out Outtakes" from the menu: kept per source, listed again without it ***',
+      await until(() => /— 4 clips$/.test(label())) && JSON.stringify(cfg.leaveOut) === '{"s1":["Outtakes"]}'
+        && JSON.stringify(calls.at(-1).leaveOut) === '["Outtakes"]', `${label()} ${JSON.stringify(cfg.leaveOut)}`);
+    state.set({ subfolders: false });
+    check('turned off: the clip at the top only', await until(() => /— 1 clip$/.test(label())) && calls.at(-1).deep === false, label());
+    inst.destroy(); host.remove();
+  }
+
   // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***
   // Without this, seven assertions about a real video from a real agent failed on 2026-09-06 for
   // the single reason that nothing was listening on 8771. The control presses above need no

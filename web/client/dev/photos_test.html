@@ -649,6 +649,117 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     q.inst.destroy(); q.host.remove();
   }
 
+  // *** EVERY FOLDER INSIDE (2026-10-10, row 2.78). *** Mike: "Could I just link her pictures folder as the drive from
+  // my computer and it would pull from all the folders inside it?" A listing seam that behaves like the media agent's
+  // /list?deep=1 (nested paths from the top, `folders`, the leave-out list applied), fake timers, pictures that load.
+  {
+    section('*** every folder inside: nested folders, leave out, an album with its folders ***');
+    const M = await import('../media_sources.js');
+    const TREE = ['top.jpg', '2019-07-04/a.jpg', '2019-07-04/b.jpg', '2019-07-04/beach/c.jpg', '2020-01-01/d.jpg',
+      'Screenshots/s.png', 'Screenshots/more/s2.png'];
+    const FOLDERS = ['2019-07-04', '2019-07-04/beach', '2020-01-01', 'Screenshots', 'Screenshots/more'];
+    function rigF(cfg0 = {}, { truncated = '' } = {}) {
+      const host = document.createElement('div');
+      host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+      document.body.append(host);
+      const timers = [];
+      const calls = [];
+      let cfg = { sourceId: 'src-1', intervalMs: 8000, ...cfg0 };
+      const subs = [];
+      const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+                      subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+      const source = { id: 'src-1', label: 'Her pictures', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+      const resolveListing = async (src, album = '', opts = {}) => {
+        calls.push({ album, deep: !!opts.deep, leaveOut: (opts.leaveOut || []).slice() });
+        const a = album ? `${album}/` : '';
+        let paths = TREE.filter((p) => !album || p.startsWith(a));
+        if (!opts.deep) paths = paths.filter((p) => !p.slice(a.length).includes('/'));
+        const out = opts.leaveOut || [];
+        const items = M.applyLeaveOut(paths.map((p) => ({ id: p, path: p, name: p.split('/').pop(), kind: 'image', url: OKPIC(p) })), out, album);
+        const listing = { album, albums: [], items, count: items.length };
+        if (opts.deep) {
+          Object.assign(listing, { deep: true, truncated,
+            folders: FOLDERS.filter((f) => (!album || f.startsWith(a)) && !out.some((l) => f === l || f.startsWith(`${l}/`))) });
+        }
+        return listing;
+      };
+      const inst = mountModule('photos', {
+        mount: host, bus: createBus(), state, instanceId: `ph-deep-${Math.random().toString(36).slice(2)}`,
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        user: USER, profileId: 'p',
+        sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+        resolveListing,
+        setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+      });
+      inst.init();
+      return { host, inst, state, calls, cfg: () => cfg, probe: () => inst.impl.__probe(),
+        label: () => host.querySelector('[data-source-label]')?.textContent || '',
+        rows: () => inst.impl.menuItems().filter((r) => /^photos-leave/.test(r.id)) };
+    }
+    const until = async (fn, ms = 1500) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(15); } return !!fn(); };
+
+    const r = rigF();
+    check('*** by default the panel asks for every folder inside (deep) ***',
+      await until(() => r.calls.length && r.calls.at(-1).deep === true) && /— 7 items$/.test(r.label()), `${JSON.stringify(r.calls)} / ${r.label()}`);
+    check('*** ...and the pictures in the folders inside are the slideshow\'s, by their nested paths ***',
+      r.probe().ids.includes('2019-07-04/beach/c.jpg') && r.probe().ids.includes('top.jpg') && r.probe().ids.length === 7,
+      JSON.stringify(r.probe().ids));
+    const row = fieldsFor(getManifest('photos'), r.inst).find((f) => f.key === 'subfolders');
+    check('the "Include every folder inside" row: a toggle, on by default, beside "Photos from"',
+      !!row && row.kind === 'toggle' && row.default === true && row.label === 'Include every folder inside'
+        && fieldValue(row, {}) === true, JSON.stringify(row && { kind: row.kind, d: row.default }));
+    check('it is one of the rows of "Where the photos come from" in edit mode',
+      (r.inst.impl.editTargets().find((t) => t.id === 'source') || {}).keys?.includes('subfolders'));
+
+    r.state.set({ subfolders: false });
+    check('*** turned off: listed again, one level only - the 1 picture at the top ***',
+      await until(() => r.calls.at(-1).deep === false && /— 1 item$/.test(r.label())), `${JSON.stringify(r.calls.at(-1))} / ${r.label()}`);
+    check('...and the folder rows are gone (nothing to leave out)', r.rows().length === 0, JSON.stringify(r.rows().map((x) => x.label)));
+    r.state.set({ subfolders: true });
+    await until(() => /— 7 items$/.test(r.label()));
+
+    // LEAVE OUT, from the panel's own rows in the settings menu.
+    let rows = r.rows();
+    check('*** a row opens the folders: "Folders inside: choose any to leave out", 5 folders, none left out ***',
+      rows.length === 1 && /choose any to leave out/.test(rows[0].label) && /5 folders · none left out/.test(rows[0].hint), JSON.stringify(rows));
+    rows[0].run();
+    rows = r.rows();
+    const outRow = rows.find((x) => x.label === 'Leave out Screenshots');
+    check('open: one row per folder, with how many pictures each holds (nested ones counted)',
+      !!outRow && /2 pictures/.test(outRow.hint) && rows.some((x) => x.label === 'Leave out 2019-07-04 / beach' && /1 picture$/.test(x.hint)),
+      JSON.stringify(rows.map((x) => `${x.label} (${x.hint})`)));
+    outRow.run();
+    check('*** "Leave out Screenshots": kept per source in the panel\'s settings ***',
+      JSON.stringify(r.cfg().leaveOut) === '{"src-1":["Screenshots"]}', JSON.stringify(r.cfg().leaveOut));
+    check('*** ...listed again with it left out: the agent is asked to skip it, 5 pictures ***',
+      await until(() => /— 5 items$/.test(r.label())) && JSON.stringify(r.calls.at(-1).leaveOut) === '["Screenshots"]'
+        && !r.probe().ids.some((id) => id.startsWith('Screenshots/')), `${r.label()} / ${JSON.stringify(r.calls.at(-1))}`);
+    rows = r.rows();
+    check('the left-out folder is first, as "Put back Screenshots"; the folder inside it is not offered',
+      rows[1]?.label === 'Put back Screenshots' && !rows.some((x) => /Screenshots \/ more/.test(x.label)) && /1 left out/.test(rows[0].hint),
+      JSON.stringify(rows.map((x) => x.label)));
+    rows[1].run();
+    check('*** "Put back": the list is empty again and all 7 are back ***',
+      await until(() => /— 7 items$/.test(r.label())) && JSON.stringify(r.cfg().leaveOut) === '{}', `${r.label()} ${JSON.stringify(r.cfg().leaveOut)}`);
+
+    // AN ALBUM, now with its own folders.
+    r.state.set({ album: '2019-07-04' });
+    check('*** an album lists its own pictures AND its folders\' (deep), paths still from the top ***',
+      await until(() => /· 2019-07-04 — 3 items$/.test(r.label())) && r.calls.at(-1).album === '2019-07-04' && r.calls.at(-1).deep
+        && r.probe().ids.includes('2019-07-04/beach/c.jpg'), `${r.label()} / ${JSON.stringify(r.probe().ids)}`);
+    rows = r.rows();
+    if (!r.probe().foldersOpen) { rows[0].run(); rows = r.rows(); }
+    check('...its folder rows name the folders inside the album, by their names there',
+      rows.some((x) => x.label === 'Leave out beach') && !rows.some((x) => /2020-01-01/.test(x.label)), JSON.stringify(rows.map((x) => x.label)));
+    r.inst.destroy(); r.host.remove();
+
+    const t = rigF({}, { truncated: 'items' });
+    check('a listing that stopped early says so after the count (a folder too big to list whole)',
+      await until(() => /the first part only/.test(t.label())), t.label());
+    t.inst.destroy(); t.host.remove();
+  }
+
   // *** A SOURCE SHOULD DEGRADE, NOT STOP (MIKE_CHANGE_LIST §3e, Mike 2026-09-08): "If a chosen source
   // can't be reached and an equivalent one can, use it and say so somewhere visible. If none can, show
   // something rather than nothing." *** No agent and no server: a registry of tagged sources, a listing
@@ -1351,7 +1462,9 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     // Expected root-album count comes from the agent itself (no hardcoding).
     // Only what the slideshow may show: a fixture folder with songs in it lists them too (as
     // `kind: 'audio'`, since 2026-09-30), and they must NOT surface - checked after the loop.
-    const allRootItems = (await (await fetch(`${AGENT}/list`)).json()).items;
+    // every folder inside (2026-10-10): the panel lists the folders inside by default, so the pool is /list?deep=1's
+    // (the fixture's Holiday album included) - this is the real agent proving the nested listing end to end.
+    const allRootItems = (await (await fetch(`${AGENT}/list?deep=1`)).json()).items;
     const rootItems = slideshowItems(allRootItems);
     const songs = allRootItems.filter((it) => it.kind === 'audio').map((it) => it.name);
     const expected = rootItems.length;
@@ -1373,6 +1486,9 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     }
     check('no immediate repeat across 24 advances', !immediateRepeat);
     check(`coverage: all ${expected} items surfaced`, seen.size === expected, `seen=${[...seen].join(',')}`);
+    const nested = rootItems.filter((it) => it.path.includes('/')).map((it) => it.name);
+    check(`*** every folder inside, from the real agent: the pictures in its folder (${nested.join(', ')}) came up too ***`,
+      nested.length > 0 && nested.every((n) => seen.has(n)), `nested=${nested.join(',')} seen=${[...seen].join(',')}`);
     check(`no song from the real agent's listing ever surfaced (${songs.length} in the folder)`,
       !songs.some((n) => seen.has(n)), `songs=${songs.join(',')} seen=${[...seen].join(',')}`);
 

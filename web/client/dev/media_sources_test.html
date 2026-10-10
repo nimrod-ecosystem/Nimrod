@@ -448,6 +448,173 @@ async function loadsAsImage(url) {
     try { indexedDB.deleteDatabase(dbName); } catch { /* left for the browser */ }
   } catch (e) { check('photo sources first: the device-pictures checks threw', false, String((e && e.stack) || e)); }
 
+  // *** EVERY FOLDER INSIDE (2026-10-10, row 2.78) - PURE, AND A FOLDER IN THIS BROWSER'S OWN STORAGE. ***
+  // Mike: "Could I just link her pictures folder as the drive from my computer and it would pull from all the folders
+  // inside it?" The helpers every panel shares, the browser folder's walk (a fake tree, then a real one of 57 x 50 in
+  // the origin-private file system, timed), and the address a deep listing asks a media agent for.
+  try {
+    const M = await import('../media_sources.js');
+    const F = await import('../folder_source.js');
+    const J = JSON.stringify;
+    check('every folder inside: cleanLeaveOut tidies (slashes, backslashes), drops climbing and repeated folders',
+      J(M.cleanLeaveOut(['/Screenshots/', 'a\\b', '..', 'x/../y', 'Screenshots', '', 5, null])) === '["Screenshots","a/b"]',
+      J(M.cleanLeaveOut(['/Screenshots/', 'a\\b', '..', 'x/../y', 'Screenshots', '', 5, null])));
+    check('...and keeps at most LEAVE_OUT_MAX (200) per source',
+      M.cleanLeaveOut(Array.from({ length: 300 }, (_, i) => `f${i}`)).length === M.LEAVE_OUT_MAX && M.LEAVE_OUT_MAX === 200);
+    check('normalizeLeaveOut: only { source: [folders] }; anything else is empty',
+      J(M.normalizeLeaveOut({ s1: ['a/', 'a'], s2: [], s3: 'x' })) === '{"s1":["a"]}' && J(M.normalizeLeaveOut(['a'])) === '{}'
+        && J(M.normalizeLeaveOut(null)) === '{}');
+    const its = ['top.jpg', 'Shots/a.png', 'Shots/more/b.png', 'Trip/c.jpg', 'Trip/Shots/d.jpg', 'Shotsy/e.jpg'].map((p) => ({ id: p, path: p }));
+    check('*** applyLeaveOut: a folder and everything inside it, nothing that merely starts with its name ***',
+      J(M.applyLeaveOut(its, ['Shots']).map((i) => i.path)) === '["top.jpg","Trip/c.jpg","Trip/Shots/d.jpg","Shotsy/e.jpg"]',
+      J(M.applyLeaveOut(its, ['Shots']).map((i) => i.path)));
+    check('...a folder inside the album applies; the album itself (or a folder above it) on the list does not - the album wins',
+      J(M.applyLeaveOut(its, ['Trip/Shots'], 'Trip').map((i) => i.path)).includes('Trip/c.jpg')
+        && !M.applyLeaveOut(its, ['Trip/Shots'], 'Trip').some((i) => i.path === 'Trip/Shots/d.jpg')
+        && M.applyLeaveOut(its, ['Trip'], 'Trip').length === its.length);
+    check('*** listOptions: deep by default; off when the row says no; the leave-out list is the SOURCE\'s own ***',
+      J(M.listOptions({}, 's1')) === '{"deep":true,"leaveOut":[]}'
+        && M.listOptions({ subfolders: false, leaveOut: { s1: ['a'] } }, 's1').deep === false
+        && J(M.listOptions({ subfolders: false, leaveOut: { s1: ['a'] } }, 's1').leaveOut) === '[]'
+        && J(M.listOptions({ leaveOut: { s1: ['a'] } }, 's1').leaveOut) === '["a"]'
+        && J(M.listOptions({ leaveOut: { s1: ['a'] } }, 's2').leaveOut) === '[]'
+        && M.listOptions({}, 's1', { subfoldersDefault: false }).deep === false);
+    check('toggleLeaveOut: on, off, per source, and a bad folder changes nothing',
+      J(M.toggleLeaveOut({}, 's1', 'a')) === '{"s1":["a"]}' && J(M.toggleLeaveOut({ s1: ['a'] }, 's1', 'a')) === '{}'
+        && J(M.toggleLeaveOut({ s1: ['a'] }, 's2', 'b', true)) === '{"s1":["a"],"s2":["b"]}'
+        && J(M.toggleLeaveOut({ s1: ['a'] }, 's1', '../x')) === '{"s1":["a"]}');
+    // The rows.
+    const listing = { deep: true, folders: Array.from({ length: 70 }, (_, i) => `d${String(i).padStart(2, '0')}`).concat(['d00/inner']),
+      items: [{ path: 'd00/x.jpg' }, { path: 'd00/inner/y.jpg' }, { path: 'd01/z.jpg' }] };
+    let open = false; let wrote = null;
+    const rowsOf = (cfg) => M.leaveOutRows({ idPrefix: 't', listing, sourceId: 's1', cfg, open, onOpen: (v) => { open = v; }, onSet: (m) => { wrote = m; } });
+    let rows = rowsOf({});
+    check('leaveOutRows: closed, ONE row (a short menu for one switch), saying how many folders', rows.length === 1 && /71 folders · none left out/.test(rows[0].hint), J(rows));
+    rows[0].run(); rows = rowsOf({});
+    check('...open: capped at FOLDER_ROWS_MAX (60) folder rows, then a quiet line for the rest',
+      rows.filter((x) => /^Leave out/.test(x.label)).length === M.FOLDER_ROWS_MAX && /11 more folders/.test(rows.at(-1).label) && rows.at(-1).disabled,
+      `${rows.length} ${rows.at(-1).label}`);
+    check('...a folder counts the pictures in its own folders too', /^2 pictures$/.test(rows.find((x) => x.label === 'Leave out d00').hint)
+      && /^1 picture$/.test(rows.find((x) => x.label === 'Leave out d00 / inner').hint), J(rows.slice(0, 4)));
+    rows.find((x) => x.label === 'Leave out d00').run();
+    check('a press writes the source\'s list', J(wrote) === '{"s1":["d00"]}', J(wrote));
+    rows = rowsOf({ leaveOut: wrote });
+    check('left out: first as "Put back", and the folder inside it is not offered',
+      rows[1].label === 'Put back d00' && !rows.some((x) => /d00 \/ inner/.test(x.label)), J(rows.slice(0, 3).map((x) => x.label)));
+    check('nothing when the setting is off, or the listing was not deep',
+      rowsOf({ subfolders: false }).length === 0 && M.leaveOutRows({ listing: { folders: ['a'] }, sourceId: 's1', cfg: {} }).length === 0);
+    check('truncatedWords: nothing when whole; a plain line when it stopped early',
+      M.truncatedWords({}) === '' && /very big/.test(M.truncatedWords({ truncated: 'items' })) && /in time/.test(M.truncatedWords({ truncated: 'time' }))
+        && /8 deep/.test(M.truncatedWords({ truncated: 'depth' })));
+
+    // The address a deep listing asks a media agent for, and the page's own filter behind it.
+    const asked = [];
+    const fakeFetch = async (url) => {
+      asked.push(url);
+      return { ok: true, json: async () => ({ album: '', albums: ['Trip'], deep: url.includes('deep=1'), folders: ['Trip', 'Shots'], truncated: '',
+        items: [{ path: 'a.jpg', name: 'a.jpg', kind: 'image' }, { path: 'Shots/s.png', name: 's.png', kind: 'image' }, { path: 'Trip/t.jpg', name: 't.jpg', kind: 'image' }] }) };
+    };
+    const agentSrc = { id: 'ag', label: 'Agent', kind: 'agent', base_url: 'http://127.0.0.1:9/' };
+    const shallow = await resolveListing(agentSrc, 'My Album', { fetchImpl: fakeFetch });
+    check('without deep: the same address as always (no deep, no skip)', asked[0] === 'http://127.0.0.1:9/list?album=My%20Album' && !shallow.deep, asked[0]);
+    const deepL = await resolveListing(agentSrc, '', { fetchImpl: fakeFetch, deep: true, leaveOut: ['Shots', 'a b/c'] });
+    check('*** deep: /list?deep=1&skip=<each folder> ***', asked[1] === 'http://127.0.0.1:9/list?deep=1&skip=Shots&skip=a%20b%2Fc', asked[1]);
+    check('*** ...and the page filters too (an agent that ignored skip): Shots/ is not in the listing ***',
+      J(deepL.items.map((i) => i.path)) === '["a.jpg","Trip/t.jpg"]' && deepL.count === 2 && deepL.deep === true && J(deepL.folders) === '["Trip","Shots"]',
+      J(deepL));
+    const long = Array.from({ length: 200 }, (_, i) => `a-rather-long-folder-name-number-${i}`);
+    await resolveListing(agentSrc, '', { fetchImpl: fakeFetch, deep: true, leaveOut: long });
+    check('a leave-out list too long for one address is cut short in the address (the page filters the rest)',
+      asked[2].length <= 6100 && asked[2].includes('skip=a-rather-long-folder-name-number-0'), String(asked[2].length));
+
+    // The browser folder's walk, over a fake tree.
+    const fakeDir = (tree, name = 'root') => ({
+      kind: 'directory', name,
+      async *entries() {
+        for (const [n, v] of Object.entries(tree)) {
+          if (v && typeof v === 'object') yield [n, fakeDir(v, n)];
+          else yield [n, { kind: 'file', name: n, getFile: async () => new File([String(v)], n, { lastModified: 1000 }) }];
+        }
+      },
+      async getDirectoryHandle(n) { const v = tree[n]; if (v && typeof v === 'object') return fakeDir(v, n); throw new DOMException('none', 'NotFoundError'); },
+    });
+    let deepTree = { 'deep.jpg': 'x' };
+    for (let i = 10; i >= 1; i -= 1) deepTree = { [`d${i}`]: deepTree };
+    const tree = { 'top.jpg': 'x', 'notes.txt': 'x', '2019-07-04': { 'a.jpg': 'x', 'B.PNG': 'x', beach: { 'c.jpg': 'x' } },
+      '.nimrod-pull': { 'p.jpg': 'x' }, '$RECYCLE.BIN': { 'del.jpg': 'x' }, 'lost+found': { 'l.jpg': 'x' },
+      Screenshots: { 's.png': 'x', more: { 's2.png': 'x' } }, songs: { 'a.mp3': 'x' }, ...deepTree };
+    const w = await F.walkFolder(fakeDir(tree));
+    const wp = w.files.map((f) => f.path);
+    check('*** walkFolder: every folder inside, paths from the top, in path order ***',
+      ['top.jpg', '2019-07-04/a.jpg', '2019-07-04/B.PNG', '2019-07-04/beach/c.jpg', 'Screenshots/s.png', 'Screenshots/more/s2.png', 'songs/a.mp3'].every((p) => wp.includes(p))
+        && J(wp) === J([...wp].sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1))), J(wp));
+    check('*** ...skips dot-folders, the recycle bin, lost+found, and what is not media ***',
+      !wp.some((p) => /nimrod-pull|RECYCLE|lost\+found|notes/.test(p)), J(wp));
+    check('...stops 8 deep, saying so', !wp.some((p) => p.endsWith('deep.jpg')) && w.truncated === 'depth', w.truncated);
+    const wl = await F.walkFolder(fakeDir(tree), '', { leaveOut: ['Screenshots', '2019-07-04/beach/'] });
+    check('*** ...leaves out the folders on the list, and everything inside them ***',
+      !wl.files.some((f) => f.path.startsWith('Screenshots/') || f.path.includes('beach/')) && wl.files.some((f) => f.path === '2019-07-04/a.jpg'),
+      J(wl.files.map((f) => f.path)));
+    const wa = await F.walkFolder(await fakeDir(tree).getDirectoryHandle('2019-07-04'), '2019-07-04');
+    check('...an album: its folders too, paths still from the top', J(wa.files.map((f) => f.path)) === '["2019-07-04/a.jpg","2019-07-04/B.PNG","2019-07-04/beach/c.jpg"]',
+      J(wa.files.map((f) => f.path)));
+    const wi = await F.walkFolder(fakeDir(tree), '', { limits: { items: 2 } });
+    const wf = await F.walkFolder(fakeDir(tree), '', { limits: { folders: 1 } });
+    let tick = 0;
+    const wt = await F.walkFolder(fakeDir(tree), '', { now: () => (tick++ ? 1e9 : 0) });
+    check('*** the caps: items, folders, time - each says why it stopped ***',
+      wi.files.length === 2 && wi.truncated === 'items' && wf.folders.length === 1 && wf.truncated === 'folders'
+        && wt.truncated === 'time' && wt.files.map((f) => f.path).join() === 'top.jpg', J({ i: wi.truncated, f: wf.truncated, t: wt.truncated, tf: wt.files.length }));
+
+    // A REAL FOLDER: the browser's own private file system, 57 folders x 50 pictures - Mike's folder's shape - through the
+    // same code a folder he picked goes through (a kept folder source, resolveListing deep). Timed.
+    if (navigator.storage && navigator.storage.getDirectory) {
+      const opfs = await navigator.storage.getDirectory();
+      const name = `deep-${Math.random().toString(36).slice(2, 8)}`;
+      const top = await opfs.getDirectoryHandle(name, { create: true });
+      const png = await (await fetch('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')).blob();
+      const t0 = performance.now();
+      for (let d = 0; d < 57; d += 1) {
+        const sub = await top.getDirectoryHandle(`2024-${String((d % 12) + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, { create: true });
+        await Promise.all(Array.from({ length: 50 }, async (_, k) => {
+          const fh = await sub.getFileHandle(`IMG_${String(k).padStart(4, '0')}.jpg`, { create: true });
+          const wr = await fh.createWritable(); await wr.write(png); await wr.close();
+        }));
+      }
+      const made = performance.now() - t0;
+      const src = await F.addFolderSource(top, 'TEST-deep');
+      try {
+        const w0 = performance.now();
+        const walked = await F.walkFolder(top);
+        const walkMs = performance.now() - w0;
+        const l0 = performance.now();
+        const got = await resolveListing(src, '', { deep: true });
+        const listMs = performance.now() - l0;
+        const s0 = performance.now();
+        const flat = await resolveListing(src, '');
+        const flatMs = performance.now() - s0;
+        check(`*** a real folder of 57 folders x 50 pictures, listed whole: ${got.count} items (walk ${walkMs.toFixed(0)} ms; walk + read every file ${listMs.toFixed(0)} ms) ***`,
+          got.count === 2850 && walked.files.length === 2850 && !got.truncated && got.folders.length === 57
+            && got.items.every((it) => it.url && it.sourceId === src.id && it.id === it.path && it.path.includes('/')),
+          J({ count: got.count, truncated: got.truncated }));
+        check('...under the 10 s the walk is given, with room to spare', listMs < F.DEEP_LIMITS.ms, `${listMs.toFixed(0)} ms`);
+        check('*** without deep it is what it always was: the top only - here, nothing ***', flat.count === 0 && flat.albums.length === 57 && !flat.deep,
+          J({ count: flat.count, albums: flat.albums.length }));
+        const note = document.createElement('div');
+        note.className = 'skip';
+        note.textContent = `TIME  browser folder, 57 x 50 = 2850 pictures: walk ${walkMs.toFixed(0)} ms, walk + read every file ${listMs.toFixed(0)} ms, one level ${flatMs.toFixed(0)} ms (made in ${made.toFixed(0)} ms)`;
+        out.append(note);
+        console.log(note.textContent);
+        window.__deepTiming = { walkMs, listMs, flatMs };
+      } finally {
+        await F.removeFolderSource(src.id);
+        try { await opfs.removeEntry(name, { recursive: true }); } catch { /* left for the browser */ }
+      }
+    } else {
+      skip('every folder inside: the timed real folder', 'this browser has no origin-private file system');
+    }
+  } catch (e) { check('every folder inside: the checks threw', false, String((e && e.stack) || e)); }
+
   const client = createMediaSourcesClient({ user: USER });
   try {
     // Clean slate: remove any leftover TEST- sources from a prior run.
@@ -512,6 +679,15 @@ async function loadsAsImage(url) {
     if (albums.length) {
       const { items: aItems } = await resolveListing(source, albums[0]);
       check('album listing resolves', aItems.length >= 0, `album=${albums[0]}`);
+      // every folder inside (2026-10-10): the same agent, deep - the top's items and the album's, nested paths from the top.
+      const deep = await resolveListing(source, '', { deep: true });
+      check('*** every folder inside, from the real agent: the album\'s pictures join the top\'s, by nested path ***',
+        deep.deep === true && deep.count === items.length + aItems.length
+          && aItems.every((a) => deep.items.some((d) => d.path === a.path && d.url === a.url)),
+        `deep=${deep.count} top=${items.length} album=${aItems.length}`);
+      const left = await resolveListing(source, '', { deep: true, leaveOut: [albums[0]] });
+      check('...and with the album left out, the top\'s only', left.count === items.length && !left.items.some((d) => d.path.startsWith(`${albums[0]}/`)),
+        `left=${left.count}`);
     }
 
     // Cleanup.

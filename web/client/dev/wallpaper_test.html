@@ -484,6 +484,46 @@ try {
     // backup source (2026-10-08). Mike: "We should make backup folder options for everything, so people could always
     // have a local fallback." The chosen folder can't be read -> the backup plays; it comes back -> the chosen one; no
     // backup chosen -> the built-in wallpaper, exactly as before. Still nothing written on screen: the words are the row's.
+    // every folder inside (2026-10-10, row 2.78): a connected folder's folders too, ON - one rule on every panel that plays
+    // from a folder - with its own "Leave out" rows; the Nimrod folder's Wallpapers is read as it always was.
+    section('*** every folder inside: a connected folder\'s folders too ***');
+    {
+      const MS = await import('../media_sources.js');
+      const pic = (tag) => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
+      const calls = [];
+      const TREE = ['top.png', 'Backgrounds/a.png', 'Backgrounds/winter/b.png', 'Scans/s.png'];
+      const resolveListing = async (s, album = '', opts = {}) => {
+        calls.push({ id: s.id, deep: !!opts.deep, leaveOut: (opts.leaveOut || []).slice() });
+        const paths = opts.deep ? TREE : TREE.filter((p) => !p.includes('/'));
+        const items = MS.applyLeaveOut(paths.map((p) => ({ id: p, path: p, name: p, kind: 'image', url: pic(p) })), opts.leaveOut || []);
+        return { album, albums: [], items, count: items.length,
+          ...(opts.deep ? { deep: true, truncated: '', folders: ['Backgrounds', 'Backgrounds/winter', 'Scans'] } : {}) };
+      };
+      const st = { sourceId: 'fam' };
+      const subs = [];
+      const w = mountModule('wallpaper', {
+        mount: host, bus: createBus(), events: null, user: USER, folderStore: storeOf(null), rand: mulberry32(3), now: () => 0,
+        state: { get: () => st, set: (p) => { Object.assign(st, p); subs.forEach((f) => f(st)); }, subscribe: (f) => { subs.push(f); } },
+        sources: { list: async () => [{ id: 'fam', label: 'Family', kind: 'agent', base_url: 'http://127.0.0.1:9' }] }, resolveListing,
+        setTimer: () => 0, clearTimer: () => {}, listingWaitMs: 0,
+      });
+      w.init();
+      await sleep(200);
+      check('*** a connected folder: listed with every folder inside by default (4 pictures) ***',
+        calls.at(-1)?.deep === true && w.impl.__probe().items === 4, J({ calls, p: w.impl.__probe() }));
+      const rowsAt = (v) => fieldItems(fieldsFor({ settings: WP_SETTINGS }), { values: v, level: 'advanced' }).some((it) => /subfolders$/.test(it.id));
+      check('the "Include every folder inside" row: offered for a connected folder, not for the Nimrod folder or "None"',
+        rowsAt({ sourceId: 'fam' }) && !rowsAt({ sourceId: NIMROD_FOLDER }) && !rowsAt({ sourceId: NO_FOLDER }));
+      let rows = w.impl.menuItems();
+      rows[0].run(); rows = w.impl.menuItems();
+      rows.find((x) => x.label === 'Leave out Scans').run();
+      await sleep(200);
+      check('*** "Leave out Scans": kept per source, listed again without it (3 pictures) ***',
+        JSON.stringify(st.leaveOut) === '{"fam":["Scans"]}' && JSON.stringify(calls.at(-1).leaveOut) === '["Scans"]' && w.impl.__probe().items === 3,
+        J({ lo: st.leaveOut, last: calls.at(-1), p: w.impl.__probe().items }));
+      w.impl && w.destroy();
+    }
+
     section('*** backup source: the wallpaper\'s backup folder ***');
     {
       const BS = [{ id: 'main', label: 'The drive', kind: 'agent', base_url: 'http://192.168.1.9:8770' },

@@ -343,7 +343,76 @@ export async function entriesIn(root, album = '', source = { id: '', label: '' }
   return { items, albums };
 }
 
-export async function resolveFolderListing(source, album = '') {
+// ------------------------------------------------------------------ every folder inside (2026-10-10, row 2.78)
+// The browser's half of the media agent's `/list?deep=1` (agent.py "EVERY FOLDER INSIDE" argues each number): the
+// pictures in a folder AND in every folder inside it, paths relative to the folder source's own top, so a picture's
+// id, plays and hidden-picture key are its path wherever it sits.
+// *** MIRRORED FROM web/media_agent/agent.py, AND test_agent.py HOLDS THEM EQUAL. ***
+//   items 20 000 · folders 5 000 · depth 8 · ms 10 000 (half the panel's 20 s wait for a listing).
+// SKIPPED, as the agent does: a name starting with "." (.nimrod-pull, .nimrod-removed), the drive's own folders below
+// (a recycle bin holds DELETED pictures), and the folders on the panel's leave-out list. A browser folder has no
+// symlinks to follow out of it (the browser does not hand them over), so the depth and folder caps are what stop a
+// tree that never ends.
+export const DEEP_LIMITS = Object.freeze({ items: 20000, folders: 5000, depth: 8, ms: 10000 });
+export const SKIP_FOLDER_NAMES = Object.freeze(['$recycle.bin', 'system volume information', 'lost+found', 'recycler']);
+
+/** A folder path relative to a source's top, tidied for comparing ('' for one that climbs or is not text). Pure. */
+export function cleanFolderPath(p) {
+  if (typeof p !== 'string') return '';
+  const s = p.replace(/\\/g, '/').trim().replace(/^\/+|\/+$/g, '');
+  if (!s || s.length > 1024 || s.split('/').some((x) => x === '' || x === '.' || x === '..')) return '';
+  return s;
+}
+
+/**
+ * WALK `album` AND EVERY FOLDER INSIDE IT, over any directory handle (the suites hand in a fake one, or the
+ * browser's own private folder). Breadth first, each folder in name order, so a walk cut short has the shallow
+ * folders whole. Returns `{ files: [{ path, name, kind, entry }], folders: [path], truncated }` - `truncated` is ''
+ * or why it stopped ('items' | 'folders' | 'depth' | 'time'). Reads no file: `entry` is the file's handle.
+ */
+export async function walkFolder(dir, album = '', { leaveOut = [], limits = DEEP_LIMITS, now = () => Date.now() } = {}) {
+  const lim = { ...DEEP_LIMITS, ...(limits || {}) };
+  const out = new Set((Array.isArray(leaveOut) ? leaveOut : []).map(cleanFolderPath).filter(Boolean));
+  const start = now();
+  const queue = [{ dir, rel: String(album || '').replace(/^\/+|\/+$/g, ''), depth: 0 }];
+  const files = [];
+  const folders = [];
+  let truncated = '';
+  for (let head = 0; head < queue.length; head += 1) {
+    const { dir: here, rel: at, depth } = queue[head];
+    const entries = [];
+    try { for await (const [name, entry] of here.entries()) entries.push([name, entry]); }
+    catch { continue; }   // a folder that cannot be read is passed over; the rest still lists
+    entries.sort((a, b) => (a[0].toLowerCase() < b[0].toLowerCase() ? -1 : a[0].toLowerCase() > b[0].toLowerCase() ? 1 : 0));
+    let full = false;
+    for (const [name, entry] of entries) {
+      if (name.startsWith('.')) continue;
+      const rel = at ? `${at}/${name}` : name;
+      if (entry.kind === 'directory') {
+        if (SKIP_FOLDER_NAMES.includes(name.toLowerCase()) || out.has(rel)) continue;
+        if (depth + 1 > lim.depth) { truncated = truncated || 'depth'; continue; }
+        if (folders.length >= lim.folders) { truncated = truncated || 'folders'; continue; }
+        folders.push(rel);
+        queue.push({ dir: entry, rel, depth: depth + 1 });
+        continue;
+      }
+      const k = kindOf(name);
+      if (!k) continue;
+      if (files.length >= lim.items) { truncated = 'items'; full = true; break; }
+      files.push({ path: rel, name, kind: k, entry });
+    }
+    if (full) break;
+    if (now() - start > lim.ms && head + 1 < queue.length) { truncated = 'time'; break; }
+  }
+  const byPath = (a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : a.toLowerCase() > b.toLowerCase() ? 1 : 0);
+  files.sort((a, b) => byPath(a.path, b.path));
+  folders.sort(byPath);
+  return { files, folders, truncated };
+}
+
+// `opts` (every folder inside): `{ deep, leaveOut }` - deep lists every folder inside `album` too, leaving out the
+// folders named (relative to the source's top). Without it, exactly what it always listed.
+export async function resolveFolderListing(source, album = '', opts = {}) {
   const row = await getRow(source.id);
   if (!row || !row.handle) {
     throw folderError('missing', `folder source "${source.label}": no longer stored`, source.id);
@@ -375,18 +444,15 @@ export async function resolveFolderListing(source, album = '') {
   const albums = [];
   const items = [];
   const urls = [];
-  for await (const [name, entry] of dir.entries()) {
-    if (name.startsWith('.')) continue;               // dotfiles, like the agent
-    if (entry.kind === 'directory') { albums.push(name); continue; }
-    const k = kindOf(name);
-    if (!k) continue;                                 // not media — the agent skips these too
-    const file = await entry.getFile();
-    // folder art: an SVG is a data: URL (the invariant over IMAGE_EXTS); a file that cannot be read is skipped.
+  // One file as a listing item (folder art: an SVG is a data: URL - the invariant over IMAGE_EXTS); null when it
+  // cannot be read, and it is skipped.
+  const itemOf = async (entry, name, path, k) => {
+    let file;
+    try { file = await entry.getFile(); } catch { return null; }
     let url;
-    if (isSvgFile(file, name)) { try { url = await svgDataUrl(file); } catch { continue; } }
+    if (isSvgFile(file, name)) { try { url = await svgDataUrl(file); } catch { return null; } }
     else { url = URL.createObjectURL(file); urls.push(url); }
-    const path = album ? `${album}/${name}` : name;
-    items.push({
+    return {
       id: path,                                       // stable across sessions: rng.js keys play-stats on it
       name,
       path,
@@ -395,7 +461,30 @@ export async function resolveFolderListing(source, album = '') {
       mtime: Math.floor(file.lastModified / 1000),
       url,
       sourceId: source.id,
-    });
+    };
+  };
+
+  // every folder inside: the walk, then the files read a batch at a time (FILE_BATCH, argued below).
+  if (opts && opts.deep) {
+    const walked = await walkFolder(dir, album, { leaveOut: opts.leaveOut, limits: opts.limits, now: opts.now });
+    for (const f of walked.folders) if (!f.slice(album ? album.length + 1 : 0).includes('/')) albums.push(f.split('/').pop());
+    for (let i = 0; i < walked.files.length; i += FILE_BATCH) {
+      const got = await Promise.all(walked.files.slice(i, i + FILE_BATCH).map((f) => itemOf(f.entry, f.name, f.path, f.kind)));
+      for (const it of got) if (it) items.push(it);
+    }
+    albums.sort();
+    revokeFor(source.id);
+    urlsBySource.set(source.id, urls);
+    return { album, albums, items, count: items.length, deep: true, folders: walked.folders, truncated: walked.truncated };
+  }
+
+  for await (const [name, entry] of dir.entries()) {
+    if (name.startsWith('.')) continue;               // dotfiles, like the agent
+    if (entry.kind === 'directory') { albums.push(name); continue; }
+    const k = kindOf(name);
+    if (!k) continue;                                 // not media — the agent skips these too
+    const it = await itemOf(entry, name, album ? `${album}/${name}` : name, k);
+    if (it) items.push(it);
   }
 
   albums.sort();
@@ -406,3 +495,10 @@ export async function resolveFolderListing(source, album = '') {
 
   return { album, albums, items, count: items.length };
 }
+
+// every folder inside: how many files are read at once. 64, argued: one at a time is a wait per file - measured
+// 2026-10-10 in dev/media_sources_test.html on a 57 x 50 folder (headless Chrome, a desktop SSD): walk + read every file
+// 0.86-0.99 s at 64, 1.5-2.0 s one at a time (the walk alone ~0.4 s). All 2 850 at once asks the disk for every file in
+// the same moment, and on a slow drive the panel's first picture waits behind the last. A batch keeps the disk busy
+// without that.
+const FILE_BATCH = 64;

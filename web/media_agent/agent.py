@@ -10,7 +10,8 @@ videos never touch it and are never uploaded to any cloud.
 Instead, YOU run this small file server on the machine where your media lives (the
 kiosk itself, a home PC, a NAS). It does two things and nothing more:
 
-  1. GET /list[?album=sub]  -> a JSON listing of the media in a folder you chose.
+  1. GET /list[?album=sub]  -> a JSON listing of the media in a folder you chose
+     (&deep=1: and in every folder inside it - "EVERY FOLDER INSIDE" below).
   2. GET /files/<relpath>   -> the actual image / video bytes, served directly.
 
 The browser client (loaded from the platform origin) fetches BOTH straight from
@@ -224,6 +225,155 @@ def list_album(album: str) -> dict:
     items.sort(key=lambda i: i["name"].lower())
     albums.sort(key=str.lower)
     return {"album": album, "albums": albums, "items": items, "count": len(items)}
+
+
+# ------------------------------------------------------------------ EVERY FOLDER INSIDE (2026-10-10, row 2.78)
+# Mike: "Could I just link her pictures folder as the drive from my computer and it would pull from all the folders
+# inside it?" His Pictures folder holds 57 dated folders and almost nothing at its top, so a one-level listing showed
+# "no photos". GET /list?deep=1 lists the media in the folder AND in every folder inside it, paths still relative to
+# --root (so a picture's id, its play history and its hidden-picture key are its path, nested or not).
+#   &skip=<folder>   (repeatable) a folder, relative to --root, left out with everything inside it - the panel's
+#                    "Leave out" list. Only ever compared with names the walk finds; never opened.
+# The answer adds `deep: true`, `folders` (every folder walked, relative to --root) and `truncated` ('' or why the walk
+# stopped early: 'items', 'folders', 'depth', 'time'). Without deep=1 nothing changes.
+#
+# *** THE PATH-SAFETY INVARIANTS (security): ***
+#   * A FOLDER THAT RESOLVES OUTSIDE --root IS NEVER WALKED (a symlink or a junction pointing elsewhere) - the same
+#     rule ?album= already had. A file's own symlink is listed as the one-level listing lists it (unchanged).
+#   * NO FOLDER IS WALKED TWICE: every folder walked is remembered by its resolved path, so a link back up the tree
+#     (a loop) or a second way into the same folder ends there.
+# SKIPPED, besides the left-out folders: anything whose name starts with "." (as the one-level listing: .nimrod-pull,
+# .nimrod-removed, a .Trash-1000), the drive's own folders in SKIP_FOLDER_NAMES (a Windows drive's recycle bin holds
+# DELETED pictures; a deleted picture coming back on a screen is the failure), and the --data-dir folder when it sits
+# inside --root (history files, not pictures).
+#
+# HARD-CODED, each argued (Rule 1; a cap protects the computer, it is not a taste):
+#   DEEP_MAX_ITEMS 20 000   pictures, videos and songs in one answer. Mike's folder is ~2 850 (57 x ~50); a big family
+#                           library is 10-20 000. The answer is about 200 bytes an item, so 20 000 is ~4 MB of JSON -
+#                           about what a Pi 400's browser can take into a slideshow without a stall. Bigger: choose a
+#                           folder inside it (Album) or leave folders out.
+#   DEEP_MAX_FOLDERS 5 000  folders walked. A whole drive pointed at by mistake (a program's folders, thousands of
+#                           empty ones) stops here rather than walking the disk.
+#   DEEP_MAX_DEPTH 8        folders below the one listed. Year/month/day is 3; a phone export (DCIM/100APPLE) 2; 8
+#                           leaves room. A loop is stopped by the remembered folders above, not by this.
+#   DEEP_MAX_SECONDS 10     the panel waits 20 s for a listing (media_sources.js LISTING_WAIT_MS) and then shows a
+#                           stand-in; half of that leaves time for the answer to travel over facility wifi. A slow
+#                           USB disk answers with what it found by then (`truncated: 'time'`).
+# MIRRORED in web/client/folder_source.js (DEEP_LIMITS, SKIP_FOLDER_NAMES) for a folder read by the browser;
+# test_agent.py fails if the two drift.
+DEEP_MAX_ITEMS = 20000
+DEEP_MAX_FOLDERS = 5000
+DEEP_MAX_DEPTH = 8
+DEEP_MAX_SECONDS = 10
+SKIP_FOLDER_NAMES = ("$recycle.bin", "system volume information", "lost+found", "recycler")
+# At most this many &skip= values are read (a longer list is the page's own filter's to finish: media_sources.js).
+SKIP_MAX = 200
+
+
+def clean_rel(p) -> str:
+    """A folder path relative to --root, tidied for comparing: '/' separators, no leading/trailing slash, '' for one
+    that climbs ('..') or is not text. Never used to open anything."""
+    if not isinstance(p, str):
+        return ""
+    s = p.replace("\\", "/").strip().strip("/")
+    if not s or len(s) > 1024 or any(part in ("", ".", "..") for part in s.split("/")):
+        return ""
+    return s
+
+
+def list_deep(album: str, skip=(), max_items: int = DEEP_MAX_ITEMS, max_folders: int = DEEP_MAX_FOLDERS,
+              max_depth: int = DEEP_MAX_DEPTH, max_seconds: float = DEEP_MAX_SECONDS, clock=time.monotonic) -> dict:
+    """GET /list?deep=1: the media in `album` and in every folder inside it (EVERY FOLDER INSIDE, above).
+    Breadth first, each folder's entries in name order, so a walk cut short has listed the shallow folders whole."""
+    root = ROOT.resolve()
+    target = (root / album).resolve() if album else root
+    if not _within(target, root) and target != root:
+        return {"error": "forbidden"}
+    if not target.is_dir():
+        return {"error": "not_found"}
+    left_out = {c for c in (clean_rel(s) for s in skip) if c}
+    data_real = None
+    if DATA_DIR is not None:
+        try:
+            data_real = Path(DATA_DIR).resolve()
+        except (OSError, RuntimeError):
+            data_real = None
+
+    start = clock()
+    seen = {target}
+    queue = [(str(target), 0)]
+    head = 0
+    items: list = []
+    folders: list = []
+    albums: list = []
+    truncated = ""
+    while head < len(queue):
+        here, depth = queue[head]
+        head += 1
+        try:
+            with os.scandir(here) as it:
+                entries = sorted(it, key=lambda e: e.name.lower())
+        except OSError:
+            continue    # a folder that cannot be read is passed over; the rest still lists
+        for entry in entries:
+            name = entry.name
+            if name.startswith("."):
+                continue
+            try:
+                is_dir = entry.is_dir()
+            except OSError:
+                continue
+            rel = os.path.relpath(entry.path, root).replace(os.sep, "/")
+            if is_dir:
+                if name.lower() in SKIP_FOLDER_NAMES or rel in left_out:
+                    continue
+                if depth + 1 > max_depth:
+                    truncated = truncated or "depth"
+                    continue
+                try:
+                    real = Path(entry.path).resolve()
+                except (OSError, RuntimeError):
+                    continue
+                if real != root and not _within(real, root):
+                    continue    # *** a folder pointing outside --root is never walked ***
+                if real in seen:
+                    continue    # *** a loop, or a second way into a folder already walked ***
+                if data_real is not None and (real == data_real or _within(real, data_real)):
+                    continue
+                if len(folders) >= max_folders:
+                    truncated = truncated or "folders"
+                    continue
+                seen.add(real)
+                folders.append(rel)
+                if depth == 0:
+                    albums.append(rel)
+                queue.append((entry.path, depth + 1))
+                continue
+            k = kind_of(name)
+            if not k:
+                continue
+            if len(items) >= max_items:
+                truncated = "items"
+                break
+            try:
+                st = entry.stat()
+            except OSError:
+                continue
+            items.append({"id": rel, "name": name, "path": rel, "kind": k,
+                          "size": st.st_size, "mtime": int(st.st_mtime)})
+        if truncated == "items":
+            break
+        if clock() - start > max_seconds and head < len(queue):
+            truncated = "time"
+            break
+
+    # Path order (not name order, as one level is): a folder's pictures stay together, and music played "in name
+    # order" goes album by album.
+    items.sort(key=lambda i: i["path"].lower())
+    folders.sort(key=str.lower)
+    albums.sort(key=str.lower)
+    return {"album": album, "albums": albums, "items": items, "count": len(items), "deep": True,
+            "folders": folders, "truncated": truncated}
 
 
 # ------------------------------------------------------------------ AGENT HISTORY: a person's history, to their Data folder
@@ -525,7 +675,11 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/list":
             qs = parse_qs(urlparse(self.path).query)
             album = (qs.get("album", [""])[0] or "").strip("/")
-            result = list_album(album)
+            # every folder inside (row 2.78): ?deep=1, with &skip=<folder> for each folder left out
+            if (qs.get("deep", [""])[0] or "").lower() in ("1", "true", "yes"):
+                result = list_deep(album, qs.get("skip", [])[:SKIP_MAX])
+            else:
+                result = list_album(album)
             if result.get("error") == "forbidden":
                 return self._json({"error": "forbidden"}, HTTPStatus.FORBIDDEN)
             if result.get("error") == "not_found":
@@ -540,7 +694,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/":
             return self._json({
                 "service": "nimrod-media-agent",
-                "endpoints": ["/health", "/list?album=<sub>", "/files/<relpath>"]
+                "endpoints": ["/health", "/list?album=<sub>", "/list?deep=1&skip=<folder>", "/files/<relpath>"]
                 + (["/history/status", "POST /history/<stream>"] if DATA_DIR is not None else []),
             })
         return self._json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
