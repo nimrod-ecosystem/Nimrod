@@ -377,7 +377,7 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
       events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
       sources: { list: async () => [source], add: async () => source, remove: async () => {} },
       resolveListing: async (src, album = '', opts = {}) => {
-        calls.push({ deep: !!opts.deep, leaveOut: (opts.leaveOut || []).slice() });
+        calls.push({ album, deep: !!opts.deep, leaveOut: (opts.leaveOut || []).slice() });
         let paths = opts.deep ? TREE : TREE.filter((p) => !p.includes('/'));
         const items = MS.applyLeaveOut(paths.map((p) => ({ id: p, path: p, name: p, kind: 'video', url: `clip/${p}` })), opts.leaveOut || []);
         return { album, albums: [], items, count: items.length,
@@ -394,6 +394,23 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     const row = fieldsFor(getManifest('personal'), inst).find((f) => f.key === 'subfolders');
     check('the "Include every folder inside" row is one of this panel\'s settings, on by default',
       !!row && row.kind === 'toggle' && row.default === true && /videos in its folders/.test(row.onLabel));
+    // choosing the album (2026-10-10): this panel always played from an album, but only a dev address could set one.
+    const albumRow = fieldsFor(getManifest('personal'), inst).find((f) => f.key === 'album');
+    check('*** choosing the album: an "Album" row on this panel - "The whole source" and each folder at the top ***',
+      !!albumRow && albumRow.kind === 'choice' && !albumRow.readOnly && albumRow.cycleable
+        && JSON.stringify(albumRow.options.map((o) => o.value)) === '["","2019","2020","Outtakes"]'
+        && albumRow.options[0].label === 'The whole source', JSON.stringify(albumRow && albumRow.options));
+    const { fieldItems } = await import('../settings_fields.js');
+    const aItem = fieldItems(fieldsFor(getManifest('personal'), inst), { values: () => cfg, level: 'standard',
+      onStep: (k, v) => state.set({ [k]: v }) }).find((x) => x.id === 'set:album');
+    aItem.run();
+    check('...one press chooses "2019": saved as the panel\'s album, and the panel lists that album',
+      cfg.album === '2019' && await until(() => calls.length && calls.at(-1).album === '2019'), JSON.stringify({ album: cfg.album, last: calls.at(-1) }));
+    check('...and inside it, its own folders would be offered under it (none here), the top folders stay',
+      await until(() => JSON.stringify(fieldsFor(getManifest('personal'), inst).find((f) => f.key === 'album').options.map((o) => o.value)) === '["","2019","2020","Outtakes"]'));
+    state.set({ album: '' });
+    await until(() => calls.at(-1).album === '');
+    await sleep(60);
     let rows = inst.impl.menuItems();
     rows[0].run(); rows = inst.impl.menuItems();
     rows.find((x) => x.label === 'Leave out Outtakes').run();

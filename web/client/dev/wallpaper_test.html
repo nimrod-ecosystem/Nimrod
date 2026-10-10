@@ -493,7 +493,7 @@ try {
       const calls = [];
       const TREE = ['top.png', 'Backgrounds/a.png', 'Backgrounds/winter/b.png', 'Scans/s.png'];
       const resolveListing = async (s, album = '', opts = {}) => {
-        calls.push({ id: s.id, deep: !!opts.deep, leaveOut: (opts.leaveOut || []).slice() });
+        calls.push({ id: s.id, album, deep: !!opts.deep, leaveOut: (opts.leaveOut || []).slice() });
         const paths = opts.deep ? TREE : TREE.filter((p) => !p.includes('/'));
         const items = MS.applyLeaveOut(paths.map((p) => ({ id: p, path: p, name: p, kind: 'image', url: pic(p) })), opts.leaveOut || []);
         return { album, albums: [], items, count: items.length,
@@ -514,6 +514,19 @@ try {
       const rowsAt = (v) => fieldItems(fieldsFor({ settings: WP_SETTINGS }), { values: v, level: 'advanced' }).some((it) => /subfolders$/.test(it.id));
       check('the "Include every folder inside" row: offered for a connected folder, not for the Nimrod folder or "None"',
         rowsAt({ sourceId: 'fam' }) && !rowsAt({ sourceId: NIMROD_FOLDER }) && !rowsAt({ sourceId: NO_FOLDER }));
+      // choosing the album (2026-10-10): a choice of the folder's own folders, where a text box used to be.
+      const aRow = fieldItems(fieldsFor({ settings: WP_SETTINGS }, w), { values: () => st, level: 'advanced',
+        onStep: (k, v) => { Object.assign(st, { [k]: v }); subs.forEach((f) => f(st)); } }).find((it) => /album$/.test(it.id));
+      check('*** choosing the album: a connected folder\'s Album row is a choice - "The whole source", Backgrounds, Scans ***',
+        !!aRow && aRow.field.kind === 'choice' && !aRow.disabled && !aRow.edit
+          && J(aRow.field.options.map((o) => o.value)) === J(['', 'Backgrounds', 'Scans']) && aRow.hint === 'The whole source',
+        J(aRow && { o: aRow.field.options, h: aRow.hint, d: aRow.disabled }));
+      aRow.run();
+      await sleep(200);
+      check('...one press chooses Backgrounds, and the wallpaper lists that album',
+        st.album === 'Backgrounds' && calls.at(-1).album === 'Backgrounds', J({ album: st.album, last: calls.at(-1) }));
+      Object.assign(st, { album: '' }); subs.forEach((f) => f(st));
+      await sleep(200);
       let rows = w.impl.menuItems();
       rows[0].run(); rows = w.impl.menuItems();
       rows.find((x) => x.label === 'Leave out Scans').run();

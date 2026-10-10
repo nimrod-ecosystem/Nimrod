@@ -47,6 +47,8 @@ import { registerModule } from '../module.js';
 import { createMediaSourcesClient, resolveListing, mediaUrl, quietResolve } from '../media_sources.js';
 // every folder inside (2026-10-10, row 2.78; media_sources.js "EVERY FOLDER INSIDE" argues the two settings)
 import { subfoldersField, listOptions, withListOptions, leaveOutRows, LEAVE_OUT_KEY } from '../media_sources.js';
+// choosing the album (2026-10-10; media_sources.js "CHOOSING THE ALBUM" argues the row)
+import { albumField, createAlbumChooser, topFoldersLister } from '../media_sources.js';
 import { personSources } from '../person_known.js';
 import {
   MOTIONS, SCENES, VIDEO_POLICIES, ambientFrame, frameToCss, motionOf,
@@ -101,7 +103,7 @@ const wallpaperItemsOf = (l) => ((l && l.items) || []).filter((it) => it.kind ==
 //
 // THE DEFAULT, BOTH SIDES. For: the art kit already says "make a wallpaper, save it in
 // Artwork/Wallpapers"; a default that then ignores that folder makes the kit a two-step job
-// (connect it, then pick it here, then type the album). Nothing changes for anybody whose folder is
+// (connect it, then pick it here, then choose the album). Nothing changes for anybody whose folder is
 // empty or who has no Nimrod folder - the ambient shows, exactly as before. Against: a panel set up
 // before today starts showing pictures by itself the day somebody saves one there, without anybody
 // choosing that on this panel. That is what the folder is for, and NO_FOLDER is one press away.
@@ -225,12 +227,13 @@ export const SETTINGS = [
       { value: NIMROD_FOLDER, label: 'Wallpapers in your Nimrod folder' },
       { value: NO_FOLDER, label: 'None: just the built-in wallpaper' },
     ] },
-  // A connected folder's subfolder. EDITABLE here, unlike the Photos panel's read-only Album, argued: there it is
-  // read-only because a name the folder does not have breaks the slideshow; here it only falls back to the built-in
-  // wallpaper and says so under the row above. Only shown for a connected folder (the two above have no albums).
-  { key: 'album', label: 'Album', kind: 'text', default: '', level: 'advanced', placeholder: 'Everything',
-    note: 'a folder inside the chosen one, such as Wallpapers',
-    appliesWhen: (v) => !!v && !!v.sourceId && v.sourceId !== NIMROD_FOLDER && v.sourceId !== NO_FOLDER },
+  // A connected folder's subfolder. A CHOICE SINCE 2026-10-10, as on Photos (media_sources.js "CHOOSING THE ALBUM"):
+  // "The whole source", then the folder's own folders. It was a text box a keyboard could type a name into; a name the
+  // folder does not have fell back to the built-in wallpaper. A choice offers only folders that are there, and a switch
+  // can use it. AGAINST: a folder that is not there yet (made later) cannot be typed in ahead; choose it once it exists.
+  // Level 'advanced', as before. Only shown for a connected folder (the two above have no albums).
+  albumField({ level: 'advanced',
+    appliesWhen: (v) => !!v && !!v.sourceId && v.sourceId !== NIMROD_FOLDER && v.sourceId !== NO_FOLDER }),
   // every folder inside (2026-10-10, row 2.78): a connected folder's folders too - ON, as Photos, so one rule holds on every
   // panel that plays from a folder. Only for a connected folder (the Nimrod folder's Wallpapers is read as it always was).
   // Which folders are left out are this panel's own rows (`menuItems`).
@@ -270,6 +273,9 @@ registerModule(
     const resolveList = quietResolve(withListOptions(ctx.resolveListing || resolveListing, (s) => listOptions(cfg, s && s.id)),
       { check: ctx.checkFromHere || null });
     let lastListing = null;         // { sourceId, album, listing } from the chosen folder: the "Leave out" rows
+    // choosing the album: the "Album" row's folders (photos.js, media_sources.js createAlbumChooser), quiet as above.
+    const albumChooser = createAlbumChooser({ listTop: topFoldersLister({ resolve: ctx.resolveListing || null,
+      check: ctx.checkFromHere || null }) });
     let foldersOpen = false;        // whether the menu's folder rows are showing (not saved)
     // backup source: the panel's row, else the screen's (`ctx.screenBackup`, kiosk.js), else nothing.
     const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
@@ -506,6 +512,8 @@ registerModule(
       catch (e) { if (e?.code !== 'elsewhere') console.warn('wallpaper: listing', e); failed = e; }
       if (seq !== loadSeq || destroyed) return;
       const code = failed ? (['permission', 'missing', 'album', 'elsewhere'].includes(failed.code) ? failed.code : 'error') : null;
+      // choosing the album: the row's folders - from this listing, or (an album the folder does not have) its top.
+      if (listing || code === 'album') albumChooser.heard(src, cfg.album, listing);
       if (code && await useBackup(seq, choice, code, src.label || src.base_url || src.id)) return;   // backup source
       source = src;
       items = wallpaperItemsOf(listing);
@@ -615,6 +623,7 @@ registerModule(
         [BACKUP_KEY]: backupPanelChoices({ sources: knownSources, mainId: cfg.sourceId || null, current: cfg[BACKUP_KEY],
           screen: screenBackup(), panelDefault: BACKUP_NONE, personId: personOf(ctx),
           showing: backupShown ? backupShown.label : null }),
+        album: albumChooser.row(cfg.sourceId, cfg.album),   // choosing the album
       }),
 
       init() {

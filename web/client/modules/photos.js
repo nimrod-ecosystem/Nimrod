@@ -32,6 +32,8 @@ import {
   quietResolve, quietReach, tryFromHere, ELSEWHERE_LINE, TRY_HERE_LABEL,   // desktop prompt (2026-10-10)
   // every folder inside (2026-10-10, row 2.78; media_sources.js "EVERY FOLDER INSIDE" argues the two settings)
   subfoldersField, listOptions, withListOptions, leaveOutRows, truncatedWords, SUBFOLDERS_KEY, LEAVE_OUT_KEY,
+  // choosing the album (2026-10-10; media_sources.js "CHOOSING THE ALBUM" argues the row)
+  albumField, createAlbumChooser, topFoldersLister,
 } from '../media_sources.js';
 // hide picture (2026-10-09): which pictures this slideshow leaves out (hidden_pictures.js), and the screen actions
 // "hide this picture" / "bring it back" press (actions.js PHOTO_ACTIONS; input_speech.js ROUTES).
@@ -195,14 +197,15 @@ const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 
 // `sourceId` is a LIVE choice: the options are this account's media sources, which are data
 // and cannot be written into a manifest. See `settingsChoices` below.
 //
-// `album` is TEXT and therefore not cycleable, and it says so rather than pretending. Nobody
-// picks one of four hundred albums one press at a time, and a fake affordance is worse than
-// an absent one.
-//
-// `readOnly` SINCE 2026-09-28, and it changes nothing you can see: that day the settings menu
-// learned to give a text field a real text box, so a text field is editable UNLESS it says
-// otherwise. This one says otherwise because the album is a pick over LIVE data owned in Media /
-// Sources - typing a name here that the source does not have would be a way to break the panel.
+// `album` IS A LIVE CHOICE SINCE 2026-10-10 (media_sources.js "CHOOSING THE ALBUM"): "The whole
+// source", then the source's own folders, from listings this panel already makes. It was TEXT,
+// read-only, saying "set in Media / Sources" - and Media / Sources never had an album chooser, so
+// only a dev address could set one. A choice offers only folders the source has (so it cannot
+// break the panel, the reason it was read-only), a long list opens as a list, and a switch steps
+// it like any choice. LEVEL 'standard', where the row always was: it decides what the panel shows,
+// as "Photos from" does. AGAINST: once the source has folders it is one more stop on a switch
+// user's lap of this menu (kiosk_test's 14 counts it only then); 'advanced' would keep the lap and
+// hide the one place the album can be chosen from everybody who has not changed the level.
 const SETTINGS = [
   { key: 'intervalMs', label: 'Change photo every', kind: 'choice', default: DEFAULTS.intervalMs,
     level: 'essential',
@@ -221,8 +224,7 @@ const SETTINGS = [
     ] },
   { key: 'sourceId', label: 'Photos from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
-  { key: 'album', label: 'Album', kind: 'text', default: '', level: 'standard',
-    placeholder: 'Everything', readOnly: true, note: 'set in Media / Sources' },
+  albumField({ level: 'standard' }),   // choosing the album: live options from `settingsChoices`
   // every folder inside (2026-10-10, row 2.78): the source's (or the album's) folders too - ON, Mike's Pictures folder
   // of 57 dated folders being the case. Which folders are left out are this panel's own rows (`menuItems`, at every
   // level: the everyday control). LEVEL 'advanced', argued as `resumeAfterMs` is: a switch user walks every 'standard'
@@ -392,6 +394,9 @@ registerModule(
     // "Try on this computer" press (`tryAction`) fetches one on purpose. `ctx.checkFromHere` is the suites' seam.
     const reachCheck = ctx.checkFromHere || null;
     const quietList = quietResolve(resolveList, { check: reachCheck });
+    // choosing the album: the "Album" row's folders, from this panel's listings of its chosen source (and, while an
+    // album is chosen, one quiet listing of the source's top).
+    const albumChooser = createAlbumChooser({ listTop: topFoldersLister({ resolve: ctx.resolveListing || null, check: reachCheck }) });
 
     // hide picture: the page's one log of hidden pictures (`ctx.hiddenPictures` in the suites), copied to the person's
     // Nimrod folder through the screen's history host when it has one. `allItems` is the listing as it came; `items`
@@ -1108,7 +1113,7 @@ registerModule(
       useItems(slideshowItems(listing.items)   // songs in the same folder are not photos
         .map((it) => (it.sourceId ? it : { ...it, sourceId: source.id })));
       // every folder inside: the chosen source's folders, for the "Leave out" rows (a stand-in's are not this panel's).
-      if (!fb) lastListing = { sourceId: source.id, album, listing };
+      if (!fb) { lastListing = { sourceId: source.id, album, listing }; albumChooser.heard(source, album, listing); }   // + the album row
       setLabel(`${source.label}${album ? ' · ' + album : ''} — ${items.length} item${items.length === 1 ? '' : 's'}${truncatedWords(listing)}`);
       degraded = fb ? { ...fb, shownLabel: source.label || source.base_url || source.id } : null;
       if (degraded) armRecheck(); else clearRecheck();
@@ -1396,6 +1401,8 @@ registerModule(
       const cid = (source && source.id) || chosenId;
       const chosenRef = { chosenId: cid, chosenLabel: (source && source.label) || labels[cid] || null,
         err: got.failure, chosenSource: source, backup: !!got.byChoice };
+      // choosing the album: an album the chosen source does not have - the row lists its folders to choose from.
+      if (source && got.failure && got.failure.code === 'album') albumChooser.heard(source, cfg.album, null);
       if (got.source) { applyListing(got.source, got.listing, got.album, got.fellBack ? chosenRef : null); return; }
       // NOTHING FROM ANY SOURCE. Keep asking after the chosen one, show the last pictures if there are
       // any, and otherwise say what is wrong -- over the picture already there, which is left up.
@@ -1664,6 +1671,7 @@ registerModule(
         // pulled pictures: "3 new pictures today" after the value, when the source's folder is filled by a pull.
         const pulled = pullNewsLine(pullNews);
         return { sourceId: pulled ? { options: opts, status: pulled } : opts,
+          album: albumChooser.row(cfg.sourceId || shownSourceId, cfg.album),   // choosing the album
           [BACKUP_KEY]: backupPanelChoices({ sources: knownSources, mainId: cfg.sourceId || null, current: cfg[BACKUP_KEY],
             screen: screenBackup(), panelDefault: BACKUP_ANY, personId: personOf(ctx),
             showing: degraded && degraded.backup && !keptMode ? degraded.shownLabel : null }) };

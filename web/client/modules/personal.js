@@ -63,6 +63,8 @@ import {
   quietResolve, quietReach, tryFromHere, ELSEWHERE_LINE, TRY_HERE_LABEL,   // desktop prompt (2026-10-10)
   // every folder inside (2026-10-10, row 2.78; media_sources.js "EVERY FOLDER INSIDE" argues the two settings)
   subfoldersField, listOptions, withListOptions, leaveOutRows, truncatedWords, SUBFOLDERS_KEY, LEAVE_OUT_KEY,
+  // choosing the album (2026-10-10; media_sources.js "CHOOSING THE ALBUM" argues the row)
+  albumField, createAlbumChooser, topFoldersLister,
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
@@ -124,6 +126,11 @@ export const SETTINGS = [
   // backup source (2026-10-08; media_sources.js argues it): "If this can't be reached, use". Its own default is the
   // stand-in this panel already had (any other source this screen may show); the screen's row applies unless this is set.
   backupPanelField({ panelDefault: BACKUP_ANY }),
+  // choosing the album (2026-10-10): this panel has always played from an album (`cfg.album`, and the name over the
+  // clips falls back to it), but nothing outside a dev address could set one. The same row as Photos, 'standard' for
+  // the same reason: it decides which messages play. AGAINST: one more stop on a switch user's walk of this menu, only
+  // once the source has folders.
+  albumField({ level: 'standard' }),
   // every folder inside (2026-10-10, row 2.78): ON, as Photos - a person's messages kept in folders by year still play.
   // Which folders are left out are this panel's own rows (`menuItems`).
   subfoldersField({ on: true, what: 'videos' }),
@@ -204,6 +211,8 @@ registerModule(
     let foldersOpen = false;        // whether the menu's folder rows are showing (not saved)
     const reachCheck = ctx.checkFromHere || null;
     const quietList = quietResolve(resolveList, { check: reachCheck });
+    // choosing the album: the "Album" row's folders (photos.js, media_sources.js createAlbumChooser).
+    const albumChooser = createAlbumChooser({ listTop: topFoldersLister({ resolve: ctx.resolveListing || null, check: reachCheck }) });
     let knownSources = [];          // backup source: what the last listing held, for the row's choices
     let lastBackupRef = null;
     const videosOf = (listing) => ((listing && listing.items) || []).filter((it) => it.kind === 'video');
@@ -611,6 +620,8 @@ registerModule(
         });
         if (seq !== loadSeq) return;
         const cid = (chosenSource && chosenSource.id) || chosenId;
+        // choosing the album: an album the chosen source does not have - the row lists its folders to choose from.
+        if (chosenSource && got.failure && got.failure.code === 'album') albumChooser.heard(chosenSource, cfg.album, null);
         if (got.source) {
           source = got.source; listing = got.listing;
           degraded = got.fellBack
@@ -668,6 +679,7 @@ registerModule(
       // recorded PERSONAL videos: keep only video clips (audio-only messages are a later add)
       items = videosOf(listing);
       lastListing = degraded ? null : { sourceId: source.id, album: cfg.album, listing };   // every folder inside
+      if (!degraded) albumChooser.heard(source, cfg.album, listing);   // choosing the album
       byId = Object.fromEntries(items.map((it) => [it.id, it]));
       ids = items.map((it) => it.id);
       recent = []; history = []; histPos = -1;
@@ -789,6 +801,7 @@ registerModule(
         [BACKUP_KEY]: backupPanelChoices({ sources: knownSources, mainId: cfg.sourceId || null, current: cfg[BACKUP_KEY],
           screen: screenBackup(), panelDefault: BACKUP_ANY, personId: personOf(ctx),
           showing: degraded && degraded.backup ? degraded.shownLabel : null }),
+        album: albumChooser.row(cfg.sourceId || shownSourceId, cfg.album),   // choosing the album
       }),
       // every folder inside (row 2.78): the chosen source's folders in the settings menu, each one press to leave out or
       // put back (media_sources.js leaveOutRows; kiosk.js `menuItems`).
