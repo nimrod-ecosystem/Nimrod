@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>archive (the Internet Archive) — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>archive — the Internet Archive as a place the site plays from (row 2.69)</h1>
+<p>An archive.org address or an item's name is read through the Archive's public metadata, and its plain sound and
+video files play in this page's own player (the audio bus, the chosen speaker, Play / Pause / Next). The Archive's own
+player (its embed frame) is used only for books and, when turned on, games. Only the item names are saved. The
+metadata fetch is stubbed throughout: nothing here touches the internet.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { createBus } from '../bus.js';
+import { getManifest } from '../module.js';
+import '../modules/archive.js';
+import { TYPE, DEFAULTS, SETTINGS, KEYS_BACK_MS } from '../modules/archive.js';
+import {
+  parseArchiveId, parseItemList, itemListText, playableFiles, itemType, itemView, whatItHolds, fetchItem,
+  forgetItemsForTest, summarizeItem, downloadUrl, embedUrl, metadataUrl, archiveAudioTracks, ARCHIVE_MESSAGES,
+  FILES_MAX_DEFAULT, ITEMS_MAX, CACHE_MAX,
+} from '../archive_org.js';
+import { parseSource, normalizeSource, describeSource, normalizeFavourites, SOURCE_KINDS } from '../music_favourites.js';
+import { createMusicRouter, messageFor } from '../music_player.js';
+import { createLocalMusic } from '../music_local.js';
+import { setOutputsForTest } from '../speakers.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField, fieldsFor } from '../settings_fields.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { CATALOG } from '../modules_catalog.js';
+
+const { check, section, finish } = harness();
+const J = (v) => JSON.stringify(v);
+
+// ---- fixtures: the shapes archive.org answers with (trimmed from real items read 2026-10-10) ----------------------
+const RADIO = {
+  metadata: { identifier: 'OTRR_Test_Radio', title: 'Test Radio - Single Episodes', mediatype: 'audio',
+    creator: 'Old Time Radio Researchers Group', date: '2015-09-15' },
+  files: [
+    { name: 'bio.txt', format: 'Text', source: 'original' },
+    { name: 'Ep 02 The Werewolf.flac', format: 'Flac', source: 'original', length: '1700.5', track: '2' },
+    { name: 'Ep 02 The Werewolf.mp3', format: 'VBR MP3', source: 'derivative', original: 'Ep 02 The Werewolf.flac', length: '1700.4', track: '2' },
+    { name: 'Ep 02 The Werewolf.ogg', format: 'Ogg Vorbis', source: 'derivative', original: 'Ep 02 The Werewolf.flac', track: '2' },
+    { name: 'Ep 01 Homicide.mp3', format: 'VBR MP3', source: 'original', length: '29:43', track: '1', title: 'Homicide' },
+    { name: 'Ep 01 Homicide.png', format: 'PNG', source: 'derivative', original: 'Ep 01 Homicide.mp3' },
+    { name: 'Ep 01 Homicide_spectrogram.png', format: 'Spectrogram', source: 'derivative', original: 'Ep 01 Homicide.mp3' },
+    { name: 'Ep 03 Secret.mp3', format: 'VBR MP3', source: 'original', private: 'true', track: '3' },
+  ],
+};
+const TV = {
+  metadata: { identifier: 'TestTVSeries1', title: 'Test TV Series 1', mediatype: 'movies' },
+  files: [
+    { name: 'A - 101.avi', format: 'Cinepack', source: 'original' },
+    { name: 'A - 101.mp4', format: 'h.264', source: 'derivative', original: 'A - 101.avi', height: '480', length: '1413.08' },
+    { name: 'A - 101.ogv', format: 'Ogg Video', source: 'derivative', original: 'A - 101.avi', height: '300' },
+    { name: 'B.mp4', format: 'MPEG4', source: 'original', height: '1080' },
+    { name: 'B.ia.mp4', format: 'h.264 IA', source: 'derivative', original: 'B.mp4', height: '480' },
+  ],
+};
+const BOOK = { metadata: { identifier: 'alicebook00', title: 'Alice’s Adventures', mediatype: 'texts' },
+  files: [{ name: 'alicebook00.pdf', format: 'Text PDF', source: 'derivative' }, { name: 'alicebook00_djvu.txt', format: 'DjVuTXT' }] };
+const GAME = { metadata: { identifier: 'msdos_Test_Trail_1990', title: 'Test Trail', mediatype: 'software', emulator: 'dosbox' },
+  files: [{ name: 'trail.zip', format: 'ZIP', source: 'original' }] };
+const COLL = { metadata: { identifier: 'classic_tv', title: 'Classic TV', mediatype: 'collection' }, files: [] };
+
+function stubFetch(db, log = []) {
+  return async (url, opts) => {
+    log.push({ url, opts });
+    const id = decodeURIComponent(String(url).split('/metadata/')[1] || '');
+    const v = db[id];
+    if (v === 'down') throw new TypeError('Failed to fetch');
+    if (v === 500) return { ok: false, status: 500, json: async () => ({}) };
+    return { ok: true, status: 200, json: async () => (v === undefined ? {} : v) };
+  };
+}
+function fakeMedia() {
+  const made = [];
+  const factory = (kind) => {
+    const L = {};
+    const m = { kind, src: '', paused: true, volume: 1, sinkId: null, plays: 0, attrs: {},
+      setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { if (k === 'src') this.src = ''; }, load() {},
+      remove() { this.removed = true; },
+      addEventListener(t, fn) { (L[t] ||= []).push(fn); },
+      fire(t) { if (t === 'pause') this.paused = true; for (const fn of (L[t] || [])) fn(); },
+      play() { this.paused = false; this.plays += 1; return Promise.resolve(); },
+      pause() { if (!this.paused) { this.paused = true; for (const fn of (L.pause || [])) fn(); } },
+      setSinkId(id) { this.sinkId = id; return Promise.resolve(); } };
+    made.push(m);
+    return m;
+  };
+  return { factory, made, last: () => made[made.length - 1] };
+}
+function fakeAudio() {
+  const regs = [];
+  const on = {};
+  return { regs, on, register: (id, o) => { regs.push({ id, ...o }); return () => {}; },
+    setActive: (id, v) => { on[id] = v; }, unregister: (id) => { on[id] = 'gone'; }, master: () => 1 };
+}
+const DB = { OTRR_Test_Radio: RADIO, TestTVSeries1: TV, alicebook00: BOOK, msdos_Test_Trail_1990: GAME, classic_tv: COLL };
+
+try {
+  // =====================================================================================
+  section('reading an address: archive.org links and plain item names');
+  {
+    const id = 'OTRR_Dragnet_Singles';
+    check('a details address', parseArchiveId(`https://archive.org/details/${id}`) === id);
+    check('...with more after it (a file, a query)', parseArchiveId(`https://archive.org/details/${id}/Dragnet_49.mp3?q=x`) === id);
+    check('an embed address', parseArchiveId(`https://archive.org/embed/${id}`) === id);
+    check('a download address of one file', parseArchiveId(`https://archive.org/download/${id}/a%20b.mp3`) === id);
+    check('the metadata address', parseArchiveId(`https://archive.org/metadata/${id}`) === id);
+    check('no https:// (as people paste it)', parseArchiveId(`archive.org/details/${id}`) === id);
+    check('www.archive.org', parseArchiveId(`www.archive.org/details/${id}`) === id);
+    check('a data server’s address (/0/items/<id>/)', parseArchiveId(`https://ia801709.us.archive.org/0/items/${id}/x.mp3`) === id);
+    check('archive:<id>', parseArchiveId(`archive:${id}`) === id);
+    check('a plain item name, typed', parseArchiveId(`  ${id} `) === id);
+    check('*** a plain word is NOT an item where a box takes other links too (bare: false) ***',
+      parseArchiveId('jazz', { bare: false }) === '' && parseArchiveId(`https://archive.org/details/${id}`, { bare: false }) === id);
+    check('another site’s /details/ is nothing', parseArchiveId(`https://evil.example/details/${id}`) === ''
+      && parseArchiveId('https://archive.org.evil.example/details/x') === '');
+    check('junk is nothing (spaces, slashes, a search page)', parseArchiveId('two words') === '' && parseArchiveId('a/b') === ''
+      && parseArchiveId('https://archive.org/search?query=dragnet') === '');
+    const list = parseItemList(`archive.org/details/${id}, alicebook00\nbad/name ${id} https://evil.example/details/x`);
+    check('a typed list: commas, spaces and new lines; repeats once; junk counted, not kept',
+      J([...list]) === J([id, 'alicebook00']) && list.bad === 2, J({ list, bad: list.bad }));
+    const many = parseItemList(Array.from({ length: ITEMS_MAX + 5 }, (_, i) => `item${i}`).join(' '));
+    check(`at most ${ITEMS_MAX} items, the rest counted as left off`, many.length === ITEMS_MAX && many.over === 5);
+    check('the list is kept as names, comma-separated', itemListText([id, 'alicebook00', 'bad name']) === `${id}, alicebook00`);
+  }
+
+  // =====================================================================================
+  section('*** which files play: one copy of each recording, in order ***');
+  {
+    const radio = summarizeItem('OTRR_Test_Radio', RADIO);
+    const a = playableFiles(radio);
+    check('a radio item: its sound files, one per programme, in track order',
+      J(a.files.map((f) => f.name)) === J(['Ep 01 Homicide.mp3', 'Ep 02 The Werewolf.mp3']) && a.kind === 'audio', J(a.files.map((f) => f.name)));
+    check('*** the .mp3 the Archive made, not the .flac (ten times the size) ***', a.files[1].format === 'VBR MP3');
+    check('a private file is never listed', !a.files.some((f) => /Secret/.test(f.name)));
+    check('pictures and text are never listed', !a.files.some((f) => /png|txt/.test(f.name)));
+    check('the Archive’s own title is used; else the file name', a.files[0].title === 'Homicide' && a.files[1].title === 'Ep 02 The Werewolf');
+    check('lengths read in both shapes ("1700.4" and "29:43")', a.files[0].seconds === 1783 && a.files[1].seconds === 1700.4);
+    check('*** the address is archive.org’s own, each part encoded ***',
+      a.files[1].url === 'https://archive.org/download/OTRR_Test_Radio/Ep%2002%20The%20Werewolf.mp3', a.files[1].url);
+    const best = playableFiles(radio, { quality: 'best' });
+    check('"best" takes the original where it plays (the .flac)', best.files[1].name === 'Ep 02 The Werewolf.flac', best.files[1].name);
+
+    const tv = summarizeItem('TestTVSeries1', TV);
+    const v = playableFiles(tv);
+    check('a TV item: its videos (not its sound), one per programme',
+      v.kind === 'video' && J(v.files.map((f) => f.name)) === J(['A - 101.mp4', 'B.ia.mp4']), J(v.files.map((f) => f.name)));
+    check('*** an .avi this browser cannot play is replaced by the Archive’s .mp4 of it ***', !v.files.some((f) => /avi/.test(f.name)));
+    const vb = playableFiles(tv, { quality: 'best' });
+    check('"best": the 1080-line original .mp4 where there is one', J(vb.files.map((f) => f.name)) === J(['A - 101.mp4', 'B.mp4']), J(vb.files.map((f) => f.name)));
+    check('sound only (a music favourite) from a TV item is nothing', playableFiles(tv, { want: 'audio' }).files.length === 0);
+    const capped = playableFiles(tv, { max: 1 });
+    check('the most files listed is a setting: capped, with the true total and "truncated"',
+      capped.files.length === 1 && capped.total === 2 && capped.truncated === true);
+    check(`the default most is ${FILES_MAX_DEFAULT}`, FILES_MAX_DEFAULT === 500 && DEFAULTS.maxFiles === 500);
+  }
+
+  // =====================================================================================
+  section('what an item is, and how it is shown');
+  {
+    const S = (raw, id) => summarizeItem(id, raw);
+    const radio = S(RADIO, 'OTRR_Test_Radio'), tv = S(TV, 'TestTVSeries1'), book = S(BOOK, 'alicebook00'),
+      game = S(GAME, 'msdos_Test_Trail_1990'), coll = S(COLL, 'classic_tv');
+    check('types', J([radio, tv, book, game, coll].map(itemType)) === J(['audio', 'video', 'text', 'software', 'collection']));
+    check('*** sound and video play in this page’s own player ***', itemView(radio, playableFiles(radio)).mode === 'media'
+      && itemView(tv, playableFiles(tv)).mode === 'media');
+    check('a book opens in the Archive’s own player (the default)', itemView(book, playableFiles(book)).mode === 'frame');
+    const g = itemView(game, playableFiles(game));
+    check('*** a game is NOT in the frame by default, and says why ***', g.mode === 'none' && g.reason === 'archive-games-off');
+    check('...and is with "books and games"', itemView(game, playableFiles(game), { frameFor: 'books-games' }).mode === 'frame');
+    check('"never": a book says there is nothing to play', itemView(book, playableFiles(book), { frameFor: 'never' }).reason === 'archive-nothing');
+    check('a collection is not one item, and says so', itemView(coll, playableFiles(coll)).reason === 'archive-collection');
+    check('what it holds, in plain words', whatItHolds(radio, playableFiles(radio)) === '2 sound files'
+      && whatItHolds(tv, playableFiles(tv)) === '2 videos' && whatItHolds(book, playableFiles(book)) === 'a book'
+      && whatItHolds(game, playableFiles(game)) === 'a game or program');
+    check('every message is a sentence, none says "her screen"', Object.values(ARCHIVE_MESSAGES).every((m) => /[.]$/.test(m) && !/her screen/i.test(m)));
+  }
+
+  // =====================================================================================
+  section('*** reading an item from archive.org: one public request, nothing about the person ***');
+  {
+    forgetItemsForTest();
+    const log = [];
+    const f = stubFetch(DB, log);
+    const r = await fetchItem('OTRR_Test_Radio', { fetchImpl: f });
+    check('ok, with the title and the files', r.ok && r.item.title === 'Test Radio - Single Episodes' && r.item.files.length === 8, J(r).slice(0, 200));
+    check('*** the address is the public metadata one ***', log[0].url === metadataUrl('OTRR_Test_Radio') && log[0].url === 'https://archive.org/metadata/OTRR_Test_Radio');
+    check('*** no cookies, no referrer, and no header of ours (the browser’s own User-Agent only) ***',
+      log[0].opts.credentials === 'omit' && log[0].opts.referrerPolicy === 'no-referrer' && log[0].opts.headers === undefined, J(log[0].opts));
+    const again = await fetchItem('OTRR_Test_Radio', { fetchImpl: f });
+    check('asked again: from this page’s memory, not the network', again.ok && log.length === 1);
+    await fetchItem('OTRR_Test_Radio', { fetchImpl: f, fresh: true });
+    check('"fresh" asks again', log.length === 2);
+    check('a missing or private item ({}) is "not found"', (await fetchItem('nope_nothing', { fetchImpl: f })).reason === 'archive-not-found');
+    check('a server error is "can’t be reached"', (await fetchItem('x500', { fetchImpl: stubFetch({ x500: 500 }) })).reason === 'archive-unreachable');
+    check('no network is "can’t be reached", never a throw', (await fetchItem('xdown', { fetchImpl: stubFetch({ xdown: 'down' }) })).reason === 'archive-unreachable');
+    const n = log.length;
+    check('a bad name is refused before any request', (await fetchItem('bad name', { fetchImpl: f })).reason === 'archive-bad-id' && log.length === n);
+    const slow = await fetchItem('slow_one', { fetchImpl: () => new Promise(() => {}), timeoutMs: 30 });
+    check('an answer that never comes gives up (the wait is a seam)', slow.reason === 'archive-unreachable');
+    forgetItemsForTest();
+    const big = stubFetch(Object.fromEntries(Array.from({ length: CACHE_MAX + 3 }, (_, i) => [`it${i}`, { metadata: { identifier: `it${i}` }, files: [] }])));
+    for (let i = 0; i < CACHE_MAX + 3; i += 1) await fetchItem(`it${i}`, { fetchImpl: big });
+    const l2 = [];
+    await fetchItem('it0', { fetchImpl: stubFetch({ it0: { metadata: { identifier: 'it0' } } }, l2) });
+    check(`the memory holds at most ${CACHE_MAX} (the oldest goes)`, l2.length === 1);
+    forgetItemsForTest();
+    const t = await archiveAudioTracks('OTRR_Test_Radio', { fetchImpl: f });
+    check('a music favourite’s tracks: sound files, by address', t.ok && t.tracks.length === 2 && t.tracks[0].url.startsWith('https://archive.org/download/'));
+    check('...and a TV item has none to give', (await archiveAudioTracks('TestTVSeries1', { fetchImpl: f })).reason === 'archive-no-audio');
+    forgetItemsForTest();
+  }
+
+  // =====================================================================================
+  section('the manifest: every limit and default is a setting');
+  {
+    const m = getManifest(TYPE);
+    check('called "Internet Archive", on the new core, needs the network', m.title === 'Internet Archive' && m.core === 'new' && m.dependsOn === 'network');
+    const keys = m.settings.map((s) => s.key);
+    const want = ['items', 'autostart', 'autoNext', 'order', 'atEnd', 'frameFor', 'keysBackMs', 'videoQuality', 'maxFiles', 'volume', 'playOn'];
+    check('*** each default is a row: ' + want.join(', ') + ' ***', want.every((k) => keys.includes(k)), J(keys));
+    const d = Object.fromEntries(m.settings.map((s) => [s.key, s.default]));
+    check('the defaults: starts by itself, next plays, in order, then the next item; books not games; 10 minutes; the smaller copy',
+      d.autostart === true && d.autoNext === true && d.order === 'inorder' && d.atEnd === 'next-item' && d.frameFor === 'books'
+      && d.keysBackMs === KEYS_BACK_MS && KEYS_BACK_MS === 600000 && d.videoQuality === 'small', J(d));
+    const fields = m.settings.map(normalizeField).filter(Boolean);
+    const errs = auditFields(fields, { type: TYPE }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, J(errs));
+    check('no visible words say "her screen"', !/her screen/i.test(J(m.settings) + m.description));
+    check('it has decided what its silence means (health)', !!HEALTH_EXPECT[TYPE]);
+    check('the catalog describes it', CATALOG.some((c) => c.type === TYPE && c.title === m.title));
+  }
+
+  // =====================================================================================
+  section('*** the panel: a sound item plays in this page’s own player, through the audio bus ***');
+  {
+    forgetItemsForTest();
+    const media = fakeMedia();
+    const audio = fakeAudio();
+    const log = [];
+    const states = [];
+    const bus = createBus();
+    bus.subscribe('shell/play-state', (p) => states.push(p));
+    const r = rig(TYPE, { bus, saved: { items: 'archive.org/details/OTRR_Test_Radio, TestTVSeries1' },
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB, log), makeMedia: media.factory, audio } });
+    await sleep(20);
+    let p = r.probe();
+    check('the first item is read and shown', p.id === 'OTRR_Test_Radio' && p.mode === 'media' && /Test Radio/.test(r.host.textContent), J(p));
+    check('*** what it holds and where it is from are on the panel ***', /2 sound files/.test(r.host.textContent)
+      && /From the Internet Archive: archive\.org\/details\/OTRR_Test_Radio/.test(r.host.textContent));
+    check('*** its first file plays in an <audio> of this page, from archive.org ***', p.elKind === 'audio'
+      && media.last().src === downloadUrl('OTRR_Test_Radio', 'Ep 01 Homicide.mp3') && media.last().plays === 1 && p.wanted, J(p));
+    check('*** it joined the audio bus: media tier, the music group, the "Videos and music" fader ***',
+      audio.regs.length === 1 && audio.regs[0].tier === 'media' && audio.regs[0].group === 'music' && audio.regs[0].channel === 'media', J(audio.regs));
+    media.last().fire('playing');
+    check('playing: the bus is told it is making sound, and the screen that it plays', audio.on[audio.regs[0].id] === true
+      && states.some((s) => s.playing === true && s.kind === 'video'), J(states));
+    check('the line says what is playing', /Playing 1 of 2: Homicide/.test(r.host.textContent), r.host.querySelector('[data-ia-now]')?.textContent);
+    const saved = r.stored();
+    check('*** only the item names and which file are saved: no addresses of files, no titles ***',
+      J(Object.keys(saved).sort()) === J(['items', 'nowFile', 'nowItem']) && !/https?:/.test(J(saved)) && !/Test Radio/.test(J(saved)), J(saved));
+
+    // the bus: a cue pauses it, and it carries on
+    audio.regs[0].onGain(0);
+    check('the bus says silent: it pauses, still wanted', media.last().paused === true && r.probe().busPaused === true && r.probe().wanted === true);
+    audio.regs[0].onGain(1);
+    check('...and carries on by itself when the bus allows', media.last().paused === false && r.probe().busPaused === false);
+    audio.regs[0].onGain(0.5);
+    check('a duck turns it down (volume x the bus)', Math.abs(media.last().volume - 0.5) < 1e-9, String(media.last().volume));
+    audio.regs[0].onGain(1);
+
+    // the screen's verbs
+    r.publish('archive/pause');
+    check('archive/pause pauses it', media.last().paused === true && r.probe().wanted === false && states[states.length - 1].playing === false);
+    r.publish('archive/play');
+    check('archive/play carries on', media.last().paused === false && r.probe().wanted === true);
+    r.publish('archive/select');
+    check('archive/select is Pause when playing…', r.probe().wanted === false);
+    r.publish('archive/select');
+    check('…and Play when not', r.probe().wanted === true);
+    r.publish('archive/next');
+    check('archive/next: the next file', media.last().src.endsWith('Ep%2002%20The%20Werewolf.mp3') && r.probe().fileAt === 1);
+    check('...and where it got to is saved (a reload carries on there)', r.stored().nowFile === 'Ep 02 The Werewolf.mp3');
+    r.publish('archive/prev');
+    check('archive/prev: back to the one before', r.probe().fileAt === 0);
+    // THE BUTTONS, not just the topics (unpressed_controls.py's lesson: a dead arrow over a working topic).
+    r.host.querySelector('[data-act="next"]').click();
+    check('*** the panel’s own Next button ***', r.probe().fileAt === 1);
+    r.host.querySelector('[data-act="prev"]').click();
+    check('...its Previous button', r.probe().fileAt === 0);
+    r.host.querySelector('[data-act="pause"]').click();
+    check('...its Pause button', r.probe().wanted === false && !!r.host.querySelector('[data-act="play"]'));
+    r.host.querySelector('[data-act="play"]').click();
+    check('...its Play button', r.probe().wanted === true);
+    r.host.querySelector('[data-act="next-item"]').click();
+    await sleep(20);
+    check('...its Next item button', r.probe().id === 'TestTVSeries1');
+    r.host.querySelector('[data-act="next-item"]').click();
+    await sleep(20);
+    r.publish('archive/next');
+    media.last().fire('ended');
+    await sleep(20);
+    p = r.probe();
+    check('*** the end of the item: on to the next item (the default), a TV series, in a <video> ***',
+      p.id === 'TestTVSeries1' && p.elKind === 'video' && media.last().kind === 'video' && media.last().src.endsWith('A%20-%20101.mp4') && p.wanted, J(p));
+    check('the bus registration is the same one (one per panel)', audio.regs.length === 1);
+    r.publish('archive/next');
+    media.last().fire('ended');
+    await sleep(20);
+    check('...and round again to the first item', r.probe().id === 'OTRR_Test_Radio');
+    r.inst.destroy();
+    check('closed: the bus is told, the element stopped', audio.on[audio.regs[0].id] === 'gone' && media.last().paused === true);
+  }
+
+  // =====================================================================================
+  section('*** play on: our own files go to the speaker chosen (row 2.68) ***');
+  {
+    forgetItemsForTest();
+    setOutputsForTest([{ deviceId: 'dev-kitchen', label: 'Kitchen speaker' }, { deviceId: 'dev-den', label: 'Den' }]);
+    const media = fakeMedia();
+    const r = rig(TYPE, { saved: { items: 'OTRR_Test_Radio', playOn: 'out:Kitchen speaker' },
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: media.factory, audio: fakeAudio() } });
+    await sleep(20);
+    check('*** the element is sent to the chosen speaker ***', media.last().sinkId === 'dev-kitchen', String(media.last().sinkId));
+    r.setCfg({ playOn: 'out:Den' });
+    check('changing "Play on" moves it at once', media.last().sinkId === 'dev-den');
+    r.setCfg({ playOn: 'here' });
+    check('"This screen": the computer’s own default', media.last().sinkId === '');
+    const choices = fieldsFor(getManifest(TYPE), r.inst).find((f) => f.key === 'playOn').options.map((o) => o.value);
+    check('the row lists this screen and each speaker, and no Spotify speaker (these files play here)',
+      choices.includes('out:Kitchen speaker') && choices.includes('here') && !choices.some((v) => v.startsWith('spotify:')), J(choices));
+    r.setCfg({ playOn: '' });
+    r.inst.destroy();
+    const media2 = fakeMedia();
+    const r2 = rig(TYPE, { saved: { items: 'OTRR_Test_Radio' },
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: media2.factory, speakerRoute: (k) => (k === 'music' ? 'out:Den' : '') } });
+    await sleep(20);
+    check('blank follows the screen’s Devices → Speakers row', media2.last().sinkId === 'dev-den', String(media2.last().sinkId));
+    r2.inst.destroy();
+    setOutputsForTest([]);
+  }
+
+  // =====================================================================================
+  section('files that will not play, an Archive that cannot be reached, a wrong address');
+  {
+    forgetItemsForTest();
+    const media = fakeMedia();
+    const r = rig(TYPE, { saved: { items: 'TestTVSeries1, OTRR_Test_Radio' },
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: media.factory, audio: fakeAudio() } });
+    await sleep(20);
+    media.last().fire('error');
+    check('one file that will not play is skipped', r.probe().fileAt === 1 && r.probe().wanted);
+    media.last().fire('error');
+    await sleep(20);
+    check('the last file of the item fails too: on to the next item', r.probe().id === 'OTRR_Test_Radio' && r.probe().wanted);
+    media.last().fire('error');
+    await sleep(5);
+    check('*** three in a row, ACROSS items (the Archive not serving): it stops and says so, with Try again ***',
+      r.probe().reason === 'archive-files-failed' && !r.probe().wanted
+      && /would not play/.test(r.host.textContent) && !!r.host.querySelector('[data-act="retry"]'), J(r.probe()));
+    check('...and has asked to try the next item in a minute', r.timers.count() >= 1);
+    r.timers.flush();
+    await sleep(20);
+    check('the minute passes: the next item plays', r.probe().id === 'TestTVSeries1' && r.probe().wanted, J(r.probe()));
+    media.last().fire('playing');
+    media.last().fire('error');
+    check('a file that played resets the count: one failure is a skip again', r.probe().wanted && r.probe().reason === null, J(r.probe()));
+    r.inst.destroy();
+
+    forgetItemsForTest();
+    const db = { ...DB, TestTVSeries1: 'down' };
+    const r2 = rig(TYPE, { saved: { items: 'TestTVSeries1' }, extra: { speakersOffline: true, archiveFetch: stubFetch(db), makeMedia: fakeMedia().factory } });
+    await sleep(20);
+    check('can’t reach the Archive: said, with Try again, and asked again in a minute', r2.probe().reason === 'archive-unreachable'
+      && /could not be reached/.test(r2.host.textContent) && r2.timers.count() >= 1);
+    db.TestTVSeries1 = TV;
+    r2.timers.flush();
+    await sleep(20);
+    check('...and plays when it answers', r2.probe().mode === 'media' && r2.probe().wanted, J(r2.probe()));
+    r2.inst.destroy();
+
+    const r3 = rig(TYPE, { saved: { items: 'no_such_item' }, extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: fakeMedia().factory } });
+    await sleep(20);
+    check('an item the Archive does not have: said once, not asked again', r3.probe().reason === 'archive-not-found' && r3.timers.count() === 0);
+    r3.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the Archive’s own player: books, and games only when turned on ***');
+  {
+    forgetItemsForTest();
+    const media = fakeMedia();
+    const audio = fakeAudio();
+    const r = rig(TYPE, { saved: { items: 'alicebook00, msdos_Test_Trail_1990' },
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: media.factory, audio, archiveEmbedUrl: (id) => `about:blank#${embedUrl(id)}` } });
+    await sleep(20);
+    let p = r.probe();
+    check('a book opens in the Archive’s own player (its embed address)', p.mode === 'frame' && p.frameSrc.endsWith('https://archive.org/embed/alicebook00'), J(p));
+    check('*** the frame sends no referrer ***', r.host.querySelector('[data-ia-frame]')?.getAttribute('referrerpolicy') === 'no-referrer');
+    check('*** and the panel says its sound and Pause are the Archive’s, not this screen’s ***', /Pause on this screen does not reach it/.test(r.host.textContent));
+    check('no media element, nothing on the audio bus for a book', media.made.length === 0 && audio.regs.length === 0);
+
+    // THE KEYBOARD: pressing into the frame gives it the keys; they come back.
+    const frame = r.host.querySelector('[data-ia-frame]');
+    frame.focus();
+    window.dispatchEvent(new Event('blur'));
+    r.timers.flush();   // the panel looks once the blur has settled
+    const away = document.activeElement === frame;
+    if (away) {
+      check('*** the frame has the keyboard: the panel says so, with "Give the keys back" ***', r.probe().keysAway === true
+        && /has the keyboard/.test(r.host.textContent) && !!r.host.querySelector('[data-act="keys"]'));
+      check('...and has asked to take it back by itself', r.timers.count() === 1);
+      r.timers.flush();
+      check('*** the time passes: the keyboard is back on this screen ***', r.probe().keysAway === false && document.activeElement !== frame
+        && r.host.contains(document.activeElement), String(document.activeElement?.outerHTML).slice(0, 80));
+    } else {
+      check('(this browser does not move focus into a frame here: the keyboard checks are skipped, not passed)', true);
+    }
+
+    r.publish('archive/next');
+    await sleep(20);
+    p = r.probe();
+    check('a game is NOT in the frame by default, and says how to turn it on', p.id === 'msdos_Test_Trail_1990' && p.mode === 'none'
+      && /game or program/.test(r.host.textContent) && /Archive’s own player/.test(r.host.textContent) && !r.host.querySelector('[data-ia-frame]'), J(p));
+    r.setCfg({ frameFor: 'books-games' });
+    await sleep(20);
+    check('*** turned on: the game is in the Archive’s player (its emulator) ***', r.probe().mode === 'frame'
+      && r.probe().frameSrc.endsWith('/embed/msdos_Test_Trail_1990'), J(r.probe()));
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('starting, the list, and shuffle');
+  {
+    forgetItemsForTest();
+    const media = fakeMedia();
+    const r = rig(TYPE, { saved: { items: 'OTRR_Test_Radio', autostart: false },
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: media.factory } });
+    await sleep(20);
+    check('"It waits for Start": loaded, not playing, a Start button', r.probe().waiting && !r.probe().wanted && media.last().plays === 0
+      && !!r.host.querySelector('[data-ia-start]'));
+    r.publish('archive/play');
+    check('Play is Start', r.probe().wanted && media.last().plays === 1);
+    r.inst.destroy();
+
+    forgetItemsForTest();
+    const r2 = rig(TYPE, { saved: {}, extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: fakeMedia().factory } });
+    await sleep(10);
+    check('no items: it says what to do', /No items yet/.test(r2.host.textContent) && /archive\.org\/details/.test(r2.host.textContent));
+    r2.host.querySelector('[data-act="edit"]').click();
+    const box = r2.host.querySelector('[data-ia-add]');
+    box.value = 'nonsense here';
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+    r2.host.querySelector('[data-act="add"]').click();
+    await sleep(10);
+    check('a wrong address is refused, with words', /not an Internet Archive address/.test(r2.host.textContent) && !r2.stored().items);
+    const box2 = r2.host.querySelector('[data-ia-add]');
+    box2.value = 'https://archive.org/details/no_such_item';
+    box2.dispatchEvent(new Event('input', { bubbles: true }));
+    r2.host.querySelector('[data-act="add"]').click();
+    await sleep(10);
+    check('an address the Archive does not have is refused', /no public item/.test(r2.host.textContent) && !r2.stored().items);
+    const box3 = r2.host.querySelector('[data-ia-add]');
+    box3.value = 'https://archive.org/details/OTRR_Test_Radio';
+    box3.dispatchEvent(new Event('input', { bubbles: true }));
+    r2.host.querySelector('[data-act="add"]').click();
+    await sleep(20);
+    check('*** a real one is looked up, added BY NAME ONLY, and says what it holds ***', r2.stored().items === 'OTRR_Test_Radio'
+      && /Added “Test Radio - Single Episodes”: 2 sound files/.test(r2.host.textContent), J(r2.stored()));
+    check('the first item added starts playing', r2.probe().id === 'OTRR_Test_Radio' && r2.probe().mode === 'media');
+    r2.host.querySelector('[data-act="remove"]').click();
+    await sleep(10);
+    check('Remove takes it off the list', r2.stored().items === '' && r2.probe().ids.length === 0);
+    r2.inst.destroy();
+
+    forgetItemsForTest();
+    const media3 = fakeMedia();
+    const r3 = rig(TYPE, { saved: { items: 'OTRR_Test_Radio', order: 'shuffle' }, rand: () => 0.99,
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: media3.factory } });
+    await sleep(20);
+    check('shuffled: the first file is the picker’s (rand)', r3.probe().fileAt === 1, J(r3.probe()));
+    media3.last().fire('ended');
+    check('...the next is one not yet played', r3.probe().fileAt === 0);
+    r3.inst.destroy();
+
+    forgetItemsForTest();
+    const media4 = fakeMedia();
+    const r4 = rig(TYPE, { saved: { items: 'OTRR_Test_Radio', nowItem: 'OTRR_Test_Radio', nowFile: 'Ep 02 The Werewolf.mp3' },
+      extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: media4.factory } });
+    await sleep(20);
+    check('*** opened again: it carries on at the file it was playing ***', r4.probe().fileAt === 1);
+    r4.setCfg({ autoNext: false });
+    media4.last().fire('ended');
+    check('"When one file ends: Stop"', !r4.probe().wanted && r4.probe().fileAt === 1);
+    r4.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a Music favourite can be an Internet Archive item ***');
+  {
+    const S = (u) => J(parseSource(u));
+    check('an archive.org link in the favourites form is an Archive source', S('https://archive.org/details/OTRR_Test_Radio') === J({ kind: 'archive', id: 'OTRR_Test_Radio' }));
+    check('...a plain word is still nothing (it may be a typo of a YouTube link)', parseSource('jazz') === null);
+    check('the kinds include it', SOURCE_KINDS.includes('archive'));
+    check('a stored one is checked', J(normalizeSource({ kind: 'archive', id: 'OTRR_Test_Radio' })) === J({ kind: 'archive', id: 'OTRR_Test_Radio' })
+      && normalizeSource({ kind: 'archive', id: 'bad name' }) === null);
+    check('described in the list', describeSource({ kind: 'archive', id: 'x' }) === 'an Internet Archive item');
+    const favs = normalizeFavourites([{ name: 'old radio', source: { kind: 'archive', id: 'OTRR_Test_Radio' } }]);
+    check('a favourite keeps only the name and the item', favs.length === 1 && J(favs[0].source) === J({ kind: 'archive', id: 'OTRR_Test_Radio' }));
+
+    const calls = [];
+    const local = { playTracks: async (a) => { calls.push(a); return { ok: true, tracks: a.tracks.length }; }, stop() {}, pause() {}, resume() {} };
+    const said = [];
+    const bus = createBus();
+    const router = createMusicRouter({ bus, favourites: () => favs, local, say: (t) => said.push(t),
+      archive: { tracks: async (id) => (id === 'OTRR_Test_Radio' ? { ok: true, tracks: [{ url: 'https://archive.org/download/OTRR_Test_Radio/a.mp3', path: 'a.mp3' }] } : { ok: false, reason: 'archive-not-found' }) } });
+    const r = await router.play({ name: 'old radio' });
+    check('*** "play old radio": its sound files go to the same player as a folder (the bus, the speaker, the order) ***',
+      r.ok && calls.length === 1 && calls[0].tracks[0].url.endsWith('/a.mp3') && calls[0].what.sourceId === 'archive:OTRR_Test_Radio', J({ r, calls }));
+    router.destroy();
+    const favs2 = normalizeFavourites([{ name: 'gone radio', source: { kind: 'archive', id: 'gone_item' } }]);
+    const router2 = createMusicRouter({ bus: createBus(), favourites: () => favs2, local, say: (t) => said.push(t),
+      archive: { tracks: async () => ({ ok: false, reason: 'archive-not-found' }) } });
+    const r2 = await router2.play({ name: 'gone radio' });
+    check('a missing item is said out loud, in the Archive’s words', !r2.ok && said[said.length - 1] === ARCHIVE_MESSAGES['archive-not-found']
+      && messageFor('archive-no-audio') === ARCHIVE_MESSAGES['archive-no-audio']);
+    router2.destroy();
+
+    // the real local player, with fake <audio>s
+    const els = [];
+    const lm = createLocalMusic({ makeAudio: (src) => { const L = {}; const e = { src, volume: 1, paused: true, sink: null,
+      addEventListener: (t, fn) => { (L[t] ||= []).push(fn); }, fire: (t) => (L[t] || []).forEach((fn) => fn()),
+      play() { this.paused = false; return Promise.resolve(); }, pause() { this.paused = true; }, removeAttribute() {}, load() {},
+      setSinkId(id) { this.sink = id; return Promise.resolve(); } }; els.push(e); return e; }, order: 'inorder' });
+    lm.setSink('dev-x');
+    const pr = await lm.playTracks({ tracks: [{ url: 'u1', path: 'one.mp3' }, { url: 'u2', path: 'two.mp3' }], what: { kind: 'archive', sourceId: 'archive:z' } });
+    check('music_local plays a list of addresses: in order, on the chosen speaker', pr.ok && pr.tracks === 2 && els[0].src === 'u1' && els[0].sink === 'dev-x');
+    els[0].fire('ended');
+    check('...and moves to the next at the end', els[1] && els[1].src === 'u2');
+    check('an empty list is "no music"', (await lm.playTracks({ tracks: [] })).reason === 'no-audio');
+    lm.destroy();
+  }
+  finish();
+} catch (err) {
+  finish(err);
+}
+</script>
+</body>
+</html>

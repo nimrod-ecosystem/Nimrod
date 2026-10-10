@@ -154,10 +154,24 @@ export const CATALOG = [
     group: 'comfort',
     use: 'watch',
     lead: 'Their favourite music, by name.',
-    needs: 'A few favourites. They can be YouTube links, music files in a connected folder, or Spotify. Spotify is optional '
-      + 'and needs Spotify Premium.',
+    needs: 'A few favourites. They can be YouTube links, music files in a connected folder, Internet Archive items, or '
+      + 'Spotify. Spotify is optional and needs Spotify Premium.',
     why: 'Say “computer please play” and a name, or press it. The family writes the list once; '
       + 'the same names work by voice, by switch and by touch.',
+  },
+  // Row 2.69: the Internet Archive - old films, radio, music and books, played from archive.org.
+  {
+    type: 'archive',
+    title: 'Internet Archive',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'Old films, radio shows, music and books from the Internet Archive.',
+    needs: 'The address of an item on archive.org, and a working internet connection. No account is needed.',
+    why: 'Footage and radio from the right decade can mean more than anything new. The Archive keeps old programmes, '
+      + 'recordings and books that anyone may watch and hear. Sound and video play through the speaker you choose, and '
+      + 'move on by themselves; books open in the Archive’s own reader.',
+    note: 'Only the item names you choose are saved. The films and sound come straight from the Archive; nothing is '
+      + 'copied to this site. Old games from the Archive are off until you turn them on.',
   },
   // Row 2.45. A first version, and the catalog says so.
   {

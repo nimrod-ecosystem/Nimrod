@@ -23,15 +23,17 @@
 //     { kind: 'file',    sourceId, path }     one file on a connected media source
 //     { kind: 'folder',  sourceId, album }    every music file in one folder of it
 //     { kind: 'spotify', uri, device? }       a Spotify track/album/playlist/artist/episode/show
+//     { kind: 'archive', id }                 the sound files of one Internet Archive item (row 2.69, archive_org.js)
 //
 // PURE except `watchFavourites`, which only wraps a state handle it is given.
 
 import { normalize, nearMiss, spokenTable, routeAction, phraseControl, SPEECH_DEVICE } from './input_speech.js';
 import { parseVideoId, parsePlaylistId } from './modules/youtube.js';
 import { spotifyRef } from './recommend.js';
+import { parseArchiveId } from './archive_org.js';   // internet archive (row 2.69)
 
 export const FAVOURITES_KEY = 'music-favourites';
-export const SOURCE_KINDS = Object.freeze(['youtube', 'file', 'folder', 'spotify']);
+export const SOURCE_KINDS = Object.freeze(['youtube', 'file', 'folder', 'spotify', 'archive']);
 export const MUSIC_PLAY_TOPIC = 'music/play';
 export const MUSIC_STOP_TOPIC = 'music/stop';
 
@@ -77,6 +79,10 @@ export function parseSource(input) {
   if (vid) return { kind: 'youtube', videoId: vid };
   const list = parsePlaylistId(s);
   if (list) return { kind: 'youtube', playlistId: list };
+  // internet archive (row 2.69): an archive.org address. Not a bare word (`bare: false`): "jazz" in the link box is a
+  // mistake to say, not an item to look up.
+  const ia = parseArchiveId(s, { bare: false });
+  if (ia) return { kind: 'archive', id: ia };
   return null;
 }
 
@@ -105,6 +111,10 @@ export function normalizeSource(raw) {
       const device = str(raw.device);
       return device ? { kind: 'spotify', uri, device } : { kind: 'spotify', uri };
     }
+    case 'archive': {
+      const id = parseArchiveId(str(raw.id));
+      return id ? { kind: 'archive', id } : null;
+    }
     default: return null;
   }
 }
@@ -114,6 +124,7 @@ export function describeSource(src, sourceLabel = null) {
   if (!src) return 'nowhere';
   if (src.kind === 'youtube') return src.videoId ? 'a YouTube video' : 'a YouTube playlist';
   if (src.kind === 'spotify') return `Spotify ${src.uri.split(':')[1] || ''}`.trim() + (src.device ? ` on ${src.device}` : '');
+  if (src.kind === 'archive') return 'an Internet Archive item';
   const where = sourceLabel ? ` in ${sourceLabel}` : '';
   if (src.kind === 'file') return `a music file${where}`;
   if (src.kind === 'folder') return `a music folder${where}`;
