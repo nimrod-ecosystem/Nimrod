@@ -898,11 +898,26 @@ section('2026-10-04: the Automation window by switch -- rows then items (step th
     check('...Close, then each field\'s own stop -- a number\'s − and + are stops of their own',
       tops[0] === q(w.el, 'close') && tops.some((n) => n.dataset.autoNudge === 'outMax:1') && tops.some((n) => rowOf(n) === 'kind'), J(tops.map((n) => n.dataset.autoNudge || rowOf(n))));
     check('*** with message names to choose from, the message name IS a stop ***', tops.some((n) => rowOf(n) === 'topic'));
+    // 2026-10-10: these two checks used Driven by, which had five kinds. 7045e26 (2026-10-07) added a sixth, "what's
+    // been played" (automation.js SOURCE_KINDS), and a choice of more than five (settings_fields.js PICKER_OVER) opens
+    // the choice picker for somebody who points - the 2026-10-02 "How you choose things" rule. The product is right;
+    // map_editor_test was moved the same way in 2ecd300. So: Driven by is now checked as a LONG choice (the picker
+    // opens, all six kinds in it, back is Cancel), and the SHORT-choice checks moved to Shape, which has exactly five
+    // (automation.js CURVES) - the boundary itself, so "5 or fewer steps" is still held where it can break.
     walkTo(w, (n) => rowOf(n) === 'kind');
     w.select();
-    check('*** a SHORT choice (5 or fewer) steps on a press, as the settings menu\'s rows do ***', val(w, 'kind') === 'link' && !w.holds(), val(w, 'kind'));
+    const kindNames = [...w.el.querySelectorAll('[data-a="kind"] option')].map((o) => o.textContent);
+    const kindPicked = [...w.el.querySelectorAll('[data-choice-picker] [data-chp-pick] .chp-name')].map((n) => n.textContent);
+    check('*** Driven by (six kinds, more than five) opens the choice picker, every kind in it ***',
+      kindNames.length === 6 && !!w.el.querySelector('[data-choice-picker]') && w.holds()
+        && kindNames.every((t) => kindPicked.includes(t)), J(kindPicked));
+    check('...and back from it is Cancel: still a message, the window open', w.back() === true
+      && !w.el.querySelector('[data-choice-picker]') && !w.holds() && val(w, 'kind') === 'bus' && w.isOpen(), val(w, 'kind'));
+    walkTo(w, (n) => rowOf(n) === 'curve');
+    w.select();
+    check('*** a SHORT choice (5 or fewer) steps on a press, as the settings menu\'s rows do ***', val(w, 'curve') === 'ease-in' && !w.holds(), val(w, 'curve'));
     w.select(); w.select(); w.select(); w.select();
-    check('...and wraps round to where it was (one switch is never stranded)', val(w, 'kind') === 'bus', val(w, 'kind'));
+    check('...and wraps round to where it was (one switch is never stranded)', val(w, 'curve') === 'linear' && !w.holds(), val(w, 'curve'));
     walkTo(w, (n) => rowOf(n) === 'topic');
     w.select();
     check('a two-name list steps too: the message name is now one of the offered names', ['room/light', 'puzzle/dial'].includes(val(w, 'topic')), val(w, 'topic'));
