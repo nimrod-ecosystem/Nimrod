@@ -101,6 +101,9 @@ export const HEALTH_EXPECT = {
   brickdrop:   { idle: true },
   // bricks module (row 2.76): a picture of one part. It publishes nothing, and a still picture is not a stall.
   bricks:      { idle: true },
+  // brick builder (2026-10-09): a model nobody is building is a model, and a game nobody is playing comes to rest.
+  brickbuilder: { idle: true },
+  buildit:     { idle: true },
   karaoke:     { expectMs: 90 * 60 * 1000 },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //

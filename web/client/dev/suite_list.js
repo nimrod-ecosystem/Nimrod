@@ -144,6 +144,9 @@ export const SUITES = [
   // 2026-10-09 (bricks module, row 2.76): one Bricks module for every part, each theme's brick colours; the CAD
   // helper's baseplate pictures drawn from their numbers.
   'bricks_module', 'baseplate_art',
+  // brick builder (2026-10-09): make a model from Nimrod parts (place, turn, stack, colour, undo, save, the match), and
+  // Build it, the game of building a model you are shown.
+  'brick_builder', 'buildit',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

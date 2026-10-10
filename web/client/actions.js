@@ -699,6 +699,15 @@ export const MODULE_VERBS = {
   brickdrop:     { next: 'brickdrop/next', prev: 'brickdrop/prev', select: 'brickdrop/select', back: 'brickdrop/back',
                    left: 'brickdrop/left', right: 'brickdrop/right', up: 'brickdrop/turn', down: 'brickdrop/drop',
                    launch: 'brickdrop/drop', stop: 'brickdrop/stop', pause: 'brickdrop/pause', play: 'brickdrop/resume' },
+  // brick builder (2026-10-09): next / prev walk every button (the light), select presses the lit one (or puts the part
+  // with nothing lit); left / right / up / down move the cursor a cell; launch puts the part. Build it: next / prev move
+  // the light over the choices (or the builder's buttons), select takes the lit one; play starts, pause stops the light.
+  brickbuilder:  { next: 'brickbuilder/next', prev: 'brickbuilder/prev', select: 'brickbuilder/select',
+                   left: 'brickbuilder/left', right: 'brickbuilder/right', up: 'brickbuilder/up', down: 'brickbuilder/down',
+                   launch: 'brickbuilder/put' },
+  buildit:       { next: 'buildit/next', prev: 'buildit/prev', select: 'buildit/select',
+                   left: 'buildit/left', right: 'buildit/right', up: 'buildit/up', down: 'buildit/down',
+                   play: 'buildit/resume', pause: 'buildit/pause' },
   // 2026-10-02 (games wait for Start; Space is Pause / Play): play / pause start-or-resume and pause, on every
   // game below. The quiz games answer `<type>/resume`, not `/play` (quiz_view.js: `/play` names a game).
   rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back',

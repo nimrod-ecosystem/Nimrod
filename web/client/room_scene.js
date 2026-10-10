@@ -67,6 +67,7 @@ import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
 import { renderBackdrop, normalizeBackdrop, quadMatrix, PAINTS } from './room_backdrop.js';
 import { moveKeeping } from './dom_move.js';
 import { buildBrickArt, buildFor, lookOf } from './brick_builds.js';
+import { buildSvg, roomBoxFor } from './brick_builder.js';   // brick builder (2026-10-09): a model in a room
 import { roomDriveOf, ROOM_DRIVE_KEYS } from './room_drive.js';
 
 // *** AN OBJECT AN AUTOMATION DRIVES (row 2.62 step 4, room_drive.js). *** `driveItem(id, row)` draws ONE object again
@@ -150,8 +151,10 @@ export function viewFor(view, light) {
   return light === 'night' ? 'night' : light === 'evening' ? 'fall' : 'cozy';
 }
 
-export const isFloor = (it) => (it.kind === 'furniture' ? FURNITURE[it.part]?.on === 'floor' : MOUNT_KINDS[it.kind]?.on === 'floor');
-export const isContent = (it) => it.kind !== 'furniture' && it.kind !== 'cat';
+// brick builder (2026-10-09): a model made in the Brick builder (`kind: 'build'`, brick_builder.js `roomItemFor`)
+// stands on the floor like furniture, drawn from the parts its entry carries.
+export const isFloor = (it) => (it.kind === 'furniture' ? FURNITURE[it.part]?.on === 'floor' : it.kind === 'build' ? true : MOUNT_KINDS[it.kind]?.on === 'floor');
+export const isContent = (it) => it.kind !== 'furniture' && it.kind !== 'cat' && it.kind !== 'build';
 
 /** Design's draw order, as item indexes: wall things; floor things back to front, rugs first;
     content (which goes in its own layer, above the lighting). */
@@ -221,6 +224,7 @@ export function itemBox(it, shell = ROOM_SHELLS.room) {
   let w, h, mk;
   if (def) { w = def.box[0] * k; h = def.box[1] * k; mk = 1; }
   else if (it.kind === 'cat') { w = h = (it.size || 110) * k; mk = 1; }
+  else if (it.kind === 'build') { const [bw, bh] = roomBoxFor({ parts: Array.isArray(it.parts) ? it.parts : [] }); w = bw * k; h = bh * k; mk = 1; }   // brick builder
   else { const c = contentSize(it); w = c.w; h = c.h; mk = sc; }
   const side = !floor && (it.wall === 'left' || it.wall === 'right') && shell[it.wall] ? sideWallTransform(shell, it) : null;
   const f = it.flip ? -1 : 1;
@@ -1056,6 +1060,18 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       if (!rec.art) { rec.art = buildFurniture(doc, it.part, color); rec.look = 'drawn'; }
       el.append(rec.art);
       if (def.view) rec.panes = buildPanes(it, box);
+    } else if (it.kind === 'build') {
+      // brick builder (2026-10-09): the model drawn from its own parts, in the theme's brick colours.
+      applyStyle(el, { width: box.w, height: box.h });
+      const art = doc.createElement('span');
+      art.className = 'rm rm-build';
+      art.dataset.build = String(it.build || '');
+      applyStyle(art, { position: 'absolute', inset: 0, display: 'block' });
+      art.innerHTML = buildSvg(Array.isArray(it.parts) ? it.parts : [], { title: it.name || 'A brick model', minHeight: 0 });
+      const svg = art.firstElementChild;
+      if (svg) applyStyle(svg, { position: 'absolute', inset: 0, width: '100%', height: '100%' });
+      rec.art = art;
+      el.append(art);
     } else if (it.kind === 'cat') {
       applyStyle(el, { width: box.w, height: box.h });
       rec.cat = buildCat(doc, { pose: it.pose || 'sleeping', size: box.w, base: `${base}nimrod-cat/`, animated });

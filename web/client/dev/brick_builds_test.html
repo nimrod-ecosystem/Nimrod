@@ -218,7 +218,9 @@ try {
     check('Look reads brick-built to begin with', t.values().look === 'bricks');
     const rec = { id: 'r1', type: 'room', title: 'Room', instance: inst, state, el: mount };
     const sel = selectionFor(rec, t);
-    check('the selection carries the link', J(sel.actions) === J([{ id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' }]));
+    // brick builder (2026-10-09): and the way to build your own, second.
+    check('the selection carries the links', J(sel.actions) === J([{ id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' },
+      { id: 'builder', label: 'Build your own in the brick builder', href: '/modules.html?m=brickbuilder', note: '' }]));
     const card = document.createElement('div');
     cell.append(card);
     const view = renderOptions(card, sel, { onDone: () => {} });
@@ -277,7 +279,8 @@ try {
   section('a DASHBOARD\'s room: the Look saved on the piece\'s recipe item (room_doors.js), 2D and 3D');
   {
     check('the Look row is declared once (brick_builds.js); the room module re-exports the same one', LOOK_FIELD === LOOK_FIELD_BB);
-    check('"Open its bricks" is declared once too', J(builtActions(BRICK_BUILDS.desk)) === J([{ id: 'bricks', note: builtFromWords(BRICK_BUILDS.desk), label: 'Open its bricks', href: bricksPageFor('desk_v1') }]) && J(builtActions(null)) === '[]');
+    check('"Open its bricks" (and, brick builder 2026-10-09, "Build your own") is declared once too', J(builtActions(BRICK_BUILDS.desk)) === J([{ id: 'bricks', note: builtFromWords(BRICK_BUILDS.desk), label: 'Open its bricks', href: bricksPageFor('desk_v1') },
+      { id: 'builder', label: 'Build your own in the brick builder', href: '/modules.html?m=brickbuilder' }]) && J(builtActions(null)) === '[]');
     const s3 = { kind: 'room3d', preset: 'box' };
     check('a 3D box room: its desk is brick-built to begin with', J(sceneLooks(s3)) === J({ table: 'bricks' }), J(sceneLooks(s3)));
     const d3 = withLook(s3, 'table', 'drawn');

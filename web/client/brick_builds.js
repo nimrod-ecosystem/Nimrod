@@ -154,4 +154,8 @@ export const LOOK_FIELD = Object.freeze({
   options: Object.freeze(LOOKS.map((v) => Object.freeze({ value: v, label: LOOK_LABELS[v] }))),
 });
 /** A built piece's edit-mode actions: "Built from N parts" and the way into its bricks. [] with no build. */
-export const builtActions = (b) => (b ? [{ id: 'bricks', note: builtFromWords(b), label: 'Open its bricks', href: bricksPageFor(b.id) }] : []);
+// brick builder (2026-10-09): and the way to build your own (Mike: "We need some sort of builder on the site for
+// making models out of the bricks as well as building rooms/dashboards"): the Brick builder on the Modules page.
+export const BUILDER_PAGE = '/modules.html?m=brickbuilder';
+export const builtActions = (b) => (b ? [{ id: 'bricks', note: builtFromWords(b), label: 'Open its bricks', href: bricksPageFor(b.id) },
+  { id: 'builder', label: 'Build your own in the brick builder', href: BUILDER_PAGE }] : []);

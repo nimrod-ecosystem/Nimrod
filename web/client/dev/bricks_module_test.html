@@ -191,9 +191,14 @@ try {
     const bad = PART_IDS.filter((p) => J(shown(p).filter((k) => ['width', 'length', 'height', 'thickness'].includes(k))) !== J(want[p]));
     check('*** each part shows only its own size rows ***', bad.length === 0, bad.map((p) => `${p}: ${shown(p)}`).join(' | '));
     check('the Part row offers every part', J(fields.find((f) => f.key === 'part').options.map((o) => o.value)) === J(PART_IDS));
-    check('sizes: 40 to 320 in 40 mm steps; a baseplate 5 or 10 mm thick',
-      J(fields.find((f) => f.key === 'width').options.map((o) => o.value)) === J([40, 80, 120, 160, 200, 240, 280, 320])
+    // brick builder (2026-10-09): on screen there is no printer cap -- the menu goes to 1280 (a desk top in one piece).
+    check('sizes: 40 to 1280 in 40 mm steps (no printer cap on screen); a baseplate 5 or 10 mm thick',
+      J(fields.find((f) => f.key === 'width').options.map((o) => o.value)) === J(Array.from({ length: 32 }, (_, i) => (i + 1) * 40))
       && J(fields.find((f) => f.key === 'thickness').options.map((o) => o.value)) === J([5, 10]));
+    check('brick builder: a stored size past the catalogue is kept (1280, not snapped back to 320); a typo is held to SIZE_MAX',
+      bricksOptions({ width: 1280, length: 680 }).width === 1280 && bricksOptions({ length: 680 }).length === 680
+      && bricksOptions({ width: 999999 }).width === 2560
+      && J(partSpec({ ...BRICKS_DEFAULTS, part: 'brick', width: 1280, length: 640, height: 40 }).dims) === J([1280, 640, 40]));
     check('colour: the theme’s five, or your own (and its row only then)', J(fields.find((f) => f.key === 'colour').options.map((o) => o.value)) === J(COLOUR_CHOICES)
       && !shown('brick').includes('ownColour') && fields.find((f) => f.key === 'ownColour').appliesWhen({ colour: 'own' }));
     const words = J(BRICKS_SETTINGS.map((f) => [f.label, f.help || '', (f.options || []).map((o) => o.label)]))

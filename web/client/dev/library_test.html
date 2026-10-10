@@ -91,11 +91,13 @@ try {
     check('*** furniture: every piece the rooms are built from ***', furn.length === Object.keys(FURNITURE).length && furn.every((f) => f.cats.includes('furniture')));
     check('*** ...shown and explained, never put in a panel’s place (it says why) ***', furn.every((f) => f.placeable === false && /room/.test(f.whyNot)));
     // bricks module (row 2.76). Mike: "there shouldn't be a separate module for each brick. Just a bricks module."
+    // brick builder (2026-10-09): the Brick builder and Build it are under 3D bricks too -- each one thing, not a card per part.
     const in3d = its.filter((i) => (i.cats || []).includes('3d'));
-    check('*** 3D bricks: ONE item, the Bricks module, and it can be put in a panel’s place ***',
-      in3d.length === 1 && in3d[0].key === 'module:bricks' && in3d[0].placeable === true, J(in3d.map((x) => x.key)));
+    const bricksItem = in3d.find((x) => x.key === 'module:bricks');
+    check('*** 3D bricks: ONE item for the parts, the Bricks module, and it can be put in a panel’s place; beside it only the brick builder and Build it ***',
+      !!bricksItem && bricksItem.placeable === true && J(in3d.map((x) => x.key).sort()) === J(['module:brickbuilder', 'module:bricks', 'module:buildit']), J(in3d.map((x) => x.key)));
     check('...no card per published part is left (no `brick:` keys, no "3D brick" kind)', !its.some((i) => i.kind === 'brick' || String(i.key).startsWith('brick:')));
-    check('...and its details still reach every part, on the bricks page', in3d[0]?.page === '/bricks.html');
+    check('...and its details still reach every part, on the bricks page', bricksItem?.page === '/bricks.html');
     const old = brickKeyItem('brick:brick_40x80x160_v1', its);
     check('*** an OLD per-part key reads as the Bricks module with that part chosen ***',
       old?.type === 'bricks' && J(old.settings) === J({ part: 'brick', width: 40, length: 80, height: 160 }), J(old));

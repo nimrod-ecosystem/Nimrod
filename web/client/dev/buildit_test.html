@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>buildit — Build it: see a finished model, build the same</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#3c5346}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  .box{position:relative;width:900px;height:520px;margin:8px 0;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>buildit — Build it: see a finished model, build the same</h1>
+<p>Mike, 2026-10-09: <i>"We should have a building game where you can see the finished product and you have to build
+it."</i> This checks the built-in models (easy to hard, each one standing as built, its parts in its level's range), the
+choices at the easy levels (exactly one right, the wrong ones never also right), that every easy model can be finished by
+choosing, the match, and the game on a page: it waits for Start, says it is being played, the choices light in turn and a
+press takes the lit one, a wrong one is not offered again, a built model is scored and the next comes by itself, a game
+nobody plays comes to rest, and the harder levels are built in the brick builder and checked as they go.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { LEVELS, LEVEL_IDS, TARGETS, targetsFor, targetBuild, modeFor, buildOrder, choicesFor, samePlaced, nextNeeded, overlaps, levelOf } from '../build_it.js';
+import { matchBuilds, settle, normalizePart, GRID } from '../brick_builder.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { MODULE_VERBS } from '../actions.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
+import { applyTheme } from '../theme.js';
+import { GAME, IDLE_MS, REST_MS, progressWords } from '../modules/buildit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function info(t) { const d = document.createElement('div'); d.className = 'info'; d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+function memState(seed = {}) {
+  let data = { ...seed };
+  const subs = new Set();
+  return { load: () => Promise.resolve(data), get: () => structuredClone(data),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f(structuredClone(data)); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, flush: async () => {}, destroy() {} };
+}
+function box() { const b = document.createElement('div'); b.className = 'box'; document.getElementById('host').append(b); return b; }
+// A seeded 0..1 (the same choices every run).
+function seeded(s = 7) { let x = s >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }
+// The game's clock, by hand: setTimer / clearTimer, and advance(ms).
+function manualClock() {
+  let t = 0; let seq = 0; const timers = new Map();
+  return {
+    setTimer(fn, ms) { const id = ++seq; timers.set(id, { at: t + Math.max(0, ms), fn }); return id; },
+    clearTimer(id) { timers.delete(id); },
+    advance(ms) {
+      const end = t + ms;
+      for (;;) {
+        let next = null;
+        for (const [id, x] of timers) if (x.at <= end && (!next || x.at < next[1].at)) next = [id, x];
+        if (!next) break;
+        timers.delete(next[0]); t = next[1].at; next[1].fn();
+      }
+      t = end;
+    },
+    pending: () => timers.size,
+  };
+}
+
+try {
+  // ===============================================================================================================
+  section('*** the models: easy to hard, each standing as built, its parts in its level\'s range ***');
+  {
+    check('five levels, easy to hard', J(LEVEL_IDS) === J([1, 2, 3, 4, 5]) && LEVELS[1].label === 'Easy' && LEVELS[5].label === 'Hardest');
+    for (const lv of LEVEL_IDS) {
+      const ts = targetsFor(lv);
+      const [lo, hi] = LEVELS[lv].parts;
+      check(`level ${lv} (${LEVELS[lv].label}): ${ts.length} models, each ${lo} to ${hi} parts`, ts.length >= 2 && ts.every((t) => t.parts.length >= lo && t.parts.length <= hi),
+        ts.map((t) => `${t.name} ${t.parts.length}`).join(', '));
+      check(`level ${lv}: no two parts of a model share any space`, ts.every((t) => overlaps(t.parts).length === 0), ts.filter((t) => overlaps(t.parts).length).map((t) => t.name).join(', '));
+      check(`level ${lv}: every part on the 40 mm grid`, ts.every((t) => t.parts.every((p) => p.x % GRID === 0 && p.z % GRID === 0)));
+      info(`level ${lv}: ${ts.map((t) => `${t.name} (${t.parts.length})`).join(', ')}`);
+    }
+    check('the easy levels are bricks only; level 4 brings plates and brackets', [1, 2, 3].every((lv) => targetsFor(lv).every((t) => t.parts.every((p) => p.part === 'brick')))
+      && targetsFor(4).some((t) => t.parts.some((p) => p.part !== 'brick')));
+    const table = targetsFor(3).find((t) => t.id === 'target-table');
+    check('*** things stand as they should: the table\'s top sits on its 80 mm legs ***', table.parts.some((p) => p.w === 120 && p.l === 120 && p.y === 80), J(table.parts.map((p) => [p.w, p.l, p.y])));
+    const bed = targetsFor(4).find((t) => t.id === 'target-bed');
+    check('the bed\'s blanket (a 10 mm baseplate) lies on its base', bed.parts.some((p) => p.part === 'baseplate' && p.h === 10 && p.y === 80), J(bed.parts.map((p) => [p.part, p.y])));
+    check('how each level is built: choose at 1 and 2, build from 3; a setting can say either', modeFor(1) === 'choose' && modeFor(2) === 'choose' && modeFor(3) === 'build'
+      && modeFor(5, 'choose') === 'choose' && modeFor(1, 'build') === 'build' && levelOf(9) === 1);
+  }
+
+  // ===============================================================================================================
+  section('*** the choices: exactly one right, the wrong ones never also right, and every easy model can be finished ***');
+  {
+    let bad = []; let total = 0;
+    for (const lv of LEVEL_IDS) for (const t of targetsFor(lv)) {
+      const order = buildOrder(t.parts);
+      let attempt = [];
+      for (let i = 0; i < order.length; i++) {
+        const n = LEVELS[lv].choices;
+        const cs = choicesFor(t, attempt, n, seeded(lv * 100 + i));
+        total++;
+        const rights = cs.filter((c) => c.right);
+        if (cs.length !== n || rights.length !== 1) { bad.push(`${t.name} step ${i + 1}: ${cs.length} choices, ${rights.length} right`); break; }
+        const still = order.slice(i);
+        const alsoRight = cs.filter((c) => !c.right && still.some((s) => samePlaced(c.part, s)));
+        if (alsoRight.length) { bad.push(`${t.name} step ${i + 1}: a wrong choice is also a part to come`); break; }
+        const dup = cs.some((c, j) => cs.some((d, k) => k > j && samePlaced(c.part, d.part)));
+        if (dup) { bad.push(`${t.name} step ${i + 1}: two choices are the same`); break; }
+        attempt = settle([...attempt, { ...rights[0].part, id: `a${i}` }]);
+      }
+      if (!matchBuilds(t.parts, attempt, { turns: false }).same) bad.push(`${t.name}: choosing every right one did not build it`);
+    }
+    check(`*** ${total} choices over every model: each has its number of pictures, exactly one right, none of the wrong ones a part still to come ***`, bad.length === 0, bad.slice(0, 5).join(' | '));
+    check('*** choosing the right one every time builds every model exactly ***', !bad.some((b) => /did not build/.test(b)));
+    const t = targetsFor(1)[0];
+    const a = choicesFor(t, [], 2, seeded(3)); const b = choicesFor(t, [], 2, seeded(3));
+    check('the same seed, the same choices (a run can be repeated)', J(a.map((c) => [c.right, c.part.colour, c.part.x])) === J(b.map((c) => [c.right, c.part.colour, c.part.x])));
+    const pos = new Set(); for (let s = 1; s < 40; s++) pos.add(choicesFor(t, [], 2, seeded(s)).findIndex((c) => c.right));
+    check('the right one is not always in the same place', pos.size === 2, [...pos].join(','));
+    check('a finished model has no choices', choicesFor(t, t.parts, 2, seeded(1)).length === 0);
+    const noCol = choicesFor(t, [], 3, seeded(5), { colours: false });
+    check('colours not counted: no wrong choice differs only by colour', noCol.filter((c) => !c.right).every((c) => !samePlaced(c.part, noCol.find((x) => x.right).part, { colours: false })));
+    const desk = targetsFor(4).find((x) => x.id === 'target-desk');
+    const need = nextNeeded(desk, desk.parts.slice(0, 4));
+    check('"Give me the next part": a part still wanted (by kind, size and colour)', need && need.w === 160 && need.l === 80, J(need));
+    check('progress in words', progressWords({ same: false, right: 3, total: 5, extra: 0 }) === '3 of 5 parts are right.'
+      && progressWords({ same: false, right: 1, total: 5, extra: 1 }) === '1 of 5 parts is right, and 1 part that is not in it.' && progressWords({ same: true }) === 'Built it!');
+  }
+
+  // ===============================================================================================================
+  section('*** the game on a page: Start, choices lit in turn, a press takes the lit one ***');
+  {
+    const m = getManifest(GAME);
+    check('registered on the new core, in the catalog, and its silence is a rest', m?.core === 'new' && m.title === 'Build it' && !!CATALOG.find((c) => c.type === GAME) && HEALTH_EXPECT[GAME]?.idle === true);
+    check('a switch reaches it (next / prev / select, play / pause)', MODULE_VERBS?.[GAME]?.select === `${GAME}/select` && MODULE_VERBS[GAME].play === `${GAME}/resume`, J(MODULE_VERBS?.[GAME]));
+    check('"start" said aloud starts it', m.voice && m.voice.start === 'play');
+    // The shared rows every game has (score_source.js "its own score", game_start.js "when it opens") carry their own
+    // words, the same on every game: this checks the words written here.
+    const SHARED_ROWS = ['ownScore', 'autostart', 'autostartAlone'];
+    const words = J([m.description, (m.settings || []).filter((f) => !SHARED_ROWS.includes(f.key)).map((f) => [f.label, f.note || '', (f.options || []).map((o) => o.label)]), CATALOG.find((c) => c.type === GAME)]);
+    check('*** PLAIN WORDS (its own rows): no module, dashboard, panel, token, widget, account or grant ***', !/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/i.test(words), words.match(/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/ig));
+    check('...and never "her screen", Taylor or Cici', !/her screen|taylor|cici/i.test(words));
+
+    const host = box();
+    applyTheme(host, 'default');
+    const bus = createBus();
+    const clock = manualClock();
+    const state = memState({});
+    const plays = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => plays.push(p));
+    const inst = mountModule(GAME, { mount: host, bus, state, personId: null, instanceId: 'bi1', rand: seeded(11),
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, gameIdleMs: 3600000 });
+    await inst.init();
+    const p = () => inst.impl.__probe();
+    check('*** it waits for Start, showing the first model ***', !p().started && !!host.querySelector('[data-start]') && !!host.querySelector('[data-target] svg') && /Build this: A tower/.test(host.querySelector('[data-target-words]').textContent));
+    check('...and says it is not being played', plays.at(-1)?.playing === false);
+    check('nothing lights while it waits (Start is the one thing a press presses)', !p().lightOn && p().lit === -1 && !host.querySelector('[data-choice][data-lit="1"]'));
+    bus.publish(`${GAME}/select`, {});
+    check('*** a press starts it: the same model, two choices, the first lit ***', p().started && p().target === 'target-tower' && p().choices.length === 2 && p().lit === 0 && p().mode === 'choose');
+    check('...and it says it is being played', plays.at(-1)?.playing === true);
+    check('each choice is a picture: the model so far with that part in it', host.querySelectorAll('[data-choice] svg').length === 2);
+    clock.advance(2000);
+    check('*** the light moves by itself, every 2 seconds ***', p().lit === 1);
+    clock.advance(2000);
+    check('...round again', p().lit === 0);
+    // take the wrong one first
+    const wrongAt = p().choices.findIndex((c) => !c.right);
+    while (p().lit !== wrongAt) clock.advance(2000);
+    bus.publish(`${GAME}/select`, {});
+    check('*** a wrong one: said gently, not put down, and not offered again ***', p().choices[wrongAt].tried && p().attempt === 0 && /Not that one/.test(p().say)
+      && host.querySelector(`[data-choice="${wrongAt}"]`).hasAttribute('data-tried'));
+    check('the light passes over a wrong one from then on', p().lit !== wrongAt);
+    clock.advance(2000);
+    check('...always', p().lit !== wrongAt);
+    bus.publish(`${GAME}/select`, {});
+    check('*** the right one snaps into place, and the next part is offered ***', p().attempt === 1 && p().choices.length === 2 && /Yes!/.test(p().say));
+    // two switches: next moves the light, select takes it
+    const rightAt = p().choices.findIndex((c) => c.right);
+    while (p().lit !== rightAt) bus.publish(`${GAME}/next`, {});
+    bus.publish(`${GAME}/select`, {});
+    check('*** the last part: "Built it!", scored ***', p().phase === 'built' && p().built === 1 && /Built it/.test(p().say) && p().resting);
+    check('the score is on the page', /Built: 1/.test(host.querySelector('[data-score]').textContent));
+    clock.advance(REST_MS);
+    check('*** the next model comes up by itself ***', p().phase === 'play' && p().target === 'target-step' && p().attempt === 0);
+    // a tap takes any choice
+    const tap = p().choices.findIndex((c) => c.right);
+    host.querySelector(`[data-choice="${tap}"]`).dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('a tap takes the choice tapped', p().attempt === 1);
+    // a game nobody plays comes to rest
+    clock.advance(IDLE_MS + 10);
+    check('*** nobody pressing for a while: it comes to rest (the light stops; "not being played") ***', p().idle && !p().lightOn && plays.at(-1)?.playing === false && plays.at(-1)?.rest === true);
+    const before = p().attempt;
+    bus.publish(`${GAME}/select`, {});
+    check('*** the next press only wakes it: it does not take whatever was lit ***', !p().idle && p().attempt === before && p().lightOn);
+    // settings: only when pressed
+    state.set({ lightMs: 0 });
+    check('"Only when pressed": the light does not move by itself', !p().lightOn);
+    // hidden
+    inst.impl.onHide?.();
+    check('hidden: nothing lights', !p().lightOn);
+    inst.destroy();
+    check('destroy empties the place and leaves no timers', host.innerHTML === '' && clock.pending() === 0, String(clock.pending()));
+  }
+
+  // ===============================================================================================================
+  section('*** the harder levels: built in the brick builder, checked after every change ***');
+  {
+    const host = box();
+    applyTheme(host, 'dusk');
+    const bus = createBus();
+    const clock = manualClock();
+    const state = memState({ level: 3, autostart: true });
+    const inst = mountModule(GAME, { mount: host, bus, state, personId: null, instanceId: 'bi2', rand: seeded(4),
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    await inst.init();
+    const p = () => inst.impl.__probe();
+    const view = inst.impl.__view();
+    check('*** level 3 (started by itself, as set): the brick builder under the model ***', p().started && p().mode === 'build' && !!view && !!host.querySelector('[data-board] svg'));
+    const target = inst.impl.__target();
+    check('the part in your hand starts as the first part it needs', view.editor.hand().w === buildOrder(target.parts)[0].w && view.editor.hand().colour === buildOrder(target.parts)[0].colour);
+    view.press('put');
+    check('*** after a change it says how much is right ***', /of 5 parts/.test(p().say) || /of 5 parts/.test(view.say()), `${p().say} | ${view.say()}`);
+    // Build it somewhere else on the floor, turned a quarter: still the same model.
+    const turned = target.parts.map((q, i) => {
+      const fx = q.rot % 2 ? q.l : q.w; const fz = q.rot % 2 ? q.w : q.l;
+      return { ...q, id: `q${i}`, rot: (q.rot + 1) % 4, x: 200 - (q.z + fz) + 40, z: q.x + 40, y: 0, _f: [fx, fz] };
+    });
+    view.editor.setParts(turned);
+    check('*** built turned round and somewhere else: "Built it!" ***', p().phase === 'built' && p().built === 1, J(p().match));
+    clock.advance(REST_MS);
+    check('the next model, a fresh floor', p().phase === 'play' && p().target !== target.id && view !== inst.impl.__view() && inst.impl.__view().editor.get().parts.length === 0);
+    // "Give me the next part"
+    const v2 = inst.impl.__view();
+    host.querySelector('[data-act="nextPart"]').click();
+    const t2 = inst.impl.__target();
+    check('"Give me the next part" puts it in your hand', v2.editor.hand().part === buildOrder(t2.parts)[0].part && v2.editor.hand().w === buildOrder(t2.parts)[0].w);
+    // colours do not have to match
+    state.set({ colours: false });
+    const v3 = inst.impl.__view();
+    const t3 = inst.impl.__target();
+    v3.editor.setParts(t3.parts.map((q, i) => ({ ...q, id: `c${i}`, colour: 'theme5' })));
+    check('"Colours must match: no" -- the right shape in another colour is built', p().phase === 'built');
+    // a level that chooses, from the build setting
+    state.set({ level: 1, how: 'build' });
+    check('"How you build: build it" at level 1 builds it', p().mode === 'build' && p().target === 'target-tower');
+    inst.destroy();
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+
+// To look at (not checked): level 1 and level 3, started.
+for (const level of [1, 3]) {
+  try {
+    const b = box(); applyTheme(b, 'default'); b.style.background = 'var(--bg)';
+    const inst = mountModule(GAME, { mount: b, bus: createBus(), state: memState({ level, autostart: true, lightMs: 0 }), personId: null, instanceId: `show${level}`, rand: seeded(level) });
+    await inst.init();
+  } catch (err) { console.error(err); }
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

@@ -158,6 +158,19 @@ rec = {"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "title": "t" * 200,
 check("a recommendation-sized event passes", refused(lambda: sl.check_event("recommendations", "rec", rec)) is None)
 about = {"sections": [{"kind": "about", "text": "word " * 400}], "theme": {"bg": "#123456"}}
 check("a page with a full 2,000-character About me passes", refused(lambda: sl.check_state(about)) is None)
+# brick builder (2026-10-09): a person's models in the shared `brick_builder` row (modules/brickbuilder.js), one key per
+# model - parts, sizes, places and colour names. A full model is brick_builder.js MAX_PARTS (300) parts.
+def brick_model(n, i=0):
+    return {"schema": "nimrod-brick-build/1", "id": f"bk{i}", "name": f"Model {i}", "floor": {"w": 640, "d": 640},
+            "updated": 1759800000000,
+            "parts": [{"id": f"p{k + 1}", "part": "brick", "w": 80, "l": 40, "h": 40, "x": (k % 16) * 40,
+                       "y": (k // 256) * 40, "z": ((k // 16) % 16) * 40, "rot": k % 4,
+                       "colour": "theme3" if k % 2 else "#c07a3e"} for k in range(n)]}
+models = {f"build_bk{i}": brick_model(300, i) for i in range(20)}
+size = sl.row_bytes(models)
+check(f"*** brick builder: twenty full models (300 parts each, {size:,} bytes) pass the state cap and the content rules ***",
+      refused(lambda: sl.check_state(models)) is None and size < sl.STATE_MAX_BYTES, str(size))
+check("...and so does a deleted one (its key set to nothing)", refused(lambda: sl.check_state({"build_bk0": None})) is None)
 
 # ---------------------------------------------------------------- rule 5: voiceprints
 section("rule 5 - a voiceprint is refused, everywhere (row 2.56)")
