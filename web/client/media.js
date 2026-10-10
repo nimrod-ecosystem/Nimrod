@@ -332,14 +332,18 @@ export function mountMedia(root, {
     }
 
     try {
-      const listing = await resolve(src, '');
+      // every folder inside (2026-10-10, row 2.78): counted with the folders inside, which is what a panel shows by
+      // default - a Pictures folder of dated folders reads "ready — 2850 items in 57 folders", not "no photos".
+      const listing = await resolve(src, '', { deep: true });
       // desktop prompt (2026-10-10): an address that answered "Check on this computer" is remembered, so the panels
       // here (Photos, Personal videos, Music, Wallpaper) use it from then on without asking again (quietReach).
       if (here && isAgent) rememberReached(src.base_url);
       const albums = listing.albums || [];
       const n = listing.count;
+      const nf = listing.deep && Array.isArray(listing.folders) ? listing.folders.length : 0;
       cell.textContent = n
-        ? `ready — ${n} item${n === 1 ? '' : 's'}${scope === 'loopback' ? ', on this computer' : ''}`
+        ? `ready — ${n} item${n === 1 ? '' : 's'}${nf ? ` in ${nf} folder${nf === 1 ? '' : 's'}` : ''}`
+          + `${scope === 'loopback' ? ', on this computer' : ''}`
         : (albums.length
             ? `no photos at the top level — folders inside: ${albums.join(', ')}`
             : 'this folder is empty');

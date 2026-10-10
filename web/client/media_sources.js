@@ -20,7 +20,7 @@
 import { cachedFetch } from './cache.js';
 import { authHeaders, httpError } from './auth.js';
 import { listFolderSources, removeFolderSource, resolveFolderListing,
-         folderFileUrl, listFolderEntries } from './folder_source.js';
+         folderFileUrl, listFolderEntries, cleanFolderPath, DEEP_LIMITS } from './folder_source.js';
 import { DEVICE_SOURCE, DEVICE_SOURCE_ID, listDevicePictures, devicePictureUrl,
          devicePhotosOn, setDevicePhotosOn, resolveDeviceListing } from './device_pictures.js';
 
@@ -142,22 +142,220 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
 // Fetch a source's listing for `album` and attach an absolute `url` + `sourceId`
 // to each item. `fetchImpl` is injectable for tests. Throws on a dead/erroring
 // agent so the caller can show "source unreachable" rather than a blank wall.
-export async function resolveListing(source, album = '', { fetchImpl = fetch } = {}) {
+// every folder inside (2026-10-10, row 2.78): `deep` lists every folder inside `album` too, and `leaveOut` names the
+// folders (relative to the source's top) left out of that - see "EVERY FOLDER INSIDE" below. Both off/empty: exactly
+// the listing this always made.
+export async function resolveListing(source, album = '', { fetchImpl = fetch, deep = false, leaveOut = [] } = {}) {
   // A folder source has no base_url to fetch — the browser reads the files directly.
   // Same return shape, so photos.js and personal.js are unchanged.
-  if (source && source.kind === 'folder') return resolveFolderListing(source, album);
-  if (source && source.kind === 'device') return resolveDeviceListing(source, album);   // photo sources first
+  const out = deep ? cleanLeaveOut(leaveOut) : [];
+  if (source && source.kind === 'folder') {
+    return deep ? resolveFolderListing(source, album, { deep: true, leaveOut: out }) : resolveFolderListing(source, album);
+  }
+  if (source && source.kind === 'device') return resolveDeviceListing(source, album);   // photo sources first (flat)
   const base = trimSlash(source.base_url);
-  const q = album ? `?album=${encodeURIComponent(album)}` : '';
+  const q = listQuery(album, deep, out);
   const res = await fetchImpl(`${base}/list${q}`);
   if (!res.ok) throw httpError(res, `media source "${source.label}": /list -> ${res.status}`);
   const body = await res.json();
-  const items = (body.items || []).map((it) => ({
+  // The page's own filter as well as the agent's: the folders a long list could not fit in the address, and an older
+  // agent that does not know `skip` (it does not know `deep` either, so it lists one level, as it always did).
+  const items = applyLeaveOut(body.items || [], out, album).map((it) => ({
     ...it,
     sourceId: source.id,
     url: mediaUrl(base, it.path),
   }));
-  return { album: body.album || album, albums: body.albums || [], items, count: items.length };
+  const listing = { album: body.album || album, albums: body.albums || [], items, count: items.length };
+  if (deep && body.deep) Object.assign(listing, { deep: true, folders: Array.isArray(body.folders) ? body.folders.map(String) : [], truncated: String(body.truncated || '') });
+  return listing;
+}
+
+// ------------------------------------------------------------------------- EVERY FOLDER INSIDE (2026-10-10, row 2.78)
+// Mike: "Could I just link her pictures folder as the drive from my computer and it would pull from all the folders
+// inside it?" Before this, no: a source listed one folder (the media agent's list_album, folder_source.js's one-level
+// read), and Photos showed its top or one album - for a Pictures folder of 57 dated folders, "No photos".
+//
+// TWO SETTINGS ON EACH PANEL THAT PLAYS FROM A SOURCE, beside "Photos from" and "Album", not on the source itself.
+// ARGUED (Rule 2):
+//   FOR THE SOURCE: it is how Mike put it - "link her pictures folder"; set once, every panel on it would follow.
+//   FOR THE PANEL (chosen): the album - which part of the source - already lives on the panel, and these two are the
+//     same kind of choice; a wallpaper on "Backgrounds" and a slideshow of everything can share one source; and a
+//     source is stored in two places (an agent's on the server, a browser folder's in this browser only), so a source
+//     setting is a server change plus a second store for one switch. AGAINST: a second photos panel on the same
+//     source sets its leave-out list again (`copyFromSibling` copies both into a new photos panel, so only a panel
+//     made by hand on another screen starts empty).
+//   "Include every folder inside" (`subfolders`): ON by default for pictures, videos and music. AGAINST: a panel
+//     whose source holds other things in its folders (a scanned-papers folder inside Pictures) now shows them, and a
+//     panel that showed a folder's top shows everything under it after this update. FOR: a folder of pictures is
+//     what people point at, and one sorted into dated folders showed nothing at all; "Leave out" is one press away.
+//   "Leave out" (`leaveOut`): folders PER SOURCE - `{ <sourceId>: ['2019-taxes', 'Screenshots'] }` - so a stand-in
+//     or a backup never loses a folder that happens to share a name, and choosing another source and coming back
+//     keeps the list. Panel STATE (text), never media.
+// HARD-CODED, argued: LEAVE_OUT_MAX 200 folders per source (a list longer than that is the wrong folder chosen -
+// choose an album instead); FOLDER_ROWS_MAX 60 rows of folders in the settings menu (Mike's 57 dated folders fit;
+// past that, the menu is a scroll nobody with one switch should walk, and the rest are listed by count).
+export const SUBFOLDERS_KEY = 'subfolders';
+export const LEAVE_OUT_KEY = 'leaveOut';
+export const LEAVE_OUT_MAX = 200;
+export const FOLDER_ROWS_MAX = 60;
+// The longest address a deep listing asks for; folders that do not fit are left out by the page instead (above).
+const LIST_QUERY_MAX = 6000;
+
+function listQuery(album, deep, leaveOut) {
+  const parts = [];
+  if (album) parts.push(`album=${encodeURIComponent(album)}`);
+  if (deep) {
+    parts.push('deep=1');
+    let len = parts.join('&').length;
+    for (const f of leaveOut) {
+      const p = `skip=${encodeURIComponent(f)}`;
+      if (len + p.length + 1 > LIST_QUERY_MAX) break;
+      parts.push(p);
+      len += p.length + 1;
+    }
+  }
+  return parts.length ? `?${parts.join('&')}` : '';
+}
+
+/** A leave-out list tidied: folder paths ('/' separators, no '..'), no repeats, at most LEAVE_OUT_MAX. Pure. */
+export function cleanLeaveOut(list) {
+  const out = [];
+  for (const raw of (Array.isArray(list) ? list : [])) {
+    const c = cleanFolderPath(raw);
+    if (c && !out.includes(c)) out.push(c);
+    if (out.length >= LEAVE_OUT_MAX) break;
+  }
+  return out;
+}
+
+/** The stored `leaveOut` setting tidied to `{ <sourceId>: [folder, ...] }` (anything else: empty). Pure. */
+export function normalizeLeaveOut(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const [sid, list] of Object.entries(raw)) {
+    const c = cleanLeaveOut(list);
+    if (sid && c.length) out[sid] = c;
+  }
+  return out;
+}
+
+/**
+ * Items without the ones in a left-out folder. A folder applies when it is INSIDE what was listed (`album`): an album
+ * that is itself on the list, or inside a folder on it, still lists - the album chosen wins, as the agent does. Pure.
+ */
+export function applyLeaveOut(items, leaveOut, album = '') {
+  const a = String(album || '').replace(/^\/+|\/+$/g, '');
+  const folders = cleanLeaveOut(leaveOut).filter((f) => !a || f.startsWith(`${a}/`));
+  const list = Array.isArray(items) ? items : [];
+  if (!folders.length) return list;
+  return list.filter((it) => {
+    const p = String((it && (it.path || it.id)) || '');
+    return !folders.some((f) => p.startsWith(`${f}/`));
+  });
+}
+
+/** What a panel's two settings mean for one source: `{ deep, leaveOut }` for `resolveListing`. Pure. */
+export function listOptions(cfg, sourceId, { subfoldersDefault = true } = {}) {
+  const v = cfg ? cfg[SUBFOLDERS_KEY] : undefined;
+  const deep = v === undefined || v === null || v === '' ? !!subfoldersDefault : (v === true || v === 'true' || v === 1);
+  const map = normalizeLeaveOut(cfg ? cfg[LEAVE_OUT_KEY] : null);
+  return { deep, leaveOut: deep && sourceId && map[sourceId] ? map[sourceId] : [] };
+}
+
+/** A lister that lists with a panel's settings: `resolve(source, album, optsFor(source))`. */
+export function withListOptions(resolve, optsFor) {
+  return (source, album) => resolve(source, album, (typeof optsFor === 'function' ? optsFor(source) : optsFor) || {});
+}
+
+/** The `leaveOut` setting with `folder` put on (or taken off) `sourceId`'s list - what a panel writes. Pure. */
+export function toggleLeaveOut(raw, sourceId, folder, leave = null) {
+  const map = normalizeLeaveOut(raw);
+  const f = cleanFolderPath(folder);
+  if (!sourceId || !f) return map;
+  const list = map[sourceId] ? map[sourceId].slice() : [];
+  const at = list.indexOf(f);
+  const want = leave === null ? at < 0 : !!leave;
+  if (want && at < 0 && list.length < LEAVE_OUT_MAX) list.push(f);
+  if (!want && at >= 0) list.splice(at, 1);
+  if (list.length) map[sourceId] = list; else delete map[sourceId];
+  return map;
+}
+
+/**
+ * THE DECLARED ROW: "Include every folder inside". `what` names the panel's things ('pictures', 'videos', 'songs').
+ * Level 'standard' by default, beside the source row: it decides what the panel shows, which somebody setting one up
+ * should see. Photos passes 'advanced' (photos.js argues it: the one-switch lap of the critical panel).
+ */
+export function subfoldersField({ on = true, what = 'pictures', appliesWhen = null, label = 'Include every folder inside',
+  level = 'standard' } = {}) {
+  return { key: SUBFOLDERS_KEY, label, kind: 'toggle', default: !!on, level,
+    onLabel: `Yes: the ${what} in its folders too`, offLabel: `No: only the ${what} at its top`,
+    ...(appliesWhen ? { appliesWhen } : {}) };
+}
+
+/**
+ * THE PANEL'S OWN "LEAVE OUT" ROWS (kiosk.js `menuItems`), from the last listing of the chosen source. One row that
+ * opens the folders ("Folders inside: 57 · 2 left out"), then - open - one row per folder, the left-out ones first
+ * ("Put back 2019-taxes"), then the rest ("Leave out 2019-07-04 · 50 pictures"), a folder inside a left-out one not
+ * shown (it is already out). Empty when the setting is off, or nothing has been listed from the chosen source.
+ *   listing   the chosen source's listing ({ folders, items }), album the panel's album, cfg the panel's settings
+ *   open      whether the folders are showing; onOpen(bool) to change it (the panel keeps it, not saved)
+ *   onSet(map) writes the new `leaveOut` setting
+ */
+export function leaveOutRows({ idPrefix = 'leave', listing = null, album = '', sourceId = '', cfg = {}, open = false,
+  onOpen = () => {}, onSet = () => {}, what = 'pictures', subfoldersDefault = true } = {}) {
+  const { deep } = listOptions(cfg, sourceId, { subfoldersDefault });
+  if (!deep || !sourceId || !listing || !listing.deep) return [];
+  const left = normalizeLeaveOut(cfg[LEAVE_OUT_KEY])[sourceId] || [];
+  const a = String(album || '').replace(/^\/+|\/+$/g, '');
+  const within = (f) => !a || f.startsWith(`${a}/`);
+  const leftHere = left.filter(within);
+  const inLeft = (f) => leftHere.some((l) => f === l || f.startsWith(`${l}/`));
+  const folders = (Array.isArray(listing.folders) ? listing.folders : []).map(String).filter((f) => within(f) && !inLeft(f))
+    .sort((x, y) => (x.toLowerCase() < y.toLowerCase() ? -1 : x.toLowerCase() > y.toLowerCase() ? 1 : 0));
+  if (!folders.length && !leftHere.length) return [];
+  // Each item counts toward every folder it sits in: its path's own prefixes, so a big listing costs its items times
+  // their depth, never items times folders (the menu paints synchronously).
+  const counts = {};
+  const known = new Set(folders);
+  for (const it of (listing.items || [])) {
+    const parts = String(it.path || '').split('/');
+    for (let i = 1; i < parts.length; i += 1) {
+      const f = parts.slice(0, i).join('/');
+      if (known.has(f)) counts[f] = (counts[f] || 0) + 1;
+    }
+  }
+  const shown = (f) => (a ? f.slice(a.length + 1) : f).split('/').join(' / ');
+  const rows = [{ kind: 'item', id: `${idPrefix}-folders`,
+    label: open ? 'Hide the folders inside' : 'Folders inside: choose any to leave out',
+    hint: `${folders.length + leftHere.length} folder${folders.length + leftHere.length === 1 ? '' : 's'}`
+      + `${leftHere.length ? ` · ${leftHere.length} left out` : ' · none left out'}`,
+    run: () => onOpen(!open) }];
+  if (!open) return rows;
+  for (const f of leftHere) {
+    rows.push({ kind: 'item', id: `${idPrefix}-back:${f}`, label: `Put back ${shown(f)}`,
+      hint: `left out: its ${what} are not shown`, run: () => onSet(toggleLeaveOut(cfg[LEAVE_OUT_KEY], sourceId, f, false)) });
+  }
+  const room = Math.max(0, FOLDER_ROWS_MAX - leftHere.length);
+  for (const f of folders.slice(0, room)) {
+    const n = counts[f] || 0;
+    rows.push({ kind: 'item', id: `${idPrefix}-out:${f}`, label: `Leave out ${shown(f)}`,
+      hint: `${n} ${n === 1 ? what.replace(/s$/, '') : what}`, run: () => onSet(toggleLeaveOut(cfg[LEAVE_OUT_KEY], sourceId, f, true)) });
+  }
+  if (folders.length > room) {
+    rows.push({ kind: 'item', id: `${idPrefix}-more`, label: `${folders.length - room} more folders are not listed here`,
+      hint: 'choose a folder inside as the Album to see its folders', disabled: true, run: () => {} });
+  }
+  return rows;
+}
+
+/** The words after "N items" when a listing stopped early ('' when it did not). Plain text. */
+export function truncatedWords(listing) {
+  const why = listing && listing.truncated;
+  if (!why) return '';
+  if (why === 'time') return ' (all it could list in time: the folder is very big)';
+  if (why === 'depth') return ` (folders more than ${DEEP_LIMITS.depth} deep inside are not included)`;
+  return ' (the first part only: the folder is very big — choose an album, or leave folders out)';
 }
 
 /**

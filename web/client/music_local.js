@@ -98,8 +98,14 @@ export function createLocalMusic({
   listingWaitMs = LISTING_WAIT_MS,
   recheckMs = SOURCE_RECHECK_MS,
   check = null,                    // desktop prompt: checkFromHere's seam (media_sources.js quietReach)
+  // every folder inside (2026-10-10, row 2.78): a folder favourite plays the songs in every folder inside it too (an
+  // artist's folder of album folders). A value or a function (the Music panel's `subfolders` row); on unless it says no.
+  deep = true,
 } = {}) {
-  const quietList = quietResolve(resolve, { check });   // desktop prompt: the backup and its rechecks never ask
+  // every folder inside: every listing of a folder - the favourite's, the backup's, the rechecks', `tryHere` - asks
+  // for its folders too when `deep` says so. A file favourite lists its own folder only to find the same file.
+  const listDeep = (source, album) => resolve(source, album, { deep: read(deep) !== false });
+  const quietList = quietResolve(listDeep, { check });   // desktop prompt: the backup and its rechecks never ask
   let vol = clamp01(volume);
   let gain = 1;                    // what the arbiter last said; 1 until it says otherwise
   let queue = [];                  // [{ url, release, path }]
@@ -342,7 +348,7 @@ export function createLocalMusic({
       if (g !== gen || dead) return { ok: false, reason: 'superseded' };
       if (error) return (error !== 'no-sources' && await viaBackup(lastReq, error, g)) || { ok: false, reason: error };
       let listing = null;
-      try { listing = await resolve(source, album); } catch { listing = null; }
+      try { listing = await listDeep(source, album); } catch { listing = null; }
       if (g !== gen || dead) return { ok: false, reason: 'superseded' };
       if (!listing) return (await viaBackup(lastReq, 'unreachable', g)) || { ok: false, reason: 'unreachable' };
       const tracks = (listing.items || []).filter((it) => it && it.url && isAudioPath(it.path || it.name || it.url))
@@ -369,7 +375,7 @@ export function createLocalMusic({
       try { all = (await sources.list()) || []; } catch { return { ok: false }; }
       const s = all.find((x) => x && x.id === req.sourceId);
       if (!s) return { ok: false };
-      const r = await tryFromHere(s, { resolve, album: req.kind === 'file' ? dirOf(req.path) : (req.album || '') });
+      const r = await tryFromHere(s, { resolve: listDeep, album: req.kind === 'file' ? dirOf(req.path) : (req.album || '') });
       return { ok: r.ok };
     },
 

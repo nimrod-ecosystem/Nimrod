@@ -61,6 +61,8 @@ import {
   LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
   backupChoice, backupPanelField, backupPanelChoices, BACKUP_KEY, BACKUP_ANY,   // backup source
   quietResolve, quietReach, tryFromHere, ELSEWHERE_LINE, TRY_HERE_LABEL,   // desktop prompt (2026-10-10)
+  // every folder inside (2026-10-10, row 2.78; media_sources.js "EVERY FOLDER INSIDE" argues the two settings)
+  subfoldersField, listOptions, withListOptions, leaveOutRows, truncatedWords, SUBFOLDERS_KEY, LEAVE_OUT_KEY,
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
@@ -122,6 +124,9 @@ export const SETTINGS = [
   // backup source (2026-10-08; media_sources.js argues it): "If this can't be reached, use". Its own default is the
   // stand-in this panel already had (any other source this screen may show); the screen's row applies unless this is set.
   backupPanelField({ panelDefault: BACKUP_ANY }),
+  // every folder inside (2026-10-10, row 2.78): ON, as Photos - a person's messages kept in folders by year still play.
+  // Which folders are left out are this panel's own rows (`menuItems`).
+  subfoldersField({ on: true, what: 'videos' }),
 ];
 
 registerModule(
@@ -193,7 +198,10 @@ registerModule(
     const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_ANY });
     // desktop prompt (2026-10-10, as photos.js): every automatic listing goes through `quietList`, which never asks a
     // source on another computer; only "Try on this computer" fetches one on purpose. `ctx.checkFromHere`: the seam.
-    const resolveList = ctx.resolveListing || resolveListing;
+    // every folder inside (row 2.78): every listing carries the panel's two folder settings for that source.
+    const resolveList = withListOptions(ctx.resolveListing || resolveListing, (s) => listOptions(cfg, s && s.id));
+    let lastListing = null;         // { sourceId, album, listing } from the chosen source: the "Leave out" rows
+    let foldersOpen = false;        // whether the menu's folder rows are showing (not saved)
     const reachCheck = ctx.checkFromHere || null;
     const quietList = quietResolve(resolveList, { check: reachCheck });
     let knownSources = [];          // backup source: what the last listing held, for the row's choices
@@ -659,11 +667,12 @@ registerModule(
       sourceLabel = source.label;
       // recorded PERSONAL videos: keep only video clips (audio-only messages are a later add)
       items = videosOf(listing);
+      lastListing = degraded ? null : { sourceId: source.id, album: cfg.album, listing };   // every folder inside
       byId = Object.fromEntries(items.map((it) => [it.id, it]));
       ids = items.map((it) => it.id);
       recent = []; history = []; histPos = -1;
       const lbl = mount.querySelector('[data-source-label]');
-      if (lbl) lbl.textContent = `${subjectName()} — ${items.length} clip${items.length === 1 ? '' : 's'}`;
+      if (lbl) lbl.textContent = `${subjectName()} — ${items.length} clip${items.length === 1 ? '' : 's'}${truncatedWords(listing)}`;
       if (!items.length) { setStatus('No videos in this source/album.'); return; }
       setStatus(null);
       // A `directed` instance waits for the content director to advance it (so a
@@ -763,7 +772,9 @@ registerModule(
 
         state.subscribe((s) => {
           cfg = { ...DEFAULTS, ...s };
-          const ref = `${cfg.sourceId}|${cfg.album}`;
+          // every folder inside: the two folder settings are part of what is listed, so a change lists again.
+          const lo = listOptions(cfg, cfg.sourceId);
+          const ref = `${cfg.sourceId}|${cfg.album}|${lo.deep}|${lo.leaveOut.join('\n')}`;
           // backup source: a changed backup reloads only while a stand-in is (or should be) playing.
           const bref = String(cfg[BACKUP_KEY] || '');
           const backupMoved = bref !== lastBackupRef;
@@ -779,6 +790,16 @@ registerModule(
           screen: screenBackup(), panelDefault: BACKUP_ANY, personId: personOf(ctx),
           showing: degraded && degraded.backup ? degraded.shownLabel : null }),
       }),
+      // every folder inside (row 2.78): the chosen source's folders in the settings menu, each one press to leave out or
+      // put back (media_sources.js leaveOutRows; kiosk.js `menuItems`).
+      menuItems: () => {
+        const ll = lastListing;
+        if (!ll || ll.sourceId !== cfg.sourceId) return [];
+        return leaveOutRows({ idPrefix: 'personal-leave', listing: ll.listing, album: cfg.album, sourceId: ll.sourceId, cfg,
+          open: foldersOpen, onOpen: (v) => { foldersOpen = !!v; }, onSet: (map) => state.set({ [LEAVE_OUT_KEY]: map }),
+          what: 'videos' });
+      },
+      __probe: () => ({ folders: lastListing?.listing?.folders || null, ids: ids.slice(), label: mount.querySelector('[data-source-label]')?.textContent || '' }),
       onResize() {},
       onHide() { active = false; clearStall(); state.flush(); },
       destroy() {

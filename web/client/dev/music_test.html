@@ -302,6 +302,30 @@ const FAVS = normalizeFavourites([
         f.ok && f.tracks === 3 && /01 Track\.MP3/.test(log.find((l) => l.startsWith('play:')) || ''), J({ f, log }));
       m.destroy();
     }
+    {
+      // *** EVERY FOLDER INSIDE (2026-10-10, row 2.78): a favourite on an artist's folder of album folders. *** It asks
+      // the source for the folders inside (deep) unless the Music panel's row says no, and plays them album by album.
+      const asked = [];
+      const LIB = ['Beatles/Abbey Road/01 Come Together.mp3', 'Beatles/Abbey Road/02 Something.mp3', 'Beatles/Help/01 Help.mp3'];
+      const resolve = async (s, album, opts = {}) => {
+        asked.push(!!opts.deep);
+        const items = (opts.deep ? LIB : LIB.filter((p) => p.split('/').length === 2)).map((p) => ({ path: p, name: p, kind: 'audio', url: `u:${p}` }));
+        return { items, deep: !!opts.deep };
+      };
+      const log = [];
+      let deepOn = true;
+      const m = createLocalMusic({ sources: SOURCES, resolve, resolveItem, makeAudio: fakeAudioFactory(log), order: 'inorder', deep: () => deepOn });
+      const f = await m.playFolder({ sourceId: 's1', album: 'Beatles' });
+      check('*** a favourite on an artist\'s folder plays the songs in its album folders (asked deep) ***',
+        f.ok && f.tracks === 3 && asked.at(-1) === true && /Come Together/.test(log.find((l) => l.startsWith('play:')) || ''), J({ f, asked, log }));
+      deepOn = false;
+      const g = await m.playFolder({ sourceId: 's1', album: 'Beatles' });
+      check('...with the Music panel\'s row off: one level, as before (nothing at the artist\'s top)', g.reason === 'no-audio' && asked.at(-1) === false, J({ g, asked }));
+      m.destroy();
+      const { SETTINGS: MSET } = await import('../modules/music.js');
+      const row = MSET.find((x) => x.key === 'subfolders');
+      check('the Music panel has the row, on by default', !!row && row.default === true && row.kind === 'toggle' && /every folder inside/.test(row.label));
+    }
 
     // ============================================================================================
     // backup source (2026-10-08). Mike: "We should make backup folder options for everything, so people could always

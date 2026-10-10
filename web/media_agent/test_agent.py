@@ -329,6 +329,181 @@ def check_history_pure():
     return tmp
 
 
+def link_dir(link: Path, target: Path) -> str:
+    """A folder link for the loop and escape checks: a symlink where this computer allows one, else (Windows without
+    the right) a junction, which needs no right. '' when neither can be made."""
+    try:
+        os.symlink(str(target), str(link), target_is_directory=True)
+        return "symlink"
+    except (OSError, NotImplementedError, AttributeError):
+        pass
+    if sys.platform == "win32":
+        try:
+            import _winapi  # noqa: E402
+            _winapi.CreateJunction(str(target), str(link))
+            return "junction"
+        except (OSError, ImportError, AttributeError):
+            pass
+    return ""
+
+
+def check_deep_mirrors():
+    """PURE. EVERY FOLDER INSIDE: the agent's caps and skipped names are copied in folder_source.js (a folder read by
+    the browser walks the same way); fail if the copies drift."""
+    sys.path.insert(0, str(HERE))
+    import agent  # noqa: E402
+    src = FOLDER_SOURCE.read_text(encoding="utf-8")
+    m = re.search(r"export const DEEP_LIMITS\s*=\s*Object\.freeze\(\{([^}]*)\}\)", src)
+    got = dict(re.findall(r"(\w+):\s*([\d_]+)", m.group(1))) if m else {}
+    want = {"items": agent.DEEP_MAX_ITEMS, "folders": agent.DEEP_MAX_FOLDERS, "depth": agent.DEEP_MAX_DEPTH,
+            "ms": agent.DEEP_MAX_SECONDS * 1000}
+    check("every folder inside: folder_source.js DEEP_LIMITS are the agent's caps (items, folders, depth, time)",
+          {k: int(v.replace("_", "")) for k, v in got.items()} == want, detail=f"js={got} agent={want}")
+    m = re.search(r"export const SKIP_FOLDER_NAMES\s*=\s*Object\.freeze\(\[([^\]]*)\]\)", src)
+    names = tuple(re.findall(r"'([^']+)'", m.group(1))) if m else ()
+    check("every folder inside: folder_source.js skips the same drive folders (recycle bin, ...)",
+          set(names) == set(agent.SKIP_FOLDER_NAMES), detail=f"js={names} agent={agent.SKIP_FOLDER_NAMES}")
+
+
+def check_deep_pure():
+    """PURE - the function, no agent process. EVERY FOLDER INSIDE (row 2.78): recursion, the caps, what is skipped,
+    and the path-safety invariants (nothing outside --root, no folder twice)."""
+    sys.path.insert(0, str(HERE))
+    import agent  # noqa: E402
+
+    tmp = Path(tempfile.mkdtemp(prefix="nimrod_deep_"))
+    root = tmp / "Pictures"
+    img = b"\xff\xd8\xff\xe0JPEG"
+    files = ["top.jpg", "2019-07-04/a.jpg", "2019-07-04/b.PNG", "2019-07-04/beach/c.jpg", "2019-07-04/notes.txt",
+             "2020-01-01/d.jpg", "2020-01-01/song.mp3", "Screenshots/s.png", "Screenshots/more/s2.png",
+             ".nimrod-pull/pulled.jpg", ".nimrod-removed/gone.jpg", "$RECYCLE.BIN/deleted.jpg",
+             "System Volume Information/x.jpg", "lost+found/y.jpg", "Data/History/plays-x-2026-10.jsonl",
+             "Data/notapicture.jpg", "empty/.keep"]
+    for f in files:
+        p = root / f
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(img)
+    deep = root
+    for i in range(1, 11):          # d1/d2/.../d10/deep.jpg: ten levels down
+        deep = deep / f"d{i}"
+    deep.mkdir(parents=True)
+    (deep / "deep.jpg").write_bytes(img)
+    outside = tmp / "outside"
+    outside.mkdir()
+    (outside / "secret.jpg").write_bytes(b"SECRET")
+
+    saved = (agent.ROOT, agent.DATA_DIR)
+    agent.ROOT = root
+    agent.DATA_DIR = root / "Data"
+    try:
+        j = agent.list_deep("")
+        paths = [i["path"] for i in j["items"]]
+        check("*** every folder inside: the pictures in the folders inside are listed, paths relative to --root ***",
+              {"top.jpg", "2019-07-04/a.jpg", "2019-07-04/b.PNG", "2019-07-04/beach/c.jpg", "2020-01-01/d.jpg",
+               "Screenshots/s.png", "Screenshots/more/s2.png"} <= set(paths) and all(i["id"] == i["path"] for i in j["items"]),
+              detail=repr(paths))
+        check("...in path order (a folder's pictures stay together), with the song listed as audio",
+              paths == sorted(paths, key=str.lower) and any(i["kind"] == "audio" for i in j["items"]))
+        check("...and 'count' counts them all", j["count"] == len(j["items"]) and j["deep"] is True)
+        check("*** skipped: dot-folders (.nimrod-pull, .nimrod-removed) ***",
+              not any(p.startswith(".") or "/." in p for p in paths), detail=repr(paths))
+        check("*** skipped: the drive's recycle bin, System Volume Information, lost+found (deleted pictures) ***",
+              not any(p.split("/")[0].lower() in agent.SKIP_FOLDER_NAMES for p in paths), detail=repr(paths))
+        check("*** skipped: the --data-dir folder when it sits inside --root ***",
+              not any(p.startswith("Data/") for p in paths) and "Data" not in j["folders"], detail=repr(j["folders"]))
+        check("folders: every folder walked, relative to --root; albums: the ones at the top",
+              "2019-07-04/beach" in j["folders"] and "empty" in j["folders"]
+              and j["albums"] == sorted([f for f in j["folders"] if "/" not in f], key=str.lower), detail=repr(j["albums"]))
+        check("the ten-levels-down picture is past the depth cap (8): not listed, and the answer says 'depth'",
+              not any(p.endswith("deep.jpg") for p in paths) and j["truncated"] == "depth", detail=repr(j["truncated"]))
+        j9 = agent.list_deep("", max_depth=10)
+        check("...a deeper cap reaches it", any(p.endswith("d10/deep.jpg") for p in [i["path"] for i in j9["items"]]))
+
+        # Leave out
+        j = agent.list_deep("", skip=["Screenshots", "2019-07-04/beach/"])
+        paths = [i["path"] for i in j["items"]]
+        check("*** leave out: a left-out folder and everything inside it is not listed ***",
+              not any(p.startswith("Screenshots/") for p in paths) and "2019-07-04/beach/c.jpg" not in paths
+              and "2019-07-04/a.jpg" in paths, detail=repr(paths))
+        j = agent.list_deep("", skip=["..", "../Pictures", "\\Screenshots\\", 5, None])
+        paths = [i["path"] for i in j["items"]]
+        check("leave out: a backslash path is the same folder; a climbing or non-text one is ignored, never opened",
+              not any(p.startswith("Screenshots/") for p in paths) and "top.jpg" in paths, detail=repr(paths))
+        check("clean_rel: tidies, refuses '..' and empties", agent.clean_rel("/a/b/") == "a/b"
+              and agent.clean_rel("a/../b") == "" and agent.clean_rel("") == "" and agent.clean_rel(None) == "")
+
+        # Album
+        j = agent.list_deep("2019-07-04")
+        paths = [i["path"] for i in j["items"]]
+        check("*** an album with every folder inside: its own pictures and its folders' (paths still from --root) ***",
+              paths == ["2019-07-04/a.jpg", "2019-07-04/b.PNG", "2019-07-04/beach/c.jpg"], detail=repr(paths))
+        j = agent.list_deep("Screenshots", skip=["Screenshots"])
+        check("an album that is itself on the leave-out list still lists (the album chosen wins)",
+              [i["path"] for i in j["items"]] == ["Screenshots/more/s2.png", "Screenshots/s.png"], detail=repr(j["items"]))
+        check("*** an album that climbs out of --root is refused ***",
+              agent.list_deep("../outside") == {"error": "forbidden"} and agent.list_deep("nope") == {"error": "not_found"})
+
+        # The caps
+        j = agent.list_deep("", max_items=3)
+        check("*** the item cap: at most that many, and the answer says 'items' ***",
+              j["count"] == 3 and j["truncated"] == "items", detail=repr((j["count"], j["truncated"])))
+        j = agent.list_deep("", max_folders=2)
+        check("*** the folder cap: at most that many walked, and the answer says 'folders' ***",
+              len(j["folders"]) == 2 and j["truncated"] == "folders", detail=repr(j["folders"]))
+        ticks = iter([0.0] + [100.0] * 1000)
+        j = agent.list_deep("", clock=lambda: next(ticks))
+        check("*** the time cap: past it, the walk answers with what it has, saying 'time' ***",
+              j["truncated"] == "time" and "top.jpg" in [i["path"] for i in j["items"]]
+              and "2019-07-04/beach/c.jpg" not in [i["path"] for i in j["items"]], detail=repr(j["truncated"]))
+
+        # Path safety: a link out, and a loop back up
+        made_out = link_dir(root / "linked-out", outside)
+        made_loop = link_dir(root / "2020-01-01" / "loop", root)
+        if made_out:
+            j = agent.list_deep("")
+            check(f"*** a folder {made_out} pointing outside --root is never walked (nothing of it listed) ***",
+                  not any("secret" in i["path"] for i in j["items"]) and "linked-out" not in j["folders"],
+                  detail=repr([i["path"] for i in j["items"]]))
+            check("...and as an album it is refused, as before", agent.list_deep("linked-out") == {"error": "forbidden"})
+        else:
+            print("  SKIP  link out of --root (this computer makes neither a symlink nor a junction)")
+        if made_loop:
+            j = agent.list_deep("", max_depth=50)
+            paths = [i["path"] for i in j["items"]]
+            check(f"*** a {made_loop} looping back up the tree: walked no more than once, the walk ends ***",
+                  paths.count("top.jpg") == 1 and not any(p.startswith("2020-01-01/loop/") for p in paths)
+                  and len(paths) == len(set(paths)), detail=repr([p for p in paths if "loop" in p][:5]))
+        else:
+            print("  SKIP  loop (this computer makes neither a symlink nor a junction)")
+
+        # TIMING: a folder like Mike's, 57 dated folders of 50 pictures each.
+        big = tmp / "Big"
+        for d in range(57):
+            sub = big / f"2024-{(d % 12) + 1:02d}-{d:02d}"
+            sub.mkdir(parents=True)
+            for k in range(50):
+                (sub / f"IMG_{k:04d}.jpg").write_bytes(img)
+        agent.ROOT = big
+        agent.DATA_DIR = None
+        t0 = time.perf_counter()
+        j = agent.list_deep("")
+        ms = (time.perf_counter() - t0) * 1000
+        check(f"timing: 57 folders x 50 pictures listed whole ({j['count']} items) in {ms:.0f} ms",
+              j["count"] == 57 * 50 and not j["truncated"] and ms < agent.DEEP_MAX_SECONDS * 1000, detail=f"{ms:.0f} ms")
+        print(f"  TIME  list_deep, 57 x 50 = 2850 pictures: {ms:.0f} ms, {len(json.dumps(j)) // 1024} KB of JSON")
+    finally:
+        agent.ROOT, agent.DATA_DIR = saved
+        for link in (tmp / "Pictures" / "linked-out", tmp / "Pictures" / "2020-01-01" / "loop"):
+            try:
+                if os.path.islink(str(link)):
+                    os.unlink(str(link))
+                elif link.exists():
+                    os.rmdir(str(link))     # a junction is removed as a folder, never followed
+            except OSError:
+                pass
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def history_http_tests(base: str, origin: str, data: Path):
     """AGENT HISTORY over HTTP: the agent was started with --data-dir `data`."""
     import http.client
@@ -498,6 +673,8 @@ def main():
     check_origin_rules()
     check_default_sites()
     check_syntax_38()
+    check_deep_mirrors()
+    check_deep_pure()
     shutil.rmtree(check_history_pure(), ignore_errors=True)
 
     tmp = Path(tempfile.mkdtemp(prefix="nimrod_media_"))
@@ -628,6 +805,27 @@ def main():
         # /list?album with traversal is rejected
         s, _, j = get_json(f"{base}/list?album=../")
         check("/list traversal album rejected", s in (403, 404), detail=f"status={s}")
+
+        # every folder inside (row 2.78), over HTTP
+        s, h, j = get_json(f"{base}/list?deep=1", {"Origin": origin})
+        dpaths = [i["path"] for i in j.get("items", [])]
+        check("*** /list?deep=1: the top's media AND the folders' (trip/cliff.png, art/Hostile.SVG), its Origin echoed ***",
+              s == 200 and {"apple.jpg", "trip/cliff.png", "art/Hostile.SVG"} <= set(dpaths) and j.get("deep") is True
+              and j.get("truncated") == "" and h.get("Access-Control-Allow-Origin") == origin, detail=repr(j)[:300])
+        check("/list?deep=1 says the folders it walked", sorted(j.get("folders", [])) == ["art", "trip"], detail=repr(j.get("folders")))
+        check("*** ...never the --data-dir's history (it sits beside the media folder here) nor a dotfile ***",
+              not any(p.endswith(".jsonl") or "/." in p or p.startswith(".") for p in dpaths), detail=repr(dpaths))
+        s, _, j = get_json(f"{base}/list?deep=1&skip=trip&skip=art%2F")
+        check("/list?deep=1&skip=trip&skip=art/: those folders left out", s == 200
+              and not any(p.startswith(("trip/", "art/")) for p in [i["path"] for i in j.get("items", [])]), detail=repr(j)[:300])
+        s, _, j = get_json(f"{base}/list?deep=1&album=trip")
+        check("/list?deep=1&album=trip: an album with its folders, paths from the root", s == 200
+              and [i["path"] for i in j.get("items", [])] == ["trip/cliff.png"], detail=repr(j)[:300])
+        s, _, j = get_json(f"{base}/list?deep=1&album=../")
+        check("*** /list?deep=1 with a climbing album: refused ***", s in (403, 404), detail=f"status={s}")
+        s, _, j = get_json(f"{base}/list")
+        check("without deep=1 nothing changed: one level, no 'deep' key", s == 200 and "deep" not in j
+              and not any("/" in i["path"] for i in j.get("items", [])))
 
         page_tests(base, origin)
         history_http_tests(base, origin, data)

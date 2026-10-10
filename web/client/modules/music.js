@@ -76,6 +76,7 @@ import { createMediaSourcesClient, TRY_HERE_LABEL } from '../media_sources.js'; 
 import { followPerson, personSources, personOf } from '../person_known.js';
 // backup source (2026-10-08; media_sources.js and music_local.js argue it)
 import { backupChoice, backupPanelField, backupPanelChoices, listedSources, degradedLine, BACKUP_KEY, BACKUP_NONE } from '../media_sources.js';
+import { subfoldersField, SUBFOLDERS_KEY } from '../media_sources.js';   // every folder inside (row 2.78)
 import {
   watchFavourites, normalizeFavourites, parseSource, normalizeSource, describeSource, newFavouriteId,
   musicSpeechRoutes, DEFAULT_STARTERS, MAX_NAME,
@@ -102,6 +103,7 @@ const DEFAULTS = {
   youtubeWhere: 'panel',
   volume: 100,
   folderOrder: 'shuffle',
+  subfolders: true,          // every folder inside (row 2.78): SETTINGS argues it
   sayProblems: true,
   spotifyOn: false,
   spotifyClientId: '',
@@ -140,6 +142,11 @@ export const SETTINGS = [
       { value: 'shuffle', label: 'shuffled' },
       { value: 'inorder', label: 'in name order' },
     ] },
+  // every folder inside (2026-10-10, row 2.78): a folder favourite plays the songs in its folders too - ON. A music folder is
+  // usually artist / album / song, so a favourite on an artist (or on the whole music folder) found NOTHING before. AGAINST:
+  // a favourite on a folder whose sub-folders hold something else (a `Ringtones` folder) plays those too. No leave-out
+  // list here, argued: a favourite already names one folder, and a favourite on the folder inside is the way to narrow it.
+  subfoldersField({ on: true, what: 'songs', label: 'A folder of music includes every folder inside' }),
   { key: 'sayProblems', label: 'When it cannot play something', kind: 'toggle', default: true,
     level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show it on the panel only' },
   { key: 'spotifyOn', label: 'Spotify', kind: 'toggle', default: false, level: 'standard',
@@ -315,6 +322,7 @@ registerModule(
       ...(ctx.resolveItem ? { resolveItem: ctx.resolveItem } : {}),
       ...(ctx.checkFromHere ? { check: ctx.checkFromHere } : {}),   // desktop prompt: the suites' seam
       volume: volume(), order: 'shuffle',
+      deep: () => cfg[SUBFOLDERS_KEY] !== false,   // every folder inside: the row above (default on)
     });
 
     let spotify = null;

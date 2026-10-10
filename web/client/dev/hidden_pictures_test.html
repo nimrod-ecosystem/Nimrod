@@ -315,6 +315,35 @@ try {
     check('a short press does not open them', menu.hidden);
     a.inst.destroy(); a.host.remove();
   }
+  // every folder inside (2026-10-10, row 2.78): a picture two folders down, listed with every folder inside, is hidden by
+  // its path from the source's top - and stays hidden when the panel lists again (a folder left out, turned off and on).
+  {
+    const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const NESTED = ['top.jpg', '2019-07-04/a.jpg', '2019-07-04/beach/b.jpg', 'Screenshots/s.png'].map((p) => ({ id: p, path: p,
+      name: p.split('/').pop(), kind: 'image', url: OKPIC(p) }));
+    const lists = { n: 0 };
+    const a = panel({ hides, id: 'photos-nested', items: NESTED, lists });
+    await sleep(150);
+    await hides.hide({ path: '2019-07-04/beach/b.jpg', scope: 'everyone' });
+    await sleep(20);
+    check('*** a nested picture (2019-07-04/beach/b.jpg) is hidden by its path from the top ***',
+      hides.paths('p1').has('2019-07-04/beach/b.jpg') && !a.probe().ids.includes('2019-07-04/beach/b.jpg') && a.probe().ids.length === 3,
+      J(a.probe().ids));
+    const before = lists.n;
+    a.state.set({ leaveOut: { 'src-1': ['Screenshots'] } });
+    await sleep(80);
+    a.state.set({ subfolders: false });
+    await sleep(80);
+    a.state.set({ subfolders: true });
+    await sleep(120);
+    check('*** ...and it stays hidden when the panel lists again (three re-lists) ***',
+      lists.n >= before + 3 && !a.probe().ids.includes('2019-07-04/beach/b.jpg') && a.probe().all === 4 && a.probe().ids.length === 3,
+      `lists ${before}->${lists.n} ids=${J(a.probe().ids)}`);
+    let again = false;
+    for (let i = 0; i < 20; i += 1) { a.host.querySelector('[data-next]').click(); if (a.shown() === 'b.jpg') again = true; }
+    check('...never shown', !again);
+    a.inst.destroy(); a.host.remove();
+  }
 
   // ------------------------------------------------------------------------------------------------
   section('who a hide is for, and which slideshow answers');

@@ -45,6 +45,8 @@
 
 import { registerModule } from '../module.js';
 import { createMediaSourcesClient, resolveListing, mediaUrl, quietResolve } from '../media_sources.js';
+// every folder inside (2026-10-10, row 2.78; media_sources.js "EVERY FOLDER INSIDE" argues the two settings)
+import { subfoldersField, listOptions, withListOptions, leaveOutRows, LEAVE_OUT_KEY } from '../media_sources.js';
 import { personSources } from '../person_known.js';
 import {
   MOTIONS, SCENES, VIDEO_POLICIES, ambientFrame, frameToCss, motionOf,
@@ -229,6 +231,11 @@ export const SETTINGS = [
   { key: 'album', label: 'Album', kind: 'text', default: '', level: 'advanced', placeholder: 'Everything',
     note: 'a folder inside the chosen one, such as Wallpapers',
     appliesWhen: (v) => !!v && !!v.sourceId && v.sourceId !== NIMROD_FOLDER && v.sourceId !== NO_FOLDER },
+  // every folder inside (2026-10-10, row 2.78): a connected folder's folders too - ON, as Photos, so one rule holds on every
+  // panel that plays from a folder. Only for a connected folder (the Nimrod folder's Wallpapers is read as it always was).
+  // Which folders are left out are this panel's own rows (`menuItems`).
+  subfoldersField({ on: true, what: 'pictures',
+    appliesWhen: (v) => !!v && !!v.sourceId && v.sourceId !== NIMROD_FOLDER && v.sourceId !== NO_FOLDER }),
   // backup source: not shown under "None: just the built-in wallpaper" - nothing is chosen there to fail.
   { ...backupPanelField({ panelDefault: BACKUP_NONE }), appliesWhen: (v) => !v || v.sourceId !== NO_FOLDER },
 ];
@@ -259,7 +266,11 @@ registerModule(
     // this panel never puts words or buttons on screen (the note at the top), and a settings row has no button. The
     // press on a Photos panel, or Media / Sources' "Check on this computer", lets this computer use it, and then this
     // panel does too. AGAINST: a screen with only a wallpaper needs one of those first. `ctx.checkFromHere`: the seam.
-    const resolveList = quietResolve(ctx.resolveListing || resolveListing, { check: ctx.checkFromHere || null });
+    // every folder inside (row 2.78): every listing carries the panel's two folder settings for that source.
+    const resolveList = quietResolve(withListOptions(ctx.resolveListing || resolveListing, (s) => listOptions(cfg, s && s.id)),
+      { check: ctx.checkFromHere || null });
+    let lastListing = null;         // { sourceId, album, listing } from the chosen folder: the "Leave out" rows
+    let foldersOpen = false;        // whether the menu's folder rows are showing (not saved)
     // backup source: the panel's row, else the screen's (`ctx.screenBackup`, kiosk.js), else nothing.
     const screenBackup = () => { try { return String(ctx.screenBackup?.() || ''); } catch { return ''; } };
     const backupNow = () => backupChoice({ panel: cfg[BACKUP_KEY], screen: screenBackup(), panelDefault: BACKUP_NONE });
@@ -498,6 +509,7 @@ registerModule(
       if (code && await useBackup(seq, choice, code, src.label || src.base_url || src.id)) return;   // backup source
       source = src;
       items = wallpaperItemsOf(listing);
+      lastListing = listing ? { sourceId: src.id, album: cfg.album, listing } : null;   // every folder inside
       folderState = { choice, status: code || (items.length ? 'ok' : 'empty'), count: items.length };
       render();
       if (pool().length) { advance(); startSwap(); }
@@ -575,6 +587,16 @@ registerModule(
         backup: backupShown ? { ...backupShown } : null, checkingMain: mainCheck.armed(),   // backup source
         shownSrc: layers.map((l) => l.querySelector('img,video')?.getAttribute('src') || ''),
       }),
+
+      // every folder inside (row 2.78): a connected folder's folders in the settings menu, each one press to leave out or
+      // put back (media_sources.js leaveOutRows; kiosk.js `menuItems`).
+      menuItems: () => {
+        const ll = lastListing;
+        if (!ll || ll.sourceId !== cfg.sourceId) return [];
+        return leaveOutRows({ idPrefix: 'wallpaper-leave', listing: ll.listing, album: cfg.album, sourceId: ll.sourceId, cfg,
+          open: foldersOpen, onOpen: (v) => { foldersOpen = !!v; }, onSet: (map) => state.set({ [LEAVE_OUT_KEY]: map }),
+          what: 'pictures' });
+      },
 
       // folder art: the row's live options - the two of its own around every connected folder - and the line under it.
       settingsChoices: () => ({

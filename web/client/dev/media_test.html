@@ -415,6 +415,8 @@ section('a typed address from ANOTHER computer: saved, not checked, no prompt');
 // ------------------------------------- the trap: media sits in a SUBfolder
 // An agent root can hold folders rather than images (~/cici-media -> photos/, music/).
 // A source pointed there lists zero items and the screen is silently blank.
+// (every folder inside, 2026-10-10: the check now asks for the folders inside too, so this is an agent or a folder whose
+// folders are empty as well - or an older agent that lists one level only.)
 section('the folder holds subfolders, not photos');
 {
   const p = mount({
@@ -428,6 +430,23 @@ section('the folder holds subfolders, not photos');
   check('it warns there are no photos at the top level', /no photos at the top level/.test(text(probe)), text(probe));
   check('it names the folders it did find', /photos/.test(text(probe)) && /music/.test(text(probe)));
   check('flagged as a problem, not a success', probe.classList.contains('bad'));
+}
+// every folder inside (2026-10-10, row 2.78): the check counts with the folders inside, which is what a panel shows by
+// default - Mike's Pictures folder of 57 dated folders reads "ready", not "no photos at the top level".
+section('every folder inside: a folder of dated folders is ready');
+{
+  const asked = [];
+  const p = mount({
+    client: fakeClient([{ id: 'a1', label: 'Pictures', base_url: 'http://localhost:8770', kind: 'agent' }]),
+    folders: fakeFolders(),
+    resolve: async (src, album, opts = {}) => { asked.push(!!opts.deep);
+      return { albums: ['2024-01-01', '2024-01-02'], items: Array(100).fill({}), count: 100, deep: true, folders: ['2024-01-01', '2024-01-02'] }; },
+  });
+  await p.refresh();
+  await settle();
+  const probe = host.querySelector('[data-probe]');
+  check('*** it asks for the folders inside, and says "ready — 100 items in 2 folders" ***',
+    asked.length && asked.every(Boolean) && /ready — 100 items in 2 folders/.test(text(probe)) && !probe.classList.contains('bad'), `${asked} ${text(probe)}`);
 }
 
 // ---------------------------------------------------------- agent is down
