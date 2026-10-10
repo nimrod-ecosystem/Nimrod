@@ -62,6 +62,10 @@ export function createGameMusic({
   // *** A SHARED CONTEXT IS NEVER CLOSED HERE *** -- it belongs to the screen, and closing it would
   // silence every other thing on it. Only a context this file made is closed.
   fx = undefined,
+  // (source, album, listing, error) after each folder listing `useFolder` makes - the listing when it came, the error
+  // when it did not. The press game's "Music folder" row is built from these (media_sources.js createAlbumChooser), so
+  // its choices cost no listing of their own. Never asked to answer; a throw from it is dropped.
+  onListing = null,
 } = {}) {
   const effectsOf = () => {
     if (fx !== undefined) return fx;
@@ -230,14 +234,18 @@ export function createGameMusic({
     async useFolder(sourceId, album = '') {
       mode = 'folder'; note = ''; playlist = []; current = null;
       if (!sources || !sourceId) { fallback('no music folder chosen'); return { tracks: 0 }; }
+      const told = (source, listing, err) => { try { onListing?.(source, album, listing, err); } catch { /* not ours */ } };
+      let source = null;
       try {
         const all = await sources.list();
-        const source = (all || []).find((s) => s.id === sourceId);
+        source = (all || []).find((s) => s.id === sourceId) || null;
         if (!source) { fallback('that music folder is not connected'); return { tracks: 0 }; }
         const listing = await resolve(source, album);
+        told(source, listing, null);
         playlist = (listing.items || []).filter((it) => isAudioPath(it.path || it.url));
         if (!playlist.length) { fallback('no music in that folder'); return { tracks: 0 }; }
       } catch (err) {
+        if (source) told(source, null, err);
         fallback('that music folder could not be reached');
         return { tracks: 0, error: String(err) };
       }

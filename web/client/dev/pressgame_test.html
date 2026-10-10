@@ -34,7 +34,8 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { registerModule, mountModule, listManifests } from '../module.js';
+import { registerModule, mountModule, listManifests, getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
 import { createBus } from '../bus.js';
 import { EDGE_TOPIC } from '../input.js';
 import { MODULE_VERBS, verbTarget } from '../actions.js';
@@ -579,6 +580,108 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
       r.impl.__press('verb');
       check('and off means off', r.impl.__probe().music.playing === false &&
         r.impl.__probe().music.mode === 'off');
+    }
+
+    // ================= choosing the music folder (2026-10-10) =================
+    // "Music folder" was text, read-only, saying "set in Media / Sources" - which has no folder chooser - and
+    // "Music from" had no options at all, so folder music could only be set by hand in the data. Both are live
+    // choices now (media_sources.js albumField / createAlbumChooser, as Photos' "Album").
+    section('*** choosing the music folder on the panel ***');
+    {
+      const decl = (getManifest('pressgame').settings || []).find((f) => f.key === 'musicAlbum');
+      check('the "Music folder" row is a CHOICE now - not read-only, no note sending anybody to Media / Sources',
+        decl && decl.kind === 'choice' && !decl.readOnly && !/Media \/ Sources/.test(String(decl.note || ''))
+          && decl.label === 'Music folder' && decl.default === '', JSON.stringify(decl));
+      const noMedia = (getManifest('pressgame').settings || []).every((f) => !/Media \/ Sources/.test(JSON.stringify(f)));
+      check('...and no row of this game says "Media / Sources"', noMedia);
+
+      const SRC = { id: 'm1', label: 'Music', kind: 'agent', base_url: 'http://music.invalid:8765' };
+      const TREE = {
+        '': { albums: ['Upbeat', 'Calm'], items: [{ path: 'top.mp3' }] },
+        Calm: { albums: ['Calm/Rain'], items: [{ path: 'Calm/a.mp3' }, { path: 'Calm/b.ogg' }] },
+        'Calm/Rain': { albums: [], items: [{ path: 'Calm/Rain/r.mp3' }] },
+        Upbeat: { albums: [], items: [{ path: 'Upbeat/u.mp3' }] },
+      };
+      const asked = [];
+      const resolveListing = async (source, album = '') => {
+        asked.push(album);
+        if (!Object.prototype.hasOwnProperty.call(TREE, album)) {
+          const e = new Error('no such album'); e.code = 'album'; throw e;
+        }
+        const t = TREE[album];
+        return { album, albums: t.albums.slice(), items: t.items.map((it) => ({ ...it, sourceId: source.id, url: `x/${it.path}` })) };
+      };
+      const sources = { list: async () => [SRC] };
+      const extra = { sources, resolveListing, checkFromHere: async () => ({ check: true, why: 'test' }) };
+      const settle = async () => { for (let i = 0; i < 12; i++) await new Promise((res) => setTimeout(res, 0)); };
+
+      // No source chosen: the folder row says why there is nothing to choose, and "Music from" lists the sources.
+      {
+        const r = rig({ music: 'ambient' }, null, extra);
+        await settle();
+        const c = r.impl.settingsChoices();
+        check('"Music from" lists this screen\'s sources (it used to have none, everywhere)',
+          Array.isArray(c.musicSourceId) && c.musicSourceId.some((o) => o.value === 'm1' && o.label === 'Music'),
+          JSON.stringify(c.musicSourceId));
+        check('with no source chosen the folder row says to choose one first, in plain words',
+          c.musicAlbum && c.musicAlbum.options.length === 1 && /choose where the music is from first/.test(c.musicAlbum.note),
+          JSON.stringify(c.musicAlbum));
+        r.inst.destroy();
+      }
+
+      // The whole source: its top folders are the choices, from the listing the music already made.
+      {
+        const r = rig({ music: 'folder', musicSourceId: 'm1', musicAlbum: '' }, null, extra);
+        await settle();
+        let c = r.impl.settingsChoices();
+        const vals = (c.musicAlbum.options || []).map((o) => o.value);
+        check('the folder row offers "The whole source", then the source\'s top folders in name order',
+          JSON.stringify(vals) === JSON.stringify(['', 'Calm', 'Upbeat']) && c.musicAlbum.options[0].label === 'The whole source',
+          JSON.stringify(c.musicAlbum));
+        check('...and it cost no listing of its own (the music\'s one listing)', asked.length === 1, JSON.stringify(asked));
+        const f = fieldsFor(getManifest('pressgame'), r.impl).find((x) => x.key === 'musicAlbum');
+        check('through the menu it is a live row a switch can step (cycleable)', f && f.cycleable === true && f.options.length === 3,
+          JSON.stringify(f && { cycleable: f.cycleable, why: f.why, n: f.options && f.options.length }));
+
+        // Choosing a folder plays from it, and the row goes one level down from there.
+        r.st.set({ musicAlbum: 'Calm' });
+        await settle();
+        check('choosing "Calm" plays the music in Calm', r.impl.__probe().music.tracks === 2, JSON.stringify(r.impl.__probe().music));
+        c = r.impl.settingsChoices();
+        const v2 = c.musicAlbum.options.map((o) => o.value);
+        check('...and the row lists Calm\'s own folders under it ("Calm / Rain"), the other top folders kept',
+          JSON.stringify(v2) === JSON.stringify(['', 'Calm', 'Calm/Rain', 'Upbeat'])
+            && c.musicAlbum.options.find((o) => o.value === 'Calm/Rain').label === 'Calm / Rain', JSON.stringify(c.musicAlbum));
+        r.inst.destroy();
+      }
+
+      // A folder the source no longer has stays on the list, last, so one press repairs it.
+      {
+        asked.length = 0;
+        const r = rig({ music: 'folder', musicSourceId: 'm1', musicAlbum: 'Gone' }, null, extra);
+        await settle();
+        const c = r.impl.settingsChoices();
+        const last = c.musicAlbum.options[c.musicAlbum.options.length - 1];
+        check('a folder the source does not have stays, last, as "... — not in this source"',
+          last && last.value === 'Gone' && /not in this source/.test(last.label)
+            && c.musicAlbum.options.some((o) => o.value === 'Calm'), JSON.stringify(c.musicAlbum));
+        check('...the music falls back to the quiet hum, never silence', r.impl.__probe().music.tracks === 0
+          && /could not be reached/.test(r.impl.__probe().music.note), JSON.stringify(r.impl.__probe().music));
+        r.inst.destroy();
+      }
+
+      // The start screen's own menu gets the same live choices (it used to read the manifest alone).
+      {
+        const r = rig({ openToMenu: true, music: 'folder', musicSourceId: 'm1' }, null, extra);
+        await settle();
+        r.impl.__press('verb');          // out of the start screen...
+        r.impl.__exit();                 // ...and back to it, so the menu paints again with the sources known
+        await settle();
+        const txt = r.host.textContent || '';
+        check('the start screen\'s menu shows the source by name in "Music from", not "No source connected"',
+          /Music from/.test(txt) && !/No source connected/.test(txt), txt.slice(0, 600));
+        r.inst.destroy();
+      }
     }
 
     // ================= calibration: "suggest a number, never apply one alone" =================

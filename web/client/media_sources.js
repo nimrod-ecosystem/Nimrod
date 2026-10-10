@@ -375,9 +375,11 @@ export const ALBUM_CHOICES_MAX = 200;
 /**
  * THE DECLARED ROW: "Album". A choice whose live options come from `albumChoices` (each panel's `settingsChoices`).
  * Declared with the one option every source has, so a panel not mounted still reads as "The whole source".
+ * `key` / `label` for a panel whose album row has its own name: the press game's "Music folder" (`musicAlbum`, beside
+ * its "Music from"), which said "set in Media / Sources" for the same reason Photos' did (found 2026-10-10).
  */
-export function albumField({ level = 'standard', appliesWhen = null } = {}) {
-  return { key: ALBUM_KEY, label: 'Album', kind: 'choice', default: '', level, emptyLabel: ALBUM_WHOLE_LABEL,
+export function albumField({ level = 'standard', appliesWhen = null, key = ALBUM_KEY, label = 'Album' } = {}) {
+  return { key, label, kind: 'choice', default: '', level, emptyLabel: ALBUM_WHOLE_LABEL,
     options: [{ value: '', label: ALBUM_WHOLE_LABEL }], ...(appliesWhen ? { appliesWhen } : {}) };
 }
 
