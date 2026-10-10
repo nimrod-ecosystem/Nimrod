@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>livecams (live nature cams) — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>livecams — explore.org's live nature cams through the site's YouTube player (row 2.69)</h1>
+<p>A short list of cams with plain names, one at a time, moving on every so often. A cam that does not start or stops is
+skipped with a sentence and rested; every cam off is said and tried again by itself; a pause carries on by itself.
+Only the list is saved. The YouTube player, YouTube's oEmbed lookup and the clock are stubbed throughout: nothing here
+touches the internet.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { createBus } from '../bus.js';
+import { getManifest } from '../module.js';
+import '../modules/livecams.js';
+import {
+  TYPE, DEFAULTS, SETTINGS, ROTATE_MS, START_WAIT_MS, REST_MS, PAUSED_RESUME_MS, KEYS_BACK_MS,
+} from '../modules/livecams.js';
+import {
+  parseCamRef, parseCamList, camListText, plainTitle, lookupCam, oembedUrl, camWords, CAM_MESSAGES,
+  SUGGESTED_CAMS, STARTER_CAMS, STARTER_IDS, STARTER_TEXT, CAMS_MAX,
+} from '../explore_cams.js';
+import { createYtPlayer } from '../modules/youtube.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { CATALOG } from '../modules_catalog.js';
+import { MODULE_VERBS } from '../actions.js';
+
+const { check, section, finish } = harness();
+const J = (v) => JSON.stringify(v);
+const BEARS = 'J7ZrIDvqlic', ELEPHANTS = '0P_LBKqVbfs', BIRDS = 'YQN2Z9Y0Qos', ODD = 'abcdefghijk';
+const LIST3 = `Brown bears, Alaska | youtu.be/${BEARS}; Elephants, South Africa | youtu.be/${ELEPHANTS}; Birds at a feeder, Panama | youtu.be/${BIRDS}`;
+
+// A stand-in for youtube.js `createYtPlayer`: records what it is asked, and the suite says what YouTube did.
+function fakePlayers() {
+  const made = [];
+  const factory = (host, h, opts) => {
+    const p = { host, h, opts, loads: [], cues: [], mutes: [], gains: [], resumes: 0, stops: 0, paused: false, destroyed: false,
+      load(id) { this.loads.push(id); this.paused = false; }, cue(id) { this.cues.push(id); },
+      resume() { this.resumes += 1; this.paused = false; },
+      pause() { this.paused = true; h.onIdle?.('paused'); },   // the real player reports PAUSED back
+      setMuted(on) { this.mutes.push(!!on); }, setGain(g) { this.gains.push(g); }, stop() { this.stops += 1; },
+      destroy() { this.destroyed = true; },
+      playing() { h.onPlaying(); }, ended() { h.onEnded(); }, error(c) { h.onError(c); }, idle(w) { h.onIdle(w); } };
+    made.push(p);
+    return p;
+  };
+  return { factory, made, last: () => made[made.length - 1] };
+}
+function fakeAudio() {
+  const regs = [];
+  const on = {};
+  return { regs, on, register: (id, o) => { regs.push({ id, ...o }); return () => {}; },
+    setActive: (id, v) => { on[id] = v; }, unregister: (id) => { on[id] = 'gone'; }, master: () => 1 };
+}
+function fakeOembed(db, log = []) {
+  return async (url, opts) => {
+    log.push({ url, opts });
+    const id = new URL(new URL(url).searchParams.get('url')).searchParams.get('v');
+    const v = db[id];
+    if (v === 'down') throw new TypeError('Failed to fetch');
+    if (typeof v === 'number') return { ok: false, status: v, json: async () => ({}) };
+    if (v === undefined) return { ok: false, status: 404, json: async () => ({}) };
+    return { ok: true, status: 200, json: async () => ({ title: v, author_name: 'Explore Live Nature Cams' }) };
+  };
+}
+function clock(t0 = 1e9) { let t = t0; return { now: () => t, add: (ms) => { t += ms; } }; }
+function mountCams({ saved = {}, players = fakePlayers(), audio = null, fetchDb = {}, fetchLog = [], c = clock(), bus = null, extra = {} } = {}) {
+  const r = rig(TYPE, { saved, bus, extra: { playerFactory: players.factory, camFetch: fakeOembed(fetchDb, fetchLog), nowMs: c.now,
+    sourceRecheckMs: 60000, ...(audio ? { audio } : {}), ...extra } });
+  return { r, players, p: () => players.last(), c, fetchLog };
+}
+const text = (r) => r.host.textContent.replace(/\s+/g, ' ');
+const click = (r, sel) => { const b = r.host.querySelector(sel); if (b) b.click(); return !!b; };
+
+try {
+  // =====================================================================================
+  section('reading a cam’s address: YouTube’s shapes, explore.org’s pages, and nothing else');
+  {
+    check('a bare video id', J(parseCamRef(BEARS)) === J({ id: BEARS }));
+    check('youtu.be/<id>, with or without https://', parseCamRef(`youtu.be/${BEARS}`)?.id === BEARS && parseCamRef(`https://youtu.be/${BEARS}?t=3`)?.id === BEARS);
+    check('a watch address', parseCamRef(`https://www.youtube.com/watch?v=${BEARS}&ab_channel=x`)?.id === BEARS);
+    check('*** a live stream’s share address (youtube.com/live/<id>) ***', parseCamRef(`https://www.youtube.com/live/${BEARS}?si=abc`)?.id === BEARS);
+    check('an embed address (explore.org’s own player uses one)', parseCamRef(`https://www.youtube.com/embed/${BEARS}?rel=0&autoplay=1`)?.id === BEARS);
+    const ex = parseCamRef('https://explore.org/livecams/brown-bears/brown-bear-salmon-cam-brooks-falls');
+    check('*** an explore.org address of a cam this site knows: its YouTube id and plain name ***', ex?.id === BEARS && ex?.name === 'Brown bears, Alaska', J(ex));
+    check('an explore.org address it does not know: said to be explore.org (its pages can’t be read from here)',
+      J(parseCamRef('explore.org/livecams/owls/some-new-owl-cam')) === J({ explore: true }));
+    check('another site, and a look-alike, are nothing', parseCamRef(`https://evil.example/watch?v=${BEARS}`) === null
+      && parseCamRef(`https://youtube.com.evil.example/watch?v=${BEARS}`) === null);
+    check('junk is nothing', parseCamRef('two words') === null && parseCamRef('') === null && parseCamRef('https://www.youtube.com/@explorebears') === null);
+  }
+
+  // =====================================================================================
+  section('the list as kept: names and addresses, as text');
+  {
+    const l = parseCamList(LIST3);
+    check('three cams, names kept WITH their commas', l.length === 3 && l[0].name === 'Brown bears, Alaska' && l[0].id === BEARS && l[2].id === BIRDS, J(l));
+    const bare = parseCamList(`youtu.be/${ELEPHANTS}\n${ODD}`);
+    check('a bare address: the suggested name if it is one of ours, else "Cam 2"', bare[0].name === 'Elephants, South Africa' && bare[1].name === 'Cam 2', J(bare));
+    const messy = parseCamList(`A | youtu.be/${BEARS}; B | youtu.be/${BEARS}; C | not-an-address; ; D | https://evil.example/watch?v=${BIRDS}`);
+    check('a repeat is kept once; entries with no YouTube address are counted, not kept', messy.length === 1 && messy.bad === 2, J({ messy, bad: messy.bad }));
+    const many = parseCamList(Array.from({ length: CAMS_MAX + 2 }, (_, i) => `c${i} | youtu.be/${String(i).padStart(11, 'x')}`).join(';'));
+    check(`at most ${CAMS_MAX} cams, the rest counted as left off`, many.length === CAMS_MAX && many.over === 2);
+    check('written back as "Name | youtu.be/<id>; …"', camListText(l) === LIST3, camListText(l));
+    const odd = camListText([{ id: BEARS, name: 'Bears | big; brown' }]);
+    check('a name cannot break the list (a bar or semicolon in it becomes a comma)', odd.split(';').length === 1
+      && (odd.match(/\|/g) || []).length === 1 && parseCamList(odd)[0].id === BEARS, odd);
+    check('round trip: written then read is the same list', J(parseCamList(camListText(l)).map((c) => [c.id, c.name])) === J(l.map((c) => [c.id, c.name])));
+  }
+
+  // =====================================================================================
+  section('*** the starting list: a default, six cams, plain names ***');
+  {
+    check('six cams to start with', STARTER_CAMS.length === 6 && STARTER_IDS.length === 6);
+    check('each is one of the suggested cams, with a YouTube id', STARTER_CAMS.every((c) => SUGGESTED_CAMS.some((s) => s.id === c.id) && /^[A-Za-z0-9_-]{11}$/.test(c.id)));
+    check('none is a seasonal cam (they are offered, not started with)', STARTER_CAMS.every((c) => !SUGGESTED_CAMS.find((s) => s.id === c.id).season));
+    check('the names are plain: an animal and a place, no "LIVE", no channel names',
+      STARTER_CAMS.every((c) => !/live|cam\b|explore/i.test(c.name) && c.name.length < 40), J(STARTER_CAMS.map((c) => c.name)));
+    check('the starting text reads back as the starting list', J(parseCamList(STARTER_TEXT).map((c) => c.id)) === J(STARTER_IDS));
+    check('*** it is the DEFAULT of the list row, not a list nobody can change ***', DEFAULTS.cams === STARTER_TEXT
+      && SETTINGS.find((s) => s.key === 'cams').default === STARTER_TEXT && SETTINGS.find((s) => s.key === 'cams').kind === 'text');
+    check('every suggested cam has a slug and a plain name; ids are unique', SUGGESTED_CAMS.every((s) => s.slug && s.name)
+      && new Set(SUGGESTED_CAMS.map((s) => s.id)).size === SUGGESTED_CAMS.length);
+    check('YouTube’s titles made plain', plainTitle('LIVE Brooks Falls - Katmai National Park, Alaska 2026 | explore.org') === 'Brooks Falls - Katmai National Park, Alaska'
+      && plainTitle('Kitten Rescue Cat Cam powered by EXPLORE.org') === 'Kitten Rescue Cat Cam', plainTitle('LIVE Brooks Falls - Katmai National Park, Alaska 2026 | explore.org'));
+  }
+
+  // =====================================================================================
+  section('*** looking a pasted address up: one public request to YouTube, nothing about the person ***');
+  {
+    const log = [];
+    const f = fakeOembed({ [BEARS]: 'LIVE Brooks Falls - Katmai National Park, Alaska 2026 | explore.org', [ODD]: 401 }, log);
+    const r = await lookupCam(BEARS, { fetchImpl: f });
+    check('found, with a plain name', r.ok && r.title === 'Brooks Falls - Katmai National Park, Alaska', J(r));
+    check('*** the address is YouTube’s public oEmbed, carrying only the video’s address ***', log[0].url === oembedUrl(BEARS)
+      && log[0].url.startsWith('https://www.youtube.com/oembed?') && log[0].url.includes(BEARS));
+    check('*** no cookies, no referrer, no header of ours ***', log[0].opts.credentials === 'omit' && log[0].opts.referrerPolicy === 'no-referrer'
+      && log[0].opts.headers === undefined, J(log[0].opts));
+    check('a video YouTube does not have: "not found"', (await lookupCam('zzzzzzzzzzz', { fetchImpl: f })).reason === 'cam-not-found');
+    check('a video that may not be shown on other sites (401): said', (await lookupCam(ODD, { fetchImpl: f })).reason === 'cam-no-embed');
+    check('no network: "can’t be reached", never a throw', (await lookupCam(BIRDS, { fetchImpl: fakeOembed({ [BIRDS]: 'down' }) })).reason === 'cam-unreachable');
+    check('an answer that never comes gives up', (await lookupCam(BIRDS, { fetchImpl: () => new Promise(() => {}), timeoutMs: 30 })).reason === 'cam-unreachable');
+    const n = log.length;
+    check('a bad id is refused before any request', (await lookupCam('bad id', { fetchImpl: f })).reason === 'cam-bad-address' && log.length === n);
+    check('every message is a sentence; none names a person or says "her screen"', Object.values(CAM_MESSAGES).every((m) => /[.]$/.test(m)
+      && !/her screen|taylor|cici/i.test(m)));
+    check('the cam’s name goes into the sentence', camWords('cam-off', 'Brown bears, Alaska') === 'Brown bears, Alaska is not on right now. It may be night there, or out of season.');
+  }
+
+  // =====================================================================================
+  section('youtube.js’s player: start without sound when asked (the one change there)');
+  {
+    const had = window.YT;
+    const made = [];
+    window.YT = { PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 },
+      Player: class { constructor(host, cfg) { this.cfg = cfg; this.calls = []; made.push(this); setTimeout(() => cfg.events.onReady(), 0); }
+        mute() { this.calls.push('mute'); } unMute() { this.calls.push('unMute'); } loadVideoById() {} destroy() {} } };
+    const a = document.createElement('div');
+    const pa = createYtPlayer(a, {}, { muted: true });
+    const pb = createYtPlayer(document.createElement('div'), {});
+    await sleep(10);
+    check('asked: the player starts muted (mute=1), and is told so when ready', made[0].cfg.playerVars.mute === 1 && made[0].calls.includes('mute'), J(made[0].calls));
+    pa.setMuted(false);
+    check('setMuted(false) turns the sound on', made[0].calls[made[0].calls.length - 1] === 'unMute');
+    check('*** not asked (the YouTube and music panels): no mute, and mute/unMute never called ***',
+      made[1].cfg.playerVars.mute === undefined && made[1].calls.length === 0, J(made[1].calls));
+    pa.destroy(); pb.destroy();
+    if (had === undefined) delete window.YT; else window.YT = had;
+  }
+
+  // =====================================================================================
+  section('the manifest: every number a setting');
+  {
+    const m = getManifest(TYPE);
+    check('called "Live nature cams", on the new core, needs the network', m.title === 'Live nature cams' && m.core === 'new' && m.dependsOn === 'network');
+    const keys = m.settings.map((s) => s.key);
+    const want = ['cams', 'autostart', 'rotateMs', 'sound', 'volume', 'pausedResumeMs', 'startWaitMs', 'restMs', 'keysBackMs'];
+    check('*** each default is a row: ' + want.join(', ') + ' ***', want.every((k) => keys.includes(k)), J(keys));
+    const d = Object.fromEntries(m.settings.map((s) => [s.key, s.default]));
+    check('the defaults: starts by itself, next cam every 30 min, sound off, 20 s to start, an hour’s rest, a pause stays paused (Mike’s YouTube ruling), keys back after a minute',
+      d.autostart === true && d.rotateMs === ROTATE_MS && ROTATE_MS === 1800000 && d.sound === false && d.startWaitMs === START_WAIT_MS
+      && START_WAIT_MS === 20000 && d.restMs === REST_MS && REST_MS === 3600000 && d.pausedResumeMs === PAUSED_RESUME_MS
+      && PAUSED_RESUME_MS === 0 && d.keysBackMs === KEYS_BACK_MS && KEYS_BACK_MS === 60000, J(d));
+    check('"never" is a choice for changing cam, carrying on, and the keyboard', [ 'rotateMs', 'pausedResumeMs', 'keysBackMs' ]
+      .every((k) => m.settings.find((s) => s.key === k).options.some((o) => o.value === 0)));
+    const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: TYPE }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, J(errs));
+    const words = J(m.settings) + m.description + J(CATALOG.find((c) => c.type === TYPE) || {});
+    check('no visible words say "her screen" or name a person', !/her screen|taylor|cici/i.test(words));
+    check('it has decided what its silence means (health)', !!HEALTH_EXPECT[TYPE]);
+    check('the catalog describes it', CATALOG.some((c) => c.type === TYPE && c.title === m.title));
+    check('the screen’s verbs reach it (next, prev, select, play, pause)', J(MODULE_VERBS[TYPE]) === J({ next: 'livecams/next', prev: 'livecams/prev',
+      select: 'livecams/select', play: 'livecams/play', pause: 'livecams/pause' }), J(MODULE_VERBS[TYPE]));
+  }
+
+  // =====================================================================================
+  section('*** opened with nothing changed: the starting list plays, without sound ***');
+  {
+    const states = [];
+    const bus = createBus();
+    bus.subscribe('shell/play-state', (p) => states.push(p));
+    const audio = fakeAudio();
+    const { r, p, players } = mountCams({ bus, audio });
+    let pr = r.probe();
+    check('the six starting cams, the first being looked in on', pr.ids.length === 6 && pr.id === STARTER_IDS[0] && pr.phase === 'trying', J(pr));
+    check('*** through the YouTube player, by its id, started WITHOUT sound ***', p().loads[0] === STARTER_IDS[0] && p().opts.muted === true
+      && p().mutes[p().mutes.length - 1] === true && pr.mutedNow, J({ loads: p().loads, opts: p().opts, mutes: p().mutes }));
+    check('*** while it starts, the panel SAYS whom it is looking in on (not a black box) ***',
+      /Looking in on Elephants, South Africa/.test(text(r)) && r.host.querySelector('[data-lc-over]').hidden === false);
+    check('the start is timed (startWaitMs)', pr.timers.start === true);
+    p().playing();
+    pr = r.probe();
+    check('it plays: the words step aside for the picture', pr.phase === 'playing' && r.host.querySelector('[data-lc-over]').hidden === true);
+    check('its plain name, and where it is from, are on the panel', /Elephants, South Africa/.test(r.host.querySelector('[data-lc-name]').textContent)
+      && /From explore\.org, on YouTube/.test(text(r)) && /Live, sound off/.test(text(r)));
+    check('*** the screen is told it plays, as a slideshow (a reload may come between, a live cam never ends) ***',
+      states.some((s) => s.playing === true && s.kind === 'slideshow'), J(states));
+    check('*** sound off: nothing on the audio bus (it never takes the music slot) ***', audio.regs.length === 0 && !pr.registered);
+    check('*** playing saves nothing: no list written, no "now showing", no titles ***', J(r.stored()) === '{}', J(r.stored()));
+    check('the next cam is timed (rotateMs)', pr.timers.rotate === true && pr.timers.start === false);
+    r.timers.flush();
+    pr = r.probe();
+    check('*** 30 minutes on: the next cam ***', pr.id === STARTER_IDS[1] && p().loads[1] === STARTER_IDS[1] && pr.phase === 'trying', J(pr));
+    p().playing();
+    click(r, '[data-act="next"]');
+    check('the panel’s own Next cam button', r.probe().id === STARTER_IDS[2]);
+    click(r, '[data-act="prev"]');
+    check('...its Previous cam button', r.probe().id === STARTER_IDS[1]);
+    r.publish('livecams/next');
+    check('livecams/next (a switch, the bar, "next")', r.probe().id === STARTER_IDS[2]);
+    r.publish('livecams/prev');
+    check('livecams/prev', r.probe().id === STARTER_IDS[1]);
+    p().playing();
+    check('one player for all of it (each cam is loaded into the same one)', players.made.length === 1 && p().loads.length >= 5 && p().destroyed === false);
+    r.inst.destroy();
+    check('closed: the player is gone, the screen told it stopped', p().destroyed === true && states[states.length - 1].playing === false);
+  }
+
+  // =====================================================================================
+  section('*** a cam that is off is skipped, in words, and left alone for a while ***');
+  {
+    const c = clock();
+    const { r, p } = mountCams({ saved: { cams: LIST3 }, c });
+    check('the bears first', r.probe().id === BEARS && r.probe().phase === 'trying');
+    r.timers.flush();   // 20 seconds, nothing
+    let pr = r.probe();
+    check('*** 20 seconds and nothing: on to the next, and the bears are said to be off ***', pr.id === ELEPHANTS && pr.phase === 'trying'
+      && /Brown bears, Alaska is not on right now\. It may be night there, or out of season\./.test(text(r)), J(pr));
+    check('...and rested (not tried again for an hour)', pr.resting.includes(BEARS));
+    p().playing();
+    check('playing the elephants, the bears’ line stays as a quiet note', /Brown bears, Alaska is not on right now/.test(r.host.querySelector('[data-lc-body]').textContent));
+    r.publish('livecams/next');
+    r.publish('livecams/next');
+    check('*** a press on Next passes over a cam known to be off ***', r.probe().id === ELEPHANTS, J(r.probe()));
+    p().playing();
+    p().ended();
+    pr = r.probe();
+    check('*** a stream that ENDS (night, the season) is skipped too ***', pr.id === BIRDS && pr.resting.includes(ELEPHANTS)
+      && /Elephants, South Africa is not on right now/.test(text(r)), J(pr));
+    p().error(100);
+    pr = r.probe();
+    check('*** every cam off: said, with Try again, and tried again by itself ***', pr.phase === 'alloff'
+      && /None of the cams is on right now/.test(text(r)) && !!r.host.querySelector('[data-act="retry"]') && pr.timers.retry, J(pr));
+    check('...the last one skipped says why in plain words (an address that moved)', /YouTube has no video at that address any more/.test(text(r)));
+    check('...and the player is stopped, not left on a dead stream', p().stops >= 1);
+    r.publish('livecams/next');
+    check('*** every cam off, a press on Next tries one anyway (somebody asked) ***', r.probe().phase === 'trying');
+    r.timers.flush(); r.timers.flush();
+    check('...and it is off: back to "none is on"', r.probe().phase === 'alloff', J(r.probe()));
+    c.add(REST_MS + 1000);
+    r.timers.flush();
+    pr = r.probe();
+    check('*** an hour on, the rest is over: the cams are tried again, by themselves ***', pr.phase === 'trying' && pr.resting.length === 0, J(pr));
+    p().playing();
+    check('a cam that plays is no longer resting', !r.probe().resting.includes(r.probe().id));
+    r.inst.destroy();
+
+    // rotateMs 0: the suite's clock fires every timer at once, and the next-cam one would win.
+    const s = mountCams({ saved: { cams: LIST3, rotateMs: 0 } });
+    s.p().playing();
+    s.p().idle('buffering');
+    check('*** a cam stuck buffering is timed ***', s.r.probe().timers.start === true);
+    s.p().playing();
+    check('...it comes back: nothing happens', s.r.probe().timers.start === false && s.r.probe().id === BEARS);
+    s.p().idle('buffering');
+    s.r.timers.flush();
+    check('...it does not: the next cam, the stuck one said to be off', s.r.probe().id === ELEPHANTS && /Brown bears, Alaska is not on right now/.test(text(s.r)));
+    s.p().error(150);
+    check('error 150 (not allowed on other sites, or gone: YouTube says both the same way): skipped, both said', s.r.probe().id === BIRDS
+      && /can’t be shown here\. YouTube may not allow it on other sites, or the video may be gone\./.test(text(s.r)));
+    s.r.publish('livecams/play');
+    s.r.inst.destroy();
+
+    const u = mountCams({ saved: { cams: LIST3 } });
+    const first = u.p();
+    first.error(new Error('failed to load YouTube IFrame API'));
+    check('*** YouTube itself could not be reached: said, no cam blamed, tried again in a minute ***', u.r.probe().phase === 'unreachable'
+      && /YouTube could not be reached/.test(text(u.r)) && u.r.probe().resting.length === 0 && first.destroyed && u.r.probe().timers.retry);
+    u.r.timers.flush();
+    check('...a minute on: a new player, the same cam', u.players.made.length === 2 && u.p().loads[0] === BEARS && u.r.probe().phase === 'trying');
+    u.r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a pause: by default it stays paused, as a YouTube video does ***');
+  {
+    const { r, p } = mountCams({ saved: { cams: LIST3 } });
+    p().playing();
+    r.publish('livecams/pause');
+    check('*** the default: held with no clock, and the words do not promise one ***', r.probe().phase === 'held' && r.probe().timers.resume === false
+      && /Paused\. Press Play to carry on\./.test(text(r)) && !/by itself later/.test(text(r)));
+    r.timers.flush();
+    check('...and nothing carries it on', r.probe().phase === 'held' && p().resumes === 0);
+    r.inst.destroy();
+  }
+  section('*** a pause, with "carry on after an hour" chosen: held, said, and it carries on by itself ***');
+  {
+    const { r, p } = mountCams({ saved: { cams: LIST3, pausedResumeMs: 3600000 } });
+    p().playing();
+    r.publish('livecams/pause');
+    let pr = r.probe();
+    check('livecams/pause: paused and held, the next-cam timer stopped', p().paused && pr.phase === 'held' && !pr.timers.rotate, J(pr));
+    check('the panel says so, with Play', /Paused\. Press Play to carry on\. It carries on by itself later\./.test(text(r)) && !!r.host.querySelector('[data-act="play"]'));
+    check('*** and has asked to carry on by itself (an hour) ***', pr.timers.resume === true);
+    r.timers.flush();
+    check('the hour passes: it carries on (and is timed, in case the cam stopped meanwhile)', p().resumes === 1 && r.probe().phase === 'trying' && r.probe().timers.start);
+    p().playing();
+    p().idle('paused');
+    check('*** a pause from inside the video (YouTube’s own button) is held the same way ***', r.probe().phase === 'held');
+    click(r, '[data-act="play"]');
+    p().playing();
+    check('the panel’s Play carries on', p().resumes === 2 && r.probe().phase === 'playing');
+    r.publish('livecams/select');
+    check('livecams/select is Pause when playing…', r.probe().phase === 'held');
+    r.publish('livecams/select');
+    p().playing();
+    check('…and Play when not', r.probe().phase === 'playing');
+    r.setCfg({ pausedResumeMs: 0 });
+    r.publish('livecams/pause');
+    check('"Never": held with no clock, and the words do not promise one', r.probe().timers.resume === false && !/by itself later/.test(text(r)));
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the sound: off by default; on, it joins the audio bus like a video ***');
+  {
+    const audio = fakeAudio();
+    const { r, p } = mountCams({ saved: { cams: LIST3 }, audio });
+    p().playing();
+    r.setCfg({ sound: true });
+    let pr = r.probe();
+    check('turned on: the player is unmuted, and joins the bus (media tier, music group, the "Videos and music" fader)',
+      p().mutes[p().mutes.length - 1] === false && audio.regs.length === 1 && audio.regs[0].tier === 'media' && audio.regs[0].group === 'music'
+      && audio.regs[0].channel === 'media' && audio.on[audio.regs[0].id] === true, J({ mutes: p().mutes, regs: audio.regs }));
+    audio.regs[0].onGain(0);
+    check('the bus says silent (a call): it pauses, and it is NOT a person’s pause', p().paused && r.probe().busPaused && r.probe().phase === 'playing');
+    audio.regs[0].onGain(1);
+    check('...and carries on by itself', !p().paused && !r.probe().busPaused && p().resumes === 1);
+    audio.regs[0].onGain(0.5);
+    check('a duck turns it down (volume x the bus)', Math.abs(p().gains[p().gains.length - 1] - 0.5) < 1e-9, J(p().gains));
+    r.setCfg({ volume: 50 });
+    check('"How loud" multiplies with it', Math.abs(p().gains[p().gains.length - 1] - 0.25) < 1e-9, J(p().gains));
+    r.setCfg({ sound: false });
+    check('turned off again: muted, and off the bus’s list of things making sound', p().mutes[p().mutes.length - 1] === true && audio.on[audio.regs[0].id] === false);
+    r.inst.destroy();
+    check('closed: the bus is told', audio.on[audio.regs[0].id] === 'gone');
+
+    const a2 = fakeAudio();
+    const s = mountCams({ saved: { cams: LIST3, sound: true }, audio: a2 });
+    check('sound on from the start: the player is made with the sound on', s.p().opts.muted === false && s.p().mutes[s.p().mutes.length - 1] === false);
+    s.r.timers.flush();
+    pr = s.r.probe();
+    check('*** it does not start: tried once more WITHOUT sound before it is called off (a browser may want a press for sound) ***',
+      pr.id === BEARS && pr.triedMuted && s.p().mutes[s.p().mutes.length - 1] === true && s.p().loads.length === 2 && pr.timers.start, J(pr));
+    s.p().playing();
+    check('*** it plays silently: the panel says why, and how to get the sound ***', s.r.probe().soundBlocked
+      && /Playing without sound\. This browser wants a press on the screen before it plays sound\. Press Play for sound\./.test(text(s.r)));
+    check('...and stays off the bus while it is silent', a2.regs.length === 0);
+    s.r.publish('livecams/play');
+    check('Play (a press): the sound is turned on', s.p().mutes[s.p().mutes.length - 1] === false && !s.r.probe().soundBlocked && !/Playing without sound/.test(text(s.r)));
+    s.r.inst.destroy();
+
+    const t = mountCams({ saved: { cams: LIST3, sound: true } });
+    t.r.timers.flush(); t.r.timers.flush();
+    check('sound on and the cam really is off: skipped after the second try', t.r.probe().id === ELEPHANTS && t.r.probe().resting.includes(BEARS));
+    t.r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the list is the person’s: up, down, remove, add with one press, or paste ***');
+  {
+    const fetchLog = [];
+    const fetchDb = { [ODD]: 'LIVE Owl Nest Cam | explore.org', zzzzzzzzzzz: 404 };
+    const { r, p } = mountCams({ saved: { cams: LIST3 }, fetchDb, fetchLog });
+    p().playing();
+    click(r, '[data-act="edit"]');
+    check('"Change the list" shows the cams in order, with buttons', r.probe().editing && r.host.querySelectorAll('[data-lc-list] li').length === 3
+      && !!r.host.querySelector('[data-act="down"]') && !!r.host.querySelector('[data-act="remove"]'));
+    check('more cams to add with one press (not the ones already in the list), seasons said', r.host.querySelectorAll('[data-lc-more] [data-act="suggest"]').length === SUGGESTED_CAMS.length - 3
+      && /Polar bears, Canada/.test(text(r)) && /October and November/.test(text(r)) && !r.host.querySelector(`[data-lc-more] [data-id="${BEARS}"]`));
+    r.host.querySelector('[data-act="down"][data-index="0"]').click();
+    let names = parseCamList(r.stored().cams).map((c) => c.name);
+    check('*** Down: the order changes and is saved ***', J(names) === J(['Elephants, South Africa', 'Brown bears, Alaska', 'Birds at a feeder, Panama']), J(names));
+    check('...and the cam showing goes on showing (no reload)', r.probe().id === BEARS && r.probe().phase === 'playing' && p().loads.length === 1);
+    r.host.querySelector('[data-act="up"][data-index="2"]').click();
+    names = parseCamList(r.stored().cams).map((c) => c.name);
+    check('Up', J(names) === J(['Elephants, South Africa', 'Birds at a feeder, Panama', 'Brown bears, Alaska']), J(names));
+    r.host.querySelector(`[data-act="suggest"][data-id="muO2i8ShZrY"]`).click();
+    check('*** a suggested cam added with one press, by name ***', /Polar bears, Canada \| youtu\.be\/muO2i8ShZrY/.test(r.stored().cams) && /Added “Polar bears, Canada”/.test(text(r)));
+    const removeAt = parseCamList(r.stored().cams).findIndex((c) => c.id === BEARS);
+    r.host.querySelector(`[data-act="remove"][data-index="${removeAt}"]`).click();
+    check('*** removing the cam that is showing: it is gone from the list, and the next one is looked in on ***',
+      !r.stored().cams.includes(BEARS) && r.probe().id !== BEARS && r.probe().phase === 'trying', J(r.probe()));
+
+    const type = (name, addr) => {
+      const n = r.host.querySelector('[data-lc-add-name]'), a = r.host.querySelector('[data-lc-add-addr]');
+      n.value = name; n.dispatchEvent(new Event('input', { bubbles: true }));
+      a.value = addr; a.dispatchEvent(new Event('input', { bubbles: true }));
+      r.host.querySelector('[data-act="add"]').click();
+    };
+    type('', 'not an address');
+    await sleep(5);
+    check('a wrong address is refused, with words', /That is not a YouTube address/.test(text(r)));
+    type('', 'https://explore.org/livecams/owls/a-cam-we-do-not-know');
+    await sleep(5);
+    check('*** an explore.org page this site does not know: says how to get its YouTube address ***', /explore\.org’s own pages can’t be read from here/.test(text(r))
+      && /press the YouTube logo/.test(text(r)));
+    type('', 'https://explore.org/livecams/brown-bears/brown-bear-salmon-cam-brooks-falls');
+    await sleep(5);
+    check('an explore.org page it knows: added by its plain name, no lookup', /Brown bears, Alaska \| youtu\.be\/J7ZrIDvqlic/.test(r.stored().cams) && fetchLog.length === 0);
+    type('', 'https://www.youtube.com/watch?v=zzzzzzzzzzz');
+    await sleep(5);
+    check('*** a video YouTube does not have is refused ***', /YouTube has no video at that address/.test(text(r)) && !r.stored().cams.includes('zzzzzzzzzzz'));
+    type('', `https://youtu.be/${ODD}`);
+    await sleep(5);
+    check('*** a pasted address with no name: named from YouTube, made plain ***', /Owl Nest Cam \| youtu\.be\/abcdefghijk/.test(r.stored().cams), r.stored().cams);
+    const before = fetchLog.length;
+    type('Kitchen birds', 'https://www.youtube.com/live/qqqqqqqqqqq');
+    await sleep(5);
+    check('a name typed in is used, and nothing is looked up', /Kitchen birds \| youtu\.be\/qqqqqqqqqqq/.test(r.stored().cams) && fetchLog.length === before);
+    type('', `youtu.be/${ODD}`);
+    await sleep(5);
+    check('the same cam twice is refused', /already in the list/.test(text(r)));
+    const saved = r.stored();
+    check('*** only the list is saved: names and youtu.be addresses, nothing else ***', J(Object.keys(saved)) === J(['cams'])
+      && !/https?:/.test(saved.cams) && !/LIVE|explore\.org/.test(saved.cams), J(saved));
+    r.host.querySelector('[data-lc-add-name]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape leaves the list', !r.probe().editing);
+    click(r, '[data-act="edit"]');
+    while (r.host.querySelector('[data-act="remove"]')) r.host.querySelector('[data-act="remove"]').click();
+    check('*** every cam removed: an empty list, said, with the way back ***', r.probe().phase === 'empty' && r.stored().cams === ''
+      && /No cams yet/.test(text(r)));
+    r.inst.destroy();
+
+    const e = mountCams({ saved: { cams: '' } });
+    check('*** an emptied list stays empty when opened again (the starting list is not forced back) ***', e.r.probe().phase === 'empty'
+      && e.r.probe().ids.length === 0 && e.players.made.length === 0);
+    e.r.inst.destroy();
+
+    const g = mountCams({ saved: { cams: `${LIST3}; nonsense here` } });
+    check('the settings row’s text works too; junk in it is counted and said', g.r.probe().ids.length === 3 && /1 of the cams typed in have no YouTube address/.test(text(g.r)));
+    g.r.setCfg({ cams: `Birds at a feeder, Panama | youtu.be/${BIRDS}` });
+    check('changing the row changes the list at once', g.r.probe().id === BIRDS && J(g.r.probe().ids) === J([BIRDS]));
+    g.r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('starting, and the keyboard');
+  {
+    const w = mountCams({ saved: { cams: LIST3, autostart: false } });
+    check('"It waits for Start": the first cam is cued, not played, with a Start button', w.r.probe().phase === 'waiting'
+      && w.p().cues[0] === BEARS && w.p().loads.length === 0 && !!w.r.host.querySelector('[data-lc-start]') && !w.r.probe().timers.start);
+    w.r.publish('livecams/play');
+    check('Play is Start', w.r.probe().phase === 'trying' && w.p().loads[0] === BEARS);
+    w.r.inst.destroy();
+
+    const k = mountCams({ saved: { cams: LIST3, rotateMs: 0 } });
+    k.p().playing();
+    check('"Never" change cam: no next-cam timer', k.r.probe().timers.rotate === false);
+    const frame = document.createElement('iframe');
+    k.r.host.querySelector('[data-lc-stage]').append(frame);   // where YouTube's frame would be
+    frame.focus();
+    window.dispatchEvent(new Event('blur'));
+    k.r.timers.flush();
+    if (document.activeElement === frame) {
+      check('*** a press on the video gives YouTube the keyboard: the panel says so, with "Give the keys back" ***', k.r.probe().keysAway
+        && /YouTube has the keyboard/.test(text(k.r)) && !!k.r.host.querySelector('[data-act="keys"]'));
+      check('...and has asked to take it back by itself', k.r.timers.count() === 1);
+      k.r.timers.flush();
+      check('*** a minute on: the keyboard is back on this screen ***', !k.r.probe().keysAway && document.activeElement !== frame
+        && k.r.host.contains(document.activeElement), String(document.activeElement?.outerHTML).slice(0, 80));
+    } else {
+      check('(this browser does not move focus into a frame here: the keyboard checks are skipped, not passed)', true);
+    }
+    check('the panel’s focus ring uses --focus, never the raw accent', !/outline[^;}]*var\(--accent/.test(document.getElementById('livecams-style')?.textContent || '')
+      && /var\(--focus, currentColor\)/.test(document.getElementById('livecams-style')?.textContent || ''));
+    k.r.inst.destroy();
+  }
+  finish();
+} catch (err) {
+  finish(err);
+}
+</script>
+</body>
+</html>

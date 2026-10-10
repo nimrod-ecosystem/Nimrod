@@ -113,6 +113,10 @@ export const HEALTH_EXPECT = {
   // Stop"), or paused, and none of those is a stall. A file that will not play is skipped by the panel itself, and three
   // in a row stop it and try the next item a minute later (modules/archive.js), so the recovery ladder is not needed.
   archive:     { idle: true },
+  // Row 2.69, livecams (Live nature cams): idle, argued. A cam that does not start, or stops, is skipped by the panel
+  // itself after 20 seconds; every cam off is said and tried again by itself; a pause carries on by itself
+  // (modules/livecams.js). Nothing for the recovery ladder to do, and a paused or all-off panel is not a stall.
+  livecams:    { idle: true },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //
   // `trivia`, `bank`, `wallpaper` and `board` shipped without rows, so they fell to the

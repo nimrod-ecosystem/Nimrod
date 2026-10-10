@@ -243,6 +243,7 @@ import './modules/note.js';            // registers 'note' (row 2.37, a note fro
 import './modules/weather.js';         // registers 'weather' (row 2.37, the weather behind the window)
 import './modules/music.js';           // registers 'music' (row 2.32, favourites by name)
 import './modules/archive.js';         // registers 'archive' (row 2.69, the Internet Archive)
+import './modules/livecams.js';        // registers 'livecams' (row 2.69, live nature cams from explore.org)
 import './modules/brickbreaker.js';    // registers 'brickbreaker' (row 2.37 item 10)
 import './modules/rhythm.js';          // registers 'rhythm' (row 2.37 item 10)
 import './modules/brickdrop.js';       // registers 'brickdrop' (brick games, row 2.76: Brick Drop)

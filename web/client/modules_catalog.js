@@ -173,6 +173,19 @@ export const CATALOG = [
     note: 'Only the item names you choose are saved. The films and sound come straight from the Archive; nothing is '
       + 'copied to this site. Old games from the Archive are off until you turn them on.',
   },
+  // Row 2.69: livecams - live nature cams from explore.org, played through YouTube's player.
+  {
+    type: 'livecams',
+    title: 'Live nature cams',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'Live animal cams from explore.org: elephants, birds, puppies, kittens, an aquarium.',
+    needs: 'A working internet connection. No account. Six cams are there to start with, and the list is yours to change.',
+    why: 'Something alive and moving, all day, that asks nothing of anybody. One cam at a time, with a plain name; it '
+      + 'moves on every half hour, and a cam that is off (night there, or out of season) is skipped and said so.',
+    note: 'Only your list is saved: each cam’s name and address. The pictures come straight from YouTube. The sound is '
+      + 'off until you turn it on.',
+  },
   // Row 2.45. A first version, and the catalog says so.
   {
     type: 'karaoke',
