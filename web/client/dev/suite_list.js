@@ -152,6 +152,8 @@ export const SUITES = [
   // brick games (2026-10-10): Stack to the line (one press drops a sliding brick; build to the line), and Brick mosaic
   // (a photo built from bricks in the theme's brick colours, one brick at a time).
   'stackline', 'brickmosaic',
+  // brick games (2026-10-10): sortbricks, Sort the bricks (a shape sorter, then sorting by colour and by size).
+  'sortbricks',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

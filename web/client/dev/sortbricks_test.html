@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>sortbricks — Sort the bricks: a shape sorter, then sorting by colour and by size — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>sortbricks — row 2.76 (brick games, 2026-10-10)</h1>
+<p>Two of chat's ideas for Mike's <i>"Any other ideas for games with our bricks?"</i>, as one game: <b>match the brick to its
+slot</b> (a shape sorter for the earliest levels) and <b>sort by colour or size</b>. This suite checks the rules on their own
+(<code>sort_bricks.js</code>): six levels from one slot to three sizes, a brick always has exactly one right place, a miss
+costs nothing and shows the right place after two, a full tray brings a new one by itself, and the colour names are the
+theme's own. Then the panel (<code>modules/sortbricks.js</code>): the first level won with <b>any single press</b>, a colour
+level won with <b>one switch and nothing else</b> (the light moves by itself), two switches, touch and keys, the colour
+said aloud, the theme's colours, the play state told to the shell, the calm demo that never scores, and a teardown that
+leaves nothing running. Time is stepped through injected timers.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540, a quarter of a 1080p kiosk)</h2>
+<div id="host"></div>
+<div id="host2" style="width:640px;height:360px;margin-top:12px;border:1px solid #e4e0c2"></div>
+<div id="host3" style="width:640px;height:360px;margin-top:12px;border:1px solid #e4e0c2"></div>
+<div id="host4" style="width:480px;height:270px;margin-top:12px;border:1px solid #e4e0c2"></div>
+
+<script type="module">
+import '../modules/sortbricks.js';
+// The two brick games whose setting keys this one shares (level, scanMs, sounds): the audit below checks they agree.
+import '../modules/brickdrop.js';
+import '../modules/stackline.js';
+import { auditManifests } from '../settings_audit.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { createAudioBus } from '../audio_bus.js';
+import { createFakeAudioContext } from '../game_tones.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import { moduleVoiceTable } from '../input_speech.js';
+import { PLAY_STATE_TOPIC, START_LINES } from '../game_start.js';
+import { SCORE_TOPIC } from '../score_source.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import { minFlashPeriodMs, FLASH_LIMIT_DEFAULT } from '../flash_limit.js';
+import { BRICK_COLOURS } from '../brick_colours.js';
+import {
+  LEVELS, LEVEL_IDS, MOVE_MS, REST_MS, SIZE_NAMES, SAME_LENGTH, newGame, freshTray, choosePlace, step, rightPlace, fits,
+  left, trayOf, colourNames, sortComputer, shuffled,
+} from '../sort_bricks.js';
+import { GAME, TITLE, DEFAULTS, IDLE_MS, DEMO_STEP_MS, VOICE, LINES, statusFor } from '../modules/sortbricks.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const seeded = (s0 = 7) => { let s = s0; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); };
+
+// The game's timers, stepped by hand: `run(ms)` fires everything due, in order.
+function fakeTimers() {
+  let t = 0, id = 0;
+  const q = new Map();
+  return {
+    set(fn, ms) { const h = ++id; q.set(h, { at: t + Math.max(0, Number(ms) || 0), fn }); return h; },
+    clear(h) { q.delete(h); },
+    now: () => t,
+    pending: () => q.size,
+    run(ms) {
+      const end = t + ms;
+      for (let guard = 0; guard < 100000; guard++) {
+        let next = null;
+        for (const [h, x] of q) if (x.at <= end && (!next || x.at < next[1].at)) next = [h, x];
+        if (!next) break;
+        q.delete(next[0]);
+        t = Math.max(t, next[1].at);
+        next[1].fn();
+      }
+      t = end;
+    },
+  };
+}
+function fakeOutput() {
+  const said = [];
+  let n = 0;
+  return { said, say(text) { said.push(String(text)); return `s${++n}`; }, cancel() { return true; } };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function fakeStream() {
+  let events = [];
+  const subs = new Set();
+  const snap = () => ({ events: [...events], total: events.length });
+  return {
+    append(kind, data) { events = [...events, { id: events.length + 1, kind, data, created_at: new Date().toISOString() }];
+      for (const fn of [...subs]) fn(snap()); return Promise.resolve(); },
+    load: () => Promise.resolve(), get: snap,
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {},
+    peek: () => events,
+  };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
+                 points = fakeStream(), rand = seeded(), timers = fakeTimers(), output = fakeOutput(), started = true } = {}) {
+  const state = fakeState(started ? { autostart: true, ...saved } : saved);
+  const inst = mountModule(GAME, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
+    instanceId: `sb${++n}`, reducedMotion, rand, audio, output,
+    setTimer: timers.set, clearTimer: timers.clear,
+    makeAudioContext: () => createFakeAudioContext(),
+    makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return { inst, host, bus, state, points, probe, timers, output, id: `sb${n}`,
+    pub: (verb, p) => bus.publish(`${GAME}/${verb}`, p),
+    verb: (v) => bus.publish(verbTarget(GAME, v).topic),
+    key: (k) => host.querySelector('[data-sb-root]').dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })),
+    tap: (el, pointerType = 'touch') => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType })),
+    say: () => host.querySelector('.sb-say')?.textContent || '' };
+}
+const flush = () => new Promise((r) => setTimeout(r, 0));
+// As a one-switch user does: wait for the light to come to the right place, then press. true when pressed.
+function pressWhenLit(t, { press = () => t.verb('select'), guard = 60 } = {}) {
+  while (guard-- > 0) {
+    const p = t.probe();
+    if (p.game.phase === 'play' && p.lit === rightPlace(p.game)) { press(); return true; }
+    t.timers.run(500);
+  }
+  return false;
+}
+
+(async () => {
+try {
+  // =====================================================================
+  section('the levels: one slot first, then two slots, colours, sizes');
+  {
+    const L = LEVEL_IDS.map((i) => LEVELS[i]);
+    check('six levels, in this order', J(L.map((l) => l.label)) === J(['One slot', 'Two slots', 'Two colours', 'Three colours', 'Two sizes', 'Three sizes']));
+    check('*** the first level is ONE slot: a shape sorter with nothing to choose ***', L[0].kind === 'slot' && L[0].places === 1);
+    check('then slots, then colours, then sizes', J(L.map((l) => l.kind)) === J(['slot', 'slot', 'colour', 'colour', 'size', 'size']));
+    check('never more than three places (what a person can hold in view)', L.every((l) => l.places >= 1 && l.places <= 3));
+    check('a stored tray size outside 1-20 is clamped, never trusted', trayOf(0) === 5 && trayOf(99) === 20 && trayOf(-4) === 5 && trayOf('8') === 8);
+  }
+
+  section('*** one slot: any choice is right, and a tray is sorted brick by brick ***');
+  {
+    const g = newGame({ level: 1, tray: 5, rand: seeded(3) });
+    check('a tray of five, one up, four more', g.tray.length === 5 && left(g) === 5 && g.phase === 'play');
+    check('every brick has exactly one slot, and it fits', g.tray.every((b) => b.places.length === 1 && b.places[0].len === b.len));
+    check('the bricks are real Nimrod lengths (1 to 4 cells: 40 to 160 mm)', g.tray.every((b) => [1, 2, 3, 4].includes(b.len)));
+    let ev = [];
+    for (let k = 0; k < 5; k++) {
+      ev = choosePlace(g, 0);
+      if (!ev.includes('right')) break;
+      if (k < 4) { check(k === 0 ? 'a brick put in goes in, then the next comes after a moment' : `brick ${k + 1} in`, g.phase === 'moving'); step(g, MOVE_MS); }
+    }
+    check('*** five choices, five right, the tray sorted ***', ev.includes('tray') && g.sorted === 5 && g.trays === 1 && g.phase === 'won', J(ev));
+    check('the words say so', statusFor(g) === 'All sorted! More bricks are coming.');
+    step(g, MOVE_MS + REST_MS - 10);
+    check('it rests a moment', g.phase === 'won');
+    const e2 = step(g, 20);
+    check('*** then a new tray by itself, the score kept ***', e2.includes('fresh') && g.phase === 'play' && left(g) === 5 && g.sorted === 5);
+  }
+
+  section('two slots: exactly one fits; a miss costs nothing; after two the right one is shown');
+  {
+    const g = newGame({ level: 2, tray: 8, rand: seeded(11) });
+    const ok = g.tray.every((b) => b.places.length === 2 && b.places[0].len !== b.places[1].len
+      && b.places.filter((p) => p.len === b.len).length === 1);
+    check('every brick brings two slots of different lengths, and exactly one fits it', ok);
+    const right = rightPlace(g), wrong = 1 - right;
+    const e1 = choosePlace(g, wrong);
+    check('*** the wrong slot: "wrong", and the same brick stays up ***', J(e1) === J(['wrong']) && g.at === 0 && g.phase === 'play' && g.wrong === wrong, J(e1));
+    check('...nothing is taken away: both slots are still there', g.places.length === 2);
+    const e2 = choosePlace(g, wrong);
+    check('*** two misses: the right one is shown ***', e2.includes('show') && g.shown === right, J(e2));
+    check('the words say so', statusFor(g, { news: 'Not that one. It goes here.' }) === 'Not that one. It goes here.');
+    const e3 = choosePlace(g, right);
+    check('then the right one is right (and it was not first try)', e3.includes('right') && g.firstTry === 0 && g.sorted === 1);
+    step(g, MOVE_MS);
+    check('the next brick starts clean: no misses, nothing shown', g.misses === 0 && g.shown === -1 && g.wrong === -1);
+    const h = newGame({ level: 2, rand: seeded(5) });
+    const w = 1 - rightPlace(h);
+    for (let k = 0; k < 5; k++) choosePlace(h, w, { showAfter: 0 });
+    check('"never": five misses and nothing is shown', h.shown === -1 && h.misses === 5);
+    check('a choice that is not a place does nothing', choosePlace(h, 7).length === 0 && choosePlace(h, -1).length === 0 && h.misses === 5);
+  }
+
+  section('colours: the theme\'s colours, one box each, every brick with a box');
+  {
+    const g = newGame({ level: 3, tray: 6, rand: seeded(2) });
+    check('two boxes of two different theme colours', g.places.length === 2 && g.places[0].c !== g.places[1].c
+      && g.places.every((p) => p.c >= 0 && p.c < 5));
+    check('every brick\'s colour has its box', g.tray.every((b) => g.places.some((p) => p.c === b.c)));
+    check('*** balanced: each box gets bricks ***', g.places.every((p) => g.tray.filter((b) => b.c === p.c).length === 3));
+    check('*** one thing differs by default: every brick the same length ***', g.tray.every((b) => b.len === SAME_LENGTH));
+    const g3 = newGame({ level: 4, tray: 9, rand: seeded(4) });
+    check('three colours: three boxes', g3.places.length === 3 && new Set(g3.places.map((p) => p.c)).size === 3);
+    const lens = new Set();
+    for (let s = 1; s < 20; s++) newGame({ level: 3, tray: 10, mix: 'both', rand: seeded(s) }).tray.forEach((b) => lens.add(b.len));
+    check('"both": lengths are mixed in with the colours', lens.size >= 3, J([...lens]));
+    check('a colour brick goes by colour, whatever its length', fits('colour', { c: 2, len: 1 }, { c: 2 }) && !fits('colour', { c: 2, len: 2 }, { c: 1 }));
+  }
+
+  section('sizes: Short and Long, then Short, Middle and Long');
+  {
+    const g = newGame({ level: 5, tray: 6, rand: seeded(8) });
+    check('two sizes: Short (1 cell) and Long (3 cells), short on the left', J(g.places.map((p) => [p.len, p.name])) === J([[1, 'Short'], [3, 'Long']]));
+    const g3 = newGame({ level: 6, tray: 6, rand: seeded(8) });
+    check('three sizes: Short, Middle, Long', J(g3.places.map((p) => p.name)) === J(['Short', 'Middle', 'Long']) && SIZE_NAMES[2] === 'Middle');
+    check('*** one thing differs by default: a tray\'s bricks are all one colour ***', new Set(g.tray.map((b) => b.c)).size === 1);
+    const cs = new Set();
+    for (let s = 1; s < 10; s++) newGame({ level: 6, tray: 10, mix: 'both', rand: seeded(s) }).tray.forEach((b) => cs.add(b.c));
+    check('"both": colours are mixed in with the sizes', cs.size >= 4, J([...cs]));
+  }
+
+  section('*** 400 random choices on every level: a brick only ever lands where it fits ***');
+  {
+    const rnd = seeded(17);
+    let bad = 0, rights = 0, wrongs = 0;
+    for (const lv of LEVEL_IDS) {
+      const g = newGame({ level: lv, tray: 6, mix: lv % 2 ? 'both' : 'one', rand: rnd });
+      for (let k = 0; k < 400; k++) {
+        if (g.phase !== 'play') { step(g, MOVE_MS + REST_MS, { rand: rnd }); continue; }
+        const ev = choosePlace(g, Math.floor(rnd() * g.places.length));
+        if (ev.includes('right')) rights++; else wrongs++;
+      }
+      const placesSeen = g.kind === 'slot' ? [] : g.places;
+      for (const p of placesSeen) for (const b of p.items) if (!fits(g.kind, b, p)) bad++;
+      if (rightPlace(g) < 0 && g.phase === 'play') bad++;
+    }
+    check(`every brick sits in a place it fits (${rights} right, ${wrongs} wrong)`, bad === 0 && rights > 100 && wrongs > 50, String(bad));
+  }
+
+  section('after a tray: the same level, one up, or a level somebody chose');
+  {
+    const g = newGame({ level: 3, tray: 1, rand: seeded(1) });
+    choosePlace(g, rightPlace(g));
+    const e = step(g, MOVE_MS + REST_MS, { afterTray: 'up' });
+    check('"one level up": Three colours next', e.includes('levelup') && g.level === 4 && g.places.length === 3);
+    choosePlace(g, rightPlace(g));
+    step(g, MOVE_MS + REST_MS, { afterTray: 'up', level: 1 });
+    check('a level chosen meanwhile wins over "one level up"', g.level === 1 && g.kind === 'slot');
+    const top = newGame({ level: 6, tray: 1, rand: seeded(1) });
+    choosePlace(top, rightPlace(top)); step(top, MOVE_MS + REST_MS, { afterTray: 'up' });
+    check('the top level stays the top level', top.level === 6);
+  }
+
+  section('*** the colour names are the theme\'s own ***');
+  {
+    const hex = (id) => BRICK_COLOURS[id].map((c) => c.hex);
+    check('the default theme\'s five: Moss, Teal, Rose, Gold, Forest', J(colourNames(hex('default'), BRICK_COLOURS)) === J(['Moss', 'Teal', 'Rose', 'Gold', 'Forest']));
+    check('Harvest\'s five, by its own names', J(colourNames(hex('harvest'), BRICK_COLOURS)) === J(BRICK_COLOURS.harvest.map((c) => c.name)));
+    check('rgb() as a browser gives it reads the same', colourNames(['rgb(16, 86, 102)'], BRICK_COLOURS)[0] === 'Teal');
+    const near = colourNames(['#105667', '#a85f53', '#123456', '#4f5c36', '#0a3324'], BRICK_COLOURS);
+    check('a colour of no theme takes the nearest brick colour\'s name', near[0] === 'Teal' && near[1] === 'Rose', J(near));
+    const twins = colourNames(['#105666', '#105667', '#105668'], BRICK_COLOURS);
+    check('*** two that come out alike are told apart, so no two places are said the same ***', new Set(twins).size === 3, J(twins));
+    check('a colour that cannot be read still has a name', colourNames(['nonsense'], BRICK_COLOURS)[0] === 'Colour 1');
+  }
+
+  section('the computer that plays the demo: it lights the right place, then puts the brick in');
+  {
+    const obs = (lit) => ({ state: { phase: 'play', brick: { len: 2, c: 1, id: 1 }, places: [{ c: 0 }, { c: 1 }], kind: 'colour', lit, right: 1 } });
+    check('first it lights the right place', J(sortComputer.decide(obs(0))) === J({ act: 'light', place: 1 }));
+    check('then it puts the brick in', J(sortComputer.decide(obs(1))) === J({ act: 'pick', place: 1 }));
+    check('nothing to do while a brick is going in', sortComputer.decide({ state: { phase: 'moving' } }) === null);
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(GAME);
+    check('registered as "Sort the bricks", on the new core, dependsOn local', m && m.title === TITLE && m.core === 'new' && m.dependsOn === 'local');
+    const words = `${m.title} ${m.description} ${J(m.settings)} ${J(CATALOG.find((c) => c.type === GAME))}`;
+    check('the words never name a toy or another game', !/lego|duplo|mega ?bloks|tupperware|fisher|melissa|playskool|tetris/i.test(words));
+    check('the words never say "her screen" or name anybody', !/taylor|cici|her screen/i.test(words));
+    const cat = CATALOG.find((c) => c.type === GAME);
+    check('catalog: listed with the games, asks for an answer', cat && cat.group === 'practice' && cat.use === 'answer' && cat.title === TITLE, J(cat));
+    check('library: under Games', J(MODULE_CATEGORIES[GAME]) === J(['games']));
+    check('health: idle is fine', GAME in HEALTH_EXPECT && expectFor(GAME).idle === true);
+    check('select, down and launch put the brick in', ['select', 'down', 'launch'].every((v) => verbTarget(GAME, v)?.topic === `${GAME}/select`));
+    check('next / right and prev / left move the light', verbTarget(GAME, 'next')?.topic === `${GAME}/next` && verbTarget(GAME, 'right')?.topic === `${GAME}/next`
+      && verbTarget(GAME, 'prev')?.topic === `${GAME}/prev` && verbTarget(GAME, 'left')?.topic === `${GAME}/prev`);
+    check('back and pause pause; play starts', verbTarget(GAME, 'pause')?.topic === `${GAME}/pause` && verbTarget(GAME, 'back')?.topic === `${GAME}/back`
+      && verbTarget(GAME, 'play')?.topic === `${GAME}/resume`);
+    const table = moduleVoiceTable(VOICE, { verbs: verbsFor(GAME) });
+    check('spoken: "put it in", "this one", "start", "pause"', ['put it in', 'this one', 'start', 'pause'].every((p) => p in table), J(table));
+    check('defaults: One slot, waits for Start, the light moves by itself every 4 s, a tray of 5, shown after 2 misses, a tray pays 1',
+      DEFAULTS.level === 1 && DEFAULTS.autostart === false && DEFAULTS.lightMoves === 'auto' && DEFAULTS.scanMs === 4000
+      && DEFAULTS.trayBricks === 5 && DEFAULTS.showAfter === 2 && DEFAULTS.trayPoints === 1 && DEFAULTS.afterTray === 'same' && DEFAULTS.mix === 'one');
+    const keys = m.settings.map((r) => r.key);
+    check('*** every timing and count is a setting: the light, the tray, the misses, the points, the demo ***',
+      ['scanMs', 'trayBricks', 'showAfter', 'trayPoints', 'attractForMs', 'attractAfterMs', 'level', 'lightMoves'].every((k) => keys.includes(k)), keys.join(','));
+    check('every setting row is labelled, and every choice is a short list', m.settings.every((r) => r.key && r.label)
+      && m.settings.filter((r) => r.kind === 'choice').every((r) => r.options.length >= 2 && r.options.length <= 6));
+    check('durations are stored in ms', m.settings.filter((r) => /Ms$/.test(r.key)).every((r) => r.options.every((o) => o.value === 0 || o.value >= 1000)));
+    const audit = auditManifests([m, getManifest('brickdrop'), getManifest('stackline')], { level: 'advanced' });
+    const errs = audit.findings.filter((f) => f.severity === 'error');
+    check('the settings audit finds no error, and the keys shared with Brick Drop and Stack to the line mean the same', errs.length === 0,
+      J(errs.map((f) => `${f.module}.${f.key}: ${f.code}`)));
+  }
+
+  section('*** the first level: ANY single press puts the brick in, and a tray is sorted with one switch ***');
+  {
+    const t = mount();
+    check('it opens with a brick up and one slot; nothing is lit, nothing moves', t.probe().game.places.length === 1 && t.say() === 'Press to play.'
+      && t.timers.pending() === 0, `${t.say()} timers=${t.timers.pending()}`);
+    let presses = 0;
+    for (let k = 0; k < 5; k++) { t.verb('select'); presses++; t.timers.run(MOVE_MS + 50); }
+    const g = t.probe().game;
+    check(`*** a tray sorted with ${presses} presses of one switch and nothing else ***`, g.trays === 1 && g.sorted === 5, J({ sorted: g.sorted, trays: g.trays, phase: g.phase }));
+    check('the words say so', t.say() === 'All sorted! More bricks are coming.', t.say());
+    await flush();
+    const pts = t.points.peek().filter((e) => e.kind === 'points');
+    check('*** a tray sorted paid 1 Play point ***', pts.length === 1 && Number(pts[0].data?.amount) === 1 && pts[0].data?.type === 'Play', J(pts.map((e) => e.data)));
+    check('the totals were kept', t.probe().stats.sorted === 5 && t.probe().stats.trays === 1 && t.state.get().stats?.sorted === 5);
+    t.verb('select');
+    check('a press skips the rest: a new tray', t.probe().game.phase === 'play' && left(t.probe().game) === 5);
+    t.timers.run(REST_MS + MOVE_MS);
+    check('...and the rest that was skipped does not fire again later', left(t.probe().game) === 5 && t.probe().game.trays === 1);
+    t.inst.destroy();
+  }
+
+  section('*** at one slot every input is the press: next, prev, left, right, down, launch, Enter, the arrows, a number, a touch anywhere ***');
+  {
+    const t = mount({ saved: { trayBricks: 10 } });
+    t.verb('select'); t.timers.run(MOVE_MS + 50);
+    const inputs = {
+      'a switch\'s next': () => t.verb('next'), 'a switch\'s previous': () => t.verb('prev'),
+      'left': () => t.verb('left'), 'right': () => t.verb('right'), 'down': () => t.verb('down'), 'launch': () => t.verb('launch'),
+      'Enter': () => t.key('Enter'), 'the Down arrow': () => t.key('ArrowDown'), 'the Right arrow': () => t.key('ArrowRight'),
+      'the 1 key': () => t.key('1'),
+      'a touch on the slot': () => t.tap(t.host.querySelector('[data-place="0"]')),
+      'a click on the brick': () => t.tap(t.host.querySelector('[data-brick]'), 'mouse'),
+      'a touch on the words': () => t.tap(t.host.querySelector('.sb-say')),
+    };
+    const worked = [];
+    for (const [name, fire] of Object.entries(inputs)) {
+      if (t.probe().game.phase === 'won') t.verb('select');
+      const before = t.probe().game.sorted;
+      fire();
+      if (t.probe().game.sorted === before + 1) worked.push(name);
+      t.timers.run(MOVE_MS + 50);
+    }
+    check(`*** each one put a brick in (${worked.length} of ${Object.keys(inputs).length}) ***`, worked.length === Object.keys(inputs).length,
+      Object.keys(inputs).filter((k) => !worked.includes(k)).join(', '));
+    check('the words say press to put it in', /Press to put the brick in|All sorted/.test(t.say()), t.say());
+    t.inst.destroy();
+  }
+
+  section('*** a colour level with ONE switch: the light moves by itself, and a press puts the brick in the lit box ***');
+  {
+    const t = mount({ saved: { level: 3, trayBricks: 4 } });
+    check('two boxes, each a theme colour', t.host.querySelectorAll('[data-place]').length === 2
+      && [...t.host.querySelectorAll('[data-place] .nb-face[data-c]')].length >= 2);
+    t.verb('select');
+    check('the first press wakes it: the first box is lit, nothing is chosen', t.probe().lit === 0 && t.probe().game.sorted === 0 && t.probe().game.tries === 0
+      && t.host.querySelector('[data-place="0"]').dataset.lit === '1');
+    const step0 = t.probe().lightStepMs;
+    check('the light steps every 4 s by default (never under the flash limit)', step0 === 4000 && step0 >= minFlashPeriodMs(FLASH_LIMIT_DEFAULT), String(step0));
+    t.timers.run(step0 - 10);
+    check('...not before', t.probe().lit === 0);
+    t.timers.run(20);
+    check('*** ...then by itself to the next box ***', t.probe().lit === 1 && t.host.querySelector('[data-place="1"]').dataset.lit === '1');
+    t.timers.run(step0);
+    check('it wraps round (with one switch you can only go one way)', t.probe().lit === 0);
+    let presses = 1, ok = true;
+    for (let k = 0; k < 4; k++) { ok = pressWhenLit(t) && ok; presses++; t.timers.run(MOVE_MS + 50); }
+    const g = t.probe().game;
+    check(`*** a tray sorted by colour with ${presses} presses of one switch, every one right ***`, ok && g.trays === 1 && g.firstTry === 4 && g.tries === 4,
+      J({ trays: g.trays, firstTry: g.firstTry, tries: g.tries }));
+    t.inst.destroy();
+  }
+
+  section('two switches, keys and touch on the colour level');
+  {
+    const t = mount({ saved: { level: 4, trayBricks: 6 } });
+    t.verb('select');                       // wake
+    t.verb('next');
+    check('next moves the light', t.probe().lit === 1);
+    t.timers.run(t.probe().lightStepMs - 100);
+    check('*** ...and starts its clock again: a jump is never cut short ***', t.probe().lit === 1);
+    t.verb('prev'); t.verb('prev');
+    check('previous wraps backwards', t.probe().lit === 2);
+    t.key('ArrowLeft');
+    check('the Left arrow moves it back', t.probe().lit === 1);
+    const right = rightPlace(t.probe().game);
+    while (t.probe().lit !== right) t.verb('next');
+    t.verb('select');
+    check('select puts the brick in the lit box', t.probe().game.sorted === 1);
+    t.timers.run(MOVE_MS + 50);
+    const r2 = rightPlace(t.probe().game);
+    t.tap(t.host.querySelector(`[data-place="${r2}"]`));
+    check('*** a box touched takes the brick, wherever the light is ***', t.probe().game.sorted === 2);
+    t.timers.run(MOVE_MS + 50);
+    t.key(String(rightPlace(t.probe().game) + 1));
+    check('a number key chooses a box outright', t.probe().game.sorted === 3);
+    t.timers.run(MOVE_MS + 50);
+    t.tap(t.host.querySelector('.sb-say'));
+    check('a touch off the boxes chooses nothing at a level with a choice', t.probe().game.sorted === 3 && t.probe().game.tries === 3);
+    t.state.set({ lightMoves: 'off' });
+    const at = t.probe().lit;
+    t.timers.run(20000);
+    check('"moves only when told": the light stays put', t.probe().lit === at && !t.probe().lightRunning);
+    t.verb('next');
+    check('...and next still moves it', t.probe().lit === (at + 1) % 3);
+    t.inst.destroy();
+  }
+
+  section('*** a wrong box costs nothing; after two misses the right one is shown ***');
+  {
+    const t = mount({ saved: { level: 3 } });
+    t.verb('select');
+    const right = rightPlace(t.probe().game);
+    t.pub('pick', 1 - right);
+    check('the wrong box: the same brick stays up, and the words are gentle', t.probe().game.at === 0 && t.say() === 'Not that one. Try another.', t.say());
+    check('...the box it went to shakes (drawn), and nothing is taken away', t.host.querySelector(`[data-place="${1 - right}"]`).dataset.wrong === '1'
+      && t.host.querySelectorAll('[data-place]').length === 2);
+    t.pub('pick', 1 - right);
+    check('*** two misses: the right box is shown, in words too ***', t.host.querySelector(`[data-place="${right}"]`).dataset.shown === '1'
+      && /It goes here/.test(t.host.querySelector(`[data-place="${right}"]`).textContent) && t.say() === 'Not that one. It goes here.', t.say());
+    t.pub('pick', right);
+    check('then the right one goes in', t.probe().game.sorted === 1);
+    t.state.set({ showAfter: 0 });
+    t.timers.run(MOVE_MS + 50);
+    const r2 = rightPlace(t.probe().game);
+    for (let k = 0; k < 4; k++) t.pub('pick', 1 - r2);
+    check('"never": four misses and nothing is shown', !t.host.querySelector('[data-shown]'));
+    t.inst.destroy();
+  }
+
+  section('*** the brick\'s colour is said aloud, in the theme\'s own words, and each lit box is named ***');
+  {
+    const host = scratch();
+    BRICK_COLOURS.dusk.forEach((c, i) => host.style.setProperty(`--brick-${i + 1}`, c.hex));
+    const t = mount({ host, saved: { level: 3 } });
+    check('nothing is said before anybody presses', t.output.said.length === 0, J(t.output.said));
+    t.verb('select');
+    const names = t.probe().names;
+    check('the panel reads the theme\'s brick colours off itself (Dusk\'s names)', J(names) === J(BRICK_COLOURS.dusk.map((c) => c.name)), J(names));
+    const g = t.probe().game;
+    const nm = names[g.brick.c].toLowerCase();
+    check(`*** a new brick says its colour: "${/^[aeiou]/.test(nm) ? 'An' : 'A'} ${nm} brick." ***`, t.output.said.includes(`${/^[aeiou]/.test(nm) ? 'An' : 'A'} ${nm} brick.`), J(t.output.said));
+    check('*** the lit box is named ("Moss?") ***', t.output.said.includes(`${names[g.places[0].c]}?`), J(t.output.said));
+    t.timers.run(t.probe().lightStepMs);
+    check('...and the next one as the light lands on it', t.output.said.includes(`${names[g.places[1].c]}?`), J(t.output.said));
+    t.pub('pick', 1 - rightPlace(g));
+    check('a wrong box: "Not that one."', t.output.said.includes(LINES.wrong));
+    t.pub('pick', rightPlace(t.probe().game));
+    check('a right one: "Yes!"', t.output.said.includes(LINES.right));
+    const before = t.output.said.length;
+    t.state.set({ speak: false });
+    t.timers.run(MOVE_MS + 50); t.timers.run(10000);
+    check('with the voice row off, nothing more is said', t.output.said.length === before, J(t.output.said.slice(before)));
+    t.inst.destroy();
+    const s = mount({ saved: { level: 5 } });
+    s.verb('select');
+    check('a size level names its boxes Short and Long', s.output.said.includes('Short?') && /brick\.$/.test(s.output.said[0]), J(s.output.said));
+    s.inst.destroy();
+  }
+
+  section('*** the colours are the THEME\'s, and nothing is written into the markup ***');
+  {
+    const host = scratch();
+    host.style.setProperty('--brick-1', 'rgb(1, 2, 3)');
+    const t = mount({ host, saved: { level: 3 } });
+    const zero = host.querySelector('.nb-face[data-c="0"]') || null;
+    const bg = (el) => (el ? getComputedStyle(el).backgroundColor : 'none');
+    // the first theme colour may not be in this tray: put a known face in to measure it
+    const probeEl = document.createElement('div'); probeEl.className = 'nb-face'; probeEl.dataset.c = '0';
+    host.querySelector('[data-sb-root]').append(probeEl);
+    check('a brick face in colour 0 takes the theme\'s --brick-1', bg(probeEl) === 'rgb(1, 2, 3)', bg(probeEl));
+    probeEl.remove();
+    check('every brick is drawn as a Nimrod brick: a keyed socket per cell', getComputedStyle(host.querySelector('[data-brick]')).backgroundImage.includes('radial-gradient')
+      && host.querySelector('[data-brick]').style.getPropertyValue('--nb-cells') === String(SAME_LENGTH), String(zero));
+    check('no colour is written into the markup', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(host.querySelector('[data-sb-root]').innerHTML));
+    t.inst.destroy();
+  }
+
+  section('settings take effect with the next tray');
+  {
+    const t = mount({ saved: { level: 1, trayBricks: 3 } });
+    t.verb('select'); t.timers.run(MOVE_MS + 50);
+    t.state.set({ level: 3, trayBricks: 5 });
+    check('changing the level does not change the tray being sorted', t.probe().game.level === 1 && t.probe().game.tray.length === 3);
+    t.verb('select'); t.timers.run(MOVE_MS + 50); t.verb('select');
+    t.verb('select');                  // skip the rest
+    check('*** ...the next tray uses it ***', t.probe().game.level === 3 && t.probe().game.tray.length === 5, J({ lv: t.probe().game.level, n: t.probe().game.tray.length }));
+    t.inst.destroy();
+  }
+
+  section('reduced motion: a brick goes straight in, and nothing shakes');
+  {
+    const t = mount({ reducedMotion: true, saved: { level: 3 } });
+    t.verb('select');
+    t.pub('pick', 1 - rightPlace(t.probe().game));
+    check('a wrong box does not shake', !t.host.querySelector('[data-wrong]'));
+    t.pub('pick', rightPlace(t.probe().game));
+    check('*** a right one: the next brick is up at once ***', t.probe().game.phase === 'play' && t.probe().game.at === 1 && !t.host.querySelector('[data-going]'));
+    t.inst.destroy();
+  }
+
+  section('*** being played: told to the shell (game_start.js createPlayWatch); a game nobody plays comes to rest ***');
+  {
+    const bus = createBus();
+    const states = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+    const t = mount({ bus, started: false, saved: { level: 3 } });
+    const lastState = () => states[states.length - 1] || {};
+    check('waiting for Start: not playing', lastState().playing === false && lastState().id === t.id, J(states));
+    t.verb('select');
+    check('*** Start: being played ***', lastState().playing === true && t.probe().started);
+    t.pub('pause');
+    check('paused: not playing (a real pause, no rest flag)', lastState().playing === false && !lastState().rest);
+    const lit = t.probe().lit;
+    t.timers.run(20000);
+    check('nothing moves while paused, and the pause is drawn', t.probe().lit === lit && !t.host.querySelector('[data-paused]').hidden && t.say() === 'Paused. Press to go on.');
+    t.verb('select');
+    check('a press goes on, without choosing', lastState().playing === true && t.probe().game.tries === 0 && t.probe().game.phase === 'play');
+    t.timers.run(IDLE_MS + 100);
+    check('*** nobody pressing for IDLE_MS: it comes to rest, says so, and the light stops ***', lastState().playing === false && lastState().rest === true
+      && t.probe().idle && !t.probe().lightRunning && t.say() === 'Press to play.', J(lastState()));
+    check('...and no box is lit', !t.host.querySelector('[data-lit]'));
+    t.timers.run(DEFAULTS.attractAfterMs + 100);
+    check('*** a minute later the demo comes back ***', !t.probe().started && t.probe().demo);
+    t.inst.destroy();
+  }
+
+  section('*** it waits for Start; the computer sorts calmly meanwhile, and the demo never scores or speaks ***');
+  {
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe(SCORE_TOPIC, (p) => scores.push(p));
+    const t = mount({ bus, started: false, saved: { level: 4 } });
+    check('a Start button, and the words say the computer is playing', !!t.host.querySelector('[data-start]') && t.say() === START_LINES.demo, t.say());
+    check('the demo player is the built-in one', t.probe().agent === 'computer');
+    t.timers.run(DEMO_STEP_MS + 10);
+    check('it lights the right box first (so a watcher sees where it goes)', t.probe().lit === rightPlace(t.probe().game) && t.probe().game.sorted === 0
+      && !!t.host.querySelector('[data-lit="1"]'));
+    t.timers.run(60000);
+    const g = t.probe().game;
+    check(`*** a minute later the computer has sorted bricks, calmly (${g.sorted}) ***`, g.sorted >= 8 && g.sorted <= 20, String(g.sorted));
+    check('...always into the right box', g.tries === g.sorted || g.tries === g.sorted + 0);
+    check('*** and nothing scored: no score, no totals, no points, nothing said ***', scores.every((s) => !s || s.score == null || s.score === 0)
+      && t.probe().stats.sorted === 0 && t.points.peek().length === 0 && t.output.said.length === 0, J(scores.slice(-2)));
+    t.verb('select');
+    check('any press starts a real game, a fresh tray', t.probe().started && t.probe().game.sorted === 0 && left(t.probe().game) === 5);
+    t.inst.destroy();
+    const still = mount({ started: false, reducedMotion: true });
+    check('reduced motion: no demo, the still Start screen', !still.probe().demo && still.timers.pending() === 0 && still.say() === START_LINES.still);
+    still.inst.destroy();
+    const lim = mount({ started: false, saved: { attractForMs: 2 * 60000 } });
+    lim.timers.run(2 * 60000 + 5 * DEMO_STEP_MS);
+    check('the demo rests after "The demo plays for" (2 minutes here): the last frame stays, with Start', lim.probe().demoRested && lim.timers.pending() === 0);
+    lim.inst.destroy();
+  }
+
+  section('Escape, and nothing left behind');
+  {
+    const bus = createBus();
+    bus.subscribe('system/settings', (p) => { p?.claim?.(); });
+    const t = mount({ bus, saved: { level: 3 } });
+    t.verb('select');
+    t.key('Escape');
+    check('Escape pauses and asks for the settings', t.probe().game.phase === 'paused' && t.probe().menuAsks === 1);
+    t.verb('select');
+    t.inst.destroy();
+    check('*** after destroy, no timer of the game is left ***', t.timers.pending() === 0, String(t.timers.pending()));
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+// To look at: three colours with a few bricks sorted, two slots with the light on one, three sizes, and one slot.
+for (const [el, level, sorts] of [[document.getElementById('host'), 4, 3], [document.getElementById('host2'), 2, 0],
+  [document.getElementById('host3'), 6, 2], [document.getElementById('host4'), 1, 0]]) {
+  const lt = fakeTimers();
+  const lb = createBus();
+  const show = mountModule(GAME, { mount: el, bus: lb, state: fakeState({ autostart: true, level }), personId: null,
+    instanceId: `live${level}`, rand: seeded(9), makeAudioContext: createFakeAudioContext, setTimer: lt.set, clearTimer: lt.clear });
+  show.init();
+  lb.publish(`${GAME}/select`);
+  for (let k = 0; k < sorts; k++) { lb.publish(`${GAME}/pick`, rightPlace(show.impl.__probe().game)); lt.run(MOVE_MS + 50); }
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

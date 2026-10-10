@@ -117,6 +117,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   bricks: ['3d', 'visual'],   // bricks module (row 2.76): every Nimrod part, one module, under the 3D chip
   brickbuilder: ['3d', 'tools'], buildit: ['games', '3d'],   // brick builder (2026-10-09): make a model; Build it
   stackline: ['games'], brickmosaic: ['games', 'visual'],   // brick games (2026-10-10): Stack to the line; Brick mosaic
+  sortbricks: ['games'],   // brick games (2026-10-10): Sort the bricks (sortbricks)
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
   themes: ['visual', 'tools'],   // (2026-10-06) the theme picker as a panel: something to look at, and a setting
