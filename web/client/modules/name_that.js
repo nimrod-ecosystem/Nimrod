@@ -103,7 +103,7 @@ export const LINES = Object.freeze({
   explainKnown: 'The answer is {name}.',
 });
 const LINE_LABELS = {
-  hintNotName: 'Known people: the first hint', explainKnown: 'Known people: the answer, when the question has no sentence of its own',
+  hintNotName: 'Well-known people: the first hint', explainKnown: 'Well-known people: the answer, when the question has no explanation of its own',
   offerLine: 'Offering one answer', hintFirst: 'Hint: the first letter', askState: 'State: the question',
   hintRegion: 'State: first hint', hintCapital: 'State: second hint', explainState: 'State: the answer',
   askCapital: 'State, from its capital: the question', explainCapital: 'State, from its capital: the answer',
@@ -140,11 +140,11 @@ export const DEFAULTS = Object.freeze({
 export const PERSON_WHO = Object.freeze(['both', 'own', 'known']);
 export const personWhoField = ({ on = 'both', appliesWhen = (v) => ((v && v.game) || 'animal') === 'person' } = {}) => ({
   key: 'personWho', label: 'Name that person: who to ask about', kind: 'choice', default: on, level: 'standard',
-  options: [{ value: 'both', label: 'Our own people first, then known people and characters' },
-            { value: 'own', label: 'Only our own people (from recorded messages)' },
-            { value: 'known', label: 'Only known people and characters' }],
-  note: 'Known people and characters are questions from the question packs ("Who painted the Mona Lisa?"); '
-    + 'only questions somebody has checked are asked.',
+  options: [{ value: 'both', label: 'Your own people first, then well-known people and characters' },
+            { value: 'own', label: 'Only your own people (from recorded messages)' },
+            { value: 'known', label: 'Only well-known people and characters' }],
+  note: 'Questions about well-known people and characters come from the question packs ("Who painted the Mona Lisa?"). '
+    + 'Only questions somebody has checked are asked.',
   ...(appliesWhen ? { appliesWhen } : {}) });
 const PERSON_WHO_FIELD = personWhoField();
 const whoOf = (v) => (PERSON_WHO.includes(v) ? v : 'both');
@@ -158,14 +158,14 @@ const SETTINGS = [
   { key: 'personMiss', label: 'Name that person: when a name is missed', kind: 'choice', default: 'gentle',
     level: 'standard',
     options: [{ value: 'gentle', label: 'Say whose message it was, and offer to listen again' },
-              { value: 'standard', label: 'The usual: "That is incorrect", a hint, and again' }],
+              { value: 'standard', label: 'The usual: "That is incorrect", a hint, then the question again' }],
     note: 'Missing somebody’s name can feel worse than missing a word, so the default is gentle.' },
   PERSON_WHO_FIELD,
   { key: 'sourceId', label: 'Name that person: messages from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
   { key: 'album', label: 'Name that person: folder', kind: 'text', default: '', level: 'standard',
     placeholder: 'The top folder',
-    note: 'Name each video after the person in it ("Annie - how we met.mp4"), or on a media agent, give each person a folder.' },
+    note: 'Name each video after the person in it ("Annie - how we met.mp4"). Or, with the Nimrod helper (media agent), give each person a folder.' },
   // Players, "Start this game at", and how the level moves: the same rows every ladder game has.
   ...adaptiveSettings({ ai: false, startLevels: 4 }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS }),
@@ -389,11 +389,11 @@ export const stateCardHtml = (it) => `<p class="qz-card" data-clue>${esc(it.kind
 
 // What the screen says when person has nothing to ask. For whoever sets the screen up — shown,
 // never spoken to the room.
-const NO_SOURCE = 'Name that person plays recorded messages from a media source, and none is connected yet. '
-  + 'Connect one in Media / Sources.';
+const NO_SOURCE = 'Name that person plays recorded messages from a media source (a folder you connect in '
+  + 'Media). None is connected yet.';
 const MANY_SOURCES = 'Choose which media source holds the messages, in this game’s settings.';
-const TOO_FEW = 'Name that person needs recorded messages from at least two people. Name each video after '
-  + 'the person in it ("Annie - how we met.mp4"), or on a media agent, give each person a folder.';
+const TOO_FEW = 'Name that person needs recorded messages from at least 2 people. Name each video after the person '
+  + 'in it ("Annie - how we met.mp4"). Or, with the Nimrod helper (media agent), give each person a folder.';
 const UNREADABLE = 'Could not read the messages from that media source. It may be switched off or disconnected.';
 
 // A clip that has not moved for this long is treated as finished, so the question is never
@@ -688,7 +688,7 @@ export function createPersonGame(ctx, { personId = ctx?.personId || null, getApi
         note = (el.ownerDocument || document).createElement('p');
         note.className = 'qz-note';
         note.dataset.muted = '';
-        note.textContent = 'Sound is off for this message — this screen blocked it.';
+        note.textContent = 'Sound is off for this message. This screen blocked it.';
         el.append(note);
       } else if (!muted && note) note.remove();
       const q = s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss';
@@ -776,8 +776,8 @@ export const KNOWN_ADAPTER = Object.freeze({
 /** The source line after the answer (answer_source.js), for a known-people question; '' for anything else. */
 export const knownSourceHtml = (it, { onScreen = true } = {}) => (isKnown(it) ? answerSourceHtml(it.sources, { onScreen }) : '');
 
-const NO_KNOWN = 'There are no questions about known people here yet. They come from the question packs once '
-  + 'somebody has checked them (Trivia, "Include unreviewed questions").';
+const NO_KNOWN = 'There are no questions about well-known people here yet. They come from the question packs once somebody has '
+  + 'checked them. That is done in Trivia, with "Include unreviewed questions" turned on.';
 
 /**
  * THE KNOWN PEOPLE, loaded once for a panel: Trivia's rows (`ctx.knownPeopleRows()` may stand in, for a suite),
@@ -955,9 +955,9 @@ function factory(ctx) {
 
 registerModule(
   { type: GAME, title: 'Name that', core: 'new',
-    description: 'Name that animal, state, or person. Person asks about well-known people and characters, '
-      + 'and can play the family’s own recorded messages and ask who it is. Each player gets questions at '
-      + 'their own level. Answer with a switch, the screen, or aloud.',
+    description: 'Name that animal, state, or person. Name that person asks about well-known people and characters. It '
+      + 'can also play the family’s own recorded messages and ask who it is. Each player gets questions at their own '
+      + 'level. Answer with a switch (one big button), on the screen, or aloud.',
     // `local`: the animals and states are built in; the person game's clips come from a media
     // source on the person's own machine, exactly like Personal videos.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },

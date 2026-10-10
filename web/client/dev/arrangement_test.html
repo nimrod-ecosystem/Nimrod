@@ -316,7 +316,7 @@ try {
     await t2.arr.mountLayout();
     const e2 = t2.stageEl.querySelector('[data-empty]');
     check('slots whose modules are gone: it says they were removed',
-      e2 && e2.textContent === 'This screen’s panels were removed. Press Home to add some again.', e2?.textContent);
+      e2 && e2.textContent === 'The parts on this screen were removed. Press Home to add some again.', e2?.textContent);   // site text rewrite 2026-10-09
   }
 
   section('showPrimary: the one-at-a-time stage');

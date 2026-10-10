@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nimrod — what you can put on a screen</title>
 <link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
-<meta name="description" content="Every part of Nimrod you can put on a screen, what it does for the person you are setting it up for, and what it needs from you.">
+<meta name="description" content="Everything you can put on a Nimrod screen. What each part does, and what it needs from you.">
 <!-- The module stylesheet, because this page now MOUNTS modules and not only
      describes them. It also @imports settings.css, which the games need to open their own
      settings menu. Without it every demo panel renders unstyled, which reads as a broken
@@ -531,9 +531,9 @@
     <p class="eyebrow">What you can put on a screen</p>
     <h1>Every part, and who it is actually for.</h1>
     <p class="lede">
-      A Nimrod screen is made of parts you choose. This is all of them — what each one does
-      for the person it is set up for, what it needs from you, and whether they can use it
-      without being able to press anything.
+      A Nimrod screen is made of parts you choose. This page lists all of them. For each part it
+      says what it does and what it needs from you. It also says whether a person can use it without
+      pressing anything.
     </p>
   </header>
 
@@ -557,7 +557,7 @@
          page's settings are a section of the one ⚙ menu. This strip shows only when there is no placed
          bar carrying them -- the module would not start, or its bar did not -- because that is exactly
          when somebody needs Modules to get away from it. Same `press`, so Save is still one thing. -->
-    <div class="stage-bar" id="stage-bar" role="toolbar" aria-label="The module you are looking at" hidden>
+    <div class="stage-bar" id="stage-bar" role="toolbar" aria-label="What you are looking at" hidden>
       <button type="button" class="hbtn" data-home="picker" aria-expanded="false">Modules: <span id="hb-name">…</span></button>
       <button type="button" class="hbtn" data-home="save">Save</button>
       <button type="button" class="hbtn" data-home="saveas">Save as…</button>
@@ -570,7 +570,7 @@
     <section class="welcome" id="examples" aria-labelledby="examples-h" hidden>
       <h2 id="examples-h">Start your Home from an example. It is optional.</h2>
       <p>Your Home is your profile: a dashboard you make your own. Pick a starting point and it is made
-        for you, then change anything on it — the scene, what is on it, where things sit. Or skip this
+        for you. Then change anything on it: the scene, what is on it, where things sit. Or skip this
         and look around first. Nothing is made until you choose one.</p>
       <div class="hbtns" id="ex-top">
         <button type="button" class="hbtn" data-home="skip">Skip for now</button>
@@ -612,17 +612,16 @@
     <h2>What this page does not cover</h2>
     <p id="recon">Checking this page against what is actually installed…</p>
     <p>
-      This list is generated from the software that is running, not typed out and left to go
-      stale. If a part exists and nobody has written about it here, it is named above as
-      undescribed rather than quietly left out.
+      This list is made from the software that is running now. It is not typed out once and left to
+      go out of date. If a part exists and nobody has described it here, it is named above so it is
+      not missed.
     </p>
   </div>
 
   <footer>
-    Nimrod is free and open source. Your photos, video and camera stay on your own hardware —
-    <a href="/api/what-we-store">here is everything the server holds</a>, generated from the
-    real database rather than written down.
-    <br>
+    Nimrod is free and open source (anyone can read and change the code). Your photos, video and
+    camera stay on your own hardware. <a href="/api/what-we-store">Here is everything the site's
+    server holds</a>. That list is made from the real database, not written by hand. <br>
     <a href="/">What Nimrod is</a> · <a href="/kiosk.html">Try a screen</a> ·
     <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
   </footer>
@@ -1003,15 +1002,15 @@ let VERDICTS = { ran: 'drew', empty: 'blank', threw: 'threw' };
 function stageNote(isLive, mode) {
   if (mode === 'chrome') {
     return isLive
-      ? 'This is live — the bar below and its ⚙ settings menu are the ones a real screen has, and '
-        + 'what you change here saves straight to your dashboard, the same as opening it from '
+      ? 'This is live. The bar below and its ⚙ settings menu are the same ones a real screen '
+        + 'has. What you change here is saved to your dashboard, the same as opening it from '
         + '<a href="/home.html">My dashboards</a>. Only this one part is shown, not the rest of '
         + 'your screen.'
-      : 'A demo, on your own device, with the same bar and ⚙ settings menu a real screen has. '
-        + 'Nothing here is saved to an account.';
+      : 'A demo, on your own device. It has the same bar and ⚙ settings menu as a real screen. '
+        + 'Nothing here is saved to a login.';
   }
   return isLive
-    ? 'This is live — changes here save straight to your dashboard, the same as opening it '
+    ? 'This is live. Changes here are saved to your dashboard, the same as opening it '
       + 'from <a href="/home.html">My dashboards</a>.'
     : 'A demo, on your own device. Nothing here is saved to a screen.';
 }
@@ -1074,8 +1073,8 @@ async function select(type, { forceDemo = false } = {}) {
     // A module that will not start here is usually one that wants hardware this browser is not
     // going to hand a web page — and saying which is more use than a stack trace.
     console.error(`modules: ${type} would not start`, err);
-    note.textContent = 'This one needs something this browser will not give a demo page — '
-      + 'usually a camera, a microphone, or your own files.';
+    note.textContent = 'This one would not start here. It usually needs a '
+      + 'camera, a microphone or your own files.';
   }
 }
 
@@ -1262,26 +1261,26 @@ function noteFor(t) {
         + `you press Save (it keeps a copy you can change). ${HOME.home ? 'Your own Home is one press away: My Home, on the bar.'
           : 'Make a Home of your own from the starting points above, or from My Home on the bar.'}`;
     }
-    return `Trying “${esc(rec?.title || t.key)}”. Nothing is made on your account until you press `
+    return `Trying “${esc(rec?.title || t.key)}”. Nothing is made on your login until you press `
       + 'Make this my Home (or Save on the bar below). The bar and its ⚙ menu work as they will on a real '
       + 'screen. Or choose anything else from Modules.';
   }
   if (t.kind === 'home' && t.landing) {
-    return `${esc(landTitle())}, live: where you land. What is on it and where saves as you change it, and settings `
-      + `wait for Save. ${HOME.home ? 'Your own Home is one press away: My Home, on the bar.' : ''} `
+    return `${esc(landTitle())}, live. This is the page you see first. What is on it, and where, is saved as you change it. Settings wait `
+      + `until you press Save. ${HOME.home ? 'Your own Home is one press away: My Home, on the bar.' : ''} `
       + `<a href="${esc(kioskURL(t.profileId))}">Open it as a screen</a>.`;
   }
   if (t.kind === 'home') {
-    return `Your Home, live. ⚙ Edit opens the editing tools above and the settings menu; what is on it and `
-      + `where saves as you change it (Undo takes it back), and settings wait for Save. `
+    return `Your Home, live. ⚙ Edit opens the editing tools above and the settings menu. What is on it, and where, `
+      + `is saved as you change it. Undo takes a change back. Settings wait until you press Save. `
       + `<a href="${esc(kioskURL(t.profileId))}">Open it as a screen</a>.`;
   }
   if (!t.live) {
-    return 'Not on your screen yet. Try it here with the bar below and its ⚙ menu; Save, on the bar, adds '
+    return 'Not on your screen yet. Try it here with the bar below and its ⚙ menu. Save, on the bar, adds '
       + 'it to your screen with the settings you chose.';
   }
-  return 'This is live on your screen: the bar below and its ⚙ settings menu are the real ones. '
-    + 'Settings you change here wait for Save; anything else saves as it happens.';
+  return 'This is live on your screen. The bar below and its ⚙ settings menu are the real ones. Settings '
+    + 'you change here wait until you press Save. Anything else is saved as it happens.';
 }
 
 function renderHomeDetail(subject, target) {
@@ -1292,8 +1291,8 @@ function renderHomeDetail(subject, target) {
   const lead = subject !== HD.PROFILE_SUBJECT ? (m?.lead || '')
     : target?.landing
       ? (HOME.landKey === START_KEY
-        ? 'Where you land: your profile, the settings, your devices and Nimrod, who shows you around. Your own Home is one press away (My Home).'
-        : 'Where you land: you and your people, with big buttons to reach them, and Nimrod at the bottom. Start here is one press away (More); your own Home too (My Home).')
+        ? 'The page you see first. It has your profile, the settings, your devices and Nimrod, who shows you around. Your own Home is one press away (My Home).'
+        : 'The page you see first. It has you and your people, with big buttons to reach them, and Nimrod at the bottom. Start here is one press away (More). So is your own Home (My Home).')
       : 'Your Home is your profile: a dashboard you make your own. Change the scene, add, switch and move what is on it.';
   // Design's edit bar and its tray sit between the title and the stage (home-dashboard: "an edit bar when
   // the module has one"), only for Your Home.
@@ -1438,7 +1437,7 @@ async function openSubject(subject, { view = null } = {}) {
     // nobody can leave, so the editing page comes back, with its note and its picker.
     if (mine === pickSeq && HOME.land) setLand(false);
     const note = $h('stagenote');
-    if (note) note.textContent = 'This one would not start here — usually it wants a camera, a microphone or your own files.';
+    if (note) note.textContent = 'This one would not start here. It usually needs a camera, a microphone or your own files.';
     // Nothing on the stage means no bar in it: the way to something else is the picker, so it opens.
     if (mine === pickSeq) document.body.classList.add('pick-open');
   }
@@ -1556,14 +1555,14 @@ function trialMenuRows({ plain = false } = {}) {
   if (!HOME.person) return [];
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
   if (!HOME.trial) {
-    return [item('trynew', 'Try it as someone new', { hint: plain ? 'a test person: this page as their first visit; nothing of yours changes'
-      : 'a test person on your account: this page as their first visit; nothing of yours changes' })];
+    return [item('trynew', 'Try it as someone new', { hint: plain ? 'a test person sees this page as a first visit. Nothing of yours changes'
+      : 'a test person on your login sees this page as a first visit. Nothing of yours changes' })];
   }
   return [
     { kind: 'heading', id: 'home-trial-head', label: TRYING_LABEL },
     item('trystart', HOME.trialArmed ? 'Press again: start over as someone new' : 'Start over as someone new',
-      { hint: HOME.trialArmed ? 'makes them new again; your notes stay with you' : 'two presses: no tour, no points, no Home again' }),
-    item('tryback', 'Back to me', { hint: 'your own person; this browser’s own settings come back' }),
+      { hint: HOME.trialArmed ? 'makes the test person new again. Your notes stay with you' : 'takes 2 presses. The test person starts again with no tour, no points and no Home' }),
+    item('tryback', 'Back to me', { hint: 'back to being you. This browser’s own settings come back' }),
   ];
 }
 const HOME_HOST = {
@@ -1636,7 +1635,7 @@ function homePress(act, p = null) {
     // only being tried there is nothing made to put it in yet, and it says so.
     case 'place': {
       if (!p || typeof p.type !== 'string') break;
-      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a module can go in its place.'); break; }
+      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a part can go in its place.'); break; }
       if (p.id && things().some((x) => x.id === p.id)) HOME.sel = p.id;
       gatedDo('switch', p.type);
       break;
@@ -1645,7 +1644,7 @@ function homePress(act, p = null) {
     // page as it does for 'place'): the same as Add with "Over the dashboard" chosen. `p.type`: the module.
     case 'overlay': {
       if (!p || typeof p.type !== 'string') break;
-      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a module can go over it.'); break; }
+      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a part can go over it.'); break; }
       if (gateCheck(p.type)?.locked) { HOME.tray = 'add'; HOME.addOver = true; gatedDo('add', p.type); break; }
       addThing(p.type, { over: true });
       break;
@@ -1689,7 +1688,7 @@ function homePress(act, p = null) {
       ownerId: HOME.person?.id || '' })); break;
     case 'trystart':
       if (!HOME.trial) break;
-      if (!HOME.trialArmed) { HOME.trialArmed = true; trialBar?.arm(); hostChanged(); toast('Press “Start over” again to make them new again. Your notes stay with you.'); break; }
+      if (!HOME.trialArmed) { HOME.trialArmed = true; trialBar?.arm(); hostChanged(); toast('Press “Start over” again to make the test person new again. Your notes stay with you.'); break; }
       trialDo(() => trialStartOver());
       break;
     case 'tryback': if (HOME.trial) trialDo(() => backToMe({ makePersonState: trialPersonState(), personId: HOME.person?.id || '' })); break;
@@ -1925,7 +1924,7 @@ async function makeThisMyHome(key) {
       : 'You had made this one already: here it is, as you left it. It is your Home now.');
   } catch (err) {
     console.error('home: make', err);
-    toast('That did not make it — check your connection and press it again (that is safe).');
+    toast('That did not work. Check your connection and press it again. Pressing it again is safe.');
   } finally { HOME.busy = false; paintHome(); }
 }
 
@@ -1965,7 +1964,7 @@ function paintExamples() {
       <h3>${esc(c.title)}</h3>
       <p>${esc(c.blurb)}</p>
       ${slowLine(c.kind)}
-      <span class="ex-now" ${c.key === showing ? '' : 'hidden'}>On the stage below now</span>
+      <span class="ex-now" ${c.key === showing ? '' : 'hidden'}>Showing below now</span>
       <div class="hbtns">
         <button type="button" class="hbtn" data-ex-try="${esc(c.key)}" ${c.key === showing ? 'aria-pressed="true"' : ''}>Try it here</button>
         <button type="button" class="hbtn primary" data-ex-make="${esc(c.key)}" ${HOME.busy ? 'disabled' : ''}>Make this my Home</button>
@@ -2298,7 +2297,7 @@ function smallClockTo(corner) {
 function switchTo(key, settings = null) {
   const old = selThing();
   if (!old) return Promise.resolve();
-  if (lockedNow(old)) { toast(`${thingTitle(old)} is locked on this dashboard. Change: Unlock lets it go.`); return Promise.resolve(); }
+  if (lockedNow(old)) { toast(`${thingTitle(old)} is locked on this dashboard. To free it, open Change and press Unlock.`); return Promise.resolve(); }
   const { label } = pieceOrType(key);
   return editOp(async () => {
     const mod = await addModuleFor(key);
@@ -2323,7 +2322,7 @@ function switchTo(key, settings = null) {
 function removeThing() {
   const t = selThing();
   if (!t) return Promise.resolve();
-  if (lockedNow(t)) { toast(`${thingTitle(t)} is locked on this dashboard. Change: Unlock lets it go.`); return Promise.resolve(); }
+  if (lockedNow(t)) { toast(`${thingTitle(t)} is locked on this dashboard. To free it, open Change and press Unlock.`); return Promise.resolve(); }
   const nextSel = HP.stepThing(things().filter((x) => x.id !== t.id), t.id, 1)?.id || null;
   return editOp(async () => {
     const cur = await readHomeLayout();
@@ -2341,7 +2340,7 @@ function placeThing(change) {
   return editOp(async () => {
     const cur = await readHomeLayout();
     const next = change(cur, t.id);
-    if (!next) return `${thingTitle(t)} sits in a grid cell: Transform… moves it.`;
+    if (!next) return `${thingTitle(t)} sits in one box of the grid. Transform… moves it.`;
     // (2026-10-04, later: merged onto the doc as it is now; the screen is moved to what was SAVED, in place when it can.)
     const w = await writeHomeLayout(next, cur);
     let r = null;
@@ -2453,7 +2452,7 @@ function openSwitch(type = null) {
   // chooser, with Home's own pick: the library goes and `switchTo` does the rest (Undo, the lock, the row).
   // The library holds the scan while it is open, as the Switch tray did.
   const t = selThing(); if (!t) return;
-  if (lockedNow(t)) { toast(`${thingTitle(t)} is locked on this dashboard. Change: Unlock lets it go.`); return; }
+  if (lockedNow(t)) { toast(`${thingTitle(t)} is locked on this dashboard. To free it, open Change and press Unlock.`); return; }
   HOME.tray = null; paintEdit(); hostChanged();
   // The library closes the ⚙ menu (it would cover it), and with it the edit view; picked or kept, the edit
   // view comes back if it was open, so Undo / Redo and the rest of the bar are where they were.
@@ -2651,7 +2650,7 @@ function unlockPanel() {
     + ebtn('data-edit-unlock="buy"', esc(HOME.unlockArmed ? `Press again: use ${st.cost} ${pts} ${then}` : `Use ${st.cost} ${pts} ${then}`),
       { disabled: !st.canBuy, hint: st.canBuy ? 'two presses: the second one spends them' : 'not enough points yet' })
     + (st.canFree ? ebtn('data-edit-unlock="free"', esc(`Unlock it free ${then}`), { hint: 'no points spent' }) : '')
-    + ebtn('data-edit-unlock="sandbox"', esc(`Sandbox: unlock everything ${then}`), { hint: 'switches this dashboard to sandbox mode' })
+    + ebtn('data-edit-unlock="sandbox"', esc(`Sandbox: unlock everything ${then}`), { hint: 'turns the game off for this dashboard (sandbox)' })
     + ebtn('data-edit-unlock="cancel"', 'Not now', { hint: 'nothing changes' })
     + '</div>';
 }
@@ -2738,9 +2737,9 @@ function paintTray(live, list, t) {
     // "Put it": in the dashboard, or OVER it (2026-10-03; home_profile.js addAsOverlay). A choice that stays,
     // before the modules, so a switch reaches it once and then every module after it is added that way.
     const where = `<div class="grp">Put it</div><div class="hbtns">${
-      ebtn('data-edit-addwhere="in"', 'In the dashboard', { pressed: !HOME.addOver, hint: 'in a free place, as it always was' })}${
+      ebtn('data-edit-addwhere="in"', 'In the dashboard', { pressed: !HOME.addOver, hint: 'in a free place' })}${
       ebtn('data-edit-addwhere="over"', 'Over the dashboard', { pressed: HOME.addOver,
-        hint: 'a small panel floating in a corner, over what is there; a clock becomes the small corner clock' })}</div>`;
+        hint: 'a small part floating in a corner, over what is there. A clock becomes the small corner clock' })}</div>`;
     setHTML(tray, trayHead('Add to your Home') + unlockPanel() + where + moduleButtons('data-edit-add'));
     return;
   }
@@ -2753,7 +2752,7 @@ function paintTray(live, list, t) {
       return;
     }
     setHTML(tray, trayHead(title) + (t
-      ? '<p class="stagenote">One press: the module you choose takes its place, exactly where it is. Undo puts it back.</p>'
+      ? '<p class="stagenote">One press: the part you choose takes its place, exactly where it is. Undo puts it back.</p>'
         + unlockPanel() + moduleButtons('data-edit-switch', { except: t.type })
       : `<div class="hbtns">${ebtn('data-edit-change="next"', 'Next thing ›', { disabled: !list.length })}</div>`));
     return;
@@ -2766,7 +2765,7 @@ function paintTray(live, list, t) {
     `data-edit-change="${b.act}"${b.d != null ? ` data-d="${esc(Array.isArray(b.d) ? b.d.join(',') : b.d)}"` : ''}`,
     esc(b.label), { disabled: b.disabled, cls: b.warn ? 'warn' : '', hint: b.hint }));
   setHTML(tray, trayHead(head) + `<div class="hbtns">${btns.slice(0, 3).join('')}</div><div class="hbtns">${btns.slice(3).join('')}</div>`
-    + (t && !placed ? '<p class="stagenote">This one sits in a grid cell: Transform… moves and sizes it.</p>' : ''));
+    + (t && !placed ? '<p class="stagenote">This one sits in one box of the grid. Transform… moves it and changes its size.</p>' : ''));
 }
 
 // ---- THE EDIT BAR BY SWITCH (2026-10-02) -------------------------------------------------------------
@@ -3009,7 +3008,7 @@ async function autosaveNow({ reopen = true, fromTimer = false } = {}) {
     } catch (err) {
       console.error('home: saving by itself failed', err);
       if (HOME.draft === draft) AUTO.failed = true;
-      toast('That did not save — check your connection. Your change is still here, and Save keeps it.');
+      toast('That did not save. Check your connection. Your change is still here, and Save keeps it.');
       return false;
     } finally { HOME.busy = false; }
   })();
@@ -3143,13 +3142,13 @@ async function commitSave(name, { asHome = null } = {}) {
       draft.reset();
       HOME.busy = false;
       await openSubject(HD.PROFILE_SUBJECT, { view: 'edit' });
-      toast(!r.home ? `${landTitle()} is yours now, saved as “${name}”: it is where you land. Your Home is as it was (My Home).`
+      toast(!r.home ? `${landTitle()} is yours now, saved as “${name}”. It is the page you see first. Your Home is as it was (My Home).`
         : r.created ? `Your Home is made, and saved as “${name}”. Change anything on it.`
           : 'You had made this one already: here it is, as you left it. It is your Home now.');
     }
   } catch (err) {
     console.error('home: save failed', err);
-    toast('That did not save — check your connection and press Save again (that is safe).');
+    toast('That did not save. Check your connection and press Save again. Pressing it again is safe.');
   } finally {
     HOME.busy = false;
     paintHome();
@@ -3161,16 +3160,17 @@ function dialogHTML(d) {
   const keep = HOME.settings.keepVersions;
   if (d.kind === 'saveOver') {
     return `<h2 id="home-dlg-h">Save over “${esc(d.name)}”?</h2>
-      <p>What you have now replaces it. The one you are replacing stays in History, which keeps your last
-        ${keep} saves, so you can get it back.</p>
+      <p>What you have now replaces it. The one you are replacing stays in History, so you can get it
+        back. History keeps your last ${keep} saves.</p>
       <div class="hbtns">${b('cancel', 'Cancel')}${b('toSaveAs', 'Save as a new name')}${b('over', 'Save over it', ' primary')}</div>`;
   }
   if (d.kind === 'saveAs') {
     const day = new Date().toLocaleDateString([], { weekday: 'long' });
     const names = HD.suggestNames(HOME.doc || HD.emptyHistory(), { base: d.name, day });
     return `<h2 id="home-dlg-h">Save as</h2>
-      <p>Type a name, or choose one. A name that is already used asks before saving over it. This keeps a
-        copy under that name, with this ${HOME.subject === HD.PROFILE_SUBJECT ? 'Home' : 'module'}.</p>
+      <p>Type a name, or choose one. If the name is already used, you are asked before it is saved over.
+        This keeps a copy under that name, with this
+        ${HOME.subject === HD.PROFILE_SUBJECT ? 'Home' : 'module'}.</p>
       <input class="field" id="saveas-name" aria-label="Name" maxlength="60" value="${esc(d.name)}">
       <div class="hbtns">${names.map((n) => `<button type="button" class="hbtn" data-home-dlg="name" data-n="${esc(n)}">${esc(n)}${HOME.doc?.saved?.[n] ? ' <small>(saved)</small>' : ''}</button>`).join('')}</div>
       <div class="hbtns">${b('cancel', 'Cancel')}${b('dosaveas', 'Save with this name', ' primary')}</div>`;
@@ -3178,8 +3178,8 @@ function dialogHTML(d) {
   if (d.kind === 'history') {
     const vs = (HOME.doc?.versions || []);
     return `<h2 id="home-dlg-h">History</h2>
-      <p>Your last ${keep} saves are kept (change how many in the ⚙ menu, under This page). Restoring one deletes
-        nothing: it opens it as unsaved changes, and saving it adds a new version.</p>
+      <p>Your last ${keep} saves are kept. You can change how many in the ⚙ menu, under This page. Restoring one
+        deletes nothing. It opens as unsaved changes, and saving it adds a new version.</p>
       <div class="vers">${vs.length ? vs.map((v, i) => `<div class="ver"><span>${esc(v.name)}
         <small>${esc(when(v.at))}${i === 0 ? ' · newest' : ''}${v.restoredFrom ? ' · a restored version' : ''}</small></span>
         <button type="button" class="hbtn" data-home-dlg="restore" data-i="${i}">Restore</button></div>`).join('')
@@ -3399,7 +3399,7 @@ function followPicked() {
     const now = readLastPerson();
     if (followSaid !== now) {
       followSaid = now;
-      toast(`Somebody else was picked on My dashboards. This page stays ${HOME.person?.name ? `${HOME.person.name}’s` : 'as it is'} while you have unsaved changes; save or leave them, and it follows when you come back to it.`);
+      toast(`Somebody else was picked on My dashboards. This page stays ${HOME.person?.name ? `${HOME.person.name}’s` : 'as it is'} while you have unsaved changes. Save them or leave them. Then this page shows the person who was picked, when you come back to it.`);
     }
     return;
   }
@@ -3517,7 +3517,7 @@ const infoLine = auditMode ? null : mountInfoLine(document, {
   enabled: () => !HOME.on || HOME.settings.hoverLine !== false,
   hidden: guideShowing,
   idle: () => (HOME.on
-    ? 'Point at anything and Nimrod will tell you what it does. He is not on this dashboard: say “tutorial”, or the ⚙ menu has Nimrod’s tutorial.'
+    ? 'Point at anything and Nimrod will tell you what it does. He is not on this dashboard. Say “tutorial”, or choose Nimrod’s tutorial in the ⚙ menu.'
     : 'Point at anything and Nimrod will tell you what it does.'),
 });
 window.__home.infoLine = () => infoLine;

@@ -157,7 +157,7 @@ const SETTINGS = [
               { value: 10, label: '10 minutes' }] },
   { key: 'task', label: 'What this sprint is for', kind: 'text', default: '',
     level: 'standard', placeholder: 'Anything' },
-  { key: 'mult', label: 'Multiplier', kind: 'choice', default: 1, level: 'standard',
+  { key: 'mult', label: 'Multiply the points by', kind: 'choice', default: 1, level: 'standard',
     options: MULTIPLIERS },
   { key: 'longBreakMin', label: 'Long break', kind: 'choice', default: 15, level: 'advanced',
     options: [{ value: 10, label: '10 minutes' }, { value: 15, label: '15 minutes' },
@@ -201,7 +201,7 @@ registerModule(
   // The type stays `sprint`, and so does `SOURCE` above — that string groups every point this
   // module has ever awarded, and renaming it would orphan the history it is the source of.
   { type: 'sprint', title: 'Focus timer',
-    description: 'A Pomodoro focus timer — finish a sprint, bank the points',
+    description: 'A Pomodoro focus timer. Finish a sprint and earn the points',
     dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
@@ -457,7 +457,7 @@ registerModule(
               <button class="s-btn" data-reset>Reset</button>
             </div>
             <div class="s-row s-meta">
-              <select class="s-mult" data-mult aria-label="multiplier">
+              <select class="s-mult" data-mult aria-label="multiply the points by">
                 ${MULTIPLIERS.map((m) => `<option value="${m.value}">${m.label}</option>`).join('')}
               </select>
               <span class="s-worth" data-worth></span>

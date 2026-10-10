@@ -110,7 +110,7 @@ export const SYSTEM_DRAWN = ['pointer:mouse'];
 export const SETTINGS = [
   { key: 'show', label: 'Show a big cursor', kind: 'choice', default: 'tracking', level: 'standard',
     options: [
-      { value: 'tracking', label: 'when hand or marker tracking is driving it' },
+      { value: 'tracking', label: 'when a hand or a marker moves it, not a mouse' },
       { value: 'always', label: 'always, including with a mouse' },
       { value: 'never', label: 'never' },
     ] },

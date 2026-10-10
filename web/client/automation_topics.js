@@ -64,7 +64,7 @@ export const AUTOMATION_TOPICS = Object.freeze([
   freeze({ topic: POINTS_TOPIC, range: AUTOMATION_TOPIC_RANGES.points, label: 'Points just earned',
     hint: 'each award as it is made' }),
   freeze({ topic: LISTENING_TOPIC, path: 'on', range: [0, 1], label: 'Listening for a spoken command',
-    hint: 'on after the wake phrase, off when it stops listening' }),
+    hint: 'on after the wake phrase (the words that tell the screen to listen), off when it stops listening' }),
   freeze({ topic: ANSWERING_TOPIC, path: 'on', range: [0, 1], label: 'Waiting for a spoken answer',
     hint: 'on while a game listens for an answer, off when it stops' }),
 ]);

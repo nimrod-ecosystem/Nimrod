@@ -51,7 +51,7 @@ export const WRAP_WHO = Object.freeze([
   Object.freeze({ id: 'online', label: 'Your online AI',
     help: 'The online AI set up for your guide. Choosing it sends the notes you chose to that address.' }),
   Object.freeze({ id: 'claude', label: 'Claude, made by Anthropic',
-    help: 'Quicker. Choosing it sends the notes you chose to Anthropic, through this website’s server, paid for with the Claude key saved for this website.' }),
+    help: 'Quicker. Choosing it sends the notes you chose to Anthropic, through the site’s server. The Claude key saved for this website pays for it.' }),
 ]);
 export const DEFAULT_WHO = 'local';
 export const isWho = (id) => WRAP_WHO.some((w) => w.id === id);
@@ -759,7 +759,7 @@ export async function saveToFolder(text, { store, view, pick = false, ownName = 
   let picked = false;
   if (!pick) { try { dir = await store?.get?.(WALK_FOLDER_KEY); } catch { dir = null; } }
   if (!dir) {
-    if (!view || typeof view.showDirectoryPicker !== 'function') return { ok: false, reason: 'This browser cannot save into a folder you choose. Download it instead.' };
+    if (!view || typeof view.showDirectoryPicker !== 'function') return { ok: false, reason: 'This browser cannot save into a folder you choose. Save it in your downloads instead.' };
     try { dir = await view.showDirectoryPicker({ id: 'nimrod-walkthroughs', mode: 'readwrite' }); }
     catch (err) { return { ok: false, cancelled: err?.name === 'AbortError', reason: err?.name === 'AbortError' ? 'No folder was chosen.' : 'The folder could not be opened.' }; }
     picked = true;

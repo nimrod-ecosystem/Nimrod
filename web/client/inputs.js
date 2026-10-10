@@ -206,9 +206,9 @@ export function mountInputs(root, {
     <div class="home">
       <div class="h-intro">
         <h1>Devices</h1>
-        <p>Bind a switch, a controller button, a key or a click to what someone needs to do.
-          You bind the <em>verb</em> — Primary select, Next — and whichever panel they are on
-          decides what that means. Set it up once; it follows you to every screen.</p>
+        <p>Give a job to a switch (one big button), a button on a game controller, a key or a click.
+          You choose the <em>action</em>, such as Primary select or Next. Whichever part they are on
+          decides what that action does. Set it up once. It follows you to every screen.</p>
       </div>
       <div data-body><p class="h-loading">Loading…</p></div>
     </div>`;
@@ -300,8 +300,8 @@ export function mountInputs(root, {
   // guides toward plugging it in instead, rather than inventing a placeholder id that could
   // never actually match what shows up.
   const ADDABLE_CLASSES = [
-    { id: 'keyboard', label: 'A switch that arrives as a keyboard key', prefix: 'keyboard' },
-    { id: 'pointer', label: 'A switch that arrives as a mouse click', prefix: 'pointer' },
+    { id: 'keyboard', label: 'A switch the computer sees as a keyboard key', prefix: 'keyboard' },
+    { id: 'pointer', label: 'A switch the computer sees as a mouse click', prefix: 'pointer' },
     { id: 'touch', label: 'A touchscreen', prefix: 'pointer:touch' },
   ];
 
@@ -315,14 +315,14 @@ export function mountInputs(root, {
   // where a person is about to act on it, not just recorded in a commit.
   function addDeviceHonesty(classId) {
     if (classId === 'keyboard') {
-      return 'Browsers cannot tell two keyboards apart — this row lets you name and pre-tune '
-        + 'a second switch, but until a connector exists, pressing it will also fire whatever '
-        + 'is bound to the Keyboard row above.';
+      return 'A browser cannot tell 2 keyboards apart. This row lets you name a second '
+        + 'switch and set its timing ahead of time. But for now, pressing it also does whatever '
+        + 'is set on the Keyboard row above.';
     }
     if (classId === 'pointer' || classId === 'touch') {
-      return 'Browsers cannot tell two ' + (classId === 'touch' ? 'touchscreens' : 'pointing devices')
-        + ' apart — this row lets you name and pre-tune a second one, but until a connector '
-        + 'exists, using it will also fire whatever is bound to the ' + (classId === 'touch' ? 'Touch' : 'Mouse')
+      return 'A browser cannot tell 2 ' + (classId === 'touch' ? 'touchscreens' : 'mice')
+        + ' apart. This row lets you name a second one and set its timing ahead of time. '
+        + 'But for now, using it also does whatever is set on the ' + (classId === 'touch' ? 'Touch' : 'Mouse')
         + ' row above.';
     }
     return '';
@@ -340,7 +340,7 @@ export function mountInputs(root, {
     if (!removableDevice(device)) return;
     const n = record.bindings.filter((b) => b.device === device).length;
     const label = deviceRecord(device)?.label || deviceName(device);
-    if (!confirm(`Remove ${label} and its ${n} binding${n === 1 ? '' : 's'}?`)) return;
+    if (!confirm(`Remove ${label} and its ${n} job${n === 1 ? '' : 's'}?`)) return;
     // *** DELETE WITH ITS BINDINGS, NOT ORPHANED. *** Mike, Revision 9, item 6: because
     // `knownDevices()` also derives rows from bindings, dropping only the device record would
     // bring the row straight back on the next render — and leave a control that still fires
@@ -359,7 +359,7 @@ export function mountInputs(root, {
   // import file by hand and walking someone through pasting it. That is a support call, not
   // a feature. This is the same restore, as a button.
   function resetToDefaults() {
-    if (!confirm('Replace every binding and device with the shipped defaults? This cannot be undone.')) return;
+    if (!confirm('Put every job and device back to how a new setup starts? This cannot be undone.')) return;
     const fresh = normalizeRecord(null, DEFAULT_BINDINGS);
     record.bindings = fresh.bindings;
     record.devices = [];
@@ -434,10 +434,10 @@ export function mountInputs(root, {
         <div class="i-focus">${reach.map((x) =>
           `<button class="h-chip${x.id === m.id ? ' on' : ''}" data-focus-id="${esc(x.id)}">${
             x.id === BINDER_ID ? 'This page' : esc(x.type)}</button>`).join('')}</div>
-        <p class="h-hint"><b>This page</b> has focus — your control drives the bindings table
-          itself. <code>Next</code> and <code>Previous</code> move down the rows,
-          <code>Primary select</code> re-presses the highlighted one.
-          <code>${esc(VERB_LABEL['focus-next'])}</code> hands focus to the screen.</p>`;
+        <p class="h-hint"><b>This page</b> is the one picked. Your control now works the list of
+          jobs on this page itself. <code>Next</code> and <code>Previous</code> move through the
+          rows. <code>Primary select</code> lets you press a new control for the highlighted row.
+          <code>${esc(VERB_LABEL['focus-next'])}</code> moves on to the screen.</p>`;
       return;
     }
     host.innerHTML = `
@@ -472,7 +472,7 @@ export function mountInputs(root, {
       <div class="i-adddev">
         <select data-adddev-class>${ADDABLE_CLASSES.map((c) =>
           `<option value="${c.id}">${esc(c.label)}</option>`).join('')}</select>
-        <input type="text" data-adddev-name placeholder="What do you call it? e.g. Tray switch">
+        <input type="text" data-adddev-name placeholder="What do you call it? For example, Tray switch">
         <button class="h-btn h-primary" data-adddev-save>Add</button>
         <p class="h-hint" data-adddev-honesty>${esc(addDeviceHonesty(ADDABLE_CLASSES[0].id))}</p>
       </div>` : ''}
@@ -522,9 +522,9 @@ export function mountInputs(root, {
       <table class="i-tab">
         <thead><tr>
           <th>Device</th><th>Label</th>
-          <th title="Every binding on this device uses this hold time, unless the binding sets its own">Hold</th>
-          <th title="Every binding on this device uses this debounce, unless the binding sets its own">Debounce</th>
-          <th title="Every binding on this device uses this lockout, unless the binding sets its own">Lockout</th>
+          <th title="Every job on this device uses this hold time, unless the job sets its own">Hold</th>
+          <th title="Every job on this device uses this Debounce time, unless the job sets its own">Debounce</th>
+          <th title="Every job on this device uses this Lockout time, unless the job sets its own">Lockout</th>
           <th></th>
         </tr></thead>
         <tbody>${known.map((device) => {
@@ -571,15 +571,15 @@ export function mountInputs(root, {
     // anything, names how much, and the way back is the same "All devices" chip, one click.
     const hidden = record.bindings.length - rows.length;
     const filterBanner = selectedDevice && hidden > 0
-      ? `<p class="i-filter-banner">Showing only <b>${esc(deviceName(selectedDevice))}</b> —
-          ${hidden} more binding${hidden === 1 ? '' : 's'} on other devices, not deleted, just not shown here.
+      ? `<p class="i-filter-banner">Showing only <b>${esc(deviceName(selectedDevice))}</b>. ${hidden} more
+          job${hidden === 1 ? '' : 's'} on other devices. They are not deleted, just not shown here.
           <button class="h-btn" data-device-chip="">Show all ${record.bindings.length}</button></p>`
       : '';
 
     if (!rows.length) {
       host.innerHTML = filterBanner + (selectedDevice
-        ? `<p class="h-none">Nothing bound to ${esc(deviceName(selectedDevice))} yet. Pick a control below and press it.</p>`
-        : '<p class="h-none">Nothing bound yet. Pick a control below and press it.</p>');
+        ? `<p class="h-none">No control on ${esc(deviceName(selectedDevice))} has a job yet. Choose a job below, press “Press a control…”, then press the control.</p>`
+        : '<p class="h-none">No control has a job yet. Choose a job below, press “Press a control…”, then press the control.</p>');
       return;
     }
     host.innerHTML = filterBanner + `
@@ -588,7 +588,7 @@ export function mountInputs(root, {
           <th>Does what</th><th>Control</th><th>When</th>
           <th title="How long it must be held before it counts">Hold</th>
           <th title="Ignore a second press this soon after the last">Debounce</th>
-          <th title="After it fires, refuse a repeat for this long">Lockout</th>
+          <th title="After it works, do not let it repeat for this long">Lockout</th>
           <!-- RENAMED FROM "Who", Revision 9 item 4 (chat's suggestion, both agreed): this
                column is ROLE (Anyone/Moderator/Participant) — who may act in a session, not a
                person picker. Sitting next to a question about per-person setups, "Who" read
@@ -613,7 +613,7 @@ export function mountInputs(root, {
             const inherited = b[f] == null;
             const src = inherited
               ? `<span class="h-hint i-source" data-source="device">from device: ${dd[f]}</span>`
-              : `<span class="h-hint i-source" data-source="binding">this binding's own</span>`;
+              : `<span class="h-hint i-source" data-source="binding">this job's own</span>`;
             return `<input type="number" data-f="${f}" min="0" step="50"
               value="${b[f] == null ? '' : b[f]}" placeholder="${dd[f]}"><br>${src}`;
           };
@@ -633,9 +633,9 @@ export function mountInputs(root, {
           </tr>`;
         }).join('')}</tbody>
       </table>
-      <p class="h-hint">A blank Hold/Debounce/Lockout box uses that switch's own setting — see
-        <b>Devices</b> above to set it once for every binding on that switch, instead of typing
-        it into each row.</p>`;
+      <p class="h-hint">A blank Hold, Debounce or Lockout box uses that switch's own setting. See
+        <b>Devices</b> above to set it once for every job on that switch. Then you do not have to
+        type it into each row.</p>`;
   }
 
   function renderGate() {
@@ -675,20 +675,20 @@ export function mountInputs(root, {
 
       <div class="h-card">
         <div class="h-card-head"><h2>Say what I press</h2></div>
-        <p class="h-hint">Speaks the control and what it now means, out loud, each time you
-          bind one. For anyone setting this up without being able to watch the screen.</p>
+        <p class="h-hint">Says the control and its new job out loud each time you give one a job.
+          For anyone setting this up who cannot watch the screen.</p>
         <label class="i-speak"><input type="checkbox" data-speak> Speak it</label>
       </div>
 
       <div class="h-card">
         <div class="h-card-head"><h2>Devices</h2><span class="h-hint">set a switch's timing once,
-          for every binding on it</span></div>
+          for every job on it</span></div>
         <div data-device-picker></div>
         <div class="i-devs" data-devices></div>
       </div>
 
       <div class="h-card">
-        <div class="h-card-head"><h2>Bindings</h2><span class="h-hint">shared by every screen</span></div>
+        <div class="h-card-head"><h2>What each control does</h2><span class="h-hint">shared by every screen</span></div>
         <div data-bindings></div>
         <div class="i-add">
           <select data-new-action>${verbOptions(verbTopic('select'))}</select>
@@ -700,16 +700,16 @@ export function mountInputs(root, {
              capture/click bug (now fixed) — the only way back was hand-building an import
              file. That should never be the only way back from a bad state this panel itself
              can cause. -->
-        <p class="i-reset-row"><button class="h-btn" data-reset-defaults>Reset to the shipped defaults…</button>
-          <span class="h-hint">Replaces every binding and device above with what a brand-new
-            setup gets. For undoing a setup that went wrong, not for everyday use.</span></p>
+        <p class="i-reset-row"><button class="h-btn" data-reset-defaults>Go back to how a new setup starts…</button>
+          <span class="h-hint">Replaces every job and device above with what a brand-new setup gets.
+            For undoing a setup that went wrong, not for everyday use.</span></p>
       </div>
 
       <div class="h-card">
         <div class="h-card-head"><h2>Hand this setup to someone else</h2></div>
-        <p class="h-hint">A small file — just what you changed from the defaults, not everything
-          declared. Copy it to give someone your setup; paste one in to use theirs. Importing
-          replaces the bindings and devices above; nothing else on the account changes.</p>
+        <p class="h-hint">A small piece of text. It holds only what you changed from how a new setup
+          starts. Copy it to give someone your setup. Paste one in to use theirs. Pressing Use this
+          setup replaces the jobs and devices above. Nothing else changes.</p>
         <textarea data-export-text readonly rows="4" style="width:100%;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace"></textarea>
         <div class="i-add">
           <button class="h-btn" data-export-copy>Copy</button>
@@ -718,15 +718,15 @@ export function mountInputs(root, {
         <textarea data-import-text rows="4" placeholder="Paste a setup someone gave you…"
           style="width:100%;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;margin-top:8px"></textarea>
         <div class="i-add">
-          <button class="h-btn h-primary" data-import-go>Import</button>
+          <button class="h-btn h-primary" data-import-go>Use this setup</button>
           <span class="h-hint" data-import-msg></span>
         </div>
       </div>
 
       <div class="h-card">
         <div class="h-card-head"><h2>Try it on a screen</h2></div>
-        <p class="h-hint">A verb goes to whichever panel has focus. Pick the screen, then move
-          focus the way they will — with a switch, not a mouse.</p>
+        <p class="h-hint">An action goes to whichever part is picked. Choose the screen. Then move
+          from part to part the way they will: with a switch, not a mouse.</p>
         <div class="h-who" data-who></div>
         <div data-focus></div>
         <div class="i-log" data-log><span class="h-none">Press something.</span></div>
@@ -742,9 +742,9 @@ export function mountInputs(root, {
   // ---- the live strip ----------------------------------------------------------
 
   const REASON_TEXT = {
-    unbound: 'nothing is bound to that control',
+    unbound: 'that control has no job yet',
     'role-gated': 'blocked — not their turn right now',
-    'unknown-action': 'bound to something that no longer exists',
+    'unknown-action': 'has a job that no longer exists',
     debounce: 'too soon after the last press (debounce)',
     lockout: 'too soon to repeat (lockout)',
     'too-short': 'let go too early for the hold time',
@@ -762,7 +762,7 @@ export function mountInputs(root, {
     if (!rec.accepted) {
       what = REASON_TEXT[rec.reason] || rec.reason;
     } else if (verb && isFocusVerb(verb)) {
-      what = `focus moved to ${router?.focused()?.type || 'nothing'}`;
+      what = `moved to ${router?.focused()?.type || 'nothing'}`;
     } else if (verb && isMasterVerb(verb)) {
       // Louder/quieter move the whole screen's volume, whatever has focus - so this is not the
       // "panel has nothing for that" case below, and saying so would be wrong.
@@ -773,7 +773,7 @@ export function mountInputs(root, {
       // Accepted by the bus, but the focused panel has no meaning for it. This is the
       // most confusing outcome in the whole feature — the switch worked and nothing
       // happened — so it is said out loud instead of looking like silence.
-      what = target ? `→ ${panel} (${target.topic})` : `${panel || 'no panel'} has nothing for that`;
+      what = target ? `→ ${panel} (${target.topic})` : `${panel || 'this screen'} has nothing for that`;
     } else {
       what = 'went through';
     }
@@ -900,7 +900,7 @@ export function mountInputs(root, {
     pendingDangerousBind = proceed;
     msg.innerHTML = `<b>Wait —</b> this makes left-click confirm whatever's highlighted, `
       + `everywhere, instead of clicking what you point at. `
-      + `<button class="h-btn" data-bindanyway>Bind it anyway</button> `
+      + `<button class="h-btn" data-bindanyway>Do it anyway</button> `
       + `<button class="h-btn" data-canceldanger>Never mind</button>`;
   }
 
@@ -915,7 +915,7 @@ export function mountInputs(root, {
     const meaning = verb ? (VERB_LABEL[verb] || verb) : (actions.get(b?.actionId)?.label || '');
     const what = `${deviceName(device)}: ${controlName(device, control)}${meaning ? ` → ${meaning}` : ''}`;
     const suggested = suggestHold(heldMs);
-    msg.innerHTML = `<b>Bound.</b> ${esc(what)}`
+    msg.innerHTML = `<b>Done.</b> ${esc(what)}`
       + (heldMs ? ` · held ${heldMs}ms` : '')
       + (suggested
         ? ` <button class="h-btn" data-usehold="${esc(bid)}" data-ms="${suggested}">Require ${suggested}ms</button>`
@@ -1035,10 +1035,10 @@ export function mountInputs(root, {
         selectedDevice = null;   // whatever was picked may not exist in the imported setup
         push(); save(); renderGate(); renderDevicePicker(); renderDevices(); renderBindings();
         if (ta) ta.value = '';
-        if (msg) msg.textContent = `Imported ${next.bindings.length} binding${next.bindings.length === 1 ? '' : 's'}`
+        if (msg) msg.textContent = `Now using ${next.bindings.length} job${next.bindings.length === 1 ? '' : 's'}`
           + (next.devices.length ? ` and ${next.devices.length} device${next.devices.length === 1 ? '' : 's'}.` : '.');
       } catch (err) {
-        if (msg) msg.textContent = `That didn't import: ${err.message}`;
+        if (msg) msg.textContent = `That setup could not be used: ${err.message}`;
       }
       return;
     }
@@ -1159,7 +1159,7 @@ export function mountInputs(root, {
           badge.textContent = `from device: ${dd[key]}`;
         } else {
           badge.dataset.source = 'binding';
-          badge.textContent = "this binding's own";
+          badge.textContent = "this job's own";
         }
       }
     }

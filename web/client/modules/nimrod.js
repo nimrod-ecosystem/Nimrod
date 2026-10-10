@@ -141,14 +141,14 @@ const ANSWERING_WAIT_MS = 800;
 //          The person's output routing still decides whether `say` becomes speech. The AI's replies follow it.
 export const GUIDE_SETTINGS = Object.freeze([
   { key: 'tree', label: 'Show the map of where you are', kind: 'toggle', default: true, level: 'standard',
-    onLabel: 'Yes — like a file tree', offLabel: 'No',
-    help: 'A tree of everything Nimrod can show you, open at the place you are.' },
+    onLabel: 'Yes, as a list', offLabel: 'No',
+    help: 'A list of everything Nimrod can show you. It opens at the place you are.' },
   { key: 'hover', label: 'Explain what the pointer is on', kind: 'toggle', default: true, level: 'standard',
     onLabel: 'Yes', offLabel: 'No',
-    help: 'Point at anything, or scan to it, and Nimrod says what it does in the box at his bottom.' },
+    help: 'Point at anything and Nimrod says what it does, in the box at the bottom of his part. It works with scanning too (the screen steps through the choices one at a time; press when yours is lit).' },
   { key: 'speak', label: 'Nimrod reads aloud', kind: 'toggle', default: true, level: 'standard',
     onLabel: 'Yes', offLabel: 'No — words only',
-    help: 'His words also go to the screen’s voice, if this screen speaks.' },
+    help: 'The screen’s voice also says his words, if this screen speaks.' },
   // notesKey ON (2026-10-03): "a notes view he can reach from anywhere ... or a hotkey". N, argued: not a
   //   browser's (Ctrl+N is, and is left alone: any Ctrl/Alt/Cmd press is ignored), not the screen's (its keys
   //   are 1-9, S, T, C, F, M, [, ], \ -- T the bar's since row 2.72, H free), never while typing, and it only OPENS a list — nothing is sent or saved.
@@ -242,7 +242,7 @@ const STYLE = `
 
 registerModule(
   { type: GUIDE_TYPE, title: 'Nimrod', core: 'new', dependsOn: 'none', importance: 'normal',
-    description: 'Nimrod the guide: what everything does, and what to try next, as choices you can walk back through — or talk it over with your own AI',
+    description: 'Nimrod the guide tells you what everything does and what to try next, as choices you can step back through. Or talk it over with your own AI (artificial intelligence).',
     settings: GUIDE_SETTINGS },
   (ctx) => {
     const { mount } = ctx;
@@ -492,7 +492,7 @@ registerModule(
       // the biggest (ai.js pickModel) could spend somebody's money without them choosing it.
       // ("Claude, on this account" has no address: its model is the account's own choice, on the server.)
       if (s.backend !== 'claude' && !isLocalAddress(s.baseUrl) && !s.model) {
-        status = { state: 'needs-model', model: '', reason: `Name the model to use at ${s.baseUrl} in “About ${aiP.name}”.` };
+        status = { state: 'needs-model', model: '', reason: `In “About ${aiP.name}”, type the name of the model to use at ${s.baseUrl}.` };
         render();
         return status;
       }
@@ -605,8 +605,8 @@ registerModule(
       clearTimeout(hintTimer);
       hintTimer = setTimeout(() => {
         if (!listening || heardAnswering || torn) return;
-        listenHint = 'This screen is not listening for voice right now (voice commands are off in the settings menu’s '
-          + 'Devices tab, or no microphone answers). You can still type.';
+        listenHint = 'This screen is not listening for voice right now. Either voice commands are off in the settings '
+          + 'menu’s Devices tab, or no microphone answers. You can still type.';
         render();
       }, ANSWERING_WAIT_MS);
       render();
@@ -662,7 +662,7 @@ registerModule(
       if (text) { if (onceOnly) stopListening(); sendText(text, { spoken: true }); return; }
       if (p.listen) { startListening({ once: 'ask', ms: p.ms }); return; }
       // A fixed-grammar engine heard the prefix and cannot hear the question.
-      notice = `Heard “ask ${aiP.name}”. This screen’s voice can only hear its own commands: type your question, or press Talk to say it.`;
+      notice = `Heard “ask ${aiP.name}”. This screen can only hear its own commands. Type your question, or press Talk to say it.`;
       render();
       focusOn('say');
       speak(`Type your question, or press Talk to say it.`);
@@ -677,7 +677,7 @@ registerModule(
         render();
         return;
       }
-      notice = 'Heard “make a note”. This screen’s voice can only hear its own commands: type the note here.';
+      notice = 'Heard “make a note”. This screen can only hear its own commands. Type the note here.';
       render();
       focusOn('quick');
       speak('Type the note.');
@@ -780,7 +780,7 @@ registerModule(
           a.remove();
           win.setTimeout(() => { try { win.URL.revokeObjectURL(url); } catch { /* gone */ } }, 10000);
         }
-        notice = `Saved as ${name} (your browser’s downloads).`;
+        notice = `Saved as ${name}, in your browser’s downloads folder.`;
       } catch (err) {
         console.error('nimrod: save notes', err);
         notice = 'This browser would not save a file. Copy them instead.';
@@ -874,7 +874,7 @@ registerModule(
       let next;
       if (!c) next = { state: 'none', model: '', reason: 'No online AI is set up on this device.', who };
       // A remote address is never given a model by itself (checkStatus argues it): its list can hold paid models.
-      else if (who === 'online' && !s.model) next = { state: 'needs-model', model: '', reason: `Name the model to use at ${hostOf(s.baseUrl)} in “About ${aiP.name}”.`, who };
+      else if (who === 'online' && !s.model) next = { state: 'needs-model', model: '', reason: `In “About ${aiP.name}”, type the name of the model to use at ${hostOf(s.baseUrl)}.`, who };
       else {
         let r;
         try { r = await c.resolveModel(who === 'claude' ? '' : (s.model || '')); } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
@@ -951,7 +951,7 @@ registerModule(
         stopWrapWork();
         keepReview(handReview(chosen));
         wrap.step = 'review';
-        notice = 'Every note is here as you wrote it, not sorted yet: move each one to a list, or drop it.';
+        notice = 'Every note is here as you wrote it, not sorted yet. Move each one to a list, or drop it.';
         render();
         return;
       }
@@ -1089,12 +1089,12 @@ registerModule(
     function approveHeard(t) {
       const p = parseReviewWords(t);
       const st = approveStep(review);
-      if (p?.action === 'use') { if (!approveDo('use')) { notice = 'This one is not cleaned up yet: say keep mine, or skip.'; render(); } return; }
+      if (p?.action === 'use') { if (!approveDo('use')) { notice = 'This one is not cleaned up yet. Say “keep mine” or “skip”.'; render(); } return; }
       if (p?.action === 'mine') { approveDo('mine'); return; }
       if (p?.action === 'prev') { approveDo('prev'); return; }
       if (p?.action === 'next') { approveDo('next'); return; }
       if (p?.action === 'change' && p.text && st && st.entry.cleaned) { approveDo('use', p.text); return; }
-      notice = `Heard “${t}”. Say use this, or keep mine; or change it to and the new words.`;
+      notice = `Heard “${t}”. Say “use this” or “keep mine”. Or say “change it to” and then the new words.`;
       render();
     }
     function reviewHeard(t, as) {
@@ -1103,7 +1103,7 @@ registerModule(
       if (wrap.step !== 'review' || !review) return;
       const p = parseReviewWords(t);
       if (!p) {
-        notice = `Heard “${t}”. Say keep, drop, move to chat, code or design, or change it to and the new words.`;
+        notice = `Heard “${t}”. Say “keep”, “drop”, “move to chat”, “move to code” or “move to design”. Or say “change it to” and then the new words.`;
         render();
         return;
       }
@@ -1158,7 +1158,7 @@ registerModule(
           a.remove();
           win.setTimeout(() => { try { win.URL.revokeObjectURL(url); } catch { /* gone */ } }, 10000);
         }
-        markSaved(name, `Saved as ${name} (your browser’s downloads).`);
+        markSaved(name, `Saved as ${name}, in your browser’s downloads folder.`);
       } catch (err) {
         console.error('nimrod: save the wrap-up', err);
         notice = 'This browser would not save a file. Copy it instead.';
@@ -1201,7 +1201,7 @@ registerModule(
         try { lna = (await mount.ownerDocument.defaultView?.navigator?.permissions?.query({ name: 'local-network-access' }))?.state || ''; } catch { lna = ''; }
         if (torn) return;
         const blocked = lna === 'denied' && !ollamaAllowsByDefault(pageOrigin())
-          ? ' This browser is set to stop this website reaching devices on your network: allow it in the site’s settings (the icon to the left of the address), then look again.' : '';
+          ? ' This browser is set to stop this website reaching devices on your network. To allow it, open the site’s settings (the icon to the left of the address). Then look again.' : '';
         detect = { ok: false, reason: r.cancelled ? 'Stopped looking.' : `${r.reason}${blocked}`, lna };
         render();
         return;
@@ -1372,7 +1372,7 @@ registerModule(
           <button type="button" class="ng-btn" data-ng-stop data-ng-do="notes"
             data-help="${esc(`Your notes: write one, see them all, copy them or save them as a file.${prefs.notesKey ? ' The N key opens them from anywhere.' : ''}`)}">Notes${notes.length ? ` (${notes.length})` : ''}</button>
           <button type="button" class="ng-btn" data-ng-stop data-ng-do="talk"
-            data-help="${esc(`Talk it over with ${aiP.name}, your AI, typed or spoken. It can show you around the guide with you.`)}">Talk to ${esc(aiP.name)}</button>
+            data-help="${esc(`Talk it over with ${aiP.name}, your AI (artificial intelligence), typed or spoken. It can go through the guide with you.`)}">Talk to ${esc(aiP.name)}</button>
         </div>
         ${movedNote ? `<p class="ng-status" data-ng-moved>${esc(movedNote)}</p>` : ''}
         ${tree}`;
@@ -1421,8 +1421,8 @@ registerModule(
         } else if (detect && !detect.ok) {
           const allowed = ollamaAllowsByDefault(pageOrigin());
           found = `<p class="ng-status" data-ng-detect>${esc(detect.reason)}</p>
-            <p class="ng-status">${allowed ? 'This page is on this computer, so Ollama allows it already: it may simply not be running. Start Ollama and look again.'
-              : `This page is ${esc(pageOrigin())}. If Ollama is running, it may not allow this website yet: see “Why can’t the website reach it?” below.`}</p>`;
+            <p class="ng-status">${allowed ? 'This page is on this computer, so Ollama allows it already. Ollama may simply not be running. Start Ollama and look again.'
+              : `This page is ${esc(pageOrigin())}. If Ollama is running, it may not allow this website yet. See “Why can’t the website reach it?” below.`}</p>`;
         }
         const choose = backendRow();
         if (backend === 'claude') {
@@ -1437,7 +1437,7 @@ registerModule(
                 : `<a class="ng-btn ng-act" data-ng-stop data-ng-link data-ng-claude-page href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener"
                 data-help="Opens the Claude settings in a new tab: the account owner saves the key, picks the model and sees today’s spending there.">Claude settings: key, model, spending ↗</a>`}
               ${claudeCheck?.busy ? '' : btnHTML('checkclaude', claudeCheck ? 'Check again' : 'Check Claude on this account',
-                'Asks this website’s server whether this account has a Claude key saved, and today’s spending. Nothing is sent to Claude.')}
+                'Asks this website’s server whether this login has a Claude key saved, and today’s spending. Nothing is sent to Claude.')}
             </div>${res}</div>`;
         }
         const other = otherOpen ? `<label for="ng-f-furl">The AI’s address (OpenAI-style, ending in /v1)</label>
@@ -1463,7 +1463,7 @@ registerModule(
       }
       if (kind === 'ai-hello') {
         let res = '';
-        if (hello?.busy) res = `<p class="ng-status" data-ng-hello>Waiting for ${esc(n)}… (a model on a computer with no graphics card can take a minute the first time)</p>`;
+        if (hello?.busy) res = `<p class="ng-status" data-ng-hello>Waiting for ${esc(n)}… (on a slower computer, the first answer can take a minute)</p>`;
         else if (hello?.ok) res = `<p class="ng-msg" data-ng-hello><b>${esc(n)}:</b>${esc(hello.text)}</p><p class="ng-status">It works (${esc(hello.model)}).</p>`;
         else if (hello) res = `<p class="ng-status" data-ng-hello>${esc(hello.reason)}</p>`;
         return `<div class="ng-form ng-box" data-ng-form="ai-hello">
@@ -1489,7 +1489,7 @@ registerModule(
           <div class="ng-btns">${btnHTML('savenote', 'Save note', 'Keep this note in your notes.')}${btnHTML('dropnote', 'Discard', 'Throw this draft away.')}</div></div>`;
     }
     const WHERE_KEPT = {
-      person: 'Kept on your account: they follow you to every screen you sign into.',
+      person: 'Kept on your login. They follow you to every screen you sign in to.',
       panel: 'Kept with this Nimrod panel on this dashboard (nobody is signed in as a person here).',
       memory: 'Kept only until this page closes: copy them or save them as a file.',
     };
@@ -1501,20 +1501,20 @@ registerModule(
       const c = contextLine(noteContext());
       return `
         <div class="ng-head"><img src="${esc(catImageURL('talking'))}" alt="">
-          <div><b>Your notes</b><div class="ng-where">${notes.length} kept${notes.length >= NOTES_MAX ? ' (the most kept: the oldest goes next)' : ''}</div></div></div>
+          <div><b>Your notes</b><div class="ng-where">${notes.length} kept${notes.length >= NOTES_MAX ? ' (the list is full: a new note removes the oldest one)' : ''}</div></div></div>
         <div class="ng-btns">${btnHTML('guide', '‹ Back to the guide', 'Back to the guide’s choices.')}
-          ${btnHTML('talk', `Talk to ${esc(n)}`, `Talk it over with ${n}; “Make a note” there turns the talk into a note.`)}</div>
+          ${btnHTML('talk', `Talk to ${esc(n)}`, `Talk it over with ${n}. “Make a note” there turns the talk into a note.`)}</div>
         <label class="ng-status" for="ng-f-quick">Write a note</label>
         <textarea id="ng-f-quick" class="ng-quick" data-ng-field="quick" maxlength="4000" placeholder="What you noticed, what you would change…"></textarea>
-        <p class="ng-status" data-ng-context>${c ? `It will say when, and ${esc(c)}.` : 'It will say when it was written.'}</p>
-        ${listening && nextAs === 'note' ? '<p class="ng-status" data-ng-listening role="status">Listening for your note…</p>' : '<p class="ng-status" data-ng-voicetip>Hands free: say the wake phrase, then “make a note” and the note.</p>'}
+        <p class="ng-status" data-ng-context>${c ? `It will say when it was written, and this: ${esc(c)}.` : 'It will say when it was written.'}</p>
+        ${listening && nextAs === 'note' ? '<p class="ng-status" data-ng-listening role="status">Listening for your note…</p>' : '<p class="ng-status" data-ng-voicetip>Hands free: say the wake phrase (the words that tell the screen to listen), wait, then say “make a note” and the note.</p>'}
         <div class="ng-btns">${btnHTML('savequick', 'Save note', 'Keep this note, with the time and where you were.')}
           ${chat.log().some((m) => m.role === 'user') ? btnHTML('makenote', `Make a note from the talk with ${esc(n)}`, 'Turn the conversation into a short note you can edit and keep.') : ''}</div>
         ${draftHTML()}
         ${notice ? `<p class="ng-status" data-ng-notice>${esc(notice)}</p>` : ''}
-        ${nearlyFull(notes) ? `<p class="ng-warn" data-ng-full>${notes.length} of ${NOTES_MAX} notes: past ${NOTES_MAX} the oldest goes. Copy them or save them as a file first.</p>` : ''}
-        <div class="ng-btns">${btnHTML('copynotes', `Copy all notes${notes.length ? ` (${notes.length})` : ''}`, 'Put every note on the clipboard, dated, to paste anywhere.', notes.length ? '' : 'disabled')}
-          ${btnHTML('exportfile', 'Save as a file (.md)', 'Save every note as a Markdown file in your downloads.', notes.length ? '' : 'disabled')}</div>
+        ${nearlyFull(notes) ? `<p class="ng-warn" data-ng-full>${notes.length} of ${NOTES_MAX} notes. After ${NOTES_MAX}, each new note removes the oldest. Copy them or save them as a file first.</p>` : ''}
+        <div class="ng-btns">${btnHTML('copynotes', `Copy all notes${notes.length ? ` (${notes.length})` : ''}`, 'Copy every note, with its date, so you can paste them anywhere.', notes.length ? '' : 'disabled')}
+          ${btnHTML('exportfile', 'Save as a file (.md)', 'Save every note as a Markdown file (a kind of text file) in your downloads folder.', notes.length ? '' : 'disabled')}</div>
         ${exportText ? `<textarea class="ng-export" data-ng-export readonly aria-label="Your notes as text">${esc(exportText)}</textarea>` : ''}
         <div class="ng-btns">${wrapButton()}</div>
         <p class="ng-status" data-ng-kept>${esc(WHERE_KEPT[store?.kind] || '')}</p>
@@ -1553,7 +1553,7 @@ registerModule(
     }
     function cautionLine() {
       if (wrap.who === 'claude') return 'Claude is quick and sorts well. It is paid for with the Claude key saved for this website, within its daily limit.';
-      if (wrap.who === 'local') return 'An AI on this computer can take a while for each note, and will put some lines in the wrong list. You see every note and every line anyway.';
+      if (wrap.who === 'local') return 'An AI on this computer can take a while for each note. It will put some lines in the wrong list. You see every note and every line anyway.';
       return '';
     }
     // The dial: Corpus Desk's slider, 1 to 10, plus Less and More for a switch or a keyboard (a slider is not a stop).
@@ -1565,14 +1565,14 @@ registerModule(
           <input type="range" min="1" max="10" step="1" value="${L}" data-ng-level aria-label="How much to clean up your notes: 1 is word for word, 10 is one line">
           <div class="ng-btns">${btnHTML('wrapless', '‹ Less clean-up', 'Closer to word for word.', L <= 1 ? 'disabled' : '')}
             ${btnHTML('wrapmore', 'More clean-up ›', 'Shorter, down to one line.', L >= 10 ? 'disabled' : '')}</div>
-          <p class="ng-status">Each note is cleaned up on its own and shown beside your words: use it, change it, or keep yours. Your notes themselves are never changed.</p>
+          <p class="ng-status">Each note is cleaned up on its own and shown beside your words. Use it, change it, or keep yours. Your notes themselves are never changed.</p>
         </div>`;
     }
     function whoHTML() {
       const opts = WRAP_WHO.filter((w) => w.id !== 'online' || onlineOffered());
       return `<p class="ng-status">Who cleans up and sorts them:</p>
         <div class="ng-btns" data-ng-who>${opts.map((w) => btnHTML('wrapwho', esc(w.label), w.help, `data-ng-id="${esc(w.id)}" aria-pressed="${wrap.who === w.id}"`)).join('')}</div>
-        ${wrap.who === 'claude' ? '<p class="ng-warn" data-ng-claudeline>Claude is chosen: the notes you chose go to Anthropic, who make Claude, to be cleaned up and sorted. Choose “The AI on this computer” to keep them here.</p>' : ''}`;
+        ${wrap.who === 'claude' ? '<p class="ng-warn" data-ng-claudeline>Claude is chosen. The notes you chose go to Anthropic, who make Claude, to be cleaned up and sorted. Choose “The AI on this computer” to keep them here.</p>' : ''}`;
     }
     function approveHTML(head, nav, note) {
       const st = approveStep(review);
@@ -1608,11 +1608,11 @@ registerModule(
           <div class="ng-btns">${btnHTML('wrapaprev', '‹ Previous', 'Back one note.', st.index > 0 ? '' : 'disabled')}
             ${btnHTML('wrapanext', 'Skip for now', 'On to the next note; this one waits.')}
             ${btnHTML('listen', listening ? 'Listening… press to stop' : 'Answer by voice',
-              listening ? 'Stop listening.' : 'Say use this, or keep mine; or change it to and the new words.', `aria-pressed="${listening}"`)}</div>
+              listening ? 'Stop listening.' : 'Say “use this” or “keep mine”. Or say “change it to” and then the new words.', `aria-pressed="${listening}"`)}</div>
           <div class="ng-btns">${btnHTML('wrapuseall', 'Use the cleaned-up words for all the rest', 'Every note not decided yet uses its cleaned-up words, including the ones still being cleaned.')}
             ${btnHTML('wrapmineall', 'Keep my words for all the rest', 'Every note not decided yet keeps your own words, and is not cleaned up.')}</div>
           ${tail}
-          <p class="ng-status" data-ng-voicetip>${listening ? 'Say use this, or keep mine; or “change it to” and the new words. “Back” and “skip” work too.' : 'By voice: press “Answer by voice”, then say use this, or keep mine.'}</p>
+          <p class="ng-status" data-ng-voicetip>${listening ? 'Say “use this” or “keep mine”. Or say “change it to” and then the new words. “Back” and “skip” work too.' : 'By voice: press “Answer by voice”, then say “use this” or “keep mine”.'}</p>
           ${listenHint ? `<p class="ng-status" data-ng-listenhint>${esc(listenHint)}</p>` : ''}
           ${note}
           <div class="ng-btns">${btnHTML('wrapnew', 'Start a new wrap-up', 'Choose notes again. This one is replaced only when the new one is made.')}</div>
@@ -1703,8 +1703,8 @@ registerModule(
           <div class="ng-btns">${btnHTML('wrapprev', '‹ Previous', 'Back one line.', review.cursor > 0 ? '' : 'disabled')}
             ${btnHTML('wrapnext', 'Skip for now', 'On to the next line; this one waits.')}
             ${btnHTML('listen', listening ? (nextAs === 'change' ? 'Listening for the new words… press to stop' : 'Listening… press to stop') : 'Answer by voice',
-              listening ? 'Stop listening.' : 'Say keep, drop, move to chat, code or design, or change it to and the new words.', `aria-pressed="${listening}"`)}</div>
-          <p class="ng-status" data-ng-voicetip>${listening ? 'Say keep, drop, move to chat, code or design, or “change it to” and the new words. “Back” and “skip” work too.' : 'By voice: press “Answer by voice”, then say keep, drop, move to …, or change it to ….'}</p>
+              listening ? 'Stop listening.' : 'Say “keep”, “drop”, “move to chat”, “move to code” or “move to design”. Or say “change it to” and then the new words.', `aria-pressed="${listening}"`)}</div>
+          <p class="ng-status" data-ng-voicetip>${listening ? 'Say “keep”, “drop”, “move to chat”, “move to code” or “move to design”. Or say “change it to” and then the new words. “Back” and “skip” work too.' : 'By voice: press “Answer by voice”. Then say “keep”, “drop”, “move to …” or “change it to …”.'}</p>
           ${listenHint ? `<p class="ng-status" data-ng-listenhint>${esc(listenHint)}</p>` : ''}
           ${note}
           <div class="ng-btns">${btnHTML('wrapnew', 'Start a new wrap-up', 'Choose notes again. This review is replaced only when the new one is made.')}</div>
@@ -1718,15 +1718,15 @@ registerModule(
           <p class="ng-status">${esc(counts)}${uns ? ` · ${UNSORTED_LABEL}: ${uns}` : ''}</p>
           ${review.problems?.length ? `<ul class="ng-lines">${review.problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
           <p class="ng-status">${review.clean
-            ? `The file has the three lists with the note each line came from, then the summary: every note as you approved it (cleaned up at ${esc(levelLine(review.clean.level))}, or in your words)${review.originals ? ', then every note word for word as well' : ''}.`
-            : 'The file has the three lists with the note each line came from, and every note word for word.'}</p>
+            ? `The file has the 3 lists, with the note each line came from. Then comes the summary, which is every note as you approved it (cleaned up at ${esc(levelLine(review.clean.level))}, or in your words)${review.originals ? ', then every note word for word as well' : ''}.`
+            : 'The file has the 3 lists, with the note each line came from, and every note word for word.'}</p>
           ${review.clean ? `<div class="ng-btns">${btnHTML('wraporiginals', `Also put in your notes word for word: ${review.originals ? 'on' : 'off'}`,
             'Off: the file has the cleaned-up notes only, so less goes to chat. On: your notes exactly as written are added at the end. Your notes themselves are kept either way.',
             `aria-pressed="${review.originals}"`)}</div>` : ''}
           <div class="ng-btns" data-ng-save>${btnHTML('wrapsave', folder ? `Save in “${esc(folder)}”` : 'Save in a folder…', folder ? `Saves the file in ${folder}, the folder this browser remembers.` : 'Pick a folder to save it in; this browser remembers it for next time.')}
             ${folder ? btnHTML('wrappickfolder', 'Choose a different folder', 'Pick another folder to save it in, and remember that one.') : ''}
-            ${btnHTML('wrapdownload', 'Download it instead', 'Save the file in your browser’s downloads.')}
-            ${btnHTML('wrapcopy', 'Copy it', 'Put the whole file on the clipboard, to paste anywhere.')}</div>
+            ${btnHTML('wrapdownload', 'Save it in your downloads instead', 'Save the file in your browser’s downloads folder.')}
+            ${btnHTML('wrapcopy', 'Copy it', 'Copy the whole file, so you can paste it anywhere.')}</div>
           ${review.savedAs ? `<p class="ng-status" data-ng-savedas>Saved as ${esc(review.savedAs)}.</p>` : ''}
           ${note}
           ${wrap.exportText ? `<textarea class="ng-export" data-ng-wrapexport readonly aria-label="The wrap-up as text">${esc(wrap.exportText)}</textarea>` : ''}
@@ -1745,7 +1745,7 @@ registerModule(
       const howFar = stage === 'approve' ? `${cleanProgress(review).decided} of ${cleanProgress(review).total} notes approved`
         : stage === 'sort' ? 'ready to sort' : stage === 'review' ? `${progress(review).done} of ${progress(review).total} looked at` : '';
       return `${head}${nav}
-        ${notes.length ? '' : '<p class="ng-status">There are no notes yet. Make some on your walk (press N, or say the wake phrase and “make a note”), then come back.</p>'}
+        ${notes.length ? '' : '<p class="ng-status">There are no notes yet. Make some as you go through the site, then come back. To make one, press N. Or say the wake phrase (the words that tell the screen to listen), wait, then say “make a note”.</p>'}
         ${unfinished ? `<div class="ng-btns">${btnHTML('wrapresume', `Pick up the wrap-up you were doing (${howFar})`, 'Back to it, where you left off.')}</div>
           <p class="ng-status">Starting a new one replaces that one.</p>` : ''}
         ${review && review.savedAt ? `<div class="ng-btns">${btnHTML('wrapreopen', `Open the last wrap-up again${review.savedAs ? ` (${esc(review.savedAs)})` : ''}`, 'Look at it again, or save it again.')}</div>` : ''}
@@ -1761,7 +1761,7 @@ registerModule(
           <p class="ng-status" data-ng-sendline>${esc(sendLine(chosen.length))}</p>
         </div>
         ${noAI && wrap.who === 'local' ? `<p class="ng-help" data-ng-help>${esc(connectHelp(n, ''))}</p>` : ''}
-        <div class="ng-btns">${btnHTML('wrapgo', `Clean up and sort them with ${esc(wrapAIName(wrap.who))}`, `Each note is cleaned up at ${levelLine(wrap.level)} and shown beside your words to approve; then they are sorted into ${WRAP_LISTS.map((l) => l.label).join(', ')}.`, chosen.length ? '' : 'disabled')}
+        <div class="ng-btns">${btnHTML('wrapgo', `Clean up and sort them with ${esc(wrapAIName(wrap.who))}`, `Each note is cleaned up at ${levelLine(wrap.level)} and shown beside your words to approve. Then they are sorted into ${WRAP_LISTS.map((l) => l.label).join(', ')}.`, chosen.length ? '' : 'disabled')}
           ${btnHTML('wraphand', 'Sort them by hand', 'No AI and nothing cleaned up: every note comes in as it is, and you put each one in a list.', chosen.length ? '' : 'disabled')}</div>` : ''}
         ${note}`;
     }
@@ -1781,7 +1781,7 @@ registerModule(
       try { s = ai().settings(); keySaved = !!ai().hasKey?.(); } catch { /* defaults */ }
       const setup = setupOpen ? `<div class="ng-box" data-ng-setup>
           <label for="ng-f-name">Name</label><input id="ng-f-name" data-ng-field="name" maxlength="40" value="${esc(n)}">
-          <label for="ng-f-persona">How it talks (its persona, in your words)</label>
+          <label for="ng-f-persona">How it talks, in your words</label>
           <textarea id="ng-f-persona" data-ng-field="persona" maxlength="2000" placeholder="A patient, cheerful guide…">${esc(aiP.persona)}</textarea>
           ${backendRow()}
           ${backend === 'claude' ? (onScreen()
@@ -1802,7 +1802,7 @@ registerModule(
       return `
         <div class="ng-head"><img src="${esc(catImageURL('talking'))}" alt="">
           <div><b>${esc(n)}</b><div class="ng-where">On the tour at “${esc(node.title)}”</div></div></div>
-        <div class="ng-btns">${btn('guide', '‹ Back to the guide', 'Back to the guide’s choices. The conversation is kept while this panel is open.')}</div>
+        <div class="ng-btns">${btn('guide', '‹ Back to the guide', 'Back to the guide’s choices. The conversation is kept while this part is open.')}</div>
         <div class="ng-card"><b>${esc(node.title)}:</b> ${esc(firstSentence(words))}</div>
         <p class="ng-status" data-ng-status role="status">${esc(statusText())}</p>
         ${noAI ? `<p class="ng-help" data-ng-help>${esc(connectHelp(n, ''))}</p>` : ''}
@@ -1813,14 +1813,14 @@ registerModule(
         <div class="ng-row"><input data-ng-field="say" aria-label="${esc(`Type to ${n}`)}" placeholder="${esc(`Type to ${n}…`)}" maxlength="4000">
           ${btn('send', 'Send', `Send what you typed to ${n}.`)}</div>
         <div class="ng-btns">
-          ${btn('listen', listening ? (nextAs === 'note' ? 'Listening for your note… press to stop' : onceOnly ? 'Listening for your question… press to stop' : 'Listening… press to stop') : 'Talk', listening ? 'Stop sending what is said to the chat.' : `Say what you want to ${n}; the wake phrase still gives a command. Hands free: say the wake phrase, then “ask ${n}” and your question.`, `aria-pressed="${listening}"`)}
+          ${btn('listen', listening ? (nextAs === 'note' ? 'Listening for your note… press to stop' : onceOnly ? 'Listening for your question… press to stop' : 'Listening… press to stop') : 'Talk', listening ? 'Stop sending what is said to the chat.' : `Say what you want to ${n}. The wake phrase (the words that tell the screen to listen) still gives a command. Hands free: say the wake phrase, wait, then say “ask ${n}” and your question.`, `aria-pressed="${listening}"`)}
           ${thinking ? btn('cancel', 'Stop', 'Stop waiting for this answer.') : ''}
           ${btn('makenote', 'Make a note', 'Turn this conversation into a short note you can edit and keep.')}
           ${btn('setup', `About ${esc(n)}`, 'Its name, how it talks, and which AI answers.', `aria-expanded="${setupOpen}"`)}
           ${btn('notes', `Notes${notes.length ? ` (${notes.length})` : ''}`, 'Your notes: write one yourself, copy them all, or save them as a file.')}
         </div>
         ${draftHTML()}
-        ${notes.length ? `<div class="ng-btns">${btn('copynotes', `Copy all notes (${notes.length})`, 'Put every note on the clipboard, dated, to paste anywhere.')}</div>` : ''}
+        ${notes.length ? `<div class="ng-btns">${btn('copynotes', `Copy all notes (${notes.length})`, 'Copy every note, with its date, so you can paste them anywhere.')}</div>` : ''}
         ${exportText ? `<textarea class="ng-export" data-ng-export readonly aria-label="Your notes as text">${esc(exportText)}</textarea>` : ''}
         ${notesList}
         ${setup}`;
@@ -1865,9 +1865,9 @@ registerModule(
     function actHelp(a) {
       switch (a.kind) {
         case 'menu-tab': return `Opens the settings menu on its ${a.tab} tab.`;
-        case 'settings-page': return 'Shows that page in the settings panel.';
-        case 'switch': return 'Opens the switch list: choose another module to take a panel’s place.';
-        case 'host': return a.act === 'picker' ? 'Shows every module there is.' : 'Shows the ready-made dashboards to start from.';
+        case 'settings-page': return 'Shows that page in the Settings part.';
+        case 'switch': return 'Opens the list for changing what a part shows. Choose something else to take that part’s place.';
+        case 'host': return a.act === 'picker' ? 'Shows everything you can put on a screen.' : 'Shows the ready-made dashboards to start from.';
         case 'tutorial': return 'Goes to the tutorial dashboard, where Nimrod and the settings always are.';
         case 'game-mode': return MODE_HELP[a.mode] || '';
         case 'guide': return a.do === 'notes' ? 'Opens your notes: write one, copy them all, or save them as a file.'
@@ -1927,7 +1927,7 @@ registerModule(
             stopWrapWork();
             keepReview(sortedByHand(review, notes));
             wrap.step = stageOf(review);
-            notice = 'Every note is here as you approved it, not sorted yet: move each one to a list, or drop it.';
+            notice = 'Every note is here as you approved it, not sorted yet. Move each one to a list, or drop it.';
             render();
           }
           return;

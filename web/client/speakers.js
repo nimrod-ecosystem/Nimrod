@@ -150,8 +150,8 @@ export function speakerFields() {
     // app is not offered a choice that cannot play.
     options: playOnChoices({ inherit: 'This screen’s own speaker (whatever the computer uses)',
       spotifyOn: knownSpotifySpeakers().length > 0 }).filter((o) => o.value !== PLAY_ON_HERE),
-    note: 'Nothing to set up: on its first choice, sound goes wherever this computer already sends it. Spotify and '
-      + 'YouTube’s own players always use that speaker; music files can go to another. Spotify speakers appear '
-      + 'here after “Find speakers” in a Music panel.',
+    note: 'Nothing to set up. On its first choice, sound goes wherever this computer already sends it. Spotify’s and '
+      + 'YouTube’s own players always use that speaker. Music files can go to another. Spotify speakers appear here '
+      + 'after you press “Find speakers” in a Music part.',
   }));
 }

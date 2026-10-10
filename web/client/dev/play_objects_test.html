@@ -260,7 +260,7 @@ function mountObj(extra = {}) {
     {
       const man = getManifest('play_objects');
       check('registered on the new core, with its settings', man?.core === 'new' && Array.isArray(man.settings) && man.settings.length === OBJECT_SETTINGS.length);
-      check('in the catalog, plainly, saying no covers or thumbnails', CATALOG.some((c) => c.type === 'play_objects' && /no covers or thumbnails/.test(c.note)));
+      check('in the catalog, plainly, saying no covers or thumbnails', CATALOG.some((c) => c.type === 'play_objects' && /no cover pictures/.test(c.note)));   // site text rewrite 2026-10-09: was "no covers or thumbnails"
       check('the health watch expects it idle', expectFor('play_objects')?.idle === true);
       check('a switch reaches it: select and back', J(verbsFor('play_objects')) === J(['select', 'back']) && J(MODULE_VERBS.play_objects) === J({ select: 'play_objects/select', back: 'play_objects/back' }), J(verbsFor('play_objects')));
       check('the library files it with Charts', J(MODULE_CATEGORIES.play_objects) === J(['tracking', 'visual']));
@@ -414,7 +414,7 @@ function mountObj(extra = {}) {
         engine.add({ id: `wait-${kind}`, target: { room: 'scr-A', item, key: 'driveTurn' }, source: { kind: 'bus', topic: 'test/turn' }, map: { outMin: 0, outMax: 90 } });
         arr.destroy();
         check(`(${kind}) the room taken down: its targets go, the rule stays (waiting)`, !engine.targets().includes(roomTargetId('scr-A', item))
-          && engine.status(`wait-${kind}`) === 'waiting for its panel' && engine.list().length === 1);
+          && engine.status(`wait-${kind}`) === 'waiting for its part' && engine.list().length === 1);   // site text rewrite 2026-10-09
         engine.destroy();
         h.remove();
       }

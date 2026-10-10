@@ -132,29 +132,29 @@ export const SPOTIFY_MESSAGES = Object.freeze({
   // (row 2.55) Names the row it means, so nobody has to hunt the settings for it.
   // (row 2.61) Both point at the "Connect Spotify" steps in the panel's "Change the list", where the Client ID is
   // typed once and the Connect button is.
-  'no-client-id': 'Spotify is not set up here yet. Press “Change the list” and follow the Spotify steps: you make a '
-    + 'free Spotify app of your own (the Spotify login that makes it needs Premium) and paste its Client ID, once.',
+  'no-client-id': 'Spotify is not set up here yet. Press “Change the list” and follow the Spotify steps. You make a '
+    + 'free Spotify app of your own and paste its Client ID, once. The Spotify login that makes the app needs Premium.',
   'signed-out': 'Spotify needs connecting on this device. Press “Change the list”, then Connect Spotify.',
-  'premium-needed': 'Spotify only lets other apps start music for Premium accounts.',
+  'premium-needed': 'Spotify only lets other apps start music for a Spotify login that has Premium.',
   'no-device': 'No Spotify speaker, phone or computer is switched on. Open Spotify on one of them first.',
   'device-not-found': 'That Spotify speaker is not switched on, or is called something else.',
-  busy: 'Spotify asked us to slow down. Try again in a minute.',
+  busy: 'Spotify asked this screen to slow down. Try again in a minute.',
   failed: 'Could not reach Spotify.',
   'bad-uri': 'That is not a Spotify link.',
-  'not-secure': 'Connecting Spotify needs this site on https, or opened as http://127.0.0.1 on this machine.',
+  'not-secure': 'Connecting Spotify needs a secure address. Open this site at an address that starts with https, or as http://127.0.0.1 on this computer.',
   'state-mismatch': 'That Spotify sign-in did not match one started here. Try Connect Spotify again.',
   // (2026-10-05, screen_lock.js: signing in leaves this page for Spotify's, and a locked screen does not leave.)
   locked: 'This screen is locked, so connecting Spotify waits until it is unlocked.',
   denied: 'Spotify was not connected.',
   // (row 2.55) Why a playlist played in Spotify's own order rather than through the site's weighted picker.
-  'not-listable': 'Spotify only lists the songs of playlists you made or share, so this one plays in Spotify’s '
+  'not-listable': 'Spotify only lists the songs of playlists you made or share. So this one plays in Spotify’s '
     + 'own order.',
   'no-tracks': 'Spotify gave no songs for this, so it plays in Spotify’s own order.',
   // play on (note BK item 4): asked, never taken over. {device} is Spotify's name for it ("Mike's iPhone").
   'playing-elsewhere': 'Spotify is already playing on {device}. Play this instead? What is playing there stops.',
   // (row 2.61) A feature turned on after connecting, whose permission was not asked for then.
-  'needs-permission': 'Spotify needs one more permission to shuffle this playlist here, so it plays in Spotify’s own '
-    + 'order for now. Press “Connect again” under Spotify in “Change the list”.',
+  'needs-permission': 'Spotify needs one more permission to shuffle this playlist here. For now it plays in Spotify’s '
+    + 'own order. Press “Connect again” under Spotify in “Change the list”.',
 });
 
 // What each feature's permission is for, in the words the panel's "Connect again" line uses (row 2.61).

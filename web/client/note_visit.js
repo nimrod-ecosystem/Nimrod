@@ -85,9 +85,9 @@ export function mountNoteWriters(root, {
     root.innerHTML = `
       <div class="nw">
         <h2 class="r-h2">Who may leave a note for ${esc(personName || 'this person')}</h2>
-        <p class="h-hint">They can leave the note on these screens from their own sign-in, and see the note
-          and the earlier ones. Each note shows the name they chose (or “${SOMEONE}”), and which sign-in
-          wrote it is kept with the note. Nobody is on this list until you tick them.</p>
+        <p class="h-hint">They can leave the note on these screens with their own login, and see the note
+          and the earlier ones. Each note shows the name they chose (or “${SOMEONE}”). Which login wrote it
+          is kept with the note. Nobody is on this list until you tick them.</p>
         ${cands.length ? `<ul class="r-list nw-list">${cands.map((c) => {
           const on = list.includes(c.account);
           return `<li data-account="${esc(c.account)}">

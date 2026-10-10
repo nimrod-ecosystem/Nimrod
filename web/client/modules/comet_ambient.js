@@ -63,7 +63,7 @@ const SETTINGS = [
     ] },
   { key: 'speed', label: 'How fast they rise', kind: 'choice', default: 1, level: 'standard',
     options: [
-      { value: 0.5, label: 'Slower' }, { value: 1, label: 'As designed' }, { value: 1.5, label: 'Faster' },
+      { value: 0.5, label: 'Slower' }, { value: 1, label: 'Normal' }, { value: 1.5, label: 'Faster' },
     ] },
   // Only spent in 'interactive' mode — declared regardless, the same honesty `sprint.js`'s own
   // dailyCap keeps for a knob that is real but only sometimes live.
@@ -105,7 +105,7 @@ export function heartX(h, t, W) {
 
 registerModule(
   { type: 'comet_ambient', title: 'Comet (ambient)', mount: 'ambient',
-    description: 'Hearts drifting behind your other panels — decorative, or something to catch.',
+    description: 'Hearts drifting behind your other parts. They can be just for looks, or something to catch.',
     // No honest built-in fallback needed here any more than the panel version has one — canvas
     // and (in interactive mode) the points ledger, no server, no files.
     importance: 'optional', dependsOn: 'none', settings: SETTINGS },

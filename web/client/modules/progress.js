@@ -64,7 +64,7 @@ export function sessionDurationMs(session) {
 // rather than a continuous signal — a line would imply values in between that don't exist.
 export function sessionChart(sessions) {
   const pts = sessions.filter((s) => s.accuracy != null);
-  if (!pts.length) return '<div class="g-empty">No sessions with a scored trial yet.</div>';
+  if (!pts.length) return '<div class="g-empty">Nothing scored yet.</div>';
   const W = 600, H = 150, padL = 32, padT = 8, padB = 16, padR = 6;
   const iw = W - padL - padR, ih = H - padT - padB, bw = iw / pts.length;
   const grid = [0, 0.5, 1].map((v) => {
@@ -77,7 +77,7 @@ export function sessionChart(sessions) {
     const x = padL + i * bw + bw * 0.15;
     return `<rect x="${x.toFixed(1)}" y="${(padT + ih - h).toFixed(1)}" ` +
            `width="${Math.max(2, bw * 0.7).toFixed(1)}" height="${h.toFixed(1)}" rx="2" class="g-bar">` +
-           `<title>${esc(fmtWhen(s.at))} — ${fmtPct(s.accuracy)} of ${s.trials}</title></rect>`;
+           `<title>${esc(fmtWhen(s.at))} — ${fmtPct(s.accuracy)} right, out of ${s.trials}</title></rect>`;
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="accuracy per session">${grid}${bars}</svg>`;
 }
@@ -89,7 +89,7 @@ registerModule(
     // so without the platform it is running and useless, which is precisely what `server`
     // means for the recovery ladder.
   { type: 'progress', title: 'Progress',
-    dependsOn: 'server', description: 'How they are doing over time — accuracy, concepts, how quickly they answer' },
+    dependsOn: 'server', description: 'How they are doing over time. It shows how often they were right (accuracy), which ideas are hard (concepts), and how quickly they answer.' },
   (ctx) => {
     const { mount, bus } = ctx;
     const now = ctx.now || (() => Date.now());
@@ -155,14 +155,14 @@ registerModule(
         card('sessions', sessions.length) +
         card('trials', s.trials) +
         card('accuracy', fmtPct(s.accuracy)) +
-        (showWhenAnswered ? card('when answered', fmtPct(s.whenAnswered)) : '') +
-        card('avg response', fmtMs(s.meanLatency)) +
+        (showWhenAnswered ? card('right, when they answered', fmtPct(s.whenAnswered)) : '') +
+        card('average time to answer', fmtMs(s.meanLatency)) +
         (s.misses ? card('missed', s.misses) : '');
     }
 
     function renderConcepts() {
       const list = byConcept(shown());
-      if (!list.length) return '<div class="g-empty">No trials recorded yet.</div>';
+      if (!list.length) return '<div class="g-empty">Nothing recorded yet.</div>';
       const rows = list.slice(0, CONCEPT_LIMIT).map((c) => {
         const pct = c.accuracy == null ? 0 : Math.round(c.accuracy * 100);
         const trend = c.trend ? `<i class="g-trend g-${c.trend}" title="earlier ${fmtPct(c.earlier)} → recent ${fmtPct(c.recent)}">${TREND_MARK[c.trend]}</i>` : '';
@@ -188,8 +188,8 @@ registerModule(
       const list = byBand(shown());
       if (!list.length) {
         return `<div class="g-empty">No difficulty labels in this data yet.<br>
-          <span class="g-note">Games can tag each item with a band (a grade level, a unit)
-          and it will appear here.</span></div>`;
+          <span class="g-note">Games can label each item with a band (a grade level, a unit). Then
+          it will appear here.</span></div>`;
       }
       const rows = list.map((b) => {
         const pct = b.accuracy == null ? 0 : Math.round(b.accuracy * 100);
@@ -200,8 +200,8 @@ registerModule(
             <div class="g-cpct">${fmtPct(b.accuracy)}<span>${b.trials}</span></div>
           </div>`;
       }).join('');
-      return `<p class="g-note">how they did on material the content labeled this hard —
-        the bank's own labels, not a national comparison</p>${rows}`;
+      return `<p class="g-note">how they did on material labeled this hard. The labels are the
+        game's own, not a national comparison</p>${rows}`;
     }
 
     function renderSessions(sessions) {
@@ -220,7 +220,7 @@ registerModule(
         </tr>`).join('');
       return `<table class="g-table">
           <thead><tr><th>When</th><th>Game</th><th>Trials</th><th>Right</th><th>Wrong</th>
-            <th>Missed</th><th>Accuracy</th><th>Avg</th><th>Length</th></tr></thead>
+            <th>Missed</th><th>Accuracy</th><th>Average time</th><th>Length</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>`;
     }

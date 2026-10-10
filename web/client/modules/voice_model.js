@@ -91,8 +91,8 @@ export const serviceHealthUrl = (port = VOICE_MODEL_PORT) => `http://127.0.0.1:$
 // ---------------------------------------------------------------------------------------------------
 export const STEP_GUIDE = Object.freeze([
   Object.freeze({ n: 1, where: 'screen',
-    need: 'A microphone on this screen; “Record this person’s voice for training” and spoken commands (or subtitles) '
-      + 'turned on in this person’s settings; and the list of phrases to read.' }),
+    need: 'A microphone on this screen. “Record this person’s voice for training” turned on in this person’s settings, with '
+      + 'spoken commands or subtitles turned on too. The list of phrases to read.' }),
   Object.freeze({ n: 2, where: 'either',
     need: 'The recordings from step 1, on this screen, and a folder to save them in.' }),
   // home voice training (2026-10-07): trained at home with the script, no longer on Google Colab.
@@ -217,16 +217,16 @@ export async function probeVoiceService({ port = VOICE_MODEL_PORT, fetchImpl = (
 /** The words for a probe result. Pure. */
 export function describeProbe(r, { port = VOICE_MODEL_PORT } = {}) {
   if (!r) return '';
-  if (r.answering === null) return 'This browser cannot check: start the service and watch its window for “Uvicorn running”.';
+  if (r.answering === null) return 'This browser cannot check. Start the service and watch its window for the words “Uvicorn running”.';
   if (r.answering && r.why === 'ok') return `It is answering on port ${port}${r.engine ? `, with “${r.engine}”` : ''}.`;
   if (r.answering && r.why === 'opaque') {
-    return `Something is answering on port ${port}. This page is not allowed to read which recogniser it is; if it is the `
-      + 'speech service you started, it is running.';
+    return `Something is answering on port ${port}. This page is not allowed to read which speech program it is. If it is `
+      + 'the speech service you started, it is running.';
   }
   if (r.answering) return `Something answered on port ${port}, but not as the speech service does (${r.why}). Is it another program?`;
   return `Nothing is answering on port ${port} yet. Start it with the command above, on this computer, and leave its window `
     + 'open. If it is running and this still says no, the browser may be blocking this page from reaching the computer it '
-    + 'is on: allow it in the site’s settings.';
+    + 'is on. Allow it in the site’s settings.';
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -389,7 +389,7 @@ export function mountVoiceModelGuide(root, {
   function whereHtml(n) {
     const g = STEP_GUIDE[n - 1];
     if (!isScreen || !g || g.where !== 'computer') return '';
-    return '<p class="vmg-where" data-vmg-where>Do this on your computer: it needs a keyboard and a terminal. This screen shows '
+    return '<p class="vmg-where" data-vmg-where>Do this on your computer. It needs a keyboard and a terminal (a window where you type commands). This screen shows '
       + 'the words, and moves on when you press Done.</p>';
   }
   function stepHtml(n) {
@@ -399,11 +399,13 @@ export function mountVoiceModelGuide(root, {
       <p><b>What you need:</b> ${esc(g.need)}</p>`;
     if (n === 1) {
       return `${head}
-        <p>Read about 100 short phrases aloud, one at a time. Each recording is kept on this screen with the phrase it is;
-          the next phrase comes up once it has been saved. A pause mid-phrase ends a recording, so set “A pause this long
-          ends what was said” to Long while you read. Leave “Use my own voice model” off until the model exists.</p>
-        <p>The phrases: Euphonia’s list (${linkHtml(EUPHONIA.phrases, 'its 100 phrases')}; this site does not ship a copy), or
-          your own, one per line. Pasting them needs a keyboard here, or load a text file.</p>
+        <p>Read about 100 short phrases aloud, one at a time. Each recording is kept on this screen, with its phrase. The
+          next phrase comes up once the recording has been saved. A pause in the middle of a phrase ends the recording. So
+          set “A pause this long ends what was said” to Long while you read. Leave “Use my own voice model” off until the
+          model exists.</p>
+        <p>The phrases: use the list from Google’s Project Euphonia (${linkHtml(EUPHONIA.phrases, 'its 100 phrases')}; this
+          site does not include a copy), or your own, one per line. Typing or pasting them needs a keyboard here. Or load a
+          text file.</p>
         <textarea data-vmg-phrases aria-label="Phrases to read, one per line"></textarea>
         <div class="vmg-row">
           <button type="button" data-vmg-act="use-phrases">Use these phrases</button>
@@ -429,7 +431,7 @@ export function mountVoiceModelGuide(root, {
           a <code>${esc(EUPHONIA_DATA)}</code> folder with one numbered folder per phrase, and <code>nimrod-export.json</code>
           saying which recording is which. Nothing is uploaded.</p>
         <p>Where it goes: <code data-vmg-recordings>${esc(pl.recordings)}</code>, your Nimrod folder’s Recordings.</p>
-        ${can ? '' : '<p class="vmg-soft" data-vmg-nostore>There is nothing to export on this page: recordings are kept on the screen that recorded them. Open this panel there.</p>'}
+        ${can ? '' : '<p class="vmg-soft" data-vmg-nostore>There is nothing to export on this page. Recordings are kept on the screen that recorded them. Open this part there.</p>'}
         <div class="vmg-row">
           <button type="button" data-vmg-act="export-default" class="primary" ${can ? '' : 'hidden'}>Export to Recordings</button>
           <button type="button" data-vmg-act="export-pick" ${can && pick ? '' : 'hidden'}>Choose a different folder</button>
@@ -456,19 +458,20 @@ export function mountVoiceModelGuide(root, {
     if (n === 4) {
       return `${head}
         <p class="vmg-soft">${esc(TRAIN_PLAIN.converted)}</p>
-        <p>The speech service cannot load a checkpoint; converting makes the folder it can. <b>This is the step that makes
-          your voice model folder.</b> Run this, with the checkpoint’s folder in place of the first name:</p>
+        <p>The speech service cannot use a checkpoint (the training result) as it is. Converting makes the folder it can
+          use. <b>This is the step that makes your voice model folder.</b> Run this command, with the checkpoint’s folder
+          in place of the first name:</p>
         ${cmdHtml('convert', convertCommand({ folder: pl.voice }))}
         <p class="vmg-soft">${pl.known
           ? 'That writes the converted files straight into your Nimrod folder’s Voice model folder. Converting on a different computer? Run it there with that computer’s path, then copy the files across.'
-          : esc(`Replace ${NIMROD_ROOT_WORDS} with your Nimrod folder’s full path, or type that path once in this panel’s Settings and the commands fill it in.`)}</p>`;
+          : esc(`Replace ${NIMROD_ROOT_WORDS} with your Nimrod folder’s full path. Or type that path once in this part’s Settings, and the commands fill it in.`)}</p>`;
     }
     if (n === 5) {
       const canPick = typeof pickModelFolder === 'function' && !isScreen;
       return `${head}
-        <p><b>The folder you want is the one the conversion wrote</b>, not the checkpoint and not the recordings. It holds:
-          ${esc(MODEL_FILES.join(', '))}. Its place: <code data-vmg-place>${esc(pl.voice)}</code>. Put the files directly in
-          it, on the computer that runs the speech service.</p>
+        <p><b>The folder you want is the one the conversion wrote</b>, not the checkpoint (the training result) and not the
+          recordings. It holds: ${esc(MODEL_FILES.join(', '))}. Its place: <code data-vmg-place>${esc(pl.voice)}</code>. Put
+          the files directly in it, on the computer that runs the speech service.</p>
         <div class="vmg-row">
           <button type="button" data-vmg-act="check" ${canPick ? '' : 'hidden'}>Check a folder</button>
           <button type="button" data-vmg-act="look">Look in my Nimrod folder again</button>
@@ -481,8 +484,9 @@ export function mountVoiceModelGuide(root, {
       <p>Run this in the project’s <code>web</code> folder, on the computer that runs the speech service. It checks the folder
         when it starts and names any file that is missing.</p>
       ${cmdHtml('serve', serviceCommand({ port: vm.port, root: pl.root }))}
-      <p class="vmg-soft">It runs beside the standard recogniser (port 8797), which stays for everybody else. Its port is this
-        panel’s Settings, and the two numbers must match.</p>
+      <p class="vmg-soft">It runs beside the standard speech program (port 8797), which stays for everybody else. A port is
+        the number a service answers on. Its own port is set in this part’s Settings. That number and the one in the command
+        must match.</p>
       <div class="vmg-row">
         <button type="button" data-vmg-act="probe" class="primary">Is it answering?</button>
         <button type="button" data-vmg-act="use" aria-pressed="${vm.on}" ${typeof save === 'function' ? '' : 'hidden'}>Use my own voice model: ${vm.on ? 'On' : 'Off'}</button>
@@ -492,8 +496,8 @@ export function mountVoiceModelGuide(root, {
   }
   const useNote = () => (typeof save !== 'function'
     ? 'Turn on “Use my own voice model” in this person’s settings (Devices, Voice) once it is answering.'
-    : vm.on ? `On: your speech goes to ${vm.url}. If it is not running, this screen says no recogniser is answering.`
-      : 'Off: your speech goes to the standard recogniser. Turn it on once it is answering.');
+    : vm.on ? `On: your speech goes to ${vm.url}. If it is not running, this screen says no speech program is running.`
+      : 'Off: your speech goes to the standard speech program. Turn it on once it is answering.');
 
   function settingsHtml() {
     const pl = places();
@@ -504,13 +508,13 @@ export function mountVoiceModelGuide(root, {
         <input type="text" data-vmg-root value="${esc(rootPath())}" placeholder="D:\\Nimrod" spellcheck="false" autocomplete="off"></label>
       <div class="vmg-row"><button type="button" data-vmg-act="save-root">Save the path</button>
         <button type="button" data-vmg-act="forget-root" ${rootPath() ? '' : 'hidden'}>Forget it</button></div>
-      <p class="vmg-soft">The commands use it (<code>${esc(pl.voice)}</code>). It is the same path “Your own folders” keeps, kept in
-        this browser only. A screen with no keyboard: type it on the computer that runs the speech service instead.</p>
-      <label>Its port
+      <p class="vmg-soft">The commands use it (<code>${esc(pl.voice)}</code>). It is the same path “Your own folders” keeps. It is
+        kept in this browser only. On a screen with no keyboard, type it on the computer that runs the speech service instead.</p>
+      <label>Its port (the number the service answers on)
         <input type="number" data-vmg-port value="${esc(vm.port)}" min="1024" max="65535" step="1" ${canSave ? '' : 'disabled'}></label>
       <div class="vmg-row"><button type="button" data-vmg-act="save-port" ${canSave ? '' : 'hidden'}>Save the port</button>
         <button type="button" data-vmg-act="use" aria-pressed="${vm.on}" ${canSave ? '' : 'hidden'}>Use my own voice model: ${vm.on ? 'On' : 'Off'}</button></div>
-      ${canSave ? '' : '<p class="vmg-soft" data-vmg-nosave>This page cannot change a person’s settings: the port and the switch are in the ⚙ menu, Devices, Voice.</p>'}
+      ${canSave ? '' : '<p class="vmg-soft" data-vmg-nosave>This page cannot change a person’s settings. The port and “Use my own voice model” are in the ⚙ menu, Devices, Voice.</p>'}
       <p data-vmg-settings-msg role="status" aria-live="polite">${esc(notes.settings)}</p>
       <div class="vmg-row">
         <button type="button" data-vmg-act="restart">${armedRestart ? 'Press again: start again from step 1' : 'Start again from step 1'}</button>
@@ -652,7 +656,7 @@ export function mountVoiceModelGuide(root, {
       notes.export = why === 'permission'
         ? `The browser did not let this page write to ${r.name || 'that folder'}. Press again to be asked again, or choose a different folder.`
         : why === 'missing' ? 'Your Nimrod folder has no Recordings folder and one could not be made. Choose a different folder.'
-          : 'This device has no Nimrod folder yet. Make one with “Set up your Nimrod folder” (Settings, Your own folders), or choose a different folder.';
+          : 'This device has no Nimrod folder yet. Make one with “Set up your Nimrod folder” (This screen, Your own folders), or choose a different folder.';
       setText('[data-vmg-export-msg]', notes.export);
       return;
     }
@@ -730,7 +734,7 @@ export function mountVoiceModelGuide(root, {
       case 'export-pick': exportPick(); return;
       case 'check': if (typeof pickModelFolder === 'function') checkFolder(); return;
       case 'look': readNimrodVoice().then((ok) => {
-        if (!ok) setText('[data-vmg-check-msg]', notes.check = 'This device’s Nimrod folder could not be read now (none set up, or the browser asks again after a restart: open “Your own folders”).');
+        if (!ok) setText('[data-vmg-check-msg]', notes.check = 'This device’s Nimrod folder could not be read now. Either none is set up, or the browser asks again after a restart. Open “Your own folders”.');
         else setText('[data-vmg-check-msg]', notes.check = describeModelCheck(nimrodCheck, VOICE_FOLDER, { place: places().voice }));
       }); return;
       case 'probe': runProbe(); return;
@@ -745,7 +749,7 @@ export function mountVoiceModelGuide(root, {
       }
       case 'save-root': {
         const p = saveRootPath($('[data-vmg-root]')?.value || '', rootPathStorage);
-        notes.settings = p ? `Saved on this device: ${p}.` : 'No path saved: the commands keep the placeholder.';
+        notes.settings = p ? `Saved on this device: ${p}.` : 'No path saved. The commands still show where to put your Nimrod folder’s path.';
         draw({ force: true });
         return;
       }
@@ -838,8 +842,8 @@ export function mountVoiceModelGuide(root, {
 
 registerModule(
   { type: VOICE_MODEL_TYPE, title: VOICE_MODEL_TITLE, core: 'new', dependsOn: 'none', importance: 'optional',
-    description: 'make a speech recogniser trained on one person’s own voice, one step at a time: record the phrases '
-      + 'here, export them, train, convert, put the folder in place and start the service; then its settings',
+    description: 'Make a speech program trained on one person’s own voice, one step at a time. Record the phrases here, export them '
+      + '(copy them to a folder), train, convert, put the folder in place and start the service. Its settings stay here afterwards.',
     settings: [] },
   (ctx) => {
     const { mount } = ctx;

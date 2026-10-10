@@ -160,7 +160,7 @@ export function paidWords(result, { name = '' } = {}) {
     return `+${fmtAmount(total)} point${total === 1 ? '' : 's'}${who}${src}.`;
   }
   switch (result.reason) {
-    case 'too-fast': return 'No points for that one: it was quicker than the wait for a real look. The review still counts.';
+    case 'too-fast': return 'No points for that one. It was too quick to count as a real look. The review still counts.';
     case 'paid': return 'No points: this question has already earned its review points.';
     case 'cap': return 'No points: today’s review points are all earned. The review still counts.';
     case 'off': return '';

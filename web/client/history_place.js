@@ -160,7 +160,7 @@ export function whereWords(kind, place, ctx = {}) {
     if (f === 'ready') {
       return 'On this device, and copied to the Data folder in your Nimrod folder.'
         // agent history: say who writes it, because it is why no "Allow it again" is ever needed here.
-        + (ctx.via === 'agent' ? ' The media agent on this computer writes it, so this browser needs no permission for it.' : '');
+        + (ctx.via === 'agent' ? ' The Nimrod helper (media agent) on this computer writes it, so this browser needs no permission for it.' : '');
     }
     if (f === 'unavailable') return 'On this device only: this browser cannot write to a folder (Chrome and Edge can). '
       + 'On this device, choose "with us" for a second copy.';
@@ -169,18 +169,18 @@ export function whereWords(kind, place, ctx = {}) {
     const n = Number.isFinite(ctx.waiting) && ctx.waiting > 0 ? ctx.waiting : 0;
     const waiting = n ? ` ${n.toLocaleString('en-US')} ${n === 1 ? 'entry is' : 'entries are'} waiting.` : '';
     const keep = Number(ctx.keep) || (kind === 'plays' ? PLAYS_DEFAULTS.keep : HISTORY_DEFAULTS.keep);
-    const pending = 'On this device for now. Will be copied to your Nimrod folder when it\'s connected. Until then '
-      + `this device keeps the newest ${keep.toLocaleString('en-US')} for each panel.`;
-    if (f === 'permission') return `${pending}${waiting} This device needs your Nimrod folder allowing again first: `
-      + 'press "Allow it again".';
-    if (f === 'missing') return `${pending}${waiting} Your Nimrod folder or its Data folder cannot be found here right `
-      + 'now - a drive not plugged in, or a folder moved. Plug it in, or "Set up your Nimrod folder" again.';
+    const pending = 'On this device for now. Will be copied to your Nimrod folder when '
+      + `it's connected. Until then this device keeps the newest ${keep.toLocaleString('en-US')} for each part.`;
+    if (f === 'permission') return `${pending}${waiting} First, this device needs permission to use your Nimrod folder again. `
+      + 'Press "Allow it again".';
+    if (f === 'missing') return `${pending}${waiting} Your Nimrod folder or its Data folder cannot be found here right now. `
+      + 'A drive may not be plugged in, or a folder may have moved. Plug it in, or "Set up your Nimrod folder" again.';
     return `${pending}${waiting} This device has no Nimrod folder yet: set one up (This screen, Your own folders).`;
   }
   if (place === 'us') {
     const n = ctx.withUs && Number.isFinite(ctx.withUs.rows) ? ctx.withUs.rows : null;
     return `On this device, and kept with us so it follows this person to another device: the newest ${cap.toLocaleString('en-US')} `
-      + 'entries in all, older ones counted rather than kept.' + (n != null ? ` ${n.toLocaleString('en-US')} kept with us now.` : '');
+      + 'entries in all. Older ones are counted, not kept.' + (n != null ? ` ${n.toLocaleString('en-US')} kept with us now.` : '');
   }
   return '';
 }
@@ -204,12 +204,12 @@ export function secondPlaceOffer(kind, place, { folder = 'none', canUs = false }
 const safeName = (s) => String(s || 'all').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 64) || 'all';
 const monthOf = (iso) => (/^\d{4}-\d{2}/.test(String(iso || '')) ? String(iso).slice(0, 7) : 'undated');
 const byteLen = (s) => (typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(s).length : s.length);
-const HISTORY_README = 'Your history from Nimrod, kept on this computer because you chose your Nimrod folder for it.\n'
-  + 'One file per kind, per panel or screen, per month: plays-..., gameplay-..., words-... Each line is one entry:\n'
-  + 'when it happened ("at"), what kind it is, and its data. Nothing here is uploaded, and Nimrod does not delete these\n'
-  + 'files: they are yours, and deleting them here deletes them.\n'
-  + `${FOLDER_ID_FILE} names this folder, so a device knows what it has already copied here. Deleting it only means\n`
-  + 'each device copies everything it still holds here again.\n';
+const HISTORY_README = 'Your history from Nimrod, kept on this computer because you chose your Nimrod '
+  + 'folder for it.\nThere is one file for each kind, for each part or screen, for each month: '
+  + 'plays-..., gameplay-..., words-...\nEach line is one entry: when it happened ("at"), what kind it '
+  + 'is, and its data.\nNothing here is sent anywhere. '
+  + `Nimrod does not delete these files.\nThey are yours. If you delete them here, they are gone.\n${FOLDER_ID_FILE} `
+  + 'names this folder, so a device knows what it has already copied here.\nDeleting it only means that each device copies everything it still holds here again.\n';
 const newFolderId = () => {
   try { if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID(); } catch { /* below */ }
   return `f-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;

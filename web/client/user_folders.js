@@ -101,16 +101,16 @@ export const LEGACY_SUBFOLDERS = Object.freeze({ fonts: Object.freeze(['fonts'])
 export const POINTER_KINDS = Object.freeze(['pictures', 'music', 'videos']);
 
 export const README = Object.freeze({
-  pictures: 'Put photos here (.jpg, .png, .heic and the like), or leave this empty and point Nimrod at the folder\n'
-    + 'your photos are already in. Nothing is copied: Nimrod reads pictures where they are, on this device.\n',
+  pictures: 'Put photos here (.jpg, .png, .heic and the like). Or leave this empty and point Nimrod at the folder\nyour '
+    + 'photos are already in. Nothing is copied: Nimrod reads pictures where they are, on this device.\n',
   music: 'Put music here (.mp3, .m4a, .ogg, .wav, .flac), or point Nimrod at the folder your music is already in.\n'
     + 'Nothing is copied: it is read where it is, on this device.\n',
   videos: 'Put your own videos here (.mp4, .mov, .webm), or point Nimrod at the folder they are already in.\n'
     + 'Nothing is copied: they are read where they are, on this device.\n',
-  fonts: 'Put font files here (.woff2, .woff, .ttf or .otf). They appear as font choices in Nimrod on this device.\n'
-    + 'They are read from this folder on this device and never uploaded.\n',
-  luts: 'Put colour look files here (.cube). One can be chosen as a colour grade for photos, wallpaper or video.\n'
-    + 'Off until somebody chooses one. Read on this device, never uploaded.\n',
+  fonts: 'Put font files here (.woff2, .woff, .ttf or .otf). They appear as font choices in Nimrod on this device.\nThey '
+    + 'are read from this folder on this device and never sent anywhere.\n',
+  luts: 'Put colour look files here (.cube). One can be chosen to change the colours of photos, wallpaper or video.\nOff '
+    + 'until somebody chooses one. Read on this device, never sent anywhere.\n',
   plugins: 'Put Web Audio Module (WAM) plugins here, one folder per plugin. VST plugins cannot run in a web browser.\n'
     + 'A plugin is a program: it can do anything this page can do, so only add plugins you trust.\n'
     + 'WAM plugins also need the free WAM host files: put the @webaudiomodules/sdk package in a folder named wam-sdk here.\n'
@@ -119,18 +119,18 @@ export const README = Object.freeze({
     + 'tokenizer.json, a vocabulary file), directly in this folder. Empty until then: you only have those files\n'
     + 'after recording, exporting, training and converting (Voice recordings, "Your own voice model").\n'
     + 'The speech service loads it with: --my-voice --root "<the full path of your Nimrod folder>".\n',
-  recordings: 'Save recordings here, and the phrases you export to train a voice model, when Nimrod asks for a folder.\n'
-    + 'They stay on this device. Nimrod uploads none of it.\n',
+  recordings: 'Save recordings here when Nimrod asks for a folder. Save the phrases you export to train a voice model here too.\nThey '
+    + 'stay on this device. Nimrod sends none of it anywhere.\n',
   // The art kit itself (art_kit.js): this README is the file a person gives to their own AI.
   artwork: artKitText(),
-  data: 'Your own data from Nimrod, kept on this computer: your play history (what played, and when) and things you\n'
-    + 'export. When Nimrod keeps something here, the place you turn it on says so. Nothing in this folder is uploaded,\n'
-    + 'and deleting it here deletes it.\n',
+  data: 'Your own data from Nimrod, kept on this computer. It holds your play history (what played, and when) and things '
+    + 'you\nexport. When Nimrod keeps something here, the place you turn it on says so. Nothing in this folder is sent '
+    + 'anywhere.\nDeleting it here deletes it.\n',
   // own board clips (2026-10-09)
-  boardSounds: 'The sounds of your own talk board cards: words you recorded, or sound files you chose, in the board editor\n'
-    + '("Record this word", "Use a sound file"). Nimrod saves them here when you press Keep, so another device with this\n'
-    + 'folder can play them too. A device without them uses its own voice for that card. Nothing here is uploaded.\n'
-    + 'Removing a sound in the editor leaves its file here; delete it by hand if nothing uses it.\n',
+  boardSounds: 'The sounds of your own talk board cards. These are words you recorded or sound files you chose in the board '
+    + 'editor\n("Record this word", "Use a sound file"). Nimrod saves them here when you press Keep. Another device with this\nfolder '
+    + 'can then play them too. A device without them uses its own voice for that card. Nothing here is sent to the Nimrod '
+    + 'site.\nRemoving a sound in the editor leaves its file here. Delete it by hand if nothing uses it.\n',
 });
 
 export function available(view = (typeof window !== 'undefined' ? window : null)) {

@@ -427,7 +427,7 @@ section('the folder holds subfolders, not photos');
   await p.refresh();
   await settle();
   const probe = host.querySelector('[data-probe]');
-  check('it warns there are no photos at the top level', /no photos at the top level/.test(text(probe)), text(probe));
+  check('it warns there are no photos at the top level', /no photos in this folder itself/.test(text(probe)), text(probe));   // site text rewrite 2026-10-09: was "no photos at the top level"
   check('it names the folders it did find', /photos/.test(text(probe)) && /music/.test(text(probe)));
   check('flagged as a problem, not a success', probe.classList.contains('bad'));
 }
@@ -511,12 +511,12 @@ section('presets — no account/dashboard wired at all');
   await p.refresh();
   const box = host.querySelector('[data-preset-list]');
   check('says presets need an account rather than showing an empty, unexplained list',
-        /signed-in account/.test(text(box)), text(box));
+        /sign in and set up a dashboard/.test(text(box)), text(box));   // site text rewrite 2026-10-09: was "a signed-in account"
   host.querySelector('[data-preset-name]').value = 'Should not save';
   host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
   await settle();
   check('trying to save without one is refused, not silently dropped',
-        /signed-in account/.test(text(host.querySelector('[data-preset-msg]'))),
+        /sign in and set up a dashboard/.test(text(host.querySelector('[data-preset-msg]'))),
         text(host.querySelector('[data-preset-msg]')));
 }
 

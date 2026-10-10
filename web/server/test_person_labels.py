@@ -183,8 +183,9 @@ d = c.get("/api/what-we-store").json()
 desc = {r["table"]: r["what"] for r in d["stores"]}
 check("*** the new table is described, and nothing is undocumented ***",
       d["undocumented"] == [] and "person_labels" in desc and "just for themselves" in desc["person_labels"], str(d["undocumented"]))
+# site text rewrite 2026-10-09: "never to the person it names" now reads "never shown to the person it names".
 check("...it says who sees it, and that removing a person removes it",
-      "never to the person it names" in desc["person_labels"] and "Removing either person removes it" in desc["person_labels"])
+      "never shown to the person it names" in desc["person_labels"] and "Removing either person removes it" in desc["person_labels"])
 check("the site's banned words are not in it", not any(w in desc["person_labels"].lower() for w in ("account", "token", "identity", "instance", "widget")))
 
 section("Postgres-safe SQL (a review, kept honest by a check)")

@@ -126,10 +126,10 @@ const SVG_REASON = Object.freeze({
   empty: 'the file is empty',
   'too-big': 'it is too big to draw safely',
   doctype: 'it has a DOCTYPE or ENTITY line, which is refused',
-  unparseable: 'it is not a well-formed SVG',
+  unparseable: 'it has a mistake in it, so it cannot be read',
   'not-svg': 'it is not an SVG drawing',
   'too-many': 'it has too many shapes to draw safely',
-  'too-deep': 'its groups are nested too deeply',
+  'too-deep': 'it has too many groups inside groups',
   'use-loop': 'it refers to itself in a loop',
   'no-frame': 'it has no viewBox (no frame to fit in)',
 });
@@ -143,7 +143,7 @@ export function droppedWords(dropped) {
     if (tag === 'text' || tag === 'tspan') seen.add('words (text)');
     else if (tag === 'image' || tag === 'feImage') seen.add('a picture inside it');
     else if (tag === 'filter' || /^fe[A-Z]/.test(tag)) seen.add('a filter effect (blur or shadow)');
-    else if (tag === 'script' || d === 'handler') seen.add('a script');
+    else if (tag === 'script' || d === 'handler') seen.add('a script (a small program)');
     else if (tag === 'a' || d === 'external-href') seen.add('a link to something else');
     else if (tag === 'foreignObject' || tag === 'iframe') seen.add('a web page inside it');
     else if (tag === 'pattern') seen.add('a pattern fill');
@@ -271,12 +271,12 @@ export function judgeArt(f, k, opts = {}) {
   if (f.ext === 'svg') {
     const reason = f.svg && f.svg.reason;
     if (!f.svg || (!f.svg.ok && SVG_FATAL.has(reason))) {
-      no(`This SVG cannot be used: ${SVG_REASON[reason] || 'it could not be read'}.`);
+      no(`This picture file (SVG) cannot be used: ${SVG_REASON[reason] || 'it could not be read'}.`);
       return finish(notes);
     }
     if (!f.svg.ok) {
       svgStill = true;
-      warn(`The site will show this SVG only as a still picture, and some screens may refuse it: ${SVG_REASON[reason] || reason}.`);
+      warn(`The site will show this picture file (SVG) only as a still picture, and some screens may refuse it: ${SVG_REASON[reason] || reason}.`);
     }
   } else if (!f.ext || !SHOWABLE.has(f.ext)) {
     if (f.ext === 'heic' || f.ext === 'heif') no(`${typeName} is a phone camera format most browsers cannot show. Save it as ${k ? typesWords(k) : 'PNG or JPG'}.`);
@@ -306,7 +306,7 @@ export function judgeArt(f, k, opts = {}) {
     const isSvg = f.ext === 'svg';
     if (!k.shapes.some((s) => near(r, s, ASPECT_TOLERANCE))) {
       const fit = k.circle ? 'It is cut to fit the circle, so some of it will not show.'
-        : k.id === 'wallpaper' ? 'It will be cropped or have bars at the sides.'
+        : k.id === 'wallpaper' ? 'Its edges will be cut off, or it will have bars at the sides.'
           : 'It is fitted inside, with space at the sides.';
       warn(`It is ${isSvg ? '' : `${W} × ${H}, `}${ratioWords(W, H)}; ${k.plural.toLowerCase()} are ${shapeWords(k)}. ${fit}`);
     }
@@ -319,8 +319,8 @@ export function judgeArt(f, k, opts = {}) {
   // 4. The background (not measured for an SVG the sanitizer refused).
   if (svgStill) { /* nothing measured */ } else if (k && k.clear === 'wanted') {
     if (f.checker) {
-      warn('The background looks like grey-and-white squares painted into the picture: a picture OF transparency, not the real thing. '
-        + 'Ask your AI again for a real transparent PNG, or remove the background.');
+      warn('The background looks like grey-and-white squares painted into the picture. That is a drawing of a clear background, not a real '
+        + 'one. Ask your AI again for a real transparent PNG, or remove the background.');
     } else if ((Number(f.border) || 0) < o.borderClear) {
       warn(f.ext === 'svg' ? 'It has a solid background shape behind it: a box will show around it. Remove the first, full-size rectangle.'
         : 'It has no clear background: a box of colour will show around it. Ask for a transparent background.');

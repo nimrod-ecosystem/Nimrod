@@ -227,8 +227,8 @@ export const FLASH_LIMIT_FIELD = Object.freeze({
   default: FLASH_NO_LIMIT,
   level: 'standard',
   options: FLASH_LIMIT_OPTIONS,
-  note: 'How often tiles, pulses and waves on this screen may flash. The "Flashing can cause seizures" '
-    + 'starting setting picks 3 a second, any size. Any choice here can be raised, lowered or removed.',
+  note: 'How often tiles, pulses and waves on this screen may flash. The "Flashing can cause seizures" starting setting picks '
+    + '3 a second, any size. Any choice here can be raised, lowered or removed. WCAG is the Web Content Accessibility Guidelines.',
   automatable: false,
 });
 

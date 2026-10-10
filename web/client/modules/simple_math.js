@@ -24,8 +24,8 @@ export const FOLDED_INTO = 'algebra';
 
 registerModule(
   { type: GAME, title: 'Simple math', core: 'new',
-    description: 'Counting, plus, minus and times on small numbers. Now the Beginner level of Math; '
-      + 'kept so a screen that already has this panel keeps working.',
+    description: 'Counting, plus, minus and times on small numbers. It is now the Beginner level of '
+      + 'Math. It is kept so a screen that already has it keeps working.',
     dependsOn: 'local', importance: 'optional', foldedInto: FOLDED_INTO,
     settings: beginnerSettings({ levelDefault: 'fixed' }) },
   beginnerMath({ type: GAME }),

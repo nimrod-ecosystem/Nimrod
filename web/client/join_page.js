@@ -30,8 +30,8 @@ export const JOIN_WORDS = Object.freeze({
   noLink: 'This link does not work. Ask whoever sent it for a new one.',
   title: (from, name) => `${from || 'Someone you know'} set up “${name}” for you`,
   titleConnect: (from) => `${from || 'Someone you know'} wants to connect with you`,
-  body: (from, name) => `When you press Make this mine, “${name}” becomes yours, on your own login: you can change `
-    + `the name, the picture and the page. Everything ${from || 'they'} set up stays as it is, and ${from || 'they'} `
+  body: (from, name) => `When you press Make this mine, “${name}” becomes yours, on your own `
+    + `login. You can change the name, the picture and the page. Everything ${from || 'they'} set up stays as it is, and ${from || 'they'} `
     + 'can still call you what they call you.',
   bodyConnect: (from) => `When you press Connect, you and ${from || 'they'} are on each other’s page.`,
   alsoLead: 'On your page you will see:',

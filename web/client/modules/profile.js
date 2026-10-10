@@ -80,8 +80,8 @@ export const REMOVE_ARM_MS = 6000;
 
 // The Call button's reasons, in words (Design's rule: dimmed, never hidden, says why).
 export const CALL_ON_SCREEN = 'Calls are placed from a phone or a computer, at /call.html. A screen answers calls; it does not place them.';
-export const CALL_NOT_ALLOWED = 'This account may not call them. Whoever looks after their screens can share them with you, on their Remote tab.';
-export const CALL_CHECKING = 'Checking whether this account may call them…';
+export const CALL_NOT_ALLOWED = 'This login may not call them. Whoever looks after their screens can share them with you, on their Remote tab.';
+export const CALL_CHECKING = 'Checking whether this login may call them…';
 export const CALL_HELP = 'A video or audio call to their screens, from this phone or computer.';
 export const callURL = (personId) => `/call.html?person=${encodeURIComponent(personId)}`;
 
@@ -110,7 +110,7 @@ export const NO_LINKS_NOTE = 'Friends on other accounts will show here once acco
 export const PROFILE_SETTINGS = Object.freeze([
   { key: 'speak', label: 'Read the AI’s replies aloud', kind: 'toggle', default: true, level: 'standard',
     onLabel: 'Yes', offLabel: 'No — words only',
-    help: 'The reply goes to the screen’s voice, in the character’s voice choice, if this screen speaks.' },
+    help: 'The screen’s voice says the reply, in the voice chosen for the character, if this screen speaks.' },
 ]);
 const FIELDS = PROFILE_SETTINGS.map((f) => normalizeField(f)).filter(Boolean);
 export function profilePrefs(values = {}) {
@@ -169,7 +169,7 @@ a.pf-btn{display:inline-flex;align-items:center;box-sizing:border-box;text-decor
 
 registerModule(
   { type: PROFILE_TYPE, title: 'Profile', core: 'new', dependsOn: 'none', importance: 'normal',
-    description: 'A person or an AI character as a card: their face, their name, and what you can do with them — talk to an AI, visit its room',
+    description: 'A person or an AI (artificial intelligence) character, shown as a card. It has their face, their name and what you can do with them, such as talk to an AI or visit its room.',
     settings: PROFILE_SETTINGS },
   (ctx) => {
     const { mount } = ctx;
@@ -233,7 +233,7 @@ registerModule(
     async function loadPeople() {
       if (typeof ctx.profiles?.people !== 'function') { people = null; peopleNote = ''; peopleAsked = true; return; }
       try { people = (await ctx.profiles.people()) || []; peopleNote = ''; }
-      catch { people = null; peopleNote = 'The people on this account could not be read just now.'; }
+      catch { people = null; peopleNote = 'The people on this login could not be read just now.'; }
       peopleAsked = true;
     }
     // Who else's screens this account may use (a drive grant), for Call. Asked once, and only off a screen
@@ -320,12 +320,12 @@ registerModule(
         const c = currentChar();
         if (!c) {
           return `<p class="pf-note">This character is not on this screen any more (it may have been removed).</p>
-            <div class="pf-btns">${btn('pick', 'Who…', { help: 'Choose who this panel shows.' })}</div>`;
+            <div class="pf-btns">${btn('pick', 'Who…', { help: 'Choose who this part shows.' })}</div>`;
         }
         const rooms = c.rooms.map((r) => btn('visit', visiting === r.id ? `Opening ${esc(r.name)}…` : `Visit ${esc(r.name)}`, {
           id: r.id, disabled: !roomsMakeable() || !!visiting,
-          help: roomsMakeable() ? `${c.name}’s ${r.name.toLowerCase()}, as a dashboard: made the first time, then opened.`
-            : 'Rooms open on a screen of your own (sign in): there is nowhere to make one here.' })).join('');
+          help: roomsMakeable() ? `Open ${c.name}’s ${r.name.toLowerCase()} as a dashboard. It is made the first time you press this.`
+            : 'A room opens on a screen of your own, so sign in first. There is nowhere to make one here.' })).join('');
         const mine = !c.seed;
         const armed = removeArmed === c.id;
         return `
@@ -340,8 +340,8 @@ registerModule(
           <div class="pf-btns">
             ${mine ? btn('edit', 'Change', { help: `Change ${c.name}’s name, way of talking, face, voice or room.` }) : ''}
             ${btn('copy', mine ? 'Copy' : 'Copy to make your own', { help: mine ? 'Make another one from this one.' : 'A copy of your own, to change however you like. This one stays as it is.' })}
-            ${mine ? btn('remove', armed ? `Press again to remove ${esc(c.name)}` : 'Remove', { warn: armed, help: 'Two presses. A dashboard already made for its room stays.' }) : ''}
-            ${btn('pick', 'Who…', { help: 'Choose who this panel shows.' })}
+            ${mine ? btn('remove', armed ? `Press again to remove ${esc(c.name)}` : 'Remove', { warn: armed, help: 'Press twice to remove. A dashboard already made for its room stays.' }) : ''}
+            ${btn('pick', 'Who…', { help: 'Choose who this part shows.' })}
           </div>`;
       }
       const p = currentPerson();
@@ -350,13 +350,13 @@ registerModule(
       return `
         <div class="pf-card">
           <div class="pf-face">${faceOf({ kind: 'person', id: p.id, name: p.name })}</div>
-          <div><b class="pf-name" data-pf-name>${esc(p.name || 'Somebody')}</b><p class="pf-line" data-pf-line>${you ? 'You' : 'On this account'}</p>
+          <div><b class="pf-name" data-pf-name>${esc(p.name || 'Somebody')}</b><p class="pf-line" data-pf-line>${you ? 'You' : 'On this login'}</p>
             <div class="pf-kind">Person</div></div></div>
         <div class="pf-btns">
           ${callButton(p)}
           ${btn('visit-home', home === undefined ? 'Their Home…' : you ? 'Visit your Home' : 'Visit their Home', {
             disabled: !home, help: home ? 'Open the Home they made.' : home === null ? 'No Home made yet.' : 'Looking for their Home…' })}
-          ${btn('pick', 'Who…', { help: 'Choose who this panel shows.' })}
+          ${btn('pick', 'Who…', { help: 'Choose who this part shows.' })}
         </div>`;
     }
 
@@ -369,9 +369,9 @@ registerModule(
       const ais = entries.filter((e) => e.kind === 'ai');
       return `
         <div class="pf-btns">${btn('close', '‹ Back', { help: 'Back to the card.' })}</div>
-        <h3 class="pf-h">People on this account</h3>
+        <h3 class="pf-h">People on this login</h3>
         ${persons.length ? `<ul class="pf-list">${persons.map(row1).join('')}</ul>`
-          : `<p class="pf-note">${esc(peopleNote || (people === null ? 'Sign in to see the people on your account.' : 'Nobody yet.'))}</p>`}
+          : `<p class="pf-note">${esc(peopleNote || (people === null ? 'Sign in to see the people on your login.' : 'Nobody yet.'))}</p>`}
         <p class="pf-note">${esc(NO_LINKS_NOTE)}</p>
         <h3 class="pf-h">AI characters</h3>
         <ul class="pf-list">${ais.map(row1).join('')}</ul>
@@ -385,18 +385,18 @@ registerModule(
         <div class="pf-btns">${btn('cancel-edit', '‹ Cancel', { help: 'Leave without saving.' })}</div>
         <div class="pf-card"><div class="pf-face">${avatarHtml({ show: 'drawn', drawn: d.drawn }, { size: FACE_SIZE, animate: false, context: { othersShow: true } })}</div>
           <div class="pf-btns" style="flex-direction:column">
-            ${btn('face', 'Another face', { help: 'A different drawn face. Your own avatar maker draws people; this picks one at random.' })}
+            ${btn('face', 'Another face', { help: 'A different drawn face, picked at random. The Avatar maker is where you draw a person.' })}
             ${ownFace ? btn('myface', 'Use my own avatar’s face', { help: 'The face you drew for yourself, for a character that is you.' }) : ''}
           </div></div>
         <div class="pf-box">
           <label for="pf-f-name">Name</label><input id="pf-f-name" data-pf-field="name" maxlength="${NAME_MAX}" value="${esc(d.name)}">
-          <label for="pf-f-persona">How it talks (its persona, in your words)</label>
+          <label for="pf-f-persona">How it talks, in your words</label>
           <textarea id="pf-f-persona" data-pf-field="persona" maxlength="${PERSONA_MAX}">${esc(d.persona)}</textarea>
           <label for="pf-f-good">What it is good at (one line)</label><input id="pf-f-good" data-pf-field="goodAt" maxlength="${GOOD_AT_MAX}" value="${esc(d.goodAt)}">
         </div>
         <div class="pf-btns">
           ${btn('voice', `Voice: ${esc(voiceChoice(d.voice).label)}`, { help: 'How its replies sound, when this screen speaks. A voice trained on recordings is not built.' })}
-          ${btn('room', `Room: ${esc(tpl.name)}`, { help: 'What is in its room: press to step through them.' })}
+          ${btn('room', `Room: ${esc(tpl.name)}`, { help: 'What is in its room. Press to step through the choices.' })}
           ${btn('save-edit', 'Save', { help: 'Keep it. It is yours, on your profile.' })}
         </div>`;
     }
@@ -422,7 +422,7 @@ registerModule(
       try { s = ai().settings(); keySaved = !!ai().hasKey?.(); } catch { /* defaults */ }
       return `
         <div class="pf-card"><div class="pf-face">${faceOf({ kind: 'ai', id: c.id }, CHAT_FACE_SIZE)}</div><b class="pf-name">${esc(n)}</b></div>
-        <div class="pf-btns">${btn('back-card', '‹ Back', { help: 'Back to the card. The conversation is kept while this panel is open.' })}</div>
+        <div class="pf-btns">${btn('back-card', '‹ Back', { help: 'Back to the card. The conversation is kept while this part is open.' })}</div>
         <p class="pf-status" data-pf-status role="status">${esc(statusText(n))}</p>
         ${noAI ? `<p class="pf-help" data-pf-help>${esc(connectHelpFor(n))}</p>` : ''}
         <div class="pf-log" data-pf-log aria-live="polite">${log}${thinking ? `<p class="pf-msg"><b>${esc(n)}:</b>…</p>` : ''}</div>
@@ -431,7 +431,7 @@ registerModule(
           ${btn('send', 'Send', { help: `Send what you typed to ${n}.` })}</div>
         <div class="pf-btns">
           ${thinking ? btn('stop', 'Stop', { help: 'Stop waiting for this answer.' }) : ''}
-          ${btn('setup', 'Connect an AI…', { help: 'Which AI answers on this device: its address, a model, your own key.', extra: `aria-expanded="${setupOpen}"` })}
+          ${btn('setup', 'Connect an AI…', { help: 'Choose which AI answers on this device. Give its address, a model (which AI to use there) and your own key.', extra: `aria-expanded="${setupOpen}"` })}
         </div>
         ${setupOpen ? `<div class="pf-box" data-pf-setup>
           <label for="pf-f-url">AI address (this device)</label><input id="pf-f-url" data-pf-field="baseUrl" type="url" spellcheck="false" value="${esc(s.baseUrl || DEFAULT_BASE_URL)}">
@@ -494,7 +494,7 @@ registerModule(
       try { s = ai().settings(); } catch { s = { baseUrl: DEFAULT_BASE_URL, model: '' }; }
       // A remote address is never given a model by itself (nimrod.js: it could spend somebody's money).
       if (!isLocalAddress(s.baseUrl) && !s.model) {
-        status = { state: 'needs-model', model: '', reason: `Name the model to use at ${s.baseUrl} under Connect an AI.` };
+        status = { state: 'needs-model', model: '', reason: `Under Connect an AI, type the name of the model to use at ${s.baseUrl}.` };
         render(); return status;
       }
       let r;
@@ -647,7 +647,7 @@ registerModule(
       if (!c || visiting) return;
       await ensureStore();
       const m = roomMaker();
-      if (!m) { notice = 'Rooms open on a screen of your own (sign in): there is nowhere to make one here.'; render(); return; }
+      if (!m) { notice = 'A room opens on a screen of your own, so sign in first. There is nowhere to make one here.'; render(); return; }
       visiting = roomId; notice = ''; render();
       let got = null;
       try { got = await m.ensure(c, roomId); }

@@ -173,7 +173,7 @@ registerModule(
           <div class="kk-head" data-karaoke-head><b>Sing along</b><span class="kk-tag">First version</span>
             <span class="kk-note">The words come from the video itself; nothing here stores them.</span></div>
           <div class="kk-stage" data-karaoke-stage></div>
-          <p class="kk-empty" data-karaoke-empty hidden>No songs yet. Open the settings on the video (the gear) to search for a song, and "karaoke" is added to the search, or paste a karaoke video link.</p>
+          <p class="kk-empty" data-karaoke-empty hidden>No songs yet. Open the settings on the video (the gear) to search for a song. The word "karaoke" is added to your search. Or paste a karaoke video link.</p>
         </div>`;
         state?.subscribe?.((snap) => { cfg = { ...DEFAULTS, ...(snap || {}) }; if (!dead) frame(); });
         frame();

@@ -74,10 +74,10 @@ export function mountPackLoader(root, { kind = null, onLoaded = null, documentRe
   const el = documentRef.createElement('div');
   el.className = 'pack-loader';
   el.innerHTML = `
-    <p class="pl-hint">A pack is a JSON file — built by hand, or by pasting
-      <a href="/learn/courses/games.html#doc" target="_blank" rel="noopener">this prompt</a>
-      into any AI along with a real source. Nothing here is sent anywhere; the file is read in
-      this browser only.</p>
+    <p class="pl-hint">A pack is a JSON file (a kind of text file). You can write one by hand. Or
+      any AI (artificial intelligence) can write one for you: give it
+      <a href="/learn/courses/games.html#doc" target="_blank" rel="noopener">this prompt</a> and a
+      real source. Nothing here is sent anywhere. The file is read in this browser only.</p>
     <div class="pl-row">
       <label class="pl-file">Choose a file…
         <input type="file" accept="application/json,.json" data-pl-file>

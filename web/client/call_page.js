@@ -104,7 +104,7 @@ export function endText(reason, why, { answered = false, connected = false } = {
   if (reason === 'unconnected') return CALLER_END_TEXT.failed;
   if (reason === 'stalled') {
     return connected ? 'The connection was lost.'
-      : 'The call could not connect. The two networks may not be able to reach each other directly.';
+      : 'The call could not connect. The two internet connections may not be able to reach each other directly.';
   }
   return CALLER_END_TEXT[reason] || 'The call ended.';
 }
@@ -234,7 +234,7 @@ export async function mountCallPage(root, {
   function renderSignIn() {
     root.dataset.live = '0'; root.dataset.view = 'setup';
     body().innerHTML = `<h1>Call</h1>
-      <p>Sign in first, with an account that may use the screen you want to call.</p>
+      <p>Sign in first, with a login that may use the screen you want to call.</p>
       <p><a class="cp-btn cp-primary" href="/auth/login?next=${encodeURIComponent('/call.html')}">Sign in</a></p>`;
   }
 
@@ -256,8 +256,8 @@ export async function mountCallPage(root, {
       </label>
       <button type="button" class="cp-btn cp-primary cp-big" data-start="video">Video call</button>
       <button type="button" class="cp-btn cp-big" data-start="audio">Audio call <span class="cp-sub">(sound only, no camera)</span></button>
-      <p class="cp-note" data-shown-as>The screen shows the call as from “${esc(shownAs)}”${myName ? '' : ' (the name your notes are signed with, which is not set)'}.</p>
-      <label class="cp-field"><span>Words chosen on the screen’s AAC board during the call</span>
+      <p class="cp-note" data-shown-as>The screen shows the call as from “${esc(shownAs)}”${myName ? '' : ' (you have not set the name your notes are signed with)'}.</p>
+      <label class="cp-field"><span>Words chosen on the screen’s talk board during the call</span>
         <select data-words-mode>
           <option value="speak"${wordsMode() === 'speak' ? ' selected' : ''}>Show them and read them out here</option>
           <option value="show"${wordsMode() === 'show' ? ' selected' : ''}>Only show them</option>
@@ -267,7 +267,7 @@ export async function mountCallPage(root, {
       <p class="cp-note">During a call you can add more people: up to ${MESH_MAX_OTHERS.video} others on a video call,
         ${MESH_MAX_OTHERS.audio} on an audio call. Everybody connects straight to everybody else.</p>
       ${relaySection()}`
-      : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
+      : '<p>This login has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
 
   // ---- group calls: "a relay server for bigger calls" - the account's setting (server/call_relay.py) -------------
@@ -328,7 +328,7 @@ export async function mountCallPage(root, {
         <div class="cp-status" role="status" aria-live="polite">
           <b class="cp-word" data-word></b><span class="cp-who" data-who></span>
         </div>
-        <section class="cp-words" data-words hidden aria-label="Words from the AAC board">
+        <section class="cp-words" data-words hidden aria-label="Words from the talk board">
           <p class="cp-words-from" data-words-from></p>
           <p class="cp-words-now" data-words-now aria-live="assertive"></p>
           <p class="cp-words-before" data-words-before></p>
@@ -641,7 +641,7 @@ export async function mountCallPage(root, {
     const set = (sel, t) => { const el = q(sel); if (el) el.textContent = t; };
     // group calls: a word from another screen in the call says whose board it came from.
     const name = saidFrom || (target ? target.name : '');
-    set('[data-words-from]', name ? `From ${name}’s AAC board` : 'From the AAC board');
+    set('[data-words-from]', name ? `From ${name}’s talk board` : 'From the talk board');
     set('[data-words-now]', said.length ? said[said.length - 1] : '');
     set('[data-words-before]', said.slice(0, -1).join(' · '));
     const aloud = q('[data-words-aloud]');
@@ -754,7 +754,7 @@ export async function mountCallPage(root, {
     buildLive(); paintLive();
     // 1. MAY THIS ACCOUNT CALL THIS SCREEN? Nothing is opened until the site says yes.
     if (!(await allowed(target.id))) {
-      if (my === run) finish('This account is not allowed to call that screen. Its owner can share it from the Remote tab.');
+      if (my === run) finish('This login is not allowed to call that screen. Its owner can share it from the Remote tab.');
       return;
     }
     if (my !== run) return;

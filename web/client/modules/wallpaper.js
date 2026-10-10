@@ -154,8 +154,8 @@ export function folderNote(choice, status, count = 0) {
       ok: `${n} there.`,
       empty: `${WHERE} is empty, so the built-in wallpaper shows. Save pictures there to see them here.`,
       none: 'There is no Nimrod folder on this device, so the built-in wallpaper shows. Set one up in This screen, Your own folders.',
-      permission: 'Your Nimrod folder needs permission again: press Allow in This screen, Your own folders. Until then the built-in wallpaper shows.',
-      missing: `There is no ${WHERE}, so the built-in wallpaper shows. “Set up your Nimrod folder” in This screen, Your own folders makes it.`,
+      permission: 'Your Nimrod folder needs permission again. Press “Allow it again” in This screen, Your own folders. Until then the built-in wallpaper shows.',
+      missing: `There is no ${WHERE}, so the built-in wallpaper shows. “Set up your Nimrod folder again” in This screen, Your own folders makes it.`,
       error: `${WHERE} could not be read just now, so the built-in wallpaper shows.`,
     }[status] || '';
   }

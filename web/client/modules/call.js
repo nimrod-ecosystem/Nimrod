@@ -140,7 +140,7 @@ const SETTINGS = [
       { value: 0, label: 'Answer straight away' },
       { value: 10, label: 'Count down ten seconds first' },
       { value: 20, label: 'Count down twenty seconds first' },
-      { value: null, label: 'Never — somebody has to answer' },
+      { value: null, label: 'It never answers by itself. Somebody has to answer' },
     ],
     note: 'It says who is calling and counts down out loud, so anybody in the room can '
         + 'decline. Only people you have given permission can call at all.' },
@@ -155,10 +155,10 @@ const SETTINGS = [
     ] },
   { key: 'demo', label: 'Show an example when there is no call', default: true,
     level: 'standard',
-    onLabel: 'Yes \u2014 a “what does a call look like?” button',
-    offLabel: 'No \u2014 just say there is no call',
-    note: 'The example never rings anybody, never opens the camera or the microphone, and is '
-        + 'labelled as an example the whole time. Turn it off on a screen somebody lives with.' },
+    onLabel: 'Yes. Show a “See what a call looks like” button',
+    offLabel: 'No. Just say there is no call',
+    note: 'The example never rings anybody. It never opens the camera or the microphone. It '
+        + 'is labelled as an example the whole time. Turn it off on a screen somebody lives with.' },
   { key: 'showSelf', label: 'Show a second view of this camera', default: false,
     level: 'advanced',
     note: 'Off, because the picture-in-picture already shows it. Only useful on a screen '
@@ -192,7 +192,7 @@ function personCard(who = {}, face = '') {
 
 registerModule(
   { type: 'call', title: 'Call',
-    description: 'Shows whoever is calling, full screen, while the picture-in-picture keeps '
+    description: 'Shows whoever is calling, full screen, while the small picture in the corner keeps '
                + 'showing this room',
     importance: 'critical', dependsOn: 'network', settings: SETTINGS,
     // Hidden, a call KEEPS PLAYING by default (hide_sound.js `whenHiddenDefault`): the panel may be set
@@ -611,7 +611,7 @@ registerModule(
         // The one failure in this module worth telling the room about. `alert`, not `say`:
         // somebody talking to a screen that cannot hear them needs to know NOW, and the
         // person's own routing decides whether that is spoken, shown or a tone.
-        try { output?.alert?.('This call has no microphone — they will not hear you.', { source: 'call' }); }
+        try { output?.alert?.('This call has no microphone. They will not hear you.', { source: 'call' }); }
         catch { /* an output bus is optional everywhere */ }
         return null;
       }

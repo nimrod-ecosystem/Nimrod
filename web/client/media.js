@@ -167,8 +167,8 @@ export function mountMedia(root, {
     <div class="home">
       <div class="h-intro">
         <h1>Media</h1>
-        <p>Your photos and videos stay on your own machine — Nimrod only remembers
-          <b>where</b> they are. Nothing is uploaded.</p>
+        <p>Your photos and videos stay on your own computer, phone or tablet. Nimrod only remembers
+          <b>where</b> they are. Nothing is sent to the site.</p>
       </div>
 
       <div class="h-card" data-add-photos>
@@ -192,7 +192,7 @@ export function mountMedia(root, {
         <div data-way="device">
           <p><b>Pictures from this device</b></p>
           <p class="h-quiet">Choose pictures and a copy is kept in this browser, on this device only.
-            Works in any browser, phones and tablets too. Nothing is uploaded to Nimrod. Clearing this
+            Works in any browser, phones and tablets too. Nothing is sent to Nimrod. Clearing this
             site’s data in the browser removes them.</p>
           <button class="h-btn" data-add-pictures>Add pictures…</button>
           <input type="file" data-picture-file accept="image/*" multiple hidden>
@@ -213,18 +213,19 @@ export function mountMedia(root, {
           <li><b>A screen nobody can press Allow on after a restart</b>, like a screen on a wall
             that turns itself on. With the helper, a restart leaves no Allow to press.</li>
           <li><b>Other devices showing this computer’s folders</b>: a tablet or another screen in
-            the house. (The helper doesn’t do this by itself yet. Its media agent can, set up by
-            hand: see its setup notes below.)</li>
+            the house. The helper doesn’t do this by itself yet. Its media agent can, if someone
+            sets it up by hand. (The media agent is the part of the helper that reads a folder of
+            photos and videos.) See its setup notes below.</li>
         </ul>
         <p class="h-quiet"><a href="${esc(HELPER_PAGE)}" data-helper-link>About the Nimrod helper</a>
-          ${helperReady ? '' : '(the download isn’t ready yet)'}
-          · <a href="${esc(AGENT_SETUP_NOTES)}" target="_blank" rel="noopener" data-agent-notes>Media agent setup notes</a>
-          (for someone comfortable with a terminal)</p>
+          ${helperReady ? '' : '(the download isn’t ready yet)'} ·
+          <a href="${esc(AGENT_SETUP_NOTES)}" target="_blank" rel="noopener" data-agent-notes>Media agent setup notes</a>
+          (for someone comfortable typing commands into a computer)</p>
 
         <p class="h-quiet">Once it is running, it shows a <b>six-character code</b>. Type it here
           and the two find each other. You never need to know its address.</p>
         <form class="h-new" data-pair>
-          <input type="text" data-code placeholder="Pairing code (e.g. 7KJ4QW)"
+          <input type="text" data-code placeholder="Pairing code (for example 7KJ4QW)"
                  aria-label="pairing code" maxlength="12" autocomplete="off"
                  spellcheck="false" class="m-code" required>
           <button type="submit" class="h-btn h-primary">Connect</button>
@@ -233,17 +234,17 @@ export function mountMedia(root, {
 
         <details data-advanced>
           <summary><b>Type an address instead</b></summary>
-          <p class="h-quiet"><b>Only if pairing will not do</b>: an agent that cannot reach the
-            internet to get a code, or one behind a fixed address you already know.</p>
-          <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole account</b>.
-            <b>${DEFAULT_URL}</b> is a special case: it means “whichever machine is showing the
-            screen, ask the agent running on it”, so one entry covers every screen that runs its
-            own agent. For one specific machine, give its address on the network instead.</p>
+          <p class="h-quiet"><b>Only if the pairing code will not do</b>. That is a media agent that
+            cannot reach the internet to get a code, or one at a fixed address you already know.</p>
+          <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole login</b>.
+            <b>${DEFAULT_URL}</b> is a special case. It means “ask the media agent on whichever
+            computer is showing the screen”. So one entry covers every screen that runs its own
+            media agent. For one particular computer, give its address on the network instead.</p>
           <p class="h-quiet">You can type it from any computer. The screen that uses it checks it.
             An address on this computer or your home network isn’t checked from here unless the
             browser already allows it, so the browser doesn’t stop to ask you; it is saved either way.</p>
           <form class="h-new" data-new>
-            <input type="text" data-label placeholder="Name it (e.g. the living room screen)"
+            <input type="text" data-label placeholder="Name it (for example the living room screen)"
                    aria-label="source name" required>
             <input type="text" data-url placeholder="${DEFAULT_URL}" value="${DEFAULT_URL}"
                    aria-label="agent address" required>
@@ -254,14 +255,14 @@ export function mountMedia(root, {
 
       <div class="h-card h-presets">
         <div class="h-card-head"><h2>Presets</h2></div>
-        <p class="h-quiet">Save a module's settings under a name, then point more than one
-          dashboard at it — a YouTube playlist and schedule you set up once, reused everywhere,
-          instead of re-entering it on every screen. Each dashboard can still keep its own
-          settings instead, unchanged, if you never pick a preset for it.</p>
+        <p class="h-quiet">Save a part’s settings under a name. Then more than one dashboard can use
+          them. For example, set up a YouTube playlist and schedule once and use it everywhere. You
+          do not have to enter it again on every screen. A dashboard that never picks a preset keeps
+          its own settings, unchanged.</p>
         <div class="h-msg" data-preset-msg></div>
         <div class="h-list" data-preset-list><p class="h-loading">Loading…</p></div>
         <form class="h-new h-preset-form" data-preset-form>
-          <input type="text" data-preset-name placeholder="Name this preset (e.g. Saturday cartoons)"
+          <input type="text" data-preset-name placeholder="Name this preset (for example Saturday cartoons)"
                  aria-label="preset name" required>
           <select data-preset-type aria-label="preset type">
             <option value="youtube">YouTube</option>
@@ -269,9 +270,9 @@ export function mountMedia(root, {
           <textarea data-preset-playlist rows="3" style="width:100%;flex:1 1 100%"
             placeholder="Videos, one per line: a YouTube link or id, optionally '| channel name'"></textarea>
           <input type="text" data-preset-playlist-id
-                 placeholder="Playlist link or id (PL…) — optional, instead of / as well as videos above">
+                 placeholder="Playlist link or id (PL…). Optional. Use it instead of the videos above, or as well as them.">
           <textarea data-preset-schedule rows="3" style="width:100%;flex:1 1 100%"
-            placeholder="Time-of-day playlists, one per line (optional): name | HH:MM | HH:MM (optional) | playlist link or id"></textarea>
+            placeholder="Time-of-day playlists, one per line (optional): name | HH:MM | HH:MM (optional) | playlist link or id. The first time is the start and the second is the end. Write times like 07:30 or 18:00."></textarea>
           <label class="chk"><input type="checkbox" data-preset-shuffle checked> shuffle (off = play in order)</label>
           <button type="submit" class="h-btn h-primary" data-preset-save>Save preset</button>
           <button type="button" class="h-btn" data-preset-cancel hidden>Cancel edit</button>
@@ -345,7 +346,7 @@ export function mountMedia(root, {
         ? `ready — ${n} item${n === 1 ? '' : 's'}${nf ? ` in ${nf} folder${nf === 1 ? '' : 's'}` : ''}`
           + `${scope === 'loopback' ? ', on this computer' : ''}`
         : (albums.length
-            ? `no photos at the top level — folders inside: ${albums.join(', ')}`
+            ? `no photos in this folder itself — folders inside it: ${albums.join(', ')}`
             : 'this folder is empty');
       cell.classList.toggle('bad', !n);
     } catch {
@@ -355,7 +356,7 @@ export function mountMedia(root, {
           // a typed address: "localhost" checked from here is THIS computer, which may not be the screen that uses it.
           : scope === 'loopback'
             ? 'not reachable on this computer: no helper answers here. A screen running its own helper checks it there.'
-            : 'not reachable — is the helper (media agent) running on that machine?';
+            : 'can’t be reached — is the helper (media agent) running on that computer?';
       cell.classList.add('bad');
     }
   }
@@ -491,7 +492,7 @@ export function mountMedia(root, {
     const box = el('[data-preset-list]');
     if (!box) return;
     if (!presetLib) {
-      box.innerHTML = '<p class="h-loading">Presets need a signed-in account with a dashboard set up.</p>';
+      box.innerHTML = '<p class="h-loading">To use presets, sign in and set up a dashboard.</p>';
       return;
     }
     const rows = presetLib.listPresets();
@@ -533,7 +534,7 @@ export function mountMedia(root, {
 
   async function savePresetFromForm() {
     if (!presetLib) {
-      presetSay('Presets need a signed-in account with a dashboard set up.', true);
+      presetSay('To use presets, sign in and set up a dashboard.', true);
       return;
     }
     const name = el('[data-preset-name]').value.trim();
@@ -634,7 +635,7 @@ export function mountMedia(root, {
       await refresh();
       say(`Added ${added.length} picture${added.length === 1 ? '' : 's'}`
         + `${skipped ? ` (${skipped} file${skipped === 1 ? ' wasn’t a picture' : 's weren’t pictures'})` : ''}. `
-        + 'A photos panel on this device can show them: “Added on this device”.');
+        + 'A Photos part on this device can show them: “Added on this device”.');
     } catch (err) {
       console.error(err);
       say('Those pictures couldn’t be kept in this browser.', true);
@@ -682,8 +683,8 @@ export function mountMedia(root, {
         // The code was spent by the claim, so say so — otherwise they retype it and get
         // "already used", which reads as a bug on top of a failure.
         tell(`Paired with “${pairing.label}”, but this browser cannot reach it. `
-          + 'Both machines need to be on the same network, and the agent has to be running. '
-          + 'Restart the agent for a fresh code and try again.', true);
+          + 'Both computers need to be on the same network, and the media agent has to be running. '
+          + 'Restart the media agent for a new code and try again.', true);
         return;
       }
       await sources.add({ label: pairing.label, base_url: hit.base_url, kind: 'agent' });

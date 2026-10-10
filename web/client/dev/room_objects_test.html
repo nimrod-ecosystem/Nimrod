@@ -383,7 +383,7 @@ try {
     const order = scene.scanTargets().map((b) => b.dataset.id).join();
     check('the scan: door, shelf, pot, window, cabinet, cat', order === 'door,shelf,pot,window,cab,cat', order);
     host.querySelector('.rs-obj[data-id="window"]').click();
-    check('pressing the window with no weather yet says how to get it', /Weather module/.test(host.querySelector('.rs-toast')?.textContent || ''));
+    check('pressing the window with no weather yet says how to get it', /Weather part/.test(host.querySelector('.rs-toast')?.textContent || ''));   // site text rewrite 2026-10-09: "Weather module" now "Weather part"
     bus.publish(WEATHER_NOW_TOPIC, { icon: 'sun', words: 'Clear', temp: '20°', spoken: '20 degrees and clear' });
     host.querySelector('.rs-obj[data-id="window"]').click();
     check('...and with it, says the weather now', /20 degrees and clear/.test(host.querySelector('.rs-toast')?.textContent || ''));

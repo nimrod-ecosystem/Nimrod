@@ -120,7 +120,7 @@ const T = (d, at) => ({ kind: TRIAL_KIND, created_at: at || new Date(17000000000
     check('session duration is derived from its trials', sessionDurationMs(sess[0]) >= 0);
     check('fmtDur reads as time', fmtDur(95000) === '1m 35s', fmtDur(95000));
     check('the chart renders bars for scored sessions', /<rect/.test(sessionChart(sess)));
-    check('the chart says so when there is nothing', /No sessions/.test(sessionChart([])));
+    check('the chart says so when there is nothing', /Nothing scored yet/.test(sessionChart([])));   // site text rewrite 2026-10-09: was "No sessions …"
 
     // ================= the module, server-backed =================
     section('progress module — one profile, games from BOTH sets');
@@ -210,7 +210,7 @@ const T = (d, at) => ({ kind: TRIAL_KIND, created_at: at || new Date(17000000000
     check('misses are surfaced for the reaction game', cardVal('missed') === '2', cardVal('missed'));
     check('accuracy counts the 2 misses against the reaction game', cardVal('accuracy') === '70%', cardVal('accuracy'));
     check('"when answered" appears only where misses exist, and excludes them',
-      cardVal('when answered') === '88%', cardVal('when answered'));   // 7 hits / 8 answered
+      cardVal('right, when they answered') === '88%', cardVal('right, when they answered'));   // site text rewrite 2026-10-09: the card was "when answered"   // 7 hits / 8 answered
 
     const modeBtns = [...host.querySelectorAll('[data-mode]')];
     check('its modes are offered', modeBtns.map((b) => b.dataset.mode).join(',') === ',calm,challenge',

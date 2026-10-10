@@ -65,8 +65,8 @@ export const OVERLAY_DEFAULTS = {
 export const OVERLAY_SETTINGS = [
   { key: 'on', label: 'Show what was pressed', default: false, level: 'standard',
     onLabel: 'Yes', offLabel: 'No' },
-  { key: 'alwaysWhenDriven', label: 'Always show it while somebody is driving', default: true,
-    level: 'standard', onLabel: 'Yes', offLabel: 'Only if the overlay is on' },
+  { key: 'alwaysWhenDriven', label: 'Always show it while somebody controls this screen from another one', default: true,
+    level: 'standard', onLabel: 'Yes', offLabel: 'Only if “Show what was pressed” is on' },
   { key: 'show', label: 'Show', kind: 'choice', default: 'both', level: 'standard',
     options: [
       { value: 'both', label: 'the button and what it does' },

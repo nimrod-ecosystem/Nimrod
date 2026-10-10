@@ -206,7 +206,7 @@ registerModule(
     // Floating over the dashboard, it is not a stop in the switch lap unless somebody chooses it in
     // (arrangement.js `scanOff` reads this; the header says why).
     overlayScan: 'skip',
-    description: 'Any count you want to keep, against a target you set — or a game’s score, followed from the same screen' },
+    description: 'Any count you want to keep, against a target you set. It can also show the score of a game on the same screen' },
   (ctx) => {
     const { mount, bus } = ctx;
     const now = ctx.now || (() => Date.now());

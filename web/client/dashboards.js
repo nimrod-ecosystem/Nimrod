@@ -201,7 +201,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   // (Made before 2026-10-07, a landing keeps the look it was made with: what is saved is never changed.)
   people: Object.freeze({
     key: 'people', label: 'Your people', name: 'Your people', kind: 'static', title: 'Your people',
-    blurb: 'You and the people you keep in touch with, with big buttons to call them or leave them a message, and Nimrod at the bottom to help.',
+    blurb: 'You and the people you keep in touch with. Big buttons call them or leave them a message. Nimrod is at the bottom to help.',
     modules: [
       { ref: 'people', type: 'people' },
       { ref: 'helper', type: 'helper' },
@@ -262,7 +262,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   }),
   basic: Object.freeze({
     key: 'basic', label: 'Basic', name: 'Basic', kind: 'static', title: 'Plain Nimrod',
-    blurb: 'The original Nimrod look: cream and green, solid panels, photos and a clock.',
+    blurb: 'The original Nimrod look: cream and green, solid backgrounds, photos and a clock.',
     modules: [
       { ref: 'photos', type: 'photos' },
       { ref: 'clock', type: 'clock' },
@@ -292,7 +292,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   }),
   classic: Object.freeze({
     key: 'classic', label: 'Classic 2D', name: 'Classic 2D', kind: 'live', title: 'Fall, moving',
-    blurb: 'See-through panels over a moving background: photos, videos, a word game and a clock.',
+    blurb: 'See-through parts over a moving background: photos, videos, a word game and a clock.',
     // STARTER_MODULES is [photos, youtube, wordforge, clock] -- the quad's TL, TR, BL, BR, as seeded.
     modules: STARTER_MODULES.map((type) => (type === 'youtube'
       ? { ref: type, type, state: { schedule: STARTER_SCHEDULE.map((d) => ({ ...d })) } }
@@ -373,7 +373,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   // ===================================================================================================
   builder: Object.freeze({
     key: 'builder', label: 'Builder', name: 'Builder', kind: 'static', title: 'The builder',
-    blurb: 'Edit one thing at a time: what you are editing top left, its options top right, the modules library bottom right and Nimrod bottom left.',
+    blurb: 'Edit one thing at a time. What you are editing is top left, with its options top right. The Modules library is bottom right and Nimrod is bottom left.',
     modules: [
       { ref: 'editing', type: 'button', start: 'sign' },
       { ref: 'options', type: 'options' },

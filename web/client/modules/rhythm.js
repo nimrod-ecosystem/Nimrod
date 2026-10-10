@@ -126,29 +126,29 @@ const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Beats hit this round. A Scoreboard on the same screen can show it instead.' }),
   { key: 'tempo', label: 'Speed of the beat', kind: 'choice', default: 60, level: 'essential',
     options: TEMPOS.map((b) => ({ value: b, label: `${b} a minute${b === 60 ? ' (one a second)' : ''}` })),
-    note: `Up to ${MAX_BPM} a minute. A screen with a flashing limit slows the beat to fit `
-      + `(3 a second: ${maxBpmFor(3)}; 2 a second: ${maxBpmFor(2)}; 1 a second: ${maxBpmFor(1)}).` },
+    note: `Up to ${MAX_BPM} a minute. If the screen has a flashing `
+      + `limit, the beat slows to fit. A limit of 3 a second allows ${maxBpmFor(3)} a minute. 2 a second allows ${maxBpmFor(2)}. 1 a second allows ${maxBpmFor(1)}.` },
   { key: 'window', label: 'How close to the beat counts', kind: 'choice', default: 'generous', level: 'essential',
     options: [
       { value: 'tight', label: 'Close (a tenth of a second)' }, { value: 'normal', label: 'Fairly close' },
       { value: 'generous', label: 'Generous (a quarter of a second)' }, { value: 'very-generous', label: 'Very generous' },
     ] },
   { key: 'pressOffset', label: 'My presses land late by', kind: 'choice', default: 0, level: 'standard',
-    options: [0, 50, 100, 150, 200, 300].map((v) => ({ value: v, label: v ? `${v} ms` : 'Nothing: judge them as they land' })),
-    note: 'For a switch that takes a moment to close: moves "on the beat" to where the presses really land.' },
+    options: [0, 50, 100, 150, 200, 300].map((v) => ({ value: v, label: v ? `${v} thousandths of a second` : 'Nothing: judge them as they land' })),
+    note: 'For a switch (one big button) that takes a moment to notice a press. It moves "on the beat" to where the presses really land.' },
   { key: 'tiles', label: 'Tiles', kind: 'choice', default: 4, level: 'standard',
     options: [3, 4, 5, 6, 8].map((v) => ({ value: v, label: String(v) })) },
   { key: 'pattern', label: 'Which tile lights next', kind: 'choice', default: 'walk', level: 'standard',
     options: [
       { value: 'walk', label: 'Along the row, left to right' }, { value: 'bounce', label: 'Along and back' },
-      { value: 'random', label: 'Any tile (never the same twice)' },
+      { value: 'random', label: 'Any tile (never the same one twice in a row)' },
     ] },
   { key: 'target', label: 'What counts as a press', kind: 'choice', default: 'any', level: 'standard',
     options: [{ value: 'any', label: 'Any press, anywhere (one switch)' }, { value: 'tile', label: 'Touching the lit tile' }],
-    note: 'Switches and keys always count; this is for a pointer.' },
+    note: 'A switch or a key always counts. This choice is for touch or a mouse.' },
   { key: 'roundBeats', label: 'Beats in a round', kind: 'choice', default: 16, level: 'standard',
     options: [{ value: 8, label: '8' }, { value: 16, label: '16' }, { value: 32, label: '32' }, { value: 0, label: 'No rounds: keep going' }] },
-  { key: 'countIn', label: 'Count-in beats', kind: 'choice', default: 4, level: 'advanced',
+  { key: 'countIn', label: 'Beats to get ready before a round', kind: 'choice', default: 4, level: 'advanced',
     options: [2, 4, 8].map((v) => ({ value: v, label: String(v) })) },
   { key: 'restBeats', label: 'Rest between rounds (beats)', kind: 'choice', default: 4, level: 'advanced',
     options: [2, 4, 8].map((v) => ({ value: v, label: String(v) })) },
@@ -157,7 +157,7 @@ const SETTINGS = [
   { key: 'hitSound', label: 'A sound for a hit', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
   { key: 'beatFrom', label: 'Where the beat comes from', kind: 'choice', default: 'own', level: 'advanced',
     options: [{ value: 'own', label: 'Its own metronome' }, { value: 'screen', label: 'A tempo on this screen, when there is one' }],
-    note: 'A faster tempo than the limit lights every second (or fourth) beat.' },
+    note: 'A tempo faster than the limit lights a tile on every 2nd (or 4th) beat.' },
   ...autostartFields({ on: false }),
   ...attractFields({ on: true, sound: true }),
   { key: 'stopWhenIdle', label: 'A round with no presses', default: true, level: 'advanced',
@@ -177,8 +177,8 @@ export const VERDICT_WORDS = Object.freeze({ hit: 'âœ“ On the beat!', early: 'â—
 
 registerModule(
   { type: GAME, title: 'Rhythm tiles', core: 'new',
-    description: 'Tiles light up to a beat; press on the beat. One switch is all it takes. '
-      + 'Slow and forgiving by default, and keeps to the screen\'s flashing limit when one is set.',
+    description: 'Tiles light up to a beat; press on the beat. One switch (one big button) is all it '
+      + 'takes. It is slow and forgiving by default. It keeps to the screen\'s flashing limit when one is set.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;

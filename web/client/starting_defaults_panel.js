@@ -74,7 +74,7 @@ export function mountStartingDefaults(host, {
     b.setAttribute('aria-pressed', 'false');
     const name = el('span', 'sd-box-label', c.label);
     const aka = c.aka && c.aka.toLowerCase() !== c.label.toLowerCase() ? el('span', 'sd-box-aka', ` (${c.aka})`) : null;
-    const tag = c.status === 'published' ? null : el('span', 'sd-box-tbf', ' - starting settings to be filled');
+    const tag = c.status === 'published' ? null : el('span', 'sd-box-tbf', ' - starting settings not filled in yet');
     b.append(el('span', 'sd-box-mark', ''), name);
     if (aka) b.append(aka);
     if (tag) b.append(tag);
@@ -116,7 +116,7 @@ export function mountStartingDefaults(host, {
   warning.setAttribute('aria-label', 'Saving online');
   warning.append(el('p', 'sd-warning-text', ONLINE_WARNING));
   warning.append(el('p', 'sd-warning-device',
-    'Keeping it on this device only means it will not follow this person to another screen.'));
+    'If it is kept on this device only, it will not follow this person to another screen.'));
   // Storage line (2026-10-07): the settings go online, never which boxes were ticked - so there is no
   // "also save which boxes were ticked" button here any more. The boxes stay on this device.
   warning.append(el('p', 'sd-warning-boxes', 'Only the settings are saved online. Which boxes were ticked stays on this device.'));
@@ -174,15 +174,15 @@ export function mountStartingDefaults(host, {
     forgetBtn.disabled = !store.get().answers.conditions.length && !store.get().answers.age && !store.get().answers.level;
     if (!library) {
       onlineBtn.disabled = true;
-      onlineBtn.textContent = 'Save to the account (online) - not available here';
-      onlineBtn.title = 'There is no account on this screen to save to.';
+      onlineBtn.textContent = 'Save to a login (online) - not available here';
+      onlineBtn.title = 'There is no login on this screen to save to.';
     } else if (!hasApplied()) {
       onlineBtn.disabled = true;
-      onlineBtn.textContent = 'Save to the account (online) - use these starting settings first';
+      onlineBtn.textContent = 'Save to this login (online) - use these starting settings first';
       onlineBtn.title = '';
     } else {
       onlineBtn.disabled = false;
-      onlineBtn.textContent = 'Also save to the account (online)...';
+      onlineBtn.textContent = 'Also save to this login (online)...';
       onlineBtn.title = '';
     }
     warning.hidden = !warningOpen;
@@ -257,7 +257,7 @@ export function mountStartingDefaults(host, {
       const record = store.get();
       render();
       saveOnline({ record, library, acknowledged: true })
-        .then(() => { store.markSavedOnline(); say('Saved online, in the account.'); })
+        .then(() => { store.markSavedOnline(); say('Saved online, on this login.'); })
         .catch((e) => say(`Not saved online: ${e && e.message ? e.message : e}`));
       return;
     }

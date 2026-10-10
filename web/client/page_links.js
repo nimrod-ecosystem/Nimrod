@@ -55,7 +55,7 @@ export const HELPER_PAGE = '/helper.html';             // = nimrod_helper.js HEL
 // The pages, by key: what a row is called, the menu page's title on a screen, and the hint off one.
 export const ELSEWHERE_PAGES = Object.freeze({
   claude: Object.freeze({ path: CLAUDE_PAGE, label: 'Claude on this account…', title: 'Claude on this account',
-    offHint: 'opens in a new tab: the account’s key, the model, today’s spending' }),
+    offHint: 'opens in a new tab: this login’s key, the model, today’s spending' }),
   reviews: Object.freeze({ path: REVIEWS_PAGE, label: 'Review questions…', title: 'Questions waiting for review',
     offHint: 'opens in a new tab: the packs waiting, how far each has got, every question marked wrong' }),
   search: Object.freeze({ path: SEARCH_KEYS_PAGE, label: 'Search songs and videos by name\u2026',
@@ -144,7 +144,7 @@ export function elsewhereHTML(path, { loc = here(), colours = null, cls = 'pl-el
 
 export const OPEN_HERE_WORDS = Object.freeze({
   button: 'Open it here',
-  note: 'Open it here opens a new tab; this page stays as it was, one tab away.',
+  note: 'Open it here opens a new tab. This page stays as it was, in its own tab.',
 });
 
 /** Does this browser have its own window around the page (tabs, an address bar)? False when it cannot tell. */

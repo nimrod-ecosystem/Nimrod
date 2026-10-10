@@ -112,7 +112,7 @@ export function createDashboardPicker(el, { onClose, onPick, onMake, onLeave, on
     // the dashboards themselves still swap. Absent or true: the row, as it always was.)
     if (model.leave !== false) {
       const out = button('k-scr-out', 'Set up dashboards ↗', { pick: 'leave', pickKey: 'leave' },
-        'opens the composer — this does leave full screen, because it leaves the screen');
+        'opens the page where you set up dashboards; this does leave full screen, because it leaves this screen');
       out.disabled = false;
     }
     // Keep the cursor on the same thing across a redraw (a "making" redraw must not jump it to Close).

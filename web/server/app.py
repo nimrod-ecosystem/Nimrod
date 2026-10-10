@@ -961,7 +961,7 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     owned_person(user, person_id)
     if len(store.list_people(user)) <= 1:
-        raise HTTPException(status_code=409, detail="an account needs at least one person")
+        raise HTTPException(status_code=409, detail="a login needs at least one person")
     n = store.count_person_screens(user, person_id)
     if n:
         raise HTTPException(

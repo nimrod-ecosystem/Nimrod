@@ -152,8 +152,8 @@ export { adapter as SPELLING_ADAPTER, view as SPELLING_VIEW };
 
 registerModule(
   { type: GAME, title: 'Spelling', core: 'new',
-    description: 'A word is said with its picture, and the player spells it on a letter board: '
-      + 'one switch, touch, or saying the letters.',
+    description: 'A word is said out loud, with its picture where there is one. The player spells it on a letter board with one '
+      + 'switch (one big button), by touch, or by saying the letters.',
     // `local`: the words, pictures and rules are all in this build; nothing is fetched.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },
   quizModule({ type: GAME, title: 'Spelling', scoreLabel: 'Spelling: right answers',

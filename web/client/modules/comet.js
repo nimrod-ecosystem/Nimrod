@@ -98,7 +98,7 @@ function readTheme(el) {
 const SETTINGS = [
   // Same label and level as the `showScore` row it replaces, so it is where it always was.
   ownScoreField({ note: 'How many hearts were caught. A Scoreboard on the same screen can show it instead.' }),
-  { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
+  { key: 'openToMenu', label: 'When this part opens', default: true, level: 'essential',
     onLabel: 'Show a start screen first', offLabel: 'Start straight away' },
   { key: 'hearts', label: 'Hearts floating up', kind: 'choice', default: 4, level: 'essential',
     options: [

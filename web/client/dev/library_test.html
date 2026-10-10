@@ -228,7 +228,7 @@ try {
     check('the title says what it is doing', b.querySelector('[data-lib-head] h3').textContent === 'Switch Photos to…');
     const rec = lib.__probe().recent;
     check('*** recent: what the panel WAS first, then the last few switched to (not what it is now) ***',
-      J(rec) === J([{ key: 'module:clock', hint: 'what this panel was' }, { key: 'module:calculator', hint: 'recent' }, { key: 'module:wordforge', hint: 'recent' }]), J(rec));
+      J(rec) === J([{ key: 'module:clock', hint: 'what this part was' } /* site text rewrite 2026-10-09 */, { key: 'module:calculator', hint: 'recent' }, { key: 'module:wordforge', hint: 'recent' }]), J(rec));
     check('it is NOT a click-through list: everything is on the grid at once', b.querySelectorAll('.lib-card').length === items().length);
     b.querySelector('[data-lib-cat="games"]').click();
     check('*** a category chip filters the grid, and is remembered ***', lib.__probe().prefs.category === 'games'
@@ -263,7 +263,7 @@ try {
     check('a locked thing is MARKED, never hidden', card('module:wordforge') && /locked/.test(card('module:wordforge').textContent));
     card('module:wordforge').dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
     check('*** a double click on a locked thing shows how to unlock it, and puts nothing there ***',
-      !log.placed.includes('module:wordforge') && /locked in game mode/.test(b.querySelector('[data-lib-lock]')?.textContent || ''),
+      !log.placed.includes('module:wordforge') && /locked while the game is on/.test(b.querySelector('[data-lib-lock]')?.textContent || ''),   // site text rewrite 2026-10-09: was "locked in game mode"
       b.querySelector('[data-lib-detail]').textContent);
     check('...every way: points (dimmed: not enough, saying so), free, sandbox',
       b.querySelector('[data-lib-act="buy"]')?.disabled === true && !!b.querySelector('[data-lib-act="free"]') && !!b.querySelector('[data-lib-act="sandbox"]'));

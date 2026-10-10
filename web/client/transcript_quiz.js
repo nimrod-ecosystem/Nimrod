@@ -553,14 +553,14 @@ export async function videoPass(parts, { chat, transcript, answerTokens = 0, cei
     const r = await chat(messages, { contextTokens: ctx.tokens, maxTokens: Number(answerTokens) > 0 ? answerTokens : 0 });
     const ran = { ...base, ran: true, ms: Number(r && r.ms) || 0, contextTokens: ctx.tokens, fits: ctx.fits };
     if (r?.cancelled || signal?.aborted) return { ...ran, cancelled: true, reason: 'Cancelled.' };
-    if (!r || !r.ok) return { ...ran, reason: (r && r.reason) || 'The model did not answer.' };
+    if (!r || !r.ok) return { ...ran, reason: (r && r.reason) || 'The AI did not answer.' };
     const parsed = parseQuestions(r.text).map((q) => ({ ...q, scope: SCOPE.VIDEO }));
-    if (!parsed.length) return { ...ran, reason: 'No whole-video questions could be read from what the model wrote.' };
+    if (!parsed.length) return { ...ran, reason: 'No questions about the whole video could be read from what the AI wrote.' };
     const { passed, rejected } = checkQuestions(parsed, transcript);
-    if (!passed.length) return { ...ran, parsed, rejected, reason: 'None of the whole-video questions could be checked against the transcript.' };
+    if (!passed.length) return { ...ran, parsed, rejected, reason: 'None of the questions about the whole video could be checked against the transcript.' };
     return { ...ran, ok: true, items: passed, parsed, rejected };
   } catch (err) {
-    return { ...base, ran: true, reason: `The whole-video pass went wrong: ${String((err && err.message) || err)}` };
+    return { ...base, ran: true, reason: `Writing the questions about the whole video went wrong: ${String((err && err.message) || err)}` };
   }
 }
 

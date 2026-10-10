@@ -57,14 +57,14 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
     try { res = await fetchImpl(`${CLAUDE_API}${path}`, init); } catch { return { ok: false, detail: 'Could not reach this website’s server.' }; }
     let j = null;
     try { j = await res.json(); } catch { j = null; }
-    if (!res.ok) return { ok: false, status: res.status, detail: (j && typeof j.detail === 'string' && j.detail) || `Error ${res.status}.` };
+    if (!res.ok) return { ok: false, status: res.status, detail: (j && typeof j.detail === 'string' && j.detail) || `That did not work. Error ${res.status}.` };
     return { ok: true, body: j };
   }
 
   async function refresh() {
     const r = await call('GET');
     if (r.ok) st = r.body;
-    else msg = r.status === 401 ? 'Sign in first: this page is for the account owner.' : r.detail;
+    else msg = r.status === 401 ? 'Sign in first. This page is for whoever owns this login.' : r.detail;
     render();
   }
 
@@ -83,15 +83,15 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
     }
     const opt = (list, cur) => list.map((m) => `<option value="${esc(m.id)}" ${m.id === cur ? 'selected' : ''}>${esc(m.label)}</option>`).join('');
     const warn = [
-      st.sdk_installed ? '' : 'This server does not have the Claude package installed yet, so Claude cannot answer here until whoever runs the site installs it.',
-      st.can_store ? '' : 'This server is not set up to keep keys yet (it needs its NIMROD_AI_KEY_SECRET setting), so a key cannot be saved.',
+      st.sdk_installed ? '' : 'This site does not have the Claude software installed yet. Claude cannot answer here until whoever runs the site installs it.',
+      st.can_store ? '' : 'This site is not set up to keep keys yet, so a key cannot be saved. Whoever runs the site needs to set NIMROD_AI_KEY_SECRET.',
     ].filter(Boolean);
     const days = (st.days || []).filter((d) => d.requests > 0);
     el.innerHTML = `<div class="cs-card" data-cs-card>
       <h1>Claude, on your account</h1>
-      <p class="cs-muted">An optional AI for the guide on your screens, paid for by your own Claude key. The free choice,
-        an AI program on your own computer (Ollama), stays the default; each screen chooses in the guide’s
-        “Set up your guide / AI”.</p>
+      <p class="cs-muted">An optional AI (artificial intelligence) for the guide on your screens. You pay for it with
+        your own Claude key. The free choice is an AI program on your own computer (Ollama). Screens use the free choice
+        unless you change it. Each screen chooses in the guide’s “Set up your guide / AI”.</p>
       <p class="cs-status" data-cs-status role="status">${esc(claudeStatusLine(st))}</p>
       ${warn.map((w) => `<p class="cs-msg" data-cs-warn>${esc(w)}</p>`).join('')}
       ${msg ? `<p class="cs-msg" data-cs-msg role="status">${esc(msg)}</p>` : ''}
@@ -99,8 +99,8 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
 
       <h2>The key</h2>
       <p class="cs-muted">${st.key_set ? `A key is saved, ending <b data-cs-last4>${esc(st.key_last4 || '')}</b>. Paste a new one to replace it.`
-        : 'Make an API key in the Anthropic Console and paste it here. It is sent once, kept encrypted, and never shown again.'}</p>
-      <label for="cs-key">Claude API key</label>
+        : 'Make a key in the Anthropic Console (it is called an API key there) and paste it here. It is sent once, kept locked (encrypted), and never shown again.'}</p>
+      <label for="cs-key">Claude key</label>
       <input id="cs-key" data-cs-key type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
       <div class="cs-row">
         <button type="button" class="cs-btn cs-go" data-cs-do="savekey" ${busy || !st.can_store ? 'disabled' : ''}>Save the key</button>
@@ -108,20 +108,21 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
         <button type="button" class="cs-btn" data-cs-do="removekey" ${busy ? 'disabled' : ''}>Remove the key</button>` : ''}
       </div>
 
-      <h2>Models and the daily limit</h2>
+      <h2>Models (which version of Claude answers) and the daily limit</h2>
       <label for="cs-chat">For talking to the guide</label>
       <select id="cs-chat" data-cs-chat>${opt(st.chat_models || [], st.chat_model)}</select>
-      <label for="cs-quiz">For writing quiz questions ahead of time (at half price, through Anthropic’s Batch API)</label>
+      <label for="cs-quiz">For writing quiz questions ahead of time (at half price, through Anthropic’s batch service)</label>
       <select id="cs-quiz" data-cs-quiz>${opt(st.quiz_models || [], st.quiz_model)}</select>
       <label for="cs-cap">Daily spending limit, in US dollars (0 pauses Claude; at most ${money(st.max_daily_cap_usd)})</label>
       <input id="cs-cap" data-cs-cap type="number" min="0" max="${esc(st.max_daily_cap_usd)}" step="0.25" value="${esc(st.daily_cap_usd)}">
       <div class="cs-row"><button type="button" class="cs-btn cs-go" data-cs-do="savesettings" ${busy ? 'disabled' : ''}>Save these</button></div>
-      <p class="cs-muted">Also set a monthly spend limit on the key itself in the Anthropic Console: a second wall that holds
-        even if this site gets something wrong.</p>
+      <p class="cs-muted">Also set a monthly spend limit on the key itself in the Anthropic Console. That is a second wall.
+        It holds even if this site gets something wrong.</p>
 
       <h2>Today, and the last week</h2>
-      <p data-cs-today>Today (the day is counted in UTC): ${money(st.today?.usd)} of ${money(st.daily_cap_usd)},
-        ${Number(st.today?.requests) || 0} message${Number(st.today?.requests) === 1 ? '' : 's'}.</p>
+      <p data-cs-today>Today: ${money(st.today?.usd)} of ${money(st.daily_cap_usd)},
+        ${Number(st.today?.requests) || 0} message${Number(st.today?.requests) === 1 ? '' : 's'}. The day is
+        counted in Coordinated Universal Time (UTC, the world’s reference clock).</p>
       ${days.length ? `<table class="cs-days" data-cs-days><thead><tr><th>Day</th><th>Messages</th><th>Cost</th></tr></thead><tbody>
         ${days.map((d) => `<tr><td>${esc(d.day)}</td><td>${esc(d.requests)}</td><td>${money(d.usd)}</td></tr>`).join('')}</tbody></table>`
         : '<p class="cs-muted">Nothing used in the last week.</p>'}
@@ -139,12 +140,12 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
       if (input) input.value = '';          // emptied at once, whatever the answer
       act(async () => {
         const r = await call('PUT', '/key', { key });
-        if (r.ok) { st = r.body; msg = 'Saved. The key is kept encrypted and will not be shown again.'; } else msg = r.detail;
+        if (r.ok) { st = r.body; msg = 'Saved. The key is kept locked (encrypted) and will not be shown again.'; } else msg = r.detail;
       });
     } else if (what === 'removekey') {
       act(async () => {
         const r = await call('DELETE', '/key');
-        if (r.ok) { st = r.body; msg = 'The key is removed. Claude will not answer on this account until a new one is saved.'; } else msg = r.detail;
+        if (r.ok) { st = r.body; msg = 'The key is removed. Claude will not answer on this login until a new one is saved.'; } else msg = r.detail;
       });
     } else if (what === 'check') {
       act(async () => {

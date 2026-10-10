@@ -55,15 +55,15 @@ export const CLAIM_WORDS = Object.freeze({
   inviteShort: 'With their own login',
   inviteTitle: (name) => `Invite ${name || 'them'}`,
   inviteLead: (name) => `${name || 'They'} can use this with their own login. It becomes ${poss(name)} own: `
-    + 'they can change the name, the picture and the page. You keep calling them what you call them, and '
-    + 'everything you set up for them stays as it is.',
+    + 'they can change the name, the picture and the page. You keep calling them what you call them. '
+    + 'Everything you set up for them stays as it is.',
   // connecting like friends
   connect: 'Connect with someone',
   connectShort: 'Send them a link',
   connectTitle: 'Connect with someone',
   connectLead: 'Send somebody a link. When they open it and sign in with their own login, you are on each other’s '
-    + 'page, and you can send each other messages.',
-  connectLine: 'Send somebody a link, and when they open it and sign in you show on each other’s page. Made someone '
+    + 'page. You can then send each other messages.',
+  connectLine: 'Send somebody a link. When they open it and sign in, you show on each other’s page. Made someone '
     + 'here for a relative or friend? Press “Invite them to use this” on their card instead, and it becomes theirs. '
     + 'Whoever looks after a screen can also share it with you, and that person shows up here.',
   // which people come with it

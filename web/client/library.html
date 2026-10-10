@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nimrod — Modules</title>
 <link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
-<meta name="description" content="Everything you can put on a Nimrod screen: look through it, try any one here with its settings beside it and its controls under it.">
+<meta name="description" content="Everything you can put on a Nimrod screen. Look through the list. Try any one here, with its settings beside it and its controls under it.">
 <!-- modules.css: the modules mounted here need their own styles (and settings.css, which it imports).
      kiosk.css: the try box is the REAL kiosk, so its bar and its menu are styled by the kiosk's own sheet. -->
 <link rel="stylesheet" href="./modules.css">
@@ -160,8 +160,8 @@
   <header class="hero">
     <p class="eyebrow">What you can put on a screen</p>
     <h1>Modules</h1>
-    <p class="lede">Everything you can put on a screen. Pick one in the list to try it here: its settings are on the
-      side, and the bar under it has the same controls it has on a screen.</p>
+    <p class="lede">Everything you can put on a screen. Pick one in the list to try it here. Its settings are on the
+      side. The bar under it has the same controls it has on a screen.</p>
   </header>
   <ul class="legend" id="legend" aria-label="What each one asks of the person using it"></ul>
 
@@ -177,7 +177,7 @@
     </div>
     <aside class="mp-set" aria-labelledby="set-h">
       <h2 id="set-h">Settings</h2>
-      <p>The same settings as the ⚙ button on the bar under the module.</p>
+      <p>The same settings as the ⚙ button on the bar under the part.</p>
       <div class="mp-setbox" id="settings"></div>
     </aside>
   </section>
@@ -190,10 +190,10 @@
   </div>
 
   <footer>
-    Nimrod is free and open source. Your photos, video and camera stay on your own hardware —
-    <a href="/api/what-we-store">here is everything the server holds</a>.
-    <br><a href="/">What Nimrod is</a> · <a href="/kiosk.html">Try a whole screen</a> ·
-    <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
+    Nimrod is free and open source (anyone can read and change the code). Your photos, video and
+    camera stay on your own hardware. <a href="/api/what-we-store">Here is everything the site's
+    server holds</a>. <br><a href="/">What Nimrod is</a> · <a href="/kiosk.html">Try a whole
+    screen</a> · <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
   </footer>
 </div>
 </div><!-- .s-page -->
@@ -336,7 +336,7 @@ function paintNav() {
 
 // ---- the legend: what each one asks of the person using it -------------------------------------------
 $('legend').innerHTML = Object.values(USE).map((v) => `<li><b>${esc(v.label)}</b> — ${esc(v.hint)}</li>`).join('')
-  + '<li>(The library’s Filters… sort by this: “Asks of them”.)</li>';
+  + '<li>(In the list, press Filters… and choose under “Asks of them” to show only one kind.)</li>';
 
 // ---- the page's own small host: the library and the Settings panel -------------------------------------
 // Not module_try.js's createTryHost: that one starts an input runtime listening on the whole window, and the kiosk
@@ -439,7 +439,7 @@ async function show(item) {
     return true;
   } catch (err) {
     console.error(`modules page: ${item.type} would not start`, err);
-    if (mine === seq) $('stagenote').textContent = 'This one needs something this browser will not give a page here — usually a camera, a microphone, or your own files.';
+    if (mine === seq) $('stagenote').textContent = 'This one needs something this browser will not give this page. Usually that is a camera, a microphone, or your own files.';
     return false;
   }
 }

@@ -778,7 +778,7 @@ const FAVS = normalizeFavourites([
       const r = createMusicRouter({ bus, favourites: () => FAVS, say: (t) => spoke.push(t) });
       let res = await r.play({ name: 'the beatles' });
       check('*** no YouTube panel and no player of its own: it says there is nowhere to play it ***',
-        !res.ok && res.reason === 'no-youtube' && /no YouTube panel/.test(spoke.at(-1) || ''), J({ res, spoke }));
+        !res.ok && res.reason === 'no-youtube' && /no YouTube part/.test(spoke.at(-1) || ''), J({ res, spoke }));   // site text rewrite 2026-10-09
       res = await r.play({ name: 'polka' });
       check('an unknown name says so, naming it', res.reason === 'not-found' && /polka/.test(spoke.at(-1)));
       const asked = [];
@@ -838,7 +838,7 @@ const FAVS = normalizeFavourites([
     const saved = person.get(`p1:${FAVOURITES_KEY}`)?.get()?.favourites || [];
     check('*** two favourites added with the panel\'s own inputs, and saved for the person ***',
       saved.length === 2 && saved[0].source.kind === 'youtube' && saved[1].source.kind === 'file' && saved[1].source.path === 'Hymns/morning.mp3', J(saved));
-    check('the editor shows what to say', /Say “play the beatles”/.test(host.textContent), host.textContent.slice(0, 300));
+    check('the editor shows what to say', /then say “play\s+the beatles”/.test(host.textContent), host.textContent.slice(0, 300));   // site text rewrite 2026-10-09: "Say the wake phrase, wait, then say …"
     q('[data-act="close"]').click();
     await tick();
 
@@ -1270,7 +1270,7 @@ const FAVS = normalizeFavourites([
       hq('[data-act="edit"]').click();
       await settle();
       check('*** a Client ID saved on the keys page is used here with nothing typed ***',
-        !hq('[data-sp-helper]') && made.at(-1)?.clientId === ID1 && /saved for the whole account/.test(hq('[data-sp-where]')?.textContent || ''), J(made.map((x) => x.clientId)));
+        !hq('[data-sp-helper]') && made.at(-1)?.clientId === ID1 && /for the whole login/i.test(hq('[data-sp-where]')?.textContent || '') /* site text rewrite 2026-10-09: account -> login */, J(made.map((x) => x.clientId)));
       m.destroy();
 
       // 3. An older panel's own copy is handed over once, and emptied.

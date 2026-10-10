@@ -452,8 +452,8 @@ const keyPid = (key) => String(key).split(':')[1] || '';
 function localBanner() {
   document.getElementById('banner').innerHTML = `
     <div class="h-banner">
-      <span><b>You're not signed in.</b> Everything here is saved on this device only —
-        close the browser and it stays, but it won't follow you to another one.</span>
+      <span><b>You're not signed in.</b> Everything here is saved on this device only. It stays when
+        you close the browser, but it will not follow you to another device.</span>
       <a class="h-btn h-primary" href="/auth/login">Sign in to keep it</a>
     </div>`;
 }
@@ -501,7 +501,7 @@ applyTheme(document.documentElement, DEFAULT_THEME);
     else { me = await r.json(); signedIn = true; }
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
-      'Could not reach the server. It will retry when the connection returns.</p>';
+      'Could not reach the site. It will try again when the connection is back.</p>';
     setTimeout(() => location.reload(), 6000);
     console.error('home boot failed', e);
     return;
@@ -591,8 +591,8 @@ applyTheme(document.documentElement, DEFAULT_THEME);
     // instead of only saying so in a message string.
     if (isAuthError(e)) {
       root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
-        'Your sign-in has stopped working. <a href="/auth/logout">Sign in again</a> to keep going ' +
-        '— nothing here was lost, this page just could not prove it was still you.</p>';
+        'Your sign-in has stopped working. <a href="/auth/logout">Sign in again</a> to keep going. ' +
+        'Nothing here was lost. This page just could not tell it was still you.</p>';
     } else {
       root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
         'Your screens could not be loaded. <a href="javascript:location.reload()">Reload</a> to try ' +

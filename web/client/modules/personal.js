@@ -235,7 +235,7 @@ registerModule(
       if (text) {
         s.innerHTML = `<span>${text}</span>`
           + (action ? ` <button data-action>${escapeHtml(action.label)}</button>` : '')
-          + (showRetry ? ` <button data-retry>Retry</button>` : '');
+          + (showRetry ? ` <button data-retry>Try again</button>` : '');
         s.querySelector('[data-retry]')?.addEventListener('click', () => reload());
         s.querySelector('[data-action]')?.addEventListener('click', () => action.run());
       }
@@ -482,7 +482,7 @@ registerModule(
     // voice is a real loss, and a silent degradation would be worse than the bug.
     function playMuted(item) {
       mutedFallback = true;
-      setStatus('Sound is off for this message — this screen blocked it.');
+      setStatus('Sound is off for this message. This screen blocked it.');
       render(item, { muted: true });
     }
 
@@ -597,7 +597,7 @@ registerModule(
       setStatus('Loading messages…');
       let found;
       try { found = await ensureSource(); }
-      catch (e) { if (seq === loadSeq) setStatus('Could not reach the platform', true); return; }
+      catch (e) { if (seq === loadSeq) setStatus('Could not reach the site', true); return; }
       if (seq !== loadSeq) return;
       const { source: chosenSource, chosenId, sources } = found;
       let source = chosenSource;
@@ -640,7 +640,7 @@ registerModule(
           setName();
           // desktop prompt: the chosen source is on another computer - the quiet line and the press, not "unreachable".
           if (chosenSource && got.failure && got.failure.code === 'elsewhere') { setStatus(ELSEWHERE_LINE, false, tryAction(chosenSource)); return; }
-          if (chosenSource) { setStatus(`Source “${escapeHtml(chosenSource.label)}” unreachable`, true); return; }
+          if (chosenSource) { setStatus(`Could not reach the source “${escapeHtml(chosenSource.label)}”`, true); return; }
           const mine = (sources || []).filter((x) => mayShowSource(x, personOf(ctx)));
           if (mine.length) {
             setStatus(`The chosen video source is gone (${escapeHtml(mine.map((x) => x.label || x.base_url || x.id).join(', '))} connected). `
@@ -656,7 +656,7 @@ registerModule(
         // *** CONNECT FROM HERE, NOT ONLY FROM MEDIA / SOURCES. *** Added 2026-09-08, same fix
         // and same reasoning as `photos.js`'s own — Mike's "sources structural rule."
         const { isFolderPickerSupported: canPick } = await import('../folder_source.js');
-        setStatus('No personal-video source connected.', false, canPick() ? {
+        setStatus('No video source connected.', false, canPick() ? {
           label: 'Connect a folder',
           run: async () => {
             setStatus('Choosing…');
@@ -665,7 +665,7 @@ registerModule(
               await pickFolder();
               reload();
             } catch (err2) {
-              setStatus('No personal-video source connected.', false,
+              setStatus('No video source connected.', false,
                 { label: 'Connect a folder', run: () => reload() });
             }
           },
@@ -685,7 +685,7 @@ registerModule(
       recent = []; history = []; histPos = -1;
       const lbl = mount.querySelector('[data-source-label]');
       if (lbl) lbl.textContent = `${subjectName()} — ${items.length} clip${items.length === 1 ? '' : 's'}${truncatedWords(listing)}`;
-      if (!items.length) { setStatus('No videos in this source/album.'); return; }
+      if (!items.length) { setStatus('No videos in this source or album.'); return; }
       setStatus(null);
       // A `directed` instance waits for the content director to advance it (so a
       // hidden, freshly-loaded provider never emits a spurious segment/done). Standalone

@@ -428,11 +428,11 @@ try {
     check('Copy says what happened (copied, or copy it by hand)',
       await until(() => [SEARCH_KEYS_WORDS.copied, SEARCH_KEYS_WORDS.copyFailed].includes(q3('[data-sk-msg]')?.textContent || ''), 3000));
     check('*** it says the Music player uses the Client ID saved here by itself, and that the secret may be left empty to play only ***',
-      /uses the Client ID saved here by itself/.test(q3('[data-sk-sp-both]')?.textContent || '') && /leave the secret empty/.test(q3('[data-sk-sp-both]').textContent));
+      /gets the Client ID saved here by itself/.test(q3('[data-sk-sp-both]')?.textContent || '') /* site text rewrite 2026-10-09: "uses" now "gets" */ && /leave the secret empty/.test(q3('[data-sk-sp-both]').textContent));
     q3('[data-sk-sp-id]').value = '0123456789abcdef0123456789abcdef';
     q3('[data-sk-do="save-spotify"]').click();
     check('*** the Client ID alone is sent (the secret empty), and the page says playing works and search needs the secret ***',
-      await until(() => /with no Client secret/.test(q3('[data-sk-status="spotify"]')?.textContent || ''), 3000)
+      await until(() => /There is no Client secret/.test(q3('[data-sk-status="spotify"]')?.textContent || ''), 3000) /* site text rewrite 2026-10-09 */
       && calls3.some((c) => c.method === 'PUT' && c.body?.client_id === '0123456789abcdef0123456789abcdef' && c.body.client_secret === ''), J(calls3));
     const w3 = JSON.stringify(SEARCH_KEYS_WORDS) + kb3.textContent;
     check('plain words still, and names nobody', !plainWordProblems(w3).length && !/\b(account|token|widget)s?\b/i.test(w3) && !/her screen|taylor|cici/i.test(w3), J(plainWordProblems(w3)));
@@ -452,7 +452,7 @@ try {
     const a1 = await kc.save('youtube', MADE_UP_1, 'account');
     const s1 = kc.last();
     check('*** a key saved for everywhere is the one in force for this panel and device ***', a1.ok
-      && s1?.youtube?.in_force?.level === 'account' && keyInForceWords(s1) === 'the account’s key, ending …0001', J(s1?.youtube));
+      && s1?.youtube?.in_force?.level === 'account' && keyInForceWords(s1) === 'this login’s key, ending …0001' /* site text rewrite 2026-10-09 */, J(s1?.youtube));
     const a2 = await kc.save('youtube', MADE_UP_2, 'panel');
     check('*** this panel’s own key wins here ***', a2.ok && kc.last()?.youtube?.in_force?.level === 'panel'
       && keyInForceWords(kc.last()) === 'this panel’s own key, ending …0002', J(kc.last()?.youtube));

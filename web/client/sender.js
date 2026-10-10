@@ -115,6 +115,6 @@ export function gatePermits(gate, role, { exempt = false } = {}) {
 export function describeSender(from) {
   const s = normalizeSender(from);
   if (s.kind === 'system') return s.label === UNKNOWN_SENDER.label ? 'the software itself' : s.label;
-  if (s.kind === 'remote') return s.id ? `${s.label} (from another screen)` : 'somebody driving remotely';
+  if (s.kind === 'remote') return s.id ? `${s.label} (from another screen)` : 'somebody helping from another screen';
   return s.label;
 }

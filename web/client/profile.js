@@ -115,7 +115,7 @@ export function createProfilesClient({ user, baseURL = '' }) {
       fetch(`${baseURL}/api/people/${personId}`, {
         method: 'DELETE', headers: authHeaders(user),
       }).then(async (res) => {
-        if (res.status === 409) throw new Error((await res.json()).detail || 'cannot remove');
+        if (res.status === 409) throw new Error((await res.json()).detail || 'That person cannot be removed.');
         return json(res);
       }),
 
@@ -135,7 +135,7 @@ export function createProfilesClient({ user, baseURL = '' }) {
         if (res.ok) return res.json();
         let detail = '';
         try { detail = (await res.json()).detail; } catch { /* not json */ }
-        throw new Error(detail || `pairing failed (${res.status})`);
+        throw new Error(detail || `Could not connect (${res.status}).`);
       }),
 
     // ---- screens -----------------------------------------------------------

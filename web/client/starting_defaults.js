@@ -435,7 +435,9 @@ export function describePlan(plan) {
 export const DEVICE_KEY = 'nimrod.startingDefaults';
 export const DEVICE_NOTE = 'Kept on this device only. It will not follow this person to another screen, '
   + 'and clearing this browser\'s data erases it.';
-export const ONLINE_WARNING = 'This puts it online, in the account. We don\'t intend to use it, '
+// site text rewrite 2026-10-09: "in the account" became "on this login"; the rest is Mike's own words
+// (starting_defaults_test checks them), so the rewrite's "Nimrod does not intend to use it" was put back.
+export const ONLINE_WARNING = 'This puts it online, on this login. We don\'t intend to use it, '
   + 'but no one can guarantee the security of anything.';
 
 // How many conflict answers the log keeps (newest last). Bounded so a storage record cannot grow forever.

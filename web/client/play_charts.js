@@ -293,7 +293,7 @@ export function chartModel(events, settings = {}, { screen = null, now = Date.no
   const title = chartTitle(s);
   const when = s.win === 'all' ? 'yet' : WINDOW_WORDS[s.win];
   const emptyText = s.count === 'by' && s.show !== 'line' && s.show !== 'number' && total
-    ? 'None of these plays kept an artist or a channel. Only music from folders keeps one today.'
+    ? 'None of these plays kept the name of an artist or a channel. For now, only music from folders keeps one.'
     : `Nothing has played ${when}.`;
   const out = { settings: s, title, kind: s.show, total, emptyText };
   if (s.show === 'number') return { ...out, empty: false };

@@ -80,9 +80,10 @@ section('what can I press right now');
   check('and it says so plainly rather than looking like a fault',
     byVerb.select.says === 'nothing on Photos', byVerb.select.says);
 
+  // site text rewrite 2026-10-09: "moves between panels" now reads "moves between parts".
   check('moving between panels always works, whatever is focused',
     byVerb['focus-next'].status === 'works'
-    && byVerb['focus-next'].says === 'moves between panels');
+    && byVerb['focus-next'].says === 'moves between parts');
 
   check('what works is listed FIRST', rows[0].status === 'works');
 }
@@ -94,8 +95,9 @@ section('what can I press right now');
   });
   const blocked = rows.find((r) => r.control === 'A');
   check('a binding the gate will refuse is called out', blocked.status === 'blocked');
+  // site text rewrite 2026-10-09: "the gate is set to moderator only" now reads "only the moderator may act right now".
   check('and names the gate as the reason, which is the repair',
-    /gate is set to moderator/.test(blocked.says), blocked.says);
+    /only the moderator may act/.test(blocked.says), blocked.says);
   check('a universal binding still passes a closed gate',
     rows.find((r) => r.control === 'B').status === 'works');
 }
@@ -116,20 +118,22 @@ check('an accepted press reads as an arrow to what it did',
   === 'Down → Next', say({ accepted: true, device: 'keyboard', control: 'key:arrowdown', actionId: 'verb/next' }));
 
 // Each of these is a DIFFERENT repair, which is the entire point.
+// site text rewrite 2026-10-09: "bound" became "has a job"; the gate is said as who may act right now.
 check('unbound → nobody has set it up',
-  /not bound to anything yet/.test(say({ control: 'key:x', reason: 'unbound' })));
+  /has no job yet/.test(say({ control: 'key:x', reason: 'unbound' })));
 check('role-gated → the gate, not the switch',
-  /gate is refusing it/.test(say({ control: 'key:x', reason: 'role-gated' })));
+  /whoever pressed it may not act right now/.test(say({ control: 'key:x', reason: 'role-gated' })));
 check('too-short → the hold threshold, and it names the number',
   /needs 300ms/.test(say({ control: 'key:x', reason: 'too-short', holdMs: 300 })));
 // BQ item 6: with no number recorded it read "it needs a longerms".
 check('too-short with no number recorded reads as words, not "a longerms"',
   /needs a longer press$/.test(say({ control: 'key:x', reason: 'too-short' }))
   && !/longerms/.test(say({ control: 'key:x', reason: 'too-short' })), say({ control: 'key:x', reason: 'too-short' }));
+// site text rewrite 2026-10-09: a bounce is "taken as the same press"; the lockout is "not allowed to repeat this soon".
 check('debounce → it was treated as a bounce',
-  /bounce/.test(say({ control: 'key:x', reason: 'debounce' })));
+  /taken as the same press/.test(say({ control: 'key:x', reason: 'debounce' })));
 check('lockout → the repeat lockout',
-  /lockout/.test(say({ control: 'key:x', reason: 'lockout' })));
+  /not allowed to repeat this soon/.test(say({ control: 'key:x', reason: 'lockout' })));
 check('auto-release → a STUCK SWITCH, which is a hardware repair',
   /stuck switch/.test(say({ control: 'key:x', reason: 'auto-release' })));
 check('unknown-action → the binding points at something gone',
@@ -278,7 +282,7 @@ section('IS IT EVEN PLUGGED IN? — the question before "what is it bound to"');
     + 'its absence is real information rather than silence, and most adaptive switches '
     + 'present as one', by['gamepad:ablenet'].state === 'missing');
   check('and the row says so in words a person can act on',
-    by['gamepad:ablenet'].why.includes('nothing is plugged in'), by['gamepad:ablenet'].why);
+    by['gamepad:ablenet'].why.includes('nothing that answers to it is plugged in'), by['gamepad:ablenet'].why);   // site text rewrite 2026-10-09
 
   // THE ONE THAT WOULD BE WORSE THAN NOT HAVING THIS AT ALL.
   check('A DEVICE THE BROWSER CANNOT ENUMERATE IS "UNKNOWN", NEVER "MISSING" — a hard-wired '
@@ -314,7 +318,7 @@ section('IS IT EVEN PLUGGED IN? — the question before "what is it bound to"');
   const all = deviceStatus({ bindings, devices: [], now: 1000 });
   check('WHEN NOTHING SHE IS BOUND TO IS CONNECTED, THAT IS THE HEADLINE — no amount of '
     + 'reading the binding list will help', all.verdict.tone === 'bad'
-    && all.verdict.text.includes('None of the bound controls'), all.verdict.text);
+    && all.verdict.text.includes('None of the controls that have a job'), all.verdict.text);   // site text rewrite 2026-10-09
 
   const some = deviceStatus({ bindings, devices: [{ device: 'gamepad:one' }], now: 1000 });
   check('with one of two present it says how many, rather than crying wolf',

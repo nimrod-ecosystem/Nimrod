@@ -433,7 +433,7 @@ try {
     check('*** the training notebook is NOT linked any more (Colab uploads the recordings) ***', !hrefs.some((h) => /\.ipynb|colab/i.test(h)), hrefs.join());
     check('links open apart from the screen and pass nothing back', [...root.querySelectorAll('a[href^="https:"]')].every((a) => a.target === '_blank' && /noopener/.test(a.rel)));
     check('*** says plainly what it is: ~100 phrases, a Whisper fine-tune, run yourself, nothing uploaded by us ***',
-      /100 (short )?phrases/.test(text) && /Whisper/.test(text) && /yourself/.test(text) && /Nothing you record here is uploaded/.test(text), text.slice(0, 400));
+      /100 (short )?phrases/.test(text) && /Whisper/.test(text) && /yourself/.test(text) && /does not send the recordings anywhere/.test(text), text.slice(0, 400));   // site text rewrite 2026-10-09: was "Nothing you record here is uploaded"
     check('*** says who it is for: yours, nobody else\'s settings use it, and not on a Raspberry Pi ***',
       /only your own speech settings/i.test(text) && /not run on a Raspberry Pi/.test(text));
     check('*** the six steps: record, export, train (with the base model named), convert, put in place, start ***',

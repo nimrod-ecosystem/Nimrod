@@ -167,7 +167,7 @@ try {
     const one = media({ flat: ['Annie - hello.mp4', 'Annie - again.mp4'] });
     const o = R({ game: 'person', personWho: 'own' }, one.ctx);
     await waitFor(() => o.phase() === 'empty');
-    check('one person: needs at least two, and says so', o.phase() === 'empty' && /two people/i.test(o.host.textContent), o.host.textContent.slice(0, 200));
+    check('one person: needs at least two, and says so', o.phase() === 'empty' && /at least 2 people/i.test(o.host.textContent), o.host.textContent.slice(0, 200));   // site text rewrite 2026-10-09: "two people" now "2 people"
     o.inst.destroy();
   }
 

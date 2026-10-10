@@ -73,7 +73,7 @@ export function autostartFields({ on = false, level = 'standard' } = {}) {
       onLabel: 'It starts by itself', offLabel: 'It waits for Start',
       note: on ? 'Off: it shows a Start button until somebody presses it.'
         : 'Off: a Start button, and nothing is said until somebody presses it.' },
-    { key: AUTOSTART_ALONE_KEY, label: 'When it is the only thing on the dashboard', kind: 'choice', default: 'same',
+    { key: AUTOSTART_ALONE_KEY, label: 'When it is the only thing on the screen', kind: 'choice', default: 'same',
       level: 'advanced', options: [
         { value: 'same', label: 'The same as above' },
         { value: 'on', label: 'It starts by itself' },
@@ -123,7 +123,7 @@ export function attractFields({ on = true, sound = false, level = 'standard' } =
         { value: 2 * MIN, label: '2 minutes, then rests' }, { value: 10 * MIN, label: '10 minutes, then rests' },
         { value: 30 * MIN, label: '30 minutes, then rests' }, { value: 0, label: 'As long as it is open' },
       ] },
-    { key: 'attractAfterMs', label: 'After a game nobody is playing, the demo comes back', kind: 'choice',
+    { key: 'attractAfterMs', label: 'When a game stops and nobody is playing, the demo comes back', kind: 'choice',
       default: ATTRACT_DEFAULTS.attractAfterMs, level: 'advanced', options: [
         { value: 0, label: 'Never: the game stays where it stopped' }, { value: 30000, label: 'After 30 seconds' },
         { value: 60000, label: 'After a minute' }, { value: 300000, label: 'After 5 minutes' },

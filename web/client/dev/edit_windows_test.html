@@ -949,7 +949,7 @@ section('2026-10-04: the Automation window by switch -- rows then items (step th
     const w = mountAutomationWindow(host, { engine: eng, panels, selected: 'lamp', chooseMode: 'step' });
     walkTo(w, (n) => rowOf(n) === 'kind' && n.matches('[data-auto-row]'));
     w.select();
-    walkTo(w, (n) => n.dataset.autoOpt !== undefined && /another panel/.test(n.textContent));
+    walkTo(w, (n) => n.dataset.autoOpt !== undefined && /another part/.test(n.textContent));   // site text rewrite 2026-10-09: "another panel’s output" now "another part’s output"
     w.select();
     check('(driven by another panel\'s output)', val(w, 'kind') === 'link');
     walkTo(w, (n) => rowOf(n) === 'instance');

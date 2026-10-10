@@ -88,8 +88,8 @@ sanguine | cheerfully optimistic | She stayed sanguine about the delay. | 9
 What is the capital of France? | Paris | London | Rome | Madrid</pre>
         <p>A <code>##</code> heading says which kind the lines below it are. Lines starting with
           <code>#</code> are notes to yourself and are ignored. For a question, anything after the
-          answer is a wrong answer — and wrong answers you choose yourself teach better than ones
-          the game borrows.</p>
+          answer is a wrong answer. Wrong answers you choose yourself teach better than ones the
+          game borrows.</p>
       </details>
 
       <textarea class="bk-text" data-text rows="14" spellcheck="false"

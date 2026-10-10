@@ -108,10 +108,10 @@ export const CALL_CAPTIONS_FIELD = Object.freeze({
   options: [
     { value: 'off', label: 'Off' },
     { value: 'here', label: 'On — words worked out on this computer only' },
-    { value: 'any', label: 'On — and the other computers in this screen’s voice settings' },
+    { value: 'any', label: 'On — worked out on this computer and the other computers in this screen’s voice settings' },
   ],
-  note: 'Writes what the person on the call says, under the call. It needs the speech program running on '
-      + 'this computer. Nothing is kept: the words go when the call ends.',
+  note: 'Writes what the person on the call says, under the call. It needs the speech program (it turns speech into words) '
+      + 'running on this computer. Nothing is kept. The words go when the call ends.',
 });
 
 /** The loadout a screen's row asks for (anything unknown is the default). Pure. */

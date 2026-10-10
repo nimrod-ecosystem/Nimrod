@@ -131,10 +131,10 @@ export const SETTINGS = [
   { key: 'youtubeWhere', label: 'Where YouTube favourites play', kind: 'choice', default: 'panel',
     level: 'standard',
     options: [
-      { value: 'panel', label: 'the YouTube panel, if there is one' },
-      { value: 'here', label: 'always in this panel' },
+      { value: 'panel', label: 'the YouTube part, if there is one' },
+      { value: 'here', label: 'always in this part' },
     ] },
-  { key: 'volume', label: 'How loud music from this panel is', kind: 'number', default: 100,
+  { key: 'volume', label: 'How loud music from this part is', kind: 'number', default: 100,
     min: MUSIC_VOLUME_MIN, max: 100, step: 10, unit: '%', level: 'standard' },
   { key: 'folderOrder', label: 'A folder of music plays', kind: 'choice', default: 'shuffle',
     level: 'standard',
@@ -148,7 +148,7 @@ export const SETTINGS = [
   // list here, argued: a favourite already names one folder, and a favourite on the folder inside is the way to narrow it.
   subfoldersField({ on: true, what: 'songs', label: 'A folder of music includes every folder inside' }),
   { key: 'sayProblems', label: 'When it cannot play something', kind: 'toggle', default: true,
-    level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show it on the panel only' },
+    level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show why on this part only' },
   { key: 'spotifyOn', label: 'Spotify', kind: 'toggle', default: false, level: 'standard',
     onLabel: 'On (needs Spotify Premium)', offLabel: 'Off' },
   // (row 2.61) Typed here or in "Change the list" or on the keys page, and KEPT ON THE SERVER with the account's Spotify
@@ -157,21 +157,21 @@ export const SETTINGS = [
   // row shows the live words `settingsChoices` gives ("In use: ... ending …1234").
   { key: 'spotifyClientId', label: 'Your household’s Spotify Client ID', kind: 'text', default: '',
     level: 'standard', appliesWhen: spotifyIsOn, secret: true,
-    note: 'Typed once, kept on this site’s server with your Spotify key, and used by every music panel and the keys '
-      + 'page. “Change the list” has the steps to make the free Spotify app it comes from.' },
+    note: 'Type it once. It is kept on this site’s server with your Spotify key. Every music part and the keys page '
+      + 'use it. “Change the list” has the steps to make the free Spotify app it comes from.' },
   // Where a Client ID typed here is saved: the same four places as the YouTube key, the whole account first.
   { key: 'spotifyClientIdFor', label: 'A Spotify Client ID typed here is saved for', kind: 'choice', default: 'account',
     level: 'advanced', appliesWhen: spotifyIsOn,
     options: [
-      { value: 'account', label: 'the whole account (every screen and search)' },
+      { value: 'account', label: 'the whole login (every screen and search)' },
       { value: 'person', label: 'this person only' },
       { value: 'device', label: 'this device only' },
-      { value: 'panel', label: 'this panel only' },
+      { value: 'panel', label: 'this part only' },
     ] },
   { key: 'spotifyShuffle', label: 'Spotify playlists and albums play', kind: 'toggle', default: true,
     level: 'standard', appliesWhen: spotifyIsOn,
-    onLabel: 'Shuffled the way YouTube is (fewer repeats)', offLabel: 'In Spotify’s own order',
-    note: 'Shuffling needs Spotify to list the songs, which it does only for playlists you made or share. '
+    onLabel: 'Shuffled like the YouTube part (fewer repeats)', offLabel: 'In Spotify’s own order',
+    note: 'Shuffling needs Spotify to list the songs. Spotify does that only for playlists you made or share. '
       + 'Others play in Spotify’s own order.' },
   { key: 'songInfo', label: 'While Spotify plays, show', kind: 'toggle', default: true, level: 'standard',
     appliesWhen: spotifyIsOn,
@@ -209,7 +209,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
 const WHY_SKIPPED = {
   taken: 'is already a command',
   twice: 'is already another favourite',
-  digits: 'has numbers in it; write them as words (“top forty”)',
+  digits: 'has numbers in it, so write them as words (“top forty”)',
   short: 'is too short to say reliably',
 };
 
@@ -414,7 +414,7 @@ registerModule(
       if (dead) return false;
       if (r && r.ok) {
         spNote = `Saved for ${KEY_LEVEL_WORDS[level] || level}.${fell ? ' Nobody has signed in on this browser, so it is '
-          + 'saved for this device; sign in to save it for the whole account.' : ''}`;
+          + 'saved for this device. Sign in to save it for the whole login.' : ''}`;
         spId = { ...(spId || {}), clientId: id, level };
         if (String(cfg.spotifyClientId || '').trim()) state?.set?.({ spotifyClientId: '' });
         await loadClientId(true);
@@ -423,7 +423,7 @@ registerModule(
       if (r && r.status === 503) {
         state?.set?.({ spotifyClientId: id });
         cfg = { ...cfg, spotifyClientId: id };
-        spNote = 'This site’s server cannot keep keys yet, so the Client ID is kept in this panel’s settings.';
+        spNote = 'This site’s server cannot keep keys yet, so the Client ID is kept in this part’s settings.';
         render();
         return true;
       }
@@ -751,7 +751,7 @@ registerModule(
         : (renew?.endsAt ? `<p class="mu-hint" data-sp-ends>Spotify ends this sign-in around ${esc(dayWords(renew.endsAt))}, six months after it was made.</p>` : '');
       const where = spId?.clientId && spId.level
         ? `Using the Client ID saved for ${KEY_LEVEL_WORDS[spId.level] || spId.level}, ending …${esc(spId.clientId.slice(-4))}.`
-        : `Using the Client ID kept in this panel’s settings, ending …${esc(id.slice(-4))}.`;
+        : `Using the Client ID kept in this part’s settings, ending …${esc(id.slice(-4))}.`;
       const devices = Array.isArray(spotifyDevices)
         ? (spotifyDevices.length ? `<ul class="mu-devs">${spotifyDevices.map((d) => `<li>${esc(d.name)}${d.active ? ' (playing now)' : ''}</li>`).join('')}</ul>`
           : '<p class="mu-hint">No Spotify speakers are switched on.</p>') : '';
@@ -778,7 +778,8 @@ registerModule(
       const rows = favs.map((f) => {
         const bad = skipped.filter((s) => s.name === f.name);
         return `<li><span class="mu-fav"><b>${esc(f.name)}</b> · ${esc(describeSource(f.source, labelOf(f.source.sourceId)))}</span>
-          <span class="mu-hint">Say “${esc(firstStarter)} ${esc(f.name.toLowerCase())}” after the wake phrase.${bad.length
+          <span class="mu-hint">Say the wake phrase, wait, then say “${esc(firstStarter)}
+            ${esc(f.name.toLowerCase())}”.${bad.length
             ? ' ' + esc(bad.map((s) => `“${s.phrase || s.name}” ${WHY_SKIPPED[s.why] || ''}`).join('; ')) + '.' : ''}</span>
           ${btn('remove', 'Remove', ` data-id="${esc(f.id)}"`)}</li>`;
       }).join('');
@@ -849,7 +850,7 @@ registerModule(
       if (next.length === before) { editMsg = `There is already a favourite called “${name}”.`; render(); return; }
       draft = { name: '', link: '', sourceId: draft.sourceId, kind: draft.kind, path: '' };
       editMsg = source.kind === 'spotify' && !cfg.spotifyOn
-        ? `Added “${name}”. It plays here in Spotify’s own player; your own Spotify app (below) adds other speakers.`
+        ? `Added “${name}”. It plays here in Spotify’s own player. Your own Spotify app (below) adds other speakers.`
         : `Added “${name}”.`;
       saveList(next);
     }
@@ -990,7 +991,7 @@ registerModule(
       settingsChoices: () => {
         const inUse = spId?.clientId
           ? `In use: the one saved for ${KEY_LEVEL_WORDS[spId.level] || spId.level || 'here'}, ending …${spId.clientId.slice(-4)}`
-          : (String(cfg.spotifyClientId || '').trim() ? `In use: this panel’s own, ending …${String(cfg.spotifyClientId).trim().slice(-4)}`
+          : (String(cfg.spotifyClientId || '').trim() ? `In use: this part’s own, ending …${String(cfg.spotifyClientId).trim().slice(-4)}`
             : (spIdState === 'done' ? 'None saved yet' : 'Checking which one is in use…'));
         const lv = cfg.spotifyClientIdFor || 'account';
         const screenOnly = !!spId && spId.canChange === false && !(spId.screenLevels || []).includes(lv);

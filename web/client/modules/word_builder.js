@@ -99,13 +99,13 @@ const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'How many words are found (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
   { key: 'maxLetters', label: 'Letters, at most', kind: 'choice', default: 5, level: 'essential',
     options: [3, 4, 5].map((v) => ({ value: v, label: `${v} letters` })),
-    note: 'Everybody starts with three; it adds letters as the words come easily.' },
+    note: 'It starts with 3 letters. It adds more as the words come easily.' },
   { key: 'wordsPerSet', label: 'Words to find in each set of letters', kind: 'choice', default: 5, level: 'standard',
     options: [3, 5, 8].map((v) => ({ value: v, label: String(v) })),
     note: 'Any other word the letters make still counts, as a bonus.' },
   { key: 'showBlanks', label: 'Show the words still to find as blanks', default: true, level: 'standard',
     onLabel: 'Yes, with their length', offLabel: 'No, only the words found' },
-  { key: 'boardScan', label: 'Letters with a switch', kind: 'choice', default: 'rows', level: 'standard',
+  { key: 'boardScan', label: 'Picking letters with a switch (one big button)', kind: 'choice', default: 'rows', level: 'standard',
     options: [{ value: 'rows', label: 'A row, then a letter' }, { value: 'keys', label: 'One key at a time' }] },
   ...adaptiveSettings({ ai: false, startLevels: 5 }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS, sayChoice: false }),
@@ -216,8 +216,8 @@ function ensureStyle(doc) {
 // ---------------------------------------------------------------------------------------
 registerModule(
   { type: GAME, title: 'Word builder', core: 'new',
-    description: 'A few big letters: find the words they make. Read aloud; answer by voice, one switch '
-      + 'or touch. More letters and harder words as the words come easily, for each player.',
+    description: 'A few big letters: find the words they make. The letters are read aloud. Answer by voice, with a switch '
+      + '(one big button), or by touch. Each player gets more letters and harder words as the words come easily.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;

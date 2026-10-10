@@ -362,9 +362,9 @@ export function lockWords(state, label = 'This', mode = 'game') {
   const pts = state.label || poolLabel(mode);
   const ways = [`use ${state.cost} ${pts} (you have ${fmtPoints(state.have)})`];
   if (state.canFree) ways.push('unlock it free');
-  ways.push('switch to sandbox, which unlocks everything');
+  ways.push('turn the game off (sandbox), which unlocks everything');
   return {
-    why: `${label} is locked in game mode. That is only for the game’s sake.`,
+    why: `${label} is locked while the game is on. That is only for the game’s sake.`,
     how: `To add it: ${ways.join(', or ')}.`,
   };
 }
@@ -551,17 +551,17 @@ export async function ensureGameCard(makeState) {
 export const SETTINGS_SHOWN_TOPIC = 'settings-module/shown';
 export const GAME_SETTINGS_PAGE = 'sc-game';
 export const PANEL_ANSWER_MS = 400;
-export const PANEL_CLOSED_NOTE = 'The settings panel is not on this dashboard, so the game’s settings cannot open '
-  + 'beside me. Open the settings menu (the gear on the bar, This screen tab, “Nimrod Game”), or go to the '
+export const PANEL_CLOSED_NOTE = 'The Settings part is not on this dashboard, so the game’s settings cannot open '
+  + 'beside me. Open the settings menu (the gear on the bar, This screen tab, “Nimrod Game”). Or go to the '
   + 'tutorial dashboard, where the settings always are. Both are buttons below.';
 // What Nimrod says after a switch changes: one sentence per switch, joined (flagsNote).
 export const FLAG_NOTES = Object.freeze({
-  gameOn: 'The game is on: this tour and the things you do earn game points, and some things to build with are '
+  gameOn: 'The game is on. This tour and the things you do earn game points. Some things to build with are '
     + 'locked until you unlock them. A “Nimrod Game” card on the scoreboard keeps the score.',
   gameOff: 'The game is off (sandbox): everything you can build with is unlocked. Nothing you unlocked is lost if '
     + 'you turn it back on.',
-  learningOn: 'Learning is on: this tour and your lessons earn School points, a second kind kept apart from the '
-    + 'game points, and the scoreboard shows both.',
+  learningOn: 'Learning is on. This tour and your lessons earn School points. They are a second kind, kept apart from '
+    + 'the game points. The scoreboard shows both.',
   learningOff: 'Learning is off: every point you earn counts as a game point.',
 });
 export const flagsNote = (f) => {
@@ -702,7 +702,7 @@ export function gameFlagRowsHTML(flags) {
 // number that is not one of the choices is still offered, so opening the page never changes it.
 function reviewPointRowsHTML(prefs, opt) {
   return `<p class="st-label" style="margin-top:6px" data-review-points-rows>Reviewing questions</p>
-    <p class="st-hint" style="display:block;margin:0 0 6px">The same points whether a question is passed or marked wrong, once per question. A review done too quickly to be a real look still counts as a review, just without points.</p>
+    <p class="st-hint" style="display:block;margin:0 0 6px">A question pays the same points whether it is passed or marked wrong. Each question pays once. A review done too quickly to be a real look still counts as a review, but earns no points.</p>
     ${REVIEW_POINT_ROWS.map(([k, label, words]) => {
     const cur = Number(prefs[k]);
     const choices = REVIEW_POINT_CHOICES[k].includes(cur) ? REVIEW_POINT_CHOICES[k] : [...REVIEW_POINT_CHOICES[k], cur].sort((a, b) => a - b);

@@ -146,14 +146,14 @@ export function sameWords(a, b) {
 // ---------------------------------------------------------------------------------------
 const passOptions = [
   { value: 'none', label: 'Nothing more' },
-  { value: 'local', label: 'The recogniser on this screen (the room’s sound stays here)' },
+  { value: 'local', label: 'The speech program on this computer (the room’s sound stays here)' },
   { value: 'remote1', label: 'Another computer (sends the room’s sound there)' },
   { value: 'remote2', label: 'A second other computer (sends the room’s sound there)' },
 ];
 export const SPEECH_PASS_FIELDS = [
   { key: 'speechPass2', label: 'Then check what it heard with', kind: 'choice', default: 'none',
     level: 'standard', options: passOptions,
-    note: 'A slower, better recogniser corrects the first guess. Off: only the first.' },
+    note: 'A slower, better speech program corrects the first guess. Nothing more: only the first guess is used.' },
   { key: 'speechPass3', label: 'And then with', kind: 'choice', default: 'none', level: 'advanced',
     options: passOptions },
   { key: 'speechRemote1Name', label: 'Another computer: its name', kind: 'text', default: 'Another computer',
@@ -168,16 +168,16 @@ export const SPEECH_PASS_FIELDS = [
     level: 'advanced', note: 'The room’s sound is sent there.' },
   { key: 'speechRemote2Key', label: 'Second other computer: its pass phrase', kind: 'text', default: '',
     level: 'advanced' },
-  { key: 'speechLocalUrl', label: 'The recogniser on this screen: its address', kind: 'text',
+  { key: 'speechLocalUrl', label: 'The speech program on this computer: its address', kind: 'text',
     default: LOCAL_URL, level: 'advanced' },
   // A WAKE-WORD DETECTOR (openWakeWord through web/speech_service --wake): it hears the wake phrase
   // itself, within a fraction of a second, so "Listening" and the duck happen while the person is
   // still talking; the command is still read by the recognisers above. EMPTY = off: no trained model
   // for "computer please" exists yet (openwakeword_measure_20261001.md), so there is nothing to
   // point it at by default.
-  { key: 'speechWakeUrl', label: 'Wake-phrase detector on this screen: its address', kind: 'text',
+  { key: 'speechWakeUrl', label: 'A separate program on this computer that hears the wake phrase: its address', kind: 'text',
     default: '', level: 'advanced',
-    note: 'For example ws://127.0.0.1:8798/speech. Empty: the recogniser hears the wake phrase itself (slower).' },
+    note: 'For example ws://127.0.0.1:8798/speech. Empty: the speech program listens for the wake phrase itself (slower).' },
   { key: 'speechSureAt', label: 'How sure the first guess must be to act at once', kind: 'choice',
     default: ENGINE_DEFAULTS.sureAt, level: 'advanced',
     options: [

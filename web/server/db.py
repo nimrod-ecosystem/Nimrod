@@ -1328,8 +1328,8 @@ class _Store:
     STORAGE_NOTES = {
         "profiles":        ("The screens you made, and what you called them.", False,
                             "when you make a screen"),
-        "profile_modules": ("Which modules are on each screen, and in what order.", False,
-                            "when you add a module to a screen"),
+        "profile_modules": ("Which parts are on each screen, and in what order.", False,
+                            "when you add a part to a screen"),
         # The weather town (MIKE_LIST_20260930, Weather item 6): the Weather panel keeps the
         # place in its own settings, here, so this row is where it is declared. Said in full
         # because a town IS a location, and NEVER_STORED below used to say "your location" flat.
@@ -1382,44 +1382,44 @@ class _Store:
                             "waiting for review: what they said about it (right, wrong, a note), "
                             "when, and the name of the person on your login they chose as who "
                             "was reviewing - and the points it earned, on that person's screen.", True,
-                            "when a module you added writes one"),
+                            "when a part you added writes one"),
         # 2026-10-07 (later): history kept with us is an OPT-IN, per person and per kind (storage_line.py rule 4).
-        "history":         ("Only if you choose \"With us\" in \"Where your history is kept\" for a person: "
-                            "what played on their screens (which photo, video or song, and when), their game "
-                            "results (right or wrong, how long it took), or the words chosen on their talk board "
-                            "- each kind only if you chose it for that kind. At most "
-                            f"{storage_line.HISTORY_MAX_ROWS:,} entries per person, "
-                            "all kinds together; past that the oldest are counted (see the next line) and "
-                            "removed. Choosing another place stops new entries; \"Remove what is kept with us\" "
-                            "deletes them, and removing the person deletes them too.", True,
+        "history":         ("Only if you choose \"With us\" in \"Where your history is kept\" for a person. "
+                            "Then: what played on their screens (which photo, video or song, and when), their game "
+                            "results (right or wrong, how long it took), or the words chosen on their talk board. "
+                            "Each kind is kept only if you chose \"With us\" for that kind. At most "
+                            f"{storage_line.HISTORY_MAX_ROWS:,} entries for each person, "
+                            "all kinds together. Past that, the oldest are counted (see the next line) and "
+                            "removed. Choosing another place stops new entries. \"Remove what is kept with us\" "
+                            "deletes them. Removing the person deletes them too.", True,
                             "when you choose \"With us\" for a person's history"),
-        "history_totals":  ("The counts that older history entries are rolled into once a person passes the "
-                            "cap: for each song, video, game topic or board word, how many times, how many "
-                            "right, and the first and last time. Only for history you chose to keep with us; "
-                            "removed with it.", True,
-                            "when history you chose to keep with us passes its cap"),
-        "people":          ("The NAME you gave a person, so their screen can say who it is "
-                            "for, and what you call them if you chose a name of your own for "
-                            "anybody on your page (only the people using your login see that). This is the most personal "
-                            "thing here. When somebody's profile is on your page because you "
-                            "connected, or because they took over a person you made: which profile "
+        "history_totals":  ("Counts of a person's older history entries, made once they pass the limit in the "
+                            "line above. For each song, video, game topic or talk board word: how many times, how "
+                            "many right, and the first and last time. Only for history you chose to keep with us. "
+                            "Removed with it.", True,
+                            "when history you chose to keep with us passes its limit"),
+        "people":          ("The NAME you gave a person, so their screen can say who it is for. "
+                            "Also what you call them, if you chose a name of your own for anybody "
+                            "on your page. Only the people using your login see that name. This is the most personal thing "
+                            "here. Sometimes somebody's profile is on your page because you "
+                            "connected, or because they took over a person you made. Then also: which profile "
                             "it is (theirs, kept on their own login), which connection put them "
-                            "there, and how - so stopping sharing removes exactly that.", True,
+                            "there, and how. That way, stopping sharing removes exactly that.", True,
                             "when you add a person, connect with somebody, or somebody shares a "
                             "person with you"),
         # 2026-10-05: "I call them" for just one of the people on a login (claims.seen_name).
-        "person_labels":   ("When more than one person uses the same login: what one of them calls "
-                            "somebody on their page, if they saved it just for themselves rather than "
-                            "for everyone on the login - who set it, who it is for, and the name. It shows only while "
-                            "the page is for the person who set it, never to the person it names or to "
-                            "anybody on another login. Removing either person removes it.", True,
+        "person_labels":   ("This is for when more than one person uses the same login. One of them can "
+                            "save what they call somebody on their page just for themselves, and not for "
+                            "everyone on the login. This keeps who set it, who it is for, and the name. It shows only while the "
+                            "page is for the person who set it. It is never shown to the person it names, "
+                            "or to anybody on another login. Removing either person removes it.", True,
                             "when somebody saves an \"I call them\" name just for themselves"),
-        "media_sources":   ("A label and an ADDRESS for the folder your media lives in - a "
-                            "pointer at your own machine. Never the files themselves.", True,
+        "media_sources":   ("A name and an ADDRESS for the folder your media (photos, videos or music) is "
+                            "in. It only points at your own computer. Never the files themselves.", True,
                             "when you connect a folder"),
-        "drive_grants":    ("Which other accounts you have allowed to drive a screen, and "
+        "drive_grants":    ("Which other logins you have allowed to control a screen, and "
                             "until when.", True,
-                            "when you let somebody drive a screen"),
+                            "when you let somebody control a screen"),
         # 2026-10-09: the list of screens on My dashboards -> Devices shows the name, when it was added
         # and when it last checked in, so all three are said here.
         "device_keys":     ("A credential for each unattended screen you set up, the name "
@@ -1427,7 +1427,7 @@ class _Store:
                             "list of your screens can say which one has gone quiet). Only a scrambled "
                             "form of the credential is kept, which cannot be turned back into a "
                             "working one.", True,
-                            "when you adopt an unattended screen"),
+                            "when you add a screen with a code"),
         "links":           ("Who you are connected to - one entry for each pair of people. "
                             "It is a relationship, not a permission: it lasts until one of "
                             "you ends it.", True,
@@ -1436,12 +1436,12 @@ class _Store:
                             "watch a screen, add photos. Each one can be switched off on its "
                             "own, and ending the connection removes them all.", True,
                             "when you allow a connection to do something"),
-        "claim_invites":   ("A link you made to connect with somebody, or inviting somebody to take "
-                            "over one of your people: which kind, which person, which of your people "
-                            "it shares and whether they may leave messages for each, when it runs "
-                            "out, and whose login used it. Never the link itself - only a scrambled "
-                            "form of it that cannot be turned back into a working link. A link nobody "
-                            "used is deleted 30 days after it runs out or is taken back.", True,
+        "claim_invites":   ("A link you made to connect with somebody, or to invite somebody to take over "
+                            "one of your people. It keeps which kind it is, which person, which of your "
+                            "people it shares, and whether they may leave messages for each. Also when "
+                            "it runs out, and whose login used it. Never the link itself. Only a scrambled "
+                            "form of it is kept, which cannot be turned back into a working link. A link "
+                            "nobody used is deleted 30 days after it runs out or is taken back.", True,
                             "when you send somebody a link"),
         "sessions":        ("When a play or therapy session started and ended, and how it "
                             "ended. It is what lets a result say who was in the room, without "
@@ -1453,7 +1453,7 @@ class _Store:
         "screen_pairings": ("A short-lived code while a screen is being set up. Deleted "
                             "afterwards.", False,
                             "only while a screen is being set up"),
-        "pairings":        ("A short-lived code while a media folder is being connected. "
+        "pairings":        ("A short-lived code while a folder of photos, videos or music is being connected. "
                             "Deleted afterwards.", False,
                             "only while a folder is being connected"),
         "will":            ("Legacy table, unused.", False),
@@ -1469,10 +1469,10 @@ class _Store:
         # Row 2.58: refused by storage_line.py (kind `play`, stream `plays`); kept by client/plays.js on the device.
         # The parenthesis comes out once remove_play_history.py has been run against this database.
         # 2026-10-07 (later): unless the person chose "With us" (the `history` line above says so).
-        "what played when - which photo, video or song - it is kept on the screen that played it, or in your "
-        "Nimrod folder, unless you choose to keep it with us (see \"history\" above; the rows kept in the log "
-        "here before October 2026 are being removed)",
-        "advertising identifiers",
+        "what played when - which photo, video or song - it is kept on the screen that played it, or in your Nimrod "
+        "folder, unless you choose to keep it with us (see \"With us\" in the list above; the rows kept in the "
+        "log here before October 2026 are being removed)",
+        "advertising IDs (codes that advertisers use to follow people)",
         "anything a module shows you that you did not save",
     ]
 
@@ -1492,7 +1492,7 @@ class _Store:
             rows.append({
                 "table": name,
                 "what": note[0] if note else
-                        "Not yet described. It exists, so it is listed - see the source.",
+                        "Not yet described. It exists, so it is listed. Read the code.",
                 "personal": bool(note[1]) if note else True,   # assume the worse until said
                 # What the person did to cause this row. Unknown for an undescribed table, and
                 # saying so is better than guessing on a privacy page.

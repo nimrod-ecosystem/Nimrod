@@ -56,7 +56,7 @@ import { NUMBER_QUERIES, NUMBER_WORDS, WINDOWS, WINDOW_WORDS, WHAT_CHOICES, sour
 
 const KIND_LABELS = {
   bus: 'a message (a sensor, a game, a score)',
-  link: 'another panel’s output',
+  link: 'another part’s output',
   verb: 'a switch or key (a verb)',
   clock: 'the time of day',
   lfo: 'a slow wave',
@@ -180,7 +180,7 @@ export function mountAutomationPanel(root, {
   const datalist = el('datalist', { id: listId });
   const pickHost = el('div', { class: 'auto-pick', data: { autoPick: '' }, hidden: true });
   verbIds.forEach((id) => datalist.append(el('option', { value: id })));
-  wrap.append(el('h3', { text: 'Settings driven by something else' }), listEl, form, pickHost, datalist);
+  wrap.append(el('h3', { text: 'Settings that something else changes' }), listEl, form, pickHost, datalist);
   root.append(wrap);
 
   const say = (t) => { statusEl.textContent = t || ''; };
@@ -199,7 +199,7 @@ export function mountAutomationPanel(root, {
   function paintList() {
     listEl.innerHTML = '';
     const list = engine.list();
-    if (!list.length) { listEl.append(el('li', { class: 'auto-empty', text: 'Nothing is driven yet.' })); return; }
+    if (!list.length) { listEl.append(el('li', { class: 'auto-empty', text: 'Nothing is changed by something else yet.' })); return; }
     const named = new Map(messageEntries().filter((m) => m.named).map((m) => [m.value, m.label]));
     for (const b of list) {
       const p = panelById(b.target.instance);
@@ -227,7 +227,7 @@ export function mountAutomationPanel(root, {
     form.innerHTML = '';
     const ps = allPanels();
     panelSel = select('panel', ps.length ? ps.map((p) => ({ value: p.id, label: p.title || p.id }))
-      : [{ value: '', label: 'No panels on this screen', disabled: true }]);
+      : [{ value: '', label: 'No parts on this screen', disabled: true }]);
     keySel = select('key', []);
     kindSel = select('kind', SOURCE_KINDS.map((k) => ({ value: k, label: KIND_LABELS[k] })), 'bus');
     srcBox = el('span', { class: 'auto-src', data: { src: '' } });
@@ -242,7 +242,7 @@ export function mountAutomationPanel(root, {
     quietSel = select('whenQuiet', QUIET.map((q) => ({ value: q, label: QUIET_LABELS[q] })), AUTOMATION_DEFAULTS.whenQuiet);
     const add = el('button', { type: 'submit', data: { addButton: '', autoRow: 'add' }, text: 'Add' });
     form.append(
-      field('Panel', panelSel), field('Setting', keySel), field('Driven by', kindSel), srcBox,
+      field('Part', panelSel), field('Setting', keySel), field('Changed by', kindSel), srcBox,
       fromF, toF, field('Shape', curveSel), peakBox,
       field('When it goes quiet', quietSel), add, statusEl);
     panelSel.addEventListener('change', paintKeys);
@@ -268,8 +268,8 @@ export function mountAutomationPanel(root, {
     }
     const first = rows.find((r) => r.ok);
     if (first) keySel.value = first.key;
-    if (!rows.length) keySel.append(el('option', { value: '', disabled: true, text: 'This panel has no settings' }));
-    else if (!first) say('Nothing on this panel can be driven: only settings that are numbers can.');
+    if (!rows.length) keySel.append(el('option', { value: '', disabled: true, text: 'This part has no settings' }));
+    else if (!first) say('Nothing on this part can be changed by something else. Only settings that are numbers can.');
     paintRange();
   }
   const settingNow = () => settingsOf(panelById(panelSel.value)).find((x) => x.key === keySel.value && x.ok) || null;
@@ -293,7 +293,7 @@ export function mountAutomationPanel(root, {
         numField('Its lowest', 'inMin', AUTOMATION_DEFAULTS.inputRange[0]),
         numField('Its highest', 'inMax', AUTOMATION_DEFAULTS.inputRange[1]));
     } else if (k === 'link') {
-      srcBox.append(field('Panel id', textInput('instance', '')), field('Its output', textInput('port', '')));
+      srcBox.append(field('Part id', textInput('instance', '')), field('Its output', textInput('port', '')));
     } else if (k === 'verb') {
       srcBox.append(field('Up with', textInput('up', 'up', listId)),
         field('Down with (optional)', textInput('down', '', listId)),
@@ -346,9 +346,9 @@ export function mountAutomationPanel(root, {
   }
 
   const REASONS = {
-    'invalid-binding': 'Something is missing: a panel, a setting, and where the number comes from.',
-    'already-bound': 'That setting is already driven. Remove the other one first.',
-    'not-bindable': 'That setting cannot be driven.',
+    'invalid-binding': 'Something is missing: a part, a setting, and where the number comes from.',
+    'already-bound': 'Something else already changes that setting. Remove the other one first.',
+    'not-bindable': 'That setting cannot be changed by something else.',
     'duplicate-id': 'That one already exists.',
   };
   form.addEventListener('submit', (e) => {
@@ -418,7 +418,7 @@ export function mountAutomationPanel(root, {
   function rowsNow() {
     const rows = [];
     const removes = [...listEl.querySelectorAll('[data-remove]')];
-    if (removes.length) rows.push({ id: 'list', el: listEl, kind: 'buttons', label: 'Driven now', buttons: removes, always: true });
+    if (removes.length) rows.push({ id: 'list', el: listEl, kind: 'buttons', label: 'Being changed now', buttons: removes, always: true });
     for (const w of form.querySelectorAll('[data-auto-row]')) {
       if (w.hidden || w.closest('[hidden]')) continue;
       const id = w.dataset.autoRow;

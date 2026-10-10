@@ -295,7 +295,7 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
       deckSize() === 6 + DEFAULT_PAIRS.length,
       `deck=${deckSize()} (expected 4 ungated + 2 roots + ${DEFAULT_PAIRS.length} pairs)`);
     check('the still-locked topic is NOT silently dropped — the game says so',
-      /waiting behind/i.test(wfHost.querySelector('[data-held]').textContent),
+      /open after these lessons/i.test(wfHost.querySelector('[data-held]').textContent),   // site text rewrite 2026-10-09: was "waiting behind"
       wfHost.querySelector('[data-held]').textContent);
     check('...naming the topic that holds it',
       /concision|commas|fewer words/i.test(wfHost.querySelector('[data-held]').textContent),
@@ -473,7 +473,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       check(`*** the roots-tagged routed question joins Word Forge's deck (${DEFAULT_WORDS.length} words + ${DEFAULT_PAIRS.length} pairs + 1) ***`,
         withRouted === expectDeck, `deck=${withRouted} expected=${expectDeck}`);
       check('...and Word Forge names the still-locked topic the same way it already does for words',
-        /waiting behind/i.test(wfHost2.textContent) && /fewer words|concision/i.test(wfHost2.textContent),
+        /open after these lessons/i.test(wfHost2.textContent) && /fewer words|concision/i.test(wfHost2.textContent),   // site text rewrite 2026-10-09
         wfHost2.textContent.slice(0, 200));
       wf3.destroy();
 
@@ -1634,7 +1634,8 @@ Say it once and move on.`;
         JSON.stringify((cRow.get().items || []).map((i) => i.question)));
       const rv = () => [...chost.querySelectorAll('[data-rq]')].find((r) => r.querySelector('.l-rq-q')?.textContent === q1);
       check('*** the review list shows it as "Contested while playing", with Clear and Keep out ***',
-        !!rv() && /Contested while playing/.test(rv().textContent) && !!rv().querySelector('[data-rq-clear]') && !!rv().querySelector('[data-rq-keepout]'),
+        // site text rewrite 2026-10-09: "Contested while playing" now reads "A player said this question is wrong".
+        !!rv() && /said\s+this\s+question\s+is\s+wrong/.test(rv().textContent) && !!rv().querySelector('[data-rq-clear]') && !!rv().querySelector('[data-rq-keepout]'),
         rv() ? rv().textContent.replace(/\s+/g, ' ').slice(0, 300) : 'no row');
 
       // Clear puts it back: the flag cleared, the contest cleared, the pool has it again.
@@ -1667,11 +1668,11 @@ Say it once and move on.`;
         reviewItems(tl.get().events || []).find((i) => i.question === q2.question).flagged
           && !(cRow.get().items || []).some((i) => i.question === q2.question), JSON.stringify((cRow.get().items || []).map((i) => i.question)));
       const rv2 = [...chost.querySelectorAll('[data-rq]')].find((r) => r.querySelector('.l-rq-q')?.textContent === q2.question);
-      check('...and is listed as contested while playing (in Trivia)', !!rv2 && /Contested while playing/.test(rv2.textContent) && /Trivia/.test(rv2.textContent),
+      check('...and is listed as contested while playing (in Trivia)', !!rv2 && /said\s+this\s+question\s+is\s+wrong/.test(rv2.textContent) && /Trivia/.test(rv2.textContent),
         rv2 ? rv2.textContent.replace(/\s+/g, ' ').slice(0, 300) : 'no row');
       const rv3 = [...chost.querySelectorAll('[data-contested-key]')].find((r) => /What is 2\+2\?/.test(r.textContent));
       check('*** a hand-written Trivia question is listed too — with Clear and Keep out ***',
-        !!rv3 && /Contested while playing/.test(rv3.textContent) && !!rv3.querySelector('[data-rq-clear]') && !!rv3.querySelector('[data-rq-keepout]'),
+        !!rv3 && /said\s+this\s+question\s+is\s+wrong/.test(rv3.textContent) && !!rv3.querySelector('[data-rq-clear]') && !!rv3.querySelector('[data-rq-keepout]'),
         ct('[data-review]').slice(0, 600));
       rv3.querySelector('[data-rq-keepout]').click();
       await sleep(1000);

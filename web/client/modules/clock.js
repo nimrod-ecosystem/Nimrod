@@ -51,12 +51,12 @@ const DEFAULTS = {
   pomodoroBreakMs: 5 * 60 * 1000,
 };
 const ZONES = [
-  ['', 'Device'],
+  ['', 'This device’s own'],
   ['America/New_York', 'Eastern'],
   ['America/Chicago', 'Central'],
   ['America/Denver', 'Mountain'],
   ['America/Los_Angeles', 'Pacific'],
-  ['UTC', 'UTC'],
+  ['UTC', 'Coordinated Universal Time (UTC)'],
 ];
 
 // ---------------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ const SETTINGS = [
   // *** THE MODE ROW. *** What this panel actually is, before anything about how it looks.
   // Essential, same reasoning as `size`/`tz` above: a panel stuck in the wrong mode is a panel
   // nobody at the bedside can fix without this row.
-  { key: 'mode', label: 'What this panel shows', kind: 'choice', default: 'clock',
+  { key: 'mode', label: 'What this part shows', kind: 'choice', default: 'clock',
     level: 'essential',
     options: [
       { value: 'clock', label: 'Clock' },
@@ -226,7 +226,7 @@ registerModule(
   // module, only a least-exposed one, which is why the vocabulary is `dependsOn` rather than
   // `cannotFail`. This makes it a good LAST RESORT, not a guarantee.
   { dependsOn: 'none',
-    type: 'clock', title: 'Clock', description: 'The time, the day and the date — for somebody who has lost track of all three',
+    type: 'clock', title: 'Clock', description: 'The time, the day and the date. Useful for somebody who has lost track of all three.',
     settings: SETTINGS },
   (ctx) => {
     const { mount, state } = ctx;
@@ -517,7 +517,7 @@ registerModule(
               <label>size
                 <select data-opt="size"><option value="s">S</option><option value="m">M</option><option value="l">L</option></select>
               </label>
-              <label>zone
+              <label>time zone
                 <select data-opt="tz">${ZONES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select>
               </label>
               <label>mode
@@ -612,7 +612,7 @@ registerModule(
         }
         if (shown(q('[data-cd]'))) {
           out.push({ id: 'timer', label: 'The timer', el: q('[data-cd]'), keys: ['mode', 'timerMs', 'pomodoroWorkMs', 'pomodoroBreakMs'],
-            help: 'What this panel counts: a timer, a stopwatch or a Pomodoro, and for how long.' });
+            help: 'What this part counts: a timer, a stopwatch or a Pomodoro, and for how long.' });
         }
         return out;
       },

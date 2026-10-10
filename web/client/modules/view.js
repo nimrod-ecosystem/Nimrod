@@ -198,7 +198,7 @@ export const DASHBOARD_TYPE = 'dashboard';
 export const DASHBOARD_ALIASES = Object.freeze(['view']);
 const DASHBOARD_MANIFEST = {
   type: DASHBOARD_TYPE, title: 'Dashboard',
-  description: 'A set of modules and where they sit — switchable as one thing',
+  description: 'A set of parts and where they sit. The whole set can be swapped as one thing.',
   importance: 'normal', dependsOn: 'server', settings: [],
 };
 
@@ -923,7 +923,7 @@ function dashboardFactory(ctx) {
         if (!arrangement || !Array.isArray(arrangement.modules)) {
           // *** A VIEW THAT CANNOT LOAD SAYS SO RATHER THAN RENDERING NOTHING. *** A blank
           // region on a screen somebody is sitting at is indistinguishable from a crash.
-          stageEl.innerHTML = '<p class="view-empty">This view could not be loaded.</p>';
+          stageEl.innerHTML = '<p class="view-empty">This dashboard could not be loaded.</p>';
           // (Nested: still pressable -- going in is the screen's own load-then-swap, which says what it can.)
           if (nested) addOpener(null);
           return;

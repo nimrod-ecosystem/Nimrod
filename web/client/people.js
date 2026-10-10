@@ -155,11 +155,12 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
       ${lastRow}
       ${editing ? `
         <div class="p-manage">
-          <p class="h-hint">A <b>person</b> is who a screen is for. Their screens, their input
-            bindings and their output routing follow them to every device — set them up once,
-            ever. The account is who signs in; it can hold as many people as you look after.</p>
+          <p class="h-hint">A <b>person</b> is who a screen is for. Their screens follow them to
+            every device. So do the jobs given to their controls, such as keys and switches (a
+            switch is one big button). So does how they are told things. Set these up once. The
+            login is who signs in. One login can hold as many people as you look after.</p>
           <form class="h-new" data-new>
-            <input type="text" data-name placeholder="Add a person (e.g. Robin)"
+            <input type="text" data-name placeholder="Add a person (for example Robin)"
                    aria-label="new person name" maxlength="64" required>
             <button type="submit" class="h-btn h-primary">Add</button>
           </form>
@@ -169,7 +170,7 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
                 <input type="text" class="p-name" value="${esc(nameOnCard(p))}" maxlength="64"
                        data-rename="${esc(p.id)}" aria-label="name">
                 <button class="h-btn h-danger p-small" data-remove="${esc(p.id)}"
-                        ${list.length <= 1 ? 'disabled title="an account needs at least one person"' : ''}
+                        ${list.length <= 1 ? 'disabled title="a login needs at least one person"' : ''}
                 >Remove</button>
               </li>`).join('')}
           </ul>
@@ -221,7 +222,7 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
       if (!person) return;
       // The server refuses if they still have screens, and refuses the last person. Both
       // come back as a sentence, so the confirm here is about intent, not validation.
-      if (!globalThis.confirm(`Remove ${person.name}? Their input bindings and output routing go with them.`)) return;
+      if (!globalThis.confirm(`Remove ${person.name}? The jobs given to their controls, and how they are told things, go with them.`)) return;
       guard(async () => {
         await profiles.removePerson(person.id);
         await refresh();

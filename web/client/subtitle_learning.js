@@ -126,8 +126,8 @@ export const COMMON_WORDS = new Set(('a an the and or but if so of to in on at b
 export const SUBTITLE_LEARNING_FIELDS = [
   { key: 'subtitlesLearn', label: 'Subtitles: learn from corrections', kind: 'toggle',
     default: LEARNING_DEFAULTS.learn, level: 'standard',
-    note: 'Say "what I said was ..." (or "what they said was ...") after the wake phrase, or use "Fix a subtitle line". '
-        + 'The words it missed are kept on this screen, never on this site.' },
+    note: 'Say the wake phrase, wait, then say "what I said was ..." (or "what they said was ..."). Or use "Fix a subtitle '
+        + 'line". The words it missed are kept on this screen, never on this site.' },
   { key: 'subtitlesFixAfter', label: 'Subtitles: fix a word it keeps mishearing', kind: 'choice',
     default: LEARNING_DEFAULTS.fixAfter, level: 'advanced',
     options: [
@@ -136,10 +136,10 @@ export const SUBTITLE_LEARNING_FIELDS = [
       { value: 3, label: 'After the same correction three times' },
       { value: 0, label: 'Never: only fix the line I corrected' },
     ],
-    note: 'Rewrites what it heard to what you said it was, from then on.' },
-  { key: 'subtitlesHints', label: 'Subtitles: tell the recogniser the words it learned', kind: 'toggle',
+    note: 'From then on, the subtitles show your correction in place of what was heard.' },
+  { key: 'subtitlesHints', label: 'Subtitles: tell the speech program the words it learned', kind: 'toggle',
     default: LEARNING_DEFAULTS.hints, level: 'advanced',
-    note: 'Only recognisers that can use a word list (on this computer, or another computer chosen above).' },
+    note: 'Only speech programs that can use a word list (on this computer, or another computer chosen above).' },
 ];
 
 /** A settings row -> { learn, fixAfter, hints }. Each unset or broken key is its default. Pure. */
@@ -545,7 +545,7 @@ export function createSubtitleLearning({
     }
     // A recogniser that cannot write a free sentence down: type it instead, on the line it meant.
     const line = pickLine(subtitles.history(), p.kind, { by: p.speaker || null, now: now() });
-    openFix({ lineId: line ? line.id : null, note: 'This screen’s voice can only hear its own commands: type what was said.' });
+    openFix({ lineId: line ? line.id : null, note: 'The speech program here only understands commands, so type what was said.' });
   }
   function onAnswer(p) {
     if (torn || !listening || !p || typeof p !== 'object') return;

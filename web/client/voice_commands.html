@@ -61,7 +61,7 @@ async function moduleVoices() {
     for (const [phrase, verb] of Object.entries(voice)) (byVerb[verb] ||= []).push(phrase);
     const list = Object.entries(byVerb).map(([verb, ps]) => `${esc(VERB_NAMES[verb] || verb)}: ${quoted(ps)}`).join('<br>');
     const name = entry.title || getManifest(entry.type)?.title || entry.lead || entry.type;
-    rows.push([name, list, 'Only while this module is the one in focus.']);
+    rows.push([name, list, 'Only while this part is the one you picked.']);
   }
   return rows;
 }
@@ -69,10 +69,10 @@ async function moduleVoices() {
 async function render() {
   const out = [];
   out.push(section('Wake phrases', table([
-    ['Defaults', quoted(SPEECH_DEFAULTS.wake), 'A person can add their own wake phrase in their Voice settings.'],
+    ['To start with', quoted(SPEECH_DEFAULTS.wake), 'A person can change these to phrases of their own in their Voice settings.'],
   ])));
   out.push(section('Everywhere', table(Object.entries(PHRASES).map(([verb, ps]) => [VERB_NAMES[verb] || verb, quoted(ps)])),
-    'These work on whatever is in focus.'));
+    'These work on the part you picked.'));
   const other = routeRows((r) => !isGame(r));
   if (other.length) out.push(section('The screen, the menu and the cursor', table(other)));
   out.push(section('Dashboards', table([
@@ -89,7 +89,7 @@ async function render() {
     ['Stop the music', quoted(MUSIC_STOP)],
   ])));
   const mods = await moduleVoices();
-  if (mods.length) out.push(section('Inside a module', table(mods)));
+  if (mods.length) out.push(section('Inside one part', table(mods)));
   document.getElementById('out').innerHTML = out.join('');
 }
 render().catch((err) => { document.getElementById('out').textContent = `Could not build the list: ${err.message}`; });

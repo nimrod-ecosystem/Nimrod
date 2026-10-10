@@ -200,7 +200,7 @@ const SETTINGS = [
     level: 'standard', appliesWhen: notBeginner,
     options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
               { value: 15, label: '15' }, { value: 20, label: '20' }] },
-  { key: 'tryPoints', label: 'Points for a miss, once the working is read', kind: 'number',
+  { key: 'tryPoints', label: 'Points for a miss, after reading how it is solved', kind: 'number',
     default: 1, level: 'advanced', min: 0, max: 10, step: 1, appliesWhen: notBeginner },
   { key: 'streakEvery', label: 'Streak bonus every', kind: 'choice', default: 5,
     level: 'advanced', appliesWhen: notBeginner,
@@ -211,7 +211,7 @@ const SETTINGS = [
   // TEXT, and therefore not cycleable - it says so rather than pretending, the same way
   // `photos.js` handles `album`. Nobody types a subject name with one switch.
   { key: 'subject', label: 'Credit counts toward', kind: 'text', default: 'Math',
-    level: 'advanced', note: 'which subject a point of credit discharges', appliesWhen: notBeginner },
+    level: 'advanced', note: 'each point also counts as 1 minute of this subject', appliesWhen: notBeginner },
   // Row 2.40 (Mike, 2026-09-30: "we probably have a bunch of modules drawing their own
   // scoreboards. We shouldn't have that."). The points-solved-streak line is PUBLISHED on the score
   // contract (`../score_source.js`); this row decides whether the panel draws it too. `auto` by
@@ -482,7 +482,7 @@ function calculatorFactory(ctx) {
       const heldEl = el('[data-held]');
       if (heldEl) {
         heldEl.textContent = held.length
-          ? `more problem types waiting behind: ${held.map((h) => h.label).join(', ')}`
+          ? `more kinds of problem open after these lessons: ${held.map((h) => h.label).join(', ')}`
           : '';
       }
 
@@ -493,9 +493,9 @@ function calculatorFactory(ctx) {
                ${answered.award.bonus ? `<span class="al-bonus">includes a +${answered.award.bonus} streak bonus</span>` : ''}
              </div><button class="al-btn al-primary" data-next>Next problem</button>`
           : `<div class="al-fb is-wrong">
-               <b>${answered.declared ? 'Here’s how it works.' : `Not quite — x = ${problem.answer}.`}</b>
+               <b>${answered.declared ? 'Here’s how it works.' : `Not quite. The answer is ${problem.answer}.`}</b>
                <span class="al-how">${esc(problem.how)}</span>
-               <span class="al-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'} — press “Got it” to bank it.</span>
+               <span class="al-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'}. Press “Got it” to add it to your points.</span>
              </div><button class="al-btn al-primary" data-next>Got it</button>`;
       }
 

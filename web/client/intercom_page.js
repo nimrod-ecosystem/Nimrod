@@ -78,7 +78,7 @@ export async function mountIntercomPage(root, {
   function renderSignIn() {
     root.dataset.live = '0'; root.dataset.view = 'setup';
     body().innerHTML = `<h1>Talk to a room</h1>
-      <p>Sign in on this phone first, with an account the room has added to its intercom.</p>
+      <p>Sign in on this phone first, with a login the room has added to its intercom.</p>
       <p><a class="pm-btn pm-primary" href="/auth/login">Sign in</a></p>`;
   }
 
@@ -88,8 +88,9 @@ export async function mountIntercomPage(root, {
     const pick = people.find((p) => p.id === want) || (people.length === 1 ? people[0] : null);
     body().innerHTML = `
       <h1>Talk to a room</h1>
-      <p class="pm-lead">An intercom: you hear the room, and the room hears you. The room hears a chime and
-        your name first, shows that the intercom is open the whole time, and can end it with one press.</p>
+      <p class="pm-lead">An intercom. You hear the room, and the room hears you. The room hears a chime and
+        your name first. It shows that the intercom is open the whole time. The room can end it with one
+        press.</p>
       ${ended ? `<p class="pm-ended" role="status">${esc(ended)}</p>` : ''}
       ${people.length ? `
       <label class="pm-field"><span>Which room</span>
@@ -98,7 +99,7 @@ export async function mountIntercomPage(root, {
       <button type="button" class="pm-btn pm-primary pm-big" data-start>Open the intercom</button>
       <p class="pm-note">Only people the room has added can open it. Whoever looks after the screen adds people.</p>
       <p class="pm-note" data-call-link>To see each other as well, <a href="./call.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">place a call</a> instead.</p>`
-      : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
+      : '<p>This login has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
 
   function buildLive() {
@@ -161,7 +162,7 @@ export async function mountIntercomPage(root, {
     put(PERSON_KEY, target.id);
     ended = null;
     if (!(await allowed(target.id))) {
-      ended = 'This account is not allowed to use that screen. Its owner can share it from the Remote tab.';
+      ended = 'This login is not allowed to use that screen. Its owner can share it from the Remote tab.';
       renderSetup();
       return;
     }

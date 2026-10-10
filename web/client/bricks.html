@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nimrod bricks</title>
 <link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
-<meta name="description" content="Every basic Nimrod brick, bracket and plate: a picture of each, its size in millimetres and its 3D model, and furniture built from them.">
+<meta name="description" content="Every basic Nimrod brick, bracket and plate. Each has a picture, its size in millimetres and a 3D model. Also furniture built from them.">
 <style>
   /* THEME TOKENS ONLY (theme.js sets them on <html> below). Every fallback is a CSS system colour, never a
      number picked here, so a page whose script is blocked still reads in the browser's own colours. */
@@ -81,9 +81,10 @@
   <header class="hero">
     <p class="eyebrow">Nimrod bricks</p>
     <h1 id="title">Every brick</h1>
-    <p class="lede" id="lede">Every brick is a multiple of 40 mm in every direction, with a 10 mm socket at the
-      centre of every 40 mm square on every face, so any brick lines up with any other. The brackets and plates
-      that join them use the same sockets. Each one has a 3D model you can download and open in any glTF viewer.</p>
+    <p class="lede" id="lede">Every brick is 40 millimetres (mm), or a multiple of 40 mm such as 80 or 120, in every
+      direction. Every face has a 10 mm socket (a hole) in the middle of each 40 mm square. So any brick lines up
+      with any other. The brackets and plates that join them use the same sockets. Each one has a 3D model you can
+      save and open in any glTF viewer (a program that shows 3D models).</p>
   </header>
 
   <section id="build" hidden></section>
@@ -95,14 +96,14 @@
   <section id="builds-sec" hidden>
     <h2>Built from bricks</h2>
     <p class="lede">Furniture made only from the bricks above. A room can draw each of these as the real
-      brick-built piece; each one's bricks, with how many it takes, are one press away.</p>
+      piece, built from bricks. Press Its bricks to see which bricks a piece takes, and how many.</p>
     <div class="grid" id="builds"></div>
   </section>
 
   <footer>
-    The list comes from <a href="/design-assets/bricks/bricks.json">bricks.json</a>. Every part is generated from
-    one parametric script, so a size not listed here is a number, not a new model.
-    <br><a href="/">What Nimrod is</a> · <a href="/modules">What you can add to a screen</a> ·
+    The list comes from a text file, <a href="/design-assets/bricks/bricks.json">bricks.json</a>. Every part is
+    made by one program that takes its sizes as numbers. So a size not listed here needs only a new number, not a
+    new model. <br><a href="/">What Nimrod is</a> · <a href="/modules">What you can add to a screen</a> ·
     <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
   </footer>
 </main>

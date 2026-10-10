@@ -184,7 +184,7 @@ export function openDashboardEditor(opts = {}) {
     const mods = items.filter((it) => !it.fixed);
     const ghosts = mods.filter((it) => !ok.has(it.id));
     if (ghosts.length) {
-      notes.push('A copy of a module needs a module of its own on this screen. That is not built yet, so the copy was not placed.');
+      notes.push('Copying a part is not built yet, so the copy was not placed.');
       syncing = true;
       try { for (const g of ghosts) model.remove(g.id); } finally { syncing = false; }
     }

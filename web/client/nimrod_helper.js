@@ -144,9 +144,10 @@ export function helperPageHTML({ downloads = HELPER_DOWNLOADS, maker = browserVo
   here = '' } = {}) {
   const win = downloads?.windows || null;
   const download = win && win.url
-    ? `<p><a class="nh-download" data-download="windows" href="${esc(win.url)}">Download the Nimrod helper for Windows</a></p>
-       ${win.signed ? '' : `<p class="nh-soft">The download is not signed yet, so Windows may say “Windows protected your PC”
-       the first time. If you got it from this page, choose <b>More info</b>, then <b>Run anyway</b>.</p>`}`
+    ? `<p><a class="nh-download" data-download="windows" href="${esc(win.url)}">Get the Nimrod helper for Windows</a></p>
+       ${win.signed ? '' : `<p class="nh-soft">This program is not signed yet (signing is how Windows checks who made a
+       program). So Windows may say “Windows protected your PC” the first time. If you got it from this page, choose <b>More
+       info</b>, then <b>Run anyway</b>.</p>`}`
     : '<p data-download="none"><b>The Windows download is not ready yet.</b> This page will have it when it is. Until then, this browser’s own voice typing works with nothing installed (below).</p>';
   const noInstall = hasVoiceTyping
     ? `<p>This browser’s own voice typing works with nothing installed, but <b>it sends what it hears to ${esc(maker)}</b>.
@@ -157,12 +158,12 @@ export function helperPageHTML({ downloads = HELPER_DOWNLOADS, maker = browserVo
     : '<p>This browser has no voice typing of its own (Chrome, Edge and Safari have one). Spoken commands here need the helper.</p>';
   return `
   <h1>Get the Nimrod helper for this computer</h1>
-  <p class="nh-lead">A small program for this computer that does two things a web page can’t: it turns speech into
-  words <b>here, on this computer</b>, and it lets your screens show the photos and videos in a folder here.</p>
+  <p class="nh-lead">A small program for this computer. It does two things a web page can’t. It turns speech into
+  words <b>here, on this computer</b>. And it lets your screens show the photos and videos in a folder here.</p>
 
   <section data-section="here"><h2>On this computer now</h2><div data-here>${here || hereHTML()}</div></section>
 
-  <section data-section="download"><h2>Download</h2>
+  <section data-section="download"><h2>Get it</h2>
   ${download}
   <p class="nh-soft">For Windows 10 and 11. Mac and Linux are not ready yet.</p></section>
 

@@ -99,9 +99,9 @@ export function mountRecordPanel(root, {
   root.innerHTML = `
     <div class="rp">
       <h3>Record a session</h3>
-      <p class="rp-lede">Two microphones at once: the near one is clear enough to know what was
-        said, the far one is what the everyday screen actually hears. Recording both together is
-        what makes the far one usable later.</p>
+      <p class="rp-lede">This records two microphones at once. The near one is clear enough to know
+        what was said. The far one is what the everyday screen hears. Recording both together is
+        what makes the far one useful later.</p>
 
       <p class="rp-folder" data-folder></p>
       <button type="button" data-pick>Choose where to save recordings</button>
@@ -228,9 +228,9 @@ export function mountRecordPanel(root, {
       // just spent a session on it; losing it because a write failed, without saying so, is the
       // worst outcome this panel can produce.
       console.error('record: save', err);
-      say('The recording could not be saved — the folder may no longer be available. '
-        + 'Do not close this page: choose the folder again and press Record→Stop is not needed; '
-        + 'press "Save again".');
+      say('The recording could not be saved. The folder may no longer be available. '
+        + 'Do not close this page. Choose the folder again, then press "Save again". You do not '
+        + 'need to record again.');
       showRetry(out);
       return;
     }

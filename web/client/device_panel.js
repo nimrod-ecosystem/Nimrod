@@ -109,8 +109,7 @@ export function mountDevicePanel(root, {
     <div class="dv">
       <h3>Which ${esc(kind)}</h3>
       <p class="dv-lede">In order, best first. If the top one is not connected, the next one is
-        used automatically — so a ${esc(kind)} that is only in the room sometimes does not need
-        anybody to change a setting when it comes and goes.</p>
+        used. So when a ${esc(kind)} comes and goes, nobody has to change a setting.</p>
       <div class="dv-permission" data-permission hidden>
         <p>This browser will not say what these ${esc(kind)}s are called until it has been given
           permission once.</p>

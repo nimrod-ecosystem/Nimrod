@@ -50,7 +50,7 @@ export const CLEAN_LEVELS = Object.freeze([
       + 'punctuation, obvious mishearings. Do not remove anything else: every filler, false start, self-correction and '
       + 'repeat stays exactly where it was. This is the transcript as spoken, just legible.' }),
   Object.freeze({ level: 2, deskName: 'verbatim → tidy', label: 'Word for word, without the ums',
-    help: 'As word for word, and the empty sounds (um, uh, like) go. False starts and repeats stay.',
+    help: 'The same as Word for word, but the empty sounds (um, uh, like) go. False starts and repeats stay.',
     prompt: 'You are cleaning up a voice-dictated note. Fix transcription noise (run-together words, missing '
       + 'punctuation, obvious mishearings) AND strip pure verbal filler sounds ("um", "uh", "like" used as a filler) '
       + 'with nothing behind them. Leave false starts, self-corrections and repeats untouched: those are still '
@@ -64,7 +64,7 @@ export const CLEAN_LEVELS = Object.freeze([
       + 'they said, and are willing to send it as-is. Something missing is a failure at this level, and so is '
       + 'sounding like a memo.' }),
   Object.freeze({ level: 4, deskName: 'tidy → condensed', label: 'Tidy, a little shorter',
-    help: 'As tidy, and a point said twice in a row is said once.',
+    help: 'The same as Tidy, and a point said twice in a row is said once.',
     prompt: 'You are cleaning up a voice-dictated note. Do everything level 3 does (fillers, false starts, '
       + 'self-corrections and repeats removed; every idea kept; uncertainty kept; order kept) AND ALSO lightly tighten '
       + 'the wording: merge a phrase that immediately restates the same point in slightly different words, tighten a '

@@ -232,7 +232,7 @@ export function mountBoardEditor(root, {
     const r = clampDim(rows, draft.rows || gridOf(draft).rows);
     const need = lastFilled() + 1;
     if (c * r < need) {
-      note = `That is ${c * r} cards and ${need} are in use. Clear the last ones first.`;
+      note = `That size holds ${c * r} cards, and ${need} are in use. Empty the last cards first.`;
       return false;
     }
     draft = normalizeBoard({ ...draft, cols: c, rows: r });
@@ -345,9 +345,9 @@ export function mountBoardEditor(root, {
   }
 
   const KEPT_WORDS = {
-    saved: 'Kept on this device and in your Nimrod folder (Board sounds), so another device with that folder plays it too.',
-    'no-folder': 'Kept on this device. Another device says this word in its own voice: set up your Nimrod folder to share it.',
-    'not-allowed': 'Kept on this device. The Nimrod folder was not allowed, so another device says this word in its own voice.',
+    saved: 'Kept on this device and in your Nimrod folder (Board sounds). Another device with that folder plays it too.',
+    'no-folder': 'Kept on this device. Another device says this word in its own voice. To share the sound, set up your Nimrod folder.',
+    'not-allowed': 'Kept on this device. The browser was not allowed to save in the Nimrod folder, so another device says this word in its own voice.',
     failed: 'Kept on this device. It could not be saved in your Nimrod folder, so another device says this word in its own voice.',
   };
 
@@ -520,13 +520,13 @@ export function mountBoardEditor(root, {
         </div>
         ${warning
           ? `<div class="be-idlewarn" role="status">
-               <span>Putting this away shortly, so the board is not left behind a form.
-                 Nothing is lost.</span>
+               <span>This will close soon, so the board is not left covered by this form. Nothing is
+                 lost.</span>
                <button type="button" class="be-btn be-primary" data-stay>I’m still here</button>
              </div>`
           : `<p class="be-hint be-idle">${idleMs
-              ? 'This closes itself if nobody is using it, so the board is never left behind a '
-                + 'form. Whatever you have typed is kept.'
+              ? 'This closes itself if nobody is using it, so the board is never left covered by '
+                + 'this form. Whatever you have typed is kept.'
               : 'This stays open until you close it.'}</p>`}
       </div>`;
     if (picking) root.querySelector('[data-picker-slot]')?.replaceWith(picking.el);

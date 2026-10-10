@@ -34,15 +34,15 @@ export const SPOTIFY_DASHBOARD_ADDRESS = 'developer.spotify.com/dashboard';
 export const CONNECT_WORDS = Object.freeze({
   intro: 'To play your own Spotify here, make a free Spotify app once. It takes about five minutes, on a computer.',
   premium: 'The Spotify login that makes the app needs Spotify Premium. Anyone else who will connect with their own '
-    + 'Spotify login has to be added under User Management in the app’s settings first (Spotify allows up to five '
-    + 'people for an app like this).',
+    + 'Spotify login has to be added first. Add them under User Management in the app’s settings. Spotify allows up to '
+    + '5 people for an app like this.',
   step1Off: 'Go to {dev} and sign in with your Spotify login.',
   step1Screen: 'On your phone or computer, open {dev} and sign in with your Spotify login.',
   step2: 'Press Create app. Any name and description will do.',
   step3: 'Under Redirect URIs, paste this address exactly, then press Add:',
   step4: 'Tick Web API, agree to Spotify’s terms, and press Save.',
   step5: 'Open the app’s Settings, copy its Client ID, and paste it here:',
-  once: 'The Client ID is saved once, for every music panel and the keys page. It is not a secret. The Client secret '
+  once: 'The Client ID is saved once, for every music part and the keys page. It is not a secret. The Client secret '
     + 'is never needed for playing.',
   notSecure: 'Spotify only accepts a return address on https (or http://127.0.0.1 on this machine), and this page is '
     + 'not on one, so connecting will not work from this address.',

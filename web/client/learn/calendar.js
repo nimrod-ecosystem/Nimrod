@@ -14,7 +14,7 @@ function row(s, libcalBase) {
   // not a fabricated per-event page.
   const libcal = libcalBase
     ? '<a class="cal-libcal" href="' + esc(libcalBase) + '" target="_blank" rel="noopener">' +
-      'Once scheduled, register on LibCal ↗</a>'
+      'Once it has a date, sign up on LibCal, the library\'s calendar ↗</a>'
     : '';
   return (
     '<div class="cal-row' + (soon ? ' soon' : '') + '">' +

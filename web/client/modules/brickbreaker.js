@@ -172,9 +172,9 @@ const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Bricks broken this game. A Scoreboard on the same screen can show it instead.' }),
   { key: 'control', label: 'How the paddle moves', kind: 'choice', default: 'sweep', level: 'essential',
     options: [
-      { value: 'sweep', label: 'It glides by itself; a press stops it and starts it (one switch)' },
-      { value: 'steps', label: 'Next and previous move it a step; select launches' },
-      { value: 'follow', label: 'It catches every ball; a press changes the angle' },
+      { value: 'sweep', label: 'It glides by itself. A press stops it and starts it. One switch (one big button) is enough' },
+      { value: 'steps', label: 'Next and previous move it one step. Select launches the ball' },
+      { value: 'follow', label: 'It catches every ball. A press changes the angle' },
     ],
     note: 'A pointer can always move the paddle, and a click is a press.' },
   ...autostartFields({ on: false }),
@@ -247,8 +247,8 @@ export function statusFor(g, { control = 'sweep', idle = false, autoLaunch = 3 }
 
 registerModule(
   { type: GAME, title: 'Brick breaker', core: 'new',
-    description: 'Knock down a wall of bricks with a ball and a paddle. One switch can play: the paddle '
-      + 'glides by itself and a press stops it. Slow by default, and a missed ball just comes back.',
+    description: 'Knock down a wall of bricks with a ball and a paddle. One switch (one big button) can play. The paddle '
+      + 'glides by itself and a press stops it. The ball is slow by default, and a missed ball just comes back.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;

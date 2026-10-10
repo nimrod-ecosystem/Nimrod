@@ -53,7 +53,7 @@ export const SDK_WORDS = Object.freeze({
   not_ready: 'Spotify says this page went offline as a speaker (not_ready). It tries again by itself.',
   initialization_error: 'Spotify says this browser cannot play its music (initialization_error).',
   authentication_error: 'Spotify did not accept the sign-in for playing here (authentication_error). Sign in again with “Connect Spotify”.',
-  account_error: 'Spotify says this account cannot play here: it needs Premium (account_error).',
+  account_error: 'Spotify says this login cannot play here. It needs Premium (account_error).',
   playback_error: 'Spotify could not play that (playback_error).',
   autoplay_failed: 'The browser stopped the music starting by itself (autoplay_failed). Press Play here once.',
   'signed-out': 'Spotify is not signed in on this device. Press “Connect Spotify”.',

@@ -110,7 +110,7 @@ export const BRICKS_SETTINGS = Object.freeze([
     options: THICKNESSES.map(mm), appliesWhen: applies('thickness') },
   { key: 'colour', label: 'Colour', kind: 'choice', default: BRICKS_DEFAULTS.colour, level: 'essential',
     options: COLOUR_CHOICES.map((v, i) => ({ value: v, label: v === 'own' ? 'Your own colour' : `Theme colour ${i + 1}` })),
-    help: 'The theme’s brick colours change with the theme; your own stays the same whatever the theme.' },
+    help: 'The theme’s brick colours change with the theme. Your own colour stays the same whatever the theme.' },
   { key: 'ownColour', label: 'Your own colour', kind: 'color', default: BRICKS_DEFAULTS.ownColour, level: 'essential',
     appliesWhen: (v) => v?.colour === 'own' },
   { key: 'look', label: 'Look', kind: 'choice', default: BRICKS_DEFAULTS.look, level: 'standard',

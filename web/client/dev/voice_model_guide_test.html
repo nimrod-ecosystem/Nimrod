@@ -173,7 +173,7 @@ try {
     check('no fetch in this browser: cannot tell (null), never a crash', (await probeVoiceService({ fetchImpl: null })).answering === null);
     check('the words: answering names the port and the engine', /answering on port 9001, with “my voice”/.test(describeProbe(ok, { port: 9001 })), describeProbe(ok, { port: 9001 }));
     check('the words: not answering says how to start it, and that the browser may block it', /Nothing is answering on port 8796/.test(describeProbe(refused))
-      && /allow it/.test(describeProbe(refused)));
+      && /Allow it in the site/.test(describeProbe(refused)));   // site text rewrite 2026-10-09: a new sentence now, capital A
     check('the timings are argued constants, not hidden ones', PROBE_TIMEOUT_MS === 3000 && PROBE_EVERY_MS === 5000);
   }
 

@@ -174,7 +174,7 @@ export const DEFAULT_POLICY = {
 export const RECOVERY_SETTINGS = [
   { key: 'on', label: 'Let this screen fix itself', default: false, level: 'standard',
     onLabel: 'Yes', offLabel: 'No',
-    note: 'rebuilds a panel that has stopped, before anybody has to notice' },
+    note: 'restarts a part that has stopped, before anybody has to notice' },
   { key: 'graceMs', label: 'Wait before doing anything', kind: 'choice', default: 10 * 60 * 1000,
     level: 'advanced',
     options: [

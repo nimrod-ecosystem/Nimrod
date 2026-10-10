@@ -235,7 +235,7 @@ export const SUBTITLES_FIELDS = [
       { value: 'eyechart', label: 'Eye chart: the newest line largest, older lines smaller' },
       { value: 'snake', label: 'Running text: the lines run on across the full width' },
     ],
-    note: 'Eye chart and running text fit more words; rolling up and plain keep every line the same size.' },
+    note: 'Eye chart and running text fit more words. Rolling up and plain keep every line the same size.' },
   { key: 'subtitlesShrink', label: 'Subtitles (eye chart): how much smaller each older line is', kind: 'choice',
     default: SUBTITLES_DEFAULTS.shrink, level: 'advanced',
     options: [
@@ -268,8 +268,8 @@ export const SUBTITLES_FIELDS = [
   { key: 'subtitlesRoute', label: 'Subtitles: what writes the words down', kind: 'choice',
     default: SUBTITLES_DEFAULTS.route, level: 'advanced',
     options: [
-      { value: 'local', label: 'The recognisers chosen for spoken commands (the room’s sound stays where they are)' },
-      { value: 'online', label: 'Also an online recogniser (sends the room’s sound to the browser’s maker)' },
+      { value: 'local', label: 'The same ones chosen for spoken commands (the room’s sound stays where they are)' },
+      { value: 'online', label: 'Also this browser’s own voice typing, online (sends the room’s sound to the browser’s maker)' },
     ],
     note: 'Online: tell everyone in the room first. Anything said near the screen is sent.' },
 ];

@@ -2619,7 +2619,7 @@ const OVERLAYS = {
   cat: {
     label: 'Black cat',
     group: 'calm',
-    note: 'Sits bottom right, blinks, flicks its tail. Drawn darker than a dark ground with a rim, so it reads on black.',
+    note: 'Sits bottom right, blinks, flicks its tail. It has a lighter edge, so it shows up on a black screen.',
     render: () => {
       const cat = {
         clipPath: `polygon( 18% 0%, 26% 13%, 40% 2%, 46% 15%, 52% 25%, 50% 33%, 58% 41%, 70% 55%, 80% 73%, 86% 91%, 88% 100%, 34% 100%, 30% 99%, 26% 79%, 22% 57%, 16% 43%, 14% 31%, 14% 17% )`,
@@ -2756,7 +2756,7 @@ const OVERLAYS = {
   rain: {
     label: 'Rain',
     group: 'weather',
-    note: 'Soft vertical streaks in three depth bands. No lightning, ever: a flash is a flash.',
+    note: 'Soft streaks of rain, some near and some far. No lightning, ever.',
     render: () => Array.from({
       length: 34
     }, (_, i) => {
@@ -2779,7 +2779,7 @@ const OVERLAYS = {
   snow: {
     label: 'Snow',
     group: 'weather',
-    note: 'Slow flakes in three depth bands, larger and sharper near the front.',
+    note: 'Slow snowflakes, some near and some far. The near ones are bigger and clearer.',
     render: () => Array.from({
       length: 28
     }, (_, i) => {
@@ -2829,7 +2829,7 @@ const OVERLAYS = {
   petals: {
     label: 'Blossom',
     group: 'weather',
-    note: 'Pale petals drifting down. The spring counterpart to falling leaves.',
+    note: 'Pale petals drifting down. Like falling leaves, but for spring.',
     render: () => Array.from({
       length: 16
     }, (_, i) => __lsh("span", {
@@ -2987,7 +2987,7 @@ const OVERLAYS = {
   moon: {
     label: 'Moon (tonight’s phase)',
     group: 'calm',
-    note: 'Shows the moon as it really is tonight, so somebody who has lost track of days can watch time pass.',
+    note: 'Shows the moon as it really is tonight. Someone who has lost track of the days can watch time pass.',
     render: () => {
       /* THE REAL PHASE. Days since a known new moon (2000-01-06 18:14 UTC) over the synodic month.
          p=0 new, .25 first quarter, .5 full, .75 last quarter. Northern-hemisphere orientation:

@@ -149,7 +149,7 @@ function checkWordsItem(it) {
   // decoys is optional in the schema doc's own example count (it shows two), but Word Forge's
   // existing rounds need at least one wrong option to be a multiple-choice question at all.
   if (it.decoys !== undefined) {
-    if (!Array.isArray(it.decoys) || it.decoys.length === 0) bad.push('decoys, if present, must be a non-empty array');
+    if (!Array.isArray(it.decoys) || it.decoys.length === 0) bad.push('decoys, if present, must be a list with at least one entry');
     else if (it.decoys.some((d) => typeof d !== 'string' || !d.trim())) bad.push('a decoy is empty');
   }
   // *** ADDED 2026-09-08 — Mike: "Fix the schema." *** Word Forge's own word rows have always
@@ -163,7 +163,7 @@ function checkWordsItem(it) {
   // way `checkLessonItem` treats a video as genuinely optional below. NOT A BREAKING CHANGE —
   // zero `words`-kind packs exist yet (the one shipped pack is `trivia`), so nothing to migrate.
   if (it.example !== undefined && (typeof it.example !== 'string' || !it.example.trim())) {
-    bad.push('example, if present, must be a non-empty string');
+    bad.push('example, if present, must be text that is not empty');
   }
   if (it.difficulty && !normalizeDifficulty(it.difficulty)) {
     bad.push(`difficulty must be very easy/easy/medium/hard, got ${JSON.stringify(it.difficulty)}`);
@@ -177,10 +177,10 @@ function checkLessonItem(it) {
   // "A lesson without a video is still a lesson" — video is genuinely optional, so its absence
   // is not checked here at all, only its type when present.
   if (it.video !== undefined && it.video !== null && typeof it.video !== 'string') {
-    bad.push('video must be a string url when present');
+    bad.push('video, if present, must be text: a web address');
   }
   if (it.questions !== undefined) {
-    if (!Array.isArray(it.questions)) bad.push('questions must be an array when present');
+    if (!Array.isArray(it.questions)) bad.push('questions, if present, must be a list');
     else it.questions.forEach((q, i) => {
       for (const problem of checkTriviaItem(q)) bad.push(`questions[${i}]: ${problem}`);
     });
@@ -420,11 +420,11 @@ export function parsePack(text) {
   try {
     json = JSON.parse(text);
   } catch (e) {
-    throw new Error(`pack is not valid JSON: ${e.message}`);
+    throw new Error(`This pack could not be read. It is not valid JSON: ${e.message}`);
   }
   const problems = validatePack(json);
   if (problems.length) {
-    throw new Error(`pack failed validation:\n  ${problems.join('\n  ')}`);
+    throw new Error(`This pack has problems:\n ${problems.join('\n  ')}`);
   }
   return json;
 }

@@ -87,12 +87,12 @@ export async function mountDemoStrip(root, {
   bar.innerHTML = `
     <span class="d-text">
       <b>This is a live demo, and these are sample photos.</b>
-      <span class="d-sub">Point it at a folder of your own and it plays those instead.
-        Nothing is uploaded — the pictures never leave this device.</span>
+      <span class="d-sub">Choose a folder of your own and it shows those instead. Nothing is sent
+        anywhere. The pictures never leave this device.</span>
     </span>
     ${supported ? '<button class="d-go" data-pick>Use my own photos</button>' : ''}
     <a class="d-in" href="${esc(loginHref)}">Sign in to keep this</a>
-    <button class="d-x" data-x aria-label="Dismiss">✕</button>
+    <button class="d-x" data-x aria-label="Close this">✕</button>
     ${supported ? '' : `
       <span class="d-note">Choosing a folder needs Chrome or Edge on a computer. On this
         browser you can still look around, and sign in to set a screen up.</span>`}`;
