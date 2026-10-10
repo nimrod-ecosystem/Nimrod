@@ -790,6 +790,18 @@ export const CATALOG = [
       + 'the row at once, or finishes the picture, and on a finished one it starts the next. It can also be set to '
       + 'build only when pressed.',
   },
+  // sortbricks (2026-10-10, row 2.76): a shape sorter, then sorting by colour and by size.
+  {
+    type: 'sortbricks',
+    title: 'Sort the bricks',   // not "Sortbricks"
+    group: 'practice',
+    use: 'answer',
+    lead: 'Put each brick where it goes: in the slot it fits, then with its colour, then with its size.',
+    needs: 'Nothing. The bricks, the levels and the sounds are built in.',
+    why: 'At the first level there is one slot, and any press puts the brick in. Later levels light the places up in '
+      + 'turn, so one switch (one big button) can choose; a touch, a key or two switches work too. It says each brick\'s '
+      + 'colour aloud, and a wrong place just brings the same brick back.',
+  },
   {
     type: 'rhythm',
     group: 'practice',

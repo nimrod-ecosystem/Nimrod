@@ -712,6 +712,11 @@ export const MODULE_VERBS = {
                    launch: 'stackline/drop', back: 'stackline/back', pause: 'stackline/pause', play: 'stackline/resume' },
   brickmosaic:   { select: 'brickmosaic/press', launch: 'brickmosaic/press', down: 'brickmosaic/press',
                    next: 'brickmosaic/next', play: 'brickmosaic/resume' },
+  // sortbricks (2026-10-10, row 2.76): Sort the bricks. select (and down, launch) puts the brick in the lit place; next / prev
+  // (and right / left) move the light; at one slot every one of them puts the brick in. back and pause pause, play starts.
+  sortbricks:    { select: 'sortbricks/select', next: 'sortbricks/next', prev: 'sortbricks/prev', back: 'sortbricks/back',
+                   left: 'sortbricks/prev', right: 'sortbricks/next', down: 'sortbricks/select', launch: 'sortbricks/select',
+                   pause: 'sortbricks/pause', play: 'sortbricks/resume' },
   buildit:      { next: 'buildit/next', prev: 'buildit/prev', select: 'buildit/select',
                    left: 'buildit/left', right: 'buildit/right', up: 'buildit/up', down: 'buildit/down',
                    play: 'buildit/resume', pause: 'buildit/pause' },
