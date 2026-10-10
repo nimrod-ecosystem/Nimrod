@@ -2520,3 +2520,20 @@ Mike, 2026-10-08/09, after the swap checks on the bench.
 - **History on a kiosk Pi is written by the media agent on that computer, not through a browser permission**
   (Mike asked for "auto allow"). Code's route: an opt-in, append-only, this-computer-only write path on the agent
   (dfa3153), rather than automating the browser's Allow button or adding a browser policy. Open to Mike. (2026-10-09)
+
+## Pictures from a shared Drive folder, hides, and voice two-step -- 2026-10-09 (later)
+
+Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 2.71).
+
+- **How often to look for new pictures is a setting; daily is fine.** Mike: *"Maybe make options to check every day or
+  week or whatever."* One listing a day is negligible against Google's quotas, and only new or changed files are
+  downloaded. (2026-10-09)
+- **A picture removed from the shared Drive folder stays on the local drive by default.** Mike: *"No. That way you
+  could free up space on the drive. I'd go with no as the default and make it an option."* Mirroring deletions is an
+  option. (2026-10-09)
+- **"Hide this picture" applies to everyone on that screen by default; per person is an option.** Mike: *"That's
+  another option. Let's make the default for everyone."* Hides are undoable and kept on the device and in the
+  Nimrod folder, never on the server. (2026-10-09)
+- **Voice commands must work in two steps: the wake phrase, then the command on its own.** Mike: *"I thought I said
+  that Christine won't be able to say everything in one breath."* A sign or guide that says "in one breath" is wrong;
+  measurements and the sign use the two-step. (2026-10-09)
