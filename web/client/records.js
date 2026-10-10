@@ -70,15 +70,22 @@ export function describe(row) {
   }
 }
 
+const NO_SITTING = '(no sitting recorded)';
 export function groupBySession(events) {
   const out = new Map();
   for (const e of events || []) {
     if (!KINDS_WORTH_SHOWING.has(e.kind)) continue;
-    const sid = e.session_id || '(no sitting recorded)';
+    const sid = e.session_id || NO_SITTING;
     if (!out.has(sid)) out.set(sid, []);
     out.get(sid).push(e);
   }
   return out;
+}
+
+// The sitting's name on its heading: a short piece of its id, enough to tell two apart. A row with no sitting
+// is said whole - cutting "(no sitting recorded)" to 12 letters printed "sitting (no sitting " (BQ item 6).
+export function sittingLabel(sid) {
+  return NO_SITTING === sid || !sid ? 'no sitting recorded' : `sitting ${String(sid).slice(0, 12)}`;
 }
 
 // Who vouched for a row — read from the attestation events, never from a flag on the row.
@@ -153,7 +160,7 @@ export function mountRecords(host, { profiles, user, makeEvents = null } = {}) {
         const trials = rows.filter((r) => r.kind === 'trial');
         const started = rows[0]?.created_at;
         parts.push(`<div class="rec-session"><h3>${esc(clock(started))}
-          <small>${trials.length} row${trials.length === 1 ? '' : 's'} · sitting ${esc(String(sid).slice(0, 12))}</small></h3>`);
+          <small>${trials.length} row${trials.length === 1 ? '' : 's'} · ${esc(sittingLabel(sid))}</small></h3>`);
         if (summary) {
           const c = summary.data?.counts || {};
           const l = summary.data?.latency || {};

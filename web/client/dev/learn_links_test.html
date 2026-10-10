@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>learn links — every link into /learn/ lands on something that is there</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>learn links</h1>
+<p>The Learn page became one page (2026-09-13) and its sections were renamed: Courses is now
+<code>#teach</code>, Try it is <code>#demo</code>, and there is no calendar. The older pages under
+<code>/learn/</code> are shelved, not deleted, and still link back to it - so every <code>/learn/#…</code>
+link on them has to name a section the page still has (chat note BQ item 6: 21 of them did not).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// The pages under /learn/ that link back to it. A page added there with links of its own belongs here too.
+const PAGES = ['about.html', 'status.html', 'print.html', 'homeschool.html',
+  'courses/upcycle-device.html', 'courses/local-ai.html', 'courses/games.html',
+  'courses/aac-board.html', 'courses/device-setup.html'];
+
+const parse = (html) => new DOMParser().parseFromString(html, 'text/html');
+const load = async (path) => {
+  const res = await fetch(`../learn/${path}`, { cache: 'no-cache' });
+  return { ok: res.ok, doc: parse(await res.text()) };
+};
+
+(async () => {
+try {
+  section('the Learn page itself');
+  const index = await load('index.html');
+  check('learn/index.html is served', index.ok);
+  const ids = new Set([...index.doc.querySelectorAll('[id]')].map((e) => e.id));
+  check('it has the sections the old pages are pointed at (teach, demo)', ids.has('teach') && ids.has('demo'), [...ids].join(','));
+  const own = [...index.doc.querySelectorAll('a[href^="#"]')].map((a) => a.getAttribute('href').slice(1)).filter(Boolean);
+  check('every in-page link on it names a section it has', own.every((id) => ids.has(id)), own.filter((id) => !ids.has(id)).join(','));
+
+  section('*** every /learn/#… link on the other pages lands on a section that is there ***');
+  for (const page of PAGES) {
+    const p = await load(page);
+    check(`${page} is served`, p.ok);
+    const into = [...p.doc.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'))
+      .map((h) => (h.match(/^\/learn\/(?:index\.html)?#(.+)$/) || [])[1]).filter(Boolean);
+    const dead = into.filter((id) => !ids.has(id));
+    check(`${page}: ${into.length} link${into.length === 1 ? '' : 's'} into the Learn page, none dead`, dead.length === 0,
+      `dead: ${dead.map((d) => '#' + d).join(', ')}`);
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

@@ -790,6 +790,15 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
     check('kept with us: how many, and a Remove button', /Kept with us: 12 entries, and 3 older ones counted/.test(kept) && kept.includes('Remove what is kept with us'));
     const nobody = historyHtml({ places: normalizePlaces(null), folder: 'none', withUs: null, cap: null, canUs: false, person: false, last: {} });
     check('a screen for nobody yet says so, and offers no choices', /does not know whose it is/.test(nobody) && !nobody.includes('data-act="place"'));
+    // BQ item 6: a failed copy showed its bare code, "(write)".
+    const failed = historyHtml({ places: { plays: 'folder', games: 'us', words: 'folder' }, folder: 'ready', withUs: null, cap: 10000,
+      canUs: true, person: true, last: { plays: { place: 'folder', why: 'write' }, games: { place: 'us', why: 'refused (422)' },
+        words: { place: 'folder', why: 'brand-new-code' } } });
+    const lastLine = (k) => (failed.match(new RegExp(`<p[^>]*data-hp-last="${k}"[^>]*>([^<]*)</p>`)) || [])[1] || '';
+    check('*** a failed copy says why in words, not the code ***',
+      /writing to your Nimrod folder failed/.test(lastLine('plays')) && !/\(write\)/.test(lastLine('plays')), lastLine('plays'));
+    check('...a server refusal by number reads as "the site refused it"', /the site refused it/.test(lastLine('games')) && !/422/.test(lastLine('games')), lastLine('games'));
+    check('...a code with no words yet still shows, rather than being hidden', /brand-new-code/.test(lastLine('words')), lastLine('words'));
     const el = document.getElementById('page');
     await host.setPlace('plays', 'device');
     const page = renderHistoryPage(el, { host });

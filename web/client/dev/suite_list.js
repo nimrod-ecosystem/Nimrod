@@ -208,6 +208,8 @@ export const SUITES = [
   // 2026-10-07: the Modules page again (library.html, /modules): the library, the real kiosk and its bar, the
   // Settings panel beside it; /home and the old addresses. Mounts real kiosks (needs the server).
   'library_page',
+  // 2026-10-10: every /learn/#… link on the shelved Learn pages names a section learn/index.html still has (BQ item 6).
+  'learn_links',
   // 2026-10-09: the ⚙ menu's words against what is really behind them, every theme: Home's docked menu with each
   // "Menu and bar background", and the kiosk's own menu (usual and docked). Mounts real kiosks (needs the server).
   'menu_contrast',

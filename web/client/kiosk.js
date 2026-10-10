@@ -311,6 +311,12 @@ export function dashboardPathFor(row, fallback = DASHBOARD_MODULE_DEFAULT) {
   const v = row && row[DASHBOARD_MODULE_KEY];
   return typeof v === 'boolean' ? v : !!fallback;
 }
+/** The name of the "every panel of its kind" level. With nothing picked it read "every this panel panel"
+ *  (BQ item 6). Pure; exported for suites. */
+export function moduleLevelName(rec) {
+  const kind = rec ? (rec.title || rec.type || '') : '';
+  return kind ? `every ${kind} panel` : 'every panel of this kind';
+}
 
 // Mount a kiosk for one profile into `root`. Returns a small control handle
 // (also used by the dev test). `profiles`/`bus` are injectable.
@@ -3528,7 +3534,7 @@ export async function mountKiosk(root, {
   }
   const panelName = (r) => (r ? (r.title || r.type) : 'this panel');
   function levelName(lv) {
-    if (lv === 'module') return `every ${panelName(focusedRec())} panel`;
+    if (lv === 'module') return moduleLevelName(focusedRec());
     if (lv === 'dashboard') return 'this dashboard';
     if (lv === 'screen') return 'this screen';
     if (lv === 'device') return 'this device';

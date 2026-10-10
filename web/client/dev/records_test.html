@@ -29,7 +29,7 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { mountRecords, describe, groupBySession, attestersOf, RECORDING_TYPES } from '../records.js';
+import { mountRecords, describe, groupBySession, attestersOf, RECORDING_TYPES, sittingLabel } from '../records.js';
 import { TABS } from '../home.js';
 
 const out = document.getElementById('results');
@@ -105,6 +105,13 @@ function rig() {
         g.size === 2 && g.has('sess-a') && g.has('sess-b'), String(g.size));
       check('an unrelated event stream is not shown as evidence',
         ![...g.values()].flat().some((e) => e.kind === 'press'));
+      // BQ item 6: a row with no sitting had its heading cut to "sitting (no sitting ".
+      const none = groupBySession([{ id: 9, kind: 'trial', data: { kind: 'hit', latencyMs: 400 } }]);
+      const [sid] = [...none.keys()];
+      check('*** a row with no sitting is headed "no sitting recorded", whole ***',
+        sittingLabel(sid) === 'no sitting recorded', sittingLabel(sid));
+      check('...and a real sitting is still named by a short piece of its id',
+        sittingLabel('abcdefghijklmnop') === 'sitting abcdefghijkl', sittingLabel('abcdefghijklmnop'));
     }
 
     section('*** the framing, which is the whole point ***');

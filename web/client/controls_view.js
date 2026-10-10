@@ -243,7 +243,8 @@ export function explainActivation(rec = {}) {
     unbound: 'is not bound to anything yet',
     'role-gated': 'is bound, but the gate is refusing it from whoever pressed it',
     'unknown-action': 'is bound to something that no longer exists',
-    'too-short': `was released too quickly — it needs ${rec.holdMs || 'a longer'}ms`,
+    // No number recorded: "a longer press", not "a longerms" (BQ item 6).
+    'too-short': `was released too quickly — it needs ${rec.holdMs ? `${rec.holdMs}ms` : 'a longer press'}`,
     debounce: 'came too soon after the last one and was treated as a bounce',
     lockout: 'is still inside its repeat lockout from the last press',
     'auto-release': 'was let go by the watchdog rather than by a person — usually a stuck switch',
@@ -251,6 +252,18 @@ export function explainActivation(rec = {}) {
 
   return { ok: false, text: `${who} ${say}` };
 }
+
+// Each refusal reason in a few plain words, for the one-line verdict below (BQ item 6: it showed
+// the bare code). The same reasons `explainActivation` explains at length.
+const REASON_WORDS = Object.freeze({
+  unbound: 'nothing is bound to it yet',
+  'role-gated': 'the gate is refusing whoever pressed it',
+  'unknown-action': 'it is bound to something that no longer exists',
+  'too-short': 'each was released too quickly',
+  debounce: 'each came too soon after the last and was treated as a bounce',
+  lockout: 'each was still inside the repeat lockout',
+  'auto-release': 'the watchdog let go, not a person — usually a stuck switch',
+});
 
 // The one-line summary that is worth more than the list, because it answers "is it the
 // switch or is it us" before anybody reads a single row.
@@ -268,7 +281,8 @@ export function verdict(records = []) {
     const reasons = [...new Set(refused.map((r) => r.reason).filter(Boolean))];
     return {
       tone: 'bad',
-      text: `Every press is being refused${reasons.length === 1 ? ` — ${reasons[0]}` : ''}`,
+      // The reason in words, not its code ("role-gated"); a code nobody has words for still shows.
+      text: `Every press is being refused${reasons.length === 1 ? ` — ${REASON_WORDS[reasons[0]] || reasons[0]}` : ''}`,
     };
   }
   return { tone: 'mixed', text: `${list.length - refused.length} of ${list.length} presses accepted` };

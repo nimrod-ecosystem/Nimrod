@@ -129,6 +129,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('added modules appear as chips', chips().length === 2, JSON.stringify(chips()));
     check('chips show HUMAN titles, not raw types',
       chips().join(',') === 'Quests,Progress', JSON.stringify(chips()));
+    // BQ item 6: the line under the form said "Added reading_log." -- the code name, not the title.
+    check('the "Added" line names the title, not the code name',
+      txt('[data-msg]') === 'Added Progress.', txt('[data-msg]'));
     check('a filled screen can now be opened', !q('[data-open]').disabled);
 
     // *** "SEE IT RUNNING" MOUNTS IT HERE. IT USED TO NAVIGATE AWAY. ***

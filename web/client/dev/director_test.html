@@ -117,6 +117,12 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     check('starts on the youtube provider (initial state)', curProv(host) === 'youtube', `current=${curProv(host)}`);
     check('youtube child mounted & autostarted a video', stub.current() !== null, `loaded=${stub.loaded.length}`);
     check('only one provider slot is visible at a time', host.querySelectorAll('.d-slot:not([hidden])').length === 1);
+    // BQ item 6: a not-yet-built one's card said "segment placeholder — real module lands in a later slice".
+    {
+      const notes = [...host.querySelectorAll('.d-ph-note')].map((n) => n.textContent);
+      check('*** a not-yet-built segment\'s card speaks plainly, not in our own build notes ***',
+        notes.length > 0 && notes.every((t) => t && !/placeholder|slice|module/i.test(t)), JSON.stringify(notes));
+    }
 
     // a video ENDING hands back to the director -> it picks a DIFFERENT provider
     stub.fireEnded();

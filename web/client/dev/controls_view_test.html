@@ -122,6 +122,10 @@ check('role-gated → the gate, not the switch',
   /gate is refusing it/.test(say({ control: 'key:x', reason: 'role-gated' })));
 check('too-short → the hold threshold, and it names the number',
   /needs 300ms/.test(say({ control: 'key:x', reason: 'too-short', holdMs: 300 })));
+// BQ item 6: with no number recorded it read "it needs a longerms".
+check('too-short with no number recorded reads as words, not "a longerms"',
+  /needs a longer press$/.test(say({ control: 'key:x', reason: 'too-short' }))
+  && !/longerms/.test(say({ control: 'key:x', reason: 'too-short' })), say({ control: 'key:x', reason: 'too-short' }));
 check('debounce → it was treated as a bounce',
   /bounce/.test(say({ control: 'key:x', reason: 'debounce' })));
 check('lockout → the repeat lockout',
@@ -147,8 +151,13 @@ check('all accepted reads as healthy',
   verdict([{ accepted: true }, { accepted: true }]).tone === 'good');
 {
   const v = verdict([{ reason: 'too-short' }, { reason: 'too-short' }]);
-  check('everything refused for one reason names that reason',
-    v.tone === 'bad' && /too-short/.test(v.text), v.text);
+  // In words, not the code (BQ item 6: the verdict showed a bare "role-gated").
+  check('everything refused for one reason names that reason, in words',
+    v.tone === 'bad' && /released too quickly/.test(v.text) && !/too-short/.test(v.text), v.text);
+  const g = verdict([{ reason: 'role-gated' }]);
+  check('..."role-gated" is never shown as the code', /gate is refusing/.test(g.text) && !/role-gated/.test(g.text), g.text);
+  const u = verdict([{ reason: 'brand-new-reason' }]);
+  check('...a reason with no words yet is still shown rather than swallowed', /brand-new-reason/.test(u.text), u.text);
 }
 check('a mix is reported as a count, not as a failure',
   verdict([{ accepted: true }, { reason: 'debounce' }]).tone === 'mixed');

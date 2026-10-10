@@ -810,7 +810,7 @@ export async function mountScreens(root, {
         const type = root.querySelector(`[data-pick="${CSS.escape(pid)}"]`).value;
         await profiles.addModule(pid, type);
         await refresh();
-        say(`Added ${type}.`);
+        say(`Added ${titleOf(type)}.`);   // its title, as the chips show it -- not the code name (BQ item 6)
       }));
     }
     for (const b of root.querySelectorAll('[data-rename]')) {

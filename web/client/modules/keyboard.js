@@ -82,7 +82,7 @@ registerModule(
           <div class="keyboard-mod">
             <div class="kb-head">
               <h3>Keyboard</h3>
-              <a class="kb-edit" href="/home.html" title="opens the Devices tab, where bindings are edited">Edit in Devices settings &#8599;</a>
+              <a class="kb-edit" href="/home.html?tab=inputs" title="opens the Devices tab, where bindings are edited">Edit in Devices settings &#8599;</a>
             </div>
             <div data-kb-rows class="kb-rows"><p class="kb-empty">Loading&hellip;</p></div>
           </div>`;
