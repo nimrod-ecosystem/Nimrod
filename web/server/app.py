@@ -29,13 +29,14 @@ from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
-from drive import ROLES, Answerers, Rooms, Tickets, parse_message, stamp_signal
+from drive import ROLES, Answerers, CallGroups, Rooms, Tickets, parse_message, stamp_signal
 from game_rooms import SWEEP_S as GAME_SWEEP_S, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
 from identity import (current_user, optional_user, set_device_key_lookup, set_device_key_touch, signed_in_here,
                       via_device_key)
+import call_relay  # group calls (2026-10-09): the relay-for-bigger-calls setting (off; connects to nothing)
 import claims
 import claude_ai
 import links
@@ -1248,6 +1249,30 @@ _rooms = Rooms()
 _answerers = Answerers()        # one answering screen per intercom or family-call offer (drive.py, row 2.44)
 
 
+# group calls (2026-10-09; drive.py CallGroups): what a group calls each member - the SERVER's names, never the
+# page's. A screen is its person's name; a caller is their display name (or first person's name).
+def _group_name(user: str, role: str, room) -> str:
+    try:
+        if role == "screen" and room:
+            p = store.get_person(room[0], room[1], profile=True) or {}
+            return (p.get("name") or "").strip()[:60] or "A screen"
+        return (_inviter_name(user) or "").strip()[:60] or "Someone"
+    except Exception:
+        return "Someone"
+
+
+_groups = CallGroups(name_of=_group_name)
+
+
+async def _send_out(out) -> None:
+    """Send what a CallGroups method returned: (connection, message) pairs. A gone socket tidies itself up."""
+    for conn, payload in out or []:
+        try:
+            await conn.send_json(payload)
+        except Exception:
+            pass
+
+
 def _person_owner(person_id: str) -> str | None:
     """Which account owns this person, or None. Deliberately NOT scoped to the caller -
     a grantee has to be able to reach a person they do not own."""
@@ -1424,6 +1449,11 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             if not room:
                 continue
             arb_key = (room_key, person_id)
+            if msg["type"] == "group":
+                # group calls (2026-10-09; drive.py CallGroups): a signal to ONE member of this socket's group,
+                # leaving, or knocking / letting a knock in. Every rule is CallGroups'; nothing here is relayed raw.
+                await _send_out(_groups.handle(ws, user, arb_key, role, msg))
+                continue
             if msg["type"] == "claim":
                 # A SCREEN asks to be the one that answers (drive.py Answerers). A driver cannot
                 # claim anything. The losers are told in the same turn as the winner, so a screen
@@ -1435,6 +1465,9 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     await _tell([c for c in room.screens if c is not ws],
                                 {"type": "answerer", "purpose": msg["purpose"], "session": msg["session"], "you": False})
                 await ws.send_json({"type": "answerer", "purpose": msg["purpose"], "session": msg["session"], "you": won})
+                # group calls: a screen picked to answer a call that was rung INTO a group joins it (the only way in).
+                if won and msg["purpose"] == "call":
+                    await _send_out(_groups.screen_won(ws, user, arb_key, msg["session"]))
                 continue
             # A driver drives screens. A screen never drives anything - it only reports -
             # so there is no path by which one bedside screen could press another's buttons.
@@ -1459,7 +1492,20 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                                     {"type": "answerer", "purpose": sig.get("purpose"), "session": sig.get("session"), "you": False})
                     if relay:
                         await _tell(room.drivers, stamp_signal(msg, user))
+                        # group calls: an older page answering without a claim is picked by its answer.
+                        if newly and sig.get("kind") == "answer" and sig.get("purpose") == "call":
+                            await _send_out(_groups.screen_won(ws, user, arb_key, sig.get("session")))
+                        if sig.get("kind") == "bye":
+                            _groups.call_ended(arb_key, sig.get("session"))
                 else:
+                    # group calls: an offer tagged with a group makes it or rings another screen into it - and is
+                    # NOT relayed when the tag is not this login's to use, or the group is full (nothing rings).
+                    relay, gout = _groups.driver_offer(ws, user, arb_key, sig)
+                    await _send_out(gout)
+                    if not relay:
+                        continue
+                    if sig.get("kind") == "bye":
+                        _groups.call_ended(arb_key, sig.get("session"))
                     _answerers.driver_signal(arb_key, sig)
                     await _tell(room.screens, stamp_signal(msg, user))
             elif role == "driver":
@@ -1472,6 +1518,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         _rooms.leave(room_key, person_id, role, ws)
         if role == "screen":
             _answerers.left((room_key, person_id), ws)
+        await _send_out(_groups.left(ws))      # group calls: out of its group, its knocks withdrawn
         await announce()
 
 
@@ -1616,6 +1663,24 @@ def put_display_name(body: DisplayNamePut, user: str = Depends(current_user)):
     cur = store.get_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY)
     store.put_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY, {"name": name}, cur.get("version", 0))
     return {"display_name": name}
+
+
+# group calls (2026-10-09): "use a relay server for bigger calls" - the account's setting only. call_relay.py has the
+# plan and the argument (no secret is kept here; nothing connects to the relay yet; off by default).
+@app.get("/api/me/call-relay")
+def get_call_relay(user: str = Depends(current_user)):
+    return call_relay.relay_view(store.get_state(user, ACCOUNT_SCOPE, call_relay.RELAY_ROW).get("data"))
+
+
+@app.put("/api/me/call-relay")
+def put_call_relay(body: dict = Body(...), user: str = Depends(current_user)):
+    try:
+        row = call_relay.clean_relay(body)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    cur = store.get_state(user, ACCOUNT_SCOPE, call_relay.RELAY_ROW)
+    store.put_state(user, ACCOUNT_SCOPE, call_relay.RELAY_ROW, row, cur.get("version", 0))
+    return call_relay.relay_view(row)
 
 
 @app.get("/api/people/{person_id}/notes/screens")

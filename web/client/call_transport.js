@@ -354,6 +354,12 @@ export function createCallTransport({
   // (call_mix.js). undefined: one is made on the first clip asked for; null: clips are never mixed (words go
   // as text only, exactly as before); an object: that mixer (a suite's fake).
   clipMixer = undefined,
+  // group calls (2026-10-09; call_group.js): the call group a SCREEN's call may grow into. With one, what this call
+  // sends goes to every other person in it (`sending`, a swapped track, a word); the group answers its own offers
+  // only once this call is live (`setReady`); it is left when the call ends; and the call stays up when the caller
+  // who rang hangs up while somebody else is still in it (see "THE CALL OUTLIVES ITS CALLER" below). null: a
+  // two-person call, exactly as before.
+  group = null,
 } = {}) {
   if (!link) throw new Error('createCallTransport: a drive link is required');
 
@@ -407,6 +413,10 @@ export function createCallTransport({
   let wordsPending = 0;
   let callSeq = 0;
   const remoteCbs = new Set();
+  // group calls (2026-10-09): what this call is sending now (kept after its own connection closes, so a group that
+  // carries on can still send it to somebody who joins), and who hears the caller who rang leave while others stay.
+  let outTracks = [];
+  const legCbs = new Set();
 
   const log = (...a) => { try { onLog?.(...a); } catch { /* a logger must not break a call */ } };
 
@@ -440,15 +450,47 @@ export function createCallTransport({
   function setLive(on) {
     if (live === on) return;
     live = on;
+    // group calls: the group answers the other people's offers once this call has its tracks.
+    if (group) { try { group.setReady?.(on); } catch (e) { log('group: ready', e); } }
     for (const cb of [...liveCbs]) { try { cb(on); } catch (e) { log('onLive threw', e); } }
   }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  // *** THE CALL OUTLIVES ITS CALLER, IN A GROUP *** (group calls, 2026-10-09)
+  // ---------------------------------------------------------------------------------------------------------------
+  // Mike rings a screen, then lets his sister in. Mike hangs up. Before: the screen's call ended with him, and the
+  // sister - still connected - was dropped with it. Now, when the caller who rang this screen says `bye` (or their
+  // connection is lost for good) WHILE SOMEBODY ELSE IS STILL IN THE GROUP, only that one connection closes: the call
+  // stays live, the camera and microphone stay with it, and it ends when the last other person leaves (or here). A
+  // two-person call (no group, or nobody else in it) ends exactly as before. Argued the other way: "the person who
+  // rang holds the call together" is simpler, and it is what happened before - but it hangs up on the people still
+  // talking, which is the opposite of what anybody in that room would want.
+  function othersStay() {
+    if (!group || role !== 'screen') return false;
+    try { return (group.othersBesidesLeg?.() || 0) > 0; } catch { return false; }
+  }
+  function legLeft() {
+    log('the caller who rang left; the group carries on');
+    clearStall();
+    clearConnect();
+    closePc();
+    remoteStream = null;
+    if (attached) { try { attached.srcObject = null; } catch { /* gone */ } }
+    if (remoteCbs.size) emit(remoteCbs, null);
+    emit(legCbs, 'left');
+  }
+  const offGroup = group?.onChange?.(() => {
+    // The caller who rang has gone and now everybody else has too: the call is over.
+    if (live && !pc && !answering && !destroyed && !othersStay()) finish('remote', { why: 'hangup' });
+  }) || null;
   const ice = () => iceServers(config);
 
   function clearStall() { if (stallTimer != null) { clearTimer(stallTimer); stallTimer = null; } }
   function armStall() {
     clearStall();
     // A caller that vanished without a `bye` must not leave her looking at a dead call.
-    stallTimer = setTimer(() => { stallTimer = null; if (live) finish('stalled'); }, STALL_MS);
+    // group calls: a screen whose caller's connection is gone for good while others are still in the call keeps them.
+    stallTimer = setTimer(() => { stallTimer = null; if (live) { if (othersStay()) legLeft(); else finish('stalled'); } }, STALL_MS);
   }
 
   // The connect clock (ANSWER_CONNECT_MS). Armed when the screen starts answering, and again by a
@@ -506,12 +548,17 @@ export function createCallTransport({
     callSeq += 1;                       // ...and so do words still waiting for their clip (call loadouts)
     if (mixer) { try { mixer.stop({ swapBack: false }); } catch { /* gone */ } }
     if (remoteCbs.size) emit(remoteCbs, null);
+    outTracks = [];
     if (was || (!local && (wasRinging || wasAnswering))) {
       try { endedCb?.(reason, { why }); } catch (e) { log('onEnded threw', e); }
     }
     // The screen's watchers hear EVERY ending of something that was here, this end's own included: a
     // notice that rang for it needs to know it is over however it ended.
     if (was || wasRinging || wasAnswering) emit(ringCbs, { type: 'end', reason, why, local });
+    // group calls: this call is over, so this device is out of its group (every other connection closes).
+    if (group) {
+      try { group.setReady?.(false); if (group.id?.()) group.leave?.(); } catch (e) { log('group: leave', e); }
+    }
   }
 
   const isLost = (session) => !!session && lost.includes(session);
@@ -574,6 +621,7 @@ export function createCallTransport({
       try { if (out) { out.addTrack(t); pc.addTrack(t, out); } else pc.addTrack(t); }
       catch (e) { log('addTrack failed', e); }
     }
+    outTracks = (tracks || []).filter(Boolean);          // group calls: what this call sends (see `sending`)
     pc.ontrack = (e) => {
       // Accept peers that send WITH a stream and peers that send bare tracks.
       if (!remoteStream) remoteStream = (e.streams && e.streams[0]) || (Stream ? new Stream() : null);
@@ -630,19 +678,22 @@ export function createCallTransport({
     return place({ ...placed, session: currentSession, again: true });
   }
 
-  async function place({ tracks = [], from = null, session = null, remoteVideo, again = false } = {}) {
+  // group calls (2026-10-09): `groupId` - this call is rung INTO that group call (drive.py CallGroups): the server
+  // makes the group on the first such offer, and the screen that answers joins it. Re-offers carry it too.
+  async function place({ tracks = [], from = null, session = null, remoteVideo, again = false, groupId = null } = {}) {
     const s = okSession(session) ? session : newCallSession();
     if (remoteVideo !== undefined) attached = remoteVideo || null;
     const mine = makePc(tracks);
     currentSession = s;
-    placed = { tracks: [...(tracks || [])], from };
+    const g = okSession(groupId) ? groupId : null;
+    placed = { tracks: [...(tracks || [])], from, ...(g ? { groupId: g } : {}) };
     if (!again) answeredOnce = false;
     const o = await mine.createOffer();
     await mine.setLocalDescription(o);
     setLive(true);
     await gatheringDone(mine, { setTimer });
     if (destroyed || pc !== mine) return false;
-    return link.sendSignal({ kind: 'offer', sdp: mine.localDescription?.sdp, from, ...tagged(s) });
+    return link.sendSignal({ kind: 'offer', sdp: mine.localDescription?.sdp, from, ...tagged(s), ...(g ? { group: g } : {}) });
   }
 
   // ---- inbound -------------------------------------------------------------------------
@@ -662,6 +713,8 @@ export function createCallTransport({
       // every caller of the person - a busy refusal for a second caller must not end the first call).
       // An untagged one ends whatever is here, as it always did.
       if (session && session !== currentSession && session !== pendingSession) return;
+      // group calls: the caller who rang this screen left, and somebody else is still in the call - it carries on.
+      if (role === 'screen' && live && pc && othersStay()) { legLeft(); return; }
       log('peer hung up');
       finish('remote', { why: typeof sig.reason === 'string' ? sig.reason : null });
       return;
@@ -743,11 +796,19 @@ export function createCallTransport({
   // Swap the track being SENT of one kind, without a new offer (the API's `replaceTrack`, and the clip mixer's
   // way on and off the call's audio sender).
   async function swapTrack(kind, track) {
-    if (destroyed || !pc || !track) return false;
-    const sender = (pc.getSenders?.() || []).find((s) => s.track && s.track.kind === kind);
-    if (!sender || typeof sender.replaceTrack !== 'function') return false;
-    try { await sender.replaceTrack(track); } catch (e) { log('replaceTrack failed', e); return false; }
+    if (destroyed || !track) return false;
+    // group calls: a screen whose caller left while the group carries on has no connection of its own, and still
+    // swaps - onto every other person's connection (the board clip, call_mix.js) - as long as it sends that kind.
+    if (!pc) {
+      if (!(live && group && outTracks.some((t) => t && t.kind === kind))) return false;
+    } else {
+      const sender = (pc.getSenders?.() || []).find((s) => s.track && s.track.kind === kind);
+      if (!sender || typeof sender.replaceTrack !== 'function') return false;
+      try { await sender.replaceTrack(track); } catch (e) { log('replaceTrack failed', e); return false; }
+    }
     if (placed) placed.tracks = placed.tracks.map((t) => (t && t.kind === kind ? track : t));
+    outTracks = outTracks.map((t) => (t && t.kind === kind ? track : t));
+    if (group) { try { await group.swap?.(kind, track); } catch (e) { log('group: swap', e); } }
     return true;
   }
 
@@ -762,6 +823,8 @@ export function createCallTransport({
     wordsQueue.push(msg);
     while (wordsQueue.length > WORDS_QUEUE_MAX) wordsQueue.shift();
     flushWords();
+    // group calls: the same word, with the same `audio` flag (the clip was swapped onto every connection), to everybody.
+    if (group) { try { group.say?.(msg); } catch (e) { log('group: words', e); } }
   }
   // A word whose clip is to go into the call: the clip starts first (or is found missing, slow or refused), then
   // the text goes, saying whether its sound is in the call. In line behind any word still waiting.
@@ -775,7 +838,8 @@ export function createCallTransport({
       if (m) {
         try {
           r = await m.play(url, {
-            getTrack: () => (pc?.getSenders?.() || []).map((s) => s.track).find((t) => t && t.kind === 'audio') || null,
+            getTrack: () => (pc?.getSenders?.() || []).map((s) => s.track).find((t) => t && t.kind === 'audio')
+              || outTracks.find((t) => t && t.kind === 'audio') || null,     // group calls: after the caller left
             swap: (t) => swapTrack('audio', t),
           });
         } catch (e) { log('words: clip failed', e); r = { ok: false }; }
@@ -870,11 +934,22 @@ export function createCallTransport({
      * (`purpose: 'call'`, a session) so the server can pick one answering screen; `session` reuses an
      * id (a caller re-offering the same call), otherwise a fresh one is made.
      */
-    async call({ tracks = [], from = null, session = null, remoteVideo } = {}) {
+    async call({ tracks = [], from = null, session = null, remoteVideo, group: groupId = null } = {}) {
       if (destroyed || role !== 'driver') return false;
       // `remoteVideo`: the element the far end plays into (the caller page's <video>). Optional.
-      return place({ tracks, from, session, remoteVideo });
+      // group calls: `group` - the group call id this call is rung into (see `place`).
+      return place({ tracks, from, session, remoteVideo, groupId });
     },
+
+    // ---- group calls (2026-10-09; call_group.js) -----------------------------------------------------------------
+    /** The tracks this call is sending now (a clip mixed in included); kept while a group carries the call on. */
+    sending: () => (pc ? currentTracks() : [...outTracks]),
+    /** The call group handed in (a screen's), or null. */
+    group: () => group,
+    /** Whether the connection to whoever rang is still here (false once they left and the group carried on). */
+    legOn: () => !!pc,
+    /** `cb('left')` when the caller who rang leaves while the group carries the call on. Returns an unsubscribe. */
+    onLeg(cb) { if (typeof cb !== 'function') return () => {}; legCbs.add(cb); return () => { legCbs.delete(cb); }; },
 
     // ---- the caller's half (2026-10-02; `call_page.js`) ------------------------------------------------
     /** `cb({ session, by })` when THIS driver's call is answered (the answer applied). Returns an unsubscribe. */
@@ -957,6 +1032,9 @@ export function createCallTransport({
       if (mixer && clipMixer === undefined) { try { mixer.destroy?.(); } catch { /* gone */ } }
       mixer = null;
       remoteCbs.clear();
+      // group calls: the transport lets go of the group's changes (the screen destroys the group itself).
+      try { offGroup?.(); } catch { /* gone */ }
+      legCbs.clear();
     },
   };
 }

@@ -1371,7 +1371,10 @@ class _Store:
                             "rather than for everywhere is kept the same way, with a short note of "
                             "where it is used (the person's name, the kind of computer, or "
                             "\"YouTube\"). What you search for is sent to YouTube or Spotify to be "
-                            "answered and is not kept here.", False,
+                            "answered and is not kept here. "
+                            # group calls (2026-10-09): call_relay.py.
+                            "If you set a relay server for bigger calls: whether it is on, its "
+                            "address and your token address - never a password or a secret.", False,
                             "when you change a setting"),
         # Row 2.58 (2026-10-07): which photo, video or song played when is no longer kept here (see NEVER_STORED).
         "events":          ("An append-only log of what a module did: a game result, a card chosen on "
