@@ -123,6 +123,17 @@ try {
       setForTheme('default') === 'color'
         && setColours('color', 'do').includes(THEMES.default.vars['--accent'].toLowerCase())
         && setColours('color', 'you').includes(THEMES.default.vars['--link'].toLowerCase()));
+    // 2026-10-10: 71a3fa1 added 13 season/holiday themes with no line in the map, and the check above
+    // failed from then on, as it was written to. Decided in aac_sets.js (best guess, on Mike's list):
+    // keep the season's set through its holidays where it reads, else the nearest that reads. Pinned
+    // here so a change to any of them is deliberate, as the four borrowed lines above are.
+    check('the seasons and holidays: light ones -> cozy; halloween, diwali -> fall; christmas, hanukkah, newYear, lunarNewYear -> winter; july4 -> night',
+      ['spring', 'summer', 'valentines', 'stPatricks', 'easter', 'harvest'].every((t) => setForTheme(t) === 'cozy')
+        && ['halloween', 'diwali'].every((t) => setForTheme(t) === 'fall')
+        && ['christmas', 'hanukkah', 'newYear', 'lunarNewYear'].every((t) => setForTheme(t) === 'winter')
+        && setForTheme('july4') === 'night',
+      ['spring', 'summer', 'valentines', 'stPatricks', 'easter', 'harvest', 'halloween', 'diwali', 'christmas',
+        'hanukkah', 'newYear', 'lunarNewYear', 'july4'].map((t) => `${t}:${setForTheme(t)}`).join(' '));
     check('an unknown theme follows to nothing (the board’s own), never a guess',
       setForTheme('no-such-theme') === null);
     check('no theme at all reads as the default theme', setForTheme(null) === 'color');
@@ -184,7 +195,10 @@ try {
       Object.values(table.color).every((v) => v < 3), JSON.stringify(table.color));
     // Each theme's own set on that theme's own card: the combination "follow the theme" produces
     // when the board also follows the theme's colours.
-    const own = Object.keys(THEMES).map((th) => [th, table[setForTheme(th)][`theme:${th}`]]);
+    // 2026-10-10: a theme with no set used to throw here (table[null]) and the throw skipped every
+    // check after it - 15 of them, hidden behind one "unexpected error" since 71a3fa1. A theme with no
+    // set now reads as 0, so it FAILS this check by name and the rest of the section still runs.
+    const own = Object.keys(THEMES).map((th) => [th, table[setForTheme(th)]?.[`theme:${th}`] ?? 0]);
     const failing = own.filter(([, v]) => v < 3).map(([th, v]) => `${th}:${v}`);
     check('*** every theme’s set reads on that theme’s own card — EXCEPT default/color, which is known ***',
       failing.length === 1 && failing[0].startsWith('default:'), failing.join(', '));
