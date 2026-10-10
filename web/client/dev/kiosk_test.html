@@ -31,7 +31,7 @@ are tunable live, and lazy switching works.</p>
 <script type="module">
 import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
-import { mountKiosk, SCREEN_SHOW, SCREEN_BACK, SCREEN_SHOWN } from '../kiosk.js';
+import { mountKiosk, SCREEN_SHOW, SCREEN_BACK, SCREEN_SHOWN, moduleLevelName } from '../kiosk.js';
 import { authHeaders } from '../auth.js';
 import { createState } from '../state.js';
 import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
@@ -83,6 +83,11 @@ const toTab = (m, id) => {
 (async () => {
   let kiosk = null;
   try {
+    // BQ item 6: with nothing picked, the "every <kind> panel" level read "every this panel panel".
+    check('the every-panel-of-its-kind level names the kind it is for',
+      moduleLevelName({ title: 'Clock', type: 'clock' }) === 'every Clock panel', moduleLevelName({ title: 'Clock' }));
+    check('*** ...and with nothing picked it reads as words, not "every this panel panel" ***',
+      moduleLevelName(null) === 'every panel of this kind' && !/this panel panel/.test(moduleLevelName(null)), moduleLevelName(null));
     const profiles = createProfilesClient({ user: USER });
     const p = await profiles.create('TEST-bedside');
     // photos (default primary / her #1) + youtube (2nd stage) + camera (mirror) + clock (HUD)

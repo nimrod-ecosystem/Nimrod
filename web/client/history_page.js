@@ -87,13 +87,29 @@ export function historyHtml(s) {
     const l = s.last && s.last[kind];
     if (l && l.why && SECOND(l.place)) {
       parts.push(say(l.why === 'not opted in' ? 'The last copy waited for your choice to be saved; it tries again.'
-        : `The last copy did not go through (${l.why}). It tries again; nothing is lost on this device.`, `data-hp-last="${kind}"`));
+        : `The last copy did not go through: ${whyWords(l.why)}. It tries again; nothing is lost on this device.`, `data-hp-last="${kind}"`));
     }
   }
   parts.push('<p class="st-hint" style="display:block;margin:8px 0 0" role="status" data-hp-msg></p>');
   return parts.join('\n');
 }
 const SECOND = (p) => p === 'folder' || p === 'us';
+
+// WHY THE LAST COPY FAILED, IN WORDS (BQ item 6: the page showed the bare code, "(write)"). The codes are
+// history_place.js syncNow's and its folder sinks'. A server's own sentence passes through; a code with no words
+// here still shows, so a new one is seen rather than hidden.
+const WHY_WORDS = Object.freeze({
+  none: 'your Nimrod folder could not be reached from here',
+  missing: 'your Nimrod folder or its Data folder cannot be found here right now',
+  permission: 'this device needs your Nimrod folder allowing again',
+  write: 'writing to your Nimrod folder failed',
+  changed: 'your Nimrod folder is not the one this device was copying to',
+  unavailable: 'this browser cannot write to a folder',
+  offline: 'the site could not be reached',
+  'no server': 'the site could not be reached',
+  device: 'this device could not read its own copy',
+});
+export const whyWords = (why) => WHY_WORDS[why] || (/^refused \(\d+\)$/.test(String(why)) ? 'the site refused it' : String(why));
 
 /** Draw the page into `el` and wire its buttons. Returns { ready, refresh, act, destroy }. */
 export function renderHistoryPage(el, { host } = {}) {

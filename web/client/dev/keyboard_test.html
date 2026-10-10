@@ -27,6 +27,7 @@ import { createBus } from '../bus.js';
 import { INPUTS_KEY } from '../input_runtime.js';
 import { KEYBOARD_DEVICE } from '../input_keyboard.js';
 import '../modules/keyboard.js';
+import { SITE_TABS, tabHref } from '../site_nav.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -189,7 +190,11 @@ try {
     await sleep(0);
     const link = host.querySelector('.kb-edit');
     check('an "Edit in Devices settings" link exists', !!link && /edit/i.test(link.textContent) && /devices/i.test(link.textContent), link?.textContent);
-    check('the link points at home.html, not a bound-in editor', link?.getAttribute('href') === '/home.html', link?.getAttribute('href'));
+    // BQ item 6: it pointed at plain /home.html, which opens on Dashboards. The Devices tab is `inputs`
+    // (site_nav.js SITE_TABS), reached by the same link the sidebar uses (tabHref).
+    const devices = SITE_TABS.find((t) => t.id === 'inputs');
+    check('*** the link opens the Devices tab itself, the way the sidebar does ***',
+      !!devices && devices.label === 'Devices' && link?.getAttribute('href') === tabHref('inputs'), link?.getAttribute('href'));
     inst.destroy();
   }
 } catch (e) {

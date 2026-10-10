@@ -121,7 +121,10 @@ registerModule(
     function placeholderAdapter(p, el) {
       el.innerHTML =
         `<div class="d-ph"><div class="d-ph-kind">${p.label}</div>` +
-        `<div class="d-ph-note">segment placeholder — real module lands in a later slice</div></div>`;
+        // What a person reads for the few seconds it is up (BQ item 6: it said "segment placeholder -- real
+        // module lands in a later slice", a note to ourselves). Whether unbuilt ones belong in the rotation at all
+        // is a question for Mike, not settled here.
+        `<div class="d-ph-note">Not ready yet. The next one starts in a moment.</div></div>`;
       return {
         activate() {
           if (phTimer != null) { clearTimer(phTimer); phTimer = null; }
