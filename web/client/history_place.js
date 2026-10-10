@@ -71,6 +71,7 @@
 import { idbPlayStore, memoryPlayStore, playRecord, devicePlays, PLAYS_DEFAULTS } from './plays.js';
 import { kindFolder, handleStore, permissionOf, allowAgain, subfolder, available as folderApi, ROOT_MODE } from './user_folders.js';
 import { authHeaders } from './auth.js';
+import { checkFromHere } from './media_sources.js';   // desktop prompt (2026-10-10): look at an agent only without a prompt
 
 export const HISTORY_KEY = 'history-place';          // the person's row (web/server/storage_line.py HISTORY_KEY)
 export const HISTORY_DB = 'nimrod-history';          // this browser's own copy of game results and board words
@@ -400,7 +401,13 @@ export function localAgentBases(sources) {
  *   read()     [] - the agent has no read route (agent.py says why); allow()  'unavailable' (nothing to allow)
  *   candidates()   resolves the base URLs to try (kiosk.js: the screen's media sources on this computer)
  */
+// (2026-10-10, desktop prompt) `mayAsk(base)`: may this page look at that agent WITHOUT the browser asking the person?
+// An account-wide `http://localhost:8770` (the photo program on a Pi) also reaches a dashboard opened on somebody's
+// desktop, where looking every few minutes would put Chrome's local-network box up for nothing. So an agent is only
+// asked where checkFromHere (media_sources.js) says it can be checked without a prompt: a page served from this
+// computer or network, or local-network access already allowed (the kiosk). Elsewhere it counts as no agent here.
 export function agentSink({ candidates = async () => [], fetchImpl = (...a) => fetch(...a), now = () => Date.now(),
+  mayAsk = async (base) => { try { return (await checkFromHere(base)).check === true; } catch { return false; } },
   ...o } = {}) {
   const opts = { ...AGENT_HISTORY_DEFAULTS, ...o };
   let bases = null;
@@ -419,6 +426,9 @@ export function agentSink({ candidates = async () => [], fetchImpl = (...a) => f
     if (!fresh && t - cur.at < opts.statusMs) return cur;
     if (fresh || !bases || t - basesAt >= opts.findMs) {
       try { bases = [...new Set(((await candidates()) || []).map((b) => String(b).replace(/\/+$/, '')))]; } catch { bases = bases || []; }
+      const allowed = [];   // desktop prompt: only the agents this page may look at without the browser asking
+      for (const b of bases) { let ok = false; try { ok = await mayAsk(b); } catch { ok = false; } if (ok) allowed.push(b); }
+      bases = allowed;
       basesAt = t;
     }
     const order = cur.base ? [cur.base, ...bases.filter((b) => b !== cur.base)] : bases;

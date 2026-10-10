@@ -645,6 +645,14 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       const noAgent = agentSink({ candidates: async () => [], fetchImpl: none.fetchImpl, now });
       check('no agent on this computer: "none", and nothing is fetched', await noAgent.status() === 'none' && none.calls.length === 0 && await noAgent.id() === null);
 
+      // desktop prompt (2026-10-10): an account-wide localhost agent seen from a desktop the browser would have to ASK
+      // about is never looked at - no request, so no local-network box - and counts as no agent here.
+      const promptOnly = fakeAgent();
+      const quiet = agentSink({ candidates: async () => ['http://localhost:8770'], fetchImpl: promptOnly.fetchImpl, now,
+        mayAsk: async () => false });
+      check('*** desktop prompt: an agent the page may not look at without asking - "none", and nothing is fetched ***',
+        await quiet.status() === 'none' && promptOnly.calls.length === 0);
+
       const old = fakeAgent({ history: false });
       const ag = fakeAgent();
       let asked = 0;
