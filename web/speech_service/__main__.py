@@ -144,6 +144,9 @@ def parse(argv=None):
     p.add_argument('--secret', default=os.environ.get('NIMROD_SPEECH_SECRET') or None)
     p.add_argument('--no-secret-i-understand', action='store_true')
     p.add_argument('--max-utterance-s', type=float, default=MAX_UTTERANCE_S)
+    p.add_argument('--feed-inline', action='store_true',
+                   help='vosk: decode on the event loop, as before 2026-10-10, instead of one worker thread per screen '
+                        'connection (service.py "FEEDING OFF THE EVENT LOOP"). Only if the threads misbehave somewhere.')
     p.add_argument('--server', choices=['auto', 'fastapi', 'websockets'], default='auto',
                    help='auto: FastAPI/uvicorn when installed, else plain websockets')
     return p.parse_args(argv)
@@ -321,6 +324,8 @@ def main(argv=None):
 
 def _serve(a, kw, sock, remote) -> int:
     backend = make_backend(a.backend, **kw)
+    if getattr(a, 'feed_inline', False) and backend is not None:
+        backend.feed_in_thread = False
     wake = make_wake([w.strip() for w in (a.wake or '').split(',') if w.strip()],
                      threshold=a.wake_threshold, refractory_s=a.wake_refractory_s, vad_threshold=a.wake_vad)
     names = ' + '.join(x.name for x in (backend, wake) if x is not None)

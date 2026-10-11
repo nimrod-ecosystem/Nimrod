@@ -245,6 +245,10 @@ class VoskBackend:
     # (client/subtitle_learning.js) is what fixes a name Vosk keeps mishearing, and the hello says hints: false.
     supports_hints = False
     partials = True
+    # Decodes as audio arrives, so its feeding runs on a worker thread per socket (service.py "FEEDING OFF THE EVENT
+    # LOOP"): two microphones, or the room and a call, decode on two cores instead of taking turns on one.
+    # `--feed-inline` (__main__.py) puts it back on the event loop.
+    feed_in_thread = True
 
     def __init__(self, model_path: str):
         import vosk  # noqa: WPS433
@@ -309,12 +313,17 @@ class FakeBackend:
     utterance's PCM bytes. Nothing is ever heard - it exists so the protocol can be tested anywhere."""
 
     def __init__(self, script=None, name: str = 'fake', supports_grammar: bool = True,
-                 partials: bool = True, delay_s: float = 0.0, supports_hints: bool = False):
+                 partials: bool = True, delay_s: float = 0.0, supports_hints: bool = False,
+                 feed_in_thread: bool = False, feed_delay_s: float = 0.0):
         self.name = name
         self.supports_grammar = supports_grammar
         self.supports_hints = supports_hints
         self.partials = partials
         self.delay_s = float(delay_s)
+        # Stand-ins for a backend that decodes as audio arrives (Vosk): fed on a worker thread, and each frame costs time.
+        self.feed_in_thread = bool(feed_in_thread)
+        self.feed_delay_s = float(feed_delay_s)
+        self.feed_threads = set()   # which threads fed it (the tests check it was not the event loop's)
         self.grammars = []
         self.hints = []          # subtitle learning: the hints each utterance was opened with (None = none passed)
         self._script = script if script is not None else ['hello']
@@ -355,6 +364,10 @@ class _FakeUtterance:
         self.n = 0
 
     def feed(self, pcm: bytes):
+        if self.b.feed_delay_s:
+            import time
+            time.sleep(self.b.feed_delay_s)
+        self.b.feed_threads.add(threading.get_ident())
         self.buf.extend(pcm)
         self.n += 1
         return f'partial {self.n}' if self.b.partials else None

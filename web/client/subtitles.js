@@ -310,6 +310,7 @@ export function earLabel(ear) {
   const e = String(ear || '');
   if (e.startsWith('phone')) return 'Phone';
   if (e === 'room') return 'Room microphone';
+  if (e === 'room2') return 'Second microphone';   // speech_engines.js speechMic 'both'
   if (e === 'online') return 'Online';
   return 'Other microphone';
 }

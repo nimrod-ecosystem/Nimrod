@@ -135,7 +135,7 @@ import {
   createSubtitleLearning, idbLearnedStore, memoryLearnedStore, SUBTITLE_LEARNING_FIELDS, SUBTITLE_LEARNING_ACTIONS,
   dataFolder,
 } from './subtitle_learning.js';
-import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS } from './speech_engines.js';
+import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS, micStatusHint } from './speech_engines.js';
 import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
 import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
 import {
@@ -4075,6 +4075,9 @@ export async function mountKiosk(root, {
     speechWaitMs: (r) => !usesBrowser(r),
     speechEndMs: (r) => !usesBrowser(r),
     speechEars: (r) => !usesBrowser(r),
+    // Which of this screen's own microphones hears speech: none of it applies with only a phone listening.
+    speechMic: (r) => !usesBrowser(r) && r.speechEars !== 'phone',
+    speechMicName: (r) => !usesBrowser(r) && r.speechEars !== 'phone' && ['chosen', 'both'].includes(r.speechMic),
   };
   const usesBrowser = (r) => speechSwitchFrom(r).engine === 'browser';
   // Every slot the person put in the list, with or without an address (so the address row can appear).
@@ -4097,6 +4100,7 @@ export async function mountKiosk(root, {
     const goes = browser ? `the room’s sound goes to ${maker === 'the browser’s maker' ? maker : `${maker}, the browser’s maker`}`
       : away.length ? `the room’s sound goes to: ${away.join(', ')}` : '';
     const online = onlineCap ? 'subtitles also send the room’s sound to the browser’s maker' : '';
+    const mics = browser ? '' : micStatusHint(st?.mics);   // which of this screen's microphones hears speech
     const hints = (...xs) => xs.filter(Boolean).join('; ');
     if (speechStatus === 'no-local') {
       if (st && !(st.engines || []).length && (st.skipped || []).length) {
@@ -4111,9 +4115,9 @@ export async function mountKiosk(root, {
     if (speechStatus === 'no-mic') return row('Not listening: the microphone could not be opened');
     if (speechStatus === 'blocked') return row('Not listening yet: the browser is holding sound until the screen is touched');
     if (speechStatus === 'listening') {
-      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`, hints(goes, online));
+      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`, hints(goes, online, mics));
     }
-    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(goes, online));
+    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(goes, online, mics));
     return null;
   }
   // *** NO SPEECH PROGRAM ON THIS COMPUTER: SAY HOW TO GET ONE, AND OFFER THE NO-INSTALL CHOICE (DECISIONS 2026-10-07

@@ -137,6 +137,114 @@ async def session_tests():
           got == [('a', 'one'), ('b', 'two')], got)
 
 
+# ------------------------------------------------------------------ feeding off the event loop ----
+async def threaded_feed_tests():
+    """A backend that decodes as audio arrives (Vosk) is fed on one worker thread per socket (2026-10-10): two of a
+    screen's microphones decode side by side, not one after the other, and nothing about the protocol changes."""
+    def mk(feed_delay_s=0.0, partials=True, script=None):
+        return FakeBackend(script=script or ['hello there'], partials=partials, feed_in_thread=True,
+                           feed_delay_s=feed_delay_s)
+
+    async def run(sess, sent, uid, frames, frame_ms=20):
+        await sess.on_text(json.dumps({'type': 'begin', 'utteranceId': uid}))
+        for _ in range(frames):
+            await sess.on_bytes(pcm(frame_ms))
+        await sess.on_text(json.dumps({'type': 'end', 'utteranceId': uid}))
+        await sess.drain()
+
+    loop_thread = threading.get_ident()
+    sent = []
+
+    async def send(m):
+        sent.append(m)
+
+    async def close(code):
+        pass
+
+    b = mk()
+    s = Session(b, send, close)
+    await s.on_text(json.dumps({'type': 'hello'}))
+    await run(s, sent, 'u1', 5)
+    kinds = [(m['kind'], m.get('text')) for m in sent[1:]]
+    check('*** threaded feed: every partial, IN ORDER, then the one final, under the same id ***',
+          kinds == [('partial', 'partial 1'), ('partial', 'partial 2'), ('partial', 'partial 3'), ('partial', 'partial 4'),
+                    ('partial', 'partial 5'), ('final', 'hello there')]
+          and all(m.get('utteranceId') == 'u1' for m in sent[1:]), kinds)
+    check('...and it was NOT fed on the event loop\'s thread', b.feed_threads and loop_thread not in b.feed_threads,
+          b.feed_threads)
+    check('...the final still says how long the audio was', sent[-1]['audioMs'] == 100, sent[-1])
+    check('a socket that hung up lets its worker go', s.pool is None)
+
+    # Two sockets (two microphones), each 10 frames costing 30 ms to decode: side by side ~0.3 s, one after the
+    # other ~0.6 s. The margin is wide on purpose (a busy test machine), and the inline case is measured too.
+    async def pair(threaded: bool):
+        outs = [[], []]
+        bs = [FakeBackend(script=['a'], partials=False, feed_in_thread=threaded, feed_delay_s=0.03) for _ in range(2)]
+
+        def sender(i):
+            async def snd(m):
+                outs[i].append(m)
+            return snd
+        ss = [Session(bs[i], sender(i), close) for i in range(2)]
+        for x in ss:
+            await x.on_text(json.dumps({'type': 'hello'}))
+        t0 = time.perf_counter()
+        await asyncio.gather(*(run(ss[i], outs[i], f'e{i}', 10) for i in range(2)))
+        return time.perf_counter() - t0, outs
+    t_thr, outs = await pair(True)
+    t_inl, _ = await pair(False)
+    check('*** two microphones on two sockets decode SIDE BY SIDE (threaded), not one after the other ***',
+          t_thr < 0.75 * t_inl and all(o[-1]['kind'] == 'final' for o in outs), (round(t_thr, 3), round(t_inl, 3)))
+
+    # Back to back on one socket: the second utterance's frames queue behind the first's finish; finals in order.
+    sent.clear()
+    s2 = Session(mk(feed_delay_s=0.005, partials=False, script=['one', 'two']), send, close)
+    await s2.on_text(json.dumps({'type': 'hello'}))
+    for uid in ('a', 'b'):
+        await s2.on_text(json.dumps({'type': 'begin', 'utteranceId': uid}))
+        for _ in range(4):
+            await s2.on_bytes(pcm(20))
+        await s2.on_text(json.dumps({'type': 'end', 'utteranceId': uid}))
+    await s2.drain()
+    got = [(m['utteranceId'], m['text']) for m in sent if m['kind'] == 'final']
+    check('threaded: two utterances back to back, finals IN THE ORDER SAID', got == [('a', 'one'), ('b', 'two')], got)
+
+    # Cancelled mid-decode: never answered; the next utterance is.
+    sent.clear()
+    s3 = Session(mk(feed_delay_s=0.01, partials=True, script=['x', 'kept']), send, close)
+    await s3.on_text(json.dumps({'type': 'hello'}))
+    await s3.on_text(json.dumps({'type': 'begin', 'utteranceId': 'c1'}))
+    for _ in range(3):
+        await s3.on_bytes(pcm(20))
+    await s3.on_text(json.dumps({'type': 'cancel', 'utteranceId': 'c1'}))
+    await run(s3, sent, 'c2', 2)
+    finals = [m for m in sent if m['kind'] == 'final']
+    check('threaded: a cancelled utterance is never answered; the next one is',
+          [m['utteranceId'] for m in finals] == ['c2'], finals)
+
+    # A feed that fails: one error for the utterance, not one per frame.
+    class Boom(FakeBackend):
+        def open(self, grammar=None, hints=None):
+            u = super().open(grammar, hints)
+
+            def bad(_pcm):
+                raise RuntimeError('decoder fell over')
+            u.feed = bad
+            return u
+    sent.clear()
+    s4 = Session(Boom(script=['y'], partials=True, feed_in_thread=True), send, close)
+    await s4.on_text(json.dumps({'type': 'hello'}))
+    await run(s4, sent, 'f1', 4)
+    errs = [m for m in sent if m['kind'] == 'error']
+    check('threaded: a decoder that fails says so ONCE for the utterance, not once per frame',
+          len(errs) == 1 and 'decoder fell over' in errs[0]['error'] and errs[0]['utteranceId'] == 'f1', errs)
+    check('the real Vosk backend asks for its own worker (its class says so)',
+          __import__('speech_service.backends', fromlist=['VoskBackend']).VoskBackend.feed_in_thread is True)
+    from speech_service import __main__ as cli
+    check('--feed-inline is there to put it back on the loop', cli.parse(['--backend', 'fake', '--feed-inline']).feed_inline
+          is True and cli.parse(['--backend', 'fake']).feed_inline is False)
+
+
 # ------------------------------------------------------------------ subtitle learning: hints ----
 async def hints_tests():
     print('\n-- subtitle learning: the learned words reach the engine --')
@@ -958,6 +1066,7 @@ if __name__ == '__main__':
         live(sys.argv[i + 1], sys.argv[i + 2], grammar=g, secret=sec)
         sys.exit(0)
     asyncio.run(session_tests())
+    asyncio.run(threaded_feed_tests())
     asyncio.run(hints_tests())
     asyncio.run(wake_tests())
     wake_model_tests()

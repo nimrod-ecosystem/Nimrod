@@ -221,6 +221,23 @@ class Session:
         self.tasks = set()
         self._last = None
         self.closed = False
+        # FEEDING OFF THE EVENT LOOP (2026-10-10). A backend that decodes AS AUDIO ARRIVES (Vosk: `feed_in_thread`)
+        # used to run on the loop itself, so every socket's decoding shared one core: two of a screen's microphones
+        # (speech_engines.js speechMic 'both'), or the room and a call's captions at once, decoded one after the other,
+        # and a slow open-mode decode held up every other socket's frames, the wake detector's included. Now each
+        # such socket feeds its own single worker thread: frames in order (one worker), finish queued behind its own
+        # frames, and two sockets on two cores [Vosk's C calls release the GIL - cffi does for every call; training
+        # knowledge, to be confirmed on the bench]. A backend that only buffers (Whisper, the fake) stays inline.
+        self.pool = None
+
+    def _threaded(self) -> bool:
+        return bool(getattr(self.b, 'feed_in_thread', False))
+
+    def _pool(self):
+        if self.pool is None:
+            from concurrent.futures import ThreadPoolExecutor
+            self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix='speech-feed')
+        return self.pool
 
     async def send(self, msg: dict):
         if self.closed:
@@ -353,14 +370,35 @@ class Session:
         c['bytes'] += len(data)
         if 'pcm' in c:
             c['pcm'].extend(data)
+        if self._threaded():
+            fut = asyncio.get_running_loop().run_in_executor(self._pool(), c['utt'].feed, data)
+            task = asyncio.ensure_future(self._partial_after(c, fut))
+            self.tasks.add(task)
+            task.add_done_callback(self.tasks.discard)
+            return
         try:
             partial = c['utt'].feed(data)
         except Exception as err:  # noqa: BLE001
             await self.send({'kind': 'error', 'error': f'feed: {err}', 'utteranceId': c['id']})
             return
-        if partial is not None and partial != c['last_partial']:
+        await self._partial(c, partial)
+
+    async def _partial(self, c, partial):
+        if partial is not None and partial != c['last_partial'] and not c.get('done'):
             c['last_partial'] = partial
             await self.send({'kind': 'partial', 'utteranceId': c['id'], 'text': partial, 'engine': self.b.name})
+
+    async def _partial_after(self, c, fut):
+        # One worker per socket finishes these in the order they were queued, so partials still go out in order;
+        # one that lands after its utterance's final is dropped (`done`).
+        try:
+            partial = await fut
+        except Exception as err:  # noqa: BLE001
+            if not c.get('feed_failed'):
+                c['feed_failed'] = True
+                await self.send({'kind': 'error', 'error': f'feed: {err}', 'utteranceId': c['id']})
+            return
+        await self._partial(c, partial)
 
     async def _wake_feed(self, data: bytes):
         # ON THE LOOP, not a thread: one 80 ms step is a few ms (bench: see the report), the order of
@@ -386,6 +424,9 @@ class Session:
         c, self.cur = self.cur, None
         if not c or abandon:
             return
+        if self._threaded():
+            # Queued NOW, straight behind this utterance's own frames on the same worker: it cannot run before them.
+            c['finish_fut'] = asyncio.get_running_loop().run_in_executor(self._pool(), c['utt'].finish)
         # IN ORDER: each utterance's decode waits for the one before it, so finals come back in the
         # order things were said (a screen reading them as a conversation depends on it).
         task = asyncio.ensure_future(self._finish(c, self._last))
@@ -409,8 +450,10 @@ class Session:
         elif c.get('spk') and self.speakers is not None:
             spk_job = asyncio.ensure_future(self._who(pcm))
         try:
-            r = await asyncio.to_thread(c['utt'].finish)
+            r = await (c['finish_fut'] if 'finish_fut' in c else asyncio.to_thread(c['utt'].finish))
+            c['done'] = True
         except Exception as err:  # noqa: BLE001
+            c['done'] = True
             if spk_job is not None:
                 await asyncio.gather(spk_job, return_exceptions=True)
             await self.send({'kind': 'error', 'error': f'finish: {err}', 'utteranceId': c['id']})
@@ -519,6 +562,10 @@ class Session:
     async def drain(self):
         if self.tasks:
             await asyncio.gather(*list(self.tasks), return_exceptions=True)
+        if self.pool is not None:
+            # Frames of an utterance the screen abandoned may still be queued; nobody waits for them.
+            self.pool.shutdown(wait=False, cancel_futures=True)
+            self.pool = None
 
 
 # ---------------------------------------------------------------------------------------------
