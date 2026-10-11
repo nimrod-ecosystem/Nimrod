@@ -281,6 +281,75 @@ check("*** the tag, the kinds and the stream here are the client's own (hidden_p
 check("*** hidden_pictures.js has no way to reach the site (no fetch, XMLHttpRequest, sendBeacon; only the folder) ***",
       not any(s in hp_src for s in ("fetch(", "XMLHttpRequest", "sendBeacon(", "/api/")))
 
+section("rule 7 - and the list of removed pictures, the same way (remove this picture, 2026-10-10)")
+removed_rec = {"k": "removed:pictures", "format": "nimrod-removed-pictures", "rows": [
+    {"kind": "remove-picture", "created_at": "2026-10-10T10:00:00.000Z",
+     "data": {"id": "r1", "path": "family_drive/IMG_0002.jpg", "name": "IMG_0002.jpg", "scope": "everyone"}}]}
+r = refused(lambda: sl.check_state(removed_rec))
+check("*** the device's removed-pictures record, put in a setting: refused, 400, with its own sentence ***",
+      r and r[0] == 400 and "removed" in r[1] and "never kept on this site" in r[1], r)
+check("...inside anything, in any case, and as a key named removedPictures / removed-pictures / removed_pictures",
+      refused(lambda: sl.check_state({"a": [{"FORMAT": " Nimrod-Removed-Pictures "}]}))
+      and refused(lambda: sl.check_state({"removedPictures": []})) and refused(lambda: sl.check_state({"x": {"REMOVED-pictures": {}}}))
+      and refused(lambda: sl.check_state({"removed_pictures": "a.jpg"})))
+r = refused(lambda: sl.check_event("photos-1", "remove-picture", {"path": "a.jpg"}))
+check("*** a remove row as an event, on any stream: refused, 400 ***", r and r[0] == 400 and "removed" in r[1], r)
+check("...and a bring-back (restore) row, and anything on the `removed` stream, in any case",
+      refused(lambda: sl.check_event("s", "Restore-Picture", {"path": "a.jpg"}))
+      and refused(lambda: sl.check_event("REMOVED", "note", {"x": 1})))
+r = refused(lambda: sl.check_history("removed", [{"kind": "remove-picture", "data": {"path": "a.jpg"}}], {"plays": "us"}))
+check("*** the history route does not take a `removed` stream, whatever the person chose ***", r and r[0] == 400, r)
+check("...nor a removal list smuggled into a stream it does take",
+      refused(lambda: sl.check_history("plays", [{"kind": "play", "data": {"source": "photos", "id": "a.jpg",
+                                                                            "removedPictures": ["a.jpg"]}}], {"plays": "us"})))
+check("NOT refused: a source's own choice (on_remove), and the word in a sentence",
+      refused(lambda: sl.check_state({"on_remove": "remove", "note": "a removed picture came back"})) is None
+      and refused(lambda: sl.check_event("photos-1", "trial", {"removed": True})) is None)
+rp_path = Path(__file__).resolve().parents[1] / "client" / "removed_pictures.js"
+rp_src = rp_path.read_text(encoding="utf-8") if rp_path.exists() else ""
+check("*** the tag, the kinds and the stream here are the client's own (removed_pictures.js) - one name, two files ***",
+      f"export const REMOVED_FORMAT = '{sl.REMOVED_FORMAT}';" in rp_src
+      and "export const REMOVE_KIND = 'remove-picture';" in rp_src and "export const RESTORE_KIND = 'restore-picture';" in rp_src
+      and "export const REMOVED_STREAM = 'removed';" in rp_src
+      and sl.REMOVED_EVENT_KINDS == {"remove-picture", "restore-picture"} and sl.REMOVED_EVENT_STREAMS == {"removed"})
+check("*** removed_pictures.js has no way to reach the site (no fetch, XMLHttpRequest, sendBeacon; only the folder) ***",
+      rp_src and not any(s in rp_src for s in ("fetch(", "XMLHttpRequest", "sendBeacon(", "/api/")))
+
+
+# ---------------------------------------------------------------- rule 8: how the drives are doing (drive status)
+section("rule 8 - a note of how a drive is doing is not kept here; it goes to the person's Nimrod folder (2026-10-10)")
+drive_note = {"format": "nimrod-drive-status", "v": 1, "source": "src-drive", "name": "Photo drive", "kind": "agent",
+              "scope": "loopback", "host": "localhost:8770", "by": "b-1234567", "state": "ok",
+              "copies": [{"at": "2026-10-10T09:00:00Z", "job": "drive", "role": "primary", "new": 12, "changed": 1,
+                          "free_bytes": 41200000000, "ok": True}]}
+r = refused(lambda: sl.check_state({"theme": "warm", "drives": [drive_note]}))
+check("*** a drive note, put in a setting: refused, 400, with a sentence that says where it goes instead ***",
+      r and r[0] == 400 and "Nimrod folder" in r[1] and "not kept on this site" in r[1], r)
+check("...by its tag in any case, and as a key named driveStatus / drive-status / drive_status",
+      refused(lambda: sl.check_state({"a": [{"Format": " NIMROD-drive-status "}]}))
+      and refused(lambda: sl.check_state({"driveStatus": {}})) and refused(lambda: sl.check_state({"x": {"Drive-Status": []}}))
+      and refused(lambda: sl.check_state({"drive_status": "ok"})))
+r = refused(lambda: sl.check_event("photos-1", "drive-status", {"source": "src-drive", "new": 3}))
+check("*** a drive-status row as an event, on any stream: refused, 400 ***", r and r[0] == 400 and "drive" in r[1], r)
+check("...and anything on the `storage` stream, in any case, and a note inside an ordinary event",
+      refused(lambda: sl.check_event("Storage", "note", {"x": 1}))
+      and refused(lambda: sl.check_event("gameplay", "trial", {"ok": True, "n": drive_note})))
+r = refused(lambda: sl.check_history("storage", [{"kind": "drive-status", "data": {"source": "a"}}], {"plays": "us"}))
+check("*** the history route does not take a `storage` stream, whatever the person chose ***", r and r[0] == 400, r)
+check("...nor a note smuggled into a stream it does take",
+      refused(lambda: sl.check_history("plays", [{"kind": "play", "data": {"source": "photos", "id": "a.jpg",
+                                                                            "n": drive_note}}], {"plays": "us"})))
+check("NOT refused: the Storage section's own words in a sentence, free space in a game result, a 'storage' setting key",
+      refused(lambda: sl.check_state({"note": "the drive status looked fine", "storage": "local"})) is None
+      and refused(lambda: sl.check_event("photos-1", "trial", {"free_bytes": 5, "drive": "e"})) is None)
+sn_src = (Path(__file__).resolve().parents[1] / "client" / "storage_notes.js").read_text(encoding="utf-8")
+check("*** the tag, the kind and the stream here are the client's own (storage_notes.js) - one name, two files ***",
+      f"export const NOTE_FORMAT = '{sl.DRIVE_FORMAT}';" in sn_src
+      and "export const NOTE_KIND = 'drive-status';" in sn_src and "export const NOTES_STREAM = 'storage';" in sn_src
+      and sl.DRIVE_EVENT_KINDS == {"drive-status"} and sl.DRIVE_EVENT_STREAMS == {"storage"})
+check("*** storage_notes.js has no way to reach the site (no fetch, XMLHttpRequest, sendBeacon, /api/; only the folder) ***",
+      not any(s in sn_src for s in ("fetch(", "XMLHttpRequest", "sendBeacon(", "/api/")))
+
 
 # ---------------------------------------------------------------- own board clips (2026-10-09)
 section("own board clips - a board's card sounds stay on the device and in the Nimrod folder (board_sounds.js)")
@@ -348,6 +417,12 @@ for name, url in state_urls.items():
     r = c.put(url, json={"data": {"theme": "warm", "photos": hidden_rec}, "base_version": v}, headers=H)
     check(f"*** {name}: the list of hidden pictures is refused, 400 (rule 7) ***",
           r.status_code == 400 and "hid" in r.json().get("detail", ""), r.text)
+    r = c.put(url, json={"data": {"theme": "warm", "photos": removed_rec}, "base_version": v}, headers=H)
+    check(f"*** {name}: the list of removed pictures is refused, 400 (rule 7) ***",
+          r.status_code == 400 and "removed" in r.json().get("detail", ""), r.text)
+    r = c.put(url, json={"data": {"theme": "warm", "drives": [drive_note]}, "base_version": v}, headers=H)
+    check(f"*** {name}: a drive note is refused, 400 (rule 8) ***",
+          r.status_code == 400 and "Nimrod folder" in r.json().get("detail", ""), r.text)
     r = c.put(url, json={"data": sized(sl.STATE_MAX_BYTES + 10), "base_version": v}, headers=H)
     check(f"*** {name}: too big is refused, 413 ***", r.status_code == 413 and "too big" in r.json().get("detail", ""),
           f"{r.status_code} {r.text[:200]}")
@@ -388,8 +463,20 @@ for name, url in event_urls.items():
     hidden_url = url.rsplit("/", 1)[0] + "/hidden"
     r = c.post(hidden_url, json={"kind": "note", "data": {"x": 1}}, headers=H)
     check(f"{name}: the `hidden` stream is refused, whatever the kind (rule 7)", r.status_code == 400, r.text)
+    r = c.post(url, json={"kind": "remove-picture", "data": {"path": "a.jpg"}}, headers=H)
+    check(f"*** {name}: a removed picture (`remove-picture`) is refused, 400 (rule 7) ***", r.status_code == 400, r.text)
+    removed_url = url.rsplit("/", 1)[0] + "/removed"
+    r = c.post(removed_url, json={"kind": "note", "data": {"x": 1}}, headers=H)
+    check(f"{name}: the `removed` stream is refused, whatever the kind (rule 7)", r.status_code == 400, r.text)
+    check(f"{name}: ...nor on removed", c.get(removed_url, headers=H).json()["total"] == 0)
+    r = c.post(url, json={"kind": "drive-status", "data": drive_note}, headers=H)
+    check(f"*** {name}: a drive note (`drive-status`) is refused, 400 (rule 8) ***", r.status_code == 400, r.text)
+    storage_url = url.rsplit("/", 1)[0] + "/storage"
+    r = c.post(storage_url, json={"kind": "note", "data": {"x": 1}}, headers=H)
+    check(f"{name}: the `storage` stream is refused, whatever the kind (rule 8)", r.status_code == 400, r.text)
     check(f"{name}: ...and nothing refused was appended", c.get(url, headers=H).json()["total"] == before)
     check(f"{name}: ...nor on hidden", c.get(hidden_url, headers=H).json()["total"] == 0)
+    check(f"{name}: ...nor on storage", c.get(storage_url, headers=H).json()["total"] == 0)
     check(f"{name}: ...nor on device-data", c.get(blob_url, headers=H).json()["total"] == 0)
     check(f"{name}: ...nor on plays", c.get(plays_url, headers=H).json()["total"] == 0)
 

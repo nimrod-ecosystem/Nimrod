@@ -57,6 +57,21 @@ check in front of them. These are the server's half of it - security invariants,
      case), the row kinds `hide-picture` / `unhide-picture`, and the stream `hidden`. The history route already takes
      only its three streams, so `hidden` is refused there before this rule is reached. NO OPT-IN COVERS IT ("Where your
      history is kept" is about plays, game results and board words).
+     AND WHICH PICTURES SOMEBODY REMOVED (remove this picture, 2026-10-10), the same way and for the same reason: the
+     list of removals (client/removed_pictures.js) is kept on the device and in the Nimrod folder, never here. Its tag
+     `"format": "nimrod-removed-pictures"`, a key named `removedPictures` / `removed-pictures` / `removed_pictures`
+     (any case), the row kinds `remove-picture` / `restore-picture`, and the stream `removed`.
+  8. HOW A HOUSEHOLD'S DRIVES ARE DOING IS NOT KEPT HERE (drive status, 2026-10-10). Mike: "I think the point of the g
+     drive is so you can see things anywhere. Let it be saved wherever the user wants." (DECISIONS.md: "A drive's status
+     is saved wherever the person chooses, not on the server by default"; it answers storage roles Stage 4's open
+     question with "no server copy is added".) A screen notes each picture drive's copy times, counts and free space
+     in the person's own Nimrod folder (client/storage_notes.js), never here; the site's code never sends one. Refused
+     in state, events and history alike (part of check_content, and check_event): anything carrying the note's own tag,
+     `"format": "nimrod-drive-status"`, a key named `driveStatus` / `drive-status` / `drive_status` (any case), the row
+     kind `drive-status`, and the stream `storage`. The history route takes only its three streams, so `storage` is
+     refused there before this rule is reached. A note holds nobody's content, so this is not a privacy invariant like
+     rules 5-7: it is the ruling held in code - nothing about a drive gains a copy here by accident. If Mike ever wants
+     "with us" as a place for it (the ruling says "by default"), this rule becomes conditional the way rule 4 did.
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -149,6 +164,20 @@ HIDDEN_EVENT_KINDS = frozenset({"hide-picture", "unhide-picture"})   # hidden_pi
 HIDDEN_EVENT_STREAMS = frozenset({"hidden"})                          # hidden_pictures.js HIDDEN_STREAM
 SAY_HIDDEN = ("This looks like the list of pictures somebody hid from a slideshow. It stays on the screen where they "
               "were hidden, or in the person's own Nimrod folder, and is never kept on this site.")
+# ---- rule 7, the removals (remove this picture, 2026-10-10) ----
+REMOVED_FORMAT = "nimrod-removed-pictures"        # web/client/removed_pictures.js REMOVED_FORMAT (the test holds them equal)
+REMOVED_KEYS = frozenset({"removedpictures", "removed-pictures", "removed_pictures"})
+REMOVED_EVENT_KINDS = frozenset({"remove-picture", "restore-picture"})   # removed_pictures.js REMOVE_KIND / RESTORE_KIND
+REMOVED_EVENT_STREAMS = frozenset({"removed"})                           # removed_pictures.js REMOVED_STREAM
+SAY_REMOVED = ("This looks like the list of pictures somebody removed from a slideshow. It stays on the screen where "
+               "they were removed, or in the person's own Nimrod folder, and is never kept on this site.")
+# ---- rule 8: how the drives are doing (drive status) ----
+DRIVE_FORMAT = "nimrod-drive-status"              # web/client/storage_notes.js NOTE_FORMAT (the test holds them equal)
+DRIVE_KEYS = frozenset({"drivestatus", "drive-status", "drive_status"})
+DRIVE_EVENT_KINDS = frozenset({"drive-status"})   # storage_notes.js NOTE_KIND
+DRIVE_EVENT_STREAMS = frozenset({"storage"})      # storage_notes.js NOTES_STREAM
+SAY_DRIVE = ("This looks like a note of how a picture drive is doing (its copy times, counts and free space). It is "
+             "saved in the person's own Nimrod folder, wherever they keep it, and is not kept on this site.")
 SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, or where "
                        "its person chose in \"Where your history is kept\" - not in this site's log.")
 
@@ -335,18 +364,43 @@ def looks_like_learned_words(data) -> bool:
     return False
 
 
-def looks_like_hidden_pictures(data) -> bool:
+def looks_like_hidden_pictures(data, keys=HIDDEN_KEYS, fmt=HIDDEN_FORMAT) -> bool:
     """Rule 7: the hidden-pictures record's own tag, or a key named hiddenPictures (any spelling above, any case).
+    `keys` / `fmt` are the removals' (looks_like_removed_pictures). Iterative, like _strings, so a deeply nested body
+    cannot blow the stack."""
+    stack = [data]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            for k, x in v.items():
+                if isinstance(k, str) and k.strip().lower() in keys:
+                    return True
+                if isinstance(k, str) and k.lower() == "format" and isinstance(x, str) \
+                        and x.strip().lower() == fmt:
+                    return True
+                stack.append(x)
+        elif isinstance(v, (list, tuple)):
+            stack.extend(v)
+    return False
+
+
+def looks_like_removed_pictures(data) -> bool:
+    """Rule 7, the removals: the removed-pictures record's own tag, or a key named removedPictures (any case)."""
+    return looks_like_hidden_pictures(data, keys=REMOVED_KEYS, fmt=REMOVED_FORMAT)
+
+
+def looks_like_drive_note(data) -> bool:
+    """Rule 8: the drive note's own tag, or a key named driveStatus (any spelling above, any case).
     Iterative, like _strings, so a deeply nested body cannot blow the stack."""
     stack = [data]
     while stack:
         v = stack.pop()
         if isinstance(v, dict):
             for k, x in v.items():
-                if isinstance(k, str) and k.strip().lower() in HIDDEN_KEYS:
+                if isinstance(k, str) and k.strip().lower() in DRIVE_KEYS:
                     return True
                 if isinstance(k, str) and k.lower() == "format" and isinstance(x, str) \
-                        and x.strip().lower() == HIDDEN_FORMAT:
+                        and x.strip().lower() == DRIVE_FORMAT:
                     return True
                 stack.append(x)
         elif isinstance(v, (list, tuple)):
@@ -356,13 +410,18 @@ def looks_like_hidden_pictures(data) -> bool:
 
 def check_content(data) -> None:
     """Rule 2: no picture, sound or video inside the JSON, as a data: address or as a long base64 run.
-    Rule 5: no voiceprint. Rule 6: no record of what the subtitles learned. Rule 7: no list of hidden pictures."""
+    Rule 5: no voiceprint. Rule 6: no record of what the subtitles learned. Rule 7: no list of hidden pictures.
+    Rule 8: no note of how a drive is doing."""
     if looks_like_voiceprint(data):
         raise Refused(400, SAY_VOICEPRINT)
     if looks_like_learned_words(data):
         raise Refused(400, SAY_LEARNED)
     if looks_like_hidden_pictures(data):
         raise Refused(400, SAY_HIDDEN)
+    if looks_like_removed_pictures(data):
+        raise Refused(400, SAY_REMOVED)
+    if looks_like_drive_note(data):
+        raise Refused(400, SAY_DRIVE)
     for s in _strings(data):
         if s.lstrip()[:11].lower().startswith(_MEDIA_PREFIXES):
             raise Refused(400, "This has a picture, a sound or a video inside it. " + SAY_KEEP_IT_HOME
@@ -397,6 +456,10 @@ def check_event(stream: str, kind: str, data) -> None:
         raise Refused(400, SAY_PLAYS_STAY_HOME)
     if (kind or "").lower() in HIDDEN_EVENT_KINDS or (stream or "").lower() in HIDDEN_EVENT_STREAMS:
         raise Refused(400, SAY_HIDDEN)      # rule 7: a hide / bring-back row, or the stream they are kept in
+    if (kind or "").lower() in REMOVED_EVENT_KINDS or (stream or "").lower() in REMOVED_EVENT_STREAMS:
+        raise Refused(400, SAY_REMOVED)     # rule 7: a remove / bring-back row, or the stream they are kept in
+    if (kind or "").lower() in DRIVE_EVENT_KINDS or (stream or "").lower() in DRIVE_EVENT_STREAMS:
+        raise Refused(400, SAY_DRIVE)       # rule 8: a drive note, or the stream it is kept in
     size = row_bytes(data)
     if size > EVENT_MAX_BYTES:
         raise _too_big("event", size, EVENT_MAX_BYTES)

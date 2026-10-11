@@ -20,7 +20,8 @@
 import { cachedFetch } from './cache.js';
 import { authHeaders, httpError } from './auth.js';
 import { listFolderSources, removeFolderSource, resolveFolderListing,
-         folderFileUrl, listFolderEntries, cleanFolderPath, DEEP_LIMITS } from './folder_source.js';
+         folderFileUrl, listFolderEntries, cleanFolderPath, DEEP_LIMITS,
+         setFolderOnRemove, moveFolderPicture, restoreFolderPicture } from './folder_source.js';   // + remove this picture
 import { DEVICE_SOURCE, DEVICE_SOURCE_ID, listDevicePictures, devicePictureUrl,
          devicePhotosOn, setDevicePhotosOn, resolveDeviceListing } from './device_pictures.js';
 
@@ -135,7 +136,106 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
     if (!res.ok) throw httpError(res, `DELETE /api/media-sources/${id} -> ${res.status}`);
     return res.json();
   }
-  return { list, add, remove, moveTo, personId: () => personId || null };
+  // remove this picture (2026-10-10): "When a picture is removed: keep it here / remove it here too" (ON_REMOVE, below),
+  // kept with the source: a folder's on its row on this device, an agent's on the server (only that field changes).
+  async function setOnRemove(id, value) {
+    const v = value === ON_REMOVE_MOVE ? ON_REMOVE_MOVE : ON_REMOVE_KEEP;
+    if (id === DEVICE_SOURCE_ID) throw new Error('Pictures added on this device are always kept.');
+    const local = await listFolderSources();
+    if (local.some((s) => s.id === id)) return setFolderOnRemove(id, v);
+    const res = await fetch(`${base}/api/media-sources/${id}`, {
+      method: 'PATCH',
+      headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ on_remove: v }),
+    });
+    if (!res.ok) throw httpError(res, `PATCH /api/media-sources/${id} -> ${res.status}`);
+    return res.json();
+  }
+  return { list, add, remove, moveTo, setOnRemove, personId: () => personId || null };
+}
+
+// ------------------------------------------------------------------------- REMOVE THIS PICTURE (2026-10-10)
+// Mike: "There should be options for this when you're setting up folders. You can decide whether pictures are deleted
+// off of each drive when they are deleted." Each source (a browser folder, a media agent, the Drive copy an agent
+// serves) carries ON_REMOVE_KEY:
+//   'keep'    THE DEFAULT (DECISIONS 2026-10-09/10: deletions kept by default; following them is chosen per drive or
+//             direction, never globally). A removed picture leaves the slideshows (removed_pictures.js) and stays here.
+//   'remove'  it is also MOVED into this folder's Removed folder (.nimrod-removed/<date>/), never deleted; the photo
+//             copy on that computer empties dated folders after its setting (30 days by default, nimrod-photo-pull.sh).
+// AGAINST 'remove' as the default: a wrong press would take a picture off every drive at once, and Mike's own desktop
+// is meant to keep everything as the archive ("I won't set it to delete the photo from my desktop"). FOR offering it:
+// the screens' drives fill up, and a picture removed on purpose should not keep coming back. So: off, per source.
+// Pictures added on this device (the device source) are never moved: they live in this browser, and the choice is not
+// offered for them.
+export const ON_REMOVE_KEY = 'on_remove';
+export const ON_REMOVE_KEEP = 'keep';
+export const ON_REMOVE_MOVE = 'remove';
+export const ON_REMOVE_DEFAULT = ON_REMOVE_KEEP;
+export const ON_REMOVE_LABEL = 'When a picture is removed';
+export const ON_REMOVE_CHOICES = Object.freeze([
+  Object.freeze({ value: ON_REMOVE_KEEP, label: 'keep it here' }),
+  Object.freeze({ value: ON_REMOVE_MOVE, label: 'remove it here too' }),
+]);
+/** 'keep' or 'remove' for a source; anything unknown, and the device's own pictures, are 'keep'. Pure. */
+export function onRemoveOf(source) {
+  return source && source.kind !== 'device' && source[ON_REMOVE_KEY] === ON_REMOVE_MOVE ? ON_REMOVE_MOVE : ON_REMOVE_KEEP;
+}
+// The words under the choice, in Media. Site copy: plain, no names. The Drive line is said for every source set to
+// remove, because a source filled from Google Drive looks like any other folder from here.
+export const ON_REMOVE_WORDS = Object.freeze({
+  keep: 'A picture removed on a screen leaves the slideshows and stays in this folder.',
+  remove: 'A picture removed on a screen is moved to a Removed folder (.nimrod-removed) inside this folder, never '
+    + 'deleted. The photo copy on that computer empties it after 30 days, unless it was set otherwise there.',
+  drive: 'If this folder is copied from Google Drive, the picture stays on Drive, but it isn’t copied back here.',
+  agent: 'The Nimrod helper (media agent) on that computer moves it, when it was started with --removals; it takes '
+    + 'moves only from a screen on that same computer, so a removal made elsewhere reaches it when that screen shows '
+    + 'these pictures.',
+  folderAsks: 'Removing needs the browser’s permission to change this folder. Until it is given, a removed picture only '
+    + 'leaves the slideshows.',
+  folderOk: 'This browser may change this folder, so a removed picture is moved there.',
+  allow: 'Allow removing here',
+});
+
+/**
+ * MOVE a removed picture on one source, when that source is set to "remove it here too". Resolves `{ done }`, never
+ * rejects:
+ *   'kept'       the source keeps removed pictures (the default) - nothing asked
+ *   'moved'      moved into its Removed folder; 'not-here': not in this folder now, listed so it never comes in
+ *   'elsewhere'  an agent on another computer from here (media_sources quietReach): not asked, so the browser never
+ *                shows its local-network box; that computer's own screen does it (THE FOLLOW-UP)
+ *   'off'        the agent was not started with --removals; 'refused': it takes moves only from its own computer
+ *   'asks'       a browser folder with no permission to change it: nothing asked, nothing moved
+ *   'failed' / 'bad' / 'missing'
+ * `fetchImpl`, `check` and `folders` ({ move, restore }) are the suites' seams.
+ */
+export async function removeOnSource(source, path, { fetchImpl = (...a) => fetch(...a), check = null, folders = null } = {}) {
+  return changeOnSource('remove', source, path, { fetchImpl, check, folders });
+}
+/** "Bring it back" on one source set to "remove it here too": `{ done }` - 'back', 'already', 'emptied', 'not-removed',
+ *  or removeOnSource's 'kept', 'elsewhere', 'off', 'refused', 'asks', 'failed'. Never rejects. */
+export async function restoreOnSource(source, path, { fetchImpl = (...a) => fetch(...a), check = null, folders = null } = {}) {
+  return changeOnSource('restore', source, path, { fetchImpl, check, folders });
+}
+async function changeOnSource(what, source, path, { fetchImpl, check, folders }) {
+  if (onRemoveOf(source) !== ON_REMOVE_MOVE || !path) return { done: 'kept' };
+  if (source.kind === 'folder') {
+    const f = folders || { move: moveFolderPicture, restore: restoreFolderPicture };
+    try { return (await (what === 'remove' ? f.move : f.restore)(source.id, path)) || { done: 'failed' }; }
+    catch { return { done: 'failed' }; }
+  }
+  const base = agentBase(source);
+  if (!base) return { done: 'kept' };
+  if (!(await quietReach(source, { check })).quiet) return { done: 'elsewhere' };
+  let res;
+  try {
+    res = await fetchImpl(`${base}/media/${what}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }) });
+  } catch { return { done: 'failed' }; }
+  let j = {};
+  try { j = (await res.json()) || {}; } catch { j = {}; }
+  if (!res.ok) return { done: res.status === 404 ? 'off' : res.status === 403 ? 'refused' : 'failed', why: String(j.why || '') };
+  if (what === 'remove') return { done: j.removed ? 'moved' : 'not-here' };
+  return { done: j.already ? 'already' : j.back ? 'back' : (j.why === 'emptied' ? 'emptied' : 'not-removed') };
 }
 
 // --- Resolver (talks to the user's media agent, NOT the platform) ----------

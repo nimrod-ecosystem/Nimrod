@@ -420,9 +420,13 @@ export const CHART_ACTIONS = [
 // screen of four panels "hide this picture" doing nothing because the clock had focus is a command that looks broken.
 export const PHOTOS_HIDE_TOPIC = 'photos/hide';
 export const PHOTOS_UNHIDE_TOPIC = 'photos/unhide';
+// remove this picture (2026-10-10; removed_pictures.js): a third action beside Hide, a screen action for Hide's reason.
+// "Bring it back" undoes whichever came last, a hide or a removal (photos.js unhideLast).
+export const PHOTOS_REMOVE_TOPIC = 'photos/remove';
 export const PHOTO_ACTIONS = [
   { id: 'photos/hide-picture', label: 'Photos: hide the picture on screen', topic: PHOTOS_HIDE_TOPIC, group: 'Photos' },
-  { id: 'photos/bring-back', label: 'Photos: bring the last hidden picture back', topic: PHOTOS_UNHIDE_TOPIC, group: 'Photos' },
+  { id: 'photos/bring-back', label: 'Photos: bring the last hidden or removed picture back', topic: PHOTOS_UNHIDE_TOPIC, group: 'Photos' },
+  { id: 'photos/remove-picture', label: 'Photos: remove the picture on screen', topic: PHOTOS_REMOVE_TOPIC, group: 'Photos' },
 ];
 
 // ---------------------------------------------------------------------------------------

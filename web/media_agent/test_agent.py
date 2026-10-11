@@ -699,6 +699,156 @@ def history_http_tests(base: str, origin: str, data: Path):
           not any(p.suffix == ".jsonl" for p in data.parent.parent.joinpath("photos").rglob("*")))
 
 
+def check_removals_pure():
+    """PURE - the functions, no agent process. REMOVE THIS PICTURE: move, never delete; only inside the folder; the
+    list the photo pull reads; bring it back."""
+    sys.path.insert(0, str(HERE))
+    import agent  # noqa: E402
+    tmp = Path(tempfile.mkdtemp(prefix="nimrod_rm_"))
+    try:
+        root = tmp / "photos"
+        (root / "trip").mkdir(parents=True)
+        (root / "a.jpg").write_bytes(b"A1")
+        (root / "trip" / "b.png").write_bytes(b"B1")
+        (root / "notes.txt").write_bytes(b"N")
+        (tmp / "secret.jpg").write_bytes(b"SECRET")
+        win = os.name == "nt"
+        check("removal paths: a picture's path is taken; '..', a dot part, a non-picture, a line break, NUL, too long are not",
+              agent.removal_parts("trip/b.png") == ["trip", "b.png"] and agent.removal_parts("a.jpg") == ["a.jpg"]
+              and all(agent.removal_parts(p) is None for p in ("../secret.jpg", "trip/../../secret.jpg", ".nimrod-removed/x.jpg",
+                                                              "notes.txt", "a\n.jpg", "a\t.jpg", "a\x00.jpg", "", None, 5,
+                                                              "x/" * 600 + "a.jpg", ".hidden.jpg", "trip/.b.png")))
+        check("...and on Windows a '\\' or a ':' in a part is refused", agent.removal_parts("C:/a.jpg", windows=True) is None
+              and agent.removal_parts("..\\secret.jpg", windows=True) is None)
+        a, s = agent.remove_picture(root, "trip/b.png", today="2026-10-10", windows=win)
+        moved = root / ".nimrod-removed" / "2026-10-10" / "trip" / "b.png"
+        listf = root / ".nimrod-removed" / "removed-paths.txt"
+        check("*** remove: the picture is MOVED to .nimrod-removed/<day>/<its path>, bytes unchanged ***",
+              s == 200 and a.get("removed") is True and not (root / "trip" / "b.png").exists()
+              and moved.read_bytes() == b"B1", detail=repr(a))
+        check("*** ...and its path is on removed-paths.txt (what the photo pull reads) ***",
+              listf.read_text(encoding="utf-8").splitlines() == ["trip/b.png"])
+        log = (root / ".nimrod-removed" / "removed-log.jsonl").read_text(encoding="utf-8").splitlines()
+        check("...a line in removed-log.jsonl, and a README saying what the folder is",
+              len(log) == 1 and json.loads(log[0])["kind"] == "remove" and (root / ".nimrod-removed" / "README.txt").exists())
+        (root / "trip" / "b.png").write_bytes(b"B2")       # the same name again (a fresh copy), removed the same day
+        a, s = agent.remove_picture(root, "trip/b.png", today="2026-10-10", windows=win)
+        check("*** removed again the same day: a fresh folder (2026-10-10-2); the first removed copy is never replaced ***",
+              s == 200 and moved.read_bytes() == b"B1"
+              and (root / ".nimrod-removed" / "2026-10-10-2" / "trip" / "b.png").read_bytes() == b"B2"
+              and listf.read_text(encoding="utf-8").splitlines() == ["trip/b.png"], detail=repr(a))
+        a, s = agent.remove_picture(root, "gone.jpg", today="2026-10-10", windows=win)
+        check("a picture not in this folder: nothing moved, but listed (so a copy from Drive never brings it in)",
+              s == 200 and a.get("removed") is False and a.get("listed") is True
+              and "gone.jpg" in listf.read_text(encoding="utf-8").splitlines(), detail=repr(a))
+        for bad in ("../secret.jpg", "notes.txt", ".nimrod-removed/removed-paths.txt", ".nimrod-removed/2026-10-10/trip/b.png"):
+            a, s = agent.remove_picture(root, bad, today="2026-10-10", windows=win)
+            check(f"*** refused, nothing touched: {bad} ***", s == 400 and (tmp / "secret.jpg").exists()
+                  and (root / "notes.txt").exists() and listf.exists(), detail=f"{s} {a}")
+        made = link_dir(root / "out", tmp)
+        if made:
+            a, s = agent.remove_picture(root, "out/secret.jpg", today="2026-10-10", windows=win)
+            check(f"*** a picture through a folder {made} pointing OUTSIDE the folder: refused, not moved ***",
+                  s == 400 and (tmp / "secret.jpg").read_bytes() == b"SECRET", detail=f"{s} {a}")
+            unlink_all([root / "out"])
+        a, s = agent.restore_picture(root, "trip/b.png", windows=win)
+        check("*** bring it back: the NEWEST removed copy goes back, and off the list ***",
+              s == 200 and a.get("back") is True and (root / "trip" / "b.png").read_bytes() == b"B2"
+              and "trip/b.png" not in listf.read_text(encoding="utf-8").splitlines() and moved.exists(), detail=repr(a))
+        a, s = agent.restore_picture(root, "trip/b.png", windows=win)
+        check("...said again with the picture already back: never replaced, the older removed copy waits",
+              s == 200 and a.get("already") is True and (root / "trip" / "b.png").read_bytes() == b"B2" and moved.exists(),
+              detail=repr(a))
+        a, s = agent.restore_picture(root, "gone.jpg", windows=win)
+        check("a removed picture whose copy was emptied: taken off the list (a copy elsewhere may come back), said so",
+              s == 200 and a.get("back") is False and a.get("why") == "emptied"
+              and "gone.jpg" not in listf.read_text(encoding="utf-8").splitlines(), detail=repr(a))
+        a, s = agent.restore_picture(root, "never.jpg", windows=win)
+        check("bringing back something never removed changes nothing", s == 200 and a.get("why") == "not removed", detail=repr(a))
+        check("*** nothing was ever deleted: every picture is still somewhere in the folder ***",
+              (root / "a.jpg").exists() and moved.read_bytes() == b"B1" and (root / "trip" / "b.png").exists())
+        src = AGENT.read_text(encoding="utf-8")
+        body = src[src.index("# ------------------------------------------------------------------ REMOVE THIS PICTURE"):
+                   src.index("class Handler(")]
+        check("*** the removal code holds no delete at all (no unlink, remove, rmtree, rmdir) ***",
+              not any(w in body for w in ("os.remove(", ".unlink(", "rmtree", "rmdir(", "os.unlink")), detail="")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def removal_http_tests(tmp: Path):
+    """REMOVE THIS PICTURE over HTTP: an agent started with --removals, and the guards in front of the move."""
+    import http.client
+    root = tmp / "rm_photos"
+    root.mkdir()
+    (root / "a.jpg").write_bytes(b"A1")
+    (root / "b.jpg").write_bytes(b"B1")
+    port = free_port()
+    origin = "https://self.example"
+    proc = subprocess.Popen([sys.executable, str(AGENT), "--root", str(root), "--host", "127.0.0.1", "--port", str(port),
+                             "--origin", origin, "--removals"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    base = f"http://127.0.0.1:{port}"
+
+    def post(path, body, headers=None, raw=None):
+        h = {"Content-Type": "application/json", "Origin": origin}
+        h.update(headers or {})
+        data_bytes = raw if raw is not None else json.dumps(body).encode("utf-8")
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        try:
+            c.request("POST", path, body=data_bytes, headers=h)
+            r = c.getresponse()
+            return r.status, dict(r.getheaders()), json.loads(r.read() or b"{}")
+        finally:
+            c.close()
+    try:
+        up = False
+        for _ in range(50):
+            try:
+                if get(f"{base}/health")[0] == 200:
+                    up = True
+                    break
+            except Exception:
+                time.sleep(0.1)
+        check("removals: the agent starts with --removals", up)
+        if not up:
+            return
+        s, h, j = get_json(f"{base}/media/removals", {"Origin": origin})
+        check("GET /media/removals: on", s == 200 and j.get("enabled") is True, detail=repr(j))
+        s, h, j = post("/media/remove", {"path": "a.jpg"}, {"Origin": EVIL})
+        check("*** a page from another site: 403, nothing moved ***", s == 403 and (root / "a.jpg").exists())
+        s, h, j = post("/media/remove", {"path": "a.jpg"}, {"Host": "evil.example:8770"})
+        check("*** a Host naming another site: 403, nothing moved ***", s == 403 and (root / "a.jpg").exists())
+        s, h, j = post("/media/remove", None, {"Content-Type": "text/plain"}, raw=b'{"path": "a.jpg"}')
+        check("*** not JSON (a plain form): 415, nothing moved ***", s == 415 and (root / "a.jpg").exists())
+        s, h, j = post("/media/remove", None, {"Content-Length": str(1024 * 1024)}, raw=b"{}")
+        check("a body over the cap: 413", s == 413 and (root / "a.jpg").exists())
+        s, h, j = post("/media/remove", {"path": "../rm_photos/a.jpg"})
+        check("*** a climbing path: 400, nothing moved ***", s == 400 and (root / "a.jpg").exists())
+        s, h, j = get(f"{base}/media/remove", {"Origin": origin, "Access-Control-Request-Method": "POST",
+                                                "Access-Control-Request-Headers": "content-type"}, method="OPTIONS")
+        check("the remove preflight offers POST", s == 204 and "POST" in (h.get("Access-Control-Allow-Methods") or ""))
+        s, h, j = post("/media/remove", {"path": "a.jpg"})
+        check("*** POST /media/remove from this computer: moved into .nimrod-removed/<today>/, its Origin echoed ***",
+              s == 200 and j.get("removed") is True and not (root / "a.jpg").exists()
+              and any(p.name == "a.jpg" for p in (root / ".nimrod-removed").rglob("a.jpg"))
+              and h.get("Access-Control-Allow-Origin") == origin, detail=repr(j))
+        s, _, j = get_json(f"{base}/list")
+        check("...and it is out of /list (the Removed folder is a dot-folder)",
+              [i["path"] for i in j.get("items", [])] == ["b.jpg"], detail=repr(j))
+        s, h, j = post("/media/restore", {"path": "a.jpg"})
+        check("*** POST /media/restore: back where it was ***", s == 200 and j.get("back") is True
+              and (root / "a.jpg").read_bytes() == b"A1", detail=repr(j))
+        for method in ("PUT", "DELETE", "PATCH"):
+            st, _, _ = get(f"{base}/media/remove", {"Origin": origin}, method=method)
+            check(f"{method} /media/remove does not exist (501)", st == 501, detail=f"status={st}")
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+
+
 def run_agent(root: Path, port: int, timeout: float = 20):
     """Start a copy of the agent and wait for it to end: (exit code, what it printed). None when it kept running
     (a second copy that started instead of stepping aside - the bug)."""
@@ -796,6 +946,7 @@ def main():
     check_deep_mirrors()
     check_deep_pure()
     check_files_pure()
+    check_removals_pure()
     shutil.rmtree(check_history_pure(), ignore_errors=True)
 
     tmp = Path(tempfile.mkdtemp(prefix="nimrod_media_"))
@@ -992,7 +1143,26 @@ def main():
 
         page_tests(base, origin)
         history_http_tests(base, origin, data)
+        # remove this picture: this agent was started WITHOUT --removals, so both routes are off and nothing moves.
+        s, _, j = get_json(f"{base}/media/removals", {"Origin": origin})
+        check("removals: off unless --removals (GET /media/removals says so)", s == 200 and j.get("enabled") is False,
+              detail=repr(j))
+        import http.client
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        try:
+            c.request("POST", "/media/remove", body=json.dumps({"path": "apple.jpg"}).encode(),
+                      headers={"Content-Type": "application/json", "Origin": origin})
+            r = c.getresponse()
+            st = r.status
+            r.read()
+        finally:
+            c.close()
+        check("*** removals off: POST /media/remove is 404 and the picture stays where it is ***",
+              st == 404 and (root / "apple.jpg").exists() and not (root / ".nimrod-removed").exists(), detail=f"status={st}")
+        s, h, _ = get(f"{base}/media/remove", {"Origin": origin, "Access-Control-Request-Method": "POST"}, method="OPTIONS")
+        check("...and its preflight offers no POST", s == 204 and "POST" not in (h.get("Access-Control-Allow-Methods") or ""))
         double_start_tests(root, tmp, port, base, origin)
+        removal_http_tests(tmp)
 
     finally:
         proc.terminate()

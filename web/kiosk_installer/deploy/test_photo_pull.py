@@ -545,6 +545,134 @@ class CopyJobTest(unittest.TestCase):
         self.assertFalse(os.path.exists(self.fallback))
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# "REMOVE THIS PICTURE" (2026-10-10): the media agent moves a removed picture into <its folder>/.nimrod-removed/<date>/
+# and lists it in .nimrod-removed/removed-paths.txt. A stand-in for that list here (the agent's own writing of it is
+# web/media_agent/test_agent.py's): every job skips what it lists, and old Removed folders are emptied, nothing else.
+def write_removed(agent_root, paths, days=()):
+    rd = os.path.join(agent_root, '.nimrod-removed')
+    os.makedirs(rd, exist_ok=True)
+    with open(os.path.join(rd, 'removed-paths.txt'), 'w', encoding='utf-8', newline='\n') as f:
+        f.write(''.join(p + '\n' for p in paths))
+    for d in days:
+        os.makedirs(os.path.join(rd, d, 'trip'), exist_ok=True)
+        with open(os.path.join(rd, d, 'trip', 'x.jpg'), 'wb') as f:
+            f.write(b'x')
+    return rd
+
+
+@unittest.skipUnless(BASH, 'no bash here (Git for Windows, or /bin/bash)')
+class RemovedPicturesTest(unittest.TestCase):
+    setUp_pull = PhotoPullTest.setUp
+    setUp_copy = CopyJobTest.setUp
+    tearDown = PhotoPullTest.tearDown
+    _stub = staticmethod(PhotoPullTest._stub)
+    run_pull = PhotoPullTest.run_pull
+    rclone_calls = PhotoPullTest.rclone_calls
+    pic = CopyJobTest.pic
+    run_job = CopyJobTest.run_job
+    in_fallback = CopyJobTest.in_fallback
+    fallback_pictures = CopyJobTest.fallback_pictures
+
+    def setUp(self):
+        self.setUp_copy()
+
+    def filters(self, name='filter-main.txt'):
+        with open(os.path.join(self.state, name), encoding='utf-8') as f:
+            return f.read().splitlines()
+
+    def test_job1_leaves_every_removed_path_out_first_relative_to_its_target(self):
+        # The agent serves <drive>/photos (above the Drive copy's target, photos/family_drive); one list in the target too.
+        write_removed(os.path.join(self.drive, 'photos'), ['family_drive/2026/a.jpg', 'family_drive/IMG_1.HEIC.jpg',
+                                                            'elsewhere/b.jpg', 'family_drive/odd [1]*.jpg'])
+        os.makedirs(self.target, exist_ok=True)
+        write_removed(self.target, ['c.jpg'])
+        rc, out = self.run_pull('--now', FAKE_NEW=1)
+        self.assertEqual(rc, 0, out)
+        rules = self.filters()
+        self.assertEqual(rules[:4], ['- /c.jpg', '- /2026/a.jpg', '- /IMG_1.HEIC.jpg', '- /odd \\[1\\]\\*.jpg'],
+                         'the removed paths first, relative to the target, glob characters escaped; another folder\'s not')
+        self.assertIn('- /.nimrod-removed/**', rules, 'a Removed folder inside the target is never copied over or deleted')
+        self.assertIn('- /IMG_1.HEIC', self.filters('filter-heic.txt'), 'the removed iPhone picture\'s original is skipped too')
+        self.assertIn('4 removed pictures kept out', out)
+        main = self.rclone_calls('copy')[0]
+        self.assertEqual(main[main.index('--filter-from') + 1], posix(os.path.join(self.state, 'filter-main.txt')))
+
+    def test_mirroring_never_deletes_the_removed_folder_inside_the_target(self):
+        os.makedirs(self.target, exist_ok=True)
+        write_removed(self.target, ['a.jpg'])
+        rc, out = self.run_pull('--now', NIMROD_PULL_MIRROR_DELETES=1)
+        self.assertEqual(rc, 0, out)
+        self.assertIn('- /.nimrod-removed/**', self.filters(), 'excluded, so `rclone sync` leaves it alone')
+        self.assertEqual(self.filters()[0], '- /a.jpg')
+
+    def test_a_removed_iphone_picture_is_not_converted_again(self):
+        os.makedirs(self.target, exist_ok=True)
+        write_removed(self.target, ['IMG_1.HEIC.jpg'])
+        rc, out = self.run_pull('--now', FAKE_HEIC='IMG_1.HEIC')       # the stand-in still fetches the original
+        self.assertEqual(rc, 0, out)
+        self.assertFalse(os.path.exists(os.path.join(self.target, 'IMG_1.HEIC.jpg')), 'never made again')
+
+    def test_without_a_list_nothing_changes(self):
+        rc, out = self.run_pull('--now', FAKE_NEW=2)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.filters()[0], '- /.nimrod-removed/**')
+        self.assertNotIn('kept out', out)
+
+    def test_a_local_copy_job_never_copies_a_removed_picture_back(self):
+        self.pic('a.jpg', 1); self.pic('trip/b.jpg', 2); self.pic('c.jpg', 3)
+        os.makedirs(self.fallback)
+        write_removed(self.fallback, ['trip/b.jpg'])                  # removed from the fallback, still on the primary
+        rc, out = self.run_job('--now')
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.fallback_pictures(), ['a.jpg', 'c.jpg'])
+        self.assertIn('1 removed picture kept out', out)
+        self.assertTrue(os.path.exists(os.path.join(self.fallback, '.nimrod-removed', 'removed-paths.txt')),
+                        'the Removed folder in the target is left alone')
+
+    def clock(self, y, m, d):
+        return str(calendar.timegm((y, m, d, 12, 0, 0)))
+
+    def test_old_removed_folders_are_emptied_and_nothing_else(self):
+        root = os.path.join(self.drive, 'photos')                     # the agent's folder, above job 1's target
+        rd = write_removed(root, ['x.jpg'], days=('2026-08-01', '2026-09-05-2', '2026-10-01'))
+        os.makedirs(os.path.join(rd, 'family_drive', '2026-08-01'))   # job 1's own mirror backups: not this feature's
+        os.makedirs(os.path.join(rd, 'notes'))
+        bare = os.path.join(self.drive, 'other', '.nimrod-removed', '2026-01-01')   # no agent list beside it
+        os.makedirs(bare)
+        rc, out = self.run_pull('--now', NIMROD_PULL_TEST_CLOCK=self.clock(2026, 10, 10), TZ='UTC')
+        self.assertEqual(rc, 0, out)
+        left = sorted(os.listdir(rd))
+        self.assertEqual(left, ['2026-10-01', 'family_drive', 'notes', 'removed-paths.txt'],
+                         'older than 30 days emptied; the newer one, the mirror backups, other folders and the list kept')
+        self.assertTrue(os.path.isdir(bare), 'a Removed folder the agent did not make is never emptied')
+        self.assertIn('emptied 2 Removed folders older than 30 days', out)
+
+    def test_emptying_can_be_off_or_set_and_dry_run_only_says(self):
+        root = os.path.join(self.drive, 'photos')
+        rd = write_removed(root, ['x.jpg'], days=('2026-08-01', '2026-10-01'))
+        rc, out = self.run_pull('--dry-run', NIMROD_PULL_TEST_CLOCK=self.clock(2026, 10, 10), TZ='UTC')
+        self.assertEqual(rc, 0, out)
+        self.assertIn('would empty:', out)
+        self.assertTrue(os.path.isdir(os.path.join(rd, '2026-08-01')), 'a dry run deletes nothing')
+        rc, out = self.run_pull('--now', NIMROD_PULL_EMPTY_REMOVED_DAYS=0, NIMROD_PULL_TEST_CLOCK=self.clock(2026, 10, 10), TZ='UTC')
+        self.assertEqual(rc, 0, out)
+        self.assertTrue(os.path.isdir(os.path.join(rd, '2026-08-01')), '0: never emptied here')
+        rc, out = self.run_pull('--now', NIMROD_PULL_EMPTY_REMOVED_DAYS=7, NIMROD_PULL_TEST_CLOCK=self.clock(2026, 10, 10), TZ='UTC')
+        self.assertEqual(sorted(os.listdir(rd)), ['removed-paths.txt'], '7 days: both emptied')
+        rc, out = self.run_pull('--now', NIMROD_PULL_EMPTY_REMOVED_DAYS='soon')
+        self.assertEqual(rc, 2, out)
+        self.assertIn('number of days', out)
+
+    def test_a_local_jobs_source_and_target_removed_folders_are_emptied_too(self):
+        self.pic('a.jpg', 1)
+        os.makedirs(self.fallback)
+        rd = write_removed(self.fallback, ['b.jpg'], days=('2026-08-01',))
+        rc, out = self.run_job('--now', NIMROD_PULL_TEST_CLOCK=self.clock(2026, 10, 10), TZ='UTC')
+        self.assertEqual(rc, 0, out)
+        self.assertFalse(os.path.exists(os.path.join(rd, '2026-08-01')))
+
+
 class FallbackInstallTest(unittest.TestCase):
     """The second agent's unit and the installer's step 9, read as text (nothing here installs anything)."""
 

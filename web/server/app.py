@@ -29,6 +29,7 @@ from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
+from db import SOURCE_ON_REMOVE  # remove this picture (2026-10-10): a source's 'keep' / 'remove'
 from drive import ROLES, Answerers, CallGroups, Rooms, Tickets, parse_message, stamp_signal
 from game_rooms import SWEEP_S as GAME_SWEEP_S, GameRooms
 from push import PushHub, StreamTickets
@@ -191,12 +192,16 @@ class SourceCreate(BaseModel):
     # Absent means the ACCOUNT'S, which is what every source was before the person layer.
     # Most accounts hold one person and will never set this.
     person_id: str | None = None
+    # remove this picture (2026-10-10): 'keep' (the default) or 'remove'; db.py create_source says what each means.
+    on_remove: str | None = None
 
 
 class SourceMove(BaseModel):
     # Empty or absent moves a source back to being the account's - it is how you UNDO a
     # narrowing, so it has to be expressible rather than a one-way door.
     person_id: str | None = None
+    # remove this picture (2026-10-10): sent alone, it changes only this (the person stays where it was).
+    on_remove: str | None = None
 
 
 class ScreenPairRequest(BaseModel):
@@ -695,7 +700,9 @@ def create_source(body: SourceCreate, user: str = Depends(current_user)):
     if pid:
         _check(pid, ID_RE, "person id")
         owned_person(user, pid)
-    return store.create_source(user, body.label, base_url, body.kind, person_id=pid or None)
+    if body.on_remove is not None and body.on_remove not in SOURCE_ON_REMOVE:
+        raise HTTPException(status_code=400, detail="on_remove is keep or remove")
+    return store.create_source(user, body.label, base_url, body.kind, person_id=pid or None, on_remove=body.on_remove)
 
 
 @app.patch("/api/media-sources/{sid}")
@@ -707,6 +714,16 @@ def move_source(sid: str, body: SourceMove, user: str = Depends(current_user)):
     on one person's screen, which everybody then wants, and which without this is stuck.
     """
     _check(sid, ID_RE, "source id")
+    # remove this picture (2026-10-10): a body carrying only `on_remove` changes only that. A body with `person_id`,
+    # or with neither (what this route always took), moves the source as before.
+    sent = body.model_fields_set
+    if "on_remove" in sent:
+        if body.on_remove not in SOURCE_ON_REMOVE:
+            raise HTTPException(status_code=400, detail="on_remove is keep or remove")
+        if not store.set_source_on_remove(user, sid, body.on_remove):
+            raise HTTPException(status_code=404, detail="no such source")
+        if "person_id" not in sent:
+            return store.get_source(user, sid)
     pid = (body.person_id or "").strip()
     if pid:
         _check(pid, ID_RE, "person id")

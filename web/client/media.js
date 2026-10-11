@@ -78,10 +78,13 @@
 import {
   createMediaSourcesClient, resolveListing, findReachable, normalizeCode, PAIR_CODE_LEN, checkFromHere, addressScope,
   rememberReached,   // desktop prompt (2026-10-10)
+  // remove this picture (2026-10-10): "When a picture is removed: keep it here / remove it here too", on each source
+  onRemoveOf, ON_REMOVE_LABEL, ON_REMOVE_CHOICES, ON_REMOVE_WORDS, ON_REMOVE_MOVE,
 } from './media_sources.js';
 import { createProfilesClient } from './profile.js';
 import {
   isFolderPickerSupported, pickFolder, folderPermission, requestFolderAccess,
+  folderWritePermission, requestFolderWrite,   // remove this picture: only looked at, and asked only on a press
 } from './folder_source.js';
 import { createPresetLibrary } from './presets.js';
 // photo sources first (2026-10-09): the second everyday way in, and the helper's page for the advanced one.
@@ -157,6 +160,8 @@ export function mountMedia(root, {
     pick: pickFolder,
     permission: folderPermission,
     request: requestFolderAccess,
+    writePermission: folderWritePermission,   // remove this picture
+    requestWrite: requestFolderWrite,
   };
   let list = [];
   let busy = false;
@@ -373,6 +378,15 @@ export function mountMedia(root, {
       : s.kind === 'device' ? 'pictures added on this device'   // photo sources first
         : esc(s.base_url || '');
     const scope = (s.kind === 'folder' || s.kind === 'device') ? 'this device only' : 'all your devices';
+    // remove this picture (2026-10-10): the source's own choice, set here where it was added. Not offered for the
+    // pictures added on this device (they live in this browser; nothing is moved).
+    const choice = s.kind === 'device' ? '' : `
+        <label class="h-quiet" data-on-remove-row="${esc(s.id)}">${esc(ON_REMOVE_LABEL)}:
+          <select data-on-remove="${esc(s.id)}" aria-label="${esc(ON_REMOVE_LABEL)}">
+            ${ON_REMOVE_CHOICES.map((o) => `<option value="${esc(o.value)}"${onRemoveOf(s) === o.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}
+          </select>
+        </label>
+        <div class="h-quiet" data-on-remove-note="${esc(s.id)}"></div>`;
     return `
       <div class="h-card">
         <div class="h-card-head">
@@ -380,8 +394,51 @@ export function mountMedia(root, {
           <button class="h-btn" data-remove="${esc(s.id)}">Disconnect</button>
         </div>
         <div class="h-quiet">${where} · ${scope}</div>
-        <div class="h-quiet" data-probe="${esc(s.id)}">checking…</div>
+        <div class="h-quiet" data-probe="${esc(s.id)}">checking…</div>${choice}
       </div>`;
+  }
+
+  // remove this picture: the words under the choice. For a browser folder set to "remove it here too", whether this
+  // browser may change it - LOOKED AT, never asked - and a press that asks ("Allow removing here").
+  async function onRemoveNote(s) {
+    const cell = root.querySelector(`[data-on-remove-note="${CSS.escape(s.id)}"]`);
+    if (!cell) return;
+    if (onRemoveOf(s) !== ON_REMOVE_MOVE) { cell.textContent = ON_REMOVE_WORDS.keep; return; }
+    const parts = [ON_REMOVE_WORDS.remove];
+    if (s.kind === 'folder') {
+      let perm = 'prompt';
+      try { perm = typeof fs.writePermission === 'function' ? await fs.writePermission(s.id) : 'prompt'; } catch { perm = 'prompt'; }
+      parts.push(perm === 'granted' ? ON_REMOVE_WORDS.folderOk : ON_REMOVE_WORDS.folderAsks);
+      parts.push(ON_REMOVE_WORDS.drive);
+      cell.innerHTML = esc(parts.join(' '))
+        + (perm === 'granted' || typeof fs.requestWrite !== 'function' ? ''
+          : ` <button class="h-btn" data-allow-remove="${esc(s.id)}">${esc(ON_REMOVE_WORDS.allow)}</button>`);
+      cell.querySelector('[data-allow-remove]')?.addEventListener('click', async () => {
+        let got = 'denied';
+        try { got = await fs.requestWrite(s.id); } catch { got = 'denied'; }
+        if (got !== 'granted') say('Permission to change that folder was not given, so removed pictures stay in it.', true);
+        else say('');
+        onRemoveNote(s);
+      });
+      return;
+    }
+    parts.push(ON_REMOVE_WORDS.agent, ON_REMOVE_WORDS.drive);
+    cell.textContent = parts.join(' ');
+  }
+  async function setOnRemove(s, value) {
+    if (typeof sources.setOnRemove !== 'function') { say('This can’t be changed here.', true); return; }
+    try {
+      const saved = await sources.setOnRemove(s.id, value);
+      s.on_remove = (saved && saved.on_remove) || value;
+      say(value === ON_REMOVE_MOVE ? `“${s.label}”: removed pictures are moved to its Removed folder.`
+        : `“${s.label}”: removed pictures stay in it.`);
+    } catch (err) {
+      console.error(err);
+      say('That couldn’t be saved — try again.', true);
+      const sel = root.querySelector(`[data-on-remove="${CSS.escape(s.id)}"]`);
+      if (sel) sel.value = onRemoveOf(s);
+    }
+    onRemoveNote(s);
   }
 
   function render() {
@@ -394,7 +451,12 @@ export function mountMedia(root, {
     for (const b of root.querySelectorAll('[data-remove]')) {
       b.addEventListener('click', () => remove(b.dataset.remove));
     }
-    for (const s of list) probe(s);
+    for (const s of list) {
+      probe(s);
+      // remove this picture
+      root.querySelector(`[data-on-remove="${CSS.escape(s.id)}"]`)?.addEventListener('change', (e) => setOnRemove(s, e.target.value));
+      onRemoveNote(s);
+    }
   }
 
   // ------------------------------------------------------------- Presets (register #255)
