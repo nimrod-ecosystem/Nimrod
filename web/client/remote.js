@@ -45,6 +45,7 @@ import { connectDrive, DRIVE_VERBS } from './drive.js';
 import { VERBS, FOCUS_VERBS, verbTopic } from './actions.js';
 import { mountIntercomApprovals } from './intercom_approvals.js';
 import { mountNoteVisit, mountNoteWriters } from './note_visit.js';
+import { mountFollowView } from './follow_view.js';   // watch along (row 2.79): play what their screen plays, in step
 import { INPUTS_KEY } from './input_runtime.js';
 import { authHeaders } from './auth.js';
 
@@ -103,6 +104,9 @@ export function mountRemote(root, {
   // THE NOTE (note_visit.js): leave one for whoever is picked, from this account. Only on a
   // server-backed panel (`profiles` given). `noteVisit: null` turns it off; a test hands in its own.
   noteVisit = mountNoteVisit,
+  // WATCH ALONG (row 2.79, follow_view.js): follow what the picked person's screen is playing, in step, on this
+  // computer. Its own socket, opened only when somebody presses its button. `followView: null` turns it off.
+  followView = mountFollowView,
 } = {}) {
   let link = null;
   let grants = [];
@@ -132,6 +136,7 @@ export function mountRemote(root, {
         <span>Send what <b>I</b> press — my keyboard and switches control their screen</span>
       </label>
       <p class="h-hint" data-fwd-note></p>
+      <div data-follow></div>
       <div class="r-grants" data-note-visit></div>
       <div class="r-grants" data-grants></div>
       <div class="r-grants" data-intercom-approvals></div>
@@ -232,6 +237,20 @@ export function mountRemote(root, {
     if (!profiles || typeof noteVisit !== 'function' || !target.id) return;
     try { noteView = noteVisit(host, { personId: target.id, personName: target.name || '', user }); }
     catch (err) { console.error('remote: note', err); noteView = null; }
+  }
+
+  // WATCH ALONG FOR WHOEVER IS PICKED (follow_view.js). Follows the chip row like the note above: switching person
+  // drops the old one (and its socket), so a follow meant for one screen never plays another's.
+  let followCtl = null;
+  function renderFollow() {
+    try { followCtl?.destroy(); } catch { /* already gone */ }
+    followCtl = null;
+    const host = el('[data-follow]');
+    if (!host) return;
+    host.innerHTML = '';
+    if (typeof followView !== 'function' || !target.id) return;
+    try { followCtl = followView(host, { personId: target.id, personName: target.name || '', user, connect }); }
+    catch (err) { console.error('remote: watch along', err); followCtl = null; }
   }
 
   function renderStatus() {
@@ -343,6 +362,7 @@ export function mountRemote(root, {
     renderGrants();
     renderApprovals().catch((err) => console.error('remote: intercom approvals', err));
     renderNoteVisit();
+    renderFollow();
     openLink(target.id);
   }
 
@@ -351,6 +371,7 @@ export function mountRemote(root, {
   renderStatus();
   openLink(personId);
   renderNoteVisit();
+  renderFollow();
 
   async function refresh() {
     if (profiles) {
@@ -386,10 +407,14 @@ export function mountRemote(root, {
     // The note blocks (null unless shown), for a test.
     noteWriters: () => noteWriters,
     noteView: () => noteView,
+    // The watch-along block (null when off), for a test.
+    follow: () => followCtl,
     destroy() {
       torn = true;
       try { noteView?.destroy(); } catch { /* already gone */ }
       noteView = null;
+      try { followCtl?.destroy(); } catch { /* already gone */ }
+      followCtl = null;
       dropApprovals({ state: true });
       stopForwarding();
       listeners.abort();
