@@ -411,6 +411,13 @@ export const ROUTES = {
               'hide the picture', 'hi this picture', 'hi this one', 'hi this photo'] },
   'photos-unhide': { action: 'photos/bring-back', label: 'Photos: bring the last hidden picture back',
     phrases: ['bring it back', 'bring that back', 'bring the picture back', 'bring back the picture', 'show it again'] },
+  // remove this picture (2026-10-10; actions.js PHOTO_ACTIONS, removed_pictures.js): the third, beside Hide, two-step and
+  // said back like it ("Removed. Say bring it back to undo."); "bring it back" above undoes whichever came last.
+  // Vocabulary [unverified on the bench, inferred]: "remove" is a common word; no "hi this" twin is needed, because
+  // nothing here starts with "hide". Every phrase names the picture or "this one": "remove" alone, or "remove that", is
+  // too easily said in passing.
+  'photos-remove': { action: 'photos/remove-picture', label: 'Photos: remove this picture',
+    phrases: ['remove this picture', 'remove this one', 'remove this photo', 'remove the picture', 'remove that picture'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

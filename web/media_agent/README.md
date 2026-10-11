@@ -56,10 +56,11 @@ Leave it running. On a machine that should serve media unattended, make it a ser
 | `--port` | `8770` | port to listen on |
 | `--origin` | *(follows `--platform`)* | the sites whose pages may use it; pages on this computer always may, every other site gets 403 |
 | `--data-dir` | off | the Data folder of your Nimrod folder: a page on this computer may append history there (see Safety) |
+| `--removals` | off | "Remove this picture" for a source set to "remove it here too": a page on this computer may MOVE a picture into `.nimrod-removed/<date>/` inside the folder, and back. Never deletes. |
 
 Each also has an environment variable (`NIMROD_MEDIA_ROOT`, `NIMROD_MEDIA_HOST`,
 `NIMROD_MEDIA_PORT`, `NIMROD_MEDIA_ORIGIN`, `NIMROD_MEDIA_NAME`, `NIMROD_PLATFORM`,
-`NIMROD_MEDIA_DATA`) so it
+`NIMROD_MEDIA_DATA`, `NIMROD_MEDIA_REMOVALS=1`) so it
 can run as a service configured from an env file.
 
 ### About those defaults
@@ -100,6 +101,9 @@ It is not listed as media and contains nothing but a random id.
 | `GET /files/<relpath>` | the raw image/video bytes (Range-aware, so video seeks). Only a file whose real path, every symlink and junction followed, is inside the root; anything else (a link pointing out, a `..` part, on Windows a `\` or `:` in a part) is 404 |
 | `GET /history/status` | only with `--data-dir`: `{enabled, ready, folder_id, streams}` - can history be written now |
 | `POST /history/<stream>` | only with `--data-dir`: `{scope, rows: [{at, kind, data}], folder_id?}` appended to `Data/History/<stream>-<scope>-<YYYY-MM>.jsonl` |
+| `GET /media/removals` | `{enabled}`: whether it was started with `--removals` (this computer only) |
+| `POST /media/remove` | only with `--removals`, only from this computer: `{path}` moved to `.nimrod-removed/<date>/<path>` and listed in `.nimrod-removed/removed-paths.txt` (the photo pull skips what it lists) |
+| `POST /media/restore` | only with `--removals`, only from this computer: `{path}` moved back from the newest Removed copy, never over a picture already there |
 
 `/list` response shape:
 

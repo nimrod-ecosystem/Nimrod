@@ -53,9 +53,30 @@
 #     space, free space on the target (for Storage roles Stage 4 to show). A different name on purpose: the Photos panel
 #     reads last-pull.json, and must not say "3 new pictures today" about a night's copy to the backup folder.
 #
+# A PICTURE SOMEBODY REMOVED NEVER COMES BACK (2026-10-10, "Remove this picture"; Mike: "You can decide whether
+# pictures are deleted off of each drive when they are deleted"). On a source set to "remove it here too", the media
+# agent (started with --removals) MOVES a removed picture into <its folder>/.nimrod-removed/<date>/ and lists its path
+# in <its folder>/.nimrod-removed/removed-paths.txt. Without the next three rules the copy from Drive would put it
+# straight back at the next pull, because Drive still has it (this login cannot write to Drive):
+#   * EVERY JOB SKIPS EVERY REMOVED PATH. The lists are read from the job's target folder and every folder above it (the
+#     agent's folder is often the drive's photos folder, above the Drive copy's target), each path taken relative to
+#     the target. Job 1 puts them first in its rclone filter ("- /<path>", glob characters escaped), with an iPhone
+#     picture's original too (a removed IMG_1.HEIC.jpg also skips IMG_1.HEIC); a local copy job leaves them out of
+#     what it copies.
+#   * NO JOB EVER TOUCHES A .nimrod-removed FOLDER INSIDE ITS TARGET: job 1's filters leave /.nimrod-removed/** out
+#     (so a mirroring `rclone sync` never deletes it), and a local copy job's listing leaves every dot-folder out.
+#   * EMPTYING, THE ONE REAL DELETE IN THE FEATURE: after the jobs, each Removed folder the agent made (one beside a
+#     removed-paths.txt, above a job's target or source) has its dated folders (YYYY-MM-DD, YYYY-MM-DD-N) emptied once
+#     they are older than NIMROD_PULL_EMPTY_REMOVED_DAYS. Nothing else is ever emptied: not job 1's own mirror backups
+#     (<parent>/.nimrod-removed/<target name>/...), not a folder without the agent's list. The list itself is kept,
+#     so an emptied picture still never comes back.
+#
 # Settings (environment, from ~/.config/nimrod/photo-pull.env through the unit; see README.md "Pictures from Google
 # Drive"). Every one is a default, argued there:
 #   NIMROD_PULL_JOBS            the jobs to run, in order (default "drive": job 1 alone, as before)
+#   NIMROD_PULL_EMPTY_REMOVED_DAYS  removed pictures wait this many days in a Removed folder before it is emptied
+#                               (default 30: long enough that a wrong removal is noticed on a visit, short enough that the
+#                               space comes back; 0 = never emptied here, only by hand)
 # Job 1 (drive):
 #   NIMROD_PULL_REMOTE          the rclone remote and folder, e.g. "nimrod-photos:" (required)
 #   NIMROD_PULL_TARGET          the folder the screen reads, e.g. /media/<user>/<drive>/photos/family_drive (required)
@@ -110,6 +131,7 @@ RCLONE="${NIMROD_PULL_RCLONE:-rclone}"
 DF="${NIMROD_PULL_DF:-df}"              # the suite's stand-in for the free space; never set on a screen
 STATE_DIR="${NIMROD_PULL_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/nimrod-photo-pull}"
 JOBS="${NIMROD_PULL_JOBS:-drive}"
+EMPTY_DAYS="${NIMROD_PULL_EMPTY_REMOVED_DAYS:-30}"
 
 FORCE=0; DRY=0; CHECK=0
 for a in "$@"; do
@@ -152,6 +174,39 @@ on_a_drive() {
   [ -n "$m" ] && [ "$m" != "/" ]
 }
 json_text() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr -d '\000-\037'; }
+# A PICTURE SOMEBODY REMOVED (header): the removed paths under DIR, one per line, from DIR's own
+# .nimrod-removed/removed-paths.txt and every folder's above it, each relative to DIR.
+REMOVED_LIST_NAME="removed-paths.txt"
+removed_paths() {
+  local d="$1" pre="" f line up
+  while :; do
+    f="$d/.nimrod-removed/$REMOVED_LIST_NAME"
+    if [ -f "$f" ]; then
+      while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%$'\r'}"
+        [ -n "$line" ] || continue
+        if [ -z "$pre" ]; then printf '%s\n' "$line"
+        else case "$line" in "$pre"/*) printf '%s\n' "${line#"$pre"/}" ;; esac; fi
+      done < "$f"
+    fi
+    up="$(dirname "$d")"
+    [ "$up" = "$d" ] && break
+    pre="$(basename "$d")${pre:+/$pre}"
+    d="$up"
+  done
+}
+# The folders above (and at) DIR that hold an agent's Removed folder (its list beside it), one per line.
+removal_roots() {
+  local d="$1" up
+  while :; do
+    [ -f "$d/.nimrod-removed/$REMOVED_LIST_NAME" ] && printf '%s\n' "$d"
+    up="$(dirname "$d")"
+    [ "$up" = "$d" ] && break
+    d="$up"
+  done
+}
+# rclone filter lines that leave each removed path out: "- /<path>", with rclone's glob characters escaped.
+removed_rules() { sed 's/[][\\*?{}]/\\&/g; s|^|- /|'; }
 plural() { [ "$1" = 1 ] && echo "$1 $2" || echo "$1 $3"; }
 is_hour() { case "$1" in ''|*[!0-9]*) return 1 ;; esac; [ "$((10#$1))" -le 23 ]; }
 
@@ -241,8 +296,14 @@ fi
 F_MAIN="$STATE_DIR/filter-main.txt"
 F_HEIC="$STATE_DIR/filter-heic.txt"
 RUNLOG="$STATE_DIR/last-run.log"
-printf '%s\n' '- /.nimrod-pull/**' '- *.heic.jpg' '- *.heif.jpg' '- *.heic' '- *.heif' > "$F_MAIN"
-printf '%s\n' '- /.nimrod-pull/**' '+ *.heic' '+ *.heif' '+ */' '- **' > "$F_HEIC"
+# A picture somebody removed (header): first, so nothing below can let it back in. The removed paths, relative to the
+# target; for an iPhone picture shown as <name>.heic.jpg, its original <name>.heic too.
+F_REMOVED="$STATE_DIR/removed-main.txt"
+removed_paths "$TARGET" > "$F_REMOVED"
+n_skipped=$(grep -c . "$F_REMOVED" 2>/dev/null || true)
+{ removed_rules < "$F_REMOVED"; printf '%s\n' '- /.nimrod-removed/**' '- /.nimrod-pull/**' '- *.heic.jpg' '- *.heif.jpg' '- *.heic' '- *.heif'; } > "$F_MAIN"
+{ grep -iE '\.(heic|heif)\.jpg$' "$F_REMOVED" | sed 's/\.[jJ][pP][gG]$//' | removed_rules
+  printf '%s\n' '- /.nimrod-removed/**' '- /.nimrod-pull/**' '+ *.heic' '+ *.heif' '+ */' '- **'; } > "$F_HEIC"
 common=(--ignore-case --bwlimit "$BWLIMIT" --drive-skip-gdocs --log-file "$RUNLOG" --log-level INFO)
 [ "$SHARED" = 1 ] && common+=(--drive-shared-with-me)
 main_extra=(); heic_extra=()
@@ -282,6 +343,7 @@ if [ "$CONVERT" = auto ] && [ "$ok" = 1 ]; then
   while IFS= read -r -d '' f; do
     rel="${f#"$HEIC_DIR"/}"
     out="$TARGET/$rel.jpg"
+    grep -qixF -- "$rel.jpg" "$F_REMOVED" 2>/dev/null && continue      # somebody removed it: never made again
     if [ -e "$out" ] && [ ! "$f" -nt "$out" ]; then continue; fi
     if [ "$CONVERTER" = none ]; then unshown=$((unshown + 1)); continue; fi
     mkdir -p "$(dirname "$out")"
@@ -323,6 +385,7 @@ secs=$(( $(date +%s) - started ))
 line="$(plural "$new" "new picture" "new pictures"), $changed changed, $removed set aside"
 [ "$unshown" -gt 0 ] && line="$line, $(plural "$unshown" "iPhone picture (HEIC)" "iPhone pictures (HEIC)") not shown: no converter here (heif-convert, from libheif-examples, would do it)"
 [ "$converted" -gt 0 ] && line="$line, $converted converted from HEIC with $CONVERTER"
+[ "${n_skipped:-0}" -gt 0 ] && line="$line, $(plural "$n_skipped" "removed picture" "removed pictures") kept out"
 if [ "$ok" = 1 ]; then
   say "$line ($MODE, $secs s)"
   echo "$(date +%s) $today" > "$STATE_DIR/last-success"
@@ -491,6 +554,13 @@ job_local() {
     FILENAME == ARGV[1] { have[$3] = $1 "\t" $2; next }
     !($3 in have) { print $2, "new", $3; next }
     { split(have[$3], a, "\t"); if (a[1] != $1 || a[2] != $2) print $2, "changed", $3 }' "$DST_TSV" "$SEL" > "$PLAN"
+  # A picture somebody removed from TO (its agent's list, header) is never copied back from FROM.
+  local SKIP="$JS/removed.txt" n_skip=0
+  removed_paths "$TO" > "$SKIP"
+  if [ -s "$SKIP" ]; then
+    n_skip=$(awk -F '\t' 'FILENAME == ARGV[1] { gone[$0] = 1; next } ($3 in gone) { n++ } END { print n + 0 }' "$SKIP" "$PLAN")
+    awk -F '\t' 'FILENAME == ARGV[1] { gone[$0] = 1; next } !($3 in gone)' "$SKIP" "$PLAN" > "$PLAN.kept" && mv -f "$PLAN.kept" "$PLAN"
+  fi
   local n_plan need room
   n_plan=$(wc -l < "$PLAN" | tr -d ' ')
   need=$(awk -F '\t' '{ s += $1 } END { printf "%.0f\n", s + 0 }' "$PLAN")
@@ -565,6 +635,7 @@ job_local() {
   local secs=$(( $(date +%s) - started )) line
   line="$NAME: $(plural "$c_new" "new picture" "new pictures"), $c_changed changed, $removed set aside"
   [ "$left" -gt 0 ] && line="$line, $left left out: no room (it keeps $KEEP_MB MB free)"
+  [ "$n_skip" -gt 0 ] && line="$line, $(plural "$n_skip" "removed picture" "removed pictures") kept out"
   if [ "$ok" = 1 ]; then
     say "$line ($JMODE, $LIMIT, $(mb "$free_now") MB free, $secs s)"
     echo "$now_s $key" > "$STATE_DIR/last-success-$NAME"
@@ -588,10 +659,50 @@ for j in ${JOBS//,/ }; do
   seen="$seen$j "
 done
 [ "$seen" != " " ] || refuse 2 "NIMROD_PULL_JOBS is empty; leave it out for the Drive pull alone (drive)"
+case "$EMPTY_DAYS" in ''|*[!0-9]*) refuse 2 "NIMROD_PULL_EMPTY_REMOVED_DAYS is '$EMPTY_DAYS'; it is a number of days (0: never emptied here)" ;; esac
 first_failure=0
 for j in $seen; do
   if [ "$j" = drive ]; then ( job_drive ); rc=$?
   else ( job_local "$j" ); rc=$?; fi
   [ "$first_failure" = 0 ] && [ "$rc" != 0 ] && first_failure=$rc
 done
+
+# =====================================================================================================================
+# EMPTYING THE REMOVED FOLDERS (header, "A PICTURE SOMEBODY REMOVED"). Every hourly look, after the jobs, whether or not
+# a job was due: cheap (a few folder names), and a removed picture leaves on the day it is due, not the next pull.
+# Only the dated folders of a Removed folder the media agent made (its removed-paths.txt beside them), above job 1's
+# target or a local job's source or target; never the list, never anything else. --check and --dry-run only say.
+empty_removed() {
+  [ "$EMPTY_DAYS" -gt 0 ] || return 0
+  local now_s cutoff starts=() s j k U v root d name n=0 where=""
+  now_s="${NIMROD_PULL_TEST_CLOCK:-$(date +%s)}"
+  cutoff="$(date -d "@$((now_s - EMPTY_DAYS * 86400))" +%F)" || return 0
+  [ -n "$TARGET" ] && starts+=("${TARGET%/}")
+  for j in $seen; do
+    [ "$j" = drive ] && continue
+    U="$(printf '%s' "$j" | tr '[:lower:]' '[:upper:]')"
+    for k in FROM TO; do v="NIMROD_PULL_JOB_${U}_$k"; [ -n "${!v-}" ] && starts+=("${!v%/}"); done
+  done
+  [ ${#starts[@]} -gt 0 ] || return 0
+  local roots; roots="$(for s in "${starts[@]}"; do case "$s" in /*) removal_roots "$s" ;; esac; done | sort -u)"
+  [ -n "$roots" ] || return 0
+  while IFS= read -r root; do
+    [ -n "$root" ] || continue
+    for d in "$root"/.nimrod-removed/*/; do
+      [ -d "$d" ] || continue
+      d="${d%/}"; name="$(basename "$d")"
+      case "$name" in
+        [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]|[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9]*) ;;
+        *) continue ;;
+      esac
+      case "${name:10}" in ''|-[0-9]|-[0-9][0-9]|-[0-9][0-9][0-9]|-[0-9][0-9][0-9][0-9]) ;; *) continue ;; esac
+      [[ "${name:0:10}" < "$cutoff" ]] || continue
+      if [ "$DRY" = 1 ] || [ "$CHECK" = 1 ]; then say "would empty: $d (removed pictures older than $EMPTY_DAYS days)"
+      elif rm -rf -- "$d"; then n=$((n + 1)); where="$root"; fi
+    done
+  done <<< "$roots"
+  [ "$n" -gt 0 ] && say "emptied $(plural "$n" "Removed folder" "Removed folders") older than $EMPTY_DAYS days (in $where/.nimrod-removed)"
+  return 0
+}
+empty_removed
 exit "$first_failure"

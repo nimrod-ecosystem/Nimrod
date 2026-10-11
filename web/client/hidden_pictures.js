@@ -100,15 +100,24 @@ export function normalizeHideData(raw, o = {}) {
 /** What one row is about: the same (scope, person, path) is the same entry. Pure. */
 export const entryKey = (d) => `${d.scope}|${d.scope === 'person' ? (d.person || '') : ''}|${d.path}`;
 
+// remove this picture (2026-10-10, removed_pictures.js): the same log, the same folder copy and the same replay serve
+// the list of REMOVED pictures, with its own two row kinds, stream, record and tag. `kinds` names a log's two kinds:
+// `on` puts a picture on the list, `off` takes it off. Every function below defaults to the hidden list's.
+export const HIDE_KINDS = Object.freeze({ on: HIDE_KIND, off: UNHIDE_KIND });
+const kindsOf = (k) => (k && k.on && k.off ? k : HIDE_KINDS);
+
 /**
  * THE LOG REPLAYED: every entry whose newest row is a hide, as `{ key, path, name, scope, person, at, id }`, newest hide
  * first. `person` (optional) keeps only what applies on that person's screens: every 'everyone' entry, and the
  * 'person' entries that are theirs. Rows out of order are fine: it goes by `created_at`, then by place in the list. Pure.
+ * `kinds` (optional): another log's two kinds (the removals'). `off: true` gives the entries whose newest row took them
+ * OFF the list instead (a picture brought back), for the removals' follow-up.
  */
-export function hiddenEntries(rows, { person } = {}) {
+export function hiddenEntries(rows, { person, kinds, off = false } = {}) {
+  const K = kindsOf(kinds);
   const list = (Array.isArray(rows) ? rows : [])
     .map((r, i) => ({ r, i, t: timeOf(r) }))
-    .filter(({ r }) => r && HIDDEN_KINDS.includes(r.kind) && r.data && typeof r.data === 'object')
+    .filter(({ r }) => r && (r.kind === K.on || r.kind === K.off) && r.data && typeof r.data === 'object')
     .sort((a, b) => (a.t - b.t) || (a.i - b.i));
   const last = new Map();
   for (const { r, t } of list) {
@@ -118,7 +127,7 @@ export function hiddenEntries(rows, { person } = {}) {
   }
   const out = [];
   for (const [key, x] of last) {
-    if (x.kind !== HIDE_KIND) continue;
+    if (x.kind !== (off ? K.off : K.on)) continue;
     if (person !== undefined && x.d.scope === 'person' && (x.d.person || '') !== String(person || '')) continue;
     out.push({ key, path: x.d.path, name: x.d.name || '', scope: x.d.scope, person: x.d.person || '', at: x.at, t: x.t, id: x.d.id });
   }
@@ -126,18 +135,19 @@ export function hiddenEntries(rows, { person } = {}) {
   return out;
 }
 
-/** The paths hidden on a screen for `person` (a Set). Pure. */
-export function hiddenPaths(rows, { person = '' } = {}) {
-  return new Set(hiddenEntries(rows, { person }).map((e) => e.path));
+/** The paths hidden on a screen for `person` (a Set). Pure. `kinds`: another log's (hiddenEntries). */
+export function hiddenPaths(rows, { person = '', kinds } = {}) {
+  return new Set(hiddenEntries(rows, { person, kinds }).map((e) => e.path));
 }
 
 /** The rows that still change something, oldest first: one hide per entry in force (unhides and superseded rows
- *  dropped). What the device keeps when it compacts. Pure. */
-export function compactRows(rows) {
-  const keep = new Set(hiddenEntries(rows).map((e) => e.key));
+ *  dropped). What the device keeps when it compacts. Pure. `kinds`: another log's (hiddenEntries). */
+export function compactRows(rows, kinds) {
+  const K = kindsOf(kinds);
+  const keep = new Set(hiddenEntries(rows, { kinds: K }).map((e) => e.key));
   const newest = new Map();
   (Array.isArray(rows) ? rows : []).forEach((r, i) => {
-    if (!r || r.kind !== HIDE_KIND || !r.data) return;
+    if (!r || r.kind !== K.on || !r.data) return;
     const d = normalizeHideData(r.data);
     if (!d || !keep.has(entryKey(d))) return;
     const cur = newest.get(entryKey(d));
@@ -175,10 +185,16 @@ const newRowId = () => {
  *   subscribe(fn)               told after every change
  * `folder()` returns the person's Nimrod folder sink (history_place.js nimrodFolder / folderSink shape) or null.
  */
+// remove this picture (2026-10-10): `kinds`, `stream`, `fileScope`, `record` and `format` make the same handle keep
+// another list (removed_pictures.js passes the removals'); each defaults to the hidden list's.
 export function createHiddenPictures({ store = memoryPlayStore(), folder = () => null, now = () => Date.now(),
-  setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (t) => clearTimeout(t), makeId = newRowId, ...o } = {}) {
+  setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (t) => clearTimeout(t), makeId = newRowId,
+  kinds = HIDE_KINDS, stream = HIDDEN_STREAM, fileScope = HIDDEN_FILE_SCOPE, record = HIDDEN_RECORD,
+  format = HIDDEN_FORMAT, ...o } = {}) {
   const opts = { ...HIDDEN_DEFAULTS, ...o };
-  const key = HIDDEN_RECORD;
+  const K = kindsOf(kinds);
+  const KINDS = [K.on, K.off];
+  const key = record;
   let rec = playRecord(key, null);
   const subs = new Set();
   let lastAt = 0;
@@ -208,7 +224,7 @@ export function createHiddenPictures({ store = memoryPlayStore(), folder = () =>
     try {                                                // 2. on this device
       const saved = await store.update(key, (r) => {
         let rows = [...(r.rows || []), row];
-        if (rows.length > opts.keep) rows = compactRows(rows);
+        if (rows.length > opts.keep) rows = compactRows(rows, K);
         return { ...r, rows };
       });
       take(saved);
@@ -220,13 +236,13 @@ export function createHiddenPictures({ store = memoryPlayStore(), folder = () =>
   function hide(raw = {}) {
     const data = normalizeHideData({ ...raw, id: makeId() }, opts);
     if (!data) return Promise.resolve(null);
-    return write({ kind: HIDE_KIND, created_at: stamp(), data });
+    return write({ kind: K.on, created_at: stamp(), data });
   }
   function unhide(entry = {}) {
     const data = normalizeHideData({ path: entry.path, scope: entry.scope, person: entry.person, name: entry.name,
       screen: entry.screen, panel: entry.panel, id: makeId() }, opts);
     if (!data) return Promise.resolve(null);
-    return write({ kind: UNHIDE_KIND, created_at: stamp(), data });
+    return write({ kind: K.off, created_at: stamp(), data });
   }
 
   function syncSoon() {
@@ -247,13 +263,13 @@ export function createHiddenPictures({ store = memoryPlayStore(), folder = () =>
     const mark = markFor(r.sent, 'folder', fid);
     const from = fid ? `folder@${fid}` : 'folder';
     // A row read FROM this folder is not sent back to it (`src`).
-    const todo = r.rows.filter((x) => x && HIDDEN_KINDS.includes(x.kind) && String(x.created_at || '') > mark && x.src !== from);
+    const todo = r.rows.filter((x) => x && KINDS.includes(x.kind) && String(x.created_at || '') > mark && x.src !== from);
     const newest = r.rows.filter((x) => x && String(x.created_at || '') > mark).map((x) => String(x.created_at)).sort().pop() || '';
     let upTo = mark;
     let sent = 0;
     let why = null;
     if (todo.length) {
-      const res = await sink.append(HIDDEN_STREAM, HIDDEN_FILE_SCOPE, todo.map(({ kind, created_at, data }) => ({ kind, created_at, data })),
+      const res = await sink.append(stream, fileScope, todo.map(({ kind, created_at, data }) => ({ kind, created_at, data })),
         { folderId: fid });
       if (res && res.ok) { sent = todo.length; upTo = newest; } else {
         why = (res && res.why) || 'write';
@@ -283,7 +299,7 @@ export function createHiddenPictures({ store = memoryPlayStore(), folder = () =>
     if (!sink || typeof sink.read !== 'function') return 0;
     await ready;
     let got = [];
-    try { got = (await sink.read(HIDDEN_STREAM, HIDDEN_FILE_SCOPE, opts.readMax)) || []; } catch { got = []; }
+    try { got = (await sink.read(stream, fileScope, opts.readMax)) || []; } catch { got = []; }
     if (!got.length) return 0;
     let fid = null;
     if (typeof sink.id === 'function') { try { fid = await sink.id(); } catch { fid = null; } }
@@ -294,7 +310,7 @@ export function createHiddenPictures({ store = memoryPlayStore(), folder = () =>
         const seen = new Set((x.rows || []).map((r) => r && r.data && r.data.id).filter(Boolean));
         const fresh = [];
         for (const r of got) {
-          if (!r || !HIDDEN_KINDS.includes(r.kind) || !r.data) continue;
+          if (!r || !KINDS.includes(r.kind) || !r.data) continue;
           const d = normalizeHideData(r.data, opts);
           if (!d || !d.id || seen.has(d.id)) continue;
           seen.add(d.id);
@@ -303,7 +319,7 @@ export function createHiddenPictures({ store = memoryPlayStore(), folder = () =>
         added = fresh.length;
         if (!fresh.length) return x;
         let rows = [...(x.rows || []), ...fresh].sort((a, b) => timeOf(a) - timeOf(b));
-        if (rows.length > opts.keep) rows = compactRows(rows);
+        if (rows.length > opts.keep) rows = compactRows(rows, K);
         return { ...x, rows };
       }));
     } catch (e) { console.error('hidden pictures: merge', e); return 0; }
@@ -314,12 +330,14 @@ export function createHiddenPictures({ store = memoryPlayStore(), folder = () =>
   return {
     ready,
     rows: () => rec.rows.slice(),
-    entries: (person) => hiddenEntries(rec.rows, person === undefined ? {} : { person }),
-    paths: (person = '') => hiddenPaths(rec.rows, { person }),
+    entries: (person) => hiddenEntries(rec.rows, person === undefined ? { kinds: K } : { person, kinds: K }),
+    paths: (person = '') => hiddenPaths(rec.rows, { person, kinds: K }),
+    // remove this picture: the entries whose newest row took them off the list (brought back), newest first.
+    offEntries: () => hiddenEntries(rec.rows, { kinds: K, off: true }),
     hide, unhide, sync, pull,
     // The list as one tagged object - what any copy of it outside the log carries (a backup, a hand-over), so the
     // server refuses it on sight (storage_line.py rule 7). The site's own code sends it nowhere.
-    snapshot: () => ({ format: HIDDEN_FORMAT, v: 1, rows: rec.rows.map(({ kind, created_at, data }) => ({ kind, created_at, data })) }),
+    snapshot: () => ({ format, v: 1, rows: rec.rows.map(({ kind, created_at, data }) => ({ kind, created_at, data })) }),
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     store,
     destroy() { if (syncTimer != null) clearTimer(syncTimer); syncTimer = null; subs.clear(); },

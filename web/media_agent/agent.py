@@ -36,6 +36,9 @@ DESIGN CHOICES:
     (agent history, 2026-10-08: ONE opt-in exception, off unless --data-dir is given -
     it may APPEND a person's history to History/ inside that Data folder and nowhere
     else. See "AGENT HISTORY" below.)
+    (remove this picture, 2026-10-10: a SECOND opt-in exception, off unless --removals is given -
+    it may MOVE a picture into .nimrod-removed/ inside the folder and back, never delete one.
+    See "REMOVE THIS PICTURE" below.)
 
 RUN IT:
     python agent.py --root "D:/Photos"
@@ -662,6 +665,229 @@ def history_append(data_dir, stream, scope, rows, expect_id=None, file_max: int 
         return {"ok": True, "written": written, "skipped": skipped, "folder_id": fid}, HTTPStatus.OK
 
 
+# ------------------------------------------------------------------ REMOVE THIS PICTURE (2026-10-10, opt-in)
+# Mike, 2026-10-10: "There should be options for this when you're setting up folders. You can decide whether pictures
+# are deleted off of each drive when they are deleted." On the site, each source says "When a picture is removed:
+# remove it here too / keep it here" (keep by default: DECISIONS 2026-10-09/10). For a source set to "remove it here
+# too" that this agent serves, the page asks this agent to MOVE the picture into a Removed folder inside the folder it
+# serves, and to move it back on "bring it back":
+#   POST /media/remove   {"path": "<a picture's path, as /list gives it>"}
+#        -> moves <root>/<path> to <root>/.nimrod-removed/<YYYY-MM-DD>/<path>, adds <path> to
+#           <root>/.nimrod-removed/removed-paths.txt (what the photo pull reads, so a removed picture is never copied
+#           back from Google Drive), and appends a line to removed-log.jsonl beside it
+#   POST /media/restore  {"path": "..."}
+#        -> moves the newest removed copy back to <root>/<path> and takes <path> off removed-paths.txt
+#   GET  /media/removals -> {"enabled": true|false} (whether this agent was started with --removals)
+# A picture already gone from this folder (a copy that never arrived here) is still put on removed-paths.txt, so it
+# is not copied in later; a restore whose Removed copy was emptied takes it off the list (a copy elsewhere, a Drive
+# folder, may then come back at the next pull).
+#
+# *** THE SECURITY INVARIANTS (the same guards as AGENT HISTORY): ***
+#   * OFF UNLESS GIVEN (--removals, or NIMROD_MEDIA_REMOVALS=1). Off, both routes answer 404 and nothing is touched.
+#   * MOVE, NEVER DELETE. A picture is renamed into the Removed folder and back; no route deletes, truncates or
+#     overwrites a picture. A move that would land on an existing file goes to a fresh folder (<day>-2, -3, ...)
+#     instead, and a restore never replaces a picture already at the path. A move across drives (the Removed folder
+#     made a mount point) fails rather than falling back to copy-and-delete. The ONE real delete in the whole feature is
+#     the photo pull emptying Removed folders past their age (nimrod-photo-pull.sh), never this agent.
+#   * ONLY INSIDE --root. The path is checked as /files checks it (files_rel: no '.', '..', NUL; on Windows no '\' or
+#     ':'), must name a picture, video or song (kind_of), no part may start with '.' (so nothing inside .nimrod-removed
+#     or .nimrod-pull is ever "removed"), and the picture's REAL path - every link followed - must be inside --root's.
+#     A name holding a line break or a tab is refused: removed-paths.txt is one path per line.
+#   * FROM THIS COMPUTER ONLY (from_this_computer), JSON only, a size cap (REMOVE_BODY_MAX), and the page checks of
+#     WHICH WEB PAGES. So a screen elsewhere on the network never removes anything here; the page on this computer
+#     does, when it lists this source (web/client/removed_pictures.js "THE FOLLOW-UP").
+# removed-paths.txt IS REWRITTEN (to a .part file, then renamed over it), not appended: it is this agent's own index of
+# what is removed now, which the pull reads whole. The record of what happened is removed-log.jsonl, append-only.
+#
+# HARD-CODED, argued (Rule 1): REMOVE_BODY_MAX 8 KiB - one path of at most 1 024 characters, as JSON; anything bigger
+# is not the page. REMOVED_DAY_RE: the folder names this agent makes (the pull empties only those).
+REMOVALS = False           # set in main() from --removals
+REMOVED_FOLDER = ".nimrod-removed"
+REMOVED_LIST = "removed-paths.txt"
+REMOVED_LOG = "removed-log.jsonl"
+REMOVED_PATH_MAX = 1024
+REMOVE_BODY_MAX = 8 * 1024
+REMOVED_DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(-\d{1,4})?$")
+REMOVED_README = (
+    "Pictures removed from Nimrod's slideshows, moved here instead of deleted.\n"
+    "Each dated folder holds what was removed that day, in the same folders as before. To bring one back, move it back,\n"
+    "or say \"bring it back\" on the screen. removed-paths.txt lists what is removed now, so the photo copy from Google\n"
+    "Drive does not bring it back; removed-log.jsonl is the record of every removal.\n"
+    "The photo copy on this computer empties dated folders older than its setting (30 days unless it was changed).\n"
+)
+REMOVED_LOCK = threading.Lock()
+
+
+def removal_parts(rel, windows: bool = os.name == "nt"):
+    """The parts of a picture's path for a removal, or None when it is refused (the invariants above). Pure."""
+    if not isinstance(rel, str) or not rel or len(rel) > REMOVED_PATH_MAX:
+        return None
+    if any(c in rel for c in ("\n", "\r", "\t", "\x00")):
+        return None
+    parts = []
+    for part in rel.split("/"):
+        if part == "":
+            continue
+        if part in (".", "..") or part.startswith("."):
+            return None
+        if windows and ("\\" in part or ":" in part):
+            return None
+        parts.append(part)
+    if not parts or not kind_of(parts[-1]):
+        return None
+    return parts
+
+
+def _read_removed(rdir: Path) -> list:
+    try:
+        text = (rdir / REMOVED_LIST).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return []
+    return [ln for ln in text.splitlines() if ln.strip()]
+
+
+def _write_removed(rdir: Path, paths: list) -> None:
+    tmp = rdir / (REMOVED_LIST + ".part")
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write("".join(p + "\n" for p in paths))
+    os.replace(str(tmp), str(rdir / REMOVED_LIST))
+
+
+def _removed_dir(base: Path):
+    """<root>/.nimrod-removed, made when missing (with its README), refused when it resolves outside --root."""
+    rdir = base / REMOVED_FOLDER
+    rdir.mkdir(exist_ok=True)
+    if not rdir.is_dir() or not _within(rdir.resolve(), base):
+        raise ValueError("the Removed folder is not inside the folder")
+    try:
+        with open(rdir / "README.txt", "x", encoding="utf-8", newline="\n") as f:
+            f.write(REMOVED_README)
+    except OSError:
+        pass
+    return rdir
+
+
+def _log_removal(rdir: Path, kind: str, rel: str, where: str, at: str) -> None:
+    line = json.dumps({"at": at, "kind": kind, "path": rel, "where": where}, ensure_ascii=False, separators=(",", ":"))
+    try:
+        with open(rdir / REMOVED_LOG, "a", encoding="utf-8", newline="\n") as f:     # APPEND ONLY
+            f.write(line + "\n")
+    except OSError:
+        pass        # the record is a courtesy; the move and the list are what matter
+
+
+def remove_picture(root, rel, today: str = None, windows: bool = os.name == "nt"):
+    """POST /media/remove: (answer, HTTP status). Moves, never deletes (REMOVE THIS PICTURE, above)."""
+    parts = removal_parts(rel, windows=windows)
+    if parts is None:
+        return {"ok": False, "why": "bad", "error": "not a picture's path in this folder"}, HTTPStatus.BAD_REQUEST
+    key = "/".join(parts)
+    day = today or time.strftime("%Y-%m-%d")
+    at = time.strftime("%Y-%m-%dT%H:%M:%S")
+    with REMOVED_LOCK:
+        try:
+            base = Path(root).resolve()
+            src = base.joinpath(*parts)
+            real = src.resolve()
+        except (OSError, RuntimeError, ValueError):
+            return {"ok": False, "why": "bad"}, HTTPStatus.BAD_REQUEST
+        if real == base or not _within(real, base):
+            return {"ok": False, "why": "bad", "error": "outside the folder"}, HTTPStatus.BAD_REQUEST
+        try:
+            rdir = _removed_dir(base)
+            listed = _read_removed(rdir)
+        except (OSError, ValueError) as e:
+            return {"ok": False, "why": "write", "error": str(e)[:200]}, HTTPStatus.INTERNAL_SERVER_ERROR
+        here = src.is_file() or src.is_symlink()
+        if not here:
+            # Not in this folder now (never copied here, or removed already): kept from coming in later all the same.
+            if key not in listed:
+                try:
+                    _write_removed(rdir, listed + [key])
+                except OSError as e:
+                    return {"ok": False, "why": "write", "error": str(e)[:200]}, HTTPStatus.INTERNAL_SERVER_ERROR
+                _log_removal(rdir, "listed", key, "", at)
+            return {"ok": True, "removed": False, "why": "not here", "listed": True}, HTTPStatus.OK
+        dest = None
+        for n in range(1, 1000):
+            folder = day if n == 1 else f"{day}-{n}"
+            cand = rdir.joinpath(folder, *parts)
+            if not cand.exists() and not cand.is_symlink():
+                dest = (folder, cand)
+                break
+        if dest is None:
+            return {"ok": False, "why": "write", "error": "no free name in the Removed folder"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        try:
+            dest[1].parent.mkdir(parents=True, exist_ok=True)
+            if not _within(dest[1].parent.resolve(), rdir.resolve()):
+                raise ValueError("outside the Removed folder")
+            os.rename(str(src), str(dest[1]))        # A MOVE: never a copy-and-delete
+        except (OSError, ValueError) as e:
+            return {"ok": False, "why": "write", "error": str(e)[:200]}, HTTPStatus.INTERNAL_SERVER_ERROR
+        try:
+            if key not in listed:
+                _write_removed(rdir, listed + [key])
+        except OSError:
+            pass    # moved; the list is caught up by the next removal or the page's follow-up
+        _log_removal(rdir, "remove", key, dest[0], at)
+        return {"ok": True, "removed": True, "folder": dest[0]}, HTTPStatus.OK
+
+
+def restore_picture(root, rel, windows: bool = os.name == "nt"):
+    """POST /media/restore: (answer, HTTP status). The newest removed copy goes back; never replaces a picture."""
+    parts = removal_parts(rel, windows=windows)
+    if parts is None:
+        return {"ok": False, "why": "bad", "error": "not a picture's path in this folder"}, HTTPStatus.BAD_REQUEST
+    key = "/".join(parts)
+    at = time.strftime("%Y-%m-%dT%H:%M:%S")
+    with REMOVED_LOCK:
+        try:
+            base = Path(root).resolve()
+            dst = base.joinpath(*parts)
+            rdir = base / REMOVED_FOLDER
+        except (OSError, RuntimeError, ValueError):
+            return {"ok": False, "why": "bad"}, HTTPStatus.BAD_REQUEST
+        if not rdir.is_dir():
+            return {"ok": True, "back": False, "why": "not removed"}, HTTPStatus.OK
+        listed = _read_removed(rdir)
+
+        def unlist():
+            if key in listed:
+                _write_removed(rdir, [p for p in listed if p != key])
+
+        try:
+            days = [e.name for e in os.scandir(rdir) if e.is_dir(follow_symlinks=False) and REMOVED_DAY_RE.match(e.name)]
+        except OSError:
+            days = []
+        # newest first: by date, then the -N folders of the same day before the plain one
+        days.sort(key=lambda d: (d[:10], int(d[11:]) if len(d) > 10 else 1), reverse=True)
+        found = None
+        for d in days:
+            cand = rdir.joinpath(d, *parts)
+            if cand.is_file() or cand.is_symlink():
+                found = (d, cand)
+                break
+        try:
+            if dst.exists() or dst.is_symlink():
+                unlist()     # it is back already (copied in by hand): never replaced; the Removed copy waits to be emptied
+                return {"ok": True, "back": True, "already": True}, HTTPStatus.OK
+            if found is None:
+                was = key in listed
+                unlist()
+                if was:
+                    _log_removal(rdir, "unlisted", key, "", at)
+                return {"ok": True, "back": False, "why": "emptied" if was else "not removed"}, HTTPStatus.OK
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if not _within(dst.parent.resolve(), base):
+                return {"ok": False, "why": "bad", "error": "outside the folder"}, HTTPStatus.BAD_REQUEST
+            os.rename(str(found[1]), str(dst))
+            unlist()
+        except OSError as e:
+            return {"ok": False, "why": "write", "error": str(e)[:200]}, HTTPStatus.INTERNAL_SERVER_ERROR
+        _log_removal(rdir, "restore", key, found[0], at)
+        return {"ok": True, "back": True}, HTTPStatus.OK
+
+
 class Handler(SimpleHTTPRequestHandler):
     """Serves /list + /health as JSON and /files/<rel> as bytes.
 
@@ -705,6 +931,8 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(HTTPStatus.NO_CONTENT)
         # agent history: POST only on /history/... (and only when it is on); everything else stays read-only.
         writes = DATA_DIR is not None and self._route().startswith("/history/")
+        # remove this picture: POST on /media/remove and /media/restore, only when the agent was started with --removals.
+        writes = writes or (REMOVALS and self._route() in ("/media/remove", "/media/restore"))
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS" if writes else "GET, HEAD, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Range, Content-Type")
         self.send_header("Access-Control-Max-Age", "600")
@@ -748,20 +976,28 @@ class Handler(SimpleHTTPRequestHandler):
             if not from_this_computer(self.client_address[0]):
                 return self._json({"ok": False, "error": "history is only for this computer"}, HTTPStatus.FORBIDDEN)
             return self._json(history_status(DATA_DIR))
+        if path == "/media/removals":    # remove this picture: is it on? (never says the folder)
+            if not from_this_computer(self.client_address[0]):
+                return self._json({"ok": False, "error": "removals are only for this computer"}, HTTPStatus.FORBIDDEN)
+            return self._json({"ok": True, "enabled": bool(REMOVALS)})
         if path == "/":
             return self._json({
                 "service": "nimrod-media-agent",
                 "endpoints": ["/health", "/list?album=<sub>", "/list?deep=1&skip=<folder>", "/files/<relpath>"]
-                + (["/history/status", "POST /history/<stream>"] if DATA_DIR is not None else []),
+                + (["/history/status", "POST /history/<stream>"] if DATA_DIR is not None else [])
+                + (["/media/removals", "POST /media/remove", "POST /media/restore"] if REMOVALS else []),
             })
         return self._json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
 
     def do_POST(self):
-        """agent history: POST /history/<stream>, and nothing else (AGENT HISTORY, above)."""
+        """agent history: POST /history/<stream>; remove this picture: POST /media/remove and /media/restore; nothing
+        else (AGENT HISTORY, REMOVE THIS PICTURE, above)."""
         if self._refused():
             return
         self.close_connection = True     # a refused body is never read, so the connection is not reused
         path = self._route()
+        if path in ("/media/remove", "/media/restore"):
+            return self._post_removal(path)
         if not path.startswith("/history/") or path == "/history/status":
             return self._json({"ok": False, "error": "not_found"}, HTTPStatus.NOT_FOUND)
         if not from_this_computer(self.client_address[0]):
@@ -793,6 +1029,35 @@ class Handler(SimpleHTTPRequestHandler):
         expect = body.get("folder_id")
         answer, status = history_append(DATA_DIR, stream, body.get("scope"), body.get("rows"),
                                         expect_id=expect if isinstance(expect, str) else None)
+        return self._json(answer, status)
+
+    def _post_removal(self, path: str):
+        """remove this picture: the guards in order - this computer, on, JSON, the cap - then the move."""
+        if not from_this_computer(self.client_address[0]):
+            return self._json({"ok": False, "why": "refused", "error": "pictures are only removed from this computer"},
+                              HTTPStatus.FORBIDDEN)
+        if not REMOVALS:
+            return self._json({"ok": False, "why": "off"}, HTTPStatus.NOT_FOUND)
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            return self._json({"ok": False, "why": "bad", "error": "JSON only"}, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+        try:
+            n = int(self.headers.get("Content-Length") or "")
+        except ValueError:
+            return self._json({"ok": False, "why": "bad", "error": "a length is needed"}, HTTPStatus.LENGTH_REQUIRED)
+        if n > REMOVE_BODY_MAX:
+            return self._json({"ok": False, "why": "too big"}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+        if n <= 0:
+            return self._json({"ok": False, "why": "bad", "error": "empty"}, HTTPStatus.BAD_REQUEST)
+        try:
+            body = json.loads(self.rfile.read(n).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError, OSError):
+            return self._json({"ok": False, "why": "bad", "error": "not JSON"}, HTTPStatus.BAD_REQUEST)
+        rel = body.get("path") if isinstance(body, dict) else None
+        if path == "/media/remove":
+            answer, status = remove_picture(ROOT, rel)
+        else:
+            answer, status = restore_picture(ROOT, rel)
         return self._json(answer, status)
 
     def do_HEAD(self):
@@ -1153,7 +1418,7 @@ def pair(platform: str, label: str, aid: str, urls: list, poll_seconds: float = 
 
 
 def main(argv=None):
-    global ROOT, SITES, CHECK_HOST, AGENT_ID, DATA_DIR
+    global ROOT, SITES, CHECK_HOST, AGENT_ID, DATA_DIR, REMOVALS
     ap = argparse.ArgumentParser(description="Nimrod local media agent (BYO storage).")
     # CLI args take precedence; each falls back to an env var so the agent can run as
     # an always-on service (systemd / Windows task) configured from an env file.
@@ -1197,6 +1462,12 @@ def main(argv=None):
                          "NIMROD_MEDIA_DATA). When given, a Nimrod page on this computer may APPEND history there "
                          "(History/*.jsonl) without asking the browser for folder permission. Off when not given. "
                          "The folder itself is never created: a drive not plugged in just waits.")
+    # remove this picture (2026-10-10): off unless given. See "REMOVE THIS PICTURE" above.
+    ap.add_argument("--removals", action="store_true",
+                    default=os.environ.get("NIMROD_MEDIA_REMOVALS", "").strip().lower() in ("1", "true", "yes"),
+                    help="let a Nimrod page on this computer MOVE a removed picture into .nimrod-removed/<date>/ inside "
+                         "the folder (and back again), for a source set to \"remove it here too\" (or "
+                         "NIMROD_MEDIA_REMOVALS=1). Nothing is ever deleted by the agent. Off when not given.")
     args = ap.parse_args(argv)
 
     if not args.root:
@@ -1206,6 +1477,7 @@ def main(argv=None):
         ap.error(f"--root is not a folder: {root}")
     ROOT = root
     DATA_DIR = Path(args.data_dir).expanduser().absolute() if args.data_dir else None   # agent history
+    REMOVALS = bool(args.removals)   # remove this picture
     SITES = sites_for(args.origin, args.platform, os.environ.get("NIMROD_MEDIA_ORIGIN", ""))
     AGENT_ID = agent_id(root)
     host = "0.0.0.0" if args.lan else args.host
@@ -1251,6 +1523,9 @@ def main(argv=None):
         elif _within(DATA_DIR.resolve(), resolved):
             print("  NOTE: the Data folder is inside the media folder, so its history files can be fetched from "
                   "/files like a photo. A Data folder beside the media folder keeps them out of it.")
+    if REMOVALS:    # remove this picture
+        print(f"  removals:     a removed picture is MOVED to {resolved / REMOVED_FOLDER} (from pages on this computer "
+              "only; never deleted here)")
     print("  Ctrl+C to stop.")
     try:
         httpd.serve_forever()

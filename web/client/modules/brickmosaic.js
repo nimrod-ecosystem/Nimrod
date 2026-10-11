@@ -48,6 +48,7 @@ import { personSources, personOf } from '../person_known.js';
 import { pick as rngPick, record } from '../rng.js';   // the shared weighted picker, as Photos uses
 // hide picture (photos.js): a picture hidden from the slideshow is never made into a mosaic either.
 import { deviceHiddenPictures, pictureKey } from '../hidden_pictures.js';
+import { deviceRemovedPictures } from '../removed_pictures.js';   // remove this picture: nor a removed one
 import { autostartFields, shouldAutostart, panelAlone, createPlayWatch, START_VOICE, ensureStartStyle, startOverlayHtml } from '../game_start.js';
 import { BRICK_COLOURS, BRICK_COLOUR_COUNT, brickColourVar } from '../brick_colours.js';
 import { ALL_BRICK_COLOURS, ORDERS, JOIN_MAX, makeMosaic, restOfRow, parseColour, toHex } from '../brick_mosaic.js';
@@ -235,7 +236,14 @@ registerModule(
     const albumChooser = createAlbumChooser({ listTop: topFoldersLister({ resolve: ctx.resolveListing || null, check: ctx.checkFromHere || null }) });
     const plays = createPlayWatch(bus, ctx);
     const hides = ctx.hiddenPictures || deviceHiddenPictures({ history: ctx.history || null });
-    const hiddenNow = () => { try { return hides.paths(personOf(ctx) || ''); } catch { return new Set(); } };
+    // remove this picture (2026-10-10): a removed picture is left out as a hidden one is.
+    const removals = ctx.removedPictures || deviceRemovedPictures({ history: ctx.history || null });
+    const hiddenNow = () => {
+      let out;
+      try { out = hides.paths(personOf(ctx) || ''); } catch { out = new Set(); }
+      try { for (const p of removals.paths('')) out.add(p); } catch { /* none */ }
+      return out;
+    };
 
     let cfg = { ...DEFAULTS };
     let dead = false, hidden = false, started = true;

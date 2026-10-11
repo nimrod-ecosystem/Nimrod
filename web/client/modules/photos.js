@@ -38,7 +38,11 @@ import {
 // hide picture (2026-10-09): which pictures this slideshow leaves out (hidden_pictures.js), and the screen actions
 // "hide this picture" / "bring it back" press (actions.js PHOTO_ACTIONS; input_speech.js ROUTES).
 import { deviceHiddenPictures, pictureKey, HIDE_SCOPES, DEFAULT_HIDE_SCOPE } from '../hidden_pictures.js';
-import { PHOTOS_HIDE_TOPIC, PHOTOS_UNHIDE_TOPIC } from '../actions.js';
+import { PHOTOS_HIDE_TOPIC, PHOTOS_UNHIDE_TOPIC, PHOTOS_REMOVE_TOPIC } from '../actions.js';
+// remove this picture (2026-10-10): the removal list (removed_pictures.js), and each source's own choice of whether a
+// removed picture is moved off it (media_sources.js ON_REMOVE).
+import { deviceRemovedPictures, followUpPlan } from '../removed_pictures.js';
+import { removeOnSource, restoreOnSource, onRemoveOf, ON_REMOVE_MOVE } from '../media_sources.js';
 import { senderOf } from '../sender.js';
 import { personSources, personOf } from '../person_known.js';
 import { addDevicePictures, setDevicePhotosOn } from '../device_pictures.js';   // photo sources first
@@ -101,8 +105,12 @@ export const HIDE_LINES = Object.freeze({
   hidden: 'Hidden. “Bring it back” is in this panel’s settings.',
   back: 'Brought back.',
   nothingOn: 'There is no picture on screen to hide.',
-  nothingHidden: 'No hidden picture to bring back.',
-  allHidden: 'Every picture here is hidden. Bring them back in this panel’s settings.',
+  nothingHidden: 'No hidden or removed picture to bring back.',
+  allHidden: 'Every picture here is hidden or removed. Bring them back in this panel’s settings.',
+  // remove this picture (2026-10-10): said back the way Hide is (Mike's shape: "Removed. Say bring it back to undo.").
+  removedVoice: 'Removed. Say “bring it back” to undo.',
+  removed: 'Removed. “Bring it back” is in this panel’s settings.',
+  nothingOnRemove: 'There is no picture on screen to remove.',
 });
 // HARD-CODED, each argued (Rule 1; none is a setting because nobody is served by tuning it):
 //   NOTICE_MS 8 s        how long "Hidden. Say ... to undo." stays: long enough to read twice and say the undo, short
@@ -402,10 +410,23 @@ registerModule(
     // Nimrod folder through the screen's history host when it has one. `allItems` is the listing as it came; `items`
     // is what the slideshow may show (the listing less what is hidden for whoever this screen is for).
     const hides = ctx.hiddenPictures || deviceHiddenPictures({ history: ctx.history || null });
+    // remove this picture (2026-10-10): the page's one removal list (`ctx.removedPictures` in the suites). A removed
+    // picture leaves every slideshow, as a hidden one does; the sources set to "remove it here too" also move it.
+    const removals = ctx.removedPictures || deviceRemovedPictures({ history: ctx.history || null });
+    const removedNow = () => { try { return removals.paths(''); } catch { return new Set(); } };
+    // The moves, through media_sources.js (`ctx.removeOnSource` / `ctx.restoreOnSource` are the suites' seams).
+    const moveOn = ctx.removeOnSource || ((s, p) => removeOnSource(s, p, { check: ctx.checkFromHere || null }));
+    const moveBack = ctx.restoreOnSource || ((s, p) => restoreOnSource(s, p, { check: ctx.checkFromHere || null }));
+    const followed = new Set();     // the follow-up: `${kind}|${source}|${path}` asked already on this page
     const viewer = () => personOf(ctx) || '';
-    const hiddenNow = () => { try { return hides.paths(viewer()); } catch { return new Set(); } };
+    const hiddenNow = () => {
+      let out;
+      try { out = hides.paths(viewer()); } catch { out = new Set(); }
+      for (const p of removedNow()) out.add(p);       // remove this picture: removed is left out too
+      return out;
+    };
     let allItems = [];
-    let offHides = null;
+    let offHides = null, offRemovals = null;
     let noticeTimer = null, menuTimer = null, pressTimer = null, longPressed = false;
     const me = { tag: null, touchedAt: 0, visible: true, order: (slideshowOrder += 1) };
     const touch = () => { me.touchedAt = Date.now(); };
@@ -1118,6 +1139,7 @@ registerModule(
       degraded = fb ? { ...fb, shownLabel: source.label || source.base_url || source.id } : null;
       if (degraded) armRecheck(); else clearRecheck();
       checkPull(source, album);   // pulled pictures: "3 new pictures today", and a new listing after a pull
+      followUp(source, listing);  // remove this picture: a removed picture still in a "remove it here too" source
       // hide picture: a folder whose every picture is hidden says that, not "no photos".
       if (!items.length && allItems.length) { clearStage(); setStatus(HIDE_LINES.allHidden); return; }
       if (!items.length) { setStatus('No photos in this source or album.'); return; }
@@ -1281,19 +1303,82 @@ registerModule(
       notice(voice ? HIDE_LINES.hiddenVoice : HIDE_LINES.hidden, voice);
       return row;
     }
-    /** "Bring it back": the newest picture still hidden here comes back, and onto the screen when it is in this panel's
-     *  pictures. Said again, the one before it. */
+    /** "Bring it back": the newest picture still hidden OR REMOVED here comes back (whichever came last), and onto the
+     *  screen when it is in this panel's pictures. Said again, the one before it. */
     function unhideLast({ voice = false } = {}) {
       touch();
       closePhotoMenu();
-      let e = null;
+      let e = null, r = null;
       try { e = hides.entries(viewer())[0] || null; } catch { e = null; }
+      try { r = removals.entries('')[0] || null; } catch { r = null; }   // remove this picture
+      if (r && (!e || (r.t || 0) >= (e.t || 0))) return restoreRemoved(r, { voice });
       if (!e) { notice(HIDE_LINES.nothingHidden, voice); return Promise.resolve(null); }
       const row = hides.unhide(e);
       const back = items.find((it) => pictureKey(it) === e.path);
       if (back) show(back.id, true);
       notice(HIDE_LINES.back, voice);
       return row;
+    }
+
+    // ---- remove this picture (2026-10-10; removed_pictures.js has the list, media_sources.js the per-source choice) ----
+    // The sources a removal is moved on: every source this panel knows that is set to "remove it here too" and that this
+    // screen may show (never another person's). A source not set so is never asked (ON_REMOVE 'keep', the default).
+    const removeSources = () => knownSources.filter((s) => s && onRemoveOf(s) === ON_REMOVE_MOVE && mayShowSource(s, personOf(ctx)));
+    /** Remove the picture on screen: off every slideshow at once (the list), then moved on each source set to "remove it
+     *  here too". Resolves `{ row, moved: [{ id, done }] }`, or null (nothing on screen). Never deletes anything. */
+    function removeCurrent({ voice = false } = {}) {
+      touch();
+      closePhotoMenu();
+      const item = currentId && byId[currentId] ? byId[currentId] : null;
+      const path = item ? pictureKey(item) : '';
+      if (!path) { notice(HIDE_LINES.nothingOnRemove, voice); return Promise.resolve(null); }
+      // In force at once (the list tells every slideshow on the page), so the next picture is up before the words.
+      const row = removals.remove({ path, name: item.name || '', screen: ctx.profileId || '', panel: ctx.instanceId || '' });
+      notice(voice ? HIDE_LINES.removedVoice : HIDE_LINES.removed, voice);
+      const moved = Promise.all(removeSources().map(async (s) => {
+        followed.add(`remove|${s.id}|${path}`);
+        const res = await moveOn(s, path).catch(() => ({ done: 'failed' }));
+        // Not done now (the agent away, on another computer, a folder with no permission): the follow-up tries again.
+        if (!res || !['moved', 'not-here'].includes(res.done)) followed.delete(`remove|${s.id}|${path}`);
+        return { id: s.id, done: (res && res.done) || 'failed' };
+      }));
+      return Promise.all([row, moved]).then(([r, m]) => ({ row: r, moved: m }));
+    }
+    /** "Bring it back" for a removal: off the list, then moved back on each source set to "remove it here too". */
+    function restoreRemoved(entry, { voice = false } = {}) {
+      const row = removals.restore(entry);
+      notice(HIDE_LINES.back, voice);
+      const path = entry.path;
+      return Promise.all(removeSources().map(async (s) => {
+        followed.add(`restore|${s.id}|${path}`);
+        const res = await moveBack(s, path).catch(() => ({ done: 'failed' }));
+        if (!res || !['back', 'already', 'emptied', 'not-removed'].includes(res.done)) followed.delete(`restore|${s.id}|${path}`);
+        return { id: s.id, done: (res && res.done) || 'failed' };
+      })).then((moved) => {
+        // On screen when it is in this panel's pictures; a source that had moved it lists again first, so its file is back.
+        if (moved.some((m) => m.done === 'back')) { reload(); return { row, moved }; }
+        const back = items.find((it) => pictureKey(it) === path);
+        if (back) show(back.id, true);
+        return Promise.resolve(row).then((r) => ({ row: r, moved }));
+      });
+    }
+    /** THE FOLLOW-UP (removed_pictures.js): a listing of a source set to "remove it here too" moves what is on the
+     *  removal list and still here, and brings back what was brought back and is not here. Bounded; never throws. */
+    function followUp(source, listing) {
+      if (!source || onRemoveOf(source) !== ON_REMOVE_MOVE || !mayShowSource(source, personOf(ctx))) return Promise.resolve(null);
+      let restored = new Set();
+      try { restored = new Set(removals.restored().map((e) => e.path)); } catch { restored = new Set(); }
+      const plan = followUpPlan({ sourceId: source.id, items: (listing && listing.items) || [], removed: removedNow(),
+        restored, done: followed });
+      if (!plan.remove.length && !plan.restore.length) return Promise.resolve(plan);
+      const jobs = [
+        ...plan.remove.map((p) => { followed.add(`remove|${source.id}|${p}`); return moveOn(source, p).catch(() => null); }),
+        ...plan.restore.map((p) => { followed.add(`restore|${source.id}|${p}`); return moveBack(source, p).catch(() => null); }),
+      ];
+      return Promise.all(jobs).then((res) => {
+        if (plan.restore.length && res.slice(plan.remove.length).some((x) => x && x.done === 'back')) reload();
+        return plan;
+      });
     }
     function unhideAll() {
       touch();
@@ -1307,10 +1392,12 @@ registerModule(
       if (!m) return;
       touch();
       let any = false;
-      try { any = hides.entries(viewer()).length > 0; } catch { any = false; }
+      try { any = hides.entries(viewer()).length > 0 || removals.entries('').length > 0; } catch { any = false; }
       const hideBtn = m.querySelector('[data-photo-hide]');
       const backBtn = m.querySelector('[data-photo-unhide]');
+      const removeBtn = m.querySelector('[data-photo-remove]');   // remove this picture
       if (hideBtn) hideBtn.disabled = !(currentId && byId[currentId]);
+      if (removeBtn) removeBtn.disabled = !(currentId && byId[currentId]);
       if (backBtn) backBtn.disabled = !any;
       m.hidden = false;
       if (menuTimer != null) clearTimer(menuTimer);
@@ -1435,6 +1522,7 @@ registerModule(
             <div class="status chip photos-notice" data-notice role="status" hidden></div>
             <div class="photo-menu" data-photo-menu hidden>
               <button type="button" data-photo-hide>Hide this picture</button>
+              <button type="button" data-photo-remove>Remove this picture</button>
               <button type="button" data-photo-unhide>Bring it back</button>
               <button type="button" data-photo-menu-close>Close</button>
             </div>
@@ -1487,7 +1575,9 @@ registerModule(
         slideshows.push(me);
         bus.subscribe(PHOTOS_HIDE_TOPIC, (_p, _t, meta) => claim(me, () => hideCurrent({ voice: byVoice(meta) })));
         bus.subscribe(PHOTOS_UNHIDE_TOPIC, (_p, _t, meta) => claim(me, () => unhideLast({ voice: byVoice(meta) })));
+        bus.subscribe(PHOTOS_REMOVE_TOPIC, (_p, _t, meta) => claim(me, () => removeCurrent({ voice: byVoice(meta) })));   // remove this picture
         offHides = hides.subscribe(() => refilter());
+        offRemovals = removals.subscribe(() => refilter());
         const stg = mount.querySelector('[data-stage]');
         let pressAt = null;
         stg.addEventListener('pointerdown', (e) => {
@@ -1505,6 +1595,7 @@ registerModule(
         const pm = mount.querySelector('[data-photo-menu]');
         pm.querySelector('[data-photo-hide]').addEventListener('click', () => { hideCurrent(); });
         pm.querySelector('[data-photo-unhide]').addEventListener('click', () => { unhideLast(); });
+        pm.querySelector('[data-photo-remove]').addEventListener('click', () => { removeCurrent(); });
         pm.querySelector('[data-photo-menu-close]').addEventListener('click', () => { closePhotoMenu(); });
 
         // its own buttons are just another source - ONE PER PANEL. Bindings live on the
@@ -1591,6 +1682,7 @@ registerModule(
         scoped?.dispose(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; }
         // hide picture / pulled pictures
         try { offHides?.(); } catch { /* gone */ }
+        try { offRemovals?.(); } catch { /* gone */ }   // remove this picture
         const at = slideshows.indexOf(me); if (at >= 0) slideshows.splice(at, 1);
         if (noticeTimer != null) { clearTimer(noticeTimer); noticeTimer = null; }
         closePhotoMenu(); clearPress();
@@ -1606,8 +1698,27 @@ registerModule(
         out.push({ kind: 'item', id: 'photos-hide', label: 'Hide this picture',
           hint: item ? `${item.name || 'the picture on screen'}; it can be brought back from this list` : 'no picture on screen now',
           disabled: !item, run: () => { hideCurrent(); } });
+        // remove this picture (2026-10-10): beside Hide. What happens on each drive is that source's own choice (Media).
+        const movers = removeSources();
+        out.push({ kind: 'item', id: 'photos-remove', label: 'Remove this picture',
+          hint: item ? `${item.name || 'the picture on screen'}; ${movers.length
+            ? `moved to the Removed folder of ${movers.map((s) => s.label || s.id).join(', ')}; it can be brought back from this list`
+            : 'every source here keeps it, so it only leaves the slideshows; it can be brought back from this list'}`
+            : 'no picture on screen now',
+          disabled: !item, run: () => { removeCurrent(); } });
         // every folder inside (row 2.78): the chosen source's folders, each one press to leave out or put back.
         out.push(...folderRows());
+        // remove this picture: every picture removed, each with its own "Bring back" (undo never depends on a voice).
+        let gone = [];
+        try { gone = removals.entries(''); } catch { gone = []; }
+        if (gone.length) {
+          out.push({ kind: 'heading', id: 'photos-removed-head', label: `Removed pictures (${gone.length})` });
+          for (const e of gone.slice(0, HIDDEN_LIST_MAX)) {
+            const when = (() => { const t = Date.parse(e.at); return Number.isFinite(t) ? new Date(t).toLocaleDateString() : ''; })();
+            out.push({ kind: 'item', id: `photos-restore:${e.key}`, label: `Bring back ${e.name || e.path}`,
+              hint: `removed${when ? ` ${when}` : ''}, for everybody`, run: () => { touch(); restoreRemoved(e); } });
+          }
+        }
         let list = [];
         try { list = hides.entries(viewer()); } catch { list = []; }
         if (!list.length) return out;
@@ -1643,6 +1754,7 @@ registerModule(
       __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice(),
         loadFails, setAside: [...loadFailed], shownSourceId,
         all: allItems.length, pullNews, hideCurrent, unhideLast,   // hide picture / pulled pictures
+        removeCurrent, followUp: (s, l) => followUp(s, l),           // remove this picture
         folders: lastListing?.listing?.folders || null, foldersOpen,   // every folder inside
         // pulled pictures: look at the pull's file now (the hourly look, on demand), for the suite.
         checkPull: () => checkPull(knownSources.find((s) => s && s.id === shownSourceId) || null, cfg.album) }),

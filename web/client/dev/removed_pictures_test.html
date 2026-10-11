@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>removed_pictures - "remove this picture", and each source's own choice</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+<link rel="stylesheet" href="../modules.css">
+</head>
+<body>
+<h1>removed_pictures - "remove this picture": off every slideshow, and moved (never deleted) only where a source says so</h1>
+<p>Mike, 2026-10-10: "There should be options for this when you're setting up folders. You can decide whether pictures
+are deleted off of each drive when they are deleted." The removal list (kept like the hidden list: on the device and in
+the Nimrod folder, never the server), each source's choice (keep by default), the moves through the media agent or a
+browser folder, the follow-up, the voice route, the Photos panel, and the choice in Media. No server, no media agent:
+everything is injected.</p>
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="media-host"></div>
+
+<script type="module">
+import {
+  createRemovedPictures, removedEntries, followUpPlan, FOLLOW_UP_MAX,
+  REMOVE_KIND, RESTORE_KIND, REMOVED_STREAM, REMOVED_FILE_SCOPE, REMOVED_FORMAT, REMOVED_RECORD,
+} from '../removed_pictures.js';
+import { createHiddenPictures, HIDDEN_RECORD } from '../hidden_pictures.js';
+import { memoryPlayStore } from '../plays.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/photos.js';
+import { HIDE_LINES } from '../modules/photos.js';
+import { ROUTES, routeFor, routeAction, duplicatePhrases, normalize } from '../input_speech.js';
+import { createDefaultRegistry, PHOTO_ACTIONS, PHOTOS_REMOVE_TOPIC, PHOTOS_UNHIDE_TOPIC, PHOTOS_HIDE_TOPIC } from '../actions.js';
+import { senderMeta } from '../sender.js';
+import {
+  onRemoveOf, removeOnSource, restoreOnSource, ON_REMOVE_DEFAULT, ON_REMOVE_CHOICES, ON_REMOVE_WORDS, ON_REMOVE_KEY,
+} from '../media_sources.js';
+import { removalParts } from '../folder_source.js';
+import { mountMedia } from '../media.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = JSON.stringify;
+const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
+const row = (kind, at, data) => ({ kind, created_at: at, data });
+const quietCheck = async () => ({ check: true, why: 'local-page' });
+const awayCheck = async () => ({ check: false, why: 'would-ask', state: 'prompt' });
+
+function fakeFolder({ id = 'folder-rm-1' } = {}) {
+  const files = [];
+  return {
+    files,
+    async id() { return id; },
+    async status() { return 'ready'; },
+    async append(stream, scope, rows) { files.push({ stream, scope, rows: JSON.parse(JSON.stringify(rows)) }); return { ok: true }; },
+    async read(stream, scope) { return files.filter((f) => f.stream === stream && f.scope === scope).flatMap((f) => f.rows); },
+  };
+}
+
+try {
+  // ------------------------------------------------------------------------------------------------
+  section('the removal list: the hidden list\'s log, with its own kinds, stream, record and tag');
+  {
+    const store = memoryPlayStore();
+    const folder = fakeFolder();
+    let t = Date.parse('2026-10-10T12:00:00.000Z');
+    const r = createRemovedPictures({ store, folder: () => folder, now: () => t, setTimer: () => 0, clearTimer: () => {} });
+    await r.ready;
+    const p = r.remove({ path: 'trip/a.jpg', name: 'a.jpg', scope: 'person', person: 'p9' });
+    check('*** a removal is in force at once, and always for everybody (a picture moved off a drive is gone for all) ***',
+      r.paths('').has('trip/a.jpg') && r.paths('someone').has('trip/a.jpg') && r.entries('')[0].scope === 'everyone');
+    await p;
+    const rec = await store.get(REMOVED_RECORD);
+    check('...kept on the device under its own record, a remove-picture row',
+      rec && rec.rows.length === 1 && rec.rows[0].kind === REMOVE_KIND && REMOVED_RECORD !== HIDDEN_RECORD);
+    check('a copy of the list as one object carries its own tag (storage_line.py rule 7 refuses it)',
+      r.snapshot().format === REMOVED_FORMAT && REMOVED_FORMAT === 'nimrod-removed-pictures');
+    const s = await r.sync();
+    check('*** the Nimrod folder gets it as stream `removed`, scope `pictures` (removed-pictures-<month>.jsonl) ***',
+      s.sent === 1 && folder.files[0].stream === REMOVED_STREAM && folder.files[0].scope === REMOVED_FILE_SCOPE
+      && folder.files[0].rows[0].kind === REMOVE_KIND, J(s));
+    t += 1000;
+    await r.restore(r.entries('')[0]);
+    check('bring it back: a restore row, not a deletion; off the list; and listed as brought back',
+      r.rows().length === 2 && r.rows()[1].kind === RESTORE_KIND && !r.paths('').has('trip/a.jpg')
+      && r.restored().map((e) => e.path).join() === 'trip/a.jpg');
+    const hides = createHiddenPictures({ store, setTimer: () => 0, clearTimer: () => {} });
+    await hides.ready;
+    check('*** the hidden list and the removal list never mix (one store, two records) ***', hides.rows().length === 0);
+    check('the replay on its own: removedEntries', removedEntries([row(REMOVE_KIND, '2026-10-10T01:00:00Z', { id: 'x', path: 'b.jpg' })])[0].path === 'b.jpg');
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('the follow-up plan (pure)');
+  {
+    const items = ['a.jpg', 'b.jpg', 'c.jpg'].map((p) => ({ id: p, path: p }));
+    const plan = followUpPlan({ sourceId: 's1', items, removed: new Set(['b.jpg', 'zz.jpg']), restored: new Set(['c.jpg', 'd.jpg']) });
+    check('*** a listed removed picture is moved; a brought-back picture not listed is brought back; nothing else ***',
+      J(plan) === J({ remove: ['b.jpg'], restore: ['d.jpg'] }), J(plan));
+    const again = followUpPlan({ sourceId: 's1', items, removed: new Set(['b.jpg']), restored: new Set(['d.jpg']),
+      done: new Set(['remove|s1|b.jpg', 'restore|s1|d.jpg']) });
+    check('...and once per page for each (source, picture)', J(again) === J({ remove: [], restore: [] }));
+    const many = Array.from({ length: 50 }, (_, i) => ({ path: `p${i}.jpg` }));
+    const big = followUpPlan({ sourceId: 's', items: many, removed: new Set(many.map((m) => m.path)) });
+    check(`bounded: at most ${FOLLOW_UP_MAX} asks from one listing`, big.remove.length === FOLLOW_UP_MAX && FOLLOW_UP_MAX === 20);
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('each source\'s own choice, and the moves (media_sources.js)');
+  {
+    check('*** keep is the default: no choice, an unknown value, and the device\'s own pictures all keep ***',
+      ON_REMOVE_DEFAULT === 'keep' && onRemoveOf({ kind: 'agent' }) === 'keep' && onRemoveOf({ kind: 'agent', on_remove: 'wipe' }) === 'keep'
+      && onRemoveOf({ kind: 'device', on_remove: 'remove' }) === 'keep' && onRemoveOf({ kind: 'folder', on_remove: 'remove' }) === 'remove');
+    check('the two choices, in the words Mike used', J(ON_REMOVE_CHOICES.map((o) => o.label)) === J(['keep it here', 'remove it here too'])
+      && ON_REMOVE_KEY === 'on_remove');
+    const calls = [];
+    const fetchImpl = (status, body) => async (url, init) => { calls.push({ url, init }); return { ok: status < 300, status, json: async () => body }; };
+    const agent = { id: 'a1', kind: 'agent', base_url: 'http://localhost:8770/', on_remove: 'remove' };
+    let r = await removeOnSource({ ...agent, on_remove: 'keep' }, 'a.jpg', { fetchImpl: fetchImpl(200, {}), check: quietCheck });
+    check('*** a source set to keep is never asked ***', r.done === 'kept' && calls.length === 0, J(r));
+    r = await removeOnSource(agent, 'trip/a.jpg', { fetchImpl: fetchImpl(200, { ok: true, removed: true }), check: quietCheck });
+    check('*** set to remove: POST <agent>/media/remove {path}, JSON; "moved" ***',
+      r.done === 'moved' && calls[0].url === 'http://localhost:8770/media/remove' && calls[0].init.method === 'POST'
+      && JSON.parse(calls[0].init.body).path === 'trip/a.jpg' && calls[0].init.headers['Content-Type'] === 'application/json', J(calls[0]));
+    r = await removeOnSource(agent, 'a.jpg', { fetchImpl: fetchImpl(404, { why: 'off' }), check: quietCheck });
+    check('an agent not started with --removals: "off"', r.done === 'off', J(r));
+    r = await removeOnSource(agent, 'a.jpg', { fetchImpl: fetchImpl(403, {}), check: quietCheck });
+    check('an agent on another computer that refuses: "refused"', r.done === 'refused', J(r));
+    const n = calls.length;
+    r = await removeOnSource({ ...agent, base_url: 'http://192.168.1.50:8770' }, 'a.jpg', { fetchImpl: fetchImpl(200, {}), check: awayCheck });
+    check('*** an agent the browser would ask about: not fetched at all ("elsewhere"), so no local-network box ***',
+      r.done === 'elsewhere' && calls.length === n, J(r));
+    r = await restoreOnSource(agent, 'a.jpg', { fetchImpl: fetchImpl(200, { ok: true, back: true }), check: quietCheck });
+    check('bring it back: POST <agent>/media/restore; "back"', r.done === 'back' && calls[calls.length - 1].url.endsWith('/media/restore'));
+    r = await restoreOnSource(agent, 'a.jpg', { fetchImpl: fetchImpl(200, { ok: true, back: false, why: 'emptied' }), check: quietCheck });
+    check('...and "emptied" when its Removed copy was emptied', r.done === 'emptied', J(r));
+    const fcalls = [];
+    const folders = { move: async (id, p) => { fcalls.push(['move', id, p]); return { done: 'asks' }; },
+      restore: async (id, p) => { fcalls.push(['restore', id, p]); return { done: 'back' }; } };
+    r = await removeOnSource({ id: 'f1', kind: 'folder', on_remove: 'remove' }, 'x.jpg', { folders });
+    check('a browser folder set to remove: moved by the browser itself ("asks" while it has no permission)',
+      r.done === 'asks' && J(fcalls[0]) === J(['move', 'f1', 'x.jpg']), J(r));
+    check('the browser side refuses what the agent refuses (no climbing, no dot folders, pictures only)',
+      J(removalParts('trip/a.jpg')) === J(['trip', 'a.jpg']) && removalParts('../a.jpg') === null
+      && removalParts('.nimrod-removed/a.jpg') === null && removalParts('notes.txt') === null && removalParts('a\n.jpg') === null);
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('said aloud: "remove this picture", a screen action beside Hide');
+  check('"remove this picture" / "remove this one" press photos/remove-picture',
+    routeAction(routeFor('remove this picture')) === 'photos/remove-picture' && routeAction(routeFor('Remove this one.')) === 'photos/remove-picture');
+  check('"bring it back" still presses the one bring-back (it undoes whichever came last)',
+    routeAction(routeFor('bring it back')) === 'photos/bring-back');
+  check('no phrase means two things', duplicatePhrases().length === 0, J(duplicatePhrases()));
+  check('every phrase is plain lowercase words, four at most',
+    ROUTES['photos-remove'].phrases.every((p) => normalize(p) === p && p.split(' ').length <= 4));
+  const reg = createDefaultRegistry();
+  check('the action is registered (a binding to it fires)',
+    PHOTO_ACTIONS.some((a) => a.id === 'photos/remove-picture' && a.topic === PHOTOS_REMOVE_TOPIC)
+    && (reg.get?.('photos/remove-picture') || reg.list().some((x) => x.id === 'photos/remove-picture')));
+
+  // ------------------------------------------------------------------------------------------------
+  section('the Photos panel: remove the picture on screen, bring it back');
+  const ITEMS = [1, 2, 3, 4].map((i) => ({ id: 'id' + i, path: 'trip/p' + i + '.jpg', name: 'p' + i + '.jpg', kind: 'image', url: OKPIC('p' + i) }));
+  function panel({ bus = createBus(), removals, hides, sources, id = 'photos-r1', items = ITEMS, moves, lists = null } = {}) {
+    const host = document.createElement('div');
+    host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+    document.body.append(host);
+    let cfg = { sourceId: sources[0].id, intervalMs: 3600000 };
+    const subs = [];
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+      subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+    const said = [];
+    const inst = mountModule('photos', {
+      mount: host, bus, state, instanceId: id, personId: 'p1',
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: 'removed-test', profileId: 's-' + id,
+      sources: { list: async () => sources, add: async () => sources[0], remove: async () => {} },
+      resolveListing: async () => { if (lists) lists.n += 1; return { items: items.map((it) => ({ ...it })), albums: [], album: '', count: items.length }; },
+      hiddenPictures: hides, removedPictures: removals,
+      removeOnSource: async (s, p) => { moves.push(['remove', s.id, p]); return { done: 'moved' }; },
+      restoreOnSource: async (s, p) => { moves.push(['restore', s.id, p]); return { done: 'not-removed' }; },
+      checkFromHere: quietCheck,
+      output: { say: (text) => { said.push(text); return null; } },
+      fetchImpl: async () => ({ ok: false }),
+      setTimer: (fn, ms) => ({ fn, ms }), clearTimer: () => {},
+    });
+    inst.init();
+    return { host, inst, said, bus, probe: () => inst.impl.__probe(), shown: () => host.querySelector('.stage')?.firstChild?.alt || null };
+  }
+  const SPEECH = senderMeta({ kind: 'local', id: 'speech:phrase:photos-remove', role: 'universal' });
+  {
+    const removals = createRemovedPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const moves = [];
+    const sources = [
+      { id: 'drive', label: 'Her drive', kind: 'agent', base_url: 'http://127.0.0.1:9', on_remove: 'remove' },
+      { id: 'desk', label: 'Desktop', kind: 'agent', base_url: 'http://127.0.0.1:10' },          // keeps (the default)
+    ];
+    const a = panel({ removals, hides, sources, moves });
+    await sleep(150);
+    const first = a.shown();
+    check('PRECONDITION: a picture is on screen', !!first, a.host.innerHTML.slice(0, 200));
+    a.bus.publish(PHOTOS_REMOVE_TOPIC, undefined, SPEECH);
+    await sleep(40);
+    const firstPath = ITEMS.find((it) => it.name === first).path;
+    check('*** "remove this picture": it is on the removal list, by its path ***', removals.paths('').has(firstPath), J([...removals.paths('')]));
+    check('*** ...and the next picture is already on screen ***', a.shown() && a.shown() !== first);
+    check('*** said back: "Removed. Say bring it back to undo." (on screen and aloud, asked aloud) ***',
+      a.host.querySelector('[data-notice]').textContent === HIDE_LINES.removedVoice && a.said[0] === HIDE_LINES.removedVoice
+      && HIDE_LINES.removedVoice === 'Removed. Say “bring it back” to undo.', J(a.said));
+    check('*** moved ONLY on the source set to "remove it here too"; the one that keeps is never asked ***',
+      J(moves) === J([['remove', 'drive', firstPath]]), J(moves));
+    check('it was not hidden (a removal is its own list)', hides.rows().length === 0);
+    let again = false;
+    for (let i = 0; i < 30; i += 1) { a.host.querySelector('[data-next]').click(); if (a.shown() === first) again = true; }
+    check('the removed picture never comes round again', !again && a.probe().ids.length === 3);
+    const rows = a.inst.impl.menuItems();
+    check('*** the panel\'s rows: "Remove this picture" beside Hide, then "Removed pictures (1)" with Bring back ***',
+      rows[1].id === 'photos-remove' && /Removed folder of Her drive/.test(rows[1].hint)
+      && rows.some((r) => r.kind === 'heading' && /Removed pictures \(1\)/.test(r.label))
+      && rows.some((r) => r.id.startsWith('photos-restore:')), J(rows.map((r) => [r.id, r.hint])));
+    a.bus.publish(PHOTOS_UNHIDE_TOPIC, undefined, SPEECH);
+    await sleep(40);
+    check('*** "bring it back": off the list, moved back on the source that moved it, said ***',
+      !removals.paths('').has(firstPath) && J(moves[1]) === J(['restore', 'drive', firstPath]) && a.said[1] === HIDE_LINES.back, J(moves));
+    // whichever came last: hide one, then remove one, then "bring it back" twice
+    await a.probe().hideCurrent();
+    await sleep(5);
+    await a.probe().removeCurrent();
+    await sleep(20);
+    a.bus.publish(PHOTOS_UNHIDE_TOPIC, undefined, SPEECH);
+    await sleep(30);
+    check('*** "bring it back" undoes the newest first: the removal, then the hide ***',
+      removals.paths('').size === 0 && hides.paths('p1').size === 1);
+    a.bus.publish(PHOTOS_UNHIDE_TOPIC, undefined, SPEECH);
+    await sleep(30);
+    check('...and then the hide', hides.paths('p1').size === 0);
+    // the long-press menu
+    const stage = a.host.querySelector('[data-stage]');
+    const menu = a.host.querySelector('[data-photo-menu]');
+    stage.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+    check('the picture\'s menu has "Remove this picture"', !menu.hidden && !!menu.querySelector('[data-photo-remove]'));
+    menu.querySelector('[data-photo-remove]').click();
+    await sleep(20);
+    check('...which removes it and closes; shown, not said, when pressed',
+      menu.hidden && removals.paths('').size === 1 && a.host.querySelector('[data-notice]').textContent === HIDE_LINES.removed);
+    a.inst.destroy(); a.host.remove();
+  }
+  // THE FOLLOW-UP: a removal made elsewhere (merged into this list) is moved when this screen lists the source.
+  {
+    const removals = createRemovedPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    await removals.remove({ path: 'trip/p2.jpg' });
+    const moves = [];
+    const lists = { n: 0 };
+    const sources = [{ id: 'drive', label: 'Her drive', kind: 'agent', base_url: 'http://127.0.0.1:9', on_remove: 'remove' }];
+    const a = panel({ removals, hides, sources, moves, lists, id: 'photos-follow' });
+    await sleep(200);
+    check('*** the follow-up: a listing of a "remove it here too" source moves a removed picture still in it ***',
+      J(moves) === J([['remove', 'drive', 'trip/p2.jpg']]) && !a.probe().ids.includes('id2'), J(moves));
+    await a.probe().followUp(sources[0], { items: ITEMS });
+    check('...once per page, not on every listing', moves.length === 1, J(moves));
+    const keepMoves = [];
+    const b = panel({ removals, hides, moves: keepMoves, id: 'photos-keep',
+      sources: [{ id: 'desk', label: 'Desktop', kind: 'agent', base_url: 'http://127.0.0.1:10' }] });
+    await sleep(200);
+    check('*** a source that keeps (the default) is never asked, and still leaves the picture out ***',
+      keepMoves.length === 0 && !b.probe().ids.includes('id2'), J(keepMoves));
+    a.inst.destroy(); a.host.remove(); b.inst.destroy(); b.host.remove();
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  section('Media: the choice where the folder is set up');
+  {
+    const host = document.getElementById('media-host');
+    const setCalls = [];
+    let srcs = [
+      { id: 'ag', label: 'Pi drive', kind: 'agent', base_url: 'http://localhost:8770' },
+      { id: 'fo', label: 'Pictures', kind: 'folder', on_remove: 'remove' },
+      { id: 'device', label: 'Added on this device', kind: 'device' },
+    ];
+    const client = {
+      list: async () => srcs.map((s) => ({ ...s })), add: async () => ({}), remove: async () => ({}),
+      setOnRemove: async (id, v) => { setCalls.push([id, v]); srcs = srcs.map((s) => (s.id === id ? { ...s, on_remove: v } : s)); return { id, on_remove: v }; },
+    };
+    let asked = 0;
+    const folders = { isSupported: () => true, pick: async () => {}, permission: async () => 'granted', request: async () => 'granted',
+      writePermission: async () => (asked ? 'granted' : 'prompt'), requestWrite: async () => { asked += 1; return 'granted'; } };
+    const m = mountMedia(host, { client, folders, resolve: async () => ({ count: 1, items: [{}], albums: [] }),
+      checkHere: async () => ({ check: true }), pairs: { claimPairing: async () => ({}) } });
+    await m.refresh();
+    await sleep(50);
+    const sel = host.querySelector('[data-on-remove="ag"]');
+    check('*** an agent source: "When a picture is removed", keep it here by default ***', sel && sel.value === 'keep'
+      && host.querySelector('[data-on-remove-note="ag"]').textContent === ON_REMOVE_WORDS.keep);
+    check('the device\'s own pictures get no choice (nothing is moved there)', !host.querySelector('[data-on-remove="device"]'));
+    const fnote = host.querySelector('[data-on-remove-note="fo"]');
+    check('*** a browser folder set to remove: says plainly removing needs the browser\'s permission, and offers a press ***',
+      fnote && fnote.textContent.includes(ON_REMOVE_WORDS.folderAsks) && !!fnote.querySelector('[data-allow-remove]'), fnote && fnote.textContent);
+    check('*** ...and nothing was asked by itself ***', asked === 0);
+    check('...it says the Drive copy keeps the picture but it is not copied back', fnote.textContent.includes(ON_REMOVE_WORDS.drive));
+    fnote.querySelector('[data-allow-remove]').click();
+    await sleep(30);
+    check('the press asks (once), and the words follow', asked === 1
+      && host.querySelector('[data-on-remove-note="fo"]').textContent.includes(ON_REMOVE_WORDS.folderOk));
+    sel.value = 'remove';
+    sel.dispatchEvent(new Event('change'));
+    await sleep(30);
+    const anote = host.querySelector('[data-on-remove-note="ag"]').textContent;
+    check('*** changing it saves it with the source, and the words say what will happen there ***',
+      J(setCalls) === J([['ag', 'remove']]) && anote.includes(ON_REMOVE_WORDS.remove) && anote.includes(ON_REMOVE_WORDS.drive)
+      && anote.includes('--removals'), anote);
+    check('no words here name a person the site was built for', !/\bher\b|Christine|Cici/i.test(host.textContent));
+    m.destroy?.();
+    host.innerHTML = '';
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = `${failed ? 'FAILURES' : 'ALL PASS'} — ${passed} passed, ${failed} failed`;
+</script>
+</body>
+</html>

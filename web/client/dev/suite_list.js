@@ -114,6 +114,9 @@ export const SUITES = [
   // hide picture (2026-10-09): "hide this picture" / "bring it back" - the log on the device and in the Nimrod folder,
   // the Photos module's three ways in, which slideshow answers, and the Drive pull's "new pictures today". No server.
   'hidden_pictures',
+  // remove this picture (2026-10-10): the removal list, each source's keep/remove choice and its moves, the follow-up,
+  // the voice route, the Photos panel's rows and the choice in Media. No server, no media agent.
+  'removed_pictures',
   // Row 2.62 step 2 (2026-10-07): charts of what played - the query layer, the panel, its table reading and the
   // spoken answer ("computer please, what played most"), end to end. No server.
   'charts',

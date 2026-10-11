@@ -143,6 +143,57 @@ def main():
           "screen that was showing it",
           len(migrated.list_sources("acct", person_id="anyone")) == 1)
 
+    check("...and a row from before `on_remove` existed reads as 'keep' (deletions kept by default)",
+          rows[0]["on_remove"] == "keep", rows)
+
+    # -------------------------------------------------------------------------------
+    # REMOVE THIS PICTURE (2026-10-10). Mike: "There should be options for this when you're setting up folders. You can
+    # decide whether pictures are deleted off of each drive when they are deleted." Kept with the source; keep by default.
+    # -------------------------------------------------------------------------------
+    s3 = store.create_source("alice", "Drive", "http://localhost:8770", "agent")
+    check("a new source keeps removed pictures by default", s3["on_remove"] == "keep"
+          and store.get_source("alice", s3["id"])["on_remove"] == "keep")
+    check("it can be set to remove them too", store.set_source_on_remove("alice", s3["id"], "remove") is True
+          and store.get_source("alice", s3["id"])["on_remove"] == "remove"
+          and [x["on_remove"] for x in store.list_sources("alice") if x["id"] == s3["id"]] == ["remove"])
+    check("...and back to keep", store.set_source_on_remove("alice", s3["id"], "keep") is True
+          and store.get_source("alice", s3["id"])["on_remove"] == "keep")
+    check("anything else is refused, not stored", store.set_source_on_remove("alice", s3["id"], "delete") is False
+          and store.get_source("alice", s3["id"])["on_remove"] == "keep")
+    check("another account cannot change it", store.set_source_on_remove("bob", s3["id"], "remove") is False
+          and store.get_source("alice", s3["id"])["on_remove"] == "keep")
+    check("chosen when it is added", store.create_source("alice", "Fallback", "http://localhost:8771", "agent",
+                                                         on_remove="remove")["on_remove"] == "remove")
+
+    # Over HTTP: PATCH with only on_remove leaves the source's person where it was.
+    try:
+        import os
+        os.environ["NIMROD_DB"] = str(tmp / "http.db")
+        os.environ.pop("DATABASE_URL", None)
+        os.environ.pop("NIMROD_ENV", None)
+        from fastapi.testclient import TestClient
+        import app as appmod
+    except Exception as e:      # no FastAPI here: the store checks above still ran
+        print(f"  SKIP  HTTP checks ({e})")
+    else:
+        c = TestClient(appmod.app)
+        H = {"X-Dev-User": "ms-http-user"}
+        pid = c.get("/api/people", headers=H).json()["people"][0]["id"]
+        src = c.post("/api/media-sources", json={"label": "Pi drive", "base_url": "http://localhost:8770",
+                                                 "person_id": pid}, headers=H).json()
+        check("HTTP: a source added keeps by default", src.get("on_remove") == "keep", src)
+        r = c.patch(f"/api/media-sources/{src['id']}", json={"on_remove": "remove"}, headers=H)
+        check("*** HTTP: PATCH {on_remove: remove} sets it, and the person stays where it was ***",
+              r.status_code == 200 and r.json()["on_remove"] == "remove" and r.json()["person_id"] == pid, r.text)
+        r = c.patch(f"/api/media-sources/{src['id']}", json={"on_remove": "wipe"}, headers=H)
+        check("HTTP: anything but keep or remove is a 400", r.status_code == 400, r.text)
+        r = c.patch(f"/api/media-sources/{src['id']}", json={"person_id": None}, headers=H)
+        check("HTTP: moving it (person_id) still works, and leaves on_remove alone",
+              r.status_code == 200 and r.json()["person_id"] is None and r.json()["on_remove"] == "remove", r.text)
+        r = c.post("/api/media-sources", json={"label": "X", "base_url": "http://localhost:8770", "on_remove": "nope"},
+                   headers=H)
+        check("HTTP: adding with a bad on_remove is a 400", r.status_code == 400, r.text)
+
     print(f"\n{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)
 

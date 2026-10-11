@@ -70,6 +70,8 @@ def _later(seconds: int) -> str:
 PAIR_ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ"     # 30 characters
 PAIR_CODE_LEN = 6
 PAIR_TTL_SECONDS = 15 * 60      # long enough to walk to another room, short enough to matter
+# remove this picture (2026-10-10): what a source does with a picture somebody removes (create_source argues it).
+SOURCE_ON_REMOVE = ("keep", "remove")
 
 
 def _pair_code() -> str:
@@ -1415,7 +1417,8 @@ class _Store:
                             "or to anybody on another login. Removing either person removes it.", True,
                             "when somebody saves an \"I call them\" name just for themselves"),
         "media_sources":   ("A name and an ADDRESS for the folder your media (photos, videos or music) is "
-                            "in. It only points at your own computer. Never the files themselves.", True,
+                            "in, and whether a picture removed on a screen is also moved out of it. It only "
+                            "points at your own computer. Never the files themselves.", True,
                             "when you connect a folder"),
         "drive_grants":    ("Which other logins you have allowed to control a screen, and "
                             "until when.", True,
@@ -1765,15 +1768,22 @@ class _Store:
     # IT IS NOT MUCH OF A PRIVACY FEATURE WITHIN ONE ACCOUNT, and saying so kept the
     # reasoning honest: anyone standing in the room already sees the screen. Visual
     # privacy there was never something software could give back.
+    #
+    # `on_remove` (remove this picture, 2026-10-10; Mike: "There should be options for this when you're setting up
+    # folders. You can decide whether pictures are deleted off of each drive when they are deleted."): what happens to
+    # a picture in this source when somebody removes it on a screen. 'keep' (the default, and what NULL reads as: every
+    # source that existed before keeps every picture, DECISIONS 2026-10-09/10 "deletions kept by default") or 'remove'
+    # (the source's media agent moves it into a Removed folder; never deleted by the site). A setting, not media.
     def create_source(self, user_id: str, label: str, base_url: str, kind: str,
-                      person_id: str | None = None) -> dict:
+                      person_id: str | None = None, on_remove: str | None = None) -> dict:
         sid, ts = _new_id(), _now()
         pid = person_id or None            # "" and None are the same thing: the account's
+        orm = on_remove if on_remove in SOURCE_ON_REMOVE else None
         with self._tx() as cur:
-            cur.execute(self._q("INSERT INTO media_sources(id, user_id, label, base_url, kind, created_at, person_id) VALUES(?,?,?,?,?,?,?)"),
-                        (sid, user_id, label, base_url, kind, ts, pid))
+            cur.execute(self._q("INSERT INTO media_sources(id, user_id, label, base_url, kind, created_at, person_id, on_remove) VALUES(?,?,?,?,?,?,?,?)"),
+                        (sid, user_id, label, base_url, kind, ts, pid, orm))
         return {"id": sid, "label": label, "base_url": base_url, "kind": kind,
-                "created_at": ts, "person_id": pid}
+                "created_at": ts, "person_id": pid, "on_remove": orm or "keep"}
 
     def list_sources(self, user_id: str, person_id: str | None = None,
                      shared_only: bool = False) -> list[dict]:
@@ -1785,7 +1795,7 @@ class _Store:
         `person_id` None   -> everything the account owns, which is the management view.
         `shared_only`      -> just the account-wide ones.
         """
-        sql = ("SELECT id, label, base_url, kind, created_at, person_id "
+        sql = ("SELECT id, label, base_url, kind, created_at, person_id, on_remove "
                "FROM media_sources WHERE user_id=?")
         args: list = [user_id]
         if shared_only:
@@ -1801,12 +1811,14 @@ class _Store:
 
     @staticmethod
     def _source_row(r) -> dict:
+        orm = r[6] if len(r) > 6 else None
         return {"id": r[0], "label": r[1], "base_url": r[2], "kind": r[3],
-                "created_at": r[4], "person_id": (r[5] if len(r) > 5 else None) or None}
+                "created_at": r[4], "person_id": (r[5] if len(r) > 5 else None) or None,
+                "on_remove": orm if orm in SOURCE_ON_REMOVE else "keep"}
 
     def get_source(self, user_id: str, sid: str) -> dict | None:
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id, label, base_url, kind, created_at, person_id FROM media_sources WHERE user_id=? AND id=?"),
+            cur.execute(self._q("SELECT id, label, base_url, kind, created_at, person_id, on_remove FROM media_sources WHERE user_id=? AND id=?"),
                         (user_id, sid))
             r = cur.fetchone()
         if r is None:
@@ -1823,6 +1835,16 @@ class _Store:
         with self._tx() as cur:
             cur.execute(self._q("UPDATE media_sources SET person_id=? WHERE user_id=? AND id=?"),
                         (person_id or None, user_id, sid))
+            return cur.rowcount == 1
+
+    def set_source_on_remove(self, user_id: str, sid: str, on_remove: str) -> bool:
+        """remove this picture: 'keep' or 'remove' for this source (create_source says what each means). Anything else
+        is refused (False) rather than stored."""
+        if on_remove not in SOURCE_ON_REMOVE:
+            return False
+        with self._tx() as cur:
+            cur.execute(self._q("UPDATE media_sources SET on_remove=? WHERE user_id=? AND id=?"),
+                        (on_remove, user_id, sid))
             return cur.rowcount == 1
 
     def remove_source(self, user_id: str, sid: str) -> bool:
@@ -2569,6 +2591,9 @@ class SQLiteStore(_Store):
             mcols = {r[1] for r in self._conn.execute("PRAGMA table_info(media_sources)")}
             if "person_id" not in mcols:
                 self._conn.execute("ALTER TABLE media_sources ADD COLUMN person_id TEXT")
+            # remove this picture (2026-10-10): nullable, undefaulted - NULL reads as 'keep', what every source did.
+            if "on_remove" not in mcols:
+                self._conn.execute("ALTER TABLE media_sources ADD COLUMN on_remove TEXT")
             self._conn.execute(
                 "CREATE INDEX IF NOT EXISTS ix_media_sources_person ON media_sources(person_id)")
             # People across accounts (2026-10-04 night): a profile's home, "I call them", and where a
@@ -2787,6 +2812,8 @@ class PostgresStore(_Store):
             # backfilling onto whichever person happened to be first would silently take
             # media away from screens that were showing it.
             "ALTER TABLE media_sources ADD COLUMN IF NOT EXISTS person_id TEXT",
+            # remove this picture (2026-10-10): NULL reads as 'keep', so every existing source keeps every picture.
+            "ALTER TABLE media_sources ADD COLUMN IF NOT EXISTS on_remove TEXT",
             "CREATE INDEX IF NOT EXISTS ix_media_sources_user ON media_sources(user_id)",
             "CREATE INDEX IF NOT EXISTS ix_media_sources_person ON media_sources(person_id)",
 

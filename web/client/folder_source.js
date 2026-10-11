@@ -130,7 +130,10 @@ const reqAsPromise = (req) => new Promise((resolve, reject) => {
 // --- the source records -----------------------------------------------------
 // Shaped like a registry source so callers cannot tell the difference: {id, label, kind}.
 // `base_url` is deliberately absent — there is no URL; that IS the point.
-const toSource = (row) => ({ id: row.id, label: row.label, kind: 'folder', local: true });
+// remove this picture (2026-10-10): `on_remove` ('keep' unless the row says 'remove'), kept on the folder's own row here
+// on this device, as an agent source keeps it on the server (media_sources.js ON_REMOVE).
+const toSource = (row) => ({ id: row.id, label: row.label, kind: 'folder', local: true,
+  on_remove: row.on_remove === 'remove' ? 'remove' : 'keep' });
 
 export async function listFolderSources() {
   if (typeof indexedDB === 'undefined') return [];
@@ -206,6 +209,164 @@ export async function requestFolderAccess(id) {
   if (!row || !row.handle) return 'missing';
   try { return await row.handle.requestPermission({ mode: 'read' }); }
   catch { return 'denied'; }
+}
+
+// ------------------------------------------------------------------ REMOVE THIS PICTURE (2026-10-10)
+// A folder is opened READ-ONLY (`pickFolder`, mode 'read'), and stays that way unless somebody chooses otherwise. For a
+// folder source set to "remove it here too", moving a removed picture into its Removed folder needs the browser's
+// permission to CHANGE the folder. *** IT IS NEVER ASKED FOR BY ITSELF. *** `folderWritePermission` only looks (a query
+// never shows a prompt); `requestFolderWrite` asks, and is called only from a press on "Allow removing here" (media.js),
+// so a screen nobody can answer never shows the browser's question. Without the permission a removed picture still
+// leaves every slideshow (the list); the move waits until it is given, and the panel's follow-up does it then.
+
+/** 'keep' or 'remove' for a folder source, kept on its row here. Resolves the source, or null when it is not here. */
+export async function setFolderOnRemove(id, value) {
+  const v = value === 'remove' ? 'remove' : 'keep';
+  const row = await getRow(id);
+  if (!row) return null;
+  const next = { ...row, on_remove: v };
+  await tx('readwrite', (s) => s.put(next));
+  return toSource(next);
+}
+
+/** 'granted' | 'prompt' | 'denied' | 'missing' for CHANGING the folder. Never asks. */
+export async function folderWritePermission(id) {
+  const row = await getRow(id);
+  if (!row || !row.handle) return 'missing';
+  try { return await row.handle.queryPermission({ mode: 'readwrite' }); }
+  catch { return 'prompt'; }
+}
+
+/** ASKS for permission to change the folder. Call it only from a press (the browser refuses otherwise, rightly). */
+export async function requestFolderWrite(id) {
+  const row = await getRow(id);
+  if (!row || !row.handle) return 'missing';
+  try { return await row.handle.requestPermission({ mode: 'readwrite' }); }
+  catch { return 'denied'; }
+}
+
+export const REMOVED_DIR = '.nimrod-removed';
+export const REMOVED_LIST_FILE = 'removed-paths.txt';
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+/** A picture's path as parts, or null: the agent's rules (agent.py removal_parts) - no '.', '..', dot parts, breaks. */
+export function removalParts(path) {
+  const s = String(path || '');
+  if (!s || s.length > 1024 || /[\n\r\t\0\\]/.test(s)) return null;
+  const parts = s.split('/').filter((p) => p !== '');
+  if (!parts.length || parts.some((p) => p === '.' || p === '..' || p.startsWith('.'))) return null;
+  return kindOf(parts[parts.length - 1]) ? parts : null;
+}
+async function dirAt(root, parts, create = false) {
+  let d = root;
+  for (const p of parts) d = await d.getDirectoryHandle(p, { create });
+  return d;
+}
+async function fileIn(dir, name) {
+  try { return await dir.getFileHandle(name); } catch { return null; }
+}
+async function readList(rdir) {
+  const fh = await fileIn(rdir, REMOVED_LIST_FILE);
+  if (!fh) return [];
+  try { return (await (await fh.getFile()).text()).split(/\r?\n/).filter((l) => l.trim()); } catch { return []; }
+}
+async function writeList(rdir, lines) {
+  const fh = await rdir.getFileHandle(REMOVED_LIST_FILE, { create: true });
+  const w = await fh.createWritable();
+  await w.write(lines.map((l) => `${l}\n`).join(''));
+  await w.close();
+}
+// A MOVE: the browser's own move where it has one; else a copy, and the original taken out only once the copy is
+// written - the net effect is the same move, and the picture is never without a copy.
+async function moveFile(fromDir, name, toDir, toName) {
+  const fh = await fromDir.getFileHandle(name);
+  if (typeof fh.move === 'function') { await fh.move(toDir, toName); return; }
+  const out = await toDir.getFileHandle(toName, { create: true });
+  const w = await out.createWritable();
+  await w.write(await fh.getFile());
+  await w.close();
+  await fromDir.removeEntry(name);
+}
+
+/**
+ * Move a picture of folder source `id` into <folder>/.nimrod-removed/<day>/<path>, and list it in removed-paths.txt
+ * (as the agent does). Resolves { done } - 'moved', 'not-here' (listed all the same), 'asks' (no permission to change
+ * the folder: nothing asked, nothing moved), 'missing', 'bad' or 'failed'. Never asks for permission.
+ */
+export async function moveFolderPicture(id, path, { day = today(), handleFor = null } = {}) {
+  const parts = removalParts(path);
+  if (!parts) return { done: 'bad' };
+  const row = handleFor ? { handle: await handleFor(id) } : await getRow(id);
+  const root = row && row.handle;
+  if (!root) return { done: 'missing' };
+  let perm = 'prompt';
+  try { perm = await root.queryPermission({ mode: 'readwrite' }); } catch { perm = 'prompt'; }
+  if (perm !== 'granted') return { done: 'asks' };
+  try {
+    const rdir = await root.getDirectoryHandle(REMOVED_DIR, { create: true });
+    const key = parts.join('/');
+    const listed = await readList(rdir);
+    let from = null;
+    try { from = await dirAt(root, parts.slice(0, -1)); } catch { from = null; }
+    const name = parts[parts.length - 1];
+    if (!from || !(await fileIn(from, name))) {
+      if (!listed.includes(key)) await writeList(rdir, [...listed, key]);
+      return { done: 'not-here' };
+    }
+    let dest = null;
+    for (let n = 1; n < 1000 && !dest; n += 1) {
+      const folder = n === 1 ? day : `${day}-${n}`;
+      let d = null;
+      try { d = await dirAt(rdir, [folder, ...parts.slice(0, -1)]); } catch { d = null; }
+      if (!d || !(await fileIn(d, name))) dest = folder;
+    }
+    if (!dest) return { done: 'failed' };
+    const to = await dirAt(rdir, [dest, ...parts.slice(0, -1)], true);
+    await moveFile(from, name, to, name);
+    if (!listed.includes(key)) await writeList(rdir, [...listed, key]);
+    return { done: 'moved', folder: dest };
+  } catch (err) {
+    console.error('folder source: moving a removed picture', err);
+    return { done: 'failed' };
+  }
+}
+
+/** "Bring it back" for folder source `id`: the newest removed copy goes back, never over a picture already there. */
+export async function restoreFolderPicture(id, path, { handleFor = null } = {}) {
+  const parts = removalParts(path);
+  if (!parts) return { done: 'bad' };
+  const row = handleFor ? { handle: await handleFor(id) } : await getRow(id);
+  const root = row && row.handle;
+  if (!root) return { done: 'missing' };
+  let perm = 'prompt';
+  try { perm = await root.queryPermission({ mode: 'readwrite' }); } catch { perm = 'prompt'; }
+  if (perm !== 'granted') return { done: 'asks' };
+  try {
+    let rdir = null;
+    try { rdir = await root.getDirectoryHandle(REMOVED_DIR); } catch { return { done: 'not-removed' }; }
+    const key = parts.join('/');
+    const name = parts[parts.length - 1];
+    const listed = await readList(rdir);
+    const unlist = async () => { if (listed.includes(key)) await writeList(rdir, listed.filter((l) => l !== key)); };
+    const days = [];
+    for await (const [n, h] of rdir.entries()) if (h.kind === 'directory' && /^\d{4}-\d{2}-\d{2}(-\d{1,4})?$/.test(n)) days.push(n);
+    days.sort((a, b) => (a.slice(0, 10) === b.slice(0, 10)
+      ? (Number(b.slice(11) || 1) - Number(a.slice(11) || 1)) : (a < b ? 1 : -1)));
+    let found = null;
+    for (const d of days) {
+      let dir = null;
+      try { dir = await dirAt(rdir, [d, ...parts.slice(0, -1)]); } catch { dir = null; }
+      if (dir && await fileIn(dir, name)) { found = dir; break; }
+    }
+    const back = await dirAt(root, parts.slice(0, -1), true);
+    if (await fileIn(back, name)) { await unlist(); return { done: 'already' }; }
+    if (!found) { await unlist(); return { done: listed.includes(key) ? 'emptied' : 'not-removed' }; }
+    await moveFile(found, name, back, name);
+    await unlist();
+    return { done: 'back' };
+  } catch (err) {
+    console.error('folder source: bringing a removed picture back', err);
+    return { done: 'failed' };
+  }
 }
 
 // --- object URL bookkeeping -------------------------------------------------
