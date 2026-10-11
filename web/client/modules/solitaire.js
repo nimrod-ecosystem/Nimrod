@@ -28,16 +28,20 @@
 //     keeps a switch walk short, at the cost of acting as a hint — said here rather than hidden.
 //   * A win pays NOTHING by default. See `winPoints` below for the argument.
 //   * Nothing is read aloud by default; "Say what is lit" is a setting for someone who scans by ear.
+//   * THE CARDS ARE DESIGN'S (2026-10-10, `../playing_cards.js` through `../card_deck.js`): the theme's own deck,
+//     back and face, redrawn when the theme changes. Faces in Design's 'big' layout and four suit colours by
+//     default; 'classic' pips and red-and-black are each one setting away (`cardSettingsFields`).
 
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
 import {
-  SUITS, suitOf, cardName, cardShort, RANK_LABEL, deal, applyMove, settle, finishMoves, destinations,
+  SUITS, suitOf, cardName, cardShort, deal, applyMove, settle, finishMoves, destinations,
   sources, pickable, cardsAt, canDraw, isWon, isStuck, allRevealed, homeCount, drawCount,
   encodeTurn, replay, AUTO_MODES,
 } from '../klondike.js';
 import { createPlayWatch } from '../game_start.js';
+import { CARD_DEFAULTS, cardSettingsFields, cardArt, watchTheme } from '../card_deck.js';
 
 export const GAME = 'solitaire';
 export const SCORE_LABEL = 'Solitaire: cards home';
@@ -59,6 +63,9 @@ export const DEFAULTS = Object.freeze({
   //   deal, whatever undo does afterwards (`paid` in the saved game). A family that wants solitaire
   //   in the economy turns it on; nobody else finds it changing their balance.
   winPoints: 0,
+  // How the cards look (card_deck.js): Design's big faces, four suit colours.
+  cardLayout: CARD_DEFAULTS.cardLayout,
+  suitColours: CARD_DEFAULTS.suitColours,
 });
 
 const SETTINGS = [
@@ -83,6 +90,7 @@ const SETTINGS = [
     onLabel: 'Shown', offLabel: 'Hidden' },
   { key: 'winPoints', label: 'Play points for a game won', kind: 'number', default: 0, min: 0, max: 20, step: 1,
     level: 'advanced', note: 'Once per game won. 0 means cards pay nothing.' },
+  ...cardSettingsFields(),
 ];
 
 const esc = (s) => String(s == null ? '' : s)
@@ -165,6 +173,9 @@ registerModule(
     // next / prev / select / back / undo, a click on the table) until nobody has pressed for GAME_IDLE_MS, or the deal
     // is won. Never merely for being open: a table left out must not keep the bar away, or hold a new version, for ever.
     let plays = null;
+    // THE THEME ON SCREEN (card_deck.js watchTheme): the deck the cards wear, redrawn when it changes.
+    let themeWatch = null;
+    const artId = String(ctx.instanceId || `s${Math.floor(rand() * 1e9)}`).replace(/[^A-Za-z0-9_-]/g, '');
 
     const game = () => snaps[snaps.length - 1];
     function stuckNow(g) {
@@ -352,15 +363,16 @@ registerModule(
     }
 
     // ---- drawing ------------------------------------------------------------------------------
+    // The card's drawing is Design's (card_deck.js cardArt), in the theme's deck and this table's settings; the
+    // element around it carries the name a screen reader reads, and the rings, the lift and the marker.
+    const art = (c) => cardArt(c, themeWatch ? themeWatch.id() : 'default', cfg, { idSuffix: artId });
     function cardHtml(c, { key = null, style = '', picked: isPicked = false, on = false } = {}) {
-      if (!c.up) return `<div class="sol-card" data-up="0" style="${style}" role="img" aria-label="face down"></div>`;
-      const s = suitOf(c.s);
+      if (!c.up) return `<div class="sol-card" data-up="0" style="${style}" role="img" aria-label="face down">${art(c)}</div>`;
       const tag = key ? 'button' : 'div';
       const attrs = key ? ` type="button" data-key="${esc(key)}"` : ' role="img"';
       return `<${tag} class="sol-card" data-up="1" data-suit="${c.s}" data-card="${c.s}${c.r}"${attrs}`
         + `${isPicked ? ' data-picked="1"' : ''}${on ? ' data-on="1"' : ''} style="${style}" aria-label="${esc(cardName(c))}">`
-        + `<span class="sol-idx" aria-hidden="true">${RANK_LABEL[c.r]}${s.symbol}</span>`
-        + `<span class="sol-pip" aria-hidden="true">${s.symbol}</span></${tag}>`;
+        + `${art(c)}</${tag}>`;
     }
 
     function render() {
@@ -471,7 +483,8 @@ registerModule(
       __probe: () => {
         const items = walk();
         return { game: game(), rec: { ...rec, turns: [...rec.turns] }, picked, lit, confirmNew,
-          items: items.map((i) => i.key), litKey: lit >= 0 ? items[lit]?.key : null, stats: { ...stats }, cfg: { ...cfg } };
+          items: items.map((i) => i.key), litKey: lit >= 0 ? items[lit]?.key : null, stats: { ...stats }, cfg: { ...cfg },
+          theme: themeWatch ? themeWatch.id() : null };
       },
       init() {
         let cssHref = '';
@@ -479,6 +492,7 @@ registerModule(
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-sol-css href="${esc(cssHref)}">` : ''}<div class="sol-wrap" data-sol-root></div>`;
         rootEl = mount.querySelector('[data-sol-root]');
         mount.addEventListener('click', onClick);
+        themeWatch = watchTheme(mount, () => render());
 
         try { ledger = typeof ctx.makeEvents === 'function' ? createPointsLedger({ makeEvents: ctx.makeEvents, bus }) : null; }
         catch (err) { ledger = null; console.error('solitaire: no points ledger', err); }
@@ -529,6 +543,7 @@ registerModule(
       destroy() {
         dead = true;
         if (plays) { plays.destroy(); plays = null; }
+        themeWatch?.stop();
         mount.removeEventListener('click', onClick);
         if (ticker != null) { clearInterval(ticker); ticker = null; }
         try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }

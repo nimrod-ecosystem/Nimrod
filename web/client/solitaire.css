@@ -1,15 +1,13 @@
 /* solitaire.css — the look of `modules/solitaire.js` (Klondike). Loaded by the module itself, from a
    <link> inside its own mount (a module never reaches outside ctx.mount), the way scoreboard.css is.
 
-   *** THE FOUR SUIT COLOURS ARE TOKENS, DECLARED ONCE, HERE. *** Design's spec: "the suits use four
-   colours AND their symbols". Theme tokens cover text and surfaces but have nothing for "hearts", so
-   each suit gets its own custom property, which a theme can set (`--suit-hearts` ...) and otherwise
-   falls back to the value on the declaration line. That is the only place a literal colour appears
-   in this file, and `check_hardcoded_colors.py` counts declarations as the right place for one.
-   The fallbacks are the usual four-colour deck (black spades, red hearts, blue diamonds, green clubs),
-   each chosen to read at better than 4.5:1 on the card face; `dev/solitaire_test.html` measures it.
-   The colour is never the only signal: every card carries its suit symbol in the corner and large in
-   the middle, and its name for a screen reader.
+   *** THE CARDS THEMSELVES ARE DESIGN'S DRAWINGS (2026-10-10). *** Each card's face and back is an SVG
+   from `playing_cards.js` (through `card_deck.js`), in the theme's own deck, with its own stock, edge
+   and four suit colours, so nothing in this file colours a card any more (the suit tokens that used to
+   live here went with the old text faces; card_sort.css still has its own copy, for its suit buttons).
+   `dev/playing_cards_test.html` measures every deck's suits on its face, in every theme. The colour is
+   never the only signal: every card carries its rank and suit shape in the corner, and its name for a
+   screen reader on the element around the drawing.
 
    SIZE: cards are sized from the panel (container units), wide as the panel allows and short enough
    that a column still fits. At a quarter of a 1080p kiosk (960 x 540) that is about 125px wide; at a
@@ -25,12 +23,6 @@
 @property --sol-bar{syntax:'<length>';inherits:true;initial-value:48px}
 
 .sol-wrap{
-  --sol-face: var(--card-face, #fffdf7);
-  --sol-edge: var(--card-edge, #8a8578);
-  --sol-spades: var(--suit-spades, #1c1c1c);
-  --sol-hearts: var(--suit-hearts, #b3261e);
-  --sol-diamonds: var(--suit-diamonds, #1f4fd1);
-  --sol-clubs: var(--suit-clubs, #17692f);
   width:100%;height:100%;min-height:0;container-type:size;color:var(--text);
 }
 .sol-wrap *{box-sizing:border-box}
@@ -39,7 +31,7 @@
   --sol-bar: clamp(44px, 9cqh, 96px);
   --sol-cw: clamp(36px, min(calc((100cqw - 8 * var(--sol-gap)) / 7), calc((100cqh - var(--sol-bar) - 3 * var(--sol-gap)) / 3.3)), 220px);
   --sol-ch: calc(var(--sol-cw) * 1.4);
-  --sol-rad: calc(var(--sol-cw) * .08);
+  --sol-rad: calc(var(--sol-cw) * .064);   /* the drawing's own corner: rx 16 on a 250-wide card */
   height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:var(--sol-gap);
   padding:var(--sol-gap);background:var(--surface-alt);font-family:var(--font);
 }
@@ -58,37 +50,31 @@
   color:var(--text-soft);font-size:calc(var(--sol-cw) * .42);font-weight:700;line-height:1;text-align:center}
 .sol-empty small{display:block;font-size:calc(var(--sol-cw) * .11);font-weight:600}
 .sol-stock{display:grid;place-items:center;padding:0;border:0;background:none;cursor:pointer;font:inherit;color:inherit}
-.sol-stock .sol-count{position:absolute;inset:auto 0 calc(var(--sol-ch) * -.02) 0;text-align:center;
-  font-size:calc(var(--sol-cw) * .16);font-weight:800;color:var(--on-dark)}
+/* How many are left to draw, on a chip of the theme's own surface and text (a pair every theme holds to 4.5:1):
+   it sits on the deck's back, which is pale in some themes and dark in others. */
+.sol-stock .sol-count{position:absolute;left:50%;bottom:calc(var(--sol-ch) * .06);transform:translateX(-50%);
+  padding:.05em .4em;border-radius:.5em;background:var(--surface);color:var(--text);
+  font-size:calc(var(--sol-cw) * .16);font-weight:800;line-height:1.2}
 
 /* ---- a card ---- */
 .sol-card{
   position:absolute;left:0;top:calc(var(--sol-y, 0) * var(--sol-step, 0px));
   width:var(--sol-cw);height:var(--sol-ch);border-radius:var(--sol-rad);padding:0;margin:0;
-  border:max(1px, calc(var(--sol-cw) * .012)) solid var(--sol-edge);background:var(--sol-face);
+  border:0;background:none;color:inherit;
   box-shadow:0 calc(var(--sol-cw) * .02) calc(var(--sol-cw) * .05) color-mix(in srgb, var(--text) 30%, transparent);
-  font:inherit;text-align:left;overflow:hidden;cursor:default;display:block;
+  font:inherit;text-align:left;cursor:default;display:block;
 }
+/* The drawing fills the card: 250 x 350, the same 5:7 as --sol-cw x --sol-ch. */
+.sol-card > svg{display:block;width:100%;height:100%;pointer-events:none}
 .sol-slot > .sol-card,.sol-stock > .sol-card{position:relative;top:0}
 button.sol-card{cursor:pointer}
-.sol-card[data-suit="S"]{color:var(--sol-spades)}
-.sol-card[data-suit="H"]{color:var(--sol-hearts)}
-.sol-card[data-suit="D"]{color:var(--sol-diamonds)}
-.sol-card[data-suit="C"]{color:var(--sol-clubs)}
-.sol-idx{position:absolute;top:calc(var(--sol-cw) * .04);left:calc(var(--sol-cw) * .07);
-  font-size:calc(var(--sol-cw) * .3);font-weight:800;line-height:1;letter-spacing:-.02em;white-space:nowrap}
-.sol-pip{position:absolute;left:0;right:0;bottom:calc(var(--sol-ch) * .12);text-align:center;
-  font-size:calc(var(--sol-cw) * .56);line-height:1}
-.sol-card[data-up="0"]{
-  background-color:var(--accent);
-  background-image:repeating-linear-gradient(45deg, transparent 0 calc(var(--sol-cw) * .06),
-    color-mix(in srgb, var(--sol-face) 28%, transparent) calc(var(--sol-cw) * .06) calc(var(--sol-cw) * .09));
-  border-color:var(--sol-face);
-}
 
-/* ---- the columns: cards fan down, closer together when a column gets long ---- */
+/* ---- the columns: cards fan down, closer together when a column gets long ----
+   .30 of a card, so a covered card still shows its WHOLE corner index: the rank and the suit shape under it
+   end 104/350 (.297) of the way down Design's card. At .28 the shape's lower tip was under the next card,
+   and a card seen only as a strip has to be read by its shape too, not by its colour alone. */
 .sol-col .sol-card{
-  --sol-step: min(calc(var(--sol-ch) * .28), calc((100cqh - var(--sol-ch)) / max(var(--sol-span, 1), 1)));
+  --sol-step: min(calc(var(--sol-ch) * .30), calc((100cqh - var(--sol-ch)) / max(var(--sol-span, 1), 1)));
 }
 
 /* ---- picking and placing ----
@@ -113,8 +99,11 @@ button.sol-card{cursor:pointer}
 /* THE SWITCH CURSOR: a thick outline AND a marker, so the lit thing reads without colour. */
 .sol [data-on="1"]{outline:max(4px, calc(var(--sol-cw) * .05)) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px;
   box-shadow:0 0 0 2px var(--surface);z-index:3}
-.sol-card[data-on="1"]::after,.sol-stock[data-on="1"]::after{content:"\25B8";position:absolute;right:calc(var(--sol-cw) * .06);
-  top:calc(var(--sol-cw) * .02);font-size:calc(var(--sol-cw) * .26);color:var(--link);line-height:1}
+/* The marker sits on the card's own drawing (light stock in most decks, dark in cyberpunk, and any back), so it
+   brings its own ground: the theme's --text on its --surface, the pair every theme holds to 4.5:1. */
+.sol-card[data-on="1"]::after,.sol-stock[data-on="1"]::after{content:"\25B8";position:absolute;right:calc(var(--sol-cw) * .05);
+  top:calc(var(--sol-cw) * .04);font-size:calc(var(--sol-cw) * .2);color:var(--text);background:var(--surface);
+  border-radius:.25em;padding:0 .12em;line-height:1.1}
 
 /* ---- the bar: what is happening, and the buttons ---- */
 .sol-bar{display:flex;flex-wrap:wrap;align-items:center;gap:calc(var(--sol-gap) * .8);min-height:var(--sol-bar)}

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>playing cards — Design's deck for every theme, and the site's side of it — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:10px 24px;margin-top:12px}
+  #sheet .th{display:grid;gap:4px}#sheet .row{display:flex;gap:6px}#sheet .c{width:84px;line-height:0}
+  #sheet .c svg{width:100%;height:auto;display:block}
+</style>
+</head>
+<body>
+<h1>playing cards (Claude Design, 2026-10-10)</h1>
+<p><code>playing_cards.js</code> is Design's file, shipped as it is: <code>cardSvg(card, theme, options)</code>
+draws any card in any of Design's 21 decks. This suite checks that file (unchanged, every card in every deck,
+the labels, the suit colours measured on every face) and <code>card_deck.js</code>, the site's side of it:
+which deck each site theme wears, the two settings, the drawing made safe to repeat on a page, and the theme
+followed as it changes. The games that use it (solitaire, card sort) have their own suites.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>every theme's deck, to look at: the back, an ace, a seven, a queen, a king and the joker</h2>
+<div id="sheet"></div>
+
+<script type="module">
+import { cardSvg, cardThemes, SUITS as DSUITS, RANKS } from '../playing_cards.js';
+import {
+  CARD_DEFAULTS, CARD_LAYOUTS, SUIT_COLOURS, cardSettingsFields, cardOptions, deckFor, hasOwnDeck, designCard,
+  cardArt, cardVars, themeIdAt, watchTheme,
+} from '../card_deck.js';
+import { THEMES, applyTheme, contrast } from '../theme.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const parses = (svg) => { const d = new DOMParser().parseFromString(svg, 'image/svg+xml'); return !d.querySelector('parsererror') && d.documentElement.localName === 'svg'; };
+const label = (svg) => (svg.match(/aria-label="([^"]*)"/) || [])[1];
+const both = (a, b) => Math.min(contrast(a, b), contrast(a, b, { deutan: true }));
+// Design's 21 decks, by Design's ids ('empty' is Design's alias for nimrod, not a deck of its own).
+const DECKS = Object.keys(cardThemes).filter((k) => k !== 'empty');
+
+(async () => {
+try {
+  section('Design\'s file, as it was handed over');
+  {
+    const text = (await (await fetch('../playing_cards.js', { cache: 'no-store' })).text()).replace(/\r\n/g, '\n');
+    const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
+    // The SHA-256 of Design's playing_cards.js.txt (handoff cards-and-theme-checklist, 2026-10-10), line endings as LF.
+    // A change here means the shipped file is no longer Design's: take a new handoff and update this line, rather
+    // than editing their file (card_deck.js is where the site's own changes go).
+    const DESIGN_SHA256 = '4a30f0a6903697703e6f52949aeb0979ee8a03f9868d866334e4babb0e290e5a';
+    check('*** web/client/playing_cards.js is byte for byte Design\'s file (line endings aside) ***', hash === DESIGN_SHA256, hash);
+    check('it imports nothing (Design: "plain JavaScript with no imports")', !/^\s*import\b/m.test(text));
+    check(`Design's 21 decks are all there: ${DECKS.join(', ')}`, DECKS.length === 21 && cardThemes.empty === cardThemes.nimrod);
+  }
+
+  section('*** every card in every deck draws, and says what it is ***');
+  {
+    let all = 0, bad = [];
+    for (const deck of DECKS) {
+      for (const suit of DSUITS) for (const rank of RANKS) for (const layout of CARD_LAYOUTS) {
+        const svg = cardSvg({ rank, suit }, deck, { layout });
+        all++;
+        const want = `${{ A: 'Ace', J: 'Jack', Q: 'Queen', K: 'King' }[rank] || rank} of ${suit}`;
+        if (!parses(svg) || label(svg) !== want || !/role="img"/.test(svg)) bad.push(`${deck} ${rank}${suit} ${layout}`);
+      }
+      for (const card of [{ faceDown: true }, { rank: 'joker' }]) {
+        const svg = cardSvg(card, deck);
+        all++;
+        if (!parses(svg) || label(svg) !== (card.faceDown ? 'Card, face down' : 'Joker')) bad.push(`${deck} ${JSON.stringify(card)}`);
+      }
+    }
+    check(`all ${all} drawings parse as SVG, each with role="img" and its own label`, bad.length === 0, bad.slice(0, 6).join(' | '));
+    check('labels read as words: "Queen of hearts", "7 of clubs", "Ace of spades", "10 of diamonds", "Card, face down", "Joker"',
+      label(cardSvg({ rank: 'Q', suit: 'hearts' }, 'fall')) === 'Queen of hearts' && label(cardSvg({ rank: '7', suit: 'clubs' }, 'night')) === '7 of clubs'
+      && label(cardSvg({ rank: 'A', suit: 'spades' }, 'nimrod')) === 'Ace of spades' && label(cardSvg({ rank: '10', suit: 'diamonds' }, 'diwali')) === '10 of diamonds'
+      && label(cardSvg({ faceDown: true }, 'halloween')) === 'Card, face down' && label(cardSvg({ rank: 'joker' }, 'night')) === 'Joker');
+    check('every back of a deck uses the one pattern id nc-<deck>, so many backs on a page share one pattern',
+      DECKS.every((d) => cardSvg({ faceDown: true }, d).includes(`<pattern id="nc-${d}"`) && cardSvg({ faceDown: true }, d).includes(`url(#nc-${d})`)));
+    check('each deck\'s back is its own: 21 different backs', new Set(DECKS.map((d) => cardSvg({ faceDown: true }, d).replace(/nc-\w+/g, ''))).size === 21);
+    check('an unknown deck draws the Nimrod one, not nothing', cardSvg({ rank: '5', suit: 'hearts' }, 'nope') === cardSvg({ rank: '5', suit: 'hearts' }, 'nimrod'));
+  }
+
+  section('*** the four suit colours, and the two-colour option, in every deck ***');
+  {
+    const inkOf = (deck, suit, o) => cardSvg({ rank: '7', suit }, deck, o).match(/<text[^>]*fill="(#[0-9a-fA-F]{6})"/)[1].toLowerCase();
+    const fourBad = DECKS.filter((d) => new Set(DSUITS.map((s) => inkOf(d, s))).size !== 4);
+    check('four colours (the default): four DIFFERENT inks in every deck', fourBad.length === 0, fourBad.join());
+    const twoBad = DECKS.filter((d) => {
+      const o = { fourColour: false };
+      return inkOf(d, 'diamonds', o) !== inkOf(d, 'hearts', o) || inkOf(d, 'clubs', o) !== inkOf(d, 'spades', o) || inkOf(d, 'hearts', o) === inkOf(d, 'spades', o);
+    });
+    check('two colours: hearts and diamonds share the red, clubs and spades the ink, in every deck', twoBad.length === 0, twoBad.join());
+    check('every index carries the suit SHAPE as well as the colour (a path beside each corner rank)',
+      DECKS.every((d) => DSUITS.every((s) => (cardSvg({ rank: '9', suit: s }, d).match(/<path /g) || []).length >= 3)));
+  }
+
+  section('*** contrast: every suit on its own deck\'s face, normal vision and deuteranopia (a warning, never a blocker, per Design) ***');
+  {
+    // THE FLOOR ASSERTED IS 3:1, and why: what a suit colour draws is the corner rank (heavy 800 weight, a fifth of the
+    // card's width: about 23px on a 110px kiosk card, which is WCAG's "large text" at 18.66px bold, 3:1) and the suit
+    // shapes (graphical objects, WCAG 1.4.11, 3:1). 4.5:1 is the body-text floor, and these are not body text.
+    // BELOW 4.5 IS STILL NAMED: Design's README makes contrast a warning on their palettes, so each deck whose worst
+    // suit is under 4.5 is listed with its measured floor (both visions). A deck falling further, or a new deck under
+    // 4.5, fails here until it is reported to Design and written in. NOTES_FOR_DESIGN carries the list.
+    // Each is the measured worst (2026-10-10), rounded down a hundredth.
+    const UNDER_45 = { ocean: 4.32, spring: 4.16, summer: 4.30, halloween: 3.72, christmas: 4.35, valentines: 4.41,
+      easter: 4.23, july4: 4.35, lunarNewYear: 4.11, diwali: 4.19 };
+    const rows = [];
+    let worst = Infinity, worstAt = '';
+    for (const d of DECKS) {
+      const t = cardThemes[d];
+      const r = DSUITS.map((s) => [s, both(t.suits[s], t.stock)]);
+      const w = Math.min(...r.map(([, x]) => x));
+      if (w < worst) { worst = w; worstAt = d; }
+      rows.push(`${d} ${w.toFixed(2)}`);
+      check(`${d}: every suit clears 3:1 on its face, both visions (worst ${w.toFixed(2)}: ${r.map(([s, x]) => `${s[0]} ${x.toFixed(2)}`).join(' ')})`, w >= 3);
+      if (w < 4.5) {
+        check(`${d}: under 4.5 for body text, named and held at its floor ${UNDER_45[d] ?? '(not on the list)'}`, UNDER_45[d] !== undefined && w >= UNDER_45[d], w.toFixed(3));
+      } else {
+        check(`${d}: 4.5 or better for every suit`, UNDER_45[d] === undefined, 'on the under-4.5 list but passes: take it off');
+      }
+      // The court frame: a court card's letter and crown sit on `court`, not on the stock.
+      const c = Math.min(...DSUITS.map((s) => both(t.suits[s], t.court)));
+      check(`${d}: picture-card letters and crowns clear 3:1 on their frame, both visions (${c.toFixed(2)})`, c >= 3);
+    }
+    console.log('suits on their own face, worst of four, both visions:', rows.join(' | '));
+    check(`the worst suit anywhere: ${worst.toFixed(2)}:1 (${worstAt}), above the 3:1 floor`, worst >= 3);
+    // THE ONE DARK FACE. Design: "Faces stay light stock in every theme except cyberpunk ... Measure that one."
+    const cy = cardThemes.cyberpunk;
+    const cyN = DSUITS.map((s) => `${s} ${contrast(cy.suits[s], cy.stock).toFixed(2)}`).join(', ');
+    const cyD = DSUITS.map((s) => `${s} ${contrast(cy.suits[s], cy.stock, { deutan: true }).toFixed(2)}`).join(', ');
+    const cyWorst = Math.min(...DSUITS.map((s) => both(cy.suits[s], cy.stock)));
+    const cyCourt = Math.min(...DSUITS.map((s) => both(cy.suits[s], cy.court)));
+    check(`*** cyberpunk's dark face (${cy.stock}): ${cyN}; deuteranopia ${cyD}; worst ${cyWorst.toFixed(2)}, court frame ${cyCourt.toFixed(2)}: all over 4.5 ***`,
+      cyWorst >= 4.5 && cyCourt >= 4.5);
+    check('cyberpunk is the only dark face (every other deck\'s stock is light)', DECKS.filter((d) => contrast(cardThemes[d].stock, '#000000') < 10).join() === 'cyberpunk',
+      DECKS.filter((d) => contrast(cardThemes[d].stock, '#000000') < 10).join());
+  }
+
+  section('the site\'s side (card_deck.js): which deck each site theme wears');
+  {
+    const ids = Object.keys(THEMES);
+    check('the default theme wears Design\'s Nimrod deck (Design calls it "nimrod", the site "default")', deckFor('default') === 'nimrod' && hasOwnDeck('default'));
+    const borrowing = ids.filter((id) => !hasOwnDeck(id));
+    check(`themes with no deck of their own wear the Nimrod deck: ${borrowing.join(', ')}`, borrowing.every((id) => deckFor(id) === 'nimrod')
+      && borrowing.join() === 'dusk,contrast,warm,forge', borrowing.join());
+    check('every other theme wears its own deck, by the same id', ids.filter((id) => hasOwnDeck(id) && id !== 'default').every((id) => deckFor(id) === id));
+    check('no theme, or an unknown one, is the default theme\'s deck', deckFor(null) === 'nimrod' && deckFor('nope') === 'nimrod' && !hasOwnDeck('nope'));
+    check('Design\'s alias "empty" is not counted as a theme\'s own deck', !hasOwnDeck('empty'));
+    check(`*** every site theme (${ids.length}) draws a back and a face ***`, ids.every((id) => {
+      const back = cardArt({ s: 'S', r: 1, up: false }, id);
+      const face = cardArt({ s: 'H', r: 12, up: true }, id);
+      return parses(back) && parses(face) && back.includes('<pattern') && face.includes('>Q</text>');
+    }));
+  }
+
+  section('the site\'s side: klondike\'s cards, the drawing made safe to repeat, the two settings');
+  {
+    check('a klondike card becomes Design\'s: { s: H, r: 12 } -> Q of hearts; face down -> faceDown',
+      JSON.stringify(designCard({ s: 'H', r: 12, up: true })) === '{"rank":"Q","suit":"hearts"}'
+      && JSON.stringify(designCard({ s: 'C', r: 1 })) === '{"rank":"A","suit":"clubs"}' && designCard({ s: 'D', r: 3, up: false }).faceDown === true);
+    const a = cardArt({ s: 'H', r: 12, up: true }, 'fall');
+    check('*** the drawing is hidden from a screen reader (the game\'s own element names the card) and not focusable ***',
+      /^<svg[^>]* aria-hidden="true" focusable="false" data-card-art=""/.test(a) && !/role="img"|aria-label=/.test(a));
+    check('...and is otherwise exactly Design\'s drawing', a.replace(' aria-hidden="true" focusable="false" data-card-art=""', ' role="img" aria-label="Queen of hearts"')
+      === cardSvg({ rank: 'Q', suit: 'hearts' }, 'fall'));
+    const b = cardArt({ s: 'S', r: 1, up: false }, 'night', {}, { idSuffix: 'p7' });
+    check('a back\'s pattern id carries the table\'s suffix, in the pattern AND where it is used (nothing left pointing at the old id)',
+      b.includes('<pattern id="nc-night-p7"') && b.includes('url(#nc-night-p7)') && !/nc-night[")]/.test(b));
+    check('no suffix, no change to the id', cardArt({ s: 'S', r: 1, up: false }, 'night').includes('id="nc-night"'));
+    check(`defaults: ${JSON.stringify(CARD_DEFAULTS)} (Design's: big faces, four colours)`, CARD_DEFAULTS.cardLayout === 'big' && CARD_DEFAULTS.suitColours === 'four'
+      && JSON.stringify(cardOptions({})) === '{"layout":"big","fourColour":true}');
+    check('the settings mean what they say, and nonsense is the default', JSON.stringify(cardOptions({ cardLayout: 'classic', suitColours: 'two' })) === '{"layout":"classic","fourColour":false}'
+      && JSON.stringify(cardOptions({ cardLayout: 'x', suitColours: 'y' })) === '{"layout":"big","fourColour":true}');
+    const rows = cardSettingsFields();
+    check('two rows, each a choice whose options are exactly the values card_deck reads',
+      rows.length === 2 && rows[0].key === 'cardLayout' && rows[1].key === 'suitColours'
+      && JSON.stringify(rows[0].options.map((o) => o.value)) === JSON.stringify(CARD_LAYOUTS)
+      && JSON.stringify(rows[1].options.map((o) => o.value)) === JSON.stringify(SUIT_COLOURS));
+    // `no-essential` is about a whole panel's menu, and these two rows are never a panel's whole menu: each game that
+    // spreads them in has essential rows of its own (its own suite audits the whole list).
+    const errs = auditFields(rows.map(normalizeField).filter(Boolean), { type: 'cards' })
+      .filter((x) => x.severity !== 'info' && x.code !== 'no-essential');
+    check('the settings audit finds nothing to warn about in the two rows', errs.length === 0, JSON.stringify(errs));
+    check('no site copy in the rows names a particular person, no she / her', !/taylor|cici|her screen|\b(she|her|hers|herself)\b/i.test(JSON.stringify(rows)));
+    const v = cardVars('halloween', { suitColours: 'two' });
+    check('the deck\'s colours as the card games\' CSS variables, two colours applied', v['--card-face'] === cardThemes.halloween.stock
+      && v['--suit-diamonds'] === cardThemes.halloween.suits.hearts && v['--suit-clubs'] === cardThemes.halloween.suits.spades);
+  }
+
+  section('*** which theme is on screen, and following it when it changes ***');
+  {
+    const outer = document.createElement('div');
+    const inner = document.createElement('div');
+    const leaf = document.createElement('div');
+    inner.append(leaf); outer.append(inner); document.body.append(outer);
+    check('nothing applied anywhere: the default theme', themeIdAt(leaf) === 'default');
+    applyTheme(outer, 'fall');
+    check('the theme on the nearest element above that carries one', themeIdAt(leaf) === 'fall');
+    applyTheme(inner, 'winter');
+    check('a panel inside wearing its own theme wins over the one around it', themeIdAt(leaf) === 'winter');
+    inner.removeAttribute('style');
+    inner.style.setProperty('--bg', '#123456');
+    check('an element that sets --bg for its own reasons (not a theme) is passed over', themeIdAt(leaf) === 'fall');
+    const seen = [];
+    const w = watchTheme(leaf, (id) => seen.push(id));
+    check('the watch starts with the theme on screen, and says nothing until it changes', w.id() === 'fall' && seen.length === 0);
+    applyTheme(outer, 'night');
+    await sleep(0);
+    check('*** a theme change is heard, with nothing pressed ***', w.id() === 'night' && seen.join() === 'night', seen.join());
+    applyTheme(outer, 'night');
+    await sleep(0);
+    check('the same theme applied again is not a change', seen.length === 1, seen.join());
+    w.stop();
+    applyTheme(outer, 'ocean');
+    await sleep(0);
+    check('a stopped watch hears nothing more', seen.length === 1);
+    outer.remove();
+  }
+
+  // The sheet, for a person to look at (run_suite.py --shot): what Design's cards_sheet.html showed, from the shipped file.
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = Object.keys(THEMES).map((id) => {
+    const c = (card) => `<span class="c">${cardArt(card, id, {}, { idSuffix: 'sheet' })}</span>`;
+    return `<div class="th"><b>${THEMES[id].label}${hasOwnDeck(id) ? '' : ' (the Nimrod deck)'}</b><div class="row">${c({ s: 'S', r: 1, up: false })}`
+      + `${c({ s: 'H', r: 1, up: true })}${c({ s: 'D', r: 7, up: true })}${c({ s: 'C', r: 12, up: true })}${c({ s: 'S', r: 13, up: true })}`
+      + `<span class="c">${cardSvg({ rank: 'joker' }, deckFor(id))}</span></div></div>`;
+  }).join('');
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

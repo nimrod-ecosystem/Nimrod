@@ -29,9 +29,11 @@
 // A card whose hand does not yet hold enough done cards asks what it can (the first card of a hand is the
 // suit only) and is NOT rated: an easier question than the level must not count as that level's.
 //
-// THE CARDS: klondike.js's deck and names ("7 of hearts"), solitaire.css's suit colour tokens (card_sort.css):
-// every suit is its COLOUR, its SYMBOL and its NAME, never one alone. Big cards. Aces are low by default
-// (`aces`, argued at DEFAULTS).
+// THE CARDS: klondike.js's deck and names ("7 of hearts"), drawn as Design's playing cards (2026-10-10,
+// ../playing_cards.js through ../card_deck.js) in the theme's own deck, redrawn when the theme changes; big faces
+// and four suit colours by default, each a setting. The suit buttons take the same deck's face and suit colours
+// (card_deck.js `cardVars`, put on this panel's mount), so a button and the card it names always agree. Every
+// suit is its COLOUR, its SHAPE and its NAME, never one alone. Aces are low by default (`aces`, argued at DEFAULTS).
 //
 // IT WAITS FOR START (quiz_view.js start gate, game_start.js), says nothing until then, and "start" said
 // aloud starts it. No demo yet, so no "While nobody is playing" row.
@@ -43,6 +45,7 @@ import { quizModule } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
 import { SUITS, RANK_LABEL, RANK_NAME, cardName, shuffled } from '../klondike.js';
 import { autostartFields, START_VOICE } from '../game_start.js';
+import { CARD_DEFAULTS, cardSettingsFields, cardArt, cardVars, watchTheme } from '../card_deck.js';
 
 export const GAME = 'card_sort';
 /** One game; listed so a spoken route's `{ game }` can be checked against it like the others. */
@@ -98,6 +101,9 @@ export const DEFAULTS = Object.freeze({
   // levels are about order, and a suit question every card halves the pace. AGAINST, and it wins: naming
   // suits is the exercise the game came from; one setting drops it.
   askSuit: 'always',
+  // How the cards look (card_deck.js): Design's big faces, four suit colours.
+  cardLayout: CARD_DEFAULTS.cardLayout,
+  suitColours: CARD_DEFAULTS.suitColours,
   answerBy: 'choices',
   autostart: false,
   autostartAlone: 'same',
@@ -117,6 +123,7 @@ const SETTINGS = [
     note: 'At the top level the card is placed among every card done this hand.' },
   { key: 'aces', label: 'Aces', kind: 'choice', default: 'low', level: 'standard',
     options: [{ value: 'low', label: 'Low: an ace is 1' }, { value: 'high', label: 'High: above the king' }] },
+  ...cardSettingsFields(),
   ...adaptiveSettings({ ai: false, startLevels: MAX_LEVEL }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS }),
 ];
@@ -428,10 +435,19 @@ registerModule(
     };
 
     // ---- the view ----
+    // THE THEME ON SCREEN (card_deck.js watchTheme), started in the view's init: the deck the cards wear.
+    let themeWatch = null;
+    const themeNow = () => (themeWatch ? themeWatch.id() : 'default');
+    // The deck's face and suit colours, on this panel's own mount, for the suit buttons (card_sort.css reads them).
+    const paintSuits = () => {
+      try { for (const [k, v] of Object.entries(cardVars(themeNow(), cfgNow))) ctx.mount?.style?.setProperty(k, v); }
+      catch (err) { console.error('card_sort: suit colours', err); }
+    };
+    // Design's drawing (card_deck.js cardArt) inside an element that carries the card's name for a screen reader.
+    // The suit's NAME is written under the cards that are placed (`name`), on the panel, not on the card.
     const cardHtml = (c, { small = false, name = false } = {}) => `<div class="cs-card" data-suit="${c.s}"${small ? ' data-small' : ''} `
-      + `role="img" aria-label="${esc(cardName(c))}"><span class="cs-rank" aria-hidden="true">${esc(RANK_LABEL[c.r])}</span>`
-      + `<span class="cs-pip" aria-hidden="true">${SUIT[c.s].symbol}</span>`
-      + `${name ? `<span class="cs-name" aria-hidden="true">${esc(SUIT[c.s].name)}</span>` : '<span></span>'}</div>`;
+      + `role="img" aria-label="${esc(cardName(c))}">${cardArt({ ...c, up: true }, themeNow(), cfgNow)}`
+      + `${name ? `<span class="cs-name" aria-hidden="true">${esc(SUIT[c.s].name)}</span>` : ''}</div>`;
     const handLine = () => `<p class="cs-hand" data-hand>${done.length} of ${Math.max(2, Number(cfgNow.handSize) || DEFAULTS.handSize)} done this hand</p>`;
 
     const view = {
@@ -468,9 +484,11 @@ registerModule(
       allowAward: () => session.allowAward(),
       scoreDetail: (s) => session.scoreDetail() || (s.asked ? `${s.rightCount} of ${s.asked}` : ''),
       pointNote: (game, item) => `card sort: ${item.kind}`,
-      onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); },
+      onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); paintSuits(); },
       init(a) {
         api = a;
+        themeWatch = watchTheme(ctx.mount, () => { paintSuits(); api?.render(); });
+        paintSuits();
         const doc = ctx.mount?.ownerDocument || (typeof document !== 'undefined' ? document : null);
         try {
           const href = new URL('../card_sort.css', import.meta.url).href;
@@ -481,14 +499,14 @@ registerModule(
           }
         } catch { /* unstyled, still works */ }
       },
-      destroy: () => { session.destroy(); ladderRows.destroy(); },
+      destroy: () => { themeWatch?.stop(); themeWatch = null; session.destroy(); ladderRows.destroy(); },
     };
 
     const inner = quizModule({ type: GAME, title: 'Card sort', scoreLabel: 'Card sort: right answers',
       games: { [GAME]: adapter }, defaults: DEFAULTS, gameKey: 'game', view, startGate: true,
       autostart: DEFAULTS.autostart })(ctx);
     inner.__session = session;
-    inner.__state = () => ({ done: done.slice(), dealt, pending, deckLeft: deck.length });
+    inner.__state = () => ({ done: done.slice(), dealt, pending, deckLeft: deck.length, theme: themeNow() });
     return inner;
   },
 );

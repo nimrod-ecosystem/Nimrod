@@ -1,12 +1,12 @@
 /* card_sort.css — the look of `modules/card_sort.js` (Card sort). Loaded by the module itself, from a
    <link> inside its own mount, the way solitaire.css is.
 
-   *** THE SUIT COLOURS ARE solitaire.css'S TOKENS, NOT NEW ONES. *** A theme that sets `--suit-hearts`
-   (and the other three, and `--card-face` / `--card-edge`) dresses both card games at once; the literal on
-   each declaration line is only the fallback, the same four-colour deck solitaire uses (black spades, red
-   hearts, blue diamonds, green clubs), each better than 4.5:1 on the card face. Design's per-theme playing
-   cards will set these. The colour is never the only signal: every card carries its symbol, and every
-   suit button and small card its NAME as well.
+   *** THE CARDS ARE DESIGN'S DRAWINGS; THE SUIT BUTTONS TAKE THE SAME DECK'S COLOURS. *** Each card is an
+   SVG from `playing_cards.js` (through `card_deck.js`) in the theme's own deck. The module puts that deck's
+   `--card-face`, `--card-edge` and `--suit-*` on its mount (card_deck.js `cardVars`, four colours or two as
+   set), so a suit button is drawn in exactly the ink of the card it names. The literal on each declaration
+   line below is only the fallback for a page with no module around it. The colour is never the only
+   signal: every card carries its rank and suit shape, and every suit button and placed card its NAME.
 
    SIZE: the card being sorted is big (about a third of the panel's height, at least 110px wide on a
    quarter of a 1080p kiosk), the cards it is placed among smaller, and the places between them are
@@ -19,24 +19,22 @@
   --cs-hearts: var(--suit-hearts, #b3261e);
   --cs-diamonds: var(--suit-diamonds, #1f4fd1);
   --cs-clubs: var(--suit-clubs, #17692f);
-  display:grid;justify-items:center;align-content:center;gap:clamp(6px,2cqmin,22px);width:100%;
+  display:grid;justify-items:center;align-content:center;gap:clamp(6px,2cqmin,22px);
+  /* A WIDTH OF ITS OWN, from the panel (`.wg`, the quiz view's size container). It sits in the quiz view's `auto`
+     column, and an element with inline-size containment contributes NO width of its own to an auto column: with
+     `width:100%` the column came out 0px wide, every `cqw` below resolved against 0, the card fell to its 84px floor
+     and hung off the column's left edge (measured 2026-10-10; dev/card_sort_test.html now checks it). */
+  width:56cqw;
   container-type:inline-size;
 }
+@container (max-aspect-ratio: 1/1){.cs-wrap{width:92cqw}}
 .cs-wrap *{box-sizing:border-box}
-.cs-card{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:center;
-  width:clamp(84px,24cqw,220px);aspect-ratio:5/7;padding:.35em .4em;border-radius:clamp(8px,1.6cqw,18px);
-  border:max(2px,.35cqw) solid var(--cs-edge);background:var(--cs-face);font-family:var(--font);line-height:1;
-  box-shadow:0 .2em .5em color-mix(in srgb, var(--text) 25%, transparent)}
-.cs-card[data-small]{width:clamp(48px,11cqw,110px);font-size:.8em}
-.cs-card[data-suit="S"]{color:var(--cs-spades)}
-.cs-card[data-suit="H"]{color:var(--cs-hearts)}
-.cs-card[data-suit="D"]{color:var(--cs-diamonds)}
-.cs-card[data-suit="C"]{color:var(--cs-clubs)}
-.cs-rank{justify-self:start;font-weight:800;font-size:clamp(18px,6cqw,56px)}
-.cs-card[data-small] .cs-rank{font-size:clamp(14px,3.6cqw,34px)}
-.cs-pip{font-size:clamp(34px,13cqw,130px)}
-.cs-card[data-small] .cs-pip{font-size:clamp(20px,6cqw,60px)}
-.cs-name{font-size:clamp(11px,2.2cqw,22px);font-weight:700}
+/* A card: Design's drawing (250 x 350, so 5:7), with the suit's name under it on the panel when asked. */
+.cs-card{display:grid;justify-items:center;gap:.2em;width:clamp(84px,24cqw,220px);font-family:var(--font);line-height:1}
+.cs-card[data-small]{width:clamp(48px,11cqw,110px)}
+.cs-card > svg{display:block;width:100%;height:auto;aspect-ratio:5/7;
+  filter:drop-shadow(0 .15em .3em color-mix(in srgb, var(--text) 25%, transparent))}
+.cs-name{font-size:clamp(11px,2.2cqw,22px);font-weight:700;color:var(--text)}
 .cs-row{display:flex;flex-wrap:wrap;align-items:stretch;justify-content:center;gap:clamp(4px,1cqw,12px);max-width:100%}
 .cs-slot{min-width:max(44px,8cqw);border-radius:clamp(8px,1.4cqw,16px);border:max(2px,.4cqw) dashed var(--accent);
   background:var(--surface);color:var(--text);font:800 clamp(12px,2.4cqw,24px)/1.15 var(--font);cursor:pointer;
