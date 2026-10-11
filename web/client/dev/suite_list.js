@@ -130,6 +130,9 @@ export const SUITES = [
   'solitaire', 'note', 'note_visit', 'weather', 'brickbreaker', 'rhythm', 'avatar', 'avatar_display', 'svg_sanitize',
   // 2026-10-02 late: games wait for Start (autostart a setting), the computer's demo and its players, card sort.
   'game_start', 'card_sort',
+  // 2026-10-10: Design's playing cards for every theme (playing_cards.js, card_deck.js), and Design's theme checklist:
+  // every theme in theme.js answers every required line, or is named on that line's known-gap list.
+  'playing_cards', 'theme_surfaces',
   // brick games (2026-10-09, row 2.76): Brick Drop - our bricks, our wall, one switch, no game over at the easy levels.
   'brickdrop',
   // 2026-10-06: Quiz mix - every kind of question round by round, each player at their own level, on the shared draw.

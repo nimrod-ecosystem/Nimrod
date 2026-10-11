@@ -21,6 +21,8 @@ per-level thresholds. Say it, tap it, or walk it with one switch. Waits for Star
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
+<!-- A panel wearing its own theme: the cards must follow the theme painted on the nearest element above them. -->
+<div id="themed" style="position:absolute;left:-9999px"><div id="host2" style="width:960px;height:540px"></div></div>
 
 <script type="module">
 import { harness, rig, personLadderChecks } from './quiz_test_rig.js';
@@ -33,6 +35,9 @@ import { LADDER_KEY } from '../adaptive_play.js';
 import { ROUTES, routeFor } from '../input_speech.js';
 import { auditFields } from '../settings_audit.js';
 import { normalizeField } from '../settings_fields.js';
+import { cardArt, cardVars } from '../card_deck.js';
+import { cardThemes } from '../playing_cards.js';
+import { applyTheme } from '../theme.js';
 
 const { check, section, finish } = harness();
 const C = (r, s) => ({ r, s });
@@ -135,7 +140,18 @@ try {
       && tiles.every((t) => /[♠♥♦♣]/.test(t.textContent) && /(Spades|Hearts|Diamonds|Clubs)/.test(t.textContent) && t.dataset.suit));
     check('the card itself: big, its rank and symbol, read out by name for a screen reader',
       !!r.host.querySelector(`.cs-card[data-suit="${it.card.s}"][aria-label]`));
-    check('no colour is written into the markup', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(r.host.innerHTML));
+    // 2026-10-10: the card is Design's drawing, which carries its deck's colours. So: no colour anywhere ELSE in the
+    // markup, and the drawing is exactly Design's card in the theme's deck (card_deck.js cardArt), nothing invented here.
+    const artEls = [...r.host.querySelectorAll('svg[data-card-art]')];
+    const outside = r.host.cloneNode(true);
+    outside.querySelectorAll('svg[data-card-art]').forEach((s) => s.remove());
+    check('no colour is written into the markup outside the card\'s own drawing', artEls.length >= 1
+      && !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(outside.innerHTML));
+    const want = document.createElement('div');
+    want.innerHTML = cardArt({ ...it.card, up: true }, r.st().theme, r.inst.impl.__api?.cfg?.() || DEFAULTS);
+    check('*** the card is Design\'s drawing of that card, in the theme\'s deck, hidden from a screen reader (the card element names it) ***',
+      want.firstElementChild.isEqualNode(r.host.querySelector('.cs-card svg[data-card-art]'))
+        && r.host.querySelector('.cs-card svg').getAttribute('aria-hidden') === 'true', r.st().theme);
     r.inst.impl.hear({ text: { S: 'spades', H: 'hearts', D: 'diamonds', C: 'clubs' }[it.card.s], confidence: 0.95 });
     check('*** saying the suit is answering it ***', r.phase() === 'celebrate', r.phase());
     r.timers.flush();
@@ -218,6 +234,52 @@ try {
     const row = r.session().playerRow(r.session().currentPlayer().id, GAME);
     check('*** nine of ten right: up to level 2 ***', row.floor === 2, JSON.stringify(row));
     r.inst.destroy();
+  }
+
+  section('*** the cards are the theme\'s deck, follow the theme, and take the two card settings (2026-10-10) ***');
+  {
+    const m = getManifest(GAME);
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('card faces and suit colours are settings, with Design\'s defaults: big, four colours',
+      f('cardLayout')?.default === 'big' && f('suitColours')?.default === 'four' && DEFAULTS.cardLayout === 'big' && DEFAULTS.suitColours === 'four');
+    const outer = document.getElementById('themed');
+    applyTheme(outer, 'christmas');
+    const r = R({}, { hostId: 'host2' });
+    const it = r.item();
+    const art = () => r.host.querySelector('.cs-card svg[data-card-art]');
+    const stockOf = () => art()?.querySelector('rect')?.getAttribute('fill');
+    check('a panel wearing Christmas draws the Christmas deck', r.st().theme === 'christmas' && stockOf() === cardThemes.christmas.stock, `${r.st().theme} ${stockOf()}`);
+    // The module adds card_sort.css itself; measured only once it has loaded.
+    const link = document.querySelector('link[data-card-sort-css]');
+    if (link && !link.sheet) await new Promise((res) => { link.addEventListener('load', res); link.addEventListener('error', res); setTimeout(res, 3000); });
+    const tileInk = (s) => getComputedStyle(r.host.querySelector(`.cs-suit[data-suit="${s}"]`)).color;
+    const toHex = (c) => '#' + (String(c).match(/[\d.]+/g) || []).slice(0, 3).map((x) => Math.round(Number(x)).toString(16).padStart(2, '0')).join('');
+    check('*** the suit buttons are drawn in the same deck\'s inks as the card ***',
+      ['H', 'D', 'C', 'S'].every((s) => toHex(tileInk(s)) === cardThemes.christmas.suits[{ H: 'hearts', D: 'diamonds', C: 'clubs', S: 'spades' }[s]].toLowerCase()),
+      ['H', 'D', 'C', 'S'].map((s) => toHex(tileInk(s))).join(' '));
+    applyTheme(outer, 'cyberpunk');
+    await new Promise((res) => setTimeout(res, 0));
+    check('*** the theme changes and the card is redrawn in the new deck, with nothing pressed ***',
+      r.st().theme === 'cyberpunk' && stockOf() === cardThemes.cyberpunk.stock && r.item() === it, `${r.st().theme} ${stockOf()}`);
+    check('...and the suit buttons follow it', toHex(tileInk('H')) === cardThemes.cyberpunk.suits.hearts.toLowerCase(), toHex(tileInk('H')));
+    // SIZE (card_sort.css's header: "at least 110px wide on a quarter of a 1080p kiosk"), measured in this 960 x 540
+    // panel: the card is that wide, and sits inside the panel rather than hanging off the left of its column.
+    const hostBox = r.host.getBoundingClientRect();
+    const cardBox = r.host.querySelector('.cs-card svg').getBoundingClientRect();
+    check(`*** the card being sorted is ${Math.round(cardBox.width)}px wide (110px+) and inside the panel ***`,
+      cardBox.width >= 110 && cardBox.left >= hostBox.left - 0.5 && cardBox.right <= hostBox.right + 0.5 && cardBox.bottom <= hostBox.bottom + 0.5,
+      JSON.stringify({ card: [cardBox.left - hostBox.left, cardBox.width, cardBox.bottom - hostBox.top] }));
+    r.setCfg({ suitColours: 'two' });
+    const v = cardVars('cyberpunk', { suitColours: 'two' });
+    check('*** two colours: diamonds take the hearts\' red on the buttons, clubs the spades\' ink ***',
+      toHex(tileInk('D')) === v['--suit-hearts'].toLowerCase() && toHex(tileInk('C')) === v['--suit-spades'].toLowerCase(),
+      `${toHex(tileInk('D'))} ${toHex(tileInk('C'))}`);
+    r.setCfg({ cardLayout: 'classic' });
+    const want = document.createElement('div');
+    want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'classic', suitColours: 'two' });
+    check('classic faces: the card is redrawn as Design\'s classic layout', want.firstElementChild.isEqualNode(art()));
+    r.inst.destroy();
+    applyTheme(outer, 'default');
   }
 
   section('*** THE LEVEL FOLLOWS THE PERSON, with "Start this game at" and their usual start (2026-10-06) ***');

@@ -40,7 +40,9 @@ import {
   solve, cardName, cardShort, homeCount, legalMoves,
 } from '../klondike.js';
 import { GAME, DEFAULTS, whereKey, placeWords, cardWords } from '../modules/solitaire.js';
-import { THEMES, applyTheme, worstContrast } from '../theme.js';
+import { THEMES, applyTheme, worstContrast, contrast as hexContrast } from '../theme.js';
+import { cardArt, deckFor, cardSettingsFields } from '../card_deck.js';
+import { cardThemes } from '../playing_cards.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -325,30 +327,110 @@ try {
       && DEFAULTS.sayAloud === false && DEFAULTS.showStats === false);
   }
 
-  section('*** the suits: four colours AND their symbols ***');
+  // 2026-10-10: the cards are Design's drawings (playing_cards.js through card_deck.js). What this suite checks is
+  // that the TABLE draws them, in the theme's deck and its own settings; every deck in every theme is measured in
+  // dev/playing_cards_test.html.
+  section('*** the suits: four colours AND their shapes, in Design\'s cards ***');
   {
     const t = mount({ host: scratch(960, 540) });
     await cssReady(t.host);
-    // Deal a game where every suit is face up somewhere: walk the solver's line until it is.
     t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    const p = t.probe();
+    const same = (el, c, themeId) => {
+      const want = document.createElement('div');
+      want.innerHTML = cardArt(c, themeId, p.cfg);   // a face has no pattern id, so no per-table suffix to match
+      const got = el.querySelector(':scope > svg');
+      return !!got && want.firstElementChild.isEqualNode(got);
+    };
     const faces = [...t.host.querySelectorAll('.sol-card[data-up="1"]')];
-    check('every face-up card shows its rank AND suit symbol as text', faces.length > 0 && faces.every((el) => {
-      const s = SUITS.find((x) => x.id === el.dataset.suit);
-      return el.textContent.includes(s.symbol) && el.querySelector('.sol-idx')?.textContent.includes(s.symbol);
-    }));
-    check('...and its name for a screen reader', faces.every((el) => /^(ace|[0-9]+|jack|queen|king) of (spades|hearts|diamonds|clubs)$/.test(el.getAttribute('aria-label'))));
-    // Render one card of each suit to measure the colours.
-    const probeHost = document.createElement('div');
-    probeHost.className = 'sol-wrap';
-    probeHost.innerHTML = SUITS.map((s) => `<div class="sol"><div class="sol-card" data-up="1" data-suit="${s.id}">x</div></div>`).join('');
-    t.host.append(probeHost);
-    const cs = [...probeHost.querySelectorAll('.sol-card')].map((el) => getComputedStyle(el));
-    const colours = cs.map((c) => c.color);
-    check('four DIFFERENT suit colours', new Set(colours).size === 4, colours.join(' | '));
-    const ratios = cs.map((c) => contrast(c.color, c.backgroundColor));
-    check('*** each suit reads at 4.5:1 or better on the card face ***', ratios.every((r) => r >= 4.5), ratios.map((r) => r.toFixed(1)).join(', '));
-    check('red suits are not the same red (hearts and diamonds are told apart by colour too)', colours[1] !== colours[2]);
-    probeHost.remove();
+    const cardOf = (el) => ({ s: el.dataset.suit, r: Number(el.dataset.card.slice(1)), up: true });
+    check('the table follows a page with no theme on it as the default theme, and wears the Nimrod deck',
+      p.theme === 'default' && deckFor(p.theme) === 'nimrod', p.theme);
+    check('*** every face-up card IS Design\'s drawing of that card, in the theme\'s deck and the table\'s settings ***',
+      faces.length > 0 && faces.every((el) => same(el, cardOf(el), p.theme)), String(faces.length));
+    check('every card\'s drawing has its rank as text and its suit as a shape (index top-left and turned bottom-right)',
+      faces.every((el) => { const svg = el.querySelector('svg'); const r = el.dataset.card.slice(1);
+        const rank = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[r] || r;
+        return [...svg.querySelectorAll('text')].filter((x) => x.textContent === rank).length >= 2 && svg.querySelectorAll('path').length >= 3; }));
+    check('...its name for a screen reader on the card, and the drawing hidden so it is not read twice',
+      faces.every((el) => /^(ace|[0-9]+|jack|queen|king) of (spades|hearts|diamonds|clubs)$/.test(el.getAttribute('aria-label'))
+        && el.querySelector('svg').getAttribute('aria-hidden') === 'true' && !el.querySelector('svg').hasAttribute('aria-label')));
+    const backs = [...t.host.querySelectorAll('.sol-card[data-up="0"]')];
+    check('every face-down card is the theme\'s back, drawn', backs.length >= 21 && backs.every((el) => el.querySelector('svg pattern, svg rect')
+      && el.getAttribute('aria-label') === 'face down'));
+    // The four inks, read off the drawn corner index.
+    const ink = (s) => cardArt({ s, r: 7, up: true }, 'default', p.cfg).match(/<text[^>]*fill="(#[0-9a-fA-F]{6})"/)[1];
+    const inks = SUITS.map((s) => ink(s.id));
+    check('four DIFFERENT suit colours by default (hearts, diamonds, clubs, spades)', new Set(inks).size === 4, inks.join(' | '));
+    const stock = cardThemes.nimrod.stock;
+    const ratios = inks.map((c) => hexContrast(c, stock));
+    check('*** each suit reads at 4.5:1 or better on the default deck\'s face ***', ratios.every((r) => r >= 4.5), ratios.map((r) => r.toFixed(2)).join(', '));
+    t.inst.destroy();
+  }
+
+  section('*** the cards change with the theme, on the page or on a panel wearing its own ***');
+  {
+    const outer = document.createElement('div');
+    outer.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.append(outer);
+    applyTheme(outer, 'halloween');
+    const host = document.createElement('div');
+    host.style.cssText = 'width:960px;height:540px';
+    outer.append(host);
+    const t = mount({ host });
+    await cssReady(t.host);
+    check('a panel wearing Halloween gets the Halloween deck', t.probe().theme === 'halloween'
+      && !!t.host.querySelector(`.sol-card[data-up="0"] svg pattern[id^="nc-halloween-"]`), t.probe().theme);
+    applyTheme(outer, 'cyberpunk');
+    await sleep(0);
+    const back = t.host.querySelector('.sol-card[data-up="0"] svg');
+    check('*** the theme changes and the cards are redrawn in the new deck, with nothing pressed ***', t.probe().theme === 'cyberpunk'
+      && !!back.querySelector('pattern[id^="nc-cyberpunk-"]')
+      && t.host.querySelector('.sol-card[data-up="1"] svg rect')?.getAttribute('fill') === cardThemes.cyberpunk.stock, t.probe().theme);
+    applyTheme(outer, 'dusk');
+    await sleep(0);
+    check('a theme Design has not drawn (dusk) wears the Nimrod deck, not a broken one', t.probe().theme === 'dusk'
+      && !!t.host.querySelector('svg pattern[id^="nc-nimrod-"]'));
+    // Every back on one table shares one pattern; two tables never share one (a hidden page's copy would blank it).
+    const ids = new Set([...t.host.querySelectorAll('svg pattern')].map((x) => x.id));
+    const other = mount({ host: scratch(960, 540) });
+    const ids2 = new Set([...other.host.querySelectorAll('svg pattern')].map((x) => x.id));
+    check('every back on a table shares one pattern id, and another table on the page uses its own',
+      ids.size === 1 && ids2.size === 1 && ![...ids].some((id) => ids2.has(id)), `${[...ids]} / ${[...ids2]}`);
+    other.inst.destroy();
+    t.inst.destroy();
+    applyTheme(outer, 'default');
+    check('a destroyed table stops following the theme (no error, nothing redrawn into a dead mount)', true);
+    outer.remove();
+  }
+
+  section('*** the cards\' two settings: big or classic faces, four or two suit colours ***');
+  {
+    const rows = getManifest(GAME).settings;
+    check('both are settings, with Design\'s defaults: big faces, four colours', DEFAULTS.cardLayout === 'big' && DEFAULTS.suitColours === 'four'
+      && rows.find((r) => r.key === 'cardLayout')?.default === 'big' && rows.find((r) => r.key === 'suitColours')?.default === 'four'
+      && JSON.stringify(cardSettingsFields().map((f) => f.key)) === JSON.stringify(['cardLayout', 'suitColours']));
+    const t = mount({ host: scratch(960, 540), saved: { autoMove: 'off' } });
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    const pipsOn = (el) => el.querySelector('svg').querySelectorAll('path').length;
+    const numbered = () => [...t.host.querySelectorAll('.sol-card[data-up="1"]')].find((el) => { const r = Number(el.dataset.card.slice(1)); return r >= 4 && r <= 10; });
+    const n0 = numbered();
+    check('a dealt number card to look at', !!n0, 'none between 4 and 10 face up');
+    if (n0) {
+      const r = Number(n0.dataset.card.slice(1));
+      check(`big (the default): one suit shape in the middle and two in the corners (${pipsOn(n0)})`, pipsOn(n0) === 3);
+      t.state.set({ cardLayout: 'classic' });
+      const n1 = t.host.querySelector(`.sol-card[data-card="${n0.dataset.card}"]`);
+      check(`*** classic: ${r} suit marks in the middle, plus the two corners (${pipsOn(n1)}) ***`, pipsOn(n1) === r + 2);
+    }
+    t.state.set({ suitColours: 'two' });
+    const two = cardArt({ s: 'D', r: 7, up: true }, 'default', t.probe().cfg);
+    const fill = (svg) => svg.match(/<text[^>]*fill="(#[0-9a-fA-F]{6})"/)[1];
+    check('*** two colours: a diamond is drawn in the hearts\' red, a club in the spades\' ink ***', t.probe().cfg.suitColours === 'two'
+      && fill(two) === cardThemes.nimrod.suits.hearts && fill(cardArt({ s: 'C', r: 7, up: true }, 'default', t.probe().cfg)) === cardThemes.nimrod.suits.spades);
+    check('...and the table redrew in it', [...t.host.querySelectorAll('.sol-card[data-suit="D"][data-up="1"] svg text')].every((x) => x.getAttribute('fill') === cardThemes.nimrod.suits.hearts));
+    t.state.set({ cardLayout: 'nonsense', suitColours: 'nonsense' });
+    check('a value that is neither falls back to the default rather than drawing nothing', !!t.host.querySelector('.sol-card[data-up="1"] svg text'));
     t.inst.destroy();
   }
 
@@ -360,15 +442,60 @@ try {
     check(`*** a card is at least 110px wide in a 960 × 540 panel *** (${Math.round(w)}px)`, w >= 110, String(w));
     const cols = [...t.host.querySelectorAll('.sol-col')].map((c) => c.getBoundingClientRect());
     check('all seven columns fit across without scrolling', cols.length === 7 && cols[6].right <= 960 + 1, String(cols[6]?.right));
-    const idx = t.host.querySelector('.sol-card[data-up="1"] .sol-idx');
-    const fs = parseFloat(getComputedStyle(idx).fontSize);
-    check(`the corner rank and suit are big (${Math.round(fs)}px)`, fs >= 30);
+    // Design's corner index is about a fifth of the card's width: "20px tall on a 110px kiosk card" (their README).
+    // Measured as drawn: the corner rank's own box, in px. (The old text face's rank was .3 of the width; Design's
+    // is smaller in the corner and puts one big rank and suit in the middle instead.)
+    // The corner rank is the text on Design's index baseline (y 56); the first <text> is the big middle one.
+    const idx = t.host.querySelector('.sol-card[data-up="1"] svg text[y="56"]');
+    const ih = idx ? idx.getBoundingClientRect().height : 0;
+    check(`the corner rank is big enough to read on a strip: ${Math.round(ih)}px tall on a ${Math.round(w)}px card (20px+ at 110px)`,
+      ih >= 20 * (w / 110) * 0.95, String(ih));
     t.inst.destroy();
     const big = mount({ host: scratch(1280, 720) });
     await cssReady(big.host);
     const w2 = big.host.querySelector('.sol-card')?.getBoundingClientRect().width || 0;
     check(`a whole 1280 × 720 panel gets bigger cards still (${Math.round(w2)}px)`, w2 > w);
     big.inst.destroy();
+
+    // A face-up card covered by the next one is seen only as a strip: the strip should hold its WHOLE corner index,
+    // rank and suit shape, which end .297 of the way down Design's card (104 of 350). Played to the first column
+    // with two face-up cards in it, on the known deal, in a panel tall enough that the column has room, and in the
+    // 960 x 540 quarter screen, where a long column has to close up to fit (`--sol-step`'s second term).
+    const strip = async (w, h) => {
+      const s = mount({ host: scratch(w, h), saved: { autoMove: 'off' } });
+      await cssReady(s.host);
+      s.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+      const covered = () => s.probe().game.tableau.findIndex((p) => p.filter((c) => c.up).length >= 2);
+      for (const m of (solution || []).slice(0, 60)) {
+        if (covered() >= 0) break;
+        for (const key of moveKeys(m)) walkTo(s, key);
+      }
+      const col = covered();
+      let r = null;
+      if (col >= 0) {
+        const colEl = s.host.querySelector(`.sol-col[data-pile="t${col}"]`);
+        const cards = [...colEl.querySelectorAll('.sol-card[data-up="1"]')];
+        const [a, b] = cards.slice(-2).map((el) => el.getBoundingClientRect());
+        const span = Number(colEl.style.getPropertyValue('--sol-span')) || 1;
+        const room = (s.host.querySelector('.sol-cols').getBoundingClientRect().height - a.height) / Math.max(span, 1);
+        r = { shown: (b.top - a.top) / a.height, step: b.top - a.top, want: Math.min(a.height * 0.30, room), ch: a.height };
+      }
+      s.inst.destroy();
+      return r;
+    };
+    const tall = await strip(960, 1400);
+    check('a column with one face-up card over another, to measure', !!tall);
+    if (tall) {
+      check(`*** with room, a covered card shows its whole corner index: ${(tall.shown * 100).toFixed(1)}% of it shows, the index needs 29.7% ***`,
+        tall.shown >= 104 / 350 - 0.002, `${tall.step}px of ${tall.ch}px`);
+    }
+    const quarter = await strip(960, 540);
+    if (quarter) {
+      // NOT a pass for a hidden shape: this holds the fan to exactly as tight as the column's length forces, and
+      // names how much shows. Below 29.7% the rank still shows and the suit shape under it does not (reported).
+      check(`at 960 x 540 a long column closes up only as far as it must (${(quarter.shown * 100).toFixed(1)}% of each covered card shows${quarter.shown < 0.297 ? ': the rank, not the suit shape under it' : ''})`,
+        Math.abs(quarter.step - quarter.want) <= 1.5, `${quarter.step}px vs ${quarter.want}px`);
+    }
   }
 
   // =====================================================================

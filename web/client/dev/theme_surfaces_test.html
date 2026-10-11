@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>theme surfaces — every theme answers every required line of Design's checklist — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>theme surfaces (Claude Design's theme checklist, 2026-10-10)</h1>
+<p>Design: <i>"When a theme is added, every line below needs an answer for it."</i> Mike's standing rule: when a
+decision is made, the question is what test proves it. This suite is that test, for every line Code can check
+from data: every theme in <code>theme.js</code> is on the checklist (<code>theme_surfaces.js</code>
+<code>siteThemes</code>), and every theme answers every <b>required</b> line, or is named on that line's
+known-gap list below. A NEW theme missing a required surface fails here; today's gaps are named, not hidden; and
+a gap that gets filled fails until it is crossed off, so the lists only shrink.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { themeSurfaces, knownCoverage, siteThemes } from '../theme_surfaces.js';
+import { THEMES, applyTheme, panelHalo, onColor, worstContrast } from '../theme.js';
+import { BOARD_BASE } from '../live_themes.js';
+import { BRICK_COLOURS } from '../brick_colours.js';
+import { cardThemes } from '../playing_cards.js';
+import { hasOwnDeck, cardArt } from '../card_deck.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const isHex = (v) => /^#[0-9a-f]{6}$/i.test(String(v || '').trim());
+
+// *** THE THEMES AS OF 2026-10-10, WRITTEN OUT, NOT READ FROM theme.js. *** A gap list that said "every theme" by
+// reading THEMES would quietly take in a theme added tomorrow, which is exactly the theme this suite exists to stop.
+const TODAY = Object.freeze(['default', 'dusk', 'contrast', 'warm', 'forge', 'fall', 'steampunk', 'cyberpunk', 'cozy',
+  'winter', 'ocean', 'night', 'spring', 'summer', 'newYear', 'lunarNewYear', 'valentines', 'stPatricks', 'easter',
+  'july4', 'halloween', 'diwali', 'harvest', 'hanukkah', 'christmas']);
+const STILL_ORIGINALS = Object.freeze(['default', 'dusk', 'contrast', 'warm', 'forge']);
+const UNDRAWN = Object.freeze(['dusk', 'contrast', 'warm', 'forge']);   // the four Design has no art for
+
+// *** HOW EACH REQUIRED LINE IS ANSWERED, FROM DATA. *** true, or the reason it is not. A required line Design adds
+// that has no entry here fails the suite: somebody has to decide how it is checked (or say it cannot be).
+const PALETTE = ['--bg', '--surface', '--surface-alt', '--text', '--text-soft', '--text-muted', '--border', '--accent', '--link'];
+const BOARD_KEYS = Object.keys(BOARD_BASE);
+const scratch = document.createElement('div');
+const CHECKS = {
+  // bg, surface, surface-alt, text, text-soft, text-muted, border, accent, link as colours; on-accent and on-link
+  // (applyTheme derives them, theme.js onColor); and "whether it is dark" saying the same as its own --bg.
+  site: (id) => {
+    const t = THEMES[id], v = t.vars;
+    const missing = PALETTE.filter((k) => !isHex(v[k]));
+    if (missing.length) return `no ${missing.join(', ')}`;
+    applyTheme(scratch, id);
+    if (!scratch.style.getPropertyValue('--on-accent') || !scratch.style.getPropertyValue('--on-link')) return 'no on-accent / on-link';
+    const darkBg = onColor(v['--bg']) === '#ffffff';
+    if (!!t.dark !== darkBg) return `dark is ${!!t.dark} but its --bg ${v['--bg']} reads as ${darkBg ? 'dark' : 'light'}`;
+    return true;
+  },
+  scene: (id) => (THEMES[id].scene ? true : 'no live scene'),
+  // theme.js panelHalo: a scene theme's own --board-halo, else derived from its --text. Every theme gets one.
+  halo: (id) => (panelHalo(THEMES[id]) ? true : 'no halo'),
+  // Its own board tokens: every --board-* there, and not simply BASE's copy of the board's pinned defaults
+  // (which ARE the default theme's own).
+  tokens: (id) => {
+    const v = THEMES[id].vars;
+    if (!BOARD_KEYS.every((k) => v[k])) return 'missing board tokens';
+    return id === 'default' || BOARD_KEYS.some((k) => v[k] !== BOARD_BASE[k]) ? true : 'the board\'s pinned defaults, not tokens of its own';
+  },
+  cards: (id) => {
+    if (!hasOwnDeck(id)) return 'wears the Nimrod deck (none drawn for it)';
+    const back = cardArt({ s: 'S', r: 1, up: false }, id), face = cardArt({ s: 'H', r: 12, up: true }, id);
+    return back.includes('<pattern') && face.includes('>Q</text>') ? true : 'a back or a face did not draw';
+  },
+  // Brick colours (brick_colours.js, five a theme) AND the rhythm tiles (rhythm.css reads --floor-tile).
+  bricks: (id) => {
+    if (!own(BRICK_COLOURS, id)) return 'no brick colours of its own';
+    return THEMES[id].vars['--floor-tile'] ? true : 'no rhythm tile colours (--floor-tile)';
+  },
+  // Design's marks are drawn "from --good / --bad", each passing 3:1 on the theme's surfaces.
+  marks: (id) => {
+    const v = THEMES[id].vars;
+    if (!isHex(v['--good']) || !isHex(v['--bad'])) return 'no --good / --bad';
+    return worstContrast(v['--good'], v) >= 3 && worstContrast(v['--bad'], v) >= 3 ? true : '--good / --bad under 3:1';
+  },
+  // Brick materials (wall, wood, soft, accent: base, seam, finish) are not in the site's data for any theme yet:
+  // they are on Design's oct-2-asks sheet, not moved into a module. When they land, this line becomes the check.
+  materials: () => 'no brick materials in the site\'s data yet',
+};
+
+// *** TODAY'S KNOWN GAPS, BY LINE, EACH WITH WHY. *** Named so they are seen, not hidden. A theme NOT on a line's list
+// must answer it; a theme on the list that now answers it fails too, so the list is crossed off rather than left to rot.
+const KNOWN_GAPS = {
+  scene: { ids: STILL_ORIGINALS, why: 'the five still themes that came before Design\'s live ones have no animated scene' },
+  tokens: { ids: UNDRAWN, why: 'the four still themes Design has not drawn use the board\'s own pinned colours' },
+  cards: { ids: UNDRAWN, why: 'the four still themes Design has not drawn wear the Nimrod deck (card_deck.js deckFor)' },
+  bricks: { ids: TODAY, why: 'brick colours are there for every theme (brick_colours.js); no theme sets the rhythm tiles (--floor-tile) yet. Design\'s sheet has them for three' },
+  marks: { ids: TODAY, why: 'no theme defines --good / --bad yet; today\'s marks are answer_mark.js\'s placeholder in the text colour on the ok/bad washes, which theme_test.html measures in every theme' },
+  materials: { ids: TODAY, why: 'no theme carries brick materials in the site\'s data yet; Design\'s sheet has them for five' },
+};
+
+try {
+  section('*** every theme in theme.js is on the checklist ***');
+  {
+    const site = Object.keys(THEMES);
+    const listed = Object.keys(siteThemes);
+    const notListed = site.filter((id) => !listed.includes(id));
+    check(`*** every theme in theme.js (${site.length}) is in theme_surfaces.js siteThemes ***`, notListed.length === 0,
+      `not on the checklist: ${notListed.join(', ')} - add it to siteThemes and walk every line below for it`);
+    const stale = listed.filter((id) => !site.includes(id));
+    check('...and siteThemes names no theme theme.js no longer has', stale.length === 0, stale.join(', '));
+    const badDesign = listed.filter((id) => siteThemes[id] !== null && !own(cardThemes, siteThemes[id]));
+    check('every Design id in siteThemes is one of Design\'s decks (21: their whole set)', badDesign.length === 0, badDesign.join(', '));
+    check('the themes with no Design id are exactly the four still themes Design has not drawn',
+      listed.filter((id) => siteThemes[id] === null).join() === UNDRAWN.join());
+    const extra = site.filter((id) => !TODAY.includes(id));
+    check(`themes added since 2026-10-10 (${extra.length ? extra.join(', ') : 'none'}): each is held to every line below, with no gap list to hide in`, true);
+  }
+
+  section('the checklist itself (Design\'s data)');
+  {
+    const ids = themeSurfaces.map((r) => r.id);
+    check(`${themeSurfaces.length} lines, each with a unique id`, new Set(ids).size === ids.length && ids.length >= 19);
+    check('each line says what it needs: required, shared, optional or process', themeSurfaces.every((r) => ['required', 'shared', 'optional', 'process'].includes(r.need)));
+    const req = themeSurfaces.filter((r) => r.need === 'required').map((r) => r.id);
+    const unchecked = req.filter((id) => !CHECKS[id]);
+    check(`*** every REQUIRED line (${req.join(', ')}) has a check here ***`, unchecked.length === 0,
+      `no check yet for: ${unchecked.join(', ')} - Design added a required line; decide how it is checked from data`);
+    check('every line with a known-gap list is a required line', Object.keys(KNOWN_GAPS).every((k) => req.includes(k)));
+    check('Design\'s knownCoverage names only Design ids', Object.values(knownCoverage).flat()
+      .filter((id) => !['color', 'mono'].includes(id)).every((id) => own(cardThemes, id)));
+    console.log('lines a person checks once per theme (process):', themeSurfaces.filter((r) => r.need === 'process').map((r) => r.label).join(', '));
+  }
+
+  // One required line over every theme in THEMES: who answers it, who is a named gap, who fails, who filled a gap.
+  const evaluate = (row) => {
+    const fn = CHECKS[row.id];
+    const gaps = KNOWN_GAPS[row.id]?.ids || [];
+    const fails = [], filled = [], named = [];
+    let answered = 0;
+    for (const id of Object.keys(THEMES)) {
+      let res;
+      try { res = fn(id); } catch (err) { res = `threw: ${err && err.message}`; }
+      if (res === true) {
+        answered++;
+        if (gaps.includes(id)) filled.push(id);
+      } else if (gaps.includes(id)) named.push(id);
+      else fails.push(`${id}: ${res}`);
+    }
+    return { fails, filled, named, answered };
+  };
+
+  section('*** the check catches a new theme (a theme added for one run, then taken out again) ***');
+  {
+    // A theme written the quick way: Nimrod's palette copied, nothing else. It must fail the lines it has not answered.
+    THEMES.zzNew = { label: 'A new theme', vars: { ...THEMES.default.vars } };
+    let r;
+    try {
+      r = Object.fromEntries(themeSurfaces.filter((x) => x.need === 'required' && CHECKS[x.id]).map((x) => [x.id, evaluate(x)]));
+    } finally { delete THEMES.zzNew; }
+    const failsFor = (row) => r[row].fails.some((f) => f.startsWith('zzNew:'));
+    check('a new theme not in siteThemes would fail the first check', !Object.keys(siteThemes).includes('zzNew'));
+    check('*** ...and fails "Playing cards" (no deck drawn), "Live scene", the gaps every theme has, and nothing it answers ***',
+      failsFor('cards') && failsFor('scene') && failsFor('bricks') && failsFor('marks') && failsFor('materials')
+        && !failsFor('site') && !failsFor('halo'),
+      Object.entries(r).map(([k, v]) => `${k}:${v.fails.filter((f) => f.startsWith('zzNew:')).length}`).join(' '));
+    check('the probe theme is gone again', !('zzNew' in THEMES));
+  }
+
+  section('*** every theme answers every required line, or is named on its known-gap list ***');
+  for (const row of themeSurfaces.filter((r) => r.need === 'required')) {
+    if (!CHECKS[row.id]) continue;
+    const { fails, filled, named, answered } = evaluate(row);
+    check(`*** ${row.label} (${row.id}): ${answered} of ${Object.keys(THEMES).length} themes answer it${named.length ? `; known gap for ${named.length}` : ''} ***`,
+      fails.length === 0, fails.join(' | '));
+    if (named.length) check(`...the ${row.id} gap, named: ${named.length === TODAY.length ? 'every theme of 2026-10-10' : named.join(', ')} (${KNOWN_GAPS[row.id].why})`, true);
+    check(`...no theme on the ${row.id} gap list has quietly filled it`, filled.length === 0,
+      `${filled.join(', ')} now answer "${row.label}": take them off KNOWN_GAPS.${row.id}`);
+  }
+
+  section('the gap lists themselves');
+  {
+    const bad = Object.entries(KNOWN_GAPS).flatMap(([row, g]) => g.ids.filter((id) => !TODAY.includes(id)).map((id) => `${row}:${id}`));
+    check('a gap list only ever names themes of 2026-10-10 (a new theme answers every line, or someone writes it in here, in a diff a reviewer sees)', bad.length === 0, bad.join(', '));
+    check('every gap says why', Object.values(KNOWN_GAPS).every((g) => g.why && g.why.length > 20));
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>
