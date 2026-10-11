@@ -45,6 +45,7 @@ import {
   subfoldersField, listOptions, withListOptions, albumField, createAlbumChooser, topFoldersLister, mediaUrl,
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
+import { pick as rngPick, record } from '../rng.js';   // the shared weighted picker, as Photos uses
 // hide picture (photos.js): a picture hidden from the slideshow is never made into a mosaic either.
 import { deviceHiddenPictures, pictureKey } from '../hidden_pictures.js';
 import { autostartFields, shouldAutostart, panelAlone, createPlayWatch, START_VOICE, ensureStartStyle, startOverlayHtml } from '../game_start.js';
@@ -247,6 +248,9 @@ registerModule(
     let pixels = null;          // the picture read, kept so a change of colours re-matches without reading it again
     let knownSources = [];
     let recent = [];
+    // The shared weighted picker's counts for this panel (rng.js: freshness, recency, folder diversity). Page memory
+    // only: a mosaic takes minutes, so the few pictures one panel builds in a day need no play log of their own.
+    let pickStats = {};
     let loadSeq = 0;
     let buildTimer = null, holdTimer = null;
     let rootEl = null, canvas = null, sayEl = null, overlayEl = null;
@@ -325,7 +329,15 @@ registerModule(
       if (!shown.length) return { why: 'empty' };
       const fresh = shown.filter((it) => !recent.includes(`${source.id}:${it.path || it.url}`));
       const pool = fresh.length ? fresh : shown;
-      const it = pool[Math.min(pool.length - 1, Math.floor((rand() || 0) * pool.length))];
+      // Mike, 2026-10-10: "Are we using our universal random function for the picture slideshow?" Photos does; so does
+      // this now. The last RECENT stay out (above); among the rest, rng.js's pick() favours pictures not built yet and
+      // spreads the picks across folders (each picture's folder is its diversity channel), as Photos does.
+      const keyOf = (x) => `${source.id}:${x.path || x.url}`;
+      const byKey = new Map(pool.map((x) => [keyOf(x), x]));
+      const channels = {};
+      for (const [k, x] of byKey) { const path = String(x.path || x.url || ''); channels[k] = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''; }
+      const chosen = rngPick([...byKey.keys()], pickStats, { now: Date.now(), rand, recent, channels });
+      const it = byKey.get(chosen) || pool[0];
       const url = it.url || (source.base_url ? mediaUrl(source.base_url, it.path) : '');
       if (!url) return { why: 'unreadable' };
       return { url, label: it.name || it.path || 'A picture', key: `${source.id}:${it.path || it.url}`, sourceId: source.id };
@@ -342,7 +354,7 @@ registerModule(
         try { px = await read(pick.url, { cols: Number(cfg.cols) || DEFAULTS.cols }); }
         catch (err) { console.warn('brickmosaic: reading the picture', err); pick = { why: 'unreadable' }; }
         if (dead || seq !== loadSeq) return;
-        if (px) { recent = [...recent, pick.key].slice(-RECENT); picture = { label: pick.label, url: pick.url, sourceId: pick.sourceId, why: null }; }
+        if (px) { recent = [...recent, pick.key].slice(-RECENT); pickStats = record(pickStats, pick.key, Date.now()); picture = { label: pick.label, url: pick.url, sourceId: pick.sourceId, why: null }; }
       }
       if (!px) {
         const why = (pick && pick.why) || 'failed';
