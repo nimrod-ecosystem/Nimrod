@@ -384,6 +384,12 @@ try {
     check('*** a picture the browser will not let the page read: the built-in picture instead, never a blank ***',
       shut.probe().picture?.why === 'unreadable' && shut.probe().picture.url === SAMPLE_URL && shut.probe().total > 0);
     shut.inst.destroy();
+
+    // Mike, 2026-10-10: "Are we using our universal random function for the picture slideshow?" Photos does (rng.js);
+    // the mosaic's pick goes through the same picker, so freshness and folder spread are one rule site-wide.
+    const src = await (await fetch('../modules/brickmosaic.js', { cache: 'no-store' })).text();
+    check('*** the picture is chosen by the shared weighted picker (rng.js), as Photos chooses ***',
+      /import\s*\{[^}]*\bpick as rngPick\b[^}]*\}\s*from\s*'\.\.\/rng\.js'/.test(src) && /rngPick\(\[\.\.\.byKey\.keys\(\)\]/.test(src));
   }
 
   section('*** the colours are the THEME\'s brick colours, read off the panel ***');
