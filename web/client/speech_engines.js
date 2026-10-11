@@ -86,6 +86,19 @@ export const LOCAL_URL = 'ws://127.0.0.1:8797/speech';
 export const PASS_SLOTS = ['local', 'remote1', 'remote2'];
 export const PASS_CHOICES = ['none', ...PASS_SLOTS];
 export const EAR_CHOICES = ['room', 'both', 'phone'];
+// WHICH OF THIS SCREEN'S OWN MICROPHONES HEARS SPEECH (2026-10-10, Mike: "Should we somehow have both mics be
+// active?"). The room's microphone used to be one device: whichever the screen's microphone list chose, the same one
+// a call uses. Now a person can name another for speech ('chosen': a webcam hears commands while calls keep a
+// speakerphone), or hear BOTH ('both'): each is its own ear - its own utterances, its own socket to each recogniser -
+// and the ranker below already makes two ears hearing one moment into ONE group: one command, one caption line. Its
+// words are the ear that heard the voice clearly more clearly (createRanker `clearerDb`), else the surer one.
+//   FOR 'both': where the microphones will sit in a room is unknown, and two places beat a guess at one.
+//   AGAINST, and why it is OFF by default: twice the recognising (on a Pi 400 the open small model was measured at
+//   about real time for ONE microphone, so two may not keep up beside the screen itself - measure on the bench before
+//   turning it on there); a microphone with no echo cancelling also hears the screen's own speaker; and a recogniser's
+//   confidence is a weak judge of which ear was right (Vosk said 1.0 for wrong words in row 2.28), which is why
+//   clearness comes first between two of the screen's own microphones.
+export const MIC_CHOICES = ['default', 'chosen', 'both'];
 
 // Every number here is a DEFAULT and a person's setting (SPEECH_PASS_FIELDS), each argued.
 export const ENGINE_DEFAULTS = Object.freeze({
@@ -108,6 +121,8 @@ export const ENGINE_DEFAULTS = Object.freeze({
   // The room's microphone and, when one is joined, a phone (row 2.44). Both, because a phone put
   // near somebody is there to hear them; a person can choose one.
   ears: 'both',
+  // This screen's own microphone for speech: the usual one (the one calls use). See MIC_CHOICES.
+  mic: 'default',
 });
 
 // The segmenter's numbers: options with defaults, not settings - nobody in a room can judge them,
@@ -204,7 +219,39 @@ export const SPEECH_PASS_FIELDS = [
       { value: 'both', label: 'This screen’s, and a phone when one is joined' },
       { value: 'phone', label: 'Only a phone joined as a microphone' },
     ] },
+  { key: 'speechMic', label: 'Which of this screen’s microphones hears speech', kind: 'choice',
+    default: ENGINE_DEFAULTS.mic, level: 'standard',
+    options: [
+      { value: 'default', label: 'The usual one (the one calls use)' },
+      { value: 'chosen', label: 'The one named below (calls keep the usual one)' },
+      { value: 'both', label: 'Both, and use whichever heard it more clearly' },
+    ],
+    note: 'Both: each microphone is listened to on its own, so the computer does about twice the work.' },
+  // A NAME, not a device id (argued): a person's row reaches every screen they use, and a browser's device ids are
+  // its own; "HD Camera" means the same webcam on any of them. Part of the name is enough; case does not matter.
+  { key: 'speechMicName', label: 'That microphone: part of its name', kind: 'text', default: '', level: 'standard',
+    note: 'For example: HD Camera. If no microphone has that name, the usual one is used, and the voice menu says so.' },
 ];
+
+/** The microphone whose name contains `name` (case-insensitive), from [{ id, label }]. Chromium's two stand-ins for
+ *  "whatever the system chose" ('default', 'communications') are passed over: their labels repeat a real device's
+ *  name, and choosing one would follow the system's choice, not the person's. null when nothing matches. */
+export function findMic(list, name) {
+  const want = String(name || '').trim().toLowerCase();
+  if (!want) return null;
+  const real = (Array.isArray(list) ? list : []).filter((d) => d && d.id && d.id !== 'default' && d.id !== 'communications');
+  return real.find((d) => String(d.label || '').toLowerCase().includes(want)) || null;
+}
+
+/** One line for the voice menu about which microphones hear speech, or '' when there is nothing to say. */
+export function micStatusHint(mics) {
+  if (!mics || mics.use === 'default') return '';
+  if (!mics.found) return `no microphone named “${mics.name}” is plugged in, so the usual one is used`;
+  if (mics.use === 'chosen') return `speech is heard by ${mics.label}`;
+  if (mics.second) return `speech is heard by two microphones: the usual one and ${mics.label}`;
+  return mics.same ? `${mics.label} is already the usual microphone, so one is heard`
+    : `${mics.label} could not be opened, so only the usual microphone is heard`;
+}
 
 /**
  * The ranked plan from a settings row. `speechEngine` (input_speech.js) is the FIRST pass; the two
@@ -224,6 +271,12 @@ export function enginePlanFrom(values = {}) {
     waitMs: num(v.speechWaitMs, 0, 60000, ENGINE_DEFAULTS.waitMs),
     endSilenceMs: num(v.speechEndMs, 200, 10000, ENGINE_DEFAULTS.endSilenceMs),
     ears: EAR_CHOICES.includes(v.speechEars) ? v.speechEars : ENGINE_DEFAULTS.ears,
+    // This screen's own microphone(s) for speech. A choice that names no microphone is the usual one.
+    mic: (() => {
+      const name = typeof v.speechMicName === 'string' ? v.speechMicName.trim() : '';
+      const use = MIC_CHOICES.includes(v.speechMic) && name ? v.speechMic : 'default';
+      return { use, name: use === 'default' ? '' : name };
+    })(),
     // Who is talking (voice_id.js): asked of every engine that offers it, with the person's own "how sure".
     speakers: voiceIdOptionsFrom(v),
   };
@@ -273,6 +326,8 @@ export function levelDb(frame) {
   return 20 * Math.log10(Math.max(rms, 1e-9));
 }
 
+const clarityOf = (c) => (c && c.overN ? Math.round((c.overSum / c.overN) * 10) / 10 : null);
+
 export function createSegmenter(options = {}) {
   const o = { ...SEGMENT_DEFAULTS, endSilenceMs: ENGINE_DEFAULTS.endSilenceMs, idPrefix: 'u', ...options };
   const preFrames = Math.max(0, Math.round(o.preRollMs / o.frameMs));
@@ -296,7 +351,8 @@ export function createSegmenter(options = {}) {
       if (pre.length > preFrames + o.onsetFrames) pre.shift();
       if (over >= o.onsetFrames) {
         seq += 1;
-        cur = { id: `${o.idPrefix}${seq}`, startT: t - (pre.length - 1) * o.frameMs, lastVoice: t, voicedMs: over * o.frameMs };
+        cur = { id: `${o.idPrefix}${seq}`, startT: t - (pre.length - 1) * o.frameMs, lastVoice: t, voicedMs: over * o.frameMs,
+                startFloor: floor, overSum: 0, overN: 0 };
         // `onset`: where the voice itself began - `t` is earlier by the pre-roll (screen_speech.js asks when
         // the VOICE began, so a quiet run-up sitting in the screen's tail is not taken for the screen).
         ev.push({ type: 'begin', id: cur.id, t: cur.startT, onset: t - (o.onsetFrames - 1) * o.frameMs });
@@ -314,12 +370,15 @@ export function createSegmenter(options = {}) {
     // filter - is what drops non-speech, and the wake phrase is what keeps a TV from commanding.)
     if (db > floor) floor += (db - floor) * 0.004;
     const holdAt = Math.max(floor + o.startDb * o.holdRatio, o.minLevelDb);
-    if (db > holdAt) { cur.lastVoice = t; cur.voicedMs += o.frameMs; }
+    // HOW CLEARLY THIS EAR HEARD IT: the voiced frames' mean level over the room's floor as it was when the voice
+    // began (dB). Two microphones hearing one sentence: the one nearer the voice hears it further above its own room
+    // noise. The ranker uses it between this screen's own microphones (createRanker `clearerDb`).
+    if (db > holdAt) { cur.lastVoice = t; cur.voicedMs += o.frameMs; cur.overSum += db - cur.startFloor; cur.overN += 1; }
     const ended = t - cur.lastVoice >= o.endSilenceMs;
     const tooLong = t - cur.startT >= o.maxUtteranceMs;
     if (ended || tooLong) {
       // `voiceEnd`: the last loud frame - `t` is later by the trailing silence that ended it.
-      if (cur.voicedMs >= o.minSpeechMs) ev.push({ type: 'end', id: cur.id, t, ms: t - cur.startT, cut: !ended, voiceEnd: cur.lastVoice });
+      if (cur.voicedMs >= o.minSpeechMs) ev.push({ type: 'end', id: cur.id, t, ms: t - cur.startT, cut: !ended, voiceEnd: cur.lastVoice, clarity: clarityOf(cur) });
       else ev.push({ type: 'cancel', id: cur.id, t });
       cur = null;
       over = 0;
@@ -332,7 +391,7 @@ export function createSegmenter(options = {}) {
     flush(t) {
       if (!cur) return [];
       const c = cur; cur = null;
-      return [c.voicedMs >= o.minSpeechMs ? { type: 'end', id: c.id, t, ms: t - c.startT, cut: true, voiceEnd: c.lastVoice } : { type: 'cancel', id: c.id, t }];
+      return [c.voicedMs >= o.minSpeechMs ? { type: 'end', id: c.id, t, ms: t - c.startT, cut: true, voiceEnd: c.lastVoice, clarity: clarityOf(c) } : { type: 'cancel', id: c.id, t }];
     },
     get speaking() { return !!cur; },
     get floorDb() { return floor; },
@@ -543,11 +602,29 @@ export function createRanker({
   // better pass (row 2.28's bench: Vosk wrote "computer please pass" for "pause" at confidence 1.0, so
   // confidence alone would let the wrong fast guess act). null = every sure guess acts.
   actsOn = null,
+  // TWO OF THIS SCREEN'S OWN MICROPHONES (ears 'room', 'room2'): one that heard the voice at least this many dB further
+  // above its room noise is taken over the other BEFORE confidence is looked at. 6 dB: the drop from doubling the
+  // distance to a voice (inverse square), so "clearly nearer", not jitter in the floor estimate. Measured offline
+  // (2026-10-10, desktop, faster-whisper small.en, 120 synthetic sentences heard once near and once far): picking by
+  // confidence chose the worse microphone 9 times in 120 and did WORSE than the near microphone alone (1.9% vs 1.3%
+  // words wrong); picking by clearness chose it 5 times and matched the near microphone (1.3%). Only between this
+  // screen's own microphones: a phone's audio arrives already cleaned (its own noise suppression), so its "clearness"
+  // is not comparable, and there confidence still decides. An option with a default, not a person's setting: nobody
+  // in a room can judge decibels.
+  clearerDb = 6,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
   const rank = (slot) => { const i = passes.indexOf(slot); return i < 0 ? -1 : i; };
+  const ownMic = (ear) => /^room/.test(String(ear || ''));
+  /** 1 when `a` heard it clearly more clearly than `b`, -1 the other way, 0 neither (or not two own microphones). */
+  const clearer = (a, b) => {
+    if (!ownMic(a.ear) || !ownMic(b.ear) || a.ear === b.ear) return 0;
+    if (!Number.isFinite(a.clarity) || !Number.isFinite(b.clarity) || !(clearerDb > 0)) return 0;
+    const d = a.clarity - b.clarity;
+    return d >= clearerDb ? 1 : (d <= -clearerDb ? -1 : 0);
+  };
   const groups = new Map();      // gid -> group
   const byUtt = new Map();       // `${ear}|${uttId}` -> gid
   let gseq = 0;
@@ -588,12 +665,14 @@ export function createRanker({
     return g.id;
   }
 
-  /** An ear's utterance ended. `voiceEnd`: its last loud moment (before the trailing silence; `t` when not given). */
-  function end(ear, uttId, t = now(), voiceEnd = null) {
+  /** An ear's utterance ended. `voiceEnd`: its last loud moment (before the trailing silence; `t` when not given).
+   *  `clarity`: how far above its room's noise this ear heard the voice, in dB (the segmenter's), or null. */
+  function end(ear, uttId, t = now(), voiceEnd = null, clarity = null) {
     const g = groups.get(byUtt.get(`${ear}|${uttId}`));
     const e = g?.ears.get(ear);
     if (!e) return;
     e.endedAt = t;
+    e.clarity = Number.isFinite(Number(clarity)) && clarity != null ? Number(clarity) : null;
     e.voiceTo = Number.isFinite(Number(voiceEnd)) && voiceEnd != null ? Number(voiceEnd) : t;
     armGiveUp(g);
     settle(g);
@@ -656,10 +735,12 @@ export function createRanker({
   }
 
   function caption(g) {
-    const bests = [...g.ears.values()].map((e) => ({ ear: e.ear, r: earBest(e) })).filter((x) => x.r);
+    const bests = [...g.ears.values()].map((e) => ({ ear: e.ear, clarity: e.clarity ?? null, r: earBest(e) })).filter((x) => x.r);
     if (!bests.length) return;
-    // The primary ear: finals over partials, later pass over earlier, then the surer.
-    bests.sort((a, b) => (b.r.score - a.r.score) || ((conf(b.r) ?? -1) - (conf(a.r) ?? -1)));
+    // The primary ear: finals over partials, later pass over earlier, then (between this screen's own microphones)
+    // the one that heard the voice CLEARLY more clearly, then the surer, then the clearer by any margin.
+    bests.sort((a, b) => (b.r.score - a.r.score) || clearer(b, a) || ((conf(b.r) ?? -1) - (conf(a.r) ?? -1))
+      || ((b.clarity ?? -Infinity) - (a.clarity ?? -Infinity) || 0));
     const p = bests[0];
     const withText = bests.filter((x) => String(x.r.text || '').trim());
     const others = withText.slice(1).filter((x) => !sameWords(x.r.text, p.r.text))
@@ -706,15 +787,14 @@ export function createRanker({
   }
 
   function bestFinal(g) {
-    let best = null;
+    // The latest pass, then the same order as the captions' primary ear (see `caption`).
+    const all = [];
     for (const e of g.ears.values()) {
-      for (const r of e.results.values()) {
-        if (!r.final) continue;
-        const k = [rank(r.slot), conf(r) ?? -1];
-        if (!best || k[0] > best.k[0] || (k[0] === best.k[0] && k[1] > best.k[1])) best = { r: { ...r, ear: e.ear }, k };
-      }
+      for (const r of e.results.values()) if (r.final) all.push({ ear: e.ear, clarity: e.clarity ?? null, r: { ...r, ear: e.ear } });
     }
-    return best?.r || null;
+    all.sort((a, b) => (rank(b.r.slot) - rank(a.r.slot)) || clearer(b, a) || ((conf(b.r) ?? -1) - (conf(a.r) ?? -1))
+      || ((b.clarity ?? -Infinity) - (a.clarity ?? -Infinity) || 0));
+    return all[0]?.r || null;
   }
 
   function settle(g) {
@@ -815,6 +895,9 @@ export function rankedRecognizer({
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   micId = 'speech',
+  // The microphones this machine has, [{ id, label }] - asked only when the plan names one (plan.mic). Default: the
+  // arbiter's list, else the browser's. A seam for the suites.
+  listMics = null,
   // false: open no microphone and no audio context at all - frames come only through `feed` (the
   // suites). The gate on an engine answering still applies.
   capture = true,
@@ -850,6 +933,8 @@ export function rankedRecognizer({
   let ranker = null;
   let ctx = null;
   let micStream = null;
+  let mic2Stream = null;           // the second of this screen's microphones (plan.mic.use 'both'), as ear 'room2'
+  let micInfo = null;              // what plan.mic came to: { use, name, found, label, second, same } (status().mics)
   let micState = 'closed';         // closed | opening | open | failed
   const ears = new Map();          // ear -> { seg, node, src, keep, stream, open: {uid, asked}|null }
   let mode = null;
@@ -879,7 +964,8 @@ export function rankedRecognizer({
     }
     const w = plan.wake ? conns.get(`wake|${firstEar}`) : null;
     return { state, engines: es, skipped: (plan.skipped || []).map((s) => ({ slot: s.slot, name: s.name, why: s.why })),
-             ears: [...ears.keys()], wake: plan.wake ? { state: w ? w.state() : 'closed' } : null };
+             ears: [...ears.keys()], wake: plan.wake ? { state: w ? w.state() : 'closed' } : null,
+             mics: micInfo ? { ...micInfo } : null };
   }
   let lastSig = '';
   function tellStatus() {
@@ -921,7 +1007,7 @@ export function rankedRecognizer({
       } else if (ev.type === 'end') {
         if (e.open?.uid === uid) for (const en of e.open.asked) en.end(uid);
         e.open = null;
-        ranker.end(ear, uid, ev.t, ev.voiceEnd);
+        ranker.end(ear, uid, ev.t, ev.voiceEnd, ev.clarity);
       } else if (ev.type === 'cancel') {
         if (e.open?.uid === uid) for (const en of e.open.asked) en.cancel(uid);
         e.open = null;
@@ -1024,7 +1110,7 @@ export function rankedRecognizer({
     for (const ev of e.seg.flush(now())) {
       const uid = `${ear}:${ev.id}`;
       if (e.open?.uid === uid) for (const en of e.open.asked) (ev.type === 'end' ? en.end(uid) : en.cancel(uid));
-      if (ev.type === 'end') ranker?.end(ear, uid, ev.t, ev.voiceEnd); else ranker?.cancel(ear, uid);
+      if (ev.type === 'end') ranker?.end(ear, uid, ev.t, ev.voiceEnd, ev.clarity); else ranker?.cancel(ear, uid);
       if (utteranceFns.size) tapUtterance(ear, uid, ev);
     }
     try { e.node?.port?.postMessage({ type: 'stop' }); } catch { /* gone */ }
@@ -1041,14 +1127,28 @@ export function rankedRecognizer({
     try {
       await ensureContext();
       if (plan.ears !== 'phone') {
-        if (micOwner && typeof micOwner.acquire === 'function') {
-          micStream = await micOwner.acquire(micId, { echoCancellation: false, noiseSuppression: false, autoGainControl: false });
-        } else {
-          const gum = getUserMedia || ((c) => navigator.mediaDevices.getUserMedia(c));
-          micStream = await gum({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
-        }
+        const want = plan.mic && plan.mic.use !== 'default' ? plan.mic : null;
+        const named = want ? await namedMic(want.name) : null;
+        // 'chosen' and found: speech hears that device. Not found: the usual one, and the status says so (a screen
+        // that stops listening because one microphone is missing has chosen the worse failure - device_pick.js).
+        micStream = await openDevice(micId, want?.use === 'chosen' && named ? named.id : null);
         if (!running) { releaseMic(); return; }
         attachStream('room', micStream);
+        micInfo = want ? { use: want.use, name: want.name, found: !!named, label: named?.label || null, second: false, same: false } : null;
+        if (want?.use === 'both' && named) {
+          // The same device twice would be one microphone heard as two ears: every utterance twice, nothing gained.
+          const firstId = trackDevice(micStream);
+          if (firstId && firstId === named.id) micInfo.same = true;
+          else {
+            try {
+              mic2Stream = await openDevice(`${micId}-2`, named.id);
+              if (!running) { releaseMic(); return; }
+              connectEar('room2');
+              attachStream('room2', mic2Stream);
+              micInfo.second = true;
+            } catch (err) { console.error('speech: second microphone', err); mic2Stream = null; }
+          }
+        }
       }
       micState = 'open';
       syncPhones();
@@ -1058,10 +1158,36 @@ export function rankedRecognizer({
     }
     tellStatus();
   }
+  const RAW = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+  // One microphone, raw: through the arbiter when there is one (a named device is its own entry there), else the
+  // browser. `deviceId` null = the usual one.
+  async function openDevice(id, deviceId) {
+    if (micOwner && typeof micOwner.acquire === 'function') return micOwner.acquire(id, RAW, deviceId || null);
+    const gum = getUserMedia || ((c) => navigator.mediaDevices.getUserMedia(c));
+    return gum({ audio: { ...(deviceId ? { deviceId: { exact: deviceId } } : {}), ...RAW }, video: false });
+  }
+  async function namedMic(name) {
+    let list = [];
+    try {
+      const ask = listMics || (micOwner && typeof micOwner.list === 'function' ? () => micOwner.list()
+        : async () => ((await navigator.mediaDevices.enumerateDevices()) || [])
+          .filter((d) => d.kind === 'audioinput').map((d) => ({ id: d.deviceId, label: d.label || '' })));
+      list = (await ask()) || [];
+    } catch { list = []; }
+    return findMic(list, name);
+  }
+  function trackDevice(stream) {
+    try { return stream?.getAudioTracks?.()?.[0]?.getSettings?.()?.deviceId || null; } catch { return null; }
+  }
   function releaseMic() {
-    if (micOwner && typeof micOwner.release === 'function') { try { micOwner.release(micId); } catch { /* gone */ } }
-    else if (micStream) { for (const t of micStream.getTracks?.() || []) { try { t.stop(); } catch { /* stopped */ } } }
+    if (micOwner && typeof micOwner.release === 'function') {
+      try { micOwner.release(micId); } catch { /* gone */ }
+      if (mic2Stream) { try { micOwner.release(`${micId}-2`); } catch { /* gone */ } }
+    } else {
+      for (const s of [micStream, mic2Stream]) for (const t of s?.getTracks?.() || []) { try { t.stop(); } catch { /* stopped */ } }
+    }
     micStream = null;
+    mic2Stream = null;
   }
   function syncPhones() {
     if (micState !== 'open' || plan.ears === 'room') return;
@@ -1108,6 +1234,7 @@ export function rankedRecognizer({
       ranker?.destroy();
       ranker = null;
       releaseMic();
+      micInfo = null;
       micState = 'closed';
       if (ctx) { try { ctx.close?.(); } catch { /* gone */ } ctx = null; }
       onText = null;

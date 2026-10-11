@@ -26,6 +26,7 @@ service running on 127.0.0.1:8797 to send a real clip to a real recogniser.</p>
 import {
   createSegmenter, createRanker, connectEngine, rankedRecognizer, enginePlanFrom, levelDb, sameWords,
   SPEECH_PASS_FIELDS, ENGINE_DEFAULTS, SEGMENT_DEFAULTS, LOCAL_URL, PASS_CHOICES, RETRY_MS,
+  MIC_CHOICES, findMic, micStatusHint,
 } from '../speech_engines.js';
 import { createDownsampler, CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
 import { attachSpeech, SPEECH_ON_FIELDS, speechSwitchFrom, phraseControl, meansSomething, LISTENING_TOPIC } from '../input_speech.js';
@@ -388,6 +389,137 @@ try {
     const g5 = r.begin('room', 'a3', 20000); r.end('room', 'a3', 21000);
     const g6 = r.begin('phone1', 'b3', 23000);
     check('utterances seconds apart are separate groups (two people taking turns)', g5 !== g6);
+  }
+
+  // ======================================================================================
+  section('this screen’s own microphones: the usual one, a named one, or both (2026-10-10)');
+  {
+    const f = SPEECH_PASS_FIELDS.find((x) => x.key === 'speechMic');
+    const fn = SPEECH_PASS_FIELDS.find((x) => x.key === 'speechMicName');
+    check('*** OFF by default: the usual microphone, the one calls use; no name ***',
+      f?.default === 'default' && fn?.default === '' && ENGINE_DEFAULTS.mic === 'default'
+      && enginePlanFrom({}).mic.use === 'default' && MIC_CHOICES.join() === 'default,chosen,both', JSON.stringify(enginePlanFrom({}).mic));
+    check('a choice that names no microphone is the usual one (nothing to look for)',
+      enginePlanFrom({ speechMic: 'both' }).mic.use === 'default' && enginePlanFrom({ speechMic: 'chosen', speechMicName: '  ' }).mic.use === 'default');
+    check('named: both / chosen carry the name; a broken choice is the usual one',
+      enginePlanFrom({ speechMic: 'both', speechMicName: ' HD Camera ' }).mic.use === 'both'
+      && enginePlanFrom({ speechMic: 'both', speechMicName: 'HD Camera' }).mic.name === 'HD Camera'
+      && enginePlanFrom({ speechMic: 'x', speechMicName: 'HD Camera' }).mic.use === 'default');
+    const list = [{ id: 'default', label: 'Default - HD Camera Mono' }, { id: 'communications', label: 'Communications - HD Camera' },
+      { id: 'em1', label: 'EMEET OfficeCore M0 Plus Mono' }, { id: 'cam1', label: 'HD Camera Mono' }];
+    check('*** findMic: part of the name, any case - never the browser’s "default" stand-in that repeats a real name ***',
+      findMic(list, 'hd camera')?.id === 'cam1' && findMic(list, 'EMEET')?.id === 'em1' && findMic(list, 'phone') === null
+      && findMic(list, '') === null && findMic(null, 'x') === null);
+    check('the voice menu says which microphones hear speech, and says when the named one is missing',
+      micStatusHint(null) === '' && micStatusHint({ use: 'default' }) === ''
+      && /no microphone named “HD Camera”.*usual one/.test(micStatusHint({ use: 'both', name: 'HD Camera', found: false }))
+      && /two microphones/.test(micStatusHint({ use: 'both', name: 'x', found: true, label: 'HD Camera Mono', second: true }))
+      && /heard by HD Camera Mono/.test(micStatusHint({ use: 'chosen', name: 'x', found: true, label: 'HD Camera Mono' }))
+      && /already the usual/.test(micStatusHint({ use: 'both', name: 'x', found: true, label: 'EMEET', second: false, same: true })));
+
+    // The segmenter says how clearly each ear heard the voice.
+    const near = createSegmenter({ endSilenceMs: 300 }); const far = createSegmenter({ endSilenceMs: 300 });
+    const evs = { near: [], far: [] };
+    let t = 0;
+    for (let i = 0; i < 25; i++) { evs.near.push(...near.push(frame(QUIET, i), t)); evs.far.push(...far.push(frame(QUIET, i), t)); t += 20; }
+    for (let i = 0; i < 30; i++) { evs.near.push(...near.push(frame(LOUD, i), t)); evs.far.push(...far.push(frame(LOUD / 6, i), t)); t += 20; }
+    for (let i = 0; i < 30; i++) { evs.near.push(...near.push(frame(QUIET, i), t)); evs.far.push(...far.push(frame(QUIET, i), t)); t += 20; }
+    const en = evs.near.find((e) => e.type === 'end'); const ef = evs.far.find((e) => e.type === 'end');
+    check('*** the segmenter: each utterance says how far above its room noise it was heard (dB) - nearer is clearer ***',
+      en && ef && Number.isFinite(en.clarity) && Number.isFinite(ef.clarity) && en.clarity > ef.clarity + 10,
+      JSON.stringify([en?.clarity, ef?.clarity]));
+
+    // The ranker: same recogniser, same confidence - the clearer ear's words.
+    const c = fakeClock(); const cmds = []; const caps = [];
+    const r = createRanker({ passes: ['local'], sureAt: 1.01, waitMs: 4000, now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer,
+      onCommand: (x, d, m) => cmds.push({ x, m }), onCaption: (x) => caps.push(x) });
+    r.begin('room', 'a', 0); r.begin('room2', 'b', 20);
+    r.end('room', 'a', 1000, null, 8); r.end('room2', 'b', 1000, null, 24);
+    r.result('room', { slot: 'local', utteranceId: 'a', kind: 'final', text: 'my sister is coming to fist', confidence: 1 });
+    r.result('room2', { slot: 'local', utteranceId: 'b', kind: 'final', text: 'my sister is coming to visit', confidence: 1 });
+    check('*** two microphones, one recogniser, both "1.0": the line is the CLEARER ear’s, the other underneath ***',
+      caps.at(-1).text === 'my sister is coming to visit' && caps.at(-1).ear === 'room2' && caps.at(-1).others[0]?.ear === 'room',
+      JSON.stringify(caps.at(-1)));
+    check('...and the command path is handed the clearer one, once', cmds.length === 1 && cmds[0].x === 'my sister is coming to visit'
+      && cmds[0].m.ear === 'room2', JSON.stringify(cmds));
+    r.begin('room', 'a2', 5000); r.begin('room2', 'b2', 5010);
+    r.end('room', 'a2', 6000, null, 30); r.end('room2', 'b2', 6000, null, 5);
+    r.result('room', { slot: 'local', utteranceId: 'a2', kind: 'final', text: 'what time is lunch', confidence: 0.6 });
+    r.result('room2', { slot: 'local', utteranceId: 'b2', kind: 'final', text: 'what time is lunch today', confidence: 0.8 });
+    check('*** two of the screen’s own microphones, one CLEARLY clearer (25 dB): its words, even against a surer far one ***',
+      caps.at(-1).text === 'what time is lunch' && cmds.at(-1).x === 'what time is lunch', JSON.stringify(caps.at(-1)));
+    r.begin('room', 'a3', 9000); r.begin('room2', 'b3', 9010);
+    r.end('room', 'a3', 10000, null, 14); r.end('room2', 'b3', 10000, null, 11);
+    r.result('room', { slot: 'local', utteranceId: 'a3', kind: 'final', text: 'the dog barked', confidence: 0.6 });
+    r.result('room2', { slot: 'local', utteranceId: 'b3', kind: 'final', text: 'the dog parked', confidence: 0.8 });
+    check('...about equally clear (3 dB, under the 6 dB margin): the surer answer decides',
+      caps.at(-1).text === 'the dog parked', JSON.stringify(caps.at(-1)));
+    const r2 = createRanker({ passes: ['local'], sureAt: 1.01, waitMs: 4000, now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer,
+      onCaption: (x) => caps.push(x) });
+    r2.begin('room', 'p', 0); r2.begin('phone1', 'q', 30);
+    r2.end('room', 'p', 1000, null, 30); r2.end('phone1', 'q', 1000, null, 5);
+    r2.result('room', { slot: 'local', utteranceId: 'p', kind: 'final', text: 'hello there', confidence: 0.6 });
+    r2.result('phone1', { slot: 'local', utteranceId: 'q', kind: 'final', text: 'hello dear', confidence: 0.8 });
+    check('a phone (its sound already cleaned by the phone) is not judged by clearness: the surer answer decides',
+      caps.at(-1).text === 'hello dear', JSON.stringify(caps.at(-1)));
+
+    // The recogniser opens the right devices.
+    const { FakeWS, server } = makeServers();
+    server(LOCAL_URL, { engine: 'vosk:small', answer: () => ({ text: 'hi', confidence: 0.9 }) });
+    const fakeCtx = { state: 'running', audioWorklet: { addModule: () => Promise.resolve() }, destination: {},
+      createMediaStreamSource: () => ({ connect() {}, disconnect() {} }), createGain: () => ({ gain: {}, connect() {}, disconnect() {} }), close() {} };
+    const opened = []; let stopped = 0;
+    const dev = (id) => ({ getTracks: () => [{ stop: () => { stopped += 1; } }],
+      getAudioTracks: () => [{ getSettings: () => ({ deviceId: id }) }] });
+    const gum = (cs) => { const id = cs.audio.deviceId?.exact || null; opened.push({ id, raw: cs.audio.echoCancellation === false && cs.audio.noiseSuppression === false }); return Promise.resolve(dev(id || 'em1')); };
+    const origErr = console.error; console.error = () => {};
+    async function make(values, mics = list) {
+      opened.length = 0; stopped = 0;
+      const rec = rankedRecognizer({ plan: enginePlanFrom(values), WebSocketImpl: FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now,
+        makeContext: () => fakeCtx, getUserMedia: gum, listMics: async () => mics });
+      rec.start(() => {});
+      await settle(); await settle(); await sleep(10);
+      return rec;
+    }
+    const usual = await make({});
+    check('the usual choice: ONE microphone, the system’s choice, raw (no device named)', opened.length === 1 && opened[0].id === null
+      && opened[0].raw && usual.status().mics === null, JSON.stringify(opened));
+    usual.stop();
+    const both = await make({ speechMic: 'both', speechMicName: 'HD Camera' });
+    check('*** both: TWO microphones - the usual one and the named one by its exact id, both raw ***',
+      opened.length === 2 && opened[0].id === null && opened[1].id === 'cam1' && opened.every((o) => o.raw), JSON.stringify(opened));
+    check('...the named one is its own ear (room2) with its own connection to the recogniser',
+      both.status().ears.includes('room') && both.status().ears.includes('room2')
+      && both.connections().some((x) => x.ear === 'room2'), JSON.stringify([both.status().ears, both.connections()]));
+    check('...and the status says so (for the voice menu)', both.status().mics?.second === true && both.status().mics?.label === 'HD Camera Mono'
+      && /two microphones/.test(micStatusHint(both.status().mics)), JSON.stringify(both.status().mics));
+    both.stop();
+    check('*** stopped: BOTH microphones let go ***', stopped === 2 && !both.status().ears.length, stopped);
+    const chosen = await make({ speechMic: 'chosen', speechMicName: 'hd camera' });
+    check('*** chosen: only the named microphone hears speech ***', opened.length === 1 && opened[0].id === 'cam1'
+      && chosen.status().mics?.found === true, JSON.stringify(opened));
+    chosen.stop();
+    const missing = await make({ speechMic: 'both', speechMicName: 'Phone by the bed' });
+    check('*** the named one is not plugged in: the usual one is used (never stranded), and the menu says so ***',
+      opened.length === 1 && opened[0].id === null && missing.status().state === 'listening'
+      && /no microphone named “Phone by the bed”/.test(micStatusHint(missing.status().mics)), JSON.stringify([opened, missing.status()]));
+    missing.stop();
+    const same = await make({ speechMic: 'both', speechMicName: 'EMEET' });
+    check('the named one IS the usual one: heard once, not as two ears', opened.length === 1 && same.status().mics?.same === true
+      && !same.status().ears.includes('room2'), JSON.stringify([opened, same.status().mics]));
+    same.stop();
+    // Through the arbiter: a named device is its own entry there, and both are released by their own ids.
+    const acq = []; const rel = [];
+    const mo = { acquire: (id, want, deviceId) => { acq.push({ id, deviceId, raw: want?.noiseSuppression === false }); return Promise.resolve(dev(deviceId || 'em1')); },
+                 release: (id) => rel.push(id), list: async () => list };
+    const viaArb = rankedRecognizer({ plan: enginePlanFrom({ speechMic: 'both', speechMicName: 'HD Camera' }), WebSocketImpl: FakeWS,
+      setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now, makeContext: () => fakeCtx, micOwner: mo });
+    viaArb.start(() => {}); await settle(); await settle(); await sleep(10);
+    viaArb.stop();
+    console.error = origErr;
+    check('*** through the microphone arbiter: two consumers (speech, speech-2), the second by device id; both released ***',
+      acq.length === 2 && acq[0].id === 'speech' && acq[0].deviceId === null && acq[1].id === 'speech-2' && acq[1].deviceId === 'cam1'
+      && acq.every((a) => a.raw) && rel.join() === 'speech,speech-2', JSON.stringify([acq, rel]));
   }
 
   // ======================================================================================
