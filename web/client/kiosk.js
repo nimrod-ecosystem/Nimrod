@@ -1514,6 +1514,23 @@ export async function mountKiosk(root, {
     view: window,
   });
   historyHost.watch();   // history to the drive: looks for the folder while it is the chosen place; never prompts
+  // DRIVE STATUS TO THE NIMROD FOLDER (2026-10-10, Mike: "Let it be saved wherever the user wants"; storage_view.js
+  // startDriveNotes argues it): this screen notes how its picture drives are doing - times, counts, free space, never
+  // a file name - in the same Nimrod folder its history goes to, so they can be seen wherever that folder can be
+  // opened. Never the site. Nothing is read while saving is off on this device or no Nimrod folder is chosen. Not on a
+  // local backend (the suites).
+  let driveNotes = null;
+  let driveNotesGone = false;
+  if (!makeState) {
+    import('./storage_view.js').then(({ startDriveNotes }) => {
+      if (driveNotesGone) return;
+      driveNotes = startDriveNotes({
+        listSources: () => createMediaSourcesClient({ user, cache: true, personId: screenPersonNow() || null }).list(),
+        folder: () => historyHost.folder,
+        readBy: () => { try { return screenNames.get(profileId) || ''; } catch { return ''; } },
+      });
+    }).catch((err) => console.error('kiosk: drive notes', err));
+  }
 
   const childCtx = (mod) => ({
     bus, user, profileId,
@@ -7962,6 +7979,7 @@ export async function mountKiosk(root, {
       try { micOwner.destroy(); } catch { /* already gone */ }
       try { markerState?.destroy?.(); } catch { /* already gone */ }
       try { deviceState?.destroy?.(); } catch { /* already gone */ }
+      driveNotesGone = true; try { driveNotes?.stop(); } catch { /* already gone */ } driveNotes = null;   // drive status
       try { historyHost.destroy(); } catch { /* already gone */ }
       try { push?.destroy(); } catch { /* already gone */ }
       runtime.destroy();

@@ -329,20 +329,35 @@ export function folderSink({ store = handleStore(), view = (typeof window !== 'u
         if (entry.kind === 'file' && name.startsWith(prefix) && name.endsWith('.jsonl')) names.push(name);
       }
       names.sort((a, b) => { const [ma, pa] = fileOrder(a); const [mb, pb] = fileOrder(b); return ma.localeCompare(mb) || pa - pb; });
-      const rows = [];
+      // NEWEST MONTH FIRST, AND STOP ONCE `limit` ROWS ARE IN (2026-10-10, drive status in the Nimrod folder): a file's
+      // month is its rows' month, so a whole older month can only hold rows older than every row already read - it
+      // would be cut by the slice below anyway. Whole months are read (all their parts), so the answer is the same as
+      // reading everything; only the work is less. The drive-status reader asks every few minutes, and a year of its
+      // files on a Google Drive folder is not something to read in full each time.
+      const months = new Map();
       for (const name of names) {
-        let text = '';
-        try { text = await (await (await h.getFileHandle(name)).getFile()).text(); } catch { continue; }
-        for (const line of text.split('\n')) {
-          if (!line.trim()) continue;
-          try {
-            const o = JSON.parse(line);
-            if (o && o.kind && o.data && typeof o.data === 'object') rows.push({ kind: o.kind, created_at: o.at, data: o.data });
-          } catch { /* a line cut short by a closed tab: skipped, the rest still read */ }
+        const m = fileOrder(name)[0];
+        if (!months.has(m)) months.set(m, []);
+        months.get(m).push(name);
+      }
+      const want = Math.max(1, limit);
+      const rows = [];
+      for (const m of [...months.keys()].reverse()) {
+        for (const name of months.get(m)) {
+          let text = '';
+          try { text = await (await (await h.getFileHandle(name)).getFile()).text(); } catch { continue; }
+          for (const line of text.split('\n')) {
+            if (!line.trim()) continue;
+            try {
+              const o = JSON.parse(line);
+              if (o && o.kind && o.data && typeof o.data === 'object') rows.push({ kind: o.kind, created_at: o.at, data: o.data });
+            } catch { /* a line cut short by a closed tab: skipped, the rest still read */ }
+          }
         }
+        if (rows.length >= want) break;
       }
       rows.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
-      return rows.slice(-Math.max(1, limit));
+      return rows.slice(-want);
     },
     async allow() {
       try {

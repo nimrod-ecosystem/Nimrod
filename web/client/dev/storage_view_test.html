@@ -38,7 +38,14 @@ import {
   mountStorageView, readSource, readCopyStatus, bytesWords, whereWords, roleWords, isLate, copyLine,
   readViewSettings, writeViewSettings, STATUS_FILES, STORAGE_VIEW_KEY, RECHECK_DEFAULT_MS, LATE_DEFAULT_MS,
   READ_WAIT_MS, STATUS_FOLDERS_MAX, SETTINGS_WHERE, STATE_WORDS,
+  SAVE_DEFAULT, NOTE_AGAIN_DEFAULT_MS, NOTE_AGAIN_CHOICES, NOTES_FIRST_DELAY_MS, PLACE_WORDS, placeWords, noteWords, noteWhereWords,
+  startDriveNotes,
 } from '../storage_view.js';
+import {
+  noteFor, noteCopy, readNote, newestNotes, createDriveNotes, readerId, NOTES_STREAM, NOTES_FILE_SCOPE, NOTE_KIND, NOTE_FORMAT,
+  NOTES_DEFAULTS, NOTE_FIELDS, NOTES_BY_KEY,
+} from '../storage_notes.js';
+import { memoryPlayStore } from '../plays.js';
 import { forgetReachedForTest, wasReached } from '../media_sources.js';
 
 const out = document.getElementById('results');
@@ -170,8 +177,15 @@ section('the two timing choices: defaults, kept in this browser only');
   const v = readViewSettings(store);
   check('defaults: look again every 10 minutes, late after 2 days', v.recheckMs === 10 * MIN && v.lateAfterMs === 2 * DAY
     && RECHECK_DEFAULT_MS === 10 * MIN, JSON.stringify(v));
+  check('*** defaults: save to the Nimrod folder ON, note again every 6 hours when nothing changed ***',
+    v.saveToFolder === true && v.noteAgainMs === 6 * HOUR && SAVE_DEFAULT === true && NOTE_AGAIN_DEFAULT_MS === 6 * HOUR, JSON.stringify(v));
   writeViewSettings({ recheckMs: HOUR, lateAfterMs: 0 }, store);
-  check('a choice is kept and read back', JSON.stringify(readViewSettings(store)) === JSON.stringify({ recheckMs: HOUR, lateAfterMs: 0 }));
+  check('a choice is kept and read back', JSON.stringify(readViewSettings(store)) === JSON.stringify({ recheckMs: HOUR, lateAfterMs: 0, saveToFolder: true, noteAgainMs: 6 * HOUR }));
+  writeViewSettings({ saveToFolder: false, noteAgainMs: DAY }, store);
+  check('...and writing one choice keeps the others', JSON.stringify(readViewSettings(store)) === JSON.stringify({ recheckMs: HOUR, lateAfterMs: 0, saveToFolder: false, noteAgainMs: DAY }));
+  mem.set(STORAGE_VIEW_KEY, JSON.stringify({ saveToFolder: 'yes', noteAgainMs: 7 }));
+  check('a save choice that is not true/false, or a note time not offered, is the default',
+    readViewSettings(store).saveToFolder === true && readViewSettings(store).noteAgainMs === 6 * HOUR);
   mem.set(STORAGE_VIEW_KEY, JSON.stringify({ recheckMs: 7, lateAfterMs: 'x' }));
   check('a value that is not one of the choices is the default', readViewSettings(store).recheckMs === 10 * MIN && readViewSettings(store).lateAfterMs === 2 * DAY);
   mem.set(STORAGE_VIEW_KEY, '{not json');
@@ -257,8 +271,35 @@ function makeWorld(extra = {}) {
     estimate: async () => ({ quota: 3.2e9, usage: 0 }),
     now: () => NOW, storage: store,
     setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer: () => {},
+    // No Nimrod folder unless a section gives one, and the notes in memory (never this test browser's IndexedDB).
+    folder: null, notesStore: memoryPlayStore(),
     ...extra,
   } };
+}
+
+// THE PERSON'S NIMROD FOLDER, stubbed: history_place.js's sink shape. Its files are a list of rows per (stream, scope);
+// every append is kept, so "sent once" and "what was written" can be read off it. `state` and `fid` can change.
+function fakeFolder({ state = 'ready', fid = 'fold-1', rows = [], readable = true } = {}) {
+  const f = {
+    state, fid, readable, appends: [], files: rows.slice(), asked: 0,
+    async status() { return f.state; },
+    async id() { return f.state === 'ready' ? f.fid : null; },
+    async append(stream, scope, list, { folderId = null } = {}) {
+      if (f.state !== 'ready') return { ok: false, why: f.state };
+      if (folderId && folderId !== f.fid) return { ok: false, why: 'changed' };
+      f.appends.push({ stream, scope, rows: JSON.parse(JSON.stringify(list)), folderId });
+      f.files.push(...list.map((r) => ({ ...JSON.parse(JSON.stringify(r)), _stream: stream, _scope: scope, _fid: f.fid })));
+      return { ok: true };
+    },
+    async read(stream, scope, limit) {
+      if (!f.readable || f.state !== 'ready') return [];
+      return f.files.filter((r) => r._stream === stream && r._scope === scope && (!r._fid || r._fid === f.fid))
+        .map(({ kind, created_at, data }) => ({ kind, created_at, data })).slice(-limit);
+    },
+    async allow() { f.asked += 1; f.state = 'ready'; return 'granted'; },
+    sent: () => f.appends.flatMap((a) => a.rows),
+  };
+  return f;
 }
 const row = (el, id) => el.querySelector(`[data-sv-id="${id}"]`);
 {
@@ -378,6 +419,291 @@ const row = (el, id) => el.querySelector(`[data-sv-id="${id}"]`);
   await p3.refresh();
   check('the dashboards\' settings unreadable: the rows still show, without the backup words', el3.querySelectorAll('[data-sv-id]').length === 5 && !/Backup folder for/.test(el3.textContent));
   p3.destroy();
+}
+
+// =====================================================================
+section('a note of a drive: what it holds, and never holds (pure)');
+{
+  const src = { id: 'src-drive', label: 'Photo drive', base_url: 'http://localhost:8770/photos/family_drive', kind: 'agent' };
+  const raw = { ...PULL(), names: ['grandma.jpg'], path: '/media/me/easystore/family_drive', folders: ['Trips'] };
+  const n = noteFor(src, { state: 'ok', copies: [readCopyStatus(raw), raw] }, { by: 'b-123456', readBy: 'Bedside' });
+  const text = JSON.stringify(n);
+  check('*** a note: its tag, the drive\'s id and name, host and port, who read it, and the copies ***',
+    n && n.format === NOTE_FORMAT && n.source === 'src-drive' && n.name === 'Photo drive' && n.host === 'localhost:8770'
+    && n.scope === 'loopback' && n.by === 'b-123456' && n.read_by === 'Bedside' && n.copies.length === 2 && n.copies[0].new === 12
+    && n.copies[0].free_bytes === 41.2e9 && n.copies[0].role === 'primary', text);
+  check('*** NEVER a file name, a folder inside the drive, or a path - not even the address\'s path ***',
+    !/grandma|\.jpg|family_drive|easystore|\/media|Trips|names|"path"|folders/.test(text), text);
+  check('...because each copy carries only the fixed fields, the status file\'s own names',
+    n.copies.every((c) => Object.keys(c).every((k) => NOTE_FIELDS.includes(k))), JSON.stringify(n.copies.map(Object.keys)));
+  check('a copy read back from a note reads exactly like the file (readCopyStatus)',
+    copyLine(readCopyStatus(n.copies[0]), NOW).text === copyLine(readCopyStatus(PULL()), NOW).text);
+  check('a reason that looks like a path is dropped; a plain one is kept',
+    noteCopy({ at: iso(NOW), ok: false, why: 'target /media/x not mounted' }).why === undefined
+    && noteCopy({ at: iso(NOW), ok: false, why: 'rclone stopped (exit 3)' }).why === 'rclone stopped (exit 3)');
+  check('*** nothing to note for a look that did not reach it, or for pictures added on this device ***',
+    ['elsewhere', 'unreachable', 'permission', 'missing', 'reading'].every((s) => noteFor(src, { state: s, copies: [] }) === null)
+    && noteFor({ id: 'device-pictures', kind: 'device' }, { state: 'none', copies: [], freeBytes: 5 }) === null);
+  check('a drive reached with no copy recorded is noted ("none"), so away from home it says so',
+    noteFor(src, { state: 'none', copies: [] })?.state === 'none');
+  check('a browser folder: kind folder, no address', (() => { const f = noteFor({ id: 'f1', kind: 'folder', label: 'Pi folder' }, { state: 'ok', copies: [] }); return f.kind === 'folder' && f.host === '' && f.scope === 'folder'; })());
+  check('a home-network address and an internet one keep only host and port',
+    noteFor({ id: 'c', base_url: 'http://192.168.1.20:8770/x/y' }, { state: 'none' }).host === '192.168.1.20:8770'
+    && noteFor({ id: 'c', base_url: 'https://p.example.com/a' }, { state: 'none' }).scope === 'internet');
+  check('a name is cut to 80', noteFor({ ...src, label: 'x'.repeat(300) }, { state: 'none' }).name.length === NOTES_DEFAULTS.nameMax);
+  const row = { kind: NOTE_KIND, created_at: iso(NOW), data: n };
+  const back = readNote(row);
+  check('read back: re-checked field by field', back && back.source === 'src-drive' && back.readBy === 'Bedside' && back.copies.length === 2);
+  check('read back: not a note, or tampered, is nothing; extra fields are dropped',
+    readNote({ kind: 'play', created_at: iso(NOW), data: n }) === null && readNote({ kind: NOTE_KIND, created_at: 'x', data: n }) === null
+    && readNote({ kind: NOTE_KIND, created_at: iso(NOW), data: { ...n, format: 'other' } }) === null
+    && !('names' in readNote({ kind: NOTE_KIND, created_at: iso(NOW), data: { ...n, names: ['a.jpg'] } })));
+  const nw = newestNotes([{ from: 'folder', rows: [row, { ...row, created_at: iso(NOW - HOUR) }, { ...row, created_at: iso(NOW - DAY), data: { ...n, by: 'b-other1' } }] },
+    { from: 'device', rows: [row] }]);
+  check('the newest note per drive and reader, newest first; the same note in both places is "from the folder"',
+    nw.length === 2 && nw[0].at === iso(NOW) && nw[0].from === 'folder' && nw[1].by === 'b-other1', JSON.stringify(nw.map((x) => [x.at, x.from, x.by])));
+  const mem = new Map();
+  const st = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)) };
+  const id1 = readerId(st);
+  check('this browser\'s reader id: random, made once, kept', /^[A-Za-z0-9-]{6,64}$/.test(id1) && readerId(st) === id1 && mem.get(NOTES_BY_KEY) === id1);
+  check('the files: Data/History/storage-drives-<month>.jsonl (the history writer\'s names)', NOTES_STREAM === 'storage' && NOTES_FILE_SCOPE === 'drives');
+}
+
+section('the words for a note, and for the place');
+{
+  const n = readNote({ kind: NOTE_KIND, created_at: iso(NOW - 3 * HOUR), data: noteFor(SOURCES[0], { state: 'ok', copies: [readCopyStatus(PULL())] }, { by: 'b-other1', readBy: 'Bedside' }) });
+  const w = noteWords({ ...n, from: 'folder' }, NOW);
+  check('*** "From your Nimrod folder, read 3 hours ago by “Bedside”." ***', w.head === 'From your Nimrod folder, read 3 hours ago by “Bedside”.', w.head);
+  check('...with its copy as the section says it, timed from now', w.lines[0].text === 'From Google Drive: last copy 3 hours ago, 12 new, 1 changed. 41.2 GB free then.'
+    && noteWords({ ...n, from: 'folder' }, NOW + DAY).lines[0].text.startsWith('From Google Drive: last copy yesterday'), w.lines[0].text);
+  check('...and where, said from the note, not from here ("this computer" would be wrong away from home)',
+    w.where === 'On the computer that read it (localhost:8770)' && noteWhereWords({ kind: 'folder' }) === 'A folder on the computer that read it'
+    && noteWhereWords({ scope: 'private', host: '10.0.0.2:8770' }) === 'On another computer, at 10.0.0.2:8770');
+  check('this browser\'s own, from the folder: "by this browser"; from this browser\'s own record: "last look"',
+    noteWords({ ...n, from: 'folder' }, NOW, { mine: true }).head === 'From your Nimrod folder, read 3 hours ago by this browser.'
+    && noteWords({ ...n, from: 'device' }, NOW, { mine: true }).head === 'From this browser\'s last look, 3 hours ago.');
+  check('a reader with no name (My dashboards): "by another browser"', noteWords({ ...n, readBy: '', from: 'folder' }, NOW).head.endsWith('by another browser.'));
+  check('a note old enough is "later than expected", the same rule', noteWords({ ...n, from: 'folder' }, NOW + 3 * DAY).lines[0].late);
+  check('the place line, by state; off says so; "write" is said as cannot be found',
+    placeWords('ready') === PLACE_WORDS.ready && placeWords('none') === PLACE_WORDS.none && placeWords('ready', false) === PLACE_WORDS.off
+    && placeWords('write') === PLACE_WORDS.missing && placeWords('???') === PLACE_WORDS.none);
+  check('*** no Nimrod folder: it says nothing is saved, and where to choose one ***',
+    /Not saved anywhere/.test(PLACE_WORDS.none) && /This screen, then Your own folders/.test(PLACE_WORDS.none));
+  check('the place words never name the person the project was built for, or "her screen"',
+    !Object.values(PLACE_WORDS).some((s) => /christine|cici|her screen/i.test(s)));
+}
+
+section('*** written when read: the section notes each drive it reached, in the stubbed Nimrod folder ***');
+const sharedFolder = fakeFolder();
+{
+  const w = makeWorld({ folder: sharedFolder, readBy: () => 'Bedside' });
+  const el = document.createElement('div');
+  const p = mountStorageView(el, w.opts);
+  await p.refresh();
+  const sent = sharedFolder.sent();
+  check('*** one write, to storage-drives, carrying the folder\'s id ***',
+    sharedFolder.appends.length === 1 && sharedFolder.appends[0].stream === 'storage' && sharedFolder.appends[0].scope === 'drives'
+    && sharedFolder.appends[0].folderId === 'fold-1', JSON.stringify(sharedFolder.appends.map((a) => [a.stream, a.scope, a.rows.length])));
+  check('*** a note for each drive it reached (the drive and the backup folder) - not the one on another computer, the one that did not answer, or pictures added here ***',
+    sent.length === 2 && sent.every((r) => r.kind === NOTE_KIND) && sent.map((r) => r.data.source).sort().join() === 'src-drive,src-fallback',
+    sent.map((r) => r.data.source).join());
+  check('...each stamped when it was read, apart (two notes never share a time)', sent[0].created_at !== sent[1].created_at);
+  check('...naming who read it', sent.every((r) => r.data.read_by === 'Bedside' && r.data.by === p.notes.by));
+  check('*** no file names in what was written ***', !/\.jpg|grandma|family_drive|"path"/.test(JSON.stringify(sent)));
+  check('the place line says it is saved, and how it can be seen', el.querySelector('[data-sv-place-text]')?.textContent === PLACE_WORDS.ready);
+  check('*** NOTHING went to the site: every request was still to an agent ***', w.ag.seen.every((u) => /^http:\/\/(localhost:877\d|192\.168\.1\.20:8770)\//.test(u)));
+
+  section('*** nothing sent twice ***');
+  await p.refresh();
+  check('*** looking again with nothing changed: no new note, nothing written ***', sharedFolder.appends.length === 1 && sharedFolder.sent().length === 2);
+  check('...this browser holds the two notes, marked as in that folder', (await p.notes.rows()).length === 2);
+  // A copy ran: the drive's status file says something new.
+  const B = 'http://localhost:8771';
+  const fbNow = FALLBACK({ at: iso(NOW - HOUR), new: 5 });
+  const ag2 = fakeAgents({ [A]: { files: { '.nimrod-pull/last-pull.json': PULL() } }, [B]: { files: { '.nimrod-pull/last-fallback.json': fbNow } }, [C]: {}, [D]: { down: true } });
+  p.destroy();
+  const p2 = mountStorageView(document.createElement('div'), { ...w.opts, fetchImpl: ag2.fetchImpl });
+  await p2.refresh();
+  check('*** a drive that says something new: one new note, for that drive only, and only it is written ***',
+    sharedFolder.appends.length === 2 && sharedFolder.appends[1].rows.length === 1 && sharedFolder.appends[1].rows[0].data.source === 'src-fallback',
+    JSON.stringify(sharedFolder.appends.map((a) => a.rows.map((r) => r.data.source))));
+  p2.destroy();
+  const later = makeWorld({ folder: sharedFolder, now: () => NOW + 7 * HOUR, readBy: () => 'Bedside' });
+  later.mem.set(NOTES_BY_KEY, w.mem.get(NOTES_BY_KEY));
+  const p3 = mountStorageView(document.createElement('div'), { ...later.opts, notesStore: w.opts.notesStore, fetchImpl: ag2.fetchImpl });
+  await p3.refresh();
+  check('*** nothing changed for 7 hours (past the 6-hour default): one note per drive again, written once ***',
+    sharedFolder.appends.length === 3 && sharedFolder.appends[2].rows.length === 2, JSON.stringify(sharedFolder.appends.map((a) => a.rows.length)));
+  await p3.refresh();
+  check('...and not again on the next look', sharedFolder.appends.length === 3);
+  p3.destroy();
+}
+
+section('*** a folder that cannot be reached now gets what waited, once; no folder chosen gets nothing ***');
+{
+  const f = fakeFolder({ state: 'missing' });
+  const w = makeWorld({ folder: f });
+  const el = document.createElement('div');
+  const p = mountStorageView(el, w.opts);
+  await p.refresh();
+  check('a drive unplugged (folder "missing"): the notes wait on this browser, nothing written',
+    f.appends.length === 0 && (await p.notes.rows()).length === 2);
+  check('...and the place line says it waits', el.querySelector('[data-sv-place-text]')?.textContent === PLACE_WORDS.missing);
+  f.state = 'ready';
+  await p.refresh();
+  check('*** plugged back in: what waited is written, once ***', f.appends.length === 1 && f.sent().length === 2);
+  await p.refresh();
+  check('...and never again', f.appends.length === 1);
+  f.fid = 'fold-2';
+  await p.refresh();
+  check('a DIFFERENT folder (another drive) gets everything this browser still holds - its own marker', f.appends.length === 2 && f.appends[1].rows.length === 2 && f.appends[1].folderId === 'fold-2');
+  p.destroy();
+
+  const fp = fakeFolder({ state: 'permission' });
+  const wp = makeWorld({ folder: fp });
+  const elp = document.createElement('div');
+  const pp = mountStorageView(elp, wp.opts);
+  await pp.refresh();
+  check('a permission that lapsed: waits, says so, with "Allow it again" (a press; nothing asked by itself)',
+    fp.appends.length === 0 && elp.querySelector('[data-sv-place-text]')?.textContent === PLACE_WORDS.permission
+    && !!elp.querySelector('[data-sv-allow]') && fp.asked === 0);
+  elp.querySelector('[data-sv-allow]').click();
+  await sleep(40);
+  check('...the press asks, and what waited is written', fp.asked === 1 && fp.appends.length === 1 && fp.sent().length === 2);
+  pp.destroy();
+
+  for (const [label, folder] of [['no Nimrod folder chosen ("none")', fakeFolder({ state: 'none' })], ['a browser that cannot use a folder', fakeFolder({ state: 'unavailable' })], ['no folder at all (null)', null]]) {
+    const wn = makeWorld({ folder });
+    const eln = document.createElement('div');
+    const pn = mountStorageView(eln, wn.opts);
+    await pn.refresh();
+    check(`*** ${label}: nothing written, and nothing kept here either ***`,
+      (!folder || folder.appends.length === 0) && (await pn.notes.rows()).length === 0);
+    if (label.startsWith('no Nimrod')) check('...and the section says where to choose one', eln.querySelector('[data-sv-place-text]')?.textContent === PLACE_WORDS.none);
+    pn.destroy();
+  }
+
+  const fo = fakeFolder();
+  const wo = makeWorld({ folder: fo });
+  wo.mem.set(STORAGE_VIEW_KEY, JSON.stringify({ saveToFolder: false }));
+  const elo = document.createElement('div');
+  document.getElementById('host').append(elo);
+  const po = mountStorageView(elo, wo.opts);
+  await po.refresh();
+  check('*** turned off: nothing written or kept, and the place line says it is off ***',
+    fo.appends.length === 0 && (await po.notes.rows()).length === 0 && elo.querySelector('[data-sv-place-text]')?.textContent === PLACE_WORDS.off);
+  const box = elo.querySelector('[data-sv-save]');
+  check('the switch is in the Settings box, unticked', box && !box.checked && elo.querySelector('[data-sv-timing]').contains(box));
+  box.checked = true; box.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(40);
+  check('ticked: kept in this browser, and this look is saved at once', JSON.parse(wo.mem.get(STORAGE_VIEW_KEY)).saveToFolder === true && fo.appends.length === 1);
+  const na = elo.querySelector('[data-sv-noteagain]');
+  na.value = String(DAY); na.dispatchEvent(new Event('change', { bubbles: true }));
+  check('"When nothing changed, save it again" is a choice kept in this browser', JSON.parse(wo.mem.get(STORAGE_VIEW_KEY)).noteAgainMs === DAY
+    && NOTE_AGAIN_CHOICES.map((c) => c.value).join() === [HOUR, 6 * HOUR, 12 * HOUR, DAY].join());
+  po.destroy(); elo.remove();
+}
+
+section('*** away from home: read back from the folder, labelled with where it came from and how old it is ***');
+{
+  // Another browser, three hours after the newest note (NOW + 7 h), that can reach none of the drives itself.
+  const away = makeWorld({ folder: sharedFolder, now: () => NOW + 10 * HOUR, check: wouldAsk,
+    listSources: async () => SOURCES.filter((s) => s.id !== 'src-fallback') });
+  // A note of a drive this browser does not know (a browser folder on a screen at home), left by that screen.
+  sharedFolder.files.push({ kind: NOTE_KIND, created_at: iso(NOW - HOUR), _stream: 'storage', _scope: 'drives', _fid: 'fold-1',
+    data: noteFor({ id: 'pi-folder', kind: 'folder', label: 'Pi folder' }, { state: 'ok', copies: [readCopyStatus(FALLBACK())] }, { by: 'b-screen1', readBy: 'Bedside' }) });
+  const el = document.createElement('div');
+  document.getElementById('host').append(el);
+  const p = mountStorageView(el, away.opts);
+  await p.refresh();
+  const drive = row(el, 'src-drive');
+  check('the drive could not be read from here (on another computer)', drive.dataset.svState === 'elsewhere' && !away.ag.seen.length);
+  const head = drive.querySelector('[data-sv-note-head]');
+  check('*** under it: "From your Nimrod folder, read 3 hours ago by “Bedside”." - the newest note, its age from now ***',
+    head && head.textContent === 'From your Nimrod folder, read 3 hours ago by “Bedside”.', head && head.textContent);
+  check('...with what the drive said, timed from now',
+    drive.querySelector('[data-sv-note] .sv-copies')?.textContent === 'From Google Drive: last copy 13 hours ago, 12 new, 1 changed. 41.2 GB free then.',
+    drive.querySelector('[data-sv-note] .sv-copies')?.textContent);
+  check('...one note per reader: only the newest of the three this drive has', drive.querySelectorAll('[data-sv-note]').length === 1);
+  check('...and it came from the folder', drive.querySelector('[data-sv-note]')?.dataset.svNoteFrom === 'folder');
+  const extra = el.querySelector('[data-sv-elsewhere] [data-sv-noted="pi-folder"]');
+  check('*** a drive this browser does not know, seen only through the folder: its own row under "Seen only through your Nimrod folder" ***',
+    extra && /Pi folder/.test(extra.textContent) && /From your Nimrod folder, read 11 hours ago by “Bedside”/.test(extra.textContent), extra && extra.textContent);
+  check('...including the backup folder this browser has no source for', !!el.querySelector('[data-sv-noted="src-fallback"]'));
+  check('*** and nothing was written from here: nothing was reached ***', sharedFolder.appends.length === 3);
+  check('the words: never the name the project was built for, never "her screen"', !/christine|cici|her screen/i.test(el.textContent),
+    (el.textContent.match(/.{0,40}(christine|cici|her screen).{0,40}/i) || [''])[0]);
+  p.destroy(); el.remove();
+
+  // The browser that wrote them, its drives now unreachable: its own notes are shown ("by this browser").
+  const home = makeWorld({ folder: sharedFolder, now: () => NOW + 2 * HOUR, listSources: async () => SOURCES.slice(0, 2) });
+  const firstBy = sharedFolder.sent()[0].data.by;
+  home.mem.set(NOTES_BY_KEY, firstBy);
+  const agDown = fakeAgents({ [A]: { down: true }, [B]: { down: true } });
+  const elh = document.createElement('div');
+  const ph = mountStorageView(elh, { ...home.opts, fetchImpl: agDown.fetchImpl });
+  await ph.refresh();
+  check('*** this browser\'s own note shows when its own look fails: "by this browser" ***',
+    /by this browser\./.test(row(elh, 'src-drive').querySelector('[data-sv-note-head]')?.textContent || ''), row(elh, 'src-drive').textContent);
+  ph.destroy();
+  const elk = document.createElement('div');
+  const okNow = mountStorageView(elk, { ...home.opts });
+  await okNow.refresh();
+  check('...and not when the look reached the drive (what it reads now is shown instead)',
+    okNow.results().get('src-drive').state === 'ok' && !row(elk, 'src-drive').querySelector('[data-sv-note]')
+    && okNow.noted().some((n) => n.source === 'src-drive' && n.by === firstBy));
+  okNow.destroy();
+  const unread = fakeFolder({ readable: false });
+  const homeOwn = makeWorld({ folder: unread, now: () => NOW + 2 * HOUR, listSources: async () => SOURCES.slice(0, 1) });
+  homeOwn.mem.set(NOTES_BY_KEY, 'b-local01');
+  const elo = document.createElement('div');
+  const po = mountStorageView(elo, homeOwn.opts);
+  await po.refresh();                                          // reached: noted here (and written to the folder)
+  po.destroy();
+  const po2 = mountStorageView(elo, { ...homeOwn.opts, now: () => NOW + 5 * HOUR, fetchImpl: agDown.fetchImpl });
+  await po2.refresh();
+  check('a folder that cannot be read here (the screen\'s agent writes it; this browser cannot open it): this browser\'s own last look, said as that',
+    row(elo, 'src-drive').querySelector('[data-sv-note-head]')?.textContent === 'From this browser\'s last look, 3 hours ago.'
+    && row(elo, 'src-drive').querySelector('[data-sv-note]')?.dataset.svNoteFrom === 'device', row(elo, 'src-drive').textContent);
+  po2.destroy();
+}
+
+section('*** a screen notes its drives with no section on it (startDriveNotes, kiosk.js) ***');
+{
+  const f = fakeFolder({ fid: 'fold-s' });
+  const ag = fakeAgents({ [A]: { files: { '.nimrod-pull/last-pull.json': PULL() } } });
+  const timers = [];
+  const mem = new Map();
+  const st = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)) };
+  const opts = { listSources: async () => [SOURCES[0], SOURCES[4]], folder: () => f, readBy: () => 'Bedside', storage: st,
+    notesStore: memoryPlayStore(), fetchImpl: ag.fetchImpl, check: quietCheck, now: () => NOW,
+    setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer: () => {} };
+  const s = startDriveNotes(opts);
+  check('its first look waits a minute after the screen starts', timers.length === 1 && timers[0].ms === NOTES_FIRST_DELAY_MS && NOTES_FIRST_DELAY_MS === MIN && !ag.seen.length);
+  await timers[0].fn(); await sleep(20);
+  check('*** then reads the drive the quiet way and notes it in the folder, named for the screen ***',
+    f.appends.length === 1 && f.sent().length === 1 && f.sent()[0].data.read_by === 'Bedside' && f.sent()[0].data.source === 'src-drive');
+  check('...and looks again on the section\'s own clock (10 minutes by default)', timers.length === 2 && timers[1].ms === RECHECK_DEFAULT_MS);
+  check('...pictures added on that screen are not a drive: not read for a note', !f.sent().some((r) => r.data.source === 'device-pictures'));
+  const r2 = await s.run();
+  check('nothing new: nothing written again', r2.noted === 0 && f.appends.length === 1);
+  s.stop();
+  for (const [label, folder, save] of [['saving off on this device', fakeFolder(), false], ['no Nimrod folder chosen', fakeFolder({ state: 'none' }), true]]) {
+    const ag3 = fakeAgents({ [A]: { files: { '.nimrod-pull/last-pull.json': PULL() } } });
+    const m3 = new Map(save ? [] : [[STORAGE_VIEW_KEY, JSON.stringify({ saveToFolder: false })]]);
+    const st3 = { getItem: (k) => (m3.has(k) ? m3.get(k) : null), setItem: (k, v) => m3.set(k, String(v)) };
+    const s3 = startDriveNotes({ ...opts, folder: () => folder, storage: st3, fetchImpl: ag3.fetchImpl, notesStore: memoryPlayStore(), setTimer: () => 0 });
+    const r3 = await s3.run();
+    check(`*** ${label}: not one read, nothing written ***`, ag3.seen.length === 0 && folder.appends.length === 0 && r3.noted === 0, JSON.stringify(r3));
+    s3.stop();
+  }
+  const t4 = [];
+  const m4 = new Map([[STORAGE_VIEW_KEY, JSON.stringify({ recheckMs: 0 })]]);
+  const s4 = startDriveNotes({ ...opts, storage: { getItem: (k) => (m4.has(k) ? m4.get(k) : null), setItem: () => {} }, notesStore: memoryPlayStore(),
+    setTimer: (fn, ms) => { t4.push({ fn, ms }); return t4.length; } });
+  await t4[0].fn(); await sleep(20);
+  check('"Only when this tab opens": a screen looks once, then not again', t4.length === 1);
+  s4.stop();
 }
 
 section('focus rings, and every control a real one');
