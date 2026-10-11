@@ -2544,3 +2544,31 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   photo from my desktop. That way it will delete from all the screens, but she'll still have a copy of everything."*
   So a household can have deletions flow out to every screen while one drive (his desktop) keeps everything as the
   archive. Copy stays the default (8697ae7); mirroring is chosen per drive or direction, never globally. (2026-10-10)
+
+## Mike's answers of 2026-10-10 (evening): deletions, clashes, where status lives, cams, mirroring
+
+- **Whether removals follow is chosen per drive, when the folder is set up.** Mike: *"There should be options for this
+  when you're setting up folders. You can decide whether pictures are deleted off of each drive when they are
+  deleted."* This refines the entry above: the choice sits on each source in the source editor. Keep stays the
+  default (8697ae7). (2026-10-10)
+- **A sync clash asks, with "keep both copies" as the default; the clash settings sit in the advanced menu.** Mike:
+  *"Probably do a popup for a clash w the default of keep both copies. Have settings for it in the advanced menu."*
+  The test of a gate (CLAUDE.md, what happens if nobody answers) passes: an unanswered clash keeps both copies and
+  nothing waits on it, so the screen never blocks. Built only when two-way sync is (storage roles Stage 3). (2026-10-10)
+- **Mike's direction on where settings apply:** *"You should be able to control any setting per
+  device/screen/module/account/user/etc."* Recorded as his direction, not yet a built rule. How the levels combine
+  (for example, the most specific level wins) is a proposal for him, not a decision. Each new setting should say
+  which levels it can be set at. (2026-10-10)
+- **A drive's status is saved wherever the person chooses, not on the server by default.** Mike: *"I think the point
+  of the g drive is so you can see things anywhere. Let it be saved wherever the user wants."* So "see my drives from
+  anywhere" goes through the person's own place (for example their Google Drive or Nimrod folder), the way history
+  and the hidden-picture list already do. This answers the open question in storage roles Stage 4: no server copy is
+  added. (2026-10-10)
+- **A paused live cam stays paused unless the person chooses otherwise.** Mike: *"That should be a user setting. I'd
+  default to no."* Carrying on after 15 minutes, 1 hour or 6 hours is the choice (2b5f052 already defaults to
+  staying paused). (2026-10-10)
+- **What "mirroring" means.** Mike: *"Having the same audio/video through different devices. So, maybe having a
+  dashboard synced on multiple devices. We had also discussed remote control of other devices which would mean you'd
+  need to at least see the screen remotely."* Three things: the same media on several devices, one dashboard kept in
+  step on several screens, and seeing and controlling another screen. A plan comes before any build (row 2.79).
+  (2026-10-10)
