@@ -192,6 +192,10 @@ import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS, isTyping, keyControl } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
+// watching along (row 2.79): what this screen plays, to the people following it - only when its owner turns it on.
+import {
+  createPlaySender, PLAY_NOW_TOPIC, FOLLOW_FIELD, FOLLOW_BEAT_FIELD, followOf, beatOf, noticeWords,
+} from './play_sync.js';
 import { createCallTransport, CALL_TRANSPORT_READY } from './call_transport.js';
 import { createCallGroup } from './call_group.js';      // group calls (2026-10-09)
 import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
@@ -725,6 +729,7 @@ export async function mountKiosk(root, {
   // laziness is the point — a module mounted early must see the value when it arrives, not
   // capture null forever — and that only works if the binding exists from the start.
   let drive = null;
+  let playSender = null;         // watching along (row 2.79, play_sync.js): built with `drive`, below
   let callTransport = null;
   let callGroup = null;          // group calls (2026-10-09; call_group.js): the group this screen's call may grow into
   // A call arriving at this screen with no Call panel on it (call_notice.js, 2026-10-02): the notice, the
@@ -3952,6 +3957,10 @@ export async function mountKiosk(root, {
     // of the site, only when nothing is going on. The SCREEN's: it is about this device and its room. Not on an
     // embed (an embed never reloads the page it sits on).
     ...(!embedded ? [{ ...PICK_UP_FIELD }] : []),
+    // watching along (row 2.79; play_sync.js argues both): whether people who may drive this screen can play the same
+    // YouTube video in step on their own computer (OFF by default), and how often it says where the video is while
+    // they do. The SCREEN's: it is about what this room is watching. Not on an embed (no drive socket there).
+    ...(!embedded ? [{ ...FOLLOW_FIELD }, { ...FOLLOW_BEAT_FIELD, options: FOLLOW_BEAT_FIELD.options.map((o) => ({ ...o })) }] : []),
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -6259,10 +6268,42 @@ export async function mountKiosk(root, {
           gate: () => runtime?.gate() || 'both',
           driverId: p.person_id,
           driverLabel: 'someone helping from another screen',
-          onPresence: ({ drivers }) => {
-            remoteEl.hidden = !(drivers > 0);
+          // WATCHING ALONG (row 2.79): the server now counts which drivers only FOLLOW what this screen plays. The
+          // notice says "watching along" for them and "helping" for the rest (play_sync.js noticeWords) - the same
+          // notice, the same rule: shown for as long as anybody is connected, never hidden by any setting. A
+          // following socket cannot press anything (the server drops it), so "watching" never hides "helping".
+          onPresence: ({ drivers, followers }) => {
+            const words = noticeWords({ drivers, followers });
+            if (words) remoteEl.textContent = words;
+            remoteEl.hidden = !words;
+            playSender?.refresh();
           },
         });
+        // WATCHING ALONG (row 2.79, play_sync.js): the panels say what they are playing on this screen's bus; this
+        // sends it to the people following - only while the owner's "Let people follow what this screen is playing"
+        // is on (default OFF) AND somebody is following. Off means nothing at all leaves the screen.
+        if (!torn) {
+          try {
+            const link = drive;
+            playSender = createPlaySender({
+              send: (m) => link.sendPlay(m),
+              enabled: () => followOf(settings.get() || {}),
+              watchers: () => (link.presence().followers | 0),
+              beatS: () => beatOf(settings.get() || {}),
+              screenName: () => { try { return screenNames.get(bootProfileId) || ''; } catch { return ''; } },
+              ping: () => link.ping(),
+            });
+            const offPlayNow = bus.subscribe(PLAY_NOW_TOPIC, (r) => playSender?.report(r));
+            const offPlaySettings = settings.subscribe(() => playSender?.refresh());
+            const sender = playSender;
+            const destroySender = sender.destroy;
+            sender.destroy = () => {
+              try { offPlayNow?.(); } catch { /* already gone */ }
+              try { offPlaySettings?.(); } catch { /* already gone */ }
+              destroySender();
+            };
+          } catch (err) { console.error('kiosk: watching along', err); }
+        }
         // A call transport can exist from now on (`childCtx`'s getter builds it from `drive`). The
         // panels mounted before this moment -- usually all of them -- are told, so a call panel that
         // found no transport at mount binds to it now instead of never ringing. 2026-09-30.
@@ -7948,6 +7989,7 @@ export async function mountKiosk(root, {
       // The who page's avatars: its subscription, and one state handle per person it read.
       offWhoAvatars();
       try { avatars?.destroy(); } catch { /* already gone */ } avatars = null;
+      try { playSender?.destroy(); } catch { /* already gone */ } playSender = null;   // watching along
       try { drive?.close(); } catch { /* already gone */ }
       // Amplify lets go of its microphone and its audio context, before the audio bus it is on.
       try { amplifier?.destroy(); } catch { /* already gone */ } amplifier = null;

@@ -91,6 +91,9 @@ export const SUITES = [
   'youtube_watchdog',
   // 2026-10-04: a screen picks up a deploy by itself, once, at a quiet moment; pages show a chip instead.
   'version_watch',
+  // watching along (2026-10-10, row 2.79): a screen says what YouTube video it plays, a follow page plays it in step.
+  // Fakes throughout, then a screen and a follower socket against the real server.
+  'play_sync',
   // *** ADDED 2026-09-30, WHEN THE LIST CHECK FIRST RAN: all of these were on disk and had never
   // been on this page. Each was run on its own from `run_suite.py` before being added. Grouped by
   // what they cover rather than slotted into the lines above, so the provenance stays readable. ***

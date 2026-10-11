@@ -42,6 +42,8 @@ import secrets
 import time
 from dataclasses import dataclass, field
 
+from play_relay import parse_follow, parse_play   # watching along (row 2.79): the `play` and `follow` messages
+
 # The verb vocabulary, mirrored from the client's actions.js. Deliberately duplicated as a
 # frozen set rather than imported from anywhere: this is a security boundary, and a
 # boundary that widens because some other file grew an entry is not a boundary.
@@ -226,7 +228,18 @@ def parse_message(raw: dict) -> dict | None:
         # group calls (2026-10-09): see CallGroups below. Only the fields each op needs, each checked; a name
         # is never taken from the page (the server writes every name a group shows).
         return _parse_group(raw)
+    if kind == "play":
+        # watching along (row 2.79, play_relay.py): what a screen is playing, checked and copied there. Where it may
+        # go (a screen's, to following drivers only) is decided in app.py with PlayRelay.route - never here.
+        return parse_play(raw)
+    if kind == "follow":
+        return parse_follow(raw)
     if kind == "ping":
+        # A page may tag its ping with a number (`n`) so it can match the answer to the question and time the round
+        # trip (play_sync.js, the clock difference). Only a small whole number is echoed; anything else is ignored.
+        n = raw.get("n")
+        if isinstance(n, int) and not isinstance(n, bool) and 0 <= n < 2 ** 31:
+            return {"type": "pong", "n": n}
         return {"type": "pong"}
     return None
 

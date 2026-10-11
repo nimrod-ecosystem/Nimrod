@@ -55,13 +55,15 @@ export const SIGNAL_KINDS = ['offer', 'answer', 'bye', 'ice'];
 // The games a call may be offered (game_rooms.py GAMES). An invitation for anything else is ignored.
 export const GAME_INVITE_GAMES = ['quiz_mix'];
 
-const wsURL = (base, personId, ticket, role) => {
+const wsURL = (base, personId, ticket, role, follow = false) => {
   const origin = base
     || (typeof location !== 'undefined' ? `${location.protocol}//${location.host}` : '');
   const scheme = origin.startsWith('https') ? 'wss' : 'ws';
   const host = origin.replace(/^https?:\/\//, '');
   return `${scheme}://${host}/api/drive/${encodeURIComponent(personId)}`
-    + `?t=${encodeURIComponent(ticket)}&role=${encodeURIComponent(role)}`;
+    + `?t=${encodeURIComponent(ticket)}&role=${encodeURIComponent(role)}`
+    // watching along (row 2.79): counted as a follower from the first presence, so the screen never says "helping".
+    + (follow && role === 'driver' ? '&follow=1' : '');
 };
 
 export function connectDrive({
@@ -74,11 +76,16 @@ export function connectDrive({
                           //   (a convenience; `link.onSignal(cb)` is the general form)
   onPresence = null,      // both: how many screens / drivers are in the room
   onState = null,         // both: offline | connecting | connected
+  // WATCHING ALONG (row 2.79, play_sync.js): a DRIVER socket opened to follow what a screen plays. It tells the
+  // server so on every (re)connect; the server then counts it as a follower, hands it the screen's `play`
+  // messages, and drops anything else it sends - a following socket only watches.
+  follow = false,
   // Seams, so the test needs no server and no real socket.
   fetchImpl = (typeof fetch !== 'undefined' ? fetch : null),
   SocketImpl = (typeof WebSocket !== 'undefined' ? WebSocket : null),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
+  now = () => Date.now(),
   // 1s, 2s, 4s, 8s, capped. Long enough not to hammer a server that is down, short enough
   // that somebody standing at the screen does not give up on it.
   backoff = [1000, 2000, 4000, 8000],
@@ -102,6 +109,9 @@ export function connectDrive({
   if (onSignal) signalSubs.add(onSignal);
   const inviteSubs = new Set();     // a game offered to the call (drivers only; see onmessage)
   const groupSubs = new Set();      // group calls (2026-10-09): the server's group messages (call_group.js)
+  const playSubs = new Set();       // watching along (row 2.79): a screen's `play`, for a following driver only
+  const pings = new Map();          // n -> { sent, resolve, timer }: pings waiting for their pong
+  let pingSeq = 0;
   const fanSignal = (sig) => {
     for (const fn of [...signalSubs]) {
       try { fn(sig); } catch (err) { console.error('drive: signal subscriber', err); }
@@ -142,21 +152,44 @@ export function connectDrive({
     if (closed) return;
 
     try {
-      sock = new SocketImpl(wsURL(base, personId, ticket, role));
+      sock = new SocketImpl(wsURL(base, personId, ticket, role, follow));
     } catch {
       setState('offline');
       retry();
       return;
     }
 
-    sock.onopen = () => { attempt = 0; setState('connected'); };
+    sock.onopen = () => {
+      attempt = 0;
+      // Before anything else, so the server never counts this socket as helping for even a moment.
+      if (follow && role === 'driver') { try { sock.send(JSON.stringify({ type: 'follow', on: true })); } catch { /* onclose follows */ } }
+      setState('connected');
+    };
     sock.onmessage = (ev) => {
       let msg = null;
       try { msg = JSON.parse(ev.data); } catch { return; }
       if (!msg || typeof msg !== 'object') return;
       if (msg.type === 'presence') {
-        presence = { screens: msg.screens | 0, drivers: msg.drivers | 0 };
+        // `followers` (row 2.79): how many of the drivers are only watching along. Absent from an older server: 0.
+        presence = { screens: msg.screens | 0, drivers: msg.drivers | 0, followers: msg.followers | 0 };
         onPresence?.({ ...presence });
+        return;
+      }
+      // A pong for one of OUR numbered pings (row 2.79): the round trip and the server's clock, for play_sync.js.
+      if (msg.type === 'pong') {
+        const p = Number.isInteger(msg.n) ? pings.get(msg.n) : null;
+        if (p) {
+          pings.delete(msg.n);
+          clearTimer(p.timer);
+          p.resolve(Number.isFinite(msg.t) ? { sent: p.sent, t: msg.t, recv: now() } : null);
+        }
+        return;
+      }
+      // WATCHING ALONG (row 2.79): what a screen is playing. Only a DRIVER hears it (the server sends it only to
+      // following drivers, and a screen ignores one anyway). Handed to its own listeners - never to the bus, never
+      // as a verb: it moves a follower's own player, nothing else.
+      if (msg.type === 'play' && role === 'driver') {
+        for (const fn of [...playSubs]) { try { fn(msg); } catch (err) { console.error('drive: play', err); } }
         return;
       }
       // A screen accepts verbs. A driver ignores them, so two drivers on one room cannot
@@ -192,7 +225,9 @@ export function connectDrive({
     };
     sock.onclose = () => {
       sock = null;
-      presence = { screens: 0, drivers: 0 };
+      for (const [, p] of pings) { clearTimer(p.timer); p.resolve(null); }   // no pong is coming on a closed socket
+      pings.clear();
+      presence = { screens: 0, drivers: 0, followers: 0 };
       onPresence?.({ ...presence });
       setState('offline');
       retry();
@@ -232,6 +267,27 @@ export function connectDrive({
     try { sock.send(JSON.stringify({ ...msg, type: 'group' })); return true; } catch { return false; }
   }
 
+  // WATCHING ALONG (row 2.79): a SCREEN says what it is playing (play_sync.js buildPlay makes the message). The
+  // server passes it to this person's following drivers only and keeps nothing. A driver cannot send one.
+  function sendPlay(msg = {}) {
+    if (role !== 'screen' || !msg || typeof msg !== 'object') return false;
+    if (!sock || state !== 'connected') return false;
+    try { sock.send(JSON.stringify({ ...msg, type: 'play' })); return true; } catch { return false; }
+  }
+
+  // A numbered ping (row 2.79). Resolves `{ sent, t, recv }` - our clock out, the server's clock, our clock back -
+  // or null when there is no socket, the server says no time, or no answer comes within `timeoutMs`.
+  function ping({ timeoutMs = 3000 } = {}) {
+    if (!sock || state !== 'connected') return Promise.resolve(null);
+    pingSeq = (pingSeq + 1) % 2147483647;
+    const n = pingSeq;
+    return new Promise((resolve) => {
+      const timer = setTimer(() => { pings.delete(n); resolve(null); }, timeoutMs);
+      pings.set(n, { sent: now(), resolve, timer });
+      try { sock.send(JSON.stringify({ type: 'ping', n })); } catch { pings.delete(n); clearTimer(timer); resolve(null); }
+    });
+  }
+
   open();
 
   return {
@@ -239,6 +295,14 @@ export function connectDrive({
     sendSignal,
     claim,
     sendGroup,
+    sendPlay,
+    ping,
+    /** watching along: a screen's `play` messages (a following driver only). Returns an unsubscribe. */
+    onPlay(cb) {
+      if (typeof cb !== 'function') return () => {};
+      playSubs.add(cb);
+      return () => playSubs.delete(cb);
+    },
     /** group calls: the server's group messages (`{ type:'group', op, ... }`). Returns an unsubscribe. */
     onGroup(cb) {
       if (typeof cb !== 'function') return () => {};
@@ -264,6 +328,9 @@ export function connectDrive({
       signalSubs.clear();
       inviteSubs.clear();
       groupSubs.clear();
+      playSubs.clear();
+      for (const [, p] of pings) { clearTimer(p.timer); p.resolve(null); }
+      pings.clear();
       clearTimer(timer);
       try { sock?.close(); } catch { /* already gone */ }
       sock = null;

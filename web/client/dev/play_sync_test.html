@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>watching along — a screen says what it plays, a follower plays it in step — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  #host,#stage{width:480px}
+</style>
+</head>
+<body>
+<h1>watching along — a screen says what it plays, a follower plays it in step</h1>
+<p>Row 2.79, the mirroring plan's first step. <code>play_sync.js</code>: the <code>play</code> message and its cap,
+the clock difference from ping round trips, the follower's decision (load, seek, play, pause — seek only for
+YouTube, past 2 s), the screen's sender (only with "Let people follow" on and somebody following), and the notice's
+words. Then <code>drive.js</code>'s new half, the YouTube player's seek and start position, the YouTube panel's
+reports, the follow page, and — against the real server (<code>SUITE_BASE</code>) — a screen socket and a follower
+socket in one room. With <code>?gap=screen</code> / <code>?gap=follow</code> this page instead plays one side of a
+two-tab gap measurement (no checks).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="stage"></div>
+
+<script type="module">
+import {
+  PLAY_NOW_TOPIC, PLAY_KINDS, MAX_PLAY_BYTES, isPlayItem, buildPlay, checkPlay, createClock, CLOCK_WINDOW,
+  targetPos, decide, SEEK_OVER_S, SETTLE_MS, SETTLE_MAX_MS, createPlaySender, MIN_GAP_MS, SEEK_DETECT_S,
+  createFollower, LOST_MIN_MS, FOLLOW_FIELD, FOLLOW_KEY, FOLLOW_BEAT_FIELD, FOLLOW_BEAT_KEY, followOf, beatOf,
+  noticeWords, HELPING_WORDS, WATCHING_WORDS, BOTH_WORDS, STOP_AFTER_CHOICES, STOP_AFTER_DEFAULT_MS, stopAfterOf,
+} from '../play_sync.js';
+import { connectDrive } from '../drive.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { createYtPlayer } from '../modules/youtube.js';
+import { mountFollowView, TICK_MS } from '../follow_view.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || ('play-sync-' + Math.floor(Math.random() * 1e9));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 6000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+const VID = 'dQw4w9WgXcQ', VID2 = 'aqz-KE-bpKQ';
+
+// A clock and timers a test steps by hand.
+function fakeTime(start = 1_000_000) {
+  let t = start; let seq = 0; const q = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; q.set(id, { fn, at: t + Math.max(0, ms) }); return id; },
+    clearTimer: (id) => { q.delete(id); },
+    advance(ms) {
+      const end = t + ms;
+      for (;;) {
+        let next = null;
+        for (const [id, e] of q) if (e.at <= end && (!next || e.at < next[1].at)) next = [id, e];
+        if (!next) break;
+        q.delete(next[0]); t = Math.max(t, next[1].at); next[1].fn();
+      }
+      t = end;
+    },
+    pending: () => q.size,
+  };
+}
+
+// ========================================================================================== gap mode
+// One side of the two-tab measurement (a scratchpad driver opens two tabs and reads window.__gap).
+const GAP = params.get('gap');
+if (GAP) {
+  const person = params.get('person');
+  const video = params.get('video') || VID2;
+  window.__gap = { role: GAP, samples: [], log: [], ready: false };
+  const log = (s) => { window.__gap.log.push(`${Date.now()} ${s}`); };
+  const stage = document.getElementById('stage');
+  if (GAP === 'screen') {
+    const link = connectDrive({ personId: person, user: USER, role: 'screen' });
+    const bus = createBus();
+    let ytp = null;
+    const sender = createPlaySender({
+      send: (m) => link.sendPlay(m), enabled: () => true, watchers: () => (link.presence().followers | 0),
+      beatS: () => 2, screenName: () => 'Bench tab', ping: () => link.ping(),
+    });
+    bus.subscribe(PLAY_NOW_TOPIC, (r) => sender.report(r));
+    const timer = setInterval(() => sender.refresh(), 500);
+    const mem = (seed) => { let d = { ...seed }; const subs = new Set(); return { load: async () => d, get: () => d,
+      set: (p) => { d = { ...d, ...p }; subs.forEach((f) => f(d)); return Promise.resolve(); },
+      subscribe: (f) => { subs.add(f); f(d); return () => subs.delete(f); }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} }; };
+    const evs = { load: async () => {}, get: () => ({ events: [], total: 0 }), append: async () => {}, subscribe: () => () => {}, startPolling() {}, destroy() {} };
+    const inst = mountModule('youtube', { mount: stage, bus, state: mem({ playlist: [{ id: video, title: 'gap' }], autoAdvance: false }), events: evs,
+      user: USER, instanceId: 'gap-yt', playerFactory: (m, h, o) => { ytp = createYtPlayer(m, h, { ...(o || {}), muted: true }); return ytp; } });
+    inst.init();
+    window.__gap.seek = (s) => { ytp?.seek(s, true); log(`seek ${s}`); };
+    window.__gap.pause = () => { bus.publish('youtube/pause'); log('pause'); };
+    window.__gap.play = () => { bus.publish('youtube/play'); log('play'); };
+    setInterval(() => {
+      const pos = ytp?.currentTime?.();
+      window.__gap.samples.push({ t: Date.now(), pos, playing: !!ytp?.playing?.(), followers: link.presence().followers | 0, sent: sender.state().sent });
+    }, 100);
+    window.__gap.ready = true;
+    document.getElementById('summary').textContent = 'gap mode: screen';
+    void timer;
+  } else {
+    const host = document.getElementById('host');
+    const view = mountFollowView(host, { personId: person, personName: 'Bench', user: USER });
+    window.__gap.view = view;
+    view.start();
+    setInterval(() => {
+      const f = view.follower(); const p = view.player();
+      window.__gap.samples.push({ t: Date.now(), pos: p?.currentTime?.() ?? null, item: p?.item?.() ?? null,
+        playing: !!p?.playing?.(), status: view.status(), gap: f ? f.gap() : null,
+        offset: f ? f.clock().offset() : null, rtt: f ? f.clock().rtt() : null, counts: f ? f.counts() : null });
+    }, 100);
+    window.__gap.ready = true;
+    document.getElementById('summary').textContent = 'gap mode: follow';
+  }
+} else {
+(async () => {
+  // ======================================================================================== the message
+  section('the play message: fields, a public id, a 1 KB cap');
+  {
+    const m = buildPlay({ item: VID, pos: 12.3456, playing: true, every: 2, screen: 'Living room' });
+    check('*** a well-formed message is built ***', m && m.type === 'play' && m.kind === 'youtube' && m.item === VID
+      && m.pos === 12.346 && m.playing === true && m.rate === 1 && m.every === 2 && m.screen === 'Living room', JSON.stringify(m));
+    check('the kinds are YouTube only for now (a closed list, mirrored from play_relay.py)', PLAY_KINDS.length === 1 && PLAY_KINDS[0] === 'youtube');
+    check('*** an item that is not a public YouTube id is never built - a file name cannot leave the screen ***',
+      ['Mom hospital 2024.jpg', 'photos/p1.jpg', 'short', VID + 'x', 7].every((x) => buildPlay({ item: x }) === null)
+      && !isPlayItem('youtube', 'Mom hospital 2024.jpg') && isPlayItem('youtube', VID));
+    check('an unknown kind is never built', buildPlay({ kind: 'files', item: VID }) === null);
+    check('nothing playing is a message too (item null), never "playing"',
+      buildPlay({ item: null, playing: true })?.playing === false);
+    check('a silly position or speed is made sane, not sent as nonsense',
+      buildPlay({ item: VID, pos: -5 }).pos === 0 && buildPlay({ item: VID, pos: NaN }).pos === 0 && buildPlay({ item: VID, rate: 9 }).rate === 1);
+    check('the screen name is cleaned and cut to 40', buildPlay({ item: VID, screen: 'A\u0000B' + 'x'.repeat(80) }).screen.length === 40
+      && !buildPlay({ item: VID, screen: 'A\u0000B' }).screen.includes('\u0000'));
+    const real = buildPlay({ item: VID, pos: 3601.5, playing: true, every: 10, screen: 'x'.repeat(40) });
+    const size = new TextEncoder().encode(JSON.stringify(real)).length;
+    check(`a real message is about 150 bytes (${size}), far inside the ${MAX_PLAY_BYTES}-byte cap`, size < 200, String(size));
+    const stamped = { ...real, at: 1_700_000_000_000, from: 'abcd1234' };
+    const c = checkPlay(stamped);
+    check('*** a received message is checked and copied: it needs the server\'s `at` and `from` ***',
+      c && c.item === VID && c.at === stamped.at && c.from === 'abcd1234' && checkPlay(real) === null
+      && checkPlay({ ...stamped, from: 'nothex!!' }) === null, JSON.stringify(c));
+    check('a received message naming a file is refused here too', checkPlay({ ...stamped, item: 'Mom.jpg' }) === null);
+    check('a received message that is far too big is refused', checkPlay({ ...stamped, pad: 'x'.repeat(2000) }) === null);
+  }
+
+  // ========================================================================================== the clock
+  section('the clock difference: the quickest round trip of the last few wins');
+  {
+    const c = createClock();
+    check('before any sample: offset 0, our own clock is the best guess', c.offset() === 0 && !c.ready() && c.serverNow(500) === 500);
+    // Server is 5000 ms ahead. A 100 ms trip split evenly, then a 900 ms trip slow on the way back.
+    c.sample({ sent: 1000, t: 6050, recv: 1100 });
+    check('one even round trip gives the exact offset', c.offset() === 5000 && c.rtt() === 100, `${c.offset()} ${c.rtt()}`);
+    c.sample({ sent: 2000, t: 7020, recv: 2900 });
+    check('*** a slow, lopsided trip does not displace the quicker one ***', c.offset() === 5000 && c.rtt() === 100, `${c.offset()} ${c.rtt()}`);
+    c.sample({ sent: 3000, t: 8010, recv: 3020 });
+    check('a quicker one replaces it', c.rtt() === 20 && c.offset() === 5000, `${c.offset()} ${c.rtt()}`);
+    check('nonsense samples are ignored', !c.sample(null) && !c.sample({ sent: 5, t: 1, recv: 2 }) && !c.sample({ sent: 0, t: 1, recv: 40000 }));
+    for (let i = 0; i < CLOCK_WINDOW; i++) c.sample({ sent: 10000 + i * 1000, t: 15000 + i * 1000 + 200 + 1000, recv: 10000 + i * 1000 + 400 });
+    check(`after ${CLOCK_WINDOW} newer samples the old quick one has aged out (a clock that stepped is followed)`,
+      c.rtt() === 400 && c.offset() === 6000 && c.samples() === CLOCK_WINDOW, `${c.offset()} ${c.rtt()}`);
+  }
+
+  // ========================================================================================== deciding
+  section('where the screen is now, and what a follower does: seek past 2 s, never nudge YouTube\'s speed');
+  {
+    const L = { kind: 'youtube', item: VID, pos: 100, playing: true, rate: 1, at: 50_000, from: 'abcd1234' };
+    check('a playing screen moves on with the clock', targetPos(L, 53_000) === 103);
+    check('a paused one stays put', targetPos({ ...L, playing: false }, 99_000) === 100);
+    check('a message from "the future" (clocks) never moves it backwards', targetPos(L, 49_000) === 100);
+    check('the seek line is 2 s (the plan\'s number)', SEEK_OVER_S === 2);
+    const D = (mine, extra = {}) => decide({ leader: L, mine, serverNow: 53_000, ...extra });
+    check('nothing heard: nothing done', decide({ leader: null, mine: {} }).do === 'none');
+    check('*** a different video: load it, at where the screen is now, playing ***',
+      JSON.stringify(D({ item: null })) === JSON.stringify({ do: 'load', to: 103, play: true }), JSON.stringify(D({ item: null })));
+    check('in step (1 s out): nothing', D({ item: VID, pos: 102, playing: true }).do === 'none');
+    check('*** 3 s behind: seek to where the screen is ***', D({ item: VID, pos: 100, playing: true }).do === 'seek' && D({ item: VID, pos: 100, playing: true }).to === 103);
+    check('3 s ahead: seek back', D({ item: VID, pos: 106, playing: true }).do === 'seek');
+    check('*** no speed branch exists: the only corrections are load / seek / play / pause ***',
+      [0, 0.3, 1, 1.9, 2.5, 30].every((g) => ['none', 'seek'].includes(D({ item: VID, pos: 103 + g, playing: true }).do)));
+    check('settling after a seek: nothing, however far out', D({ item: VID, pos: 50, playing: true }, { settling: true }).do === 'none');
+    check('the screen plays, I am paused nearby: play', D({ item: VID, pos: 103, playing: false }).do === 'play');
+    check('...paused far away: seek and play', JSON.stringify(D({ item: VID, pos: 10, playing: false })) === JSON.stringify({ do: 'seek', to: 103, play: true }));
+    const P = { ...L, playing: false };
+    check('the screen paused, I play nearby: pause', decide({ leader: P, mine: { item: VID, pos: 100.5, playing: true }, serverNow: 53_000 }).do === 'pause');
+    check('...far away: seek to its frame and pause there', JSON.stringify(decide({ leader: P, mine: { item: VID, pos: 140, playing: true }, serverNow: 53_000 })) === JSON.stringify({ do: 'seek', to: 100, play: false }));
+    check('the screen plays nothing: pause mine (never blank it)', decide({ leader: { ...L, item: null, playing: false }, mine: { item: VID, playing: true } }).do === 'pause'
+      && decide({ leader: { ...L, item: null, playing: false }, mine: { item: VID, playing: false } }).do === 'none');
+    check('a position the player cannot say: nothing (no seek on a guess)', D({ item: VID, pos: null, playing: true }).do === 'none');
+  }
+
+  // ========================================================================================== follower
+  section('the follower: messages in, player commands out; it never goes blank');
+  {
+    const ft = fakeTime();
+    const calls = [];
+    const pl = { id: null, pos: 0, on: false,
+      load(id, to, play) { calls.push(['load', id, Math.round(to)]); this.id = id; this.pos = to; this.on = !!play; },
+      seek(to, play) { calls.push(['seek', Math.round(to)]); this.pos = to; if (play != null) this.on = play; },
+      play() { calls.push(['play']); this.on = true; }, pause() { calls.push(['pause']); this.on = false; },
+      item() { return this.id; }, currentTime() { return this.pos; }, playing() { return this.on; } };
+    const f = createFollower({ player: pl, now: ft.now });
+    check('nothing heard: waiting, and a tick does nothing', f.status() === 'waiting' && f.tick().do === 'none' && calls.length === 0);
+    const msg = (o = {}) => ({ type: 'play', kind: 'youtube', item: VID, pos: 10, playing: true, rate: 1, at: ft.now(), from: 'abcd1234', screen: 'Living room', every: 2, ...o });
+    check('a message it can check is taken', f.onPlay(msg()) === true && f.status() === 'following');
+    check('*** first tick: the video loads at the screen\'s position ***', f.tick().do === 'load' && calls.at(-1)[0] === 'load' && calls.at(-1)[1] === VID);
+    ft.advance(1000); pl.pos += 1;
+    check('inside the settle window, even far out, nothing', (pl.pos = 30, f.tick().do === 'none'));
+    ft.advance(SETTLE_MS);
+    f.onPlay(msg({ pos: 14, at: ft.now() }));
+    check('*** after settling, 16 s out: one seek ***', f.tick().do === 'seek' && Math.abs(calls.at(-1)[1] - 14) <= 1, JSON.stringify(calls.at(-1)));
+    pl.pos = 50;                                       // the seek "did not land" (a slow line)
+    ft.advance(SETTLE_MS + 10);
+    f.onPlay(msg({ pos: 17, at: ft.now() }));
+    check('it did not land: it seeks again', f.tick().do === 'seek');
+    pl.pos = 80;
+    ft.advance(SETTLE_MS + 10);
+    f.onPlay(msg({ pos: 20, at: ft.now() }));
+    check('a second miss seeks again...', f.tick().do === 'seek');
+    pl.pos = 90;
+    ft.advance(SETTLE_MS + 10);
+    f.onPlay(msg({ pos: 25, at: ft.now() }));
+    check('*** ...but the wait has doubled: no further seek yet (a slow line is not hammered) ***', f.tick().do === 'none');
+    ft.advance(SETTLE_MS * 2);
+    f.onPlay(msg({ pos: 30, at: ft.now() }));
+    check('after the doubled wait it tries again', f.tick().do === 'seek');
+    check(`the wait never grows past ${SETTLE_MAX_MS / 1000} s`, SETTLE_MAX_MS === 30000);
+    pl.pos = 30; ft.advance(SETTLE_MAX_MS);
+    f.onPlay(msg({ pos: 30, at: ft.now() }));
+    check('in step: nothing', f.tick().do === 'none' && Math.abs(f.gap()) < 0.01, String(f.gap()));
+    f.onPlay(msg({ pos: 30, playing: false, at: ft.now() }));
+    check('the screen pauses: the follower pauses', f.tick().do === 'pause' && pl.on === false);
+    f.onPlay(msg({ pos: 30, playing: true, at: ft.now() }));
+    check('the screen plays: the follower plays', f.tick().do === 'play' && pl.on === true);
+    f.onPlay(msg({ item: VID2, pos: 0, at: ft.now() }));
+    check('the screen moves to the next video: it loads that one', f.tick().do === 'load' && pl.id === VID2);
+    check('another screen of the same person is listed, not followed',
+      f.onPlay(msg({ from: 'ffff0000', item: VID, screen: 'Kitchen' })) === false && f.screens().length === 2 && f.leader().item === VID2);
+    // Quiet: the screen stops sending.
+    const n = calls.length;
+    ft.advance(LOST_MIN_MS + 100);
+    check(`*** quiet for ${LOST_MIN_MS / 1000} s: "lost", and it stops correcting ***`, f.status() === 'lost' && f.tick().do === 'none');
+    check('*** ...and it never told the player to stop or blank: it plays on by itself ***',
+      calls.length === n && pl.on === true && !calls.some((c) => c[0] === 'stop'));
+    check('a slow heartbeat (every 10 s) stretches "lost" to three of them', (() => {
+      const g = createFollower({ player: pl, now: ft.now }); g.onPlay(msg({ every: 10, at: ft.now() }));
+      ft.advance(25_000); const a = g.status(); ft.advance(6000); return a === 'following' && g.status() === 'lost';
+    })());
+    f.pick('ffff0000');
+    f.onPlay(msg({ from: 'ffff0000', item: VID, pos: 5, at: ft.now() }));
+    check('picking the other screen follows it', f.pinned() === 'ffff0000' && f.leader().item === VID);
+
+    // ONE TIGHTENING SEEK AFTER A LOAD (measured: a load lands ~0.5 s late, a seek within ~0.1 s).
+    const g = createFollower({ player: pl, now: ft.now });
+    pl.id = null;
+    g.onPlay(msg({ item: VID2, pos: 100, at: ft.now() }));
+    check('a fresh follower loads', g.tick().do === 'load');
+    ft.advance(SETTLE_MS + 10);
+    g.onPlay(msg({ item: VID2, pos: 103.01, at: ft.now() }));
+    pl.pos = 102.5; pl.on = true;                      // landed half a second behind
+    const tight = g.tick();
+    check('*** once the load settles, half a second behind: ONE finer seek ***', tight.do === 'seek' && Math.abs(tight.to - 103.01) < 0.01, JSON.stringify(tight));
+    ft.advance(SETTLE_MS + 10);
+    g.onPlay(msg({ item: VID2, pos: 106.03, at: ft.now() }));
+    pl.pos = 105.6;                                    // still 0.4 s out
+    check('*** ...and only once: 0.4 s out after that is left alone (the 2 s line again) ***', g.tick().do === 'none');
+  }
+
+  // ========================================================================================== sender
+  section('the screen\'s sender: nothing leaves unless sharing is on AND somebody follows');
+  {
+    const ft = fakeTime();
+    const sent = [];
+    let on = false, watching = 0, beat = 2;
+    const pings = [];
+    const s = createPlaySender({ send: (m) => { sent.push(m); return true; }, enabled: () => on, watchers: () => watching,
+      beatS: () => beat, screenName: () => 'Living room', now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer,
+      ping: () => { pings.push(ft.now()); return Promise.resolve({ sent: ft.now(), t: ft.now() + 7, recv: ft.now() + 40 }); } });
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 0, playing: false });
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 0, playing: true });
+    ft.advance(10_000);
+    check('*** sharing off (the default): nothing is sent, however much plays ***', sent.length === 0 && pings.length === 0);
+    on = true; s.refresh(); ft.advance(10_000);
+    check('sharing on but nobody following: still nothing', sent.length === 0);
+    watching = 1; s.refresh();
+    check('*** somebody starts following: the screen sends AT ONCE (a late joiner does not wait) ***',
+      sent.length === 1 && sent[0].item === VID && sent[0].playing === true && sent[0].screen === 'Living room' && sent[0].every === 2, JSON.stringify(sent[0]));
+    await sleep(0);
+    check('...and measures its round trip', pings.length === 1);
+    check('the first message says where the video is now (20 s of play since it started)', Math.abs(sent[0].pos - 20) < 0.01, String(sent[0].pos));
+    ft.advance(2000);
+    check('a heartbeat every 2 s', sent.length === 2);
+    check('*** pos is sent half a round trip ahead (as of when the server stamps it) ***', Math.abs(sent[1].pos - (22 + 0.02)) < 0.005, String(sent[1].pos));
+    ft.advance(10_000);
+    check('five more in ten seconds', sent.length === 7, String(sent.length));
+    {
+      const k0 = sent.length;
+      for (let i = 0; i < 20; i++) { s.refresh(); ft.advance(500); }
+      check('*** refresh() called twice a second (every presence and settings notice) does not starve the heartbeat ***',
+        sent.length === k0 + 5, String(sent.length - k0));
+    }
+    beat = 10; s.refresh(); const k = sent.length; ft.advance(10_000);
+    check('the heartbeat follows the setting (every 10 s)', sent.length === k + 1, String(sent.length - k));
+    // Changes go at once, but never closer than MIN_GAP_MS (a heartbeat has just gone: wait a second first).
+    ft.advance(1000);
+    const c0 = sent.length;
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 40, playing: false });
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 40, playing: true });
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 40, playing: false });
+    check('a change goes at once', sent.length === c0 + 1 && sent.at(-1).playing === false);
+    ft.advance(MIN_GAP_MS);
+    check(`a burst of changes is coalesced: the last state goes ${MIN_GAP_MS} ms later`, sent.length === c0 + 2 && sent.at(-1).playing === false);
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 40, playing: true });
+    ft.advance(MIN_GAP_MS);
+    const c1 = sent.length;
+    ft.advance(3000);
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 43.1, playing: true });
+    check('a progress report where it was expected is NOT a change (no extra message)', sent.length === c1);
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 120, playing: true });
+    ft.advance(MIN_GAP_MS);
+    check(`*** a jump of more than ${SEEK_DETECT_S} s is a seek: sent at once ***`, sent.length === c1 + 1 && Math.abs(sent.at(-1).pos - 120) < 0.1, String(sent.at(-1)?.pos));
+    s.report({ kind: 'youtube', panel: 'yt-2', item: VID2, pos: 0, playing: true });
+    check('another panel playing while the shared one plays is NOT shared (one at a time)', s.state().lead === 'yt-1');
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 125, playing: false });
+    s.report({ kind: 'youtube', panel: 'yt-2', item: VID2, pos: 1, playing: true });
+    check('...until the shared one stops: then the playing one is shared', s.state().lead === 'yt-2' && s.state().base.item === VID2);
+    s.report({ kind: 'youtube', panel: 'yt-2', item: 'Mom hospital.jpg', pos: 1, playing: true });
+    ft.advance(MIN_GAP_MS);
+    check('*** a panel reporting something that is not a public id shares "nothing playing", never the name ***',
+      sent.at(-1).item === null && !JSON.stringify(sent).includes('Mom'));
+    watching = 0; s.refresh(); const c2 = sent.length; ft.advance(60_000);
+    check('*** the last follower leaves: the heartbeat stops ***', sent.length === c2 && ft.pending() === 0, `${sent.length - c2} ${ft.pending()}`);
+    watching = 2; s.refresh(); on = false; s.refresh(); const c3 = sent.length; ft.advance(60_000);
+    check('*** sharing turned off while followed: nothing more is sent ***', sent.length === c3 && ft.pending() === 0);
+    s.destroy();
+  }
+
+  // ========================================================================================== settings + notice
+  section('the screen\'s settings and the notice\'s words');
+  {
+    const ff = normalizeField(FOLLOW_FIELD), bf = normalizeField(FOLLOW_BEAT_FIELD);
+    check('*** "Let people follow what this screen is playing" is OFF by default ***',
+      FOLLOW_FIELD.default === false && followOf({}) === false && followOf(null) === false && followOf({ [FOLLOW_KEY]: true }) === true
+      && followOf({ [FOLLOW_KEY]: 'yes' }) === false);
+    check('the heartbeat is 2 s by default, a choice of 2 / 5 / 10', beatOf({}) === 2 && beatOf({ [FOLLOW_BEAT_KEY]: 10 }) === 10
+      && beatOf({ [FOLLOW_BEAT_KEY]: 3 }) === 2 && FOLLOW_BEAT_FIELD.options.map((o) => o.value).join() === '2,5,10');
+    const bad = auditFields([ff, bf], { type: 'screen' }).filter((x) => x.severity === 'error');
+    check('both fields normalise and pass the settings audit', ff && bf && bad.length === 0, JSON.stringify(bad));
+    const copy = JSON.stringify([FOLLOW_FIELD, FOLLOW_BEAT_FIELD, HELPING_WORDS, WATCHING_WORDS, BOTH_WORDS, STOP_AFTER_CHOICES]);
+    check('site copy never says "her screen" or names anybody', !/\bher screen|christine|cici/i.test(copy));    check('*** nobody connected: no notice ***', noticeWords({ drivers: 0, followers: 0 }) === '');
+    check('a driver: "helping" (exactly the words the screen always showed)', noticeWords({ drivers: 1 }) === HELPING_WORDS
+      && HELPING_WORDS === 'Someone is helping from another screen');
+    check('*** a follower only: "watching along", not "helping" ***', noticeWords({ drivers: 1, followers: 1 }) === WATCHING_WORDS);
+    check('both: the notice says both', noticeWords({ drivers: 3, followers: 1 }) === BOTH_WORDS);
+    check('the follow page stops by itself after a minute by default; choices are 30 s, 1 min, 5 min, never',
+      STOP_AFTER_DEFAULT_MS === 60000 && stopAfterOf('300000') === 300000 && stopAfterOf('7') === 60000 && stopAfterOf(0) === 0);
+  }
+
+  // ========================================================================================== drive.js
+  section('drive.js: follow, play, a numbered ping');
+  {
+    const sockets = [];
+    class FakeSocket {
+      constructor(url) { this.url = url; this.sent = []; sockets.push(this); }
+      send(s) { this.sent.push(JSON.parse(s)); }
+      close() { this.onclose?.(); }
+      open() { this.onopen?.(); }
+      deliver(o) { this.onmessage?.({ data: JSON.stringify(o) }); }
+    }
+    const fetchImpl = async () => ({ ok: true, json: async () => ({ ticket: 'T' }) });
+    const plays = [];
+    const fl = connectDrive({ personId: 'p1', role: 'driver', follow: true, fetchImpl, SocketImpl: FakeSocket });
+    fl.onPlay((m) => plays.push(m));
+    await sleep(0); sockets[0].open();
+    check('*** a follow socket says so in its address (counted as watching from the first presence) ***', /[?&]follow=1\b/.test(sockets[0].url), sockets[0].url);
+    check('*** ...and again first thing on open ***', sockets[0].sent[0]?.type === 'follow' && sockets[0].sent[0].on === true, JSON.stringify(sockets[0].sent));
+    sockets[0].deliver({ type: 'play', kind: 'youtube', item: VID, pos: 1, playing: true, at: 5, from: 'abcd1234' });
+    check('a play reaches its listeners', plays.length === 1 && plays[0].item === VID);
+    sockets[0].deliver({ type: 'presence', screens: 1, drivers: 2, followers: 1 });
+    check('presence carries the follower count', fl.presence().followers === 1);
+    check('a driver cannot send a play', fl.sendPlay({ kind: 'youtube' }) === false);
+    const pr = fl.ping();
+    const pingMsg = sockets[0].sent.at(-1);
+    check('a ping is numbered', pingMsg.type === 'ping' && Number.isInteger(pingMsg.n));
+    sockets[0].deliver({ type: 'pong', n: pingMsg.n, t: 123456 });
+    const res = await pr;
+    check('*** its pong resolves with our time out, the server\'s time, our time back ***', res && res.t === 123456 && res.recv >= res.sent, JSON.stringify(res));
+    const lost = fl.ping({ timeoutMs: 30 });
+    check('a ping nobody answers resolves null (never hangs)', (await lost) === null);
+    fl.close();
+    const sc = connectDrive({ personId: 'p1', role: 'screen', fetchImpl, SocketImpl: FakeSocket });
+    const splays = [];
+    sc.onPlay((m) => splays.push(m));
+    await sleep(0); sockets[1].open();
+    check('a screen socket never says follow', !sockets[1].sent.some((m) => m.type === 'follow') && !/follow=/.test(sockets[1].url));
+    check('a screen sends a play', sc.sendPlay(buildPlay({ item: VID, pos: 2, playing: true })) === true && sockets[1].sent.at(-1).type === 'play');
+    sockets[1].deliver({ type: 'play', kind: 'youtube', item: VID, pos: 1, playing: true, at: 5, from: 'abcd1234' });
+    check('*** a screen ignores a play that reached it (screens never act on each other) ***', splays.length === 0);
+    sc.close();
+  }
+
+  // ========================================================================================== the YouTube player
+  section('the YouTube player: a start position, a seek, what it is playing');
+  {
+    const calls = [];
+    let api = null;
+    if (!window.YT) {
+      window.YT = { PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 },
+        Player: class { constructor(h, o) { api = o; setTimeout(() => o.events.onReady(), 0); }
+          loadVideoById(x) { calls.push(['load', x]); } cueVideoById(x) { calls.push(['cue', x]); }
+          seekTo(s, a) { calls.push(['seekTo', s, a]); } playVideo() { calls.push(['play']); } pauseVideo() { calls.push(['pause']); }
+          getCurrentTime() { return 42; } mute() { calls.push(['mute']); } unMute() { calls.push(['unMute']); } destroy() {} } };
+    }
+    const h = document.createElement('div'); document.getElementById('host').append(h);
+    const p = createYtPlayer(h, {}, { muted: true });
+    p.load(VID, 30);
+    await until(() => calls.length > 0, 2000);
+    check('*** a load with a start position starts there ***', JSON.stringify(calls.find((c) => c[0] === 'load')) === JSON.stringify(['load', { videoId: VID, startSeconds: 30 }]), JSON.stringify(calls));
+    p.load(VID2);
+    check('a load with no start is exactly the old call', JSON.stringify(calls.at(-1)) === JSON.stringify(['load', VID2]));
+    check('it says which video it was asked for', p.item() === VID2);
+    p.seek(12, true);
+    check('a seek jumps and plays', JSON.stringify(calls.slice(-2)) === JSON.stringify([['seekTo', 12, true], ['play']]));
+    p.seek(5, false);
+    check('...or jumps and pauses', JSON.stringify(calls.slice(-2)) === JSON.stringify([['seekTo', 5, true], ['pause']]));
+    api.events.onStateChange({ data: 1 });
+    const on = p.playing();
+    api.events.onStateChange({ data: 2 });
+    check('playing() follows the player\'s state (playing / buffering count; paused does not)', on === true && p.playing() === false);
+    check('muted to start (asked for)', calls.some((c) => c[0] === 'mute'));
+    p.destroy(); h.remove();
+  }
+
+  // ========================================================================================== the panel's reports
+  section('the YouTube panel says what it plays, on the screen\'s own bus');
+  {
+    const mem = (seed) => { let d = { ...seed }; const subs = new Set(); return { load: async () => d, get: () => d,
+      set: (p) => { d = { ...d, ...p }; subs.forEach((f) => f(d)); return Promise.resolve(); },
+      subscribe: (f) => { subs.add(f); f(d); return () => subs.delete(f); }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} }; };
+    const evs = { load: async () => {}, get: () => ({ events: [], total: 0 }), append: async () => {}, subscribe: () => () => {}, startPolling() {}, destroy() {} };
+    let hs = {}; let t = 0; const loaded = [];
+    const factory = (m, h) => { hs = h; return { load: (id) => loaded.push(id), cue() {}, cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {}, currentTime: () => t }; };
+    const bus = createBus(); const said = [];
+    bus.subscribe(PLAY_NOW_TOPIC, (r) => said.push(r));
+    const h = document.createElement('div'); document.getElementById('host').append(h);
+    const inst = mountModule('youtube', { mount: h, bus, state: mem({ playlist: [{ id: VID, title: 'one' }, { id: VID2, title: 'two' }] }), events: evs,
+      user: USER, instanceId: 'yt-ps', playerFactory: factory, progressMs: 1000 });
+    inst.init();
+    await until(() => said.length > 0, 2000);
+    const first = said[0];
+    check('*** a new video: "this video, at its start, not playing yet" ***', first && first.kind === 'youtube' && first.panel === 'yt-ps'
+      && [VID, VID2].includes(first.item) && first.playing === false && first.pos === 0, JSON.stringify(first));
+    t = 3; hs.onPlaying?.();
+    check('*** it plays: "playing, at 3 s" ***', said.at(-1).playing === true && said.at(-1).pos === 3, JSON.stringify(said.at(-1)));
+    t = 4.5;
+    await until(() => said.at(-1).pos === 4.5, 3000);
+    check('each progress poll says where it is (how a drag of the player\'s own bar is noticed)', said.at(-1).pos === 4.5 && said.at(-1).playing === true, JSON.stringify(said.at(-1)));
+    hs.onIdle?.('paused');
+    check('paused: "not playing"', said.at(-1).playing === false, JSON.stringify(said.at(-1)));
+    hs.onEnded?.();
+    check('ended: "not playing"', said.some((r, i) => i > 0 && r.playing === false));
+    const n = said.length;
+    inst.destroy(); h.remove();
+    check('*** destroyed: "nothing playing here" (item null), so a follower is never left on a video nobody sees ***',
+      said.length > n && said.at(-1).item === null && said.at(-1).playing === false, JSON.stringify(said.at(-1)));
+    check('nothing it said ever named anything but a public video id', said.every((r) => r.item === null || isPlayItem('youtube', r.item)));
+  }
+
+  // ========================================================================================== the follow page
+  section('the follow page: Start, "Following <screen>", muted, Stop, stops by itself when the screen goes quiet');
+  {
+    const ft = fakeTime(Date.now());
+    let opened = null; let closed = 0; let onPlayCb = null;
+    const connect = (o) => { opened = o; setTimeout(() => o.onState?.('connected'), 0);
+      return { onPlay: (cb) => { onPlayCb = cb; return () => {}; }, ping: async () => null, close: () => { closed += 1; }, presence: () => ({}) }; };
+    const pc = [];
+    const fakePlayer = { id: null, pos: 0, on: false, muted: true, destroyed: false,
+      load(id, to, play) { pc.push(['load', id]); this.id = id; this.pos = to; this.on = !!play; }, seek(to, play) { pc.push(['seek', to]); this.pos = to; },
+      play() { this.on = true; }, pause() { this.on = false; }, item() { return this.id; }, currentTime() { return this.pos; }, playing() { return this.on; },
+      setMuted(m) { this.muted = m; pc.push(['muted', m]); }, destroy() { this.destroyed = true; } };
+    const host = document.createElement('div'); document.getElementById('host').append(host);
+    const store = new Map();
+    const view = mountFollowView(host, { personId: 'p1', personName: 'Robin', user: USER, connect, makePlayer: () => fakePlayer,
+      now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer,
+      storage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) } });
+    check('*** opening the page follows nothing (no socket until somebody presses Follow) ***', opened === null && view.phase() === 'idle');
+    host.querySelector('[data-fv-start]').click();
+    await until(() => opened, 1000);
+    check('*** Follow opens a driver socket marked follow ***', opened && opened.role === 'driver' && opened.follow === true && opened.personId === 'p1');
+    await sleep(10);
+    check('waiting words say why nothing may come (sharing is the screen\'s choice)', /only if that is turned on/.test(view.status()), view.status());
+    onPlayCb({ type: 'play', kind: 'youtube', item: VID, pos: 10, playing: true, rate: 1, at: ft.now(), from: 'abcd1234', screen: 'Living room', every: 2 });
+    ft.advance(TICK_MS);
+    check('*** the same video loads ***', pc.some((c) => c[0] === 'load' && c[1] === VID), JSON.stringify(pc));
+    check('*** a plain "Following <screen>" line ***', view.line() === 'Following Robin’s screen (Living room)', view.line());
+    check('muted to start, with a Sound button', view.muted() === true && host.querySelector('[data-fv-sound]').textContent === 'Sound on');
+    host.querySelector('[data-fv-sound]').click();
+    check('Sound on turns the sound on', fakePlayer.muted === false && host.querySelector('[data-fv-sound]').textContent === 'Sound off');
+    check('in step, it says so', /Playing\. (In step|About)/.test(view.status()), view.status());
+    // The screen goes quiet.
+    ft.advance(LOST_MIN_MS + 1000);
+    check('quiet: "stopped sending ... carries on here by itself"', /stopped sending/.test(view.status()) && !fakePlayer.destroyed, view.status());
+    ft.advance(STOP_AFTER_DEFAULT_MS);
+    check('*** after a minute of quiet it STOPS FOLLOWING by itself: socket closed ***', view.phase() === 'stopped' && closed === 1, `${view.phase()} ${closed}`);
+    check('*** ...and the video is left playing, never blanked ***', !fakePlayer.destroyed && fakePlayer.on === true);
+    check('it says why, and offers to follow again', /Stopped following/.test(view.status()) && host.querySelector('[data-fv-start]').textContent === 'Follow again', view.status());
+    host.querySelector('[data-fv-stopafter]').value = '300000';
+    host.querySelector('[data-fv-stopafter]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('the "stop after" choice is remembered on this computer', store.get('nimrod:follow-stop-after') === '300000' && view.stopAfterMs() === 300000);
+    host.querySelector('[data-fv-start]').click();
+    await sleep(10);
+    host.querySelector('[data-fv-stop]').click();
+    check('*** Stop: the socket closes and the player goes ***', view.phase() === 'idle' && closed === 2 && fakePlayer.destroyed, `${view.phase()} ${closed}`);
+    const css = document.getElementById('follow-view-style')?.textContent || '';
+    check('*** focus outlines go through var(--focus, currentColor) ***', /outline:3px solid var\(--focus, currentColor\)/.test(css) && !/outline[^;}]*var\(--accent/.test(css));
+    check('the page\'s copy never says "her screen"', !/\bher screen/i.test(host.textContent));
+    view.destroy(); host.remove();
+  }
+
+  // ========================================================================================== the real server
+  section('*** the real server: a screen and a follower in one room ***');
+  try {
+    const res = await fetch('/api/people', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Dev-User': USER },
+      body: JSON.stringify({ name: 'Robin' }) });
+    if (!res.ok) throw new Error(`people -> ${res.status}`);
+    const person = (await res.json()).id;
+    const screen = connectDrive({ personId: person, user: USER, role: 'screen' });
+    const other = connectDrive({ personId: person, user: USER, role: 'screen' });
+    const plain = connectDrive({ personId: person, user: USER, role: 'driver' });
+    const fol = connectDrive({ personId: person, user: USER, role: 'driver', follow: true });
+    const got = [], gotPlain = [], gotOther = [];
+    fol.onPlay((m) => got.push({ m, recv: Date.now() }));
+    plain.onPlay((m) => gotPlain.push(m));
+    other.onPlay((m) => gotOther.push(m));
+    check('all four connect', await until(() => [screen, other, plain, fol].every((l) => l.state() === 'connected'), 8000));
+    check('*** the screen hears 1 follower among 2 drivers ***', await until(() => screen.presence().followers === 1 && screen.presence().drivers === 2, 4000),
+      JSON.stringify(screen.presence()));
+    check('...so its notice would read "watching along" and "helping" both', noticeWords(screen.presence()) === BOTH_WORDS);
+    const clock = createClock();
+    for (let i = 0; i < 5; i++) { const s = await fol.ping(); if (s) clock.sample(s); }
+    check(`*** the pong carries the server's clock: offset ${Math.round(clock.offset())} ms, round trip ${clock.rtt()} ms ***`,
+      clock.ready() && Math.abs(clock.offset()) < 2000 && clock.rtt() < 1000, `${clock.offset()} ${clock.rtt()}`);
+    const sentAt = Date.now();
+    screen.sendPlay(buildPlay({ item: VID, pos: 12, playing: true, every: 2, screen: 'Living room' }));
+    check('*** the follower receives the screen\'s play ***', await until(() => got.length === 1, 4000));
+    const m = checkPlay(got[0]?.m);
+    check('...checked, with the server\'s `at` and a `from`', m && m.item === VID && m.from.length === 8, JSON.stringify(got[0]?.m));
+    const lat = got[0] ? got[0].recv - sentAt : -1;
+    check(`screen -> server -> follower took ${lat} ms here`, lat >= 0 && lat < 2000, String(lat));
+    const atErr = m ? Math.abs(m.at - clock.serverNow(got[0].recv)) : -1;
+    check(`\`at\` agrees with the follower's estimate of the server clock within ${Math.round(atErr)} ms`, m && atErr < 1000, String(atErr));
+    await sleep(300);
+    check('*** a driver that is not following hears nothing; nor does the other screen ***', gotPlain.length === 0 && gotOther.length === 0);
+    fol.sendPlay?.(buildPlay({ item: VID, pos: 1 }));
+    plain.send('next');
+    await sleep(200);
+    console.log(`play_sync live: offset ${clock.offset()} ms, rtt ${clock.rtt()} ms, screen->follower ${lat} ms`);
+    fol.close();
+    check('the follower leaving is announced', await until(() => screen.presence().followers === 0, 4000));
+    for (const l of [screen, other, plain]) l.close();
+  } catch (e) {
+    check('the live section ran (needs the server at SUITE_BASE)', false, String(e && e.stack || e));
+  }
+
+  document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+})().catch((e) => { document.getElementById('summary').textContent = 'threw: ' + (e && e.stack || e); });
+}
+</script>
+</body>
+</html>

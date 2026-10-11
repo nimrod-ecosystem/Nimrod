@@ -35,6 +35,7 @@ import { createPresetLibrary } from '../presets.js';
 import { followPerson } from '../person_known.js';
 import { flashLimit, failureBackoffMs } from '../flash_limit.js';
 import { createSearchKeyClient, keyInForceWords, keyAtLevelWords, KEY_LEVEL_WORDS } from '../search_key.js';
+import { PLAY_NOW_TOPIC } from '../play_sync.js';
 import {
   autostartFields, shouldAutostart, panelAlone, createPlayReporter, ensureStartStyle, startOverlayHtml,
 } from '../game_start.js';
@@ -400,8 +401,15 @@ function loadIframeApi() {
 // YouTube panel is on the screen - the same player, not a second copy of it.
 // `opts.muted` (row 2.69, the live nature cams, modules/livecams.js): start with the sound off, which a browser always
 // lets play by itself; `setMuted` turns it on or off later. Left out, nothing changes for anybody else using this.
+// WATCHING ALONG (row 2.79, play_sync.js): a follow page drives this same player to stay in step with a screen, so it
+// also takes a start position on `load`, a `seek`, and answers `item()` / `playing()`. Additive: nothing that already
+// used this player passes a start or calls them.
 export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }, opts = {}) {
   let player = null, ready = false, pending = null, pendingList = null, pendingCue = false, destroyed = false;
+  let pendingStart = 0, curId = null, ytState = -1;   // watching along: where a queued load starts, what is loaded, its state
+  const loadNow = (id, start) => {
+    if (start > 0) player.loadVideoById({ videoId: id, startSeconds: start }); else player.loadVideoById(id);
+  };
   let wantMuted = !!(opts && opts.muted), muteAsked = !!(opts && opts.muted);   // livecams: mute only when asked
   const applyMute = () => {   // livecams: the asked-for sound, once the player can take it
     if (!muteAsked || !ready || !player) return;
@@ -421,9 +429,11 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
           ready = true;
           applyMute();   // livecams
           if (pendingList) { player.cuePlaylist({ list: pendingList, listType: 'playlist' }); pendingList = null; }
-          else if (pending) { if (pendingCue) player.cueVideoById(pending); else player.loadVideoById(pending); pending = null; pendingCue = false; }
+          else if (pending) { if (pendingCue) player.cueVideoById(pending); else loadNow(pending, pendingStart); pending = null; pendingCue = false; pendingStart = 0; }
         },
         onStateChange: (e) => {
+          ytState = e.data;                                            // watching along: `playing()` reads it
+
           if (e.data === YT.PlayerState.ENDED) onEnded?.();
           else if (e.data === YT.PlayerState.PLAYING) onPlaying?.();   // disarms the watchdog
           // PAUSED / BUFFERING: stopped, and nothing in the product can press play. Hand it
@@ -443,10 +453,28 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
   }).catch((err) => onError?.(err));
 
   return {
-    load(id) { if (destroyed) return; if (ready && player) player.loadVideoById(id); else { pending = id; pendingList = null; pendingCue = false; } },
+    // `start` (seconds, optional): where to begin - a follow page joining a video part-way through (row 2.79).
+    load(id, start = 0) {
+      if (destroyed) return;
+      const s = Number.isFinite(Number(start)) && Number(start) > 0 ? Number(start) : 0;
+      curId = id;
+      if (ready && player) loadNow(id, s); else { pending = id; pendingList = null; pendingCue = false; pendingStart = s; }
+    },
     // LOADED, NOT PLAYED (2026-10-02, "When it opens: it waits for Start"): the video's first frame and the
     // player's own play button, and nothing plays until somebody asks (`load` or `resume` then plays it).
-    cue(id) { if (destroyed) return; if (ready && player) player.cueVideoById(id); else { pending = id; pendingList = null; pendingCue = true; } },
+    cue(id) { if (destroyed) return; curId = id; if (ready && player) player.cueVideoById(id); else { pending = id; pendingList = null; pendingCue = true; } },
+    // WATCHING ALONG (row 2.79): jump to `sec`, then play (`play: true`), pause (`false`), or leave it as it is.
+    seek(sec, play) {
+      if (destroyed || !ready || !player) return;
+      try {
+        player.seekTo?.(Math.max(0, Number(sec) || 0), true);
+        if (play === true) player.playVideo?.(); else if (play === false) player.pauseVideo?.();
+      } catch { /* not ready */ }
+    },
+    /** The video id last asked for, or null. */
+    item: () => curId,
+    /** Playing, or buffering on the way to playing - what a follower counts as "going". */
+    playing: () => ytState === 1 || ytState === 3,
     cueList(listId) {
       if (destroyed) return;
       if (ready && player) player.cuePlaylist({ list: listId, listType: 'playlist' });
@@ -479,7 +507,7 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
     },
     // livecams (row 2.69): sound off (true) or on (false); kept until the player is ready.
     setMuted(on) { if (destroyed) return; wantMuted = !!on; muteAsked = true; applyMute(); },
-    stop() { pending = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
+    stop() { pending = null; curId = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
     destroy() { destroyed = true; pending = null; try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
   };
 }
@@ -676,6 +704,27 @@ registerModule(
       catch { return null; }
     }
 
+    // *** WATCHING ALONG (row 2.79, play_sync.js): SAY WHAT IS PLAYING, ON THIS SCREEN'S OWN BUS. *** On a start,
+    // a stop (pause, buffering, the end), a new video, and with each progress poll (which is how a drag of the
+    // player's own bar is noticed - the IFrame API reports no seek). The panel never touches a socket: the screen's
+    // sender decides whether anything leaves the room, and with "Let people follow" off (the default) nothing does.
+    // A hidden or destroyed panel says "nothing" (item null), so a follower is never left on a video nobody sees.
+    let saidItem = null;
+    function sayNow(playing, pos = readTime()) {
+      if (!currentId && saidItem === null) return;
+      saidItem = currentId;
+      try {
+        bus.publish(PLAY_NOW_TOPIC, { kind: 'youtube', panel: ctx.instanceId || 'youtube', item: currentId,
+          pos: Number.isFinite(pos) ? pos : null, playing: !!playing && !!currentId });
+      } catch { /* not load-bearing */ }
+    }
+    function sayGone() {
+      if (saidItem === null) return;
+      saidItem = null;
+      try { bus.publish(PLAY_NOW_TOPIC, { kind: 'youtube', panel: ctx.instanceId || 'youtube', item: null, pos: 0, playing: false }); }
+      catch { /* not load-bearing */ }
+    }
+
     // Restart the clock on the current video, arming it first if nothing is being watched
     // (a `playing` can arrive after a give-up disarmed everything).
     function watchAgain() {
@@ -711,7 +760,7 @@ registerModule(
         heartbeat();
         return;
       }
-      if (t > lastTime + 0.05) { lastTime = t; heartbeat(); return; }
+      if (t > lastTime + 0.05) { lastTime = t; heartbeat(); sayNow(true, t); return; }
       // The position has not moved while the player still claims to be playing. Say nothing.
       // The clock armed at the last beat runs out and the ordinary ladder takes over.
     }
@@ -751,6 +800,7 @@ registerModule(
       // game's music come back up. BUFFERING counts: a stalled video is silence.
       audio?.setActive?.(AUDIO_ID, false);
       if (!active || !currentId) return;
+      sayNow(false);                 // watching along: stopped (paused, buffering, or waiting for Start)
       // A video waiting for Start is MEANT to be still: nothing to recover, nobody to tell.
       if (waiting) return;
       // Already counting a STOP for this video — don't restart the clock, or a player that
@@ -838,6 +888,7 @@ registerModule(
       // beat(), NOT ok(). `ok()` stops the clock for good and a video that freezes afterwards
       // is then watched by nothing — see the heartbeat note above and watchdog.js.
       heartbeat();
+      if (active && currentId) sayNow(true, lastTime >= 0 ? lastTime : null);   // watching along: it is playing
     }
 
     const stage = () => mount.querySelector('[data-stage]');
@@ -936,12 +987,14 @@ registerModule(
         clearStall();
         try { player.cue?.(id); } catch (e) { console.error('youtube: cue', e); }
         updateLabel();
+        sayNow(false, 0);            // watching along: this video, at its start, not playing
         return;
       }
       player.load(id);
       lastTime = -1;                 // a new video starts its own clock; never compare across two
       armStall(id, 'loading');
       updateLabel();
+      sayNow(false, 0);              // watching along: a new video, loading (it says "playing" when it is)
       if (record) recordPlay(id);
     }
     function recordPlay(id) {
@@ -1439,7 +1492,7 @@ registerModule(
         // and cut short whatever is actually on screen. The poll keeps ticking but
         // `reportProgress` returns on `!active`, so a hidden provider cannot beat the
         // backstop on behalf of the one that is actually on screen.
-        bus.subscribe('youtube/deactivate', () => { active = false; clearStall(); });
+        bus.subscribe('youtube/deactivate', () => { active = false; clearStall(); sayGone(); });
 
         // The heartbeat's own clock. Started here rather than on first play so that it is
         // running before anything can need it, and self-rescheduling so it uses the same
@@ -1465,6 +1518,7 @@ registerModule(
             // A daypart boundary crossed while this was playing: now is the moment to
             // change over, not mid-video.
             const switched = applyPendingPart();
+            sayNow(false);           // watching along: it reached the end
             bus.publish('segment/done', { provider: 'youtube', reason: 'ended' });
             if (!switched && cfg.autoAdvance) bus.publish('youtube/next');
           },
@@ -1666,7 +1720,7 @@ registerModule(
 
       },
       onResize() {},
-      onHide() { active = false; clearStall(); state.flush(); },
+      onHide() { active = false; clearStall(); sayGone(); state.flush(); },
       destroy() {
         destroyed = true;
         playLog.destroy();
@@ -1680,6 +1734,7 @@ registerModule(
         // A module torn down while held must publish its end, or whatever reacted to the hold
         // is stuck in a state only the destroyed module could have left. See `held.js` rule 3.
         heldSignal.release();
+        sayGone();                     // watching along: a follower is told nothing is playing here now
         try { offPerson?.(); } catch { /* already gone */ }
         try { presetsLib?.destroy(); } catch { /* already gone */ }
         try { player?.destroy(); } catch { /* noop */ } player = null; },

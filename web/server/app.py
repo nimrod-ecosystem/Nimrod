@@ -31,6 +31,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from db import SOURCE_ON_REMOVE  # remove this picture (2026-10-10): a source's 'keep' / 'remove'
 from drive import ROLES, Answerers, CallGroups, Rooms, Tickets, parse_message, stamp_signal
+from play_relay import PlayRelay  # watching along (row 2.79): a screen's `play` to its following drivers, kept nowhere
 from game_rooms import SWEEP_S as GAME_SWEEP_S, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
@@ -1264,6 +1265,7 @@ def attest_event(pid: str, stream: str, event_id: int, body: AttestPost = Attest
 _tickets = Tickets()
 _rooms = Rooms()
 _answerers = Answerers()        # one answering screen per intercom or family-call offer (drive.py, row 2.44)
+_plays = PlayRelay()            # watching along (row 2.79, play_relay.py): who follows; in memory, nothing stored
 
 
 # group calls (2026-10-09; drive.py CallGroups): what a group calls each member - the SERVER's names, never the
@@ -1422,7 +1424,7 @@ async def _tell(conns, payload):
 
 
 @app.websocket("/api/drive/{person_id}")
-async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver"):
+async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver", follow: str = ""):
     if not ID_RE.match(person_id or "") or role not in ROLES:
         await ws.close(code=4400)
         return
@@ -1445,12 +1447,19 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
 
     await ws.accept()
     _rooms.join(room_key, person_id, role, ws)
+    # `?follow=1` (row 2.79): a driver socket opened only to watch along is counted as a follower BEFORE the first
+    # presence goes out, so the screen never flashes "helping" for somebody who is only watching.
+    if role == "driver" and follow == "1":
+        _plays.follow(ws, True)
 
     async def announce():
         counts = _rooms.counts(room_key, person_id)
         room = _rooms.get(room_key, person_id)
         if room:
-            await _tell(room.screens + room.drivers, {"type": "presence", **counts})
+            # `followers` (row 2.79): how many of the drivers are only watching along, so the screen can say
+            # "watching" for them and "helping" only for the rest. `drivers` still counts every driver socket.
+            await _tell(room.screens + room.drivers,
+                        {"type": "presence", **counts, "followers": _plays.count(room.drivers)})
 
     await announce()
     try:
@@ -1460,12 +1469,30 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             if msg is None:
                 continue                       # unknown verb or shape: dropped, not relayed
             if msg["type"] == "pong":
-                await ws.send_json(msg)
+                # `t`: this server's clock, in ms (row 2.79). A page times the round trip and works out how far its
+                # own clock is from this one (play_sync.js), so "at this second" means the same moment everywhere.
+                await ws.send_json({**msg, "t": _plays.server_ms()})
                 continue
             room = _rooms.get(room_key, person_id)
             if not room:
                 continue
             arb_key = (room_key, person_id)
+            # WATCHING ALONG (row 2.79, play_relay.py). `follow` marks a DRIVER socket as only watching; from then on
+            # it is counted as a follower, hears `play`, and does nothing else - its verbs, signals and group messages
+            # are dropped below, so the screen's "watching along" notice can never hide somebody pressing its buttons.
+            if msg["type"] == "follow":
+                if role == "driver" and _plays.follow(ws, msg["on"]):
+                    await announce()
+                continue
+            if _plays.following(ws):
+                continue
+            if msg["type"] == "play":
+                # A SCREEN's, to this person's FOLLOWING drivers only: never to another screen, never stored,
+                # rate-limited per socket. Every rule is PlayRelay.route's.
+                targets, out = _plays.route(role, ws, msg, room.drivers)
+                if targets:
+                    await _tell(targets, out)
+                continue
             if msg["type"] == "group":
                 # group calls (2026-10-09; drive.py CallGroups): a signal to ONE member of this socket's group,
                 # leaving, or knocking / letting a knock in. Every rule is CallGroups'; nothing here is relayed raw.
@@ -1533,6 +1560,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         log.info("drive socket ended: %s", exc)
     finally:
         _rooms.leave(room_key, person_id, role, ws)
+        _plays.left(ws)                        # watching along: who followed, its rate counter - all forgotten
         if role == "screen":
             _answerers.left((room_key, person_id), ws)
         await _send_out(_groups.left(ws))      # group calls: out of its group, its knocks withdrawn
