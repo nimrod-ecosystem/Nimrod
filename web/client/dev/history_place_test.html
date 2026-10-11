@@ -204,6 +204,19 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
     check('*** read back oldest first across months and parts ***', J(back.map((x) => x.data.id)) === J(['a', 'b', 'c', 'd', 'e', 'nov']), J(back.map((x) => x.data.id)));
     back = await fs.read('plays', 'yt-1', 2);
     check('...the newest N when asked for N', J(back.map((x) => x.data.id)) === J(['e', 'nov']));
+    {
+      // 2026-10-10 (drive status): newest month first, stopping once enough rows are in - the same answer, less read.
+      const oct = hist._kids.get('plays-yt-1-2026-10.jsonl');
+      const getFile = oct.getFile;
+      let octReads = 0;
+      oct.getFile = async () => { octReads += 1; return getFile(); };
+      const one = await fs.read('plays', 'yt-1', 1);
+      const two = await fs.read('plays', 'yt-1', 2);
+      oct.getFile = getFile;
+      check('*** a read that the newest month fills does not open an older month\'s files; one that needs more does ***',
+        J(one.map((x) => x.data.id)) === J(['nov']) && J(two.map((x) => x.data.id)) === J(['e', 'nov']) && octReads === 1,
+        `${J(one.map((x) => x.data.id))} ${J(two.map((x) => x.data.id))} oct reads ${octReads}`);
+    }
     check('another panel\'s file is not read as this one\'s', (await fs.read('plays', 'yt-2', 500)).length === 0);
     root.perm = 'prompt';
     check('*** permission lapsed: "permission", and a write is refused without prompting ***',
