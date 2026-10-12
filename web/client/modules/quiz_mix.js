@@ -45,6 +45,19 @@
 //     server cannot be heard. A lobby nobody starts closes after ten minutes. A screen that joined goes back to its own
 //     game the moment the room ends, the host disappears (30 s), or it loses the site (45 s). None of it is a modal:
 //     the rest of the screen carries on, and every waiting view has its way out on it.
+//
+// ASKED FROM THE CALL (2026-10-12). Mike: "some of the games could be good to play online or over a call." "On this
+// call" needed two presses here, by the person who may be least able to make them. Now the CALLER can ask, with one
+// press on their call page ("Play Quiz mix together"): the server hands this screen the ask (game_rooms.py CallAsks;
+// the person's own input gate applies, as to a press - drive.js attachDriveToBus), and the panel opens a call room
+// exactly as "On this call" does. Then, with nobody pressing anything here:
+//   * the lobby says who asked; a game this screen was playing on its own ends first (the caller's ask stands for
+//     "stop, and play together" - both presses they could make anyway, being allowed to drive this screen);
+//   * the game STARTS BY ITSELF when the asker's screen joins (the person here may not be able to press Start);
+//   * nobody joins within CALL_ASK_JOIN_MS: the room closes, said in the corner, and the panel is as it was;
+//   * the asker leaves, or the call ends: the game together ends, and this screen's game ends with it (the done
+//     view and its table) rather than going on asking questions of somebody who may only have been playing for
+//     the call.
 
 import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
@@ -67,9 +80,15 @@ import { elsewhereQR, themeQrColours, pageAddress } from '../page_links.js';
 //   REMOTE_TURN_MS 165 s   the host's own backstop for a turn on another screen: the server skips it at 150 s
 //                          (game_rooms.py TURN_MAX_S); this only fires when the server cannot be heard.
 //   NOTE_MS 20 s           how long "the game together has ended" stays in the corner: read, then gone by itself.
+//   CALL_ASK_JOIN_MS 60 s  a room opened because somebody on the call ASKED closes if they have not joined in this
+//                          long. Their call page joins by itself the moment the room's code reaches it - a few seconds
+//                          (a ticket, a socket, the game's page) - so 60 s covers a slow phone several times over. The
+//                          10-minute lobby above is for somebody fetching a phone and typing a code, which an ask is
+//                          not; and nobody here may be able to close a lobby, so it should not stand for ten minutes.
 export const LOBBY_MS = 10 * 60 * 1000;
 export const REMOTE_TURN_MS = 165000;
 export const NOTE_MS = 20000;
+export const CALL_ASK_JOIN_MS = 60000;
 // The page a phone opens to join (the QR code on the lobby, and the call page's "Join" beside the video).
 export const PLAY_PAGE = '/play.html';
 export const playPath = (code) => `${PLAY_PAGE}?room=${encodeURIComponent(code)}`;
@@ -724,6 +743,12 @@ registerModule(
     let note = '';                // why the last game together ended, in the corner for NOTE_MS
     let noteTimer = null;
     let lobbyTimer = null;
+    // ASKED FROM THE CALL (see the header): who asked, and whether their screen has joined. `endAfter`: when this room
+    // ends, end this screen's game too (the asker left, or the call ended).
+    let asked = null;             // null | { name, joined }
+    let endAfter = false;
+    let offLive = null;
+    let offAsk = null;
     const redraw = () => { try { api?.render(); } catch { /* gone */ } };
     const canTogether = () => ctx.gameRooms !== false
       && (typeof ctx.gameLink === 'function' || (typeof WebSocket !== 'undefined' && typeof fetch !== 'undefined'));
@@ -777,8 +802,57 @@ registerModule(
       if (!room) return;
       room.leave(why);              // ends here at once (onRoomEnd), and tells the room
     }
+    /**
+     * Somebody on the call asked to play (the kiosk hands it on: ctx.onGameAsk, or `askTogether` on a game it opened
+     * for the call). true: this panel took it; false: not for this panel now (another game, no call live here, a game
+     * together already open, no way to reach the site) - the kiosk then offers it to the next one.
+     */
+    function onAsk(a) {
+      if (dead || !a || a.game !== GAME || !api) return false;
+      if (!canTogether() || !callLive() || roomBusy()) return false;
+      const name = String(a.name || '').replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 40);
+      // A game of its own going here ends first (see the header): the done view stays calm while the asker joins.
+      if (api.begun() && phase() !== 'done') { try { api.engine.end(); } catch (err) { console.error('quiz mix: end for the call', err); } }
+      if (!startRoom({ call: true })) return false;
+      asked = { name, joined: false };
+      endAfter = false;
+      showLobby = true;
+      clearLobby();
+      lobbyTimer = roomSet(() => { lobbyTimer = null; if (asked && !asked.joined) stopTogether('nobody-came'); }, CALL_ASK_JOIN_MS);
+      // The call ends here: the game together ends with it.
+      try { offLive?.(); } catch { /* gone */ }
+      offLive = null;
+      try {
+        offLive = ctx.callTransport?.onLive?.((on) => {
+          if (on || !asked || !roomBusy()) return;
+          endAfter = !!asked.joined;
+          stopTogether(asked.joined ? 'call-left' : 'nobody-came');
+        }) || null;
+      } catch { offLive = null; }
+      redraw();
+      return true;
+    }
+    /** The asker's screen joined: the game starts by itself - a new game, for both ends. */
+    function startAsked() {
+      showLobby = false; sheetLit = 0;
+      if (!api) return;
+      if (!api.begun()) { api.start(); publish(); return; }
+      if (phase() !== 'done') { try { api.engine.end(); } catch { /* gone */ } }
+      try { api.engine.press('restart'); } catch (err) { console.error('quiz mix: start for the call', err); }
+      publish();
+    }
     function onRoomChange() {
       if (dead || !room) return;
+      if (asked && isHost()) {
+        const others = room.seats().some((s) => s.device !== room.you());
+        if (others && !asked.joined) { asked.joined = true; clearLobby(); startAsked(); }
+        else if (!others && asked.joined) {
+          // The asker's screen left the room (they closed the game, or hung up): the game together is over.
+          endAfter = true;
+          stopTogether('call-left');
+          return;
+        }
+      }
       if (isGuest()) {
         const st = room.state();
         // The host pressed Start: this screen's game starts with it (it waits for its turns from here on).
@@ -808,6 +882,11 @@ registerModule(
       const l = link;
       room = null; link = null;
       guestTurn = null;
+      // Asked from the call: that is over too. `finish`: this screen's game ends with it (see the header).
+      const finish = endAfter;
+      asked = null; endAfter = false;
+      try { offLive?.(); } catch { /* gone */ }
+      offLive = null;
       // The other screens' seats are gone with the room; a turn out at one of them is over.
       if (current?.remote && !current.done) { current.done = true; current.points = 0; }
       queueMicrotask(() => {
@@ -817,9 +896,13 @@ registerModule(
         if (wasGuest) {
           current = null;
           if (api.begun() && phase() !== 'done') api.engine.end();     // back to this screen's own game: Play again
+        } else if (finish) {
+          if (api.begun() && phase() !== 'done') api.engine.end();     // the game was for the call: it ends with it
         } else if (api.begun() && phase() === 'loading') {
           api.engine.refresh();          // the host carries on with its own players
         }
+        // A host that opened this panel only for the call (the kiosk's call view) closes it once the room is over.
+        try { ctx.onTogetherEnd?.(why); } catch (err) { console.error('quiz mix: together end', err); }
         redraw();
       });
       redraw();
@@ -926,8 +1009,9 @@ registerModule(
         try { qr = elsewhereQR(path, { colours: themeQrColours(ctx.mount || null) }); } catch { qr = ''; }
         const waiting = room.waiting().map((w) => `<li data-waiting="${esc(w.id)}"><b>${esc(w.names.join(', '))}</b>`
           + `${w.from ? ` <span class="qm-soft">(${esc(w.from)})</span>` : ''} would like to join.</li>`).join('');
-        const how = room.call()
-          ? '<p data-qm-call>Offered to the call: they can join from their call page, beside the video.</p>' : '';
+        const how = asked
+          ? `<p data-qm-asked>${esc(asked.name ? `${asked.name} asked to play on this call.` : 'Somebody on the call asked to play.')} The game starts when they join.</p>`
+          : room.call() ? '<p data-qm-call>Offered to the call: they can join from their call page, beside the video.</p>' : '';
         return wrap('lobby', `<h3>Play together</h3><div class="qm-lobby"><div><p>The game's code</p>
           <p class="qm-code" data-qm-code="${esc(code)}" aria-label="${esc([...code].join(' '))}">${esc(codeWords(code))}</p>
           <p class="qm-soft">On another screen with Quiz mix: Play together, then Join a game, and enter this code.</p>
@@ -1094,9 +1178,16 @@ registerModule(
         ensureSources();          // a host with no settings row still has every game in the mix
         // The join page (play.html?room=CODE): straight into that room.
         if (ctx.autoJoin) { try { joinRoom(ctx.autoJoin); } catch (err) { console.error('quiz mix: join', err); } }
+        // Asked from the call (see the header): the kiosk offers each ask to its game panels, first taker wins.
+        if (typeof ctx.onGameAsk === 'function') {
+          try { offAsk = ctx.onGameAsk((x) => onAsk(x)) || null; } catch (err) { console.error('quiz mix: asks', err); }
+        }
       },
       destroy: () => {
         dead = true;
+        try { offAsk?.(); } catch { /* gone */ }
+        try { offLive?.(); } catch { /* gone */ }
+        offAsk = null; offLive = null;
         stopClock();
         stopRemoteTimer();
         clearLobby();
@@ -1119,8 +1210,10 @@ registerModule(
       // Playing together: the room as this screen sees it, and the together layer.
       room: room ? { phase: room.phase(), role: room.role(), code: room.code(), you: room.you(), seats: room.seats(),
         state: room.state(), waiting: room.waiting() } : null,
-      sheet, note, showLobby, guestTurn, totalsNow: { ...totalsNow() },
+      sheet, note, showLobby, guestTurn, totalsNow: { ...totalsNow() }, asked: asked ? { ...asked } : null,
       act: (a, arg) => act(a, arg), join: (c) => joinRoom(c), open: (o) => startRoom(o), stop: () => stopTogether() });
+    // Asked from the call, handed straight in (the kiosk's call view opens this panel for an ask, then gives it the ask).
+    inner.askTogether = (a) => onAsk(a);
     return inner;
   },
 );

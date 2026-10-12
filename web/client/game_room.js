@@ -62,6 +62,9 @@ export const END_WORDS = Object.freeze({
   stopped: 'You stopped playing together.',
   unstarted: 'The game together ended: nobody started it.',
   'no-site': 'Could not reach the site to play together. Check the connection, and that this screen is signed in.',
+  // A game opened because somebody on the call asked for it (2026-10-12, quiz_mix.js CALL_ASK_JOIN_MS).
+  'nobody-came': 'Nobody joined the game on the call, so it closed.',
+  'call-left': 'The other player left, so the game together has ended.',
 });
 export const endWords = (why) => END_WORDS[why] || END_WORDS.closed;
 

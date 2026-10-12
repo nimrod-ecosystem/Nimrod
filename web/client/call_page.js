@@ -79,6 +79,17 @@ export const CALLER_END_TEXT = Object.freeze({
   ended: 'The call ended.',
 });
 
+// "PLAY THIS GAME TOGETHER" (2026-10-12; game_rooms.py CallAsks). During a call, one press here asks the screen to open
+// Quiz mix on the call; the screen opens a room and the site hands this page its code, and the game opens beside the
+// video with no second press. GAME_ASK_WAIT_MS is how long this page waits for that code before saying the game did
+// not open: the screen opens the room the moment it hears the ask and the code comes back in the same breath, so
+// 20 s, argued, covers a screen whose connection is reconnecting (its backoff tops out at 8 s) plus a ticket and a
+// socket. The server lets one socket ask once per 10 s, so a second press inside the wait would be dropped anyway.
+// GAME_NOTE_MS: how long the "did not open" words stay before the button comes back by itself.
+export const GAME_ASK_WAIT_MS = 20000;
+export const GAME_NOTE_MS = 20000;
+export const GAME_ASK_GAME = 'quiz_mix';
+
 // group calls: how long a knock waits before this page gives up on it. The server's own limit is 90 s (drive.py
 // KNOCK_WAIT_S) and it says "unanswered" itself; this is the backstop for a server that never replies, a little longer.
 export const KNOCK_GIVE_UP_MS = 95000;
@@ -638,6 +649,7 @@ export async function mountCallPage(root, {
     const n = q('[data-note]');
     if (n) { n.textContent = note || ''; n.hidden = !note; }
     if (group || legs.size) paintGroup();       // group calls: tiles, knocks, Add someone
+    paintGame();                                // "Play Quiz mix together" once the call is going
   }
 
   // ---- words from the screen's AAC board (WORDS_KEY above) -------------------------------------------
@@ -861,30 +873,76 @@ export async function mountCallPage(root, {
   }
 
   // ---- a game beside the video (game_rooms.py; the game itself is play.html, on this login's own levels) ----
-  let game = null;                     // { code, game, name, playing }
+  // `game`: null (nothing: during a call, the "Play Quiz mix together" button), { asking } (this page asked the screen
+  // to open it, GAME_ASK_WAIT_MS above), { note } (it did not open, said for GAME_NOTE_MS), or an offer / a game playing
+  // ({ code, game, name, playing }).
+  let game = null;
+  let gameSeq = 0;
+  const canAsk = () => phase === 'in-call' && primaryShown() && !!target && typeof link?.askGame === 'function';
   function paintGame() {
     const el = q('[data-game]');
     if (!el) return;
-    if (!game) { el.hidden = true; el.innerHTML = ''; return; }
-    el.hidden = false;
+    const set = (shape, html) => { if (el.dataset.shape !== shape) { el.dataset.shape = shape; el.innerHTML = html; } el.hidden = false; };
+    if (!game) {
+      if (!canAsk()) { el.hidden = true; el.innerHTML = ''; el.dataset.shape = ''; return; }
+      set('ask', `<div class="cp-game-btns"><button type="button" class="cp-btn" data-game-ask>Play Quiz mix together</button></div>`);
+      return;
+    }
     const who = game.name ? `${game.name}'s screen` : 'The screen';
+    if (game.asking) {
+      set('asking', `<p class="cp-game-line" data-game-asking role="status">${esc(`Asking ${target ? `${target.name}’s screen` : 'the screen'} to start Quiz mix…`)}</p>
+        <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>Never mind</button></div>`);
+      return;
+    }
+    if (game.note) {
+      set(`note:${game.note}`, `<p class="cp-game-line" data-game-note role="status">${esc(game.note)}</p>
+        <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>OK</button></div>`);
+      return;
+    }
     if (!game.playing) {
-      el.innerHTML = `<p class="cp-game-line" data-game-offer="${esc(game.code)}">${esc(who)} would like to play Quiz mix with you.</p>
+      set(`offer:${game.code}`, `<p class="cp-game-line" data-game-offer="${esc(game.code)}">${esc(who)} would like to play Quiz mix with you.</p>
         <div class="cp-game-btns"><button type="button" class="cp-btn cp-primary" data-game-join>Play</button>
-        <button type="button" class="cp-btn" data-game-close>Not now</button></div>`;
+        <button type="button" class="cp-btn" data-game-close>Not now</button></div>`);
       return;
     }
     if (el.querySelector('[data-game-frame]')) return;     // already playing: never reload the game under them
-    el.innerHTML = `<iframe class="cp-game-frame" data-game-frame title="Quiz mix" src="${esc(`/play.html?room=${encodeURIComponent(game.code)}`)}"></iframe>
-      <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>Close the game</button></div>`;
+    set(`play:${game.code}`, `<iframe class="cp-game-frame" data-game-frame title="Quiz mix" src="${esc(`/play.html?room=${encodeURIComponent(game.code)}`)}"></iframe>
+      <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>Close the game</button></div>`);
   }
   function showGame(inv) {
     if (!inv || !inv.code) return;
     if (game && game.playing && game.code === inv.code) return;
-    game = { code: inv.code, game: inv.game, name: inv.name || '', playing: false };
+    // This page asked for it: straight into the game, no second press (the press that asked was the yes).
+    const mine = !!game?.asking;
+    gameSeq++;
+    game = { code: inv.code, game: inv.game, name: inv.name || '', playing: mine };
     paintGame();
   }
-  function closeGame() { game = null; paintGame(); }
+  function closeGame() { gameSeq++; game = null; paintGame(); }
+  /** One press: ask the screen to open Quiz mix on this call (game_rooms.py CallAsks). */
+  function askForGame() {
+    if (game || !canAsk()) return false;
+    if (!link.askGame(GAME_ASK_GAME)) {
+      game = { note: 'Could not reach the site to ask. Check the connection and try again.' };
+    } else {
+      game = { asking: true };
+    }
+    const my = ++gameSeq;
+    const name = target?.name || 'the other';
+    if (game.asking) {
+      later(() => {
+        if (my !== gameSeq || !game?.asking) return;
+        game = { note: `The game did not open on ${name}’s screen. It opens on a screen showing Quiz mix, or showing the call by itself.` };
+        const mine = ++gameSeq;
+        paintGame();
+        later(() => { if (mine === gameSeq && game?.note) closeGame(); }, GAME_NOTE_MS);
+      }, GAME_ASK_WAIT_MS);
+    } else {
+      later(() => { if (my === gameSeq && game?.note) closeGame(); }, GAME_NOTE_MS);
+    }
+    paintGame();
+    return true;
+  }
 
   function stopTracks(stream) {
     for (const t of stream?.getTracks?.() || []) { try { t.stop(); } catch { /* stopped */ } }
@@ -969,6 +1027,7 @@ export async function mountCallPage(root, {
     if (e.target.closest?.('[data-flip]')) { flip(); return; }
     if (e.target.closest?.('[data-words-aloud]')) { setWordsMode(wordsMode() === 'speak' ? 'show' : 'speak'); return; }
     if (e.target.closest?.('[data-game-join]')) { if (game) { game.playing = true; paintGame(); } return; }
+    if (e.target.closest?.('[data-game-ask]')) { askForGame(); return; }
     if (e.target.closest?.('[data-game-close]')) { closeGame(); return; }
     // group calls: a knock, Add someone, letting a knock in, the relay setting.
     if (e.target.closest?.('[data-knock]')) { knockStart(); return; }
@@ -1014,6 +1073,7 @@ export async function mountCallPage(root, {
     people: () => people.map((p) => ({ ...p })),
     transport: () => transport,
     game: () => (game ? { ...game } : null),
+    askGame: () => askForGame(),
     words: () => [...said],
     wordsMode: () => wordsMode(),
     micHeld: () => heldForWords,

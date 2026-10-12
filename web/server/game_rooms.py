@@ -49,6 +49,24 @@ client keeps its own backstop for a server it can no longer hear:
   screen dropped on its turn (SEAT_AWAY_S), a turn nobody answers (TURN_MAX_S), a device gone for good
   (DEVICE_GONE_S), a room nobody touches (ROOM_IDLE_S) and any room at all (ROOM_MAX_S).
 
+ASKING A SCREEN TO OPEN THE GAME, FROM THE CALL (2026-10-12, `CallAsks` below). Mike: "some of the games could be
+good to play online or over a call." Until now a call game started at the SCREEN ("Play together", then "On this
+call"): two presses by the person who may be least able to make them. Now the CALLER can ask, with one press on the
+call page: the drive socket carries `{type: "game-ask", game}` from a DRIVER to that person's SCREENS, rebuilt here
+from the server's own record (the game from the fixed list, the asker's name as the server knows it - never a name
+the page sent). The screen opens a call room exactly as "On this call" does, the invitation comes back the usual way,
+and the call page joins it without another press.
+  WHICH GATE, argued both ways:
+    the game socket's own door (signed in, any login, then per room) - FOR: it is where rooms live. AGAINST, and it
+      decides it: an ask makes a SCREEN do something (open the game, start it). That is a press on somebody's
+      screen, and pressing a screen's buttons is exactly the drive socket's door, `grants.may_drive`.
+    the drive socket's door - the caller already passes it (calling a screen IS that door), so the ask adds no
+      power: the same caller could open the game with `select` and `next` today. A watch-only socket (following,
+      waiting for a yes, refused) can send nothing at all (app.py drops it first), so seeing a screen never becomes
+      starting a game on it. And the screen applies the person's own input gate (drive.js `attachDriveToBus`), the
+      same rule a remote press meets - a screen set to "only the person in the room" refuses an ask too.
+  It holds nothing: the ask is relayed and forgotten, apart from when this socket last asked (CALL_ASK_GAP_S).
+
 IN-MEMORY, AND THEREFORE SINGLE-INSTANCE - exactly drive.py's honest limit, for the same reason: on one Render
 web service that is correct; two instances need Redis pub/sub, not a bigger dict. Nothing is written to the
 database, so there is nothing new to list on the privacy page.
@@ -116,6 +134,10 @@ ROOM_IDLE_S = 30 * 60
 ROOM_MAX_S = 6 * 3600
 # How often app.py's socket loops wake to run the clocks when nothing is arriving.
 SWEEP_S = 5
+# A caller may ask a screen to open a game at most once in this long (per socket). The call page sends one ask per
+# press and waits up to 20 s for the room (call_page.js GAME_ASK_WAIT_MS), so a person never meets this; a loop on a
+# page that pressed it a hundred times would otherwise make a screen open and close rooms as fast as it could.
+CALL_ASK_GAP_S = 10
 
 # ---------------------------------------------------------------------------------------------------
 # THE BOUNDS
@@ -829,3 +851,53 @@ class GameRooms:
             if changed and h.conn is not None:
                 out.append((h.conn, self._view(room, HOST)))
         return out
+
+
+# ---------------------------------------------------------------------------------------------------
+# ASKING A SCREEN TO OPEN THE GAME, FROM THE CALL (2026-10-12; the header argues the gate)
+# ---------------------------------------------------------------------------------------------------
+def parse_call_ask(raw) -> dict | None:
+    """A caller's `{type: "game-ask", game}` on the DRIVE socket (drive.py parse_message hands it here). Only the
+    game, from GAMES; anything else on the message - a name, a code, a seat - is dropped, not relayed."""
+    if not isinstance(raw, dict) or raw.get("type") != "game-ask":
+        return None
+    g = raw.get("game")
+    if not isinstance(g, str) or g not in GAMES:
+        return None
+    return {"type": "game-ask", "game": g}
+
+
+class CallAsks:
+    """Who asked a screen to open a game, and when - per drive socket, for CALL_ASK_GAP_S only. PURE (no I/O).
+
+    ask(conn, role, msg, name_of) -> the message for the person's SCREENS, or None to drop it:
+      * only a DRIVER asks (a screen never asks another screen to do anything - drive.py's first rule);
+      * only a game on the fixed list;
+      * at most once per CALL_ASK_GAP_S per socket;
+      * the name is the server's (`name_of()`, read only when the ask goes out), cleaned like a seat's name.
+    """
+
+    def __init__(self, *, gap_s: float = CALL_ASK_GAP_S, now=time.monotonic):
+        self._gap = gap_s
+        self._now = now
+        self._last: dict = {}
+
+    def ask(self, conn, role: str, msg, name_of=lambda: "") -> dict | None:
+        if role != "driver" or not isinstance(msg, dict) or msg.get("type") != "game-ask" or msg.get("game") not in GAMES:
+            return None
+        now = self._now()
+        last = self._last.get(conn)
+        if last is not None and now - last < self._gap:
+            return None
+        self._last[conn] = now
+        try:
+            name = clean_name(name_of() or "")
+        except Exception:
+            name = ""
+        return {"type": "game-ask", "game": msg["game"], "name": name}
+
+    def left(self, conn) -> None:
+        self._last.pop(conn, None)
+
+    def __len__(self) -> int:
+        return len(self._last)
