@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>characters, world kits and the town — Design's files, and where the site uses them — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #pen{position:relative;width:960px;height:540px;overflow:hidden}
+  #pen .host{position:absolute;inset:0}
+  #sheet{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}#sheet svg{width:120px;height:auto;display:block}
+  #sheet .wide svg{width:240px}
+</style>
+</head>
+<body>
+<h1>characters, world kits and the town (Claude Design, 2026-10-12)</h1>
+<p>Design's characters handoff ships three files as they are: <code>character_kit.js</code> (a full-body character
+from a look, an outfit, a role and a pose), <code>theme_kits.js</code> (each world's furniture as SVG) and
+<code>town.js</code> (each theme's eight places, as room recipes, and a flat drawing of each). This suite checks those
+files are Design's, byte for byte; that EVERY theme draws every character, piece and place, each with a label; that
+NO drawing anywhere carries a script, an event handler or a reference outside itself; and the three places the site
+uses them: the avatar maker's full-body character (<code>avatar_figure.js</code>, kept as data), the room builder's
+piece list (<code>room_parts.js</code>: each world's pieces drawn in a real room) and the cards (their own suite,
+<code>playing_cards_test.html</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="pen"></div>
+<h2>to look at: the four court characters in each world's outfits, and a place from each dressed town</h2>
+<div id="sheet"></div>
+
+<script type="module">
+import {
+  figureSvg, figureBody, OUTFITS, OUTFIT_THEMES, DEFAULT_CHARACTERS, COURT_PICK, courtOutfit, POSES, SKIN_TONES,
+  HAIR_COLOURS, HAIR_STYLES, SUIT_PATH,
+} from '../character_kit.js';
+import { KIT, KIT_WORLDS, kitByWorld } from '../theme_kits.js';
+import { TOWN_DRESS, PLACES, HOMES, PARK_SCENES, PLACE_FOR, placeSvg, placeInfo, placeRecipe, parkScene } from '../town.js';
+import { cardThemes } from '../playing_cards.js';
+import {
+  FIGURE_PARTS, normalizeFigure, renderFigure, describeFigure, surpriseFigure, courtFigure, COURT_ROLES, figureParts,
+  DEFAULT_FIGURE,
+} from '../avatar_figure.js';
+import { readAvatar } from '../avatar.js';
+import { avatarView, avatarHtml } from '../avatar_display.js';
+import { FURNITURE, FURNITURE_GROUPS, FURNITURE_WORLD_GROUPS, KIT_PIECES, buildFurniture } from '../room_parts.js';
+import { mountRoomScene } from '../room_scene.js';
+import { furnitureItems } from '../library.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const SVGNS = 'http://www.w3.org/2000/svg';
+const parse = (svg) => new DOMParser().parseFromString(svg, 'image/svg+xml');
+const parses = (svg) => { const d = parse(svg); return !d.querySelector('parsererror') && d.documentElement.localName === 'svg'; };
+const labelOf = (svg) => (svg.match(/^<svg[^>]*aria-label="([^"]*)"/) || [])[1];
+const wrap = (body) => `<svg xmlns="${SVGNS}" viewBox="0 0 100 100">${body}</svg>`;
+
+// *** NOTHING IN A DRAWING THAT COULD RUN OR REACH OUT. *** Every element and attribute of a parsed drawing: no script,
+// no foreignObject, no image, no link, no <use> of anything but a local id; no on* handler; no href but '#local'; no
+// url(...) but url(#local); no 'javascript:' anywhere; nothing that names another site but the SVG namespace itself.
+const BAD_ELEMENTS = new Set(['script', 'foreignobject', 'image', 'a', 'iframe', 'object', 'embed', 'audio', 'video', 'link', 'style']);
+function unsafe(svg) {
+  const d = parse(svg);
+  if (d.querySelector('parsererror')) return 'does not parse';
+  for (const el of d.querySelectorAll('*')) {
+    const n = el.localName.toLowerCase();
+    if (BAD_ELEMENTS.has(n)) return `<${n}>`;
+    for (const a of el.attributes) {
+      const an = a.name.toLowerCase(), v = a.value;
+      if (an.startsWith('on')) return `${an}=`;
+      if ((an === 'href' || an === 'xlink:href') && !v.startsWith('#')) return `${an}="${v}"`;
+      if (/javascript:/i.test(v)) return `javascript: in ${an}`;
+      for (const m of v.matchAll(/url\(\s*['"]?([^)'"]*)/gi)) if (!m[1].startsWith('#')) return `url(${m[1]}) in ${an}`;
+      if (an !== 'xmlns' && /https?:\/\//i.test(v)) return `a web address in ${an}`;
+    }
+  }
+  const outside = svg.replace(/xmlns(:\w+)?="http:\/\/www\.w3\.org\/2000\/svg"/g, '');
+  if (/https?:\/\//i.test(outside)) return 'a web address in the text';
+  return null;
+}
+
+(async () => {
+try {
+  section('*** Design\'s files, as they were handed over (Nimrod Design System16, handoff/characters, 2026-10-12) ***');
+  {
+    // The SHA-256 of each .js.txt, line endings as LF. A change here means a shipped file is no longer Design's: take
+    // a new handoff and update the line, rather than editing their file. (playing_cards.js: its own suite.)
+    const PINS = {
+      'character_kit.js': '71dd5de1beeb2349ea39371ae0e9a77cf22598077e8e2e4c56ddd33724ad7852',
+      'theme_kits.js': 'aa9d4f28c75383d2d328fef7810fb62240148ca31f62a24d45bdd333c8ff758f',
+      'town.js': 'a4e5e6b594bd2ce59b7cd9e0754b5bce21176af9145e4159b2031307d0ca3194',
+    };
+    const IMPORTS = { 'character_kit.js': '', 'theme_kits.js': '', 'town.js': './theme_kits.js' };
+    for (const [f, pin] of Object.entries(PINS)) {
+      const text = (await (await fetch(`../${f}`, { cache: 'no-store' })).text()).replace(/\r\n/g, '\n');
+      const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
+        .map((b) => b.toString(16).padStart(2, '0')).join('');
+      check(`*** web/client/${f} is byte for byte Design's file (line endings aside) ***`, hash === pin, hash);
+      const imports = [...text.matchAll(/^\s*import\b[^;]*from\s*'([^']+)'/gm)].map((m) => m[1]).join();
+      check(`${f} imports ${IMPORTS[f] || 'nothing'}`, imports === IMPORTS[f], imports);
+    }
+  }
+
+  section('*** character_kit: every outfit, every role, every pose draws, with a label ***');
+  {
+    const ROLES = [null, 'king', 'queen', 'jack', 'joker'];
+    const SUITS = Object.keys(SUIT_PATH);
+    let n = 0; const bad = [], risky = [];
+    for (const outfit of Object.keys(OUTFITS)) for (const role of ROLES) for (const pose of POSES) {
+      const suit = role && role !== 'joker' ? SUITS[n % 4] : null;
+      const svg = figureSvg({ tone: SKIN_TONES[n % SKIN_TONES.length], hair: HAIR_STYLES[n % HAIR_STYLES.length], hairColor: HAIR_COLOURS[n % HAIR_COLOURS.length], beard: n % 3 === 0, glasses: n % 2 === 0 },
+        { outfit, role, suit, suitColor: '#b03a2e', pose, emblem: '<circle cx="50" cy="50" r="40" fill="#f2e2a8"/>' }, `${outfit} ${role || 'none'} ${pose}`);
+      n++;
+      if (!parses(svg) || !/role="img"/.test(svg) || labelOf(svg) !== `${outfit} ${role || 'none'} ${pose}` || !/<title>/.test(svg)) bad.push(`${outfit}/${role}/${pose}`);
+      const u = unsafe(svg); if (u) risky.push(`${outfit}/${role}: ${u}`);
+    }
+    check(`all ${n} figures (${Object.keys(OUTFITS).length} outfits x 5 roles x ${POSES.length} poses) parse, with role="img", a label and a title`, bad.length === 0, bad.slice(0, 5).join(' | '));
+    check('*** no figure carries a script, a handler or a reference outside itself ***', risky.length === 0, risky.slice(0, 5).join(' | '));
+    check(`six themes have outfits of their own (${OUTFIT_THEMES.join(', ')}), two or three each, and the Royal robe is for any`,
+      OUTFIT_THEMES.length === 6 && OUTFIT_THEMES.every((t) => Object.values(OUTFITS).filter((o) => o.theme === t).length >= 2) && OUTFITS.royal.theme === 'any');
+    check('the four default characters are four people with a name and a look of their own',
+      Object.keys(DEFAULT_CHARACTERS).join() === 'king,queen,jack,joker' && Object.values(DEFAULT_CHARACTERS).every((c) => c.name && c.look && c.look.tone));
+    check('what the court wears in each of the six themes is a real outfit; any other theme falls back to the Royal robe',
+      OUTFIT_THEMES.every((t) => ['king', 'queen', 'jack', 'joker'].every((r) => OUTFITS[COURT_PICK[t][r]])) && courtOutfit('king', 'night') === 'royal' && courtOutfit('queen', 'nope') === 'royal');
+    check('an unknown outfit draws the Royal robe, not nothing', figureBody({}, { outfit: 'nope' }) === figureBody({}, { outfit: 'royal' }));
+  }
+
+  section('*** theme_kits: every world\'s pieces draw, each with a label ***');
+  {
+    const ids = Object.keys(KIT);
+    const worlds = KIT_WORLDS.map(([w]) => w);
+    const bad = ids.filter((id) => {
+      const p = KIT[id];
+      return !p.label || !['floor', 'wall'].includes(p.on) || !Array.isArray(p.box) || p.box.length !== 2 || !(p.box[0] > 0 && p.box[1] > 0)
+        || !/^#[0-9a-f]{6}$/i.test(p.color) || !worlds.includes(p.theme) || !parses(wrap(p.svg(p.color)));
+    });
+    check(`all ${ids.length} pieces have a label, floor or wall, a box, a colour, a world, and draw`, bad.length === 0, bad.join());
+    check('*** no piece carries a script, a handler or a reference outside itself, in its own colour or another ***',
+      ids.every((id) => !unsafe(wrap(KIT[id].svg(KIT[id].color))) && !unsafe(wrap(KIT[id].svg('#123456')))), ids.filter((id) => unsafe(wrap(KIT[id].svg(KIT[id].color)))).join());
+    check(`every piece is in exactly one world, listed in Design's order: ${KIT_WORLDS.map(([w, l]) => `${l} ${kitByWorld(w).length}`).join(', ')}`,
+      worlds.flatMap((w) => kitByWorld(w)).sort().join() === ids.sort().join());
+    check('pieces that give off light say so (glow), the way the room\'s lamps do', ['candelabra', 'woodStove', 'cauldron', 'jackLantern', 'xmasTree', 'boiler'].every((id) => KIT[id].glow && KIT[id].glow.r > 0));
+  }
+
+  section('*** town: every place in every theme draws, with a label; no drawing reaches outside itself ***');
+  {
+    const themes = [...new Set([...Object.keys(TOWN_DRESS), ...Object.keys(cardThemes)])];
+    const places = Object.keys(PLACES);
+    let n = 0; const bad = [], risky = [];
+    for (const th of themes) for (const id of places) {
+      const svg = placeSvg(id, th);
+      n++;
+      const want = `${placeInfo(id, th).label}, `;
+      if (!parses(svg) || !/role="img"/.test(svg) || !(labelOf(svg) || '').startsWith(want) || !/<title>/.test(svg)) bad.push(`${th}/${id}`);
+      const u = unsafe(svg); if (u) risky.push(`${th}/${id}: ${u}`);
+    }
+    check(`all ${n} places (${places.length} places x ${themes.length} themes) parse, with role="img" and a label naming the place`, bad.length === 0, bad.slice(0, 5).join(' | '));
+    check('*** no place carries a script, a handler or a reference outside itself ***', risky.length === 0, risky.slice(0, 5).join(' | '));
+    check('eight places: four homes, one for each suit in town', places.length === 8
+      && ['K', 'Q', 'J', 'joker', 'hearts', 'diamonds', 'clubs', 'spades'].every((k) => places.includes(PLACE_FOR[k])));
+    check('every place in every theme has a name and a one-line description, ready for stories',
+      themes.every((th) => places.every((id) => { const p = placeInfo(id, th); return p.label && p.blurb && p.blurb.length > 10; })));
+    check(`six towns are dressed (${Object.keys(TOWN_DRESS).join(', ')}) and build their own homes; any other theme borrows Nimrod's`,
+      Object.keys(TOWN_DRESS).length === 6 && Object.keys(TOWN_DRESS).every((t) => HOMES[t]) && placeSvg('kingHall', 'night').includes('Nimrod'));
+    // Every piece a home or a place uses is one the town can draw: its own built-ins or a world's kit piece.
+    const known = new Set([...Object.keys(KIT), 'sofa', 'armchair', 'bed', 'bookshelf', 'desk', 'sideTable', 'cabinet', 'tableLamp', 'floorLamp', 'plant', 'rug', 'fireplace', 'window', 'wallShelf']);
+    const recipes = [...Object.values(PLACES).filter((p) => p.recipe).map((p) => p.recipe), ...Object.values(HOMES).flatMap((h) => Object.values(h).map((x) => x.recipe))];
+    const unknown = recipes.flatMap((r) => r.items.filter((it) => it.kind === 'furniture' && !known.has(it.part)).map((it) => it.part));
+    check(`every piece in the ${recipes.length} home and place recipes is one the town can draw`, unknown.length === 0, unknown.join());
+    check('*** and every one of them is a piece the room builder can draw too (room_parts.js FURNITURE) ***',
+      recipes.every((r) => r.items.filter((it) => it.kind === 'furniture').every((it) => FURNITURE[it.part])));
+    check('the Park is a scene recipe for each dressed theme, and a copy is a copy', Object.keys(TOWN_DRESS).every((t) => PARK_SCENES[t] && PARK_SCENES[t].parts.length)
+      && parkScene('fall') !== PARK_SCENES.fall && JSON.stringify(parkScene('fall')) === JSON.stringify(PARK_SCENES.fall));
+    const edited = { ...placeRecipe('library', 'winter'), wall: { finish: 'paint', color: '#224466' } };
+    check('a person\'s edited place wins whole (town.js placeRecipe), and draws', placeRecipe('library', 'winter', edited) === edited && placeSvg('library', 'winter', { edited }).includes('#224466'));
+  }
+
+  section('*** the avatar\'s full-body character (avatar_figure.js): kept as data, never markup ***');
+  {
+    const r = normalizeFigure({ tone: '"/><script>bad()<\/script>', hair: 'mohawk', hairColor: 'red" onload="bad()', beard: true, glasses: 'maybe', outfit: 'nope', pose: 'dance', extra: '<x>' });
+    check('*** a stored record is repaired: an unknown or unsafe value is the default, a free colour must be #rrggbb ***',
+      r.tone === DEFAULT_FIGURE.tone && r.hair === DEFAULT_FIGURE.hair && r.hairColor === DEFAULT_FIGURE.hairColor && r.beard === 'yes'
+      && r.glasses === DEFAULT_FIGURE.glasses && r.outfit === DEFAULT_FIGURE.outfit && r.pose === DEFAULT_FIGURE.pose && !('extra' in r));
+    check('a free colour is kept, written the one way', normalizeFigure({ tone: '#ABCDEF', hairColor: 'abc' }).tone === '#abcdef' && normalizeFigure({ hairColor: '#abc' }).hairColor === '#aabbcc');
+    const svg = renderFigure({ tone: '"><script>x<\/script>' }, { title: '"Jo" <b>&</b>' });
+    check('*** the drawing is safe whatever the record said, and its title is escaped ***', parses(svg) && !unsafe(svg) && labelOf(svg) === '&quot;Jo&quot; &lt;b&gt;&amp;&lt;/b&gt;');
+    let all = 0; const bad = [];
+    for (const p of FIGURE_PARTS) for (const o of p.options) {
+      const s = renderFigure({ ...DEFAULT_FIGURE, [p.key]: o.id });
+      all++;
+      if (!parses(s) || unsafe(s) || !labelOf(s)) bad.push(`${p.key}=${o.id}`);
+    }
+    check(`every choice of every part (${all}) draws, safely, with a label`, bad.length === 0, bad.join());
+    check('every outfit in Design\'s wardrobe is a choice, named with its world', FIGURE_PARTS.find((p) => p.key === 'outfit').options.length === Object.keys(OUTFITS).length
+      && FIGURE_PARTS.find((p) => p.key === 'outfit').options.some((o) => o.name === 'Halloween: Witch'));
+    const head = renderFigure(DEFAULT_FIGURE, { crop: 'head', size: '100%', title: '' });
+    check('the small face is the head and shoulders, decorative (hidden from a screen reader: the name beside it says who)',
+      /viewBox="16 0 168 168"/.test(head) && /data-avatar-figure="head"/.test(head) && /aria-hidden="true"/.test(head) && !/aria-label=/.test(head));
+    check('a surprise is the same for the same seed and differs between seeds', JSON.stringify(surpriseFigure('p1')) === JSON.stringify(surpriseFigure('p1'))
+      && JSON.stringify(surpriseFigure('p1')) !== JSON.stringify(surpriseFigure('p2')));
+    check('the four court characters are offered as starting points, in their Nimrod clothes', COURT_ROLES.join() === 'king,queen,jack,joker'
+      && COURT_ROLES.every((role) => courtFigure(role).outfit === COURT_PICK.nimrod[role]) && courtFigure('king').beard === 'yes');
+    check('a role is a costume for a game, passed when drawing, not kept on the avatar', !('role' in normalizeFigure({ role: 'king' }))
+      && figureParts(DEFAULT_FIGURE, { role: 'king', suit: 'hearts' }).opts.role === 'king' && !figureParts(DEFAULT_FIGURE, { role: 'emperor' }).opts.role);
+    check('described in words', /^A full-body character: .+ wearing the .+\.$/.test(describeFigure(DEFAULT_FIGURE)));
+    const row = { use: 'figure', figure: { ...DEFAULT_FIGURE, outfit: 'winterParka' } };
+    check('*** kept on the person\'s avatar row: use "figure", the record repaired on the way in, the drawn face and picture untouched ***',
+      readAvatar(row).use === 'figure' && readAvatar(row).figure.outfit === 'winterParka' && readAvatar(row).drawn === null
+      && readAvatar({ use: 'figure' }).use === 'none' && readAvatar({ figure: DEFAULT_FIGURE }).use === 'figure');
+    const v = avatarView(row);
+    const html = avatarHtml(v, { size: '32px', reducedMotion: true });
+    check('*** shown beside a name as the head and shoulders, in the same small face every avatar uses ***',
+      v.show === 'figure' && /data-avatar-shown="figure"/.test(html) && /viewBox="16 0 168 168"/.test(html) && /border-radius:50%/.test(html));
+  }
+
+  section('*** the room builder\'s piece list: each world\'s furniture, grouped by world, drawn in a real room ***');
+  {
+    const ids = Object.keys(KIT);
+    check(`every one of Design's ${ids.length} world pieces is a room piece (room_parts.js FURNITURE), with its box, place and light`,
+      ids.every((id) => FURNITURE[id] && FURNITURE[id].svg && FURNITURE[id].box === KIT[id].box && FURNITURE[id].on === KIT[id].on
+        && (FURNITURE[id].glow || null) === (KIT[id].glow || null)) && KIT_PIECES.length === ids.length);
+    check('...and none replaced a drawn piece of the same name', ['sofa', 'bookshelf', 'window', 'door'].every((id) => FURNITURE[id].render && !FURNITURE[id].svg));
+    const listed = FURNITURE_WORLD_GROUPS.flatMap(([, g]) => g);
+    check(`*** the piece list groups them by world, in Design's order: ${FURNITURE_WORLD_GROUPS.map(([l, g]) => `${l} (${g.length})`).join(', ')} ***`,
+      listed.slice().sort().join() === ids.slice().sort().join() && new Set(listed).size === listed.length
+      && FURNITURE_WORLD_GROUPS.map(([l]) => l).join() === KIT_WORLDS.map(([, l]) => l).join());
+    check('the drawn pieces keep their own groups first, as before', FURNITURE_GROUPS.slice(0, 5).map(([l]) => l).join() === 'Seating,Storage & tables,Light & warmth,Soft things,Doors & sound');
+    const lib = furnitureItems();
+    check('the Library lists every piece, a world\'s under its world', lib.length === Object.keys(FURNITURE).length && lib.find((i) => i.id === 'cauldron')?.lead.startsWith('Halloween:'));
+    const el = buildFurniture(document, 'cauldron', '#7fd06a');
+    check('a world piece is drawn as its SVG, filling its box', el.dataset.furniture === 'cauldron' && el.querySelector('svg') && el.querySelector('svg').getAttribute('viewBox') === '0 0 100 100');
+    const evil = buildFurniture(document, 'throne', '"/><img src=x onerror="bad()');
+    check('*** a colour that is not #rrggbb is not let into the drawing (the piece\'s own colour draws) ***',
+      !evil.querySelector('img') && evil.innerHTML.includes(KIT.throne.color) && [...evil.querySelectorAll('*')].every((e) => [...e.attributes].every((a) => !/^on/i.test(a.name))));
+    // A town place, opened as an ordinary room in the real renderer: every piece draws, the kit pieces as their SVG.
+    const pen = document.getElementById('pen');
+    for (const [th, id] of [['halloween', 'kingHall'], ['steampunk', 'jackWorkshop'], ['christmas', 'queenParlour'], ['fall', 'jokerCaravan']]) {
+      const host = document.createElement('div'); host.className = 'host'; pen.append(host);
+      const recipe = placeRecipe(id, th);
+      const scene = mountRoomScene(host, recipe, { now: () => new Date(2026, 9, 12, 12) });
+      await sleep(40);
+      const furn = recipe.items.filter((it) => it.kind === 'furniture');
+      const drawn = [...scene.root.querySelectorAll('.rs-item[data-item^="furniture:"]')];
+      const kitDrawn = drawn.filter((e) => KIT[e.dataset.item.slice(10)]);
+      check(`*** ${placeInfo(id, th).label} (${th}) opens in the room builder: all ${furn.length} pieces drawn, ${kitDrawn.length} of them the world's own, each with its drawing ***`,
+        drawn.length === furn.length && kitDrawn.length > 0 && kitDrawn.every((e) => e.querySelector('.rm svg path, .rm svg circle, .rm svg rect, .rm svg ellipse')),
+        `${drawn.length} of ${furn.length}`);
+      scene.destroy();
+      host.remove();
+    }
+  }
+
+  // To look at.
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = OUTFIT_THEMES.map((t) => ['king', 'queen', 'jack', 'joker'].map((role) => figureSvg(DEFAULT_CHARACTERS[role].look,
+    { outfit: COURT_PICK[t][role], role, suit: role === 'joker' ? null : 'hearts', suitColor: '#b03a2e' }, `${DEFAULT_CHARACTERS[role].name}, ${t}`)).join('')).join('')
+    + Object.keys(TOWN_DRESS).map((t) => `<span class="wide">${placeSvg(PLACE_FOR.K, t)}</span>`).join('');
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

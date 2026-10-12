@@ -23,7 +23,12 @@ a gap that gets filled fails until it is crossed off, so the lists only shrink.<
 <div id="summary">running…</div>
 
 <script type="module">
-import { themeSurfaces, knownCoverage, siteThemes } from '../theme_surfaces.js';
+import { themeSurfaces as designSurfaces, knownCoverage, siteThemes, codeSurfaces, codeCoverage, allSurfaces } from '../theme_surfaces.js';
+import { OUTFITS, OUTFIT_THEMES, COURT_PICK } from '../character_kit.js';
+import { TOWN_DRESS } from '../town.js';
+import { KIT, KIT_WORLDS } from '../theme_kits.js';
+// Design's lines and Code's (2026-10-12: the character outfits line, from Design's characters handoff).
+const themeSurfaces = allSurfaces;
 import { THEMES, applyTheme, panelHalo, onColor, worstContrast } from '../theme.js';
 import { BOARD_BASE } from '../live_themes.js';
 import { BRICK_COLOURS } from '../brick_colours.js';
@@ -98,6 +103,15 @@ const CHECKS = {
   // Brick materials (wall, wood, soft, accent: base, seam, finish) are not in the site's data for any theme yet:
   // they are on Design's oct-2-asks sheet, not moved into a module. When they land, this line becomes the check.
   materials: () => 'no brick materials in the site\'s data yet',
+  // Design's character kit (2026-10-12): the theme has outfits of its own in the wardrobe AND its court wears them
+  // (COURT_PICK). A theme without is dressed in the Royal robe in its deck's colours: Design's fallback, named below.
+  outfits: (id) => {
+    const d = siteThemes[id];
+    if (!d) return 'no Design id (a still theme Design has not drawn)';
+    const own = Object.values(OUTFITS).some((o) => o.theme === d);
+    if (!own) return 'no outfits of its own: its court wears the Royal robe in its deck\'s colours';
+    return COURT_PICK[d] && ['king', 'queen', 'jack', 'joker'].every((r) => OUTFITS[COURT_PICK[d][r]]) ? true : 'outfits, but its court is not dressed in them (COURT_PICK)';
+  },
 };
 
 // *** TODAY'S KNOWN GAPS, BY LINE, EACH WITH WHY. *** Named so they are seen, not hidden. A theme NOT on a line's list
@@ -109,6 +123,9 @@ const KNOWN_GAPS = {
   bricks: { ids: TODAY, why: 'brick colours are there for every theme (brick_colours.js); no theme sets the rhythm tiles (--floor-tile) yet. Design\'s sheet has them for three' },
   marks: { ids: TODAY, why: 'no theme defines --good / --bad yet; today\'s marks are answer_mark.js\'s placeholder in the text colour on the ok/bad washes, which theme_test.html measures in every theme' },
   materials: { ids: TODAY, why: 'no theme carries brick materials in the site\'s data yet; Design\'s sheet has them for five' },
+  // Design's characters handoff (2026-10-12): "Six themes so far ... Every other theme falls back to the Royal robe".
+  outfits: { ids: TODAY.filter((id) => !['default', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'].includes(id)),
+    why: 'Design has drawn outfits for six themes so far (Nimrod, Fall, Winter, Halloween, Christmas, Steampunk); every other court wears the Royal robe in its deck\'s colours, Design\'s own fallback' },
 };
 
 try {
@@ -141,6 +158,17 @@ try {
     check('every line with a known-gap list is a required line', Object.keys(KNOWN_GAPS).every((k) => req.includes(k)));
     check('Design\'s knownCoverage names only Design ids', Object.values(knownCoverage).flat()
       .filter((id) => !['color', 'mono'].includes(id)).every((id) => own(cardThemes, id)));
+    check(`Design's ${designSurfaces.length} lines come first and are unchanged in number; Code's ${codeSurfaces.length} (from the characters handoff) follow`,
+      allSurfaces.length === designSurfaces.length + codeSurfaces.length && allSurfaces.slice(0, designSurfaces.length).every((r, i) => r === designSurfaces[i]));
+    // codeCoverage is read back from Design's own files, not trusted.
+    const same = (a, b) => [...a].sort().join() === [...b].sort().join();
+    check(`*** character outfits: ${codeCoverage.outfits.join(', ')} (character_kit.js OUTFIT_THEMES and COURT_PICK say the same) ***`,
+      same(codeCoverage.outfits, OUTFIT_THEMES) && same(codeCoverage.outfits, Object.keys(COURT_PICK)));
+    check(`town and homes: ${codeCoverage.town.join(', ')} dressed (town.js TOWN_DRESS); every other theme borrows Nimrod's town, as Design wrote it to`,
+      same(codeCoverage.town, Object.keys(TOWN_DRESS)));
+    const kitWorlds = [...new Set(Object.values(KIT).map((p) => p.theme))].filter((w) => w !== 'any');
+    check(`world furniture: ${codeCoverage.kit.join(', ')} have pieces of their own (theme_kits.js), plus ${Object.values(KIT).filter((p) => p.theme === 'any').length} for every world`,
+      same(codeCoverage.kit, kitWorlds) && same(kitWorlds, KIT_WORLDS.map(([w]) => w).filter((w) => w !== 'any')));
     console.log('lines a person checks once per theme (process):', themeSurfaces.filter((r) => r.need === 'process').map((r) => r.label).join(', '));
   }
 
@@ -173,7 +201,7 @@ try {
     const failsFor = (row) => r[row].fails.some((f) => f.startsWith('zzNew:'));
     check('a new theme not in siteThemes would fail the first check', !Object.keys(siteThemes).includes('zzNew'));
     check('*** ...and fails "Playing cards" (no deck drawn), "Live scene", the gaps every theme has, and nothing it answers ***',
-      failsFor('cards') && failsFor('scene') && failsFor('bricks') && failsFor('marks') && failsFor('materials')
+      failsFor('cards') && failsFor('scene') && failsFor('bricks') && failsFor('marks') && failsFor('materials') && failsFor('outfits')
         && !failsFor('site') && !failsFor('halo'),
       Object.entries(r).map(([k, v]) => `${k}:${v.fails.filter((f) => f.startsWith('zzNew:')).length}`).join(' '));
     check('the probe theme is gone again', !('zzNew' in THEMES));

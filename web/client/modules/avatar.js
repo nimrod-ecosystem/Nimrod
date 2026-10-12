@@ -21,6 +21,10 @@
 //     warning that a photo sent to an online AI leaves the computer. What comes back is a picture,
 //     which goes in a picture folder and is chosen with "use a picture instead".
 //
+// AND A FOURTH (2026-10-12): A FULL-BODY CHARACTER from Claude Design's character kit (`../avatar_figure.js`):
+// skin, hair, beard, glasses, an outfit from any theme's wardrobe and a pose, walked by the same rows. Kept as
+// data on the same row (`figure`), shown head-and-shoulders in a small face (avatar_display.js).
+//
 // ONE SWITCH REACHES EVERYTHING. The walk goes down the PARTS, then the buttons (Surprise me, Use a
 // picture, Make your own, Cancel, Save — Save last, so it is one `prev` from the top). `select` on a
 // part opens it: now `next`/`prev` step through that part's choices and the picture changes as they
@@ -48,6 +52,9 @@ import { createCardImages } from '../card_face.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { mountPicturePicker } from '../picture_picker.js';
 import { normalizeHex } from '../color_picker.js';
+import {
+  FIGURE_PARTS, figurePartOf, normalizeFigure, figureOptionFor, renderFigure, describeFigure, surpriseFigure,
+} from '../avatar_figure.js';
 
 // *** THE MAKE-YOUR-OWN PROMPTS — chat's draft (room-as-home notes §7.4), unchanged in substance. ***
 export const PROMPT_PHOTO = [
@@ -101,6 +108,16 @@ export const MAKE_ACTIONS = Object.freeze([
   { act: 'save', label: 'Save' },
 ]);
 
+// THE FULL-BODY CHARACTER (Design's character kit, 2026-10-12; `../avatar_figure.js`). The same maker walks
+// its parts (skin, hair, outfit, pose ...) exactly as it walks the face's: a PLAIN CHOOSER, one row per part.
+// Design's own maker has picture tiles in four tabs (Body, Outfits, Role, Pose); that layout is not built here
+// (on Mike's list). Its buttons, in walk order, Save last for the same reason as the face's.
+export const FIGURE_ACTIONS = Object.freeze([
+  { act: 'surprise', label: 'Surprise me' },
+  { act: 'cancel', label: 'Cancel' },
+  { act: 'save', label: 'Save' },
+]);
+
 registerModule(
   { type: 'avatar', title: 'Avatar maker', core: 'new',
     description: 'Make a drawn face for a person (an avatar), one piece at a time, like a game character. Or '
@@ -113,6 +130,7 @@ registerModule(
     const now = ctx.now || (() => Date.now());
     let cfg = { ...DEFAULTS };
     let view = 'show';            // 'show' | 'make' | 'picture' | 'own'
+    let makeKind = 'face';        // what 'make' is making: 'face' (the drawn face) | 'figure' (a full-body character)
     let draft = null;             // the record being made
     let openPart = null;          // the part whose choices are being walked, or null
     let openBefore = null;        // its value when it was opened (what `back` puts back)
@@ -137,6 +155,27 @@ registerModule(
     const moving = () => motionNow().animate;
     const personIdNow = () => { try { return ctx.personId || null; } catch { return null; } };
     const seedBase = () => personIdNow() || ctx.instanceId || 'avatar';
+    const warnMin = () => Number(cfg.warnBelow) || DEFAULT_WARN_BELOW;
+
+    // WHAT THE MAKER IS MAKING. The walk, the rows, Surprise and Save are one machine; these say what it is
+    // walking. The face's entries are exactly what this file always called.
+    const KINDS = {
+      face: {
+        parts: PARTS, partOf, normalize: normalizeRecord, optionFor,
+        draw: (r) => avatarSvg(r), describe: describeAvatar, warnings: (r) => avatarWarnings(r, { min: warnMin() }),
+        surprise: (seed) => surprise(seed, { min: warnMin() }), actions: MAKE_ACTIONS,
+        start: (s) => (s.drawn ? normalizeRecord(s.drawn) : surprise(seedBase())),
+        saveRow: (d) => ({ use: 'drawn', drawn: normalizeRecord(d) }),
+      },
+      figure: {
+        parts: FIGURE_PARTS, partOf: figurePartOf, normalize: normalizeFigure, optionFor: figureOptionFor,
+        draw: (r) => renderFigure(r), describe: describeFigure, warnings: () => [],
+        surprise: (seed) => surpriseFigure(seed), actions: FIGURE_ACTIONS,
+        start: (s) => (s.figure ? normalizeFigure(s.figure) : surpriseFigure(seedBase())),
+        saveRow: (d) => ({ use: 'figure', figure: normalizeFigure(d) }),
+      },
+    };
+    const K = () => KINDS[makeKind] || KINDS.face;
 
     // ---- where it is kept ----------------------------------------------------------------
     let personStore = null;
@@ -217,9 +256,9 @@ registerModule(
     }
 
     // ---- actions ---------------------------------------------------------------------------
-    function startMake() {
-      const s = saved();
-      draft = s.drawn ? normalizeRecord(s.drawn) : surprise(seedBase());
+    function startMake(kind = 'face') {
+      makeKind = KINDS[kind] ? kind : 'face';
+      draft = K().start(saved());
       openPart = null; openBefore = null; msg = '';
       view = 'make';
       lit = lit >= 0 ? 0 : -1;
@@ -228,20 +267,20 @@ registerModule(
     function toShow() { view = 'show'; openPart = null; draft = null; msg = ''; if (lit >= 0) lit = 0; render(); }
     function save() {
       if (!draft) return;
-      writeRow({ use: 'drawn', drawn: normalizeRecord(draft) });
+      writeRow(K().saveRow(draft));
       toShow();
     }
     function doSurprise() {
       surprises += 1;
-      draft = surprise(`${seedBase()}:${surprises}`, { min: Number(cfg.warnBelow) || DEFAULT_WARN_BELOW });
+      draft = K().surprise(`${seedBase()}:${surprises}`);
       render();
     }
     function openPartRow(key) {
-      if (!partOf(key) || !draft) return;
+      if (!K().partOf(key) || !draft) return;
       openPart = key; openBefore = draft[key];
       // The light moves onto the choice showing now, so the first `next` is the next choice. A pointer
       // that never started the walk gets no light.
-      if (lit >= 0) lit = Math.max(0, partOf(key).options.findIndex((o) => o.id === draft[key]));
+      if (lit >= 0) lit = Math.max(0, K().partOf(key).options.findIndex((o) => o.id === draft[key]));
       render();
     }
     function closePart(keep) {
@@ -249,16 +288,16 @@ registerModule(
       const key = openPart;
       if (!keep && draft) draft = { ...draft, [key]: openBefore };
       openPart = null; openBefore = null;
-      if (lit >= 0) lit = PARTS.findIndex((p) => p.key === key);
+      if (lit >= 0) lit = K().parts.findIndex((p) => p.key === key);
       render();
     }
     function setPart(key, value) {
-      if (!draft || !partOf(key)) return;
-      draft = normalizeRecord({ ...draft, [key]: value });
+      if (!draft || !K().partOf(key)) return;
+      draft = K().normalize({ ...draft, [key]: value });
       render();
     }
     function stepOpen(d) {
-      const p = partOf(openPart);
+      const p = K().partOf(openPart);
       if (!p || !draft) return;
       const n = p.options.length;
       const i = p.options.findIndex((o) => o.id === draft[openPart]);
@@ -316,7 +355,9 @@ registerModule(
       if (!el || dead) return;
       const a = el.dataset.act;
       switch (a) {
-        case 'make': startMake(); return;
+        case 'make': startMake('face'); return;
+        case 'make-figure': startMake('figure'); return;
+        case 'use-figure': writeRow({ use: 'figure' }); toShow(); return;
         case 'to-picture': toPicture(); return;
         case 'to-own': view = 'own'; openPart = null; msg = ''; if (lit >= 0) lit = 0; render(); return;
         case 'no-avatar': noAvatar(); return;
@@ -327,7 +368,7 @@ registerModule(
           const key = el.dataset.part;
           if (openPart !== key) { openPart = key; openBefore = draft?.[key]; }
           setPart(key, el.dataset.value);
-          const idx = partOf(key).options.findIndex((o) => o.id === el.dataset.value);
+          const idx = K().partOf(key).options.findIndex((o) => o.id === el.dataset.value);
           if (lit >= 0) { lit = idx; render(); }
           return;
         }
@@ -358,13 +399,16 @@ registerModule(
       const s = saved();
       let face;
       if (s.use === 'drawn' && s.drawn) face = `<div class="av-face" data-avatar-shown="drawn">${avatarSvg(s.drawn)}</div>`;
+      else if (s.use === 'figure' && s.figure) face = `<div class="av-face" data-avatar-shown="figure">${renderFigure(s.figure)}</div>`;
       else if (s.use === 'picture' && s.picture) face = `<div class="av-face" data-avatar-shown="picture">${pictureSlot(s.picture, 'Avatar picture')}</div>`;
       else face = '<div class="av-face av-empty" data-avatar-shown="none"><p>No avatar. That is fine: an avatar is optional.</p></div>';
       const btns = cfg.allowChange ? [
         btn('make', s.drawn ? 'Change the drawn avatar' : 'Make an avatar'),
         btn('to-picture', 'Use a picture instead'),
         btn('to-own', 'Make your own'),
-        s.use === 'picture' && s.drawn ? btn('use-drawn', 'Use the drawn one again') : '',
+        btn('make-figure', s.figure ? 'Change the full-body character' : 'Make a full-body character'),
+        s.use !== 'drawn' && s.drawn ? btn('use-drawn', 'Use the drawn one again') : '',
+        s.use !== 'figure' && s.figure ? btn('use-figure', 'Use the full-body character again') : '',
         s.use !== 'none' ? btn('motion', `Movement: ${esc(MOTION_CHOICES.find((c) => c.value === personChoice()).label)}`,
           ` data-motion-choice="${personChoice() === null ? 'usual' : personChoice() ? 'moves' : 'still'}"`) : '',
         s.use !== 'none' ? btn('no-avatar', 'No avatar') : '',
@@ -373,7 +417,7 @@ registerModule(
     }
 
     function partRowHtml(p) {
-      const o = optionFor(draft, p.key);
+      const o = K().optionFor(draft, p.key);
       const open = openPart === p.key;
       const sw = p.color && o.hex ? `<span class="av-sw" style="background:${esc(o.hex)}" aria-hidden="true"></span>` : '';
       let choices = '';
@@ -394,15 +438,16 @@ registerModule(
     }
 
     function makeHtml() {
-      const warns = avatarWarnings(draft, { min: Number(cfg.warnBelow) || DEFAULT_WARN_BELOW });
-      return `<div class="av-make" data-open="${openPart || ''}">
+      const k = K();
+      const warns = k.warnings(draft);
+      return `<div class="av-make" data-open="${openPart || ''}" data-kind="${makeKind}">
         <div class="av-preview">
-          <div class="av-face" data-avatar-preview>${avatarSvg(draft)}</div>
-          <p class="av-desc" data-avatar-desc>${esc(describeAvatar(draft))}</p>
+          <div class="av-face" data-avatar-preview>${k.draw(draft)}</div>
+          <p class="av-desc" data-avatar-desc>${esc(k.describe(draft))}</p>
           <div class="av-warn" role="status" data-avatar-warnings>${warns.map((w) => `<p data-warn="${w.part}">${esc(w.text)}</p>`).join('')}</div>
         </div>
-        <div class="av-parts">${PARTS.map(partRowHtml).join('')}
-          <div class="av-btns">${MAKE_ACTIONS.map((x) => btn(x.act, x.label)).join('')}</div>
+        <div class="av-parts">${k.parts.map(partRowHtml).join('')}
+          <div class="av-btns">${k.actions.map((x) => btn(x.act, x.label)).join('')}</div>
         </div>
       </div>`;
     }
@@ -475,7 +520,7 @@ registerModule(
     function selectLit() {
       if (view === 'picture' && picker) { picker.select(); return; }
       if (view === 'make' && openPart) {
-        if (lit < 0) { lit = Math.max(0, partOf(openPart).options.findIndex((o) => o.id === draft?.[openPart])); paintLit(); return; }
+        if (lit < 0) { lit = Math.max(0, K().partOf(openPart).options.findIndex((o) => o.id === draft?.[openPart])); paintLit(); return; }
         closePart(true); return;
       }
       const list = walk();
@@ -501,7 +546,7 @@ registerModule(
       const key = e.target?.dataset?.free;
       if (!key || !draft) return;
       const hex = normalizeHex(e.target.value);
-      if (hex) { draft = normalizeRecord({ ...draft, [key]: hex }); if (!openPart) openPart = key; render(); }
+      if (hex) { draft = K().normalize({ ...draft, [key]: hex }); if (!openPart) openPart = key; render(); }
     }
     function onKey(e) {
       if (e.target?.matches?.('input,textarea,select')) return;
@@ -521,7 +566,7 @@ registerModule(
     };
 
     return {
-      __probe: () => ({ view, lit, openPart, draft: draft ? { ...draft } : null, saved: saved(), cfg: { ...cfg },
+      __probe: () => ({ view, makeKind, lit, openPart, draft: draft ? { ...draft } : null, saved: saved(), cfg: { ...cfg },
         moving: moving(), motionWhy: motionNow().because, personChoice: personChoice(), litAct: lit >= 0 ? walk()[lit]?.dataset.act : null,
         litLabel: lit >= 0 ? walk()[lit]?.textContent.trim().replace(/\s+/g, ' ') : null,
         stored: personStore ? 'person' : 'panel', picker: picker ? picker.__probe() : null }),

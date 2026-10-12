@@ -44,7 +44,8 @@ import {
   declaredColors, avatarWarnings, describeAvatar, readAvatar, featureInkFor, outlineFor, stepPart, colorOf,
   AVATAR_KEY, DEFAULT_WARN_BELOW, MOTION_CSS,
 } from '../avatar.js';
-import { PROMPT_PHOTO, PROMPT_DESCRIBE, MAKE_ACTIONS, MOTION_CHOICES } from '../modules/avatar.js';
+import { PROMPT_PHOTO, PROMPT_DESCRIBE, MAKE_ACTIONS, MOTION_CHOICES, FIGURE_ACTIONS } from '../modules/avatar.js';
+import { FIGURE_PARTS, normalizeFigure, surpriseFigure } from '../avatar_figure.js';
 import { contrast, normalizeHex } from '../color_picker.js';
 
 const out = document.getElementById('results');
@@ -391,6 +392,48 @@ try {
     const f = t.probe().draft.face;
     t.key('ArrowRight'); t.key('Escape');
     check('Escape is back: the choice is put back', t.probe().openPart === null && t.probe().draft.face === f);
+    t.inst.destroy();
+  }
+
+  section('*** a full-body character (Design\'s character kit, 2026-10-12): the same maker, kept as data on the same row ***');
+  {
+    const kept = { use: 'drawn', drawn: surprise('kept') };
+    const t = mount({ person: kept });
+    await tick();
+    check('offered from the panel: "Make a full-body character"', !!t.q('[data-act="make-figure"]') && /Make a full-body character/.test(t.host.textContent));
+    t.press('[data-act="make-figure"]');
+    check('it opens the maker on the character\'s parts, starting from a surprise seeded by the person',
+      t.probe().view === 'make' && t.probe().makeKind === 'figure' && JSON.stringify(t.probe().draft) === JSON.stringify(surpriseFigure('p1')));
+    check('the walk is the character\'s parts (skin, hair, hair colour, beard, glasses, outfit, pose), then Surprise / Cancel / Save',
+      [...t.host.querySelectorAll('[data-walk]')].map((b) => b.dataset.act).join(',') === [...FIGURE_PARTS.map(() => 'part'), ...FIGURE_ACTIONS.map((a) => a.act)].join(','));
+    check('the preview is the full-body figure, described in words', !!t.q('[data-avatar-preview] svg[data-avatar-figure="full"]') && /full-body character/.test(t.q('[data-avatar-desc]').textContent));
+    t.press('[data-act="part"][data-part="outfit"]');
+    t.press('[data-act="opt"][data-part="outfit"][data-value="halloweenWitch"]');
+    t.press('[data-act="done"]');
+    t.press('[data-act="part"][data-part="pose"]');
+    t.pub('select'); t.pub('next'); t.pub('select');
+    check('a choice by pointer and a choice by switch both land in the record', t.probe().draft.outfit === 'halloweenWitch' && t.probe().draft.pose === 'wave', JSON.stringify(t.probe().draft));
+    const before = t.q('[data-avatar-preview]').innerHTML;
+    t.press('[data-act="surprise"]');
+    check('Surprise me deals a whole new character', t.q('[data-avatar-preview]').innerHTML !== before);
+    t.press('[data-act="part"][data-part="outfit"]');
+    t.press('[data-act="opt"][data-part="outfit"][data-value="winterParka"]');
+    t.press('[data-act="done"]');
+    const made = t.probe().draft;
+    t.press('[data-act="save"]');
+    const row = t.personStates[0].get();
+    check('*** Save keeps it ON THE PERSON as data (use "figure"), and the drawn face is still there ***',
+      row.use === 'figure' && JSON.stringify(row.figure) === JSON.stringify(normalizeFigure(made)) && JSON.stringify(row.drawn) === JSON.stringify(kept.drawn), JSON.stringify(row));
+    check('no picture of it is kept anywhere: the row holds ids and colours only', !/<svg|data:/.test(JSON.stringify(row)));
+    check('...and shows it, with "Use the drawn one again" offered', t.probe().view === 'show' && !!t.q('[data-avatar-shown="figure"] svg[data-avatar-figure]')
+      && !!t.q('[data-act="use-drawn"]') && /Change the full-body character/.test(t.host.textContent));
+    t.press('[data-act="use-drawn"]');
+    check('back to the drawn face in one press; the character is kept, one press away', t.personStates[0].get().use === 'drawn'
+      && t.personStates[0].get().figure?.outfit === 'winterParka' && !!t.q('[data-act="use-figure"]'));
+    t.press('[data-act="use-figure"]');
+    check('...and the character again', t.personStates[0].get().use === 'figure');
+    t.press('[data-act="make"]'); t.press('[data-act="save"]');
+    check('saving the drawn face later keeps the character on the row', t.personStates[0].get().use === 'drawn' && t.personStates[0].get().figure?.outfit === 'winterParka');
     t.inst.destroy();
   }
 

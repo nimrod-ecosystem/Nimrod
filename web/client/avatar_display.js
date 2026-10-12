@@ -39,6 +39,7 @@
 //      (Mike, 2026-10-02), on by default. OTHERS_AVATAR_FIELDS, below.
 
 import { readAvatar, renderAvatar, AVATAR_KEY } from './avatar.js';
+import { renderFigure } from './avatar_figure.js';
 import { createMediaSourcesClient, resolveItemUrl, sourceById } from './media_sources.js';
 import { sanitizeSvg, svgMarkup, newSvgUid, looksLikeSvgPath, minAnimationMs, SVG_LIMITS } from './svg_sanitize.js';
 import { flashLimitFrom, normalizeFlashLimit, FLASH_LIMIT_DEFAULT } from './flash_limit.js';
@@ -249,7 +250,7 @@ export function avatarMotion({ context = {}, person = null, big = false, other =
 
 /**
  * The avatar to show for a person, from the row kept on them and the state of its picture.
- *   { show: 'none' | 'drawn' | 'picture', drawn, url, still, fallback }
+ *   { show: 'none' | 'drawn' | 'picture' | 'figure', drawn, url, figure, still, fallback }
  * `still` is the person's own `animate: false` on the row, when there is one: nothing moves it then.
  * PURE — the cache calls it; a test can too.
  */
@@ -260,6 +261,8 @@ export function avatarView(row, { picture = null } = {}) {
   const still = row.animate === false;
   const moves = row.animate === true;
   if (a.use === 'drawn' && a.drawn) return { show: 'drawn', drawn: a.drawn, still, moves };
+  // A full-body character (avatar_figure.js): shown as its head and shoulders in a small face.
+  if (a.use === 'figure' && a.figure) return { show: 'figure', figure: a.figure, still, moves };
   if (a.use === 'picture' && a.picture) {
     // `svg`: the file made safe to draw inline (rule 4), when it is one and it could be.
     if (picture && picture.status === 'ok' && picture.url) {
@@ -288,7 +291,7 @@ export function avatarView(row, { picture = null } = {}) {
  */
 export function avatarHtml(view, { size = DISPLAY_DEFAULTS.size, animate = DISPLAY_DEFAULTS.animate,
   round = DISPLAY_DEFAULTS.round, personId = '', reducedMotion = null, win = globalThis, context = null } = {}) {
-  if (!view || (view.show !== 'drawn' && view.show !== 'picture')) return '';
+  if (!view || (view.show !== 'drawn' && view.show !== 'picture' && view.show !== 'figure')) return '';
   const ctx = { ...(context || view.context || {}) };
   const other = isOtherPerson(ctx, personId);
   // Somebody else's own avatar, on a screen (or for a viewer) that chose not to show them: their name
@@ -314,6 +317,12 @@ export function avatarHtml(view, { size = DISPLAY_DEFAULTS.size, animate = DISPL
     return `<span class="nav-av" data-avatar-shown="picture" aria-hidden="true" style="${style}">`
       + `<img src="${esc(view.url)}" alt="" data-avatar-person="${esc(personId)}" `
       + 'style="display:block;width:100%;height:100%;object-fit:cover"></span>';
+  }
+  if (view.show === 'figure') {
+    // Design's character has no movement of its own yet, so it is still at any size; `data-motion-why`
+    // still says what the decision would have been, the same as every other face.
+    return `<span class="nav-av" data-avatar-shown="figure" data-motion-why="${m.because}" aria-hidden="true" style="${style}">`
+      + renderFigure(view.figure, { crop: 'head', size: '100%', title: '' }) + '</span>';
   }
   return `<span class="nav-av" data-avatar-shown="drawn" data-motion-why="${m.because}" aria-hidden="true" style="${style}">`
     + renderAvatar(view.drawn, { size: '100%', animate: m.animate, title: '' }) + '</span>';
