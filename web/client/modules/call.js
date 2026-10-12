@@ -61,6 +61,19 @@
 // a missed call from her people costs more than an unwanted one, on a screen whose whole
 // purpose is being her window to them. Set the window to 0 to connect at once, or turn it off
 // entirely to require somebody to answer.
+//
+// *** CHANGED 2026-10-12 (Mike, DECISIONS.md "Mike's answers of 2026-10-12"): A CALL WAITS FOR SOMEBODY
+// TO ANSWER, BY DEFAULT. *** Everything above is still true for the people it was written about - and
+// now ONLY for them. A screen that picks up by itself is right for someone who cannot answer and wrong
+// as everyone's default, so answering by itself ("drop in") is a permission given to NAMED people on
+// the person's own list (screen_permissions.js "May drop in", or the guardian set). "Who may drive" lets
+// somebody CALL; it never lets a call answer by itself. So:
+//   * a caller who may drop in: the countdown below, announced, with Decline on the card - as before;
+//   * everybody else: it rings, says who is calling, and waits for Answer or Decline (both buttons on
+//     the card), giving up after "Ring for" - nobody answering is a missed call, never a blocked screen.
+// Who is calling is judged on `from.by`, the account the SERVER stamped on the call (drive.py
+// stamp_signal), through the host's `ctx.mayDropIn` - never on a name the caller's page sent.
+// AND A CALL CAN LEND "SEE THIS SCREEN" TO THE CALLER until it ends (tech-support style, `ctx.lendScreen`).
 
 import { registerModule } from '../module.js';
 import { MUSIC_GROUP } from '../audio_bus.js';
@@ -114,8 +127,8 @@ export const ANSWER_KIND = 'answer';
 
 // press-to-answer is deliberately absent from the default: see the header.
 const DEFAULTS = {
-  // Seconds of announced countdown before it answers. 0 connects at once; `null` never
-  // answers by itself and waits for somebody.
+  // Seconds of announced countdown before a call from somebody who MAY DROP IN answers (2026-10-12: only
+  // they ever answer by themselves). 0 connects at once; `null` never answers by itself, even for them.
   declineSeconds: 10,
   showSelf: false,      // the mirror is the self-view; this is here to be turned ON by a
                         // surface that has no mirror, not to be used on the bedside kiosk
@@ -134,16 +147,17 @@ const DEFAULTS = {
 };
 
 const SETTINGS = [
-  { key: 'declineSeconds', label: 'Before it answers', kind: 'choice', default: 10,
+  { key: 'declineSeconds', label: 'When someone who may drop in calls', kind: 'choice', default: 10,
     level: 'essential',
     options: [
       { value: 0, label: 'Answer straight away' },
       { value: 10, label: 'Count down ten seconds first' },
       { value: 20, label: 'Count down twenty seconds first' },
-      { value: null, label: 'It never answers by itself. Somebody has to answer' },
+      { value: null, label: 'Never answer by itself, even for them. Somebody has to answer' },
     ],
-    note: 'It says who is calling and counts down out loud, so anybody in the room can '
-        + 'decline. Only people you have given permission can call at all.' },
+    note: 'Calls wait for somebody to press Answer. Only people you let drop in (on the Remote page) '
+        + 'are answered by themselves: it says who is calling and counts down, with Decline on the '
+        + 'screen, so anybody in the room can refuse it.' },
   { key: 'announce', label: 'Say it out loud', default: true, level: 'essential',
     onLabel: 'Announce the caller and the countdown', offLabel: 'On screen only',
     note: 'The person who can decline is often not the person the call is for.' },
@@ -331,9 +345,15 @@ registerModule(
           + (counting ? `<div class="call-count" aria-live="off">${remaining}</div>` : '')
           // THE WAY OUT IS ON THE SCREEN, ALWAYS. Somebody who missed the spoken line - a
           // caregiver who walked in mid-countdown - can still see that this can be refused.
+          // 2026-10-12 (Mike; site-text question A2): a DECLINE BUTTON, not "say decline" - spoken
+          // commands are off until turned on, so the words promised a way out that was not there.
+          // Answer beside it, since a call now waits for somebody to answer. Decline first, as on
+          // the screen's notice (call_notice.js), so a stray first press never answers.
           + `<div class="call-hint">${counting
-              ? 'Say “decline” to refuse this call'
-              : 'Waiting to be answered'}</div>`;
+              ? `Answering by itself in ${remaining}. Press Decline to refuse it.`
+              : 'Waiting to be answered'}</div>`
+          + '<div class="call-actions"><button type="button" class="call-btn" data-call-decline>Decline</button>'
+          + '<button type="button" class="call-btn call-btn-answer" data-call-answer>Answer</button></div>';
       } else {
         // Connected. A remote VIDEO fills the stage; audio-only shows who it is, because a
         // black rectangle tells her nothing and she cannot read a status line.
@@ -356,6 +376,51 @@ registerModule(
       }
       root.dataset.phase = phase;
       paintTiles();                 // group calls: everybody else in the call, beside whoever rang
+      renderLend();
+    }
+
+    // ---- A TEMPORARY "SEE THIS SCREEN" FOR THE CALLER (Mike, 2026-10-12) ---------------------------------------
+    // Tech-support style: "let me see what you are seeing". The person at this screen lends it to whoever is on
+    // THIS call, until the call ends or the person's own `lendMinutes` run out (60 by default, argued in
+    // server/screen_access.py). The server checks this screen answered the call and lends it to that call's own
+    // caller - the page names nobody. Only offered when the host can lend (`ctx.lendScreen`) and the call came with
+    // a server-stamped caller and a session. It sits under the call, never over the caller's face.
+    let lent = null;              // null | { until } once the server said yes
+    let lendBusy = false;
+    let lendMsg = '';
+    function canLend() {
+      return phase === 'connected' && typeof ctx.lendScreen === 'function' && !!who?.by && !!who?.session;
+    }
+    function renderLend() {
+      const bar = root?.querySelector('[data-lend]');
+      if (!bar) return;
+      if (!canLend()) { bar.hidden = true; bar.innerHTML = ''; return; }
+      bar.hidden = false;
+      const name = esc(who?.name || 'the caller');
+      bar.innerHTML = lent
+        ? `<span>${name} can see this screen until the call ends.</span>`
+          + '<button type="button" class="call-btn" data-lend-stop>Stop</button>'
+        : `<button type="button" class="call-btn" data-lend-start${lendBusy ? ' disabled' : ''}>Let ${name} see this screen until the call ends</button>`
+          + (lendMsg ? `<span>${esc(lendMsg)}</span>` : '');
+    }
+    async function setLend(on) {
+      if (!canLend() || lendBusy) return false;
+      lendBusy = true;
+      lendMsg = '';
+      renderLend();
+      const session = who.session;
+      let r = null;
+      try { r = await ctx.lendScreen({ session, on }); } catch (err) { console.error('call: lend', err); r = null; }
+      lendBusy = false;
+      if (phase !== 'connected' || who?.session !== session) return false;
+      if (on) {
+        lent = r && r.on ? { until: r.until || null } : null;
+        if (!lent) lendMsg = 'That did not work. Try again.';
+      } else {
+        lent = null;
+      }
+      renderLend();
+      return !!(r && r.on === on);
     }
 
     // ---- GROUP CALLS (2026-10-09; call_group.js) --------------------------------------------------------------
@@ -521,7 +586,7 @@ registerModule(
       const body = demo === 'ringing'
         ? personCard({ name: 'Alex', note: 'Alex is calling' })
           + `<div class="call-count">${demoLeft}</div>`
-          + '<div class="call-hint">On a real call, saying \u201cdecline\u201d refuses it</div>'
+          + '<div class="call-hint">On a real call, Decline refuses it and Answer takes it</div>'
         : personCard({ name: 'Alex', note: 'On a call' })
           + '<div class="call-hint">A real call shows their video here, and this room stays '
             + 'in the corner</div>';
@@ -653,7 +718,7 @@ registerModule(
       remaining = Math.max(0, Math.round(seconds));
       render();
       announce(`Incoming call from ${who?.name || 'someone'}. `
-             + `Answering in ${remaining}. Say decline to refuse it.`);
+             + `Answering by itself in ${remaining} unless someone declines.`);
       tickTimer = setTick(() => {
         remaining -= 1;
         // Only the last few are spoken. Counting all the way down out loud is a machine
@@ -683,7 +748,12 @@ registerModule(
       bus.publish(CALL_INCOMING, { from: who });
       clearRing();
 
-      const window_ = cfg.declineSeconds;
+      // CALLS WAIT TO BE ANSWERED (2026-10-12): the countdown is only for a caller who may drop in. The host
+      // decides on the server-stamped caller (`who.by`); no host, or no answer from it, is "wait".
+      let dropIn = false;
+      try { dropIn = typeof ctx.mayDropIn === 'function' && ctx.mayDropIn(who) === true; }
+      catch (err) { console.error('call: drop in', err); dropIn = false; }
+      const window_ = dropIn ? cfg.declineSeconds : null;
       if (window_ === 0) { await answer(); return; }     // straight through
       if (window_ == null) {
         // Nobody-answers is set to WAIT. Then it must still give up, or the screen sits on a
@@ -839,6 +909,8 @@ registerModule(
           8000);
       }
       ctl = { mic: true, speaker: true, theirVideo: true, myVideo: true };
+      // A lend ends with the call on the server (screen_access.py); here it simply goes with the call's view.
+      lent = null; lendBusy = false; lendMsg = '';
       render();
       // The bars put the call's controls away.
       applyControls();
@@ -884,12 +956,13 @@ registerModule(
     return {
       __probe: () => ({ phase, who, hasOutgoing: !!outgoing, ringArmed: !!ringTimer,
                         counting: !!tickTimer, remaining, cfg: { ...cfg },
-                        demo, demoLeft,
+                        demo, demoLeft, lent: !!lent,
                         demoOffered: !!root?.querySelector('[data-demo]'),
                         tagged: !!root?.querySelector('.call-demo-tag') }),
       __demo: () => startDemo(),
       __demoStop: () => stopDemo(),
       __decline: () => decline(),
+      __lend: (on) => setLend(on),
       __incoming: (from) => incoming(from),
       __answer: () => answer(),
       __end: (r) => end(r),
@@ -947,6 +1020,18 @@ registerModule(
           + '.m-call .call-hint{opacity:.6;max-width:34ch;'
           + 'font:400 2.2cqmin/1.35 system-ui,sans-serif}'
           + '.m-call .call-idle{opacity:.45;font:400 3cqmin system-ui,sans-serif}'
+          // The ringing card's Decline / Answer (2026-10-12), and the "see this screen" bar under a live call.
+          + '.m-call .call-actions{display:flex;gap:2cqmin;justify-content:center;flex-wrap:wrap}'
+          + '.m-call .call-btn{min-height:44px;min-width:7em;padding:1.2cqmin 2.6cqmin;border-radius:2cqmin;'
+          + 'cursor:pointer;background:transparent;color:#e8f0ea;border:1px solid rgba(232,240,234,.55);'
+          + 'font:600 max(14px,2.4cqmin) system-ui,sans-serif}'
+          + '.m-call .call-btn:focus-visible{outline:3px solid #fff3d9;outline-offset:2px}'
+          + '.m-call .call-btn-answer{background:#fff3d9;color:#12181c;border-color:#fff3d9}'
+          + '.m-call .call-lend{position:absolute;left:50%;bottom:2cqmin;transform:translateX(-50%);z-index:2;'
+          + 'display:flex;gap:1.5cqmin;align-items:center;justify-content:center;flex-wrap:wrap;max-width:94%;'
+          + 'padding:1cqmin 2cqmin;border-radius:2cqmin;background:rgba(0,0,0,.65);color:#fff3d9;'
+          + 'font:600 max(13px,2.2cqmin)/1.3 system-ui,sans-serif}'
+          + '.m-call .call-lend[hidden]{display:none}'
           // Distinct from `.call-idle` on purpose -- higher opacity, its own line -- because
           // this is information ("no answer", "could not connect"), not the ambient dimness of
           // nothing happening. Same warm tone as the demo tag rather than an alarm red; a failed
@@ -995,13 +1080,24 @@ registerModule(
         const stage = document.createElement('div');
         stage.setAttribute('data-stage', '');
         root.appendChild(stage);
+        // The temporary "see this screen" bar (2026-10-12): outside the stage, so a render mid-call never drops it.
+        const lendBar = document.createElement('div');
+        lendBar.className = 'call-lend';
+        lendBar.dataset.lend = '';
+        lendBar.hidden = true;
+        root.appendChild(lendBar);
         mount.appendChild(root);
         render();
 
         // Delegated, because `render` replaces the stage's markup on every frame.
         root.addEventListener('click', (e) => {
           if (e.target.closest('[data-demo]')) { startDemo(); return; }
-          if (e.target.closest('[data-demo-stop]')) stopDemo();
+          if (e.target.closest('[data-demo-stop]')) { stopDemo(); return; }
+          // The ringing card's own buttons (2026-10-12): Decline, and Answer.
+          if (e.target.closest('[data-call-decline]')) { decline(); return; }
+          if (e.target.closest('[data-call-answer]')) { answer(); return; }
+          if (e.target.closest('[data-lend-start]')) { setLend(true); return; }
+          if (e.target.closest('[data-lend-stop]')) setLend(false);
         });
 
         // *** SETTINGS TAKE EFFECT WHILE IT IS MOUNTED. THEY DID NOT. ***

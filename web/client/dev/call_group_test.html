@@ -617,6 +617,7 @@ try {
     };
     const inst = mountModule('call', {
       mount: box, bus: createBus(), audio: null, cameraOwner: null, micOwner: null, instanceId: 'g1', callTransport: fakeT,
+      mayDropIn: () => true,      // answers straight through only for a caller who may drop in (Mike, 2026-10-12)
       state: { get: () => ({ declineSeconds: 0, demo: false }), set: () => Promise.resolve(), subscribe: () => () => {},
         load: () => Promise.resolve(), startPolling() {}, destroy() {} },
     });

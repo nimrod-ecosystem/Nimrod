@@ -46,6 +46,7 @@ import { VERBS, FOCUS_VERBS, verbTopic } from './actions.js';
 import { mountIntercomApprovals } from './intercom_approvals.js';
 import { mountNoteVisit, mountNoteWriters } from './note_visit.js';
 import { mountFollowView } from './follow_view.js';   // watch along (row 2.79): play what their screen plays, in step
+import { mountScreenPermissions } from './screen_permissions.js';   // who may see, drop in, the guardian set (2026-10-12)
 import { INPUTS_KEY } from './input_runtime.js';
 import { authHeaders } from './auth.js';
 
@@ -139,6 +140,7 @@ export function mountRemote(root, {
       <div data-follow></div>
       <div class="r-grants" data-note-visit></div>
       <div class="r-grants" data-grants></div>
+      <div class="r-grants" data-screen-people></div>
       <div class="r-grants" data-intercom-approvals></div>
       <div class="r-grants" data-note-writers></div>
     </div>`;
@@ -163,10 +165,13 @@ export function mountRemote(root, {
   function renderGrants() {
     const host = el('[data-grants]');
     if (!profiles || !personId || !target.mine) { host.innerHTML = ''; return; }
+    // A3 of the site-text questions (2026-10-12, Mike's ruling 2.81): adding somebody here also lets them CALL these
+    // screens, so the page says so. It never lets a call answer by itself - that is "May drop in", below.
     host.innerHTML = `
-      <h2 class="r-h2">Who may drive ${esc(personName || 'these screens')}</h2>
-      <p class="h-hint">Anyone you add here can drive from their own sign-in, without you
-        being present. They will see it happen; so will whoever is at the screen.</p>
+      <h2 class="r-h2">Who may drive ${personName ? `${esc(personName)}’s screens` : 'these screens'}</h2>
+      <p class="h-hint">Anyone you add here can drive these screens from their own sign-in, without you
+        being present. It also lets them call these screens. A call waits for somebody at the screen to answer,
+        unless you let them drop in (below). Whoever is at the screen sees when someone is driving it.</p>
       <form class="h-new" data-grant-form>
         <input type="email" data-subject placeholder="their sign-in email" aria-label="who" required>
         <input type="text" data-label placeholder="what for (optional)" aria-label="note" maxlength="120">
@@ -197,18 +202,28 @@ export function mountRemote(root, {
   let torn = false;
   const whoamiOnce = async () => { if (me == null) { try { me = await whoami(); } catch { me = null; } } return me; };
   let noteWriters = null;       // who may leave a note: same person's row, same owner-only rule
+  // who may see these screens, who may drop in, the guardian set (2026-10-12; screen_permissions.js): the same row too.
+  let screenPeople = null;
   function dropApprovals({ state: dropState = false } = {}) {
     try { approvals?.destroy(); } catch { /* already gone */ }
     approvals = null;
     try { noteWriters?.destroy(); } catch { /* already gone */ }
     noteWriters = null;
+    try { screenPeople?.destroy(); } catch { /* already gone */ }
+    screenPeople = null;
     if (dropState && approvalsState) { try { approvalsState.destroy?.(); } catch { /* already gone */ } approvalsState = null; }
   }
   async function renderApprovals() {
     const my = ++approvalsSeq;
     const host = el('[data-intercom-approvals]');
     const want = !!(profiles && personId && target.mine && typeof makePersonState === 'function');
-    if (!want) { dropApprovals({ state: true }); if (host) host.innerHTML = ''; return; }
+    if (!want) {
+      dropApprovals({ state: true });
+      if (host) host.innerHTML = '';
+      const sp = el('[data-screen-people]');
+      if (sp) sp.innerHTML = '';
+      return;
+    }
     if (!approvalsState) {
       let st = null;
       try { st = makePersonState(personId, INPUTS_KEY) || null; } catch (err) { console.error('remote: intercom approvals', err); st = null; }
@@ -223,6 +238,18 @@ export function mountRemote(root, {
     });
     const nwHost = el('[data-note-writers]');
     if (nwHost) noteWriters = mountNoteWriters(nwHost, { personName, state: approvalsState, loadGrants: async () => grants });
+    const spHost = el('[data-screen-people]');
+    if (spHost) {
+      screenPeople = mountScreenPermissions(spHost, {
+        personName, state: approvalsState, loadGrants: async () => grants, whoami: whoamiOnce,
+        // The guardian set's drive: a grant "as long as I allow it", made only when they have no live one.
+        grantDrive: async (account) => {
+          await profiles.grantDrive(personId, account, { label: 'guardian', days: 0 });
+          try { grants = await profiles.driveGrants(personId); } catch { /* the list shows it on the next load */ }
+          renderGrants();
+        },
+      });
+    }
   }
 
   // A NOTE FOR WHOEVER IS PICKED, from this account (note_visit.js). Follows the chip row: switching
@@ -406,6 +433,8 @@ export function mountRemote(root, {
     approvals: () => approvals,
     // The note blocks (null unless shown), for a test.
     noteWriters: () => noteWriters,
+    // Who may see / drop in / the guardian set (null unless shown), for a test.
+    screenPeople: () => screenPeople,
     noteView: () => noteView,
     // The watch-along block (null when off), for a test.
     follow: () => followCtl,

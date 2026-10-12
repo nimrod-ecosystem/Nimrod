@@ -133,7 +133,7 @@ function fakeLink() {
 }
 
 // A notice on a fake transport, in a box of its own.
-function rig({ mode = 'notice', open = async () => true } = {}) {
+function rig({ mode = 'notice', open = async () => true, dropIn = undefined } = {}) {
   const t = fakeTransport();
   const clock = fakeClock();
   const host = document.createElement('div');
@@ -149,6 +149,7 @@ function rig({ mode = 'notice', open = async () => true } = {}) {
     holdScan: (on) => holds.push(on),
     openCall: async (from, opts) => { t.calls.push('open'); opened.push({ from, opts }); return open(from, opts); },
     now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    ...(dropIn !== undefined ? { dropIn } : {}),
   });
   const el = () => host.querySelector('[data-call-notice]');
   const btn = (stop) => host.querySelector(`[data-cn-stop="${stop}"]`);
@@ -198,6 +199,58 @@ try {
     a.t.ring({ name: 'Bo', video: false });
     check('an audio call says so', /Audio call/.test(a.el().textContent));
     a.done();
+  }
+
+  // =====================================================================================
+  section('*** drop in (Mike, 2026-10-12): only a caller on the list answers by itself ***');
+  {
+    const asked = [];
+    const r = rig({ dropIn: (from) => { asked.push(from); return from?.by === 'mike@x' ? 10 : null; } });
+    r.t.ring({ name: 'Mike', video: true, by: 'mal@x' });
+    r.clock.advance(60000);
+    check('*** a caller NOT on the drop-in list waits for Answer, however long ***',
+      r.n.phase() === 'ringing' && r.t.calls.length === 0 && r.n.counting() === 0, JSON.stringify(r.t.calls));
+    check('the host was asked about the caller the server stamped (`by`), not the name', asked[0]?.by === 'mal@x');
+    r.n.decline();
+    r.t.calls.length = 0;
+    r.t.ring({ name: 'Mike', video: true, by: 'mike@x' });
+    check('*** a caller who may drop in: a countdown on the card, Decline still there ***',
+      r.n.counting() === 10 && /Answering by itself in 10/.test(r.el().textContent) && !!r.btn('decline'), r.el().textContent);
+    check('it is announced with the countdown', /Answering by itself in 10 seconds unless someone declines/.test(r.alerts[r.alerts.length - 1] || ''),
+      JSON.stringify(r.alerts));
+    r.clock.advance(5000);
+    check('it counts down', r.n.counting() === 5 && /Answering by itself in 5/.test(r.el().textContent), r.el().textContent);
+    r.clock.advance(5000);
+    await sleep(10);
+    check('*** at nought it answers by itself: the claim first, then the call is handed on ***',
+      r.t.calls[0] === 'claim' && r.t.calls.includes('open') && r.opened[0]?.from?.by === 'mike@x', JSON.stringify(r.t.calls));
+    r.done();
+  }
+  {
+    const r = rig({ dropIn: () => 10 });
+    r.t.ring({ name: 'Mike', by: 'mike@x' });
+    r.clock.advance(3000);
+    r.btn('decline').click();
+    r.clock.advance(20000);
+    await sleep(10);
+    check('*** Decline during the countdown refuses it; nothing answers afterwards ***',
+      r.t.calls.join() === 'hangup:declined' && r.opened.length === 0, JSON.stringify(r.t.calls));
+    r.done();
+  }
+  {
+    const r = rig({ dropIn: () => 0 });
+    r.t.ring({ name: 'Mike', by: 'mike@x' });
+    await sleep(10);
+    check('"answer straight away" for a drop-in caller: claimed and handed on at once', r.t.calls[0] === 'claim' && r.opened.length === 1,
+      JSON.stringify(r.t.calls));
+    r.done();
+  }
+  {
+    const r = rig({ dropIn: () => { throw new Error('broken'); } });
+    r.t.ring({ name: 'Mike', by: 'mike@x' });
+    r.clock.advance(60000);
+    check('a host that breaks deciding drop-in: it waits (never answers by accident)', r.n.phase() === 'ringing' && r.t.calls.length === 0);
+    r.done();
   }
 
   // =====================================================================================

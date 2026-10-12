@@ -32,6 +32,8 @@ from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person
 from db import SOURCE_ON_REMOVE  # remove this picture (2026-10-10): a source's 'keep' / 'remove'
 from drive import ROLES, Answerers, CallGroups, Rooms, Tickets, parse_message, stamp_signal
 from play_relay import PlayRelay  # watching along (row 2.79): a screen's `play` to its following drivers, kept nowhere
+# who may see a screen, ask first, a temporary permission on a call (Mike, 2026-10-12): rules pure in screen_access.py
+from screen_access import SeeAccess, ask_seconds, lend_minutes, name_for, see_decision
 from game_rooms import SWEEP_S as GAME_SWEEP_S, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
@@ -1266,6 +1268,8 @@ _tickets = Tickets()
 _rooms = Rooms()
 _answerers = Answerers()        # one answering screen per intercom or family-call offer (drive.py, row 2.44)
 _plays = PlayRelay()            # watching along (row 2.79, play_relay.py): who follows; in memory, nothing stored
+_see = SeeAccess()              # who may see a screen (2026-10-12, screen_access.py): asks, yeses, lends; in memory
+_see_timer = None               # the one timer for the next ask or lend coming due
 
 
 # group calls (2026-10-09; drive.py CallGroups): what a group calls each member - the SERVER's names, never the
@@ -1423,6 +1427,201 @@ async def _tell(conns, payload):
     return dead
 
 
+# ------------------------------------------------------------- who may see a screen (Mike, 2026-10-12)
+# The rules are pure in screen_access.py (and tested alone in test_screen_access.py). What is here is only the wiring:
+# read the person's row once when somebody starts seeing, ask the screens, let the first answer decide, and end a
+# temporary permission when its call ends. Every refusal leaves the socket HELD (watch-only, play_relay.py), so it can
+# never be mistaken for somebody helping, and it never reaches the screen's buttons.
+
+def _person_row(owner: str | None, person_id: str) -> dict:
+    """The person's own row (where the list lives). {} when there is none, or it cannot be read: the defaults then
+    stand, and the defaults let nobody but the owner see."""
+    if not owner:
+        return {}
+    try:
+        return store.get_state(owner, person_scope(person_id), notes.PERSON_ROW_KEY).get("data") or {}
+    except Exception:
+        return {}
+
+
+def _seer_name(row: dict, account: str) -> str:
+    """The name a screen shows for somebody seeing it: the one the owner gave them on the list, else their own display
+    name, else '' (the screen then says "someone"). Never an account id - that could be an email or an opaque string."""
+    n = name_for(row, account)
+    if n:
+        return n
+    try:
+        return (_inviter_name(account) or "").strip()[:60]
+    except Exception:
+        return ""
+
+
+def _screens_of(room) -> list:
+    r = _rooms.get(room[0], room[1])
+    return list(r.screens) if r else []
+
+
+async def _announce(room_key: str, person_id: str) -> None:
+    """Presence to everybody in the room. `drivers` leaves out sockets that only asked to watch and are not seeing (they
+    are not helping); `followers` is who is seeing. The SCREENS also get `watchers` - the names of who is seeing, for
+    "Sharing your screen with ..." - and the drivers do not: who else is watching is the screen's to know."""
+    room = _rooms.get(room_key, person_id)
+    if not room:
+        return
+    base = {"type": "presence", "screens": len(room.screens),
+            "drivers": len(room.drivers) - _plays.held_count(room.drivers),
+            "followers": _plays.count(room.drivers)}
+    seeing = [d for d in room.drivers if _plays.following(d)]
+    await _tell(room.screens, {**base, "watchers": _see.names((room_key, person_id), seeing)})
+    await _tell(room.drivers, base)
+
+
+async def _admit(conn, room, account: str, name: str, via: str) -> None:
+    _plays.follow(conn, True)
+    _see.seeing(conn, room, account, name, via)
+    try:
+        await conn.send_json({"type": "follow-state", "state": "on", "via": via})
+    except Exception:
+        pass
+
+
+async def _follow(ws, user: str, room_key: str, person_id: str, on: bool, *, announce: bool = True) -> None:
+    """A driver asking to start (or stop) seeing this person's screen. One request per socket: to try again after a
+    no, the page opens a new socket (follow_view.js "Follow again")."""
+    room = (room_key, person_id)
+    if not on:
+        await _send_out(_see.withdraw(ws, _screens_of))
+        was = _plays.following(ws) or _plays.held(ws)
+        _plays.follow(ws, False)
+        _plays.hold(ws, False)
+        _see.stopped(ws)
+        if was:
+            try:
+                await ws.send_json({"type": "follow-state", "state": "off"})
+            except Exception:
+                pass
+        if announce:
+            await _announce(room_key, person_id)
+        return
+    if _plays.following(ws) or _plays.held(ws) or _see.asking(ws):
+        return
+    owner = _person_owner(person_id)
+    row = _person_row(owner, person_id)
+    verdict, why = see_decision(row, user, owner, lent=_see.lent(room, user),
+                                recent_yes=_see.recent_yes(room, user))
+    name = _seer_name(row, user)
+    if verdict == "admit":
+        await _admit(ws, room, user, name, why)
+    elif verdict == "refuse":
+        _plays.hold(ws, True)
+        try:
+            await ws.send_json({"type": "follow-state", "state": "refused", "reason": why})
+        except Exception:
+            pass
+    else:
+        _plays.hold(ws, True)
+        _, out = _see.open_ask(ws, room, user, name, ask_seconds(row), _screens_of(room))
+        await _send_out(out)
+        _arm_see_timer()
+    if announce:
+        await _announce(room_key, person_id)
+
+
+async def _end_lent(gone) -> None:
+    """Temporary permissions that ended (the call ended, the screen took it back, the time ran out). Whoever was seeing
+    only because of one stops - unless the list itself would let them see without asking, in which case they carry on."""
+    for room, account in gone or []:
+        r = _rooms.get(room[0], room[1])
+        if not r:
+            continue
+        row = None
+        for c in _see.lent_followers(room, account, r.drivers):
+            if row is None:
+                row = _person_row(_person_owner(room[1]), room[1])
+            verdict, why = see_decision(row, account, _person_owner(room[1]), lent=_see.lent(room, account))
+            f = _see.follower(c)
+            if verdict == "admit":
+                _see.seeing(c, room, account, f.name if f else "", why)
+                continue
+            _plays.follow(c, False)
+            _plays.hold(c, True)
+            _see.stopped(c)
+            try:
+                await c.send_json({"type": "follow-state", "state": "refused", "reason": "ended"})
+            except Exception:
+                pass
+        await _announce(room[0], room[1])
+
+
+async def _see_sweep() -> None:
+    out, gone = _see.sweep(_screens_of)
+    await _send_out(out)
+    await _end_lent(gone)
+    _arm_see_timer()
+
+
+async def _see_tick() -> None:
+    """Run the clock if something is due. Called on every message as well as by the timer, so a lost timer (or a test's
+    own clock) still ends an ask or a lend on time."""
+    due = _see.next_due()
+    if due is not None and due <= 0:
+        await _see_sweep()
+
+
+def _arm_see_timer() -> None:
+    global _see_timer
+    due = _see.next_due()
+    if _see_timer is not None:
+        try:
+            _see_timer.cancel()
+        except Exception:
+            pass
+        _see_timer = None
+    if due is None:
+        return
+    try:
+        loop = asyncio.get_running_loop()
+        _see_timer = loop.call_later(due + 0.05, lambda: asyncio.ensure_future(_see_sweep()))
+    except RuntimeError:
+        _see_timer = None                          # no loop (a pure test): _see_tick on the next message covers it
+
+
+async def _see_answer(ws, room, msg) -> None:
+    a = _see.asks.get(msg["ask"])
+    conn, out = _see.answer(room, msg["ask"], msg["yes"], _screens_of(room))
+    await _send_out(out)
+    if conn is not None and a is not None and _plays.held(conn):
+        await _admit(conn, room, a.account, a.name, "yes")
+        await _announce(room[0], room[1])
+    _arm_see_timer()
+
+
+async def _lend(ws, room, msg) -> None:
+    """A screen lends "see this screen" to the caller of a call IT answered, until the call ends (or the time runs out)."""
+    session = msg["session"]
+    if not msg["on"]:
+        await _end_lent(_see.end_lend(room, session))
+        await ws.send_json({"type": "lend-state", "what": msg["what"], "session": session, "on": False, "reason": "off"})
+        return
+    caller = _answerers.caller(room, "call", session)
+    if _answerers.answerer(room, "call", session) is not ws or not caller:
+        await ws.send_json({"type": "lend-state", "what": msg["what"], "session": session, "on": False,
+                            "reason": "not-this-call"})
+        return
+    row = _person_row(_person_owner(room[1]), room[1])
+    await ws.send_json(_see.lend(room, session, caller, ws, lend_minutes(row, msg.get("minutes"))))
+    _arm_see_timer()
+    # The caller already waiting on an ask is let in now: the person at the screen just said yes in another way.
+    r = _rooms.get(room[0], room[1])
+    for d in list(r.drivers if r else []):
+        a = next((x for x in _see.asks.values() if x.conn is d and x.account == caller and x.room == room), None)
+        if a is not None:
+            _, out = _see.answer(room, a.aid, True, _screens_of(room))
+            await _send_out(out)
+            await _admit(d, room, caller, a.name, "lent")
+    await _announce(room[0], room[1])
+
+
 @app.websocket("/api/drive/{person_id}")
 async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver", follow: str = ""):
     if not ID_RE.match(person_id or "") or role not in ROLES:
@@ -1447,24 +1646,26 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
 
     await ws.accept()
     _rooms.join(room_key, person_id, role, ws)
-    # `?follow=1` (row 2.79): a driver socket opened only to watch along is counted as a follower BEFORE the first
-    # presence goes out, so the screen never flashes "helping" for somebody who is only watching.
+    # `?follow=1` (row 2.79): a driver socket opened only to watch along is decided BEFORE the first presence goes
+    # out (let in, asking, or refused - each is watch-only), so the screen never flashes "helping" for somebody who is
+    # only watching. Since 2026-10-12 it is decided by "who may see this screen" (screen_access.py).
     if role == "driver" and follow == "1":
-        _plays.follow(ws, True)
+        await _follow(ws, user, room_key, person_id, True, announce=False)
+    if role == "screen":
+        # A screen that joins while somebody is waiting for a "yes" is shown the question too.
+        for m in _see.pending_for((room_key, person_id)):
+            await ws.send_json(m)
 
     async def announce():
-        counts = _rooms.counts(room_key, person_id)
-        room = _rooms.get(room_key, person_id)
-        if room:
-            # `followers` (row 2.79): how many of the drivers are only watching along, so the screen can say
-            # "watching" for them and "helping" only for the rest. `drivers` still counts every driver socket.
-            await _tell(room.screens + room.drivers,
-                        {"type": "presence", **counts, "followers": _plays.count(room.drivers)})
+        # `followers` (row 2.79): how many of the drivers are only watching along, so the screen can say "sharing"
+        # for them and "helping" only for the rest; `watchers` (screens only, 2026-10-12): who they are.
+        await _announce(room_key, person_id)
 
     await announce()
     try:
         while True:
             raw = await ws.receive_json()
+            await _see_tick()                  # an ask or a temporary permission whose time is up ends now
             msg = parse_message(raw)
             if msg is None:
                 continue                       # unknown verb or shape: dropped, not relayed
@@ -1481,10 +1682,21 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             # it is counted as a follower, hears `play`, and does nothing else - its verbs, signals and group messages
             # are dropped below, so the screen's "watching along" notice can never hide somebody pressing its buttons.
             if msg["type"] == "follow":
-                if role == "driver" and _plays.follow(ws, msg["on"]):
-                    await announce()
+                if role == "driver":
+                    await _follow(ws, user, room_key, person_id, msg["on"])
                 continue
-            if _plays.following(ws):
+            # Seeing, waiting for a yes, or refused: watch-only. Nothing it sends goes anywhere (play_relay.py rule 4).
+            if _plays.following(ws) or _plays.held(ws):
+                continue
+            if msg["type"] == "see-answer":
+                # A SCREEN's answer to "may <name> see this screen?" (2026-10-12). The first answer decides.
+                if role == "screen":
+                    await _see_answer(ws, arb_key, msg)
+                continue
+            if msg["type"] == "lend":
+                # A SCREEN lends "see this screen" to the caller of the call it answered (2026-10-12).
+                if role == "screen":
+                    await _lend(ws, arb_key, msg)
                 continue
             if msg["type"] == "play":
                 # A SCREEN's, to this person's FOLLOWING drivers only: never to another screen, never stored,
@@ -1541,6 +1753,8 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                             await _send_out(_groups.screen_won(ws, user, arb_key, sig.get("session")))
                         if sig.get("kind") == "bye":
                             _groups.call_ended(arb_key, sig.get("session"))
+                            # a temporary permission given on this call ends with it (2026-10-12)
+                            await _end_lent(_see.end_lend(arb_key, sig.get("session")))
                 else:
                     # group calls: an offer tagged with a group makes it or rings another screen into it - and is
                     # NOT relayed when the tag is not this login's to use, or the group is full (nothing rings).
@@ -1550,7 +1764,8 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                         continue
                     if sig.get("kind") == "bye":
                         _groups.call_ended(arb_key, sig.get("session"))
-                    _answerers.driver_signal(arb_key, sig)
+                        await _end_lent(_see.end_lend(arb_key, sig.get("session")))   # ends with the call
+                    _answerers.driver_signal(arb_key, sig, user)   # `user`: who placed it, for a lend (2026-10-12)
                     await _tell(room.screens, stamp_signal(msg, user))
             elif role == "driver":
                 await _tell(room.screens, msg)
@@ -1561,8 +1776,12 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
     finally:
         _rooms.leave(room_key, person_id, role, ws)
         _plays.left(ws)                        # watching along: who followed, its rate counter - all forgotten
+        # who may see (2026-10-12): an ask it was waiting on goes from the screens; a yes it rode on starts its grace.
+        await _send_out(_see.withdraw(ws, _screens_of))
+        _see.stopped(ws)
         if role == "screen":
             _answerers.left((room_key, person_id), ws)
+            await _end_lent(_see.screen_left(ws))    # the screen that lent it is gone: so is the lend
         await _send_out(_groups.left(ws))      # group calls: out of its group, its knocks withdrawn
         await announce()
 

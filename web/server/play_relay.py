@@ -13,6 +13,9 @@ WHAT THIS ADDS TO THE DRIVE SOCKET (drive.py parse_message hands these two types
                that screen's socket), so a follower can tell two screens apart and nobody can forge either.
   * `follow` - from a DRIVER: {on: true|false}. "This socket is watching along." Presence then counts it as a
                follower, so the screen can say "watching" instead of "helping" (kiosk.js, Mike's consent rule).
+               SINCE 2026-10-12 (screen_access.py) only somebody on "who may see this screen" is let in, and by default
+               the screen ASKS first: app.py decides, and a socket waiting or refused is HELD here (watch-only, not
+               seeing, not counted as helping).
 
 *** THE RULES (these are the security half; everything numeric below is a default, argued) ***
 
@@ -149,6 +152,11 @@ class PlayRelay:
         self._rate = float(rate_per_s)
         self._burst = float(burst)
         self._following: set[int] = set()
+        # WATCH-ONLY BUT NOT (YET) SEEING (2026-10-12, screen_access.py): a driver socket that asked to follow and is
+        # waiting for the screen's "yes", or was told no. It does nothing (its messages are dropped, like a
+        # follower's), it hears no `play`, and presence does not count it as helping - the screen must never say
+        # "someone is helping" about somebody who only asked to watch.
+        self._held: set[int] = set()
         self._buckets: dict[int, list] = {}
         self._ids: dict[int, str] = {}
 
@@ -163,6 +171,7 @@ class PlayRelay:
         had = k in self._following
         if on:
             self._following.add(k)
+            self._held.discard(k)
         else:
             self._following.discard(k)
         return had != bool(on)
@@ -172,6 +181,21 @@ class PlayRelay:
 
     def count(self, conns) -> int:
         return sum(1 for c in conns if id(c) in self._following)
+
+    # ---- asked to watch, not seeing (2026-10-12) ---------------------------------------------------------------
+    def hold(self, conn, on: bool) -> None:
+        """Mark (or clear) a socket as watch-only while it is not seeing: waiting for a yes, or refused."""
+        if on:
+            self._held.add(id(conn))
+            self._following.discard(id(conn))
+        else:
+            self._held.discard(id(conn))
+
+    def held(self, conn) -> bool:
+        return id(conn) in self._held
+
+    def held_count(self, conns) -> int:
+        return sum(1 for c in conns if id(c) in self._held)
 
     # ---- which screen ----------------------------------------------------------------------------------
     def screen_id(self, conn) -> str:
@@ -221,9 +245,10 @@ class PlayRelay:
         """A socket closed: everything this held about it goes."""
         k = id(conn)
         self._following.discard(k)
+        self._held.discard(k)
         self._buckets.pop(k, None)
         self._ids.pop(k, None)
 
     def __len__(self) -> int:
         """How many sockets this holds anything about - so a test can see it all goes."""
-        return len(self._following | set(self._buckets) | set(self._ids))
+        return len(self._following | self._held | set(self._buckets) | set(self._ids))

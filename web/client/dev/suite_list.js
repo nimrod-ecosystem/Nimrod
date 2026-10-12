@@ -179,6 +179,9 @@ export const SUITES = [
   'phone_mic_show',
   // Row 2.44: voice recording for training, and the two-way phone intercom limited to an approved list.
   'voice_recording', 'intercom',
+  // 2026-10-12 (Mike): calls wait unless the caller may drop in; "who may see this screen" with ask first; the guardian
+  // set; the question on the screen; the follower hearing yes / asking / no. Fakes, then one live section (needs the server).
+  'screen_permissions',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

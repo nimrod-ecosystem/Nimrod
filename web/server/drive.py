@@ -43,6 +43,7 @@ import time
 from dataclasses import dataclass, field
 
 from play_relay import parse_follow, parse_play   # watching along (row 2.79): the `play` and `follow` messages
+from screen_access import parse_lend, parse_see_answer   # who may see a screen; a temporary permission (2026-10-12)
 
 # The verb vocabulary, mirrored from the client's actions.js. Deliberately duplicated as a
 # frozen set rather than imported from anywhere: this is a security boundary, and a
@@ -234,6 +235,14 @@ def parse_message(raw: dict) -> dict | None:
         return parse_play(raw)
     if kind == "follow":
         return parse_follow(raw)
+    if kind == "see-answer":
+        # who may see a screen (2026-10-12, screen_access.py): a SCREEN's answer to "may <name> see this screen?".
+        # Only from a screen, only for an ask on its own person - decided in app.py, never here.
+        return parse_see_answer(raw)
+    if kind == "lend":
+        # a temporary permission given during a call (2026-10-12): a SCREEN's "let this caller see until the call
+        # ends". The account is the call's own caller as the server recorded it (Answerers.caller), never the page's.
+        return parse_lend(raw)
     if kind == "ping":
         # A page may tag its ping with a number (`n`) so it can match the answer to the question and time the round
         # trip (play_sync.js, the clock difference). Only a small whole number is echoed; anything else is ignored.
@@ -339,6 +348,9 @@ class _Offer:
     answerer: object = None      # the winning screen's connection, once there is one
     declined: bool = False       # the first response was a no
     touched: float = 0.0
+    # The account that placed the call (the server's own record, from the drive ticket). 2026-10-12: a temporary
+    # permission given during a call goes to THIS account, never to one a page names (screen_access.py).
+    caller: str | None = None
 
 
 class Answerers:
@@ -367,8 +379,8 @@ class Answerers:
             for k in sorted(self._recs, key=lambda k: self._recs[k].touched)[:max(1, self._max // 10)]:
                 self._recs.pop(k, None)
 
-    def driver_signal(self, room, sig) -> None:
-        """A phone's signal, on its way to the screens. An offer opens (or keeps) a record."""
+    def driver_signal(self, room, sig, user: str | None = None) -> None:
+        """A phone's signal, on its way to the screens. An offer opens (or keeps) a record. `user`: who sent it."""
         ps = _arbitrated(sig)
         if ps is None:
             return
@@ -384,7 +396,7 @@ class Answerers:
         if rec is not None and rec.answerer is not None:
             rec.touched = self._now()           # a reconnect: the same screen keeps it
             return
-        self._recs[key] = _Offer(touched=self._now())   # new, or a fresh try after a no
+        self._recs[key] = _Offer(touched=self._now(), caller=user)   # new, or a fresh try after a no
 
     def claim(self, room, purpose: str, session: str, conn) -> tuple[bool, bool]:
         """(won, newly) - `newly` means the caller must now tell every OTHER screen `you: false`.
@@ -444,6 +456,11 @@ class Answerers:
     def answerer(self, room, purpose: str, session: str):
         rec = self._recs.get((room, purpose, session))
         return rec.answerer if rec else None
+
+    def caller(self, room, purpose: str, session: str) -> str | None:
+        """The account that placed this offer, as the server recorded it (None if unknown)."""
+        rec = self._recs.get((room, purpose, session))
+        return rec.caller if rec else None
 
     def __len__(self) -> int:
         return len(self._recs)

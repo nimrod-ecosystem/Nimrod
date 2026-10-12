@@ -172,14 +172,16 @@ export function decide({ leader, mine, serverNow, settling = false, seekOverS = 
 }
 
 // ---- the screen's settings (kiosk.js puts them on the screen's row) ---------------------------------------------
-// *** OFF BY DEFAULT, AND THE SCREEN'S OWNER TURNS IT ON. *** Argued: what a screen is playing is a record of what
-// the person in front of it is watching. The people who could follow already hold a drive grant (they may press its
-// buttons), and the plan argues both ways whether that is enough or a separate "may see this screen" list is needed
-// (its question 2, Mike's call). Until he rules, the gate is this switch: nothing leaves the screen until somebody
-// who sets the screen up says so. Who wants the opposite? A family that wants to watch along without setting
-// anything; they turn it on once.
+// *** MIKE RULED (2026-10-12): SEEING A SCREEN HAS ITS OWN LIST, "WHO MAY SEE THIS SCREEN", EMPTY TO START, AND THE
+// SCREEN ASKS FIRST BY DEFAULT (server/screen_access.py). *** Until then this switch WAS the gate, off by default. Now
+// the list is the gate - the server lets nobody follow who is not on it, and asks the screen first - so this switch is
+// only a per-screen "never share from THIS screen", and it is ON by default. Argued: left off by default it would be a
+// second gate the guardian set does not open - a family given the set would still see nothing until somebody also
+// found this switch, which is exactly the screen where nobody can (the guardian set exists for the screen where nobody
+// can answer "ask first"). Who wants it off? One screen of a person in a shared room (a day room) while their bedside
+// screen shares: they turn it off on that screen. A screen where somebody already chose (true or false) keeps it.
 export const FOLLOW_KEY = 'letFollow';
-export const FOLLOW_DEFAULT = false;
+export const FOLLOW_DEFAULT = true;
 export const FOLLOW_FIELD = Object.freeze({
   key: FOLLOW_KEY,
   label: 'Let people follow what this screen is playing',
@@ -187,11 +189,12 @@ export const FOLLOW_FIELD = Object.freeze({
   // `standard`: set once by whoever sets the screen up, like "Pick up new versions by itself" beside it.
   level: 'standard',
   default: FOLLOW_DEFAULT,
-  onLabel: 'Yes, people who may drive it',
-  offLabel: 'No',
-  note: 'When it is on, people who may drive this screen can play the same YouTube video on their own computer, at '
-    + 'the same moment, from Remote. Only which video and where it has got to is sent, never the picture or the sound, '
-    + 'and nothing is kept. The screen says when somebody is watching along.',
+  onLabel: 'Yes, people on “Who may see this screen”',
+  offLabel: 'No, never from this screen',
+  note: 'People on “Who may see this screen” (on the Remote page) can play the same YouTube video on their own '
+    + 'computer, at the same moment. By default the screen asks first each time. Only which video and where it has '
+    + 'got to is sent, never the picture or the sound, and nothing is kept. While anyone sees it, the screen says '
+    + '“Sharing your screen with” their name.',
 });
 export function followOf(row) {
   const v = row && row[FOLLOW_KEY];
@@ -230,17 +233,38 @@ export function beatOf(row) {
 // promise of their own. So the words follow the counts. Best guess at the wording, for Mike (plan question 7).
 // A following socket can ONLY watch (the server drops its presses), so "watching" can never hide "helping".
 // Never a state that needs an input to leave: it is a line of text, not a dialog, and it goes when they do.
+//
+// *** THE WORDS ARE MIKE'S (2026-10-12): "Sharing your screen with ...", NAMING THE PERSON WHERE IT IS KNOWN. *** The
+// names come from the server (`watchers` on presence): the name the owner gave them on "Who may see this screen", or
+// their own display name. A follower with neither is "someone". Shown for a guardian too - the guardian set skips the
+// question, never the notice.
 export const HELPING_WORDS = 'Someone is helping from another screen';
-export const WATCHING_WORDS = 'Someone is watching along from another screen';
-export const BOTH_WORDS = 'Someone is helping, and someone is watching along, from another screen';
-/** The notice's words for a presence count, or '' for no notice. */
-export function noticeWords({ drivers = 0, followers = 0 } = {}) {
+export const SHARING_PREFIX = 'Sharing your screen with ';
+export const WATCHING_WORDS = 'Sharing your screen with someone on another screen';
+export const BOTH_WORDS = 'Sharing your screen with someone on another screen. Someone is also helping from another screen';
+const MAX_NAMED = 3;
+/** "Mike", "Mike and Ann", "Mike, Ann and Jo", "Mike and 2 others", "someone on another screen". Pure. */
+export function sharingWords(names = [], count = 0) {
+  const known = [...new Set((Array.isArray(names) ? names : []).filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim()))];
+  const n = Math.max(count | 0, known.length);
+  if (!n) return '';
+  if (!known.length) return n === 1 ? WATCHING_WORDS : `${SHARING_PREFIX}${n} people on other screens`;
+  const shown = known.slice(0, MAX_NAMED);
+  const rest = n - shown.length;
+  let who;
+  if (rest > 0) who = `${shown.join(', ')} and ${rest === 1 ? '1 other' : `${rest} others`}`;
+  else if (shown.length === 1) who = shown[0];
+  else who = `${shown.slice(0, -1).join(', ')} and ${shown[shown.length - 1]}`;
+  return `${SHARING_PREFIX}${who}`;
+}
+/** The notice's words for a presence count (and the names, when the server sent them), or '' for no notice. */
+export function noticeWords({ drivers = 0, followers = 0, watchers = [] } = {}) {
   const f = Math.max(0, followers | 0);
   const helping = Math.max(0, (drivers | 0) - f);
-  if (helping && f) return BOTH_WORDS;
+  const sharing = f ? sharingWords(watchers, f) : '';
+  if (helping && sharing) return `${sharing}. Someone is also helping from another screen`;
   if (helping) return HELPING_WORDS;
-  if (f) return WATCHING_WORDS;
-  return '';
+  return sharing;
 }
 
 // ---- the screen's half: the sender -------------------------------------------------------------------------------

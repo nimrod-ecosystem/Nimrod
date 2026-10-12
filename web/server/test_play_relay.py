@@ -186,6 +186,12 @@ def J(o):
 robin = c.post("/api/people", json={"name": "Robin"}, headers=H_("pat")).json()["id"]
 gran = c.post("/api/people", json={"name": "Gran"}, headers=H_("quinn")).json()["id"]
 c.post(f"/api/people/{robin}/drive-grants", json={"subject_id": "mike"}, headers=H_("pat"))
+# Since 2026-10-12 (screen_access.py) a driver sees a screen only from "who may see this screen", and the screen asks
+# first by default. Mike is put on Robin's list with "ask first" off, so this file keeps testing the relay itself;
+# test_screen_access.py tests the list, the ask and the refusals.
+c.put(f"/api/people/{robin}/state/input-bindings", headers=H_("pat"),
+      json={"data": {"screenPeople": [{"account": "mike", "name": "Mike", "see": True, "seeAsk": False}]},
+            "base_version": 0})
 
 
 def drive_ws(u, person, role):
@@ -255,6 +261,7 @@ with drive_ws("pat", robin, "screen") as P, drive_ws("pat", robin, "screen") as 
           pong and pong["n"] == 7 and abs(pong["t"] - before_t) < 5000, str(pong))
 
     M.send_text(J({"type": "follow", "on": True}))
+    drain(M)        # M's own pong comes after its follow was handled (the list is read first, since 2026-10-12)
     got, _ = drain(P)
     pr = presence(got)
     check("*** following is announced: presence counts 1 follower (and still 3 drivers) ***",
@@ -347,11 +354,11 @@ with drive_ws("pat", robin, "screen") as P3:
     drain(P3)
     t = c.post(f"/api/drive/ticket/{robin}", headers=H_("mike")).json()["ticket"]
     with c.websocket_connect(f"/api/drive/{robin}?t={t}&role=driver&follow=1") as F:
+        drain(F)    # F's pong comes after its connect (and the first presence) was handled
         got, _ = drain(P3)
         ps = [m for m in got if m.get("type") == "presence"]
         check("*** the screen never sees that driver counted as helping, not even for one message ***",
               ps and all(m["drivers"] == m["followers"] == 1 for m in ps), str(ps))
-        drain(F)
     t = c.post(f"/api/drive/ticket/{robin}", headers=H_("pat")).json()["ticket"]
     with c.websocket_connect(f"/api/drive/{robin}?t={t}&role=screen&follow=1") as S3:
         got, _ = drain(P3)
