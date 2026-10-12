@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>photos in step — a follow page shows the screen's picture from its own copy — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  #host,#screen{width:480px}
+</style>
+</head>
+<body>
+<h1>photos in step — a follow page shows the screen's picture from its own copy</h1>
+<p>2026-10-12. <code>sha256.js</code> (the published vectors, and the browser's own where it has one),
+<code>photo_follow.js</code> (the index over this computer's own pictures - a match, no match, hidden here, nothing
+reachable, listing again on a miss, never asking a source on another computer - and the stage that never shows an
+empty box), the follow page following a Photos panel, and one page that wires a real Photos panel to the screen's sender
+and a follow page together (no server): the same picture on both, a hidden picture never sent. With
+<code>?gap=screen</code> / <code>?gap=follow</code> (and <code>person</code>, <code>user</code>) this page instead plays one
+side of a two-tab gap measurement against the real server (no checks).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="screen"></div>
+
+<script type="module">
+import { sha256Hex } from '../sha256.js';
+import {
+  photoPlayId, isPhotoId, createPlaySender, createFollower, PLAY_NOW_TOPIC, checkPlay, buildPlay,
+} from '../play_sync.js';
+import { createPhotoIndex, createPhotoStage, PHOTO_LINES, MISS_RELIST_MS } from '../photo_follow.js';
+import { mountFollowView, TICK_MS } from '../follow_view.js';
+import { quietResolve } from '../media_sources.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { createHiddenPictures } from '../hidden_pictures.js';
+import { createRemovedPictures } from '../removed_pictures.js';
+import { memoryPlayStore } from '../plays.js';
+import { connectDrive } from '../drive.js';
+import '../modules/photos.js';
+
+const params = new URLSearchParams(location.search);
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 4000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(20); } return false; };
+const SALT = 'a1b2c3d4e5f60718';
+// A picture that REALLY loads (photos_test.html's reason): a tiny SVG, tagged so two are different pictures.
+const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
+const ITEMS = ['Family/2024/IMG_0001.jpg', 'Family/2024/IMG_0002.jpg', 'Family/2024/IMG_0003.jpg', 'Trips/beach.jpg',
+  'Trips/boat.jpg', 'Trips/sunset.jpg'].map((p, i) => ({ id: p, path: p, name: p.split('/').pop(), kind: 'image', url: OKPIC('pic' + i) }));
+const mem = (seed) => { let d = { ...seed }; const subs = new Set(); return { load: async () => d, get: () => d,
+  set: (p) => { d = { ...d, ...p }; subs.forEach((f) => f(d)); return Promise.resolve(); },
+  subscribe: (f) => { subs.add(f); f(d); return () => subs.delete(f); }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} }; };
+const evs = { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() };
+const SOURCE = { id: 'src-1', label: 'Family photos', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+
+// One Photos panel on its own bus, listing ITEMS (no agent, no server).
+function mountPhotos(host, { hides = createHiddenPictures({ store: memoryPlayStore() }), removals = createRemovedPictures({ store: memoryPlayStore() }), items = ITEMS, bus = createBus() } = {}) {
+  const inst = mountModule('photos', {
+    mount: host, bus, state: mem({ sourceId: 'src-1', intervalMs: 3600000, fit: 'contain' }), events: evs,
+    user: 'pf-user', profileId: 'p', instanceId: 'photos-pf', hiddenPictures: hides, removedPictures: removals,
+    sources: { list: async () => [SOURCE], add: async () => SOURCE, remove: async () => {} },
+    resolveListing: async () => ({ items: items.map((it) => ({ ...it })), albums: [], album: '', count: items.length }),
+  });
+  inst.init();
+  return { inst, bus, hides, removals };
+}
+
+// ========================================================================================== gap mode
+const GAP = params.get('gap');
+if (GAP) {
+  const person = params.get('person');
+  const user = params.get('user') || 'gapuser';
+  window.__gap = { role: GAP, events: [], ready: false };
+  const MANY = Array.from({ length: 40 }, (_, i) => ({ id: `Gap/p${i}.jpg`, path: `Gap/p${i}.jpg`, name: `p${i}`, kind: 'image', url: OKPIC('gap' + i) }));
+  if (GAP === 'screen') {
+    const link = connectDrive({ personId: person, user, role: 'screen' });
+    const host = document.getElementById('screen');
+    const { bus } = mountPhotos(host, { items: MANY });
+    const sender = createPlaySender({ send: (m) => link.sendPlay(m), enabled: () => true, watchers: () => (link.presence().followers | 0),
+      beatS: () => 2, screenName: () => 'Bench tab', ping: () => link.ping() });
+    bus.subscribe(PLAY_NOW_TOPIC, (r) => {
+      window.__gap.events.push({ t: Date.now(), key: r.key || null, playing: !!r.playing });
+      sender.report(r);
+    });
+    setInterval(() => sender.refresh(), 500);
+    window.__gap.next = () => bus.publish('photos/next');
+    window.__gap.followers = () => link.presence().followers | 0;
+    window.__gap.ready = true;
+    document.getElementById('summary').textContent = 'gap mode: screen';
+  } else {
+    const host = document.getElementById('host');
+    const byUrl = new Map(MANY.map((it) => [it.url, it.path]));
+    const view = mountFollowView(host, { personId: person, personName: 'Bench', user,
+      makePhotoIndex: () => ({ index: createPhotoIndex({ listSources: async () => [SOURCE], resolve: async () => ({ items: MANY.map((it) => ({ ...it })) }) }), onHiddenChange: null }) });
+    view.start();
+    let lastSrc = null;
+    const look = () => {
+      const img = host.querySelector('[data-fv-photo-shown]');
+      const src = img ? img.getAttribute('src') : null;
+      if (src !== lastSrc) { lastSrc = src; window.__gap.events.push({ t: Date.now(), key: src ? byUrl.get(src) || '?' : null, status: view.status() }); }
+    };
+    new MutationObserver(look).observe(host, { subtree: true, childList: true, attributes: true });
+    window.__gap.status = () => view.status();
+    window.__gap.ready = true;
+    document.getElementById('summary').textContent = 'gap mode: follow';
+  }
+} else {
+(async () => {
+  // ========================================================================================== sha256
+  section('sha256.js: the published vectors, and the browser\'s own');
+  {
+    check('SHA-256("") is the published value', sha256Hex('') === 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    check('SHA-256("abc") is the published value', sha256Hex('abc') === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    check('a two-block message (56 bytes) is the published value',
+      sha256Hex('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq') === '248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1');
+    if (globalThis.crypto && crypto.subtle) {
+      const words = ['', 'a', 'Family/2024/IMG_0001.jpg', 'Café/été \u{1F600}.jpg', 'x'.repeat(55), 'y'.repeat(56), 'z'.repeat(64), 'w'.repeat(1000)];
+      let same = true;
+      for (const w of words) {
+        const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(w));
+        const hex = [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
+        if (hex !== sha256Hex(w)) { same = false; break; }
+      }
+      check('*** the same as the browser\'s own SHA-256 for padding edges and non-ASCII names ***', same);
+    } else check('the browser\'s own SHA-256 is not on this page (not secure): the vectors above stand', true);
+    const paths = Array.from({ length: 10000 }, (_, i) => `Pictures/${2000 + (i % 25)}/IMG_${String(i).padStart(5, '0')}.jpg`);
+    const t0 = performance.now();
+    for (const p of paths) photoPlayId(SALT, p);
+    const ms = performance.now() - t0;
+    console.log(`photo_follow: 10000 picture ids in ${ms.toFixed(0)} ms`);
+    check(`*** 10,000 picture paths hash in ${ms.toFixed(0)} ms (a follow page's index, once per sharing session) ***`, ms < 3000, String(ms));
+  }
+
+  // ========================================================================================== the index
+  section('the index: my own pictures, by the screen\'s id - a match, no match, hidden here, nothing reachable');
+  {
+    let t = 1_000_000;
+    let lists = 0;
+    let have = ITEMS.slice(0, 4);
+    const hidden = new Set();
+    const idx = createPhotoIndex({ now: () => t, listSources: async () => [SOURCE],
+      resolve: async () => { lists += 1; return { items: have.map((it) => ({ ...it, url: 'mine:' + it.path })) }; },
+      hidden: () => hidden });
+    const id1 = photoPlayId(SALT, 'Family/2024/IMG_0001.jpg');
+    const r1 = await idx.find(id1, SALT);
+    check('*** a picture I have too is found - MY copy (my address), by the screen\'s id ***', r1.status === 'found' && r1.item.url === 'mine:Family/2024/IMG_0001.jpg', JSON.stringify(r1));
+    check('one listing made it', lists === 1 && idx.size() === 4);
+    const idNo = photoPlayId(SALT, 'Trips/sunset.jpg');
+    const r2 = await idx.find(idNo, SALT);
+    check('*** a picture not here: "missing" ***', r2.status === 'missing');
+    check(`*** a miss right after a listing, or within ${MISS_RELIST_MS / 1000} s of one, does NOT list again ***`, lists === 1);
+    t += MISS_RELIST_MS / 2;
+    await idx.find(idNo, SALT);
+    check('...half a minute later still not', lists === 1);
+    have = ITEMS.slice();
+    t += MISS_RELIST_MS / 2;
+    const r3 = await idx.find(idNo, SALT);
+    check('*** a minute after the listing a miss lists again (it may be new here), and a picture copied in meanwhile is found ***',
+      lists === 2 && r3.status === 'found', JSON.stringify(r3));
+    t += 1000;
+    await idx.find(photoPlayId(SALT, 'Not/anywhere.jpg'), SALT);
+    check('and right after that listing, another miss does not list again', lists === 2);
+    hidden.add('Trips/sunset.jpg');
+    const r4 = await idx.find(idNo, SALT);
+    check('*** a picture hidden ON THIS COMPUTER is "hidden", not shown ***', r4.status === 'hidden');
+    hidden.clear();
+    check('the id from another session\'s salt finds the same picture under that salt', (await idx.find(photoPlayId('0f1e2d3c4b5a6978', 'Trips/sunset.jpg'), '0f1e2d3c4b5a6978')).status === 'found');
+    check('a bad id or salt is "missing", never thrown', (await idx.find('IMG_0001.jpg', SALT)).status === 'missing' && (await idx.find(id1, 'x')).status === 'missing');
+    const emptyIdx = createPhotoIndex({ listSources: async () => [SOURCE], resolve: async () => { throw new Error('down'); } });
+    check('*** no source answered here: "none" (the words say why) ***', (await emptyIdx.find(id1, SALT)).status === 'none');
+    check('a song in the same folder is not a picture', (await createPhotoIndex({ listSources: async () => [SOURCE],
+      resolve: async () => ({ items: [{ path: 'Family/2024/IMG_0001.jpg', kind: 'audio', url: 'x' }] }) }).find(id1, SALT)).status === 'missing');
+    // QUIET: a source on another computer is never fetched (no local-network box), through media_sources' own quietResolve.
+    let fetched = 0;
+    const away = { id: 'away', label: 'Pi photos', kind: 'agent', base_url: 'http://localhost:8770' };
+    const lister = quietResolve(async () => { fetched += 1; return { items: ITEMS }; }, { check: async () => ({ check: false, why: 'would-ask', state: 'prompt' }) });
+    const quiet = createPhotoIndex({ listSources: async () => [away], resolve: (s) => lister(s, '') });
+    const rq = await quiet.find(id1, SALT);
+    check('*** a source on another computer is never asked from here: nothing fetched, "none" ***', fetched === 0 && rq.status === 'none', `${fetched} ${rq.status}`);
+  }
+
+  // ========================================================================================== the stage
+  section('the stage: the picture, or the plain words in the box - never an empty box');
+  {
+    const box = document.createElement('div'); document.getElementById('host').append(box);
+    let hidden = new Set();
+    let tell = null;
+    const idx = createPhotoIndex({ listSources: async () => [SOURCE], resolve: async () => ({ items: ITEMS.slice(0, 3).concat([{ id: 'Clips/a.mp4', path: 'Clips/a.mp4', kind: 'video', url: 'data:video/mp4,' }]) }),
+      hidden: () => hidden });
+    const st = createPhotoStage(box, { index: idx, onHiddenChange: (fn) => { tell = fn; return () => { tell = null; }; } });
+    st.load(photoPlayId(SALT, 'Family/2024/IMG_0002.jpg'), 0, true, 'photo', { salt: SALT });
+    check('while it looks: the words, in the box', box.textContent === PHOTO_LINES.looking && st.status() === 'looking');
+    await until(() => st.status() === 'found');
+    const img = box.querySelector('img');
+    check('*** found: my copy of the picture is shown ***', img && img.getAttribute('src') === ITEMS[1].url && st.words() === '', box.innerHTML.slice(0, 160));
+    check('a still picture has no position (never sought)', st.currentTime() === null);
+    st.load(photoPlayId(SALT, 'Not/here.jpg'), 0, true, 'photo', { salt: SALT });
+    await until(() => st.status() === 'missing');
+    check('*** not here: "This picture isn\'t in your pictures here." - in the box, no picture, not empty ***',
+      box.textContent === 'This picture isn’t in your pictures here.' && !box.querySelector('img') && box.children.length === 1, box.innerHTML);
+    hidden = new Set(['Family/2024/IMG_0003.jpg']);
+    st.load(photoPlayId(SALT, 'Family/2024/IMG_0003.jpg'), 0, true, 'photo', { salt: SALT });
+    await until(() => st.status() === 'hidden');
+    check('*** hidden on this computer: the words say so, the picture is not shown ***', box.textContent === PHOTO_LINES.hidden && !box.querySelector('img'));
+    hidden = new Set();
+    tell?.();
+    await until(() => st.status() === 'found');
+    check('brought back here while it is the picture: it comes up at once', !!box.querySelector('img'));
+    hidden = new Set(['Family/2024/IMG_0003.jpg']);
+    tell?.();
+    await until(() => st.status() === 'hidden');
+    check('hidden here while it is up: it goes at once', !box.querySelector('img') && box.textContent === PHOTO_LINES.hidden);
+    st.load(photoPlayId(SALT, 'Clips/a.mp4'), 4, true, 'photo', { salt: SALT });
+    await until(() => st.status() === 'found');
+    check('a clip in the slideshow is a muted video here', box.querySelector('video')?.muted === true);
+    st.load(null, 0, false, 'photo', { salt: SALT });
+    check('the screen showing nothing: the words, not an empty box', box.textContent === PHOTO_LINES.nothing);
+    const copy = JSON.stringify(PHOTO_LINES);
+    check('the words never say "her screen" or name anybody', !/\bher screen|christine|cici/i.test(copy));
+    st.destroy(); box.remove();
+  }
+
+  // ========================================================================================== the follow page
+  section('the follow page follows a Photos panel: the same picture, "Following <screen>", the words when it isn\'t here');
+  {
+    let onPlayCb = null; let closed = 0;
+    const connect = (o) => { setTimeout(() => o.onState?.('connected'), 0);
+      return { onPlay: (cb) => { onPlayCb = cb; return () => {}; }, onFollowState: () => () => {}, ping: async () => null, close: () => { closed += 1; }, presence: () => ({}) }; };
+    let ytMade = 0;
+    const fakeYt = { id: null, destroyed: false, muted: true, load(id) { this.id = id; }, seek() {}, pause() {}, resume() { this.resumed = true; }, item() { return this.id; },
+      currentTime() { return 0; }, playing() { return true; }, setMuted(m) { this.muted = m; }, destroy() { this.destroyed = true; } };
+    let hidden = new Set();
+    let idxMade = 0;
+    const host = document.createElement('div'); document.getElementById('host').append(host);
+    const view = mountFollowView(host, { personId: 'p1', personName: 'Robin', user: 'pf-user', connect,
+      makePlayer: () => { ytMade += 1; return fakeYt; },
+      makePhotoIndex: async ({ personId }) => { idxMade += 1; return { index: createPhotoIndex({ listSources: async () => (personId === 'p1' ? [SOURCE] : []),
+        resolve: async () => ({ items: ITEMS.slice(0, 4).map((it) => ({ ...it, url: 'mine-' + it.url })) }), hidden: () => hidden }), onHiddenChange: null }; },
+      storage: { getItem: () => null, setItem() {} } });
+    host.querySelector('[data-fv-start]').click();
+    await until(() => onPlayCb);
+    const at = () => Date.now();
+    const play = (path, o = {}) => onPlayCb({ type: 'play', kind: 'photo', item: path === null ? null : photoPlayId(SALT, path), salt: path === null ? undefined : SALT, pos: 1,
+      playing: true, rate: 1, at: at(), from: 'abcd1234', screen: 'Living room', every: 2, ...o });
+    play('Family/2024/IMG_0001.jpg');
+    const shown = () => host.querySelector('[data-fv-photo] [data-fv-photo-shown]');
+    check('*** the same picture is shown, from this computer\'s copy ***', await until(() => shown()?.getAttribute('src') === 'mine-' + ITEMS[0].url),
+      host.querySelector('[data-fv-photo]')?.innerHTML);
+    check('*** "Following Robin\'s screen (Living room)" ***', view.line() === 'Following Robin’s screen (Living room)', view.line());
+    check('the status says it is the same picture', /same picture/.test(view.status()), view.status());
+    check('*** a page following pictures never made a YouTube player (YouTube is never loaded for pictures) ***', ytMade === 0);
+    check('no Sound button for a picture', host.querySelector('[data-fv-sound]').hidden === true);
+    check('the picture box shows; the video box does not', host.querySelector('[data-fv-photo]').hidden === false && host.querySelector('[data-fv-stage]').hidden === true);
+    check('the index was made for the person being followed', idxMade === 1);
+    play('Trips/sunset.jpg');
+    check('*** a picture not here: the plain words, in the box, and it keeps following ***',
+      await until(() => host.querySelector('[data-fv-photo]').textContent === 'This picture isn’t in your pictures here.')
+      && view.phase() === 'on' && /isn’t in your pictures here/.test(view.status()), view.status());
+    hidden = new Set(['Trips/beach.jpg']);
+    play('Trips/beach.jpg');
+    check('*** a picture hidden on this computer is not shown here, even though the screen shows it ***',
+      await until(() => host.querySelector('[data-fv-photo]').textContent === PHOTO_LINES.hidden) && !shown());
+    play('Family/2024/IMG_0002.jpg', { playing: false });
+    check('paused on the screen: "Paused on the same picture."', await until(() => /Paused on the same picture/.test(view.status())), view.status());
+    // the screen moves on to a video: the video box, a YouTube player made now
+    onPlayCb({ type: 'play', kind: 'youtube', item: 'dQw4w9WgXcQ', pos: 3, playing: true, rate: 1, at: at(), from: 'abcd1234', screen: 'Living room', every: 2 });
+    check('*** the screen switches to a video: the YouTube player is made then, and shown ***',
+      await until(() => ytMade === 1 && fakeYt.id === 'dQw4w9WgXcQ' && host.querySelector('[data-fv-stage]').hidden === false && host.querySelector('[data-fv-photo]').hidden === true));
+    check('...and the Sound button is back', await until(() => host.querySelector('[data-fv-sound]').hidden === false));
+    play('Family/2024/IMG_0003.jpg');
+    check('back to the pictures: the picture box again', await until(() => shown()?.getAttribute('src') === 'mine-' + ITEMS[2].url && host.querySelector('[data-fv-stage]').hidden === true));
+    play(null);
+    check('the screen showing nothing: the words in the box, never empty', await until(() => host.querySelector('[data-fv-photo]').textContent === PHOTO_LINES.nothing));
+    host.querySelector('[data-fv-stop]').click();
+    check('Stop: the socket closes, the players go', view.phase() === 'idle' && closed === 1 && fakeYt.destroyed && !host.querySelector('[data-fv-photo]').textContent);
+    check('the page\'s copy never says "her screen"', !/\bher screen/i.test(host.textContent));
+    view.destroy(); host.remove();
+  }
+
+  section('the follow page: stopped by the screen, "Follow again", then a video - the YouTube player is made (an async maker)');
+  {
+    let onPlayCb = null, onStateCb = null;
+    const connect = (o) => { setTimeout(() => o.onState?.('connected'), 0);
+      return { onPlay: (cb) => { onPlayCb = cb; return () => {}; }, onFollowState: (cb) => { onStateCb = cb; return () => {}; }, ping: async () => null, close() {}, presence: () => ({}) }; };
+    const fakeYt = { id: null, destroyed: false, load(id) { this.id = id; }, seek() {}, pause() {}, resume() {}, item() { return this.id; },
+      currentTime() { return 0; }, playing() { return true; }, setMuted() {}, destroy() { this.destroyed = true; } };
+    const host = document.createElement('div'); document.getElementById('host').append(host);
+    const view = mountFollowView(host, { personId: 'p1', personName: 'Robin', user: 'pf-user', connect,
+      makePlayer: () => new Promise((r) => setTimeout(() => r(fakeYt), 30)),
+      makePhotoIndex: () => ({ index: createPhotoIndex({ listSources: async () => [SOURCE], resolve: async () => ({ items: ITEMS }) }), onHiddenChange: null }),
+      storage: { getItem: () => null, setItem() {} } });
+    host.querySelector('[data-fv-start]').click();
+    await until(() => onPlayCb);
+    onPlayCb({ type: 'play', kind: 'photo', item: photoPlayId(SALT, ITEMS[0].path), salt: SALT, pos: 0, playing: true, rate: 1, at: Date.now(), from: 'abcd1234', every: 2 });
+    await until(() => host.querySelector('[data-fv-photo-shown]'));
+    onStateCb({ state: 'refused', reason: 'declined' });
+    check('refused: stopped, and the picture is left up (never blank)', view.phase() === 'stopped' && !!host.querySelector('[data-fv-photo-shown]'));
+    onPlayCb = null;
+    host.querySelector('[data-fv-start]').click();
+    await until(() => onPlayCb);
+    onPlayCb({ type: 'play', kind: 'youtube', item: 'dQw4w9WgXcQ', pos: 0, playing: true, rate: 1, at: Date.now(), from: 'abcd1234', every: 2 });
+    check('*** after "Follow again", a video still gets its YouTube player (a slow maker\'s player is not thrown away) ***',
+      await until(() => fakeYt.id === 'dQw4w9WgXcQ' && !fakeYt.destroyed, 2000), JSON.stringify(fakeYt));
+    view.destroy(); host.remove();
+  }
+
+  // ========================================================================================== end to end
+  section('*** end to end (no server): a real Photos panel, the screen\'s sender, a follow page - the same picture; hidden never sent ***');
+  {
+    const screenHost = document.createElement('div'); screenHost.style.cssText = 'width:300px;height:200px'; document.getElementById('screen').append(screenHost);
+    const hides = createHiddenPictures({ store: memoryPlayStore() });
+    const removals = createRemovedPictures({ store: memoryPlayStore() });
+    // One picture is already hidden on the screen before anybody follows: it must never be sent.
+    await hides.hide({ path: 'Trips/boat.jpg', name: 'boat.jpg', scope: 'everyone' });
+    const bus = createBus();
+    const reports = [];
+    bus.subscribe(PLAY_NOW_TOPIC, (r) => reports.push(r));
+    const wire = [];             // what left the screen (and what the follow page got, stamped as the server would)
+    let deliver = null;
+    let salt = 'c0ffee00c0ffee01';
+    const sender = createPlaySender({ send: (m) => { wire.push(m); const stamped = { ...m, at: Date.now(), from: 'abcd1234' }; setTimeout(() => deliver?.(stamped), 5); return true; },
+      enabled: () => true, watchers: () => 1, beatS: () => 2, screenName: () => 'Living room', makeSalt: () => salt });
+    bus.subscribe(PLAY_NOW_TOPIC, (r) => sender.report(r));
+    const { inst } = mountPhotos(screenHost, { hides, removals, bus });
+    check('PRECONDITION: the screen shows a picture', await until(() => inst.impl.__probe?.()?.currentId || screenHost.querySelector('.stage img')));
+    const fhost = document.createElement('div'); document.getElementById('host').append(fhost);
+    const view = mountFollowView(fhost, { personId: 'p1', personName: 'Robin', user: 'pf-user',
+      connect: (o) => { setTimeout(() => o.onState?.('connected'), 0); return { onPlay: (cb) => { deliver = cb; return () => {}; }, onFollowState: () => () => {}, ping: async () => null, close() {}, presence: () => ({}) }; },
+      makePlayer: () => { throw new Error('no video here'); },
+      makePhotoIndex: () => ({ index: createPhotoIndex({ listSources: async () => [SOURCE], resolve: async () => ({ items: ITEMS.map((it) => ({ ...it })) }) }), onHiddenChange: null }) });
+    view.start();
+    await until(() => deliver);
+    sender.refresh();
+    const screenPath = () => inst.impl.__probe().currentId;
+    const followPath = () => { const src = fhost.querySelector('[data-fv-photo-shown]')?.getAttribute('src'); return ITEMS.find((it) => it.url === src)?.path || null; };
+    check('*** the follow page shows the same picture as the screen ***', await until(() => followPath() && followPath() === screenPath()), `${screenPath()} vs ${followPath()}`);
+    const sameEach = [];
+    for (let i = 0; i < 8; i++) {
+      bus.publish('photos/next');
+      await until(() => followPath() === screenPath(), 3000);
+      sameEach.push(followPath() === screenPath());
+    }
+    check('*** eight "next"s on the screen: the follow page is on the same picture after each ***', sameEach.every(Boolean), JSON.stringify(sameEach));
+    const hiddenId = photoPlayId(salt, 'Trips/boat.jpg');
+    check('*** the picture hidden on the screen was never sent, never reported, never shown on the follower ***',
+      !wire.some((m) => m.item === hiddenId) && !reports.some((r) => r.key === 'Trips/boat.jpg'));
+    // Hide the picture that is on the screen right now: the screen moves on, and its id is never sent again.
+    const before = screenPath();
+    const beforeId = photoPlayId(salt, before);
+    const n0 = wire.length;
+    await inst.impl.__probe().hideCurrent();
+    await until(() => screenPath() !== before && followPath() === screenPath(), 3000);
+    check('*** hiding the picture on screen: the screen moves on and the follower follows to the next one ***', screenPath() !== before && followPath() === screenPath(), `${before} -> ${screenPath()} / ${followPath()}`);
+    for (let i = 0; i < 6; i++) { bus.publish('photos/next'); await sleep(30); }
+    await sleep(300);
+    check('*** ...and that picture\'s id is never sent again ***', !wire.slice(n0).some((m) => m.item === beforeId));
+    check('*** nothing that left the screen named a file ***', !JSON.stringify(wire).match(/\.jpg|Family|Trips/) && wire.every((m) => m.item === null || isPhotoId(m.item) || m.kind === 'youtube'));
+    bus.publish('photos/pause');
+    check('pause on the screen: the follow page says paused', await until(() => /Paused on the same picture/.test(view.status())), view.status());
+    bus.publish('photos/play');
+    inst.destroy();
+    check('*** the screen\'s panel closing: "nothing showing" goes, the follower says so (never left on a picture) ***',
+      await until(() => fhost.querySelector('[data-fv-photo]').textContent === PHOTO_LINES.nothing), fhost.querySelector('[data-fv-photo]').textContent);
+    sender.destroy(); view.destroy(); fhost.remove(); screenHost.remove();
+  }
+
+  document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+})().catch((e) => { document.getElementById('summary').textContent = 'threw: ' + (e && e.stack || e); });
+}
+</script>
+</body>
+</html>

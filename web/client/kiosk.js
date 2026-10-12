@@ -201,6 +201,7 @@ import { attachDriveToBus } from './drive.js';
 // watching along (row 2.79): what this screen plays, to the people following it - only when its owner turns it on.
 import {
   createPlaySender, PLAY_NOW_TOPIC, FOLLOW_FIELD, FOLLOW_BEAT_FIELD, followOf, beatOf, noticeWords,
+  FOLLOW_MAIN_FIELD, mainOf,   // photos in step (2026-10-12): which panel people following see when more than one plays
 } from './play_sync.js';
 import { createCallTransport, CALL_TRANSPORT_READY } from './call_transport.js';
 import { createCallGroup } from './call_group.js';      // group calls (2026-10-09)
@@ -3995,10 +3996,13 @@ export async function mountKiosk(root, {
     // of the site, only when nothing is going on. The SCREEN's: it is about this device and its room. Not on an
     // embed (an embed never reloads the page it sits on).
     ...(!embedded ? [{ ...PICK_UP_FIELD }] : []),
-    // watching along (row 2.79; play_sync.js argues both): whether people who may drive this screen can play the same
-    // YouTube video in step on their own computer (OFF by default), and how often it says where the video is while
-    // they do. The SCREEN's: it is about what this room is watching. Not on an embed (no drive socket there).
-    ...(!embedded ? [{ ...FOLLOW_FIELD }, { ...FOLLOW_BEAT_FIELD, options: FOLLOW_BEAT_FIELD.options.map((o) => ({ ...o })) }] : []),
+    // watching along (row 2.79; play_sync.js argues both): whether people who may see this screen can play the same
+    // YouTube video - and since 2026-10-12 see the same picture - in step on their own computer, and how often it says
+    // where it is while they do. The SCREEN's: it is about what this room is watching. Not on an embed (no drive socket
+    // there). photos in step: which one they see when a video and a slideshow both play (FOLLOW_MAIN_FIELD, 'advanced'
+    // like the heartbeat, so the one-switch lap is unchanged).
+    ...(!embedded ? [{ ...FOLLOW_FIELD }, { ...FOLLOW_BEAT_FIELD, options: FOLLOW_BEAT_FIELD.options.map((o) => ({ ...o })) },
+      { ...FOLLOW_MAIN_FIELD, options: FOLLOW_MAIN_FIELD.options.map((o) => ({ ...o })) }] : []),
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -6341,6 +6345,7 @@ export async function mountKiosk(root, {
               enabled: () => followOf(settings.get() || {}),
               watchers: () => (link.presence().followers | 0),
               beatS: () => beatOf(settings.get() || {}),
+              main: () => mainOf(settings.get() || {}),   // photos in step: a video or the pictures, when both play
               screenName: () => { try { return screenNames.get(bootProfileId) || ''; } catch { return ''; } },
               ping: () => link.ping(),
             });

@@ -21,11 +21,18 @@
 // WHEN THE SCREEN GOES QUIET this never goes blank: the player carries on with what it had, the page says the screen
 // stopped sending, and after "Stop following by itself after" (a choice on this page, a minute by default,
 // play_sync.js argues it) it stops following, which also takes the notice off their screen.
+//
+// PHOTOS IN STEP (2026-10-12): the same page follows a screen's Photos panel too. The screen sends an opaque id; this
+// page finds the picture in ITS OWN picture sources (photo_follow.js: listed quietly, never a local-network prompt) and
+// shows it in a box of its own, or says plainly that it isn't here and keeps following. One player stands in for both
+// (`composite`): it shows the video or the picture, whichever the screen is sharing, and creates the YouTube player
+// only when a video first arrives - a page following pictures never loads YouTube at all.
 
 import { connectDrive } from './drive.js';
 import {
   createClock, createFollower, STOP_AFTER_CHOICES, STOP_AFTER_KEY, stopAfterOf,
 } from './play_sync.js';
+import { createPhotoIndex, createPhotoStage, PHOTO_LINES } from './photo_follow.js';
 
 // How often the follower looks at its player and the screen's last message. Half a second: well inside the 2 s
 // seek line, cheap (no network - it reads the player and does arithmetic). Not a person's setting.
@@ -73,12 +80,50 @@ async function defaultPlayer(stageEl) {
   return createYtPlayer(stageEl, {}, { muted: true });
 }
 
+// photos in step: the pictures this page may look in - this computer's own sources (its registry, the followed
+// person's own sources and the account-wide ones), listed quietly with every folder inside, less this computer's hidden
+// and removed pictures. Imported when the first picture arrives, so a page following videos loads none of it.
+// HIDDEN_WAIT_MS 1.5 s: photos.js's own wait for the hidden list before a first picture (a store that never answers must
+// not hold the picture back for good).
+const HIDDEN_WAIT_MS = 1500;
+async function defaultPhotoIndex({ user, personId }) {
+  const ms = await import('./media_sources.js');
+  const { deviceHiddenPictures } = await import('./hidden_pictures.js');
+  const { deviceRemovedPictures } = await import('./removed_pictures.js');
+  const client = ms.createMediaSourcesClient({ user, cache: true });
+  const lister = ms.quietResolve((s, album) => ms.resolveListing(s, album, { deep: true }));
+  const hides = deviceHiddenPictures();
+  const removals = deviceRemovedPictures();
+  await new Promise((resolve) => {
+    Promise.all([hides.ready, removals.ready]).then(resolve, resolve);
+    setTimeout(resolve, HIDDEN_WAIT_MS);
+  });
+  const index = createPhotoIndex({
+    listSources: async () => ((await client.list()) || []).filter((s) => ms.mayShowSource(s, personId || null)),
+    resolve: (s) => lister(s, ''),
+    hidden: () => {
+      const out = new Set();
+      try { for (const p of hides.paths(personId || '')) out.add(p); } catch { /* none */ }
+      try { for (const p of removals.paths('')) out.add(p); } catch { /* none */ }
+      return out;
+    },
+  });
+  const onHiddenChange = (fn) => {
+    const a = hides.subscribe(fn);
+    const b = removals.subscribe(fn);
+    return () => { try { a?.(); } catch { /* gone */ } try { b?.(); } catch { /* gone */ } };
+  };
+  return { index, onHiddenChange };
+}
+
 export function mountFollowView(root, {
   personId = '',
   personName = '',
   user = null,
   connect = connectDrive,
   makePlayer = defaultPlayer,          // (stageEl) => player | Promise<player>: load/seek/play/pause/item/currentTime/playing/setMuted/destroy
+  // photos in step: ({ user, personId }) => { index, onHiddenChange } | Promise<...> (photo_follow.js createPhotoIndex)
+  makePhotoIndex = defaultPhotoIndex,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
@@ -86,6 +131,7 @@ export function mountFollowView(root, {
 } = {}) {
   ensureStyle(root.ownerDocument || document);
   let link = null, player = null, follower = null, clock = null;
+  let composite = null;                 // photos in step: the one player for a video or a picture (`makeComposite`)
   let tickTimer = null, pingTimer = null;
   let phase = 'idle';                   // idle | on | stopped
   let connState = 'offline';
@@ -102,9 +148,11 @@ export function mountFollowView(root, {
   root.innerHTML = `
     <section class="fv r-grants" data-follow-view aria-labelledby="fv-h">
       <h2 class="r-h2" id="fv-h">Watch along</h2>
-      <p class="h-hint">Play what ${esc(who)} is playing, here, at the same moment. It works for YouTube. You need to be
-        on “Who may see this screen” for their screens. Usually the screen asks first, and it starts only if somebody
-        there says yes. Their screen shows “Sharing your screen with” your name while you follow.</p>
+      <p class="h-hint">Play what ${esc(who)} is playing, here, at the same moment. It works for YouTube, and for
+        pictures that are in your own pictures here too (a shared Google Drive folder, say): the picture is shown from
+        your copy. You need to be on “Who may see this screen” for their screens. Usually the screen asks first, and it
+        starts only if somebody there says yes. Their screen shows “Sharing your screen with” your name while you
+        follow.</p>
       <div class="fv-row" data-fv-idle>
         <button type="button" class="h-btn h-primary" data-fv-start>Follow what ${esc(who)} is playing</button>
       </div>
@@ -113,6 +161,7 @@ export function mountFollowView(root, {
         <p class="fv-status" data-fv-status role="status" aria-live="polite"></p>
         <div class="fv-screens" data-fv-screens></div>
         <div class="fv-stage" data-fv-stage></div>
+        <div data-fv-photo hidden></div>
         <div class="fv-row">
           <button type="button" class="h-btn" data-fv-sound>Sound on</button>
           <button type="button" class="h-btn h-danger" data-fv-stop>Stop</button>
@@ -136,9 +185,19 @@ export function mountFollowView(root, {
       return 'Waiting for their screen. It shares what it plays only if that is turned on in its settings, and only '
         + 'while it is on.';
     }
-    if (st === 'lost') return 'Their screen has stopped sending. The video carries on here by itself.';
     const L = follower.leader();
-    if (!L || L.item === null) return 'Their screen is not playing a video right now.';
+    const photo = L && L.kind === 'photo';
+    if (st === 'lost') {
+      return photo ? 'Their screen has stopped sending. The last picture stays here.'
+        : 'Their screen has stopped sending. The video carries on here by itself.';
+    }
+    if (!L || L.item === null) return photo ? PHOTO_LINES.nothing : 'Their screen is not playing a video right now.';
+    // photos in step: a picture is "the same picture" or the plain words about why it isn't shown (never a blank).
+    if (photo && composite && !composite.photoShownIsClip()) {
+      const words = composite.photoWords();
+      if (words) return words;
+      return L.playing ? 'Showing the same picture.' : 'Paused on the same picture.';
+    }
     const gap = follower.gap();
     const where = L.playing ? 'Playing' : 'Paused';
     return gap === null ? `${where}. Catching up…` : `${where}. ${Math.abs(gap) < 0.05 ? 'In step' : `About ${Math.abs(gap).toFixed(1)} s apart`}.`;
@@ -166,7 +225,8 @@ export function mountFollowView(root, {
     el('[data-fv-line]').textContent = phase === 'stopped' ? `Not following ${who}` : lineWords();
     el('[data-fv-status]').textContent = statusWords();
     el('[data-fv-sound]').textContent = muted ? 'Sound on' : 'Sound off';
-    el('[data-fv-sound]').hidden = !player;
+    // Sound is a video's: a picture has none, and a clip in a slideshow plays muted on the screen too.
+    el('[data-fv-sound]').hidden = !(composite && composite.hasVideo() && composite.shownKind() === 'youtube');
     renderScreens();
   }
 
@@ -181,8 +241,99 @@ export function mountFollowView(root, {
   function dropPlayer() {
     try { player?.destroy?.(); } catch { /* already gone */ }
     player = null;
+    composite = null;
     const stage = el('[data-fv-stage]');
     if (stage) stage.innerHTML = '';
+    const ph = el('[data-fv-photo]');
+    if (ph) { ph.innerHTML = ''; ph.hidden = true; }
+  }
+
+  // *** ONE PLAYER FOR A VIDEO OR A PICTURE (photos in step). *** createFollower drives `load` with the kind; this shows
+  // the YouTube player for a video and the photo box for a picture, and hides the other. The YouTube player is made on
+  // the first video (makePlayer may be synchronous - the suites' - or a promise: a load asked for meanwhile is kept and
+  // applied when it is ready); the photo box and its index on the first picture.
+  function makeComposite() {
+    let yt = null, ytWant = null, ytMaking = false;
+    let ph = null, idx = null;
+    let shown = null;                 // 'youtube' | 'photo' | null
+    let dead = false;                 // destroyed (Stop): a player still being made is thrown away when it lands
+    const ytStage = () => el('[data-fv-stage]');
+    const phStage = () => el('[data-fv-photo]');
+    function show(kind) {
+      shown = kind;
+      const a = ytStage(), b = phStage();
+      if (a) a.hidden = kind === 'photo';
+      if (b) b.hidden = kind !== 'photo';
+    }
+    function haveYt(p) {
+      yt = p || null;
+      ytMaking = false;
+      if (!yt) return;
+      try { yt.setMuted?.(muted); } catch { /* not ready */ }
+      if (ytWant && shown === 'youtube') { const w = ytWant; ytWant = null; try { yt.load(w.id, w.to, w.play); } catch (err) { console.error('follow: load', err); } }
+      render();
+    }
+    function ensureYt() {
+      if (yt || ytMaking) return;
+      ytMaking = true;
+      let r;
+      try { r = makePlayer(ytStage()); } catch (err) { console.error('follow: player', err); ytMaking = false; return; }
+      if (r && typeof r.then === 'function') {
+        r.then((p) => { if (torn || dead) { try { p?.destroy?.(); } catch { /* gone */ } return; } haveYt(p); })
+          .catch((err) => { console.error('follow: player', err); ytMaking = false; });
+      } else haveYt(r);
+    }
+    function ensurePhoto() {
+      if (ph) return;
+      const made = (async () => {
+        try { return await makePhotoIndex({ user, personId }); } catch (err) { console.error('follow: pictures', err); return null; }
+      })();
+      idx = { find: async (id, salt) => { const m = await made; return m && m.index ? m.index.find(id, salt) : { status: 'none' }; } };
+      let off = null;
+      const onHiddenChange = (fn) => { made.then((m) => { if (m && typeof m.onHiddenChange === 'function' && !torn) off = m.onHiddenChange(fn); }); return () => { try { off?.(); } catch { /* gone */ } }; };
+      ph = createPhotoStage(phStage(), { index: idx, onHiddenChange, onChange: () => { if (!torn) render(); } });
+    }
+    const cur = () => (shown === 'youtube' ? yt : shown === 'photo' ? ph : null);
+    return {
+      load(id, to, play, kind = 'youtube', leader = null) {
+        if (kind === 'photo') {
+          if (shown === 'youtube') { try { yt?.pause?.(); } catch { /* not ready */ } }
+          ensurePhoto();
+          show('photo');
+          ph.load(id, to, play, kind, leader);
+          return;
+        }
+        if (shown === 'photo') { try { ph?.pause(); } catch { /* gone */ } }
+        show('youtube');
+        if (yt) { yt.load(id, to, play); return; }
+        ytWant = { id, to, play };
+        ensureYt();
+      },
+      seek(to, play) { cur()?.seek?.(to, play); },
+      // The YouTube player has no play(); resume() is its "carry on" (this page used to call play() on it, which threw
+      // inside the follower's try and did nothing - found while adding pictures, 2026-10-12).
+      play() { const p = cur(); if (!p) return; if (typeof p.play === 'function') p.play(); else p.resume?.(); },
+      pause() { cur()?.pause?.(); },
+      item() {
+        if (shown === 'youtube') return yt ? yt.item() : (ytWant ? ytWant.id : null);
+        if (shown === 'photo') return ph ? ph.item() : null;
+        return null;
+      },
+      currentTime() { const p = cur(); return p ? p.currentTime() : null; },
+      playing() { const p = cur(); return p ? !!p.playing() : false; },
+      setMuted(m) { try { yt?.setMuted?.(m); } catch { /* not ready */ } },
+      hasVideo: () => !!yt,
+      shownKind: () => shown,
+      photoWords: () => (ph ? ph.words() : ''),
+      photoShownIsClip: () => !!(ph && ph.status() === 'found' && ph.shown() && ph.shown().kind === 'video'),
+      photoStatus: () => (ph ? ph.status() : 'idle'),
+      destroy() {
+        dead = true;
+        try { yt?.destroy?.(); } catch { /* gone */ }
+        try { ph?.destroy(); } catch { /* gone */ }
+        yt = null; ph = null; ytWant = null;
+      },
+    };
   }
 
   function pingSoon(n) {
@@ -218,16 +369,24 @@ export function mountFollowView(root, {
     clock = createClock();
     if (!player) {
       muted = true;
-      try { player = await makePlayer(el('[data-fv-stage]')); } catch (err) { console.error('follow: player', err); player = null; }
-      if (torn || my !== gen) { if (my !== gen) { /* a Stop came first */ } return; }
+      composite = makeComposite();
+      player = composite;
     }
-    follower = createFollower({ player: player || {}, clock, now });
+    if (torn || my !== gen) return;
+    follower = createFollower({ player, clock, now });
     link = connect({
       personId, user, role: 'driver', follow: true,
       onState: (s) => { connState = s; if (s === 'connected') pingSoon(FIRST_PINGS); render(); },
       onPresence: () => {},
     });
-    link.onPlay?.((m) => { follower?.onPlay(m); });
+    // A message from the followed screen is acted on AT ONCE, not at the next half-second look (photos in step,
+    // 2026-10-12: measured, two headless windows on this desktop, a new picture reached the follower a median 223 ms
+    // after the screen showed it, almost all of it waiting for the next look; acting on arrival takes that out).
+    link.onPlay?.((m) => {
+      if (!follower?.onPlay(m) || phase !== 'on') return;
+      try { follower.tick(); } catch (err) { console.error('follow: tick', err); }
+      render();
+    });
     access = '';
     askSeconds = null;
     link.onFollowState?.((st) => { if (my === gen) onAccess(st); });

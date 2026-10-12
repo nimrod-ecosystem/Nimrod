@@ -49,6 +49,8 @@ import { addDevicePictures, setDevicePhotosOn } from '../device_pictures.js';   
 import { cacheGet, cacheSet } from '../cache.js';
 import { createWatchdog } from '../watchdog.js';
 import { pick } from '../rng.js';
+// photos in step (2026-10-12, play_sync.js): what this slideshow shows, said on the screen's own bus (never a socket).
+import { PLAY_NOW_TOPIC } from '../play_sync.js';
 import { panelPlays } from '../plays.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 import { applyGrade } from '../lut.js';
@@ -469,6 +471,32 @@ registerModule(
     let paused = false;
     let resumeTimer = null;   // a pause carries on by itself (`resumeAfterMs`)
     const holding = () => waiting || paused;
+
+    // *** PHOTOS IN STEP (2026-10-12; play_sync.js argues it): SAY WHAT IS ON SCREEN, ON THIS SCREEN'S OWN BUS. *** On
+    // each new picture, Pause and Play, a clip starting, and when the panel is hidden, emptied or closed. The panel
+    // never touches a socket: the screen's sender decides whether anything leaves the room (only with "Let people
+    // follow" on, somebody following, and only as an opaque id - the path below is hashed there and never sent).
+    // `key` is the picture's path inside its source's folder (hidden_pictures.js pictureKey), which is what lets a
+    // follow page find its own copy of the same picture.
+    // *** A HIDDEN OR REMOVED PICTURE IS NEVER SAID. *** The slideshow never shows one (`setVisible`), and this checks
+    // again on the way out, so even a picture hidden in the same moment it came up is reported as nothing.
+    // A HIDDEN PANEL (another dashboard on screen) says nothing, the way a destroyed one does: a follower is never left
+    // on a picture nobody in the room can see.
+    let saidKey = null;
+    function sayPhoto() {
+      const item = currentId && byId[currentId] ? byId[currentId] : null;
+      let key = item ? pictureKey(item) : '';
+      if (key && hiddenNow().has(key)) key = '';
+      if (!me.visible) key = '';
+      if (!key && saidKey === null) return;
+      saidKey = key || null;
+      let pos = 0;
+      if (key && item.kind === 'video' && currentVideo) { const t = Number(currentVideo.currentTime); pos = Number.isFinite(t) ? t : 0; }
+      else if (key) pos = Math.max(0, (now() - lastShownAt) / 1000);
+      try {
+        bus.publish(PLAY_NOW_TOPIC, { kind: 'photo', panel: ctx.instanceId || ownTag, key: key || null, pos, playing: !!key && !holding() });
+      } catch { /* not load-bearing */ }
+    }
     // 'slideshow': a screen picking up a new version waits for the next photo, not for this to stop (version_watch.js).
     const reportPlay = createPlayReporter(bus, ctx, { kind: 'slideshow' });
 
@@ -683,6 +711,7 @@ registerModule(
         st.dataset.showing = '';
         currentEl = null; currentId = null;
       }
+      sayPhoto();   // photos in step
     }
 
     // *** FAILURE BACKOFF (photosensitivity audit, 2026-09-30). *** A failed item used to move on
@@ -731,7 +760,7 @@ registerModule(
         // DOWN_AFTER_FAILURES of them in a row is a source that has stopped serving (`countFailure`).
         const onError = () => { videoStall.disarm(); if (!countFailure()) failedItem(); };
         const onBeat = () => videoStall.beat();
-        const onPlaying = () => { videoStall.beat(); loadFails = 0; lastGoodAt = Date.now(); };
+        const onPlaying = () => { videoStall.beat(); loadFails = 0; lastGoodAt = Date.now(); if (el === currentVideo) sayPhoto(); };
         el.addEventListener('ended', onEnded);
         el.addEventListener('error', onError);
         el.addEventListener('timeupdate', onBeat);
@@ -813,6 +842,7 @@ registerModule(
       // is silently gone.
       scheduleAdvance(item);
       render(item);
+      sayPhoto();   // photos in step
       if (record) {
         recent.push(id);
         if (recent.length > RECENT_CAP) recent.shift();
@@ -857,6 +887,7 @@ registerModule(
       if (root) { if (waiting) root.dataset.waiting = '1'; else delete root.dataset.waiting; if (paused) root.dataset.paused = '1'; else delete root.dataset.paused; }
       reportPlay(!holding());
       pulseHold();
+      sayPhoto();   // photos in step: paused or playing again
     }
     // *** A HELD SLIDESHOW SAYS IT IS HERE. *** health.js judges a photos panel silent after an hour with
     // no `photos/next`, and a slideshow waiting for Start (or paused overnight) publishes none -- so the
@@ -1031,6 +1062,7 @@ registerModule(
         return;
       }
       if (!currentId && !was.length && ids.length && allItems.length) { setStatus(null); advance(); }
+      sayPhoto();   // photos in step: a picture hidden or removed elsewhere is never left reported
     }
     // Nothing on the stage at all (every picture here is hidden): not even the last good one, which may be the hidden one.
     function clearStage() {
@@ -1038,6 +1070,7 @@ registerModule(
       const st = stage();
       if (st) { st.innerHTML = ''; st.dataset.showing = ''; }
       currentEl = null; currentId = null;
+      sayPhoto();   // photos in step: nothing to follow now
     }
     function setLabel(text) {
       const el = mount.querySelector('[data-source-label]');
@@ -1671,13 +1704,15 @@ registerModule(
         });
       },
       onResize() {},
-      onHide() { videoStall.disarm(); writeSeen(); state.flush(); me.visible = false; closePhotoMenu(); },
-      onShow() { me.visible = true; },   // hide picture: a slideshow on screen answers before one that is not
+      onHide() { videoStall.disarm(); writeSeen(); state.flush(); me.visible = false; closePhotoMenu(); sayPhoto(); },
+      onShow() { me.visible = true; sayPhoto(); },   // hide picture: a slideshow on screen answers before one that is not
       // `loadSeq` moves on so a listing still in flight lands on nothing: without it a panel
       // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
       // arm a timer after it was gone.
       destroy() {
         playLog.destroy();
+        // photos in step: "nothing here" (item null), so a follower is never left on a picture nobody sees.
+        me.visible = false; sayPhoto();
         loadSeq += 1; clearAdvance(); clearResume(); clearRecheck(); writeSeen(); degraded = null;
         scoped?.dispose(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; }
         // hide picture / pulled pictures

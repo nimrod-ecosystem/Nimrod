@@ -7,6 +7,7 @@ in step from its own copy. play_relay.py holds the rules; this file proves each 
 person's FOLLOWING drivers only (never to another screen, never from a driver), it is capped and rate-limited, a
 following socket can only watch, the pong carries the server's clock, and NOTHING IS STORED.
 """
+import hashlib
 import json
 import os
 import sqlite3
@@ -16,7 +17,7 @@ import time
 
 from drive import parse_message
 from play_relay import (MAX_PLAY_BYTES, MAX_SCREEN_NAME, PLAY_KINDS, RATE_BURST, RATE_PER_S, PlayRelay,
-                        parse_follow, parse_play)
+                        hex_is_text, is_photo_id, is_salt, parse_follow, parse_play)
 
 passed = failed = 0
 
@@ -47,6 +48,12 @@ class Clock:
 
 
 GOOD = {"type": "play", "kind": "youtube", "item": "dQw4w9WgXcQ", "pos": 12.5, "playing": True}
+# photos in step (2026-10-12): a picture by its opaque id - the same vector client/dev/photo_follow_test.html checks, so
+# both ends are proved to make the same id from the same path and salt.
+SALT = "a1b2c3d4e5f60718"
+PHOTO_PATH = "Family/2024/IMG_0001.jpg"
+PHOTO_ID = hashlib.sha256(f"nimrod-photo-v1\n{SALT}\n{PHOTO_PATH}".encode()).hexdigest()[:32]
+PHOTO = {"type": "play", "kind": "photo", "item": PHOTO_ID, "salt": SALT, "pos": 3.0, "playing": True}
 
 # ------------------------------------------------------------------------------------------- the message
 section("a play message: what may cross the wire")
@@ -62,7 +69,7 @@ check("*** `at` and `from` a page writes are NOT kept (the server stamps its own
       parse_play({**GOOD, "at": 5, "from": "abcd1234"}).keys() == p.keys())
 check("nothing playing (item null) is a message too, and is never 'playing'",
       parse_play({**GOOD, "item": None, "playing": True}) == {**p, "item": None, "playing": False})
-check("the kinds are a closed list: YouTube only for now", PLAY_KINDS == {"youtube"})
+check("the kinds are a closed list: YouTube and (since 2026-10-12) photos by an opaque id", PLAY_KINDS == {"youtube", "photo"})
 check("*** an unknown kind is dropped ***", parse_play({**GOOD, "kind": "files"}) is None)
 check("*** an item that is not a YouTube id is dropped - a file name never crosses ***",
       all(parse_play({**GOOD, "item": bad}) is None
@@ -87,6 +94,37 @@ check(f"a real message is about 150 bytes ({size}), far inside the {MAX_PLAY_BYT
 check("*** a message bigger than the cap is refused whole (measured as it arrived) ***",
       parse_play({**GOOD, "pad": "x" * MAX_PLAY_BYTES}) is None)
 check("...and the cap is a real bound", MAX_PLAY_BYTES == 1024)
+
+
+section("photos in step (2026-10-12): a picture by an opaque id, never a name")
+check("the reference id is the one the client computes (photo_follow_test.html checks the same string)",
+      PHOTO_ID == "9a84340173189b88516d67eb9a7675f9", PHOTO_ID)
+pp = parse_play(PHOTO)
+check("*** a photo play with a 32-hex id and its 16-hex salt is accepted, salt carried ***",
+      pp == {"type": "play", "kind": "photo", "item": PHOTO_ID, "salt": SALT, "pos": 3.0, "playing": True, "rate": 1.0}, str(pp))
+check("drive.py's parse_message hands it here too", parse_message(PHOTO) == pp)
+check("*** a photo item that looks like a file name is refused ***",
+      all(parse_play({**PHOTO, "item": bad}) is None
+          for bad in ("Mom hospital 2024.jpg", "Family/2024/IMG_0001.jpg", "IMG_0001.jpg", "dQw4w9WgXcQ")))
+check("*** a short name dressed as hex is refused (its bytes are all printable text) ***",
+      parse_play({**PHOTO, "item": "Mom hospital 24!".encode().hex()}) is None
+      and hex_is_text("Mom hospital 24!".encode().hex()) and not hex_is_text(PHOTO_ID))
+check("anything but exactly 32 lowercase hex is refused",
+      all(parse_play({**PHOTO, "item": bad}) is None
+          for bad in (PHOTO_ID[:31], PHOTO_ID + "0", PHOTO_ID.upper(), "g" * 32, 7, ["x"], ""))
+      and not is_photo_id(PHOTO_ID.upper()) and is_photo_id(PHOTO_ID))
+check("*** a photo id without its salt, or with a bad one, is refused ***",
+      parse_play({k: v for k, v in PHOTO.items() if k != "salt"}) is None
+      and all(parse_play({**PHOTO, "salt": bad}) is None
+              for bad in (SALT[:15], SALT + "0", SALT.upper(), "secret!!".encode().hex(), 5, None)))
+check("a salt whose bytes spell text is refused (8 printable bytes)", not is_salt("secret!!".encode().hex()) and is_salt(SALT))
+check("nothing showing (item null) needs no salt", parse_play({**PHOTO, "item": None, "salt": None}) == {
+      "type": "play", "kind": "photo", "item": None, "pos": 3.0, "playing": False, "rate": 1.0})
+check("*** a salt on a YouTube play is refused (nothing extra rides along) ***", parse_play({**GOOD, "salt": SALT}) is None)
+check("a YouTube id is not a photo id, nor the other way round",
+      parse_play({**PHOTO, "kind": "youtube"}) is None and parse_play({**GOOD, "kind": "photo", "salt": SALT}) is None)
+psize = len(json.dumps({**PHOTO, "rate": 1, "every": 2, "screen": "x" * MAX_SCREEN_NAME}, separators=(",", ":")))
+check(f"a real photo message is about 200 bytes ({psize}), far inside the cap", psize < 240, str(psize))
 
 
 class _Unserialisable:
@@ -128,6 +166,10 @@ check("the routing never names a screen as a target: only the drivers list is re
       R.route("screen", S1, msg, [])[0] == [])
 check("anything that is not a play goes nowhere", R.route("screen", S1, {"type": "verb", "verb": "next"}, [D1]) == ([], None))
 check("count() counts followers in a list", R.count([D1, D2]) == 1)
+ptargets, pout = R.route("screen", S1, parse_play(PHOTO), [D1, D2])
+check("*** a screen's PHOTO play reaches the following driver the same way, stamped, its id and salt as sent ***",
+      ptargets == [D1] and pout["item"] == PHOTO_ID and pout["salt"] == SALT and pout["kind"] == "photo"
+      and "at" in pout and "from" in pout, str(pout))
 R.follow(D1, False)
 check("unfollowing stops it", R.route("screen", S1, msg, [D1, D2]) == ([], None) and R.count([D1, D2]) == 0)
 
@@ -310,6 +352,28 @@ with drive_ws("pat", robin, "screen") as P, drive_ws("pat", robin, "screen") as 
         drain(P)
         got, _ = drain(M)
         check("*** an oversized play, and one naming a file, are dropped - the follower hears neither ***",
+              plays(got) == [], str(got))
+
+        # photos in step (2026-10-12): a picture by its opaque id, through the real socket.
+        P.send_text(J({**PHOTO, "screen": "Living room", "every": 2}))
+        drain(P)
+        got, _ = drain(M)
+        pl = plays(got)
+        check("*** a screen's PHOTO play reaches the following driver: the opaque id and its salt, stamped ***",
+              len(pl) == 1 and pl[0]["kind"] == "photo" and pl[0]["item"] == PHOTO_ID and pl[0]["salt"] == SALT
+              and len(pl[0]["from"]) == 8, str(got))
+        check("...and the path it was made from appears nowhere in what crossed",
+              PHOTO_PATH not in json.dumps(got) and "IMG_0001" not in json.dumps(got))
+        got, _ = drain(D)
+        got2, _ = drain(P2)
+        check("*** nobody else hears the picture: not a driver who is not following, not the other screen ***",
+              plays(got) == [] and plays(got2) == [], str(got + got2))
+        P.send_text(J({**PHOTO, "item": "IMG_0001.jpg"}))
+        P.send_text(J({**PHOTO, "item": "Mom hospital 24!".encode().hex()}))
+        P.send_text(J({**PHOTO, "salt": None}))
+        drain(P)
+        got, _ = drain(M)
+        check("*** a photo play naming a file, a name dressed as hex, or an id with no salt: all dropped ***",
               plays(got) == [], str(got))
 
         for i in range(40):
