@@ -216,7 +216,10 @@ export function parsePlayers(text, { personId = null } = {}) {
  */
 export function resolvePlayers(value, { personId = null, host = null } = {}) {
   const ask = (fn, d) => { try { const v = typeof fn === 'function' ? fn() : d; return v == null ? d : v; } catch { return d; } };
-  const raw = followsScreen(value) ? ask(host?.seats, []) : value;
+  // play as (row 2.80, play_as.js): the seats a game started by voice was told ("play trivia as Robin") win over this
+  // game's own row and the screen's, for that panel's sitting only. `host.override()` is null otherwise.
+  const forced = ask(host?.override, null);
+  const raw = Array.isArray(forced) && forced.length ? forced : (followsScreen(value) ? ask(host?.seats, []) : value);
   // An old typed list is read exactly as it always was (the same names, ids and order).
   if (typeof raw === 'string') return parsePlayers(raw, { personId });
   let seats = normalizeSeats(raw, { selfId: personId, max: MAX_PLAYERS });

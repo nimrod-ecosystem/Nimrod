@@ -174,6 +174,8 @@ import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_K
 import { openUsualStart } from './adaptive_play.js';
 // players (2026-10-06): who is playing on this screen, its own tab in the ⚙ menu (player_picker.js).
 import { SCREEN_PLAYERS_KEY, normalizeSeats, playersValueLabel, MAX_SEATS } from './player_picker.js';
+// play as (row 2.80): "play <game> as <person>" by voice, and who plays when nobody is named (play_as.js).
+import { createPlayAs, PLAY_AS_FIELDS } from './play_as.js';
 import { mountPackLoader } from './pack_loader.js';
 import { gameSettingsPage, GAME_SETTINGS_PAGE } from './unlocks.js';
 // "Lesson topics" (quest / sandbox): a ⚙ menu page since 2026-10-03, moved from the Settings panel's own list.
@@ -1117,6 +1119,8 @@ export async function mountKiosk(root, {
         routes,
         screenSpeech,
         scoped: sw.on ? focusedVoice : null,
+        // play as (row 2.80): the games and names, read when heard (an arrow: `playAs` is declared further down).
+        playAs: sw.on ? () => playAs.vocabulary() : null,
         // Subtitles-only: no commands, so nothing is confirmed, asked, logged or announced -- the
         // recogniser is there to write the room down, and a wake phrase does nothing.
         ...(sw.on ? {} : { confirm: 'off', nearMiss: false, retries: 0 }),   // two-step: no "Say it again?" either
@@ -1499,6 +1503,20 @@ export async function mountKiosk(root, {
       return () => { try { off?.(); } catch { /* gone */ } };
     },
   };
+  // play as (row 2.80; play_as.js argues it): "play <game> as <person>" said to this screen. The speech layer is handed
+  // its vocabulary (`playAs.vocabulary`), each panel its players through it (`playAs.wrap`, childCtx below), and the
+  // settings sit on the Players tab. Built before any panel mounts, so a spoken route's players are set before the game
+  // hears it. Everything it reads is read when asked (`settings`, `output`, the router and the people come later).
+  const playAs = createPlayAs({
+    bus,
+    manifests: () => listManifests(),
+    panels: () => menuPanelRecs(),
+    focusedId: () => { try { return runtime?.router?.focused?.()?.id || null; } catch { return null; } },
+    people: () => { try { return playerHostNow().people?.() || null; } catch { return null; } },
+    self: () => screenPlayersHost.self(),
+    values: () => { try { return settings.get() || {}; } catch { return {}; } },
+    say: (text, opts) => { try { return output?.say?.(text, opts); } catch { return null; } },
+  });
 
   // *** WHERE THE PERSON'S HISTORY IS KEPT (row 2.58, 2026-10-07; history_place.js). *** One host per screen: it
   // reads the person's own `history-place` row (lazily - the person is resolved in the background), copies what
@@ -1712,8 +1730,9 @@ export async function mountKiosk(root, {
     // players (2026-10-06): WHO IS PLAYING ON THIS SCREEN (the ⚙ menu's Players tab; player_picker.js). A game whose own
     // "Players" says "This screen's players" reads these. `seats()`: in turn order, a person's name as this login
     // knows them now; empty is the screen's person alone. `self()`: the screen's person. `subscribe(fn)`: told when
-    // the seats change.
-    screenPlayers: screenPlayersHost,
+    // the seats change. play as (row 2.80): wrapped per panel, so a game started by voice "as Robin" plays as Robin
+    // (`override()`, play_as.js) and no other panel does.
+    screenPlayers: playAs.wrap(screenPlayersHost, mod.id),
   });
 
   // *** "EVERY <MODULE> PANEL": THE MODULE LEVEL OF THE CHAIN (2026-10-02; settings.js "LEVELS"). ***
@@ -4355,13 +4374,14 @@ export async function mountKiosk(root, {
   function playersItems() {
     if (torn) return [];
     const t = MENU_TAB.players;
-    const rows = fieldItems([normalizeField(SCREEN_PLAYERS_FIELD)], {
+    // play as (row 2.80): "who plays when nobody is named" and its three neighbours follow the Players row (play_as.js).
+    const rows = fieldItems([normalizeField(SCREEN_PLAYERS_FIELD), ...PLAY_AS_FIELDS.map((f) => normalizeField(f))], {
       values: () => { try { return settings.get() || {}; } catch { return {}; } },
       level: complexity(),
       onStep: (key, value) => { try { settings.set({ [key]: value }); } catch (err) { console.error('kiosk: players', err); } },
     });
     return rows.length ? [{ kind: 'heading', id: 'players-head', label: 'Who is playing on this screen', ...t(0) },
-      ...withPlayerNames(rows).map((it) => ({ ...it, id: 'screen-players', ...t(0) }))] : [];
+      ...withPlayerNames(rows).map((it) => ({ ...it, ...(it.players ? { id: 'screen-players' } : {}), ...t(0) }))] : [];
   }
 
   // ---- "SWITCH MODULE": THE MODULES LIBRARY IN THE PANEL'S PLACE (2026-10-02) ------------------------
@@ -7922,8 +7942,11 @@ export async function mountKiosk(root, {
     // Whose screen this is, and whether that is settled yet (person_known.js) -- for a suite, and for
     // anything above the panels that needs the same answer they get.
     personKnown: () => personKnown,
+    // play as (row 2.80), for a suite: the host (its vocabulary, the seats a voice start chose, what it last did).
+    playAs: () => playAs,
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
+      try { playAs.destroy(); } catch { /* already gone */ }   // play as: its bus listeners
       try { deviceSettle?.cancel(); } catch { /* already done */ }   // "Best for this device": its one measurement
       try { personKnown.destroy(); } catch { /* already gone */ }   // its timer, and its listeners
       // The Settings panels' views of the menu go with the panels (their `destroy`); any left are let go here.
