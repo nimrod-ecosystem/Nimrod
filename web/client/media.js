@@ -104,6 +104,9 @@ const DEFAULT_URL = 'http://localhost:8770';
 
 // a typed address (2026-10-10, note BO): the words when an address can't be checked from this computer without the
 // browser asking. The same sentence on the card and after saving, so a person reads one thing, not two.
+// A "localhost" helper checked from a computer it isn't meant for (chat note BR 1, Mike 2026-10-12: "Photos on the
+// drive" said not reachable on his desktop, where no photo program runs). Not a problem, so not in red.
+export const LOCALHOST_ELSEWHERE = 'This is the photo program on a screen’s own computer. It works on that screen; none is running on this one.';
 export const CANT_CHECK_HERE = 'This address is on the screen that uses it — it can’t be checked from here.';
 function cantCheckWords(reach) {
   return reach && reach.why === 'denied'
@@ -355,14 +358,15 @@ export function mountMedia(root, {
             : 'this folder is empty');
       cell.classList.toggle('bad', !n);
     } catch {
+      const localElsewhere = src.kind !== 'folder' && src.kind !== 'device' && scope === 'loopback';
       cell.textContent = src.kind === 'folder'
         ? 'could not read this folder'
         : src.kind === 'device' ? 'could not read the pictures kept on this device'   // photo sources first
           // a typed address: "localhost" checked from here is THIS computer, which may not be the screen that uses it.
           : scope === 'loopback'
-            ? 'not reachable on this computer: no helper answers here. A screen running its own helper checks it there.'
+            ? LOCALHOST_ELSEWHERE
             : 'can’t be reached — is the helper (media agent) running on that computer?';
-      cell.classList.add('bad');
+      cell.classList.toggle('bad', !localElsewhere);
     }
   }
 

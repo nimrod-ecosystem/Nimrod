@@ -369,8 +369,10 @@ section('a typed address from ANOTHER computer: saved, not checked, no prompt');
   await p.refresh();
   await settle();
   const t = text(host.querySelector('[data-probe]'));
-  check('a "localhost" helper that does not answer here says "on this computer", and that a screen running its own checks it',
-        /not reachable on this computer/.test(t) && /screen running its own helper checks it there/.test(t), t);
+  // chat note BR 1 (Mike, 2026-10-12): not "not reachable" - it is the photo program on a screen's own computer.
+  check('*** a "localhost" helper that does not answer here says it is the photo program on a screen\'s own computer, not "not reachable" ***',
+        /photo program on a screen’s own computer/.test(t) && /works on that screen/.test(t) && !/not reachable/.test(t), t);
+  check('...and not in red', !host.querySelector('[data-probe]').classList.contains('bad'));
 }
 {
   const p = mount({
@@ -459,8 +461,10 @@ section('the agent is not running');
   });
   await p.refresh();
   await settle();
-  check('it says the agent is unreachable rather than failing silently',
-        /not reachable/.test(text(host.querySelector('[data-probe]'))));
+  // chat note BR 1 (2026-10-12): a "localhost" helper that doesn't answer here is said as a screen's own photo program,
+  // not "not reachable" - still said, never silent.
+  check('it says the localhost helper isn\'t answering here rather than failing silently',
+        /photo program on a screen’s own computer/.test(text(host.querySelector('[data-probe]'))));
 }
 
 // ---------------------------------------------------------- a bad address
