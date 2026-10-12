@@ -28,10 +28,12 @@
 // kept under the guest's name on the screen's row, as guest play already does).
 //
 // *** WHAT IS NOT DONE, ARGUED. ***
-//   * A GAME NOT ON THE SCREEN IS NOT OPENED. Opening it means replacing a panel, and the only panel to replace is
-//     whichever is picked - on a screen whose photos are the point of it. It says "<game> is not on this screen."
-//     FOR opening it: one sentence would do everything. AGAINST, and it wins for the default: a spoken command that
-//     can remove the photos is the wrong kind of surprise; "switch module" then a press is still there. [Mike's list.]
+//   * (REVERSED, Mike 2026-10-12, public DECISIONS 40c5889: "I would like it to just pull up a full screen dashboard of
+//     whatever module I ask for, unless you specify something else like 'trivia bottom right corner'.") A game not on
+//     the screen used to be refused here ("<game> is not on this screen"), argued as "a spoken command that can remove
+//     the photos is the wrong kind of surprise". It is now OPENED by voice_open.js - over the dashboard, for now, never
+//     in place of a panel and never saved - so the photos are not removed, only covered until it goes back (said, by
+//     itself when it goes quiet, or the bar's Smaller). `opener` below; with none, the old line is still said.
 //   * POINTS ARE NOT MOVED. A game's "Right answers earn points for: The first player only" still pays the first seat's
 //     right answers into this screen's points, whoever sits there (adaptive_play.js argues that row). [Mike's list.]
 //
@@ -316,6 +318,9 @@ export function createPlayAs({
   now = () => Date.now(),
   peopleRefreshMs = PEOPLE_REFRESH_MS,
   sayTtlMs = SAY_TTL_MS,
+  // voice open (2026-10-12): a function returning the host that opens a game not on the screen (voice_open.js
+  // `createVoiceOpen`: `open(type, { place, name, line, quiet })` -> { ok, why?, ready: Promise<{ id } | null> }), or null.
+  opener = null,
 } = {}) {
   const L = { ...PLAY_AS_LINES, ...(lines || {}) };
   const overrides = new Map();   // instanceId -> seats
@@ -392,7 +397,13 @@ export function createPlayAs({
         fill(unknown.length > 1 ? L.unknownPeople : L.unknownPerson, { names: listWords(unknown) }));
     }
     const recs = panelList().filter((x) => x.type === entry.type);
-    if (!recs.length) return done({ started: false, why: 'not-here', game: entry.id }, fill(L.notHere, { game: entry.name }));
+    // *** VOICE OPEN (Mike, 2026-10-12; voice_open.js argues it): A GAME NOT ON THE SCREEN IS OPENED, full screen for
+    // now, or in the place that was said ("play trivia in the corner"); a game that IS here starts where it is, unless a
+    // place was named. With no opener (a host that has none, or a suite) it is as before: "<game> is not on this screen."
+    const place = typeof r.place === 'string' && r.place ? r.place : null;
+    const host = ask(opener, null);
+    const opening = !!host && typeof host.open === 'function' && (place || !recs.length);
+    if (!recs.length && !opening) return done({ started: false, why: 'not-here', game: entry.id }, fill(L.notHere, { game: entry.name }));
     const fid = ask(focusedId, null);
     const rec = recs.find((x) => x.id === fid) || recs[0];
     const m = manifestList().find((x) => x.type === entry.type);
@@ -422,6 +433,28 @@ export function createPlayAs({
       line = fill(L.startPlain, { game: entry.name });
     } else {
       line = fill(L.start, { game: entry.name, players: seatWords(seats, { selfName }) });
+    }
+    if (opening) {
+      // The opener says it back ("Opening Trivia.", or this line when players were named or cut) AFTER it has checked the
+      // game may open here - a refusal said after "Opening Trivia" would be two answers to one question. Then the same
+      // order as below: the players on the new panel first, then the start.
+      const named = line !== fill(L.startPlain, { game: entry.name });
+      const req = { place, name: entry.name, line: named && o.readBack !== false ? line : null, quiet: o.readBack === false };
+      let res = null;
+      try { res = host.open(entry.type, req); } catch (err) { console.error('play as: open', err); res = null; }
+      if (!res || res.ok === false) {
+        last = { started: false, why: (res && res.why) || 'not-opened', game: entry.id, place, line: null };
+        return last;
+      }
+      const chosen = seats ? seats.map((s) => ({ ...s })) : null;
+      Promise.resolve(res.ready).then((opened) => {
+        if (!opened || !opened.id) return;
+        setOverride(opened.id, chosen);
+        const how = startPanel({ id: opened.id, type: entry.type }, entry);
+        if (last && last.opening === true && last.game === entry.id) last = { ...last, instanceId: opened.id, how, opened: true };
+      }).catch((err) => console.error('play as: open', err));
+      last = { started: true, opening: true, game: entry.id, place, seats: chosen, line };
+      return last;
     }
     // The players first, then the start: the first turn is already theirs.
     setOverride(rec.id, seats);

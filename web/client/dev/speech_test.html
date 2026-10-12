@@ -36,6 +36,8 @@ import {
 // Note AO's additions, read through the namespace so a missing export fails ITS checks rather than
 // the whole page's import.
 import * as SP from '../input_speech.js';
+// voice open (2026-10-12): its places and its "go back" phrases are checked against what is heard here.
+import * as VO from '../voice_open.js';
 import { ANSWER_TOPIC as WG_ANSWER, GRAMMAR_TOPIC as WG_GRAMMAR, PLAY_TOPIC as WG_PLAY, GAMES as WG_GAMES }
   from '../modules/word_games.js';
 import { normalizeField } from '../settings_fields.js';
@@ -1808,6 +1810,133 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('...and its own setHints is back (nothing of ours added any more)', J(sent.at(-1)) === '["Plain"]', J(sent.at(-1)));
     const nh = attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {} }, bus, playAs: () => VOCAB });
     check('an engine with no setHints (Vosk, the browser\'s own) is left alone', (() => { try { nh.start(); nh.destroy(); return true; } catch { return false; } })());
+  }
+
+  section('*** voice open (Mike, 2026-10-12): "open / show <module>", and a place said after it - what is heard ***');
+  {
+    const J = (x) => JSON.stringify(x);
+    const VOCAB = {
+      games: [
+        { id: 'trivia', name: 'Trivia', names: ['Trivia'] },
+        { id: 'route:play-opposites', name: 'Opposites', names: ['opposites'] },
+      ],
+      people: [{ id: 'self', name: 'Robin', names: ['robin'] }],
+      modules: [
+        { id: 'trivia', name: 'Trivia', names: ['trivia'] },
+        { id: 'calculator', name: 'Calculator', names: ['calculator'] },
+        { id: 'photos', name: 'Photos', names: ['photos', 'pictures'], here: true },
+        { id: 'clock', name: 'Clock', names: ['clock'] },
+        { id: 'keyboard', name: 'Keyboard', names: ['keyboard'], hidden: true },
+      ],
+    };
+    // The places.
+    const ps = (s) => SP.placeSplit(s.split(' '));
+    check('*** a place at the end: "trivia bottom right corner" is trivia and the bottom right ***',
+      J(ps('trivia bottom right corner')) === J({ place: 'br', body: ['trivia'], words: 'bottom right corner' }), J(ps('trivia bottom right corner')));
+    check('..."in the corner", "on the left", "top half", "in the middle", "full screen"',
+      ps('trivia in the corner')?.place === 'corner' && ps('trivia on the left')?.place === 'left' && ps('trivia top half')?.place === 'top'
+      && ps('trivia in the middle')?.place === 'middle' && ps('trivia full screen')?.place === 'full' && ps('trivia in the centre')?.place === 'middle',
+      J(['trivia in the corner', 'trivia on the left', 'trivia top half', 'trivia in the middle'].map(ps)));
+    check('..."in the top left corner of the screen" is the top left, the longest place wins',
+      ps('trivia in the top left corner of the screen')?.place === 'tl' && J(ps('trivia in the top left corner of the screen')?.body) === '["trivia"]');
+    check('a place alone (nothing before it) is not one: "left" stays the verb it is', ps('left') === null && ps('corner') === null
+      && SP.openFor('in the corner', { modules: [{ id: 'clock', names: ['clock'] }] }) === null);
+    check('every place has a box in voice_open.js, and every box a place (one list in two files)',
+      Object.keys(SP.PLACE_PHRASES).filter((k) => k !== 'corner').sort().join() === Object.keys(VO.PLACE_BOXES).sort().join(),
+      `${Object.keys(SP.PLACE_PHRASES)} | ${Object.keys(VO.PLACE_BOXES)}`);
+    const O = (t, o) => SP.openFor(t, VOCAB, o);
+    let r = O('open the calculator');
+    check('*** "open the calculator": the module (the "the" dropped), no place ***', r && r.module === 'calculator' && r.place === null && r.verb === 'open' && !r.near, J(r));
+    r = O('show me the clock in the corner');
+    check('*** "show me the clock in the corner": the clock, the corner ***', r && r.module === 'clock' && r.place === 'corner' && r.verb === 'show me', J(r));
+    r = O('pull up trivia');
+    check('Mike\'s own words: "pull up trivia"', r && r.module === 'trivia' && r.verb === 'pull up', J(r));
+    r = O('trivia bottom right corner');
+    check('*** Mike\'s example with no verb at all: "trivia bottom right corner" ***', r && r.module === 'trivia' && r.place === 'br' && r.verb === null, J(r));
+    check('*** ...but a module named ON ITS OWN is not this command (an answer to a quiz, room talk) ***', O('trivia') === null && O('calculator') === null);
+    r = O('put the pictures on the right');
+    check('"put the pictures on the right": a short name, and a half', r && r.module === 'photos' && r.place === 'right' && r.verb === 'put', J(r));
+    r = O('open keyboard');
+    check('a module the library hides is still HEARD (voice_open.js says it does not open)', r && r.module === 'keyboard', J(r));
+    r = O('open the calculater');
+    check('*** one word off the module: a near miss, asked about, with the corrected phrase ***', r && r.near?.slot === 'module' && r.module === 'calculator' && r.phrase === 'open calculator', J(r));
+    r = O('open the zork');
+    check('*** a module nobody has, with a verb: module null, what was heard kept ***', r && r.module === null && r.moduleHeard === 'zork', J(r));
+    check('...without a verb it is nothing ("zork in the corner" asks for nothing here)', O('zork in the corner') === null);
+    check('"play ..." is play_as\'s, never this', O('play trivia') === null);
+    r = SP.playAsFor('play trivia in the bottom right corner', VOCAB);
+    check('*** "play trivia in the bottom right corner": play as, with the place ***', r && r.game === 'trivia' && r.place === 'br' && !r.unknown.length, J(r));
+    r = SP.playAsFor('play trivia as robin on the left', VOCAB);
+    check('*** "play trivia as robin on the left": the person AND the place ***', r && r.game === 'trivia' && J(r.people) === '["self"]' && r.place === 'left', J(r));
+    check('...and "play trivia as robin" has no place', SP.playAsFor('play trivia as robin', VOCAB)?.place === null);
+    const op = SP.openPhrases(VOCAB);
+    check('*** grammar: "open <module>" / "show <module>", not the hidden ones, those NOT here first ***',
+      op.includes('open calculator') && op.includes('show pictures') && !op.some((p) => /keyboard/.test(p))
+      && op.indexOf('open calculator') < op.indexOf('open photos'), op.join(' | '));
+    check('...and never more than OPEN_GRAMMAR_MAX', SP.openPhrases(VOCAB, { max: 3 }).length === 3 && SP.OPEN_GRAMMAR_MAX === 100);
+    check('the hints: the modules too, after the people and the games, never a hidden one',
+      SP.playHints(VOCAB).includes('Calculator') && !SP.playHints(VOCAB).includes('Keyboard'), J(SP.playHints(VOCAB)));
+
+    // The speech layer itself.
+    const bus = createBus();
+    const presses = [];
+    let feed = null;
+    const heardLog = [];
+    const said = [];
+    const rec = { running: false, start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; } };
+    let scoped = null;
+    const sp = attachSpeech({ down: (d, c) => presses.push(c), up() {} }, { recognizer: rec, bus, confirm: 'off',
+      playAs: () => VOCAB, scoped: () => scoped, onHeard: (h) => heardLog.push(h), output: { say: (t) => { said.push(t); return 1; } } });
+    sp.start();
+    const opens = [];
+    const plays = [];
+    bus.subscribe(SP.SPEECH_OPEN_TOPIC, (p) => opens.push(p));
+    bus.subscribe(SP.SPEECH_PLAY_AS_TOPIC, (p) => plays.push(p));
+    feed('computer please open the calculator');
+    check('*** one breath: "computer please open the calculator" is published, nothing pressed ***',
+      opens.length === 1 && opens[0].module === 'calculator' && opens[0].place === null && presses.length === 0
+      && heardLog.at(-1)?.open?.module === 'calculator', J(opens));
+    feed('computer please');
+    feed('trivia in the bottom right corner');
+    check('*** two-step: "trivia in the bottom right corner" on its own, inside the window ***',
+      opens.length === 2 && opens[1].module === 'trivia' && opens[1].place === 'br' && !sp.windowOpen, J(opens[1]));
+    feed('computer please play trivia on the left');
+    check('*** "play trivia on the left" goes to play as, with its place ***', plays.length === 1 && plays[0].place === 'left' && opens.length === 2, J(plays));
+    feed('open the calculator');
+    check('without the wake phrase: nothing', opens.length === 2);
+    feed('computer please show the settings');
+    check('*** a command still wins: "show the settings" is the route it always was ***', presses.at(-1) === 'phrase:open-settings' && opens.length === 2, J(presses));
+    feed('computer please open the menu');
+    check('...and "open the menu" is the menu verb', presses.at(-1) === 'phrase:menu' && opens.length === 2, J(presses));
+    feed('computer please open the calculater');
+    check('*** a near miss ASKS ("did you mean"), and publishes nothing yet ***',
+      opens.length === 2 && sp.nearMissPending()?.phrase === 'open calculator' && /open calculator/.test(said.at(-1) || ''), J([sp.nearMissPending(), said.at(-1)]));
+    feed('yes');
+    check('*** ...a yes sends the corrected request, and presses nothing ***', opens.length === 3 && opens[2].module === 'calculator' && presses.at(-1) === 'phrase:menu', J(opens[2]));
+    feed('computer please open the zork');
+    check('*** a module nobody has, said to the screen: published with module null (the screen says it does not know it) ***',
+      opens.length === 4 && opens[3].module === null && opens[3].moduleHeard === 'zork', J(opens[3]));
+    feed('computer please show the setting');
+    check('*** ...but one word off ANOTHER command is asked about first ("show the setting" is "show the settings") ***',
+      opens.length === 4 && sp.nearMissPending()?.phrase === 'show the settings', J(sp.nearMissPending()));
+    feed('no');
+    // "go back" while a module opened by voice shows: the host hands it as the focused module's own phrase (close).
+    scoped = VO.voiceBackTable();
+    feed('computer please go back');
+    check('*** while one shows: "go back" is the CLOSE verb (the host\'s scoped phrase), not back ***',
+      presses.at(-1) === 'verb:close' || presses.at(-1) === 'phrase:close', J(presses.slice(-2)));
+    feed('computer please back to the pictures');
+    check('...and "back to the pictures" too', presses.at(-1) === presses.at(-2) && /close/.test(presses.at(-1)), J(presses.slice(-2)));
+    scoped = null;
+    feed('computer please go back');
+    check('*** nothing open: "go back" is the back verb it always was ***', /back/.test(presses.at(-1)) && !/close/.test(presses.at(-1)), J(presses.at(-1)));
+    sp.destroy();
+
+    // Grammar mode: "open <module>" is in the grammar.
+    const g = attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {} }, bus, recognition: 'grammar', playAs: () => VOCAB });
+    check('*** grammar mode: "computer please open calculator" is IN the grammar ***',
+      g.currentGrammar().includes('computer please open calculator') && g.currentGrammar().includes('show clock'), g.currentGrammar().length);
+    g.destroy();
   }
 
   section('*** the screen does not take its OWN words as a person\'s (screen_speech.js, 2026-10-04) ***');
