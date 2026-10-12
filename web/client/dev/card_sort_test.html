@@ -240,8 +240,10 @@ try {
   {
     const m = getManifest(GAME);
     const f = (k) => m.settings.find((s) => s.key === k);
-    check('card faces and suit colours are settings, with Design\'s defaults: big, four colours',
-      f('cardLayout')?.default === 'big' && f('suitColours')?.default === 'four' && DEFAULTS.cardLayout === 'big' && DEFAULTS.suitColours === 'four');
+    // 2026-10-12 (Design's characters handoff): suit marks are Design's new default, and the scenery is a third row.
+    check('card faces, suit colours and the scenery are settings, with card_deck.js\'s defaults: suit marks, four colours, auto',
+      f('cardLayout')?.default === 'pips' && f('suitColours')?.default === 'four' && f('cardScenery')?.default === 'auto'
+      && DEFAULTS.cardLayout === 'pips' && DEFAULTS.suitColours === 'four' && DEFAULTS.cardScenery === 'auto');
     const outer = document.getElementById('themed');
     applyTheme(outer, 'christmas');
     const r = R({}, { hostId: 'host2' });
@@ -274,10 +276,17 @@ try {
     check('*** two colours: diamonds take the hearts\' red on the buttons, clubs the spades\' ink ***',
       toHex(tileInk('D')) === v['--suit-hearts'].toLowerCase() && toHex(tileInk('C')) === v['--suit-spades'].toLowerCase(),
       `${toHex(tileInk('D'))} ${toHex(tileInk('C'))}`);
-    r.setCfg({ cardLayout: 'classic' });
+    r.setCfg({ cardLayout: 'big' });
     const want = document.createElement('div');
-    want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'classic', suitColours: 'two' });
-    check('classic faces: the card is redrawn as Design\'s classic layout', want.firstElementChild.isEqualNode(art()));
+    want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'big', suitColours: 'two' });
+    check('big faces: the card is redrawn in Design\'s big layout', want.firstElementChild.isEqualNode(art()));
+    r.setCfg({ cardScenery: 'on' });
+    want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'big', suitColours: 'two', cardScenery: 'on' });
+    // (ids aside: the panel gives its faces its own suffix, card_deck.js `cardArt` idSuffix)
+    const noIds = (s) => s.replace(/\bk[a-z0-9]+-\d+(-[\w-]+)?/g, 'ID');
+    check('*** scenery on: the card is redrawn with its place in the town behind it, its ids the panel\'s own ***',
+      noIds(want.firstElementChild.outerHTML) === noIds(art().outerHTML) && /viewBox="0 0 960 540"/.test(art().outerHTML)
+      && [...art().querySelectorAll('[id]')].every((e) => /-[\w]+$/.test(e.id) && e.id.split('-').length >= 3));
     r.inst.destroy();
     applyTheme(outer, 'default');
   }

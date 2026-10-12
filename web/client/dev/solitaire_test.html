@@ -404,12 +404,15 @@ try {
     outer.remove();
   }
 
-  section('*** the cards\' two settings: big or classic faces, four or two suit colours ***');
+  section('*** the cards\' settings: suit marks or big faces, four or two suit colours, the town behind them ***');
   {
     const rows = getManifest(GAME).settings;
-    check('both are settings, with Design\'s defaults: big faces, four colours', DEFAULTS.cardLayout === 'big' && DEFAULTS.suitColours === 'four'
-      && rows.find((r) => r.key === 'cardLayout')?.default === 'big' && rows.find((r) => r.key === 'suitColours')?.default === 'four'
-      && JSON.stringify(cardSettingsFields().map((f) => f.key)) === JSON.stringify(['cardLayout', 'suitColours']));
+    // 2026-10-12 (Design's characters handoff): the pips are Design's new default, and the scenery is a third row.
+    check('all three are settings, with the defaults card_deck.js argues: suit marks, four colours, scenery where it measured readable',
+      DEFAULTS.cardLayout === 'pips' && DEFAULTS.suitColours === 'four' && DEFAULTS.cardScenery === 'auto'
+      && rows.find((r) => r.key === 'cardLayout')?.default === 'pips' && rows.find((r) => r.key === 'suitColours')?.default === 'four'
+      && rows.find((r) => r.key === 'cardScenery')?.default === 'auto'
+      && JSON.stringify(cardSettingsFields().map((f) => f.key)) === JSON.stringify(['cardLayout', 'suitColours', 'cardScenery']));
     const t = mount({ host: scratch(960, 540), saved: { autoMove: 'off' } });
     t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
     const pipsOn = (el) => el.querySelector('svg').querySelectorAll('path').length;
@@ -418,10 +421,21 @@ try {
     check('a dealt number card to look at', !!n0, 'none between 4 and 10 face up');
     if (n0) {
       const r = Number(n0.dataset.card.slice(1));
-      check(`big (the default): one suit shape in the middle and two in the corners (${pipsOn(n0)})`, pipsOn(n0) === 3);
-      t.state.set({ cardLayout: 'classic' });
+      // The default theme's deck (Nimrod) starts with plain cards (card_deck.js SCENERY_DEFAULT_OFF), so every path is a suit.
+      check(`*** suit marks (the default): ${r} in the middle, plus the two corners (${pipsOn(n0)}) ***`, pipsOn(n0) === r + 2);
+      t.state.set({ cardLayout: 'big' });
       const n1 = t.host.querySelector(`.sol-card[data-card="${n0.dataset.card}"]`);
-      check(`*** classic: ${r} suit marks in the middle, plus the two corners (${pipsOn(n1)}) ***`, pipsOn(n1) === r + 2);
+      check(`big: one suit shape in the middle and two in the corners (${pipsOn(n1)})`, pipsOn(n1) === 3);
+      t.state.set({ cardLayout: 'classic' });
+      const n2 = t.host.querySelector(`.sol-card[data-card="${n0.dataset.card}"]`);
+      check(`a layout saved under its old name, "classic", draws the suit marks (${pipsOn(n2)})`, pipsOn(n2) === r + 2);
+      const cardsBefore = t.host.querySelectorAll('.sol-card').length;
+      t.state.set({ cardScenery: 'on' });
+      const n3 = t.host.querySelector(`.sol-card[data-card="${n0.dataset.card}"]`);
+      check('*** scenery on: the card shows its suit\'s place in the town, and the same table is drawn ***',
+        /viewBox="0 0 960 540"/.test(n3.innerHTML) && t.host.querySelectorAll('.sol-card').length === cardsBefore,
+        `${cardsBefore} -> ${t.host.querySelectorAll('.sol-card').length}`);
+      t.state.set({ cardScenery: 'auto' });
     }
     t.state.set({ suitColours: 'two' });
     const two = cardArt({ s: 'D', r: 7, up: true }, 'default', t.probe().cfg);

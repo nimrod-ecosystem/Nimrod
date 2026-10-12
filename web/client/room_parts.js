@@ -32,6 +32,8 @@
 // room_scene.css): the fire, lamp glow, curtains, the plant, the steam off a mug. None of it
 // flashes: a fire that flickers fast is a strobe, so these flames breathe instead.
 
+import { KIT, KIT_WORLDS, kitByWorld } from './theme_kits.js';
+
 export const STAGE = Object.freeze({ w: 960, h: 540 });
 
 export const mix = (c, other, pct) => `color-mix(in oklab, ${c} ${pct}%, ${other})`;
@@ -259,13 +261,31 @@ export const FURNITURE = {
     ],
   },
 };
+/* ---------- EACH WORLD'S OWN FURNITURE (Claude Design, 2026-10-12: `theme_kits.js`, shipped as it is). ----------
+   Design: "Each piece is one SVG drawing, so the room builder, the scene builder, the flat town drawings and the
+   cards all show the same art. The editors list pieces by world, and any piece can go in any room." Design's own
+   room builder wraps each as furniture (roomParts.jsx); here each becomes a FURNITURE entry with its `svg` instead
+   of a part list, so any room recipe can hold one (a town place opened as a room, a person's own room) and the
+   renderer needs nothing new: the same box, `on`, `glow` and colour as every other piece. `world` says which world
+   it comes from ('any' is every world). A piece never replaces one of the drawn pieces above with the same id. */
+for (const [id, p] of Object.entries(KIT)) {
+  if (Object.prototype.hasOwnProperty.call(FURNITURE, id)) continue;
+  FURNITURE[id] = { label: p.label, on: p.on, box: p.box, color: p.color, ...(p.glow ? { glow: p.glow } : null), world: p.theme, svg: p.svg };
+}
+export const KIT_PIECES = Object.freeze(Object.keys(FURNITURE).filter((id) => FURNITURE[id].svg));
+
+// The piece list, grouped: the drawn pieces by kind (Design's room-add-ons groups), then each world's own pieces
+// in Design's order (KIT_WORLDS: every world, then Nimrod, Fall, Winter, Halloween, Christmas, Steampunk).
 export const FURNITURE_GROUPS = [
   ['Seating', ['sofa', 'armchair', 'bed']],
   ['Storage & tables', ['bookshelf', 'desk', 'sideTable', 'cabinet', 'wallShelf']],
   ['Light & warmth', ['window', 'tableLamp', 'floorLamp', 'fireplace']],
   ['Soft things', ['plant', 'rug']],
   ['Doors & sound', ['door', 'speaker']],
+  ...KIT_WORLDS.map(([w, label]) => [label, kitByWorld(w).filter((id) => KIT_PIECES.includes(id))]).filter(([, ids]) => ids.length),
 ];
+/** The world groups only, for an editor that lists pieces by world: [[label, ids], ...]. */
+export const FURNITURE_WORLD_GROUPS = Object.freeze(FURNITURE_GROUPS.slice(5));
 
 /* ---------- LIGHT. `auto` follows the real clock. ---------- */
 export const ROOM_LIGHTS = {
@@ -320,12 +340,19 @@ function buildPartList(doc, parent, list) {
 
 /** A furniture part drawn into a new element that fills its box (the caller sizes the box). */
 export function buildFurniture(doc, part, color) {
-  const def = FURNITURE[part];
+  const def = Object.prototype.hasOwnProperty.call(FURNITURE, part) ? FURNITURE[part] : null;
   const el = doc.createElement('span');
   el.className = 'rm';
   el.dataset.furniture = part;
   el.style.cssText = 'position:absolute;inset:0;display:block';
-  if (def) buildPartList(doc, el, def.render(color || def.color));
+  if (def && def.svg) {
+    // A world's piece (theme_kits.js) is an SVG string in a 0-100 box, stretched to the piece's box, the way
+    // town.js draws it. ITS COLOUR GOES INTO THE MARKUP, so only a plain `#rrggbb` is let through (Design's own
+    // shading reads one); anything else is the piece's own colour.
+    const c = /^#[0-9a-f]{6}$/i.test(String(color || '')) ? color : def.color;
+    el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%"'
+      + ` aria-hidden="true" focusable="false" style="position:absolute;inset:0;overflow:visible">${def.svg(c)}</svg>`;
+  } else if (def) buildPartList(doc, el, def.render(color || def.color));
   return el;
 }
 

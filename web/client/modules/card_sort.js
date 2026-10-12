@@ -101,9 +101,11 @@ export const DEFAULTS = Object.freeze({
   // levels are about order, and a suit question every card halves the pace. AGAINST, and it wins: naming
   // suits is the exercise the game came from; one setting drops it.
   askSuit: 'always',
-  // How the cards look (card_deck.js): Design's big faces, four suit colours.
+  // How the cards look (card_deck.js, which argues each): suit marks, four suit colours, the town behind the
+  // cards where it measured readable.
   cardLayout: CARD_DEFAULTS.cardLayout,
   suitColours: CARD_DEFAULTS.suitColours,
+  cardScenery: CARD_DEFAULTS.cardScenery,
   answerBy: 'choices',
   autostart: false,
   autostartAlone: 'same',
@@ -445,8 +447,11 @@ registerModule(
     };
     // Design's drawing (card_deck.js cardArt) inside an element that carries the card's name for a screen reader.
     // The suit's NAME is written under the cards that are placed (`name`), on the panel, not on the card.
+    // `artId`: since Design's town is behind the cards (2026-10-12) a face carries pattern and clip ids too; the
+    // panel's own suffix keeps two panels from sharing one (card_deck.js's header says why that matters).
+    const artId = String(ctx.instanceId || 'cs').replace(/[^A-Za-z0-9_-]/g, '');
     const cardHtml = (c, { small = false, name = false } = {}) => `<div class="cs-card" data-suit="${c.s}"${small ? ' data-small' : ''} `
-      + `role="img" aria-label="${esc(cardName(c))}">${cardArt({ ...c, up: true }, themeNow(), cfgNow)}`
+      + `role="img" aria-label="${esc(cardName(c))}">${cardArt({ ...c, up: true }, themeNow(), cfgNow, { idSuffix: artId })}`
       + `${name ? `<span class="cs-name" aria-hidden="true">${esc(SUIT[c.s].name)}</span>` : ''}</div>`;
     const handLine = () => `<p class="cs-hand" data-hand>${done.length} of ${Math.max(2, Number(cfgNow.handSize) || DEFAULTS.handSize)} done this hand</p>`;
 

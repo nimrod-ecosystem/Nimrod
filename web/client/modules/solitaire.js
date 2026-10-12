@@ -29,8 +29,10 @@
 //   * A win pays NOTHING by default. See `winPoints` below for the argument.
 //   * Nothing is read aloud by default; "Say what is lit" is a setting for someone who scans by ear.
 //   * THE CARDS ARE DESIGN'S (2026-10-10, `../playing_cards.js` through `../card_deck.js`): the theme's own deck,
-//     back and face, redrawn when the theme changes. Faces in Design's 'big' layout and four suit colours by
-//     default; 'classic' pips and red-and-black are each one setting away (`cardSettingsFields`).
+//     back and face, redrawn when the theme changes. Since Design's characters handoff (2026-10-12) the court
+//     cards are characters at home and each card can show its place in the theme's town; the defaults (suit
+//     marks, four colours, scenery where it measured readable) and the other choices are card_deck.js's
+//     (`cardSettingsFields`).
 
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
@@ -63,9 +65,11 @@ export const DEFAULTS = Object.freeze({
   //   deal, whatever undo does afterwards (`paid` in the saved game). A family that wants solitaire
   //   in the economy turns it on; nobody else finds it changing their balance.
   winPoints: 0,
-  // How the cards look (card_deck.js): Design's big faces, four suit colours.
+  // How the cards look (card_deck.js, which argues each): suit marks, four suit colours, the town behind the
+  // cards where it measured readable.
   cardLayout: CARD_DEFAULTS.cardLayout,
   suitColours: CARD_DEFAULTS.suitColours,
+  cardScenery: CARD_DEFAULTS.cardScenery,
 });
 
 const SETTINGS = [

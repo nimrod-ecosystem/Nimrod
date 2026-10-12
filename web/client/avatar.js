@@ -28,6 +28,7 @@
 
 import { mulberry32 } from './rng.js';
 import { DEFAULT_PALETTE, normalizeHex, contrast } from './color_picker.js';
+import { normalizeFigure } from './avatar_figure.js';
 
 export const AVATAR_VERSION = 1;
 export const VIEWBOX = 200;
@@ -682,10 +683,13 @@ export function renderAvatar(record, { size = null, animate = true, title = null
 // server table. Optional in every sense: a person with no row has no avatar, and whatever shows for
 // them today is unchanged.
 //
-//   { use: 'drawn' | 'picture' | 'none', drawn: <record> | null, picture: { sourceId, path } | null, at }
+//   { use: 'drawn' | 'picture' | 'figure' | 'none', drawn: <record> | null, picture: { sourceId, path } | null,
+//     figure: <figure record> | null, at }
 //
 // `picture` is a reference into the person's own Media sources — the same `{ sourceId, path }` a
 // button's or an AAC card's picture is (`card_face.js`). Nothing is uploaded; the file stays where it is.
+// `figure` (2026-10-12) is a full-body character from Design's character kit, kept as data the same way
+// the drawn face is (`avatar_figure.js`): the look, the outfit and the pose, never a picture.
 // ---------------------------------------------------------------------------------------
 export const AVATAR_KEY = 'avatar';
 
@@ -695,8 +699,11 @@ export function readAvatar(row) {
   const pic = r.picture && typeof r.picture === 'object' && typeof r.picture.sourceId === 'string'
     && typeof r.picture.path === 'string' && r.picture.sourceId && r.picture.path
     ? { sourceId: r.picture.sourceId, path: r.picture.path } : null;
-  let use = ['drawn', 'picture', 'none'].includes(r.use) ? r.use : (drawn ? 'drawn' : pic ? 'picture' : 'none');
-  if (use === 'drawn' && !drawn) use = pic ? 'picture' : 'none';
-  if (use === 'picture' && !pic) use = drawn ? 'drawn' : 'none';
-  return { use, drawn, picture: pic };
+  const figure = r.figure && typeof r.figure === 'object' ? normalizeFigure(r.figure) : null;
+  const first = () => (drawn ? 'drawn' : pic ? 'picture' : figure ? 'figure' : 'none');
+  let use = ['drawn', 'picture', 'figure', 'none'].includes(r.use) ? r.use : first();
+  if (use === 'drawn' && !drawn) use = first();
+  if (use === 'picture' && !pic) use = first();
+  if (use === 'figure' && !figure) use = first();
+  return { use, drawn, picture: pic, figure };
 }

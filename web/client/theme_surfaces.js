@@ -45,7 +45,7 @@ export const knownCoverage = {
   marks: ['nimrod'],
 };
 
-/* ---- Added by Code, 2026-10-10. Everything above this line is Design's file as handed over. ----
+/* ---- Added by Code, 2026-10-10. Everything above this line is Design's file as handed over (2026-10-10). ----
  *
  * WHY THIS FILE IS IN web/client AND NOT docs/: the thing that proves the list is a suite
  * (dev/theme_surfaces_test.html), and the suites run in a browser against the site's own server, which
@@ -67,3 +67,30 @@ export const siteThemes = {
   stPatricks: 'stPatricks', easter: 'easter', july4: 'july4', halloween: 'halloween', diwali: 'diwali',
   harvest: 'harvest', hanukkah: 'hanukkah', christmas: 'christmas',
 };
+
+/* ---- Added by Code, 2026-10-12, from Design's characters handoff (Nimrod Design System16, handoff/characters). ----
+ *
+ * Design's handoff of 2026-10-11 (System11) added a REQUIRED line to the list above, "Court character skins" (robe,
+ * trim, crown metal, emblem, extras per theme). The next day's handoff replaced that model with the character kit
+ * (`character_kit.js`): an outfit is a choice from a wardrobe, the theme picks what the four court characters wear
+ * (`COURT_PICK`), and "every other theme falls back to the Royal robe in its card colours until it gets outfits of
+ * its own". The System11 list was never shipped, so its line is written here in the kit's terms, required as Design
+ * made it, and the themes without outfits are named gaps (dev/theme_surfaces_test.html), so the list only shrinks.
+ * The same handoff dresses six themes' towns and gives six worlds their own furniture; both BORROW by design (the
+ * town falls back to Nimrod's, any piece goes in any room), so they are `shared` lines.
+ * `codeCoverage` lists, by Design id, who answers each today (read from Design's files by the suite, not trusted). */
+export const codeSurfaces = [
+  { id: 'outfits', group: 'Games', label: 'Character outfits', need: 'required', where: 'character_kit.js OUTFITS, COURT_PICK',
+    what: 'Outfits of the theme\'s own in the wardrobe, and what King, Queen, Jack and Joker wear in it. Until then, the Royal robe in the deck\'s colours.' },
+  { id: 'town', group: 'Rooms and bricks', label: 'Town and homes', need: 'shared', where: 'town.js TOWN_DRESS, HOMES, PARK_SCENES',
+    what: 'Walls, floor, light and view for the town\'s eight places, the characters\' own homes and the Park. Borrows Nimrod\'s town until it has its own.' },
+  { id: 'kit', group: 'Rooms and bricks', label: 'World furniture', need: 'shared', where: 'theme_kits.js KIT',
+    what: 'The world\'s own pieces for the room and scene builders and the town. Any piece can go in any room.' },
+];
+export const codeCoverage = {
+  outfits: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
+  town: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
+  kit: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
+};
+/** Design's lines and Code's, the whole checklist. */
+export const allSurfaces = [...themeSurfaces, ...codeSurfaces];

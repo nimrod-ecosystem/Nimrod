@@ -8,30 +8,28 @@
  *   cardSvg({ rank: 'joker' }, 'night', { layout: 'classic' })
  *
  * BUILT FOR SOMEBODY WHO MAY SEE POORLY OR READ SLOWLY:
- * - FOUR SUIT COLOURS, AND THE SUIT SHAPE EVERYWHERE. Hearts red, diamonds blue, clubs green, spades
- *   ink. A suit never depends on red against black, and never on colour alone: every index carries
- *   the shape. `fourColour: false` gives the traditional two colours for people who want them.
+ * - RED AND BLACK BY DEFAULT, AND THE SUIT SHAPE EVERYWHERE. Every index carries the suit shape, so a
+ *   suit never depends on colour alone. `fourColour: true` is a setting for low vision: hearts red,
+ *   diamonds blue, clubs green, spades ink.
+ * - THE COURT CARDS ARE CHARACTERS (King, Queen, Jack, Joker) from courtCharacters.js, dressed in the
+ *   theme and the suit. courtCharacterSvg() draws one on its own, for use anywhere else.
  * - A BIG CORNER INDEX. In solitaire most cards are seen as a strip, so the corner is the card. It's
  *   about a fifth of the card's width: 20px tall on a 110px kiosk card.
- * - `layout: 'big'` (the default) puts one huge rank and suit in the middle instead of pips, so a
- *   card can be read from across a room. `layout: 'classic'` draws the usual pips.
+ * - Number cards show THAT MANY of the suit in the middle, as on a real card: the 3 of hearts has
+ *   three hearts. `layout: 'big'` swaps the pips for one huge rank and suit, a setting for reading a
+ *   card from across a room.
  * - Faces stay light stock in every theme except cyberpunk, so the ink keeps its contrast. The
  *   theme lives in the BACK, the edge, the court frames and the suit hues.
  */
+
+import { SUIT_PATH, figureBody, figureSvg, DEFAULT_CHARACTERS, courtOutfit } from './character_kit.js';
+import { placeSvg, placeForCard } from './town.js';
 
 const W = 250, H = 350;
 export const SUITS = ['hearts', 'diamonds', 'clubs', 'spades'];
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const NAMES = { A: 'Ace', J: 'Jack', Q: 'Queen', K: 'King' };
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-
-/* suit shapes in a 100×100 box */
-const SUIT_PATH = {
-  hearts: 'M50 90C20 68 4 50 4 31C4 15 16 5 30 5C40 5 47 11 50 19C53 11 60 5 70 5C84 5 96 15 96 31C96 50 80 68 50 90Z',
-  diamonds: 'M50 2L88 50L50 98L12 50Z',
-  spades: 'M50 4C30 26 6 40 6 60C6 76 20 84 32 84C40 84 45 81 48 76C46 86 42 92 33 97H67C58 92 54 86 52 76C55 81 60 84 68 84C80 84 94 76 94 60C94 40 70 26 50 4Z',
-  clubs: 'M50 8A20 20 0 0 0 36 42A20 20 0 1 0 46 70C45 82 41 90 33 97H67C59 90 55 82 54 70A20 20 0 1 0 64 42A20 20 0 0 0 50 8Z',
-};
 
 /* each theme's emblem in a 100×100 box. `c` is the emblem colour. */
 const EMBLEM = {
@@ -100,6 +98,26 @@ export const cardThemes = {
 cardThemes.empty = cardThemes.nimrod;
 const TRADITIONAL = { hearts: 'h', diamonds: 'h', clubs: 's', spades: 's' };
 
+/* ---------- court characters: the four default characters from characterKit.js, dressed for the theme ---------- */
+const ROLE_OF = { K: 'king', Q: 'queen', J: 'jack', joker: 'joker' };
+export function courtLook(role, suit, theme = 'nimrod', { fourColour = false, look } = {}) {
+  const t = cardThemes[theme] || cardThemes.nimrod;
+  const joker = role === 'joker', red = suit === 'hearts' || suit === 'diamonds';
+  return {
+    look: { ...DEFAULT_CHARACTERS[role].look, ...look },
+    opts: {
+      outfit: courtOutfit(role, theme), role, suit: joker ? null : suit,
+      suitColor: joker ? t.suits.hearts : fourColour ? t.suits[suit] : t.suits[red ? 'hearts' : 'spades'],
+      royal: { main: joker ? t.back.a : red ? t.suits.hearts : t.back.a, trim: t.back.frame, metal: '#e2b45a' },
+      emblem: (EMBLEM[theme] || EMBLEM.nimrod)('#f2e2a8'),
+    },
+  };
+}
+export function courtCharacterSvg(role, suit, theme = 'nimrod', o = {}) {
+  const { look, opts } = courtLook(role, role === 'joker' ? null : suit, theme, o);
+  return figureSvg(look, opts, DEFAULT_CHARACTERS[role].name + (role === 'joker' ? '' : ', ' + role + ' of ' + suit));
+}
+
 /* standard pip positions: [column 0|.5|1, row 0..1] */
 const PIPS = {
   2: [[0.5, 0], [0.5, 1]],
@@ -119,8 +137,20 @@ const crown = (rank, color) => {
   return `<path d="M92 118C92 92 108 80 128 80C146 80 156 92 158 104L136 108L158 118Z" fill="${color}"/><path d="M146 82Q170 64 168 92" stroke="${color}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
 };
 
-/* options: layout 'big' | 'classic', fourColour true | false */
-export function cardSvg(card = {}, theme = 'nimrod', { layout = 'big', fourColour = true } = {}) {
+/* A place from the theme's town, drawn into the card's middle window. Court cards stand in their
+   character's home; number cards and Aces show their suit's place in town. */
+const sceneIn = (card, theme, x, y, w, h, town, n, noSign) => {
+  const id = placeForCard(card);
+  let art = placeSvg(id, theme, { edited: town && town[id] }).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace(/<title>[^<]*<\/title>/, '');
+  /* on a face card the room's own name sign would sit under the corner index, so the name moves to a ribbon at the foot */
+  if (noSign) art = art.replace(/<rect[^>]*stroke="rgba\(0,0,0,\.25\)" stroke-width="3"\/><text[^>]*>[^<]*<\/text>/g, '');
+  return `<defs><clipPath id="cw${n}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12"/></clipPath></defs><g clip-path="url(#cw${n})"><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 960 540" preserveAspectRatio="xMidYMax slice">${art}</svg></g>`;
+};
+let cardN = 0;
+
+/* options: layout 'big' | 'classic', fourColour true | false, scenery true | false (the town places),
+   town: the person's edited places for this theme, { placeId: recipe } */
+export function cardSvg(card = {}, theme = 'nimrod', { layout = 'pips', fourColour = false, scenery = true, town } = {}) {
   const t = cardThemes[theme] || cardThemes.nimrod;
   const frame = `<rect x="2" y="2" width="${W - 4}" height="${H - 4}" rx="16"`;
   if (card.faceDown) {
@@ -140,15 +170,33 @@ export function cardSvg(card = {}, theme = 'nimrod', { layout = 'big', fourColou
     return `<g${g}><text x="${r === '10' ? 14 : 20}" y="56" font-family="${FONT}" font-weight="800" font-size="${r === '10' ? 44 : 52}" fill="${ink}" letter-spacing="${r === '10' ? -3 : 0}">${r}</text>${pip(suit, 39, 86, 36, ink)}</g>`;
   };
   let middle = '';
-  if (joker) {
-    middle = `<rect x="58" y="72" width="134" height="206" rx="12" fill="${t.court}" stroke="${t.edge}" stroke-width="3"/><circle cx="125" cy="175" r="54" fill="${t.back.med}" stroke="${t.back.frame}" stroke-width="4"/><g transform="translate(92 142) scale(.66)">${(EMBLEM[theme] || EMBLEM.nimrod)(t.back.emb)}</g>`;
-  } else if (['J', 'Q', 'K'].includes(r)) {
-    middle = `<rect x="58" y="72" width="134" height="206" rx="12" fill="${t.court}" stroke="${ink}" stroke-width="4"/>${crown(r, ink)}<text x="125" y="226" text-anchor="middle" font-family="${FONT}" font-weight="800" font-size="104" fill="${ink}">${r}</text>${pip(suit, 125, 254, 30, ink)}<g transform="translate(150 236) scale(.26)" opacity=".85">${(EMBLEM[theme] || EMBLEM.nimrod)(t.edge)}</g>`;
-  } else if (layout === 'big' || r === 'A') {
-    middle = r === 'A' && layout === 'classic' ? pip(suit, 125, 175, 120, ink) : `<text x="125" y="196" text-anchor="middle" font-family="${FONT}" font-weight="800" font-size="${r === '10' ? 112 : 132}" letter-spacing="${r === '10' ? -8 : 0}" fill="${ink}">${r}</text>${pip(suit, 125, 250, 64, ink)}`;
+  if (joker || ['J', 'Q', 'K'].includes(r)) {
+    const role = ROLE_OF[joker ? 'joker' : r];
+    const { look, opts } = courtLook(role, joker ? null : suit, theme, { fourColour });
+    /* the home fills the whole card too, and the character stands in it, feet near the bottom,
+       clear of the corner indexes */
+    /* the Joker's long corner word fills the foot, and the card already says JOKER, so no ribbon there */
+    const who = joker ? '' : (DEFAULT_CHARACTERS[role] || {}).name || '';
+    const ribbon = who ? `<rect x="58" y="300" width="134" height="26" rx="6" fill="${t.stock}" stroke="${ink}" stroke-width="2"/><text x="125" y="318.5" text-anchor="middle" font-family="-apple-system,Segoe UI,Roboto,sans-serif" font-size="15" font-weight="800" fill="${ink}">${who}</text>` : '';
+    const bg = scenery ? `${sceneIn(card, theme, 4, 4, W - 8, H - 8, town, ++cardN, true)}<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="13" fill="${t.stock}" opacity=".12"/>` : `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="13" fill="${t.court}"/>`;
+    middle = `${bg}<svg x="44" y="52" width="162" height="244" viewBox="0 0 200 320" preserveAspectRatio="xMidYMax meet">${figureBody(look, opts)}</svg>${ribbon}`;
   } else {
-    const n = +r, x0 = 78, x1 = 172, y0 = 82, y1 = 268;
-    middle = PIPS[n].map(([cx, cy]) => pip(suit, x0 + cx * (x1 - x0), y0 + cy * (y1 - y0), 42, ink, cy > 0.5)).join('');
+    /* Number cards and Aces: the suit's place in town, behind a card-stock veil so the rank and
+       pips stay readable. Every pip and number also gets a stock-coloured outline. */
+    const halo = `stroke="${t.stock}" stroke-width="7" paint-order="stroke" stroke-linejoin="round"`;
+    /* the place fills the whole card, edge to edge, under a light veil */
+    const back = scenery ? `${sceneIn(card, theme, 4, 4, W - 8, H - 8, town, ++cardN)}<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="13" fill="${t.stock}" opacity="${r === 'A' ? 0.16 : 0.38}"/>` : '';
+    const hp = (s) => (scenery ? s.replace('<path ', `<path ${halo} `) : s);
+    if (layout === 'big' || r === 'A') {
+      middle = back + (r === 'A' ? hp(pip(suit, 125, 176, layout === 'big' ? 96 : 120, ink)) : `<text x="125" y="196" text-anchor="middle" font-family="${FONT}" font-weight="800" font-size="${r === '10' ? 112 : 132}" letter-spacing="${r === '10' ? -8 : 0}" fill="${ink}" ${scenery ? halo : ''}>${r}</text>${hp(pip(suit, 125, 250, 64, ink))}`);
+    } else {
+      const n = +r, x0 = 86, x1 = 164, y0 = 94, y1 = 260;
+      const size = n <= 3 ? 60 : n <= 6 ? 50 : 42;
+      middle = back + PIPS[n].map(([cx, cy]) => hp(pip(suit, x0 + cx * (x1 - x0), y0 + cy * (y1 - y0), size, ink, cy > 0.5))).join('');
+    }
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${frame} fill="${t.stock}" stroke="${t.edge}" stroke-width="4"/>${middle}${idx(false)}${idx(true)}</svg>`;
+  /* the corner index sits on the scene too, so it gets the same stock-coloured outline */
+  const onScene = scenery || ['J', 'Q', 'K', 'joker'].includes(card.rank);
+  const ix = (s) => (onScene ? s.replace(/<(text|path) /g, `<$1 stroke="${t.stock}" stroke-width="6" paint-order="stroke" stroke-linejoin="round" `) : s);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${frame} fill="${t.stock}" stroke="${t.edge}" stroke-width="4"/>${middle}${ix(idx(false))}${ix(idx(true))}</svg>`;
 }

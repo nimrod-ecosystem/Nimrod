@@ -149,6 +149,9 @@ export const SUITES = [
   // 2026-10-10: Design's playing cards for every theme (playing_cards.js, card_deck.js), and Design's theme checklist:
   // every theme in theme.js answers every required line, or is named on that line's known-gap list.
   'playing_cards', 'theme_surfaces',
+  // 2026-10-12: Design's characters handoff (character_kit.js, theme_kits.js, town.js): every theme draws, nothing in a
+  // drawing reaches outside it, the avatar's full-body character, each world's furniture in the room builder.
+  'characters',
   // brick games (2026-10-09, row 2.76): Brick Drop - our bricks, our wall, one switch, no game over at the easy levels.
   'brickdrop',
   // 2026-10-06: Quiz mix - every kind of question round by round, each player at their own level, on the shared draw.

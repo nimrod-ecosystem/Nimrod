@@ -12,25 +12,33 @@
   #sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:10px 24px;margin-top:12px}
   #sheet .th{display:grid;gap:4px}#sheet .row{display:flex;gap:6px}#sheet .c{width:84px;line-height:0}
   #sheet .c svg{width:100%;height:auto;display:block}
+  #measure{position:absolute;left:0;top:0;width:250px;height:350px;opacity:0;pointer-events:none}
+  #measure svg{width:250px;height:350px;display:block}
 </style>
 </head>
 <body>
-<h1>playing cards (Claude Design, 2026-10-10)</h1>
+<h1>playing cards (Claude Design, 2026-10-10; characters and the town, 2026-10-12)</h1>
 <p><code>playing_cards.js</code> is Design's file, shipped as it is: <code>cardSvg(card, theme, options)</code>
-draws any card in any of Design's 21 decks. This suite checks that file (unchanged, every card in every deck,
-the labels, the suit colours measured on every face) and <code>card_deck.js</code>, the site's side of it:
-which deck each site theme wears, the two settings, the drawing made safe to repeat on a page, and the theme
-followed as it changes. The games that use it (solitaire, card sort) have their own suites.</p>
+draws any card in any of Design's 21 decks. Since the characters handoff it draws the court cards as Design's
+four characters standing in their homes, and every card with its suit's place in the theme's town behind it
+(<code>character_kit.js</code> and <code>town.js</code>, also Design's, also as they are). This suite checks
+that file (unchanged, every card in every deck, the labels, the suit colours, the contrast of every corner index
+and pip MEASURED over the scene at the kiosk's smallest card) and <code>card_deck.js</code>, the site's side of
+it: which deck each site theme wears, the three settings, the town seam, the drawing made safe to repeat on a
+page, and the theme followed as it changes. The games that use it (solitaire, card sort) have their own suites.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <h2>every theme's deck, to look at: the back, an ace, a seven, a queen, a king and the joker</h2>
 <div id="sheet"></div>
+<div id="measure" aria-hidden="true"></div>
 
 <script type="module">
-import { cardSvg, cardThemes, SUITS as DSUITS, RANKS } from '../playing_cards.js';
+import { cardSvg, cardThemes, courtLook, SUITS as DSUITS, RANKS } from '../playing_cards.js';
+import { courtOutfit, DEFAULT_CHARACTERS } from '../character_kit.js';
+import { placeForCard, placeRecipe } from '../town.js';
 import {
-  CARD_DEFAULTS, CARD_LAYOUTS, SUIT_COLOURS, cardSettingsFields, cardOptions, deckFor, hasOwnDeck, designCard,
-  cardArt, cardVars, themeIdAt, watchTheme,
+  CARD_DEFAULTS, CARD_LAYOUTS, SUIT_COLOURS, CARD_SCENERY, SCENERY_DEFAULT_OFF, cardSettingsFields, cardOptions, deckFor,
+  hasOwnDeck, designCard, cardArt, cardVars, themeIdAt, watchTheme, stableIds,
 } from '../card_deck.js';
 import { THEMES, applyTheme, contrast } from '../theme.js';
 import { auditFields } from '../settings_audit.js';
@@ -45,6 +53,7 @@ function check(name, cond, detail = '') {
   d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
   out.append(d);
 }
+function note(text) { const d = document.createElement('div'); d.textContent = `      ${text}`; out.append(d); }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const parses = (svg) => { const d = new DOMParser().parseFromString(svg, 'image/svg+xml'); return !d.querySelector('parsererror') && d.documentElement.localName === 'svg'; };
@@ -52,6 +61,7 @@ const label = (svg) => (svg.match(/aria-label="([^"]*)"/) || [])[1];
 const both = (a, b) => Math.min(contrast(a, b), contrast(a, b, { deutan: true }));
 // Design's 21 decks, by Design's ids ('empty' is Design's alias for nimrod, not a deck of its own).
 const DECKS = Object.keys(cardThemes).filter((k) => k !== 'empty');
+const PLAIN = { scenery: false };
 
 (async () => {
 try {
@@ -60,27 +70,31 @@ try {
     const text = (await (await fetch('../playing_cards.js', { cache: 'no-store' })).text()).replace(/\r\n/g, '\n');
     const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
       .map((b) => b.toString(16).padStart(2, '0')).join('');
-    // The SHA-256 of Design's playing_cards.js.txt (handoff cards-and-theme-checklist, 2026-10-10), line endings as LF.
+    // The SHA-256 of Design's playing_cards.js.txt (Nimrod Design System16, handoff/characters, 2026-10-12), line
+    // endings as LF. It was 4a30f0a6... (the 2026-10-10 cards-and-theme-checklist handoff) until this one.
     // A change here means the shipped file is no longer Design's: take a new handoff and update this line, rather
     // than editing their file (card_deck.js is where the site's own changes go).
-    const DESIGN_SHA256 = '4a30f0a6903697703e6f52949aeb0979ee8a03f9868d866334e4babb0e290e5a';
+    const DESIGN_SHA256 = '566ff668181a555cde98001a1849d3f1791017b6bb08812b3f18eb548157c067';
     check('*** web/client/playing_cards.js is byte for byte Design\'s file (line endings aside) ***', hash === DESIGN_SHA256, hash);
-    check('it imports nothing (Design: "plain JavaScript with no imports")', !/^\s*import\b/m.test(text));
+    // Design's header still says "no imports"; since the characters handoff it imports Design's own two files.
+    const imports = [...text.matchAll(/^\s*import\b[^;]*from\s*'([^']+)'/gm)].map((m) => m[1]);
+    check(`it imports only Design's own two files, beside it: ${imports.join(', ')}`,
+      imports.join() === './character_kit.js,./town.js', imports.join());
     check(`Design's 21 decks are all there: ${DECKS.join(', ')}`, DECKS.length === 21 && cardThemes.empty === cardThemes.nimrod);
   }
 
-  section('*** every card in every deck draws, and says what it is ***');
+  section('*** every card in every deck draws, and says what it is (both layouts, scenery on and off) ***');
   {
-    let all = 0, bad = [];
+    let all = 0; const bad = [];
     for (const deck of DECKS) {
-      for (const suit of DSUITS) for (const rank of RANKS) for (const layout of CARD_LAYOUTS) {
-        const svg = cardSvg({ rank, suit }, deck, { layout });
+      for (const suit of DSUITS) for (const rank of RANKS) for (const layout of CARD_LAYOUTS) for (const scenery of [true, false]) {
+        const svg = cardSvg({ rank, suit }, deck, { layout, scenery });
         all++;
         const want = `${{ A: 'Ace', J: 'Jack', Q: 'Queen', K: 'King' }[rank] || rank} of ${suit}`;
-        if (!parses(svg) || label(svg) !== want || !/role="img"/.test(svg)) bad.push(`${deck} ${rank}${suit} ${layout}`);
+        if (!parses(svg) || label(svg) !== want || !/role="img"/.test(svg)) bad.push(`${deck} ${rank}${suit} ${layout} ${scenery}`);
       }
-      for (const card of [{ faceDown: true }, { rank: 'joker' }]) {
-        const svg = cardSvg(card, deck);
+      for (const card of [{ faceDown: true }, { rank: 'joker' }]) for (const scenery of [true, false]) {
+        const svg = cardSvg(card, deck, { scenery });
         all++;
         if (!parses(svg) || label(svg) !== (card.faceDown ? 'Card, face down' : 'Joker')) bad.push(`${deck} ${JSON.stringify(card)}`);
       }
@@ -93,19 +107,56 @@ try {
     check('every back of a deck uses the one pattern id nc-<deck>, so many backs on a page share one pattern',
       DECKS.every((d) => cardSvg({ faceDown: true }, d).includes(`<pattern id="nc-${d}"`) && cardSvg({ faceDown: true }, d).includes(`url(#nc-${d})`)));
     check('each deck\'s back is its own: 21 different backs', new Set(DECKS.map((d) => cardSvg({ faceDown: true }, d).replace(/nc-\w+/g, ''))).size === 21);
-    check('an unknown deck draws the Nimrod one, not nothing', cardSvg({ rank: '5', suit: 'hearts' }, 'nope') === cardSvg({ rank: '5', suit: 'hearts' }, 'nimrod'));
+    check('an unknown deck draws the Nimrod one, not nothing (ids aside: Design numbers them from a counter)',
+      stableIds(cardSvg({ rank: '5', suit: 'hearts' }, 'nope')) === stableIds(cardSvg({ rank: '5', suit: 'hearts' }, 'nimrod')));
+  }
+
+  section('*** what the characters handoff changed: characters at home, that many pips, scenery on and off, big ***');
+  {
+    // Face cards are the four court characters, dressed for the theme (character_kit COURT_PICK), standing in their home.
+    const named = DECKS.every((d) => DSUITS.every((s) => ['K', 'Q', 'J'].every((r) => {
+      const role = { K: 'king', Q: 'queen', J: 'jack' }[r];
+      return cardSvg({ rank: r, suit: s }, d).includes(`>${DEFAULT_CHARACTERS[role].name}</text>`);
+    })));
+    check('*** every King, Queen and Jack in every deck is a character with a name ribbon (King Bram, Queen Rosa, Jack Theo) ***', named);
+    check('the Joker has no ribbon (its corner already reads JOKER)', DECKS.every((d) => !cardSvg({ rank: 'joker' }, d).includes(`>${DEFAULT_CHARACTERS.joker.name}</text>`)));
+    // (Nimrod's King keeps the Royal robe: that is Design's own pick, COURT_PICK.nimrod.king.)
+    const dressed = ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'].every((d) => ['king', 'queen', 'jack', 'joker']
+      .every((role) => courtLook(role, 'hearts', d).opts.outfit === courtOutfit(role, d))
+      && ['king', 'queen', 'jack', 'joker'].filter((role) => courtOutfit(role, d) !== 'royal').length >= 3);
+    check('the six themes with outfits dress their court in them; every other deck in the Royal robe (Design: "falls back")',
+      dressed && DECKS.filter((d) => !['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'].includes(d))
+        .every((d) => courtLook('king', 'spades', d).opts.outfit === 'royal'));
+    const scene = (svg) => /<svg x="4" y="4" width="242" height="342" viewBox="0 0 960 540"/.test(svg);
+    check('*** with scenery (the default) every face shows its place edge to edge; with scenery: false none does ***',
+      DECKS.every((d) => ['A', '7', 'K', 'joker'].every((r) => scene(cardSvg(r === 'joker' ? { rank: r } : { rank: r, suit: 'clubs' }, d))
+        && !scene(cardSvg(r === 'joker' ? { rank: r } : { rank: r, suit: 'clubs' }, d, PLAIN)))));
+    check('a court card\'s place is its character\'s home; a number card\'s, its suit\'s place in town',
+      placeForCard({ rank: 'K', suit: 'clubs' }) === 'kingHall' && placeForCard({ rank: 'joker' }) === 'jokerCaravan'
+        && placeForCard({ rank: '7', suit: 'hearts' }) === 'bakery' && placeForCard({ rank: '2', suit: 'spades' }) === 'library');
+    // That many pips: the suit paths drawn (`translate(... scale(...)`) minus the two corner suits.
+    const pipsIn = (svg) => (svg.match(/<path [^>]*transform="translate\([^)]*\) scale\([^)]*\)[^"]*" d="M/g) || []).length - 2;
+    const counted = DSUITS.every((s) => ['2', '3', '4', '5', '6', '7', '8', '9', '10'].every((r) => pipsIn(cardSvg({ rank: r, suit: s }, 'fall', PLAIN)) === +r));
+    check('*** number cards show that many of the suit: the 3 of hearts has three hearts (2 to 10, every suit) ***', counted);
+    check('an Ace shows one big suit', pipsIn(cardSvg({ rank: 'A', suit: 'spades' }, 'night', PLAIN)) === 1);
+    check('the default layout is the pips (Design\'s new default)', pipsIn(cardSvg({ rank: '8', suit: 'clubs' }, 'nimrod', PLAIN)) === 8);
+    const big = cardSvg({ rank: '8', suit: 'clubs' }, 'nimrod', { layout: 'big', scenery: false });
+    check('layout: "big" keeps one huge rank and one suit (a setting for reading across a room)', pipsIn(big) === 1 && /font-size="132"[^>]*>8<\/text>/.test(big));
+    check('over a scene every pip and the corner index carry a card-stock outline; plain cards need none',
+      /paint-order="stroke"/.test(cardSvg({ rank: '7', suit: 'hearts' }, 'fall')) && !/paint-order/.test(cardSvg({ rank: '7', suit: 'hearts' }, 'fall', PLAIN)));
   }
 
   section('*** the four suit colours, and the two-colour option, in every deck ***');
   {
-    const inkOf = (deck, suit, o) => cardSvg({ rank: '7', suit }, deck, o).match(/<text[^>]*fill="(#[0-9a-fA-F]{6})"/)[1].toLowerCase();
-    const fourBad = DECKS.filter((d) => new Set(DSUITS.map((s) => inkOf(d, s))).size !== 4);
-    check('four colours (the default): four DIFFERENT inks in every deck', fourBad.length === 0, fourBad.join());
+    // Read off a plain card: a card with scenery also has the place's name sign in it, which is text too.
+    const inkOf = (deck, suit, o) => cardSvg({ rank: '7', suit }, deck, { ...o, scenery: false }).match(/<text[^>]*fill="(#[0-9a-fA-F]{6})"/)[1].toLowerCase();
+    const fourBad = DECKS.filter((d) => new Set(DSUITS.map((s) => inkOf(d, s, { fourColour: true }))).size !== 4);
+    check('four colours: four DIFFERENT inks in every deck', fourBad.length === 0, fourBad.join());
     const twoBad = DECKS.filter((d) => {
       const o = { fourColour: false };
       return inkOf(d, 'diamonds', o) !== inkOf(d, 'hearts', o) || inkOf(d, 'clubs', o) !== inkOf(d, 'spades', o) || inkOf(d, 'hearts', o) === inkOf(d, 'spades', o);
     });
-    check('two colours: hearts and diamonds share the red, clubs and spades the ink, in every deck', twoBad.length === 0, twoBad.join());
+    check('two colours (Design\'s file\'s own default): hearts and diamonds share the red, clubs and spades the ink, in every deck', twoBad.length === 0, twoBad.join());
     check('every index carries the suit SHAPE as well as the colour (a path beside each corner rank)',
       DECKS.every((d) => DSUITS.every((s) => (cardSvg({ rank: '9', suit: s }, d).match(/<path /g) || []).length >= 3)));
   }
@@ -115,10 +166,11 @@ try {
     // THE FLOOR ASSERTED IS 3:1, and why: what a suit colour draws is the corner rank (heavy 800 weight, a fifth of the
     // card's width: about 23px on a 110px kiosk card, which is WCAG's "large text" at 18.66px bold, 3:1) and the suit
     // shapes (graphical objects, WCAG 1.4.11, 3:1). 4.5:1 is the body-text floor, and these are not body text.
-    // BELOW 4.5 IS STILL NAMED: Design's README makes contrast a warning on their palettes, so each deck whose worst
-    // suit is under 4.5 is listed with its measured floor (both visions). A deck falling further, or a new deck under
-    // 4.5, fails here until it is reported to Design and written in. NOTES_FOR_DESIGN carries the list.
-    // Each is the measured worst (2026-10-10), rounded down a hundredth.
+    // BELOW 4.5 IS STILL NAMED: each deck whose worst suit is under 4.5 is listed with its measured floor (both
+    // visions). A deck falling further, or a new deck under 4.5, fails here until it is reported to Design and written
+    // in. Each is the measured worst (2026-10-10, unchanged by the 2026-10-12 file), rounded down a hundredth.
+    // THIS IS THE INK ON THE CARD STOCK: on a plain card, and the stock-coloured outline every glyph wears over a
+    // scene. The ink over the scene itself is the next section.
     const UNDER_45 = { ocean: 4.32, spring: 4.16, summer: 4.30, halloween: 3.72, christmas: 4.35, valentines: 4.41,
       easter: 4.23, july4: 4.35, lunarNewYear: 4.11, diwali: 4.19 };
     const rows = [];
@@ -135,9 +187,9 @@ try {
       } else {
         check(`${d}: 4.5 or better for every suit`, UNDER_45[d] === undefined, 'on the under-4.5 list but passes: take it off');
       }
-      // The court frame: a court card's letter and crown sit on `court`, not on the stock.
+      // The court frame: with scenery off, a court card's index sits on `court`, not on the stock.
       const c = Math.min(...DSUITS.map((s) => both(t.suits[s], t.court)));
-      check(`${d}: picture-card letters and crowns clear 3:1 on their frame, both visions (${c.toFixed(2)})`, c >= 3);
+      check(`${d}: with scenery off, picture-card corners clear 3:1 on their frame, both visions (${c.toFixed(2)})`, c >= 3);
     }
     console.log('suits on their own face, worst of four, both visions:', rows.join(' | '));
     check(`the worst suit anywhere: ${worst.toFixed(2)}:1 (${worstAt}), above the 3:1 floor`, worst >= 3);
@@ -151,6 +203,153 @@ try {
       cyWorst >= 4.5 && cyCourt >= 4.5);
     check('cyberpunk is the only dark face (every other deck\'s stock is light)', DECKS.filter((d) => contrast(cardThemes[d].stock, '#000000') < 10).join() === 'cyberpunk',
       DECKS.filter((d) => contrast(cardThemes[d].stock, '#000000') < 10).join());
+  }
+
+  section('*** contrast OVER THE SCENE, measured: every corner index and pip, every deck, at the kiosk\'s smallest card (110px) ***');
+  {
+    // Design: "Contrast is a warning: measure it." HOW IT IS MEASURED, so the number means something. Each card is
+    // drawn as it will be seen, at 110 x 154 px (the kiosk's minimum, solitaire_test.html), and drawn again with one
+    // set of glyphs (the corner indexes, or the pips / big rank) filled in a probe colour: the two rasters line up to
+    // the pixel, so where the glyph is, and how much of each pixel it covers, is exact. THE PIXELS TOUCHING A GLYPH
+    // (under 5% covered, beside one at least half covered) are what its edge is read against. Each is measured
+    // against the glyph's ink, normal vision and deuteranopia, for BOTH inks a glyph can be in (four colours, two).
+    //
+    // THE NUMBER: THE MEDIAN OF THAT EDGE, ON THE DECK'S WORST CARD -- half of the edge of the worst glyph in the
+    // deck clears it. Design's stock-coloured outline is 6 or 7 units of a 250-unit card: about 1.3px at 110px, so
+    // the ring a pixel out is part outline and part scene, and this asks whether the outline still does its job at
+    // the smallest size. The yardstick, the same edge on a PLAIN card (nothing behind but stock): 3.6 to 4.7.
+    //
+    // WHAT ELSE WAS MEASURED (2026-10-12), and why it is not the floor:
+    //   * the ink against the outline itself: that is the ink on the stock, the section above (worst 3.72, Halloween);
+    //     every deck passes it, and it is what WCAG means by the adjacent colour;
+    //   * the ink against the scene with the outline taken out (the glyph's whole box): 1.00 to 1.01 for the corner
+    //     index in EVERY deck, 1.00 to 1.42 for the pips. Every town has something the colour of the ink somewhere
+    //     behind a corner (a book spine, a rug, a lantern). The outline is what carries the contrast, by design;
+    //   * the 5th percentile of the edge (95% of the edge clears it): 1.01 to 1.12 for the corner index in every
+    //     deck, 1.01 to 2.09 for the pips. A pixel diagonal to a glyph's corner is mostly scene at this size. Logged
+    //     (the console), not pinned.
+    //
+    // THE FLOOR IS 3:1 (large text and graphics, as above). A deck whose median edge is under it is in card_deck.js
+    // SCENERY_DEFAULT_OFF (its scenery starts off; a person can still turn it on) and is reported to Design. Each
+    // deck's measurement is PINNED below, 0.10 under what was measured: a raster measure moves a little with the
+    // machine's font smoothing, and the margin keeps it from failing on a different computer while still failing
+    // when Design's town, veil, outline or palette change enough to matter.
+    // Cards: A, 3, 8 and 10 of each suit in the pips layout (between them every pip position), the 7 in the big
+    // layout, the J, Q and K of each suit, and the Joker.
+    // { deck: [corner index, pips and big rank] }: measured 2026-10-12 (headless Chrome, Windows), minus 0.10.
+    const SCENE_FLOORS = { nimrod: [2.82, 3.31], fall: [2.79, 2.71], steampunk: [2.27, 2.30], cyberpunk: [2.79, 2.33],
+      winter: [3.86, 4.12], ocean: [3.65, 2.89], night: [4.19, 3.34], cozy: [4.11, 3.30], spring: [3.44, 2.79], summer: [3.60, 2.84],
+      halloween: [1.83, 1.17], harvest: [4.27, 3.36], christmas: [3.35, 2.40], hanukkah: [4.27, 3.45], newYear: [4.10, 3.25],
+      valentines: [3.64, 2.93], stPatricks: [3.82, 3.10], easter: [3.48, 2.81], july4: [3.66, 2.88], lunarNewYear: [3.56, 2.76],
+      diwali: [3.48, 2.80] };
+    const W = 110, H = Math.round(110 * 350 / 250);
+    async function raster(svg) {
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      await img.decode();
+      const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const g = cv.getContext('2d'); g.drawImage(img, 0, 0, W, H);
+      return g.getImageData(0, 0, W, H).data;
+    }
+    // ONE set of glyphs (where = 'index': the two corner groups | 'middle': pips, a big rank) filled in the probe colour.
+    const PROBE = '#ff00ff';
+    function probed(svg, where) {
+      const d = new DOMParser().parseFromString(svg, 'image/svg+xml');
+      const root = d.documentElement;
+      let n = 0;
+      for (const el of root.querySelectorAll('[paint-order]')) {
+        const inIndex = !!el.parentElement && el.parentElement.parentElement === root;
+        if ((where === 'index') !== inIndex) continue;
+        el.setAttribute('fill', PROBE); n++;
+      }
+      return n ? new XMLSerializer().serializeToString(root) : null;
+    }
+    const hexOf = (data, i) => '#' + [data[i], data[i + 1], data[i + 2]].map((v) => v.toString(16).padStart(2, '0')).join('');
+    // How much of each pixel the glyphs cover: how far it moved toward the probe, on the channel where ink and probe differ most.
+    function coverage(full, probe, ink) {
+      const iv = [1, 3, 5].map((o) => parseInt(ink.slice(o, o + 2), 16)), pv = [255, 0, 255];
+      let ch = 0;
+      for (let c = 1; c < 3; c++) if (Math.abs(pv[c] - iv[c]) > Math.abs(pv[ch] - iv[ch])) ch = c;
+      const span = pv[ch] - iv[ch];
+      const cov = new Float32Array(W * H);
+      for (let p = 0; p < W * H; p++) cov[p] = Math.max(0, Math.min(1, (probe[p * 4 + ch] - full[p * 4 + ch]) / span));
+      return cov;
+    }
+    function edgeOf(cov) {
+      const out = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const p = y * W + x;
+        if (cov[p] >= 0.05) continue;
+        let touch = false;
+        for (let dy = -1; dy <= 1 && !touch; dy++) for (let dx = -1; dx <= 1 && !touch; dx++) {
+          const xx = x + dx, yy = y + dy;
+          if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+          if (cov[yy * W + xx] >= 0.5) touch = true;
+        }
+        if (touch) out.push(p * 4);
+      }
+      return out;
+    }
+    const memo = new Map();
+    const cWorst = (ink, px) => { const key = ink + px; let v = memo.get(key); if (v === undefined) { v = both(ink, px); memo.set(key, v); } return v; };
+    const pct = (sorted, f) => (sorted.length ? sorted[Math.floor(sorted.length * f)] : Infinity);
+    const CARDS = [];
+    for (const s of DSUITS) {
+      for (const r of ['A', '3', '8', '10']) CARDS.push([{ rank: r, suit: s }, { layout: 'pips' }]);
+      CARDS.push([{ rank: '7', suit: s }, { layout: 'big' }]);
+      for (const r of ['J', 'Q', 'K']) CARDS.push([{ rank: r, suit: s }, {}]);
+    }
+    CARDS.push([{ rank: 'joker' }, {}]);
+    const t0 = performance.now();
+    const report = [];
+    const under3 = [];
+    const measured = {};
+    for (const d of DECKS) {
+      const t = cardThemes[d];
+      const worst = { index: { med: Infinity, p5: Infinity, at: '' }, middle: { med: Infinity, p5: Infinity, at: '' } };
+      for (const [card, o] of CARDS) {
+        const svg = cardSvg(card, d, { ...o, fourColour: true, scenery: true });
+        const full = await raster(svg);
+        const red = card.suit === 'hearts' || card.suit === 'diamonds';
+        const drawnInk = card.rank === 'joker' ? t.suits.spades : t.suits[card.suit];
+        const inks = card.rank === 'joker' ? [t.suits.spades] : [...new Set([drawnInk, t.suits[red ? 'hearts' : 'spades']])];
+        for (const where of ['index', 'middle']) {
+          const pr = probed(svg, where);
+          if (!pr) continue;
+          const edge = edgeOf(coverage(full, await raster(pr), drawnInk));
+          for (const ink of inks) {
+            const vals = edge.map((i) => cWorst(ink, hexOf(full, i))).sort((a, b) => a - b);
+            const med = pct(vals, 0.5), w = worst[where];
+            w.p5 = Math.min(w.p5, pct(vals, 0.05));
+            if (med < w.med) { w.med = med; w.at = `${card.rank}${card.suit ? card.suit[0] : ''}${o.layout === 'big' ? ' big' : ''} in ${ink}`; }
+          }
+        }
+      }
+      // The yardstick: the same edge on a plain card (nothing behind but stock).
+      const plainSvg = cardSvg({ rank: '8', suit: 'hearts' }, d, { fourColour: true, scenery: false }).replace(/<(text|path) /g, '<$1 paint-order="normal" ');
+      const plainFull = await raster(plainSvg);
+      const plainEdge = edgeOf(coverage(plainFull, await raster(probed(plainSvg, 'index')), t.suits.hearts));
+      const plain = pct(plainEdge.map((i) => cWorst(t.suits.hearts, hexOf(plainFull, i))).sort((a, b) => a - b), 0.5);
+      const { index: wi, middle: wm } = worst;
+      const w = Math.min(wi.med, wm.med);
+      measured[d] = [wi.med, wm.med];
+      report.push(`${d}: index ${wi.med.toFixed(2)} (${wi.at}; 5th pct ${wi.p5.toFixed(2)}), pips ${wm.med.toFixed(2)} (${wm.at}; 5th pct ${wm.p5.toFixed(2)}), plain ${plain.toFixed(2)}`);
+      if (w < 3) under3.push(d);
+      const floor = SCENE_FLOORS[d];
+      check(`${d}: the edge of a glyph over its scene, median on the worst card: corner index ${wi.med.toFixed(2)}:1 (${wi.at}), pips and big rank ${wm.med.toFixed(2)}:1 (${wm.at}); plain card ${plain.toFixed(2)}${w < 3 ? '. UNDER 3:1: its scenery starts off' : ''}`,
+        (w >= 2.9 || SCENERY_DEFAULT_OFF.includes(d)) && !!floor && wi.med >= floor[0] && wm.med >= floor[1],
+        floor ? `pinned ${floor.join(' / ')}` : 'no floor pinned');
+    }
+    console.log('contrast at the glyph edge over the scene, both visions, 110px:\n' + report.join('\n'));
+    console.log('measured, for SCENE_FLOORS:', JSON.stringify(measured));
+    note(`measured ${DECKS.length * CARDS.length} cards in ${((performance.now() - t0) / 1000).toFixed(1)} s`);
+    // HELD BOTH WAYS, with the same 0.10 of room a raster measure needs: every deck measured under 2.90 is on the list
+    // (its scenery starts off), and every deck on the list measured under 3.10 (a deck that clearly passes now comes off).
+    const unlisted = DECKS.filter((d) => Math.min(...measured[d]) < 2.9 && !SCENERY_DEFAULT_OFF.includes(d));
+    const passing = SCENERY_DEFAULT_OFF.filter((d) => Math.min(...measured[d]) >= 3.1);
+    check(`*** every deck under 3:1 over its scene starts with its scenery off: measured under 3 here: ${under3.join(', ') || 'none'} (SCENERY_DEFAULT_OFF: ${SCENERY_DEFAULT_OFF.length}) ***`,
+      unlisted.length === 0 && passing.length === 0, `under 2.90 and not listed: ${unlisted.join()}; listed but 3.10 or better: ${passing.join()}`);
+    check('every deck has its floors pinned', DECKS.every((d) => Array.isArray(SCENE_FLOORS[d])), JSON.stringify(measured));
   }
 
   section('the site\'s side (card_deck.js): which deck each site theme wears');
@@ -170,34 +369,74 @@ try {
     }));
   }
 
-  section('the site\'s side: klondike\'s cards, the drawing made safe to repeat, the two settings');
+  section('the site\'s side: klondike\'s cards, the drawing made safe to repeat, the three settings, the town seam');
   {
     check('a klondike card becomes Design\'s: { s: H, r: 12 } -> Q of hearts; face down -> faceDown',
       JSON.stringify(designCard({ s: 'H', r: 12, up: true })) === '{"rank":"Q","suit":"hearts"}'
       && JSON.stringify(designCard({ s: 'C', r: 1 })) === '{"rank":"A","suit":"clubs"}' && designCard({ s: 'D', r: 3, up: false }).faceDown === true);
     const a = cardArt({ s: 'H', r: 12, up: true }, 'fall');
     check('*** the drawing is hidden from a screen reader (the game\'s own element names the card) and not focusable ***',
-      /^<svg[^>]* aria-hidden="true" focusable="false" data-card-art=""/.test(a) && !/role="img"|aria-label=/.test(a));
-    check('...and is otherwise exactly Design\'s drawing', a.replace(' aria-hidden="true" focusable="false" data-card-art=""', ' role="img" aria-label="Queen of hearts"')
-      === cardSvg({ rank: 'Q', suit: 'hearts' }, 'fall'));
+      /^<svg[^>]* aria-hidden="true" focusable="false" data-card-art=""/.test(a) && !/^<svg[^>]*(role="img"|aria-label=)/.test(a));
+    check('...and is otherwise exactly Design\'s drawing (its counter-numbered ids renamed)', stableIds(a.replace(' aria-hidden="true" focusable="false" data-card-art=""', ' role="img" aria-label="Queen of hearts"'))
+      === stableIds(cardSvg({ rank: 'Q', suit: 'hearts' }, 'fall', cardOptions({}, { deck: 'fall' }))));
+    check('*** the same card is the same string, drawn twice (Design numbers ids from a counter; card_deck renames them) ***',
+      cardArt({ s: 'C', r: 7, up: true }, 'winter') === cardArt({ s: 'C', r: 7, up: true }, 'winter')
+      && stableIds(cardSvg({ rank: 'K', suit: 'spades' }, 'halloween')) === stableIds(cardSvg({ rank: 'K', suit: 'spades' }, 'halloween'))
+      && cardSvg({ rank: 'K', suit: 'spades' }, 'halloween') !== cardSvg({ rank: 'K', suit: 'spades' }, 'halloween'));
+    const ided = cardArt({ s: 'S', r: 13, up: true }, 'steampunk', { cardScenery: 'on' }, { idSuffix: 't9' });
+    const idList = [...ided.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    const refs = [...ided.matchAll(/url\(#([^)]+)\)/g)].map((m) => m[1]);
+    check('every id in a face carries the table\'s suffix, every one is unique, and every url(#..) points at one of them (or at the suffixed name of Design\'s one dangling reference)',
+      idList.length >= 3 && idList.every((x) => x.endsWith('-t9')) && new Set(idList).size === idList.length && refs.every((r) => r.endsWith('-t9')), idList.slice(0, 5).join());
     const b = cardArt({ s: 'S', r: 1, up: false }, 'night', {}, { idSuffix: 'p7' });
     check('a back\'s pattern id carries the table\'s suffix, in the pattern AND where it is used (nothing left pointing at the old id)',
       b.includes('<pattern id="nc-night-p7"') && b.includes('url(#nc-night-p7)') && !/nc-night[")]/.test(b));
-    check('no suffix, no change to the id', cardArt({ s: 'S', r: 1, up: false }, 'night').includes('id="nc-night"'));
-    check(`defaults: ${JSON.stringify(CARD_DEFAULTS)} (Design's: big faces, four colours)`, CARD_DEFAULTS.cardLayout === 'big' && CARD_DEFAULTS.suitColours === 'four'
-      && JSON.stringify(cardOptions({})) === '{"layout":"big","fourColour":true}');
-    check('the settings mean what they say, and nonsense is the default', JSON.stringify(cardOptions({ cardLayout: 'classic', suitColours: 'two' })) === '{"layout":"classic","fourColour":false}'
-      && JSON.stringify(cardOptions({ cardLayout: 'x', suitColours: 'y' })) === '{"layout":"big","fourColour":true}');
+    check('no suffix, no change to the back\'s id', cardArt({ s: 'S', r: 1, up: false }, 'night').includes('id="nc-night"'));
+    check(`defaults: ${JSON.stringify(CARD_DEFAULTS)} (Design's pips; scenery where it measured readable; four colours kept, see card_deck.js)`,
+      CARD_DEFAULTS.cardLayout === 'pips' && CARD_DEFAULTS.suitColours === 'four' && CARD_DEFAULTS.cardScenery === 'auto'
+      && JSON.stringify(cardOptions({})) === '{"layout":"pips","fourColour":true,"scenery":true}'
+      && cardOptions({}, { deck: 'winter' }).scenery === true && cardOptions({}, { deck: 'halloween' }).scenery === false);
+    check('the default theme (the Nimrod deck) starts with plain cards: it measured under 3:1 (2.93 at the corner index)',
+      cardOptions({}, { deck: deckFor('default') }).scenery === false && !/viewBox="0 0 960 540"/.test(cardArt({ s: 'H', r: 7, up: true }, 'default')));
+    check('the settings mean what they say, and nonsense is the default',
+      JSON.stringify(cardOptions({ cardLayout: 'big', suitColours: 'two', cardScenery: 'off' })) === '{"layout":"big","fourColour":false,"scenery":false}'
+      && JSON.stringify(cardOptions({ cardLayout: 'x', suitColours: 'y', cardScenery: 'z' })) === '{"layout":"pips","fourColour":true,"scenery":true}');
+    check('a layout saved under its old name, "classic", is the pips', cardOptions({ cardLayout: 'classic' }).layout === 'pips');
+    check('scenery off draws plain cards in every deck, on draws the town in every deck', !/viewBox="0 0 960 540"/.test(cardArt({ s: 'H', r: 7, up: true }, 'winter', { cardScenery: 'off' }))
+      && /viewBox="0 0 960 540"/.test(cardArt({ s: 'H', r: 7, up: true }, 'halloween', { cardScenery: 'on' })));
+    check('SCENERY_DEFAULT_OFF names only Design decks', SCENERY_DEFAULT_OFF.every((d) => DECKS.includes(d)));
+    check('a deck on SCENERY_DEFAULT_OFF starts with its scenery off, and a person\'s own "on" still turns it on',
+      SCENERY_DEFAULT_OFF.every((d) => cardOptions({}, { deck: d }).scenery === false && cardOptions({ cardScenery: 'on' }, { deck: d }).scenery === true));
+    // THE TOWN SEAM: a person's edited places are passed only when there are some.
+    check('no edited places: no `town` option at all (Design\'s default places draw)', !('town' in cardOptions({}, { town: null })) && !('town' in cardOptions({}, { town: {} })));
+    const ON = { cardScenery: 'on' };
+    const myHall = { ...placeRecipe('kingHall', 'fall'), wall: { finish: 'paint', color: '#3355aa' } };
+    const town = { kingHall: myHall };
+    check('edited places ARE passed on (a clean copy: card_deck.js cleanTown), and not when the scenery is off',
+      JSON.stringify(cardOptions({}, { town }).town) === JSON.stringify(town) && !('town' in cardOptions({ cardScenery: 'off' }, { town })));
+    const evil = { kingHall: { ...myHall, wall: { finish: 'paint', color: '"/><script>bad()<\/script>', wainscot: 'red" onload="bad()' },
+      items: [...myHall.items, { kind: 'furniture', part: 'throne', x: 50, y: 80, color: '"><script>bad()<\/script>' }, { kind: 'sign', x: 50, y: 8, name: '<img src=x onerror=bad()>King', variant: 'wood' }] } };
+    const evilArt = cardArt({ s: 'H', r: 13, up: true }, 'fall', ON, { town: evil });
+    const evilDoc = new DOMParser().parseFromString(evilArt, 'image/svg+xml');
+    check('*** a saved town edit cannot put markup into a card: bad colours are dropped, a sign\'s words lose their brackets ***',
+      parses(evilArt) && !/<script|<img|bad\(\)<\/script/i.test(evilArt) && !evilArt.includes('onload="bad') && !evilDoc.querySelector('script,img,foreignObject')
+      && [...evilDoc.querySelectorAll('*')].every((e) => [...e.attributes].every((a) => !/^on/i.test(a.name))));
+    const kMine = cardArt({ s: 'H', r: 13, up: true }, 'fall', ON, { town });
+    const kStock = cardArt({ s: 'H', r: 13, up: true }, 'fall', ON);
+    check('*** edit the King\'s hall and the King\'s card changes (Design: "Edit the King\'s hall and the King\'s card changes") ***',
+      kMine !== kStock && kMine.includes('#3355aa') && !kStock.includes('#3355aa'));
+    check('...and the Queen\'s card does not', cardArt({ s: 'H', r: 12, up: true }, 'fall', ON, { town }) === cardArt({ s: 'H', r: 12, up: true }, 'fall', ON));
     const rows = cardSettingsFields();
-    check('two rows, each a choice whose options are exactly the values card_deck reads',
-      rows.length === 2 && rows[0].key === 'cardLayout' && rows[1].key === 'suitColours'
+    check('three rows, each a choice whose options are exactly the values card_deck reads',
+      rows.length === 3 && rows.map((r) => r.key).join() === 'cardLayout,suitColours,cardScenery'
       && JSON.stringify(rows[0].options.map((o) => o.value)) === JSON.stringify(CARD_LAYOUTS)
-      && JSON.stringify(rows[1].options.map((o) => o.value)) === JSON.stringify(SUIT_COLOURS));
-    // `no-essential` is about a whole panel's menu, and these two rows are never a panel's whole menu: each game that
+      && JSON.stringify(rows[1].options.map((o) => o.value)) === JSON.stringify(SUIT_COLOURS)
+      && JSON.stringify(rows[2].options.map((o) => o.value)) === JSON.stringify(CARD_SCENERY));
+    // `no-essential` is about a whole panel's menu, and these rows are never a panel's whole menu: each game that
     // spreads them in has essential rows of its own (its own suite audits the whole list).
     const errs = auditFields(rows.map(normalizeField).filter(Boolean), { type: 'cards' })
       .filter((x) => x.severity !== 'info' && x.code !== 'no-essential');
-    check('the settings audit finds nothing to warn about in the two rows', errs.length === 0, JSON.stringify(errs));
+    check('the settings audit finds nothing to warn about in the three rows', errs.length === 0, JSON.stringify(errs));
     check('no site copy in the rows names a particular person, no she / her', !/taylor|cici|her screen|\b(she|her|hers|herself)\b/i.test(JSON.stringify(rows)));
     const v = cardVars('halloween', { suitColours: 'two' });
     check('the deck\'s colours as the card games\' CSS variables, two colours applied', v['--card-face'] === cardThemes.halloween.stock
