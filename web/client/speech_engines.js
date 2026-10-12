@@ -171,21 +171,24 @@ export const SPEECH_PASS_FIELDS = [
     note: 'A slower, better speech program corrects the first guess. Nothing more: only the first guess is used.' },
   { key: 'speechPass3', label: 'And then with', kind: 'choice', default: 'none', level: 'advanced',
     options: passOptions },
+  // A computer's ADDRESS and PASS PHRASE are at the usual level (Mike, 2026-10-12: he picked "Another computer" and
+  // could not find where to type the address - it was an advanced row). They show only while a pass uses that
+  // computer (kiosk.js visibility), so they never clutter a menu that doesn't need them. Its name stays advanced.
   { key: 'speechRemote1Name', label: 'Another computer: its name', kind: 'text', default: 'Another computer',
     level: 'advanced' },
   // A SECURE address (wss://) in the example: the site is served over https, and a browser refuses a plain ws://
   // address on another computer from a secure page (see `addressRefusal` below). web/speech_service/DESKTOP_SECOND_PASS.md
   // has the steps that give a desktop one.
   { key: 'speechRemote1Url', label: 'Another computer: its address', kind: 'text', default: '',
-    level: 'advanced', note: 'For example wss://your-desktop.your-tailnet.ts.net/speech (a secure address: it starts with wss://). The room’s sound is sent there.' },
+    level: 'standard', note: 'For example wss://your-desktop.your-tailnet.ts.net/speech (a secure address: it starts with wss://). The room’s sound is sent there.' },
   { key: 'speechRemote1Key', label: 'Another computer: its pass phrase', kind: 'text', default: '',
-    level: 'advanced' },
+    level: 'standard' },
   { key: 'speechRemote2Name', label: 'Second other computer: its name', kind: 'text',
     default: 'A second other computer', level: 'advanced' },
   { key: 'speechRemote2Url', label: 'Second other computer: its address', kind: 'text', default: '',
-    level: 'advanced', note: 'A secure address, starting with wss://. The room’s sound is sent there.' },
+    level: 'standard', note: 'A secure address, starting with wss://. The room’s sound is sent there.' },
   { key: 'speechRemote2Key', label: 'Second other computer: its pass phrase', kind: 'text', default: '',
-    level: 'advanced' },
+    level: 'standard' },
   { key: 'speechLocalUrl', label: 'The speech program on this computer: its address', kind: 'text',
     default: LOCAL_URL, level: 'advanced' },
   // A WAKE-WORD DETECTOR (openWakeWord through web/speech_service --wake): it hears the wake phrase
