@@ -6,8 +6,11 @@
 //
 // WHAT IT DOES: opens its OWN drive socket marked "follow" (so the screen counts it as watching, not helping, and the
 // server lets it do nothing but watch), hears the screen's `play` messages, and steers a YouTube player of its own
-// to the same video and second. MUTED TO START (the plan: two speakers in one room a fraction of a second apart
-// sound like an echo, and a page that starts making sound by itself is rude anywhere) with a Sound button.
+// to the same video and second. THE SOUND (the hear half, 2026-10-12): it used to start MUTED (the plan: two speakers
+// in one room a fraction of a second apart sound like an echo). Now "Sound here" on this page decides, remembered on
+// this computer: by default ON, but OFF while this computer is on a call with that screen, because the call already
+// carries the screen's sound and two copies are an echo (follow_sound.js argues both). The Sound button still turns
+// it on or off for this visit.
 //
 // THE PERSON AT THE SCREEN IS TOLD. The screen shows "Sharing your screen with <name>" for as long as this is open
 // (kiosk.js, play_sync.js noticeWords). So following is an explicit act here: a button, never started by opening the
@@ -33,6 +36,9 @@ import {
   createClock, createFollower, STOP_AFTER_CHOICES, STOP_AFTER_KEY, stopAfterOf,
 } from './play_sync.js';
 import { createPhotoIndex, createPhotoStage, PHOTO_LINES } from './photo_follow.js';
+import {
+  FOLLOW_SOUND_CHOICES, FOLLOW_SOUND_KEY, soundModeOf, followMuted, watchLocalCalls,
+} from './follow_sound.js';
 
 // How often the follower looks at its player and the screen's last message. Half a second: well inside the 2 s
 // seek line, cheap (no network - it reads the player and does arithmetic). Not a person's setting.
@@ -41,6 +47,15 @@ export const TICK_MS = 500;
 // PING_EVERY_MS. Five, 250 ms apart: the first picture is not waiting long on them.
 export const FIRST_PINGS = 5;
 export const PING_EVERY_MS = 30000;
+// *** IF THE BROWSER WILL NOT PLAY WITH SOUND, FALL BACK TO MUTED AFTER 8 SECONDS AND SAY SO. *** A press on Follow lets
+// this page play sound, but the YouTube player is made a moment later inside its own frame, and a browser may still
+// refuse to start it with sound - and then it would sit there, not playing, which is the stuck screen the follow page
+// must never be. So: with sound on, if the screen is playing and this player has not started for this long, it turns
+// the sound off (a muted video always may play), carries on, and says "press Sound on" (a press, which the browser
+// then allows). 8 s, argued: a YouTube load here starts in 1-2 s and the first one also loads the player's own code;
+// buffering counts as playing, so a slow line does not trip it. Shorter would mute people on a slow first load. Not a
+// person's setting; a seam for the suites.
+export const SOUND_BLOCKED_MS = 8000;
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -72,12 +87,17 @@ function ensureStyle(doc) {
 function readStopAfter(storage) {
   try { return stopAfterOf(storage?.getItem(STOP_AFTER_KEY)); } catch { return stopAfterOf(null); }
 }
+function readSoundMode(storage) {
+  try { return soundModeOf(storage?.getItem(FOLLOW_SOUND_KEY)); } catch { return soundModeOf(null); }
+}
 
-// The default player: the same YouTube player the panels use, muted. Imported when first needed so the Remote page
-// does not load the YouTube module until somebody follows.
-async function defaultPlayer(stageEl) {
+// The default player: the same YouTube player the panels use, muted or not as this page's sound says when it is made
+// (the hear half: made with sound, rather than made muted and unmuted later, which a browser may treat as sound that
+// started by itself). Imported when first needed so the Remote page does not load the YouTube module until somebody
+// follows.
+async function defaultPlayer(stageEl, { muted = true } = {}) {
   const { createYtPlayer } = await import('./modules/youtube.js');
-  return createYtPlayer(stageEl, {}, { muted: true });
+  return createYtPlayer(stageEl, {}, { muted: muted !== false });
 }
 
 // photos in step: the pictures this page may look in - this computer's own sources (its registry, the followed
@@ -121,21 +141,33 @@ export function mountFollowView(root, {
   personName = '',
   user = null,
   connect = connectDrive,
-  makePlayer = defaultPlayer,          // (stageEl) => player | Promise<player>: load/seek/play/pause/item/currentTime/playing/setMuted/destroy
+  makePlayer = defaultPlayer,          // (stageEl, { muted }) => player | Promise<player>: load/seek/play/pause/item/currentTime/playing/setMuted/destroy
   // photos in step: ({ user, personId }) => { index, onHiddenChange } | Promise<...> (photo_follow.js createPhotoIndex)
   makePhotoIndex = defaultPhotoIndex,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   storage = (() => { try { return globalThis.localStorage || null; } catch { return null; } })(),
+  // the hear half: whether this computer is on a call with that screen (follow_sound.js watchLocalCalls). A seam.
+  callWatch = null,
+  soundBlockedMs = SOUND_BLOCKED_MS,
 } = {}) {
   ensureStyle(root.ownerDocument || document);
+  const ownCalls = !callWatch;
+  const calls = callWatch || (() => { try { return watchLocalCalls(); } catch { return null; } })();
   let link = null, player = null, follower = null, clock = null;
   let composite = null;                 // photos in step: the one player for a video or a picture (`makeComposite`)
   let tickTimer = null, pingTimer = null;
   let phase = 'idle';                   // idle | on | stopped
   let connState = 'offline';
   let muted = true;
+  // the hear half (follow_sound.js): "Sound here", the Sound button's choice this visit (null: none - the setting
+  // decides), whether the browser refused sound (SOUND_BLOCKED_MS), and the call state last seen.
+  let soundMode = readSoundMode(storage);
+  let override = null;
+  let soundBlocked = false;
+  let notPlayingSince = null;
+  let lastInCall = false;
   let stopAfterMs = readStopAfter(storage);
   let stoppedWhy = '';
   let access = '';                      // the server's word on this follow (2026-10-12): '' | on | asking
@@ -166,7 +198,11 @@ export function mountFollowView(root, {
           <button type="button" class="h-btn" data-fv-sound>Sound on</button>
           <button type="button" class="h-btn h-danger" data-fv-stop>Stop</button>
         </div>
+        <p class="fv-status" data-fv-soundnote hidden></p>
       </div>
+      <label>Sound here
+        <select data-fv-soundmode>${FOLLOW_SOUND_CHOICES.map((c) => `<option value="${c.value}"${c.value === soundMode ? ' selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
+      </label>
       <label>Stop following by itself if their screen goes quiet for
         <select data-fv-stopafter>${STOP_AFTER_CHOICES.map((c) => `<option value="${c.ms}"${c.ms === stopAfterMs ? ' selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
       </label>
@@ -226,9 +262,57 @@ export function mountFollowView(root, {
     el('[data-fv-status]').textContent = statusWords();
     el('[data-fv-sound]').textContent = muted ? 'Sound on' : 'Sound off';
     // Sound is a video's: a picture has none, and a clip in a slideshow plays muted on the screen too.
-    el('[data-fv-sound]').hidden = !(composite && composite.hasVideo() && composite.shownKind() === 'youtube');
+    const video = !!(composite && composite.hasVideo() && composite.shownKind() === 'youtube');
+    el('[data-fv-sound]').hidden = !video;
+    const note = soundNote();
+    el('[data-fv-soundnote]').textContent = note;
+    el('[data-fv-soundnote]').hidden = !(video && note);
     renderScreens();
   }
+
+  // ---- the hear half (follow_sound.js) ----------------------------------------------------------------------------
+  const inCall = () => { try { return !!calls?.inCallWith?.(personId); } catch { return false; } };
+  // Why the sound is as it is, when that is not obvious from the button: the browser refused it, or a call carries it.
+  function soundNote() {
+    if (soundBlocked && muted) return 'The browser kept the sound off here. Press Sound on to hear it.';
+    if (muted && override === null && soundModeOf(soundMode) === 'auto' && inCall()) {
+      return `Sound is off here while you are on a call with ${who}: you hear it through the call, with the voices.`;
+    }
+    return '';
+  }
+  // Enact whatever the setting, the call and the button now say. Safe to call often.
+  function applySound() {
+    const m = followMuted({ mode: soundMode, inCall: inCall(), override });
+    if (m === muted) return false;
+    muted = m;
+    try { player?.setMuted?.(muted); } catch { /* not ready */ }
+    return true;
+  }
+  // A call with that screen starting or ending puts the setting back in charge (a Sound press from before the call
+  // does not carry into it: the safe answer for a call is the setting's, and the button is one press away).
+  function checkCall() {
+    const now = inCall();
+    if (now === lastInCall) return false;
+    lastInCall = now;
+    override = null;
+    soundBlocked = false;
+    return applySound() || true;
+  }
+  // SOUND_BLOCKED_MS: the screen is playing, sound is on here, and this player has not started.
+  function checkBlocked() {
+    const L = follower?.leader?.();
+    const stuck = !muted && phase === 'on' && !!(composite && composite.hasVideo() && composite.shownKind() === 'youtube')
+      && !!(L && L.playing && follower.status() === 'following') && !(() => { try { return !!player?.playing?.(); } catch { return false; } })();
+    if (!stuck) { notPlayingSince = null; return; }
+    const t = now();
+    if (notPlayingSince === null) { notPlayingSince = t; return; }
+    if (t - notPlayingSince < soundBlockedMs) return;
+    notPlayingSince = null;
+    soundBlocked = true;
+    override = true;
+    applySound();
+  }
+  const offCalls = (() => { try { return calls?.onChange?.(() => { if (!torn && checkCall()) render(); }) || null; } catch { return null; } })();
 
   function dropLink() {
     if (tickTimer != null) { clearTimer(tickTimer); tickTimer = null; }
@@ -277,7 +361,7 @@ export function mountFollowView(root, {
       if (yt || ytMaking) return;
       ytMaking = true;
       let r;
-      try { r = makePlayer(ytStage()); } catch (err) { console.error('follow: player', err); ytMaking = false; return; }
+      try { r = makePlayer(ytStage(), { muted }); } catch (err) { console.error('follow: player', err); ytMaking = false; return; }
       if (r && typeof r.then === 'function') {
         r.then((p) => { if (torn || dead) { try { p?.destroy?.(); } catch { /* gone */ } return; } haveYt(p); })
           .catch((err) => { console.error('follow: player', err); ytMaking = false; });
@@ -346,6 +430,9 @@ export function mountFollowView(root, {
     tickTimer = null;
     if (torn || phase !== 'on') return;
     try { follower?.tick(); } catch (err) { console.error('follow: tick', err); }
+    // the hear half: a call tab gone quiet counts as ended (follow_sound.js CALL_STALE_MS), and a player the browser
+    // would not start with sound falls back to muted (SOUND_BLOCKED_MS).
+    try { checkCall(); checkBlocked(); } catch (err) { console.error('follow: sound', err); }
     // STOPS BY ITSELF when the screen has been quiet past the page's setting (0 = keep waiting). The player is left
     // as it is - never blank - and the socket closes, which takes "watching along" off their screen.
     if (stopAfterMs > 0 && follower && follower.leader() && follower.quietMs() > stopAfterMs) {
@@ -368,7 +455,13 @@ export function mountFollowView(root, {
     stoppedWhy = '';
     clock = createClock();
     if (!player) {
-      muted = true;
+      // A new follow starts from "Sound here" (and whether a call with that screen is on): a press on Follow is what
+      // lets the browser play sound, so the sound may start with it. A Sound press from an earlier follow is forgotten.
+      override = null;
+      soundBlocked = false;
+      notPlayingSince = null;
+      lastInCall = inCall();
+      muted = followMuted({ mode: soundMode, inCall: lastInCall, override });
       composite = makeComposite();
       player = composite;
     }
@@ -430,8 +523,11 @@ export function mountFollowView(root, {
     if (t.closest('[data-fv-start]')) { start(); return; }
     if (t.closest('[data-fv-stop]')) { stop(); return; }
     if (t.closest('[data-fv-sound]')) {
-      muted = !muted;
-      try { player?.setMuted?.(muted); } catch { /* not ready */ }
+      // This visit's choice, over the setting, until a call with that screen starts or ends (checkCall).
+      override = !muted;
+      soundBlocked = false;
+      notPlayingSince = null;
+      applySound();
       render();
       return;
     }
@@ -439,6 +535,15 @@ export function mountFollowView(root, {
     if (pick && follower) { follower.pick(pick.dataset.fvPick); render(); }
   });
   root.addEventListener('change', (e) => {
+    if (e.target instanceof Element && e.target.matches('[data-fv-soundmode]')) {
+      soundMode = soundModeOf(e.target.value);
+      try { storage?.setItem(FOLLOW_SOUND_KEY, soundMode); } catch { /* a private window: this visit only */ }
+      override = null;
+      soundBlocked = false;
+      applySound();
+      render();
+      return;
+    }
     if (!(e.target instanceof Element) || !e.target.matches('[data-fv-stopafter]')) return;
     stopAfterMs = stopAfterOf(e.target.value);
     try { storage?.setItem(STOP_AFTER_KEY, String(stopAfterMs)); } catch { /* a private window: this visit only */ }
@@ -457,11 +562,17 @@ export function mountFollowView(root, {
     link: () => link,
     muted: () => muted,
     stopAfterMs: () => stopAfterMs,
+    // the hear half, for the suites: "Sound here", the note beside the button, and whether a call with that screen is on.
+    soundMode: () => soundMode,
+    soundNote: () => soundNote(),
+    inCall: () => inCall(),
     destroy() {
       torn = true;
       gen += 1;
       dropLink();
       dropPlayer();
+      try { offCalls?.(); } catch { /* gone */ }
+      if (ownCalls) { try { calls?.destroy?.(); } catch { /* gone */ } }
       root.innerHTML = '';
     },
   };

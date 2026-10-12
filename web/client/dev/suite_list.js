@@ -99,6 +99,9 @@ export const SUITES = [
   // photos in step (2026-10-12): the follow page finds the screen's picture in its own pictures by an opaque id; a real
   // Photos panel, the screen's sender and a follow page wired together (no server); hidden pictures never sent.
   'photo_follow',
+  // the hear half (2026-10-12): during a call a followed screen's video plays under the voices instead of pausing (never
+  // louder than the call); the follow page's own sound is on, and off during a call with that screen. Fakes; no server.
+  'follow_call_sound',
   // *** ADDED 2026-09-30, WHEN THE LIST CHECK FIRST RAN: all of these were on disk and had never
   // been on this page. Each was run on its own from `run_suite.py` before being added. Grouped by
   // what they cover rather than slotted into the lines above, so the provenance stays readable. ***

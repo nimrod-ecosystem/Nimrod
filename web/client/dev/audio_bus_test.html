@@ -28,7 +28,7 @@
 <script type="module">
 import * as AB from '../audio_bus.js';
 const { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY, CALL_MODES,
-  MASTER_FLOOR, CHANNEL_IDS, CHANNEL_FLOORS, TIER_CHANNEL } = AB;
+  MASTER_FLOOR, CHANNEL_IDS, CHANNEL_FLOORS, TIER_CHANNEL, CALL_DUCK_TO } = AB;
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -158,15 +158,85 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
       r.bus.setCallMode('duck');
       r.bus.setActive('video', true);
       r.bus.setActive('call', true);
+      // 2026-10-12 (the hear half): under a CALL the media goes to the call depth (CALL_DUCK_TO, 0.3), not
+      // the sentence depth (DUCK_TO, 0.5) - a film under a conversation is not a bed under a cue.
       check('*** set to duck instead, the video keeps going under the call — which is what '
-        + 'watching something together needs ***', r.last('video') === DUCK_TO,
+        + 'watching something together needs ***', r.last('video') === CALL_DUCK_TO,
         String(r.last('video')));
       check('the mode is reported back', r.bus.callMode() === 'duck');
       r.bus.setCallMode('pause');
       check('switching back mid-call takes effect immediately', r.last('video') === 0);
       check('the modes are a closed set, and nonsense is refused',
-        CALL_MODES.join(',') === 'pause,duck' && r.bus.setCallMode('loud') === 'pause');
+        CALL_MODES.join(',') === 'pause,duck,together' && r.bus.setCallMode('loud') === 'pause');
       check('pause is the default', createAudioBus().callMode() === 'pause');
+    }
+
+    section('*** the hear half (2026-10-12): "together" — a call pauses, unless somebody is watching along ***');
+    {
+      const r = rig();
+      r.src('video', video); r.src('call', { tier: 'call' }); r.src('voice', { tier: 'voice' }); r.src('sfx', { tier: 'sfx' });
+      r.bus.setCallMode('together');
+      r.bus.setActive('video', true); r.bus.setActive('sfx', true);
+      r.bus.setActive('call', true);
+      check('*** with nobody watching along, "together" PAUSES the video — the 08-29 ruling, unchanged ***',
+        r.last('video') === 0 && r.bus.callEffect() === 'pause', String(r.last('video')));
+      check('a bus nobody told is never "watched"', r.bus.watched() === false);
+      r.bus.setWatched(true);
+      check('*** somebody starts watching along MID-CALL: the video comes back, quietly, under the voices ***',
+        r.last('video') === CALL_DUCK_TO && r.bus.callEffect() === 'duck', String(r.last('video')));
+      check('the call itself is untouched', r.bus.levelOf('call') === 1);
+      check('game sounds under a call keep their old duck (only media changed)', r.last('sfx') === DUCK_TO, String(r.last('sfx')));
+      r.bus.setWatched(false);
+      check('*** and they stop watching: paused again, at once ***', r.last('video') === 0);
+      r.bus.setWatched(true);
+      r.bus.setActive('call', false);
+      check('the call ends: full volume again', r.last('video') === 1 && r.bus.callEffect() === null);
+      check('watching along with NO call changes nothing at all', r.last('video') === 1);
+      check('setWatched only takes a real true', r.bus.setWatched('yes') === false && r.bus.setWatched(true) === true);
+      check('the default depth is 0.3, below the sentence depth', CALL_DUCK_TO === 0.3 && CALL_DUCK_TO < DUCK_TO);
+    }
+    {
+      // The depth is a setting; nonsense and 0 are refused (0 is "pause", a decision with its own name).
+      const r = rig();
+      r.src('video', video); r.src('call', { tier: 'call' });
+      r.bus.setCallMode('duck');
+      r.bus.setActive('video', true); r.bus.setActive('call', true);
+      check('setCallDuck(0.15) is heard at once', r.bus.setCallDuck(0.15) === 0.15 && r.last('video') === 0.15, String(r.last('video')));
+      check('0 is refused (that would be pause, not a duck)', r.bus.setCallDuck(0) === CALL_DUCK_TO);
+      check('nonsense is the default', r.bus.setCallDuck('loud') === CALL_DUCK_TO && r.bus.setCallDuck(1.5) === CALL_DUCK_TO);
+      check('a bus can be built with its depth', createAudioBus({ callDuck: 0.5 }).callDuck() === 0.5);
+    }
+    {
+      // *** NEVER LOUDER THAN THE CALL. *** The call's fader down and its minimum removed, the media's
+      // fader and minimum up: the media is still held under the call x the depth.
+      const r = rig();
+      r.src('video', video); r.src('call', { tier: 'call' });
+      r.bus.setCallMode('duck');
+      r.bus.setFader('call', 0.2); r.bus.setFloor('call', 0);
+      r.bus.setFloor('media', 0.8);
+      r.bus.setActive('video', true); r.bus.setActive('call', true);
+      const callL = r.bus.levelOf('call'), vid = r.last('video');
+      check('*** the call always wins: media under it is never louder than call x depth, whatever the mixer says ***',
+        Math.abs(callL - 0.2) < 1e-9 && vid <= callL * CALL_DUCK_TO + 1e-9 && vid > 0, `call ${callL} video ${vid}`);
+      check('...and so never louder than the call itself', vid < callL);
+      r.bus.setActive('call', false);
+      check('with the call gone the media minimum is back in charge', r.last('video') === 1);
+    }
+    {
+      // A Spotify-style source (whenDucked: 'pause') still pauses under a call that ducks: its own rule.
+      const r = rig();
+      r.src('sp', { ...video, whenDucked: 'pause' }); r.src('call', { tier: 'call' });
+      r.bus.setCallMode('together'); r.bus.setWatched(true);
+      r.bus.setActive('sp', true); r.bus.setActive('call', true);
+      check('a source that pauses when ducked (Spotify) still pauses under a call watched along', r.last('sp') === 0);
+    }
+    {
+      // A hush is a decision: watching along on a call never lifts it.
+      const r = rig();
+      r.src('video', video); r.src('call', { tier: 'call' });
+      r.bus.setCallMode('together'); r.bus.setWatched(true);
+      r.bus.setActive('video', true); r.bus.hush(true); r.bus.setActive('call', true);
+      check('a hushed room stays hushed on a call watched along', r.last('video') === 0);
     }
     {
       // A call while somebody is hushing: both say silence, and neither undoes the other.

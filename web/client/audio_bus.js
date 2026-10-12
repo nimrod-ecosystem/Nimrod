@@ -63,7 +63,31 @@ export const TIERS = { call: 100, talk: 80, voice: 80, media: 40, sfx: 20 };
 // AN OPTION, NOT A LAW, because somebody watching a film together over a call may well want
 // the film to keep going quietly - which is exactly the case Cici's own note about
 // watch-together was making.
-export const CALL_MODES = ['pause', 'duck'];
+//
+// *** 'together' (2026-10-12, "the hear half" of mirroring): PAUSE, UNLESS SOMEBODY IS WATCHING ALONG. ***
+// Mike, 2026-10-12: "we both see and hear the same thing at the same time... the same pictures and videos
+// on a call". While this screen is being followed (play_sync.js: somebody on "Who may see this screen" is
+// seeing it) a call DUCKS the media under the voices instead of pausing it - pausing would stop the very
+// thing the two of them are watching. With nobody watching along it is 'pause', exactly as before, so the
+// 08-29 ruling (auto-answer pauses everything) still holds for every ordinary call. The host says whether
+// the screen is being followed (`setWatched`); a bus nobody tells is never "watched", so 'together' on its
+// own is 'pause'. Which mode a screen uses is its own setting (call_sound.js argues the default).
+export const CALL_MODES = ['pause', 'duck', 'together'];
+
+// *** HOW LOUD THE MEDIA IS UNDER A CALL THAT DUCKS IT: 0.3 BY DEFAULT, A SETTING (call_sound.js). ***
+// Separate from DUCK_TO on purpose. DUCK_TO (0.5) was chosen for a SENTENCE - a spoken cue a second or
+// two long, where the bed only has to step aside. A call is minutes of two people talking OVER a film, and
+// the words have to stay on top the whole time. 0.3 is about 10 dB down (if the player's volume is linear
+// in amplitude - YouTube's 0-100 is not documented as either) [inferred, unmeasured]. For more (0.5): the
+// person on the far end of the call hears the film only through this screen's microphone, at this level,
+// so too low and they lose it (a follow page stays muted during a call by default - follow_sound.js).
+// For less (0.15): a voice that is hard to hear - a quiet or impaired speaker - needs more room.
+// NEVER 0 (that is 'pause', a decision with its own name) and never above 1.
+export const CALL_DUCK_TO = 0.3;
+function callDuckValue(v) {
+  const n = Number(v);
+  return v !== null && v !== undefined && v !== '' && Number.isFinite(n) && n > 0 && n <= 1 ? n : CALL_DUCK_TO;
+}
 
 // *** spotify sdk (2026-10-07): WHAT A SOURCE DOES WHEN IT WOULD BE DUCKED - PER SOURCE. ***
 // 'duck' (every source until now, and still the default): the tier rule above, a soft bed under the words.
@@ -196,7 +220,8 @@ const defaultFloorOf = (ch) => (CHANNEL_FLOORS[ch] != null ? CHANNEL_FLOORS[ch] 
 
 export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pause',
                                  master = 1, masterFloor = MASTER_FLOOR,
-                                 faders = {}, floors = {} } = {}) {
+                                 faders = {}, floors = {},
+                                 callDuck = CALL_DUCK_TO, watched = false } = {}) {
   const sources = new Map();      // id -> {id, tier, tierP, channel, group, gp, duck, onGain, active, seq, level, owner}
   // *** HIDDEN AND MUTED (2026-10-01, hide_sound.js). *** Owners (module instance ids) whose sources
   // are muted because their panel is hidden and its "When hidden" setting says so. A DECISION, like
@@ -239,6 +264,8 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
   let hushed = false;
   let inRecompute = false;
   let onCall = CALL_MODES.includes(callMode) ? callMode : 'pause';
+  let underCall = callDuckValue(callDuck);   // CALL_DUCK_TO: the media's level under a call that ducks it
+  let watchedAlong = watched === true;       // 'together': is this screen being followed right now?
   let floor = floorValue(masterFloor);
   let masterGain = masterValue(master, floor);
   // The mixer. Only channels somebody has touched are stored; everything else reads its default.
@@ -307,6 +334,21 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       let g = 1;
       try { g = masterValue(masterGain, floor); } catch { g = 1; }
 
+      // Does this call DUCK the media rather than pause it? 'duck' always; 'together' while somebody is
+      // watching along (see CALL_MODES); 'pause' never.
+      const callDucks = inCall && (onCall === 'duck' || (onCall === 'together' && watchedAlong));
+      // *** THE CALL ALWAYS WINS THE SPEAKER. *** How loud the call itself is heard (its mixed level, the
+      // loudest call source), so media under it can be capped BELOW it (step 6) - whatever the faders, the
+      // master or a media minimum say. Guarded: anything wrong is a call at full, which caps nothing extra.
+      let callHeard = 1;
+      if (callDucks) {
+        try {
+          callHeard = 0;
+          for (const o of active) if (o.tier === 'call') callHeard = Math.max(callHeard, mixed(ownerGain(o), o.channel, g));
+          if (!Number.isFinite(callHeard) || callHeard <= 0) callHeard = 1;
+        } catch { callHeard = 1; }
+      }
+
       for (const s of active) {
         let level = 1;
         if (s.tierP < topP && s.whenDucked === 'pause') {                     // 1. (spotify sdk) pause, not duck
@@ -315,22 +357,32 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
           // The deepest duck among the active sources ABOVE this one. Every one of them uses
           // the bus's depth unless it declared its own (a listening window ducks further than
           // a spoken cue: the microphone is trying to hear a person over the video).
+          // A CALL ducks MEDIA to the call depth (CALL_DUCK_TO), not the sentence depth: a film under
+          // a conversation is not a bed under a cue. Voice and game sounds under a call are unchanged.
           let depth = 1;
-          for (const o of active) if (o.tierP > s.tierP) depth = Math.min(depth, duckOf(o));
+          for (const o of active) {
+            if (o.tierP > s.tierP) depth = Math.min(depth, s.tier === 'media' && o.tier === 'call' ? underCall : duckOf(o));
+          }
           level *= depth;
         }
         if (s.group && winners.get(s.group)?.id !== s.id) level = 0;          // 2. exclusivity
         if (hushed && s.tier === 'media') level = 0;                          // 3. hush
-        // 4. a call, when set to pause. Same shape as hush and for the same reason: this is
-        // a conversation, not a cue, and half-volume music under it helps nobody.
-        if (inCall && onCall === 'pause' && s.tier === 'media') level = 0;
+        // 4. a call, when it pauses ('pause', or 'together' with nobody watching along). Same shape as
+        // hush and for the same reason: this is a conversation, not a cue, and half-volume music under
+        // it helps nobody.
+        if (inCall && !callDucks && s.tier === 'media') level = 0;
         // 4b. a source ABOVE it that asked to silence media while it is active. The same "pause"
         // the call mode means - level 0, not a stopped player - and the same reason: somebody is
         // talking to the screen. Owned by that source rather than by the hush button, so turning
         // it off can never un-hush a room somebody hushed by hand.
         if (s.tier === 'media' && active.some((o) => o.silence && o.tierP > s.tierP)) level = 0;
         // 5. fader x master x the panel's own volume (a TV's too), then the floor.
-        apply(s, mixed(level * ownerGain(s), s.channel, g));
+        let heard = mixed(level * ownerGain(s), s.channel, g);
+        // 6. UNDER A CALL THAT DUCKS IT, MEDIA IS NEVER LOUDER THAN THE CALL x THE CALL DEPTH. Last, so it
+        // outranks a media minimum and a media fader turned up while the call's was turned down: "the call
+        // always wins the speaker" is the rule this whole mode rests on. Never lifts anything (min).
+        if (callDucks && s.tier === 'media' && heard > 0) heard = Math.min(heard, callHeard * underCall);
+        apply(s, heard);
       }
       // 4c. hidden and muted by its own setting: 0, which the floor never lifts.
       for (const s of all) if (isMuted(s)) apply(s, 0);
@@ -457,8 +509,8 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     },
     isHushed: () => hushed,
 
-    // 'pause' (default) or 'duck'. Changeable live, because the right answer differs between
-    // a phone call and watching something together.
+    // 'pause' (the bus's default), 'duck', or 'together' (pause unless watched along). Changeable live,
+    // because the right answer differs between a phone call and watching something together.
     setCallMode(mode) {
       if (!CALL_MODES.includes(mode)) return onCall;
       onCall = mode;
@@ -466,6 +518,28 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       return onCall;
     },
     callMode: () => onCall,
+
+    // 'together' (2026-10-12): the host says whether this screen is being followed right now (kiosk.js,
+    // from play_sync.js's sender: sharing on AND somebody seeing). Returns what is now in force.
+    setWatched(on) {
+      const next = on === true;
+      if (next !== watchedAlong) { watchedAlong = next; recompute(); }
+      return watchedAlong;
+    },
+    watched: () => watchedAlong,
+    // The media's level under a call that ducks it (CALL_DUCK_TO). (0, 1]; anything else is the default.
+    setCallDuck(v) {
+      const next = callDuckValue(v);
+      if (next !== underCall) { underCall = next; recompute(); }
+      return underCall;
+    },
+    callDuck: () => underCall,
+    // Right now: is a call on, and does it duck the media ('duck') or silence it ('pause')? null with no call.
+    callEffect() {
+      const on = [...sources.values()].some((s) => s.active && s.tier === 'call');
+      if (!on) return null;
+      return onCall === 'duck' || (onCall === 'together' && watchedAlong) ? 'duck' : 'pause';
+    },
 
     // THE MASTER. `setMaster` takes 0..1 and returns what is now in force: clamped to
     // [floor, 1], or 1 when handed something that is not a number (see MASTER_FLOOR).

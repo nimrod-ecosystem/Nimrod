@@ -502,8 +502,12 @@ const toTab = (m, id) => {
       // (watching along, row 2.79, 2026-10-10, DELIBERATELY: "Let people follow what this screen is playing" on the screen's
       // row, after "Pick up new versions by itself" (play_sync.js argues it, OFF by default). One more of the old rows: 44.
       // Its heartbeat row is "Everything" only. The panel's lap is unchanged. dev/play_sync_test.html checks both.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 44) ***',
-        lapStops.length === 14 && oldStops.length === 44 && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
+      // (the hear half, 2026-10-12, DELIBERATELY: "During a call, other sound" on the screen's Sound rows, after the mixer
+      // (call_sound.js argues it: pauses, unless someone is watching along). One more of the old rows: 45. Its "how quiet"
+      // row is "Everything" only. The panel's lap is unchanged. dev/follow_call_sound_test.html checks both.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 45) ***',
+        lapStops.length === 14 && oldStops.length === 45 && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
+        && oldStops.some((i) => i.id === 'set:callOtherSound') /* the hear half */
         && oldStops.some((i) => i.id === 'set:panelRing') /* panel ring */
         && oldStops.some((i) => i.id === 'set:callOpensAs') && oldStops.some((i) => i.id === 'set:callCaptions') /* call loadouts */
         && oldStops.some((i) => i.id === 'set:speakerMusic')
@@ -2984,6 +2988,18 @@ const toTab = (m, id) => {
         Math.abs(wk.audio().master() - 0.9) < 1e-9, `${item('set:masterVolume')?.hint} / ${wk.audio().master()}`);
       check('wiring, master: how big a step is, and the floor, are advanced rows (not on "The usual")',
         !item('set:masterStep') && !item('set:masterFloor'));
+
+      // ---- 1b. THE HEAR HALF (2026-10-12, call_sound.js): during a call, other sound ----
+      check('*** wiring, call sound: the screen starts on "pauses, unless someone is watching along", 30%, nobody watching ***',
+        wk.audio().callMode() === 'together' && wk.audio().callDuck() === 0.3 && wk.audio().watched() === false,
+        `${wk.audio().callMode()} ${wk.audio().callDuck()} ${wk.audio().watched()}`);
+      check('wiring, call sound: "During a call, other sound" is a stop on the one-button walk', walkTo('set:callOtherSound'));
+      wk.menu.select();
+      check('*** wiring, call sound: stepping the row reaches the audio bus ("plays quietly under the voices") ***',
+        wk.audio().callMode() === 'duck', `${item('set:callOtherSound')?.hint} / ${wk.audio().callMode()}`);
+      for (let i = 0; i < 3 && wk.audio().callMode() !== 'together'; i += 1) wk.menu.select();
+      check('(setup) back on the default', wk.audio().callMode() === 'together');
+      check('wiring, call sound: "how quiet" is an advanced row (not on "The usual")', !item('set:callUnderLevel'));
 
       // ---- 2. THE MIXER (row 2.35) ----
       check('wiring, mixer: its rows are advanced (not on "The usual")', !item('set:faderMedia') && !item('set:floorCall'));

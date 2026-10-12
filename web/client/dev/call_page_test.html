@@ -313,9 +313,12 @@ try {
   {
     const room = fakeRoom();
     const S = screenOn(room);
-    const M = await mount({ room, enumerateDevices: twoCams });
+    // the hear half (2026-10-12, follow_sound.js): the page tells this browser's follow page which screens it is on a call with.
+    const ann = { cur: [], sets: [], set(ids) { this.cur = [...ids]; this.sets.push([...ids]); }, people() { return this.cur.slice(); }, destroy() {} };
+    const M = await mount({ room, enumerateDevices: twoCams, extra: { announceCall: ann } });
     press('[data-start="video"]');
     await settled(() => M.page.state() === 'ringing' && S.rings.length === 1);
+    check('the hear half: while it only rings, no call is announced (nothing is heard through it yet)', ann.cur.length === 0, JSON.stringify(ann.sets));
     check('*** the screen rings ***', S.rings.length === 1, String(S.rings.length));
     check('*** it rings as a VIDEO call, from the caller\'s name ***', S.rings[0]?.name === 'Ann' && S.rings[0]?.video === true, JSON.stringify(S.rings[0]));
     const offer = M.connect.made[0]?.sent.find((s) => s.kind === 'offer');
@@ -329,6 +332,10 @@ try {
     await S.t.answer({ outgoing: { kind: 'video' } });
     await settled(() => M.page.state() === 'answered');
     check('*** answered: the page says so ***', M.page.state() === 'answered' && /Answered/.test(root.querySelector('[data-word]').textContent));
+    const calledId = root.querySelector('[data-person]')?.value || M.page.people()[0]?.id;
+    check('*** the hear half: answered, the call with that person is announced to this browser\'s follow page ***',
+      ann.cur.length === 1 && M.page.people().some((p) => p.id === ann.cur[0]) && M.page.callingWith().join() === ann.cur.join(),
+      `${JSON.stringify(ann.sets)} ${calledId}`);
     M.peers.last().fire('connected');
     check('*** connected: "In a call", and the room\'s picture takes the stage ***',
       M.page.state() === 'in-call' && root.querySelector('[data-word]').textContent === 'In a call' && !root.querySelector('[data-remote]').hidden && root.dataset.live === '1');
@@ -355,6 +362,7 @@ try {
       M.media.allTracks().every((t) => t.stopped), JSON.stringify(M.media.allTracks().map((t) => [t.kind, t.stopped])));
     check('...the socket is closed, and the page is back at the start saying the call ended',
       M.connect.made[0].closed && M.page.state() === 'idle' && !M.page.media() && /The call ended/.test(text()));
+    check('the hear half: hung up, the follow page is told the call is over', ann.cur.length === 0 && ann.sets.length >= 2, JSON.stringify(ann.sets));
     M.page.destroy(); S.t.destroy();
   }
 

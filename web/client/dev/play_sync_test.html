@@ -672,6 +672,7 @@ if (GAP) {
     const store = new Map();
     const view = mountFollowView(host, { personId: 'p1', personName: 'Robin', user: USER, connect, makePlayer: () => fakePlayer,
       now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer,
+      callWatch: { inCallWith: () => false, onChange: () => () => {} },   // no call on this computer
       storage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) } });
     check('*** opening the page follows nothing (no socket until somebody presses Follow) ***', opened === null && view.phase() === 'idle');
     host.querySelector('[data-fv-start]').click();
@@ -683,7 +684,13 @@ if (GAP) {
     ft.advance(TICK_MS);
     check('*** the same video loads ***', pc.some((c) => c[0] === 'load' && c[1] === VID), JSON.stringify(pc));
     check('*** a plain "Following <screen>" line ***', view.line() === 'Following Robin’s screen (Living room)', view.line());
-    check('muted to start, with a Sound button', view.muted() === true && host.querySelector('[data-fv-sound]').textContent === 'Sound on');
+    // the hear half (2026-10-12, follow_sound.js): "Sound here" defaults to on (off during a call with that screen), so a
+    // follow with no call starts WITH sound - the press on Follow is what lets the browser play it.
+    check('*** with sound to start when no call is on (the hear half), with a Sound button ***',
+      view.muted() === false && fakePlayer.muted === false && host.querySelector('[data-fv-sound]').textContent === 'Sound off',
+      `${view.muted()} ${fakePlayer.muted} ${host.querySelector('[data-fv-sound]').textContent}`);
+    host.querySelector('[data-fv-sound]').click();
+    check('Sound off turns the sound off', fakePlayer.muted === true && host.querySelector('[data-fv-sound]').textContent === 'Sound on');
     host.querySelector('[data-fv-sound]').click();
     check('Sound on turns the sound on', fakePlayer.muted === false && host.querySelector('[data-fv-sound]').textContent === 'Sound off');
     check('in step, it says so', /Playing\. (In step|About)/.test(view.status()), view.status());

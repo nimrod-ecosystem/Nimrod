@@ -117,6 +117,9 @@ import { PLAY_STATE_TOPIC } from './game_start.js';
 // 2026-10-02: "3D detail on this device", a screen row (arrangement.js hands it to the 3D room).
 import { DETAIL_FIELD } from './room_lod.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
+// the hear half of mirroring (2026-10-12): during a call, other sound pauses - or plays quietly under the voices while
+// somebody watches along (call_sound.js argues the default).
+import { attachCallSound, CALL_SOUND_FIELDS } from './call_sound.js';
 import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import {
   attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, meansSomething, SPEECH_FIELDS, SPEECH_ON_FIELDS,
@@ -772,6 +775,7 @@ export async function mountKiosk(root, {
   // effects through the audio bus handle below and a module can mount before the settings load.
   let master = null;             // master_volume.js: "louder"/"quieter" and the Volume row
   let mixer = null;              // mixer.js: faders and minimums on the bus, compressor/reverb on the effects
+  let callSound = null;          // call_sound.js: during a call, pause other sound or keep it under the voices
   let soundScene = null;         // the theme's live scene id, which "sounds like: match the scene" follows
   let lastShownTheme;            // the theme id last applied (Stage 4: a swap re-applies only on a change)
   const bootProfileId = profileId;   // the screen this kiosk booted on (Stage 4: its doc is the one held open)
@@ -2201,6 +2205,11 @@ export async function mountKiosk(root, {
   catch (err) { console.error('kiosk: master volume', err); master = null; }
   try { mixer = attachMixer({ audio, fx: fxLazy, read: readScreen, write: writeScreen }); }
   catch (err) { console.error('kiosk: mixer', err); mixer = null; }
+  // THE HEAR HALF OF MIRRORING (2026-10-12, call_sound.js): the screen's "During a call, other sound" and how quiet
+  // "quietly" is, on the bus - and whether somebody is watching along right now, read from watch along's sender
+  // (`playSender` is built later, with the drive socket; until then nobody can be following, so this is false).
+  try { callSound = attachCallSound({ audio, read: readScreen, watched: () => !!playSender?.active?.() }); }
+  catch (err) { console.error('kiosk: call sound', err); callSound = null; }
   // play on (row 2.68): this computer's speakers, listed once (and on a plug-in) for Devices -> Speakers. No prompt.
   try { refreshOutputs().catch(() => {}); } catch (err) { console.error('kiosk: speakers', err); }
   // "BEST FOR THIS DEVICE" (2026-10-07, theme_default.js) asks this screen what the browser cannot know: its motion
@@ -2267,6 +2276,8 @@ export async function mountKiosk(root, {
     // A volume or a mix changed from the menu, or from another device, is heard now.
     try { master?.sync(); } catch (err) { console.error('kiosk: master volume', err); }
     try { mixer?.sync(); } catch (err) { console.error('kiosk: mixer', err); }
+    // ...and the call's effect on other sound (the setting, or "Let people follow" switched off mid-call).
+    try { callSound?.sync(); } catch (err) { console.error('kiosk: call sound', err); }
     // A change made through the menu (turning burn-in protection on, off, or switching mode)
     // takes effect immediately — re-arming rather than waiting for the next activity event,
     // so switching it off actually clears an already-dimmed/drifting screen right away.
@@ -4017,6 +4028,10 @@ export async function mountKiosk(root, {
   const SOUND_FIELDS = () => [
     ...MASTER_FIELDS,
     ...MIXER_FIELDS.map((f) => ({ ...f, level: 'advanced' })),
+    // the hear half of mirroring (2026-10-12; call_sound.js argues both): during a call, other sound pauses, or
+    // plays quietly under the voices while somebody watches along (the default), or always; and how quiet. Not on
+    // an embed: there is no drive socket there, so nobody can watch along and no call reaches it.
+    ...(!embedded ? CALL_SOUND_FIELDS.map((f) => ({ ...f, options: f.options.map((o) => ({ ...o })) })) : []),
   ];
   // *** MOVEMENT AND FLASHING (2026-09-30): zoom on focus (row 2.37 item 6) and the flash limit (rows
   // 2.43/2.48), under their own heading after the screen's rows and before Sound. *** Argued:
@@ -6330,6 +6345,9 @@ export async function mountKiosk(root, {
             if (words) remoteEl.textContent = words;
             remoteEl.hidden = !words;
             playSender?.refresh();
+            // the hear half (call_sound.js): somebody started or stopped watching along, so a call on now
+            // pauses or ducks the other sound accordingly - at once, mid-call too.
+            try { callSound?.sync(); } catch (err) { console.error('kiosk: call sound', err); }
           },
         });
         // WATCHING ALONG (row 2.79, play_sync.js): the panels say what they are playing on this screen's bus; this
@@ -8063,6 +8081,7 @@ export async function mountKiosk(root, {
       try { listening?.destroy(); } catch { /* already gone */ } listening = null;
       try { master?.destroy(); } catch { /* already gone */ } master = null;
       try { mixer?.destroy(); } catch { /* already gone */ } mixer = null;
+      try { callSound?.destroy(); } catch { /* already gone */ } callSound = null;
       try { fxReal?.destroy(); } catch { /* already gone */ } fxReal = null;
       // Hide = mute: its open question card, and the choices row it remembers answers in.
       try { hideSound?.destroy(); } catch { /* already gone */ }

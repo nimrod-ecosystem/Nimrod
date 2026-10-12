@@ -37,6 +37,7 @@ import { createCallTransport, newCallSession } from './call_transport.js';
 import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_group.js';
 import { createWakeHold } from './phone_mic_show.js';
 import { createSpeechChannel } from './output_channels.js';
+import { createCallAnnouncer } from './follow_sound.js';   // the hear half: a follow page in this browser hears of the call
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -166,8 +167,12 @@ export async function mountCallPage(root, {
   giveUpMs = CALLER_GIVE_UP_MS,
   connectMs = CONNECT_MS,
   presenceMs = PRESENCE_MS,
+  // the hear half (follow_sound.js createCallAnnouncer): tells this browser's follow page which screens this call is
+  // with. A seam for the suites; null makes the real one.
+  announceCall = null,
 } = {}) {
   if (!root) throw new Error('mountCallPage: a root element is required');
+  const callNews = announceCall || (() => { try { return createCallAnnouncer({ setTimer, clearTimer }); } catch { return null; } })();
   const get = (k, d = '') => { try { return storage?.getItem(k) ?? d; } catch { return d; } };
   const put = (k, v) => { try { storage?.setItem(k, v); } catch { /* private mode */ } };
 
@@ -520,12 +525,13 @@ export async function mountCallPage(root, {
           : why === 'declined' ? `${person.name} declined.` : `${person.name} did not answer.`;
       endLeg(session, text);
     }));
-    leg.offs.push(t.onAnswered?.(() => { if (my === run) { leg.answered = true; paintGroup(); } }) || (() => {}));
+    leg.offs.push(t.onAnswered?.(() => { if (my === run) { leg.answered = true; paintGroup(); tellCall(); } }) || (() => {}));
     leg.offs.push(t.onConnection?.((st) => {
       if (my !== run) return;
       if (st === 'connected') leg.answered = true;
       leg.state = st;
       paintGroup();
+      tellCall();
     }) || (() => {}));
     leg.offs.push(t.onRemote?.((s) => { if (my === run && s) { leg.stream = s; paintGroup(); } }) || (() => {}));
     // Words from that screen's AAC board, with whose board it was.
@@ -556,6 +562,7 @@ export async function mountCallPage(root, {
     if (text && phase !== 'idle') note = text;
     paintGroup();
     paintLive();
+    tellCall();
     checkAlone();
   }
 
@@ -695,7 +702,21 @@ export async function mountCallPage(root, {
   const tracksOf = (kind) => { try { return (kind === 'audio' ? local?.getAudioTracks?.() : local?.getVideoTracks?.()) || []; } catch { return []; } };
   const hasKind = (kind) => tracksOf(kind).length > 0;
 
-  function setPhase(p) { phase = p; paintLive(); }
+  function setPhase(p) { phase = p; paintLive(); tellCall(); }
+
+  // ---- THE HEAR HALF (2026-10-12, follow_sound.js): tell this browser's follow page which screens this call is with ----
+  // A follow page following a screen this page is on a call with turns its own sound off by default: the call already
+  // carries that screen's sound, and two copies a call's delay apart are an echo, both ways. Same-browser only (a
+  // BroadcastChannel); nothing new goes to the server. Answered, in the call or reconnecting counts; ringing does not
+  // (nothing is heard through a call that has not been answered).
+  function tellCall() {
+    const live = phase === 'in-call' || phase === 'answered' || phase === 'reconnecting';
+    const ids = !live ? [] : [
+      ...(target && !primaryGone ? [target.id] : []),
+      ...[...legs.values()].filter((l) => l.answered && l.person).map((l) => l.person.id),
+    ];
+    try { callNews?.set(ids); } catch { /* no channel: the follow page's Sound button still works */ }
+  }
 
   // ---- asking first: the same ticket the socket needs ----------------------------------------------
   async function allowed(personId) {
@@ -895,6 +916,7 @@ export async function mountCallPage(root, {
     said = []; heldForWords = false; readTok++;
     phase = 'idle';
     ended = message;
+    tellCall();
     renderSetup();
   }
 
@@ -1005,6 +1027,8 @@ export async function mountCallPage(root, {
     knockOffered: () => !!knockOffer,
     others: () => othersInCall(),
     tiles: () => tileList().map(({ stream, ...t }) => ({ ...t, hasStream: !!stream })),
-    destroy() { finish(null); wake.destroy(); ac.abort(); },
+    // the hear half: which people this page tells the follow page it is on a call with (follow_sound.js).
+    callingWith: () => (callNews?.people?.() || []),
+    destroy() { finish(null); wake.destroy(); ac.abort(); try { callNews?.destroy?.(); } catch { /* gone */ } },
   };
 }

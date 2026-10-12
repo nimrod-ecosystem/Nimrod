@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the hear half — sound during a call, and on the follow page</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>the hear half of mirroring (2026-10-12)</h1>
+<div class="note">
+  Mike: <i>"we both see and hear the same thing at the same time."</i> On the screen: during a call, a video being
+  watched along keeps playing quietly under the voices instead of pausing (<code>call_sound.js</code>,
+  <code>audio_bus.js</code> 'together'), and never louder than the call. On the follow page: sound on by default, off
+  while this computer is on a call with that screen (<code>follow_sound.js</code>), so the film is not heard twice.
+  Fakes throughout; no server, no sound hardware.
+</div>
+<div id="results"></div>
+<div id="host"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createAudioBus, CALL_DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
+import {
+  attachCallSound, CALL_SOUND_FIELD, CALL_UNDER_FIELD, CALL_SOUND_FIELDS, CALL_SOUND_DEFAULT, CALL_UNDER_DEFAULT,
+  callSoundOf, callUnderOf, CALL_SOUND_KEY, CALL_UNDER_KEY,
+} from '../call_sound.js';
+import { createPlaySender } from '../play_sync.js';
+import {
+  followMuted, soundModeOf, FOLLOW_SOUND_CHOICES, FOLLOW_SOUND_DEFAULT, FOLLOW_SOUND_KEY,
+  createCallAnnouncer, watchLocalCalls, CALL_BEAT_MS, CALL_STALE_MS, CALL_CHANNEL,
+} from '../follow_sound.js';
+import { mountFollowView, TICK_MS, SOUND_BLOCKED_MS } from '../follow_view.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function until(fn, ms = 1000) { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(10); } return !!fn(); }
+
+// Fake clock and timers: advance(ms) runs everything due, in order.
+function fakeTime(start = 1e12) {
+  let t = start; let seq = 0; const due = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; due.set(id, { at: t + Math.max(0, ms), fn }); return id; },
+    clearTimer: (id) => { due.delete(id); },
+    advance(ms) {
+      const end = t + ms;
+      for (;;) {
+        let next = null;
+        for (const [id, d] of due) if (d.at <= end && (!next || d.at < next[1].at)) next = [id, d];
+        if (!next) break;
+        due.delete(next[0]); t = next[1].at; next[1].fn();
+      }
+      t = end;
+    },
+  };
+}
+const VID = 'dQw4w9WgXcQ';
+
+(async () => {
+  try {
+    // =================================================================================== the settings
+    section('the screen\'s two settings, argued in call_sound.js');
+    check('*** "During a call, other sound" defaults to "pauses, unless someone is watching along" ***',
+      CALL_SOUND_FIELD.default === 'together' && CALL_SOUND_DEFAULT === 'together' && CALL_SOUND_FIELD.key === CALL_SOUND_KEY);
+    check('three choices: pauses / together / plays quietly', CALL_SOUND_FIELD.options.map((o) => o.value).join() === 'pause,together,duck');
+    check('a real choice, shown at "The usual" (standard)', CALL_SOUND_FIELD.level === 'standard' && CALL_SOUND_FIELD.kind === 'choice');
+    check('"how quiet" is 15 / 30 / 50 %, default 30, at "Everything"', CALL_UNDER_FIELD.options.map((o) => o.value).join() === '15,30,50'
+      && CALL_UNDER_FIELD.default === 30 && CALL_UNDER_DEFAULT === Math.round(CALL_DUCK_TO * 100) && CALL_UNDER_FIELD.level === 'advanced');
+    check('the two fields, in order', CALL_SOUND_FIELDS.map((f) => f.key).join() === `${CALL_SOUND_KEY},${CALL_UNDER_KEY}`);
+    check('nonsense in the row is the default', callSoundOf({ [CALL_SOUND_KEY]: 'loud' }) === 'together' && callSoundOf(null) === 'together'
+      && callUnderOf({ [CALL_UNDER_KEY]: 99 }) === 0.3 && callUnderOf({}) === 0.3);
+    check('a real choice is read', callSoundOf({ [CALL_SOUND_KEY]: 'duck' }) === 'duck' && callUnderOf({ [CALL_UNDER_KEY]: '15' }) === 0.15);
+    const copy = JSON.stringify(CALL_SOUND_FIELDS);
+    check('site copy never says "her screen", "Taylor" or "Cici"', !/her screen|Taylor|Cici/i.test(copy));
+    check('"never louder than the call" is said on the row', /never louder than it/.test(CALL_SOUND_FIELD.note));
+
+    // =================================================================================== ducking during a followed call
+    section('*** ducking during a FOLLOWED call: the kiosk\'s wiring, with a real bus and watch along\'s real sender ***');
+    {
+      const bus = createAudioBus();
+      const heard = {};
+      bus.register('yt', { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY, onGain: (l) => { heard.yt = l; } });
+      bus.register('call', { tier: 'call', onGain: (l) => { heard.call = l; } });
+      const row = { letFollow: true };
+      let followers = 0;
+      const sent = [];
+      const ft = fakeTime();
+      // Exactly how kiosk.js builds them: the sender's `active()` is "watched".
+      const sender = createPlaySender({ send: (m) => { sent.push(m); return true; }, enabled: () => row.letFollow, watchers: () => followers,
+        now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer });
+      const cs = attachCallSound({ audio: bus, read: () => row, watched: () => !!sender.active() });
+      check('attached: the bus is on the screen\'s mode and depth', bus.callMode() === 'together' && bus.callDuck() === 0.3 && bus.watched() === false);
+      bus.setActive('yt', true);
+      sender.report({ kind: 'youtube', panel: 'yt', item: VID, pos: 5, playing: true });
+      check('the video plays at full before any call', heard.yt === 1);
+      bus.setActive('call', true);
+      check('*** a call with nobody watching along: the video is PAUSED (silenced), as before ***', heard.yt === 0 && bus.callEffect() === 'pause');
+      // Somebody starts following (the server's presence count goes to 1): kiosk.js onPresence -> refresh + sync.
+      followers = 1; sender.refresh(); cs.sync();
+      check('*** somebody watches along: the video comes back UNDER THE VOICES, at 30% ***', heard.yt === 0.3 && bus.callEffect() === 'duck', String(heard.yt));
+      check('...and the screen is actually sending to them', sent.length > 0 && sent.at(-1).item === VID);
+      check('*** never louder than the call: the call is at full, the video under it ***', heard.call === 1 && heard.yt < heard.call);
+      row[CALL_UNDER_KEY] = 15; cs.sync();
+      check('"how quiet" changed in the menu is heard at once', heard.yt === 0.15, String(heard.yt));
+      row[CALL_UNDER_KEY] = 30; cs.sync();
+      row.letFollow = false; sender.refresh(); cs.sync();
+      check('*** "Let people follow" switched off mid-call: nobody is watching along now, so it pauses ***', heard.yt === 0, String(heard.yt));
+      row.letFollow = true; sender.refresh(); cs.sync();
+      check('...and on again: back under the voices', heard.yt === 0.3);
+      row[CALL_SOUND_KEY] = 'pause'; cs.sync();
+      check('*** "pauses": a followed call pauses too — the person who wants calls clean gets it ***', heard.yt === 0);
+      row[CALL_SOUND_KEY] = 'duck'; followers = 0; sender.refresh(); cs.sync();
+      check('*** "plays quietly under the voices": even with nobody watching along ***', heard.yt === 0.3 && cs.watched() === false);
+      row[CALL_SOUND_KEY] = 'together'; cs.sync();
+      check('back to the default with nobody watching: paused', heard.yt === 0);
+      followers = 1; sender.refresh(); cs.sync();
+      bus.setActive('call', false);
+      check('the call ends: full volume again, still followed', heard.yt === 1 && bus.callEffect() === null);
+      bus.setMaster(0.5);
+      bus.setActive('call', true);
+      check('the master turns both down together: the video is still under the call', heard.yt <= heard.call * 0.3 + 1e-9 && heard.yt > 0, `${heard.yt} ${heard.call}`);
+      sender.destroy();
+      check('a sender that is gone means nobody is watching along', (cs.sync(), bus.watched() === false && heard.yt === 0));
+      const broken = attachCallSound({ audio: createAudioBus(), read: () => { throw new Error('row'); }, watched: () => { throw new Error('w'); } });
+      check('a row that throws and a watched() that throws: the defaults, not a crash', broken.mode() === 'together' && broken.watched() === false);
+    }
+
+    // =================================================================================== the follow page's setting
+    section('the follow page\'s "Sound here", argued in follow_sound.js');
+    check('*** the default is "on, but off while I am on a call with that screen" ***', FOLLOW_SOUND_DEFAULT === 'auto'
+      && FOLLOW_SOUND_CHOICES.map((c) => c.value).join() === 'auto,on,off');
+    check('auto, no call: sound ON (the press on Follow allows it)', followMuted({ mode: 'auto', inCall: false }) === false);
+    check('*** auto, ON A CALL with that screen: muted — the call carries the sound, no echo either way ***', followMuted({ mode: 'auto', inCall: true }) === true);
+    check('on: sound even during a call (headphones)', followMuted({ mode: 'on', inCall: true }) === false);
+    check('off: muted even with no call (two screens in one room)', followMuted({ mode: 'off', inCall: false }) === true);
+    check('the Sound button\'s choice wins over all of them', followMuted({ mode: 'auto', inCall: true, override: false }) === false
+      && followMuted({ mode: 'on', override: true }) === true);
+    check('nonsense is the default', soundModeOf('loud') === 'auto' && followMuted({ mode: 'loud', inCall: true }) === true);
+    check('the choices never say "her screen"', !/her screen|Taylor|Cici/i.test(JSON.stringify(FOLLOW_SOUND_CHOICES)));
+
+    // =================================================================================== this computer's calls, across tabs
+    section('*** a call in another tab of this browser reaches the follow page (BroadcastChannel; nothing leaves the computer) ***');
+    {
+      const ft = fakeTime();
+      const ann = createCallAnnouncer({ setTimer: ft.setTimer, clearTimer: ft.clearTimer, tab: 'tab-a' });
+      const w = watchLocalCalls({ now: ft.now });
+      let changes = 0; w.onChange(() => { changes += 1; });
+      check('the channel exists in this browser', w.available() === true && CALL_CHANNEL === 'nimrod-call');
+      check('no call: not on a call with anybody', w.inCallWith('p1') === false);
+      ann.set(['p1']);
+      await until(() => w.inCallWith('p1'), 1000);
+      check('*** the call page says "on a call with p1": the follow page knows ***', w.inCallWith('p1') === true && changes >= 1);
+      check('...with p1 only, not anybody else', w.inCallWith('p2') === false);
+      // A follow page opened mid-call asks and is told at once.
+      const late = watchLocalCalls({ now: ft.now });
+      await until(() => late.inCallWith('p1'), 1000);
+      check('*** a follow page opened MID-CALL is told at once (it asks) ***', late.inCallWith('p1') === true);
+      // The tab goes silent (crashed): after CALL_STALE_MS with no beat it counts as no call.
+      const silent = watchLocalCalls({ now: ft.now, staleMs: CALL_STALE_MS });
+      await sleep(50);
+      ft.advance(CALL_BEAT_MS);          // the announcer beats: a fresh message lands
+      await sleep(50);
+      check('the call tab re-says it every few seconds', silent.inCallWith('p1') === true);
+      ann.set([]);
+      await until(() => !w.inCallWith('p1'), 1000);
+      check('*** the call ends: the follow page knows at once ***', w.inCallWith('p1') === false && late.inCallWith('p1') === false);
+      const closing = createCallAnnouncer({ setTimer: ft.setTimer, clearTimer: ft.clearTimer, tab: 'tab-b' });
+      closing.set(['p9']);
+      await until(() => w.inCallWith('p9'), 1000);
+      check('a second call tab is heard alongside', w.inCallWith('p9') === true);
+      closing.destroy();
+      await until(() => !w.inCallWith('p9'), 1000);
+      check('a call page closing says goodbye (destroy)', w.inCallWith('p9') === false);
+      check('nonsense ids are not passed on', (ann.set([42, '', 'p3']), ann.people().join() === 'p3'));
+      check('three missed beats before "no call" (argued: one late background timer never flips it)', CALL_STALE_MS >= 3 * CALL_BEAT_MS);
+      ann.destroy(); w.destroy(); late.destroy(); silent.destroy();
+      // Staleness, exactly: a watcher whose clock moves past CALL_STALE_MS since the last message.
+      let clock = 1000;
+      const w2 = watchLocalCalls({ now: () => clock });
+      const a2 = createCallAnnouncer({ setTimer: () => 0, clearTimer: () => {}, tab: 'tab-c' });   // never beats
+      a2.set(['p5']);
+      await until(() => w2.inCallWith('p5'), 1000);
+      check('a call is heard', w2.inCallWith('p5') === true);
+      clock += CALL_STALE_MS + 1;
+      check('*** silence past CALL_STALE_MS (a crashed tab never says goodbye): no call, so the follow page is never stuck muted ***', w2.inCallWith('p5') === false);
+      a2.destroy(); w2.destroy();
+    }
+
+    // =================================================================================== the follow page itself
+    section('*** the follow page: sound on to start, off during a call with that screen, the button, the setting ***');
+    {
+      const ft = fakeTime(Date.now());
+      let onPlayCb = null;
+      const connect = (o) => { setTimeout(() => o.onState?.('connected'), 0);
+        return { onPlay: (cb) => { onPlayCb = cb; return () => {}; }, onFollowState: () => () => {}, ping: async () => null, close: () => {}, presence: () => ({}) }; };
+      const made = [];
+      const fakePlayer = { id: null, pos: 0, on: false, muted: null, mutes: [], destroyed: false,
+        load(id, to, play) { this.id = id; this.pos = to; this.on = !!play; }, seek(to) { this.pos = to; },
+        resume() { this.on = true; }, pause() { this.on = false; }, item() { return this.id; }, currentTime() { return this.pos; },
+        playing() { return this.on; }, setMuted(m) { this.muted = m; this.mutes.push(m); }, destroy() { this.destroyed = true; } };
+      let calling = false; let changeFn = null;
+      const callWatch = { inCallWith: (pid) => calling && pid === 'p1', onChange: (fn) => { changeFn = fn; return () => { changeFn = null; }; } };
+      const store = new Map();
+      const host = document.createElement('div'); document.getElementById('host').append(host);
+      const view = mountFollowView(host, { personId: 'p1', personName: 'Robin', user: 'fcs', connect,
+        makePlayer: (el, o) => { made.push(o); return fakePlayer; }, callWatch,
+        now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer,
+        storage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) } });
+      check('"Sound here" is on the page, at its default', view.soundMode() === 'auto' && host.querySelector('[data-fv-soundmode]').value === 'auto');
+      // A call with that screen is already on when Follow is pressed.
+      calling = true;
+      host.querySelector('[data-fv-start]').click();
+      await sleep(10);
+      onPlayCb({ type: 'play', kind: 'youtube', item: VID, pos: 10, playing: true, rate: 1, at: ft.now(), from: 'abcd1234', screen: 'Room', every: 2 });
+      ft.advance(TICK_MS);
+      check('*** following during a call with that screen: the page\'s own copy is MUTED (the call carries it) ***',
+        view.muted() === true && fakePlayer.muted === true && made[0] && made[0].muted === true, JSON.stringify({ m: view.muted(), p: fakePlayer.muted, made }));
+      check('...and it says why, in plain words', /on a call with Robin’s screen: you hear it through the call/.test(view.soundNote())
+        && !host.querySelector('[data-fv-soundnote]').hidden, view.soundNote());
+      // The call ends (another tab says so).
+      calling = false; changeFn?.();
+      check('*** the call ends: the sound comes on here, at once ***', view.muted() === false && fakePlayer.muted === false && view.soundNote() === '');
+      // A call starts while following.
+      calling = true; changeFn?.();
+      check('*** a call with that screen starts while following: muted at once ***', view.muted() === true && fakePlayer.muted === true);
+      host.querySelector('[data-fv-sound]').click();
+      check('the Sound button wins during the call (somebody with headphones)', view.muted() === false && fakePlayer.muted === false && view.soundNote() === '');
+      calling = false; changeFn?.();
+      calling = true; changeFn?.();
+      check('*** ...but a NEW call puts the safe default back (a press from before does not carry into it) ***', view.muted() === true);
+      // The setting.
+      const sel = host.querySelector('[data-fv-soundmode]');
+      sel.value = 'on'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      check('"on, even during a call": sound now, call or not', view.muted() === false && store.get(FOLLOW_SOUND_KEY) === 'on');
+      sel.value = 'off'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      calling = false; changeFn?.();
+      check('"off": muted with no call either (the same room)', view.muted() === true && store.get(FOLLOW_SOUND_KEY) === 'off');
+      sel.value = 'auto'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      check('back to the default, no call: sound on', view.muted() === false);
+      // A call tab that goes stale is noticed on the page's own tick, not only on a message.
+      calling = true;
+      ft.advance(TICK_MS);
+      check('the tick notices a call without a message too (staleness both ways)', view.muted() === true);
+      calling = false;
+      ft.advance(TICK_MS);
+      check('...and its end', view.muted() === false);
+      check('the copy never says "her screen"', !/\bher screen|Taylor|Cici/i.test(host.textContent));
+      view.destroy(); host.remove();
+    }
+    {
+      // *** THE BROWSER REFUSES SOUND: the player never starts. After SOUND_BLOCKED_MS it falls back to muted and plays. ***
+      const ft = fakeTime(Date.now());
+      let onPlayCb = null;
+      const connect = (o) => { setTimeout(() => o.onState?.('connected'), 0);
+        return { onPlay: (cb) => { onPlayCb = cb; return () => {}; }, onFollowState: () => () => {}, ping: async () => null, close: () => {}, presence: () => ({}) }; };
+      const p = { id: null, pos: 0, on: false, muted: null,
+        load(id, to) { this.id = id; this.pos = to; this.on = this.muted === true; },     // only a muted video may start
+        seek(to) { this.pos = to; }, resume() { this.on = this.muted === true; }, pause() { this.on = false; },
+        item() { return this.id; }, currentTime() { return this.pos; }, playing() { return this.on; },
+        setMuted(m) { this.muted = m; }, destroy() {} };
+      const host = document.createElement('div'); document.getElementById('host').append(host);
+      const view = mountFollowView(host, { personId: 'p1', personName: 'Robin', user: 'fcs', connect, makePlayer: () => p,
+        callWatch: { inCallWith: () => false, onChange: () => () => {} },
+        now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer, storage: null });
+      host.querySelector('[data-fv-start]').click();
+      await sleep(10);
+      const beat = () => onPlayCb({ type: 'play', kind: 'youtube', item: VID, pos: 10, playing: true, rate: 1, at: ft.now(), from: 'abcd1234', every: 2 });
+      beat();
+      ft.advance(TICK_MS);
+      check('with sound, the refused player has not started', view.muted() === false && p.on === false);
+      for (let i = 0; i < (SOUND_BLOCKED_MS / 2000) + 4; i++) { beat(); ft.advance(2000); }
+      check('*** after SOUND_BLOCKED_MS it falls back to MUTED and the video plays — never stuck ***', view.muted() === true && p.on === true,
+        JSON.stringify({ m: view.muted(), on: p.on }));
+      check('...and says "press Sound on"', /kept the sound off here\. Press Sound on/.test(view.soundNote()), view.soundNote());
+      check('the wait is longer than a load needs (argued: 8 s)', SOUND_BLOCKED_MS === 8000);
+      view.destroy(); host.remove();
+    }
+  } catch (e) {
+    check('the suite ran to the end', false, String(e && e.stack || e));
+  }
+  document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+})();
+</script>
+</body>
+</html>
