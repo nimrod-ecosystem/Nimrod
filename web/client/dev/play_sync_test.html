@@ -34,6 +34,9 @@ import {
   createFollower, LOST_MIN_MS, FOLLOW_FIELD, FOLLOW_KEY, FOLLOW_BEAT_FIELD, FOLLOW_BEAT_KEY, followOf, beatOf,
   noticeWords, HELPING_WORDS, WATCHING_WORDS, BOTH_WORDS, STOP_AFTER_CHOICES, STOP_AFTER_DEFAULT_MS, stopAfterOf,
   sharingWords,
+  // photos in step (2026-10-12)
+  isPhotoId, isSalt, hexIsText, photoKey, photoPlayId, newSalt, PHOTO_ID_HEX, SALT_HEX,
+  FOLLOW_MAIN_FIELD, FOLLOW_MAIN_KEY, mainOf, PAUSED_HOLD_MS,
 } from '../play_sync.js';
 import { connectDrive } from '../drive.js';
 import { normalizeField } from '../settings_fields.js';
@@ -140,7 +143,7 @@ if (GAP) {
     const m = buildPlay({ item: VID, pos: 12.3456, playing: true, every: 2, screen: 'Living room' });
     check('*** a well-formed message is built ***', m && m.type === 'play' && m.kind === 'youtube' && m.item === VID
       && m.pos === 12.346 && m.playing === true && m.rate === 1 && m.every === 2 && m.screen === 'Living room', JSON.stringify(m));
-    check('the kinds are YouTube only for now (a closed list, mirrored from play_relay.py)', PLAY_KINDS.length === 1 && PLAY_KINDS[0] === 'youtube');
+    check('the kinds are YouTube and photos (a closed list, mirrored from play_relay.py)', PLAY_KINDS.length === 2 && PLAY_KINDS.join() === 'youtube,photo');
     check('*** an item that is not a public YouTube id is never built - a file name cannot leave the screen ***',
       ['Mom hospital 2024.jpg', 'photos/p1.jpg', 'short', VID + 'x', 7].every((x) => buildPlay({ item: x }) === null)
       && !isPlayItem('youtube', 'Mom hospital 2024.jpg') && isPlayItem('youtube', VID));
@@ -284,6 +287,22 @@ if (GAP) {
     g.onPlay(msg({ item: VID2, pos: 106.03, at: ft.now() }));
     pl.pos = 105.6;                                    // still 0.4 s out
     check('*** ...and only once: 0.4 s out after that is left alone (the 2 s line again) ***', g.tick().do === 'none');
+    // 2026-10-12: a RESUME lands late too (measured ~0.29 s); it earns the same one finer seek once settled.
+    g.onPlay(msg({ item: VID2, pos: 110, playing: false, at: ft.now() }));
+    pl.pos = 110.2; g.tick();
+    ft.advance(500);
+    g.onPlay(msg({ item: VID2, pos: 110, playing: true, at: ft.now() }));
+    pl.on = false;
+    check('the screen plays again, I am paused nearby: play (in place)', g.tick().do === 'play');
+    ft.advance(SETTLE_MS + 10);
+    g.onPlay(msg({ item: VID2, pos: 113.01, at: ft.now() }));
+    pl.pos = 112.7; pl.on = true;
+    const rt = g.tick();
+    check('*** once the resume settles, 0.3 s behind: ONE finer seek (measured: 289 ms -> 50 ms) ***', rt.do === 'seek' && Math.abs(rt.to - 113.01) < 0.01, JSON.stringify(rt));
+    ft.advance(SETTLE_MS + 10);
+    g.onPlay(msg({ item: VID2, pos: 116.03, at: ft.now() }));
+    pl.pos = 115.7;
+    check('...and only once', g.tick().do === 'none');
   }
 
   // ========================================================================================== sender
@@ -346,13 +365,144 @@ if (GAP) {
     check('...until the shared one stops: then the playing one is shared', s.state().lead === 'yt-2' && s.state().base.item === VID2);
     s.report({ kind: 'youtube', panel: 'yt-2', item: 'Mom hospital.jpg', pos: 1, playing: true });
     ft.advance(MIN_GAP_MS);
-    check('*** a panel reporting something that is not a public id shares "nothing playing", never the name ***',
-      sent.at(-1).item === null && !JSON.stringify(sent).includes('Mom'));
+    // 2026-10-12 (photos in step): the sender now keeps every panel's last report, so when the shared panel has nothing
+    // to share, the OTHER panel's paused video - still on screen - is shared instead of "nothing". Never the name.
+    check('*** a panel reporting something that is not a public id is never shared by name; the other panel\'s paused video is ***',
+      !JSON.stringify(sent).includes('Mom') && s.state().lead === 'yt-1' && sent.at(-1).item === VID && sent.at(-1).playing === false,
+      JSON.stringify(sent.at(-1)));
+    s.forget('yt-1');
+    ft.advance(MIN_GAP_MS);
+    check('...and with that panel gone too, "nothing playing" (item null)', sent.at(-1).item === null && s.state().lead !== 'yt-1',
+      JSON.stringify(sent.at(-1)));
     watching = 0; s.refresh(); const c2 = sent.length; ft.advance(60_000);
     check('*** the last follower leaves: the heartbeat stops ***', sent.length === c2 && ft.pending() === 0, `${sent.length - c2} ${ft.pending()}`);
     watching = 2; s.refresh(); on = false; s.refresh(); const c3 = sent.length; ft.advance(60_000);
     check('*** sharing turned off while followed: nothing more is sent ***', sent.length === c3 && ft.pending() === 0);
     s.destroy();
+  }
+
+  // ========================================================================================== photos in step
+  section('*** photos in step: an opaque id, a salt per sharing session, never a name ***');
+  {
+    const SALT = 'a1b2c3d4e5f60718';
+    const ID = photoPlayId(SALT, 'Family/2024/IMG_0001.jpg');
+    check('*** the id is the one the server test computes with Python\'s hashlib (both ends agree) ***',
+      ID === '9a84340173189b88516d67eb9a7675f9', ID);
+    check(`it is ${PHOTO_ID_HEX} lowercase hex, and a photo item`, ID.length === PHOTO_ID_HEX && isPhotoId(ID) && isPlayItem('photo', ID));
+    check('the same picture under another salt is another id (sessions cannot be matched)', photoPlayId('0f1e2d3c4b5a6978', 'Family/2024/IMG_0001.jpg') !== ID);
+    check('a leading slash, ./ or backslashes are the same picture', photoPlayId(SALT, '/Family/2024/IMG_0001.jpg') === ID
+      && photoPlayId(SALT, './Family\\2024\\IMG_0001.jpg') === ID);
+    check('*** "é" spelled two ways (a Mac and a Pi) is the same picture (NFC) ***',
+      photoPlayId(SALT, 'Caf\u00e9/\u00e9t\u00e9.jpg') === photoPlayId(SALT, 'Cafe\u0301/e\u0301te\u0301.jpg')
+      && photoPlayId(SALT, 'Caf\u00e9/\u00e9t\u00e9.jpg') === '804b1f9c163b2c4c918f22459c4bfa7c' && photoKey('Cafe\u0301') === 'Caf\u00e9');
+    check('no path or a bad salt makes no id', photoPlayId(SALT, '') === '' && photoPlayId('nope', 'a.jpg') === '' && photoPlayId(SALT.toUpperCase(), 'a.jpg') === '');
+    const dressed = Array.from(new TextEncoder().encode('Mom hospital 24!')).map((b) => b.toString(16).padStart(2, '0')).join('');
+    check('*** a file name dressed as 32 hex characters is NOT a photo id (its bytes are all printable) ***',
+      dressed.length === 32 && hexIsText(dressed) && !isPhotoId(dressed) && !isPlayItem('photo', dressed));
+    check('*** a file name is never a photo item ***', ['Mom hospital 2024.jpg', 'Family/2024/IMG_0001.jpg', ID.toUpperCase(), ID.slice(1), 'dQw4w9WgXcQ']
+      .every((x) => !isPlayItem('photo', x)) && !isPlayItem('youtube', ID));
+    const salts = new Set(Array.from({ length: 50 }, () => newSalt()));
+    check(`a fresh salt is ${SALT_HEX} hex, never text, and different each time`, [...salts].every(isSalt) && salts.size === 50);
+    let i = 0; const textBytes = [0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48];
+    check('a salt that happens to spell text is drawn again', isSalt(newSalt(() => (i < 8 ? textBytes[i++] : (i++ % 2 ? 0x01 : 0xfe)))));
+    const m = buildPlay({ kind: 'photo', item: ID, salt: SALT, pos: 3, playing: true, every: 2, screen: 'Living room' });
+    check('*** a photo message carries the id and its salt ***', m && m.kind === 'photo' && m.item === ID && m.salt === SALT && m.playing === true, JSON.stringify(m));
+    check('a photo id without a salt is never built; a salt on a YouTube message is never built',
+      buildPlay({ kind: 'photo', item: ID }) === null && buildPlay({ kind: 'photo', item: ID, salt: 'zz' }) === null
+      && buildPlay({ item: VID, salt: SALT }) === null);
+    check('a photo message with nothing showing needs no salt', buildPlay({ kind: 'photo', item: null })?.item === null);
+    check('*** a file name is never built as a photo item ***', ['Mom hospital 2024.jpg', dressed].every((x) => buildPlay({ kind: 'photo', item: x, salt: SALT }) === null));
+    const st = { ...m, at: 5, from: 'abcd1234' };
+    check('a received photo message is checked and copied, salt and all', checkPlay(st)?.salt === SALT && checkPlay(st)?.item === ID);
+    check('...and refused without its salt, or naming a file', checkPlay({ ...st, salt: undefined }) === null
+      && checkPlay({ ...st, item: 'IMG_0001.jpg' }) === null && checkPlay({ ...st, item: dressed }) === null);
+    const size = new TextEncoder().encode(JSON.stringify(m)).length;
+    check(`a photo message is about 150 bytes (${size})`, size < 220, String(size));
+  }
+
+  section('*** photos in step: the sender hashes the path on the way out; which panel when a video and pictures both play ***');
+  {
+    const ft = fakeTime();
+    const sent = [];
+    let main = 'video';
+    let salt = 'a1b2c3d4e5f60718';
+    let watching = 1;
+    const s = createPlaySender({ send: (m) => { sent.push(m); return true; }, enabled: () => true, watchers: () => watching,
+      beatS: () => 2, main: () => main, now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer, makeSalt: () => salt });
+    s.refresh();
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0001.jpg', pos: 0, playing: true });
+    ft.advance(MIN_GAP_MS);
+    const last = () => sent.at(-1);
+    check('*** a Photos panel\'s picture goes as its opaque id, with the session\'s salt ***',
+      last().kind === 'photo' && last().item === '9a84340173189b88516d67eb9a7675f9' && last().salt === salt && last().playing === true, JSON.stringify(last()));
+    check('*** the path never leaves the screen: no message carries it ***', !JSON.stringify(sent).includes('IMG_0001') && !JSON.stringify(sent).includes('Family'));
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0002.jpg', pos: 0, playing: true });
+    ft.advance(MIN_GAP_MS);
+    check('a new picture: a new id at once', last().item === photoPlayId(salt, 'Family/2024/IMG_0002.jpg'));
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0002.jpg', pos: 1, playing: false });
+    ft.advance(MIN_GAP_MS);
+    check('paused: said at once', last().playing === false && last().item === photoPlayId(salt, 'Family/2024/IMG_0002.jpg'));
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0002.jpg', pos: 1, playing: true });
+    const n0 = sent.length; ft.advance(2000);
+    check('a heartbeat carries the picture too', sent.length > n0 && last().item === photoPlayId(salt, 'Family/2024/IMG_0002.jpg'));
+    s.report({ kind: 'photo', panel: 'ph-1', key: null, pos: 0, playing: false });
+    ft.advance(MIN_GAP_MS);
+    check('nothing on the slideshow: item null, no salt', last().kind === 'photo' && last().item === null && !('salt' in last()));
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0003.jpg', pos: 0, playing: true });
+    ft.advance(MIN_GAP_MS);
+    // a video starts on the same screen: under 'video' (the default) the followers see the video
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 0, playing: true });
+    ft.advance(MIN_GAP_MS);
+    check('*** default ("the video while one is on"): a video starting is what followers see ***', last().kind === 'youtube' && last().item === VID && s.state().lead === 'yt-1');
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0004.jpg', pos: 0, playing: true });
+    ft.advance(MIN_GAP_MS);
+    check('...the slideshow moving on underneath is not sent while the video plays', last().kind === 'youtube');
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 30, playing: false });
+    ft.advance(MIN_GAP_MS);
+    check(`*** a pause to talk keeps the video (for ${PAUSED_HOLD_MS / 60000} minutes), not a flip to the pictures ***`,
+      last().kind === 'youtube' && last().playing === false);
+    ft.advance(PAUSED_HOLD_MS + 2000);
+    check('*** paused longer than that: back to the pictures, on a heartbeat ***', last().kind === 'photo'
+      && last().item === photoPlayId(salt, 'Family/2024/IMG_0004.jpg'), JSON.stringify(last()));
+    s.report({ kind: 'youtube', panel: 'yt-1', item: VID, pos: 30, playing: true });
+    ft.advance(MIN_GAP_MS);
+    check('the video playing again: the video', last().kind === 'youtube' && last().playing === true);
+    main = 'photos'; s.refresh(); ft.advance(MIN_GAP_MS);
+    check('*** "the pictures" chosen: the pictures, even while the video plays ***', last().kind === 'photo', JSON.stringify(last()));
+    main = 'latest'; s.refresh(); ft.advance(MIN_GAP_MS);
+    check('"whatever started last": stays on what is shared until it stops', last().kind === 'photo');
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0004.jpg', pos: 9, playing: false });
+    ft.advance(MIN_GAP_MS);
+    check('...then the one still playing (the video)', last().kind === 'youtube');
+    main = 'video'; s.refresh();
+    s.forget('yt-1'); ft.advance(MIN_GAP_MS);
+    check('the video panel closed: the pictures again', last().kind === 'photo');
+    // a new sharing session: a new salt, so the same picture is a new id
+    watching = 0; s.refresh(); salt = '0f1e2d3c4b5a6978'; watching = 1; s.refresh();
+    check('*** a new sharing session: a new salt, the same picture a new id ***', last().salt === '0f1e2d3c4b5a6978'
+      && last().item === photoPlayId('0f1e2d3c4b5a6978', 'Family/2024/IMG_0004.jpg') && s.state().salt === '0f1e2d3c4b5a6978');
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'x'.repeat(600), pos: 0, playing: true });
+    ft.advance(MIN_GAP_MS);
+    check('a path past the length any picture key may have is "nothing", never sent', last().item === null);
+    check('every photo message that went had a 32-hex id or nothing', sent.filter((x) => x.kind === 'photo').every((x) => x.item === null || isPhotoId(x.item)));
+    s.destroy();
+  }
+
+  section('photos in step: the follower hands the kind and the message to its player');
+  {
+    const ft = fakeTime();
+    const calls = [];
+    const pl = { id: null, load(id, to, play, kind, leader) { calls.push({ id, kind, salt: leader && leader.salt }); this.id = id; },
+      seek() {}, play() {}, pause() {}, item() { return this.id; }, currentTime() { return null; }, playing() { return true; } };
+    const f = createFollower({ player: pl, now: ft.now });
+    const ID = photoPlayId('a1b2c3d4e5f60718', 'Family/2024/IMG_0001.jpg');
+    f.onPlay({ type: 'play', kind: 'photo', item: ID, salt: 'a1b2c3d4e5f60718', pos: 2, playing: true, rate: 1, at: ft.now(), from: 'abcd1234', every: 2 });
+    f.tick();
+    check('*** a photo message loads with kind "photo" and the salt the id was made with ***',
+      calls.length === 1 && calls[0].kind === 'photo' && calls[0].id === ID && calls[0].salt === 'a1b2c3d4e5f60718', JSON.stringify(calls));
+    ft.advance(SETTLE_MS + 10);
+    f.onPlay({ type: 'play', kind: 'photo', item: ID, salt: 'a1b2c3d4e5f60718', pos: 9, playing: true, rate: 1, at: ft.now(), from: 'abcd1234', every: 2 });
+    check('a still picture (no position) is never sought', f.tick().do === 'none' && calls.length === 1);
   }
 
   // ========================================================================================== settings + notice
@@ -378,9 +528,15 @@ if (GAP) {
       noticeWords({ drivers: 2, followers: 1, watchers: ['Mike'] }) === 'Sharing your screen with Mike. Someone is also helping from another screen');
     check('the heartbeat is 2 s by default, a choice of 2 / 5 / 10', beatOf({}) === 2 && beatOf({ [FOLLOW_BEAT_KEY]: 10 }) === 10
       && beatOf({ [FOLLOW_BEAT_KEY]: 3 }) === 2 && FOLLOW_BEAT_FIELD.options.map((o) => o.value).join() === '2,5,10');
-    const bad = auditFields([ff, bf], { type: 'screen' }).filter((x) => x.severity === 'error');
-    check('both fields normalise and pass the settings audit', ff && bf && bad.length === 0, JSON.stringify(bad));
-    const copy = JSON.stringify([FOLLOW_FIELD, FOLLOW_BEAT_FIELD, HELPING_WORDS, WATCHING_WORDS, BOTH_WORDS, STOP_AFTER_CHOICES]);
+    const mf = normalizeField(FOLLOW_MAIN_FIELD);
+    const bad = auditFields([ff, bf, mf], { type: 'screen' }).filter((x) => x.severity === 'error');
+    check('all three fields normalise and pass the settings audit', ff && bf && mf && bad.length === 0, JSON.stringify(bad));
+    check('*** photos in step: "When more than one thing plays" defaults to the video while one is on; advanced ***',
+      mainOf({}) === 'video' && mainOf({ [FOLLOW_MAIN_KEY]: 'photos' }) === 'photos' && mainOf({ [FOLLOW_MAIN_KEY]: 'x' }) === 'video'
+      && FOLLOW_MAIN_FIELD.level === 'advanced' && FOLLOW_MAIN_FIELD.options.map((o) => o.value).join() === 'video,photos,latest');
+    check('the sharing note now says pictures too, and that a picture goes as a code, never its name',
+      /picture/.test(FOLLOW_FIELD.note) && /never its name/.test(FOLLOW_FIELD.note));
+    const copy = JSON.stringify([FOLLOW_FIELD, FOLLOW_BEAT_FIELD, FOLLOW_MAIN_FIELD, HELPING_WORDS, WATCHING_WORDS, BOTH_WORDS, STOP_AFTER_CHOICES]);
     check('site copy never says "her screen" or names anybody', !/\bher screen|taylor|cici/i.test(copy));    check('*** nobody connected: no notice ***', noticeWords({ drivers: 0, followers: 0 }) === '');
     check('a driver: "helping" (exactly the words the screen always showed)', noticeWords({ drivers: 1 }) === HELPING_WORDS
       && HELPING_WORDS === 'Someone is helping from another screen');

@@ -28,9 +28,17 @@ WHAT THIS ADDS TO THE DRIVE SOCKET (drive.py parse_message hands these two types
      (storage_line.py rule 4: what played when stays on the device that played it) with room to spare - a play
      message is a record of what somebody is watching, so the server passing it on and keeping nothing is the
      whole point. test_play_relay.py proves no write happens.
-  3. AN ITEM IS A PUBLIC ID, NEVER A NAME. For YouTube that is the 11-character video id, which is public already.
-     A file name ("Mom hospital 2024.jpg") can be personal, so a kind for local files must carry an opaque id; no
-     such kind exists yet, and PLAY_KINDS is a closed list so one cannot arrive by accident.
+  3. AN ITEM IS A PUBLIC ID OR AN OPAQUE ONE, NEVER A NAME. For YouTube that is the 11-character video id, which is
+     public already. A file name ("Mom hospital 2024.jpg") can be personal, so a picture (kind `photo`, photos in step,
+     2026-10-12) carries an OPAQUE id: 32 lowercase hex characters, the start of a SHA-256 of the picture's path inside
+     its source's folder, salted per sharing session by the screen (`salt`, 16 hex, required with a photo id). The
+     follow page finds its own copy by hashing its own listing the same way (client/photo_follow.js). Fixed length and
+     hex, and NEVER BYTES THAT ARE ALL PRINTABLE TEXT - a short name hex-encoded ("Mom hospital 24" is thirty hex
+     characters) has the right shape, and a real hash's sixteen bytes are all printable about once in 8 million, so
+     such an id (or salt) is refused. PLAY_KINDS is a closed list, so another kind cannot arrive by accident.
+     The salt travels with the id, so this server could in principle guess a name and hash it to compare; rule 2 is
+     what stops it learning anything - the id is held in memory for the moment it is passed on, and kept nowhere.
+     (client/play_sync.js argues the per-session salt against no salt and a per-person one.)
   4. A SOCKET THAT IS FOLLOWING ONLY WATCHES. app.py drops its verbs, signals and group messages, so the screen's
      "watching along" notice can never hide somebody pressing its buttons. Somebody who wants to do both opens
      the Remote page's buttons as well (a second socket), and the screen then says both.
@@ -46,11 +54,37 @@ import re
 import secrets
 import time
 
-PLAY_KINDS = frozenset({"youtube"})
+PLAY_KINDS = frozenset({"youtube", "photo"})
 
 # A YouTube video id: exactly what youtube.js parseVideoId accepts. Public, not a person's anything.
 _YT_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
-_ITEM_RULES = {"youtube": _YT_ID}
+# photos in step (2026-10-12): a picture's opaque id and the sharing session's salt (rule 3). Mirrors play_sync.js.
+PHOTO_ID_HEX = 32
+SALT_HEX = 16
+_PHOTO_ID = re.compile(r"^[0-9a-f]{32}$")
+_SALT = re.compile(r"^[0-9a-f]{16}$")
+
+
+def hex_is_text(h: str) -> bool:
+    """True when every byte the hex spells is printable ASCII (0x20-0x7e): a name dressed as an id. PURE."""
+    if not isinstance(h, str) or not h or len(h) % 2:
+        return False
+    try:
+        raw = bytes.fromhex(h)
+    except ValueError:
+        return False
+    return all(0x20 <= b <= 0x7E for b in raw)
+
+
+def is_photo_id(v) -> bool:
+    return isinstance(v, str) and bool(_PHOTO_ID.match(v)) and not hex_is_text(v)
+
+
+def is_salt(v) -> bool:
+    return isinstance(v, str) and bool(_SALT.match(v)) and not hex_is_text(v)
+
+
+_ITEM_RULES = {"youtube": lambda v: isinstance(v, str) and bool(_YT_ID.match(v)), "photo": is_photo_id}
 
 # *** THE SIZE CAP: 1 KB, measured on the message AS IT ARRIVED (compact JSON). *** A real one is about 150 bytes
 # (measured in the suite: kind, an 11-character id, two numbers, a flag and a 40-character screen name). The cap is
@@ -105,8 +139,14 @@ def parse_play(raw: dict) -> dict | None:
     if kind not in PLAY_KINDS:
         return None
     item = raw.get("item")
-    if item is not None and not (isinstance(item, str) and _ITEM_RULES[kind].match(item)):
-        return None                                  # only a public id, or None for "nothing playing"
+    if item is not None and not _ITEM_RULES[kind](item):
+        return None                                  # only a public or opaque id, or None for "nothing playing"
+    salt = raw.get("salt")
+    if kind == "photo":
+        if (item is not None or salt is not None) and not is_salt(salt):
+            return None                              # a photo id is meaningless without its session's salt
+    elif salt is not None:
+        return None                                  # a salt on anything else is not ours to carry
     pos = raw.get("pos")
     if not _num(pos) or pos < 0 or pos > MAX_POS_S:
         return None
@@ -115,6 +155,8 @@ def parse_play(raw: dict) -> dict | None:
         return None
     out = {"type": "play", "kind": kind, "item": item, "pos": round(float(pos), 3),
            "playing": playing if item is not None else False}
+    if kind == "photo" and salt is not None:
+        out["salt"] = salt
     rate = raw.get("rate", 1)
     if not _num(rate) or rate < MIN_RATE or rate > MAX_RATE:
         return None

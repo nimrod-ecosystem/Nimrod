@@ -96,6 +96,9 @@ export const SUITES = [
   // watching along (2026-10-10, row 2.79): a screen says what YouTube video it plays, a follow page plays it in step.
   // Fakes throughout, then a screen and a follower socket against the real server.
   'play_sync',
+  // photos in step (2026-10-12): the follow page finds the screen's picture in its own pictures by an opaque id; a real
+  // Photos panel, the screen's sender and a follow page wired together (no server); hidden pictures never sent.
+  'photo_follow',
   // *** ADDED 2026-09-30, WHEN THE LIST CHECK FIRST RAN: all of these were on disk and had never
   // been on this page. Each was run on its own from `run_suite.py` before being added. Grouped by
   // what they cover rather than slotted into the lines above, so the provenance stays readable. ***

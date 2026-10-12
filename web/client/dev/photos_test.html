@@ -277,6 +277,72 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
     }
   }
 
+  // *** PHOTOS IN STEP (2026-10-12, play_sync.js): THE PANEL SAYS WHAT IS ON SCREEN, ON THE SCREEN'S OWN BUS. ***
+  // Its path inside the source (hashed later by the screen's sender, never sent as it is), Pause / Play, nothing when
+  // hidden or closed - and a picture hidden or removed is never said at all. No server, no agent.
+  {
+    section('*** photos in step: the panel says which picture is on screen (on its own bus), never a hidden one ***');
+    const { PLAY_NOW_TOPIC } = await import('../play_sync.js');
+    const { createHiddenPictures } = await import('../hidden_pictures.js');
+    const { createRemovedPictures } = await import('../removed_pictures.js');
+    const ITEMS = ['a/one.jpg', 'a/two.jpg', 'b/three.jpg', 'b/four.jpg'].map((p, i) => ({ id: p, path: p, name: p, kind: 'image', url: OKPIC('s' + i) }));
+    const hides = createHiddenPictures({ store: memoryPlayStore() });
+    const removals = createRemovedPictures({ store: memoryPlayStore() });
+    await hides.hide({ path: 'b/four.jpg', name: 'four', scope: 'everyone' });
+    await removals.remove({ path: 'b/three.jpg', name: 'three' });
+    const host = document.createElement('div');
+    host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+    document.body.append(host);
+    let cfg = { sourceId: 'src-1', intervalMs: 3600000, fit: 'contain' };
+    const subs = [];
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+                    subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+    const source = { id: 'src-1', label: 'Test source', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+    const bus = createBus();
+    const said = [];
+    bus.subscribe(PLAY_NOW_TOPIC, (r) => said.push(r));
+    const inst = mountModule('photos', {
+      mount: host, bus, state, instanceId: 'photos-insync',
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: USER, profileId: 'p', hiddenPictures: hides, removedPictures: removals,
+      sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+      resolveListing: async () => ({ items: ITEMS.map((it) => ({ ...it })), albums: [], album: '', count: ITEMS.length }),
+    });
+    inst.init();
+    const t0 = Date.now(); while (!said.length && Date.now() - t0 < 2000) await sleep(20);
+    const cur = () => inst.impl.__probe().currentId;
+    check('*** a picture on screen is said: kind photo, this panel, its path, playing ***',
+      said.length && said.at(-1).kind === 'photo' && said.at(-1).panel === 'photos-insync' && said.at(-1).key === cur() && said.at(-1).playing === true,
+      JSON.stringify(said.at(-1)));
+    for (let i = 0; i < 12; i++) { bus.publish('photos/next'); await sleep(10); }
+    check('each next is said, always the picture on screen', said.at(-1).key === cur());
+    check('*** a picture hidden here, or removed, is never said ***', !said.some((r) => r.key === 'b/four.jpg' || r.key === 'b/three.jpg'),
+      JSON.stringify([...new Set(said.map((r) => r.key))]));
+    bus.publish('photos/pause');
+    check('Pause: said as not playing', said.at(-1).playing === false && said.at(-1).key === cur());
+    bus.publish('photos/play');
+    check('Play: said as playing again', said.at(-1).playing === true);
+    const on = cur();
+    await inst.impl.__probe().hideCurrent();
+    await sleep(30);
+    check('*** the picture on screen hidden: the next one is said at once, and the hidden one never again ***',
+      cur() !== on && said.at(-1).key === cur() && !said.slice(-1).some((r) => r.key === on));
+    // Hide the rest: nothing left to show is said as nothing.
+    for (let i = 0; i < 4 && cur(); i++) { await inst.impl.__probe().hideCurrent(); await sleep(30); }
+    check('every picture hidden: "nothing" is said (key null), never the last one', said.at(-1).key === null && said.at(-1).playing === false,
+      JSON.stringify(said.at(-1)));
+    await hides.unhide((hides.entries('') || []).find((e) => e.path === 'a/one.jpg') || {});
+    await sleep(60);
+    inst.impl.onHide?.();
+    check('*** the panel hidden (another dashboard up): said as nothing ***', said.at(-1).key === null);
+    inst.impl.onShow?.();
+    check('shown again: the picture is said again', said.at(-1).key === cur() && !!cur(), JSON.stringify(said.at(-1)));
+    inst.destroy();
+    check('*** closed: said as nothing, so a follower is never left on a picture nobody sees ***', said.at(-1).key === null);
+    check('nothing it said was anything but a path from its own listing, or nothing', said.every((r) => r.key === null || ITEMS.some((it) => it.path === r.key)));
+    host.remove();
+  }
+
   // *** "SETTING PHOTOS TO 30 SECONDS DOESN'T SEEM TO WORK NOW." *** (Mike, 2026-09-29, live.)
   //
   // The setting was stored and read correctly the whole time. Measured on the real kiosk with

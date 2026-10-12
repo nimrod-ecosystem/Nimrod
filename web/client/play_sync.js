@@ -20,6 +20,12 @@
 // THE PATH (and the safety rule it keeps): a screen's `play` goes over the drive socket to the server, which passes
 // it to that person's drivers who said they are FOLLOWING, and to nobody else — the direction call signals already
 // travel, so "screens never talk to screens" is unchanged. The server stamps `at` and `from` and keeps nothing.
+//
+// PHOTOS IN STEP (2026-10-12): the same path for a Photos panel's pictures, by an opaque id (see PHOTOS IN STEP below,
+// and photo_follow.js for the follow page's half). A screen showing a video AND a slideshow shares the one this
+// screen's "When more than one thing plays, people following see" setting picks (FOLLOW_MAIN_FIELD, argued there).
+
+import { sha256Hex } from './sha256.js';
 
 // *** THE TOPIC A PANEL REPORTS ON. *** A panel never touches the socket: it publishes what it is playing on the
 // screen's own bus, and the screen's sender decides whether anything leaves the room. So a panel cannot share by
@@ -27,29 +33,112 @@
 export const PLAY_NOW_TOPIC = 'play/now';
 
 // Mirrored from play_relay.py (the server enforces the same; this end checks so a bad message fails HERE).
-export const PLAY_KINDS = Object.freeze(['youtube']);
+// 'photo' (2026-10-12, photos in step): a picture (or a clip) in a Photos panel, by an OPAQUE id - see PHOTOS IN STEP.
+export const PLAY_KINDS = Object.freeze(['youtube', 'photo']);
 export const MAX_PLAY_BYTES = 1024;
 export const MAX_POS_S = 7 * 24 * 3600;
 export const MAX_SCREEN_NAME = 40;
 const YT_ID = /^[A-Za-z0-9_-]{11}$/;
 const FROM_ID = /^[0-9a-f]{8}$/;
 
-// *** AN ITEM IS A PUBLIC ID, NEVER A NAME. *** A YouTube video id is public already. A file name ("Mom hospital
-// 2024.jpg") can be personal; a kind for local files will have to carry an opaque id, and none exists yet.
+// ---- PHOTOS IN STEP (2026-10-12) ----------------------------------------------------------------------------------
+// Mike, 2026-10-12: "we both see and hear the same thing at the same time... the same pictures and videos on a call or
+// even just to know I'm looking at the same things when it's not a call."
+//
+// *** THE FOLLOWER SHOWS ITS OWN COPY, FOUND BY AN OPAQUE ID. *** A screen's photo program is usually on that screen's
+// own computer (localhost), which a follower at home cannot reach - and must not try (media_sources.js quietReach: no
+// local-network box). The household's shared copy is usually a Google Drive folder every screen pulls, so the same
+// picture exists on both sides under the same path INSIDE its source's folder. So the screen sends a hash of that
+// path, and the follow page hashes its own listing the same way and looks the id up (photo_follow.js). The path, the
+// file name and the address never leave the screen; the server relays the id in memory and stores nothing.
+//
+// *** THE SALT: A NEW ONE FOR EACH SHARING SESSION, CHOSEN BY THE SCREEN, CARRIED IN THE MESSAGE. *** Argued (Mike's
+// list, 2026-10-12):
+//   * NO SALT: one picture is the same id in every household, so a table of common camera names (IMG_0001.jpg ...)
+//     made once reads everybody's. Rejected.
+//   * PER PERSON (say, from the person's id): the follow page could keep its index for good. But a picture is then the
+//     same id forever, so anybody holding two logs can tell "the same picture was on screen Monday and Friday" without
+//     knowing which - and the server knows the person's id anyway, so it hides nothing from the server either.
+//   * PER SHARING SESSION (CHOSEN): a fresh random salt each time somebody starts following after nobody was. No
+//     table made in advance works, ids from two sessions cannot be matched, and a guess has to be redone each session.
+//     Cost: the follow page hashes its listing once per session (measured in dev/photo_follow_test.html).
+//   * HONESTLY: the salt travels with the id, so the server sees both. Nothing that passes through the server can stop
+//     a server that sets out to GUESS names (camera names are guessable: a date and a time). What stops the server
+//     learning anything is rule 2 of play_relay.py - it holds the message in memory, passes it on, and keeps nothing.
+//     A salt the server never sees needs a key the two ends share some other way (a small key file in the shared
+//     Drive folder each side reads from its own copy, or a key exchange between the screen and the follow page).
+//     Not built: on Mike's list as the next step if he wants it.
+// The id is the first PHOTO_ID_HEX hex characters (128 bits) of SHA-256 over a fixed label, the salt and the path:
+// 128 bits is far past any household's pictures (a collision among a million is about 1 in 10^27), and fixed-length
+// hex is what lets both ends refuse anything else.
+export const PHOTO_ID_HEX = 32;
+export const SALT_HEX = 16;
+const PHOTO_ID = /^[0-9a-f]{32}$/;
+const SALT_RE = /^[0-9a-f]{16}$/;
+const PHOTO_LABEL = 'nimrod-photo-v1';
+// *** A FILE NAME DRESSED AS HEX IS STILL REFUSED. *** "Mom hospital 24" is fifteen bytes - thirty hex characters -
+// so the format alone would let a page smuggle a short name across as an "id". A real hash's bytes are random: the
+// chance that all sixteen are printable text is (95/256)^16, about 1 in 8 million, so an id whose bytes are ALL
+// printable is refused (play_relay.py does the same). The same for the salt's eight bytes (1 in 2,800 by chance; the
+// screen simply draws again).
+export function hexIsText(hex) {
+  if (typeof hex !== 'string' || !hex.length || hex.length % 2) return false;
+  for (let i = 0; i < hex.length; i += 2) {
+    const b = parseInt(hex.slice(i, i + 2), 16);
+    if (!(b >= 0x20 && b <= 0x7e)) return false;
+  }
+  return true;
+}
+export function isPhotoId(s) { return typeof s === 'string' && PHOTO_ID.test(s) && !hexIsText(s); }
+export function isSalt(s) { return typeof s === 'string' && SALT_RE.test(s) && !hexIsText(s); }
+// The path both ends hash: the picture's place inside its source's folder (hidden_pictures.js pictureKey's rule:
+// '/' separators, no leading './' or '/'), in Unicode NFC - a Mac and a Pi can spell "é" in two byte sequences, and
+// the same picture must give the same id on both.
+export function photoKey(path) {
+  const raw = String(path == null ? '' : path).trim().replace(/\\/g, '/').replace(/^(\.\/|\/)+/, '');
+  try { return raw.normalize('NFC'); } catch { return raw; }
+}
+/** The opaque id of a picture for one sharing session. '' for no path or a bad salt. PURE. */
+export function photoPlayId(salt, path) {
+  const key = photoKey(path);
+  if (!key || !isSalt(salt)) return '';
+  return sha256Hex(`${PHOTO_LABEL}\n${salt}\n${key}`).slice(0, PHOTO_ID_HEX);
+}
+/** A fresh salt (SALT_HEX hex). `rand` is the seam: () => an integer 0-255. */
+export function newSalt(rand = defaultByte) {
+  for (let tries = 0; tries < 64; tries++) {
+    let s = '';
+    for (let i = 0; i < SALT_HEX / 2; i++) s += (rand() & 255).toString(16).padStart(2, '0');
+    if (isSalt(s)) return s;
+  }
+  return 'ff'.repeat(SALT_HEX / 2);                    // never reached with a real source of randomness
+}
+function defaultByte() {
+  try { const a = new Uint8Array(1); globalThis.crypto.getRandomValues(a); return a[0]; }
+  catch { return Math.floor(Math.random() * 256); }
+}
+
+// *** AN ITEM IS A PUBLIC ID OR AN OPAQUE ONE, NEVER A NAME. *** A YouTube video id is public already. A picture is a
+// hash (above): fixed length, hex, and never printable text. A file name ("Mom hospital 2024.jpg") is neither.
 export function isPlayItem(kind, item) {
-  return kind === 'youtube' && typeof item === 'string' && YT_ID.test(item);
+  if (kind === 'youtube') return typeof item === 'string' && YT_ID.test(item);
+  if (kind === 'photo') return isPhotoId(item);
+  return false;
 }
 
 const finite = (v) => typeof v === 'number' && Number.isFinite(v);
 const bytes = (o) => { try { return new TextEncoder().encode(JSON.stringify(o)).length; } catch { return Infinity; } };
 
 /** The message a screen sends. Null when anything is wrong — and then nothing is sent. */
-export function buildPlay({ kind = 'youtube', item = null, pos = 0, playing = false, rate = 1, every = null, screen = '' } = {}) {
+// `salt` (photos only): the sharing session's salt the id was made with; required with a photo id, refused otherwise.
+export function buildPlay({ kind = 'youtube', item = null, pos = 0, playing = false, rate = 1, every = null, screen = '', salt = null } = {}) {
   if (!PLAY_KINDS.includes(kind)) return null;
   if (item !== null && !isPlayItem(kind, item)) return null;
+  if (kind === 'photo' ? (item !== null && !isSalt(salt)) || (salt !== null && !isSalt(salt)) : salt !== null) return null;
   const p = finite(pos) ? Math.max(0, Math.min(MAX_POS_S, pos)) : 0;
   const r = finite(rate) && rate >= 0.25 && rate <= 2 ? rate : 1;
   const msg = { type: 'play', kind, item, pos: Math.round(p * 1000) / 1000, playing: item !== null && playing === true, rate: r };
+  if (kind === 'photo' && salt !== null) msg.salt = salt;
   if (finite(every) && every >= 1 && every <= 60) msg.every = every;
   const name = String(screen || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, MAX_SCREEN_NAME);
   if (name) msg.screen = name;
@@ -62,10 +151,12 @@ export function checkPlay(m) {
   if (bytes(m) > MAX_PLAY_BYTES + 128) return null;     // the server's stamp adds ~40 bytes to a capped message
   if (!PLAY_KINDS.includes(m.kind)) return null;
   if (m.item !== null && !isPlayItem(m.kind, m.item)) return null;
+  if (m.kind === 'photo' && m.item !== null && !isSalt(m.salt)) return null;
   if (!finite(m.pos) || m.pos < 0 || m.pos > MAX_POS_S || typeof m.playing !== 'boolean') return null;
   if (!finite(m.at) || typeof m.from !== 'string' || !FROM_ID.test(m.from)) return null;
   const rate = finite(m.rate) && m.rate >= 0.25 && m.rate <= 2 ? m.rate : 1;
   const out = { kind: m.kind, item: m.item, pos: m.pos, playing: m.item !== null && m.playing, rate, at: m.at, from: m.from };
+  if (m.kind === 'photo' && isSalt(m.salt)) out.salt = m.salt;
   if (finite(m.every)) out.every = m.every;
   if (typeof m.screen === 'string' && m.screen.trim()) out.screen = m.screen.trim().slice(0, MAX_SCREEN_NAME);
   return out;
@@ -156,6 +247,10 @@ export function decide({ leader, mine, serverNow, settling = false, seekOverS = 
   tighten = false, fineS = FINE_AFTER_LOAD_S } = {}) {
   if (!leader) return { do: 'none' };
   const m = mine || {};
+  // photos in step: a SLIDESHOW showing nothing (its picture hidden or removed there, the panel closed or hidden) clears
+  // the follower's picture too - a picture the screen took down must not stay up here. A video showing nothing is
+  // paused instead, never blanked, exactly as before (the follower carries on with what it had).
+  if (leader.item === null && leader.kind === 'photo') return m.item !== null && m.item !== undefined ? { do: 'load', to: 0, play: false } : { do: 'none' };
   if (leader.item === null) return m.playing ? { do: 'pause' } : { do: 'none' };
   const target = targetPos(leader, serverNow);
   const lead = leader.playing ? seekLeadS : 0;
@@ -191,11 +286,53 @@ export const FOLLOW_FIELD = Object.freeze({
   default: FOLLOW_DEFAULT,
   onLabel: 'Yes, people on “Who may see this screen”',
   offLabel: 'No, never from this screen',
-  note: 'People on “Who may see this screen” (on the Remote page) can play the same YouTube video on their own '
-    + 'computer, at the same moment. By default the screen asks first each time. Only which video and where it has '
-    + 'got to is sent, never the picture or the sound, and nothing is kept. While anyone sees it, the screen says '
+  // photos in step (2026-10-12): the note says pictures too, and how a picture is named on the way (a code, never its name).
+  note: 'People on “Who may see this screen” (on the Remote page) can play the same YouTube video, or see the same '
+    + 'picture from their own copy of the pictures, on their own computer at the same moment. By default the screen '
+    + 'asks first each time. Only which video or picture (a picture as a code, never its name) and where it has got '
+    + 'to is sent, never the picture or the sound, and nothing is kept. While anyone sees it, the screen says '
     + '“Sharing your screen with” their name.',
 });
+
+// *** WHEN MORE THAN ONE THING PLAYS, WHICH ONE PEOPLE FOLLOWING SEE (photos in step, 2026-10-12). *** A screen with a
+// video panel AND a Photos panel. The sender shares ONE panel at a time (as before), and this picks it. Two shapes were
+// possible, argued:
+//   * THE SCREEN MARKS ONE AS MAIN (chosen): one stream leaves the screen, so a follow page needs no extra control and
+//     the traffic stays one small message every couple of seconds. AGAINST: somebody following a video who would rather
+//     see the pictures cannot choose that from their own end.
+//   * THE FOLLOW PAGE CHOOSES: the screen sends every panel and the follower picks. AGAINST: more of the screen leaves
+//     the room than anybody is looking at, each panel's heartbeat doubles the traffic, and a follow page gains a choice
+//     that has to be explained. Not built; it is one row on Mike's list if he wants it.
+// The default: 'video' - A VIDEO WHILE ONE IS PLAYING (OR PAUSED FOR LESS THAN PAUSED_HOLD_MS), OTHERWISE THE PICTURES.
+//   FOR: a video is chosen on purpose and has sound - when one is on, it is what the room is watching; the slideshow runs
+//   all day behind everything, so 'photos' as the default would make following a video impossible on any screen that
+//   also has a slideshow, and the pictures are still what a follower sees for most of the day. AGAINST: pictures are
+//   what matters most on a bedside screen, and somebody who wants them followed even while a video plays sets 'photos'.
+// 'latest' is the rule this had before pictures existed: whichever started playing most recently, kept until it stops.
+// `advanced` (shown at "Everything"): set once, rarely, by whoever sets the screen up.
+export const FOLLOW_MAIN_KEY = 'followMain';
+export const FOLLOW_MAIN_DEFAULT = 'video';
+export const FOLLOW_MAIN_FIELD = Object.freeze({
+  key: FOLLOW_MAIN_KEY,
+  label: 'When more than one thing plays, people following see',
+  kind: 'choice',
+  level: 'advanced',
+  default: FOLLOW_MAIN_DEFAULT,
+  options: [
+    { value: 'video', label: 'the video while one is on, otherwise the pictures' },
+    { value: 'photos', label: 'the pictures while a slideshow is on' },
+    { value: 'latest', label: 'whatever started playing last' },
+  ],
+});
+export function mainOf(row) {
+  const v = row && row[FOLLOW_MAIN_KEY];
+  return FOLLOW_MAIN_FIELD.options.some((o) => o.value === v) ? v : FOLLOW_MAIN_DEFAULT;
+}
+// *** A PAUSED VIDEO STAYS "THE VIDEO" FOR 5 MINUTES. *** Under 'video', a pause to talk about something should not flip
+// everybody following over to the pictures and back on Play. Five minutes, argued: a pause to talk, answer the door or
+// find a moment again is minutes; a video left paused (or ended) for longer is no longer what anybody is watching, and
+// the slideshow is. Not a menu setting: nobody can judge it from a menu. A seam (`pausedHoldMs`) for the suite.
+export const PAUSED_HOLD_MS = 5 * 60 * 1000;
 export function followOf(row) {
   const v = row && row[FOLLOW_KEY];
   return typeof v === 'boolean' ? v : FOLLOW_DEFAULT;
@@ -286,15 +423,24 @@ export function createPlaySender({
   watchers = () => 0,                 // how many are following (the server's presence count)
   beatS = () => FOLLOW_BEAT_DEFAULT,
   screenName = () => '',
+  main = () => FOLLOW_MAIN_DEFAULT,   // photos in step: which panel when more than one plays (FOLLOW_MAIN_FIELD)
   ping = null,                        // () => Promise<{sent, t, recv} | null> — the drive socket's ping
   clock = createClock(),
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   minGapMs = MIN_GAP_MS,
+  pausedHoldMs = PAUSED_HOLD_MS,
+  makeSalt = () => newSalt(),         // photos in step: a fresh salt for each sharing session (the suites pin it)
 } = {}) {
+  // EVERY PANEL'S LAST REPORT, kept in this screen's memory only: panel -> { kind, ident, pos, playing, rate, t, since }.
+  // `ident` is what the panel is on: a YouTube id, or (photos in step) a picture's PATH - which never leaves this
+  // screen: it is hashed with the session's salt as the message is built (`sendNow`), and only the hash goes.
+  const panels = new Map();
   let lead = null;                    // the panel being shared (one at a time)
-  let base = null;                    // { kind, item, pos, playing, rate, t } as last reported by it
+  let base = null;                    // panels.get(lead)
+  let lastKind = 'youtube';           // the kind of the last thing shared, for a "nothing playing" message
+  let salt = null;                    // photos in step: this sharing session's salt (made when it goes live)
   let beatTimer = null, gapTimer = null, pingTimer = null;
   let lastSent = -Infinity;
   let sentCount = 0;
@@ -303,20 +449,65 @@ export function createPlaySender({
 
   const active = () => !destroyed && !!enabled() && (watchers() | 0) > 0;
 
-  function posNow() {
-    if (!base) return 0;
-    const since = Math.max(0, (now() - base.t) / 1000);
-    return base.playing ? base.pos + since * (base.rate || 1) : base.pos;
+  function posOf(b) {
+    if (!b) return 0;
+    const since = Math.max(0, (now() - b.t) / 1000);
+    return b.playing ? b.pos + since * (b.rate || 1) : b.pos;
+  }
+  const posNow = () => posOf(base);
+
+  // *** WHICH PANEL IS SHARED. *** First the screen's FOLLOW_MAIN_FIELD narrows the panels with something on to the
+  // kind it prefers (when any is on); then, among those, the one already shared stays shared unless it has stopped and
+  // another is playing - the rule this had from the start, so two video panels behave exactly as before.
+  function chooseLead(prev) {
+    const on = [...panels.entries()].filter(([, b]) => b.ident !== null);
+    if (!on.length) return prev !== null && panels.has(prev) ? prev : null;
+    let pool = on;
+    const mode = (() => { try { return main(); } catch { return FOLLOW_MAIN_DEFAULT; } })();
+    if (mode === 'video') {
+      const vids = on.filter(([, b]) => b.kind === 'youtube' && (b.playing || now() - b.since < pausedHoldMs));
+      const pics = on.filter(([, b]) => b.kind === 'photo');
+      if (vids.length) pool = vids; else if (pics.length) pool = pics;
+    } else if (mode === 'photos') {
+      const pics = on.filter(([, b]) => b.kind === 'photo');
+      if (pics.length) pool = pics;
+    }
+    const playing = pool.filter(([, b]) => b.playing);
+    const kept = pool.find(([p]) => p === prev);
+    if (kept && (kept[1].playing || !playing.length)) return prev;
+    const from = playing.length ? playing : pool;
+    return from.reduce((a, b) => (b[1].since > a[1].since ? b : a))[0];
+  }
+
+  // Re-decide the shared panel; true when it changed.
+  function relead() {
+    const prev = lead;
+    lead = chooseLead(prev);
+    base = lead !== null ? panels.get(lead) || null : null;
+    if (base) lastKind = base.kind;
+    return lead !== prev;
   }
 
   function sendNow() {
     if (gapTimer != null) { clearTimer(gapTimer); gapTimer = null; }
     if (!active()) return false;
+    relead();                         // a paused video's hold (PAUSED_HOLD_MS) runs out on a heartbeat, not a report
     // `pos` as of the moment the server stamps it: half the round trip ahead, if it is playing.
     const ahead = base && base.playing ? clock.rtt() / 2000 : 0;
+    const kind = base ? base.kind : lastKind;
+    let item = base ? base.ident : null;
+    let s = null;
+    if (kind === 'photo') {
+      // photos in step: the path becomes the session's opaque id HERE, and only here. No salt, or a path that will not
+      // hash, is "nothing to follow" - never the path.
+      if (!isSalt(salt)) salt = makeSalt();
+      s = isSalt(salt) ? salt : null;
+      item = item !== null && s ? (photoPlayId(s, item) || null) : null;
+      if (item === null) s = null;
+    }
     const msg = buildPlay({
-      kind: (base && base.kind) || 'youtube', item: base ? base.item : null, pos: posNow() + ahead,
-      playing: !!(base && base.playing), rate: (base && base.rate) || 1, every: beatS(), screen: screenName(),
+      kind, item, pos: posNow() + ahead, salt: s,
+      playing: !!(base && base.playing) && item !== null, rate: (base && base.rate) || 1, every: beatS(), screen: screenName(),
     });
     if (!msg) return false;
     let ok = false;
@@ -349,23 +540,34 @@ export function createPlaySender({
     pingTimer = setTimer(() => { pingTimer = null; pingOnce(); restartPing(); }, PING_EVERY_MS);
   }
 
-  /** A panel's report: `{ kind, panel, item, pos, playing, rate }` (PLAY_NOW_TOPIC). */
+  // What a panel's report names. YouTube: a public id, or nothing. Photos (photos in step): `key`, the picture's path
+  // inside its source's folder - kept here, hashed only on the way out. Anything else is "nothing".
+  function identOf(kind, r) {
+    if (kind === 'photo') {
+      const k = typeof r.key === 'string' ? photoKey(r.key) : '';
+      return k && k.length <= 500 ? k : null;
+    }
+    return isPlayItem(kind, r.item) ? r.item : null;
+  }
+
+  /** A panel's report (PLAY_NOW_TOPIC): `{ kind: 'youtube', panel, item, pos, playing, rate }`, or for a Photos panel
+   *  `{ kind: 'photo', panel, key, pos, playing }` (`key` the picture's path inside its source; null for nothing). */
   function report(r) {
     if (destroyed || !r || typeof r !== 'object') return;
     const kind = PLAY_KINDS.includes(r.kind) ? r.kind : null;
     if (!kind) return;
-    const item = isPlayItem(kind, r.item) ? r.item : null;
+    const ident = identOf(kind, r);
     const panel = String(r.panel || kind);
-    const playing = item !== null && r.playing === true;
-    // ONE PANEL IS SHARED AT A TIME: the one already shared, unless it has stopped and another is playing.
-    if (lead !== null && lead !== panel && !(playing && !(base && base.playing))) return;
-    const was = base;
-    const expected = posNow();
-    const pos = finite(r.pos) ? Math.max(0, r.pos) : (was && was.item === item ? expected : 0);
-    base = { kind, item, pos, playing, rate: finite(r.rate) ? r.rate : 1, t: now() };
-    const changed = lead !== panel || !was || was.item !== item || was.playing !== playing
-      || Math.abs(pos - expected) > SEEK_DETECT_S;
-    lead = panel;
+    const playing = ident !== null && r.playing === true;
+    const was = panels.get(panel) || null;
+    const expected = posOf(was);
+    const same = !!was && was.kind === kind && was.ident === ident;
+    const pos = finite(r.pos) ? Math.max(0, r.pos) : (same ? expected : 0);
+    const t = now();
+    const since = same && was.playing === playing ? was.since : t;
+    panels.set(panel, { kind, ident, pos, playing, rate: finite(r.rate) ? r.rate : 1, t, since });
+    const moved = relead();
+    const changed = moved || (lead === panel && (!same || was.playing !== playing || Math.abs(pos - expected) > SEEK_DETECT_S));
     if (changed) sendSoon();
   }
 
@@ -373,9 +575,14 @@ export function createPlaySender({
    *  kiosk calls it on every presence message and every settings notice, and a heartbeat restarted on each of
    *  those would never get to beat (measured: the first two-tab run sent two messages in two minutes). */
   let beatWas = null;
+  let mainWas = null;
   function refresh() {
     const on = active();
-    if (on && !live) { live = true; beatWas = beatS(); pingOnce(); restartPing(); sendNow(); restartBeat(); return; }
+    if (on && !live) {
+      // A NEW SHARING SESSION: a new salt (photos in step - ids from two sessions cannot be matched).
+      live = true; salt = makeSalt(); beatWas = beatS(); mainWas = safeMain();
+      pingOnce(); restartPing(); sendNow(); restartBeat(); return;
+    }
     if (!on && live) {
       live = false;
       for (const t of [beatTimer, gapTimer, pingTimer]) if (t != null) clearTimer(t);
@@ -383,21 +590,27 @@ export function createPlaySender({
       return;
     }
     if (on && beatS() !== beatWas) { beatWas = beatS(); restartBeat(); }   // only when the setting itself changed
+    if (on && safeMain() !== mainWas) { mainWas = safeMain(); if (relead()) sendSoon(); }
   }
+  function safeMain() { try { return main(); } catch { return FOLLOW_MAIN_DEFAULT; } }
 
-  /** A panel went away: if it was the one shared, nothing is playing now. */
+  /** A panel went away: it is no longer shared; another panel with something on may be. */
   function forget(panel) {
-    if (lead === null || String(panel) !== lead) return;
-    base = base ? { ...base, item: null, playing: false, pos: 0, t: now() } : null;
+    const p = String(panel);
+    if (!panels.has(p)) return;
+    panels.delete(p);
+    if (lead !== p) return;
+    lead = null; base = null;
+    relead();
     sendSoon();
-    lead = null;
   }
 
   return {
     report, refresh, forget,
     sendNow,
     active,
-    state: () => ({ lead, base: base ? { ...base } : null, sent: sentCount, live }),
+    state: () => ({ lead, base: base ? { ...base, item: base.ident } : null, sent: sentCount, live, salt,
+      panels: panels.size }),
     clock: () => clock,
     destroy() {
       destroyed = true;
@@ -416,7 +629,7 @@ export function createPlaySender({
 export const LOST_MIN_MS = 10000;
 
 export function createFollower({
-  player,                             // { load(id, pos, play), seek(pos, play), play(), pause(), item(), currentTime(), playing() }
+  player,                             // { load(id, pos, play, kind, leader), seek(pos, play), play(), pause(), item(), currentTime(), playing() }
   clock = createClock(),
   now = () => Date.now(),
   seekOverS = SEEK_OVER_S,
@@ -439,7 +652,9 @@ export function createFollower({
   function mine() {
     let pos = null, item = null, playing = false;
     try { item = player?.item?.() ?? null; } catch { item = null; }
-    try { const t = Number(player?.currentTime?.()); pos = Number.isFinite(t) ? t : null; } catch { pos = null; }
+    // null means "cannot say" (a still picture; a player not ready yet) - Number(null) is 0, which read as "at the very
+    // start" and made the follower seek a still picture on every look (found adding photos in step, 2026-10-12).
+    try { const raw = player?.currentTime?.(); const t = raw == null ? NaN : Number(raw); pos = Number.isFinite(t) ? t : null; } catch { pos = null; }
     try { playing = !!player?.playing?.(); } catch { playing = false; }
     return { item, pos, playing };
   }
@@ -474,12 +689,20 @@ export function createFollower({
       if (tight) tightenPending = false;                  // the one chance, taken or not needed
       try {
         if (d.do === 'load') {
-          player.load(leader.item, d.to, d.play); loads += 1; settleUntil = t + settleMs; misses = 0; tightenPending = true;
+          // photos in step: the kind and the message go too, so one player can show a video or a picture (follow_view.js);
+          // a player that knows only videos ignores them.
+          player.load(leader.item, d.to, d.play, leader.kind, leader); loads += 1; settleUntil = t + settleMs; misses = 0; tightenPending = true;
         } else if (d.do === 'seek') {
           player.seek(d.to, d.play); seeks += 1;
           if (tight) settleUntil = t + settleMs;          // the tightening seek is not a miss
           else { settleUntil = t + Math.min(settleMaxMs, settleMs * (2 ** misses)); misses += 1; }
-        } else if (d.do === 'play') player.play();
+        } else if (d.do === 'play') {
+          // A RESUME LANDS LATE TOO, like a load (measured 2026-10-12, two headless windows: a YouTube follower carrying
+          // on in place after the screen's Play sat ~0.29 s behind for good). So a resume earns the same one finer seek
+          // once it has settled. (Before 2026-10-12 this call threw - the YouTube player has no play() - and the
+          // follower only caught up through a seek once it was 2 s behind; follow_view.js now resumes it.)
+          player.play(); settleUntil = t + settleMs; tightenPending = true;
+        }
         else if (d.do === 'pause') player.pause();
         else if (t >= settleUntil) misses = 0;           // in step: a later seek starts from the short wait again
       } catch (err) { console.error('play_sync: follower', err); }
