@@ -75,6 +75,8 @@ export const SUITES = [
   'player_picker',
   // play as (row 2.80): "play <game> as <person>" by voice - who that makes the players, and which panel starts.
   'play_as',
+  // voice open (2026-10-12): a module asked for by voice opens full screen, or where it was put, and goes back again.
+  'voice_open',
   // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
   'soak',
   // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function

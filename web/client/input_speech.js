@@ -808,6 +808,10 @@ export function playVocabulary(raw) {
   return {
     games: clean(v.games, (g) => ({ id: g.id, name: String(g.name || g.title || ''), here: g.here !== false })),
     people: clean(people, (p) => ({ id: p.id, name: String(p.name || '') })),
+    // voice open (Mike, 2026-10-12): every module "open / show <module>" knows (voice_open.js `moduleEntries`). `hidden`:
+    // one the library does not offer, kept so the screen can SAY it does not open rather than "I do not know it".
+    modules: clean(v.modules, (m) => ({ id: m.id, name: String(m.name || m.title || ''), here: m.here === true,
+                                        ...(m.hidden === true ? { hidden: true } : {}) })),
     cleaned: true,   // already through here: `playAsFor` and friends do not clean it twice
   };
 }
@@ -873,9 +877,23 @@ function playPeople(words, people, nearOk) {
  *   near       { slot: 'game'|'people', heard, phrase } when one slot was one word off (ask; never act), else null
  *   phrase     what it would have been, corrected - the near-miss question's words
  */
+//   place      (voice open, Mike 2026-10-12) where it was asked to go, or null: 'full', 'tl' 'tr' 'bl' 'br', 'corner',
+//              'left' 'right' 'top' 'bottom', 'middle' (PLACE_PHRASES). "play trivia as robin in the corner".
 export function playAsFor(text, vocab, { near: nearOk = true } = {}) {
   const v = cleanVocab(vocab);
   const w = playTokens(text);
+  if (w[0] !== 'play' || w.length < 2) return null;
+  // voice open: the whole utterance first (a game whose name ends in a place word keeps it); else a place said at the end.
+  const whole = playAsParse(w, v, nearOk);
+  if (whole && whole.game && !whole.near && !whole.unknown.length) return { ...whole, place: null };
+  const sp = placeSplit(w.slice(1));
+  if (sp) {
+    const cut = playAsParse(['play', ...sp.body], v, nearOk);
+    if (cut) return { ...cut, place: sp.place, phrase: `${cut.phrase} ${sp.words}` };
+  }
+  return whole ? { ...whole, place: null } : null;
+}
+function playAsParse(w, v, nearOk) {
   if (w[0] !== 'play' || w.length < 2) return null;
   let i = 1;
   let count = null;
@@ -945,7 +963,140 @@ export function playHints(vocab, { max = PLAY_HINTS_MAX } = {}) {
   const add = (s) => { const t = String(s || '').trim(); if (t && !out.some((x) => x.toLowerCase() === t.toLowerCase())) out.push(t); };
   for (const p of v.people) if (p.id !== PLAY_GUEST_ID) add(p.name || p.names[0]);
   for (const g of v.games) add(g.name || g.names[0]);
+  // voice open: the modules "open <module>" knows, after the games (a game is also a module; it is not added twice).
+  for (const m of v.modules || []) if (!m.hidden) add(m.name || m.names[0]);
   return out.slice(0, Math.max(0, Math.floor(Number(max)) || 0));
+}
+
+// ---------------------------------------------------------------------------------------
+// *** "OPEN <MODULE>", "SHOW <MODULE>", AND A PLACE SAID AFTER IT (voice open, Mike 2026-10-12). ***
+// ---------------------------------------------------------------------------------------
+//
+// Mike (public DECISIONS, 40c5889): *"When I ask the computer to play trivia, it says Trivia is not on this screen. I
+// would like it to just pull up a full screen dashboard of whatever module I ask for, unless you specify something else
+// like 'trivia bottom right corner' or whatever."* THIS FILE HEARS which module and which place; voice_open.js DECIDES
+// (and play_as.js, for a game, who plays). The same rules as "play <game> as <person>" above: exact after normalising,
+// the WHOLE utterance, every fixed command first ("show the settings", "open the menu", "show my video" are what they
+// always were), one slot one word off is ASKED about and never acted on, and an unknown module is said back only when
+// it was said to the screen.
+//   open <module> [place]       "open the calculator", "open trivia on the left"
+//   show [me] <module> [place]  "show the clock", "show me the pictures in the corner"
+//   pull up / bring up <module> [place]   Mike's own words ("pull up a full screen dashboard")
+//   put <module> <place>        "put trivia in the middle"
+//   <module> <place>            "trivia bottom right corner" - Mike's example, with no verb at all. A module named ON ITS
+//                               OWN is not this command: said to a quiz it is an answer, said to a room it is talk.
+//   play <game> [as ...] [place]   playAsFor above.
+//
+// *** THE PLACES: A SMALL, CLEAR VOCABULARY (PLACE_PHRASES), ARGUED. *** Four corners, four halves, the middle, the
+// corner (whichever one the screen's "In the corner means" says), and full screen. Each also with "in / on / at / to
+// the" in front and "of the screen" after ("in the bottom right corner of the screen" is the corner).
+//   FOR this set: they are the words people already use for a screen, they need no counting, and every one of them is
+//   a whole region a module can be read in (a quarter, a half, or the middle quarter) - no "a bit to the left".
+//   AGAINST: thirds, "small", "big", "next to the photos". Each is a size or a relation the screen would have to guess
+//   at, and a guessed place is the "wrong kind of surprise" play_as.js argued against. [On Mike's list.]
+// Vocabulary [unverified on the bench]: every word is a common one; "centre"/"center" are both written.
+export const SPEECH_OPEN_TOPIC = 'speech/open';
+// The near-miss question's id for this command (it is not a route, so it cannot be pressed as one).
+export const OPEN_ID = 'open-module';
+export const PLACE_PHRASES = Object.freeze({
+  full: Object.freeze(['full screen', 'whole screen', 'all of the screen']),
+  tl: Object.freeze(['top left', 'top left corner', 'upper left', 'upper left corner']),
+  tr: Object.freeze(['top right', 'top right corner', 'upper right', 'upper right corner']),
+  bl: Object.freeze(['bottom left', 'bottom left corner', 'lower left', 'lower left corner']),
+  br: Object.freeze(['bottom right', 'bottom right corner', 'lower right', 'lower right corner']),
+  corner: Object.freeze(['corner']),
+  left: Object.freeze(['left', 'left half', 'left side']),
+  right: Object.freeze(['right', 'right half', 'right side']),
+  top: Object.freeze(['top', 'top half']),
+  bottom: Object.freeze(['bottom', 'bottom half']),
+  middle: Object.freeze(['middle', 'centre', 'center']),
+});
+const PLACE_INDEX = new Map(Object.entries(PLACE_PHRASES).flatMap(([id, ps]) => ps.map((p) => [p, id])));
+const PLACE_LEAD = new Set(['in', 'on', 'at', 'to', 'into', 'onto', 'the']);
+// The verbs, and how many words each is. "show me" before "show".
+export const OPEN_VERBS = Object.freeze({ 'show me': 2, 'pull up': 2, 'bring up': 2, 'open up': 2, open: 1, show: 1, put: 1 });
+const OPEN_ARTICLES = new Set(['the', 'a', 'an', 'my', 'some']);
+// *** HARD-CODED, ARGUED (Rule 1): OPEN_GRAMMAR_MAX 100. *** "open <module>" and "show <module>" for a grammar-limited
+// engine (the per-person 'grammar' option only). It shares that grammar with play's PLAY_GRAMMAR_MAX (300), and the
+// same argument holds: the longer a closed list, the surer such an engine is of wrong answers. A hundred is "open" and
+// "show" for every module's own name; the places are left to open recognition (the default), which hears them with no
+// list. FOR more: somebody on a grammar who wants "trivia in the corner". AGAINST: eleven places times every name is
+// hundreds of near-identical phrases, the shape a small engine mis-hears worst.
+export const OPEN_GRAMMAR_MAX = 100;
+
+/**
+ * A place said at the END of `words` (normalised tokens): { place, body, words } - the place id, the words before it
+ * (never empty), and the place as it was said - or null. The longest place wins ("bottom right corner", not "corner").
+ */
+export function placeSplit(words) {
+  const w = Array.isArray(words) ? words : [];
+  for (let k = 1; k < w.length; k += 1) {
+    let s = w.slice(k);
+    if (s.length > 9) continue;
+    let a = 0;
+    while (a < s.length - 1 && PLACE_LEAD.has(s[a])) a += 1;
+    s = s.slice(a);
+    if (s.length > 3 && s.slice(-3).join(' ') === 'of the screen') s = s.slice(0, -3);
+    const id = PLACE_INDEX.get(s.join(' '));
+    if (id) return { place: id, body: w.slice(0, k), words: w.slice(k).join(' ') };
+  }
+  return null;
+}
+
+/**
+ * Was this (the words after the wake phrase) "open / show / pull up / put <module> [place]" or "<module> <place>"? null
+ * when it is none of them, else { module, moduleHeard, place, verb, near, phrase }:
+ *   module     the vocabulary id (the module's type), or null when no module here has that name (said back as such)
+ *   place      a PLACE_PHRASES id, or null (the screen's own default: full screen, unless its setting says otherwise)
+ *   verb       'open' | 'show' | 'show me' | 'pull up' | 'bring up' | 'open up' | 'put', or null (a module and a place)
+ *   near       { slot: 'module', heard, phrase } when the name was one word off (ask; never act), else null
+ */
+export function openFor(text, vocab, { near: nearOk = true } = {}) {
+  const v = cleanVocab(vocab);
+  const mods = v.modules || [];
+  if (!mods.length) return null;
+  const w = playTokens(text);
+  if (!w.length || w[0] === 'play') return null;
+  let verb = null;
+  let i = 0;
+  const two = w.slice(0, 2).join(' ');
+  if (OPEN_VERBS[two] === 2) { verb = two; i = 2; } else if (OPEN_VERBS[w[0]] === 1) { verb = w[0]; i = 1; }
+  const rest = w.slice(i);
+  if (!rest.length) return null;
+  const strip = (words) => { let j = 0; while (j < words.length - 1 && OPEN_ARTICLES.has(words[j])) j += 1; return words.slice(j); };
+  let body = strip(rest);
+  let place = null;
+  let placeWords = '';
+  let mod = playExact(mods, body);
+  if (!mod) {
+    const sp = placeSplit(rest);
+    if (sp) { body = strip(sp.body); place = sp.place; placeWords = sp.words; mod = playExact(mods, body); }
+  }
+  if (!verb && !place) return null;
+  let near = null;
+  let modWords = body;
+  if (!mod && nearOk) {
+    const m = playNear(mods, body);
+    if (m) { mod = m.entry; near = { slot: 'module', heard: body.join(' '), phrase: m.phrase }; modWords = m.phrase.split(' '); }
+  }
+  // "<something> in the corner" naming no module is not this command (nothing here was asked for).
+  if (!mod && !verb) return null;
+  const phrase = [...w.slice(0, i), ...modWords, ...(placeWords ? placeWords.split(' ') : [])].join(' ');
+  return { module: mod ? mod.id : null, moduleHeard: body.join(' '), place, verb, near, phrase };
+}
+
+/**
+ * The phrases a GRAMMAR-limited engine is given for this command: "open <module>" and "show <module>", for every module
+ * that opens by voice, at most OPEN_GRAMMAR_MAX (argued there). Those NOT on the screen first: they are the ones this
+ * command exists for.
+ */
+export function openPhrases(vocab, { max = OPEN_GRAMMAR_MAX } = {}) {
+  const v = cleanVocab(vocab);
+  const mods = (v.modules || []).filter((m) => !m.hidden);
+  const order = [...mods.filter((m) => !m.here), ...mods.filter((m) => m.here)];
+  const out = [];
+  for (const m of order) for (const n of m.names) { out.push(`open ${n}`); out.push(`show ${n}`); }
+  return [...new Set(out)].slice(0, Math.max(0, Math.floor(Number(max)) || 0));
 }
 
 /**
@@ -1643,6 +1794,7 @@ export function attachSpeech(input, {
   screenSpeech = null,
   // "PLAY <GAME> AS <PERSON>" (row 2.80): a function returning the vocabulary ({ games, people }, `playVocabulary`),
   // asked each time something is heard, like `scoped`. Null (the default): no such command, exactly as before.
+  // (voice open, 2026-10-12: its `modules` too - "open / show <module> [place]" is heard only when the host gives them.)
   playAs = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
@@ -1964,10 +2116,13 @@ export function attachSpeech(input, {
     // play as (row 2.80): "play <game>" and "play <game> as <name>" for the games on this screen (playPhrases argues it).
     const pv = playVocabNow();
     const plays = pv ? playPhrases(pv) : [];
+    // voice open (2026-10-12): "open <module>" / "show <module>" (openPhrases argues the cap).
+    const opens = pv ? openPhrases(pv) : [];
     let t = spoken;
     if (own.length) t = { ...t, '#focused': own };
     if (asks.length) t = { ...t, '#ask': asks };
     if (plays.length) t = { ...t, '#play': plays };
+    if (opens.length) t = { ...t, '#open': opens };
     return t;
   };
 
@@ -2006,7 +2161,19 @@ export function attachSpeech(input, {
     publish(SPEECH_PLAY_AS_TOPIC, {
       game: pa.game, gameHeard: pa.gameHeard, join: pa.join, count: pa.count, people: [...pa.people],
       unknown: [...pa.unknown], text: text == null ? pa.phrase : text,
+      // voice open (2026-10-12): where it was asked to go ("play trivia in the corner"), when a place was said.
+      ...(pa.place ? { place: pa.place } : {}),
       // WHO SAID IT (row 2.56), when the speech program could tell: a label, never a permission.
+      ...(detail && detail.speaker ? { speaker: detail.speaker } : {}),
+    });
+  }
+  // voice open (2026-10-12): "open <module> [place]" heard - voice_open.js decides what it does.
+  function openSend(oa, text, woke, detail = {}) {
+    report({ text, verb: null, woke, open: { module: oa.module, place: oa.place, verb: oa.verb } });
+    confirmed(OPEN_ID);
+    publish(SPEECH_OPEN_TOPIC, {
+      module: oa.module, moduleHeard: oa.moduleHeard, place: oa.place, verb: oa.verb,
+      text: text == null ? oa.phrase : text,
       ...(detail && detail.speaker ? { speaker: detail.speaker } : {}),
     });
   }
@@ -2181,6 +2348,30 @@ export function attachSpeech(input, {
       if (pa && !pa.near && (toScreen || (pa.game && !pa.unknown.length))) {
         closeWindow('command');   // one wake, one command
         playAsSend(pa, text, w.woke, detail);
+        return;
+      }
+      // voice open (2026-10-12): "open / show <module> [place]", "<module> <place>". The same rules as play as: exact and
+      // known is a command (the wake gate decides); a near miss is asked about, and only when said to the screen.
+      const oa = !pa && pv ? openFor(rawRest(text, w), pv, { near: asking }) : null;
+      if (oa && oa.near && toScreen && asking) {
+        report({ text, verb: null, woke: w.woke, nearMiss: oa.phrase, open: true });
+        ask({ id: OPEN_ID, phrase: oa.phrase, run: () => openSend(oa, null, w.woke, detail) });
+        return;
+      }
+      if (oa && !oa.near && oa.module) {
+        closeWindow('command');   // one wake, one command
+        openSend(oa, text, w.woke, detail);
+        return;
+      }
+      // A module nobody here has, said to the screen: a near miss of another command is asked about first ("show the
+      // setting" is "show the settings"), else the screen says it does not know that module - instead of "Say it again?",
+      // which would only get the same words back.
+      if (oa && !oa.near && !oa.module && toScreen) {
+        logMiss(rest);
+        const nmo = asking ? nearMiss(rest, spoken) : null;
+        if (nmo) { report({ text, verb: null, woke: w.woke, nearMiss: nmo.phrase }); ask(nmo); return; }
+        closeWindow('command');
+        openSend(oa, text, w.woke, detail);
         return;
       }
       if (toScreen) logMiss(rest);

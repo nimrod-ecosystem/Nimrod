@@ -38,6 +38,10 @@ import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
 import { registerModule } from '../module.js';
 import { DEFAULT_PALETTE } from '../color_picker.js';
 import { sceneDoors, sceneLooks, withDoor, withLook } from '../room_doors.js';
+// voice open (2026-10-12): a module asked for by voice opens over the dashboard (voice_open.js).
+import { SPEECH_OPEN_TOPIC, SPEECH_PLAY_AS_TOPIC } from '../input_speech.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
+import { verbTopic } from '../actions.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
@@ -505,8 +509,13 @@ const toTab = (m, id) => {
       // (the hear half, 2026-10-12, DELIBERATELY: "During a call, other sound" on the screen's Sound rows, after the mixer
       // (call_sound.js argues it: pauses, unless someone is watching along). One more of the old rows: 45. Its "how quiet"
       // row is "Everything" only. The panel's lap is unchanged. dev/follow_call_sound_test.html checks both.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 45) ***',
-        lapStops.length === 14 && oldStops.length === 45 && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
+      // (voice open, 2026-10-12, DELIBERATELY: "A module asked for by voice that is not on the dashboard opens" and "It goes
+      // back by itself after nothing is pressed or played for" on the This screen tab, under "Asked for by voice"
+      // (voice_open.js argues both; Mike: "pull up a full screen dashboard of whatever module I ask for"). Two more of the
+      // old rows: 47. Its other two rows are "Everything" only. The panel's lap is unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 47) ***',
+        lapStops.length === 14 && oldStops.length === 47 && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
+        && oldStops.some((i) => i.id === 'set:voiceOpenWhere') && oldStops.some((i) => i.id === 'set:voiceOpenQuietMs') /* voice open */
         && oldStops.some((i) => i.id === 'set:callOtherSound') /* the hear half */
         && oldStops.some((i) => i.id === 'set:panelRing') /* panel ring */
         && oldStops.some((i) => i.id === 'set:callOpensAs') && oldStops.some((i) => i.id === 'set:callCaptions') /* call loadouts */
@@ -4647,6 +4656,173 @@ const toTab = (m, id) => {
     groot.remove();
   } catch (e) {
     check('the switch-access gaps section threw', false, String((e && e.stack) || e));
+  }
+
+  // =================================================================================================================
+  // *** VOICE OPEN (Mike, 2026-10-12; public DECISIONS 40c5889; voice_open.js). *** "When I ask the computer to play trivia,
+  // it says Trivia is not on this screen. I would like it to just pull up a full screen dashboard of whatever module I ask
+  // for, unless you specify something else like 'trivia bottom right corner'." The speech layer is not attached here (no
+  // microphone): what it would publish is published (speech_test checks the hearing).
+  // =================================================================================================================
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const readSettings = async (screen) => {
+      const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+      await st.load().catch(() => {}); const v = { ...(st.get() || {}) }; st.destroy(); return v;
+    };
+    const writeSettings = async (screen, patch) => {
+      const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+      await st.load(); st.set(patch); await st.flush(); st.destroy();
+    };
+    const V = await profiles.create('TEST-voice-open');
+    const vPhotos = await profiles.addModule(V.id, 'photos');
+    await writeSettings(V, { kiosk: { layout: { preset: 'full', slots: [vPhotos.id] } } });
+    const before = JSON.stringify((await readSettings(V)).kiosk);
+    const vroot = document.createElement('div');
+    vroot.style.cssText = 'position:relative;width:900px;height:560px';
+    document.body.append(vroot);
+    const vbus = createBus();
+    const mountV = () => mountKiosk(vroot, { user: USER, profileId: V.id, profiles, bus: vbus, reloadPage: () => {},
+      voiceOpenTimes: { quietMs: 2500, restLingerMs: 300 } });
+    let vk = await mountV();
+    await sleep(200);
+    const box = () => vroot.querySelector('.k-voiceview');
+    const cur = () => vk.voiceOpen().current();
+    const kds = () => vroot.querySelector('.kiosk').dataset;
+    check('(setup) one panel, Photos, the only stop; nothing open by voice',
+      await settled(() => vk.routerFocus() === vPhotos.id, 4000) && !cur() && !box(), `${vk.routerFocus()} ${JSON.stringify(cur())}`);
+    const vocab = vk.voiceOpen().modules();
+    check('the modules "open <module>" knows: the library\'s, with Trivia not here and Photos here; a test panel known but hidden',
+      vocab.some((m) => m.type === 'trivia' && !m.here) && vocab.some((m) => m.type === 'photos' && m.here)
+      && !!vocab.find((m) => m.type === 'keyboard')?.hidden && vocab.find((m) => m.type === 'photos')?.names.includes('pictures'),
+      JSON.stringify(vocab.filter((m) => ['trivia', 'photos', 'keyboard'].includes(m.type))));
+
+    // (1) "PLAY TRIVIA", NOT ON THE DASHBOARD: it opens, full screen, for now.
+    vbus.publish(SPEECH_PLAY_AS_TOPIC, { game: 'trivia', join: null, count: null, people: [], unknown: [], text: 'play trivia' });
+    check('*** "play trivia" with no Trivia on the dashboard: it OPENS, full screen (was "Trivia is not on this screen") ***',
+      await settled(() => cur()?.type === 'trivia' && cur()?.mounted && box()?.dataset.voiceView === 'full', 5000),
+      `${JSON.stringify(cur())} ${JSON.stringify(vk.playAs().last())}`);
+    check('...play as says it is opening it, with the players as nobody named (the screen\'s profile)',
+      vk.playAs().last()?.opening === true && vk.playAs().last()?.why === undefined, JSON.stringify(vk.playAs().last()));
+    check('...the box covers the whole screen, with the trivia module mounted in it',
+      box()?.style.width === '100%' && box()?.style.height === '100%' && !!box()?.querySelector('.mod-host'), box()?.style.cssText);
+    {
+      vroot.scrollIntoView();
+      const rc = vroot.getBoundingClientRect();
+      const hit = document.elementFromPoint(rc.left + rc.width / 2, rc.top + rc.height / 3);
+      check('*** ...and it is ON TOP: the middle of the screen is the module opened by voice, not the dashboard under it ***',
+        !!hit?.closest?.('.k-voiceview'), hit ? `${hit.tagName}.${hit.className}` : 'nothing');
+    }
+    check('*** ...it is the only stop for a switch: the router\'s focus is on it ***',
+      vk.routerFocus() === 'voice:trivia', vk.routerFocus());
+    check('...the screen says it is full screen (the mirror and corner clock step aside), and no ring on a lone panel',
+      kds().voiceOpen === 'full' && !box()?.style.outline, `${kds().voiceOpen} ${box()?.style.outline}`);
+    const barBtn = (act) => vroot.querySelector(`.k-controls [data-act="${act}"]`);
+    check('*** ...the bar\'s Smaller is lit (the way back), Bigger dimmed ***',
+      await settled(() => barBtn('smaller')?.disabled === false && barBtn('bigger')?.disabled === true, 2000),
+      `${barBtn('smaller')?.disabled} ${barBtn('bigger')?.disabled}`);
+    check('...and the bar\'s Pause / the menu\'s panel tab are about it now (the selected panel is the one opened by voice)',
+      vk.playPause()?.id === 'voice:trivia', JSON.stringify(vk.playPause()));
+    check('*** NOTHING WAS SAVED: the dashboard\'s layout and modules are as they were ***',
+      JSON.stringify((await readSettings(V)).kiosk) === before && (await profiles.get(V.id)).modules.length === 1,
+      JSON.stringify((await readSettings(V)).kiosk));
+    // (2) THE BAR'S WAY BACK: Smaller.
+    barBtn('smaller')?.click();
+    check('*** the bar\'s Smaller takes it away: the dashboard is back, and the switch is on Photos again ***',
+      await settled(() => !cur() && !box() && vk.routerFocus() === vPhotos.id && !kds().voiceOpen, 3000),
+      `${JSON.stringify(cur())} ${vk.routerFocus()} ${kds().voiceOpen}`);
+
+    // (3) "OPEN THE CALCULATOR IN THE BOTTOM RIGHT CORNER": the dashboard stays, the module sits in that quarter.
+    vbus.publish(SPEECH_OPEN_TOPIC, { module: 'calculator', moduleHeard: 'calculator', place: 'br', verb: 'open' });
+    check('*** a named place: the module opens in that region, over the dashboard ***',
+      await settled(() => cur()?.type === 'calculator' && cur()?.mounted && box()?.dataset.voiceView === 'br', 5000),
+      `${JSON.stringify(cur())} ${JSON.stringify(vk.voiceOpen().last())}`);
+    check('...the bottom right quarter, and the dashboard\'s Photos still there beside it',
+      box()?.style.left === '50%' && box()?.style.top === '50%' && box()?.style.width === '50%' && kds().voiceOpen === 'region'
+      && vk.panels().some((p) => p.id === vPhotos.id), box()?.style.cssText);
+    // (4) "GO BACK" by voice: while it shows, the speech layer hears it as `close` (voice_open.js VOICE_BACK_PHRASES).
+    check('...while it shows, "go back" and "back to the pictures" are its phrases (the close verb)',
+      vk.voiceOpen().backTable()?.['go back'] === 'close' && vk.voiceOpen().backTable()?.['back to the pictures'] === 'close',
+      JSON.stringify(vk.voiceOpen().backTable()));
+    vbus.publish(verbTopic('close'), null);
+    check('*** said "go back" (the close verb): it goes, the dashboard as it was ***',
+      await settled(() => !cur() && !box() && vk.routerFocus() === vPhotos.id, 3000), `${JSON.stringify(cur())} ${vk.voiceOpen().last()?.closed}`);
+    check('...and once it is gone, "go back" is the ordinary back again (no phrases of its own)', vk.voiceOpen().backTable() === null);
+
+    // (5) BY ITSELF WHEN IT GOES QUIET (the suite's quiet time: 2.5 s instead of the setting's minutes).
+    vbus.publish(SPEECH_OPEN_TOPIC, { module: 'calculator', moduleHeard: 'calculator', place: null, verb: 'open' });
+    check('(setup) "open the calculator": full screen', await settled(() => cur()?.type === 'calculator' && cur()?.mounted, 5000));
+    await sleep(1500);
+    vbus.publish(verbTopic('next'), null);     // somebody pressed something: the quiet time starts again
+    await sleep(1500);
+    check('a press keeps it: still open after the quiet time measured from the open', !!cur(), JSON.stringify(vk.voiceOpen().last()));
+    check('*** nobody presses anything: it goes back BY ITSELF ***',
+      await settled(() => !cur() && !box(), 4000) && vk.voiceOpen().last()?.closed === 'quiet', JSON.stringify(vk.voiceOpen().last()));
+    // A game playing stays; at rest it goes after the short linger.
+    vbus.publish(SPEECH_OPEN_TOPIC, { module: 'calculator', moduleHeard: 'calculator', place: 'left', verb: 'open' });
+    await settled(() => cur()?.mounted, 5000);
+    vbus.publish(PLAY_STATE_TOPIC, { id: 'voice:calculator', playing: true });
+    await sleep(3200);
+    check('*** while it says it is playing, the quiet time does not take it away ***', !!cur(), JSON.stringify(vk.voiceOpen().last()));
+    vbus.publish(PLAY_STATE_TOPIC, { id: 'voice:calculator', playing: false, rest: true });
+    check('*** it comes to rest (the game\'s own rest signal): it goes, after the linger ***',
+      await settled(() => !cur(), 3000) && vk.voiceOpen().last()?.closed === 'rest', JSON.stringify(vk.voiceOpen().last()));
+
+    // (6) ON THE DASHBOARD ALREADY, NO PLACE: today's behaviour - shown and chosen, nothing opened.
+    vbus.publish(SPEECH_OPEN_TOPIC, { module: 'photos', moduleHeard: 'the pictures', place: null, verb: 'show' });
+    await sleep(150);
+    check('"show the pictures" with Photos on the dashboard: nothing opens, it is chosen and said to be there',
+      !cur() && vk.voiceOpen().last()?.why === 'here' && vk.routerFocus() === vPhotos.id, JSON.stringify(vk.voiceOpen().last()));
+    // A module the library does not offer, and one nobody has: said, never opened.
+    vbus.publish(SPEECH_OPEN_TOPIC, { module: 'keyboard', moduleHeard: 'keyboard', place: null, verb: 'open' });
+    await sleep(100);
+    check('a module the library does not offer is refused, said plainly', !cur() && vk.voiceOpen().last()?.why === 'hidden', JSON.stringify(vk.voiceOpen().last()));
+    vbus.publish(SPEECH_OPEN_TOPIC, { module: null, moduleHeard: 'zork', place: null, verb: 'open' });
+    await sleep(100);
+    check('a module nobody has: "I do not know a module called zork."', !cur() && vk.voiceOpen().last()?.why === 'unknown'
+      && /zork/.test(vk.voiceOpen().last()?.line || ''), JSON.stringify(vk.voiceOpen().last()));
+
+    // (7) "Not at all": the old behaviour, by the screen's setting - set from the menu, as a person would.
+    vk.menu.open();
+    const vrow = (id) => vk.menu.items().find((r) => r.id === id) || null;
+    check('the This screen tab has "Asked for by voice": where it opens and when it goes back by itself',
+      vrow('set:voiceOpenWhere')?.tab === 'screen' && vrow('set:voiceOpenQuietMs')?.tab === 'screen' && !!vrow('voice-open-head'),
+      JSON.stringify([vrow('set:voiceOpenWhere'), vrow('voice-open-head')]));
+    vk.menu.showTab('screen');
+    vk.menu.focusRow('set:voiceOpenWhere'); vk.menu.select();      // full -> corner
+    vk.menu.focusRow('set:voiceOpenWhere'); vk.menu.select();      // corner -> off
+    check('(setup) stepped to "Not at all"', /Not at all/.test(vrow('set:voiceOpenWhere')?.hint || ''), JSON.stringify(vrow('set:voiceOpenWhere')));
+    vk.menu.close();
+    vbus.publish(SPEECH_OPEN_TOPIC, { module: 'trivia', moduleHeard: 'trivia', place: null, verb: 'open' });
+    await sleep(200);
+    check('*** set to "Not at all": "open trivia" opens nothing and says it is not on this screen ***',
+      !cur() && vk.playAs().last()?.why === 'off', JSON.stringify(vk.playAs().last()));
+    vbus.publish(SPEECH_PLAY_AS_TOPIC, { game: 'trivia', place: 'tl', join: null, count: null, people: [], unknown: [], text: 'play trivia top left' });
+    check('...but a place SAID still opens it there ("play trivia top left")',
+      await settled(() => cur()?.type === 'trivia' && cur()?.place === 'tl' && cur()?.mounted, 5000), JSON.stringify(cur()));
+    vk.voiceOpen().close('test');
+    vk.menu.open(); vk.menu.showTab('screen');
+    vk.menu.focusRow('set:voiceOpenWhere'); vk.menu.select();      // off -> full
+    vk.menu.close();
+
+    // (8) A RESTART NEVER COMES BACK AS THE TEMPORARY ONE.
+    let reopened = false;
+    for (let i = 0; i < 40 && !reopened; i += 1) {
+      vbus.publish(SPEECH_OPEN_TOPIC, { module: 'calculator', moduleHeard: 'calculator', place: null, verb: 'open' });
+      reopened = await settled(() => cur()?.mounted, 400);
+    }
+    check('(setup) open again before the restart', reopened);
+    vk.destroy();
+    check('the screen going: its box goes with it', !box());
+    vk = await mountV();
+    await sleep(300);
+    check('*** after a restart: the chosen dashboard, Photos, and nothing opened by voice ***',
+      !cur() && !box() && await settled(() => vk.routerFocus() === vPhotos.id, 4000)
+      && JSON.stringify((await readSettings(V)).kiosk) === before, `${JSON.stringify(cur())} ${vk.routerFocus()}`);
+    vk.destroy();
+    vroot.remove();
+  } catch (e) {
+    check('the voice open section threw', false, String((e && e.stack) || e));
   }
 
   const sum = document.getElementById('summary');

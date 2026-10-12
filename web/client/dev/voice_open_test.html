@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>voice open: a module asked for by voice opens</title>
+<style>
+  body{font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.25rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #stage{position:relative;width:600px;height:340px;border:1px solid #ccc;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>voice open: “open trivia”, “trivia in the corner”, and the way back</h1>
+<p>Mike, 2026-10-12 (public DECISIONS 40c5889): <i>“I would like it to just pull up a full screen dashboard of whatever module I
+ask for, unless you specify something else like ‘trivia bottom right corner’.”</i> <code>input_speech.js</code> hears it
+(<code>speech_test</code>); <code>voice_open.js</code> decides what opens, where, and when it goes again; the kiosk wiring is
+in <code>kiosk_test</code>. Every timer here is driven by hand; nothing is mounted but a stand-in.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stage"><div class="kiosk" id="kiosk" style="position:absolute;inset:0"><div class="k-mirror" id="mirror"></div></div></div>
+
+<script type="module">
+import * as VO from '../voice_open.js';
+import { SPEECH_OPEN_TOPIC, PLACE_PHRASES, normalize } from '../input_speech.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
+import { verbTopic } from '../actions.js';
+import { createBus } from '../bus.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+import { listManifests } from '../module.js';
+import { CATALOG, NOT_FOR_CAREGIVERS } from '../modules_catalog.js';
+// Real manifests, so "which modules" is read off the real catalog and registry.
+import '../modules/trivia.js';
+import '../modules/calculator.js';
+import '../modules/clock.js';
+import '../modules/photos.js';
+import '../modules/counter.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const tick = () => new Promise((res) => setTimeout(res, 0));
+const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
+
+(async () => {
+  section('*** the settings: Mike\'s default, and every one a row with a default ***');
+  const F = Object.fromEntries(VO.VOICE_OPEN_FIELDS.map((f) => [f.key, f]));
+  check('*** not on the dashboard: FULL SCREEN by default (Mike\'s ruling); the corner and "not at all" are choices ***',
+    F.voiceOpenWhere.default === 'full' && F.voiceOpenWhere.options.map((o) => o.value).join() === 'full,corner,off', J(F.voiceOpenWhere));
+  check('"in the corner" means bottom right by default (the corner nothing else sits in)', F.voiceOpenCorner.default === 'br'
+    && F.voiceOpenCorner.options.map((o) => o.value).join() === 'tl,tr,bl,br');
+  check('*** it goes back by itself: 2 minutes by default, and there is NO "never" (a state only an input can leave) ***',
+    F.voiceOpenQuietMs.default === 120000 && F.voiceOpenQuietMs.options.every((o) => Number(o.value) > 0)
+    && F.voiceOpenQuietMs.options.map((o) => o.value).join() === VO.VOICE_OPEN_QUIET_MS.join(), J(F.voiceOpenQuietMs.options));
+  check('it says what is opening, by default', F.voiceOpenSayBack.default === true && F.voiceOpenSayBack.kind === 'toggle');
+  const norm = VO.VOICE_OPEN_FIELDS.map((f) => normalizeField(f)).filter(Boolean);
+  const findings = auditFields(norm, { type: 'voice-open', declared: VO.VOICE_OPEN_FIELDS }).filter((x) => x.level === 'error' || x.severity === 'error');
+  check('every row passes the settings audit (no errors; durations in ms)', norm.length === 4 && findings.length === 0, J(findings));
+  check('two rows at "The usual" (where, and when it goes back), two at "Everything"',
+    VO.VOICE_OPEN_FIELDS.filter((f) => f.level === 'standard').length === 2 && VO.VOICE_OPEN_FIELDS.filter((f) => f.level === 'advanced').length === 2);
+  check('nothing on a settings row says "her screen" or names anybody',
+    !/her screen|christine|cici/i.test(J(VO.VOICE_OPEN_FIELDS)) && !/her screen|christine|cici/i.test(J(VO.VOICE_OPEN_LINES)));
+  check('a row with junk in it reads as the defaults', J(VO.voiceOpenOptionsFrom({ voiceOpenWhere: 'sideways', voiceOpenCorner: 'mid',
+    voiceOpenQuietMs: 5, voiceOpenSayBack: 'yes' })) === J({ where: 'full', corner: 'br', quietMs: 120000, sayBack: true }));
+  check('...and a row with choices in it reads them', J(VO.voiceOpenOptionsFrom({ voiceOpenWhere: 'corner', voiceOpenCorner: 'tl',
+    voiceOpenQuietMs: 30000, voiceOpenSayBack: false })) === J({ where: 'corner', corner: 'tl', quietMs: 30000, sayBack: false }));
+
+  section('*** where it goes ***');
+  check('*** nothing named: the whole screen; "the corner": the setting\'s corner; a corner or a half: that ***',
+    VO.placeFor(null) === 'full' && VO.placeFor('corner') === 'br' && VO.placeFor('corner', { corner: 'tl' }) === 'tl'
+    && VO.placeFor('left') === 'left' && VO.placeFor('middle') === 'middle');
+  check('set to "in the corner": nothing named goes in the corner', VO.placeFor(null, { where: 'corner', corner: 'bl' }) === 'bl');
+  check('*** set to "not at all": nothing named goes nowhere (null), but a place SAID still opens it ***',
+    VO.placeFor(null, { where: 'off' }) === null && VO.placeFor('br', { where: 'off' }) === 'br');
+  check('the boxes: a quarter, a half, the middle quarter, or all of it',
+    J(VO.placeBox('br')) === J({ left: 50, top: 50, width: 50, height: 50 }) && J(VO.placeBox('left')) === J({ left: 0, top: 0, width: 50, height: 100 })
+    && J(VO.placeBox('middle')) === J({ left: 25, top: 25, width: 50, height: 50 }) && J(VO.placeBox('zz')) === J(VO.placeBox('full')));
+  check('every place the speech layer hears has a box and words to say it with',
+    Object.keys(PLACE_PHRASES).filter((k) => k !== 'corner').every((k) => VO.PLACE_BOXES[k] && VO.PLACE_WORDS[k]));
+
+  section('*** which modules ***');
+  const ents = VO.moduleEntries({ manifests: listManifests(), here: new Set(['photos']),
+    spoken: [{ name: 'calculator', said: 'sums' }] });
+  const E = (t) => ents.find((e) => e.type === t);
+  check('*** the library\'s modules, by their catalog titles ***', E('trivia')?.name === 'Trivia' && E('calculator')?.names.includes('calculator')
+    && E('clock') && CATALOG.some((c) => c.type === 'trivia'), J(ents.map((e) => e.type)));
+  check('*** "pictures" is Photos (a short name of its own), and Photos is here ***', E('photos')?.names.includes('pictures') && E('photos')?.here === true);
+  check('a module the library does not offer (a test panel) is KNOWN but hidden - so it can be said not to open',
+    E('counter')?.hidden === true && !!NOT_FOR_CAREGIVERS.counter, J(E('counter')));
+  check('"Other names it listens for" reach modules too (Calculator = sums)', E('calculator')?.names.includes('sums'));
+  check('only what is registered: nothing for a module this page never loaded', !E('youtube'));
+  const bt = VO.voiceBackTable();
+  check('*** the way back by voice: "go back", "close it", "back to the pictures" - each the close verb ***',
+    bt['go back'] === 'close' && bt['close it'] === 'close' && bt['back to the pictures'] === 'close'
+    && Object.values(bt).every((v) => v === 'close') && Object.keys(bt).every((k) => k === normalize(k) && k.split(' ').length <= 4), J(bt));
+
+  section('*** the host: open, said first, where, and back ***');
+  const bus = createBus();
+  const kioskEl = document.getElementById('kiosk');
+  const mirror = document.getElementById('mirror');
+  const log = [];
+  const said = [];
+  let vals = {};
+  let panels = [{ id: 'p1', type: 'photos', title: 'Photos' }];
+  let focusId = 'p1';
+  let allow = { ok: true };
+  let mountThrows = false;
+  let mountDelay = 0;
+  const timers = [];
+  let tid = 0;
+  const fire = (why) => { const t = timers.shift(); if (t) t.fn(); return t; };
+  const live = () => timers.slice();
+  const playCalls = [];
+  let playResult = null;
+  const host = VO.createVoiceOpen({
+    bus, parent: () => kioskEl, before: () => mirror, zIndex: 400,
+    manifests: () => listManifests(), panels: () => panels, values: () => vals,
+    say: (t) => { said.push(t); log.push(`say:${t}`); },
+    allowed: async (type) => { log.push(`allowed:${type}`); return allow; },
+    mount: async (mod, el) => {
+      log.push(`mount:${mod.id}`);
+      if (mountDelay) await new Promise((res) => setTimeout(res, mountDelay));
+      if (mountThrows) throw new Error('nope');
+      const inner = document.createElement('div'); inner.className = `stand-in ${mod.type}`; el.append(inner);
+      return { id: mod.id, type: mod.type, stateKey: mod.stateKey, el, instance: {} };
+    },
+    unmount: (rec) => log.push(`unmount:${rec.id}`),
+    hideUnder: (on) => log.push(`hide:${on}`),
+    focus: { get: () => focusId, set: (id) => { focusId = id; log.push(`focus:${id}`); } },
+    play: (type, place) => { playCalls.push({ type, place }); return playResult; },
+    setTimer: (fn, ms) => { tid += 1; timers.push({ fn, ms, id: tid }); return tid; },
+    clearTimer: (id) => { const i = timers.findIndex((t) => t.id === id); if (i >= 0) timers.splice(i, 1); },
+  });
+  const box = () => kioskEl.querySelector('.k-voiceview');
+
+  let r = host.handle({ module: null, moduleHeard: 'zork' });
+  check('*** a module nobody has: "I do not know a module called zork." - nothing opened ***',
+    !r.opened && r.why === 'unknown' && said.at(-1) === 'I do not know a module called zork.' && !box());
+  r = host.handle({ module: 'counter' });
+  check('*** a module the library hides: said plainly, never opened ***', r.why === 'hidden' && said.at(-1) === 'Counter does not open by voice.' && !box(), said.at(-1));
+
+  log.length = 0;
+  r = host.handle({ module: 'calculator', moduleHeard: 'calculator', place: null, verb: 'open' });
+  check('"open the calculator", not on the dashboard: opening', r.opening === true && r.type === 'calculator', J(r));
+  await settle();
+  check('*** checked, THEN said ("Opening Calculator."), THEN opened - in that order ***',
+    J(log.slice(0, 3)) === J(['allowed:calculator', 'say:Opening Calculator.', 'hide:true']) && log.includes('mount:voice:calculator'), J(log));
+  check('*** full screen: the whole screen, the dashboard hidden under it, before the mirror (which steps aside by CSS) ***',
+    box()?.dataset.voiceView === 'full' && box()?.style.width === '100%' && box()?.nextSibling === mirror && kioskEl.dataset.voiceOpen === 'full', box()?.outerHTML?.slice(0, 200));
+  check('*** its own instance id and its own settings row, per module type (never a dashboard panel\'s) ***',
+    J(host.current()) === J({ id: 'voice:calculator', type: 'calculator', place: 'full', name: 'Calculator', mounted: true })
+    && host.rec()?.stateKey === 'voice-open-calculator', J([host.current(), host.rec()?.stateKey]));
+  check('*** the switch\'s focus is on it, and it is the ONLY stop in the lap ***',
+    focusId === 'voice:calculator' && J(host.ring([{ id: 'p1', type: 'photos' }])) === J([{ id: 'voice:calculator', type: 'calculator' }]));
+  check('...while it shows, the "go back" phrases are handed out', host.backTable()?.['go back'] === 'close');
+  check('*** the quiet time is running (the setting\'s 2 minutes) ***', live().length === 1 && live()[0].ms === 120000, J(live()));
+  log.length = 0;
+  host.close('said');
+  check('*** going back: the module goes, the dashboard is shown again, and the switch is where it was ***',
+    !box() && !host.current() && kioskEl.dataset.voiceOpen === undefined
+    && J(log) === J(['unmount:voice:calculator', 'hide:false', 'focus:p1']) && focusId === 'p1' && live().length === 0, J(log));
+  check('...and the lap and the phrases are the dashboard\'s again', J(host.ring([{ id: 'p1' }])) === J([{ id: 'p1' }]) && host.backTable() === null);
+
+  section('*** a place named ***');
+  vals = { voiceOpenCorner: 'tl' };
+  log.length = 0;
+  bus.publish(SPEECH_OPEN_TOPIC, { module: 'clock', moduleHeard: 'clock', place: 'corner', verb: 'show' });
+  await settle();
+  check('*** "show the clock in the corner" (said, on the bus): the corner the screen chose, and it says where ***',
+    host.current()?.place === 'tl' && said.at(-1) === 'Opening Clock in the top left corner.' && box()?.style.left === '0%'
+    && box()?.style.width === '50%' && kioskEl.dataset.voiceOpen === 'region', J([host.current(), said.at(-1)]));
+  check('*** a place: the dashboard is NOT hidden under it (it stays in view beside it) ***', !log.includes('hide:true'), J(log));
+  bus.publish(SPEECH_OPEN_TOPIC, { module: 'calculator', moduleHeard: 'calculator', place: 'right', verb: 'open' });
+  await settle();
+  check('a second one replaces the first (one at a time)', host.current()?.type === 'calculator' && host.current()?.place === 'right'
+    && kioskEl.querySelectorAll('.k-voiceview').length === 1 && log.includes('unmount:voice:clock'), J(log));
+  host.close('test');
+
+  section('*** what is refused, and said ***');
+  allow = { ok: false, why: 'locked' };
+  said.length = 0; log.length = 0;
+  host.handle({ module: 'calculator', place: null });
+  await settle();
+  check('*** locked by the Nimrod Game: "Calculator is locked. ..." - and NOT "Opening" first ***',
+    J(said) === J(['Calculator is locked. It can be unlocked in the Modules library.']) && !box() && !log.some((l) => /mount/.test(l)), J([said, log]));
+  allow = { ok: false, why: 'call' };
+  host.handle({ module: 'calculator', place: null });
+  await settle();
+  check('during a call: "Calculator can open after the call."', said.at(-1) === 'Calculator can open after the call.' && !box());
+  allow = { ok: true };
+  vals = { voiceOpenWhere: 'off' };
+  r = host.handle({ module: 'calculator', place: null });
+  check('*** set to "not at all": "Calculator is not on this screen." (the old line) ***', !r.opened && said.at(-1) === 'Calculator is not on this screen.' && !box(), J(r));
+  r = host.handle({ module: 'calculator', place: 'bottom' });
+  await settle();
+  check('...but a place said still opens it', host.current()?.place === 'bottom', J(host.current()));
+  host.close('test');
+  vals = {};
+
+  section('*** on the dashboard already ***');
+  log.length = 0;
+  r = host.handle({ module: 'photos', moduleHeard: 'the pictures', place: null });
+  check('*** "show the pictures" with Photos on the dashboard: nothing opens, it is chosen, and said to be there ***',
+    !r.opened && r.why === 'here' && focusId === 'p1' && said.at(-1) === 'Photos is on the screen.' && !box(), J(r));
+  host.handle({ module: 'calculator', place: null });
+  await settle();
+  host.handle({ module: 'photos', place: null });
+  check('*** ...and with something open by voice over it, that goes: "show the pictures" is a way back ***',
+    !box() && !host.current() && host.last()?.why === 'here', J(host.last()));
+  r = host.handle({ module: 'photos', place: 'left' });
+  await settle();
+  check('a place named opens another Photos there anyway', host.current()?.type === 'photos' && host.current()?.place === 'left', J(host.current()));
+  host.close('test');
+
+  section('*** a game goes through play as ***');
+  playResult = { started: true, opening: true, line: null };
+  r = host.handle({ module: 'trivia', place: 'br' });
+  check('*** "open trivia in the corner": handed to play as (who plays, the read-back), with its place ***',
+    J(playCalls.at(-1)) === J({ type: 'trivia', place: 'br' }) && r.via === 'play' && !box(), J([r, playCalls]));
+  playResult = null;
+  r = host.handle({ module: 'trivia', place: null });
+  await settle();
+  check('play as has no entry for it: opened plainly instead', host.current()?.type === 'trivia', J([r, host.current()]));
+  host.close('test');
+  said.length = 0;
+  const o = host.open('trivia', { place: 'br', line: 'Starting Trivia as Sam Jones.' });
+  const rec = await o.ready;
+  check('*** play as\'s read-back is said in place of "Opening", with where ***',
+    o.ok && rec?.id === 'voice:trivia' && said.at(-1) === 'Starting Trivia as Sam Jones in the bottom right corner.', J(said));
+  host.close('test');
+  vals = { voiceOpenSayBack: false };
+  said.length = 0;
+  await host.open('calculator').ready;
+  check('"say what is opening" off: nothing said (the tone already was)', said.length === 0 && host.current()?.type === 'calculator');
+  await host.open('clock', { quiet: true }).ready;
+  host.close('test');
+  vals = {};
+
+  section('*** BY ITSELF: the quiet rule ***');
+  await host.open('calculator').ready;
+  check('(setup) open, the quiet time armed', live().length === 1);
+  const first = live()[0].id;
+  bus.publish(verbTopic('next'), null);
+  check('*** a press (any verb) starts the quiet time again ***', live().length === 1 && live()[0].id !== first, J(live()));
+  host.rec().el.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+  check('...and so does a tap in the box', live().length === 1);
+  fire();
+  check('*** nobody presses: it goes back by itself ***', !host.current() && host.last()?.closed === 'quiet' && !box(), J(host.last()));
+  await host.open('trivia').ready;
+  bus.publish(PLAY_STATE_TOPIC, { id: 'voice:trivia', playing: true });
+  check('*** being played (the game says so): no quiet time at all ***', live().length === 0, J(live()));
+  bus.publish(verbTopic('select'), null);
+  check('...a press while it plays changes nothing', live().length === 0);
+  bus.publish(PLAY_STATE_TOPIC, { id: 'other', playing: false, rest: true });
+  check('another panel resting is nothing to it', live().length === 0 && !!host.current());
+  bus.publish(PLAY_STATE_TOPIC, { id: 'voice:trivia', playing: false, rest: true });
+  check('*** it comes to rest: the short linger (REST_LINGER_MS, 20 s), then gone ***', live().length === 1 && live()[0].ms === VO.REST_LINGER_MS, J(live()));
+  fire();
+  check('...gone, said "rest"', !host.current() && host.last()?.closed === 'rest');
+  await host.open('trivia').ready;
+  bus.publish(PLAY_STATE_TOPIC, { id: 'voice:trivia', playing: true });
+  bus.publish(PLAY_STATE_TOPIC, { id: 'voice:trivia', playing: false });
+  check('a pause (not a rest): the ordinary quiet time again', live().length === 1 && live()[0].ms === 120000, J(live()));
+  host.close('test');
+
+  section('*** what can go wrong ***');
+  mountThrows = true;
+  said.length = 0; log.length = 0;
+  const bad = await host.open('calculator').ready;
+  check('*** a module that will not start: said, the box gone, the dashboard shown again, the switch put back ***',
+    bad === null && !box() && !host.current() && said.at(-1) === 'Calculator could not start. Nothing on the screen changed.'
+    && log.includes('hide:false') && focusId === 'p1', J([said, log]));
+  mountThrows = false;
+  mountDelay = 30;
+  const a1 = host.open('clock');
+  const a2 = host.open('calculator');
+  const [r1, r2] = await Promise.all([a1.ready, a2.ready]);
+  check('*** asked twice quickly: only the newer opens ***', r1 === null && r2?.id === 'voice:calculator' && host.current()?.type === 'calculator'
+    && kioskEl.querySelectorAll('.k-voiceview').length === 1, J([r1, r2?.id]));
+  mountDelay = 0;
+  host.destroy();
+  check('*** the screen going: the box and the module go with it ***', !box() && !host.current() && kioskEl.dataset.voiceOpen === undefined);
+  bus.publish(SPEECH_OPEN_TOPIC, { module: 'clock' });
+  await settle();
+  check('destroyed: it hears nothing more', !box());
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})().catch((e) => {
+  console.error(e);
+  check('the suite threw', false, String((e && e.stack) || e));
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+});
+</script>
+</body>
+</html>

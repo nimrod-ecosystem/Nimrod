@@ -234,6 +234,59 @@ const J = (x) => JSON.stringify(x);
     sp.destroy();
   }
 
+  section('*** voice open (Mike, 2026-10-12): a game not on the screen is OPENED (the opener), not refused ***');
+  {
+    const b3 = createBus();
+    const said3 = [];
+    const asks = [];
+    let refuse = null;
+    const opener = {
+      open(type, req) {
+        asks.push({ type, ...req });
+        if (refuse) return { ok: false, why: refuse };
+        return { ok: true, ready: Promise.resolve({ id: `voice:${type}`, type }) };
+      },
+    };
+    let ps3 = [{ id: 'p1', type: 'brickdrop' }, { id: 'p3', type: 'trivia' }];
+    const h3 = PA.createPlayAs({ bus: b3, manifests: () => listManifests(), panels: () => ps3, people: ROWS,
+      self: () => ({ id: 'pat', name: 'Pat Lee' }), values: () => ({}), say: (t) => said3.push(t), opener: () => opener });
+    const started = [];
+    for (const t of ['card_sort/play', 'card_sort/resume', 'trivia/resume', 'trivia/play', 'brickdrop/resume']) {
+      for (const id of ['voice:card_sort', 'voice:trivia', 'voice:brickdrop', 'p3']) b3.subscribe(`${t}#${id}`, () => started.push({ t: `${t}#${id}`, seats: h3.override(id) }));
+    }
+    let r3 = h3.handle({ game: 'route:play-card-sort', people: [], join: null });
+    check('*** "play card sort", NOT on the screen: handed to the opener (no "not on this screen"), and play as says nothing itself ***',
+      r3.started && r3.opening && asks.at(-1)?.type === 'card_sort' && asks.at(-1)?.place === null && asks.at(-1)?.line === null
+      && said3.length === 0, J([r3, asks.at(-1), said3]));
+    await new Promise((res) => setTimeout(res, 20));
+    check('*** ...once it is open, ITS panel is started: the route\'s own named start, on the new panel ***',
+      started.some((s) => s.t === 'card_sort/play#voice:card_sort') && h3.last()?.instanceId === 'voice:card_sort', J([started, h3.last()]));
+    r3 = h3.handle({ game: 'route:play-card-sort', people: ['sam'], join: 'as' });
+    check('*** "play card sort as Sam": the read-back line goes to the opener to say ("Starting Card sort as Sam Jones.") ***',
+      r3.opening && /Starting Card sort as Sam Jones\./.test(asks.at(-1)?.line || '') && said3.length === 0, J(asks.at(-1)));
+    await new Promise((res) => setTimeout(res, 20));
+    check('...and Sam is the player on the opened panel, set BEFORE it was started',
+      kinds(h3.override('voice:card_sort')) === 'sam' && kinds(started.filter((s) => /voice:card_sort/.test(s.t)).at(-1)?.seats) === 'sam', J(started.at(-1)));
+    const n3 = started.length;
+    r3 = h3.handle({ game: 'trivia', people: [], join: null, place: 'br' });
+    check('*** "play trivia in the bottom right corner", Trivia IS here: a place named opens it there anyway ***',
+      r3.opening && asks.at(-1)?.type === 'trivia' && asks.at(-1)?.place === 'br', J([r3, asks.at(-1)]));
+    await new Promise((res) => setTimeout(res, 20));
+    check('...and it is the opened one that starts, not the dashboard\'s', started.slice(n3).every((s) => /voice:trivia/.test(s.t)), J(started.slice(n3)));
+    r3 = h3.handle({ game: 'trivia', people: [], join: null });
+    check('*** Trivia here and no place: today\'s behaviour, started where it is ***', r3.started && !r3.opening && r3.instanceId === 'p3', J(r3));
+    refuse = 'locked';
+    const s3 = said3.length;
+    r3 = h3.handle({ game: 'route:play-card-sort', people: [], join: null });
+    check('*** the opener refuses (it says why itself): nothing started, and play as says nothing on top ***',
+      !r3.started && r3.why === 'locked' && said3.length === s3, J([r3, said3.slice(s3)]));
+    refuse = null;
+    const a3 = asks.length;
+    r3 = h3.handle({ game: 'route:play-card-sort', people: ['zork'], unknown: ['zork'], join: 'as' });
+    check('an unknown name is still said, and nothing is opened', !r3.started && said3.at(-1) === 'I do not know who zork is.' && asks.length === a3, J(r3));
+    h3.destroy();
+  }
+
   section('*** the people list is read when asked, and again only after a while ***');
   {
     let clock = 1000;

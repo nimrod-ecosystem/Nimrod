@@ -183,8 +183,10 @@ import { openUsualStart } from './adaptive_play.js';
 import { SCREEN_PLAYERS_KEY, normalizeSeats, playersValueLabel, MAX_SEATS } from './player_picker.js';
 // play as (row 2.80): "play <game> as <person>" by voice, and who plays when nobody is named (play_as.js).
 import { createPlayAs, PLAY_AS_FIELDS } from './play_as.js';
+// voice open (Mike, 2026-10-12): a module asked for by voice opens full screen, or where it was put (voice_open.js).
+import { createVoiceOpen, VOICE_OPEN_FIELDS } from './voice_open.js';
 import { mountPackLoader } from './pack_loader.js';
-import { gameSettingsPage, GAME_SETTINGS_PAGE } from './unlocks.js';
+import { gameSettingsPage, GAME_SETTINGS_PAGE, createUnlockGate, moduleItem } from './unlocks.js';
 // "Lesson topics" (quest / sandbox): a ⚙ menu page since 2026-10-03, moved from the Settings panel's own list.
 import { MODE_KEY, MODES, modeFrom } from './lessons.js';
 import { mountChoicePicker } from './choice_picker.js';
@@ -368,6 +370,9 @@ export async function mountKiosk(root, {
   // A game's "being played" ends this long after the last press (game_start.js GAME_IDLE_MS, 5 minutes, argued there).
   // A seam for the suites, the same reason `burnInIdleMs` is one: null = the module's own constant.
   gameIdleMs = null,
+  // voice open (2026-10-12): a suite's seams - `{ quietMs, restLingerMs }` in ms instead of the screen's setting (the
+  // shortest choice is 30 s) and voice_open.js REST_LINGER_MS. null = the real ones.
+  voiceOpenTimes = null,
   // Burn-in protection's own idle wait (2.18) — real default below, ten minutes. A test that
   // actually waited that long to prove the dim/drift class appears would be a test nobody
   // runs; this seam lets it use milliseconds instead, the same reason `recoveryTick` is one.
@@ -1027,10 +1032,16 @@ export async function mountKiosk(root, {
   // table of only the verbs it answers (input_speech.js `moduleVoiceTable`). Read at the moment
   // something is heard, so focus moving needs no restart of the recogniser.
   const focusedVoice = () => {
+    let own = null;
     try {
       const m = runtime?.router?.focused?.();
-      return m ? moduleVoiceTable(getManifest(m.type)?.voice, { verbs: verbsFor(m.type) }) : null;
-    } catch { return null; }
+      own = m ? moduleVoiceTable(getManifest(m.type)?.voice, { verbs: verbsFor(m.type) }) : null;
+    } catch { own = null; }
+    // voice open (2026-10-12): while a module opened by voice shows, "go back", "back to the pictures" and the rest close
+    // it (voice_open.js VOICE_BACK_PHRASES, each the `close` verb). Declared further down: read when heard.
+    let back = null;
+    try { back = voiceOpen?.backTable?.() || null; } catch { back = null; }
+    return back ? { ...(own || {}), ...back } : own;
   };
   // (Re)attach speech from the person's row -- only when one of ITS settings changed, so a poll that
   // brings nothing new never restarts a recogniser under somebody who is mid-sentence.
@@ -1132,7 +1143,8 @@ export async function mountKiosk(root, {
         screenSpeech,
         scoped: sw.on ? focusedVoice : null,
         // play as (row 2.80): the games and names, read when heard (an arrow: `playAs` is declared further down).
-        playAs: sw.on ? () => playAs.vocabulary() : null,
+        // voice open (2026-10-12): and every module "open / show <module>" knows (voice_open.js `modules`).
+        playAs: sw.on ? () => ({ ...playAs.vocabulary(), modules: voiceOpen.modules() }) : null,
         // Subtitles-only: no commands, so nothing is confirmed, asked, logged or announced -- the
         // recogniser is there to write the room down, and a wake phrase does nothing.
         ...(sw.on ? {} : { confirm: 'off', nearMiss: false, retries: 0 }),   // two-step: no "Say it again?" either
@@ -1522,12 +1534,81 @@ export async function mountKiosk(root, {
   const playAs = createPlayAs({
     bus,
     manifests: () => listManifests(),
-    panels: () => menuPanelRecs(),
+    // (voice open: a game opened by voice is one of the panels while it shows, so "play trivia" again starts it there.)
+    panels: () => { const v = voiceOpen?.rec?.(); return v ? [v, ...menuPanelRecs()] : menuPanelRecs(); },
     focusedId: () => { try { return runtime?.router?.focused?.()?.id || null; } catch { return null; } },
     people: () => { try { return playerHostNow().people?.() || null; } catch { return null; } },
     self: () => screenPlayersHost.self(),
     values: () => { try { return settings.get() || {}; } catch { return {}; } },
     say: (text, opts) => { try { return output?.say?.(text, opts); } catch { return null; } },
+    // voice open (2026-10-12): a game not on the screen, or with a place named, is opened over the dashboard.
+    opener: () => voiceOpen,
+  });
+
+  // *** VOICE OPEN (Mike, 2026-10-12; voice_open.js argues all of it). *** "Play trivia", "open the calculator", "trivia
+  // in the corner": a module not on the dashboard opens over it, full screen by default, for now - never in place of a
+  // panel, never saved, gone after a reload. Mounted with the shell's own hands (`mountInstance` / `destroyRec`), on a row
+  // of its own per module type. The ways back: said ("go back"), by itself when it goes quiet, the bar's Smaller and
+  // Escape (`promotedAny` / `demotePanel` count it as a level up), a switch's Back where the module has none
+  // (`backUnhandled`). Built before any panel mounts; everything it reads is read when asked.
+  // WHAT MAY OPEN (`voiceAllowed`): a module the Nimrod Game has locked does not (unlocks.js, the library's own check),
+  // and nothing opens over a call (the call outranks it; it says "after the call"). A module the library does not offer
+  // is refused by voice_open.js itself. A guardian's lock (row 2.21) is unbuilt; it would be one more line here.
+  let voiceGate = null;
+  async function voiceAllowed(type) {
+    if (callView) return { ok: false, why: 'call' };
+    if (!voiceGate) {
+      const c = childCtx({ id: 'voice-open', type: 'library' });
+      voiceGate = createUnlockGate({ makeState: c.makeState, makeEvents: c.makeEvents, bus });
+    }
+    try { await voiceGate.load(); } catch { /* offline: its defaults, nothing locked */ }
+    let s = null;
+    try { s = voiceGate.check(moduleItem(type)); } catch { s = null; }
+    return s && s.locked ? { ok: false, why: 'locked' } : { ok: true };
+  }
+  const voiceOpen = createVoiceOpen({
+    bus,
+    ...(voiceOpenTimes && Number(voiceOpenTimes.quietMs) > 0 ? { quietMs: Number(voiceOpenTimes.quietMs) } : {}),
+    ...(voiceOpenTimes && Number(voiceOpenTimes.restLingerMs) >= 0 && voiceOpenTimes.restLingerMs != null
+      ? { restLingerMs: Number(voiceOpenTimes.restLingerMs) } : {}),
+    parent: () => kioskEl,
+    before: () => (mirrorEl && mirrorEl.parentNode === kioskEl ? mirrorEl : null),
+    zIndex: LAYERS.floating,
+    manifests: () => listManifests(),
+    panels: () => menuPanelRecs(),
+    values: () => { try { return settings.get() || {}; } catch { return {}; } },
+    say: (text, opts) => { try { return output?.say?.(text, opts); } catch { return null; } },
+    allowed: (type) => voiceAllowed(type),
+    mount: (mod, el) => mountInstance(mod, el),
+    unmount: (rec) => destroyRec(rec),
+    // Full screen: the dashboard's panels are hidden as any hidden panel is (a video pauses or mutes as it is set to),
+    // and shown again after. The Modules library standing in a panel's place goes first: it would be shown under it.
+    hideUnder: (on) => {
+      if (on) { try { if (libOpen) closeLibrary('keep'); } catch { /* declared later; not open then */ } }
+      for (const r of menuPanelRecs()) {
+        try { if (on) r.instance?.onHide?.({ by: 'auto' }); else r.instance?.onShow?.({ by: 'auto' }); }
+        catch (err) { console.error('kiosk: voice open, the dashboard', err); }
+      }
+    },
+    focus: {
+      get: () => { try { return runtime?.router?.focused?.()?.id || null; } catch { return null; } },
+      set: (id) => {
+        try { runtime?.router?.setFocus?.(id); } catch { /* no router yet */ }
+        try { paintFocus(id); } catch { /* not laid out */ }
+        try { renderMods(); } catch { /* not drawn yet */ }
+      },
+    },
+    // A game: play_as.js decides who plays and calls `open` back. null when play_as has no entry for it.
+    play: (type, place) => {
+      let known = false;
+      try { known = playAs.vocabulary().games.some((g) => g.id === type); } catch { known = false; }
+      return known ? playAs.handle({ game: type, place, gameHeard: type }) : null;
+    },
+    onChange: () => {
+      try { renderMods(); } catch { /* not drawn yet */ }
+      try { syncPlayPause(); } catch { /* the bars' buttons; declared later */ }
+      try { if (menu?.isOpen?.()) menu.refresh(); } catch { /* not up */ }
+    },
   });
 
   // *** WHERE THE PERSON'S HISTORY IS KEPT (row 2.58, 2026-10-07; history_place.js). *** One host per screen: it
@@ -2461,7 +2542,10 @@ export async function mountKiosk(root, {
     if (sw) {
       let rec = null;
       try { rec = arr.focusedRec(); } catch { rec = null; }
-      sw.disabled = !rec || !!piece;
+      // (voice open, 2026-10-12: dimmed while a module opened by voice shows -- it stands in no panel's place to switch.)
+      let voiceUp = false;
+      try { voiceUp = voiceOpen.isOpen(); } catch { voiceUp = false; }
+      sw.disabled = !rec || !!piece || voiceUp;
       let locked = false;
       try { locked = !piece && !!rec && lockedNow(rec.id); } catch { locked = false; }
       sw.title = piece ? PIECE_SWITCH_TITLE(piece.label)
@@ -2492,6 +2576,10 @@ export async function mountKiosk(root, {
     return t && t.kind === 'piece' ? t : null;
   }
   function panelSubject() {
+    // voice open (2026-10-12): a module opened by voice IS the selected panel while it shows - it is the only stop in
+    // the switch lap - so the bar's Pause, Next and Back and the menu's panel tab are about it, not a panel under it.
+    const v = voiceOpen.rec();
+    if (v) return v;
     return focusedPiece() ? null : focusedRec();
   }
 
@@ -2521,6 +2609,8 @@ export async function mountKiosk(root, {
    *  `remember: false` on the return leg, so going back does not stack up forever. */
   async function showScreen(nextId, { remember = true } = {}) {
     if (!nextId || nextId === profileId || swapping) return null;
+    // voice open (2026-10-12): a module opened by voice was over THIS dashboard; it goes before another comes.
+    try { voiceOpen.close('dashboard'); } catch { /* none open */ }
     // An embed's dashboard (Stage 3) is not swapped: an embed has no other screens to go to (its
     // `list()` is empty), so this refuses rather than half-swapping inside the module.
     if (useDashboard && embedded) return null;
@@ -2688,6 +2778,13 @@ export async function mountKiosk(root, {
   // that is what every verb already is ("whatever is in front of you decides"), and the trail is empty
   // -- so nothing changes -- on every screen nobody opened anything from.
   function backUnhandled(info) {
+    // voice open (2026-10-12): `close` reaches here when the module in front has nothing for it (none does) -- "go back"
+    // said while a module opened by voice shows is `close` (focusedVoice) -- and so does a switch's Back on a module with
+    // no Back of its own. Either one closes it: the dashboard comes back.
+    if (info && (info.verb === 'close' || info.verb === 'back') && !torn && voiceOpen.isOpen()) {
+      voiceOpen.close(info.verb === 'close' ? 'said' : 'back');
+      return { topic: SHELL_DEMOTE, fallback: 'voice-open-back' };
+    }
     // 2026-10-02: a panel made bigger comes back down first, one level -- the nearer "back".
     if (info && info.verb === 'back' && !torn) {
       try { if (promotedAny() && demotePanel()) return { topic: SHELL_DEMOTE, fallback: 'demote' }; } catch { /* declared later */ }
@@ -2726,6 +2823,8 @@ export async function mountKiosk(root, {
   // Next skipped the FIRST panel's photo. The button and the ring described different screens,
   // which is the one thing `paintFocus` exists to prevent.
   function nextInPrimary() {
+    // voice open (2026-10-12): the module opened by voice, addressed to it alone.
+    if (voiceOpen.rec()) { sendPanelVerb(voiceOpen.rec(), 'next'); return; }
     // (2026-10-02: none while a piece of the room is selected -- `panelSubject`.)
     const rec = arr.layout() ? panelSubject() : arr.stageRec();
     if (!rec) return;
@@ -2756,6 +2855,7 @@ export async function mountKiosk(root, {
   // prevent elsewhere in the product — the way to honor that here, without touching
   // director.js, is to not make the press at all.
   function prevInPrimary() {
+    if (voiceOpen.rec()) { sendPanelVerb(voiceOpen.rec(), 'prev'); return; }   // voice open, as Next
     const rec = arr.layout() ? panelSubject() : arr.stageRec();
     if (!rec || rec.type === 'director') return;
     bus.publish(`${rec.type}/prev`);
@@ -4423,6 +4523,20 @@ export async function mountKiosk(root, {
     return rows.length ? [{ kind: 'heading', id: 'players-head', label: 'Who is playing on this screen', ...t(0) },
       ...withPlayerNames(rows).map((it) => ({ ...it, ...(it.players ? { id: 'screen-players' } : {}), ...t(0) }))] : [];
   }
+  // voice open (2026-10-12; voice_open.js VOICE_OPEN_FIELDS argues each default): where a module asked for by voice
+  // opens, what "in the corner" means, when it goes back by itself, and whether it says so. The screen's own row, on the
+  // This screen tab under its own heading. Not on an embed (it has no speech of its own).
+  function voiceOpenItems() {
+    if (torn || embedded) return [];
+    const rows = fieldItems(VOICE_OPEN_FIELDS.map((f) => normalizeField(f)), {
+      values: () => { try { return settings.get() || {}; } catch { return {}; } },
+      level: complexity(),
+      onStep: (key, value) => { try { settings.set({ [key]: value }); } catch (err) { console.error('kiosk: voice open', err); } },
+    });
+    const t = MENU_TAB.screen;
+    return rows.length ? [{ kind: 'heading', id: 'voice-open-head', label: 'Asked for by voice', ...t(2) },
+      ...rows.map((it) => ({ ...it, ...t(2) }))] : [];
+  }
 
   // ---- "SWITCH MODULE": THE MODULES LIBRARY IN THE PANEL'S PLACE (2026-10-02) ------------------------
   //
@@ -4974,7 +5088,10 @@ export async function mountKiosk(root, {
     try { rec = panelSubject(); } catch { rec = null; }
     let promoted = false;
     try { promoted = promotedAny(); } catch { promoted = false; }
-    return { can: !!rec, top: !!rec && promotedScreen === rec.id, promoted,
+    // (voice open: Bigger dims while a module opened by voice shows -- it is already over the dashboard; Smaller is lit.)
+    let voiceUp = false;
+    try { voiceUp = voiceOpen.isOpen(); } catch { voiceUp = false; }
+    return { can: !!rec && !voiceUp, top: !!rec && (voiceUp || promotedScreen === rec.id), promoted,
       name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
   }
 
@@ -4988,7 +5105,9 @@ export async function mountKiosk(root, {
   // Leaving full screen any other way (the browser's own Escape) drops the screen level too.
   let promotedScreen = null;          // the panel taken up to the screen, or null
   let fsByPromote = false;            // this file asked for full screen for it (so it is this file's to leave)
-  const promotedAny = () => !!promotedScreen || !!(arr.promotedId?.());
+  // (voice open, 2026-10-12: a module opened by voice counts as a level up, so Smaller, Escape and "make it smaller" --
+  // every way down -- take it away first, one level a press. `demotePanel` below.)
+  const promotedAny = () => !!promotedScreen || !!(arr.promotedId?.()) || voiceOpen.isOpen();
   function syncPromote() {
     if (promotedScreen) kioskEl.dataset.promoted = 'screen'; else delete kioskEl.dataset.promoted;
     try { arr.setPromoteTop?.(promotedScreen); } catch { /* not load-bearing */ }
@@ -4999,6 +5118,7 @@ export async function mountKiosk(root, {
   }
   function promotePanel(id = null) {
     if (torn) return null;
+    if (voiceOpen.isOpen()) return null;     // voice open: nothing goes bigger over a module opened by voice
     let rec = null;
     try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : panelSubject(); } catch { rec = null; }
     if (!rec) return null;
@@ -5020,6 +5140,8 @@ export async function mountKiosk(root, {
     return 'screen';
   }
   function demotePanel() {
+    // voice open (2026-10-12): the nearest level down is the module opened by voice -- it goes, the dashboard comes back.
+    if (voiceOpen.isOpen()) { voiceOpen.close('bar'); return 'voice'; }
     if (promotedScreen) {
       promotedScreen = null;
       // (2026-10-05, screen_lock.js: locked, the screen stays in full screen; the panel still goes back down.)
@@ -5256,6 +5378,8 @@ export async function mountKiosk(root, {
   async function openCallView(from, { ringStartedAt = null } = {}) {
     if (torn || typeof document === 'undefined') return false;
     if (callView) closeCallView('replaced');
+    // voice open (2026-10-12): an answered call outranks a module opened by voice; it goes, and the call comes up.
+    try { voiceOpen.close('call'); } catch { /* none open */ }
     const box = document.createElement('div');
     box.className = 'k-callview';
     box.dataset.callView = '';
@@ -5538,7 +5662,8 @@ export async function mountKiosk(root, {
           ? 'nobody yet — what their keys and switches do, and their voice, come with them'
           : `now: ${whoState?.name || '…'}`,
       }];
-    })()), ...voiceItems(), ...chooseModeItems(), ...usualStartItems(), ...playersItems()],   // players: its own tab
+    })()), ...voiceItems(), ...chooseModeItems(), ...usualStartItems(), ...playersItems(),   // players: its own tab
+      ...voiceOpenItems()],   // voice open (2026-10-12): the This screen tab
     // SCREEN-LEVEL SETTINGS. Written to the profile settings blob, which IS the screen level
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
@@ -6607,7 +6732,9 @@ export async function mountKiosk(root, {
 
   runtime = mountInputRuntime({
     bus,
-    modules: focusRing,
+    // (voice open, 2026-10-12: while a module opened by voice shows, it is the switch lap's only stop -- voice_open.js
+    // `ring` argues it. A panel beside it is still a pointer's; the lap comes back with the dashboard.)
+    modules: () => voiceOpen.ring(focusRing()),
     // On the dashboard path (Stage 3b) ESCAPE IS THE PLAIN BAR (Design: "Escape, from anywhere"), so
     // its menu binding is left out there; M still opens the menu, and the menu's own panel still closes
     // on Escape. Every other screen keeps Escape as the menu, exactly as it was.
@@ -8100,8 +8227,14 @@ export async function mountKiosk(root, {
     personKnown: () => personKnown,
     // play as (row 2.80), for a suite: the host (its vocabulary, the seats a voice start chose, what it last did).
     playAs: () => playAs,
+    // voice open (2026-10-12), for a suite: the host (what is open, the last request, `close`), and where the switch's
+    // focus is (the router's; a module opened by voice is the only stop while it shows).
+    voiceOpen: () => voiceOpen,
+    routerFocus: () => { try { return runtime?.router?.focused?.()?.id || null; } catch { return null; } },
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
+      try { voiceOpen.destroy(); } catch { /* already gone */ }   // voice open: its box, its module, its listeners
+      try { voiceGate?.destroy?.(); } catch { /* already gone */ }
       try { playAs.destroy(); } catch { /* already gone */ }   // play as: its bus listeners
       try { deviceSettle?.cancel(); } catch { /* already done */ }   // "Best for this device": its one measurement
       try { personKnown.destroy(); } catch { /* already gone */ }   // its timer, and its listeners
