@@ -248,6 +248,7 @@ export const STATE_WORDS = Object.freeze({
   reading: 'Looking…',
   none: 'Can be reached. No copy recorded here.',
   unreachable: 'Can’t be reached right now. The computer may be off, or its photo program stopped.',
+  localElsewhere: 'This is the photo program on a screen’s own computer. It works on that screen; none is running on this one.',
   elsewhere: 'Not asked from here. It is on another computer, and asking would make this browser ask you for permission first.',
   permission: 'This browser needs your OK to open this folder again. Open it from Media.',
   missing: 'This browser no longer has this folder. Connect it again in Media.',
@@ -513,7 +514,11 @@ export function mountStorageView(root, {
     const roles = roleWords(copies, backupNamesFor(s.id));
     const lines = copies.map((c) => copyLine(c, now(), { lateAfterMs: view.lateAfterMs }));
     const free = r.freeHere && r.freeBytes != null ? `About ${bytesWords(r.freeBytes)} free for pictures added here` : '';
-    const stateText = r.state === 'ok' ? '' : (r.checkedNo ? STATE_WORDS.checkedNo : (STATE_WORDS[r.state] || ''));
+    // chat note BR 1 (2026-10-12): a "localhost" photo program that doesn't answer on THIS computer is a screen's own;
+    // it isn't broken, so it gets those words rather than "Can't be reached".
+    const localElsewhere = r.state === 'unreachable' && addressScope(s.base_url || '') === 'loopback';
+    const stateText = r.state === 'ok' ? '' : (localElsewhere ? STATE_WORDS.localElsewhere
+      : r.checkedNo ? STATE_WORDS.checkedNo : (STATE_WORDS[r.state] || ''));
     return `<li class="sv-row" data-sv-id="${esc(s.id)}" data-sv-state="${esc(r.state)}">
         <span class="sv-name">${esc(s.label || s.base_url || s.id)}</span>
         <span class="sv-where" data-sv-where-row>${esc(whereWords(s, r.reach || null))}</span>

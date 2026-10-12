@@ -334,8 +334,13 @@ const row = (el, id) => el.querySelector(`[data-sv-id="${id}"]`);
   check('*** ...and it was NEVER fetched by itself ***', !w.ag.seen.some((u) => u.startsWith(C)), w.ag.seen.filter((u) => u.startsWith(C)).join(' '));
   check('...with a press to check on purpose', !!desk.querySelector('[data-sv-check="src-desk"]'));
   const gone = row(el, 'src-gone');
-  check('a source that can\'t be reached says so in plain words', gone.dataset.svState === 'unreachable'
-    && /Can’t be reached right now/.test(gone.textContent));
+  // chat note BR 1 (2026-10-12): this one is a "localhost" photo program that doesn't answer HERE - a screen's own, not
+  // a broken one - so it says that instead of "Can't be reached" (STATE_WORDS.unreachable stays for any other address).
+  check('*** a "localhost" source that doesn\'t answer here: the photo program on a screen\'s own computer, not "can\'t be reached" ***',
+    gone.dataset.svState === 'unreachable' && /photo program on a screen’s own computer/.test(gone.textContent)
+    && !/Can’t be reached/.test(gone.textContent), gone.textContent);
+  check('...and "can\'t be reached" is still the words for an address that isn\'t this computer\'s',
+    /^Can’t be reached right now/.test(STATE_WORDS.unreachable));
   const dev = row(el, 'device-pictures');
   check('pictures added here: on this device, with the room left in this browser', /On this device/.test(dev.textContent)
     && dev.querySelector('[data-sv-free]')?.textContent === 'About 3.2 GB free for pictures added here');
