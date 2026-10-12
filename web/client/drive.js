@@ -108,6 +108,7 @@ export function connectDrive({
   const signalSubs = new Set();
   if (onSignal) signalSubs.add(onSignal);
   const inviteSubs = new Set();     // a game offered to the call (drivers only; see onmessage)
+  const askSubs = new Set();        // a caller asking this screen to open a game on the call (screens only, 2026-10-12)
   const groupSubs = new Set();      // group calls (2026-10-09): the server's group messages (call_group.js)
   const playSubs = new Set();       // watching along (row 2.79): a screen's `play`, for a following driver only
   // who may see a screen (2026-10-12, server/screen_access.py): a driver hears whether it is seeing, waiting for the
@@ -245,6 +246,14 @@ export function connectDrive({
         const inv = { code: msg.code, game: msg.game, name: String(msg.name || '').slice(0, 40) };
         for (const fn of [...inviteSubs]) { try { fn(inv); } catch (err) { console.error('drive: game invite', err); } }
       }
+      // THE OTHER DIRECTION (2026-10-12, game_rooms.py CallAsks): a CALLER asked this screen to open a game on the
+      // call. Built by the SERVER (the game from its fixed list, the asker's name as the site knows it); only a
+      // SCREEN hears it. Handed to its own listeners - never to the bus, never as a verb - and attachDriveToBus
+      // holds it to the person's own input gate first, as it does a press.
+      if (msg.type === 'game-ask' && role === 'screen' && GAME_INVITE_GAMES.includes(msg.game)) {
+        const ask = { game: msg.game, name: String(msg.name || '').replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 40) };
+        for (const fn of [...askSubs]) { try { fn(ask); } catch (err) { console.error('drive: game ask', err); } }
+      }
       // GROUP CALLS (2026-10-09, drive.py CallGroups): built by the SERVER (who is in the call, a signal from one member
       // to this one, a knock). Both roles. Handed to the group's own listeners - never to the bus, never as a verb.
       if (msg.type === 'group' && typeof msg.op === 'string') {
@@ -332,6 +341,14 @@ export function connectDrive({
     });
   }
 
+  // "PLAY THIS GAME TOGETHER", from a call (2026-10-12): a DRIVER asks the person's screens to open `game` on the call.
+  // The server rebuilds it, and drops it from a socket that only watches or asked within the last 10 s.
+  function askGame(game) {
+    if (role !== 'driver' || !GAME_INVITE_GAMES.includes(game)) return false;
+    if (!sock || state !== 'connected') return false;
+    try { sock.send(JSON.stringify({ type: 'game-ask', game })); return true; } catch { return false; }
+  }
+
   // A numbered ping (row 2.79). Resolves `{ sent, t, recv }` - our clock out, the server's clock, our clock back -
   // or null when there is no socket, the server says no time, or no answer comes within `timeoutMs`.
   function ping({ timeoutMs = 3000 } = {}) {
@@ -356,6 +373,13 @@ export function connectDrive({
     ping,
     answerSee,
     lend,
+    askGame,
+    /** A caller asking this screen to open a game on the call (`{ game, name }`). Screens only. Returns an unsubscribe. */
+    onGameAsk(cb) {
+      if (typeof cb !== 'function') return () => {};
+      askSubs.add(cb);
+      return () => askSubs.delete(cb);
+    },
     /** who may see (2026-10-12): this driver's seeing state ({ state: on|asking|refused|off, reason, seconds }). */
     onFollowState(cb) {
       if (typeof cb !== 'function') return () => {};
@@ -398,6 +422,7 @@ export function connectDrive({
       closed = true;
       signalSubs.clear();
       inviteSubs.clear();
+      askSubs.clear();
       groupSubs.clear();
       playSubs.clear();
       followSubs.clear();
@@ -453,7 +478,7 @@ export function attachDriveToBus(bus, opts = {}) {
     ...rest
   } = opts;
 
-  return connectDrive({
+  const link = connectDrive({
     ...rest,
     role: 'screen',
     onVerb: (verb) => {
@@ -483,4 +508,27 @@ export function attachDriveToBus(bus, opts = {}) {
       opts.onVerb?.(verb, from);
     },
   });
+  // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12): opening a game on this screen is a press on it, so it
+  // meets the SAME gate a remote press does - the person's own (gate, role) - and a refused one is reported the same
+  // way, in the same list ("why nothing happened"). Only what passes reaches the screen's listeners.
+  const rawOnAsk = link.onGameAsk;
+  link.onGameAsk = (cb) => {
+    if (typeof cb !== 'function') return () => {};
+    return rawOnAsk((ask) => {
+      const asRole = role() || DEFAULT_REMOTE_ROLE;
+      const now = gate() || 'both';
+      if (!gatePermits(now, asRole)) {
+        bus.publish(ACTIVATION_TOPIC, {
+          at: Date.now(), device: 'remote', deviceClass: 'remote',
+          control: (ask && ask.name) || driverLabel || driverId || 'another screen',
+          actionId: 'play-together', bindingId: null, edge: null,
+          role: asRole, gate: now, accepted: false, reason: 'role-gated', heldMs: null, latencyMs: null,
+        });
+        opts.onRefused?.({ verb: 'play-together', reason: 'role-gated', gate: now, role: asRole });
+        return;
+      }
+      cb(ask);
+    });
+  };
+  return link;
 }

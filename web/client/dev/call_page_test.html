@@ -29,6 +29,7 @@
 <script type="module">
 import {
   mountCallPage, endText, CALLER_GIVE_UP_MS, CALLER_END_TEXT, CALL_MODES, CONNECT_MS, PRESENCE_MS,
+  GAME_ASK_WAIT_MS, GAME_NOTE_MS, GAME_ASK_GAME,
 } from '../call_page.js';
 import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { SIGNAL_KINDS, connectDrive } from '../drive.js';
@@ -579,6 +580,59 @@ try {
     check('"Close the game": gone, the call still on', !root.querySelector('[data-game-frame]') && M.page.state() === 'in-call');
     M.page.hangup();
     check('hanging up takes the game with it', M.page.game() === null);
+    M.page.destroy(); S.t.destroy();
+  }
+
+  section('*** "Play Quiz mix together": one press asks the screen, and the game opens with no second press ***');
+  {
+    const clock = fakeClock();
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const base = pageConnect(room);
+    const askSent = [];
+    const connect = (o) => { const l = base(o); l.askGame = (g) => { askSent.push(g); return true; }; return l; };
+    connect.made = base.made;
+    const M = await mount({ room, connect, clock });
+    check('before the call: no button', !root.querySelector('[data-game-ask]'));
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    check('ringing: not yet', !root.querySelector('[data-game-ask]'));
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    M.peers.last().fire('connected');
+    await settled(() => M.page.state() === 'in-call');
+    check('*** in the call: "Play Quiz mix together", beside the video ***', root.querySelector('[data-game-ask]')?.textContent === 'Play Quiz mix together'
+      && root.querySelector('[data-game]')?.hidden === false);
+    press('[data-game-ask]');
+    check('*** one press: the ask goes out on the call\'s own socket (the game only) ***', askSent.join() === GAME_ASK_GAME && GAME_ASK_GAME === 'quiz_mix');
+    check('...and it says what it is doing, with a way out', /Asking Alex’s screen to start Quiz mix…/.test(text()) && !!root.querySelector('[data-game-asking]')
+      && !!root.querySelector('[data-game-close]'), text().slice(0, 300));
+    check('a second press cannot ask twice (the button is gone while asking)', !root.querySelector('[data-game-ask]') && M.page.askGame() === false && askSent.length === 1);
+    M.connect.made[0].invite({ code: 'KX49PM', game: 'quiz_mix', name: 'Alex' });
+    const frame = root.querySelector('[data-game-frame]');
+    check('*** the screen opened it: the game is beside the video at once - no "Play" to press ***',
+      frame && frame.getAttribute('src') === '/play.html?room=KX49PM' && !root.querySelector('[data-game-join]'), frame?.getAttribute('src'));
+    clock.advance(GAME_ASK_WAIT_MS + 10); await sleep(5);
+    check('...and the wait running out later changes nothing', !!root.querySelector('[data-game-frame]'));
+    press('[data-game-close]');
+    check('"Close the game": the button comes back, the call still on', !!root.querySelector('[data-game-ask]') && M.page.state() === 'in-call');
+    // Asked, and nothing comes back.
+    clock.advance(10000);
+    press('[data-game-ask]');
+    clock.advance(GAME_ASK_WAIT_MS - 1); await sleep(5);
+    check('still asking just before the wait runs out', !!root.querySelector('[data-game-asking]'));
+    clock.advance(1); await sleep(5);
+    check(`*** nothing in ${GAME_ASK_WAIT_MS / 1000} s: it says the game did not open, and where it can ***`,
+      /The game did not open on Alex’s screen\. It opens on a screen showing Quiz mix, or showing the call by itself\./.test(text()), text().slice(0, 300));
+    check('*** plain words (no "her screen", no names of the people this was built for) ***', !/her screen|taylor|cici|socket|server|module|panel/i.test(root.querySelector('[data-game]')?.textContent || ''));
+    clock.advance(GAME_NOTE_MS); await sleep(5);
+    check(`...gone by itself after ${GAME_NOTE_MS / 1000} s: the button is back`, !!root.querySelector('[data-game-ask]') && !root.querySelector('[data-game-note]'));
+    // "Never mind": a late code is then an ordinary offer, not a game opened under them.
+    press('[data-game-ask]');
+    press('[data-game-close]');
+    M.connect.made[0].invite({ code: 'KX49PN', game: 'quiz_mix', name: 'Alex' });
+    check('*** after "Never mind", a code that arrives late is only offered (Play / Not now) ***', !!root.querySelector('[data-game-join]') && !root.querySelector('[data-game-frame]'));
+    M.page.hangup();
+    check('hanging up takes all of it with it', M.page.game() === null && !root.querySelector('[data-game-ask]'));
     M.page.destroy(); S.t.destroy();
   }
 

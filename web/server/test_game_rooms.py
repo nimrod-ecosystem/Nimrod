@@ -387,6 +387,44 @@ op(R2, Conn("h"), "pat")
 check("the same login-that-may-call, at a room NOT opened on a call: refused", [m for _, m in jn(R2, Conn("d"), "dana")]
       == [{"kind": "refused", "why": "no-room"}])
 
+section("*** asking a screen to open the game, from the call (2026-10-12) ***")
+from game_rooms import CALL_ASK_GAP_S, CallAsks, parse_call_ask  # noqa: E402
+from drive import parse_message as drive_parse  # noqa: E402
+check("*** the ask carries only the game: a name, a code or a seat on it is dropped ***",
+      parse_call_ask({"type": "game-ask", "game": "quiz_mix", "name": "<b>Boss</b>", "code": "KX49PM", "seat": "d0.0"})
+      == {"type": "game-ask", "game": "quiz_mix"})
+check("a game not on the list, or no game: dropped", parse_call_ask({"type": "game-ask", "game": "poker"}) is None
+      and parse_call_ask({"type": "game-ask"}) is None and parse_call_ask({"type": "game-ask", "game": ["quiz_mix"]}) is None
+      and parse_call_ask("game-ask") is None)
+check("the drive socket's own parser hands it here (and so drops the same things)",
+      drive_parse({"type": "game-ask", "game": "quiz_mix", "x": 1}) == {"type": "game-ask", "game": "quiz_mix"}
+      and drive_parse({"type": "game-ask", "game": "poker"}) is None)
+check("*** an ask is not a verb and not a game kind: it can never become a press or a move ***",
+      "game-ask" not in DRIVE_VERBS and "game-ask" not in GAME_KINDS and parse_game(J({"type": "game-ask", "game": "quiz_mix"})) is None
+      and parse_game(J({"kind": "game-ask", "game": "quiz_mix"})) is None)
+clk = Clock()
+A = CallAsks(now=clk)
+d1, d2, scr = Conn("d1"), Conn("d2"), Conn("scr")
+asked = []
+out = A.ask(d1, "driver", {"type": "game-ask", "game": "quiz_mix"}, lambda: asked.append(1) or "  Dana\t <script>")
+check("*** a driver's ask goes out rebuilt: the game, and the server's own name for the asker, cleaned ***",
+      out == {"type": "game-ask", "game": "quiz_mix", "name": "Dana <script>"}, str(out))
+check("*** a SCREEN cannot ask (a screen never makes another screen do anything) ***",
+      A.ask(scr, "screen", {"type": "game-ask", "game": "quiz_mix"}) is None)
+n_before = len(asked)
+check(f"*** asked again within {CALL_ASK_GAP_S} s: dropped, and the name is not even looked up ***",
+      A.ask(d1, "driver", {"type": "game-ask", "game": "quiz_mix"}, lambda: asked.append(1) or "Dana") is None
+      and len(asked) == n_before)
+check("...another caller's socket is counted on its own", A.ask(d2, "driver", {"type": "game-ask", "game": "quiz_mix"}) is not None)
+clk.advance(CALL_ASK_GAP_S)
+check("...and after the gap the first may ask again", A.ask(d1, "driver", {"type": "game-ask", "game": "quiz_mix"}) is not None)
+check("a name that cannot be read: the ask still goes, with no name",
+      CallAsks(now=clk).ask(d1, "driver", {"type": "game-ask", "game": "quiz_mix"}, lambda: 1 / 0) == {"type": "game-ask", "game": "quiz_mix", "name": ""})
+check("a message that is not an ask (a verb that got this far): nothing", A.ask(d2, "driver", {"type": "verb", "verb": "select"}) is None)
+A.left(d1)
+A.left(d2)
+check("a socket that goes is forgotten: nothing kept", len(A) == 0)
+
 # ---------------------------------------------------------------------------------------------- HTTP
 section("*** the real socket, end to end ***")
 tmp = tempfile.mkdtemp(prefix="nimrod_games_")
@@ -539,6 +577,42 @@ import time as _time  # noqa: E402
 appmod._games._now = lambda: _time.monotonic() + HOST_GONE_S + 1
 appmod._games.sweep()
 check("*** and once the host has been gone long enough, nothing is left at all ***", len(appmod._games) == 0)
+
+section("*** from the call: the CALLER asks, the SCREEN hears it - rebuilt, once per gap, never from a watcher ***")
+with drive_ws("pat", "screen") as screenws, drive_ws("dana", "driver") as callerws:
+    until(screenws, "presence")
+    until(callerws, "presence")
+    until(screenws, "presence")
+    callerws.send_text(J({"type": "game-ask", "game": "quiz_mix", "name": "The Boss", "code": "KX49PM"}))
+    a_ = until(screenws, "game-ask")
+    check("*** the screen is asked: the game, and the asker's name as the site knows it (not the page's) ***",
+          a_ is not None and a_["game"] == "quiz_mix" and a_.get("name") != "The Boss" and set(a_) == {"type", "game", "name"}, str(a_))
+    ok, m = quiet(callerws, drive=True)
+    check("*** the ask goes to the screens only: the caller hears nothing back ***", ok, str(m))
+    callerws.send_text(J({"type": "game-ask", "game": "quiz_mix"}))
+    ok, m = quiet(screenws, drive=True)
+    check(f"*** asked again at once: dropped (one ask per {CALL_ASK_GAP_S} s) ***", ok, str(m))
+    callerws.send_text(J({"type": "game-ask", "game": "poker"}))
+    screenws.send_text(J({"type": "game-ask", "game": "quiz_mix"}))
+    ok, m = quiet(screenws, drive=True)
+    ok2, m2 = quiet(callerws, drive=True)
+    check("a game not on the list, and a SCREEN asking: nobody hears anything", ok and ok2, f"{m} {m2}")
+t_ = c.post(f"/api/drive/ticket/{robin}", headers=H("dana")).json()["ticket"]
+with drive_ws("pat", "screen") as screenws, c.websocket_connect(f"/api/drive/{robin}?t={t_}&role=driver&follow=1") as watchws:
+    until(screenws, "presence")
+    watchws.send_text(J({"type": "game-ask", "game": "quiz_mix"}))
+    screenws.send_text(J({"type": "ping"}))
+    heard = []
+    for _ in range(12):
+        m = screenws.receive_json()
+        heard.append(m.get("type"))
+        if m.get("type") == "pong":
+            break
+    check("*** a socket that only watches (or waits to be let see) cannot ask: seeing never starts a game ***",
+          "pong" in heard and "game-ask" not in heard, str(heard))
+t_m = c.post(f"/api/drive/ticket/{robin}", headers=H("mallory"))
+check("*** a login that may not use that screen cannot even get a drive ticket for it ***", t_m.status_code in (401, 403), str(t_m.status_code))
+check("every drive socket closed: no asks remembered", len(appmod._call_asks) == 0, str(len(appmod._call_asks)))
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

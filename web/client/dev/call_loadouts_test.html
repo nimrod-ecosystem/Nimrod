@@ -51,6 +51,7 @@ import { createProfilesClient } from '../profile.js';
 import { mountKiosk } from '../kiosk.js';
 import { verbTopic } from '../actions.js';
 import '../modules/call.js';
+import { connectGameRoom } from '../game_room.js';
 
 const out = document.getElementById('results');
 const root = document.getElementById('root');
@@ -302,11 +303,40 @@ try {
     await sleep(100);
     check('*** a switch\'s select in the call view goes to the call view\'s board, and to no Board panel under it ***', mine === 1 && bare === 0, `${mine} ${bare}`);
     offA?.(); offB?.();
+    // "PLAY THIS GAME TOGETHER" (2026-10-12): the caller asks; the game opens in the call view, in the board's half.
+    {
+      const invites = [];
+      const offInv = ph.onGameInvite((i) => invites.push(i));
+      check('*** LIVE: the caller asks, with one message on the call\'s own socket ***', ph.askGame('quiz_mix') === true);
+      const game = () => view()?.querySelector('[data-call-game]');
+      check('*** LIVE: Quiz mix opens in the call view, in the talk board\'s half (the board set aside, not closed) ***',
+        await settled(() => !!game()?.querySelector('[data-qm-asked]'), 8000)
+        && view().querySelector('[data-call-board]')?.style.display === 'none' && view().firstElementChild === game(),
+        `${game()?.textContent?.slice(0, 160)} | ${view()?.firstElementChild?.outerHTML.slice(0, 60)}`);
+      check('LIVE: it says who asked and that it starts when they join', /asked to play( on this call)?\. The game starts when they join\./.test(game()?.textContent || ''), game()?.textContent?.slice(0, 200));
+      check('*** LIVE: the room\'s code comes back to the caller (server-built), so their page can join with no code typed ***',
+        await settled(() => invites.length > 0, 6000) && /^[A-Z0-9]{6}$/.test(invites[0]?.code || '') && invites[0].game === 'quiz_mix', JSON.stringify(invites));
+      const gl = connectGameRoom({ user: KUSER });
+      const got = [];
+      gl.onMessage((m) => got.push(m));
+      await settled(() => gl.state() === 'connected', 6000);
+      gl.send({ kind: 'join', code: invites[0]?.code, seats: [{ name: 'Tess' }] });
+      check('LIVE: the caller\'s game joins the room', await settled(() => got.some((m) => m.kind === 'joined'), 6000), JSON.stringify(got.slice(-2)));
+      const mix = () => k.callGame()?.inst?.impl?.__mix?.();
+      check('*** LIVE: the game starts by itself on the screen - nobody pressed anything there ***',
+        await settled(() => (mix()?.round || 0) >= 1 && got.some((m) => m.kind === 'room' && m.state?.phase === 'playing'), 8000),
+        JSON.stringify({ round: mix()?.round, phase: got.filter((m) => m.kind === 'room').at(-1)?.state?.phase }));
+      gl.send({ kind: 'leave' });
+      check('*** LIVE: the caller leaves: the game together ends on the screen, by itself ***', await settled(() => !mix()?.room, 6000), JSON.stringify(mix()?.room));
+      check('LIVE: the screen\'s game ends with it, and says why', /The other player left/.test(game()?.textContent || ''), game()?.textContent?.slice(0, 200));
+      gl.close(); offInv?.();
+    }
     // Hang up from the bar, with a pointer.
     root.querySelector('[data-call-controls] [data-call="hangup"]').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
     check('*** LIVE: Hang up on the bar ends the call: the caller hears it ***', await settled(() => dEnded.at(-1) === 'hangup', 6000), JSON.stringify(dEnded));
     check('*** LIVE: the view goes, the board with it, and the screen is as it was ***',
       await settled(() => !k.callView() && !k.callScanHeld(), 4000) && !root.querySelector('[data-call-board]') && k.primaryType() === 'photos');
+    check('*** LIVE: the call\'s game goes with the call ***', !root.querySelector('[data-call-game]') && k.callGame() === null);
     check('LIVE: the microphone is let go', await settled(() => callMedia(/^call:/).mic.length === 0, 4000), JSON.stringify(callMedia(/^call:/)));
   } catch (e) {
     check('live section ran', false, String((e && e.stack) || e));

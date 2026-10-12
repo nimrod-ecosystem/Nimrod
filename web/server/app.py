@@ -34,7 +34,7 @@ from drive import ROLES, Answerers, CallGroups, Rooms, Tickets, parse_message, s
 from play_relay import PlayRelay  # watching along (row 2.79): a screen's `play` to its following drivers, kept nowhere
 # who may see a screen, ask first, a temporary permission on a call (Mike, 2026-10-12): rules pure in screen_access.py
 from screen_access import SeeAccess, ask_seconds, lend_minutes, name_for, see_decision
-from game_rooms import SWEEP_S as GAME_SWEEP_S, GameRooms
+from game_rooms import SWEEP_S as GAME_SWEEP_S, CallAsks, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
@@ -1270,6 +1270,7 @@ _answerers = Answerers()        # one answering screen per intercom or family-ca
 _plays = PlayRelay()            # watching along (row 2.79, play_relay.py): who follows; in memory, nothing stored
 _see = SeeAccess()              # who may see a screen (2026-10-12, screen_access.py): asks, yeses, lends; in memory
 _see_timer = None               # the one timer for the next ask or lend coming due
+_call_asks = CallAsks()         # "play this game together", asked from a call (game_rooms.py): when each socket last asked
 
 
 # group calls (2026-10-09; drive.py CallGroups): what a group calls each member - the SERVER's names, never the
@@ -1698,6 +1699,17 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                 if role == "screen":
                     await _lend(ws, arb_key, msg)
                 continue
+            if msg["type"] == "game-ask":
+                # "PLAY THIS GAME TOGETHER", from a call (2026-10-12; game_rooms.py CallAsks argues the gate). A DRIVER
+                # asks this person's SCREENS to open a game on the call: rebuilt there (the game from the fixed list,
+                # the name the owner gave this login or its own display name), at most once per CALL_ASK_GAP_S. A
+                # watch-only socket never gets here (dropped above). The screen still applies the person's own input
+                # gate, as it does to a press.
+                out = _call_asks.ask(ws, role, msg,
+                                     lambda: _seer_name(_person_row(_person_owner(person_id), person_id), user))
+                if out:
+                    await _tell(room.screens, out)
+                continue
             if msg["type"] == "play":
                 # A SCREEN's, to this person's FOLLOWING drivers only: never to another screen, never stored,
                 # rate-limited per socket. Every rule is PlayRelay.route's.
@@ -1776,6 +1788,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
     finally:
         _rooms.leave(room_key, person_id, role, ws)
         _plays.left(ws)                        # watching along: who followed, its rate counter - all forgotten
+        _call_asks.left(ws)                    # a game asked from a call: when it last asked - forgotten
         # who may see (2026-10-12): an ask it was waiting on goes from the screens; a yes it rode on starts its grace.
         await _send_out(_see.withdraw(ws, _screens_of))
         _see.stopped(ws)

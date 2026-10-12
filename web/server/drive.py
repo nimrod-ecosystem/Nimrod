@@ -44,6 +44,7 @@ from dataclasses import dataclass, field
 
 from play_relay import parse_follow, parse_play   # watching along (row 2.79): the `play` and `follow` messages
 from screen_access import parse_lend, parse_see_answer   # who may see a screen; a temporary permission (2026-10-12)
+from game_rooms import parse_call_ask   # "play this game together", asked from a call (2026-10-12)
 
 # The verb vocabulary, mirrored from the client's actions.js. Deliberately duplicated as a
 # frozen set rather than imported from anywhere: this is a security boundary, and a
@@ -243,6 +244,11 @@ def parse_message(raw: dict) -> dict | None:
         # a temporary permission given during a call (2026-10-12): a SCREEN's "let this caller see until the call
         # ends". The account is the call's own caller as the server recorded it (Answerers.caller), never the page's.
         return parse_lend(raw)
+    if kind == "game-ask":
+        # "play this game together", from a call (2026-10-12, game_rooms.py CallAsks): a DRIVER asks the person's
+        # screens to open a game on the call. Only the game is kept; who may send it and how often is decided in
+        # app.py with CallAsks.ask - never here, and it is never relayed as given.
+        return parse_call_ask(raw)
     if kind == "ping":
         # A page may tag its ping with a number (`n`) so it can match the answer to the question and time the round
         # trip (play_sync.js, the clock difference). Only a small whole number is echoed; anything else is ignored.

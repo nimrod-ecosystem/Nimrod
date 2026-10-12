@@ -73,7 +73,7 @@ import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS }
 import { dropInFor, dropInSecondsOf, lendMinutesOf } from './screen_permissions.js';
 import { mountSeeAsk } from './see_ask.js';
 // call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
-import { callViewPlan, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD } from './call_loadouts.js';
+import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD } from './call_loadouts.js';
 import { createCallCaptions } from './call_captions.js';
 import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
 // 2026-10-04: the screen picks up a new version of the site by itself, at a quiet moment (version_watch.js).
@@ -742,6 +742,8 @@ export async function mountKiosk(root, {
   let playSender = null;         // watching along (row 2.79, play_sync.js): built with `drive`, below
   let callTransport = null;
   let callGroup = null;          // group calls (2026-10-09; call_group.js): the group this screen's call may grow into
+  // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12): the game panels that take an ask (ctx.onGameAsk).
+  const gameAskSubs = new Set();
   // A call arriving at this screen with no Call panel on it (call_notice.js, 2026-10-02): the notice, the
   // call it answered (the Call module hosted over the panels until hang-up), and whether either has the scan.
   let callNotice = null;
@@ -1658,6 +1660,13 @@ export async function mountKiosk(root, {
     // checks this screen answered that call and lends it to that call's own caller (screen_access.py).
     lendScreen: ({ session, on = true } = {}) => (drive && typeof drive.lend === 'function'
       ? drive.lend({ what: 'see', session, on, minutes: lendMinutesOf(personRow || {}) }) : Promise.resolve(null)),
+    // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12; routeGameAsk below): a game panel that can open a room on
+    // the call listens here, and returns true when it took the ask. The ask has already met the person's input gate.
+    onGameAsk: (fn) => {
+      if (typeof fn !== 'function') return () => {};
+      gameAskSubs.add(fn);
+      return () => gameAskSubs.delete(fn);
+    },
     // "Your own voice model" (the Voice model module, modules/voice_model.js, 2026-10-04): the screen's recorder,
     // so reading phrases arms it, and a writer for ONLY that person's own voice-model rows - the panel can
     // flip "Use my own voice model" and set its port, and nothing else on the row.
@@ -5368,10 +5377,105 @@ export async function mountKiosk(root, {
       cv.offs.push(t?.onRemote?.((s) => { if (callView === cv && s) cv.captions?.start(s); }) || (() => {}));
     } catch (err) { console.error('kiosk: call captions', err); }
   }
+  // ---- "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12) ----------------------------------------------------
+  // The caller pressed "Play Quiz mix together" on their call page; the ask is past the person's input gate already.
+  // WHERE THE GAME GOES, argued. A call answered over the panels (the call view) COVERS the panels, so a Quiz mix panel
+  // under it could open a room nobody here can see: the game opens IN THE CALL VIEW instead, in the half the talk board
+  // uses (beside the call on a wide screen, under it on a tall one - call_loadouts.js boardPreset), the board set
+  // aside while the game is on and back when it ends. With no call view (a Call panel on the dashboard holds the
+  // call), the first game panel that takes the ask opens it where it is. Neither: nothing opens, and the caller's
+  // page says so after its own wait (call_page.js GAME_ASK_WAIT_MS).
+  const CALL_GAME_ROW = 'call-game';
+  const CALL_GAME_ID = 'call:game';
+  const CALL_GAME_TYPES = Object.freeze(['quiz_mix']);
+  // How long the game's half stays after the game together is over (its last table, the note saying why), before the
+  // call view goes back to how it opened. = quiz_mix.js NOTE_MS: read, then gone by itself.
+  const CALL_GAME_LINGER_MS = 20000;
+  function routeGameAsk(ask) {
+    if (torn || !ask || !CALL_GAME_TYPES.includes(ask.game)) return false;
+    if (callView) { openCallGame(callView, ask).catch((err) => console.error('kiosk: call game', err)); return true; }
+    for (const fn of [...gameAskSubs]) {
+      try { if (fn(ask) === true) return true; } catch (err) { console.error('kiosk: a game ask', err); }
+    }
+    return false;
+  }
+  async function openCallGame(cv, ask) {
+    if (cv.game) {
+      // Already open in this call: hand it the new ask (a game together that ended, asked for again).
+      if (cv.game.lingerTimer) { clearTimeout(cv.game.lingerTimer); cv.game.lingerTimer = null; }
+      try { cv.game.inst?.impl?.askTogether?.(ask); } catch (err) { console.error('kiosk: call game ask', err); }
+      return;
+    }
+    const slot = document.createElement('div');
+    slot.dataset.callGame = '';
+    slot.style.cssText = 'position:relative;min-width:0;min-height:0;overflow:auto;background:var(--surface)';
+    const g = { slot, inst: null, state: null, lingerTimer: null,
+                grid: { cols: cv.box.style.gridTemplateColumns, rows: cv.box.style.gridTemplateRows } };
+    cv.game = g;
+    if (cv.boardSlot) {
+      // The board's half: the game takes it while it is on (the board kept, only hidden, so nothing on it is lost).
+      cv.boardSlot.style.display = 'none';
+      cv.box.insertBefore(slot, cv.boardSlot);
+    } else {
+      const preset = boardPreset({ width: kioskEl.clientWidth || window.innerWidth || 0, height: kioskEl.clientHeight || window.innerHeight || 0 });
+      const p = LAYOUT_PRESETS.find((x) => x.id === preset) || LAYOUT_PRESETS[0];
+      cv.box.style.gridTemplateColumns = p.cols;
+      cv.box.style.gridTemplateRows = p.rows;
+      // As the board would sit: left of the call side by side, under it stacked (the mirror stays in the call's corner).
+      if (preset === 'side') cv.box.insertBefore(slot, cv.area); else cv.area.after(slot);
+    }
+    cv.box.dataset.game = '1';
+    // Its own row, like the call view's board: rounds and kinds of question set for games on calls. The player's level
+    // is the person's own row (makePersonState), the same one every Quiz mix of theirs uses. It never starts by itself
+    // and never runs its demo: it starts when the asker joins (quiz_mix.js).
+    const base = withTypeLayer(stateFor(CALL_GAME_ROW), ask.game);
+    const pin = (row) => ({ ...(row || {}), autostart: false, attract: false });
+    g.state = Object.assign({}, base, {
+      get: () => pin(base.get()),
+      subscribe: (fn) => (typeof fn === 'function' ? base.subscribe((row) => fn(pin(row))) : () => {}),
+    });
+    try {
+      g.inst = mountModule(ask.game, extendCtx(childCtx({ id: CALL_GAME_ID, type: ask.game }), {
+        mount: slot, state: g.state, events: eventsFor(CALL_GAME_ROW),
+        onGameAsk: null,              // the asks come through routeGameAsk, not a second subscription
+        onTogetherEnd: () => {
+          if (callView !== cv || cv.game !== g) return;
+          if (g.lingerTimer) clearTimeout(g.lingerTimer);
+          g.lingerTimer = setTimeout(() => { g.lingerTimer = null; if (callView === cv && cv.game === g) closeCallGame(cv); }, CALL_GAME_LINGER_MS);
+        },
+      }));
+      await g.state.load?.().catch?.(() => {});
+      if (callView !== cv || cv.game !== g) return;
+      await g.inst.init();
+      if (callView !== cv || cv.game !== g) return;
+      g.state.startPolling?.();
+    } catch (err) {
+      console.error('kiosk: the call game would not open', err);
+      if (callView === cv && cv.game === g) closeCallGame(cv);
+      return;
+    }
+    let took = false;
+    try { took = g.inst.impl?.askTogether?.(ask) === true; } catch (err) { console.error('kiosk: call game ask', err); }
+    if (!took) closeCallGame(cv);
+  }
+  function closeCallGame(cv) {
+    const g = cv?.game;
+    if (!g) return;
+    cv.game = null;
+    if (g.lingerTimer) { clearTimeout(g.lingerTimer); g.lingerTimer = null; }
+    try { g.inst?.destroy(); } catch (err) { console.error('kiosk: closing the call game', err); }
+    if (!g.inst) { try { g.state?.destroy?.(); } catch { /* gone */ } }
+    try { g.slot.remove(); } catch { /* gone */ }
+    if (cv.boardSlot) cv.boardSlot.style.display = '';
+    else { cv.box.style.gridTemplateColumns = g.grid.cols; cv.box.style.gridTemplateRows = g.grid.rows; }
+    delete cv.box.dataset.game;
+  }
   function closeCallView(why = 'ended') {
     const cv = callView;
     if (!cv) return false;
     callView = null;
+    // "play this game together": the game goes with the call (its room is left as it goes).
+    closeCallGame(cv);
     cv.offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
     // call loadouts: the board and the captions go with the call (captions keep nothing).
     try { cv.captions?.stop(); } catch { /* gone */ }
@@ -6423,6 +6527,10 @@ export async function mountKiosk(root, {
           // gone by itself; nobody answering means nothing is shared (see_ask.js).
           try { seeAskNote = mountSeeAsk(kioskEl, { link: drive, zIndex: LAYERS.menus + 40 }); }
           catch (err) { console.error('kiosk: see ask', err); }
+          // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12): past the person's input gate already
+          // (attachDriveToBus), handed to the call view's game or to the first game panel that takes it.
+          try { drive.onGameAsk?.((ask) => routeGameAsk(ask)); }
+          catch (err) { console.error('kiosk: game asks', err); }
         }
       }
       if (makeState || embedded || !profiles.personStateURL) return;
@@ -7975,6 +8083,8 @@ export async function mountKiosk(root, {
     // the call it answered while that is hosted over the panels (else null), and whether either has the scan.
     callNotice: () => callNotice,
     callView: () => (callView ? { el: callView.box, lit: callView.lit, controls: callView.inst?.impl?.controls?.() || null } : null),
+    // "play this game together" (2026-10-12): the game opened in the call view for an ask, if any (the suites).
+    callGame: () => (callView?.game ? { el: callView.game.slot, inst: callView.game.inst } : null),
     callScanHeld: () => callScanHeld,
     // The screen's flash limit as everything on it reads it, and the who page's avatar cache (null
     // until that page is first drawn).

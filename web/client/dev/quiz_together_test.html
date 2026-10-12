@@ -32,10 +32,12 @@ import { LADDER_KEY } from '../adaptive_play.js';
 import { TRIVIA_LADDER_KEY } from '../modules/trivia.js';
 import { SOURCE_IDS } from '../question_kinds.js';
 import '../modules/quiz_mix.js';
-import { GAME, USE_KEYS, LOBBY_MS, REMOTE_TURN_MS, NOTE_MS, playPath, scoreWords } from '../modules/quiz_mix.js';
+import { GAME, USE_KEYS, LOBBY_MS, REMOTE_TURN_MS, NOTE_MS, CALL_ASK_JOIN_MS, playPath, scoreWords } from '../modules/quiz_mix.js';
 import { connectGameRoom, createRoomClient, normalizeCode, codeWords, sendable, GAME_KINDS, MAX_GAME_BYTES, END_WORDS,
   LOST_MS, ASK_BACKSTOP_MS, REPLY_MS } from '../game_room.js';
-import { connectDrive, GAME_INVITE_GAMES } from '../drive.js';
+import { connectDrive, attachDriveToBus, GAME_INVITE_GAMES } from '../drive.js';
+import { createBus } from '../bus.js';
+import { ACTIVATION_TOPIC } from '../input.js';
 
 const { check, section, finish } = harness();
 const tick = () => sleep(0);
@@ -374,6 +376,74 @@ try {
     C.inst.destroy();
   }
   {
+    section('*** asked from the call: one press there, nothing pressed here ***');
+    const hub5 = fakeHub();
+    let live = true;
+    const liveSubs = new Set();
+    const transport = { isLive: () => live, onLive: (fn) => { liveSubs.add(fn); return () => liveSubs.delete(fn); } };
+    const setLive = (v) => { live = v; for (const f of [...liveSubs]) f(v); };
+    const asks = new Set();
+    let ended = [];
+    const S = screen('hostC', { players: 'Robin', hub: hub5, extra: { personId: 'p-robin', callTransport: transport,
+      onGameAsk: (fn) => { asks.add(fn); return () => asks.delete(fn); }, onTogetherEnd: (w) => ended.push(w) } });
+    await tick();
+    const ask = (a) => [...asks].map((f) => f(a));
+    check('the panel listens for asks (one listener)', asks.size === 1);
+    check('an ask for another game is not taken', ask({ game: 'poker', name: 'Dana' })[0] === false && !S.mix().room);
+    live = false;
+    check('*** no call live on this screen: an ask is not taken (nothing to offer it to) ***', ask({ game: GAME, name: 'Dana' })[0] === false && !S.mix().room);
+    live = true;
+    S.inst.impl.__api.start();
+    await until(() => S.inst.impl.__gate().begun && S.phase() === 'asking');
+    check('(setup) a game of its own going here', S.inst.impl.__gate().begun && S.phase() === 'asking', S.phase());
+    check('*** an ask for Quiz mix during a call: taken ***', ask({ game: GAME, name: 'Dana' })[0] === true);
+    await until(() => S.mix().room?.phase === 'in');
+    const open = hub5.log.find((x) => x.msg.kind === 'room' && x.msg.open)?.msg;
+    check('*** a call room is opened for this screen\'s person, as "On this call" opens one ***', open?.open?.person === 'p-robin', JSON.stringify(open));
+    check('*** the game it was playing on its own ended first (calm, while the asker joins) ***', S.phase() === 'done', S.phase());
+    check('*** the lobby says who asked, and that it starts when they join ***',
+      /Dana asked to play on this call\. The game starts when they join\./.test(S.host.querySelector('[data-qm-asked]')?.textContent || ''), S.text().slice(0, 200));
+    check('the lobby still has its way out', !!S.host.querySelector('[data-qm-sheet="lobby"] [data-qm="stop"]'));
+    check('plain words', !BANNED.test(S.host.querySelector('[data-qm-sheet]')?.textContent || ''));
+    check('a second ask while the room is open: not taken', ask({ game: GAME, name: 'Dana' })[0] === false);
+    // The asker's page joins (the call page's game frame): the game starts by itself.
+    const Dana = screen('hostB', { players: 'Dana', hub: hub5, account: 'dana' });
+    await tick();
+    Dana.mix().join('KX49PM');
+    await until(() => S.inst.impl.__gate().begun && S.mix().round === 1 && Dana.inst.impl.__gate().begun, 4000);
+    check('*** the asker joins: the game STARTS BY ITSELF, on both screens - nobody pressed Start ***',
+      S.mix().round === 1 && S.phase() !== 'done' && Dana.inst.impl.__gate().begun, `${S.phase()} round ${S.mix().round} ${Dana.inst.impl.__gate().begun}`);
+    check('...a new game: round 1, this screen\'s player first', S.cur()?.player.name === 'Robin', S.cur()?.player?.name);
+    // The asker leaves (closed the game, or hung up): the game together ends, and this screen's game ends with it.
+    Dana.mix().stop();
+    await until(() => !S.mix().room, 4000);
+    await tick(); await tick();
+    check('*** the asker leaves: the game together ends here, by itself ***', !S.mix().room);
+    check('*** ...and this screen\'s game ends with it (the done view), rather than asking on alone ***', S.phase() === 'done', S.phase());
+    check('...said in the corner', /The other player left/.test(S.text()), S.text().slice(0, 200));
+    check('the host that opened it for the call is told it is over (the call view closes its game)', ended.includes('call-left'), JSON.stringify(ended));
+    S.roomTimers.flush();
+    // Asked again, and nobody comes.
+    check('asked again: taken', ask({ game: GAME, name: '' })[0] === true);
+    await until(() => S.mix().room?.phase === 'in');
+    check('no name known: "Somebody on the call asked to play."', /Somebody on the call asked to play\./.test(S.host.querySelector('[data-qm-asked]')?.textContent || ''));
+    S.roomTimers.flush();
+    await until(() => !S.mix().room, 4000);
+    check(`*** nobody joins within ${CALL_ASK_JOIN_MS / 1000} s: the room closes by itself, and says so ***`, !S.mix().room
+      && /Nobody joined the game on the call/.test(S.text()), S.text().slice(0, 200));
+    // Asked, and the call ends before anybody joins.
+    S.roomTimers.flush();
+    check('asked a third time: taken', ask({ game: GAME, name: 'Dana' })[0] === true);
+    await until(() => S.mix().room?.phase === 'in');
+    setLive(false);
+    await until(() => !S.mix().room, 4000);
+    check('*** the call ends: the room it opened for the call closes with it ***', !S.mix().room, JSON.stringify(S.mix().room));
+    live = true;
+    check('askTogether is there for a host that opens the panel for an ask', typeof S.inst.impl.askTogether === 'function');
+    S.inst.destroy(); Dana.inst.destroy();
+    check('destroyed: it stops listening', asks.size === 0);
+  }
+  {
     section('a switch can step through the sheet');
     const hub4 = fakeHub();
     const S = screen('hostC', { players: 'Ann', hub: hub4 });
@@ -408,7 +478,39 @@ try {
     check('*** the caller hears the invitation (code, game, name) ***', got.drv.length === 1 && got.drv[0].code === 'KX49PM' && got.drv[0].name === 'Robin', JSON.stringify(got.drv));
     check('*** a screen never does, and it never becomes a press ***', got.scr.length === 0 && verbs.length === 0);
     check('a mangled code or another game: ignored', GAME_INVITE_GAMES.join() === 'quiz_mix');
+    // The other direction (2026-10-12): a caller ASKS the screen to open the game.
+    const asked = { drv: [], scr: [] };
+    drv.onGameAsk((a) => asked.drv.push(a));
+    scr.onGameAsk((a) => asked.scr.push(a));
+    for (const s of subs) s.onmessage?.({ data: JSON.stringify({ type: 'game-ask', game: 'quiz_mix', name: 'Dana\u0007' }) });
+    for (const s of subs) s.onmessage?.({ data: JSON.stringify({ type: 'game-ask', game: 'poker', name: 'Dana' }) });
+    check('*** a screen hears a caller\'s ask (the game, the name, cleaned) ***', asked.scr.length === 1 && asked.scr[0].game === 'quiz_mix' && asked.scr[0].name === 'Dana', JSON.stringify(asked.scr));
+    check('*** a caller\'s page never does, and an ask never becomes a press ***', asked.drv.length === 0 && verbs.length === 0);
+    const sent = [];
+    for (const s of subs) s.send = (t) => sent.push(t);
+    check('*** the caller asks: exactly { type, game } on its socket ***', drv.askGame('quiz_mix') === true && sent.length === 1
+      && sent[0] === JSON.stringify({ type: 'game-ask', game: 'quiz_mix' }), JSON.stringify(sent));
+    check('a screen cannot ask, and nor can anybody for a game not on the list', scr.askGame('quiz_mix') === false && drv.askGame('poker') === false && sent.length === 1);
     drv.close(); scr.close();
+    // The person's own input gate holds an ask as it holds a press (attachDriveToBus).
+    const gsubs = [];
+    class GSock { constructor() { gsubs.push(this); queueMicrotask(() => this.onopen?.()); } send() {} close() {} }
+    const gbus = createBus();
+    const acts = [];
+    gbus.subscribe(ACTIVATION_TOPIC, (a) => acts.push(a));
+    let gate = 'participant';
+    const att = attachDriveToBus(gbus, { personId: 'p1', fetchImpl: fetchOk, SocketImpl: GSock, gate: () => gate, role: () => 'moderator' });
+    await sleep(10);
+    const got2 = [];
+    att.onGameAsk((a) => got2.push(a));
+    const askMsg = { data: JSON.stringify({ type: 'game-ask', game: 'quiz_mix', name: 'Dana' }) };
+    gsubs[0].onmessage(askMsg);
+    check('*** the screen is set to "only the person in the room": the ask is refused, and said so where refused presses are ***',
+      got2.length === 0 && acts.length === 1 && acts[0].accepted === false && acts[0].reason === 'role-gated' && acts[0].actionId === 'play-together', JSON.stringify(acts));
+    gate = 'both';
+    gsubs[0].onmessage(askMsg);
+    check('*** the gate open: the ask reaches the screen\'s game ***', got2.length === 1 && got2[0].name === 'Dana');
+    att.close();
   }
 
   // =====================================================================================
