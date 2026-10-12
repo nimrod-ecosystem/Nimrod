@@ -47,9 +47,9 @@ Tailscale's DNS (on by default on Linux) so it can find the `.ts.net` name.
    * `--allow-origin` replaces the default list. The default already has `https://nimrodecosystem.com`
      and `https://nimrod.onrender.com`, so you can leave it out.
    * To keep the pass phrase out of your command history, set `NIMROD_SPEECH_SECRET` instead of `--secret`.
-   * If the Nimrod helper is installed here, it may already run the speech program on port 8797 (without
-     `--allow-host`). The program then says "already running" and stops. Turn speech off in the helper,
-     or start this one with `--port 8799` and use `8799` in the next step.
+   * If the Nimrod helper is installed here, it already runs the speech program on port 8797, and this
+     second copy says "already running" and stops. Give the helper the name and the pass phrase instead
+     (**Starting by itself**, below).
 
 3. Give it a secure address, in a second PowerShell window:
 
@@ -64,6 +64,75 @@ Tailscale's DNS (on by default on Linux) so it can find the `.ts.net` name.
    "whisper:small.en"`. The first visit can take a few seconds while the certificate is made.
 
 To stop sharing it: `tailscale serve reset` (this clears every `tailscale serve` setting on the desktop).
+
+**After a restart.** `tailscale serve --bg` comes back by itself: Tailscale's page on `tailscale serve`
+(section "Effects of rebooting and restarting", last validated 26 January 2026) says that with `--bg`,
+when you reboot the device or run `tailscale down` and `tailscale up`, Serve automatically resumes sharing.
+On Windows, Tailscale itself only connects once someone signs in, unless **Run unattended** is turned on
+in Tailscale's menu (Tailscale's "Run unattended" page). The speech program does **not** come back by
+itself when it was started by hand. For that, use the helper.
+
+## Starting by itself: the Nimrod helper
+
+The Nimrod helper (`web/nimrod_helper`) starts the speech program when you sign in to Windows and starts
+it again if it stops. It can give the speech program the secure name and the pass phrase, so it replaces
+step 2 above. `tailscale serve` (step 3) stays as it is: it passes everything to `127.0.0.1:8797`,
+whichever program is answering there. (Added 2026-10-12. `nimrod_helper/test_helper.py` runs the real
+helper and speech program this way with the test engine; it has not yet been installed on a real desktop
+with these settings.)
+
+From the repo's `web` folder, in PowerShell:
+
+1. Install it, with the desktop's full Tailscale name. `--models-dir` points at the Whisper model already
+   on this computer, so nothing is downloaded. `--no-start` means nothing starts yet.
+
+       py -3.13 -m nimrod_helper install --use-this-python --models-dir "$env:USERPROFILE\.cache\huggingface" --allow-host your-desktop.your-tailnet.ts.net --no-start
+
+2. Give it the pass phrase. It asks twice and does not show what you type, so the pass phrase never goes
+   in your command history:
+
+       py -3.13 -m nimrod_helper secret
+
+   It is kept in `%LOCALAPPDATA%\Nimrod Helper\speech_secret.txt`, on its own and not in `settings.json`.
+   Your Windows account, the computer's administrators and Windows itself can read it; other ordinary
+   accounts can't. The helper passes it to the speech program in that program's environment, never on its
+   command line, so it is not in any log or in Task Manager. `secret --clear` removes it. Uninstalling
+   removes it too.
+
+3. Stop the copy you started by hand: press Ctrl+C in its window, or close the window. Port 8797 is free
+   when this prints nothing:
+
+       Get-NetTCPConnection -LocalPort 8797 -State Listen -ErrorAction SilentlyContinue
+
+   (If you forget, nothing breaks: the helper sees 8797 is taken, does not start a second copy, and takes
+   over within 15 seconds of the hand-started copy closing.)
+
+4. Sign out of Windows and sign back in.
+
+5. Check it:
+
+       py -3.13 -m nimrod_helper status
+
+   This should say `Speech program: running` (or `loading the speech model` for a few seconds first),
+   `Speech program also answers to: your-desktop.your-tailnet.ts.net` and `Speech pass phrase: set`.
+   Then, on any device in your tailnet, `https://your-desktop.your-tailnet.ts.net/health` should show
+   `"ok": true`, `"engine": "whisper:small.en"` and `"secret": true`. The helper's own page is
+   `http://127.0.0.1:8790/` on the desktop; the speech program's log is
+   `%LOCALAPPDATA%\Nimrod Helper\logs\speech.log`.
+
+**To change the name later:** run step 1 again with the new `--allow-host` (or `--allow-host ""` for none).
+To change the pass phrase, run step 2 again: a running helper restarts the speech program with it
+within a few seconds. Change it on the screen too.
+
+**To update it after pulling new code:** stop it first, then install again with the same flags. The
+pass phrase and settings are kept:
+
+    py -3.13 -m nimrod_helper unregister --keep-data
+    py -3.13 -m nimrod_helper install --use-this-python --models-dir "$env:USERPROFILE\.cache\huggingface" --allow-host your-desktop.your-tailnet.ts.net
+
+**To go back to starting it by hand:** Settings, Apps, Installed apps, Nimrod helper, Uninstall (or
+`py -3.13 -m nimrod_helper uninstall`). This removes the pass phrase file and the helper's settings. The
+model cache named with `--models-dir` is left alone. Then run step 2 of the section above again.
 
 ## On the screen (the voice menu, advanced settings)
 

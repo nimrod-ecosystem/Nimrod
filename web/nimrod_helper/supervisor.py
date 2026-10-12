@@ -73,9 +73,11 @@ def child_python(python: str | None = None) -> str:
     return str(p)
 
 
-def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None = None) -> list[dict]:
+def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None = None,
+         secret: str | None = None) -> list[dict]:
     """What to run, from the settings. Pure: a list of {name, label, argv, cwd, env, port, why}. A part that is
-    on but cannot run yet (media with no folder) is listed with argv None and `why`."""
+    on but cannot run yet (media with no folder) is listed with argv None and `why`. `secret`: the speech
+    program's pass phrase (settings.read_secret), handed to it in its environment only."""
     app = Path(app_dir)
     out = []
     sp = settings.get('speech') or {}
@@ -95,6 +97,17 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
         # program is updated (the installer replaces app\ wholesale) and removed with it (speech_service/speakers.py
         # argues the place). Passed every time, so the speech program never falls back to a folder inside app\.
         argv += ['--voiceprints', str(Path(data) / 'voiceprints')]
+        # A SECURE NAME IN FRONT OF IT (inbox BV, DESKTOP_SECOND_PASS.md): the names a proxy on this computer
+        # (`tailscale serve`) passes on. Only when the settings name some: otherwise every name but this computer's
+        # own is refused, the speech program's guard against DNS rebinding.
+        hosts = [str(h).strip() for h in (sp.get('allowHosts') or []) if str(h).strip()]
+        if hosts:
+            argv += ['--allow-host', ','.join(hosts)]
+        env = {'PYTHONPATH': str(app), 'PYTHONUNBUFFERED': '1'}
+        # THE PASS PHRASE goes in the child's environment, which speech_service reads as NIMROD_SPEECH_SECRET -
+        # never in argv, which Part.start writes to the log (settings.py "WHERE IT LIVES").
+        if secret:
+            env['NIMROD_SPEECH_SECRET'] = secret
         # A model that came IN the package (build_windows.py --with-model) sits beside app/; used unless the
         # settings name another place.
         bundled = app.parent / 'models'
@@ -105,7 +118,7 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
         else:
             mdir = S.models_dir(settings, data)
         out.append({'name': 'speech', 'label': 'Speech program', 'argv': argv, 'cwd': str(app), 'port': port,
-                    'env': {'HF_HOME': str(mdir), 'PYTHONPATH': str(app), 'PYTHONUNBUFFERED': '1'},
+                    'env': {'HF_HOME': str(mdir), **env},
                     'model': model, 'models': str(mdir), 'why': ''})
     md = settings.get('media') or {}
     if md.get('on'):
@@ -314,15 +327,21 @@ class Supervisor:
         self.started = time.time()
 
     def _stamp(self):
-        try:
-            return self.settings_file.stat().st_mtime
-        except OSError:
-            return None
+        """The settings file's and the pass phrase file's times: a change to either restarts the parts."""
+        out = []
+        for f in (self.settings_file, S.secret_path(self.data)):
+            try:
+                st = f.stat()
+                out.append((st.st_mtime_ns, st.st_size))
+            except OSError:
+                out.append(None)
+        return tuple(out)
 
     def start(self):
         with self.lock:
             self.parts = [Part(s, self.data / 'logs', self.popen, self.clock, self.probe)
-                          for s in plan(self.settings, self.app, self.python, self.data)]
+                          for s in plan(self.settings, self.app, self.python, self.data,
+                                        secret=S.read_secret(self.data))]
             for p in self.parts:
                 p.start()
         self.write_pids()
@@ -334,7 +353,8 @@ class Supervisor:
         self.write_pids()
 
     def poll(self):
-        # The settings changed (somebody chose a media folder): stop everything and start what they now say.
+        # The settings changed (somebody chose a media folder), or the pass phrase did: stop everything and start
+        # what they now say.
         stamp = self._stamp()
         if stamp != self._mtime:
             self._mtime = stamp

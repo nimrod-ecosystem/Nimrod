@@ -67,6 +67,21 @@ def settings_tests(tmp: Path):
     check('settings: the model lives in the data folder unless a place is named',
           S.models_dir(S.DEFAULTS, tmp) == tmp / 'models'
           and S.models_dir({'speech': {'modelsDir': str(tmp / 'cache')}}, tmp) == tmp / 'cache')
+    check('settings: the speech program answers to no other name by default (allowHosts empty)',
+          st['speech']['allowHosts'] == [])
+    sd = tmp / 'sec'
+    check('secret: no file -> no pass phrase', S.read_secret(sd) is None)
+    S.write_secret('a pass phrase', sd)
+    check('secret: kept in its own file in the data folder, NOT in settings.json',
+          S.secret_path(sd) == sd / 'speech_secret.txt' and S.read_secret(sd) == 'a pass phrase'
+          and not S.settings_path(sd).exists())
+    S.secret_path(sd).write_bytes('﻿  spaced phrase \r\n'.encode('utf-8'))
+    check('secret: an editor\'s line ending and BOM are dropped, its own spaces are kept',
+          S.read_secret(sd) == '  spaced phrase ', repr(S.read_secret(sd)))
+    S.secret_path(sd).write_text('\n', encoding='utf-8')
+    check('secret: an empty file -> no pass phrase', S.read_secret(sd) is None)
+    check('secret: cleared -> gone, and clearing again says there was none',
+          S.clear_secret(sd) and not S.secret_path(sd).exists() and not S.clear_secret(sd))
     old = os.environ.get('NIMROD_HELPER_DATA')
     os.environ['NIMROD_HELPER_DATA'] = str(tmp / 'dd')
     check('settings: NIMROD_HELPER_DATA moves the data folder (the tests use it)', S.data_dir() == tmp / 'dd')
@@ -111,6 +126,17 @@ def plan_tests(tmp: Path):
     p3 = SV.plan(S.DEFAULTS, app, 'PY', data)[0]
     check('plan: a model that came in the package (beside app/) is used when no place is named',
           p3['env']['HF_HOME'] == str(tmp / 'models'))
+    check('plan: no pass phrase and no other names -> no --allow-host, no --secret, no NIMROD_SPEECH_SECRET set',
+          '--allow-host' not in sp['argv'] and '--secret' not in sp['argv'] and 'NIMROD_SPEECH_SECRET' not in sp['env'])
+    s7 = S.merged(S.DEFAULTS, {'speech': {'allowHosts': [' desk.tail.ts.net ', '', 'other.example']}})
+    p7 = SV.plan(s7, app, 'PY', data, secret='the phrase')[0]
+    check('plan: allowHosts are passed as one --allow-host (blanks dropped)',
+          p7['argv'][p7['argv'].index('--allow-host') + 1] == 'desk.tail.ts.net,other.example', p7['argv'])
+    check('*** plan: the pass phrase goes in the speech program\'s environment, NEVER on its command line ***',
+          p7['env'].get('NIMROD_SPEECH_SECRET') == 'the phrase' and 'the phrase' not in ' '.join(p7['argv'])
+          and '--secret' not in p7['argv'], p7['argv'])
+    check('plan: the backend and model are still whisper small.en (the speech program\'s defaults)',
+          '--backend' not in p7['argv'] and '--model' not in p7['argv'])
     p4 = SV.plan(S.merged(S.DEFAULTS, {'speech': {'backend': 'fake'}}), app, 'PY', data)[0]
     check('plan: another backend is passed on, with no model', p4['argv'][5:7] == ['--backend', 'fake']
           and '--model' not in p4['argv'], p4['argv'])
@@ -307,6 +333,163 @@ def status_privacy_tests(tmp: Path):
     sup.stop()
 
 
+# --------------------------------------------- the pass phrase and the secure name (inbox BV) ----
+PHRASE = 'test-phrase-not-real-7Qz'
+
+
+def secret_tests(tmp: Path):
+    import contextlib
+    import io
+    from nimrod_helper import __main__ as M
+    data = tmp / 'sdata'
+    S.save(S.settings_path(data), S.merged(S.DEFAULTS, {'speech': {'allowHosts': ['desk.tail.ts.net']}}))
+    S.write_secret(PHRASE, data)
+    popened = []
+    sup = SV.Supervisor(tmp / 'app', data, 'PY', popen=lambda argv, **kw: (popened.append((argv, kw)), FakeProc())[1],
+                        probe=lambda p: False)
+    sup.start()
+    argv, kw = popened[-1]
+    check('*** supervisor: the speech program gets the pass phrase in its environment, not its command line ***',
+          kw['env'].get('NIMROD_SPEECH_SECRET') == PHRASE and PHRASE not in ' '.join(argv)
+          and argv[argv.index('--allow-host') + 1] == 'desk.tail.ts.net', argv)
+    log = (data / 'logs' / 'speech.log').read_text(encoding='utf-8')
+    check('*** the pass phrase is not in the part\'s log, /status, the status page or helper.pids ***',
+          PHRASE not in log and '--allow-host desk.tail.ts.net' in log and PHRASE not in json.dumps(sup.status())
+          and PHRASE not in SV.status_html(sup.status()) and PHRASE not in (data / 'helper.pids').read_text())
+    S.write_secret('a new phrase', data)
+    st = S.secret_path(data).stat()
+    os.utime(S.secret_path(data), ns=(st.st_atime_ns, st.st_mtime_ns + 2_000_000_000))
+    n = len(popened)
+    sup.poll()
+    check('supervisor: a changed pass phrase restarts the speech program with the new one',
+          len(popened) == n + 1 and popened[-1][1]['env'].get('NIMROD_SPEECH_SECRET') == 'a new phrase')
+    S.clear_secret(data)
+    sup.poll()
+    check('supervisor: a removed pass phrase restarts it without one (unless this computer\'s own environment has one)',
+          len(popened) == n + 2 and popened[-1][1]['env'].get('NIMROD_SPEECH_SECRET') == os.environ.get('NIMROD_SPEECH_SECRET'))
+    sup.stop()
+
+    # The `secret` command: asked twice, never shown, never printed.
+    answers = []
+    check('secret command: two matching answers -> the phrase', M.ask_secret(lambda q: answers.pop(0) if answers else PHRASE)
+          == (PHRASE, ''))
+    seq = iter(['one', 'two'])
+    v, why = M.ask_secret(lambda q: next(seq))
+    check('secret command: two that differ -> nothing, and it says so', v is None and 'did not match' in why)
+    v, why = M.ask_secret(lambda q: '')
+    check('secret command: empty -> nothing', v is None and 'empty' in why)
+    old_env, old_gp = os.environ.get('NIMROD_HELPER_DATA'), M.getpass.getpass
+    os.environ['NIMROD_HELPER_DATA'] = str(tmp / 'cmd')
+    try:
+        M.getpass.getpass = lambda prompt='': PHRASE
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = M.main(['secret'])
+        check('*** secret command: saved in the data folder, and the phrase is never printed ***',
+              code == 0 and S.read_secret(tmp / 'cmd') == PHRASE and PHRASE not in out.getvalue() + err.getvalue()
+              and 'speech_secret.txt' in out.getvalue(), out.getvalue())
+        seq2 = iter(['x', 'y'])
+        M.getpass.getpass = lambda prompt='': next(seq2)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            code = M.main(['secret'])
+        check('secret command: a mismatch exits 2 and keeps the old phrase', code == 2 and S.read_secret(tmp / 'cmd') == PHRASE)
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = M.main(['secret', '--clear'])
+        check('secret command: --clear removes it', code == 0 and S.read_secret(tmp / 'cmd') is None)
+    finally:
+        M.getpass.getpass = old_gp
+        if old_env is None:
+            del os.environ['NIMROD_HELPER_DATA']
+        else:
+            os.environ['NIMROD_HELPER_DATA'] = old_env
+
+    # `install --allow-host`: what it lays over the settings.
+    import argparse
+    ns = lambda **k: argparse.Namespace(**{'models_dir': None, 'allow_host': None, **k})  # noqa: E731
+    check('install flags: nothing given -> the settings are left as they are', M.install_settings(ns()) is None)
+    check('install flags: --allow-host (repeated or comma-separated, no repeats) -> speech.allowHosts',
+          M.install_settings(ns(allow_host=['a.ts.net,b.ts.net', 'a.ts.net'])) == {'speech': {'allowHosts': ['a.ts.net', 'b.ts.net']}})
+    check('install flags: --allow-host "" empties the list', M.install_settings(ns(allow_host=[''])) == {'speech': {'allowHosts': []}})
+    over = M.install_settings(ns(allow_host=['desk.tail.ts.net'], models_dir=str(tmp / 'hf')))
+    check('install flags: with --models-dir, both are laid over (and the pass phrase is not a flag at all)',
+          over == {'speech': {'allowHosts': ['desk.tail.ts.net'], 'modelsDir': str(tmp / 'hf')}}, over)
+
+
+def live_secret_tests(tmp: Path):
+    """The REAL supervisor and speech program, with a pass phrase file and a secure name, as on a desktop that is
+    another screen's second pass (DESKTOP_SECOND_PASS.md)."""
+    data = tmp / 'livesec'
+    sport, hport = free_port(), free_port()
+    S.save(S.settings_path(data), S.merged(S.DEFAULTS, {'statusPort': hport, 'speech': {
+        'backend': 'fake', 'port': sport, 'allowHosts': ['desk.tail.example.ts.net']}}))
+    S.write_secret(PHRASE, data)
+    env = {k: v for k, v in os.environ.items() if k != 'NIMROD_SPEECH_SECRET'}
+    env['NIMROD_HELPER_DATA'] = str(data)
+    proc = subprocess.Popen([sys.executable, '-m', 'nimrod_helper', 'run'], cwd=str(WEB), env=env,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            creationflags=0x00000200 if sys.platform == 'win32' else 0)
+
+    def health(host):
+        req = urllib.request.Request(f'http://127.0.0.1:{sport}/health', headers={'Host': host})
+        try:
+            with urllib.request.urlopen(req, timeout=2) as r:
+                return r.status, json.loads(r.read().decode())
+        except urllib.error.HTTPError as err:
+            return err.code, None
+        except OSError:
+            return None, None
+
+    try:
+        end = time.time() + 40
+        code, body = None, None
+        while time.time() < end:
+            code, body = health(f'127.0.0.1:{sport}')
+            if code == 200:
+                break
+            time.sleep(0.5)
+        check('*** live: the helper\'s speech program says "secret": true in /health ***',
+              code == 200 and body.get('secret') is True, (code, body))
+        code, body = health('desk.tail.example.ts.net')
+        check('*** live: it answers to the secure name the settings give it (what tailscale serve passes on) ***',
+              code == 200 and body.get('ok') is True, (code, body))
+        code, _ = health('evil.example')
+        check('live: ...and still refuses any other name (403)', code == 403, code)
+        from websockets.sync.client import connect
+
+        def hello(secret):
+            msg = {'type': 'hello', 'rate': 16000}
+            if secret is not None:
+                msg['secret'] = secret
+            try:
+                with connect(f'ws://127.0.0.1:{sport}/speech', open_timeout=5) as ws:
+                    ws.send(json.dumps(msg))
+                    got = json.loads(ws.recv(timeout=5))
+                return got.get('kind'), got.get('error')
+            except Exception as err:  # noqa: BLE001
+                return 'exception', repr(err)
+        check('*** live: a screen with no pass phrase is refused ***', hello(None) == ('error', 'secret'), hello(None))
+        check('live: a screen with the wrong one is refused', hello('wrong') == ('error', 'secret'))
+        check('*** live: a screen with the pass phrase from the helper\'s file gets its hello ***',
+              hello(PHRASE)[0] == 'hello', hello(PHRASE))
+        logs = ''.join(p.read_text(encoding='utf-8', errors='replace') for p in (data / 'logs').glob('*.log*'))
+        with urllib.request.urlopen(f'http://127.0.0.1:{hport}/status', timeout=2) as r:
+            status = r.read().decode()
+        check('*** live: the pass phrase is in no log and not in /status ***', PHRASE not in logs and PHRASE not in status
+              and 'also answers to desk.tail.example.ts.net' in logs, logs[-400:])
+    finally:
+        if sys.platform == 'win32':
+            subprocess.run(['taskkill', '/PID', str(proc.pid), '/T', '/F'], capture_output=True)
+        else:
+            proc.kill()
+        try:
+            proc.wait(timeout=20)
+        except subprocess.TimeoutExpired:
+            pass
+        for pid in W.read_pids(data).values():
+            if pid != os.getpid() and sys.platform == 'win32' and W.image_name(pid).startswith('python'):
+                subprocess.run(['taskkill', '/PID', str(pid), '/T', '/F'], capture_output=True)
+
+
 # ----------------------------------------------- the real supervisor, the real speech program ----
 def live_tests(tmp: Path):
     data = tmp / 'live'
@@ -438,6 +621,7 @@ def install_tests(tmp: Path):
     lay = W.layout(home=home, data=data, python=Path(sys.executable))
     reg = W.MemoryRegistry()
     spawned = []
+    S.write_secret(PHRASE, data)
     done = W.install(lay, reg, web_dir=WEB, menu=menu, settings_over={'speech': {'modelsDir': str(tmp / 'hfcache')}},
                      spawn=lambda argv, cwd=None: spawned.append((argv, cwd)))
     files = {p.relative_to(lay.app).as_posix() for p in lay.app.rglob('*') if p.is_file()}
@@ -473,12 +657,16 @@ def install_tests(tmp: Path):
     (tmp / 'hfcache').mkdir(exist_ok=True)
     (tmp / 'hfcache' / 'keep.txt').write_text('a model cache somebody already had')
     (data / 'logs').mkdir(exist_ok=True)
+    check('install: a pass phrase already set (re-installing over one) is kept, and is in no record install keeps',
+          S.read_secret(data) == PHRASE and PHRASE not in (home / 'install_record.json').read_text()
+          and PHRASE not in json.dumps(st))
     removed_home = []
     out = W.uninstall(lay, reg, menu=menu, stop=lambda d: ['helper (1)'],
                       remove_home=lambda l: (removed_home.append(l.home), 'removing home')[1])
     check('*** uninstall: start-with-Windows gone, the Apps entry gone, the Start menu folder gone ***',
           reg.get(W.RUN_KEY, W.RUN_VALUE) is None and W.UNINSTALL_KEY not in reg.keys and not menu.exists(), reg.keys)
-    check('uninstall: the data folder (settings, logs) is gone', not data.exists())
+    check('uninstall: the data folder (settings, logs, the pass phrase) is gone', not data.exists()
+          and not S.secret_path(data).exists())
     check('*** uninstall: a model place OUTSIDE the data folder is left alone ***', (tmp / 'hfcache' / 'keep.txt').exists())
     check('uninstall: it stopped the helper first, and removes the program folder after', out[0].startswith('stopped')
           and removed_home == [home])
@@ -549,17 +737,19 @@ def build_tests(tmp: Path):
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix='nimrod_helper_test_', ignore_cleanup_errors=True) as d:
         tmp = Path(d)
-        for sub in ('s', 'p', 'pt', 'sp', 'b', 'st', 'i', 'l'):
+        for sub in ('s', 'p', 'pt', 'sp', 'sec', 'b', 'st', 'i', 'l', 'ls'):
             (tmp / sub).mkdir()
         settings_tests(tmp / 's')
         plan_tests(tmp / 'p')
         origin_tests()
         part_tests(tmp / 'pt')
         status_privacy_tests(tmp / 'sp')
+        secret_tests(tmp / 'sec')
         build_tests(tmp / 'b')
         stop_tests(tmp / 'st')
         install_tests(tmp / 'i')
         live_tests(tmp / 'l')
+        live_secret_tests(tmp / 'ls')
     print(f'\n{passed} passed, {failed} failed')
     return 1 if failed else 0
 

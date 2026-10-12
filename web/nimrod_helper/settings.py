@@ -42,6 +42,12 @@ DEFAULTS = {
         # Where the speech model is kept. Empty: inside the helper's data folder, so uninstalling removes
         # it too. A path: an existing model cache (nothing is downloaded when the model is already there).
         'modelsDir': '',
+        # Other names the speech program answers to, passed as --allow-host: the secure name a proxy on this
+        # computer gives it (`tailscale serve`, speech_service/DESKTOP_SECOND_PASS.md), e.g.
+        # ['your-desktop.your-tailnet.ts.net']. Empty: only this computer's own names (127.0.0.1, localhost),
+        # which is right for everybody whose screen is this computer. A name here is not a secret: the pass
+        # phrase that goes with it is kept apart from this file (SECRET_FILE, below).
+        'allowHosts': [],
     },
     'media': {
         # OFF until a folder is chosen: serving a folder is a choice about somebody's pictures, never a
@@ -127,6 +133,61 @@ def install_dir() -> Path:
 
 def settings_path(d: Path | None = None) -> Path:
     return (d or data_dir()) / 'settings.json'
+
+
+
+# ---------------------------------------------------------------------------------------------
+# THE SPEECH PROGRAM'S PASS PHRASE (2026-10-12, inbox BV). Needed when a screen on ANOTHER computer sends this
+# one its room's sound (allowHosts above): the speech program then refuses any screen that does not send it.
+#
+# *** WHERE IT LIVES, argued. *** Its own one-line file in the data folder, NOT in settings.json:
+#   * FOR settings.json: one file, one place to look.
+#   * AGAINST, and it wins: settings.json is the file a person opens, copies into a message to ask for help, or
+#     reads aloud; the pass phrase must not ride along. Apart, it can be set, changed and removed on its own
+#     (`python -m nimrod_helper secret`, which asks for it without showing it, so it never sits in a command
+#     history either).
+#   * Windows Credential Manager / DPAPI were considered: they encrypt it at rest, but any program running as
+#     the same person can still ask for it back, which is exactly who can read this file. What they add is
+#     protection from a copied disk or backup, and the data folder (%LOCALAPPDATA%) is not roamed or synced by
+#     OneDrive. Not worth a file nobody can open to check.
+#   * WHO CAN READ IT: the folder inherits the user profile's permissions - that Windows account, SYSTEM and the
+#     computer's administrators; not other ordinary accounts. Uninstalling deletes it with the data folder.
+# HOW IT REACHES THE SPEECH PROGRAM: the NIMROD_SPEECH_SECRET environment variable of that one child process
+# (supervisor.plan), never `--secret` on its command line: the supervisor writes each command line to the part's
+# log, and Task Manager shows command lines. It is never in /status, a log, helper.pids or install_record.json.
+# ---------------------------------------------------------------------------------------------
+SECRET_FILE = 'speech_secret.txt'
+
+
+def secret_path(d: Path | None = None) -> Path:
+    return (d or data_dir()) / SECRET_FILE
+
+
+def read_secret(d: Path | None = None) -> str | None:
+    """The pass phrase, or None when there is no file or it is empty. Line endings an editor adds are dropped;
+    nothing else is changed (the screen sends exactly what was typed there)."""
+    try:
+        v = secret_path(d).read_text(encoding='utf-8-sig').rstrip('\r\n')
+    except OSError:
+        return None
+    return v or None
+
+
+def write_secret(value: str, d: Path | None = None) -> Path:
+    p = secret_path(d)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix('.tmp')
+    tmp.write_text(value, encoding='utf-8')
+    os.replace(tmp, p)
+    return p
+
+
+def clear_secret(d: Path | None = None) -> bool:
+    try:
+        secret_path(d).unlink()
+        return True
+    except OSError:
+        return False
 
 
 def models_dir(settings: dict, d: Path | None = None) -> Path:
