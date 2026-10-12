@@ -27,7 +27,10 @@
 // AROUND it, which is the part that has to be right before a call ever connects:
 //
 //   * it takes the CALL TIER on the audio bus, so a call pauses the music rather than
-//     ducking it (the tier existed and nothing used it until now);
+//     ducking it (the tier existed and nothing used it until now) - by default. Since 2026-10-12 the
+//     SCREEN's "During a call, other sound" (call_sound.js) can keep it playing quietly under the
+//     voices, and by default does while somebody is watching along; this module is unchanged by that;
+//     the bus decides;
 //   * it takes the camera as a CLONE through the arbiter, so hanging up cannot blink the
 //     picture-in-picture;
 //   * it publishes `call/incoming` and `call/ended`, which is what the Rules tab's switch
@@ -622,6 +625,8 @@ registerModule(
     }
 
     // ---- the audio bus: a call PAUSES the media, it does not duck it ------------------
+    // (unless the screen's "During a call, other sound" says otherwise - call_sound.js, 2026-10-12: by default the
+    // media plays quietly under the voices while somebody is watching along, never louder than the call.)
     function takeSpeaker(on) {
       if (!audio) return;
       // `call` tier. The bus decides what that means - by default it silences media outright
