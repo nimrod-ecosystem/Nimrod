@@ -2603,3 +2603,13 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   later. (2026-10-12)
 - **The fallback copy is not trimmed.** Pictures that fall out of the newest N stay in the fallback until the space
   margin stops it, as built (8544ea1). (2026-10-12)
+
+## Asking for a module by voice opens it (Mike, 2026-10-12)
+
+- **"Play trivia" (or any module asked for by voice) opens it full screen, even when it isn't on the screen; a place
+  can be named.** Mike: *"When I ask the computer to play trivia, it says Trivia is not on this screen. I would like it
+  to just pull up a full screen dashboard of whatever module I ask for, unless you specify something else like
+  'trivia bottom right corner' or whatever."* This reverses Code's choice in 7f589ea (a game not on the screen was not
+  opened, so it couldn't replace a panel). How the screen gets back to what it was showing is Code's to propose: the
+  screen must never be left where only an input can bring the old dashboard back, so a voice-opened module returns by
+  itself when it goes quiet, as well as on "go back". (2026-10-12)
