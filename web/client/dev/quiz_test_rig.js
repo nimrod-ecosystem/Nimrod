@@ -330,6 +330,31 @@ export async function personLadderChecks({ check, mount, name, game, saved = {} 
       solo.length === 1 && solo[0].id === 'person:pat' && solo[0].name === '', JSON.stringify(solo));
     r.inst.destroy();
   }
+  // 9. PLAY AS (row 2.80, play_as.js): a game started by voice "as Sam" plays as Sam - over the game's OWN row and the
+  // screen's - and his answers are kept with him; when the voice start ends (the sitting rested) it is as before.
+  {
+    let forced = [{ kind: 'person', id: 'sam', name: 'Sam' }];
+    const subs = new Set();
+    const host = { seats: () => [], self: () => ({ id: 'pat', name: 'Pat' }), override: () => forced,
+      subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); } };
+    const people = peopleRows();
+    const screen = liveRow();
+    const r = open({ person: 'pat', people, screen, saved: { players: [{ kind: 'guest', name: 'Ann' }] }, extra: { screenPlayers: host } });
+    await sleep(30);
+    const ids = sessionOf(r).players().map((p) => p.id).join();
+    check(`*** ${name}: play as: "as Sam" plays as Sam, over the game's own Players row (a guest, Ann) ***`, ids === 'person:sam', ids);
+    play(r, 1);
+    await sleep(10);
+    check(`*** ${name}: play as: Sam's answer is kept with HIM, nothing on the screen's row for him or for Ann ***`,
+      at(people, 'sam')?.n === 1 && !screen.get().ladder?.players?.['name:ann'] && !screen.get().ladder?.players?.['person:sam'],
+      JSON.stringify([at(people, 'sam'), screen.get().ladder?.players]));
+    forced = null;
+    for (const f of [...subs]) f();
+    await sleep(10);
+    const back = sessionOf(r).players().map((p) => p.id).join();
+    check(`${name}: play as ended: the game's own row again (Ann, a guest)`, back === 'name:ann', back);
+    r.inst.destroy();
+  }
 }
 
 /**

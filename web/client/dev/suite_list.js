@@ -73,6 +73,8 @@ export const SUITES = [
   'choice_picker',
   // players (2026-10-06): one way to pick the players - how many, then people on this login, connected, or guests.
   'player_picker',
+  // play as (row 2.80): "play <game> as <person>" by voice - who that makes the players, and which panel starts.
+  'play_as',
   // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
   'soak',
   // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function

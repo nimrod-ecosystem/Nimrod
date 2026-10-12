@@ -726,6 +726,257 @@ export function textAfterWords(text, skip) {
 }
 
 // ---------------------------------------------------------------------------------------
+// *** "PLAY <GAME> AS <PERSON>" AND "PLAY A <N> PLAYER GAME OF <GAME> WITH <NAMES>" (row 2.80). ***
+// ---------------------------------------------------------------------------------------
+//
+// Mike, 2026-10-12 (DECISIONS, notes BR-BT): *"Play <game> as <person>"*, *"play a <n> player game of <game> with
+// <names>"*, and when nobody is named the game plays as the profile the screen is on (guest is a choice). The names
+// are the people this screen knows and the games' own titles, so neither can be rows in PHRASES or ROUTES (fixed
+// whole utterances): the host hands them in as a VOCABULARY, read at the moment something is heard (`attachSpeech`'s
+// `playAs`, like `scoped`), so a panel added or a person renamed needs no restart.
+//
+// THIS FILE HEARS; play_as.js DECIDES. What is matched here is only which game and which names were said (ids from
+// the vocabulary); who that makes the players, what the setting for "nobody named" says, whether the game can seat
+// them and what is said back are play_as.js's.
+//
+// *** THE RULES, each the same as for every other command here: ***
+//   * EXACT AFTER NORMALISING, on the WHOLE utterance. "I want to play trivia as robin later" matches nothing.
+//   * A COMMAND WINS: every exact phrase (a verb, a route, the focused module's own, "ask <name>") is tried first,
+//     so "play opposites" is still the route it always was. Only then is "play ..." read this way.
+//   * A NEAR MISS ASKS, NEVER ACTS: ONE slot (the game, or one name) one word off (`nearMiss`'s own rule) is asked
+//     about ("It sounded like 'play trivia as robin'. Did you mean that?") and goes ahead only on a yes. Two slots off
+//     is nothing.
+//   * WHAT IS KNOWN AND WHAT IS NOT: a known game with a name nobody here has (and is not near), or a name everybody
+//     knows with a game that does not exist, is sent with the unknown part marked, so the screen can SAY so ("I do
+//     not know who Zork is") instead of going quiet - and only when it was said to the screen. Nothing known at all
+//     is not this command, and falls through to "did you mean" / "Say it again?" as before.
+//   * DIGITS. Normalising drops digits ("2 player" would read as "player"), so a number from 1 to 10 is turned into
+//     its word first. In the count's own slot "to", "too" and "for" are two and four: recognisers write them that way.
+export const SPEECH_PLAY_AS_TOPIC = 'speech/play-as';
+// The vocabulary's id for a guest, and for the person this screen is for (play_as.js turns them into seats).
+export const PLAY_GUEST_ID = 'guest';
+export const PLAY_SELF_ID = 'self';
+// "as a guest", "with robin and a guest": always known, whoever is on the screen.
+export const PLAY_GUEST_WORDS = Object.freeze(['guest', 'a guest']);
+// The near-miss question's id for this command (it is not a route, so it cannot be pressed as one).
+export const PLAY_AS_ID = 'play-as';
+const PLAY_COUNT_WORDS = Object.freeze({ one: 1, two: 2, to: 2, too: 2, three: 3, four: 4, for: 4, five: 5, six: 6,
+  seven: 7, eight: 8, nine: 9, ten: 10 });
+const PLAY_DIGIT_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const PLAY_SEAT_WORDS = ['player', 'players', 'person', 'people'];
+// *** HARD-CODED, EACH ARGUED (Rule 1). ***
+//   PLAY_GRAMMAR_MAX 300  phrases "play <game>" / "play <game> as <name>" put into a grammar (the per-person 'grammar'
+//                         option only). Every one of them is also added once per wake phrase, so 300 is ~900 lines in
+//                         the command grammar: a small grammar engine gets slower and more sure of wrong answers the
+//                         longer its list (row 2.28's bench), and the option exists for somebody who needs only a few
+//                         commands. The games ON THIS SCREEN go first, bare names before "as" pairs.
+//                         ARGUED AGAINST multi-player phrases in a grammar at all: "with A and B" over every pair of
+//                         people and every game is hundreds of near-identical phrases - the shape such an engine
+//                         mis-hears worst. Open recognition (the default) hears all of them with no list.
+//   PLAY_HINTS_MAX 60     names handed to a Whisper-class engine as hints (a prompt: likelier, never forced). Enough for
+//                         a household and every game; a longer prompt costs speed and starts to bias ordinary speech.
+export const PLAY_GRAMMAR_MAX = 300;
+export const PLAY_HINTS_MAX = 60;
+
+// A name as the speech layer hears it, or '' when it cannot be one (the table's rules: 3 letters, 4 words).
+function playName(raw) {
+  const n = normalize(raw);
+  if (!n || n.replace(/\s/g, '').length < 3 || n.split(' ').length > VOICE_WORDS_MAX) return '';
+  return n;
+}
+
+/**
+ * The host's vocabulary, cleaned: `{ games: [{ id, name, names, here }], people: [{ id, name, names }] }`, every name
+ * normalised. A NAME TWO OF THEM ANSWER TO IS NOBODY'S: two games or two people both called "sam" is a coin flip, so
+ * that name is dropped from both (their other names still work). "a guest" is always one of the people.
+ */
+export function playVocabulary(raw) {
+  const v = raw && typeof raw === 'object' ? raw : {};
+  const clean = (list, keep) => {
+    const owners = new Map();
+    const rows = [];
+    for (const e of Array.isArray(list) ? list : []) {
+      if (!e || typeof e.id !== 'string' || !e.id) continue;
+      const names = [...new Set((Array.isArray(e.names) ? e.names : []).map(playName).filter(Boolean))];
+      rows.push({ ...keep(e), names });
+      for (const n of names) { if (!owners.has(n)) owners.set(n, new Set()); owners.get(n).add(e.id); }
+    }
+    return rows.map((e) => ({ ...e, names: e.names.filter((n) => owners.get(n).size === 1) })).filter((e) => e.names.length);
+  };
+  const people = Array.isArray(v.people) ? [...v.people] : [];
+  if (!people.some((p) => p && p.id === PLAY_GUEST_ID)) people.push({ id: PLAY_GUEST_ID, name: 'a guest', names: PLAY_GUEST_WORDS });
+  return {
+    games: clean(v.games, (g) => ({ id: g.id, name: String(g.name || g.title || ''), here: g.here !== false })),
+    people: clean(people, (p) => ({ id: p.id, name: String(p.name || '') })),
+    cleaned: true,   // already through here: `playAsFor` and friends do not clean it twice
+  };
+}
+const cleanVocab = (v) => (v && v.cleaned === true ? v : playVocabulary(v));
+
+// The words, with 1-10 written as words first (normalising would drop the digits).
+function playTokens(text) {
+  const s = normalize(String(text ?? '').replace(/\d+/g, (d) => ` ${PLAY_DIGIT_WORDS[Number(d)] || d} `));
+  return s ? s.split(' ') : [];
+}
+const playExact = (list, words) => { const k = words.join(' '); return list.find((e) => e.names.includes(k)) || null; };
+function playNear(list, words) {
+  const table = {};
+  for (const e of list) table[e.id] = e.names;
+  const nm = nearMiss(words.join(' '), table);
+  return nm ? { entry: list.find((e) => e.id === nm.id), phrase: nm.phrase } : null;
+}
+
+// "robin and sam", "robin sam and a guest": the longest known name at each place, "and" between them skipped. One near
+// miss at most (`nearOk`); every run of words that is nobody's is kept as `unknown`.
+function playPeople(words, people, nearOk) {
+  const ids = [];
+  const unknown = [];
+  const fixed = [];
+  let near = null;
+  let run = [];
+  const flush = () => { if (run.length) { unknown.push(run.join(' ')); fixed.push(...run); run = []; } };
+  let i = 0;
+  while (i < words.length) {
+    if (words[i] === 'and') { flush(); fixed.push('and'); i += 1; continue; }
+    const most = Math.min(VOICE_WORDS_MAX, words.length - i);
+    let hit = null;
+    let len = 0;
+    for (let n = most; n >= 1 && !hit; n -= 1) { const e = playExact(people, words.slice(i, i + n)); if (e) { hit = e; len = n; } }
+    let nearHere = null;
+    if (!hit && nearOk && !near) {
+      for (let n = most; n >= 1 && !hit; n -= 1) {
+        const seg = words.slice(i, i + n);
+        if (seg.includes('and')) continue;
+        const m = playNear(people, seg);
+        if (m) { hit = m.entry; len = n; nearHere = { heard: seg.join(' '), phrase: m.phrase }; }
+      }
+    }
+    if (!hit) { run.push(words[i]); i += 1; continue; }
+    flush();
+    ids.push(hit.id);
+    if (nearHere) { near = nearHere; fixed.push(...nearHere.phrase.split(' ')); } else fixed.push(...words.slice(i, i + len));
+    i += len;
+  }
+  flush();
+  return { ids, unknown, near, fixed };
+}
+
+/**
+ * Was this (the words after the wake phrase) "play <game> as / with <names>", "play a <n> player game of <game>
+ * [with <names>]", or "play <game>"? null when it is none of them, else
+ *   { game, gameHeard, join, count, people, unknown, near, phrase }
+ *   game       the game's vocabulary id, or null when the game is unknown (only sent when every name is known)
+ *   join       'as' | 'with' | null (bare, or a count with no names)
+ *   count      the number said ("a 3 player game"), or null
+ *   people     the vocabulary ids of the names, in the order said ('self', 'guest' or a person's id)
+ *   unknown    the runs of words that are nobody here
+ *   near       { slot: 'game'|'people', heard, phrase } when one slot was one word off (ask; never act), else null
+ *   phrase     what it would have been, corrected - the near-miss question's words
+ */
+export function playAsFor(text, vocab, { near: nearOk = true } = {}) {
+  const v = cleanVocab(vocab);
+  const w = playTokens(text);
+  if (w[0] !== 'play' || w.length < 2) return null;
+  let i = 1;
+  let count = null;
+  {
+    let j = 1;
+    if (w[j] === 'a' || w[j] === 'an') j += 1;
+    const n = Object.prototype.hasOwnProperty.call(PLAY_COUNT_WORDS, w[j]) ? PLAY_COUNT_WORDS[w[j]] : null;
+    if (n != null && PLAY_SEAT_WORDS.includes(w[j + 1])) {
+      count = n;
+      j += 2;
+      if (w[j] === 'game' || w[j] === 'games') j += 1;
+      if (w[j] === 'of') j += 1;
+      i = j;
+    }
+  }
+  const joins = [];
+  for (let k = i + 1; k < w.length; k += 1) if (w[k] === 'as' || w[k] === 'with') joins.push(k);
+  // The split: the first "as"/"with" with a game before it; else the first one; else none.
+  const k = joins.find((x) => playExact(v.games, w.slice(i, x))) ?? (joins.length ? joins[0] : -1);
+  const gw = k >= 0 ? w.slice(i, k) : w.slice(i);
+  if (!gw.length) return null;
+  const join = k >= 0 ? w[k] : null;
+  const list = k >= 0 ? w.slice(k + 1) : [];
+  if (join && !list.length) return null;
+  let game = playExact(v.games, gw);
+  let near = null;
+  let gameWords = gw;
+  if (!game && nearOk) {
+    const m = playNear(v.games, gw);
+    if (m) { game = m.entry; near = { slot: 'game', heard: gw.join(' '), phrase: m.phrase }; gameWords = m.phrase.split(' '); }
+  }
+  const ppl = join ? playPeople(list, v.people, nearOk && !near) : { ids: [], unknown: [], near: null, fixed: [] };
+  if (ppl.near) near = { slot: 'people', ...ppl.near };
+  // A near miss AND a name nobody has is two things wrong: nothing to ask about, nothing to act on.
+  if (near && ppl.unknown.length) return null;
+  if (!game) {
+    // Bare "play <something>" naming no game is not this command ("play some jazz" is a music miss, as before); and a
+    // game nobody knows WITH names nobody knows is nothing known at all.
+    if (!join && count == null) return null;
+    if (ppl.unknown.length || near || (join && !ppl.ids.length)) return null;
+  }
+  const phrase = [...w.slice(0, i), ...gameWords, ...(join ? [join, ...ppl.fixed] : [])].join(' ');
+  return { game: game ? game.id : null, gameHeard: gw.join(' '), join, count, people: ppl.ids, unknown: ppl.unknown,
+           near, phrase };
+}
+
+/**
+ * The phrases a GRAMMAR-limited engine is given for this command (the per-person 'grammar' option): "play <game>" and
+ * "play <game> as <name>", the games on this screen only, at most PLAY_GRAMMAR_MAX (argued there).
+ */
+export function playPhrases(vocab, { max = PLAY_GRAMMAR_MAX } = {}) {
+  const v = cleanVocab(vocab);
+  const here = v.games.filter((g) => g.here);
+  const out = [];
+  for (const g of here) for (const n of g.names) out.push(`play ${n}`);
+  for (const g of here) for (const n of g.names) for (const p of v.people) for (const pn of p.names) out.push(`play ${n} as ${pn}`);
+  return [...new Set(out)].slice(0, Math.max(0, Math.floor(Number(max)) || 0));
+}
+
+/**
+ * The words a Whisper-class engine is leant towards (its `setHints`): every person's name and every game's, as they
+ * are written (a hint is a prompt, so "Siobhan" helps where "siobhan" may not), people first, at most PLAY_HINTS_MAX.
+ */
+export function playHints(vocab, { max = PLAY_HINTS_MAX } = {}) {
+  const v = cleanVocab(vocab);
+  const out = [];
+  const add = (s) => { const t = String(s || '').trim(); if (t && !out.some((x) => x.toLowerCase() === t.toLowerCase())) out.push(t); };
+  for (const p of v.people) if (p.id !== PLAY_GUEST_ID) add(p.name || p.names[0]);
+  for (const g of v.games) add(g.name || g.names[0]);
+  return out.slice(0, Math.max(0, Math.floor(Number(max)) || 0));
+}
+
+/**
+ * LAYER THESE HINTS OVER WHATEVER ELSE SETS THEM. A ranked recogniser has ONE hint list (speech_engines.js `setHints`
+ * replaces it), and subtitle learning already sets it with the words people corrected. So the recogniser's `setHints`
+ * is wrapped: whatever else calls it sets ITS layer, this sets ours, and the engine gets both. `restore()` puts the
+ * original back with only the other layer. null when the recogniser takes no hints (Vosk, the browser's own).
+ */
+export function layerHints(rec) {
+  if (!rec || typeof rec.setHints !== 'function') return null;
+  const orig = rec.setHints;
+  const own = Object.prototype.hasOwnProperty.call(rec, 'setHints');
+  let theirs = [];
+  try { theirs = typeof rec.hints === 'function' ? [...(rec.hints() || [])] : []; } catch { theirs = []; }
+  let mine = [];
+  const send = () => {
+    const seen = new Set();
+    const all = [...theirs, ...mine].filter((x) => typeof x === 'string' && x.trim() && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
+    try { orig.call(rec, all); } catch (err) { console.error('speech: hints', err); }
+  };
+  rec.setHints = (words) => { theirs = Array.isArray(words) ? [...words] : []; send(); };
+  return {
+    set(words) { mine = Array.isArray(words) ? [...words] : []; send(); },
+    restore() {
+      if (own) rec.setHints = orig; else delete rec.setHints;
+      try { orig.call(rec, theirs); } catch { /* gone */ }
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------------------
 // WHAT A RECOGNISER MAY SAY BESIDES THE TEXT (row 2.31)
 // ---------------------------------------------------------------------------------------
 //
@@ -1390,6 +1641,9 @@ export function attachSpeech(input, {
   // never an answer, a dictation or a command. Times from the recogniser's `voiceFrom`/`voiceTo` when it gives
   // them. Null (the default): nothing changes.
   screenSpeech = null,
+  // "PLAY <GAME> AS <PERSON>" (row 2.80): a function returning the vocabulary ({ games, people }, `playVocabulary`),
+  // asked each time something is heard, like `scoped`. Null (the default): no such command, exactly as before.
+  playAs = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
@@ -1496,7 +1750,8 @@ export function attachSpeech(input, {
     clearClose();
     clearAsk();
     const question = nearMissQuestion(nearMissLine, nm.phrase);
-    pending = { id: nm.id, phrase: nm.phrase, question, until: now() + askMs };
+    // `run` (row 2.80, "play <game> as <person>"): what a yes does when it is not a press on a phrase.
+    pending = { id: nm.id, phrase: nm.phrase, question, until: now() + askMs, run: typeof nm.run === 'function' ? nm.run : null };
     open = true;
     if (bus || canPush()) {
       try { askTimer = setTimer(() => { askTimer = null; endPending('timeout'); }, askMs); }
@@ -1523,7 +1778,11 @@ export function attachSpeech(input, {
     if (!pending) return false;
     const p = pending;
     endPending(yes ? 'confirmed' : 'declined');
-    if (yes) {
+    if (yes && p.run) {
+      // play as (row 2.80): the corrected request, sent as if it had been said that way.
+      report({ text, verb: null, woke, nearMiss: p.phrase, confirmed: true, playAs: true });
+      try { p.run(); } catch (err) { console.error('speech: play as', err); }
+    } else if (yes) {
       const isVerb = Object.prototype.hasOwnProperty.call(table || {}, p.id);
       report({ text, verb: isVerb ? p.id : null, ...(isVerb ? {} : { route: p.id }), woke,
                nearMiss: p.phrase, confirmed: true });
@@ -1702,11 +1961,55 @@ export function attachSpeech(input, {
   const spokenNow = () => {
     const own = Object.keys(scopedTable());
     const asks = askNow().map((p) => p.phrase);
+    // play as (row 2.80): "play <game>" and "play <game> as <name>" for the games on this screen (playPhrases argues it).
+    const pv = playVocabNow();
+    const plays = pv ? playPhrases(pv) : [];
     let t = spoken;
     if (own.length) t = { ...t, '#focused': own };
     if (asks.length) t = { ...t, '#ask': asks };
+    if (plays.length) t = { ...t, '#play': plays };
     return t;
   };
+
+  // ---- "play <game> as <person>" (row 2.80) ---------------------------------------------------
+  // The host's vocabulary right now, cleaned (null when there is no host or it throws).
+  function playVocabNow() {
+    if (typeof playAs !== 'function') return null;
+    try { const v = playAs(); return v && typeof v === 'object' ? playVocabulary(v) : null; }
+    catch (err) { console.error('speech: play as', err); return null; }
+  }
+  // The names as hints for an engine that takes them, layered over subtitle learning's (`layerHints`), only when
+  // they change. The layer is made the first time there is a name to send, so a host with none changes nothing.
+  let hintLayer = null;
+  let hintSig = '';
+  function syncPlayHints() {
+    const pv = playVocabNow();
+    const words = pv ? playHints(pv) : [];
+    const sig = words.join('\u0001');
+    if (sig === hintSig) return;
+    hintSig = sig;
+    if (!hintLayer && words.length) hintLayer = layerHints(rec);
+    hintLayer?.set(words);
+  }
+  // The utterance after the wake phrase in the recogniser's own words (its digits kept: "a 2 player game").
+  function rawRest(text, w) {
+    if (!w.woke) return text;
+    const all = normalize(text).split(' ').filter(Boolean).length;
+    const after = w.rest ? w.rest.split(' ').length : 0;
+    const cut = textAfterWords(text, all - after);
+    return cut == null ? w.rest : cut;
+  }
+  function playAsSend(pa, text, woke, detail = {}) {
+    report({ text, verb: null, woke, playAs: { game: pa.game, people: [...pa.people], count: pa.count, join: pa.join,
+                                                unknown: [...pa.unknown] } });
+    confirmed(PLAY_AS_ID);
+    publish(SPEECH_PLAY_AS_TOPIC, {
+      game: pa.game, gameHeard: pa.gameHeard, join: pa.join, count: pa.count, people: [...pa.people],
+      unknown: [...pa.unknown], text: text == null ? pa.phrase : text,
+      // WHO SAID IT (row 2.56), when the speech program could tell: a label, never a permission.
+      ...(detail && detail.speaker ? { speaker: detail.speaker } : {}),
+    });
+  }
   function recognitionMode() {
     if (pendingLive()) {
       return how === 'grammar'
@@ -1796,6 +2099,7 @@ export function attachSpeech(input, {
   }
 
   function heard(text, rawDetail) {
+    syncPlayHints();   // play as: a person renamed, or a game added, reaches the engine's hints
     const detail = cleanDetail(rawDetail);
     const w = splitWake(text, wakes);
     const rest = w.rest;
@@ -1864,6 +2168,21 @@ export function attachSpeech(input, {
         asked(a, text, w.woke, detail);
         return;
       }
+      // "play <game> as <person>" (row 2.80): once no command and no ask prefix matched. Exact and fully known, it is a
+      // command like any other (so the wake gate decides, as for "play opposites"); a near miss or an unknown part
+      // only when said to the screen - a near miss is asked about, an unknown part is said back by play_as.js.
+      const pv = playVocabNow();
+      const pa = pv ? playAsFor(rawRest(text, w), pv, { near: asking }) : null;
+      if (pa && pa.near && toScreen && asking) {
+        report({ text, verb: null, woke: w.woke, nearMiss: pa.phrase, playAs: true });
+        ask({ id: PLAY_AS_ID, phrase: pa.phrase, run: () => playAsSend(pa, null, w.woke, detail) });
+        return;
+      }
+      if (pa && !pa.near && (toScreen || (pa.game && !pa.unknown.length))) {
+        closeWindow('command');   // one wake, one command
+        playAsSend(pa, text, w.woke, detail);
+        return;
+      }
       if (toScreen) logMiss(rest);
       const nm = toScreen && asking ? nearMiss(rest, spoken) : null;
       // two-step: nothing matched and nothing was near - ask to hear it again (a bounded number of times).
@@ -1901,6 +2220,8 @@ export function attachSpeech(input, {
     askTargets: () => askList().map((t) => ({ source: t.source, instanceId: t.instanceId, names: [...t.names], notes: t.notes,
                                               ...(t.fixes ? { fixes: true } : {}) })),
     askPhrases: () => askNow().map((p) => ({ ...p })),
+    // play as (row 2.80): the games and names "play <game> as <person>" knows right now (cleaned), or null.
+    playVocabulary: () => playVocabNow(),
     canDictate: () => canDictateNow(),
     // The "did you mean" question up right now ({ id, phrase, question }), or null.
     nearMissPending: () => (pendingLive() ? { id: pending.id, phrase: pending.phrase, question: pending.question } : null),
@@ -1912,6 +2233,7 @@ export function attachSpeech(input, {
       running = true;
       lastModeKey = '';
       pushMode();
+      syncPlayHints();   // play as (row 2.80)
       rec.start(heard);
       syncAnswering();
       return true;
@@ -1919,6 +2241,8 @@ export function attachSpeech(input, {
     stop() { halt(); },
     destroy() {
       halt();
+      try { hintLayer?.restore(); } catch { /* gone */ }   // play as: the recogniser's own setHints back
+      hintLayer = null;
       for (const off of [offGrammar, offYes, offNo, offAskTarget]) { try { off(); } catch { /* gone */ } }
       games.clear();
       askTargets.clear();

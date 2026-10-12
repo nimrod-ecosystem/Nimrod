@@ -1656,6 +1656,160 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     sp.destroy(); g.destroy(); open.destroy();
   }
 
+  section('*** "play <game> as <person>" (row 2.80): what is heard ***');
+  {
+    const J = (x) => JSON.stringify(x);
+    const VOCAB = {
+      games: [
+        { id: 'trivia', name: 'Trivia', names: ['Trivia'] },
+        { id: 'brickdrop', name: 'Brick Drop', names: ['Brick Drop'] },
+        { id: 'route:play-opposites', name: 'Opposites', names: ['opposites', 'the opposites game'] },
+        { id: 'card_sort', name: 'Card sort', names: ['card sort'], here: false },
+      ],
+      people: [
+        { id: 'self', name: 'Robin', names: ['robin'] },
+        { id: 'p2', name: 'Sam Jones', names: ['sam jones', 'sam'] },
+        { id: 'p3', name: 'Alex', names: ['alex'] },
+      ],
+    };
+    const P = (t, o) => SP.playAsFor(t, VOCAB, o);
+    let r = P('play brick drop as robin');
+    check('*** "play brick drop as robin": the game and the person, by id ***',
+      r && r.game === 'brickdrop' && r.join === 'as' && J(r.people) === '["self"]' && !r.near && !r.unknown.length, J(r));
+    r = P('Play Trivia as Sam and Alex.');
+    check('"as" takes a list: "as sam and alex", capitals and a full stop ignored', r && r.game === 'trivia' && J(r.people) === '["p2","p3"]', J(r));
+    r = P('play trivia with sam jones');
+    check('*** "with": a full name, joined "with" (play_as.js adds the default player) ***', r && r.join === 'with' && J(r.people) === '["p2"]', J(r));
+    r = P('play a 2 player game of trivia with robin and sam');
+    check('*** "play a 2 player game of trivia with robin and sam": the DIGIT is read (normalising would drop it) ***',
+      r && r.count === 2 && r.game === 'trivia' && r.join === 'with' && J(r.people) === '["self","p2"]', J(r));
+    r = P('play a three player game of trivia');
+    check('...and a count with no names', r && r.count === 3 && r.game === 'trivia' && r.join === null && r.people.length === 0, J(r));
+    r = P('play a to player game of trivia with sam and alex');
+    check('...and "to" in the count\'s slot is two (recognisers write it so)', r && r.count === 2, J(r));
+    r = P('play brick drop');
+    check('bare "play brick drop" is the game, nobody named', r && r.game === 'brickdrop' && r.join === null && r.count === null, J(r));
+    r = P('play opposites as alex');
+    check('a named game of a spoken route ("opposites") takes a person too', r && r.game === 'route:play-opposites', J(r));
+    r = P('play the opposites game with robin and a guest');
+    check('*** "a guest" is always one of the people ***', r && J(r.people) === '["self","guest"]', J(r));
+    r = P('play card sort as robin');
+    check('a game that is not on this screen is still HEARD (play_as.js says it is not here)', r && r.game === 'card_sort', J(r));
+    check('*** "play some jazz" (no game, nobody named) is not this command: it falls through, as before ***', P('play some jazz') === null);
+    check('...nor is a sentence that only CONTAINS it', P('i want to play trivia as robin') === null);
+    r = P('play trivia as robin later on');
+    check('words after the names are not a name: marked unknown, so nothing starts', r && J(r.unknown) === '["later on"]', J(r));
+    r = P('play trivia as zork');
+    check('*** a known game and a name nobody has: sent with the unknown part marked ***', r && r.game === 'trivia' && J(r.unknown) === '["zork"]' && !r.people.length, J(r));
+    r = P('play zorkball as robin');
+    check('*** a game nobody knows, with a known name: game null, what was heard kept ***', r && r.game === null && r.gameHeard === 'zorkball', J(r));
+    check('*** nothing known at all is not this command ***', P('play zorkball as zork') === null);
+    r = P('play trivial as robin');
+    check('*** one word off the game: a near miss (asked about, never acted on), with the corrected phrase ***',
+      r && r.near && r.near.slot === 'game' && r.game === 'trivia' && r.phrase === 'play trivia as robin', J(r));
+    r = P('play trivia as robyn');
+    check('*** one word off a name: a near miss too ***', r && r.near && r.near.slot === 'people' && r.phrase === 'play trivia as robin', J(r));
+    check('*** two slots off is nothing (one near miss at most) ***', P('play trivial as robyn') === null, J(P('play trivial as robyn')));
+    check('near misses off: one word off is unknown, never corrected', P('play trivial as robin', { near: false })?.game === null);
+    check('"play trivia as" with nobody after it is nothing', P('play trivia as') === null);
+    const dup = SP.playVocabulary({ games: [], people: [{ id: 'a', names: ['sam'] }, { id: 'b', names: ['sam', 'sam smith'] }] });
+    check('*** a name two people answer to is nobody\'s (a coin flip); their other names still work ***',
+      J(dup.people.find((p) => p.id === 'a')) === undefined && J(dup.people.find((p) => p.id === 'b').names) === '["sam smith"]', J(dup.people));
+    const gp = SP.playPhrases(VOCAB);
+    check('*** the grammar phrases: the games on THIS screen only, bare and "as <name>" ***',
+      gp.includes('play brick drop') && gp.includes('play trivia as robin') && gp.includes('play opposites as a guest')
+      && !gp.some((p) => /card sort/.test(p)) && !gp.some((p) => / with /.test(p)), gp.slice(0, 8).join(' | '));
+    check('...and never more than PLAY_GRAMMAR_MAX', SP.playPhrases(VOCAB, { max: 3 }).length === 3);
+    check('*** the hints: names as written, people first, no guest ***',
+      J(SP.playHints(VOCAB).slice(0, 3)) === '["Robin","Sam Jones","Alex"]' && !SP.playHints(VOCAB).includes('a guest'), J(SP.playHints(VOCAB)));
+
+    // The speech layer itself.
+    const bus = createBus();
+    const presses = [];
+    let feed = null;
+    const heardLog = [];
+    const said = [];
+    const rec = { running: false, start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; } };
+    const sp = attachSpeech({ down: (d, c) => presses.push(c), up() {} }, { recognizer: rec, bus, confirm: 'off',
+      playAs: () => VOCAB, onHeard: (h) => heardLog.push(h), output: { say: (t) => { said.push(t); return 1; } } });
+    sp.start();
+    const plays = [];
+    bus.subscribe(SP.SPEECH_PLAY_AS_TOPIC, (p) => plays.push(p));
+    feed('computer please play brick drop as robin');
+    check('*** one breath: "computer please play brick drop as robin" is published, and nothing is pressed ***',
+      plays.length === 1 && plays[0].game === 'brickdrop' && J(plays[0].people) === '["self"]' && presses.length === 0
+      && heardLog.at(-1)?.playAs?.game === 'brickdrop', J(plays));
+    feed('computer please');
+    check('two-step: the wake phrase alone opens the window', sp.windowOpen);
+    feed('play a 2 player game of trivia with robin and sam');
+    check('*** two-step: the command on its own, inside the window, with its digit ***',
+      plays.length === 2 && plays[1].count === 2 && J(plays[1].people) === '["self","p2"]' && !sp.windowOpen, J(plays[1]));
+    feed('play trivia as robin');
+    check('*** without the wake phrase: nothing ***', plays.length === 2);
+    feed('computer please play opposites');
+    check('*** a command still wins: "play opposites" is the route it always was ***',
+      presses.at(-1) === 'phrase:play-opposites' && plays.length === 2, J(presses));
+    feed('computer please play trivial as robin');
+    check('*** a near miss ASKS ("did you mean"), and publishes nothing yet ***',
+      plays.length === 2 && sp.nearMissPending()?.phrase === 'play trivia as robin' && said.at(-1) === "It sounded like 'play trivia as robin'. Did you mean that?",
+      J([sp.nearMissPending(), said.at(-1)]));
+    feed('yes');
+    check('*** ...a yes sends the CORRECTED request, and presses nothing (not even select) ***',
+      plays.length === 3 && plays[2].game === 'trivia' && J(plays[2].people) === '["self"]' && presses.at(-1) === 'phrase:play-opposites', J(plays[2]));
+    feed('computer please play trivia as robyn');
+    feed('no');
+    check('...and a no drops it', plays.length === 3 && !sp.nearMissPending());
+    feed('computer please play trivia as zork');
+    check('*** an unknown name, said to the screen: published with it marked, for the screen to say so ***',
+      plays.length === 4 && J(plays[3].unknown) === '["zork"]', J(plays[3]));
+    feed('computer please play zorkball as robin');
+    check('*** an unknown game, said to the screen: published with game null ***', plays.length === 5 && plays[4].game === null && plays[4].gameHeard === 'zorkball', J(plays[4]));
+    feed('computer please play some jazz');
+    check('"play some jazz" is not this command: the old path ("Say it again?"), nothing published',
+      plays.length === 5 && heardLog.at(-1)?.retry === true, J(heardLog.at(-1)));
+    check('the vocabulary is readable for a diagnostic', sp.playVocabulary()?.people?.some((p) => p.id === 'guest'));
+    sp.destroy();
+
+    // The wake gate off: an exact, fully known request is a command like "play opposites"; an unknown part is not said
+    // to the screen, so nothing at all.
+    const plays2 = [];
+    const off = bus.subscribe(SP.SPEECH_PLAY_AS_TOPIC, (p) => plays2.push(p));
+    const open = attachSpeech({ down() {}, up() {} }, { recognizer: { start(cb) { feed = cb; }, stop() {} }, bus, requireWake: false,
+      confirm: 'off', playAs: () => VOCAB });
+    open.start();
+    feed('play trivia as sam');
+    feed('play trivia as zork');
+    feed('play trivial as sam');
+    check('*** wake gate OFF: the exact request works; an unknown name or a near miss (not said to the screen) does nothing ***',
+      plays2.length === 1 && plays2[0].game === 'trivia' && !open.nearMissPending(), J(plays2));
+    open.destroy(); off();
+
+    // Grammar mode: the phrases are in the grammar; open mode has no grammar at all.
+    const g = attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {} }, bus, recognition: 'grammar', playAs: () => VOCAB });
+    check('*** grammar mode: "computer please play trivia as robin" is IN the grammar (it can be heard) ***',
+      g.currentGrammar().includes('computer please play trivia as robin') && g.currentGrammar().includes('play brick drop'), g.currentGrammar().length);
+    g.destroy();
+    const o = attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {} }, bus, playAs: () => VOCAB });
+    check('open mode (the default): no grammar, nothing to add', o.currentGrammar() === null);
+    o.destroy();
+
+    // Hints: layered over whatever else sets them (subtitle learning), and put back on destroy.
+    const sent = [];
+    const hr = { start() {}, stop() {}, _h: ['Learned'], hints() { return [...this._h]; }, setHints(w) { this._h = [...w]; sent.push([...w]); } };
+    const h = attachSpeech({ down() {}, up() {} }, { recognizer: hr, bus, playAs: () => VOCAB });
+    h.start();
+    check('*** hints: the names go to an engine that takes them, AFTER the words subtitle learning set ***',
+      J(sent.at(-1)?.slice(0, 3)) === '["Learned","Robin","Sam Jones"]', J(sent.at(-1)));
+    hr.setHints(['Corrected']);
+    check('*** ...and subtitle learning setting its words again keeps ours ***', J(sent.at(-1)?.slice(0, 2)) === '["Corrected","Robin"]', J(sent.at(-1)));
+    h.destroy();
+    check('*** destroyed: the engine is sent only the other words again ***', J(sent.at(-1)) === '["Corrected"]', J(sent.at(-1)));
+    hr.setHints(['Plain']);
+    check('...and its own setHints is back (nothing of ours added any more)', J(sent.at(-1)) === '["Plain"]', J(sent.at(-1)));
+    const nh = attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {} }, bus, playAs: () => VOCAB });
+    check('an engine with no setHints (Vosk, the browser\'s own) is left alone', (() => { try { nh.start(); nh.destroy(); return true; } catch { return false; } })());
+  }
+
   section('*** the screen does not take its OWN words as a person\'s (screen_speech.js, 2026-10-04) ***');
   {
     let clock = 50_000;

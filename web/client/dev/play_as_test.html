@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>play as — who a game started by voice plays as</title>
+<style>
+  body{font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.25rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>play as — “play &lt;game&gt; as &lt;person&gt;”, and who plays when nobody is named (row 2.80)</h1>
+<p>Mike, 2026-10-12: <i>“Play &lt;game&gt; as &lt;person&gt;”</i> and <i>“play a &lt;n&gt; player game of &lt;game&gt; with
+&lt;names&gt;”</i>; nobody named is the profile the screen is on, a guest is a choice. <code>input_speech.js</code> hears it
+(<code>speech_test</code>); <code>play_as.js</code> decides who that makes the players, whether the game seats them, what
+is said back and which panel starts. No microphone is opened here.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import * as PA from '../play_as.js';
+import { attachSpeech, SPEECH_PLAY_AS_TOPIC, ROUTES } from '../input_speech.js';
+import { resolvePlayers } from '../adaptive_play.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
+import { senderMeta } from '../sender.js';
+import { createBus } from '../bus.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+import { listManifests, getManifest } from '../module.js';
+// Real games, so the rules below are read off real manifests (a players row; a Start said aloud), not made-up ones.
+import '../modules/brickdrop.js';
+import '../modules/brain_games.js';
+import '../modules/trivia.js';
+import '../modules/card_sort.js';
+import '../modules/clock.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+
+(async () => {
+  section('*** the settings: Mike\'s defaults, and the audit ***');
+  const F = Object.fromEntries(PA.PLAY_AS_FIELDS.map((f) => [f.key, f]));
+  check('*** nobody named: the screen\'s profile by default (Mike, BT item 1); a guest is a choice ***',
+    F.playAsNobody.default === 'self' && F.playAsNobody.options.map((o) => o.value).join() === 'self,guest,setting', J(F.playAsNobody));
+  check('more named than it seats: start with who fits, by default (argued in play_as.js); "do not start" is the other',
+    F.playAsTooMany.default === 'fit' && F.playAsTooMany.options.map((o) => o.value).join() === 'fit,stop');
+  check('the read-back is on by default', F.playAsReadBack.default === true);
+  check('other spoken names: none until somebody adds one', F.playAsSpoken.default === '' && F.playAsSpoken.kind === 'text');
+  const bad = auditFields(PA.PLAY_AS_FIELDS.map(normalizeField).filter(Boolean), { type: 'play-as' }).filter((f) => f.severity === 'error');
+  check('the rows pass the settings audit', PA.PLAY_AS_FIELDS.map(normalizeField).filter(Boolean).length === 4 && bad.length === 0, J(bad));
+  check('options from a row: defaults for anything unset or broken',
+    J(PA.playAsOptionsFrom({})) === J({ nobody: 'self', tooMany: 'fit', readBack: true, spoken: '' })
+    && PA.playAsOptionsFrom({ playAsNobody: 'everyone', playAsTooMany: 'stop', playAsReadBack: 'no' }).nobody === 'self'
+    && PA.playAsOptionsFrom({ playAsTooMany: 'stop' }).tooMany === 'stop' && PA.playAsOptionsFrom({ playAsReadBack: false }).readBack === false);
+  const copy = J([PA.PLAY_AS_LINES, PA.PLAY_AS_FIELDS]);
+  check('*** site copy: never "her screen", never anybody in particular ***', !/her screen|christine|cici/i.test(copy));
+  check('spoken names: "Siobhan = shiv; Brick Drop = bricks"; a part with no "=" is skipped',
+    J(PA.spokenNamesFrom('Siobhan = shiv; Brick Drop = bricks; nonsense')) === J([{ name: 'siobhan', said: 'shiv' }, { name: 'brick drop', said: 'bricks' }]));
+
+  section('*** which modules are games, and how many they seat (read off each manifest) ***');
+  check('*** Brick Drop is a game (a Start said aloud) that keeps NO players: seats 0 ***',
+    PA.isGame(getManifest('brickdrop')) && PA.seatsOf(getManifest('brickdrop')) === 0);
+  check('*** Brain games and Trivia have a players row: up to 4 each ***',
+    PA.isGame(getManifest('brain_games')) && PA.seatsOf(getManifest('brain_games')) === 4 && PA.seatsOf(getManifest('trivia')) === 4);
+  check('the clock is not a game', !PA.isGame(getManifest('clock')));
+  const here = new Set(['brickdrop', 'brain_games', 'trivia']);
+  const ge = PA.gameEntries({ manifests: listManifests(), here, spoken: PA.spokenNamesFrom('Brick Drop = bricks') });
+  const byId = Object.fromEntries(ge.map((g) => [g.id, g]));
+  check('*** a game\'s own title is one of its names ***', byId.brickdrop?.names.includes('brick drop') && byId.trivia?.names.includes('trivia'), J(byId.brickdrop));
+  check('*** a spoken route\'s named game is its own entry ("odd one out" is Brain games\' odd game, with its payload) ***',
+    byId['route:play-different']?.type === 'brain_games' && byId['route:play-different'].names.includes('odd one out')
+    && J(byId['route:play-different'].payload) === J(ROUTES['play-different'].payload) && byId['route:play-different'].topic === 'brain_games/play',
+    J(byId['route:play-different']));
+  check('...and a title the route already says is left to the route (no two entries answering "brain games")',
+    byId['route:play-brain']?.names.includes('brain games') && !byId.brain_games?.names.includes('brain games'), J([byId['route:play-brain'], byId.brain_games]));
+  check('"here": a panel of it is on the screen', byId.brickdrop.here && !byId['route:play-card-sort']?.here, J(byId['route:play-card-sort']));
+  check('*** a spoken name somebody set is a name too ("bricks") ***', byId.brickdrop.names.includes('bricks'));
+  check('no module that is not a game is offered', !ge.some((g) => g.type === 'clock'));
+
+  section('*** the people: as this screen\'s person calls them ***');
+  const ROWS = [{ id: 'pat', name: 'Pat Lee' }, { id: 'sam', name: 'Sam Jones' }, { id: 'sal', name: 'Sam Ortiz' }, { id: 'ann', name: 'Ann' }];
+  const pe = PA.peopleEntries({ people: ROWS, self: { id: 'pat', name: 'Pat Lee' }, spoken: PA.spokenNamesFrom('Ann = annie') });
+  const pb = Object.fromEntries(pe.map((p) => [p.id, p]));
+  check('*** the person this screen is for is "self" (a self seat, whoever that is) ***', !!pb.self && !pb.pat && pb.self.names.includes('pat lee'), J(pe));
+  check('a first name is a name when nobody else has it ("pat"), and not when two do ("sam")',
+    pb.self.names.includes('pat') && !pb.sam.names.includes('sam') && !pb.sal.names.includes('sam'), J([pb.sam, pb.sal]));
+  check('a spoken name is a name too ("annie")', pb.ann.names.includes('annie'));
+  check('no people list: the screen\'s own person by name, still', J(PA.peopleEntries({ self: { id: 'x', name: 'Robin' } })) === J([{ id: 'self', name: 'Robin', names: ['robin'] }]));
+
+  section('*** the seats a request makes (seatsFor) ***');
+  const people = ROWS;
+  const S = (req, o = {}) => PA.seatsFor(req, { people, ...o }).seats;
+  const kinds = (seats) => (seats || []).map((s) => (s.kind === 'person' ? s.id : s.kind === 'guest' ? `guest:${s.name}` : 'self')).join();
+  check('*** "as Sam": exactly Sam, as himself (his own rows) ***', J(S({ join: 'as', people: ['sam'] })) === J([{ kind: 'person', id: 'sam', name: 'Sam Jones' }]));
+  check('*** "with Sam": the screen\'s profile first, then Sam ***', kinds(S({ join: 'with', people: ['sam'] })) === 'self,sam');
+  check('..."with Sam" when nobody named means a guest: a guest first', kinds(S({ join: 'with', people: ['sam'] }, { nobody: 'guest' })) === 'guest:Guest,sam');
+  check('*** bare: the screen\'s profile (the default) ***', kinds(S({})) === 'self');
+  check('*** bare, with "a guest" chosen: a guest ***', kinds(S({}, { nobody: 'guest' })) === 'guest:Guest');
+  check('*** bare, with "the game\'s own Players row": no change at all (null) ***', S({}, { nobody: 'setting' }) === null);
+  check('*** a 2 player game with Pat and Sam: the two named ***', kinds(S({ count: 2, join: 'with', people: ['self', 'sam'] })) === 'self,sam');
+  check('*** a 3 player game with Sam and Ann: the screen\'s profile, Sam and Ann ***', kinds(S({ count: 3, join: 'with', people: ['sam', 'ann'] })) === 'self,sam,ann');
+  check('*** a 3 player game, nobody named: the screen\'s profile and two guests ***', kinds(S({ count: 3 })) === 'self,guest:Guest,guest:Guest 2');
+  check('*** a 1 player game with two names: an error, nothing starts ***', PA.seatsFor({ count: 1, join: 'with', people: ['sam', 'ann'] }, { people }).error === 'count-off');
+  check('named twice, seated once', kinds(S({ join: 'as', people: ['sam', 'sam'] })) === 'sam');
+  check('two guests are numbered', kinds(S({ join: 'with', people: ['guest'] }, { nobody: 'guest' })) === 'guest:Guest,guest:Guest 2');
+  check('the seats in words: "Pat Lee, Sam Jones and a guest"; guests counted',
+    PA.seatWords([{ kind: 'self' }, { kind: 'person', name: 'Sam Jones' }, { kind: 'guest', name: 'Guest' }], { selfName: 'Pat Lee' }) === 'Pat Lee, Sam Jones and a guest'
+    && PA.seatWords([{ kind: 'guest', name: 'Guest' }, { kind: 'guest', name: 'Guest 2' }]) === 'two guests');
+
+  section('*** the host: which panel, what is said, what starts ***');
+  const bus = createBus();
+  const said = [];
+  const sent = [];
+  let vals = {};
+  let focus = null;
+  let panels = [{ id: 'p1', type: 'brickdrop' }, { id: 'p2', type: 'brain_games' }, { id: 'p3', type: 'trivia' }];
+  const host = PA.createPlayAs({ bus, manifests: () => listManifests(), panels: () => panels, focusedId: () => focus,
+    people: ROWS, self: () => ({ id: 'pat', name: 'Pat Lee' }), values: () => vals, say: (t) => said.push(t) });
+  // What every panel would hear, and what the host had set for it at that moment (the players come first).
+  for (const t of ['brickdrop/resume', 'brain_games/play', 'brain_games/resume', 'trivia/resume']) {
+    for (const id of ['p1', 'p2', 'p3', 'p4']) bus.subscribe(`${t}#${id}`, (p) => sent.push({ t: `${t}#${id}`, p, seats: host.override(id) }));
+  }
+  let r = host.handle({ game: 'brickdrop', people: [], join: null, count: null });
+  check('*** "play brick drop": its Start pressed on THAT panel, and "Starting Brick Drop." said ***',
+    r.started && r.instanceId === 'p1' && sent.at(-1)?.t === 'brickdrop/resume#p1' && said.at(-1) === 'Starting Brick Drop.', J([r, sent.at(-1), said.at(-1)]));
+  r = host.handle({ game: 'brickdrop', people: ['sam'], join: 'as' });
+  check('*** "play brick drop as Sam": a game that keeps no players says so, and starts (the default) ***',
+    r.started && said.at(-1) === 'Brick Drop keeps its score for this screen only. Starting it.' && host.override('p1') === null, J([r, said.at(-1)]));
+  vals = { playAsTooMany: 'stop' };
+  r = host.handle({ game: 'brickdrop', people: ['sam'], join: 'as' });
+  check('...set to "do not start": said, and not started', !r.started && r.why === 'no-seats' && /so it was not started/.test(said.at(-1)), J(r));
+  vals = {};
+  const before = sent.length;
+  r = host.handle({ game: 'route:play-brain', people: ['sam'], join: 'as' });
+  check('*** "play brain games as Sam": Sam\'s seat set on THAT panel, BEFORE the game is told to start ***',
+    r.started && J(host.override('p2')) === J([{ kind: 'person', id: 'sam', name: 'Sam Jones' }])
+    && sent.length === before + 1 && sent.at(-1).t === 'brain_games/play#p2' && J(sent.at(-1).p) === J({ game: 'mix' })
+    && J(sent.at(-1).seats) === J(host.override('p2')), J([r, sent.at(-1)]));
+  check('*** ...and read back: "Starting Brain games as Sam Jones." ***', said.at(-1) === 'Starting Brain games as Sam Jones.', said.at(-1));
+  check('no other panel plays as Sam', host.override('p1') === null && host.override('p3') === null);
+  r = host.handle({ game: 'trivia', people: [], join: null, count: 5 });
+  check('*** a 5 player game of Trivia (it seats 4): starts with the first four, and says so ***',
+    r.started && r.seats.length === 4 && said.at(-1) === 'Trivia takes up to 4 players. Starting with Pat Lee and three guests.', J([r.seats, said.at(-1)]));
+  r = host.handle({ game: 'route:play-card-sort', people: [], join: null });
+  check('*** a game that is not on this screen: said, nothing opened, nothing started ***',
+    !r.started && r.why === 'not-here' && said.at(-1) === 'Card sort is not on this screen.', J([r, said.at(-1)]));
+  r = host.handle({ game: null, gameHeard: 'zorkball', people: ['sam'], join: 'as' });
+  check('*** an unknown game: "I do not know a game called zorkball." ***', !r.started && said.at(-1) === 'I do not know a game called zorkball.', said.at(-1));
+  r = host.handle({ game: 'trivia', people: [], unknown: ['zork'], join: 'as' });
+  check('*** an unknown name: "I do not know who zork is." and nothing starts ***', !r.started && said.at(-1) === 'I do not know who zork is.', said.at(-1));
+  r = host.handle({ game: 'trivia', people: ['sam', 'ann'], join: 'with', count: 1 });
+  check('a count that does not fit the names: said, nothing starts', !r.started && said.at(-1) === 'That is 2 names for a 1 player game, so it was not started.', said.at(-1));
+  vals = { playAsNobody: 'guest' };
+  r = host.handle({ game: 'route:play-brain', people: [], join: null });
+  check('*** nobody named, "a guest" chosen: "Starting Brain games as a guest." ***',
+    r.started && kinds(host.override('p2')) === 'guest:Guest' && said.at(-1) === 'Starting Brain games as a guest.', J([host.override('p2'), said.at(-1)]));
+  vals = { playAsNobody: 'setting' };
+  r = host.handle({ game: 'route:play-brain', people: [], join: null });
+  check('*** nobody named, "the game\'s own Players row": the voice choice is let go, the game\'s row decides ***',
+    r.started && host.override('p2') === null && said.at(-1) === 'Starting Brain games.', J([host.override('p2'), said.at(-1)]));
+  vals = { playAsReadBack: false };
+  const n = said.length;
+  host.handle({ game: 'trivia', people: ['sam'], join: 'as' });
+  host.handle({ game: 'route:play-card-sort', people: [], join: null });
+  check('*** read-back off: a start says nothing; why nothing started is still said ***', said.length === n + 1 && /not on this screen/.test(said.at(-1)), J(said.slice(n)));
+  vals = {};
+  panels = [...panels, { id: 'p4', type: 'trivia' }];
+  focus = 'p4';
+  r = host.handle({ game: 'trivia', people: ['ann'], join: 'as' });
+  check('two Trivia panels: the focused one is the one asked', r.instanceId === 'p4' && kinds(host.override('p4')) === 'ann', J(r));
+
+  section('*** the players a panel reads, and when the voice choice ends ***');
+  const base = { seats: () => [{ kind: 'guest', name: 'Bea' }], self: () => ({ id: 'pat', name: 'Pat Lee' }), subscribe: () => () => {} };
+  const w2 = host.wrap(base, 'p2');
+  const w9 = host.wrap(base, 'p9');
+  host.handle({ game: 'route:play-brain', people: ['sam'], join: 'as' });
+  let told = 0;
+  const off = w2.subscribe(() => { told += 1; });
+  check('*** a panel\'s players: the screen\'s seats and person as before, plus the voice choice for THAT panel only ***',
+    J(w2.seats()) === J(base.seats()) && w2.self().id === 'pat' && kinds(w2.override()) === 'sam' && w9.override() === null);
+  check('*** resolvePlayers: "as Sam" wins over the game\'s own row and the screen\'s ***',
+    resolvePlayers([{ kind: 'guest', name: 'Ann' }], { personId: 'pat', host: w2 }).map((p) => p.id).join() === 'person:sam'
+    && resolvePlayers('', { personId: 'pat', host: w9 }).map((p) => p.id).join() === 'name:bea');
+  bus.publish(PLAY_STATE_TOPIC, { id: 'p2', playing: false, rest: true });
+  check('*** the sitting rests (game_start.js): the voice choice ends, and the panel is told ***',
+    w2.override() === null && told === 1 && resolvePlayers('', { personId: 'pat', host: w2 }).map((p) => p.id).join() === 'name:bea', `told ${told}`);
+  host.handle({ game: 'route:play-brain', people: ['sam'], join: 'as' });
+  bus.publish(PLAY_STATE_TOPIC, { id: 'p2', playing: false });
+  check('a pause is not a rest: "as Sam" stays', kinds(w2.override()) === 'sam');
+  off();
+  host.handle({ game: 'route:play-brain', people: ['ann'], join: 'as' });
+  check('unsubscribed: not told any more', told === 2, `told ${told}`);
+
+  section('*** "play opposites", "play brain games": the routes that already start a game by name ***');
+  vals = { playAsNobody: 'guest' };
+  bus.publish('brain_games/play', { game: 'odd' }, senderMeta({ kind: 'local', id: 'speech:phrase:play-different', role: 'universal' }));
+  check('*** SAID (from the speech device): nobody named, so "a guest" (the setting) on every Brain games panel ***', kinds(host.override('p2')) === 'guest:Guest', J(host.override('p2')));
+  vals = {};
+  host.handle({ game: 'route:play-brain', people: ['sam'], join: 'as' });
+  bus.publish('brain_games/play', { game: 'odd' }, senderMeta({ kind: 'local', id: 'keyboard:KeyB', role: 'universal' }));
+  check('*** pressed (a switch bound to it): nothing changes - this is only about saying it ***', kinds(host.override('p2')) === 'sam');
+
+  section('*** end to end: said, heard, started ***');
+  {
+    let feed = null;
+    const sp = attachSpeech({ down() {}, up() {} }, { recognizer: { start(cb) { feed = cb; }, stop() {} }, bus, confirm: 'off',
+      playAs: () => host.vocabulary() });
+    sp.start();
+    const k = sent.length;
+    feed('Computer please, play brain games as Sam Jones.');
+    check('*** "computer please, play brain games as Sam Jones": the right panel, as Sam, started ***',
+      host.last()?.started && host.last().instanceId === 'p2' && kinds(host.override('p2')) === 'sam' && sent.length === k + 1
+      && sent.at(-1).t === 'brain_games/play#p2', J([host.last(), sent.at(-1)]));
+    feed('computer please');
+    feed('play a 2 player game of trivia with ann');
+    check('*** two-step, a count and a name: Trivia (focused p4), the screen\'s profile and Ann ***',
+      host.last()?.instanceId === 'p4' && kinds(host.override('p4')) === 'self,ann' && said.at(-1) === 'Starting Trivia as Pat Lee and Ann.', J([host.last(), said.at(-1)]));
+    feed('computer please play brick drop as pat');
+    check('the screen\'s own person by first name is the self seat: Brick Drop just starts', said.at(-1) === 'Starting Brick Drop.', said.at(-1));
+    feed('computer please play brick drop as bricks');
+    check('a game name where a person goes is nobody: "I do not know who bricks is."', said.at(-1) === 'I do not know who bricks is.', said.at(-1));
+    sp.destroy();
+  }
+
+  section('*** the people list is read when asked, and again only after a while ***');
+  {
+    let clock = 1000;
+    let asked = 0;
+    const h2 = PA.createPlayAs({ bus: createBus(), people: () => { asked += 1; return Promise.resolve([{ id: 'zo', name: 'Zoe' }]); },
+      self: () => ({ id: null, name: '' }), now: () => clock });
+    check('nothing is read until something asks', asked === 0);
+    h2.vocabulary();
+    await new Promise((res) => setTimeout(res, 10));
+    check('*** asked once, and the names arrive ***', asked === 1 && h2.vocabulary().people.some((p) => p.names.includes('zoe')));
+    h2.vocabulary();
+    check('not again inside PEOPLE_REFRESH_MS', asked === 1);
+    clock += PA.PEOPLE_REFRESH_MS + 1;
+    h2.vocabulary();
+    check('...and again after it', asked === 2);
+    h2.destroy();
+  }
+  const lastBefore = J(host.last());
+  host.destroy();
+  bus.publish(SPEECH_PLAY_AS_TOPIC, { game: 'trivia', people: ['sam'], join: 'as' });
+  check('destroyed: it hears nothing more', J(host.last()) === lastBefore, J(host.last()));
+
+  document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+})().catch((e) => {
+  console.error(e);
+  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+});
+</script>
+</body>
+</html>

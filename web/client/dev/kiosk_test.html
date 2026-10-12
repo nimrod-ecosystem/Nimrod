@@ -415,9 +415,22 @@ const toTab = (m, id) => {
       {
         const pl = kiosk.menu.items().filter((i) => i.tab === 'players');
         const row = pl.find((i) => i.id === 'screen-players');
+        // (play as, row 2.80, deliberately: the Players tab also holds "When a game is started by voice and nobody is
+        // named, it plays as" (standard) and three advanced rows beside it - play_as.js PLAY_AS_FIELDS.)
+        const playAsRows = pl.filter((i) => /^set:playAs/.test(String(i.id)));
         check('*** players: the Players tab holds the screen\'s one "Players" row, which opens the player picker ***',
-          pl.length === 2 && !!row && !!row.players && row.players.follow === false && !row.disabled
+          pl.length === 2 + playAsRows.length && !!row && !!row.players && row.players.follow === false && !row.disabled
           && /Just/.test(row.hint || ''), JSON.stringify(pl.map((i) => [i.id, i.label, i.hint])));
+        check('*** play as: "who plays when nobody is named" is on the Players tab, the screen\'s profile by default ***',
+          playAsRows.some((i) => i.id === 'set:playAsNobody') && /profile/i.test(JSON.stringify(playAsRows.find((i) => i.id === 'set:playAsNobody'))),
+          JSON.stringify(playAsRows.map((i) => [i.id, i.label, i.hint, i.value])));
+        {
+          const v = kiosk.playAs?.()?.vocabulary?.();
+          const here = new Set(kiosk.panels().map((p) => p.type));
+          check('play as: the host is built, and its games say truly which are on this screen',
+            typeof kiosk.playAs?.()?.wrap === 'function' && Array.isArray(v?.games) && Array.isArray(v?.people)
+            && v.games.every((g) => g.here === here.has(g.type)), JSON.stringify(v?.games?.map((g) => [g.id, g.here])));
+        }
       }
       check('*** themes: the Theme row is on the Theme tab, not Display ***',
         (placed.get('set:theme') || []).join() === 'theme', JSON.stringify(placed.get('set:theme')));
@@ -449,7 +462,8 @@ const toTab = (m, id) => {
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
           'claude-page', 'reviews-page', 'screen-lock', 'screen-lock-pin', 'set:barQuietMs', 'set:barShowsItself',
           'set:barWhilePlaying',   // bar while playing (comment below)
-          'person:start', 'screen-players', 'history-place'].includes(i.id));
+          'person:start', 'screen-players', 'history-place'].includes(i.id)
+        && !/^set:playAs/.test(String(i.id)));   // play as (row 2.80): the Players tab's rows, outside the lap like 'screen-players'
       // ('set:barWhilePlaying', 2026-10-07, bar while playing (row 2.65): "While a game is being played, the bar" under "The
       // bar" on the Devices tab, beside the two bar-toggle rows. Outside the panel's lap; left out here DELIBERATELY so the
       // old rows stay 40. dev/bar_toggle_test.html checks it is in the menu and what it does.)
