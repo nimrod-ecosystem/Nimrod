@@ -2572,3 +2572,34 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   need to at least see the screen remotely."* Three things: the same media on several devices, one dashboard kept in
   step on several screens, and seeing and controlling another screen. A plan comes before any build (row 2.79).
   (2026-10-10)
+
+## Mike's answers of 2026-10-12 (through chat, notes BR-BT): calls, seeing a screen, play as, sockets, trim
+
+- **A call waits for someone to answer, by default. This changes the 2026-08-29 decision** (a call answered by
+  itself after a 10-second countdown). Answering by itself ("drop in") becomes a permission given to named people on
+  a screen. The ringing card gets a Decline button. A temporary permission can be given during a call
+  (tech-support style), ending with the call or after a set time. "Who may drive" allows calling, never answering by
+  itself; drop-in is its own permission. Why it changed: a screen that picks up by itself is right for someone who
+  can't answer and wrong as everyone's default. The people who need it get it by name. Chat flagged that before the
+  swap Mike needs drop-in on that screen for himself, or his calls will ring unanswered there. Nobody answering means
+  the call isn't answered: inaction, never a blocked screen. (2026-10-12)
+- **Seeing a screen has its own list, "who may see this screen", empty to start, with "ask first" ON by default.**
+  If nobody answers the ask, the seeing doesn't start, so the screen is never blocked (CLAUDE.md's gate test). A
+  parent/guardian set of permissions changes that default for those people. Chat's suggested shape, to confirm in
+  the build: a named bundle of the separate permissions (see without asking, drop-in calls, drive), each still
+  changeable. The words while someone sees a screen: *"Sharing your screen with ..."*, shown for a guardian too.
+  For a screen where nobody can answer "ask first", the guardian set is what lets family see along. Raspberry Pi
+  Connect is for troubleshooting only, and nothing is installed until Mike says. (2026-10-12)
+- **Mirroring means the same thing at the same time.** Mike: *"we both see and hear the same thing at the same
+  time... the same pictures and videos on a call or even just to know I'm looking at the same things when it's not
+  a call. Also, some of the games could be good to play online or over a call."* Next after watch along: photos in
+  step, sound on, playing on under the voices during a call, and more games in game rooms. Spotify: one account, no
+  listening together. (2026-10-12)
+- **"Play as" by voice, and who plays when nobody is named.** "Play <game> as <person>", and "play a <n> player game
+  of <game> with <names>". When nobody is named, the game plays as the profile the screen is on; guest is a choice.
+  A "with help" mark (answers kept but not moving the level) is parked. (2026-10-12)
+- **Baseplate sockets: keep the through-bore, and add a closed-face version for 10 mm plates only** (sockets from one
+  face, the other face flat). 5 mm plates keep through holes; there is nothing behind a 5 mm socket. Other variants
+  later. (2026-10-12)
+- **The fallback copy is not trimmed.** Pictures that fall out of the newest N stay in the fallback until the space
+  margin stops it, as built (8544ea1). (2026-10-12)
