@@ -326,14 +326,75 @@ try {
       check('*** LIVE: the game starts by itself on the screen - nobody pressed anything there ***',
         await settled(() => (mix()?.round || 0) >= 1 && got.some((m) => m.kind === 'room' && m.state?.phase === 'playing'), 8000),
         JSON.stringify({ round: mix()?.round, phase: got.filter((m) => m.kind === 'room').at(-1)?.state?.phase }));
+      // *** THE SWITCH LAP WITH A GAME OPEN (2026-10-12): the game, then Hang up; the game lit from the start. ***
+      const cvNow = () => k.callView() || {};
+      const hangLit = () => view()?.querySelector('[data-call-hangup]')?.dataset.lit === '1';
+      const gameLit = () => game()?.dataset.lit === '1';
+      check('*** LIVE: with the game open the call view\'s switch lap is the game, then Hang up - the game lit, with its ring ***',
+        (cvNow().lap || []).join() === 'game,hangup' && cvNow().stop === 'game' && gameLit() && !hangLit() && /solid/.test(game()?.style.outline || ''),
+        JSON.stringify({ lap: cvNow().lap, stop: cvNow().stop, ring: game()?.style.outline }));
+      const eng = () => k.callGame()?.inst?.impl?.__engine;
+      check('(setup) the screen\'s player has the first turn, and a question is asked', await settled(() => mix()?.current && !mix().current.remote
+        && eng()?.snapshot().phase === 'asking' && (eng().snapshot().candidates || []).length > 1, 8000),
+        JSON.stringify({ cur: mix()?.current && { remote: mix().current.remote }, phase: eng()?.snapshot().phase, c: eng()?.snapshot().candidates }));
+      let gNext = 0, gSel = 0, bareQ = 0, boardSel = 0;
+      const offs = [
+        kbus.subscribe('quiz_mix/next#call:game', () => { gNext += 1; }),
+        kbus.subscribe('quiz_mix/select#call:game', () => { gSel += 1; }),
+        kbus.subscribe('quiz_mix/select', () => { bareQ += 1; }),   // bare-topic-ok: proving NOTHING is published to the bare topic (no Quiz mix panel under the call view hears it)
+        kbus.subscribe('board/select#call:board', () => { boardSel += 1; }),
+      ];
+      const before = eng().snapshot();
+      kbus.publish(verbTopic('next'));
+      await sleep(80);
+      const walked = eng().snapshot();
+      check('*** LIVE: a switch\'s Next walks the game\'s answers (addressed to the call\'s game, as the router addresses a panel) ***',
+        gNext === 1 && walked.phase === 'asking' && walked.highlight !== before.highlight && walked.lit != null,
+        JSON.stringify({ gNext, h0: before.highlight, h1: walked.highlight, lit: walked.lit }));
+      kbus.publish(verbTopic('select'));
+      const answered = await settled(() => { const s = eng().snapshot(); return s.phase !== 'asking' || s.misses > before.misses || !!s.feedback; }, 4000);
+      check('*** LIVE: a switch\'s Select answers the question in the call view\'s game ***', answered && gSel === 1,
+        JSON.stringify({ gSel, phase: eng().snapshot().phase, misses: eng().snapshot().misses, fb: eng().snapshot().feedback }));
+      check('...and to nothing else: no bare Quiz mix topic, not the hidden board, the call still on',
+        bareQ === 0 && boardSel === 0 && dEnded.length === 0 && !!k.callView(), JSON.stringify({ bareQ, boardSel, dEnded }));
+      // Hang up stays reachable by switch: one focus-next away, and Back steps out to it.
+      kbus.publish(verbTopic('focus-next'));
+      await sleep(40);
+      check('*** LIVE: "Move to the next panel" goes from the game to Hang up (lit; the game\'s ring goes) ***',
+        cvNow().stop === 'hangup' && hangLit() && !gameLit() && !game()?.style.outline, JSON.stringify({ stop: cvNow().stop }));
+      kbus.publish(verbTopic('next'));
+      await sleep(40);
+      check('...and Next on Hang up steps back into the game (two stops), hanging nothing up', cvNow().stop === 'game' && gameLit() && !hangLit() && dEnded.length === 0);
+      kbus.publish(verbTopic('back'));
+      await sleep(40);
+      check('*** LIVE: Back on the game steps OUT to Hang up (lit) - it does not end the call ***',
+        cvNow().stop === 'hangup' && hangLit() && dEnded.length === 0 && !!k.callView(), JSON.stringify({ stop: cvNow().stop, dEnded }));
+      kbus.publish(verbTopic('focus-prev'));
+      await sleep(40);
+      check('..."Move to the previous panel" goes back to the game', cvNow().stop === 'game' && gameLit());
       gl.send({ kind: 'leave' });
       check('*** LIVE: the caller leaves: the game together ends on the screen, by itself ***', await settled(() => !mix()?.room, 6000), JSON.stringify(mix()?.room));
       check('LIVE: the screen\'s game ends with it, and says why', /The other player left/.test(game()?.textContent || ''), game()?.textContent?.slice(0, 200));
       gl.close(); offInv?.();
+      // Nobody touches anything: the game's half goes by itself (kiosk.js CALL_GAME_LINGER_MS, 20 s) and the lap with it.
+      check('*** LIVE: nobody presses anything: the game goes by itself, and the switch lap is back to how the call opened ***',
+        await settled(() => !k.callGame(), 26000) && (cvNow().lap || []).join() === 'hangup' && cvNow().stop === null && !hangLit()
+        && view()?.querySelector('[data-call-board]')?.style.display === '',
+        JSON.stringify({ game: !!k.callGame(), lap: cvNow().lap, stop: cvNow().stop }));
+      kbus.publish(verbTopic('select'));
+      await sleep(80);
+      check('...a switch\'s Select is the board\'s again', boardSel === 1 && gSel === 1, JSON.stringify({ boardSel, gSel }));
+      offs.forEach((off) => off?.());
+      // Asked again: the game comes back, lit, and Hang up by switch still ends the call with it open.
+      check('LIVE: asked again, the game opens again in the call view, lit', ph.askGame('quiz_mix') === true
+        && await settled(() => !!k.callGame() && cvNow().stop === 'game', 8000), JSON.stringify({ stop: cvNow().stop }));
     }
-    // Hang up from the bar, with a pointer.
-    root.querySelector('[data-call-controls] [data-call="hangup"]').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
-    check('*** LIVE: Hang up on the bar ends the call: the caller hears it ***', await settled(() => dEnded.at(-1) === 'hangup', 6000), JSON.stringify(dEnded));
+    // Hang up BY SWITCH with the game open: Move to the next panel, then Select.
+    kbus.publish(verbTopic('focus-next'));
+    await sleep(40);
+    kbus.publish(verbTopic('select'));
+    check('*** LIVE: Hang up by switch (Move to the next panel, Select) with the game open ends the call: the caller hears it ***',
+      await settled(() => dEnded.at(-1) === 'hangup', 6000), JSON.stringify(dEnded));
     check('*** LIVE: the view goes, the board with it, and the screen is as it was ***',
       await settled(() => !k.callView() && !k.callScanHeld(), 4000) && !root.querySelector('[data-call-board]') && k.primaryType() === 'photos');
     check('*** LIVE: the call\'s game goes with the call ***', !root.querySelector('[data-call-game]') && k.callGame() === null);

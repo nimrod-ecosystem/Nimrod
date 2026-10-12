@@ -5322,9 +5322,65 @@ export async function mountKiosk(root, {
   // scan and select, addressed to that one board - never a Board panel under the view), and `back` still hangs up.
   // Argued: the board is what a switch user is there to press during a call, and Hang up stays reachable by `back`,
   // the bar, a pointer and "hang up" said. A board stop before Hang up would cost every word a press.
-  function callViewVerb(v) {
+  //
+  // *** WITH A GAME OPEN IN THE CALL VIEW ("play this game together", 2026-10-12): THE LAP IS THE GAME, THEN HANG UP. ***
+  // Before this the switch went to the call view's one stop (or its board), so somebody answering with a switch could
+  // not answer the game a caller asked for. Now, while the game shows, the call view's lap has TWO stops, as two panels
+  // on a dashboard do, and moves between them the way a dashboard's lap does (`focus-next` / `focus-prev`):
+  //   THE GAME FIRST, and lit the moment it opens: next / prev / select reach it exactly as the router reaches a Quiz mix
+  //     panel (actions.js `quiz_mix`, addressed to this one instance, the press's own meta carried through), so its
+  //     answers are walked and chosen by one switch's Next + Select, or two switches as "Select is Yes, Next is No" -
+  //     the game's own `twoSwitch` row decides, as it does on a dashboard. ARGUED: the caller asked, the game came up,
+  //     and the next press is far likelier an answer than a hang-up; Hang up first would cost every answer a press.
+  //   HANG UP AFTER IT, one `focus-next` away (or `focus-prev`: two stops, either way is one step). On it, select
+  //     hangs up and next / prev step back into the game (two stops: there is nowhere else to step).
+  //   BACK ON THE GAME STEPS OUT TO HANG UP (lit); BACK ON HANG UP HANGS UP. Argued against the two plain readings:
+  //     - the game's own Back, as on a dashboard (`quiz_mix/skip`): then nothing a switch's Back does reaches Hang up
+  //       while the game shows, and a person who learned "Back hangs up a call" skips a question instead, unawares;
+  //     - Back hangs up at once, as in the call view without a game: then a Back meant as "skip this question" ENDS THE
+  //       CALL - the same switch, very different stakes.
+  //     Stepping out is the nearer back first (the rule `backUnhandled` already keeps: a panel made bigger comes down
+  //     a level before Back leaves the dashboard), it keeps "Back, Back hangs up" with Hang up lit in between to see,
+  //     and it gives somebody with only Select and Back a switch way to Hang up. The cost: a switch's Back does not
+  //     skip a question in a call's game (the game's own Skip by touch does, and a together turn passes by itself
+  //     when its time is up - quiz_mix.js's turn timer).
+  //   HANG UP STAYS REACHABLE whatever is lit: `focus-next`, Back twice, the bar's Hang up, a pointer, "hang up" said.
+  //   NO STATE ONLY AN INPUT CAN LEAVE: the game in a call still closes by itself after a game together ends
+  //     (CALL_GAME_LINGER_MS), and with it the lap goes back to how it was - nothing lit, the board's when there is one.
+  //   THE RING (29b238e's rule: a "which one" ring only when there is more than one stop to move to): the game's half
+  //     gets one while it is the lit stop, because with Hang up beside it the question is real. Hang up keeps its own
+  //     lit look, as before. (4px, the theme's scan-ring colour: the same width Hang up's lit look already uses, so the
+  //     two stops look like one lap. Drawn inside the half - outline-offset -4px - because the half clips its edges.)
+  // Without a game nothing here changes: `focus-next` / `focus-prev` are next / prev, as they always were in a call view.
+  const callLap = (cv) => (cv?.game ? ['game', 'hangup'] : ['hangup']);
+  function callGameVerb(cv, v, meta) {
+    const t = verbTarget(cv.game.type, v);
+    if (!t) return false;
+    try { bus.publish(typeof bus.instanceTopic === 'function' ? bus.instanceTopic(CALL_GAME_ID, t.topic) : `${t.topic}#${CALL_GAME_ID}`, t.payload, meta); }
+    catch (err) { console.error('kiosk: call game verb', err); }
+    return true;
+  }
+  function callViewVerb(raw, meta) {
     const cv = callView;
     if (!cv) return;
+    if (cv.game) {
+      const lap = callLap(cv);
+      if (raw === 'focus-next' || raw === 'focus-prev') {
+        const at = Math.max(0, lap.indexOf(cv.at));
+        cv.at = lap[(at + (raw === 'focus-prev' ? -1 : 1) + lap.length) % lap.length];
+      } else if (cv.at === 'game' || !cv.at) {
+        cv.at = 'game';
+        if (raw === 'back') cv.at = 'hangup';
+        else callGameVerb(cv, raw, meta && typeof meta === 'object' ? meta : { from: 'kiosk' });
+      } else if (raw === 'select' || raw === 'back') {
+        hangUpCallView();
+      } else if (raw === 'next' || raw === 'prev') {
+        cv.at = 'game';
+      }
+      paintCallView(cv);
+      return;
+    }
+    const v = raw === 'focus-next' ? 'next' : raw === 'focus-prev' ? 'prev' : raw;
     if (cv.boardInst && v !== 'back') {
       if (v === 'prev') return;          // the board's scan only goes forward (board.js `board/next`)
       const topic = v === 'select' ? 'board/select' : 'board/next';
@@ -5332,27 +5388,35 @@ export async function mountKiosk(root, {
       catch (err) { console.error('kiosk: call board', err); }
       return;
     }
-    if (v === 'next' || v === 'prev') cv.lit = 0;
-    else if (v === 'select') { if (cv.lit === 0) hangUpCallView(); }
+    if (v === 'next' || v === 'prev') cv.at = 'hangup';
+    else if (v === 'select') { if (cv.at === 'hangup') hangUpCallView(); }
     else if (v === 'back') hangUpCallView();
     paintCallView(cv);
   }
   function paintCallView(cv) {
     if (!cv?.hang) return;
-    const on = cv.lit === 0;
+    const on = cv.at === 'hangup';
     if (on) cv.hang.dataset.lit = '1'; else delete cv.hang.dataset.lit;
     cv.hang.style.boxShadow = on ? '0 0 0 4px var(--scan-ring, var(--focus))' : '';
+    const slot = cv.game?.slot;
+    if (slot) {
+      const ring = cv.at === 'game' && callLap(cv).length > 1;
+      if (ring) slot.dataset.lit = '1'; else delete slot.dataset.lit;
+      slot.style.outline = ring ? '4px solid var(--scan-ring, var(--focus))' : '';
+      slot.style.outlineOffset = ring ? '-4px' : '';
+    }
   }
   // Hang up the hosted call the way every other way does: the topic the Call module listens on.
   function hangUpCallView() { try { bus.publish(CALL_HANGUP_TOPIC, { from: 'kiosk' }); } catch (err) { console.error('kiosk: hang up', err); } }
   for (const [verb, as] of [['next', 'next'], ['prev', 'prev'], ['select', 'select'], ['back', 'back'],
     ['focus-next', 'next'], ['focus-prev', 'prev']]) {
-    offsScreen.push(bus.subscribe(verbTopic(verb), () => {
+    offsScreen.push(bus.subscribe(verbTopic(verb), (_p, _t, meta) => {
       if (torn || !callScanHeld || screensOpen || editScanHeld) return;
       try { if (menu?.isOpen?.()) return; } catch { /* not up yet */ }
       try {
         if (callNotice?.showing?.()) callNotice.verb(as);
-        else if (callView) callViewVerb(as);
+        // The call view gets the verb as pressed: with a game open, focus-next moves between its stops (see above).
+        else if (callView) callViewVerb(verb, meta);
       } catch (err) { console.error('kiosk: call verb', err); }
     }));
   }
@@ -5425,7 +5489,9 @@ export async function mountKiosk(root, {
     if (!area.parentNode) box.append(area);
     if (mirrorEl && mirrorEl.parentNode === kioskEl) kioskEl.insertBefore(box, mirrorEl);
     else kioskEl.append(box);
-    const cv = { box, slot, hang, area, boardSlot, plan, inst: null, state: null, events: null, lit: -1, offs: [],
+    // `at`: the lit stop of the call view's switch lap - null (nothing lit: a stray select does nothing), 'hangup', or
+    // 'game' while a game is open in it (see callViewVerb).
+    const cv = { box, slot, hang, area, boardSlot, plan, inst: null, state: null, events: null, at: null, offs: [],
                  boardInst: null, captions: null, subs: null };
     callView = cv;
     holdCallScan(true);
@@ -5533,9 +5599,11 @@ export async function mountKiosk(root, {
     const slot = document.createElement('div');
     slot.dataset.callGame = '';
     slot.style.cssText = 'position:relative;min-width:0;min-height:0;overflow:auto;background:var(--surface)';
-    const g = { slot, inst: null, state: null, lingerTimer: null,
+    const g = { slot, type: ask.game, inst: null, state: null, lingerTimer: null,
                 grid: { cols: cv.box.style.gridTemplateColumns, rows: cv.box.style.gridTemplateRows } };
     cv.game = g;
+    // The switch lap: the game, then Hang up - the game lit, so the next press answers it (callViewVerb argues it).
+    cv.at = 'game';
     if (cv.boardSlot) {
       // The board's half: the game takes it while it is on (the board kept, only hidden, so nothing on it is lost).
       cv.boardSlot.style.display = 'none';
@@ -5549,6 +5617,7 @@ export async function mountKiosk(root, {
       if (preset === 'side') cv.box.insertBefore(slot, cv.area); else cv.area.after(slot);
     }
     cv.box.dataset.game = '1';
+    paintCallView(cv);
     // Its own row, like the call view's board: rounds and kinds of question set for games on calls. The player's level
     // is the person's own row (makePersonState), the same one every Quiz mix of theirs uses. It never starts by itself
     // and never runs its demo: it starts when the asker joins (quiz_mix.js).
@@ -5593,6 +5662,9 @@ export async function mountKiosk(root, {
     if (cv.boardSlot) cv.boardSlot.style.display = '';
     else { cv.box.style.gridTemplateColumns = g.grid.cols; cv.box.style.gridTemplateRows = g.grid.rows; }
     delete cv.box.dataset.game;
+    // The switch lap goes back to how the call view opened: nothing lit (the board's, when there is one).
+    cv.at = null;
+    paintCallView(cv);
   }
   function closeCallView(why = 'ended') {
     const cv = callView;
@@ -8209,7 +8281,10 @@ export async function mountKiosk(root, {
     // 2026-10-02 (call_notice.js), for the suites: the incoming-call notice (null until the drive socket),
     // the call it answered while that is hosted over the panels (else null), and whether either has the scan.
     callNotice: () => callNotice,
-    callView: () => (callView ? { el: callView.box, lit: callView.lit, controls: callView.inst?.impl?.controls?.() || null } : null),
+    // (`lit`: 0 while Hang up is lit, else -1, as before; `stop`: the lit stop of its switch lap, and `lap` the stops -
+    // the game and Hang up while a game is open in it, else Hang up alone.)
+    callView: () => (callView ? { el: callView.box, lit: callView.at === 'hangup' ? 0 : -1, stop: callView.at,
+      lap: callLap(callView), controls: callView.inst?.impl?.controls?.() || null } : null),
     // "play this game together" (2026-10-12): the game opened in the call view for an ask, if any (the suites).
     callGame: () => (callView?.game ? { el: callView.game.slot, inst: callView.game.inst } : null),
     callScanHeld: () => callScanHeld,
