@@ -173,6 +173,10 @@ try {
     check('PASS_CHOICES: none, this screen, two other computers', PASS_CHOICES.join() === 'none,local,remote1,remote2');
     const bad = auditFields(SPEECH_PASS_FIELDS.map(normalizeField).filter(Boolean), { type: 'speech' }).filter((x) => x.severity === 'error');
     check('the new settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+    // Mike, 2026-10-12: he picked "Another computer" and could not find where to type its address (an advanced row).
+    check('*** a computer\'s address and pass phrase are at the usual level (they show only while a pass uses it) ***',
+      ['speechRemote1Url', 'speechRemote1Key', 'speechRemote2Url', 'speechRemote2Key']
+        .every((k) => SPEECH_PASS_FIELDS.find((f) => f.key === k)?.level === 'standard'));
     check('sameWords: case and punctuation do not make a disagreement', sameWords('Pause.', 'pause') && !sameWords('pause', 'play'));
   }
 
