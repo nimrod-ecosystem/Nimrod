@@ -125,6 +125,12 @@ try {
       here.passes.map((p) => p.slot).join() === 'local' && here.skipped.some((s) => s.slot === 'remote1'), JSON.stringify(here.passes));
     const any = callCaptionPlan(row, 'any');
     check('"and the other computers": the other computer too', any.passes.map((p) => p.slot).join() === 'local,remote1');
+    // 2026-10-11: an https page cannot use ws:// to another computer by name (speech_engines.js addressRefusal).
+    const sec = callCaptionPlan({ speechPass2: 'remote1', speechRemote1Url: 'ws://desk:8797/speech' }, 'any', { pageProtocol: 'https:' });
+    check('*** on an https page a ws:// address by name is left out of the call\'s captions too, said as "not secure" ***',
+      sec.passes.map((p) => p.slot).join() === 'local' && sec.skipped.some((s) => s.slot === 'remote1' && s.why === 'not secure'), JSON.stringify(sec));
+    const secOk = callCaptionPlan({ speechPass2: 'remote1', speechRemote1Url: 'wss://desk.tail1234.ts.net/speech' }, 'any', { pageProtocol: 'https:' });
+    check('...and a wss:// address is used', secOk.passes.map((p) => p.slot).join() === 'local,remote1');
     check('the call\'s ear only: no room microphone, no wake phrase, no voiceprints', here.ears === 'phone' && here.wake === null && here.speakers === null);
     const br = callCaptionPlan({ speechEngine: 'browser' }, 'here');
     check('*** the browser\'s own recogniser cannot hear a call: the local speech program is asked instead, and it says why ***',

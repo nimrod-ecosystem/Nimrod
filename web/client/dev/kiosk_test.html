@@ -3545,7 +3545,23 @@ const toTab = (m, id) => {
       rk.setStatus({ ...rk.st, state: 'blocked' });
       check('ranked: sound held by the browser is said, not left silent', rk3.speechStatus() === 'blocked'
         && /touched/.test(item('voice-status')?.label || ''));
-      rk.setStatus({ ...rk.st, state: 'listening' });
+      // 2026-10-11: an https page left Desk out (a ws:// address by name): the menu says so, in words a person can act on.
+      rk.setStatus({ state: 'listening', engines: [{ slot: 'local', name: 'This screen', state: 'ready' }],
+        skipped: [{ slot: 'remote1', name: 'Desk', why: 'not secure' }], ears: ['room'] });
+      check('*** a computer left out for a ws:// address on a secure page: the listening row says so, and what to change ***',
+        await settled(() => /Desk is not used: its address needs to start with wss:\/\/ \(a secure address\)/.test(item('voice-status')?.hint || ''), 4000),
+        JSON.stringify(item('voice-status')));
+      rk.setStatus({ state: 'listening', engines: [{ slot: 'local', name: 'This screen', state: 'ready' },
+        { slot: 'remote1', name: 'Desk', state: 'down', caution: 'ws on a secure page' }], skipped: [], ears: ['room'] });
+      check('...a ws:// local address that is not answering: "a wss:// address is surer"',
+        await settled(() => /Desk is not answering: .*wss:\/\/ address is surer/.test(item('voice-status')?.hint || ''), 4000),
+        JSON.stringify(item('voice-status')));
+      rk.setStatus({ state: 'waiting', engines: [], skipped: [{ slot: 'remote1', name: 'Desk', why: 'not secure' }], ears: [] });
+      check('...and when it was the only one: "Not listening: Desk’s address needs to start with wss://"',
+        await settled(() => rk3.speechStatus() === 'no-local'
+          && /^Not listening: Desk’s address needs to start with wss:\/\/ \(a secure address\)$/.test(item('voice-status')?.label || ''), 4000)
+        && /DESKTOP_SECOND_PASS/.test(item('voice-status')?.hint || '') && !item('helper-page'), JSON.stringify(item('voice-status')));
+      rk.setStatus({ state: 'listening', engines: [{ slot: 'local', name: 'This screen', state: 'ready' }, { slot: 'remote1', name: 'Desk', state: 'ready' }], skipped: [], ears: ['room'] });
       // Captions: the fast guess, then the correction, in ONE line.
       rk.cap({ id: 'g1', ear: 'room', text: 'computer please turn it off', words: [{ w: 'computer', conf: 0.9 }, { w: 'please', conf: 0.9 },
         { w: 'turn', conf: 0.5 }, { w: 'it', conf: 0.9 }, { w: 'off', conf: 0.3 }] });

@@ -27,6 +27,7 @@ import {
   createSegmenter, createRanker, connectEngine, rankedRecognizer, enginePlanFrom, levelDb, sameWords,
   SPEECH_PASS_FIELDS, ENGINE_DEFAULTS, SEGMENT_DEFAULTS, LOCAL_URL, PASS_CHOICES, RETRY_MS,
   MIC_CHOICES, findMic, micStatusHint,
+  addressRefusal, addressHost, skippedSays, cautionSays, pageProtocol,
 } from '../speech_engines.js';
 import { createDownsampler, CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
 import { attachSpeech, SPEECH_ON_FIELDS, speechSwitchFrom, phraseControl, meansSomething, LISTENING_TOPIC } from '../input_speech.js';
@@ -173,6 +174,74 @@ try {
     const bad = auditFields(SPEECH_PASS_FIELDS.map(normalizeField).filter(Boolean), { type: 'speech' }).filter((x) => x.severity === 'error');
     check('the new settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
     check('sameWords: case and punctuation do not make a disagreement', sameWords('Pause.', 'pause') && !sameWords('pause', 'play'));
+  }
+
+  // ======================================================================================
+  section('a secure page (https) and a plain ws:// address on another computer (2026-10-11)');
+  {
+    const HTTPS = { pageProtocol: 'https:' };
+    const HTTP = { pageProtocol: 'http:' };
+    const row = (url) => ({ speechPass2: 'remote1', speechRemote1Url: url, speechRemote1Name: 'Desk' });
+    const byName = enginePlanFrom(row('ws://desk.tail1234.ts.net:8797/speech'), HTTPS);
+    check('*** an https page REFUSES ws:// to another computer by name: left out, and SAID, with a plain reason ***',
+      byName.passes.map((p) => p.slot).join() === 'local' && byName.skipped.length === 1
+      && byName.skipped[0].slot === 'remote1' && byName.skipped[0].why === 'not secure', JSON.stringify(byName));
+    const says = skippedSays(byName.skipped[0]);
+    check('*** ...and the words say what to do: start with wss:// (a secure address), and where the steps are ***',
+      /Desk’s address needs to start with wss:\/\/ \(a secure address\)/.test(says.line)
+      && /Desk is not used: its address needs to start with wss:\/\//.test(says.unused)
+      && /DESKTOP_SECOND_PASS/.test(says.hint), JSON.stringify(says));
+    check('a bare name (MagicDNS "desk") is refused too: the browser checks before it looks the name up',
+      enginePlanFrom(row('ws://desk:8797/speech'), HTTPS).skipped[0]?.why === 'not secure');
+    check('a public address literal is refused', enginePlanFrom(row('ws://8.8.8.8:8797/speech'), HTTPS).skipped[0]?.why === 'not secure');
+    const loop = ['ws://127.0.0.1:8797/speech', 'ws://localhost:8797/speech', 'ws://[::1]:8797/speech', 'ws://127.0.0.2:8797/speech',
+                  'ws://LOCALHOST:8797/speech', 'ws://speech.localhost:8797/speech'];
+    check('*** loopback ws:// is still allowed on an https page (this computer is trustworthy) ***',
+      loop.every((u) => { const p = enginePlanFrom(row(u), HTTPS); return p.passes.length === 2 && !p.skipped.length && !p.passes[1].caution; }),
+      JSON.stringify(loop.map((u) => enginePlanFrom(row(u), HTTPS).skipped)));
+    check('...and the default "this screen" address (ws://127.0.0.1) is never refused on https',
+      enginePlanFrom({}, HTTPS).passes[0]?.url === LOCAL_URL && !enginePlanFrom({}, HTTPS).skipped.length);
+    check('*** an http page (the dev server) allows ws:// to anything, as before ***',
+      ['ws://desk:8797/speech', 'ws://100.64.0.2:8797/speech', 'ws://8.8.8.8:8797/speech'].every((u) => {
+        const p = enginePlanFrom(row(u), HTTP); return p.passes.length === 2 && !p.skipped.length && !p.passes[1].caution; }));
+    check('*** wss:// is allowed on https (a name, an IP, anything) ***',
+      ['wss://desk.tail1234.ts.net/speech', 'wss://100.64.0.2:8797/speech', 'WSS://Desk/speech'].every((u) => {
+        const p = enginePlanFrom(row(u), HTTPS); return p.passes.length === 2 && !p.skipped.length && !p.passes[1].caution; }));
+    const lit = enginePlanFrom(row('ws://100.101.102.103:8797/speech'), HTTPS);
+    check('*** ws:// to a LOCAL IP literal (Tailscale 100.64/10) on https: kept (Chrome 147+ allows it once allowed), marked caution ***',
+      lit.passes.length === 2 && lit.passes[1].caution === 'ws on a secure page' && !lit.skipped.length, JSON.stringify(lit));
+    check('...the same for 192.168/16, 10/8, 172.16/12, a .local name, and an fd00:: literal',
+      ['ws://192.168.1.5:8797/s', 'ws://10.0.0.2:8797/s', 'ws://172.20.0.1:8797/s', 'ws://desk.local:8797/s', 'ws://[fd7a:115c::1]:8797/s']
+        .every((u) => enginePlanFrom(row(u), HTTPS).passes[1]?.caution === 'ws on a secure page'));
+    check('...but 172.32.x and 100.128.x are not local (refused by name rule)',
+      enginePlanFrom(row('ws://172.32.0.1:8797/s'), HTTPS).skipped[0]?.why === 'not secure'
+      && enginePlanFrom(row('ws://100.128.0.1:8797/s'), HTTPS).skipped[0]?.why === 'not secure');
+    check('cautionSays: only while that pass is not answering, and it names the fix',
+      /wss:\/\/ address is surer/.test(cautionSays({ name: 'Desk', caution: 'ws on a secure page', state: 'down' }))
+      && cautionSays({ name: 'Desk', caution: 'ws on a secure page', state: 'ready' }) === ''
+      && cautionSays({ name: 'Desk', state: 'down' }) === '');
+    check('addressRefusal / addressHost: the pure pieces',
+      addressRefusal('ws://desk/s', 'https:').refuse === 'not secure' && addressRefusal('ws://desk/s', 'http:').refuse === ''
+      && addressRefusal('wss://desk/s', 'https:').refuse === '' && addressRefusal('ws://desk/s', '').refuse === ''
+      && addressHost('ws://[::1]:1/s') === 'loopback' && addressHost('ws://100.64.0.1/s') === 'local' && addressHost('nonsense') === 'invalid');
+    check('the protocol is read at the boundary (this suite runs over http, so a default plan refuses nothing)',
+      pageProtocol() === location.protocol && enginePlanFrom(row('ws://desk:8797/speech')).skipped.length === (location.protocol === 'https:' ? 1 : 0));
+    check('a missing address is still "no address" on https (not "not secure")',
+      enginePlanFrom({ speechPass2: 'remote1' }, HTTPS).skipped[0]?.why === 'no address');
+    const note = SPEECH_PASS_FIELDS.find((f) => f.key === 'speechRemote1Url').note;
+    check('*** the address example is a SECURE one (wss://), never a ws:// to another computer ***',
+      /wss:\/\/your-desktop\.your-tailnet\.ts\.net\/speech/.test(note) && !/ws:\/\/1/.test(note), note);
+    // The recogniser's status carries the reason, for the voice menu.
+    const m = makeServers();
+    m.server(LOCAL_URL, { engine: 'vosk' });
+    const rec = rankedRecognizer({ plan: enginePlanFrom(row('ws://desk:8797/speech'), HTTPS), WebSocketImpl: m.FakeWS, capture: false });
+    rec.start(() => {});
+    await settle(); await settle();
+    const st = rec.status();
+    check('*** the status carries it (skipped, why "not secure"), and NO socket was opened to that address ***',
+      st.skipped.length === 1 && st.skipped[0].why === 'not secure' && st.engines.length === 1
+      && !m.sockets.some((s) => /desk/.test(s.url)), JSON.stringify(st));
+    rec.stop();
   }
 
   // ======================================================================================

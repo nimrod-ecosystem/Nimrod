@@ -33,6 +33,10 @@ WHICH PAGES MAY CONNECT: pages from the person's Nimrod (https://nimrodecosystem
 https://nimrod.onrender.com by default; `--allow-origin` or NIMROD_SPEECH_ORIGINS for a self-hosted one)
 and pages on this computer. Any other site is refused with 403 (service.py, "WHICH WEB PAGES").
 
+A SECURE ADDRESS FOR ANOTHER COMPUTER'S SCREEN (DESKTOP_SECOND_PASS.md): the site is https, so a screen elsewhere
+needs wss://. Keep the service on 127.0.0.1, put `tailscale serve` in front of it, and pass
+`--allow-host your-desktop.your-tailnet.ts.net` (and `--secret`): the proxy keeps that name in the Host header.
+
 WHO IS TALKING (row 2.56, speakers.py): `--speakers auto` (the default) offers it when the WeSpeaker model is already
 on this computer (the Hugging Face cache, or --speaker-model) and pyannote.audio loads; the model loads the first time a
 screen asks. Voiceprints are kept in --voiceprints (default speech_service/voiceprints/, kept out of git; the helper
@@ -52,7 +56,7 @@ import sys
 from .backends import (MY_VOICE_DIR, MY_VOICE_PORT, NIMROD_FOLDER_FILE, VOICE_MODEL_SUBFOLDER, WAKE_REFRACTORY_S,
                        WAKE_THRESHOLD, WHISPER_FOLDER_FILES, ModelFolderError, check_whisper_folder, default_threads,
                        is_model_folder, make_backend, make_wake)
-from .service import DEFAULT_SITES, MAX_UTTERANCE_S, PROTOCOL, listen_socket, site_list
+from .service import DEFAULT_SITES, MAX_UTTERANCE_S, PROTOCOL, host_names, listen_socket, site_list
 from .speakers import (SPEAKER_MARGIN, SPEAKER_MATCH, SPEAKER_MAYBE, SPEAKER_MIN_S, VOICEPRINTS_DIR, find_wespeaker,
                        make_speakers)
 
@@ -140,6 +144,11 @@ def parse(argv=None):
                         'separated or given more than once. REPLACES the default list ('
                         + ', '.join(DEFAULT_SITES) + '; or NIMROD_SPEECH_ORIGINS). Pages on this computer itself '
                         '(http://127.0.0.1, localhost) are always allowed; every other site is refused with 403.')
+    p.add_argument('--allow-host', action='append', default=None, metavar='NAME[,NAME...]',
+                   help='while listening only on this computer: also accept connections addressed to this name, e.g. '
+                        'your-desktop.your-tailnet.ts.net when `tailscale serve` on this computer gives the service a '
+                        'secure (wss://) address (see speech_service/DESKTOP_SECOND_PASS.md). Every other name is '
+                        'still refused.')
     p.add_argument('--port', type=int, default=None, help=f'default 8797 ({MY_VOICE_PORT} with --my-voice)')
     p.add_argument('--secret', default=os.environ.get('NIMROD_SPEECH_SECRET') or None)
     p.add_argument('--no-secret-i-understand', action='store_true')
@@ -334,8 +343,13 @@ def _serve(a, kw, sock, remote) -> int:
     if said:
         print(f'speech service: {said}', file=sys.stderr)
     sites, loopback = allowed_sites(a), not remote
+    hosts = host_names(getattr(a, 'allow_host', None))
     print(f'speech service: pages allowed from {", ".join(sites) + " and " if sites else ""}this computer; '
           'other sites get 403', file=sys.stderr)
+    if hosts:
+        print(f'speech service: also answers to {", ".join(hosts)} (a proxy on this computer, e.g. tailscale serve)'
+              + ('' if a.secret else '; no --secret given, so any device that can reach that name can send sound'),
+              file=sys.stderr)
     server = a.server
     if server == 'auto':
         try:
@@ -350,7 +364,7 @@ def _serve(a, kw, sock, remote) -> int:
         # uvicorn.Server on our own socket, not uvicorn.run(host, port): uvicorn's own bind sets SO_REUSEADDR.
         userver = uvicorn.Server(uvicorn.Config(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s,
                                                            wake=wake, sites=sites, loopback=loopback,
-                                                           speakers=speakers),
+                                                           speakers=speakers, hosts=hosts),
                                                 host=a.host, port=a.port, log_level='warning', ws_max_size=2 ** 20))
         try:
             userver.run(sockets=[sock])
@@ -361,7 +375,7 @@ def _serve(a, kw, sock, remote) -> int:
     try:
         asyncio.run(serve_websockets(backend, a.host, a.port, secret=a.secret,
                                      max_utterance_s=a.max_utterance_s, wake=wake,
-                                     sites=sites, loopback=loopback, sock=sock, speakers=speakers))
+                                     sites=sites, loopback=loopback, sock=sock, speakers=speakers, hosts=hosts))
     except KeyboardInterrupt:
         pass
     return 0

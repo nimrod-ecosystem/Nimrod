@@ -417,8 +417,21 @@ def origin_tests():
           and 'not this computer' in host_refusal('evil.example:8790') and host_refusal('127.0.0.1.evil.example') != '')
     check('host: listening on another address (Tailscale, with a secret), the name used is not checked',
           refusal(SITE, 'desk:8797', loopback=False) == '' and 'origin' in refusal(EVIL, 'desk:8797', loopback=False))
+    # tailscale serve in front (DESKTOP_SECOND_PASS.md): the proxy keeps the screen's name in Host.
+    from speech_service.service import host_names
+    TS = host_names(['Desk.Tail1234.ts.net.,  other.example', 'desk.tail1234.ts.net'])
+    check('--allow-host: names cleaned (comma-separated, repeated, case, trailing dot); none given -> none',
+          TS == ('desk.tail1234.ts.net', 'other.example') and host_names(None) == () and host_names([]) == (), TS)
+    check('*** --allow-host: the secure name tailscale serve answers to goes on, with or without a port ***',
+          refusal(SITE, 'desk.tail1234.ts.net', hosts=TS) == '' and refusal(SITE, 'DESK.tail1234.ts.net:443', hosts=TS) == '')
+    check('*** --allow-host: every other name is still refused (look-alikes too), and the origin check still applies ***',
+          'host' in refusal(SITE, 'evil.example', hosts=TS) and 'host' in refusal(SITE, 'desk.tail1234.ts.net.evil.example', hosts=TS)
+          and 'host' in refusal(SITE, 'x' + 'desk.tail1234.ts.net', hosts=TS) and 'origin' in refusal(EVIL, 'desk.tail1234.ts.net', hosts=TS))
+    check('without --allow-host, that name is refused (as before)', 'host' in refusal(SITE, 'desk.tail1234.ts.net'))
     import os
     import speech_service.__main__ as cli
+    check('command line: --allow-host is read (repeatable)', cli.parse(['--allow-host', 'a.ts.net', '--allow-host', 'b.ts.net']).allow_host
+          == ['a.ts.net', 'b.ts.net'] and cli.parse([]).allow_host is None)
     saved = os.environ.pop('NIMROD_SPEECH_ORIGINS', None)
     try:
         d = cli.allowed_sites(cli.parse([]))
@@ -473,6 +486,19 @@ def fastapi_origin_tests():
     check('fastapi /speech: a page on this computer does', got == 'hello', got)
     got = ws_try({'Origin': SITE, 'Host': 'evil.example:8797'})
     check('fastapi /speech: a Host that is not this computer does not', got == 'refused 1008', got)
+    # tailscale serve in front: the screen's secure name arrives in Host (DESKTOP_SECOND_PASS.md).
+    ts_app = create_app(FakeBackend(script=['hi']), hosts=('desk.tail1234.ts.net',))
+    tc = TestClient(ts_app, base_url='http://127.0.0.1:8797')
+    try:
+        with tc.websocket_connect(WS_URL, headers={'Origin': SITE, 'Host': 'desk.tail1234.ts.net'}) as ws:
+            ws.send_text(json.dumps({'type': 'hello'}))
+            got = ws.receive_json().get('kind')
+    except WebSocketDisconnect as err:
+        got = f'refused {err.code}'
+    check('*** fastapi /speech with --allow-host: the name tailscale serve passes on gets a socket ***', got == 'hello', got)
+    check('fastapi with --allow-host: another name is still refused',
+          tc.get('/health', headers={'Host': 'evil.example'}).status_code == 403
+          and tc.get('/health', headers={'Host': 'desk.tail1234.ts.net', 'Origin': SITE}).status_code == 200)
     own = TestClient(create_app(FakeBackend(script=['hi']), sites=('https://self.example',)), base_url='http://127.0.0.1')
     check('fastapi: a self-hosted list replaces the defaults',
           own.get('/health', headers={'Origin': 'https://self.example'}).status_code == 200
