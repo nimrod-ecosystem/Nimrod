@@ -68,6 +68,10 @@ import {
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
 // over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
 import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS } from './call_notice.js';
+// Mike, 2026-10-12: calls wait to be answered unless the caller may drop in; "may <name> see this screen?" on the
+// screen; a temporary "see this screen" lent during a call (screen_permissions.js, see_ask.js, server/screen_access.py).
+import { dropInFor, dropInSecondsOf, lendMinutesOf } from './screen_permissions.js';
+import { mountSeeAsk } from './see_ask.js';
 // call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
 import { callViewPlan, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD } from './call_loadouts.js';
 import { createCallCaptions } from './call_captions.js';
@@ -872,6 +876,7 @@ export async function mountKiosk(root, {
   let recPill = null;            // "Recording voice for training"
   let intercomRx = null;         // the room's half of the intercom, once the drive socket exists
   let intercomNote = null;       // "Intercom opening / open: <name>", with End
+  let seeAskNote = null;         // "<name> would like to see this screen" - Allow / Not now, gone by itself (see_ask.js)
   // A CALL AND THE ROOM (2026-09-30). The call transport reports a call going live and ending (its
   // `onLive`), and the screen does two things with it:
   //   * VOICE RECORDING IS HELD for the whole live call, for the intercom's reason: the recogniser would
@@ -1641,6 +1646,13 @@ export async function mountKiosk(root, {
     // review panel sees what was just kept, and the person's row for its retention wording.
     get voiceStore() { return voiceStore; },
     personRow: () => personRow,
+    // CALLS WAIT TO BE ANSWERED (Mike, 2026-10-12): a Call panel answers by itself only for a caller on the person's
+    // "May drop in" list - `by` is the SERVER-STAMPED caller (drive.py stamp_signal), never a name a page sent.
+    mayDropIn: (from) => dropInFor(personRow || {}, from && from.by),
+    // A TEMPORARY "SEE THIS SCREEN" FOR THE CALLER, until the call ends or the person's `lendMinutes` run out. The server
+    // checks this screen answered that call and lends it to that call's own caller (screen_access.py).
+    lendScreen: ({ session, on = true } = {}) => (drive && typeof drive.lend === 'function'
+      ? drive.lend({ what: 'see', session, on, minutes: lendMinutesOf(personRow || {}) }) : Promise.resolve(null)),
     // "Your own voice model" (the Voice model module, modules/voice_model.js, 2026-10-04): the screen's recorder,
     // so reading phrases arms it, and a writer for ONLY that person's own voice-model rows - the panel can
     // flip "Use my own voice model" and set its port, and nothing else on the row.
@@ -5205,6 +5217,9 @@ export async function mountKiosk(root, {
         output: () => output,
         holdScan: (on) => { if (on) holdCallScan(true); else if (!callView) holdCallScan(false); },
         openCall: (from, opts) => openCallView(from, opts),
+        // Mike, 2026-10-12: a caller on the person's "May drop in" list is answered by itself after the person's own
+        // countdown (`dropInSeconds`, 10 s by default); everybody else waits for Answer. null = wait.
+        dropIn: (from) => (dropInFor(personRow || {}, from && from.by) ? dropInSecondsOf(personRow || {}) : null),
         zIndex: LAYERS.menus + 50,
       });
     } catch (err) { console.error('kiosk: call notice', err); callNotice = null; }
@@ -6304,16 +6319,20 @@ export async function mountKiosk(root, {
           // notice says "watching along" for them and "helping" for the rest (play_sync.js noticeWords) - the same
           // notice, the same rule: shown for as long as anybody is connected, never hidden by any setting. A
           // following socket cannot press anything (the server drops it), so "watching" never hides "helping".
-          onPresence: ({ drivers, followers }) => {
-            const words = noticeWords({ drivers, followers });
+          // 2026-10-12 (Mike): the words are "Sharing your screen with <name>" - `watchers` are the names the server
+          // knows for who is seeing (play_sync.js sharingWords). Shown for a guardian too; never hidden by a setting.
+          onPresence: ({ drivers, followers, watchers }) => {
+            const words = noticeWords({ drivers, followers, watchers });
             if (words) remoteEl.textContent = words;
             remoteEl.hidden = !words;
             playSender?.refresh();
           },
         });
         // WATCHING ALONG (row 2.79, play_sync.js): the panels say what they are playing on this screen's bus; this
-        // sends it to the people following - only while the owner's "Let people follow what this screen is playing"
-        // is on (default OFF) AND somebody is following. Off means nothing at all leaves the screen.
+        // sends it to the people following - only while "Let people follow what this screen is playing" is on AND
+        // somebody is following. Since 2026-10-12 the server lets only "Who may see this screen" follow, and asks the
+        // screen first by default (screen_access.py), so that switch is ON by default and is this screen's "never"
+        // (play_sync.js FOLLOW_FIELD). Off means nothing at all leaves the screen.
         if (!torn) {
           try {
             const link = drive;
@@ -6377,6 +6396,10 @@ export async function mountKiosk(root, {
             });
             intercomNote = mountIntercomNotice(kioskEl, { receiver: intercomRx, bus });
           } catch (err) { console.error('kiosk: intercom', err); }
+          // WHO MAY SEE (Mike, 2026-10-12): the server's "may <name> see this screen?" - a corner card, never a dialog,
+          // gone by itself; nobody answering means nothing is shared (see_ask.js).
+          try { seeAskNote = mountSeeAsk(kioskEl, { link: drive, zIndex: LAYERS.menus + 40 }); }
+          catch (err) { console.error('kiosk: see ask', err); }
         }
       }
       if (makeState || embedded || !profiles.personStateURL) return;
@@ -8017,6 +8040,7 @@ export async function mountKiosk(root, {
       // An open intercom is ended and its phone told (before the socket closes), and its notice goes.
       try { intercomRx?.destroy(); } catch { /* already gone */ } intercomRx = null;
       try { intercomNote?.destroy(); } catch { /* already gone */ } intercomNote = null;
+      try { seeAskNote?.destroy(); } catch { /* already gone */ } seeAskNote = null;     // who may see (2026-10-12)
       // Voice recording: detached already (stopSpeech, above); its notice goes and its store closes.
       try { voiceRec?.destroy(); } catch { /* already gone */ } voiceRec = null;
       try { recPill?.destroy(); } catch { /* already gone */ } recPill = null;

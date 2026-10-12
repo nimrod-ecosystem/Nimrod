@@ -9,9 +9,14 @@
 // to the same video and second. MUTED TO START (the plan: two speakers in one room a fraction of a second apart
 // sound like an echo, and a page that starts making sound by itself is rude anywhere) with a Sound button.
 //
-// THE PERSON AT THE SCREEN IS TOLD. The screen shows "Someone is watching along from another screen" for as long as
-// this is open (kiosk.js, play_sync.js noticeWords). So following is an explicit act here: a button, never started
-// by opening the page, never remembered.
+// THE PERSON AT THE SCREEN IS TOLD. The screen shows "Sharing your screen with <name>" for as long as this is open
+// (kiosk.js, play_sync.js noticeWords). So following is an explicit act here: a button, never started by opening the
+// page, never remembered.
+//
+// WHO MAY (Mike, 2026-10-12; server/screen_access.py): only people on the screen's "Who may see this screen" list,
+// and by default the screen ASKS first. The server says which (`follow-state`): seeing, asking (the page says so and
+// waits), or refused - not on the list, "Not now" on the screen, nobody answered, or a permission lent on a call
+// ended. A refusal stops following here and closes the socket, so nothing is left connected to their screen.
 //
 // WHEN THE SCREEN GOES QUIET this never goes blank: the player carries on with what it had, the page says the screen
 // stopped sending, and after "Stop following by itself after" (a choice on this page, a minute by default,
@@ -87,6 +92,8 @@ export function mountFollowView(root, {
   let muted = true;
   let stopAfterMs = readStopAfter(storage);
   let stoppedWhy = '';
+  let access = '';                      // the server's word on this follow (2026-10-12): '' | on | asking
+  let askSeconds = null;
   let torn = false;
   let gen = 0;                          // a Stop / Start pair must not let an old player's promise land in the new one
 
@@ -95,9 +102,9 @@ export function mountFollowView(root, {
   root.innerHTML = `
     <section class="fv r-grants" data-follow-view aria-labelledby="fv-h">
       <h2 class="r-h2" id="fv-h">Watch along</h2>
-      <p class="h-hint">Play what ${esc(who)} is playing, here, at the same moment. It works for YouTube. Their screen
-        shares this only if whoever set it up turned on “Let people follow what this screen is playing”, and it shows
-        that someone is watching along while you do.</p>
+      <p class="h-hint">Play what ${esc(who)} is playing, here, at the same moment. It works for YouTube. You need to be
+        on “Who may see this screen” for their screens. Usually the screen asks first, and it starts only if somebody
+        there says yes. Their screen shows “Sharing your screen with” your name while you follow.</p>
       <div class="fv-row" data-fv-idle>
         <button type="button" class="h-btn h-primary" data-fv-start>Follow what ${esc(who)} is playing</button>
       </div>
@@ -120,6 +127,10 @@ export function mountFollowView(root, {
   function statusWords() {
     if (phase === 'stopped') return stoppedWhy;
     if (connState !== 'connected') return connState === 'connecting' ? 'Connecting…' : 'Not connected. Trying again…';
+    if (access === 'asking') {
+      return `Asking ${who} first. Somebody there has ${askSeconds || 30} seconds to say yes. If nobody does, it does `
+        + 'not start.';
+    }
     const st = follower ? follower.status() : 'waiting';
     if (st === 'waiting') {
       return 'Waiting for their screen. It shares what it plays only if that is turned on in its settings, and only '
@@ -217,8 +228,32 @@ export function mountFollowView(root, {
       onPresence: () => {},
     });
     link.onPlay?.((m) => { follower?.onPlay(m); });
+    access = '';
+    askSeconds = null;
+    link.onFollowState?.((st) => { if (my === gen) onAccess(st); });
     render();
     tickTimer = setTimer(tick, TICK_MS);
+  }
+
+  // The server's answer (who may see, 2026-10-12). A refusal stops following and closes the socket; the player is
+  // left as it is (never blank) and "Follow again" asks afresh.
+  const REFUSED = {
+    'not-allowed': () => `You are not on “Who may see this screen” for ${who}. Whoever looks after their screen can add you on its Remote page.`,
+    declined: () => `${who[0].toUpperCase()}${who.slice(1)} said not now.`,
+    unanswered: () => `Nobody answered on ${who}, so it did not start.`,
+    ended: () => `Your permission to see ${who} has ended.`,
+  };
+  function onAccess(st) {
+    if (!st || phase !== 'on') return;
+    if (st.state === 'asking') { access = 'asking'; askSeconds = st.seconds || null; render(); return; }
+    if (st.state === 'on') { access = 'on'; render(); return; }
+    if (st.state === 'refused') {
+      stoppedWhy = (REFUSED[st.reason] || (() => `${who[0].toUpperCase()}${who.slice(1)} is not shared with you right now.`))();
+      phase = 'stopped';
+      access = '';
+      dropLink();
+      render();
+    }
   }
 
   function stop() {
@@ -255,6 +290,7 @@ export function mountFollowView(root, {
   return {
     start, stop,
     phase: () => phase,
+    access: () => access,
     status: () => statusWords(),
     line: () => el('[data-fv-line]').textContent,
     follower: () => follower,

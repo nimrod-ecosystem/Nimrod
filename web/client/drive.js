@@ -110,6 +110,11 @@ export function connectDrive({
   const inviteSubs = new Set();     // a game offered to the call (drivers only; see onmessage)
   const groupSubs = new Set();      // group calls (2026-10-09): the server's group messages (call_group.js)
   const playSubs = new Set();       // watching along (row 2.79): a screen's `play`, for a following driver only
+  // who may see a screen (2026-10-12, server/screen_access.py): a driver hears whether it is seeing, waiting for the
+  // screen's "yes", or refused; a screen hears the questions ("may <name> see this screen?") and its lends' state.
+  const followSubs = new Set();
+  const accessSubs = new Set();
+  const lendWaits = new Map();      // session -> [{ resolve, timer }]: a lend waiting for the server's answer
   const pings = new Map();          // n -> { sent, resolve, timer }: pings waiting for their pong
   let pingSeq = 0;
   const fanSignal = (sig) => {
@@ -171,8 +176,31 @@ export function connectDrive({
       if (!msg || typeof msg !== 'object') return;
       if (msg.type === 'presence') {
         // `followers` (row 2.79): how many of the drivers are only watching along. Absent from an older server: 0.
-        presence = { screens: msg.screens | 0, drivers: msg.drivers | 0, followers: msg.followers | 0 };
-        onPresence?.({ ...presence });
+        // `watchers` (2026-10-12, screens only): the names of who is seeing, as the server knows them - the name the
+        // owner gave them, or their own display name - for "Sharing your screen with ...". Cleaned and bounded here.
+        const watchers = Array.isArray(msg.watchers)
+          ? msg.watchers.filter((n) => typeof n === 'string' && n.trim()).map((n) => n.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 60)).slice(0, 8)
+          : [];
+        presence = { screens: msg.screens | 0, drivers: msg.drivers | 0, followers: msg.followers | 0, watchers };
+        onPresence?.({ ...presence, watchers: [...watchers] });
+        return;
+      }
+      // WHO MAY SEE (2026-10-12): a driver's own "are you seeing" answer from the server - on, asking, refused, off.
+      if (msg.type === 'follow-state' && role === 'driver' && typeof msg.state === 'string') {
+        const st = { state: msg.state, reason: typeof msg.reason === 'string' ? msg.reason : null,
+                     seconds: Number.isFinite(msg.seconds) ? msg.seconds : null };
+        for (const fn of [...followSubs]) { try { fn(st); } catch (err) { console.error('drive: follow state', err); } }
+        return;
+      }
+      // ...and a screen's: the questions put to it, the questions gone, and the state of what it lent on a call.
+      // Built by the SERVER; handed to their own listeners, never to the bus.
+      if (role === 'screen' && (msg.type === 'see-ask' || msg.type === 'see-ask-ended' || msg.type === 'lend-state')) {
+        if (msg.type === 'lend-state' && typeof msg.session === 'string') {
+          const waits = lendWaits.get(msg.session) || [];
+          lendWaits.delete(msg.session);
+          for (const w of waits) { clearTimer(w.timer); w.resolve(msg); }
+        }
+        for (const fn of [...accessSubs]) { try { fn(msg); } catch (err) { console.error('drive: access', err); } }
         return;
       }
       // A pong for one of OUR numbered pings (row 2.79): the round trip and the server's clock, for play_sync.js.
@@ -227,8 +255,10 @@ export function connectDrive({
       sock = null;
       for (const [, p] of pings) { clearTimer(p.timer); p.resolve(null); }   // no pong is coming on a closed socket
       pings.clear();
-      presence = { screens: 0, drivers: 0, followers: 0 };
-      onPresence?.({ ...presence });
+      presence = { screens: 0, drivers: 0, followers: 0, watchers: [] };
+      onPresence?.({ ...presence, watchers: [] });
+      for (const [, waits] of lendWaits) for (const w of waits) { clearTimer(w.timer); w.resolve(null); }
+      lendWaits.clear();
       setState('offline');
       retry();
     };
@@ -275,6 +305,33 @@ export function connectDrive({
     try { sock.send(JSON.stringify({ ...msg, type: 'play' })); return true; } catch { return false; }
   }
 
+  // WHO MAY SEE (2026-10-12): a SCREEN answers "may <name> see this screen?" (the `ask` id the server sent).
+  function answerSee(ask, yes) {
+    if (role !== 'screen' || typeof ask !== 'string' || typeof yes !== 'boolean') return false;
+    if (!sock || state !== 'connected') return false;
+    try { sock.send(JSON.stringify({ type: 'see-answer', ask, yes })); return true; } catch { return false; }
+  }
+
+  // A TEMPORARY PERMISSION DURING A CALL (2026-10-12): a SCREEN lends "see this screen" to the caller of the call it
+  // answered (`session`), or takes it back. The server knows who placed the call; the page never names anybody.
+  // Resolves the server's `lend-state` ({ on, until?, minutes?, reason? }), or null with no answer in `timeoutMs`.
+  function lend({ what = 'see', session, on = true, minutes = null, timeoutMs = 5000 } = {}) {
+    if (role !== 'screen' || typeof session !== 'string' || !session) return Promise.resolve(null);
+    if (!sock || state !== 'connected') return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const w = { resolve, timer: null };
+      w.timer = setTimer(() => {
+        const list = (lendWaits.get(session) || []).filter((x) => x !== w);
+        if (list.length) lendWaits.set(session, list); else lendWaits.delete(session);
+        resolve(null);
+      }, timeoutMs);
+      lendWaits.set(session, [...(lendWaits.get(session) || []), w]);
+      const m = { type: 'lend', what, session, on: !!on };
+      if (Number.isInteger(minutes) && minutes > 0) m.minutes = minutes;
+      try { sock.send(JSON.stringify(m)); } catch { clearTimer(w.timer); lendWaits.delete(session); resolve(null); }
+    });
+  }
+
   // A numbered ping (row 2.79). Resolves `{ sent, t, recv }` - our clock out, the server's clock, our clock back -
   // or null when there is no socket, the server says no time, or no answer comes within `timeoutMs`.
   function ping({ timeoutMs = 3000 } = {}) {
@@ -297,6 +354,20 @@ export function connectDrive({
     sendGroup,
     sendPlay,
     ping,
+    answerSee,
+    lend,
+    /** who may see (2026-10-12): this driver's seeing state ({ state: on|asking|refused|off, reason, seconds }). */
+    onFollowState(cb) {
+      if (typeof cb !== 'function') return () => {};
+      followSubs.add(cb);
+      return () => followSubs.delete(cb);
+    },
+    /** who may see (2026-10-12): a screen's questions and lends (`see-ask`, `see-ask-ended`, `lend-state`). */
+    onAccess(cb) {
+      if (typeof cb !== 'function') return () => {};
+      accessSubs.add(cb);
+      return () => accessSubs.delete(cb);
+    },
     /** watching along: a screen's `play` messages (a following driver only). Returns an unsubscribe. */
     onPlay(cb) {
       if (typeof cb !== 'function') return () => {};
@@ -329,6 +400,10 @@ export function connectDrive({
       inviteSubs.clear();
       groupSubs.clear();
       playSubs.clear();
+      followSubs.clear();
+      accessSubs.clear();
+      for (const [, waits] of lendWaits) for (const w of waits) { clearTimer(w.timer); w.resolve(null); }
+      lendWaits.clear();
       for (const [, p] of pings) { clearTimer(p.timer); p.resolve(null); }
       pings.clear();
       clearTimer(timer);

@@ -558,9 +558,19 @@ section('*** who may open the intercom (row 2.44): the approved list, on the per
   await panel.approvals()?.ready;
   await sleep(0);
   const block = el.querySelector('[data-intercom-approvals]');
-  check('*** the owner sees who may open the intercom into their person, after the grants ***',
+  // 2026-10-12: "who may see / drop in" sits between the grants and the intercom (screen_permissions_test.html has it).
+  const spBlock = el.querySelector('[data-screen-people]');
+  check('*** the owner sees who may open the intercom into their person, after the grants (and who may see) ***',
     !!block && /Who may open the intercom into Robin/.test(block.textContent)
-    && block.previousElementSibling === el.querySelector('[data-grants]'), block?.textContent.slice(0, 120));
+    && block.previousElementSibling === spBlock && spBlock?.previousElementSibling === el.querySelector('[data-grants]'),
+    block?.textContent.slice(0, 120));
+  check('*** "Who may drive" says it also lets them call, and that a call waits unless they may drop in (A3) ***',
+    /Who may drive Robin’s screens/.test(el.querySelector('[data-grants]').textContent)
+    && /also lets them call/.test(el.querySelector('[data-grants]').textContent)
+    && /drop in/.test(el.querySelector('[data-grants]').textContent), el.querySelector('[data-grants]').textContent.slice(0, 300));
+  check('*** the people block says calls now wait to be answered, and how to give someone drop-in ***',
+    /Calls now wait to be answered/.test(spBlock?.textContent || '') && /May drop in/.test(spBlock?.textContent || '')
+    && !!panel.screenPeople(), spBlock?.textContent.slice(0, 200));
   check('it reads and writes the PERSON’s row (their bindings key), not the screen’s',
     made.length === 1 && made[0].pid === 'p1' && made[0].key === 'input-bindings', JSON.stringify(made.map((h) => [h.pid, h.key])));
   check('*** nobody is on it until somebody ticks them ***', ![...block.querySelectorAll('[data-allow]')].some((c) => c.checked));

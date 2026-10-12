@@ -9,9 +9,12 @@
 // for it, this shows a notice over the panels: who is calling, video or audio, and Decline / Answer.
 //
 // WHAT IT DOES, AND THE GUESSES IN IT (on Mike's list, 2026-10-02):
-//   * NO AUTO-ANSWER. A Call panel counts down and connects (call.js's header records why, for a screen
-//     somebody set up to take calls). A notice is a screen nobody set up for calls at all, so nothing opens
-//     until somebody presses Answer - and then only after the claim is won, exactly as call.js does.
+//   * NO AUTO-ANSWER, EXCEPT FOR SOMEBODY ALLOWED TO DROP IN. Mike, 2026-10-12: a call waits for somebody to answer,
+//     by default, everywhere; answering by itself is a permission given to NAMED people (screen_permissions.js "May
+//     drop in"). For one of them (`dropIn(from)` gives a number of seconds) the notice counts down on the card and
+//     answers by itself, with Decline there the whole time; for everybody else nothing opens until somebody presses
+//     Answer - and then only after the claim is won, exactly as call.js does. The caller is judged by `from.by`, the
+//     account the server stamped on the call, never by a name a page sent.
 //   * IT RINGS FOR AS LONG AS THE CALLER WAITS (`NOTICE_RING_MS`), then goes by itself: it is never a gate
 //     only an input can leave. The caller's own give-up normally ends it first (its `bye`); this is the
 //     backstop for a caller who vanished without one.
@@ -51,8 +54,9 @@ export const CALL_NOTICE_FIELD = Object.freeze({
     { value: 'notice', label: 'Show a notice to answer or decline' },
     { value: 'off', label: 'Don’t ring here' },
   ],
-  note: 'A screen with a Call panel on it rings in the panel either way. The notice never answers by '
-      + 'itself: somebody has to press Answer.',
+  note: 'A screen with a Call panel on it rings in the panel either way. The notice waits for somebody to '
+      + 'press Answer, except for people you let drop in (on the Remote page): their calls answer by themselves '
+      + 'after a short countdown, with Decline on the screen.',
 });
 
 /** The mode a screen's row asks for. Anything but 'off' is the default, 'notice'. */
@@ -79,14 +83,21 @@ const nameOf = (from) => {
   return n || 'Someone';
 };
 
-/** The words the notice shows. Pure. */
-export function noticeText(from) {
+/** The words the notice shows. Pure. `dropInS`: seconds before a drop-in call answers by itself, or null. */
+export function noticeText(from, dropInS = null) {
   const name = nameOf(from);
+  const kind = from && from.video ? 'Video call' : 'Audio call';
+  const counting = Number.isFinite(dropInS) && dropInS > 0;
   return {
     who: `${name} is calling`,
-    kind: from && from.video ? 'Video call' : 'Audio call',
-    announce: `${from && from.video ? 'Video call' : 'Call'} from ${name}.`,
+    kind,
+    announce: `${from && from.video ? 'Video call' : 'Call'} from ${name}.`
+      + (counting ? ` Answering by itself in ${Math.round(dropInS)} seconds unless someone declines.` : ''),
   };
+}
+/** The line under the caller while a drop-in call counts down. Pure. */
+export function countdownText(left) {
+  return `Answering by itself in ${Math.max(0, Math.round(left))}. Press Decline to refuse it.`;
 }
 
 /**
@@ -102,6 +113,8 @@ export function noticeText(from) {
  *              so whether it is spoken, shown or a tone is the person's own routing
  *   holdScan   (on) => void: the screen gives its switch scan to the notice while it shows
  *   zIndex     the notice's depth (kiosk.js passes one above its menu)
+ *   dropIn     (from) => seconds | null: for a caller allowed to drop in, how long to count down before it answers
+ *              by itself (0 = at once); null = wait for Answer (everybody else, and the default). Read at each ring.
  */
 export function createCallNotice({
   transport,
@@ -113,6 +126,7 @@ export function createCallNotice({
   output = null,
   holdScan = null,
   zIndex = null,
+  dropIn = () => null,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
@@ -127,6 +141,8 @@ export function createCallNotice({
   let lit = -1;                  // which stop the scan is on; -1 = none (a stray first press does nothing)
   let ringT = null;
   let noteT = null;
+  let dropT = null;              // a drop-in caller's countdown (one timer per second)
+  let dropLeft = 0;
   let held = false;
   // A call this notice handed on to be hosted (kiosk.js mounts the Call module over the panels). That view
   // closes the moment the call ends, taking the Call module's own ending line with it - so when a hosted
@@ -154,6 +170,10 @@ export function createCallNotice({
   const kindEl = doc.createElement('div');
   kindEl.dataset.cnKind = '';
   kindEl.style.cssText = 'font-weight:400;color:var(--text-muted);margin-bottom:1em';
+  const countEl = doc.createElement('div');
+  countEl.dataset.cnCount = '';
+  countEl.hidden = true;
+  countEl.style.cssText = 'font-weight:600;margin:-.4em 0 1em';
   const btns = doc.createElement('div');
   btns.style.cssText = 'display:flex;gap:1em;justify-content:center;flex-wrap:wrap';
   const mkBtn = (stop, label) => {
@@ -171,7 +191,7 @@ export function createCallNotice({
   const declineBtn = mkBtn('decline', 'Decline');
   const answerBtn = mkBtn('answer', 'Answer');
   btns.append(declineBtn, answerBtn);
-  el.append(whoEl, kindEl, btns);
+  el.append(whoEl, kindEl, countEl, btns);
 
   const noteEl = doc.createElement('div');
   noteEl.dataset.callNoticeNote = '';
@@ -211,8 +231,16 @@ export function createCallNotice({
     noteT = setTimer(() => { noteT = null; noteEl.hidden = true; }, NOTICE_NOTE_MS);
   }
 
+  function stopDrop() {
+    if (dropT != null) { try { clearTimer(dropT); } catch { /* gone */ } dropT = null; }
+    dropLeft = 0;
+    countEl.hidden = true;
+    countEl.textContent = '';
+  }
+
   /** The notice goes. `note`: a short line to leave for a moment (or null). Never touches the call. */
   function clear(note = null) {
+    stopDrop();
     if (ringT != null) { try { clearTimer(ringT); } catch { /* gone */ } ringT = null; }
     phase = 'idle';
     who = null;
@@ -233,19 +261,38 @@ export function createCallNotice({
     hosted = false;                                    // whatever was handed on before is over (or busy)
     // A new ring (or a caller ringing again over the last one): this caller, from the start.
     if (ringT != null) { try { clearTimer(ringT); } catch { /* gone */ } ringT = null; }
+    stopDrop();
     showNote(null);
     seq += 1;
     who = ev.from || {};
     ringAt = now();
     phase = 'ringing';
     lit = -1;
-    const t = noticeText(who);
+    // DROP IN (2026-10-12): only for a caller on the person's list. Anything but a whole number of seconds is "wait".
+    let drop = null;
+    try { drop = dropIn?.(who); } catch (err) { console.error('call notice: drop in', err); drop = null; }
+    drop = Number.isFinite(drop) && drop >= 0 ? Math.round(drop) : null;
+    const t = noticeText(who, drop);
     whoEl.textContent = t.who;
     kindEl.textContent = t.kind;
     el.hidden = false;
     paint();
     setHold(true);
     const mine = seq;
+    if (drop != null && drop > 0) {
+      dropLeft = drop;
+      countEl.hidden = false;
+      countEl.textContent = countdownText(dropLeft);
+      const step = () => {
+        dropT = null;
+        if (phase !== 'ringing' || seq !== mine) return;
+        dropLeft -= 1;
+        if (dropLeft <= 0) { stopDrop(); answer().catch(() => {}); return; }
+        countEl.textContent = countdownText(dropLeft);
+        dropT = setTimer(step, 1000);
+      };
+      dropT = setTimer(step, 1000);
+    }
     ringT = setTimer(() => {
       ringT = null;
       if (phase !== 'ringing' || seq !== mine) return;
@@ -259,6 +306,8 @@ export function createCallNotice({
       const out = typeof output === 'function' ? output() : output;
       out?.alert?.(t.announce, { source: 'call' });
     } catch (err) { console.error('call notice: announce', err); }
+    // Straight through, for somebody allowed to: the same claim-then-open path as a pressed Answer.
+    if (drop === 0) answer().catch(() => {});
   }
 
   function ended(ev) {
@@ -348,11 +397,14 @@ export function createCallNotice({
     who: () => (who ? { ...who } : null),
     lit: () => (lit < 0 ? null : NOTICE_STOPS[lit]),
     note: () => (noteEl.hidden ? null : noteEl.textContent),
+    // A drop-in caller's countdown: seconds left, or 0 when nothing is counting (2026-10-12).
+    counting: () => (dropT != null ? dropLeft : 0),
     element: () => el,
     verb,
     answer,
     decline,
     destroy() {
+      stopDrop();
       offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
       if (ringT != null) { try { clearTimer(ringT); } catch { /* gone */ } ringT = null; }
       if (noteT != null) { try { clearTimer(noteT); } catch { /* gone */ } noteT = null; }

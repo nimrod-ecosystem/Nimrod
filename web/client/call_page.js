@@ -245,8 +245,9 @@ export async function mountCallPage(root, {
     const shownAs = myName || 'Someone';
     body().innerHTML = `
       <h1>Call</h1>
-      <p class="cp-lead">A video or audio call to a screen. Every screen of that person rings, and whoever
-        is there can answer or decline. The camera and microphone open only when you press a call button.</p>
+      <p class="cp-lead">A video or audio call to a screen. Every screen of that person rings and waits for
+        whoever is there to answer or decline. If whoever looks after those screens lets you drop in, it answers
+        by itself after a short countdown. The camera and microphone open only when you press a call button.</p>
       ${ended ? `<p class="cp-ended" role="status" data-ended>${esc(ended)}</p>` : ''}
       ${knockOffer ? `<button type="button" class="cp-btn cp-primary cp-big" data-knock>Ask to join that call
         <span class="cp-sub">(somebody already in it lets you in)</span></button>` : ''}

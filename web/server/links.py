@@ -55,6 +55,10 @@ FIVE RULES, each here because the alternative rots.
    and different feature - but it is not a permission, and the last version of it was deleted
    because nothing used it and `describe_storage` was publishing an empty table to users as
    something we store about them.
+   MIKE ASKED, 2026-10-12: "a parent/guardian set of permissions" - built in screen_access.py
+   in exactly the shape above: a named BUNDLE of the separate permissions (see without asking,
+   drop in on a call, drive), each still changeable, kept on the person's own row beside the
+   intercom's list. No table, no second mechanism, nothing that lets anybody act AS an account.
 """
 
 from __future__ import annotations

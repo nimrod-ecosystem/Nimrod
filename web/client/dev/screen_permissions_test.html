@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>who may see a screen, drop-in calls, the guardian set — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #root{position:relative;width:640px;height:400px;margin-top:12px;border:1px solid #ccc}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>who may see a screen, drop-in calls, the guardian set (Mike, 2026-10-12)</h1>
+<div class="note">
+  A call waits for somebody to answer unless the caller may drop in; "who may see this screen" starts empty with
+  "ask first" on; the guardian set is a bundle of the separate permissions, each still changeable. Checked here: the
+  rules (the same table as server/screen_access.py), the editor on the Remote page, the question on the screen (a
+  corner card that goes by itself), the follower's page hearing yes / asking / no, and drive.js carrying it all, with
+  fakes; then once LIVE through the real server and a real screen (needs the server running). The server half is
+  test_screen_access.py.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+
+<script type="module">
+import {
+  LIST_FIELD, ASK_CHOICES, ASK_DEFAULT_S, LEND_CHOICES, LEND_DEFAULT_MIN, DROP_IN_CHOICES, DROP_IN_DEFAULT_S,
+  normalizePeople, permsFor, dropInFor, askSecondsOf, lendMinutesOf, dropInSecondsOf, withSwitch, peopleCandidates,
+  mountScreenPermissions, CALLS_WAIT_LINE,
+} from '../screen_permissions.js';
+import { mountSeeAsk, askWords, MAX_SHOWN } from '../see_ask.js';
+import { mountFollowView } from '../follow_view.js';
+import { connectDrive } from '../drive.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+
+const out = document.getElementById('results');
+const root = document.getElementById('root');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const row = (...people) => ({ [LIST_FIELD]: people });
+const OWN = 'pat@x';
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the rules: the same table as the server (screen_access.py)');
+  {
+    let p = permsFor({}, 'mike', OWN);
+    check('*** empty to start: somebody not on the list may not see and may not drop in ***', !p.see && !p.dropIn, JSON.stringify(p));
+    p = permsFor(row({ account: 'mike', see: true }), 'mike', OWN);
+    check('*** ticked "may see": ask first is ON by default ***', p.see && p.askFirst, JSON.stringify(p));
+    p = permsFor(row({ account: 'mike', guardian: true }), 'mike', OWN);
+    check('*** the guardian set: see without asking, and drop in ***', p.guardian && p.see && !p.askFirst && p.dropIn, JSON.stringify(p));
+    p = permsFor(row({ account: 'mike', guardian: true, dropIn: false }), 'mike', OWN);
+    check('*** ...each still changeable: drop-in off for a guardian ***', p.see && !p.dropIn, JSON.stringify(p));
+    p = permsFor(row({ account: 'mike', guardian: true, seeAsk: true }), 'mike', OWN);
+    check('...ask first back on for a guardian', p.see && p.askFirst);
+    p = permsFor(row({ account: 'mike', guardian: true, see: false }), 'mike', OWN);
+    check('...seeing off for a guardian', !p.see && p.dropIn);
+    p = permsFor({}, OWN, OWN);
+    check('the owner sees without asking, and does not drop in, by default', p.see && !p.askFirst && !p.dropIn, JSON.stringify(p));
+    p = permsFor(row({ account: OWN, dropIn: true }), OWN, OWN);
+    check('...and can give themselves drop-in on the list', p.dropIn && p.see);
+    check('a switch that is not a real true/false is never yes',
+      !permsFor(row({ account: 'mike', see: 'yes', dropIn: 1 }), 'mike', OWN).see && !dropInFor(row({ account: 'mike', dropIn: 'true' }), 'mike'));
+    check('malformed entries and duplicates are ignored', normalizePeople([{ account: 'a' }, { account: 'a', name: 'x' }, 'junk', { name: 'n' }]).length === 1);
+  }
+
+  section('*** drop-in is decided on the server-stamped caller, never a name ***');
+  {
+    const r = row({ account: 'mike@x', name: 'Mike', dropIn: true });
+    check('the caller on the list (by account): drops in', dropInFor(r, 'mike@x') === true);
+    check('another account, even named "Mike": waits', dropInFor(r, 'mal@x') === false);
+    check('no account known (an older caller page): waits', dropInFor(r, null) === false && dropInFor(r, '') === false);
+    check('*** an existing drive grant alone never makes a caller drop in (nothing on the list) ***', dropInFor({}, 'mike@x') === false);
+  }
+
+  section('the timings: each a setting with a default');
+  check(`the ask stays ${ASK_DEFAULT_S} s; 15/30/60`, askSecondsOf({}) === 30 && ASK_CHOICES.join() === '15,30,60' && askSecondsOf({ seeAskSeconds: 60 }) === 60
+    && askSecondsOf({ seeAskSeconds: '60' }) === 30 && askSecondsOf({ seeAskSeconds: 45 }) === 30);
+  check(`a lent "see" lasts at most ${LEND_DEFAULT_MIN} min; 15/30/60/120`, lendMinutesOf({}) === 60 && LEND_CHOICES.join() === '15,30,60,120'
+    && lendMinutesOf({ lendMinutes: 15 }) === 15);
+  check(`a drop-in call on a screen with no Call panel answers after ${DROP_IN_DEFAULT_S} s; 0/10/20`,
+    dropInSecondsOf({}) === 10 && DROP_IN_CHOICES.join() === '0,10,20' && dropInSecondsOf({ dropInSeconds: 0 }) === 0);
+
+  section('switching: the guardian set is a fresh start for that person');
+  {
+    let l = withSwitch([], 'mike', 'dropIn', true, { name: 'Mike' });
+    check('a tick adds the person with that one switch', JSON.stringify(l) === '[{"account":"mike","name":"Mike","dropIn":true}]', JSON.stringify(l));
+    l = withSwitch(l, 'mike', 'see', false);
+    l = withSwitch(l, 'mike', 'guardian', true);
+    check('*** giving the set clears their own ticks, so the set\'s defaults show ***', JSON.stringify(l) === '[{"account":"mike","name":"Mike","guardian":true}]', JSON.stringify(l));
+    l = withSwitch(l, 'mike', 'dropIn', false);
+    check('then one part can be changed', permsFor(row(...l), 'mike', OWN).see && !permsFor(row(...l), 'mike', OWN).dropIn);
+    l = withSwitch(l, 'mike', 'guardian', false);
+    check('taking the set: back to the ordinary defaults (nothing)', !permsFor(row(...l), 'mike', OWN).see && !permsFor(row(...l), 'mike', OWN).dropIn);
+  }
+
+  // =====================================================================================
+  section('*** the editor on the Remote page ***');
+  {
+    let data = {};
+    const writes = [];
+    const subs = new Set();
+    const state = {
+      get: () => data,
+      set: (patch) => { writes.push(patch); data = { ...data, ...patch }; for (const f of subs) f(data); return Promise.resolve(); },
+      subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+    };
+    const driven = [];
+    const grants = [{ id: 'g1', subject_id: 'bea@x', subject_kind: 'account', label: 'Bea', expires_at: null },
+                    { id: 'g2', subject_id: 'ot@x', subject_kind: 'account', label: '', expires_at: '2020-01-01T00:00:00+00:00' }];
+    const host = document.createElement('div');
+    document.body.append(host);
+    const ed = mountScreenPermissions(host, { personName: 'Robin', state, loadGrants: async () => grants,
+      whoami: async () => OWN, grantDrive: async (a) => { driven.push(a); } });
+    await ed.ready;
+    const li = (a) => host.querySelector(`[data-account="${a}"]`);
+    const box = (a, k) => li(a)?.querySelector(`[data-switch="${k}"]`);
+    check('*** the plain line: calls now wait to be answered, and how to give someone drop-in ***',
+      host.querySelector('[data-calls-wait]')?.textContent.replace(/\s+/g, ' ').trim() === CALLS_WAIT_LINE, host.querySelector('[data-calls-wait]')?.textContent);
+    check('candidates: you, and everybody who may drive (a lapsed one shown, but not tickable)',
+      !!li(OWN) && !!li('bea@x') && !!li('ot@x') && box('ot@x', 'see').disabled === true, host.textContent.slice(0, 200));
+    check('*** nobody is on the list until you tick them: nothing written on mount ***', writes.length === 0 && normalizePeople(data[LIST_FIELD]).length === 0);
+    check('Bea starts with nothing ticked', !box('bea@x', 'see').checked && !box('bea@x', 'dropIn').checked && !box('bea@x', 'guardian').checked);
+    check('"Ask first" cannot be ticked for somebody who may not see', box('bea@x', 'seeAsk').disabled === true);
+    check('you (the owner) may see by default; no guardian box for yourself', box(OWN, 'see').checked && !box(OWN, 'guardian'));
+    box('bea@x', 'dropIn').checked = true;
+    box('bea@x', 'dropIn').dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('*** ticking "May drop in" writes that one switch for Bea, named from her grant ***',
+      JSON.stringify(normalizePeople(data[LIST_FIELD])) === '[{"account":"bea@x","name":"Bea","dropIn":true}]', JSON.stringify(data[LIST_FIELD]));
+    check('...and says what it means', /Their calls will answer by themselves/.test(host.textContent));
+    box('bea@x', 'guardian').checked = true;
+    box('bea@x', 'guardian').dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('*** the guardian set: see (no asking), drop in - shown ticked ***', box('bea@x', 'see').checked && !box('bea@x', 'seeAsk').checked
+      && box('bea@x', 'dropIn').checked && box('bea@x', 'guardian').checked, li('bea@x').innerHTML.slice(0, 200));
+    check('...Bea already may drive, so no second grant is made', driven.length === 0 && /see without asking, drop in, and drive/.test(host.textContent));
+    box('bea@x', 'dropIn').checked = false;
+    box('bea@x', 'dropIn').dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('*** each part still changeable: drop-in off, the rest of the set stays ***',
+      box('bea@x', 'guardian').checked && box('bea@x', 'see').checked && !box('bea@x', 'dropIn').checked);
+    // a guardian set for somebody with no live grant makes one
+    data = { ...data, [LIST_FIELD]: [...normalizePeople(data[LIST_FIELD]), { account: 'ot@x', name: 'OT' }] };
+    ed.render();
+    box('ot@x', 'guardian').checked = true;
+    box('ot@x', 'guardian').dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('*** the set for somebody whose drive permission lapsed: the drive grant is made ***', driven.join() === 'ot@x', JSON.stringify(driven));
+    const sel = host.querySelector('[data-choice="seeAskSeconds"]');
+    sel.value = '60';
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('the ask time is the person\'s choice, written as a number', data.seeAskSeconds === 60);
+    check('site copy never says "her screen" or names anybody', !/\bher screen|taylor|cici/i.test(host.textContent));
+    ed.destroy();
+    host.remove();
+    check('candidates from grants: an expired one is marked so', peopleCandidates({ grants, now: '2026-10-12' }).find((c) => c.account === 'ot@x')?.current === false);
+  }
+
+  // =====================================================================================
+  section('*** the question on the screen: a corner card, never a dialog, gone by itself ***');
+  {
+    const subs = new Set();
+    const answered = [];
+    const link = { onAccess: (f) => { subs.add(f); return () => subs.delete(f); }, answerSee: (id, yes) => { answered.push([id, yes]); return true; } };
+    const emit = (m) => { for (const f of subs) f(m); };
+    let tickFn = null;
+    const host = document.createElement('div');
+    document.body.append(host);
+    const sa = mountSeeAsk(host, { link, setTick: (fn) => { tickFn = fn; return 1; }, clearTick: () => { tickFn = null; } });
+    check('nothing shows before a question', !sa.showing() && sa.element().hidden);
+    emit({ type: 'see-ask', ask: 'aaaaaaaaaaaa', name: 'Mike', seconds: 3 });
+    check('*** the question names who asks, with Not now and Allow ***', /Mike would like to see this screen/.test(host.textContent)
+      && [...host.querySelectorAll('[data-see-answer]')].map((b) => b.textContent).join() === 'Not now,Allow', host.textContent);
+    check('*** it says that nobody answering means nothing is shared, and when it goes ***', /If nobody answers, nothing is shared/.test(host.textContent) && /3 s/.test(host.textContent));
+    check('it is a corner card, not a dialog (no modal role, nothing behind it touched)', sa.element().getAttribute('role') === 'status'
+      && !host.querySelector('[role="dialog"]') && sa.element().style.position === 'absolute' && /bottom/.test(sa.element().style.cssText));
+    tickFn(); tickFn(); tickFn();
+    check('*** after its seconds it goes BY ITSELF, and nothing was answered ***', !sa.showing() && sa.element().hidden && answered.length === 0);
+    emit({ type: 'see-ask', ask: 'bbbbbbbbbbbb', name: '', seconds: 30 });
+    check('a name not known: "Someone signed in elsewhere"', /Someone signed in elsewhere would like to see this screen/.test(host.textContent) && askWords('') === 'Someone signed in elsewhere would like to see this screen');
+    host.querySelector('[data-see-answer="yes"]').click();
+    check('*** Allow answers yes for that question, and the card goes ***', JSON.stringify(answered) === '[["bbbbbbbbbbbb",true]]' && !sa.showing());
+    emit({ type: 'see-ask', ask: 'cccccccccccc', name: 'Ann', seconds: 30 });
+    host.querySelector('[data-see-answer="no"]').click();
+    check('Not now answers no', JSON.stringify(answered.at(-1)) === '["cccccccccccc",false]');
+    emit({ type: 'see-ask', ask: 'dddddddddddd', name: 'Jo', seconds: 30 });
+    emit({ type: 'see-ask-ended', ask: 'dddddddddddd' });
+    check('answered on another screen (or withdrawn): it goes here too', !sa.showing());
+    for (const id of ['111111111111', '222222222222', '333333333333', '444444444444']) emit({ type: 'see-ask', ask: id, name: id, seconds: 30 });
+    check(`at most ${MAX_SHOWN} shown at once`, host.querySelectorAll('[data-see-ask-card]').length === MAX_SHOWN);
+    sa.destroy();
+    check('destroyed: gone, and no longer listening', !host.querySelector('[data-see-ask]') && subs.size === 0);
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('*** the follower\'s page hears the server: asking, yes, no ***');
+  {
+    const made = [];
+    const connect = (o) => {
+      const fsubs = new Set();
+      const l = { o, closed: false, onPlay() { return () => {}; }, ping: async () => null,
+        onFollowState(f) { fsubs.add(f); return () => fsubs.delete(f); }, emit(st) { for (const f of fsubs) f(st); },
+        close() { this.closed = true; } };
+      made.push(l);
+      setTimeout(() => o.onState?.('connected'), 0);
+      return l;
+    };
+    const host = document.createElement('div');
+    document.body.append(host);
+    const fv = mountFollowView(host, { personId: 'p1', personName: 'Robin', connect, makePlayer: async () => ({ setMuted() {}, destroy() {} }),
+      setTimer: () => 0, clearTimer: () => {} });
+    check('the page says you need to be on the list, and that the screen usually asks', /Who may see this screen/.test(host.textContent)
+      && /asks first/.test(host.textContent) && !/Let people follow what this screen is playing/.test(host.textContent));
+    await fv.start();
+    await sleep(5);
+    made[0].emit({ state: 'asking', seconds: 30 });
+    check('*** asking: the page says so and waits ***', fv.access() === 'asking' && /Asking Robin’s screen first/.test(fv.status()), fv.status());
+    made[0].emit({ state: 'on' });
+    check('yes: seeing', fv.access() === 'on' && fv.phase() === 'on');
+    fv.stop();
+    await fv.start();
+    await sleep(5);
+    made[1].emit({ state: 'refused', reason: 'not-allowed' });
+    check('*** refused (not on the list): it stops and closes its socket, and says who can add you ***', fv.phase() === 'stopped' && made[1].closed
+      && /not on “Who may see this screen”/.test(fv.status()), fv.status());
+    await fv.start();
+    await sleep(5);
+    made[2].emit({ state: 'refused', reason: 'unanswered' });
+    check('nobody answered: it says so', /Nobody answered on Robin’s screen/.test(fv.status()) && made[2].closed, fv.status());
+    await fv.start();
+    await sleep(5);
+    made[3].emit({ state: 'refused', reason: 'ended' });
+    check('a lent permission ended: it says so', /has ended/.test(fv.status()), fv.status());
+    fv.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('drive.js carries it: names on presence, follow state, the questions, a lend');
+  {
+    const sockets = [];
+    class FakeSocket {
+      constructor(url) { this.url = url; this.sent = []; sockets.push(this); }
+      send(s) { this.sent.push(JSON.parse(s)); }
+      close() { this.onclose?.(); }
+      open() { this.onopen?.(); }
+      deliver(o) { this.onmessage?.({ data: JSON.stringify(o) }); }
+    }
+    const fetchImpl = async () => ({ ok: true, json: async () => ({ ticket: 'T' }) });
+    const pres = [];
+    const sc = connectDrive({ personId: 'p1', role: 'screen', fetchImpl, SocketImpl: FakeSocket, onPresence: (p) => pres.push(p) });
+    const access = [];
+    sc.onAccess((m) => access.push(m));
+    await sleep(0); sockets[0].open();
+    sockets[0].deliver({ type: 'presence', screens: 1, drivers: 1, followers: 1, watchers: ['Mike', 7, '', 'A\u0007nn'] });
+    check('*** presence carries the names of who is seeing, cleaned ***', JSON.stringify(pres.at(-1).watchers) === '["Mike","Ann"]', JSON.stringify(pres.at(-1)));
+    sockets[0].deliver({ type: 'see-ask', ask: 'aaaaaaaaaaaa', name: 'Mike', seconds: 30 });
+    sockets[0].deliver({ type: 'see-ask-ended', ask: 'aaaaaaaaaaaa' });
+    check('a screen hears the questions (never onto the bus)', access.map((m) => m.type).join() === 'see-ask,see-ask-ended');
+    check('a screen answers one', sc.answerSee('aaaaaaaaaaaa', true) === true && JSON.stringify(sockets[0].sent.at(-1)) === '{"type":"see-answer","ask":"aaaaaaaaaaaa","yes":true}');
+    const lent = sc.lend({ session: 'c1', on: true, minutes: 60 });
+    check('*** a lend names a session and nobody else ***', JSON.stringify(sockets[0].sent.at(-1)) === '{"type":"lend","what":"see","session":"c1","on":true,"minutes":60}');
+    sockets[0].deliver({ type: 'lend-state', what: 'see', session: 'c1', on: true, until: 99, minutes: 60 });
+    const res = await lent;
+    check('...and resolves with the server\'s answer', res && res.on === true && res.until === 99, JSON.stringify(res));
+    check('a lend nobody answers resolves null (never hangs)', (await sc.lend({ session: 'c2', timeoutMs: 20 })) === null);
+    sc.close();
+    const dr = connectDrive({ personId: 'p1', role: 'driver', follow: true, fetchImpl, SocketImpl: FakeSocket });
+    const states = [];
+    dr.onFollowState((s) => states.push(s));
+    await sleep(0); sockets[1].open();
+    sockets[1].deliver({ type: 'follow-state', state: 'asking', seconds: 30 });
+    sockets[1].deliver({ type: 'follow-state', state: 'refused', reason: 'declined' });
+    check('*** a driver hears whether it is seeing ***', states.map((s) => `${s.state}:${s.reason || s.seconds}`).join() === 'asking:30,refused:declined', JSON.stringify(states));
+    sockets[1].deliver({ type: 'see-ask', ask: 'aaaaaaaaaaaa', name: 'X', seconds: 30 });
+    check('a driver can neither answer a question nor lend', dr.answerSee('aaaaaaaaaaaa', true) === false && (await dr.lend({ session: 'c1' })) === null);
+    dr.close();
+  }
+
+  // =====================================================================================
+  section('*** LIVE, through the real server: a real screen asks, Allow, "Sharing your screen with Fran" ***');
+  let k = null, f = null, f2 = null;
+  try {
+    const KUSER = 'see-owner-' + Math.floor(Math.random() * 1e9);
+    const FUSER = 'see-fran-' + Math.floor(Math.random() * 1e9);
+    const profiles = createProfilesClient({ user: KUSER });
+    const person = (await profiles.people())[0];
+    const p = await profiles.create('TEST-see-ask', person.id);
+    await profiles.addModule(p.id, 'clock');
+    await profiles.grantDrive(person.id, FUSER, { label: 'Fran', days: 1 });
+    const put = await fetch(`/api/people/${person.id}/state/input-bindings`, { method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Dev-User': KUSER },
+      body: JSON.stringify({ data: { [LIST_FIELD]: [{ account: FUSER, name: 'Fran', see: true }] }, base_version: 0 }) });
+    check('(setup) Fran may drive, and is on "who may see" with ask first (the default)', put.ok, String(put.status));
+    const v1 = (await put.json())?.version ?? 1;
+    k = await mountKiosk(root, { user: KUSER, profileId: p.id, profiles, bus: createBus() });
+    const settledOn = async (fn, ms = 8000) => { const until = Date.now() + ms; while (Date.now() < until) { if (fn()) return true; await sleep(40); } return !!fn(); };
+    check('(setup) the screen attached its drive socket', await settledOn(() => !!k.drive() && k.drive().state() === 'connected', 12000));
+    const states = [];
+    f = connectDrive({ personId: person.id, role: 'driver', follow: true, user: FUSER });
+    f.onFollowState((s) => states.push(s.state));
+    const card = () => root.querySelector('[data-see-ask-card]');
+    check('*** Fran starts following: the real screen shows the question, naming her ***',
+      await settledOn(() => !!card() && /Fran would like to see this screen/.test(card().textContent)), root.querySelector('[data-see-ask]')?.outerHTML);
+    check('...and Fran\'s page is told it is waiting', states.includes('asking'), JSON.stringify(states));
+    const notice = () => root.querySelector('[data-remote]');
+    check('while she waits, the screen does not say anybody is helping or seeing', !notice() || notice().hidden, notice()?.textContent);
+    card().querySelector('[data-see-answer="yes"]').click();
+    check('*** Allow: Fran sees ***', await settledOn(() => states.includes('on')), JSON.stringify(states));
+    check('*** the screen says "Sharing your screen with Fran" ***',
+      await settledOn(() => notice() && !notice().hidden && notice().textContent === 'Sharing your screen with Fran'), notice()?.textContent);
+    f.close(); f = null;
+    check('she stops: the notice goes', await settledOn(() => !notice() || notice().hidden), notice()?.textContent);
+    // A guardian sees without the question - and the screen still says so.
+    await fetch(`/api/people/${person.id}/state/input-bindings`, { method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Dev-User': KUSER },
+      body: JSON.stringify({ data: { [LIST_FIELD]: [{ account: FUSER, name: 'Fran', guardian: true }] }, base_version: v1 }) });
+    const st2 = [];
+    f2 = connectDrive({ personId: person.id, role: 'driver', follow: true, user: FUSER });
+    f2.onFollowState((s) => st2.push(s.state));
+    check('*** the guardian set: no question, she sees at once, and the screen still says so ***',
+      await settledOn(() => st2.includes('on') && notice() && notice().textContent === 'Sharing your screen with Fran') && !card(),
+      `${JSON.stringify(st2)} ${notice()?.textContent}`);
+  } finally {
+    try { f?.close(); } catch { /* gone */ }
+    try { f2?.close(); } catch { /* gone */ }
+    try { k?.destroy(); } catch { /* gone */ }
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

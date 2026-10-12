@@ -764,8 +764,16 @@ export function createCallTransport({
       pendingSession = session;
       // Read BEFORE the panel is told: whether a Call panel rings for this one (see `ringCbs`).
       const panel = typeof incomingCb === 'function';
-      try { incomingCb?.(sig.from || null); } catch (e) { log('onIncoming threw', e); }
-      emit(ringCbs, { type: 'ring', from: sig.from || null, session, panel });
+      // WHO IS CALLING, AS THE SERVER KNOWS IT (2026-10-12). `from` is what the caller's page says about itself (a
+      // name for the card); `by` is the account the server stamped on the signal (drive.py stamp_signal), which a page
+      // cannot forge - so "may this caller drop in?" is decided on `by`, never on a name. The call's `session` rides
+      // along too, for a permission lent on THIS call (screen_access.py). Nothing here is shown on the screen.
+      const from = sig.from && typeof sig.from === 'object' ? { ...sig.from } : (sig.from ? sig.from : null);
+      const who = from && typeof from === 'object'
+        ? { ...from, by: typeof sig.by === 'string' ? sig.by : null, ...(session ? { session } : {}) }
+        : (typeof sig.by === 'string' ? { by: sig.by, ...(session ? { session } : {}) } : from);
+      try { incomingCb?.(who); } catch (e) { log('onIncoming threw', e); }
+      emit(ringCbs, { type: 'ring', from: who, session, panel });
       return;
     }
     if (role === 'driver' && sig.kind === 'answer') {

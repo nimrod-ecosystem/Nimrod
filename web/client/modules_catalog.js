@@ -364,9 +364,10 @@ export const CATALOG = [
     needs: 'A network connection, and somebody to call them.',
     why: 'The caller fills the screen and the small picture-in-picture keeps showing this '
        + 'room, which is the layout people already know from every video call. An audio call '
-       + 'shows their name instead of a black rectangle. It does NOT answer by itself unless '
-       + 'you turn that on for people you have chosen - a screen that answers on its own is a '
-       + 'microphone in the room.',
+       + 'shows their name instead of a black rectangle. A call waits for somebody to press Answer '
+       + 'or Decline. It answers by itself only for people you let drop in, on the Remote page, '
+       + 'and then it says who is calling and counts down first - a screen that answers on its own '
+       + 'is a microphone in the room.',
   },
   {
     type: 'pressgame',

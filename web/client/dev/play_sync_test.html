@@ -33,6 +33,7 @@ import {
   targetPos, decide, SEEK_OVER_S, SETTLE_MS, SETTLE_MAX_MS, createPlaySender, MIN_GAP_MS, SEEK_DETECT_S,
   createFollower, LOST_MIN_MS, FOLLOW_FIELD, FOLLOW_KEY, FOLLOW_BEAT_FIELD, FOLLOW_BEAT_KEY, followOf, beatOf,
   noticeWords, HELPING_WORDS, WATCHING_WORDS, BOTH_WORDS, STOP_AFTER_CHOICES, STOP_AFTER_DEFAULT_MS, stopAfterOf,
+  sharingWords,
 } from '../play_sync.js';
 import { connectDrive } from '../drive.js';
 import { normalizeField } from '../settings_fields.js';
@@ -358,9 +359,23 @@ if (GAP) {
   section('the screen\'s settings and the notice\'s words');
   {
     const ff = normalizeField(FOLLOW_FIELD), bf = normalizeField(FOLLOW_BEAT_FIELD);
-    check('*** "Let people follow what this screen is playing" is OFF by default ***',
-      FOLLOW_FIELD.default === false && followOf({}) === false && followOf(null) === false && followOf({ [FOLLOW_KEY]: true }) === true
-      && followOf({ [FOLLOW_KEY]: 'yes' }) === false);
+    // 2026-10-12 (Mike): "Who may see this screen" is the gate now (empty to start, ask first on - server/screen_access.py),
+    // so this switch is only "never from THIS screen", and ON by default - off, the guardian set would open nothing.
+    check('*** "Let people follow what this screen is playing" is ON by default now (the list is the gate) ***',
+      FOLLOW_FIELD.default === true && followOf({}) === true && followOf(null) === true && followOf({ [FOLLOW_KEY]: false }) === false
+      && followOf({ [FOLLOW_KEY]: 'no' }) === true);
+    check('...and a screen where somebody turned it off keeps it off', followOf({ [FOLLOW_KEY]: false }) === false);
+    check('*** the words name who is seeing: "Sharing your screen with Mike" ***',
+      noticeWords({ drivers: 1, followers: 1, watchers: ['Mike'] }) === 'Sharing your screen with Mike'
+      && sharingWords(['Mike', 'Ann'], 2) === 'Sharing your screen with Mike and Ann'
+      && sharingWords(['Mike', 'Ann', 'Jo'], 3) === 'Sharing your screen with Mike, Ann and Jo'
+      && sharingWords(['Mike'], 3) === 'Sharing your screen with Mike and 2 others'
+      && sharingWords([], 2) === 'Sharing your screen with 2 people on other screens'
+      && sharingWords([], 0) === '');
+    check('a name not known: "someone", never an account id', noticeWords({ drivers: 1, followers: 1, watchers: [] }) === WATCHING_WORDS
+      && /^Sharing your screen with someone/.test(WATCHING_WORDS));
+    check('sharing and helping at once: both said, names first',
+      noticeWords({ drivers: 2, followers: 1, watchers: ['Mike'] }) === 'Sharing your screen with Mike. Someone is also helping from another screen');
     check('the heartbeat is 2 s by default, a choice of 2 / 5 / 10', beatOf({}) === 2 && beatOf({ [FOLLOW_BEAT_KEY]: 10 }) === 10
       && beatOf({ [FOLLOW_BEAT_KEY]: 3 }) === 2 && FOLLOW_BEAT_FIELD.options.map((o) => o.value).join() === '2,5,10');
     const bad = auditFields([ff, bf], { type: 'screen' }).filter((x) => x.severity === 'error');

@@ -83,7 +83,11 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
                           // only fires callbacks on request). `nowRef.t` is mutable so a test
                           // can move time forward between `incoming()` and `answer()` without
                           // touching the ring/countdown timer mock at all.
-                          nowRef = { t: 1000 }, events = fakeEvents(), makePersonState = null } = {}) {
+                          nowRef = { t: 1000 }, events = fakeEvents(), makePersonState = null,
+                          // 2026-10-12 (Mike): a call answers by itself ONLY for a caller who may drop in. Most of
+                          // this suite tests the countdown and the answer path, so its rig's caller may drop in;
+                          // the section "calls wait to be answered" turns this off (and leaves it out entirely).
+                          dropIn = true, lendScreen = null } = {}) {
   const clock = fakeClock();
   const host = document.createElement('div');
   document.getElementById('host').append(host);
@@ -119,6 +123,8 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
     mount: host, bus, audio, cameraOwner, micOwner, output, instanceId: 'c1', callIO: clock.io,
     callTransport, events, now: () => nowRef.t,
     ...(makePersonState ? { makePersonState } : {}),
+    ...(dropIn === null ? {} : { mayDropIn: typeof dropIn === 'function' ? dropIn : () => dropIn }),
+    ...(lendScreen ? { lendScreen } : {}),
     state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
@@ -240,8 +246,9 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         + 'act is often not the person the call is for ***',
         /Incoming call from Mike/.test(r.said[0] || '') && /decline/i.test(r.said[0] || ''),
         JSON.stringify(r.said));
-      check('and the way out is on the screen too, for whoever missed the words',
-        /Say .decline. to refuse/.test(r.host.textContent), r.host.textContent.slice(0, 120));
+      check('*** and the way out is on the screen too: a Decline BUTTON (A2), not "say decline" ***',
+        !!r.host.querySelector('[data-call-decline]') && /Press Decline to refuse it/.test(r.host.textContent)
+        && !/Say .decline/.test(r.host.textContent), r.host.textContent.slice(-160));
       check('the seconds are shown', /10/.test(r.host.textContent));
       check('no camera is taken while it is only ringing',
         !r.camLog.some((c) => c[0] === 'acquireTrack'), JSON.stringify(r.camLog));
@@ -305,6 +312,100 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       await sleep(20);
       check('somebody answering early skips the rest of the countdown',
         r.impl.__probe().phase === 'connected' && r.impl.__probe().counting === false);
+    }
+
+    section('*** calls wait to be answered; drop-in is a permission (Mike, 2026-10-12) ***');
+    {
+      const r = rig({ declineSeconds: 10 }, { dropIn: null });     // a host that says nothing about drop-in
+      await r.impl.__incoming({ name: 'Mike', by: 'mike@x' });
+      check('*** by default a call WAITS: no countdown, even with "count down ten seconds" chosen ***',
+        r.impl.__probe().phase === 'ringing' && r.impl.__probe().counting === false && /Waiting to be answered/.test(r.host.textContent),
+        JSON.stringify(r.impl.__probe()));
+      check('it still says who is calling, without promising it will answer', /Incoming call from Mike\.$/.test(r.said[0] || ''), JSON.stringify(r.said));
+      check('*** the ringing card has a Decline button and an Answer button, Decline first ***',
+        [...r.host.querySelectorAll('.call-actions button')].map((b) => b.textContent).join('|') === 'Decline|Answer');
+      r.clock.tick(30);
+      await sleep(10);
+      check('ticking the clock does not answer it', r.impl.__probe().phase === 'ringing');
+      r.host.querySelector('[data-call-answer]').click();
+      await sleep(20);
+      check('*** pressing Answer answers it ***', r.impl.__probe().phase === 'connected');
+      r.impl.__end('hangup');
+    }
+    {
+      const r = rig({ declineSeconds: 0 }, { dropIn: () => false });
+      await r.impl.__incoming({ name: 'Ann', by: 'ann@x' });
+      await sleep(20);
+      check('*** a caller NOT allowed to drop in waits, even when the panel says "answer straight away" ***',
+        r.impl.__probe().phase === 'ringing', r.impl.__probe().phase);
+      r.host.querySelector('[data-call-decline]').click();
+      await sleep(10);
+      check('*** pressing Decline refuses it, recorded as declined ***', r.impl.__probe().phase === 'idle'
+        && r.published.some(([t, p]) => t === CALL_ENDED && p.reason === 'declined'), JSON.stringify(r.published));
+    }
+    {
+      const seen = [];
+      const r = rig({ declineSeconds: 10 }, { dropIn: (who) => { seen.push(who); return who?.by === 'mike@x'; } });
+      await r.impl.__incoming({ name: 'Mike', by: 'mike@x' });
+      check('*** a caller who may drop in: the announced countdown, as before ***', r.impl.__probe().counting === true
+        && /Answering by itself in 10 unless someone declines/.test(r.said[0] || ''), JSON.stringify(r.said));
+      check('the host is asked about THIS caller, with the server-stamped account', seen[0]?.by === 'mike@x');
+      r.impl.__end('hangup');
+      await r.impl.__incoming({ name: 'Mike', by: 'mal@x' });
+      check('*** the same NAME from another account does not drop in (judged on `by`, never the name) ***',
+        r.impl.__probe().counting === false && r.impl.__probe().phase === 'ringing');
+      r.impl.__end('hangup');
+    }
+    {
+      const r = rig({ declineSeconds: null }, { dropIn: () => true });
+      await r.impl.__incoming({ name: 'Mike', by: 'mike@x' });
+      check('"never answer by itself, even for them" still holds for a drop-in caller', r.impl.__probe().counting === false
+        && r.impl.__probe().phase === 'ringing');
+      r.impl.__end('hangup');
+    }
+    {
+      const r = rig({ declineSeconds: 10 }, { dropIn: () => { throw new Error('broken host'); } });
+      await r.impl.__incoming({ name: 'Mike', by: 'mike@x' });
+      check('a host that breaks deciding drop-in: the call waits (never answers by accident)', r.impl.__probe().counting === false);
+      r.impl.__end('hangup');
+    }
+    {
+      const calls = [];
+      const lendScreen = async (o) => { calls.push(o); return o.on ? { on: true, until: 123 } : { on: false }; };
+      const r = rig({ declineSeconds: 0 }, { lendScreen });
+      await r.impl.__incoming({ name: 'Mike', by: 'mike@x', session: 'c1' });
+      await sleep(20);
+      const bar = () => r.host.querySelector('[data-lend]');
+      check('*** a live call offers "Let Mike see this screen until the call ends" ***',
+        bar() && !bar().hidden && /Let Mike see this screen until the call ends/.test(bar().textContent), bar()?.outerHTML);
+      r.host.querySelector('[data-lend-start]').click();
+      await sleep(20);
+      check('*** pressing it lends "see" for THIS call (by session; the page names nobody) ***',
+        calls.length === 1 && calls[0].session === 'c1' && calls[0].on === true && !('to' in calls[0]) && r.impl.__probe().lent,
+        JSON.stringify(calls));
+      check('...and the screen says so, with Stop', /Mike can see this screen until the call ends/.test(bar().textContent)
+        && !!r.host.querySelector('[data-lend-stop]'));
+      r.host.querySelector('[data-lend-stop]').click();
+      await sleep(20);
+      check('Stop takes it back', calls.length === 2 && calls[1].on === false && !r.impl.__probe().lent);
+      r.impl.__end('hangup');
+      check('the bar goes with the call', bar().hidden === true);
+    }
+    {
+      const r = rig({ declineSeconds: 0 }, { lendScreen: async () => null });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(20);
+      check('no server-stamped caller (an older caller page): nothing is offered to lend', r.host.querySelector('[data-lend]').hidden === true);
+      r.impl.__end('hangup');
+    }
+    {
+      const r = rig({ declineSeconds: 0 }, { lendScreen: async () => null });
+      await r.impl.__incoming({ name: 'Mike', by: 'mike@x', session: 'c2' });
+      await sleep(20);
+      await r.impl.__lend(true);
+      check('a lend the server did not confirm is not shown as given', !r.impl.__probe().lent
+        && /did not work/.test(r.host.querySelector('[data-lend]').textContent));
+      r.impl.__end('hangup');
     }
 
     section('*** the module, the topic and the rule all agree ***');
@@ -444,6 +545,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         mount: small, bus: bus2, audio: null, cameraOwner: null, micOwner: null,
         output: { alert() {}, say() {}, notify() {}, status() {}, destroy() {} },
         instanceId: 'small', callIO: clock2.io,
+        mayDropIn: () => true,          // a countdown is only for a caller who may drop in (2026-10-12)
         state: { get: () => ({ declineSeconds: 20 }), set: () => Promise.resolve(),
                  subscribe: () => () => {}, load: () => Promise.resolve(),
                  startPolling() {}, destroy() {} },
@@ -828,6 +930,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         mount: host, bus: createBus(), instanceId: 'c-mix', callIO: clock.io, events: fakeEvents(),
         output: { alert() {}, say() {}, notify() {}, status() {}, destroy() {} },
         audio, micOwner, callTransport: t,
+        mayDropIn: () => true,          // answers straight through (declineSeconds 0) only for a drop-in caller
         state: { get: () => saved, set: () => Promise.resolve(), subscribe: (fn) => { sub = fn; return () => {}; },
                  load: () => Promise.resolve(), startPolling() {}, destroy() {} },
       });
