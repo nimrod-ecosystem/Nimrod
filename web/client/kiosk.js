@@ -135,7 +135,7 @@ import {
   createSubtitleLearning, idbLearnedStore, memoryLearnedStore, SUBTITLE_LEARNING_FIELDS, SUBTITLE_LEARNING_ACTIONS,
   dataFolder,
 } from './subtitle_learning.js';
-import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS, micStatusHint } from './speech_engines.js';
+import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS, micStatusHint, skippedSays, cautionSays } from './speech_engines.js';
 import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
 import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
 import {
@@ -1061,10 +1061,17 @@ export async function mountKiosk(root, {
       return sw.on ? 'listening' : 'subtitles-only';
     };
     if (typeof rec.onStatus === 'function') {
+      // The menu's status row also names which computers answer and which were left out (and why), so a change
+      // there repaints it too, not only a change of state (2026-10-11: a desktop going away while this screen
+      // keeps listening left "the room’s sound goes to: Desk" on the menu).
+      let shownSig = '';
+      const sigOf = (st) => { try { return JSON.stringify([(st?.engines || []).map((e) => [e.slot, e.state]),
+        (st?.skipped || []).map((s) => [s.slot, s.why]), st?.mics || null]); } catch { return ''; } };
       speechOffs.push(rec.onStatus((st) => {
         if (speechRec !== rec) return;
         const next = fromRec(st);
-        if (next !== speechStatus) { speechStatus = next; onVoiceChange?.(); }
+        const sig = sigOf(st);
+        if (next !== speechStatus || sig !== shownSig) { speechStatus = next; shownSig = sig; onVoiceChange?.(); }
       }));
     }
     // WHO IS TALKING (row 2.56, voice_id.js): who is set up on this computer, for the Voice rows' wording - names and
@@ -4110,13 +4117,18 @@ export async function mountKiosk(root, {
       : away.length ? `the room’s sound goes to: ${away.join(', ')}` : '';
     const online = onlineCap ? 'subtitles also send the room’s sound to the browser’s maker' : '';
     const mics = browser ? '' : micStatusHint(st?.mics);   // which of this screen's microphones hears speech
+    // A computer the plan left out (no address, or a ws:// address a secure page cannot use) and one marked
+    // `caution` that is not answering (speech_engines.js `addressRefusal`): said, with what to change, not left silent.
+    const left = browser ? '' : [...(st?.skipped || []).map((s) => skippedSays(s).unused),
+                                 ...(st?.engines || []).map(cautionSays)].filter(Boolean).join('; ');
     const hints = (...xs) => xs.filter(Boolean).join('; ');
     if (speechStatus === 'no-local') {
       if (st && !(st.engines || []).length && (st.skipped || []).length) {
-        return row(`Not listening: ${st.skipped[0].name} has no address yet`, 'the room’s sound is not sent anywhere');
+        const says = skippedSays(st.skipped[0]);
+        return row(`Not listening: ${says.line}`, hints(says.hint, st.skipped[0].why === 'not secure' ? 'the room’s sound is not sent anywhere' : ''));
       }
       if (firstPass && firstPass.slot !== 'local') {
-        return row(`Not listening: ${firstPass.name} is not answering`, 'nothing is recorded until it answers');
+        return row(`Not listening: ${firstPass.name} is not answering`, hints('nothing is recorded until it answers', cautionSays(firstPass)));
       }
       return row('Not listening: no speech program is running on this computer', hints('the room’s sound is not sent anywhere', online));
     }
@@ -4124,9 +4136,9 @@ export async function mountKiosk(root, {
     if (speechStatus === 'no-mic') return row('Not listening: the microphone could not be opened');
     if (speechStatus === 'blocked') return row('Not listening yet: the browser is holding sound until the screen is touched');
     if (speechStatus === 'listening') {
-      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`, hints(goes, online, mics));
+      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`, hints(goes, online, mics, left));
     }
-    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(goes, online, mics));
+    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(goes, online, mics, left));
     return null;
   }
   // *** NO SPEECH PROGRAM ON THIS COMPUTER: SAY HOW TO GET ONE, AND OFFER THE NO-INSTALL CHOICE (DECISIONS 2026-10-07

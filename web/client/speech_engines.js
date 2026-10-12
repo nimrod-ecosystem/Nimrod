@@ -173,14 +173,17 @@ export const SPEECH_PASS_FIELDS = [
     options: passOptions },
   { key: 'speechRemote1Name', label: 'Another computer: its name', kind: 'text', default: 'Another computer',
     level: 'advanced' },
+  // A SECURE address (wss://) in the example: the site is served over https, and a browser refuses a plain ws://
+  // address on another computer from a secure page (see `addressRefusal` below). web/speech_service/DESKTOP_SECOND_PASS.md
+  // has the steps that give a desktop one.
   { key: 'speechRemote1Url', label: 'Another computer: its address', kind: 'text', default: '',
-    level: 'advanced', note: 'For example ws://100.64.0.2:8797/speech. The room’s sound is sent there.' },
+    level: 'advanced', note: 'For example wss://your-desktop.your-tailnet.ts.net/speech (a secure address: it starts with wss://). The room’s sound is sent there.' },
   { key: 'speechRemote1Key', label: 'Another computer: its pass phrase', kind: 'text', default: '',
     level: 'advanced' },
   { key: 'speechRemote2Name', label: 'Second other computer: its name', kind: 'text',
     default: 'A second other computer', level: 'advanced' },
   { key: 'speechRemote2Url', label: 'Second other computer: its address', kind: 'text', default: '',
-    level: 'advanced', note: 'The room’s sound is sent there.' },
+    level: 'advanced', note: 'A secure address, starting with wss://. The room’s sound is sent there.' },
   { key: 'speechRemote2Key', label: 'Second other computer: its pass phrase', kind: 'text', default: '',
     level: 'advanced' },
   { key: 'speechLocalUrl', label: 'The speech program on this computer: its address', kind: 'text',
@@ -253,14 +256,109 @@ export function micStatusHint(mics) {
     : `${mics.label} could not be opened, so only the usual microphone is heard`;
 }
 
+// ---------------------------------------------------------------------------------------
+// *** A SECURE PAGE REFUSES A PLAIN ws:// ADDRESS ON ANOTHER COMPUTER (2026-10-11). ***
+// ---------------------------------------------------------------------------------------
+// The site is served over https. A browser treats a ws:// connection from an https page as MIXED CONTENT and blocks
+// it, except to this computer itself (localhost, 127.0.0.0/8, [::1]: "potentially trustworthy", W3C Secure Contexts).
+// So the example address this setting used to give (ws://100.64.0.2:8797/speech) would have failed with nothing on
+// screen to say so. Checked against current sources 2026-10-11:
+//   * W3C Mixed Content (CRD 2023-02-23): anything not an image/audio/video is "blockable" from a secure page.
+//   * Chrome's Local Network Access (WICG draft 2026-08-07; blink-dev "Intent to Ship: Local network access
+//     restrictions for WebSockets", 2026-02-19, Chrome 147): from Chrome 147 a ws:// address whose host is a
+//     LOCAL IP LITERAL (10/8, 100.64/10 - Tailscale's range, 172.16/12, 192.168/16, 169.254/16, fc00::/7,
+//     fe80::/10) or a `.local` name is exempt from the mixed-content block, but only after the person allows the
+//     site "local network" access. A NAME (your-desktop.your-tailnet.ts.net, or a bare "desk") is still blocked:
+//     the check happens before the name is looked up. (Chrome 154 added a `targetAddressSpace` option to the
+//     WebSocket constructor for that case; this file does not pass it.)
+// THE RULE, argued: refuse only what fails in EVERY browser - ws:// to a name that is not this computer and not a
+// `.local` name. A ws:// local IP literal is NOT refused (it works on Chrome 147+ once allowed, the same permission
+// a wss:// Tailscale address needs anyway), but it is marked `caution`, and the voice menu says, while it is not
+// answering, that an older browser refuses it and a wss:// address is surer.
+//   FOR refusing every ws:// that is not this computer (simpler, and what was first asked): older browsers refuse
+//   the IP literal too. AGAINST, and it wins: it would refuse an address that works on a current browser, and the
+//   menu already says when that pass is not answering. http pages (the dev server) and loopback are never touched.
+const LOCAL_V4 = (a, b) => a === 10 || (a === 100 && b >= 64 && b <= 127) || (a === 172 && b >= 16 && b <= 31)
+  || (a === 192 && b === 168) || (a === 169 && b === 254);
+
+/** The page's protocol ('https:', 'http:', ...), read at the boundary - pure code is handed it. '' when unknown. */
+export function pageProtocol() {
+  try { return String(globalThis.location?.protocol || ''); } catch { return ''; }
+}
+
+/**
+ * Where a speech address sits, as a browser on a SECURE page sees it: 'loopback' (this computer), 'local' (a local IP
+ * literal or a `.local` name), 'name' (any other host: blocked as mixed content when ws://), or 'invalid'.
+ */
+export function addressHost(url) {
+  let host = '';
+  try { host = new URL(String(url || '')).hostname.toLowerCase(); } catch { return 'invalid'; }
+  if (!host) return 'invalid';
+  if (host === 'localhost' || host.endsWith('.localhost') || host === '[::1]' || host === '::1') return 'loopback';
+  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])];
+    if (a === 127) return 'loopback';
+    return LOCAL_V4(a, b) ? 'local' : 'name';
+  }
+  if (host.startsWith('[')) return /^\[(fc|fd|fe[89ab])/.test(host) ? 'local' : 'name';
+  return host.endsWith('.local') ? 'local' : 'name';
+}
+
+/**
+ * Would a page loaded over `protocol` be refused `url` by the browser? `{ refuse, caution }`:
+ *   refuse  'not secure' - ws:// to another computer by NAME from an https page: blocked in every browser.
+ *   caution 'ws on a secure page' - ws:// to a local IP literal from an https page: Chrome 147+ allows it after the
+ *           person allows local network access; an older browser refuses it.
+ * Both '' otherwise: wss://, loopback, and every http page (the dev server) are left alone.
+ */
+export function addressRefusal(url, protocol = '') {
+  const ok = { refuse: '', caution: '' };
+  if (String(protocol).toLowerCase() !== 'https:' || !/^ws:\/\//i.test(String(url || '').trim())) return ok;
+  const where = addressHost(String(url).trim());
+  if (where === 'loopback') return ok;
+  if (where === 'local') return { refuse: '', caution: 'ws on a secure page' };
+  return { refuse: 'not secure', caution: '' };
+}
+
+// Where a person can find the steps (DESKTOP_SECOND_PASS.md, beside the speech program).
+export const SECURE_ADDRESS_HELP = 'the steps are in the speech program’s DESKTOP_SECOND_PASS notes';
+
+/**
+ * Words for a pass the plan left out (`plan.skipped[i]`), for the voice menu: `line` finishes "Not listening: ...",
+ * `unused` is a hint while something else is listening, `hint` what to do. Plain, and says what to change.
+ */
+export function skippedSays(s) {
+  const name = String(s?.name || 'Another computer');
+  if (s?.why === 'not secure') {
+    return { line: `${name}’s address needs to start with wss:// (a secure address)`,
+             unused: `${name} is not used: its address needs to start with wss:// (a secure address)`,
+             hint: `this page is secure, so the browser will not send sound to a ws:// address on another computer; ${SECURE_ADDRESS_HELP}` };
+  }
+  if (s?.why === 'no address') {
+    return { line: `${name} has no address yet`, unused: `${name} is not used: it has no address yet`,
+             hint: 'the room’s sound is not sent anywhere' };
+  }
+  return { line: `${name} is not used (${String(s?.why || 'left out')})`, unused: `${name} is not used (${String(s?.why || 'left out')})`, hint: '' };
+}
+
+/** A hint for a pass marked `caution` that is not answering, or '' (see `addressRefusal`). */
+export function cautionSays(e) {
+  if (!e || e.caution !== 'ws on a secure page' || e.state === 'ready') return '';
+  return `${e.name} is not answering: its address starts with ws://, which an older browser refuses on a secure page; a wss:// address is surer`;
+}
+
 /**
  * The ranked plan from a settings row. `speechEngine` (input_speech.js) is the FIRST pass; the two
  * pass fields add later ones. A pass naming another computer with no address is left out and listed
  * in `skipped` (the menu says why), duplicates are dropped, and 'browser' as the first pass returns
  * `{ browser: true }` - the browser's own recogniser takes no audio from here, so it cannot be in a
  * ranked list (it listens to the default microphone and hands back text with no utterance to match).
+ * `pageProtocol`: the page's protocol (default: read once here, at the boundary; the suites pass it). On an https
+ * page a ws:// address the browser would refuse is left out too, in `skipped` with why 'not secure'
+ * (`addressRefusal`).
  */
-export function enginePlanFrom(values = {}) {
+export function enginePlanFrom(values = {}, { pageProtocol: protocol = pageProtocol() } = {}) {
   const v = values || {};
   const num = (x, lo, hi, d) => {
     const n = Number(x);
@@ -308,7 +406,9 @@ export function enginePlanFrom(values = {}) {
     if (passes.some((p) => p.slot === s)) continue;
     const info = slotInfo(s);
     if (!/^wss?:\/\//i.test(info.url)) { skipped.push({ ...info, why: 'no address' }); continue; }
-    passes.push(info);
+    const secure = addressRefusal(info.url, protocol);
+    if (secure.refuse) { skipped.push({ ...info, why: secure.refuse }); continue; }
+    passes.push(secure.caution ? { ...info, caution: secure.caution } : info);
   }
   const wakeUrl = text(v.speechWakeUrl);
   const wake = /^wss?:\/\//i.test(wakeUrl) ? { url: wakeUrl } : null;
@@ -951,7 +1051,8 @@ export function rankedRecognizer({
       const cs = connsOf(p.slot);
       const ready = cs.some((c) => c.ready());
       const primary = conns.get(`${p.slot}|${firstEar}`) || cs[0];
-      return { slot: p.slot, name: p.name, state: ready ? 'ready' : (primary ? primary.state() : 'closed') };
+      return { slot: p.slot, name: p.name, state: ready ? 'ready' : (primary ? primary.state() : 'closed'),
+               ...(p.caution ? { caution: p.caution } : {}) };
     });
     let state = 'stopped';
     if (running) {

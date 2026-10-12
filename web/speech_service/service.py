@@ -142,6 +142,10 @@ CLOSE_PROTOCOL = 4400
 # That stops "DNS rebinding" (a site that points its own name at 127.0.0.1 so its page counts as
 # same-site and sends no Origin). When the service listens on another address (a Tailscale address, by
 # choice and with a secret), the name a screen uses for it cannot be known here, so Host is not checked.
+# A SECURE NAME IN FRONT OF IT (2026-10-11, DESKTOP_SECOND_PASS.md): `tailscale serve` on this computer gives the
+# service an https/wss name (your-desktop.your-tailnet.ts.net) and proxies to 127.0.0.1, keeping that name in Host
+# (tailscale ipn/ipnlocal/serve.go: `r.Out.Host = r.In.Host`). `--allow-host <that name>` accepts exactly it; every
+# other name is still refused, so the rebinding guard stands.
 # ---------------------------------------------------------------------------------------------
 # MIRRORS nimrod_helper/settings.py DEFAULTS 'platform' + 'alsoAllow'; test_helper.py fails if they
 # drift. Kept here as well because the service also runs on its own (a Pi has no helper).
@@ -174,19 +178,38 @@ def origin_allowed(origin, sites=DEFAULT_SITES) -> bool:
     return o in {str(s).rstrip('/') for s in (sites or ()) if s}
 
 
-def host_refusal(host) -> str:
+def host_names(values) -> tuple:
+    """--allow-host values (each may be comma-separated) as clean lower-case names, no port. None or []: ()."""
+    out = []
+    for v in values or ():
+        for s in str(v).split(','):
+            s = s.strip().lower().rstrip('.')
+            if s and s not in out:
+                out.append(s)
+    return tuple(out)
+
+
+def host_refusal(host, also=()) -> str:
     """'' when a Host header names this computer (or there is none), else why not. For a server that listens
-    only on this computer; the helper's status page uses it too (nimrod_helper/supervisor.py)."""
+    only on this computer; the helper's status page uses it too (nimrod_helper/supervisor.py).
+    `also`: names the person allowed by hand (--allow-host) - the secure name a proxy on this computer answers to
+    (`tailscale serve`, DESKTOP_SECOND_PASS.md). Such a proxy keeps the name the screen used in Host, so without
+    this the service would refuse its own proxy. Matched whole, case-insensitive, any port."""
     if host and not LOCAL_HOST.match(str(host).strip()):
+        name = str(host).strip().lower()
+        name = re.sub(r':\d+$', '', name).rstrip('.') if not name.startswith('[') else name
+        if also and name in also:
+            return ''
         return f'host {str(host)[:200]} is not this computer'
     return ''
 
 
-def refusal(origin, host, sites=DEFAULT_SITES, loopback: bool = True) -> str:
-    """'' when the request may go on, else why not (said in the 403 and the log, never anything heard)."""
+def refusal(origin, host, sites=DEFAULT_SITES, loopback: bool = True, hosts=()) -> str:
+    """'' when the request may go on, else why not (said in the 403 and the log, never anything heard).
+    `hosts`: extra Host names accepted while listening only on this computer (see host_refusal)."""
     if not origin_allowed(origin, sites):
         return f'origin {str(origin)[:200]} is not allowed'
-    return host_refusal(host) if loopback else ''
+    return host_refusal(host, hosts) if loopback else ''
 
 
 def secrets_match(expected: str | None, given) -> bool:
@@ -612,7 +635,7 @@ def note_refusal(why: str, every_s: float = 10.0) -> None:
 
 
 def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_UTTERANCE_S, wake=None,
-               sites=DEFAULT_SITES, loopback: bool = True, speakers=None):
+               sites=DEFAULT_SITES, loopback: bool = True, speakers=None, hosts=()):
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect
     from fastapi.responses import JSONResponse, Response
 
@@ -624,7 +647,7 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
         # the same CORS answer the helper's status page gives (its Origin echoed, the private-network
         # preflight answered), so a page on the person's Nimrod may read /health.
         origin = request.headers.get('origin')
-        why = refusal(origin, request.headers.get('host'), sites, loopback)
+        why = refusal(origin, request.headers.get('host'), sites, loopback, hosts)
         if why:
             note_refusal(why)
             return JSONResponse({'ok': False, 'error': why}, status_code=403)
@@ -650,7 +673,7 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
 
     @app.websocket('/speech')
     async def speech(ws: WebSocket):
-        why = refusal(ws.headers.get('origin'), ws.headers.get('host'), sites, loopback)
+        why = refusal(ws.headers.get('origin'), ws.headers.get('host'), sites, loopback, hosts)
         if why:
             note_refusal(why)
             # Closed BEFORE it is accepted: the server answers the handshake with HTTP 403, and no socket opens.
@@ -677,7 +700,7 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
 
 async def serve_websockets(backend, host: str, port: int, secret: str | None = None,
                            max_utterance_s: float = MAX_UTTERANCE_S, ready=None, wake=None,
-                           sites=DEFAULT_SITES, loopback: bool | None = None, sock=None, speakers=None):
+                           sites=DEFAULT_SITES, loopback: bool | None = None, sock=None, speakers=None, hosts=()):
     """`sock`: a socket from listen_socket() to serve on (host and port are then only what it was bound to)."""
     from http import HTTPStatus
     from websockets.asyncio.server import serve
@@ -687,7 +710,7 @@ async def serve_websockets(backend, host: str, port: int, secret: str | None = N
 
     def guard(connection, request):
         # Before the handshake completes: a page from another site gets HTTP 403 and no socket.
-        why = refusal(request.headers.get('Origin'), request.headers.get('Host'), sites, loopback)
+        why = refusal(request.headers.get('Origin'), request.headers.get('Host'), sites, loopback, hosts)
         if why:
             note_refusal(why)
             return connection.respond(HTTPStatus.FORBIDDEN, f'{why}\n')

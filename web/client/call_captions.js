@@ -26,12 +26,14 @@ import { rankedRecognizer, enginePlanFrom } from './speech_engines.js';
 
 // The plan for the call's ear, from the screen's (or person's) speech row. Pure.
 //   mode 'here': local passes only (remote passes are dropped, and said in `skipped`).
-export function callCaptionPlan(row, mode = 'here') {
-  const base = enginePlanFrom(row || {});
+//   `opts.pageProtocol`: the page's protocol (enginePlanFrom's; on https a ws:// address on another computer is
+//   left out, said in `skipped` with why 'not secure'). Default: read at the boundary; the suites pass it.
+export function callCaptionPlan(row, mode = 'here', opts = {}) {
+  const base = enginePlanFrom(row || {}, opts);
   if (base.browser) {
     // The browser's own recogniser is the first pass: it cannot take the call's stream. The local service is
     // still asked, at its default or chosen address - it may be running even when commands use the browser.
-    const local = enginePlanFrom({ ...(row || {}), speechEngine: 'local' });
+    const local = enginePlanFrom({ ...(row || {}), speechEngine: 'local' }, opts);
     return finish(local, mode, [{ slot: 'browser', name: 'The browser’s recogniser', why: 'cannot hear a call' }]);
   }
   return finish(base, mode, []);
@@ -54,11 +56,12 @@ export function createCallCaptions({
   row = {}, mode = 'here', sink = null, who = () => null,
   recognizer = rankedRecognizer, makeContext = undefined, WebSocketImpl = undefined,
   onStatus = null,
+  pageProtocol = undefined,   // a seam for the suites (callCaptionPlan's `opts.pageProtocol`)
 } = {}) {
   let stream = null;
   let rec = null;
   let offs = [];
-  const plan = callCaptionPlan(row, mode);
+  const plan = callCaptionPlan(row, mode, pageProtocol !== undefined ? { pageProtocol } : {});
 
   function build() {
     const opts = {
