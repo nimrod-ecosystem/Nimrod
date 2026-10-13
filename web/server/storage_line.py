@@ -72,6 +72,23 @@ check in front of them. These are the server's half of it - security invariants,
      refused there before this rule is reached. A note holds nobody's content, so this is not a privacy invariant like
      rules 5-7: it is the ruling held in code - nothing about a drive gains a copy here by accident. If Mike ever wants
      "with us" as a place for it (the ruling says "by default"), this rule becomes conditional the way rule 4 did.
+  9. A CONVERSATION OR A STORY WITH THE TOWN'S CHARACTERS IS REFUSED, EVERYWHERE (talk with the town and free-form
+     adventures, acbfb8c, 2026-10-12). client/story_ai.js keeps a story - every turn the person typed or said, the
+     storyteller's replies, the running summary - on the device (localStorage, `nimrod.story.<instanceId>`) and in the
+     person's Nimrod folder; never `ctx.state`, the server's copy. Refused in state, events and history alike (part of
+     check_content, so check_event and check_history refuse it too): anything carrying the saved story's own tag,
+     `"format": "nimrod-story"` (any case), or a key that is the device copy's own name, `nimrod.story.<anything>` (any
+     case) - which is what a page copying its local storage into a setting would send. story_ai.js has no event kind
+     or stream of its own, so there is none to refuse by name; an event CARRYING a story is refused by its content.
+     ARGUED, so this is not read as a new absolute: it is THE LINE above, applied - "nothing that is a person's
+     content goes on the server" - to one more kind of content. A conversation is the person's own words, the same
+     as the subtitles' learned words (rule 6), and nothing here needs it across devices: "Carry on" reads this
+     device's copy, and the Nimrod folder is where a story travels. Who wants the opposite: somebody who starts a
+     story on the bedside screen and wants to carry on from a phone with no shared folder. A fair want, and the
+     answer is the one rule 4 gave play history: if Mike ever wants "with us" as a place for stories, this becomes
+     conditional - kept only through a capped route, only when the person chose it in their own row - not
+     loosened here. (The words do pass THROUGH this site when a person picks the 'claude' storyteller,
+     nimrod_ai.js: that route answers and keeps nothing. This rule is about keeping, not about passing through.)
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -178,6 +195,12 @@ DRIVE_EVENT_KINDS = frozenset({"drive-status"})   # storage_notes.js NOTE_KIND
 DRIVE_EVENT_STREAMS = frozenset({"storage"})      # storage_notes.js NOTES_STREAM
 SAY_DRIVE = ("This looks like a note of how a picture drive is doing (its copy times, counts and free space). It is "
              "saved in the person's own Nimrod folder, wherever they keep it, and is not kept on this site.")
+# ---- rule 9: a conversation or a story with the town (story_ai.js) ----
+STORY_FORMAT = "nimrod-story"                     # web/client/story_ai.js STORY_FORMAT (the test holds them equal)
+STORY_SAVE_PREFIX = "nimrod.story."               # web/client/story_ai.js STORY_SAVE_PREFIX (the test holds them equal)
+SAY_STORY = ("This looks like a conversation or a story with the town's characters (what was said, turn by turn). It is "
+             "the person's own words, so it stays on the screen where it was told, or in the person's own Nimrod "
+             "folder, and is never kept on this site.")
 SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, or where "
                        "its person chose in \"Where your history is kept\" - not in this site's log.")
 
@@ -408,10 +431,29 @@ def looks_like_drive_note(data) -> bool:
     return False
 
 
+def looks_like_story(data) -> bool:
+    """Rule 9: a saved story's own tag, or a key named after the device copy (nimrod.story.<id>), any case.
+    Iterative, like _strings, so a deeply nested body cannot blow the stack."""
+    stack = [data]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            for k, x in v.items():
+                if isinstance(k, str) and k.strip().lower().startswith(STORY_SAVE_PREFIX):
+                    return True
+                if isinstance(k, str) and k.lower() == "format" and isinstance(x, str) \
+                        and x.strip().lower() == STORY_FORMAT:
+                    return True
+                stack.append(x)
+        elif isinstance(v, (list, tuple)):
+            stack.extend(v)
+    return False
+
+
 def check_content(data) -> None:
     """Rule 2: no picture, sound or video inside the JSON, as a data: address or as a long base64 run.
     Rule 5: no voiceprint. Rule 6: no record of what the subtitles learned. Rule 7: no list of hidden pictures.
-    Rule 8: no note of how a drive is doing."""
+    Rule 8: no note of how a drive is doing. Rule 9: no conversation or story with the town."""
     if looks_like_voiceprint(data):
         raise Refused(400, SAY_VOICEPRINT)
     if looks_like_learned_words(data):
@@ -422,6 +464,8 @@ def check_content(data) -> None:
         raise Refused(400, SAY_REMOVED)
     if looks_like_drive_note(data):
         raise Refused(400, SAY_DRIVE)
+    if looks_like_story(data):
+        raise Refused(400, SAY_STORY)
     for s in _strings(data):
         if s.lstrip()[:11].lower().startswith(_MEDIA_PREFIXES):
             raise Refused(400, "This has a picture, a sound or a video inside it. " + SAY_KEEP_IT_HOME
