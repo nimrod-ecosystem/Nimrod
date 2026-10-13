@@ -2613,3 +2613,19 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   opened, so it couldn't replace a panel). How the screen gets back to what it was showing is Code's to propose: the
   screen must never be left where only an input can bring the old dashboard back, so a voice-opened module returns by
   itself when it goes quiet, as well as on "go back". (2026-10-12)
+
+## Mike's answers of 2026-10-12 (late): Design's ideas, the next call game, cards, Spotify, the Pi speech model
+
+- **Build all of Design's ideas, starting with the Town module and story time** (then Who's who, dress-up, court
+  solitaire). Mike: *"It would be cool to have a conversation with people in the town and maybe even have little
+  choose your own adventure stories. Preferably free form like D&D or something. Could we do something like that on
+  the pi with my desktop connected like it is for the subtitles?"* So: conversations with the town's characters and
+  free-form adventures run on a language model through the one OpenAI-compatible adapter (ai.js), on Mike's desktop
+  (Ollama) the way the subtitles' second pass runs there; the Pi screen works without it (written stories), and
+  for everyone else the default must cost Mike nothing (CLAUDE.md, long-view direction). (2026-10-12)
+- **Word Builder is the next game playable together from a call.** (2026-10-12)
+- **Playing cards default to red and black.** Four colours stays a setting. (2026-10-12)
+- **Spotify: the bedside screen uses Mike's Spotify for now. Spotify Jams are an option for whoever wants them.**
+  (2026-10-12)
+- **Yes to downloading Whisper tiny.en and testing it on the bench Pi** as the Pi's own better speech model.
+  (2026-10-12)
