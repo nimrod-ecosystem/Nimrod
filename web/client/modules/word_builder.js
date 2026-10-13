@@ -32,12 +32,22 @@
 // every word found (or not) is one answer against it, so the set's own rating learns how hard it is,
 // and a player who finds more than 80% of words cleanly moves up a level (more letters, rarer words).
 // Two to four players take turns, one word each, each with their OWN letters at their own level.
+//
+// PLAYING TOGETHER, AND FROM A CALL (2026-10-12; Mike: Word Builder is the next game playable together from a call).
+// "Play together" works as Quiz mix's does - the room, the lobby, "On this call", and the caller's one-press ask are
+// the layer the two games share (game_together.js; the server half is web/server/game_rooms.py). What a TURN is here:
+// ONE WORD FROM THE PLAYER'S OWN LETTERS. Each screen deals its own players' letters off its own login's ladder,
+// judges the word there, and sends back only { seat, right, points } (one point a word; the server holds a Word
+// Builder room to that and to one fixed category, so neither the letters nor the word typed or said ever crosses).
+// The host keeps the turn order (every seat, wherever it sits) and the table; a game together is `togetherRounds`
+// rounds of one word each, then the table and Play again. Alone, the game is as it was: it goes on until stopped.
 
 import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
 import { flowSettings, fill, esc, normalize, parseLetters, LETTER_WORDS } from '../quiz_flow.js';
 import { quizModule, up } from '../quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder, MAX_PLAYERS } from '../adaptive_play.js';
+import { createTogether, scoreWords, REMOTE_TURN_MS } from '../game_together.js';
 import { PUZZLES, TIER, canMake } from '../word_builder_words.js';
 // 2026-10-02 late: opens waiting for Start, silent until then (quiz_view.js start gate, game_start.js).
 // No demo yet, so no "While nobody is playing" row.
@@ -50,6 +60,11 @@ export const GAMES = Object.freeze([GAME]);
 // (at, to, of, an), which are poor finds and would crowd every set with near-free answers. Three is
 // also where the hand-written list starts, so a setting below it would have nothing behind it.
 export const MIN_WORD = 3;
+// PLAYING TOGETHER: every word found is one point on the table, as on one screen ("a point"), and a Word Builder
+// room's one category. Both are mirrored by the server (game_rooms.py GAME_POINTS, GAME_CATEGORY), which holds a
+// room to them whatever a screen sends.
+export const WORD_POINTS = 1;
+export const TOGETHER_CATEGORY = Object.freeze({ group: 'words', id: 'word_builder', label: 'Word builder' });
 
 export const LINES = Object.freeze({
   // Not "That is incorrect.": the only miss here is a word these letters cannot make, so say that.
@@ -66,12 +81,18 @@ export const LINES = Object.freeze({
   notListedLine: '{heard} is not on this list. Try another one.',
   shortLine: 'Words here have at least three letters.',
   noMoreHintsLine: 'That is every letter but the last.',
+  // Playing together (2026-10-12): a new round, and the end of a game together.
+  roundLine: 'Round {round} of {rounds}.',
+  roundLineNoEnd: 'Round {round}.',
+  endLine: 'That is the end of the game. {scores}.',
 });
 const LINE_LABELS = {
   askLetters: 'Question: the letters', askMore: 'Question: after a word is found', hintFirst: 'Hint: the first letter',
   hintMore: 'Hint: more letters', explainWord: 'A word found', explainBonus: 'A bonus word found',
   explainLast: 'The last word found', alreadyLine: 'A word already found', notListedLine: 'A word not on the list',
   shortLine: 'Too short to be a word here', noMoreHintsLine: 'No more hints for this word',
+  roundLine: 'Playing together: a new round', roundLineNoEnd: 'Playing together: a new round (no end set)',
+  endLine: 'Playing together: the end of the game',
 };
 
 export const DEFAULTS = Object.freeze({
@@ -82,6 +103,7 @@ export const DEFAULTS = Object.freeze({
   // Words are different lengths, so there is no "full": a word is checked when Check is pressed (or
   // the whole word is said). Not offered as a setting for that reason.
   checkWhenFull: false,
+  togetherRounds: 5,
   autostart: false,
   autostartAlone: 'same',
   ...ADAPTIVE_DEFAULTS,
@@ -94,6 +116,14 @@ export const DEFAULTS = Object.freeze({
 //   wordsPerSet 5  a five-letter set can make fifteen words; asking for all of them is a long sitting
 //                  on one set. Five is a few minutes; the rest still count, as bonus words.
 //   showBlanks on  the length of each word still to find is the clue a grid gives for free.
+//   togetherRounds 5  a game played together (another screen, or a call) is this many rounds of one word each.
+//                  FOR more (Quiz mix plays 10): a longer game, and the table means more. FOR fewer: a word takes
+//                  far longer than a Quiz mix question - finding one in four or five letters is often half a
+//                  minute or more, with hints - so ten rounds for two players would be twenty words, a long
+//                  stretch of a call spent on one game. Five rounds for two is ten words: about Quiz mix's
+//                  length in minutes, and over while attention holds. 3, 5, 10, or no end ("keep going");
+//                  Play again for another. It changes nothing on one screen, where the game goes on until stopped.
+//                  [A guess: on Mike's list.]
 const SETTINGS = [
   ...autostartFields({ on: false }),
   ownScoreField({ level: 'essential', note: 'How many words are found (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
@@ -107,6 +137,9 @@ const SETTINGS = [
     onLabel: 'Yes, with their length', offLabel: 'No, only the words found' },
   { key: 'boardScan', label: 'Picking letters with a switch (one big button)', kind: 'choice', default: 'rows', level: 'standard',
     options: [{ value: 'rows', label: 'A row, then a letter' }, { value: 'keys', label: 'One key at a time' }] },
+  { key: 'togetherRounds', label: 'Rounds when playing together', kind: 'choice', default: 5, level: 'standard',
+    options: [3, 5, 10].map((v) => ({ value: v, label: String(v) })).concat([{ value: 0, label: 'No end: keep going' }]),
+    note: 'With another screen, or on a call. A round is one word for every player. On this screen alone, the game goes on until it is stopped.' },
   ...adaptiveSettings({ ai: false, startLevels: 5 }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS, sayChoice: false }),
 ];
@@ -229,6 +262,60 @@ registerModule(
     let unsubBack = null;
     let unsubPlay = null;
     const sets = new Map();      // player id -> their set
+
+    // ---- PLAYING TOGETHER (2026-10-12; the header): rounds of one word each, over a game room ----
+    let round = 0;               // this game together's round, from 1 (0: none yet)
+    let turnIdx = 0;             // whose turn in the round (an index into players())
+    let totals = {};             // seat -> words found, this game together
+    let ended = false;           // the last round is over
+    let playedIn = '';           // the room this game's rounds belong to (a new room is a new game)
+    let turnNow = null;          // { player, item, intro, said } here; { player, remote, done, serial } elsewhere;
+                                 // { player, item, guest, answered } on a screen that joined
+    let lastTable = null;        // { players, totals }: the table of the game together that just ended
+    let guestTurn = null;        // { seat, serial, round, category, dealt }: the host's turn for one of this screen's seats
+    let remoteSerial = 0;
+    let remoteTimer = null;
+    const phase = () => { try { return api?.engine.snapshot().phase || 'idle'; } catch { return 'idle'; } };
+    const together = createTogether(ctx, {
+      game: GAME, title: 'Word builder',
+      getApi: () => api, phase: () => phase(),
+      localPlayers: () => session.players(),
+      onTurn: (t) => onRoomTurn(t),
+      onAnswer: (a) => remoteDone(a),
+      remoteNow: () => (turnNow?.remote && !turnNow.done
+        ? { seat: turnNow.player.seat, serial: turnNow.serial, name: turnNow.player.name } : null),
+      skipRemote: (why) => {
+        if (turnNow?.remote && !turnNow.done) remoteDone({ seat: turnNow.player.seat, serial: turnNow.serial, right: false, points: 0, skipped: true, why });
+      },
+      publish: () => publish(),
+      tableLine: () => {
+        const ps = players();
+        return ps.length > 1 ? `<p class="wg-count" data-score>${esc(scoreWords(ps, totalsNow()).replace(/, /g, ' · '))}</p>` : '';
+      },
+      onGuestDone: () => { turnNow = null; guestTurn = null; },
+      beforeEnd: () => {
+        // Keep the table to show under Play again (on the host and on a screen that joined alike).
+        try { if (roundNow() > 0) lastTable = { players: players(), totals: { ...totalsNow() } }; } catch { lastTable = null; }
+        stopRemoteTimer();
+        guestTurn = null;
+        if (turnNow?.remote && !turnNow.done) turnNow.done = true;     // the seat is gone with the room
+      },
+      afterEnd: ({ wasGuest }) => { if (wasGuest) turnNow = null; },
+    });
+    const R = () => together.room();
+    const inRoom = () => together.inRoom();
+    const isHost = () => together.isHost();
+    const isGuest = () => together.isGuest();
+    // The turn order: the room's seats, wherever they sit; this screen's own players when not in a room.
+    const players = () => together.players(session.players());
+    const tkey = (p) => p?.seat || p?.id;
+    const totalsNow = () => (isGuest() ? (R().state().totals || {}) : totals);
+    const roundNow = () => (isGuest() ? Number(R().state().round) || 0 : round);
+    const roundsSet = () => {
+      const n = Math.floor(Number(cfgNow.togetherRounds));
+      return Number.isFinite(n) && n >= 0 ? n : DEFAULTS.togetherRounds;
+    };
+
     // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
     // start in this game, else their usual one; everybody else's stays on this screen's row; a refused save merges, entry by
     // entry (adaptive_play.js openPersonLadder).
@@ -254,6 +341,8 @@ registerModule(
     // a level-4 player would spend a whole set on three letters after every reload.
     function ladderArrived() {
       for (const [pid, st] of [...sets]) if (!st.found.length && !st.bonusFound.length) sets.delete(pid);
+      // Playing together, a skip would pass the turn on: the set on screen stays as it was dealt.
+      if (together.roomBusy()) return;
       const s = api?.engine.snapshot();
       if (s && s.phase === 'asking' && !s.entry && !s.misses && current && !current.found.length && !keyHints) api.engine.skip();
     }
@@ -265,12 +354,13 @@ registerModule(
       if (d && current && d.id === current.id && keyHints > 0) session.record({ item: current, right: false, skipped: true });
     }
 
-    function deal() {
-      flushPending();
-      const p = session.currentPlayer();
+    // THIS player's letters, on their own ladder: the set they have going, else a new one. (`player`: one of this
+    // screen's players - their ladder id finds them in the session's own list, so a seat's room index never reaches
+    // the ladder.) Call flushPending() first.
+    function dealFor(p) {
       let st = sets.get(p.id);
-      let q = st && !st.done ? session.deal(GAME, { again: st.id }) : session.deal(GAME);
-      if (!q) { current = null; return []; }
+      const q = st && !st.done ? session.deal(GAME, { again: st.id, player: p }) : session.deal(GAME, { player: p });
+      if (!q) { current = null; return null; }
       if (!st || st.done || q.id !== st.id) {
         st = newSet(q, { wordsPerSet: cfgNow.wordsPerSet });
         sets.set(p.id, st);
@@ -278,8 +368,170 @@ registerModule(
       keyHints = 0;
       engineHints = 0;
       current = st;
+      return st;
+    }
+    function deal() {
+      flushPending();
+      // On one screen again after a game together: its table is not this game's.
+      lastTable = null;
+      const st = dealFor(session.currentPlayer());
+      return st ? [st] : [];
+    }
+
+    // ---- PLAYING TOGETHER: the turns (the layer itself is game_together.js) ----
+    function newGame() {
+      round = 0; turnIdx = 0; totals = {}; ended = false; turnNow = null; lastTable = null;
+      stopRemoteTimer();
+    }
+    // The words before a word: the round when it starts, then whose turn it is.
+    function introFor(player, ps, fresh) {
+      const c = cfgNow;
+      const parts = [];
+      if (fresh && turnIdx === 0) {
+        const n = roundsSet();
+        parts.push(fill(n ? c.roundLine : c.roundLineNoEnd, { round, rounds: n }));
+      }
+      const turnLine = ps.length > 1 ? fill(c.turnLine, { player: player.name || `Player ${player.index + 1}` }) : '';
+      return { full: [...parts, turnLine].filter(Boolean).join(' '), turn: turnLine };
+    }
+    function prefixFor(st) {
+      if (!inRoom() || !turnNow || turnNow.item !== st) return session.askPrefix();
+      if (turnNow.said) return turnNow.intro.turn ? `${turnNow.intro.turn} ` : '';
+      turnNow.said = true;
+      return turnNow.intro.full ? `${turnNow.intro.full} ` : '';
+    }
+    /** THE HOST: the next turn - the next seat, wherever it sits (a new round when it is due). */
+    function hostItems() {
+      flushPending();
+      const code = R()?.code?.() || '';
+      if (phase() === 'done' || playedIn !== code) { newGame(); playedIn = code; }
+      const ps = players();
+      let fresh = false;
+      if (turnNow) {                            // the last turn is over...
+        if (turnNow.remote && !turnNow.done) return null;   // ...unless it is still being played on another screen
+        turnNow = null;
+        turnIdx += 1;
+        if (turnIdx >= ps.length) { turnIdx = 0; round += 1; fresh = true; }
+      }
+      if (round === 0) { round = 1; turnIdx = 0; fresh = true; }
+      const player = ps[turnIdx % ps.length];
+      if (player.remote) return remoteTurn(player, ps, fresh);
+      const st = dealFor(player);
+      if (!st) return [];
+      turnNow = { player, item: st, intro: introFor(player, ps, fresh), said: false };
+      publish();
       return [st];
     }
+    /** Asked before the next word: was that the last turn of the last round? (The host's; a game alone never ends.) */
+    function over() {
+      if (!isHost() || !turnNow) return false;
+      const n = roundsSet();
+      if (!n) return false;
+      if (round >= n && turnIdx >= players().length - 1) { ended = true; publish(); return true; }
+      return false;
+    }
+    function stopRemoteTimer() {
+      if (remoteTimer != null) { try { together.roomClear(remoteTimer); } catch { /* gone */ } }
+      remoteTimer = null;
+    }
+    // A turn that belongs to a seat on another screen: sent there, with this room's one category and nothing else.
+    function remoteTurn(player, ps, fresh) {
+      remoteSerial += 1;
+      const serial = remoteSerial;
+      const intro = introFor(player, ps, fresh);
+      turnNow = { player, remote: true, done: false, serial, intro };
+      R().turn({ seat: player.seat, serial, round: Math.min(999, round), category: { ...TOGETHER_CATEGORY } });
+      publish();
+      // The round and whose turn it is, said here too: the people at this screen are in the same game.
+      try { api?.say?.(intro.full); } catch { /* silent */ }
+      stopRemoteTimer();
+      remoteTimer = together.roomSet(() => { remoteTimer = null; remoteDone({ seat: player.seat, serial, right: false, points: 0, skipped: true, why: 'time' }); }, REMOTE_TURN_MS);
+      return null;
+    }
+    /** A result for the turn out at another screen (the room, the server's skip, "Skip their turn", or the backstop). */
+    function remoteDone(a) {
+      if (!turnNow?.remote || turnNow.done || !a || a.seat !== turnNow.player.seat || a.serial !== turnNow.serial) return;
+      stopRemoteTimer();
+      turnNow.done = true;
+      const pts = a.right === true ? Math.max(0, Math.min(WORD_POINTS, Math.floor(Number(a.points) || 0))) : 0;
+      const k = tkey(turnNow.player);
+      totals = { ...totals, [k]: (totals[k] || 0) + pts };
+      const n = roundsSet();
+      const last = !!n && round >= n && turnIdx >= players().length - 1;
+      if (last) { ended = true; publish(); api?.engine.end(); }
+      else { publish(); api?.engine.refresh(); }
+      api?.render();
+    }
+    /** The host's view of the game, to every screen in the room. Only the host sends it; the server checks it. */
+    function publish() {
+      if (!isHost()) return;
+      const ph = phase();
+      const tot = {};
+      for (const p of players()) if (p.seat) tot[p.seat] = Math.min(99999, totals[p.seat] || 0);
+      R().update({
+        phase: ended || ph === 'done' ? 'done' : (api?.begun?.() ? 'playing' : 'lobby'),
+        round: Math.min(999, round), rounds: Math.min(99, roundsSet()),
+        category: round > 0 ? { ...TOGETHER_CATEGORY } : null, turn: turnNow?.player?.seat || null, totals: tot,
+      });
+    }
+    // ---- A SCREEN THAT JOINED: its turns come from the host; only the result goes back ----
+    function guestAnswer(t, { right = false } = {}) {
+      try {
+        R()?.answer({ seat: t.seat, serial: t.serial, category: { group: TOGETHER_CATEGORY.group, id: TOGETHER_CATEGORY.id },
+          right: !!right, points: right ? WORD_POINTS : 0 });
+      } catch { /* gone */ }
+    }
+    function guestItems() {
+      flushPending();
+      // A turn that ended with no word (new letters before any try): still answered, as nothing found.
+      if (turnNow?.guest && !turnNow.answered) { turnNow.answered = true; guestAnswer(turnNow.guest); }
+      turnNow = null;
+      const t = guestTurn;
+      if (!t || t.dealt) return null;
+      t.dealt = true;
+      const player = players().find((p) => p.here && p.seat === t.seat);
+      if (!player) { guestAnswer(t); return null; }
+      const st = dealFor(player);
+      if (!st) { guestAnswer(t); return null; }
+      const line = players().length > 1 ? fill(cfgNow.turnLine, { player: player.name || 'Player' }) : '';
+      turnNow = { player, item: st, guest: t, answered: false, intro: { full: line, turn: line }, said: false };
+      return [st];
+    }
+    function onRoomTurn(t) {
+      if (!isGuest() || !t || !t.seat) return;
+      guestTurn = { ...t, dealt: false };
+      if (!api) return;
+      if (!api.begun()) { api.start(); return; }
+      if (phase() === 'done') api.engine.press('restart');
+      else api.engine.refresh();
+    }
+    function items() {
+      if (!inRoom()) return deal();
+      return isGuest() ? guestItems() : hostItems();
+    }
+    // The chips in front of the word, playing together: the round, and whose turn (here or elsewhere).
+    function chip(p) {
+      if (!p) return '';
+      const initial = esc((String(p.name || '').trim()[0] || '•').toUpperCase());
+      return `<span class="qz-turn" data-turn="${esc(p.id)}"><span class="qz-token" data-p="${p.index % MAX_PLAYERS}" aria-hidden="true">${initial}</span>${esc(p.name)}</span>`;
+    }
+    function turnHtml(s) {
+      if (!inRoom()) return session.turnHtml(s, GAME);
+      if (s.phase === 'done') return '';
+      const st = isGuest() ? R().state() : null;
+      const rn = roundNow();
+      if (!rn) return '';
+      const whoP = turnNow?.player || (st ? players().find((p) => p.seat === st.turn) : null);
+      const n = st ? Number(st.rounds) || 0 : roundsSet();
+      const roundBit = `<span class="qz-turn qm-round" data-round="${rn}">${esc(n ? `Round ${rn} of ${n}` : `Round ${rn}`)}</span>`;
+      return roundBit + (players().length > 1 && whoP ? chip(whoP) : '');
+    }
+    const tableHtml = (ps, tot) => {
+      const sorted = [...ps].sort((a, b) => (tot[tkey(b)] || 0) - (tot[tkey(a)] || 0));
+      const top = sorted.length ? (tot[tkey(sorted[0])] || 0) : 0;
+      return `<ol class="qm-table" data-table>${sorted.map((p) => `<li data-player="${esc(p.id)}"${(tot[tkey(p)] || 0) === top && top > 0 ? ' data-top' : ''}>`
+        + `<b>${esc(p.name || 'You')}</b><span>${tot[tkey(p)] || 0}</span></li>`).join('')}</ol>`;
+    };
 
     const totalHints = () => keyHints + engineHints;
     function askHint() {
@@ -294,7 +546,14 @@ registerModule(
     }
 
     const adapter = {
-      items: () => deal(),
+      items: () => items(),
+      over: () => over(),
+      // The end of a game together: the table, said. (A game alone ends with the usual words.)
+      doneLine: (c) => {
+        publish();                              // the host's "done" (the end, or a "stop") reaches every screen
+        const fin = inRoom() && (ended || (isGuest() && R().state().phase === 'done'));
+        return fin ? fill(c.endLine, { scores: scoreWords(players(), totalsNow()) }) : '';
+      },
       empty: () => 'There are no letters for this game yet.',
       entry: () => 'letters',
       ask(st, c) {
@@ -303,7 +562,7 @@ registerModule(
         const begun = st.found.length + st.bonusFound.length > 0;
         let line = begun ? fill(c.askMore, { letters, left: plural(left, 'word', 'words') }) : fill(c.askLetters, { letters });
         if (keyHints > 0) line += ` ${fill(c.hintLine, { hint: hintText(st, totalHints(), c) })}`;
-        return session.askPrefix() + line;
+        return prefixFor(st) + line;
       },
       judge: (st, v) => judgeWord(st, v),
       hint(st, n, c) {
@@ -378,7 +637,7 @@ registerModule(
         if (k.view === 'new') newLetters();
       },
       pairHtml: (s) => `<div class="wg-pair" data-pair>${esc(up(lettersOnly(s.pair.answer)))}</div>`,
-      turnHtml: (s) => session.turnHtml(s, GAME),
+      turnHtml: (s) => turnHtml(s),
       onResult(r) {
         const st = r.item;
         if (st && st === current) {
@@ -392,10 +651,31 @@ registerModule(
         }
         session.record({ ...r, hintsGiven: (r.hintsGiven || 0) + keyHints });
         keyHints = 0;
+        // Playing together: the word is this turn's. On the host it goes on the table; on a screen that joined, only
+        // { seat, right, points } goes back (game_rooms.py holds it to that) - never the word or the letters.
+        if (inRoom() && turnNow && !turnNow.remote && st === turnNow.item) {
+          const pts = r.right === true ? WORD_POINTS : 0;
+          if (turnNow.guest) {
+            if (!turnNow.answered) { turnNow.answered = true; guestAnswer(turnNow.guest, { right: r.right === true }); }
+          } else {
+            const k = tkey(turnNow.player);
+            totals = { ...totals, [k]: (totals[k] || 0) + pts };
+            publish();
+          }
+        }
       },
       allowAward: () => session.allowAward(),
-      scoreDetail: (s) => session.scoreDetail() || (s.rightCount ? plural(s.rightCount, 'word', 'words') : ''),
-      scoreLine: (s) => session.scoreDetail() || `${plural(s.rightCount, 'word', 'words')} found.`,
+      scoreDetail: (s) => (inRoom() ? scoreWords(players(), totalsNow())
+        : session.scoreDetail() || (s.rightCount ? plural(s.rightCount, 'word', 'words') : '')),
+      scoreLine: (s) => (inRoom() ? scoreWords(players(), totalsNow()).replace(/, /g, ' · ')
+        : session.scoreDetail() || `${plural(s.rightCount, 'word', 'words')} found.`),
+      // Playing together (game_together.js): the table under Play again, the waiting lines, the lobby and its sheet.
+      doneHtml: () => (lastTable ? tableHtml(lastTable.players, lastTable.totals)
+        : (inRoom() && roundNow() > 0 ? tableHtml(players(), totalsNow()) : '')),
+      waitingHtml: () => together.waitingHtml(),
+      sheetHtml: (s) => together.sheetHtml(s),
+      onClick: (e) => together.onClick(e),
+      onMove: (m) => together.onMove(m),
       pointNote: (game, item, answer) => `word builder: ${lettersOnly(answer)}`,
       onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); },
       init(a) {
@@ -411,8 +691,12 @@ registerModule(
               : (ph === 'celebrate' || ph === 'answer') ? 'continue' : 'repeat');
           });
         } catch { unsubPlay = null; }
+        // Playing together: the join page's room (ctx.autoJoin), and the call's asks (ctx.onGameAsk).
+        together.init();
       },
       destroy: () => {
+        stopRemoteTimer();
+        together.destroy();
         session.destroy();
         try { if (typeof unsubBack === 'function') unsubBack(); } catch { /* gone */ }
         try { if (typeof unsubPlay === 'function') unsubPlay(); } catch { /* gone */ }
@@ -427,6 +711,16 @@ registerModule(
     inner.__session = session;
     inner.__sets = sets;
     inner.__current = () => current;
+    // For the suites: the game together as this screen sees it (the same shape as Quiz mix's __mix where it overlaps).
+    inner.__together = () => ({ round, turnIdx, totals: { ...totals }, ended, turnNow, players: players(), lastTable,
+      room: R() ? { phase: R().phase(), role: R().role(), code: R().code(), you: R().you(), seats: R().seats(),
+        state: R().state(), waiting: R().waiting() } : null,
+      sheet: together.sheet(), note: together.note(), showLobby: together.showLobby(), guestTurn,
+      totalsNow: { ...totalsNow() }, asked: together.asked(),
+      act: (a, arg) => together.act(a, arg), join: (c) => together.joinRoom(c), open: (o) => together.startRoom(o),
+      stop: () => together.stop() });
+    // Asked from the call, handed straight in (the kiosk's call view opens this panel for an ask, then gives it the ask).
+    inner.askTogether = (a) => together.onAsk(a);
     return inner;
   },
 );

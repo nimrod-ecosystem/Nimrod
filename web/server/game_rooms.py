@@ -91,8 +91,9 @@ from dataclasses import dataclass, field
 # The kinds a device may SEND. Mirrored in game_room.js, and duplicated rather than shared, for the reason
 # drive.py gives for its verbs: a boundary that widens because another file grew an entry is not a boundary.
 GAME_KINDS = frozenset({"room", "join", "admit", "turn", "answer", "leave", "ping"})
-# The games a room may be for. One today.
-GAMES = frozenset({"quiz_mix"})
+# The games a room may be for. Word Builder joined Quiz mix on 2026-10-12 (Mike: Word Builder is the next game
+# playable together from a call).
+GAMES = frozenset({"quiz_mix", "word_builder"})
 ADMIT_MODES = frozenset({"ask", "connected"})
 PHASES = frozenset({"lobby", "playing", "done"})
 
@@ -105,6 +106,23 @@ MAX_WAITING = 6            # asking to join at once; a family is a handful, a lo
 MAX_NAME = 40
 MAX_LABEL = 60
 MAX_POINTS = 3             # question_pick.js turnPoints: 1 + round(2 x (1 - chance)), at most 3
+
+# WHAT EACH GAME'S TURN MAY CARRY (2026-10-12, Word Builder together). The wire is ONE shape for every game - a turn
+# is {seat, serial, round, category}, an answer is {seat, serial, category, right, points} - and the room holds it
+# per game to the least that game needs. Argued, for Word Builder:
+#   WHAT A TURN IS: one word found from the player's own letters, dealt on THEIR screen off THEIR ladder, exactly as
+#     a Quiz mix turn is one question. So it needs nothing new on the wire: which seat, which turn, right or not,
+#     and the points. The letters, the word typed or said, the hints, the level: none of them crosses.
+#   ONE CATEGORY, FIXED HERE (GAME_CATEGORY): Word Builder has no rounds of different kinds, so the host's category
+#     (and its free-text label) is replaced with the server's own on every turn, state and answer of a Word Builder
+#     room. A host can therefore never put the letters, or a word, into the label for another screen to read.
+#   ONE POINT A WORD (GAME_POINTS): every word found is worth one, as on one screen (word_builder.js: "a point"); a
+#     screen claiming more is held to it, as a wrong answer claiming points is held to none.
+#   Considered and left out: the word's length or whether it was a bonus word (both say something about what was
+#     typed, and nothing at the host needs them), a "skipped" flag from the guest (a turn given up is right=false,
+#     0 points; the server's own skips already carry `skipped`).
+GAME_POINTS = {"quiz_mix": MAX_POINTS, "word_builder": 1}
+GAME_CATEGORY = {"word_builder": {"group": "words", "id": "word_builder", "label": "Word builder"}}
 
 # A code people read off a screen and type: no I/L/1, no O/0. 31^6 is about 887 million, and a code alone
 # is not a key (the join door above still applies).
@@ -355,6 +373,23 @@ def parse_game(raw) -> dict | None:
         return {"kind": "leave", "id": d}
 
     return None
+
+
+def held_category(game: str, cat, *, label: bool = True):
+    """A category as a room of `game` may carry it: the game's own fixed one (GAME_CATEGORY), whatever was sent,
+    or - for a game with no fixed category - what was sent (already cleaned by parse_game). None stays None."""
+    fixed = GAME_CATEGORY.get(game)
+    if fixed is None or cat is None:
+        return cat
+    return dict(fixed) if label else {"group": fixed["group"], "id": fixed["id"]}
+
+
+def held_points(game: str, right: bool, points: int) -> int:
+    """The points a right answer in a room of `game` may be worth: at most GAME_POINTS for that game, never any for
+    a wrong one."""
+    if not right:
+        return 0
+    return max(0, min(int(points), GAME_POINTS.get(game, MAX_POINTS)))
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -656,6 +691,7 @@ class GameRooms:
             st["totals"] = {k: v for k, v in st["totals"].items() if k in ids}
             if st.get("turn") not in ids:
                 st["turn"] = None
+            st["category"] = held_category(room.game, st.get("category"))
             room.state = st
         return self._broadcast(room)
 
@@ -684,12 +720,13 @@ class GameRooms:
             return []                               # the host plays its own seats itself
         room.touched = self._now()
         dev = room.devices[seat["device"]]
+        cat = held_category(room.game, msg["category"])
         room.turn = {"seat": seat["id"], "device": dev.id, "serial": msg["serial"], "round": msg["round"],
-                     "category": msg["category"], "since": self._now()}
+                     "category": cat, "since": self._now()}
         if dev.conn is None:
             return []                               # away: the clock skips it (SEAT_AWAY_S)
         return [(dev.conn, {"kind": "turn", "seat": seat["id"], "serial": msg["serial"], "round": msg["round"],
-                            "category": msg["category"]})]
+                            "category": cat})]
 
     # ---- guests -------------------------------------------------------------------------------------
     def _join(self, conn, account: str, msg: dict) -> list:
@@ -763,8 +800,10 @@ class GameRooms:
             return []
         room.turn = None
         room.touched = self._now()
+        # Per game (GAME_CATEGORY, GAME_POINTS): a Word Builder answer carries the fixed category and one point at most.
         return self._to_host(room, {"kind": "answer", "seat": msg["seat"], "serial": msg["serial"],
-                                    "category": msg["category"], "right": msg["right"], "points": msg["points"]})
+                                    "category": held_category(room.game, msg["category"], label=False),
+                                    "right": msg["right"], "points": held_points(room.game, msg["right"], msg["points"])})
 
     def _leave(self, conn, msg: dict) -> list:
         w = self._where.get(conn)

@@ -158,6 +158,9 @@ export const SUITES = [
   'quiz_mix',
   // 2026-10-06: Quiz mix played together - with another screen or on a call (game_room.js; game_rooms.py on the server).
   'quiz_together',
+  // 2026-10-12: Word Builder played together and asked for from a call - one word a turn, from each player's own letters
+  // (game_together.js, the layer it shares with Quiz mix; game_rooms.py holds a Word Builder room to one point a word).
+  'word_together',
   // 2026-10-02: "person known" -- panels that read the person once at mount end up with the person on a slow boot.
   'person_known',
   // The room, the cat, ambient motion and sound.

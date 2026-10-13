@@ -52,8 +52,9 @@ export const STATES = ['offline', 'connecting', 'connected'];
 // payloads onto a bedside screen, which is exactly what the verb allowlist exists to stop.
 export const SIGNAL_KINDS = ['offer', 'answer', 'bye', 'ice'];
 
-// The games a call may be offered (game_rooms.py GAMES). An invitation for anything else is ignored.
-export const GAME_INVITE_GAMES = ['quiz_mix'];
+// The games a call may be offered, or a caller may ask for (game_rooms.py GAMES; Word Builder since 2026-10-12). An
+// invitation or an ask for anything else is ignored.
+export const GAME_INVITE_GAMES = ['quiz_mix', 'word_builder'];
 
 const wsURL = (base, personId, ticket, role, follow = false) => {
   const origin = base

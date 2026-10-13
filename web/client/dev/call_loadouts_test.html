@@ -234,7 +234,7 @@ try {
 
   // =====================================================================================
   section('*** LIVE, through the real server: a screen with no Call panel answers into "Audio + talk board" ***');
-  let k = null, ph = null, media = null, d = null;
+  let k = null, ph = null, media = null, d = null, ph2 = null, gl2 = null;
   try {
     const KUSER = 'call-loadouts-' + Math.floor(Math.random() * 1e9);
     const profiles = createProfilesClient({ user: KUSER });
@@ -388,6 +388,65 @@ try {
       // Asked again: the game comes back, lit, and Hang up by switch still ends the call with it open.
       check('LIVE: asked again, the game opens again in the call view, lit', ph.askGame('quiz_mix') === true
         && await settled(() => !!k.callGame() && cvNow().stop === 'game', 8000), JSON.stringify({ stop: cvNow().stop }));
+      // *** WORD BUILDER (2026-10-12): the same one press, from the caller's page; it takes the game's half in Quiz mix's
+      // place, starts when the caller joins, and a switch answers it. (A second socket for the caller: one ask per
+      // socket per 10 s on the server, and this one just asked.) ***
+      ph2 = connectDrive({ personId: person.id, role: 'driver', user: KUSER });
+      await settled(() => ph2.state() === 'connected', 8000);
+      const wbInv = [];
+      const offWb = ph2.onGameInvite((i) => { if (i.game === 'word_builder') wbInv.push(i); });
+      check('*** LIVE: the caller asks for Word Builder, with one message ***', ph2.askGame('word_builder') === true);
+      const wb = () => k.callGame()?.inst?.impl?.__together?.();
+      check('*** LIVE: Word Builder opens in the call view, in Quiz mix\'s place - lit, the lap the game then Hang up ***',
+        await settled(() => k.callGame()?.inst?.type === 'word_builder' && !!game()?.querySelector('[data-qm-asked]'), 8000)
+        && root.querySelectorAll('[data-call-game]').length === 1 && cvNow().stop === 'game' && (cvNow().lap || []).join() === 'game,hangup',
+        JSON.stringify({ type: k.callGame()?.inst?.type, stop: cvNow().stop, lap: cvNow().lap, text: game()?.textContent?.slice(0, 120) }));
+      check('*** LIVE: the Word Builder room\'s code comes back to the caller, naming the game ***',
+        await settled(() => wbInv.length > 0, 6000) && /^[A-Z0-9]{6}$/.test(wbInv[0]?.code || ''), JSON.stringify(wbInv));
+      gl2 = connectGameRoom({ user: KUSER });
+      const got2 = [];
+      gl2.onMessage((m) => got2.push(m));
+      await settled(() => gl2.state() === 'connected', 6000);
+      gl2.send({ kind: 'join', code: wbInv[0]?.code, seats: [{ name: 'Tess' }] });
+      check('*** LIVE: the caller joins, and Word Builder starts by itself on the screen ***',
+        await settled(() => got2.some((m) => m.kind === 'joined') && (wb()?.round || 0) >= 1
+          && got2.some((m) => m.kind === 'room' && m.state?.phase === 'playing'), 8000),
+        JSON.stringify({ round: wb()?.round, joined: got2.some((m) => m.kind === 'joined') }));
+      const probe = () => k.callGame()?.inst?.impl?.__probe?.() || {};
+      check('(setup) the screen\'s player has the first word, and its letters are asked', await settled(() => wb()?.turnNow && !wb().turnNow.remote
+        && probe().phase === 'asking', 8000), JSON.stringify({ phase: probe().phase }));
+      let wSel = 0, wBare = 0;
+      const offW = [
+        kbus.subscribe('word_builder/select#call:game', () => { wSel += 1; }),
+        kbus.subscribe('word_builder/select', () => { wBare += 1; }),   // bare-topic-ok: proving NOTHING is published to the bare topic (no Word Builder panel under the call view hears it)
+      ];
+      kbus.publish(verbTopic('select'));
+      await sleep(60);
+      kbus.publish(verbTopic('select'));
+      await sleep(80);
+      check('*** LIVE: a switch answers Word Builder in the call view: Select, Select - into the letters, and one letter taken ***',
+        wSel === 2 && wBare === 0 && String(probe().entry || '').length === 1 && dEnded.length === 0,
+        JSON.stringify({ wSel, wBare, entry: probe().entry, phase: probe().phase }));
+      // The word itself, said (as a voice would): right, and the turn goes to the caller - with nothing of it on the wire.
+      const st = k.callGame()?.inst?.impl?.__current?.();
+      const word = (st?.required || []).find((w) => !st.found.includes(w)) || '';
+      k.callGame()?.inst?.impl?.__engine?.clearEntry?.();
+      k.callGame()?.inst?.impl?.hear?.({ text: word, confidence: 0.95 });
+      check('LIVE: the screen\'s player finds a word: a point on the table', await settled(() => (wb()?.totals?.['d0.0'] || 0) === 1, 4000),
+        JSON.stringify({ word, totals: wb()?.totals, phase: probe().phase }));
+      kbus.publish(verbTopic('select'));      // on to the next turn (the after-answer's Next), or it goes on by itself
+      check('*** LIVE: the caller\'s turn reaches the caller: the room\'s one category, no letters ***',
+        await settled(() => got2.some((m) => m.kind === 'turn'), 30000)
+        && JSON.stringify(got2.find((m) => m.kind === 'turn')?.category) === JSON.stringify({ group: 'words', id: 'word_builder', label: 'Word builder' }),
+        JSON.stringify(got2.find((m) => m.kind === 'turn')));
+      const tw = got2.find((m) => m.kind === 'turn');
+      gl2.send({ kind: 'answer', seat: tw?.seat, serial: tw?.serial, category: { group: 'words', id: 'word_builder' }, right: true, points: 3 });
+      check('*** LIVE: the caller\'s word comes back as ONE point (the server holds it), and the screen\'s next word is asked ***',
+        await settled(() => (wb()?.totals?.[tw?.seat] || 0) === 1 && probe().phase === 'asking', 8000),
+        JSON.stringify({ totals: wb()?.totals, phase: probe().phase }));
+      check('LIVE: the switch lap is still the game, then Hang up, with the game lit', cvNow().stop === 'game' && (cvNow().lap || []).join() === 'game,hangup');
+      offW.forEach((off) => off?.());
+      offWb?.();
     }
     // Hang up BY SWITCH with the game open: Move to the next panel, then Select.
     kbus.publish(verbTopic('focus-next'));
@@ -405,6 +464,8 @@ try {
     try { k?.destroy(); } catch { /* gone */ }
     try { d?.destroy(); } catch { /* gone */ }
     try { ph?.close(); } catch { /* gone */ }
+    try { gl2?.close(); } catch { /* gone */ }
+    try { ph2?.close(); } catch { /* gone */ }
     try { media?.getTracks().forEach((t) => t.stop()); } catch { /* gone */ }
   }
 } catch (e) {
