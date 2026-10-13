@@ -351,6 +351,41 @@ check("*** storage_notes.js has no way to reach the site (no fetch, XMLHttpReque
       not any(s in sn_src for s in ("fetch(", "XMLHttpRequest", "sendBeacon(", "/api/")))
 
 
+# ---------------------------------------------------------------- rule 9: a conversation or story with the town
+section("rule 9 - a conversation or a story with the town is the person's own words, and is not kept here (2026-10-12)")
+story_rec = {"format": "nimrod-story", "kind": "adventure", "character": "king", "theme": "nimrod",
+             "summary": "We found a key under the bridge.", "choices": ["Open the door", "Go home"],
+             "turns": [{"role": "user", "text": "I look under the bridge"},
+                       {"role": "assistant", "text": "You find a small brass key."}],
+             "lastSay": "You find a small brass key.", "count": 1, "at": 1760300000000}
+r = refused(lambda: sl.check_state({"theme": "warm", "story": story_rec}))
+check("*** a saved story, put in a setting: refused, 400, with a sentence that says where it stays ***",
+      r and r[0] == 400 and "Nimrod folder" in r[1] and "never kept on this site" in r[1], r)
+check("...by its tag in any case, a talk with a character too (kind 'talk')",
+      refused(lambda: sl.check_state({"a": [{"Format": " NIMROD-Story "}]}))
+      and refused(lambda: sl.check_state({**story_rec, "kind": "talk"})))
+check("...and as a key that is the device copy's own name (a page copying its local storage into a setting)",
+      refused(lambda: sl.check_state({"nimrod.story.adv-1": {"summary": "x"}}))
+      and refused(lambda: sl.check_state({"saved": {"Nimrod.Story.panel7": "{}"}})))
+r = refused(lambda: sl.check_event("gameplay", "trial", {"ok": True, "story": story_rec}))
+check("*** a story carried in an event, on any stream: refused, 400 (check_event reaches it through its content) ***",
+      r and r[0] == 400 and "own words" in r[1], r)
+check("...and inside a history row the person DID opt in for: refused anyway (no opt-in covers stories)",
+      refused(lambda: sl.check_history("plays", [{"kind": "play", "data": {"source": "photos", "id": "a.jpg",
+                                                                            "n": story_rec}}], {"plays": "us"})))
+check("NOT refused: the word 'story' in a setting, Story time's own choices, a story module's panel settings",
+      refused(lambda: sl.check_state({"story": "The Three Bears", "storyTime": {"readAloud": True},
+                                      "format": "nimrod-stories-list", "keepOnDevice": True})) is None
+      and refused(lambda: sl.check_event("gameplay", "trial", {"game": "story", "format": "nimrod-story-time"})) is None)
+sa_src = (Path(__file__).resolve().parents[1] / "client" / "story_ai.js").read_text(encoding="utf-8")
+check("*** the tag and the device copy's name here are the client's own (story_ai.js) - one name, two files ***",
+      f"export const STORY_FORMAT = '{sl.STORY_FORMAT}';" in sa_src
+      and f"export const STORY_SAVE_PREFIX = '{sl.STORY_SAVE_PREFIX}';" in sa_src)
+adv_src = (Path(__file__).resolve().parents[1] / "client" / "modules" / "adventure.js").read_text(encoding="utf-8")
+check("*** the Adventure module never puts a story in its server copy (no state.set / state?.set / events append) ***",
+      not any(s in adv_src for s in ("state.set(", "state?.set(", "state?.set?.(", ".append(\"", "events?.append")), "found a write")
+
+
 # ---------------------------------------------------------------- own board clips (2026-10-09)
 section("own board clips - a board's card sounds stay on the device and in the Nimrod folder (board_sounds.js)")
 own_board = {"board": {"id": "own-x", "name": "My board", "cols": 3, "rows": 2, "cells": [
@@ -423,6 +458,9 @@ for name, url in state_urls.items():
     r = c.put(url, json={"data": {"theme": "warm", "drives": [drive_note]}, "base_version": v}, headers=H)
     check(f"*** {name}: a drive note is refused, 400 (rule 8) ***",
           r.status_code == 400 and "Nimrod folder" in r.json().get("detail", ""), r.text)
+    r = c.put(url, json={"data": {"theme": "warm", "story": story_rec}, "base_version": v}, headers=H)
+    check(f"*** {name}: a story with the town is refused, 400 (rule 9) ***",
+          r.status_code == 400 and "own words" in r.json().get("detail", ""), r.text)
     r = c.put(url, json={"data": sized(sl.STATE_MAX_BYTES + 10), "base_version": v}, headers=H)
     check(f"*** {name}: too big is refused, 413 ***", r.status_code == 413 and "too big" in r.json().get("detail", ""),
           f"{r.status_code} {r.text[:200]}")
@@ -474,6 +512,9 @@ for name, url in event_urls.items():
     storage_url = url.rsplit("/", 1)[0] + "/storage"
     r = c.post(storage_url, json={"kind": "note", "data": {"x": 1}}, headers=H)
     check(f"{name}: the `storage` stream is refused, whatever the kind (rule 8)", r.status_code == 400, r.text)
+    r = c.post(url, json={"kind": "trial", "data": {"story": story_rec}}, headers=H)
+    check(f"*** {name}: a story with the town, in an event: refused, 400 (rule 9) ***",
+          r.status_code == 400 and "own words" in r.json().get("detail", ""), r.text)
     check(f"{name}: ...and nothing refused was appended", c.get(url, headers=H).json()["total"] == before)
     check(f"{name}: ...nor on hidden", c.get(hidden_url, headers=H).json()["total"] == 0)
     check(f"{name}: ...nor on storage", c.get(storage_url, headers=H).json()["total"] == 0)
