@@ -44,6 +44,8 @@ import {
 } from '../klondike.js';
 import { createPlayWatch } from '../game_start.js';
 import { CARD_DEFAULTS, cardSettingsFields, cardArt, watchTheme } from '../card_deck.js';
+// town (2026-10-12): the person's rearranged town places (modules/town.js) behind the cards; null = Design's own town.
+import { watchTownEdits } from '../town_edits.js';
 
 export const GAME = 'solitaire';
 export const SCORE_LABEL = 'Solitaire: cards home';
@@ -179,6 +181,7 @@ registerModule(
     let plays = null;
     // THE THEME ON SCREEN (card_deck.js watchTheme): the deck the cards wear, redrawn when it changes.
     let themeWatch = null;
+    let townWatch = null;   // town (2026-10-12): the person's edited places, per theme (town_edits.js)
     const artId = String(ctx.instanceId || `s${Math.floor(rand() * 1e9)}`).replace(/[^A-Za-z0-9_-]/g, '');
 
     const game = () => snaps[snaps.length - 1];
@@ -369,7 +372,11 @@ registerModule(
     // ---- drawing ------------------------------------------------------------------------------
     // The card's drawing is Design's (card_deck.js cardArt), in the theme's deck and this table's settings; the
     // element around it carries the name a screen reader reads, and the rings, the lift and the marker.
-    const art = (c) => cardArt(c, themeWatch ? themeWatch.id() : 'default', cfg, { idSuffix: artId });
+    // town (2026-10-12): with the person's rearranged town places, so an edited King's hall is behind the King.
+    const art = (c) => {
+      const theme = themeWatch ? themeWatch.id() : 'default';
+      return cardArt(c, theme, cfg, { idSuffix: artId, town: townWatch ? townWatch.forTheme(theme) : null });
+    };
     function cardHtml(c, { key = null, style = '', picked: isPicked = false, on = false } = {}) {
       if (!c.up) return `<div class="sol-card" data-up="0" style="${style}" role="img" aria-label="face down">${art(c)}</div>`;
       const tag = key ? 'button' : 'div';
@@ -497,6 +504,7 @@ registerModule(
         rootEl = mount.querySelector('[data-sol-root]');
         mount.addEventListener('click', onClick);
         themeWatch = watchTheme(mount, () => render());
+        townWatch = watchTownEdits(ctx, () => render());   // town (2026-10-12)
 
         try { ledger = typeof ctx.makeEvents === 'function' ? createPointsLedger({ makeEvents: ctx.makeEvents, bus }) : null; }
         catch (err) { ledger = null; console.error('solitaire: no points ledger', err); }
@@ -548,6 +556,8 @@ registerModule(
         dead = true;
         if (plays) { plays.destroy(); plays = null; }
         themeWatch?.stop();
+        townWatch?.stop();   // town (2026-10-12)
+        townWatch = null;
         mount.removeEventListener('click', onClick);
         if (ticker != null) { clearInterval(ticker); ticker = null; }
         try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }

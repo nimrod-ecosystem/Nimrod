@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>town — the theme's town: every place drawn, opened, rearranged per person, and on the cards — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>town — Design's town as a module (2026-10-12)</h1>
+<p>Mike, 2026-10-12: build Design's ideas, the Town first. This suite checks Design's drawing for <b>every theme's eight
+places</b>; the edits as pure functions (<code>town_edits.js</code>: move, bigger, smaller, turn round, take out, add, the
+bounds); the person's store (per theme, per place, put back); that <b>an edited King's hall is on the King card</b>
+(<code>card_deck.js cardArt</code>) and on a real solitaire table; and the panel: the town, a place opened full size, the
+light for one switch, two switches, touch, <b>voice</b> ("go to the bakery"), rearranging and saving, going back by
+itself, the "Talk to" seam (<code>town_talk.js</code>), the theme changing, and a teardown that leaves nothing running.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/town.js';
+import '../modules/sortbricks.js';   // the keys this one shares (lightMoves, scanMs, sayChoice): the audit checks they agree
+import '../modules/solitaire.js';
+import { auditManifests } from '../settings_audit.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import { moduleVoiceTable, SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC } from '../input_speech.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import { applyTheme } from '../theme.js';
+import { PLACES, TOWN_DRESS, placeSvg, placeInfo, placeRecipe } from '../town.js';
+import { KIT } from '../theme_kits.js';
+import { cardArt } from '../card_deck.js';
+import {
+  TOWN_KEY, PLACE_IDS, EDITABLE_PLACES, TOWN_THEMES, moveItem, scaleItem, flipItem, removeItem, addPiece, cleanRecipe,
+  editsFor, openTownEdits, watchTownEdits, piecesFor, itemName, RECIPE_MAX_ITEMS, FLOOR_Y, WALL_Y, X_RANGE,
+} from '../town_edits.js';
+import { sceneSvg } from '../town_scene.js';
+import { registerTownTalk, townTalkReady, TOWN_TALK_TOPIC } from '../town_talk.js';
+import { TYPE, TITLE, DEFAULTS, IDLE_MS, MOVE_STEP, VOICE, placeFromSpeech, placeWords } from '../modules/town.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = () => sleep(0);
+
+function fakeTimers() {
+  let t = 0, id = 0;
+  const q = new Map();
+  return {
+    set(fn, ms) { const h = ++id; q.set(h, { at: t + Math.max(0, Number(ms) || 0), fn }); return h; },
+    clear(h) { q.delete(h); },
+    pending: () => q.size,
+    run(ms) {
+      const end = t + ms;
+      for (let guard = 0; guard < 100000; guard++) {
+        let next = null;
+        for (const [h, x] of q) if (x.at <= end && (!next || x.at < next[1].at)) next = [h, x];
+        if (!next) break;
+        q.delete(next[0]);
+        t = Math.max(t, next[1].at);
+        next[1].fn();
+      }
+      t = end;
+    },
+  };
+}
+function fakeOutput() {
+  const said = [];
+  let n = 0;
+  return { said, say(text) { said.push(String(text)); return `s${++n}`; }, cancel() { return true; } };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+// One person's rows, shared by every panel that asks (as the real per-person store is).
+function people() {
+  const rows = new Map();
+  const make = (pid, key) => { const k = `${pid}:${key}`; if (!rows.has(k)) rows.set(k, fakeState({})); return rows.get(k); };
+  return { make, row: (pid, key) => make(pid, key).get() };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ host = scratch(), bus = createBus(), saved = {}, timers = fakeTimers(), output = fakeOutput(),
+                 person = null, personId = 'p1' } = {}) {
+  const state = fakeState(saved);
+  const inst = mountModule(TYPE, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: person ? personId : null,
+    instanceId: `tw${++n}`, output, setTimer: timers.set, clearTimer: timers.clear,
+    ...(person ? { makePersonState: person.make } : {}),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  const stopEl = (act, extra = '') => host.querySelector(`[data-stop][data-act="${act}"]${extra}`);
+  return { inst, host, bus, state, probe, timers, output,
+    pub: (verb, p) => bus.publish(`${TYPE}/${verb}`, p),
+    verb: (v) => bus.publish(verbTarget(TYPE, v).topic),
+    click: (el) => el.dispatchEvent(new MouseEvent('click', { bubbles: true })),
+    stopEl, say: () => host.querySelector('.tw-say')?.textContent || '' };
+}
+const kingCard = (theme, town) => cardArt({ s: 'H', r: 13, up: true }, theme, { cardScenery: 'on' }, { town });
+
+(async () => {
+try {
+  // =====================================================================
+  section('*** every theme draws its eight places (Design\'s town.js, as it is) ***');
+  {
+    check('eight places: four homes and a place for each suit', PLACE_IDS.length === 8
+      && ['kingHall', 'queenParlour', 'jackWorkshop', 'jokerCaravan'].every((id) => PLACES[id].who)
+      && ['bakery', 'shop', 'park', 'library'].every((id) => PLACES[id].suit));
+    check('six themes have a town of their own', J(TOWN_THEMES) === J(['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk']));
+    for (const t of TOWN_THEMES) {
+      const bad = PLACE_IDS.filter((id) => {
+        const svg = placeSvg(id, t);
+        const p = placeInfo(id, t);
+        return !/^<svg[^>]*viewBox="0 0 960 540"/.test(svg) || !svg.includes(`<title>${p.label}, ${TOWN_DRESS[t].label}</title>`)
+          || svg.length < 800 || /<script|on\w+=/i.test(svg) || !p.blurb;
+      });
+      check(`${TOWN_DRESS[t].label}: all eight places draw, named, with a line about each`, bad.length === 0, bad.join(','));
+    }
+    check('the homes are different places in every world (the King\'s: Great Hall, Garden Hall, Harvest Hall, Ice Hall, Haunted Hall, Feast Hall, Engine Hall)',
+      new Set(TOWN_THEMES.map((t) => placeInfo('kingHall', t).label)).size === 6, TOWN_THEMES.map((t) => placeInfo('kingHall', t).label).join(','));
+    const scene = sceneSvg({ place: 'kingHall', deck: 'halloween', cast: [{ role: 'king', pose: 'wave' }], title: 'x' });
+    check('a place with its character standing at home is one drawing (the place, then King Bram)', /data-scene="kingHall"/.test(scene)
+      && /data-who="king"/.test(scene) && !/<script|on\w+=/i.test(scene));
+  }
+
+  section('*** the edits, as pure functions: move, bigger, smaller, turn round, take out, add ***');
+  {
+    const r0 = placeRecipe('kingHall', 'nimrod');
+    const i = r0.items.findIndex((it) => it.part === 'throne');
+    const m = moveItem(r0, i, -MOVE_STEP, 0);
+    check('Move left moves the chosen thing 4% left, and nothing else', m.items[i].x === r0.items[i].x - MOVE_STEP
+      && m.items.every((it, k) => k === i || J(it) === J(r0.items[k])));
+    check('the recipe given is never changed', J(r0) === J(placeRecipe('kingHall', 'nimrod')));
+    let far = r0;
+    for (let k = 0; k < 60; k++) far = moveItem(far, i, -MOVE_STEP, MOVE_STEP);
+    check('a floor thing stops at the room\'s edge and the front of the floor', far.items[i].x === X_RANGE[0] && far.items[i].y === FLOOR_Y[1]);
+    const w = r0.items.findIndex((it) => it.kind === 'sign');
+    let up = r0;
+    for (let k = 0; k < 60; k++) up = moveItem(up, w, 0, MOVE_STEP);
+    check('a thing on the wall stays on the wall', up.items[w].y === WALL_Y[1]);
+    const q = placeRecipe('queenParlour', 'nimrod');
+    const lamp = q.items.findIndex((it) => it.part === 'tableLamp');
+    const ql = moveItem(q, lamp, 0, -MOVE_STEP);
+    check('a lamp standing on a table moves with its table line (`ground` follows)', ql.items[lamp].ground === q.items[lamp].ground - MOVE_STEP);
+    let big = r0;
+    for (let k = 0; k < 20; k++) big = scaleItem(big, i, 1);
+    check('Bigger grows by a tenth, up to 1.6 times', big.items[i].scale === 1.6 && scaleItem(r0, i, 1).items[i].scale === 1.1);
+    check('Smaller, down to half', (() => { let s = r0; for (let k = 0; k < 20; k++) s = scaleItem(s, i, -1); return s.items[i].scale === 0.5; })());
+    check('Turn round flips, and again flips back', flipItem(r0, i).items[i].flip === true && !('flip' in flipItem(flipItem(r0, i), i).items[i]));
+    check('Take it out removes just that thing', removeItem(r0, i).items.length === r0.items.length - 1
+      && !removeItem(r0, i).items.some((it) => J(it) === J(r0.items[i])));
+    const a = addPiece(r0, 'snowman');
+    check('Add a piece puts a floor piece on the floor, in the middle', a.index === r0.items.length && a.recipe.items[a.index].part === 'snowman'
+      && a.recipe.items[a.index].y === 92 && a.recipe.items[a.index].x === 50);
+    check('...and a wall piece on the wall', addPiece(r0, 'wreath').recipe.items.at(-1).y === 30);
+    check('a piece the flat drawing cannot draw is not added', addPiece(r0, 'door').index === -1 && addPiece(r0, 'nonsense').index === -1);
+    let full = r0;
+    while (full.items.length < RECIPE_MAX_ITEMS) full = addPiece(full, 'plant').recipe;
+    check(`a room is full at ${RECIPE_MAX_ITEMS} things`, addPiece(full, 'plant').index === -1);
+    check('names in words: a piece, a sign', itemName(r0.items[i]) === 'Throne' && itemName({ kind: 'sign', name: 'King Bram' }) === 'Name sign: King Bram');
+    check('"Add a piece" lists the world\'s own pieces first, then every world\'s, then furniture',
+      J(piecesFor('winter').map((g) => g[0])) === J(['Winter pieces', 'Pieces from every world', 'Furniture'])
+      && piecesFor('winter')[0][1].includes('snowman') && piecesFor('winter')[1][1].includes('throne'));
+    const dirty = { ...r0, items: [...r0.items, { kind: 'furniture', part: 'plant', x: 10, y: 90, color: 'red" onload="x' },
+      { kind: 'furniture', part: 'door', x: 1, y: 1 }, { kind: 'sign', name: '<script>', x: 1, y: 1 }] };
+    const c = cleanRecipe(dirty);
+    check('*** a kept recipe is made safe: a colour that is not #rrggbb is dropped, an undrawable piece too, no < & " ***',
+      c && !J(c).includes('onload') && !J(c).includes('<') && !c.items.some((it) => it.part === 'door'), J(c && c.items.slice(-2)));
+    check('not a recipe, not kept', cleanRecipe(null) === null && cleanRecipe([1]) === null && cleanRecipe({ items: 'x' }) === null);
+  }
+
+  section('*** the person\'s town: kept per theme and per place, put back, on the person\'s own row ***');
+  {
+    const ppl = people();
+    const s = openTownEdits({ makePersonState: ppl.make, personId: 'p1' });
+    const r = addPiece(placeRecipe('kingHall', 'winter'), 'snowman').recipe;
+    check('saving a place', s.save('winter', 'kingHall', r) === true && s.isPerson());
+    const row = ppl.row('p1', TOWN_KEY);
+    check(`kept on the person's row "${TOWN_KEY}", under the theme, as a recipe`, row.winter && Array.isArray(row.winter.kingHall.items)
+      && row.winter.kingHall.items.some((it) => it.part === 'snowman') && row.v === 1);
+    check('another theme is untouched', J(s.forDeck('nimrod')) === '{}' && Object.keys(s.forDeck('winter')).length === 1);
+    s.save('winter', 'bakery', placeRecipe('bakery', 'winter'));
+    check('two places in a theme: both kept', J(Object.keys(s.forDeck('winter')).sort()) === J(['bakery', 'kingHall']));
+    s.reset('winter', 'kingHall');
+    check('"Put it back" leaves the theme\'s own version (written as null: the row merges)', ppl.row('p1', TOWN_KEY).winter.kingHall === null
+      && J(Object.keys(s.forDeck('winter'))) === J(['bakery']));
+    check('the Park is not kept (it is a scene, not a room)', s.save('winter', 'park', r) === false);
+    check('editsFor drops what is not a recipe', J(editsFor({ winter: { kingHall: 'x', shop: null, nothere: r } }, 'winter')) === '{}');
+    const st = fakeState({});
+    const f = openTownEdits({ fallback: st });
+    f.save('fall', 'shop', placeRecipe('shop', 'fall'));
+    check('no person on this screen: the panel\'s own row keeps it, under "town"', !f.isPerson() && st.get().town && st.get().town.fall.shop
+      && Object.keys(f.forDeck('fall')).length === 1);
+    s.destroy(); f.destroy();
+  }
+
+  section('*** an edited King\'s hall is on the King card ***');
+  {
+    const r = addPiece(placeRecipe('kingHall', 'winter'), 'snowman').recipe;
+    const body = KIT.snowman.svg(KIT.snowman.color);
+    const plain = kingCard('winter', null);
+    const edited = kingCard('winter', { kingHall: r });
+    check('the snowman is not in the Ice Hall to start with', !plain.includes(body));
+    check('*** with the person\'s edit, the King of hearts stands in their Ice Hall, snowman and all ***', edited.includes(body) && edited !== plain);
+    const ppl = people();
+    const s = openTownEdits({ makePersonState: ppl.make, personId: 'p1' });
+    s.save('nimrod', 'kingHall', addPiece(placeRecipe('kingHall', 'nimrod'), 'snowman').recipe);
+    const w = watchTownEdits({ makePersonState: ppl.make, personId: 'p1' });
+    check('watchTownEdits gives a card game the edits for the theme on screen (the site\'s "default" is Design\'s nimrod)',
+      w.forTheme('default') && w.forTheme('default').kingHall && w.forTheme('winter') === null);
+    check('...and the default theme\'s King card shows it', kingCard('default', w.forTheme('default')).includes(body));
+    check('a person with no edits: null, and the card is Design\'s own', watchTownEdits({ makePersonState: ppl.make, personId: 'p2' }).forTheme('default') === null);
+    w.stop(); s.destroy();
+  }
+
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(TYPE);
+    check('registered as "Town", on the new core, needs nothing', m && m.title === TITLE && m.core === 'new' && m.dependsOn === 'none');
+    const words = `${m.title} ${m.description} ${J(m.settings)} ${J(CATALOG.find((c) => c.type === TYPE))}`;
+    check('the words never say "her screen" or name anybody', !/christine|cici|her screen/i.test(words));
+    const cat = CATALOG.find((c) => c.type === TYPE);
+    check('catalog: something to look at, responds to touch', cat && cat.group === 'comfort' && cat.use === 'touch', J(cat));
+    check('library: To look at, and Scenes', J(MODULE_CATEGORIES[TYPE]) === J(['visual', 'scenes']));
+    check('health: resting is fine', TYPE in HEALTH_EXPECT && expectFor(TYPE).idle === true);
+    check('select / down / launch open or press; next / right and prev / left move the light; back goes back',
+      ['select', 'down', 'launch'].every((v) => verbTarget(TYPE, v)?.topic === 'town/select')
+      && verbTarget(TYPE, 'next')?.topic === 'town/next' && verbTarget(TYPE, 'right')?.topic === 'town/next'
+      && verbTarget(TYPE, 'prev')?.topic === 'town/prev' && verbTarget(TYPE, 'left')?.topic === 'town/prev'
+      && verbTarget(TYPE, 'back')?.topic === 'town/back');
+    const table = moduleVoiceTable(VOICE, { verbs: verbsFor(TYPE) });
+    check('every spoken phrase of its own can fire', Object.keys(VOICE).every((p) => p in table), J(table));
+    const keys = m.settings.map((r) => r.key);
+    check('*** every timing is a setting: the light, going back, listening ***',
+      ['scanMs', 'townReturnMs', 'townListenMs', 'lightMoves', 'listenForPlaces', 'talk', 'townTheme'].every((k) => keys.includes(k)), keys.join(','));
+    check('defaults: the theme on screen, the light by itself every 4 s, back after 2 minutes, listening for a minute, "Talk to" once set up',
+      DEFAULTS.townTheme === 'screen' && DEFAULTS.lightMoves === 'auto' && DEFAULTS.scanMs === 4000 && DEFAULTS.townReturnMs === 120000
+      && DEFAULTS.townListenMs === 60000 && DEFAULTS.listenForPlaces === true && DEFAULTS.talk === 'ready');
+    check('durations are stored in ms', m.settings.filter((r) => /Ms$/.test(r.key)).every((r) => r.options.every((o) => o.value === 0 || o.value >= 1000)));
+    const audit = auditManifests([m, getManifest('sortbricks')], { level: 'advanced' });
+    const errs = audit.findings.filter((f) => f.severity === 'error');
+    check('the settings audit finds no error, and the keys shared with Sort the bricks mean the same', errs.length === 0,
+      J(errs.map((f) => `${f.module}.${f.key}: ${f.code}`)));
+  }
+
+  section('*** the town: eight places, in every theme ***');
+  {
+    for (const theme of TOWN_THEMES) {
+      const t = mount({ saved: { townTheme: theme } });
+      const tiles = [...t.host.querySelectorAll('.tw-tile')];
+      const labels = tiles.map((el) => el.querySelector('b').textContent);
+      check(`${TOWN_DRESS[theme].label}: eight tiles, each the theme's own place, drawn`, tiles.length === 8
+        && J(labels) === J(PLACE_IDS.map((id) => placeInfo(id, theme).label)) && tiles.every((el) => el.querySelector('svg')), J(labels));
+      t.inst.destroy();
+    }
+    const t = mount();
+    check('the default: the theme on screen (no theme on this page: the Nimrod town)', t.probe().deck === 'nimrod'
+      && t.host.querySelector('.tw-head').textContent.includes('Nimrod'));
+    check('nothing is lit and nothing waits: left alone it is a picture', t.probe().lit === -1 && t.probe().idle && !t.probe().lightRunning);
+    t.inst.destroy();
+  }
+
+  section('*** the theme changes and the town is redrawn, with nothing pressed ***');
+  {
+    const outer = document.createElement('div');
+    outer.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.append(outer);
+    applyTheme(outer, 'winter');
+    const host = document.createElement('div');
+    host.style.cssText = 'width:960px;height:540px';
+    outer.append(host);
+    const t = mount({ host });
+    check('a panel wearing Winter shows the winter town (the Ice Hall)', t.probe().deck === 'winter'
+      && t.host.querySelector('[data-place="kingHall"] b').textContent === 'The Ice Hall');
+    applyTheme(outer, 'halloween');
+    await flush();
+    check('*** Halloween now: the Haunted Hall, redrawn by itself ***', t.probe().deck === 'halloween'
+      && t.host.querySelector('[data-place="kingHall"] b').textContent === 'The Haunted Hall');
+    t.click(t.host.querySelector('[data-place="queenParlour"]'));
+    applyTheme(outer, 'steampunk');
+    await flush();
+    check('an open place follows the theme too (the Queen\'s home is the Observatory in steampunk)', t.probe().view === 'place'
+      && t.host.querySelector('.tw-head').textContent.startsWith('The Observatory'));
+    t.inst.destroy(); outer.remove();
+  }
+
+  section('*** a place, opened full size: touch ***');
+  {
+    const t = mount();
+    t.click(t.host.querySelector('[data-place="kingHall"]'));
+    const p = t.probe();
+    check('a touch on a tile opens that place', p.view === 'place' && p.place === 'kingHall');
+    check('full size: the place, with King Bram standing at home', !!t.host.querySelector('.tw-pic svg[data-scene="kingHall"] [data-who="king"]'));
+    check('its name and one line about it are said', t.output.said.at(-1) === `${placeInfo('kingHall', 'nimrod').label}. ${placeInfo('kingHall', 'nimrod').blurb}`, t.output.said.at(-1));
+    check('the cards drawn from it are shown (the King)', !!t.host.querySelector('.tw-card[aria-label="king of hearts"] svg'));
+    check('Back to the town, Rearrange; no Talk button until the storyteller is set up', J(p.stops) === J(['town', 'edit']), J(p.stops));
+    t.click(t.stopEl('town'));
+    check('Back to the town', t.probe().view === 'map');
+    t.click(t.host.querySelector('[data-place="park"]'));
+    check('the Park opens, and says it cannot be rearranged here yet', t.probe().view === 'place' && !t.stopEl('edit')
+      && /cannot be rearranged here yet/.test(t.host.textContent));
+    t.inst.destroy();
+  }
+
+  section('*** one switch: the light walks the places by itself; a press opens the lit one ***');
+  {
+    const t = mount();
+    t.verb('select');
+    check('the first press only wakes it: the light on the first place, named', t.probe().lit === 0 && t.probe().view === 'map'
+      && t.output.said.at(-1) === `${placeInfo('kingHall', 'nimrod').label}?` && !!t.host.querySelector('[data-lit="1"][data-place="kingHall"]'));
+    t.timers.run(DEFAULTS.scanMs);
+    check('after "How long each choice stays lit" (4 s) the light moves on by itself', t.probe().lit === 1
+      && t.output.said.at(-1) === `${placeInfo('queenParlour', 'nimrod').label}?`);
+    t.timers.run(DEFAULTS.scanMs * 3);
+    check('...and on round the town', t.probe().lit === 4);
+    t.verb('select');
+    check('*** a press opens the lit place (the Bakery) ***', t.probe().view === 'place' && t.probe().place === 'bakery');
+    t.timers.run(IDLE_MS);
+    check(`nobody presses for ${IDLE_MS / 1000} s: the light rests`, t.probe().idle && t.probe().lit === -1 && !t.probe().lightRunning);
+    t.timers.run(DEFAULTS.townReturnMs);
+    check('*** an open place goes back to the town by itself after "Go back to the whole town after" (2 minutes) ***', t.probe().view === 'map');
+    const never = mount({ saved: { townReturnMs: 0 } });
+    never.click(never.host.querySelector('[data-place="shop"]'));
+    never.timers.run(60 * 60000);
+    check('..."Never" is the person\'s own choice: it stays', never.probe().view === 'place');
+    never.inst.destroy();
+    const slow = mount({ saved: { lightMoves: 'off' } });
+    slow.verb('select'); slow.timers.run(30000);
+    check('"Moves only when told": the light waits for Next', slow.probe().lit === 0);
+    slow.verb('next'); slow.verb('next');
+    check('two switches: next moves the light, prev back', slow.probe().lit === 2 && (slow.verb('prev'), slow.probe().lit === 1));
+    slow.verb('right');
+    check('right is next', slow.probe().lit === 2);
+    slow.verb('launch');
+    check('launch (or down) opens the lit place', slow.probe().view === 'place' && slow.probe().place === 'jackWorkshop');
+    slow.verb('back');
+    check('back goes back to the town, the light on the place you came from', slow.probe().view === 'map' && slow.probe().lit === 2);
+    slow.inst.destroy();
+    t.inst.destroy();
+  }
+
+  section('*** voice: "go to the bakery" ***');
+  {
+    check('the names: "go to the bakery", "the bakery", "King Bram", "Pip\'s caravan", a theme\'s own ("the Ice Hall")',
+      placeFromSpeech('go to the bakery') === 'bakery' && placeFromSpeech('The Bakery.') === 'bakery' && placeFromSpeech('King Bram') === 'kingHall'
+      && placeFromSpeech("Pip's Caravan") === 'jokerCaravan' && placeFromSpeech('take me to the ice hall', 'winter') === 'kingHall'
+      && placeFromSpeech('back to the town') === 'town' && placeFromSpeech('go to the moon') === null);
+    check('the Nimrod name works in every world ("the great hall" in winter is still the King\'s)', placeFromSpeech('go to the great hall', 'winter') === 'kingHall');
+    const bus = createBus();
+    const grammar = [];
+    bus.subscribe(SPEECH_GRAMMAR_TOPIC, (g) => grammar.push(g));
+    const t = mount({ bus });
+    const g0 = grammar.at(-1);
+    check('*** shown, the town listens for place names (the speech layer\'s answer seam) ***', g0 && g0.open === true && g0.source === 'town'
+      && g0.words.includes('go to the bakery') && g0.words.includes('king bram') && g0.words.includes('[unk]'), J(g0 && g0.words.slice(0, 8)));
+    bus.publish(SPEECH_ANSWER_TOPIC, { text: 'go to the bakery' });
+    check('"go to the bakery" opens the Bakery', t.probe().view === 'place' && t.probe().place === 'bakery');
+    bus.publish(SPEECH_ANSWER_TOPIC, { text: 'Queen Rosa' });
+    check('"Queen Rosa" goes to her home, from a place too', t.probe().place === 'queenParlour');
+    bus.publish(SPEECH_ANSWER_TOPIC, { text: 'back to the town' });
+    check('"back to the town"', t.probe().view === 'map');
+    bus.publish(SPEECH_ANSWER_TOPIC, { text: 'what a lovely day' });
+    check('anything else does nothing', t.probe().view === 'map');
+    t.timers.run(DEFAULTS.townListenMs);
+    check(`after "Listen for place names for" (1 minute) with nothing pressed, it stops listening`, grammar.at(-1).open === false && !t.probe().listening);
+    bus.publish(SPEECH_ANSWER_TOPIC, { text: 'go to the library' });
+    check('...and a place name then goes nowhere', t.probe().view === 'map');
+    t.verb('select');
+    check('a press opens the listening again', grammar.at(-1).open === true && t.probe().listening);
+    t.click(t.host.querySelector('[data-place="kingHall"]'));
+    t.click(t.stopEl('edit'));
+    check('never while rearranging (that is buttons)', grammar.at(-1).open === false);
+    t.inst.destroy();
+    const off = mount({ bus: createBus(), saved: { listenForPlaces: false } });
+    check('"Go to a place by saying its name: No": it never listens', !off.probe().listening);
+    off.inst.destroy();
+    const always = mount({ saved: { townListenMs: 0 } });
+    always.timers.run(60 * 60000);
+    check('"As long as the town shows": still listening an hour later', always.probe().listening);
+    always.inst.onHide();
+    check('...until it is hidden', !always.probe().listening);
+    always.inst.destroy();
+    check('the grammar has the theme\'s own names', placeWords('halloween').includes('go to the haunted hall'));
+  }
+
+  section('*** rearrange a place, keep it, and see it on the King card ***');
+  {
+    const ppl = people();
+    const t = mount({ person: ppl });
+    t.click(t.host.querySelector('[data-place="kingHall"]'));
+    t.click(t.stopEl('edit'));
+    let p = t.probe();
+    check('Rearrange opens the editor on the place as it is, the first thing chosen', p.view === 'edit' && p.sel === 0
+      && J(p.draft) === J(placeRecipe('kingHall', 'nimrod')));
+    check('the chosen thing is marked in the picture', !!t.host.querySelector('.tw-pic circle[data-chosen]'));
+    const x0 = p.draft.items[0].x;
+    t.click(t.stopEl('right'));
+    p = t.probe();
+    check('*** Move right moves it, and it is kept at once on the person\'s row ***', p.draft.items[0].x === x0 + MOVE_STEP
+      && ppl.row('p1', TOWN_KEY).nimrod.kingHall.items[0].x === x0 + MOVE_STEP);
+    t.click(t.stopEl('undo'));
+    check('Undo puts it back, and keeps that', t.probe().draft.items[0].x === x0 && ppl.row('p1', TOWN_KEY).nimrod.kingHall.items[0].x === x0);
+    t.click(t.stopEl('next'));
+    check('Next thing chooses the next one, and says it', t.probe().sel === 1 && t.output.said.at(-1) === itemName(t.probe().draft.items[1]));
+    t.click(t.stopEl('add'));
+    check('Add a piece: the groups, this world\'s first', t.probe().view === 'add'
+      && J([...t.host.querySelectorAll('[data-act="group"]')].map((el) => el.textContent)) === J(['Nimrod pieces', 'Pieces from every world', 'Furniture']));
+    t.click(t.host.querySelector('[data-act="group"][data-group="1"]'));
+    t.click(t.host.querySelector('[data-act="piece"][data-piece="chest"]'));
+    p = t.probe();
+    check('*** a treasure chest added, chosen, and kept ***', p.view === 'edit' && p.draft.items[p.sel].part === 'chest'
+      && ppl.row('p1', TOWN_KEY).nimrod.kingHall.items.some((it) => it.part === 'chest'));
+    t.click(t.stopEl('left')); t.click(t.stopEl('left')); t.click(t.stopEl('bigger')); t.click(t.stopEl('flip'));
+    const chest = t.probe().draft.items[t.probe().sel];
+    check('moved, bigger, turned round', chest.x === 50 - 2 * MOVE_STEP && chest.scale === 1.1 && chest.flip === true, J(chest));
+    t.click(t.stopEl('done'));
+    check('Done: back to the place, rearranged', t.probe().view === 'place' && !!t.stopEl('reset'));
+    const body = KIT.chest.svg(KIT.chest.color);
+    check('*** the King card in the place shows the chest ***', t.host.querySelector('.tw-card[aria-label="king of hearts"]').innerHTML.includes('<svg') && t.probe().edits.kingHall
+      && kingCard('default', t.probe().edits).includes(body));
+    // A real solitaire table, for the same person: the edit is behind the cards there too.
+    const all = {};
+    for (const id of EDITABLE_PLACES) all[id] = addPiece(placeRecipe(id, 'nimrod'), 'chest').recipe;
+    const s = openTownEdits({ makePersonState: ppl.make, personId: 'p1' });
+    for (const [id, r] of Object.entries(all)) s.save('nimrod', id, r);
+    const solHost = scratch();
+    const sol = mountModule('solitaire', { mount: solHost, bus: createBus(), state: fakeState({ cardScenery: 'on' }), events: null,
+      user: 'u', profileId: 'p', personId: 'p1', makePersonState: ppl.make, instanceId: 'soltown', output: null, rand: () => 0.25,
+      makeEvents: () => ({ append() { return Promise.resolve(); }, load: () => Promise.resolve(), get: () => ({ events: [] }), subscribe() { return () => {}; }, startPolling() {}, destroy() {} }) });
+    sol.init();
+    const faces = [...solHost.querySelectorAll('.sol-card[data-up="1"]')].filter((el) => !/^C/.test(el.dataset.card || ''));
+    check('*** on a solitaire table, the person\'s rearranged places are behind the face-up cards ***', faces.length > 0
+      && faces.every((el) => el.innerHTML.includes('M4 40Q4 4 50 4Q96 4 96 40Z')), String(faces.length));
+    sol.destroy(); s.destroy();
+    t.click(t.stopEl('reset'));
+    check('"Put it back to the Nimrod version": the theme\'s own again', !t.probe().edits.kingHall && !t.stopEl('reset')
+      && /Put back to the Nimrod version/.test(t.say()));
+    t.click(t.stopEl('town'));
+    check('the town tile no longer says "rearranged"', !/rearranged/.test(t.host.querySelector('[data-place="kingHall"]').getAttribute('aria-label'))
+      && /rearranged/.test(t.host.querySelector('[data-place="bakery"]').getAttribute('aria-label')));
+    t.inst.destroy();
+  }
+
+  section('*** rearranging with one switch, and nothing stranded ***');
+  {
+    const t = mount({ person: people() });
+    t.verb('select');                                     // wake: the light on the first place
+    t.verb('select');                                     // open the Great Hall
+    t.timers.run(DEFAULTS.scanMs);                        // the light walks: Back to the town, then Rearrange
+    check('in a place the light walks its buttons', t.probe().lit === 1 && t.probe().stops[1] === 'edit');
+    t.verb('select');
+    check('a press on the lit Rearrange opens the editor', t.probe().view === 'edit');
+    t.timers.run(DEFAULTS.scanMs * 2);
+    t.verb('select');
+    check('the light walks the editor\'s buttons, and a press does the lit one (Move left)', t.probe().stops[t.probe().lit] === 'left'
+      && t.probe().undo === 1, J([t.probe().lit, t.probe().stops]));
+    t.timers.run(DEFAULTS.townReturnMs + IDLE_MS);
+    check('*** nobody presses: the editor goes back to the town by itself, and the change is still kept ***', t.probe().view === 'map'
+      && !!t.probe().edits.kingHall);
+    t.inst.destroy();
+    check('after destroy, no timer is left', t.timers.pending() === 0, String(t.timers.pending()));
+  }
+
+  section('*** "Talk to King Bram": the seam for the AI storyteller ***');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe(TOWN_TALK_TOPIC, (p) => heard.push(p));
+    const t = mount({ bus });
+    t.click(t.host.querySelector('[data-place="kingHall"]'));
+    check('nothing set up: no Talk button (a scan never stops on a button that does nothing)', !townTalkReady() && !t.stopEl('talk'));
+    const got = [];
+    const off = registerTownTalk((req) => { got.push(req); return true; });
+    check('*** a storyteller registers: the button appears, with nothing pressed ***', townTalkReady() && t.stopEl('talk')?.textContent === 'Talk to King Bram');
+    t.click(t.stopEl('talk'));
+    await flush();
+    check('pressed: the storyteller is handed who, where and which theme', got.length === 1 && got[0].character === 'king' && got[0].name === 'King Bram'
+      && got[0].place === 'kingHall' && got[0].theme === 'nimrod' && got[0].placeLabel === placeInfo('kingHall', 'nimrod').label, J(got[0]));
+    check('...and the same request is on the bus as "town/talk"', heard.length === 1 && heard[0].character === 'king');
+    off();
+    check('unregistered: the button goes', !townTalkReady() && !t.stopEl('talk'));
+    t.inst.destroy();
+    const a = mount({ saved: { talk: 'always' } });
+    a.click(a.host.querySelector('[data-place="jokerCaravan"]'));
+    a.click(a.stopEl('talk'));
+    await flush();
+    check('"Always": shown anyway, and pressed it says plainly it is not set up', /Talking to Pip the Joker is not set up on this screen yet/.test(a.say()), a.say());
+    a.inst.destroy();
+    const nv = mount({ saved: { talk: 'never' } });
+    const off2 = registerTownTalk(() => true);
+    nv.click(nv.host.querySelector('[data-place="kingHall"]'));
+    check('"Never": not shown even when set up', !nv.stopEl('talk'));
+    off2(); nv.inst.destroy();
+    const homes = mount({ saved: { talk: 'always' } });
+    homes.click(homes.host.querySelector('[data-place="bakery"]'));
+    check('a suit\'s place has nobody living there, so no Talk button', !homes.stopEl('talk'));
+    homes.inst.destroy();
+  }
+
+  section('teardown');
+  {
+    const bus = createBus();
+    const grammar = [];
+    bus.subscribe(SPEECH_GRAMMAR_TOPIC, (g) => grammar.push(g));
+    const t = mount({ bus });
+    t.verb('select');
+    t.inst.destroy();
+    check('*** after destroy: no timer left, and the town stopped listening ***', t.timers.pending() === 0 && grammar.at(-1).open === false);
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+// To look at: the Halloween town with the King's hall open.
+{
+  const liveHost = document.getElementById('host');
+  const show = mountModule(TYPE, { mount: liveHost, bus: createBus(), state: fakeState({ townTheme: 'halloween' }),
+    personId: null, instanceId: 'live', setTimer: () => 0, clearTimer: () => {} });
+  show.init();
+  liveHost.querySelector('[data-place="kingHall"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

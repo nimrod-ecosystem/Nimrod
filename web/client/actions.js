@@ -721,6 +721,15 @@ export const MODULE_VERBS = {
   sortbricks:    { select: 'sortbricks/select', next: 'sortbricks/next', prev: 'sortbricks/prev', back: 'sortbricks/back',
                    left: 'sortbricks/prev', right: 'sortbricks/next', down: 'sortbricks/select', launch: 'sortbricks/select',
                    pause: 'sortbricks/pause', play: 'sortbricks/resume' },
+  // town (2026-10-12): the Town. next / prev (and right / left) move the light over the places or the buttons, select
+  // (and down, launch) opens the lit place or presses the lit button, back goes back a level (a place to the town).
+  town:          { select: 'town/select', next: 'town/next', prev: 'town/prev', back: 'town/back',
+                   left: 'town/prev', right: 'town/next', down: 'town/select', launch: 'town/select' },
+  // story (2026-10-12): Story time. Every forward press turns the page (select, next, right, down, launch); prev, back and
+  // left go back a page; up reads the page again; pause and play stop and go on.
+  story:         { select: 'story/next', next: 'story/next', right: 'story/next', down: 'story/next', launch: 'story/next',
+                   prev: 'story/prev', back: 'story/prev', left: 'story/prev', up: 'story/again',
+                   pause: 'story/pause', play: 'story/resume' },
   buildit:      { next: 'buildit/next', prev: 'buildit/prev', select: 'buildit/select',
                    left: 'buildit/left', right: 'buildit/right', up: 'buildit/up', down: 'buildit/down',
                    play: 'buildit/resume', pause: 'buildit/pause' },

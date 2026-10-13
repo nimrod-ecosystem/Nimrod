@@ -46,6 +46,7 @@ import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonL
 import { SUITS, RANK_LABEL, RANK_NAME, cardName, shuffled } from '../klondike.js';
 import { autostartFields, START_VOICE } from '../game_start.js';
 import { CARD_DEFAULTS, cardSettingsFields, cardArt, cardVars, watchTheme } from '../card_deck.js';
+import { watchTownEdits } from '../town_edits.js';   // town (2026-10-12): the person's rearranged town places
 
 export const GAME = 'card_sort';
 /** One game; listed so a spoken route's `{ game }` can be checked against it like the others. */
@@ -439,6 +440,7 @@ registerModule(
     // ---- the view ----
     // THE THEME ON SCREEN (card_deck.js watchTheme), started in the view's init: the deck the cards wear.
     let themeWatch = null;
+    let townWatch = null;   // town (2026-10-12): the person's rearranged town places (town_edits.js), behind the cards
     const themeNow = () => (themeWatch ? themeWatch.id() : 'default');
     // The deck's face and suit colours, on this panel's own mount, for the suit buttons (card_sort.css reads them).
     const paintSuits = () => {
@@ -451,7 +453,7 @@ registerModule(
     // panel's own suffix keeps two panels from sharing one (card_deck.js's header says why that matters).
     const artId = String(ctx.instanceId || 'cs').replace(/[^A-Za-z0-9_-]/g, '');
     const cardHtml = (c, { small = false, name = false } = {}) => `<div class="cs-card" data-suit="${c.s}"${small ? ' data-small' : ''} `
-      + `role="img" aria-label="${esc(cardName(c))}">${cardArt({ ...c, up: true }, themeNow(), cfgNow, { idSuffix: artId })}`
+      + `role="img" aria-label="${esc(cardName(c))}">${cardArt({ ...c, up: true }, themeNow(), cfgNow, { idSuffix: artId, town: townWatch ? townWatch.forTheme(themeNow()) : null })}`
       + `${name ? `<span class="cs-name" aria-hidden="true">${esc(SUIT[c.s].name)}</span>` : ''}</div>`;
     const handLine = () => `<p class="cs-hand" data-hand>${done.length} of ${Math.max(2, Number(cfgNow.handSize) || DEFAULTS.handSize)} done this hand</p>`;
 
@@ -493,6 +495,7 @@ registerModule(
       init(a) {
         api = a;
         themeWatch = watchTheme(ctx.mount, () => { paintSuits(); api?.render(); });
+        townWatch = watchTownEdits(ctx, () => api?.render());   // town (2026-10-12)
         paintSuits();
         const doc = ctx.mount?.ownerDocument || (typeof document !== 'undefined' ? document : null);
         try {
@@ -504,7 +507,7 @@ registerModule(
           }
         } catch { /* unstyled, still works */ }
       },
-      destroy: () => { themeWatch?.stop(); themeWatch = null; session.destroy(); ladderRows.destroy(); },
+      destroy: () => { themeWatch?.stop(); themeWatch = null; townWatch?.stop(); townWatch = null; session.destroy(); ladderRows.destroy(); },
     };
 
     const inner = quizModule({ type: GAME, title: 'Card sort', scoreLabel: 'Card sort: right answers',

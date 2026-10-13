@@ -310,6 +310,32 @@ export const CATALOG = [
     note: 'Five rooms to start from, drawn with Claude Design. Movement can be slowed or stopped. '
       + 'It stops by itself if the device is set to reduce motion.',
   },
+  // town (2026-10-12): Design's town. `touch`: left alone it is a picture of the town, and nothing waits on anybody.
+  {
+    type: 'town',
+    group: 'comfort',
+    use: 'touch',
+    // Not the eight names: "the Shop" is a money word on the library's pages (library_test), and a list reads long.
+    lead: 'The theme\'s town: the King\'s, the Queen\'s, Jack\'s and Pip\'s homes, and a place in town for each suit.',
+    needs: 'Nothing. The town is drawn for each theme.',
+    why: 'Open a place to see it full size, with its character at home, or rearrange it: move things, add a piece from '
+      + 'the theme, take one out. A rearranged place is kept for the person, in that theme, and the playing cards drawn '
+      + 'from it change too. The places light up in turn, so one switch (one big button) can choose; touch works, and so '
+      + 'does saying "go to the bakery".',
+  },
+  // story (2026-10-12): Story time. `watch`: it turns its own pages by default, so somebody who can only watch hears the
+  // whole story; any press turns sooner.
+  {
+    type: 'story',
+    title: 'Story time',   // not "Story"
+    group: 'comfort',
+    use: 'watch',
+    lead: 'A short picture story, read aloud page by page, with you as the hero.',
+    needs: 'Nothing. Five stories are built in. A voice on the screen reads them; without one, the words are shown large.',
+    why: 'Each page is a place in the theme\'s town, with your own character (from the avatar maker) and the King, the '
+      + 'Queen, Jack and Pip. The pages turn by themselves, or any press turns one, so one switch is all it needs. '
+      + 'Gentle, everyday stories: a recipe found, a clock mended, a letter written.',
+  },
   // Row 2.37. `touch`: left alone it is a note on the wall, and nothing waits on anybody.
   {
     type: 'note',
