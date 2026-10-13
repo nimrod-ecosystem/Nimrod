@@ -269,6 +269,8 @@ import './modules/buildit.js';         // registers 'buildit' (brick builder, 20
 import './modules/stackline.js';       // registers 'stackline' (brick games, 2026-10-10: Stack to the line)
 import './modules/brickmosaic.js';     // registers 'brickmosaic' (brick games, 2026-10-10: Brick mosaic)
 import './modules/sortbricks.js';      // registers 'sortbricks' (brick games, 2026-10-10: Sort the bricks)
+import './modules/whoswho.js';         // registers 'whoswho' (Design's game ideas, 2026-10-12: Who's who)
+import './modules/dressup.js';         // registers 'dressup' (Design's game ideas, 2026-10-12: Dress-up)
 import './modules/town.js';            // registers 'town' (2026-10-12: the theme's town, its places opened and rearranged)
 import './modules/story.js';           // registers 'story' (2026-10-12: Story time, a picture story read aloud)
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)

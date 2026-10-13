@@ -187,6 +187,8 @@ export const SUITES = [
   // town and story (2026-10-12): Design's town (its places opened, rearranged per person, and drawn on the cards) and
   // Story time (a picture story read aloud, turned by a press, by itself, or by voice).
   'town', 'story',
+  // Design's game ideas (2026-10-12): Who's who (which one is the Queen?) and Dress-up (put Jack in something warm).
+  'whoswho', 'dressup',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the
