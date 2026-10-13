@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>who's who — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:960px;height:540px}
+</style>
+</head>
+<body>
+<h1>who's who (Design's game ideas, 2026-10-12)</h1>
+<p>"Which one is the Queen?" Three of Design's court characters, dressed for the theme. Levels: the role with the
+signature pieces on, then by name, then by home, then by name and by home with the pieces off. Touch, voice, one
+switch (the light moves by itself), two switches, and yes / no. On the shared quiz engine and the ladder.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<!-- A panel wearing its own theme: the characters must follow the theme painted on the nearest element above them. -->
+<div id="themed" style="position:absolute;left:-9999px"><div id="host2" style="width:960px;height:540px"></div></div>
+
+<script type="module">
+import { harness, rig, personLadderChecks, answerByChecks } from './quiz_test_rig.js';
+import { getManifest } from '../module.js';
+import {
+  GAME, GAMES, DEFAULTS, LINES, LEVELS, MAX_LEVEL, BANK, ROLES, ROLE_WORD, HOME_OF, PIECE, LIGHT_LAPS, firstName, lookWords,
+  lookOf, lookAlike, positionFrom, nameFrom, placeWords, pickChoices, figureMarkup, positionWords,
+} from '../modules/whoswho.js';
+import { LADDER_KEY } from '../adaptive_play.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+import { figureBody, DEFAULT_CHARACTERS, OUTFIT_THEMES, courtOutfit } from '../character_kit.js';
+import { courtParts } from '../town_scene.js';
+import { deckFor } from '../card_deck.js';
+import { applyTheme, THEMES } from '../theme.js';
+import { placeInfo } from '../town.js';
+
+const { check, section, finish } = harness();
+// A clock the suite moves by hand: timers fire in order as time passes (the light's step, the wait after an answer).
+function clock() {
+  let now = 0, id = 0;
+  const due = new Map();
+  return {
+    set: (fn, ms) => { id += 1; due.set(id, { fn, at: now + Math.max(0, Number(ms) || 0) }); return id; },
+    clear: (h) => { due.delete(h); },
+    count: () => due.size,
+    advance(ms) {
+      const end = now + ms;
+      for (let guard = 0; guard < 10000; guard++) {
+        let next = null;
+        for (const [k, t] of due) if (t.at <= end && (!next || t.at < next[1].at)) next = [k, t];
+        if (!next) break;
+        due.delete(next[0]); now = next[1].at; next[1].fn();
+      }
+      now = end;
+    },
+  };
+}
+function ladderStore(init = {}) {
+  let v = { ...init };
+  return { load: async () => {}, get: () => v, set: (p) => { v = { ...v, ...p }; }, destroy() {}, peek: () => v };
+}
+const R = (saved = {}, opts = {}) => {
+  const store = opts.store || ladderStore();
+  const c = clock();
+  const s = opts.fresh ? saved : { autostart: true, ...saved };
+  const r = rig(GAME, { saved: s, rand: opts.rand || (() => 0.3), hostId: opts.hostId || 'host', reducedMotion: !!opts.reducedMotion,
+    extra: { makeState: (k) => (k === LADDER_KEY ? store : null), setTimer: c.set, clearTimer: c.clear, ...(opts.extra || {}) } });
+  return Object.assign(r, { ladder: store, clock: c, item: () => r.probe().item, st: () => r.inst.impl.__state(),
+    session: () => r.inst.impl.__session, gate: () => r.inst.impl.__gate() });
+};
+const tap = (r, v) => r.host.querySelector(`[data-pick="${CSS.escape(String(v))}"]`)?.click();
+const tiles = (r) => [...r.host.querySelectorAll('.ww-pick')];
+const at = (level, extra = {}) => ({ startLevel: level, adapt: false, levelsAtOnce: 1, ...extra });
+const outside = (host) => { const c = host.cloneNode(true); c.querySelectorAll('svg[data-figure]').forEach((s) => s.remove()); return c.innerHTML; };
+const COLOUR = /(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i;
+
+try {
+  section('the characters, the levels and the words, pure');
+  {
+    check('four characters, one per role, with Design\'s names: Bram, Rosa, Theo, Pip',
+      ROLES.map(firstName).join() === 'Bram,Rosa,Theo,Pip');
+    check('each one\'s home is the town place that is theirs', HOME_OF.king === 'kingHall' && HOME_OF.queen === 'queenParlour'
+      && HOME_OF.jack === 'jackWorkshop' && HOME_OF.joker === 'jokerCaravan');
+    check('looks in words, read off Design\'s looks: grey beard, auburn bun, black curls, ginger',
+      lookOf('king') === 'short grey hair and a beard' && lookOf('queen') === 'auburn hair in a bun'
+        && lookOf('jack') === 'curly black hair' && lookOf('joker') === 'short ginger hair', ROLES.map(lookOf).join(' | '));
+    check('a look with glasses and no hair still reads', lookWords({ hair: 'bald', glasses: true }) === 'glasses'
+      && lookWords({ hair: 'bald' }) === 'no hair on top');
+    check(`five levels, each character at each one: ${BANK.length} questions`, MAX_LEVEL === 5 && BANK.length === 20
+      && [1, 2, 3, 4, 5].every((l) => BANK.filter((q) => q.level === l).length === 4));
+    check('*** easy first: the signature pieces at levels 1-3, off at 4 and 5 ***', [1, 2, 3].every((l) => LEVELS[l].pieces)
+      && [4, 5].every((l) => !LEVELS[l].pieces));
+    check('by role, then name, then home; then name and home by look', [1, 2, 3, 4, 5].map((l) => LEVELS[l].ask).join() === 'role,name,home,name,home');
+    check('where they stand, said: left / middle / right, first / last, number two',
+      positionFrom('the one on the left', 3) === 0 && positionFrom('the middle one', 3) === 1 && positionFrom('the one on the right', 3) === 2
+        && positionFrom('first', 3) === 0 && positionFrom('the last one', 3) === 2 && positionFrom('number two', 3) === 1
+        && positionFrom('number three', 3) === 2 && positionFrom('one', 3) === 0);
+    check('with two: "the one on the right" is the second; "the middle one" and "three" are nobody',
+      positionFrom('the one on the right', 2) === 1 && positionFrom('the middle one', 2) === null && positionFrom('three', 2) === null);
+    check('nothing about a place: null (never a guess)', positionFrom('banana', 3) === null && positionFrom('the one', 3) === null);
+    check('names and roles: "Rosa", "the queen", "King Bram" (a name), "Jack" (a role), "Theo"',
+      nameFrom('Rosa')?.role === 'queen' && nameFrom('Rosa').by === 'name' && nameFrom('the queen')?.by === 'role'
+        && nameFrom('King Bram')?.by === 'name' && nameFrom('jack')?.role === 'jack' && nameFrom('jack').by === 'role'
+        && nameFrom('theo')?.role === 'jack' && nameFrom('pip')?.role === 'joker');
+    check('two people named, or nobody: null', nameFrom('the king and the queen') === null && nameFrom('banana') === null);
+    check('*** a home asked by its name never says who lives there: "Pip\'s Caravan" is asked as "the Caravan" ***',
+      placeWords('joker', 'nimrod', { inQuestion: true }) === 'the Caravan' && placeWords('joker', 'nimrod') === "Pip's Caravan"
+        && placeWords('queen', 'halloween', { inQuestion: true }) === 'the Potion Parlour');
+    const leaks = [];
+    for (const deck of [...OUTFIT_THEMES, 'cyberpunk']) for (const r of ROLES) {
+      const q = placeWords(r, deck, { inQuestion: true }).toLowerCase();
+      if (ROLES.some((x) => q.includes(firstName(x).toLowerCase()) || new RegExp(`\\b${x}\\b`).test(q))) leaks.push(`${deck}/${r}: ${q}`);
+    }
+    check('...in every theme, no home question names a character or a role', leaks.length === 0, leaks.join(' | '));
+    check('*** with the pieces off, the Halloween Queen and Pip (both witches, hats on) are too alike to ask between ***',
+      lookAlike('queen', 'joker', 'halloween') && !lookAlike('queen', 'king', 'halloween') && !lookAlike('jack', 'joker', 'nimrod'));
+    let bad = 0, fewer = 0;
+    for (const deck of [...OUTFIT_THEMES, 'cyberpunk', 'ocean']) for (const role of ROLES) for (let i = 0; i < 25; i++) {
+      let x = (i * 0.137 + 0.05) % 1;
+      const rnd = () => { x = (x * 9301 + 0.49297) % 1; return x; };
+      const c = pickChoices(role, 3, { deck, pieces: false, rand: rnd });
+      if (c.length !== 3) fewer += 1;
+      if (!c.includes(role) || c.some((o) => o !== role && lookAlike(o, role, deck))) bad += 1;
+    }
+    check('*** three always offered, the answer among them, never two that look the same (every theme, every character) ***', bad === 0 && fewer === 0, `${bad} ${fewer}`);
+    check('two to choose from, when asked', pickChoices('queen', 2, { rand: () => 0.5 }).length === 2);
+  }
+
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('on the new core, needs nothing', m.core === 'new' && m.dependsOn === 'none' && m.title === "Who's who");
+    check('waits for Start, the demo on; say it / tap it / step through by default; three to choose from; the light moves by itself',
+      f('autostart').default === false && f('attract').default === true && f('answerBy').default === 'choices'
+        && f('whoChoices').default === 3 && f('lightMoves').default === 'auto' && f('scanMs').default === 6000
+        && DEFAULTS.whoChoices === 3 && DEFAULTS.scanMs === 6000);
+    check('*** on the ladder: players, "Start this game at", the per-level thresholds ***', f('players')?.kind === 'players'
+      && f('gameStart') && f('moveUpAbove').default === 'auto' && f('startLevel').options.length === MAX_LEVEL);
+    check('two switches as yes and no is a row', f('twoSwitch')?.options.map((o) => o.value).join() === 'scan,yesno');
+    const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    check('no site copy names the person it was first built for, no she / her on the screen\'s person, nothing childish',
+      !/taylor|cici|her screen|\b(herself|hers)\b|kiddo|little one|yay/i.test(JSON.stringify(LINES) + m.description));
+    check('"start" said aloud presses play; one game, listed', m.voice?.start === 'play' && GAMES.join() === GAME);
+  }
+
+  section('*** it waits for Start, silently, with the computer playing meanwhile ***');
+  {
+    const store = ladderStore();
+    const r = R({}, { fresh: true, store });
+    check('not started, nothing said, a Start button', r.gate().begun === false && r.said.length === 0 && !!r.host.querySelector('[data-start]'));
+    check('the demo is running, with three characters on screen', r.gate().demo === true && tiles(r).length === 3, JSON.stringify(r.gate()));
+    r.clock.advance(20000);
+    check('*** the computer answers (silently), and nothing reaches the ladder or the points ***', r.gate().demoSteps >= 5 && r.said.length === 0
+      && !store.peek().ladder && r.points().length === 0, JSON.stringify({ steps: r.gate().demoSteps, said: r.said }));
+    r.publish(`${GAME}/play`, { game: GAME });
+    check('"play who\'s who" starts it, and the first question is asked', r.gate().begun && r.said.length >= 1 && !!r.item()
+      && /Which one is the (King|Queen|Jack|Joker)\?/.test(r.said[0]), r.said[0]);
+    r.inst.destroy();
+    const still = R({}, { fresh: true, reducedMotion: true });
+    check('reduced motion: a still Start, no demo', still.gate().demo === false && !!still.host.querySelector('[data-start]'));
+    still.inst.destroy();
+  }
+
+  section('*** the levels: what is asked, and how they are drawn ***');
+  {
+    const want = { 1: /^Which one is the (King|Queen|Jack|Joker)\?$/, 2: /^Which one is (Bram|Rosa|Theo|Pip)\?$/, 3: /^Who lives in the [A-Z]/,
+      4: /^Which one is (Bram|Rosa|Theo|Pip)\?$/, 5: /^Who lives in the [A-Z]/ };
+    for (const L of [1, 2, 3, 4, 5]) {
+      const r = R(at(L));
+      const it = r.item();
+      const ts = tiles(r);
+      const deck = r.st().deck;
+      const drawn = ts.every((t) => {
+        const role = t.dataset.pick;
+        const svg = t.querySelector('svg[data-figure]');
+        const exp = document.createElement('div');
+        exp.innerHTML = figureMarkup(role, deck, LEVELS[L].pieces);
+        return svg && exp.firstElementChild.isEqualNode(svg);
+      });
+      check(`level ${L}: "${r.said[0]}" with three characters, each Design's drawing ${LEVELS[L].pieces ? 'WITH' : 'WITHOUT'} the signature piece`,
+        it.level === L && want[L].test(r.said[0]) && ts.length === 3 && drawn && ts.some((t) => t.dataset.pick === it.role), r.said[0]);
+      if (!LEVELS[L].pieces) {
+        const { look, opts } = courtParts(it.role, deck);
+        const exp = document.createElement('div');
+        exp.innerHTML = `<svg viewBox="0 0 200 320">${figureBody(look, { outfit: opts.outfit, royal: opts.royal, pose: 'stand' })}</svg>`;
+        const got = r.host.querySelector(`[data-pick="${it.role}"] svg`);
+        check(`level ${L}: no crown, cap or jester's hat: the theme outfit alone`, exp.firstElementChild.innerHTML === got.innerHTML);
+      }
+      r.inst.destroy();
+    }
+    const r = R(at(3), { rand: () => 0.99 });
+    const it = r.item();
+    check('level 3 asks the home by the theme\'s own name for it', r.said[0] === `Who lives in ${placeWords(it.role, 'nimrod', { inQuestion: true })}?`, r.said[0]);
+    r.inst.destroy();
+  }
+
+  section('*** right and wrong; the answer explained; the Next question button ***');
+  {
+    const r = R(at(1));
+    const it = r.item();
+    const wrong = r.probe().candidates.find((x) => x !== it.role);
+    tap(r, wrong);
+    check('a wrong character: a miss, the switch line ("That is incorrect."), and a hint about the signature piece',
+      r.probe().misses === 1 && /That is incorrect/.test(r.said.join(' ')) && !/sounded like/.test(r.last())
+        && r.said.join(' ').includes(PIECE[it.role]), r.said.join(' | '));
+    tap(r, it.role);
+    check('*** the right one: right ***', r.phase() === 'celebrate');
+    const after = r.host.querySelector('[data-after]');
+    const expl = `${firstName(it.role)} is the ${ROLE_WORD[it.role]}, with ${lookOf(it.role)}, and lives in ${placeWords(it.role, 'nimrod')}.`;
+    check('the answer says who, what they look like and where they live', r.last().includes(expl), r.last());
+    check('the after-answer screen: the character drawn, their name and role, and a Next question button',
+      !!after?.querySelector('[data-pair] svg[data-figure]') && /, the /.test(after.querySelector('[data-pair]').textContent)
+        && !!after.querySelector('[data-next]'));
+    check('no colour is written into the markup outside Design\'s drawings', !COLOUR.test(outside(r.host)));
+    const serial = r.probe().serial;
+    r.publish(`${GAME}/select`);
+    check('Next (a press) goes on to the next question at once', r.probe().serial === serial + 1 && r.phase() === 'asking');
+    tap(r, r.item().role);
+    r.clock.advance(60000);
+    check('...and left alone, the next question comes by itself once the answer has been read', r.phase() === 'asking' && r.probe().serial === serial + 2);
+    r.inst.destroy();
+  }
+
+  section('*** answering: the five checks every quiz game passes (say it, tap it, one switch walks, yes / no) ***');
+  answerByChecks({ check, type: GAME, name: "Who's who", defaults: DEFAULTS, manifest: getManifest(GAME),
+    mount: (saved) => R({ ...at(1), lightMoves: 'off', ...saved }),
+    right: (r) => r.item().role,
+    say: (r) => positionWords(r.probe().candidates.indexOf(r.item().role), r.probe().candidates.length) });
+
+  section('*** the yes / no switches (Design\'s note) ***');
+  {
+    const r = R({ ...at(1), answerBy: 'yesno' });
+    const it = r.item();
+    const off = () => r.host.querySelector('[data-offered="1"]');
+    check('one character offered and ringed, and asked about by where they stand', off()?.dataset.pick === String(r.probe().candidate)
+      && /^Is it the one (on the left|in the middle|on the right)\?$/.test(r.probe().candLine), r.probe().candLine);
+    r.inst.destroy();
+    const y = R({ ...at(1), twoSwitch: 'yesno' });
+    const yi = y.item();
+    let guard = 0;
+    while (String(y.probe().candidate) !== yi.role && guard++ < 4) {
+      const misses = y.probe().misses;
+      y.publish(`${GAME}/next`);
+      if (guard === 1) check('two switches as Yes and No: Next is No to a wrong one, the next is offered, not a miss',
+        y.probe().misses === misses && y.host.querySelector('[data-offered="1"]')?.dataset.pick === String(y.probe().candidate));
+    }
+    y.publish(`${GAME}/select`);
+    check('*** Select is Yes to the right one: right ***', y.phase() === 'celebrate', y.phase());
+    check('two switches as yes and no: the light does not move by itself (there is nothing to walk)', y.st().light.running === false);
+    y.inst.destroy();
+  }
+
+  section('*** one switch: the light moves by itself, says each, and rests after its laps ***');
+  {
+    const r = R(at(1));
+    const it = r.item();
+    check('the light is running, at 6 s a step', r.st().light.running && r.st().light.stepMs === 6000);
+    const lit0 = r.probe().lit;
+    r.clock.advance(5999);
+    check('nothing moves before the step', r.probe().lit === lit0);
+    r.clock.advance(1);
+    const lit1 = r.probe().lit;
+    check('*** after a step the next character is lit, on screen, and said where it is ***', lit1 !== lit0
+      && r.host.querySelector(`[data-pick="${lit1}"]`)?.dataset.on === '1' && /^The one (in the middle|on the right|on the left)$/.test(r.last()), r.last());
+    r.clock.advance(6000 * LIGHT_LAPS * 3 + 1000);
+    check(`*** after ${LIGHT_LAPS} laps with no press it rests (no empty room hears the places for ever) ***`, r.st().light.running === false);
+    r.publish(`${GAME}/next`);
+    check('a press starts it again', r.st().light.running === true);
+    let guard = 0;
+    while (r.probe().lit !== it.role && guard++ < 6) r.clock.advance(6000);
+    r.publish(`${GAME}/select`);
+    check('*** a press answers the lit one: right ***', r.phase() === 'celebrate' && r.probe().misses === 0, r.phase());
+    check('the light stops while the answer is shown', r.st().light.running === false);
+    r.inst.destroy();
+    const off = R({ ...at(1), lightMoves: 'off' });
+    check('"moves only when told": no light by itself', off.st().light.running === false);
+    off.inst.destroy();
+    const paused = R(at(1));
+    paused.publish(`${GAME}/pause`);
+    check('paused: the light stops', paused.st().light.running === false);
+    paused.publish(`${GAME}/resume`);
+    check('going on: it moves again', paused.st().light.running === true);
+    paused.inst.destroy();
+  }
+
+  section('*** saying it: a name or a role; the word the question used asks "which one" ***');
+  {
+    const r = R(at(1));
+    const it = r.item();
+    r.inst.impl.hear({ text: `the ${it.role}`, confidence: 0.95 });
+    check('*** "Which one is the Queen?" - "the Queen": not judged (it points at nobody); asks which one, by place or name ***',
+      r.phase() === 'asking' && r.probe().misses === 0 && /^Which one\? Say the one on the left/.test(r.last()), r.last());
+    r.inst.impl.hear({ text: firstName(it.role), confidence: 0.95 });
+    check('*** ...her NAME is an answer: right ***', r.phase() === 'celebrate', r.phase());
+    r.inst.destroy();
+    const n = R(at(2));
+    const ni = n.item();
+    n.inst.impl.hear({ text: firstName(ni.role), confidence: 0.95 });
+    check('"Which one is Rosa?" - "Rosa": not judged either', n.phase() === 'asking' && n.probe().misses === 0, n.last());
+    n.inst.impl.hear({ text: `it's the ${ni.role}`, confidence: 0.95 });
+    check('*** ...her ROLE is an answer: right ***', n.phase() === 'celebrate', n.phase());
+    n.inst.destroy();
+    const h = R(at(3));
+    const hi = h.item();
+    const other = ROLES.find((x) => x !== hi.role && h.probe().candidates.includes(x));
+    h.inst.impl.hear({ text: firstName(other), confidence: 0.95 });
+    check('"Who lives in ...?" - somebody else\'s name: a miss, in Mike\'s words', h.probe().misses === 1 && /It sounded like you said/.test(h.said.join(' ')), h.said.join(' | '));
+    h.inst.impl.hear({ text: `the ${hi.role}`, confidence: 0.95 });
+    check('...and the right one, by role: right', h.phase() === 'celebrate');
+    h.inst.destroy();
+    const g = R(at(1));
+    const words = (g.lastGrammar()?.words || []).map((w) => w.toLowerCase());
+    check('the listening carries the names, the roles and the places', ['rosa', 'queen', 'the one on the left', 'the one in the middle', 'pip'].every((w) => words.includes(w)));
+    g.inst.destroy();
+  }
+
+  section('*** every theme draws the choices, in its own outfits, and follows a change ***');
+  {
+    const outer = document.getElementById('themed');
+    const ids = Object.keys(THEMES);
+    const decks = new Set();
+    const fails = [];
+    for (const id of ids) {
+      applyTheme(outer, id);
+      for (const L of [1, 4]) {
+        const r = R(at(L), { hostId: 'host2' });
+        const deck = r.st().deck;
+        decks.add(deck);
+        const ok = deck === deckFor(id) && tiles(r).length === 3 && tiles(r).every((t) => {
+          const exp = document.createElement('div');
+          exp.innerHTML = figureMarkup(t.dataset.pick, deck, LEVELS[L].pieces);
+          return exp.firstElementChild.isEqualNode(t.querySelector('svg[data-figure]'));
+        }) && !COLOUR.test(outside(r.host));
+        if (!ok) fails.push(`${id}/${L}`);
+        r.inst.destroy();
+      }
+    }
+    check(`*** every theme (${ids.length}) draws three characters in its deck's outfits, no colour outside the drawings ***`, fails.length === 0, fails.join(', '));
+    check(`...and the six themes with outfits of their own are among them (${[...decks].join(', ')})`, OUTFIT_THEMES.every((d) => decks.has(d)),
+      OUTFIT_THEMES.filter((d) => !decks.has(d)).join());
+    applyTheme(outer, 'halloween');
+    const r = R(at(1), { hostId: 'host2' });
+    const role = tiles(r)[0].dataset.pick;
+    const out = r.host.querySelector(`[data-pick="${role}"] svg`).outerHTML;
+    check('a Halloween panel dresses them for Halloween', r.st().deck === 'halloween' && courtOutfit(role, 'halloween').startsWith('halloween'));
+    applyTheme(outer, 'christmas');
+    await new Promise((res) => setTimeout(res, 0));
+    check('*** the theme changes and they are redrawn in the new outfits, the question unchanged ***', r.st().deck === 'christmas'
+      && r.host.querySelector(`[data-pick="${role}"] svg`).outerHTML !== out && r.item().role === r.probe().item.role);
+    r.inst.destroy();
+    applyTheme(outer, 'default');
+  }
+
+  section('*** the ladder moves it: 9 of 10 at the easiest steps up ***');
+  {
+    const store = ladderStore();
+    const r = R({ judgeOver: 10, levelsAtOnce: 1, lightMoves: 'off' }, { store });
+    for (let i = 0; i < 10; i++) {
+      const it = r.item();
+      if (i === 4) { tap(r, r.probe().candidates.find((x) => x !== it.role)); r.publish(`${GAME}/skip`); }
+      else { tap(r, it.role); r.publish(`${GAME}/select`); }
+    }
+    const row = r.session().playerRow(r.session().currentPlayer().id, GAME);
+    check('*** nine of ten right: up to level 2 ***', row.floor === 2, JSON.stringify(row));
+    r.inst.destroy();
+  }
+
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start this game at" and their usual start ***');
+  await personLadderChecks({ check, name: "Who's who", game: GAME,
+    mount: ({ saved, store, extra }) => R({ lightMoves: 'off', ...saved }, { store, extra }) });
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

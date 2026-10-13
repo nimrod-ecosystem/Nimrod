@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dress-up — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:960px;height:540px}
+</style>
+</head>
+<body>
+<h1>dress-up (Design's game ideas, 2026-10-12)</h1>
+<p>"Put Jack in something warm." Pick from Design's wardrobe. Any outfit that fits is right and nothing is ever marked
+wrong; free play dresses them in anything. One switch (the light moves by itself), two switches, touch, keys and voice
+("the parka"). Waits for Start with the computer dressing them; comes to rest when nobody presses.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="themed" style="position:absolute;left:-9999px"><div id="host2" style="width:960px;height:540px"></div></div>
+
+<script type="module">
+import { harness, rig } from './quiz_test_rig.js';
+import { getManifest } from '../module.js';
+import {
+  GAME, DEFAULTS, LINES, QUALITIES, SPOKEN, WARDROBE, PEOPLE, WHO_NAME, IDLE_MS, DEMO_STEP_MS, fits, forWords, rackFor,
+  pickQuality, outfitFrom, placeFrom, outfitName, dressedMarkup, qualityOf,
+} from '../modules/dressup.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+import { OUTFITS, OUTFIT_THEMES, courtOutfit } from '../character_kit.js';
+import { deckFor } from '../card_deck.js';
+import { applyTheme, THEMES } from '../theme.js';
+
+const { check, section, finish } = harness();
+function clock() {
+  let now = 0, id = 0;
+  const due = new Map();
+  return {
+    set: (fn, ms) => { id += 1; due.set(id, { fn, at: now + Math.max(0, Number(ms) || 0) }); return id; },
+    clear: (h) => { due.delete(h); },
+    count: () => due.size,
+    advance(ms) {
+      const end = now + ms;
+      for (let guard = 0; guard < 10000; guard++) {
+        let next = null;
+        for (const [k, t] of due) if (t.at <= end && (!next || t.at < next[1].at)) next = [k, t];
+        if (!next) break;
+        due.delete(next[0]); now = next[1].at; next[1].fn();
+      }
+      now = end;
+    },
+  };
+}
+const R = (saved = {}, opts = {}) => {
+  const c = clock();
+  const s = opts.fresh ? saved : { autostart: true, ...saved };
+  const r = rig(GAME, { saved: s, rand: opts.rand || (() => 0.3), hostId: opts.hostId || 'host', reducedMotion: !!opts.reducedMotion,
+    extra: { setTimer: c.set, clearTimer: c.clear, ...(opts.extra || {}) } });
+  return Object.assign(r, { clock: c, g: () => r.probe().game });
+};
+const items = (r) => [...r.host.querySelectorAll('.du-item[data-outfit]')];
+const tapOutfit = (r, id) => r.host.querySelector(`.du-item[data-outfit="${id}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+const tapCmd = (r, k) => r.host.querySelector(`.du-item[data-cmd="${k}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+const fitting = (r) => r.g().rack.find((id) => fits(id, r.g().quality));
+const notFitting = (r) => r.g().rack.find((id) => !fits(id, r.g().quality));
+const outside = (host) => { const c = host.cloneNode(true); c.querySelectorAll('svg[data-figure]').forEach((s) => s.remove()); return c.innerHTML; };
+const COLOUR = /(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i;
+const NEVER_WRONG = /\b(wrong|incorrect|no!|oops|try again)\b/i;
+
+try {
+  section('the wardrobe and what it is for, pure');
+  {
+    check(`every outfit in Design's wardrobe can be chosen (${WARDROBE.length}) and has a spoken name`,
+      WARDROBE.length === Object.keys(OUTFITS).length && WARDROBE.every((id) => SPOKEN[id]?.length));
+    check('every quality fits real outfits only', QUALITIES.every((q) => q.fits.length >= 1 && q.fits.every((id) => OUTFITS[id])));
+    check('*** every outfit can say what it is for ("for Halloween", "warm") ***', WARDROBE.every((id) => !!forWords(id)),
+      WARDROBE.filter((id) => !forWords(id)).join());
+    check('Design\'s example: the parka and the ski jumper are warm; the witch is for Halloween, not warm',
+      fits('winterParka', 'warm') && fits('winterSki', 'warm') && fits('halloweenWitch', 'halloween') && !fits('halloweenWitch', 'warm'));
+    let bad = 0;
+    for (const q of QUALITIES) for (const wearing of [null, ...q.fits]) for (const n of [2, 3, 4]) for (let i = 0; i < 12; i++) {
+      let x = (i * 0.173 + 0.07) % 1;
+      const rnd = () => { x = (x * 9301 + 0.49297) % 1; return x; };
+      const rk = rackFor({ quality: q.id, wearing, n, rand: rnd });
+      const anyFit = q.fits.some((id) => id !== wearing);
+      if (rk.length !== n || rk.includes(wearing) || new Set(rk).size !== n || (anyFit && !rk.some((id) => fits(id, q.id)))) bad += 1;
+    }
+    check('*** a rail always has something that fits, never what is being worn, never one twice, the size asked ***', bad === 0, String(bad));
+    const other = rackFor({ wearing: 'royal', n: 3, rand: () => 0.4, avoid: ['winterParka', 'winterSki', 'fallSweater'] });
+    check('"Other clothes" brings different ones while there are enough', other.every((id) => !['winterParka', 'winterSki', 'fallSweater'].includes(id)));
+    check('a new prompt is not the last one, and has something to choose', QUALITIES.every((q) => pickQuality({ last: q.id, rand: () => 0.5 }) !== q.id)
+      && pickQuality({ last: 'warm', wearing: 'steampunkAviator', rand: () => 0.99 }) !== 'airship');
+    const rail = ['winterParka', 'halloweenWitch', 'christmasJumper'];
+    check('said: "the parka", "a witch costume please", "festive jumper"', outfitFrom('the parka', rail) === 'winterParka'
+      && outfitFrom('a witch costume please', rail) === 'halloweenWitch' && outfitFrom('festive jumper', rail) === 'christmasJumper');
+    check('only what is on offer is heard, and a word two of them share is nobody', outfitFrom('the cape', rail) === null
+      && outfitFrom('jumper', ['winterSki', 'christmasJumper']) === null && outfitFrom('ski jumper', ['winterSki', 'christmasJumper']) === 'winterSki');
+    check('where it is: "the first one", "number two", "the last one"', placeFrom('the first one', 3) === 0 && placeFrom('number two', 3) === 1
+      && placeFrom('the last one', 3) === 2 && placeFrom('banana', 3) === null);
+  }
+
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('on the new core, needs nothing', m.core === 'new' && m.dependsOn === 'none' && m.title === 'Dress-up');
+    check('a prompt by default; each of the four in turn; three to choose from; they try it on anyway; fits shown after 2 tries',
+      f('dressMode').default === 'prompt' && f('dressWho').default === 'all' && f('rackSize').default === 3 && f('tryOn').default === 'wear'
+        && f('showAfter').default === 2 && DEFAULTS.dressMode === 'prompt');
+    check('waits for Start with the demo on; the light moves by itself at 4 s; 5 s after a good choice',
+      f('autostart').default === false && f('attract').default === true && f('lightMoves').default === 'auto' && f('scanMs').default === 4000
+        && f('dressedMs').default === 5000);
+    const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    check('no site copy names the person it was first built for; nothing childish; nothing ever "wrong"',
+      !/taylor|cici|her screen|kiddo|little one|yay/i.test(JSON.stringify(LINES) + m.description + JSON.stringify(QUALITIES))
+        && !NEVER_WRONG.test(JSON.stringify(LINES)));
+    check('"start" said aloud presses play; "put it on" / "this one" choose', m.voice?.start === 'play' && m.voice['put it on'] === 'select');
+  }
+
+  section('*** it waits for Start, silently, with the computer dressing them ***');
+  {
+    const r = R({}, { fresh: true });
+    check('not started, nothing said, a Start button, the listening closed', !r.probe().started && r.said.length === 0
+      && !!r.host.querySelector('[data-start]') && !r.probe().listening);
+    const before = r.g().wearing;
+    check('the demo is on, the clothes on the rail', r.probe().demo && items(r).length === 3);
+    r.clock.advance(DEMO_STEP_MS * 3);
+    check('*** the computer puts something that fits on (silently, scoring nothing) ***', r.g().wearing !== before && fits(r.g().wearing, r.g().quality)
+      && r.said.length === 0 && r.g().dressed === 0 && r.scores.length === 0, JSON.stringify({ w: r.g().wearing, q: r.g().quality }));
+    const seen = new Set();
+    for (let s = 0; s < 60; s++) { r.clock.advance(1000); seen.add(r.g().who); }
+    check('...and goes on to the next person by itself', seen.size >= 3 && r.said.length === 0, [...seen].join());
+    r.clock.advance(10 * 60000);
+    check('the demo rests after "The demo plays for" (10 minutes)', r.probe().demoRested && r.probe().timers === 0, JSON.stringify(r.probe().timers));
+    r.publish(`${GAME}/select`);
+    check('any press starts a real game: the prompt is said', r.probe().started && /^Put (the King|the Queen|Jack|Pip) in something/.test(r.said[0]), r.said[0]);
+    r.inst.destroy();
+    const still = R({}, { fresh: true, reducedMotion: true });
+    check('reduced motion: a still Start, no demo', !still.probe().demo && !!still.host.querySelector('[data-start]'));
+    still.inst.destroy();
+  }
+
+  section('*** a prompt: anything that fits is right ***');
+  {
+    const r = R();
+    const g = r.g();
+    check('"Put Jack in something ..." (Design\'s wording), the first person in their theme outfit', r.said[0] === `Put Jack in ${qualityOf(g.quality).ask}.`
+      && g.who === 'jack' && g.wearing === courtOutfit('jack', 'nimrod'), r.said[0]);
+    const deck = r.probe().deck;
+    const drawn = items(r).every((t) => {
+      const exp = document.createElement('div');
+      exp.innerHTML = dressedMarkup(g.who, t.dataset.outfit, deck);
+      return exp.firstElementChild.isEqualNode(t.querySelector('svg[data-figure]'));
+    });
+    check('three outfits, each drawn ON the person (Design\'s drawing), each named', items(r).length === 3 && drawn
+      && items(r).every((t) => t.textContent.toLowerCase().includes(outfitName(t.dataset.outfit))));
+    check('the person themselves, in what they wear, and named', !!r.host.querySelector('[data-who] svg[data-figure]') && /Jack Theo/.test(r.host.querySelector('[data-who]').textContent));
+    check('no colour is written into the markup outside Design\'s drawings', !COLOUR.test(outside(r.host)));
+    const id = fitting(r);
+    tapOutfit(r, id);
+    check('*** touching one that fits: it goes on, "Good choice", counted ***', r.g().phase === 'dressed' && r.g().wearing === id && r.g().dressed === 1
+      && r.last() === `Good choice: the ${outfitName(id)} is ${qualityOf(g.quality).is}.`, r.last());
+    check('the score is published', r.scores.some((p) => p && p.value === 1), JSON.stringify(r.scores.at(-1)));
+    r.clock.advance(5000);
+    check('*** 5 s later, the next person and a new prompt, by themselves (then the lit outfit is named) ***', r.g().phase === 'dress'
+      && r.g().who === 'joker' && r.said.at(-2)?.startsWith('Put Pip in') && r.g().quality !== g.quality
+      && r.last() === `${outfitName(r.g().rack[0])[0].toUpperCase()}${outfitName(r.g().rack[0]).slice(1)}?`, r.said.slice(-2).join(' | '));
+    check('the prompt is never cut off by the lit outfit\'s name', !r.cancelled.some((c) => r.said[Number(String(c).slice(1)) - 1]?.startsWith('Put ')));
+    r.publish(`${GAME}/select`);
+    const q = r.g().quality;
+    let guard = 0;
+    while (!fits(r.g().rack[r.g().lit], q) && guard++ < 4) r.publish(`${GAME}/next`);
+    r.publish(`${GAME}/select`);
+    check('two switches: Next to one that fits, Select puts it on', r.g().phase === 'dressed' && fits(r.g().wearing, q));
+    r.publish(`${GAME}/select`);
+    check('a press skips the rest: the next prompt at once', r.g().phase === 'dress' && r.g().who === 'king');
+    r.inst.destroy();
+  }
+
+  section('*** gentle: something else is never wrong ***');
+  {
+    const r = R();
+    const q = qualityOf(r.g().quality);
+    const no = notFitting(r);
+    const was = r.g().dressed;
+    tapOutfit(r, no);
+    check('*** one that does not fit: they try it on anyway, and it says plainly what that one is for, and asks again ***',
+      r.g().phase === 'dress' && r.g().wearing === no && r.last() === `The ${outfitName(no)} is ${forWords(no)}. ${q.ask[0].toUpperCase()}${q.ask.slice(1)}?`
+        && r.g().dressed === was, r.last());
+    check('nothing said is ever "wrong" or "incorrect"', !r.said.some((s) => NEVER_WRONG.test(s)), r.said.join(' | '));
+    check('what is being worn is no longer on the rail, and something that fits still is', !r.g().rack.includes(no) && r.g().rack.length === 3
+      && r.g().rack.some((id) => fits(id, q.id)), r.g().rack.join());
+    check('one try: nothing marked yet', !r.host.querySelector('[data-fits="1"]'));
+    tapOutfit(r, notFitting(r) || r.g().rack[0]);
+    if (r.g().phase === 'dress') {
+      const marked = [...r.host.querySelectorAll('[data-fits="1"]')].map((t) => t.dataset.outfit);
+      check('*** after 2 tries, the ones that fit say so on their tiles ***', marked.length >= 1 && marked.every((id) => fits(id, q.id)),
+        marked.join());
+    }
+    r.inst.destroy();
+    const k = R({ tryOn: 'keep' });
+    const w0 = k.g().wearing;
+    tapOutfit(k, notFitting(k));
+    check('"keep what they have on": it says what that one is for, and they keep theirs', k.g().wearing === w0 && k.g().phase === 'dress');
+    k.inst.destroy();
+  }
+
+  section('*** one switch: the light moves by itself, says each, and a press puts it on ***');
+  {
+    const r = R();
+    check('the light is running at 4 s', r.probe().lightRunning && r.probe().lightStepMs === 4000);
+    r.clock.advance(4000);
+    const lit = r.g().lit;
+    check('*** after a step the next outfit is lit, on screen, and said ("Parka?") ***', lit === 1
+      && r.host.querySelector('.du-item[data-lit="1"]')?.dataset.stop === '1' && r.last() === `${outfitName(r.g().rack[1])[0].toUpperCase()}${outfitName(r.g().rack[1]).slice(1)}?`, r.last());
+    let guard = 0;
+    while (!fits(r.g().rack[r.g().lit], r.g().quality) && guard++ < 4) r.clock.advance(4000);
+    r.publish(`${GAME}/select`);
+    check('a press puts the lit one on', r.g().phase === 'dressed');
+    r.inst.destroy();
+    const off = R({ lightMoves: 'off' });
+    check('"moves only when told": no light by itself; Next moves it', !off.probe().lightRunning && (off.publish(`${GAME}/next`), off.g().lit === 1));
+    off.inst.destroy();
+  }
+
+  section('*** keys and voice ***');
+  {
+    const r = R();
+    const g0 = r.g();
+    const gram = r.lastGrammar();
+    check('the listening is open, with the names of the clothes on offer', gram?.open && g0.rack.every((id) => gram.words.includes(SPOKEN[id][0])));
+    const id = fitting(r);
+    r.publish('speech/answer', { text: `the ${SPOKEN[id][0]}`, confidence: 0.9 });
+    check('*** "the parka" said: it goes on ***', r.g().phase === 'dressed' && r.g().wearing === id, JSON.stringify(r.g().wearing));
+    check('the listening closes while there is nothing to choose', r.lastGrammar()?.open === false);
+    r.publish(`${GAME}/select`);
+    const i = r.g().rack.findIndex((x) => fits(x, r.g().quality));
+    r.publish('speech/answer', { text: ['the first one', 'the second one', 'the last one'][i], confidence: 0.9 });
+    check('"the second one" said: that one', r.g().phase === 'dressed');
+    r.publish(`${GAME}/select`);
+    const j = r.g().rack.findIndex((x) => fits(x, r.g().quality));
+    r.host.querySelector('[data-du-root]').dispatchEvent(new KeyboardEvent('keydown', { key: String(j + 1), bubbles: true }));
+    check('a number key chooses outright', r.g().phase === 'dressed');
+    r.inst.destroy();
+  }
+
+  section('*** free play: dress them in anything ***');
+  {
+    const r = R({ dressMode: 'free' });
+    check('no prompt: "Dress Jack in anything you like."', r.said[0] === 'Dress Jack in anything you like.' && r.g().quality === null, r.said[0]);
+    check('the rail, then Other clothes and Next person', r.probe().stops.map((s) => s.kind).join() === 'outfit,outfit,outfit,more,person');
+    const id = r.g().rack[2];
+    tapOutfit(r, id);
+    check('anything goes on, and is said', r.g().wearing === id && r.last() === `Jack in the ${outfitName(id)}.` && r.g().phase === 'dress', r.last());
+    const rail = r.g().rack.slice();
+    tapCmd(r, 'more');
+    check('Other clothes: a different rail', r.g().rack.some((x) => !rail.includes(x)) && !r.g().rack.includes(r.g().wearing));
+    tapCmd(r, 'person');
+    check('Next person: Pip, in his own clothes', r.g().who === 'joker' && r.g().wearing === courtOutfit('joker', 'nimrod')
+      && r.said.includes('Dress Pip in anything you like.'));
+    r.inst.destroy();
+    const one = R({ dressWho: 'queen' });
+    tapOutfit(one, fitting(one));
+    one.clock.advance(5000);
+    check('"Who gets dressed: Queen Rosa": the Queen every time', one.g().who === 'queen');
+    one.inst.destroy();
+  }
+
+  section('*** nothing waits for ever: a game nobody presses comes to rest ***');
+  {
+    const r = R();
+    r.clock.advance(IDLE_MS + 10);
+    check('*** 45 s with no press: the light stops, the listening closes, it says "Press to play" ***', r.probe().idle && !r.probe().lightRunning
+      && r.lastGrammar()?.open === false && /Press to play/.test(r.host.querySelector('.du-say').textContent));
+    r.clock.advance(60000);
+    check('a minute later the demo comes back (the Start screen)', !r.probe().started && r.probe().demo);
+    r.inst.destroy();
+    const w = R();
+    w.clock.advance(IDLE_MS + 10);
+    const lit = w.g().lit;
+    w.publish(`${GAME}/select`);
+    check('a press at rest only wakes it (it does not choose where the light had stopped)', !w.probe().idle && w.g().phase === 'dress' && w.g().lit === 0 && lit >= 0);
+    w.inst.destroy();
+  }
+
+  section('*** pause ***');
+  {
+    const r = R();
+    r.publish(`${GAME}/back`);
+    const n = r.said.length;
+    check('Back pauses: the light stops, the listening closes, Paused shown', r.g().phase === 'paused' && !r.probe().lightRunning
+      && r.lastGrammar()?.open === false && !r.host.querySelector('[data-paused]').hidden);
+    r.clock.advance(IDLE_MS * 2);
+    check('paused is paused: nothing moves, nothing said, it does not go back to the demo', r.g().phase === 'paused' && r.said.length === n && r.probe().started);
+    r.publish(`${GAME}/select`);
+    check('any press goes on, and the prompt is said again', r.g().phase === 'dress' && r.said.length === n + 1);
+    r.bus.publish('shell/state', { menuOpen: true });
+    check('the menu opening pauses it', r.g().phase === 'paused');
+    r.inst.destroy();
+    check('destroyed: the listening closed, no timers left', r.lastGrammar()?.open === false);
+  }
+
+  section('*** every theme draws the people and the clothes, and follows a change ***');
+  {
+    const outer = document.getElementById('themed');
+    const ids = Object.keys(THEMES);
+    const fails = [];
+    for (const id of ids) {
+      applyTheme(outer, id);
+      const r = R({}, { hostId: 'host2' });
+      const deck = r.probe().deck;
+      const g = r.g();
+      const big = document.createElement('div');
+      big.innerHTML = dressedMarkup(g.who, g.wearing, deck, { cls: 'du-big' });
+      const ok = deck === deckFor(id) && big.firstElementChild.isEqualNode(r.host.querySelector('[data-who] svg')) && items(r).length === 3
+        && items(r).every((t) => { const e = document.createElement('div'); e.innerHTML = dressedMarkup(g.who, t.dataset.outfit, deck); return e.firstElementChild.isEqualNode(t.querySelector('svg')); })
+        && !COLOUR.test(outside(r.host));
+      if (!ok) fails.push(id);
+      r.inst.destroy();
+    }
+    check(`*** every theme (${ids.length}) draws the person and the rail in its own colours, no colour outside the drawings ***`, fails.length === 0, fails.join());
+    applyTheme(outer, 'halloween');
+    const r = R({}, { hostId: 'host2' });
+    check('a Halloween panel starts Jack in his Halloween outfit', r.g().wearing === courtOutfit('jack', 'halloween') && OUTFIT_THEMES.includes('halloween'));
+    const before = r.host.querySelector('[data-who] svg').outerHTML;
+    applyTheme(outer, 'nimrod');
+    applyTheme(outer, 'default');
+    await new Promise((res) => setTimeout(res, 0));
+    check('the theme changes and the person is redrawn', r.host.querySelector('[data-who] svg').outerHTML !== before || r.probe().deck === 'nimrod');
+    r.inst.destroy();
+    applyTheme(outer, 'default');
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

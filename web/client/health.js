@@ -112,6 +112,8 @@ export const HEALTH_EXPECT = {
   sortbricks:  { idle: true },   // brick games (2026-10-10): Sort the bricks comes to rest when nobody presses
   town:        { idle: true },   // town (2026-10-12): left alone the town is a picture; it changes only when pressed
   story:       { idle: true },   // story (2026-10-12): rests between stories, and on "The end" when that is chosen
+  whoswho:     { idle: true },   // Design's game ideas (2026-10-12): Who's who waits for an answer; its light rests
+  dressup:     { idle: true },   // Design's game ideas (2026-10-12): Dress-up comes to rest when nobody presses
   karaoke:     { expectMs: 90 * 60 * 1000 },
   // Row 2.69, the Internet Archive: idle, argued. It may be showing a book, waiting at the end of an item ("At the end:
   // Stop"), or paused, and none of those is a stall. A file that will not play is skipped by the panel itself, and three

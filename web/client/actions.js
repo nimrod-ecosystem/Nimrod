@@ -730,6 +730,15 @@ export const MODULE_VERBS = {
   story:         { select: 'story/next', next: 'story/next', right: 'story/next', down: 'story/next', launch: 'story/next',
                    prev: 'story/prev', back: 'story/prev', left: 'story/prev', up: 'story/again',
                    pause: 'story/pause', play: 'story/resume' },
+  // whoswho (2026-10-12, Design's game ideas): Who's who, a quiz_view game. next / prev walk the characters, select answers,
+  // back skips; play / pause start-or-resume and pause.
+  whoswho:       { next: 'whoswho/next', prev: 'whoswho/prev', select: 'whoswho/select', back: 'whoswho/skip',
+                   play: 'whoswho/resume', pause: 'whoswho/pause' },
+  // dressup (2026-10-12, Design's game ideas): Dress-up. select (and down, launch) puts the lit outfit on; next / prev (and
+  // right / left) move the light; back and pause pause, play starts.
+  dressup:       { select: 'dressup/select', next: 'dressup/next', prev: 'dressup/prev', back: 'dressup/back',
+                   left: 'dressup/prev', right: 'dressup/next', down: 'dressup/select', launch: 'dressup/select',
+                   pause: 'dressup/pause', play: 'dressup/resume' },
   buildit:      { next: 'buildit/next', prev: 'buildit/prev', select: 'buildit/select',
                    left: 'buildit/left', right: 'buildit/right', up: 'buildit/up', down: 'buildit/down',
                    play: 'buildit/resume', pause: 'buildit/pause' },

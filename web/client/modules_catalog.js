@@ -336,6 +336,30 @@ export const CATALOG = [
       + 'Queen, Jack and Pip. The pages turn by themselves, or any press turns one, so one switch is all it needs. '
       + 'Gentle, everyday stories: a recipe found, a clock mended, a letter written.',
   },
+  // whoswho (2026-10-12, Design's game ideas): which one is the Queen? `answer`: it asks and waits for the answer.
+  {
+    type: 'whoswho',
+    title: "Who's who",
+    group: 'practice',
+    use: 'answer',
+    lead: 'Which one is the Queen? Pick her out from three of the court characters, dressed for the theme.',
+    needs: 'Nothing. The characters and the questions are built in.',
+    why: 'It starts with their crowns and hats to go by, then by name, then by where they live, then by their looks '
+      + 'alone, each player at their own level. Say the name or which one ("the one on the left"), touch it, let the light '
+      + 'step through them for one switch (one big button), or answer yes or no. It waits for Start.',
+  },
+  // dressup (2026-10-12, Design's game ideas): put Jack in something warm. `answer`: it asks and waits; nothing is wrong.
+  {
+    type: 'dressup',
+    title: 'Dress-up',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Put Jack in something warm: choose from the wardrobe, or dress the court characters in anything.',
+    needs: 'Nothing. The wardrobe is built in.',
+    why: 'Anything that fits is right, and nothing is ever marked wrong: something else is tried on, and it says what '
+      + 'that one is for. Touch an outfit, say its name ("the parka"), or let the light step through them for one '
+      + 'switch (one big button). It waits for Start.',
+  },
   // Row 2.37. `touch`: left alone it is a note on the wall, and nothing waits on anybody.
   {
     type: 'note',

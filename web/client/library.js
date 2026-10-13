@@ -121,6 +121,8 @@ export const MODULE_CATEGORIES = Object.freeze({
   sortbricks: ['games'],   // brick games (2026-10-10): Sort the bricks (sortbricks)
   town: ['visual', 'scenes'],   // town (2026-10-12): the theme's town, a place to look at and rearrange
   story: ['visual'],   // story (2026-10-12): Story time, a picture story read aloud
+  whoswho: ['games'],   // Design's game ideas (2026-10-12): Who's who (whoswho)
+  dressup: ['games'],   // Design's game ideas (2026-10-12): Dress-up (dressup)
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
   adventure: ['games', 'ai'],   // (2026-10-12) talk with the town, or a free-form story: a game, told by an AI
