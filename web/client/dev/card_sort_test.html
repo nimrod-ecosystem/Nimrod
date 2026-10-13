@@ -241,9 +241,9 @@ try {
     const m = getManifest(GAME);
     const f = (k) => m.settings.find((s) => s.key === k);
     // 2026-10-12 (Design's characters handoff): suit marks are Design's new default, and the scenery is a third row.
-    check('card faces, suit colours and the scenery are settings, with card_deck.js\'s defaults: suit marks, four colours, auto',
-      f('cardLayout')?.default === 'pips' && f('suitColours')?.default === 'four' && f('cardScenery')?.default === 'auto'
-      && DEFAULTS.cardLayout === 'pips' && DEFAULTS.suitColours === 'four' && DEFAULTS.cardScenery === 'auto');
+    check('card faces, suit colours and the scenery are settings, with card_deck.js\'s defaults: suit marks, red and black, auto',
+      f('cardLayout')?.default === 'pips' && f('suitColours')?.default === 'two' && f('cardScenery')?.default === 'auto'
+      && DEFAULTS.cardLayout === 'pips' && DEFAULTS.suitColours === 'two' && DEFAULTS.cardScenery === 'auto');
     const outer = document.getElementById('themed');
     applyTheme(outer, 'christmas');
     const r = R({}, { hostId: 'host2' });
@@ -257,7 +257,7 @@ try {
     const tileInk = (s) => getComputedStyle(r.host.querySelector(`.cs-suit[data-suit="${s}"]`)).color;
     const toHex = (c) => '#' + (String(c).match(/[\d.]+/g) || []).slice(0, 3).map((x) => Math.round(Number(x)).toString(16).padStart(2, '0')).join('');
     check('*** the suit buttons are drawn in the same deck\'s inks as the card ***',
-      ['H', 'D', 'C', 'S'].every((s) => toHex(tileInk(s)) === cardThemes.christmas.suits[{ H: 'hearts', D: 'diamonds', C: 'clubs', S: 'spades' }[s]].toLowerCase()),
+      ['H', 'D', 'C', 'S'].every((s) => toHex(tileInk(s)) === cardVars('christmas', {})[`--suit-${{ H: 'hearts', D: 'diamonds', C: 'clubs', S: 'spades' }[s]}`].toLowerCase()),
       ['H', 'D', 'C', 'S'].map((s) => toHex(tileInk(s))).join(' '));
     applyTheme(outer, 'cyberpunk');
     await new Promise((res) => setTimeout(res, 0));

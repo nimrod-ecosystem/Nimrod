@@ -61,10 +61,9 @@ export const CARD_SCENERY = Object.freeze(['auto', 'on', 'off']);
 //                      looks like, and counting the marks is part of the game. AGAINST: 'big' (the default until
 //                      today) reads from across a room. It is one setting away, and the corner index on every
 //                      card is a fifth of its width either way.
-//   suitColours 'four' Kept as it was (631a9aa), NOT Design's file's own default (red and black). FOR four: a
-//                      diamond and a heart, a club and a spade, differ at a glance for somebody who sees poorly,
-//                      and the suit shape is on every index anyway. AGAINST: two colours is what most people
-//                      expect. On Mike's list.
+//   suitColours 'two'  RED AND BLACK - Mike, 2026-10-12, asked between the two: "red and black" (Design's file's own
+//                      default too). Four colours (red, blue, green, ink), the default from 631a9aa until today, is one
+//                      setting away for somebody who sees poorly; the suit shape is on every index either way.
 //   cardScenery 'auto' ON, EXCEPT IN THE DECKS WHERE IT MEASURED UNDER 3:1 (SCENERY_DEFAULT_OFF, below), which is
 //                      what Mike's brief asked for (2026-10-12). FOR on (Design's file's own default): the town
 //                      behind the cards is the whole point of this handoff, and every pip and index carries a
@@ -73,7 +72,7 @@ export const CARD_SCENERY = Object.freeze(['auto', 'on', 'off']);
 //                      in 13 of the 21 decks (the Nimrod deck among them: so the default theme's cards start PLAIN).
 //                      'on' and 'off' are each one setting away and apply to every deck. On Mike's list: whether
 //                      a mixed default (pictures in some themes, not others) is what he wants, or one answer for all.
-export const CARD_DEFAULTS = Object.freeze({ cardLayout: 'pips', suitColours: 'four', cardScenery: 'auto' });
+export const CARD_DEFAULTS = Object.freeze({ cardLayout: 'pips', suitColours: 'two', cardScenery: 'auto' });
 
 // DECKS WHOSE SCENERY STARTS OFF: the corner index or the pips measured under 3:1 at their edge over the scene, on
 // the deck's worst card, at the kiosk's smallest card (110px; dev/playing_cards_test.html says how, and holds this

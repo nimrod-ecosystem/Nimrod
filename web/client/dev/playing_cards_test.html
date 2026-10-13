@@ -392,15 +392,16 @@ try {
     check('a back\'s pattern id carries the table\'s suffix, in the pattern AND where it is used (nothing left pointing at the old id)',
       b.includes('<pattern id="nc-night-p7"') && b.includes('url(#nc-night-p7)') && !/nc-night[")]/.test(b));
     check('no suffix, no change to the back\'s id', cardArt({ s: 'S', r: 1, up: false }, 'night').includes('id="nc-night"'));
-    check(`defaults: ${JSON.stringify(CARD_DEFAULTS)} (Design's pips; scenery where it measured readable; four colours kept, see card_deck.js)`,
-      CARD_DEFAULTS.cardLayout === 'pips' && CARD_DEFAULTS.suitColours === 'four' && CARD_DEFAULTS.cardScenery === 'auto'
-      && JSON.stringify(cardOptions({})) === '{"layout":"pips","fourColour":true,"scenery":true}'
+    check(`defaults: ${JSON.stringify(CARD_DEFAULTS)} (Design's pips; scenery where it measured readable; red and black, Mike 2026-10-12)`,
+      CARD_DEFAULTS.cardLayout === 'pips' && CARD_DEFAULTS.suitColours === 'two' && CARD_DEFAULTS.cardScenery === 'auto'
+      && JSON.stringify(cardOptions({})) === '{"layout":"pips","fourColour":false,"scenery":true}'
       && cardOptions({}, { deck: 'winter' }).scenery === true && cardOptions({}, { deck: 'halloween' }).scenery === false);
     check('the default theme (the Nimrod deck) starts with plain cards: it measured under 3:1 (2.93 at the corner index)',
       cardOptions({}, { deck: deckFor('default') }).scenery === false && !/viewBox="0 0 960 540"/.test(cardArt({ s: 'H', r: 7, up: true }, 'default')));
     check('the settings mean what they say, and nonsense is the default',
       JSON.stringify(cardOptions({ cardLayout: 'big', suitColours: 'two', cardScenery: 'off' })) === '{"layout":"big","fourColour":false,"scenery":false}'
-      && JSON.stringify(cardOptions({ cardLayout: 'x', suitColours: 'y', cardScenery: 'z' })) === '{"layout":"pips","fourColour":true,"scenery":true}');
+      && JSON.stringify(cardOptions({ cardLayout: 'x', suitColours: 'y', cardScenery: 'z' })) === '{"layout":"pips","fourColour":false,"scenery":true}'
+      && cardOptions({ suitColours: 'four' }).fourColour === true);
     check('a layout saved under its old name, "classic", is the pips', cardOptions({ cardLayout: 'classic' }).layout === 'pips');
     check('scenery off draws plain cards in every deck, on draws the town in every deck', !/viewBox="0 0 960 540"/.test(cardArt({ s: 'H', r: 7, up: true }, 'winter', { cardScenery: 'off' }))
       && /viewBox="0 0 960 540"/.test(cardArt({ s: 'H', r: 7, up: true }, 'halloween', { cardScenery: 'on' })));

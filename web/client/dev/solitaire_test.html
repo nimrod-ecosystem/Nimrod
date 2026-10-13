@@ -330,7 +330,7 @@ try {
   // 2026-10-10: the cards are Design's drawings (playing_cards.js through card_deck.js). What this suite checks is
   // that the TABLE draws them, in the theme's deck and its own settings; every deck in every theme is measured in
   // dev/playing_cards_test.html.
-  section('*** the suits: four colours AND their shapes, in Design\'s cards ***');
+  section('*** the suits: red and black (Mike, 2026-10-12) AND their shapes, in Design\'s cards ***');
   {
     const t = mount({ host: scratch(960, 540) });
     await cssReady(t.host);
@@ -361,7 +361,9 @@ try {
     // The four inks, read off the drawn corner index.
     const ink = (s) => cardArt({ s, r: 7, up: true }, 'default', p.cfg).match(/<text[^>]*fill="(#[0-9a-fA-F]{6})"/)[1];
     const inks = SUITS.map((s) => ink(s.id));
-    check('four DIFFERENT suit colours by default (hearts, diamonds, clubs, spades)', new Set(inks).size === 4, inks.join(' | '));
+    // Mike, 2026-10-12: "red and black" (card_deck.js CARD_DEFAULTS); four colours is a setting, checked per deck in playing_cards.
+    check('red and black by default: two inks, the hearts\' red on diamonds and the spades\' ink on clubs', new Set(inks).size === 2
+      && ink('D') === ink('H') && ink('C') === ink('S') && ink('H') !== ink('S'), inks.join(' | '));
     const stock = cardThemes.nimrod.stock;
     const ratios = inks.map((c) => hexContrast(c, stock));
     check('*** each suit reads at 4.5:1 or better on the default deck\'s face ***', ratios.every((r) => r >= 4.5), ratios.map((r) => r.toFixed(2)).join(', '));
@@ -408,9 +410,9 @@ try {
   {
     const rows = getManifest(GAME).settings;
     // 2026-10-12 (Design's characters handoff): the pips are Design's new default, and the scenery is a third row.
-    check('all three are settings, with the defaults card_deck.js argues: suit marks, four colours, scenery where it measured readable',
-      DEFAULTS.cardLayout === 'pips' && DEFAULTS.suitColours === 'four' && DEFAULTS.cardScenery === 'auto'
-      && rows.find((r) => r.key === 'cardLayout')?.default === 'pips' && rows.find((r) => r.key === 'suitColours')?.default === 'four'
+    check('all three are settings, with the defaults card_deck.js argues: suit marks, red and black, scenery where it measured readable',
+      DEFAULTS.cardLayout === 'pips' && DEFAULTS.suitColours === 'two' && DEFAULTS.cardScenery === 'auto'
+      && rows.find((r) => r.key === 'cardLayout')?.default === 'pips' && rows.find((r) => r.key === 'suitColours')?.default === 'two'
       && rows.find((r) => r.key === 'cardScenery')?.default === 'auto'
       && JSON.stringify(cardSettingsFields().map((f) => f.key)) === JSON.stringify(['cardLayout', 'suitColours', 'cardScenery']));
     const t = mount({ host: scratch(960, 540), saved: { autoMove: 'off' } });
