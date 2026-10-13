@@ -83,6 +83,8 @@ import {
 } from '../music_favourites.js';
 import { createLocalMusic, FOLDER_ORDERS } from '../music_local.js';
 import { createSpotify, createSpotifyPlayer, SPOTIFY_MESSAGES, FEATURE_WORDS, callbackUrl, dayWords } from '../music_spotify.js';
+// Spotify Jam (2026-10-12): a pointer to where a Jam starts, shown where Spotify is set up. music_spotify.js says what was checked.
+import { SPOTIFY_JAM_WORDS } from '../music_spotify.js';
 import { connectHelperHtml, copyText, CONNECT_WORDS } from '../spotify_connect.js';
 import { createSearchKeyClient, KEY_LEVEL_WORDS } from '../search_key.js';
 import { themeQrColours, hasBrowserWindow } from '../page_links.js';
@@ -150,7 +152,8 @@ export const SETTINGS = [
   { key: 'sayProblems', label: 'When it cannot play something', kind: 'toggle', default: true,
     level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show why on this part only' },
   { key: 'spotifyOn', label: 'Spotify', kind: 'toggle', default: false, level: 'standard',
-    onLabel: 'On (needs Spotify Premium)', offLabel: 'Off' },
+    onLabel: 'On (needs Spotify Premium)', offLabel: 'Off',
+    note: SPOTIFY_JAM_WORDS },   // Spotify Jam (2026-10-12): where a Jam starts, said where Spotify is turned on
   // (row 2.61) Typed here or in "Change the list" or on the keys page, and KEPT ON THE SERVER with the account's Spotify
   // key, once (`settingsWrite` below). `secret: true` is not because a Client ID is secret (it is not); it is the
   // settings menu's "kept somewhere else" behaviour - the box opens empty, an empty save keeps what is there, and the
@@ -769,6 +772,7 @@ registerModule(
           ${spNote ? `<p class="mu-hint" data-sp-note role="status">${esc(spNote)}</p>` : ''}
           ${spotifyNote ? `<p class="mu-hint" role="status">${esc(spotifyNote)}</p>` : ''}
           ${devices}
+          <p class="mu-hint" data-sp-jam>${esc(SPOTIFY_JAM_WORDS)}</p>
         </div>`;
     }
 
