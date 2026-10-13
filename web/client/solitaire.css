@@ -116,6 +116,31 @@ button.sol-card{cursor:pointer}
 .sol-btn[data-on="1"]::before{content:"\25B8\00a0"}
 .sol-won{font-size:clamp(16px, 3.4cqmin, 40px)}
 
+/* ---- the court cheers (court solitaire, 2026-10-12; modules/solitaire.js "the court cheers") ----
+   A King stands in the empty cell between the drawn cards and the home piles: nothing is dealt there, so he covers
+   no card. In draw-three the drawn fan reaches .44 of a card into that cell (.sol-waste above), so there he stands
+   in the part it does not reach. He never takes a press (pointer-events: none) and goes by himself (a timer).
+   ONE appearance and ONE fade: the animation runs once, nothing repeats or changes colour. Full motion: he grows a
+   little, up from his feet, as he appears. Reduced motion: no movement at all, only the fade. The module sets the length
+   (--sol-cheer-ms) and a negative delay so a redraw mid-cheer carries on where it was. */
+.sol-cheer-slot{position:relative;min-width:0}
+.sol-cheer{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;
+  animation:sol-cheer-rise var(--sol-cheer-ms, 4000ms) linear 1 both}
+.sol-cheer[data-draw="3"]{left:max(0px, calc(var(--sol-cw) * .44 + 2px - var(--sol-gap)))}
+.sol[data-motion="reduce"] .sol-cheer{animation-name:sol-cheer-fade}
+.sol-king{flex:1 1 0;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.sol-king > svg{display:block;width:100%;height:100%}
+/* "Rises" by growing up from his feet, never by sliding: a slide up from below crossed the top of the column under
+   his cell for its first half-second, and the suite caught it covering that column's card. */
+.sol-cheer{transform-origin:50% 100%}
+@keyframes sol-cheer-rise{
+  0%{opacity:0;transform:scale(.86)}
+  12%{opacity:1;transform:none}
+  85%{opacity:1;transform:none}
+  100%{opacity:0;transform:none}
+}
+@keyframes sol-cheer-fade{0%{opacity:0}12%{opacity:1}85%{opacity:1}100%{opacity:0}}
+
 .sol[data-motion="full"] .sol-card{transition:transform .15s ease-out}
 @media (prefers-reduced-motion: no-preference){
   .sol[data-motion="full"] .sol-won{animation:sol-glow 1.6s ease-in-out 2}

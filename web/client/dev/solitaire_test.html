@@ -39,7 +39,8 @@ import {
   finishMoves, isSafeHome, nextAutoMove, settle, isStuck, encodeMove, decodeMove, encodeTurn, replay,
   solve, cardName, cardShort, homeCount, legalMoves,
 } from '../klondike.js';
-import { GAME, DEFAULTS, whereKey, placeWords, cardWords } from '../modules/solitaire.js';
+import { GAME, DEFAULTS, whereKey, placeWords, cardWords, cheerLine, suitsFinished, CHEER_MODES } from '../modules/solitaire.js';
+import { minFlashPeriodMs } from '../flash_limit.js';
 import { THEMES, applyTheme, worstContrast, contrast as hexContrast } from '../theme.js';
 import { cardArt, deckFor, cardSettingsFields } from '../card_deck.js';
 import { cardThemes } from '../playing_cards.js';
@@ -106,7 +107,7 @@ function scratch(w = 960, h = 540) {
   return el;
 }
 function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, output = undefined,
-                 points = fakeStream(), rand = () => 0.25 } = {}) {
+                 points = fakeStream(), rand = () => 0.25, now = undefined, extra = {} } = {}) {
   const said = [];
   const out2 = output === null ? null : (output || { say: (t) => { said.push(t); return `u${said.length}`; }, cancel() {} });
   const state = fakeState(saved);
@@ -114,6 +115,7 @@ function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion 
     mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
     instanceId: `sol${++n}`, output: out2, reducedMotion, rand,
     makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+    ...(now ? { now } : {}), ...extra,
   });
   inst.init();
   const probe = () => inst.impl.__probe();
@@ -770,6 +772,167 @@ try {
       !bad.some((b) => /picked \d/.test(b)), bad.join(' | '));
     probe.remove();
     t.inst.destroy();
+  }
+
+  // 2026-10-12: court solitaire (Design's characters handoff README; Mike's answers): a finished suit brings its King
+  // out to cheer, beside the home piles, waving, and he goes by himself.
+  section('*** court solitaire: a finished suit brings its King out to cheer, and he goes by himself ***');
+  {
+    check('the line: one King, several, all four', cheerLine(['H']) === 'The King of Hearts cheers!'
+      && cheerLine(['H', 'S']) === 'The Kings of Hearts and Spades cheer!'
+      && cheerLine(['H', 'S', 'C']) === 'The Kings of Hearts, Spades and Clubs cheer!'
+      && cheerLine(['H', 'S', 'C', 'D']) === 'All four Kings cheer!' && cheerLine([]) === '', cheerLine(['H', 'S', 'C']));
+    check('defaults: the court cheers (on), for 4 seconds; on / quiet / off are the choices',
+      DEFAULTS.courtCheer === 'on' && DEFAULTS.cheerSeconds === 4 && CHEER_MODES.join() === 'on,quiet,off');
+    const rows = getManifest(GAME).settings;
+    const cc = rows.find((r) => r.key === 'courtCheer');
+    const cs = rows.find((r) => r.key === 'cheerSeconds');
+    check('a setting turns it off (or quiet), and the time is bounded so a switch can reach every value',
+      cc && cc.options.map((o) => o.value).join() === 'on,quiet,off' && cc.default === 'on'
+      && cs && cs.min === 2 && cs.max === 10 && cs.step === 1 && cs.appliesWhen({ courtCheer: 'off' }) === false);
+    check('the setting\'s words never promise more than it does (no "always", no "never" about the person)',
+      !/always/i.test(`${cc.label} ${cc.note} ${cc.options.map((o) => o.label).join(' ')}`));
+
+    // The first turn of the known deal's winning line that finishes a suit, and the game just before it.
+    let g = deal(KNOWN_SEED, { draw: 1 });
+    let at = -1, suit = null;
+    for (let i = 0; i < (solution || []).length; i++) {
+      const nx = applyMove(g, solution[i]);
+      const done = suitsFinished(g, nx);
+      if (done.length) { at = i; suit = done[0]; break; }
+      g = nx;
+    }
+    check('suitsFinished: the known line finishes a suit, and names it', at > 0 && /^[SHDC]$/.test(suit), `${at} ${suit}`);
+    check('suitsFinished: nothing is finished by a turn that leaves every suit short', suitsFinished(deal(1), deal(1)).length === 0);
+    const before = { seed: KNOWN_SEED, draw: 1, turns: (solution || []).slice(0, at).map((m) => encodeTurn([m])) };
+    const finishKeys = at >= 0 ? moveKeys(solution[at]) : [];
+    const suitName = { S: 'Spades', H: 'Hearts', D: 'Diamonds', C: 'Clubs' }[suit];
+
+    // ---- he comes out: seen, said, in the theme's outfit, waving ----
+    const outer = document.createElement('div');
+    outer.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.append(outer);
+    applyTheme(outer, 'halloween');
+    const host = document.createElement('div');
+    host.style.cssText = 'width:960px;height:540px';
+    outer.append(host);
+    let clock = 1_000_000;
+    const t = mount({ host, saved: { autoMove: 'off', game: before }, now: () => clock });
+    await cssReady(t.host);
+    check('no King before the suit is finished', !t.host.querySelector('[data-cheer]') && !t.probe().cheer);
+    const slotBefore = t.host.querySelector(`[data-pile="f${suit}"]`).getBoundingClientRect();
+    finishKeys.forEach((k) => walkTo(t, k));
+    const el = t.host.querySelector('[data-cheer]');
+    check(`*** finishing ${suitName} brings the King of ${suitName} out ***`, !!el && t.probe().cheer?.suits.join() === suit
+      && el.querySelectorAll('.sol-king').length === 1 && el.querySelector('.sol-king')?.dataset.king === suit);
+    check('the line is said where the screen speaks (sayAloud is off: the cheer is not "say what is lit")',
+      t.said.includes(`The King of ${suitName} cheers!`), t.said.join(' | '));
+    check('and is what a screen reader reads on him; the drawing itself is hidden from it',
+      el?.getAttribute('aria-label') === `The King of ${suitName} cheers!` && el?.querySelector('svg')?.getAttribute('aria-hidden') === 'true');
+    const svg = el?.querySelector('svg')?.outerHTML || '';
+    check('he is Design\'s King: the crown, and the waving arm', svg.includes('M64 52L62 16L78 32') && svg.includes('rotate(-158 145 128)'));
+    check('*** in the theme\'s outfit: on a Halloween panel the King wears the vampire cape (COURT_PICK) ***',
+      svg.includes('M58 120L24 304L176 304L142 120Z'), t.probe().theme);
+    check('he stands in the empty cell beside the home piles, which did not move', !!el?.closest('.sol-top [data-cheer-slot]')
+      && JSON.stringify(t.host.querySelector(`[data-pile="f${suit}"]`).getBoundingClientRect()) === JSON.stringify(slotBefore));
+    const overlaps = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+    const cheerRect = el.getBoundingClientRect();
+    const covered = [...t.host.querySelectorAll('.sol-card, .sol-stock, .sol-slot, .sol-btn, .sol-say')].filter((x) => overlaps(cheerRect, x.getBoundingClientRect()));
+    check('*** he covers no card, no home pile, no button and not the bar ***', cheerRect.width > 20 && covered.length === 0,
+      `${covered.length} covered (${covered.map((x) => `${x.className} ${x.dataset.pile || x.dataset.card || ''} ${JSON.stringify(x.getBoundingClientRect())}`).join('; ')}); cheer ${JSON.stringify(cheerRect)}`);
+    const cs1 = getComputedStyle(el);
+    check('he never takes a press (pointer-events: none)', cs1.pointerEvents === 'none');
+    check('*** ONE appearance and ONE fade: the animation runs once (nothing repeats, blinks or flashes) ***',
+      cs1.animationIterationCount === '1' && cs1.animationName === 'sol-cheer-rise', `${cs1.animationName} x${cs1.animationIterationCount}`);
+    // Not a gate: the table answers every verb while he is out.
+    const litBefore = t.probe().litKey;
+    t.pub('next');
+    check('*** nothing waits for him: the switch walks the table while he is out ***', t.probe().litKey !== litBefore && !!t.probe().cheer);
+    check('a redraw mid-cheer carries on the same fade (a negative delay), not a new one', /animation-delay:\s*-?\d+ms/.test(t.host.querySelector('[data-cheer]')?.getAttribute('style') || ''));
+    clock += 2000;
+    t.pub('next');
+    const midEl = t.host.querySelector('[data-cheer]');
+    const mid = midEl?.getBoundingClientRect();
+    const coveredMid = mid ? [...t.host.querySelectorAll('.sol-card, .sol-stock, .sol-slot, .sol-btn, .sol-say')].filter((x) => overlaps(mid, x.getBoundingClientRect())) : [1];
+    check('halfway through, at his full size, he still covers nothing', !!mid && coveredMid.length === 0
+      && Math.abs(mid.height - midEl.parentElement.getBoundingClientRect().height) < 1, mid && JSON.stringify(mid));
+    clock += 2001;
+    t.pub('next');
+    check('*** and he goes by himself: after 4 seconds the next drawing has no King ***', !t.host.querySelector('[data-cheer]') && !t.probe().cheer);
+    // once per suit per deal: undo and redo does not bring him back
+    const saidN = t.said.length;
+    walkTo(t, 'undo');
+    finishKeys.forEach((k) => walkTo(t, k));
+    check('undo and finish the same suit again: no second cheer this deal', !t.probe().cheer && t.said.length === saidN
+      && t.probe().cheered.includes(suit));
+    t.inst.destroy();
+    outer.remove();
+
+    // ---- the real timer: no press at all ----
+    const r = mount({ saved: { autoMove: 'off', game: before, cheerSeconds: 2 } });
+    finishKeys.forEach((k) => walkTo(r, k));
+    check('a 2-second King is out', !!r.host.querySelector('[data-cheer]'));
+    await sleep(2150);
+    check('*** with nothing pressed, he is gone after 2 seconds (a timer, never a press) ***', !r.host.querySelector('[data-cheer]') && !r.probe().cheer);
+    r.inst.destroy();
+
+    // ---- quiet, off, and a screen that does not speak ----
+    const q = mount({ saved: { autoMove: 'off', game: before, courtCheer: 'quiet' } });
+    finishKeys.forEach((k) => walkTo(q, k));
+    check('"quiet": he comes out, and nothing is said', !!q.host.querySelector('[data-cheer]') && !q.said.some((s) => /cheer/.test(s)));
+    q.inst.destroy();
+    const o = mount({ saved: { autoMove: 'off', game: before, courtCheer: 'off' } });
+    finishKeys.forEach((k) => walkTo(o, k));
+    check('"off": no King and no line', !o.host.querySelector('[data-cheer]') && !o.probe().cheer && !o.said.some((s) => /cheer/.test(s)));
+    o.inst.destroy();
+    const mute = mount({ saved: { autoMove: 'off', game: before }, output: null });
+    finishKeys.forEach((k) => walkTo(mute, k));
+    check('a screen with no voice: he still comes out, silently, and nothing throws', !!mute.host.querySelector('[data-cheer]'));
+    mute.inst.destroy();
+    const late = mount({ saved: { autoMove: 'off', game: before } });
+    finishKeys.forEach((k) => walkTo(late, k));
+    late.state.set({ courtCheer: 'off' });
+    check('turned off while he is out: he goes at once', !late.host.querySelector('[data-cheer]') && !late.probe().cheer);
+    late.inst.destroy();
+
+    // ---- reduced motion: no slide, only the fade; the person's setting counts as well as the device's ----
+    const rm = mount({ host: scratch(960, 540), saved: { autoMove: 'off', game: before }, reducedMotion: true });
+    await cssReady(rm.host);
+    finishKeys.forEach((k) => walkTo(rm, k));
+    const rs = getComputedStyle(rm.host.querySelector('[data-cheer]'));
+    check('*** reduced motion: he does not slide, he only fades in and out, once ***', rs.animationName === 'sol-cheer-fade'
+      && rs.animationIterationCount === '1', `${rs.animationName} x${rs.animationIterationCount}`);
+    rm.inst.destroy();
+    const pr = mount({ saved: { autoMove: 'off' }, reducedMotion: null, extra: { avatarContext: () => ({ reduceMotion: true }) } });
+    check('the person\'s "movement" setting (the host\'s avatar context) stills the table too, not only the device\'s',
+      pr.host.querySelector('.sol')?.dataset.motion === 'reduce');
+    pr.inst.destroy();
+
+    // ---- the flash limit: appearing and going never closer together than it allows ----
+    const fl = mount({ saved: { autoMove: 'off', game: before }, extra: { flashLimitPerSecond: 0.25 } });
+    finishKeys.forEach((k) => walkTo(fl, k));
+    const c = fl.probe().cheer;
+    check('*** under a flash limit of one every 4 seconds he stays at least two of its periods ***',
+      !!c && c.until - c.started >= 2 * minFlashPeriodMs(0.25) - 1 &&c.until - c.started > 4000, c && `${c.until - c.started} ms`);
+    fl.inst.destroy();
+    const nf = mount({ saved: { autoMove: 'off', game: before } });
+    finishKeys.forEach((k) => walkTo(nf, k));
+    check('with no limit (and the photosensitivity box\'s 3 a second) he stays the 4 seconds chosen',
+      nf.probe().cheer && nf.probe().cheer.until - nf.probe().cheer.started === 4000);
+    nf.inst.destroy();
+
+    // ---- draw three: the drawn fan reaches into his cell, so he stands clear of it ----
+    const d3 = mount({ host: scratch(960, 540), saved: { autoMove: 'off' } });
+    await cssReady(d3.host);
+    d3.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'three' });
+    walkTo(d3, 'draw');
+    const slot = d3.host.querySelector('[data-cheer-slot]');
+    slot.innerHTML = '<div class="sol-cheer" data-cheer data-draw="3"><span class="sol-king"><svg viewBox="0 0 200 320"></svg></span></div>';
+    const r3 = slot.firstChild.getBoundingClientRect();
+    const waste3 = [...d3.host.querySelectorAll('.sol-waste .sol-card')];
+    check('*** draw three: the King\'s place clears the fanned drawn cards ***', waste3.length === 3 && r3.width > 10
+      && !waste3.some((x) => overlaps(r3, x.getBoundingClientRect())), `${waste3.length} drawn, cheer ${Math.round(r3.left)}..${Math.round(r3.right)}, top card ends ${Math.round(waste3[2]?.getBoundingClientRect().right)}`);
+    d3.inst.destroy();
   }
 
   section('settings: every one has a label, and a switch can walk every choice');
