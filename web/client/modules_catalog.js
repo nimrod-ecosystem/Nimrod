@@ -991,6 +991,23 @@ export const CATALOG = [
     note: 'This site does not send the recordings anywhere. They stay on the screen until you export them (copy them to a folder). It does not run '
       + 'on a Raspberry Pi (a small, low-cost computer).',
   },
+  // 2026-10-12 (Mike: "have a conversation with people in the town ... choose your own adventure stories ... free form
+  // like D&D"): story_ai.js and modules/adventure.js. `answer`: it asks what happens next and waits; left alone it just
+  // sits on its page.
+  {
+    type: 'adventure',
+    title: 'Adventure',
+    group: 'ai',
+    use: 'answer',
+    lead: 'Talk with the people in town, or play a story where you choose what happens.',
+    needs: 'An AI (artificial intelligence) storyteller: Ollama on this computer (free), a computer in the house that has one, '
+      + 'or an online AI with your own key.',
+    why: 'The story is read aloud and shown in big letters. Each turn offers 2 to 4 choices: touch one, say its number or its '
+      + 'words, or step through them with a switch (one big button). Or say or type anything else, and the story goes that '
+      + 'way. The storyteller keeps it gentle and kind. If it is slow to answer, the choices are offered again.',
+    note: 'The story is kept on this device only, and in your Nimrod folder if you ask. It is never kept on the website’s '
+      + 'server. The words are sent to whichever AI this device uses.',
+  },
 ];
 
 // Modules that exist in the registry but are deliberately not offered on THIS page: dev

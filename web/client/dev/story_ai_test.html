@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>story_ai — talk with the town, a free-form adventure, Story time's next page — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>story_ai — the storyteller, with a stubbed model</h1>
+<p>No model is called: every reply is a stub. The timeout check uses the real ai.js with a server that never answers.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createStory, parseTurn, nextPage, characterInfo, talkSystem, adventureSystem, pageSystem, townTheme, openingChoices,
+  needsCare, storyAIFor, saveStoryLocal, loadStoryLocal, forgetStoryLocal, storyText,
+  STORY_DEFAULTS, TIMEOUT_CHOICES, FALLBACK_LINE, REFUSE_LINE, CARE_LINE, NO_AI_LINE, STORY_FORMAT, STORY_SAVE_PREFIX,
+  CHARACTER_IDS, PERSONAS, SAFETY_RULES, OPENING_REPLIES,
+} from '../story_ai.js';
+import { createAI } from '../ai.js';
+import { AI_BACKEND_KEY } from '../nimrod_ai.js';
+import { DEFAULT_CHARACTERS } from '../character_kit.js';
+import { placeInfo } from '../town.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const memStore = () => ({ m: {}, getItem(k) { return k in this.m ? this.m[k] : null; }, setItem(k, v) { this.m[k] = String(v); }, removeItem(k) { delete this.m[k]; } });
+
+// A stubbed model: each reply comes from `replies` in turn (a string, an object turned into JSON, or a result).
+function stubAI(replies) {
+  const calls = [];
+  let i = 0;
+  return {
+    calls,
+    async chat(messages, opts = {}) {
+      calls.push({ messages: messages.map((m) => ({ ...m })), opts: { ...opts } });
+      const r = replies[Math.min(i++, replies.length - 1)];
+      if (r && typeof r === 'object' && 'ok' in r) return r;
+      return { ok: true, text: typeof r === 'string' ? r : JSON.stringify(r), model: 'stub:1b' };
+    },
+  };
+}
+const turn = (say, choices, summary = '', stop = false) => ({ say, choices, summary, stop });
+const lastUser = (call) => [...call.messages].reverse().find((m) => m.role === 'user')?.content;
+
+try {
+// =====================================================================
+section('*** a CONVERSATION turn with a town character ***');
+{
+  const ai = stubAI([turn('Hello, dear! Come in, the kettle is on.', ['Hello! How are you?', 'What are you growing?', 'Tell me a story'], 'A visitor came to tea.')]);
+  const s = createStory({ ai, kind: 'talk', character: 'queen', theme: 'fall', settings: () => ({ turnTimeoutMs: 45000 }) });
+  const r = await s.start();
+  check('the turn is read: what to say, and 2-4 things to say back', r.ok && r.say.startsWith('Hello, dear') && r.choices.length === 3, JSON.stringify(r));
+  const sys = ai.calls[0].messages[0].content;
+  const home = placeInfo('queenParlour', 'fall').label;
+  check(`*** the system prompt is Queen Rosa, at home in this theme's town (${home}) ***`,
+    sys.includes('Queen Rosa') && sys.includes(home) && sys.includes(PERSONAS.queen), sys.slice(0, 200));
+  check('...with the safety rules in it', sys.includes(SAFETY_RULES));
+  check('...asking for one JSON object, and the call asks for JSON', /ONE JSON object/.test(sys) && ai.calls[0].opts.json === true);
+  check('*** the timeout is the setting, passed to every call ***', ai.calls[0].opts.timeoutMs === 45000, JSON.stringify(ai.calls[0].opts));
+  check('a reply is capped (max tokens) so a runaway model stops', ai.calls[0].opts.maxTokens === STORY_DEFAULTS.replyTokens);
+  const r2 = await s.choose(1);
+  check('a chosen reply is said AS the person (no "I choose:" in a conversation)', lastUser(ai.calls[1]) === 'What are you growing?', lastUser(ai.calls[1]));
+  check('the summary the model kept is sent back as "what has happened so far"',
+    ai.calls[1].messages.some((m) => m.role === 'system' && m.content === 'What has happened so far: A visitor came to tea.'));
+  check('the default persona set: four characters, names from the character kit',
+    CHARACTER_IDS.every((id) => characterInfo(id).name === DEFAULT_CHARACTERS[id].name && PERSONAS[id]));
+  check('an unknown character is the King, never a throw', characterInfo('nobody').id === 'king');
+  check('r2 ok', r2.ok);
+}
+
+// =====================================================================
+section('*** an ADVENTURE turn with choices, then FREE SPEECH chosen ***');
+{
+  const ai = stubAI([
+    turn('You stand in the Harvest Hall. A pie has gone missing from the feast!', ['Look under the table', 'Ask King Bram', 'Follow the crumbs'], 'A pie went missing.'),
+    turn('Under the table you find a trail of crumbs.', ['Follow the crumbs', 'Call for help'], 'A pie went missing. Crumbs under the table.'),
+    turn('You whistle, and a sleepy cat pokes its head out of a hay bale, pie on its whiskers.', ['Laugh', 'Pick up the cat', 'Tell the King'], 'The cat took the pie.'),
+  ]);
+  const s = createStory({ ai, kind: 'adventure', theme: 'fall', hero: 'brown hair, short, round glasses' });
+  const r = await s.start();
+  check('the opening scene and three choices', r.ok && r.choices.length === 3 && /missing/.test(r.say), JSON.stringify(r));
+  const sys = ai.calls[0].messages[0].content;
+  check('*** the adventure is told in the second person, the avatar is the hero, the theme\'s town the setting ***',
+    /second person/.test(sys) && sys.includes('round glasses') && sys.includes(placeInfo('kingHall', 'fall').label) && sys.includes('Fall'), sys.slice(0, 300));
+  check('the town\'s people are named in it', ['King Bram', 'Queen Rosa', 'Jack Theo', 'Pip the Joker'].every((n) => sys.includes(n)));
+  const r1 = await s.choose(0);
+  check('a choice goes to the storyteller as "I choose: <choice>"', lastUser(ai.calls[1]) === 'I choose: Look under the table', lastUser(ai.calls[1]));
+  check('...and the new choices replace the old', r1.ok && r1.choices.join('|') === 'Follow the crumbs|Call for help');
+  const r2 = await s.say('  I whistle   for the cat ');
+  check('*** free speech goes to the storyteller as the person said it ***', lastUser(ai.calls[2]) === 'I whistle for the cat', lastUser(ai.calls[2]));
+  check('...and the story follows it', r2.ok && /cat/.test(r2.say) && s.summary() === 'The cat took the pie.');
+  check('the last exchanges are sent verbatim (the door just mentioned is still the door)',
+    ai.calls[2].messages.some((m) => m.role === 'assistant' && m.content.startsWith('Under the table')));
+  check('turns are counted', s.turns() === 3 && s.started());
+}
+
+// =====================================================================
+section('*** a TIMEOUT: the plain fallback, the choices again, never a blocked screen ***');
+{
+  // The real ai.js, against a model server that never answers: only its own timeout ends the turn.
+  const never = (url, init) => new Promise((_, reject) => { init?.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))); });
+  const mem = memStore();
+  const realAI = createAI({ storage: mem, fetchImpl: never });
+  const s0 = createStory({ ai: { chat: (m, o) => realAI.chat(m, { ...o, model: 'qwen2.5:3b' }) }, kind: 'adventure', theme: 'winter',
+    settings: () => ({ turnTimeoutMs: 80 }) });
+  const t0 = performance.now();
+  const r0 = await s0.start();
+  const took = performance.now() - t0;
+  check('*** the first turn times out by the setting, not the adapter\'s 10 minutes ***', took < 3000, `${Math.round(took)} ms`);
+  check('...and says so plainly', !r0.ok && r0.fallback && r0.timedOut && r0.say === FALLBACK_LINE, JSON.stringify(r0));
+  check('...with the opening choices, from this theme\'s town', r0.choices.length === 3 && r0.choices.join() === openingChoices('winter').join(), JSON.stringify(r0.choices));
+  check('the fallback words are the ones asked for', FALLBACK_LINE === 'The storyteller isn’t answering; here are the choices again.');
+  const late = stubAI([{ ok: false, timedOut: true, reason: 'slow' }, turn('You reach the Bakery.', ['Buy bread', 'Leave'])]);
+  const sl = createStory({ ai: late, kind: 'adventure', theme: 'winter' });
+  const f0 = await sl.start();
+  const f1 = await sl.choose(0);
+  check('*** an opening choice offered after a first-turn timeout can be pressed, and starts the story ***',
+    f1.ok && lastUser(late.calls[1]) === `I choose: ${f0.choices[0]}`, JSON.stringify({ f1, u: lastUser(late.calls[1]) }));
+
+  // Mid-story: the last choices are kept.
+  const ai = stubAI([turn('A fox in a scarf waves at you.', ['Wave back', 'Follow the fox']), { ok: false, timedOut: true, reason: 'took too long' }]);
+  const s = createStory({ ai, kind: 'adventure' });
+  await s.start();
+  const r = await s.say('I wave');
+  check('*** mid-story, the choices offered again are the last ones ***', !r.ok && r.fallback && r.choices.join('|') === 'Wave back|Follow the fox', JSON.stringify(r));
+  check('...and the failed turn is not kept in the story', s.turns() === 1);
+  const r3 = await s.choose(1);
+  check('...so the next press tries again', ai.calls.length === 3 && !!r3);
+  check('the timeout choices are a list, and the default is in it', TIMEOUT_CHOICES.includes(STORY_DEFAULTS.turnTimeoutMs));
+  // Unreadable answers fall back too.
+  const bad = createStory({ ai: stubAI(['']) });
+  const rb = await bad.start();
+  check('an empty or unreadable answer is the fallback too, never a throw', !rb.ok && rb.fallback && rb.choices.length >= 2);
+  const none = createStory({ ai: null });
+  const rn = await none.start();
+  check('no AI at all: says so, with choices, never a throw', !rn.ok && rn.noAI && rn.say === NO_AI_LINE && rn.choices.length >= 2);
+  // A cancel (Stop waiting) is not a failure line.
+  const ctl = new AbortController();
+  const slow = { chat: (m, o) => new Promise((res) => { o.signal.addEventListener('abort', () => res({ ok: false, cancelled: true, reason: 'Cancelled.' })); }) };
+  const sc = createStory({ ai: slow });
+  const p = sc.start({ signal: ctl.signal });
+  ctl.abort();
+  const rc = await p;
+  check('"Stop waiting" resolves as cancelled, not as the storyteller failing', rc.cancelled && !rc.fallback, JSON.stringify(rc));
+}
+
+// =====================================================================
+section('*** a REFUSAL: calm, gentler choices, and the harmful turn is not kept ***');
+{
+  const ai = stubAI([
+    turn('You are at the Bakery. The baker waves.', ['Buy bread', 'Say hello']),
+    turn('Let\'s keep this story kind. The baker offers you a warm bun instead.', ['Take the bun', 'Go to the park'], '', true),
+    turn('You take the bun. It is delicious.', ['Say thank you', 'Go to the park']),
+  ]);
+  const s = createStory({ ai, kind: 'adventure' });
+  await s.start();
+  const r = await s.say('I describe hurting the baker in gory detail');
+  check('*** the model\'s "stop": a calm line, gentler choices, marked refused ***', r.ok && r.refused && /kind/.test(r.say) && r.choices.join('|') === 'Take the bun|Go to the park', JSON.stringify(r));
+  await s.choose(0);
+  const sent = ai.calls[2].messages.map((m) => m.content).join('\n');
+  check('*** the harmful words are NOT sent again with the next turn ***', !/gory/.test(sent), sent.slice(-400));
+  const bare = await createStory({ ai: stubAI([{ stop: true }]) }).start();
+  check('a stop with no words gets the plain refusal line, and choices', bare.refused && bare.say === REFUSE_LINE && bare.choices.length >= 2, JSON.stringify(bare));
+  // The one check that never waits on a model.
+  const ai2 = stubAI([turn('x', ['a', 'b'])]);
+  const s2 = createStory({ ai: ai2, kind: 'talk', character: 'joker' });
+  const rc = await s2.say('Sometimes I want to hurt myself');
+  check('*** words about hurting oneself get the care line and NEVER reach the model ***', rc.ok && rc.care && rc.say === CARE_LINE && ai2.calls.length === 0, JSON.stringify(rc));
+  check('the care line points to a person, and gives no advice beyond that', /someone you trust/.test(CARE_LINE) && !/doctor|medic|pill|call \d/i.test(CARE_LINE));
+  check('needsCare: a few ways of saying it', ['I want to die', 'thinking about suicide', 'I don\'t want to live', 'kill myself'].every(needsCare));
+  check('needsCare: game words pass', !['I swing my sword at the dragon', 'kill the lights', 'the goblin is hurt', 'I cut the rope', 'the dragon wants to hurt me',
+    'the end of my journey', 'I want to end my turn'].some(needsCare));
+  check('the system prompt forbids medical, legal or money advice, and claiming to be real',
+    /medical, legal or money advice/.test(SAFETY_RULES) && /You are not a real person/.test(SAFETY_RULES));
+}
+
+// =====================================================================
+section('reading replies (small models are untidy)');
+{
+  const a = parseTurn('Sure! Here it is: {"say":"You open the door.","choices":["Go in","Knock","Go in","Run"],"summary":"A door.","stop":false} Hope that helps');
+  check('JSON inside prose is found', a && a.say === 'You open the door.' && a.summary === 'A door.');
+  check('...duplicate choices are dropped', a.choices.join('|') === 'Go in|Knock|Run', JSON.stringify(a.choices));
+  const b = parseTurn('You see a bridge over a stream.\n1. Cross the bridge\n2. Wade the stream\n3) Sit and rest');
+  check('plain prose with numbered lines: the lines are the choices', b && b.say === 'You see a bridge over a stream.' && b.choices.length === 3 && b.choices[1] === 'Wade the stream', JSON.stringify(b));
+  const c = parseTurn(JSON.stringify({ story: 'S', options: ['a', 'b', 'c', 'd', 'e', 'f', 'g'] }), { maxChoices: 4 });
+  check('other key names are read, and the choices capped', c.say === 'S' && c.choices.length === 4);
+  check('nothing usable is null', parseTurn('') === null && parseTurn('{}') === null);
+  check('"stop" read as a refusal', parseTurn('{"say":"no","choices":[],"stop":true}').stop === true);
+}
+
+// =====================================================================
+section('a SHORT context for small models: a running summary and the last few turns');
+{
+  const replies = Array.from({ length: 8 }, (_, i) => turn(`Scene ${i}.`, ['a', 'b'], Array.from({ length: 300 }, (_, k) => `w${k}`).join(' ')));
+  const ai = stubAI(replies);
+  const s = createStory({ ai, settings: () => ({ keepTurns: 2, summaryWords: 50 }) });
+  await s.start();
+  for (let i = 0; i < 6; i++) await s.choose(0);
+  const last = ai.calls[ai.calls.length - 1].messages;
+  const convo = last.filter((m) => m.role === 'user' || m.role === 'assistant');
+  check('*** only the last keepTurns exchanges go with a turn (plus the new one) ***', convo.length === 2 * 2 + 1, String(convo.length));
+  check('*** the summary is trimmed to summaryWords ***', s.summary().split(' ').length === 50, String(s.summary().split(' ').length));
+  const sys = last.filter((m) => m.role === 'system');
+  check('the context is the system prompt and the summary, nothing else', sys.length === 2);
+  // Without a model summary, a summary is made from what was told.
+  const ai2 = stubAI([turn('One.', ['a', 'b']), turn('Two.', ['a', 'b'])]);
+  const s2 = createStory({ ai: ai2 });
+  await s2.start(); await s2.choose(0);
+  check('no summary from the model: the narration is kept as the summary', s2.summary() === 'One. Two.', s2.summary());
+}
+
+// =====================================================================
+section('kept on THIS DEVICE (never the server)');
+{
+  const ai = stubAI([turn('Pip juggles three turnips.', ['Clap', 'Ask for a riddle'], 'Pip juggled.')]);
+  const s = createStory({ ai, kind: 'talk', character: 'joker', theme: 'halloween' });
+  await s.start();
+  const mem = memStore();
+  check('saved under the device key', saveStoryLocal('panel-1', s, mem) && !!mem.m[`${STORY_SAVE_PREFIX}panel-1`]);
+  const back = loadStoryLocal('panel-1', mem);
+  check('...tagged with its format (so a server rule could refuse it by tag)', back && back.format === STORY_FORMAT && back.kind === 'talk');
+  const s2 = createStory({ ai: stubAI([]), kind: 'talk', character: 'joker' });
+  check('*** restored: the page, the choices and the summary, with no model call ***', s2.restore(back) && s2.lastSay() === 'Pip juggles three turnips.'
+    && s2.choices().join('|') === 'Clap|Ask for a riddle' && s2.summary() === 'Pip juggled.');
+  check('a saved conversation is not restored as an adventure', createStory({ kind: 'adventure' }).restore(back) === false);
+  forgetStoryLocal('panel-1', mem);
+  check('forgotten', loadStoryLocal('panel-1', mem) === null);
+  const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); }, removeItem() { throw new Error('blocked'); } };
+  check('blocked storage keeps nothing and never throws', saveStoryLocal('x', s, broken) === false && loadStoryLocal('x', broken) === null
+    && (forgetStoryLocal('x', broken), true));
+  const txt = storyText(s.toJSON(), { title: 'Talking with Pip' });
+  check('as text for the Nimrod folder: the title and what was said', txt.startsWith('Talking with Pip') && txt.includes('Story: Pip juggles'));
+}
+
+// =====================================================================
+section('*** Story time\'s seam: nextPage(context) ***');
+{
+  const ai = stubAI([turn('Snow fell on the Ski Lodge. A mitten lay on the step.', ['Pick it up', 'Look for its owner'], 'A mitten was found.')]);
+  const r = await nextPage({ ai, theme: 'winter', title: 'The lost mitten', pages: [] });
+  check('a first page: text, choices and a summary', r.ok && /mitten/.test(r.text) && r.choices.length === 2 && r.summary === 'A mitten was found.', JSON.stringify(r));
+  check('...asked for as "Write the first page", in the story\'s town', lastUser(ai.calls[0]) === 'Write the first page.'
+    && ai.calls[0].messages[0].content.includes('The lost mitten') && ai.calls[0].messages[0].content.includes('Winter'));
+  const ai2 = stubAI([turn('Page three.', [])]);
+  const r2 = await nextPage({ ai: ai2, pages: ['one', 'two', 'three'], summary: 'Things happened.', choice: 'Look for its owner' });
+  check('later pages: the last two pages and the summary go with it, and the choice', ai2.calls[0].messages.filter((m) => m.role === 'assistant').length === 2
+    && lastUser(ai2.calls[0]).includes('Look for its owner') && ai2.calls[0].messages.some((m) => m.content === 'What has happened so far: Things happened.'), JSON.stringify(ai2.calls[0].messages.map((m) => m.role)));
+  check('r2 ok', r2.ok && r2.text === 'Page three.');
+  const r3 = await nextPage({ ai: stubAI([{ ok: false, timedOut: true, reason: 'slow' }]) });
+  check('*** a storyteller that does not answer: a fallback result, never a throw ***', !r3.ok && r3.fallback && r3.timedOut && r3.text === '');
+  const r4 = await nextPage({ ctx: { storyAI: null, ai: null, aiStorage: memStore() }, ai: { nope: true } });
+  check('something that is not an AI: says so, never a throw', !r4.ok && r4.noAI);
+  check('the page prompt keeps the safety rules', pageSystem({}).includes(SAFETY_RULES));
+}
+
+// =====================================================================
+section('which AI tells it: this device\'s choice');
+{
+  const mine = { chat: async () => ({ ok: true, text: '{}' }) };
+  check('a host\'s storyAI wins', storyAIFor({ storyAI: mine }) === mine);
+  const mem = memStore();
+  mem.setItem(AI_BACKEND_KEY, 'claude');
+  const c = storyAIFor({ aiStorage: mem });
+  check('"Claude, on this account" on this device: the server\'s client (no key in the browser)', c.backend === 'claude' && c.hasKey() === false);
+  const l = storyAIFor({ aiStorage: memStore() });
+  check('otherwise ai.js (local Ollama by default)', typeof l.chat === 'function' && l.settings().baseUrl === 'http://127.0.0.1:11434/v1');
+}
+
+// =====================================================================
+section('the words');
+{
+  const all = [talkSystem({ character: characterInfo('jack', 'steampunk'), theme: 'steampunk' }), adventureSystem({ theme: 'christmas' }), pageSystem({}),
+    FALLBACK_LINE, REFUSE_LINE, CARE_LINE, NO_AI_LINE, ...OPENING_REPLIES, ...openingChoices('nimrod')].join('\n');
+  check('*** nothing names the person the site was first built for, or says "her screen" ***', !/taylor|cici|her screen/i.test(all));
+  check('a site theme with no town of its own is Nimrod\'s town', townTheme('ocean') === 'nimrod' && townTheme('halloween') === 'halloween');
+  check('opening choices name real places in the theme\'s town', openingChoices('halloween')[2].includes(placeInfo('kingHall', 'halloween').label.replace(/^The /, '')));
+}
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

@@ -89,6 +89,8 @@ export const HEALTH_EXPECT = {
   simple_math: { idle: true },
   think_games: { idle: true },
   word_builder: { idle: true },
+  // 2026-10-12: a story nobody is answering sits on its page; that is not a stall.
+  adventure: { idle: true },
   brain_games: { idle: true },
   quiz_mix: { idle: true },
   name_that:   { idle: true },

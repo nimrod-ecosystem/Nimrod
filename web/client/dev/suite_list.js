@@ -224,6 +224,9 @@ export const SUITES = [
   'unlocks',
   // 2026-10-02: the Nimrod guide as the AI module (talk to your own AI; actions only on a press; notes).
   'nimrod_ai',
+  // 2026-10-12: talk with the town and a free-form adventure (story_ai.js, stubbed model; the Adventure module), and the
+  // seam for a voice program on this computer (local_voice.js, a stub program).
+  'story_ai', 'adventure', 'local_voice',
   // 2026-10-04: "Try it as someone new" - a test person, fresh; Start over; Back to me; notes kept; Home in a frame.
   'try_new',
   // 2026-10-07 (row 2.54): wrap up a walkthrough - the notes cleaned up locally (Corpus Desk's ten-level dial, clean_up.js)
