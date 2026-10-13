@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Adventure module — talk with the town, a free-form story — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{position:relative;width:900px;height:600px;border:1px solid #999;margin:8px 0}
+</style>
+</head>
+<body>
+<h1>Adventure — the panel, with a stubbed storyteller</h1>
+<div class="stage" id="stage"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { readHeard, ADVENTURE_DEFAULTS, ADVENTURE_VERB_TOPICS, LIGHT_LAPS, ADVENTURE_TALK_TOPIC } from '../modules/adventure.js';
+import { FALLBACK_LINE, CARE_LINE, STORY_SAVE_PREFIX, STORY_FORMAT } from '../story_ai.js';
+import { SPEECH_TOPICS, DELIVERY_TOPIC } from '../nimrod_ai.js';
+import { SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC } from '../input_speech.js';
+import { MODULE_VERBS } from '../actions.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { CATALOG } from '../modules_catalog.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import { auditManifests } from '../settings_audit.js';
+import { talkTo, townTalkReady } from '../town_talk.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = () => new Promise((r) => setTimeout(r, 0));
+async function until(fn, ms = 2000) { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await new Promise((r) => setTimeout(r, 10)); } return !!fn(); }
+
+const turn = (say, choices, summary = '', stop = false) => JSON.stringify({ say, choices, summary, stop });
+// A stubbed storyteller. Each reply: a string (the model's text), a result object, or a function (messages, opts) -> either.
+function stubAI(replies) {
+  const calls = [];
+  let i = 0;
+  return {
+    calls,
+    async chat(messages, opts = {}) {
+      calls.push({ messages, opts });
+      let r = replies[Math.min(i++, replies.length - 1)];
+      if (typeof r === 'function') r = await r(messages, opts);
+      if (r && typeof r === 'object') return r;
+      return { ok: true, text: r, model: 'stub' };
+    },
+  };
+}
+const lastUser = (ai) => { const c = ai.calls[ai.calls.length - 1]; return c ? [...c.messages].reverse().find((m) => m.role === 'user')?.content : null; };
+
+function host({ ai, id = 'advtest1', state0 = {}, extra = {} } = {}) {
+  const bus = createBus();
+  const said = [];
+  const cancelled = [];
+  let n = 0;
+  const output = { say(text, opts) { const oid = `o${++n}`; said.push({ id: oid, text, opts }); return oid; }, cancel(oid) { cancelled.push(oid); return true; } };
+  const subs = [];
+  const state = { v: { ...state0 }, sets: [], get() { return this.v; }, set(p) { this.sets.push(p); this.v = { ...this.v, ...p }; for (const f of subs) f(this.v); },
+    subscribe(f) { subs.push(f); return () => {}; }, flush() {}, destroy() {} };
+  const grammar = [];
+  bus.subscribe(SPEECH_GRAMMAR_TOPIC, (p) => grammar.push(p));
+  const mount = document.createElement('div');
+  mount.style.cssText = 'position:absolute;inset:0';
+  document.getElementById('stage').append(mount);
+  try { localStorage.removeItem(STORY_SAVE_PREFIX + id); } catch { /* blocked */ }
+  const inst = mountModule('adventure', { mount, bus, instanceId: id, personId: null, output, state, storyAI: ai, ...extra });
+  inst.init();
+  const p = () => inst.impl.__probe();
+  const delivered = () => { const last = said[said.length - 1]; bus.publish(DELIVERY_TOPIC, { id: last.id, delivered: true }); };
+  return { bus, said, cancelled, state, grammar, mount, inst, p, delivered, id };
+}
+
+try {
+// =====================================================================
+section('registered like every other module');
+{
+  const m = getManifest('adventure');
+  check('type "adventure", on the new core, with settings', m && m.core === 'new' && Array.isArray(m.settings) && m.settings.length >= 6);
+  check('every setting has a label and a level', m.settings.every((s) => s.label && s.level));
+  const audit = auditManifests([m]);
+  const bad = audit.findings.filter((f) => f.severity === 'error' || f.severity === 'warn');
+  check('*** the settings audit finds no error or warning in its settings ***', bad.length === 0, JSON.stringify(bad));
+  check('its verbs are in actions.js, and they are the module\'s own topics',
+    Object.entries(MODULE_VERBS.adventure || {}).every(([v, t]) => ADVENTURE_VERB_TOPICS[v] === t) && Object.keys(MODULE_VERBS.adventure).length === 6);
+  check('health: a story nobody answers is idle, not stalled', HEALTH_EXPECT.adventure && HEALTH_EXPECT.adventure.idle === true);
+  const c = CATALOG.find((x) => x.type === 'adventure');
+  check('described in the catalog, in the AI set, as something that asks for an answer', c && c.group === 'ai' && c.use === 'answer' && c.title === m.title);
+  check('the library files it under games and AI', (MODULE_CATEGORIES.adventure || []).join() === 'games,ai');
+  check('the speech topics it uses are the speech layer\'s', SPEECH_TOPICS.grammar === SPEECH_GRAMMAR_TOPIC && SPEECH_TOPICS.answer === SPEECH_ANSWER_TOPIC);
+}
+
+// =====================================================================
+section('*** nothing is asked of the AI until somebody presses ***');
+let H;
+{
+  const ai = stubAI([
+    turn('You stand in the Garden Hall. A golden key has gone missing!', ['Look under the throne', 'Ask King Bram', 'Check the plants'], 'A key went missing.'),
+    turn('Under the throne you find a trail of soil.', ['Follow the soil', 'Call for help'], 'A key went missing; soil under the throne.'),
+    turn('You peer into the well and see the key shining.', ['Climb down', 'Fetch a rope'], 'The key is in the well.'),
+    { ok: false, timedOut: true, reason: 'The AI model took longer than 1 minute and was stopped.' },
+  ]);
+  H = host({ ai, state0: { lightMoves: 'auto' } });
+  await tick();
+  check('the start: home, with an adventure and the four people to talk to', H.p().view === 'home'
+    && H.mount.querySelector('[data-adv-act="adventure"]') && H.mount.querySelectorAll('[data-adv-act="talk"]').length === 4);
+  check('*** no AI call on mount ***', ai.calls.length === 0);
+  check('...and no listening on the home page', !H.grammar.some((g) => g.open));
+
+  section('*** an adventure: narration large and read aloud, choices as big buttons ***');
+  H.inst.impl.__press('adventure');
+  check('while it thinks: "The storyteller is thinking…", Stop waiting, nothing listening',
+    H.p().thinking && H.mount.querySelector('[data-adv-thinking]') && H.mount.querySelector('[data-adv-act="stop"]') && !H.grammar[H.grammar.length - 1].open);
+  await until(() => !H.p().thinking);
+  const p1 = H.p();
+  check('the story view, the narration and three choices', p1.view === 'story' && /golden key/.test(p1.say) && p1.choices.length === 3, JSON.stringify(p1.choices));
+  check('the choices are buttons, numbered', H.mount.querySelectorAll('[data-adv-act="choose"]').length === 3
+    && H.mount.querySelector('[data-adv-act="choose"]').textContent.startsWith('1. Look under the throne'));
+  const saidStory = H.said.find((s) => /golden key/.test(s.text));
+  check('*** the narration is read aloud through the output bus ***', saidStory && saidStory.opts.source === 'adventure');
+  check('*** while it is read, the listening window is SHUT (the screen\'s voice is not the person) ***', p1.holding && H.grammar[H.grammar.length - 1].open === false);
+  const callsBefore = ai.calls.length;
+  H.bus.publish(SPEECH_ANSWER_TOPIC, { text: 'two', dictation: true });
+  await tick();
+  check('...so something "heard" meanwhile is ignored', ai.calls.length === callsBefore);
+
+  H.delivered();
+  await tick();
+  const g = H.grammar[H.grammar.length - 1];
+  check('*** read: the window opens, for any words (dictation) and with the choices listed ***',
+    g.open && g.dictation === true && g.instanceId === 'advtest1' && g.words.includes('Ask King Bram') && g.words.includes('two'), JSON.stringify(g));
+  check('*** one switch: the light lands on the first choice by itself and says it ***',
+    H.p().lit && H.p().lit.startsWith('1.') && H.said[H.said.length - 1].text === 'Look under the throne?', JSON.stringify(H.p().lit));
+
+  section('*** a spoken choice, then free speech ***');
+  H.bus.publish(SPEECH_ANSWER_TOPIC, { text: 'Two', dictation: true });
+  await until(() => !H.p().thinking && ai.calls.length === 2);
+  check('*** "two" chooses the second choice ***', lastUser(ai) === 'I choose: Ask King Bram', lastUser(ai));
+  await until(() => !H.p().thinking);
+  H.delivered(); await tick();
+  H.bus.publish(SPEECH_ANSWER_TOPIC, { text: 'I look down the old well', dictation: true });
+  await until(() => ai.calls.length === 3 && !H.p().thinking);
+  check('*** anything else said goes into the story, as said ***', lastUser(ai) === 'I look down the old well', lastUser(ai));
+  check('...and the story follows it', /well/.test(H.p().say));
+
+  section('*** the storyteller times out: the plain line, and the choices again ***');
+  H.delivered(); await tick();
+  H.mount.querySelector('[data-adv-act="choose"]').click();
+  await until(() => ai.calls.length === 4 && !H.p().thinking);
+  const p4 = H.p();
+  check('*** "The storyteller isn\'t answering; here are the choices again." ***', p4.say === FALLBACK_LINE, p4.say);
+  check('...with the last choices still there as buttons', p4.choices.join('|') === 'Climb down|Fetch a rope'
+    && H.mount.querySelectorAll('[data-adv-act="choose"]:not([disabled])').length === 2);
+  check('...said aloud too', H.said.some((s) => s.text === FALLBACK_LINE));
+  check('...and the reason, in words, underneath', /longer than 1 minute/.test(p4.note));
+
+  section('THE STORY STAYS ON THIS DEVICE');
+  const saved = JSON.parse(localStorage.getItem(STORY_SAVE_PREFIX + 'advtest1') || 'null');
+  check('*** kept in this browser after a turn ***', saved && saved.format === STORY_FORMAT && saved.kind === 'adventure' && /well/.test(saved.lastSay));
+  check('*** and NEVER in the panel\'s state (the server\'s copy) ***', !/golden key|well|throne/i.test(JSON.stringify(H.state.sets)) && H.state.sets.length === 0, JSON.stringify(H.state.sets));
+}
+
+// =====================================================================
+section('two switches: next / select; and back to the start, then Carry on');
+{
+  H.state.set({ lightMoves: 'off' });
+  H.delivered(); await tick();
+  H.bus.publish(ADVENTURE_VERB_TOPICS.next, {});
+  H.bus.publish(ADVENTURE_VERB_TOPICS.next, {});
+  check('next moves the light (here to the second choice)', H.p().lit && H.p().lit.startsWith('2.'), H.p().lit);
+  const ai = H.p().story; // the story object (for its turn count)
+  const before = ai.turns();
+  H.bus.publish(ADVENTURE_VERB_TOPICS.back, {});
+  await tick();
+  check('back goes to the start, which offers to carry on', H.p().view === 'home' && /Carry on the adventure/.test(H.mount.textContent));
+  const calls = H.p().story;
+  H.inst.impl.__press('carry');
+  await tick();
+  check('*** Carry on: the page and choices back, with no AI call ***', H.p().view === 'story' && /well/.test(H.p().say) && H.p().choices.length === 2 && H.p().story.turns() === before);
+  check('the module does not name the person it was first built for', !/christine|cici|her screen/i.test(H.mount.textContent));
+  void calls;
+}
+
+// =====================================================================
+section('the Nimrod folder: says so when there is none');
+{
+  const H2 = host({ ai: stubAI([turn('Hello there!', ['Hi', 'Bye'])]), id: 'advtest2', extra: { folderStore: { get: async () => null, put: async () => {}, del: async () => {} } } });
+  H2.inst.impl.__press('talk', 'queen');
+  await until(() => H2.p().view === 'story' && !H2.p().thinking);
+  check('*** talking with Queen Rosa: her figure is drawn, the conversation is hers ***', H2.p().kind === 'talk' && H2.p().character === 'queen'
+    && H2.mount.querySelector('.adv-face svg') && H2.p().choices.join('|') === 'Hi|Bye');
+  H2.inst.impl.__press('folder');
+  await until(() => /Nimrod folder/.test(H2.p().note));
+  check('no Nimrod folder on this device: it says the story stays here', /no Nimrod folder/.test(H2.p().note), H2.p().note);
+  H2.delivered(); await tick();     // read aloud first: the window is shut while it is
+  H2.inst.impl.__heard('I want to hurt myself');
+  await tick();
+  check('*** words about hurting oneself: the care line, and no AI call ***', H2.p().say === CARE_LINE, H2.p().say);
+  H2.inst.destroy();
+  check('destroyed: the listening window is closed', H2.grammar[H2.grammar.length - 1].open === false);
+  H2.mount.remove();
+}
+
+// =====================================================================
+section('*** no storyteller: it says how to set one up, instead of failing ***');
+{
+  const ai = stubAI([{ ok: false, reason: 'Could not reach the AI program at http://127.0.0.1:11434/v1.' }]);
+  const H3 = host({ ai, id: 'advtest3' });
+  H3.inst.impl.__press('adventure');
+  await until(() => H3.p().view === 'setup');
+  check('the setup view, with the reason in words', H3.p().view === 'setup' && /Could not reach/.test(H3.mount.textContent));
+  check('...and how: the guide\'s "Set up your guide / AI", a computer in the house, or a key', /Set up your guide \/ AI/.test(H3.mount.textContent)
+    && /computer in the house/.test(H3.mount.textContent) && /own key/.test(H3.mount.textContent));
+  check('...with Try again and Back', H3.mount.querySelector('[data-adv-act="retry"]') && H3.mount.querySelector('[data-adv-act="home"]'));
+  check('nothing is saved from a story that never started', !localStorage.getItem(STORY_SAVE_PREFIX + 'advtest3'));
+  H3.inst.destroy(); H3.mount.remove();
+  const slowFirst = stubAI([{ ok: false, timedOut: true, reason: 'The AI model took longer than 2 minutes and was stopped.' }, turn('You reach the Bakery.', ['Buy bread', 'Leave'])]);
+  const H5 = host({ ai: slowFirst, id: 'advtest5', state0: { lightMoves: 'off' } });
+  H5.inst.impl.__press('adventure');
+  await until(() => !H5.p().thinking && H5.p().choices.length > 0);
+  check('*** a storyteller that is only SLOW the first time: the opening choices, not the setup page ***',
+    H5.p().view === 'story' && H5.p().say === FALLBACK_LINE && H5.p().choices.length === 3, JSON.stringify(H5.p().choices));
+  H5.inst.impl.__press('choose', 0);
+  await until(() => slowFirst.calls.length === 2 && !H5.p().thinking);
+  check('...and pressing one starts the story', /Bakery/.test(H5.p().say), H5.p().say);
+  H5.inst.destroy(); H5.mount.remove();
+  const tAI = stubAI([turn('Hello! Mind the sawdust.', ['Hi Jack', 'What are you making?'])]);
+  const H6 = host({ ai: tAI, id: 'advtest6' });
+  H6.bus.publish(ADVENTURE_TALK_TOPIC, { who: 'jack' });
+  await until(() => !H6.p().thinking && H6.p().view === 'story');
+  check('*** the Town\'s "Talk to Jack Theo" opens a conversation with him here ***', H6.p().kind === 'talk' && H6.p().character === 'jack'
+    && tAI.calls[0].messages[0].content.includes('Jack Theo'));
+  H6.bus.publish(ADVENTURE_TALK_TOPIC, { who: 'nobody' });
+  await tick();
+  check('...an unknown name opens nothing', tAI.calls.length === 1);
+  H6.inst.impl.__press('home');
+  check('*** while an Adventure panel is mounted, the Town\'s "Talk to" is ready ***', townTalkReady());
+  const took = await talkTo({ character: 'queen', name: 'Queen Rosa' });
+  await until(() => !H6.p().thinking && H6.p().character === 'queen');
+  check('*** the Town\'s button, pressed: the conversation with Queen Rosa opens here ***', took === true && H6.p().kind === 'talk' && H6.p().character === 'queen');
+  H6.inst.destroy(); H6.mount.remove();
+  check('...and when the panel goes, the Town is told nothing answers any more', townTalkReady() === false);
+}
+
+// =====================================================================
+section('*** Stop waiting: never a blocked screen ***');
+{
+  const ai = stubAI([turn('A door creaks.', ['Open it', 'Knock']),
+    (m, o) => new Promise((res) => { o.signal.addEventListener('abort', () => res({ ok: false, cancelled: true, reason: 'Cancelled.' })); })]);
+  const H4 = host({ ai, id: 'advtest4', state0: { lightMoves: 'off', keepOnDevice: false } });
+  H4.inst.impl.__press('adventure');
+  await until(() => H4.p().view === 'story' && !H4.p().thinking);
+  H4.delivered(); await tick();
+  H4.inst.impl.__press('choose', 0);
+  await tick();
+  check('thinking, with Stop waiting', H4.p().thinking && H4.mount.querySelector('[data-adv-act="stop"]'));
+  H4.bus.publish(ADVENTURE_VERB_TOPICS.back, {});
+  await until(() => !H4.p().thinking);
+  check('*** back (or Stop waiting) ends the wait; the choices are there again ***', !H4.p().thinking && H4.p().choices.length === 2 && /Stopped waiting/.test(H4.p().note));
+  check('keep on this device turned off: nothing is kept', !localStorage.getItem(STORY_SAVE_PREFIX + 'advtest4'));
+  H4.inst.destroy(); H4.mount.remove();
+}
+
+// =====================================================================
+section('what a spoken line means (pure)');
+{
+  const cs = ['Walk to the bakery', 'Explore the park', 'Knock at the Great Hall'];
+  check('"two" / "number two" / "the second" -> the second', readHeard('two', cs).index === 1 && readHeard('number two', cs).index === 1 && readHeard('second', cs).index === 1);
+  check('a number past the choices is free speech', readHeard('four', cs).kind === 'free');
+  check('a choice\'s words -> that choice', readHeard('Explore the park.', cs).index === 1);
+  check('part of ONE choice -> that choice', readHeard('the bakery', cs).index === 0);
+  check('"read it again" -> again', readHeard('Read it again', cs).kind === 'again');
+  check('anything else -> free speech, as said', readHeard('I sing a song to the ducks', cs).kind === 'free' && readHeard('I sing a song to the ducks', cs).text === 'I sing a song to the ducks');
+  check('nothing -> null', readHeard('  ', cs) === null);
+  check('the defaults: read aloud, listen, free speech, a light that moves by itself', ADVENTURE_DEFAULTS.readAloud && ADVENTURE_DEFAULTS.listen
+    && ADVENTURE_DEFAULTS.freeSpeech && ADVENTURE_DEFAULTS.lightMoves === 'auto' && LIGHT_LAPS === 3);
+}
+H.inst.destroy(); H.mount.remove();
+try { localStorage.removeItem(STORY_SAVE_PREFIX + 'advtest1'); localStorage.removeItem(STORY_SAVE_PREFIX + 'advtest2'); } catch { /* blocked */ }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

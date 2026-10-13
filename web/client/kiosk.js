@@ -274,6 +274,7 @@ import './modules/story.js';           // registers 'story' (2026-10-12: Story t
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
 import './modules/voice_review.js';    // registers 'voice_review' (row 2.44, the voice recordings kept here)
 import './modules/voice_model.js';     // registers 'voice_model' (2026-10-04: the voice-model steps, one at a time)
+import './modules/adventure.js';       // registers 'adventure' (2026-10-12: talk with the town, or a free-form story)
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
 import './modules/lessons.js';
 import './modules/algebra.js';

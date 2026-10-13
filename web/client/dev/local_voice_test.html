@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>local_voice — the seam for a voice program on this computer — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>local_voice — the client side, against a stub voice program</h1>
+<p>No program is installed or called: <code>fetch</code> is a stub that answers like the program would.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createLocalVoice, withLocalVoice, readLocalVoice, writeLocalVoice, cleanLocalVoiceUrl,
+  LOCAL_VOICE_KEY, DEFAULT_LOCAL_VOICE_URL, DEFAULT_LOCAL_VOICE_TIMEOUT_MS, LOCAL_VOICE_DEFAULTS,
+} from '../local_voice.js';
+import { createSpeechChannel } from '../output_channels.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const memStore = () => ({ m: {}, getItem(k) { return k in this.m ? this.m[k] : null; }, setItem(k, v) { this.m[k] = String(v); }, removeItem(k) { delete this.m[k]; } });
+const wav = () => new Blob([new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0])], { type: 'audio/wav' });
+
+// The stub program: answers /health and /speak, or whatever `how` says.
+function stubProgram(how = {}) {
+  const calls = [];
+  const f = async (url, init = {}) => {
+    calls.push({ url, init });
+    if (how.hang) return new Promise((_, rej) => init.signal?.addEventListener('abort', () => rej(Object.assign(new Error('aborted'), { name: 'AbortError' }))));
+    if (how.down) throw new TypeError('Failed to fetch');
+    if (how.status) return new Response('no', { status: how.status });
+    if (url.endsWith('/health')) return new Response(JSON.stringify({ ok: true, engine: 'piper:en_US-ljspeech-medium', voices: ['en_US-ljspeech-medium'] }), { headers: { 'Content-Type': 'application/json' } });
+    if (url.endsWith('/speak')) return how.notAudio ? new Response('<html>', { headers: { 'Content-Type': 'text/html' } }) : new Response(wav(), { headers: { 'Content-Type': 'audio/wav' } });
+    return new Response('?', { status: 404 });
+  };
+  f.calls = calls;
+  return f;
+}
+
+try {
+section('per device, OFF by default, loopback only');
+{
+  const mem = memStore();
+  const d = readLocalVoice(mem);
+  check('*** off by default: no screen reaches for a local program until somebody turns it on ***', d.on === false && d.url === DEFAULT_LOCAL_VOICE_URL);
+  check('the default address is loopback, port 8794', DEFAULT_LOCAL_VOICE_URL === 'http://127.0.0.1:8794' && LOCAL_VOICE_DEFAULTS.timeoutMs === DEFAULT_LOCAL_VOICE_TIMEOUT_MS);
+  check('*** another computer\'s address is refused (a secure page may only reach this computer) ***',
+    cleanLocalVoiceUrl('http://192.168.1.20:8794') === '' && cleanLocalVoiceUrl('http://100.97.79.13:8794') === '' && cleanLocalVoiceUrl('http://127.0.0.1.evil.example:8794') === '');
+  check('...this computer by any of its names is kept', cleanLocalVoiceUrl('http://localhost:9000/') === 'http://localhost:9000'
+    && cleanLocalVoiceUrl('http://[::1]:8794') === 'http://[::1]:8794' && cleanLocalVoiceUrl('http://127.0.0.1:8794/tts/') === 'http://127.0.0.1:8794/tts');
+  const w = writeLocalVoice({ on: true, url: 'http://10.0.0.5:1' }, mem);
+  check('turned on; a bad address falls back to the default', w.on === true && w.url === DEFAULT_LOCAL_VOICE_URL && !!mem.m[LOCAL_VOICE_KEY]);
+  const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+  check('blocked storage reads as the defaults, never a throw', readLocalVoice(broken).on === false && writeLocalVoice({ on: true }, broken).on === false);
+  mem.m[LOCAL_VOICE_KEY] = '{not json';
+  check('garbage reads as the defaults', readLocalVoice(mem).on === false);
+  mem.m[LOCAL_VOICE_KEY] = JSON.stringify({ on: true, timeoutMs: 999999 });
+  check('a silly timeout reads as the default', readLocalVoice(mem).timeoutMs === DEFAULT_LOCAL_VOICE_TIMEOUT_MS);
+}
+
+section('*** speaking through the stub program ***');
+{
+  const mem = memStore();
+  const prog = stubProgram();
+  const v = createLocalVoice({ fetchImpl: prog, storage: mem });
+  const off = await v.speak('Hello');
+  check('off: nothing is asked of the program', off.ok === false && off.off === true && prog.calls.length === 0);
+  v.setSettings({ on: true, voice: 'en_US-ljspeech-medium' });
+  const r = await v.speak('  Once upon   a time.  ');
+  const c = prog.calls[0];
+  check('*** on: POST <address>/speak with the text (and the chosen voice) ***', c.url === 'http://127.0.0.1:8794/speak' && c.init.method === 'POST'
+    && JSON.parse(c.init.body).text === 'Once upon a time.' && JSON.parse(c.init.body).voice === 'en_US-ljspeech-medium', JSON.stringify(c.init.body));
+  check('...never with the site\'s cookies', c.init.credentials === 'omit');
+  check('the sound comes back as audio', r.ok && r.blob && /^audio\//.test(r.type), JSON.stringify({ ok: r.ok, type: r.type }));
+  const h = await v.check();
+  check('"is it there?" reads /health', h.ok && h.engine.startsWith('piper:') && h.voices.length === 1);
+  const empty = await v.speak('   ');
+  check('nothing to say asks nothing', !empty.ok && prog.calls.length === 2);
+  const v403 = createLocalVoice({ fetchImpl: stubProgram({ status: 403 }), storage: mem });
+  check('a program that refuses this website says so', /allowed/.test((await v403.speak('hi')).reason));
+  const vHtml = createLocalVoice({ fetchImpl: stubProgram({ notAudio: true }), storage: mem });
+  check('an answer that is not a sound is not played', (await vHtml.speak('hi')).ok === false);
+  const vDown = createLocalVoice({ fetchImpl: stubProgram({ down: true }), storage: mem });
+  check('no program: a reason, never a throw', /No voice program answered/.test((await vDown.speak('hi')).reason));
+  writeLocalVoice({ timeoutMs: 600 }, mem);
+  const vSlow = createLocalVoice({ fetchImpl: stubProgram({ hang: true }), storage: mem });
+  const t0 = performance.now();
+  const slow = await vSlow.speak('hi');
+  const took = performance.now() - t0;
+  check('*** a slow program is given up on at its timeout ***', slow.timedOut && took < 2500, `${Math.round(took)} ms`);
+}
+
+section('*** the speech channel, with the local voice first ***');
+{
+  const mem = memStore();
+  writeLocalVoice({ on: true }, mem);
+  const presented = [];
+  const inner = { name: 'speech', concurrency: 1, present(item, { done }) { presented.push(item); setTimeout(done, 0); return () => { presented.cancelled = true; }; } };
+  const urls = []; const revoked = [];
+  const make = (fetchImpl) => withLocalVoice(inner, createLocalVoice({ fetchImpl, storage: mem }),
+    { createURL: (b) => { const u = `blob:test/${urls.length}`; urls.push(u); return u; }, revokeURL: (u) => revoked.push(u) });
+  const ch = make(stubProgram());
+  check('the wrapped channel keeps the contract (name, one at a time)', ch.name === 'speech' && ch.concurrency === 1);
+  let doneN = 0;
+  await new Promise((res) => { ch.present({ id: 'o1', text: 'Hello there', data: null }, { done: () => { doneN++; res(); } }); });
+  check('*** the program\'s sound is handed to the channel as the message\'s clip ***', presented[0].data.clips[0] === 'blob:test/0' && presented[0].text === 'Hello there');
+  check('...and its address is let go of when it is done', doneN === 1 && revoked.includes('blob:test/0'));
+
+  await new Promise((res) => { make(stubProgram({ down: true })).present({ id: 'o2', text: 'No program', data: null }, { done: res }); });
+  check('*** no program: the message goes to the browser\'s voice exactly as it was ***', presented[1].text === 'No program' && !(presented[1].data && presented[1].data.clips));
+
+  const before = presented.length;
+  const prog = stubProgram();
+  await new Promise((res) => { make(prog).present({ id: 'o3', text: 'Cat', data: { clips: ['/aac/clips/cat.mp3'] } }, { done: res }); });
+  check('a word with its own recorded sound is left alone (no program call)', prog.calls.length === 0 && presented[before].data.clips[0] === '/aac/clips/cat.mp3');
+
+  const memOff = memStore();
+  const chOff = withLocalVoice(inner, createLocalVoice({ fetchImpl: stubProgram(), storage: memOff }));
+  const n0 = presented.length;
+  chOff.present({ id: 'o4', text: 'Off', data: null }, { done: () => {} });
+  check('turned off: handed straight through, at once', presented.length === n0 + 1 && presented[n0].text === 'Off');
+
+  const hang = stubProgram({ hang: true });
+  const n1 = presented.length;
+  const cancel = make(hang).present({ id: 'o5', text: 'Interrupted', data: null }, { done: () => {} });
+  cancel();
+  await new Promise((r) => setTimeout(r, 30));
+  check('*** cancelled while the program is still making it: nothing is said, the request is stopped ***',
+    presented.length === n1 && hang.calls[0].init.signal.aborted === true);
+}
+
+section('*** end to end through the real speech channel: the sound plays, the voice is not used ***');
+{
+  const mem = memStore();
+  writeLocalVoice({ on: true }, mem);
+  const played = [];
+  const makeAudio = () => {
+    const ls = {};
+    return { set src(u) { this._src = u; }, get src() { return this._src; }, volume: 1, pause() {},
+      addEventListener(t, f) { ls[t] = f; }, play() { played.push(this._src); setTimeout(() => ls.ended && ls.ended(), 0); return Promise.resolve(); } };
+  };
+  const spoken = [];
+  const synth = { speaking: false, pending: false, speak(u) { spoken.push(u.text); setTimeout(() => u.onend && u.onend(), 0); }, cancel() {}, getVoices: () => [] };
+  function Utterance(text) { this.text = text; }
+  const real = createSpeechChannel({ synth, Utterance, makeAudio, pollMs: 0 });
+  const ch = withLocalVoice(real, createLocalVoice({ fetchImpl: stubProgram(), storage: mem }), { createURL: () => 'blob:e2e', revokeURL: () => {} });
+  await new Promise((res) => ch.present({ id: 'e1', text: 'A story begins', data: null }, { done: res }));
+  check('*** the local voice\'s sound is played by the speech channel itself (ducking, one at a time, the watchdog) ***',
+    played[0] === 'blob:e2e' && spoken.length === 0, JSON.stringify({ played, spoken }));
+}
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

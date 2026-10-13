@@ -123,6 +123,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   story: ['visual'],   // story (2026-10-12): Story time, a picture story read aloud
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
+  adventure: ['games', 'ai'],   // (2026-10-12) talk with the town, or a free-form story: a game, told by an AI
   themes: ['visual', 'tools'],   // (2026-10-06) the theme picker as a panel: something to look at, and a setting
   people: ['people'], helper: ['ai', 'tools'],
 });

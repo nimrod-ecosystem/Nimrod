@@ -773,6 +773,10 @@ export const MODULE_VERBS = {
   // 2026-10-04, the Voice model module (modules/voice_model.js): next / prev walk its buttons (the walk's own Back /
   // Skip this step / Done, next among them), select presses the lit one, back is the walk's Back.
   voice_model:   { next: 'voice_model/next', prev: 'voice_model/prev', select: 'voice_model/select', back: 'voice_model/back' },
+  // 2026-10-12, Adventure (modules/adventure.js): next / prev walk every button, select presses the lit one (a choice), back
+  // stops waiting or goes back to the start; play reads the page again, pause stops reading.
+  adventure:     { next: 'adventure/next', prev: 'adventure/prev', select: 'adventure/select', back: 'adventure/back',
+                   play: 'adventure/play', pause: 'adventure/pause' },
 };
 
 // What a verb does on a given module type, normalized to {topic, payload}.
