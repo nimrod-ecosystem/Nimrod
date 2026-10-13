@@ -10,12 +10,26 @@
 // No code, or a mistyped one: a box to type it in. The page is a phone's page, not a screen's, so it opens nothing
 // by itself and leaves nothing running when it is closed (pagehide destroys the game, which leaves the room).
 
+//
+// WHICH GAME (2026-10-12, Word Builder together): `&game=word_builder` opens Word Builder; no `game` (every address
+// made before) or one not on the list opens Quiz mix, as it always did. The room itself is the real check: a Word
+// Builder page joining a Quiz mix room would simply be dealt the wrong kind of turn, and the server holds each room
+// to its own game's turns (game_rooms.py GAME_CATEGORY), so nothing about either player crosses.
+
 import { createBus } from './bus.js';
-import { mountModule } from './module.js';
+import { mountModule, getManifest } from './module.js';
 import { authHeaders, isAuthError, httpError } from './auth.js';
 import { createState } from './state.js';
 import { normalizeCode, codeWords } from './game_room.js';
+import { PLAY_GAMES, DEFAULT_PLAY_GAME } from './game_together.js';
 import './modules/quiz_mix.js';
+import './modules/word_builder.js';
+
+/** The game a join page opens: `game` from its address when it is one of PLAY_GAMES, else Quiz mix. */
+export function playGameOf(search) {
+  const g = new URLSearchParams(search || '').get('game') || '';
+  return PLAY_GAMES.includes(g) ? g : DEFAULT_PLAY_GAME;
+}
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -42,6 +56,11 @@ export async function mountPlayPage(root, {
 } = {}) {
   if (!root) throw new Error('mountPlayPage: a root element is required');
   const code = normalizeCode(new URLSearchParams(search || '').get('room') || '');
+  const game = playGameOf(search);
+  let title = game;
+  try { title = getManifest(game)?.title || game; } catch { title = game; }
+  // Quiz mix's address is as it always was; another game carries its name (game_together.js playPath).
+  const here = (c) => `/play.html${c ? `?room=${encodeURIComponent(c)}` : ''}${game !== DEFAULT_PLAY_GAME ? `${c ? '&' : '?'}game=${encodeURIComponent(game)}` : ''}`;
   let inst = null;
   root.innerHTML = '<main class="pp" data-body><p class="pp-note">Loading…</p></main>';
   const body = () => root.querySelector('[data-body]');
@@ -53,7 +72,7 @@ export async function mountPlayPage(root, {
   }
 
   function renderSignIn() {
-    const next = `/play.html${code ? `?room=${encodeURIComponent(code)}` : ''}`;
+    const next = here(code);
     body().innerHTML = `<h1>Play together</h1><p>Sign in first, then you join the game with your own levels.</p>
       <p><a class="pp-btn" href="/auth/login?next=${encodeURIComponent(next)}">Sign in</a></p>`;
   }
@@ -66,22 +85,22 @@ export async function mountPlayPage(root, {
       e.preventDefault();
       const c = normalizeCode(body().querySelector('[data-code]')?.value || '');
       if (!c) { renderAsk(true); return; }
-      try { win?.history?.replaceState?.(null, '', `/play.html?room=${c}`); } catch { /* fine */ }
+      try { win?.history?.replaceState?.(null, '', here(c)); } catch { /* fine */ }
       start(c, me);
     });
   }
 
   let me = null;
   function start(c, person) {
-    body().innerHTML = `<h1 class="pp-title">Quiz mix <span class="pp-code">· ${esc(codeWords(c))}</span></h1><div class="pp-game" data-game></div>`;
+    body().innerHTML = `<h1 class="pp-title">${esc(title)} <span class="pp-code">· ${esc(codeWords(c))}</span></h1><div class="pp-game" data-game data-play-game="${esc(game)}"></div>`;
     const host = body().querySelector('[data-game]');
     const personId = person?.id || null;
     const makePersonState = (pid, key, opts = {}) => (pid
       ? createState({ url: `${base}/api/people/${pid}/state/${key}`, user, cacheKey: `person:${user}:${pid}:${key}`, ...opts })
       : null);
     const rows = new Map();
-    inst = mountModule('quiz_mix', {
-      mount: host, bus: createBus(), user, personId, instanceId: 'quiz_mix-play',
+    inst = mountModule(game, {
+      mount: host, bus: createBus(), user, personId, instanceId: `${game}-play`,
       // The panel's own settings live only here (autostart off: the host's Start starts it).
       state: memoryState({ autostart: false }),
       // The questions' ratings: this page only. The PLAYER's level: their own row, on the server.

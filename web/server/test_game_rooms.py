@@ -425,6 +425,60 @@ A.left(d1)
 A.left(d2)
 check("a socket that goes is forgotten: nothing kept", len(A) == 0)
 
+section("*** Word Builder together (2026-10-12): the same wire, held to the least that game needs ***")
+from game_rooms import GAME_CATEGORY, GAME_POINTS, GAMES, held_category, held_points  # noqa: E402
+WB = GAME_CATEGORY["word_builder"]
+check("*** word_builder is a game a room may be for, and one a caller may ask for ***", "word_builder" in GAMES
+      and parse_call_ask({"type": "game-ask", "game": "word_builder", "name": "x"}) == {"type": "game-ask", "game": "word_builder"}
+      and CallAsks(now=Clock()).ask(Conn("w"), "driver", {"type": "game-ask", "game": "word_builder"}, lambda: "Dana")
+      == {"type": "game-ask", "game": "word_builder", "name": "Dana"})
+check("a Word Builder room's one category is fixed here, with no room for text from a page",
+      WB == {"group": "words", "id": "word_builder", "label": "Word builder"} and GAME_POINTS["word_builder"] == 1)
+check("Quiz mix is untouched: its own categories pass, up to three points",
+      held_category("quiz_mix", CAT) == CAT and held_points("quiz_mix", True, 3) == 3 and GAME_POINTS["quiz_mix"] == MAX_POINTS)
+check("held_points: never any for a wrong answer, at most the game's own for a right one",
+      held_points("word_builder", False, 1) == 0 and held_points("word_builder", True, 3) == 1 and held_points("word_builder", True, 0) == 0)
+R, clk = mk()
+wh, wd = Conn("wb-host"), Conn("wb-phone")
+out = R.handle(wh, "pat", J({"kind": "room", "open": {"game": "word_builder", "seats": [{"name": "Pat"}]}}))
+check("a Word Builder room opens", kinds(out, wh)[:1] == ["opened"] and R.room("KX49PM").game == "word_builder", str(out))
+jn(R, wd, "pat", seats=("Sam",))
+# The host tries to put the letters (and a word) into the category's label: the server's own label goes instead.
+sneaky = {"group": "trivia", "id": "trivia:space", "label": "C, A, T - try CAT"}
+out = R.handle(wh, "pat", J({"kind": "turn", "seat": "d1.0", "serial": 1, "round": 1, "category": sneaky}))
+t_ = to(out, wd)
+check("*** a Word Builder turn reaches the other screen with the room's own category - never the host's text ***",
+      t_ == [{"kind": "turn", "seat": "d1.0", "serial": 1, "round": 1, "category": WB}], str(t_))
+check("...and nothing of it is kept but that (the room's turn record carries the fixed category)",
+      R.room("KX49PM").turn["category"] == WB, str(R.room("KX49PM").turn))
+out = R.handle(wh, "pat", J({"kind": "room", "state": {"phase": "playing", "round": 1, "rounds": 5, "turn": "d1.0",
+                                                     "category": sneaky, "totals": {"d0.0": 1}}}))
+views = [m for _, m in out if m.get("kind") == "room"]
+check("*** the host's table, as every screen sees it: the fixed category, the host's label gone ***",
+      views and all(v["state"]["category"] == WB for v in views) and "CAT" not in J(views), J(views)[:300])
+out = R.handle(wd, "pat", J({"kind": "answer", "seat": "d1.0", "serial": 1, "category": {"group": "words", "id": "x"},
+                             "right": True, "points": 3, "word": "cat", "letters": ["c", "a", "t"], "bonus": True}))
+a_ = to(out, wh)
+check("*** a Word Builder answer: seat, serial, the fixed category, right, ONE point - no word, no letters, no bonus ***",
+      a_ == [{"kind": "answer", "seat": "d1.0", "serial": 1, "category": {"group": "words", "id": "word_builder"},
+              "right": True, "points": 1}], str(a_))
+R.handle(wh, "pat", J({"kind": "turn", "seat": "d1.0", "serial": 2, "round": 1, "category": WB}))
+out = R.handle(wd, "pat", J({"kind": "answer", "seat": "d1.0", "serial": 2, "category": WB, "right": False, "points": 1}))
+check("a word not found earns nothing, whatever the screen claims", [m["points"] for m in to(out, wh)] == [0], str(out))
+R.handle(wh, "pat", J({"kind": "turn", "seat": "d1.0", "serial": 3, "round": 2, "category": WB}))
+clk.advance(TURN_MAX_S + 1)
+sk = [m for m in to(R.sweep(), wh) if m.get("kind") == "answer"]
+check("a Word Builder turn nobody answers is skipped by the same clock, with the fixed category",
+      sk and sk[0]["skipped"] is True and sk[0]["category"] == {"group": "words", "id": "word_builder"} and sk[0]["points"] == 0, str(sk))
+R2, _c2 = mk()
+qh, qd = Conn("q-host"), Conn("q-phone")
+op(R2, qh, "pat")
+jn(R2, qd, "pat")
+R2.handle(qh, "pat", J({"kind": "turn", "seat": "d1.0", "serial": 1, "round": 1, "category": {**CAT, "label": "Space"}}))
+out = R2.handle(qd, "pat", J({"kind": "answer", "seat": "d1.0", "serial": 1, "category": {"group": "math", "id": "math"}, "right": True, "points": 3}))
+check("...and a Quiz mix room next to it still carries its own categories and three points",
+      [m["points"] for m in to(out, qh)] == [3] and R2.room("KX49PM").turn is None, str(out))
+
 # ---------------------------------------------------------------------------------------------- HTTP
 section("*** the real socket, end to end ***")
 tmp = tempfile.mkdtemp(prefix="nimrod_games_")
@@ -613,6 +667,55 @@ with drive_ws("pat", "screen") as screenws, c.websocket_connect(f"/api/drive/{ro
 t_m = c.post(f"/api/drive/ticket/{robin}", headers=H("mallory"))
 check("*** a login that may not use that screen cannot even get a drive ticket for it ***", t_m.status_code in (401, 403), str(t_m.status_code))
 check("every drive socket closed: no asks remembered", len(appmod._call_asks) == 0, str(len(appmod._call_asks)))
+
+section("*** Word Builder from the call, end to end: asked, opened on the call, a turn each way, nothing stored ***")
+SENTINEL = "zqxwordzq"   # what a person typed, as far as this test is concerned: it must never reach the database
+with drive_ws("pat", "screen") as screenws, drive_ws("dana", "driver") as callerws, \
+        c.websocket_connect(f"/api/game?t={ticket('pat')}") as hostws, \
+        c.websocket_connect(f"/api/game?t={ticket('dana')}") as danaws:
+    until(screenws, "presence")
+    until(callerws, "presence")
+    until(screenws, "presence")
+    callerws.send_text(J({"type": "game-ask", "game": "word_builder"}))
+    a_ = until(screenws, "game-ask")
+    check("*** the caller asks for Word Builder: the screen hears it, rebuilt ***", a_ is not None and a_["game"] == "word_builder"
+          and set(a_) == {"type", "game", "name"}, str(a_))
+    # The screen opens a call room for Word Builder, as it does for Quiz mix.
+    hostws.send_text(J({"kind": "room", "open": {"game": "word_builder", "seats": [{"name": "Robin"}], "person": robin}}))
+    code = until(hostws, "opened")["code"]
+    until(hostws, "room")
+    inv = until(callerws, "game-invite")
+    check("*** the caller's page is handed the Word Builder room's code (server-built) ***",
+          inv == {"type": "game-invite", "code": code, "game": "word_builder", "name": "Robin"}, str(inv))
+    danaws.send_text(J({"kind": "join", "code": code, "seats": [{"name": "Dana"}]}))
+    check("the caller joins at once", until(danaws, "joined") is not None)
+    until(hostws, "room")
+    hostws.send_text(J({"kind": "turn", "seat": "d1.0", "serial": 1, "round": 1,
+                        "category": {"group": "words", "id": "word_builder", "label": f"letters {SENTINEL}"}}))
+    t_ = until(danaws, "turn")
+    check("*** the turn reaches the caller with the room's own category ***", t_ and t_["category"] == GAME_CATEGORY["word_builder"], str(t_))
+    danaws.send_text(J({"kind": "answer", "seat": "d1.0", "serial": 1, "category": {"group": "words", "id": "word_builder"},
+                        "right": True, "points": 1, "word": SENTINEL}))
+    a_ = until(hostws, "answer")
+    check("*** the caller's word comes back as one point - and not the word ***",
+          a_ == {"kind": "answer", "seat": "d1.0", "serial": 1, "category": {"group": "words", "id": "word_builder"},
+                 "right": True, "points": 1}, str(a_))
+    hostws.send_text(J({"kind": "room", "state": {"phase": "done", "round": 1, "rounds": 1, "turn": None,
+                                                 "category": {"group": "words", "id": "word_builder", "label": SENTINEL},
+                                                 "totals": {"d0.0": 1, "d1.0": 1}}}))
+    v_ = until(danaws, "room")
+    check("the end of the game reaches the caller: the table, the fixed category", v_ and v_["state"]["phase"] == "done"
+          and v_["state"]["totals"] == {"d0.0": 1, "d1.0": 1} and v_["state"]["category"] == GAME_CATEGORY["word_builder"], str(v_))
+    hostws.send_text(J({"kind": "leave"}))
+    until(danaws, "closed")
+db_bytes = b""
+for f in os.listdir(tmp):
+    with open(os.path.join(tmp, f), "rb") as fh:
+        db_bytes += fh.read()
+check("*** nothing of the game was written down: the word, the label - not in the database or its journal ***",
+      len(db_bytes) > 0 and SENTINEL.encode() not in db_bytes, str(len(db_bytes)))
+appmod._games.sweep()
+check("the Word Builder room is gone with its host; no sockets left behind", appmod._games.connections() == 0, str(appmod._games.connections()))
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

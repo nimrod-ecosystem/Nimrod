@@ -29,7 +29,7 @@
 <script type="module">
 import {
   mountCallPage, endText, CALLER_GIVE_UP_MS, CALLER_END_TEXT, CALL_MODES, CONNECT_MS, PRESENCE_MS,
-  GAME_ASK_WAIT_MS, GAME_NOTE_MS, GAME_ASK_GAME,
+  GAME_ASK_WAIT_MS, GAME_NOTE_MS, GAME_ASK_GAME, CALL_GAMES,
 } from '../call_page.js';
 import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { SIGNAL_KINDS, connectDrive } from '../drive.js';
@@ -631,6 +631,39 @@ try {
     press('[data-game-close]');
     M.connect.made[0].invite({ code: 'KX49PN', game: 'quiz_mix', name: 'Alex' });
     check('*** after "Never mind", a code that arrives late is only offered (Play / Not now) ***', !!root.querySelector('[data-game-join]') && !root.querySelector('[data-game-frame]'));
+    // WORD BUILDER (2026-10-12): a button of its own beside Quiz mix's - one press each (call_page.js CALL_GAMES argues it).
+    press('[data-game-close]');
+    const btns = [...root.querySelectorAll('[data-game-ask]')];
+    check('*** two games, one button each, one press each: "Play Quiz mix together", "Play Word builder together" ***',
+      btns.map((b) => `${b.dataset.gameAsk}=${b.textContent}`).join('|') === 'quiz_mix=Play Quiz mix together|word_builder=Play Word builder together'
+      && CALL_GAMES.map((g) => g.game).join() === 'quiz_mix,word_builder', btns.map((b) => b.outerHTML).join(' '));
+    clock.advance(10000);
+    press('[data-game-ask="word_builder"]');
+    check('*** one press asks for Word Builder (the game only) ***', askSent.at(-1) === 'word_builder', JSON.stringify(askSent));
+    check('...and says so', /Asking Alex’s screen to start Word builder…/.test(text()) && root.querySelector('[data-game-asking]')?.dataset.gameAsking === 'word_builder', text().slice(0, 300));
+    M.connect.made[0].invite({ code: 'KX49PQ', game: 'quiz_mix', name: 'Alex' });
+    check('*** asked for Word Builder, a Quiz mix code from the screen meanwhile is only offered - not opened under them ***',
+      !!root.querySelector('[data-game-join]') && !root.querySelector('[data-game-frame]') && /would like to play Quiz mix with you/.test(text()), text().slice(0, 300));
+    press('[data-game-close]');
+    clock.advance(10000);
+    press('[data-game-ask="word_builder"]');
+    M.connect.made[0].invite({ code: 'KX49PR', game: 'word_builder', name: 'Alex' });
+    const wf = root.querySelector('[data-game-frame]');
+    check('*** the screen opened Word Builder: its join page beside the video at once, naming the game ***',
+      wf && wf.getAttribute('src') === '/play.html?room=KX49PR&game=word_builder' && wf.getAttribute('title') === 'Word builder'
+      && !root.querySelector('[data-game-join]'), `${wf?.getAttribute('src')} ${wf?.getAttribute('title')}`);
+    press('[data-game-close]');
+    clock.advance(10000);
+    press('[data-game-ask="word_builder"]');
+    clock.advance(GAME_ASK_WAIT_MS); await sleep(5);
+    check('*** nothing came back: it says where Word Builder can open ***',
+      /The game did not open on Alex’s screen\. It opens on a screen showing Word builder, or showing the call by itself\./.test(text()), text().slice(0, 300));
+    check('an offer of Word Builder from the screen reads with its name', (() => {
+      press('[data-game-close]');
+      M.connect.made[0].invite({ code: 'KX49PS', game: 'word_builder', name: 'Alex' });
+      return /Alex's screen would like to play Word builder with you\./.test(text());
+    })(), text().slice(0, 300));
+    check('the page\'s own ask takes a game name, and nothing off the list', M.page.askGame('poker') === false);
     M.page.hangup();
     check('hanging up takes all of it with it', M.page.game() === null && !root.querySelector('[data-game-ask]'));
     M.page.destroy(); S.t.destroy();

@@ -5577,7 +5577,8 @@ export async function mountKiosk(root, {
   // page says so after its own wait (call_page.js GAME_ASK_WAIT_MS).
   const CALL_GAME_ROW = 'call-game';
   const CALL_GAME_ID = 'call:game';
-  const CALL_GAME_TYPES = Object.freeze(['quiz_mix']);
+  // Word Builder since 2026-10-12 (the same one-press way; its room mode is game_together.js's, as Quiz mix's is).
+  const CALL_GAME_TYPES = Object.freeze(['quiz_mix', 'word_builder']);
   // How long the game's half stays after the game together is over (its last table, the note saying why), before the
   // call view goes back to how it opened. = quiz_mix.js NOTE_MS: read, then gone by itself.
   const CALL_GAME_LINGER_MS = 20000;
@@ -5590,6 +5591,10 @@ export async function mountKiosk(root, {
     return false;
   }
   async function openCallGame(cv, ask) {
+    // ANOTHER game asked for while one is open in this call (Quiz mix, then Word Builder): the caller's page only offers
+    // its buttons when no game is going there, so the open one is over or abandoned - it goes (its room left as it
+    // goes), and the new one takes the half.
+    if (cv.game && cv.game.type !== ask.game) closeCallGame(cv);
     if (cv.game) {
       // Already open in this call: hand it the new ask (a game together that ended, asked for again).
       if (cv.game.lingerTimer) { clearTimeout(cv.game.lingerTimer); cv.game.lingerTimer = null; }

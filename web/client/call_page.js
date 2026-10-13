@@ -38,6 +38,7 @@ import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_gro
 import { createWakeHold } from './phone_mic_show.js';
 import { createSpeechChannel } from './output_channels.js';
 import { createCallAnnouncer } from './follow_sound.js';   // the hear half: a follow page in this browser hears of the call
+import { playPath } from './game_together.js';   // the join page's address for a game's room (Quiz mix's as it always was)
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -88,7 +89,23 @@ export const CALLER_END_TEXT = Object.freeze({
 // GAME_NOTE_MS: how long the "did not open" words stay before the button comes back by itself.
 export const GAME_ASK_WAIT_MS = 20000;
 export const GAME_NOTE_MS = 20000;
-export const GAME_ASK_GAME = 'quiz_mix';
+// THE GAMES THIS PAGE OFFERS (Word Builder since 2026-10-12): one button each, "Play Quiz mix together" and "Play Word
+// builder together". ONE BUTTON PER GAME OR ONE BUTTON WITH A CHOICE, argued:
+//   ONE WITH A CHOICE ("Play a game together", then which): a single button however many games there are, and the
+//     screen beside the video stays quiet. AGAINST: two presses where the whole point of 9a70277 was one, and a
+//     choice that opens and has to be closed again is one more thing on a phone held up for a video call.
+//   ONE EACH: one press, the game's own name on it, nothing to open or dismiss; with two games, two buttons in a row.
+//     AGAINST: it grows with every game - past three or four it is a wall of buttons beside the video.
+// One each, for now: the press stays one press, and there are two games. When a fourth game joins this list, it
+// should become "Play a game together" with the games under it - written here so that is the trigger, not a feeling.
+// [On Mike's list.] Each title is the module's own (the name on the screen's panel), so both ends say the same word.
+export const CALL_GAMES = Object.freeze([
+  Object.freeze({ game: 'quiz_mix', title: 'Quiz mix' }),
+  Object.freeze({ game: 'word_builder', title: 'Word builder' }),
+]);
+// The first game, asked for when nothing names one (`askGame()` with no game; kept for what read it before).
+export const GAME_ASK_GAME = CALL_GAMES[0].game;
+const gameTitle = (g) => CALL_GAMES.find((x) => x.game === g)?.title || 'the game';
 
 // group calls: how long a knock waits before this page gives up on it. The server's own limit is 90 s (drive.py
 // KNOCK_WAIT_S) and it says "unanswered" itself; this is the backstop for a server that never replies, a little longer.
@@ -873,9 +890,9 @@ export async function mountCallPage(root, {
   }
 
   // ---- a game beside the video (game_rooms.py; the game itself is play.html, on this login's own levels) ----
-  // `game`: null (nothing: during a call, the "Play Quiz mix together" button), { asking } (this page asked the screen
-  // to open it, GAME_ASK_WAIT_MS above), { note } (it did not open, said for GAME_NOTE_MS), or an offer / a game playing
-  // ({ code, game, name, playing }).
+  // `game`: null (nothing: during a call, a "Play ... together" button for each of CALL_GAMES), { asking: <game> } (this
+  // page asked the screen to open it, GAME_ASK_WAIT_MS above), { note } (it did not open, said for GAME_NOTE_MS), or an
+  // offer / a game playing ({ code, game, name, playing }).
   let game = null;
   let gameSeq = 0;
   const canAsk = () => phase === 'in-call' && primaryShown() && !!target && typeof link?.askGame === 'function';
@@ -885,12 +902,12 @@ export async function mountCallPage(root, {
     const set = (shape, html) => { if (el.dataset.shape !== shape) { el.dataset.shape = shape; el.innerHTML = html; } el.hidden = false; };
     if (!game) {
       if (!canAsk()) { el.hidden = true; el.innerHTML = ''; el.dataset.shape = ''; return; }
-      set('ask', `<div class="cp-game-btns"><button type="button" class="cp-btn" data-game-ask>Play Quiz mix together</button></div>`);
+      set('ask', `<div class="cp-game-btns">${CALL_GAMES.map((g) => `<button type="button" class="cp-btn" data-game-ask="${esc(g.game)}">${esc(`Play ${g.title} together`)}</button>`).join('')}</div>`);
       return;
     }
     const who = game.name ? `${game.name}'s screen` : 'The screen';
     if (game.asking) {
-      set('asking', `<p class="cp-game-line" data-game-asking role="status">${esc(`Asking ${target ? `${target.name}’s screen` : 'the screen'} to start Quiz mix…`)}</p>
+      set(`asking:${game.asking}`, `<p class="cp-game-line" data-game-asking="${esc(game.asking)}" role="status">${esc(`Asking ${target ? `${target.name}’s screen` : 'the screen'} to start ${gameTitle(game.asking)}…`)}</p>
         <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>Never mind</button></div>`);
       return;
     }
@@ -899,40 +916,42 @@ export async function mountCallPage(root, {
         <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>OK</button></div>`);
       return;
     }
+    const title = gameTitle(game.game);
     if (!game.playing) {
-      set(`offer:${game.code}`, `<p class="cp-game-line" data-game-offer="${esc(game.code)}">${esc(who)} would like to play Quiz mix with you.</p>
+      set(`offer:${game.code}`, `<p class="cp-game-line" data-game-offer="${esc(game.code)}">${esc(`${who} would like to play ${title} with you.`)}</p>
         <div class="cp-game-btns"><button type="button" class="cp-btn cp-primary" data-game-join>Play</button>
         <button type="button" class="cp-btn" data-game-close>Not now</button></div>`);
       return;
     }
     if (el.querySelector('[data-game-frame]')) return;     // already playing: never reload the game under them
-    set(`play:${game.code}`, `<iframe class="cp-game-frame" data-game-frame title="Quiz mix" src="${esc(`/play.html?room=${encodeURIComponent(game.code)}`)}"></iframe>
+    set(`play:${game.code}`, `<iframe class="cp-game-frame" data-game-frame title="${esc(title)}" src="${esc(playPath(game.code, game.game))}"></iframe>
       <div class="cp-game-btns"><button type="button" class="cp-btn" data-game-close>Close the game</button></div>`);
   }
   function showGame(inv) {
     if (!inv || !inv.code) return;
     if (game && game.playing && game.code === inv.code) return;
-    // This page asked for it: straight into the game, no second press (the press that asked was the yes).
-    const mine = !!game?.asking;
+    // This page asked for THIS game: straight into it, no second press (the press that asked was the yes). An
+    // invitation to another game meanwhile (the screen offered it by itself) is only offered.
+    const mine = !!game?.asking && game.asking === inv.game;
     gameSeq++;
     game = { code: inv.code, game: inv.game, name: inv.name || '', playing: mine };
     paintGame();
   }
   function closeGame() { gameSeq++; game = null; paintGame(); }
-  /** One press: ask the screen to open Quiz mix on this call (game_rooms.py CallAsks). */
-  function askForGame() {
-    if (game || !canAsk()) return false;
-    if (!link.askGame(GAME_ASK_GAME)) {
+  /** One press: ask the screen to open `which` (one of CALL_GAMES) on this call (game_rooms.py CallAsks). */
+  function askForGame(which = GAME_ASK_GAME) {
+    if (game || !canAsk() || !CALL_GAMES.some((g) => g.game === which)) return false;
+    if (!link.askGame(which)) {
       game = { note: 'Could not reach the site to ask. Check the connection and try again.' };
     } else {
-      game = { asking: true };
+      game = { asking: which };
     }
     const my = ++gameSeq;
     const name = target?.name || 'the other';
     if (game.asking) {
       later(() => {
         if (my !== gameSeq || !game?.asking) return;
-        game = { note: `The game did not open on ${name}’s screen. It opens on a screen showing Quiz mix, or showing the call by itself.` };
+        game = { note: `The game did not open on ${name}’s screen. It opens on a screen showing ${gameTitle(which)}, or showing the call by itself.` };
         const mine = ++gameSeq;
         paintGame();
         later(() => { if (mine === gameSeq && game?.note) closeGame(); }, GAME_NOTE_MS);
@@ -1027,7 +1046,7 @@ export async function mountCallPage(root, {
     if (e.target.closest?.('[data-flip]')) { flip(); return; }
     if (e.target.closest?.('[data-words-aloud]')) { setWordsMode(wordsMode() === 'speak' ? 'show' : 'speak'); return; }
     if (e.target.closest?.('[data-game-join]')) { if (game) { game.playing = true; paintGame(); } return; }
-    if (e.target.closest?.('[data-game-ask]')) { askForGame(); return; }
+    if (e.target.closest?.('[data-game-ask]')) { askForGame(e.target.closest('[data-game-ask]').dataset.gameAsk || GAME_ASK_GAME); return; }
     if (e.target.closest?.('[data-game-close]')) { closeGame(); return; }
     // group calls: a knock, Add someone, letting a knock in, the relay setting.
     if (e.target.closest?.('[data-knock]')) { knockStart(); return; }
@@ -1073,7 +1092,7 @@ export async function mountCallPage(root, {
     people: () => people.map((p) => ({ ...p })),
     transport: () => transport,
     game: () => (game ? { ...game } : null),
-    askGame: () => askForGame(),
+    askGame: (which) => askForGame(which || GAME_ASK_GAME),
     words: () => [...said],
     wordsMode: () => wordsMode(),
     micHeld: () => heldForWords,

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>word builder together — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .dev{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>Word builder: playing together, and from a call (2026-10-12)</h1>
+<p>The same room, lobby and one-press ask from the call as Quiz mix (game_together.js), with a Word Builder turn: one
+word from the player's own letters, dealt and judged on that player's own screen, and only { seat, right, points }
+sent back. Two screens simulated here, each with its own panel, rows and socket; then the join page; then the same
+against the real server.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="hostA" class="dev"></div>
+<div id="hostB" class="dev"></div>
+<div id="hostC" class="dev"></div>
+<div id="playRoot" class="dev"></div>
+
+<script type="module">
+import { harness, rig, sleep, liveRow, fakeTimers } from './quiz_test_rig.js';
+import { mulberry32 } from '../rng.js';
+import { LADDER_KEY } from '../adaptive_play.js';
+import { getManifest } from '../module.js';
+import '../modules/word_builder.js';
+import { GAME, DEFAULTS, LINES, WORD_POINTS, TOGETHER_CATEGORY, toFind } from '../modules/word_builder.js';
+import { createTogether, playPath, PLAY_GAMES, LOBBY_MS, REMOTE_TURN_MS, NOTE_MS, CALL_ASK_JOIN_MS, scoreWords } from '../game_together.js';
+import { playPath as quizPlayPath } from '../modules/quiz_mix.js';
+import { connectGameRoom, sendable } from '../game_room.js';
+import { GAME_INVITE_GAMES } from '../drive.js';
+import { mountPlayPage, playGameOf } from '../play_page.js';
+
+const { check, section, finish } = harness();
+const tick = () => sleep(0);
+async function until(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (fn()) return true; await sleep(20); } return !!fn(); }
+const BANNED = /\b(module|dashboard|panel|grant|widget|account|token|websocket|socket|server)s?\b|christine|cici|\bher screen\b/i;
+
+// A ROOM HUB IN THE PAGE: the server's rules for one room, small (the real ones are game_rooms.py, proven by
+// test_game_rooms.py and by the live section below). Every message that crosses is logged. As quiz_together's, with
+// the room's game, and a Word Builder room held to its one category and one point (game_rooms.py GAME_CATEGORY).
+function fakeHub() {
+  const log = [];
+  let room = null;
+  const WB = { group: 'words', id: 'word_builder', label: 'Word builder' };
+  const view = (d) => ({ kind: 'room', code: room.code, game: room.game, host: 'd0', you: d.id,
+    seats: room.seats.map((s) => ({ ...s, away: !!room.devices.find((x) => x.id === s.device)?.away })),
+    state: room.state, admit: 'ask', call: !!room.person, hostAway: !!room.devices[0].away, ...(d.id === 'd0' ? { waiting: [] } : {}) });
+  const tell = (L, m) => queueMicrotask(() => L.deliver(JSON.parse(JSON.stringify(m))));
+  const all = () => { for (const d of room.devices) if (!d.away && d.L) tell(d.L, view(d)); };
+  function handle(L, m) {
+    if (m.kind === 'ping') { tell(L, { kind: 'pong' }); return; }
+    if (m.kind === 'room' && m.open) {
+      room = { code: 'KX49PM', game: m.open.game, person: m.open.person || null, devices: [{ id: 'd0', L, key: 'hostkeyhostkeyhostkey' }], seats: [],
+        state: { phase: 'lobby', round: 0, rounds: 0, category: null, turn: null, totals: {} }, turn: null, n: 1 };
+      m.open.seats.forEach((s, i) => room.seats.push({ id: `d0.${i}`, name: s.name || `Player ${i + 1}`, device: 'd0' }));
+      tell(L, { kind: 'opened', code: room.code, key: 'hostkeyhostkeyhostkey', you: 'd0' }); all(); return;
+    }
+    if (!room) { tell(L, { kind: 'refused', why: 'no-room' }); return; }
+    const me = room.devices.find((d) => d.L === L);
+    if (m.kind === 'room' && me?.id === 'd0') {
+      if (m.state) room.state = { ...m.state, category: room.game === 'word_builder' && m.state.category ? WB : m.state.category };
+      all(); return;
+    }
+    if (m.kind === 'join') {
+      if (m.code !== room.code) { tell(L, { kind: 'refused', why: 'no-room' }); return; }
+      const id = `d${room.n++}`;
+      const key = `${id}keykeykeykeykeykey`;
+      room.devices.push({ id, L, key });
+      m.seats.forEach((s, i) => room.seats.push({ id: `${id}.${i}`, name: s.name, device: id }));
+      tell(L, { kind: 'joined', code: room.code, key, you: id }); all(); return;
+    }
+    if (m.kind === 'turn' && me?.id === 'd0') {
+      const seat = room.seats.find((s) => s.id === m.seat);
+      if (!seat || seat.device === 'd0') return;
+      const d = room.devices.find((x) => x.id === seat.device);
+      room.turn = { seat: m.seat, serial: m.serial, device: d.id };
+      const cat = room.game === 'word_builder' ? WB : m.category;
+      if (d && !d.away) tell(d.L, { kind: 'turn', seat: m.seat, serial: m.serial, round: m.round, category: cat });
+      return;
+    }
+    if (m.kind === 'answer') {
+      const t = room.turn;
+      if (!t || !me || t.device !== me.id || t.seat !== m.seat || t.serial !== m.serial) return;
+      room.turn = null;
+      const max = room.game === 'word_builder' ? 1 : 3;
+      tell(room.devices[0].L, { kind: 'answer', seat: m.seat, serial: m.serial, category: { group: m.category.group, id: m.category.id },
+        right: m.right, points: m.right ? Math.min(max, m.points) : 0 });
+      return;
+    }
+    if (m.kind === 'leave') {
+      if (me?.id === 'd0') { for (const d of room.devices.slice(1)) if (d.L && !d.away) tell(d.L, { kind: 'closed', code: room.code, why: 'host-left' }); room = null; return; }
+      if (me) {
+        room.devices = room.devices.filter((d) => d !== me);
+        room.seats = room.seats.filter((s) => s.device !== me.id);
+        if (room.turn?.device === me.id) { const t = room.turn; room.turn = null; tell(room.devices[0].L, { kind: 'answer', seat: t.seat, serial: t.serial, category: { group: 'words', id: 'word_builder' }, right: false, points: 0, skipped: true, why: 'left' }); }
+        all();
+      }
+    }
+  }
+  function link(account) {
+    const subs = new Set(), ssubs = new Set();
+    let state = 'connected';
+    const L = {
+      account,
+      send(msg) {
+        if (state !== 'connected') return false;
+        const text = sendable(msg);
+        if (!text) return false;
+        const m = JSON.parse(text);
+        log.push({ from: account, msg: m });
+        queueMicrotask(() => handle(L, m));
+        return true;
+      },
+      state: () => state, authFailed: () => false,
+      onMessage(cb) { subs.add(cb); return () => subs.delete(cb); },
+      onState(cb) { ssubs.add(cb); return () => ssubs.delete(cb); },
+      close() { state = 'offline'; L.closed = true; },
+      deliver(m) { for (const f of [...subs]) f(m); },
+      drop() { state = 'offline'; const d = room?.devices.find((x) => x.L === L); if (d) d.away = true; for (const f of [...ssubs]) f('offline'); },
+      up() { state = 'connected'; for (const f of [...ssubs]) f('connected'); },
+    };
+    return L;
+  }
+  return { link, log, room: () => room, handle };
+}
+
+/** One simulated screen: Word Builder mounted with its own ladder row, its own socket (from the hub), its own room clock. */
+function screen(hostId, { players, account = 'pat', hub, saved = {}, extra = {}, seed = 7 }) {
+  const ratings = liveRow();
+  const roomTimers = fakeTimers();
+  const links = [];
+  const r = rig(GAME, { hostId, saved: { autostart: false, players, togetherRounds: 2, ...saved }, rand: mulberry32(seed),
+    extra: { makeState: (k) => (k === LADDER_KEY ? ratings : null), roomTimers,
+      gameLink: () => { const l = hub.link(account); links.push(l); return l; }, ...extra } });
+  return Object.assign(r, { ratings, roomTimers, links, link: () => links[links.length - 1], tog: () => r.inst.impl.__together(),
+    text: () => r.host.textContent, set: () => r.inst.impl.__current() });
+}
+// Find a word in the letters on screen, and say it (the engine hears it as if spoken clearly).
+const wordOf = (s) => toFind(s.set())[0] || s.set().required[0];
+const sayWord = (s) => { const w = wordOf(s); s.inst.impl.hear({ text: w, confidence: 0.95 }); return w; };
+const ladderPlayers = (row) => Object.keys(row.get()?.ladder?.players || {});
+
+try {
+  // =====================================================================================
+  section('what a Word Builder turn is on the wire: the same shape, held to the least the game needs');
+  {
+    check('*** one point a word, and the room\'s one category - the same as the server holds a room to ***',
+      WORD_POINTS === 1 && JSON.stringify(TOGETHER_CATEGORY) === JSON.stringify({ group: 'words', id: 'word_builder', label: 'Word builder' }));
+    check('*** a caller may be offered, and may ask for, Word Builder as well as Quiz mix ***', GAME_INVITE_GAMES.join() === 'quiz_mix,word_builder');
+    check('the join page\'s address names the game (Quiz mix\'s as it always was)', playPath('KX49PM', GAME) === '/play.html?room=KX49PM&game=word_builder'
+      && quizPlayPath('KX49PM') === '/play.html?room=KX49PM' && PLAY_GAMES.includes(GAME));
+    check('the join page opens the game its address names, and Quiz mix for anything else',
+      playGameOf('?room=KX49PM&game=word_builder') === 'word_builder' && playGameOf('?room=KX49PM') === 'quiz_mix'
+      && playGameOf('?room=KX49PM&game=poker') === 'quiz_mix');
+    const row = getManifest(GAME).settings.find((s) => s.key === 'togetherRounds');
+    check('*** rounds when playing together: a setting, 5 by default; 3, 5, 10 or no end ***', DEFAULTS.togetherRounds === 5 && row?.default === 5
+      && row.options.map((o) => o.value).join() === '3,5,10,0', JSON.stringify(row?.options));
+    check('the new spoken lines are editable text rows, in plain words', ['roundLine', 'roundLineNoEnd', 'endLine'].every((k) =>
+      getManifest(GAME).settings.find((s) => s.key === k)?.kind === 'text' && !BANNED.test(LINES[k])));
+    check('the layer is shared: Quiz mix and Word Builder both build on game_together.js', typeof createTogether === 'function'
+      && typeof getManifest('word_builder') === 'object');
+  }
+
+  // =====================================================================================
+  section('*** two screens: the host opens, the other joins by code, each finds words in its own letters ***');
+  const hub = fakeHub();
+  const A = screen('hostA', { players: 'Ann', hub, seed: 7 });
+  const B = screen('hostB', { players: 'Bob', hub, seed: 9 });
+  {
+    await tick();
+    check('the way in: "Play together" in the corner, before the game starts', !!A.host.querySelector('[data-qm="open"]'));
+    A.host.querySelector('[data-qm="open"]').click();
+    const opts = [...A.host.querySelectorAll('[data-qm-sheet="choose"] [data-qm]')].map((b) => b.textContent);
+    check('the same choice as Quiz mix: on this screen, with another screen, join a game', opts.join('|') === 'On this screen|With another screen|Join a game|Back', opts.join('|'));
+    A.host.querySelector('[data-qm="host"]').click();
+    await until(() => A.tog().room?.phase === 'in');
+    const lobby = A.host.querySelector('[data-qm-sheet="lobby"]');
+    check('*** the lobby: the code, and how to join "with Word builder" ***', A.host.querySelector('.qm-code')?.textContent === 'KX4 9PM'
+      && /On another screen with Word builder: Play together, then Join a game/.test(lobby?.textContent || ''), lobby?.textContent?.slice(0, 200));
+    check('*** the square and the address open Word Builder\'s join page ***', /play\.html\?room=KX49PM&game=word_builder/.test(lobby.textContent));
+    check('the room is opened for Word Builder', hub.log.find((x) => x.msg.kind === 'room' && x.msg.open)?.msg.open.game === GAME);
+    check('plain words in the lobby', !BANNED.test(lobby.textContent), (lobby.textContent.match(BANNED) || [])[0]);
+    B.host.querySelector('[data-qm="open"]').click();
+    B.host.querySelector('[data-qm="joinform"]').click();
+    B.host.querySelector('[data-qm-input]').value = 'kx4 9pm';
+    B.host.querySelector('[data-qm="join"]').click();
+    await until(() => B.tog().room?.phase === 'in' && A.tog().room?.seats.length === 2);
+    check('*** the other screen joins with the code ***', B.tog().room?.role === 'guest' && /Bob\s+on Bob's screen/.test(A.host.querySelector('[data-seats]')?.textContent || ''));
+  }
+  let annWord = '', bobWord = '';
+  {
+    A.host.querySelector('[data-qm="start"]').click();
+    await until(() => B.inst.impl.__gate().begun && A.phase() === 'asking');
+    check('*** Start: both screens start; round 1, Ann first, on the host ***', A.tog().round === 1 && A.tog().turnNow?.player.name === 'Ann'
+      && A.phase() === 'asking', `${A.phase()} ${A.tog().round}`);
+    check('*** said: the round, whose turn, and her letters ***', /^Round 1 of 2\. Ann, your turn\. Make a word from [A-Z](, [A-Z])+\.$/.test(A.last()), A.last());
+    check('the round and whose turn, on screen', !!A.host.querySelector('[data-round="1"]') && /Ann/.test(A.host.querySelector('.qz-turn[data-turn]')?.textContent || ''));
+    annWord = sayWord(A);
+    check('Ann finds a word: right, and a point on the table by her seat', A.phase() === 'celebrate' && A.tog().totals['d0.0'] === 1, `${A.phase()} ${JSON.stringify(A.tog().totals)}`);
+    A.timers.flush();
+    await until(() => B.phase() === 'asking');
+    check('*** then Bob\'s turn: the host waits, saying so, with "Skip their turn" ***', A.phase() === 'loading'
+      && /Bob's turn, on Bob's screen\./.test(A.text()) && !!A.host.querySelector('[data-qm="skip"]'), A.text().slice(0, 200));
+    check('the host says it aloud too', /Bob, your turn\./.test(A.said.join(' ')), A.last());
+    const turnMsg = hub.log.find((x) => x.msg.kind === 'turn')?.msg;
+    check('*** the turn carries the room\'s one category - never letters ***', turnMsg && turnMsg.seat === 'd1.0'
+      && JSON.stringify(turnMsg.category) === JSON.stringify(TOGETHER_CATEGORY) && Object.keys(turnMsg).sort().join() === 'category,kind,round,seat,serial',
+      JSON.stringify(turnMsg));
+    check('*** Bob\'s screen deals Bob\'s OWN letters (his screen, his ladder) and asks him ***', B.set() && B.set() !== A.set()
+      && /Bob, your turn\. Make a word from/.test(B.last()), B.last());
+    bobWord = sayWord(B);
+    await until(() => A.phase() === 'asking');
+    const ans = hub.log.find((x) => x.msg.kind === 'answer')?.msg;
+    check('*** what came back: seat, serial, category, right, ONE point - nothing else ***',
+      ans && Object.keys(ans).sort().join() === 'category,kind,points,right,seat,serial' && ans.right === true && ans.points === 1, JSON.stringify(ans));
+    const wire = JSON.stringify(hub.log);
+    check('*** neither word, nor any letters, level or rating, ever crossed ***', !wire.includes(`"${annWord}"`) && !wire.includes(`"${bobWord}"`)
+      && !/"(letters|word|entry|level|rating|found|hints?)"/.test(wire), wire.slice(0, 300));
+    check('*** Bob\'s word is on BOB\'s screen\'s ladder, and nowhere on the host\'s ***', ladderPlayers(B.ratings).includes('name:bob')
+      && !ladderPlayers(A.ratings).some((p) => /bob|seat/.test(p)), JSON.stringify([ladderPlayers(A.ratings), ladderPlayers(B.ratings)]));
+    check('the host\'s table: one each', A.tog().totals['d0.0'] === 1 && A.tog().totals['d1.0'] === 1, JSON.stringify(A.tog().totals));
+    await until(() => (B.tog().totalsNow['d1.0'] || 0) === 1);
+    check('the joined screen shows the host\'s table', B.tog().totalsNow['d1.0'] === 1 && B.tog().totalsNow['d0.0'] === 1, JSON.stringify(B.tog().totalsNow));
+    check('*** round 2: Ann again, with HER letters still going ***', A.tog().round === 2 && A.tog().turnNow?.player.name === 'Ann'
+      && /^Round 2 of 2\. Ann, your turn\. Make another word from/.test(A.last()), `${A.tog().round} ${A.last()}`);
+    B.timers.flush();
+    await tick();
+    check('after its word, the joined screen waits, showing whose turn it is', B.phase() === 'loading' && /Ann's turn, on Ann's screen/.test(B.text()), `${B.phase()} ${B.text().slice(0, 140)}`);
+  }
+  {
+    // Ann gives up on this one (New letters): her turn passes with nothing earned; then Bob's is skipped from the host.
+    A.host.querySelectorAll('.qz-key').forEach((b) => { if (b.textContent.trim() === 'New letters') b.click(); });
+    await until(() => A.phase() === 'loading');
+    check('*** "New letters" on her turn: the turn passes on, nothing earned ***', A.phase() === 'loading' && A.tog().totals['d0.0'] === 1
+      && A.tog().turnNow?.remote, `${A.phase()} ${JSON.stringify(A.tog().totals)}`);
+    await until(() => B.phase() === 'asking');
+    A.host.querySelector('[data-qm="skip"]').click();
+    await until(() => A.phase() === 'done');
+    check('*** "Skip their turn" on the last turn of the last round: the game ends ***', A.phase() === 'done' && A.tog().ended);
+    check('*** the end is said, with the table ***', /That is the end of the game\. Ann 1, Bob 1\./.test(A.said.join(' ')), A.last());
+    await until(() => B.phase() === 'done');
+    check('*** the host\'s end reaches the other screen: its game ends too, with the table ***', B.phase() === 'done'
+      && /Ann/.test(B.host.querySelector('[data-table]')?.textContent || '') && /Bob/.test(B.host.querySelector('[data-table]')?.textContent || ''));
+    check('...and on the host, with Play again', !!A.host.querySelector('[data-table]') && !!A.host.querySelector('[data-act="restart"]'));
+    // Play again: a new game together, from round 1, the table cleared.
+    A.eng.press('restart');
+    await until(() => A.phase() === 'asking');
+    check('*** Play again: a new game together - round 1, Ann first, the table cleared ***', A.tog().round === 1 && A.tog().turnNow?.player.name === 'Ann'
+      && !A.tog().totals['d0.0'], JSON.stringify({ r: A.tog().round, t: A.tog().totals }));
+    sayWord(A);
+    A.timers.flush();
+    await until(() => B.phase() === 'asking', 4000);
+    check('...and the other screen is dealt its turn again', B.phase() === 'asking' && B.tog().turnNow?.guest, B.phase());
+  }
+  {
+    section('*** the waits end by themselves ***');
+    // Bob gives up before trying (New letters): his screen still answers, as nothing found.
+    const before = hub.log.filter((x) => x.msg.kind === 'answer').length;
+    B.host.querySelectorAll('.qz-key').forEach((b) => { if (b.textContent.trim() === 'New letters') b.click(); });
+    await until(() => hub.log.filter((x) => x.msg.kind === 'answer').length > before);
+    const last = hub.log.filter((x) => x.msg.kind === 'answer').at(-1)?.msg;
+    check('*** a turn given up on the other screen is still answered: right=false, 0 points ***', last && last.right === false && last.points === 0, JSON.stringify(last));
+    await until(() => A.phase() === 'asking');
+    sayWord(A);
+    A.timers.flush();
+    await until(() => A.phase() === 'loading' && A.tog().turnNow?.remote);
+    A.roomTimers.flush();
+    await tick();
+    check(`*** a turn nobody answers: the host's own backstop (${REMOTE_TURN_MS / 1000} s) passes it on - here the last, so the game ends, nothing earned ***`,
+      A.phase() === 'done' && A.tog().ended && (A.tog().totals['d1.0'] || 0) === 0, `${A.phase()} ${JSON.stringify(A.tog().totals)}`);
+    B.link().drop();
+    B.roomTimers.flush();
+    await until(() => !B.tog().room);
+    check('*** a joined screen that lost the site goes back to its own game, and says why ***', !B.tog().room
+      && /Lost touch with the site/.test(B.text()), B.text().slice(0, 160));
+    B.roomTimers.flush();
+    check(`the note goes by itself (${NOTE_MS / 1000} s)`, !B.tog().note);
+    A.inst.destroy(); B.inst.destroy();
+  }
+  {
+    section('a lobby nobody starts closes by itself');
+    const hub2 = fakeHub();
+    const H = screen('hostA', { players: 'Ann', hub: hub2 });
+    await tick();
+    H.tog().open({});
+    await until(() => H.tog().room?.phase === 'in');
+    H.roomTimers.flush();
+    await until(() => !H.tog().room);
+    check(`*** ${LOBBY_MS / 60000} minutes and nobody started it: closed, and said ***`, !H.tog().room && /nobody started it/.test(H.text()), H.text().slice(0, 160));
+    H.inst.destroy();
+  }
+  {
+    section('*** asked from the call: one press there, nothing pressed here ***');
+    const hub5 = fakeHub();
+    let live = true;
+    const liveSubs = new Set();
+    const transport = { isLive: () => live, onLive: (fn) => { liveSubs.add(fn); return () => liveSubs.delete(fn); } };
+    const setLive = (v) => { live = v; for (const f of [...liveSubs]) f(v); };
+    const asks = new Set();
+    const ended = [];
+    const S = screen('hostC', { players: 'Robin', hub: hub5, extra: { personId: 'p-robin', callTransport: transport,
+      onGameAsk: (fn) => { asks.add(fn); return () => asks.delete(fn); }, onTogetherEnd: (w) => ended.push(w) } });
+    await tick();
+    const ask = (a) => [...asks].map((f) => f(a));
+    check('the panel listens for asks (one listener)', asks.size === 1);
+    check('*** an ask for Quiz mix is not Word Builder\'s to take ***', ask({ game: 'quiz_mix', name: 'Dana' })[0] === false && !S.tog().room);
+    live = false;
+    check('no call live on this screen: not taken', ask({ game: GAME, name: 'Dana' })[0] === false);
+    live = true;
+    S.inst.impl.__api.start();
+    await until(() => S.phase() === 'asking');
+    check('*** an ask for Word Builder during a call: taken ***', ask({ game: GAME, name: 'Dana' })[0] === true);
+    await until(() => S.tog().room?.phase === 'in');
+    const open = hub5.log.find((x) => x.msg.kind === 'room' && x.msg.open)?.msg;
+    check('*** a call room for Word Builder, for this screen\'s person ***', open?.open?.person === 'p-robin' && open.open.game === GAME, JSON.stringify(open));
+    check('*** the game it was playing on its own ended first ***', S.phase() === 'done', S.phase());
+    check('*** the lobby says who asked, and that it starts when they join ***',
+      /Dana asked to play on this call\. The game starts when they join\./.test(S.host.querySelector('[data-qm-asked]')?.textContent || ''), S.text().slice(0, 200));
+    check('the lobby has its way out', !!S.host.querySelector('[data-qm-sheet="lobby"] [data-qm="stop"]'));
+    check('a second ask while the room is open: not taken', ask({ game: GAME, name: 'Dana' })[0] === false);
+    const Dana = screen('hostB', { players: 'Dana', hub: hub5, account: 'dana' });
+    await tick();
+    Dana.tog().join('KX49PM');
+    await until(() => S.tog().round === 1 && S.phase() === 'asking' && Dana.inst.impl.__gate().begun, 4000);
+    check('*** the asker joins: the game STARTS BY ITSELF, on both screens - nobody pressed Start ***',
+      S.tog().round === 1 && S.phase() === 'asking' && Dana.inst.impl.__gate().begun, `${S.phase()} ${S.tog().round}`);
+    check('...a new game, this screen\'s player first', S.tog().turnNow?.player.name === 'Robin' && /Robin, your turn/.test(S.last()), S.last());
+    Dana.tog().stop();
+    await until(() => !S.tog().room, 4000);
+    await tick(); await tick();
+    check('*** the asker leaves: the game together ends here, and this screen\'s game with it ***', !S.tog().room && S.phase() === 'done', S.phase());
+    check('...said in the corner', /The other player left/.test(S.text()), S.text().slice(0, 200));
+    check('the host that opened it for the call is told (the call view closes its game)', ended.includes('call-left'), JSON.stringify(ended));
+    S.roomTimers.flush();
+    check('asked again: taken', ask({ game: GAME, name: '' })[0] === true);
+    await until(() => S.tog().room?.phase === 'in');
+    S.roomTimers.flush();
+    await until(() => !S.tog().room, 4000);
+    check(`*** nobody joins within ${CALL_ASK_JOIN_MS / 1000} s: the room closes by itself, and says so ***`, !S.tog().room
+      && /Nobody joined the game on the call/.test(S.text()), S.text().slice(0, 200));
+    S.roomTimers.flush();
+    check('asked a third time: taken', ask({ game: GAME, name: 'Dana' })[0] === true);
+    await until(() => S.tog().room?.phase === 'in');
+    setLive(false);
+    await until(() => !S.tog().room, 4000);
+    check('*** the call ends: the room it opened for the call closes with it ***', !S.tog().room);
+    check('askTogether is there for a host that opens the panel for an ask', typeof S.inst.impl.askTogether === 'function');
+    S.inst.destroy(); Dana.inst.destroy();
+    check('destroyed: it stops listening', asks.size === 0);
+  }
+  {
+    section('a switch steps through the sheet, as on Quiz mix');
+    const hub4 = fakeHub();
+    const S = screen('hostC', { players: 'Ann', hub: hub4 });
+    await tick();
+    S.host.querySelector('[data-qm="open"]').click();
+    S.publish(`${GAME}/next`);
+    check('next lights the next choice', S.host.querySelector('[data-qm-sheet] [data-on="1"]')?.dataset.qm === 'host');
+    S.publish(`${GAME}/select`);
+    await until(() => S.tog().room?.phase === 'in');
+    check('*** select presses it (and does not start the game underneath) ***', S.tog().room?.role === 'host' && !S.inst.impl.__gate().begun);
+    S.inst.destroy();
+  }
+  {
+    section('alone, nothing changed: no rounds, no end');
+    const hub6 = fakeHub();
+    const S = screen('hostC', { players: 'Ann, Bob', hub: hub6, saved: { togetherRounds: 3 } });
+    S.inst.impl.__api.start();
+    await until(() => S.phase() === 'asking');
+    check('two players on one screen: "Ann, your turn." and no round', /^Ann, your turn\. Make a word from/.test(S.last()) && !S.host.querySelector('[data-round]'), S.last());
+    for (let i = 0; i < 8; i++) { sayWord(S); S.timers.flush(); }
+    check('*** eight words later the game is still going (rounds are for games together) ***', S.phase() === 'asking' && !S.tog().ended, S.phase());
+    S.inst.destroy();
+  }
+  check('scores by seat, in words', scoreWords([{ id: 'name:ann', seat: 'd0.0', name: 'Ann' }, { id: 'seat:d1.0', seat: 'd1.0', name: 'Bob' }], { 'd0.0': 2, 'd1.0': 3 }) === 'Ann 2, Bob 3');
+
+  // =====================================================================================
+  section('*** the join page: Word Builder when its address says so ***');
+  {
+    const hub7 = fakeHub();
+    const H = screen('hostA', { players: 'Ann', hub: hub7 });
+    await tick();
+    H.tog().open({});
+    await until(() => H.tog().room?.phase === 'in');
+    const fetchImpl = async (url) => ({ ok: true, status: 200, json: async () => ({ people: [{ id: 'p-sam', kind: 'you', name: 'Sam' }] }) });
+    const root = document.getElementById('playRoot');
+    const page = await mountPlayPage(root, { fetchImpl, search: '?room=KX49PM&game=word_builder', win: null, gameLink: () => hub7.link('sam') });
+    await until(() => H.tog().room?.seats.length === 2);
+    check('*** the page mounts Word Builder, titled so, and joins the room ***', page.instance()?.type === 'word_builder'
+      && /^Word builder/.test(root.querySelector('.pp-title')?.textContent || '') && H.tog().room?.seats.length === 2,
+      `${page.instance()?.type} | ${root.querySelector('.pp-title')?.textContent}`);
+    check('...as the signed-in person, by name', /Sam\s+on Sam's screen/.test(H.host.querySelector('[data-seats]')?.textContent || ''), H.host.querySelector('[data-seats]')?.textContent);
+    page.destroy(); H.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the real server: two Word Builder panels, a word each way ***');
+  {
+    const ping = await fetch('/api/game/ticket', { method: 'POST', headers: { 'X-Dev-User': 'suite-wbt' } }).catch(() => null);
+    if (!ping || !ping.ok) {
+      check('(the live checks need the server this page is served from; skipped: no /api/game/ticket here)', true);
+    } else {
+      const real = (hostId, players, seed) => {
+        const ratings = liveRow();
+        const roomTimers = fakeTimers();
+        const r = rig(GAME, { hostId, saved: { autostart: false, players, togetherRounds: 1 }, rand: mulberry32(seed),
+          extra: { makeState: (k) => (k === LADDER_KEY ? ratings : null), roomTimers, gameLink: () => connectGameRoom({ user: 'suite-wbt' }) } });
+        return Object.assign(r, { ratings, tog: () => r.inst.impl.__together(), set: () => r.inst.impl.__current() });
+      };
+      const RA = real('hostA', 'Ann', 3), RB = real('hostB', 'Bob', 5);
+      RA.tog().open({});
+      await until(() => RA.tog().room?.phase === 'in', 6000);
+      RB.tog().join(RA.tog().room.code);
+      await until(() => RB.tog().room?.phase === 'in' && RA.tog().room?.seats.length === 2, 6000);
+      check('*** two Word Builder panels over the real server: in one room ***', RA.tog().room?.seats.length === 2);
+      RA.tog().act('start');
+      await until(() => RA.phase() === 'asking', 6000);
+      sayWord(RA);
+      RA.timers.flush();
+      await until(() => RB.phase() === 'asking', 6000);
+      check('*** Bob\'s turn arrives on Bob\'s panel through the server, with his own letters ***', RB.tog().turnNow?.player.name === 'Bob' && !!RB.set());
+      sayWord(RB);
+      await until(() => RA.phase() === 'done', 6000);
+      check('*** ...his word comes back as one point, and one round of two ends the game on both ***', RA.phase() === 'done'
+        && RA.tog().totals['d1.0'] === 1 && RA.tog().totals['d0.0'] === 1, `${RA.phase()} ${JSON.stringify(RA.tog().totals)}`);
+      await until(() => RB.phase() === 'done', 6000);
+      check('the joined panel ends with it, with the table', RB.phase() === 'done' && !!RB.host.querySelector('[data-table]'));
+      check('*** Bob\'s level is on Bob\'s panel\'s rows only ***', ladderPlayers(RB.ratings).includes('name:bob') && !ladderPlayers(RA.ratings).includes('name:bob'));
+      RA.inst.destroy(); RB.inst.destroy();
+    }
+  }
+  finish();
+} catch (err) {
+  finish(err);
+}
+</script>
+</body>
+</html>

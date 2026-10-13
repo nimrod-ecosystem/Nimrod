@@ -71,29 +71,16 @@ import { packsFor } from '../pack_library.js';
 import { createContests } from '../contests.js';
 import { SOURCES, SOURCE_IDS, SOURCE_LABELS } from '../question_kinds.js';
 import { personWhoField } from './name_that.js';
-import { connectGameRoom, createRoomClient, codeWords, normalizeCode, endWords, CODE_LEN } from '../game_room.js';
-import { elsewhereQR, themeQrColours, pageAddress } from '../page_links.js';
+// PLAYING TOGETHER (2026-10-12): the room, the lobby and the call's ask are game_together.js's now, shared with Word
+// Builder; the numbers are argued there and re-exported here, where the suites have always read them.
+import { createTogether, scoreWords, playPath as togetherPath, LOBBY_MS, REMOTE_TURN_MS, NOTE_MS, CALL_ASK_JOIN_MS,
+  PLAY_PAGE } from '../game_together.js';
 
-// THE PLAYING-TOGETHER NUMBERS, each argued:
-//   LOBBY_MS 10 min        a room opened and never started closes: long enough to fetch a phone and type a code,
-//                          short enough that a forgotten lobby does not sit on a screen all afternoon.
-//   REMOTE_TURN_MS 165 s   the host's own backstop for a turn on another screen: the server skips it at 150 s
-//                          (game_rooms.py TURN_MAX_S); this only fires when the server cannot be heard.
-//   NOTE_MS 20 s           how long "the game together has ended" stays in the corner: read, then gone by itself.
-//   CALL_ASK_JOIN_MS 60 s  a room opened because somebody on the call ASKED closes if they have not joined in this
-//                          long. Their call page joins by itself the moment the room's code reaches it - a few seconds
-//                          (a ticket, a socket, the game's page) - so 60 s covers a slow phone several times over. The
-//                          10-minute lobby above is for somebody fetching a phone and typing a code, which an ask is
-//                          not; and nobody here may be able to close a lobby, so it should not stand for ten minutes.
-export const LOBBY_MS = 10 * 60 * 1000;
-export const REMOTE_TURN_MS = 165000;
-export const NOTE_MS = 20000;
-export const CALL_ASK_JOIN_MS = 60000;
-// The page a phone opens to join (the QR code on the lobby, and the call page's "Join" beside the video).
-export const PLAY_PAGE = '/play.html';
-export const playPath = (code) => `${PLAY_PAGE}?room=${encodeURIComponent(code)}`;
-
+export { LOBBY_MS, REMOTE_TURN_MS, NOTE_MS, CALL_ASK_JOIN_MS, PLAY_PAGE, scoreWords };
 export const GAME = 'quiz_mix';
+// The page a phone opens to join (the QR code on the lobby, and the call page's "Join" beside the video).
+export const playPath = (code) => togetherPath(code, GAME);
+
 // One game, so "play quiz mix" (input_speech.js) has a game to name.
 export const GAMES = Object.freeze(['mix']);
 export const USE_KEYS = Object.freeze({
@@ -225,10 +212,7 @@ export function pickRound(available, { last = null, groupStats = {}, catStats = 
   return cats.find((a) => a.id === id) || cats[0] || null;
 }
 
-/** "Ann 7, Bob 5" (a player with no name: "You"). Playing together, the points are kept by seat (`p.seat`). */
-export function scoreWords(players, points) {
-  return (players || []).map((p) => `${p.name || 'You'} ${points?.[p.seat || p.id] || 0}`).join(', ');
-}
+// scoreWords ("Ann 7, Bob 5", by seat when playing together) is game_together.js's, re-exported above.
 
 const STYLE_ID = 'quiz-mix-style';
 const CSS = `
@@ -239,29 +223,6 @@ const CSS = `
 .qm-mean{display:block}
 .qm-mean b{font-weight:800}
 .qm-opt .qm-mean{margin-top:.2em;font-size:.8em;font-weight:400;line-height:1.25}
-.qm-round{font-weight:700}
-.qm-table{margin:0 auto 1.5cqmin;padding:0;list-style:none;display:grid;gap:.6cqmin;font-size:clamp(14px,4.5cqmin,52px)}
-.qm-table li{display:flex;gap:1em;justify-content:space-between;min-width:12em}
-.qm-table li[data-top] b{text-decoration:underline}
-.qm-bar{position:absolute;top:clamp(4px,1.2cqmin,14px);right:clamp(4px,1.2cqmin,14px);z-index:5;display:flex;gap:.5em;
-  align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:72%;font-size:clamp(12px,2.6cqmin,28px)}
-.qm-bar .wg-btn{font-size:inherit;min-height:max(36px,7cqmin)}
-.qm-chip{background:var(--surface);color:var(--text);border:max(1px,.3cqmin) solid var(--border);border-radius:1em;padding:.2em .7em}
-.qm-sheet{position:absolute;inset:0;z-index:6;overflow:auto;background:var(--bg);color:var(--text);box-sizing:border-box;
-  padding:clamp(10px,3cqmin,36px);display:flex;flex-direction:column;gap:clamp(6px,1.6cqmin,20px);font-size:clamp(13px,3.4cqmin,36px)}
-.qm-sheet h3{margin:0;font-size:1.3em}
-.qm-sheet p{margin:0}
-.qm-sheet .wg-btns{display:flex;flex-wrap:wrap;gap:.5em}
-.qm-sheet .wg-btn[data-on="1"]{outline:max(3px,.8cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:max(2px,.4cqmin)}
-.qm-code{font:800 clamp(28px,12cqmin,140px)/1 var(--font);letter-spacing:.12em}
-.qm-lobby{display:flex;flex-wrap:wrap;gap:clamp(8px,2.5cqmin,30px);align-items:flex-start}
-.qm-qr{width:clamp(90px,26cqmin,260px)}
-.qm-qr svg{width:100%;height:auto;display:block}
-.qm-seats{margin:0;padding:0;list-style:none;display:grid;gap:.3em}
-.qm-seats li[data-away] {color:var(--text-soft)}
-.qm-sheet input{font:inherit;padding:.3em .5em;border-radius:.4em;border:max(2px,.4cqmin) solid var(--border);background:var(--surface);
-  color:var(--text);letter-spacing:.15em;text-transform:uppercase;width:8em;max-width:100%}
-.qm-soft{color:var(--text-soft)}
 `;
 function ensureStyle(doc) {
   if (!doc || doc.getElementById(STYLE_ID)) return;
@@ -366,41 +327,51 @@ registerModule(
       }
     }
 
-    // ---- playing together: the room this screen is in, if any (game_room.js) ----
-    let link = null;              // the game socket: opened only when somebody chooses to play together
-    let room = null;              // createRoomClient
-    const inRoom = () => !!room && room.phase() === 'in';
-    const isHost = () => inRoom() && room.role() === 'host';
-    const isGuest = () => inRoom() && room.role() === 'guest';
-    const roomBusy = () => !!room && ['opening', 'joining', 'asking', 'in'].includes(room.phase());
+    // ---- playing together: the room, the lobby, asked from the call - the layer every turn game shares
+    // (game_together.js). What a turn is, and the table, stay here. ----
+    const together = createTogether(ctx, {
+      game: GAME, title: 'Quiz mix',
+      getApi: () => api, phase: () => phase(),
+      localPlayers: () => localPlayers(),
+      onTurn: (t) => onRoomTurn(t),
+      onAnswer: (a) => remoteDone(a),
+      remoteNow: () => (current?.remote && !current.done
+        ? { seat: current.player.seat, serial: current.serial, name: current.player.name } : null),
+      skipRemote: (why) => {
+        if (current?.remote && !current.done) remoteDone({ seat: current.player.seat, serial: current.serial, right: false, points: 0, skipped: true, why });
+      },
+      publish: () => publish(),
+      tableLine: () => tableLine(),
+      // The host's game is over: a screen that joined stops waiting for its turns.
+      onGuestDone: () => { current = null; guestTurn = null; },
+      beforeEnd: ({ wasGuest }) => {
+        // A game this screen joined: keep its last table to show, and stop waiting for turns.
+        if (wasGuest) {
+          try { lastTable = { players: players(), totals: R().state().totals || {} }; } catch { lastTable = null; }
+        }
+        stopRemoteTimer();
+        guestTurn = null;
+        // The other screens' seats are gone with the room; a turn out at one of them is over.
+        if (current?.remote && !current.done) { current.done = true; current.points = 0; }
+      },
+      afterEnd: ({ wasGuest }) => { if (wasGuest) current = null; },
+    });
+    const R = () => together.room();
+    const inRoom = () => together.inRoom();
+    const isHost = () => together.isHost();
+    const isGuest = () => together.isGuest();
 
     // ---- the game ----
     const localPlayers = () => {
       try { return resolvePlayers(cfgNow.players, { personId: ctx.personId || null, host: ctx.screenPlayers || null }); }
       catch { return [{ id: 'player', name: '', index: 0 }]; }
     };
-    // Playing together, the turn order is the ROOM's seats, wherever they sit. A seat on this screen is this screen's
-    // own player (their ladder id, their name) at the same place in this screen's list; a seat elsewhere is a name and
-    // where it is. `seat` is the room's id for it, and what the table is kept by.
-    const players = () => {
-      const local = localPlayers();
-      if (!inRoom()) return local;
-      const me = room.you();
-      const seats = room.seats();
-      const mine = seats.filter((s) => s.device === me);
-      return seats.map((s, i) => {
-        if (s.device === me) {
-          const k = mine.findIndex((m) => m.id === s.id);
-          const p = local[k] || { id: `seat:${s.id}`, name: s.name };
-          return { ...p, name: p.name || s.name, seat: s.id, index: i, localIndex: k, here: true };
-        }
-        return { id: `seat:${s.id}`, seat: s.id, name: s.name, index: i, remote: s.device, away: !!s.away };
-      });
-    };
+    // Playing together, the turn order is the ROOM's seats, wherever they sit (game_together.js `players`).
+    const players = () => together.players(localPlayers());
     const tkey = (p) => p?.seat || p?.id;
     // The table: this screen's own, or - on a screen that joined somebody else's game - the host's.
-    const totalsNow = () => (isGuest() ? (room.state().totals || {}) : totals);
-    const roundNow = () => (isGuest() ? Number(room.state().round) || 0 : round);
+    const totalsNow = () => (isGuest() ? (R().state().totals || {}) : totals);
+    const roundNow = () => (isGuest() ? Number(R().state().round) || 0 : round);
     let lastTable = null;         // a game together that just ended on a screen that joined: its last table
     const roundsSet = () => Math.max(0, Math.floor(Number(cfgNow.rounds) || 0));
     let round = 0;                // this game's round, from 1 (0: none yet)
@@ -519,7 +490,7 @@ registerModule(
     let remoteTimer = null;
     const catWire = (c) => (c ? { group: String(c.group || ''), id: String(c.id || ''), label: String(c.label || '').slice(0, 60) } : null);
     function stopRemoteTimer() {
-      if (remoteTimer != null) { try { roomClear(remoteTimer); } catch { /* gone */ } }
+      if (remoteTimer != null) { try { together.roomClear(remoteTimer); } catch { /* gone */ } }
       remoteTimer = null;
     }
     function remoteTurn(player, ps, fresh) {
@@ -527,12 +498,12 @@ registerModule(
       const serial = remoteSerial;
       const intro = introFor(player, ps, fresh);
       current = { player, remote: true, done: false, serial, cat: roundCat, item: null, intro, points: null };
-      room.turn({ seat: player.seat, serial, round: Math.min(999, round), category: catWire(roundCat) });
+      R().turn({ seat: player.seat, serial, round: Math.min(999, round), category: catWire(roundCat) });
       publish();
       // The round and whose turn it is, said here too: the people at this screen are in the same game.
       try { api?.say?.(intro.full); } catch { /* silent */ }
       stopRemoteTimer();
-      remoteTimer = roomSet(() => { remoteTimer = null; remoteDone({ seat: player.seat, serial, right: false, points: 0, skipped: true, why: 'time' }); }, REMOTE_TURN_MS);
+      remoteTimer = together.roomSet(() => { remoteTimer = null; remoteDone({ seat: player.seat, serial, right: false, points: 0, skipped: true, why: 'time' }); }, REMOTE_TURN_MS);
       return null;
     }
     /** A result for the turn out at another screen (from the room, the server's skip, "Skip their turn", or the backstop). */
@@ -558,7 +529,7 @@ registerModule(
       const c = current?.cat || roundCat;
       const tot = {};
       for (const p of players()) if (p.seat) tot[p.seat] = Math.min(99999, totals[p.seat] || 0);
-      room.update({
+      R().update({
         phase: ended || ph === 'done' ? 'done' : (api?.begun?.() ? 'playing' : 'lobby'),
         round: Math.min(999, round), rounds: Math.min(99, roundsSet()),
         category: c ? catWire(c) : null, turn: current?.player?.seat || null, totals: tot,
@@ -569,7 +540,7 @@ registerModule(
     let guestTurn = null;         // { seat, serial, round, category, dealt }
     function guestAnswer(t, { right = false, points = 0, cat = null } = {}) {
       const c = cat || t.category || {};
-      try { room?.answer({ seat: t.seat, serial: t.serial, category: { group: String(c.group || ''), id: String(c.id || '') },
+      try { R()?.answer({ seat: t.seat, serial: t.serial, category: { group: String(c.group || ''), id: String(c.id || '') },
         right: !!right, points: right ? Math.max(0, Math.min(3, points | 0)) : 0 }); } catch { /* gone */ }
     }
     function guestItems() {
@@ -628,7 +599,7 @@ registerModule(
       over: () => over(),
       doneLine: (c) => {
         publish();                              // the host's "done" (the end, or a "stop") reaches every screen
-        const fin = ended || (isGuest() && room.state().phase === 'done');
+        const fin = ended || (isGuest() && R().state().phase === 'done');
         const ps = players();
         return fin ? fill(c.endLine, { scores: ps.length > 1 ? scoreWords(ps, totalsNow()) : `${totalsNow()[tkey(ps[0])] || 0} points` }) : '';
       },
@@ -705,7 +676,7 @@ registerModule(
     function turnHtml(s) {
       if (s.phase === 'done') return '';
       // Playing together and waiting: the round, and whose turn it is elsewhere, from the room.
-      const st = isGuest() ? room.state() : null;
+      const st = isGuest() ? R().state() : null;
       const whoP = current?.player || (st ? players().find((p) => p.seat === st.turn) : null);
       if (!current && !(st && st.round > 0)) return '';
       const rn = roundNow();
@@ -729,364 +700,11 @@ registerModule(
       const who = players().length > 1 && current.player.name ? ` for ${current.player.name}` : '';
       return ` <span class="qm-pts" data-points="${n}">+${n} ${n === 1 ? 'point' : 'points'}${esc(who)}</span>`;
     };
-    // ---------------------------------------------------------------------------------------------------
-    // PLAYING TOGETHER: the way in ("Play together"), the lobby, and the waiting views
-    // ---------------------------------------------------------------------------------------------------
-    // The room's clocks run on their own timer seam (`ctx.roomTimers`), not the panel's: a suite flushing the game's
-    // timers must not also fire a ten-minute lobby clock.
-    const roomSet = (fn, ms) => (typeof ctx.roomTimers?.set === 'function' ? ctx.roomTimers.set(fn, ms) : setTimeout(fn, ms));
-    const roomClear = (id) => (typeof ctx.roomTimers?.clear === 'function' ? ctx.roomTimers.clear(id) : clearTimeout(id));
-    let sheet = null;             // null | 'choose' | 'join': the "Play together" layer when no room is open
-    let sheetLit = 0;             // the lit button, for a switch
-    let showLobby = false;        // the host looking at the room again during a game
-    let joinError = '';
-    let note = '';                // why the last game together ended, in the corner for NOTE_MS
-    let noteTimer = null;
-    let lobbyTimer = null;
-    // ASKED FROM THE CALL (see the header): who asked, and whether their screen has joined. `endAfter`: when this room
-    // ends, end this screen's game too (the asker left, or the call ended).
-    let asked = null;             // null | { name, joined }
-    let endAfter = false;
-    let offLive = null;
-    let offAsk = null;
-    const redraw = () => { try { api?.render(); } catch { /* gone */ } };
-    const canTogether = () => ctx.gameRooms !== false
-      && (typeof ctx.gameLink === 'function' || (typeof WebSocket !== 'undefined' && typeof fetch !== 'undefined'));
-    const callLive = () => { try { return !!ctx.personId && !!ctx.callTransport?.isLive?.(); } catch { return false; } };
-    function setNote(text) {
-      note = text || '';
-      if (noteTimer != null) { try { roomClear(noteTimer); } catch { /* gone */ } }
-      noteTimer = note ? roomSet(() => { noteTimer = null; note = ''; redraw(); }, NOTE_MS) : null;
-    }
-    function clearLobby() { if (lobbyTimer != null) { try { roomClear(lobbyTimer); } catch { /* gone */ } } lobbyTimer = null; }
-    // This screen's players, as the room shows them: a name for each (the screen's person by their own name).
-    function seatNames() {
-      let self = '';
-      try { self = String(ctx.screenPlayers?.self?.()?.name || ctx.playerName || ''); } catch { self = ''; }
-      return localPlayers().map((p, i) => p.name || (i === 0 && self) || `Player ${i + 1}`);
-    }
-    function ensureRoom() {
-      if (room) { try { room.destroy(); } catch { /* gone */ } }
-      if (link) { try { link.close(); } catch { /* gone */ } }
-      link = typeof ctx.gameLink === 'function' ? ctx.gameLink() : connectGameRoom({ user: ctx.user || null, base: ctx.gameBase || '' });
-      room = createRoomClient({
-        link,
-        setTimer: roomSet, clearTimer: roomClear,
-        onChange: () => onRoomChange(),
-        onTurn: (t) => onRoomTurn(t),
-        onAnswer: (a) => remoteDone(a),
-        onEnd: (why) => onRoomEnd(why),
-      });
-    }
-    function startRoom({ call = false } = {}) {
-      if (roomBusy() || dead) return false;
-      ensureRoom();
-      sheet = null; sheetLit = 0; joinError = ''; setNote('');
-      room.open({ game: GAME, seats: seatNames(), admit: 'ask', person: call ? ctx.personId || null : null });
-      clearLobby();
-      lobbyTimer = roomSet(() => { lobbyTimer = null; if (isHost() && !api?.begun?.()) stopTogether('unstarted'); }, LOBBY_MS);
-      redraw();
-      return true;
-    }
-    function joinRoom(code) {
-      if (roomBusy() || dead) return false;
-      const c = normalizeCode(code);
-      if (!c) { joinError = `That is not a game code. A code is ${CODE_LEN} letters and numbers, like KX4 9PM.`; sheet = 'join'; redraw(); return false; }
-      ensureRoom();
-      sheet = null; sheetLit = 0; joinError = ''; setNote('');
-      room.join(c, seatNames());
-      redraw();
-      return true;
-    }
-    function stopTogether(why = 'stopped') {
-      if (!room) return;
-      room.leave(why);              // ends here at once (onRoomEnd), and tells the room
-    }
-    /**
-     * Somebody on the call asked to play (the kiosk hands it on: ctx.onGameAsk, or `askTogether` on a game it opened
-     * for the call). true: this panel took it; false: not for this panel now (another game, no call live here, a game
-     * together already open, no way to reach the site) - the kiosk then offers it to the next one.
-     */
-    function onAsk(a) {
-      if (dead || !a || a.game !== GAME || !api) return false;
-      if (!canTogether() || !callLive() || roomBusy()) return false;
-      const name = String(a.name || '').replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 40);
-      // A game of its own going here ends first (see the header): the done view stays calm while the asker joins.
-      if (api.begun() && phase() !== 'done') { try { api.engine.end(); } catch (err) { console.error('quiz mix: end for the call', err); } }
-      if (!startRoom({ call: true })) return false;
-      asked = { name, joined: false };
-      endAfter = false;
-      showLobby = true;
-      clearLobby();
-      lobbyTimer = roomSet(() => { lobbyTimer = null; if (asked && !asked.joined) stopTogether('nobody-came'); }, CALL_ASK_JOIN_MS);
-      // The call ends here: the game together ends with it.
-      try { offLive?.(); } catch { /* gone */ }
-      offLive = null;
-      try {
-        offLive = ctx.callTransport?.onLive?.((on) => {
-          if (on || !asked || !roomBusy()) return;
-          endAfter = !!asked.joined;
-          stopTogether(asked.joined ? 'call-left' : 'nobody-came');
-        }) || null;
-      } catch { offLive = null; }
-      redraw();
-      return true;
-    }
-    /** The asker's screen joined: the game starts by itself - a new game, for both ends. */
-    function startAsked() {
-      showLobby = false; sheetLit = 0;
-      if (!api) return;
-      if (!api.begun()) { api.start(); publish(); return; }
-      if (phase() !== 'done') { try { api.engine.end(); } catch { /* gone */ } }
-      try { api.engine.press('restart'); } catch (err) { console.error('quiz mix: start for the call', err); }
-      publish();
-    }
-    function onRoomChange() {
-      if (dead || !room) return;
-      if (asked && isHost()) {
-        const others = room.seats().some((s) => s.device !== room.you());
-        if (others && !asked.joined) { asked.joined = true; clearLobby(); startAsked(); }
-        else if (!others && asked.joined) {
-          // The asker's screen left the room (they closed the game, or hung up): the game together is over.
-          endAfter = true;
-          stopTogether('call-left');
-          return;
-        }
-      }
-      if (isGuest()) {
-        const st = room.state();
-        // The host pressed Start: this screen's game starts with it (it waits for its turns from here on).
-        if (st.phase === 'playing' && api && !api.begun()) api.start();
-        if (st.phase === 'done' && api?.begun?.() && phase() !== 'done') { current = null; guestTurn = null; api.engine.end(); }
-      }
-      if (isHost() && current?.remote && !current.done && !players().some((p) => p.seat === current.player.seat)) {
-        // The screen holding this turn's seat is gone from the room: the turn passes on.
-        remoteDone({ seat: current.player.seat, serial: current.serial, right: false, points: 0, skipped: true, why: 'left' });
-      }
-      redraw();
-    }
-    function onRoomEnd(why) {
-      const wasGuest = room?.role() === 'guest';
-      // A game this screen joined: keep its last table to show, and stop waiting for turns.
-      if (wasGuest) {
-        try {
-          const ps = players();
-          lastTable = { players: ps, totals: room.state().totals || {} };
-        } catch { lastTable = null; }
-      }
-      clearLobby();
-      stopRemoteTimer();
-      showLobby = false;
-      setNote(why === 'stopped' || why === 'left' ? '' : endWords(why));
-      const r = room;
-      const l = link;
-      room = null; link = null;
-      guestTurn = null;
-      // Asked from the call: that is over too. `finish`: this screen's game ends with it (see the header).
-      const finish = endAfter;
-      asked = null; endAfter = false;
-      try { offLive?.(); } catch { /* gone */ }
-      offLive = null;
-      // The other screens' seats are gone with the room; a turn out at one of them is over.
-      if (current?.remote && !current.done) { current.done = true; current.points = 0; }
-      queueMicrotask(() => {
-        try { r?.destroy(); } catch { /* gone */ }
-        try { l?.close(); } catch { /* gone */ }
-        if (dead || !api) return;
-        if (wasGuest) {
-          current = null;
-          if (api.begun() && phase() !== 'done') api.engine.end();     // back to this screen's own game: Play again
-        } else if (finish) {
-          if (api.begun() && phase() !== 'done') api.engine.end();     // the game was for the call: it ends with it
-        } else if (api.begun() && phase() === 'loading') {
-          api.engine.refresh();          // the host carries on with its own players
-        }
-        // A host that opened this panel only for the call (the kiosk's call view) closes it once the room is over.
-        try { ctx.onTogetherEnd?.(why); } catch (err) { console.error('quiz mix: together end', err); }
-        redraw();
-      });
-      redraw();
-    }
-
-    // ---- the words ----
-    const firstSeatOf = (device) => room?.seats().find((s) => s.device === device) || null;
-    const hostName = () => firstSeatOf('d0')?.name || 'the other screen';
-    function whereOf(p) {
-      if (!p || p.here) return 'this screen';
-      const first = firstSeatOf(p.remote);
-      return first ? `${first.name}'s screen` : 'another screen';
-    }
+    // The table under a waiting line (game_together.js waitingHtml): every player's points, with more than one.
     const tableLine = () => {
       const ps = players();
       return ps.length > 1 ? `<p class="wg-count" data-score>${esc(scoreWords(ps, totalsNow()).replace(/, /g, ' · '))}</p>` : '';
     };
-    function waitingHtml() {
-      if (!inRoom()) return '';
-      if (isHost() && current?.remote && !current.done) {
-        const p = current.player;
-        const away = room.seats().find((s) => s.id === p.seat)?.away;
-        return `<p class="wg-say" data-remote-turn="${esc(p.seat)}">${esc(`${p.name}'s turn, on ${whereOf(p)}.`)}</p>`
-          + (away ? '<p class="wg-say wg-soft" data-away>That screen has stopped answering. If it does not come back soon, the turn passes on by itself.</p>' : '')
-          + `<div class="wg-btns"><button type="button" class="wg-btn" data-qm="skip">Skip their turn</button></div>${tableLine()}`;
-      }
-      if (isGuest()) {
-        const st = room.state();
-        if (room.hostAway()) return `<p class="wg-say" data-host-away>${esc(`Waiting for ${hostName()}'s screen to come back…`)}</p>${tableLine()}`;
-        if (st.phase === 'lobby') return `<p class="wg-say" data-lobby>${esc(`Waiting for ${hostName()} to start the game.`)}</p>`;
-        const p = players().find((x) => x.seat === st.turn);
-        const line = p && !p.here ? `${p.name}'s turn, on ${whereOf(p)}.` : 'Waiting for the next turn.';
-        return `<p class="wg-say" data-remote-turn="${esc(p?.seat || '')}">${esc(line)}</p>${tableLine()}`;
-      }
-      return '';
-    }
-
-    // ---- the layer: the corner bar, and the sheet over the panel ----
-    // The sheet's buttons, in order, so a switch can step through them (`onMove`) as a finger taps them.
-    function sheetButtons(s) {
-      if (dead) return [];
-      const b = [];
-      if (room && ['opening', 'joining', 'asking'].includes(room.phase())) {
-        b.push({ act: 'stop', label: room.phase() === 'opening' ? 'Never mind' : 'Stop asking' });
-        return b;
-      }
-      if (isHost() && (!api?.begun?.() || showLobby)) {
-        for (const w of room.waiting()) {
-          b.push({ act: 'admit', arg: w.id, label: `Let ${w.names.join(' and ')} in` });
-          b.push({ act: 'deny', arg: w.id, label: 'Not now' });
-        }
-        b.push(api?.begun?.() ? { act: 'hide', label: 'Back to the game' } : { act: 'start', label: 'Start the game' });
-        b.push({ act: 'admitmode', label: room.admit() === 'connected' ? 'Ask me before each one joins' : 'Let anyone connected to this login join without asking' });
-        b.push({ act: 'stop', label: 'Stop playing together' });
-        return b;
-      }
-      if (isGuest() && room.state().phase === 'lobby') { b.push({ act: 'stop', label: 'Leave the game' }); return b; }
-      if (inRoom()) return b;
-      if (sheet === 'choose') {
-        b.push({ act: 'local', label: 'On this screen' });
-        b.push({ act: 'host', label: 'With another screen' });
-        b.push({ act: 'joinform', label: 'Join a game' });
-        if (callLive()) b.push({ act: 'call', label: 'On this call' });
-        b.push({ act: 'close', label: 'Back' });
-      } else if (sheet === 'join') {
-        b.push({ act: 'join', label: 'Join' });
-        b.push({ act: 'close', label: 'Back' });
-      }
-      return b;
-    }
-    const btnHtml = (list) => `<div class="wg-btns">${list.map((x, i) => `<button type="button" class="wg-btn" data-qm="${esc(x.act)}"`
-      + `${x.arg ? ` data-qm-arg="${esc(x.arg)}"` : ''}${i === sheetLit ? ' data-on="1"' : ''}>${esc(x.label)}</button>`).join('')}</div>`;
-    const seatList = () => `<ul class="qm-seats" data-seats>${room.seats().map((st) => {
-      const p = { here: st.device === room.you(), remote: st.device };
-      return `<li data-seat="${esc(st.id)}"${st.away ? ' data-away' : ''}><b>${esc(st.name)}</b> <span class="qm-soft">on ${esc(whereOf(p))}${st.away ? ' (stopped answering)' : ''}</span></li>`;
-    }).join('')}</ul>`;
-    function barHtml(s) {
-      if (inRoom() && !(isHost() && (!api?.begun?.() || showLobby)) && !(isGuest() && room.state().phase === 'lobby')) {
-        const label = isHost() ? 'Stop playing together' : 'Leave the game';
-        return `<div class="qm-bar" data-qm-bar><span class="qm-chip" data-qm-code="${esc(room.code())}">Playing together · ${esc(codeWords(room.code()))}</span>`
-          + (isHost() ? '<button type="button" class="wg-btn" data-qm="lobby">Who is playing</button>' : '')
-          + `<button type="button" class="wg-btn" data-qm="stop">${esc(label)}</button></div>`;
-      }
-      if (roomBusy() || sheet) return '';
-      const offer = canTogether() && (!api?.begun?.() || s.phase === 'done');
-      if (!offer && !note) return '';
-      return `<div class="qm-bar" data-qm-bar>${note ? `<span class="qm-chip" data-qm-note role="status">${esc(note)}</span>` : ''}`
-        + (offer ? '<button type="button" class="wg-btn" data-qm="open">Play together</button>' : '') + '</div>';
-    }
-    function sheetBody(s) {
-      const btns = sheetButtons(s);
-      if (sheetLit >= btns.length) sheetLit = 0;
-      const wrap = (kind, inner) => `<div class="qm-sheet" data-qm-sheet="${kind}" role="dialog" aria-label="Play together">${inner}${btnHtml(btns)}</div>`;
-      if (room && ['opening', 'joining', 'asking'].includes(room.phase())) {
-        const ph = room.phase();
-        const line = ph === 'opening' ? 'Opening a game for other screens to join…'
-          : ph === 'joining' ? 'Asking to join…' : 'Asked to join. Somebody at that screen needs to let you in.';
-        return wrap(ph, `<h3>Play together</h3><p data-qm-status>${esc(line)}</p>`);
-      }
-      if (isHost() && (!api?.begun?.() || showLobby)) {
-        const code = room.code();
-        const path = playPath(code);
-        let qr = '';
-        try { qr = elsewhereQR(path, { colours: themeQrColours(ctx.mount || null) }); } catch { qr = ''; }
-        const waiting = room.waiting().map((w) => `<li data-waiting="${esc(w.id)}"><b>${esc(w.names.join(', '))}</b>`
-          + `${w.from ? ` <span class="qm-soft">(${esc(w.from)})</span>` : ''} would like to join.</li>`).join('');
-        const how = asked
-          ? `<p data-qm-asked>${esc(asked.name ? `${asked.name} asked to play on this call.` : 'Somebody on the call asked to play.')} The game starts when they join.</p>`
-          : room.call() ? '<p data-qm-call>Offered to the call: they can join from their call page, beside the video.</p>' : '';
-        return wrap('lobby', `<h3>Play together</h3><div class="qm-lobby"><div><p>The game's code</p>
-          <p class="qm-code" data-qm-code="${esc(code)}" aria-label="${esc([...code].join(' '))}">${esc(codeWords(code))}</p>
-          <p class="qm-soft">On another screen with Quiz mix: Play together, then Join a game, and enter this code.</p>
-          <p class="qm-soft">On a phone: scan the square, or open ${esc(pageAddress(path))}</p>${how}</div>
-          ${qr ? `<div class="qm-qr" data-qm-qr>${qr}</div>` : ''}</div>
-          <p><b>Playing</b></p>${seatList()}
-          ${waiting ? `<ul class="qm-seats" data-qm-waiting>${waiting}</ul>` : ''}`);
-      }
-      if (isGuest() && room.state().phase === 'lobby') {
-        return wrap('joined', `<h3>Play together</h3><p data-qm-status>${esc(`You are in ${hostName()}'s game. It starts when they press Start the game.`)}</p>${seatList()}`);
-      }
-      if (inRoom()) return '';
-      if (sheet === 'choose') {
-        return wrap('choose', `<h3>Play together</h3><p class="qm-soft">Take turns on this screen, play with somebody on their own screen, or join a game somebody else started.</p>`);
-      }
-      if (sheet === 'join') {
-        return wrap('join', `<h3>Join a game</h3><p>The code on the other screen:</p>
-          <input type="text" data-qm-input inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" aria-label="Game code" value="">
-          ${joinError ? `<p class="wg-say" data-qm-error role="alert">${esc(joinError)}</p>` : ''}`);
-      }
-      return '';
-    }
-    const sheetHtml = (s) => barHtml(s) + sheetBody(s);
-
-    function act(a, arg = '') {
-      switch (a) {
-        case 'open': sheet = 'choose'; sheetLit = 0; setNote(''); break;
-        case 'close': case 'local': sheet = null; joinError = ''; break;
-        case 'host': startRoom({ call: false }); return;
-        case 'call': startRoom({ call: true }); return;
-        case 'joinform': sheet = 'join'; sheetLit = 0; joinError = ''; break;
-        case 'join': {
-          const el = ctx.mount?.querySelector?.('[data-qm-input]');
-          joinRoom(el ? el.value : '');
-          return;
-        }
-        case 'admit': room?.admitOne(arg, true); break;
-        case 'deny': room?.admitOne(arg, false); break;
-        case 'admitmode': room?.setAdmit(room.admit() === 'connected' ? 'ask' : 'connected'); break;
-        case 'start': clearLobby(); showLobby = false; sheetLit = 0; api?.start(); publish(); break;
-        case 'hide': showLobby = false; break;
-        case 'lobby': showLobby = true; sheetLit = 0; break;
-        case 'stop': stopTogether(isHost() || !inRoom() ? 'stopped' : 'left'); break;
-        case 'skip':
-          if (isHost() && current?.remote && !current.done) {
-            remoteDone({ seat: current.player.seat, serial: current.serial, right: false, points: 0, skipped: true, why: 'skipped' });
-          }
-          return;
-        default: return;
-      }
-      redraw();
-    }
-    function onTogetherClick(e) {
-      const t = e?.target;
-      if (t?.closest?.('[data-qm-input]')) return true;        // typing the code is not Start
-      const b = t?.closest?.('[data-qm]');
-      if (b) { act(b.dataset.qm, b.dataset.qmArg || ''); return true; }
-      // A tap on the sheet itself (not a button) does nothing underneath it.
-      return !!t?.closest?.('[data-qm-sheet]');
-    }
-    function onTogetherMove(m) {
-      const btns = sheetButtons();
-      const sheetUp = !!ctx.mount?.querySelector?.('[data-qm-sheet]') && btns.length > 0;
-      if (!sheetUp) {
-        // Waiting on another screen: the switch's "skip" passes their turn on, as the button does.
-        if (m === 'skip' && isHost() && current?.remote && !current.done) { act('skip'); return true; }
-        return false;
-      }
-      if (m === 'next') sheetLit = (sheetLit + 1) % btns.length;
-      else if (m === 'prev') sheetLit = (sheetLit - 1 + btns.length) % btns.length;
-      else if (m === 'select') { const x = btns[sheetLit]; if (x) act(x.act, x.arg || ''); return true; }
-      else return true;
-      redraw();
-      return true;
-    }
 
     // THE LEFT OF THE PANEL (row 2.63): the current game's own `leftEl` when it has one (Name that person's clip,
     // which must not be rebuilt or it would restart under the person watching), else its `left` markup. When the
@@ -1162,10 +780,10 @@ registerModule(
       scoreLine: () => (players().length > 1 ? scoreWords(players(), totalsNow()).replace(/, /g, ' · ')
         : `${totalsNow()[tkey(players()[0])] || 0} points so far.`),
       doneHtml: () => (lastTable ? tableHtml(lastTable.players, lastTable.totals) : (roundNow() > 0 ? tableHtml(players()) : '')),
-      waitingHtml: () => waitingHtml(),
-      sheetHtml: (s) => sheetHtml(s),
-      onClick: (e) => onTogetherClick(e),
-      onMove: (m) => onTogetherMove(m),
+      waitingHtml: () => together.waitingHtml(),
+      sheetHtml: (s) => together.sheetHtml(s),
+      onClick: (e) => together.onClick(e),
+      onMove: (m) => together.onMove(m),
       pointNote: (game, item) => `quiz mix: ${current?.cat?.label || 'a question'}`,
       onConfig: (c) => {
         cfgNow = c;
@@ -1176,25 +794,14 @@ registerModule(
         api = a;
         ensureStyle(ctx.mount?.ownerDocument || (typeof document !== 'undefined' ? document : null));
         ensureSources();          // a host with no settings row still has every game in the mix
-        // The join page (play.html?room=CODE): straight into that room.
-        if (ctx.autoJoin) { try { joinRoom(ctx.autoJoin); } catch (err) { console.error('quiz mix: join', err); } }
-        // Asked from the call (see the header): the kiosk offers each ask to its game panels, first taker wins.
-        if (typeof ctx.onGameAsk === 'function') {
-          try { offAsk = ctx.onGameAsk((x) => onAsk(x)) || null; } catch (err) { console.error('quiz mix: asks', err); }
-        }
+        // The join page (play.html?room=CODE) straight into that room, and the call's asks (game_together.js).
+        together.init();
       },
       destroy: () => {
         dead = true;
-        try { offAsk?.(); } catch { /* gone */ }
-        try { offLive?.(); } catch { /* gone */ }
-        offAsk = null; offLive = null;
         stopClock();
         stopRemoteTimer();
-        clearLobby();
-        if (noteTimer != null) { try { roomClear(noteTimer); } catch { /* gone */ } noteTimer = null; }
-        try { room?.destroy(); } catch { /* gone */ }
-        try { link?.close(); } catch { /* gone */ }
-        room = null; link = null;
+        together.destroy();
         for (const s of sources.values()) { try { s.destroy(); } catch { /* gone */ } }
         sources.clear();
         rows.close();
@@ -1208,12 +815,14 @@ registerModule(
     inner.__mix = () => ({ round, turn, roundCat, totals: { ...totals }, ended, current, players: players(),
       sources, history: { ...roundHist }, errors: errors.slice(-5), available: available(),
       // Playing together: the room as this screen sees it, and the together layer.
-      room: room ? { phase: room.phase(), role: room.role(), code: room.code(), you: room.you(), seats: room.seats(),
-        state: room.state(), waiting: room.waiting() } : null,
-      sheet, note, showLobby, guestTurn, totalsNow: { ...totalsNow() }, asked: asked ? { ...asked } : null,
-      act: (a, arg) => act(a, arg), join: (c) => joinRoom(c), open: (o) => startRoom(o), stop: () => stopTogether() });
+      room: R() ? { phase: R().phase(), role: R().role(), code: R().code(), you: R().you(), seats: R().seats(),
+        state: R().state(), waiting: R().waiting() } : null,
+      sheet: together.sheet(), note: together.note(), showLobby: together.showLobby(), guestTurn,
+      totalsNow: { ...totalsNow() }, asked: together.asked(),
+      act: (a, arg) => together.act(a, arg), join: (c) => together.joinRoom(c), open: (o) => together.startRoom(o),
+      stop: () => together.stop() });
     // Asked from the call, handed straight in (the kiosk's call view opens this panel for an ask, then gives it the ask).
-    inner.askTogether = (a) => onAsk(a);
+    inner.askTogether = (a) => together.onAsk(a);
     return inner;
   },
 );
