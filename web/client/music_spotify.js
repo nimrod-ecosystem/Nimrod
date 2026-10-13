@@ -165,6 +165,30 @@ export const FEATURE_WORDS = Object.freeze({
   screen: 'playing Spotify through this screen’s own speaker',     // spotify sdk
 });
 
+// ---- SPOTIFY JAM: A POINTER, NOT A FEATURE (Mike, 2026-10-12: "Jams should be an option for whoever wants them") ----
+// WHAT WAS CHECKED, 2026-10-12:
+//   * support.spotify.com/us/article/jam/ ("Start or join a Jam"): a Jam is started IN SPOTIFY'S OWN APPS (a song or
+//     playlist's menu, or the Connect device picker on a phone, desktop, TV or car); "Premium is needed to start and
+//     host a Jam"; free users can join one in person; joining remotely needs Premium; the Jam plays through the device
+//     or speaker the host is listening on, and anyone in it can change what plays there. Spotify can start one by
+//     itself on a smart or Bluetooth speaker ("Let others Jam on this speaker"). The page says nothing about the web
+//     player, a browser, or a Web Playback SDK device.
+//   * developer.spotify.com Web API reference, Player section (15 endpoints: playback state, transfer, devices, play,
+//     pause, skip, seek, repeat, volume, shuffle, recently played, queue): NO Jam, group or social-session endpoint.
+//   * developer.spotify.com/documentation/web-playback-sdk: it "create[s] a local Spotify Connect device in your
+//     browser" (Premium); it does not mention Jam.
+//   * community.spotify.com, Spotify for Developers, "Web API info for Jams" (the page itself would not load here; read
+//     through a search engine's copy of it): a Spotify reply that Jam belongs in the playback SDKs rather than the Web
+//     API, so it will not come to the Web API soon. And an Ideas post, "Give the Spotify Web API Access to Jams"
+//     (2023), still a suggestion.
+// SO: this site cannot start, join or end a Jam; nothing here tries. What it can honestly say is where a Jam starts.
+// Whether THIS screen (spotify_sdk.js's browser device, or the embed) can be the speaker a Jam plays on is NOT in any
+// source above, so the words do not promise it: they say to try. If a bench test shows it working, the line can say so.
+export const SPOTIFY_JAM_WORDS = 'A Spotify Jam is listening together: everyone in it can add songs. It is started in '
+  + 'the Spotify app on a phone or computer, not from this site, and starting one needs Spotify Premium. The Jam plays on '
+  + 'the speaker the person who started it is listening on. Spotify does not say whether a web page that plays Spotify, '
+  + 'like this one, can be that speaker, so try it and see.';
+
 // ---- spotify sdk: HOW LONG A SIGN-IN LASTS, AND THE REMINDER (2026-10-07) ------------------------------------
 // Spotify, developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens, read 2026-10-07: refresh tokens
 // for dashboard-registered apps "have a lifetime of 6 months"; the lifetime "starts when the user authorizes your

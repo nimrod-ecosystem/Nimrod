@@ -46,6 +46,7 @@ import {
   SPOTIFY_SCOPE_SETS, SCOPES_BEFORE_SPLIT, scopesFor, missingFeatures, FEATURE_WORDS,
   SPOTIFY_AUTHORIZE_URL, SPOTIFY_TOKEN_URL, safeReturn,
   SIGN_IN_MONTHS, SIGN_IN_WARN_DAYS, signInEndsAt, signInReminder, dayWords,   // spotify sdk
+  SPOTIFY_JAM_WORDS,   // Spotify Jam (2026-10-12)
 } from '../music_spotify.js';
 import { connectHelperHtml, callbackAccepted, copyText, CONNECT_WORDS, SPOTIFY_DASHBOARD_URL, SPOTIFY_DASHBOARD_ADDRESS } from '../spotify_connect.js';
 import { createMusicRouter, messageFor } from '../music_player.js';
@@ -1150,6 +1151,14 @@ const FAVS = normalizeFavourites([
       const words = Object.values(CONNECT_WORDS).join(' ') + Object.values(FEATURE_WORDS).join(' ') + SPOTIFY_MESSAGES['needs-permission']
         + SPOTIFY_MESSAGES['no-client-id'] + SPOTIFY_MESSAGES['signed-out'];
       check('no new words name anybody or say "her screen"', !/her screen|taylor|cici/i.test(words));
+      // Spotify Jam (2026-10-12). Sources in music_spotify.js: a Jam starts in Spotify's apps, Premium to start, it plays on
+      // the host's speaker; no Web API endpoint; nothing says a browser device can be a Jam's speaker. So: no promises.
+      check('*** Spotify Jam words: started in the Spotify app, Premium to start, and nothing promised about this screen ***',
+        /Spotify app on a phone or computer/.test(SPOTIFY_JAM_WORDS) && /Premium/.test(SPOTIFY_JAM_WORDS)
+        && /not from this site/.test(SPOTIFY_JAM_WORDS) && /try it and see/.test(SPOTIFY_JAM_WORDS)
+        && !/\b(will|always|never|guarantee)/i.test(SPOTIFY_JAM_WORDS) && !/her screen|taylor|cici/i.test(SPOTIFY_JAM_WORDS), SPOTIFY_JAM_WORDS);
+      check('...and the Spotify row in the settings carries the same line, where Spotify is turned on',
+        getManifest('music')?.settings?.find((r) => r.key === 'spotifyOn')?.note === SPOTIFY_JAM_WORDS);
 
       // The panel, with a fake server for the Client ID and a fake connector.
       function fakeKeys({ clientId = '', level = 'account', canChange = true, saveStatus = 200 } = {}) {
@@ -1214,6 +1223,9 @@ const FAVS = normalizeFavourites([
       check('nothing went into the panel\'s own settings', !st.get().spotifyClientId);
       check('the steps are gone: Connect and "Change the Client ID", and which one is in use',
         !hq('[data-sp-helper]') && !!hq('[data-act="spotify-connect"]') && !!hq('[data-act="sp-change-id"]') && /ending …cdef/.test(hq('[data-sp-where]')?.textContent || ''), h.textContent.slice(0, 400));
+      // Spotify Jam (2026-10-12): a pointer where Spotify is set up, not a feature.
+      check('*** Spotify Jam: where Spotify is set up, a plain line says a Jam starts in the Spotify app ***',
+        (hq('[data-sp-jam]')?.textContent || '') === SPOTIFY_JAM_WORDS);
       // Connected, then shuffle needs one more permission.
       connected = true; missing = ['shuffle'];
       hq('[data-act="close"]').click(); hq('[data-act="edit"]').click();
