@@ -33,6 +33,8 @@
 //     cards are characters at home and each card can show its place in the theme's town; the defaults (suit
 //     marks, four colours, scenery where it measured readable) and the other choices are card_deck.js's
 //     (`cardSettingsFields`).
+//   * COURT SOLITAIRE (Design's idea, characters handoff README; Mike, 2026-10-12): FINISHING A SUIT BRINGS ITS KING
+//     OUT TO CHEER. See "the court cheers", below, for what it does and the argument for each default.
 
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
@@ -43,7 +45,11 @@ import {
   encodeTurn, replay, AUTO_MODES,
 } from '../klondike.js';
 import { createPlayWatch } from '../game_start.js';
-import { CARD_DEFAULTS, cardSettingsFields, cardArt, watchTheme } from '../card_deck.js';
+import { CARD_DEFAULTS, cardSettingsFields, cardArt, watchTheme, cardOptions, deckFor } from '../card_deck.js';
+// court solitaire (2026-10-12): the King who cheers is Design's character, in the theme's outfit.
+import { courtLook } from '../playing_cards.js';
+import { figureSvg } from '../character_kit.js';
+import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 // town (2026-10-12): the person's rearranged town places (modules/town.js) behind the cards; null = Design's own town.
 import { watchTownEdits } from '../town_edits.js';
 
@@ -72,7 +78,58 @@ export const DEFAULTS = Object.freeze({
   cardLayout: CARD_DEFAULTS.cardLayout,
   suitColours: CARD_DEFAULTS.suitColours,
   cardScenery: CARD_DEFAULTS.cardScenery,
+  // THE COURT CHEERS (below). 'on' | 'quiet' | 'off', and how many seconds the King stays.
+  courtCheer: 'on',
+  cheerSeconds: 4,
 });
+
+// ---------------------------------------------------------------------------------------
+// *** THE COURT CHEERS (court solitaire: Design's characters handoff README; Mike, 2026-10-12). ***
+// When a turn puts a suit's King home (all thirteen of that suit), that suit's King comes out beside the home piles,
+// waving: Design's character (character_kit.js `figureSvg`), dressed as the theme's deck dresses him
+// (playing_cards.js `courtLook`, COURT_PICK; the Royal robe in the deck's colours where a theme has no outfit yet),
+// in the 'wave' pose. A short line ("The King of Hearts cheers!") goes to the output bus as a `say`, so it is heard
+// only where this screen speaks at all (the person's routing and the speech channel decide; a screen whose voice
+// is off hears nothing). Then he goes, by himself.
+//   * WHERE: the empty cell between the drawn cards and the four home piles. Nothing is dealt there, so he covers
+//     no card anybody needs. In draw-three the drawn fan reaches into that cell, so he stands in the part it does
+//     not reach (solitaire.css). The suite checks he overlaps no card and no button, in both.
+//   * NEVER A GATE. Nothing waits for him: every verb, click and the bar work while he is out, and a timer takes
+//     him away. A press is never needed to dismiss him (CLAUDE.md: a screen must never enter a state only an input
+//     can leave).
+//   * MOTION: one appearance and one fade; in full motion he grows a little, up from his feet, inside his own cell
+//     (a slide up from below crossed the column under it). With reduced motion (the device's, `ctx.reducedMotion`,
+//     or the person's "movement" setting through `ctx.avatarContext`) nothing moves: he fades in and out where he
+//     stands.
+//   * FLASHING: he comes once and goes once; nothing on him repeats, blinks or changes colour. Under a flash limit
+//     (the photosensitivity box, flash_limit.js) he stays at least two of its periods, so appearing and going are
+//     never closer together than the limit allows. Suits finished while he is out join him (one appearance, not
+//     a second one); each suit cheers once per deal (undo and redo does not bring him back, a new deal does).
+//   * DEFAULTS, both sides (on Mike's list):
+//       courtCheer 'on'. FOR: it is the reward Design drew for exactly this moment, it costs nothing to the game
+//         (no gate, no cover, no wait), and finishing a suit is a real result on a table that otherwise only says
+//         "cards home". AGAINST: solitaire says nothing aloud by default (`sayAloud` off), and a line spoken
+//         unasked could startle somebody who plays in quiet; a calmer table is a fair thing to want. So: 'quiet'
+//         (seen, never said) and 'off' are one setting away, and 'on' only speaks where the screen's own voice is on.
+//       cheerSeconds 4. Long enough to see who it is at a glance from across a room, short enough not to linger;
+//         2 to 10 in the setting, and never under the flash limit's floor.
+export const CHEER_MODES = Object.freeze(['on', 'quiet', 'off']);
+
+const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
+/** What the court says when these suits ('H', 'S' ...) are finished: "The King of Hearts cheers!" */
+export function cheerLine(suitIds = []) {
+  const names = suitIds.map((id) => cap(suitOf(id)?.name || '')).filter(Boolean);
+  if (!names.length) return '';
+  if (names.length === 1) return `The King of ${names[0]} cheers!`;
+  if (names.length >= 4) return 'All four Kings cheer!';
+  return `The Kings of ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]} cheer!`;
+}
+/** The suits a turn finished: all thirteen home after it, not before. */
+export function suitsFinished(before, after) {
+  if (!before || !after) return [];
+  return SUITS.filter((s) => (after.foundations[s.id] || []).length === 13 && (before.foundations[s.id] || []).length < 13)
+    .map((s) => s.id);
+}
 
 const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Cards home, out of 52. A Scoreboard on the same screen can show it instead.' }),
@@ -96,6 +153,16 @@ const SETTINGS = [
     onLabel: 'Shown', offLabel: 'Hidden' },
   { key: 'winPoints', label: 'Play points for a game won', kind: 'number', default: 0, min: 0, max: 20, step: 1,
     level: 'advanced', note: 'Once per game won. 0 means cards pay nothing.' },
+  { key: 'courtCheer', label: 'A King cheers when a suit is finished', kind: 'choice', default: 'on', level: 'standard',
+    options: [
+      { value: 'on', label: 'Yes, and he says so out loud where this screen speaks' },
+      { value: 'quiet', label: 'Yes, without a word' },
+      { value: 'off', label: 'No' },
+    ],
+    note: 'He waves for a few seconds beside the home piles and goes by himself. He never covers a card and never waits for a press.' },
+  { key: 'cheerSeconds', label: 'How long the King stays', kind: 'number', default: 4, min: 2, max: 10, step: 1,
+    level: 'advanced', note: 'Seconds. Never quicker than the screen\'s flashing limit allows.',
+    appliesWhen: (v) => !v || v.courtCheer !== 'off' },
   ...cardSettingsFields(),
 ];
 
@@ -155,6 +222,12 @@ registerModule(
     const rand = ctx.rand || Math.random;
     const reducedMotion = () => {
       if (typeof ctx.reducedMotion === 'boolean') return ctx.reducedMotion;
+      // court solitaire (2026-10-12): the person's "movement makes me unwell" setting too, which the host hands
+      // over in the avatars' context (kiosk.js avatarContextNow), not only the device's own preference.
+      try {
+        const a = typeof ctx.avatarContext === 'function' ? ctx.avatarContext() : null;
+        if (a && (a.reduceMotion || a.deviceReduced)) return true;
+      } catch { /* no host context */ }
       try { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { return false; }
     };
 
@@ -183,6 +256,11 @@ registerModule(
     let themeWatch = null;
     let townWatch = null;   // town (2026-10-12): the person's edited places, per theme (town_edits.js)
     const artId = String(ctx.instanceId || `s${Math.floor(rand() * 1e9)}`).replace(/[^A-Za-z0-9_-]/g, '');
+    // THE COURT CHEERS (above): who is out now, and which suits have cheered this deal.
+    let cheer = null;          // { suits: ['H', ...], started, until } while a King is out
+    let cheerTimer = null;
+    let cheerSpeech = null;
+    let cheered = new Set();
 
     const game = () => snaps[snaps.length - 1];
     function stuckNow(g) {
@@ -199,6 +277,65 @@ registerModule(
       } catch (err) { console.error('solitaire: say', err); }
     }
 
+    // ---- the court cheers ----------------------------------------------------------------------
+    function cheerMs() {
+      const s = Number(cfg.cheerSeconds);
+      const base = (Number.isFinite(s) && s > 0 ? s : DEFAULTS.cheerSeconds) * 1000;
+      let period = 0;
+      try { period = minFlashPeriodMs(flashLimit(ctx)); } catch { period = 0; }
+      // Appearing and going are two changes: never closer together than the flash limit's period allows.
+      return Math.max(base, 2 * (Number.isFinite(period) ? period : 0));
+    }
+    function endCheer() {
+      if (cheerTimer != null) { clearTimeout(cheerTimer); cheerTimer = null; }
+      cheer = null;
+    }
+    function resetCheers(g = null) {
+      endCheer();
+      cheered = new Set(g ? SUITS.filter((s) => (g.foundations[s.id] || []).length === 13).map((s) => s.id) : []);
+    }
+    /** After a turn: did it finish a suit? Then its King comes out (once per suit per deal). */
+    function noticeFinished(before, after) {
+      if (cfg.courtCheer === 'off' || !CHEER_MODES.includes(cfg.courtCheer)) return;
+      const done = suitsFinished(before, after).filter((id) => !cheered.has(id));
+      if (!done.length) return;
+      done.forEach((id) => cheered.add(id));
+      const t = now();
+      const ms = cheerMs();
+      // A King already out: the new ones join him (one appearance, not a second), and they all stay the full time.
+      cheer = cheer && t < cheer.until
+        ? { suits: [...cheer.suits, ...done], started: cheer.started, until: Math.max(cheer.until, t + ms) }
+        : { suits: done, started: t, until: t + ms };
+      if (cheerTimer != null) clearTimeout(cheerTimer);
+      // He goes by himself: a timer, never a press.
+      cheerTimer = setTimeout(() => { cheerTimer = null; cheer = null; if (!dead) render(); }, Math.max(0, cheer.until - t));
+      if (cfg.courtCheer === 'on' && ctx.output?.say) {
+        try { cheerSpeech = ctx.output.say(cheerLine(done), { source: GAME }); }
+        catch (err) { console.error('solitaire: cheer', err); }
+      }
+    }
+    function cheerHtml() {
+      if (cheer && now() >= cheer.until) cheer = null;
+      if (!cheer) return '';
+      const deck = deckFor(themeWatch ? themeWatch.id() : 'default');
+      const fourColour = cardOptions(cfg).fourColour;
+      const kings = cheer.suits.map((id) => {
+        const name = suitOf(id)?.name || 'spades';
+        const { look, opts } = courtLook('king', name, deck, { fourColour });
+        // Design's figure, waving; hidden from a screen reader (the element around them carries the line).
+        const svg = figureSvg(look, { ...opts, pose: 'wave' }, 'King')
+          .replace(/ role="img" aria-label="[^"]*"/, ' aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMax meet"')
+          .replace(/<title>[^<]*<\/title>/, '');
+        return `<span class="sol-king" data-king="${id}">${svg}</span>`;
+      }).join('');
+      const dur = Math.max(1, cheer.until - cheer.started);
+      const elapsed = Math.max(0, Math.min(dur, now() - cheer.started));
+      // The animation carries on across re-draws: the table is redrawn on every move, so each drawing starts the
+      // same single fade where the last one had got to (a negative delay), rather than from the beginning.
+      return `<div class="sol-cheer" data-cheer data-draw="${game().draw}" role="img" aria-label="${esc(cheerLine(cheer.suits))}"`
+        + ` style="--sol-cheer-ms:${Math.round(dur)}ms;animation-delay:-${Math.round(elapsed)}ms">${kings}</div>`;
+    }
+
     // ---- saving --------------------------------------------------------------------------
     function save() {
       try { state?.set?.({ game: rec, stats }); } catch (err) { console.error('solitaire: save', err); }
@@ -209,6 +346,7 @@ registerModule(
       rec = { seed: r.game.seed, draw: r.game.draw, turns: r.turns, startedAt: Number(saved.startedAt) || now(),
         won: !!saved.won, paid: !!saved.paid };
       snaps = r.snapshots;
+      resetCheers(game());   // a reloaded game's finished suits have had their cheer
       return true;
     }
     function newGame(seed = null, draw = null, { persist = true } = {}) {
@@ -217,6 +355,7 @@ registerModule(
       const first = deal(s, { draw: d });
       rec = { seed: s, draw: d, turns: [], startedAt: now(), won: false, paid: false };
       snaps = [first];
+      resetCheers();   // a new deal: every suit can cheer again
       // Aces (and twos) dealt face up go home at once under auto-move. Recorded as a turn so the
       // saved game replays exactly, and so Undo can put them back for somebody who wants to.
       const st = settle(first, cfg.autoMove);
@@ -246,6 +385,7 @@ registerModule(
         stats = { ...stats, won: (Number(stats.won) || 0) + 1 };
         pay();
       }
+      noticeFinished(g0, g);   // court solitaire: a finished suit brings its King out
       save();
       render();
       if (isWon(g)) say('You won. All fifty-two cards are home.');
@@ -270,12 +410,14 @@ registerModule(
     function finish() {
       const moves = finishMoves(game());
       if (!moves.length) return;
-      let g = game();
+      const g0 = game();
+      let g = g0;
       for (const m of moves) g = applyMove(g, m);
       rec.turns.push(encodeTurn(moves));
       snaps.push(g);
       picked = null; confirmNew = false; touched = true;
       if (!rec.won && isWon(g)) { rec.won = true; stats = { ...stats, won: (Number(stats.won) || 0) + 1 }; pay(); }
+      noticeFinished(g0, g);   // court solitaire
       save(); render();
       say('You won. All fifty-two cards are home.');
     }
@@ -456,13 +598,17 @@ registerModule(
       const scoreLine = own ? `<p class="sol-stats" data-score>${homeCount(g)} of 52 cards home</p>` : '';
       const statsLine = cfg.showStats
         ? `<p class="sol-stats" data-stats>Moves: ${g.moves} · Time: ${fmtTime(now() - (rec.startedAt || now()))}</p>` : '';
+      // The empty cell between the drawn cards and the home piles: where a King comes out to cheer (court solitaire).
+      const cheering = cheerHtml();
+      const cheerCell = cheering ? `<div class="sol-cheer-slot" data-cheer-slot>${cheering}</div>`
+        : '<div class="sol-cheer-slot" data-cheer-slot aria-hidden="true"></div>';
       const barBtns = items.filter((i) => !i.key.startsWith('src:') && i.key !== 'draw')
         .map((i) => `<button type="button" class="sol-btn" data-key="${esc(i.key)}"${i.key === onKey ? ' data-on="1"' : ''}>${esc(i.label)}</button>`)
         .join('');
 
       rootEl.innerHTML = `
         <div class="sol" data-sol data-motion="${reducedMotion() ? 'reduce' : 'full'}" data-phase="${picked ? 'place' : 'pick'}"${won ? ' data-won' : ''}>
-          <div class="sol-top">${stock}${waste}<div aria-hidden="true"></div>${founds}</div>
+          <div class="sol-top">${stock}${waste}${cheerCell}${founds}</div>
           <div class="sol-cols">${cols}</div>
           <div class="sol-bar">
             <p class="sol-say" role="status" aria-live="polite">${line}</p>
@@ -495,7 +641,9 @@ registerModule(
         const items = walk();
         return { game: game(), rec: { ...rec, turns: [...rec.turns] }, picked, lit, confirmNew,
           items: items.map((i) => i.key), litKey: lit >= 0 ? items[lit]?.key : null, stats: { ...stats }, cfg: { ...cfg },
-          theme: themeWatch ? themeWatch.id() : null };
+          theme: themeWatch ? themeWatch.id() : null,
+          cheer: cheer ? { suits: [...cheer.suits], started: cheer.started, until: cheer.until } : null,
+          cheered: [...cheered] };
       },
       init() {
         let cssHref = '';
@@ -516,6 +664,8 @@ registerModule(
           const next = { ...DEFAULTS };
           for (const k of Object.keys(DEFAULTS)) if (s[k] !== undefined) next[k] = s[k];
           if (!AUTO_MODES.includes(next.autoMove)) next.autoMove = DEFAULTS.autoMove;
+          if (!CHEER_MODES.includes(next.courtCheer)) next.courtCheer = DEFAULTS.courtCheer;
+          if (next.courtCheer === 'off') endCheer();   // turned off while a King is out: he goes now
           if (s.ownScore !== undefined) next.ownScore = s.ownScore;
           cfg = next;
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
@@ -560,7 +710,9 @@ registerModule(
         townWatch = null;
         mount.removeEventListener('click', onClick);
         if (ticker != null) { clearInterval(ticker); ticker = null; }
+        endCheer();
         try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }
+        try { if (cheerSpeech && ctx.output?.cancel) ctx.output.cancel(cheerSpeech); } catch { /* gone */ }
         try { score?.destroy(); } catch { /* gone */ }
         score = null;
         try { ledger?.destroy?.(); } catch { /* gone */ }
