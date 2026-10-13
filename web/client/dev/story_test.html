@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>story — Story time: a picture story read aloud, turned by a press, by itself, or by voice — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>story — Story time (2026-10-12)</h1>
+<p>Design's idea, built: "a short picture story read aloud. The person's own avatar is the hero and the court characters are
+the cast, in the current theme's outfits. One switch turns the page." This suite checks the stories as data
+(<code>stories.js</code>: every page a place in the town, a cast, a sentence or two; warm and plain; the places named in each
+theme's own words), and the panel: <b>any press turns the page</b>, <b>it turns by itself</b> after each page is read (and,
+waiting for a press, still turns after a while unless "Never" was chosen), <b>voice</b> ("next page"), <b>read aloud through
+the site's voice</b> (a stub here), the words shown large where there is no voice, the person's own character as the hero,
+the cast in the theme's outfits, the theme changing, the seam for an AI-written story, and a teardown that leaves nothing.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/story.js';
+import { auditManifests } from '../settings_audit.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import { moduleVoiceTable } from '../input_speech.js';
+import { MODULE_CATEGORIES } from '../library.js';
+import { applyTheme } from '../theme.js';
+import { PLACES, TOWN_DRESS, placeInfo } from '../town.js';
+import { figureBody } from '../character_kit.js';
+import { STORIES, STORY_IDS, STORY_ROLES, MAX_CAST, MAX_PAGE_CHARS, pageText, placeName, checkPage, nextStoryId } from '../stories.js';
+import { heroParts, courtParts, themeOutfit } from '../town_scene.js';
+import { normalizeFigure } from '../avatar_figure.js';
+import { TYPE, TITLE, DEFAULTS, VOICE, READ_MS_PER_WORD, SPEECH_WAIT_MAX_MS, AI_WAIT_MS, aiPage } from '../modules/story.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = () => sleep(0);
+const THEMES6 = Object.keys(TOWN_DRESS);
+
+function fakeTimers() {
+  let t = 0, id = 0;
+  const q = new Map();
+  return {
+    set(fn, ms) { const h = ++id; q.set(h, { at: t + Math.max(0, Number(ms) || 0), fn }); return h; },
+    clear(h) { q.delete(h); },
+    pending: () => q.size,
+    run(ms) {
+      const end = t + ms;
+      for (let guard = 0; guard < 100000; guard++) {
+        let next = null;
+        for (const [h, x] of q) if (x.at <= end && (!next || x.at < next[1].at)) next = [h, x];
+        if (!next) break;
+        q.delete(next[0]);
+        t = Math.max(t, next[1].at);
+        next[1].fn();
+      }
+      t = end;
+    },
+  };
+}
+// The site's voice, stubbed: it says nothing until told the current line has finished (`finish()`), as a real voice does.
+// `mode: 'auto'` finishes each line at once; 'none' reports what a screen with no voice reports.
+function fakeOutput({ mode = 'manual' } = {}) {
+  const said = [], cancelled = [];
+  let n = 0, last = null;
+  return {
+    said, cancelled,
+    say(text, opts = {}) {
+      said.push(String(text));
+      const id = `s${++n}`;
+      last = { id, onReport: opts.onReport };
+      if (mode === 'auto') opts.onReport?.({ id, delivered: true, channel: 'speech' });
+      if (mode === 'none') opts.onReport?.({ id, delivered: false, channel: 'speech', reason: 'no-adapter' });
+      return id;
+    },
+    cancel(id) { cancelled.push(id); return true; },
+    finish() { last?.onReport?.({ id: last.id, delivered: true, channel: 'speech' }); },
+  };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ host = scratch(), bus = createBus(), saved = {}, timers = fakeTimers(), output = fakeOutput(), person = null, storyAi = null } = {}) {
+  const state = fakeState(saved);
+  const inst = mountModule(TYPE, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: person ? 'p1' : null,
+    instanceId: `st${++n}`, output, setTimer: timers.set, clearTimer: timers.clear,
+    ...(person ? { makePersonState: person } : {}), ...(storyAi ? { storyAi } : {}),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return { inst, host, bus, state, probe, timers, output,
+    pub: (verb, p) => bus.publish(`${TYPE}/${verb}`, p),
+    verb: (v) => bus.publish(verbTarget(TYPE, v).topic),
+    words: () => host.querySelector('[data-words]'),
+    pic: () => host.querySelector('[data-pic] svg') };
+}
+const textOf = (story, i, deck = 'nimrod') => pageText(story.pages[i].text, deck);
+// A figure's drawing as the page's DOM writes it back (an SVG string's <path/> reads back as <path></path>).
+const dom = (body) => { const g = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); g.innerHTML = body; return g.innerHTML; };
+
+(async () => {
+try {
+  // =====================================================================
+  section('*** the stories, as data ***');
+  {
+    check(`at least four stories built in (${STORIES.length})`, STORIES.length >= 4 && new Set(STORY_IDS).size === STORIES.length
+      && new Set(STORIES.map((s) => s.title)).size === STORIES.length);
+    const bad = [];
+    for (const s of STORIES) {
+      if (s.pages.length < 4 || s.pages.length > 8) bad.push(`${s.id}: ${s.pages.length} pages`);
+      s.pages.forEach((p, i) => {
+        const c = checkPage(p);
+        if (!c || J(c.cast) !== J(p.cast) || c.text !== p.text) bad.push(`${s.id}[${i}] not a clean page`);
+        if (!PLACES[p.place]) bad.push(`${s.id}[${i}] place`);
+        if (p.cast[0] !== 'hero' || p.cast.length > MAX_CAST || !p.cast.every((r) => STORY_ROLES.includes(r))) bad.push(`${s.id}[${i}] cast`);
+        const sentences = p.text.split(/[.!?](?:[”"’]?)(?:\s|$)/).filter((x) => x.trim()).length;
+        if (sentences < 1 || sentences > 3) bad.push(`${s.id}[${i}] ${sentences} sentences`);
+        for (const tok of p.text.matchAll(/\{(\w+)\}/g)) if (!PLACES[tok[1]]) bad.push(`${s.id}[${i}] token ${tok[1]}`);
+      });
+    }
+    check('*** every page: a place in the town, the hero first and at most three in it, a sentence or two ***', bad.length === 0, bad.join(' | '));
+    const all = J(STORIES);
+    check('the words never say "her screen" or name anybody real', !/taylor|cici|her screen|\bmike\b/i.test(all));
+    check('warm and plain, not childish: no "yay", "uh-oh", "silly", "naughty", "boo-boo"', !/\byay\b|uh-oh|\bsilly\b|naughty|boo-boo|\bteddy\b/i.test(all));
+    check('no peril: nobody is hurt, lost for ever, scared or dies', !/\bdie[sd]?\b|\bdead\b|\bblood|\bhurt|\bscared\b|\bterrif|\bmonster/i.test(all));
+    check('the hero is "you": every story speaks to the listener', STORIES.every((s) => s.pages.some((p) => /\byou\b/i.test(p.text))));
+    for (const t of THEMES6) {
+      const left = STORIES.flatMap((s) => s.pages.map((p) => pageText(p.text, t))).filter((x) => /[{}]/.test(x));
+      check(`${TOWN_DRESS[t].label}: every page's places filled with the theme's own names`, left.length === 0, left[0]);
+    }
+    check('a place mid-sentence: "the Ice Hall" in winter, "the Great Hall"... and "Pip\'s Caravan" as it is',
+      placeName('kingHall', 'winter') === 'the Ice Hall' && placeName('jokerCaravan', 'nimrod') === "Pip's Caravan"
+      && pageText('In {kingHall}, all is well.', 'halloween') === 'In the Haunted Hall, all is well.');
+    check('a page from elsewhere is checked: a bad place, no words, markup, too long, a bad cast',
+      checkPage({ place: 'moon', text: 'x' }) === null && checkPage({ place: 'park', text: '' }) === null
+      && checkPage({ place: 'park', text: '<b>hi</b>' }).text === 'bhi/b' && checkPage({ place: 'park', text: 'x'.repeat(999) }).text.length === MAX_PAGE_CHARS
+      && J(checkPage({ place: 'park', text: 'x', cast: ['queen', 'queen', 'villain', 'king', 'jack'] }).cast) === J(['hero', 'queen', 'king']));
+    check('the next story: each in turn, round; or the same again; or the one chosen',
+      nextStoryId(STORY_IDS[0]) === STORY_IDS[1] && nextStoryId(STORY_IDS.at(-1)) === STORY_IDS[0]
+      && nextStoryId(STORY_IDS[2], { after: 'again' }) === STORY_IDS[2] && nextStoryId(STORY_IDS[0], { only: STORY_IDS[3] }) === STORY_IDS[3]);
+  }
+
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(TYPE);
+    check('registered as "Story time", on the new core, needs nothing', m && m.title === TITLE && TITLE === 'Story time' && m.core === 'new' && m.dependsOn === 'none');
+    const words = `${m.title} ${m.description} ${J(m.settings)} ${J(CATALOG.find((c) => c.type === TYPE))}`;
+    check('the words never say "her screen" or name anybody', !/taylor|cici|her screen/i.test(words));
+    const cat = CATALOG.find((c) => c.type === TYPE);
+    check('catalog: something to look at, runs by itself, titled "Story time"', cat && cat.group === 'comfort' && cat.use === 'watch' && cat.title === TITLE, J(cat));
+    check('library: To look at', J(MODULE_CATEGORIES[TYPE]) === J(['visual']));
+    check('health: resting is fine', TYPE in HEALTH_EXPECT && expectFor(TYPE).idle === true);
+    check('every forward press turns the page: select, next, right, down, launch',
+      ['select', 'next', 'right', 'down', 'launch'].every((v) => verbTarget(TYPE, v)?.topic === 'story/next'));
+    check('prev, back and left go back a page; up reads it again; pause and play',
+      ['prev', 'back', 'left'].every((v) => verbTarget(TYPE, v)?.topic === 'story/prev') && verbTarget(TYPE, 'up')?.topic === 'story/again'
+      && verbTarget(TYPE, 'pause')?.topic === 'story/pause' && verbTarget(TYPE, 'play')?.topic === 'story/resume');
+    const table = moduleVoiceTable(VOICE, { verbs: verbsFor(TYPE) });
+    check('spoken: "next page", "turn the page", "previous page", "read it again", every one can fire',
+      ['next page', 'turn the page', 'previous page', 'read it again'].every((p) => p in table) && Object.keys(VOICE).every((p) => p in table), J(table));
+    const keys = m.settings.map((r) => r.key);
+    check('*** every timing is a setting: the page, the wait for a press, the rest between stories ***',
+      ['storyPageMs', 'storyWaitMs', 'storyRestMs', 'turnPages', 'afterStory', 'readAloud', 'storySource'].every((k) => keys.includes(k)), keys.join(','));
+    check('defaults: turns by itself 8 s after each page is read, a minute when waiting for a press, read aloud, the next story after a minute, built-in stories',
+      DEFAULTS.turnPages === 'itself' && DEFAULTS.storyPageMs === 8000 && DEFAULTS.storyWaitMs === 60000 && DEFAULTS.readAloud === true
+      && DEFAULTS.afterStory === 'next' && DEFAULTS.storyRestMs === 60000 && DEFAULTS.storySource === 'builtin' && DEFAULTS.heroOutfit === 'own');
+    check('the AI story is off by default', DEFAULTS.storySource === 'builtin');
+    check('durations are stored in ms', m.settings.filter((r) => /Ms$/.test(r.key)).every((r) => r.options.every((o) => o.value === 0 || o.value >= 1000)));
+    const audit = auditManifests([m], { level: 'advanced' });
+    check('the settings audit finds no error', audit.findings.filter((f) => f.severity === 'error').length === 0,
+      J(audit.findings.filter((f) => f.severity === 'error')));
+  }
+
+  section('*** read aloud, page by page; any press turns the page ***');
+  {
+    const t = mount();
+    const s = STORIES[0];
+    check('it opens on the first story\'s cover: its title, said', t.probe().storyId === s.id && t.probe().at === -1
+      && t.words().textContent === s.title && t.output.said.at(-1) === s.title);
+    check('the cover: the hero waving in the first page\'s place', t.pic()?.getAttribute('data-scene') === s.pages[0].place
+      && !!t.pic().querySelector('[data-who="hero"]'));
+    t.verb('select');
+    check('*** a press turns to page 1, and it is read aloud ***', t.probe().at === 0 && t.words().textContent === textOf(s, 0)
+      && t.output.said.at(-1) === textOf(s, 0));
+    check('the page: the place, and its cast standing in it (you and Queen Rosa)', t.pic().getAttribute('data-scene') === s.pages[0].place
+      && J([...t.pic().querySelectorAll('[data-who]')].map((e) => e.dataset.who)) === J(s.pages[0].cast));
+    check('"Page 1 of 6"', t.host.querySelector('[data-count]').textContent === `Page 1 of ${s.pages.length}`);
+    t.verb('next');
+    check('next turns too', t.probe().at === 1);
+    check('a page turned while one was being read: the old one is stopped', t.output.cancelled.length >= 1);
+    t.verb('prev');
+    check('prev goes back a page', t.probe().at === 0 && t.output.said.at(-1) === textOf(s, 0));
+    t.verb('up');
+    check('up reads the page again', t.probe().at === 0 && t.output.said.filter((x) => x === textOf(s, 0)).length === 3);
+    for (const v of ['right', 'down', 'launch']) t.verb(v);
+    check('right, down and launch each turn a page', t.probe().at === 3);
+    t.host.querySelector('[data-st-root]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('a touch anywhere turns the page', t.probe().at === 4);
+    t.host.querySelector('[data-st-root]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    t.host.querySelector('[data-st-root]').dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    check('Enter and Space turn the page; past the last page, "The end."', t.probe().at === s.pages.length
+      && t.words().textContent === 'The end.' && t.output.said.at(-1) === 'The end.');
+    t.verb('select');
+    check('a press on "The end" starts the next story', t.probe().storyId === STORIES[1].id && t.probe().at === -1 && t.output.said.at(-1) === STORIES[1].title);
+    t.inst.destroy();
+  }
+
+  section('*** voice: "next page" ***');
+  {
+    const t = mount();
+    const table = moduleVoiceTable(VOICE, { verbs: verbsFor(TYPE) });
+    const say = (phrase) => t.bus.publish(verbTarget(TYPE, table[phrase]).topic);
+    say('next page');
+    check('"next page" turns the page (the phrase is the verb, the verb is the page)', t.probe().at === 0);
+    say('turn the page');
+    check('"turn the page"', t.probe().at === 1);
+    say('previous page');
+    check('"previous page"', t.probe().at === 0);
+    say('read it again');
+    check('"read it again"', t.output.said.at(-1) === textOf(STORIES[0], 0) && t.probe().at === 0);
+    say('pause the story');
+    check('"pause the story": paused, the voice stopped', t.probe().paused && !!t.host.querySelector('[data-paused]:not([hidden])'));
+    say('carry on reading');
+    check('"carry on reading": it goes on, reading the page', !t.probe().paused && t.output.said.at(-1) === textOf(STORIES[0], 0));
+    t.inst.destroy();
+  }
+
+  section('*** it turns by itself, after each page is read, so somebody who can only watch hears the whole story ***');
+  {
+    const t = mount();
+    const s = STORIES[0];
+    t.timers.run(30000);
+    check('while the voice is still reading, the page waits for it', t.probe().at === -1 && t.probe().reading);
+    t.output.finish();
+    check('read: the page turn is set', t.probe().turnPending);
+    t.timers.run(DEFAULTS.storyPageMs - 1);
+    check(`...not before "How long a page stays after it is read" (${DEFAULTS.storyPageMs / 1000} s)`, t.probe().at === -1);
+    t.timers.run(1);
+    check('*** then the page turns by itself, and is read ***', t.probe().at === 0 && t.output.said.at(-1) === textOf(s, 0));
+    for (let i = 1; i <= s.pages.length; i++) { t.output.finish(); t.timers.run(DEFAULTS.storyPageMs); }
+    check('*** with nothing pressed, every page, to "The end" ***', t.probe().at === s.pages.length
+      && s.pages.every((p, i) => t.output.said.includes(textOf(s, i))));
+    t.output.finish();
+    t.timers.run(DEFAULTS.storyRestMs - 1);
+    check('a quiet rest on "The end" (1 minute)', t.probe().storyId === s.id);
+    t.timers.run(1);
+    check('*** then the next story, by itself ***', t.probe().storyId === STORIES[1].id && t.probe().at === -1);
+    t.inst.destroy();
+    const lost = mount();
+    lost.timers.run(SPEECH_WAIT_MAX_MS + DEFAULTS.storyPageMs);
+    check(`a voice that never says it finished cannot hold a page: after ${SPEECH_WAIT_MAX_MS / 1000} s it counts as read`, lost.probe().at === 0);
+    lost.inst.destroy();
+    const stay = mount({ output: fakeOutput({ mode: 'auto' }), saved: { afterStory: 'stop' } });
+    for (let i = 0; i < 20; i++) stay.timers.run(DEFAULTS.storyPageMs);
+    stay.timers.run(60 * 60000);
+    check('"Stay on The end until pressed" is a choice: it stays', stay.probe().at === STORIES[0].pages.length && stay.probe().storyId === STORIES[0].id);
+    stay.verb('select');
+    check('...and a press starts the next', stay.probe().storyId === STORIES[1].id);
+    stay.inst.destroy();
+    const again = mount({ output: fakeOutput({ mode: 'auto' }), saved: { afterStory: 'again' } });
+    for (let i = 0; i < 7; i++) again.timers.run(DEFAULTS.storyPageMs);
+    again.timers.run(DEFAULTS.storyRestMs);
+    check('"the same story again"', again.probe().storyId === STORIES[0].id && again.probe().at === -1);
+    again.inst.destroy();
+    const one = mount({ output: fakeOutput({ mode: 'auto' }), saved: { storyPick: STORIES[3].id } });
+    check('"Which story": the one chosen', one.probe().storyId === STORIES[3].id);
+    one.inst.destroy();
+  }
+
+  section('*** waiting for a press still turns by itself after a while, unless "Never" was chosen ***');
+  {
+    const t = mount({ output: fakeOutput({ mode: 'auto' }), saved: { turnPages: 'press' } });
+    t.timers.run(DEFAULTS.storyPageMs * 3);
+    check('"Wait for a press": the page waits past the usual time', t.probe().at === -1);
+    t.timers.run(DEFAULTS.storyWaitMs);
+    check('*** ...and turns anyway after "turn by itself anyway after" (1 minute) ***', t.probe().at === 0);
+    t.verb('select');
+    check('a press turns at once', t.probe().at === 1);
+    t.inst.destroy();
+    const never = mount({ output: fakeOutput({ mode: 'auto' }), saved: { turnPages: 'press', storyWaitMs: 0 } });
+    never.timers.run(24 * 60 * 60000);
+    check('"Never (only a press turns it)": the person\'s own choice, it waits', never.probe().at === -1 && never.timers.pending() === 0);
+    never.inst.destroy();
+  }
+
+  section('*** no voice on this screen: the words large, said once, and it still turns by itself ***');
+  {
+    const t = mount({ output: null });
+    check('no voice: shown large', t.probe().voice === 'none' && t.words().dataset.size === 'large');
+    check('...said once, in words, under the story', /no voice, so the words are shown large/.test(t.host.querySelector('[data-note]').textContent));
+    const s = STORIES[0];
+    const coverMs = DEFAULTS.storyPageMs + s.title.split(/\s+/).length * READ_MS_PER_WORD;
+    t.timers.run(coverMs);
+    check('the cover turns by itself after the page\'s time plus time to read it', t.probe().at === 0);
+    const pageMs = DEFAULTS.storyPageMs + textOf(s, 0).split(/\s+/).length * READ_MS_PER_WORD;
+    t.timers.run(pageMs - 1);
+    check(`...a page stays long enough to read (${READ_MS_PER_WORD} ms a word more)`, t.probe().at === 0);
+    t.timers.run(1);
+    check('...then turns', t.probe().at === 1);
+    t.inst.destroy();
+    const r = mount({ output: fakeOutput({ mode: 'none' }) });
+    check('a voice that reports it is not there ("no-adapter") counts as no voice', r.probe().voice === 'none' && r.words().dataset.size === 'large');
+    r.inst.destroy();
+    const quiet = mount({ saved: { readAloud: false } });
+    check('"Read the story aloud: No": nothing said, the words shown', quiet.output.said.length === 0 && quiet.words().textContent === STORIES[0].title);
+    quiet.inst.destroy();
+    const big = mount({ saved: { storyText: 'large' } });
+    check('"Size of the words: Large"', big.words().dataset.size === 'large');
+    big.inst.destroy();
+  }
+
+  section('*** the hero is the person\'s own character; the cast wears the theme\'s outfits ***');
+  {
+    const fig = normalizeFigure({ tone: '#6f4a32', hair: 'bald', hairColor: '#d8d4cc', beard: 'yes', glasses: 'yes', outfit: 'steampunkAviator', pose: 'stand' });
+    const rows = new Map();
+    const person = (pid, key) => { const k = `${pid}:${key}`; if (!rows.has(k)) rows.set(k, fakeState(key === 'avatar' ? { use: 'drawn', figure: fig } : {})); return rows.get(k); };
+    const t = mount({ person });
+    t.verb('select');   // page 1: everybody standing (on the cover the hero waves)
+    const mine = heroParts(fig, 'nimrod');
+    check('*** the hero is the full-body character from the avatar maker, as they dressed it ***',
+      t.pic().querySelector('[data-who="hero"]').innerHTML === dom(figureBody(mine.look, mine.opts)) && mine.opts.outfit === 'steampunkAviator');
+    t.state.set({ heroOutfit: 'theme' });
+    const themed = heroParts(fig, 'nimrod', { outfit: 'theme' });
+    check('"Dressed for the theme": the same person, in the theme\'s outfit', themed.opts.outfit === themeOutfit('nimrod')
+      && t.pic().querySelector('[data-who="hero"]').innerHTML === dom(figureBody(themed.look, themed.opts)));
+    t.inst.destroy();
+    const d = mount();
+    d.verb('select');
+    const def = heroParts(null, 'nimrod');
+    check('without one, a default character is the hero', d.pic().querySelector('[data-who="hero"]').innerHTML === dom(figureBody(def.look, def.opts)));
+    const q = courtParts('queen', 'nimrod');
+    check('the cast are Design\'s court characters, dressed for the theme (Queen Rosa in the Nimrod cardigan)',
+      d.pic().querySelector('[data-who="queen"]').innerHTML === dom(figureBody(q.look, q.opts)) && q.opts.outfit === 'nimrodCardigan');
+    d.inst.destroy();
+  }
+
+  section('*** the theme changes and the story is redrawn in it ***');
+  {
+    const outer = document.createElement('div');
+    outer.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.append(outer);
+    applyTheme(outer, 'halloween');
+    const host = document.createElement('div');
+    host.style.cssText = 'width:960px;height:540px';
+    outer.append(host);
+    const t = mount({ host, output: fakeOutput({ mode: 'auto' }), saved: { storyPick: 'letter' } });
+    t.verb('select');
+    const s = STORIES.find((x) => x.id === 'letter');
+    check('a Halloween panel: the King\'s home is the Haunted Hall in the words and the picture', t.words().textContent === textOf(s, 0, 'halloween')
+      && /the Haunted Hall/.test(t.words().textContent) && t.pic().getAttribute('aria-label').startsWith('The Haunted Hall'));
+    const k = courtParts('king', 'halloween');
+    check('King Bram in his Halloween outfit', t.pic().querySelector('[data-who="king"]').innerHTML === dom(figureBody(k.look, k.opts)) && k.opts.outfit === 'halloweenVampire');
+    applyTheme(outer, 'christmas');
+    await flush();
+    check('*** Christmas now: the Feast Hall, redrawn with nothing pressed ***', t.pic().getAttribute('aria-label').startsWith('The Feast Hall'));
+    t.inst.destroy(); outer.remove();
+  }
+
+  section('*** an AI-written story: the seam (story_ai.js nextPage), off until set up ***');
+  {
+    check('the picture is chosen from the words: the first place named, the people named',
+      J(aiPage({ ok: true, text: 'You walk into the Bakery with Queen Rosa. Jack waves.' }, 'nimrod')) === J({ place: 'bakery', cast: ['hero', 'queen', 'jack'], text: 'You walk into the Bakery with Queen Rosa. Jack waves.' }));
+    check('a theme\'s own name counts ("the Ice Hall" is the King\'s home in winter)', aiPage({ ok: true, text: 'Snow falls on the Ice Hall.' }, 'winter').place === 'kingHall');
+    check('no place named: the last page\'s place, the hero alone', J(aiPage({ ok: true, text: 'It was quiet.' }, 'nimrod', 'shop')) === J({ place: 'shop', cast: ['hero'], text: 'It was quiet.' }));
+    check('a page in Story time\'s own shape is checked as it is', J(aiPage({ place: 'park', cast: ['king'], text: 'Hi.' })) === J({ place: 'park', cast: ['hero', 'king'], text: 'Hi.' }));
+    check('a refusal or "please tell somebody" ends the story there', aiPage({ ok: true, refused: true, text: 'Let us not.' }).end === true);
+    check('no answer is no page', aiPage({ ok: false, fallback: true, text: '' }) === null && aiPage(null) === null);
+    const calls = [];
+    const storyAi = { nextPage: async (c) => { calls.push(c); return { ok: true, text: calls.length === 1 ? 'You find King Bram in the Library.' : 'Pip arrives at the Park.', summary: 's' }; } };
+    const t = mount({ storyAi, output: fakeOutput({ mode: 'auto' }), saved: { storySource: 'ai' } });
+    await flush(); await flush(); await flush();
+    check('set to the AI: it is asked for the first page with the theme, the cast and the places', calls.length >= 1 && calls[0].theme === 'nimrod'
+      && calls[0].pages.length === 0 && calls[0].places.length === 8 && calls[0].cast[0].role === 'hero' && 'ctx' in calls[0], J(Object.keys(calls[0] || {})));
+    t.verb('select');
+    await flush(); await flush();
+    check('*** its page shows: the Library, with King Bram, read aloud ***', t.probe().at === 0 && t.pic().getAttribute('data-scene') === 'library'
+      && !!t.pic().querySelector('[data-who="king"]') && t.output.said.at(-1) === 'You find King Bram in the Library.');
+    t.inst.destroy();
+    const none = mount({ storyAi: { nextPage: async () => ({ ok: false, fallback: true, noAI: true, text: '' }) }, saved: { storySource: 'ai' } });
+    await flush(); await flush(); await flush();
+    check('*** no storyteller set up: a built-in story, and it says so ***', none.probe().storyId === STORIES[0].id
+      && /not set up on this screen/.test(none.host.querySelector('[data-note]').textContent));
+    none.inst.destroy();
+    const slow = mount({ storyAi: { nextPage: () => new Promise(() => {}) }, saved: { storySource: 'ai' } });
+    await flush(); await flush();
+    slow.timers.run(AI_WAIT_MS);
+    check(`a storyteller that never answers gets ${AI_WAIT_MS / 1000} s, then a built-in story is read`, slow.probe().storyId === STORIES[0].id
+      && /did not answer/.test(slow.host.querySelector('[data-note]').textContent));
+    slow.inst.destroy();
+  }
+
+  section('pause, hiding, and nothing left behind');
+  {
+    const t = mount({ output: fakeOutput({ mode: 'auto' }) });
+    t.verb('pause');
+    t.timers.run(60 * 60000);
+    check('paused: it stays, nothing said', t.probe().paused && t.probe().at === -1 && t.timers.pending() === 0);
+    t.verb('select');
+    check('any press goes on (and does not skip a page)', !t.probe().paused && t.probe().at === -1);
+    t.inst.onHide();
+    check('hidden: the voice and the page turn stop', t.timers.pending() === 0);
+    t.inst.onShow();
+    check('shown again: the page is read again and turns as before', t.probe().turnPending);
+    t.inst.destroy();
+    check('*** after destroy, no timer is left ***', t.timers.pending() === 0, String(t.timers.pending()));
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+// To look at: page 4 of the clock story.
+{
+  const liveHost = document.getElementById('host');
+  const lt = fakeTimers();
+  const lb = createBus();
+  const show = mountModule(TYPE, { mount: liveHost, bus: lb, state: fakeState({ storyPick: 'clock' }), personId: null, instanceId: 'live',
+    setTimer: lt.set, clearTimer: lt.clear });
+  show.init();
+  for (let i = 0; i < 4; i++) lb.publish('story/next');
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

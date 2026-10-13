@@ -184,6 +184,9 @@ export const SUITES = [
   'stackline', 'brickmosaic',
   // brick games (2026-10-10): sortbricks, Sort the bricks (a shape sorter, then sorting by colour and by size).
   'sortbricks',
+  // town and story (2026-10-12): Design's town (its places opened, rearranged per person, and drawn on the cards) and
+  // Story time (a picture story read aloud, turned by a press, by itself, or by voice).
+  'town', 'story',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

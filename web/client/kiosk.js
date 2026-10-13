@@ -269,6 +269,8 @@ import './modules/buildit.js';         // registers 'buildit' (brick builder, 20
 import './modules/stackline.js';       // registers 'stackline' (brick games, 2026-10-10: Stack to the line)
 import './modules/brickmosaic.js';     // registers 'brickmosaic' (brick games, 2026-10-10: Brick mosaic)
 import './modules/sortbricks.js';      // registers 'sortbricks' (brick games, 2026-10-10: Sort the bricks)
+import './modules/town.js';            // registers 'town' (2026-10-12: the theme's town, its places opened and rearranged)
+import './modules/story.js';           // registers 'story' (2026-10-12: Story time, a picture story read aloud)
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
 import './modules/voice_review.js';    // registers 'voice_review' (row 2.44, the voice recordings kept here)
 import './modules/voice_model.js';     // registers 'voice_model' (2026-10-04: the voice-model steps, one at a time)
@@ -5580,7 +5582,7 @@ export async function mountKiosk(root, {
   // Word Builder since 2026-10-12 (the same one-press way; its room mode is game_together.js's, as Quiz mix's is).
   const CALL_GAME_TYPES = Object.freeze(['quiz_mix', 'word_builder']);
   // How long the game's half stays after the game together is over (its last table, the note saying why), before the
-  // call view goes back to how it opened. = quiz_mix.js NOTE_MS: read, then gone by itself.
+  // call view goes back to how it opened. = game_together.js NOTE_MS: read, then gone by itself.
   const CALL_GAME_LINGER_MS = 20000;
   function routeGameAsk(ask) {
     if (torn || !ask || !CALL_GAME_TYPES.includes(ask.game)) return false;

@@ -119,6 +119,8 @@ export const MODULE_CATEGORIES = Object.freeze({
   brickbuilder: ['3d', 'tools'], buildit: ['games', '3d'],   // brick builder (2026-10-09): make a model; Build it
   stackline: ['games'], brickmosaic: ['games', 'visual'],   // brick games (2026-10-10): Stack to the line; Brick mosaic
   sortbricks: ['games'],   // brick games (2026-10-10): Sort the bricks (sortbricks)
+  town: ['visual', 'scenes'],   // town (2026-10-12): the theme's town, a place to look at and rearrange
+  story: ['visual'],   // story (2026-10-12): Story time, a picture story read aloud
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
   themes: ['visual', 'tools'],   // (2026-10-06) the theme picker as a panel: something to look at, and a setting

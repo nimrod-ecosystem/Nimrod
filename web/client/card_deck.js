@@ -41,8 +41,9 @@
 //     "`scenery: false` turns the scenes off, for plainer cards or the low-vision setting"). 'auto' is on except
 //     in the decks where it MEASURED under 3:1 (SCENERY_DEFAULT_OFF, below).
 //   * THE TOWN SEAM: `cardOptions(cfg, { town })` passes a person's edited places ({ placeId: recipe }, per
-//     theme) to `cardSvg` ONLY when there are some. No such edits exist yet (the town editor is not built),
-//     so today nothing passes one and every card draws Design's default town.
+//     theme) to `cardSvg` ONLY when there are some. Since 2026-10-12 the Town module (modules/town.js) keeps a
+//     person's rearranged places (town_edits.js), and solitaire and card sort pass them here; with none, every card
+//     draws Design's default town.
 //   * IDS MADE STABLE. Design's town and character drawings number their pattern, gradient and clip ids from a
 //     counter, so the same card drawn twice was two different strings. `cardArt` renames every id in a face
 //     to one derived from the drawing itself plus the table's suffix: the same card is the same string (a
