@@ -461,6 +461,12 @@ export function verbFor(text, table = PHRASES) {
   return null;
 }
 
+/** Whether `text` is one of route `r`'s `wakeOnly` phrases (row 2.88): taken only when said to the screen. Pure. */
+export function wakeOnlyPhrase(r, text) {
+  const said = normalize(text);
+  return !!said && Array.isArray(r?.wakeOnly) && r.wakeOnly.some((p) => normalize(p) === said);
+}
+
 /** Which spoken route, if any, was said: the route id or null. Same exact whole-utterance rule. */
 export function routeFor(text, routes = ROUTES) {
   const said = normalize(text);
@@ -2320,7 +2326,10 @@ export function attachSpeech(input, {
       return;
     }
     const verb = verbFor(rest, table);
-    const route = verb ? null : routeFor(rest, routes);
+    let route = verb ? null : routeFor(rest, routes);
+    // A route phrase marked `wakeOnly` (row 2.88: a dashboard's bare name, dashboards.js) counts only when said to the
+    // screen - the wake phrase or the command window - even with the wake gate off. Otherwise it is talk.
+    if (route && !(w.woke || inWindow) && wakeOnlyPhrase(routes?.[route], rest)) route = null;
     // An unrecognised phrase does nothing - and does not close an open window, so somebody who
     // is mis-heard once can simply say it again. It is logged ONLY when it followed a wake
     // phrase (in the same breath, or inside the window): with the gate turned off, a bare
