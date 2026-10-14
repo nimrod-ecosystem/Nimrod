@@ -4,15 +4,13 @@
 // only answers, and the only caller was `createCallTransport({ role: 'driver' }).call()` in the tests.
 // This is that caller, for a phone or a computer, signed in to the caller's own account.
 //
-// WHO CAN CALL: exactly whoever may use that person's screens today - the owner, or an account holding a
-// live DRIVE GRANT (grants.py `may_drive`, checked by the server when the page asks for a socket ticket and
-// again when the socket opens). That is the same gate the intercom page passes through to reach the
-// socket. There is no separate "may call" check, and this page does not invent one or widen this one:
-// links.py names `call_audio` / `call_video` as link permissions, but nothing on the site can create a
-// link or switch a permission on yet, so a check on them would refuse every family member. When they
-// become settable, they are the server's to check (on a `purpose: 'call'` offer) - see the report on
-// Mike's list. The page asks for a ticket BEFORE it opens anything, so an account without the grant is
-// told so in plain words and no camera, microphone or socket is ever opened for it.
+// WHO CAN CALL (2026-10-14, "a call is only a call"): the owner, or an account holding a live grant on that person -
+// a drive grant, or a CALL-ONLY one (grants.py `may_reach`, checked when the page asks for a socket ticket and again
+// when the socket opens) - whose "May call" is not switched off on the person's own list (screen_access.py
+// `may_call`, checked by the SERVER on every call offer: a refused ring comes back as a `bye` with reason
+// 'not-allowed', and nothing rings). Calling grants no drive and no see; those are lent by the screen during a call.
+// The page asks for a ticket BEFORE it opens anything, so an account without a grant is told so in plain words and
+// no camera, microphone or socket is ever opened for it.
 //
 // WHAT IT DOES: the person presses Video call or Audio call. Only then, and only once the site says a
 // screen of that person is connected, does the browser ask for the camera / microphone. The call goes out
@@ -78,6 +76,9 @@ export const CALLER_END_TEXT = Object.freeze({
   'connection-lost': 'The connection was lost.',
   hangup: 'The call ended.',
   ended: 'The call ended.',
+  // A call is only a call (2026-10-14): "May call" is its own permission, and the SERVER refuses the ring (app.py) with
+  // this reason when it is switched off for this account. Nothing rang.
+  'not-allowed': 'This account may not call that screen. Whoever looks after it can allow it on the Remote page (“May call”).',
 });
 
 // "PLAY THIS GAME TOGETHER" (2026-10-12; game_rooms.py CallAsks). During a call, one press here asks the screen to open
@@ -529,7 +530,7 @@ export async function mountCallPage(root, {
     if (my !== run || legs.get(session) !== leg) return;
     let pres = null;
     opened.sockets++;
-    leg.link = connect({ personId: person.id, role: 'driver', user, base,
+    leg.link = connect({ personId: person.id, role: 'driver', user, base, idle: true,
       onPresence: (p) => { pres = p; poke(); }, onState: () => poke() });
     // The site refusing this ring (the call is full, or this login is not in it) is said on THIS socket.
     leg.offs.push(leg.link.onGroup?.((m) => {
@@ -612,7 +613,7 @@ export async function mountCallPage(root, {
     if (my !== run) return;
     setPhase('connecting');
     opened.sockets++;
-    link = connect({ personId: target.id, role: 'driver', user, base, onState: () => poke() });
+    link = connect({ personId: target.id, role: 'driver', user, base, idle: true, onState: () => poke() });
     const up = await waitFor(() => link && link.state?.() === 'connected', connectMs);
     if (my !== run) return;
     if (!up) { finish('Could not reach the site. Check the connection and try again.'); return; }
@@ -815,8 +816,11 @@ export async function mountCallPage(root, {
     let presence = null;
     let wasDown = false;
     opened.sockets++;
+    // `idle` (row 2.83; 2026-10-14 "a call is only a call"): a call socket is CONNECTED, NOT PRESSING, so a call
+    // alone never makes the screen say "Someone is helping from another screen" (drive.js `idle`, app.py
+    // `_idle_drivers`). It never sends a press; if it ever did, the server would mark it driving first.
     link = connect({
-      personId: target.id, role: 'driver', user, base,
+      personId: target.id, role: 'driver', user, base, idle: true,
       onPresence: (p) => { presence = p; poke(); },
       onState: (s) => {
         poke();

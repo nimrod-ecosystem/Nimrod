@@ -65,6 +65,29 @@ MAX_TTL_DAYS = 3650
 GRANT_ROLES = ("moderator", "participant")
 DEFAULT_GRANT_ROLE = "moderator"
 
+# *** A CALL IS ONLY A CALL (Mike, 2026-10-14, note BX). *** Being able to call a person's screens grants NO drive and NO
+# see. Until now the only way to reach a person's screens at all was a drive grant, so calling rode on "may drive". A
+# grant with the role CALL_ONLY lets somebody reach the screens - call them, and use the intercom if the person's own
+# list allows it - and nothing else: may_drive() says no to it, and the drive socket drops every verb it sends (app.py)
+# unless the screen lends them "drive" during a call (screen_access.py). It is the SAME grant row, with the same expiry
+# and the same "either side may end it" rule, so the person still finds the screens in their list (/api/drive/shared)
+# and the owner still sees and takes it back in one place - a second table would be a second place to forget.
+#
+# It is NOT one of GRANT_ROLES: those say what a DRIVER gets to be (the input gate's role). A role nothing understands is
+# normalized to the default (normalize_role); this one is kept as itself by normalize_stored_role, so storage holds it.
+CALL_ONLY = "caller"
+STORED_ROLES = GRANT_ROLES + (CALL_ONLY,)
+
+
+def normalize_stored_role(role: str | None) -> str:
+    """What a grant row stores: a driver role (normalized), or CALL_ONLY kept as itself."""
+    r = (role or "").strip().lower()
+    return CALL_ONLY if r == CALL_ONLY else normalize_role(r)
+
+
+def is_call_only(grant: dict | None) -> bool:
+    return normalize_stored_role((grant or {}).get("role")) == CALL_ONLY
+
 
 def normalize_role(role: str | None) -> str:
     """An unknown role becomes the default rather than raising.
@@ -112,9 +135,13 @@ def is_expired(expires_at: str | None, now_iso: str) -> bool:
     return str(expires_at) <= str(now_iso)
 
 
-def grant_allows(grant: dict, *, account: str, now_iso: str) -> bool:
-    """Does this one grant let `account` drive? PURE - the whole rule, testable alone."""
+def grant_allows(grant: dict, *, account: str, now_iso: str, drive: bool = True) -> bool:
+    """Does this one grant let `account` drive (`drive`=True) or just reach the screens (`drive`=False)? PURE.
+
+    A CALL_ONLY grant reaches and never drives (2026-10-14)."""
     if not grant:
+        return False
+    if drive and is_call_only(grant):
         return False
     kind = grant.get("subject_kind")
     # THE FAIL-CLOSED LINE. A 'group' grant is stored and does nothing until groups exist.
@@ -144,4 +171,23 @@ def may_drive(person_id: str, *, account: str, owner: str | None,
         return False
     if owner == account:
         return True
+    return any(grant_allows(g, account=account, now_iso=now_iso) for g in grants or [])
+
+
+def may_reach(person_id: str, *, account: str, owner: str | None,
+              grants: list[dict], now_iso: str) -> bool:
+    """May `account` open a socket onto this person's screens at all - the owner, a live drive grant, or a live
+    CALL_ONLY grant (2026-10-14)? What the socket then lets them DO is decided per message: verbs need may_drive (or a
+    drive lent on a call), a call needs "may call" (screen_access.perms_for), the intercom needs the person's list.
+    The same anti-oracle rules as may_drive."""
+    if not person_id or not account or not owner:
+        return False
+    if owner == account:
+        return True
+    return any(grant_allows(g, account=account, now_iso=now_iso, drive=False) for g in grants or [])
+
+
+def holds_drive_grant(account: str, grants: list[dict], now_iso: str) -> bool:
+    """A live grant that lets them DRIVE (not a call-only one). For "May call"'s default: an existing drive grant keeps
+    the right to call it always carried (continuity, argued in screen_access.py)."""
     return any(grant_allows(g, account=account, now_iso=now_iso) for g in grants or [])

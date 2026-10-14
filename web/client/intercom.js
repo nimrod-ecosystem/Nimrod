@@ -12,8 +12,9 @@
 //      the intercom until somebody adds them. The check is against WHO THE SERVER SAYS SENT THE OFFER
 //      (`sig.by`, stamped by the server on every relayed signal - drive.py `stamp_signal`), never
 //      against a name the phone typed. An offer with no stamp (an older server) is REFUSED: the check
-//      fails closed. Getting onto the drive socket at all still needs a drive grant (unchanged), so an
-//      intercom caller is somebody with a grant AND on the list.
+//      fails closed. Getting onto the drive socket at all still needs a grant (since 2026-10-14 a call-only
+//      one does too), so an intercom caller is somebody with a grant AND allowed the intercom. (2026-10-13/14:
+//      "the list" is now "May use the intercom" - see HANDLED LIKE A CALL below.)
 //   2. THE ROOM IS TOLD FIRST. Before any microphone opens, the room hears a chime and (by default) the
 //      caller's name is said, and the screen shows "Intercom opening: <name>" for `warnMs`. Only
 //      then is the room's microphone opened. The name shown is the one on the APPROVED LIST, not one the
@@ -50,9 +51,29 @@
 //
 // THE CALL TIER ON THE AUDIO BUS: while open, the caller's voice is registered as `call` tier (like a
 // call), so music and videos pause under it rather than talking over the person on the intercom.
+//
+// ---------------------------------------------------------------------------------------
+// HANDLED LIKE A CALL (Mike, 2026-10-13): "Intercom is handled like a call, with its own permission separate from
+// calls; auto answer on by default; sound only by default, video as an option; so any device in someone's household
+// can announce something." What that changed, argued:
+//   * ITS OWN PERMISSION, CHECKED BY THE SERVER. "May use the intercom" (screen_permissions.js permsFor, the same rule
+//     as server/screen_access.may_intercom): the owner's own devices and the guardian set by default, anybody else when
+//     ticked (this file's older list `intercomAllowed` still counts). The server now refuses an intercom offer from
+//     anybody else before it reaches a screen (app.py); the screen still checks too, by the server's stamp (rule 1).
+//     Being able to call gives no intercom, and the intercom gives no call.
+//   * AUTO ANSWER ON BY DEFAULT (`intercomAutoAnswer`) - what it always did: an intercom ANNOUNCES. Off makes it ring
+//     like a call instead: "Intercom from <name>" with Answer and Not now, gone by itself after `answerWaitMs` (20 s,
+//     inside the phone's own 30 s wait) - nobody answering means it never opened, never a state only a press can leave.
+//   * SOUND ONLY BY DEFAULT, VIDEO AS AN OPTION (`intercomVideo`): 'off' (default) - a phone that offers video is
+//     answered with sound only, and the room's camera never opens; 'theirs' - the room shows the caller's picture in the
+//     notice, its own camera stays off; 'both' - two-way, like a call. Argued: 'theirs' exists because "show me who is
+//     announcing" is the common want, and opening a ROOM's camera on an intercom that answers by itself is a bigger
+//     step than seeing a face - it is a separate choice, never the default.
+//   * THE SCREEN SHOWS WHO IS ANNOUNCING the whole time (rule 3), its picture too when video is on.
 
 import { iceServers, gatheringDone, STALL_MS } from './call_transport.js';
-import { offerIsAudioOnly, newSession as newPhoneSession } from './phone_mic.js';
+import { newSession as newPhoneSession } from './phone_mic.js';
+import { permsFor } from './screen_permissions.js';
 import { PROFILES as MIC_PROFILES } from './mic_owner.js';
 import { noticeStack } from './live_notices.js';
 
@@ -103,8 +124,18 @@ export const INTERCOM_DEFAULTS = Object.freeze({
   //     intercom case above. Right for a household that uses the intercom for long conversations
   //     and would rather the caller try again.
   callDuringIntercom: 'ring',
+  // AUTO ANSWER (2026-10-13, Mike: "auto answer on by default"): an intercom announces. Off = it rings like a call.
+  autoAnswer: true,
+  // With auto answer off: how long "Intercom from <name>" waits for Answer before it goes by itself. 20 s, argued:
+  //   the phone gives up at 30 s (createIntercomSender `answerMs`), so the room's question must end first, with time
+  //   for the phone to hear why; long enough to reach a button across a room. Not a person's setting: it is bounded
+  //   by the phone's own wait, and a menu choice longer than that would be a lie.
+  answerWaitMs: 20000,
+  // VIDEO (2026-10-13, "sound only by default, video as an option"): 'off' | 'theirs' | 'both' - see the header.
+  video: 'off',
 });
 const CALL_DURING = ['ring', 'busy'];
+export const VIDEO_CHOICES = Object.freeze(['off', 'theirs', 'both']);
 
 const WARN_CHOICES = [0, 3000, 10000];
 const MAX_CHOICES = [0, 10 * 60000, 30 * 60000, 60 * 60000];
@@ -137,6 +168,17 @@ export const INTERCOM_FIELDS = [
       { value: 'busy', label: 'Tell the caller the room is busy' },
     ],
     note: 'Ringing means a phone left open on the intercom never turns a call away. Busy means nobody on the intercom is cut off.' },
+  { key: 'intercomAutoAnswer', label: 'Intercom: answer by itself', kind: 'toggle',
+    default: INTERCOM_DEFAULTS.autoAnswer, level: 'standard',
+    note: 'On, the intercom announces: the room hears a chime and who it is, then it opens. Off, it waits for Answer, like a call, and goes by itself if nobody answers.' },
+  { key: 'intercomVideo', label: 'Intercom: video', kind: 'choice',
+    default: INTERCOM_DEFAULTS.video, level: 'standard',
+    options: [
+      { value: 'off', label: 'Sound only' },
+      { value: 'theirs', label: 'Show the caller’s video; this room’s camera stays off' },
+      { value: 'both', label: 'Video both ways, like a call' },
+    ],
+    note: 'Sound only by default. The screen always shows who is on the intercom.' },
 ];
 
 /** The approved list, cleaned: [{ account, name }], one per account. Pure. */
@@ -165,7 +207,40 @@ export function intercomOptionsFrom(values = {}) {
     announce: typeof v.intercomAnnounce === 'boolean' ? v.intercomAnnounce : INTERCOM_DEFAULTS.announce,
     maxMs: pick('intercomMaxMs', MAX_CHOICES, INTERCOM_DEFAULTS.maxMs),
     callDuringIntercom: CALL_DURING.includes(v.callDuringIntercom) ? v.callDuringIntercom : INTERCOM_DEFAULTS.callDuringIntercom,
+    autoAnswer: typeof v.intercomAutoAnswer === 'boolean' ? v.intercomAutoAnswer : INTERCOM_DEFAULTS.autoAnswer,
+    video: VIDEO_CHOICES.includes(v.intercomVideo) ? v.intercomVideo : INTERCOM_DEFAULTS.video,
+    answerWaitMs: INTERCOM_DEFAULTS.answerWaitMs,
+    // The whole row, for "May use the intercom" (screen_permissions.js permsFor): the owner, the guardian set, ticks.
+    row: v,
   };
+}
+
+/**
+ * MAY THIS SENDER USE THE INTERCOM (2026-10-13/14)? Pure. `sig` is the server-stamped offer: `by` (the account),
+ * `byOwner` (the server's word that it owns these screens), `byName` (the name the server would show). Returns
+ * { account, name } or null. Fails closed: no stamp, no entry. With no row in the options (an older caller of this
+ * file), only the older list counts - exactly as before.
+ */
+export function admitFor(o, sig) {
+  const by = sig && typeof sig.by === 'string' && sig.by ? sig.by : null;
+  if (!by) return null;
+  const listed = admits((o || {}).allowed, by);
+  const row = o && o.row;
+  if (!row || typeof row !== 'object') return listed;
+  const ok = permsFor(row, by, sig.byOwner === true ? by : null).intercom === true;
+  if (!ok) return null;
+  if (listed) return listed;
+  const ent = (Array.isArray(row.screenPeople) ? row.screenPeople : []).find((e) => e && e.account === by);
+  const name = (ent && typeof ent.name === 'string' && ent.name.trim())
+    || (typeof sig.byName === 'string' && sig.byName.trim()) || (sig.byOwner === true ? 'Your other device' : 'Someone');
+  return { account: by, name: String(name).slice(0, 60) };
+}
+
+/** An intercom offer must carry sound; video may ride along (the room's `video` setting decides what is shown). */
+export function intercomOfferCheck(sdp) {
+  const s = String(sdp || '');
+  if (!/^m=audio/m.test(s)) return { ok: false, why: 'no-audio' };
+  return { ok: true, why: null, video: /^m=video/m.test(s) };
 }
 
 /**
@@ -184,12 +259,16 @@ export const newSession = (rand) => newPhoneSession(rand).replace(/^pm-/, 'ic-')
 // agree on the words.
 export const END_REASONS = Object.freeze({
   'not-approved': 'This room has not added you to its intercom. Whoever looks after the screen can add you.',
+  // The server's own refusal of a call offer on an intercom-only socket (2026-10-14), for completeness.
+  'not-allowed': 'This account may not do that on this screen.',
   busy: 'The intercom is already open with somebody else.',
   'in-a-call': 'The room is on a call right now. Try the intercom again once the call is over.',
   'room-ended': 'The room ended the intercom.',
   'time-limit': 'The intercom ended itself after its time limit.',
   call: 'The room answered a call, so the intercom ended. Open it again once the call is over.',
   'video-refused': 'The intercom only carries sound.',
+  declined: 'The room said not now.',
+  unanswered: 'Nobody in the room answered.',
   'no-audio': 'The intercom needs this phone’s microphone.',
   stopped: 'The intercom is closed.',
   'no-answer': 'The screen did not answer. It may be switched off.',
@@ -214,8 +293,11 @@ export function createIntercomSender({
   // How long to wait for the room to answer: its warning (up to 10 s) plus the connection. 30 s, then
   // it says the screen did not answer. NOT retried by itself: an intercom is a press each time.
   answerMs = 30000,
+  // SEND THIS PHONE'S VIDEO TOO (2026-10-13, "video as an option"). Off by default. The room's own `intercomVideo`
+  // decides whether it is shown; a room set to sound only answers with sound only and its camera never opens.
+  video = false,
   onState = null,
-  onRemote = null,                     // (MediaStream|null) - the room's sound, for the page to play
+  onRemote = null,                     // (MediaStream|null) - the room's sound (and picture, if it sends one)
 } = {}) {
   if (!link) throw new Error('createIntercomSender: a drive link is required');
   let state = 'idle';
@@ -252,7 +334,9 @@ export function createIntercomSender({
     answered = false;
     pc = new PeerConnection({ iceServers: iceServers(config) });
     const out = Stream ? new Stream() : null;
-    for (const t of (stream.getAudioTracks ? stream.getAudioTracks() : (stream.getTracks?.() || [])).filter((x) => !x.kind || x.kind === 'audio')) {
+    const sendable = (stream.getAudioTracks ? stream.getAudioTracks() : (stream.getTracks?.() || [])).filter((x) => !x.kind || x.kind === 'audio');
+    if (video) sendable.push(...(stream.getVideoTracks?.() || []));
+    for (const t of sendable) {
       try {
         if (out) out.addTrack?.(t);
         if (typeof pc.addTransceiver === 'function') pc.addTransceiver(t, { direction: 'sendrecv', streams: out ? [out] : [] });
@@ -261,7 +345,8 @@ export function createIntercomSender({
     }
     const mine = pc;
     pc.ontrack = (e) => {
-      if (pc !== mine || !e.track || (e.track.kind && e.track.kind !== 'audio')) return;   // sound only
+      // Sound only, unless this phone asked for video (then the room's picture, if it sends one, is shown too).
+      if (pc !== mine || !e.track || (e.track.kind && e.track.kind !== 'audio' && !(video && e.track.kind === 'video'))) return;
       if (!remote) remote = (e.streams && e.streams[0]) || (Stream ? new Stream() : null);
       if (remote && remote.getTracks && !remote.getTracks().includes(e.track)) { try { remote.addTrack(e.track); } catch { /* there */ } }
       try { onRemote?.(remote); } catch (err) { console.error('intercom onRemote', err); }
@@ -314,10 +399,17 @@ export function createIntercomSender({
     async start() {
       if (state !== 'idle' && state !== 'ended' && state !== 'no-mic') return false;
       set('opening');
-      try { stream = await getUserMedia(INTERCOM_CONSTRAINTS); }
-      catch (err) { console.error('intercom: no microphone', err); stream = null; set('no-mic', err?.name || 'denied'); return false; }
+      stream = null;
+      if (video) {
+        // Video asked for: try the camera with the microphone; without a camera, it is sound only (never no intercom).
+        try { stream = await getUserMedia({ ...INTERCOM_CONSTRAINTS, video: true }); } catch { stream = null; }
+      }
+      if (!stream) {
+        try { stream = await getUserMedia(INTERCOM_CONSTRAINTS); }
+        catch (err) { console.error('intercom: no microphone', err); stream = null; set('no-mic', err?.name || 'denied'); return false; }
+      }
       if (state !== 'opening') { release(); return false; }
-      for (const t of stream.getVideoTracks?.() || []) { try { t.stop(); stream.removeTrack?.(t); } catch { /* gone */ } }
+      if (!video) for (const t of stream.getVideoTracks?.() || []) { try { t.stop(); stream.removeTrack?.(t); } catch { /* gone */ } }
       return offer('asking');
     },
     /** The socket came back mid-intercom: offer again on the SAME session (the room treats it as a reconnect). */
@@ -326,6 +418,8 @@ export function createIntercomSender({
     state: () => state,
     reason: () => why,
     micOpen: () => !!stream,
+    /** This phone's own picture, when it sends video (for a small self view). */
+    local: () => (video && stream && (stream.getVideoTracks?.() || []).length ? stream : null),
     remote: () => remote,
     destroy() { stop('destroyed'); try { off?.(); } catch { /* gone */ } },
   };
@@ -377,21 +471,27 @@ export function createIntercomReceiver({
   makeAudio = () => (typeof Audio !== 'undefined' ? new Audio() : null),
   stallMs = STALL_MS,
   claimMs = CLAIM_MS,
+  // THE ROOM'S CAMERA, only for `intercomVideo: 'both'` (2026-10-13): () => Promise<MediaStreamTrack|null> (the kiosk
+  // hands in a clone from its camera owner) and its release. Absent: 'both' behaves as 'theirs' - no camera opens.
+  getCamera = null,
+  releaseCamera = null,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   onChange = null,
 } = {}) {
   if (!link) throw new Error('createIntercomReceiver: a drive link is required');
-  // The one session: { session, by, name, phase: 'claiming'|'warning'|'open', since, pc, mic, el, timers }.
+  // The one session: { session, by, name, phase: 'claiming'|'asking'|'warning'|'open', since, pc, mic, el, timers }.
   // 'claiming' = asking the server whether this screen is the one; nothing has happened in the room,
-  // so it is not shown, not listed, and holds nothing.
+  // so it is not shown, not listed, and holds nothing. 'asking' (auto answer off, 2026-10-13) = "Intercom from <name>"
+  // with Answer / Not now; nothing is open, and it goes by itself after `answerWaitMs`.
   let s = null;
   let destroyed = false;
   const offs = [];
   const claims = new Map();   // session -> a claim waiting for the server's answer
 
-  const list = () => (s && s.phase !== 'claiming' ? [{ session: s.session, name: s.name, phase: s.phase, since: s.since }] : []);
+  const list = () => (s && s.phase !== 'claiming'
+    ? [{ session: s.session, name: s.name, phase: s.phase, since: s.since, video: !!s.videoStream }] : []);
   function changed() {
     const sessions = list();
     try { onChange?.(sessions); } catch (err) { console.error('intercom onChange', err); }
@@ -405,11 +505,14 @@ export function createIntercomReceiver({
   function end(reason, { tell = true } = {}) {
     if (!s) return false;
     const was = s;
-    for (const k of ['warn', 'stall', 'limit']) clearT(k);
+    for (const k of ['warn', 'stall', 'limit', 'ask']) clearT(k);
     // The microphone FIRST: whatever else fails below, the room stops being heard.
     if (was.micHeld) { try { micOwner?.release?.(MIC_ID); } catch { /* gone */ } }
     else if (was.mic) { for (const t of was.mic.getTracks?.() || []) { try { t.stop(); } catch { /* stopped */ } } }
     was.mic = null; was.micHeld = false;
+    // ...and the room's camera, if 'both' opened it.
+    if (was.cam) { try { was.cam.stop?.(); } catch { /* stopped */ } was.cam = null; try { releaseCamera?.(); } catch { /* gone */ } }
+    was.videoStream = null;
     try { was.pc?.close(); } catch { /* closed */ }
     if (was.el) { try { was.el.pause?.(); was.el.srcObject = null; } catch { /* gone */ } }
     try { audio?.setActive?.(AUDIO_ID, false); } catch { /* gone */ }
@@ -477,8 +580,22 @@ export function createIntercomReceiver({
     const pc = new PeerConnection({ iceServers: iceServers(config) });
     sess.pc = pc;
     for (const t of sess.mic?.getAudioTracks?.() || []) { try { pc.addTrack(t, sess.mic); } catch (err) { console.error('intercom: add track', err); } }
+    // VIDEO (2026-10-13): 'off' never shows or sends a picture; 'theirs' shows the caller's; 'both' sends the room's
+    // camera too - and only when the phone offered video at all.
+    const vopt = sess.wantVideo ? ((options() || {}).video || 'off') : 'off';
+    if (vopt === 'both' && !sess.cam && typeof getCamera === 'function') {
+      try { sess.cam = await getCamera(); } catch (err) { console.error('intercom: camera', err); sess.cam = null; }
+      if (s !== sess) { try { sess.cam?.stop?.(); } catch { /* gone */ } if (sess.cam) { try { releaseCamera?.(); } catch { /* gone */ } } sess.cam = null; return false; }
+    }
     pc.ontrack = (e) => {
-      if (sess.pc !== pc || !e.track || (e.track.kind && e.track.kind !== 'audio')) return;
+      if (sess.pc !== pc || !e.track) return;
+      if (e.track.kind === 'video') {
+        if (vopt === 'off') return;
+        sess.videoStream = (e.streams && e.streams[0]) || null;
+        changed();
+        return;
+      }
+      if (e.track.kind && e.track.kind !== 'audio') return;
       const st = (e.streams && e.streams[0]) || null;
       if (!sess.el) sess.el = makeAudio();
       if (sess.el && st) { try { sess.el.srcObject = st; sess.el.play?.()?.catch?.(() => {}); } catch { /* gone */ } }
@@ -494,6 +611,16 @@ export function createIntercomReceiver({
       }
     };
     await pc.setRemoteDescription({ type: 'offer', sdp });
+    // The offer's video, set by the room's choice. A browser without transceivers (or a test's fake) has none to set.
+    for (const t of (typeof pc.getTransceivers === 'function' ? pc.getTransceivers() : []) || []) {
+      const kind = t?.receiver?.track?.kind;
+      if (kind !== 'video') continue;
+      try {
+        if (vopt === 'both' && sess.cam) { await t.sender?.replaceTrack?.(sess.cam); t.direction = 'sendrecv'; }
+        else if (vopt === 'theirs' || vopt === 'both') t.direction = 'recvonly';
+        else t.direction = 'inactive';
+      } catch (err) { console.error('intercom: video direction', err); try { t.direction = 'inactive'; } catch { /* fixed */ } }
+    }
     const a = await pc.createAnswer();
     await pc.setLocalDescription(a);
     await gatheringDone(pc, { setTimer });
@@ -536,12 +663,12 @@ export function createIntercomReceiver({
     }
     if (sig.kind === 'bye') { if (s && s.session === session) end('phone', { tell: false }); return; }
     if (sig.kind !== 'offer') return;
-    const check = offerIsAudioOnly(sig.sdp);
+    const check = intercomOfferCheck(sig.sdp);
     if (!check.ok) { send(session, 'bye', { reason: check.why }); return; }
     const o = options() || intercomOptionsFrom({});
-    // THE LIST, BY THE SERVER'S STAMP. Read at every offer, so a person taken off the list cannot
-    // reconnect either.
-    const entry = admits(o.allowed, sig.by);
+    // "MAY USE THE INTERCOM", BY THE SERVER'S STAMP (admitFor: the owner, the guardian set, the list). Read at every
+    // offer, so a person taken off the list cannot reconnect either.
+    const entry = admitFor(o, sig);
     if (!entry) {
       if (s && s.session === session) end('not-approved');       // taken off the list mid-intercom
       else send(session, 'bye', { reason: 'not-approved' });
@@ -567,26 +694,55 @@ export function createIntercomReceiver({
     // Two different "no"s, so the phone says the true one: another intercom is open, or the room is on a call.
     if (s) { send(session, 'bye', { reason: 'busy' }); return; }
     if (busy()) { send(session, 'bye', { reason: 'in-a-call' }); return; }
-    const sess = { session, by: sig.by, name: entry.name, phase: 'claiming', since: now(), sdp: sig.sdp,
-                   pc: null, mic: null, micHeld: false, el: null, warn: null, stall: null, limit: null };
+    const sess = { session, by: sig.by, byOwner: sig.byOwner === true, name: entry.name, phase: 'claiming', since: now(), sdp: sig.sdp,
+                   wantVideo: !!check.video, videoStream: null, cam: null,
+                   pc: null, mic: null, micHeld: false, el: null, warn: null, stall: null, limit: null, ask: null };
     s = sess;
     // NOTHING happens in the room until the server says this screen is the one (CLAIM_MS above).
     askServer(session).then((won) => {
       if (destroyed || s !== sess) return;
       if (!won) { end('answered-elsewhere', { tell: false }); return; }
-      sess.phase = 'warning';
-      sess.since = now();
-      changed();
+      if (o.autoAnswer === false) {
+        // AUTO ANSWER OFF (2026-10-13): it rings like a call. Nothing opens until Answer; nobody answering ends it by
+        // itself after `answerWaitMs` and the phone is told - never a state only a press can leave.
+        sess.phase = 'asking';
+        sess.since = now();
+        changed();
+        playChime(o);
+        if (o.announce) { try { output?.alert?.(`Intercom from ${entry.name}`, { source: 'intercom' }); } catch { /* optional */ } }
+        sess.ask = setTimer(() => { if (s === sess && sess.phase === 'asking') { sess.ask = null; end('unanswered'); } },
+          o.answerWaitMs || INTERCOM_DEFAULTS.answerWaitMs);
+        return;
+      }
+      openAfterWarning(sess, o, entry);
+    }).catch((err) => { console.error('intercom: claim', err); if (s === sess) end('failed', { tell: false }); });
+  }
+
+  function openAfterWarning(sess, o, entry) {
+    sess.phase = 'warning';
+    sess.since = now();
+    changed();
+    if (!sess.answeredByHand) {
       playChime(o);
       if (o.announce) { try { output?.alert?.(`Intercom from ${entry.name}`, { source: 'intercom' }); } catch { /* optional */ } }
-      const go = () => {
-        if (s !== sess) return;
-        sess.warn = null;
-        answer(sess, sess.sdp).catch((err) => { console.error('intercom: answer', err); if (s === sess) end('failed'); });
-      };
-      if (o.warnMs > 0) sess.warn = setTimer(go, o.warnMs);
-      else go();
-    }).catch((err) => { console.error('intercom: claim', err); if (s === sess) end('failed', { tell: false }); });
+    }
+    const go = () => {
+      if (s !== sess) return;
+      sess.warn = null;
+      answer(sess, sess.sdp).catch((err) => { console.error('intercom: answer', err); if (s === sess) end('failed'); });
+    };
+    // Somebody pressed Answer: they ARE the room being told, so there is no further wait.
+    if (o.warnMs > 0 && !sess.answeredByHand) sess.warn = setTimer(go, o.warnMs);
+    else go();
+  }
+
+  /** Auto answer off: Answer pressed in the room. */
+  function accept() {
+    if (!s || s.phase !== 'asking') return false;
+    clearT('ask');
+    s.answeredByHand = true;
+    openAfterWarning(s, options() || intercomOptionsFrom({}), { name: s.name });
+    return true;
   }
   offs.push(link.onSignal ? link.onSignal(onSignal) : null);
   if (bus && typeof bus.subscribe === 'function') {
@@ -596,11 +752,16 @@ export function createIntercomReceiver({
   return {
     sessions: list,
     open: () => !!s && s.phase === 'open',
+    /** Auto answer off (2026-10-13): Answer and Not now on "Intercom from <name>". */
+    accept,
+    decline() { return !!s && s.phase === 'asking' ? end('declined') : false; },
+    /** The caller's picture, when the room's `intercomVideo` shows it (null otherwise). */
+    videoStream: () => (s && s.videoStream) || null,
     /** The room ends it: ONE press, from the notice, a switch or a spoken phrase. */
     endAll(reason = 'room-ended') { return end(reason); },
     /** The person's row changed: somebody taken off the list while talking is cut off now, not later. */
     recheck() {
-      if (s && !admits((options() || {}).allowed, s.by)) return end('not-approved');
+      if (s && !admitFor(options() || {}, { by: s.by, byOwner: !!s.byOwner })) return end('not-approved');
       return false;
     },
     destroy() {
@@ -643,6 +804,7 @@ function defaultChime() {
 export function intercomText(sessions = []) {
   const x = sessions[0];
   if (!x) return '';
+  if (x.phase === 'asking') return `Intercom from ${x.name}`;
   return x.phase === 'open' ? `Intercom open: ${x.name}` : `Intercom opening: ${x.name}`;
 }
 
@@ -671,17 +833,48 @@ export function mountIntercomNotice(host, {
   btn.className = 'ic-end';
   btn.textContent = 'End';
   btn.setAttribute('aria-label', 'End the intercom');
-  el.append(dot, word, btn);
+  // Auto answer off (2026-10-13): Answer and Not now while it asks. Not now ends it; nobody pressing ends it by itself.
+  const yes = doc.createElement('button');
+  yes.type = 'button';
+  yes.className = 'ic-end ic-answer';
+  yes.textContent = 'Answer';
+  yes.dataset.icAnswer = '';
+  yes.hidden = true;
+  const no = doc.createElement('button');
+  no.type = 'button';
+  no.className = 'ic-end ic-decline';
+  no.textContent = 'Not now';
+  no.dataset.icDecline = '';
+  no.hidden = true;
+  // The caller's picture, when the room's intercom video setting shows it (2026-10-13). Muted: the sound plays elsewhere.
+  const vid = doc.createElement('video');
+  vid.className = 'ic-video';
+  vid.muted = true;
+  vid.autoplay = true;
+  vid.playsInline = true;
+  vid.setAttribute('aria-hidden', 'true');
+  vid.hidden = true;
+  vid.style.cssText = 'display:block;width:12em;max-width:40vw;border-radius:.4em;margin-top:.3em';
+  el.append(dot, word, yes, no, btn, vid);
   noticeStack(host, doc).append(el);
   btn.addEventListener('click', () => {
     if (receiver) receiver.endAll('room-ended');
     else bus?.publish?.(INTERCOM_END_TOPIC, {});
   });
+  yes.addEventListener('click', () => { receiver?.accept?.(); });
+  no.addEventListener('click', () => { receiver?.decline?.(); });
   function show(sessions) {
     const t = intercomText(sessions || []);
     word.textContent = t;
     el.hidden = !t;
-    el.dataset.phase = (sessions || []).some((x) => x.phase === 'open') ? 'open' : 'warning';
+    const asking = (sessions || []).some((x) => x.phase === 'asking');
+    el.dataset.phase = (sessions || []).some((x) => x.phase === 'open') ? 'open' : asking ? 'asking' : 'warning';
+    yes.hidden = !asking || !receiver;
+    no.hidden = !asking || !receiver;
+    btn.hidden = asking && !!receiver;
+    const st = receiver?.videoStream?.() || null;
+    if (vid.srcObject !== st) { try { vid.srcObject = st; vid.play?.()?.catch?.(() => {}); } catch { /* no video here */ } }
+    vid.hidden = !st || !t;
   }
   show(receiver ? receiver.sessions() : []);
   const offBus = bus && typeof bus.subscribe === 'function' ? bus.subscribe(INTERCOM_TOPIC, (p) => show((p && p.sessions) || [])) : () => {};

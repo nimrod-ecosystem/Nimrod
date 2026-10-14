@@ -12,7 +12,17 @@
 // THE NAME the room shows ("Intercom open: <name>") is set HERE, by the person who approves them - not
 // typed by the phone. It starts as the grant's note, or the part of the sign-in before the @.
 
+//
+// 2026-10-13/14 (Mike: the intercom is "handled like a call, with its own permission separate from calls"; and "the
+// account owner controls every screen on the account by default"): the tick here is "May use the intercom", decided by
+// screen_permissions.js `permsFor(...).intercom` - the same rule the SERVER now checks on every intercom offer
+// (screen_access.may_intercom). It is ON by default for the owner (any device in the household can announce) and for
+// the guardian set, and off for everybody else until ticked. Ticking writes this older list (`intercomAllowed`, which
+// still holds the name the room shows); unticking somebody who has it by default writes `intercom: false` on their line
+// of the people list, which wins.
+
 import { normalizeAllowed } from './intercom.js';
+import { permsFor, withSwitch, normalizePeople, LIST_FIELD } from './screen_permissions.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -59,6 +69,10 @@ export function mountIntercomApprovals(root, {
   const ac = new AbortController();
   const allowed = () => normalizeAllowed((state.get?.() || {}).intercomAllowed);
 
+  const rowNow = () => state.get?.() || {};
+  // "May use the intercom", by the shared rule (owner and guardian set by default; the older list; an untick wins).
+  const mayUse = (c) => permsFor(rowNow(), c.account, owner, { reach: !!c.current }).intercom === true;
+
   function render() {
     if (destroyed) return;
     const list = allowed();
@@ -66,17 +80,20 @@ export function mountIntercomApprovals(root, {
     root.innerHTML = `
       <div class="ia">
         <h2 class="r-h2">Who may open the intercom into ${esc(personName || 'this room')}</h2>
-        <p class="h-hint">They can talk into the room from their phone and hear it back. The room hears a
-          chime and their name first. The screen shows that the intercom is open the whole time. The room
-          can end it with one press. Nobody is on this list until you tick them.</p>
+        <p class="h-hint">The intercom works like a call, with its own permission: being able to call doesn’t let
+          anyone use it. It answers by itself and carries sound only, unless the screen’s intercom settings allow
+          video. The room hears a chime and their name first, the screen shows who it is the whole time, and the room
+          can end it with one press. You, on your own devices, and anyone with the guardian set may use it unless you
+          untick them; anybody else only once you tick them.</p>
         ${cands.length ? `<ul class="r-list ia-list">${cands.map((c) => {
-          const on = list.find((a) => a.account === c.account);
+          const on = mayUse(c);
+          const ent = list.find((a) => a.account === c.account);
           return `<li data-account="${esc(c.account)}">
             <label><input type="checkbox" data-allow${on ? ' checked' : ''}${!c.current && !on ? ' disabled' : ''}>
               <b>${esc(c.account)}</b></label>
             <span class="h-hint"> — ${esc(c.note)}</span>
-            ${on ? `<label class="ia-name">The room shows them as
-              <input type="text" data-name maxlength="60" value="${esc(on.name)}"></label>` : ''}
+            ${on && ent ? `<label class="ia-name">The room shows them as
+              <input type="text" data-name maxlength="60" value="${esc(ent.name)}"></label>` : ''}
           </li>`;
         }).join('')}</ul>`
         : '<p class="h-hint">Nobody may use these screens yet, so nobody can be added.</p>'}
@@ -85,9 +102,9 @@ export function mountIntercomApprovals(root, {
   }
   const say = (t) => { const m = root.querySelector('[data-msg]'); if (m) m.textContent = t || ''; };
 
-  function write(next, msg) {
+  function write(next, msg, extra = {}) {
     try {
-      const r = state.set({ intercomAllowed: normalizeAllowed(next) });
+      const r = state.set({ intercomAllowed: normalizeAllowed(next), ...extra });
       Promise.resolve(r).then(() => { render(); say(msg); }, (err) => { console.error('intercom approvals', err); say('Could not save that.'); });
     } catch (err) { console.error('intercom approvals', err); say('Could not save that.'); }
   }
@@ -98,11 +115,20 @@ export function mountIntercomApprovals(root, {
     const account = li.dataset.account;
     const list = allowed();
     if (e.target.matches('[data-allow]')) {
+      const c = approvalCandidates({ owner, grants, allowed: list, now: now() }).find((x) => x.account === account);
+      const people = normalizePeople(rowNow()[LIST_FIELD]);
+      const explicit = people.find((x) => x.account === account && typeof x.intercom === 'boolean');
       if (e.target.checked) {
-        const c = approvalCandidates({ owner, grants, allowed: list, now: now() }).find((x) => x.account === account);
-        write([...list, { account, name: c?.suggested || shortName(account) }], 'Added. They can open the intercom now.');
+        const next = list.some((a) => a.account === account) ? list : [...list, { account, name: c?.suggested || shortName(account) }];
+        // An earlier untick on the people list would still win: it goes with this tick.
+        const extra = explicit ? { [LIST_FIELD]: withSwitch(people, account, 'intercom', true) } : {};
+        write(next, 'Added. They can open the intercom now.', extra);
       } else {
-        write(list.filter((a) => a.account !== account), 'Removed. They can no longer open the intercom.');
+        const next = list.filter((a) => a.account !== account);
+        // Still allowed by default (the owner, the guardian set)? Then say no on their line, which wins.
+        const still = permsFor({ ...rowNow(), intercomAllowed: next }, account, owner, { reach: !!c?.current }).intercom;
+        const extra = still || explicit ? { [LIST_FIELD]: withSwitch(people, account, 'intercom', false, { name: c?.suggested }) } : {};
+        write(next, 'Removed. They can no longer open the intercom.', extra);
       }
       return;
     }

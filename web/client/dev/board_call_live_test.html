@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the AAC board over a call, end to end — live test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #screen{position:relative;width:960px;height:540px;margin-top:12px;border:1px solid #ccc}
+  #caller{position:relative;width:420px;min-height:300px;margin-top:12px;border:1px solid #ccc}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>the AAC board over a call, end to end (Mike, 2026-10-13)</h1>
+<div class="note">
+  Mike: "Being able to use your AAC board over a call is a feature. Not sure if it's working yet." Two ends, each its
+  own app on its own sockets, through the REAL server and a REAL WebRTC call (the browser's fake camera and
+  microphone): a screen (a real kiosk with a Call panel and a Board panel) and a caller (the real call page, signed in
+  as somebody holding only a CALL-ONLY permission - a call is only a call, 2026-10-14). The caller rings, the screen
+  answers, a card is chosen on the screen's Board panel, and the caller's page must SHOW the word and either READ IT
+  OUT in its own voice (a word with no recording) or receive it as sound mixed into the call (a word with a recording,
+  call_mix.js) - never both, never neither. Needs the server running (SUITE_BASE).
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="screen"></div>
+<div id="caller"></div>
+
+<script type="module">
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { mountCallPage } from '../call_page.js';
+import { createCallTransport } from '../call_transport.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+const screenRoot = document.getElementById('screen');
+const callerRoot = document.getElementById('caller');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 8000) => { const until = Date.now() + ms; while (Date.now() < until) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(50); } try { return !!fn(); } catch { return false; } };
+
+(async () => {
+  let k = null, page = null;
+  let heardVia = '';
+  try {
+    section('setup: a screen with a Call panel and a Board panel; a caller who may only call');
+    const OWNER = 'aac-call-owner-' + Math.floor(Math.random() * 1e9);
+    const CALLER = 'aac-call-caller-' + Math.floor(Math.random() * 1e9);
+    const api = (who, path, opts = {}) => fetch(path, { ...opts, headers: { 'X-Dev-User': who, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+    const profiles = createProfilesClient({ user: OWNER });
+    const person = (await profiles.people())[0];
+    check('(setup) the owner has a person', !!person);
+    const p = await profiles.create('TEST-aac-over-call', person.id);
+    // A screen showing its AAC board, as a person who uses one would have it. A screen shows one panel on its stage at a
+    // time, so the call rings on the screen's call notice (call_notice.js) and opens the call view over the board.
+    const m1 = await profiles.addModule(p.id, 'board');
+    check('(setup) the screen has a Board panel', !!m1?.id, JSON.stringify(m1));
+    await api(CALLER, '/api/me/display-name', { method: 'PUT', body: JSON.stringify({ name: 'Tess' }) });
+    const g = await (await api(OWNER, `/api/people/${person.id}/drive-grants`, { method: 'POST',
+      body: JSON.stringify({ subject_id: CALLER, label: 'Tess', days: 1, role: 'caller' }) })).json();
+    check('(setup) the caller holds a CALL-ONLY permission (role "caller")', g?.role === 'caller', JSON.stringify(g));
+
+    const kbus = createBus();
+    k = await mountKiosk(screenRoot, { user: OWNER, profileId: p.id, profiles, bus: kbus });
+    check('(setup) the screen connected its drive socket', await settled(() => !!k.drive() && k.drive().state() === 'connected', 15000));
+    check('(setup) the Board panel shows cards', await settled(() => !!screenRoot.querySelector('.ab-card:not(.ab-empty)'), 10000),
+      `${k.primaryType?.()} ${JSON.stringify(k.panels?.())} ${screenRoot.innerHTML.length}`);
+
+    // The caller: the real call page, with a real transport; its voice and the raw words are watched.
+    const spoken = [];
+    const raw = [];
+    page = await mountCallPage(callerRoot, {
+      user: CALLER, storage: null, search: `?person=${person.id}`, nav: {},
+      speakWords: (text, done) => { spoken.push(text); setTimeout(() => done?.(), 10); return true; },
+      makeTransport: (o) => { const t = createCallTransport(o); t.onWords?.((w) => raw.push(w)); return t; },
+    });
+    check('(setup) the caller page lists the person (a call-only permission is enough to call)',
+      page.people().some((x) => x.id === person.id), JSON.stringify(page.people()));
+
+    section('*** the call: rung by the caller, answered on the screen ***');
+    callerRoot.querySelector('[data-person]').value = person.id;
+    callerRoot.querySelector('[data-start="video"]').click();
+    check('*** LIVE: the screen rings (a call waits; the caller may not drop in) ***', await settled(() => !!k.callNotice()?.showing?.(), 15000));
+    kbus.publish('call/answer');
+    check('*** LIVE: the call connects for real (both ends) ***', await settled(() => page.state() === 'in-call', 20000), page.state());
+    const st = k.callTransport();
+    check('LIVE: the screen\'s call is live', await settled(() => !!st?.isLive?.(), 5000));
+    const helping = () => { const n = screenRoot.querySelector('[data-remote]'); return !!n && !n.hidden && /helping/i.test(n.textContent); };
+    await sleep(500);
+    check('*** a call alone never makes the screen say "Someone is helping from another screen" (the call socket is idle, and call-only) ***',
+      !helping(), screenRoot.querySelector('[data-remote]')?.textContent);
+
+    section('*** the AAC board over the call: chosen on the screen, shown AND heard by the caller ***');
+    check('(setup) the call\'s words channel is open', await settled(() => st.__probe?.().words === 'open', 10000), JSON.stringify(st.__probe?.()));
+    const card = [...screenRoot.querySelectorAll('.ab-card:not(.ab-empty)')].find((c) => !c.closest('[data-call-view]'));
+    const word = (card?.getAttribute('aria-label') || card?.textContent || '').trim();
+    check('(setup) a card on the Board panel', !!card && !!word, word);
+    let clipSeen = false;
+    const sampler = setInterval(() => { try { if (st.clipPlaying?.()) clipSeen = true; } catch { /* gone */ } }, 20);
+    card.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('*** LIVE: the caller\'s page SHOWS the word ***', await settled(() => page.words().length > 0, 10000)
+      && callerRoot.querySelector('[data-words-now]')?.textContent.toLowerCase().includes(word.toLowerCase().split(' ')[0]),
+      `${JSON.stringify(page.words())} / ${word}`);
+    check('...from the board', raw[0]?.source === 'board', JSON.stringify(raw[0]));
+    await sleep(400);
+    const viaClip = raw[0]?.audio === true;
+    const viaVoice = spoken.length > 0;
+    heardVia = viaClip ? `its recording mixed into the call ("${word}")` : `read out by the caller's voice ("${word}")`;
+    check(`*** LIVE: the caller HEARS it - ${viaClip ? 'its recording, mixed into the call\'s sound (call_mix.js)' : 'read out in the caller\'s own voice'} - exactly one way ***`,
+      (viaClip && !viaVoice) || (!viaClip && viaVoice && spoken[0].toLowerCase() === (raw[0]?.text || '').toLowerCase()),
+      `audio:${raw[0]?.audio} spoken:${JSON.stringify(spoken)}`);
+    clearInterval(sampler);
+    if (viaClip) {
+      check('*** ...the screen really mixed the recording into the call\'s outgoing sound ***', clipSeen === true);
+    } else {
+      check('...the screen sent it as text only (no recording was mixed in)', clipSeen === false);
+    }
+    // A word that has no recording for sure: the voice path, every time.
+    const before = spoken.length;
+    st.sendWords('zebra crossing quietly', { source: 'board' });
+    check('*** LIVE: a word with no recording is SHOWN and READ OUT on the caller\'s page ***',
+      await settled(() => page.words().includes('zebra crossing quietly') && spoken.length > before, 8000), JSON.stringify(spoken));
+
+    section('the call ends');
+    page.hangup();
+    check('LIVE: hanging up ends the screen\'s call', await settled(() => !st.isLive(), 8000));
+    const before2 = page.words().length;
+    check('*** after the call nothing more is sent (the transport refuses) ***', st.sendWords('after', { source: 'board' }) === false && page.words().length === before2);
+  } catch (e) {
+    check('live section ran', false, String((e && e.stack) || e));
+  } finally {
+    try { page?.destroy(); } catch { /* gone */ }
+    try { k?.destroy(); } catch { /* gone */ }
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = (failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`)
+    + (heardVia ? ` · the board word was heard: ${heardVia}` : '');
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

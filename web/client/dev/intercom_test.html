@@ -32,6 +32,7 @@ import {
   createIntercomSender, createIntercomReceiver, mountIntercomNotice, intercomText, intercomOptionsFrom, normalizeAllowed,
   admits, isIntercomSignal, newSession, INTERCOM_PURPOSE, INTERCOM_TOPIC, INTERCOM_END_TOPIC, INTERCOM_ACTIONS,
   INTERCOM_DEFAULTS, INTERCOM_FIELDS, INTERCOM_CONSTRAINTS, END_REASONS, CLAIM_MS,
+  VIDEO_CHOICES, admitFor, intercomOfferCheck,
 } from '../intercom.js';
 import { connectDrive } from '../drive.js';
 import { createProfilesClient } from '../profile.js';
@@ -106,6 +107,8 @@ function fakeRoom({ stamp = true, arbiter = true } = {}) {
         me.sent.push(s);
         const copy = JSON.parse(JSON.stringify(s));
         if (stamp) copy.by = account; else delete copy.by;
+        // 2026-10-14: the server also says whether the sender owns these screens (app.py `byOwner`), never the page.
+        if (stamp && role === 'driver') copy.byOwner = account === 'owner@x'; else delete copy.byOwner;
         if (arbiter && arb(s)) {
           const rec = recs.get(s.session);
           if (role === 'driver') {
@@ -263,6 +266,37 @@ try {
   }
 
   // ======================================================================================
+  section('*** handled like a call (Mike, 2026-10-13): its own permission, auto answer on, sound only by default ***');
+  {
+    const o = intercomOptionsFrom({});
+    check('*** defaults: auto answer ON, sound only ***', o.autoAnswer === true && o.video === 'off' && INTERCOM_DEFAULTS.autoAnswer === true);
+    check('the choices: sound only, the caller\'s video, both ways; anything else is sound only',
+      VIDEO_CHOICES.join() === 'off,theirs,both' && intercomOptionsFrom({ intercomVideo: 'yes' }).video === 'off'
+      && intercomOptionsFrom({ intercomVideo: 'theirs' }).video === 'theirs' && intercomOptionsFrom({ intercomAutoAnswer: 'no' }).autoAnswer === true);
+    check('the two new settings are on the settings list', INTERCOM_FIELDS.some((f) => f.key === 'intercomAutoAnswer')
+      && INTERCOM_FIELDS.some((f) => f.key === 'intercomVideo'));
+    check('an offer needs sound; video may ride along', intercomOfferCheck(VIDEO_SDP).ok && intercomOfferCheck(VIDEO_SDP).video
+      && !intercomOfferCheck('v=0\r\nm=video 9 UDP 96\r\n').ok);
+    const row = { intercomAllowed: [{ account: 'mike@x', name: 'Mike' }], screenPeople: [{ account: 'g@x', name: 'Gran', guardian: true }] };
+    const opts = intercomOptionsFrom(row);
+    check('*** admitFor: the list, the guardian set, the owner by the server\'s word - and nobody by their own ***',
+      admitFor(opts, { by: 'mike@x' })?.name === 'Mike' && admitFor(opts, { by: 'g@x' })?.name === 'Gran'
+      && admitFor(opts, { by: 'own@x', byOwner: true, byName: 'Pat' })?.name === 'Pat'
+      && admitFor(opts, { by: 'eve@x', byName: 'Pat' }) === null && admitFor(opts, { byOwner: true }) === null);
+    check('calling gives no intercom: a call-only person is not admitted', admitFor(intercomOptionsFrom({ screenPeople: [{ account: 'c@x', call: true }] }), { by: 'c@x' }) === null);
+  }
+  for (const [video, shown] of [['off', false], ['theirs', true]]) {
+    const r = rig({ row: { intercomVideo: video, intercomWarnMs: 0 } });
+    const p = r.phone('mike@x', { offerSdp: VIDEO_SDP });
+    await p.s.start(); await flush(); await flush();
+    const pc = r.peers.last();
+    pc?.fireTrack({ kind: 'video' }, [new FakeStream([{ kind: 'video' }])]);
+    check(`*** room set to "${video}": the caller's picture is ${shown ? 'shown' : 'NOT shown'} ***`,
+      !!r.recv.videoStream() === shown && r.recv.sessions()[0]?.video === shown, JSON.stringify(r.recv.sessions()));
+    r.recv.destroy();
+  }
+
+  // ======================================================================================
   section('*** somebody NOT on the list ***');
   {
     const r = rig();
@@ -288,8 +322,66 @@ try {
     const r = rig({ allowed: [] });
     const p = r.phone('owner@x');
     await p.s.start(); await flush();
-    check('*** an empty list refuses even the owner: nobody until somebody is added ***', p.s.reason() === 'not-approved');
+    check('*** 2026-10-14: the OWNER\'s own device may announce by default (any device in the household), by the server\'s word ***',
+      p.s.reason() !== 'not-approved' && r.recv.sessions().length === 1, JSON.stringify(p.states));
     r.recv.destroy();
+  }
+  {
+    const r = rig({ allowed: [], row: { screenPeople: [{ account: 'owner@x', intercom: false }] } });
+    const p = r.phone('owner@x');
+    await p.s.start(); await flush();
+    check('...and the owner can switch their own off: refused', p.s.reason() === 'not-approved');
+    r.recv.destroy();
+  }
+  {
+    const r = rig({ allowed: [] });
+    const p = r.phone('eve@x', { claim: 'owner@x' });
+    await p.s.start(); await flush();
+    check('*** an empty list refuses everybody the server did not say owns these screens ***', p.s.reason() === 'not-approved');
+    r.recv.destroy();
+  }
+  {
+    const r = rig({ allowed: [], row: { screenPeople: [{ account: 'gina@x', name: 'Gina', guardian: true }] } });
+    const p = r.phone('gina@x');
+    await p.s.start(); await flush();
+    check('*** the guardian set includes the intercom, named as the list names them ***',
+      r.recv.sessions()[0]?.name === 'Gina', JSON.stringify(r.recv.sessions()));
+    r.recv.destroy();
+  }
+  {
+    const r = rig({ row: { screenPeople: [{ account: 'mike@x', intercom: false }] } });
+    const p = r.phone('mike@x');
+    await p.s.start(); await flush();
+    check('an untick on the people list wins over the older intercom list', p.s.reason() === 'not-approved');
+    r.recv.destroy();
+  }
+  {
+    const r = rig({ row: { intercomAutoAnswer: false } });
+    const host = document.getElementById('host');
+    const note = mountIntercomNotice(host, { receiver: r.recv, bus: r.bus });
+    const p = r.phone('mike@x');
+    await p.s.start(); await flush();
+    check('*** auto answer OFF: it rings like a call - "Intercom from Mike", Answer and Not now, nothing open ***',
+      r.recv.sessions()[0]?.phase === 'asking' && note.text() === 'Intercom from Mike' && r.mic.acquired.length === 0
+      && !host.querySelector('[data-ic-answer]').hidden && !host.querySelector('[data-ic-decline]').hidden, note.text());
+    check('...the room is still told who it is (chime and name)', r.chimes.length === 1 && r.said.includes('Intercom from Mike'));
+    host.querySelector('[data-ic-answer]').click();
+    await flush();
+    check('*** Answer: it opens at once (whoever pressed it is the room being told) ***', r.mic.acquired.length === 1, JSON.stringify(r.mic.acquired));
+    r.recv.endAll(); await flush();
+    const q = r.phone('mike@x');
+    await q.s.start(); await flush();
+    host.querySelector('[data-ic-decline]').click();
+    await flush();
+    check('*** Not now: it ends, the phone is told "not now", nothing opened ***', q.s.reason() === 'declined' && r.mic.acquired.length === 1);
+    const w = r.phone('mike@x');
+    await w.s.start(); await flush();
+    r.clock.advance(INTERCOM_DEFAULTS.answerWaitMs + 1);
+    await flush();
+    check('*** nobody answers: it goes BY ITSELF after its time (never a state only a press can leave) ***',
+      r.recv.sessions().length === 0 && w.s.reason() === 'unanswered' && r.mic.acquired.length === 1, w.s.reason());
+    check(`...and that time ends before the phone gives up (${INTERCOM_DEFAULTS.answerWaitMs} ms < 30 s)`, INTERCOM_DEFAULTS.answerWaitMs < 30000);
+    note.destroy(); r.recv.destroy();
   }
 
   // ======================================================================================
@@ -430,10 +522,12 @@ try {
     await flush();
     check('...and the phone is told why', b2.s.reason() === 'not-approved');
     r.setRow({ intercomAllowed: [{ account: 'bea@x', name: 'Bea' }] });
-    // Video is refused.
+    // Video, with the room on sound only (the default, 2026-10-13): answered with sound only, no picture, no camera.
     const v = r.phone('bea@x', { offerSdp: VIDEO_SDP });
     await v.s.start(); await flush();
-    check('*** an offer carrying video is refused ***', v.s.reason() === 'video-refused' && r.recv.sessions().length === 0);
+    check('*** an offer carrying video, the room on sound only (the default): answered, with sound only - no picture shown ***',
+      v.s.reason() !== 'video-refused' && r.recv.sessions().length === 1 && r.recv.videoStream() === null, v.s.reason());
+    v.s.stop(); await flush();
     // A call is live: refused rather than talking over it.
     const busyR = rig({ busy: () => true });
     const c = busyR.phone('mike@x');
@@ -651,7 +745,21 @@ try {
     const panel = mountIntercomApprovals(root, { personName: 'Alex', state, loadGrants: async () => grants, whoami: async () => 'owner@x',
                                                  now: () => '2026-09-30T00:00:00Z' });
     await panel.ready;
-    check('*** nobody is ticked to begin with ***', [...root.querySelectorAll('[data-allow]')].every((b) => !b.checked) && panel.allowed().length === 0);
+    check('*** to begin with only YOU are ticked (2026-10-14: the owner\'s own devices may announce); nobody else, and the list is empty ***',
+      root.querySelector('[data-account="owner@x"] [data-allow]').checked
+      && [...root.querySelectorAll('[data-allow]')].filter((b) => b.checked).length === 1 && panel.allowed().length === 0);
+    const ob = root.querySelector('[data-account="owner@x"] [data-allow]');
+    ob.checked = false; ob.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+    check('*** unticking yourself writes "intercom: off" on your line, which wins ***',
+      (row.screenPeople || []).some((e) => e.account === 'owner@x' && e.intercom === false)
+      && !root.querySelector('[data-account="owner@x"] [data-allow]').checked, JSON.stringify(row));
+    const ob2 = root.querySelector('[data-account="owner@x"] [data-allow]');
+    ob2.checked = true; ob2.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+    check('...and ticking again turns it back on', root.querySelector('[data-account="owner@x"] [data-allow]').checked
+      && (row.screenPeople || []).some((e) => e.account === 'owner@x' && e.intercom === true), JSON.stringify(row));
+    row = { ...row, intercomAllowed: [] };
     check('an expired grant cannot be ticked', root.querySelector('[data-account="ot@x"] [data-allow]').disabled === true);
     const box = root.querySelector('[data-account="bea@x"] [data-allow]');
     box.checked = true; box.dispatchEvent(new Event('change', { bubbles: true }));
@@ -664,7 +772,8 @@ try {
     const box2 = root.querySelector('[data-account="bea@x"] [data-allow]');
     box2.checked = false; box2.dispatchEvent(new Event('change', { bubbles: true }));
     await flush();
-    check('*** unticking removes them ***', row.intercomAllowed.length === 0);
+    check('*** unticking removes them ***', row.intercomAllowed.length === 0
+      && !root.querySelector('[data-account="bea@x"] [data-allow]').checked);
     check('site copy never says "her screen"', !/her screen|Christine|Cici/i.test(root.textContent));
     panel.destroy();
   }

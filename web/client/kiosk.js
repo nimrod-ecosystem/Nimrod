@@ -70,7 +70,7 @@ import {
 import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS } from './call_notice.js';
 // Mike, 2026-10-12: calls wait to be answered unless the caller may drop in; "may <name> see this screen?" on the
 // screen; a temporary "see this screen" lent during a call (screen_permissions.js, see_ask.js, server/screen_access.py).
-import { dropInFor, dropInSecondsOf, lendMinutesOf } from './screen_permissions.js';
+import { dropInFor, dropInSecondsOf, lendLengthOf } from './screen_permissions.js';
 import { mountSeeAsk } from './see_ask.js';
 // call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
 import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD } from './call_loadouts.js';
@@ -1750,11 +1750,13 @@ export async function mountKiosk(root, {
     personRow: () => personRow,
     // CALLS WAIT TO BE ANSWERED (Mike, 2026-10-12): a Call panel answers by itself only for a caller on the person's
     // "May drop in" list - `by` is the SERVER-STAMPED caller (drive.py stamp_signal), never a name a page sent.
-    mayDropIn: (from) => dropInFor(personRow || {}, from && from.by),
-    // A TEMPORARY "SEE THIS SCREEN" FOR THE CALLER, until the call ends or the person's `lendMinutes` run out. The server
-    // checks this screen answered that call and lends it to that call's own caller (screen_access.py).
-    lendScreen: ({ session, on = true } = {}) => (drive && typeof drive.lend === 'function'
-      ? drive.lend({ what: 'see', session, on, minutes: lendMinutesOf(personRow || {}) }) : Promise.resolve(null)),
+    // `byOwner` (2026-10-14): the server's word that the caller owns these screens - the owner drops in by default.
+    mayDropIn: (from) => dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null),
+    // WHAT THE SCREEN LENDS THE CALLER DURING A CALL (2026-10-12; "see" or "drive", and how long, 2026-10-14): until the
+    // call ends by default, a set time that still ends with it, or "always" for a caller with the guardian set. The
+    // server checks this screen answered that call and lends it to that call's own caller (screen_access.py).
+    lendScreen: ({ session, on = true, what = 'see', length = null } = {}) => (drive && typeof drive.lend === 'function'
+      ? drive.lend({ what, session, on, length: length ?? lendLengthOf(personRow || {}) }) : Promise.resolve(null)),
     // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12; routeGameAsk below): a game panel that can open a room on
     // the call listens here, and returns true when it took the ask. The ask has already met the person's input gate.
     onGameAsk: (fn) => {
@@ -4421,7 +4423,12 @@ export async function mountKiosk(root, {
       ...VOICE_RECORDING_FIELDS.filter((f) => f.key === 'voiceRecording' || r.voiceRecording === true),
       // THE INTERCOM'S rows only once somebody is on its approved list (edited on the home page, where
       // the grants are): with nobody approved there is no intercom to tune.
-      ...(normalizeAllowed(r.intercomAllowed).length ? INTERCOM_FIELDS : []),
+      // (2026-10-14: the owner's own devices may announce by default, which ticks nobody; these rows still wait for a
+      // tick - on the list, or "May use the intercom" / the guardian set on the people list - so a screen nobody set up
+      // an intercom for keeps a short menu. The defaults then apply, auto answer on and sound only.)
+      ...(normalizeAllowed(r.intercomAllowed).length
+        || (Array.isArray(r.screenPeople) && r.screenPeople.some((e) => e && (e.intercom === true || e.guardian === true)))
+        ? INTERCOM_FIELDS : []),
       // OTHER PEOPLE'S OWN AVATARS, the PERSON's copy (avatar_display.js; the screen's copy is on Display,
       // with faces moving, and wins where it chose). On the People tab, argued: FOR Display (it is about
       // what is drawn): the screen's copy is already there, and the same row twice on one tab reads as a
@@ -5459,7 +5466,8 @@ export async function mountKiosk(root, {
         openCall: (from, opts) => openCallView(from, opts),
         // Mike, 2026-10-12: a caller on the person's "May drop in" list is answered by itself after the person's own
         // countdown (`dropInSeconds`, 10 s by default); everybody else waits for Answer. null = wait.
-        dropIn: (from) => (dropInFor(personRow || {}, from && from.by) ? dropInSecondsOf(personRow || {}) : null),
+        dropIn: (from) => (dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null)
+          ? dropInSecondsOf(personRow || {}) : null),
         zIndex: LAYERS.menus + 50,
       });
     } catch (err) { console.error('kiosk: call notice', err); callNotice = null; }
@@ -6748,8 +6756,12 @@ export async function mountKiosk(root, {
               config: (settings.get() || {}).call || {},
               options: () => intercomOptionsFrom(personRow || {}),
               micOwner, audio, output,
+              // 'Video both ways' (intercomVideo, 2026-10-13): a clone of the room camera's track, released at the end.
+              getCamera: cameraOwner ? () => cameraOwner.acquireTrack('intercom') : null,
+              releaseCamera: cameraOwner ? () => cameraOwner.release('intercom') : null,
               busy: () => { try { return !!callTransport?.isLive?.(); } catch { return false; } },
               onChange: (sessions) => {
+                try { intercomNote?.refresh?.(); } catch { /* not mounted yet */ }
                 try { voiceRec?.hold('intercom', (sessions || []).length > 0); } catch (err) { console.error('kiosk: voice recording hold', err); }
               },
             });

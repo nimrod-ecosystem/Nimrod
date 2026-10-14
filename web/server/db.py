@@ -222,7 +222,7 @@ class _Store:
         authorised person may do.
         """
         gid, ts = _new_id(), _now()
-        r = grants.normalize_role(role)
+        r = grants.normalize_stored_role(role)   # a driver role, or 'caller' (a call is only a call, 2026-10-14)
         with self._tx() as cur:
             cur.execute(self._q(
                 "INSERT INTO drive_grants(id, owner_id, person_id, subject_kind, subject_id, "
@@ -289,7 +289,7 @@ class _Store:
         role = r[8] if len(r) > 8 else (r[7] if len(r) > 7 else None)
         return {"id": r[0], "person_id": r[1], "subject_kind": r[2], "subject_id": r[3],
                 "label": r[4], "expires_at": r[5], "created_at": r[6],
-                "role": grants.normalize_role(role)}
+                "role": grants.normalize_stored_role(role)}
 
     # ---- CONNECTIONS -----------------------------------------------------
     # Read links.py first: the RULES live there, pure and tested on their own. This is

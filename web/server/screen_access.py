@@ -17,31 +17,58 @@ Mike's rulings of 2026-10-12 (DECISIONS.md, "Mike's answers of 2026-10-12"; note
     after a set time. In memory only (SeeAccess below): a server restart ends calls anyway, and a lend must never outlive
     the call it was given on.
 
+Mike's rulings of 2026-10-13 and 2026-10-14 (DECISIONS.md "Mike's site-text answers and new rules (2026-10-13)", notes
+BW and BX), added here:
+
+  * A CALL IS ONLY A CALL. Being able to call grants NO drive and NO see. "May call" is its own permission: a CALL_ONLY
+    grant (grants.py) lets somebody reach the screens without driving them, and "May call" on this list can switch
+    calling off for anybody. Drive and see are separate grants a screen can LEND during a call (below).
+  * BRINGING OTHER PEOPLE INTO A CALL IS A PERMISSION ("May bring others into a call", `bringOthers`): checked on the
+    server where a group call grows (drive.py CallGroups, app.py), for every other screen already in the call.
+  * HOW LONG A PERMISSION LENT ON A CALL LASTS has choices: until the call ends (the default), a set time (which still
+    ends with the call), or "always" - for a caller with the guardian set only, and then it is a REAL grant (the list's
+    "may see" tick, or a drive grant) the owner sees on the Remote page and anybody at the screen can take back.
+  * THE ACCOUNT OWNER CONTROLS EVERY SCREEN ON THEIR OWN ACCOUNT BY DEFAULT, drop-in included (still changeable).
+
 WHERE THE LIST LIVES: on the person's own row (person state, key `input-bindings`, the same row the intercom's approved
 list and the note writers already live in - notes.PERSON_ROW_KEY). Only the person's owner can write that row (app.py
 `owned_person` on person state), which is what makes it safe to read as a permission here. A permission is a SETTING,
 not content (storage_line.py): a few names and switches, nothing about a body.
 
-    screenPeople: [{ account, name, guardian?, see?, seeAsk?, dropIn? }]
+    screenPeople: [{ account, name, guardian?, see?, seeAsk?, dropIn?, call?, bringOthers?, intercom? }]
 
 A switch that is not set (missing, or not a real true/false) takes its DEFAULT:
 
-                         ordinary person     with the guardian set     the account that owns the person
-    may see              no                  yes                       yes
-    ask first            yes                 no                        no
-    may drop in          no                  yes                       no
-    may drive            a drive grant (grants.py), never this row - the guardian set's UI makes one
+                         ordinary person         with the guardian set     the account that owns the person
+    may see              no                      yes                       yes
+    ask first            yes                     no                        no
+    may drop in          no                      yes                       YES (2026-10-14, was no)
+    may call             yes if they hold a      yes                       yes
+                         live grant (any kind)
+    may bring others     no                      yes                       yes
+    may drive            a drive grant (grants.py), never this row - the guardian set's UI makes one; or lent on a call
+    may use the intercom no (yes if on the      yes                       yes (2026-10-14, was no)
+                         intercom's older list `intercomAllowed`) - its own permission, separate from calls
 
 WHY THE OWNER SEES WITHOUT ASKING BY DEFAULT (argued; on Mike's list): the owner set the screen up and can already
 change every one of its settings, including this list - an ask they could switch off from the same page is a speed
 bump, not a protection. Who wants the opposite? An adult who owns their own login and would like to be asked even about
-their own other devices - they add themselves to the list with "ask first" ticked, and that wins. WHY THE OWNER DOES
-NOT DROP IN BY DEFAULT: the ruling is "a call waits by default" for everybody; the owner ticks it for themselves.
+their own other devices - they add themselves to the list with "ask first" ticked, and that wins.
+WHY THE OWNER DROPS IN BY DEFAULT (Mike, 2026-10-14, note BX: "the account owner controls every screen on the account by
+default"): the owner calling their own account's screen is the household calling itself. Who wants the opposite? An
+owner whose screens are in somebody else's room (a parent's) and who would rather the call waited - they untick it.
 
-THE OUTER WALL STAYS THE DRIVE GRANT. Watching along rides the drive socket, which only opens for somebody who may
-drive (grants.may_drive). So "may see" here narrows who of those may watch; it does not let anybody new in. Seeing
-WITHOUT being allowed to drive needs the socket to admit see-only logins as watch-only - a real, separate step, on
-Mike's list rather than smuggled in here.
+WHY AN EXISTING DRIVE GRANT KEEPS THE RIGHT TO CALL (argued, on Mike's list). Until 2026-10-14 a drive grant WAS the
+permission to call. Taking that away on the day the rule changed would silently cut off every family member who calls
+today, on a screen somebody depends on, with nobody told. So "may call" DEFAULTS to yes for anybody holding a live grant
+(a drive grant, or the new call-only one), and the Remote page shows it as a ticked "May call" the owner can untick.
+The case for migrating instead (an explicit tick for each, so nothing is implied): cleaner on paper, but it is a write
+to every person's row for no change anybody can see, and "nothing implied" is already true - the tick is visible.
+
+THE OUTER WALL IS A GRANT. Watching along rides the drive socket, which only opens for the owner or somebody holding a
+live grant (grants.may_reach: a drive grant, or since 2026-10-14 a call-only one). So "may see" here narrows who of
+those may watch; it does not let anybody new in. Seeing with NO grant at all ("see-only") needs the socket to admit
+see-only logins - after the bench swap (Mike, 2026-10-14), not built here.
 """
 from __future__ import annotations
 
@@ -73,22 +100,42 @@ ASK_GRACE_S = 3
 # comes back later is asked again. Not a person's setting: nobody can judge it from a menu.
 YES_GRACE_S = 120
 
-# *** THE TEMPORARY PERMISSION: 60 MINUTES BY DEFAULT (`lendMinutes` on the person's row), and it ends with the call
-# whichever comes first. *** Argued: it is for a helper on a call ("let me see what you are seeing"), and a call that
-# needs the helper to see the screen rarely runs past an hour; ending with the call is the real limit and the time is
-# the backstop for a call that somehow never says it ended. For 15 or 30: a shorter leash for somebody less trusted.
-# For 120: a long support session. MAX_LEND_MIN bounds whatever a page sends.
+# *** A PERMISSION LENT DURING A CALL: HOW LONG IT LASTS (Mike, 2026-10-13: "options, default the length of the call,
+# plus an 'always' option for parents/guardians"). ***
+#   "call"   - UNTIL THE CALL ENDS. The default. Ends at the call's bye, when the screen that lent it leaves, or - only for a
+#              call whose end the server never hears - after MAX_LEND_MIN (4 hours, the backstop; argued: the server does
+#              hear a bye or a socket closing in every ordinary case, so this only bounds a lost one).
+#   minutes  - A SET TIME (15, 30, 60, 120 offered), WHICH STILL ENDS WITH THE CALL: a shorter leash inside the call, never
+#              longer than it. Argued: a set time that OUTLIVED the call would leave somebody seeing or pressing a screen
+#              after everybody hung up, with no call card left on the screen to stop it from. The case for letting it
+#              outlive the call: a helper who hangs up and keeps fixing something. That wants a notice with Stop on the
+#              screen after the call - a later step, on Mike's list, not smuggled in here.
+#   "always" - A REAL GRANT, for a caller with the GUARDIAN SET only (below). Not held here: written where every other
+#              standing permission lives (the list's "may see", or a drive grant), so it is seen and taken back there.
+# `lendLength` on the person's row picks which one the screen offers first ("call" unless somebody chose otherwise).
+# `lendMinutes` (the old "at most N minutes") is still honoured from an older page: a lend with minutes and no length is a
+# set time that ends with the call - exactly what it always was.
 LEND_CHOICES = (15, 30, 60, 120)
 LEND_DEFAULT_MIN = 60
 LEND_FIELD = "lendMinutes"
+LENGTH_FIELD = "lendLength"
+LENGTH_DEFAULT = "call"
 MAX_LEND_MIN = 240
-LEND_WHAT = frozenset({"see"})      # see below: "drive" is argued out today, not forgotten
+LEND_WHAT = frozenset({"see", "drive"})
+LENGTHS = frozenset({"call", "time", "always"})
 
-# WHY THE TEMPORARY PERMISSION IS "SEE" ONLY (pushback, on Mike's list). Mike asked for "drive / see". But a call can
-# only be placed by somebody who may already drive the screen (ruling 3: "who may drive" allows calling - the drive
-# ticket is the call's door). So every caller ALREADY may drive; a temporary "drive" would grant nothing. The moment
-# calls get a permission of their own (links.py `call_video`), "drive" belongs in LEND_WHAT and the rest of this file
-# already carries it.
+# WHY "ALWAYS" IS FOR GUARDIANS ONLY, AND WHAT IT WRITES (argued, on Mike's list). "Always" pressed on a screen in the
+# middle of a call is a standing permission given by whoever is in front of that screen, to whoever is on the call. For
+# a household's own adult that is their right; for somebody who cannot weigh it, a call is exactly where they could be
+# talked into it. The guardian set is the owner's own statement "this person may do everything", made on the Remote page
+# - so "always" is offered for those callers and refused for everybody else, who are given "always" on the Remote page by
+# the owner. With the set's defaults a guardian already sees without asking and holds a drive grant, so "always" mostly
+# RESTORES what somebody narrowed by hand (a see turned off, a drive grant taken back); it writes it explicitly:
+#   see   -> their line on the list: see: true, seeAsk: false
+#   drive -> a drive grant "as long as I allow it" (label ALWAYS_LABEL), made only when they hold no live one
+# Taking it back from the screen writes see: false, or removes their live drive grants on this person - the person at the
+# screen can take back what was given there; the owner sees both on the Remote page.
+ALWAYS_LABEL = "always, given on a call"
 
 
 def clean_name(raw) -> str:
@@ -111,35 +158,103 @@ def entries_from(row: dict | None) -> dict[str, dict]:
             continue
         a = a.strip()
         ent = {"account": a, "name": clean_name(e.get("name"))}
-        for k in ("guardian", "see", "seeAsk", "dropIn"):
+        for k in SWITCHES:
             if isinstance(e.get(k), bool):
                 ent[k] = e[k]
         out[a] = ent
     return out
 
 
-def perms_for(row: dict | None, account: str, owner: str | None) -> dict:
-    """What `account` may do on this person's screens, from the row alone. PURE.
+SWITCHES = ("guardian", "see", "seeAsk", "dropIn", "call", "bringOthers", "intercom")
 
-    {guardian, see, ask_first, drop_in, listed}. A person with no owner does not exist, and is indistinguishable from
-    one you may do nothing on (the same anti-oracle rule as grants.may_drive)."""
-    none = {"guardian": False, "see": False, "ask_first": True, "drop_in": False, "listed": False}
+
+def perms_for(row: dict | None, account: str, owner: str | None, *, reach: bool = False) -> dict:
+    """What `account` may do on this person's screens, from the row alone (plus `reach`: they hold a live grant of any
+    kind - app.py knows, this file does not read grants). PURE.
+
+    {guardian, see, ask_first, drop_in, call, bring_others, listed}. A person with no owner does not exist, and is
+    indistinguishable from one you may do nothing on (the same anti-oracle rule as grants.may_drive)."""
+    none = {"guardian": False, "see": False, "ask_first": True, "drop_in": False, "call": False,
+            "bring_others": False, "intercom": False, "listed": False}
     if not account or not owner:
         return none
+    is_owner = account == owner
     ent = entries_from(row).get(account)
     if ent is None:
-        if account == owner:
-            return {"guardian": False, "see": True, "ask_first": False, "drop_in": False, "listed": False}
-        return none
+        if is_owner:
+            return {"guardian": False, "see": True, "ask_first": False, "drop_in": True, "call": True,
+                    "bring_others": True, "intercom": True, "listed": False}
+        return {**none, "call": bool(reach), "intercom": _on_intercom_list(row, account)}
     g = ent.get("guardian") is True
-    is_owner = account == owner
     return {
         "guardian": g,
         "see": ent["see"] if "see" in ent else (g or is_owner),
         "ask_first": ent["seeAsk"] if "seeAsk" in ent else not (g or is_owner),
-        "drop_in": ent["dropIn"] if "dropIn" in ent else g,
+        "drop_in": ent["dropIn"] if "dropIn" in ent else (g or is_owner),
+        "call": ent["call"] if "call" in ent else (g or is_owner or bool(reach)),
+        "bring_others": ent["bringOthers"] if "bringOthers" in ent else (g or is_owner),
+        "intercom": ent["intercom"] if "intercom" in ent else (g or is_owner or _on_intercom_list(row, account)),
         "listed": True,
     }
+
+
+INTERCOM_LIST_FIELD = "intercomAllowed"     # the intercom's own list (row 2.44, intercom.js), older than this one
+
+
+def _on_intercom_list(row, account: str) -> bool:
+    raw = (row or {}).get(INTERCOM_LIST_FIELD) if isinstance(row, dict) else None
+    return isinstance(raw, list) and any(isinstance(e, dict) and e.get("account") == account for e in raw)
+
+
+def may_intercom(row: dict | None, account: str, owner: str | None, *, reach: bool) -> bool:
+    """MAY USE THE INTERCOM (Mike, 2026-10-13: "handled like a call, with its own permission separate from calls").
+    PURE. Who wants it by default, argued:
+      * THE OWNER - yes (2026-10-14, "the account owner controls every screen on the account by default"; and Mike's
+        "any device in someone's household can announce something": the household's own devices are the owner's login).
+        Until now the owner had to tick themselves; an owner who would rather not (a screen in somebody else's room)
+        unticks it.
+      * THE GUARDIAN SET - yes: the set is "every permission switched on", and a guardian may already drop in on a VIDEO
+        call; the intercom is sound only by default. Unticked per person like everything else in the set.
+      * ANYBODY ELSE - only when ticked: the intercom's own older list (`intercomAllowed`) still counts as ticked, so
+        nobody already approved loses it, and an explicit untick on this list wins over it.
+    Like a call, it needs a socket: the owner, or a live grant of any kind."""
+    if not account or not owner:
+        return False
+    if account != owner and not reach:
+        return False
+    return perms_for(row, account, owner, reach=reach).get("intercom") is True
+
+
+def may_call(row: dict | None, account: str, owner: str | None, *, reach: bool) -> bool:
+    """May `account` ring this person's screens? The owner, or somebody who can reach them (a live grant) and whose
+    "May call" is not switched off. PURE. A guardian with no grant at all cannot open a socket, so cannot call."""
+    if not account or not owner:
+        return False
+    if account != owner and not reach:
+        return False
+    return perms_for(row, account, owner, reach=reach)["call"] is True
+
+
+def with_switches(row: dict | None, account: str, name: str = "", **switches) -> list:
+    """The list on `row` with `account`'s switches set (added to the list if absent). PURE: returns a new list in the
+    row's own shape, for "always" written from a call. Only real switches and real true/false are written."""
+    raw = (row or {}).get(LIST_FIELD) if isinstance(row, dict) else None
+    out = [dict(e) for e in (raw if isinstance(raw, list) else [])[:MAX_PEOPLE] if isinstance(e, dict)]
+    ent = next((e for e in out if e.get("account") == account), None)
+    if ent is None:
+        if len(out) >= MAX_PEOPLE:
+            return out
+        ent = {"account": account, "name": clean_name(name) or account.split("@")[0]}
+        out.append(ent)
+    for k, v in switches.items():
+        if k in SWITCHES and isinstance(v, bool):
+            ent[k] = v
+    return out
+
+
+def may_bring_others(row: dict | None, account: str, owner: str | None) -> bool:
+    """May `account` bring other people into a call this person's screen is on? PURE."""
+    return perms_for(row, account, owner)["bring_others"] is True
 
 
 def name_for(row: dict | None, account: str) -> str:
@@ -169,6 +284,16 @@ def lend_minutes(row: dict | None, asked=None) -> int:
     if isinstance(asked, int) and not isinstance(asked, bool) and 1 <= asked <= MAX_LEND_MIN:
         return asked
     return _choice(row, LEND_FIELD, LEND_CHOICES, LEND_DEFAULT_MIN)
+
+
+def lend_length(row: dict | None):
+    """The length the screen offers first: "call" (the default), "always", or one of LEND_CHOICES minutes. PURE."""
+    v = (row or {}).get(LENGTH_FIELD) if isinstance(row, dict) else None
+    if v in ("call", "always"):
+        return v
+    if isinstance(v, int) and not isinstance(v, bool) and v in LEND_CHOICES:
+        return v
+    return LENGTH_DEFAULT
 
 
 def see_decision(row: dict | None, account: str, owner: str | None, *, lent: bool = False,
@@ -206,9 +331,17 @@ def parse_see_answer(raw: dict) -> dict | None:
     return {"type": "see-answer", "ask": raw["ask"], "yes": raw["yes"]}
 
 
+def _minutes_ok(m) -> bool:
+    return isinstance(m, int) and not isinstance(m, bool) and 1 <= m <= MAX_LEND_MIN
+
+
 def parse_lend(raw: dict) -> dict | None:
-    """`{type: lend, what, session, on, minutes?}` from a SCREEN. PURE. The account it is lent to is never taken from
-    the page: it is the account that placed that call, as the server recorded it."""
+    """`{type: lend, what, session, on, length?, minutes?}` from a SCREEN. PURE. The account it is lent to is never taken
+    from the page: it is the account that placed that call, as the server recorded it.
+
+    `length`: "call" | "always" | a whole number of minutes. Out comes `length` as "call" | "time" | "always" (with
+    `minutes` for "time"). No `length` (an older page): `minutes` alone is a set time ending with the call, and nothing
+    at all is "until the call ends"."""
     from drive import _session_ok    # the same session rule as a call's (local import: drive imports this file)
     if not isinstance(raw, dict):
         return None
@@ -216,9 +349,19 @@ def parse_lend(raw: dict) -> dict | None:
     if what not in LEND_WHAT or not _session_ok(session) or not isinstance(on, bool):
         return None
     out = {"type": "lend", "what": what, "session": session, "on": on}
-    m = raw.get("minutes")
-    if isinstance(m, int) and not isinstance(m, bool) and 1 <= m <= MAX_LEND_MIN:
-        out["minutes"] = m
+    ln, m = raw.get("length"), raw.get("minutes")
+    if ln == "always":
+        out["length"] = "always"
+    elif ln == "call":
+        out["length"] = "call"
+    elif _minutes_ok(ln):
+        out["length"], out["minutes"] = "time", ln
+    elif ln is not None:
+        return None                     # a length nobody offers: not trusted as anything
+    elif _minutes_ok(m):
+        out["length"], out["minutes"] = "time", m
+    else:
+        out["length"] = "call"
     return out
 
 
@@ -242,6 +385,8 @@ class _Lend:
     screen: object               # the screen that answered the call and lent it
     until: float
     wall_until_ms: int = 0
+    what: str = "see"            # "see" | "drive" (2026-10-14)
+    length: str = "call"         # "call" | "time" - both end with the call; "always" is never held here
 
 
 @dataclass
@@ -321,22 +466,29 @@ class SeeAccess:
         return False
 
     # ---- lending -----------------------------------------------------------------------------------------------
-    def lend(self, room, session: str, account: str, screen, minutes: int) -> dict:
+    def lend(self, room, session: str, account: str, screen, minutes: int, *, what: str = "see",
+             length: str = "call") -> dict:
+        """Lend `what` to the call's caller. `minutes`: the set time, or the backstop for "until the call ends"."""
         until = self.now() + minutes * 60
         wall_until = int(self.wall() + minutes * 60 * 1000)
-        self.lends[(room, session)] = _Lend(room=room, session=session, account=account, screen=screen,
-                                            until=until, wall_until_ms=wall_until)
-        return {"type": "lend-state", "what": "see", "session": session, "on": True, "until": wall_until,
-                "minutes": minutes}
+        self.lends[(room, session, what)] = _Lend(room=room, session=session, account=account, screen=screen,
+                                                  until=until, wall_until_ms=wall_until, what=what, length=length)
+        return {"type": "lend-state", "what": what, "session": session, "on": True, "until": wall_until,
+                "minutes": minutes, "length": length}
 
-    def lent(self, room, account: str) -> bool:
+    def lent(self, room, account: str, what: str = "see") -> bool:
         now = self.now()
-        return any(l.room == room and l.account == account and l.until > now for l in self.lends.values())
+        return any(l.room == room and l.account == account and l.what == what and l.until > now
+                   for l in self.lends.values())
 
-    def end_lend(self, room, session: str) -> list[tuple]:
-        """The call ended, or the screen took it back. Returns [(room, account)] whose lend went."""
-        l = self.lends.pop((room, session), None)
-        return [(l.room, l.account)] if l else []
+    def end_lend(self, room, session: str, what: str | None = None) -> list[tuple]:
+        """The call ended (`what` None: everything lent on it), or the screen took one back. Returns [(room, account)]
+        whose lend went. Every length ends with the call: a set time is a shorter leash INSIDE the call."""
+        gone = []
+        for k in [k for k in self.lends if k[0] == room and k[1] == session and (what is None or k[2] == what)]:
+            l = self.lends.pop(k)
+            gone.append((l.room, l.account))
+        return gone
 
     def screen_left(self, conn) -> list[tuple]:
         """The screen that lent it closed: the call it was lent on is over for that screen."""
@@ -396,7 +548,7 @@ class SeeAccess:
             if l.until <= now:
                 self.lends.pop(k, None)
                 gone.append((l.room, l.account))
-                out.append((l.screen, {"type": "lend-state", "what": "see", "session": l.session, "on": False,
+                out.append((l.screen, {"type": "lend-state", "what": l.what, "session": l.session, "on": False,
                                        "reason": "time"}))
         for k, until in list(self.yes.items()):
             if until is not None and until <= now:

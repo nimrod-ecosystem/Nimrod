@@ -77,11 +77,11 @@ check("'ask first' can be turned off for one person", p["see"] and not p["ask_fi
 p = perms_for(row({"account": "mike", "see": True}), "mike", None)
 check("a person with no owner does not exist: nothing (no id oracle)", not p["see"] and not p["drop_in"])
 p = perms_for({}, OWN, OWN)
-check("the owner sees without asking by default, and does NOT drop in by default (a call waits for everybody)",
-      p["see"] and not p["ask_first"] and not p["drop_in"], str(p))
-p = perms_for(row({"account": OWN, "dropIn": True, "seeAsk": True}), OWN, OWN)
-check("...and the owner can give themselves drop-in, and ask first, from the same list",
-      p["drop_in"] and p["see"] and p["ask_first"], str(p))
+check("*** the owner sees without asking AND drops in by default (2026-10-14: the owner controls their own screens) ***",
+      p["see"] and not p["ask_first"] and p["drop_in"], str(p))
+p = perms_for(row({"account": OWN, "dropIn": False, "seeAsk": True}), OWN, OWN)
+check("...and the owner can switch their own drop-in off, and ask first on, from the same list",
+      not p["drop_in"] and p["see"] and p["ask_first"], str(p))
 
 section("*** the guardian set: a bundle of the separate permissions, each still changeable ***")
 p = perms_for(row({"account": "mike", "guardian": True}), "mike", OWN)
@@ -97,6 +97,42 @@ p = perms_for(row({"account": "mike", "guardian": False, "dropIn": True}), "mike
 check("drop-in on its own, without the set (the bundle is not the only way in)", p["drop_in"] and not p["see"], str(p))
 p = perms_for(row({"account": "mike", "guardian": True}), "ann", OWN)
 check("one person's guardian set gives nobody else anything", not p["see"] and not p["drop_in"])
+
+section("*** a call is only a call; bringing others in; the intercom (2026-10-13/14) ***")
+from screen_access import may_bring_others, may_call, may_intercom, with_switches  # noqa: E402
+check("*** may call: somebody holding a grant (drive or call-only) may call by default - an existing drive grant keeps "
+      "calling ***", may_call({}, "mike", OWN, reach=True))
+check("*** ...and with no grant at all, nobody calls, list or no list (no socket) ***",
+      not may_call(row({"account": "mike", "guardian": True, "call": True}), "mike", OWN, reach=False))
+check("*** 'May call' switched off: no ring, even with a drive grant ***",
+      not may_call(row({"account": "mike", "call": False}), "mike", OWN, reach=True))
+check("the owner calls their own screens (and can switch it off for themselves)",
+      may_call({}, OWN, OWN, reach=False) and not may_call(row({"account": OWN, "call": False}), OWN, OWN, reach=False))
+check("no owner: nobody calls", not may_call({}, "mike", None, reach=True))
+check("*** may bring others into a call: off for an ordinary person, on for the owner and the guardian set ***",
+      not may_bring_others({}, "mike", OWN) and may_bring_others({}, OWN, OWN)
+      and may_bring_others(row({"account": "mike", "guardian": True}), "mike", OWN))
+check("...each changeable: ticked for one person, unticked for a guardian",
+      may_bring_others(row({"account": "mike", "bringOthers": True}), "mike", OWN)
+      and not may_bring_others(row({"account": "mike", "guardian": True, "bringOthers": False}), "mike", OWN))
+check("*** the intercom is its own permission: calling does not give it ***",
+      may_call({}, "mike", OWN, reach=True) and not may_intercom({}, "mike", OWN, reach=True))
+check("*** the owner's household devices may announce by default; the guardian set includes it ***",
+      may_intercom({}, OWN, OWN, reach=False) and may_intercom(row({"account": "mike", "guardian": True}), "mike", OWN, reach=True))
+check("the intercom's older list still counts as ticked (nobody already approved loses it)",
+      may_intercom({"intercomAllowed": [{"account": "mike", "name": "Mike"}]}, "mike", OWN, reach=True))
+check("...an untick on this list wins over the older list",
+      not may_intercom({"intercomAllowed": [{"account": "mike"}], "screenPeople": [{"account": "mike", "intercom": False}]},
+                       "mike", OWN, reach=True))
+check("...and on the list with no grant at all: no socket, no intercom",
+      not may_intercom({"intercomAllowed": [{"account": "mike"}]}, "mike", OWN, reach=False))
+check("the owner's own intercom can be switched off", not may_intercom(row({"account": OWN, "intercom": False}), OWN, OWN, reach=False))
+nl = with_switches(row({"account": "ann", "name": "Ann", "see": False}), "ann", "x", see=True, seeAsk=False, junk=True)
+check("'always' written: the person's switches set, nothing invented", nl == [{"account": "ann", "name": "Ann", "see": True,
+                                                                                "seeAsk": False}], str(nl))
+nl = with_switches({}, "bob@example.org", "", see=True, seeAsk="no")
+check("...a person not on the list is added with a short name; a switch that is not true/false is not written",
+      nl == [{"account": "bob@example.org", "name": "bob", "see": True}], str(nl))
 
 section("the decision when somebody starts seeing")
 check("not allowed -> refused", see_decision({}, "mike", OWN) == ("refuse", "not-allowed"))
@@ -136,9 +172,21 @@ check("drive.py's parse_message hands both new types here",
       and parse_message({"type": "lend", "what": "see", "session": "s1", "on": True})["what"] == "see")
 check("*** a lend never carries an account from the page (the server knows who called) ***",
       parse_lend({"type": "lend", "what": "see", "session": "s1", "on": True, "to": "mal", "minutes": 30})
-      == {"type": "lend", "what": "see", "session": "s1", "on": True, "minutes": 30})
-check("*** a lend of 'drive' is refused today: every caller may already drive (argued in screen_access.py) ***",
-      parse_lend({"what": "drive", "session": "s1", "on": True}) is None)
+      == {"type": "lend", "what": "see", "session": "s1", "on": True, "length": "time", "minutes": 30})
+check("*** a lend of 'drive' is accepted since a call is only a call (2026-10-14) ***",
+      parse_lend({"what": "drive", "session": "s1", "on": True}) == {"type": "lend", "what": "drive", "session": "s1",
+                                                                     "on": True, "length": "call"})
+check("a lend of anything else is dropped", parse_lend({"what": "own", "session": "s1", "on": True}) is None)
+check("*** the lengths: until the call ends (also when nothing is said), a set time, always ***",
+      parse_lend({"what": "see", "session": "s1", "on": True, "length": "call"})["length"] == "call"
+      and parse_lend({"what": "see", "session": "s1", "on": True})["length"] == "call"
+      and parse_lend({"what": "see", "session": "s1", "on": True, "length": 30}) == {
+          "type": "lend", "what": "see", "session": "s1", "on": True, "length": "time", "minutes": 30}
+      and parse_lend({"what": "see", "session": "s1", "on": True, "length": "always"})["length"] == "always")
+check("a length nobody offers (too long, a word, a true) is dropped, not trusted as anything",
+      parse_lend({"what": "see", "session": "s1", "on": True, "length": MAX_LEND_MIN + 1}) is None
+      and parse_lend({"what": "see", "session": "s1", "on": True, "length": "forever"}) is None
+      and parse_lend({"what": "see", "session": "s1", "on": True, "length": True}) is None)
 check("a lend with a bad session or no on/off is dropped",
       parse_lend({"what": "see", "session": "bad session", "on": True}) is None
       and parse_lend({"what": "see", "session": "s1"}) is None)
@@ -212,6 +260,15 @@ check("*** after its time it ends by itself, and the screen is told ***", gone =
 S.lend(ROOM, "c3", "mike", s1, 60)
 check("the screen that lent it closes: the lend goes with it", S.screen_left(s1) == [(ROOM, "mike")] and not S.lent(ROOM, "mike"))
 check("nothing left over", len(S) == 0 and S.next_due() is None, str(len(S)))
+st = S.lend(ROOM, "c4", "mike", s1, 30, what="drive", length="time")
+check("*** 'drive' is lent on its own: the caller may press, and still may not see ***",
+      S.lent(ROOM, "mike", "drive") and not S.lent(ROOM, "mike") and st["what"] == "drive" and st["length"] == "time")
+S.lend(ROOM, "c4", "mike", s1, 240)
+check("both at once, each its own", S.lent(ROOM, "mike", "drive") and S.lent(ROOM, "mike", "see"))
+S.end_lend(ROOM, "c4", "see")
+check("taking back one leaves the other", S.lent(ROOM, "mike", "drive") and not S.lent(ROOM, "mike", "see"))
+check("*** the call ends: EVERY length ends with it, a set time too ***", S.end_lend(ROOM, "c4") == [(ROOM, "mike")]
+      and not S.lent(ROOM, "mike", "drive") and len(S) == 0)
 
 # ------------------------------------------------------------------------------------------- the real socket
 section("*** the real socket, end to end ***")
@@ -395,8 +452,9 @@ with ws_for("pat", "screen") as P:
         drain(P)
         P.send_text(J({"type": "lend", "what": "see", "session": "c1", "on": True}))
         ls = of(drain(P), "lend-state")
-        check("*** the screen that answered lends 'see this screen' to the caller, for 60 minutes by default ***",
-              ls and ls[-1]["on"] is True and ls[-1]["minutes"] == 60, str(ls))
+        check("*** the screen that answered lends 'see this screen' to the caller, UNTIL THE CALL ENDS by default "
+              "(its only clock the 4-hour backstop) ***",
+              ls and ls[-1]["on"] is True and ls[-1]["length"] == "call" and ls[-1]["minutes"] == MAX_LEND_MIN, str(ls))
         with ws_for("mike", "driver", follow=True) as F:
             fs = of(drain(F), "follow-state")
             check("*** the caller may see now, list or no list ***", fs[-1]["state"] == "on" and fs[-1]["via"] == "lent", str(fs))
@@ -435,7 +493,145 @@ with ws_for("pat", "screen") as P:
         P.send_text(J({"type": "lend", "what": "see", "session": "c2", "on": False}))
         check("taking it back is answered", of(drain(P), "lend-state")[-1]["on"] is False)
 
-    section("the outer wall is still the drive grant")
+    section("*** a call is only a call (Mike, 2026-10-14): a call-only grant, through the real socket ***")
+
+    def get_row():
+        g_ = c.get(f"/api/people/{robin}/state/input-bindings", headers=H_("pat")).json()
+        version[0] = g_.get("version", version[0])
+        return g_.get("data") or {}
+
+    get_row()
+    set_row({"screenPeople": []})
+    r_ = c.post(f"/api/people/{robin}/drive-grants", json={"subject_id": "carl", "role": "caller", "days": 0},
+                headers=H_("pat"))
+    check("the owner gives a CALL-ONLY grant (role 'caller'), kept as itself", r_.status_code == 200
+          and r_.json()["role"] == "caller", r_.text)
+    tk = c.post(f"/api/drive/ticket/{robin}", headers=H_("carl"))
+    check("*** a call-only login gets a socket ticket, and is told it does not drive ***",
+          tk.status_code == 200 and tk.json()["drive"] is False, tk.text)
+    sh = c.get("/api/drive/shared", headers=H_("carl")).json()["people"]
+    check("...and finds Robin in their list, marked call-only", sh and sh[0]["role"] == "caller" and sh[0]["drive"] is False,
+          str(sh))
+    t_ = c.post(f"/api/drive/ticket/{robin}", headers=H_("carl")).json()["ticket"]
+    try:
+        with c.websocket_connect(f"/api/drive/{robin}?t={t_}&role=screen") as bad:
+            bad.receive_json()
+        check("*** a call-only login cannot open a SCREEN socket ***", False, "opened")
+    except Exception:
+        check("*** a call-only login cannot open a SCREEN socket (closed before it opened) ***", True)
+    drain(P)
+    with ws_for("carl", "driver") as CARL:
+        drain(CARL)
+        pr = last_presence(drain(P))
+        check("*** a call-only socket is NOT counted as helping ***", pr and pr["drivers"] == 0, str(pr))
+        CARL.send_text(J({"type": "verb", "verb": "next"}))
+        drain(CARL)
+        check("*** ...and its verbs never reach the screen ***", not of(drain(P), "verb"))
+        CARL.send_text(J({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "purpose": "call", "session": "k1"}}))
+        drain(CARL)
+        sigs = of(drain(P), "signal")
+        check("*** ...but it may CALL: the ring reaches the screen, stamped by the server (not the owner) ***",
+              sigs and sigs[-1]["signal"]["by"] == "carl" and sigs[-1]["signal"]["byOwner"] is False, str(sigs))
+        P.send_text(J({"type": "claim", "purpose": "call", "session": "k1"}))
+        drain(P)
+        P.send_text(J({"type": "lend", "what": "drive", "session": "k1", "on": True}))
+        got = drain(P)
+        ls = of(got, "lend-state")
+        check("*** the screen that answered lends 'drive' until the call ends ***",
+              ls and ls[-1]["on"] and ls[-1]["what"] == "drive" and ls[-1]["length"] == "call", str(ls))
+        pr = last_presence(got)
+        CARL.send_text(J({"type": "verb", "verb": "next"}))
+        drain(CARL)
+        vs = of(drain(P), "verb")
+        check("*** with 'drive' lent, the caller's press reaches the screen ***", vs and vs[-1]["verb"] == "next", str(vs))
+        check("...and the screen now counts them as helping", pr and pr["drivers"] == 1, str(pr))
+        CARL.send_text(J({"type": "signal", "signal": {"kind": "bye", "purpose": "call", "session": "k1"}}))
+        drain(CARL)
+        drain(P)
+        CARL.send_text(J({"type": "verb", "verb": "next"}))
+        drain(CARL)
+        check("*** the call ends: so does the lent drive - presses stop ***", not of(drain(P), "verb"))
+        set_row({"screenPeople": [{"account": "carl", "name": "Carl", "call": False}]})
+        CARL.send_text(J({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "purpose": "call", "session": "k2"}}))
+        got_c = drain(CARL)
+        byes = [m for m in of(got_c, "signal") if m["signal"].get("kind") == "bye"]
+        check("*** 'May call' switched off: the SERVER refuses the ring, telling the caller 'not-allowed' ***",
+              byes and byes[-1]["signal"]["reason"] == "not-allowed" and byes[-1]["signal"]["session"] == "k2", str(got_c))
+        check("...and nothing rang on the screen", not of(drain(P), "signal"))
+        CARL.send_text(J({"type": "group", "op": "knock"}))
+        rf = [m for m in drain(CARL) if m.get("type") == "group" and m.get("op") == "refused"]
+        check("...a knock needs 'May call' too", rf and rf[-1]["reason"] == "not-allowed", str(rf))
+        CARL.send_text(J({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "purpose": "intercom",
+                                                       "session": "ic-0123456789abcdef"}}))
+        got_c = drain(CARL)
+        byes = [m for m in of(got_c, "signal") if m["signal"].get("kind") == "bye"]
+        check("*** the intercom is its own permission: refused 'not-approved' by the SERVER, nothing reaches the screen ***",
+              byes and byes[-1]["signal"]["reason"] == "not-approved" and not of(drain(P), "signal"), str(got_c))
+    drain(P)
+    with ws_for("pat", "driver") as OWNP:
+        drain(OWNP)
+        OWNP.send_text(J({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "purpose": "intercom",
+                                                       "session": "ic-00000000000000aa"}}))
+        drain(OWNP)
+        sigs = of(drain(P), "signal")
+        check("*** the owner's own device may announce on the intercom by default, and the screen is told it is the owner ***",
+              sigs and sigs[-1]["signal"]["purpose"] == "intercom" and sigs[-1]["signal"]["byOwner"] is True
+              and "byName" in sigs[-1]["signal"], str(sigs))
+        OWNP.send_text(J({"type": "signal", "signal": {"kind": "bye", "purpose": "intercom", "session": "ic-00000000000000aa"}}))
+        drain(OWNP)
+    drain(P)
+
+    section("*** 'always', for a guardian only, is a real grant (2026-10-13) ***")
+    set_row({"screenPeople": [{"account": "ann", "name": "Ann", "guardian": True, "see": False}]})
+    with ws_for("ann", "driver") as ANN, ws_for("mike", "driver") as MK:
+        drain(ANN)
+        drain(MK)
+        MK.send_text(J({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "purpose": "call", "session": "m1"}}))
+        drain(MK)
+        drain(P)
+        P.send_text(J({"type": "claim", "purpose": "call", "session": "m1"}))
+        drain(P)
+        P.send_text(J({"type": "lend", "what": "see", "session": "m1", "on": True, "length": "always"}))
+        ls = of(drain(P), "lend-state")
+        check("*** 'always' for somebody WITHOUT the guardian set is refused (given on the Remote page instead) ***",
+              ls and ls[-1]["on"] is False and ls[-1]["reason"] == "not-guardian", str(ls))
+        ANN.send_text(J({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "purpose": "call", "session": "a1"}}))
+        drain(ANN)
+        drain(P)
+        P.send_text(J({"type": "claim", "purpose": "call", "session": "a1"}))
+        drain(P)
+        P.send_text(J({"type": "lend", "what": "see", "session": "a1", "on": True, "length": "always"}))
+        ls = of(drain(P), "lend-state")
+        check("*** 'always' to a guardian on the call: on ***", ls and ls[-1]["on"] is True and ls[-1]["length"] == "always",
+              str(ls))
+        ent = next((e for e in get_row().get("screenPeople", []) if e.get("account") == "ann"), {})
+        check("*** ...written on the person's own list - see, without asking - where the owner sees and changes it ***",
+              ent.get("see") is True and ent.get("seeAsk") is False and ent.get("guardian") is True, str(ent))
+        P.send_text(J({"type": "lend", "what": "see", "session": "a1", "on": False, "length": "always"}))
+        drain(P)
+        ent = next((e for e in get_row().get("screenPeople", []) if e.get("account") == "ann"), {})
+        check("*** taken back from the screen: see off, on the list ***", ent.get("see") is False, str(ent))
+        gl = lambda: [g for g in c.get(f"/api/people/{robin}/drive-grants", headers=H_("pat")).json()["grants"]
+                      if g["subject_id"] == "ann"]
+        before = gl()
+        P.send_text(J({"type": "lend", "what": "drive", "session": "a1", "on": False, "length": "always"}))
+        drain(P)
+        check("*** 'drive' always taken back from the screen: their drive grant on this person goes ***",
+              before and not gl(), f"{before} {gl()}")
+        P.send_text(J({"type": "lend", "what": "drive", "session": "a1", "on": True, "length": "always"}))
+        drain(P)
+        g_ = gl()
+        check("*** 'drive' always given: a drive grant 'as long as I allow it', labelled as given on a call ***",
+              len(g_) == 1 and g_[0]["expires_at"] is None and g_[0]["label"] == sa.ALWAYS_LABEL
+              and g_[0]["role"] == "moderator", str(g_))
+        ANN.send_text(J({"type": "signal", "signal": {"kind": "bye", "purpose": "call", "session": "a1"}}))
+        MK.send_text(J({"type": "signal", "signal": {"kind": "bye", "purpose": "call", "session": "m1"}}))
+        drain(ANN)
+        drain(MK)
+    drain(P)
+    get_row()
+
+    section("the outer wall is still a grant")
     set_row({"screenPeople": [{"account": "mike", "name": "Mike", "guardian": True}]})
     gid = next(g["id"] for g in c.get(f"/api/people/{robin}/drive-grants", headers=H_("pat")).json()["grants"]
                if g["subject_id"] == "mike")
@@ -471,6 +667,19 @@ p = perms_for(old_row, "family1", s2.person_owner(pid))
 check("*** an existing drive grant does NOT become drop-in, and does not become 'may see' (both start empty) ***",
       not p["drop_in"] and not p["see"], str(p))
 check("the row's other lists are untouched", old_row.get("intercomAllowed") == [{"account": "family1", "name": "Fam"}])
+check("*** a call is only a call, and nobody is cut off: the existing drive grant still CALLS by default, keeps the "
+      "intercom it was approved for, and may not bring others in ***",
+      may_call(old_row, "family1", s2.person_owner(pid), reach=True)
+      and may_intercom(old_row, "family1", s2.person_owner(pid), reach=True)
+      and not may_bring_others(old_row, "family1", s2.person_owner(pid)))
+from grants import may_reach  # noqa: E402
+cg = s2.add_grant("owner1", pid, "account", "caller1", label="", expires_at=None, role="caller")
+grants = s2.grants_on_person(pid)
+check("*** a call-only grant reaches the screens and never drives them; a typo'd role still drives as before ***",
+      cg["role"] == "caller"
+      and may_reach(pid, account="caller1", owner="owner1", grants=grants, now_iso="2026-10-14T00:00:00+00:00")
+      and not may_drive(pid, account="caller1", owner="owner1", grants=grants, now_iso="2026-10-14T00:00:00+00:00")
+      and s2.add_grant("owner1", pid, "account", "x", role="Callerz")["role"] == "moderator")
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

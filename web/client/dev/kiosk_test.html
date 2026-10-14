@@ -3849,8 +3849,9 @@ const toTab = (m, id) => {
         for (const o of [o2, o3]) { try { o.pc.close(); } catch { /* closed */ } }
         await setRow({ callDuringIntercom: null });
       }
-      // Taken off the list: an offer is refused (the list is read at every offer).
-      await setRow({ intercomAllowed: [] });
+      // Taken off the list: an offer is refused (the list is read at every offer). The sender here is the screen's own
+      // account, which may announce by default since 2026-10-14 - so "taken off" is an explicit untick for it too.
+      await setRow({ intercomAllowed: [], screenPeople: [{ account: wUser, intercom: false }] });
       await settled(() => !item('set:intercomWarnMs'), 9000);
       driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-3', sdp: SDP });
       check('intercom: with nobody on the list, the same sender is refused ("not-approved") and its rows leave the menu',

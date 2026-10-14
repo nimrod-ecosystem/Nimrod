@@ -236,6 +236,9 @@ def parse_message(raw: dict) -> dict | None:
         return parse_play(raw)
     if kind == "follow":
         return parse_follow(raw)
+    if kind == "driving":
+        # row 2.83: a driver saying it is (or is not) pressing right now (app.py `_idle_drivers`). Only the flag.
+        return {"type": "driving", "on": raw["on"]} if isinstance(raw.get("on"), bool) else None
     if kind == "see-answer":
         # who may see a screen (2026-10-12, screen_access.py): a SCREEN's answer to "may <name> see this screen?".
         # Only from a screen, only for an ask on its own person - decided in app.py, never here.
@@ -628,12 +631,31 @@ class CallGroups:
     `name_of(user, role, room)` is what the group calls a member - the server's own names, never the page's.
     """
 
-    def __init__(self, now=time.monotonic, name_of=None, max_groups: int = MAX_GROUPS):
+    def __init__(self, now=time.monotonic, name_of=None, max_groups: int = MAX_GROUPS, may_bring=None):
         self._groups: dict[str, _Group] = {}
         self._pending: dict[tuple, list] = {}     # (room, session) -> [gid, inviter peer, touched]
         self._now = now
         self._name = name_of or (lambda user, role, room: user)
         self._max = max_groups
+        # BRINGING OTHERS INTO A CALL IS A PERMISSION (Mike, 2026-10-13: "This sounds like something that should be a
+        # permission."). `may_bring(user, room)`: may this login bring somebody new in front of that room's person? app.py
+        # answers from the person's own list (screen_access.may_bring_others). Asked for EVERY OTHER screen in the call -
+        # the people who would meet somebody their owner did not choose - when a caller rings somebody into a call and when
+        # a caller lets a knock in. None (a test, an older caller of this class): allowed, as before.
+        self._may_bring = may_bring
+
+    def _bring_ok(self, user: str, g: _Group, but_room) -> bool:
+        """`user` may bring somebody into `g`: allowed by every OTHER screen's person in it (members, and screens rung
+        in that have not answered yet). `but_room`: the newcomer's own person - who already lets them call."""
+        if self._may_bring is None:
+            return True
+        rooms = {m.room for m in g.members.values() if m.role == "screen"}
+        rooms |= {k[0] for k, p in self._pending.items() if p[0] == g.gid}
+        rooms.discard(but_room)
+        try:
+            return all(self._may_bring(user, r) for r in rooms)
+        except Exception:
+            return False                     # cannot tell: fails closed (nobody new is brought in)
 
     # ---- reading -------------------------------------------------------------------------------
     def __len__(self) -> int:
@@ -754,6 +776,9 @@ class CallGroups:
                 return False, out + [(conn, _g("refused", group=gid, reason="not-in-call"))]
             if (room, session) not in self._pending and self._counted(g) >= g.max:
                 return False, out + [(conn, _g("refused", group=gid, reason="full"))]
+            if (room, session) not in self._pending and not self._bring_ok(user, g, room):
+                # 2026-10-13: a permission, decided here where the group grows - nothing rings.
+                return False, out + [(conn, _g("refused", group=gid, reason="no-bring"))]
         self._pending[(room, session)] = [gid, inviter.peer, self._now()]
         return True, out
 
@@ -851,6 +876,10 @@ class CallGroups:
         k = g.knocks.get(kid)
         if k is None:
             return []
+        if yes and not self._bring_ok(m.user, g, k.room):
+            # The caller pressing "Let in" may not bring others into this call (2026-10-13). The knock STAYS, so another
+            # caller in the call who may can still let it in; it ends by itself after KNOCK_WAIT_S like any knock.
+            return [(conn, _g("refused", group=g.gid, reason="no-bring", knock=k.kid))]
         out = self._end_knock(g, k)
         if not yes:
             return out + [(k.conn, _g("refused", group=g.gid, reason="declined"))]

@@ -85,6 +85,7 @@ import { CALL_TRANSPORT_READY } from '../call_transport.js';
 import { createAvatarCache, avatarHtml } from '../avatar_display.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { PANEL_VOLUME_FIELD, PANEL_VOLUME_KEY, panelVolumeFrom } from '../panel_sound.js';
+import { permsFor, lendLengthOf, lengthWords, LENGTH_CHOICES } from '../screen_permissions.js';
 
 // ---------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute
@@ -158,9 +159,12 @@ const SETTINGS = [
       { value: 20, label: 'Count down twenty seconds first' },
       { value: null, label: 'Never answer by itself, even for them. Somebody has to answer' },
     ],
-    note: 'Calls wait for somebody to press Answer. Only people you let drop in (on the Remote page) '
-        + 'are answered by themselves: it says who is calling and counts down, with Decline on the '
-        + 'screen, so anybody in the room can refuse it.' },
+    // Mike, 2026-10-13: auto answer is described as an option designed with people who can't answer their own calls in
+    // mind, not as the point ("I don't expect the average user to be in a care facility").
+    note: 'Calls wait for somebody to press Answer. Answering by itself is an option, designed with people who '
+        + 'can’t answer their own calls in mind: only people you let drop in (on the Remote page) are answered '
+        + 'by themselves. It says who is calling and counts down, with Decline on the screen, so anybody in the '
+        + 'room can refuse it.' },
   { key: 'announce', label: 'Say it out loud', default: true, level: 'essential',
     onLabel: 'Announce the caller and the countdown', offLabel: 'On screen only',
     note: 'The person who can decline is often not the person the call is for.' },
@@ -384,44 +388,71 @@ registerModule(
 
     // ---- A TEMPORARY "SEE THIS SCREEN" FOR THE CALLER (Mike, 2026-10-12) ---------------------------------------
     // Tech-support style: "let me see what you are seeing". The person at this screen lends it to whoever is on
-    // THIS call, until the call ends or the person's own `lendMinutes` run out (60 by default, argued in
-    // server/screen_access.py). The server checks this screen answered the call and lends it to that call's own
+    // THIS call, until the call ends (or a shorter time, below). The server checks this screen answered the call and lends it to that call's own
     // caller - the page names nobody. Only offered when the host can lend (`ctx.lendScreen`) and the call came with
     // a server-stamped caller and a session. It sits under the call, never over the caller's face.
-    let lent = null;              // null | { until } once the server said yes
+    // 2026-10-13/14 (Mike: "a call is only a call"; "options, default the length of the call, plus 'always' for
+    // parents/guardians"): the screen lends "see" and "control" SEPARATELY - a call grants neither - each for a length
+    // picked here: until the call ends (the default, or the person's `lendLength`), a set time that still ends with the
+    // call, or "always" - offered only for a caller with the guardian set, and then a real permission the owner sees
+    // on the Remote page. The server refuses "always" for anybody else whatever this page sends.
+    let lent = null;              // "see": null | { until, length } once the server said yes
+    let lentDrive = null;         // "control": the same
     let lendBusy = false;
     let lendMsg = '';
+    let lendLength = null;        // what the picker shows; null = the person's own default
     function canLend() {
       return phase === 'connected' && typeof ctx.lendScreen === 'function' && !!who?.by && !!who?.session;
     }
+    function callerIsGuardian() {
+      try { return permsFor(ctx.personRow?.() || {}, who?.by).guardian === true; } catch { return false; }
+    }
+    function lengthNow() {
+      const choices = lengthChoices();
+      if (choices.includes(lendLength)) return lendLength;
+      let d = 'call';
+      try { d = lendLengthOf(ctx.personRow?.() || {}); } catch { d = 'call'; }
+      return choices.includes(d) ? d : 'call';
+    }
+    function lengthChoices() { return callerIsGuardian() ? [...LENGTH_CHOICES, 'always'] : [...LENGTH_CHOICES]; }
     function renderLend() {
       const bar = root?.querySelector('[data-lend]');
       if (!bar) return;
       if (!canLend()) { bar.hidden = true; bar.innerHTML = ''; return; }
       bar.hidden = false;
       const name = esc(who?.name || 'the caller');
-      bar.innerHTML = lent
-        ? `<span>${name} can see this screen until the call ends.</span>`
-          + '<button type="button" class="call-btn" data-lend-stop>Stop</button>'
-        : `<button type="button" class="call-btn" data-lend-start${lendBusy ? ' disabled' : ''}>Let ${name} see this screen until the call ends</button>`
-          + (lendMsg ? `<span>${esc(lendMsg)}</span>` : '');
+      const len = lengthNow();
+      const said = (l) => (l && l.length === 'always' ? 'always' : lengthWords(l?.length === 'time' ? l.minutes : 'call'));
+      const parts = [];
+      if (lent) parts.push(`<span>${name} can see this screen ${esc(said(lent))}.</span>`
+        + `<button type="button" class="call-btn" data-lend-stop="see">${lent.length === 'always' ? 'Take back' : 'Stop'}</button>`);
+      if (lentDrive) parts.push(`<span>${name} can control this screen ${esc(said(lentDrive))}.</span>`
+        + `<button type="button" class="call-btn" data-lend-stop="drive">${lentDrive.length === 'always' ? 'Take back' : 'Stop'}</button>`);
+      if (!lent || !lentDrive) {
+        const dis = lendBusy ? ' disabled' : '';
+        parts.push((!lent ? `<button type="button" class="call-btn" data-lend-start="see"${dis}>Let ${name} see this screen ${esc(lengthWords(len))}</button>` : '')
+          + (!lentDrive ? `<button type="button" class="call-btn" data-lend-start="drive"${dis}>Let ${name} control this screen ${esc(lengthWords(len))}</button>` : '')
+          + `<select class="call-btn" data-lend-length aria-label="For how long">${lengthChoices().map((v) => `<option value="${esc(v)}"${v === len ? ' selected' : ''}>${esc(lengthWords(v))}</option>`).join('')}</select>`);
+      }
+      if (lendMsg) parts.push(`<span>${esc(lendMsg)}</span>`);
+      bar.innerHTML = parts.join('');
     }
-    async function setLend(on) {
+    async function setLend(on, what = 'see') {
       if (!canLend() || lendBusy) return false;
       lendBusy = true;
       lendMsg = '';
       renderLend();
       const session = who.session;
+      const was = what === 'drive' ? lentDrive : lent;
+      const length = on ? lengthNow() : (was && was.length === 'always' ? 'always' : null);
       let r = null;
-      try { r = await ctx.lendScreen({ session, on }); } catch (err) { console.error('call: lend', err); r = null; }
+      try { r = await ctx.lendScreen({ session, on, what, ...(length ? { length } : {}) }); } catch (err) { console.error('call: lend', err); r = null; }
       lendBusy = false;
       if (phase !== 'connected' || who?.session !== session) return false;
-      if (on) {
-        lent = r && r.on ? { until: r.until || null } : null;
-        if (!lent) lendMsg = 'That did not work. Try again.';
-      } else {
-        lent = null;
-      }
+      const got = on && r && r.on ? { until: r.until || null, length: r.length || (length === 'always' ? 'always' : 'call'),
+                                       minutes: r.minutes || null } : null;
+      if (on && !got) lendMsg = r && r.reason === 'not-guardian' ? '“Always” is only for someone with the guardian set.' : 'That did not work. Try again.';
+      if (what === 'drive') lentDrive = got; else lent = got;
       renderLend();
       return !!(r && r.on === on);
     }
@@ -915,7 +946,7 @@ registerModule(
       }
       ctl = { mic: true, speaker: true, theirVideo: true, myVideo: true };
       // A lend ends with the call on the server (screen_access.py); here it simply goes with the call's view.
-      lent = null; lendBusy = false; lendMsg = '';
+      lent = null; lentDrive = null; lendBusy = false; lendMsg = ''; lendLength = null;
       render();
       // The bars put the call's controls away.
       applyControls();
@@ -961,13 +992,13 @@ registerModule(
     return {
       __probe: () => ({ phase, who, hasOutgoing: !!outgoing, ringArmed: !!ringTimer,
                         counting: !!tickTimer, remaining, cfg: { ...cfg },
-                        demo, demoLeft, lent: !!lent,
+                        demo, demoLeft, lent: !!lent, lentDrive: !!lentDrive,
                         demoOffered: !!root?.querySelector('[data-demo]'),
                         tagged: !!root?.querySelector('.call-demo-tag') }),
       __demo: () => startDemo(),
       __demoStop: () => stopDemo(),
       __decline: () => decline(),
-      __lend: (on) => setLend(on),
+      __lend: (on, what = 'see', length = undefined) => { if (length !== undefined) lendLength = length; return setLend(on, what); },
       __incoming: (from) => incoming(from),
       __answer: () => answer(),
       __end: (r) => end(r),
@@ -1101,8 +1132,17 @@ registerModule(
           // The ringing card's own buttons (2026-10-12): Decline, and Answer.
           if (e.target.closest('[data-call-decline]')) { decline(); return; }
           if (e.target.closest('[data-call-answer]')) { answer(); return; }
-          if (e.target.closest('[data-lend-start]')) { setLend(true); return; }
-          if (e.target.closest('[data-lend-stop]')) setLend(false);
+          const ls = e.target.closest('[data-lend-start]');
+          if (ls) { setLend(true, ls.dataset.lendStart === 'drive' ? 'drive' : 'see'); return; }
+          const lx = e.target.closest('[data-lend-stop]');
+          if (lx) setLend(false, lx.dataset.lendStop === 'drive' ? 'drive' : 'see');
+        });
+        // How long what is lent lasts (2026-10-13): the picker beside the buttons.
+        root.addEventListener('change', (e) => {
+          const sel = e.target.closest?.('[data-lend-length]');
+          if (!sel) return;
+          lendLength = sel.value === 'call' || sel.value === 'always' ? sel.value : Number(sel.value);
+          renderLend();
         });
 
         // *** SETTINGS TAKE EFFECT WHILE IT IS MOUNTED. THEY DID NOT. ***
