@@ -26,7 +26,7 @@ export const PACK_LIBRARY = [
     url: '/packs/vocab_starter.json' },
   { id: 'lesson_starter', kind: 'lesson', label: 'Lessons — starter topics',
     url: '/packs/lesson_starter.json' },
-  // Built for the CPL sample site (/learn/) as a worked example of "make your own pack" —
+  // Built for the CPL sample site (its pages removed 2026-10-13) as a worked example of "make your own pack" —
   // real, shippable content (MIT-clean per docs/PACK_SCHEMA.md's packs/ vs packs_local/ split),
   // not decoration limited to that one page.
   { id: 'cma_art_trivia', kind: 'trivia', label: 'Cleveland Museum of Art — who painted it?',

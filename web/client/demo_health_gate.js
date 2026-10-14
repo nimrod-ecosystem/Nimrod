@@ -7,7 +7,7 @@
 // sense — no registry entry, no `(user, profile, instance)` contract — just a plain function
 // two static pages both call.
 //
-// Markup contract (see landing.html or learn/index.html for a worked example):
+// Markup contract (see landing.html for a worked example; learn/ was removed 2026-10-13):
 //   <div class="demo-frame">                      <- frameEl: waking/failed panels append here
 //     <button data-play>...</button>               <- playEl: hidden/removed once resolved
 //     <div data-live hidden></div>                  <- liveEl: the iframe is appended here

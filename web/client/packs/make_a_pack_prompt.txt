@@ -1,0 +1,34 @@
+Make your own pack
+
+A pack is a JSON file (a kind of text file). Any AI can write one with you.
+Build it FROM A SOURCE (a book, an article, a fact sheet), never from the AI's
+memory: that is where made-up facts come from. Paste everything below the line
+into any AI, with your source at the end. Then load the file it gives you from
+the game's settings: "Load your own pack".
+
+----------------------------------------------------------------------------
+
+Make me a Nimrod trivia pack from the source below.
+
+Rules:
+  - Every question must be answerable FROM THE SOURCE. Do not use anything you
+    already know. If it is not in the text, it is not a question.
+  - Four answers each, one correct, three plausible and wrong.
+  - Mark difficulty very easy / easy / medium / hard.
+  - Add a one-line "explain" for each, so a wrong answer teaches something.
+  - Give each question a "source": the sentence or section of the source it
+    comes from, quoted or named, so a person can find it.
+  - Return ONLY valid JSON in the shape below, no commentary.
+
+{ "schema": "nimrod.pack.v1", "kind": "trivia", "name": "...",
+  "description": "...",
+  "source": { "name": "...", "url": "...", "licence": "...",
+              "attribution": "..." },
+  "generated": "YYYY-MM-DD",
+  "items": [ { "question": "...", "answers": ["...","...","...","..."],
+               "correct": "...", "difficulty": "easy",
+               "category": "...", "explain": "...",
+               "source": "<where in the source this comes from>" } ] }
+
+SOURCE:
+[paste the text, or the link, here]

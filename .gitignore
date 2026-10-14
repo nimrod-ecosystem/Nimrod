@@ -51,22 +51,17 @@ Claude outputs/
 # 700 KB, and nothing serves them.
 web/client/demo-media/originals/
 
-# *** THE CPL SAMPLE SITE'S MUSEUM IMAGES. Same shape as the two exceptions above. ***
+# *** BRICK MOSAIC'S BUILT-IN PICTURE. Same shape as the two exceptions above. ***
 #
-# SAFE UNDER THE RULE AT THE TOP OF THIS FILE: Cleveland Museum of Art Open Access artworks,
-# each individually checked for `share_license_status: "CC0"` in the museum's own API response
-# before download (not assumed from the collection being "open access" generally) -- public
-# domain paintings, no people photographed, no patient or personal media of any kind. Downloaded
-# rather than hotlinked so the /learn/ demo works offline and doesn't depend on a third party's
-# CDN. `manifest.json` beside them carries the accession number, artist, and credit line per
-# image. Restructured 2026-09-13 to also work as a real media SOURCE (`kind:'agent'`,
-# `base_url:'/learn/images/cma'`) rather than only a static gallery: `files/` holds the images,
-# `list` is the same `{album,albums,items,count}` shape `demo-media/list` already uses, so
-# `media_sources.js`'s existing `resolveListing()` needs no changes to read either one. ONE
-# folder, named, with the reason next to it -- same convention as demo-media above.
-!web/client/learn/images/cma/files/*.jpg
-!web/client/learn/images/cma/manifest.json
-!web/client/learn/images/cma/list
+# SAFE UNDER THE RULE AT THE TOP OF THIS FILE: one Cleveland Museum of Art Open Access painting
+# (Church, "Twilight in the Wilderness", 1860), checked for `share_license_status: "CC0"` in the
+# museum's own API response before download -- public domain, no people photographed, no patient
+# or personal media of any kind. `manifest.json` beside it carries the accession number, artist
+# and credit line. It came from the CPL sample site's museum images (learn/images/cma); those
+# pages were removed 2026-10-13 (Mike: "Any library pages can go") and this is the one image
+# anything else used (modules/brickmosaic.js SAMPLE_URL). ONE folder, named, with the reason
+# next to it -- same convention as demo-media above.
+!web/client/design-assets/sample-picture/*.jpg
 
 # Secrets & local config
 .env

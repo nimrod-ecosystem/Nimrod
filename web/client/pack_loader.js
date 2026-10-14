@@ -75,9 +75,10 @@ export function mountPackLoader(root, { kind = null, onLoaded = null, documentRe
   el.className = 'pack-loader';
   el.innerHTML = `
     <p class="pl-hint">A pack is a JSON file (a kind of text file). You can write one by hand. Or
-      any AI (artificial intelligence) can write one for you: give it
-      <a href="/learn/courses/games.html#doc" target="_blank" rel="noopener">this prompt</a> and a
-      real source. Nothing here is sent anywhere. The file is read in this browser only.</p>
+      any AI can write one for you: give it
+      <a href="/packs/make_a_pack_prompt.txt" target="_blank" rel="noopener">this prompt</a> and a
+      real source. Nothing goes to the Nimrod site. The file is read in this browser only.
+      <a href="/#what-we-keep" target="_blank" rel="noopener">What the site does keep</a>.</p>
     <div class="pl-row">
       <label class="pl-file">Choose a file…
         <input type="file" accept="application/json,.json" data-pl-file>
