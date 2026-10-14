@@ -216,6 +216,8 @@ export const SUITES = [
   'status_icons',
   // Row 2.85 (2026-10-14): notes on a phone - the same person-record notes as "Make a note", merged by note id.
   'notes_page',
+  // Row 2.89 (2026-10-14): changing dashboard is the dashboards page's own load; the trail carried across it.
+  'screen_switch',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

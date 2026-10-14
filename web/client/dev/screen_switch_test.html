@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>screen_switch — changing dashboard is an actual switch</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>screen_switch — changing dashboard is an actual switch</h1>
+<p>Row 2.89 (Mike, 2026-10-14): <i>"It should be opening the dashboard the same as if you went back to the dashboards
+page ... It should be an actual switch."</i> The pure half: the address, when to reload, and the trail carried across
+the load. kiosk_test has the screen half.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { switchURL, switchesByReload, writeTrail, takeTrail, TRAIL_KEY, TRAIL_FRESH_MS, KEPT_ON_SWITCH } from '../screen_switch.js';
+import { KEPT_AFTER_PAIRING } from '../restart.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const store = () => { const m = new Map(); return { m, getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+
+try {
+  section('the address: the dashboards page\'s own, plus the launcher\'s parts');
+  check('*** /kiosk.html?profile=<id>, as Home and the dashboards page open it ***', switchURL('abc') === 'kiosk.html?profile=abc');
+  check('an id is encoded', switchURL('a b&c') === 'kiosk.html?profile=a%20b%26c');
+  check('*** lockHelper and localVoice go with it; boot=1 and pair=key do not ***',
+    switchURL('x', '?pair=key&lockHelper=off&boot=1&localVoice=on') === 'kiosk.html?profile=x&lockHelper=off&localVoice=on',
+    switchURL('x', '?pair=key&lockHelper=off&boot=1&localVoice=on'));
+  check('the kept parts are the pairing reload\'s, without boot', J(KEPT_ON_SWITCH) === J(KEPT_AFTER_PAIRING.filter((k) => k !== 'boot')));
+
+  section('reload, or in place');
+  check('*** reload: asked for, a real screen, nothing live ***', switchesByReload({ reload: true }) === true);
+  check('*** a call, the intercom or a check-in running: in place (a reload would cut them off) ***',
+    ['call', 'intercom', 'checkin'].every((live) => switchesByReload({ reload: true, live }) === false));
+  check('not asked for (a suite, a preview): in place', switchesByReload({}) === false);
+  check('embedded: in place', switchesByReload({ reload: true, embedded: true }) === false);
+
+  section('the trail, carried once');
+  {
+    const s = store();
+    check('written', writeTrail({ to: 'B', stack: ['A'], home: 'A', names: { A: 'Pictures' } }, { session: s, now: 1000 }));
+    const got = takeTrail('B', { session: s, now: 2000 });
+    check('*** read by the page it was written for ***', got && J(got.stack) === J(['A']) && got.home === 'A' && got.names.A === 'Pictures', J(got));
+    check('*** read ONCE: gone after reading ***', !s.m.has(TRAIL_KEY) && takeTrail('B', { session: s, now: 2000 }) === null);
+  }
+  {
+    const s = store();
+    writeTrail({ to: 'B', stack: ['A'], home: 'A' }, { session: s, now: 1000 });
+    check('*** another page never takes it (and it is removed, so it cannot be taken later) ***',
+      takeTrail('C', { session: s, now: 2000 }) === null && !s.m.has(TRAIL_KEY));
+  }
+  {
+    const s = store();
+    writeTrail({ to: 'B', stack: ['A'], home: 'A' }, { session: s, now: 1000 });
+    check('a stale record (a switch that never landed) is not applied', takeTrail('B', { session: s, now: 1000 + TRAIL_FRESH_MS + 1 }) === null);
+  }
+  {
+    const s = store();
+    writeTrail({ to: 'B', stack: ['A', 'B', 7, ''], home: 'A' }, { session: s, now: 1000 });
+    check('the page itself and junk never stand in its own trail', J(takeTrail('B', { session: s, now: 1500 }).stack) === J(['A']));
+  }
+  {
+    const s = store(); s.setItem(TRAIL_KEY, '{not json');
+    check('nonsense in storage: nothing, no throw', takeTrail('B', { session: s }) === null);
+    const broken = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
+    check('storage that refuses (private mode): writing says no, reading says nothing', writeTrail({ to: 'B' }, { session: broken }) === false
+      && takeTrail('B', { session: broken }) === null);
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>
