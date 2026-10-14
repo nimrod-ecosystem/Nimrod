@@ -1493,6 +1493,13 @@ registerModule(
       panel: 'Kept with this Nimrod panel on this dashboard (nobody is signed in as a person here).',
       memory: 'Kept only until this page closes: copy them or save them as a file.',
     };
+    // Notes on a phone (row 2.85, 2026-10-14; notes.html): the address, as words to type - not a link, because on a
+    // screen nobody should be sent off the dashboard.
+    const phoneNotesAddress = () => {
+      let o = '';
+      try { o = typeof location !== 'undefined' && /^https?:$/.test(location.protocol) ? location.host : ''; } catch { o = ''; }
+      return `${o}/notes.html`;
+    };
 
     // THE NOTES VIEW (2026-10-03): write one, see them all, copy or save them. Reached from his bottom row, the
     // N key, a "guide" act, or GUIDE_TOPICS.notes from the host.
@@ -1518,6 +1525,7 @@ registerModule(
         ${exportText ? `<textarea class="ng-export" data-ng-export readonly aria-label="Your notes as text">${esc(exportText)}</textarea>` : ''}
         <div class="ng-btns">${wrapButton()}</div>
         <p class="ng-status" data-ng-kept>${esc(WHERE_KEPT[store?.kind] || '')}</p>
+        ${store?.kind === 'person' ? `<p class="ng-status" data-ng-phone>On a phone, the same notes are at <b>${esc(phoneNotesAddress())}</b> (sign in there): write, change and remove them.</p>` : ''}
         ${movedNote ? `<p class="ng-status" data-ng-moved>${esc(movedNote)}</p>` : ''}
         ${noteItems(notes)}`;
     }

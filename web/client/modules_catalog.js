@@ -1169,6 +1169,7 @@ export const isBeta = (type, catalog = CATALOG) => stageOf(type, catalog) === 'b
 // The reason for each is in the proposal (see the top of this file's stage note).
 export const PAGE_STAGES = Object.freeze({
   'checkin.html': 'beta',       // the silent check-in, built 2026-10-14
+  'notes.html': 'beta',         // notes on a phone (row 2.85), built 2026-10-14
   'intercom.html': 'beta',      // the intercom: one change so far, and no record of use
   'phone_mic.html': 'beta',     // a phone as the room's microphone
   'play.html': 'beta',          // play together from a phone
