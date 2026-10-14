@@ -42,6 +42,7 @@
 
 import { MENU_TAB_IDS } from './actions.js';
 import { isChatModel, DEFAULT_BASE_URL } from './ai.js';
+import { beginAI } from './ai_activity.js';   // status icons (2026-10-14)
 import { GUIDE_NODES, GUIDE_TOPICS, SETTINGS_PAGES, GUIDE_ROOT, introFor } from './nimrod_guide_data.js';
 
 export const AI_SOURCE = 'nimrod-ai';           // `source` on what the AI says, for the output log
@@ -256,8 +257,13 @@ export function createClaudeAI({ fetchImpl = (...a) => fetch(...a), headers = ()
     const list = (Array.isArray(actions) ? actions : []).map((a) => ({ name: String(a?.name || ''), args: String(a?.args || ''), help: String(a?.help || '') }));
     const body = { messages: (Array.isArray(messages) ? messages : []).map((m) => ({ role: m?.role, content: m?.content })),
       actions: list, ...(Number(maxTokens) > 0 ? { max_tokens: Math.floor(Number(maxTokens)) } : {}) };
-    const r = await call(`${CLAUDE_API}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body) }, { signal, timeoutMs: t });
+    // The status strip's "asking an AI over the internet" (ai_activity.js): the words go to this site's server and on.
+    const done = beginAI('away');
+    let r;
+    try {
+      r = await call(`${CLAUDE_API}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body) }, { signal, timeoutMs: t });
+    } finally { done(); }
     if (!r.ok) return { ...r, ms: Date.now() - started };
     const b = r.body || {};
     if (!b.ok) return { ok: false, reason: b.reason || 'Claude did not answer.', refusal: !!b.refusal, ms: Date.now() - started };

@@ -469,8 +469,12 @@ const toTab = (m, id) => {
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
           'claude-page', 'reviews-page', 'screen-lock', 'screen-lock-pin', 'set:barQuietMs', 'set:barShowsItself',
           'set:barWhilePlaying',   // bar while playing (comment below)
+          'set:statusIconOffline', 'set:statusIconMusicAway',   // status icons (comment below)
           'person:start', 'screen-players', 'history-place'].includes(i.id)
         && !/^set:playAs/.test(String(i.id)));   // play as (row 2.80): the Players tab's rows, outside the lap like 'screen-players'
+      // ('set:statusIconOffline' and 'set:statusIconMusicAway', 2026-10-14, status_icons.js: "Status icons" on the Display
+      // tab, the two status-only icons on by default (the other three are "Everything" rows). Outside the panel's lap; left
+      // out here DELIBERATELY so the old rows stay 47. The wiring section below checks they are in the menu.)
       // ('set:barWhilePlaying', 2026-10-07, bar while playing (row 2.65): "While a game is being played, the bar" under "The
       // bar" on the Devices tab, beside the two bar-toggle rows. Outside the panel's lap; left out here DELIBERATELY so the
       // old rows stay 40. dev/bar_toggle_test.html checks it is in the menu and what it does.)
@@ -3757,6 +3761,18 @@ const toTab = (m, id) => {
         && probeCtx?.personRow?.()?.voiceRecording === true, 4000));
       check('the recording rows are in the Voice section (and its retention row, since it is on)',
         !!item('set:voiceRecording') && !!item('set:voiceRecordingKeepDays'));
+      // ---- 1a. STATUS ICONS (2026-10-14, status_icons.js): the strip says what hears, the whole time.
+      const glyph = (id) => wbox.querySelector(`.kiosk .live-notices > .status-icons [data-status="${id}"]`);
+      check('*** status icons: the strip is the FIRST row of the notice column, and recording has its glyph ***',
+        await settled(() => !!glyph('recording') && wbox.querySelector('.kiosk .live-notices')?.firstElementChild === wk.statusStrip()?.el, 4000),
+        wbox.querySelector('.kiosk .live-notices')?.innerHTML?.slice(0, 300));
+      check('...and "listening" (the recogniser hears the room on this computer), with no "sound goes away" glyph',
+        !!glyph('listening') && /Listening for spoken commands/.test(glyph('listening').getAttribute('aria-label')) && !glyph('sound-away'));
+      check('status icons: a status row for each status-only icon on Display, and the line saying which always show',
+        item('set:statusIconOffline')?.tab === 'display' && !!item('set:statusIconMusicAway') && !!item('status-icons-always')
+        && !item('set:statusIconCamera'));
+      check('the quiet check-in\'s rows are NOT in the menu while nobody is ticked to check in (the intercom\'s rule)',
+        !item('set:checkInMedia') && !item('set:checkInMaxMs') && !item('set:checkInEndOnPress'));
 
       // ---- 2. THE INTERCOM, THROUGH THE REAL SERVER ----
       check('*** intercom: the room’s half is built once the drive socket exists, with its notice ***',
@@ -3774,6 +3790,8 @@ const toTab = (m, id) => {
       driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-1', sdp: SDP, from: { name: 'typed by the phone' } });
       check('*** intercom: an offer from somebody ON the approved list (the server’s stamp) -> "Intercom opening: Bea" ***',
         await settled(() => !!note() && !note().hidden && /Intercom opening: Bea/.test(note().textContent), 6000), note()?.textContent);
+      check('*** status icons: the intercom has its glyph, saying who ***',
+        await settled(() => /Intercom opening: Bea/.test(glyph('intercom')?.getAttribute('aria-label') || ''), 3000), glyph('intercom')?.getAttribute('aria-label'));
       check('...and the call panel did NOT ring (an intercom is not a call)', wbox.querySelector('.m-call')?.dataset.phase === 'idle',
         wbox.querySelector('.m-call')?.dataset.phase);
       check('*** while it is opening, VOICE RECORDING IS HELD: not recording, and its notice goes ***',
@@ -3804,9 +3822,27 @@ const toTab = (m, id) => {
         check('*** check-in: the screen answers SEND ONLY - it sends the room, it never receives the checker ***',
           !!ciAns && /^a=sendonly\s*$/m.test(ciAns.sdp) && !/^a=(sendrecv|recvonly)\s*$/m.test(ciAns.sdp), ciAns?.sdp?.match(/^a=(send|recv|inactive)\w*/gm)?.join(','));
         check('...no audio or video element was made for the checker', !wbox.querySelector('.ci-live audio, .ci-live video'));
+        check('*** status icons: a quiet check-in has its glyph (not hideable), saying who ***',
+          await settled(() => /checking in quietly: /.test(glyph('checkin')?.getAttribute('aria-label') || ''), 3000), glyph('checkin')?.getAttribute('aria-label'));
         looker.stop();
         check('*** check-in: the checker stops -> the notice goes ***', await settled(() => ciNote().hidden && wk.checkIn().sessions().length === 0, 6000));
+        check('...and its glyph goes too (after its short hold)', await settled(() => !glyph('checkin'), 5000));
         looker.destroy?.();
+        // THE CHECK-IN'S SETTINGS IN THE SCREEN'S OWN MENU (Mike, 2026-10-14: "Probably"): once somebody is ticked.
+        await setRow({ screenPeople: [{ account: 'checker@example.com', name: 'Cal', checkIn: true }] });
+        check('*** check-in: somebody ticked "May check in quietly" -> its three rows are in the menu, under People ***',
+          await settled(() => !!item('set:checkInMedia') && !!item('set:checkInMaxMs') && !!item('set:checkInEndOnPress')
+            && item('set:checkInMedia').tab === 'people' && !!item('checkin-head'), 9000));
+        check('...showing the stored values (unset: their defaults)', item('set:checkInEndOnPress').value === true
+          && item('set:checkInMedia').value === 'both' && item('set:checkInMaxMs').value === 10 * 60000);
+        item('set:checkInEndOnPress').run();
+        check('*** ...and a step there writes the SAME key on the person\'s row the Remote page edits ***',
+          await settled(() => probeCtx?.personRow?.()?.checkInEndOnPress === false, 6000),
+          JSON.stringify(probeCtx?.personRow?.()?.checkInEndOnPress));
+        item('set:checkInEndOnPress').run();
+        await settled(() => probeCtx?.personRow?.()?.checkInEndOnPress === true, 6000);
+        await setRow({ screenPeople: [] });
+        check('...nobody ticked again -> the rows go', await settled(() => !item('set:checkInMedia'), 9000));
       }
       // A LIVE CALL blocks the intercom. The screen's transport says whether a call is live (call_transport.js
       // isLive); it is stood in for here - answering a real call needs a real peer.

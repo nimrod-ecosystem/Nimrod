@@ -212,6 +212,8 @@ export const SUITES = [
   // 2026-10-14 (Mike, 2026-10-13): the silent check-in, "like baby monitor mode" - the room hears nothing, the screen
   // shows who is checking in, it ends by every route; fakes, then one live section with real peer connections.
   'checkin',
+  // 2026-10-14 (Mike): status icons - one small strip, the whole time, for what sees, hears, sends or controls.
+  'status_icons',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

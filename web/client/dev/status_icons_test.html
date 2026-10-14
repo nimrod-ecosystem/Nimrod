@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>status_icons - one small strip for what sees, hears, sends or controls - test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  :root{--letterbox:#0c1a14;--on-dark:#F7F4D5}
+</style>
+</head>
+<body>
+<h1>status_icons</h1>
+<p>Mike, 2026-10-14: "something small that stays up the whole time like the recording icon does when it's recording."
+The state layer (each part reports, or is read), the strip (the first row of the notice column, placeholder glyphs,
+words on hover and for screen readers), the settings (the privacy icons are not hideable now; each status icon is a row),
+nothing that flashes, the AI's "is it being asked", and the quiet check-in's rows' rule.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  createStatusIcons, mountStatusStrip, statusShown, statusText, STATUS_DEFS, STATUS_ICON_FIELDS, STATUS_ICONS_NOTE,
+  PRIVACY_KINDS, KINDS, MIN_ON_MS, MUSIC_NOW_TOPIC, PLACEHOLDER_GLYPHS,
+} from '../status_icons.js';
+import { beginAI, aiWhere, aiActivity, onAIActivity } from '../ai_activity.js';
+import { createAI } from '../ai.js';
+import { createClaudeAI } from '../nimrod_ai.js';
+import { MUSIC_TOPICS } from '../music_player.js';
+import { checkInTicked } from '../screen_permissions.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+import { THEMES, contrast, TEXT_MIN } from '../theme.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeClock() {
+  let t = 1000, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    ticks: 0,
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+const rig = (prefs = {}) => {
+  const c = fakeClock();
+  const reg = createStatusIcons({ prefs: () => prefs, now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer,
+    setTick: () => 1, clearTick: () => {} });
+  return { c, reg, prefs };
+};
+
+(async () => {
+try {
+  section('the inventory');
+  const ids = STATUS_DEFS.map((d) => d.id);
+  for (const want of ['camera', 'checkin', 'watching', 'recording', 'listening', 'phone-mic', 'sound-away', 'call',
+    'intercom', 'ai-away', 'driving', 'lent', 'offline', 'music-away', 'locked', 'stand-in', 'ai-local']) {
+    check(`a state for "${want}"`, ids.includes(want));
+  }
+  check('every state has one of the kinds', STATUS_DEFS.every((d) => KINDS.includes(d.kind)));
+  check('ids are unique', new Set(ids).size === ids.length);
+  check('*** every state that sees, hears, sends or controls is NOT hideable now (no setting) ***',
+    STATUS_DEFS.filter((d) => PRIVACY_KINDS.includes(d.kind)).every((d) => d.hideable === false && !d.setting));
+  check('every status-only state is a setting', STATUS_DEFS.filter((d) => d.kind === 'status').every((d) => d.hideable && d.setting));
+  check('the privacy states Mike named are privacy kinds (recording, intercom, driving, calls, viewing, camera)',
+    ['recording', 'intercom', 'driving', 'call', 'watching', 'camera', 'checkin', 'lent'].every((id) => PRIVACY_KINDS.includes(STATUS_DEFS.find((d) => d.id === id).kind)));
+  check('every state has a placeholder glyph', STATUS_DEFS.every((d) => PLACEHOLDER_GLYPHS.includes(d.glyph)));
+  check('no two states share a glyph (told apart by shape)', new Set(STATUS_DEFS.map((d) => d.glyph)).size === STATUS_DEFS.length);
+  const allWords = JSON.stringify(STATUS_DEFS) + JSON.stringify(STATUS_ICON_FIELDS) + STATUS_ICONS_NOTE;
+  check('the site copy never says "her screen" or names anybody', !/\bher screen|christine|\bcici\b/i.test(allWords));
+  check('the music topic is the music router\'s own', MUSIC_NOW_TOPIC === MUSIC_TOPICS.now);
+
+  section('the settings');
+  check('one row per status-only state', STATUS_ICON_FIELDS.length === STATUS_DEFS.filter((d) => d.hideable).length);
+  check('each row is a toggle that normalises', STATUS_ICON_FIELDS.every((f) => f.kind === 'toggle' && !!normalizeField(f)));
+  check('the rows pass the settings audit (no errors)',
+    auditFields(STATUS_ICON_FIELDS.map(normalizeField).filter(Boolean), { type: 'status-icons' }).filter((x) => x.severity === 'error').length === 0,
+    JSON.stringify(auditFields(STATUS_ICON_FIELDS.map(normalizeField).filter(Boolean), { type: 'status-icons' })));
+  const def = (id) => STATUS_DEFS.find((d) => d.id === id);
+  check('defaults: offline and music elsewhere ON; locked, the stand-in and a local AI OFF',
+    def('offline').defaultShow === true && def('music-away').defaultShow === true && def('locked').defaultShow === false
+    && def('stand-in').defaultShow === false && def('ai-local').defaultShow === false);
+  check('statusShown: a privacy state shows whatever the settings say',
+    statusShown('camera', { statusIconCamera: false, camera: false }) && statusShown('recording', {}) && statusShown('intercom', { 'statusIcon:intercom': false }));
+  check('statusShown: a status state follows its row, else its default',
+    statusShown('offline', {}) === true && statusShown('offline', { statusIconOffline: false }) === false
+    && statusShown('locked', {}) === false && statusShown('locked', { statusIconLocked: true }) === true);
+  check('statusShown: a broken value is the default, never a hide', statusShown('offline', { statusIconOffline: 'no' }) === true);
+
+  section('the registry: each state on and off');
+  for (const d of STATUS_DEFS) {
+    const { c, reg } = rig(d.hideable ? { [d.setting]: true } : {});
+    reg.set(d.id, { on: true });
+    const on = reg.active().some((x) => x.id === d.id);
+    c.advance(MIN_ON_MS + 1);
+    reg.set(d.id, { on: false });
+    const off = !reg.active().some((x) => x.id === d.id);
+    check(`${d.id}: on shows, off goes`, on && off);
+    reg.destroy();
+  }
+  {
+    const { c, reg } = rig();
+    let n = 0; reg.onChange(() => { n += 1; });
+    reg.set('camera', { on: true });
+    check('*** on is AT ONCE ***', reg.isOn('camera') && n === 1);
+    reg.set('camera', { on: true });
+    check('the same state twice is not a change', n === 1);
+    reg.set('camera', { on: false });
+    check('*** off within the hold is NOT at once (no blink) ***', reg.isOn('camera') && n === 1);
+    c.advance(MIN_ON_MS);
+    check('...it goes once it has been on for the hold', !reg.isOn('camera') && n === 2);
+    reg.set('checkin', { on: true, who: 'Bea' });
+    c.advance(500);
+    reg.set('checkin', { on: false });
+    c.advance(300);
+    reg.set('checkin', { on: true, who: 'Bea' });
+    c.advance(5000);
+    check('...an off and an on inside the hold: one steady glyph, never gone', reg.isOn('checkin'));
+    reg.destroy();
+  }
+  {
+    const { c, reg } = rig();
+    let changes = 0; reg.onChange(() => { changes += 1; });
+    // A microphone flickering 20 times a second for 3 seconds.
+    for (let i = 0; i < 60; i += 1) { reg.set('listening', { on: i % 2 === 0 }); c.advance(50); }
+    check('*** NO FLASHING: 60 flips in 3 s are at most 3 changes on the strip (far under 3 a second) ***', changes <= 3, String(changes));
+    reg.destroy();
+  }
+  {
+    const { reg } = rig();
+    reg.set('intercom', { on: true, label: 'Intercom open', who: ['Bea'] });
+    reg.set('watching', { on: true, label: 'Sharing your screen with', who: ['Ann', 'Bob', 'Cy', 'Di', 'Ed'] });
+    const a = reg.active();
+    check('the words: label and who', a.find((x) => x.id === 'intercom').text === 'Intercom open: Bea', a.find((x) => x.id === 'intercom').text);
+    check('more than three names: three and "and N more"', a.find((x) => x.id === 'watching').text === 'Sharing your screen with: Ann, Bob, Cy and 2 more');
+    check('statusText with no label: the definition\'s words', statusText('camera') === 'The camera is on');
+    check('control characters are cleaned from a name', statusText('call', { who: 'Bea\u0007' }) === 'On a call: Bea');
+    check('the strip\'s order is the definitions\' (sees, then sends)', a[0].id === 'watching' && a[1].id === 'intercom');
+    reg.set('mystery', { on: true, kind: 'sees', label: 'Something new sees' });
+    check('*** a state with no definition that says it SEES shows, and is not hideable ***',
+      reg.active().some((x) => x.id === 'mystery' && x.privacy && !x.hideable));
+    reg.destroy();
+  }
+  {
+    const prefs = {};
+    const { reg } = rig(prefs);
+    reg.set('locked', { on: true });
+    reg.set('offline', { on: true });
+    check('a status state off by default is on in the registry but not drawn', reg.isOn('locked') && !reg.active().some((x) => x.id === 'locked'));
+    check('one on by default is drawn', reg.active().some((x) => x.id === 'offline'));
+    prefs.statusIconLocked = true; prefs.statusIconOffline = false;
+    check('switched by the screen\'s rows, read fresh', reg.active().some((x) => x.id === 'locked') && !reg.active().some((x) => x.id === 'offline'));
+    reg.destroy();
+  }
+
+  section('watched states (no event of their own)');
+  {
+    const { c, reg } = rig();
+    let cam = false, throws = false;
+    const off = reg.watch('camera', () => { if (throws) throw new Error('x'); return cam; });
+    check('a probe reads off at first', !reg.isOn('camera'));
+    cam = true; reg.poke();
+    check('a poke reads it at once', reg.isOn('camera'));
+    reg.watch('phone-mic', () => ({ on: true, who: ['Kitchen phone'] }));
+    check('a probe may give words and who', reg.active().find((x) => x.id === 'phone-mic')?.text === 'A phone is a microphone here: Kitchen phone');
+    throws = true; c.advance(MIN_ON_MS + 1); reg.poke();
+    check('a probe that throws reads as off (a broken part never pins a glyph on, nor stops the others)',
+      !reg.isOn('camera') && reg.isOn('phone-mic'));
+    throws = false; cam = true; reg.poke();
+    off();
+    check('unwatching turns it off within the hold', reg.isOn('camera'));
+    c.advance(MIN_ON_MS + 1);
+    check('...and then it is gone', !reg.isOn('camera'));
+    reg.destroy();
+  }
+  {
+    let tickFn = null, tickMs = 0;
+    const reg = createStatusIcons({ setTick: (fn, ms) => { tickFn = fn; tickMs = ms; return 7; }, clearTick: () => { tickFn = null; } });
+    let v = false;
+    reg.watch('call', () => v);
+    check('the backstop read is every second', tickMs === 1000 && typeof tickFn === 'function');
+    v = true; tickFn();
+    check('...and a tick turns it on', reg.isOn('call'));
+    reg.destroy();
+    check('destroy stops the tick', tickFn === null);
+  }
+
+  section('the strip');
+  {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    // A notice is already in the column (the recording pill), as on a real screen.
+    const { noticeStack } = await import('../live_notices.js');
+    const col = noticeStack(host);
+    const pill = document.createElement('div'); pill.className = 'live-note rec-live'; pill.textContent = 'Recording voice for training';
+    col.append(pill);
+    const { c, reg } = rig();
+    const strip = mountStatusStrip(host, reg);
+    check('the strip is the FIRST row of the notice column (never over a notice, never under one)',
+      col.firstElementChild === strip.el && strip.el.parentElement === col);
+    check('nothing on: the strip is hidden', strip.el.hidden === true);
+    reg.set('recording', { on: true });
+    reg.set('camera', { on: true });
+    const glyphs = () => [...strip.el.querySelectorAll('.si')];
+    check('two states on: two glyphs, in order', glyphs().map((g) => g.dataset.status).join() === 'camera,recording', glyphs().map((g) => g.dataset.status).join());
+    check('each glyph\'s words are its accessible name and its hover title',
+      glyphs().every((g) => g.getAttribute('aria-label') === g.title && g.title.length > 0) && glyphs()[0].title === 'The camera is on');
+    check('the words are in the glyph (shown on hover or focus)', glyphs()[0].querySelector('.si-label').textContent === 'The camera is on');
+    check('each glyph can take focus (for the words) and the SVG is hidden from screen readers',
+      glyphs().every((g) => g.tabIndex === 0 && g.querySelector('svg').getAttribute('aria-hidden') === 'true'));
+    check('*** each glyph is marked a PLACEHOLDER for Design ***', glyphs().every((g) => g.querySelector('svg').getAttribute('data-placeholder') === 'design'));
+    check('the strip is a list with a name', strip.el.getAttribute('role') === 'list' && strip.el.getAttribute('aria-label') === 'Status');
+    const first = glyphs()[0];
+    reg.set('intercom', { on: true, who: 'Bea' });
+    check('a third state: the glyphs already there are the same elements (nothing redrawn, nothing blinks)', glyphs()[0] === first && glyphs().length === 3);
+    c.advance(MIN_ON_MS + 1);
+    reg.set('camera', { on: false });
+    check('a state off: its glyph goes', !glyphs().some((g) => g.dataset.status === 'camera'));
+    // The CSS: no animation, no transition; the caption pair's colours.
+    const link = document.querySelector('link[data-status-icons-css]');
+    check('its stylesheet is linked once', document.querySelectorAll('link[data-status-icons-css]').length === 1);
+    for (let i = 0; i < 60 && !link?.sheet; i += 1) await sleep(50);
+    await sleep(50);
+    const cs = getComputedStyle(strip.el);
+    const gs = getComputedStyle(glyphs()[0]);
+    check('*** no animation and no transition on the strip or a glyph ***',
+      cs.animationName === 'none' && gs.animationName === 'none' && /^0s/.test(cs.transitionDuration) && /^0s/.test(gs.transitionDuration),
+      `${cs.animationName} ${cs.transitionDuration} ${gs.animationName} ${gs.transitionDuration}`);
+    check('the theme\'s caption pair: --letterbox behind, --on-dark in front', cs.backgroundColor === 'rgb(12, 26, 20)' && cs.color === 'rgb(247, 244, 213)',
+      `${cs.backgroundColor} ${cs.color}`);
+    check('the column is in the floating band (above panels, below the bar and the menus)',
+      getComputedStyle(col).zIndex === '400' || getComputedStyle(col).zIndex === 'auto', getComputedStyle(col).zIndex);
+    const gw = glyphs()[0].querySelector('svg').getBoundingClientRect().width;
+    check('a glyph is small (18 to 32 px)', gw >= 17.5 && gw <= 32.5, String(gw));
+    check('the words are not drawn until hover or focus (a few glyphs, not a banner)',
+      glyphs()[0].querySelector('.si-label').getBoundingClientRect().width <= 1);
+    strip.destroy();
+    check('destroy takes the strip away and leaves the notice', !col.querySelector('.status-icons') && col.contains(pill));
+    reg.destroy();
+    host.innerHTML = '';
+  }
+
+  section('the themes');
+  {
+    const base = THEMES.default.vars;
+    const bad = [];
+    for (const [id, t] of Object.entries(THEMES)) {
+      const v = { ...base, ...(t.vars || {}) };
+      if (!v['--on-dark'] || !v['--letterbox']) continue;
+      if (contrast(v['--on-dark'], v['--letterbox']) < TEXT_MIN) bad.push(`${id} ${contrast(v['--on-dark'], v['--letterbox']).toFixed(2)}`);
+    }
+    check('*** on every theme, the strip\'s pair (--on-dark on --letterbox) reads at text contrast (4.5) ***', bad.length === 0, bad.join('; '));
+  }
+
+  section('is an AI being asked (ai_activity.js)');
+  {
+    check('aiWhere: this computer is local', aiWhere('http://127.0.0.1:11434/v1') === 'local' && aiWhere('http://localhost:8080') === 'local' && aiWhere('http://[::1]:1/') === 'local');
+    check('aiWhere: another computer in the house is away (the words leave this screen)', aiWhere('http://192.168.1.20:11434/v1') === 'away' && aiWhere('http://desk.local/v1') === 'away');
+    check('aiWhere: the internet, or nonsense, is away', aiWhere('https://api.example.com/v1') === 'away' && aiWhere('not a url') === 'away');
+    const base0 = aiActivity();
+    let seen = 0; const off = onAIActivity(() => { seen += 1; });
+    const done = beginAI('away');
+    check('a question starts: counted as away', aiActivity().away === base0.away + 1 && seen === 1);
+    done(); done();
+    check('...and ends, once, however often its end is called', aiActivity().away === base0.away && seen === 2);
+    off();
+    // ai.js: a chat to a model on this computer counts as local while it is on its way.
+    let during = null;
+    const storage = { _m: {}, getItem(k) { return this._m[k] ?? null; }, setItem(k, v) { this._m[k] = String(v); }, removeItem(k) { delete this._m[k]; } };
+    const ai = createAI({ storage, fetchImpl: async () => { during = aiActivity(); return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'hi' } }] }) }; } });
+    const r = await ai.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+    check('*** ai.js: a question to this computer\'s model is counted local while it is asked, and not after ***',
+      r.ok && during && during.local === base0.local + 1 && aiActivity().local === base0.local, JSON.stringify({ r, during }));
+    const away = createAI({ storage: { ...storage, _m: { 'nimrod.ai.device': JSON.stringify({ baseUrl: 'https://api.example.com/v1', model: 'm' }) },
+      getItem(k) { return this._m[k] ?? null; } }, fetchImpl: async () => { during = aiActivity(); return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'hi' } }] }) }; } });
+    await away.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+    check('ai.js: a question to a model on the internet is counted away', during && during.away === base0.away + 1, JSON.stringify(during));
+    const failing = createAI({ storage, fetchImpl: async () => { throw new Error('down'); } });
+    await failing.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+    check('ai.js: a failed question still ends', aiActivity().local === base0.local && aiActivity().away === base0.away);
+    const claude = createClaudeAI({ fetchImpl: async () => { during = aiActivity(); return { ok: true, status: 200, json: async () => ({ ok: true, text: 'hi' }) }; } });
+    await claude.chat([{ role: 'user', content: 'x' }]);
+    check('*** Claude through the site\'s server is counted away (not hideable) ***', during && during.away === base0.away + 1 && aiActivity().away === base0.away,
+      JSON.stringify(during));
+  }
+
+  section('the quiet check-in\'s rows: only once somebody is ticked');
+  {
+    check('nobody on the list: no', checkInTicked({}) === false && checkInTicked({ screenPeople: [] }) === false);
+    check('somebody listed with nothing ticked: no', checkInTicked({ screenPeople: [{ account: 'a@x', name: 'A' }] }) === false);
+    check('"May check in quietly" ticked: yes', checkInTicked({ screenPeople: [{ account: 'a@x', checkIn: true }] }) === true);
+    check('the guardian set: yes', checkInTicked({ screenPeople: [{ account: 'a@x', guardian: true }] }) === true);
+    check('the guardian set with the check-in taken off: no', checkInTicked({ screenPeople: [{ account: 'a@x', guardian: true, checkIn: false }] }) === false);
+    check('a broken tick ("yes") is not a tick', checkInTicked({ screenPeople: [{ account: 'a@x', checkIn: 'yes' }] }) === false);
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS - ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

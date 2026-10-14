@@ -1,0 +1,37 @@
+/* status_icons.css - the status strip (status_icons.js). PLACEHOLDER LOOK until Design's arrives (the brief:
+   Nimrod_Ecosystem/docs/for_chat/status_icons_brief_20261014.md).
+   The first row of the notice column (live_notices.css), so it sits where the notices sit and can never cover one.
+   The theme's caption pair (`--on-dark` over `--letterbox`), like every notice, so it reads on every theme and picks no
+   colour of its own; states differ by SHAPE, never by colour alone. NO ANIMATION, NO TRANSITION: nothing here moves. */
+.live-notices > .status-icons {
+  order: -1;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin: 0; padding: 3px 5px; list-style: none;
+  border-radius: 999px;
+  background: var(--letterbox, #0c1a14); color: var(--on-dark, #F7F4D5);
+  font: 700 clamp(14px, 1.8vmin, 22px)/1.2 var(--font, system-ui, sans-serif);
+  pointer-events: none;
+  animation: none; transition: none;
+}
+.live-notices > .status-icons[hidden] { display: none; }
+.status-icons .si {
+  display: inline-flex; align-items: center; gap: .35em;
+  /* Small: about 24 px on a 1080p screen (2.2vmin), never under 18 px. */
+  min-width: clamp(18px, 2.2vmin, 32px); height: clamp(18px, 2.2vmin, 32px);
+  border-radius: 999px;
+  pointer-events: auto;          /* hover shows the words; a press here does nothing */
+  outline: none;
+  animation: none; transition: none;
+}
+.status-icons .si-glyph { flex: 0 0 auto; width: clamp(18px, 2.2vmin, 32px); height: clamp(18px, 2.2vmin, 32px); }
+/* The words: in the accessible name always; drawn beside the glyph on hover or keyboard focus only. */
+.status-icons .si-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.status-icons .si:hover, .status-icons .si:focus-visible { padding-right: .5em; }
+.status-icons .si:focus-visible { box-shadow: 0 0 0 2px currentColor; }
+.status-icons .si:hover .si-label, .status-icons .si:focus-visible .si-label {
+  position: static; width: auto; height: auto; overflow: visible; clip: auto;
+  font-size: .8em; white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) { .status-icons, .status-icons * { animation: none !important; transition: none !important; } }
