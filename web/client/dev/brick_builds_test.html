@@ -65,7 +65,6 @@ function memState(seed = {}) {
 const noEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }), append: () => Promise.resolve(),
   subscribe: () => () => {}, startPolling() {}, destroy() {} });
 
-let partsList = null;
 try {
   // ==========================================================================================
   section('*** the index of builds agrees with what is PUBLISHED (a copied number with a check on it) ***');
@@ -90,18 +89,8 @@ try {
     check(`${part}: the merged GLB is in its budget`, a.display && a.display.triangles > 0 && a.display.triangles <= a.display.budget,
       J(a.display && [a.display.triangles, a.display.budget]));
     check(`${part}: the URL the room draws is the one published`, buildUrls(b.id).front.endsWith(a.display?.front || '?'));
-    // 2026-10-04: the side table was missing from Print Your Own's parts list. Every build has an entry there, in the
-    // desk's shape, whose words agree with the assembly (its size, its bricks, its connector pins).
-    const parts = partsList || (partsList = await (await fetch('../learn/parts.json', { cache: 'no-cache' })).json());
-    const e = (parts.parts || []).find((p) => p.assembly === `/design-assets/bricks/scenes/${b.id}.json`);
-    check(`${part}: *** it has an entry in learn/parts.json (Print Your Own) ***`, !!e, b.id);
-    if (e) {
-      const [x, y, z] = a.bbox_mm?.max || [];
-      check(`${part}: ...in the Builds group, titled ${b.title}, the desk's shape`, e.group === 'Builds' && e.title === b.title && e.status === 'available'
-        && ['id', 'title', 'group', 'status', 'summary', 'glb', 'stl', 'source', 'photo', 'assembly'].every((k) => k in e), J(e));
-      check(`${part}: ...its summary says its size, its ${b.bricks} bricks and its ${a.connectors?.count} connector pins`,
-        e.summary.includes(`${x} x ${y} x ${z} mm`) && e.summary.includes(`${b.bricks} bricks`) && e.summary.includes(`${a.connectors?.count} connector pins`), e.summary);
-    }
+    // 2026-10-13: the check that every build had an entry in learn/parts.json (Print Your Own) is gone with that
+    // page: the library pages were removed (Mike: "Any library pages can go"), and nothing else reads parts.json.
   }
 
   section('the rules, as data');

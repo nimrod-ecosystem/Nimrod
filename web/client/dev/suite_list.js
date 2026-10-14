@@ -116,8 +116,9 @@ export const SUITES = [
   // Modules as things: the module contract, try-before-add, prefabs, presets, the editor windows,
   // and data links with the wire transforms and tempo values that ride on them.
   'module', 'module_try', 'prefab', 'presets', 'starting_defaults', 'settings_module', 'edit_windows', 'links', 'conditioning', 'tempo',
-  // Content packs, AAC data and a hosted photo source.
-  'pack_library', 'pack_loader', 'user_packs', 'aac_sets', 'board_symbols', 'learn_cma_source',
+  // Content packs and AAC data. (2026-10-13: 'learn_cma_source', the museum pictures under learn/ as a photo
+  // source, removed with learn/ - Mike: "Any library pages can go". learn_links below proves nothing links there.)
+  'pack_library', 'pack_loader', 'user_packs', 'aac_sets', 'board_symbols',
   // Games, scoring and the reward side.
   'game', 'game_teardown', 'points', 'scoreboard', 'contests', 'word_games', 'transcript_quiz', 'reading_log',
   // Row 2.62: the shared `plays` stream (one shape for YouTube, Spotify, folders) and the table it answers with.
@@ -260,6 +261,9 @@ export const SUITES = [
   // Settings panel beside it; /home and the old addresses. Mounts real kiosks (needs the server).
   'library_page',
   // 2026-10-10: every /learn/#… link on the shelved Learn pages names a section learn/index.html still has (BQ item 6).
+  // 2026-10-13: learn/ is removed (Mike: "Any library pages can go"); the suite now proves it is gone and that no
+  // page or script links, fetches or imports into it, and that what moved out of it (Brick mosaic's picture, the
+  // make-a-pack prompt) is served from its new place.
   'learn_links',
   // 2026-10-09: the ⚙ menu's words against what is really behind them, every theme: Home's docked menu with each
   // "Menu and bar background", and the kiosk's own menu (usual and docked). Mounts real kiosks (needs the server).

@@ -1,0 +1,17 @@
+{
+  "note": "Brick mosaic's built-in picture (modules/brickmosaic.js SAMPLE_URL). Moved here 2026-10-13 from learn/images/cma when the library pages were removed; this entry is copied unchanged from that folder's manifest. Cleveland Museum of Art Open Access, CC0, verified via the API's own share_license_status field at download time, 2026-09-11. Stored locally, not hotlinked.",
+  "source_api": "https://openaccess-api.clevelandart.org/",
+  "generated": "2026-09-11",
+  "images": [
+    {
+      "file": "1965_233.jpg",
+      "accession_number": "1965.233",
+      "title": "Twilight in the Wilderness",
+      "artist": "Frederic Edwin Church (American, 1826–1900)",
+      "date": "1860",
+      "credit_line": "Mr. and Mrs. William H. Marlatt Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1965.233"
+    }
+  ]
+}

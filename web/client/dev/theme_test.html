@@ -487,7 +487,7 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     // Every focus rule that used the accent now goes through --focus. Read from the sheets
     // themselves, because a :focus-visible state cannot be produced in a hidden document.
     const FOCUS_SHEETS = ['../kiosk.css', '../settings.css', '../color_picker.css', '../picture_picker.css',
-      '../starting_defaults.css', '../choice_card.css', '../learn/learn.css', '../home.html'];
+      '../starting_defaults.css', '../choice_card.css', '../home.html'];   // learn/learn.css went with learn/ (2026-10-13)
     for (const path of FOCUS_SHEETS) {
       const text = await (await fetch(path, { cache: 'no-store' })).text();
       const blocks = text.match(/[^{}]*:focus[^{}]*\{[^}]*\}/g) || [];
@@ -565,7 +565,7 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     check('the server listed the client .js files for the outline read', Array.isArray(files) && files.length > 50,
       String(files && files.length));
     const CSS_SHEETS = ['kiosk.css', 'modules.css', 'settings.css', 'color_picker.css', 'picture_picker.css',
-      'starting_defaults.css', 'choice_card.css', 'learn/learn.css', 'rhythm.css', 'layers.css', 'edit_windows.css',
+      'starting_defaults.css', 'choice_card.css', 'rhythm.css', 'layers.css', 'edit_windows.css',
       'edit_map.css', 'room_scene.css', 'room3d.css', 'screen_pair.css', 'live_notices.css', 'listening_cue.css',
       'scoreboard.css', 'subtitles.css', 'weather.css', 'music.css', 'note.css', 'avatar.css', 'solitaire.css',
       'brickbreaker.css', 'card_sort.css', 'phone_mic.css'];

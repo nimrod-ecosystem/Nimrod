@@ -22,8 +22,8 @@
 // source and none chosen: it does not guess (photos.js argues why a coin flip about whose photographs appear is wrong),
 // it uses the built-in picture and the settings row says to choose one.
 // THE BUILT-IN PICTURE when there is no photo, or the photo cannot be read: Frederic Edwin Church, "Twilight in the
-// Wilderness" (1860), Cleveland Museum of Art Open Access, CC0 - already on the site for the art lessons
-// (learn/images/cma, its manifest records the licence). A sunset over hills: many colours, a clear horizon, nobody's
+// Wilderness" (1860), Cleveland Museum of Art Open Access, CC0 (design-assets/sample-picture, its manifest records
+// the licence; moved there from learn/images/cma 2026-10-13 when the library pages went). A sunset over hills: many colours, a clear horizon, nobody's
 // face. If even that cannot be read, a drawn sky-and-hills picture, so the panel is never empty.
 // NOTHING GOES TO THE SERVER: the picture is read in the browser, straight from the person's own source (the media
 // agent sends the CORS header on files: web/media_agent/agent.py), and only the panel's settings are saved. A picture
@@ -55,7 +55,7 @@ import { ALL_BRICK_COLOURS, ORDERS, JOIN_MAX, makeMosaic, restOfRow, parseColour
 
 export const GAME = 'brickmosaic';
 export const TITLE = 'Brick mosaic';
-export const SAMPLE_URL = new URL('../learn/images/cma/files/1965_233.jpg', import.meta.url).href;
+export const SAMPLE_URL = new URL('../design-assets/sample-picture/1965_233.jpg', import.meta.url).href;
 export const SAMPLE_LABEL = 'Twilight in the Wilderness, by Frederic Edwin Church, 1860 (a public domain painting)';
 export const SAMPLE = 'sample';
 const SAMPLE_CELLS = 4;

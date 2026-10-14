@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>learn links — every link into /learn/ lands on something that is there</title>
+<title>learn links — learn/ is gone, and nothing on the site points into it</title>
 <style>
   body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
   h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
@@ -12,14 +12,23 @@
 </head>
 <body>
 <h1>learn links</h1>
-<p>The Learn page became one page (2026-09-13) and its sections were renamed: Courses is now
-<code>#teach</code>, Try it is <code>#demo</code>, and there is no calendar. The older pages under
-<code>/learn/</code> are shelved, not deleted, and still link back to it - so every <code>/learn/#…</code>
-link on them has to name a section the page still has (chat note BQ item 6: 21 of them did not).</p>
+<p>Mike, 2026-10-13: <i>"Any library pages can go."</i> The pages under <code>/learn/</code> were built for a
+library proposal that went away, and they are removed. This proves it: the old addresses are not served; no
+page, script or sheet on the site links, fetches or imports into <code>learn/</code> (the scripts are walked by
+the server, so a new one is covered without anybody listing it); and the two things other parts of the site
+really used from there are served from their new places - Brick mosaic's built-in picture
+(<code>design-assets/sample-picture/</code>, with its licence) and the make-a-pack prompt the pack loader links
+to (<code>packs/make_a_pack_prompt.txt</code>). Needs the server.</p>
+<p>(Until 2026-10-13 this suite checked that every <code>/learn/#…</code> link on the shelved Learn pages named a
+section <code>learn/index.html</code> still had: chat note BQ item 6.)</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 
 <script type="module">
+import { SAMPLE_URL, SAMPLE_LABEL } from '../modules/brickmosaic.js';
+import { mountPackLoader } from '../pack_loader.js';
+import { validatePack } from '../packs.js';
+
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
 function check(name, cond, detail = '') {
@@ -31,37 +40,87 @@ function check(name, cond, detail = '') {
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 
-// The pages under /learn/ that link back to it. A page added there with links of its own belongs here too.
-const PAGES = ['about.html', 'status.html', 'print.html', 'homeschool.html',
-  'courses/upcycle-device.html', 'courses/local-ai.html', 'courses/games.html',
-  'courses/aac-board.html', 'courses/device-setup.html'];
-
-const parse = (html) => new DOMParser().parseFromString(html, 'text/html');
-const load = async (path) => {
-  const res = await fetch(`../learn/${path}`, { cache: 'no-cache' });
-  return { ok: res.ok, doc: parse(await res.text()) };
-};
+// Addresses that were served before the removal. A sample of each kind: pages, data, the sheet, the museum pictures.
+const GONE = ['/learn/', '/learn/index.html', '/learn/print.html', '/learn/homeschool.html', '/learn/courses/games.html',
+  '/learn/parts.json', '/learn/calendar.json', '/learn/learn.css', '/learn/images/cma/list',
+  '/learn/images/cma/manifest.json', '/learn/images/cma/files/1965_233.jpg'];
+// The site's own top-level pages. A browser cannot list a directory, so the .html sibling of every walked .js is
+// tried as well (a page that brings its own script is covered without being named here).
+const PAGES = ['bricks.html', 'call.html', 'claude.html', 'helper.html', 'home.html', 'index.html', 'intercom.html',
+  'join.html', 'kiosk.html', 'landing.html', 'library.html', 'modules.html', 'pair.html', 'phone_mic.html', 'play.html',
+  'reviews.html', 'search_keys.html', 'spotify_callback.html', 'talk.html', 'voice_commands.html', 'wallpapers.html',
+  'robots.txt', 'sitemap.xml'];
+// A link, fetch, import or url() into learn/: a quote, bracket or `=` followed by `learn/`, or by `/learn` after one
+// or more `/` / `./` / `../`. Words in a comment (the /learn sample site) do not match; '/learn/x', "../learn/x",
+// `learn/x`, url(/learn/x), href=/learn do.
+const INTO = /[("'`=]\s*(?:(?:\.{0,2}\/)+learn(?:[/#?"'`)>\s]|$)|learn\/)/m;
 
 (async () => {
 try {
-  section('the Learn page itself');
-  const index = await load('index.html');
-  check('learn/index.html is served', index.ok);
-  const ids = new Set([...index.doc.querySelectorAll('[id]')].map((e) => e.id));
-  check('it has the sections the old pages are pointed at (teach, demo)', ids.has('teach') && ids.has('demo'), [...ids].join(','));
-  const own = [...index.doc.querySelectorAll('a[href^="#"]')].map((a) => a.getAttribute('href').slice(1)).filter(Boolean);
-  check('every in-page link on it names a section it has', own.every((id) => ids.has(id)), own.filter((id) => !ids.has(id)).join(','));
-
-  section('*** every /learn/#… link on the other pages lands on a section that is there ***');
-  for (const page of PAGES) {
-    const p = await load(page);
-    check(`${page} is served`, p.ok);
-    const into = [...p.doc.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'))
-      .map((h) => (h.match(/^\/learn\/(?:index\.html)?#(.+)$/) || [])[1]).filter(Boolean);
-    const dead = into.filter((id) => !ids.has(id));
-    check(`${page}: ${into.length} link${into.length === 1 ? '' : 's'} into the Learn page, none dead`, dead.length === 0,
-      `dead: ${dead.map((d) => '#' + d).join(', ')}`);
+  section('*** learn/ is gone: the old addresses are not served ***');
+  for (const u of GONE) {
+    const r = await fetch(u, { cache: 'no-store' });
+    check(`${u}: not served (${r.status})`, r.status === 404, String(r.status));
   }
+
+  section('*** nothing on the site links, fetches or imports into learn/ ***');
+  const js = await (await fetch('/api/dev/client-modules', { cache: 'no-store' })).json();
+  check('the server listed the client .js files', Array.isArray(js) && js.length > 50, String(js && js.length));
+  check('...and none of them is under learn/', js.every((f) => !f.startsWith('learn/')), js.filter((f) => f.startsWith('learn/')).join(', '));
+  const top = js.filter((f) => !f.includes('/'));
+  const paths = new Set([...js, ...js.map((f) => f.replace(/\.js$/, '.css')), ...PAGES, ...top.map((f) => f.replace(/\.js$/, '.html'))]);
+  const hits = [];
+  let read = 0;
+  for (const p of paths) {
+    const r = await fetch('../' + p, { cache: 'no-store' });
+    if (!r.ok) continue;
+    read++;
+    const text = await r.text();
+    text.split('\n').forEach((line, i) => { if (INTO.test(line)) hits.push(`${p}:${i + 1}: ${line.trim().slice(0, 100)}`); });
+  }
+  check(`*** no page, script or sheet points into learn/ (${read} files read) ***`, hits.length === 0 && read > 50,
+    hits.join(' || ') || `read ${read}`);
+  check('the pattern itself catches a link, a fetch, an import and a url() (so a pass above means something)',
+    ['<a href="/learn/print.html">', "fetch('../learn/parts.json')", "new URL('../learn/x.jpg', import.meta.url)",
+      "import x from './learn/a.js'", 'background:url(/learn/a.png)', '<a href=/learn>'].every((s) => INTO.test(s))
+    && !['the /learn sample site', 'subtitles learn from corrections', "'subtitlesLearn'", 'learned_words'].some((s) => INTO.test(s)));
+
+  section('*** what moved out: Brick mosaic\'s built-in picture ***');
+  check('its address is not under learn/', !/\/learn\//.test(SAMPLE_URL) && /\/design-assets\/sample-picture\//.test(SAMPLE_URL), SAMPLE_URL);
+  const img = await fetch(SAMPLE_URL, { method: 'HEAD', cache: 'no-store' });
+  check('it is served, as a JPEG', img.ok && /image\/jpeg/.test(img.headers.get('content-type') || ''), `${img.status} ${img.headers.get('content-type')}`);
+  const man = await (await fetch('../design-assets/sample-picture/manifest.json', { cache: 'no-store' })).json();
+  const entry = (man.images || []).find((e) => SAMPLE_URL.endsWith('/' + e.file));
+  check('*** its licence came with it: the manifest beside it says CC0, with the museum\'s own record ***',
+    !!entry && entry.license === 'CC0' && /^https:\/\/www\.clevelandart\.org\/art\//.test(entry.source_url || ''), JSON.stringify(entry));
+  check('...and the title the game shows is the manifest\'s', !!entry && SAMPLE_LABEL.startsWith(entry.title), SAMPLE_LABEL);
+
+  section('*** what moved out: the make-a-pack prompt the pack loader links to ***');
+  const host = document.createElement('div');
+  document.body.append(host);
+  mountPackLoader(host, { kind: 'trivia' });
+  const a = [...host.querySelectorAll('a[href]')].find((x) => /prompt/i.test(x.textContent));
+  check('the loader still offers "this prompt"', !!a);
+  const href = a?.getAttribute('href') || '';
+  check('...and it does not point into learn/', !!href && !INTO.test(`"${href}"`), href);
+  const pr = await fetch(href, { cache: 'no-store' });
+  const prompt = pr.ok ? await pr.text() : '';
+  check('...it is served, as plain text', pr.ok && /text\/plain/.test(pr.headers.get('content-type') || ''), `${pr.status} ${pr.headers.get('content-type')}`);
+  check('...and it is the prompt: build it from a source, never from memory', /Make me a Nimrod trivia pack/.test(prompt)
+    && /answerable FROM THE SOURCE/.test(prompt) && /SOURCE:/.test(prompt), prompt.slice(0, 80));
+  // The JSON shape in the prompt, filled in, is a pack the loader accepts: a prompt teaching a shape the site refuses
+  // would make every pack written from it fail to load.
+  const shape = prompt.slice(prompt.indexOf('{ "schema"'), prompt.indexOf('SOURCE:')).trim();
+  let example = null;
+  try { example = JSON.parse(shape.replace('"<where in the source this comes from>"', '"line 1"')); } catch { /* reported below */ }
+  check('...its JSON shape parses', !!example, shape.slice(0, 80));
+  if (example) {
+    example.name = 'Test'; example.description = 'x'; example.source = { name: 'A source', url: 'https://example.org/', licence: 'CC0', attribution: 'x' };
+    example.items = [{ question: 'Q?', answers: ['a', 'b', 'c', 'd'], correct: 'a', difficulty: 'easy', category: 'c', explain: 'e', source: 'line 1' }];
+    const bad = validatePack(example);
+    check('...and, filled in, it is a pack the loader accepts', bad.length === 0, bad.join('; '));
+  }
+  host.remove();
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }
