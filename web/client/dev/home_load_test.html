@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>home load (nothing but Home on the way to it) and the sidebar on Home — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#5d7064}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>home load (nothing but Home on the way to it) and the sidebar on Home — test</h1>
+<p>Mike, 2026-10-13, on the live site: "The home page doesn't have a sidebar, so you can't get to anywhere else on the
+site. It also cycles through a few pages like modules before becoming the home page." Measured that day: /home's own
+markup is the parts page, and it was painted (the "Sign in" strip, the parts heading, the legend, the list) for the
+whole load, then the sidebar, then an empty window, then the dashboard. This suite records what a signed-in load of
+/home paints, check by check, from the moment the frame starts loading until Home is ready, and fails if anything but
+the theme's background, the sidebar or "Loading your Home…" shows before then. Then: the slow line (and Try again),
+the line when Home cannot start, signed out still handed to /modules, and the site's sidebar beside the dashboard
+filling the window (and the person's row that puts it away), at 1280x720 and a phone's 390x844. Needs the server
+(<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { authHeaders } from '../auth.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { SITE_PAGES, VISIBLE_SITE_TABS } from '../site_nav.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('home-load-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function info(t) { const d = document.createElement('div'); d.className = 'info'; d.textContent = t; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+const near = (a, b, tol = 1) => Math.abs(a - b) <= tol;
+
+// ---- the frame, and what it shows --------------------------------------------------------------------------------
+let ifr = null;
+const doc = () => ifr?.contentDocument;
+const win = () => ifr?.contentWindow;
+const $ = (s) => doc()?.querySelector(s);
+const $$ = (s) => [...(doc()?.querySelectorAll(s) || [])];
+function shown(el) {
+  const w = win();
+  if (!el || !w) return false;
+  const cs = w.getComputedStyle(el);
+  if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) return false;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 && r.top < w.innerHeight && r.left < w.innerWidth;
+}
+// What is painted right now, as names. The PARTS PAGE's own pieces are the ones that must never show on the way to Home.
+const PARTS = ['top-strip', 'parts-hero', 'legend', 'parts-list', 'gaps', 'footer', 'module-copy'];
+function views() {
+  const d = doc();
+  if (!d || !d.body) return [];
+  const v = [];
+  if (shown($('.top'))) v.push('top-strip');
+  if (shown($('header.hero h1'))) v.push('parts-hero');
+  if (shown($('.legend'))) v.push('legend');
+  if (shown($('.pick')) && $('#list .pickrow')) v.push('parts-list');
+  if (shown($('.gaps'))) v.push('gaps');
+  if (shown($('footer'))) v.push('footer');
+  if (shown($('#detail > h2'))) v.push('module-copy');
+  if (shown($('#stage'))) v.push('stage');
+  if (shown($('#stage .kiosk'))) v.push('kiosk');
+  if (shown($('.s-side'))) v.push('sidebar');
+  if (shown($('#home-boot .hbw-wait'))) v.push('loading-words');
+  if (shown($('#home-boot .hbw-slow'))) v.push('slow-line');
+  if (shown($('#home-boot .hbw-failed'))) v.push('failed-line');
+  return v;
+}
+const bootState = () => doc()?.documentElement?.dataset.boot || '';
+// Load `path` in the frame and record every change of what is painted until `done()` (or `ms`), sampling between the
+// page's own tasks (the frame shares this page's event loop, so a sample lands between any two of its tasks -- which
+// is the only place a paint can happen). `onDoc` runs once, as soon as the frame's new document exists.
+async function load(path, { w = 1280, h = 720, done = () => bootState() === 'ready', ms = 45000, after = 300, onDoc = null } = {}) {
+  ifr?.remove();
+  ifr = document.createElement('iframe');
+  ifr.style.cssText = `position:fixed;left:-9999px;top:0;width:${w}px;height:${h}px;border:0`;
+  document.body.append(ifr);
+  const t0 = performance.now();
+  const seq = [];
+  let last = null, hooked = false, finishedAt = null;
+  ifr.src = path;
+  const end = t0 + ms;
+  while (performance.now() < end) {
+    const d = doc();
+    const fresh = d && d.URL && d.URL !== 'about:blank';
+    if (fresh) {
+      if (!hooked && onDoc) { hooked = true; try { onDoc(win(), d); } catch (err) { info(`(onDoc threw ${err})`); } }
+      const v = views();
+      const key = v.join(' ');
+      if (key !== last) { last = key; seq.push({ t: Math.round(performance.now() - t0), v, boot: bootState(), path: win().location.pathname }); }
+      let isDone = false;
+      try { isDone = !!done(); } catch { isDone = false; }
+      if (isDone && finishedAt == null) finishedAt = performance.now();
+      if (finishedAt != null && performance.now() - finishedAt >= after) break;
+    }
+    await sleep(0);
+  }
+  return { seq, readyAt: finishedAt == null ? null : Math.round(finishedAt - t0) };
+}
+const line = (seq) => seq.map((s) => `${s.t}ms[${s.boot}]${s.path === '/home' ? '' : s.path}: ${s.v.join(' ') || '(nothing)'}`).join('  →  ');
+// Every sample before Home was ready.
+// (A sample taken in the same turn as the one that saw ready is already ready: its own state says so.)
+const before = (r) => r.seq.filter((s) => s.boot !== 'ready' && (r.readyAt == null || s.t < r.readyAt));
+
+// ---- what this server is ------------------------------------------------------------------------------------------
+const meDev = await fetch('/api/me', { headers: authHeaders(USER) });
+const devUser = meDev.ok ? ((await meDev.json()).user || '') : '';
+const devSignIn = devUser === USER;
+const anonStatus = (await fetch('/api/me')).status;
+info(`server: a dev user ${devSignIn ? 'is' : 'is NOT'} honoured; an anonymous /api/me answers ${anonStatus}`);
+
+const profiles = createProfilesClient({ user: USER });
+async function homeRow() {
+  const person = (await profiles.people())[0];
+  const h = createState({ url: profiles.personStateURL(person.id, 'home'), user: USER });
+  try { return (await h.load()) || {}; } finally { h.destroy(); }
+}
+async function setHomeRow(patch) {
+  const person = (await profiles.people())[0];
+  const h = createState({ url: profiles.personStateURL(person.id, 'home'), user: USER });
+  try { await h.load(); h.set(patch); await h.flush(); } finally { h.destroy(); }
+}
+const homeURL = (extra = '') => `/home?user=${encodeURIComponent(USER)}${extra}`;
+const hb = (k) => (k === 'view' ? $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]')
+  : k === 'fs' ? $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="fs"]')
+  : $(`#stage .tb-bar .tb-host [data-host="${k}"]`));
+const hrow = (act) => $(`#stage .st-item[data-id="home:${act}"]`);
+const menuShown = () => !!$('#stage [data-settings] .st-scrim:not([hidden])');
+async function ensureMenu(rowAct) {
+  await until(() => !!hb('view'), 15000);
+  for (let i = 0; i < 3; i++) {
+    if (await until(() => menuShown() && !!hrow(rowAct), 2500)) return true;
+    if (!menuShown()) hb('view')?.click();
+  }
+  return menuShown() && !!hrow(rowAct);
+}
+const box = (el) => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; };
+const rnd = (b) => J(Object.fromEntries(Object.entries(b).map(([k, v]) => [k, Math.round(v)])));
+
+try {
+  if (!devSignIn) {
+    check('(skipped) this server does not take a dev user (?user=), so the signed-in loads cannot run here', true);
+  } else {
+    // ============================================================================================================
+    section('*** a signed-in load of /home paints NOTHING but Home on the way to it ***');
+    {
+      // The first visit (the account and its default screen are made on the way) and a returning one.
+      for (const visit of ['first visit', 'returning']) {
+        const r = await load(homeURL());
+        info(`${visit}: ${line(r.seq)}  (ready at ${r.readyAt}ms)`);
+        check(`${visit}: Home becomes ready (the dashboard filling the window)`, r.readyAt != null && doc().body.classList.contains('is-land'),
+          `boot=${bootState()} error=${doc()?.body?.dataset.homeError || '-'}`);
+        const leaks = before(r).filter((s) => s.v.some((v) => PARTS.includes(v)));
+        check(`*** ${visit}: no piece of the parts page (the "Sign in" strip, the heading, the legend, the list, a module's copy) is painted before Home is ready ***`,
+          leaks.length === 0, line(leaks));
+        const half = before(r).filter((s) => s.v.some((v) => !['sidebar', 'loading-words'].includes(v)));
+        check(`*** ${visit}: before then, only the theme's background, the sidebar and "Loading your Home…" -- no half-built dashboard ***`,
+          half.length === 0, line(half));
+        const words = r.seq.find((s) => s.v.includes('loading-words'));
+        check(`${visit}: "Loading your Home…" does not show in the first second (a fast load shows nothing)`,
+          !words || words.t >= 950, words ? `${words.t}ms` : '');
+        const atReady = r.seq.filter((s) => s.t >= r.readyAt)[0] || r.seq[r.seq.length - 1];
+        check(`${visit}: at ready, the dashboard, its kiosk and the sidebar are all there at once`,
+          ['stage', 'kiosk', 'sidebar'].every((v) => views().includes(v)) && !views().includes('loading-words'), J(atReady?.v));
+        check(`${visit}: the tab says Home the whole way`, doc().title.includes('Home'), doc().title);
+      }
+      // The editing page and a module page are Home too: the same veil, the same rule.
+      for (const [label, extra, ready] of [['the editing page (?edit=1)', '&edit=1', () => !!$('#home-edit')],
+        ['a module page (?m=photos)', '&m=photos', () => /Photos/.test($('#detail > h2')?.textContent || '')]]) {
+        const r = await load(homeURL(extra));
+        info(`${label}: ${line(r.seq)}  (ready at ${r.readyAt}ms)`);
+        check(`${label}: Home becomes ready`, r.readyAt != null && ready() && doc().body.classList.contains('is-home'),
+          `boot=${bootState()} error=${doc()?.body?.dataset.homeError || '-'}`);
+        const leaks = before(r).filter((s) => s.v.some((v) => PARTS.includes(v)));
+        check(`*** ${label}: nothing of the parts page before Home is ready ***`, leaks.length === 0, line(leaks));
+      }
+    }
+
+    // ============================================================================================================
+    section('*** the site’s sidebar on Home: beside the dashboard filling the window, and on the editing page ***');
+    {
+      const r = await load(homeURL());
+      check('(setup) Home ready, filling the window', r.readyAt != null && doc().body.classList.contains('is-land'));
+      const side = $('.s-side');
+      check('*** the sidebar shows beside the dashboard ***', shown(side) && near(box(side).l, 0) && box(side).w > 150, side ? rnd(box(side)) : 'none');
+      const pages = SITE_PAGES.map((p) => p.id);
+      check('*** every page of the site is a link in it (Home, Modules, Make your profile), Home marked as here ***',
+        pages.every((id) => !!$(`.s-side a[data-nav="${id}"]`)) && $('.s-side a[data-nav="home"]')?.getAttribute('aria-current') === 'page',
+        pages.filter((id) => !$(`.s-side a[data-nav="${id}"]`)).join(', '));
+      const tabs = VISIBLE_SITE_TABS.map((t) => t.id);
+      check(`*** every tab of My dashboards is a link in it (${tabs.join(', ')}), each to its tab ***`,
+        tabs.every((id) => new URL($(`.s-side a[data-side-tab="${id}"]`)?.href || 'http://x/').searchParams.get('tab') === id),
+        tabs.filter((id) => !$(`.s-side a[data-side-tab="${id}"]`)).join(', '));
+      check('...and the way out (Sign out) is in its foot', !!$('.s-side a[href="/auth/logout"]'));
+      // The dashboard is the rest of the window: from the sidebar's edge to the window's, top to bottom (above the info
+      // line's strip when it shows). Nothing of it lies under the sidebar.
+      const vw = doc().documentElement.clientWidth, vh = win().innerHeight;
+      const st = box($('#stage')), k = box($('#stage .kiosk')), sb = box(side);
+      // The info line's strip: the page keeps 2.6em clear for it while it shows (`body.has-infoline`), as it always has.
+      const bottom = doc().body.classList.contains('has-infoline') ? vh - 2.6 * parseFloat(win().getComputedStyle(doc().body).fontSize) : vh;
+      check('*** the dashboard fills the rest of the window: from the sidebar’s edge to the right, top to bottom ***',
+        near(st.l, sb.r) && near(st.r, vw) && near(st.t, 0) && near(st.b, bottom), `stage ${rnd(st)} side ${rnd(sb)} window ${vw}x${vh} bottom ${bottom}`);
+      check('...and the dashboard (the kiosk) is exactly that box', near(k.l, st.l) && near(k.t, st.t) && near(k.w, st.w) && near(k.h, st.h), `${rnd(k)} vs ${rnd(st)}`);
+      const homeLink = $('.s-side a[data-nav="modules"]');
+      const [mx, my] = [box(homeLink).l + box(homeLink).w / 2, box(homeLink).t + box(homeLink).h / 2];
+      check('*** a press on the sidebar reaches the sidebar (the dashboard does not lie over it) ***',
+        doc().elementFromPoint(mx, my)?.closest('a') === homeLink, String(doc().elementFromPoint(mx, my)?.className));
+      check('no page scroll, either way', doc().documentElement.scrollHeight <= vh + 0.5 && doc().documentElement.scrollWidth <= vw + 0.5,
+        `${doc().documentElement.scrollWidth}x${doc().documentElement.scrollHeight}`);
+      check('the bar still has ⛶ Full screen (the whole screen, sidebar and all put away)', /Full screen/.test(hb('fs')?.textContent || ''), hb('fs')?.textContent);
+      // The panels are measured against the dashboard's box, not the window: four up, each a quarter of IT.
+      // (Start here is the four-up; Your people is a page. Asked for directly: `?example=` is the editor, so the check
+      // reads whichever grid is on the stage now, if any.)
+      const cells = $$('#stage .k-stage.k-grid > .k-cell');
+      if (cells.length) {
+        const G = box($('#stage .k-stage.k-grid'));
+        check('the panels tile the dashboard’s box (none spills under the sidebar or off the window)',
+          cells.every((c) => { const b = box(c); return b.l >= G.l - 1 && b.r <= G.r + 1 && b.l >= sb.r - 1; }), J(cells.map((c) => rnd(box(c)))));
+      }
+
+      // EDIT: the editing page keeps the sidebar (it always had it); Dashboard comes back with it.
+      hb('edit')?.click();
+      check('*** Edit: the editing page, the sidebar still there ***',
+        await until(() => !doc().body.classList.contains('is-land') && !!$('#home-edit') && shown($('.s-side')), 10000),
+        `land=${doc().body.classList.contains('is-land')} side=${shown($('.s-side'))}`);
+      hb('land')?.click();
+      check('...and Dashboard: back to the dashboard, the sidebar beside it',
+        await until(() => doc().body.classList.contains('is-land') && shown($('.s-side')) && near(box($('#stage')).l, box($('.s-side')).r), 10000));
+
+      // THE PERSON'S ROW: "Filling the window, keep the site's sidebar" -- No is 2026-10-02's whole window.
+      check('*** the ⚙ menu has the row "Filling the window, keep the site’s sidebar", saying Yes ***',
+        await ensureMenu('set:landSide') && /sidebar/i.test(hrow('set:landSide').textContent) && /Yes, beside it/.test(hrow('set:landSide').textContent),
+        hrow('set:landSide')?.textContent);
+      hrow('set:landSide')?.click();
+      check('*** pressed: the sidebar goes, and the dashboard is the whole window ***',
+        await until(() => doc().body.classList.contains('land-noside') && !shown($('.s-side')) && near(box($('#stage')).l, 0)
+          && near(box($('#stage')).r, doc().documentElement.clientWidth), 6000),
+        `noside=${doc().body.classList.contains('land-noside')} stage=${rnd(box($('#stage')))}`);
+      check('...saved on the person (it holds next time)', await until(async () => (await homeRow()).landSide === false, 6000));
+      check('*** ...and the same row, still in the ⚙ menu, brings it back (No strands nobody) ***',
+        await until(() => !!hrow('set:landSide'), 4000) && /No, the whole window/.test(hrow('set:landSide').textContent));
+      const r2 = await load(homeURL());
+      check('*** arriving with it No: no sidebar, the whole window, and still nothing but Home on the way ***',
+        r2.readyAt != null && doc().body.classList.contains('land-noside') && !shown($('.s-side')) && near(box($('#stage')).l, 0)
+        && !before(r2).some((s) => s.v.some((v) => PARTS.includes(v))), line(r2.seq));
+      check('...and its Edit opens the editing page, which has the sidebar',
+        await (async () => { hb('edit')?.click(); return until(() => !doc().body.classList.contains('is-land') && shown($('.s-side')), 10000); })());
+      hb('land')?.click();
+      await until(() => doc().body.classList.contains('is-land'), 8000);
+      if (await ensureMenu('set:landSide')) hrow('set:landSide').click();
+      check('(back to Yes) the row brings the sidebar back',
+        await until(() => !doc().body.classList.contains('land-noside') && shown($('.s-side')), 6000)
+        && await until(async () => (await homeRow()).landSide === true, 6000));
+    }
+
+    // ============================================================================================================
+    section('*** on a phone (390x844): the sidebar is the site’s strip along the top, the dashboard under it ***');
+    {
+      const r = await load(homeURL(), { w: 390, h: 844 });
+      check('(setup) Home ready at 390 wide', r.readyAt != null && doc().body.classList.contains('is-land'));
+      const sb = box($('.s-side')), st = box($('#stage'));
+      const vw = doc().documentElement.clientWidth;
+      check('*** the strip runs across the top ***', shown($('.s-side')) && near(sb.l, 0) && near(sb.w, vw) && near(sb.t, 0), rnd(sb));
+      check('*** the dashboard starts under it and runs the window’s width ***', near(st.t, sb.b) && near(st.l, 0) && near(st.w, vw) && st.h > 300,
+        `stage ${rnd(st)} strip ${rnd(sb)}`);
+      check('no sideways scroll on a phone', doc().documentElement.scrollWidth <= vw + 0.5, `${doc().documentElement.scrollWidth} > ${vw}`);
+      const leaks = before(r).filter((s) => s.v.some((v) => PARTS.includes(v)));
+      check('...and nothing of the parts page on the way, here too', leaks.length === 0, line(leaks));
+    }
+
+    // ============================================================================================================
+    section('*** slow: a plain line and Try again, never a screen that waits on an answer ***');
+    {
+      // `?boot_wait=1`: the slow line's timer at 1 ms, so this load is "slow" from the start.
+      const r = await load(homeURL('&boot_wait=1'));
+      info(`slow: ${line(r.seq)}  (ready at ${r.readyAt}ms)`);
+      const slow = r.seq.filter((s) => s.v.includes('slow-line'));
+      check('*** the line shows (taking longer than usual), with Try again ***', slow.length > 0, line(r.seq));
+      check('...and while it shows, the parts page still does not (it is not Home, and Home has not failed)',
+        !before(r).some((s) => s.v.some((v) => PARTS.includes(v))), line(before(r)));
+      check('*** Home still arrives by itself, and the line goes ***', r.readyAt != null && !views().includes('slow-line')
+        && doc().body.classList.contains('is-land'), `boot=${bootState()} ${J(views())}`);
+      // Try again, pressed while slow: the page loads again. (A slow load is made by setting the timer to 1 ms.)
+      const r3 = await load(homeURL('&boot_wait=1'), { done: () => bootState() === 'slow' && shown($('#home-boot .hbw-slow [data-boot-retry]')), ms: 20000, after: 0 });
+      const retry = $('#home-boot .hbw-slow [data-boot-retry]');
+      check('(setup) the slow line is up with its Try again', r3.readyAt != null && shown(retry), `boot=${bootState()}`);
+      const firstDoc = doc();
+      retry?.click();
+      check('*** Try again loads the page again ***', await until(() => doc() && doc() !== firstDoc && doc().URL.includes('/home'), 15000));
+      check('...and that load becomes Home', await until(() => bootState() === 'ready' && doc().body.classList.contains('is-land'), 45000), bootState());
+      // Its links, for when even the sidebar has not come (no answer from the server yet): hidden once the sidebar is there.
+      check('the line’s own links to Modules and My dashboards are in the markup (shown only when the sidebar is not)',
+        !!$('#home-boot .hbw-links a[href="/modules"]') && !!$('#home-boot .hbw-links a[href="/home.html"]'));
+    }
+
+    // ============================================================================================================
+    section('*** Home that cannot start: the parts page, and a line that says so (and why) ***');
+    {
+      // Every /api/profiles call refused, from the frame's own fetch, put in place before the page's module runs. A
+      // person this browser has never loaded (profile.js caches an account's list of screens in the browser, so a known
+      // one could still start).
+      let refused = 0;
+      const r = await load(`/home?user=${encodeURIComponent(`${USER}-cannot`)}`, {
+        done: () => ['failed', 'parts', 'ready'].includes(bootState()),
+        onDoc: (w) => {
+          const real = w.fetch.bind(w);
+          w.fetch = (url, opts) => {
+            if (/\/api\/profiles/.test(String(url && url.url ? url.url : url))) { refused++; return Promise.reject(new TypeError('refused by the test')); }
+            return real(url, opts);
+          };
+        },
+      });
+      info(`cannot start: ${line(r.seq)}  (ended at ${r.readyAt}ms, ${refused} refused)`);
+      check('(setup) the page asked for /api/profiles and was refused', refused > 0, `${refused}`);
+      check('*** the load ends on the parts page, saying why (data-home-error) ***',
+        bootState() === 'failed' && !!doc().body.dataset.homeError && !doc().body.classList.contains('is-home'),
+        `boot=${bootState()} error=${doc().body.dataset.homeError || '-'}`);
+      check('*** a line at the top says Home could not start, with what went wrong and Try again ***',
+        await until(() => shown($('#home-boot .hbw-failed')), 3000) && /could not start/.test($('#home-boot .hbw-failed').textContent)
+        && /What went wrong/.test($('#home-boot-why')?.textContent || '') && shown($('#home-boot .hbw-failed [data-boot-retry]')),
+        $('#home-boot .hbw-failed')?.textContent);
+      check('...and the parts page is there under it (its heading, and the list further down)',
+        await until(() => views().includes('parts-hero') && !!$('#list .pickrow') && win().getComputedStyle($('.pick')).display !== 'none', 5000), J(views()));
+      check('...nothing of the parts page before it was known Home could not start',
+        !r.seq.filter((s) => s.boot === 'loading').some((s) => s.v.some((v) => PARTS.includes(v))), line(r.seq));
+    }
+  }
+
+  // ==============================================================================================================
+  section('*** signed out: still handed to the Modules page, and nothing of the parts page painted on the way ***');
+  if (anonStatus === 401) {
+    const r = await load('/home?m=photos', { done: () => win()?.location.pathname === '/modules', ms: 30000, after: 0 });
+    info(`signed out: ${line(r.seq)}`);
+    check('*** signed OUT: handed to /modules, with its ?m= ***', r.readyAt != null && /m=photos/.test(win().location.search), win()?.location.href);
+    check('*** ...and /home painted nothing of its parts page before it went ***',
+      !r.seq.filter((s) => s.path === '/home').some((s) => s.v.some((v) => PARTS.includes(v))), line(r.seq));
+  } else {
+    check('(skipped) this server signs everybody in, so there is no signed-out visitor to test (run it against a NIMROD_ENV=prod server)', true);
+  }
+
+  // The audit (`?all=1`) is the parts page on purpose: never veiled.
+  if (devSignIn) {
+    section('the audit (?all=1) is never veiled');
+    ifr?.remove();
+    ifr = document.createElement('iframe');
+    ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1280px;height:720px;border:0';
+    document.body.append(ifr);
+    ifr.src = `/modules.html?user=${encodeURIComponent(USER)}&all=1`;
+    check('?all=1: the parts page shows, with no veil and no boot state', await until(() => views().includes('legend'), 20000)
+      && !doc().documentElement.classList.contains('home-boot') && !bootState(), J(views()));
+    ifr.remove();
+  }
+} catch (err) {
+  check('the suite ran to the end', false, err?.stack || String(err));
+}
+
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

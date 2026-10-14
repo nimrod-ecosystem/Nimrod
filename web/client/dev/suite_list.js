@@ -221,6 +221,9 @@ export const SUITES = [
   'home_profile',
   // 2026-10-02: Home on a phone (375 and 320 wide; untouched at 1280 and 1920).
   'home_phone',
+  // 2026-10-13: Home's load (nothing but Home is painted on the way to it; the slow line; the line when it cannot start;
+  // signed out still handed to /modules) and the site's sidebar beside the dashboard filling the window.
+  'home_load',
   'nimrod_guide', 'whats_new',
   // 2026-10-02: the Nimrod Game - game / learning / sandbox, unlocks gating Add, the tour's points.
   'unlocks',

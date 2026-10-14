@@ -215,12 +215,15 @@ try {
   // settings sidebar (2026-10-08): Home's editing page has the same sidebar...
   check('(setup) Home\'s editing page has drawn its sidebar', await until(() => !!$('.s-side'), 15000));
   if ($('.s-side')) sideChecks('home');
-  // ...and Home's landing -- the dashboard filling the window -- has none (Mike, 2026-10-02: "the dashboard should be the
-  // whole screen").
+  // ...and Home's landing -- the dashboard filling the window -- has it too, DELIBERATELY CHANGED 2026-10-13 (Mike: "The
+  // home page doesn't have a sidebar, so you can't get to anywhere else on the site."). It had none under 2026-10-02's
+  // "the dashboard should be the whole screen", which is now the person's own row (home_dashboard.js `landSide`;
+  // dev/home_load_test.html checks the dashboard beside it, and the row).
   await open(`/home?user=${USER}`);
-  check('*** Home\'s landing (the dashboard filling the window): NO sidebar ***',
-    await until(() => doc.body.classList.contains('is-land'), 20000) && (!$('.s-side') || rect($('.s-side')).width === 0),
+  check('*** Home\'s landing (the dashboard filling the window): the sidebar beside it ***',
+    await until(() => doc.body.classList.contains('is-land') && !!$('.s-side') && rect($('.s-side')).width >= 200, 20000),
     `${doc.body.className} ${$('.s-side') ? JSON.stringify(rect($('.s-side'))) : 'none'}`);
+  if ($('.s-side')) sideChecks('home');
 
   // ==========================================================================================
   section('*** the Pi\'s 1920x1080, signed in: the sidebar, then all three side by side ***');
