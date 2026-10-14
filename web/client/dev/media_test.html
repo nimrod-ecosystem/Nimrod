@@ -517,7 +517,7 @@ section('presets — no account/dashboard wired at all');
   check('says presets need an account rather than showing an empty, unexplained list',
         /sign in and set up a dashboard/.test(text(box)), text(box));   // site text rewrite 2026-10-09: was "a signed-in account"
   host.querySelector('[data-preset-name]').value = 'Should not save';
-  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  host.querySelector('[data-preset-save]').click();   // the page's own Save (row 2.22: only it saves)
   await settle();
   check('trying to save without one is refused, not silently dropped',
         /sign in and set up a dashboard/.test(text(host.querySelector('[data-preset-msg]'))),
@@ -531,15 +531,33 @@ section('presets — create, list, edit and delete end to end');
   await p.refresh();
   check('a fresh library says so plainly', /No presets saved yet/.test(text(host.querySelector('[data-preset-list]'))));
 
-  // ---- create, with a real playlist/schedule/shuffle, the same fields youtube.js's own
-  // instance settings hold — proving this form can produce a USABLE preset, not an empty shell.
+  // ---- create, with a real playlist/schedule/shuffle - typed into YOUTUBE'S OWN SETTINGS FORM (row 2.22, Mike
+  // 2026-10-14: "Just replace the one on the media page with the one from the Youtube settings"), the drawer a YouTube
+  // panel has, mounted on the preset (preset_editor.js). The same presses a person makes.
+  const ed = (sel) => host.querySelector(`[data-preset-editor] ${sel}`);
+  check('*** the preset form IS YouTube\'s own settings drawer (its Add row, its playlist row, its schedule row) ***',
+    !!ed('[data-settings]') && !ed('[data-settings]').hidden && !!ed('[data-add-url]') && !!ed('[data-set-list]')
+      && !!ed('[data-sch-from]') && ed('[data-sch-from]').type === 'time' && !host.querySelector('[data-preset-playlist]'));
+  check('...without the rows a preset does not hold ("play the next video when one ends" is a panel\'s own)',
+    !ed('[data-opt="autoAdvance"]') && !!ed('[data-opt="shuffle"]') && !ed('[data-close]'));
   host.querySelector('[data-preset-name]').value = 'Saturday cartoons';
-  host.querySelector('[data-preset-playlist]').value =
-    'https://youtu.be/dQw4w9WgXcQ | Cartoon Co\nabc12345678';
-  host.querySelector('[data-preset-playlist-id]').value = 'https://www.youtube.com/playlist?list=PLR0lG5yo6NRE';
-  host.querySelector('[data-preset-schedule]').value = 'Morning | 07:00 | 09:00 | PLmorningset';
-  host.querySelector('[data-preset-shuffle]').checked = false;
-  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  const addVideo = (url, channel = '') => { ed('[data-add-url]').value = url; ed('[data-add-channel]').value = channel; ed('[data-add]').click(); };
+  addVideo('https://youtu.be/dQw4w9WgXcQ', 'Cartoon Co');
+  addVideo('abc12345678');
+  await settle();
+  check('*** pressing the drawer\'s own Add does NOT save the preset (only the page\'s Save does) ***',
+    presets.listPresets().length === 0, JSON.stringify(presets.listPresets()));
+  ed('[data-list-url]').value = 'https://www.youtube.com/playlist?list=PLR0lG5yo6NRE';
+  ed('[data-set-list]').click();
+  ed('[data-sch-name]').value = 'Morning';
+  ed('[data-sch-from]').value = '07:00';
+  ed('[data-sch-to]').value = '09:00';
+  ed('[data-sch-list]').value = 'PLmorningset';
+  ed('[data-sch-add]').click();
+  const shuf = ed('[data-opt="shuffle"]');
+  shuf.checked = false; shuf.dispatchEvent(new Event('change', { bubbles: true }));
+  await settle();
+  host.querySelector('[data-preset-save]').click();   // the page's own Save (row 2.22: only it saves)
   await settle();
 
   const listText = text(host.querySelector('[data-preset-list]'));
@@ -568,8 +586,9 @@ section('presets — create, list, edit and delete end to end');
 
   // ---- a second preset of the SAME type coexists
   host.querySelector('[data-preset-name]').value = 'Bedtime nature docs';
-  host.querySelector('[data-preset-playlist]').value = 'zzz11111111';
-  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  addVideo('zzz11111111');
+  await settle();
+  host.querySelector('[data-preset-save]').click();   // the page's own Save (row 2.22: only it saves)
   await settle();
   check('a second preset is listed alongside the first, not replacing it',
         /Saturday cartoons/.test(text(host.querySelector('[data-preset-list]')))
@@ -582,16 +601,15 @@ section('presets — create, list, edit and delete end to end');
   await settle();
   check('*** Edit loads the preset back into the form ***',
         host.querySelector('[data-preset-name]').value === 'Saturday cartoons');
-  check('...with its playlist round-tripped back into the textarea',
-        /dQw4w9WgXcQ/.test(host.querySelector('[data-preset-playlist]').value)
-          && /Cartoon Co/.test(host.querySelector('[data-preset-playlist]').value),
-        host.querySelector('[data-preset-playlist]').value);
+  check('...with its playlist back in YouTube\'s own form (its list shows the videos)',
+        /dQw4w9WgXcQ/.test(text(ed('[data-list]'))) && /Cartoon Co/.test(text(ed('[data-list]'))),
+        text(ed('[data-list]')));
   check('...and the Save button now says so, with a way to back out',
         host.querySelector('[data-preset-save]').textContent === 'Save changes'
           && host.querySelector('[data-preset-cancel]').hidden === false);
 
   host.querySelector('[data-preset-name]').value = 'Saturday cartoons (renamed)';
-  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  host.querySelector('[data-preset-save]').click();   // the page's own Save (row 2.22: only it saves)
   await settle();
   check('*** saving the edit RENAMES in place — still exactly two presets, not three ***',
         presets.listPresets().length === 2, JSON.stringify(presets.listPresets().map((p) => p.name)));

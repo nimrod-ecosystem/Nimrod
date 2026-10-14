@@ -95,7 +95,8 @@ import { HELPER_PAGE, HELPER_DOWNLOADS } from './nimrod_helper.js';
 // this file is safe here: ES modules are evaluated once per resolved URL, so on every page
 // that already loads the 'youtube' module (every real page this panel is mounted on) this is
 // the SAME module instance, not a second `registerModule('youtube', …)` call.
-import { parseVideoId, parsePlaylistId } from './modules/youtube.js';
+// Row 2.22 (2026-10-14): a preset is edited with the module's own settings form, not typed lines.
+import { mountPresetEditor } from './preset_editor.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -275,13 +276,9 @@ export function mountMedia(root, {
           <select data-preset-type aria-label="preset type">
             <option value="youtube">YouTube</option>
           </select>
-          <textarea data-preset-playlist rows="3" style="width:100%;flex:1 1 100%"
-            placeholder="Videos, one per line: a YouTube link or id, optionally '| channel name'"></textarea>
-          <input type="text" data-preset-playlist-id
-                 placeholder="Playlist link or id (PL…). Optional. Use it instead of the videos above, or as well as them.">
-          <textarea data-preset-schedule rows="3" style="width:100%;flex:1 1 100%"
-            placeholder="Time-of-day playlists, one per line (optional): name | HH:MM | HH:MM (optional) | playlist link or id. The first time is the start and the second is the end. Write times like 07:30 or 18:00."></textarea>
-          <label class="chk"><input type="checkbox" data-preset-shuffle checked> shuffle (off = play in order)</label>
+          <!-- Row 2.22 (Mike, 2026-10-14): "replace the one on the media page with the one from the Youtube settings".
+               The real YouTube settings form, editing this preset (preset_editor.js). -->
+          <div data-preset-editor style="width:100%;flex:1 1 100%"></div>
           <button type="submit" class="h-btn h-primary" data-preset-save>Save preset</button>
           <button type="button" class="h-btn" data-preset-cancel hidden>Cancel edit</button>
         </form>
@@ -465,69 +462,12 @@ export function mountMedia(root, {
 
   // ------------------------------------------------------------- Presets (register #255)
   //
-  // Reuses `youtube.js`'s own parsers (`parseVideoId`/`parsePlaylistId`) so a link pasted
-  // here is accepted or refused exactly the way it is inside a YouTube instance's own panel
-  // — one rule for "is this a video/playlist link", not two that can quietly disagree.
   const presetSay = (text, bad = false) => {
     const m = el('[data-preset-msg]');
     if (!m) return;
     m.textContent = text || '';
     m.classList.toggle('bad', !!bad);
   };
-
-  // One video/playlist-id per line, optionally `<link or id> | <channel>` — the same two
-  // fields `youtube.js`'s own "Add" row collects, folded onto one line so this form does not
-  // need to grow a repeating widget for what is, for a first pass, a paste-a-list job.
-  function parsePlaylistLines(text) {
-    const out = [];
-    for (const raw of String(text || '').split('\n')) {
-      const line = raw.trim();
-      if (!line) continue;
-      const [urlPart, channelPart] = line.split('|');
-      const id = parseVideoId((urlPart || '').trim());
-      if (!id) continue;               // silently skipped, the same way a bad add is refused
-      out.push({ id, title: id, channel: (channelPart || '').trim() || undefined });
-    }
-    return out;
-  }
-  const formatPlaylistLines = (list) => (Array.isArray(list) ? list : [])
-    .map((v) => (v && v.channel ? `${v.id} | ${v.channel}` : (v && v.id) || '')).filter(Boolean).join('\n');
-
-  function hoursFromTime(v) {
-    const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
-    if (!m) return null;
-    const h = Number(m[1]), mi = Number(m[2]);
-    return (h >= 0 && h <= 23 && mi >= 0 && mi <= 59) ? h + mi / 60 : null;
-  }
-  function hhmm(h) {
-    const n = Math.max(0, Math.min(24, Number(h) || 0));
-    const hh = Math.floor(n);
-    const mm = Math.round((n - hh) * 60);
-    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-  }
-  // `name | from | to | playlist` (4 fields) or `name | from | playlist` (3, no end) — the
-  // same optional-"to" `youtube.js`'s own schedule editor already allows, just one line per
-  // entry instead of four separate inputs.
-  function parseScheduleLines(text) {
-    const out = [];
-    for (const raw of String(text || '').split('\n')) {
-      const line = raw.trim();
-      if (!line) continue;
-      const parts = line.split('|').map((s) => s.trim());
-      const name = parts[0];
-      const from = hoursFromTime(parts[1]);
-      const to = parts.length >= 4 ? hoursFromTime(parts[2]) : null;
-      const listId = parsePlaylistId(parts.length >= 4 ? parts[3] : parts[2]);
-      if (from == null || !listId) continue;
-      const entry = { name: name || `from ${hhmm(from)}`, start: from, playlistId: listId };
-      if (to != null) entry.end = to;
-      out.push(entry);
-    }
-    return out;
-  }
-  const formatScheduleLines = (list) => (Array.isArray(list) ? list : [])
-    .map((d) => `${d.name || ''} | ${hhmm(d.start)}`
-      + `${Number.isFinite(Number(d.end)) ? ' | ' + hhmm(d.end) : ''} | ${d.playlistId}`).join('\n');
 
   function summarizePreset(p) {
     const s = p.settings || {};
@@ -573,10 +513,21 @@ export function mountMedia(root, {
   }
 
   let editingPresetId = null;
+  // Row 2.22 (2026-10-14): the preset's form is the module's own (preset_editor.js), remade for each preset edited.
+  let presetEditor = null;
+  function openPresetEditor(type, settings = {}) {
+    try { presetEditor?.destroy(); } catch { /* gone */ }
+    presetEditor = null;
+    const host = el('[data-preset-editor]');
+    if (!host) return;
+    try { presetEditor = mountPresetEditor(host, { type, settings }); }
+    catch (err) { console.error('media: preset editor', err); host.textContent = 'The settings form could not be shown.'; }
+  }
 
   function resetPresetForm() {
     editingPresetId = null;
     el('[data-preset-form]')?.reset();
+    openPresetEditor(el('[data-preset-type]')?.value || 'youtube', {});
     const cancel = el('[data-preset-cancel]');
     if (cancel) cancel.hidden = true;
     const save = el('[data-preset-save]');
@@ -589,10 +540,8 @@ export function mountMedia(root, {
     editingPresetId = id;
     el('[data-preset-name]').value = p.name;
     el('[data-preset-type]').value = p.type;
-    el('[data-preset-playlist]').value = formatPlaylistLines(p.settings?.playlist);
-    el('[data-preset-playlist-id]').value = p.settings?.playlistId || '';
-    el('[data-preset-schedule]').value = formatScheduleLines(p.settings?.schedule);
-    el('[data-preset-shuffle]').checked = p.settings?.shuffle !== false;
+    // The preset's own settings in the module's own form: nothing on a screen changes until Save.
+    openPresetEditor(p.type, p.settings || {});
     el('[data-preset-cancel]').hidden = false;
     el('[data-preset-save]').textContent = 'Save changes';
     presetSay('');
@@ -606,12 +555,7 @@ export function mountMedia(root, {
     const name = el('[data-preset-name]').value.trim();
     if (!name) { presetSay('Give the preset a name.', true); return; }
     const type = el('[data-preset-type]').value;
-    const settings = {
-      playlist: parsePlaylistLines(el('[data-preset-playlist]').value),
-      playlistId: parsePlaylistId(el('[data-preset-playlist-id]').value),
-      schedule: parseScheduleLines(el('[data-preset-schedule]').value),
-      shuffle: el('[data-preset-shuffle]').checked,
-    };
+    const settings = presetEditor ? presetEditor.values() : {};
     try {
       await presetLib.savePreset({ id: editingPresetId, type, name, settings });
       const wasEdit = !!editingPresetId;
@@ -652,8 +596,12 @@ export function mountMedia(root, {
 
   el('[data-preset-form]').addEventListener('submit', (e) => {
     e.preventDefault();
+    // The module's own form sits inside this one, and its Add / Use playlist buttons (and Enter in its boxes) submit
+    // too: only the page's own Save saves the preset.
+    if (!(e.submitter && e.submitter.matches('[data-preset-save]'))) return;
     savePresetFromForm();
   });
+  openPresetEditor('youtube', {});
   el('[data-preset-cancel]').addEventListener('click', () => resetPresetForm());
   // Kept live: a preset saved or deleted from a DIFFERENT screen (or this same section on
   // another tab) should not need a manual reload to show up here — the same expectation
