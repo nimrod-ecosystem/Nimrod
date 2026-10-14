@@ -2580,6 +2580,8 @@ export async function mountKiosk(root, {
     // The panel button lives or dies with the same facts the bar is drawn from, so it is
     // refreshed here rather than at each of the four call sites that redraw the bar.
     try { syncPanelBtn?.(); } catch { /* declared later; harmless before first render */ }
+    // A remount, a swap or a new arrangement can put a different panel under the small clock (2026-10-14).
+    try { dodgeClock(); } catch { /* declared later; harmless before first render */ }
     // What the bar lists is the arrangement's (arrangement.js); the bar itself is the shell's. Read
     // fresh on every draw, because a swap replaces all of it.
     // (2026-10-02: with the scan on a PIECE of the room, no panel's chip is lit -- the piece has one of its
@@ -5297,6 +5299,7 @@ export async function mountKiosk(root, {
   }
   function liftCorners() {
     if (torn || typeof document === 'undefined') return;
+    try { dodgeClock(); } catch { /* the clock's corner; not load-bearing */ }
     let bars = [];
     try { bars = shownBarRects(); } catch { bars = []; }
     for (const btn of kioskEl.querySelectorAll('.k-promote, .k-editc')) {
@@ -5315,6 +5318,61 @@ export async function mountKiosk(root, {
       else btn.style.removeProperty('--k-corner-lift');
     }
   }
+  // *** THE SMALL CLOCK'S CORNER, KEPT CLEAR (2026-10-14, seen on the bench at 1920x1080: Quiz mix's "Play together"
+  // bar sat UNDER the top-right corner clock, unreadable and unpressable). *** The clock floats over the panels, so a
+  // module cannot know it is there. Each panel the clock overlaps gets how far to keep away from it, on the corner it
+  // overlaps: `--k-dodge-tr` / `-tl` / `-br` / `-bl` (px; unset = 0). A module's own corner controls add it
+  // (game_together.js's bar: `top: calc(<its inset> + var(--k-dodge-tr, 0px))`). Full-bleed content (photos, a video)
+  // ignores it and stays full size: only controls move. Measured, not assumed, because the clock's size is the
+  // theme's and the screen's. Runs with `liftCorners` and whenever the screen, a panel or the clock changes size.
+  const DODGE_VARS = Object.freeze({ tr: '--k-dodge-tr', tl: '--k-dodge-tl', br: '--k-dodge-br', bl: '--k-dodge-bl' });
+  // EVERY corner clock, not only this screen's own: a dashboard opened inside the screen draws its own small clock in its
+  // own view (`.view[data-clock-corner]`, kiosk.css), over its own panels.
+  function dodgeClock() {
+    if (torn || typeof document === 'undefined') return;
+    const clocks = [];
+    try {
+      for (const el of root.querySelectorAll('.k-clock')) {
+        const view = el.closest('[data-clock-corner]');
+        if (!view || view.dataset.clockCorner === 'off') continue;
+        const cs = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        if (cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0) clocks.push(r);
+      }
+    } catch { /* none measurable: every panel is told 0 */ }
+    for (const cell of kioskEl.querySelectorAll('.k-cell, .k-pcell, .k-stage')) {
+      const want = {};
+      const r = clocks.length ? cell.getBoundingClientRect() : null;
+      for (const c of clocks) {
+        if (c.right > r.left && c.left < r.right && c.bottom > r.top && c.top < r.bottom) {
+          const right = (c.left + c.right) / 2 > (r.left + r.right) / 2;
+          const top = (c.top + c.bottom) / 2 < (r.top + r.bottom) / 2;
+          const k = `${top ? 't' : 'b'}${right ? 'r' : 'l'}`;
+          want[k] = Math.max(want[k] || 0, Math.ceil(top ? c.bottom - r.top : r.bottom - c.top) + CORNER_GAP_PX);
+        }
+      }
+      for (const [k, v] of Object.entries(DODGE_VARS)) {
+        const px = want[k] > 0 ? `${want[k]}px` : '';
+        if (cell.style.getPropertyValue(v) === px) continue;
+        if (px) cell.style.setProperty(v, px); else cell.style.removeProperty(v);
+      }
+    }
+  }
+  let dodgeWatch = null;
+  try {
+    if (typeof ResizeObserver !== 'undefined') {
+      dodgeWatch = new ResizeObserver(() => { try { dodgeClock(); } catch { /* not load-bearing */ } });
+      for (const el of [root, stageEl, clockEl]) if (el) dodgeWatch.observe(el);
+    }
+  } catch { dodgeWatch = null; }
+  // The clock moved to another corner (or off): same size, so no resize to hear - the corner attribute changing is.
+  let dodgeCorner = null;
+  try {
+    if (typeof MutationObserver !== 'undefined' && kioskEl) {
+      dodgeCorner = new MutationObserver(() => { try { dodgeClock(); } catch { /* not load-bearing */ } });
+      dodgeCorner.observe(kioskEl, { attributes: true, subtree: true, attributeFilter: ['data-clock-corner'] });
+    }
+  } catch { dodgeCorner = null; }
   const onPointerOverForCorners = (e) => {
     const t = e.target;
     if (t instanceof Element && t.closest('.k-cell, .k-pcell, .k-stage')) liftCorners();
@@ -8615,6 +8673,8 @@ export async function mountKiosk(root, {
     // voice open (2026-10-12), for a suite: the host (what is open, the last request, `close`), and where the switch's
     // focus is (the router's; a module opened by voice is the only stop while it shows).
     voiceOpen: () => voiceOpen,
+    // The small clock's corner kept clear (2026-10-14), for a suite: measure now (its watchers never fire in a hidden page).
+    dodgeClock: () => dodgeClock(),
     routerFocus: () => { try { return runtime?.router?.focused?.()?.id || null; } catch { return null; } },
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
@@ -8640,6 +8700,7 @@ export async function mountKiosk(root, {
       // 2026-10-02: Escape-to-smaller, full screen left, and the device level's listener.
       window.removeEventListener('keydown', onEscDemote, true);
       try { cornerWatch.stop(); } catch { /* already gone */ }   // corner on hover (2026-10-09)
+    try { dodgeWatch?.disconnect(); dodgeCorner?.disconnect(); } catch { /* already gone */ }   // the clock's corner (2026-10-14)
       root.removeEventListener('pointerdown', onPressKind, true);
       root.removeEventListener('pointerover', onPointerOverForCorners, true);
       controlsEl.removeEventListener('transitionend', onBarFaded);

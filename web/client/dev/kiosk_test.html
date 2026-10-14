@@ -4542,6 +4542,16 @@ const toTab = (m, id) => {
           check(`*** "Show a small clock" (${dashPath ? 'dashboard path' : 'today\'s path'}): the corner chosen here and the change made there are both saved ***`,
             s.kiosk?.clock?.corner === 'tr' && s.kiosk?.mirror?.corner === 'bl' && JSON.stringify(s.kiosk?.layout?.slots) === JSON.stringify([photos]), JSON.stringify(s.kiosk));
           check(`...(${tag}) the clock is drawn top right`, await settled(() => k.layout().clockCorner === 'tr', 4000), String(k.layout().clockCorner));
+          // 2026-10-14 (seen on the bench: Quiz mix's "Play together" bar under the top-right clock): the panel under the
+          // clock is told how far to keep its top-right controls away (`--k-dodge-tr`), and no other corner.
+          {
+            const dodge = () => { try { k.dodgeClock(); } catch { /* measured below */ }
+              return [...root.querySelectorAll('.k-cell, .k-pcell, .k-stage')].map((c) => ['tr', 'tl', 'br', 'bl']
+                .map((x) => parseFloat(c.style.getPropertyValue(`--k-dodge-${x}`)) || 0)); };
+            const got = dodge();
+            check(`*** ...(${tag}) the panel under the clock gets --k-dodge-tr, and no other corner ***`,
+              got.some((v) => v[0] > 0) && got.every((v) => !v[1] && !v[2] && !v[3]), JSON.stringify(got));
+          }
           check(`...(${tag}) nothing was said`, !k.note(), String(k.note()));
         } else {
           check(`*** "Show a small clock" (${dashPath ? 'dashboard path' : 'today\'s path'}): a clash keeps the other device's corner ***`,

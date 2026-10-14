@@ -67,7 +67,7 @@ const CSS = `
 .qm-table{margin:0 auto 1.5cqmin;padding:0;list-style:none;display:grid;gap:.6cqmin;font-size:clamp(14px,4.5cqmin,52px)}
 .qm-table li{display:flex;gap:1em;justify-content:space-between;min-width:12em}
 .qm-table li[data-top] b{text-decoration:underline}
-.qm-bar{position:absolute;top:clamp(4px,1.2cqmin,14px);right:clamp(4px,1.2cqmin,14px);z-index:5;display:flex;gap:.5em;
+.qm-bar{position:absolute;top:calc(clamp(4px,1.2cqmin,14px) + var(--k-dodge-tr, 0px));right:clamp(4px,1.2cqmin,14px);z-index:5;display:flex;gap:.5em;
   align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:72%;font-size:clamp(12px,2.6cqmin,28px)}
 .qm-bar .wg-btn{font-size:inherit;min-height:max(36px,7cqmin)}
 .qm-chip{background:var(--surface);color:var(--text);border:max(1px,.3cqmin) solid var(--border);border-radius:1em;padding:.2em .7em}
