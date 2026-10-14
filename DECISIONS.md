@@ -2700,3 +2700,22 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   different stages of their development. There just needs to be a delineation between this is what we're pretty
   confident in now vs. these are the new things we're still tweaking."* Code proposes where each part starts; Mike
   rules on the list. (2026-10-14)
+
+## Mike's answers of 2026-10-14 (late): switching dashboards, Presets, bare names, the Lineup's weights
+
+- **Changing dashboard from the screen is an actual switch, the same as opening it from the dashboards page.** Mike:
+  *"It should be opening the dashboard the same as if you went back to the dashboards page. We probably need to make
+  sure it's also not just stacking dashboards on top of each other. It should be an actual switch."* (row 2.89).
+  HOW, proposed by chat and Code, not ruled by Mike: the switch is the dashboards page's own load
+  (`/kiosk.html?profile=<id>`), except while a call, the intercom or a quiet check-in is live, when the in-place swap
+  is kept so nobody is cut off. Mending the in-place swap was argued against (the opened-on screen's handle is read in
+  many places, and the next would drift the same way). (2026-10-14)
+- **Presets: the media page's typed preset form is replaced by YouTube's own settings form.** Mike: *"Just replace the
+  one on the media page with the one from the Youtube settings."* This supersedes the typed
+  `name | HH:MM | HH:MM | playlist` lines. Code's addition, which chat says fits it: editing a preset opens that same
+  form on the preset, not on a live panel, so nothing on a screen changes until it is applied. (2026-10-14)
+- **A dashboard's bare name opens it, only straight after the wake phrase; a dashboard's name wins over a module's.**
+  Chat's suggestion; Mike: *"Sounds good."* (row 2.88, built in 05d244a). (2026-10-14)
+- **Lineup weights, for later and the settings rework:** freshness at the module level from counts that last (a module
+  with fewer plays comes up more often), and weights settable by account, person, device and module. Mike's direction,
+  not yet a design. (2026-10-14)
