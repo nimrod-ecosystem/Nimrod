@@ -2677,3 +2677,26 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   comes later and does not block the swap. (2026-10-14)
 - **Picture codes for watching together stay as built (b59a0ec); the secret key file comes with Drive syncing.
   See-only access comes after the swap.** (2026-10-14)
+
+## Mike's answers of 2026-10-14 (evening): the check-in notice, status icons, a storage limit, live and beta
+
+- **The silent check-in's notice is not hideable, for now.** Mike: *"I don't know about ever. You know how I feel about
+  absolutes. Let's not make it hideable now."* A current choice, not a rule: it can be reopened. (2026-10-14)
+- **The check-in's settings also go in the screen's own menu.** Mike: *"Probably. I think we need to rework the
+  settings menu. I just don't know how yet."* The menu rework is open, with no shape yet. (2026-10-14)
+- **The "a pause was left" notice stays off by default** (4b4f06a), which supersedes that part of the 2026-08-30
+  ruling. The 60 s "helping" hold after a press stays. (2026-10-14)
+- **A small, always-visible status icon for anything that sees, hears, sends or controls,** like a recording icon.
+  Mike: *"I feel like there should be something small that stays up the whole time like the recording icon does when
+  it's recording. We maybe need to work with Design for a system that looks good for this."* His list: recording,
+  intercom, someone else driving, calls, people viewing your dashboard or camera; Code proposes the rest. The look is
+  Design's; the states are Code's. (2026-10-14)
+- **A per-account storage limit, to keep the site free.** Mike: *"Seems like we would need some limit to keep the site
+  free."* The size is a measured default, his to change. (2026-10-14)
+- **Yes to Piper on the bench** (the program and an LJSpeech voice), to give the Pi a voice. (2026-10-14)
+- **The site splits into a "live" part and a "beta" part, both public.** Mike: *"I would like to have something
+  polished and professional as far as this is what's ready now on the site, but I don't think there will ever be a
+  point where everything is polished and professional. It's always going to be a lot of works in progress at
+  different stages of their development. There just needs to be a delineation between this is what we're pretty
+  confident in now vs. these are the new things we're still tweaking."* Code proposes where each part starts; Mike
+  rules on the list. (2026-10-14)
