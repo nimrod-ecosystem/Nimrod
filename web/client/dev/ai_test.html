@@ -22,7 +22,7 @@ otherwise records a SKIP rather than a pass.</p>
 <script type="module">
 import {
   createAI, pickModel, modelSize, readAISettings, writeAISettings, explainFailure,
-  AI_SETTINGS_KEY, DEFAULT_BASE_URL, AI_KEY_KEY, readAIKey, writeAIKey,
+  AI_SETTINGS_KEY, DEFAULT_BASE_URL, AI_KEY_KEY, readAIKey, writeAIKey, cleanKeepAlive, quickestModel,
 } from '../ai.js';
 import { buildPrompt, parseQuestions, checkQuestions, videoMinutes } from '../transcript_quiz.js';
 
@@ -205,6 +205,46 @@ const MODELS = { object: 'list', data: [{ id: 'qwen2.5:7b' }, { id: 'nomic-embed
       const r5 = await createAI({ fetchImpl: f5, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'm' });
       check('*** without contextTokens nothing changes: one standard call, no new field ***',
         f5.calls.length === 1 && f5.calls[0].url.endsWith('/v1/chat/completions') && !('contextTokens' in r5), J(r5));
+    }
+
+    // 2026-10-14 (the storyteller's speed): keep the model loaded between turns, load it ahead, the quickest model.
+    section('chat — keepAlive: Ollama\'s documented /api/chat, per request; warm(); quickestModel');
+    {
+      check('cleanKeepAlive takes Ollama\'s shapes and nothing else', cleanKeepAlive('30m') === '30m' && cleanKeepAlive(' 1h ') === '1h'
+        && cleanKeepAlive(600) === 600 && cleanKeepAlive(-1) === -1 && cleanKeepAlive('0') === '0' && cleanKeepAlive('') === null
+        && cleanKeepAlive('forever') === null && cleanKeepAlive(undefined) === null && cleanKeepAlive(NaN) === null);
+      const f = fakeFetch((url) => (url.endsWith('/api/chat')
+        ? resp(200, { message: { role: 'assistant', content: '{"say":"hi"}' }, done: true })
+        : resp(200, { choices: [{ message: { content: 'std' } }] })));
+      const r = await createAI({ fetchImpl: f, storage: memStorage() }).chat([{ role: 'user', content: 'x' }],
+        { model: 'qwen2.5:3b', json: true, maxTokens: 240, keepAlive: '30m' });
+      const c = f.calls[0];
+      check('*** a call with keepAlive goes to <server>/api/chat with keep_alive, and no num_ctx it did not ask for ***',
+        f.calls.length === 1 && c.url === 'http://127.0.0.1:11434/api/chat' && c.body.keep_alive === '30m'
+          && !('num_ctx' in c.body.options) && c.body.options.num_predict === 240 && c.body.format === 'json', J(c.body));
+      check('...and says it was applied (and no contextTokens field it did not ask for)', r.ok && r.keepAlive === '30m' && !('contextTokens' in r), J(r));
+      const f2 = fakeFetch((url) => (url.endsWith('/api/chat') ? resp(404, 'nope') : resp(200, { choices: [{ message: { content: 'std' } }] })));
+      const r2 = await createAI({ fetchImpl: f2, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'm', keepAlive: '30m' });
+      check('a server without /api/chat: the standard call, keepAlive null (not applied, said)', r2.ok && r2.text === 'std' && r2.keepAlive === null
+        && f2.calls.length === 2, J(r2));
+      const f3 = fakeFetch(() => resp(200, { choices: [{ message: { content: 'std' } }] }));
+      await createAI({ fetchImpl: f3, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'm', keepAlive: 'forever' });
+      check('a keepAlive Ollama would not take is not sent: the standard call, as before', f3.calls.length === 1 && f3.calls[0].url.endsWith('/v1/chat/completions'));
+      const f4 = fakeFetch((url) => (url.endsWith('/models') ? resp(200, MODELS) : resp(200, { model: 'qwen2.5:7b', done: true, done_reason: 'load' })));
+      const w = await createAI({ fetchImpl: f4, storage: memStorage() }).warm('qwen2.5:7b', { keepAlive: '30m' });
+      check('*** warm(): Ollama\'s documented preload - /api/chat with NO messages, and the keep-alive ***', w.ok && w.model === 'qwen2.5:7b'
+        && f4.calls.length === 1 && f4.calls[0].url === 'http://127.0.0.1:11434/api/chat' && J(f4.calls[0].body) === J({ model: 'qwen2.5:7b', messages: [], keep_alive: '30m' }), J(f4.calls));
+      const w2 = await createAI({ fetchImpl: f4, storage: memStorage() }).warm('');
+      check('warm() with no model loads the one chat would use', w2.ok && w2.model === 'qwen2.5:7b' && f4.calls[2].body.model === 'qwen2.5:7b', J(f4.calls.slice(1)));
+      const f5 = fakeFetch(() => resp(200, {}));
+      const w3 = await createAI({ fetchImpl: f5, storage: memStorage({ [AI_SETTINGS_KEY]: J({ baseUrl: 'https://api.example.com/v2' }) }) }).warm('m');
+      check('*** warm() at an address not shaped like Ollama\'s asks NOTHING ***', !w3.ok && w3.skipped && f5.calls.length === 0, J(w3));
+      const w4 = await createAI({ fetchImpl: fakeFetch(() => { throw new TypeError('Failed to fetch'); }), storage: memStorage() }).warm('m');
+      check('warm() with nothing there: a reason, never a throw', !w4.ok && typeof w4.reason === 'string');
+      check('*** quickestModel: the smallest chat model (qwen2.5:3b on the list measured here), never an embedding one ***',
+        quickestModel(['qwen2.5:7b', 'nomic-embed-text:latest', 'qwen2.5:3b']) === 'qwen2.5:3b'
+          && quickestModel(['nomic-embed-text']) === null && quickestModel(['phi3:mini', 'llama3:8b']) === 'llama3:8b'
+          && quickestModel(['b-model', 'a-model']) === 'a-model' && quickestModel([]) === null);
     }
 
     section('chat — failures come back as a plain reason, never a throw');

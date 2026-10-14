@@ -47,7 +47,7 @@
 // the page keep a story on THIS DEVICE (localStorage, `STORY_SAVE_PREFIX`), and the page may also write it to the
 // person's Nimrod folder; never `ctx.state`, which is the server's copy. (The server's line: storage_line.py.)
 
-import { createAI } from './ai.js';
+import { createAI, quickestModel, pickModel, cleanKeepAlive } from './ai.js';
 import { createClaudeAI, readAIBackend } from './nimrod_ai.js';
 import { authHeaders } from './auth.js';
 import { DEFAULT_CHARACTERS } from './character_kit.js';
@@ -68,6 +68,24 @@ export const STORY_FORMAT = 'nimrod-story';          // the tag on a saved story
 // summaryWords: 120 words is a paragraph; a 3B model keeps track of that much reliably.
 // keepTurns: the last 3 exchanges verbatim, so "the door" in the last answer still means the door just mentioned.
 // temperature: 0.8 for a story (the quiz writer's 0.2 is for facts, where variety is a fault).
+//
+// *** SPEED (2026-10-14, Mike: "Yes" to speeding up the storyteller). Measured numbers: STORY_SPEED below. ***
+// talkModel / adventureModel - WHICH MODEL EACH KIND USES (MODEL_CHOICES): 'quick' = the smallest this AI has
+//   (ai.js quickestModel; qwen2.5:3b on Mike's desktop), 'large' = the largest (pickModel), 'device' = whatever this
+//   device's AI settings say (its saved model, else the largest - the behaviour before this). Talk on 'quick', argued:
+//   FOR the big model - it plays a character more richly and keeps to the JSON more reliably. FOR quick (chosen): a
+//   conversation is a reply at a time, and waiting most of a minute for "Hello! How are you?" is not a conversation;
+//   a hello needs no plot. Adventure on 'device' (the big one, as before): FOR quick - twice as fast. FOR the big model
+//   (chosen) - the adventure has to remember a plot through a 120-word summary and invent with it, which is where a
+//   3B model is weakest, and a turn of a story can be waited for. Both a setting.
+// keepAlive - how long the model stays loaded after a turn ('30m'). Ollama's own default is 5 minutes, after which the
+//   next turn waits for a reload (measured 56 s for 3b, 139 s for 7b). FOR 5 minutes: memory goes back sooner (7b is
+//   about 5 GB of Mike's 12 GB). FOR 30 (chosen): a person who reads slowly, waits on a switch's light (6 s a choice,
+//   three laps) or steps away for a cup of tea comes back to a storyteller that answers; it is per request and changes
+//   nothing in Ollama's settings. '' leaves it to the server. A setting.
+// talkReplyTokens / talkSummaryWords - a conversation's reply is one or two sentences and its summary needs less: 240
+//   tokens and 60 words (adventure keeps 400 and 120). Too few cuts the JSON off and the turn is lost, so the measured
+//   length of a talk reply is the floor (STORY_SPEED).
 export const STORY_DEFAULTS = Object.freeze({
   turnTimeoutMs: 120000,
   replyTokens: 400,
@@ -75,7 +93,22 @@ export const STORY_DEFAULTS = Object.freeze({
   keepTurns: 3,
   maxChoices: 4,
   temperature: 0.8,
+  talkModel: 'quick',
+  adventureModel: 'device',
+  keepAlive: '30m',
+  talkReplyTokens: 240,
+  talkSummaryWords: 60,
 });
+// STORY_SPEED - MEASURED 2026-10-14 on Mike's desktop (i5-10400, 12 GB, processor only, Ollama 0.40.4), through this
+// file, 4 turns each:
+//   BEFORE (both kinds on qwen2.5:7b, 400 tokens, Ollama's 5-minute keep-alive, no warm-up), from cold: six turns in a
+//     row hit the 2-minute timeout (twelve minutes) while the 7B model loaded (one load took 5 min 36 s: the machine had
+//     about 5 GB free); once loaded, adventure turns 35-41 s and talk turns 21-38 s.
+//   AFTER: talk on qwen2.5:3b at 240 tokens - warm-up 56 s, then turns of 22, 12, 9 and 14 s (none cut short: every
+//     reply read, 3-4 choices); adventure on qwen2.5:7b - warm-up 127 s, then turns of 49, 27, 32 and 33 s.
+//   So: a conversation about twice as fast, and no turn lost to the load once the panel has warmed up.
+export const MODEL_CHOICES = Object.freeze(['quick', 'device', 'large']);
+export const KEEP_ALIVE_CHOICES = Object.freeze(['', '5m', '15m', '30m', '60m']);
 export const TIMEOUT_CHOICES = Object.freeze([30000, 60000, 120000, 180000, 300000]);
 export const MIN_CHOICES = 2;
 
@@ -255,8 +288,41 @@ const cfgOf = (s) => {
   o.keepTurns = Number(o.keepTurns) >= 0 ? Math.floor(Number(o.keepTurns)) : STORY_DEFAULTS.keepTurns;
   o.maxChoices = Math.max(MIN_CHOICES, Math.min(6, Number(o.maxChoices) || STORY_DEFAULTS.maxChoices));
   o.temperature = Number.isFinite(Number(o.temperature)) ? Number(o.temperature) : STORY_DEFAULTS.temperature;
+  o.talkModel = MODEL_CHOICES.includes(o.talkModel) ? o.talkModel : STORY_DEFAULTS.talkModel;
+  o.adventureModel = MODEL_CHOICES.includes(o.adventureModel) ? o.adventureModel : STORY_DEFAULTS.adventureModel;
+  o.keepAlive = o.keepAlive === '' ? '' : (cleanKeepAlive(o.keepAlive) ?? STORY_DEFAULTS.keepAlive);
+  o.talkReplyTokens = Number(o.talkReplyTokens) > 0 ? Math.floor(Number(o.talkReplyTokens)) : STORY_DEFAULTS.talkReplyTokens;
+  o.talkSummaryWords = Number(o.talkSummaryWords) > 0 ? Math.floor(Number(o.talkSummaryWords)) : STORY_DEFAULTS.talkSummaryWords;
   return o;
 };
+
+/**
+ * The model a kind of story uses, from `choice` (MODEL_CHOICES): '' means "let the AI choose" (ai.js's own rule: this
+ * device's saved model, else the largest). 'quick' / 'large' ask the server's list once; a server that cannot list,
+ * or lists no chat model, gets '' (the AI's own choice), never a failure: the turn still happens.
+ */
+export async function storyModel(ai, choice, { signal } = {}) {
+  if (choice !== 'quick' && choice !== 'large') return '';
+  if (!ai || typeof ai.listModels !== 'function') return '';
+  let l = null;
+  try { l = await ai.listModels({ signal }); } catch { l = null; }
+  if (!l || !l.ok || !Array.isArray(l.models)) return '';
+  return (choice === 'quick' ? quickestModel(l.models) : pickModel(l.models)) || '';
+}
+
+/**
+ * LOAD THE STORYTELLER AHEAD (2026-10-14): ask the AI to load the model `kind` will use, so the first turn does not
+ * also wait for the load. Only an AI with `warm` (ai.js, for an Ollama address); anything else - "Claude, on this
+ * account", another server - is `{ ok: false, skipped: true }` and nothing is asked. No words are sent. Never throws.
+ */
+export async function warmStoryteller({ ai = null, kind = 'adventure', settings = () => ({}), signal } = {}) {
+  if (!ai || typeof ai.warm !== 'function') return { ok: false, skipped: true };
+  const cfg = cfgOf(typeof settings === 'function' ? settings() : settings);
+  try {
+    const model = await storyModel(ai, kind === 'talk' ? cfg.talkModel : cfg.adventureModel, { signal });
+    return await ai.warm(model, { keepAlive: cfg.keepAlive, signal });
+  } catch (err) { return { ok: false, reason: String(err?.message || err) }; }
+}
 
 /**
  * `createStory({ ai, kind, character, theme, hero, settings })`. `ai` has ai.js's `chat`. `settings()` returns any of
@@ -276,11 +342,21 @@ export function createStory({ ai = null, kind = 'adventure', character = 'king',
   let count = 0;
   const who = () => characterInfo(character, theme);
   const opening = () => (k === 'talk' ? [...OPENING_REPLIES] : openingChoices(theme));
+  // A conversation's own, shorter numbers (STORY_DEFAULTS, "SPEED").
+  const words = (cfg) => (k === 'talk' ? cfg.talkSummaryWords : cfg.summaryWords);
+  const tokens = (cfg) => (k === 'talk' ? cfg.talkReplyTokens : cfg.replyTokens);
+  // The model, asked for once a story (and again after a turn that failed: the list may have changed).
+  let picked = null;       // { choice, model }
+  async function modelFor(cfg, signal) {
+    const choice = k === 'talk' ? cfg.talkModel : cfg.adventureModel;
+    if (!picked || picked.choice !== choice) picked = { choice, model: await storyModel(ai, choice, { signal }) };
+    return picked.model;
+  }
 
   function system(cfg) {
     return k === 'talk'
-      ? talkSystem({ character: who(), theme, hero, maxChoices: cfg.maxChoices, summaryWords: cfg.summaryWords })
-      : adventureSystem({ theme, hero, maxChoices: cfg.maxChoices, summaryWords: cfg.summaryWords });
+      ? talkSystem({ character: who(), theme, hero, maxChoices: cfg.maxChoices, summaryWords: words(cfg) })
+      : adventureSystem({ theme, hero, maxChoices: cfg.maxChoices, summaryWords: words(cfg) });
   }
   function messagesFor(userText, cfg) {
     const msgs = [{ role: 'system', content: system(cfg) }];
@@ -306,11 +382,14 @@ export function createStory({ ai = null, kind = 'adventure', character = 'king',
     const started0 = now();
     let r;
     try {
-      r = await ai.chat(messagesFor(userText, cfg), { json: true, temperature: cfg.temperature, maxTokens: cfg.replyTokens,
-        timeoutMs: cfg.turnTimeoutMs, signal });
-    } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
+      const model = await modelFor(cfg, signal);
+      if (signal?.aborted) throw Object.assign(new Error('Canceled.'), { cancel: true });   // stopped while choosing
+      r = await ai.chat(messagesFor(userText, cfg), { json: true, temperature: cfg.temperature, maxTokens: tokens(cfg),
+        timeoutMs: cfg.turnTimeoutMs, signal, ...(model ? { model } : {}), ...(cfg.keepAlive ? { keepAlive: cfg.keepAlive } : {}) });
+    } catch (err) { r = { ok: false, reason: String(err?.message || err), ...(err?.cancel ? { cancelled: true } : {}) }; }
     finally { busy = false; }
     if (!r || !r.ok) {
+      if (!r?.cancelled && !r?.timedOut) picked = null;
       if (r?.cancelled) return { ok: false, cancelled: true, say: '', choices: [...choices], reason: r.reason || 'Canceled.' };
       return fallback(r?.reason || 'The storyteller did not answer.', r?.timedOut ? { timedOut: true } : {});
     }
@@ -324,7 +403,7 @@ export function createStory({ ai = null, kind = 'adventure', character = 'king',
     }
     turns.push({ role: 'user', text: shown }, { role: 'assistant', text: p.say });
     turns = turns.slice(-Math.max(2, cfg.keepTurns * 2 + 2));
-    summary = p.summary ? trimWords(p.summary, cfg.summaryWords) : trimWords(`${summary} ${p.say}`, cfg.summaryWords);
+    summary = p.summary ? trimWords(p.summary, words(cfg)) : trimWords(`${summary} ${p.say}`, words(cfg));
     choices = p.choices.length ? p.choices : (choices.length ? choices : opening());
     lastSay = p.say;
     started = true;
@@ -425,8 +504,10 @@ export async function nextPage(context = {}) {
   const t0 = Date.now();
   let r;
   try {
+    // A page is a story: the adventure's model and keep-alive (STORY_DEFAULTS, "SPEED").
+    const model = await storyModel(ai, cfg.adventureModel, { signal: c.signal });
     r = await ai.chat(msgs, { json: true, temperature: cfg.temperature, maxTokens: PAGE_DEFAULTS.pageTokens,
-      timeoutMs: cfg.turnTimeoutMs, signal: c.signal });
+      timeoutMs: cfg.turnTimeoutMs, signal: c.signal, ...(model ? { model } : {}), ...(cfg.keepAlive ? { keepAlive: cfg.keepAlive } : {}) });
   } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
   if (!r || !r.ok) return { ok: false, fallback: true, text: '', choices: [], reason: r?.reason || 'The storyteller did not answer.',
     ...(r?.timedOut ? { timedOut: true } : {}), ...(r?.cancelled ? { cancelled: true } : {}) };
@@ -470,6 +551,17 @@ export function loadStoryLocal(key, storage = deviceStorage()) {
 }
 export function forgetStoryLocal(key, storage = deviceStorage()) {
   try { storage?.removeItem?.(STORY_SAVE_PREFIX + key); } catch { /* read-only */ }
+}
+
+// HAS THE STORYTELLER ANSWERED ON THIS DEVICE? (2026-10-14) The warm-up's guard: a panel loads the model ahead only on a
+// device where a press has already reached it, so it never reaches for an address this browser has not used (and been
+// allowed to use) before. A time, kept in this browser; nothing about the story.
+export const STORY_ANSWERED_KEY = 'nimrod.storyteller.answered';
+export function markStorytellerAnswered(storage = deviceStorage(), now = Date.now()) {
+  try { storage?.setItem(STORY_ANSWERED_KEY, String(now)); } catch { /* read-only */ }
+}
+export function storytellerAnswered(storage = deviceStorage()) {
+  try { return Number(storage?.getItem(STORY_ANSWERED_KEY)) > 0; } catch { return false; }
 }
 
 /** A story as plain text, for the person's Nimrod folder: what was said, turn by turn. */

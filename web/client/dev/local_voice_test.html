@@ -19,7 +19,7 @@
 
 <script type="module">
 import {
-  createLocalVoice, withLocalVoice, readLocalVoice, writeLocalVoice, cleanLocalVoiceUrl,
+  createLocalVoice, withLocalVoice, readLocalVoice, writeLocalVoice, cleanLocalVoiceUrl, localVoiceFrom, splitForVoice,
   LOCAL_VOICE_KEY, DEFAULT_LOCAL_VOICE_URL, DEFAULT_LOCAL_VOICE_TIMEOUT_MS, LOCAL_VOICE_DEFAULTS,
 } from '../local_voice.js';
 import { createSpeechChannel } from '../output_channels.js';
@@ -143,6 +143,77 @@ section('*** the speech channel, with the local voice first ***');
   await new Promise((r) => setTimeout(r, 30));
   check('*** cancelled while the program is still making it: nothing is said, the request is stopped ***',
     presented.length === n1 && hang.calls[0].init.signal.aborted === true);
+}
+
+section('turned on by the launcher (?localVoice=on), kept on this device');
+{
+  const mem = memStore();
+  check('no word from the launcher: the saved setting stands (off)', localVoiceFrom({ search: '?pair=1', storage: mem }).on === false && !mem.m[LOCAL_VOICE_KEY]);
+  check('?localVoice=on turns it on and keeps it', localVoiceFrom({ search: '?pair=1&localVoice=on', storage: mem }).on === true
+    && readLocalVoice(mem).on === true);
+  check('...and a later load without the word keeps it on', localVoiceFrom({ search: '', storage: mem }).on === true);
+  check('anything else is ignored (not a way to set an address)', localVoiceFrom({ search: '?localVoice=http://10.0.0.5:1', storage: mem }).url === DEFAULT_LOCAL_VOICE_URL
+    && readLocalVoice(mem).on === true);
+  check('?localVoice=off turns it off', localVoiceFrom({ search: '?localVoice=off', storage: mem }).on === false);
+  const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+  check('blocked storage: off, never a throw', localVoiceFrom({ search: '?localVoice=on', storage: broken }).on === false);
+  check('the timeout is 6 s (measured on the bench: one sentence took up to 5.6 s)', DEFAULT_LOCAL_VOICE_TIMEOUT_MS === 6000);
+}
+
+section('*** a sentence at a time ***');
+{
+  check('nothing -> no pieces', splitForVoice('').length === 0 && splitForVoice('   ').length === 0);
+  check('one sentence is one piece', JSON.stringify(splitForVoice('Hello there')) === '["Hello there"]');
+  check('two short sentences are one piece', JSON.stringify(splitForVoice('Good morning! Mike is calling you.')) === '["Good morning! Mike is calling you."]');
+  const long = 'You walk down the lane to the bakery, where the smell of warm bread drifts through the open door. '
+    + 'The baker waves you inside and points at a big basket of fresh rolls on the counter. "Would you like one of these, my dear?" she asks with a smile.';
+  const p = splitForVoice(long);
+  check('a narration is split at its sentences, nothing lost', p.length === 3 && p[0].endsWith('open door.') && p.join(' ') === long.replace(/\s+/g, ' ').trim(), JSON.stringify(p));
+  check('...a quote mark stays with its sentence', p[2] === '"Would you like one of these, my dear?" she asks with a smile.', JSON.stringify(p));
+  check('...and short sentences ride together', JSON.stringify(splitForVoice('The baker waves. "Would you like one?" she asks.')) === '["The baker waves. \\"Would you like one?\\" she asks."]');
+  const huge = `${'word '.repeat(150)}end.`;
+  const h = splitForVoice(huge);
+  check('a sentence longer than 300 characters is split at a space, every piece fits', h.length >= 2 && h.every((x) => x.length <= 300)
+    && h.join(' ').replace(/\s+/g, ' ') === huge.trim(), JSON.stringify(h.map((x) => x.length)));
+  const comma = `${'a'.repeat(200)}, ${'b'.repeat(200)}.`;
+  check('...at a comma when there is one', splitForVoice(comma)[0] === `${'a'.repeat(200)},`);
+
+  const mem = memStore();
+  writeLocalVoice({ on: true }, mem);
+  const presented = [];
+  let playing = false;
+  const inner = { name: 'speech', concurrency: 1, present(item, { done }) { presented.push(item); playing = true; setTimeout(() => { playing = false; done(); }, 5); return () => {}; } };
+  // A program that says which sentence it was asked for (and whether one was playing then), and can fail on one.
+  const asked = [];
+  const prog = (failOn = '') => async (url, init = {}) => {
+    const text = JSON.parse(init.body).text;
+    asked.push({ text, at: presented.length, playing });
+    if (failOn && text.includes(failOn)) throw new TypeError('Failed to fetch');
+    return new Response(wav(), { headers: { 'Content-Type': 'audio/wav' } });
+  };
+  let n = 0;
+  const make = (f) => withLocalVoice(inner, createLocalVoice({ fetchImpl: f, storage: mem }), { createURL: () => `blob:p/${n++}`, revokeURL: () => {} });
+  let doneN = 0;
+  await new Promise((res) => make(prog()).present({ id: 's1', text: long, data: null }, { done: () => { doneN++; res(); } }));
+  check('*** each sentence is played in turn, in its own sound, and done is said once ***', presented.length === 3 && doneN === 1
+    && presented.every((x, i) => x.text === p[i] && /^blob:p\//.test(x.data.clips[0])), JSON.stringify(presented.map((x) => x.text)));
+  check('*** the next sentence is asked for while this one plays ***', asked.length === 3 && !asked[0].playing
+    && asked[1].playing && asked[1].at === 1 && asked[2].playing && asked[2].at === 2, JSON.stringify(asked.map((a) => [a.at, a.playing])));
+
+  presented.length = 0; asked.length = 0;
+  await new Promise((res) => make(prog('baker waves')).present({ id: 's2', text: long, data: null }, { done: res }));
+  check('*** a sentence the program cannot make: the rest goes to the browser\'s voice in one go ***', presented.length === 2
+    && presented[0].data.clips.length === 1 && presented[1].text === `${p[1]} ${p[2]}` && !presented[1].data, JSON.stringify(presented.map((x) => [x.text, x.data])));
+
+  presented.length = 0; asked.length = 0;
+  let cancel = null;
+  const slowInner = { name: 'speech', concurrency: 1, present(item, { done }) { presented.push(item); const t = setTimeout(done, 200); return () => { clearTimeout(t); presented.stopped = true; }; } };
+  cancel = withLocalVoice(slowInner, createLocalVoice({ fetchImpl: prog(), storage: mem }), { createURL: () => 'blob:c', revokeURL: () => {} })
+    .present({ id: 's3', text: long, data: null }, { done: () => { presented.doneCalled = true; } });
+  await new Promise((r) => setTimeout(r, 60));
+  cancel();
+  await new Promise((r) => setTimeout(r, 300));
+  check('*** cancelled during the first sentence: it stops, and nothing more is said ***', presented.length === 1 && presented.stopped === true);
 }
 
 section('*** end to end through the real speech channel: the sound plays, the voice is not used ***');

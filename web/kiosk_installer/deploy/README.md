@@ -194,6 +194,26 @@ for this screen**. The copy keeps the drive's folder layout, so albums mean the 
 The agent's own settings are in `~/.config/nimrod/fallback-agent.env` (folder, `NIMROD_MEDIA_PORT=8771`, address
 `127.0.0.1`); `systemctl --user status nimrod-fallback-agent`. It never writes history: the drive's agent does.
 
+## A voice for the screen: Piper (opt-in, 2026-10-14)
+
+A Pi's Chromium has no voice of its own (no speech-dispatcher), so the screen's spoken lines are silent there.
+`NIMROD_TTS=1` installs `web/tts_service/tts_service.py` as the user unit `nimrod-tts`: Piper text to speech on
+`127.0.0.1:8794`, this computer only (it refuses any other address), answering only the kiosk's website. It
+**downloads** piper-tts and its parts (about 190 MB, its own venv; **piper-tts is GPL-3.0**) and the
+`en_US-ljspeech-medium` voice (about 61 MB; LJ Speech is public domain; not the "lessac" voices, research-only data).
+
+```bash
+NIMROD_TTS=1 NIMROD_LOCK_POLICY=1 bash install-linux.sh https://nimrodecosystem.com/kiosk.html
+```
+
+The kiosk's unit gets `NIMROD_LOCAL_VOICE=on`; the launcher passes `localVoice=on` to the page only when Chromium's
+local-network policy exists (`NIMROD_LOCK_POLICY=1`, step 6), otherwise `off`, so no "Block / Allow" box is left on
+the screen. Settings in `~/.config/nimrod/tts.env` (`NIMROD_TTS_DIR`, `NIMROD_TTS_MODEL`, `NIMROD_TTS_PORT`,
+`NIMROD_TTS_SITES`). Measured on the bench Pi 400 with the kiosk running: a short sentence 0.7-1.7 s, a 130-character
+sentence 2.2-5.6 s; the program holds about 370 MB of memory. The page speaks long text a sentence at a time and gives
+up on a sentence after 6 s (the browser's voice then says it). Undo: `systemctl --user disable --now nimrod-tts`, then
+remove `~/.config/systemd/user/nimrod-tts.service` and the folder.
+
 ## Windows (Task Scheduler)
 
 ```powershell

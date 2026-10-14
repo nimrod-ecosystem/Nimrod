@@ -36,6 +36,7 @@ import { createAudioBus } from './audio_bus.js';
 import { createScreenSpeech } from './screen_speech.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
+import { createLocalVoice, withLocalVoice, localVoiceFrom } from './local_voice.js';
 import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
@@ -1466,9 +1467,18 @@ export async function mountKiosk(root, {
     // is a different feature with its own consent question, not a symmetrical half of this
     // one. The sending half carries no such question: it puts a message in the account's own
     // mailbox and nothing about this room changes.
+    // *** A VOICE FROM THIS COMPUTER (2026-10-14, local_voice.js; the program is tts_service.py). *** Off unless this
+    // device turned it on (the launcher's `?localVoice=on`); when on, what the screen says is made by the program and
+    // played through the speech channel below, a sentence at a time, and anything it cannot make is the browser's voice.
+    // Wrapped OUTSIDE the subtitles' tap, so each sentence is captioned when it is heard, not while it is being made.
+    const voiceOf = (chs) => {
+      try { localVoiceFrom(); if (chs.speech) chs.speech = withLocalVoice(chs.speech, createLocalVoice()); }
+      catch (err) { console.error('kiosk: local voice', err); }
+      return chs;
+    };
     output = createOutputBus({
       bus,
-      channels: defaultChannels({
+      channels: voiceOf(defaultChannels({
         audio,
         screenSpeech,
         // WIRED TO `push`, 2026-09-17 — the legacy /api/user-events alias's POST handler
@@ -1480,7 +1490,7 @@ export async function mountKiosk(root, {
         // Neon-quota polling default.
         events: createEvents({ url: `/api/user-events/${REMOTE_STREAM}`, user, push }),
         captions: subtitles,
-      }),
+      })),
     });
   } catch (err) {
     // A screen that cannot speak is still a screen. Modules treat `output` as optional.

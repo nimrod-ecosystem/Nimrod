@@ -25,6 +25,8 @@
 // *** OFF UNTIL A STORYTELLER IS SET UP, AND IT SAYS SO. *** Nothing here calls the AI until somebody presses Start
 // (ai.js's rule: a page that reached for a local address on every mount could put a permission prompt on a screen
 // nobody is there to answer). If nothing answers the first time, the panel says how to set one up, never an error.
+// THE ONE EXCEPTION (2026-10-14, the storyteller's speed): once a press HAS reached the storyteller on this device, the
+// panel asks Ollama to load the model when it opens (`warmUp`, a setting; no words are sent; ADVENTURE_DEFAULTS).
 //
 // *** NEVER A BLOCKED SCREEN. *** A turn that takes longer than `turnTimeoutMs` (a setting) says "The storyteller
 // isn't answering; here are the choices again." with the choices still there. While it is thinking, "Stop waiting"
@@ -39,6 +41,7 @@ import { registerModule } from '../module.js';
 import {
   createStory, storyAIFor, characterInfo, CHARACTER_IDS, townTheme, TIMEOUT_CHOICES, STORY_DEFAULTS, STORY_SOURCE,
   saveStoryLocal, loadStoryLocal, forgetStoryLocal, storyText, NO_AI_LINE,
+  warmStoryteller, markStorytellerAnswered, storytellerAnswered,
 } from '../story_ai.js';
 import { SPEECH_TOPICS, DELIVERY_TOPIC } from '../nimrod_ai.js';
 import { DEFAULT_CHARACTERS, figureSvg, courtOutfit } from '../character_kit.js';
@@ -79,7 +82,24 @@ export const ADVENTURE_DEFAULTS = Object.freeze({
   sayChoice: true,
   turnTimeoutMs: STORY_DEFAULTS.turnTimeoutMs,
   keepOnDevice: true,
+  // SPEED (2026-10-14; story_ai.js STORY_DEFAULTS argues each). warmUp, argued: FOR off - loading a model takes the AI's
+  // computer a minute or two and gigabytes of memory, for a panel that may sit unused. FOR on (chosen, Mike's "yes" to
+  // speeding it up): the first turn otherwise waits for the load too (139 s for the 7B model on Mike's desktop), longer
+  // than the 2-minute timeout. Guarded: only once this device's storyteller has answered a press before, so a panel
+  // never reaches for a local address that has never been used from here (ai.js's rule: no permission box on a
+  // screen nobody can answer), and at most once every WARM_EVERY_MS.
+  talkModel: STORY_DEFAULTS.talkModel,
+  adventureModel: STORY_DEFAULTS.adventureModel,
+  keepAlive: STORY_DEFAULTS.keepAlive,
+  warmUp: true,
 });
+// A warm-up at most this often, per kind: inside the keep-alive the model is still loaded, so asking again is waste.
+const WARM_EVERY_MS = 10 * 60 * 1000;
+const MODEL_OPTIONS = [
+  { value: 'quick', label: 'The quickest model the AI has (the smallest)' },
+  { value: 'device', label: 'The model this screen’s AI settings choose' },
+  { value: 'large', label: 'The largest model the AI has' },
+];
 
 const SETTINGS = [
   { key: 'readAloud', label: 'Read the story aloud', default: true, level: 'essential', onLabel: 'On', offLabel: 'Off' },
@@ -100,6 +120,19 @@ const SETTINGS = [
   { key: 'turnTimeoutMs', label: 'How long to wait for the storyteller', kind: 'choice', default: STORY_DEFAULTS.turnTimeoutMs,
     level: 'advanced', options: TIMEOUT_CHOICES.map((v) => ({ value: v, label: v < 60000 ? `${v / 1000} seconds` : `${v / 60000} minute${v === 60000 ? '' : 's'}` })),
     note: 'After this the choices are offered again. A small model on a slow computer needs longer.' },
+  { key: 'talkModel', label: 'Talking with somebody in town uses', kind: 'choice', default: STORY_DEFAULTS.talkModel,
+    level: 'advanced', options: MODEL_OPTIONS,
+    note: 'A conversation is a reply at a time, so the quickest model is the default. On a computer with Ollama, the smallest is often twice as fast.' },
+  { key: 'adventureModel', label: 'An adventure uses', kind: 'choice', default: STORY_DEFAULTS.adventureModel,
+    level: 'advanced', options: MODEL_OPTIONS,
+    note: 'A bigger model keeps track of the story better, and is slower.' },
+  { key: 'keepAlive', label: 'Keep the storyteller ready between turns for', kind: 'choice', default: STORY_DEFAULTS.keepAlive,
+    level: 'advanced', options: [{ value: '', label: 'However long the AI program decides (Ollama: 5 minutes)' },
+      ...['5m', '15m', '30m', '60m'].map((v) => ({ value: v, label: `${parseInt(v, 10)} minutes` }))],
+    note: 'Ollama only. After this the AI program puts the model away, and the next turn waits a minute or two while it loads. Longer uses the AI computer’s memory for longer.' },
+  { key: 'warmUp', label: 'Get the storyteller ready when this panel opens', default: true, level: 'advanced',
+    onLabel: 'Yes', offLabel: 'No: only when a story starts',
+    note: 'Ollama only, and only once the storyteller has answered on this device. No words are sent; the model is loaded so the first turn is quicker.' },
   { key: 'keepOnDevice', label: 'Keep the story on this device, to carry on later', default: true, level: 'standard',
     onLabel: 'Yes', offLabel: 'No: forget it when the panel closes',
     note: 'Only on this device. It is never sent to the website’s server.' },
@@ -357,6 +390,8 @@ registerModule(
       choices = Array.isArray(r.choices) ? r.choices : choices;
       cursor = -1;
       if (r.ok && !r.refused && !r.care) remember();
+      if (r.ok && !r.care) markStorytellerAnswered(ctx.aiStorage || undefined);   // the warm-up's guard
+      if (!r.ok && r.timedOut) warmAhead(storyKind);   // still loading, most likely: let it finish
       render();
       speak(say);
       announceGrammar();
@@ -367,8 +402,34 @@ registerModule(
       character = CHARACTER_IDS.includes(who) ? who : 'king';
       ai = storyAIFor(ctx);
       story = createStory({ ai, kind: storyKind, character, theme: theme(), hero: storyKind === 'adventure' ? hero : '',
-        settings: () => ({ turnTimeoutMs: Number(cfg.turnTimeoutMs) || STORY_DEFAULTS.turnTimeoutMs }) });
+        settings: storySettings });
       return story;
+    }
+    const storySettings = () => ({ turnTimeoutMs: Number(cfg.turnTimeoutMs) || STORY_DEFAULTS.turnTimeoutMs,
+      talkModel: cfg.talkModel, adventureModel: cfg.adventureModel, keepAlive: cfg.keepAlive });
+    // LOAD THE STORYTELLER AHEAD (ADVENTURE_DEFAULTS.warmUp argues it): when the panel opens or comes back into view,
+    // the model the next story will most likely use (the kept story's kind, else an adventure's) - silently; a failure
+    // is not shown (the first turn says what is wrong, as before).
+    const warmedAt = {};
+    let warming = null;
+    // `after`: a turn that timed out (a press just reached the storyteller, so the guard is met): the load carries on
+    // in the background with the warm-up's longer wait, instead of every press starting it again and giving up at the
+    // turn's timeout (MEASURED 2026-10-14, before this: six turns in a row timed out over twelve minutes while the 7B
+    // model loaded).
+    function warmAhead(after = null) {
+      if (torn || warming || cfg.warmUp === false) return;
+      if (!after && (hidden || view === 'story')) return;
+      const storage = ctx.aiStorage || undefined;
+      if (!after && !storytellerAnswered(storage)) return;
+      const saved = cfg.keepOnDevice ? loadStoryLocal(saveKey()) : null;
+      const kind = after || (saved?.kind === 'talk' ? 'talk' : 'adventure');
+      if (Date.now() - (warmedAt[kind] || 0) < WARM_EVERY_MS) return;
+      warmedAt[kind] = Date.now();
+      warming = new AbortController();
+      let wai = null;
+      try { wai = storyAIFor(ctx); } catch { wai = null; }
+      warmStoryteller({ ai: wai, kind, settings: storySettings, signal: warming.signal })
+        .catch(() => null).finally(() => { warming = null; });
     }
     function begin(kind, who) {
       newStory(kind, who);
@@ -563,6 +624,7 @@ registerModule(
         on(DELIVERY_TOPIC, (rec) => { if (holding && rec && saidId != null && rec.id === saidId) release(); });
         render();
         loadHero();
+        warmAhead();
       },
       onResize() {},
       onHide() {
@@ -571,10 +633,11 @@ registerModule(
         if (saidId != null) { try { ctx.output?.cancel?.(saidId); } catch { /* said */ } saidId = null; }
         announceGrammar();
       },
-      onShow() { hidden = false; announceGrammar(); if (view === 'story' && !thinking) startLight(); },
+      onShow() { hidden = false; announceGrammar(); if (view === 'story' && !thinking) startLight(); warmAhead(); },
       destroy() {
         torn = true;
         stopLight();
+        if (warming) { try { warming.abort(); } catch { /* done */ } }
         clearTimeout(holdTimer);
         if (inflight) { try { inflight.abort(); } catch { /* done */ } }
         if (saidId != null) { try { ctx.output?.cancel?.(saidId); } catch { /* said */ } }

@@ -23,6 +23,7 @@ import {
   needsCare, storyAIFor, saveStoryLocal, loadStoryLocal, forgetStoryLocal, storyText,
   STORY_DEFAULTS, TIMEOUT_CHOICES, FALLBACK_LINE, REFUSE_LINE, CARE_LINE, NO_AI_LINE, STORY_FORMAT, STORY_SAVE_PREFIX,
   CHARACTER_IDS, PERSONAS, SAFETY_RULES, OPENING_REPLIES,
+  MODEL_CHOICES, KEEP_ALIVE_CHOICES, storyModel, warmStoryteller, markStorytellerAnswered, storytellerAnswered, STORY_ANSWERED_KEY,
 } from '../story_ai.js';
 import { createAI } from '../ai.js';
 import { AI_BACKEND_KEY } from '../nimrod_ai.js';
@@ -73,7 +74,9 @@ section('*** a CONVERSATION turn with a town character ***');
   check('...with the safety rules in it', sys.includes(SAFETY_RULES));
   check('...asking for one JSON object, and the call asks for JSON', /ONE JSON object/.test(sys) && ai.calls[0].opts.json === true);
   check('*** the timeout is the setting, passed to every call ***', ai.calls[0].opts.timeoutMs === 45000, JSON.stringify(ai.calls[0].opts));
-  check('a reply is capped (max tokens) so a runaway model stops', ai.calls[0].opts.maxTokens === STORY_DEFAULTS.replyTokens);
+  check('a reply is capped (max tokens) so a runaway model stops: a conversation\'s shorter cap (2026-10-14)',
+    ai.calls[0].opts.maxTokens === STORY_DEFAULTS.talkReplyTokens && STORY_DEFAULTS.talkReplyTokens < STORY_DEFAULTS.replyTokens);
+  check('...and a conversation\'s shorter summary', sys.includes(`at most ${STORY_DEFAULTS.talkSummaryWords} words`), sys.slice(-400));
   const r2 = await s.choose(1);
   check('a chosen reply is said AS the person (no "I choose:" in a conversation)', lastUser(ai.calls[1]) === 'What are you growing?', lastUser(ai.calls[1]));
   check('the summary the model kept is sent back as "what has happened so far"',
@@ -266,6 +269,65 @@ section('*** Story time\'s seam: nextPage(context) ***');
   const r4 = await nextPage({ ctx: { storyAI: null, ai: null, aiStorage: memStore() }, ai: { nope: true } });
   check('something that is not an AI: says so, never a throw', !r4.ok && r4.noAI);
   check('the page prompt keeps the safety rules', pageSystem({}).includes(SAFETY_RULES));
+}
+
+// =====================================================================
+section('*** SPEED (2026-10-14): which model each kind uses, keeping it loaded, loading it ahead ***');
+{
+  const LIST = ['qwen2.5:7b', 'nomic-embed-text:latest', 'qwen2.5:3b'];
+  // A stub with a model list and a warm(), recording both.
+  const listing = (replies) => {
+    const a = stubAI(replies);
+    a.lists = 0; a.warmed = [];
+    a.listModels = async () => { a.lists++; return { ok: true, models: LIST }; };
+    a.warm = async (model, opts = {}) => { a.warmed.push({ model, ...opts }); return { ok: true, model }; };
+    return a;
+  };
+  check('the defaults: talk on the quickest model, adventure on this device\'s choice, kept loaded 30 minutes',
+    STORY_DEFAULTS.talkModel === 'quick' && STORY_DEFAULTS.adventureModel === 'device' && STORY_DEFAULTS.keepAlive === '30m'
+      && MODEL_CHOICES.join() === 'quick,device,large' && KEEP_ALIVE_CHOICES.includes(''));
+  const ai = listing([turn('Hello!', ['Hi', 'Bye']), turn('Again!', ['Hi', 'Bye'])]);
+  const talk = createStory({ ai, kind: 'talk', character: 'king' });
+  await talk.start(); await talk.choose(0);
+  check('*** a conversation asks for the quickest model (qwen2.5:3b), with the keep-alive ***', ai.calls[0].opts.model === 'qwen2.5:3b'
+    && ai.calls[0].opts.keepAlive === '30m', JSON.stringify(ai.calls[0].opts));
+  check('...the model list is asked once a story, not every turn', ai.lists === 1 && ai.calls[1].opts.model === 'qwen2.5:3b');
+  const ai2 = listing([turn('Once.', ['a', 'b'])]);
+  await createStory({ ai: ai2, kind: 'adventure' }).start();
+  check('*** an adventure leaves the model to this device\'s AI settings (no model named, no list asked) ***',
+    !('model' in ai2.calls[0].opts) && ai2.lists === 0 && ai2.calls[0].opts.maxTokens === STORY_DEFAULTS.replyTokens, JSON.stringify(ai2.calls[0].opts));
+  const ai3 = listing([turn('Once.', ['a', 'b'])]);
+  await createStory({ ai: ai3, kind: 'adventure', settings: () => ({ adventureModel: 'large', keepAlive: '' }) }).start();
+  check('both are settings: "large" names the largest; keep-alive "" sends none (the server decides)',
+    ai3.calls[0].opts.model === 'qwen2.5:7b' && !('keepAlive' in ai3.calls[0].opts), JSON.stringify(ai3.calls[0].opts));
+  const ai4 = listing([turn('Hi.', ['a', 'b'])]);
+  await createStory({ ai: ai4, kind: 'talk', settings: () => ({ talkModel: 'nonsense', keepAlive: 'forever' }) }).start();
+  check('nonsense settings read as the defaults', ai4.calls[0].opts.model === 'qwen2.5:3b' && ai4.calls[0].opts.keepAlive === '30m', JSON.stringify(ai4.calls[0].opts));
+  const plain = stubAI([turn('Hi.', ['a', 'b'])]);
+  await createStory({ ai: plain, kind: 'talk' }).start();
+  check('an AI that cannot list its models (Claude, on this account): no model named, the turn still happens', !('model' in plain.calls[0].opts));
+  const ai5 = listing([{ ok: false, reason: 'model gone' }, turn('Back.', ['a', 'b'])]);
+  const s5 = createStory({ ai: ai5, kind: 'talk' });
+  await s5.start(); await s5.say('hello');
+  check('after a failed turn the list is asked again (a model may have gone)', ai5.lists === 2);
+  check('storyModel: quick / large / device', await storyModel(ai5, 'quick') === 'qwen2.5:3b' && await storyModel(ai5, 'large') === 'qwen2.5:7b'
+    && await storyModel(ai5, 'device') === '' && await storyModel(null, 'quick') === '');
+  const ai6 = listing([]);
+  const w = await warmStoryteller({ ai: ai6, kind: 'talk' });
+  const w2 = await warmStoryteller({ ai: ai6, kind: 'adventure', settings: () => ({ keepAlive: '60m' }) });
+  check('*** warmStoryteller loads the model that kind will use, with the keep-alive ***', w.ok && ai6.warmed[0].model === 'qwen2.5:3b'
+    && ai6.warmed[0].keepAlive === '30m' && w2.ok && ai6.warmed[1].model === '' && ai6.warmed[1].keepAlive === '60m', JSON.stringify(ai6.warmed));
+  check('an AI without warm (Claude, another server): skipped, nothing asked', (await warmStoryteller({ ai: stubAI([]) })).skipped === true
+    && (await warmStoryteller({})).skipped === true);
+  const mem = memStore();
+  check('"has the storyteller answered here?": no, until a turn marks it', storytellerAnswered(mem) === false);
+  markStorytellerAnswered(mem, 1234);
+  check('...yes after, kept under its own key (a time, nothing about the story)', storytellerAnswered(mem) === true && mem.m[STORY_ANSWERED_KEY] === '1234');
+  const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+  check('blocked storage: no, never a throw', storytellerAnswered(broken) === false && (markStorytellerAnswered(broken), true));
+  const page = listing([turn('Page.', [])]);
+  await nextPage({ ai: page, settings: { adventureModel: 'quick' } });
+  check('Story time\'s pages use the adventure\'s model setting and the keep-alive', page.calls[0].opts.model === 'qwen2.5:3b' && page.calls[0].opts.keepAlive === '30m');
 }
 
 // =====================================================================
