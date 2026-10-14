@@ -1,0 +1,19 @@
+[Unit]
+Description=Nimrod voice - Piper text to speech for the kiosk page (127.0.0.1:8794, this computer only)
+Documentation=file:%h/.local/bin/nimrod-tts-service.py
+
+[Service]
+Type=simple
+# The folder (its venv has piper-tts), the voice, the port and the allowed website are in this file, not here
+# (install-linux.sh NIMROD_TTS=1 writes it, and keeps an existing one): NIMROD_TTS_DIR, NIMROD_TTS_MODEL,
+# NIMROD_TTS_PORT (default 8794, local_voice.js's address), NIMROD_TTS_SITES (the kiosk's website).
+# The program refuses to listen anywhere but 127.0.0.1 / ::1; there is no setting for that, on purpose.
+EnvironmentFile=%h/.config/nimrod/tts.env
+Environment=PYTHONUNBUFFERED=1
+# $$ hands the variables to the shell, so the venv's own python runs the program (a variable cannot be the first word).
+ExecStart=/bin/sh -c 'exec "$${NIMROD_TTS_DIR}/venv/bin/python" "%h/.local/bin/nimrod-tts-service.py" --model "$${NIMROD_TTS_MODEL}" --port "$${NIMROD_TTS_PORT:-8794}" --allow-origin "$${NIMROD_TTS_SITES:-https://nimrodecosystem.com}" --quiet'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

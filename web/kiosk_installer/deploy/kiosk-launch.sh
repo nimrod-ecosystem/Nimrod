@@ -57,6 +57,14 @@ if [ -n "$LOCK_HELPER_URL" ]; then
   if [ -f "$POLICY_FILE" ]; then LH="$LOCK_HELPER_URL"; else LH="off"; LOCK_HELPER_URL=""; fi
   case "$PAGE" in *\?*) PAGE="$PAGE&lockHelper=$LH" ;; *) PAGE="$PAGE?lockHelper=$LH" ;; esac
 fi
+# A VOICE FROM THIS COMPUTER (2026-10-14, tts_service.py / local_voice.js). NIMROD_LOCAL_VOICE=on (install-linux.sh
+# NIMROD_TTS=1 puts it in the unit) adds `localVoice=on`, which the page keeps in its own storage - for the same reason
+# as the lock helper, ONLY when Chromium's local-network policy is there; without it, `localVoice=off`, so no
+# "Block / Allow" box is left on the screen. Unset: nothing is added and the page's own setting stands.
+if [ -n "${NIMROD_LOCAL_VOICE:-}" ]; then
+  if [ "$NIMROD_LOCAL_VOICE" = "on" ] && [ -f "$POLICY_FILE" ]; then LV="on"; else LV="off"; fi
+  case "$PAGE" in *\?*) PAGE="$PAGE&localVoice=$LV" ;; *) PAGE="$PAGE?localVoice=$LV" ;; esac
+fi
 # AFTER A RESTART (row 2.70, 2026-10-09): `boot=1` tells the page this is a restart -- the computer started, or Chromium
 # was relaunched after a crash -- so it opens the dashboard chosen under "After a restart, open" (restart.js). The page
 # takes the flag out of its address at once, so its own reloads (a new version, a refresh) are not restarts. Every

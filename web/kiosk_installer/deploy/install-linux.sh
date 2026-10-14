@@ -82,6 +82,11 @@ SuccessExitStatus=75"
 else
   LOCK_UNIT_LINES=""
 fi
+# (2026-10-14) With the voice (step 10, NIMROD_TTS=1): the launcher tells the page to use it (kiosk-launch.sh).
+if [ "${NIMROD_TTS:-0}" = "1" ]; then
+  LOCK_UNIT_LINES="$LOCK_UNIT_LINES
+Environment=NIMROD_LOCAL_VOICE=on"
+fi
 cat > "$UNIT_FILE" <<EOF
 [Unit]
 Description=Nimrod kiosk — the dashboard, always on screen
@@ -375,6 +380,55 @@ EOF
   systemctl --user restart nimrod-fallback-agent.service || true
   echo "fallback agent on: http://localhost:$FALLBACK_PORT serves $FALLBACK_DIR (systemctl --user status nimrod-fallback-agent)"
   echo "  on the screen: Media / Sources, add http://localhost:$FALLBACK_PORT; then This screen, Backup folder for this screen"
+fi
+
+# 10. (2026-10-14, Mike: "Yes to Piper on the bench") A VOICE FOR THE SCREEN: Piper text to speech on 127.0.0.1:8794, the
+#     program the page's local_voice.js asks (a Pi's Chromium has no voice of its own without speech-dispatcher). Only
+#     when asked: NIMROD_TTS=1. It DOWNLOADS: piper-tts and its parts (about 190 MB, into its own venv; piper-tts is
+#     GPL-3.0) and the en_US-ljspeech-medium voice (about 61 MB; LJ Speech is public domain - NOT the "lessac" voices,
+#     research-only data). Nothing system-wide, no sudo: a USER unit, its own folder. Already there = not downloaded again.
+#       NIMROD_TTS_DIR    default ~/nimrod-tts (venv/ and voices/ inside it)
+#       NIMROD_TTS_VOICE  default en_US-ljspeech-medium
+#       NIMROD_TTS_PORT   default 8794 (local_voice.js's address)
+#     The page uses it only when told: the kiosk's unit gets NIMROD_LOCAL_VOICE=on (step 2), and the launcher passes
+#     `localVoice=on` ONLY when Chromium's local-network policy is there (step 6, NIMROD_LOCK_POLICY=1); without it the
+#     page is told `off`, so Chromium never leaves a "Block / Allow" box on the screen.
+#     Undo: systemctl --user disable --now nimrod-tts; rm ~/.config/systemd/user/nimrod-tts.service; and the folder.
+if [ "${NIMROD_TTS:-0}" = "1" ]; then
+  TTS_DIR="${NIMROD_TTS_DIR:-$HOME/nimrod-tts}"
+  TTS_VOICE="${NIMROD_TTS_VOICE:-en_US-ljspeech-medium}"
+  TTS_PORT="${NIMROD_TTS_PORT:-8794}"
+  case "$TTS_PORT" in ''|*[!0-9]*) echo "NIMROD_TTS_PORT '$TTS_PORT' is not a port number" >&2; exit 1 ;; esac
+  TTS_SRC="$HERE/../../tts_service/tts_service.py"
+  for f in "$TTS_SRC" "$HERE/nimrod-tts.service"; do
+    [ -f "$f" ] || { echo "not found: $f" >&2; exit 1; }
+  done
+  mkdir -p "$TTS_DIR/voices"
+  [ -x "$TTS_DIR/venv/bin/python" ] || python3 -m venv "$TTS_DIR/venv"
+  "$TTS_DIR/venv/bin/python" -c 'import piper' 2>/dev/null || "$TTS_DIR/venv/bin/pip" install --disable-pip-version-check piper-tts
+  [ -f "$TTS_DIR/voices/$TTS_VOICE.onnx" ] || "$TTS_DIR/venv/bin/python" -m piper.download_voices --data-dir "$TTS_DIR/voices" "$TTS_VOICE"
+  TTS_ENV="$HOME/.config/nimrod/tts.env"
+  mkdir -p "$(dirname "$TTS_ENV")"
+  if [ ! -f "$TTS_ENV" ]; then      # never overwritten: it holds the person's own choices
+    cat > "$TTS_ENV" <<EOF
+# Nimrod voice (Piper text to speech, this computer only). Edit, then: systemctl --user restart nimrod-tts
+NIMROD_TTS_DIR=$TTS_DIR
+NIMROD_TTS_MODEL=$TTS_DIR/voices/$TTS_VOICE.onnx
+NIMROD_TTS_PORT=$TTS_PORT
+# The website allowed to use the voice (the kiosk's). More than one: comma-separated.
+NIMROD_TTS_SITES=$SITE_ORIGIN
+EOF
+  else
+    echo "kept existing $TTS_ENV"
+  fi
+  install -m 0755 "$TTS_SRC" "$BIN_DIR/nimrod-tts-service.py"
+  install -m 0644 "$HERE/nimrod-tts.service" "$UNIT_DIR/nimrod-tts.service"
+  systemctl --user daemon-reload
+  systemctl --user enable nimrod-tts.service
+  systemctl --user restart nimrod-tts.service || true
+  echo "voice on: http://127.0.0.1:$TTS_PORT (systemctl --user status nimrod-tts); settings: $TTS_ENV"
+  [ -f "$POLICY_FILE" ] || echo "  NOTE: the page will be told localVoice=off until Chromium's policy exists (re-run with NIMROD_LOCK_POLICY=1)"
+  echo "  restart the kiosk to apply: systemctl --user restart nimrod-kiosk"
 fi
 
 echo

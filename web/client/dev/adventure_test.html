@@ -276,6 +276,46 @@ section('*** Stop waiting: never a blocked screen ***');
 }
 
 // =====================================================================
+section('*** SPEED (2026-10-14): the storyteller is loaded ahead, only where it has answered before ***');
+{
+  const mem = { m: {}, getItem(k) { return k in this.m ? this.m[k] : null; }, setItem(k, v) { this.m[k] = String(v); }, removeItem(k) { delete this.m[k]; } };
+  const warmer = (replies) => {
+    const a = stubAI(replies);
+    a.warmed = [];
+    a.listModels = async () => ({ ok: true, models: ['qwen2.5:7b', 'qwen2.5:3b'] });
+    a.warm = async (model, opts = {}) => { a.warmed.push({ model, ...opts }); return { ok: true, model }; };
+    return a;
+  };
+  const m = getManifest('adventure');
+  check('the speed settings are rows: each kind\'s model, the keep-alive, the warm-up', ['talkModel', 'adventureModel', 'keepAlive', 'warmUp']
+    .every((k) => m.settings.some((s) => s.key === k && s.level === 'advanced')));
+  const ai = warmer([turn('Hello there!', ['Hi', 'Bye'])]);
+  const W1 = host({ ai, id: 'advtest7', extra: { aiStorage: mem } });
+  await tick();
+  check('*** a device where the storyteller has never answered: nothing is asked on open, not even a warm-up ***', ai.warmed.length === 0 && ai.calls.length === 0);
+  W1.inst.impl.__press('talk', 'queen');
+  await until(() => W1.p().view === 'story' && !W1.p().thinking);
+  check('a conversation turn asks for the quickest model, kept loaded 30 minutes', ai.calls[0].opts.model === 'qwen2.5:3b' && ai.calls[0].opts.keepAlive === '30m',
+    JSON.stringify(ai.calls[0].opts));
+  check('...and once it has answered, this device remembers it', !!mem.m['nimrod.storyteller.answered']);
+  W1.inst.destroy(); W1.mount.remove();
+  const ai2 = warmer([turn('Hi.', ['a', 'b'])]);
+  const W2 = host({ ai: ai2, id: 'advtest8', extra: { aiStorage: mem } });
+  await until(() => ai2.warmed.length > 0);
+  check('*** the next time the panel opens, the adventure\'s model is loaded ahead - no words sent, no turn taken ***',
+    ai2.warmed.length === 1 && ai2.warmed[0].model === '' && ai2.warmed[0].keepAlive === '30m' && ai2.calls.length === 0, JSON.stringify(ai2.warmed));
+  W2.inst.impl.onHide(); W2.inst.impl.onShow();
+  await tick();
+  check('...not again within ten minutes', ai2.warmed.length === 1);
+  W2.inst.destroy(); W2.mount.remove();
+  const ai3 = warmer([turn('Hi.', ['a', 'b'])]);
+  const W3 = host({ ai: ai3, id: 'advtest9', state0: { warmUp: false }, extra: { aiStorage: mem } });
+  await tick(); await tick();
+  check('warm-up turned off: nothing is asked on open', ai3.warmed.length === 0);
+  W3.inst.destroy(); W3.mount.remove();
+}
+
+// =====================================================================
 section('what a spoken line means (pure)');
 {
   const cs = ['Walk to the bakery', 'Explore the park', 'Knock at the Great Hall'];

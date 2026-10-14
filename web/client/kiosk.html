@@ -263,9 +263,11 @@ function offerCat(kiosk) {
       label: 'This screen',
       // (2026-10-05, screen_lock.js: the Pi launcher's `?lockHelper=` is kept through the reload, so a screen
       // paired for the first time still reports its lock to the helper on that computer.)
+      // (2026-10-14, local_voice.js: `?localVoice=` too, so a screen paired for the first time keeps its voice.)
       onPaired: () => {
-        const lh = params.get('lockHelper');
-        location.href = location.pathname + (lh ? `?lockHelper=${encodeURIComponent(lh)}` : '');
+        const keep = ['lockHelper', 'localVoice'].filter((k) => params.get(k))
+          .map((k) => `${k}=${encodeURIComponent(params.get(k))}`).join('&');
+        location.href = location.pathname + (keep ? `?${keep}` : '');
       },
     });
     return;

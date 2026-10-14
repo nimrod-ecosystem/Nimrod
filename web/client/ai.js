@@ -92,6 +92,14 @@ export function writeAIKey(key, storage = defaultStorage()) {
   return !!readAIKey(storage);
 }
 
+/** A keep-alive as Ollama takes it ('30m', '1h', '90s', a number of seconds, -1 = stay loaded, 0 = unload), or null
+ * (none given, or not one of those: then nothing is sent and the server's own setting stands). */
+export function cleanKeepAlive(v) {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  const s = typeof v === 'string' ? v.trim() : '';
+  return /^-?\d+(\.\d+)?(ms|s|m|h)?$/.test(s) ? s : null;
+}
+
 // ---------------------------------------------------------------------------------------------
 // choosing a model
 // ---------------------------------------------------------------------------------------------
@@ -136,6 +144,18 @@ export function pickModel(ids) {
     for (let i = 0; i < sa.length; i++) if (sa[i] !== sb[i]) return sb[i] - sa[i];
     return a.localeCompare(b);
   })[0];
+}
+
+/**
+ * The QUICKEST chat model on a server's list: the smallest by its name's size (2026-10-14, the storyteller's talk).
+ * Names with no size come after sized ones (nothing says they are small); ties alphabetical. On Mike's desktop's list
+ * this is qwen2.5:3b. Null when there is no chat model.
+ */
+export function quickestModel(ids) {
+  const list = (Array.isArray(ids) ? ids : []).filter(isChatModel);
+  if (!list.length) return null;
+  const size = (id) => { const n = modelSize(id); return n == null ? Infinity : n; };
+  return [...list].sort((a, b) => (size(a) - size(b)) || a.localeCompare(b))[0];
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -295,8 +315,15 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
   // endpoint is not there (any failure but a refusal, a timeout or Cancel) the call is made the
   // standard way and `contextTokens` in the result is null — not applied, and saying so. Without
   // `contextTokens` nothing here changes. The ONE place this adapter knows a backend's own API.
+  //
+  // `keepAlive` (2026-10-14, the storyteller's speed): how long Ollama keeps the model loaded after this answer
+  // ('30m', or seconds). Ollama's FAQ documents `keep_alive` for `/api/chat` and `/api/generate` only (default 5
+  // minutes; https://docs.ollama.com/faq); its OpenAI-compatibility page does not list it (docs.ollama.com/api/openai-
+  // compatibility). MEASURED on Ollama 0.40.4: `/v1/chat/completions` did honour it, but that is undocumented, so a
+  // call that names one takes the documented road, `/api/chat`, exactly like `contextTokens` (and falls back the same
+  // way). It changes nothing in Ollama's own settings: it is per request.
   async function chat(messages, { model = '', json = false, temperature = 0.2, timeoutMs: t, signal, maxTokens = 0,
-                                  contextTokens = 0 } = {}) {
+                                  contextTokens = 0, keepAlive = '' } = {}) {
     const started = Date.now();
     let use = model;
     if (!use) {
@@ -306,11 +333,14 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     }
     const ctxN = Number(contextTokens) > 0 ? Math.floor(Number(contextTokens)) : 0;
     const root = /\/v1$/i.test(settings().baseUrl) ? settings().baseUrl.replace(/\/v1$/i, '') : '';
-    if (ctxN && root) {
-      const options = { temperature, num_ctx: ctxN };
+    const keep = cleanKeepAlive(keepAlive);
+    if ((ctxN || keep !== null) && root) {
+      const options = { temperature };
+      if (ctxN) options.num_ctx = ctxN;
       if (Number(maxTokens) > 0) options.num_predict = Math.floor(Number(maxTokens));
       const nb = { model: use, messages, stream: false, options };
       if (json) nb.format = 'json';
+      if (keep !== null) nb.keep_alive = keep;
       const n = await request(`${root}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -318,7 +348,10 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
       }, { signal, timeoutMs: t });
       if (n.ok) {
         const text = n.body?.message?.content;
-        if (typeof text === 'string') return { ok: true, text, model: use, ms: Date.now() - started, contextTokens: ctxN };
+        if (typeof text === 'string') {
+          return { ok: true, text, model: use, ms: Date.now() - started, ...(ctxN ? { contextTokens: ctxN } : {}),
+            ...(keep !== null ? { keepAlive: keep } : {}) };
+        }
       } else if (n.cancelled || n.timedOut || n.status === 403) {
         return { ...n, ms: Date.now() - started };
       }
@@ -337,7 +370,34 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     if (typeof text !== 'string') {
       return { ok: false, reason: explainFailure({ kind: 'unreadable' }), ms: Date.now() - started };
     }
-    return { ok: true, text, model: use, ms: Date.now() - started, ...(ctxN ? { contextTokens: null } : {}) };
+    return { ok: true, text, model: use, ms: Date.now() - started, ...(ctxN ? { contextTokens: null } : {}),
+      ...(keep !== null ? { keepAlive: null } : {}) };
+  }
+
+  /**
+   * WARM-UP (2026-10-14): load `model` now so the first real question does not wait for it (on Mike's desktop CPU,
+   * measured: 56-60 s for qwen2.5:3b, 139 s for qwen2.5:7b). Ollama's documented preload is a request with no messages
+   * (https://docs.ollama.com/faq, "preload a model"): no words are sent, nothing is written. Only for an Ollama-shaped
+   * address (ending /v1); anything else resolves `{ ok: false, skipped: true }` and asks nothing. Never throws.
+   */
+  // 10 minutes: nothing waits on a warm-up, and a load measured 2026-10-14 on Mike's desktop took 5 min 36 s.
+  async function warm(model = '', { keepAlive = '', signal, timeoutMs: t = 10 * 60 * 1000 } = {}) {
+    const root = /\/v1$/i.test(settings().baseUrl) ? settings().baseUrl.replace(/\/v1$/i, '') : '';
+    if (!root) return { ok: false, skipped: true, reason: 'Not an Ollama address: nothing to load ahead.' };
+    const started = Date.now();
+    let use = model;
+    if (!use) {
+      const m = await resolveModel('', { signal });
+      if (!m.ok) return { ok: false, reason: m.reason, cancelled: m.cancelled };
+      use = m.model;
+    }
+    const keep = cleanKeepAlive(keepAlive);
+    const r = await request(`${root}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: use, messages: [], ...(keep !== null ? { keep_alive: keep } : {}) }),
+    }, { signal, timeoutMs: t });
+    return r.ok ? { ok: true, model: use, ms: Date.now() - started } : { ...r, model: use, ms: Date.now() - started };
   }
 
   // The status strip's "an AI is being asked" (ai_activity.js): from the first byte sent to the answer or the failure.
@@ -353,6 +413,7 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     setKey: (key) => writeAIKey(key, storage),
     listModels,
     resolveModel,
+    warm,
     chat: noted,
   };
 }
