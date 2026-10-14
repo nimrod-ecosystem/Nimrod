@@ -53,6 +53,7 @@ import pack_reviews
 import page_visits
 import recommend
 import storage_line  # storage line (row 2.58): what the state and event routes refuse to keep
+import quota  # how much one login may keep (Mike, 2026-10-14: "some limit to keep the site free")
 from version import deploy_commit, safe_code_version
 
 log = logging.getLogger("nimrod")
@@ -202,6 +203,39 @@ def _storage_line_content(what: str, data) -> None:
     except storage_line.Refused as e:
         log.warning("storage line: refused %s status=%s bytes=%s", what, e.status, storage_line.row_bytes(data))
         raise HTTPException(status_code=e.status, detail=e.detail)
+
+
+# *** HOW MUCH ONE LOGIN MAY KEEP (Mike, 2026-10-14: "Seems like we would need some limit to keep the site free"). ***
+# Every route that keeps something a client sent asks `_room_for` first, with how much the write ADDS, and tells
+# `_usage` once it is kept. The rules and the number: quota.py. A write that adds nothing (a setting saved again, or
+# made smaller) is never refused, so a login over the limit keeps working; reads and removals are never asked.
+_usage = quota.UsageCache()
+
+
+def _room_for(account: str, adding: int, what: str) -> None:
+    """Refuse (507, with quota.refusal's sentence) a write of `adding` bytes that would take `account` past the
+    limit. Logged by what and size, like the storage line - never the content."""
+    lim = quota.limit_bytes()
+    ok, seen = _usage.check(account, adding, lim, store.account_usage, time.monotonic())
+    if not ok:
+        log.warning("quota: refused %s account=%s adding=%s used=%s limit=%s", what, account, adding,
+                    seen.get("bytes"), lim)
+        raise HTTPException(status_code=quota.STATUS,
+                            detail=quota.refusal(seen.get("bytes", 0), lim, seen.get("tables") or {}))
+
+
+def _state_growth(account: str, pid: str, key: str, data: dict) -> int:
+    """How much saving `data` as this state row adds: the difference from the row it replaces, or a whole new row."""
+    payload = quota.stored(data)
+    old = store.state_bytes(account, pid, key)
+    if old is None:
+        return quota.row_size(payload, account, pid, key, _now_iso())
+    return len(payload.encode("utf-8")) - old
+
+
+def _event_size(account: str, pid: str, stream: str, kind: str, data: dict, *extra) -> int:
+    """What one new event row costs (its text, its timestamps, quota.ROW_OVERHEAD)."""
+    return quota.row_size(quota.stored(data), account, pid, stream, kind, _now_iso(), *[x for x in extra if x])
 
 
 class SourceCreate(BaseModel):
@@ -419,7 +453,11 @@ def create_profile(body: ProfileCreate, user: str = Depends(current_user)):
     person_id = body.person_id or store.ensure_default_person(user)
     _check(person_id, ID_RE, "person id")
     owned_person(user, person_id)
-    return store.create_profile(user, body.name, person_id)
+    adding = quota.row_size(body.name, user, person_id, _now_iso()) + 32        # + its id
+    _room_for(user, adding, "screen")
+    made = store.create_profile(user, body.name, person_id)
+    _usage.added(user, adding)
+    return made
 
 
 @app.get("/api/profiles/{pid}")
@@ -453,6 +491,7 @@ def delete_profile(pid: str, user: str = Depends(current_user)):
     """Remove a screen. Its append-only events SURVIVE by design (see db.delete_profile)."""
     owned_profile(user, pid)
     store.delete_profile(user, pid)
+    _usage.forget(user)                     # room was made: count afresh (quota.py)
     return {"ok": True}
 
 
@@ -461,7 +500,11 @@ def add_module(pid: str, body: ModuleAdd, user: str = Depends(current_user)):
     _check(pid, ID_RE, "profile id")
     _check(body.type, ID_RE, "module type")
     owned_profile(user, pid)
-    return store.add_module(pid, body.type)
+    adding = quota.row_size(body.type, pid, _now_iso()) + 40                    # + its id and position
+    _room_for(user, adding, "module")
+    made = store.add_module(pid, body.type)
+    _usage.added(user, adding)
+    return made
 
 
 @app.delete("/api/profiles/{pid}/modules/{mid}")
@@ -470,6 +513,7 @@ def remove_module(pid: str, mid: str, user: str = Depends(current_user)):
     _check(mid, ID_RE, "module id")
     owned_profile(user, pid)
     store.remove_module(user, pid, mid)
+    _usage.forget(user)
     return {"ok": True}
 
 
@@ -634,8 +678,38 @@ def what_we_store():
 
     It describes the SHAPE of the storage - table names and what they are for - and returns
     nobody's data.
+
+    `limit` (2026-10-14, quota.py): how much one login may keep, said in a sentence. A signed-in login's own
+    count is GET /api/me/storage.
     """
-    return store.describe_storage()
+    lim = quota.limit_bytes()
+    return {**store.describe_storage(), "limit": {"bytes": lim, "text": quota.limit_sentence(lim)}}
+
+
+# Five seconds: a count of a login near the limit takes about a quarter of a second (measured, 250,000 rows), so
+# this bounds what reloading the account page can cost to one count every five seconds. For longer: cheaper still,
+# but "I removed something and the page did not change" for longer. Removing anything forgets the count anyway.
+MY_STORAGE_FRESH_S = 5.0
+
+
+@app.get("/api/me/storage")
+def my_storage(user: str = Depends(current_user)):
+    """How much THIS login keeps here, of how much it may (quota.py): the total, what uses it (largest first, in the
+    same words the refusal uses), and a sentence. Counted fresh unless the last count is under MY_STORAGE_FRESH_S
+    old (a page reloaded in a loop must not become a loop of counts; removing anything forgets the count, so it is
+    right straight after). The login's own count only - never anybody else's."""
+    now = time.monotonic()
+    last = _usage.peek(user)
+    if last and now - last["at"] < MY_STORAGE_FRESH_S:
+        u = {"bytes": last["bytes"] + last["added"], "rows": last["rows"], "tables": last["tables"]}
+    else:
+        u = store.account_usage(user)
+        _usage.store(user, u, now)
+    lim = quota.limit_bytes()
+    parts = [{"table": t, "what": quota.WORDS.get(t, t), "rows": v["rows"], "bytes": v["bytes"]}
+             for t, v in sorted(u["tables"].items(), key=lambda kv: -kv[1]["bytes"])]
+    return {"used": u["bytes"], "rows": u["rows"], "limit": lim, "over": lim is not None and u["bytes"] > lim,
+            "parts": parts, "text": quota.usage_sentence(u["bytes"], lim)}
 
 
 # A screen's name: the same characters as any other name here (NAME_RE), trimmed, and at most
@@ -734,7 +808,11 @@ def create_source(body: SourceCreate, user: str = Depends(current_user)):
         owned_person(user, pid)
     if body.on_remove is not None and body.on_remove not in SOURCE_ON_REMOVE:
         raise HTTPException(status_code=400, detail="on_remove is keep or remove")
-    return store.create_source(user, body.label, base_url, body.kind, person_id=pid or None, on_remove=body.on_remove)
+    adding = quota.row_size(body.label, base_url, body.kind, user, pid, body.on_remove, _now_iso()) + 32
+    _room_for(user, adding, "media source")
+    made = store.create_source(user, body.label, base_url, body.kind, person_id=pid or None, on_remove=body.on_remove)
+    _usage.added(user, adding)
+    return made
 
 
 @app.patch("/api/media-sources/{sid}")
@@ -770,6 +848,7 @@ def remove_source(sid: str, user: str = Depends(current_user)):
     _check(sid, ID_RE, "source id")
     if not store.remove_source(user, sid):
         raise HTTPException(status_code=404, detail="no such source")
+    _usage.forget(user)
     return {"ok": True}
 
 
@@ -788,11 +867,14 @@ def put_state(pid: str, key: str, body: StatePut, request: Request, user: str = 
     _check(key, ID_RE, "state key")
     owned_profile(user, pid)
     _storage_line_state(key, body.data)
+    adding = _state_growth(user, pid, key, body.data)
+    _room_for(user, adding, f"state key={key}")
     status, result = store.put_state(user, pid, key, body.data, body.base_version)
     if status == "conflict":
         # Stale write, rejected — nothing actually changed, so nobody is told it did.
         # Hand back the current truth so the client can rebase + retry.
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
+    _usage.added(user, adding)
     # request.url.path is exactly the GET this same data lives at — self-referential on
     # purpose, so this can never drift out of sync with the URL a poller actually uses.
     _push.publish(user, request.url.path)
@@ -935,7 +1017,11 @@ def visit_page(person_id: str, user: str = Depends(current_user)):
 def create_person(body: PersonCreate, user: str = Depends(current_user)):
     _check(body.name, NAME_RE, "person name")
     store.ensure_default_person(user)   # never let the second person be the first
-    return store.create_person(user, body.name)
+    adding = quota.row_size(body.name, user, _now_iso()) + 32
+    _room_for(user, adding, "person")
+    made = store.create_person(user, body.name)
+    _usage.added(user, adding)
+    return made
 
 
 @app.patch("/api/people/{person_id}")
@@ -1024,6 +1110,7 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
             claims.holder_refusal(row, link_rows=store.count_link_rows(user, row.get("link_id"))) == "last":
         raise HTTPException(status_code=409, detail=claims.REFUSAL_TEXT["last-here"])
     store.delete_person(user, person_id)
+    _usage.forget(user)
     return {"ok": True}
 
 
@@ -1083,9 +1170,12 @@ def put_person_state(person_id: str, key: str, body: StatePut, request: Request,
     _check(key, ID_RE, "state key")
     acct, pid = _person_state_target(user, person_id, key, write=True)
     _storage_line_state(key, body.data)
+    adding = _state_growth(acct, person_scope(pid), key, body.data)
+    _room_for(acct, adding, f"person state key={key}")
     status, result = store.put_state(acct, person_scope(pid), key, body.data, body.base_version)
     if status == "conflict":
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
+    _usage.added(acct, adding)
     _push.publish(acct, request.url.path)
     # A profile key: every login that holds this profile reads it through its own row - tell each.
     if key in claims.PROFILE_KEYS:
@@ -1113,7 +1203,10 @@ def append_person_event(person_id: str, stream: str, body: EventPost, request: R
     _check(body.kind, ID_RE, "event kind")
     owned_person(user, person_id)
     _storage_line_event(stream, body.kind, body.data)
+    adding = _event_size(user, person_scope(person_id), stream, body.kind, body.data)
+    _room_for(user, adding, f"event stream={stream}")
     result = store.append_event(user, person_scope(person_id), stream, body.kind, body.data)
+    _usage.added(user, adding)
     # request.url.path is exactly the GET this same data lives at — self-referential on
     # purpose, so this can never drift out of sync with the URL a poller actually uses.
     _push.publish(user, request.url.path)
@@ -1175,11 +1268,20 @@ def history_add(person_id: str, stream: str, body: HistoryPost, request: Request
         storage_line.check_history(stream, body.rows, place)
     except storage_line.Refused as e:
         _history_refused(e, stream, len(body.rows or []))
+    ts = _now_iso()
+    adding = sum(quota.row_size(quota.stored(r.get("data")), acct, pid, stream, str(r.get("kind") or ""),
+                                str(r.get("scope") or "")[:storage_line.HISTORY_SCOPE_MAX],
+                                str(r.get("at") or ts)[:40], ts) for r in body.rows)
+    _room_for(acct, adding, f"history stream={stream}")
     result = store.history_append(
         acct, pid, stream.lower(), body.rows, group_of=storage_line.group_of,
         max_rows=storage_line.HISTORY_MAX_ROWS, roll_batch=storage_line.HISTORY_ROLL_BATCH,
         totals_max=storage_line.HISTORY_TOTALS_MAX, scope_max=storage_line.HISTORY_SCOPE_MAX,
         other=storage_line.OTHER_GROUP)
+    if result.get("rolled"):
+        _usage.forget(acct)                 # the oldest were folded into totals and removed: count afresh
+    else:
+        _usage.added(acct, adding)
     _push.publish(acct, f"/api/people/{person_id}/history/{stream}")
     return result
 
@@ -1194,7 +1296,9 @@ def history_remove(person_id: str, stream: str = "", user: str = Depends(current
         except storage_line.Refused as e:
             raise HTTPException(status_code=e.status, detail=e.detail)
     acct, pid = _history_target(user, person_id)
-    return store.history_delete(acct, pid, stream.lower() or None)
+    out = store.history_delete(acct, pid, stream.lower() or None)
+    _usage.forget(acct)                     # room was made: the next write counts afresh (quota.py)
+    return out
 
 
 # ------------------------------------------------------- legacy per-USER aliases
@@ -1213,9 +1317,12 @@ def put_user_state(key: str, body: StatePut, user: str = Depends(current_user)):
     _check(key, ID_RE, "state key")
     _storage_line_state(key, body.data)
     scope = person_scope(store.ensure_default_person(user))
+    adding = _state_growth(user, scope, key, body.data)
+    _room_for(user, adding, f"user state key={key}")
     status, result = store.put_state(user, scope, key, body.data, body.base_version)
     if status == "conflict":
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
+    _usage.added(user, adding)
     return result
 
 
@@ -1230,8 +1337,11 @@ def append_user_event(stream: str, body: EventPost, request: Request,
                       user: str = Depends(current_user)):
     _check(stream, ID_RE, "event stream")
     _storage_line_event(stream, body.kind, body.data)
-    result = store.append_event(user, person_scope(store.ensure_default_person(user)),
-                                stream, body.kind, body.data)
+    scope = person_scope(store.ensure_default_person(user))
+    adding = _event_size(user, scope, stream, body.kind, body.data)
+    _room_for(user, adding, f"user event stream={stream}")
+    result = store.append_event(user, scope, stream, body.kind, body.data)
+    _usage.added(user, adding)
     # Found 2026-09-17: this alias never published at all, so the kiosk's own mailbox
     # channel (defaultChannels' `events`, see kiosk.js) was one of the few remaining
     # state/events handles still stuck on the raw poll interval regardless of whether
@@ -1261,10 +1371,13 @@ def append_event(pid: str, stream: str, body: EventPost, request: Request,
         _check(body.producer_version, PRODUCER_RE, "producer version")
     owned_profile(user, pid)
     _storage_line_event(stream, body.kind, body.data)
+    adding = _event_size(user, pid, stream, body.kind, body.data, body.session_id, body.producer_version)
+    _room_for(user, adding, f"event stream={stream}")
     result = store.append_event(
         user, pid, stream, body.kind, body.data,
         session_id=body.session_id, producer_version=body.producer_version,
     )
+    _usage.added(user, adding)
     # request.url.path is exactly the GET this same data lives at — self-referential on
     # purpose, so this can never drift out of sync with the URL a poller actually uses.
     _push.publish(user, request.url.path)
@@ -1285,10 +1398,15 @@ def attest_event(pid: str, stream: str, event_id: int, body: AttestPost = Attest
     _check(stream, ID_RE, "event stream")
     owned_profile(user, pid)
     _storage_line_content("attestation note", {"note": (body.note or "")[:2000]})   # what provenance.attestation_row keeps
+    # The new row: the note, who vouched and when, and the id it cites.
+    adding = _event_size(user, pid, stream, "attestation", {"note": (body.note or "")[:2000]}, user, _now_iso()) + 64
+    _room_for(user, adding, f"attestation stream={stream}")
     try:
-        return store.attest_event(user, pid, stream, event_id, attester=user, note=body.note)
+        made = store.attest_event(user, pid, stream, event_id, attester=user, note=body.note)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    _usage.added(user, adding)
+    return made
 
 
 # ------------------------------------------------------------- remote drive
@@ -2276,10 +2394,15 @@ def leave_person_note(person_id: str, pid: str, stream: str, body: EventPost, re
         data = notes.build_row(body.data, display_name=_display_name(user))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    # quota.py rule 2: a note left on somebody's screen counts against whoever LEFT it, so it is THEIR room that is
+    # asked - never the person it is for.
+    adding = _event_size(owner, pid, stream, notes.NOTE_KIND, data, user, "human")
+    _room_for(user, adding, "note")
     if not _note_limit.hit(f"{user}|{person_id}"):
         raise HTTPException(status_code=429, detail="that is a lot of notes - try again in a few minutes")
     row = store.append_event(owner, pid, stream, notes.NOTE_KIND, data,
                              principal_id=user, principal_type="human")
+    _usage.added(user, adding)
     # The screen listens on its OWN url for this stream; tell it, so the note changes at once.
     _push.publish(owner, f"/api/profiles/{pid}/events/{stream}")
     _push.publish(user, request.url.path)
@@ -2355,8 +2478,12 @@ def send_recommendation(person_id: str, body: RecommendPost, user: str = Depends
         raise HTTPException(status_code=429, detail="That is a lot of recommendations - try again in a few minutes.")
     _, about = _rec_about(body.link)
     data = recommend.build_row(ref, about, message=message, from_name=from_name, from_person=from_person)
+    # quota.py rule 2: counted against the SENDER (as a note is).
+    adding = _event_size(owner, person_scope(person_id), recommend.STREAM, recommend.REC_KIND, data, user, "human")
+    _room_for(user, adding, "recommendation")
     row = store.append_event(owner, person_scope(person_id), recommend.STREAM, recommend.REC_KIND, data,
                              principal_id=user, principal_type="human")
+    _usage.added(user, adding)
     _push.publish(owner, f"/api/people/{person_id}/recommendations")
     return recommend.visible(row.get("id"), row.get("created_at"), row.get("data") or data)
 
@@ -2886,7 +3013,10 @@ def append_review(body: EventPost, request: Request, user: str = Depends(current
     else:
         data["by"] = "a screen" if via_device_key(request) else (_display_name(user) or "the account owner")
     data["at"] = _now_iso()
+    adding = _event_size(user, ACCOUNT_SCOPE, pack_reviews.REVIEW_STREAM, body.kind, data)
+    _room_for(user, adding, "review")
     result = store.append_event(user, ACCOUNT_SCOPE, pack_reviews.REVIEW_STREAM, body.kind, data)
+    _usage.added(user, adding)
     _push.publish(user, REVIEWS_PATH)
     return result
 
