@@ -151,6 +151,9 @@ const toTab = (m, id) => {
 
     // keyboard: number key selects a stage module
     await press('1', 60);
+    // 2026-10-14: polled, not a fixed 60 ms - under load (several suite servers at once) the switch took longer and
+    // this check, and the ArrowRight/ArrowLeft and menu checks that start from photos, failed together.
+    await settled(() => kiosk.primaryType() === 'photos' && stageHas('.photos'));
     check('keyboard "1" selects the first stage module (photos)', kiosk.primaryType() === 'photos' && stageHas('.photos'));
 
     // mirror MODE = press M to make the camera full screen
