@@ -35,7 +35,7 @@ import { mulberry32 } from '../rng.js';
 import '../modules/youtube.js';      // registers 'youtube'
 import '../modules/personal.js';     // registers 'personal' (a real provider now)
 import '../modules/educational.js';  // registers 'educational' (a real provider now)
-import { PANEL_TITLE_TOPIC, lineupTitle, LINEUP_TITLE } from '../modules/director.js';     // registers 'director'
+import { PANEL_TITLE_TOPIC, lineupTitle, LINEUP_TITLE, PICTURES_TURN_FIELD, PICTURES_TURN_MS } from '../modules/director.js';     // registers 'director'
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'director-test-user';
@@ -170,8 +170,30 @@ async function mountDirector({ host, hour, seed, timers, stub }){
       seenDaytime.add(curProv(host));
     }
     check('daytime rotation uses several providers', seenDaytime.size >= 4, `seen=${[...seenDaytime].join(',')}`);
-    check('every shown provider is daytime-legal', [...seenDaytime].every((p) => p && ['youtube','personal','educational','wordgame','trivia','singalong'].includes(p)));
+    check('every shown provider is daytime-legal', [...seenDaytime].every((p) => p && ['youtube','personal','educational','pictures','wordgame','trivia','singalong'].includes(p)));
     check('re-activating youtube ADVANCES it (director drives youtube/next)', stub.loaded.length > loadsBefore, `loads ${loadsBefore} -> ${stub.loaded.length}`);
+
+    // ── ROW 2.87 (2): A TURN OF PICTURES - the real Photos module, given a turn, paused while hidden ──────────────
+    {
+      const verbs = [];
+      const watch = (verb) => bus.subscribe(`photos/${verb}`, () => verbs.push(verb));   // the bare topic hears nothing from the Lineup
+      const offBare = [watch('pause'), watch('play')];
+      bus.publish('pictures/activate');
+      await sleep(30);
+      check('*** a Pictures turn shows the Pictures slot, named "Pictures (Lineup)" ***',
+        curProv(host) === 'pictures' && (instance.impl || instance).titleNow() === 'Pictures (Lineup)', `${curProv(host)} ${(instance.impl || instance).titleNow()}`);
+      check('the Photos module is mounted inside it', !!host.querySelector('.d-slot[data-prov="pictures"] .photos'),
+        host.querySelector('.d-slot[data-prov="pictures"]')?.innerHTML.slice(0, 120));
+      check('*** its play and pause go to ITS Photos only (instance address), never the bare topic every Photos panel hears ***',
+        verbs.length === 0, JSON.stringify(verbs));
+      check('the turn armed its end (and a heartbeat for the backstop)', T.pending() >= 1, `pending=${T.pending()}`);
+      T.fireDue();
+      await sleep(40);
+      check('*** the turn ends by itself and the Lineup moves on ***', curProv(host) !== 'pictures', `now=${curProv(host)}`);
+      offBare.forEach((o) => o());
+    }
+    check('the Lineup has a setting for how long pictures show (Rule 1), 2 minutes by default',
+      PICTURES_TURN_FIELD.key === 'picturesTurnMs' && PICTURES_TURN_FIELD.default === PICTURES_TURN_MS && PICTURES_TURN_MS === 120000);
 
     // teardown: after destroy, further events are ignored
     const provAtDestroy = curProv(host);

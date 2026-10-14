@@ -1606,9 +1606,13 @@ registerModule(
         // every one that heard it, see `claim`), the log changing, and the two buttons on a long press.
         me.tag = ownTag;
         slideshows.push(me);
-        bus.subscribe(PHOTOS_HIDE_TOPIC, (_p, _t, meta) => claim(me, () => hideCurrent({ voice: byVoice(meta) })));
-        bus.subscribe(PHOTOS_UNHIDE_TOPIC, (_p, _t, meta) => claim(me, () => unhideLast({ voice: byVoice(meta) })));
-        bus.subscribe(PHOTOS_REMOVE_TOPIC, (_p, _t, meta) => claim(me, () => removeCurrent({ voice: byVoice(meta) })));   // remove this picture
+        // `ctx.answersOnlyWhenShown` (2026-10-14, the Lineup's Pictures turn, director.js): a slideshow that is only
+        // sometimes on screen takes no "hide / bring back / remove this picture" while it is not showing, even when it
+        // is the only slideshow - the picture somebody means is not one they can see. Off for every other panel: as before.
+        const mayAnswer = () => !(ctx.answersOnlyWhenShown && !me.visible);
+        bus.subscribe(PHOTOS_HIDE_TOPIC, (_p, _t, meta) => { if (mayAnswer()) claim(me, () => hideCurrent({ voice: byVoice(meta) })); });
+        bus.subscribe(PHOTOS_UNHIDE_TOPIC, (_p, _t, meta) => { if (mayAnswer()) claim(me, () => unhideLast({ voice: byVoice(meta) })); });
+        bus.subscribe(PHOTOS_REMOVE_TOPIC, (_p, _t, meta) => { if (mayAnswer()) claim(me, () => removeCurrent({ voice: byVoice(meta) })); });   // remove this picture
         offHides = hides.subscribe(() => refilter());
         offRemovals = removals.subscribe(() => refilter());
         const stg = mount.querySelector('[data-stage]');
