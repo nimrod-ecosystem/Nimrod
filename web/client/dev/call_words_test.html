@@ -376,7 +376,7 @@ try {
     const mic = tracks[0];
     screen.sendWords('water', { source: 'board' }); await ticks();
     check('*** the word is shown, big ***', q('[data-words-now]')?.textContent === 'water' && q('[data-words]').hidden === false);
-    check('*** ...with whose board it came from ***', q('[data-words-from]')?.textContent === 'From Alex’s talk board' /* site text rewrite 2026-10-09 */, q('[data-words-from]')?.textContent);
+    check('*** ...with whose board it came from ***', q('[data-words-from]')?.textContent === 'From Alex’s AAC board' /* site text second pass 2026-10-13 */, q('[data-words-from]')?.textContent);
     check('*** ...and read out in this device\'s voice ***', spoken.join() === 'water');
     check('*** this device\'s microphone is held while it reads (so the room does not hear its own word back) ***', mic.enabled === false && page.micHeld());
     utter.fire('end');

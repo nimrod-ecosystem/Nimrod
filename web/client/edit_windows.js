@@ -333,7 +333,7 @@ export function mountTransformWindow(host, model, { onClose } = {}) {
 // ---------------------------------------------------------------------------------------
 // SNAP
 // ---------------------------------------------------------------------------------------
-const SNAP_TOGGLES = [['snapGrid', 'Snap to grid'], ['showGrid', 'Show grid'], ['snapCenter', 'Snap to centre'], ['fine', 'Fine steps']];
+const SNAP_TOGGLES = [['snapGrid', 'Snap to grid'], ['showGrid', 'Show grid'], ['snapCenter', 'Snap to center'], ['fine', 'Fine steps']];
 
 export function mountSnapWindow(host, model, { onClose } = {}) {
   return mountWindow(host, model, {
@@ -553,7 +553,7 @@ export function mountTextEffectsWindow(host, model, { onClose } = {}) {
       const m = model.measure();
       const line = m && m.ratio !== null
         ? `<p class="ew-note">Contrast <b data-ew-ratio>${m.ratio.toFixed(1)}:1</b>. That is how clearly the text stands out from what is behind it. It is measured with every effect off, so turning one off can't make this text harder to read.</p>`
-        : '<p class="ew-note">Contrast is measured with every effect off. There is no text colour and background to measure yet.</p>';
+        : '<p class="ew-note">Contrast is measured with every effect off. There is no text color and background to measure yet.</p>';
       const warns = (m?.warnings || []).map((w) => `<p class="ew-warn" role="status" data-ew-warn="${esc(w.code)}"><b>Warning:</b> ${esc(w.text)}</p>`).join('');
       return (dis ? '<p class="ew-note">Locked. Unlock it in the Layers window to change it.</p>' : '') + rows + line + warns;
     },
@@ -642,7 +642,7 @@ export function mountLinksWindow(host, model, { dashboards = () => [], refresh =
     if (it.opens) return `Pressing it goes to ${nameOf(it.opens)}${it.canShow && it.shows ? ', not to what it shows' : ''}.`;
     if (it.canShow && it.shows) return `It shows ${nameOf(it.shows)}, and pressing it goes there.`;
     if (it.fixed) return 'Pressing it does what the room gives it to do.';
-    return 'Pressing it does what it always does.';
+    return 'Pressing it does what this module always does.';
   }
   w = mountWindow(host, model, {
     kind: 'links',

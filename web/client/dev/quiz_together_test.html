@@ -43,7 +43,9 @@ const { check, section, finish } = harness();
 const tick = () => sleep(0);
 async function until(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (fn()) return true; await sleep(20); } return !!fn(); }
 const ONLY = (...ids) => Object.fromEntries(SOURCE_IDS.map((id) => [USE_KEYS[id], ids.includes(id)]));
-const BANNED = /\b(module|dashboard|panel|grant|widget|account|token|websocket|socket|server)s?\b|taylor|cici|\bher screen\b/i;
+// The person-privacy rule (2026-09-11): copy never says "her screen" or names the person the project was first built
+// for. (This was a banned-word list too, until 2026-10-13: Mike, "I really don't like this banned word thing at all.")
+const NAMES_RX = /taylor|cici|\bher screen\b/i;
 
 // ---------------------------------------------------------------------------------------------------
 // A ROOM HUB IN THE PAGE: the server's rules for one room, small (the real ones are game_rooms.py, proven by
@@ -159,7 +161,7 @@ try {
     check('codes: read as typed, shown in two halves', normalizeCode(' kx4-9pm ') === 'KX49PM' && normalizeCode('KX49P0') === ''
       && codeWords('KX49PM') === 'KX4 9PM');
     const words = JSON.stringify(END_WORDS);
-    check('*** every ending is said in plain words (no account, token, server, socket...) ***', !BANNED.test(words), (words.match(BANNED) || [])[0]);
+    check('*** no ending names the person the project was first built for ***', !NAMES_RX.test(words), (words.match(NAMES_RX) || [])[0]);
     check('the join page\'s address carries the code', playPath('KX49PM') === '/play.html?room=KX49PM');
   }
 
@@ -240,7 +242,7 @@ try {
     check('the seats: Ann, on this screen', /Ann\s+on this screen/.test(A.host.querySelector('[data-seats]')?.textContent || ''));
     check('*** the lobby has its way out: "Stop playing together" ***', !!A.host.querySelector('[data-qm-sheet="lobby"] [data-qm="stop"]'));
     const sheetWords = lobby.textContent;
-    check('*** plain words in the lobby ***', !BANNED.test(sheetWords), (sheetWords.match(BANNED) || [])[0]);
+    check('*** the lobby names nobody ***', !NAMES_RX.test(sheetWords), (sheetWords.match(NAMES_RX) || [])[0]);
 
     B.host.querySelector('[data-qm="open"]').click();
     B.host.querySelector('[data-qm="joinform"]').click();
@@ -404,7 +406,7 @@ try {
     check('*** the lobby says who asked, and that it starts when they join ***',
       /Dana asked to play on this call\. The game starts when they join\./.test(S.host.querySelector('[data-qm-asked]')?.textContent || ''), S.text().slice(0, 200));
     check('the lobby still has its way out', !!S.host.querySelector('[data-qm-sheet="lobby"] [data-qm="stop"]'));
-    check('plain words', !BANNED.test(S.host.querySelector('[data-qm-sheet]')?.textContent || ''));
+    check('names nobody', !NAMES_RX.test(S.host.querySelector('[data-qm-sheet]')?.textContent || ''));
     check('a second ask while the room is open: not taken', ask({ game: GAME, name: 'Dana' })[0] === false);
     // The asker's page joins (the call page's game frame): the game starts by itself.
     const Dana = screen('hostB', { players: 'Dana', hub: hub5, account: 'dana' });

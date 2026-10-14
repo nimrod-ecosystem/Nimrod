@@ -198,7 +198,7 @@ export function explainModule(type, { chat = 'some', catalog = CATALOG, manifest
       .filter(Boolean).join(' ') };
   }
   if (m?.description) return { title, text: c === 'few' ? sentences(m.description, 1) : m.description };
-  return { title, text: `This is the ${title} part.` };
+  return { title, text: `This is the ${title} panel.` };
 }
 
 const ACTION_DOES = {
@@ -230,10 +230,10 @@ export function explainObject(d = {}, { chat = 'some', catalog = CATALOG } = {})
       lines = [`This is a key: ${d.key ?? d.label}.`, `Press it to send ${d.key ?? d.label}.`];
       break;
     case 'pet':
-      lines = [`This is ${d.label || 'an animal'}.`, 'Stroke it to pet it, or hold the switch (one big button) down on it.'];
+      lines = [`This is ${d.label || 'an animal'}.`, 'Stroke it to pet it, or hold the switch down on it.'];
       break;
     case 'library':
-      lines = [`This ${thing} is a library. Each book is something you can put on a screen.`, 'Press a book to open it, or press the shelf for the list.'];
+      lines = [`This ${thing} is a library. Each book is a module.`, 'Press a book to open it, or press the shelf for the list.'];
       break;
     case 'closeup':
       lines = [`Press the ${thing} to look closer.`, 'Back returns to the whole room, and it goes back by itself after a while.'];
@@ -255,7 +255,7 @@ export const SETTING_ROW_HELP = Object.freeze({
   close: 'This closes the menu. Nothing you changed is lost.',
   home: 'This goes back to Home, where screens are chosen.',
   who: 'Who is using this screen right now.',
-  'panel-settings': 'The settings of the part you picked.',
+  'panel-settings': 'The settings of the panel you picked.',
 });
 
 /** A settings row: { label, value, field?, id? }. { title, text } */
@@ -273,7 +273,7 @@ export function explainSetting(d = {}, { chat = 'some' } = {}) {
 
 // What he says with nothing picked. Site copy: never "her screen" (CLAUDE.md, 2026-09-11).
 export const SCREEN_HELP = Object.freeze({
-  kiosk: 'This is the screen. It is made of parts. Pick a part, then press me, and I will tell you what it does.',
+  kiosk: 'This is the screen. Each panel on it is a module. Pick a panel, then press me, and I will tell you what it does.',
   room: 'This is a room, and its furniture can hold the screen’s controls. Rest the pointer on a thing, or let scanning light it (the screen steps through the choices one at a time). Then press me and I will tell you what it is.',
   settings: 'This is the settings menu. Each row is one setting, and pressing a row changes it. Move to a row, then press me to hear what it does.',
   page: 'Pick something on this page, then press me, and I will tell you what it is.',

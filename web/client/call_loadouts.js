@@ -56,12 +56,12 @@ export const CALL_LOADOUTS = Object.freeze({
     layout: Object.freeze({ preset: 'full', slots: Object.freeze(['call']) }),
   }),
   video_board: Object.freeze({
-    key: 'video_board', label: 'Video + talk board', camera: true, theirVideo: true, board: true,
+    key: 'video_board', label: 'Video + AAC board', camera: true, theirVideo: true, board: true,
     modules: Object.freeze([{ ref: 'call', type: 'call' }, { ref: 'board', type: 'board' }]),
     layout: Object.freeze({ preset: 'side', slots: Object.freeze(['board', 'call']) }),
   }),
   audio_board: Object.freeze({
-    key: 'audio_board', label: 'Audio + talk board', camera: false, theirVideo: false, board: true,
+    key: 'audio_board', label: 'Audio + AAC board', camera: false, theirVideo: false, board: true,
     modules: Object.freeze([{ ref: 'call', type: 'call' }, { ref: 'board', type: 'board' }]),
     layout: Object.freeze({ preset: 'side', slots: Object.freeze(['board', 'call']) }),
   }),
@@ -87,7 +87,7 @@ export const CALL_OPENS_FIELD = Object.freeze({
   default: CALL_OPENS_DEFAULT,
   options: CALL_LOADOUT_ORDER.map((k) => ({ value: k, label: CALL_LOADOUTS[k].label })),
   note: 'What this screen shows when it answers a call with no Call panel on it. "Audio only" never opens '
-      + 'the camera. The talk board sends each word chosen to the person on the call. The bar has '
+      + 'the camera. The AAC board sends each word chosen to the person on the call. The bar has '
       + 'mute, camera and hang-up buttons during every call.',
 });
 

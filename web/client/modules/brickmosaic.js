@@ -114,13 +114,13 @@ const SETTINGS = [
   { key: 'cols', label: 'How many bricks across', kind: 'choice', default: 24, level: 'standard',
     options: [{ value: 16, label: '16: big bricks' }, { value: 24, label: '24' }, { value: 32, label: '32' }, { value: 48, label: '48: fine detail' }],
     note: 'Starts with the next picture.' },
-  { key: 'palette', label: 'Brick colours', kind: 'choice', default: 'theme', level: 'standard',
-    options: [{ value: 'theme', label: 'The theme\'s five brick colours' }, { value: 'all', label: 'Every brick colour, from every theme' }] },
-  { key: 'stretch', label: 'Fit the picture\'s light and dark to the colours', default: true, level: 'advanced',
-    onLabel: 'Yes: faces and shapes stay clear', offLabel: 'No: each cell takes its nearest colour as it is' },
+  { key: 'palette', label: 'Brick colors', kind: 'choice', default: 'theme', level: 'standard',
+    options: [{ value: 'theme', label: 'The theme\'s five brick colors' }, { value: 'all', label: 'Every brick color, from every theme' }] },
+  { key: 'stretch', label: 'Fit the picture\'s light and dark to the colors', default: true, level: 'advanced',
+    onLabel: 'Yes: faces and shapes stay clear', offLabel: 'No: each cell takes its nearest color as it is' },
   { key: 'dither', label: 'Mix bricks for in-between shades', default: false, level: 'advanced',
     onLabel: 'Yes: more detail, busier', offLabel: 'No: calmer' },
-  { key: 'join', label: 'Bricks side by side in one colour join into longer bricks', default: true, level: 'advanced',
+  { key: 'join', label: 'Bricks side by side in one color join into longer bricks', default: true, level: 'advanced',
     onLabel: 'Yes', offLabel: 'No: every cell its own brick' },
   { key: 'joinMax', label: 'The longest brick', kind: 'choice', default: JOIN_MAX, level: 'advanced',
     options: [{ value: 2, label: '2 cells (80 mm)' }, { value: 3, label: '3 cells (120 mm)' }, { value: 4, label: '4 cells (160 mm)' },
@@ -218,7 +218,7 @@ function ensureStyle(doc) {
 
 registerModule(
   { type: GAME, title: TITLE, core: 'new',
-    description: 'A picture from your photos built out of Nimrod bricks, one brick at a time, in the theme\'s brick colours. '
+    description: 'A picture from your photos built out of Nimrod bricks, one brick at a time, in the theme\'s brick colors. '
       + 'Calm to watch. A press lays a row at once, or finishes it. With no photos, a built-in painting.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {

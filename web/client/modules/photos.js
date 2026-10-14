@@ -230,7 +230,7 @@ const SETTINGS = [
   { key: 'fit', label: 'How photos fit', kind: 'choice', default: 'contain', level: 'essential',
     options: [
       { value: 'contain', label: 'Show the whole photo' },
-      { value: 'cover', label: 'Fill the space' },
+      { value: 'cover', label: 'Fill the panel' },
     ] },
   { key: 'sourceId', label: 'Photos from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
@@ -1783,7 +1783,7 @@ registerModule(
         const out = [];
         if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album', SUBFOLDERS_KEY, BACKUP_KEY] });   // backup source; every folder inside
         if (st) out.push({ id: 'picture', label: 'The picture', el: st, keys: ['fit', 'intervalMs', 'autostart', 'autostartAlone', 'resumeAfterMs'],
-          help: 'How the picture fits its space, how long each one stays, and whether the slideshow starts by itself.' });
+          help: 'How the picture fits its panel, how long each one stays, and whether the slideshow starts by itself.' });
         return out;
       },
       __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice(),

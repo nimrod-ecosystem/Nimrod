@@ -164,9 +164,9 @@ export function mountAccountScreens(root, {
 
   root.innerHTML = `
     <section class="as" aria-labelledby="as-h" data-account-screens>
-      <h2 id="as-h">Screens on this login</h2>
+      <h2 id="as-h">Screens on this account</h2>
       <p class="as-intro">The screens you added with a code. Each one stays on by itself, after a restart too, until
-        you remove it here. This list is for the whole login, whoever is picked above.</p>
+        you remove it here. This list is for the whole account, whoever is picked above.</p>
       <div class="h-msg" data-as-msg role="status" aria-live="polite"></div>
       <div data-as-body><p class="h-loading">Loading…</p></div>
       <p class="as-foot" data-as-readonly hidden>This page is open on one of the screens, so it can only look. To
@@ -216,13 +216,13 @@ export function mountAccountScreens(root, {
     el('[data-as-readonly]').hidden = !(loaded && !canChange && rows.length);
     if (!loaded) {
       body.innerHTML = failed
-        ? '<p class="h-none">The screens on this login could not be loaded. Check your connection and open this tab again.</p>'
+        ? '<p class="h-none">The screens on this account could not be loaded. Check your connection and open this tab again.</p>'
         : '<p class="h-loading">Loading…</p>';
       return;
     }
     body.innerHTML = rows.length
       ? `<ul class="as-list" data-as-list>${rows.map(rowHTML).join('')}</ul>`
-      : '<p class="h-none" data-as-empty>No screens on this login yet.</p>';
+      : '<p class="h-none" data-as-empty>No screens on this account yet.</p>';
     if (focus) {
       const f = root.querySelector(focus);
       if (f) { try { f.focus(); if (f.select) f.select(); } catch { /* not focusable */ } }
@@ -267,7 +267,7 @@ export function mountAccountScreens(root, {
   function failWith(res, data) {
     if (res && res.status === 403 && data && data.detail) say(String(data.detail), true);
     else if (res && res.status === 400) say('That name has a character a screen name cannot have. Use letters, numbers, spaces and . , \' -', true);
-    else if (res && res.status === 404) say('That screen is not on this login any more.', true);
+    else if (res && res.status === 404) say('That screen is not on this account any more.', true);
     else say('That did not save. Check your connection and try again.', true);
   }
 

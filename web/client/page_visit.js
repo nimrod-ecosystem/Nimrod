@@ -88,7 +88,7 @@ export const historyURL = (personId, { before = null, limit = null } = {}) => {
   return `/api/people/${encodeURIComponent(personId)}/notes/history${s ? `?${s}` : ''}`;
 };
 
-// The words, in one place (the suite holds every one to page_sections.js pageWordProblems).
+// The words, in one place.
 export const VISIT_WORDS = Object.freeze({
   see: 'See their page',
   seeShort: 'What they show you',

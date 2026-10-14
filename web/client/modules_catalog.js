@@ -48,7 +48,7 @@
 export const USE = {
   watch: { label: 'Runs by itself', hint: 'Nothing to press. It just plays.' },
   touch: { label: 'Responds to touch', hint: 'Reacts if touched, and is fine if it never is.' },
-  answer: { label: 'Asks for an answer', hint: 'Needs somebody who can reply, with a touch, a switch (one big button) or a key.' },
+  answer: { label: 'Asks for an answer', hint: 'Needs somebody who can reply, with a touch, a switch or a key.' },
 };
 
 // *** WHAT THE SEEDED STARTER SCREEN MOUNTS, IN SLOT ORDER (TL, TR, BL, BR). ***
@@ -91,9 +91,9 @@ export const GROUPS = [
   {
     id: 'ai',
     title: 'AI',
-    blurb: 'Your guide, AI characters to talk to, and a speech recogniser trained on your own voice. The AI costs '
-      + 'nothing by default: it runs on your own computer, or on a key you bring. Claude on this account and the '
-      + 'wake phrases are settings, not panels: they are in the ⚙ menu (Devices) and in Modules under AI.',
+    blurb: 'Your guide, AI characters to talk to, and a speech program trained on your own voice. The AI costs nothing by default. It '
+      + 'runs on your own computer, or uses a key of your own from an AI service. “Claude on this account” and the wake phrases (the words '
+      + 'that tell the screen to listen) are settings, not panels. They are in the ⚙ menu (Devices) and in Modules under AI.',
   },
 ];
 
@@ -153,8 +153,8 @@ export const CATALOG = [
     title: 'Music',
     group: 'comfort',
     use: 'watch',
-    lead: 'Their favourite music, by name.',
-    needs: 'A few favourites. They can be YouTube links, music files in a connected folder, Internet Archive items, or '
+    lead: 'Their favorite music, by name.',
+    needs: 'A few favorites. They can be YouTube links, music files in a connected folder, Internet Archive items, or '
       + 'Spotify. Spotify is optional and needs Spotify Premium.',
     why: 'Say “computer please play” and a name, or press it. The family writes the list once; '
       + 'the same names work by voice, by switch and by touch.',
@@ -167,7 +167,7 @@ export const CATALOG = [
     use: 'watch',
     lead: 'Old films, radio shows, music and books from the Internet Archive.',
     needs: 'The address of an item on archive.org, and a working internet connection. No account is needed.',
-    why: 'Footage and radio from the right decade can mean more than anything new. The Archive keeps old programmes, '
+    why: 'Footage and radio from the right decade can mean more than anything new. The Archive keeps old programs, '
       + 'recordings and books that anyone may watch and hear. Sound and video play through the speaker you choose, and '
       + 'move on by themselves; books open in the Archive’s own reader.',
     note: 'Only the item names you choose are saved. The films and sound come straight from the Archive; nothing is '
@@ -194,7 +194,7 @@ export const CATALOG = [
     use: 'watch',
     lead: 'Karaoke videos from YouTube, with the words on screen, to sing along with.',
     needs: 'Some karaoke videos, and a working internet connection. Search for videos in this '
-      + 'part, or paste links. Searching needs your own YouTube key.',
+      + 'panel, or paste links. Searching needs your own YouTube key.',
     why: 'A song somebody has known for years can be easier to join in with than a conversation. '
       + 'The words come from the videos themselves, so nothing here has to store them.',
     note: 'A first version: it plays and shuffles the songs. There is no scoring and no song list '
@@ -245,13 +245,13 @@ export const CATALOG = [
     // something to look at.
     group: 'practice',
     use: 'answer',
-    lead: 'A talk board, also called an AAC communication board. Big cards say the word out loud when chosen.',
+    lead: 'An AAC communication board. Big cards say the word out loud when chosen.',
     needs: 'Nothing. A speaker, if you want it heard.',
-    why: 'It is a way to say something when speaking is hard: a set of care words, or just '
-      + 'yes, no and "something else". It can be touched, or it can walk the cards one at a '
-      + 'time so somebody with a single switch can answer. Switch boards from the row above '
-      + 'the cards. It says the word in the room and nowhere else: it is not a nurse call and '
-      + 'does not reach anybody who is not there.',
+    why: 'An AAC board (augmentative and alternative communication) is a way to say something '
+      + 'when speaking is hard: a set of care words, or just yes, no and "something else". It can '
+      + 'be touched, or it can light the cards one at a time so somebody using a switch can '
+      + 'answer. Switch boards from the row above the cards. It says the word out loud. During a call, '
+      + 'the person on the call gets the word too.',
     // SAYS WHAT THE SHIPPED BOARD IS, rather than letting somebody assume it is a starter set
     // (D13). `aac_vocab.js` is explicit that the 16-word board was built for one person and has
     // no eat / drink / hungry / thirsty cards, "which for anybody else is a hole in the middle
@@ -287,7 +287,7 @@ export const CATALOG = [
     needs: 'Nothing.',
     why: 'Something calm to look at that never asks for anything. Each scene is a '
       + 'whole place with depth, not a pattern, and all of the movement is slow. It '
-      + 'can fill a screen on its own, or sit behind a talk board with the cards '
+      + 'can fill a screen on its own, or sit behind an AAC board with the cards '
       + 'see-through.',
     note: 'Movement can be slowed or stopped. It stops by itself if the device is set to '
       + 'reduce motion.',
@@ -302,10 +302,10 @@ export const CATALOG = [
     lead: 'A room to look into, with a window, a clock and a calendar on the wall.',
     needs: 'Nothing.',
     why: 'A familiar place instead of a flat screen. It has a sofa, a lamp, a window onto a live scene, '
-      + 'and the time and date on the wall where anybody would look for them. It follows the real '
-      + 'clock. The lamp comes on in the evening and the window goes dark at night. The clock, the '
-      + 'calendar and the pictures stay bright enough to read. The furniture can hold the screen’s own '
-      + 'controls. Every piece that does something carries a label, and a switch (one big button) can '
+      + 'and the time and date on the wall where anybody would look for them. It follows the '
+      + 'real clock. The lamp comes on in the evening and the window goes dark at night. The '
+      + 'clock, the calendar and the pictures stay bright enough to read. The furniture can hold the '
+      + 'screen’s own controls. Every piece that does something carries a label, and a switch can '
       + 'step through them one at a time.',
     note: 'Five rooms to start from, drawn with Claude Design. Movement can be slowed or stopped. '
       + 'It stops by itself if the device is set to reduce motion.',
@@ -318,9 +318,9 @@ export const CATALOG = [
     // Not the eight names: "the Shop" is a money word on the library's pages (library_test), and a list reads long.
     lead: 'The theme\'s town: the King\'s, the Queen\'s, Jack\'s and Pip\'s homes, and a place in town for each suit.',
     needs: 'Nothing. The town is drawn for each theme.',
-    why: 'Open a place to see it full size, with its character at home, or rearrange it: move things, add a piece from '
-      + 'the theme, take one out. A rearranged place is kept for the person, in that theme, and the playing cards drawn '
-      + 'from it change too. The places light up in turn, so one switch (one big button) can choose; touch works, and so '
+    why: 'Open a place to see it full size, with its character at home, or rearrange it: move things, add a piece '
+      + 'from the theme, take one out. A rearranged place is kept for the person, in that theme, and the playing '
+      + 'cards drawn from it change too. The places light up in turn, so one switch can choose; touch works, and so '
       + 'does saying "go to the bakery".',
   },
   // story (2026-10-12): Story time. `watch`: it turns its own pages by default, so somebody who can only watch hears the
@@ -344,9 +344,9 @@ export const CATALOG = [
     use: 'answer',
     lead: 'Which one is the Queen? Pick her out from three of the court characters, dressed for the theme.',
     needs: 'Nothing. The characters and the questions are built in.',
-    why: 'It starts with their crowns and hats to go by, then by name, then by where they live, then by their looks '
-      + 'alone, each player at their own level. Say the name or which one ("the one on the left"), touch it, let the light '
-      + 'step through them for one switch (one big button), or answer yes or no. It waits for Start.',
+    why: 'It starts with their crowns and hats to go by, then by name, then by where they live, then by their '
+      + 'looks alone, each player at their own level. Say the name or which one ("the one on the left"), touch it, '
+      + 'let the light step through them for one switch, or answer yes or no. It waits for Start.',
   },
   // dressup (2026-10-12, Design's game ideas): put Jack in something warm. `answer`: it asks and waits; nothing is wrong.
   {
@@ -356,9 +356,9 @@ export const CATALOG = [
     use: 'answer',
     lead: 'Put Jack in something warm: choose from the wardrobe, or dress the court characters in anything.',
     needs: 'Nothing. The wardrobe is built in.',
-    why: 'Anything that fits is right, and nothing is ever marked wrong: something else is tried on, and it says what '
-      + 'that one is for. Touch an outfit, say its name ("the parka"), or let the light step through them for one '
-      + 'switch (one big button). It waits for Start.',
+    why: 'Anything that fits is right, and nothing is ever marked wrong: something else is tried on, and it says '
+      + 'what that one is for. Touch an outfit, say its name ("the parka"), or let the light step through '
+      + 'them for one switch. It waits for Start.',
   },
   // Row 2.37. `touch`: left alone it is a note on the wall, and nothing waits on anybody.
   {
@@ -368,7 +368,7 @@ export const CATALOG = [
     use: 'touch',
     lead: 'A short note somebody left, with who wrote it and when.',
     needs: 'Nothing. Somebody to leave a note, on this screen or from a phone or computer signed in '
-      + 'with the same login.',
+      + 'to the same account.',
     why: 'Words from a person who was here, in their own name, where they will be seen. It can look like '
       + 'a sticky note, or sit on the fridge or a desk. It can be read aloud. Change it by typing or, with no '
       + 'keyboard, by picking a ready-made note. Every earlier note is kept and can be put back.',
@@ -392,8 +392,8 @@ export const CATALOG = [
     lead: 'The weather now, the next few hours and the next few days, in big words and pictures.',
     needs: 'A place, typed once in its settings. It can be a town, or a latitude and longitude (the two numbers that mark a spot on '
       + 'a map). The place is sent to Open-Meteo, a free weather service. Nothing is sent until a place is set.',
-    why: 'A window on the day outside, with the words next to every picture. A touch, or one press of a switch '
-      + '(one big button), reads it aloud. When the connection drops, it keeps the last weather it had and says how old it is.',
+    why: 'A window on the day outside, with the words next to every picture. A touch, or one press of '
+      + 'a switch, reads it aloud. When the connection drops, it keeps the last weather it had and says how old it is.',
   },
   {
     type: 'pond',
@@ -430,10 +430,10 @@ export const CATALOG = [
     lead: 'Wait while a charge builds, then press when the screen says Go.',
     needs: 'Nothing, to play. Somewhere to save, if you want to keep the record.',
     why: 'A wait-then-press exercise that therapists run by hand, called go/no-go. Here the waiting '
-       + 'is worth something: the longer they hold off, the bigger the reward. In calm mode Go never '
-       + 'times out. It waits for them, so there is no way to fail. Only in challenge mode does Go '
-       + 'close if they wait too long. It writes down every press and release with its timing, even '
-       + 'presses the game ignored. That record is for a doctor, nurse or therapist to read. It is not '
+       + 'is worth something: the longer they hold off, the bigger the reward. In calm mode Go '
+       + 'never times out. It waits for them, so there is no way to fail. Only in challenge mode '
+       + 'does Go close if they wait too long. It writes down every press and release with its '
+       + 'timing, even presses the game ignored. That record is for a clinician to read. It is not '
        + 'a score.',
   },
   {
@@ -446,10 +446,10 @@ export const CATALOG = [
     use: 'touch',
     lead: 'A comet that follows your movement, with hearts to catch.',
     needs: 'Nothing.',
-    why: 'The comet’s head sits exactly where the pointer is, and never drifts by '
-      + 'itself. So it is plain that your own movement is what moved it. That matters '
-      + 'for somebody who is learning again that they can make things happen. It '
-      + 'can also be driven with a switch (one big button), which goes and gets a '
+    why: 'The comet’s head sits exactly where the pointer is, and never drifts '
+      + 'by itself. So it is plain that your own movement is what moved it. That '
+      + 'matters for somebody who is learning again that they can make things '
+      + 'happen. It can also be driven with a switch, which goes and gets a '
       + 'heart for you.',
   },
   {
@@ -461,16 +461,16 @@ export const CATALOG = [
     type: 'comet_ambient',
     group: 'comfort',
     use: 'watch',
-    lead: 'Hearts drifting behind your other parts. They are just for looks unless you change that.',
+    lead: 'Hearts drifting behind your other panels. They are just for looks unless you change that.',
     needs: 'Nothing.',
     why: 'It does not take a place of its own on the dashboard. It sits behind '
       + 'whatever else is on screen, like a wallpaper. Set to "Just for looks", '
       + 'it is only scenery. Set to "Something to catch", it becomes a small, '
       + 'quiet game worth points. It never covers the thing you were already '
       + 'looking at.',
-    note: 'In "Something to catch" mode, a switch (one big button) cannot reach it by '
-      + 'stepping round the screen yet. A caregiver gives a switch that job directly, the '
-      + 'same as for any part.',
+    note: 'In "Something to catch" mode, a switch cannot reach it by stepping '
+      + 'around the screen yet. A caregiver binds a switch to it directly, the same '
+      + 'as for any module.',
   },
 
   {
@@ -483,10 +483,10 @@ export const CATALOG = [
     needs: 'Nothing for words. A picture comes from this device, or from a folder on this computer '
       + 'connected in Media.',
     why: 'A name on a sign, a photo in a frame, a label on the wall. It is one button, set up from '
-      + 'the settings menu. You choose the words, a font, the colours, a frame, and whether pressing '
+      + 'the settings menu. You choose the words, a font, the colors, a frame, and whether pressing '
       + 'it says the words out loud. The first step of the Nimrod game builds a profile out of two '
       + 'of them.',
-    note: 'Six sign styles and seven frames, drawn with Claude Design. Until you pick a colour for '
+    note: 'Six sign styles and seven frames, drawn with Claude Design. Until you pick a color for '
       + 'the words, they take the one that reads best on the sign. Choosing a picture walks '
       + 'the pictures in a source one at a time, so a small folder of the ones you want is '
       + 'quickest.',
@@ -498,13 +498,13 @@ export const CATALOG = [
     type: 'bricks',
     group: 'comfort',
     use: 'watch',
-    lead: 'One Nimrod brick, plate or bracket, in any size, in the theme’s brick colours.',
+    lead: 'One Nimrod brick, plate or bracket, in any size, in the theme’s brick colors.',
     needs: 'Nothing. Every part and size is built in.',
     why: 'Every Nimrod part is on the same 40 mm grid, so any two fit together. In the settings menu, choose the '
-      + 'part, its size in 40 mm steps, and its colour. A baseplate can also be 5 or 10 mm thick. The parts that have a '
+      + 'part, its size in 40 mm steps, and its color. A baseplate can also be 5 or 10 mm thick. The parts that have a '
       + 'printed model show its picture. Every other size is drawn the same way.',
-    note: 'The theme’s brick colours change with the theme and are chosen to stand out from it and from each other, '
-      + 'colour-blind too. The models themselves are on the bricks page, free to print.',
+    note: 'The theme’s brick colors change with the theme and are chosen to stand out from it and from each other, '
+      + 'color-blind too. The models themselves are on the bricks page, free to print.',
     page: '/bricks.html',
   },
 
@@ -542,9 +542,9 @@ export const CATALOG = [
     use: 'answer',
     lead: 'A quiz built from questions you write yourself.',
     needs: 'Nothing. Add your own questions in settings.',
-    why: 'The score is about knowing things, never about how clearly somebody speaks. '
-      + 'Somebody whose speech is hard to understand is never marked down for it. There are '
-      + '4 choices by default and one button, so a switch (one big button) is enough.',
+    why: 'The score is about knowing things, never about how clearly somebody '
+      + 'speaks. Somebody whose speech is hard to understand is never marked down for '
+      + 'it. There are 4 choices by default and one button, so a switch is enough.',
     note: 'It can also record the room while it is played. That is how a computer can later '
       + 'learn to understand one person’s speech. Recording is off unless you turn it on.',
   },
@@ -605,8 +605,8 @@ export const CATALOG = [
     use: 'answer',
     lead: 'A word is said out loud, with its picture where there is one, and the player spells it.',
     needs: 'Nothing. The words and pictures are built in.',
-    why: 'The letters are on a board. A switch (one big button) can step through it: first a row, then a letter. '
-      + 'The letters can be touched or said aloud too. A miss gets a hint: first the first letter, then how many '
+    why: 'The letters are on a board. A switch can step through it: first a row, then a letter. The letters '
+      + 'can be touched or said aloud too. A miss gets a hint: first the first letter, then how many '
       + 'letters there are. There is never a buzzer.',
   },
   // Row 2.45, corrected 2026-10-01: simple math is not its own game (it is Math's Beginner level);
@@ -628,8 +628,8 @@ export const CATALOG = [
     use: 'answer',
     lead: 'A few big letters: find the words they make.',
     needs: 'Nothing. The words are built in.',
-    why: 'It starts with 3 letters, and adds more as the words come easily, for each player. The letters are read aloud. Say the '
-      + 'word, build it with a switch (one big button), or touch the letters. A real word that is not on its list is not marked wrong.',
+    why: 'It starts with 3 letters, and adds more as the words come easily, for each player. The letters are read aloud. '
+      + 'Say the word, build it with a switch, or touch the letters. A real word that is not on its list is not marked wrong.',
   },
   {
     type: 'brain_games',
@@ -659,9 +659,9 @@ export const CATALOG = [
     use: 'answer',
     lead: 'Name the suit of a big playing card, then say whether it is higher or lower than cards already done.',
     needs: 'Nothing. The deck is built in.',
-    why: 'It starts with the suit alone. It works up to putting a card in order among several, each player at their own '
-      + 'level. Say the answer, touch it, or step through the choices with a switch (one big button). Every suit has its '
-      + 'colour, its symbol and its name, never a colour alone. It waits for Start.',
+    why: 'It starts with the suit alone. It works up to putting a card in order among several, each player at '
+      + 'their own level. Say the answer, touch it, or step through the choices with a switch. Every suit has its '
+      + 'color, its symbol and its name, never a color alone. It waits for Start.',
   },
   // 2026-10-02 (Mike's landing Home): the guide, the devices list, and What's new.
   {
@@ -689,11 +689,11 @@ export const CATALOG = [
     title: 'Modules',
     group: 'practice',
     use: 'touch',
-    lead: 'Everything you can put on a screen, to look through: parts, scenes, furniture and 3D bricks.',
+    lead: 'Everything you can put on a screen, to look through: modules, scenes, furniture and 3D bricks.',
     needs: 'Nothing.',
     why: 'Sort and filter by what you are after (games, learning, something to look at, people), or search. '
-      + 'One press shows what a thing is and what it needs. A second press puts it where this part is. '
-      + 'Switch module opens this list in the place of the part you chose. It puts that part back if you change your mind.',
+      + 'One press shows what a thing is and what it needs. A second press puts it where this panel is. '
+      + 'Switch module opens this list in the place of the panel you chose. It puts that panel back if you change your mind.',
     note: 'Nothing here costs money. In the Nimrod Game some things unlock as you play. Sandbox (the game turned off) is one choice away '
       + 'and unlocks everything.',
   },
@@ -725,10 +725,10 @@ export const CATALOG = [
     title: 'Profile',
     group: 'ai',      // 2026-10-04: the AI set, for its AI characters (was 'record')
     use: 'touch',
-    lead: 'A person or an AI (artificial intelligence) character, as a card: their face, their name, and what you can do with them.',
+    lead: 'A person or an AI character, as a card: their face, their name, and what you can do with them.',
     needs: 'Nothing for the card. Talking to an AI needs one connected to this device. That can be Ollama, which is free, or a key of your own.',
-    why: 'Talk to an AI character, or open its room. For example, a math tutor’s room has the calculator. People '
-      + 'on this login show here too. Friends on other logins will show once logins can be linked.',
+    why: 'Talk to an AI character, or open its room. For example, a math tutor’s room has the calculator. People on '
+      + 'this account show here too. Friends on other accounts will show once accounts can be linked.',
   },
   // 2026-10-04 (DECISIONS.md, "The landing is a very simple profile page"): you and your people, as cards. `touch`:
   // left alone it is faces and names, and nothing waits on anybody. Words a visitor reads (the hover line uses them).
@@ -758,9 +758,9 @@ export const CATALOG = [
     type: 'options',
     group: 'practice',
     use: 'touch',
-    lead: 'The options of whatever you choose in a part you are editing.',
+    lead: 'The options of whatever you choose in a panel you are editing.',
     needs: 'Nothing.',
-    why: 'Press ✎ on a part, then press a thing in it: its words, its picture, or the whole part. Its options show here.',
+    why: 'Press ✎ on a panel, then press a thing in it: its words, its picture, or the whole panel. Its options show here.',
   },
   {
     type: 'name_that',
@@ -779,11 +779,11 @@ export const CATALOG = [
     type: 'solitaire',
     group: 'practice',
     use: 'answer',
-    lead: 'Klondike solitaire, with big cards in four suit colours.',
+    lead: 'Klondike solitaire, with big cards in four suit colors.',
     needs: 'Nothing. The deck and the rules are built in.',
-    why: 'A move is two short choices. Pick a card, then pick one of the places it can go. One switch (one '
-      + 'big button) can play a whole game. So can a touch or a mouse. Nothing needs dragging. There '
-      + 'is no timer and no losing screen. When no move helps, it offers Undo or a new game.',
+    why: 'A move is two short choices. Pick a card, then pick one of the places it can go. One switch '
+      + 'can play a whole game. So can a touch or a mouse. Nothing needs dragging. There is no '
+      + 'timer and no losing screen. When no move helps, it offers Undo or a new game.',
   },
   // Row 2.37 item 10: games on the room's bricks and floor tiles, standalone first.
   {
@@ -792,9 +792,9 @@ export const CATALOG = [
     use: 'answer',
     lead: 'Knock down a wall of Nimrod bricks with a ball and a paddle.',
     needs: 'Nothing. The wall, the ball and the sounds are built in.',
-    why: 'One switch (one big button) can play. The paddle glides by itself and a press stops it where the ball '
-      + 'will land. The ball is slow by default. A missed ball just comes back, and there is no losing screen. '
-      + 'The bricks take the theme’s colours.',
+    why: 'One switch can play. The paddle glides by itself and a press stops it where the ball will land. '
+      + 'The ball is slow by default. A missed ball just comes back, and there is no losing screen. '
+      + 'The bricks take the theme’s colors.',
   },
   // brick games (2026-10-09, row 2.76): stack Nimrod bricks into a wall.
   {
@@ -803,9 +803,9 @@ export const CATALOG = [
     use: 'answer',
     lead: 'Stack Nimrod bricks into a wall: fill a row and it is built.',
     needs: 'Nothing. The bricks, the levels and the sounds are built in.',
-    why: 'One switch (one big button) can play. The brick glides along the top by itself and a press drops it. Or Left, '
-      + 'Turn, Right and Drop light up in turn, and a press does the lit one. The easiest levels are slow and use small bricks, '
-      + 'and a full wall just starts a fresh one. Harder levels are faster, with bigger pieces.',
+    why: 'One switch can play. The brick glides along the top by itself and a press drops it. Or Left, Turn, Right '
+      + 'and Drop light up in turn, and a press does the lit one. The easiest levels are slow and use small bricks, and '
+      + 'a full wall just starts a fresh one. Harder levels are faster, with bigger pieces.',
   },
   // brick builder (2026-10-09): make a model from Nimrod parts, and a game of building one you are shown.
   {
@@ -813,7 +813,7 @@ export const CATALOG = [
     title: 'Brick builder',   // title-casing the type would say "Brickbuilder" (composer_reach checks it is the manifest's)
     group: 'practice',
     use: 'touch',
-    lead: 'Make a model from Nimrod bricks, plates and brackets: any size, stacked, turned and coloured.',
+    lead: 'Make a model from Nimrod bricks, plates and brackets: any size, stacked, turned and colored.',
     needs: 'Nothing. Every part is built in. Models are kept for you, and can be saved to your Nimrod folder.',
     why: 'Every part is on the same 40 mm grid, so anything put down fits. A cursor shows where the next part goes, and '
       + 'everything is a button: a mouse, a finger, the keys or one switch can build. Parts fall onto what is under '
@@ -838,8 +838,8 @@ export const CATALOG = [
     use: 'answer',
     lead: 'A brick slides along above a tower. One press drops it. Build up to the line.',
     needs: 'Nothing. The bricks, the levels and the sounds are built in.',
-    why: 'One press is the whole game, so one switch (one big button) can play: a key, a click or a touch works too. '
-      + 'What hangs over the edge is cut off. The easy levels are slow and wide, a brick lands on the nearest whole '
+    why: 'One press is the whole game, so one switch can play: a key, a click or a touch works too. What hangs '
+      + 'over the edge is cut off. The easy levels are slow and wide, a brick lands on the nearest whole '
       + 'cell, and a miss just brings the same brick again.',
   },
   {
@@ -847,7 +847,7 @@ export const CATALOG = [
     title: 'Brick mosaic',   // not "Brickmosaic"
     group: 'comfort',
     use: 'touch',
-    lead: 'One of your photos, built from Nimrod bricks one brick at a time, in the theme’s brick colours.',
+    lead: 'One of your photos, built from Nimrod bricks one brick at a time, in the theme’s brick colors.',
     needs: 'Nothing. It uses a photo source if there is one, and a built-in painting if not. The picture never leaves '
       + 'the browser.',
     why: 'It builds by itself, slowly, from the bottom row up, so there is nothing to press. A press lays the rest of '
@@ -860,11 +860,11 @@ export const CATALOG = [
     title: 'Sort the bricks',   // not "Sortbricks"
     group: 'practice',
     use: 'answer',
-    lead: 'Put each brick where it goes: in the slot it fits, then with its colour, then with its size.',
+    lead: 'Put each brick where it goes: in the slot it fits, then with its color, then with its size.',
     needs: 'Nothing. The bricks, the levels and the sounds are built in.',
-    why: 'At the first level there is one slot, and any press puts the brick in. Later levels light the places up in '
-      + 'turn, so one switch (one big button) can choose; a touch, a key or two switches work too. It says each brick\'s '
-      + 'colour aloud, and a wrong place just brings the same brick back.',
+    why: 'At the first level there is one slot, and any press puts the brick in. Later levels light the places '
+      + 'up in turn, so one switch can choose; a touch, a key or two switches work too. It says each brick\'s '
+      + 'color aloud, and a wrong place just brings the same brick back.',
   },
   {
     type: 'rhythm',
@@ -873,7 +873,7 @@ export const CATALOG = [
     lead: 'Tiles light up to a beat; press on the beat.',
     needs: 'Nothing. The beat is built in, or it can follow a tempo on the screen.',
     why: 'One press is the whole game, so one switch plays it. Slow and forgiving by default, it never '
-      + 'flashes more than three times a second, and a hit shows as a mark and words, not only a colour.',
+      + 'flashes more than three times a second, and a hit shows as a mark and words, not only a color.',
   },
   {
     type: 'sprint',
@@ -924,11 +924,11 @@ export const CATALOG = [
     // a screen that has one on it is not stalled by it, which is what the `touch` legend says.
     // It does need somebody to press keys to be of any use, and the copy below does not hide that.
     use: 'touch',
-    lead: 'A calculator that adds, subtracts, multiplies and divides, in a part of its own.',
+    lead: 'A calculator that adds, subtracts, multiplies and divides, on a panel of its own.',
     needs: 'Nothing. It works with no internet.',
-    why: 'For working something out without leaving the screen, and without having to open the '
-      + 'Math game. The keys can be touched, or stepped through with a switch (one big button). '
-      + 'It can also pass its answer to another part that takes one. There is no screen for '
+    why: 'For working something out without leaving the screen, and without having to open '
+      + 'the Math game. The keys can be touched, or stepped through with a switch. It can '
+      + 'also pass its answer to another panel that takes one. There is no screen for '
       + 'setting that up yet, so today that link is written by hand into the data behind the screen.',
   },
   {
@@ -967,8 +967,8 @@ export const CATALOG = [
     why: 'It starts as “Top played this week”, and “Next view” shows the same plays other ways: each day this '
       + 'month, today in one number, by kind, of all time. Every chart can be read as a plain list and said '
       + 'aloud - press “Say it”, or say “computer please, what played most”.',
-    note: 'Counted on this device from this screen’s own plays. Nothing is sent anywhere. Spotify plays are left out, '
-      + 'because Spotify’s rules for developers say an app should not make listening statistics from them.',
+    note: 'Counted on this device from this screen’s own plays. Nothing goes to the Nimrod site. Spotify plays are left '
+      + 'out, because Spotify’s rules for developers say an app should not make listening statistics from them.',
   },
   // Row 2.62 step 4: the same plays as things in a room (modules/play_objects.js). `watch`: looked at; one press reads it.
   {
@@ -978,11 +978,11 @@ export const CATALOG = [
     use: 'watch',
     lead: 'What played on this screen as things in a room: a stack of bricks for each, a pie, or posters on the wall.',
     needs: 'Nothing to set up. Home’s Add has “Top played this week” as a stack, a pie or posters. In a room it goes '
-      + 'on the wall with no box around it.',
-    why: 'The same plays that Charts counts, as something to look at across a room. Press it to hear what played '
-      + 'most and see it as a list. The bricks are the Nimrod brick, as it is printed.',
-    note: 'Counted on this device from this screen’s own plays. Nothing is sent anywhere. Spotify plays are left out. '
-      + 'Posters show names only. There are no cover pictures until the services’ rules on showing them are checked.',
+      + 'on the wall with no panel around it.',
+    why: 'The same plays that the Charts panel counts, as something to look at across a room. Press it to hear what '
+      + 'played most and see it as a list. The bricks are the Nimrod brick, as it is printed.',
+    note: 'Counted on this device from this screen’s own plays. Nothing goes to the Nimrod site. Spotify plays are left '
+      + 'out. Posters show names only. There are no cover pictures until the services’ rules on showing them are checked.',
   },
   // Row 2.44: the recordings voice_recording.js kept on this device, reviewed a pair at a time. `touch`: it
   // plays nothing until somebody presses Play, and left alone it is a list.
@@ -1010,7 +1010,7 @@ export const CATALOG = [
       + 'train on, or a computer with a graphics card, and the speech service running on it.',
     why: 'For somebody whose speech an ordinary speech program keeps getting wrong. It takes you through 6 steps, one at a time. You record the '
       + 'phrases here and export them (copy them to a folder). Then you train, convert, put the folder in place, and start the service. It works '
-      + 'out which step you are on from what it can see. Afterwards its settings stay in the same part: the folder, the port (the number the service '
+      + 'out which step you are on from what it can see. Afterwards its settings stay in the same panel: the folder, the port (the number the service '
       + 'answers on) and on or off.',
     note: 'This site does not send the recordings anywhere. They stay on the screen until you export them (copy them to a folder). It does not run '
       + 'on a Raspberry Pi (a small, low-cost computer).',
@@ -1026,9 +1026,9 @@ export const CATALOG = [
     lead: 'Talk with the people in town, or play a story where you choose what happens.',
     needs: 'An AI (artificial intelligence) storyteller: Ollama on this computer (free), a computer in the house that has one, '
       + 'or an online AI with your own key.',
-    why: 'The story is read aloud and shown in big letters. Each turn offers 2 to 4 choices: touch one, say its number or its '
-      + 'words, or step through them with a switch (one big button). Or say or type anything else, and the story goes that '
-      + 'way. The storyteller keeps it gentle and kind. If it is slow to answer, the choices are offered again.',
+    why: 'The story is read aloud and shown in big letters. Each turn offers 2 to 4 choices: touch one, say its number '
+      + 'or its words, or step through them with a switch. Or say or type anything else, and the story goes that way. '
+      + 'The storyteller keeps it gentle and kind. If it is slow to answer, the choices are offered again.',
     note: 'The story is kept on this device only, and in your Nimrod folder if you ask. It is never kept on the website’s '
       + 'server. The words are sent to whichever AI this device uses.',
   },

@@ -78,7 +78,7 @@ registerModule(
   { type: 'calculator', title: 'Calculator', core: 'new',
     // `local`, MEASURED: it renders and works with every platform handle rejecting.
     dependsOn: 'local',
-    description: 'A calculator that adds, subtracts, multiplies and divides. Press the keys. Another part can also press its keys and read its answer.',
+    description: 'A calculator that adds, subtracts, multiplies and divides. Press the keys. Another module can also press its keys and read its answer.',
     ports: CALC_PORTS },
   (ctx) => {
   const { mount } = ctx;

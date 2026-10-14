@@ -207,7 +207,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const one = parseCube('# comment\nLUT_1D_SIZE 2\n0 0 0\n1 1 1\n');
       check('a 1D cube is read', one.ok && one.lut.kind === '1d' && one.lut.size === 2);
       check('*** wrong count, junk, no size: a plain reason, never a throw ***',
-        /expected 8 colours/.test(parseCube('LUT_3D_SIZE 2\n0 0 0').why) && /not three numbers/.test(parseCube('LUT_1D_SIZE 2\n0 0\n1 1 1').why)
+        /expected 8 colors/.test(parseCube('LUT_3D_SIZE 2\n0 0 0').why) /* site text second pass 2026-10-13: American spelling */ && /not three numbers/.test(parseCube('LUT_1D_SIZE 2\n0 0\n1 1 1').why)
           && /no size line, LUT_3D_SIZE/.test(parseCube('0 0 0').why) /* site text rewrite 2026-10-09 */ && /empty/.test(parseCube('').why) && !parseCube(null).ok);
       check('DOMAIN lines are read', parseCube('DOMAIN_MIN 0 0 0\nDOMAIN_MAX 2 2 2\nLUT_1D_SIZE 2\n0 0 0\n1 1 1').lut.max[0] === 2);
     }

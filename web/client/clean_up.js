@@ -96,12 +96,12 @@ export const CLEAN_LEVELS = Object.freeze([
       + 'be combined into one line.' }),
   Object.freeze({ level: 9, deskName: 'nearly one line', label: 'Two or three lines',
     help: 'What it was about, and what you want done, in two or three short lines.',
-    prompt: 'You are summarising a voice-dictated note in a very few words. Two or three short lines at most, '
+    prompt: 'You are summarizing a voice-dictated note in a very few words. Two or three short lines at most, '
       + 'capturing the actual gist of what this was about and what (if anything) they want done: not yet a single '
       + 'line, but close to it.' }),
   Object.freeze({ level: 10, deskName: 'ONE LINE', label: 'One line',
     help: 'What the note was about, in one line, in your own words as far as one line allows.',
-    prompt: 'You are summarising a voice-dictated note in ONE LINE: what this note was about, in their own words as '
+    prompt: 'You are summarizing a voice-dictated note in ONE LINE: what this note was about, in their own words as '
       + 'far as that is possible in one line. Nothing else.' }),
 ]);
 

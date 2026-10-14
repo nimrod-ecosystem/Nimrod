@@ -107,8 +107,9 @@ try {
       && brickKeyItem('module:clock', its) === null && brickKeyItem(null, its) === null);
     check('every item has a unique key', new Set(its.map((i) => i.key)).size === its.length);
     const words = J(its) + J(CATEGORIES) + J(LIBRARY_SETTINGS);
-    check('*** no site copy says "her screen", Taylor or Cici; no money words (shop, buy, price, coins) ***',
-      !/\bher screen|taylor|cici/i.test(words) && !/\b(shop|price|coins?|purchase)\b/i.test(words));
+    // (Its money-word half was retired 2026-10-13 with the banned-word lists: Mike, "I really don't like this banned
+    // word thing at all.")
+    check('*** no site copy says "her screen", Taylor or Cici ***', !/\bher screen|taylor|cici/i.test(words));
   }
 
   section('*** categories are tags: several per thing, from the catalog’s groups unless the table says ***');
@@ -228,7 +229,7 @@ try {
     check('the title says what it is doing', b.querySelector('[data-lib-head] h3').textContent === 'Switch Photos to…');
     const rec = lib.__probe().recent;
     check('*** recent: what the panel WAS first, then the last few switched to (not what it is now) ***',
-      J(rec) === J([{ key: 'module:clock', hint: 'what this part was' } /* site text rewrite 2026-10-09 */, { key: 'module:calculator', hint: 'recent' }, { key: 'module:wordforge', hint: 'recent' }]), J(rec));
+      J(rec) === J([{ key: 'module:clock', hint: 'what this panel was' } /* site text second pass 2026-10-13 */, { key: 'module:calculator', hint: 'recent' }, { key: 'module:wordforge', hint: 'recent' }]), J(rec));
     check('it is NOT a click-through list: everything is on the grid at once', b.querySelectorAll('.lib-card').length === items().length);
     b.querySelector('[data-lib-cat="games"]').click();
     check('*** a category chip filters the grid, and is remembered ***', lib.__probe().prefs.category === 'games'

@@ -42,7 +42,7 @@ export const CONNECT_WORDS = Object.freeze({
   step3: 'Under Redirect URIs, paste this address exactly, then press Add:',
   step4: 'Tick Web API, agree to Spotify’s terms, and press Save.',
   step5: 'Open the app’s Settings, copy its Client ID, and paste it here:',
-  once: 'The Client ID is saved once, for every music part and the keys page. It is not a secret. The Client secret '
+  once: 'The Client ID is saved once, for every music panel and the keys page. It is not a secret. The Client secret '
     + 'is never needed for playing.',
   notSecure: 'Spotify only accepts a return address on https (or http://127.0.0.1 on this machine), and this page is '
     + 'not on one, so connecting will not work from this address.',

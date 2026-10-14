@@ -599,7 +599,7 @@ const SETTINGS = [
     note: 'Adds the packs waiting for review to "Which pack", and their questions to "Every question pack". Each unreviewed '
       + 'question shows a small ✓ fine / ✗ wrong. You can also press '
       + 'O for fine or W for wrong, or say "that one is wrong". Playing a question through passes it. ✗ keeps it out until '
-      + 'it is fixed. This is only for this part. Turn it off when you have finished reviewing.' },
+      + 'it is fixed. This is only for this panel. Turn it off when you have finished reviewing.' },
   { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
     level: 'standard',
     options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
@@ -647,7 +647,7 @@ const SETTINGS = [
   // themselves (no "Is it this one?"). Hidden while nothing is said at all.
   { key: 'sayChoice', label: 'Say the switch choice too', default: true, level: 'standard',
     onLabel: 'Yes (the answer it lands on)', offLabel: 'Only the question',
-    note: 'Somebody using a switch (one big button) needs it, to know which answer is lit.',
+    note: 'Somebody using a switch needs it, to know which answer is lit.',
     appliesWhen: (v) => v.speak !== false },
   // *** "SAY WHERE THE ANSWER COMES FROM": OFF BY DEFAULT, AND ADVANCED. *** Argued:
   //   FOR on (matching "Show where the answer comes from", which is on): the same honesty, for somebody who
@@ -1042,7 +1042,7 @@ registerModule(
             </div></div>`
           : `<div class="tv"><div class="tv-empty">
               <p><b>No questions yet.</b></p>
-              <p>These come from your own questions, in the <b>Questions</b> part. Add it to this
+              <p>These come from your own questions, in the <b>Questions</b> module. Add it to this
                 screen and write some. Anything you write there shows up here.</p>
               <p class="tv-fmt">One per line:
                 <code>question | answer | wrong | wrong | wrong</code></p>

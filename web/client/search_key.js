@@ -31,14 +31,14 @@ export const SEARCH_URL = '/api/recommend/search';
 // Saved for, as the server names them. "account" is the default every other level falls back to.
 export const KEY_LEVELS = Object.freeze(['account', 'person', 'device', 'panel']);
 export const KEY_LEVEL_WORDS = Object.freeze({
-  account: 'the whole login (every screen and search)',
+  account: 'the whole account (every screen and search)',
   person: 'this person only',
   device: 'this device only',
   panel: 'this panel only',
 });
 // Whose key it is, in a sentence ("the account's key, ending …4f2a").
 const OWNER_WORDS = Object.freeze({
-  account: 'this login’s key', person: 'this person’s own key', device: 'this device’s own key', panel: 'this panel’s own key',
+  account: 'the account’s key', person: 'this person’s own key', device: 'this device’s own key', panel: 'this panel’s own key',
 });
 
 /** The places a request is made from, the empty ones left out. PURE. */

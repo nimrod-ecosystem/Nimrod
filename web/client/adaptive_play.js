@@ -177,7 +177,7 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
     w({ key: 'pointsFor', label: 'Right answers earn points for', kind: 'choice', default: 'first', level: 'advanced',
       options: [{ value: 'first', label: 'The first player only' }, { value: 'all', label: 'Every player' }] }),
     ...(ai ? [
-      w({ key: 'aiWrite', label: 'Write more questions with AI (artificial intelligence)', kind: 'choice', default: 'off', level: 'advanced',
+      w({ key: 'aiWrite', label: 'Write more questions with AI', kind: 'choice', default: 'off', level: 'advanced',
         options: [{ value: 'off', label: 'Off' }, { value: 'local', label: 'With this device’s own AI' }],
         note: 'Uses the AI address set on this device (an open model such as one in Ollama). Questions are kept on this screen.' }),
       w({ key: 'aiWhenFewer', label: 'Write more when a player has fewer than', kind: 'choice', default: 6,

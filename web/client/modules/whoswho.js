@@ -82,7 +82,7 @@ export const PIECE = Object.freeze({ king: 'the tall crown', queen: 'the crown w
   jack: 'the cap with the long feather', joker: "the jester's hat" });
 
 // The hair colours by name, in character_kit.js HAIR_COLOURS order.
-const HAIR_NAMES = ['black', 'dark brown', 'brown', 'auburn', 'ginger', 'fair', 'blonde', 'grey', 'red-brown', 'blue'];
+const HAIR_NAMES = ['black', 'dark brown', 'brown', 'auburn', 'ginger', 'fair', 'blonde', 'gray', 'red-brown', 'blue'];   // shown words only (site text second pass 2026-10-13: American spelling)
 export function hairName(hex) {
   const i = HAIR_COLOURS.findIndex((h) => h.toLowerCase() === String(hex || '').toLowerCase());
   return i >= 0 ? HAIR_NAMES[i] || '' : '';

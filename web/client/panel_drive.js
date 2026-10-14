@@ -46,15 +46,15 @@
 // a play count, a few times a day.
 
 export const PANEL_DRIVE_FIELDS = Object.freeze([
-  Object.freeze({ key: 'driveScale', label: 'The whole part: its size', kind: 'number', min: 10, max: 400, step: 1,
+  Object.freeze({ key: 'driveScale', label: 'The whole panel: its size', kind: 'number', min: 10, max: 400, step: 1,
     default: 100, unit: '%', level: 'advanced' }),
-  Object.freeze({ key: 'driveTurn', label: 'The whole part: how far it is turned', kind: 'number', min: -180, max: 180,
+  Object.freeze({ key: 'driveTurn', label: 'The whole panel: how far it is turned', kind: 'number', min: -180, max: 180,
     step: 1, default: 0, unit: '°', level: 'advanced' }),
-  Object.freeze({ key: 'driveHue', label: 'The whole part: its colours, shifted round the colour wheel', kind: 'number',
+  Object.freeze({ key: 'driveHue', label: 'The whole panel: its colors, shifted around the color wheel', kind: 'number',
     min: 0, max: 360, step: 1, default: 0, unit: '°', level: 'advanced' }),
-  Object.freeze({ key: 'driveAcross', label: 'The whole part: moved left or right', kind: 'number', min: -100, max: 100,
+  Object.freeze({ key: 'driveAcross', label: 'The whole panel: moved left or right', kind: 'number', min: -100, max: 100,
     step: 1, default: 0, unit: '% of its width', level: 'advanced' }),
-  Object.freeze({ key: 'driveDown', label: 'The whole part: moved up or down', kind: 'number', min: -100, max: 100,
+  Object.freeze({ key: 'driveDown', label: 'The whole panel: moved up or down', kind: 'number', min: -100, max: 100,
     step: 1, default: 0, unit: '% of its height', level: 'advanced' }),
 ]);
 export const PANEL_DRIVE_KEYS = Object.freeze(PANEL_DRIVE_FIELDS.map((f) => f.key));

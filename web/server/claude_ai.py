@@ -231,7 +231,7 @@ def clean_key(raw: str | None) -> str:
     if not k:
         raise ValueError("paste the key first")
     if k.startswith("sk-ant-admin"):
-        raise ValueError("that is an Admin key, which can manage your whole Anthropic organisation. "
+        raise ValueError("that is an Admin key, which can manage your whole Anthropic organization. "
                          "Make an ordinary API key in the Anthropic Console and paste that instead")
     if not KEY_RE.match(k):
         raise ValueError("that does not look like a Claude API key (they start sk-ant-)")

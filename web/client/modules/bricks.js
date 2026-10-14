@@ -25,7 +25,7 @@ const CSS = `.bk{box-sizing:border-box;width:100%;height:100%;display:flex;flex-
 registerModule(
   { type: BRICKS_TYPE, title: BRICKS_TITLE, core: 'new', dependsOn: 'none', importance: 'optional',
     description: 'One Nimrod part: a brick, a baseplate, a bracket or a joiner plate. Any size on the 40 mm grid, in '
-      + 'one of the theme’s brick colours or your own.',
+      + 'one of the theme’s brick colors or your own.',
     settings: BRICKS_SETTINGS },
   (ctx) => {
     const { mount, state } = ctx;

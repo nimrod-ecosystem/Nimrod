@@ -425,8 +425,8 @@ export const SETTINGS = [
   // ESSENTIAL, both of them. How readable this board is outranks which board it is showing,
   // and somebody who cannot read it cannot tell you that.
   { key: 'highContrast', label: 'High contrast', default: false, level: 'essential',
-    onLabel: 'Black on white', offLabel: 'The board’s own colours' },
-  { key: 'followTheme', label: 'Colours', default: false, level: 'essential',
+    onLabel: 'Black on white', offLabel: 'The board’s own colors' },
+  { key: 'followTheme', label: 'Colors', default: false, level: 'essential',
     onLabel: 'Follow the screen’s theme', offLabel: 'The board keeps its own' },
   // *** ONE ROW, NOT TWO. *** "Follow the theme" and "lock to one set" are options of the SAME
   // question, so a pinned set is a value here rather than a second row that only applies
@@ -492,19 +492,19 @@ export const SETTINGS = [
   // the list: almost nobody needs to turn touch off, and the person who does will be looking
   // for it deliberately.
   { key: 'tapSelects', label: 'Touching a card chooses it', kind: 'toggle', default: true,
-    level: 'advanced', onLabel: 'Yes', offLabel: 'No — choose by holding still (dwell), with a switch (one big button) or by scanning',
+    level: 'advanced', onLabel: 'Yes', offLabel: 'No — choose by holding still (dwell), with a switch or by scanning',
     note: 'Turn this off for somebody who rests or drags a hand across the screen.' },
   { key: 'fitScreen', label: 'Turn the grid to fit the screen', kind: 'toggle', default: true,
     level: 'advanced', onLabel: 'Yes', offLabel: 'No — keep the grid as it is',
     note: 'Turn this off once somebody has learned where the cards are.' },
   // "board into call" (2026-10-08): see `intoCall` in DEFAULTS.
   { key: 'intoCall', label: 'Words go into a call', kind: 'toggle', default: true,
-    level: 'standard', onLabel: 'Yes — the person on the call sees and hears each word', offLabel: 'No — words stay in this room',
+    level: 'standard', onLabel: 'Yes — everyone else on the call sees each word, and hears it unless they turned that off', offLabel: 'No — words are not sent into the call',
     note: 'Only during a call that is already going. It never starts a call or reaches anybody else.' },
   // call loadouts (2026-10-09): see `callClips` in DEFAULTS.
   { key: 'callClips', label: 'Recorded words are heard on a call', kind: 'toggle', default: true,
     level: 'advanced', onLabel: 'Yes — a word with a recording is sent as sound as well as text', offLabel: 'No — text only',
-    note: 'Only the words that have a recording. The person on the call sees every word either way.' },
+    note: 'Only the words that have a recording. This only applies when words go into a call. Then the person on the call sees every word either way.' },
   // own board clips (2026-10-09): see `shippedClips` in DEFAULTS.
   { key: 'shippedClips', label: 'Common words use the built-in recorded voice', kind: 'toggle', default: true,
     level: 'advanced', onLabel: 'Yes — 17 common words, like Yes and Thank you', offLabel: 'No — the device’s own voice',
@@ -526,8 +526,8 @@ registerModule(
   // bindings and in tests — and renaming it is a migration, not a label change. Same rule the
   // `inputs` tab followed when it became "Devices".
   { type: 'board', title: 'AAC board',
-    description: 'A talk board, also called an AAC communication board. AAC is augmentative and alternative communication: ways to say something when speaking is hard. Big '
-      + 'cards say the word out loud when they are chosen. They can be touched, or lit one at a time for somebody using a switch (one big button).',
+    description: 'An AAC board (AAC is augmentative and alternative communication: ways to say something when speaking is hard). Big cards say '
+      + 'the word out loud when they are chosen. They can be touched, or lit one at a time for somebody using a switch.',
     // `normal`, not `critical` — and the distinction is not modesty. `importance` feeds the
     // recovery ladder's fallback RANKING (`recovery.js`), so `critical` does not mean "matters
     // a lot", it means "swap to this when something breaks". A board is a tool somebody uses on
@@ -1451,7 +1451,7 @@ registerModule(
           <div class="aboard">
             <div class="ab-surface" data-surface aria-hidden="true"></div>
             <div class="ab-boards" data-boards role="group" aria-label="which board" hidden></div>
-            <div class="ab-grid" data-grid role="group" aria-label="talk board"></div>
+            <div class="ab-grid" data-grid role="group" aria-label="AAC board"></div>
             <div class="ab-flight" data-flight aria-hidden="true"></div>
             <button type="button" class="ab-gear" data-gear aria-expanded="false"
                     aria-label="board settings">⚙</button>
@@ -1475,7 +1475,7 @@ registerModule(
                 <input type="checkbox" data-popt="locked">
                 <span>Lock — hide the row and this button</span>
               </label>
-              <p class="ab-pnote">The cards still work the same. To unlock, open this part’s
+              <p class="ab-pnote">The cards still work the same. To unlock, open this panel’s
                 settings from the screen it is on. That menu is the way back in.</p>
               <div class="ab-prow ab-pbtns">
                 <button type="button" class="ab-pbtn ab-pdone" data-pclose>Done</button>

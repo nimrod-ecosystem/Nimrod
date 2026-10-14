@@ -65,7 +65,7 @@ export const SYMBOL_MIN_CONTRAST = 3;
 // the live themes in theme.js's own order. `card` says which kind of card the set was drawn for,
 // and is shown in the choice so nobody pins a dark-card set onto a light board by accident.
 export const SYMBOL_SETS = Object.freeze([
-  { id: 'color',     label: 'Colour',     card: 'mixed' },
+  { id: 'color',     label: 'Color',      card: 'mixed' },   // site text second pass 2026-10-13: American spelling; the id is unchanged
   { id: 'mono',      label: 'Black line', card: 'light' },
   { id: 'fall',      label: 'Fall',       card: 'dark' },
   { id: 'steampunk', label: 'Steampunk',  card: 'dark' },

@@ -172,7 +172,7 @@ export function explainFailure({ kind, status, message, baseUrl = DEFAULT_BASE_U
         + 'A smaller model, or a shorter transcript, will be quicker.';
     }
     case 'cancelled':
-      return 'Cancelled.';
+      return 'Canceled.';
     case 'http':
       return `The AI program answered with an error (${status || '?'})${message ? `: ${message}` : ''}.`;
     case 'unreadable':

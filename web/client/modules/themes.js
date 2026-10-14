@@ -59,7 +59,7 @@ registerModule(
     function previewHere(host, why) {
       host.innerHTML = `<div data-themes-preview style="box-sizing:border-box;height:100%;overflow:auto;padding:10px;
         color:var(--text);background:var(--surface)">
-        <p data-themes-note style="margin:0 0 8px;font-size:.9rem;color:var(--text-muted)">${why} Choosing one here colours this part only, to show it.</p>
+        <p data-themes-note style="margin:0 0 8px;font-size:.9rem;color:var(--text-muted)">${why} Choosing one here colors this panel only, to show it.</p>
         <div data-themes-list></div></div>`;
       const box = host.querySelector('[data-themes-preview]');
       let shown = DEFAULT_THEME;

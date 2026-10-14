@@ -87,8 +87,8 @@ try {
       ROLES.map(firstName).join() === 'Bram,Rosa,Theo,Pip');
     check('each one\'s home is the town place that is theirs', HOME_OF.king === 'kingHall' && HOME_OF.queen === 'queenParlour'
       && HOME_OF.jack === 'jackWorkshop' && HOME_OF.joker === 'jokerCaravan');
-    check('looks in words, read off Design\'s looks: grey beard, auburn bun, black curls, ginger',
-      lookOf('king') === 'short grey hair and a beard' && lookOf('queen') === 'auburn hair in a bun'
+    check('looks in words, read off Design\'s looks: gray beard, auburn bun, black curls, ginger',
+      lookOf('king') === 'short gray hair and a beard' /* site text second pass 2026-10-13: American spelling */ && lookOf('queen') === 'auburn hair in a bun'
         && lookOf('jack') === 'curly black hair' && lookOf('joker') === 'short ginger hair', ROLES.map(lookOf).join(' | '));
     check('a look with glasses and no hair still reads', lookWords({ hair: 'bald', glasses: true }) === 'glasses'
       && lookWords({ hair: 'bald' }) === 'no hair on top');

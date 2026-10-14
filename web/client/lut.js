@@ -79,7 +79,7 @@ export function parseCube(text) {
   const size = size3 || size1;
   if (!(size >= 2 && size <= 256)) return { ok: false, why: `a size of ${size} is not one this can use (2 to 256)` };
   const want = (kind === '3d' ? size ** 3 : size) * 3;
-  if (vals.length !== want) return { ok: false, why: `expected ${want / 3} colours, found ${vals.length / 3}` };
+  if (vals.length !== want) return { ok: false, why: `expected ${want / 3} colors, found ${vals.length / 3}` };
   if (min.length !== 3 || max.length !== 3 || min.some((v, i) => !(max[i] > v))) return { ok: false, why: 'a DOMAIN line that makes no sense' };
   return { ok: true, lut: { title, kind, size, min, max, data: Float32Array.from(vals) } };
 }
@@ -216,8 +216,8 @@ function tidy(c) {
 export function describeFit(compiled) {
   if (!compiled) return '';
   if (compiled.kind === '1d' || compiled.error.mean < 0.004) return 'Applied exactly.';
-  if (compiled.error.mean < 0.02) return 'Applied closely (this file mixes colours in ways the screen can only come close to).';
-  return 'Applied roughly: this look twists colours in a way the screen cannot reproduce closely.';
+  if (compiled.error.mean < 0.02) return 'Applied closely (this file mixes colors in ways the screen can only come close to).';
+  return 'Applied roughly: this look twists colors in a way the screen cannot reproduce closely.';
 }
 
 // ---------------------------------------------------------------------------------------------

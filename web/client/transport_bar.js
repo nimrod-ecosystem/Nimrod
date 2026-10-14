@@ -40,7 +40,7 @@ export function drawHelpButton(parent, { before = null, onPress = null, doc = pa
   b.dataset.act = HELP_ACT;
   b.className = 'k-help';
   b.textContent = 'Nimrod';
-  b.title = 'Nimrod explains what is picked. Pick a part or a setting, then press this button';
+  b.title = 'Nimrod explains what is picked. Pick a panel or a setting, then press this button';
   b.setAttribute('aria-label', 'Nimrod: explain what is picked');
   b.addEventListener('click', () => { try { onPress?.(); } catch (err) { console.error('transport bar: help', err); } });
   if (before && before.parentNode === parent) parent.insertBefore(b, before);
@@ -96,7 +96,7 @@ export function paintPlayPause(btn, s = {}) {
   if (!btn) return;
   const can = !!(s && s.can);
   const paused = !!(s && s.paused);
-  const name = (s && s.name) || 'the part you picked';
+  const name = (s && s.name) || 'the panel you picked';
   btn.disabled = !can;
   btn.textContent = paused ? '▶ Play' : '⏸ Pause';
   btn.setAttribute('aria-pressed', paused ? 'true' : 'false');
@@ -122,11 +122,11 @@ export function paintBigger(btn, s = {}) {
   if (!btn) return;
   const can = !!(s && s.can);
   const top = !!(s && s.top);
-  const name = (s && s.name) || 'the part you picked';
+  const name = (s && s.name) || 'the panel you picked';
   btn.disabled = !can || top;
   btn.textContent = '⤢ Bigger';
   btn.style.minWidth = '6.2em';
-  btn.title = !can ? 'no part is picked' : top ? `${name} already fills the screen` : `make ${name} bigger, one step at a time`;
+  btn.title = !can ? 'no panel is picked' : top ? `${name} already fills the screen` : `make ${name} bigger, one step at a time`;
 }
 export function paintSmaller(btn, s = {}) {
   if (!btn) return;
@@ -294,7 +294,7 @@ export function drawCallControls(el, s, send, hangUp = null) {
 export function pieceOf(arr) {
   try { const t = arr?.focusedTarget?.(); return t && t.kind === 'piece' ? t : null; } catch { return null; }
 }
-export const PIECE_SWITCH_TITLE = (label) => `${label} is a piece of the room, not a part. Switch module is for parts`;
+export const PIECE_SWITCH_TITLE = (label) => `${label} is a piece of the room, not a panel. Switch module is for panels`;
 // The buttons that act on the selected panel's content, dimmed while a piece is selected.
 export const PIECE_INERT_ACTS = Object.freeze(['back', 'next']);
 /** Dim `PIECE_INERT_ACTS` under `scope` while `piece` is selected (title says why); put them back after. */
@@ -305,7 +305,7 @@ export function paintPieceInert(scope, piece) {
     if (!b) continue;
     if (b.dataset.baseTitle === undefined) b.dataset.baseTitle = b.title || '';
     b.disabled = !!piece;
-    b.title = piece ? `${piece.label} is picked: ${act === 'next' ? 'Next' : 'Back'} is for parts` : b.dataset.baseTitle;
+    b.title = piece ? `${piece.label} is picked: ${act === 'next' ? 'Next' : 'Back'} is for panels` : b.dataset.baseTitle;
   }
 }
 function drawPieceChip(modsEl, piece, focus) {
@@ -365,7 +365,7 @@ function drawSoundToggle(modsEl, rec, audio) {
   b.textContent = muted ? 'Muted' : 'Sound';
   b.setAttribute('aria-pressed', muted ? 'true' : 'false');
   b.setAttribute('aria-label', `${rec.title || rec.type}: ${muted ? 'muted, press for sound' : 'sound on, press to mute'}`);
-  b.title = muted ? 'sound off in this part — press for sound' : 'press to mute this part';
+  b.title = muted ? 'sound off on this panel — press for sound' : 'press to mute this panel';
   b.addEventListener('click', () => {
     try { rec.state.set(toggleMutePatch(rec.state.get?.() || {})); } catch (err) { console.error('transport bar: sound', err); }
     b.textContent = b.textContent === 'Muted' ? 'Sound' : 'Muted';
@@ -457,7 +457,7 @@ export function drawChips(modsEl, m) {
         b.className = 'k-dot' + (rec.id === focusId ? ' on' : '')
           + (noControls ? ' k-nover' : '');
         if (noControls) {
-          b.title = 'nothing in this part answers a button — pressing it puts the '
+          b.title = 'nothing on this panel answers a button — pressing it puts the '
             + 'outline here, and the controls stay empty';
         }
         b.textContent = rec.title || rec.type;
@@ -470,7 +470,7 @@ export function drawChips(modsEl, m) {
         b.className = 'k-dot k-off';
         b.textContent = instanceTitle(def);
         b.dataset.id = def.id;
-        b.title = 'not showing on this screen now — press to show it in place of the part you picked';
+        b.title = 'not showing on this screen now — press to show it in the panel you picked';
         b.addEventListener('click', () => { showUnplaced(def); });
         modsEl.append(b);
       }
@@ -571,7 +571,7 @@ export function barScanModeOf(v, chooseMode = 'point') {
 // so a press is never sent to the wrong holder.
 const CHECK_MS = 1000;
 export const BAR_GROUP_NAMES = Object.freeze({
-  page: 'this page', panels: 'the parts', call: 'this call', transport: 'the controls', menu: 'help, settings and full screen',
+  page: 'this page', panels: 'the panels', call: 'this call', transport: 'the controls', menu: 'help, settings and full screen',
 });
 
 /** Which group a bar button belongs to (both bars: the plain one and the placed module). */

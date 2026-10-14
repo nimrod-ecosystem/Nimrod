@@ -34,7 +34,7 @@ export const NESTED_MUTED_KEY = 'nestedMuted';
 export const PANEL_VOLUME_ON_KEY = 'panelVolumeOn';
 
 export const PANEL_VOLUME_FIELD = Object.freeze({
-  key: PANEL_VOLUME_KEY, label: 'This part’s volume', kind: 'choice', level: 'standard', default: 1,
+  key: PANEL_VOLUME_KEY, label: 'This panel’s volume', kind: 'choice', level: 'standard', default: 1,
   options: Object.freeze([
     { value: 1, label: 'As loud as the rest' },
     { value: 0.75, label: 'A little quieter' },
@@ -46,7 +46,7 @@ export const PANEL_VOLUME_FIELD = Object.freeze({
 
 export const ROOM_SOUND_FIELD = Object.freeze({
   key: ROOM_SOUND_KEY, label: 'Sound like it’s in the room', kind: 'choice', level: 'advanced', default: 'off',
-  help: 'Adds a little echo to this part’s own sound, as if it were across the room. Only for sound the screen plays itself (not a YouTube video).',
+  help: 'Adds a little echo to this panel’s own sound, as if it were across the room. Only for sound the screen plays itself (not a YouTube video).',
   options: Object.freeze([
     { value: 'off', label: 'Off' },
     { value: 'small', label: 'A small room' },

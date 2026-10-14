@@ -130,13 +130,13 @@ export const SETTINGS = [
       { value: 'play', label: 'play the close one' },
       { value: 'off', label: 'do nothing' },
     ] },
-  { key: 'youtubeWhere', label: 'Where YouTube favourites play', kind: 'choice', default: 'panel',
+  { key: 'youtubeWhere', label: 'Where YouTube favorites play', kind: 'choice', default: 'panel',
     level: 'standard',
     options: [
-      { value: 'panel', label: 'the YouTube part, if there is one' },
-      { value: 'here', label: 'always in this part' },
+      { value: 'panel', label: 'the YouTube panel, if there is one' },
+      { value: 'here', label: 'always in this panel' },
     ] },
-  { key: 'volume', label: 'How loud music from this part is', kind: 'number', default: 100,
+  { key: 'volume', label: 'How loud music from this panel is', kind: 'number', default: 100,
     min: MUSIC_VOLUME_MIN, max: 100, step: 10, unit: '%', level: 'standard' },
   { key: 'folderOrder', label: 'A folder of music plays', kind: 'choice', default: 'shuffle',
     level: 'standard',
@@ -150,7 +150,7 @@ export const SETTINGS = [
   // list here, argued: a favourite already names one folder, and a favourite on the folder inside is the way to narrow it.
   subfoldersField({ on: true, what: 'songs', label: 'A folder of music includes every folder inside' }),
   { key: 'sayProblems', label: 'When it cannot play something', kind: 'toggle', default: true,
-    level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show why on this part only' },
+    level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show why on this panel only' },
   { key: 'spotifyOn', label: 'Spotify', kind: 'toggle', default: false, level: 'standard',
     onLabel: 'On (needs Spotify Premium)', offLabel: 'Off',
     note: SPOTIFY_JAM_WORDS },   // Spotify Jam (2026-10-12): where a Jam starts, said where Spotify is turned on
@@ -160,25 +160,25 @@ export const SETTINGS = [
   // row shows the live words `settingsChoices` gives ("In use: ... ending …1234").
   { key: 'spotifyClientId', label: 'Your household’s Spotify Client ID', kind: 'text', default: '',
     level: 'standard', appliesWhen: spotifyIsOn, secret: true,
-    note: 'Type it once. It is kept on this site’s server with your Spotify key. Every music part and the keys page '
+    note: 'Type it once. It is kept on this site’s server with your Spotify key. Every music panel and the keys page '
       + 'use it. “Change the list” has the steps to make the free Spotify app it comes from.' },
   // Where a Client ID typed here is saved: the same four places as the YouTube key, the whole account first.
   { key: 'spotifyClientIdFor', label: 'A Spotify Client ID typed here is saved for', kind: 'choice', default: 'account',
     level: 'advanced', appliesWhen: spotifyIsOn,
     options: [
-      { value: 'account', label: 'the whole login (every screen and search)' },
+      { value: 'account', label: 'the whole account (every screen and search)' },
       { value: 'person', label: 'this person only' },
       { value: 'device', label: 'this device only' },
-      { value: 'panel', label: 'this part only' },
+      { value: 'panel', label: 'this panel only' },
     ] },
   { key: 'spotifyShuffle', label: 'Spotify playlists and albums play', kind: 'toggle', default: true,
     level: 'standard', appliesWhen: spotifyIsOn,
-    onLabel: 'Shuffled like the YouTube part (fewer repeats)', offLabel: 'In Spotify’s own order',
+    onLabel: 'Shuffled like the YouTube panel (fewer repeats)', offLabel: 'In Spotify’s own order',
     note: 'Shuffling needs Spotify to list the songs. Spotify does that only for playlists you made or share. '
       + 'Others play in Spotify’s own order.' },
   { key: 'songInfo', label: 'While Spotify plays, show', kind: 'toggle', default: true, level: 'standard',
     appliesWhen: spotifyIsOn,
-    onLabel: 'The song’s name, artist and picture', offLabel: 'The favourite’s name only' },
+    onLabel: 'The song’s name, artist and picture', offLabel: 'The favorite’s name only' },
   // (play on) The older typed speaker name. Still read when "Play on" is left blank, so a panel set up with it
   // keeps playing where it did; the "Play on" row is the way to choose now.
   { key: 'spotifyDevice', label: 'Spotify speaker to play on (blank: whichever is on)', kind: 'text',
@@ -211,14 +211,14 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
 
 const WHY_SKIPPED = {
   taken: 'is already a command',
-  twice: 'is already another favourite',
+  twice: 'is already another favorite',
   digits: 'has numbers in it, so write them as words (“top forty”)',
   short: 'is too short to say reliably',
 };
 
 registerModule(
   { dependsOn: 'network',
-    type: 'music', title: 'Music', description: 'Play a favourite by name: YouTube, your own music files, Spotify or the Internet Archive',
+    type: 'music', title: 'Music', description: 'Play a favorite by name: YouTube, your own music files, Spotify or the Internet Archive',
     settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, audio = null } = ctx;
@@ -417,7 +417,7 @@ registerModule(
       if (dead) return false;
       if (r && r.ok) {
         spNote = `Saved for ${KEY_LEVEL_WORDS[level] || level}.${fell ? ' Nobody has signed in on this browser, so it is '
-          + 'saved for this device. Sign in to save it for the whole login.' : ''}`;
+          + 'saved for this device. Sign in to save it for the whole account.' : ''}`;
         spId = { ...(spId || {}), clientId: id, level };
         if (String(cfg.spotifyClientId || '').trim()) state?.set?.({ spotifyClientId: '' });
         await loadClientId(true);
@@ -426,7 +426,7 @@ registerModule(
       if (r && r.status === 503) {
         state?.set?.({ spotifyClientId: id });
         cfg = { ...cfg, spotifyClientId: id };
-        spNote = 'This site’s server cannot keep keys yet, so the Client ID is kept in this part’s settings.';
+        spNote = 'This site’s server cannot keep keys yet, so the Client ID is kept in this panel’s settings.';
         render();
         return true;
       }
@@ -672,7 +672,7 @@ registerModule(
               : btn('confirm', 'Yes, play it') + btn('decline', 'No')}</div></div>` : ''}
         <div class="mu-list" data-list>${favs.length
           ? favs.map((f) => btn('play', f.name, ` data-id="${esc(f.id)}"`)).join('')
-          : '<p class="mu-empty">No favourites yet. Add some with “Change the list”.</p>'}</div>
+          : '<p class="mu-empty">No favorites yet. Add some with “Change the list”.</p>'}</div>
         <div class="mu-btns">${btn('stop', 'Stop')}${btn('play-on', `Play on: ${playOnWords(playOnValue())}`, ' data-play-on')}${btn('edit', 'Change the list')}</div>`;
     }
 
@@ -719,7 +719,7 @@ registerModule(
         // (play on) They DO play now - here, in Spotify's own player - so this says what turning it on adds.
         return hasSpotifyFav() ? `<div class="mu-spot" data-spotify data-spotify-off>
             <p class="mu-head">Spotify</p>
-            <p class="mu-hint">Spotify favourites play here in Spotify’s own player, with nothing to set up (whole songs
+            <p class="mu-hint">Spotify favorites play here in Spotify’s own player, with nothing to set up (whole songs
               when this browser is signed in to Spotify Premium, 30-second previews otherwise). To play them on other
               Spotify speakers, shuffle them the site’s way and show the song card, turn on your own Spotify app here,
               or with the “Spotify” row in this panel’s settings.</p>
@@ -756,7 +756,7 @@ registerModule(
         : (renew?.endsAt ? `<p class="mu-hint" data-sp-ends>Spotify ends this sign-in around ${esc(dayWords(renew.endsAt))}, six months after it was made.</p>` : '');
       const where = spId?.clientId && spId.level
         ? `Using the Client ID saved for ${KEY_LEVEL_WORDS[spId.level] || spId.level}, ending …${esc(spId.clientId.slice(-4))}.`
-        : `Using the Client ID kept in this part’s settings, ending …${esc(id.slice(-4))}.`;
+        : `Using the Client ID kept in this panel’s settings, ending …${esc(id.slice(-4))}.`;
       const devices = Array.isArray(spotifyDevices)
         ? (spotifyDevices.length ? `<ul class="mu-devs">${spotifyDevices.map((d) => `<li>${esc(d.name)}${d.active ? ' (playing now)' : ''}</li>`).join('')}</ul>`
           : '<p class="mu-hint">No Spotify speakers are switched on.</p>') : '';
@@ -791,8 +791,8 @@ registerModule(
       }).join('');
       const opts = sourcesList.map((s) => `<option value="${esc(s.id)}"${s.id === draft.sourceId ? ' selected' : ''}>${esc(s.label || s.id)}</option>`).join('');
       return `
-        <p class="mu-head">Favourites</p>
-        <p class="mu-hint">Typing needs a keyboard. Each favourite is a name to say and where its music is.</p>
+        <p class="mu-head">Favorites</p>
+        <p class="mu-hint">Typing needs a keyboard. Each favorite is a name to say and where its music is.</p>
         <label class="mu-field">Name to say <input type="text" data-fav-name maxlength="${MAX_NAME}" value="${esc(draft.name)}" placeholder="the Beatles"></label>
         <label class="mu-field">A YouTube, Spotify or Internet Archive link <input type="text" data-fav-link value="${esc(draft.link)}" placeholder="https://…"></label>
         <p class="mu-hint">Or music on a connected folder (set up in Media):</p>
@@ -804,7 +804,7 @@ registerModule(
           </select>
           <input type="text" data-fav-path value="${esc(draft.path)}" placeholder="Songs/song.mp3 or Songs" aria-label="file or folder name">
         </div>
-        <div class="mu-btns">${btn('add', 'Add this favourite')}</div>
+        <div class="mu-btns">${btn('add', 'Add this favorite')}</div>
         ${editMsg ? `<p class="mu-msg" role="status">${esc(editMsg)}</p>` : ''}
         <ul class="mu-favs" data-favs>${rows}</ul>
         ${spotifyHtml()}
@@ -853,7 +853,7 @@ registerModule(
       } else { editMsg = 'Paste a link, or pick a music folder.'; render(); return; }
       const before = favs.length;
       const next = normalizeFavourites([...favs, { id: newFavouriteId(), name, source }]);
-      if (next.length === before) { editMsg = `There is already a favourite called “${name}”.`; render(); return; }
+      if (next.length === before) { editMsg = `There is already a favorite called “${name}”.`; render(); return; }
       draft = { name: '', link: '', sourceId: draft.sourceId, kind: draft.kind, path: '' };
       editMsg = source.kind === 'spotify' && !cfg.spotifyOn
         ? `Added “${name}”. It plays here in Spotify’s own player. Your own Spotify app (below) adds other speakers.`
@@ -997,7 +997,7 @@ registerModule(
       settingsChoices: () => {
         const inUse = spId?.clientId
           ? `In use: the one saved for ${KEY_LEVEL_WORDS[spId.level] || spId.level || 'here'}, ending …${spId.clientId.slice(-4)}`
-          : (String(cfg.spotifyClientId || '').trim() ? `In use: this part’s own, ending …${String(cfg.spotifyClientId).trim().slice(-4)}`
+          : (String(cfg.spotifyClientId || '').trim() ? `In use: this panel’s own, ending …${String(cfg.spotifyClientId).trim().slice(-4)}`
             : (spIdState === 'done' ? 'None saved yet' : 'Checking which one is in use…'));
         const lv = cfg.spotifyClientIdFor || 'account';
         const screenOnly = !!spId && spId.canChange === false && !(spId.screenLevels || []).includes(lv);

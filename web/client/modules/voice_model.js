@@ -431,7 +431,7 @@ export function mountVoiceModelGuide(root, {
           a <code>${esc(EUPHONIA_DATA)}</code> folder with one numbered folder per phrase, and <code>nimrod-export.json</code>
           saying which recording is which. Nothing is uploaded.</p>
         <p>Where it goes: <code data-vmg-recordings>${esc(pl.recordings)}</code>, your Nimrod folder’s Recordings.</p>
-        ${can ? '' : '<p class="vmg-soft" data-vmg-nostore>There is nothing to export on this page. Recordings are kept on the screen that recorded them. Open this part there.</p>'}
+        ${can ? '' : '<p class="vmg-soft" data-vmg-nostore>There is nothing to export on this page. Recordings are kept on the screen that recorded them. Open this panel there.</p>'}
         <div class="vmg-row">
           <button type="button" data-vmg-act="export-default" class="primary" ${can ? '' : 'hidden'}>Export to Recordings</button>
           <button type="button" data-vmg-act="export-pick" ${can && pick ? '' : 'hidden'}>Choose a different folder</button>
@@ -448,7 +448,7 @@ export function mountVoiceModelGuide(root, {
         ${cmdHtml('train-check', trainCheckCommand())}
         <p><b>Then train</b>, in the same folder:</p>
         ${cmdHtml('train', trainCommand({ data: pl.recordings, root: pl.root }))}
-        <p class="vmg-soft">It starts from <code>${esc(BASE_MODEL)}</code>, the recogniser the speech service already runs.
+        <p class="vmg-soft">It starts from <code>${esc(BASE_MODEL)}</code>, the recognizer the speech service already runs.
           ${esc(TRAIN_PLAIN.after)}</p>
         ${cmdHtml('score', scoreCommand({ data: pl.recordings, root: pl.root }))}
         <p class="vmg-soft">${esc(TRAIN_PLAIN.keep)}</p>
@@ -464,7 +464,7 @@ export function mountVoiceModelGuide(root, {
         ${cmdHtml('convert', convertCommand({ folder: pl.voice }))}
         <p class="vmg-soft">${pl.known
           ? 'That writes the converted files straight into your Nimrod folder’s Voice model folder. Converting on a different computer? Run it there with that computer’s path, then copy the files across.'
-          : esc(`Replace ${NIMROD_ROOT_WORDS} with your Nimrod folder’s full path. Or type that path once in this part’s Settings, and the commands fill it in.`)}</p>`;
+          : esc(`Replace ${NIMROD_ROOT_WORDS} with your Nimrod folder’s full path. Or type that path once in this panel’s Settings, and the commands fill it in.`)}</p>`;
     }
     if (n === 5) {
       const canPick = typeof pickModelFolder === 'function' && !isScreen;
@@ -485,8 +485,8 @@ export function mountVoiceModelGuide(root, {
         when it starts and names any file that is missing.</p>
       ${cmdHtml('serve', serviceCommand({ port: vm.port, root: pl.root }))}
       <p class="vmg-soft">It runs beside the standard speech program (port 8797), which stays for everybody else. A port is
-        the number a service answers on. Its own port is set in this part’s Settings. That number and the one in the command
-        must match.</p>
+        the number a service answers on. Its own port is set in this panel’s Settings. That number and the one in the
+        command must match.</p>
       <div class="vmg-row">
         <button type="button" data-vmg-act="probe" class="primary">Is it answering?</button>
         <button type="button" data-vmg-act="use" aria-pressed="${vm.on}" ${typeof save === 'function' ? '' : 'hidden'}>Use my own voice model: ${vm.on ? 'On' : 'Off'}</button>

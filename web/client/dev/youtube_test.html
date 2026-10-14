@@ -631,10 +631,10 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
           calls.filter((c) => c[0] === 'adopt').length === 1 && calls.find((c) => c[0] === 'adopt')[1] === OLD && rowK.apiKey === '', JSON.stringify({ calls, rowK }));
         const words = instK.impl.settingsChoices().apiKey;
         check('*** the key row says which key is in use (no box to read a key back from) ***',
-          words && /In use: this login’s key, ending …4f2a/.test(words.emptyLabel), JSON.stringify(words));   // site text rewrite 2026-10-09: "the account’s key" now "this login’s key"
+          words && /In use: the account’s key, ending …4f2a/.test(words.emptyLabel), JSON.stringify(words));   // site text second pass 2026-10-13: "the account’s key" again
         const keyField = fieldsFor(getManifest('youtube'), instK).find((f) => f.key === 'apiKey');
         check('...and the menu row shows those words where it used to say "Not set"',
-          /In use: this login’s key/.test(displayValue(keyField, '')), displayValue(keyField, ''));   // site text rewrite 2026-10-09
+          /In use: the account’s key/.test(displayValue(keyField, '')), displayValue(keyField, ''));   // site text second pass 2026-10-13
         const NEW = 'AIza' + 'MadeUpTypedKeyForThisSuite_01234567';      // made up
         check('*** a typed key is TAKEN by the panel (the host stores nothing) and saved for the whole account by default ***',
           instK.impl.settingsWrite('apiKey', `  ${NEW} `) === true && rowK.apiKey !== NEW, JSON.stringify(rowK));

@@ -150,7 +150,7 @@ try {
       J(other.choices.slice(0, 6).map((c) => c.to)) === J(['mode', 'change-module', 'change-dashboard', 'change-scene', 'edit-module', 'ai'])
       && /collection of dashboards/.test(other.choices[3].label), J(other.choices));
     check('*** it suggests replacing your profile (top left on the landing), and says ANY module can be replaced, including him ***',
-      /replacing your profile/.test(other.say) && /replace any part whenever you want, including me/.test(other.say) /* site text rewrite 2026-10-09: module -> part */
+      /replacing your profile/.test(other.say) && /replace any module whenever you want, including me/.test(other.say) /* site text second pass 2026-10-13: module again */
       && other.acts.some((a) => a.kind === 'switch' && a.type === 'profile'));
     // 2026-10-04: the guide's Switch acts name a TYPE; on the landing AND the tutorial that type must be what sits
     // top left, or "Replace the profile" falls back to whatever happens to be chosen. Checked against the real

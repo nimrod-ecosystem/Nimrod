@@ -106,7 +106,7 @@ section('what the menu contains');
   check('a missing person renders a placeholder, so the menu does not change height',
     items[0].label === 'Setting up for …', items[0].label);
   check('a missing subject says so rather than guessing at one',
-    items[1].label === 'No part picked', items[1].label);   // site text rewrite 2026-10-09: was 'No panel selected'
+    items[1].label === 'No panel selected', items[1].label);   // site text second pass 2026-10-13: 'No panel selected' again
 }
 {
   const items = buildItems({ extras: [{ id: 'controls', label: 'Set up controls' }] });

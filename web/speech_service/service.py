@@ -572,7 +572,7 @@ class Session:
         e = self.enrolling
         if e is None or e['person'] != person:
             await self.send({'kind': 'enrol-failed', 'person': person, 'error': 'Setting up that voice was not started '
-                             'on this connection, or it was cancelled. Nothing was saved.'})
+                             'on this connection, or it was canceled. Nothing was saved.'})
             return
         self.enrolling = None
         try:

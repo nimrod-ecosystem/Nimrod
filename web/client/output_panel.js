@@ -55,8 +55,8 @@ const CHANNEL_LABEL = {
 };
 
 const SAMPLE = {
-  alert: 'Your chair needs service.',
-  notify: 'Your data is ready to send.',
+  alert: 'Alerts will show here.',
+  notify: 'Your notifications will show here.',
   say: 'Good morning. It is Tuesday.',
   status: 'Up to date',
 };

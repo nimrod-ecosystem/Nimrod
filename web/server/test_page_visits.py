@@ -101,8 +101,9 @@ check("*** a video: one YouTube video's link; any other link is dropped ***",
 check("a clock: its own few settings, a size it knows", byid["clock-1"]["options"] == {"settings": {"hour12": False, "showDate": True, "size": "large"}})
 check("About me is cut to the page's own limit", len(visitor_options("about", {"text": "x" * 5000})["text"]) == pv.ABOUT_MAX)
 words = " ".join(REFUSAL_TEXT.values())
-check("*** the refusals say no 'account', 'token' or 'grant', and name nobody ***",
-      not any(w in words.lower() for w in ("account", "token", "grant")) and not re.search(r"her screen|taylor|cici", words, re.I))
+# (Its banned-word half was retired 2026-10-13 with the banned-word lists: Mike, "I really don't like this banned
+# word thing at all.")
+check("*** the refusals name nobody ***", not re.search(r"her screen|taylor|cici", words, re.I))
 
 section("the page's own colours (2026-10-05)")
 check("*** a theme id is sent as it is; nothing set is '' ***", pv.visitor_theme({"theme": "warm"}) == "warm" and pv.visitor_theme({}) == ""

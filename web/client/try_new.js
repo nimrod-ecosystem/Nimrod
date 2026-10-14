@@ -305,7 +305,7 @@ async function removeTestPerson({ profiles, makePersonState, personId, localScop
   if (!rec) throw new Error('That is not a test person, so nothing was removed.');
   const people = (await profiles.people()) || [];
   const me = people.find((p) => p.id === personId);
-  if (!me) throw new Error('That test person is not on this login any more.');
+  if (!me) throw new Error('That test person is not on this account any more.');
   const screens = (await profiles.list(personId)) || [];
   // A screen made BEFORE the test person existed was handed to them: it is somebody's own. Checked for all
   // before anything is removed, so a refusal removes nothing.

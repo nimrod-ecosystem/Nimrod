@@ -53,7 +53,7 @@ function esc(s) {
 
 registerModule(
   { type: 'keyboard', title: 'Keyboard', core: 'new', dependsOn: 'server',
-    description: "what each key does right now. It shows the jobs this person gave their keys, or the jobs keys start with." },
+    description: "what each key does right now. It shows this person's own bindings, or the bindings the keys start with." },
   (ctx) => {
     const { mount } = ctx;
     let personState = null;
@@ -73,7 +73,7 @@ registerModule(
           </div>`)
         .join('');
       const list = mount.querySelector('[data-kb-rows]');
-      if (list) list.innerHTML = rows || '<p class="kb-empty">No key has a job yet.</p>';
+      if (list) list.innerHTML = rows || '<p class="kb-empty">No keyboard bindings yet.</p>';
     }
 
     return {

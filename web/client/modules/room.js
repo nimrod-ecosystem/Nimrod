@@ -138,7 +138,7 @@ export const SETTINGS = [
       { value: 'smooth', label: 'Smoother (about twice the work)' },
       { value: 'full', label: 'As often as the screen can (the most work)' },
     ] },
-  { key: 'liftReturnMs', label: 'Put a part lifted out of the furniture back after', kind: 'choice', default: DEFAULTS.liftReturnMs,
+  { key: 'liftReturnMs', label: 'Put a panel lifted out of the furniture back after', kind: 'choice', default: DEFAULTS.liftReturnMs,
     level: 'standard',
     options: [
       { value: 30000, label: '30 seconds' },
@@ -157,22 +157,22 @@ export const SETTINGS = [
     onLabel: 'Shown', offLabel: 'Hidden' },
   // ---- the second pass ----
   { key: 'shelf', label: 'The bookshelf', kind: 'choice', default: DEFAULTS.shelf, level: 'standard',
-    help: 'A library. Each book is a part, such as Photos or Clock. Pressing a book opens it.',
+    help: 'A library. Each book is a module, such as Photos or Clock. Pressing a book opens it.',
     options: [
-      { value: 'library', label: 'A library of parts' },
+      { value: 'library', label: 'A library of modules' },
       { value: 'recipe', label: 'As the room has it' },
     ] },
   { key: 'books', label: 'Books on the shelf', kind: 'choice', default: DEFAULTS.books, level: 'standard',
     options: [
-      { value: 'screen', label: 'This screen’s parts' },
+      { value: 'screen', label: 'This screen’s modules' },
       { value: 'few', label: 'A few common ones' },
       { value: 'named', label: 'The ones named below' },
     ] },
   { key: 'bookList', label: 'Name the books', kind: 'text', default: DEFAULTS.bookList, level: 'advanced',
     placeholder: 'Photos, Clock, Weather', maxLength: 300,
-    help: 'The names of parts, separated by commas. Used when "Books on the shelf" is "The ones named below".' },
+    help: 'The names of modules, separated by commas. Used when "Books on the shelf" is "The ones named below".' },
   { key: 'windowShows', label: 'The window shows', kind: 'choice', default: DEFAULTS.windowShows, level: 'standard',
-    help: 'The weather comes from the Weather part, once it has a place set. The room sends nothing itself.',
+    help: 'The weather comes from the Weather module, once it has a place set. The room sends nothing itself.',
     options: [
       { value: 'weather', label: 'The view and the weather' },
       { value: 'view', label: 'Just the view' },
@@ -387,7 +387,7 @@ registerModule(
         // The window's weather: what the room already knows says itself, even with no Weather panel here.
         if (module === 'weather') {
           const w = api?.weather?.();
-          api?.toast(w?.spoken ? `Now: ${w.spoken}` : 'Add the Weather part to this screen and set a place, and the weather shows here.');
+          api?.toast(w?.spoken ? `Now: ${w.spoken}` : 'Add the Weather module to this screen and set a place, and the weather shows here.');
           return;
         }
         api?.toast(`${moduleLabel(module)} is not on this screen. Add it, and this book opens it.`);

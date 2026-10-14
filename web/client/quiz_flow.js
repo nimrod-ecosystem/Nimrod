@@ -259,7 +259,7 @@ export function flowSettings({ lines = {}, labels = {}, sayChoice = true } = {})
       onLabel: 'On', offLabel: 'Off' },
     ...(sayChoice ? [{ key: 'sayChoice', label: 'Say the switch choice too', default: true, level: 'standard',
       onLabel: 'Yes ("Is it this one?")', offLabel: 'Only the question',
-      note: 'Somebody using a switch (one big button) needs it. Somebody answering aloud hears one possible answer.' }] : []),
+      note: 'Somebody using a switch needs it. Somebody answering aloud hears one possible answer.' }] : []),
     { key: 'sound', label: 'Chime for a right answer', default: true, level: 'standard',
       onLabel: 'On', offLabel: 'Off' },
     { ...ASK_ANOTHER_FIELD },

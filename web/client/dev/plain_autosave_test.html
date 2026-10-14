@@ -25,7 +25,6 @@ the server (<code>SUITE_BASE</code>).</p>
 import * as HD from '../home_dashboard.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
-import { pageWordProblems } from '../page_sections.js';
 import { FIRST_RUN_KEYS, TRY_NEW_KEY, TRY_STASH_KEY } from '../try_new.js';
 import { LAST_PERSON_KEY } from '../people.js';
 
@@ -64,8 +63,8 @@ try {
   check('the ⚙ menu’s Save row says the same', HD.homeMenuModel({ target: live, land: true, autosave: 'saving' }).find((i) => i.act === 'save').hint === 'Saving…');
   const words = ['Saving…', 'Kept when you close the settings', 'What you change here is kept', 'Saved.',
     'That did not save — check your connection. Your change is still here, and Save keeps it.'];
-  check('*** plain words (no module, dashboard, panel, grant, widget, account, token), and nobody named ***',
-    words.every((w) => !pageWordProblems(w).length) && !/her screen|taylor|cici/i.test(words.join(' ')), J(words.map(pageWordProblems)));
+  // (Its banned-word half, pageWordProblems, was retired 2026-10-13 with the banned-word lists; nobody named stays.)
+  check('*** nobody named ***', !/her screen|taylor|cici/i.test(words.join(' ')), words.join(' | ').slice(0, 200));
 
   section('*** the draft keeps a change made WHILE it is being written ***');
   {

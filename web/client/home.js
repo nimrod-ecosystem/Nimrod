@@ -98,7 +98,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         // TRY IT AS SOMEONE NEW (try_new.js): the site as a brand-new person meets it, on a test person, nothing of
         // yours touched. While one is being tried, the strip above the people bar has its actions.
         footExtra: canTry
-          ? '<button type="button" class="s-signout s-acct" data-trynew hidden title="A test person on this login. You see the site the way a new person does on a first visit. Nothing of yours changes. Your notes stay yours.">Try it as someone new</button>'
+          ? '<button type="button" class="s-signout s-acct" data-trynew hidden title="A test person on this account. You see the site the way a new person does on a first visit. Nothing of yours changes. Your notes stay yours.">Try it as someone new</button>'
             + '<button type="button" class="s-signout s-acct" data-tryremove hidden title="The test person and their dashboards are removed. Any notes they hold move to you first.">Remove the test person</button>'
             + '<span class="s-signout" data-trymsg hidden></span>'
           : '',
@@ -579,8 +579,8 @@ export async function mountScreens(root, {
              and broke the file -- third time this session, caught each time in seconds by
              imports_test, which is the entire argument for that suite existing. -->
         <h1>Your dashboards</h1>
-        <p>A <b>dashboard</b> is a set of parts that you open on the full screen. The parts can be
-          photos, a clock, games or the lineup. Make one dashboard for each person or place.</p>
+        <p>A <b>dashboard</b> is a set of modules that you open on the full screen. The modules can
+          be photos, a clock, games or the lineup. Make one dashboard for each person or place.</p>
       </div>
 
       <form class="h-new" data-new>
@@ -608,7 +608,7 @@ export async function mountScreens(root, {
       ? mods.map((m) => `<span class="h-chip">${esc(m.title || titleOf(m.type))}
           <button class="h-x" data-remove="${esc(p.id)}:${esc(m.id)}" aria-label="remove ${esc(m.type)}">×</button>
         </span>`).join('')
-      : `<span class="h-none">No parts yet. Add one below.</span>`;
+      : `<span class="h-none">No modules yet. Add one below.</span>`;
     return `
       <section class="h-card">
         <div class="h-card-head">
@@ -621,11 +621,11 @@ export async function mountScreens(root, {
         </div>
         <div class="h-chips">${chips}</div>
         <div class="h-add">
-          <select data-pick="${esc(p.id)}" aria-label="part to add">
+          <select data-pick="${esc(p.id)}" aria-label="module to add">
             ${catalog.map((m) => `<option value="${esc(m.type)}" title="${esc(m.description || '')}">${esc(m.title || m.type)}</option>`).join('')}
           </select>
-          <button class="h-btn" data-add="${esc(p.id)}">Add this part</button>
-          ${mods.length ? '' : '<span class="h-hint">a dashboard needs at least one part before it can open</span>'}
+          <button class="h-btn" data-add="${esc(p.id)}">Add module</button>
+          ${mods.length ? '' : '<span class="h-hint">a dashboard needs at least one module before it can open</span>'}
         </div>
         <!-- WHAT THE THING YOU ARE ABOUT TO ADD ACTUALLY DOES.
              The picker was fourteen bare words - "Pond", "Sprint", "Quests", "Lineup" - and
@@ -653,7 +653,7 @@ export async function mountScreens(root, {
         <div class="h-modpreview" data-modpreview="${esc(p.id)}" hidden></div>
         ${mods.length && makeSettings ? `
         <div class="h-arrange">
-          <button class="h-btn h-quiet" data-arrange="${esc(p.id)}" aria-expanded="false">Arrange the parts</button>
+          <button class="h-btn h-quiet" data-arrange="${esc(p.id)}" aria-expanded="false">Arrange the modules</button>
           <div class="h-arrange-body" data-arrange-body="${esc(p.id)}" hidden></div>
         </div>` : ''}
       </section>`;
@@ -778,7 +778,7 @@ export async function mountScreens(root, {
       // A module that will not start is worth saying plainly. It is also not a reason to lose
       // the dashboard somebody is building, which is the whole point of previewing here.
       box.innerHTML = '<p class="h-quiet">That one would not start here. It still works on a '
-        + 'dashboard. Some parts need a camera or a folder that this preview does not have.</p>';
+        + 'dashboard. Some modules need a camera or a folder that this preview does not have.</p>';
     }
   }
 
@@ -796,7 +796,7 @@ export async function mountScreens(root, {
     const opening = body.hidden;
     body.hidden = !opening;
     btn.setAttribute('aria-expanded', String(opening));
-    btn.textContent = opening ? 'Done arranging' : 'Arrange the parts';
+    btn.textContent = opening ? 'Done arranging' : 'Arrange the modules';
     if (!opening) {
       // Closing must land any debounced write before the handle goes away, or the last
       // change made would be the one silently lost.
@@ -923,7 +923,7 @@ export async function mountScreens(root, {
       await profiles.create(name, personId);
       input.value = '';
       await refresh();
-      say(`Created “${name}”. Add some parts to it.`);
+      say(`Created “${name}”. Add some modules to it.`);
     });
   });
 

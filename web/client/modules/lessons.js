@@ -267,7 +267,7 @@ const SETTINGS = [
   // when the transcript went in more than one piece; a failure keeps every piece's questions.
   { key: 'connectPieces', label: 'Also ask about the whole video', kind: 'toggle', default: true,
     level: 'advanced',
-    note: 'This is for a long transcript sent in pieces. The AI (artificial intelligence) then goes over short summaries of the pieces, and writes questions about how the parts connect. This takes one more turn of the AI.' },
+    note: 'This is for a long transcript sent in pieces. The AI then goes over short summaries of the pieces, and writes questions about how the parts connect. This takes one more turn of the AI.' },
   // *** THE CONTEXT WINDOW, SET ON EVERY CALL (same day: "Set the context size explicitly per call"). ***
   // Each call asks for the window its own prompt and answer need (transcript_quiz.js `contextFor`), at
   // least 4,096 (what the model server here used anyway, so an ordinary call never makes it reload)
@@ -742,8 +742,8 @@ registerModule(
         body = `
           <p class="l-tq-help">Paste the video's transcript (the written words of the video). On
             YouTube it is under the description. Press <b>Show transcript</b>, then select it all and
-            copy. An AI (artificial intelligence) program on this device writes questions from it.
-            Each one is checked against the transcript before it is asked.</p>
+            copy. An AI program on this device writes questions from it. Each one is checked against
+            the transcript before it is asked.</p>
           <textarea class="l-tq-text" data-tq-text rows="7" placeholder="Paste the transcript here"
             aria-label="Transcript of ${esc(t.label)}"></textarea>
           <div data-tq-minutes></div>
@@ -1444,9 +1444,9 @@ registerModule(
         </div>` : '';
       box.innerHTML = `
         <h3 class="l-rv-title">Questions to check (${waiting.length + othersHeld.length})</h3>
-        ${items.length ? `<p class="l-tq-help">An AI (artificial intelligence) wrote the transcript questions. Each one
-          passed a check: its answer is in the transcript line shown. That does not mean the video is right. Where a question
-          was looked up on Wikipedia, what was found is shown with it.
+        ${items.length ? `<p class="l-tq-help">An AI wrote the transcript questions. Each one passed a check: its answer is
+          in the transcript line shown. That does not mean the video is right. Where a question was looked up on Wikipedia,
+          what was found is shown with it.
           ${target ? `Approved questions join ${target}.` : 'This screen sends lesson questions to neither game.'}</p>` : ''}
         ${othersHeld.length || othersOut.length || cList.length ? `<p class="l-tq-help">When somebody says a question is wrong while
           playing, it is held out of every game on this profile. It stays out until someone clears it.</p>` : ''}

@@ -101,7 +101,7 @@ try {
   check('*** the default is "Video" - what a call view did before this, so no screen changes the day it ships ***',
     CALL_OPENS_DEFAULT === 'video' && CALL_OPENS_FIELD.default === 'video' && callLoadoutOf({}).key === 'video' && callLoadoutOf({ [CALL_OPENS_KEY]: 'nonsense' }).key === 'video');
   check('the row: a choice of the four, by name, at "standard"', CALL_OPENS_FIELD.kind === 'choice' && CALL_OPENS_FIELD.level === 'standard'
-    && CALL_OPENS_FIELD.options.map((o) => o.value).join() === CALL_LOADOUT_ORDER.join() && CALL_OPENS_FIELD.options[3].label === 'Audio + talk board');
+    && CALL_OPENS_FIELD.options.map((o) => o.value).join() === CALL_LOADOUT_ORDER.join() && CALL_OPENS_FIELD.options[3].label === 'Audio + AAC board' /* site text second pass 2026-10-13 */);
   check('captions: off by default; "this computer only" and "and the other computers" are separate choices',
     CALL_CAPTIONS_DEFAULT === 'off' && CALL_CAPTION_MODES.join() === 'off,here,any' && callCaptionsOf({}) === 'off'
     && callCaptionsOf({ [CALL_CAPTIONS_KEY]: 'any' }) === 'any' && callCaptionsOf({ [CALL_CAPTIONS_KEY]: true }) === 'off');

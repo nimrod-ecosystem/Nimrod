@@ -1213,8 +1213,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         slot.dataset.slot = it.id;
         const card = doc.createElement('span');
         card.className = 'rs-slot-card';
-        const t = doc.createElement('b'); t.textContent = MODULE_LABELS[it.module] || it.module || 'Part';
-        const s = doc.createElement('small'); s.textContent = 'place for a part';
+        const t = doc.createElement('b'); t.textContent = MODULE_LABELS[it.module] || it.module || 'Module';
+        const s = doc.createElement('small'); s.textContent = 'place for a module';
         card.append(t, s);
         m.append(slot, card);
         rec.slotEl = slot;

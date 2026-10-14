@@ -561,8 +561,8 @@ try {
       /only these 6 notes/.test(send) && /AI on this computer/.test(send) && /nothing leaves this computer/.test(send) && /Not your name/.test(send) && /Sorting by hand sends nothing/.test(send), send);
     const view = g.mount.querySelector('.ng-root').cloneNode(true);
     for (const el of view.querySelectorAll('[data-ng-help],[data-ng-info]')) el.remove();
-    check('the page’s own words: plain (no module, panel, dashboard, widget, grant, token, account), names nobody',
-      !/\b(modules?|panels?|dashboards?|widgets?|grants?|tokens?|accounts?)\b/i.test(view.textContent) && !NAMES.test(view.textContent), view.textContent.match(/\b(modules?|panels?|dashboards?|widgets?|grants?|tokens?|accounts?)\b/i)?.[0]);
+    // (Its banned-word half was retired 2026-10-13 with the banned-word lists.)
+    check('the page’s own words name nobody', !NAMES.test(view.textContent), view.textContent.match(NAMES)?.[0]);
     await press(g, 'wrapgo');
     await until(() => g.probe().wrap.step === 'approve' && entry(g, 0).state === 'open');
     check('*** “Clean up and sort”: the approval opens, and the record already has the wrap-up ***', g.rec().walkReview?.id === g.probe().review.id && g.probe().review.clean.level === 3);

@@ -84,7 +84,7 @@ export const LINES = Object.freeze({
 const LINE_LABELS = {
   askWhichSuit: 'Question: the suit', askOne: 'Question: higher or lower', askTwo: 'Question: lower, middle or higher',
   askMany: 'Question: where it goes', offerSuit: 'Offering a suit', offerPlace: 'Offering a place',
-  hintColour: 'Hint: the colour', hintNotSuit: 'Hint: a suit taken away', hintAces: 'Hint: what the picture cards count as',
+  hintColour: 'Hint: the color', hintNotSuit: 'Hint: a suit taken away', hintAces: 'Hint: what the picture cards count as',
   hintSide: 'Hint: one side of it', explainSuit: 'The answer: the suit', explainHigher: 'The answer: higher',
   explainLower: 'The answer: lower', explainSame: 'The answer: the same rank', explainBetween: 'The answer: between two',
   explainFirst: 'The answer: first', explainLast: 'The answer: last', newHand: 'A full hand', notAPlace: 'Said something that is not a place',
@@ -266,8 +266,8 @@ export function judgeItem(it, value, aces = 'low') {
 // ---------------------------------------------------------------------------------------------------
 registerModule(
   { type: GAME, title: 'Card sort', core: 'new',
-    description: 'Name the suit of a card, then say whether it is higher or lower than cards you have already done. As '
-      + 'it gets easy, each player gets more cards to sort among. Say it, tap it, or use one switch (one big button).',
+    description: 'Name the suit of a card, then say whether it is higher or lower than cards you have already '
+      + 'done. As it gets easy, each player gets more cards to sort among. Say it, tap it, or use one switch.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;

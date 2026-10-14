@@ -23,7 +23,7 @@ server (<code>SUITE_BASE</code>).</p>
 
 <script type="module">
 import {
-  PEOPLE_TYPE, HELPER_TYPE, BANNED_WORDS, plainWordProblems, ACTIONS, ACTION_LABELS, WHY, connectionsFrom, actionsFor,
+  PEOPLE_TYPE, HELPER_TYPE, ACTIONS, ACTION_LABELS, WHY, connectionsFrom, actionsFor,
   noteStatusFrom, scanModeOf, stepCursor, incomingFrom, HELPER_OPEN_TOPIC, PEOPLE_VERB_TOPICS, PEOPLE_SETTINGS,
 } from '../people_page.js';
 import { PREBUILT_DASHBOARDS, LANDING_KEY, START_KEY, LANDING_KEYS, recordProblems, prebuiltRecord, layoutFor, EXAMPLE_ORDER, HELPER_SPOT } from '../dashboards.js';
@@ -43,7 +43,8 @@ import '../modules/avatar.js';
 import '../modules/note.js';
 import { FIRST_RUN_KEYS, TRY_NEW_KEY, TRY_STASH_KEY, TRIAL_NAME } from '../try_new.js';
 import { LAST_PERSON_KEY } from '../people.js';
-import { pageWordProblems } from '../page_sections.js';
+// (pageWordProblems / plainWordProblems: the banned-word checks, retired 2026-10-13 - Mike: "I really don't like this
+// banned word thing at all." The checks that the page names nobody stay.)
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -78,9 +79,6 @@ function memState(initial = {}) {
 try {
   // ============================================================================================
   section('*** the rules, pure ***');
-  check('the banned words are found, whole words, plural too, any case',
-    J(plainWordProblems('This Module and two panels on a dashboard; a grant')) === J(['module', 'dashboard', 'panel', 'grant'])
-    && !plainWordProblems('Grantham modular paneling granted').length && J(BANNED_WORDS) === J(['module', 'dashboard', 'panel', 'grant']));
   const conn = connectionsFrom({ own: [{ id: 'me', name: 'Pat' }, { id: 'r', name: 'Robin' }, { id: 'x', name: '' }],
     shared: [{ person_id: 's', name: 'Sam' }, { person_id: 'r', name: 'Robin again' }, { person_id: 'me', name: 'me' }], selfId: 'me' });
   check('*** connections: your account’s people (not you), then shared ones, each once, the account’s own winning ***',
@@ -118,7 +116,6 @@ try {
   check('messages for you: newest first, one per screen, empty ones left out', J(inc.map((m) => m.text)) === J(['new', 'old']) && incomingFrom(inc, { limit: 0 }).length === 0);
   const allWords = [...Object.values(ACTION_LABELS), ...Object.values(WHY).map((w) => (typeof w === 'function' ? w('Sam') : w)),
     ...PEOPLE_SETTINGS.map((s) => `${s.label} ${s.help}`), HELPER_ELSEWHERE].join(' ');
-  check('*** every word the rules can put on the page is plain (no module, dashboard, panel or grant) ***', !plainWordProblems(allWords).length, J(plainWordProblems(allWords)));
   check('names nobody', !/her screen|taylor|cici/i.test(allWords));
   const olderRow = PEOPLE_SETTINGS.find((s) => s.key === 'olderHere');
   check('*** "Offer older messages here": a yes/no row of this page’s own (stored per screen), yes by default (Mike, 2026-10-05) ***',
@@ -137,9 +134,8 @@ try {
     lay.preset === 'full' && J(lay.slots) === J(['P']) && ov && ov.place === 'overlay' && ov.y > 50 && ov.x > 50 && ov.scan === false
     && ov.y + ov.h / 2 <= 90, J(lay));
   check('it is not one of Home’s cards (it is where you land), and Start here still is', !EXAMPLE_ORDER.includes('people') && EXAMPLE_ORDER.includes('start'));
-  check('both are described in the catalog, in plain words, and a switch reaches them (MODULE_VERBS)',
+  check('both are described in the catalog, and a switch reaches them (MODULE_VERBS)',
     CATALOG.some((c) => c.type === PEOPLE_TYPE) && CATALOG.some((c) => c.type === HELPER_TYPE)
-    && !plainWordProblems(J(CATALOG.find((c) => c.type === PEOPLE_TYPE))).length
     && J(Object.keys(MODULE_VERBS.people)) === J(['next', 'prev', 'select', 'back']) && MODULE_VERBS.people.next === PEOPLE_VERB_TOPICS.next
     && !!MODULE_VERBS.helper?.select);
   check('the catalog title equals the manifest title', CATALOG.find((c) => c.type === PEOPLE_TYPE).title === getManifest(PEOPLE_TYPE).title
@@ -228,7 +224,7 @@ try {
     && /Invite them to use this/.test(q('[data-pp-connect]').textContent) && /share it with you/.test(q('[data-pp-connect]').textContent));
   check('More and Ask Nimrod are on the page', !!q('[data-pp-act="more"]') && !!q('[data-pp-act="nimrod"]'));
   const words = box.querySelector('[data-pp-list]').textContent;
-  check('*** PLAIN WORDS: nothing on the page says module, dashboard, panel or grant ***', !plainWordProblems(words).length, J(plainWordProblems(words)));
+  check('*** the page names nobody ***', !/her screen|taylor|cici/i.test(words));
   const tall = qa('[data-pp-stop]').map((b) => b.getBoundingClientRect().height);
   check('*** every button is at least 44px tall at 375 wide ***', tall.length > 10 && tall.every((h) => h >= 44), J(tall.map(Math.round)));
   const root = q('.pp-root');
@@ -243,7 +239,7 @@ try {
   check('*** the message window says a screen that shows no notes yet does not -- without the word "panel" ***',
     await until(() => /Den does not show notes yet/.test(q('[data-pp-sheet] [data-nv-nopanel]')?.textContent || ''), 4000), q('[data-pp-sheet]')?.textContent.slice(0, 200));
   const sheetWords = q('[data-pp-sheet="message"]')?.textContent || '';
-  check('*** PLAIN WORDS in the message window too ***', sheetWords.length > 50 && !plainWordProblems(sheetWords).length, J(plainWordProblems(sheetWords)));
+  check('*** the message window has its words, and names nobody ***', sheetWords.length > 50 && !/her screen|taylor|cici/i.test(sheetWords), sheetWords.slice(0, 200));
   q('[data-pp-close]').click();
   check('...and Back closes it', !q('[data-pp-sheet]'));
   // More: on Home, the page's own press.
@@ -282,7 +278,7 @@ try {
   helper.init();
   const hb = hbox.querySelector('[data-hp-open]');
   check('*** the helper: his face and "Ask Nimrod", a target at least 44px ***', /Ask Nimrod/.test(hb?.textContent || '') && !!hb.querySelector('img')
-    && hb.getBoundingClientRect().height >= 44 && !plainWordProblems(hbox.textContent).length);
+    && hb.getBoundingClientRect().height >= 44);
   hb.click();
   check('*** pressed: Nimrod opens over Your people (it answers his ask) ***', await until(() => q('[data-pp-sheet="nimrod"] [data-nimrod-guide]'), 8000) && !hbox.querySelector('[data-hp-note]'));
   q('[data-pp-close]').click();
@@ -314,7 +310,7 @@ try {
   check('More on a screen goes to the ready-made Start here (a press, like "go to my room")', ssaid.some((p) => p.prebuilt === 'start'));
   sq('[data-pp-act="nimrod"]').click();
   check('Ask Nimrod opens him over the page there too', await until(() => sq('[data-pp-sheet="nimrod"]'), 4000));
-  check('plain words on the screen too', !plainWordProblems(sbox.querySelector('[data-pp-list]').textContent).length, J(plainWordProblems(sbox.querySelector('[data-pp-list]').textContent)));
+  check('names nobody on the screen too', !/her screen|taylor|cici/i.test(sbox.querySelector('[data-pp-list]').textContent));
   sinst.destroy(); sbox.remove();
 
   // ============================================================================================
@@ -336,8 +332,7 @@ try {
   const barShows = () => $$('#stage .tb-bar button, #stage .tb-bar [data-host-status]').filter(shown).map((b) => b.textContent.trim());
   const barPlain = (where) => {
     const words = barShows();
-    check(`*** ${where}: the bar is in plain words (no module, panel, dashboard, grant) ***`, words.length >= 3 && !plainWordProblems(words.join(' | ')).length,
-      J(words));
+    check(`*** ${where}: the bar shows its buttons ***`, words.length >= 3, J(words));
     check(`${where}: no panel chips ("Your People", "Nimrod, The Helper"), no Switch module, nothing that pages through a panel`,
       !shown($('#stage .tb-bar .tb-mods')) && !['switch', 'panel', 'bigger', 'smaller', 'back', 'next', 'playpause'].some((a) => shown($(`#stage .tb-bar .tb-actions:not(.tb-host) [data-act="${a}"]`)))
       && !words.some((w) => /Your People|The Helper/.test(w)), J(words));
@@ -355,7 +350,7 @@ try {
   const ovl = $('#stage .k-placed-overlay [data-helper]');
   check('*** Nimrod is over it, at the bottom: the helper overlay ***', !!ovl && ovl.getBoundingClientRect().top > win.innerHeight / 2);
   const stageText = $('#stage [data-pp-list]')?.textContent || '';
-  check('*** plain words on the landing (the page and Nimrod at the bottom) ***', !plainWordProblems(stageText + ovl?.textContent).length, J(plainWordProblems(stageText)));
+  check('*** the landing names nobody (the page and Nimrod at the bottom) ***', !/her screen|taylor|cici/i.test(stageText + (ovl?.textContent || '')));
   const pstops = $$('#stage [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
   check('*** targets at least 44px at 375 ***', pstops.length >= 3 && pstops.every((x) => x >= 44), J(pstops.map(Math.round)));
   check('*** no sideways scroll at 375 (the page or Your people) ***', doc.documentElement.scrollWidth <= doc.documentElement.clientWidth + 1
@@ -365,9 +360,8 @@ try {
   barPlain('375 wide');
 
   // The ⚙ menu over Your people (kiosk.js "THE ⚙ MENU IN PLAIN WORDS"): every tab, at every level of "How much this
-  // menu shows", in the page's own plain words (page_sections.js `pageWordProblems`: the page's banned words and
-  // widget, account, token), and "All settings…" the way to the whole menu.
-  section('*** the ⚙ menu over Your people: plain words, and "All settings…" ***');
+  // menu shows", and "All settings…" the way to the whole menu. (Its banned-word check was retired 2026-10-13.)
+  section('*** the ⚙ menu over Your people: "All settings…" ***');
   const gearBtn = () => $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]');
   const gearOpen = () => !!$('#stage [data-settings] [data-scrim]:not([hidden])');
   const openGear = async () => { for (let i = 0; i < 3 && !gearOpen(); i++) { gearBtn()?.click(); await until(gearOpen, 3000); } return gearOpen(); };
@@ -405,7 +399,6 @@ try {
   check('(setup) ⚙ opens the menu over Your people', await openGear());
   const levelNow = () => menuRow('set:complexity')?.querySelector('.st-hint')?.textContent || '';
   const startLevel = levelNow();
-  const menuWordsBad = [];
   const tabsWithoutAll = [];
   let usual = null;
   for (let n = 0; n < 3; n++) {
@@ -413,15 +406,12 @@ try {
     const tabs = await menuTabs();
     if (lv === 'The usual') usual = tabs;
     for (const [id, t] of Object.entries(tabs)) {
-      for (const w of t.words) { const p = pageWordProblems(w); if (p.length) menuWordsBad.push(`${lv} / ${id}: ${w} (${p.join(',')})`); }
       if (t.rows.slice(-4).join(' ') !== 'all-settings fullscreen home close') tabsWithoutAll.push(`${lv} / ${id}`);
     }
     menuRow('set:complexity')?.click();     // the next level; three presses come back round
     await sleep(200);
   }
   check('(setup) "How much this menu shows" is back where it was, and "The usual" was walked', levelNow() === startLevel && !!usual, `${startLevel} -> ${levelNow()}`);
-  check('*** PLAIN WORDS in the ⚙ menu: every tab, every level (no module, dashboard, panel, grant, widget, account, token) ***',
-    !menuWordsBad.length, J(menuWordsBad.slice(0, 12)));
   check('*** "All settings…" on every tab, at every level, just before the ways out ***', !tabsWithoutAll.length, J(tabsWithoutAll));
   const usualRows = Object.values(usual || {}).flatMap((t) => t.rows);
   const panelOnly = ['switch-module', 'edit-panel', 'promote', 'demote', 'set:instancePanelSurface', 'set:panelSurface', 'set:panelGap',
@@ -437,7 +427,7 @@ try {
   menuRow('all-settings')?.click();
   check('*** "All settings…" reaches the whole menu: Switch, "Every Your people panel", the page’s Switch module… ***',
     await until(() => !menuRow('all-settings') && /of \d/.test(menuRow('subject-pick')?.textContent || '') && !!menuRow('switch-module'), 3000)
-    && await showMenuTab('page') && !!menuRow('home:switch') && pageWordProblems($('#stage [data-list]').textContent).length > 0,
+    && await showMenuTab('page') && !!menuRow('home:switch'),
     $('#stage [data-list]')?.textContent.slice(0, 200));
   await closeGear();
   check('*** ...until it closes: the next ⚙ is plain again ***', await openGear() && await showMenuTab('module') && !!menuRow('all-settings') && !menuRow('switch-module'));

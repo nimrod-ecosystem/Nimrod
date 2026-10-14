@@ -330,7 +330,7 @@ export const PANEL_GAPS = Object.freeze(['none', 'thin', 'roomy']);
 export const PANEL_GAP_DEFAULT = 'none';
 export const PANEL_GAP_FIELD = Object.freeze({ key: 'panelGap', label: 'Space between panels', kind: 'choice',
   level: 'standard', default: PANEL_GAP_DEFAULT,
-  options: [{ value: 'none', label: 'None: each part takes its full share' }, { value: 'thin', label: 'Thin' },
+  options: [{ value: 'none', label: 'None: each panel takes its full share' }, { value: 'thin', label: 'Thin' },
     { value: 'roomy', label: 'Roomy' }] });
 /** Which path a real screen boots on, from its settings row and the default. Pure; exported for suites. */
 export function dashboardPathFor(row, fallback = DASHBOARD_MODULE_DEFAULT) {
@@ -562,14 +562,14 @@ export async function mountKiosk(root, {
                turns the next word into a bare JS identifier, which is exactly what broke
                here (SyntaxError: Unexpected identifier 'prevInPrimary'). -->
           <button data-act="back" title="back — the one before this (↑)">◂ Back</button>
-          <button data-act="playpause" title="pause or play the part you picked" disabled>⏸ Pause</button>
+          <button data-act="playpause" title="pause or play the panel you picked" disabled>⏸ Pause</button>
           <button data-act="next" title="next (→ / ↓)">Next ▸</button>
           <!-- Only on an arranged screen; hidden below when there is no layout. See panelNext. -->
-          <button data-act="panel" title="move to the next part" hidden>Panel ▸</button>
+          <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
           <!-- SWITCH MODULE (2026-10-02): the Modules library in the selected panel's place - see openLibraryAt. -->
-          <button data-act="switch" title="show something else in the part you picked">Switch module</button>
+          <button data-act="switch" title="show another module in the panel you picked">Switch module</button>
           <!-- BIGGER (2026-10-02 evening): the panel corner's press for the selected panel - see promotePanel. -->
-          <button data-act="bigger" title="make the part you picked bigger, one step at a time">⤢ Bigger</button>
+          <button data-act="bigger" title="make the panel you picked bigger, one step at a time">⤢ Bigger</button>
           <!-- SMALLER (2026-10-03): the way back down, one level a press, dimmed while nothing is bigger - see demotePanel. -->
           <button data-act="smaller" title="nothing is bigger now" disabled>⤡ Smaller</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
@@ -2555,7 +2555,7 @@ export async function mountKiosk(root, {
       try { locked = !piece && !!rec && lockedNow(rec.id); } catch { locked = false; }
       sw.title = piece ? PIECE_SWITCH_TITLE(piece.label)
         : locked ? `${rec.title || rec.type} is locked on this dashboard (Unlock is on Home, under Change)`
-          : 'show something else in the part you picked';      // the markup's own title
+          : 'show another module in the panel you picked';      // the markup's own title
     }
     // The Modules library standing in a panel's place goes with that panel: a rebuilt arrangement (a swap,
     // a new layout) has new boxes, and a library beside a box that is gone stands in for nothing.
@@ -3823,7 +3823,7 @@ export async function mountKiosk(root, {
     const tag = (rows) => rows.map((it) => ({ ...it, ...t }));
     if (lv === 'module') {
       const rec = focusedRec();
-      if (!rec) return [{ kind: 'item', id: 'level-none', disabled: true, label: 'No part picked', ...t }];
+      if (!rec) return [{ kind: 'item', id: 'level-none', disabled: true, label: 'No panel selected', ...t }];
       const name = panelName(rec);
       const sounds = makesSound({ instanceId: rec.id, audio, manifest: rec.instance.manifest });
       const fields = [...typeFields(rec),
@@ -3835,8 +3835,8 @@ export async function mountKiosk(root, {
       });
       withReviewsLink(rows);
       return tag([
-        { kind: 'heading', id: 'level-head', label: `Every ${name} part on this screen. A part that has not made its own choice follows these` },
-        ...(rows.length ? rows : [{ kind: 'item', id: 'level-none', disabled: true, label: `Nothing to set for every ${name} part` }]),
+        { kind: 'heading', id: 'level-head', label: `Every ${name} panel on this screen. A panel that has not made its own choice follows these` },
+        ...(rows.length ? rows : [{ kind: 'item', id: 'level-none', disabled: true, label: `Nothing to set for every ${name} panel` }]),
       ]);
     }
     const order = levelsHere();
@@ -3884,7 +3884,7 @@ export async function mountKiosk(root, {
     if (!deviceLookRead) deviceLookRead = Promise.resolve(deviceLookCtl.read()).then(() => redrawMenu(), () => redrawMenu());
     let rows = [];
     try { rows = deviceLookCtl.rows(); } catch (err) { console.error('kiosk: device font and look rows', err); rows = []; }
-    return [{ kind: 'heading', id: 'uf-head', label: 'Font and colour look on this device' }, ...rows];
+    return [{ kind: 'heading', id: 'uf-head', label: 'Font and color look on this device' }, ...rows];
   }
 
   // *** "IN THE SWITCH SCAN: YES / NO" FOR A PLACED PANEL (2026-10-02; c93a1ec). *** A panel placed freely
@@ -3949,17 +3949,17 @@ export async function mountKiosk(root, {
   function layoutRow() {
     const p = currentPreset();
     return { kind: 'item', id: 'layout-pick', label: `Layout: ${p ? p.label : 'One at a time'}…`,
-      hint: 'more ways to arrange the parts', run: () => { layoutOpen = true; const v = menuView(); v.refresh(); v.focusRow('layout-keep'); } };
+      hint: 'more ways to arrange the panels', run: () => { layoutOpen = true; const v = menuView(); v.refresh(); v.focusRow('layout-keep'); } };
   }
   function layoutRows() {
     const cur = currentPreset();
     const t = MENU_TAB.module(0);
     return [
-      { kind: 'heading', id: 'layout-head', label: 'Arrange the parts as', ...t },
+      { kind: 'heading', id: 'layout-head', label: 'Arrange the panels as', ...t },
       { kind: 'item', id: 'layout-keep', label: `Keep ${cur ? cur.label : 'one at a time'}`, hint: 'leave it as it is', ...t,
         run: () => { layoutOpen = false; const v = menuView(); v.refresh(); v.focusRow('layout-pick'); } },
       ...LAYOUT_PRESETS.map((p) => ({ kind: 'item', id: `layout:${p.id}`, label: p.label, ...t,
-        hint: `${p.slots} part${p.slots === 1 ? '' : 's'}${cur && cur.id === p.id ? ' · now' : ''}`,
+        hint: `${p.slots} panel${p.slots === 1 ? '' : 's'}${cur && cur.id === p.id ? ' · now' : ''}`,
         run: () => { applyLayoutPreset(p.id).catch((err) => console.error('kiosk: layout', err)); } })),
     ];
   }
@@ -4340,7 +4340,7 @@ export async function mountKiosk(root, {
     const name = (whoState && whoState.name) || '';
     const mine = (voicePrints || []).some((p) => p.person === String(personId));
     const rows = [{ kind: 'item', id: 'voice-id-setup',
-      label: mine ? 'Set up my voice again' : 'Set up my voice, so what I say is labelled with my name',
+      label: mine ? 'Set up my voice again' : 'Set up my voice, so what I say is labeled with my name',
       hint: 'read five sentences aloud; only numbers that describe the voice are kept, on this computer',
       run: () => startEnrolment(name) }];
     if (mine) {
@@ -5741,7 +5741,7 @@ export async function mountKiosk(root, {
         kind: 'item', id: 'who-pick', page: 'who',
         label: whoState === false ? 'Choose who this screen is for' : 'Someone else is using this screen',
         hint: whoState === false
-          ? 'nobody yet — what their keys and switches do, and their voice, come with them'
+          ? 'nobody yet — their bindings and voice come with them'
           : `now: ${whoState?.name || '…'}`,
       }];
     })()), ...voiceItems(), ...chooseModeItems(), ...usualStartItems(), ...playersItems(),   // players: its own tab
@@ -6114,7 +6114,7 @@ export async function mountKiosk(root, {
             Promise.resolve(peopleList || profiles.people()).then((list) => {
               peopleList = list || [];
               if (!peopleList.length) {
-                el.innerHTML = '<div class="st-hint">No people on this login yet. '
+                el.innerHTML = '<div class="st-hint">No people on this account yet. '
                   + 'Add one on the home page.</div>';
                 return;
               }
@@ -6307,7 +6307,7 @@ export async function mountKiosk(root, {
     if (screenLocked()) {
       return [{ kind: 'item', id: LOCK_STATE_ROW, disabled: !pin,
         label: pin ? 'Locked: unlock…' : `Locked: ${words} unlocks it`,
-        hint: pin ? `type the PIN (or press ${words})` : 'everything on it still works; leaving it and this login’s keys wait until it is unlocked',
+        hint: pin ? `type the PIN (or press ${words})` : 'everything on it still works; leaving it and the account’s keys wait until it is unlocked',
         ...(pin ? { run: () => { try { menu.close(); } catch { /* already closed */ } openPinStrip('unlock'); } } : {}) }];
     }
     // Not at "Just the essentials" (legibility and the ways out); the chord works at every level.
@@ -6316,7 +6316,7 @@ export async function mountKiosk(root, {
     return [
       { kind: 'heading', id: 'screen-lock-head', label: 'Locking this screen', ...t },
       { kind: 'item', id: 'screen-lock', label: 'Lock this screen', ...t,
-        hint: `everything on it keeps working, editing too; leaving it and this login’s keys wait for ${words}${pin ? ' and the PIN' : ''}`,
+        hint: `everything on it keeps working, editing too; leaving it and the account’s keys wait for ${words}${pin ? ' and the PIN' : ''}`,
         run: () => { screenLock.lock({ by: 'menu' }); } },
       { kind: 'item', id: 'screen-lock-pin', label: pin ? 'Unlock PIN: on' : 'Unlock PIN: off', ...t,
         hint: pin ? 'press to remove it' : 'press to choose one: then unlocking asks for it, and works by touch alone',
@@ -6369,14 +6369,15 @@ export async function mountKiosk(root, {
   let menuAll = false;                     // "All settings…" pressed: the whole menu, until it closes
   const hostAsksPlain = () => { try { return !!hostPage && typeof hostPage.plainBar === 'function' && !!hostPage.plainBar(); } catch { return false; } };
   function plainMenu() { return !viewNow && !menuAll && hostAsksPlain(); }
-  const PLAIN_PART = 'This part';
+  const PLAIN_PART = 'This panel';
   const PLAIN_MENU_DROPS = new Set(['switch-module', 'edit-panel', 'promote', 'demote', 'play-pause', 'scan-lap', 'piece-edit',
     'set:instancePanelSurface', 'set:panelSurface', `set:${PANEL_GAP_FIELD.key}`, `set:${ZOOM_FOCUS_FIELD.key}`,
     `set:${SMALL_CLOCK_KEY}`, `set:${HIDE_ASK_TIMEOUT_FIELD.key}`, 'edit-view', 'dashboard-map',
     `set:${PANEL_RING_FIELD.key}`]);   // panel ring: acts only on the panels, like Grow the panel the cursor is on
   const PLAIN_MENU_WORDS = {
-    // site text rewrite 2026-10-09: the hint (page_links.js ELSEWHERE_PAGES) now says "this login’s key".
-    'claude-page': { label: 'Claude…', hint: (h) => h.replace('this login’s key', 'the key it uses') },
+    // site text second pass 2026-10-13: the hint (page_links.js ELSEWHERE_PAGES) says "the account’s key" again
+    // (it said "this login’s key" after the 2026-10-09 rewrite); this replace has to follow whatever it says.
+    'claude-page': { label: 'Claude…', hint: (h) => h.replace('the account’s key', 'the key it uses') },
     'screen-name': { hint: () => 'renamed on the home page' },
   };
   function plainRow(it) {

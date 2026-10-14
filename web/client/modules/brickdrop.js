@@ -116,7 +116,7 @@ const SETTINGS = [
     note: 'Starts with the next wall.' },
   { key: 'control', label: 'How the brick moves', kind: 'choice', default: 'glide', level: 'essential',
     options: [
-      { value: 'glide', label: 'It glides by itself. A press drops it. One switch (one big button) can play' },
+      { value: 'glide', label: 'It glides by itself. A press drops it. One switch can play' },
       { value: 'scan', label: 'Left, Turn, Right and Drop light up in turn. A press does the lit one' },
       { value: 'keys', label: 'Keys, buttons or switches move it. It falls by itself' },
     ],
@@ -136,8 +136,8 @@ const SETTINGS = [
       { value: 'again', label: 'The game ends and a new one starts by itself' }] },
   { key: 'levelUp', label: 'It goes up a level by itself', kind: 'choice', default: 0, level: 'standard',
     options: [{ value: 0, label: 'No, it stays where it is set' }, { value: 10, label: 'After 10 rows' }, { value: 20, label: 'After 20 rows' }] },
-  { key: 'colours', label: 'Brick colours', kind: 'choice', default: 'length', level: 'advanced',
-    options: [{ value: 'length', label: 'From the theme: each length of brick its own colour' }, { value: 'one', label: 'From the theme: all one colour' }] },
+  { key: 'colours', label: 'Brick colors', kind: 'choice', default: 'length', level: 'advanced',
+    options: [{ value: 'length', label: 'From the theme: each length of brick its own color' }, { value: 'one', label: 'From the theme: all one color' }] },
   { key: 'buttons', label: 'Left, Turn, Right and Drop buttons under the wall', default: true, level: 'standard',
     onLabel: 'Shown', offLabel: 'Hidden', note: 'Always shown when the choices light in turn.' },
   { key: 'pauseKey', label: 'A key of its own that pauses', kind: 'choice', default: 'off', level: 'advanced',
@@ -222,8 +222,8 @@ function ensureStyle(doc) {
 
 registerModule(
   { type: GAME, title: TITLE, core: 'new',
-    description: 'Stack Nimrod bricks into a wall. A full row is a row built. One switch (one big button) can play. '
-      + 'The brick glides by itself and a press drops it. The easy levels are slow, use small bricks and never end the game.',
+    description: 'Stack Nimrod bricks into a wall. A full row is a row built. One switch can play. The brick '
+      + 'glides by itself and a press drops it. The easy levels are slow, use small bricks and never end the game.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;

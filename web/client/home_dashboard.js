@@ -335,11 +335,11 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent, land, autosave }) || 'nothing open', disabled: !t || busy }),
     item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
     item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
-    item('switch', 'Switch module…', { hint: 'show something else in the part you picked', disabled: !canSwitch || busy }),
+    item('switch', 'Switch module…', { hint: 'another module in the place of the chosen one', disabled: !canSwitch || busy }),
     // The edit bar (Scene / Add / Change…) sits above the stage, outside this menu: this row is how a switch
     // walking the menu gets to it -- the bar then takes the scan and the menu goes (one holder at a time).
     // `canEdit`: the page says whether Your Home is on the stage (on a module page there is no bar).
-    item('editbar', 'Edit bar…', { hint: 'scene, add, change: go to the bar above, so a switch (one big button) can use it', disabled: !canEdit }),
+    item('editbar', 'Edit bar…', { hint: 'scene, add, change: go to the bar above, so a switch can use it', disabled: !canEdit }),
     // The starting points are up front on the page; this row is how a switch (or the plain bar's ⚙) gets
     // back to them once a Home exists.
     item('examples', 'Start from an example…', { hint: 'ready-made Homes to begin from' }),

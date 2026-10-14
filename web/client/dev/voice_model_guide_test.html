@@ -527,7 +527,8 @@ try {
       pages.length === 2 && pages.every((p) => p.kind === 'page' && p.placeable === false && /settings page/i.test(p.whyNot) && p.cats.includes('ai')));
     check('the Claude page is the one page_links knows; wake phrases are the menu\'s Devices tab', AI_PAGES[0].path === CLAUDE_PAGE && AI_PAGES[1].menuTab === 'devices');
     check('search finds them', filterItems(pageItems(), { query: 'wake' }).length === 1 && filterItems(pageItems(), { query: 'claude key' }).length === 1);
-    check('no money words, no names', !/\b(shop|price|coins?|purchase)\b/i.test(J(pages)) && !/taylor|cici|her screen/i.test(J(pages)));
+    // (Its money-word half was retired 2026-10-13 with the banned-word lists.)
+    check('no names', !/taylor|cici|her screen/i.test(J(pages)));
 
     // The details of a settings page, off a screen and on one.
     const host = document.createElement('div');

@@ -99,7 +99,7 @@ try {
       ART_KINDS.every((k) => t.includes(`Artwork/${k.folder}`) && t.includes(`${k.width} × ${k.height}`) && t.includes(k.example)), t.slice(0, 300));
     // folder art (2026-10-07): the SVG limit is gone (a folder lists SVG), so the kit no longer sends anybody round it.
     check('*** says how a picture reaches the site (connect, then choose), that nothing is uploaded, and no SVG limit any more ***',
-      /Connect it for pictures/.test(t) && /Nothing is sent anywhere/.test(t) /* site text rewrite 2026-10-09: was "Nothing is uploaded" */ && !/does not list SVG/.test(t) && !/Add one from this device/.test(t));
+      /Connect it for pictures/.test(t) && /Nothing goes to the Nimrod site/.test(t) /* site text second pass 2026-10-13: was "Nothing is sent anywhere" */ && !/does not list SVG/.test(t) && !/Add one from this device/.test(t));
     check('folder art: the kit says the Wallpaper panel shows Artwork/Wallpapers by itself',
       /Wallpaper panel/.test(t) && /Artwork\/Wallpapers|Wallpapers folder/.test(t), t.slice(t.indexOf('WALLPAPERS'), t.indexOf('WALLPAPERS') + 400));
     check('*** says what is NOT read from files yet (trophies, room objects ...), and who answers for real people and brands ***',
@@ -133,7 +133,7 @@ try {
     check('verdict words', verdictWords(boxed) === 'Works as a board card, but:');
 
     const fake = await checkArtFile(await picture('card-tea.png', 512, 512, checker(16)), { folder: 'Board cards' });
-    check('*** an AI\'s painted-on checkerboard is caught and named ***', fake.facts.checker === true && has(fake, 'warn', /grey-and-white squares/), texts(fake));
+    check('*** an AI\'s painted-on checkerboard is caught and named ***', fake.facts.checker === true && has(fake, 'warn', /gray-and-white squares/ /* site text second pass 2026-10-13: American spelling */), texts(fake));
     const fake8 = await checkArtFile(await picture('card-tea.png', 1024, 1024, checker(8)), { folder: 'Board cards' });
     check('...with smaller squares too', fake8.facts.checker === true, J(fake8.facts));
     check('...and a plain light-grey background is NOT called a checkerboard', boxed.facts.checker === false
@@ -288,7 +288,7 @@ try {
       check('*** Artwork\'s README IS the art kit (the file to give an AI) ***', (await readText(tree.Artwork['README.txt'])) === artKitText() && README.artwork === artKitText());
       const dataReadme = await readText(tree.Data['README.txt']);
       check('*** Data\'s README: play history and exports, on this computer, nothing uploaded ***',
-        /play history/.test(dataReadme) && /export/.test(dataReadme) && /Nothing in this folder is sent/.test(dataReadme), dataReadme);   // site text rewrite 2026-10-09: was "is uploaded"
+        /play history/.test(dataReadme) && /export/.test(dataReadme) && /Nothing in this folder goes to the Nimrod site/.test(dataReadme), dataReadme);   // site text second pass 2026-10-13
       tree.Artwork.Avatars['avatar-me.png'] = new Blob(['x']);
       delete tree.Artwork.Buttons;
       const r2 = await ensureTree(root);
@@ -329,7 +329,7 @@ try {
       check('*** what is not read yet, and the real-people line ***', /trophies/.test(host.querySelector('[data-uf-art-notyet]')?.textContent || '') && /brands/.test(text()));
       check('*** the checker\'s buttons: pictures, a folder (every browser), the Artwork folder ***', !!btn('check-files') && !!btn('check-dir') && !!btn('check-artwork')
         && !!host.querySelector('input[type=file][data-uf-art-files][multiple]') && host.querySelector('input[data-uf-art-dir]')?.hasAttribute('webkitdirectory'));
-      check('says nothing is uploaded', /Nothing is sent anywhere/.test(host.querySelector('[data-uf-art-checknote]')?.textContent || ''));   // site text rewrite 2026-10-09: was "Nothing is uploaded"
+      check('says nothing is uploaded', /Nothing goes to the Nimrod site/.test(host.querySelector('[data-uf-art-checknote]')?.textContent || ''));   // site text second pass 2026-10-13
       btn('copy-kit').click();
       await settle();
       check('*** "Copy the art kit" copies the kit ***', copied[copied.length - 1] === artKitText() && /Copied the art kit/.test(text()));

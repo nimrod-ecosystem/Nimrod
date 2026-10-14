@@ -203,9 +203,9 @@ try {
       && !shown('brick').includes('ownColour') && fields.find((f) => f.key === 'ownColour').appliesWhen({ colour: 'own' }));
     const words = J(BRICKS_SETTINGS.map((f) => [f.label, f.help || '', (f.options || []).map((o) => o.label)]))
       + J(CATALOG.find((c) => c.type === BRICKS_TYPE));
-    check('*** PLAIN WORDS: no module, dashboard, panel, token, widget, account or grant in its rows or its catalog words ***',
-      !/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/i.test(words), words.match(/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/ig));
-    check('...and never "her screen", Taylor or Cici', !/her screen|taylor|cici/i.test(words));
+    // (A banned-word check here was retired 2026-10-13 with the banned-word lists: Mike, "I really don't like this
+    // banned word thing at all.")
+    check('never "her screen", Taylor or Cici in its rows or its catalog words', !/her screen|taylor|cici/i.test(words));
     check('garbage reads as the defaults', J(bricksOptions({ part: 'sofa', width: 'x', thickness: 7, colour: 'pink', ownColour: 'red' }))
       === J({ ...BRICKS_DEFAULTS }));
     const o = bricksOptions({ part: 'baseplate', width: '120', length: 310, thickness: '10', colour: 'own', ownColour: '#ABCDEF' });

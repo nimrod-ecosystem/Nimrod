@@ -200,7 +200,7 @@ const CELEBRATION_MS = 1500;
 const MAX_SPARKS = 260;
 
 const SETTINGS = [
-  { key: 'openToMenu', label: 'When this part opens', default: true, level: 'essential',
+  { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
     onLabel: 'Show a start screen first', offLabel: 'Start playing straight away' },
   { key: 'confirmExit', label: 'Leaving a session', default: false, level: 'standard',
     onLabel: 'Ask before ending it', offLabel: 'Leave straight away' },

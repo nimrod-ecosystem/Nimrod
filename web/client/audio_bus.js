@@ -187,7 +187,7 @@ export const CHANNELS = Object.freeze([
   // *** THE AAC VOICE IS ITS OWN CHANNEL. *** It is the one sound on the screen that is a person
   // talking, and it must never be buried - so it gets its own floor, apart from the spoken prompts
   // it used to share the voice tier with.
-  Object.freeze({ id: 'aac',   label: 'Talk board voice',  floor: 0.6, effects: true }),
+  Object.freeze({ id: 'aac',   label: 'AAC board voice',  floor: 0.6, effects: true }),
   Object.freeze({ id: 'voice', label: 'Spoken prompts',       floor: 0,   effects: false }),
   Object.freeze({ id: 'media', label: 'Videos and music',     floor: 0,   effects: true }),
   Object.freeze({ id: 'sfx',   label: 'Game sounds',          floor: 0,   effects: true }),

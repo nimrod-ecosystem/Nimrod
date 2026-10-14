@@ -419,8 +419,7 @@ def remove_card_refusal(*, actor: str, row: dict | None, first_person_id: str | 
     return "last-here" if holder_refusal(row, link_rows=link_rows) == "last" else ""
 
 
-# What the join page and the invite window say for each refusal, in plain words (no "account", "token" or
-# "grant").
+# What the join page and the invite window say for each refusal, in plain words.
 REFUSAL_TEXT = {
     "unknown": "This link does not work. Ask whoever sent it for a new one.",
     "used": "This link has already been used. Ask whoever sent it for a new one if you need it.",

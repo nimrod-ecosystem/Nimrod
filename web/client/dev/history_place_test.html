@@ -159,7 +159,7 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
       && /1 entry is waiting/.test(whereWords('games', 'folder', { folder: 'missing', waiting: 1 }))
       && !/waiting/.test(whereWords('plays', 'folder', { folder: 'none', waiting: 0 })));
     check('...and says plainly what the device keeps meanwhile, and that a drive may just be unplugged',
-      /newest 500 for each part/.test(whereWords('plays', 'folder', { folder: 'none' })) /* site text rewrite 2026-10-09 */ && /newest 1,000/.test(whereWords('words', 'folder', { folder: 'none' }))
+      /newest 500 for each panel/.test(whereWords('plays', 'folder', { folder: 'none' })) /* site text second pass 2026-10-13 */ && /newest 1,000/.test(whereWords('words', 'folder', { folder: 'none' }))
       && /drive may not be plugged in/.test(whereWords('plays', 'folder', { folder: 'missing' })) /* site text rewrite 2026-10-09 */ && /Allow it again/.test(whereWords('plays', 'folder', { folder: 'permission' })));
     const offer = secondPlaceOffer('plays', 'device', { folder: 'none', canUs: true });
     check('*** only on this device: the offer line, word for word, with both second places ***',

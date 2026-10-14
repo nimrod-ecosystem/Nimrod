@@ -560,7 +560,7 @@ export function createAutomation({
   function startRunner(b) {
     stopRunner(b.id);
     const t = targets.get(b.target.instance);
-    if (!t) { setStatus(b.id, 'waiting for its part'); return; }
+    if (!t) { setStatus(b.id, 'waiting for its panel'); return; }
     const field = t.fields.get(b.target.key);
     const ok = bindable(field, t.raw.get(b.target.key), guards);
     if (!ok.ok) { setStatus(b.id, `not working: ${ok.why}`); return; }
@@ -876,7 +876,7 @@ export function createAutomation({
         if (targets.get(instance) === t) {
           for (const b of bindings.values()) if (b.target.instance === instance) stopRunner(b.id, { restore: false });
           targets.delete(instance);
-          for (const b of bindings.values()) if (b.target.instance === instance) setStatus(b.id, 'waiting for its part');
+          for (const b of bindings.values()) if (b.target.instance === instance) setStatus(b.id, 'waiting for its panel');
         }
         t.listeners.clear();
         return handle.destroy?.();

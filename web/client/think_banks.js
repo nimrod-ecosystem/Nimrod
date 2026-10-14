@@ -100,7 +100,7 @@ const G = (level, things, group, accept, cue) => ({ level, things, group, accept
 const GROUP_ROWS = [
   G(1, ['apple', 'banana', 'orange'], 'fruit', ['fruits'], 'they are sweet and grow on trees and plants'),
   G(1, ['dog', 'cat', 'cow'], 'animals', ['animal', 'pets'], 'they are alive and have four legs'),
-  G(1, ['red', 'blue', 'green'], 'colours', ['colors', 'colour', 'color'], 'you see them in a rainbow'),
+  G(1, ['red', 'blue', 'green'], 'colors', ['colours', 'color', 'colour'], 'you see them in a rainbow'),   // American spelling first; the British ones still count (site text second pass 2026-10-13)
   G(1, ['shirt', 'socks', 'hat'], 'clothes', ['clothing'], 'you wear them'),
   G(1, ['milk', 'juice', 'water'], 'drinks', ['drink', 'drinks'], 'you pour them into a glass'),
   G(1, ['one', 'two', 'three'], 'numbers', ['number'], 'you count with them'),
@@ -132,12 +132,12 @@ const GROUP_ROWS = [
   G(4, ['france', 'japan', 'brazil'], 'countries', ['country', 'places'], 'each one has its own flag'),
   G(5, ['knife', 'fork', 'spoon'], 'cutlery', ['silverware', 'utensils', 'flatware'], 'you set the table with them'),
   G(5, ['ring', 'necklace', 'bracelet'], 'jewellery', ['jewelry'], 'people wear them to look nice'),
-  G(5, ['basil', 'mint', 'parsley'], 'herbs', ['herb', 'spices'], 'they are green leaves that flavour food'),
+  G(5, ['basil', 'mint', 'parsley'], 'herbs', ['herb', 'spices'], 'they are green leaves that flavor food'),
   G(5, ['poodle', 'beagle', 'collie'], 'dogs', ['dog', 'dog breeds', 'breeds', 'animals'], 'they bark'),
   G(5, ['cake', 'pie', 'pudding'], 'desserts', ['dessert', 'sweets', 'puddings'], 'you eat them after dinner'),
   G(5, ['box', 'jar', 'basket'], 'containers', ['container'], 'you keep things in them'),
   G(5, ['canoe', 'yacht', 'ferry'], 'boats', ['boat', 'ships'], 'they float on water'),
-  G(5, ['inch', 'mile', 'metre'], 'measurements', ['units', 'lengths', 'distances', 'meter'], 'you measure how long things are with them'),
+  G(5, ['inch', 'mile', 'meter'], 'measurements', ['units', 'lengths', 'distances', 'metre'], 'you measure how long things are with them'),
 ];
 export const GROUPS = Object.freeze(GROUP_ROWS.map((g) => Object.freeze({
   id: `groups-${g.things.join('-')}`, kind: 'groups', level: g.level, things: Object.freeze(g.things),
@@ -165,7 +165,7 @@ const FINISH_ROWS = [
   F(2, 'I read a', ['book', 'newspaper', 'magazine', 'story', 'letter', 'paper', 'poem', 'menu'], ['spoon', 'cloud'], 'it has pages'),
   F(2, 'I write with a', ['pen', 'pencil', 'marker', 'crayon'], ['pillow', 'banana'], 'it makes marks on paper'),
   F(2, 'I open the', ['door', 'window', 'box', 'lid', 'jar', 'curtains', 'letter', 'present', 'gate', 'fridge'], ['sky', 'song'], 'it opens and closes'),
-  F(2, 'The grass is', ['green', 'wet', 'long', 'tall', 'short', 'soft', 'cut'], ['purple', 'loud'], 'think of its colour'),
+  F(2, 'The grass is', ['green', 'wet', 'long', 'tall', 'short', 'soft', 'cut'], ['purple', 'loud'], 'think of its color'),
   F(2, 'The sky is', ['blue', 'grey', 'gray', 'cloudy', 'clear', 'dark', 'big', 'bright'], ['square', 'salty'], 'look up'),
   F(2, 'I sit on a', ['chair', 'sofa', 'couch', 'bench', 'stool', 'bed', 'seat'], ['cloud', 'spoon'], 'it has legs and you rest on it'),
   F(2, 'Cats say', ['meow', 'miaow', 'purr'], ['woof', 'moo'], 'it is the sound a cat makes'),

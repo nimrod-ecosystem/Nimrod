@@ -319,11 +319,11 @@ export function judgeArt(f, k, opts = {}) {
   // 4. The background (not measured for an SVG the sanitizer refused).
   if (svgStill) { /* nothing measured */ } else if (k && k.clear === 'wanted') {
     if (f.checker) {
-      warn('The background looks like grey-and-white squares painted into the picture. That is a drawing of a clear background, not a real '
+      warn('The background looks like gray-and-white squares painted into the picture. That is a drawing of a clear background, not a real '
         + 'one. Ask your AI again for a real transparent PNG, or remove the background.');
     } else if ((Number(f.border) || 0) < o.borderClear) {
       warn(f.ext === 'svg' ? 'It has a solid background shape behind it: a box will show around it. Remove the first, full-size rectangle.'
-        : 'It has no clear background: a box of colour will show around it. Ask for a transparent background.');
+        : 'It has no clear background: a box of color will show around it. Ask for a transparent background.');
     } else if (k.circle && (Number(f.outside) || 0) > o.outsideMax) {
       warn('Part of it reaches into the corners: an avatar is shown in a circle, so that part is cut off. Keep it nearer the middle.');
     }

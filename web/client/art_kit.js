@@ -41,7 +41,7 @@ export const ART_FOLDER = 'Artwork';
 
 // *** THE LOOK, IN WORDS - A STAND-IN UNTIL DESIGN WRITES IT (note 37 in NOTES_FOR_DESIGN). *** It is the avatar
 // prompt's own style line (modules/avatar.js PROMPT_PHOTO), so nothing new is claimed about the look here.
-export const ART_LOOK = 'Friendly and simple: flat colours with soft shading, clean dark outlines, warm colours, '
+export const ART_LOOK = 'Friendly and simple: flat colors with soft shading, clean dark outlines, warm colors, '
   + 'and easy to read when small. No words in the picture unless you ask for them.';
 
 // *** THE NUMBERS, EACH ARGUED. A spec, not a setting: they describe what the site draws, so they change when the
@@ -81,8 +81,8 @@ export const ART_KINDS = Object.freeze([
   }),
   kind({
     id: 'button', folder: 'Buttons', prefix: 'button', title: 'Button picture', plural: 'Button pictures',
-    what: 'the picture on a Button part, inside its frame',
-    use: 'a Button part’s settings: “Picture”',
+    what: 'the picture on a Button panel, inside its frame',
+    use: 'a Button panel’s settings: “Picture”',
     width: 1024, height: 768, shapes: [[4, 3], [1, 1]], minSide: 256, maxSide: 4096,
     types: ['png', 'webp', 'jpg'], clear: 'either', maxBytes: 2 * MB,
     advice: '4:3 (a little wider than tall) or square: the frame takes the picture’s shape. Any other shape is fitted inside, with space at the sides.',
@@ -91,8 +91,8 @@ export const ART_KINDS = Object.freeze([
   }),
   kind({
     id: 'card', folder: 'Board cards', prefix: 'card', title: 'Board card', plural: 'Board cards',
-    what: 'the picture on a card of the talk board (the part named AAC board; AAC is augmentative and alternative communication), above the card’s word',
-    use: 'the editor of the AAC board (the talk board): a card’s picture',
+    what: 'the picture on a card of the AAC board (AAC is augmentative and alternative communication), above the card’s word',
+    use: 'the editor of the AAC board: a card’s picture',
     width: 512, height: 512, shapes: [[1, 1]], minSide: 128, maxSide: 2048,
     types: ['png', 'webp'], clear: 'wanted', maxBytes: 1 * MB,
     advice: 'One clear thing, big and simple. No words in the picture: the card prints its own word under it.',
@@ -171,12 +171,12 @@ export function artKitText(kinds = ART_KINDS) {
   const L = [];
   L.push('NIMROD ART KIT');
   L.push('');
-  L.push('Pictures you make for Nimrod yourself, with your own AI (artificial intelligence) or by hand. Give this whole file to your AI, then ask');
+  L.push('Pictures you make for Nimrod yourself, with your own AI or by hand. Give this whole file to your AI, then ask');
   L.push('for what you want, for example: "Using the Nimrod art kit, make me a board card of a cup of tea."');
   L.push('');
   L.push('Put each picture in its folder inside this Artwork folder. Then in Nimrod, in the settings menu: This screen,');
-  L.push('Your own folders, Artwork: "Connect it for pictures" (once), and choose the picture wherever a part asks for one.');
-  L.push('"Check pictures" on that page says what is wrong with a file, if anything. Nothing is sent anywhere: your pictures stay');
+  L.push('Your own folders, Artwork: "Connect it for pictures" (once), and choose the picture wherever a panel asks for one.');
+  L.push('"Check pictures" on that page says what is wrong with a file, if anything. Nothing goes to the Nimrod site: your pictures stay');
   L.push('on this computer.');
   L.push('');
   L.push('THE LOOK');
@@ -198,8 +198,8 @@ export function artKitText(kinds = ART_KINDS) {
   }
   L.push('');
   L.push('NOT YET');
-  L.push('Room objects and furniture, posters and picture frames in a room, trophies and badges, theme scenes, icons for');
-  L.push('parts, game pieces and playing cards: nothing in Nimrod takes these from a file yet. Each gets a section here');
+  L.push('Room objects and furniture, posters and picture frames in a room, trophies and badges, theme scenes, module');
+  L.push('icons, game pieces and playing cards: nothing in Nimrod takes these from a file yet. Each gets a section here');
   L.push('when something does.');
   L.push('');
   L.push('WHO OWNS IT');

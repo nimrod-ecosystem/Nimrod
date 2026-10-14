@@ -47,10 +47,10 @@ const SETTINGS = [
       { value: 270, label: 'Three quarters of a turn' },
     ],
     note: 'For a camera that is mounted on its side.' },
-  { key: 'fit', label: 'How the picture fills its part', kind: 'choice', default: 'cover',
+  { key: 'fit', label: 'How the picture fills the panel', kind: 'choice', default: 'cover',
     level: 'standard',
     options: [
-      { value: 'cover', label: 'Fill the part (edges may be cut off)' },
+      { value: 'cover', label: 'Fill the panel (edges may be cut off)' },
       { value: 'contain', label: 'Show the whole picture' },
     ] },
   // The live options come from the device, so the row is declared and `settingsChoices` fills it.

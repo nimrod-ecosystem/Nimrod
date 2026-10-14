@@ -779,7 +779,7 @@ const FAVS = normalizeFavourites([
       const r = createMusicRouter({ bus, favourites: () => FAVS, say: (t) => spoke.push(t) });
       let res = await r.play({ name: 'the beatles' });
       check('*** no YouTube panel and no player of its own: it says there is nowhere to play it ***',
-        !res.ok && res.reason === 'no-youtube' && /no YouTube part/.test(spoke.at(-1) || ''), J({ res, spoke }));   // site text rewrite 2026-10-09
+        !res.ok && res.reason === 'no-youtube' && /no YouTube panel/.test(spoke.at(-1) || ''), J({ res, spoke }));   // site text second pass 2026-10-13
       res = await r.play({ name: 'polka' });
       check('an unknown name says so, naming it', res.reason === 'not-found' && /polka/.test(spoke.at(-1)));
       const asked = [];
@@ -821,7 +821,7 @@ const FAVS = normalizeFavourites([
     const q = (s) => host.querySelector(s);
     check('the settings are declared as data, Spotify OFF by default', fieldsFor(getManifest('music')).find((f) => f.key === 'spotifyOn')?.default === false);
     check('the list is kept for the PERSON when the host says whose screen it is', probe().personList === true);
-    check('it starts empty and says how to add one', /No favourites yet/.test(host.textContent));
+    check('it starts empty and says how to add one', /No favorites yet/.test(host.textContent));   // site text second pass 2026-10-13: American spelling
 
     // Change the list, by pressing the buttons a person presses.
     q('[data-act="edit"]').click();
@@ -1282,7 +1282,7 @@ const FAVS = normalizeFavourites([
       hq('[data-act="edit"]').click();
       await settle();
       check('*** a Client ID saved on the keys page is used here with nothing typed ***',
-        !hq('[data-sp-helper]') && made.at(-1)?.clientId === ID1 && /for the whole login/i.test(hq('[data-sp-where]')?.textContent || '') /* site text rewrite 2026-10-09: account -> login */, J(made.map((x) => x.clientId)));
+        !hq('[data-sp-helper]') && made.at(-1)?.clientId === ID1 && /for the whole account/i.test(hq('[data-sp-where]')?.textContent || '') /* site text second pass 2026-10-13: login -> account again */, J(made.map((x) => x.clientId)));
       m.destroy();
 
       // 3. An older panel's own copy is handed over once, and emptied.

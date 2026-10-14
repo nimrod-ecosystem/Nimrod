@@ -126,8 +126,7 @@ export function mountRemote(root, {
         <h1>Remote</h1>
         <p>Control ${personName ? `<b>${esc(personName)}</b>’s` : 'their'} screen from here, while
           they are sitting at it. It is useful for showing someone what a button or key does. It
-          also lets you check that a key or a switch (one big button) does its job on the screen
-          they really use.</p>
+          also lets you check that a binding actually works on the screen they really use.</p>
       </div>
       <div class="r-who" data-shared></div>
       <div class="r-status" data-status></div>
@@ -169,9 +168,9 @@ export function mountRemote(root, {
     // screens, so the page says so. It never lets a call answer by itself - that is "May drop in", below.
     host.innerHTML = `
       <h2 class="r-h2">Who may drive ${personName ? `${esc(personName)}’s screens` : 'these screens'}</h2>
-      <p class="h-hint">Anyone you add here can drive these screens from their own sign-in, without you
-        being present. It also lets them call these screens. A call waits for somebody at the screen to answer,
-        unless you let them drop in (below). Whoever is at the screen sees when someone is driving it.</p>
+      <p class="h-hint">Anyone you add here can control these screens from their own device, without you
+        being there. It also lets them call these screens. A call waits for somebody at the screen to answer,
+        unless you let them drop in (below). Whoever is at the screen sees when someone is controlling it.</p>
       <form class="h-new" data-grant-form>
         <input type="email" data-subject placeholder="their sign-in email" aria-label="who" required>
         <input type="text" data-label placeholder="what for (optional)" aria-label="note" maxlength="120">
@@ -297,7 +296,7 @@ export function mountRemote(root, {
   function renderForward() {
     el('[data-forward]').checked = forwarding;
     el('[data-fwd-note]').textContent = forwarding
-      ? 'On. Every key, switch or other control that has a job on THIS device is now also pressing their screen.'
+      ? 'On. Every key, switch or other control bound on THIS device is now also pressing their screen.'
       : 'Off. Nothing you press here reaches their screen unless you use the buttons above.';
   }
 

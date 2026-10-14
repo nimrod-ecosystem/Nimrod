@@ -69,7 +69,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</
 registerModule(
   { type: TYPE, title: TITLE, core: 'new', dependsOn: 'local', importance: 'optional',
     description: 'make a model from Nimrod bricks, plates and brackets, in any size on the 40 mm grid: put parts down, '
-      + 'stack them, turn them, colour them, undo; by mouse, touch, keys or one switch',
+      + 'stack them, turn them, color them, undo; by mouse, touch, keys or one switch',
     settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;

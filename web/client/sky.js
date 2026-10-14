@@ -47,7 +47,7 @@ export const SKY_TICK_MS = 60 * 1000;
  */
 export const SKY_FIELD = Object.freeze({
   key: SKY_FOLLOW_KEY, label: 'Wallpaper follows the sky outside', kind: 'choice', level: 'standard', default: 'both',
-  note: 'A moving scene shows the time of day, and the weather from a Weather part on this screen.',
+  note: 'A moving scene shows the time of day, and the weather from a Weather panel on this screen.',
   options: [
     { value: 'both', label: 'The weather and the time of day' },
     { value: 'weather', label: 'Just the weather' },

@@ -152,6 +152,6 @@ export function speakerFields() {
       spotifyOn: knownSpotifySpeakers().length > 0 }).filter((o) => o.value !== PLAY_ON_HERE),
     note: 'Nothing to set up. On its first choice, sound goes wherever this computer already sends it. Spotify’s and '
       + 'YouTube’s own players always use that speaker. Music files can go to another. Spotify speakers appear here '
-      + 'after you press “Find speakers” in a Music part.',
+      + 'after you press “Find speakers” in a Music panel.',
   }));
 }

@@ -186,7 +186,8 @@ check("*** the new table is described, and nothing is undocumented ***",
 # site text rewrite 2026-10-09: "never to the person it names" now reads "never shown to the person it names".
 check("...it says who sees it, and that removing a person removes it",
       "never shown to the person it names" in desc["person_labels"] and "Removing either person removes it" in desc["person_labels"])
-check("the site's banned words are not in it", not any(w in desc["person_labels"].lower() for w in ("account", "token", "identity", "instance", "widget")))
+# (A check that the site's banned words were not in it was retired 2026-10-13 with the banned-word lists: Mike, "I
+# really don't like this banned word thing at all.")
 
 section("Postgres-safe SQL (a review, kept honest by a check)")
 src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "db.py"), encoding="utf-8").read()

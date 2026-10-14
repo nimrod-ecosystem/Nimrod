@@ -38,7 +38,7 @@ const field = (key, label, min, max, def, unit) => Object.freeze({ key, label, k
 export const ROOM_DRIVE_FIELDS = Object.freeze([
   field('driveScale', 'This object: its size', 10, 400, 100, '%'),
   field('driveTurn', 'This object: how far it is turned', -180, 180, 0, '°'),
-  field('driveHue', 'This object: its colours, shifted round the colour wheel', 0, 360, 0, '°'),
+  field('driveHue', 'This object: its colors, shifted round the color wheel', 0, 360, 0, '°'),
   field('driveAcross', 'This object: moved left or right', -100, 100, 0, '% of its width'),
   field('driveDown', 'This object: moved up or down', -100, 100, 0, '% of its height'),
 ]);
@@ -46,7 +46,7 @@ export const ROOM_DRIVE_FIELDS = Object.freeze([
 export const ROOM3D_DRIVE_FIELDS = Object.freeze([
   field('driveScale', 'This piece: its size', 10, 400, 100, '%'),
   field('driveTurn', 'This piece: how far it is turned on the floor', -180, 180, 0, '°'),
-  field('driveHue', 'This piece: its colours, shifted round the colour wheel', 0, 360, 0, '°'),
+  field('driveHue', 'This piece: its colors, shifted round the color wheel', 0, 360, 0, '°'),
   field('driveAcross', 'This piece: moved left or right', -100, 100, 0, '% of its width'),
   field('driveDown', 'This piece: moved toward you or away', -100, 100, 0, '% of its depth'),
 ]);

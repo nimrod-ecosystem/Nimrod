@@ -77,7 +77,7 @@ export const HAIR_COLORS = freeze([
   { id: 'strawberry', name: 'Strawberry blonde', hex: '#d9955f' },
   { id: 'blonde',     name: 'Blonde',            hex: '#e3c16f' },
   { id: 'platinum',   name: 'Platinum',          hex: '#efe3bd' },
-  { id: 'grey',       name: 'Grey',              hex: '#8f8a86' },
+  { id: 'grey',       name: 'Gray',              hex: '#8f8a86' },
   { id: 'silver',     name: 'Silver',            hex: '#c9c6c2' },
   { id: 'white',      name: 'White',             hex: '#f4f1ec' },
   { id: 'dyedblue',   name: 'Blue',              hex: '#3f6fd1' },
@@ -213,14 +213,14 @@ export const PARTS = Object.freeze([
   { key: 'face',      label: 'Face shape',        options: FACES },
   { key: 'skin',      label: 'Skin',              options: SKIN, color: true },
   { key: 'hair',      label: 'Hair',              options: HAIR_STYLES },
-  { key: 'hairColor', label: 'Hair colour',       options: HAIR_COLORS, color: true },
+  { key: 'hairColor', label: 'Hair color',       options: HAIR_COLORS, color: true },
   { key: 'eyes',      label: 'Eyes',              options: EYES },
   { key: 'brows',     label: 'Eyebrows',          options: BROWS },
   { key: 'mouth',     label: 'Mouth',             options: MOUTHS },
   { key: 'glasses',   label: 'Glasses',           options: GLASSES },
   { key: 'facial',    label: 'Beard or moustache', options: FACIAL_HAIR },
   { key: 'extra',     label: 'Hat or extra',      options: EXTRAS },
-  { key: 'top',       label: 'Top colour',        options: TOPS, color: true },
+  { key: 'top',       label: 'Top color',        options: TOPS, color: true },
   { key: 'bg',        label: 'Background',        options: BACKGROUNDS, color: true },
 ].map((p) => Object.freeze(p)));
 export const PART_KEYS = Object.freeze(PARTS.map((p) => p.key));
@@ -257,7 +257,7 @@ export function optionFor(record, key) {
   const p = partOf(key);
   if (!p) return null;
   const v = normalizeRecord(record)[key];
-  return p.options.find((o) => o.id === v) || { id: v, name: `Colour ${v}`, hex: v };
+  return p.options.find((o) => o.id === v) || { id: v, name: `Color ${v}`, hex: v };
 }
 
 /** The hex a colour part resolves to, or null (a see-through background). */
@@ -308,7 +308,7 @@ export function avatarWarnings(record, { min = DEFAULT_WARN_BELOW } = {}) {
     const ratio = contrast(hex, bg);
     if (ratio < min) {
       out.push({ part: key, ratio: Math.round(ratio * 100) / 100,
-        text: `The ${what} and the background are close in colour (${ratio.toFixed(2)}:1). It will still show, `
+        text: `The ${what} and the background are close in color (${ratio.toFixed(2)}:1). It will still show, `
           + 'with its outline, but it may blur into the background when small. Another background would stand out more.' });
     }
   };

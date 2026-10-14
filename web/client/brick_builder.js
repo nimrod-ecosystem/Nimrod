@@ -668,8 +668,8 @@ export function matchBuilds(target, attempt, { colours = true, turns = true } = 
 // FILES: a build as a file for the Nimrod folder, and back; the CAD side's assemblies read in.
 // ---------------------------------------------------------------------------------------------------------------
 export const FILE_ABOUT = 'A model built from Nimrod parts in the brick builder. Sizes and places in mm on the 40 mm grid: '
-  + 'x along the width, y up, z toward the front; rot is quarter turns about the vertical; colour is the theme\'s brick '
-  + 'colour (theme1..theme5) or your own (#rrggbb).';
+  + 'x along the width, y up, z toward the front; rot is quarter turns about the vertical; color is the theme\'s brick '
+  + 'color (theme1..theme5) or your own (#rrggbb).';
 
 /** The build as the text of a .json file (pretty: a person may open it). */
 export function toFile(build) {

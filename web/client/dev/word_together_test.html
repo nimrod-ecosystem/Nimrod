@@ -42,7 +42,9 @@ import { mountPlayPage, playGameOf } from '../play_page.js';
 const { check, section, finish } = harness();
 const tick = () => sleep(0);
 async function until(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (fn()) return true; await sleep(20); } return !!fn(); }
-const BANNED = /\b(module|dashboard|panel|grant|widget|account|token|websocket|socket|server)s?\b|taylor|cici|\bher screen\b/i;
+// The person-privacy rule (2026-09-11): copy never says "her screen" or names the person the project was first built
+// for. (This was a banned-word list too, until 2026-10-13: Mike, "I really don't like this banned word thing at all.")
+const NAMES_RX = /taylor|cici|\bher screen\b/i;
 
 // A ROOM HUB IN THE PAGE: the server's rules for one room, small (the real ones are game_rooms.py, proven by
 // test_game_rooms.py and by the live section below). Every message that crosses is logged. As quiz_together's, with
@@ -165,7 +167,7 @@ try {
     check('*** rounds when playing together: a setting, 5 by default; 3, 5, 10 or no end ***', DEFAULTS.togetherRounds === 5 && row?.default === 5
       && row.options.map((o) => o.value).join() === '3,5,10,0', JSON.stringify(row?.options));
     check('the new spoken lines are editable text rows, in plain words', ['roundLine', 'roundLineNoEnd', 'endLine'].every((k) =>
-      getManifest(GAME).settings.find((s) => s.key === k)?.kind === 'text' && !BANNED.test(LINES[k])));
+      getManifest(GAME).settings.find((s) => s.key === k)?.kind === 'text' && !NAMES_RX.test(LINES[k])));
     check('the layer is shared: Quiz mix and Word Builder both build on game_together.js', typeof createTogether === 'function'
       && typeof getManifest('word_builder') === 'object');
   }
@@ -188,7 +190,7 @@ try {
       && /On another screen with Word builder: Play together, then Join a game/.test(lobby?.textContent || ''), lobby?.textContent?.slice(0, 200));
     check('*** the square and the address open Word Builder\'s join page ***', /play\.html\?room=KX49PM&game=word_builder/.test(lobby.textContent));
     check('the room is opened for Word Builder', hub.log.find((x) => x.msg.kind === 'room' && x.msg.open)?.msg.open.game === GAME);
-    check('plain words in the lobby', !BANNED.test(lobby.textContent), (lobby.textContent.match(BANNED) || [])[0]);
+    check('the lobby names nobody', !NAMES_RX.test(lobby.textContent), (lobby.textContent.match(NAMES_RX) || [])[0]);
     B.host.querySelector('[data-qm="open"]').click();
     B.host.querySelector('[data-qm="joinform"]').click();
     B.host.querySelector('[data-qm-input]').value = 'kx4 9pm';

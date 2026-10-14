@@ -17,21 +17,13 @@
 // *** DIMMED, NEVER HIDDEN, AND SAYS WHY *** (Design's rule, home_profile.js and modules/profile.js). Every person's
 // card has the same buttons in the same places, so a switch user's habit holds from card to card.
 //
-// *** PLAIN WORDS ONLY. *** The people this is for are not building anything: no "module", "dashboard", "panel" or
-// "grant" on this page (`plainWordProblems`, checked by the suite over everything the page shows).
+// (The page's banned-word list, BANNED_WORDS / plainWordProblems, was RETIRED 2026-10-13 - Mike: "I really don't
+// like this banned word thing at all." "Module", "panel", "dashboard" and "account" are the site's own words. The
+// separate rule that the page never says "her screen" or names the person the project was first built for stays:
+// web/tools/check_site_copy.py, and the suites' name checks.)
 
 export const PEOPLE_TYPE = 'people';
 export const HELPER_TYPE = 'helper';
-
-// The words the page may not say, whole words, singular or plural. A rule a suite checks, not a style note.
-export const BANNED_WORDS = Object.freeze(['module', 'dashboard', 'panel', 'grant']);
-/** The banned words found in `text`, lower case, each once. PURE. */
-export function plainWordProblems(text) {
-  const out = [];
-  const s = String(text == null ? '' : text);
-  for (const w of BANNED_WORDS) if (new RegExp(`\\b${w}s?\\b`, 'i').test(s)) out.push(w);
-  return out;
-}
 
 // The buttons on every person's card, in order. Call first (the one Mike named first, and the one that matters most
 // to somebody far away), then the message, then recommending a song or video, then sharing a picture.

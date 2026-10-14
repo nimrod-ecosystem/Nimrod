@@ -99,7 +99,7 @@ export function createLocalVoice({ fetchImpl = (...a) => fetch(...a), storage = 
       return { ok: true, res };
     } catch {
       if (timedOut) return { ok: false, timedOut: true, reason: 'The voice program took too long, so the browser’s voice was used.' };
-      if (signal?.aborted) return { ok: false, cancelled: true, reason: 'Cancelled.' };
+      if (signal?.aborted) return { ok: false, cancelled: true, reason: 'Canceled.' };
       return { ok: false, reason: `No voice program answered at ${c.url}.` };
     } finally {
       clearTimeout(timer);

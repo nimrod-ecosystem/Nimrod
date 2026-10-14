@@ -220,7 +220,7 @@ VOICEPRINT_FORMAT = "nimrod-voiceprint"           # web/speech_service/speakers.
 VOICEPRINT_KEYS = frozenset({"voiceprint", "voiceprints"})
 VOICEPRINT_NUMBERS_MIN = 128
 VOICEPRINT_FRACTION = 0.9
-SAY_VOICEPRINT = ("This looks like a voiceprint (the numbers that recognise somebody by their voice). Voiceprints stay "
+SAY_VOICEPRINT = ("This looks like a voiceprint (the numbers that recognize somebody by their voice). Voiceprints stay "
                   "on the computer that made them and are never kept on this site.")
 # ---- rule 6: what the subtitles learned (subtitle learning) ----
 LEARNED_FORMAT = "nimrod-learned-words"           # web/client/subtitle_learning.js LEARNED_FORMAT (the test holds them equal)
@@ -298,7 +298,7 @@ def history_kind(stream: str) -> str:
     hit = HISTORY_STREAMS.get((stream or "").lower())
     if not hit:
         raise Refused(400, "That is not a kind of history this site can keep. It keeps what played, game "
-                           "results and the talk board's words, and only when you choose to.")
+                           "results and the AAC board's words, and only when you choose to.")
     return hit[0]
 
 
@@ -355,7 +355,7 @@ def check_history(stream: str, rows, place_doc) -> None:
 
 
 # The words a refusal uses for each kind (the same words the site's own setting uses).
-HISTORY_WORDS = {"plays": "record of what played", "games": "game results", "words": "talk board words"}
+HISTORY_WORDS = {"plays": "record of what played", "games": "game results", "words": "AAC board words"}
 
 
 class Refused(Exception):

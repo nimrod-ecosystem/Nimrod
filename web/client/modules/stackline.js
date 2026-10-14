@@ -121,8 +121,8 @@ const SETTINGS = [
     onLabel: 'Yes', offLabel: 'No', note: 'Never wider than the first brick.' },
   { key: 'afterLine', label: 'After the line is reached', kind: 'choice', default: 'same', level: 'standard',
     options: [{ value: 'same', label: 'A new tower at the same level' }, { value: 'up', label: 'A new tower one level up' }] },
-  { key: 'colours', label: 'Brick colours', kind: 'choice', default: 'rows', level: 'advanced',
-    options: [{ value: 'rows', label: 'From the theme: each row the next colour' }, { value: 'one', label: 'From the theme: all one colour' }] },
+  { key: 'colours', label: 'Brick colors', kind: 'choice', default: 'rows', level: 'advanced',
+    options: [{ value: 'rows', label: 'From the theme: each row the next color' }, { value: 'one', label: 'From the theme: all one color' }] },
   { key: 'button', label: 'A Drop button under the tower', default: true, level: 'standard', onLabel: 'Shown', offLabel: 'Hidden',
     note: 'A tap anywhere on the game drops the brick too.' },
   { key: 'pauseKey', label: 'A key of its own that pauses', kind: 'choice', default: 'off', level: 'advanced',
@@ -204,8 +204,8 @@ function ensureStyle(doc) {
 
 registerModule(
   { type: GAME, title: TITLE, core: 'new',
-    description: 'A brick slides along above a tower. One press drops it, and what hangs over the edge is cut off. '
-      + 'Build up to the line. One switch (one big button) can play. The easy levels are slow, and a miss costs nothing.',
+    description: 'A brick slides along above a tower. One press drops it, and what hangs over the edge is '
+      + 'cut off. Build up to the line. One switch can play. The easy levels are slow, and a miss costs nothing.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;

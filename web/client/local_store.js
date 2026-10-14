@@ -140,7 +140,7 @@ function createLocalProfilesClient() {
   // with nobody on it has no valid state to be in.
   async function removePerson(personId) {
     const all = (await allRows(PEOPLE)).map((r) => r.v);
-    if (all.length <= 1) throw new Error('a login needs at least one person');
+    if (all.length <= 1) throw new Error('an account needs at least one person');
     const mine = (await allRows(PROFILES)).filter((r) => r.v.person_id === personId);
     if (mine.length) {
       throw new Error(`this person still has ${mine.length} screen${mine.length === 1 ? '' : 's'} `
@@ -413,7 +413,7 @@ export function createLocalMediaSources({ baseUrl = null } = {}) {
       const own = await listFolderSources();
       return own.length ? own : [samples()];
     },
-    async add() { throw new Error('sign in to save this connection to your login'); },
+    async add() { throw new Error('sign in to save this connection to your account'); },
     async remove(id) { return removeFolderSource(id); },
   };
 }

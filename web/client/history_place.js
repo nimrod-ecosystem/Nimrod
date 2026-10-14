@@ -84,8 +84,8 @@ export const HISTORY_KINDS = Object.freeze({
   games: Object.freeze({ stream: 'gameplay', kinds: Object.freeze(['trial']), title: 'Game results',
     what: 'each answer in a game: right or wrong, and how long it took', def: 'device',
     places: Object.freeze(['device', 'folder', 'us', 'log']) }),
-  words: Object.freeze({ stream: 'words', kinds: Object.freeze(['select']), title: 'Talk board words',
-    what: 'each word chosen on the talk board', def: 'device', places: Object.freeze(['device', 'folder', 'us', 'log']) }),
+  words: Object.freeze({ stream: 'words', kinds: Object.freeze(['select']), title: 'AAC board words',
+    what: 'each word chosen on the AAC board', def: 'device', places: Object.freeze(['device', 'folder', 'us', 'log']) }),
 });
 export const KIND_IDS = Object.freeze(Object.keys(HISTORY_KINDS));
 export const SECOND_PLACES = Object.freeze(['folder', 'us']);
@@ -169,8 +169,8 @@ export function whereWords(kind, place, ctx = {}) {
     const n = Number.isFinite(ctx.waiting) && ctx.waiting > 0 ? ctx.waiting : 0;
     const waiting = n ? ` ${n.toLocaleString('en-US')} ${n === 1 ? 'entry is' : 'entries are'} waiting.` : '';
     const keep = Number(ctx.keep) || (kind === 'plays' ? PLAYS_DEFAULTS.keep : HISTORY_DEFAULTS.keep);
-    const pending = 'On this device for now. Will be copied to your Nimrod folder when '
-      + `it's connected. Until then this device keeps the newest ${keep.toLocaleString('en-US')} for each part.`;
+    const pending = 'On this device for now. Will be copied to your '
+      + `Nimrod folder when it's connected. Until then this device keeps the newest ${keep.toLocaleString('en-US')} for each panel.`;
     if (f === 'permission') return `${pending}${waiting} First, this device needs permission to use your Nimrod folder again. `
       + 'Press "Allow it again".';
     if (f === 'missing') return `${pending}${waiting} Your Nimrod folder or its Data folder cannot be found here right now. `
@@ -205,10 +205,10 @@ const safeName = (s) => String(s || 'all').replace(/[^A-Za-z0-9_-]/g, '_').slice
 const monthOf = (iso) => (/^\d{4}-\d{2}/.test(String(iso || '')) ? String(iso).slice(0, 7) : 'undated');
 const byteLen = (s) => (typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(s).length : s.length);
 const HISTORY_README = 'Your history from Nimrod, kept on this computer because you chose your Nimrod '
-  + 'folder for it.\nThere is one file for each kind, for each part or screen, for each month: '
-  + 'plays-..., gameplay-..., words-...\nEach line is one entry: when it happened ("at"), what kind it '
-  + 'is, and its data.\nNothing here is sent anywhere. '
-  + `Nimrod does not delete these files.\nThey are yours. If you delete them here, they are gone.\n${FOLDER_ID_FILE} `
+  + 'folder for it.\nThere is one file for each kind, for each panel or screen, for each '
+  + 'month: plays-..., gameplay-..., words-...\nEach line is one entry: when it happened ("at"), what '
+  + 'kind it is, and its data.\nNothing here goes to '
+  + `the Nimrod site. Nimrod does not delete these files.\nThey are yours. If you delete them here, they are gone.\n${FOLDER_ID_FILE} `
   + 'names this folder, so a device knows what it has already copied here.\nDeleting it only means that each device copies everything it still holds here again.\n';
 const newFolderId = () => {
   try { if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID(); } catch { /* below */ }

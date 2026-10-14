@@ -144,7 +144,7 @@ const SETTINGS = [
     options: [{ value: 0, label: 'Never: take your time' }, { value: 2000, label: '2 seconds' },
               { value: 4000, label: '4 seconds' }, { value: 8000, label: '8 seconds' }],
     note: 'A little time pressure, for somebody who wants it. Nothing ever ends a turn.' },
-  { key: 'boardScan', label: 'Picking with a switch (one big button)', kind: 'choice', default: 'rows', level: 'standard',
+  { key: 'boardScan', label: 'Picking with a switch', kind: 'choice', default: 'rows', level: 'standard',
     options: [{ value: 'rows', label: 'A row, then a key' }, { value: 'keys', label: 'One key at a time' }] },
   ...adaptiveSettings({ ai: false, startLevels: 5 }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS }),

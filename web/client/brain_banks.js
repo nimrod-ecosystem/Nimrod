@@ -63,7 +63,7 @@ const ODD_WORDS = {
   2: [
     [['apple', 'banana', 'pear'], 'dog', 'fruit'], [['dog', 'cat', 'cow'], 'chair', 'animals'],
     [['shirt', 'sock', 'hat'], 'apple', 'clothes'], [['milk', 'juice', 'water'], 'shoe', 'drinks'],
-    [['car', 'bus', 'train'], 'banana', 'vehicles'], [['red', 'blue', 'green'], 'spoon', 'colours'],
+    [['car', 'bus', 'train'], 'banana', 'vehicles'], [['red', 'blue', 'green'], 'spoon', 'colors'],
     [['chair', 'table', 'bed'], 'fish', 'furniture'], [['one', 'two', 'three'], 'bread', 'numbers'],
     [['eye', 'nose', 'mouth'], 'car', 'parts of the face'], [['bread', 'cheese', 'eggs'], 'bike', 'food'],
   ],

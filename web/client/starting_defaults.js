@@ -93,13 +93,13 @@ export const SOURCES = Object.freeze({
     says: 'Nothing flashes more than three times in any one second - no threshold exception.' },
   'wcag-1.4.1': { kind: 'published', provenance: CHECKED(WCAG22),
     name: 'WCAG 2.2 success criterion 1.4.1, Use of Color (Level A)',
-    says: 'Colour is not the only visual means of conveying information.' },
+    says: 'Color is not the only visual means of conveying information.' },
   'wcag-1.2.2': { kind: 'published', provenance: CHECKED(WCAG22),
     name: 'WCAG 2.2 success criterion 1.2.2, Captions (Prerecorded) (Level A)',
     says: 'Recorded audio in a video has captions.' },
   'gov-uk-2016': { kind: 'published', provenance: CHECKED('https://accessibility.blog.gov.uk/2016/09/02/dos-and-donts-on-designing-for-accessibility/'),
     name: 'GOV.UK accessibility posters, "Dos and don\'ts on designing for accessibility" (2016)',
-    says: 'Deaf or hard of hearing: use subtitles or transcripts for video. Low vision: use a combination of colour, shapes and text.' },
+    says: 'Deaf or hard of hearing: use subtitles or transcripts for video. Low vision: use a combination of color, shapes and text.' },
   'webkit-motion-2017': { kind: 'published', provenance: CHECKED('https://webkit.org/blog/7551/responsive-design-for-motion/'),
     name: 'WebKit, "Responsive Design for Motion" (2017)',
     says: 'Scaling, spinning, parallax, plane-shifting and peripheral motion are common vestibular triggers; reduced motion should remove or simplify them.' },
@@ -114,7 +114,7 @@ export const SOURCES = Object.freeze({
     says: 'Motion animation triggered by interaction can be turned off (written for vestibular disorders).' },
   'mq5-reduced-motion': { kind: 'published', provenance: TK,
     name: 'CSS Media Queries Level 5, prefers-reduced-motion',
-    says: 'A person can ask the system to minimise non-essential motion.' },
+    says: 'A person can ask the system to minimize non-essential motion.' },
   'wcag-1.4.6': { kind: 'published', provenance: TK,
     name: 'WCAG 2.x success criterion 1.4.6, Contrast (Enhanced) (Level AAA)',
     says: 'Text has a contrast ratio of at least 7:1 (4.5:1 for large text).' },
@@ -160,10 +160,10 @@ export const CONDITIONS = Object.freeze([
     { what: 'No transitions to or from saturated red', sources: ['wcag-2.3.1', 'efa-2005'], from: RESEARCH_T2 },
     { what: 'No high-contrast stripe patterns (at most 5 light-dark pairs moving, 8 still)', sources: ['efa-2005'], from: RESEARCH_T2 },
   ]),
-  published('colourVision', 'Some colours are hard to tell apart', 'colour blindness', [
+  published('colourVision', 'Some colors are hard to tell apart', 'color blindness', [
     { key: 'colourNotAlone', value: true, combine: 'or', sources: ['wcag-1.4.1', 'gov-uk-2016'] },
   ], [
-    { what: 'A colour-blind-tested palette (no published palette found)', sources: [], from: RESEARCH_T2 },
+    { what: 'A color-blind-tested palette (no published palette found)', sources: [], from: RESEARCH_T2 },
   ]),
   // Reduced motion is on ITS OWN box, not the epilepsy one. The published sources for reduced
   // motion are written for vestibular disorders; the epilepsy sources are about flashes. Putting
@@ -197,7 +197,7 @@ export const CONDITIONS = Object.freeze([
     { what: 'Large targets, no short timeouts (direction only)', sources: ['gov-uk-2016'], from: RESEARCH_T2 },
   ]),
   toBeFilled('autism', 'Autism', 'autism', [
-    { what: 'Simple colours (direction only; conflicts with the low-vision advice for bright contrast)', sources: ['gov-uk-2016'], from: RESEARCH_T2 },
+    { what: 'Simple colors (direction only; conflicts with the low-vision advice for bright contrast)', sources: ['gov-uk-2016'], from: RESEARCH_T2 },
   ]),
   toBeFilled('dementia', 'Memory loss', 'dementia'),
   toBeFilled('aphasia', 'Finding or understanding words is hard', 'aphasia', [
@@ -244,7 +244,7 @@ export const SETTING_WORDS = Object.freeze({
     if (v === 'wcag-2.3.1') return 'no more than 3 flashes a second, except small or faint ones';
     return Number(v) === 3 ? 'no more than 3 flashes a second, at any size' : `no more than ${v} flashes a second`;
   } },
-  colourNotAlone: { label: 'Colour', say: (v) => (v ? 'never colour alone - a shape or a word as well' : 'colour may be used alone') },
+  colourNotAlone: { label: 'Color', say: (v) => (v ? 'never color alone - a shape or a word as well' : 'color may be used alone') },
   reduceMotion: { label: 'Movement', say: (v) => (v ? 'keep movement to a minimum' : 'normal movement') },
   minTargetPx: { label: 'Buttons', say: (v) => `at least ${v} pixels across` },
   subtitlesOn: { label: 'Subtitles', say: (v) => (v ? 'on - write what is said on the screen' : 'off') },
@@ -435,9 +435,10 @@ export function describePlan(plan) {
 export const DEVICE_KEY = 'nimrod.startingDefaults';
 export const DEVICE_NOTE = 'Kept on this device only. It will not follow this person to another screen, '
   + 'and clearing this browser\'s data erases it.';
-// site text rewrite 2026-10-09: "in the account" became "on this login"; the rest is Mike's own words
-// (starting_defaults_test checks them), so the rewrite's "Nimrod does not intend to use it" was put back.
-export const ONLINE_WARNING = 'This puts it online, on this login. We don\'t intend to use it, '
+// site text second pass 2026-10-13: "in the account" is back (the 2026-10-09 rename to "on this login" is
+// gone). The rest is Mike's own words (starting_defaults_test checks them), so the rewrite's "Nimrod does not
+// intend to use it" is still not taken: Mike's "We don't intend" stays until he says otherwise.
+export const ONLINE_WARNING = 'This puts it online, in the account. We don\'t intend to use it, '
   + 'but no one can guarantee the security of anything.';
 
 // How many conflict answers the log keeps (newest last). Bounded so a storage record cannot grow forever.

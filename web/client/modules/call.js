@@ -175,7 +175,7 @@ const SETTINGS = [
     onLabel: 'Yes. Show a “See what a call looks like” button',
     offLabel: 'No. Just say there is no call',
     note: 'The example never rings anybody. It never opens the camera or the microphone. It '
-        + 'is labelled as an example the whole time. Turn it off on a screen somebody lives with.' },
+        + 'is labeled as an example the whole time. Turn it off on a screen somebody lives with.' },
   { key: 'showSelf', label: 'Show a second view of this camera', default: false,
     level: 'advanced',
     note: 'Off, because the picture-in-picture already shows it. Only useful on a screen '

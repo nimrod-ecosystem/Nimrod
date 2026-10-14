@@ -236,7 +236,7 @@ export function measureText({ ink, ground, fx } = {}, config) {
   const ratio = ink && ground ? contrast(ink, ground) : null;
   if (ratio !== null && ratio < c.contrastMin) {
     warnings.push({ code: 'contrast',
-      text: `The text does not stand out enough from what is behind it. It measures ${ratio.toFixed(1)}:1 and needs at least ${c.contrastMin}:1. Effects are not counted. Make the text colour darker or lighter to fix it.` });
+      text: `The text does not stand out enough from what is behind it. It measures ${ratio.toFixed(1)}:1 and needs at least ${c.contrastMin}:1. Effects are not counted. Make the text color darker or lighter to fix it.` });
   }
   if (f.glow.on && f.glow.r > c.glowWarnPx) {
     warnings.push({ code: 'glow-wide', text: 'A glow this wide can blur the letter shapes at a distance.' });

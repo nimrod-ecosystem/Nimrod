@@ -116,8 +116,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('creating a screen adds a card', cards().length === 1, String(cards().length));
     check('the card is named what you typed', txt('.h-card h2') === 'Living room', txt('.h-card h2'));
     check('an EMPTY screen cannot be opened', q('[data-open]').disabled);
-    // site text rewrite 2026-10-09: "at least one module" now reads "at least one part".
-    check('...and it says why', /at least one part/.test(txt('.h-add') || ''), txt('.h-add'));
+    // site text second pass 2026-10-13: "at least one module" again.
+    check('...and it says why', /at least one module/.test(txt('.h-add') || ''), txt('.h-add'));
 
     // add modules
     q('[data-pick]').value = 'quests';
@@ -317,7 +317,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       const find = (re) => links.find((l) => re.test(l.t));
       const all = JSON.stringify(links);
       check('signed in, the sidebar offers Sign out', !!find(/sign out/i), all);
-      const sw = find(/use a different login/i);   // site text rewrite 2026-10-09: was "Switch account"
+      const sw = find(/switch account/i);   // site text second pass 2026-10-13: "Switch account" again
       check('*** ...and Switch account, which did not exist at all ***', !!sw, all);
       check('*** ...asking Google for the chooser, which is the whole feature ***',
         !!sw && /[?&]switch=1\b/.test(sw.h), sw ? sw.h : 'no link');

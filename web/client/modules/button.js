@@ -360,14 +360,14 @@ export const SETTINGS = [
   // row while nobody has chosen one (see "THE WORDS' COLOUR" above). A mounted instance also
   // re-orders the walk for its look (`settingsChoices`); these declared options are the order for
   // the default look, and the one a surface with no live instance walks.
-  { key: 'color', label: 'Colour of the words', kind: 'color', default: DEFAULTS.color,
+  { key: 'color', label: 'Color of the words', kind: 'color', default: DEFAULTS.color,
     defaultFrom: (row) => suggestedInk(styleOfRow(row), row?.background),
     level: 'essential', options: INK_PALETTE.map((c) => ({ ...c })) },
   { key: 'style', label: 'Sign style', kind: 'choice', default: DEFAULTS.style, aliases: LEGACY_STYLES,
     level: 'standard', options: STYLES.map(({ value, label }) => ({ value, label })) },
   // Shown only where it shows (Mike, 2026-09-29: "hide it"): on the plain face, and in a frame's
   // window. A designed sign with no frame brings its own ground, so there the row would do nothing.
-  { key: 'background', label: 'Background colour', kind: 'color', default: DEFAULTS.background,
+  { key: 'background', label: 'Background color', kind: 'color', default: DEFAULTS.background,
     level: 'standard',
     appliesWhen: (row) => { const c = configFrom(row); return c.style === 'plain' || c.frame !== 'none'; } },
   { key: 'whenPressed', label: 'When pressed', kind: 'choice', default: DEFAULTS.whenPressed,
@@ -377,9 +377,9 @@ export const SETTINGS = [
   // an automation is not limited to the step; the step is only what a press does.
   { key: 'inkLightness', label: 'Words: lighter or darker', kind: 'number', default: DEFAULTS.inkLightness,
     min: -100, max: 100, step: 10, unit: 'points', level: 'advanced' },
-  { key: 'inkSaturation', label: 'Words: more or less colourful', kind: 'number', default: DEFAULTS.inkSaturation,
+  { key: 'inkSaturation', label: 'Words: more or less colorful', kind: 'number', default: DEFAULTS.inkSaturation,
     min: -100, max: 100, step: 10, unit: 'points', level: 'advanced' },
-  { key: 'inkHue', label: 'Words: turn the colour round the wheel', kind: 'number', default: DEFAULTS.inkHue,
+  { key: 'inkHue', label: 'Words: turn the color round the wheel', kind: 'number', default: DEFAULTS.inkHue,
     min: -180, max: 180, step: 30, unit: 'degrees', level: 'advanced' },
 ];
 

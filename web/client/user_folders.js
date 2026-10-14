@@ -86,6 +86,8 @@ export const ROOT_KEY = 'root';
 // ---------------------------------------------------------------------------------------------
 export const SUBFOLDERS = Object.freeze({
   pictures: 'Pictures', music: 'Music', videos: 'Videos',
+  // 'Colour looks' is a FOLDER NAME on a person's own drive, not copy: renaming it would orphan every looks folder
+  // already made, so it keeps its spelling (site text second pass 2026-10-13: American English is for the copy).
   fonts: 'Fonts', luts: 'Colour looks', plugins: 'Audio plugins',
   voice: 'Voice model', recordings: 'Recordings',
   artwork: ART_FOLDER, data: 'Data',
@@ -107,10 +109,10 @@ export const README = Object.freeze({
     + 'Nothing is copied: it is read where it is, on this device.\n',
   videos: 'Put your own videos here (.mp4, .mov, .webm), or point Nimrod at the folder they are already in.\n'
     + 'Nothing is copied: they are read where they are, on this device.\n',
-  fonts: 'Put font files here (.woff2, .woff, .ttf or .otf). They appear as font choices in Nimrod on this device.\nThey '
-    + 'are read from this folder on this device and never sent anywhere.\n',
-  luts: 'Put colour look files here (.cube). One can be chosen to change the colours of photos, wallpaper or video.\nOff '
-    + 'until somebody chooses one. Read on this device, never sent anywhere.\n',
+  fonts: 'Put font files here (.woff2, .woff, .ttf or .otf). They appear as font choices in Nimrod on this device.\nThey are '
+    + 'read from this folder on this device and never sent to the Nimrod site.\n',
+  luts: 'Put color look files here (.cube). One can be chosen to change the colors of photos, wallpaper or video.\nOff until '
+    + 'somebody chooses one. Read on this device, never sent to the Nimrod site.\n',
   plugins: 'Put Web Audio Module (WAM) plugins here, one folder per plugin. VST plugins cannot run in a web browser.\n'
     + 'A plugin is a program: it can do anything this page can do, so only add plugins you trust.\n'
     + 'WAM plugins also need the free WAM host files: put the @webaudiomodules/sdk package in a folder named wam-sdk here.\n'
@@ -124,10 +126,10 @@ export const README = Object.freeze({
   // The art kit itself (art_kit.js): this README is the file a person gives to their own AI.
   artwork: artKitText(),
   data: 'Your own data from Nimrod, kept on this computer. It holds your play history (what played, and when) and things '
-    + 'you\nexport. When Nimrod keeps something here, the place you turn it on says so. Nothing in this folder is sent '
-    + 'anywhere.\nDeleting it here deletes it.\n',
+    + 'you\nexport. When Nimrod keeps something here, the place you turn it on says so. Nothing in this folder goes to the '
+    + 'Nimrod site.\nDeleting it here deletes it.\n',
   // own board clips (2026-10-09)
-  boardSounds: 'The sounds of your own talk board cards. These are words you recorded or sound files you chose in the board '
+  boardSounds: 'The sounds of your own AAC board cards. These are words you recorded or sound files you chose in the board '
     + 'editor\n("Record this word", "Use a sound file"). Nimrod saves them here when you press Keep. Another device with this\nfolder '
     + 'can then play them too. A device without them uses its own voice for that card. Nothing here is sent to the Nimrod '
     + 'site.\nRemoving a sound in the editor leaves its file here. Delete it by hand if nothing uses it.\n',

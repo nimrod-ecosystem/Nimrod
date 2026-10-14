@@ -34,7 +34,7 @@ export function callCaptionPlan(row, mode = 'here', opts = {}) {
     // The browser's own recogniser is the first pass: it cannot take the call's stream. The local service is
     // still asked, at its default or chosen address - it may be running even when commands use the browser.
     const local = enginePlanFrom({ ...(row || {}), speechEngine: 'local' }, opts);
-    return finish(local, mode, [{ slot: 'browser', name: 'The browser’s recogniser', why: 'cannot hear a call' }]);
+    return finish(local, mode, [{ slot: 'browser', name: 'The browser’s recognizer', why: 'cannot hear a call' }]);
   }
   return finish(base, mode, []);
 }

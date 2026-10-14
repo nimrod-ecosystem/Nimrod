@@ -202,8 +202,7 @@ try {
     const mine = new Set(['players', 'rounds', 'triviaFrom', 'boards', 'repeatGame', 'scoring', 'answerTime', 'pointsFor', ...Object.values(USE_KEYS)]);
     const words = JSON.stringify(m.settings.filter((s) => mine.has(s.key)).map((s) => [s.label, s.note, s.onLabel, s.offLabel,
       (s.options || []).map((o) => o.label)])) + JSON.stringify(LINES) + m.description;
-    check('*** plain words: no module, dashboard, panel, grant, widget, account or token ***',
-      !/\b(module|dashboard|panel|grant|widget|account|token)s?\b/i.test(words), (words.match(/\b(module|dashboard|panel|grant|widget|account|token)s?\b/i) || [])[0]);
+    // (A banned-word check here was retired 2026-10-13 with the banned-word lists.)
     check('no copy names the person this was first built for', !/taylor|cici|her screen/i.test(words));
   }
 

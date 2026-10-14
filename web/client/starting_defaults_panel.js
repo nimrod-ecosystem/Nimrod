@@ -174,15 +174,15 @@ export function mountStartingDefaults(host, {
     forgetBtn.disabled = !store.get().answers.conditions.length && !store.get().answers.age && !store.get().answers.level;
     if (!library) {
       onlineBtn.disabled = true;
-      onlineBtn.textContent = 'Save to a login (online) - not available here';
-      onlineBtn.title = 'There is no login on this screen to save to.';
+      onlineBtn.textContent = 'Save to the account (online) - not available here';
+      onlineBtn.title = 'There is no account on this screen to save to.';
     } else if (!hasApplied()) {
       onlineBtn.disabled = true;
-      onlineBtn.textContent = 'Save to this login (online) - use these starting settings first';
+      onlineBtn.textContent = 'Save to the account (online) - use these starting settings first';
       onlineBtn.title = '';
     } else {
       onlineBtn.disabled = false;
-      onlineBtn.textContent = 'Also save to this login (online)...';
+      onlineBtn.textContent = 'Also save to the account (online)...';
       onlineBtn.title = '';
     }
     warning.hidden = !warningOpen;
@@ -257,7 +257,7 @@ export function mountStartingDefaults(host, {
       const record = store.get();
       render();
       saveOnline({ record, library, acknowledged: true })
-        .then(() => { store.markSavedOnline(); say('Saved online, on this login.'); })
+        .then(() => { store.markSavedOnline(); say('Saved online, in the account.'); })
         .catch((e) => say(`Not saved online: ${e && e.message ? e.message : e}`));
       return;
     }

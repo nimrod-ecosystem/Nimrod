@@ -94,7 +94,7 @@ def visitor_theme(doc) -> str:
     return v if all(c.isascii() and (c.isalnum() or c in "-_") for c in v) else ""
 
 
-# Why a visit is refused, in plain words (no "account", "token" or "grant"). `{name}` is the profile's name.
+# Why a visit is refused, in plain words. `{name}` is the profile's name.
 REFUSAL_TEXT = {
     "closed": "{name} has not opened their page to you.",
     "not-connected": "You are not connected with {name}, so their page is not open to you.",

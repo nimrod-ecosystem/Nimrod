@@ -66,16 +66,16 @@ const BUTTONS = [
   { act: 'back', verb: SHELL_PREV, label: '◂ Back', title: 'back — the one before this' },
   // Pause / Play (2026-10-02): the selected panel's, between Back and Next where a transport has it. The
   // shell says whether it can and which way it is (SHELL_STATE `playPause`); dimmed until it says so.
-  { act: 'playpause', verb: SHELL_PLAY_PAUSE, label: '⏸ Pause', title: 'pause or play the part you picked' },
+  { act: 'playpause', verb: SHELL_PLAY_PAUSE, label: '⏸ Pause', title: 'pause or play the panel you picked' },
   { act: 'next', verb: SHELL_NEXT, label: 'Next ▸', title: 'next' },
-  { act: 'panel', verb: SHELL_PANEL, label: 'Panel ▸', title: 'move to the next part' },
+  { act: 'panel', verb: SHELL_PANEL, label: 'Panel ▸', title: 'move to the next panel' },
   // "Switch module" (2026-10-02, Mike: "Maybe a switch module button on the transport bar for the
   // selected module"): the Modules library in the selected panel's place (kiosk.js `openLibraryAt`). Dimmed,
   // never hidden, when there is no panel to switch (D16). Not drawn when the host page has its own
   // switch button (Home): ONE chooser, however it is reached.
-  { act: 'switch', verb: SHELL_SWITCH_MODULE, label: 'Switch module', title: 'show something else in the part you picked' },
+  { act: 'switch', verb: SHELL_SWITCH_MODULE, label: 'Switch module', title: 'show another module in the panel you picked' },
   // Bigger / Smaller (2026-10-02 evening): the panel corner's press, for the selected panel (paintBigger).
-  { act: 'bigger', verb: SHELL_PROMOTE, label: '⤢ Bigger', title: 'make the part you picked bigger, one step at a time' },
+  { act: 'bigger', verb: SHELL_PROMOTE, label: '⤢ Bigger', title: 'make the panel you picked bigger, one step at a time' },
   // Smaller (2026-10-03, "no way to demote it"): one level down, live while anything is bigger (paintSmaller).
   { act: 'smaller', verb: SHELL_DEMOTE, label: '⤡ Smaller', title: 'nothing is bigger now' },
   { act: 'mirror', verb: SHELL_MIRROR, label: 'Mirror', title: 'the camera, full screen', embed: false },
@@ -87,7 +87,7 @@ const BUTTONS = [
 
 registerModule(
   { type: 'transport_bar', title: 'Transport bar',
-    description: 'The bar with a button for each part and the controls, placed in a dashboard',
+    description: 'The bar with a button for each panel and the controls, placed in a dashboard',
     chrome: 'bar', importance: 'critical', dependsOn: 'none', settings: [] },
   (ctx) => {
     const { mount } = ctx;
@@ -127,8 +127,8 @@ registerModule(
     function arrangement() { return ctx.container?.arrangement?.() || null; }
 
     // *** A PLAIN BAR, WHEN THE HOST PAGE ASKS FOR ONE (2026-10-04, Your people). *** The page a new person lands on
-    // (modules/people.js) is for people who are not building anything: no "module", "panel" or "dashboard" (people_page.js
-    // BANNED_WORDS). Over it the host page says `host.plainBar()`, and this bar leaves out what does not apply there --
+    // (modules/people.js) is for people who are not building anything. Over it the host page says `host.plainBar()`,
+    // and this bar leaves out what does not apply there --
     // the panel chips ("Your People", "Nimrod, The Helper": one page and a helper, nothing to move between), Panel ▸,
     // Switch module, Bigger / Smaller and Back / Pause / Next (a page of people has nothing to page through or play).
     // HIDDEN, not dimmed, ARGUED against D16's "dimmed, never hidden": that rule is about a control that can act on

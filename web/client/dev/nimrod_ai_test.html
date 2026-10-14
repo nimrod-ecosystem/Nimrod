@@ -628,7 +628,7 @@ try {
     check('cleanNotes keeps the context; a note with none has none', cleanNotes([n])[0].context?.dashboard === 'Start here' && !('context' in makeNote('x', { at })));
     const txt = notesToText([n], { at });
     check('*** copied out: the context on its own line under the date, then the note ***',
-      txt.includes('### 2026-10-03 14:05 (at "Your theme")\n_dashboard: Start here; part picked: Settings (settings); page: /kiosk.html_\n- the theme page is slow'), txt);   // site text rewrite 2026-10-09: "panel picked" now "part picked"
+      txt.includes('### 2026-10-03 14:05 (at "Your theme")\n_dashboard: Start here; panel picked: Settings (settings); page: /kiosk.html_\n- the theme page is slow'), txt);   // site text second pass 2026-10-13: "panel picked" again
     check('the file is Markdown, named by the minute', notesFileName(at) === 'nimrod-notes-2026-10-03-1405.md');
     check(`*** ${NOTES_MAX} are kept now (a walk through the whole site is more than 40), and it warns before the oldest goes ***`,
       NOTES_MAX === 200 && NOTES_WARN_AT === 190 && nearlyFull(Array.from({ length: 190 }, (_, i) => makeNote(`n${i}`, { at: at + i }))) && !nearlyFull([n]));
@@ -783,14 +783,14 @@ try {
       rec.notes?.length === 1 && n0.text === 'The settings panel should open on Sound for me.' && Number.isFinite(n0.at)
       && J(n0.context) === J({ dashboard: 'Start here', panel: 'Settings (settings)', page: location.pathname }), J(n0));
     check('the box is emptied for the next one, and it says where they are kept', q('[data-ng-field="quick"]').value === ''
-      && /Kept on your login/.test(q('[data-ng-kept]').textContent) /* site text rewrite 2026-10-09 */ && /Note saved/.test(q('[data-ng-notice]').textContent));
+      && /Kept on your account/.test(q('[data-ng-kept]').textContent) /* site text second pass 2026-10-13 */ && /Note saved/.test(q('[data-ng-notice]').textContent));
     check('an empty note is not saved', (doBtn('savequick').click(), ps.made[`note1/${AI_STATE_KEY}`].data().notes.length === 1) && /empty/.test(probe().notice));
     let copied = null;
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { copied = t; } } });
     doBtn('copynotes').click();
     await until(() => copied);
     check('*** "Copy all notes": dated, WITH the context line, ready to paste to chat or Code ***',
-      /## Notes from the Nimrod guide/.test(copied) && copied.includes('_dashboard: Start here; part picked: Settings (settings); page: ') /* site text rewrite 2026-10-09 */
+      /## Notes from the Nimrod guide/.test(copied) && copied.includes('_dashboard: Start here; panel picked: Settings (settings); page: ') /* site text second pass 2026-10-13 */
       && copied.includes('The settings panel should open on Sound for me.'), copied);
     doBtn('exportfile').click();
     check('*** "Save as a file": a .md file, the same text as Copy ***', saved.length === 1 && /^nimrod-notes-\d{4}-\d\d-\d\d-\d{4}\.md$/.test(saved[0].name)
@@ -1062,7 +1062,7 @@ try {
     check('*** unsaved landing, a person known: the note is on the PERSON’S record ***',
       rec('ann').notes?.length === 1 && rec('ann').notes[0].text === 'The landing should say who it is for.', J(rec('ann')));
     check('*** ...and not on the preview’s panel row (this browser) ***', !shared.data().ai?.notes?.length, J(shared.data()));
-    check('it says they are kept on the account', ann.probe().storeKind === 'person' && /Kept on your login/.test(ann.q('[data-ng-kept]')?.textContent || ''));   // site text rewrite 2026-10-09
+    check('it says they are kept on the account', ann.probe().storeKind === 'person' && /Kept on your account/.test(ann.q('[data-ng-kept]')?.textContent || ''));   // site text second pass 2026-10-13
     ann.done();
     const bob = await mk('bob', { state: shared });
     await until(() => bob.probe().storeKind === 'person');

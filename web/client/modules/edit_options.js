@@ -18,7 +18,7 @@ import { registerModule } from '../module.js';
 import { renderOptions, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC, EDIT_PANEL_TOPIC, ensureEditCss } from '../edit_mode.js';
 
 // What it says with nothing chosen. Site copy: no "her screen", no names.
-export const OPTIONS_IDLE = 'Nothing is chosen yet. Press ✎ in the corner of a part (beside ⤢). Then press a thing in it. Its '
+export const OPTIONS_IDLE = 'Nothing is chosen yet. Press ✎ in the corner of a panel (beside ⤢). Then press a thing in it. Its '
   + 'options show here. To stop, press Done or Escape.';
 
 // Which rows: the ⚙ menu's levels. 'standard' is the menu's own default; 'advanced' shows every row a
@@ -30,7 +30,7 @@ export const OPTIONS_SETTINGS = Object.freeze([
 
 registerModule(
   { type: 'options', title: 'Options', core: 'new', dependsOn: 'local', importance: 'optional',
-    description: 'The options of whatever you choose in a part you are editing. Press ✎ on a part, then press a thing in it.',
+    description: 'The options of whatever you choose in a panel you are editing. Press ✎ on a panel, then press a thing in it.',
     settings: OPTIONS_SETTINGS },
   (ctx) => {
     const { mount, state } = ctx;

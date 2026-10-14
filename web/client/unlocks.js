@@ -551,7 +551,7 @@ export async function ensureGameCard(makeState) {
 export const SETTINGS_SHOWN_TOPIC = 'settings-module/shown';
 export const GAME_SETTINGS_PAGE = 'sc-game';
 export const PANEL_ANSWER_MS = 400;
-export const PANEL_CLOSED_NOTE = 'The Settings part is not on this dashboard, so the game’s settings cannot open '
+export const PANEL_CLOSED_NOTE = 'The settings panel is not on this dashboard, so the game’s settings cannot open '
   + 'beside me. Open the settings menu (the gear on the bar, This screen tab, “Nimrod Game”). Or go to the '
   + 'tutorial dashboard, where the settings always are. Both are buttons below.';
 // What Nimrod says after a switch changes: one sentence per switch, joined (flagsNote).

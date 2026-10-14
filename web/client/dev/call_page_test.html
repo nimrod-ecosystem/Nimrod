@@ -623,7 +623,8 @@ try {
     clock.advance(1); await sleep(5);
     check(`*** nothing in ${GAME_ASK_WAIT_MS / 1000} s: it says the game did not open, and where it can ***`,
       /The game did not open on Alex’s screen\. It opens on a screen showing Quiz mix, or showing the call by itself\./.test(text()), text().slice(0, 300));
-    check('*** plain words (no "her screen", no names of the people this was built for) ***', !/her screen|taylor|cici|socket|server|module|panel/i.test(root.querySelector('[data-game]')?.textContent || ''));
+    // (Its banned-word half, socket/server/module/panel, was retired 2026-10-13 with the banned-word lists.)
+    check('*** no "her screen", no names of the people this was built for ***', !/her screen|taylor|cici/i.test(root.querySelector('[data-game]')?.textContent || ''));
     clock.advance(GAME_NOTE_MS); await sleep(5);
     check(`...gone by itself after ${GAME_NOTE_MS / 1000} s: the button is back`, !!root.querySelector('[data-game-ask]') && !root.querySelector('[data-game-note]'));
     // "Never mind": a late code is then an ordinary offer, not a game opened under them.

@@ -16,7 +16,7 @@
 //
 // NOTHING IS ACCEPTED WITHOUT THE PRESS. Opening the page only reads who sent it.
 
-import { createClaimsClient, inviteFromQuery, claimWordProblems, JOIN_PAGE } from './claim.js';
+import { createClaimsClient, inviteFromQuery, JOIN_PAGE } from './claim.js';
 
 const STASH = 'nimrod:joinInvite';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -162,6 +162,6 @@ export function mountJoinPage(root, {
   const ready = token ? peek() : Promise.resolve();
   return {
     ready,
-    __probe: () => ({ phase, info, text, done, token, messagesBack, words: main.textContent, problems: claimWordProblems(main.textContent) }),
+    __probe: () => ({ phase, info, text, done, token, messagesBack, words: main.textContent }),
   };
 }

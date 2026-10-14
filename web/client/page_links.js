@@ -55,7 +55,7 @@ export const HELPER_PAGE = '/helper.html';             // = nimrod_helper.js HEL
 // The pages, by key: what a row is called, the menu page's title on a screen, and the hint off one.
 export const ELSEWHERE_PAGES = Object.freeze({
   claude: Object.freeze({ path: CLAUDE_PAGE, label: 'Claude on this account…', title: 'Claude on this account',
-    offHint: 'opens in a new tab: this login’s key, the model, today’s spending' }),
+    offHint: 'opens in a new tab: the account’s key, the model, today’s spending' }),
   reviews: Object.freeze({ path: REVIEWS_PAGE, label: 'Review questions…', title: 'Questions waiting for review',
     offHint: 'opens in a new tab: the packs waiting, how far each has got, every question marked wrong' }),
   search: Object.freeze({ path: SEARCH_KEYS_PAGE, label: 'Search songs and videos by name\u2026',

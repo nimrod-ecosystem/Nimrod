@@ -473,9 +473,9 @@ registerModule(
       const q = esc(String(cfg.place || '').trim());
       const mins = Math.round(refreshMs() / 60000);
       switch (status) {
-        case 'short': return messageHtml('Type a little more of the place’s name.', 'At least 2 letters, in the Place setting of this part.');
+        case 'short': return messageHtml('Type a little more of the place’s name.', 'At least 2 letters, in the Place setting of this panel.');
         case 'searching': return messageHtml(`Looking up “${q}”…`, '');
-        case 'notfound': return messageHtml(`No place called “${q}” was found.`, 'Check the spelling in this part’s Place setting. Or type a latitude and longitude instead, like 40.7, -74.0.');
+        case 'notfound': return messageHtml(`No place called “${q}” was found.`, 'Check the spelling in this panel’s Place setting. Or type a latitude and longitude instead, like 40.7, -74.0.');
         case 'searchfailed': return messageHtml(`Could not look up “${q}” just now.`, `The weather service did not answer. It will try again in ${mins} minutes.`,
           '<button type="button" class="wx-btn" data-walk data-act="retry">Try again now</button>');
         case 'pick': return `<div class="wx-msg" data-weather-msg="pick"><p class="wx-msg-title">Which “${q}”?</p>
@@ -484,7 +484,7 @@ registerModule(
         case 'failed': return messageHtml('Could not reach the weather service.', `It will try again in ${mins} minutes.`,
           '<button type="button" class="wx-btn" data-walk data-act="retry">Try again now</button>');
         default: return messageHtml('No place set for the weather yet.',
-          'Open this part’s settings. In Place, type a town, or a latitude and longitude (the two numbers that mark a spot on a map). '
+          'Open this panel’s settings. In Place, type a town, or a latitude and longitude (the two numbers that mark a spot on a map). '
           + 'The place is sent to Open-Meteo, a free weather service, to look up the weather. Nothing is sent until a place is set.');
       }
     }
