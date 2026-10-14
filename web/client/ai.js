@@ -33,6 +33,9 @@
 // mount would fill the console on the live site and, in browsers that gate local-network access,
 // could put a permission prompt on a screen nobody is there to answer.
 
+// STATUS ICONS (2026-10-14): each question is noted, with where it goes, for the screen's status strip (ai_activity.js).
+import { beginAI, aiWhere } from './ai_activity.js';
+
 export const AI_SETTINGS_KEY = 'nimrod.ai.device';
 export const AI_KEY_KEY = 'nimrod.ai.key';            // the person's own API key, this browser only
 export const DEFAULT_BASE_URL = 'http://127.0.0.1:11434/v1';     // Ollama's OpenAI-compatible API
@@ -337,6 +340,12 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     return { ok: true, text, model: use, ms: Date.now() - started, ...(ctxN ? { contextTokens: null } : {}) };
   }
 
+  // The status strip's "an AI is being asked" (ai_activity.js): from the first byte sent to the answer or the failure.
+  async function noted(messages, opts) {
+    const done = beginAI(aiWhere(settings().baseUrl));
+    try { return await chat(messages, opts); } finally { done(); }
+  }
+
   return {
     settings,
     setSettings: (patch) => writeAISettings(patch, storage),
@@ -344,6 +353,6 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     setKey: (key) => writeAIKey(key, storage),
     listModels,
     resolveModel,
-    chat,
+    chat: noted,
   };
 }

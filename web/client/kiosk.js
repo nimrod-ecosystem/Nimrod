@@ -70,7 +70,7 @@ import {
 import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS } from './call_notice.js';
 // Mike, 2026-10-12: calls wait to be answered unless the caller may drop in; "may <name> see this screen?" on the
 // screen; a temporary "see this screen" lent during a call (screen_permissions.js, see_ask.js, server/screen_access.py).
-import { dropInFor, dropInSecondsOf, lendLengthOf } from './screen_permissions.js';
+import { dropInFor, dropInSecondsOf, lendLengthOf, checkInTicked } from './screen_permissions.js';
 import { mountSeeAsk } from './see_ask.js';
 // call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
 import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD } from './call_loadouts.js';
@@ -156,7 +156,10 @@ import {
   createIntercomReceiver, mountIntercomNotice, intercomOptionsFrom, normalizeAllowed, INTERCOM_ACTIONS, INTERCOM_FIELDS,
 } from './intercom.js';
 // The silent check-in (2026-10-14): a one-way look and/or listen; the room hears nothing; the screen says who it is.
-import { createCheckInReceiver, mountCheckInNotice, checkInOptionsFrom, CHECKIN_ACTIONS } from './checkin.js';
+import { createCheckInReceiver, mountCheckInNotice, checkInOptionsFrom, CHECKIN_ACTIONS, CHECKIN_FIELDS } from './checkin.js';
+// Status icons (2026-10-14): one small strip saying what sees, hears, sends or controls, the whole time it does.
+import { createStatusIcons, mountStatusStrip, STATUS_ICON_FIELDS, STATUS_ICONS_NOTE, MUSIC_NOW_TOPIC } from './status_icons.js';
+import { aiActivity, onAIActivity } from './ai_activity.js';
 import { EDGE_TOPIC } from './input.js';
 import { createDeviceStore } from './starting_defaults.js';
 import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
@@ -906,6 +909,9 @@ export async function mountKiosk(root, {
   let checkInRx = null;          // the room's half of the silent check-in (checkin.js), once the drive socket exists
   let checkInNote = null;        // "<name> is checking in (sound and picture)", with End - NO SETTING HIDES IT
   let seeAskNote = null;         // "<name> would like to see this screen" - Allow / Not now, gone by itself (see_ask.js)
+  let statusIcons = null;        // status icons (2026-10-14, status_icons.js): what sees, hears, sends or controls
+  let statusStrip = null;        // ...and its strip, the first row of the notice column
+  const lentNow = new Map();     // what this screen lent on a call: `${session}|${what}` -> { until } (drive.js lend-state)
   // A CALL AND THE ROOM (2026-09-30). The call transport reports a call going live and ending (its
   // `onLive`), and the screen does two things with it:
   //   * VOICE RECORDING IS HELD for the whole live call, for the intercom's reason: the recogniser would
@@ -921,6 +927,9 @@ export async function mountKiosk(root, {
     if (on) { try { intercomRx?.endAll('call'); } catch (err) { console.error('kiosk: intercom', err); } }
     // ...and a quiet check-in gives way to an answered call too (checkin.js: the room is awake and talking).
     if (on) { try { checkInRx?.endAll('call'); } catch (err) { console.error('kiosk: check-in', err); } }
+    // Status icons: what was lent on a call ends with it (an "always" is a real grant from then on, not a lend).
+    if (!on) lentNow.clear();
+    try { statusIcons?.poke(); } catch { /* not built yet */ }
   }
   // *** THE CALL TRANSPORT — the reason the Call panel could never ring. ***
   //
@@ -1026,7 +1035,8 @@ export async function mountKiosk(root, {
   // subtitle learning: its keys ride with the subtitles' own.
   const SUBS_KEYS = [...SUBTITLES_FIELDS, ...SUBTITLE_LEARNING_FIELDS].map((f) => f.key);
   // The keys whose change adds or removes rows in the Voice section without restarting speech.
-  const REC_MENU_KEYS = ['voiceRecording', 'intercomAllowed'];
+  // (2026-10-14: `screenPeople` too - a tick there brings the intercom's and the quiet check-in's rows.)
+  const REC_MENU_KEYS = ['voiceRecording', 'intercomAllowed', 'screenPeople'];
   let recMenuSig = null;
   const sigOf = (r, keys) => JSON.stringify(keys.map((k) => (r && k in r ? r[k] : null)));
 
@@ -4445,6 +4455,13 @@ export async function mountKiosk(root, {
       ...(normalizeAllowed(r.intercomAllowed).length
         || (Array.isArray(r.screenPeople) && r.screenPeople.some((e) => e && (e.intercom === true || e.guardian === true)))
         ? INTERCOM_FIELDS : []),
+      // THE QUIET CHECK-IN'S rows (Mike, 2026-10-14: its settings "also go in the screen's own menu" - "Probably"):
+      // the same three as the Remote page (checkin_options.js CHECKIN_FIELDS, each argued in checkin.js), editing the
+      // same keys on the same row. On the intercom's rule, only once somebody is ticked to check in (screen_permissions.js
+      // `checkInTicked`): the owner may check in by default, which ticks nobody, so a screen nobody set a check-in up
+      // for keeps a short menu, and the owner still has them on the Remote page. Who may check in is not here: that
+      // is a permission, and permissions are given on the Remote page, where the grants are.
+      ...(checkInTicked(r) ? CHECKIN_FIELDS : []),
       // OTHER PEOPLE'S OWN AVATARS, the PERSON's copy (avatar_display.js; the screen's copy is on Display,
       // with faces moving, and wins where it chose). On the People tab, argued: FOR Display (it is about
       // what is drawn): the screen's copy is already there, and the same row twice on one tab reads as a
@@ -4468,10 +4485,12 @@ export async function mountKiosk(root, {
     const SUBS = new Set([...SUBTITLES_FIELDS, ...SUBTITLE_LEARNING_FIELDS].map((f) => f.key));   // + subtitle learning
     const AMP = new Set(AMPLIFY_FIELDS.map((f) => f.key));
     const IC = new Set(INTERCOM_FIELDS.map((f) => f.key));
+    const CI = new Set(CHECKIN_FIELDS.map((f) => f.key));   // the quiet check-in (2026-10-14)
     const OTH = new Set(OTHERS_AVATAR_FIELDS.map((f) => f.key));
     const group = (set) => items.filter((it) => set.has(keyOf(it)));
-    const subs = group(SUBS), amp = group(AMP), ic = group(IC), oth = group(OTH);
-    const dev = items.filter((it) => !SUBS.has(keyOf(it)) && !AMP.has(keyOf(it)) && !IC.has(keyOf(it)) && !OTH.has(keyOf(it)));
+    const subs = group(SUBS), amp = group(AMP), ic = group(IC), ci = group(CI), oth = group(OTH);
+    const dev = items.filter((it) => !SUBS.has(keyOf(it)) && !AMP.has(keyOf(it)) && !IC.has(keyOf(it)) && !CI.has(keyOf(it))
+      && !OTH.has(keyOf(it)));
     const t = MENU_TAB;
     return [
       ...(dev.length || status ? [{ kind: 'heading', id: 'voice-head', label: 'Voice', ...t.devices(0) },
@@ -4486,6 +4505,9 @@ export async function mountKiosk(root, {
         ...amp.map((it) => ({ ...it, ...t.audio(3) }))] : []),
       ...(ic.length ? [{ kind: 'heading', id: 'intercom-head', label: 'Intercom', ...t.people(1) },
         ...ic.map((it) => ({ ...it, ...t.people(1) }))] : []),
+      // The quiet check-in: on People, beside the intercom (both are about who may reach into the room).
+      ...(ci.length ? [{ kind: 'heading', id: 'checkin-head', label: 'Quiet check-in', ...t.people(1) },
+        ...ci.map((it) => ({ ...it, ...t.people(1) }))] : []),
       ...(oth.length ? [{ kind: 'heading', id: 'others-avatars-head', label: 'Other people’s avatars', ...t.people(2) },
         ...oth.map((it) => ({ ...it, id: `person:${keyOf(it)}`, ...t.people(2) }))] : []),
     ];
@@ -5855,6 +5877,20 @@ export async function mountKiosk(root, {
         });
         return rows.length ? tagged([{ kind: 'heading', id: 'motion-head', label: 'Movement and flashing' }, ...rows], 'display', 1) : [];
       })(),
+      // STATUS ICONS (2026-10-14; status_icons.js argues each default): a row for each status-only icon, and one line
+      // saying which icons always show - those have no row, because no setting hides them (not hideable now). The
+      // SCREEN's row: what this room's screen shows is the place's to choose, like the corner clock.
+      ...(() => {
+        if (!statusIcons) return [];
+        const rows = fieldItems(STATUS_ICON_FIELDS.map(normalizeField).filter(Boolean), {
+          values: () => settings.get() || {},
+          level: complexity(),
+          onStep: (key, value) => { settings.set({ [key]: value }); },
+        });
+        return rows.length ? tagged([{ kind: 'heading', id: 'status-icons-head', label: 'Status icons' },
+          { kind: 'item', id: 'status-icons-always', disabled: true, label: 'Always shown', hint: STATUS_ICONS_NOTE },
+          ...rows], 'display', 5) : [];
+      })(),
       // THE SCREEN'S SOUND: written to the same screen row, heard at once (the settings subscribe above
       // re-syncs the master and the mixer on every change). On the Sound tab, after the panel's own.
       ...tagged([{ kind: 'heading', id: 'sound-head', label: 'Sound' },
@@ -6729,6 +6765,7 @@ export async function mountKiosk(root, {
             // the hear half (call_sound.js): somebody started or stopped watching along, so a call on now
             // pauses or ducks the other sound accordingly - at once, mid-call too.
             try { callSound?.sync(); } catch (err) { console.error('kiosk: call sound', err); }
+            try { statusIcons?.poke(); } catch { /* not built yet */ }   // helping / sharing glyphs
           },
         });
         // WATCHING ALONG (row 2.79, play_sync.js): the panels say what they are playing on this screen's bus; this
@@ -6802,6 +6839,7 @@ export async function mountKiosk(root, {
                 try { voiceRec?.hold('intercom', (sessions || []).length > 0); } catch (err) { console.error('kiosk: voice recording hold', err); }
                 // An intercom opening ends a quiet check-in (checkin.js: the room is awake and talking).
                 if ((sessions || []).length) { try { checkInRx?.endAll('intercom'); } catch (err) { console.error('kiosk: check-in', err); } }
+                try { statusIcons?.poke(); } catch { /* not built yet */ }
               },
             });
             intercomNote = mountIntercomNotice(kioskEl, { receiver: intercomRx, bus });
@@ -6827,7 +6865,10 @@ export async function mountKiosk(root, {
                 try { return (intercomRx?.sessions?.() || []).length > 0; } catch { return false; }
               },
               onPress: (fn) => bus.subscribe(EDGE_TOPIC, (e) => { if (e && e.phase === 'down') fn(); }),
-              onChange: () => { try { checkInNote?.refresh?.(); } catch { /* not mounted yet */ } },
+              onChange: () => {
+                try { checkInNote?.refresh?.(); } catch { /* not mounted yet */ }
+                try { statusIcons?.poke(); } catch { /* not built yet */ }
+              },
             });
             checkInNote = mountCheckInNotice(kioskEl, { receiver: checkInRx, bus });
           } catch (err) { console.error('kiosk: check-in', err); }
@@ -6835,6 +6876,17 @@ export async function mountKiosk(root, {
           // gone by itself; nobody answering means nothing is shared (see_ask.js).
           try { seeAskNote = mountSeeAsk(kioskEl, { link: drive, zIndex: LAYERS.menus + 40 }); }
           catch (err) { console.error('kiosk: see ask', err); }
+          // STATUS ICONS: what this screen lent on a call ("see" or "drive"), from the server's own `lend-state` - the
+          // answer to a lend and any later change. Gone when it says off, when its time is up, or when the call ends.
+          try {
+            drive.onAccess?.((m) => {
+              if (!m || m.type !== 'lend-state' || typeof m.session !== 'string') return;
+              const key = `${m.session}|${m.what || 'see'}`;
+              if (m.on) lentNow.set(key, { what: m.what || 'see', until: m.length === 'always' ? null : (m.until || null) });
+              else lentNow.delete(key);
+              try { statusIcons?.poke(); } catch { /* not built yet */ }
+            });
+          } catch (err) { console.error('kiosk: status icons (lends)', err); }
           // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12): past the person's input gate already
           // (attachDriveToBus), handed to the call view's game or to the first game panel that takes it.
           try { drive.onGameAsk?.((ask) => routeGameAsk(ask)); }
@@ -7180,6 +7232,88 @@ export async function mountKiosk(root, {
       notify: (text) => { try { output?.notify?.(text, { source: 'playback' }); } catch { /* the line still said it */ } },
       line: (text) => sayNote(text),
     });
+  }
+
+  // ---- STATUS ICONS (2026-10-14; status_icons.js has Mike's ask and every default) -----------------------------------
+  // One small strip, the first row of the notice column, for as long as anything sees, hears, sends or controls. Each
+  // state is read from what already knows it - nothing here decides whether a camera or a microphone is on - and the
+  // registry is poked at each event the screen already has, with a one-second read as the backstop for the rest.
+  // The privacy states cannot be hidden by any setting (Mike: "Let's not make it hideable now"); the status-only ones
+  // are the screen's rows under Display, "Status icons".
+  if (!embedded) {
+    try {
+      statusIcons = createStatusIcons({ prefs: () => settings.get() || {} });
+      const si = statusIcons;
+      si.watch('camera', () => { const s = cameraOwner.state(); return s.live || s.opening; });
+      si.watch('checkin', () => {
+        const ss = checkInRx?.sessions?.() || [];
+        return { on: ss.length > 0, who: ss.map((x) => x.name) };
+      });
+      si.watch('intercom', () => {
+        const ss = intercomRx?.sessions?.() || [];
+        const open = ss.some((x) => x.phase === 'open');
+        return { on: ss.length > 0, label: open ? 'Intercom open' : 'Intercom opening', who: ss.map((x) => x.name) };
+      });
+      si.watch('call', () => !!(callTransport?.isLive?.() || callView));
+      si.watch('watching', () => {
+        const p = drive?.presence?.() || {};
+        return { on: (p.followers | 0) > 0 || (p.watchers || []).length > 0, label: 'Sharing your screen with', who: p.watchers || [] };
+      });
+      si.watch('driving', () => {
+        const p = drive?.presence?.() || {};
+        return (p.drivers | 0) - (p.followers | 0) > 0;
+      });
+      si.watch('lent', () => {
+        const t = Date.now();
+        const live = [...lentNow.values()].filter((l) => !l.until || !(Date.parse(l.until) <= t));
+        const see = live.some((l) => l.what === 'see'), drv = live.some((l) => l.what === 'drive');
+        return { on: see || drv, label: see && drv ? 'The caller can see and control this screen'
+          : drv ? 'The caller can control this screen' : 'The caller can see this screen' };
+      });
+      si.watch('recording', () => voiceRec?.state?.()?.recording === true);
+      si.watch('phone-mic', () => {
+        const ph = phoneRx?.phones?.() || [];
+        return { on: ph.length > 0, label: 'A phone is a microphone here', who: ph.map((x) => x.name) };
+      });
+      // LISTENING: the recogniser is running and hearing (commands, or words for subtitles). WHERE IT GOES: the
+      // browser's own speech (its maker), another computer's speech program, or subtitles' online route - the same
+      // reading the Voice menu's status row makes (`voiceStatusItem`).
+      const hearing = () => speechStatus === 'listening' || speechStatus === 'subtitles-only';
+      si.watch('listening', () => ({ on: hearing(),
+        label: speechStatus === 'subtitles-only' ? 'Listening to write subtitles' : 'Listening for spoken commands' }));
+      si.watch('sound-away', () => {
+        if (!hearing() && !onlineCap) return false;
+        let st = null;
+        try { st = speechRec?.status?.() || null; } catch { st = null; }
+        const browser = speechSwitchFrom(personRow || {}).engine === 'browser';
+        const away = (st?.engines || []).filter((e) => e.state === 'ready' && e.slot !== 'local').map((e) => e.name);
+        const who = [...(browser || onlineCap ? ['the browser’s maker'] : []), ...away];
+        return { on: who.length > 0, label: 'The room’s sound goes to', who };
+      });
+      si.watch('ai-away', () => aiActivity().away > 0);
+      si.watch('ai-local', () => aiActivity().local > 0);
+      si.watch('offline', () => {
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) return { on: true, label: 'No internet' };
+        return false;
+      });
+      si.watch('locked', () => screenLocked());
+      si.watch('stand-in', () => (stallSwitch?.status?.() || []).some((r) => r.phase === 'switched'));
+      let musicAway = false;
+      si.watch('music-away', () => musicAway);
+      offsScreen.push(bus.subscribe(MUSIC_NOW_TOPIC, (n) => { musicAway = !!(n && n.playing && n.kind === 'spotify'); si.poke(); }));
+      offsScreen.push(bus.subscribe(VOICE_RECORDING_TOPIC, () => si.poke()));
+      offsScreen.push(bus.subscribe(PHONE_MIC_TOPIC, () => si.poke()));
+      offsScreen.push(bus.subscribe(CALL_ENDED, () => si.poke()));
+      offsScreen.push(onAIActivity(() => si.poke()));
+      offsScreen.push(settings.subscribe(() => si.refresh()));   // a status row switched on or off
+      if (typeof window !== 'undefined') {
+        const pokeNet = () => si.poke();
+        window.addEventListener('online', pokeNet);
+        window.addEventListener('offline', pokeNet);
+        offsScreen.push(() => { window.removeEventListener('online', pokeNet); window.removeEventListener('offline', pokeNet); });
+      }
+      statusStrip = mountStatusStrip(kioskEl, si);
+    } catch (err) { console.error('kiosk: status icons', err); }
   }
 
   // auto-hide the control bar
@@ -8440,6 +8574,8 @@ export async function mountKiosk(root, {
     // The silent check-in's room half and its notice (null until the drive socket), for the suites.
     checkIn: () => checkInRx,
     checkInNotice: () => checkInNote,
+    statusIcons: () => statusIcons,   // status icons (2026-10-14)
+    statusStrip: () => statusStrip,
     // The call transport (built when the drive socket attaches; the intercom's busy check reads it).
     callTransport: () => callTransport,
     // 2026-10-02 (call_notice.js), for the suites: the incoming-call notice (null until the drive socket),
@@ -8549,6 +8685,8 @@ export async function mountKiosk(root, {
       // A quiet check-in: the room's microphone and camera let go and the checker told (before the socket closes).
       try { checkInRx?.destroy(); } catch { /* already gone */ } checkInRx = null;
       try { checkInNote?.destroy(); } catch { /* already gone */ } checkInNote = null;
+      try { statusStrip?.destroy(); } catch { /* already gone */ } statusStrip = null;
+      try { statusIcons?.destroy(); } catch { /* already gone */ } statusIcons = null;
       try { seeAskNote?.destroy(); } catch { /* already gone */ } seeAskNote = null;     // who may see (2026-10-12)
       // Voice recording: detached already (stopSpeech, above); its notice goes and its store closes.
       try { voiceRec?.destroy(); } catch { /* already gone */ } voiceRec = null;

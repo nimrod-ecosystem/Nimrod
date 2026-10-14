@@ -105,6 +105,14 @@ export function permsFor(row, account, owner = null, { reach = false } = {}) {
   };
 }
 
+/** HAS ANYBODY BEEN TICKED TO CHECK IN QUIETLY? (2026-10-14, the screen's own menu.) Somebody on the list with "May
+ *  check in quietly" ticked, or with the guardian set and that tick not taken off. The OWNER is not counted, on the
+ *  intercom rows' rule (kiosk.js voiceItems): the owner may check in by default, which would put the check-in's rows on
+ *  every screen's menu; they wait for a tick so a screen nobody set a check-in up for keeps a short menu. Pure. */
+export function checkInTicked(row) {
+  return normalizePeople(row && row[LIST_FIELD]).some((e) => e.checkIn === true || (e.guardian === true && e.checkIn !== false));
+}
+
 /** May a call from `account` answer by itself on this screen? `account` is the SERVER-STAMPED caller (`by`, drive.py
  *  stamp_signal) - never a name a page sent. `owner`: that account when the server said it owns these screens
  *  (`byOwner`), so the owner's own calls drop in by default (2026-10-14). No account known: no. */
