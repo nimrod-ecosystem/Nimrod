@@ -177,6 +177,7 @@ try {
     const clock = mountPanel('clock', 'c1', bus);
     const em2 = createEditMode({ bus, recs: () => [clock], boxOf: () => clock.cell });
     em2.enter('c1');
+    check('(live and beta) a live module (the clock) has no Beta tag in edit mode', !clock.cell.querySelector('[data-em-beta]'));
     clock.el.firstElementChild?.click?.();
     const sel = em2.selection();
     check('*** a press outside its parts chooses the panel, and its options are its manifest’s settings ***',
@@ -216,7 +217,10 @@ try {
     bus.subscribe(settingsTopic, (p) => { opened.push(p); p?.claim?.(); });
     const em5 = createEditMode({ bus, recs: () => [room], boxOf: () => room.cell });
     check('(setup) the room draws its door and its bookshelf', !!room.el.querySelector('.rs-obj[data-id="door"]') && !!room.el.querySelector('.rs-obj[data-id="shelf"]'));
+    check('(live and beta) a beta panel says nothing about it while it is used', !room.cell.querySelector('[data-em-beta]'));
     em5.enter('r1');
+    check('*** (live and beta, 2026-10-14) a beta module (the room) says "Beta" beside Done, in edit mode only ***',
+      room.cell.querySelector('.em-bar [data-em-beta]')?.textContent === 'Beta');
     const ids = targetsOf(room).map((t) => t.id);
     check('every object in it is a thing to choose (the door, the shelf, the plant, the cat...)',
       ['door', 'shelf', 'lamp', 'window', 'cat'].every((x) => ids.includes(x)), J(ids));
@@ -240,6 +244,7 @@ try {
       em5.selection()?.target === null && em5.selection().fields.length === (getManifest('room').settings || []).length);
     room.cell.querySelector('.em-bar .em-done').click();
     check('*** Done leaves edit mode ***', em5.active() === null && !room.cell.dataset.editing && !room.el.querySelector('[data-edit-target]'));
+    check('...and the Beta tag goes with it (never on the panel in use)', !room.cell.querySelector('[data-em-beta]'));
     room.el.querySelector('.rs-obj[data-id="door"]').click();
     check('*** ...and the door works again ***', opened.length === 1 || scene.lastPress() !== before);
   }

@@ -26,7 +26,7 @@ place / swap); <code>transport_test</code> checks it in a real kiosk.</p>
 <script type="module">
 import { createBus } from '../bus.js';
 import { mountModule, getManifest } from '../module.js';
-import { CATALOG, NOT_FOR_CAREGIVERS } from '../modules_catalog.js';
+import { CATALOG, NOT_FOR_CAREGIVERS, STAGES, stageOf } from '../modules_catalog.js';
 import { FURNITURE } from '../room_parts.js';
 import { ROOM_PRESETS } from '../room_presets.js';
 import { listScenes } from '../livescene.js';
@@ -437,6 +437,81 @@ try {
     inst.destroy();
     check('destroy leaves nothing behind', mount.innerHTML === '');
     mount.remove();
+  }
+
+  // ===================================================================================================
+  section('*** live and beta (2026-10-14): live first, beta in its own section with a badge, hideable ***');
+  {
+    const its = items();
+    check('*** every item carries a stage, and a module item carries its catalog entry’s ***',
+      its.every((i) => STAGES.includes(i.stage)) && its.filter((i) => i.kind === 'module').every((i) => i.stage === stageOf(i.type)),
+      J(its.filter((i) => !STAGES.includes(i.stage)).map((i) => i.key)));
+    check('a room scene goes with the Room module, a live scene with the Live scene module',
+      its.filter((i) => i.kind === 'scene').every((i) => i.stage === stageOf(i.type)));
+    const b = box();
+    let saved = null;
+    let lib = mountLibrary(b, { items, keys: false });
+    const p = () => lib.__probe();
+    const shown = p().shown;
+    const firstBeta = shown.findIndex((k) => its.find((i) => i.key === k)?.stage === 'beta');
+    check('*** by default every item shows, live ones first, then the beta ones ***', shown.length === its.length && firstBeta > 0
+      && shown.slice(firstBeta).every((k) => its.find((i) => i.key === k)?.stage === 'beta'), J({ firstBeta, n: shown.length }));
+    check('...each part still in the chosen order (by name)', J(shown) === J([
+      ...sortItems(its.filter((i) => i.stage !== 'beta'), 'name', {}), ...sortItems(its.filter((i) => i.stage === 'beta'), 'name', {}),
+    ].map((i) => i.key)));
+    const head = b.querySelector('[data-lib-beta-head]');
+    const cards = [...b.querySelectorAll('.lib-card')];
+    check('*** one heading, "Beta: still being tweaked", right before the first beta card ***', !!head
+      && b.querySelectorAll('[data-lib-beta-head]').length === 1 && /Beta: still being tweaked/.test(head.textContent)
+      && head.nextElementSibling === cards[firstBeta], head?.textContent);
+    check('...with its one plain line and the way to say what you think', /still changing/.test(head.textContent)
+      && !!head.querySelector('a[data-lib-act="feedback"][href*="github.com"]'));
+    check('*** every beta card wears a small "Beta" badge, and no live card does ***',
+      cards.every((c) => !!c.querySelector('.lib-badge.is-beta') === (its.find((i) => i.key === c.dataset.libKey).stage === 'beta')));
+    check('no Hide button where nothing would keep the choice', !b.querySelector('[data-lib-act="beta-hide"]'));
+    const town = b.querySelector('.lib-card[data-lib-key="module:town"]');
+    town.click();
+    check('*** its details say Beta, in words ***', /Beta: still being tweaked/.test(b.querySelector('[data-lib-beta]')?.textContent || ''));
+    b.querySelector('[data-lib-act="close"]').click();
+    lib.destroy();
+    lib = mountLibrary(b, { items, keys: false, betaShow: 'hide' });
+    const hiddenN = its.filter((i) => i.stage === 'beta').length;
+    check('*** "Hide them": no beta card, and one line says how many are hidden ***',
+      !b.querySelector('[data-lib-stage="beta"]') && !b.querySelector('[data-lib-beta-head]')
+      && b.querySelector('[data-lib-beta-hidden]')?.dataset.libBetaHidden === String(hiddenN) && p().beta.hidden === hiddenN, J(p().beta));
+    lib.destroy();
+    let mode = 'section';
+    lib = mountLibrary(b, { items, keys: false, betaShow: () => mode, onBetaShow: (v) => { saved = v; mode = v; } });
+    b.querySelector('[data-lib-act="beta-hide"]').click();
+    check('*** "Hide these" in the list is kept where the host keeps it, and the beta cards go ***', saved === 'hide'
+      && !b.querySelector('[data-lib-stage="beta"]') && p().beta.mode === 'hide');
+    b.querySelector('[data-lib-act="beta-show"]').click();
+    check('...and "Show them" brings them back', saved === 'section' && !!b.querySelector('[data-lib-stage="beta"]'));
+    mode = 'hide'; lib.refresh();
+    check('a choice changed elsewhere (the ⚙ menu) shows at the next draw', !b.querySelector('[data-lib-stage="beta"]'));
+    const q = b.querySelector('[data-lib-q]');
+    q.value = 'town'; q.dispatchEvent(new Event('input', { bubbles: true }));
+    check('*** hidden and searched for: it says the match is hidden, rather than "nothing" alone ***',
+      Number(b.querySelector('[data-lib-beta-hidden]')?.dataset.libBetaHidden) >= 1 && !b.querySelector('.lib-card[data-lib-key="module:town"]'),
+      b.querySelector('[data-lib-grid]').textContent.trim().slice(0, 160));
+    check('...and an AI asking for a hidden one by name still reaches it (hiding is about the list)', lib.openFor && (() => { lib.openFor('town'); return p().detail === 'module:town'; })());
+    lib.destroy();
+    lib = mountLibrary(b, { items, keys: false, isScreen: true });
+    check('*** on a screen, no feedback link (a link there could only open over the dashboard) ***',
+      !!b.querySelector('[data-lib-beta-head]') && !b.querySelector('[data-lib-act="feedback"]'));
+    lib.destroy();
+    b.remove();
+    {
+      const mount = box();
+      let kept = null;
+      const inst = mountModule(LIBRARY_TYPE, { mount, bus: createBus(), state: fakeState({}), events: null, user: null, profileId: 'p',
+        personId: null, instanceId: 'L3', showBeta: () => kept || 'section', setShowBeta: (v) => { kept = v; } });
+      await inst.init(); await tick();
+      mount.querySelector('[data-lib-act="beta-hide"]')?.click();
+      check('*** in the module, "Hide these" reaches ctx.setShowBeta, and the grid follows ctx.showBeta ***', kept === 'hide'
+        && !mount.querySelector('[data-lib-stage="beta"]'), J({ kept }));
+      inst.destroy(); mount.remove();
+    }
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));

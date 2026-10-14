@@ -356,6 +356,15 @@ try {
   check('the picker’s first two rows are Start here and Your Home (marked Optional)',
     /Start here/.test($$('#list .pickrow')[0]?.textContent) && /Your Home/.test($$('#list .pickrow')[1]?.textContent)
     && /Optional/.test($$('#list .pickrow')[1]?.textContent), $$('#list .pickrow').slice(0, 2).map((r) => r.textContent.trim()).join(' | '));
+  {
+    // LIVE AND BETA (2026-10-14): the beta modules come last, in a group of their own, each saying Beta.
+    const groups = $$('#list .pickgroup');
+    const bg = $('#list [data-beta-group]');
+    check('*** the picker: the beta modules come LAST, under "Beta: still being tweaked", each saying Beta ***',
+      !!bg && groups[groups.length - 1] === bg && /Beta: still being tweaked/.test(bg.querySelector('h3')?.textContent || '')
+      && [...bg.querySelectorAll('.pickrow')].every((r) => !!r.querySelector('[data-beta]'))
+      && !groups.slice(0, -1).some((g) => g.querySelector('[data-beta]')), groups.map((g) => g.querySelector('h3')?.textContent).join(' | '));
+  }
   check('*** the first example is on the stage, being TRIED (the card says so) ***',
     await until(() => card(EXAMPLE_ORDER[0]).getAttribute('aria-current') === 'true' && kiosks() === 1 && /Trying/.test($('#stagenote').textContent)));
   check('status says nothing is made yet', /not made yet/i.test(status()), status());
@@ -413,6 +422,16 @@ try {
   check('Add opens its tray, its way out (Close) FIRST', await until(() => !tray().hidden && tray().querySelector('button')?.textContent === 'Close'));
   check('...offering the catalog’s modules AND the old profile’s pieces (picture frame, name sign)',
     !!tray().querySelector('[data-edit-add="clock"]') && !!tray().querySelector('[data-edit-add="piece:picture"]') && !!tray().querySelector('[data-edit-add="piece:sign"]'));
+  {
+    // LIVE AND BETA (2026-10-14): the beta modules after the live ones, under their own heading, each saying Beta.
+    const adds = [...tray().querySelectorAll('[data-edit-add]')].filter((b) => !/^piece:|:/.test(b.dataset.editAdd));
+    const head = tray().querySelector('[data-beta-group]');
+    const town = tray().querySelector('[data-edit-add="town"]');
+    check('*** Add: the beta modules after every live one, under "Beta: still being tweaked", each saying Beta ***',
+      !!head && !!town && /Beta/.test(town.textContent) && !/Beta/.test(tray().querySelector('[data-edit-add="clock"]').textContent)
+      && (head.compareDocumentPosition(town) & 4) && adds.filter((b) => /Beta/.test(b.textContent)).every((b) => head.compareDocumentPosition(b) & 4)
+      && adds.filter((b) => !/Beta/.test(b.textContent)).every((b) => b.compareDocumentPosition(head) & 4), head?.textContent);
+  }
   tray().querySelector('[data-edit-add="clock"]').click();
   check('*** a Clock is ON your Home (a real module on the screen) ***', await until(async () => (await modsOf(HID)).some((m) => m.type === 'clock'), 15000));
   const clockId = (await modsOf(HID)).find((m) => m.type === 'clock').id;

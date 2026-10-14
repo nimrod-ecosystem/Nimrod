@@ -28,7 +28,8 @@
 
 <script type="module">
 import { listManifests } from '../module.js';
-import { CATALOG, GROUPS, USE, NOT_FOR_CAREGIVERS, reconcile, groupItems, titleFor, coreReport }
+import { CATALOG, GROUPS, USE, NOT_FOR_CAREGIVERS, reconcile, groupItems, titleFor, coreReport,
+  STAGES, stageOf, isBeta, UNLISTED_STAGES, UNKNOWN_STAGE, STARTER_MODULES, PAGE_STAGES, pageStageOf }
   from '../modules_catalog.js';
 // The same imports modules.html makes — if this list and that list drift, the reconciliation
 // below is checking a different build from the one the page describes.
@@ -334,6 +335,40 @@ section('titles');
     titleFor({ type: 'photos' }, manifests) === (manifests.find((m) => m.type === 'photos') || {}).title);
   check('...falling back to the type rather than to "undefined"',
     titleFor({ type: 'nope' }, manifests) === 'nope');
+}
+
+section('*** live and beta (2026-10-14): every module has a stage, on purpose ***');
+{
+  const bad = CATALOG.filter((c) => !STAGES.includes(c.stage)).map((c) => `${c.type}=${c.stage}`);
+  check('*** every catalog entry says live or beta, explicitly (no entry is left to a default) ***', bad.length === 0, bad.join(', '));
+  const unstaged = manifests.map((m) => m.type).filter((t) => !STAGES.includes(stageOf(t)));
+  check('*** every registered module resolves to live or beta ***', unstaged.length === 0, unstaged.join(', '));
+  const internal = Object.keys(NOT_FOR_CAREGIVERS).filter((t) => !STAGES.includes(UNLISTED_STAGES[t]));
+  check('every module left out of the lists still has its stage written down', internal.length === 0, internal.join(', '));
+  check('a type nobody classified reads as beta (the pessimistic default)', stageOf('ghostmodule') === 'beta' && UNKNOWN_STAGE === 'beta');
+  const counts = { live: CATALOG.filter((c) => c.stage === 'live').length, beta: CATALOG.filter((c) => c.stage === 'beta').length };
+  check('both stages have something in them, or the line between them means nothing', counts.live >= 10 && counts.beta >= 1, JSON.stringify(counts));
+  check('*** the starter screen is all live: the landing calls it "live today" ***',
+    STARTER_MODULES.every((t) => stageOf(t) === 'live'), STARTER_MODULES.map((t) => `${t}=${stageOf(t)}`).join(','));
+  check('moving one is one word: a copy of the catalog with one stage changed says the other stage',
+    stageOf('town', CATALOG.map((c) => (c.type === 'town' ? { ...c, stage: c.stage === 'beta' ? 'live' : 'beta' } : c))) !== stageOf('town'));
+  check('isBeta agrees with stageOf', CATALOG.every((c) => isBeta(c.type) === (c.stage === 'beta')));
+  const badPages = Object.entries(PAGE_STAGES).filter(([, s]) => !STAGES.includes(s)).map(([p]) => p);
+  check('every page listed has a real stage', badPages.length === 0, badPages.join(','));
+  check('a page not listed is live; paths with a slash, a query or no .html read the same',
+    pageStageOf('home.html') === 'live' && pageStageOf('/checkin.html?x=1') === 'beta' && pageStageOf('checkin') === 'beta'
+      && pageStageOf('/game/') === 'beta');
+  const missing = [];
+  const noBanner = [];
+  for (const [p, s] of Object.entries(PAGE_STAGES)) {
+    try {
+      const r = await fetch(`../${p}`);
+      if (!r.ok) missing.push(`${p} ${r.status}`);
+      else if (s === 'beta' && !(await r.text()).includes('mountBetaBanner')) noBanner.push(p);
+    } catch (e) { missing.push(`${p} ${e}`); }
+  }
+  check('*** every page listed is a real page (a stage for a page that is gone is a stale line) ***', missing.length === 0, missing.join(', '));
+  check('*** every beta page carries the banner script, so its stage shows ***', noBanner.length === 0, noBanner.join(', '));
 }
 
 section('*** the AI set (2026-10-04): the guide, the AI characters’ card, the voice model ***');

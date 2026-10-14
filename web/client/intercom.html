@@ -65,5 +65,7 @@
     .then((page) => { window.__intercom = page; })
     .catch((err) => { console.error('intercom: failed to start', err); });
 </script>
+<!-- live and beta (2026-10-14): a small banner along the top while this page is beta (modules_catalog.js PAGE_STAGES). -->
+<script type="module">import { mountBetaBanner } from './beta.js'; mountBetaBanner({ page: 'intercom.html' });</script>
 </body>
 </html>
