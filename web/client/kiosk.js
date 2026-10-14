@@ -6262,8 +6262,11 @@ export async function mountKiosk(root, {
         })], 'screen', 2),
       // after a restart (row 2.70; restart.js argues the one row, its list and the default): Home, where it left off,
       // or any dashboard on the account, by name. Device-local, as it always was.
+      // (row 2.83) The dashboards of the person this screen is for, each name once (restart.js restartScreensFor argues
+      // the fallback when no person is set).
       ...tagged([RESTART_HEADING, ...fieldItems([normalizeField(restartField({
         cfg: restart, screens: restartScreens, homeId: bootProfileId,
+        personId: screenPersonNow() || '',
         homeName: screenNames.get(bootProfileId) || restartScreens.find((d) => d && d.id === bootProfileId)?.name
           || (profileId === bootProfileId ? arr.profile()?.name : '') || '',
         names: screenNames,

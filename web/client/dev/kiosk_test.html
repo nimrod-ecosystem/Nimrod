@@ -883,8 +883,9 @@ const toTab = (m, id) => {
     const rrow = kiosk.menu.items().find((i) => i.id === 'restart-open');
     check('*** the menu offers "After a restart, open", on This screen ***', !!rrow && rrow.label === 'After a restart, open'
       && rrow.tab === 'screen' && !rrow.disabled, JSON.stringify(rrow && [rrow.label, rrow.tab, rrow.hint]));
-    check('*** today’s behavior is the default, and it names THIS screen: Home ***',
-      !!rrow && /^Home, “TEST-bedside”/.test(rrow.hint || ''), rrow?.hint);
+    // (row 2.83, Mike 2026-10-14: "say just the dashboard's name" - no "Home, " in front of it.)
+    check('*** today’s behavior is the default, and it names THIS screen, by its name alone ***',
+      !!rrow && /^“TEST-bedside”/.test(rrow.hint || ''), rrow?.hint);
     check('*** the choices: Home, where it left off, and the account\'s other dashboards by name ***',
       !!rrow && rrow.field.options[0].value === 'top' && rrow.field.options[1].value === 'resume'
       && rrow.field.options.slice(2).every((o) => /^screen:/.test(o.value)), JSON.stringify(rrow?.field?.options));

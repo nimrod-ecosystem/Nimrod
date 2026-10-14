@@ -447,6 +447,37 @@ try {
     check('no copy says "her screen", Taylor or Cici', !/her screen|Taylor|Cici/i.test(LIBRARY_WAITING + OPTIONS_IDLE));
     slot.destroy();
   }
+
+  // ============================================================================================
+  // Row 2.83 (Mike at the bench, 2026-10-14: a pass phrase showed in plain text). A secret's box here too.
+  section('*** a secret (a key, a pass phrase): a hidden box with a Show button, here too (row 2.83) ***');
+  {
+    const { normalizeField } = await import('../settings_fields.js');
+    const { renderOptions } = await import('../edit_mode.js');
+    const vals = { apiKey: 'AIzaSyD-abcdef1234', phrase: 'correct-horse-battery', words: 'Hello' };
+    const sel = { label: 'Test', fields: [
+      normalizeField({ key: 'apiKey', label: 'Key', kind: 'text', secret: true }),
+      normalizeField({ key: 'phrase', label: 'Pass phrase', kind: 'text', secret: true, showTail: false }),
+      normalizeField({ key: 'words', label: 'Words', kind: 'text' }),
+    ], values: () => vals, set: (k, v) => { vals[k] = v; } };
+    const ohost = document.createElement('div');
+    document.getElementById('host').append(ohost);
+    const ro = renderOptions(ohost, sel, { level: 'advanced' });
+    const box = (k) => ohost.querySelector(`[data-em-text="${k}"]`);
+    check('*** the secrets\' boxes are hidden (password) boxes, opened empty ***', box('apiKey').type === 'password' && box('apiKey').value === ''
+      && box('phrase').type === 'password' && box('phrase').value === '');
+    check('an ordinary text box is not', box('words').type === 'text' && box('words').value === 'Hello');
+    check('*** neither secret is in the page\'s text or markup (the phrase not even in part) ***',
+      !ohost.innerHTML.includes('abcdef') && !ohost.innerHTML.includes('horse') && ohost.querySelector('[data-em-row="phrase"] [data-em-value]').textContent === 'Set (hidden)');
+    box('phrase').value = 'typed';
+    ohost.querySelector('[data-em-show="phrase"]').click();
+    check('*** Show: what is typed shows, nothing redrawn or saved ***', box('phrase').type === 'text' && box('phrase').value === 'typed' && vals.phrase === 'correct-horse-battery');
+    ohost.querySelector('[data-em-show="phrase"]').click();
+    check('Hide: hidden again', box('phrase').type === 'password' && ohost.querySelector('[data-em-show="phrase"]').textContent === 'Show');
+    check('only secrets get a Show button', !ohost.querySelector('[data-em-show="words"]'));
+    ro.destroy();
+    ohost.remove();
+  }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));
   console.error(err);

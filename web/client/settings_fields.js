@@ -482,6 +482,11 @@ export function normalizeField(raw = {}) {
     // screen can open the menu, so the row shows only the last four characters, the text box opens
     // EMPTY (the value is never put into the page), and saving an empty box keeps what is there.
     f.secret = raw.secret === true;
+    // (row 2.83, Mike at the bench 2026-10-14: the pass phrase showed in plain text in Devices) `showTail: false` on a
+    // secret: the row shows no characters of it at all, only that one is set. For a PASS PHRASE, argued: the last four
+    // characters of an API key are a harmless way to tell keys apart, but the last four of a phrase are a good part of
+    // the phrase. The box is a hidden (password) box with a Show button wherever a secret's box is drawn.
+    if (f.secret && raw.showTail === false) f.showTail = false;
     f.placeholder = String(raw.placeholder || (f.secret ? 'Type a new one to replace it' : 'Not set'));
     // What an EMPTY secret row says instead of "Not set" (row 2.57): a key kept somewhere else (sealed on the
     // server) is not in this row at all, and the row should say what IS in use, from the mounted instance.
@@ -665,6 +670,7 @@ export function displayValue(field, value) {
   if (!field) return '';
   if (field.secret) {
     const v = String(value ?? '');
+    if (v && field.showTail === false) return 'Set (hidden)';
     return v ? `\u2022\u2022\u2022\u2022${v.length > 8 ? v.slice(-4) : ''}` : (field.emptyLabel || 'Not set');
   }
   if (field.kind === 'toggle') return value ? field.onLabel : field.offLabel;
@@ -846,8 +852,19 @@ export function fieldItems(fields = [], {
         return true;
       },
     };
+    if (f.editable && f.secret && !f.readOnly) {
+      // (row 2.83) A secret's box opens empty and an empty save keeps it, so clearing one is its own act: `clear()`,
+      // through the same `onStep`. True when there was something to clear.
+      item.clear = () => {
+        if (!onStep || !String(fieldValue(f, read() || {}) ?? '')) return false;
+        onStep(f.key, '', f);
+        return true;
+      };
+    }
     if (f.editable) {
-      item.edit = { kind: 'text', value: f.secret ? '' : value, placeholder: f.placeholder, maxLength: f.maxLength };
+      // `secret` (row 2.83): the host draws the box hidden (a password box) with a Show button.
+      item.edit = { kind: 'text', value: f.secret ? '' : value, placeholder: f.placeholder, maxLength: f.maxLength,
+        ...(f.secret ? { secret: true } : {}) };
     }
     if (f.kind === 'color' && !f.readOnly) item.color = { value, palette: f.palette || [] };
     // What the choice picker needs, on every steppable choice row: the options (with their previews),
