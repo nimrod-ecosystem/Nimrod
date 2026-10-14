@@ -2629,3 +2629,40 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   (2026-10-12)
 - **Yes to downloading Whisper tiny.en and testing it on the bench Pi** as the Pi's own better speech model.
   (2026-10-12)
+
+## Mike's site-text answers and new rules (2026-10-13, through chat, note BW)
+
+- **No banned-word lists in the site's copy checks.** Mike: *"Why is there a banned word list? ... I really don't like
+  this banned word thing at all."* The lists (BANNED_WORDS, PAGE_EXTRA_BANNED, CLAIM_BANNED) and the suites that check
+  them are retired. The rule that site copy never says "her screen" or names the person the project was first built
+  for (2026-09-11) is separate: it protects a person's privacy rather than banning vocabulary, and stays. (2026-10-13)
+- **Words:** "module" stays (*"Definitely keep modules. It's a modular system."*), as do "panel", "account"
+  (*"I prefer account"*), "dashboard", "Transport bar", "bind" and "clinician". *"AAC board, not talk board."* "Kiosk"
+  becomes "dashboard" in copy; file names don't change. "AI" isn't spelled out. A switch isn't called "one big
+  button". (2026-10-13)
+- **American English for everything** in the site's copy. (2026-10-13)
+- **The "not a nurse call" line is one sentence in three places:** "Nimrod is not a nurse call or an emergency
+  system." on the Call page, the AAC board's settings and the "What Nimrod is" page. Mike: *"This isn't meant to be
+  nursing home software ... I feel like this is really being overemphasized."* (2026-10-13)
+- **The library (learn/) pages can go.** Mike: *"Any library pages can go."* They were built for a library
+  proposal that went away. (2026-10-13)
+- **Privacy wording:** people can choose to send things (photos device to device), so copy says nothing goes to the
+  Nimrod site, not "nothing is sent anywhere", and points at the live list of what the site keeps. Mike: *"The idea
+  is that the files never land anywhere on our end, the data/media is all theirs ... there are some exceptions as far
+  as things like profile settings."* (2026-10-13)
+- **No person's audio (or other larger media) is stored on the site; only default recordings the project provides.**
+  Mike: *"We can't be letting people store their own audio files on the site. There should only be some default
+  recordings we provide. If they want custom audio, they will have to store it themselves."* This is the storage line
+  applied to audio. (2026-10-13)
+- **Calls and remote help, to build:** auto answer is described as an option designed with people who can't answer
+  their own calls in mind, not as the point (*"I don't expect the average user to be in a care facility."*);
+  bringing other people into a call is a permission; how long a remote permission lasts has options, defaulting to
+  the length of the call, plus "always" for parents/guardians; copy says "control this site on your device" while
+  the heading keeps "Who may drive". (2026-10-13)
+- **Intercom is handled like a call,** with its own permission separate from calls; auto answer on by default; sound
+  only by default, video as an option; so any device in someone's household can announce something. (2026-10-13)
+- **Also to build:** the AAC board over a call (words shown and heard by the other person; confirm it works end to
+  end); stalled playback (a paused, frozen or loading video gets fixed where settings allow, an optional notice, and
+  a setting to switch to something else after a set time, e.g. YouTube to pictures on a drive when the internet is
+  out); a silent check-in, "like baby monitor mode", where by default the screen still shows who is checking in.
+  (2026-10-13)
