@@ -657,7 +657,11 @@ class CallGroups:
         rooms |= {k[0] for k, p in self._pending.items() if p[0] == g.gid}
         rooms.discard(but_room)
         try:
-            return all(self._may_bring(user, r) for r in rooms)
+            # EVERY one is asked, in a fixed order (2026-10-14): all() over a set stopped at the first "no" in
+            # whatever order the set gave, so which people were asked changed from run to run (test_call_groups
+            # failed about half the time on "EVERY other screen's person is asked").
+            answers = [bool(self._may_bring(user, r)) for r in sorted(rooms, key=repr)]
+            return all(answers)
         except Exception:
             return False                     # cannot tell: fails closed (nobody new is brought in)
 
