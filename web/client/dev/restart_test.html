@@ -27,6 +27,7 @@ import {
   // after a restart (row 2.70)
   RESTART_HEADING, RESTART_KEY, restartField, restartValue, restartPatch, restartScreensFor,
   isColdStart, markTab, hasBootParam, withoutBootParam, markKeepPlace, takeKeepPlace,
+  searchAfterPairing, KEPT_AFTER_PAIRING,
 } from '../restart.js';
 
 const out = document.getElementById('results');
@@ -270,6 +271,14 @@ section('A RESTART, TOLD FROM A RELOAD (row 2.70)');
   check('*** once it has: a reload (a refresh, a new version) is NOT a restart ***', isColdStart({ search: '', session: ss }) === false);
   check('*** the launcher\'s ?boot=1 is a restart, whatever the tab says ***', isColdStart({ search: '?key=x&boot=1', session: ss }) === true);
   check('boot=0, or no flag, is not the launcher\'s', !hasBootParam('?boot=0') && !hasBootParam('') && hasBootParam('?lockHelper=off&boot=1'));
+// 2026-10-14 (a side finding at the bench): the reload after a screen's FIRST pairing keeps the launcher's boot=1, so
+// that start still counts as a restart and a chosen dashboard opens; pair=key and anything else go, as before.
+check('*** after the first pairing: the launcher\'s lockHelper, localVoice AND boot=1 are kept ***',
+  searchAfterPairing('?pair=key&lockHelper=off&boot=1&localVoice=on') === '?lockHelper=off&localVoice=on&boot=1'
+  && hasBootParam(searchAfterPairing('?pair=key&boot=1')) && isColdStart({ search: searchAfterPairing('?pair=key&boot=1'), session: { getItem: () => '1' } }),
+  searchAfterPairing('?pair=key&lockHelper=off&boot=1&localVoice=on'));
+check('...pair=key and anything else go; nothing kept is an empty search', searchAfterPairing('?pair=key&x=1') === ''
+  && searchAfterPairing('') === '' && JSON.stringify(KEPT_AFTER_PAIRING) === JSON.stringify(['lockHelper', 'localVoice', 'boot']));
   check('*** kiosk.html reloading ITSELF before the screen started (waiting for the server after a power cut) is still the restart ***',
     isColdStart({ search: '', session: fakeStore(), navType: 'reload' }) === true);
   check('no sessionStorage to read: the browser\'s word decides', isColdStart({ search: '', session: hostileStore, navType: 'reload' }) === false

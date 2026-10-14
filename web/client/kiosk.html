@@ -59,6 +59,7 @@ import {
 import { pickFolder, listFolderSources, isFolderPickerSupported } from './folder_source.js';
 import { mountDemoStrip, mountWayOut } from './demo_strip.js';
 import { mountScreenPairing, shouldPair, KEY_RECHECK_MS } from './screen_pair.js';
+import { searchAfterPairing } from './restart.js';
 
 const params = new URLSearchParams(location.search);
 // one-time device-key pairing (unattended-kiosk fallback): launch once with
@@ -263,11 +264,10 @@ function offerCat(kiosk) {
       label: 'This screen',
       // (2026-10-05, screen_lock.js: the Pi launcher's `?lockHelper=` is kept through the reload, so a screen
       // paired for the first time still reports its lock to the helper on that computer.)
-      // (2026-10-14, local_voice.js: `?localVoice=` too, so a screen paired for the first time keeps its voice.)
+      // (2026-10-14, local_voice.js: `?localVoice=` too, so a screen paired for the first time keeps its voice; and
+      // `boot=1`, so the start that paired still counts as a restart - restart.js `searchAfterPairing`.)
       onPaired: () => {
-        const keep = ['lockHelper', 'localVoice'].filter((k) => params.get(k))
-          .map((k) => `${k}=${encodeURIComponent(params.get(k))}`).join('&');
-        location.href = location.pathname + (keep ? `?${keep}` : '');
+        location.href = location.pathname + searchAfterPairing(params.toString());   // the address as it was opened
       },
     });
     return;

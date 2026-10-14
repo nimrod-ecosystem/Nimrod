@@ -165,6 +165,20 @@ const sessOf = (s) => s || (typeof sessionStorage !== 'undefined' ? sessionStora
 export function hasBootParam(search = '') {
   try { return new URLSearchParams(search || '').get(BOOT_PARAM) === '1'; } catch { return false; }
 }
+/**
+ * THE ADDRESS AFTER A SCREEN'S FIRST PAIRING (kiosk.html `onPaired`): the page reloads to start the screen on its new
+ * key, keeping what the Pi launcher put on the address - the lock helper's, the local voice's, and (2026-10-14, a side
+ * finding while looking into the bench's cold boot) `boot=1`. Without `boot`, the start that paired was not counted as
+ * a restart, so a chosen "After a restart, open" dashboard (row 2.70) was skipped on exactly that start. Anything else
+ * on the address (`pair=key` among it) is dropped, as before. Pure: `search` in, a `?...` string (or '') out.
+ */
+export const KEPT_AFTER_PAIRING = Object.freeze(['lockHelper', 'localVoice', BOOT_PARAM]);
+export function searchAfterPairing(search = '') {
+  let p;
+  try { p = new URLSearchParams(search || ''); } catch { return ''; }
+  const keep = KEPT_AFTER_PAIRING.filter((k) => p.get(k)).map((k) => `${k}=${encodeURIComponent(p.get(k))}`).join('&');
+  return keep ? `?${keep}` : '';
+}
 /** `href` with the launcher's flag taken out, so the page's own reloads are not restarts. */
 export function withoutBootParam(href = '') {
   try {
