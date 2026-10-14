@@ -28,7 +28,8 @@ also be put on a switch.</p>
 <script type="module">
 // *** ONE SOURCE: the live tables. *** Nothing on this page is typed out by hand, so it cannot drift from
 // what the screen actually hears (Mike, 2026-10-02: "I'd like a running list of voice commands").
-import { PHRASES, ROUTES, SPEECH_DEFAULTS } from './input_speech.js';
+import { PHRASES, ROUTES, SPEECH_DEFAULTS, NOTE_PHRASES, FIX_PHRASES, ASK_WORD, OPEN_VERBS, PLACE_PHRASES,
+  PLAY_GUEST_WORDS } from './input_speech.js';
 import { STOP_PHRASES as GAME_STOP } from './quiz_flow.js';
 import { STOP_PHRASES as MUSIC_STOP, DEFAULT_STARTERS as MUSIC_STARTERS } from './music_favourites.js';
 import { PREBUILT_ROUTES, NAV_ROUTES, DEFAULT_GO_STARTERS } from './dashboards.js';
@@ -79,6 +80,28 @@ async function render() {
     ...Object.values(PREBUILT_ROUTES).map((r) => [r.label, quoted(r.phrases)]),
     ...Object.values(NAV_ROUTES).map((r) => [r.label, quoted(r.phrases)]),
     ['Any of your dashboards', DEFAULT_GO_STARTERS.map((s) => `<q>${esc(s)} &lt;its name&gt;</q>`).join(', ')],
+    // (row 2.88, 2026-10-14) the bare name, only when said to the screen (dashboards.js `wakeOnly`).
+    ['A dashboard by its name alone', '<q>&lt;its name&gt;</q>, for example <q>pictures</q>',
+      'Only straight after the wake phrase, even where the wake phrase is turned off, so the word in conversation does nothing. A name that is already a command keeps the command; "go to <its name>" still works.'],
+  ])));
+  // (2026-10-14) opening a module by voice (voice_open.js), playing as somebody (play_as.js), notes and asking.
+  const verbs = Object.keys(OPEN_VERBS);
+  out.push(section('Opening a module', table([
+    ['Open one', verbs.map((v) => `<q>${esc(v)} &lt;a module&gt;</q>`).join(', '),
+      'For example "open trivia". It opens full screen, unless the screen is set otherwise, and goes back by itself when nobody uses it. A dashboard with the same name wins.'],
+    ['Somewhere in particular', `<q>&lt;a module&gt; in the &lt;place&gt;</q>; places: ${quoted(Object.values(PLACE_PHRASES).map((ps) => ps[0]))}`,
+      'For example "trivia in the bottom right corner".'],
+  ])));
+  out.push(section('Playing as somebody', table([
+    ['As a person', '<q>play &lt;a game&gt; as &lt;a name&gt;</q>', 'For example "play opposites as Sam". With no name, the game plays as the person the screen is for.'],
+    ['As a guest', PLAY_GUEST_WORDS.map((g) => `<q>play &lt;a game&gt; as ${esc(g)}</q>`).join(', ')],
+    ['Two or more players', '<q>play a 2 player game of &lt;a game&gt; with &lt;a name&gt; and &lt;a name&gt;</q>, <q>play &lt;a game&gt; with &lt;a name&gt; and &lt;a name&gt;</q>'],
+  ])));
+  out.push(section('Notes, questions and corrections', table([
+    ['Make a note', NOTE_PHRASES.map((p) => `<q>${esc(p)} …</q>`).join(', '), 'The words after it are the note.'],
+    ['Ask an AI character', `<q>${esc(ASK_WORD)} &lt;a name&gt; …</q>`, 'Only after the wake phrase.'],
+    ['Correct the subtitles (your own words)', quoted(FIX_PHRASES['fix-self'].map((p) => `${p} …`)), 'While subtitles are on.'],
+    ['Correct the subtitles (someone else\'s)', quoted(FIX_PHRASES['fix-other'].map((p) => `${p} …`))],
   ])));
   out.push(section('Games', table([
     ...routeRows(isGame),
