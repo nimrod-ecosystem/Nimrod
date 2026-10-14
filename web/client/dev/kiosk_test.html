@@ -3781,6 +3781,28 @@ const toTab = (m, id) => {
       check('intercom: the phone hangs up -> the notice goes', await settled(() => note().hidden, 6000), note()?.textContent);
       check('*** ...and recording resumes by itself, its notice back ***',
         vr.state().held === null && vr.state().recording === true && !pill().hidden, JSON.stringify(vr.state()));
+      // ---- 2a. THE SILENT CHECK-IN (2026-10-14, checkin.js), THROUGH THE REAL SERVER: the owner's own device looks in.
+      {
+        const { createCheckInSender } = await import('../checkin.js');
+        check('*** check-in: the room\'s half is built once the drive socket exists, with its notice; "Check-in: end it" is an action ***',
+          !!wk.checkIn() && !!wk.checkInNotice() && wk.runtime.actions.has('checkin/end'));
+        const ciNote = () => wbox.querySelector('.kiosk .ci-live');
+        const looker = createCheckInSender({ link: driver });
+        await looker.start();
+        check('*** check-in: the screen says who is checking in (a notice, nothing else) ***',
+          await settled(() => !!ciNote() && !ciNote().hidden && /is checking in \(sound and picture\)/.test(ciNote().textContent), 8000),
+          ciNote()?.textContent);
+        check('...the call panel did NOT ring, and nothing is spoken (a check-in is not a call or an intercom)',
+          wbox.querySelector('.m-call')?.dataset.phase === 'idle' && note().hidden, wbox.querySelector('.m-call')?.dataset.phase);
+        const ciAns = await settled(() => back.some((s) => s.purpose === 'checkin' && s.kind === 'answer' && s.session === looker.session), 8000)
+          ? back.find((s) => s.purpose === 'checkin' && s.kind === 'answer' && s.session === looker.session) : null;
+        check('*** check-in: the screen answers SEND ONLY - it sends the room, it never receives the checker ***',
+          !!ciAns && /^a=sendonly\s*$/m.test(ciAns.sdp) && !/^a=(sendrecv|recvonly)\s*$/m.test(ciAns.sdp), ciAns?.sdp?.match(/^a=(send|recv|inactive)\w*/gm)?.join(','));
+        check('...no audio or video element was made for the checker', !wbox.querySelector('.ci-live audio, .ci-live video'));
+        looker.stop();
+        check('*** check-in: the checker stops -> the notice goes ***', await settled(() => ciNote().hidden && wk.checkIn().sessions().length === 0, 6000));
+        looker.destroy?.();
+      }
       // A LIVE CALL blocks the intercom. The screen's transport says whether a call is live (call_transport.js
       // isLive); it is stood in for here - answering a real call needs a real peer.
       const ct = await settled(() => !!wk.callTransport(), 6000) ? wk.callTransport() : null;

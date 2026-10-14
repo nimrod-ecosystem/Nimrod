@@ -225,7 +225,8 @@ check("*** a claim for a purpose that is not arbitrated (a phone microphone, or 
 check("a claim with no session, an empty one, a huge one or odd characters is dropped",
       all(parse_message({"type": "claim", "purpose": p, "session": s}) is None
           for p in ("intercom", "call") for s in (None, "", "x" * 65, "ic 1", "ic/../1", 7)))
-check("the intercom and family calls are the arbitrated purposes", ARBITRATED_PURPOSES == {"intercom", "call"})
+check("the intercom, family calls and the silent check-in are the arbitrated purposes",
+      ARBITRATED_PURPOSES == {"intercom", "call", "checkin"})
 
 section("*** the first screen to claim answers; every other screen is told no ***")
 clk = Clock()

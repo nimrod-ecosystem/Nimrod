@@ -60,6 +60,15 @@ async function whoamiFromServer(user) {
   } catch { return null; }
 }
 
+// What this login may do on a person's screens (app.py /api/drive/may), or null when the site could not say.
+async function mayFromServer(personId, user) {
+  try {
+    const r = await fetch(`/api/drive/may/${encodeURIComponent(personId)}`, { headers: authHeaders(user), credentials: 'same-origin' });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -122,6 +131,9 @@ export function mountRemote(root, {
   followView = mountFollowView,
   // Row 2.83: how long after a press of one of the buttons this page keeps driving (see PAD_HOLD_MS).
   padHoldMs = PAD_HOLD_MS,
+  // "CHECK IN QUIETLY" (2026-10-14, checkin.js): what this login may do on a person's screens - the site's answer, or
+  // null. Shown only on a plain yes. `mayFor: null` turns it off; a test hands in its own.
+  mayFor = (id) => mayFromServer(id, user),
 } = {}) {
   let link = null;
   let padTimer = null;        // row 2.83: the hold after a button press
@@ -151,6 +163,7 @@ export function mountRemote(root, {
         <span>Send what <b>I</b> press — my keyboard and switches control their screen</span>
       </label>
       <p class="h-hint" data-fwd-note></p>
+      <div data-check-in></div>
       <div data-follow></div>
       <div class="r-grants" data-note-visit></div>
       <div class="r-grants" data-grants></div>
@@ -305,6 +318,27 @@ export function mountRemote(root, {
     catch (err) { console.error('remote: watch along', err); followCtl = null; }
   }
 
+  // CHECK IN QUIETLY ON WHOEVER IS PICKED (checkin.js): a link to the check-in page, only when the site says this login
+  // may. Follows the chip row like the note and watch along; a late answer for a person no longer picked is dropped.
+  let checkInSeq = 0;
+  let checkInShown = false;
+  async function renderCheckIn() {
+    const my = ++checkInSeq;
+    const host = el('[data-check-in]');
+    if (!host) return;
+    host.innerHTML = '';
+    checkInShown = false;
+    if (typeof mayFor !== 'function' || !target.id) return;
+    const id = target.id;
+    let may = null;
+    try { may = await mayFor(id); } catch { may = null; }
+    if (torn || my !== checkInSeq || !may || may.checkIn !== true) return;
+    checkInShown = true;
+    host.innerHTML = `<p class="r-checkin"><a class="h-btn" data-check-in-link href="./checkin.html?person=${esc(encodeURIComponent(id))}">Check in quietly</a>
+      <span class="h-hint">See and hear ${target.name ? `${esc(target.name)}’s room` : 'the room'} without making a sound
+        there, to see if they are asleep. Their screen shows that you are checking in.</span></p>`;
+  }
+
   // Row 2.83: driving = "Send what I press" is ticked, or a button above was pressed within `padHoldMs`.
   const drivingNow = () => forwarding || padTimer !== null;
   function syncDriving() {
@@ -431,6 +465,7 @@ export function mountRemote(root, {
     renderApprovals().catch((err) => console.error('remote: intercom approvals', err));
     renderNoteVisit();
     renderFollow();
+    renderCheckIn().catch((err) => console.error('remote: check in', err));
     openLink(target.id);
   }
 
@@ -440,6 +475,7 @@ export function mountRemote(root, {
   openLink(personId);
   renderNoteVisit();
   renderFollow();
+  renderCheckIn().catch((err) => console.error('remote: check in', err));
 
   async function refresh() {
     if (profiles) {
@@ -484,6 +520,8 @@ export function mountRemote(root, {
     noteView: () => noteView,
     // The watch-along block (null when off), for a test.
     follow: () => followCtl,
+    // Whether "Check in quietly" is shown for whoever is picked (only when the site says this login may), for a test.
+    checkInShown: () => checkInShown,
     destroy() {
       torn = true;
       try { noteView?.destroy(); } catch { /* already gone */ }

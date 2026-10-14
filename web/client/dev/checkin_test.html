@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>checkin - the silent check-in, like baby monitor mode - test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>checkin</h1>
+<p>Mike, 2026-10-13: a silent check-in, "like baby monitor mode", where by default the screen still shows who is
+checking in. The checker sees and/or hears the room; the room hears NOTHING from the checker; the screen shows
+"&lt;name&gt; is checking in" the whole time; it ends when the checker stops, after its time, on End, or on a press in the
+room. Only "May check in quietly" (the owner and the guardian set by default), by the SERVER's stamp.</p>
+<div class="note"><b>Stubbed:</b> the relay (a fake of the server's fan-out that stamps <code>by</code>/<code>byOwner</code>
+and picks one answering screen, as <code>drive.py</code> does - the real one is <code>web/server/test_check_in.py</code>),
+the peer connections, the microphone and the camera. The LIVE section at the end goes through the real server with real
+peer connections and the browser's fake devices.</div>
+<div id="host"></div>
+<div id="page"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  createCheckInSender, createCheckInReceiver, mountCheckInNotice, checkInText, checkInOptionsFrom, checkInOfferCheck,
+  admitFor, allowedKinds, mediaWords, isCheckInSignal, newSession, CHECKIN_PURPOSE, CHECKIN_TOPIC, CHECKIN_END_TOPIC,
+  CHECKIN_ACTIONS, CHECKIN_DEFAULTS, CHECKIN_FIELDS, MEDIA_CHOICES, END_REASONS,
+} from '../checkin.js';
+import { mountCheckInPage } from '../checkin_page.js';
+import { connectDrive, SIGNAL_KINDS } from '../drive.js';
+import { createProfilesClient } from '../profile.js';
+import { createBus } from '../bus.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = async () => { for (let i = 0; i < 10; i++) await sleep(0); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// The server's relay, faked: the stamp (`by`, `byOwner`, `byName`) and the pick of one answering screen per offer.
+function fakeRoom({ stamp = true, owner = 'owner@x', names = {} } = {}) {
+  const screens = new Set(), drivers = new Set();
+  const recs = new Map();
+  const deliver = (l, sig) => { for (const cb of [...l.subs]) cb(sig); };
+  function join(role, account = owner) {
+    const subs = new Set();
+    const me = {
+      role, account, sent: [], subs,
+      sendSignal(s) {
+        if (!SIGNAL_KINDS.includes(s.kind)) return false;
+        me.sent.push(s);
+        const copy = JSON.parse(JSON.stringify(s));
+        if (stamp) copy.by = account; else delete copy.by;
+        if (stamp && role === 'driver') { copy.byOwner = account === owner; copy.byName = names[account] || ''; }
+        else { delete copy.byOwner; delete copy.byName; }
+        if (s.purpose === CHECKIN_PURPOSE) {
+          const rec = recs.get(s.session);
+          if (role === 'driver') {
+            if (s.kind === 'bye') recs.delete(s.session);
+            else if (s.kind === 'offer' && !(rec && rec.answerer)) recs.set(s.session, { answerer: null, declined: false });
+          } else if (!rec) { if (s.kind !== 'bye') return true; }
+          else if (rec.declined) return true;
+          else if (!rec.answerer) { if (s.kind === 'bye') rec.declined = true; else if (s.kind !== 'answer') return true; else rec.answerer = me; }
+          else if (rec.answerer !== me) return true;
+          else if (s.kind === 'bye') recs.delete(s.session);
+        }
+        for (const l of role === 'screen' ? [...drivers] : [...screens]) deliver(l, copy);
+        return true;
+      },
+      claim({ purpose, session }) {
+        if (role !== 'screen') return false;
+        const rec = recs.get(session);
+        let won = false;
+        if (rec && !rec.declined) {
+          if (!rec.answerer) {
+            rec.answerer = me; won = true;
+            for (const l of screens) if (l !== me) deliver(l, { kind: 'answerer', purpose, session, you: false });
+          } else won = rec.answerer === me;
+        }
+        deliver(me, { kind: 'answerer', purpose, session, you: won });
+        return true;
+      },
+      onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+      state: () => 'connected',
+      close() { (role === 'screen' ? screens : drivers).delete(me); subs.clear(); },
+    };
+    (role === 'screen' ? screens : drivers).add(me);
+    return me;
+  }
+  return { join };
+}
+
+const RECV_BOTH = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=recvonly\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=recvonly\r\n';
+const RECV_AUDIO = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=recvonly\r\n';
+const RECV_VIDEO = 'v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=recvonly\r\n';
+const SENDS = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendrecv\r\n';
+
+// A peer connection that records everything. As a CHECKER it builds the offer from its transceivers' directions; as a
+// ROOM it makes one transceiver per section of the remote offer (as a browser does) so directions can be set.
+function fakePeers() {
+  const made = [];
+  class PC {
+    constructor(cfg) {
+      this.cfg = cfg; this.trs = []; this.added = []; this.closed = false;
+      this.iceGatheringState = 'complete'; this.connectionState = 'new'; this.localDescription = null; this.remote = null;
+      made.push(this);
+    }
+    addTransceiver(kind, init) { const t = { kind, init, direction: init?.direction, sender: {}, receiver: { track: { kind } } }; this.trs.push(t); return t; }
+    addTrack(t, s) { this.added.push({ track: t, stream: s }); return {}; }
+    getTransceivers() { return this.trs; }
+    async setRemoteDescription(d) {
+      this.remote = d;
+      if (d.type === 'offer') {
+        for (const m of String(d.sdp).matchAll(/^m=(\w+)/gm)) {
+          const t = { kind: m[1], direction: 'recvonly', receiver: { track: { kind: m[1] } }, sent: null,
+            sender: { replaceTrack: async (tr) => { t.sent = tr; } } };
+          this.trs.push(t);
+        }
+      }
+    }
+    async createOffer() {
+      return { type: 'offer', sdp: 'v=0\r\n' + this.trs.map((t) => `m=${t.kind} 9 UDP/TLS/RTP/SAVPF 0\r\na=${t.direction || 'sendrecv'}\r\n`).join('') };
+    }
+    async createAnswer() {
+      return { type: 'answer', sdp: 'v=0\r\n' + this.trs.map((t) => `m=${t.kind} 9 UDP/TLS/RTP/SAVPF 0\r\na=${t.direction}\r\n`).join('') };
+    }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; }
+    fire(st) { this.connectionState = st; this.onconnectionstatechange?.(); }
+    fireTrack(track, streams) { this.ontrack?.({ track, streams }); }
+  }
+  return { PC, made, last: () => made[made.length - 1] };
+}
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { this.tracks.push(t); }
+  getTracks() { return this.tracks; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+const track = (kind = 'audio') => ({ kind, stopped: false, stop() { this.stopped = true; } });
+
+const host = document.getElementById('host');
+
+function rig({ row = {}, stamp = true, busy = () => false, camera = true, names = {} } = {}) {
+  const room = fakeRoom({ stamp, names });
+  const clock = fakeClock();
+  const bus = createBus();
+  const screenLink = room.join('screen', 'owner@x');
+  const peers = fakePeers();
+  const log = [];                  // the order things happened in the room
+  let note = null;
+  const mic = { acquired: [], held: new Set(),
+    async acquire(id, p) { log.push(`mic:${note?.shown() ? 'notice-up' : 'notice-down'}`); mic.acquired.push([id, p]); mic.held.add(id); return new FakeStream([track('audio')]); },
+    release(id) { mic.held.delete(id); log.push('mic-released'); } };
+  const cam = { given: [], released: 0 };
+  let current = { ...row };
+  const presses = new Set();
+  const recv = createCheckInReceiver({
+    link: screenLink, options: () => checkInOptionsFrom(current), micOwner: mic, busy, bus, PeerConnection: peers.PC,
+    getCamera: camera ? async () => { const t = track('video'); cam.given.push(t); log.push('camera'); return t; } : null,
+    releaseCamera: camera ? () => { cam.released += 1; } : null,
+    onPress: (fn) => { presses.add(fn); return () => presses.delete(fn); },
+    now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+  });
+  host.innerHTML = '';
+  note = mountCheckInNotice(host, { receiver: recv, bus });
+  const press = () => { for (const f of [...presses]) f(); };
+  function checker(account = 'owner@x', want = 'both') {
+    const link = room.join('driver', account);
+    const got = [];
+    link.onSignal((s) => got.push(s));
+    const pp = fakePeers();
+    const states = [];
+    const s = createCheckInSender({ link, want, PeerConnection: pp.PC, Stream: FakeStream,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onState: (st, why) => states.push([st, why]) });
+    return { link, got, pp, s, states, byes: () => got.filter((g) => g.kind === 'bye'), answers: () => got.filter((g) => g.kind === 'answer') };
+  }
+  // The connection comes up at both ends (until then the room's stall clock and the checker's answer wait both run, as
+  // on real devices).
+  const up = (c) => {
+    try { peers.last()?.fire('connected'); } catch { /* none yet */ }
+    try { c?.pp?.last()?.fire('connected'); } catch { /* none yet */ }
+  };
+  return { room, clock, bus, screenLink, peers, mic, cam, recv, note, log, press, checker, up,
+    setRow: (r) => { current = { ...r }; recv.recheck(); } };
+}
+
+(async () => {
+try {
+  section('the settings, and what they default to');
+  {
+    const o = checkInOptionsFrom({});
+    check('*** defaults: sound and picture, ten minutes, a press ends it ***',
+      o.media === 'both' && o.maxMs === 10 * 60000 && o.endOnPress === true, JSON.stringify(o));
+    check('a broken value is its default, never something else',
+      checkInOptionsFrom({ checkInMedia: 'everything', checkInMaxMs: 7, checkInEndOnPress: 'no' }).media === 'both'
+      && checkInOptionsFrom({ checkInMaxMs: 7 }).maxMs === 10 * 60000 && checkInOptionsFrom({ checkInEndOnPress: 'no' }).endOnPress === true);
+    check('the choices are kept: sound only, an hour, "only when somebody ends it", presses do not end it',
+      checkInOptionsFrom({ checkInMedia: 'sound', checkInMaxMs: 3600000, checkInEndOnPress: false }).media === 'sound'
+      && checkInOptionsFrom({ checkInMaxMs: 3600000 }).maxMs === 3600000 && checkInOptionsFrom({ checkInMaxMs: 0 }).maxMs === 0
+      && checkInOptionsFrom({ checkInEndOnPress: false }).endOnPress === false);
+    check('the room setting is a ceiling: sound / picture / both', JSON.stringify(allowedKinds('sound')) === '{"audio":true,"video":false}'
+      && JSON.stringify(allowedKinds('picture')) === '{"audio":false,"video":true}' && JSON.stringify(allowedKinds('both')) === '{"audio":true,"video":true}');
+    check('every setting is a well-formed field (the settings audit finds no error)',
+      auditFields(CHECKIN_FIELDS.map(normalizeField).filter(Boolean), { type: 'checkin' }).filter((x) => x.severity === 'error').length === 0);
+    check('"Check-in: end it" is an action a switch or phrase can be bound to', CHECKIN_ACTIONS.some((a) => a.id === 'checkin/end' && a.topic === CHECKIN_END_TOPIC));
+    check('a session is its own kind ("ck-")', /^ck-/.test(newSession()) && isCheckInSignal({ purpose: 'checkin' }) && !isCheckInSignal({ purpose: 'intercom' }));
+  }
+
+  section('*** the room refuses an offer that would send anything into it ***');
+  {
+    const ok = checkInOfferCheck(RECV_BOTH);
+    check('*** receive-only sound and picture: accepted, both asked for ***', ok.ok && ok.audio && ok.video, JSON.stringify(ok));
+    check('receive-only sound alone', checkInOfferCheck(RECV_AUDIO).ok && !checkInOfferCheck(RECV_AUDIO).video);
+    check('*** an offer that would SEND sound (sendrecv) is refused: "sends" ***', checkInOfferCheck(SENDS).why === 'sends');
+    check('*** ...and so is one with no direction at all (SDP reads that as sendrecv) ***',
+      checkInOfferCheck('v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n').why === 'sends');
+    check('...and sendonly', checkInOfferCheck('v=0\r\nm=video 9 X 96\r\na=sendonly\r\n').why === 'sends');
+    check('...and a data channel riding along (nothing but sound and picture)',
+      checkInOfferCheck(RECV_AUDIO + 'm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n').why === 'sends');
+    check('a session-level sendrecv on a section with no direction of its own is refused',
+      checkInOfferCheck('v=0\r\na=sendrecv\r\nm=audio 9 X 111\r\n').why === 'sends');
+    check('nothing asked for (every section switched off, or none): "nothing-asked"',
+      checkInOfferCheck('v=0\r\nm=audio 9 X 111\r\na=inactive\r\n').why === 'nothing-asked' && checkInOfferCheck('v=0\r\n').why === 'nothing-asked');
+  }
+
+  section('who may: the SERVER\'s stamp, never the page');
+  {
+    check('no stamp: refused (fails closed)', admitFor({}, { byOwner: true }) === null);
+    check('*** the owner (the server says so): yes, named "Someone on this account" when they have no name ***',
+      admitFor({}, { by: 'owner@x', byOwner: true })?.name === 'Someone on this account');
+    check('...or by their display name the server sent', admitFor({}, { by: 'owner@x', byOwner: true, byName: 'Pat' })?.name === 'Pat');
+    check('*** an ordinary account: no ***', admitFor({}, { by: 'mike@x', byName: 'Mike' }) === null);
+    check('*** with the guardian set: yes, by the name the owner gave them ***',
+      admitFor({ screenPeople: [{ account: 'ann@x', name: 'Ann', guardian: true }] }, { by: 'ann@x', byName: 'typed' })?.name === 'Ann');
+    check('ticked "May check in quietly": yes', !!admitFor({ screenPeople: [{ account: 'mike@x', name: 'Mike', checkIn: true }] }, { by: 'mike@x' }));
+    check('a guardian unticked: no', admitFor({ screenPeople: [{ account: 'ann@x', guardian: true, checkIn: false }] }, { by: 'ann@x' }) === null);
+    check('the owner unticked themselves: no', admitFor({ screenPeople: [{ account: 'owner@x', checkIn: false }] }, { by: 'owner@x', byOwner: true }) === null);
+  }
+
+  section('*** the checker opens NOTHING of its own ***');
+  {
+    const r = rig();
+    const c = r.checker('owner@x', 'both');
+    await c.s.start();
+    const pc = c.pp.last();
+    check('*** its peer connection asks to RECEIVE sound and picture, and holds no track of its own ***',
+      pc.trs.length === 2 && pc.trs.every((t) => t.direction === 'recvonly') && pc.added.length === 0, JSON.stringify(pc.trs.map((t) => t.direction)));
+    check('*** the sender has no microphone at all (there is no getUserMedia in it) ***',
+      c.s.micOpen() === false && !String(createCheckInSender).includes('getUserMedia('));
+    check('its offer is tagged a check-in, with a session', c.link.sent.some((s) => s.kind === 'offer' && s.purpose === 'checkin' && /^ck-/.test(s.session)));
+    const c2 = r.checker('owner@x', 'sound');
+    await c2.s.start();
+    check('"Sound only" asks for sound alone', c2.pp.last().trs.length === 1 && c2.pp.last().trs[0].kind === 'audio');
+    c.s.stop(); c2.s.stop(); r.recv.destroy(); r.note.destroy();
+  }
+
+  section('*** a check-in, end to end: notice first, nothing heard in the room, the checker receives ***');
+  {
+    const r = rig({ names: {} });
+    const c = r.checker('owner@x', 'both');
+    await c.s.start();
+    await flush();
+    check('*** the screen shows who is checking in ***', r.note.shown() && r.note.text() === 'Someone on this account is checking in (sound and picture)', r.note.text());
+    check('*** the notice was up BEFORE the microphone opened ***', r.log[0] === 'mic:notice-up', JSON.stringify(r.log));
+    check('the notice is a polite status in the notice column, with End (one press)',
+      host.querySelector('.ci-live')?.getAttribute('role') === 'status' && host.querySelector('.ci-live')?.getAttribute('aria-live') === 'polite'
+      && host.querySelector('.ci-live')?.parentElement?.classList.contains('live-notices') && !!r.note.button());
+    const pc = r.peers.last();
+    const audioT = pc.trs.find((t) => t.kind === 'audio'), videoT = pc.trs.find((t) => t.kind === 'video');
+    check('*** the room SENDS its microphone and camera (sendonly), and receives nothing ***',
+      audioT?.direction === 'sendonly' && videoT?.direction === 'sendonly' && audioT.sent?.kind === 'audio' && videoT.sent?.kind === 'video',
+      JSON.stringify(pc.trs.map((t) => [t.kind, t.direction])));
+    check('*** the answer reached the checker, and says sendonly for both ***',
+      c.answers().length === 1 && (c.answers()[0].sdp.match(/a=sendonly/g) || []).length === 2, JSON.stringify(c.answers()));
+    const mediaBefore = document.querySelectorAll('audio, video').length;
+    pc.fireTrack(track('audio'), [new FakeStream([track('audio')])]);
+    await flush();
+    check('*** something arriving from the checker is NOT played: no audio or video element anywhere ***',
+      document.querySelectorAll('audio, video').length === mediaBefore && mediaBefore === 0, String(document.querySelectorAll('audio, video').length));
+    check('the microphone was asked for with the call profile (cleaned up for a human ear)', r.mic.acquired[0]?.[0] === 'checkin');
+    c.pp.last().fireTrack(track('video'), [new FakeStream([track('audio'), track('video')])]);
+    c.pp.last().fire('connected');
+    check('*** the checker receives the room (its stream), and is "open" ***', !!c.s.remote() && c.s.state() === 'open');
+    check('what is sent right now: the room\'s own sound and picture', JSON.stringify(r.recv.sending()) === '{"audio":true,"video":true}');
+    r.bus.publish(CHECKIN_TOPIC, { sessions: r.recv.sessions() });
+    check('the bus says who is checking in', r.recv.sessions()[0]?.phase === 'open' && r.recv.sessions()[0]?.video === true);
+
+    // ---- END 1: the checker stops ----
+    c.s.stop();
+    await flush();
+    check('*** ENDS when the checker stops: the notice goes, the microphone and the camera are let go ***',
+      !r.note.shown() && r.mic.held.size === 0 && r.cam.released === 1 && r.cam.given[0].stopped && r.recv.sessions().length === 0,
+      JSON.stringify({ shown: r.note.shown(), mic: r.mic.held.size, cam: r.cam.released }));
+    r.recv.destroy(); r.note.destroy();
+  }
+
+  section('it ends by every route, and the checker is told why');
+  {
+    const endBy = async (label, opts, act, reason, { row = {} } = {}) => {
+      const r = rig({ row });
+      const c = r.checker('owner@x', opts || 'both');
+      await c.s.start(); await flush();
+      r.up(c);
+      const was = r.note.shown();
+      await act(r, c);
+      await flush();
+      const bye = c.byes().at(-1);
+      check(`*** ENDS ${label}: the notice goes, devices let go, the checker hears "${reason}" ***`,
+        was && !r.note.shown() && r.mic.held.size === 0 && bye?.reason === reason && c.s.state() === 'ended' && c.s.reason() === reason,
+        JSON.stringify({ was, shown: r.note.shown(), mic: r.mic.held.size, bye, st: c.s.state() }));
+      r.recv.destroy(); r.note.destroy();
+      return { r, c };
+    };
+    await endBy('after its time (ten minutes by default)', 'both', async (r) => { r.clock.advance(10 * 60000); }, 'time-limit');
+    await endBy('after the time the room chose (two minutes)', 'both', async (r) => { r.clock.advance(2 * 60000); }, 'time-limit', { row: { checkInMaxMs: 2 * 60000 } });
+    await endBy('on End (one press on the notice)', 'both', async (r) => { r.note.button().click(); }, 'room-ended');
+    await endBy('on "Check-in: end it" (a switch or a spoken phrase)', 'both', async (r) => { r.bus.publish(CHECKIN_END_TOPIC, {}); }, 'room-ended');
+    await endBy('on a press in the room (the default)', 'both', async (r) => { r.press(); }, 'room-pressed');
+    await endBy('when a call is answered', 'both', async (r) => { r.recv.endAll('call'); }, 'call');
+    await endBy('when the connection is lost', 'both', async (r) => { r.peers.last().fire('failed'); r.clock.advance(30000); }, 'stalled');
+    {
+      const r = rig({ row: { checkInEndOnPress: false } });
+      const c = r.checker();
+      await c.s.start(); await flush();
+      r.up(c);
+      r.press(); await flush();
+      check('with "a press ends it" off, a press leaves it running', r.note.shown() && r.recv.open() && !c.byes().length);
+      r.clock.advance(10 * 60000); await flush();
+      check('...and it still ends by itself at its time (never a state only an input can leave)', !r.note.shown() && c.byes().at(-1)?.reason === 'time-limit');
+      r.recv.destroy(); r.note.destroy();
+    }
+    {
+      const r = rig({ row: { checkInMaxMs: 0 } });
+      const c = r.checker();
+      await c.s.start(); await flush();
+      r.up(c);
+      r.clock.advance(24 * 3600000); await flush();
+      check('"only when somebody ends it": a day later it is still on, and still shown', r.note.shown() && r.recv.open());
+      c.s.stop(); await flush();
+      check('...and the checker leaving still ends it', !r.note.shown() && r.mic.held.size === 0);
+      r.recv.destroy(); r.note.destroy();
+    }
+    {
+      const r = rig({ row: { screenPeople: [{ account: 'mike@x', name: 'Mike', checkIn: true }] } });
+      const c = r.checker('mike@x');
+      await c.s.start(); await flush();
+      check('a ticked person checks in, named as the owner named them', r.note.text() === 'Mike is checking in (sound and picture)', r.note.text());
+      r.setRow({ screenPeople: [{ account: 'mike@x', name: 'Mike', checkIn: false }] });
+      await flush();
+      check('*** unticked mid-look: cut off at once ("not-allowed") ***', !r.note.shown() && r.mic.held.size === 0 && c.byes().at(-1)?.reason === 'not-allowed');
+      r.recv.destroy(); r.note.destroy();
+    }
+  }
+
+  section('refused, and nothing opens in the room');
+  {
+    const refused = async (label, rigOpts, account, want, reason, sdp = null) => {
+      const r = rig(rigOpts);
+      const c = r.checker(account, want);
+      if (sdp) {
+        c.link.sendSignal({ kind: 'offer', purpose: 'checkin', session: 'ck-raw', sdp });
+        await flush();
+      } else { await c.s.start(); await flush(); }
+      const bye = c.got.filter((g) => g.kind === 'bye').at(-1);
+      check(`*** ${label}: "${reason}", no notice, no microphone, no camera ***`,
+        bye?.reason === reason && !r.note.shown() && r.mic.acquired.length === 0 && r.cam.given.length === 0,
+        JSON.stringify({ bye, shown: r.note.shown(), mic: r.mic.acquired.length }));
+      r.recv.destroy(); r.note.destroy();
+    };
+    await refused('an ordinary account', {}, 'mike@x', 'both', 'not-allowed');
+    await refused('no stamp from the server (fails closed)', { stamp: false }, 'owner@x', 'both', 'not-allowed');
+    await refused('a call is live', { busy: () => true }, 'owner@x', 'both', 'in-a-call');
+    await refused('a room set to sound only, asked for the picture only', { row: { checkInMedia: 'sound' } }, 'owner@x', 'picture', 'not-offered');
+    await refused('an offer that would send sound into the room', {}, 'owner@x', 'both', 'sends', SENDS);
+    {
+      const r = rig({ row: { checkInMedia: 'sound' } });
+      const c = r.checker('owner@x', 'both');
+      await c.s.start(); await flush();
+      check('*** a room set to sound only, asked for both: sound only, the camera never opens ***',
+        r.note.text() === 'Someone on this account is checking in (sound only)' && r.cam.given.length === 0
+        && r.peers.last().trs.find((t) => t.kind === 'video')?.direction === 'inactive', r.note.text());
+      const c2 = r.checker('owner@x', 'both');
+      await c2.s.start(); await flush();
+      check('a second check-in while one is on: "busy", and the first carries on',
+        c2.byes().at(-1)?.reason === 'busy' && r.note.shown() && r.mic.acquired.length === 1);
+      c.s.stop(); c2.s.stop(); r.recv.destroy(); r.note.destroy();
+    }
+    {
+      const r = rig({ camera: false });
+      const c = r.checker('owner@x', 'both');
+      await c.s.start(); await flush();
+      check('a screen with no camera: sound only, said honestly on the notice', r.note.text().endsWith('(sound only)'), r.note.text());
+      c.s.stop(); r.recv.destroy(); r.note.destroy();
+    }
+  }
+
+  section('two screens of one person: only ONE opens anything');
+  {
+    const room = fakeRoom();
+    const mk = () => {
+      const link = room.join('screen', 'owner@x');
+      const mic = { acquired: 0, async acquire() { mic.acquired += 1; return new FakeStream([track('audio')]); }, release() {} };
+      const recv = createCheckInReceiver({ link, micOwner: mic, PeerConnection: fakePeers().PC, getCamera: async () => track('video'), releaseCamera: () => {} });
+      return { recv, mic };
+    };
+    const A = mk(), B = mk();
+    const link = room.join('driver', 'owner@x');
+    const s = createCheckInSender({ link, PeerConnection: fakePeers().PC, Stream: FakeStream });
+    await s.start(); await flush();
+    check('*** exactly one screen opened its microphone and shows the notice ***',
+      A.mic.acquired + B.mic.acquired === 1 && A.recv.sessions().length + B.recv.sessions().length === 1,
+      JSON.stringify([A.mic.acquired, B.mic.acquired]));
+    s.stop(); A.recv.destroy(); B.recv.destroy();
+  }
+
+  section('the words');
+  {
+    check('nobody: nothing shown', checkInText([]) === '');
+    check('"<name> is checking in (what)"', checkInText([{ name: 'Mike', phase: 'open', audio: true, video: false }]) === 'Mike is checking in (sound only)'
+      && mediaWords({ video: true }) === 'picture only' && mediaWords({ audio: true, video: true }) === 'sound and picture');
+    check('every reason the room can give has words for the checker',
+      ['not-allowed', 'busy', 'in-a-call', 'room-ended', 'room-pressed', 'time-limit', 'call', 'intercom', 'not-offered', 'sends', 'stalled', 'no-answer', 'stopped']
+        .every((k) => typeof END_REASONS[k] === 'string' && END_REASONS[k].length > 5));
+    check('the site copy never says "her screen"', !/her screen/i.test(JSON.stringify(END_REASONS) + JSON.stringify(CHECKIN_FIELDS)));
+  }
+
+  section('the checker\'s page');
+  {
+    const root = document.getElementById('page');
+    const people = { people: [{ id: 'p1', name: 'Robin' }] };
+    const fakeFetch = (may) => async (url) => {
+      const ok = (body, status = 200) => ({ ok: status < 400, status, json: async () => body });
+      if (/\/api\/people$/.test(url)) return ok(people);
+      if (/\/api\/drive\/shared$/.test(url)) return ok({ people: [] });
+      if (/\/api\/drive\/may\//.test(url)) return may === 403 ? ok({}, 403) : ok(may);
+      return ok({}, 404);
+    };
+    let page = await mountCheckInPage(root, { fetchImpl: fakeFetch({ checkIn: false, call: true }), storage: null, nav: {}, win: null });
+    check('*** somebody who may not: the button is off, and the page says how to be allowed ***',
+      !!root.querySelector('[data-start][disabled]') && /May check in quietly/.test(root.textContent), root.textContent.slice(0, 300));
+    page.destroy();
+    const room = fakeRoom();
+    const screen = room.join('screen', 'owner@x');
+    const mic = { acquired: 0, async acquire() { mic.acquired += 1; return new FakeStream([track('audio')]); }, release() {} };
+    const pbus = createBus();
+    const recv = createCheckInReceiver({ link: screen, bus: pbus, micOwner: mic, PeerConnection: fakePeers().PC, getCamera: async () => track('video'), releaseCamera: () => {} });
+    host.innerHTML = '';
+    const note = mountCheckInNotice(host, { receiver: recv, bus: pbus });
+    let made = null;
+    page = await mountCheckInPage(root, {
+      fetchImpl: fakeFetch({ checkIn: true, call: true }), storage: null, nav: {}, win: null,
+      connect: () => room.join('driver', 'owner@x'),
+      makeSender: (o) => (made = createCheckInSender({ ...o, PeerConnection: fakePeers().PC, Stream: FakeStream })),
+      makeAudio: () => null,
+    });
+    check('somebody who may: "Check in quietly" is pressable', !!root.querySelector('[data-start]:not([disabled])'));
+    root.querySelector('[data-start]').click();
+    for (let i = 0; i < 40 && !note.shown(); i++) await sleep(10);
+    check('*** pressed: the page is live, and the screen says who is checking in ***', page.live() && note.shown(), note.text());
+    check('...the page says plainly the room cannot hear them', /can’t hear you/.test(root.textContent));
+    check('...and offers "Call now"', !!root.querySelector('[data-call-now]'));
+    root.querySelector('[data-stop]').click();
+    await flush();
+    check('*** Stop: the screen\'s notice goes and its microphone is let go ***', !note.shown() && recv.sessions().length === 0 && /has ended/.test(root.textContent));
+    page.destroy(); recv.destroy(); note.destroy();
+  }
+
+  section('*** LIVE, through the real server, with real peer connections ***');
+  try {
+    const USER = 'checkin-test-' + Math.floor(Math.random() * 1e9);
+    const person = (await createProfilesClient({ user: USER }).people())[0];
+    check('(setup) the account has a person', !!person);
+    const settled = async (fn, ms) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(40); } return !!fn(); };
+    const may = await fetch(`/api/drive/may/${person.id}`, { headers: { 'X-Dev-User': USER } }).then((r) => r.json());
+    check('LIVE: the site says the owner may check in', may.checkIn === true, JSON.stringify(may));
+    const screen = connectDrive({ personId: person.id, role: 'screen', user: USER });
+    const driver = connectDrive({ personId: person.id, role: 'driver', user: USER, idle: true });
+    check('(setup) a screen and a checker connect', await settled(() => screen.state() === 'connected' && driver.state() === 'connected'
+      && driver.presence().screens >= 1, 8000), JSON.stringify(driver.presence()));
+    let camTrack = null;
+    const lbus = createBus();
+    const recv = createCheckInReceiver({ link: screen, bus: lbus,
+      getUserMedia: (c) => navigator.mediaDevices.getUserMedia(c),
+      getCamera: async () => { const s = await navigator.mediaDevices.getUserMedia({ video: true }); camTrack = s.getVideoTracks()[0]; return camTrack.clone(); },
+      releaseCamera: () => { try { camTrack?.stop(); } catch { /* gone */ } } });
+    host.innerHTML = '';
+    const note = mountCheckInNotice(host, { receiver: recv, bus: lbus });
+    const got = [];
+    driver.onSignal((s) => got.push(s));
+    const sender = createCheckInSender({ link: driver });
+    await sender.start();
+    check('*** LIVE: the screen shows the notice ***', await settled(() => note.shown(), 8000), note.text());
+    check('*** LIVE: the checker is connected and receives the room\'s sound and picture ***',
+      await settled(() => sender.state() === 'open' && (sender.remote()?.getAudioTracks?.() || []).length === 1
+        && (sender.remote()?.getVideoTracks?.() || []).length === 1, 10000), `${sender.state()} ${sender.remote()?.getTracks?.().length}`);
+    const ans = got.find((g) => g.kind === 'answer' && g.session === sender.session);
+    check('*** LIVE: the room\'s real answer sends only (a=sendonly), never receives ***',
+      !!ans && /^a=sendonly\s*$/m.test(ans.sdp) && !/^a=(sendrecv|recvonly)\s*$/m.test(ans.sdp), ans?.sdp?.match(/^a=(send|recv|inactive)\w*/gm)?.join(','));
+    check('LIVE: no audio or video element was made in the room for the checker', host.querySelectorAll('audio, video').length === 0);
+    sender.stop();
+    check('*** LIVE: the checker stops -> the notice goes and the room lets go ***',
+      await settled(() => !note.shown() && recv.sessions().length === 0, 6000) && camTrack?.readyState === 'ended');
+    recv.destroy(); note.destroy(); screen.close(); driver.close();
+  } catch (e) {
+    check('live section ran', false, String((e && e.stack) || e));
+  }
+
+  section('the page is not indexed');
+  {
+    const txt = await fetch('../robots.txt', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).catch(() => '');
+    check('robots.txt disallows /checkin.html', /^Disallow:\s*\/checkin\.html\s*$/m.test(txt), txt.slice(0, 400));
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

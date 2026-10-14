@@ -827,6 +827,17 @@ section('*** LIVE (row 2.83): a real screen and a real Remote page — the notic
     const el = document.createElement('div'); host.append(el);
     panel = mountRemote(el, { personId: person.id, personName: 'Robin', user: KUSER, bus: createBus() });
     check('(setup) the Remote page connected and sees the screen', await settled(() => panel.state() === 'connected' && panel.presence().screens >= 1));
+    // "Check in quietly" (2026-10-14, checkin.js): the real site says the owner may, so the link is there, for this person.
+    check('*** the owner\'s Remote page offers "Check in quietly" for the picked person (the site said they may) ***',
+      await settled(() => panel.checkInShown()) && new RegExp(`checkin\\.html\\?person=${person.id}`).test(el.querySelector('[data-check-in-link]')?.getAttribute('href') || ''),
+      el.querySelector('[data-check-in]')?.innerHTML);
+    {
+      const elx = document.createElement('div'); host.append(elx);
+      const px = mountRemote(elx, { personId: person.id, personName: 'Robin', user: KUSER, bus: createBus(), mayFor: async () => ({ call: true, checkIn: false }) });
+      await sleep(100);
+      check('...and somebody who may not: no "Check in quietly" at all', !px.checkInShown() && !elx.querySelector('[data-check-in-link]'));
+      px.destroy(); elx.remove();
+    }
     await sleep(300);
     check('*** the Remote page only OPEN: the screen says nobody is helping ***', !notice() || notice().hidden, notice()?.textContent);
     el.querySelector('[data-forward]').click();

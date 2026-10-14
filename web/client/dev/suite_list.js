@@ -209,6 +209,9 @@ export const SUITES = [
   // 2026-10-12 (Mike): calls wait unless the caller may drop in; "who may see this screen" with ask first; the guardian
   // set; the question on the screen; the follower hearing yes / asking / no. Fakes, then one live section (needs the server).
   'screen_permissions',
+  // 2026-10-14 (Mike, 2026-10-13): the silent check-in, "like baby monitor mode" - the room hears nothing, the screen
+  // shows who is checking in, it ends by every route; fakes, then one live section with real peer connections.
+  'checkin',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

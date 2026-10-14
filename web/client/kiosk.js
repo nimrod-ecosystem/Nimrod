@@ -155,6 +155,9 @@ import { VOICE_ID_FIELDS, voiceIdOptionsFrom, createEnrolment, mountEnrolment } 
 import {
   createIntercomReceiver, mountIntercomNotice, intercomOptionsFrom, normalizeAllowed, INTERCOM_ACTIONS, INTERCOM_FIELDS,
 } from './intercom.js';
+// The silent check-in (2026-10-14): a one-way look and/or listen; the room hears nothing; the screen says who it is.
+import { createCheckInReceiver, mountCheckInNotice, checkInOptionsFrom, CHECKIN_ACTIONS } from './checkin.js';
+import { EDGE_TOPIC } from './input.js';
 import { createDeviceStore } from './starting_defaults.js';
 import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
 // Hiding a panel can mute or pause it (ad7dc49): a per-panel setting, asked once when a person hides one.
@@ -897,6 +900,8 @@ export async function mountKiosk(root, {
   let recPill = null;            // "Recording voice for training"
   let intercomRx = null;         // the room's half of the intercom, once the drive socket exists
   let intercomNote = null;       // "Intercom opening / open: <name>", with End
+  let checkInRx = null;          // the room's half of the silent check-in (checkin.js), once the drive socket exists
+  let checkInNote = null;        // "<name> is checking in (sound and picture)", with End - NO SETTING HIDES IT
   let seeAskNote = null;         // "<name> would like to see this screen" - Allow / Not now, gone by itself (see_ask.js)
   // A CALL AND THE ROOM (2026-09-30). The call transport reports a call going live and ending (its
   // `onLive`), and the screen does two things with it:
@@ -911,6 +916,8 @@ export async function mountKiosk(root, {
   function onCallLive(on) {
     try { voiceRec?.hold('call', !!on); } catch (err) { console.error('kiosk: voice recording hold', err); }
     if (on) { try { intercomRx?.endAll('call'); } catch (err) { console.error('kiosk: intercom', err); } }
+    // ...and a quiet check-in gives way to an answered call too (checkin.js: the room is awake and talking).
+    if (on) { try { checkInRx?.endAll('call'); } catch (err) { console.error('kiosk: check-in', err); } }
   }
   // *** THE CALL TRANSPORT — the reason the Call panel could never ring. ***
   //
@@ -1268,6 +1275,8 @@ export async function mountKiosk(root, {
     try { voiceRec?.update(r); } catch (err) { console.error('kiosk: voice recording', err); }
     // Somebody taken off the approved list while talking is cut off now, not at the next offer.
     try { intercomRx?.recheck(); } catch (err) { console.error('kiosk: intercom', err); }
+    // ...and somebody unticked from "May check in quietly" while looking in.
+    try { checkInRx?.recheck(); } catch (err) { console.error('kiosk: check-in', err); }
     // Their rows come and go in the Voice section with these settings (and speech may not restart to
     // repaint it): the menu is redrawn when one of them changed.
     const rs = sigOf(r, REC_MENU_KEYS);
@@ -6763,10 +6772,37 @@ export async function mountKiosk(root, {
               onChange: (sessions) => {
                 try { intercomNote?.refresh?.(); } catch { /* not mounted yet */ }
                 try { voiceRec?.hold('intercom', (sessions || []).length > 0); } catch (err) { console.error('kiosk: voice recording hold', err); }
+                // An intercom opening ends a quiet check-in (checkin.js: the room is awake and talking).
+                if ((sessions || []).length) { try { checkInRx?.endAll('intercom'); } catch (err) { console.error('kiosk: check-in', err); } }
               },
             });
             intercomNote = mountIntercomNotice(kioskEl, { receiver: intercomRx, bus });
           } catch (err) { console.error('kiosk: intercom', err); }
+          // THE SILENT CHECK-IN (2026-10-14, checkin.js): same socket, so only somebody the server lets reach this
+          // screen gets here at all, and then only with "May check in quietly" (the server checks it, and the room checks
+          // the server's stamp). NOTHING from the checker is played here - no audio element, no output, no audio bus -
+          // and nothing sounds when it starts. "<name> is checking in" shows in the notice column, BEFORE the microphone
+          // or camera opens, for the whole time, with End. NO SETTING HIDES IT. It ends by itself (time limit, the
+          // checker leaving, the connection), with End, on a press in the room (a setting, on by default: a physical
+          // press only, input.js EDGE_TOPIC - a remote driver's press is not somebody in the room), and when a call is
+          // answered or the intercom opens. It is refused while a call is live or the intercom is open.
+          try {
+            checkInRx = createCheckInReceiver({
+              link: drive, bus,
+              config: (settings.get() || {}).call || {},
+              options: () => checkInOptionsFrom(personRow || {}),
+              micOwner,
+              getCamera: cameraOwner ? () => cameraOwner.acquireTrack('checkin') : null,
+              releaseCamera: cameraOwner ? () => cameraOwner.release('checkin') : null,
+              busy: () => {
+                try { if (callTransport?.isLive?.()) return true; } catch { /* no transport */ }
+                try { return (intercomRx?.sessions?.() || []).length > 0; } catch { return false; }
+              },
+              onPress: (fn) => bus.subscribe(EDGE_TOPIC, (e) => { if (e && e.phase === 'down') fn(); }),
+              onChange: () => { try { checkInNote?.refresh?.(); } catch { /* not mounted yet */ } },
+            });
+            checkInNote = mountCheckInNotice(kioskEl, { receiver: checkInRx, bus });
+          } catch (err) { console.error('kiosk: check-in', err); }
           // WHO MAY SEE (Mike, 2026-10-12): the server's "may <name> see this screen?" - a corner card, never a dialog,
           // gone by itself; nobody answering means nothing is shared (see_ask.js).
           try { seeAskNote = mountSeeAsk(kioskEl, { link: drive, zIndex: LAYERS.menus + 40 }); }
@@ -6904,7 +6940,7 @@ export async function mountKiosk(root, {
   // switch answers to "Did you mean that?". An input bus refuses an unregistered action, so without
   // these a route phrase or a Yes switch would be logged as unknown and do nothing.
   // (And "Intercom: end it": a switch or a phrase bound to it ends an open intercom, one press.)
-  try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS, ...SUBTITLE_ACTIONS, ...INTERCOM_ACTIONS]); }
+  try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS, ...SUBTITLE_ACTIONS, ...INTERCOM_ACTIONS, ...CHECKIN_ACTIONS]); }
   catch (err) { console.error('kiosk: speech actions', err); }
   // subtitle learning: "Subtitles: fix a line", for a switch or a key (subtitle_learning.js answers its topic).
   try { runtime.actions.registerAll(SUBTITLE_LEARNING_ACTIONS); } catch (err) { console.error('kiosk: subtitle learning actions', err); }
@@ -7863,6 +7899,7 @@ export async function mountKiosk(root, {
       if (screenLock?.staysOut()) return 'unlocked';
       try { if (callTransport?.isLive?.() || callView || callNotice?.showing?.() || ringing()) return 'call'; } catch { return 'call'; }
       try { if ((intercomRx?.sessions?.() || []).length > 0) return 'intercom'; } catch { /* none */ }
+      try { if ((checkInRx?.sessions?.() || []).length > 0) return 'checkin'; } catch { /* none */ }   // a quiet check-in
       if (playingKinds().includes('game')) return 'game';
       try { if (menu?.isOpen?.() || screensOpen) return 'menu'; } catch { /* not built */ }
       try { if (editorNow() || mapWin || arr.editing?.()) return 'edit'; } catch { /* not built */ }
@@ -8372,6 +8409,9 @@ export async function mountKiosk(root, {
     recordingPill: () => recPill,
     intercom: () => intercomRx,
     intercomNotice: () => intercomNote,
+    // The silent check-in's room half and its notice (null until the drive socket), for the suites.
+    checkIn: () => checkInRx,
+    checkInNotice: () => checkInNote,
     // The call transport (built when the drive socket attaches; the intercom's busy check reads it).
     callTransport: () => callTransport,
     // 2026-10-02 (call_notice.js), for the suites: the incoming-call notice (null until the drive socket),
@@ -8478,6 +8518,9 @@ export async function mountKiosk(root, {
       // An open intercom is ended and its phone told (before the socket closes), and its notice goes.
       try { intercomRx?.destroy(); } catch { /* already gone */ } intercomRx = null;
       try { intercomNote?.destroy(); } catch { /* already gone */ } intercomNote = null;
+      // A quiet check-in: the room's microphone and camera let go and the checker told (before the socket closes).
+      try { checkInRx?.destroy(); } catch { /* already gone */ } checkInRx = null;
+      try { checkInNote?.destroy(); } catch { /* already gone */ } checkInNote = null;
       try { seeAskNote?.destroy(); } catch { /* already gone */ } seeAskNote = null;     // who may see (2026-10-12)
       // Voice recording: detached already (stopSpeech, above); its notice goes and its store closes.
       try { voiceRec?.destroy(); } catch { /* already gone */ } voiceRec = null;

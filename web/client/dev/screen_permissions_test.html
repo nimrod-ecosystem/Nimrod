@@ -111,6 +111,21 @@ try {
     check('malformed entries and duplicates are ignored', normalizePeople([{ account: 'a' }, { account: 'a', name: 'x' }, 'junk', { name: 'n' }]).length === 1);
   }
 
+  section('*** "May check in quietly" (the silent check-in, 2026-10-14) - the server\'s table (test_check_in.py) ***');
+  {
+    check('*** the owner may, by default ***', permsFor({}, OWN, OWN).checkIn === true);
+    check('...and can untick themselves', permsFor(row({ account: OWN, checkIn: false }), OWN, OWN).checkIn === false);
+    check('*** the guardian set includes it ***', permsFor(row({ account: 'mike', guardian: true }), 'mike', OWN).checkIn === true);
+    check('...still changeable on its own', permsFor(row({ account: 'mike', guardian: true, checkIn: false }), 'mike', OWN).checkIn === false);
+    check('*** an ordinary caller does not get it by being able to call ***',
+      permsFor({}, 'mike', OWN, { reach: true }).call && !permsFor({}, 'mike', OWN, { reach: true }).checkIn);
+    check('ticked on its own: yes, and nothing else comes with it',
+      permsFor(row({ account: 'mike', checkIn: true }), 'mike', OWN).checkIn && !permsFor(row({ account: 'mike', checkIn: true }), 'mike', OWN).see
+      && !permsFor(row({ account: 'mike', checkIn: true }), 'mike', OWN).intercom);
+    check('a switch that is not a real true/false is never yes', !permsFor(row({ account: 'mike', checkIn: 'yes' }), 'mike', OWN).checkIn);
+    check('nobody known: no', permsFor({}, '', OWN).checkIn === false);
+  }
+
   section('*** drop-in is decided on the server-stamped caller, never a name ***');
   {
     const r = row({ account: 'mike@x', name: 'Mike', dropIn: true });
@@ -205,6 +220,29 @@ try {
     ls.dispatchEvent(new Event('change', { bubbles: true }));
     await sleep(10);
     check('...a set time is written as a number', data.lendLength === 30);
+    // THE QUIET CHECK-IN (2026-10-14): its tick on each line, and its three settings beside the others.
+    check('*** "May check in quietly": ticked for you (the owner), and for Bea (she has the guardian set), each untickable ***',
+      box(OWN, 'checkIn')?.checked === true && box('bea@x', 'checkIn')?.checked === true && box('bea@x', 'checkIn').disabled === false);
+    box('bea@x', 'checkIn').checked = false;
+    box('bea@x', 'checkIn').dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('...unticking writes checkIn: false on her line, and says so',
+      normalizePeople(data[LIST_FIELD]).find((e) => e.account === 'bea@x')?.checkIn === false && /can no longer check in quietly/.test(host.textContent));
+    const cm = host.querySelector('[data-checkin="checkInMedia"]');
+    const ct = host.querySelector('[data-checkin="checkInMaxMs"]');
+    const cp = host.querySelector('[data-checkin="checkInEndOnPress"]');
+    check('*** its settings: sound and picture, ten minutes, a press ends it - by default ***',
+      cm?.value === 'both' && ct?.value === String(10 * 60000) && cp?.checked === true, `${cm?.value} ${ct?.value} ${cp?.checked}`);
+    cm.value = 'sound'; cm.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    const ct2 = host.querySelector('[data-checkin="checkInMaxMs"]');      // the editor redraws after each save
+    ct2.value = String(60 * 60000); ct2.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    host.querySelector('[data-checkin="checkInEndOnPress"]').checked = false;
+    host.querySelector('[data-checkin="checkInEndOnPress"]').dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('...each written to the person\'s row as its own type', data.checkInMedia === 'sound' && data.checkInMaxMs === 3600000
+      && data.checkInEndOnPress === false, JSON.stringify({ m: data.checkInMedia, t: data.checkInMaxMs, p: data.checkInEndOnPress }));
     check('*** "May call": ticked for Bea (her drive grant keeps calling), and grayed out for a lapsed grant ***',
       box('bea@x', 'call').checked && box('ot@x', 'call').disabled === true);
     box('bea@x', 'call').checked = false;
