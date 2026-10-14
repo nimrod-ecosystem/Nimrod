@@ -1511,6 +1511,73 @@ class _Store:
             "undocumented": [r["table"] for r in rows if not r["documented"]],
         }
 
+    # ------------------------------------------------- how much one login keeps (quota.py)
+    # Mike, 2026-10-14: "Seems like we would need some limit to keep the site free." The rules and the numbers are
+    # quota.py's; this is only the count. Every column of every row is counted (the column list is read from the
+    # database itself, so a column added later is counted without anybody remembering to), plus quota.ROW_OVERHEAD
+    # a row. The event log is split by quota.py rule 2: a row another login wrote here (a note, a recommendation:
+    # `principal_id` is theirs) counts against THEM, never against the person it was left for.
+    def _columns(self, table: str) -> list[str]:
+        raise NotImplementedError
+
+    def _octets(self, col: str) -> str:
+        """SQL for the stored size in bytes of one column, 0 for NULL, on either engine."""
+        if self._pg:
+            return f"COALESCE(OCTET_LENGTH(CAST(t.{col} AS TEXT)), 0)"
+        return f"COALESCE(LENGTH(CAST(t.{col} AS BLOB)), 0)"
+
+    def account_usage(self, account: str) -> dict:
+        """{"bytes", "rows", "tables": {table: {"rows", "bytes"}}} for one login. Bytes include quota.ROW_OVERHEAD a
+        row. Reads only; each table through an index on the login's column."""
+        import quota   # the table list and the overhead live with the rules
+        cache = getattr(self, "_usage_cols", None)
+        if cache is None:
+            cache = self._usage_cols = {}
+        present = set(self._table_names())
+        for table in quota.USAGE_TABLES:          # before the transaction: SQLite's lock is not re-entrant
+            if table in present and table not in cache:
+                cache[table] = [c for c in self._columns(table) if c.replace("_", "").isalnum()]
+        out: dict[str, dict] = {}
+        with self._tx() as cur:
+            for table, owner in quota.USAGE_TABLES.items():
+                if table not in present:
+                    continue
+                size = " + ".join(self._octets(c) for c in cache[table]) or "0"
+                if table == "events":
+                    # Rule 2: this login's own rows (written by it, or by nobody in particular) ...
+                    cur.execute(self._q(
+                        f"SELECT COUNT(*), COALESCE(SUM({size}), 0) FROM events t WHERE t.user_id=? "
+                        f"AND (t.principal_id IS NULL OR t.principal_id=t.user_id)"), (account,))
+                    n1, b1 = cur.fetchone()
+                    # ... and the rows it left in other logins' logs.
+                    cur.execute(self._q(
+                        f"SELECT COUNT(*), COALESCE(SUM({size}), 0) FROM events t WHERE t.principal_id=? "
+                        f"AND t.user_id<>?"), (account, account))
+                    n2, b2 = cur.fetchone()
+                    n, b = int(n1 or 0) + int(n2 or 0), int(b1 or 0) + int(b2 or 0)
+                elif isinstance(owner, tuple):
+                    parent, link, col = owner
+                    cur.execute(self._q(
+                        f"SELECT COUNT(*), COALESCE(SUM({size}), 0) FROM {table} t JOIN {parent} p "
+                        f"ON p.id=t.{link} WHERE p.{col}=?"), (account,))
+                    n, b = (int(x or 0) for x in cur.fetchone())
+                else:
+                    cur.execute(self._q(f"SELECT COUNT(*), COALESCE(SUM({size}), 0) FROM {table} t WHERE t.{owner}=?"),
+                                (account,))
+                    n, b = (int(x or 0) for x in cur.fetchone())
+                if n:
+                    out[table] = {"rows": n, "bytes": b + n * quota.ROW_OVERHEAD}
+        return {"bytes": sum(v["bytes"] for v in out.values()), "rows": sum(v["rows"] for v in out.values()),
+                "tables": out}
+
+    def state_bytes(self, user_id: str, pid: str, key: str) -> int | None:
+        """The stored size of one state row's data, or None when there is no such row (a new one)."""
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT data FROM state WHERE user_id=? AND profile_id=? AND key=?"),
+                        (user_id, pid, key))
+            r = cur.fetchone()
+        return None if r is None else len(str(r[0]).encode("utf-8"))
+
     # -------------------------------------------------------- screen pairing
     # UNATTENDED SCREENS. A bedside screen reboots at 3am and has to come back on its
     # own; it cannot type a password and there is nobody there to. So it holds a long
@@ -2578,6 +2645,9 @@ class SQLiteStore(_Store):
             self._conn.execute("CREATE INDEX IF NOT EXISTS ix_events_session ON events(session_id)")
             self._conn.execute(
                 "CREATE INDEX IF NOT EXISTS ix_events_principal ON events(principal_type)")
+            # quota.py rule 2: what a login left in other logins' logs is found by who wrote it.
+            self._conn.execute(
+                "CREATE INDEX IF NOT EXISTS ix_events_principal_id ON events(principal_id)")
             cols = {r[1] for r in self._conn.execute("PRAGMA table_info(profiles)")}
             if "person_id" not in cols:
                 self._conn.execute("ALTER TABLE profiles ADD COLUMN person_id TEXT NOT NULL DEFAULT ''")
@@ -2620,6 +2690,10 @@ class SQLiteStore(_Store):
         cur = self._conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
         return [r[0] for r in cur.fetchall()]
+
+    def _columns(self, table: str) -> list[str]:
+        with self._lock:
+            return [r[1] for r in self._conn.execute(f"PRAGMA table_info({table})")]
 
 
 class PostgresStore(_Store):
@@ -2702,6 +2776,12 @@ class PostgresStore(_Store):
     def _table_names(self) -> list[str]:
         with self._tx() as cur:
             cur.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+            return [r[0] for r in cur.fetchall()]
+
+    def _columns(self, table: str) -> list[str]:
+        with self._tx() as cur:
+            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' "
+                        "AND table_name = %s ORDER BY ordinal_position", (table,))
             return [r[0] for r in cur.fetchall()]
 
     @contextlib.contextmanager
@@ -2852,6 +2932,8 @@ class PostgresStore(_Store):
             "ALTER TABLE events ADD COLUMN IF NOT EXISTS producer_version TEXT",
             "CREATE INDEX IF NOT EXISTS ix_events_session ON events(session_id)",
             "CREATE INDEX IF NOT EXISTS ix_events_principal ON events(principal_type)",
+            # quota.py rule 2: what a login left in other logins' logs (notes, recommendations) is found by who wrote it.
+            "CREATE INDEX IF NOT EXISTS ix_events_principal_id ON events(principal_id)",
 
             "CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
             "profile_id TEXT NOT NULL, label TEXT NOT NULL DEFAULT '', started_at TEXT NOT NULL, "

@@ -942,7 +942,20 @@
         ? '<p class="undocnote"><b>Undescribed:</b> ' + esc(d.undocumented.join(', ')) +
           '. It exists, so it is listed. Read the code.</p>'
         : '') +
-      '<p class="never"><b>Never stored:</b> ' + esc(d.never.join('; ')) + '.</p>';
+      '<p class="never"><b>Never stored:</b> ' + esc(d.never.join('; ')) + '.</p>' +
+      // HOW MUCH ONE LOGIN MAY KEEP (2026-10-14, server quota.py), and - only when signed in - how much this one does.
+      (d.limit && d.limit.text ? '<p id="store-limit"><b>How much:</b> ' + esc(d.limit.text) + '</p>' : '');
+    try {
+      const mine = await fetch('/api/me/storage', { credentials: 'same-origin' });
+      if (mine.ok) {
+        const u = await mine.json();
+        const p = document.createElement('p');
+        p.id = 'store-mine';
+        p.innerHTML = '<b>Your login:</b> ' + esc(u.text) + (u.parts && u.parts.length
+          ? ' Most of it: ' + esc(u.parts.slice(0, 3).map((x) => x.what).join(', ')) + '.' : '');
+        box.appendChild(p);
+      }
+    } catch { /* not signed in, or offline: the list above still stands */ }
   } catch (e) {
     box.innerHTML = '<p class="muted">Could not load the live list just now — ' +
       '<a href="https://github.com/nimrod-ecosystem/Nimrod/blob/main/web/server/db.py">' +
