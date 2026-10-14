@@ -408,6 +408,99 @@ check("*** board_sounds.js has no way to send a sound anywhere (no fetch, FormDa
       not any(s in bs_src for s in ("fetch(", "new FormData", "XMLHttpRequest", "sendBeacon(")))
 
 
+# ---------------------------------------------------------------- rule 10: a person's own sound, in other shapes
+section("rule 10 - a person's own sound or other media, in the shapes rule 2 does not see (2026-10-13)")
+check("*** the rule's own words: the storage line applied, who wants the opposite, and the 'with us' way it could change ***",
+      all(s in (sl.__doc__ or "") for s in ("We can't be letting people store their own audio files on the site",
+                                            "the storage line applied", "Who wants the opposite", "becomes conditional")))
+# (a) a data: address of a file, anywhere in a string
+for s, why in (("data:application/octet-stream;base64,T2dnUwACAAAA", "application/octet-stream at the start"),
+               ("data:application/ogg,OggS%00%02", "a sound typed application/ogg, not base64"),
+               ('background: url("data:audio/webm;base64,GkXfo59ChoEB") no-repeat', "inside CSS url(...)"),
+               ("my clip is data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAAD - play it", "after other words"),
+               ("DATA:Font/woff2;base64,d09GMgABAAAA", "a font, in capitals"),
+               ("data:;base64,UklGRiQAAABXQVZFZm10IBAAAAAB", "no type, marked ;base64"),
+               ("data:text/plain;base64,UklGRiQAAABXQVZF", "text, but marked ;base64"),
+               ("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%22%3E", "an SVG mid-string")):
+    r = refused(lambda: sl.check_state({"x": "a " + s}))
+    check(f"*** (a) refused: {why} ***", r and r[0] == 400 and "Nimrod folder" in r[1], r)
+r = refused(lambda: sl.check_state({"x": "here: data:audio/ogg;base64,T2dnUwAC"}))
+check("*** (a) the sentence names a sound, says where it is kept and that the site keeps only its own ***",
+      r and "a sound" in r[1] and "own device or in their Nimrod folder" in r[1]
+      and "only sounds this site keeps are its own" in r[1], r)
+check("(a) as an object KEY too", refused(lambda: sl.check_state({"k data:audio/ogg;base64,T2dn": 1})))
+check("(a) in an event too", refused(lambda: sl.check_event("s", "k", {"x": "see data:video/mp4;base64,AAAAIGZ0"})))
+check("(a) passes: a plain-text data: address (text, not a file)", refused(lambda: sl.check_state({"a": "x data:text/plain,hello"})) is None)
+check("(a) passes: the words 'data:image/' in a sentence (an address needs its comma)",
+      refused(lambda: sl.check_state({"n": "the site refuses data:image/ and data:audio/ addresses now"})) is None)
+check("(a) passes: 'metadata:' is not a data: address", refused(lambda: sl.check_state({"n": "metadata:image/png, two"})) is None)
+check("(a) passes: a link to a sound somewhere else (a pointer, not the sound)",
+      refused(lambda: sl.check_state({"clip": "https://example.org/sounds/hello.ogg", "file": "thank_you-lq3k2a.webm"})) is None)
+
+# (b) base64 cut into pieces
+def rand_b64(nbytes, seed):
+    return base64.b64encode(random.Random(seed).randbytes(nbytes)).decode()
+pieces = [rand_b64(45, i) for i in range(30)]                              # 30 pieces of 60 characters
+r = refused(lambda: sl.check_state({"clip": pieces}))
+check("*** (b) a sound cut into 30 pieces of 60 characters (a list) is refused, 400, 'in pieces' ***",
+      r and r[0] == 400 and "in pieces" in r[1] and "Nimrod folder" in r[1], r)
+three = [rand_b64(750, 100 + i) for i in range(3)]                         # pieces of 1,000: each under rule 2's run
+check("(b) three pieces of 1,000 (each one under rule 2's 1,024) are refused",
+      all(len(p) <= sl.BASE64_RUN_MAX for p in three) and refused(lambda: sl.check_state({"a": three[0], "b": {"c": three[1:]}})))
+board_pieces = {"board": {"cells": [{"id": f"c{i}", "word": "hi", "sound": {"file": "hi.webm", "part": three[i]}} for i in range(3)]}}
+check("*** (b) a board whose cards each carry a piece of a recording is refused ***", refused(lambda: sl.check_state(board_pieces)))
+check("(b) pieces separated by spaces in ONE string are caught too", refused(lambda: sl.check_state({"a": " ".join(pieces)})))
+check("(b) in an event too", refused(lambda: sl.check_event("s", "k", {"p": pieces})))
+just = [rand_b64(45, 200 + i) for i in range(17)]                          # 17 x 60 = 1,020: within the allowance
+check(f"(b) passes: pieces adding up to {sum(map(len, just)):,} (not over {sl.BASE64_RUN_MAX:,})",
+      refused(lambda: sl.check_state({"p": just})) is None)
+paths = [f"/media/unclemikemic/easystore/Cici/Photos/Family_Photos/2019/Summer_Holiday_Cornwall/Day_{i}/IMG_2019070{i % 10}_1234{i}"
+         for i in range(300)]
+total, bits = sl.encoded_pieces({"p": paths})
+check(f"*** (b) passes: 300 deep photo-folder paths ({total:,} characters in long runs, {bits:.2f} bits each) ***",
+      total > 10 * sl.BASE64_RUN_MAX and bits < sl.ENCODED_BITS and refused(lambda: sl.check_state({"p": paths})) is None, (total, bits))
+hexes = ["%064x" % random.Random(i).getrandbits(256) for i in range(500)]
+check("(b) passes: 500 64-character hex hashes (hex can carry 4 bits a letter at most)",
+      refused(lambda: sl.check_state({"h": hexes})) is None)
+ids = [rand_b64(24, 300 + i)[:33] for i in range(400)]                      # Drive-style ids: under WRAP_MIN, never counted
+check("(b) passes: 400 random 33-character ids (shorter than a piece)", refused(lambda: sl.check_state({"ids": ids})) is None)
+check("(b) passes: the brick builder's twenty full models and the nimrod-ai record at its maximum (above) - re-checked",
+      refused(lambda: sl.check_state(models)) is None and refused(lambda: sl.check_state(nimrod_ai)) is None)
+silence = base64.b64encode(bytes(750 * 4)).decode()
+silent_pieces = [silence[i:i + 1000] for i in range(0, len(silence), 1000)]
+check("(b) THE KNOWN GAP, held so it is not forgotten: uncompressed silence cut up is not mixed enough, left to the cap",
+      refused(lambda: sl.check_state({"p": silent_pieces})) is None and refused(lambda: sl.check_state({"p": silence})))
+
+# (c) bytes written out as numbers
+clip = list(random.Random(5).randbytes(6000))
+r = refused(lambda: sl.check_state({"clip": clip}))
+check("*** (c) a recording's bytes as a list of 6,000 numbers is refused, 400, with the count ***",
+      r and r[0] == 400 and "6,000" in r[1] and "Nimrod folder" in r[1], r)
+typed = {str(i): b for i, b in enumerate(clip)}                             # what JSON.stringify(new Uint8Array(...)) makes
+check("*** (c) ...and as JSON.stringify makes a typed array ({\"0\": .., \"1\": ..}) ***", refused(lambda: sl.check_state({"clip": typed})))
+pcm = [random.Random(9).randint(-32768, 32767) for _ in range(5000)]
+check("(c) 16-bit samples as whole numbers are refused", refused(lambda: sl.check_state({"pcm": pcm})))
+check("(c) cut into lists of 256 adding up past the limit, refused",
+      refused(lambda: sl.check_state({"parts": [clip[i:i + 256] for i in range(0, 4352, 256)]})))
+quiet = [0, 1, 2, 1] * 1050                                                # 4,200 numbers in ~8 KB: under the event cap
+r = refused(lambda: sl.check_event("s", "k", {"clip": quiet}))
+check("(c) in an event too (under the event's size cap, so it is this rule that says no)",
+      sl.row_bytes({"clip": quiet}) < sl.EVENT_MAX_BYTES and r and "small whole numbers" in r[1], r)
+check(f"(c) passes: exactly {sl.NUMBERS_MAX:,}", refused(lambda: sl.check_state({"clip": clip[:sl.NUMBERS_MAX]})) is None)
+check("(c) passes: 10,000 times in milliseconds (far bigger than a byte or a sample)",
+      refused(lambda: sl.check_state({"at": [1759800000000 + i * 997 for i in range(10000)]})) is None)
+check("(c) passes: short lists ([x, y, z] points) however many",
+      refused(lambda: sl.check_state({"pts": [[i % 200, (i * 7) % 200, 3] for i in range(3000)]})) is None)
+check("(c) passes: a list of words", refused(lambda: sl.check_state({"w": ["yes", "no"] * 3000})) is None)
+check("*** rule 10 in history too: a history row carrying a file as a data: address is refused ***",
+      refused(lambda: sl.check_history("gameplay", [{"kind": "trial", "data": {"n": "x data:audio/ogg;base64,T2dn"}}],
+                                        {"games": "us"})) is not None)
+aac_src = (Path(__file__).resolve().parents[1] / "client" / "aac_clips.js").read_text(encoding="utf-8")
+check("*** the site's own recordings are files it serves (aac_clips.js points at ./aac/audio), not rows ***",
+      "DEFAULT_CLIP_BASE = './aac/audio'" in aac_src
+      and (Path(__file__).resolve().parents[1] / "client" / "aac" / "audio").is_dir())
+
+
 # ---------------------------------------------------------------- the six routes
 section("the six routes refuse, and keep nothing")
 tmp = tempfile.mkdtemp(prefix="nimrod_storage_line_")
@@ -520,6 +613,60 @@ for name, url in event_urls.items():
     check(f"{name}: ...nor on storage", c.get(storage_url, headers=H).json()["total"] == 0)
     check(f"{name}: ...nor on device-data", c.get(blob_url, headers=H).json()["total"] == 0)
     check(f"{name}: ...nor on plays", c.get(plays_url, headers=H).json()["total"] == 0)
+
+
+section("rule 10 on the routes - the six, and the other routes that keep what a client sends")
+for name, url in state_urls.items():
+    v = c.get(url, headers=H).json().get("version", 0)
+    for what, data in (("a sound as a data: address mid-string", {"css": 'url("data:audio/webm;base64,GkXfo59C")'}),
+                       ("a sound cut into pieces", {"clip": pieces}),
+                       ("a sound's bytes as numbers", {"clip": clip})):
+        r = c.put(url, json={"data": data, "base_version": v}, headers=H)
+        check(f"*** {name}: {what} is refused, 400, and says where it is kept ***",
+              r.status_code == 400 and "Nimrod folder" in r.json().get("detail", ""), r.text[:200])
+    got = c.get(url, headers=H).json()
+    check(f"{name}: ...and none of it was kept", got.get("data") == {"theme": "warm"} and got.get("version") == v, str(got)[:200])
+for name, url in event_urls.items():
+    before = c.get(url, headers=H).json()["total"]
+    for what, data in (("a file as a data: address", {"x": "a data:application/octet-stream;base64,AAAA"}),
+                       ("a sound cut into pieces", {"clip": pieces}),
+                       ("a sound's bytes as numbers", {"clip": quiet})):
+        r = c.post(url, json={"kind": "trial", "data": data}, headers=H)
+        check(f"*** {name}: {what} is refused, 400 ***", r.status_code == 400 and "Nimrod folder" in r.json().get("detail", ""),
+              r.text[:200])
+    check(f"{name}: ...and nothing was appended", c.get(url, headers=H).json()["total"] == before)
+
+# The routes outside state and events that keep text a client sends.
+ev = c.post(f"/api/profiles/{screen}/events/gameplay", json={"kind": "trial", "data": trial}, headers=H).json()
+before = c.get(f"/api/profiles/{screen}/events/gameplay", headers=H).json()["total"]
+r = c.post(f"/api/profiles/{screen}/events/gameplay/{ev['id']}/attest", json={"note": "heard it: data:audio/ogg;base64,T2dnUwAC"}, headers=H)
+check("*** an attestation's note carrying a sound is refused, 400 ***",
+      r.status_code == 400 and "Nimrod folder" in r.json().get("detail", ""), r.text[:200])
+r = c.post(f"/api/profiles/{screen}/events/gameplay/{ev['id']}/attest", json={"note": " ".join(pieces)}, headers=H)
+check("an attestation's note carrying a sound in pieces is refused", r.status_code == 400, r.text[:200])
+check("...and nothing was appended", c.get(f"/api/profiles/{screen}/events/gameplay", headers=H).json()["total"] == before)
+r = c.post(f"/api/profiles/{screen}/events/gameplay/{ev['id']}/attest", json={"note": "watched it happen"}, headers=H)
+check("an ordinary attestation note is not refused by the line", r.status_code != 400 or "Nimrod folder" not in r.text, r.text[:200])
+
+r = c.post("/api/account/reviews", json={"kind": "note", "data": {"key": "c-abc", "note": "listen: data:audio/ogg;base64,T2dnUwAC"}},
+           headers=H)
+check("*** a review note carrying a sound is refused, 400 ***", r.status_code == 400 and "Nimrod folder" in r.json().get("detail", ""),
+      r.text[:200])
+r = c.post("/api/account/reviews", json={"kind": "note", "data": {"key": "c-abc", "note": "The answer is out of date."}}, headers=H)
+check("an ordinary review note is kept", r.status_code == 200, r.text[:200])
+
+long_b64 = "https://192.168.1.20:8765/" + rand_b64(1200, 77).replace("+", "-").replace("/", "_")
+for what, url in (("a media folder address with a recording folded into it", long_b64),
+                  ("a media folder address longer than BASE_URL_MAX", "https://192.168.1.20:8765/" + "a/" * 1100)):
+    r = c.post("/api/media-sources", json={"label": "Photos", "base_url": url}, headers=H)
+    check(f"*** {what} is refused, 400 ***", r.status_code == 400, r.text[:200])
+    r = c.post("/api/pair/request", json={"label": "Media device", "base_urls": [url]})
+    check(f"*** ...and on the pairing route, which needs no sign-in ***", r.status_code == 400, r.text[:200])
+check("...and no media source was kept", c.get("/api/media-sources", headers=H).json()["sources"] == [])
+r = c.post("/api/media-sources", json={"label": "Photos", "base_url": "http://192.168.1.20:8765"}, headers=H)
+check("an ordinary media folder address is kept", r.status_code == 200, r.text[:200])
+r = c.post("/api/pair/request", json={"label": "Media device", "base_urls": ["http://localhost:8765", "http://192.168.1.20:8765"]})
+check("an ordinary pairing request still works", r.status_code == 200, r.text[:200])
 
 
 # ---------------------------------------------------------------- the collector, end to end

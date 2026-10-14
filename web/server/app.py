@@ -188,6 +188,18 @@ def _storage_line_event(stream: str, kind: str, data: dict) -> None:
         raise HTTPException(status_code=e.status, detail=e.detail)
 
 
+# THE SAME LINE ON THE OTHER ROUTES THAT KEEP WHAT A CLIENT SENDS (2026-10-13, storage_line.py rule 10; Mike: "We can't
+# be letting people store their own audio files on the site"). An attestation's note, a review row and a media folder's
+# address are short text by their own limits (2,000 / 1,000 / 2,048 characters), but each is kept, so each passes the
+# content rules too: no data: address of a file, no long or cut-up base64. Logged like the two above, never the content.
+def _storage_line_content(what: str, data) -> None:
+    try:
+        storage_line.check_content(data)
+    except storage_line.Refused as e:
+        log.warning("storage line: refused %s status=%s bytes=%s", what, e.status, storage_line.row_bytes(data))
+        raise HTTPException(status_code=e.status, detail=e.detail)
+
+
 class SourceCreate(BaseModel):
     label: str
     base_url: str
@@ -286,10 +298,23 @@ def _clean_base_url(raw: str) -> str:
     allowed — this URL is fetched by the browser, so file://, javascript:, and
     friends must never round-trip. Returns the URL with any trailing slash stripped."""
     url = (raw or "").strip()
+    # 2026-10-13 (storage line, rule 10): the address is KEPT (media_sources, and pairings for fifteen minutes - a route
+    # that needs no sign-in), so it has a length, and the content rules apply to it like any kept text: an address
+    # with a recording folded into it is refused. BASE_URL_MAX argued beside it.
+    if len(url) > BASE_URL_MAX:
+        raise HTTPException(status_code=400, detail=f"invalid base_url (at most {BASE_URL_MAX:,} characters)")
     p = urlparse(url)
     if p.scheme not in ("http", "https") or not p.netloc:
         raise HTTPException(status_code=400, detail="invalid base_url (must be http(s)://host)")
+    _storage_line_content("base_url", {"base_url": url})
     return url.rstrip("/")
+
+
+# The longest media folder address kept: 2,048 characters, the length every browser and proxy is sure to carry (the
+# long-standing practical limit for a URL). A real one is a host, a port and perhaps a short path - tens of characters.
+# For longer: nothing a media agent prints. For shorter: 300 would do today, but an address is not where the line is
+# drawn; the content rules are.
+BASE_URL_MAX = 2048
 
 
 # Timestamps here MUST match the format db.py writes (`_now()`): UTC, ISO-8601, with the
@@ -1255,6 +1280,7 @@ def attest_event(pid: str, stream: str, event_id: int, body: AttestPost = Attest
     _check(pid, ID_RE, "profile id")
     _check(stream, ID_RE, "event stream")
     owned_profile(user, pid)
+    _storage_line_content("attestation note", {"note": (body.note or "")[:2000]})   # what provenance.attestation_row keeps
     try:
         return store.attest_event(user, pid, stream, event_id, attester=user, note=body.note)
     except ValueError as e:
@@ -2621,6 +2647,7 @@ def append_review(body: EventPost, request: Request, user: str = Depends(current
         data = pack_reviews.clean_review(body.kind, body.data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    _storage_line_content("review", data)
     if data.get("person"):
         # "Who is reviewing" (the review page): one of THIS login's people, named from the server's row.
         who = store.get_person(user, data["person"])
