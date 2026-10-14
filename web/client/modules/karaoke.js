@@ -27,6 +27,7 @@ import { registerModule, mountModule, extendCtx } from '../module.js';
 // The player this frames. Imported here because this module cannot work without it, not for the
 // registry's sake: every page that offers karaoke also imports youtube.js itself.
 import { SETTINGS as YT_SETTINGS, searchVideos } from './youtube.js';
+import { STALL_TOPIC, STALL_OK_TOPIC } from '../playback_stall.js';
 
 export const GAME = 'karaoke';
 
@@ -40,7 +41,11 @@ export const DEFAULTS = Object.freeze({
 // The YouTube rows this panel shares, reused AS DECLARED so the two can never disagree about what a
 // key means. `presetId` is left out: its choices come from a mounted youtube instance's live list,
 // which this frame does not forward yet.
-const SHARED = ['apiKey', 'apiKeyFor', 'volume', 'volumeStep', 'heldNotifyMs'];
+// STALLED PLAYBACK (2026-10-13, playback_stall.js): the player's stall rows are shared too - "Say when it gets stuck"
+// and "show something else after" mean the same in a sing-along as in the YouTube panel. They replace the old
+// "let people know after" row, whose key (`heldNotifyMs`) is now "A pause counts as left after".
+const SHARED = ['apiKey', 'apiKeyFor', 'volume', 'volumeStep', 'stallFix', 'stallTries', 'stallMs', 'stallNotify',
+  'heldNotifyMs', 'stallSwitchMs', 'stallSwitchTo', 'stallBackMs'];
 const SETTINGS = [
   { key: 'framing', label: 'Show the "Sing along" heading', default: true, level: 'essential',
     onLabel: 'On', offLabel: 'Off (just the video)' },
@@ -140,6 +145,13 @@ registerModule(
         return {
           ...s,
           publish(topic, payload, meta) {
+            // STALLED PLAYBACK (playback_stall.js): the inner player's "stuck" and "playing again" are about THIS
+            // panel, so they are said under its id - the screen switches and restores the sing-along, not a player
+            // it cannot find.
+            if ((topic === STALL_TOPIC || topic === STALL_OK_TOPIC) && payload && typeof payload === 'object') {
+              s.publish(topic, { ...payload, panel: ctx.instanceId || GAME, type: GAME, title: 'Sing along' }, meta);
+              return;
+            }
             s.publish(topic, payload, meta);
             if (topic === 'segment/progress') bus.publish(`${GAME}/progress`, payload);
           },

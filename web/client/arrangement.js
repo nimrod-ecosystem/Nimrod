@@ -1666,7 +1666,10 @@ export function createArrangement({
     return true;
   }
 
-  async function swapPanel(id, toType) {
+  // `stateKey` (optional, 2026-10-13, stalled playback - playback_stall.js): the row the stand-in reads and writes, so a
+  // photos panel standing in for a stuck video never writes its settings into the video's row. Left out, it is exactly
+  // what recovery has always mounted.
+  async function swapPanel(id, toType, { stateKey = null } = {}) {
     const rec = recFor(id);
     if (!rec || !toType) return false;
     const host = rec.el;
@@ -1676,7 +1679,7 @@ export function createArrangement({
     health().forget(id);
     destroyRec(rec);
     host.innerHTML = '';
-    const fresh = watchRec(await mountInstance({ id, type: toType }, host));
+    const fresh = watchRec(await mountInstance({ id, type: toType, ...(stateKey ? { stateKey } : {}) }, host));
     replaceRec(id, fresh);
     return true;
   }

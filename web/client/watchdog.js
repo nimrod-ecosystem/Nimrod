@@ -58,6 +58,14 @@ export function createWatchdog({
   // `fire` must not overrule it.
   let epoch = 0;
 
+  // `retries` may be a NUMBER or a FUNCTION, for the same reason `stallMs` may (below): it comes from a panel's
+  // settings ("Tries before the next one", "When playing stops by itself", playback_stall.js), which arrive after
+  // construction and change while it runs. Read on every fire. Junk reads as the old default of 1.
+  const budget = () => {
+    const v = typeof retries === 'function' ? Number(retries()) : Number(retries);
+    return Number.isFinite(v) && v >= 0 ? Math.floor(v) : 1;
+  };
+
   const ms = () => {
     const v = typeof stallMs === 'function' ? Number(stallMs()) : Number(stallMs);
     return Number.isFinite(v) && v > 0 ? v : 0;      // 0 (or junk) disables it
@@ -105,7 +113,7 @@ export function createWatchdog({
   function fire() {
     timer = null;
     const k = key;
-    if (used < retries) {
+    if (used < budget()) {
       used += 1;
       const before = epoch;
       try { onRetry?.(k, used); } catch (err) { console.error('watchdog onRetry', err); }
