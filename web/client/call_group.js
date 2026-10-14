@@ -45,6 +45,10 @@ export const GROUP_REFUSED_TEXT = Object.freeze({
   'not-in-call': 'Only somebody in the call can add people to it.',
   busy: 'Too many people are asking at once. Try again in a moment.',
   'not-allowed': 'This device cannot do that.',
+  // 2026-10-13: bringing other people into a call is a permission, checked by the server for every other screen in the
+  // call (drive.py CallGroups `_bring_ok`). Said plainly, with where it is given.
+  'no-bring': 'You don’t have permission to bring others into this call. Whoever looks after the screens on the call '
+    + 'can allow it on the Remote page (“May bring others into a call”).',
 });
 
 // A mesh connection that FAILS is offered again once by whoever offered it (the same once-per-drop rule a caller

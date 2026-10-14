@@ -71,7 +71,7 @@ export const PANEL_ORDER = [
   'up', 'down', 'left', 'right', 'menu',
 ];
 
-export function statusLine({ state, presence }) {
+export function statusLine({ state, presence, driving = true }) {
   if (state === 'connecting') return { text: 'Connecting…', tone: 'wait' };
   if (state !== 'connected') return { text: 'Not connected', tone: 'bad' };
   if (!presence.screens) {
@@ -80,11 +80,23 @@ export function statusLine({ state, presence }) {
     return { text: 'Connected — but none of their screens is open', tone: 'bad' };
   }
   const n = presence.screens;
+  // Row 2.83: open but not pressing is not "controlling" - and their screen does not say anybody is helping.
+  if (!driving) return { text: `Connected to ${n} screen${n === 1 ? '' : 's'}. Not controlling ${n === 1 ? 'it' : 'them'} now`, tone: 'good' };
   return { text: `Controlling ${n} screen${n === 1 ? '' : 's'}`, tone: 'good' };
 }
 
+// CONNECTED, NOT PRESSING (row 2.83, Mike at the bench 2026-10-14: "Someone is helping from another screen" stayed after
+// "Send what I press" was unticked). This page now tells the server whether it is driving: on while "Send what I press"
+// is ticked, and for a while after a press of one of the buttons above, so their screen's notice is up while somebody
+// is pressing it and goes when they stop. HOW LONG AFTER A BUTTON PRESS, argued: a person showing somebody what a button
+// does presses in bursts, and a notice that came and went between presses would flicker; a minute is short enough that
+// the screen stops saying "helping" soon after the last press. A default here (`padHoldMs`), for Mike to rule on.
+export const PAD_HOLD_MS = 60 * 1000;
+
 export const DAY_CHOICES = [
-  { days: 1, label: 'today' },
+  // 'a day', not 'today' (site-text row tac53d29f): the server gives 24 hours from the moment it is allowed, not until
+  // midnight. How long something lent DURING a call lasts is a separate choice, made on the screen (screen_permissions.js).
+  { days: 1, label: 'a day' },
   { days: 7, label: 'a week' },
   { days: 30, label: 'a month' },
   { days: 0, label: 'as long as I allow it' },
@@ -108,8 +120,11 @@ export function mountRemote(root, {
   // WATCH ALONG (row 2.79, follow_view.js): follow what the picked person's screen is playing, in step, on this
   // computer. Its own socket, opened only when somebody presses its button. `followView: null` turns it off.
   followView = mountFollowView,
+  // Row 2.83: how long after a press of one of the buttons this page keeps driving (see PAD_HOLD_MS).
+  padHoldMs = PAD_HOLD_MS,
 } = {}) {
   let link = null;
+  let padTimer = null;        // row 2.83: the hold after a button press
   let grants = [];
   let shared = [];
   let target = { id: personId, name: personName, mine: true };
@@ -164,13 +179,17 @@ export function mountRemote(root, {
   function renderGrants() {
     const host = el('[data-grants]');
     if (!profiles || !personId || !target.mine) { host.innerHTML = ''; return; }
-    // A3 of the site-text questions (2026-10-12, Mike's ruling 2.81): adding somebody here also lets them CALL these
-    // screens, so the page says so. It never lets a call answer by itself - that is "May drop in", below.
+    // A3 of the site-text questions (2026-10-12, Mike's ruling 2.81), changed 2026-10-14 ("a call is only a call"):
+    // adding somebody here lets them control the screens; they may also call unless "May call" is unticked below
+    // (continuity - every drive grant could call before), and a call-only permission is added below instead. Copy
+    // (2026-10-13): "control this site on your device" in the sentence; the heading keeps "Who may drive".
     host.innerHTML = `
       <h2 class="r-h2">Who may drive ${personName ? `${esc(personName)}’s screens` : 'these screens'}</h2>
-      <p class="h-hint">Anyone you add here can control these screens from their own device, without you
-        being there. It also lets them call these screens. A call waits for somebody at the screen to answer,
-        unless you let them drop in (below). Whoever is at the screen sees when someone is controlling it.</p>
+      <p class="h-hint">Anyone you add here can control this site on your device, from their own device, without you
+        being there. They may also call these screens, unless you untick “May call” for them below. To let someone
+        call without controlling anything, add them under “Who may call” below instead. A call waits for somebody at
+        the screen to answer, unless you let them drop in. Whoever is at the screen sees when someone is controlling
+        it.</p>
       <form class="h-new" data-grant-form>
         <input type="email" data-subject placeholder="their sign-in email" aria-label="who" required>
         <input type="text" data-label placeholder="what for (optional)" aria-label="note" maxlength="120">
@@ -185,6 +204,7 @@ export function mountRemote(root, {
           <b>${esc(g.subject_id)}</b>
           ${g.label ? `<span class="h-hint"> — ${esc(g.label)}</span>` : ''}
           <span class="h-hint"> ${g.expires_at ? `until ${esc(String(g.expires_at).slice(0, 10))}` : 'until you take it back'}</span>
+          ${String(g.role || '') === 'caller' ? '<span class="h-hint"> — may call only, not control</span>' : ''}
           <button class="h-btn h-danger p-small" data-revoke="${esc(g.id)}">Take it back</button>
         </li>`).join('')}</ul>`
         : '<p class="h-hint">Nobody yet. Only you can control these screens.</p>'}`;
@@ -247,6 +267,12 @@ export function mountRemote(root, {
           try { grants = await profiles.driveGrants(personId); } catch { /* the list shows it on the next load */ }
           renderGrants();
         },
+        // A call is only a call (2026-10-14): "Add someone who may call, but not control these screens".
+        grantCall: async (account, { days = 0 } = {}) => {
+          await profiles.grantDrive(personId, account, { label: '', days, role: 'caller' });
+          try { grants = await profiles.driveGrants(personId); } catch { /* the list shows it on the next load */ }
+          renderGrants();
+        },
       });
     }
   }
@@ -279,8 +305,16 @@ export function mountRemote(root, {
     catch (err) { console.error('remote: watch along', err); followCtl = null; }
   }
 
+  // Row 2.83: driving = "Send what I press" is ticked, or a button above was pressed within `padHoldMs`.
+  const drivingNow = () => forwarding || padTimer !== null;
+  function syncDriving() {
+    try { link?.setDriving?.(drivingNow()); } catch { /* an older link: it drives whenever it is open */ }
+    renderStatus();
+  }
+  function clearPadHold() { if (padTimer !== null) { clearTimeout(padTimer); padTimer = null; } }
+
   function renderStatus() {
-    const { text, tone } = statusLine({ state, presence });
+    const { text, tone } = statusLine({ state, presence, driving: drivingNow() });
     el('[data-status]').innerHTML = `<span class="r-dot ${tone}"></span>${esc(text)}`;
     const live = state === 'connected' && presence.screens > 0;
     for (const b of root.querySelectorAll('[data-verb]')) b.disabled = !live;
@@ -324,6 +358,10 @@ export function mountRemote(root, {
     }
     const b = e.target.closest('[data-verb]');
     if (!b || b.disabled) return;
+    // Driving for a while (row 2.83): their screen says so BEFORE the press reaches it (the server announces first).
+    clearPadHold();
+    padTimer = setTimeout(() => { padTimer = null; syncDriving(); }, padHoldMs);
+    syncDriving();
     link?.send(b.dataset.verb);
     // A press that went nowhere must not look like a press that landed.
     b.classList.add('sent');
@@ -352,6 +390,7 @@ export function mountRemote(root, {
     forwarding = e.target.checked;
     if (forwarding) startForwarding(); else stopForwarding();
     renderForward();
+    syncDriving();      // row 2.83: unticked -> their screen stops saying somebody is helping
   }, { signal: listeners.signal });
 
   async function loadGrants() {
@@ -369,6 +408,8 @@ export function mountRemote(root, {
     if (!id) return;
     link = connect({
       personId: id, user, role: 'driver',
+      // Row 2.83: open but not pressing until "Send what I press" is ticked or a button is pressed.
+      idle: !drivingNow(),
       onState: (s) => { state = s; renderStatus(); },
       onPresence: (p) => { presence = p; renderStatus(); },
     });
@@ -382,8 +423,9 @@ export function mountRemote(root, {
       : shared.find((p) => p.id === id);
     if (!hit) return;
     target = { ...hit, mine: hit.mine !== false && hit.id === personId };
-    // Forwarding does not survive a change of subject either.
+    // Forwarding does not survive a change of subject either (nor the hold after a button press, row 2.83).
     if (forwarding) { forwarding = false; stopForwarding(); renderForward(); }
+    clearPadHold();
     renderShared();
     renderGrants();
     renderApprovals().catch((err) => console.error('remote: intercom approvals', err));
@@ -406,6 +448,8 @@ export function mountRemote(root, {
         // everything in this panel keys on `id`. Mapping here rather than at each use is
         // what stops the chip row silently rendering nothing, which is what it did.
         shared = (await profiles.sharedWithMe())
+          // A call-only permission (2026-10-14) is not one to drive with: those screens are for the Call page.
+          .filter((p) => p && p.drive !== false)
           .map((p) => ({ ...p, id: p.person_id, mine: false }));
       } catch { shared = []; }
       renderShared();
@@ -422,7 +466,10 @@ export function mountRemote(root, {
       forwarding = !!on;
       if (forwarding) startForwarding(); else stopForwarding();
       renderForward();
+      syncDriving();
     },
+    /** Row 2.83: whether this page is driving (ticked, or a button pressed within `padHoldMs`). */
+    driving: () => drivingNow(),
     refresh,
     grants: () => grants.map((g) => ({ ...g })),
     shared: () => shared.map((p) => ({ ...p })),
@@ -445,6 +492,7 @@ export function mountRemote(root, {
       followCtl = null;
       dropApprovals({ state: true });
       stopForwarding();
+      clearPadHold();
       listeners.abort();
       try { link?.close(); } catch { /* already gone */ }
       link = null;

@@ -34,10 +34,14 @@ from drive import ROLES, Answerers, CallGroups, Rooms, Tickets, parse_message, s
 from play_relay import PlayRelay  # watching along (row 2.79): a screen's `play` to its following drivers, kept nowhere
 # who may see a screen, ask first, a temporary permission on a call (Mike, 2026-10-12): rules pure in screen_access.py
 from screen_access import SeeAccess, ask_seconds, lend_minutes, name_for, see_decision
+# a call is only a call; bringing others in; how long a lend lasts; "always" for guardians (Mike, 2026-10-13/14)
+from screen_access import (ALWAYS_LABEL, LIST_FIELD as SCREEN_LIST_FIELD, MAX_LEND_MIN, may_bring_others, may_call,
+                           may_intercom, perms_for, with_switches)
 from game_rooms import SWEEP_S as GAME_SWEEP_S, CallAsks, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
+from grants import CALL_ONLY, holds_drive_grant, is_call_only, may_reach, normalize_stored_role   # 2026-10-14
 from identity import (current_user, optional_user, set_device_key_lookup, set_device_key_touch, signed_in_here,
                       via_device_key)
 import call_relay  # group calls (2026-10-09): the relay-for-bigger-calls setting (off; connects to nothing)
@@ -1297,6 +1301,17 @@ _plays = PlayRelay()            # watching along (row 2.79, play_relay.py): who 
 _see = SeeAccess()              # who may see a screen (2026-10-12, screen_access.py): asks, yeses, lends; in memory
 _see_timer = None               # the one timer for the next ask or lend coming due
 _call_asks = CallAsks()         # "play this game together", asked from a call (game_rooms.py): when each socket last asked
+# CONNECTED, NOT PRESSING (row 2.83, Mike at the bench 2026-10-14): a DRIVER socket that said it is not driving right now
+# (`?idle=1`, or `{type: driving, on: false}` - the Remote page with "Send what I press" off). Presence leaves it out of
+# `drivers`, so the screen stops saying "Someone is helping from another screen" when the box is unticked. It can still
+# press: its first verb marks it driving again, and the screen is told BEFORE the press is passed on, so a press never
+# lands on a screen that is not saying so. Ids of sockets; in memory; forgotten when the socket goes.
+_idle_drivers: set = set()
+
+
+def _idle_count(conns) -> int:
+    """Drivers that said they are not driving (and are not already counted as watch-only)."""
+    return sum(1 for c in conns if id(c) in _idle_drivers and not _plays.following(c) and not _plays.held(c))
 
 
 # group calls (2026-10-09; drive.py CallGroups): what a group calls each member - the SERVER's names, never the
@@ -1311,7 +1326,18 @@ def _group_name(user: str, role: str, room) -> str:
         return "Someone"
 
 
-_groups = CallGroups(name_of=_group_name)
+def _may_bring(user: str, room) -> bool:
+    """Bringing others into a call is a permission (Mike, 2026-10-13): may `user` bring somebody new in front of the
+    person whose screen is in `room` (app.py's (owner, person_id))? From that person's own list - the owner and a
+    guardian may by default, anybody else only when ticked (screen_access.py). Fails closed."""
+    try:
+        owner = _person_owner(room[1])
+        return may_bring_others(_person_row(owner, room[1]), user, owner)
+    except Exception:
+        return False
+
+
+_groups = CallGroups(name_of=_group_name, may_bring=_may_bring)
 
 
 async def _send_out(out) -> None:
@@ -1337,6 +1363,29 @@ def _may_drive(user: str, person_id: str) -> bool:
         grants=store.grants_on_person(person_id),
         now_iso=_now_iso(),
     )
+
+
+def _may_reach(user: str, person_id: str) -> bool:
+    """A socket onto this person's screens at all (2026-10-14): the owner, a drive grant, or a call-only grant. What the
+    socket may then DO is decided per message (verbs: drive; a call: "May call"; the intercom: its list)."""
+    return may_reach(person_id, account=user, owner=_person_owner(person_id),
+                     grants=store.grants_on_person(person_id), now_iso=_now_iso())
+
+
+def _may_call(user: str, person_id: str) -> bool:
+    """A call is only a call (2026-10-14): "May call" - a live grant of any kind and not switched off on the person's
+    list, or the owner. Read fresh at each ring, so switching it off stops the next ring."""
+    owner = _person_owner(person_id)
+    reach = _may_reach(user, person_id)
+    return may_call(_person_row(owner, person_id), user, owner, reach=reach)
+
+
+def _intercom_allowed(user: str, person_id: str) -> bool:
+    """The intercom's own permission (row 2.44; 2026-10-13 "its own permission separate from calls";
+    screen_access.may_intercom argues the defaults). Checked by the SERVER on every intercom offer since 2026-10-14 (the
+    screen still checks too)."""
+    owner = _person_owner(person_id)
+    return may_intercom(_person_row(owner, person_id), user, owner, reach=_may_reach(user, person_id))
 
 
 class GrantCreate(BaseModel):
@@ -1389,9 +1438,11 @@ def create_drive_grant(person_id: str, body: GrantCreate, user: str = Depends(cu
     if days < 0 or days > MAX_TTL_DAYS:
         raise HTTPException(status_code=400, detail=f"days must be 0..{MAX_TTL_DAYS}")
     expires = None if days == 0 else _iso_in_days(days)
+    # A call is only a call (2026-10-14): role 'caller' is a grant that lets them reach and call these screens, and
+    # never drive them (grants.CALL_ONLY). Any other role is a drive role, normalized as before.
     return store.add_grant(user, person_id, kind, subject,
                            label=(body.label or "").strip()[:120], expires_at=expires,
-                           role=normalize_role(body.role))
+                           role=normalize_stored_role(body.role))
 
 
 @app.delete("/api/people/{person_id}/drive-grants/{grant_id}")
@@ -1427,6 +1478,8 @@ def shared_with_me(user: str = Depends(current_user)):
         out.append({
             "grant_id": g["id"], "person_id": g["person_id"], "name": person["name"],
             "owner_id": g["owner_id"], "label": g["label"], "expires_at": g["expires_at"],
+            # 2026-10-14: 'caller' = may call these screens, not drive them (a page that drives leaves those out).
+            "role": g.get("role") or normalize_role(None), "drive": not is_call_only(g),
         })
     return {"people": out}
 
@@ -1438,9 +1491,11 @@ def drive_ticket(person_id: str, user: str = Depends(current_user)):
     # NO LONGER `owned_person`. Owning the person is now one of two ways in; the other is
     # holding a live grant. 403 either way, and the SAME 403 for "no such person" - or this
     # endpoint becomes a way to find out which person ids are real.
-    if not _may_drive(user, person_id):
-        raise HTTPException(status_code=403, detail="not allowed to drive this person's screens")
-    return {"ticket": _tickets.issue(user, person_id), "expires_in": 30}
+    # 2026-10-14 (a call is only a call): a call-only grant opens the socket too; what it may do on it is decided per
+    # message (drive_socket below). `drive` says which kind this login holds, so a page can say so before trying.
+    if not _may_reach(user, person_id):
+        raise HTTPException(status_code=403, detail="not allowed to use this person's screens")
+    return {"ticket": _tickets.issue(user, person_id), "expires_in": 30, "drive": _may_drive(user, person_id)}
 
 
 async def _tell(conns, payload):
@@ -1488,6 +1543,18 @@ def _screens_of(room) -> list:
     return list(r.screens) if r else []
 
 
+# A CALL IS ONLY A CALL (Mike, 2026-10-14, note BX). A driver socket opened by a login that may reach these screens but
+# not drive them (a call-only grant): id(socket) -> the account. Its verbs are dropped (drive_socket) unless the screen
+# lent that account "drive" on a call, and presence does not count it as helping - it is calling, not pressing.
+_call_only: dict = {}
+
+
+def _call_only_count(conns, room) -> int:
+    """Call-only sockets that are not already counted out (watch-only, idle) and hold no "drive" lent on a call."""
+    return sum(1 for c in conns if id(c) in _call_only and not _plays.following(c) and not _plays.held(c)
+               and id(c) not in _idle_drivers and not _see.lent(room, _call_only[id(c)], "drive"))
+
+
 async def _announce(room_key: str, person_id: str) -> None:
     """Presence to everybody in the room. `drivers` leaves out sockets that only asked to watch and are not seeing (they
     are not helping); `followers` is who is seeing. The SCREENS also get `watchers` - the names of who is seeing, for
@@ -1496,7 +1563,8 @@ async def _announce(room_key: str, person_id: str) -> None:
     if not room:
         return
     base = {"type": "presence", "screens": len(room.screens),
-            "drivers": len(room.drivers) - _plays.held_count(room.drivers),
+            "drivers": len(room.drivers) - _plays.held_count(room.drivers) - _idle_count(room.drivers)
+            - _call_only_count(room.drivers, (room_key, person_id)),
             "followers": _plays.count(room.drivers)}
     seeing = [d for d in room.drivers if _plays.following(d)]
     await _tell(room.screens, {**base, "watchers": _see.names((room_key, person_id), seeing)})
@@ -1623,21 +1691,94 @@ async def _see_answer(ws, room, msg) -> None:
     _arm_see_timer()
 
 
+def _write_person_row(owner: str, person_id: str, change) -> bool:
+    """Read-change-write the person's own row (where the list lives), retrying a version clash a few times. Used ONLY for
+    "always" given or taken back on a call (2026-10-13): the server writes it because the account it names is the call's
+    own caller as the server recorded it, never one a page sent. Tells that account's pages, like any other write."""
+    from notes import PERSON_ROW_KEY
+    for _ in range(4):
+        cur = store.get_state(owner, person_scope(person_id), PERSON_ROW_KEY)
+        data = dict(cur.get("data") or {})
+        data = change(data)
+        status, _r = store.put_state(owner, person_scope(person_id), PERSON_ROW_KEY, data, cur.get("version", 0))
+        if status == "ok":
+            try:
+                _push.publish(owner, f"/api/people/{person_id}/state/{PERSON_ROW_KEY}")
+            except Exception:
+                pass
+            return True
+    return False
+
+
+def _always(room, caller: str, what: str, on: bool) -> str | None:
+    """'always' given (on) or taken back (off) from a call's screen. Returns None when done, else the reason it was not.
+
+    Only for a caller with the GUARDIAN SET (screen_access.py argues why). See -> their line on the list (see, no ask; or
+    see off). Drive -> a drive grant "as long as I allow it" made when they hold no live one; taken back = their live drive
+    grants on this person removed. Both are visible on the Remote page, where the owner can change them again."""
+    owner, pid = room
+    row = _person_row(owner, pid)
+    if on and not perms_for(row, caller, owner).get("guardian"):
+        return "not-guardian"
+    if what == "see":
+        name = _seer_name(row, caller)
+        ok = _write_person_row(owner, pid, lambda d: {**d, SCREEN_LIST_FIELD: with_switches(
+            d, caller, name, see=bool(on), seeAsk=False) if on else with_switches(d, caller, name, see=False)})
+        return None if ok else "not-saved"
+    now = _now_iso()
+    live = [g for g in store.list_grants(owner, pid)
+            if g.get("subject_id") == caller and not is_call_only(g)
+            and (not g.get("expires_at") or str(g["expires_at"]) > now)]
+    if on:
+        if not live:
+            store.add_grant(owner, pid, "account", caller, label=ALWAYS_LABEL, expires_at=None,
+                            role=normalize_role(None))
+        return None
+    for g in live:
+        store.delete_grant(g["id"], owner_id=owner)
+    return None
+
+
 async def _lend(ws, room, msg) -> None:
-    """A screen lends "see this screen" to the caller of a call IT answered, until the call ends (or the time runs out)."""
-    session = msg["session"]
-    if not msg["on"]:
-        await _end_lent(_see.end_lend(room, session))
-        await ws.send_json({"type": "lend-state", "what": msg["what"], "session": session, "on": False, "reason": "off"})
-        return
+    """A screen lends "see" or "drive" to the caller of a call IT answered (2026-10-12; lengths and "drive", 2026-10-14):
+    until the call ends (the default), a set time that still ends with the call, or "always" for a guardian (a real
+    grant). Every check here is the server's: which screen answered which call, and who placed it."""
+    session, what, length = msg["session"], msg["what"], msg.get("length", "call")
     caller = _answerers.caller(room, "call", session)
-    if _answerers.answerer(room, "call", session) is not ws or not caller:
-        await ws.send_json({"type": "lend-state", "what": msg["what"], "session": session, "on": False,
+    answered_here = _answerers.answerer(room, "call", session) is ws and bool(caller)
+    if not msg["on"]:
+        if length == "always":
+            # Taking back what "always" gave, from the screen that answered this call (the caller is the server's).
+            if not answered_here:
+                await ws.send_json({"type": "lend-state", "what": what, "session": session, "on": False,
+                                    "reason": "not-this-call"})
+                return
+            _always(room, caller, what, False)
+        await _end_lent(_see.end_lend(room, session, what))
+        await ws.send_json({"type": "lend-state", "what": what, "session": session, "on": False, "reason": "off",
+                            "length": length})
+        await _announce(room[0], room[1])
+        return
+    if not answered_here:
+        await ws.send_json({"type": "lend-state", "what": what, "session": session, "on": False,
                             "reason": "not-this-call"})
         return
-    row = _person_row(_person_owner(room[1]), room[1])
-    await ws.send_json(_see.lend(room, session, caller, ws, lend_minutes(row, msg.get("minutes"))))
+    if length == "always":
+        why = _always(room, caller, what, True)
+        if why:
+            await ws.send_json({"type": "lend-state", "what": what, "session": session, "on": False, "reason": why})
+            return
+        # Held for this call too, so it is in force this second whatever the list's next read says.
+        st = _see.lend(room, session, caller, ws, MAX_LEND_MIN, what=what, length="call")
+        await ws.send_json({**st, "length": "always"})
+    else:
+        # A set time; or "until the call ends", whose only clock is the backstop for a call whose end is never heard.
+        minutes = msg["minutes"] if length == "time" else MAX_LEND_MIN
+        await ws.send_json(_see.lend(room, session, caller, ws, minutes, what=what, length=length))
     _arm_see_timer()
+    if what == "drive":
+        await _announce(room[0], room[1])
+        return
     # The caller already waiting on an ask is let in now: the person at the screen just said yes in another way.
     r = _rooms.get(room[0], room[1])
     for d in list(r.drivers if r else []):
@@ -1650,12 +1791,17 @@ async def _lend(ws, room, msg) -> None:
 
 
 @app.websocket("/api/drive/{person_id}")
-async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver", follow: str = ""):
+async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver", follow: str = "",
+                       idle: str = ""):
     if not ID_RE.match(person_id or "") or role not in ROLES:
         await ws.close(code=4400)
         return
     user = _tickets.redeem(t, person_id)
-    if user and not _may_drive(user, person_id):
+    # 2026-10-14 (a call is only a call): a DRIVER socket opens for anybody who may reach these screens - a call-only
+    # grant included - and what it may then do is decided per message below. A SCREEN socket still needs what it always
+    # needed (may drive): a call-only login is never one of the person's screens.
+    can_drive = bool(user) and _may_drive(user, person_id)
+    if user and not (can_drive if role == "screen" else _may_reach(user, person_id)):
         # Revoked between buying the ticket and using it. Thirty seconds is a small window
         # and it is not zero, so it is closed here too.
         await ws.close(code=4403)
@@ -1673,11 +1819,16 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
 
     await ws.accept()
     _rooms.join(room_key, person_id, role, ws)
+    if role == "driver" and not can_drive:
+        _call_only[id(ws)] = user          # 2026-10-14: may call (if "May call" allows), may not press - unless lent
     # `?follow=1` (row 2.79): a driver socket opened only to watch along is decided BEFORE the first presence goes
     # out (let in, asking, or refused - each is watch-only), so the screen never flashes "helping" for somebody who is
     # only watching. Since 2026-10-12 it is decided by "who may see this screen" (screen_access.py).
     if role == "driver" and follow == "1":
         await _follow(ws, user, room_key, person_id, True, announce=False)
+    elif role == "driver" and idle == "1":
+        # row 2.83: connected but not pressing, decided before the first presence, so the screen never flashes "helping".
+        _idle_drivers.add(id(ws))
     if role == "screen":
         # A screen that joins while somebody is waiting for a "yes" is shown the question too.
         for m in _see.pending_for((room_key, person_id)):
@@ -1711,6 +1862,17 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             if msg["type"] == "follow":
                 if role == "driver":
                     await _follow(ws, user, room_key, person_id, msg["on"])
+                continue
+            if msg["type"] == "driving":
+                # row 2.83: a driver saying it is (or is no longer) pressing this screen. Only a change is announced.
+                if role == "driver":
+                    was = id(ws) in _idle_drivers
+                    if msg["on"]:
+                        _idle_drivers.discard(id(ws))
+                    else:
+                        _idle_drivers.add(id(ws))
+                    if was == msg["on"]:
+                        await announce()
                 continue
             # Seeing, waiting for a yes, or refused: watch-only. Nothing it sends goes anywhere (play_relay.py rule 4).
             if _plays.following(ws) or _plays.held(ws):
@@ -1746,6 +1908,10 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             if msg["type"] == "group":
                 # group calls (2026-10-09; drive.py CallGroups): a signal to ONE member of this socket's group,
                 # leaving, or knocking / letting a knock in. Every rule is CallGroups'; nothing here is relayed raw.
+                if msg.get("op") == "knock" and not _may_call(user, person_id):
+                    # a knock is asking to join a call: it needs "May call" like a ring does (2026-10-14)
+                    await ws.send_json({"type": "group", "op": "refused", "reason": "not-allowed"})
+                    continue
                 await _send_out(_groups.handle(ws, user, arb_key, role, msg))
                 continue
             if msg["type"] == "claim":
@@ -1794,6 +1960,25 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                             # a temporary permission given on this call ends with it (2026-10-12)
                             await _end_lent(_see.end_lend(arb_key, sig.get("session")))
                 else:
+                    # A CALL IS ONLY A CALL (2026-10-14), AND EACH KIND OF RING HAS ITS OWN PERMISSION, checked HERE on
+                    # every offer (read fresh, so switching one off stops the next ring): a call needs "May call", the
+                    # intercom needs "May use the intercom", a phone joining as a microphone needs drive (as it always
+                    # did). A refused offer rings nothing; the one who rang is told why on their own socket.
+                    if sig.get("kind") == "offer":
+                        purpose = sig.get("purpose")
+                        if purpose == "intercom":
+                            ok, why = _intercom_allowed(user, person_id), "not-approved"
+                        elif purpose == "phone-mic":
+                            ok, why = can_drive, "not-allowed"
+                        else:
+                            ok, why = _may_call(user, person_id), "not-allowed"
+                        if not ok:
+                            no = {"kind": "bye", "reason": why}
+                            for k in ("purpose", "session"):
+                                if isinstance(sig.get(k), str):
+                                    no[k] = sig[k]
+                            await ws.send_json({"type": "signal", "signal": no})
+                            continue
                     # group calls: an offer tagged with a group makes it or rings another screen into it - and is
                     # NOT relayed when the tag is not this login's to use, or the group is full (nothing rings).
                     relay, gout = _groups.driver_offer(ws, user, arb_key, sig)
@@ -1804,8 +1989,23 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                         _groups.call_ended(arb_key, sig.get("session"))
                         await _end_lent(_see.end_lend(arb_key, sig.get("session")))   # ends with the call
                     _answerers.driver_signal(arb_key, sig, user)   # `user`: who placed it, for a lend (2026-10-12)
-                    await _tell(room.screens, stamp_signal(msg, user))
+                    stamped = stamp_signal(msg, user)
+                    # 2026-10-14: the server's own knowledge, beside `by`, so the screen need not guess: whether the
+                    # caller is the account that owns these screens (drop-in by default for the owner), and - on an
+                    # intercom offer - the name the room should show (the list's, else their display name).
+                    stamped["signal"]["byOwner"] = user == room_key
+                    if sig.get("kind") == "offer" and sig.get("purpose") == "intercom":
+                        stamped["signal"]["byName"] = _seer_name(_person_row(room_key, person_id), user) or ""
+                    await _tell(room.screens, stamped)
             elif role == "driver":
+                if id(ws) in _call_only and not _see.lent(arb_key, user, "drive"):
+                    # 2026-10-14: a call-only login presses nothing - unless the screen lent it "drive" on a call.
+                    continue
+                if id(ws) in _idle_drivers:
+                    # row 2.83: a press from a driver that said it was not driving. It is driving now, and the screen
+                    # is told so first - the notice goes up before the press lands, never after.
+                    _idle_drivers.discard(id(ws))
+                    await announce()
                 await _tell(room.screens, msg)
     except WebSocketDisconnect:
         pass
@@ -1815,6 +2015,8 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         _rooms.leave(room_key, person_id, role, ws)
         _plays.left(ws)                        # watching along: who followed, its rate counter - all forgotten
         _call_asks.left(ws)                    # a game asked from a call: when it last asked - forgotten
+        _idle_drivers.discard(id(ws))          # row 2.83: connected-not-pressing - forgotten with the socket
+        _call_only.pop(id(ws), None)           # 2026-10-14: a call-only socket - forgotten with it
         # who may see (2026-10-12): an ask it was waiting on goes from the screens; a yes it rode on starts its grace.
         await _send_out(_see.withdraw(ws, _screens_of))
         _see.stopped(ws)
@@ -1845,7 +2047,7 @@ def _game_relation(account: str, host_account: str, call_person: str | None) -> 
             return "connected"
     except Exception:
         pass
-    if call_person and _may_drive(account, call_person):
+    if call_person and _may_call(account, call_person):     # a call is only a call (2026-10-14): may CALL, not drive
         return "call"
     return None
 

@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>remote drive — press it there, it happens here — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
@@ -21,6 +23,7 @@ and a verb is sent driver → screen for real. Run the server first:
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
+<div id="kroot" style="position:relative;width:640px;height:400px;margin-top:12px;border:1px solid #ccc"></div>
 
 <script type="module">
 import { connectDrive, attachDriveToBus, DRIVE_VERBS } from '../drive.js';
@@ -31,6 +34,7 @@ import { verbTopic } from '../actions.js';
 import { senderOf } from '../sender.js';
 import { ACTIVATION_TOPIC } from '../input.js';
 import { explainActivation } from '../controls_view.js';
+import { mountKiosk } from '../kiosk.js';     // row 2.83: a real screen, for the notice end to end
 
 const USER = 'drive-test-' + Math.floor(Math.random() * 1e9);
 const out = document.getElementById('results');
@@ -444,6 +448,96 @@ section('the panel');
 }
 
 // =====================================================================
+// Row 2.83 (Mike at the bench, 2026-10-14): "Someone is helping from another screen" stayed after "Send what I press"
+// was unticked. The page now tells the server whether it is pressing; the server leaves an idle page out of `drivers`.
+section('*** connected, not pressing (row 2.83): the page says whether it is driving ***');
+
+{
+  sockets.length = 0;
+  const link = connectDrive({ personId: 'p1', role: 'driver', idle: true, fetchImpl: fakeFetch(), SocketImpl: FakeSocket });
+  await sleep(0);
+  check('an idle driver says so on its address (?idle=1), before the first presence', /[?&]idle=1(&|$)/.test(sockets[0].url), sockets[0].url);
+  check('...and knows it is not driving', link.driving() === false);
+  sockets[0].open();
+  check('opening sends nothing extra', sockets[0].sent.length === 0, JSON.stringify(sockets[0].sent));
+  check('setDriving(true) tells the server', link.setDriving(true) === true
+    && JSON.stringify(sockets[0].sent.at(-1)) === '{"type":"driving","on":true}', JSON.stringify(sockets[0].sent));
+  const n = sockets[0].sent.length;
+  link.setDriving(true);
+  check('saying the same thing again sends nothing', sockets[0].sent.length === n);
+  link.setDriving(false);
+  check('setDriving(false) tells the server', JSON.stringify(sockets[0].sent.at(-1)) === '{"type":"driving","on":false}');
+  link.send('next');
+  check('a press is driving (the server marks it; this end agrees)', link.driving() === true);
+  link.setDriving(false);
+  sockets[0].close();       // a dropped socket: the next one opens the way the page left it
+  link.close();
+  sockets.length = 0;
+  const plain = connectDrive({ personId: 'p1', role: 'driver', fetchImpl: fakeFetch(), SocketImpl: FakeSocket });
+  await sleep(0);
+  check('CONTROL: an ordinary driver has no idle on its address (it counts as helping, as before)',
+    !/idle=/.test(sockets[0].url) && plain.driving() === true, sockets[0].url);
+  plain.close();
+  sockets.length = 0;
+  const scr = connectDrive({ personId: 'p1', role: 'screen', idle: true, fetchImpl: fakeFetch(), SocketImpl: FakeSocket });
+  await sleep(0);
+  check('a SCREEN never says idle, and cannot set driving', !/idle=/.test(sockets[0].url) && scr.setDriving(false) === false);
+  scr.close();
+}
+{
+  // Reconnecting keeps what the page last said.
+  sockets.length = 0;
+  let fire = null;
+  const link = connectDrive({ personId: 'p1', role: 'driver', idle: true, fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+    setTimer: (fn) => { fire = fn; return 1; }, clearTimer: () => {} });
+  await sleep(0);
+  sockets[0].open();
+  link.setDriving(true);
+  sockets[0].close();
+  fire?.(); await sleep(0);
+  check('a reconnect after "driving" opens WITHOUT idle', sockets[1] && !/idle=/.test(sockets[1].url), sockets[1]?.url);
+  sockets[1].open();
+  link.setDriving(false);
+  sockets[1].close();
+  fire?.(); await sleep(0);
+  check('...and after "not driving" opens WITH idle', sockets[2] && /idle=1/.test(sockets[2].url), sockets[2]?.url);
+  link.close();
+}
+{
+  sockets.length = 0;
+  const bus = createBus();
+  const el = document.createElement('div'); host.append(el);
+  const panel = mountRemote(el, {
+    personId: 'p1', personName: 'Robin', bus, padHoldMs: 80,
+    connect: (opts) => connectDrive({ ...opts, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }),
+  });
+  await sleep(0);
+  const s = sockets[0];
+  check('*** the Remote page opens NOT driving (its screen does not say anybody is helping) ***',
+    /idle=1/.test(s.url) && panel.driving() === false, s.url);
+  s.open();
+  s.deliver({ type: 'presence', screens: 1, drivers: 0 });
+  check('its status line says connected, not controlling', /^Connected to 1 screen\. Not controlling it now$/.test(el.querySelector('[data-status]').textContent.trim()),
+    el.querySelector('[data-status]').textContent);
+  el.querySelector('[data-forward]').click();
+  check('*** ticking "Send what I press": driving, told to the server ***', panel.driving() === true
+    && JSON.stringify(s.sent.at(-1)) === '{"type":"driving","on":true}', JSON.stringify(s.sent));
+  check('...and the status line says controlling', /Controlling 1 screen/.test(el.querySelector('[data-status]').textContent));
+  el.querySelector('[data-forward]').click();
+  check('*** UNTICKING it: not driving, told to the server (their notice goes) ***', panel.driving() === false
+    && JSON.stringify(s.sent.at(-1)) === '{"type":"driving","on":false}', JSON.stringify(s.sent));
+  const before = s.sent.length;
+  el.querySelector('[data-verb="select"]').click();
+  check('*** a button press: "driving" goes FIRST, then the press ***',
+    JSON.stringify(s.sent.slice(before)) === '[{"type":"driving","on":true},{"type":"verb","verb":"select"}]', JSON.stringify(s.sent.slice(before)));
+  check('driving while the hold lasts', panel.driving() === true);
+  await sleep(160);
+  check('*** the hold runs out: not driving again, told to the server ***', panel.driving() === false
+    && JSON.stringify(s.sent.at(-1)) === '{"type":"driving","on":false}', JSON.stringify(s.sent));
+  panel.destroy();
+}
+
+// =====================================================================
 section('grants — who may drive, and whose screens I may drive');
 
 {
@@ -564,16 +658,22 @@ section('*** who may open the intercom (row 2.44): the approved list, on the per
     !!block && /Who may open the intercom into Robin/.test(block.textContent)
     && block.previousElementSibling === spBlock && spBlock?.previousElementSibling === el.querySelector('[data-grants]'),
     block?.textContent.slice(0, 120));
-  check('*** "Who may drive" says it also lets them call, and that a call waits unless they may drop in (A3) ***',
+  // 2026-10-13/14: "control this site on your device" in the sentence (the heading keeps "Who may drive"); a call is only
+  // a call - a drive grant may also call unless "May call" is unticked, and a call-only permission is added separately.
+  check('*** "Who may drive": "control this site on your device", they may also call unless unticked, a call waits unless they may drop in ***',
     /Who may drive Robin’s screens/.test(el.querySelector('[data-grants]').textContent)
-    && /also lets them call/.test(el.querySelector('[data-grants]').textContent)
+    && /control this site on your device/.test(el.querySelector('[data-grants]').textContent)
+    && /may also call these screens, unless you untick “May call”/.test(el.querySelector('[data-grants]').textContent)
     && /drop in/.test(el.querySelector('[data-grants]').textContent), el.querySelector('[data-grants]').textContent.slice(0, 300));
-  check('*** the people block says calls now wait to be answered, and how to give someone drop-in ***',
-    /Calls now wait to be answered/.test(spBlock?.textContent || '') && /May drop in/.test(spBlock?.textContent || '')
+  check('*** the people block says calls wait to be answered, and that drop-in is an option for people who can\'t answer ***',
+    /Calls wait to be answered/.test(spBlock?.textContent || '') && /May drop in/.test(spBlock?.textContent || '')
+    && /designed with people who can’t answer their own calls in mind/.test(spBlock?.textContent || '')
     && !!panel.screenPeople(), spBlock?.textContent.slice(0, 200));
   check('it reads and writes the PERSON’s row (their bindings key), not the screen’s',
     made.length === 1 && made[0].pid === 'p1' && made[0].key === 'input-bindings', JSON.stringify(made.map((h) => [h.pid, h.key])));
-  check('*** nobody is on it until somebody ticks them ***', ![...block.querySelectorAll('[data-allow]')].some((c) => c.checked));
+  check('*** nobody but the owner is on it until somebody ticks them (2026-10-14: the owner\'s own devices may announce) ***',
+    [...block.querySelectorAll('[data-allow]')].filter((c) => c.checked).length <= 1
+    && !block.querySelector('[data-account="bea@x.com"] [data-allow]').checked);
   check('the candidates are the owner and the people with a grant', !!block.querySelector('[data-account="owner@x.com"]')
     && !!block.querySelector('[data-account="bea@x.com"]'));
   const bea = block.querySelector('[data-account="bea@x.com"] [data-allow]');
@@ -704,6 +804,52 @@ try {
   driver.close(); screen.close();
 } catch (e) {
   check('live grant section ran', false, String(e && e.message || e));
+}
+
+// =====================================================================
+// Row 2.83, END TO END: a real screen (the kiosk, its own socket) and a real Remote page (its own socket), through the
+// real server. The screen's "Someone is helping from another screen" must follow the Remote page's tick box.
+section('*** LIVE (row 2.83): a real screen and a real Remote page — the notice follows "Send what I press" ***');
+
+{
+  let k = null, panel = null;
+  try {
+    const KUSER = USER + '-k';
+    const profiles = createProfilesClient({ user: KUSER });
+    const person = (await profiles.people())[0];
+    const p = await profiles.create('TEST-helping', person.id);
+    await profiles.addModule(p.id, 'clock');
+    const kroot = document.getElementById('kroot');
+    k = await mountKiosk(kroot, { user: KUSER, profileId: p.id, profiles, bus: createBus() });
+    const settled = async (fn, ms = 8000) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(40); } return !!fn(); };
+    check('(setup) the screen attached its drive socket', await settled(() => !!k.drive() && k.drive().state() === 'connected', 12000));
+    const notice = () => kroot.querySelector('[data-remote]');
+    const el = document.createElement('div'); host.append(el);
+    panel = mountRemote(el, { personId: person.id, personName: 'Robin', user: KUSER, bus: createBus() });
+    check('(setup) the Remote page connected and sees the screen', await settled(() => panel.state() === 'connected' && panel.presence().screens >= 1));
+    await sleep(300);
+    check('*** the Remote page only OPEN: the screen says nobody is helping ***', !notice() || notice().hidden, notice()?.textContent);
+    el.querySelector('[data-forward]').click();
+    check('*** "Send what I press" ticked: the screen says "Someone is helping from another screen" ***',
+      await settled(() => notice() && !notice().hidden && notice().textContent === 'Someone is helping from another screen'), notice()?.textContent);
+    el.querySelector('[data-forward]').click();
+    check('*** UNTICKED: the notice goes (Mike at the bench, 2026-10-14) ***', await settled(() => !notice() || notice().hidden), notice()?.textContent);
+    // A press of a button on the page shows the notice for the hold, then it goes.
+    panel.destroy(); el.remove();
+    const el2 = document.createElement('div'); host.append(el2);
+    panel = mountRemote(el2, { personId: person.id, personName: 'Robin', user: KUSER, bus: createBus(), padHoldMs: 600 });
+    check('(setup) a second Remote page, with a short hold', await settled(() => panel.state() === 'connected' && panel.presence().screens >= 1));
+    el2.querySelector('[data-verb="next"]').click();
+    check('*** a button pressed: the notice is up ***', await settled(() => notice() && !notice().hidden), notice()?.textContent);
+    check('*** the hold runs out: it goes ***', await settled(() => !notice() || notice().hidden, 5000), notice()?.textContent);
+    panel.destroy(); panel = null;
+    check('the page closed: still no notice', !notice() || notice().hidden);
+  } catch (e) {
+    check('live notice section ran', false, String((e && e.stack) || e));
+  } finally {
+    try { panel?.destroy(); } catch { /* gone */ }
+    try { k?.destroy(); } catch { /* gone */ }
+  }
 }
 
 const s = document.getElementById('summary');

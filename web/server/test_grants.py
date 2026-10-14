@@ -226,5 +226,26 @@ check("a grant created without a role stores the default rather than an empty st
 check("a garbage role is normalized on the way IN, so storage never holds one",
       store2.add_grant("me2", p2["id"], "account", "ot4", role="wizard").get("role") == "moderator")
 
+# A CALL IS ONLY A CALL (Mike, 2026-10-14): a call-only grant reaches the screens, never drives them.
+import grants as G  # noqa: E402
+NOW = "2026-10-14T00:00:00+00:00"
+co = store2.add_grant("me2", p2["id"], "account", "callonly", role="caller")
+check("a call-only grant is stored as itself, not normalized to a driver role", co.get("role") == "caller", co)
+rows3 = store2.grants_on_person(p2["id"])
+check("*** a call-only grant does NOT let them drive ***",
+      not G.may_drive(p2["id"], account="callonly", owner="me2", grants=rows3, now_iso=NOW))
+check("*** ...but it lets them reach the screens (a socket to call on) ***",
+      G.may_reach(p2["id"], account="callonly", owner="me2", grants=rows3, now_iso=NOW))
+check("a drive grant reaches too, and the owner always does; a stranger does not",
+      G.may_reach(p2["id"], account="ot3", owner="me2", grants=rows3, now_iso=NOW)
+      and G.may_reach(p2["id"], account="me2", owner="me2", grants=[], now_iso=NOW)
+      and not G.may_reach(p2["id"], account="mal", owner="me2", grants=rows3, now_iso=NOW))
+check("no owner: nobody reaches (no id oracle)", not G.may_reach(p2["id"], account="callonly", owner=None, grants=rows3,
+                                                                 now_iso=NOW))
+check("holds_drive_grant tells the two kinds apart",
+      G.holds_drive_grant("ot3", rows3, NOW) and not G.holds_drive_grant("callonly", rows3, NOW))
+check("a call-only grant's role for the input gate, if 'drive' is ever lent on a call, is the default driver role",
+      role_for(co) == "moderator")
+
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

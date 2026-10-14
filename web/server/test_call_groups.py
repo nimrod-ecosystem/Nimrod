@@ -269,6 +269,51 @@ _, out = N.driver_offer(na, "mike", ROOM_P, offer("s2", "g-2"))
 check("...the screen in the old one hears the caller left; the caller is in the new one only",
       any(m.get("op") == "peer-left" for _, m in out) and N.group_of(na)[0].gid == "g-2", str(out))
 
+section("*** bringing others into a call is a permission (Mike, 2026-10-13) ***")
+allow = set()                      # (user, room) pairs that may bring others in
+asked = []
+
+
+def may_bring(user, room):
+    asked.append((user, room))
+    return (user, room) in allow
+
+
+B = CallGroups(now=Clock(), may_bring=may_bring)
+ba, bp, bq = Conn("ba"), Conn("bp"), Conn("bq")
+relay, out = B.driver_offer(ba, "mike", ROOM_P, offer("s1", "g-b"))
+check("starting a call is not bringing anybody in: no question asked", relay and asked == [], str(asked))
+B.screen_won(bp, "pat", ROOM_P, "s1")
+relay, out = B.driver_offer(Conn("bq-ring"), "mike", ROOM_Q, offer("s2", "g-b"))
+check("*** ringing Gran into a call Robin's screen is on, without the permission: NOT relayed, refused 'no-bring' ***",
+      not relay and any(m.get("reason") == "no-bring" for _, m in out), str(out))
+check("...asked about Robin's person only (Gran's own person already lets Mike call her)",
+      asked == [("mike", ROOM_P)], str(asked))
+check("...and no invitation is left waiting", B.pending() == 1, str(B.pending()))
+allow.add(("mike", ROOM_P))
+relay, out = B.driver_offer(Conn("bq-ring"), "mike", ROOM_Q, offer("s2", "g-b"))
+check("*** with the permission on Robin's list: it rings ***", relay, str(out))
+B.screen_won(bq, "quinn", ROOM_Q, "s2")
+asked.clear()
+relay, out = B.driver_offer(Conn("br-ring"), "mike", ROOM_R, offer("s3", "g-b"))
+check("*** a third screen: EVERY other screen's person is asked; Gran's says no, so nothing rings ***",
+      not relay and set(asked) >= {("mike", ROOM_P), ("mike", ROOM_Q)}, str(asked))
+# a knock: the caller pressing Let in needs it for every OTHER screen than the knocker's own person
+sk = Conn("sam")
+out = B.knock(sk, "sam", ROOM_P, "driver")
+kid = to(out, ba, "knock")[0]["knock"]
+out = B.answer_knock(ba, "g-b", kid, True)
+check("*** Let in, but Mike may not bring Sam in front of Gran: refused 'no-bring' to Mike, the knock stays ***",
+      to(out, ba, "refused") and to(out, ba, "refused")[0]["reason"] == "no-bring" and kid in B.get("g-b").knocks
+      and not to(out, sk), str(out))
+allow.add(("mike", ROOM_Q))
+out = B.answer_knock(ba, "g-b", kid, True)
+check("...with it on both lists: Sam joins", to(out, sk, "joined"), str(out))
+X = CallGroups(now=Clock(), may_bring=lambda u, r: 1 / 0)
+X.driver_offer(Conn("xa"), "mike", ROOM_P, offer("s1", "g-x"))
+relay, out = X.driver_offer(Conn("xq"), "mike", ROOM_Q, offer("s2", "g-x"))
+check("a permission that cannot be read fails CLOSED (nothing rings)", not relay, str(out))
+
 
 # ------------------------------------------------------------------------------------------- the real socket
 section("*** the real socket, end to end: three people, one call ***")
@@ -375,6 +420,19 @@ with drive_ws("pat", robin, "screen") as P, drive_ws("mike", robin, "driver") as
     check("...and nobody else", ok, str(m))
     ok, m = quiet(Q)
     check("...not Gran's screen, in no group yet", ok, str(m))
+
+    # *** BRINGING OTHERS INTO A CALL IS A PERMISSION (Mike, 2026-10-13). *** Mike is neither Robin's owner nor a
+    # guardian, so by default he may not ring somebody new in front of Robin.
+    AQ.send_text(J({"type": "signal", "signal": offer("call-bbb", "call-aaa")}))
+    rf = until(AQ, op_is("refused"))
+    check("*** without 'May bring others into a call' on Robin's list: refused 'no-bring', on the ringer's socket ***",
+          rf and rf["reason"] == "no-bring", str(rf))
+    ok, m = quiet(Q)
+    check("*** ...and Gran's screen never rang ***", ok, str(m))
+    r_ = c.put(f"/api/people/{robin}/state/input-bindings", headers=H_("pat"),
+               json={"data": {"screenPeople": [{"account": "mike", "name": "Mike", "bringOthers": True}]},
+                     "base_version": 0})
+    check("(setup) Robin's owner ticks 'May bring others into a call' for Mike", r_.status_code == 200, r_.text)
 
     # Mike rings Gran's screen into the call.
     AQ.send_text(J({"type": "signal", "signal": offer("call-bbb", "call-aaa")}))

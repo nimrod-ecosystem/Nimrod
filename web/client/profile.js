@@ -213,10 +213,11 @@ export function createProfilesClient({ user, baseURL = '' }) {
     driveGrants: (personId) =>
       fetch(`${baseURL}/api/people/${personId}/drive-grants`, { headers: jsonHeaders() })
         .then(json).then((r) => r.grants),
-    grantDrive: (personId, subjectId, { kind = 'account', label = '', days = null } = {}) =>
+    // `role`: 'caller' is a CALL-ONLY grant (2026-10-14, "a call is only a call"): reach and call, never drive.
+    grantDrive: (personId, subjectId, { kind = 'account', label = '', days = null, role = null } = {}) =>
       fetch(`${baseURL}/api/people/${personId}/drive-grants`, {
         method: 'POST', headers: jsonHeaders(),
-        body: JSON.stringify({ subject_id: subjectId, subject_kind: kind, label, days }),
+        body: JSON.stringify({ subject_id: subjectId, subject_kind: kind, label, days, ...(role ? { role } : {}) }),
       }).then(json),
     revokeDrive: (personId, grantId) =>
       fetch(`${baseURL}/api/people/${personId}/drive-grants/${grantId}`, {

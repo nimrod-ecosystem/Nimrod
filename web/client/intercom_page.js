@@ -5,11 +5,13 @@
 // across the top in the browser's top layer says "Intercom open" and names the room, with Stop beside
 // it - one press ends it at both ends. The room shows its own notice the whole time (intercom.js).
 //
-// WHO CAN USE IT: somebody signed in who may use that person's screens (a drive grant, checked by the
-// server) AND whom the room has added to its intercom list (checked by the ROOM, against the account the
-// server stamps on the offer). A phone that is not on the list is told so in plain words.
+// WHO CAN USE IT (2026-10-14): somebody signed in who may reach that person's screens (the owner, or a grant of
+// any kind) AND who "May use the intercom" - its own permission, separate from calls: the owner's own devices and
+// the guardian set by default, anybody else when ticked. The SERVER refuses anybody else's offer before it reaches
+// the room, and the room checks the server's stamp too. A phone that may not is told so in plain words.
 //
-// It plays the room's sound on this phone - that is the point of an intercom - and never opens a camera.
+// It plays the room's sound on this phone - that is the point of an intercom. It opens this phone's camera only when
+// "Send my video too" is ticked (2026-10-13, video as an option); the room shows it only if its settings allow.
 
 import { connectDrive } from './drive.js';
 import { authHeaders, isAuthError, httpError } from './auth.js';
@@ -20,6 +22,8 @@ const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const PERSON_KEY = 'nimrod:intercom:person';
+// "Send my video too" (2026-10-13, video as an option): remembered on this phone. Off until somebody ticks it.
+const VIDEO_KEY = 'nimrod:intercom:video';
 
 const STATE_TEXT = {
   opening: 'Asking this phone for its microphone…',
@@ -96,8 +100,11 @@ export async function mountIntercomPage(root, {
       <label class="pm-field"><span>Which room</span>
         <select data-person>${people.map((p) => `<option value="${esc(p.id)}"${pick && pick.id === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
       </label>
+      <label class="pm-field"><input type="checkbox" data-video${get(VIDEO_KEY, '0') === '1' ? ' checked' : ''}>
+        <span>Send my video too. The room shows it only if its intercom settings allow video; otherwise it is sound only.</span></label>
       <button type="button" class="pm-btn pm-primary pm-big" data-start>Open the intercom</button>
-      <p class="pm-note">Only people the room has added can open it. Whoever looks after the screen adds people.</p>
+      <p class="pm-note">The intercom has its own permission, separate from calls. Only people the room allows can open
+        it; whoever looks after the screen decides.</p>
       <p class="pm-note" data-call-link>To see each other as well, <a href="./call.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">place a call</a> instead.</p>`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
@@ -112,7 +119,8 @@ export async function mountIntercomPage(root, {
           <button type="button" class="pm-btn pm-stop" data-stop>Stop</button>
         </div>
       </div>
-      <div class="pm-live"><div class="pm-live-word" data-big-word></div><div class="pm-live-who" data-big-who></div></div>
+      <div class="pm-live"><div class="pm-live-word" data-big-word></div><div class="pm-live-who" data-big-who></div>
+        <video data-room-video muted autoplay playsinline hidden style="width:100%;max-width:28em;border-radius:.5em"></video></div>
       <div class="pm-notes">
         <p class="pm-live-note" data-hidden-note hidden>Keep this page open and the phone unlocked, or the intercom stops.</p>
         <p class="pm-live-note" data-wake-note hidden></p>
@@ -148,6 +156,15 @@ export async function mountIntercomPage(root, {
     } catch { return true; }
   }
 
+  // The room's picture, when the room's intercom is set to video both ways (2026-10-13). Muted: playRoom plays the sound.
+  function showRoom(stream) {
+    const v = q('[data-room-video]');
+    if (!v) return;
+    const has = !!stream && (stream.getVideoTracks?.() || []).length > 0;
+    try { v.srcObject = has ? stream : null; if (has) v.play?.()?.catch?.(() => {}); } catch { /* no video here */ }
+    v.hidden = !has;
+  }
+
   function playRoom(stream) {
     if (!stream) { if (player) { try { player.pause?.(); player.srcObject = null; } catch { /* gone */ } } return; }
     if (!player) player = makeAudio();
@@ -170,16 +187,19 @@ export async function mountIntercomPage(root, {
     buildLive();
     paintLive();
     link = connect({
-      personId: target.id, role: 'driver', user: null, base,
+      // `idle`: connected, not pressing - the intercom never makes the screen say somebody is helping (row 2.83).
+      personId: target.id, role: 'driver', user: null, base, idle: true,
       onState: (s) => {
         if (s === 'connected' && sender && ['asking', 'reconnecting', 'open'].includes(sender.state())) sender.reconnect();
         else if (s === 'connected' && sender && sender.state() === 'idle') sender.start();
       },
     });
     let me = null;
+    const withVideo = !!q('[data-video]')?.checked;
+    put(VIDEO_KEY, withVideo ? '1' : '0');
     me = makeSender({
-      link, session: newSession(), from: {},
-      onRemote: (stream) => { if (sender === me) playRoom(stream); },
+      link, session: newSession(), from: {}, video: withVideo,
+      onRemote: (stream) => { if (sender === me) { playRoom(stream); showRoom(stream); } },
       onState: (st, why) => {
         if (!me || sender !== me) return;
         if (st === 'ended' || st === 'no-mic') {

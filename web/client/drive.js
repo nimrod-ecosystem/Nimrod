@@ -56,7 +56,7 @@ export const SIGNAL_KINDS = ['offer', 'answer', 'bye', 'ice'];
 // invitation or an ask for anything else is ignored.
 export const GAME_INVITE_GAMES = ['quiz_mix', 'word_builder'];
 
-const wsURL = (base, personId, ticket, role, follow = false) => {
+const wsURL = (base, personId, ticket, role, follow = false, idle = false) => {
   const origin = base
     || (typeof location !== 'undefined' ? `${location.protocol}//${location.host}` : '');
   const scheme = origin.startsWith('https') ? 'wss' : 'ws';
@@ -64,7 +64,9 @@ const wsURL = (base, personId, ticket, role, follow = false) => {
   return `${scheme}://${host}/api/drive/${encodeURIComponent(personId)}`
     + `?t=${encodeURIComponent(ticket)}&role=${encodeURIComponent(role)}`
     // watching along (row 2.79): counted as a follower from the first presence, so the screen never says "helping".
-    + (follow && role === 'driver' ? '&follow=1' : '');
+    + (follow && role === 'driver' ? '&follow=1' : '')
+    // connected, not pressing (row 2.83): not counted as helping from the first presence either.
+    + (!follow && idle && role === 'driver' ? '&idle=1' : '');
 };
 
 export function connectDrive({
@@ -81,6 +83,11 @@ export function connectDrive({
   // server so on every (re)connect; the server then counts it as a follower, hands it the screen's `play`
   // messages, and drops anything else it sends - a following socket only watches.
   follow = false,
+  // CONNECTED, NOT PRESSING (row 2.83, Mike at the bench 2026-10-14): a DRIVER socket that starts out not driving (the
+  // Remote page with "Send what I press" off). The server leaves it out of `drivers`, so the screen does not say
+  // "Someone is helping" for a page that is only open. `setDriving(on)` changes it; a press marks it driving at the
+  // server by itself (the server announces it before passing the press on). Kept across reconnects.
+  idle = false,
   // Seams, so the test needs no server and no real socket.
   fetchImpl = (typeof fetch !== 'undefined' ? fetch : null),
   SocketImpl = (typeof WebSocket !== 'undefined' ? WebSocket : null),
@@ -100,6 +107,7 @@ export function connectDrive({
   let attempt = 0;
   let timer = null;
   let presence = { screens: 0, drivers: 0 };
+  let driving = !idle;            // row 2.83: what this driver last told the server (sent again on every reconnect)
 
   // SIGNALS ARE SUBSCRIBED TO, NOT HANDED IN ONCE. The kiosk opens this socket at boot and
   // the call transport is built later (and rebuilt, if the panel is torn down and remounted),
@@ -159,7 +167,7 @@ export function connectDrive({
     if (closed) return;
 
     try {
-      sock = new SocketImpl(wsURL(base, personId, ticket, role, follow));
+      sock = new SocketImpl(wsURL(base, personId, ticket, role, follow, !driving));
     } catch {
       setState('offline');
       retry();
@@ -198,8 +206,10 @@ export function connectDrive({
       // Built by the SERVER; handed to their own listeners, never to the bus.
       if (role === 'screen' && (msg.type === 'see-ask' || msg.type === 'see-ask-ended' || msg.type === 'lend-state')) {
         if (msg.type === 'lend-state' && typeof msg.session === 'string') {
-          const waits = lendWaits.get(msg.session) || [];
-          lendWaits.delete(msg.session);
+          // One wait per session AND what (2026-10-14: "see" and "drive" are lent separately on one call).
+          const key = `${msg.session}|${msg.what || 'see'}`;
+          const waits = lendWaits.get(key) || [];
+          lendWaits.delete(key);
           for (const w of waits) { clearTimer(w.timer); w.resolve(msg); }
         }
         for (const fn of [...accessSubs]) { try { fn(msg); } catch (err) { console.error('drive: access', err); } }
@@ -279,7 +289,20 @@ export function connectDrive({
     if (role !== 'driver') return false;
     if (!DRIVE_VERBS.includes(verb)) return false;
     if (!sock || state !== 'connected') return false;
-    try { sock.send(JSON.stringify({ type: 'verb', verb })); return true; } catch { return false; }
+    // A press is driving (row 2.83): the server marks an idle socket driving on its first verb; this end agrees.
+    try { sock.send(JSON.stringify({ type: 'verb', verb })); driving = true; return true; } catch { return false; }
+  }
+
+  // CONNECTED, NOT PRESSING (row 2.83): tell the server whether this driver is pressing the screen right now. Off ->
+  // the screen's "Someone is helping" goes (when nobody else is); on -> it shows. Remembered, so a reconnect opens
+  // the socket the same way. A driver only, and never a following socket (that only watches anyway).
+  function setDriving(on) {
+    if (role !== 'driver' || follow) return false;
+    const want = !!on;
+    if (want === driving) return true;
+    driving = want;
+    if (!sock || state !== 'connected') return true;      // the next socket opens with it (`idle` on the address)
+    try { sock.send(JSON.stringify({ type: 'driving', on: want })); return true; } catch { return false; }
   }
 
   // A signal, from either role. Deliberately NOT `send`: a caller that muddled the two
@@ -324,21 +347,25 @@ export function connectDrive({
 
   // A TEMPORARY PERMISSION DURING A CALL (2026-10-12): a SCREEN lends "see this screen" to the caller of the call it
   // answered (`session`), or takes it back. The server knows who placed the call; the page never names anybody.
-  // Resolves the server's `lend-state` ({ on, until?, minutes?, reason? }), or null with no answer in `timeoutMs`.
-  function lend({ what = 'see', session, on = true, minutes = null, timeoutMs = 5000 } = {}) {
+  // Resolves the server's `lend-state` ({ on, until?, minutes?, length?, reason? }), or null with no answer in `timeoutMs`.
+  // 2026-10-14: `what` is 'see' or 'drive'; `length` is 'call' (until the call ends), 'always' (a guardian only - a real
+  // grant), or a whole number of minutes (a set time that still ends with the call). No `length`: as before.
+  function lend({ what = 'see', session, on = true, minutes = null, length = null, timeoutMs = 5000 } = {}) {
     if (role !== 'screen' || typeof session !== 'string' || !session) return Promise.resolve(null);
     if (!sock || state !== 'connected') return Promise.resolve(null);
+    const key = `${session}|${what}`;
     return new Promise((resolve) => {
       const w = { resolve, timer: null };
       w.timer = setTimer(() => {
-        const list = (lendWaits.get(session) || []).filter((x) => x !== w);
-        if (list.length) lendWaits.set(session, list); else lendWaits.delete(session);
+        const list = (lendWaits.get(key) || []).filter((x) => x !== w);
+        if (list.length) lendWaits.set(key, list); else lendWaits.delete(key);
         resolve(null);
       }, timeoutMs);
-      lendWaits.set(session, [...(lendWaits.get(session) || []), w]);
+      lendWaits.set(key, [...(lendWaits.get(key) || []), w]);
       const m = { type: 'lend', what, session, on: !!on };
-      if (Number.isInteger(minutes) && minutes > 0) m.minutes = minutes;
-      try { sock.send(JSON.stringify(m)); } catch { clearTimer(w.timer); lendWaits.delete(session); resolve(null); }
+      if (length === 'call' || length === 'always' || (Number.isInteger(length) && length > 0)) m.length = length;
+      else if (Number.isInteger(minutes) && minutes > 0) m.minutes = minutes;
+      try { sock.send(JSON.stringify(m)); } catch { clearTimer(w.timer); lendWaits.delete(key); resolve(null); }
     });
   }
 
@@ -367,6 +394,8 @@ export function connectDrive({
 
   return {
     send,
+    setDriving,
+    driving: () => driving,
     sendSignal,
     claim,
     sendGroup,

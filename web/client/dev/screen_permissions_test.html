@@ -33,7 +33,7 @@
 import {
   LIST_FIELD, ASK_CHOICES, ASK_DEFAULT_S, LEND_CHOICES, LEND_DEFAULT_MIN, DROP_IN_CHOICES, DROP_IN_DEFAULT_S,
   normalizePeople, permsFor, dropInFor, askSecondsOf, lendMinutesOf, dropInSecondsOf, withSwitch, peopleCandidates,
-  mountScreenPermissions, CALLS_WAIT_LINE,
+  mountScreenPermissions, CALLS_WAIT_LINE, LENGTH_CHOICES, lendLengthOf, lengthWords,
 } from '../screen_permissions.js';
 import { mountSeeAsk, askWords, MAX_SHOWN } from '../see_ask.js';
 import { mountFollowView } from '../follow_view.js';
@@ -75,9 +75,37 @@ try {
     p = permsFor(row({ account: 'mike', guardian: true, see: false }), 'mike', OWN);
     check('...seeing off for a guardian', !p.see && p.dropIn);
     p = permsFor({}, OWN, OWN);
-    check('the owner sees without asking, and does not drop in, by default', p.see && !p.askFirst && !p.dropIn, JSON.stringify(p));
-    p = permsFor(row({ account: OWN, dropIn: true }), OWN, OWN);
-    check('...and can give themselves drop-in on the list', p.dropIn && p.see);
+    check('*** the owner sees without asking AND drops in by default (2026-10-14: the owner controls their own screens) ***',
+      p.see && !p.askFirst && p.dropIn && p.call && p.bringOthers && p.intercom, JSON.stringify(p));
+    p = permsFor(row({ account: OWN, dropIn: false }), OWN, OWN);
+    check('...and can switch their own drop-in off on the list', !p.dropIn && p.see);
+    check('*** the owner drops in by the SERVER\'s word only (byOwner), never by a name ***',
+      dropInFor({}, OWN, OWN) === true && dropInFor({}, OWN) === false);
+  }
+
+  section('*** a call is only a call; bringing others in; the intercom (2026-10-13/14) - the server\'s table ***');
+  {
+    let p = permsFor({}, 'mike', OWN, { reach: true });
+    check('*** somebody with a grant may CALL by default (an existing drive grant keeps calling), and nothing else ***',
+      p.call && !p.see && !p.dropIn && !p.bringOthers && !p.intercom, JSON.stringify(p));
+    p = permsFor({}, 'mike', OWN);
+    check('...with no grant: may not call', !p.call);
+    p = permsFor(row({ account: 'mike', call: false }), 'mike', OWN, { reach: true });
+    check('*** "May call" unticked: no call, grant or not ***', !p.call);
+    p = permsFor(row({ account: 'mike', guardian: true }), 'mike', OWN);
+    check('*** the guardian set: call, drop in, bring others in, intercom, see without asking ***',
+      p.call && p.dropIn && p.bringOthers && p.intercom && p.see && !p.askFirst, JSON.stringify(p));
+    p = permsFor(row({ account: 'mike', bringOthers: true }), 'mike', OWN, { reach: true });
+    check('bringing others in, ticked on its own', p.bringOthers && !p.dropIn);
+    p = permsFor({ intercomAllowed: [{ account: 'mike' }] }, 'mike', OWN, { reach: true });
+    check('the intercom\'s older list still counts', p.intercom);
+    p = permsFor({ intercomAllowed: [{ account: 'mike' }], [LIST_FIELD]: [{ account: 'mike', intercom: false }] }, 'mike', OWN, { reach: true });
+    check('...an untick on this list wins', !p.intercom);
+    check(`what is lent on a call lasts ${'until the call ends'} by default; set times; "always" never a default`,
+      lendLengthOf({}) === 'call' && LENGTH_CHOICES.join() === 'call,15,30,60,120' && lendLengthOf({ lendLength: 30 }) === 30
+      && lendLengthOf({ lendLength: 'always' }) === 'call' && lendLengthOf({ lendLength: '30' }) === 'call');
+    check('the words for each length', lengthWords('call') === 'until the call ends' && lengthWords(15) === 'for 15 minutes'
+      && lengthWords(60) === 'for 1 hour' && lengthWords('always') === 'always');
     check('a switch that is not a real true/false is never yes',
       !permsFor(row({ account: 'mike', see: 'yes', dropIn: 1 }), 'mike', OWN).see && !dropInFor(row({ account: 'mike', dropIn: 'true' }), 'mike'));
     check('malformed entries and duplicates are ignored', normalizePeople([{ account: 'a' }, { account: 'a', name: 'x' }, 'junk', { name: 'n' }]).length === 1);
@@ -153,7 +181,7 @@ try {
     await sleep(10);
     check('*** the guardian set: see (no asking), drop in - shown ticked ***', box('bea@x', 'see').checked && !box('bea@x', 'seeAsk').checked
       && box('bea@x', 'dropIn').checked && box('bea@x', 'guardian').checked, li('bea@x').innerHTML.slice(0, 200));
-    check('...Bea already may drive, so no second grant is made', driven.length === 0 && /see without asking, drop in, and drive/.test(host.textContent));
+    check('...Bea already may drive, so no second grant is made', driven.length === 0 && /see without asking, and drive/.test(host.textContent));
     box('bea@x', 'dropIn').checked = false;
     box('bea@x', 'dropIn').dispatchEvent(new Event('change', { bubbles: true }));
     await sleep(10);
@@ -171,10 +199,50 @@ try {
     sel.dispatchEvent(new Event('change', { bubbles: true }));
     await sleep(10);
     check('the ask time is the person\'s choice, written as a number', data.seeAskSeconds === 60);
+    const ls = host.querySelector('[data-choice="lendLength"]');
+    check('*** "what the screen lends on a call lasts": until the call ends by default ***', ls && ls.value === 'call', ls?.value);
+    ls.value = '30';
+    ls.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('...a set time is written as a number', data.lendLength === 30);
+    check('*** "May call": ticked for Bea (her drive grant keeps calling), and grayed out for a lapsed grant ***',
+      box('bea@x', 'call').checked && box('ot@x', 'call').disabled === true);
+    box('bea@x', 'call').checked = false;
+    box('bea@x', 'call').dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(10);
+    check('*** unticking "May call" writes call: false for her - a call is only a call ***',
+      normalizePeople(data[LIST_FIELD]).find((x) => x.account === 'bea@x')?.call === false && /can no longer call/.test(host.textContent));
+    check('*** your own line: drop in, call and bring others in ticked by default ***',
+      box(OWN, 'dropIn').checked && box(OWN, 'call').checked && box(OWN, 'bringOthers').checked);
+    check('Bea has the guardian set, so "May bring others into a call" is ticked for her', box('bea@x', 'bringOthers').checked);
     check('site copy never says "her screen" or names anybody', !/\bher screen|taylor|cici/i.test(host.textContent));
     ed.destroy();
     host.remove();
     check('candidates from grants: an expired one is marked so', peopleCandidates({ grants, now: '2026-10-12' }).find((c) => c.account === 'ot@x')?.current === false);
+  }
+
+  section('*** "Add someone who may call, but not control these screens" (a call-only permission, 2026-10-14) ***');
+  {
+    let data = {};
+    const state = { get: () => data, set: (patch) => { data = { ...data, ...patch }; return Promise.resolve(); } };
+    let grants = [];
+    const asked = [];
+    const host = document.createElement('div');
+    document.body.append(host);
+    const ed = mountScreenPermissions(host, { personName: 'Robin', state, loadGrants: async () => grants, whoami: async () => OWN,
+      grantCall: async (a, o) => { asked.push([a, o.days]); grants = [...grants, { id: 'c1', subject_id: a, subject_kind: 'account', label: '', expires_at: null, role: 'caller' }]; } });
+    await ed.ready;
+    check('the form is there', !!host.querySelector('[data-call-form]'));
+    host.querySelector('[data-call-subject]').value = 'cal@x';
+    host.querySelector('[data-call-form]').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await sleep(20);
+    const li = host.querySelector('[data-account="cal@x"]');
+    check('*** it asks for a call-only grant, "as long as I allow it" by default ***', JSON.stringify(asked) === '[["cal@x",0]]', JSON.stringify(asked));
+    check('*** they appear: may call (ticked), and nothing else ***', li && /may call these screens, not control them/.test(li.textContent)
+      && li.querySelector('[data-switch="call"]').checked && !li.querySelector('[data-switch="see"]').checked
+      && !li.querySelector('[data-switch="dropIn"]').checked && !li.querySelector('[data-switch="bringOthers"]').checked, li?.textContent);
+    check('...and the page says they cannot control or see', /can’t control or see them/.test(host.textContent));
+    ed.destroy(); host.remove();
   }
 
   // =====================================================================================
@@ -286,6 +354,14 @@ try {
     const res = await lent;
     check('...and resolves with the server\'s answer', res && res.on === true && res.until === 99, JSON.stringify(res));
     check('a lend nobody answers resolves null (never hangs)', (await sc.lend({ session: 'c2', timeoutMs: 20 })) === null);
+    const ld = sc.lend({ what: 'drive', session: 'c3', on: true, length: 'call' });
+    check('*** 2026-10-14: "drive" is lent on its own, with a length ***',
+      JSON.stringify(sockets[0].sent.at(-1)) === '{"type":"lend","what":"drive","session":"c3","on":true,"length":"call"}');
+    const ls2 = sc.lend({ what: 'see', session: 'c3', on: true, length: 'always' });
+    sockets[0].deliver({ type: 'lend-state', what: 'see', session: 'c3', on: true, length: 'always' });
+    sockets[0].deliver({ type: 'lend-state', what: 'drive', session: 'c3', on: true, length: 'call' });
+    const [rd, rs] = await Promise.all([ld, ls2]);
+    check('...each answer goes to its own question (see and drive on one call)', rd?.what === 'drive' && rs?.what === 'see' && rs?.length === 'always');
     sc.close();
     const dr = connectDrive({ personId: 'p1', role: 'driver', follow: true, fetchImpl, SocketImpl: FakeSocket });
     const states = [];

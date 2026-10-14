@@ -415,9 +415,10 @@ export const CATALOG = [
     why: 'The caller fills the screen and the small picture-in-picture keeps showing this '
        + 'room, which is the layout people already know from every video call. An audio call '
        + 'shows their name instead of a black rectangle. A call waits for somebody to press Answer '
-       + 'or Decline. It answers by itself only for people you let drop in, on the Remote page, '
-       + 'and then it says who is calling and counts down first - a screen that answers on its own '
-       + 'is a microphone in the room.',
+       + 'or Decline. Answering by itself is an option, designed with people who can’t answer '
+       + 'their own calls in mind: it is only for people you let drop in, on the Remote page, and '
+       + 'then it says who is calling and counts down first - a screen that answers on its own is '
+       + 'a microphone in the room.',
   },
   {
     type: 'pressgame',

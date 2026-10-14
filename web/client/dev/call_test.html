@@ -87,7 +87,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
                           // 2026-10-12 (Mike): a call answers by itself ONLY for a caller who may drop in. Most of
                           // this suite tests the countdown and the answer path, so its rig's caller may drop in;
                           // the section "calls wait to be answered" turns this off (and leaves it out entirely).
-                          dropIn = true, lendScreen = null } = {}) {
+                          dropIn = true, lendScreen = null, personRow = null } = {}) {
   const clock = fakeClock();
   const host = document.createElement('div');
   document.getElementById('host').append(host);
@@ -125,6 +125,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
     ...(makePersonState ? { makePersonState } : {}),
     ...(dropIn === null ? {} : { mayDropIn: typeof dropIn === 'function' ? dropIn : () => dropIn }),
     ...(lendScreen ? { lendScreen } : {}),
+    ...(personRow ? { personRow: () => personRow } : {}),
     state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
@@ -390,6 +391,46 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       check('Stop takes it back', calls.length === 2 && calls[1].on === false && !r.impl.__probe().lent);
       r.impl.__end('hangup');
       check('the bar goes with the call', bar().hidden === true);
+    }
+    {
+      // 2026-10-13/14: "see" and "control" lent separately (a call grants neither), each for a length; "always" only
+      // offered for a caller with the guardian set.
+      const calls = [];
+      const lendScreen = async (o) => { calls.push(o); return o.on ? { on: true, until: 1, length: o.length === 'always' ? 'always' : (Number.isInteger(o.length) ? 'time' : 'call'), minutes: Number.isInteger(o.length) ? o.length : 240 } : { on: false }; };
+      const r = rig({ declineSeconds: 0 }, { lendScreen });
+      await r.impl.__incoming({ name: 'Mike', by: 'mike@x', session: 'c9' });
+      await sleep(20);
+      const bar = () => r.host.querySelector('[data-lend]');
+      check('*** a live call offers "control" as its own thing, beside "see" ***',
+        /Let Mike control this screen until the call ends/.test(bar().textContent) && !!r.host.querySelector('[data-lend-start="drive"]'), bar().textContent);
+      const sel = r.host.querySelector('[data-lend-length]');
+      check('*** the lengths offered: until the call ends (first), set times - and NO "always" for a caller without the guardian set ***',
+        sel && sel.value === 'call' && [...sel.options].map((o) => o.value).join() === 'call,15,30,60,120', [...(sel?.options || [])].map((o) => o.value).join());
+      sel.value = '15'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      await sleep(5);
+      r.host.querySelector('[data-lend-start="drive"]').click();
+      await sleep(20);
+      check('*** pressing it lends "drive" for 15 minutes on THIS call ***', calls.at(-1)?.what === 'drive' && calls.at(-1)?.length === 15
+        && calls.at(-1)?.session === 'c9' && r.impl.__probe().lentDrive && !r.impl.__probe().lent, JSON.stringify(calls));
+      check('...and says so, with Stop', /Mike can control this screen for 15 minutes/.test(bar().textContent) && !!r.host.querySelector('[data-lend-stop="drive"]'), bar().textContent);
+      r.impl.__end('hangup');
+    }
+    {
+      const calls = [];
+      const lendScreen = async (o) => { calls.push(o); return o.on ? { on: true, length: o.length === 'always' ? 'always' : 'call' } : { on: false }; };
+      const r = rig({ declineSeconds: 0 }, { lendScreen, personRow: { screenPeople: [{ account: 'gran@x', name: 'Gran', guardian: true }] } });
+      await r.impl.__incoming({ name: 'Gran', by: 'gran@x', session: 'g1' });
+      await sleep(20);
+      const sel = r.host.querySelector('[data-lend-length]');
+      check('*** a caller WITH the guardian set is offered "always" too ***', [...(sel?.options || [])].some((o) => o.value === 'always'));
+      await r.impl.__lend(true, 'see', 'always');
+      check('*** "always": the screen asks the server for it, and says so, with Take back ***',
+        calls.at(-1)?.length === 'always' && /Gran can see this screen always/.test(r.host.querySelector('[data-lend]').textContent)
+        && r.host.querySelector('[data-lend-stop="see"]')?.textContent === 'Take back', r.host.querySelector('[data-lend]').textContent);
+      r.host.querySelector('[data-lend-stop="see"]').click();
+      await sleep(20);
+      check('Take back asks the server to take back the "always" itself', calls.at(-1)?.on === false && calls.at(-1)?.length === 'always', JSON.stringify(calls.at(-1)));
+      r.impl.__end('hangup');
     }
     {
       const r = rig({ declineSeconds: 0 }, { lendScreen: async () => null });

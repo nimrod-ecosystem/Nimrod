@@ -768,10 +768,13 @@ export function createCallTransport({
       // name for the card); `by` is the account the server stamped on the signal (drive.py stamp_signal), which a page
       // cannot forge - so "may this caller drop in?" is decided on `by`, never on a name. The call's `session` rides
       // along too, for a permission lent on THIS call (screen_access.py). Nothing here is shown on the screen.
+      // `byOwner` (2026-10-14): the server's own word that the caller is the account owning these screens (the owner
+      // drops in by default) - written AFTER the page's `from`, so a page cannot claim it.
       const from = sig.from && typeof sig.from === 'object' ? { ...sig.from } : (sig.from ? sig.from : null);
+      const byOwner = sig.byOwner === true;
       const who = from && typeof from === 'object'
-        ? { ...from, by: typeof sig.by === 'string' ? sig.by : null, ...(session ? { session } : {}) }
-        : (typeof sig.by === 'string' ? { by: sig.by, ...(session ? { session } : {}) } : from);
+        ? { ...from, by: typeof sig.by === 'string' ? sig.by : null, byOwner, ...(session ? { session } : {}) }
+        : (typeof sig.by === 'string' ? { by: sig.by, byOwner, ...(session ? { session } : {}) } : from);
       try { incomingCb?.(who); } catch (e) { log('onIncoming threw', e); }
       emit(ringCbs, { type: 'ring', from: who, session, panel });
       return;

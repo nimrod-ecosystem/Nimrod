@@ -37,6 +37,9 @@ export const SUITES = [
   // call_loadouts mounts a real kiosk and real sockets (needs the server). call_mix's last section needs the page's
   // audio to run: in headless Chrome it is reported NOT RUN unless the browser allows sound without a touch.
   'call_mix', 'call_loadouts',
+  // the AAC board over a call, end to end (2026-10-13): a real kiosk's Board panel and the real call page, a real WebRTC
+  // call through the real server (needs the server), the word shown AND heard (read out, or its recording mixed in).
+  'board_call_live',
   // group calls (2026-10-09): several people in one call, each device connected straight to each other (call_group.js);
   // a fake server routes group messages the way drive.py CallGroups does. Fakes throughout.
   'call_group',
