@@ -243,7 +243,7 @@ import './modules/photos.js';
 import './modules/youtube.js';
 import './modules/personal.js';
 import './modules/educational.js';
-import './modules/director.js';
+import { PANEL_TITLE_TOPIC } from './modules/director.js';   // (registers 'director'; row 2.87: its live name)
 import './modules/sprint.js';
 import './modules/quests.js';
 import './modules/progress.js';
@@ -1997,7 +1997,15 @@ export async function mountKiosk(root, {
     const offDrive = watchPanelDrive(host, state);
     instance.init();
     state.startPolling(); events.startPolling();
-    return { instance, state, events, type: mod.type, id: mod.id, title: instance.manifest.title, el: host, offSound, offDrive,
+    // `title` is LIVE (row 2.87, 2026-10-14): a module that says what it is showing (`titleNow()` - a Lineup, "YouTube
+    // (Lineup)") names the panel by it, everywhere the screen names a panel; any other keeps its registered title.
+    return { instance, state, events, type: mod.type, id: mod.id,
+      get title() {
+        let t = '';
+        try { t = (instance.impl || instance)?.titleNow?.() || ''; } catch { t = ''; }
+        return typeof t === 'string' && t.trim() ? t : instance.manifest.title;
+      },
+      el: host, offSound, offDrive,
       ...(mod.stateKey ? { stateKey: mod.stateKey } : {}) };
   }
   function destroyRec(rec) {
@@ -5373,6 +5381,13 @@ export async function mountKiosk(root, {
       dodgeCorner.observe(kioskEl, { attributes: true, subtree: true, attributeFilter: ['data-clock-corner'] });
     }
   } catch { dodgeCorner = null; }
+  // A panel's name changed (row 2.87: a Lineup moved to its next turn, "YouTube (Lineup)"): the bar and an open menu
+  // name it again. The name itself is read live from the panel (`rec.title`).
+  const offPanelTitle = bus.subscribe(PANEL_TITLE_TOPIC, () => {
+    if (torn) return;
+    try { renderMods(); } catch { /* not drawn yet */ }
+    try { if (menu?.isOpen?.()) menu.refresh(); } catch { /* not up */ }
+  });
   const onPointerOverForCorners = (e) => {
     const t = e.target;
     if (t instanceof Element && t.closest('.k-cell, .k-pcell, .k-stage')) liftCorners();
@@ -8701,6 +8716,7 @@ export async function mountKiosk(root, {
       window.removeEventListener('keydown', onEscDemote, true);
       try { cornerWatch.stop(); } catch { /* already gone */ }   // corner on hover (2026-10-09)
     try { dodgeWatch?.disconnect(); dodgeCorner?.disconnect(); } catch { /* already gone */ }   // the clock's corner (2026-10-14)
+    try { offPanelTitle?.(); } catch { /* already gone */ }   // a Lineup's live name (row 2.87)
       root.removeEventListener('pointerdown', onPressKind, true);
       root.removeEventListener('pointerover', onPointerOverForCorners, true);
       controlsEl.removeEventListener('transitionend', onBarFaded);

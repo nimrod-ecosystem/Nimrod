@@ -23,7 +23,7 @@
 // (per-key handle factories). Child storage lives under `<instanceId>.<provider>`,
 // its own row — never colliding with a sibling instance.
 
-import { registerModule, mountModule } from '../module.js';
+import { registerModule, mountModule, getManifest } from '../module.js';
 import { createMachine } from '../statemachine.js';
 import { createWatchdog } from '../watchdog.js';
 import { HELD_BEGIN, HELD_END } from '../held.js';
@@ -40,6 +40,23 @@ export const PROVIDERS = [
   { id: 'singalong',   label: 'Sing-along',     real: false },
 ];
 const ALL = PROVIDERS.map((p) => p.id);
+
+// *** THE BAR NAMES WHAT IS ON SCREEN (row 2.87, Mike 2026-10-14 via chat CA item 3: the bar said "Lineup" on his
+// YouTube dashboard). *** A Lineup says what it is showing: `titleNow()` is "<what is showing> (Lineup)" - "YouTube
+// (Lineup)" - and every change is published on PANEL_TITLE_TOPIC so the screen redraws its bar and menu (kiosk.js
+// reads `titleNow` for the panel's name wherever it names a panel). FOR the child's name first: it is what the person
+// is looking at, and Mike's words are "the bar names what is on screen". FOR keeping "(Lineup)": Next on this panel
+// skips the whole turn, not one video, and the name is the only place that says so. AGAINST: longer chips. A guess
+// for Mike to change. The child's own registered title ("YouTube") when it is a real module, else its label here.
+export const PANEL_TITLE_TOPIC = 'kiosk/panel-title';
+export const LINEUP_TITLE = 'Lineup';
+export function lineupTitle(providerId) {
+  if (!providerId) return LINEUP_TITLE;
+  const p = PROVIDERS.find((x) => x.id === providerId);
+  let t = '';
+  try { t = (p && p.real && getManifest(providerId)?.title) || ''; } catch { t = ''; }
+  return `${t || (p ? p.label : providerId)} (${LINEUP_TITLE})`;
+}
 
 // The default machine config: a weighted daypart-gated rotation. Morning &
 // sleepytime enable YouTube ONLY (they run their existing playlists — the person may
@@ -104,6 +121,8 @@ registerModule(
       current = id;
       for (const pid of Object.keys(slots)) slots[pid].hidden = (pid !== id);
       setLabel(id);
+      // The screen's bar names what is showing now (row 2.87): tell it there is a new name to read.
+      try { rootBus.publish(PANEL_TITLE_TOPIC, { id: instanceId, title: lineupTitle(id) }); } catch { /* no screen listening */ }
       // *** ARM BEFORE ACTIVATING, AND THE ORDER IS LOAD-BEARING (fixed 2026-08-30). ***
       // `activate()` can hand straight back: an unconfigured provider publishes
       // `segment/done {reason:'empty'}` SYNCHRONOUSLY, which is deliberate — see
@@ -292,6 +311,8 @@ registerModule(
       // asserting on from outside, and "is the wallpaper up" is the whole behavior here.
       __probe: () => ({ current, heldBy, wallpaperUp: !mount.querySelector('[data-wall]')?.hidden,
                         wallpaperMounted: !!wallpaper }),
+      // What the screen calls this panel right now (row 2.87): "YouTube (Lineup)", or "Lineup" before the first turn.
+      titleNow: () => lineupTitle(current),
       init() {
         mount.innerHTML = `
           <div class="director">

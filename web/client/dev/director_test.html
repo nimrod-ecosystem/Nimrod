@@ -35,7 +35,7 @@ import { mulberry32 } from '../rng.js';
 import '../modules/youtube.js';      // registers 'youtube'
 import '../modules/personal.js';     // registers 'personal' (a real provider now)
 import '../modules/educational.js';  // registers 'educational' (a real provider now)
-import '../modules/director.js';     // registers 'director'
+import { PANEL_TITLE_TOPIC, lineupTitle, LINEUP_TITLE } from '../modules/director.js';     // registers 'director'
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'director-test-user';
@@ -115,6 +115,14 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     const { instance, bus } = await mountDirector({ host, hour: 12, seed: 2026, timers: T, stub });
 
     check('starts on the youtube provider (initial state)', curProv(host) === 'youtube', `current=${curProv(host)}`);
+    // ROW 2.87 (2026-10-14): the screen's bar names what is on screen, not just "Lineup".
+    const named = [];
+    const offNamed = bus.subscribe(PANEL_TITLE_TOPIC, (m) => named.push(m));
+    const impl = instance.impl || instance;
+    check('*** the Lineup says what it is showing: "YouTube (Lineup)" ***', impl.titleNow?.() === lineupTitle('youtube')
+      && /^YouTube \(Lineup\)$/i.test(impl.titleNow()), String(impl.titleNow?.()));
+    check('an unbuilt turn uses its own label; before any turn, plain "Lineup"',
+      lineupTitle('wordgame') === 'Word game (Lineup)' && lineupTitle(null) === LINEUP_TITLE);
     check('youtube child mounted & autostarted a video', stub.current() !== null, `loaded=${stub.loaded.length}`);
     check('only one provider slot is visible at a time', host.querySelectorAll('.d-slot:not([hidden])').length === 1);
     // BQ item 6: a not-yet-built one's card said "segment placeholder — real module lands in a later slice".
@@ -129,6 +137,10 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     await sleep(40);
     const afterEnded = curProv(host);
     check('segment/done(ended) advances the director off youtube', afterEnded && afterEnded !== 'youtube', `now=${afterEnded}`);
+    check('*** ...and tells the screen its name changed (PANEL_TITLE_TOPIC), with the new name ***',
+      named.length >= 1 && named[named.length - 1].title === lineupTitle(afterEnded) && impl.titleNow() === lineupTitle(afterEnded),
+      JSON.stringify(named));
+    offNamed();
     check('the picked provider rendered its segment (placeholder or real)', !!host.querySelector('.d-slot:not([hidden])')?.firstChild);
     // >= 1, not === 1: since the stall-watchdog work the director ALSO arms a slow
     // segment backstop alongside whatever the segment itself armed, so the exact count is
