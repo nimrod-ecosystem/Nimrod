@@ -227,7 +227,9 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
             ? `<button type="button" class="em-btn" data-em-step="-1" data-em-key="${esc(r.key)}" data-em-focus="${esc(r.key)}:-1" aria-label="${esc(`${r.label}: back one`)}">‹</button>`
               + `<button type="button" class="em-btn" data-em-step="1" data-em-key="${esc(r.key)}" data-em-focus="${esc(r.key)}:1" aria-label="${esc(`${r.label}: next`)}">›</button>`
             : r.text
-              ? `<input class="em-text" data-em-text="${esc(r.key)}" data-em-focus="${esc(r.key)}:t" aria-label="${esc(r.label)}" value="${esc(r.field.secret ? '' : r.value)}"${r.field.maxLength ? ` maxlength="${r.field.maxLength}"` : ''}>`
+              // A secret (a key, a pass phrase; row 2.83) is a HIDDEN box with a Show button, opened empty as before.
+              ? `<input class="em-text"${r.field.secret ? ' type="password" autocomplete="new-password"' : ''} data-em-text="${esc(r.key)}" data-em-focus="${esc(r.key)}:t" aria-label="${esc(r.label)}" value="${esc(r.field.secret ? '' : r.value)}"${r.field.maxLength ? ` maxlength="${r.field.maxLength}"` : ''}>`
+                + (r.field.secret ? `<button type="button" class="em-btn" data-em-show="${esc(r.key)}" data-em-focus="${esc(r.key)}:s" aria-pressed="false">Show</button>` : '')
                 + `<button type="button" class="em-btn" data-em-keep="${esc(r.key)}" data-em-focus="${esc(r.key)}:k" aria-label="${esc(`Keep ${r.label}`)}">✓</button>`
               : r.picture
                 ? `<button type="button" class="em-btn" data-em-pick="${esc(r.key)}" data-em-focus="${esc(r.key)}:p">Choose…</button>`
@@ -251,6 +253,16 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
       return;
     }
     if (ds.emKeep) { keepText(ds.emKeep); return; }
+    if (ds.emShow) {
+      // Show / Hide what is typed in a secret's box (row 2.83). Only the box's type changes: nothing is redrawn or saved.
+      const box = host.querySelector(`[data-em-text="${CSS.escape ? CSS.escape(ds.emShow) : ds.emShow}"]`);
+      if (!box) return;
+      const show = box.type === 'password';
+      box.type = show ? 'text' : 'password';
+      b.textContent = show ? 'Hide' : 'Show';
+      b.setAttribute('aria-pressed', show ? 'true' : 'false');
+      return;
+    }
     if (ds.emPick) {
       const f = rowField(ds.emPick);
       const item = f ? fieldItems([f], { values: () => sel.values(), level: 'advanced', onStep: (k, v) => { sel.set(k, v); draw(); } })[0] : null;

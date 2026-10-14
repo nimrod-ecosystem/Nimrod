@@ -670,6 +670,7 @@ export function mountSettings(root, {
     if (!visibleTab(id)) return null;
     tab = id;
     if (editing) editing = null;
+    revealNext = true;              // another tab: its cursor row in view (row 2.83)
     render({ keepCursor: false });
     const n = items.findIndex((it) => it.id === focus && it.kind === 'item' && !it.disabled);
     if (n >= 0) nav.setIndex(n);
@@ -729,14 +730,46 @@ export function mountSettings(root, {
 
   const editInput = () => listEl.querySelector('[data-edit-input]');
 
+  // ---------------------------------------------------------------------------------
+  // A REPAINT MUST NOT MOVE THE LIST UNDER SOMEBODY (row 2.83, Mike at the bench 2026-10-14: "the settings menu jumps
+  // back to the top on the Pi"). The kiosk repaints this menu while it is open - the voice status row when an engine
+  // connects or drops (a desktop second pass reconnects every 30 s), a person's name arriving, presence, a press - and
+  // every paint used to scroll the CURSOR row into view. Somebody who had scrolled the list with a mouse or a finger,
+  // with the cursor still on a row near the top, was thrown back up to it each time. So a paint now keeps the list's
+  // scroll and whichever row had keyboard focus, and brings the cursor into view only when the CURSOR MOVED (another
+  // row, another tab, the menu opening, `focusRow`). A switch user still never loses the cursor: every move of theirs
+  // moves it, and that paint scrolls to it.
+  let paintedId = null;           // the cursor's row at the last paint
+  let revealNext = true;          // the next paint brings the cursor into view whatever (open, a tab, focusRow)
+  const cssq = (v) => String(v).replace(/["\\]/g, '\\$&');
+  /** A selector that finds the same control again after the list is rebuilt, or null. */
+  function focusKeyOf(el) {
+    if (!el || el === doc?.body || !listEl.contains(el)) return null;
+    const d = el.dataset || {};
+    if (d.editInput !== undefined) return null;                      // the box: carried across by its own code below
+    if (d.swatch !== undefined) return `[data-swatch="${cssq(d.swatch)}"][data-for="${cssq(d.for)}"]`;
+    if (d.fine !== undefined) return `[data-fine][data-for="${cssq(d.for)}"]`;
+    if (d.tab !== undefined) return `[data-tab="${cssq(d.tab)}"]`;
+    for (const k of ['editShow', 'editSave', 'editClear', 'editCancel']) if (d[k] !== undefined) return `[data-${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}]`;
+    if (d.id !== undefined) return `.st-item[data-id="${cssq(d.id)}"]`;
+    return null;
+  }
+
   function paint() {
     const at = nav.index();
+    const curId = items[at]?.id ?? null;
+    const moved = revealNext || curId !== paintedId;
+    revealNext = false;
+    paintedId = curId;
     // A REPAINT MUST NOT EAT TYPING. The kiosk refreshes this menu when a person's name arrives
     // and after every activation; rebuilding the list replaces the box, so the draft, the focus
     // and the caret are carried across by hand.
     const box = editInput();
     const hadFocus = !!box && doc?.activeElement === box;
     const caret = hadFocus ? [box.selectionStart, box.selectionEnd] : null;
+    // ...and must not move the list (row 2.83, above): where it is scrolled, and the control with focus.
+    const scrolledTo = panel ? panel.scrollTop : 0;
+    const focusKey = focusKeyOf(doc?.activeElement);
     listEl.innerHTML = items.map((it, n) => {
       if (it.kind === 'heading') return `<div class="st-head">${esc(it.label)}</div>`;
       const on = n === at;
@@ -770,29 +803,41 @@ export function mountSettings(root, {
           data-tab="${esc(d.id)}" aria-selected="${d.id === tab ? 'true' : 'false'}">${esc(d.label)}</button>`).join('')
       }</div>` : '';
       if (it.tabStrip) return row + strip;
+      // A SECRET'S BOX (row 2.83: a pass phrase showed in plain text) is a hidden one - a password box - with a Show
+      // button that shows what is being typed (`editing.shown`, kept across repaints), and Clear when one is set.
+      const secret = !!(it.edit && it.edit.secret);
       const editor = isEditing ? `<div class="st-edit" data-edit-for="${n}">
-          <input class="st-input" type="text" data-edit-input value="${esc(editing.draft)}"
+          <input class="st-input" type="${secret && !editing.shown ? 'password' : 'text'}" data-edit-input value="${esc(editing.draft)}"
             placeholder="${esc(it.edit.placeholder || '')}" aria-label="${esc(it.label)}"
-            ${it.edit.maxLength ? `maxlength="${Number(it.edit.maxLength)}"` : ''} autocomplete="off" spellcheck="false">
+            ${it.edit.maxLength ? `maxlength="${Number(it.edit.maxLength)}"` : ''} autocomplete="${secret ? 'new-password' : 'off'}" spellcheck="false">
+          ${secret ? `<button type="button" class="st-mini" data-edit-show aria-pressed="${editing.shown ? 'true' : 'false'}">${editing.shown ? 'Hide' : 'Show'}</button>` : ''}
           <button type="button" class="st-mini" data-edit-save>Save</button>
+          ${secret && typeof it.clear === 'function' && it.value ? '<button type="button" class="st-mini" data-edit-clear>Clear</button>' : ''}
           <button type="button" class="st-mini" data-edit-cancel>Cancel</button>
         </div>` : '';
       return row + swatches + editor;
     }).join('');
+    if (panel && panel.scrollTop !== scrolledTo) panel.scrollTop = scrolledTo;
+    if (focusKey) { try { listEl.querySelector(focusKey)?.focus?.({ preventScroll: true }); } catch { /* a selector this browser refuses */ } }
+    const opened = !!(editing && editing.focus);
     if (editing && (hadFocus || editing.focus)) {
       const el = editInput();
       if (el) {
-        el.focus?.();
+        // Typing carried across a repaint does not scroll (preventScroll); a box just opened is brought into view below.
+        el.focus?.(opened ? undefined : { preventScroll: true });
+        const end = String(el.value || '').length;
         if (caret) { try { el.setSelectionRange(caret[0], caret[1]); } catch { /* not a text input */ } }
+        else if (editing.focus === 'end') { try { el.setSelectionRange(end, end); } catch { /* same */ } }
         else { try { el.select(); } catch { /* same */ } }
       }
       editing.focus = false;
     }
     // The cursor must be visible without scrolling to it — someone driving with a switch
     // cannot scroll, and a highlighted row below the fold is the same as no highlight.
-    listEl.querySelector('.st-item.on')?.scrollIntoView({ block: 'nearest' });
-    // ...and so must the box somebody is typing in.
-    editInput()?.scrollIntoView?.({ block: 'nearest' });
+    // Only when it MOVED (row 2.83, above): a repaint that left it where it was leaves the list where it was.
+    if (moved) listEl.querySelector('.st-item.on')?.scrollIntoView({ block: 'nearest' });
+    // ...and so must a box somebody has just opened.
+    if (opened) editInput()?.scrollIntoView?.({ block: 'nearest' });
   }
 
   // ---------------------------------------------------------------------------------
@@ -1080,6 +1125,7 @@ export function mountSettings(root, {
     pageEl.hidden = true;
     pageEl.innerHTML = '';
     listEl.hidden = false;
+    revealNext = true;              // back from a page: the cursor's row in view (row 2.83)
     paint();
   }
 
@@ -1093,6 +1139,7 @@ export function mountSettings(root, {
     // The gate. Refusing SILENTLY would look like a broken switch, so the host is told.
     if (gated && !isModerator()) { onRefused?.({ reason: 'moderator-only' }); return false; }
     open = true;
+    revealNext = true;              // a menu opening shows its cursor (row 2.83)
     returnFocus = doc?.activeElement || null;
     // EVERY OPEN STARTS IN THE SAME PLACE: the subject is the focused panel and the tab is the host's
     // start tab (the panel's). Argued: the same first stops at every open is what a switch user can
@@ -1142,6 +1189,7 @@ export function mountSettings(root, {
     const n = items.findIndex((it) => it.id === id && it.kind === 'item' && !it.disabled);
     if (n < 0) return false;
     nav.setIndex(n);
+    revealNext = true;              // asked for by name: shown (row 2.83)
     paint();
     return true;
   }
@@ -1174,6 +1222,20 @@ export function mountSettings(root, {
     // The text box's own buttons, first: they sit in the list but are not rows.
     if (e.target.closest('[data-edit-save]')) { saveEdit(); return; }
     if (e.target.closest('[data-edit-cancel]')) { cancelEdit(); return; }
+    // A secret's box (row 2.83): Show / Hide what is typed, the typing kept; Clear empties the setting itself.
+    if (e.target.closest('[data-edit-show]')) {
+      if (editing) { editing.shown = !editing.shown; editing.focus = 'end'; paint(); }
+      return;
+    }
+    if (e.target.closest('[data-edit-clear]')) {
+      const it = editing ? items.find((x) => x.id === editing.id) : null;
+      editing = null;
+      let wrote = false;
+      try { wrote = !!it?.clear?.(); } catch (err) { console.warn('settings: clear threw', err); }
+      if (wrote) onSelect?.(it);
+      if (open) { render(); grab(); }
+      return;
+    }
     if (e.target.closest('.st-edit')) return;            // a click INTO the box is typing, not a choice
     // A TAB BUTTON (a pointer's way to a tab): that tab, the cursor on the tab row.
     const tb = e.target.closest('[data-tab]');

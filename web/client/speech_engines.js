@@ -184,14 +184,17 @@ export const SPEECH_PASS_FIELDS = [
   // has the steps that give a desktop one.
   { key: 'speechRemote1Url', label: 'Another computer: its address', kind: 'text', default: '',
     level: 'standard', note: 'For example wss://your-desktop.your-tailnet.ts.net/speech (a secure address: it starts with wss://). The room’s sound is sent there.' },
+  // A PASS PHRASE IS A SECRET (row 2.83, Mike at the bench 2026-10-14: it showed in plain text in Devices). The row
+  // says only "Set (hidden)", its box is a hidden one with a Show button and opens empty, and an empty save keeps it
+  // (settings_fields.js `secret`, `showTail`). Stored exactly as before.
   { key: 'speechRemote1Key', label: 'Another computer: its pass phrase', kind: 'text', default: '',
-    level: 'standard' },
+    level: 'standard', secret: true, showTail: false },
   { key: 'speechRemote2Name', label: 'Second other computer: its name', kind: 'text',
     default: 'A second other computer', level: 'advanced' },
   { key: 'speechRemote2Url', label: 'Second other computer: its address', kind: 'text', default: '',
     level: 'standard', note: 'A secure address, starting with wss://. The room’s sound is sent there.' },
   { key: 'speechRemote2Key', label: 'Second other computer: its pass phrase', kind: 'text', default: '',
-    level: 'standard' },
+    level: 'standard', secret: true, showTail: false },
   { key: 'speechLocalUrl', label: 'The speech program on this computer: its address', kind: 'text',
     default: LOCAL_URL, level: 'advanced' },
   // A WAKE-WORD DETECTOR (openWakeWord through web/speech_service --wake): it hears the wake phrase

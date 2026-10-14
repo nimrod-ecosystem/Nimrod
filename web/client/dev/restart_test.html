@@ -25,7 +25,7 @@ import {
   MODES, DEFAULT_MODE, readConfig, writeConfig, readPosition, writePosition,
   bootPlan, markHopped, hasHopped,
   // after a restart (row 2.70)
-  RESTART_HEADING, RESTART_KEY, restartField, restartValue, restartPatch,
+  RESTART_HEADING, RESTART_KEY, restartField, restartValue, restartPatch, restartScreensFor,
   isColdStart, markTab, hasBootParam, withoutBootParam, markKeepPlace, takeKeepPlace,
 } from '../restart.js';
 
@@ -179,8 +179,9 @@ section('what the menu shows: ONE row, "After a restart, open" (row 2.70)');
   const f = restartField({ cfg, screens, homeId: 'home', homeName: 'Bedside' });
   check('*** one choice row, worded as Mike asked: "After a restart, open" ***',
     f.key === RESTART_KEY && f.kind === 'choice' && f.label === 'After a restart, open', JSON.stringify(f));
-  check('*** the default is Home -- today\'s behavior, and a chosen dashboard, never "the last one used" ***',
-    f.default === 'top' && f.options[0].value === 'top' && f.options[0].label === 'Home, “Bedside”', JSON.stringify(f.options[0]));
+  // (row 2.83, Mike at the bench 2026-10-14: "say just the dashboard's name", not "Home, 'Pictures'".)
+  check('*** the default is Home -- today\'s behavior, and a chosen dashboard, never "the last one used" -- shown by its name alone ***',
+    f.default === 'top' && f.options[0].value === 'top' && f.options[0].label === '“Bedside”', JSON.stringify(f.options[0]));
   check('then "Where it left off", then every OTHER dashboard by name (Home is not listed twice)',
     JSON.stringify(f.options.map((o) => o.value)) === JSON.stringify(['top', 'resume', 'screen:pics', 'screen:games'])
     && f.options[2].label === '“Her pictures”', JSON.stringify(f.options));
@@ -209,6 +210,54 @@ section('what the menu shows: ONE row, "After a restart, open" (row 2.70)');
   const homeChosen = restartField({ cfg: { mode: 'screen', screenId: 'home' }, screens: [{ id: 'home', name: 'Bedside' }], homeId: 'home', homeName: 'Bedside' });
   check('Home chosen BY NAME (the page was opened on it after a restart) is listed, so the row can show it',
     homeChosen.options.some((o) => o.value === 'screen:home'), JSON.stringify(homeChosen.options));
+  check('...told apart from Home itself ("(always)": it opens that one whatever the address says)',
+    homeChosen.options.find((o) => o.value === 'screen:home')?.label === '“Bedside” (always)' && homeChosen.options[0].label === '“Bedside”',
+    JSON.stringify(homeChosen.options));
+}
+
+// =====================================================================
+// Row 2.83 (Mike at the bench, 2026-10-14): the list was every dashboard on the login, "two of them twice". It is now
+// the dashboards of the person this screen is for, each name once.
+section('*** whose dashboards: the screen\'s person\'s, each name once (row 2.83) ***');
+
+{
+  const login = [
+    { id: 'home', name: 'Pictures', person_id: 'chris' },
+    { id: 'clock', name: 'Clock and calendar', person_id: 'chris' },
+    { id: 'pics2', name: 'Pictures', person_id: 'chris' },          // the same name as Home
+    { id: 'games', name: 'Games', person_id: 'chris' },
+    { id: 'games2', name: 'games ', person_id: 'chris' },           // the same name, said differently
+    { id: 'mike1', name: 'Mike’s desk', person_id: 'mike' },
+    { id: 'mike2', name: 'Games', person_id: 'mike' },
+    { id: 'loose', name: 'Spare', person_id: '' },
+  ];
+  const vals = (f) => f.options.map((o) => o.value);
+  const labels = (f) => f.options.map((o) => o.label);
+  const f = restartField({ cfg: { mode: 'top' }, screens: login, homeId: 'home', homeName: 'Pictures', personId: 'chris' });
+  check('*** only the screen\'s PERSON\'s dashboards (nobody else\'s, none with no person) ***',
+    JSON.stringify(vals(f)) === JSON.stringify(['top', 'resume', 'screen:clock', 'screen:games']), JSON.stringify(f.options));
+  check('*** each name ONCE: Home\'s own name is not offered again, and "games " is the same as "Games" ***',
+    new Set(labels(f).map((l) => l.toLowerCase())).size === labels(f).length && !labels(f).slice(1).includes('“Pictures”'), JSON.stringify(labels(f)));
+  check('*** Home is just its name ***', f.options[0].label === '“Pictures”');
+  const chosenDup = restartField({ cfg: { mode: 'screen', screenId: 'games2' }, screens: login, homeId: 'home', homeName: 'Pictures', personId: 'chris' });
+  check('*** of two with one name, the CHOSEN one is the one kept (the row must be able to show it) ***',
+    vals(chosenDup).includes('screen:games2') && !vals(chosenDup).includes('screen:games'), JSON.stringify(chosenDup.options));
+  const chosenOther = restartField({ cfg: { mode: 'screen', screenId: 'mike1' }, screens: login, homeId: 'home', homeName: 'Pictures', personId: 'chris',
+    names: new Map([['mike1', 'Mike’s desk']]) });
+  check('a dashboard chosen before that is somebody else\'s stays a choice (by its name), never quietly dropped',
+    chosenOther.options.some((o) => o.value === 'screen:mike1' && o.label === '“Mike’s desk”')
+    && !vals(chosenOther).includes('screen:mike2'), JSON.stringify(chosenOther.options));
+  const noPerson = restartField({ cfg: { mode: 'top' }, screens: login, homeId: 'home', homeName: 'Pictures', personId: '' });
+  check('*** no person set: the person whose dashboard Home is ***',
+    JSON.stringify(vals(noPerson)) === JSON.stringify(['top', 'resume', 'screen:clock', 'screen:games']), JSON.stringify(noPerson.options));
+  check('restartScreensFor says which it used', restartScreensFor(login, { personId: 'chris' }).by === 'person'
+    && restartScreensFor(login, { homeId: 'home' }).by === 'home' && restartScreensFor(login, { homeId: 'loose' }).by === 'all');
+  const nobody = restartField({ cfg: { mode: 'top' }, screens: login, homeId: 'loose', homeName: 'Spare', personId: '' });
+  check('...and when Home is nobody\'s either: every dashboard on the login, each name once',
+    JSON.stringify(vals(nobody)) === JSON.stringify(['top', 'resume', 'screen:home', 'screen:clock', 'screen:games', 'screen:mike1']), JSON.stringify(nobody.options));
+  const older = restartField({ cfg: { mode: 'top' }, screens: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], homeId: 'a', homeName: 'A', personId: 'chris' });
+  check('a list with no person on any dashboard (an older server) is not narrowed to nothing',
+    JSON.stringify(vals(older)) === JSON.stringify(['top', 'resume', 'screen:b']), JSON.stringify(older.options));
 }
 
 // =====================================================================

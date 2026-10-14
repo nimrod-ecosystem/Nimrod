@@ -221,28 +221,71 @@ export function restartPatch(value) {
   if (v.startsWith(SCREEN_PREFIX) && v.length > SCREEN_PREFIX.length) return { mode: 'screen', screenId: v.slice(SCREEN_PREFIX.length) };
   return { mode: v === 'resume' ? 'resume' : 'top' };
 }
+// *** WHOSE DASHBOARDS THE LIST OFFERS (row 2.83, Mike at the bench 2026-10-14). *** The list was every dashboard on
+// the login - his own, everybody's he looks after - "two of them twice". He wants the dashboards of the PERSON THIS
+// SCREEN IS FOR. With no person set, the fallback, argued:
+//   1. the person the Home dashboard (the one this screen opens on) belongs to - a screen with no person set is still
+//      opened on SOMEBODY's dashboard, and theirs are the ones it would go to;
+//   2. else every dashboard on the login - with nothing to narrow by, an empty list would leave only Home and "Where it
+//      left off", which takes away the choice row 2.70 exists for. AGAINST it: a long list; but that is today's list,
+//      and only for a screen nobody has said who it is for.
+// A list whose dashboards carry no `person_id` at all (an older server) is not narrowed: it cannot be told apart.
+/** The dashboards the row offers: `{ list, by: 'person' | 'home' | 'all' }`. PURE. */
+export function restartScreensFor(screens = [], { personId = '', homeId = '' } = {}) {
+  const all = (Array.isArray(screens) ? screens : []).filter((d) => d && d.id);
+  if (!all.some((d) => Object.prototype.hasOwnProperty.call(d, 'person_id'))) return { list: all, by: 'all' };
+  if (personId) return { list: all.filter((d) => d.person_id === personId), by: 'person' };
+  const homeOwner = all.find((d) => d.id === homeId)?.person_id || '';
+  if (homeOwner) return { list: all.filter((d) => d.person_id === homeOwner), by: 'home' };
+  return { list: all, by: 'all' };
+}
+
 /**
  * The row: "After a restart, open" Home / Where it left off / each dashboard by name.
- *   screens   the account's dashboards ([{ id, name }]), as the picker lists them; may be empty (offline, not loaded)
+ *   screens   the account's dashboards ([{ id, name, person_id }]), as the picker lists them; may be empty (offline,
+ *             not loaded). Narrowed to `personId`'s (restartScreensFor, above).
+ *   personId  the person this screen is for ('' = not set: see the fallback above)
  *   homeName  the name of the screen this page was opened on
  *   names     id -> name for a chosen dashboard the list does not have (yet)
  * A chosen dashboard missing from the list stays a choice ("the dashboard chosen before"), so opening the menu offline
  * never quietly changes what the device does.
+ *
+ * (row 2.83) HOME IS SHOWN BY ITS NAME ALONE ("Pictures", not "Home, 'Pictures'"), as Mike asked. And A NAME IS
+ * LISTED ONCE: two dashboards with the same name cannot be told apart in a list, so the one chosen (else the first)
+ * stays and the other is left out - Home's name counts as listed. The chosen one is never left out.
  */
-export function restartField({ cfg = null, screens = [], homeId = '', homeName = '', names = null } = {}) {
+export function restartField({ cfg = null, screens = [], homeId = '', homeName = '', names = null, personId = '' } = {}) {
   const q = (n) => `“${n}”`;
+  const nameKey = (n) => String(n || '').trim().toLowerCase();
   const options = [
-    { value: 'top', label: homeName ? `Home, ${q(homeName)}` : 'Home' },
+    { value: 'top', label: homeName ? q(homeName) : 'Home' },
     { value: 'resume', label: 'Where it left off' },
   ];
   const now = restartValue(cfg);
+  const chosenId = now.startsWith(SCREEN_PREFIX) ? now.slice(SCREEN_PREFIX.length) : '';
+  const { list } = restartScreensFor(screens, { personId, homeId });
+  // Which dashboard keeps each name: the chosen one, else the first; Home's name is taken by Home.
+  const keeper = new Map();
+  const homeKey = nameKey(homeName || (Array.isArray(screens) ? screens : []).find((d) => d && d.id === homeId)?.name);
+  if (homeKey) keeper.set(homeKey, homeId || '*home');
+  for (const d of list) {
+    const k = nameKey(d.name);
+    if (!k) continue;
+    if (d.id === chosenId || !keeper.has(k)) keeper.set(k, d.id);
+  }
   const seen = new Set();
-  for (const d of Array.isArray(screens) ? screens : []) {
-    if (!d || !d.id || seen.has(d.id)) continue;
+  for (const d of list) {
+    if (seen.has(d.id)) continue;
+    const chosen = d.id === chosenId;
     // Home is the first choice already; listed again only when it is the one chosen by name.
-    if (d.id === homeId && now !== `${SCREEN_PREFIX}${d.id}`) continue;
+    if (d.id === homeId && !chosen) continue;
+    const k = nameKey(d.name);
+    if (k && keeper.get(k) !== d.id && !chosen) continue;
     seen.add(d.id);
-    options.push({ value: `${SCREEN_PREFIX}${d.id}`, label: q(String(d.name || '').trim() || 'A dashboard') });
+    const label = q(String(d.name || '').trim() || 'A dashboard');
+    // Home chosen BY NAME sits beside Home itself: "(always)" tells the two apart - it opens that dashboard whatever
+    // the screen's address says.
+    options.push({ value: `${SCREEN_PREFIX}${d.id}`, label: d.id === homeId ? `${label} (always)` : label });
   }
   if (now.startsWith(SCREEN_PREFIX) && !seen.has(now.slice(SCREEN_PREFIX.length))) {
     const nm = names && typeof names.get === 'function' ? names.get(now.slice(SCREEN_PREFIX.length)) : null;

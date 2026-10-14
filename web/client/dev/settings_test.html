@@ -1531,6 +1531,105 @@ section('*** long hints and long labels: nothing runs off a row, and no label co
   }
 }
 
+// =====================================================================
+// Row 2.83 (Mike at the bench, 2026-10-14): "the pass phrase shows in plain text in Devices".
+section('*** a pass phrase: a hidden box with a Show button, never in the page\'s text (row 2.83) ***');
+{
+  const PHRASE = 'correct-horse-battery';
+  const f = normalizeField({ key: 'speechRemote1Key', label: 'Another computer: its pass phrase', kind: 'text', secret: true, showTail: false });
+  check('*** the row says only that one is set: not a character of it ***', displayValue(f, PHRASE) === 'Set (hidden)' && displayValue(f, '') === 'Not set');
+  check('CONTROL: an API key (no showTail) still shows its last four', displayValue(normalizeField({ key: 'k', kind: 'text', secret: true }), 'AIzaSyD-abcdef1234').endsWith('1234'));
+  const live = { speechRemote1Key: PHRASE };
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'speech', title: 'Speech' }),
+    fields: () => fieldItems([f], { values: () => live, onStep: (k, v) => { live[k] = v; } }),
+  });
+  m.open();
+  check('*** the phrase is nowhere in the menu\'s text or markup ***', !h.textContent.includes(PHRASE) && !h.innerHTML.includes(PHRASE));
+  m.focusRow?.('set:speechRemote1Key');
+  while (m.focusId() !== 'set:speechRemote1Key') m.next();
+  m.select();
+  const box = () => h.querySelector('[data-edit-input]');
+  check('*** its box is a HIDDEN (password) box, opened empty ***', box() && box().type === 'password' && box().value === '', box()?.outerHTML);
+  check('...with a Show button, and Clear (one is set)', !!h.querySelector('[data-edit-show]') && !!h.querySelector('[data-edit-clear]'));
+  box().value = 'new-phrase'; box().dispatchEvent(new Event('input', { bubbles: true }));
+  h.querySelector('[data-edit-show]').click();
+  check('*** Show: what is being typed shows, and the typing is kept ***', box().type === 'text' && box().value === 'new-phrase'
+    && h.querySelector('[data-edit-show]').textContent === 'Hide', box()?.outerHTML);
+  h.querySelector('[data-edit-show]').click();
+  check('Hide: hidden again, still kept', box().type === 'password' && box().value === 'new-phrase');
+  m.refresh();
+  check('a repaint keeps it hidden and kept', box() && box().type === 'password' && box().value === 'new-phrase');
+  check('...and the stored phrase is still not in the page', !h.innerHTML.includes(PHRASE));
+  h.querySelector('[data-edit-save]').click();
+  check('Save writes the new one, as stored before (plain, as typed)', live.speechRemote1Key === 'new-phrase');
+  check('...and the row still shows no character of it', !h.textContent.includes('new-phrase') && /Set \(hidden\)/.test(h.querySelector('[data-id="set:speechRemote1Key"]').textContent));
+  m.select();
+  h.querySelector('[data-edit-clear]').click();
+  check('*** Clear empties it (an empty Save keeps it, so clearing is its own button) ***', live.speechRemote1Key === ''
+    && /Not set/.test(h.querySelector('[data-id="set:speechRemote1Key"]').textContent));
+  m.select();
+  check('with nothing set there is no Clear', !h.querySelector('[data-edit-clear]'));
+  m.destroy();
+}
+{
+  // The speech settings themselves, as speech_engines.js declares them.
+  const { SPEECH_PASS_FIELDS } = await import('../speech_engines.js');
+  const keys = SPEECH_PASS_FIELDS.filter((x) => /pass phrase/i.test(x.label));
+  check('*** every pass phrase row in the speech settings is a secret that shows nothing of itself ***',
+    keys.length === 2 && keys.every((x) => normalizeField(x).secret === true && displayValue(normalizeField(x), 'abcdefghijkl') === 'Set (hidden)'),
+    JSON.stringify(keys.map((x) => x.key)));
+}
+
+// =====================================================================
+// Row 2.83 (Mike at the bench, 2026-10-14): "the settings menu jumps back to the top on the Pi". A repaint (the voice
+// status row on an engine change, presence, a name arriving) used to scroll the CURSOR row into view every time.
+section('*** a repaint keeps where the list is scrolled and which row has focus (row 2.83) ***');
+{
+  const many = Array.from({ length: 40 }, (_, i) => normalizeField({ key: `t${i}`, label: `Setting number ${i}`, default: false, onLabel: 'On', offLabel: 'Off' }));
+  const live = {};
+  let status = 'Speech: connecting';
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'x', title: 'Many' }),
+    // a row whose words change on their own - the voice status row's part
+    extras: () => [{ kind: 'item', id: 'voice-status', label: status, disabled: true }],
+    fields: () => fieldItems(many, { values: () => live, onStep: (k, v) => { live[k] = v; } }),
+  });
+  m.open();
+  const panel = h.querySelector('[data-panel]');
+  check('(setup) the list is long enough to scroll', panel.scrollHeight > panel.clientHeight + 200, `${panel.scrollHeight} / ${panel.clientHeight}`);
+  const first = m.focusId();
+  panel.scrollTop = panel.scrollHeight - panel.clientHeight - 50;      // a mouse wheel or a finger, not the cursor
+  const scrolled = panel.scrollTop;
+  check('(setup) scrolled well away from the cursor', scrolled > 200, String(scrolled));
+  status = 'Speech: listening (desktop reconnected)';
+  m.refresh();
+  check('*** a repaint with the cursor where it was: the list STAYS where it was scrolled (it used to jump to the top) ***',
+    Math.abs(panel.scrollTop - scrolled) <= 1, `${panel.scrollTop} vs ${scrolled}`);
+  check('...the repaint did happen (the row\'s words changed)', h.textContent.includes('desktop reconnected'));
+  check('...and the cursor is where it was', m.focusId() === first);
+  const btn = h.querySelector('.st-item[data-id="set:t30"]');
+  btn.focus();
+  const at = panel.scrollTop;
+  m.refresh();
+  check('*** the row with keyboard focus keeps it across a repaint ***', document.activeElement?.dataset?.id === 'set:t30', document.activeElement?.outerHTML?.slice(0, 80));
+  check('...and the list did not move', Math.abs(panel.scrollTop - at) <= 1, `${panel.scrollTop} vs ${at}`);
+  m.next();
+  const on = h.querySelector('.st-item.on').getBoundingClientRect();
+  const pr = panel.getBoundingClientRect();
+  check('*** a MOVE of the cursor still brings it into view (a switch user never loses it) ***',
+    on.top >= pr.top - 1 && on.bottom <= pr.bottom + 1, `row ${Math.round(on.top)}..${Math.round(on.bottom)}, panel ${Math.round(pr.top)}..${Math.round(pr.bottom)}`);
+  m.close();
+  panel.scrollTop = panel.scrollHeight;
+  m.open();
+  const on2 = h.querySelector('.st-item.on').getBoundingClientRect();
+  const pr2 = panel.getBoundingClientRect();
+  check('opening the menu shows its cursor', on2.top >= pr2.top - 1 && on2.bottom <= pr2.bottom + 1);
+  m.destroy();
+}
+
 await tick();
 const s = document.getElementById('summary');
 s.textContent = `${passed} passed, ${failed} failed`;
