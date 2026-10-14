@@ -4567,6 +4567,35 @@ const toTab = (m, id) => {
       }
     }
 
+    // ---- ROW 2.87 (2026-10-14): A LINEUP NAMES ITS TURN, AND THE MENU OFFERS THAT TURN'S OWN SETTINGS ----
+    {
+      const S = await profiles.create('TEST-lineup-turn');
+      const dir = (await profiles.addModule(S.id, 'director')).id;
+      await remote(S.id, () => ({ kiosk: { layout: { preset: 'full', slots: [dir] } } }));
+      const root = box();
+      const k = await mountKiosk(root, { user: USER, profileId: S.id, profiles, bus: createBus(), reloadPage: () => {} });
+      check('(setup, lineup) the Lineup fills the screen', await settled(() => k.slotLayout()?.slots?.[0] === dir, 8000));
+      // Closed and opened again each time, so the rows are drawn fresh (an open menu's list is the one it drew).
+      const rows = () => { try { k.menu.close(); } catch { /* not open */ } try { k.menu.open(); return k.menu.items(); } catch { return []; } };
+      check('*** the menu offers the showing turn\'s OWN settings, under its name ("YouTube: ...") ***',
+        await settled(() => {
+          const it = rows();
+          return it.some((i) => i.id === 'turn-head' && /^YouTube: /.test(i.label)) && it.some((i) => String(i.id).startsWith('turn:'));
+        }, 10000), JSON.stringify(rows().filter((i) => /turn/.test(String(i.id))).map((i) => [i.id, i.label]).slice(0, 6)));
+      check('...and the Lineup\'s own row is still there ("Each turn of pictures lasts")', rows().some((i) => i.id === 'set:picturesTurnMs'));
+      const turn = rows().find((i) => String(i.id).startsWith('turn:') && !i.disabled && i.field?.cycleable);
+      if (turn) {
+        const was = turn.value;
+        turn.run();
+        check('*** a turn row writes the TURN\'s own setting (it steps, as on its own panel) ***',
+          await settled(() => { const now = rows().find((i) => i.id === turn.id); return now && JSON.stringify(now.value) !== JSON.stringify(was); }, 4000),
+          `${turn.id} ${JSON.stringify(was)}`);
+      } else check('(setup, lineup) a turn row that steps', false, JSON.stringify(rows().filter((i) => String(i.id).startsWith('turn:')).map((i) => i.id)));
+      try { k.menu.close(); } catch { /* gone */ }
+      k.destroy();
+      root.remove();
+    }
+
     // ---- 3. "OVER THE DASHBOARD" from the library (the module is added first: the wait) ----
     {
       const S = await profiles.create('TEST-overhere');

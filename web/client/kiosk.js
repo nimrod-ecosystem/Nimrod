@@ -6157,6 +6157,31 @@ export async function mountKiosk(root, {
         const own = (rec.instance?.impl || rec.instance)?.menuItems?.();
         if (Array.isArray(own)) items.push(...own.filter((it) => it && it.id && it.label).map((it) => ({ ...it, ...MENU_TAB.module(0) })));
       } catch (err) { console.error('kiosk: panel rows', err); }
+      // *** A LINEUP'S CURRENT TURN, ITS OWN SETTINGS (row 2.87, 2026-10-14). *** Mike uses YouTube's own settings - its
+      // boxes and time pickers - and inside a Lineup they were out of the menu's reach (only YouTube's small gear on the
+      // panel). A container that says what it is showing (`childNow()`, modules/director.js) gets that module's rows
+      // here, under its name, writing that module's own settings exactly as when it is its own panel (its
+      // `settingsWrite` first, as above). `turn:` ids, so they never collide with the Lineup's own rows. Only the turn
+      // on screen: the menu follows the Lineup, as the bar does.
+      try {
+        const kid = (rec.instance?.impl || rec.instance)?.childNow?.();
+        if (kid && kid.manifest && kid.state) {
+          const kidRows = fieldItems(fieldsFor(kid.manifest, kid.instance), {
+            values: () => kid.state.get() || {},
+            level: complexity(),
+            idPrefix: 'turn:',
+            onStep: (key, value) => {
+              let taken = false;
+              try { taken = (kid.instance?.impl || kid.instance)?.settingsWrite?.(key, value) === true; } catch (err) { console.error('kiosk: settingsWrite', err); }
+              if (!taken) kid.state.set({ [key]: value });
+            },
+          }).map((it) => ({ ...it, ...MENU_TAB.module(0) }));
+          if (kidRows.length) {
+            items.push({ kind: 'heading', id: 'turn-head', label: `${kid.title}: its own settings, while it is showing`, ...MENU_TAB.module(0) },
+              ...kidRows);
+          }
+        }
+      } catch (err) { console.error('kiosk: lineup turn rows', err); }
       // players: a game's "Players" row names the people as this login knows them.
       items.splice(0, items.length, ...withPlayerNames(items));
       // PAUSE / PLAY for this panel (2026-10-02; `playPauseSelected` argues it): only on a panel that can.

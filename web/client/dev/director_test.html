@@ -121,6 +121,12 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     const impl = instance.impl || instance;
     check('*** the Lineup says what it is showing: "YouTube (Lineup)" ***', impl.titleNow?.() === lineupTitle('youtube')
       && /^YouTube \(Lineup\)$/i.test(impl.titleNow()), String(impl.titleNow?.()));
+    {
+      const kid = impl.childNow?.();
+      check('*** childNow(): the module showing, with its own manifest and settings, for the screen\'s menu ***',
+        kid && kid.type === 'youtube' && kid.title === 'YouTube' && Array.isArray(kid.manifest?.settings) && kid.manifest.settings.length > 0
+        && typeof kid.state?.get === 'function' && !!kid.instance, JSON.stringify(kid && { type: kid.type, title: kid.title }));
+    }
     check('an unbuilt turn uses its own label; before any turn, plain "Lineup"',
       lineupTitle('wordgame') === 'Word game (Lineup)' && lineupTitle(null) === LINEUP_TITLE);
     check('youtube child mounted & autostarted a video', stub.current() !== null, `loaded=${stub.loaded.length}`);
