@@ -2666,3 +2666,14 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   a setting to switch to something else after a set time, e.g. YouTube to pictures on a drive when the internet is
   out); a silent check-in, "like baby monitor mode", where by default the screen still shows who is checking in.
   (2026-10-13)
+
+## A call is only a call; the owner controls their own screens (Mike, 2026-10-14, through chat, note BX)
+
+- **A call grants nothing else.** Being able to call someone's screen grants no drive and no see; those are separate
+  grants that can be given during a call, lasting the length of the call by default, with "always" for guardians
+  (2026-10-13). This changes 341b4b9, where "who may drive" also let a person call. (2026-10-14)
+- **The account owner controls every screen on their own account by default.** Chat read "control" to include drop-in
+  on the account's own screens (today the owner gets see and drive but not drop-in). Remote control for other accounts
+  comes later and does not block the swap. (2026-10-14)
+- **Picture codes for watching together stay as built (b59a0ec); the secret key file comes with Drive syncing.
+  See-only access comes after the swap.** (2026-10-14)
