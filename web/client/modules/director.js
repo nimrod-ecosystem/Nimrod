@@ -236,6 +236,7 @@ registerModule(
           }, turnMs());
         },
         deactivate() { stopTimers(); rootBus.publish(addr('pause')); try { child?.onHide?.(); } catch { /* noop */ } },
+        inner: () => (child && cState ? { type: p.inner, instance: child, state: cState } : null),
         flush() { try { cState?.flush?.(); } catch { /* noop */ } },
         resize() { try { child?.onResize?.(); } catch { /* noop */ } },
         destroy() {
@@ -320,6 +321,7 @@ registerModule(
         // it has armed — a stall watchdog especially — must stand down, or a hidden
         // provider will end the segment that is currently on screen.
         deactivate() { rootBus.publish(`${p.id}/deactivate`); },
+        inner: () => (child && cState ? { type: p.id, instance: child, state: cState } : null),
         flush() { try { cState?.flush?.(); } catch { /* noop */ } },
         resize() { try { child?.onResize?.(); } catch { /* noop */ } },
         // Idempotent, and it has to be: it is called BY `mount` when a teardown overtook it,
@@ -406,6 +408,15 @@ registerModule(
                         wallpaperMounted: !!wallpaper }),
       // What the screen calls this panel right now (row 2.87): "YouTube (Lineup)", or "Lineup" before the first turn.
       titleNow: () => lineupTitle(current),
+      // The module showing now, for the screen's menu to offer its own settings under the Lineup's (row 2.87, Mike:
+      // YouTube's own boxes and time pickers are the ones he uses): `{ type, title, manifest, instance, state }`, or null
+      // (a turn not built yet, or still mounting). Its settings are its own row, as when it is its own panel.
+      childNow: () => {
+        const x = current && adapters[current]?.inner?.();
+        if (!x) return null;
+        const manifest = getManifest(x.type);
+        return manifest ? { ...x, manifest, title: manifest.title || x.type } : null;
+      },
       init() {
         mount.innerHTML = `
           <div class="director">
