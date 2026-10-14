@@ -23,7 +23,8 @@
 // (per-key handle factories). Child storage lives under `<instanceId>.<provider>`,
 // its own row — never colliding with a sibling instance.
 
-import { registerModule, mountModule, getManifest } from '../module.js';
+import { registerModule, mountModule, getManifest, extendCtx } from '../module.js';
+import './photos.js';   // registers 'photos', the Pictures turn's module (row 2.87)
 import { createMachine } from '../statemachine.js';
 import { createWatchdog } from '../watchdog.js';
 import { HELD_BEGIN, HELD_END } from '../held.js';
@@ -35,11 +36,30 @@ export const PROVIDERS = [
   { id: 'youtube',     label: 'Video',          real: true  },
   { id: 'personal',    label: 'Personal video', real: true  },
   { id: 'educational', label: 'Educational',    real: true  },
+  // PICTURES (row 2.87 (2), Mike 2026-10-14: "rotate pictures, videos, songs, lessons and voice messages"): the real
+  // Photos module, wrapped (`inner`) - see `makeTurnAdapter`. Photos keeps its own rules; the Lineup only gives it a turn.
+  { id: 'pictures',    label: 'Pictures',       real: true, inner: 'photos' },
   { id: 'wordgame',    label: 'Word game',      real: false },
   { id: 'trivia',      label: 'Trivia',         real: false },
   { id: 'singalong',   label: 'Sing-along',     real: false },
 ];
 const ALL = PROVIDERS.map((p) => p.id);
+
+// HOW LONG A PICTURES TURN LASTS (row 2.87, Rule 1: a setting, not a fixed number). Default 2 minutes: at Photos' own
+// default of a new picture every 8 seconds that is about 15 pictures, long enough to be a turn of its own rather than a
+// flash between videos, short enough that the next video is not long in coming. FOR longer: pictures are what she most
+// wants to see. AGAINST: a Lineup is a mix; a family who wants mostly pictures has a Photos panel. Mike's later
+// question - weighing modules with very different amounts of content - is not answered here.
+export const PICTURES_TURN_MS = 120000;
+export const PICTURES_TURN_FIELD = Object.freeze({
+  key: 'picturesTurnMs', label: 'Each turn of pictures lasts', kind: 'choice', default: PICTURES_TURN_MS, level: 'standard',
+  options: [
+    { value: 60000, label: '1 minute' }, { value: 120000, label: '2 minutes' }, { value: 300000, label: '5 minutes' },
+    { value: 600000, label: '10 minutes' },
+  ],
+});
+// A pictures turn says it is alive this often, well inside the backstop's 3-minute silence (segmentSilenceMs).
+export const TURN_BEAT_MS = 30000;
 
 // *** THE BAR NAMES WHAT IS ON SCREEN (row 2.87, Mike 2026-10-14 via chat CA item 3: the bar said "Lineup" on his
 // YouTube dashboard). *** A Lineup says what it is showing: `titleNow()` is "<what is showing> (Lineup)" - "YouTube
@@ -54,7 +74,7 @@ export function lineupTitle(providerId) {
   if (!providerId) return LINEUP_TITLE;
   const p = PROVIDERS.find((x) => x.id === providerId);
   let t = '';
-  try { t = (p && p.real && getManifest(providerId)?.title) || ''; } catch { t = ''; }
+  try { t = (p && p.real && !p.inner && getManifest(providerId)?.title) || ''; } catch { t = ''; }
   return `${t || (p ? p.label : providerId)} (${LINEUP_TITLE})`;
 }
 
@@ -81,7 +101,8 @@ registerModule(
     // "Skip" control - and NOTHING ELSE. It is a container whose job is running a schedule, and
     // the schedule comes from the platform, so without it there is nothing to direct.
   { type: 'director', title: 'Lineup',
-    dependsOn: 'server', description: 'Takes turns between videos, personal messages and learning by time of day, so the screen changes by itself' },
+    dependsOn: 'server', description: 'Takes turns between videos, pictures, personal messages and learning by time of day, so the screen changes by itself',
+    settings: [PICTURES_TURN_FIELD] },
   (ctx) => {
     const { mount, bus, state, user, profileId } = ctx;
     const rootBus = ctx.rootBus || bus;                 // children mount here (re-scoped per child)
@@ -154,6 +175,78 @@ registerModule(
         },
         deactivate() { if (phTimer != null) { clearTimer(phTimer); phTimer = null; } },
         destroy() { this.deactivate(); },
+      };
+    }
+
+    // *** A TURN FOR A MODULE THAT DOES NOT KNOW IT IS IN A LINEUP (row 2.87 (2), 2026-10-14: Pictures). ***
+    // youtube/personal/educational were written as providers (they answer `<id>/next` and end their own segment).
+    // Photos was not, and it is her main module, so it is not rewired: it is mounted as it is, on its own instance id,
+    // and this adapter keeps the time.
+    //   * It gets the director's WHOLE context (`extendCtx`), unlike the children above: Photos needs what a screen
+    //     gives a panel - the person's picture sources, hidden pictures, the flash limit - or it shows nothing.
+    //     The children above deliberately get less (see "STILL MISSING" there); that is unchanged.
+    //   * Hidden, it is PAUSED (`photos/pause#<its id>`, bus.js's instance address, so a Photos panel elsewhere on
+    //     the screen is never touched). Its turn: `photos/play#<id>`, a heartbeat for the backstop, and the turn
+    //     ends after `picturesTurnMs` (the Lineup's own setting; default 2 minutes, argued at the setting).
+    //   * Nothing to show (no pictures yet): Photos says so on its own panel and the turn still ends on time, so the
+    //     Lineup never stops on an empty card.
+    function makeTurnAdapter(p) {
+      let child = null, cState = null, cEvents = null, gone = false;
+      let endTimer = null, beatTimer = null;
+      const innerId = `${instanceId}-${p.id}`;
+      const addr = (verb) => `${p.inner}/${verb}#${innerId}`;
+      const stopTimers = () => {
+        if (endTimer != null) { clearTimer(endTimer); endTimer = null; }
+        if (beatTimer != null) { clearTimer(beatTimer); beatTimer = null; }
+      };
+      const turnMs = () => {
+        const v = Number((state.get() || {}).picturesTurnMs);
+        return Number.isFinite(v) && v >= 10000 ? v : PICTURES_TURN_MS;
+      };
+      const beat = () => {
+        rootBus.publish('segment/progress', { provider: p.id });
+        beatTimer = setTimer(beat, TURN_BEAT_MS);
+      };
+      return {
+        async mount(el) {
+          cState = makeState(innerId);
+          cEvents = makeEvents(innerId);
+          await cState.load(); await cEvents.load();
+          if (gone) { this.destroy(); return; }
+          child = mountModule(p.inner, extendCtx(ctx, {
+            mount: el, bus: rootBus, state: cState, events: cEvents, instanceId: innerId,
+            // "remove this picture" is never answered by a slideshow that is not on screen (photos.js).
+            answersOnlyWhenShown: true,
+          }));
+          child.init();
+          cState.startPolling(); cEvents.startPolling();
+          // Hidden until its turn: paused, and told it is not showing.
+          rootBus.publish(addr('pause'));
+          try { child.onHide?.(); } catch { /* noop */ }
+          if (current === p.id) this.activate();   // its turn came while it was still mounting
+        },
+        activate() {
+          stopTimers();
+          try { child?.onShow?.(); } catch { /* noop */ }
+          rootBus.publish(addr('play'));
+          beat();
+          endTimer = setTimer(() => {
+            endTimer = null;
+            rootBus.publish('segment/done', { provider: p.id, reason: 'ended' });
+          }, turnMs());
+        },
+        deactivate() { stopTimers(); rootBus.publish(addr('pause')); try { child?.onHide?.(); } catch { /* noop */ } },
+        flush() { try { cState?.flush?.(); } catch { /* noop */ } },
+        resize() { try { child?.onResize?.(); } catch { /* noop */ } },
+        destroy() {
+          gone = true;
+          stopTimers();
+          try { child?.destroy(); } catch { /* noop */ }
+          child = null;
+          try { cState?.destroy?.(); } catch { /* noop */ }
+          try { cEvents?.destroy?.(); } catch { /* noop */ }
+          cState = null; cEvents = null;
+        },
       };
     }
 
@@ -443,7 +536,7 @@ registerModule(
             // Somebody tore this down mid-loop. Building the remaining providers would be
             // building them for nobody, and each one is a module with its own clocks.
             if (torn) return;
-            if (p.real) { const a = makeChildAdapter(p); adapters[p.id] = a; await a.mount(slots[p.id]); }
+            if (p.real) { const a = p.inner ? makeTurnAdapter(p) : makeChildAdapter(p); adapters[p.id] = a; await a.mount(slots[p.id]); }
             else adapters[p.id] = placeholderAdapter(p, slots[p.id]);
           }
           if (torn) return;

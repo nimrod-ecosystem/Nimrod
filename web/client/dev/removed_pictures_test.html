@@ -177,7 +177,7 @@ try {
   // ------------------------------------------------------------------------------------------------
   section('the Photos panel: remove the picture on screen, bring it back');
   const ITEMS = [1, 2, 3, 4].map((i) => ({ id: 'id' + i, path: 'trip/p' + i + '.jpg', name: 'p' + i + '.jpg', kind: 'image', url: OKPIC('p' + i) }));
-  function panel({ bus = createBus(), removals, hides, sources, id = 'photos-r1', items = ITEMS, moves, lists = null } = {}) {
+  function panel({ bus = createBus(), removals, hides, sources, id = 'photos-r1', items = ITEMS, moves, lists = null, extra = {} } = {}) {
     const host = document.createElement('div');
     host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
     document.body.append(host);
@@ -199,11 +199,32 @@ try {
       output: { say: (text) => { said.push(text); return null; } },
       fetchImpl: async () => ({ ok: false }),
       setTimer: (fn, ms) => ({ fn, ms }), clearTimer: () => {},
+      ...extra,
     });
     inst.init();
     return { host, inst, said, bus, probe: () => inst.impl.__probe(), shown: () => host.querySelector('.stage')?.firstChild?.alt || null };
   }
   const SPEECH = senderMeta({ kind: 'local', id: 'speech:phrase:photos-remove', role: 'universal' });
+  {
+    // 2026-10-14 (the Lineup's Pictures turn): a slideshow that is only sometimes on screen (`answersOnlyWhenShown`)
+    // takes no "remove this picture" while hidden - even as the only slideshow - and does once it is showing.
+    const removals = createRemovedPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
+    const sources = [{ id: 'drive', label: 'Her drive', kind: 'agent', base_url: 'http://127.0.0.1:9', on_remove: 'remove' }];
+    const t = panel({ removals, hides, sources, moves: [], id: 'photos-turn', extra: { answersOnlyWhenShown: true } });
+    await sleep(150);
+    const hideIt = t.inst.onHide || t.inst.impl.onHide;
+    const showIt = t.inst.onShow || t.inst.impl.onShow;
+    hideIt.call(t.inst.onHide ? t.inst : t.inst.impl);
+    t.bus.publish(PHOTOS_REMOVE_TOPIC, undefined, SPEECH);
+    await sleep(40);
+    check('*** hidden (a Lineup turn not on screen): "remove this picture" removes nothing ***', removals.paths('').size === 0, J([...removals.paths('')]));
+    showIt.call(t.inst.onShow ? t.inst : t.inst.impl);
+    t.bus.publish(PHOTOS_REMOVE_TOPIC, undefined, SPEECH);
+    await sleep(40);
+    check('...and once it is showing, it answers as any slideshow does', removals.paths('').size === 1, J([...removals.paths('')]));
+    t.inst.destroy(); t.host.remove();
+  }
   {
     const removals = createRemovedPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
     const hides = createHiddenPictures({ store: memoryPlayStore(), setTimer: () => 0, clearTimer: () => {} });
