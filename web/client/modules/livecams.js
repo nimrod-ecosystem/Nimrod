@@ -68,6 +68,7 @@ import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createYtPlayer } from './youtube.js';
 import { autostartFields, shouldAutostart, panelAlone, createPlayReporter } from '../game_start.js';
 import { SOURCE_RECHECK_MS } from '../media_sources.js';
+import { stallFields, createStallReporter } from '../playback_stall.js';
 import {
   parseCamRef, parseCamList, camListText, lookupCam, camWords, SUGGESTED_CAMS, STARTER_TEXT, CAMS_MAX,
 } from '../explore_cams.js';
@@ -147,6 +148,13 @@ export const SETTINGS = [
     ],
     note: 'Pressing on the video gives YouTube the keyboard. A switch then types into it, not into this screen. This is '
       + 'how long until the screen takes the keyboard back by itself.' },
+  // STALLED PLAYBACK (Mike, 2026-10-13; playback_stall.js argues the defaults): when YouTube itself cannot be reached
+  // (the internet is out), show something else after a while and come back by itself. Only the switch and what is
+  // said about it: this panel already fixes a cam that will not start (the next cam, "try the next one after") and
+  // says so in its own words. A cam that is merely OFF is not stuck - every cam off at night is this panel's normal
+  // "None of the cams is on right now", and switching away from it would bounce back and forth all night, because the
+  // check (is YouTube reachable?) would say yes every minute.
+  ...stallFields({ parts: ['notify', 'switch'], pause: false }),
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -208,6 +216,10 @@ registerModule(
     const win = (doc && doc.defaultView) || (typeof window !== 'undefined' ? window : null);
 
     let cfg = { ...DEFAULTS };
+    // STALLED PLAYBACK (playback_stall.js): stuck only while YouTube cannot be reached; a cam that plays ends it.
+    let rawRow = {};
+    const stallReport = createStallReporter({ bus, panel: instanceId, type: TYPE, title: 'Live nature cams',
+      row: () => rawRow, now });
     let cams = [];
     let listNote = { bad: 0, over: 0 };
     let at = 0;
@@ -298,6 +310,7 @@ registerModule(
       phase = 'playing';
       busPaused = false;
       reportPlay(true);
+      stallReport.ok();            // playback_stall.js: a cam that plays ends a stretch of being stuck
       if (soundOn() && !mutedNow) { ensureBus(); active(true); }
       if (rotateTimer == null) armRotate();
       render();
@@ -323,6 +336,7 @@ registerModule(
         clearCamTimers();
         phase = 'unreachable';
         reportPlay(false); active(false);
+        stallReport.stuck('unreachable');   // playback_stall.js: the screen may show something else meanwhile
         try { player?.destroy?.(); } catch { /* gone */ }
         player = null;
         mount.querySelector('[data-lc-player]')?.remove?.();
@@ -469,7 +483,9 @@ registerModule(
     // ---- the settings, as they change ---------------------------------------------------------------------------
     function readCfg(snap) {
       const was = cfg;
+      rawRow = snap && typeof snap === 'object' ? snap : {};
       cfg = { ...DEFAULTS, ...(snap || {}) };
+      stallReport.refresh();
       const list = parseCamList(cfg.cams);
       listNote = { bad: list.bad, over: list.over };
       const next = [...list];
@@ -738,9 +754,10 @@ registerModule(
         bus.subscribe(`${TYPE}/select`, () => api.select());
       },
       onResize() {},
-      onHide() { state?.flush?.(); },
+      onHide() { stallReport.gone(); state?.flush?.(); },
       destroy() {
         dead = true;
+        stallReport.gone();
         clearCamTimers();
         keysTimer = stopTimer(keysTimer);
         try { win?.removeEventListener?.('blur', onWinBlur); win?.removeEventListener?.('focus', onWinFocus); } catch { /* gone */ }

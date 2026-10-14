@@ -261,8 +261,7 @@ try {
 
     const bus = createBus();
     const done = [];
-    bus.subscribe('segment/done', (p) => done.push(p));
-    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    bus.subscribe('segment/done', (p) => done.push(p));    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
     const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
     await state.load(); await events.load();
 
@@ -337,8 +336,14 @@ try {
     check('a video whose clock stops is RESUMED once, without a reload',
       log.resumes.length === 1 && log.loads.length === 1,
       `${log.resumes.length} resumes / ${log.loads.length} loads`);
+    // 2026-10-13 (stalled playback, playback_stall.js): a frozen clock's second try is LOADING IT AGAIN at its place -
+    // "carry on" does nothing to a player that still says PLAYING. Before, it was handed back here and its place lost.
     clock.advance(21000);
-    check('...and if that does not take, the segment is handed back',
+    check('...and if that does not take, it is LOADED AGAIN rather than given up on',
+      log.loads.length === 2 && !y.done.some((d) => d?.reason === 'timeout'),
+      `${log.loads.length} loads / ${JSON.stringify(y.done)}`);
+    clock.advance(21000);
+    check('...and if that does not take either, the segment is handed back',
       y.done.some((d) => d?.reason === 'timeout'), JSON.stringify(y.done));
     y.inst.destroy();
   }
@@ -449,6 +454,10 @@ try {
       check('a clip that goes silent after playing is asked to carry on',
         playCalls.length > playsBefore && p.done.length === 0,
         `${playCalls.length - playsBefore} play() calls / ${p.done.length} done`);
+      clock.advance(21000);
+      // The second try (2026-10-13, playback_stall.js): the clip is loaded again rather than handed back at once.
+      check('...then, when carrying on did not take, loaded again rather than handed back',
+        !p.done.some((d) => d?.reason === 'timeout'), JSON.stringify(p.done));
       clock.advance(21000);
       check('...and then handed back rather than left frozen',
         p.done.some((d) => d?.reason === 'timeout'), JSON.stringify(p.done));

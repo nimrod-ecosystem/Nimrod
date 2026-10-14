@@ -48,6 +48,7 @@ import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { autostartFields, shouldAutostart, panelAlone, createPlayReporter } from '../game_start.js';
 import { parsePlayOn, playOnWords, playOnChoices, sinkIdFor, refreshOutputs, watchOutputs, PLAY_ON_HERE } from '../speakers.js';
 import { DOWN_AFTER_FAILURES, SOURCE_RECHECK_MS } from '../media_sources.js';
+import { stallFields, createStallReporter } from '../playback_stall.js';
 import {
   parseArchiveId, parseItemList, itemListText, fetchItem, playableFiles, itemView, whatItHolds, itemType,
   embedUrl, tileUrl, itemAddress, ARCHIVE_MESSAGES, FILES_MAX_DEFAULT, FRAME_FOR, ITEMS_MAX,
@@ -125,6 +126,10 @@ export const SETTINGS = [
     options: [{ value: '', label: 'As Devices → Speakers says' }, { value: PLAY_ON_HERE, label: 'This screen' }],
     note: 'Sound and video from the Archive can go to any speaker listed. Books and games in the Archive’s own player '
       + 'use this computer’s own speaker.' },
+  // STALLED PLAYBACK (Mike, 2026-10-13; playback_stall.js argues the defaults): when the Archive cannot be reached, or
+  // its files stop loading, show something else after a while and come back by itself. Only the switch and what is
+  // said about it: this panel already skips a file that will not play and tries again by itself, in its own words.
+  ...stallFields({ parts: ['notify', 'switch'], pause: false }),
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -178,6 +183,11 @@ registerModule(
     const reportPlay = createPlayReporter(bus, ctx, { kind: 'video' });
 
     let cfg = { ...DEFAULTS };
+    // STALLED PLAYBACK (playback_stall.js): stuck while the Archive cannot be reached or its files stop loading; a file
+    // that plays ends it.
+    let rawRow = {};
+    const stallReport = createStallReporter({ bus, panel: instanceId, type: TYPE, title: 'Internet Archive',
+      row: () => rawRow, now: ctx.now || (() => Date.now()) });
     let ids = [];
     let listNote = { bad: 0, over: 0 };
     let at = 0;                    // which item of the list
@@ -294,6 +304,7 @@ registerModule(
         failRun = 0;
         if (reason === 'blocked' || reason === 'archive-files-failed') reason = null;
         reportPlay(true);
+        stallReport.ok();          // playback_stall.js: a file that plays ends a stretch of being stuck
         active(true);
         render();
       });
@@ -391,6 +402,7 @@ registerModule(
         failRun = 0;
         stopPlaying();
         reason = 'archive-files-failed';
+        stallReport.stuck(reason);   // playback_stall.js
         render();
         armRetry(() => loadItem(ids.length > 1 ? at + 1 : at, { autoplay: true }));
         return;
@@ -486,7 +498,10 @@ registerModule(
         render();
         // Not reachable: asked again after SOURCE_RECHECK_MS (a screen that came up before the network did). Not found:
         // the address is wrong, and asking again changes nothing.
-        if (r.reason === 'archive-unreachable') armRetry(() => loadItem(at, { autoplay, startFile }));
+        if (r.reason === 'archive-unreachable') {
+          stallReport.stuck(r.reason);   // playback_stall.js: the screen may show something else meanwhile
+          armRetry(() => loadItem(at, { autoplay, startFile }));
+        }
         return;
       }
       item = r.item;
@@ -508,7 +523,9 @@ registerModule(
     let started = false;
     function readCfg(snap) {
       const was = cfg;
+      rawRow = snap && typeof snap === 'object' ? snap : {};
       cfg = { ...DEFAULTS, ...(snap || {}) };
+      stallReport.refresh();
       const list = parseItemList(cfg.items);
       listNote = { bad: list.bad, over: list.over };
       const next = [...list];
@@ -737,8 +754,9 @@ registerModule(
         bus.subscribe(`${TYPE}/item`, () => api.nextItem());
       },
       onResize() {},
-      onHide() { state?.flush?.(); },
+      onHide() { stallReport.gone(); state?.flush?.(); },
       destroy() {
+        stallReport.gone();
         dead = true;
         loadGen += 1;
         if (retryTimer != null) { try { clearT(retryTimer); } catch { /* gone */ } }

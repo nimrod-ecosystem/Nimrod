@@ -390,6 +390,10 @@ try {
     check('a slow clip on facility wifi is not cut off', done.length === 0, JSON.stringify(done));
     timers.advance(2000);
     check('...it retries first', done.length === 0, JSON.stringify(done));
+    // TWO TRIES since 2026-10-13 (stalled playback, playback_stall.js "Tries before the next one"): carry on, then
+    // load it again, then hand the slot back. It was one.
+    timers.advance(21000);
+    check('...and tries a second time (the second of two tries)', done.length === 0, JSON.stringify(done));
     timers.advance(21000);
     check('*** and then hands the slot back, so a director can move on ***',
       done.length === 1 && done[0].reason === 'timeout', JSON.stringify(done));
@@ -435,7 +439,7 @@ try {
       timers.watching() === 1, String(timers.watching()));
     timers.advance(19000);
     check('a brief pause is forgiven', done.length === 0, JSON.stringify(done));
-    timers.advance(2000); timers.advance(21000);
+    timers.advance(2000); timers.advance(21000); timers.advance(21000);   // two tries (2026-10-13), then it ends
     check('a pause that persists ends the segment',
       done.length === 1 && done[0].reason === 'timeout', JSON.stringify(done));
     inst.destroy();
@@ -528,7 +532,7 @@ try {
     await sleep(900);
     fire('pause');
     check('with nobody there, a pause takes the SHORT clock even though the hold is 4h',
-      (() => { timers.advance(21000); timers.advance(21000); return done.length === 1; })(),
+      (() => { timers.advance(21000); timers.advance(21000); timers.advance(21000); return done.length === 1; })(),   // two tries (2026-10-13)
       JSON.stringify(done));
     check('...and it was never marked as a deliberate pause', !heldShown());
     inst.destroy();

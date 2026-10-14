@@ -93,6 +93,10 @@ export const SUITES = [
   'sprint',
   'statemachine', 'talk', 'theme', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
   'youtube_watchdog',
+  // stalled playback (2026-10-13, playback_stall.js): a video that freezes, buffers or errors is fixed, said, and after
+  // a while shown as pictures in its place, and put back by itself. Stubbed player and fake clock; the last section
+  // mounts a real screen (needs the server).
+  'playback_stall',
   // 2026-10-04: a screen picks up a deploy by itself, once, at a quiet moment; pages show a chip instead.
   'version_watch',
   // watching along (2026-10-10, row 2.79): a screen says what YouTube video it plays, a follow page plays it in step.

@@ -869,9 +869,11 @@ const toTab = (m, id) => {
       check('CONTROL: this panel is not photos', kiosk.primaryType() !== 'photos', kiosk.primaryType());
       check('photos’ settings are gone once photos is not the focused panel',
         !ids2.includes('set:intervalSec'), ids2.join(','));
-      check('*** the held-pause setting is reachable from the bedside menu *** - how long a '
-        + 'pause by somebody in the room is held before anybody is told about it',
-        ids2.includes('set:heldNotifyMs'), ids2.join(','));
+      // 2026-10-13 (stalled playback, playback_stall.js): "let people know after" was replaced. Its time is now an
+      // advanced row shown only when notices are on, so the standard row this checks is the one that replaced it.
+      check('*** the stalled-playback setting is reachable from the bedside menu *** - how long a '
+        + 'stuck video stays before something else is shown in its place',
+        ids2.includes('set:stallSwitchMs'), ids2.join(','));
     }
     await kiosk.showPrimary(0);
     await sleep(60);

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>stalled playback — fixed, said, switched and back — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#root{position:absolute;left:-9999px;width:640px;height:400px}
+</style>
+</head>
+<body>
+<h1>stalled playback (Mike, 2026-10-13)</h1>
+<p>"When a video is paused, frozen or loading for a while, try to fix it where settings allow, notify if wanted, and a
+setting to switch to something else after a set time (YouTube to pictures on a drive when the internet is out).
+Replaces 'let people know after'." <code>playback_stall.js</code>, <code>modules/youtube.js</code>, and the screen's
+hands in <code>kiosk.js</code>. A stubbed player that freezes, buffers and errors; a person's pause; the fix
+attempts; and the switch to pictures and back, on a fake clock. The last section mounts a real screen and needs the
+server.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="root"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { createWatchdog } from '../watchdog.js';
+import {
+  STALL_DEFAULTS, STALL_TOPIC, STALL_OK_TOPIC, SWITCH_TARGETS, stallSettings, pauseNoticeMs, stallFields,
+  createStallReporter, createStallSwitch, standInSource, probeFor, reachProbe, BACKOFF_MAX_MS,
+} from '../playback_stall.js';
+import { normalizeField } from '../settings_fields.js';
+import '../modules/youtube.js';
+import '../modules/personal.js';
+import '../modules/livecams.js';
+import '../modules/archive.js';
+import '../modules/karaoke.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = async () => { for (let i = 0; i < 6; i++) await Promise.resolve(); await sleep(0); };
+const MIN = 60 * 1000;
+
+// A discrete-event clock (the segment_heartbeat suite's): the earliest due timer fires first, so a callback that
+// clears or re-arms another is respected.
+function fakeTimers() {
+  let now = 1_000_000, seq = 0;
+  const pending = new Map();
+  return {
+    now: () => now,
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + Math.max(0, Number(ms) || 0) }); return id; },
+    clearTimer: (id) => { pending.delete(id); },
+    advance(ms) {
+      const target = now + ms;
+      for (let guard = 0; guard < 20000; guard++) {
+        let pickId = null, pickAt = Infinity;
+        for (const [id, t] of pending) if (t.at <= target && t.at < pickAt) { pickId = id; pickAt = t.at; }
+        if (pickId === null) break;
+        const t = pending.get(pickId);
+        pending.delete(pickId);
+        now = Math.max(now, t.at);
+        t.fn();
+      }
+      now = target;
+    },
+    armed: () => pending.size,
+  };
+}
+
+function memState(init = {}) {
+  let row = { ...init };
+  const subs = new Set();
+  return {
+    get: () => row,
+    set(p) { row = { ...row, ...p }; for (const f of [...subs]) f(row); },
+    subscribe(f) { subs.add(f); f(row); return () => subs.delete(f); },
+    load: async () => {}, flush: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+const memEvents = () => ({ append: async () => {}, subscribe: () => () => {}, load: async () => {}, flush: async () => {},
+  get: () => ({ events: [] }), startPolling() {}, destroy() {} });
+
+// A stub of the YouTube player adapter that can be made to freeze, buffer, error, or be paused by a person.
+// It reports a position (`currentTime`), so the module's strong heartbeat - a MOVING CLOCK - is what is exercised.
+function stubPlayerFactory(log) {
+  return (mountEl, h) => {
+    const api = {
+      load(id, start = 0) { log.loads.push({ id, start }); log.t = Number(start) || 0; if (api.playOnLoad) h.onPlaying?.(); },
+      resume() { log.resumes.push(log.t); if (api.playOnResume) h.onPlaying?.(); },
+      pause() {}, stop() {}, destroy() {}, setGain() {}, cue() {},
+      currentTime: () => log.t,
+      playNow: () => h.onPlaying?.(),
+      pauseNow: () => h.onIdle?.('paused'),
+      bufferNow: () => h.onIdle?.('buffering'),
+      errorNow: (code = 150) => h.onError?.(code),
+      endNow: () => h.onEnded?.(),
+      playOnLoad: false, playOnResume: false,
+    };
+    log.player = api;
+    return api;
+  };
+}
+
+const PLAYLIST = [
+  { id: 'aaaaaaaaaaa', channel: 'a', title: 'A' },
+  { id: 'bbbbbbbbbbb', channel: 'b', title: 'B' },
+  { id: 'ccccccccccc', channel: 'c', title: 'C' },
+];
+
+async function mountYT(row = {}) {
+  const bus = createBus();
+  const t = fakeTimers();
+  const log = { loads: [], resumes: [], t: 0, player: null };
+  const seen = { stall: [], ok: [], done: [], nexts: 0, notices: [] };
+  bus.subscribe(STALL_TOPIC, (p) => seen.stall.push(p));
+  bus.subscribe(STALL_OK_TOPIC, (p) => seen.ok.push(p));
+  bus.subscribe('segment/done', (p) => seen.done.push(p));   // bare-topic-ok: the panel itself publishes it bare, as youtube_watchdog reads it
+  bus.subscribe('youtube/next', () => { seen.nexts += 1; });   // bare-topic-ok: the panel's own move to the next video, published bare
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const state = memState({ playlist: PLAYLIST, autoAdvance: true, shuffle: false, ...row });
+  const inst = mountModule('youtube', {
+    mount: host, bus, state, events: memEvents(), user: 'stall-test', instanceId: 'yt-test-' + Math.floor(Math.random() * 1e6),
+    playerFactory: stubPlayerFactory(log), setTimer: t.setTimer, clearTimer: t.clearTimer, now: t.now,
+    progressMs: 5000, activity: { note() {}, recent: () => false, lastAt: () => 0, sinceMs: () => Infinity, destroy() {} },
+    output: { notify: (text, o) => seen.notices.push({ text, ...o }) },
+  });
+  inst.init();
+  await flush();
+  const status = () => (host.querySelector('[data-status]')?.hidden ? '' : (host.querySelector('[data-status]')?.textContent || ''));
+  const held = () => !host.querySelector('[data-held]')?.hidden;
+  // Play for `sec` seconds of genuine progress (the clock moves with the video).
+  const playFor = (sec) => { for (let i = 0; i < sec; i++) { log.t += 1; t.advance(1000); } };
+  return { inst, bus, t, log, seen, host, state, status, held, playFor };
+}
+
+(async () => {
+  try {
+    // ============================================================================================ the settings
+    section('the settings: defaults, and the old "let people know after" choice kept');
+    const d = stallSettings({});
+    check('defaults: stuck after 20 s, fix on, 2 tries, a line on the panel, switch after 5 min to the backup pictures, check every minute',
+      d.stallMs === 20000 && d.fix === true && d.tries === 2 && d.notify === 'panel' && d.switchMs === 5 * MIN
+        && d.switchTo === 'backup' && d.backMs === MIN, JSON.stringify(d));
+    check('a row that chose a pause time under the old row keeps its notice (reads as alerts)',
+      stallSettings({ heldNotifyMs: 3600000 }).notify === 'alerts');
+    check('...and the old "never" (0) does not', stallSettings({ heldNotifyMs: 0 }).notify === 'panel');
+    check('an explicit choice wins over the old key', stallSettings({ heldNotifyMs: 3600000, stallNotify: 'off' }).notify === 'off');
+    check('a pause has NO notice clock by default (it is held and says Paused)', pauseNoticeMs({}) === 0);
+    check('with notices on, the pause clock is the old six hours', pauseNoticeMs({ stallNotify: 'alerts' }) === 6 * 60 * MIN);
+    check('junk reads as the default, never as a crash',
+      stallSettings({ stallMs: 'x', stallTries: -4, stallSwitchTo: 'the moon', stallBackMs: 1 }).stallMs === 20000
+        && stallSettings({ stallSwitchTo: 'the moon' }).switchTo === 'backup' && stallSettings({ stallBackMs: 1 }).backMs === 1000);
+
+    const rows = stallFields();
+    const keys = rows.map((r) => r.key);
+    check('the rows: fix, tries, stuck-after, say, pause time, switch after, switch to, check every',
+      ['stallFix', 'stallTries', 'stallMs', 'stallNotify', 'heldNotifyMs', 'stallSwitchMs', 'stallSwitchTo', 'stallBackMs']
+        .every((k) => keys.includes(k)), keys.join(','));
+    check('every row normalizes (none silently dropped)', rows.every((r) => !!normalizeField(r)), keys.join(','));
+    check('every row default equals STALL_DEFAULTS', rows.every((r) => r.default === STALL_DEFAULTS[r.key]),
+      rows.map((r) => `${r.key}=${r.default}`).join(','));
+    check('the three a family needs are standard; the numbers inside them are advanced',
+      ['stallFix', 'stallNotify', 'stallSwitchMs', 'stallSwitchTo'].every((k) => rows.find((r) => r.key === k).level === 'standard')
+        && ['stallTries', 'stallMs', 'heldNotifyMs', 'stallBackMs'].every((k) => rows.find((r) => r.key === k).level === 'advanced'));
+    check('the pause time shows only when notices are sent',
+      rows.find((r) => r.key === 'heldNotifyMs').appliesWhen({}) === false
+        && rows.find((r) => r.key === 'heldNotifyMs').appliesWhen({ stallNotify: 'alerts' }) === true);
+    check('"Show instead" hides when the switch is Never', rows.find((r) => r.key === 'stallSwitchTo').appliesWhen({ stallSwitchMs: 0 }) === false);
+    check('no row says "let people know after", "her screen", or names anybody',
+      !JSON.stringify(rows).match(/let people know after|her screen|Christine|Cici/i));
+    check('the switch-only set has no fix rows and no pause row',
+      stallFields({ parts: ['notify', 'switch'], pause: false }).every((r) => !['stallFix', 'stallTries', 'stallMs', 'heldNotifyMs'].includes(r.key)));
+    for (const type of ['youtube', 'personal', 'livecams', 'archive', 'karaoke']) {
+      const ks = (getManifest(type)?.settings || []).map((s) => s.key);
+      check(`${type} declares the switch rows`, ks.includes('stallSwitchMs') && ks.includes('stallSwitchTo'), ks.join(','));
+    }
+    check('YouTube and Personal videos no longer declare "let people know after"',
+      !JSON.stringify(getManifest('youtube').settings).includes('let people know after')
+        && !JSON.stringify(getManifest('personal').settings).includes('let people know after'));
+
+    section('the watchdog reads its tries live');
+    {
+      const t = fakeTimers();
+      let n = 2; const tries = [];
+      const w = createWatchdog({ setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 1000, retries: () => n,
+        onRetry: (k, i) => tries.push(i), onGiveUp: () => tries.push('gave up') });
+      w.arm('x'); t.advance(3500);
+      check('two tries, then give up', JSON.stringify(tries) === '[1,2,"gave up"]', JSON.stringify(tries));
+      n = 0; tries.length = 0; w.arm('y'); t.advance(1500);
+      check('zero tries gives up at the first stall', JSON.stringify(tries) === '["gave up"]', JSON.stringify(tries));
+    }
+
+    // ============================================================================================ the report
+    section('the report: said once per stretch, ended by playing');
+    {
+      const bus = createBus(); const said = [];
+      bus.subscribe(STALL_TOPIC, (p) => said.push(['stall', p])); bus.subscribe(STALL_OK_TOPIC, (p) => said.push(['ok', p]));
+      let row = { stallSwitchMs: 60000 };
+      const r = createStallReporter({ bus, panel: 'p1', type: 'youtube', title: 'YouTube', row: () => row, now: () => 42 });
+      r.stuck('loading'); r.stuck('paused');
+      check('stuck is said once, with the panel\'s switch settings', said.length === 1 && said[0][1].switchMs === 60000
+        && said[0][1].since === 42 && said[0][1].reason === 'loading', JSON.stringify(said));
+      row = { stallSwitchMs: 0 }; r.refresh();
+      check('a settings change re-says the open stretch, same start', said.length === 2 && said[1][1].switchMs === 0 && said[1][1].since === 42);
+      r.ok(); r.ok();
+      check('playing ends it, once', said.length === 3 && said[2][0] === 'ok');
+      check('gone says nothing when nothing was stuck', r.gone() === false && said.length === 3);
+    }
+
+    // ============================================================================================ youtube
+    section('YouTube: a video that FREEZES while it says it is playing');
+    {
+      const y = await mountYT();
+      y.log.player.playNow();
+      y.playFor(30);                                  // half a minute of real play
+      check('real play is not stuck', y.seen.stall.length === 0 && y.log.resumes.length === 0);
+      y.t.advance(21000);                             // the clock stops moving
+      check('frozen past 20 s: try 1 carries on from where it is', y.log.resumes.length === 1 && y.log.loads.length === 1,
+        `${y.log.resumes.length} resumes / ${y.log.loads.length} loads`);
+      check('...and the panel says it is stuck, once, on the bus', y.seen.stall.length === 1 && y.seen.stall[0].type === 'youtube');
+      y.t.advance(21000);
+      const last = y.log.loads[y.log.loads.length - 1];
+      check('try 2 loads it again AT THE PLACE IT GOT TO, not from the start',
+        y.log.loads.length === 2 && last.id === y.log.loads[0].id && last.start >= 29, JSON.stringify(y.log.loads));
+      check('...with a quiet line on the panel', /starting it again/i.test(y.status()), y.status());
+      check('...and nothing moved on yet', y.seen.done.length === 0);
+      y.t.advance(21000);
+      check('still stuck after both tries: the segment is handed back and it moves to the next video',
+        y.seen.done.some((x) => x.reason === 'timeout') && y.seen.nexts === 1, `${JSON.stringify(y.seen.done)} / ${y.seen.nexts}`);
+      check('...said calmly on the panel', /moving on/i.test(y.status()), y.status());
+      check('still ONE stuck report for the whole stretch', y.seen.stall.length === 1, String(y.seen.stall.length));
+      // The next video plays: the stretch ends.
+      y.log.player.playNow(); y.playFor(8);
+      check('a video that plays ends the stretch (playback/ok)', y.seen.ok.length === 1, String(y.seen.ok.length));
+      y.inst.destroy();
+    }
+
+    section('YouTube: "carry on" that says PLAYING but never moves cannot loop for ever');
+    {
+      const y = await mountYT();
+      y.log.player.playOnResume = true;               // a resume reports PLAYING, and the clock still never moves
+      y.log.player.playOnLoad = true;
+      y.log.player.playNow(); y.playFor(5);
+      y.t.advance(5 * 21000);
+      check('it still reaches the end of its tries and moves on', y.seen.done.some((x) => x.reason === 'timeout'),
+        `${y.log.resumes.length} resumes / ${y.log.loads.length} loads / ${JSON.stringify(y.seen.done)}`);
+      y.inst.destroy();
+    }
+
+    section('YouTube: buffering for ever, and an error');
+    {
+      const y = await mountYT();
+      y.log.player.playNow(); y.playFor(10);
+      y.log.player.bufferNow();
+      y.t.advance(21000);
+      check('buffering is the short clock and is fixed (carry on)', y.log.resumes.length === 1 && y.seen.stall[0]?.reason === 'buffering',
+        JSON.stringify(y.seen.stall));
+      check('...and is never marked as a person\'s pause', !y.held());
+      y.inst.destroy();
+      const e = await mountYT({ autoAdvance: false });
+      e.log.player.errorNow();
+      check('a player error opens a stretch too (reason error)', e.seen.stall.length === 1 && e.seen.stall[0].reason === 'error',
+        JSON.stringify(e.seen.stall));
+      e.inst.destroy();
+    }
+
+    section('YouTube: a person\'s pause is held, never fixed, never reported as stuck');
+    {
+      const y = await mountYT();
+      y.log.player.playNow(); y.playFor(10);
+      y.log.player.pauseNow();
+      y.t.advance(24 * 60 * MIN);                     // a whole day
+      check('a day later: not resumed, not reloaded, not moved on', y.log.resumes.length === 0 && y.log.loads.length === 1
+        && y.seen.done.length === 0, `${y.log.resumes.length}/${y.log.loads.length}/${y.seen.done.length}`);
+      check('...still says Paused', y.held());
+      check('...never counted as stuck, so the screen never switches it away', y.seen.stall.length === 0);
+      check('...and, with notices not asked for, nobody was sent one', y.seen.notices.length === 0);
+      y.inst.destroy();
+      const n = await mountYT({ stallNotify: 'alerts', heldNotifyMs: 3600000 });
+      n.log.player.playNow(); n.playFor(10);
+      n.log.player.pauseNow();
+      n.t.advance(61 * MIN);
+      check('with notices on: one notice after the pause time, and it is still paused', n.seen.notices.length === 1 && n.held()
+        && n.log.resumes.length === 0, JSON.stringify(n.seen.notices));
+      n.inst.destroy();
+    }
+
+    section('YouTube: "Leave it as it is" and "Say nothing"');
+    {
+      const y = await mountYT({ stallFix: false });
+      y.log.player.playNow(); y.playFor(10);
+      y.t.advance(21000);
+      check('fix off: no carry on, no reload', y.log.resumes.length === 0 && y.log.loads.length === 1);
+      check('...says so calmly', /has stopped/i.test(y.status()), y.status());
+      check('...is reported stuck (so the switch can still help)', y.seen.stall.length === 1);
+      check('...does not skip to the next video', y.seen.nexts === 0);
+      y.inst.destroy();
+      const q = await mountYT({ stallNotify: 'off' });
+      q.t.advance(21000);                             // the first video never loads
+      check('say nothing: no line on the panel while it tries again', q.status() === '' && q.log.loads.length === 2, q.status());
+      q.inst.destroy();
+    }
+
+    // ============================================================================================ the switch
+    section('the switch: after the panel\'s time, to its stand-in, and back by itself');
+    {
+      const bus = createBus();
+      const t = fakeTimers();
+      const calls = []; const lines = []; const notices = [];
+      let here = 'youtube'; let reachable = false;
+      const sw = createStallSwitch({
+        bus, now: t.now, setTimer: t.setTimer, clearTimer: t.clearTimer,
+        swap: async (id, target) => {
+          calls.push(['swap', id, target]);
+          // The original panel goes away during the swap, and says so - this must not cancel the switch.
+          bus.publish(STALL_OK_TOPIC, { panel: id, type: 'youtube', gone: true });
+          here = SWITCH_TARGETS[target].type; return true;
+        },
+        restore: async (id) => { calls.push(['restore', id]); here = 'youtube'; return true; },
+        probe: (type) => () => { calls.push(['probe', type]); return Promise.resolve(reachable); },
+        currentType: () => here,
+        notify: (text) => notices.push(text), line: (text) => lines.push(text),
+      });
+      const stuck = (extra = {}) => bus.publish(STALL_TOPIC, { panel: 'yt1', type: 'youtube', title: 'YouTube', reason: 'loading',
+        since: t.now(), directed: false, notify: 'panel', switchMs: 5 * MIN, switchTo: 'backup', backMs: MIN, ...extra });
+
+      stuck();
+      t.advance(4 * MIN); await flush();
+      check('stuck for 4 minutes: nothing switched yet', calls.length === 0);
+      bus.publish(STALL_OK_TOPIC, { panel: 'yt1', type: 'youtube' });
+      t.advance(10 * MIN); await flush();
+      check('it played again before the time: nothing ever switches', calls.length === 0);
+
+      stuck();
+      t.advance(5 * MIN + 1); await flush();
+      check('stuck for the panel\'s 5 minutes: switched to the backup pictures',
+        calls.length === 1 && calls[0][2] === 'backup' && here === 'photos', JSON.stringify(calls));
+      check('...even though the original said "gone" while it was being replaced', sw.switched('yt1'));
+      check('...with a quiet line, and no alert (the default is a line only)',
+        lines.length === 1 && /pictures are showing until it plays again/.test(lines[0]) && notices.length === 0, JSON.stringify(lines));
+      check('the line names the panel, not a person', !/her |Christine|Cici/.test(lines[0]));
+
+      t.advance(MIN); await flush();
+      check('a minute later it checks; still down, so the pictures stay',
+        calls.filter((c) => c[0] === 'probe').length === 1 && here === 'photos', JSON.stringify(calls));
+      for (let i = 0; i < 3; i++) { t.advance(MIN); await flush(); }
+      check('...and keeps checking every minute', calls.filter((c) => c[0] === 'probe').length === 4, JSON.stringify(calls));
+      reachable = true;
+      t.advance(MIN); await flush(); await flush();
+      check('*** it works again: the panel is put back by itself, no press needed ***',
+        here === 'youtube' && calls.some((c) => c[0] === 'restore') && !sw.switched('yt1'), JSON.stringify(calls));
+      check('...and says so', /is back/.test(lines[lines.length - 1]), lines[lines.length - 1]);
+
+      // The check said yes, but it is stuck again at once (a network that answers small requests and not video).
+      calls.length = 0;
+      stuck();
+      t.advance(1); await flush();
+      check('stuck again right after coming back: straight back to the pictures, no 5-minute wait',
+        calls.length === 1 && calls[0][0] === 'swap', JSON.stringify(calls));
+      check('...and the next check waits twice as long', sw.status()[0]?.wait === 2 * MIN, JSON.stringify(sw.status()));
+      reachable = true;
+      t.advance(2 * MIN); await flush(); await flush();
+      check('...then puts it back', here === 'youtube');
+      sw.destroy();
+    }
+
+    section('the switch: Never, a director\'s panel, alerts, a rebuilt screen, the waits capped');
+    {
+      const bus = createBus(); const t = fakeTimers(); const calls = []; const notices = [];
+      let here = 'youtube';
+      const sw = createStallSwitch({ bus, now: t.now, setTimer: t.setTimer, clearTimer: t.clearTimer,
+        swap: async (id, target) => { calls.push(['swap', id, target]); here = SWITCH_TARGETS[target].type; return true; },
+        restore: async () => { calls.push(['restore']); here = 'youtube'; return true; },
+        probe: () => () => Promise.resolve(false), currentType: () => here, notify: (x) => notices.push(x), line: () => {} });
+      const base = { type: 'youtube', title: 'YouTube', reason: 'loading', directed: false, notify: 'panel',
+        switchMs: MIN, switchTo: 'backup', backMs: MIN };
+      bus.publish(STALL_TOPIC, { ...base, panel: 'never', since: t.now(), switchMs: 0 });
+      bus.publish(STALL_TOPIC, { ...base, panel: 'directed', since: t.now(), directed: true });
+      t.advance(60 * MIN); await flush();
+      check('"Never" never switches, and a director\'s own panel is left to the director', calls.length === 0, JSON.stringify(calls));
+
+      bus.publish(STALL_TOPIC, { ...base, panel: 'clocky', since: t.now(), switchTo: 'clock', notify: 'alerts' });
+      t.advance(MIN + 1); await flush();
+      check('"The clock" is what it shows when asked', calls[0]?.[2] === 'clock' && here === 'clock', JSON.stringify(calls));
+      check('alerts: ONE notice, at the switch', notices.length === 1 && /the clock is showing/.test(notices[0]), JSON.stringify(notices));
+      here = 'wallpaper';                             // the screen was rebuilt under the stand-in
+      t.advance(MIN); await flush();
+      check('the place now holds something else: it is left alone, not "put back"',
+        !calls.some((c) => c[0] === 'restore') && !sw.status().some((s) => s.panel === 'clocky'), JSON.stringify(sw.status()));
+      check('a type with nothing outside it to ask (Personal videos) just tries it', probeFor('personal') === null
+        && typeof probeFor('youtube') === 'function' && typeof probeFor('archive') === 'function');
+      check('the waits are capped at half an hour', BACKOFF_MAX_MS === 30 * MIN);
+      sw.destroy();
+      bus.publish(STALL_TOPIC, { ...base, panel: 'after', since: t.now() });
+      t.advance(10 * MIN); await flush();
+      check('destroyed: hears nothing and does nothing', !calls.some((c) => c[1] === 'after'));
+
+      const failing = createStallSwitch({ bus: createBus(), now: t.now, setTimer: t.setTimer, clearTimer: t.clearTimer,
+        swap: async () => false, restore: async () => true, currentType: () => 'youtube' });
+      check('a switch that cannot happen (the panel is not on this screen) is forgotten', failing.status().length === 0);
+      failing.destroy();
+    }
+
+    section('which pictures: the backup folder, else a folder on this computer');
+    {
+      const src = [
+        { id: 'remote', label: 'NAS', base_url: 'http://nas.lan:8770', kind: 'agent' },
+        { id: 'local', label: 'Drive', base_url: 'http://localhost:8770', kind: 'agent' },
+        { id: 'theirs', label: 'Theirs', base_url: 'http://localhost:8771', kind: 'agent', person_id: 'p2' },
+        { id: 'mine', label: 'Mine', base_url: 'http://127.0.0.1:8772', kind: 'agent', person_id: 'p1' },
+      ];
+      check('the screen\'s backup folder when it names one', standInSource({ screenBackup: 'remote', sources: src, personId: 'p1' }) === 'remote');
+      check('never another person\'s, even when named', standInSource({ screenBackup: 'theirs', sources: src, personId: 'p1' }) === '');
+      check('not set: the person\'s own folder on this computer first', standInSource({ screenBackup: '', sources: src, personId: 'p1' }) === 'mine');
+      check('...then the account\'s folder on this computer', standInSource({ screenBackup: 'any', sources: src, personId: null }) === 'local');
+      check('"None" chooses nothing', standInSource({ screenBackup: 'none', sources: src, personId: 'p1' }) === '');
+    }
+
+    section('the check itself');
+    {
+      check('offline: answered at once, no request', await reachProbe('https://x.test/a', { online: () => false, fetchFn: () => { throw new Error('asked'); } }) === false);
+      check('an answer means reachable', await reachProbe('https://x.test/a', { online: () => true, fetchFn: async () => ({}) }) === true);
+      check('a failed request means not', await reachProbe('https://x.test/a', { online: () => true, fetchFn: async () => { throw new Error('down'); } }) === false);
+      let asked = null;
+      await reachProbe('https://x.test/a', { online: () => true, fetchFn: async (u, o) => { asked = o; return {}; } });
+      check('it sends nothing about anybody: no cookies, no referrer, nothing read', asked && asked.mode === 'no-cors'
+        && asked.credentials === 'omit' && asked.referrerPolicy === 'no-referrer', JSON.stringify(asked));
+    }
+
+    // ============================================================================================ a real screen
+    section('a real screen: a stuck YouTube panel shows pictures, and comes back');
+    {
+      let createProfilesClient = null, mountKiosk = null;
+      try {
+        ({ createProfilesClient } = await import('../profile.js'));
+        ({ mountKiosk } = await import('../kiosk.js'));
+      } catch (err) { check('the screen modules load', false, String(err)); }
+      if (mountKiosk) {
+        const USER = 'stall-kiosk-' + Math.floor(Math.random() * 1e6);
+        const profiles = createProfilesClient({ user: USER });
+        let p = null, mod = null;
+        try { p = await profiles.create('TEST-stall'); mod = await profiles.addModule(p.id, 'youtube'); } catch { p = null; }
+        if (!p) {
+          check('the server is running (needed for a real screen)', false, 'no server');
+        } else {
+          const t = fakeTimers(); let reachable = false;
+          const bus = createBus();
+          const root = document.getElementById('root');
+          const kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, recoveryTick: 0,
+            stallSwitch: { now: t.now, setTimer: t.setTimer, clearTimer: t.clearTimer, probe: () => () => Promise.resolve(reachable) } });
+          await sleep(200);
+          check('CONTROL: the screen shows YouTube', kiosk.primaryType() === 'youtube', kiosk.primaryType());
+          bus.publish(STALL_TOPIC, { panel: mod.id, type: 'youtube', title: 'YouTube', reason: 'error', since: t.now(),
+            directed: false, notify: 'panel', switchMs: 5 * MIN, switchTo: 'backup', backMs: MIN });
+          t.advance(5 * MIN + 1);
+          let ok = false;
+          for (let i = 0; i < 40 && !ok; i++) { await sleep(50); ok = kiosk.primaryType() === 'photos'; }
+          check('*** after five minutes stuck, pictures are in its place ***', ok, kiosk.primaryType());
+          const pan = kiosk.panels().find((x) => x.id === mod.id);
+          check('...as a stand-in with its own settings row, never the video panel\'s', pan && pan.stateKey === `${mod.id}--stall`,
+            JSON.stringify(pan));
+          check('...and the screen knows it is switched', kiosk.stalls.switched(mod.id));
+          t.advance(MIN);
+          await sleep(200);
+          check('the internet is still out a minute later: still pictures', kiosk.primaryType() === 'photos');
+          reachable = true;
+          t.advance(MIN);
+          ok = false;
+          for (let i = 0; i < 40 && !ok; i++) { await sleep(50); ok = kiosk.primaryType() === 'youtube'; }
+          check('*** it is back: YouTube is in its place again, by itself ***', ok, kiosk.primaryType());
+          check('...and nothing is switched any more', !kiosk.stalls.switched(mod.id) && kiosk.stalls.status().length === 0,
+            JSON.stringify(kiosk.stalls.status()));
+          kiosk.destroy();
+        }
+      }
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

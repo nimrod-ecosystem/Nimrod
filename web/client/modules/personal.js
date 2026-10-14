@@ -73,6 +73,7 @@ import { pick } from '../rng.js';
 import { panelPlays } from '../plays.js';
 import { createHeldSignal } from '../held.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
+import { stallFields, stallSettings, pauseNoticeMs, createStallReporter } from '../playback_stall.js';
 
 // `stallMs` matches youtube's for the same reason: long enough that a big clip loading off
 // a media agent over facility wifi is not cut off, short enough that nobody sits in front
@@ -82,8 +83,11 @@ import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js'
 // The key is renamed for the reason AGENTS.md renames a key whose unit changed: a changed
 // MEANING under an unchanged key silently reinterprets a choice somebody already made. Six
 // hours, and it is not resumed — Mike, 2026-08-30. Full reasoning in `youtube.js`.
+// *** 2026-10-13 (stalled playback, playback_stall.js): it is no longer in these defaults, and there is a notice
+// only when "Say when it gets stuck" sends one - read from the panel's own row (`pauseNoticeMs(rawRow)`), so a row
+// that chose a time under the old "let people know after" keeps its notice. See youtube.js's DEFAULTS.
 const DEFAULTS = { sourceId: '', album: '', subjectName: '', autoAdvance: true, autoplay: true,
-                   directed: false, fit: 'contain', stallMs: 20000, heldNotifyMs: 21600000 };
+                   directed: false, fit: 'contain', stallMs: 20000 };
 const RECENT_CAP = 12;
 
 // How often a playing clip reports progress on the bus. `timeupdate` fires several times a
@@ -115,14 +119,10 @@ const PAUSE_IS_REACHABLE = false;
 // family who sets it in one place and finds a different answer in the other has been given a
 // puzzle rather than a setting.
 export const SETTINGS = [
-  { key: 'heldNotifyMs', label: 'If someone pauses it, let people know after', kind: 'choice',
-    default: 21600000, level: 'standard',
-    options: [
-      { value: 0, label: 'never — just leave it paused' },
-      { value: 3600000, label: 'after 1 hour' },
-      { value: 21600000, label: 'after 6 hours' },
-      { value: 43200000, label: 'after 12 hours' },
-    ] },
+  // STALLED PLAYBACK (Mike, 2026-10-13; playback_stall.js argues every default) - the same rows as YouTube's, for
+  // the same reason the old pause row matched it: one question about one room. Replaces "If someone pauses it, let
+  // people know after".
+  ...stallFields(),
   // backup source (2026-10-08; media_sources.js argues it): "If this can't be reached, use". Its own default is the
   // stand-in this panel already had (any other source this screen may show); the screen's row applies unless this is set.
   backupPanelField({ panelDefault: BACKUP_ANY }),
@@ -162,6 +162,13 @@ registerModule(
     const client = ctx.sources || scoped;
 
     let cfg = { ...DEFAULTS };
+    // STALLED PLAYBACK (playback_stall.js; youtube.js has the same three lines and says why the row is kept raw).
+    let rawRow = {};
+    const stallNow = () => stallSettings(rawRow);
+    const stallReport = createStallReporter({
+      bus, panel: ctx.instanceId || 'personal', type: 'personal', title: 'Personal videos',
+      row: () => rawRow, directed: () => !!cfg.directed, now: ctx.now || (() => Date.now()),
+    });
     let items = [], ids = [], byId = {};
     let stats = {};
     // Where the plays go (row 2.58): this device, never the server. The panel's old server rows come down once.
@@ -179,7 +186,8 @@ registerModule(
     let pollTimer = null;
     let destroyed = false;
     const activity = ctx.activity || pageActivity();
-    const holdNotifyMs = () => Math.max(0, Number(cfg.heldNotifyMs) || 0);
+    // 0 unless "Say when it gets stuck" sends notices (playback_stall.js); then the hold has no clock at all.
+    const holdNotifyMs = () => pauseNoticeMs(rawRow);
     // THE HELD SIGNAL — the same one youtube publishes, so a container reacts to a hold
     // without knowing which provider is on the stage. See `held.js`.
     const heldSignal = createHeldSignal(bus, 'personal');
@@ -266,7 +274,8 @@ registerModule(
     }
 
     function clearVideoEnd() { if (videoEndOff) { videoEndOff(); videoEndOff = null; } }
-    const onBeat = () => heartbeat();
+    // `timeupdate` is the moving clock, so it is also what ends a stretch of being stuck (playback_stall.js).
+    const onBeat = () => { heartbeat(); if (active && currentId) stallReport.ok(); };
 
     // Injectable so the tests drive this against a fake clock, exactly as youtube's does.
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
@@ -346,7 +355,11 @@ registerModule(
       clipFails = 0;                // ...and the "source is down" count
       stallReason = 'playing';
       setHeld(false);
-      heartbeat();
+      // While a stretch of being stuck is open (playback_stall.js), `playing` restarts the clock WITHOUT refilling the
+      // tries - a frozen clip says `playing` after every "carry on" (youtube.js onPlaying has the long version). The
+      // first real `timeupdate` refills them and ends the stretch.
+      if (stallReport.stuckSince() != null && active && currentId && stall) stall.arm(currentId);
+      else heartbeat();
       if (!mutedFallback) setStatus(null);
     }
 
@@ -377,6 +390,7 @@ registerModule(
     // autoAdvance=false, so only segment/done fires.
     function onClipEnded() {
       clearStall();
+      stallReport.ok();             // a clip that ended played
       const finish = () => {
         bus.publish('segment/done', { provider: 'personal', reason: 'ended' });
         if (cfg.autoAdvance) bus.publish('personal/next');
@@ -488,6 +502,7 @@ registerModule(
 
     function onClipError() {
       clearStall();
+      if (active) stallReport.stuck('error');   // playback_stall.js: a clip that plays next ends the stretch
       if (countFailure()) return;
       afterFailure(() => {
         bus.publish('segment/done', { provider: 'personal', reason: 'error' });
@@ -712,10 +727,13 @@ registerModule(
         stall = createWatchdog({
           // A GETTER, not a snapshot: cfg arrives with the state subscription, which may
           // not have landed when this is built.
-          setTimer, clearTimer, retries: 1,
+          // THE TRIES (playback_stall.js): "Tries before the next one", none for "Leave it as it is"; a held
+          // pause's one "retry" is only ever its notice.
+          setTimer, clearTimer,
+          retries: () => (stallReason === 'held' ? 1 : (stallNow().fix ? stallNow().tries : 0)),
           // Two clocks, one instance: hours when a person stopped it, seconds otherwise.
-          stallMs: () => (stallReason === 'held' ? holdNotifyMs() : cfg.stallMs),
-          onRetry: (id) => {
+          stallMs: () => (stallReason === 'held' ? holdNotifyMs() : stallNow().stallMs),
+          onRetry: (id, n) => {
             // *** THE HOLD RAN OUT, AND IT IS NOT RESUMED. Mike, 2026-08-30. ***
             // Somebody stopped it; a screen that restarts under them is the interruption the
             // hold exists to prevent. Tell somebody once — `disarm` bumps the epoch so `fire`
@@ -728,14 +746,15 @@ registerModule(
               setHeld(true);
               return;
             }
+            stallReport.stuck(stallReason);   // playback_stall.js: said once per stretch
             const item = byId[id];
             if (!item) return;
             // A blocked autoplay will be blocked again in twenty seconds' time, so the
             // retry that has any chance of working is the muted one.
             if (stallReason === 'blocked') { playMuted(item); return; }
-            // Otherwise ask it to carry on where it is, and only reload if there is no
-            // element left to ask.
-            if (currentVideo && currentVideo.play) {
+            // Otherwise ask it to carry on where it is (the first try), and only reload if there is no
+            // element left to ask - or, from the second try (2026-10-13), because carrying on did not work.
+            if (n === 1 && currentVideo && currentVideo.play) {
               currentVideo.play().catch(() => { render(item, { muted: mutedFallback }); });
               return;
             }
@@ -743,8 +762,16 @@ registerModule(
           },
           onGiveUp: () => {
             setHeld(false);
+            stallReport.stuck(stallReason);   // "Leave it as it is" gives up on the first stall
+            if (!stallNow().fix) {
+              // Nothing is fixed: no next message, no setting the source aside. The director (a container) is
+              // still told the segment is over, as it always was; what it does is its own choice.
+              if (stallNow().notify !== 'off') setStatus('This message has stopped.');
+              bus.publish('segment/done', { provider: 'personal', reason: 'timeout' });
+              return;
+            }
             if (countFailure()) return;   // the third clip in a row: the source is down, not the clip
-            setStatus('That message wouldn\u2019t play. Moving on.');
+            if (stallNow().notify !== 'off') setStatus('That message wouldn\u2019t play. Moving on.');
             bus.publish('segment/done', { provider: 'personal', reason: 'timeout' });
             if (cfg.autoAdvance && ids.length > 1) bus.publish('personal/next');
           },
@@ -755,7 +782,7 @@ registerModule(
         // actually on screen. `heartbeat` returns on `!active` for the same reason — a
         // hidden provider quieting the backstop for the visible one is the same bug wearing
         // the opposite sign.
-        bus.subscribe('personal/deactivate', () => { active = false; clearStall(); });
+        bus.subscribe('personal/deactivate', () => { active = false; clearStall(); stallReport.gone(); });
 
         // The window that rate-limits the published heartbeat, on the injected clock.
         pollTimer = setTimer(progressTick, progressMs);
@@ -783,7 +810,9 @@ registerModule(
         playLog.subscribe((s) => { stats = s; });   // play history (this device) -> picker stats
 
         state.subscribe((s) => {
+          rawRow = s && typeof s === 'object' ? s : {};
           cfg = { ...DEFAULTS, ...s };
+          stallReport.refresh();        // playback_stall.js: an open stretch is re-said with the settings as they are
           // every folder inside: the two folder settings are part of what is listed, so a change lists again.
           const lo = listOptions(cfg, cfg.sourceId);
           const ref = `${cfg.sourceId}|${cfg.album}|${lo.deep}|${lo.leaveOut.join('\n')}`;
@@ -814,9 +843,10 @@ registerModule(
       },
       __probe: () => ({ folders: lastListing?.listing?.folders || null, ids: ids.slice(), label: mount.querySelector('[data-source-label]')?.textContent || '' }),
       onResize() {},
-      onHide() { active = false; clearStall(); state.flush(); },
+      onHide() { active = false; clearStall(); stallReport.gone(); state.flush(); },
       destroy() {
         destroyed = true;
+        stallReport.gone();
         playLog.destroy();
         clearRecheck();
         scoped?.dispose();

@@ -132,6 +132,7 @@ import {
 } from './music_favourites.js';
 import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS } from './speakers.js';   // play on (row 2.68)
 import { backupScreenField, listedSources, BACKUP_KEY } from './media_sources.js';   // backup source (2026-10-08)
+import { createStallSwitch, standInSource, probeFor, SWITCH_TARGETS } from './playback_stall.js';   // stalled playback
 import { createMissStore, MISS_FIELDS } from './speech_misses.js';
 import {
   createSubtitles, subtitlesOptionsFrom, SUBTITLES_FIELDS, SUBTITLE_ACTIONS, SUBTITLES_EARLIER_TOPIC,
@@ -368,6 +369,9 @@ export async function mountKiosk(root, {
   onRecovery = null,               // told about every action taken, for the log and the tests
   recoveryNow = () => Date.now(),
   recoveryTick = 60 * 1000,
+  // STALLED PLAYBACK (2026-10-13, playback_stall.js): a suite's seams for the switch - `{ now, setTimer, clearTimer,
+  // probe }`, each optional (`probe(type)` returns the check, or null to just try). `false` turns the switch off.
+  stallSwitch: stallSwitchOpts = undefined,
   // PICKING UP A NEW VERSION (2026-10-04, version_watch.js): the seams a suite needs -- `{ fetchVersion,
   // pollMs, checkMs, quietWaitMs, inputQuietMs, storage }`, every one optional; `false` turns the watch off
   // for this mount. Never on an embed. The setting a person changes is the screen row's, not this.
@@ -7059,6 +7063,49 @@ export async function mountKiosk(root, {
     recoveryTimer = setInterval(() => { recoveryStep().catch(() => {}); }, recoveryTick);
   }
 
+  // ---- STALLED PLAYBACK: show something else in a stuck panel's place, and put it back (2026-10-13) --------------
+  // Mike: "a setting to switch to something else after a set time (YouTube to pictures on a drive when the internet
+  // is out)". playback_stall.js decides and argues every number; these are its hands, the same two recovery's swap
+  // already uses (arrangement.js `swapPanel`, then `remountPanel` to put the panel back from its own saved place).
+  // UNLIKE RECOVERY IT IS ON BY DEFAULT, because it is each PANEL's own setting ("If it stays stuck, show something
+  // else after", 5 minutes) and nothing it does is saved: the stand-in is never written into the dashboard.
+  let stallSwitch = null;
+  if (stallSwitchOpts !== false) {
+    const so = stallSwitchOpts || {};
+    // The stand-in's own row (`<id>--stall`), so its settings never land in the stuck panel's row, and whatever
+    // somebody sets on it (an album) is there next time.
+    const standInKey = (id) => `${id}--stall`.slice(0, 64);
+    stallSwitch = createStallSwitch({
+      bus,
+      ...(so.now ? { now: so.now } : {}),
+      ...(so.setTimer ? { setTimer: so.setTimer } : {}),
+      ...(so.clearTimer ? { clearTimer: so.clearTimer } : {}),
+      probe: typeof so.probe === 'function' ? so.probe : probeFor,
+      currentType: (id) => arr.recFor(id)?.type || null,
+      swap: async (id, target) => {
+        const type = SWITCH_TARGETS[target]?.type;
+        if (torn || !type || !getManifest(type) || !arr.recFor(id)) return false;
+        const ok = await swapPanel(id, type, { stateKey: standInKey(id) });
+        if (ok && type === 'photos') {
+          // WHICH PICTURES: the screen's backup folder, else a folder on this computer (playback_stall.js
+          // `standInSource`). Only when the stand-in has none of its own yet, so a choice made on it stands.
+          try {
+            const rec = arr.recFor(id);
+            const row = rec?.state?.get?.() || {};
+            const pid = screenPersonNow();
+            const sid = row.sourceId ? '' : standInSource({ screenBackup: (settings.get() || {})[BACKUP_KEY],
+              sources: listedSources(pid), personId: pid });
+            if (sid) rec.state.set({ sourceId: sid });
+          } catch (err) { console.error('kiosk: the stand-in pictures', err); }
+        }
+        return ok;
+      },
+      restore: async (id) => (torn ? false : remountPanel(id)),
+      notify: (text) => { try { output?.notify?.(text, { source: 'playback' }); } catch { /* the line still said it */ } },
+      line: (text) => sayNote(text),
+    });
+  }
+
   // auto-hide the control bar
   let hideT = null;
   // HELD: something above the modules is pointing at the bar and needs it on screen while it does
@@ -8193,6 +8240,12 @@ export async function mountKiosk(root, {
     // The recovery machinery, exposed so a test can drive it a step at a time rather than
     // waiting on a timer, and so a diagnostic page can show what it currently thinks.
     health,
+    // STALLED PLAYBACK (playback_stall.js): what is stuck or showing a stand-in now, for a suite and a diagnostic page.
+    stalls: {
+      status: () => stallSwitch?.status() || [],
+      switched: (id) => !!stallSwitch?.switched(id),
+      restoreNow: (id) => stallSwitch?.restoreNow(id) ?? Promise.resolve(false),
+    },
     recovery: {
       step: recoveryStep,
       faults: () => health.faults(),
@@ -8383,6 +8436,7 @@ export async function mountKiosk(root, {
       for (const ev of BURN_IN_EVENTS) root.removeEventListener(ev, pokeBurnIn);
       clearBurnIn();
       clearInterval(recoveryTimer);
+      try { stallSwitch?.destroy(); } catch { /* stalled playback: its timers only */ }
       health.destroy();
       try { automation.destroy(); } catch { /* already gone */ }
       try { offLinks?.(); } catch { /* already gone */ }

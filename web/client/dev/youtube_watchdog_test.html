@@ -206,8 +206,14 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     check('...and still hasn’t abandoned the segment', a.done.length === 0, JSON.stringify(a.done));
     check('...with the watchdog re-armed', a.watching() === 1);
 
+    // *** TWO TRIES SINCE 2026-10-13 (stalled playback, playback_stall.js "Tries before the next one"). ***
+    // It was one: a second stall ended the segment. The second try is what a FROZEN video needed (load it again
+    // at its place - see the buffering section below); for a load that never started it is one more reload.
     a.timers.advance(21000);         // the retry stalls too
-    check('a second stall ENDS the segment', a.done.length === 1, JSON.stringify(a.done));
+    check('a second stall tries ONCE MORE (the second of two tries)',
+      a.log.loads.length === 3 && a.done.length === 0, `${a.log.loads.length} loads / ${a.done.length} done`);
+    a.timers.advance(21000);         // the second retry stalls as well
+    check('a third stall ENDS the segment', a.done.length === 1, JSON.stringify(a.done));
     check('...with reason=timeout, the director’s vocabulary',
       a.done[0].reason === 'timeout' && a.done[0].provider === 'youtube', JSON.stringify(a.done[0]));
     check('...and it moves to the next video', a.nexts.length === 1, String(a.nexts.length));
@@ -258,7 +264,8 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     section('recovering onto the next video');
     const d = await mountYT();
     d.timers.advance(21000);         // stall 1 -> retry
-    d.timers.advance(21000);         // stall 2 -> give up, next
+    d.timers.advance(21000);         // stall 2 -> the second try
+    d.timers.advance(21000);         // stall 3 -> give up, next
     check('the first video gave up', d.done.length === 1);
     // the module advanced; simulate the next one actually playing
     await sleep(200);
@@ -332,6 +339,10 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     p4.timers.advance(21000);
     check('...on the SHORT clock, even though the hold is six hours',
       p4.log.resumes.length === 1, `${p4.log.resumes.length} resumes`);
+    p4.timers.advance(21000);
+    // The second try (2026-10-13): carrying on did not work, so it is LOADED AGAIN AT ITS PLACE rather than skipped.
+    check('...then, when carrying on did not work, it is loaded again rather than skipped',
+      p4.log.loads.length === 2 && p4.done.length === 0, `${p4.log.loads.length} loads / ${p4.done.length} done`);
     p4.timers.advance(21000);
     check('...then it gives the slot up', p4.done.length === 1 && p4.done[0].reason === 'timeout',
       JSON.stringify(p4.done));
@@ -528,7 +539,7 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     // ================= a single-video playlist =================
     section('one video, nowhere to advance to');
     const f = await mountYT();
-    f.timers.advance(21000); f.timers.advance(21000);
+    f.timers.advance(21000); f.timers.advance(21000); f.timers.advance(21000);   // two tries, then give up
     check('it still declares the segment done so a DIRECTOR can move on',
       f.done.length === 1 && f.done[0].reason === 'timeout', JSON.stringify(f.done));
     f.inst.destroy();
