@@ -89,6 +89,40 @@ check in front of them. These are the server's half of it - security invariants,
      conditional - kept only through a capped route, only when the person chose it in their own row - not
      loosened here. (The words do pass THROUGH this site when a person picks the 'claude' storyteller,
      nimrod_ai.js: that route answers and keeps nothing. This rule is about keeping, not about passing through.)
+ 10. A PERSON'S OWN SOUND, OR OTHER MEDIA, IN THE SHAPES RULE 2 DOES NOT SEE, IS REFUSED, EVERYWHERE (Mike, 2026-10-13,
+     DECISIONS.md: "We can't be letting people store their own audio files on the site. There should only be some
+     default recordings we provide. If they want custom audio, they will have to store it themselves."). The site's own
+     recordings - the talk board's shipped clips in web/client/aac/audio (aac_clips.js) - are files served from the
+     site's own folder, not rows, so nothing here touches them. A person's own - a word recorded for a board card
+     (board_sounds.js), a voice recording (voice_recording.js), a recording session (recorder.js) - is kept on their
+     device and in their Nimrod folder, and a row carries only its NAME (`sound: {file, from}`); the board editor
+     already says so in words ("Kept on this device and in your Nimrod folder"). Rule 2 sees a sound written as one
+     data: address at the START of a string, or as one long base64 run. This rule sees the next obvious shapes (part of
+     check_content, so state, events and history alike):
+       (a) a data: address of a sound, picture, video, font or any other kind of file ANYWHERE in a string (inside
+           CSS's url(...), after other words), and any data: address marked ;base64 whatever its type. A plain-text
+           data: address (data:text/plain,hello) is text and passes; so do the words "data:image/" in a sentence (an
+           address needs its comma).
+       (b) base64 cut into pieces to get under rule 2's run: every run of WRAP_MIN or more base64 characters in the
+           row, in every string, added up, over BASE64_RUN_MAX - when, joined, its letters are as mixed as encoded
+           bytes are (ENCODED_BITS). Long folder paths, hex ids and long words are far less mixed and pass however
+           many there are.
+       (c) bytes written out as numbers: lists of BYTES_LIST_MIN or more whole numbers (or the {"0": .., "1": ..} shape
+           JSON.stringify makes of a typed array), each in the range of a byte or a 16-bit sound sample, adding up to
+           more than NUMBERS_MAX in the row - which is what a sound's or a picture's bytes are as JSON. (A sound's
+           samples as fractional numbers are already rule 5b's.)
+     ARGUED, so this is not read as a new absolute: Mike's own words call it the storage line applied - THE LINE above,
+     to one more kind of content, the way rule 9 was. Who wants the opposite: somebody with no Nimrod folder who wants a
+     word they recorded to play on every screen they have, or a family who wants Grandad's recorded "good morning" on a
+     screen in another house. A fair want, and the answer is the one rule 4 gave play history: if Mike ever wants "with
+     us" as a place for a person's own recordings, this becomes conditional - kept only through a capped route of its
+     own, only when the person chose it in their own row - not loosened here.
+     WHAT IT DOES NOT CLOSE, said so it is not mistaken for more: (1) a client set on it can still spread a sound over
+     many small rows, each under every pattern here, because nothing counts how many rows an account keeps - that is a
+     quota, not a pattern, and a number per account is Mike's call; (2) uncompressed sound (WAV) cut into
+     pieces is not mixed enough for (b) and is left to the size cap - one piece over BASE64_RUN_MAX is still rule 2's.
+     No pattern catches every disguise; the point, as with rule 5, is that nothing the site sends trips it and the
+     obvious shapes are refused with a sentence.
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -119,6 +153,24 @@ THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not
     never whole; the site's own long numeric facts (milliseconds, counts, ids) are whole, so a list of 500 reaction
     times passes.
 
+  RULE 10's NUMBERS - measured 2026-10-13 on a copy of the dev database (65,633 state, event and history rows), not
+  guessed. Outside the device-data rows rule 1 refuses, it holds NO run of 60+ base64 characters, NO data: address of
+  any kind anywhere in a string, and NO list longer than ten items.
+  WRAP_MIN (60, above) is also (b)'s smallest piece: the same line length that already joins wrapped base64 up, and
+    PEM's 64 and MIME's 76 are both over it. Shorter pieces are not counted, so ids (YouTube 11, Spotify 22, Drive 33,
+    hex 32) never are. For shorter: catches pieces of 40. Against: OAuth verifiers (43-128) and Drive ids would start
+    to count - still only when mixed - for little gain.
+  ENCODED_BITS = 5.5 bits a character, for the joined pieces. Measured on samples: random bytes (which is what
+    compressed sound - webm, mp3, ogg - and photos are) as base64 are 5.96-5.99; deep photo-folder paths 4.77-4.85;
+    long German compound words 4.09; hex 4.00 (16 letters can carry no more); 64 letters can carry at most 6.0.
+    5.5 sits well clear of both. For lower: base32 (5 bits) would be caught too, but so would mixed-case paths sooner.
+  BYTES_LIST_MIN = 256: a list shorter than this is not counted at all, so points ([x, y, z]), a game's few scores or
+    a week of counts never are. NUMBERS_MAX = 4,096 numbers in such lists in one row (a quarter of a second of 16 kHz
+    sound as bytes). For more: an hourly reading for a year (8,760) - but raw readings are rule 1's and belong on the
+    household's machine anyway. For fewer: catches less sound, starts to reach long charts. Whole numbers from
+    -32,768 to 65,535 (NUMBER_LOW / NUMBER_HIGH) are what bytes and 16-bit samples are; times in milliseconds since
+    1970 are far bigger, so a list of timestamps never counts.
+
   THE HISTORY CAP (rule 4, opted in) - argued, Mike's "scalable" is the test it is held to:
   HISTORY_MAX_ROWS = 10,000 rows per PERSON, every kind of history together. Measured row sizes: a play
     ~130 bytes, a game trial under 300, a board word ~200; HISTORY_ROW_MAX_BYTES (1 KiB) is the most one
@@ -141,7 +193,9 @@ weighs, not the six bytes per character the database's own escaping would charge
 from __future__ import annotations
 
 import json
+import math
 import re
+from collections import Counter
 
 STATE_MAX_BYTES = 2 * 1024 * 1024
 EVENT_MAX_BYTES = 16 * 1024
@@ -201,6 +255,20 @@ STORY_SAVE_PREFIX = "nimrod.story."               # web/client/story_ai.js STORY
 SAY_STORY = ("This looks like a conversation or a story with the town's characters (what was said, turn by turn). It is "
              "the person's own words, so it stays on the screen where it was told, or in the person's own Nimrod "
              "folder, and is never kept on this site.")
+# ---- rule 10: a person's own sound or other media, in the shapes rule 2 does not see ----
+ENCODED_BITS = 5.5
+BYTES_LIST_MIN = 256
+NUMBERS_MAX = 4096
+NUMBER_LOW, NUMBER_HIGH = -32768, 65535
+# A data: address: `data:`, then an optional type/subtype, optional ;parameters, then the comma that starts the content.
+# Not preceded by a letter or digit, so "metadata:" is not one. Every part is bounded or delimited by a character it
+# cannot contain, so a search cannot backtrack badly on a long string.
+_DATA_ADDRESS = re.compile(r"(?<![A-Za-z0-9+.\-])data:\s{0,4}(?:([A-Za-z]{1,30})/[A-Za-z0-9!#$&^_.+\-]{1,100})?"
+                           r"((?:\s{0,4};[^;,\s]{1,200}){0,20})\s{0,4},", re.I)
+_DATA_HINT = re.compile(r"data:", re.I)
+_DATA_KIND_WORD = {"audio": "a sound", "image": "a picture", "video": "a video"}
+SAY_OWN_MEDIA = ("A person's own recordings, sound files, pictures and videos are kept on their own device or in their "
+                 "Nimrod folder, not on this site. The only sounds this site keeps are its own.")
 SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, or where "
                        "its person chose in \"Where your history is kept\" - not in this site's log.")
 
@@ -450,10 +518,91 @@ def looks_like_story(data) -> bool:
     return False
 
 
+def media_data_address(s: str) -> str | None:
+    """Rule 10a: the type of the first data: address of a file anywhere in `s` ('audio', 'image', 'font', ... or
+    'base64' for one marked ;base64 with no type), or None. A plain-text data: address is not one."""
+    if not isinstance(s, str) or not _DATA_HINT.search(s):
+        return None
+    for m in _DATA_ADDRESS.finditer(s):
+        kind = (m.group(1) or "").lower()
+        params = [p.strip().lower() for p in (m.group(2) or "").split(";") if p.strip()]
+        if kind and kind != "text":
+            return kind
+        if "base64" in params:
+            return kind or "base64"
+    return None
+
+
+def _bits_per_letter(counts: dict, n: int) -> float:
+    return -sum(c / n * math.log2(c / n) for c in counts.values()) if n else 0.0
+
+
+def encoded_pieces(data, strings=None) -> tuple[int, float]:
+    """Rule 10b: (how many characters of base64 there are in runs of WRAP_MIN or more, over every string in the row,
+    and how mixed those characters are, in bits a character). `strings`: the row's strings, if already gathered."""
+    total = 0
+    counts: Counter = Counter()          # counted in C, so a 2 MiB row costs milliseconds, not a second
+    for s in (strings if strings is not None else _strings(data)):
+        if len(s) < WRAP_MIN:
+            continue
+        for m in _RUN.finditer(s):
+            if m.end() - m.start() >= WRAP_MIN:
+                total += m.end() - m.start()
+                counts.update(m.group())
+    return total, _bits_per_letter(counts, total)
+
+
+def _small_whole(x) -> bool:
+    return isinstance(x, int) and not isinstance(x, bool) and NUMBER_LOW <= x <= NUMBER_HIGH
+
+
+def bytes_as_numbers(data) -> int:
+    """Rule 10c: how many small whole numbers the row holds in lists of BYTES_LIST_MIN or more (a typed array's
+    {"0": .., "1": ..} shape counted the same). Iterative, like _strings, so a deeply nested body cannot blow the stack."""
+    total = 0
+    stack = [data]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            if len(v) >= BYTES_LIST_MIN and all(isinstance(k, str) and k.isdigit() for k in v) \
+                    and all(_small_whole(x) for x in v.values()):
+                total += len(v)
+                continue
+            stack.extend(x for x in v.values() if isinstance(x, (dict, list, tuple)))
+        elif isinstance(v, (list, tuple)):
+            if len(v) >= BYTES_LIST_MIN and all(_small_whole(x) for x in v):
+                total += len(v)
+                continue
+            stack.extend(x for x in v if isinstance(x, (dict, list, tuple)))   # only what can hold a list
+    return total
+
+
+def check_own_media(data) -> None:
+    """Rule 10: a person's own sound or other media in the shapes rule 2 does not see. Raises Refused."""
+    strings = list(_strings(data))
+    for s in strings:
+        kind = media_data_address(s)
+        if kind:
+            what = _DATA_KIND_WORD.get(kind, "a file")
+            raise Refused(400, f"This has {what} inside it, written as a data: address. " + SAY_OWN_MEDIA
+                          + " Save a link to where it lives instead.")
+    total, bits = encoded_pieces(data, strings)
+    if total > BASE64_RUN_MAX and bits >= ENCODED_BITS:
+        raise Refused(400, f"This has {total:,} characters of encoded data inside it, in pieces, which is what a "
+                           f"sound or a picture looks like once it is cut up to fit (the most allowed is "
+                           f"{BASE64_RUN_MAX:,} in all). " + SAY_OWN_MEDIA)
+    n = bytes_as_numbers(data)
+    if n > NUMBERS_MAX:
+        raise Refused(400, f"This has {n:,} small whole numbers in long lists inside it, which is what a sound or a "
+                           f"picture looks like once its bytes are written out as numbers (the most allowed is "
+                           f"{NUMBERS_MAX:,}). " + SAY_OWN_MEDIA)
+
+
 def check_content(data) -> None:
     """Rule 2: no picture, sound or video inside the JSON, as a data: address or as a long base64 run.
     Rule 5: no voiceprint. Rule 6: no record of what the subtitles learned. Rule 7: no list of hidden pictures.
-    Rule 8: no note of how a drive is doing. Rule 9: no conversation or story with the town."""
+    Rule 8: no note of how a drive is doing. Rule 9: no conversation or story with the town.
+    Rule 10: no person's own sound or other media in the shapes rule 2 does not see (check_own_media)."""
     if looks_like_voiceprint(data):
         raise Refused(400, SAY_VOICEPRINT)
     if looks_like_learned_words(data):
@@ -475,6 +624,7 @@ def check_content(data) -> None:
             raise Refused(400, f"This has {run:,} characters of encoded data in a row inside it, which is what a "
                                f"picture, a sound or a recording looks like as text (the most allowed is "
                                f"{BASE64_RUN_MAX:,}). " + SAY_KEEP_IT_HOME)
+    check_own_media(data)
 
 
 def _too_big(what: str, size: int, cap: int) -> Refused:

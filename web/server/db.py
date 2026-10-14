@@ -1464,7 +1464,10 @@ class _Store:
 
     # Said once, on the page, because it is the part that matters and it is still true.
     NEVER_STORED = [
-        "your photos, videos or recordings - they stay on your machine",
+        # 2026-10-13 (storage_line.py rule 10, Mike: "We can't be letting people store their own audio files on the
+        # site"): a person's own sounds named, since the talk board's own shipped clips are the one kind of sound here.
+        "your photos, videos or recordings, or any sound you record or add (a word for an AAC board card, a voice "
+        "recording) - they stay on your device or in your Nimrod folder; the only sounds this site keeps are its own",
         "camera feeds - they never leave the device",
         "your location - the device is never asked where it is (a town you type for "
         "Weather is a setting, listed above)",
