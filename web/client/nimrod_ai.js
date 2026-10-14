@@ -43,6 +43,7 @@
 import { MENU_TAB_IDS } from './actions.js';
 import { isChatModel, DEFAULT_BASE_URL } from './ai.js';
 import { beginAI } from './ai_activity.js';   // status icons (2026-10-14)
+import { mergeNotesDoc } from './nimrod_notes.js';   // notes on a phone (2026-10-14)
 import { GUIDE_NODES, GUIDE_TOPICS, SETTINGS_PAGES, GUIDE_ROOT, introFor } from './nimrod_guide_data.js';
 
 export const AI_SOURCE = 'nimrod-ai';           // `source` on what the AI says, for the output log
@@ -299,7 +300,10 @@ export async function openAIStore(ctx) {
   try { pid = ctx?.personId || null; } catch { pid = null; }
   let handle = null;
   if (pid && typeof ctx?.makePersonState === 'function') {
-    try { handle = ctx.makePersonState(pid, AI_STATE_KEY); } catch { handle = null; }
+    // (2026-10-14, notes on a phone: the notes merge by id when a write is refused, so a note changed on a phone and
+    // one made here at the same time are both kept - nimrod_notes.js `mergeNotesDoc`. A host that takes no options
+    // ignores it.)
+    try { handle = ctx.makePersonState(pid, AI_STATE_KEY, { merge: mergeNotesDoc }); } catch { handle = null; }
   }
   let hostState = null;
   try { hostState = typeof ctx?.personHost?.state === 'function' ? ctx.personHost.state : null; } catch { hostState = null; }

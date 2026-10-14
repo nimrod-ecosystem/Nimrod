@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>notes_page — notes on a phone, the same notes as "Make a note"</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+</style>
+</head>
+<body>
+<h1>notes_page — notes on a phone, the same notes as "Make a note"</h1>
+<p>Row 2.85 (Mike, 2026-10-14, via chat): <i>"a plain Notes module or page for a phone, using the same person-record
+notes as 'Make a note'"</i>. The merge by note id (so a screen and a phone writing at once both keep their notes),
+then the real page against the server's person record. Needs the server.</p>
+<div id="mount" style="width:375px"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mergeNotesDoc, editNote, makeNote, cleanNotes, NOTES_MAX } from '../nimrod_notes.js';
+import { openAIStore, AI_STATE_KEY } from '../nimrod_ai.js';
+import { mountNotesPage, NOTES_PAGE, PERSON_KEY } from '../notes_page.js';
+import { PAGE_STAGES } from '../modules_catalog.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 8000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+const n = (id, text, at) => ({ id, at, where: '', text });
+const ids = (doc) => cleanNotes(doc.notes).map((x) => x.id);
+const texts = (doc) => Object.fromEntries(cleanNotes(doc.notes).map((x) => [x.id, x.text]));
+
+try {
+  // ==========================================================================================
+  section('editNote: same note, new words');
+  const l0 = [n('a', 'one', 1), n('b', 'two', 2)];
+  check('the words change; id and date stay', J(editNote(l0, 'b', ' TWO ')) === J([n('a', 'one', 1), n('b', 'TWO', 2)]));
+  check('empty words change nothing (removing is its own press)', J(editNote(l0, 'b', '   ')) === J(l0));
+  check('an unknown id changes nothing', J(editNote(l0, 'zz', 'x')) === J(l0));
+
+  // ==========================================================================================
+  section('*** mergeNotesDoc: two places writing one list ***');
+  const base = { name: 'Nim', notes: [n('a', 'one', 1), n('b', 'two', 2)] };
+  {
+    const mine = { ...base, notes: [...base.notes, n('p', 'from the phone', 5)] };
+    const theirs = { ...base, notes: [...base.notes, n('s', 'from the screen', 4)] };
+    const r = mergeNotesDoc(base, mine, theirs);
+    check('*** a note added on each side: both are kept, in date order ***', J(ids(r.data)) === J(['a', 'b', 's', 'p']), J(ids(r.data)));
+    check('nothing lost', J(r.lost) === '[]');
+  }
+  {
+    const mine = { ...base, notes: [n('b', 'two', 2)] };
+    const theirs = { ...base, notes: [...base.notes, n('s', 'new', 4)] };
+    const r = mergeNotesDoc(base, mine, theirs);
+    check('removed here, added there: removed, and the new one kept', J(ids(r.data)) === J(['b', 's']), J(ids(r.data)));
+  }
+  {
+    const mine = { ...base, notes: [n('a', 'ONE', 1), n('b', 'two', 2)] };
+    const theirs = { ...base, notes: [...base.notes, n('s', 'new', 4)] };
+    const r = mergeNotesDoc(base, mine, theirs);
+    check('changed here: these words, the other side\'s addition kept', texts(r.data).a === 'ONE' && ids(r.data).includes('s'));
+  }
+  {
+    const mine = { ...base, notes: [n('a', 'mine', 1), n('b', 'two', 2)] };
+    const theirs = { ...base, notes: [n('a', 'theirs', 1), n('b', 'two', 2)] };
+    const r = mergeNotesDoc(base, mine, theirs);
+    check('*** both changed one note: these words win, and the other words are handed back as lost ***',
+      texts(r.data).a === 'mine' && J(r.lost) === J([{ id: 'a', text: 'theirs' }]), J(r));
+  }
+  {
+    const mine = { ...base, notes: [n('a', 'changed here', 1), n('b', 'two', 2)] };
+    const theirs = { ...base, notes: [n('b', 'two', 2)] };
+    const r = mergeNotesDoc(base, mine, theirs);
+    check('changed here, removed there: it comes back with these words (a merge never throws words away)', texts(r.data).a === 'changed here', J(ids(r.data)));
+  }
+  {
+    const mine = { ...base };
+    const theirs = { ...base, notes: [n('b', 'two', 2)] };
+    const r = mergeNotesDoc(base, mine, theirs);
+    check('untouched here, removed there: stays removed', J(ids(r.data)) === J(['b']));
+  }
+  {
+    const r1 = mergeNotesDoc(base, { ...base, persona: 'kind' }, { ...base, name: 'Other' });
+    check('the record\'s other keys: the server\'s, unless changed here', r1.data.name === 'Other' && r1.data.persona === 'kind', J(r1.data));
+  }
+  {
+    const many = Array.from({ length: NOTES_MAX }, (_, i) => n(`x${i}`, `n${i}`, i + 10));
+    const r = mergeNotesDoc({ notes: many }, { notes: [...many, n('new', 'mine', 99999)] }, { notes: many });
+    check(`never more than ${NOTES_MAX}: the oldest goes`, cleanNotes(r.data.notes).length === NOTES_MAX && ids(r.data).includes('new') && !ids(r.data).includes('x0'));
+  }
+  check('nonsense in: an empty list out, no throw', J(mergeNotesDoc(null, undefined, 7).data) === J({ notes: [] }));
+
+  // ==========================================================================================
+  section('the screen\'s handle gets the same merge (nimrod_ai.js openAIStore)');
+  {
+    let opts = null;
+    const fake = { get: () => ({}), set() {}, load: async () => {}, flush: async () => {}, destroy() {} };
+    await openAIStore({ personId: 'p1', makePersonState: (pid, key, o) => { opts = { pid, key, o }; return fake; } });
+    check('*** openAIStore asks for the record with mergeNotesDoc ***', opts && opts.key === AI_STATE_KEY && opts.o?.merge === mergeNotesDoc, J(opts && { ...opts, o: Object.keys(opts.o || {}) }));
+  }
+  check('the page is listed as beta (its banner)', PAGE_STAGES['notes.html'] === 'beta');
+
+  // ==========================================================================================
+  section('signed out: a Sign in link, nothing else');
+  {
+    const r = document.createElement('div');
+    await mountNotesPage(r, { fetchImpl: async () => new Response('{}', { status: 401 }), storage: null });
+    check('*** 401 -> "Sign in", back to this page ***', r.dataset.view === 'signin'
+      && r.querySelector('[data-signin]')?.getAttribute('href') === `/auth/login?next=${encodeURIComponent('/notes.html')}`);
+    const r2 = document.createElement('div');
+    await mountNotesPage(r2, { fetchImpl: async () => new Response('{}', { status: 500 }), storage: null });
+    check('a server error says so in words', r2.dataset.view === 'problem' && /could not be loaded/.test(r2.textContent));
+  }
+
+  // ==========================================================================================
+  section('*** the real page, the real record ***');
+  const user = `notes-${Date.now().toString(36)}`;
+  const H = { 'X-Dev-User': user, 'Content-Type': 'application/json' };
+  const mem = new Map();
+  const storage = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
+  let copied = null;
+  const nav = { clipboard: { writeText: async (t) => { copied = t; } } };
+  const root = document.getElementById('mount');
+  const page = await mountNotesPage(root, { user, storage, nav, pollMs: 60 * 60 * 1000 });
+  const pid = page.person()?.id;
+  check('it opens on this login\'s person', root.dataset.view === 'notes' && !!pid, root.dataset.view);
+  check('...and remembers whose notes on this phone', storage.getItem(PERSON_KEY) === pid);
+  check('no notes yet: says how to make one', !!root.querySelector('[data-empty]'));
+  const read = async () => (await (await fetch(`/api/people/${pid}/state/${AI_STATE_KEY}`, { headers: H })).json());
+  const click = (sel) => root.querySelector(sel).click();
+
+  root.querySelector('[data-new]').value = 'Bigger buttons on the clock';
+  click('[data-save]');
+  check('*** Save note: it is on the person\'s record, saying it came from this page ***', await until(async () => {
+    const d = (await read()).data || {};
+    return cleanNotes(d.notes).some((x) => x.text === 'Bigger buttons on the clock' && x.context?.page === NOTES_PAGE);
+  }));
+  check('the box empties and it is listed', await until(() => root.querySelector('[data-new]').value === ''
+    && root.querySelectorAll('[data-note]').length === 1));
+  const first = cleanNotes(((await read()).data || {}).notes)[0];
+
+  click('[data-save]');
+  check('an empty box saves nothing, and says why', await until(() => /Write something first/.test(root.textContent))
+    && cleanNotes(((await read()).data || {}).notes).length === 1);
+
+  // THE SCREEN WRITES, the phone has not seen it yet (its own copy is a version behind).
+  const now = await read();
+  const fromScreen = makeNote('Made on the screen', { at: Date.now() + 1000 });
+  const put = await fetch(`/api/people/${pid}/state/${AI_STATE_KEY}`, { method: 'PUT', headers: H,
+    body: J({ data: { ...(now.data || {}), notes: [...cleanNotes(now.data?.notes), fromScreen] }, base_version: now.version }) });
+  check('(setup) the screen\'s note landed', put.ok, String(put.status));
+
+  root.querySelector(`[data-note="${first.id}"] [data-edit]`).click();
+  check('Change: the note becomes a box with its words', root.querySelector('[data-edit-box]')?.value === 'Bigger buttons on the clock');
+  root.querySelector('[data-edit-box]').value = 'Bigger buttons on the clock, and brighter';
+  click('[data-edit-save]');
+  check('*** a change made while the screen added a note: BOTH are on the record ***', await until(async () => {
+    const t = texts((await read()).data || {});
+    return t[first.id] === 'Bigger buttons on the clock, and brighter' && t[fromScreen.id] === 'Made on the screen';
+  }), J(texts((await read()).data || {})));
+  check('...and the page shows both, newest first', await until(() => {
+    const items = [...root.querySelectorAll('[data-note]')].map((e) => e.getAttribute('data-note'));
+    return J(items) === J([fromScreen.id, first.id]);
+  }));
+
+  root.querySelector(`[data-note="${fromScreen.id}"] [data-remove]`).click();
+  check('Remove asks, in place', !!root.querySelector(`[data-note="${fromScreen.id}"] [data-asking]`));
+  root.querySelector('[data-remove-no]').click();
+  check('Keep: nothing removed', root.querySelectorAll('[data-note]').length === 2 && !root.querySelector('[data-asking]'));
+  root.querySelector(`[data-note="${fromScreen.id}"] [data-remove]`).click();
+  root.querySelector('[data-remove-yes]').click();
+  check('*** Remove, then Remove: gone from the record ***', await until(async () => J(ids((await read()).data || {})) === J([first.id])));
+
+  click('[data-copy]');
+  check('Copy all: the same text a screen\'s "Copy all" makes', await until(() => copied && copied.includes('and brighter') && copied.startsWith('## Notes from the Nimrod guide')));
+
+  // A note with markup in it is words, not markup.
+  root.querySelector('[data-new]').value = '<img src=x onerror="window.__bad=1">';
+  click('[data-save]');
+  check('a note is shown as words, never as markup', await until(() => root.querySelectorAll('[data-note]').length === 2)
+    && !root.querySelector('[data-list] img') && !window.__bad);
+  page.destroy();
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

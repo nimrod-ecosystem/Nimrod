@@ -169,6 +169,55 @@ export function addNote(list, note) {
 }
 export const removeNote = (list, id) => cleanNotes(list).filter((n) => n.id !== id);
 
+/** One note's words changed (notes on a phone, 2026-10-14): same id, same date - it is the same note. Empty words
+ * change nothing (removing is its own press). */
+export function editNote(list, id, text) {
+  const t = clip(String(text || '').replace(/\r\n/g, '\n').trim(), NOTE_MAX_CHARS);
+  return cleanNotes(list).map((n) => (n.id === id && t ? { ...n, text: t } : n));
+}
+
+// ---------------------------------------------------------------------------------------------------
+// *** TWO PLACES WRITING ONE LIST (2026-10-14, notes on a phone, row 2.85). *** The notes are ONE key on the person's
+// record, so state.js's ordinary rebase of a refused write (keep this side's changed keys whole) would put back this
+// side's whole list: a note made on the screen while a phone changed another would be lost. This is state.js's
+// `merge(base, mine, theirs)` for that record, by note id, starting from the server's copy:
+//   * a note added here is added; one removed here is removed; one whose words changed here takes these words;
+//   * a note changed here that the other side removed comes back with these words (words are never thrown away
+//     by a merge; removing it again is one press);
+//   * both changed the same note: these words win (this write is the later one) and the other side's are `lost`,
+//     so the page can say so;
+//   * the record's other keys (the AI's name and manner): the server's, unless this side changed one.
+// Pure.
+// ---------------------------------------------------------------------------------------------------
+export function mergeNotesDoc(base, mine, theirs) {
+  const b0 = base && typeof base === 'object' ? base : {};
+  const m0 = mine && typeof mine === 'object' ? mine : {};
+  const t0 = theirs && typeof theirs === 'object' ? theirs : {};
+  const b = new Map(cleanNotes(b0.notes).map((n) => [n.id, n]));
+  const m = new Map(cleanNotes(m0.notes).map((n) => [n.id, n]));
+  const lost = [];
+  let out = cleanNotes(t0.notes).filter((n) => !(b.has(n.id) && !m.has(n.id)));
+  out = out.map((n) => {
+    const was = b.get(n.id), now = m.get(n.id);
+    if (!was || !now || now.text === was.text) return n;
+    if (n.text !== was.text && n.text !== now.text) lost.push({ id: n.id, text: n.text });
+    return { ...n, text: now.text };
+  });
+  const have = new Set(out.map((n) => n.id));
+  for (const n of m.values()) {
+    if (have.has(n.id)) continue;
+    const was = b.get(n.id);
+    if (!was || n.text !== was.text) out.push(n);      // added here, or changed here and removed there
+  }
+  const data = { ...t0 };
+  for (const k of Object.keys(m0)) {
+    if (k === 'notes') continue;
+    if (JSON.stringify(m0[k]) !== JSON.stringify(b0[k])) data[k] = m0[k];
+  }
+  data.notes = cleanNotes(out).slice(-NOTES_MAX);
+  return { data, lost };
+}
+
 // ---------------------------------------------------------------------------------------------------
 // *** NOTES THIS BROWSER KEPT BEFORE A PERSON WAS KNOWN, MOVED TO THE PERSON'S RECORD (2026-10-04). *** A landing
 // tried before anybody saved it ran over this browser's local store under ONE preview id, shared by everybody who

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Your notes on a phone: the same notes Make a note keeps on a screen. Write, change, remove, copy or save them.">
+<meta name="robots" content="noindex">
+<title>Notes — Nimrod</title>
+<link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
+<link rel="stylesheet" href="./layers.css">
+<style>
+  /* The check-in page's shape (checkin.html): theme variables only, one column, big targets for a thumb. */
+  html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text);
+    font:17px/1.45 var(--font, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif); }
+  #app { min-height:100vh; box-sizing:border-box;
+    padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px); }
+  .nt { max-width:640px; margin:0 auto; display:flex; flex-direction:column; gap:12px; }
+  .nt h1 { font-size:1.35rem; margin:0; }
+  .nt-h2 { font-size:1.1rem; margin:0; }
+  .nt-lead, .nt-note { margin:0; color:var(--text-soft); }
+  .nt-field { display:flex; flex-direction:column; gap:6px; font-weight:600; }
+  .nt-field select { min-height:48px; font:inherit; padding:0 12px; border-radius:10px;
+    border:1px solid var(--border); background:var(--surface); color:var(--text); }
+  .nt-box { width:100%; box-sizing:border-box; font:inherit; font-weight:400; padding:10px 12px; border-radius:10px;
+    border:1px solid var(--border); background:var(--surface); color:var(--text); resize:vertical; }
+  .nt-btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 16px;
+    border-radius:12px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);
+    font:700 1rem/1.2 inherit; cursor:pointer; text-decoration:none; }
+  .nt-primary { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+  .nt-danger { background:var(--accent-warm-deep); border-color:var(--accent-warm-deep); color:var(--on-accent-warm-deep); }
+  .nt-big { min-height:60px; width:100%; font-size:1.1rem; }
+  .nt-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .nt-said { margin:0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); color:var(--text); font-weight:600; }
+  .nt-said[hidden], .nt-warn[hidden], .nt-row[hidden] { display:none; }
+  .nt-warn { margin:0; padding:10px 12px; border-radius:10px; border:2px solid var(--accent-warm-deep); font-weight:600; }
+  .nt-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:8px; }
+  .nt-count { color:var(--text-soft); }
+  .nt-list { display:flex; flex-direction:column; gap:10px; }
+  .nt-item { padding:12px; border-radius:12px; background:var(--surface); border:1px solid var(--border);
+    display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .nt-when { margin:0; font-size:.9rem; font-weight:700; }
+  .nt-where { font-weight:400; color:var(--text-soft); overflow-wrap:anywhere; }
+  .nt-text { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .nt-ask { font-weight:700; margin-right:4px; }
+  .nt-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+  import { applyTheme, getStoredTheme, resolveThemeId } from './theme.js';
+  import { mountNotesPage } from './notes_page.js';
+  applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+  window.__notes = { ready: mountNotesPage(document.getElementById('app'))
+    .then((page) => { window.__notes.page = page; return page; })
+    .catch((err) => { console.error('notes: failed to start', err); }) };
+</script>
+<!-- live and beta (2026-10-14): a small banner along the top while this page is beta (modules_catalog.js PAGE_STAGES). -->
+<script type="module">import { mountBetaBanner } from './beta.js'; mountBetaBanner({ page: 'notes.html' });</script>
+</body>
+</html>

@@ -214,6 +214,8 @@ export const SUITES = [
   'checkin',
   // 2026-10-14 (Mike): status icons - one small strip, the whole time, for what sees, hears, sends or controls.
   'status_icons',
+  // Row 2.85 (2026-10-14): notes on a phone - the same person-record notes as "Make a note", merged by note id.
+  'notes_page',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.
