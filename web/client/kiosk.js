@@ -37,6 +37,7 @@ import { createScreenSpeech } from './screen_speech.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { createLocalVoice, withLocalVoice, localVoiceFrom } from './local_voice.js';
+import { switchURL, switchesByReload, writeTrail, takeTrail } from './screen_switch.js';   // row 2.89
 import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
@@ -369,6 +370,10 @@ export async function mountKiosk(root, {
   // address and navigation entry when absent. See `isColdStart` (restart.js).
   launch = undefined,
   navigate = (url) => { if (typeof location !== 'undefined') location.replace(url); },
+  // ROW 2.89 (2026-10-14; screen_switch.js argues it): changing dashboard from the screen (the bar's list, "go to",
+  // Back, Home, the crumbs) is the same LOAD the dashboards page does, except while a call, the intercom or a check-in
+  // is live. kiosk.html turns it on; off here so a host page (a suite, a preview) is never navigated away by a switch.
+  reloadSwitch = false,
   // RECOVERY SEAMS. All three exist so the test can walk the whole ladder without anything
   // actually happening - a suite that reloads the page cannot report its own results, and
   // one that reboots a machine is not a suite anybody will run twice.
@@ -805,6 +810,11 @@ export async function mountKiosk(root, {
   let soundScene = null;         // the theme's live scene id, which "sounds like: match the scene" follows
   let lastShownTheme;            // the theme id last applied (Stage 4: a swap re-applies only on a change)
   const bootProfileId = profileId;   // the screen this kiosk booted on (Stage 4: its doc is the one held open)
+  // Row 2.89 (screen_switch.js): a person's switch that RELOADED carried the trail and Home here. HOME is the dashboard
+  // the screen started on before any switch - not the one this page happened to load - else Home after one switch would
+  // be "where you are". Read once; only on a page that switches by reload (kiosk.html).
+  const carriedTrail = (!embedded && reloadSwitch) ? takeTrail(profileId, { session }) : null;
+  const homeProfileId = carriedTrail?.home || bootProfileId;
   let listening = null;          // listening_cue.js: the cue, the tone, the duck, the voice-game pause
   let listenSig = null;
   let offListenPerson = null;
@@ -2667,6 +2677,32 @@ export async function mountKiosk(root, {
   let swapping = false;
   const screenStack = [];          // where to go back to
 
+  // *** ROW 2.89: A PERSON'S SWITCH IS AN ACTUAL SWITCH (screen_switch.js argues it). *** Every way a person changes
+  // dashboard - the bar's list, "go to <name>", Back, Home, the crumbs, the editor's and the map's Go - comes here.
+  // With `reloadSwitch` (kiosk.html), and nothing live running, it is the dashboards page's own load
+  // (`kiosk.html?profile=<id>`), the trail and Home carried across in this tab's sessionStorage. Otherwise, today's
+  // in-place swap. The state machine's `kiosk/show` (a call's own screen) is not a person's switch: it stays in place.
+  /** What is live right now that a reload would cut: 'call' | 'intercom' | 'checkin' | null. */
+  function liveSession() {
+    try { if (callTransport?.isLive?.() || callView) return 'call'; } catch { /* not built */ }
+    try { if ((intercomRx?.sessions?.() || []).length) return 'intercom'; } catch { /* not built */ }
+    try { if ((checkInRx?.sessions?.() || []).length) return 'checkin'; } catch { /* not built */ }
+    return null;
+  }
+  /** `home`: going Home (the trail cleared). `remember: false`: the trail as it is (Back has already taken its step). */
+  async function switchScreen(nextId, { remember = true, home = false } = {}) {
+    if (!nextId || nextId === profileId || swapping) return null;
+    if (!switchesByReload({ reload: reloadSwitch, embedded, live: liveSession() })) {
+      return home ? goHomeInPlace() : showScreen(nextId, { remember });
+    }
+    const stack = home ? [] : (remember ? trailAfter(screenStack, profileId, nextId) : screenStack.slice());
+    writeTrail({ to: nextId, stack, home: homeProfileId, names: Object.fromEntries(screenNames) }, { session });
+    let search = '';
+    try { search = launch?.search ?? (typeof location !== 'undefined' ? location.search : ''); } catch { search = ''; }
+    navigate(switchURL(nextId, search));
+    return nextId;
+  }
+
   /** Show another screen here, keeping everything that is not a module.
    *  `remember: false` on the return leg, so going back does not stack up forever. */
   async function showScreen(nextId, { remember = true } = {}) {
@@ -2782,7 +2818,7 @@ export async function mountKiosk(root, {
   async function showPreviousScreen() {
     const back = screenStack.pop();
     if (!back) return null;
-    const got = await showScreen(back, { remember: false });
+    const got = await switchScreen(back, { remember: false });
     // Row 2.38: a back that did not happen leaves the trail as it was (the way back is still there).
     if (!got) screenStack.push(back);
     drawCrumbs();
@@ -2814,17 +2850,21 @@ export async function mountKiosk(root, {
   const crumbsEl = embedded ? null : document.createElement('nav');
   const crumbs = crumbsEl ? createBreadcrumb(crumbsEl, {
     // A crumb `steps` levels up: straight there, the trail cut at it (`trailAfter` does the cutting).
-    onJump: (id) => { if (id === bootProfileId) goHomeScreen().catch(() => {}); else showScreen(id).catch(() => {}); },
+    onJump: (id) => { if (id === homeProfileId) goHomeScreen().catch(() => {}); else switchScreen(id).catch(() => {}); },
   }) : null;
   if (crumbsEl) kioskEl.append(crumbsEl);
   const trailNow = () => [...screenStack, profileId].map((id) => ({ id, name: crumbName(id, screenNames) }));
   function drawCrumbs() {
     try { crumbs?.draw(trailNow()); } catch (err) { console.error('kiosk: breadcrumb', err); }
   }
-  /** Home: the dashboard this screen started on, and the trail cleared. */
+  /** Home: the dashboard this screen started on, and the trail cleared. (Row 2.89: "started on" survives a switch that
+   *  reloaded - `homeProfileId`, carried in the trail - so Home after a switch is still the first dashboard.) */
   async function goHomeScreen() {
-    if (profileId === bootProfileId) { screenStack.length = 0; drawCrumbs(); return profileId; }
-    const got = await showScreen(bootProfileId, { remember: false });
+    if (profileId === homeProfileId) { screenStack.length = 0; drawCrumbs(); return profileId; }
+    return switchScreen(homeProfileId, { remember: false, home: true });
+  }
+  async function goHomeInPlace() {
+    const got = await showScreen(homeProfileId, { remember: false });
     if (got) { screenStack.length = 0; drawCrumbs(); }
     return got;
   }
@@ -2860,6 +2900,11 @@ export async function mountKiosk(root, {
     return { topic: SCREEN_BACK, fallback: 'dashboard-back' };
   }
   nameScreen(profileId, arr.profile()?.name);
+  // Row 2.89: a switch that reloaded left the trail, Home and the crumbs' names for THIS page (read once, if fresh).
+  if (carriedTrail) {
+    screenStack.splice(0, screenStack.length, ...carriedTrail.stack);
+    for (const [id, name] of Object.entries(carriedTrail.names)) if (!screenNames.has(id)) nameScreen(id, name);
+  }
   drawCrumbs();
 
   // *** THE STATE MACHINE'S HANDLE ON THIS. *** It needs no new engine primitive: a state's
@@ -3030,7 +3075,7 @@ export async function mountKiosk(root, {
   let pickerNote = null;            // a sentence for the tray (a make that failed)
   const picker = createDashboardPicker(screensEl, {
     onClose: () => toggleScreens(false),
-    onPick: async (id) => { toggleScreens(false); await showScreen(id); },
+    onPick: async (id) => { toggleScreens(false); await switchScreen(id); },
     onMake: (key) => { goToPrebuilt(key, { fromPicker: true }).catch(() => {}); },
     onLeave: goHome,
     // Row 2.38: the way back along the trail, for a switch (the breadcrumb is the pointer's).
@@ -3069,7 +3114,7 @@ export async function mountKiosk(root, {
       leave: !screenLocked(),
       // Row 2.38: inside something an object opened -- Back (one step) and Home (the start), first.
       back: prevId ? { id: prevId, name: crumbName(prevId, screenNames) } : null,
-      home: screenStack.length ? { id: bootProfileId, name: crumbName(bootProfileId, screenNames) } : null,
+      home: screenStack.length ? { id: homeProfileId, name: crumbName(homeProfileId, screenNames) } : null,
       // Offline, signed out, or a demo kiosk with no account. Saying so beats an empty box, and the way
       // out is still on the row below.
       empty: list.length || offers.length ? null : 'No other dashboards to show from here.',
@@ -3121,7 +3166,7 @@ export async function mountKiosk(root, {
     if (screensOpen) toggleScreens(false);
     // It is in the list now: "go to my room" and its name are speakable from here on.
     listDashboards().then((l) => { if (l) applyDashboards(l); }).catch(() => {});
-    return got.id === profileId ? got.id : showScreen(got.id);
+    return got.id === profileId ? got.id : switchScreen(got.id);
   }
 
   // The tray's scan: the same verbs the menu takes, only while it is open (and the menu is not).
@@ -3149,7 +3194,7 @@ export async function mountKiosk(root, {
       // so it does not also say "nothing here answers that".
       if (p.prebuilt || p.id) { try { p.claim?.(); } catch { /* a publisher's claim must not stop the press */ } }
       if (p.prebuilt) goToPrebuilt(p.prebuilt).catch(() => {});
-      else if (p.id) showScreen(p.id).catch(() => {});
+      else if (p.id) switchScreen(p.id).catch(() => {});
     }));
   }
 
@@ -3245,7 +3290,7 @@ export async function mountKiosk(root, {
             ? (name) => profiles.create(name, personId || arr.profile()?.person_id || '') : null,
           currentId: () => profileId,
           loadMap: !embedded && typeof profiles?.list === 'function' ? mapLoad : null,
-          onGo: (id) => { closeEditView(); showScreen(id).catch(() => {}); },
+          onGo: (id) => { closeEditView(); switchScreen(id).catch(() => {}); },
           hidePolicy: { personHid: (id) => { try { hideSound?.personHid?.(id); } catch { /* not load-bearing */ } } },
           onClose: () => {
             kEditor = null;
@@ -3300,7 +3345,7 @@ export async function mountKiosk(root, {
     kioskEl.append(mapHost);
     mapWin = mountMapWindow(mapHost, {
       load: mapLoad, current: () => profileId,
-      onGo: (id) => { closeMap(); showScreen(id).catch(() => {}); },
+      onGo: (id) => { closeMap(); switchScreen(id).catch(() => {}); },
       onClose: () => closeMap(),
     });
     for (const ev of ['pointerdown', 'keydown']) mapHost.addEventListener(ev, () => armMapIdle());
@@ -6458,10 +6503,11 @@ export async function mountKiosk(root, {
       // (row 2.83) The dashboards of the person this screen is for, each name once (restart.js restartScreensFor argues
       // the fallback when no person is set).
       ...tagged([RESTART_HEADING, ...fieldItems([normalizeField(restartField({
-        cfg: restart, screens: restartScreens, homeId: bootProfileId,
+        // (row 2.89: Home is the dashboard the screen started on, even after a switch that reloaded.)
+        cfg: restart, screens: restartScreens, homeId: homeProfileId,
         personId: screenPersonNow() || '',
-        homeName: screenNames.get(bootProfileId) || restartScreens.find((d) => d && d.id === bootProfileId)?.name
-          || (profileId === bootProfileId ? arr.profile()?.name : '') || '',
+        homeName: screenNames.get(homeProfileId) || restartScreens.find((d) => d && d.id === homeProfileId)?.name
+          || (profileId === homeProfileId ? arr.profile()?.name : '') || '',
         names: screenNames,
       }))].filter(Boolean), {
         values: () => ({ [RESTART_KEY]: restartValue(restart) }),

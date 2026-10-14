@@ -284,7 +284,8 @@ function offerCat(kiosk) {
   try {
     const profiles = createProfilesClient({ user: who.user });
     const profileId = await ensureProfile(profiles, who.user, wantProfile);
-    const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles });
+    // reloadSwitch (row 2.89, screen_switch.js): a person changing dashboard gets the dashboards page's own load.
+    const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles, reloadSwitch: true });
     boot.remove();
     offerTour(kiosk);
   } catch (e) {

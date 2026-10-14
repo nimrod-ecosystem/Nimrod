@@ -4596,6 +4596,64 @@ const toTab = (m, id) => {
       root.remove();
     }
 
+    // ---- ROW 2.89 (2026-10-14): A PERSON'S SWITCH IS THE DASHBOARDS PAGE'S OWN LOAD, NOT AN IN-PLACE STACK ----
+    // Mike: "It should be opening the dashboard the same as if you went back to the dashboards page ... It should be an
+    // actual switch." The dashboards page (home.js kioskURL, composer.js) opens `/kiosk.html?profile=<id>`.
+    {
+      const A = await profiles.create('TEST-switch-A');
+      await profiles.addModule(A.id, 'photos');
+      const B = await profiles.create('TEST-switch-B');
+      await profiles.addModule(B.id, 'clock');
+      const mapStore = () => { const m = new Map([['nimrod.restart.tab', '1']]);
+        return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+      const sess = mapStore();
+      const trailRec = () => { try { return JSON.parse(sess.getItem('nimrod.kiosk.trail') || 'null'); } catch { return null; } };
+      let went = [];
+      const busA = createBus();
+      const rootA = box();
+      let k = await mountKiosk(rootA, { user: USER, profileId: A.id, profiles, bus: busA, session: sess, storage: mapStore(),
+        reloadSwitch: true, navigate: (u) => { went.push(u); }, launch: { search: '?lockHelper=off&boot=1', navType: 'navigate' } });
+      await sleep(250);
+      busA.publish('dashboard/go', { id: B.id });
+      check('*** "go to" a dashboard is the dashboards page\'s own load (/kiosk.html?profile=<id>), not an in-place swap ***',
+        await settled(() => went.length === 1, 3000) && `/${went[0].split('&')[0]}` === `/kiosk.html?profile=${encodeURIComponent(B.id)}`
+        && k.screenId() === A.id, `${JSON.stringify(went)} on ${k.screenId()}`);
+      check('...the launcher\'s lockHelper goes with it, its boot=1 does not (a switch is not a restart)',
+        went[0].includes('lockHelper=off') && !went[0].includes('boot='), went[0]);
+      check('*** ...and the trail and Home are carried for the page that loads ***',
+        trailRec()?.to === B.id && JSON.stringify(trailRec()?.stack) === JSON.stringify([A.id]) && trailRec()?.home === A.id, JSON.stringify(trailRec()));
+      k.destroy(); rootA.remove();
+      // THE PAGE THAT LOADS: B, with the trail.
+      went = [];
+      const busB = createBus();
+      const rootB = box();
+      k = await mountKiosk(rootB, { user: USER, profileId: B.id, profiles, bus: busB, session: sess, storage: mapStore(),
+        reloadSwitch: true, navigate: (u) => { went.push(u); }, launch: { search: '', navType: 'navigate' } });
+      await sleep(250);
+      check('*** on the loaded page, the crumbs show the way back (A, then B) ***',
+        JSON.stringify(k.trail().map((c) => c.id)) === JSON.stringify([A.id, B.id]) && trailRec() === null, JSON.stringify(k.trail()));
+      busB.publish(SCREEN_BACK);
+      check('*** Back goes to A by the same load, the trail one step shorter ***',
+        await settled(() => went.length === 1, 3000) && went[0] === `kiosk.html?profile=${encodeURIComponent(A.id)}`
+        && JSON.stringify(trailRec()?.stack) === '[]' && trailRec()?.home === A.id, `${JSON.stringify(went)} ${JSON.stringify(trailRec())}`);
+      k.destroy(); rootB.remove();
+      // Home from a page two switches in: A, the dashboard the screen started on, with the trail cleared.
+      went = [];
+      const C = await profiles.create('TEST-switch-C');
+      await profiles.addModule(C.id, 'clock');
+      const sess2 = mapStore();
+      sess2.setItem('nimrod.kiosk.trail', JSON.stringify({ to: C.id, stack: [A.id, B.id], home: A.id, names: {}, at: Date.now() }));
+      const busC = createBus();
+      const rootC = box();
+      k = await mountKiosk(rootC, { user: USER, profileId: C.id, profiles, bus: busC, session: sess2, storage: mapStore(),
+        reloadSwitch: true, navigate: (u) => { went.push(u); }, launch: { search: '', navType: 'navigate' } });
+      await sleep(250);
+      busC.publish('kiosk/home');
+      check('*** Home after switches is the dashboard the screen STARTED on, not the one this page loaded ***',
+        await settled(() => went.length === 1, 3000) && went[0] === `kiosk.html?profile=${encodeURIComponent(A.id)}`, JSON.stringify(went));
+      k.destroy(); rootC.remove();
+    }
+
     // ---- 3. "OVER THE DASHBOARD" from the library (the module is added first: the wait) ----
     {
       const S = await profiles.create('TEST-overhere');
