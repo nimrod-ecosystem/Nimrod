@@ -71,7 +71,8 @@ import { normalize, SPEECH_OPEN_TOPIC, SPEECH_ANSWER_TOPIC } from './input_speec
 import { GAME_SPOKEN, spokenNamesFrom, isGame, SAY_TTL_MS } from './play_as.js';
 import { PLAY_STATE_TOPIC } from './game_start.js';
 import { VERBS, FOCUS_VERBS, MEDIA_VERBS, ACTION_VERBS, verbTopic } from './actions.js';
-import { CATALOG, NOT_FOR_CAREGIVERS, titleFor } from './modules_catalog.js';
+import { CATALOG, NOT_FOR_CAREGIVERS, titleFor, stageOf } from './modules_catalog.js';
+import { splitStages } from './beta.js';
 
 export const VOICE_OPEN_WHERE = Object.freeze(['full', 'corner', 'off']);
 export const VOICE_OPEN_CORNERS = Object.freeze(['tl', 'tr', 'bl', 'br']);
@@ -218,9 +219,14 @@ export function moduleEntries({ manifests = [], catalog = CATALOG, notFor = NOT_
     const names = [title, m.title, ...(GAME_SPOKEN[type] || []), ...(MODULE_SPOKEN[type] || [])]
       .map((n) => normalize(n)).filter(Boolean);
     out.push({ id: type, type, name: String(title || m.title || type), names: [...new Set(names)], here: here.has(type),
-               ...(hidden ? { hidden: true } : {}) });
+               stage: stageOf(type, catalog), ...(hidden ? { hidden: true } : {}) });
   };
-  for (const c of catalog || []) if (c && c.type && !(notFor || {})[c.type]) add(c.type, titleFor(c, manifests || []), false);
+  // LIVE AND BETA (2026-10-14): live modules first, like every other list of them, and each entry says its stage. A
+  // beta module still opens by voice when its name is said: hiding beta things is about the lists you choose from, and
+  // a name said out loud is a choice already made.
+  const offered = (catalog || []).filter((c) => c && c.type && !(notFor || {})[c.type]);
+  const { live, beta } = splitStages(offered, (c) => stageOf(c.type, catalog));
+  for (const c of [...live, ...beta]) add(c.type, titleFor(c, manifests || []), false);
   for (const type of Object.keys(notFor || {})) add(type, reg.get(type)?.title || type, true);
   for (const { name, said } of spoken || []) {
     for (const e of out) if (e.names.includes(name) || normalize(e.name) === name) e.names = [...e.names, said];

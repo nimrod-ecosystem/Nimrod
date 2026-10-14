@@ -49,6 +49,8 @@ import { getManifest } from './module.js';
 import { fieldsFor, normalizeField, fieldItems, fieldValue, stepValue, displayValue, showsAtLevel } from './settings_fields.js';
 import { explainModule, selectionAt, explain } from './cat_help.js';
 import { cornerShowCss } from './panel_corners.js';   // corner on hover (2026-10-09): when the ✎ corner shows
+import { stageOf } from './modules_catalog.js';      // live and beta (2026-10-14): the Beta tag beside Done
+import { BETA_WORDS } from './beta.js';
 
 export const EDIT_PANEL_TOPIC = 'shell/edit-panel';   // { id?, on?: true|false } -- absent `on` toggles
 export const EDIT_SELECTED_TOPIC = 'edit/selected';   // the selection (below), with claim()
@@ -311,6 +313,8 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
   z-index:calc(var(--z-panel-contents,300) + 30);background:var(--surface);color:var(--text);
   border:1px solid var(--border);border-radius:12px;box-shadow:0 6px 24px color-mix(in srgb,var(--text) 25%,transparent)}
 .em-card[hidden]{display:none}
+.em-beta{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font:700 13px/1.2 system-ui,-apple-system,Segoe UI,sans-serif}
 .em-btn{min-width:44px;min-height:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--border);
   background:var(--surface-alt,var(--surface));color:var(--text);font:600 15px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;cursor:pointer}
 .em-btn:focus-visible{outline:3px solid var(--focus, var(--accent));outline-offset:2px}
@@ -435,6 +439,17 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     bar.className = 'em-bar';
     bar.innerHTML = `<button type="button" class="em-btn em-done" data-em="leave">Done</button>`;
     bar.querySelector('button').setAttribute('aria-label', `Done editing ${rec.title || rec.type}`);
+    // LIVE AND BETA (2026-10-14): a beta module says so while it is being edited, beside Done, and only then.
+    try {
+      if (stageOf(rec.type) === 'beta') {
+        const tag = doc.createElement('span');
+        tag.className = 'em-beta';
+        tag.dataset.emBeta = '';
+        tag.textContent = BETA_WORDS.badge;
+        tag.title = BETA_WORDS.detail;
+        bar.append(tag);
+      }
+    } catch { /* the bar without it */ }
     bar.addEventListener('click', (e) => { e.stopPropagation(); leave('done'); });
     const card = doc.createElement('div');
     card.className = 'em-card';

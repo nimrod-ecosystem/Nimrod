@@ -181,6 +181,9 @@ import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf } from './settings_fields.js';
+// LIVE AND BETA (2026-10-14): the person's "Beta things" row, and a beta panel says so in its own settings.
+import { BETA_FIELD, BETA_KEY, BETA_WORDS, betaShowOf } from './beta.js';
+import { stageOf } from './modules_catalog.js';
 // The person's usual starting level for question games, on the People tab (2026-10-06, adaptive_play.js openUsualStart).
 import { openUsualStart } from './adaptive_play.js';
 // players (2026-10-06): who is playing on this screen, its own tab in the ⚙ menu (player_picker.js).
@@ -1808,6 +1811,10 @@ export async function mountKiosk(root, {
     // "How you choose things" (6fd7575): 'point' or 'step', read when asked (a module mounted at boot, before
     // the menu below exists, gets the default rather than a ReferenceError).
     chooseMode: () => { try { return chooseModeNow(); } catch { return chooseModeOf(null); } },
+    // LIVE AND BETA (2026-10-14, beta.js): the person's "Beta things" choice, read when asked, the same way; and
+    // kept on that same row when a list changes it ("Hide these" in the Modules library).
+    showBeta: () => { try { return betaShowNow(); } catch { return betaShowOf(null); } },
+    setShowBeta: (v) => { try { choiceRow().set?.({ [BETA_KEY]: betaShowOf(v) }); } catch (err) { console.error('kiosk: beta', err); } },
     // A SCREEN, OR A PAGE SHOWING ONE (2026-10-02, profile.js): true on a real screen, false when this kiosk is
     // embedded in another page (Home, the modules page). "A screen never places a call" reads this first.
     isScreen: !embedded,
@@ -5755,6 +5762,19 @@ export async function mountKiosk(root, {
       },
     }).map((it) => ({ ...it, ...MENU_TAB.devices(0) }));
   }
+  // LIVE AND BETA (2026-10-14, beta.js BETA_FIELD): "Beta things", on the same row as "How you choose things" (the
+  // person's, else the screen's), on the This screen tab. Not in a kiosk embedded in a page: the page keeps it.
+  const betaShowNow = () => betaShowOf((choiceRow().get?.() || {})[BETA_KEY]);
+  function betaItems() {
+    if (torn || embedded) return [];
+    const rows = fieldItems([normalizeField(BETA_FIELD)], {
+      values: () => choiceRow().get?.() || {},
+      level: complexity(),
+      onStep: (k, v) => { try { choiceRow().set?.({ [k]: v }); } catch (err) { console.error('kiosk: beta', err); } },
+    });
+    const t = MENU_TAB.screen;
+    return rows.length ? [{ kind: 'heading', id: 'beta-head', label: 'Beta', ...t(2) }, ...rows.map((it) => ({ ...it, ...t(2) }))] : [];
+  }
   // *** ONE MENU, TWO PLACES (2026-10-03). *** These options ARE the screen's settings: the ⚙ menu is
   // `mountSettings` over them, and so is every Settings panel on this screen (`settingsMenuFor`, below). There
   // is no second list anywhere; a row added here is in both.
@@ -5783,7 +5803,7 @@ export async function mountKiosk(root, {
           : `now: ${whoState?.name || '…'}`,
       }];
     })()), ...voiceItems(), ...chooseModeItems(), ...usualStartItems(), ...playersItems(),   // players: its own tab
-      ...voiceOpenItems()],   // voice open (2026-10-12): the This screen tab
+      ...voiceOpenItems(), ...betaItems()],   // voice open (2026-10-12): the This screen tab; then Beta (2026-10-14)
     // SCREEN-LEVEL SETTINGS. Written to the profile settings blob, which IS the screen level
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
@@ -5983,6 +6003,14 @@ export async function mountKiosk(root, {
         ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),
         ...fieldsFor(rec.instance.manifest, rec.instance),
       ], fieldsOpts).map((it) => ({ ...it, ...MENU_TAB.module(0) }));
+      // LIVE AND BETA (2026-10-14): a beta panel says so HERE, in its own settings (and in edit mode), never on the
+      // panel while it is used. A row that says, not a control: it costs a switch nothing to pass.
+      try {
+        if (stageOf(rec.type) === 'beta') {
+          items.unshift({ kind: 'item', id: 'beta-note', disabled: true, ...MENU_TAB.module(0),
+            label: BETA_WORDS.panel, hint: BETA_WORDS.panelHint });
+        }
+      } catch { /* the rows without it */ }
       // *** "FOLLOWING: EVERY <MODULE> PANEL" (2026-10-02; the module level, `withTypeLayer`). *** Only where
       // the kind HAS a value for the key -- every other row is exactly what it was. A row the panel has not
       // set itself says what it follows; one it has set gets a second row that puts it back.

@@ -548,12 +548,14 @@
       <div class="device-note"><b>Runs on what you already have.</b> It runs in a web browser. Open
         it on a phone, a tablet, a computer, or an inexpensive Raspberry Pi (a small computer) and a
         monitor. No special equipment. Nothing you must buy from one company.</div>
-      <h3 style="margin-top:26px">Every module, today</h3>
+      <h3 style="margin-top:26px">Every finished module, today</h3>
       <p>A screen is built from modules. This list is made as you read it, from the same list the site
         offers you when you build a screen. So it cannot name something the software does not have.</p>
       <div class="mgroups" id="mods-live">
         <p class="muted">Loading the live list…</p>
       </div>
+      <!-- live and beta (2026-10-14): the one line pointing to the modules still being tweaked (filled in below). -->
+      <p class="muted" id="mods-beta" hidden></p>
 
       <div class="milestone"><b>Every module named above is in the public code.</b> Nothing here is
         a mockup. <b>This list is not written by hand.</b> It is made from
@@ -1008,10 +1010,13 @@ if (def) {
 
 // Everything, grouped the way the composer groups it, with the one fact a caregiver most needs:
 // whether it runs on its own or asks somebody a question.
+// LIVE AND BETA (Mike, 2026-10-14): this page says what Nimrod DOES, so it lists only the live modules - what we are
+// confident in - and one line points to the rest, which are public too, on the Modules page under Beta.
 const live = document.getElementById('mods-live');
 if (live) {
+  const isLive = (c) => c.stage !== 'beta';
   live.innerHTML = GROUPS.map((g) => {
-    const items = CATALOG.filter((c) => c.group === g.id);
+    const items = CATALOG.filter((c) => c.group === g.id && isLive(c));
     if (!items.length) return '';
     return '<div class="mgroup"><h4>' + esc(g.title) + '</h4><ul>'
       + items.map((c) => '<li><b>' + esc(nameOf(c)) + '</b> — ' + esc(c.lead)
@@ -1023,11 +1028,20 @@ if (live) {
   // A module in the catalog with no group would silently vanish from this page, which is the
   // failure the hand-written version had. Say so instead.
   const grouped = new Set(GROUPS.map((g) => g.id));
-  const orphans = CATALOG.filter((c) => !grouped.has(c.group)).map((c) => c.type);
+  const orphans = CATALOG.filter((c) => !grouped.has(c.group) && isLive(c)).map((c) => c.type);
   if (orphans.length) {
     live.insertAdjacentHTML('beforeend',
       '<p class="undocnote"><b>Not grouped, so not described above:</b> '
       + esc(orphans.join(', ')) + '. It exists, so it is listed.</p>');
+  }
+  // The one line pointing to Beta. The count is read from the catalog, never written; this page loads nothing but the
+  // catalog, so the words are its own.
+  const betaCount = CATALOG.filter((c) => !isLive(c)).length;
+  const betaLine = document.getElementById('mods-beta');
+  if (betaLine) {
+    betaLine.hidden = !betaCount;
+    betaLine.innerHTML = betaCount ? esc(betaCount + ' newer modules are still being tweaked. They are public too: ')
+      + '<a href="/modules">see them on the Modules page, under Beta</a>.' : '';
   }
 }
 </script>

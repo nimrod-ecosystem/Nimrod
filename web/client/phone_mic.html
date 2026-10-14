@@ -89,5 +89,7 @@
     .then((page) => { window.__phoneMic = page; })
     .catch((err) => { console.error('phone mic: failed to start', err); });
 </script>
+<!-- live and beta (2026-10-14): a small banner along the top while this page is beta (modules_catalog.js PAGE_STAGES). -->
+<script type="module">import { mountBetaBanner } from './beta.js'; mountBetaBanner({ page: 'phone_mic.html' });</script>
 </body>
 </html>

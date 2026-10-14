@@ -31,7 +31,7 @@ import { createBus } from '../bus.js';
 import { normalizeField } from '../settings_fields.js';
 import { auditFields } from '../settings_audit.js';
 import { listManifests } from '../module.js';
-import { CATALOG, NOT_FOR_CAREGIVERS } from '../modules_catalog.js';
+import { CATALOG, NOT_FOR_CAREGIVERS, stageOf } from '../modules_catalog.js';
 // Real manifests, so "which modules" is read off the real catalog and registry.
 import '../modules/trivia.js';
 import '../modules/calculator.js';
@@ -100,6 +100,15 @@ const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
     E('counter')?.hidden === true && !!NOT_FOR_CAREGIVERS.counter, J(E('counter')));
   check('"Other names it listens for" reach modules too (Calculator = sums)', E('calculator')?.names.includes('sums'));
   check('only what is registered: nothing for a module this page never loaded', !E('youtube'));
+  {
+    // LIVE AND BETA (2026-10-14): each entry says its stage, and the offered ones list live first.
+    const offered = ents.filter((e) => !e.hidden);
+    const firstBeta = offered.findIndex((e) => e.stage === 'beta');
+    check('*** every module entry says live or beta, as the catalog does ***',
+      ents.every((e) => e.stage === stageOf(e.type)), J(ents.filter((e) => e.stage !== stageOf(e.type)).map((e) => e.type)));
+    check('...and the offered ones are live first, like every list of modules',
+      firstBeta < 0 || offered.slice(firstBeta).every((e) => e.stage === 'beta'), J(offered.map((e) => `${e.type}:${e.stage}`)));
+  }
   const bt = VO.voiceBackTable();
   check('*** the way back by voice: "go back", "close it", "back to the pictures" - each the close verb ***',
     bt['go back'] === 'close' && bt['close it'] === 'close' && bt['back to the pictures'] === 'close'

@@ -289,6 +289,10 @@ import { createState } from './state.js';
 import { pickCurrent, readLastPerson } from './people.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
 import { mountSiteSide } from './site_nav.js';
+// LIVE AND BETA (2026-10-14, beta.js): the person's "Beta things" (signed in), else this browser's.
+import { stageOf } from './modules_catalog.js';
+import { BETA_WORDS, createBetaChoice } from './beta.js';
+import { INPUTS_KEY } from './input_runtime.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -385,7 +389,9 @@ function noteFor(item, live) {
 }
 function paintHead(item, live) {
   const u = item.use && USE[item.use] ? USE[item.use].label : '';
-  $('try-head').innerHTML = `<h2>${esc(item.title)}${u ? ` <span class="pill">${esc(u)}</span>` : ''}</h2>
+  const beta = item.stage === 'beta' || (item.type && stageOf(item.type) === 'beta');
+  $('try-head').innerHTML = `<h2>${esc(item.title)}${u ? ` <span class="pill">${esc(u)}</span>` : ''}${
+    beta ? ` <span class="pill" data-beta-pill title="${esc(BETA_WORDS.detail)}">${esc(BETA_WORDS.badge)}</span>` : ''}</h2>
     <p>${esc(item.lead || '')}</p>`;
   $('stagenote').textContent = noteFor(item, live);
   const add = $('add-btn');
@@ -512,7 +518,11 @@ const LIB_HOST = {
   usage: () => ({ recent: [...recent], counts: {} }),
   place: (it) => show(it),
 };
-const libRec = mountPanel('library', $('lib'), { libraryHost: () => LIB_HOST });
+// "Beta things" (beta.js): this browser's until the person's own row is read (below, signed in); "Hide these" in the
+// list keeps the choice wherever it was read from.
+let betaChoice = createBetaChoice();
+const libRec = mountPanel('library', $('lib'), { libraryHost: () => LIB_HOST,
+  showBeta: () => betaChoice.get(), setShowBeta: (v) => betaChoice.set(v) });
 $('lib').addEventListener('click', (e) => {
   const card = e.target instanceof Element ? e.target.closest('.lib-card[data-lib-key], [data-lib-recent-key]') : null;
   if (!card) return;
@@ -541,7 +551,17 @@ if (user) {
       try { const theme = ((await s.load()) || {}).theme; if (theme) applyTheme(document.documentElement, theme); } finally { s.destroy(); }
     }
   } catch (err) { console.error('modules page: your screen could not be read; everything is a try', err); }
+  // The person's own "Beta things" (the row their "How you choose things" is on), then the list drawn again.
+  if (SCREEN.person && SCREEN.profiles?.personStateURL) {
+    try {
+      const c = createBetaChoice({ state: createState({ url: SCREEN.profiles.personStateURL(SCREEN.person.id, INPUTS_KEY), user }) });
+      await c.load();
+      betaChoice = c;
+      libRec?.impl?.refresh?.();
+    } catch (err) { console.error('modules page: beta choice', err); }
+  }
 }
+libRec?.impl?.refresh?.();   // this browser's own choice, for a visitor
 if (firstType) await show(itemFor(firstType));
 document.body.dataset.ready = 'true';
 </script>

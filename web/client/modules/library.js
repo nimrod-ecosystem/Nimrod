@@ -82,6 +82,10 @@ registerModule(
           // a page opened over the dashboard; a page that is menu rows opens the menu on its tab.
           isScreen: ctx.isScreen === true,
           openMenuTab: ctx.bus?.publish ? (tab) => ctx.bus.publish(MENU_TAB_TOPIC, { tab }) : null,
+          // LIVE AND BETA (2026-10-14, beta.js): the person's "Beta things" choice, read at every draw, and kept
+          // where the host keeps it when changed from the grid. A host with neither: beta in its own section.
+          betaShow: () => (typeof ctx.showBeta === 'function' ? ctx.showBeta() : ctx.showBeta),
+          onBetaShow: typeof ctx.setShowBeta === 'function' ? (v) => ctx.setShowBeta(v) : null,
           prefs: libraryPrefsFrom(values()),
           onPrefs: (patch) => { try { ctx.state?.set?.(patch); } catch (err) { console.error('library: save', err); } },
         });
@@ -110,6 +114,8 @@ registerModule(
       },
       // The verbs, for a host that holds the scan itself (kiosk.js, in another panel's place).
       verb: (v) => (lib ? lib.verb(v) : false),
+      // Drawn again, for a host whose answers changed (a page that has just read the person's "Beta things").
+      refresh: () => { try { lib?.refresh(); } catch { /* gone */ } },
       __probe: () => (lib ? lib.__probe() : null),
     };
   },

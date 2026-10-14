@@ -56,7 +56,9 @@
 //    from it), then the last few modules switched to — the commonest answer is "the one I had a minute
 //    ago". Sort: by name (default: predictable for somebody looking for a thing), recently used, most used.
 
-import { CATALOG, USE, NOT_FOR_CAREGIVERS, titleFor } from './modules_catalog.js';
+import { CATALOG, USE, NOT_FOR_CAREGIVERS, titleFor, stageOf, pageStageOf } from './modules_catalog.js';
+// LIVE AND BETA (2026-10-14, beta.js argues it): live first, beta in its own section with a badge, and hideable.
+import { BETA_WORDS, FEEDBACK_HREF, betaShowOf, splitStages, hiddenWords } from './beta.js';
 import { FURNITURE, FURNITURE_GROUPS } from './room_parts.js';
 import { ROOM_PRESETS } from './room_presets.js';
 import { listScenes } from './livescene.js';
@@ -153,6 +155,7 @@ export function moduleItems({ catalog = CATALOG, manifests = listManifests() } =
     key: `module:${c.type}`, kind: 'module', id: c.type, type: c.type, title: titleFor(c, manifests),
     lead: c.lead, why: c.why, needs: c.needs, note: c.note || '', use: c.use, group: c.group,
     cats: categoriesFor(c), settings: null, placeable: true, whyNot: '', link: '', lockKey: `module:${c.type}`,
+    stage: stageOf(c.type, catalog),   // live or beta (2026-10-14)
     // bricks module: a catalog entry's own page (Bricks: every part, on the bricks page) -- "See every brick".
     ...(typeof c.page === 'string' && c.page ? { page: c.page } : {}),
   }));
@@ -177,7 +180,7 @@ export function sceneItems({ presets = ROOM_PRESETS, scenes = null, manifests = 
         lead: 'A room to look into, furnished, with a clock and a calendar on the wall.',
         why: 'A Room panel showing this room. Everything about it can be changed afterwards in that panel’s settings.',
         needs: 'Nothing.', note: '', use: 'touch', group: 'comfort', cats: ['scenes', 'visual'],
-        settings: { preset: id }, placeable: true, whyNot: '', link: '', lockKey: 'module:room' });
+        settings: { preset: id }, placeable: true, whyNot: '', link: '', lockKey: 'module:room', stage: stageOf('room') });
     }
   }
   if (has('scene')) {
@@ -188,7 +191,7 @@ export function sceneItems({ presets = ROOM_PRESETS, scenes = null, manifests = 
         lead: 'A calm animated world that never asks for anything.',
         why: 'A Live scene panel showing this world. You can slow or stop its movement in that panel’s settings.',
         needs: 'Nothing.', note: '', use: 'watch', group: 'comfort', cats: ['scenes', 'visual'],
-        settings: { scene: s.value }, placeable: true, whyNot: '', link: '', lockKey: 'module:scene' });
+        settings: { scene: s.value }, placeable: true, whyNot: '', link: '', lockKey: 'module:scene', stage: stageOf('scene') });
     }
   }
   return out;
@@ -202,6 +205,7 @@ export function furnitureItems({ furniture = FURNITURE, groups = FURNITURE_GROUP
     why: 'One of the pieces the rooms are built from, drawn with Claude Design.',
     needs: 'A room.', note: '', use: null, group: null, cats: ['furniture'], settings: null,
     placeable: false, whyNot: FURNITURE_WHY_NOT, link: '', lockKey: `furniture:${id}`,
+    stage: stageOf('room'),   // the rooms' pieces go with the rooms
   }));
 }
 
@@ -241,6 +245,7 @@ export function pageItems({ pages = AI_PAGES } = {}) {
     note: '', use: null, group: null, cats: ['ai'], settings: null, placeable: false, whyNot: PAGE_WHY_NOT, link: '',
     // Never locked: a settings page is not a thing the Nimrod Game hands out.
     path: p.path || '', menuTab: p.menuTab || null, lockKey: null,
+    stage: p.stage || (p.path ? pageStageOf(p.path) : 'live'),   // a settings page is as live as the page it opens
   }));
 }
 
@@ -460,6 +465,10 @@ export const LIBRARY_SETTINGS = Object.freeze([
 //              never opens (page_links.js). Off a screen it opens in a new tab.
 //   openMenuTab(tab)  opens the settings menu on a tab (a settings page that is menu rows); absent, the
 //              details name the tab instead.
+//   betaShow   'section' | 'hide', or a getter (beta.js BETA_FIELD): beta things after the rest in their own
+//              section (the default), or left out with a line saying how many. Read at every draw.
+//   onBetaShow(v)  saves the choice when it is changed from the grid ("Hide these" / "Show them"); absent, the grid
+//              has no such buttons and the choice is the ⚙ menu's.
 // ---------------------------------------------------------------------------------------------------
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const CSS_ID = 'library-css';
@@ -502,6 +511,13 @@ const CSS = `
 .lib-detail .lib-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .lib-note{min-height:1.2em}
 .lib-empty{grid-column:1/-1;padding:12px;color:var(--text-muted)}
+/* LIVE AND BETA (2026-10-14): the beta section's heading and the "hidden" line span the grid; the badge is the same
+   pill as the others, its words carry the meaning (never a color alone). */
+.lib-beta{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:10px 4px 2px;
+  border-top:1px solid var(--border);margin-top:4px;font-size:.88rem;color:var(--text-muted)}
+.lib-beta b{color:var(--text);font-size:.95rem}
+.lib-beta a{color:var(--link, var(--text))}
+.lib-badge.is-beta{font-weight:700;color:var(--text)}
 `;
 function ensureCss(doc) {
   if (!doc || doc.getElementById(CSS_ID)) return;
@@ -514,7 +530,7 @@ const RECENT_MAX = 6;   // kiosk.js SWITCH_RECENT_MAX argues six
 
 export function mountLibrary(root, {
   items = [], moreItems = null, host = null, gate = null, prefs = {}, onPrefs = null, say = null, keys = true,
-  chooseMode = null, isScreen = false, openMenuTab = null,
+  chooseMode = null, isScreen = false, openMenuTab = null, betaShow = null, onBetaShow = null,
   setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (t) => clearTimeout(t),
 } = {}) {
   const doc = root.ownerDocument;
@@ -590,7 +606,23 @@ export function mountLibrary(root, {
     Object.assign(p, patch);
     try { onPrefs?.(patch); } catch (err) { console.error('library: prefs', err); }
   }
-  const visible = () => sortItems(filterItems(all, { category: p.category, use: p.use, query }), p.sort, usage());
+  // LIVE AND BETA (2026-10-14): live first, then beta, each in the chosen order; beta left out when hidden.
+  let betaOwn = null;         // the grid's own choice, when the host gave a value rather than a getter
+  const betaMode = () => {
+    if (betaOwn) return betaOwn;
+    try { return betaShowOf(typeof betaShow === 'function' ? betaShow() : betaShow); } catch { return betaShowOf(null); }
+  };
+  const staged = () => {
+    const { live, beta } = splitStages(sortItems(filterItems(all, { category: p.category, use: p.use, query }), p.sort, usage()));
+    return betaMode() === 'hide' ? { list: live, beta: [], hidden: beta.length } : { list: [...live, ...beta], beta, hidden: 0 };
+  };
+  const visible = () => staged().list;
+  function setBeta(v) {
+    if (typeof betaShow !== 'function') betaOwn = betaShowOf(v);
+    try { onBetaShow?.(betaShowOf(v)); } catch (err) { console.error('library: beta', err); }
+    cur = -1; row = -1; inRow = -1;
+    draw();
+  }
   // bricks module: an old per-part key (`brick:<id>`) is the Bricks module with that part chosen.
   const byKey = (k) => all.find((it) => it.key === k) || brickKeyItem(k, all);
   function recentItems() {
@@ -622,13 +654,26 @@ export function mountLibrary(root, {
   function cardHtml(it, sel) {
     const lock = lockOf(it);
     const badges = [];
+    if (it.stage === 'beta') badges.push(BETA_WORDS.badge);
     if (it.kind !== 'module') badges.push(kindLabel(it.kind));
     if (lock) badges.push('locked');
     if (!it.placeable && mode !== 'browse') badges.push('not for a panel');
     return `<button type="button" class="lib-card${!it.placeable || lock ? ' is-off' : ''}" role="option" data-lib-key="${esc(it.key)}"
-      aria-selected="${sel ? 'true' : 'false'}" data-help="${esc(it.lead)}" data-help-title="${esc(it.title)}">
+      aria-selected="${sel ? 'true' : 'false'}" data-help="${esc(it.lead)}" data-help-title="${esc(it.title)}"${it.stage === 'beta' ? ' data-lib-stage="beta"' : ''}>
       <span class="t">${esc(it.title)}</span><span class="l">${esc(it.lead)}</span>
-      ${badges.length ? `<span>${badges.map((b) => `<span class="lib-badge">${esc(b)}</span>`).join(' ')}</span>` : ''}</button>`;
+      ${badges.length ? `<span>${badges.map((b) => `<span class="lib-badge${b === BETA_WORDS.badge && it.stage === 'beta' ? ' is-beta' : ''}">${esc(b)}</span>`).join(' ')}</span>` : ''}</button>`;
+  }
+  // The beta section's heading: what it is, in one line, the way to say what you think (not on a screen: a link there
+  // could only open over the dashboard), and Hide when the host can keep that choice.
+  const feedbackHtml = () => (isScreen ? ''
+    : `<a href="${esc(FEEDBACK_HREF)}" target="_blank" rel="noopener" data-lib-act="feedback">${esc(BETA_WORDS.feedback)}</a>`);
+  function betaHeadHtml() {
+    return `<div class="lib-beta" data-lib-beta-head><b>${esc(BETA_WORDS.heading)}</b><span>${esc(BETA_WORDS.line)}</span>${feedbackHtml()}${
+      typeof onBetaShow === 'function' ? `<button type="button" class="lib-btn" data-lib-act="beta-hide">${esc(BETA_WORDS.hide)}</button>` : ''}</div>`;
+  }
+  function betaHiddenHtml(n) {
+    return n > 0 ? `<div class="lib-beta" data-lib-beta-hidden="${n}"><span>${esc(hiddenWords(n))}</span>${
+      typeof onBetaShow === 'function' ? `<button type="button" class="lib-btn" data-lib-act="beta-show">${esc(BETA_WORDS.show)}</button>` : ''}</div>` : '';
   }
   function draw() {
     if (torn) return;
@@ -649,9 +694,12 @@ export function mountLibrary(root, {
     rEl.innerHTML = rec.length ? `<span class="lib-small lib-label">Recent</span>${rec.map(({ it, hint }) =>
       `<button type="button" class="lib-chip sf-chip" data-lib-key="${esc(it.key)}" data-lib-recent-key="${esc(it.key)}" title="${esc(hint)}">${esc(it.title)}${hint === 'what this panel was' /* site text second pass 2026-10-13: must match the add() above */ ? ' (was)' : ''}</button>`).join('')}` : '';
     $('[data-lib-cats]').innerHTML = chipsHTML({ options: CATEGORIES, value: p.category, cls: 'lib-chip', attrOf: (c) => `data-lib-cat="${esc(c.id)}"` });
-    const list = visible();
-    $('[data-lib-grid]').innerHTML = list.length ? list.map((it) => cardHtml(it, detail && detail.key === it.key)).join('')
-      : `<div class="lib-empty">Nothing matches. <button type="button" class="lib-btn" data-lib-act="clear">Show everything</button></div>`;
+    const { list, beta, hidden } = staged();
+    const firstBeta = beta.length ? list.indexOf(beta[0]) : -1;
+    $('[data-lib-grid]').innerHTML = (list.length
+      ? list.map((it, i) => (i === firstBeta ? betaHeadHtml() : '') + cardHtml(it, detail && detail.key === it.key)).join('')
+      : `<div class="lib-empty">Nothing matches. <button type="button" class="lib-btn" data-lib-act="clear">Show everything</button></div>`)
+      + betaHiddenHtml(hidden);
     $('[data-lib-note]').textContent = note;
     drawDetail();
     paintCursor();
@@ -705,7 +753,9 @@ export function mountLibrary(root, {
     acts.push('<button type="button" class="lib-btn" data-lib-act="close">Back to the list</button>');
     const why = !it.placeable ? it.whyNot
       : !canPlace() ? 'Open Modules on a dashboard (or Switch module there) to put this somewhere.' : '';
-    d.innerHTML = `<h4>${esc(it.title)} <span class="lib-badge">${esc(kindLabel(it.kind))}</span></h4>
+    const betaLine = it.stage === 'beta' ? `<p class="lib-small" data-lib-beta>${esc(BETA_WORDS.detail)} ${feedbackHtml()}</p>` : '';
+    d.innerHTML = `<h4>${esc(it.title)} <span class="lib-badge">${esc(kindLabel(it.kind))}</span>${
+      it.stage === 'beta' ? ` <span class="lib-badge is-beta">${esc(BETA_WORDS.badge)}</span>` : ''}</h4>${betaLine}
       ${it.picture ? `<img class="lib-pic" data-lib-pic src="${esc(it.picture)}" alt="" width="96" height="96" loading="lazy" style="float:right;margin:0 0 6px 10px">` : ''}
       <p>${esc(it.lead)}</p>${u ? `<p class="lib-small">${esc(u)}</p>` : ''}
       <p>${esc(it.why)}</p><p class="lib-small">What it needs: ${esc(it.needs)}</p>
@@ -915,7 +965,9 @@ export function mountLibrary(root, {
     if (act === 'place') { place(detail); return; }
     if (act === 'overlay') { overlay(detail); return; }
     if (act === 'buy' || act === 'free' || act === 'sandbox') { unlock(act); return; }
-    if (act === 'link' || act === 'open-page') return;
+    if (act === 'link' || act === 'open-page' || act === 'feedback') return;
+    if (act === 'beta-hide') { setBeta('hide'); return; }
+    if (act === 'beta-show') { setBeta('section'); return; }
     if (act === 'menu-tab') {
       const tab = t.closest('[data-lib-tab]')?.dataset.libTab;
       try { if (tab) openMenuTab?.(tab); } catch (err) { console.error('library: menu tab', err); }
@@ -1010,6 +1062,7 @@ export function mountLibrary(root, {
       recent: recentItems().map(({ it, hint }) => ({ key: it.key, hint })),
       cursor: { cur, row, inRow, lit: litEl()?.dataset?.libKey || litEl()?.dataset?.libAct || litEl()?.dataset?.libCat || null },
       rows: rows().length, idle: !!idleT,
+      beta: { mode: betaMode(), shown: staged().beta.map((it) => it.key), hidden: staged().hidden },
     }),
   };
 }

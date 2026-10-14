@@ -516,8 +516,13 @@ const toTab = (m, id) => {
       // back by itself after nothing is pressed or played for" on the This screen tab, under "Asked for by voice"
       // (voice_open.js argues both; Mike: "pull up a full screen dashboard of whatever module I ask for"). Two more of the
       // old rows: 47. Its other two rows are "Everything" only. The panel's lap is unchanged.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 47) ***',
-        lapStops.length === 14 && oldStops.length === 47 && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
+      // (live and beta, 2026-10-14, DELIBERATELY: "Beta things (still being tweaked)" on the This screen tab, under "Beta"
+      // (beta.js argues it: shown in their own section by default; Mike: "a delineation between ... what we're pretty
+      // confident in now vs. ... the new things we're still tweaking"). One more of the old rows: 48. The panel's lap is
+      // unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 48) ***',
+        lapStops.length === 14 && oldStops.length === 48 && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
+        && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
         && oldStops.some((i) => i.id === 'set:voiceOpenWhere') && oldStops.some((i) => i.id === 'set:voiceOpenQuietMs') /* voice open */
         && oldStops.some((i) => i.id === 'set:callOtherSound') /* the hear half */
         && oldStops.some((i) => i.id === 'set:panelRing') /* panel ring */
@@ -4836,6 +4841,15 @@ const toTab = (m, id) => {
     check('the This screen tab has "Asked for by voice": where it opens and when it goes back by itself',
       vrow('set:voiceOpenWhere')?.tab === 'screen' && vrow('set:voiceOpenQuietMs')?.tab === 'screen' && !!vrow('voice-open-head'),
       JSON.stringify([vrow('set:voiceOpenWhere'), vrow('voice-open-head')]));
+    // LIVE AND BETA (2026-10-14, beta.js): "Beta things" on the This screen tab; one press flips it, another puts it back.
+    check('*** (live and beta) the This screen tab has "Beta things": shown, in their own section, by default ***',
+      vrow('set:showBeta')?.tab === 'screen' && !!vrow('beta-head') && /own section/.test(vrow('set:showBeta')?.hint || ''),
+      JSON.stringify([vrow('set:showBeta'), vrow('beta-head')]));
+    vk.menu.showTab('screen');
+    vk.menu.focusRow('set:showBeta'); vk.menu.select();
+    check('...one press: "Hide them"', /Hide them/.test(vrow('set:showBeta')?.hint || ''), JSON.stringify(vrow('set:showBeta')));
+    vk.menu.focusRow('set:showBeta'); vk.menu.select();
+    check('...and back', /own section/.test(vrow('set:showBeta')?.hint || ''), JSON.stringify(vrow('set:showBeta')));
     vk.menu.showTab('screen');
     vk.menu.focusRow('set:voiceOpenWhere'); vk.menu.select();      // full -> corner
     vk.menu.focusRow('set:voiceOpenWhere'); vk.menu.select();      // corner -> off

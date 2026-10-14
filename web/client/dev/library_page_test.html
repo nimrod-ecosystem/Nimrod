@@ -261,6 +261,32 @@ try {
   }
 
   // ==========================================================================================
+  section('*** live and beta (2026-10-14): live first, beta in its own section, hideable, kept ***');
+  await open(`/modules?user=${USER}&m=town`);
+  check('it starts', await until(() => doc.body.dataset.ready === 'true', 30000));
+  {
+    const cards = $$('#lib .lib-card');
+    const firstBeta = cards.findIndex((c) => c.dataset.libStage === 'beta');
+    check('*** the list: live cards first, then "Beta: still being tweaked", then the beta cards ***', firstBeta > 0
+      && cards.slice(firstBeta).every((c) => c.dataset.libStage === 'beta')
+      && $('#lib [data-lib-beta-head]')?.nextElementSibling === cards[firstBeta], `${firstBeta} of ${cards.length}`);
+    check('*** a beta module on the stage says Beta beside its name ***', P().shown()?.type === 'town' && !!$('#try-head [data-beta-pill]'),
+      $('#try-head')?.textContent);
+    check('*** ...and in its own settings (the ⚙ menu beside it) ***', await until(() => /Beta: still being tweaked/.test($('#settings')?.textContent || ''), 10000),
+      ($('#settings')?.textContent || '').slice(0, 200));
+    check('*** ...but never on the module itself, while it is used ***', !/\bBeta\b/.test($('#stage')?.textContent || ''));
+    $('#lib [data-lib-act="beta-hide"]')?.click();
+    check('"Hide these": the beta cards go from the list, and a line says how many', await until(() => !$('#lib [data-lib-stage="beta"]')
+      && !!$('#lib [data-lib-beta-hidden]')));
+    await new Promise((r) => setTimeout(r, 800));   // the save on its way, before the page is left
+    await open(`/modules?user=${USER}&m=photos`);
+    check('*** ...and the choice is kept: the next visit still hides them ***', await until(() => doc.body.dataset.ready === 'true', 30000)
+      && await until(() => !!$('#lib [data-lib-beta-hidden]') && !$('#lib [data-lib-stage="beta"]')));
+    $('#lib [data-lib-act="beta-show"]')?.click();
+    check('"Show them" brings them back', await until(() => !!$('#lib [data-lib-stage="beta"]')));
+  }
+
+  // ==========================================================================================
   section('signed out');
   const anon = await fetch('/api/me');
   if (anon.status === 401) {

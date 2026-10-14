@@ -153,6 +153,9 @@
   .pickrow .vb{margin-left:auto;font-size:.62rem;font-weight:800;text-transform:uppercase;
     letter-spacing:.06em;padding:2px 7px;border-radius:99px}
   .pickempty{padding:14px 10px;color:var(--text-muted);font-size:.9rem}
+  /* LIVE AND BETA (2026-10-14): the beta group's one line, and its badge (the "Optional" pill's look). */
+  .betaline{margin:0 4px 6px;font-size:.82rem;color:var(--text-muted)}
+  .betaline a{color:var(--link)}
 
   .detail{min-width:0}
   .detail h2{margin:0 0 6px;font-size:1.6rem;letter-spacing:-.02em;display:flex;
@@ -760,7 +763,10 @@
 import { mountVersionChip } from './version_watch.js';
 mountVersionChip();
 import { listManifests, getManifest } from './module.js';
-import { GROUPS, USE, groupItems, reconcile, titleFor } from './modules_catalog.js';
+import { GROUPS, USE, groupItems, reconcile, titleFor, stageOf } from './modules_catalog.js';
+// LIVE AND BETA (2026-10-14, beta.js): live first in every list here, beta in its own group, hideable per person.
+import { BETA_WORDS, FEEDBACK_HREF, createBetaChoice, hiddenWords, splitStages } from './beta.js';
+import { INPUTS_KEY } from './input_runtime.js';
 // Importing the modules is what REGISTERS them. This page reads the same registry the home
 // page and the kiosk read, so it cannot describe a build that is not the one running.
 import './modules/algebra.js';
@@ -1014,6 +1020,10 @@ const ITEMS = [];
 for (const g of GROUPS) {
   for (const m of groupItems(g.id, manifests)) ITEMS.push({ ...m, group: g });
 }
+// LIVE AND BETA (2026-10-14, beta.js): "Beta things", the person's own once Home has read their row (bootHome), this
+// browser's for a visitor. Read at every draw.
+let betaChoice = createBetaChoice();
+const betaHidden = () => betaChoice.get() === 'hide';
 
 const listEl = document.getElementById('list');
 const detailEl = document.getElementById('detail');
@@ -1107,21 +1117,33 @@ function renderList() {
     listEl.innerHTML = yours || `<p class="pickempty">Nothing matches “${esc(qEl.value)}”.</p>`;
     return;
   }
-  const byGroup = GROUPS.map((g) => [g, hits.filter((m) => m.group.id === g.id)])
+  // LIVE AND BETA (2026-10-14): the live ones in their groups, then the beta ones in a group of their own (or a line
+  // saying how many are hidden, when the person chose that).
+  const { live: liveHits, beta: betaHits } = splitStages(hits);
+  const byGroup = GROUPS.map((g) => [g, liveHits.filter((m) => m.group.id === g.id)])
     .filter(([, xs]) => xs.length);
-  listEl.innerHTML = yours + byGroup.map(([g, xs]) => `
-    <div class="pickgroup">
-      <h3>${esc(g.title)}</h3>
-      ${xs.map((m) => {
-        const v = verdicts.get(m.type);
-        return `<button type="button" class="pickrow" data-pick="${esc(m.type)}"
+  const row = (m) => {
+    const v = verdicts.get(m.type);
+    return `<button type="button" class="pickrow" data-pick="${esc(m.type)}"
           aria-current="${m.type === selected}">
           <span class="dot ${esc(m.use)}" title="${esc(USE[m.use].label)}"></span>
           <span class="nm">${esc(titleFor(m, manifests))}</span>
+          ${m.stage === 'beta' ? `<span class="vb opt" data-beta title="${esc(BETA_WORDS.detail)}">${esc(BETA_WORDS.badge)}</span>` : ''}
           ${v ? `<span class="vb v-${esc(v)}">${esc(VERDICTS[v])}</span>` : ''}
         </button>`;
-      }).join('')}
-    </div>`).join('');
+  };
+  const betaPart = !betaHits.length ? ''
+    : betaHidden() ? `<p class="betaline" data-beta-hidden="${betaHits.length}">${esc(hiddenWords(betaHits.length))}</p>`
+    : `<div class="pickgroup" data-beta-group>
+      <h3>${esc(BETA_WORDS.heading)}</h3>
+      <p class="betaline">${esc(BETA_WORDS.line)} <a href="${esc(FEEDBACK_HREF)}" target="_blank" rel="noopener">${esc(BETA_WORDS.feedback)}</a></p>
+      ${betaHits.map(row).join('')}
+    </div>`;
+  listEl.innerHTML = yours + byGroup.map(([g, xs]) => `
+    <div class="pickgroup">
+      <h3>${esc(g.title)}</h3>
+      ${xs.map(row).join('')}
+    </div>`).join('') + betaPart;
 }
 
 // Filled in when the audit module is loaded; the list renders before that, so it starts empty
@@ -1153,7 +1175,9 @@ function stageNote(isLive, mode) {
 function renderDetail(m, isLive, mode) {
   detailEl.innerHTML = `
     <h2>${esc(titleFor(m, manifests))}
-      <span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span></h2>
+      <span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span>${m.stage === 'beta'
+        ? ` <span class="pill opt" data-beta-pill>${esc(BETA_WORDS.badge)}</span>` : ''}</h2>
+    ${m.stage === 'beta' ? `<p class="note" data-beta-note>${esc(BETA_WORDS.detail)}</p>` : ''}
     <p class="lead">${esc(m.lead)}</p>
     <p class="why">${esc(m.why)}</p>
     ${m.note ? `<p class="note">${esc(m.note)}</p>` : ''}
@@ -2823,15 +2847,24 @@ function moduleButtons(attr, { except = null, disabled = false } = {}) {
       const m = mark(p.key, p.label);
       return ebtn(`${attr}="${esc(p.key)}"`, esc(m.label), { disabled, hint: m.hint || p.hint });
     }).join('')}</div>`;
+  // LIVE AND BETA (2026-10-14): the live ones in their groups; the beta ones after, in their own group, each saying
+  // "Beta" (or one line saying how many are hidden, when the person chose that).
+  const { live, beta } = splitStages(ITEMS.filter((m) => m.type !== except));
+  const btn = (m) => {
+    const k = mark(m.type, titleFor(m, manifests));
+    const label = m.stage === 'beta' ? `${k.label} · ${BETA_WORDS.badge}` : k.label;
+    return ebtn(`${attr}="${esc(m.type)}"`, esc(label), { disabled, hint: k.hint || (m.stage === 'beta' ? BETA_WORDS.detail : '') });
+  };
   const groups = GROUPS.map((g) => {
-    const xs = ITEMS.filter((m) => m.group.id === g.id && m.type !== except);
+    const xs = live.filter((m) => m.group.id === g.id);
     if (!xs.length) return '';
-    return `<div class="grp">${esc(g.title)}</div><div class="hbtns">${xs.map((m) => {
-      const k = mark(m.type, titleFor(m, manifests));
-      return ebtn(`${attr}="${esc(m.type)}"`, esc(k.label), { disabled, hint: k.hint });
-    }).join('')}</div>`;
+    return `<div class="grp">${esc(g.title)}</div><div class="hbtns">${xs.map(btn).join('')}</div>`;
   }).join('');
-  return pieces + groups;
+  const betaPart = !beta.length ? ''
+    : betaHidden() ? `<p class="stagenote" data-beta-hidden="${beta.length}">${esc(hiddenWords(beta.length))}</p>`
+    : `<div class="grp" data-beta-group>${esc(BETA_WORDS.heading)}</div><p class="stagenote">${esc(BETA_WORDS.line)}</p>`
+      + `<div class="hbtns">${beta.map(btn).join('')}</div>`;
+  return pieces + groups + betaPart;
 }
 
 function paintTray(live, list, t) {
@@ -2898,7 +2931,8 @@ function paintTray(live, list, t) {
   // 'change'
   const placed = !!(t && HP.whereIs(HOME.layoutNow, t.id)?.kind === 'placed');
   const model = HP.changeTrayModel({ thing: t, placed, count: list.length, locked: lockedNow(t) });
-  const head = t ? `Change: ${esc(thingTitle(t))} <small>(${list.findIndex((x) => x.id === t.id) + 1} of ${list.length})</small>` : 'Choose a thing';
+  const head = t ? `Change: ${esc(thingTitle(t))} <small>(${list.findIndex((x) => x.id === t.id) + 1} of ${list.length})</small>${
+    t.type && stageOf(t.type) === 'beta' ? ` <small data-beta>· ${esc(BETA_WORDS.badge)}</small>` : ''}` : 'Choose a thing';
   const btns = model.filter((b) => b.act !== 'close').map((b) => ebtn(
     `data-edit-change="${b.act}"${b.d != null ? ` data-d="${esc(Array.isArray(b.d) ? b.d.join(',') : b.d)}"` : ''}`,
     esc(b.label), { disabled: b.disabled, cls: b.warn ? 'warn' : '', hint: b.hint }));
@@ -3455,6 +3489,13 @@ async function bootHome(wanted) {
   if (person && profiles.personStateURL) {
     settingsRow = createState({ url: profiles.personStateURL(person.id, HD.HOME_STATE_KEY), user });
     try { settings = HD.readHomeSettings(await settingsRow.load()); } catch { /* the defaults stand */ }
+    // LIVE AND BETA (2026-10-14): the person's own "Beta things" (beta.js), from the row "How you choose things" is on.
+    try {
+      const c = createBetaChoice({ state: createState({ url: profiles.personStateURL(person.id, INPUTS_KEY), user }) });
+      await c.load();
+      betaChoice = c;
+      renderList();
+    } catch (err) { console.error('home: beta choice', err); }
   }
   let defaultSurface;
   try {
