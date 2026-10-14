@@ -80,8 +80,8 @@ export const REMOVE_ARM_MS = 6000;
 
 // The Call button's reasons, in words (Design's rule: dimmed, never hidden, says why).
 export const CALL_ON_SCREEN = 'Calls are placed from a phone or a computer, at /call.html. A screen answers calls; it does not place them.';
-export const CALL_NOT_ALLOWED = 'This login may not call them. Whoever looks after their screens can share them with you, on their Remote tab.';
-export const CALL_CHECKING = 'Checking whether this login may call them…';
+export const CALL_NOT_ALLOWED = 'This account may not call them. Whoever looks after their screens can share them with you, on their Remote tab.';
+export const CALL_CHECKING = 'Checking whether this account may call them…';
 export const CALL_HELP = 'A video or audio call to their screens, from this phone or computer.';
 export const callURL = (personId) => `/call.html?person=${encodeURIComponent(personId)}`;
 
@@ -169,7 +169,7 @@ a.pf-btn{display:inline-flex;align-items:center;box-sizing:border-box;text-decor
 
 registerModule(
   { type: PROFILE_TYPE, title: 'Profile', core: 'new', dependsOn: 'none', importance: 'normal',
-    description: 'A person or an AI (artificial intelligence) character, shown as a card. It has their face, their name and what you can do with them, such as talk to an AI or visit its room.',
+    description: 'A person or an AI character, shown as a card. It has their face, their name and what you can do with them, such as talk to an AI or visit its room.',
     settings: PROFILE_SETTINGS },
   (ctx) => {
     const { mount } = ctx;
@@ -233,7 +233,7 @@ registerModule(
     async function loadPeople() {
       if (typeof ctx.profiles?.people !== 'function') { people = null; peopleNote = ''; peopleAsked = true; return; }
       try { people = (await ctx.profiles.people()) || []; peopleNote = ''; }
-      catch { people = null; peopleNote = 'The people on this login could not be read just now.'; }
+      catch { people = null; peopleNote = 'The people on this account could not be read just now.'; }
       peopleAsked = true;
     }
     // Who else's screens this account may use (a drive grant), for Call. Asked once, and only off a screen
@@ -320,7 +320,7 @@ registerModule(
         const c = currentChar();
         if (!c) {
           return `<p class="pf-note">This character is not on this screen any more (it may have been removed).</p>
-            <div class="pf-btns">${btn('pick', 'Who…', { help: 'Choose who this part shows.' })}</div>`;
+            <div class="pf-btns">${btn('pick', 'Who…', { help: 'Choose who this panel shows.' })}</div>`;
         }
         const rooms = c.rooms.map((r) => btn('visit', visiting === r.id ? `Opening ${esc(r.name)}…` : `Visit ${esc(r.name)}`, {
           id: r.id, disabled: !roomsMakeable() || !!visiting,
@@ -341,7 +341,7 @@ registerModule(
             ${mine ? btn('edit', 'Change', { help: `Change ${c.name}’s name, way of talking, face, voice or room.` }) : ''}
             ${btn('copy', mine ? 'Copy' : 'Copy to make your own', { help: mine ? 'Make another one from this one.' : 'A copy of your own, to change however you like. This one stays as it is.' })}
             ${mine ? btn('remove', armed ? `Press again to remove ${esc(c.name)}` : 'Remove', { warn: armed, help: 'Press twice to remove. A dashboard already made for its room stays.' }) : ''}
-            ${btn('pick', 'Who…', { help: 'Choose who this part shows.' })}
+            ${btn('pick', 'Who…', { help: 'Choose who this panel shows.' })}
           </div>`;
       }
       const p = currentPerson();
@@ -350,13 +350,13 @@ registerModule(
       return `
         <div class="pf-card">
           <div class="pf-face">${faceOf({ kind: 'person', id: p.id, name: p.name })}</div>
-          <div><b class="pf-name" data-pf-name>${esc(p.name || 'Somebody')}</b><p class="pf-line" data-pf-line>${you ? 'You' : 'On this login'}</p>
+          <div><b class="pf-name" data-pf-name>${esc(p.name || 'Somebody')}</b><p class="pf-line" data-pf-line>${you ? 'You' : 'On this account'}</p>
             <div class="pf-kind">Person</div></div></div>
         <div class="pf-btns">
           ${callButton(p)}
           ${btn('visit-home', home === undefined ? 'Their Home…' : you ? 'Visit your Home' : 'Visit their Home', {
             disabled: !home, help: home ? 'Open the Home they made.' : home === null ? 'No Home made yet.' : 'Looking for their Home…' })}
-          ${btn('pick', 'Who…', { help: 'Choose who this part shows.' })}
+          ${btn('pick', 'Who…', { help: 'Choose who this panel shows.' })}
         </div>`;
     }
 
@@ -369,9 +369,9 @@ registerModule(
       const ais = entries.filter((e) => e.kind === 'ai');
       return `
         <div class="pf-btns">${btn('close', '‹ Back', { help: 'Back to the card.' })}</div>
-        <h3 class="pf-h">People on this login</h3>
+        <h3 class="pf-h">People on this account</h3>
         ${persons.length ? `<ul class="pf-list">${persons.map(row1).join('')}</ul>`
-          : `<p class="pf-note">${esc(peopleNote || (people === null ? 'Sign in to see the people on your login.' : 'Nobody yet.'))}</p>`}
+          : `<p class="pf-note">${esc(peopleNote || (people === null ? 'Sign in to see the people on your account.' : 'Nobody yet.'))}</p>`}
         <p class="pf-note">${esc(NO_LINKS_NOTE)}</p>
         <h3 class="pf-h">AI characters</h3>
         <ul class="pf-list">${ais.map(row1).join('')}</ul>
@@ -422,7 +422,7 @@ registerModule(
       try { s = ai().settings(); keySaved = !!ai().hasKey?.(); } catch { /* defaults */ }
       return `
         <div class="pf-card"><div class="pf-face">${faceOf({ kind: 'ai', id: c.id }, CHAT_FACE_SIZE)}</div><b class="pf-name">${esc(n)}</b></div>
-        <div class="pf-btns">${btn('back-card', '‹ Back', { help: 'Back to the card. The conversation is kept while this part is open.' })}</div>
+        <div class="pf-btns">${btn('back-card', '‹ Back', { help: 'Back to the card. The conversation is kept while this panel is open.' })}</div>
         <p class="pf-status" data-pf-status role="status">${esc(statusText(n))}</p>
         ${noAI ? `<p class="pf-help" data-pf-help>${esc(connectHelpFor(n))}</p>` : ''}
         <div class="pf-log" data-pf-log aria-live="polite">${log}${thinking ? `<p class="pf-msg"><b>${esc(n)}:</b>…</p>` : ''}</div>

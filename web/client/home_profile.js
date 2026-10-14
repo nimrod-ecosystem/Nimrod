@@ -531,7 +531,7 @@ export function editBarModel({ live = false, thing = null, count = 0, canUndo = 
     // Its way out, FIRST and not dimmed (2026-10-02, the bar by switch): a stray select lands on it.
     b('closebar', 'Close', { hint: 'put the edit bar away' }),
     b('scene', 'Scene', { expanded: tray === 'scene', disabled: !live, hint: 'the room or the scene behind everything' }),
-    b('add', 'Add', { expanded: tray === 'add', disabled: !live, hint: 'put a part on' }),
+    b('add', 'Add', { expanded: tray === 'add', disabled: !live, hint: 'put a module on' }),
     b('change', thing ? `Change: ${thing.title || thing.type}` : 'Choose a thing',
       { expanded: tray === 'change' || tray === 'switch', disabled: !live || !count, hint: 'swap, move or remove one thing' }),
     b('transform', 'Transform…', { disabled: !live || !count, hint: 'position, size, turn and layer, as numbers' }),
@@ -571,7 +571,7 @@ export function changeTrayModel({ thing = null, placed = false, count = 0, locke
     b('close', 'Close'),
     b('prev', '‹ Previous thing', { disabled: !count }),
     b('next', 'Next thing ›', { disabled: !count }),
-    b('switch', 'Switch module…', { disabled: none || held, hint: held ? LOCKED_HINT : 'show something else, in exactly this place' }),
+    b('switch', 'Switch module…', { disabled: none || held, hint: held ? LOCKED_HINT : 'show another module, in exactly this place' }),
     b('move', 'Move left', { d: [-MOVE_STEP, 0], disabled: none || !placed || held, ...why }),
     b('move', 'Move right', { d: [MOVE_STEP, 0], disabled: none || !placed || held, ...why }),
     b('move', 'Move up', { d: [0, -MOVE_STEP], disabled: none || !placed || held, ...why }),

@@ -20,8 +20,8 @@ import { EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC } from '../edit_mode.js';
 
 // The names the library may register under, in the order looked for (the coordinator's: `library`/`modules`).
 export const LIBRARY_TYPES = Object.freeze(['library', 'modules']);
-export const LIBRARY_WAITING = 'The Modules library goes here. Until it arrives, Switch module (on the bar) shows something '
-  + 'else in the part you are editing. The Add tray above your Home adds a part.';
+export const LIBRARY_WAITING = 'The Modules library goes here. Until it arrives, Switch module (on the bar) puts any '
+  + 'module in the panel you are editing. The Add tray above your Home adds one.';
 
 /** The library's registered type, or null while none is. */
 export function libraryType(lookup = getManifest) {

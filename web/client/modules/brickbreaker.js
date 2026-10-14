@@ -172,7 +172,7 @@ const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Bricks broken this game. A Scoreboard on the same screen can show it instead.' }),
   { key: 'control', label: 'How the paddle moves', kind: 'choice', default: 'sweep', level: 'essential',
     options: [
-      { value: 'sweep', label: 'It glides by itself. A press stops it and starts it. One switch (one big button) is enough' },
+      { value: 'sweep', label: 'It glides by itself. A press stops it and starts it. One switch is enough' },
       { value: 'steps', label: 'Next and previous move it one step. Select launches the ball' },
       { value: 'follow', label: 'It catches every ball. A press changes the angle' },
     ],
@@ -209,7 +209,7 @@ const SETTINGS = [
   { key: 'cols', label: 'Bricks across', kind: 'choice', default: 8, level: 'advanced',
     options: [5, 6, 8, 10].map((v) => ({ value: v, label: String(v) })), note: 'Starts with the next wall.' },
   { key: 'look', label: 'The bricks', kind: 'choice', default: 'nimrod', level: 'standard',
-    options: [{ value: 'nimrod', label: 'Nimrod bricks, in the theme\'s colours' }, { value: 'plain', label: 'Plain bricks' }] },
+    options: [{ value: 'nimrod', label: 'Nimrod bricks, in the theme\'s colors' }, { value: 'plain', label: 'Plain bricks' }] },
   { key: 'sounds', label: 'Bounce sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
   { key: 'music', label: 'Music', kind: 'choice', default: 'ambient', level: 'standard',
     options: [{ value: 'ambient', label: 'Quiet background music' }, { value: 'off', label: 'No music' }] },
@@ -247,8 +247,8 @@ export function statusFor(g, { control = 'sweep', idle = false, autoLaunch = 3 }
 
 registerModule(
   { type: GAME, title: 'Brick breaker', core: 'new',
-    description: 'Knock down a wall of bricks with a ball and a paddle. One switch (one big button) can play. The paddle '
-      + 'glides by itself and a press stops it. The ball is slow by default, and a missed ball just comes back.',
+    description: 'Knock down a wall of bricks with a ball and a paddle. One switch can play. The paddle glides '
+      + 'by itself and a press stops it. The ball is slow by default, and a missed ball just comes back.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;

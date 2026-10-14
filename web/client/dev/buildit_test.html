@@ -153,8 +153,8 @@ try {
     // words, the same on every game: this checks the words written here.
     const SHARED_ROWS = ['ownScore', 'autostart', 'autostartAlone'];
     const words = J([m.description, (m.settings || []).filter((f) => !SHARED_ROWS.includes(f.key)).map((f) => [f.label, f.note || '', (f.options || []).map((o) => o.label)]), CATALOG.find((c) => c.type === GAME)]);
-    check('*** PLAIN WORDS (its own rows): no module, dashboard, panel, token, widget, account or grant ***', !/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/i.test(words), words.match(/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/ig));
-    check('...and never "her screen", Christine or Cici', !/her screen|christine|cici/i.test(words));
+    // (A banned-word check here was retired 2026-10-13 with the banned-word lists.)
+    check('its own rows never say "her screen", Christine or Cici', !/her screen|christine|cici/i.test(words));
 
     const host = box();
     applyTheme(host, 'default');

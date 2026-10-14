@@ -18,7 +18,7 @@ import { HISTORY_KINDS, KIND_IDS, PLACE_WORDS, whereWords, secondPlaceOffer } fr
 export const HISTORY_PAGE = 'history-place';
 export const HISTORY_ITEMS = [
   { kind: 'item', id: HISTORY_PAGE, label: 'Where your history is kept',
-    hint: 'what played, game results, talk board words: this device, your Nimrod folder, or with us', page: HISTORY_PAGE },
+    hint: 'what played, game results, AAC board words: this device, your Nimrod folder, or with us', page: HISTORY_PAGE },
 ];
 
 const esc = (s) => String(s == null ? '' : s)

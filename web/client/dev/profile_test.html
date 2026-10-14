@@ -168,7 +168,7 @@ try {
     const u = await mountCard({ subject: { kind: 'ai', id: 'tally' } });
     check('*** Tally: name, line, a DRAWN avatar ***', u.q('[data-pf-name]').textContent === 'Tally'
       && u.q('[data-pf-line]').textContent === seedById('tally').goodAt && !!u.q('[data-avatar-shown="drawn"] svg'));
-    check('her room is the maths room', /Visit Maths room/.test(u.doBtn('visit').textContent));
+    check('her room is the maths room', /Visit Math room/.test(u.doBtn('visit').textContent));   // site text second pass 2026-10-13: American spelling
     check('no names on the card', !NAMES_RE.test(u.mount.textContent));
     u.done();
 
@@ -182,7 +182,7 @@ try {
   {
     const t = await mountCard({ subject: { kind: 'person', id: 'p2' }, personRows: { [`p2/${HOME_STATE_KEY}`]: { homeId: 'home-p2' } } });
     await until(() => !t.doBtn('visit-home').disabled);
-    check('*** the person\'s name, "On this account", Person ***', t.q('[data-pf-name]').textContent === 'Lee' && t.q('[data-pf-line]').textContent === 'On this login');   // site text rewrite 2026-10-09: account -> login
+    check('*** the person\'s name, "On this account", Person ***', t.q('[data-pf-name]').textContent === 'Lee' && t.q('[data-pf-line]').textContent === 'On this account');   // site text second pass 2026-10-13: login -> account again
     check('*** off a screen, Call is a link to the caller page for them ***',
       t.doBtn('call').tagName === 'A' && t.doBtn('call').getAttribute('href') === '/call.html?person=p2' && t.doBtn('call').title === CALL_HELP);
     check('their Home is offered once it is found', !t.doBtn('visit-home').disabled && /Visit their Home/.test(t.doBtn('visit-home').textContent));
@@ -358,8 +358,8 @@ try {
     t.doBtn('visit').click();
     await until(() => t.goes.length > 0);
     const s = [...t.screens.screens.values()][0];
-    check('*** one dashboard made, "Tally: Maths room", with the calculator in it ***',
-      t.screens.calls.create.length === 1 && s.name === 'Tally: Maths room' && J(s.modules.map((m) => m.type)) === J(['profile', 'calculator', 'algebra', 'scoreboard']));
+    check('*** one dashboard made, "Tally: Math room", with the calculator in it ***',
+      t.screens.calls.create.length === 1 && s.name === 'Tally: Math room' /* site text second pass 2026-10-13 */ && J(s.modules.map((m) => m.type)) === J(['profile', 'calculator', 'algebra', 'scoreboard']));
     check('*** and opened (dashboard/go with its id) ***', t.goes[0].id === s.id && t.goes[0].source === 'profile');
     check('made for this person, finished', t.screens.calls.create[0].personId === 'p1' && t.states.made[`${s.id}/settings`].data()[AI_ROOM_DONE_KEY] === true);
     const card = s.modules.find((m) => m.type === 'profile');

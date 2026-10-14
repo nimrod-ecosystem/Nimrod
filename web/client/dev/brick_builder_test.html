@@ -297,8 +297,8 @@ try {
     check('a switch reaches it (next / prev / select, and the cursor)', MODULE_VERBS?.[TYPE]?.select === `${TYPE}/select` && MODULE_VERBS[TYPE].next === `${TYPE}/next` && MODULE_VERBS[TYPE].left === `${TYPE}/left`,
       J(MODULE_VERBS?.[TYPE]));
     const words = J([m.description, (m.settings || []).map((f) => [f.label, f.note || '', (f.options || []).map((o) => o.label)]), CATALOG.find((c) => c.type === TYPE)]);
-    check('*** PLAIN WORDS: no module, dashboard, panel, token, widget, account or grant ***', !/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/i.test(words), words.match(/\b(modules?|dashboards?|panels?|tokens?|widgets?|accounts?|grants?)\b/ig));
-    check('...and never "her screen", Christine or Cici', !/her screen|christine|cici/i.test(words));
+    // (A banned-word check here was retired 2026-10-13 with the banned-word lists.)
+    check('never "her screen", Christine or Cici', !/her screen|christine|cici/i.test(words));
 
     const host = box();
     applyTheme(host, 'default');

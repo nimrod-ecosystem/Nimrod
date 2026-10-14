@@ -126,7 +126,7 @@ export function noteContextFrom({ scope = null, own = null, lastOther = null, pa
 /** "Dashboard: …; panel picked: …; page: …" — the line a note's context reads as. '' when there is none. */
 export function contextLine(c) {
   const o = c && typeof c === 'object' ? c : {};
-  return [o.dashboard && `dashboard: ${o.dashboard}`, o.panel && `part picked: ${o.panel}`, o.page && `page: ${o.page}`,
+  return [o.dashboard && `dashboard: ${o.dashboard}`, o.panel && `panel picked: ${o.panel}`, o.page && `page: ${o.page}`,
     o.person && `person: ${o.person}`, o.trial === true && 'made as a test person'].filter(Boolean).join('; ');
 }
 

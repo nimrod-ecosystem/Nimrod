@@ -133,9 +133,9 @@ export const SPOTIFY_MESSAGES = Object.freeze({
   // (row 2.61) Both point at the "Connect Spotify" steps in the panel's "Change the list", where the Client ID is
   // typed once and the Connect button is.
   'no-client-id': 'Spotify is not set up here yet. Press “Change the list” and follow the Spotify steps. You make a '
-    + 'free Spotify app of your own and paste its Client ID, once. The Spotify login that makes the app needs Premium.',
+    + 'free Spotify app of your own and paste its Client ID, once. The Spotify account that makes the app needs Premium.',
   'signed-out': 'Spotify needs connecting on this device. Press “Change the list”, then Connect Spotify.',
-  'premium-needed': 'Spotify only lets other apps start music for a Spotify login that has Premium.',
+  'premium-needed': 'Spotify only lets other apps start music for Premium accounts.',
   'no-device': 'No Spotify speaker, phone or computer is switched on. Open Spotify on one of them first.',
   'device-not-found': 'That Spotify speaker is not switched on, or is called something else.',
   busy: 'Spotify asked this screen to slow down. Try again in a minute.',

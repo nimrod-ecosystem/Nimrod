@@ -23,7 +23,7 @@ server (<code>SUITE_BASE</code>).</p>
 
 <script type="module">
 import {
-  JOIN_PAGE, CLAIM_WORDS, CLAIM_BANNED, claimWordProblems, inviteFromQuery, joinPath, joinURL, whenText, kindSub, shareable,
+  JOIN_PAGE, CLAIM_WORDS, inviteFromQuery, joinPath, joinURL, whenText, kindSub, shareable,
   sharesFrom, twoPress, STOP_CONFIRM_MS, createClaimsClient, mountInviteSheet, mountCallName, removeWhy, holderName,
   callLevels,
 } from '../claim.js';
@@ -90,11 +90,9 @@ try {
   section('*** the words and rules, pure ***');
   const allWords = Object.values(CLAIM_WORDS).map((w) => (typeof w === 'function' ? `${w('Mom', 'Pat')} ${w('', '')}` : w)).join(' ')
     + ' ' + Object.values(JOIN_WORDS).map((w) => (typeof w === 'function' ? `${w('Pat', 'Mom')} ${w('', '')}` : w)).join(' ');
-  check('*** every word a person can read here is plain: no account, token, widget, identity, instance, grant, module, dashboard or panel ***',
-    !claimWordProblems(allWords).length && J(CLAIM_BANNED) === J(['account', 'token', 'widget', 'identity', 'instance']), J(claimWordProblems(allWords)));
-  check('the check catches them', J(claimWordProblems('your account token, a grant on a panel, an identity and an instance'))
-    === J(['panel', 'grant', 'account', 'token', 'identity', 'instance']));
-  check('names nobody real', !/her screen|christine|cici|mike/i.test(allWords));
+  // (The banned-word check here, CLAIM_BANNED / claimWordProblems, was retired 2026-10-13: Mike, "I really don't like
+  // this banned word thing at all." The name check is the rule that stays.)
+  check('names nobody real', !/her screen|christine|cici|mike/i.test(allWords), String(allWords).slice(0, 200));
   check('*** "Send this to Mom. When Mom opens it and signs in, this becomes Mom’s." ***',
     CLAIM_WORDS.send('Mom') === 'Send this to Mom. When Mom opens it and signs in, this becomes Mom’s.', CLAIM_WORDS.send('Mom'));
   check('the link: join.html?invite=<token>, the whole address for a code to scan',
@@ -150,7 +148,7 @@ try {
   trio.querySelector('[data-cl-call]').value = 'Granny';
   trio.querySelector('[data-cl-act="save"]').click();
   check('...and at Everyone on this login, sends nobody', await until(() => J(fakeCalls.at(-1)) === J(['g', 'Granny', '']), 3000), J(fakeCalls));
-  check('plain words in the window', !claimWordProblems(trio.textContent).length, J(claimWordProblems(trio.textContent)));
+  check('names nobody in the window', !/her screen|christine|cici/i.test(trio.textContent), String(trio.textContent).slice(0, 200));
   cn3.destroy(); trio.remove();
 
   // ============================================================================================
@@ -203,7 +201,7 @@ try {
     && !!q('[data-cl-qr] svg') && q('[data-cl-send]')?.textContent === CLAIM_WORDS.send('Mom') && /It works once, until/.test(q('[data-cl-until]')?.textContent || ''),
     q('[data-pp-sheet]')?.textContent.slice(0, 300));
   const firstToken = inviteFromQuery(new URL(q('[data-cl-link]').value).search);
-  check('*** PLAIN WORDS in the window ***', !claimWordProblems(q('[data-pp-sheet]').textContent).length, J(claimWordProblems(q('[data-pp-sheet]').textContent)));
+  check('*** NAMES NOBODY in the window ***', !/her screen|christine|cici/i.test(q('[data-pp-sheet]').textContent), String(q('[data-pp-sheet]').textContent).slice(0, 200));
   q('[data-cl-act="copy"]').click();
   check('Copy says what happened (copied, or how to copy by hand)', await until(() => [CLAIM_WORDS.copied, CLAIM_WORDS.copyFailed].includes(q('[data-cl-say]')?.textContent), 4000));
   q('[data-cl-act="cancel"]').click();
@@ -281,7 +279,7 @@ try {
     && J([...jbox.querySelectorAll('[data-jp-also] li')].map((l) => l.textContent)) === J(['Pat, and you can leave Pat messages', 'Robin, and you can leave Robin messages'])
     && jbox.querySelector('[data-jp-act="make"]')?.textContent === 'Make this mine' && !!jbox.querySelector('[data-jp-other]'), jbox.textContent);
   check('*** "Let Pat leave messages for you": ticked by default ***', jbox.querySelector('[data-jp-back]')?.checked === true && /Let Pat leave messages for you/.test(jbox.textContent));
-  check('*** PLAIN WORDS on the join page ***', !claimWordProblems(jbox.textContent).length, J(claimWordProblems(jbox.textContent)));
+  check('*** NAMES NOBODY on the join page ***', !/her screen|christine|cici/i.test(jbox.textContent), String(jbox.textContent).slice(0, 200));
   check('nothing accepted by opening it', (await call('GET', '/api/people', M)).people.length === 1);
   jbox.querySelector('[data-jp-act="make"]').click();
   check('*** Make this mine: done, "Mom" is hers, and a way to her people ***',
@@ -306,7 +304,7 @@ try {
     && !card2('Mom').querySelector('[data-pp-act="invite"]'), card2('Mom')?.textContent);
   check('Robin still has Invite', !!card2('Robin')?.querySelector('[data-pp-act="invite"]'));
   const addedWords = [card2('Mom').textContent, ...[...box2.querySelectorAll('[data-pp-claim]')].map((e) => e.textContent), q2('[data-pp-connect]').textContent].join(' ');
-  check('plain words in everything this adds to the inviter’s page', !claimWordProblems(addedWords).length, J(claimWordProblems(addedWords)));
+  check('names nobody in everything this adds to the inviter’s page', !/her screen|christine|cici/i.test(addedWords), String(addedWords).slice(0, 200));
   card2('Mom').querySelector('[data-pp-act="call-name"]').click();
   // Pat's login has three people on it (Pat, Robin, and Mom, who still has a page here): the window asks who sees it.
   const levelBox = (v) => q2(`[data-cl-level][value="${v}"]`);
@@ -334,7 +332,7 @@ try {
   check('*** read as Robin (the other person on Pat’s login): Mom is "Mum" - Pat’s own "Mumsie" is his alone ***',
     asRobin.find((p) => p.id === mom.id)?.name === 'Mum' && !JSON.stringify(asRobin).includes('Mumsie'), JSON.stringify(asRobin.find((p) => p.id === mom.id)));
   check('...and Mom’s own login never sees either', !/Mumsie|"Mum"/.test(JSON.stringify((await call('GET', '/api/people', M)).people)));
-  check('plain words in the window', !claimWordProblems(q2('[data-pp-sheet]').textContent).length, J(claimWordProblems(q2('[data-pp-sheet]').textContent)));
+  check('names nobody in the window', !/her screen|christine|cici/i.test(q2('[data-pp-sheet]').textContent), String(q2('[data-pp-sheet]').textContent).slice(0, 200));
   q2('[data-pp-close]').click();
   card2('Mumsie').querySelector('[data-pp-act="call-name"]').click();
   check('*** opened again: it opens at Pat’s own level (the one his card shows), with both labels said ***',
@@ -388,7 +386,7 @@ try {
   check('Pat has no screen: a message is dimmed, saying so', /has no screen yet/.test(card3('Pat').querySelector('[data-pp-act="message"]').dataset.ppWhy || ''));
   check('*** no Invite under people whose profile is somebody else’s - I call them… instead, and Stop sharing ***',
     !q3('[data-pp-act="invite"]') && !!card3('Robin').querySelector('[data-pp-act="call-name"]') && !!card3('Pat').querySelector('[data-pp-act="stop-share"]'));
-  check('*** plain words on her page ***', !claimWordProblems(q3('[data-pp-list]').textContent).length, J(claimWordProblems(q3('[data-pp-list]').textContent)));
+  check('*** names nobody on her page ***', !/her screen|christine|cici/i.test(q3('[data-pp-list]').textContent), String(q3('[data-pp-list]').textContent).slice(0, 200));
   card3('Robin').querySelector('[data-pp-act="message"]').click();
   check('*** the message window opens for Robin (on Pat’s screen for Robin) ***',
     await until(() => q3('[data-pp-sheet="message"]') && /A message for Robin/.test(q3('[data-pp-sheet="message"]').textContent), 8000));
@@ -418,7 +416,7 @@ try {
   await until(() => /invite=/.test(q4('[data-cl-link]')?.value || ''), 8000);
   const ctoken = inviteFromQuery(new URL(q4('[data-cl-link]').value).search);
   check('the connect link, with its words', !!ctoken && q4('[data-cl-send]')?.textContent === CLAIM_WORDS.sendConnect
-    && !claimWordProblems(q4('[data-pp-sheet]').textContent).length);
+    && !/her screen|christine|cici/i.test(q4('[data-pp-sheet]').textContent));
   q4('[data-pp-close]').click();
   inst.destroy(); box4.remove();
   jp = mountJoinPage(jbox, { search: `?invite=${ctoken}`, user: O });
@@ -426,7 +424,7 @@ try {
   check('*** Oscar opens it: "Pat wants to connect with you", Pat on his page, and Connect ***',
     jp.__probe().phase === 'ready' && jbox.querySelector('[data-jp-title]')?.textContent === 'Pat wants to connect with you'
     && J([...jbox.querySelectorAll('[data-jp-also] li')].map((l) => l.textContent)) === J(['Pat, and you can leave Pat messages'])
-    && jbox.querySelector('[data-jp-act="make"]')?.textContent === 'Connect' && !claimWordProblems(jbox.textContent).length, jbox.textContent);
+    && jbox.querySelector('[data-jp-act="make"]')?.textContent === 'Connect' && !/her screen|christine|cici/i.test(jbox.textContent), jbox.textContent);
   jbox.querySelector('[data-jp-back]').click();      // Oscar would rather Pat did not leave him messages
   jbox.querySelector('[data-jp-act="make"]').click();
   check('*** Connect: done, "You and Pat are connected" ***', await until(() => jp.__probe().phase === 'done', 8000)
@@ -483,7 +481,7 @@ try {
   unBtn().click();
   check('pressed: it says why, and nothing changed', await until(() => /only card Oscar has/.test(qx('[data-cl-say]')?.textContent || ''), 3000)
     && (await call('GET', '/api/people', O)).people.some((p) => p.name === 'Gramps'));
-  check('*** plain words in the list ***', !claimWordProblems(qx('[data-pp-sheet]').textContent).length, J(claimWordProblems(qx('[data-pp-sheet]').textContent)));
+  check('*** names nobody in the list ***', !/her screen|christine|cici/i.test(qx('[data-pp-sheet]').textContent), String(qx('[data-pp-sheet]').textContent).slice(0, 200));
   qx('[data-pp-close]').click();
   inst.destroy(); bx.remove();
   const rt = (await ac.connect({ shares: [robin.id] })).body.token;
@@ -533,7 +531,7 @@ try {
   check('*** Pat is now the only card from Pat: Remove is dimmed, saying Stop sharing instead ***',
     await until(() => rm('Gramps')?.getAttribute('aria-disabled') === 'true', 6000)
     && /only card from Pat on your page/.test(rm('Gramps').dataset.ppWhy || ''), rm('Gramps')?.outerHTML);
-  check('*** plain words on everything this adds ***', !claimWordProblems(qz('[data-pp-list]').textContent).length, J(claimWordProblems(qz('[data-pp-list]').textContent)));
+  check('*** names nobody on everything this adds ***', !/her screen|christine|cici/i.test(qz('[data-pp-list]').textContent), String(qz('[data-pp-list]').textContent).slice(0, 200));
   inst.destroy(); bz.remove();
 
   section('a screen in a room: faces only, no invite, connect or stop buttons');

@@ -61,7 +61,7 @@ async function moduleVoices() {
     for (const [phrase, verb] of Object.entries(voice)) (byVerb[verb] ||= []).push(phrase);
     const list = Object.entries(byVerb).map(([verb, ps]) => `${esc(VERB_NAMES[verb] || verb)}: ${quoted(ps)}`).join('<br>');
     const name = entry.title || getManifest(entry.type)?.title || entry.lead || entry.type;
-    rows.push([name, list, 'Only while this part is the one you picked.']);
+    rows.push([name, list, 'Only while this module is the one you picked.']);
   }
   return rows;
 }
@@ -72,7 +72,7 @@ async function render() {
     ['To start with', quoted(SPEECH_DEFAULTS.wake), 'A person can change these to phrases of their own in their Voice settings.'],
   ])));
   out.push(section('Everywhere', table(Object.entries(PHRASES).map(([verb, ps]) => [VERB_NAMES[verb] || verb, quoted(ps)])),
-    'These work on the part you picked.'));
+    'These work on the module you picked.'));
   const other = routeRows((r) => !isGame(r));
   if (other.length) out.push(section('The screen, the menu and the cursor', table(other)));
   out.push(section('Dashboards', table([
@@ -85,11 +85,11 @@ async function render() {
     ['Stop a game', quoted(GAME_STOP), 'Unless "stop" is an answer to the question being asked.'],
   ])));
   out.push(section('Music', table([
-    ['Play a favourite', MUSIC_STARTERS.map((s) => `<q>${esc(s)} &lt;its name&gt;</q>`).join(', '), 'Names come from the Music favourites list.'],
+    ['Play a favorite', MUSIC_STARTERS.map((s) => `<q>${esc(s)} &lt;its name&gt;</q>`).join(', '), 'Names come from the Music favorites list.'],
     ['Stop the music', quoted(MUSIC_STOP)],
   ])));
   const mods = await moduleVoices();
-  if (mods.length) out.push(section('Inside one part', table(mods)));
+  if (mods.length) out.push(section('Inside a module', table(mods)));
   document.getElementById('out').innerHTML = out.join('');
 }
 render().catch((err) => { document.getElementById('out').textContent = `Could not build the list: ${err.message}`; });

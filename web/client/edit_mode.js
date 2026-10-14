@@ -98,7 +98,7 @@ export const DECLARED_TARGETS = Object.freeze({
   button: Object.freeze([
     Object.freeze({ id: 'words', label: 'The words', selector: '.ab-word',
       keys: ['label', 'font', 'color', 'style', 'inkLightness', 'inkSaturation', 'inkHue'],
-      help: 'The words on it: what they say, their font and their colour.' }),
+      help: 'The words on it: what they say, their font and their color.' }),
     Object.freeze({ id: 'picture', label: 'The picture', selector: '.ab-img',
       keys: ['image', 'frame'], help: 'The picture on it, and the frame around it.' }),
     Object.freeze({ id: 'face', label: 'The button', selector: '[data-face]',

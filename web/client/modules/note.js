@@ -81,13 +81,13 @@ const SETTINGS = [
     onLabel: 'Says who it is from, then the note', offLabel: 'Says only the note' },
   { key: 'announceNew', label: 'When a new note arrives', default: false, level: 'standard',
     onLabel: 'Read it aloud by itself', offLabel: 'Just show it' },
-  { key: 'allowChange', label: 'Change the note from this part', default: true, level: 'standard',
-    onLabel: 'Allowed', offLabel: 'Not from this part' },
-  { key: 'paper', label: 'Paper colour', kind: 'color', default: DEFAULT_PAPER, level: 'standard' },
+  { key: 'allowChange', label: 'Change the note from this panel', default: true, level: 'standard',
+    onLabel: 'Allowed', offLabel: 'Not from this panel' },
+  { key: 'paper', label: 'Paper color', kind: 'color', default: DEFAULT_PAPER, level: 'standard' },
   { key: 'tilt', label: 'Tilted like a sticky note', default: true, level: 'advanced', onLabel: 'Yes', offLabel: 'No, straight' },
   { key: 'which', label: 'Which note', kind: 'choice', default: 'note', level: 'advanced',
     options: [{ value: 'note', label: 'The note' }, { value: 'note2', label: 'A second note' }, { value: 'note3', label: 'A third note' }],
-    note: 'Two parts set to the same note show the same thing. A second note is for a second place, like the fridge and the desk.' },
+    note: 'Two panels set to the same note show the same thing. A second note is for a second place, like the fridge and the desk.' },
 ];
 export const DEFAULTS = Object.freeze(Object.fromEntries(SETTINGS.map((s) => [s.key, s.default])));
 

@@ -23,25 +23,13 @@
 // stored list by `id` and writes the rest of it back as it was read, so an unknown section's `options` survive a save
 // from an older page; the page shows it as one quiet line (`EDIT_WORDS.newer`) rather than breaking.
 //
-// *** PLAIN WORDS (`pageWordProblems`). *** The page's banned words (people_page.js `BANNED_WORDS`) plus "widget",
-// "account" and "token", over everything this page shows in view mode AND in edit mode. people_page.js's list is not
-// widened itself: the same check also reads the bar Home draws around the page, which is not this file's to reword.
+// (Its banned-word list, PAGE_EXTRA_BANNED / pageWordProblems, was RETIRED 2026-10-13 with people_page.js's - Mike:
+// "I really don't like this banned word thing at all." The rule that the page names nobody stays, in the suites.)
 
-import { plainWordProblems } from './people_page.js';
 import { merge3 } from './doc_merge.js';
 import { parseLink } from './recommend.js';
 
 export const PAGE_KEY = 'page';
-
-// The extra words this page may not say, beyond people_page.js's four.
-export const PAGE_EXTRA_BANNED = Object.freeze(['widget', 'account', 'token']);
-/** Every banned word in `text`, lower case, each once (people_page.js's four, then these). PURE. */
-export function pageWordProblems(text) {
-  const out = plainWordProblems(text);
-  const s = String(text == null ? '' : text);
-  for (const w of PAGE_EXTRA_BANNED) if (new RegExp(`\\b${w}s?\\b`, 'i').test(s)) out.push(w);
-  return out;
-}
 
 // The parts of today's page, as sections, in today's order. `self` (you, at the top) is FIXED: it holds "Edit my
 // page", so the page is never left with no way back to editing. ARGUED: FOR letting it go too (it is their page),
@@ -103,7 +91,7 @@ export const isKnownKind = (kind) => LIB.has(kind);
 /** What "Add something" lists: everything but You (it is always there). PURE. */
 export const addableEntries = () => SECTION_LIBRARY.filter((e) => e.kind !== FIXED_KIND);
 
-// The words, in one place (the suite holds every one to `pageWordProblems`).
+// The words, in one place.
 export const EDIT_WORDS = Object.freeze({
   edit: 'Edit my page',
   editShort: 'Add, remove or move parts',

@@ -39,7 +39,7 @@ const esc = (s) => String(s == null ? '' : s)
 // Names for Design's lists. The colours are Design's; the words are Code's, named by lightness for skin
 // (as avatar.js does: no food, no places, no peoples).
 const SKIN_NAMES = ['Lightest', 'Very light', 'Light', 'Light medium', 'Medium', 'Medium deep', 'Deep', 'Very deep', 'Deepest'];
-const HAIR_COLOUR_NAMES = ['Black', 'Dark brown', 'Brown', 'Auburn', 'Ginger', 'Blonde', 'Pale blonde', 'Grey', 'Rose', 'Blue'];
+const HAIR_COLOUR_NAMES = ['Black', 'Dark brown', 'Brown', 'Auburn', 'Ginger', 'Blonde', 'Pale blonde', 'Gray', 'Rose', 'Blue'];
 const HAIR_STYLE_NAMES = { short: 'Short', long: 'Long', curly: 'Curly', bun: 'Bun', ponytail: 'Ponytail', bald: 'Bald' };
 const POSE_NAMES = { stand: 'Standing', wave: 'Waving' };
 export const WORLD_NAMES = Object.freeze({ nimrod: 'Nimrod', fall: 'Fall', winter: 'Winter', halloween: 'Halloween',
@@ -55,8 +55,8 @@ export const FIGURE_PARTS = Object.freeze([
   { key: 'tone', label: 'Skin', color: true,
     options: freeze(SKIN_TONES.map((hex, i) => ({ id: hex, name: SKIN_NAMES[i] || `Tone ${i + 1}`, hex }))) },
   { key: 'hair', label: 'Hair', options: freeze(HAIR_STYLES.map((id) => ({ id, name: HAIR_STYLE_NAMES[id] || id }))) },
-  { key: 'hairColor', label: 'Hair colour', color: true,
-    options: freeze(HAIR_COLOURS.map((hex, i) => ({ id: hex, name: HAIR_COLOUR_NAMES[i] || `Colour ${i + 1}`, hex }))) },
+  { key: 'hairColor', label: 'Hair color', color: true,
+    options: freeze(HAIR_COLOURS.map((hex, i) => ({ id: hex, name: HAIR_COLOUR_NAMES[i] || `Color ${i + 1}`, hex }))) },
   { key: 'beard', label: 'Beard', options: YES_NO },
   { key: 'glasses', label: 'Glasses', options: YES_NO },
   { key: 'outfit', label: 'Outfit',
@@ -95,7 +95,7 @@ export function figureOptionFor(record, key) {
   const p = figurePartOf(key);
   if (!p) return null;
   const v = normalizeFigure(record)[key];
-  return p.options.find((o) => o.id === v) || { id: v, name: `Colour ${v}`, hex: v };
+  return p.options.find((o) => o.id === v) || { id: v, name: `Color ${v}`, hex: v };
 }
 
 /** The record as character_kit's two arguments: the look (who) and what they wear. */

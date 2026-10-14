@@ -296,7 +296,7 @@ try {
     check('binding a colour is refused, with why', !col.ok && col.reason === 'not-bindable' && /only numbers/.test(col.why));
     check('a binding to a panel not mounted yet is kept, waiting',
       eng.add({ id: 'later', target: { instance: 'nope', key: 'level' }, source: { kind: 'bus', topic: 'a' } }).ok
-      && eng.status('later') === 'waiting for its part');   // site text rewrite 2026-10-09
+      && eng.status('later') === 'waiting for its panel');   // site text second pass 2026-10-13
     eng.destroy();
   }
 
@@ -567,7 +567,7 @@ try {
     st.destroy();
     check('*** panel destroyed: no timers, no subscriptions ***', eng.activeTimers() === 0 && bus.live() === 0 && clk.pending() === 0,
       `${eng.activeTimers()} timers, ${bus.live()} subs`);
-    check('the bindings themselves survive (they are the screen\'s)', eng.list().length === 2 && eng.status('l') === 'waiting for its part');   // site text rewrite 2026-10-09
+    check('the bindings themselves survive (they are the screen\'s)', eng.list().length === 2 && eng.status('l') === 'waiting for its panel');   // site text second pass 2026-10-13
     const st2 = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
     check('remounted: they run again', eng.activeTimers() === 1 && bus.live() === 1 && st2.get().level === 0);
     eng.destroy();

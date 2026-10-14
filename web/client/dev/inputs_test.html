@@ -477,8 +477,8 @@ const logText = (r) => r.q('[data-log]').textContent;
       // when the hold was long enough to suggest a threshold — so a quick tap bound the
       // control in silence. Mike: "it's not very obvious that a setting was ever made."
       const confirmed = r.q('[data-addmsg]').innerHTML;
-      // site text rewrite 2026-10-09: the confirmation now starts "Done." (was "Bound.").
-      check('it confirms the binding was made', /Done\./.test(confirmed), confirmed);
+      // site text second pass 2026-10-13: the confirmation starts "Bound." again.
+      check('it confirms the binding was made', /Bound\./.test(confirmed), confirmed);
       check('...naming the control', /button:0|Button 0|A /i.test(confirmed), confirmed);
       check('...and what it now MEANS, which is the fact being checked',
         /Next/i.test(confirmed), confirmed);
@@ -495,7 +495,7 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.press(XAC, 'button:1', 40);
       const quick = r.q('[data-addmsg]').innerHTML;
       check('a QUICK TAP still confirms — the case that used to say nothing at all',
-        /Done\./.test(quick), quick);   // site text rewrite 2026-10-09
+        /Bound\./.test(quick), quick);   // site text second pass 2026-10-13
       check('...and does not offer a meaningless hold', !r.q('[data-usehold]'), quick);
 
       // Speaking is off unless asked for. A laptop announcing every press in a shared
@@ -713,7 +713,7 @@ const logText = (r) => r.q('[data-log]').textContent;
         /not their turn/.test(logText(r)), logText(r));
 
       r.press(XAC, 'button:9');
-      check('an unbound control is reported, not silence', /has no job yet/.test(logText(r)));   // site text rewrite 2026-10-09
+      check('an unbound control is reported, not silence', /nothing is bound to that control/.test(logText(r)));   // site text second pass 2026-10-13
       r.panel.destroy();
     }
 
@@ -765,7 +765,7 @@ const logText = (r) => r.q('[data-log]').textContent;
       holdField.dispatchEvent(new Event('change', { bubbles: true }));
       const badgeNow = row2.querySelector('[data-f="holdMs"]').parentElement.querySelector('.i-source');
       check('*** typing an override flips the badge to "this binding\'s own" with no table rebuild ***',
-        badgeNow.dataset.source === 'binding' && /this job.s own/.test(badgeNow.textContent),   // site text rewrite 2026-10-09
+        badgeNow.dataset.source === 'binding' && /this binding.s own/.test(badgeNow.textContent),   // site text second pass 2026-10-13
         badgeNow.outerHTML);
 
       // And clearing it back to blank must flip the badge back to "device", live, the same way.
@@ -949,7 +949,7 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.q('[data-add]').click();
       r.press('pointer:mouse', 'button:7');
       check('a non-empty filtered view ALSO shows the "more elsewhere" banner',
-        /more\s+jobs?\s+on other devices/.test(r.host.textContent), r.host.textContent.slice(0, 400));   // site text rewrite 2026-10-09
+        /more\s+bindings?\s+on other devices/.test(r.host.textContent), r.host.textContent.slice(0, 400));   // site text second pass 2026-10-13
       r.panel.destroy();
     }
 
@@ -1011,7 +1011,7 @@ const logText = (r) => r.q('[data-log]').textContent;
       check('declining the confirm leaves the device and its binding untouched',
         r.panel.bindings().some((b) => b.device === XAC));
       check('the confirm names how many bindings would go with it',
-        /1 job\b/.test(confirmMsg), confirmMsg);   // site text rewrite 2026-10-09
+        /1 binding\b/.test(confirmMsg), confirmMsg);   // site text second pass 2026-10-13
 
       window.confirm = () => true;
       r.q('[data-remove-device]').click();

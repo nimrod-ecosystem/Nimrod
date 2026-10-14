@@ -938,7 +938,7 @@ const isLocalSource = (s) => !!s && (s.kind === 'folder' || s.kind === 'device' 
 const sourceWords = (s) => `${s.label || s.base_url || s.id}${isLocalSource(s) && s.kind !== 'device' ? ' (on this computer)' : ''}`;
 
 /** The words for a backup choice, for a row's "as This screen says (...)" and the screen row. PURE. */
-export function backupWords(choice, sources = [], { panelDefaultWords = 'each part’s own choice' } = {}) {
+export function backupWords(choice, sources = [], { panelDefaultWords = 'each one’s own choice' } = {}) {
   const c = String(choice == null ? '' : choice);
   if (!c) return panelDefaultWords;
   if (c === BACKUP_ANY) return 'any other source this screen can see';
@@ -996,7 +996,7 @@ export function backupPanelChoices({ sources = [], mainId = null, current = BACK
 /** THE SCREEN ROW (kiosk.js SCREEN_FIELDS, This screen tab). Its choices are what the panels here have listed. */
 export function backupScreenField({ sources = [], personId = null, current = BACKUP_FOLLOW } = {}) {
   const options = [
-    { value: BACKUP_FOLLOW, label: 'Not set: each part’s own choice' },
+    { value: BACKUP_FOLLOW, label: 'Not set: each one’s own choice' },
     ...sourceChoices(sources, { personId }),
     { value: BACKUP_ANY, label: 'Any source this screen can see' },
     { value: BACKUP_NONE, label: 'None' },

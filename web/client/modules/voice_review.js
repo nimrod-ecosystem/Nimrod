@@ -33,11 +33,11 @@ export const VOICE_MODEL_MODULE = 'voice_model';
 export function voiceModelPointerHTML({ canSwitch = false } = {}) {
   return `<div data-vm-pointer>
     <h3 class="vr-h">Your own voice model</h3>
-    <p>It has a part of its own now: <b>Voice model</b>, in Modules under AI (artificial intelligence). It takes you
-      through the 6 steps one at a time. They are: record the phrases, export them, train, convert, put the folder
-      in place, start the service. It works out which step you are on. It keeps its settings afterwards. Anything
-      you already did here carries over.</p>
-    ${canSwitch ? '<div class="vr-bar"><button type="button" data-vm-switch>Show Voice model in this part</button></div>'
+    <p>It has a panel of its own now: <b>Voice model</b>, in Modules under AI. It takes you through the 6 steps one
+      at a time. They are: record the phrases, export them, train, convert, put the folder in place, start the
+      service. It works out which step you are on. It keeps its settings afterwards. Anything you already did here
+      carries over.</p>
+    ${canSwitch ? '<div class="vr-bar"><button type="button" data-vm-switch>Show Voice model in this panel</button></div>'
       : '<p class="vr-said">Add it to a dashboard from Modules (AI).</p>'}
   </div>`;
 }

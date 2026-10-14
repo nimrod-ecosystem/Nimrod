@@ -134,7 +134,7 @@ export const SYSTEM_ACTIONS = [
   // on the remote-drive allowlist: binding is for the person's own switch, not a socket at the far end.
   { id: 'shell/host/save', label: 'Home: Save', topic: 'shell/host', payload: { act: 'save' }, group: 'System' },
   { id: 'shell/host/saveas', label: 'Home: Save as…', topic: 'shell/host', payload: { act: 'saveas' }, group: 'System' },
-  { id: 'shell/host/picker', label: 'Home: choose a module', topic: 'shell/host', payload: { act: 'picker' }, group: 'System' },
+  { id: 'shell/host/picker', label: 'Home: Modules (open or close the list of modules)', topic: 'shell/host', payload: { act: 'picker' }, group: 'System' },
   { id: 'shell/host/history', label: 'Home: history', topic: 'shell/host', payload: { act: 'history' }, group: 'System' },
   // 2026-10-02: Home's edit bar (Scene / Add / Change…), opened WITH the scan -- next / prev / select / back
   // walk it, Close first, back leaves a tray and then the bar. It opens the bar; back and Close put it away.
@@ -165,12 +165,12 @@ export const SYSTEM_ACTIONS = [
   // shape a single switch can use (the spoken "pause" and "play" stay the idempotent verbs above, for the
   // reason MEDIA_VERBS gives). Bigger fills the dashboard, then the screen; Smaller goes back one level.
   // Not on the remote-drive allowlist, for the reason the rest of this list is not.
-  { id: 'shell/play-pause', label: 'Pause or play the selected panel', topic: PLAY_PAUSE_TOPIC, group: 'System' },
-  { id: 'shell/promote', label: 'Make the selected panel bigger (its dashboard, then the screen)', topic: PROMOTE_TOPIC, group: 'System' },
+  { id: 'shell/play-pause', label: 'Pause or play the panel you picked', topic: PLAY_PAUSE_TOPIC, group: 'System' },
+  { id: 'shell/promote', label: 'Make the panel you picked bigger (it fills its dashboard, then the screen)', topic: PROMOTE_TOPIC, group: 'System' },
   { id: 'shell/demote', label: 'Make it smaller again (one level)', topic: DEMOTE_TOPIC, group: 'System' },
   // 2026-10-02 (edit_mode.js): edit the chosen (focused) panel; pressed again, stop. `shell/edit-panel` with no
   // id means the focused panel and no `on` toggles (arrangement.js answers it).
-  { id: 'shell/edit-panel', label: 'Edit the chosen panel', topic: EDIT_PANEL_TOPIC, payload: {}, group: 'System' },
+  { id: 'shell/edit-panel', label: 'Edit the panel you picked', topic: EDIT_PANEL_TOPIC, payload: {}, group: 'System' },
   // 2026-10-02: the transport bar takes the switch (pressed again, or back from the top, it lets go). Not on
   // the remote-drive allowlist, for the reason the rest of this list is not.
   { id: BAR_SCAN_TOPIC, label: 'Walk the transport bar with the switch (press again to leave)', topic: BAR_SCAN_TOPIC, group: 'System' },
@@ -371,7 +371,7 @@ const menuTab = (tab, label) => ({ id: `menu/tab-${tab}`, label, topic: MENU_TAB
 export const MENU_ACTIONS = [
   { id: 'menu/next-tab', label: 'Settings menu: next tab', topic: MENU_TAB_TOPIC, payload: { dir: 1 }, group: 'Settings menu' },
   { id: 'menu/prev-tab', label: 'Settings menu: previous tab', topic: MENU_TAB_TOPIC, payload: { dir: -1 }, group: 'Settings menu' },
-  menuTab('module', 'Settings menu: the selected panel'),
+  menuTab('module', 'Settings menu: the panel you picked'),
   menuTab('audio', 'Settings menu: sound'),
   menuTab('display', 'Settings menu: display'),
   menuTab('theme', 'Settings menu: theme'),   // themes (2026-10-06)
@@ -379,7 +379,7 @@ export const MENU_ACTIONS = [
   menuTab('people', 'Settings menu: people'),
   menuTab('players', 'Settings menu: players'),   // players (2026-10-06)
   menuTab('screen', 'Settings menu: this screen'),
-  { id: 'menu/switch-module', label: 'Switch the selected panel to another module', topic: SWITCH_MODULE_TOPIC, group: 'Settings menu' },
+  { id: 'menu/switch-module', label: 'Show another module in the panel you picked', topic: SWITCH_MODULE_TOPIC, group: 'Settings menu' },
 ];
 
 // ---------------------------------------------------------------------------------------

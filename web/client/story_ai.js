@@ -311,7 +311,7 @@ export function createStory({ ai = null, kind = 'adventure', character = 'king',
     } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
     finally { busy = false; }
     if (!r || !r.ok) {
-      if (r?.cancelled) return { ok: false, cancelled: true, say: '', choices: [...choices], reason: r.reason || 'Cancelled.' };
+      if (r?.cancelled) return { ok: false, cancelled: true, say: '', choices: [...choices], reason: r.reason || 'Canceled.' };
       return fallback(r?.reason || 'The storyteller did not answer.', r?.timedOut ? { timedOut: true } : {});
     }
     const p = parseTurn(r.text, { maxChoices: cfg.maxChoices });

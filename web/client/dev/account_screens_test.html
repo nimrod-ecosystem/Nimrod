@@ -139,7 +139,7 @@ section('the list');
   const srv = fakeServer({ rows: ROWS });
   const { el, p } = mount(srv);
   await p.refresh();
-  check('the heading says what it is', el.querySelector('h2')?.textContent === 'Screens on this login');   // site text rewrite 2026-10-09: account -> login
+  check('the heading says what it is', el.querySelector('h2')?.textContent === 'Screens on this account');   // site text second pass 2026-10-13: login -> account again
   check('one row per screen', el.querySelectorAll('[data-as-id]').length === 3);
   check('each with its name', row(el, 'aaaa1111').querySelector('.as-name').textContent === 'Living room');
   check('*** a name is text, never markup ***', row(el, 'cccc3333').querySelector('.as-name').textContent === 'Hall <b>'
@@ -164,7 +164,7 @@ section('the list');
 
   section('the words on it');
   const words = el.querySelector('[data-account-screens]').textContent.replace(/\S*kiosk\.html\?pair=key/g, '');
-  check('no "token", "key", "credential" in what a person reads', !/\b(token|key|keys|credential)\b/i.test(words), words.slice(0, 200));
+  // (A banned-word check here, no "token", "key" or "credential", was retired 2026-10-13 with the banned-word lists.)
   check('never names the person the project was first built for, or "her screen"', !/christine|cici|her screen/i.test(words));
 
   section('every control is a real button or box, reachable by Tab and by a switch stepping through');
@@ -264,7 +264,7 @@ section('removing the screen this page is open on forgets its key here');
   await sleep(0);
   row(el, 'bbbb2222').querySelector('[data-as-yes]').click();
   await sleep(20);
-  check('an empty account says so', /No screens on this login yet/.test(el.textContent));   // site text rewrite 2026-10-09
+  check('an empty account says so', /No screens on this account yet/.test(el.textContent));   // site text second pass 2026-10-13
   p.destroy();
 }
 

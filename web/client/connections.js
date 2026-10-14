@@ -80,7 +80,7 @@ export const CONNECTIONS = [
   },
   {
     id: 'ai',
-    title: 'An AI (artificial intelligence) you have connected',
+    title: 'An AI you have connected',
     area: 'ai',
     blurb: 'Used for checking a shared module before you install it, and for writing plain '
       + 'summaries. It advises; it never decides.',

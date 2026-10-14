@@ -135,7 +135,7 @@ const SETTINGS = [
     ] },
   { key: 'pressOffset', label: 'My presses land late by', kind: 'choice', default: 0, level: 'standard',
     options: [0, 50, 100, 150, 200, 300].map((v) => ({ value: v, label: v ? `${v} thousandths of a second` : 'Nothing: judge them as they land' })),
-    note: 'For a switch (one big button) that takes a moment to notice a press. It moves "on the beat" to where the presses really land.' },
+    note: 'For a switch that takes a moment to notice a press. It moves "on the beat" to where the presses really land.' },
   { key: 'tiles', label: 'Tiles', kind: 'choice', default: 4, level: 'standard',
     options: [3, 4, 5, 6, 8].map((v) => ({ value: v, label: String(v) })) },
   { key: 'pattern', label: 'Which tile lights next', kind: 'choice', default: 'walk', level: 'standard',
@@ -177,8 +177,8 @@ export const VERDICT_WORDS = Object.freeze({ hit: 'âœ“ On the beat!', early: 'â—
 
 registerModule(
   { type: GAME, title: 'Rhythm tiles', core: 'new',
-    description: 'Tiles light up to a beat; press on the beat. One switch (one big button) is all it '
-      + 'takes. It is slow and forgiving by default. It keeps to the screen\'s flashing limit when one is set.',
+    description: 'Tiles light up to a beat; press on the beat. One switch is all it takes. It '
+      + 'is slow and forgiving by default. It keeps to the screen\'s flashing limit when one is set.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;

@@ -61,6 +61,12 @@ USAGE, from the repo root:
     py -3.13 web/tools/export_site_text.py --out site_text.md --json items.json
     py -3.13 web/tools/export_site_text.py --apply changes.txt [--skip ids.txt ...] [--dry-run]
         [--export site_text.md] [--report apply_report.txt]
+    py -3.13 web/tools/export_site_text.py --apply-tsv second_pass.tsv --export site_text.md
+        [--skip-dir learn/] [--skip ids.txt ...] [--dry-run] [--report apply_report.txt]
+
+AND A SECOND PASS (`--apply-tsv`, 2026-10-13): after a first --apply the export's ids no longer match the
+code (they hash the export's words). A second-pass file carries, per id, the words the code holds NOW and
+the words it should show; the export says which file. See apply_tsv() for what is written and refused.
 """
 import argparse
 import ast
@@ -88,11 +94,11 @@ SKIP_DIRS = {'dev', 'vendor', 'node_modules', 'packs', 'packs_local', 'packs_rev
 
 # CONTENT, NOT COPY: counted (string literals) and named, not exported line by line.
 CONTENT_FILES = {
-    'aac_vocab.js': "the AAC talk board's words",
-    'aac_sets_data.js': "the AAC talk board's word sets",
-    'aac_sets.js': "the AAC talk board's word sets",
-    'aac_symbols.js': "the AAC talk board's symbol names",
-    'aac_clips.js': "the AAC talk board's sound clips",
+    'aac_vocab.js': "the AAC board's words",
+    'aac_sets_data.js': "the AAC board's word sets",
+    'aac_sets.js': "the AAC board's word sets",
+    'aac_symbols.js': "the AAC board's symbol names",
+    'aac_clips.js': "the AAC board's sound clips",
     'word_games_words.js': 'word-game word lists',
     'word_builder_words.js': 'word-builder word lists',
 }
@@ -787,8 +793,6 @@ MENU_FILES = {'kiosk.js', 'settings.js', 'settings_fields.js', 'settings_audit.j
               'bar_toggle.js', 'controls_view.js', 'modules/transport_bar.js', 'modules/settings_menu.js',
               'modules/settings.js', 'modules/edit_options.js', 'modules/options.js', 'restart.js',
               'screen_lock.js', 'player_picker.js', 'shell_verbs.js', 'starting_defaults_panel.js'}
-CALL_TALK = {'modules/call.js', 'call.html', 'talk.html', 'talk.js', 'modules/board.js', 'call_page.js',
-             'call_notice.js', 'board_editor.js'}
 
 
 def page_scripts():
@@ -845,19 +849,6 @@ def module_titles():
                 names.append(f"{tval(t)}" + (f" (\"{lab.group(1)}\")" if lab else ''))
         out['modules/' + p.name] = ', '.join(dict.fromkeys(names))
     return out
-
-
-def banned_lists():
-    def grab(path, name):
-        try:
-            src = (CLIENT / path).read_text(encoding='utf-8')
-            m = re.search(name + r'\s*=\s*Object\.freeze\(\[([^\]]*)\]', src)
-            return re.findall(r'[\'"]([\w-]+)[\'"]', m.group(1)) if m else []
-        except OSError:
-            return []
-    return {'people_page.js BANNED_WORDS': grab('people_page.js', 'BANNED_WORDS'),
-            'page_sections.js PAGE_EXTRA_BANNED': grab('page_sections.js', 'PAGE_EXTRA_BANNED'),
-            'claim.js CLAIM_BANNED': grab('claim.js', 'CLAIM_BANNED')}
 
 
 # --------------------------------------------------------------------------------------------
@@ -1653,6 +1644,162 @@ def raw_scan():
     return col, srcs
 
 
+def _write_files(per_file, wanted, srcs, by_id, dry_run):
+    """{file: [items]} -> each file planned, checked and (unless dry_run) written. Shared by --apply and
+    --apply-tsv. Returns (applied {id: (file, old, new)}, refused {id: why}, warnings {id: [..]})."""
+    applied, refused, warns = {}, {}, {}
+    for rel, items in per_file.items():
+        src = srcs[rel]
+        if not dry_run:   # somebody may have edited the file since the scan: plan on what is there now
+            with open(source_path(rel), encoding='utf-8', newline='') as f:
+                now_src = f.read()
+            if now_src != src:
+                c2 = Collector()
+                scan_one(c2, rel, now_src)
+                now = {it.id: it for it in c2.order}
+                refused.update({it.id: 'the file changed while applying and these words with it'
+                                for it in items if it.id not in now})
+                items = [now[it.id] for it in items if it.id in now]
+                src = now_src
+        new_src, done, ref, warn = apply_to_file(rel, src, items, wanted)
+        refused.update(ref)
+        warns.update(warn)
+        applied.update({i: (rel, by_id[i].text, d) for i, d in done.items()})
+        if done and not dry_run:
+            with open(source_path(rel), 'w', encoding='utf-8', newline='') as f:
+                f.write(new_src)
+    return applied, refused, warns
+
+
+def read_tsv(path):
+    """A second-pass file: `<id>\\t<the text in the code now>\\t<the text it should show>` per line; `#`
+    lines and blanks are skipped. Returns ([(id, current, new)], [bad line numbers], [dup ids])."""
+    rows, bad, seen, dups = [], [], set(), []
+    for n, ln in enumerate(Path(path).read_text(encoding='utf-8-sig').splitlines(), 1):
+        if not ln.strip() or ln.startswith('#'):
+            continue
+        p = ln.split('\t')
+        if len(p) != 3 or not re.fullmatch(r't[0-9a-f]{8}', p[0]):
+            bad.append(n)
+            continue
+        if p[0] in seen:
+            dups.append(p[0])
+        seen.add(p[0])
+        rows.append((p[0], norm_text(p[1]), norm_text(p[2])))
+    return rows, bad, dups
+
+
+def apply_tsv(tsv_path, export_path, skip_paths=(), skip_dirs=(), dry_run=False, report_path=None):
+    """--apply-tsv: a SECOND pass over text that an earlier --apply already changed.
+
+    The ids in the file are the ORIGINAL export's (a hash of the file and the export's words), so after a
+    first pass they no longer name anything in the code. Each row therefore carries the words that should
+    be in the code NOW, and the export (`--export`, required) says which file the id was in. A row is
+    written only when that file holds those exact words (trimmed ends and collapsed spaces aside, as in
+    the export); then it goes through the same writer and the same self-check as --apply. Otherwise:
+      * the file still holds the export's ORIGINAL words (the first pass left the row out - a held
+        rename, a reverted line): the original id still matches exactly, so the row is written over
+        those, and the report says so (ORIGINAL);
+      * the file already reads the new words: nothing to do (ALREADY);
+      * anything else is REFUSED, with the nearest line in that file - never guessed.
+    Rows in a file under one of `skip_dirs` (e.g. `learn/`, being removed) are SKIPPED and listed."""
+    import difflib
+    rows, bad, dups = read_tsv(tsv_path)
+    export = read_export(export_path)
+    skip = set()
+    for p in skip_paths or ():
+        skip |= read_ids(p)
+    col, srcs = raw_scan()
+    by_id = {it.id: it for it in col.order}
+    by_file = {}
+    for it in col.order:
+        by_file.setdefault(it.file, {})[it.text] = it
+    refused, warns, applied, already, original, skipped = {}, {}, {}, [], [], []
+    targets = {}   # current item id -> (new text, [tsv ids])
+    for i, cur, new in rows:
+        if i in skip:
+            skipped.append((i, 'listed in --skip'))
+            continue
+        if i not in export:
+            refused[i] = 'not in the export: no way to know which file it was in'
+            continue
+        rel, orig = export[i]
+        if rel and any(rel.startswith(d) for d in skip_dirs or ()):
+            skipped.append((i, f'{rel}: under a skipped folder'))
+            continue
+        have = by_file.get(rel, {})
+        it = have.get(cur)
+        if it is None and orig in have and item_id(rel, orig) == i:
+            it = have[orig]
+            original.append(i)
+        if it is None:
+            if new in have:
+                already.append(i)
+                continue
+            best = difflib.get_close_matches(cur, list(have), n=1, cutoff=0.6)
+            refused[i] = (f'{rel}: the current words are not in the file'
+                          + (f'; nearest line now reads: {best[0]}' if best else '; no line like it is left there'))
+            continue
+        if it.text == new:
+            already.append(i)
+            if i in original:
+                original.remove(i)
+            continue
+        t = targets.setdefault(it.id, (new, []))
+        if t[0] != new:
+            # Two export rows the first pass made identical (one line of code now). If one of them already
+            # reads its new words elsewhere in the file, that one is done and the other owns this line.
+            if new in have and t[1]:
+                already.append(i)
+                continue
+            if t[0] in have and t[1] and t[0] != it.text:
+                already.extend(t[1])
+                targets[it.id] = (new, [i])
+                continue
+            refused[i] = f'{rel}: another row asks the same words in the code to read differently ({", ".join(t[1])})'
+            continue
+        t[1].append(i)
+    wanted = {cid: new for cid, (new, ids) in targets.items() if ids}
+    per_file = {}
+    for cid in wanted:
+        per_file.setdefault(by_id[cid].file, []).append(by_id[cid])
+    a, r, w = _write_files(per_file, wanted, srcs, by_id, dry_run)
+    for cid, ids in ((c, t[1]) for c, t in targets.items()):
+        for i in ids:
+            if cid in a:
+                applied[i] = a[cid]
+                if cid in w:
+                    warns[i] = w[cid]
+            elif cid in r:
+                refused[i] = f'{by_id[cid].file}: {r[cid]}'
+    for i in [x for x in original if x not in applied]:
+        original.remove(i)
+    lines = [f'{"DRY RUN - nothing written. " if dry_run else ""}{len(applied)} applied '
+             f'({len(original)} of them over the export\'s original words), {len(already)} already read the new '
+             f'words, {len(refused)} refused, {len(skipped)} skipped, {len(bad)} unreadable lines, '
+             f'{len(dups)} duplicate ids.']
+    for i, (rel, old, new) in sorted(applied.items(), key=lambda x: (x[1][0], x[0])):
+        lines.append(f'APPLIED  {i}  {rel}{"  (ORIGINAL words were in the code)" if i in original else ""}\n'
+                     f'    was: {old}\n    now: {new}')
+        for wn in warns.get(i, []):
+            lines.append(f'    WARNING: {wn}')
+    for i in sorted(already):
+        lines.append(f'ALREADY  {i}  {export[i][0]}')
+    for i, why in sorted(refused.items()):
+        lines.append(f'REFUSED  {i}  {why}')
+    for i, why in skipped:
+        lines.append(f'SKIPPED  {i}  {why}')
+    if bad:
+        lines.append('UNREADABLE lines (not id<TAB>now<TAB>new): ' + ' '.join(map(str, bad)))
+    if dups:
+        lines.append('DUPLICATE ids (each row was read): ' + ' '.join(dups))
+    text = '\n'.join(lines) + '\n'
+    if report_path:
+        Path(report_path).write_text(text, encoding='utf-8')
+    return {'applied': applied, 'refused': refused, 'warnings': warns, 'already': already, 'original': original,
+            'skipped': skipped, 'report': text}
+
+
 def apply_changes(changes_path, skip_paths=(), dry_run=False, export_path=None, report_path=None):
     import difflib
     wanted, dups = read_changes(changes_path)
@@ -1685,26 +1832,10 @@ def apply_changes(changes_path, skip_paths=(), dry_run=False, export_path=None, 
             refused[i] = 'the new words are the same as the old'
             continue
         per_file.setdefault(it.file, []).append(it)
-    for rel, items in per_file.items():
-        src = srcs[rel]
-        if not dry_run:   # somebody may have edited the file since the scan: plan on what is there now
-            with open(source_path(rel), encoding='utf-8', newline='') as f:
-                now_src = f.read()
-            if now_src != src:
-                c2 = Collector()
-                scan_one(c2, rel, now_src)
-                now = {it.id: it for it in c2.order}
-                refused.update({it.id: 'the file changed while applying and these words with it'
-                                for it in items if it.id not in now})
-                items = [now[it.id] for it in items if it.id in now]
-                src = now_src
-        new_src, done, ref, warn = apply_to_file(rel, src, items, wanted)
-        refused.update(ref)
-        warns.update(warn)
-        applied.update({i: (rel, by_id[i].text, d) for i, d in done.items()})
-        if done and not dry_run:
-            with open(source_path(rel), 'w', encoding='utf-8', newline='') as f:
-                f.write(new_src)
+    a, r, w = _write_files(per_file, wanted, srcs, by_id, dry_run)
+    applied.update(a)
+    refused.update(r)
+    warns.update(w)
     lines = [f'{"DRY RUN - nothing written. " if dry_run else ""}{len(applied)} applied, {len(refused)} refused, '
              f'{len(skipped)} skipped (--skip), {len(dups)} duplicate ids in the changes file.']
     for i, (rel, old, new) in sorted(applied.items(), key=lambda x: (x[1][0], x[0])):
@@ -1744,9 +1875,10 @@ its place (every place it appears in that file - repeats are listed once, with a
 1. Plain words. Short. Say what a thing does for the person using it, not how it is built.
 2. Never "her screen". Never name Christine or Cici, or refer to the person the project was first built
    for - a visitor has no idea who that is (Mike, 2026-09-11; checked by `web/tools/check_site_copy.py`).
-3. These words are banned in what a visitor reads on Your people, the ⚙ menu and the join/claim pages,
-   and the suites check for them (whole words, plurals too) - avoid them everywhere you can:
-{banned}
+3. American English (color, favorite, gray, center). Mike's words, 2026-10-13: "module", "panel",
+   "dashboard", "account", "Transport bar" and "bind" are the site's own words; "AAC board", not "talk
+   board"; "dashboard", not "kiosk", in copy; a switch is not "one big button". (There is no banned-word
+   list any more - retired 2026-10-13.)
 4. Keep every `{{placeholder}}` exactly as written (curly braces and what is inside) - the code fills
    them in. You may move one within the sentence; do not drop, rename or add one.
 5. Keep keyboard hints and key names as they are (Ctrl+Shift+L, Esc, Space, arrow keys, "press Enter").
@@ -1756,8 +1888,8 @@ its place (every place it appears in that file - repeats are listed once, with a
    something fails). Rewrite it if it reads like site copy; skip it if it looks like code.
 
 **Row format.** `- <id> · L<line>[, L<line>…] · <flags> · <text>`
-Flags: `?` maybe not shown (see rule 7) · `seen` found on a page by the headless pass · `⚠word` contains a
-banned word (rule 3) or a reference to one person (rule 2).
+Flags: `?` maybe not shown (see rule 7) · `seen` found on a page by the headless pass · `⚠word` a reference
+to one person (rule 2).
 
 **Grouping.** Part A pages (each with the scripts only it loads), Part B modules (the parts a person puts
 on a screen), Part C menus and settings, Part D the shared parts used by several pages, Part E the
@@ -1766,18 +1898,12 @@ is not covered. Files with many rows are split by the function the text sits in 
 Inline markup inside a line is shown by tag name only (`<a>`, `<b>`, `<code>`, `<br>`): keep the tags
 around the same words and the apply step restores each tag (its link, its class) in the same order.
 
-**One line to ADD, not rewrite.** The call and talk board sections (call.html, call_page.js, call_notice.js,
-modules/call.js, talk.html, talk.js, modules/board.js, board_editor.js) start with a SUGGESTED new line
-that is not in the site yet: "Nimrod isn't a nurse call or an emergency system — for help, use the
-room's call button or phone." Place it (or your version of it) wherever calls and the talk board are
-described to a visitor; say where it should go, and it will be added by hand.
+**The "not a nurse call" line is placed** (Mike, 2026-10-13): "Nimrod is not a nurse call or an emergency
+system." on the Call page, the AAC board's settings (talk.html) and the "What Nimrod is" page, and nowhere
+else (web/tools/test_site_text_rules.py checks it). Do not add it to other rows.
 
 ## Totals
 """
-
-SUGGESTION = ("> **SUGGESTED NEW LINE - not in the site yet (Mike's wording, for wherever calls and the talk board "
-              "are described):**\n> \"Nimrod isn't a nurse call or an emergency system — for help, use the room's "
-              "call button or phone.\"\n")
 
 
 def write_md(path, col, content_counts, packs, learn_json, only, ran):
@@ -1791,10 +1917,6 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
                                capture_output=True, text=True).stdout.strip()
     except Exception:
         commit, dirty = '?', ''
-    bl = banned_lists()
-    allbanned = sorted({w for v in bl.values() for w in v})
-    banned_md = '\n'.join(f'   - `{k}` (web/client/{k.split()[0]}): ' + ', '.join(f'"{w}"' for w in v) for k, v in bl.items())
-    bad_rx = re.compile(r'\b(' + '|'.join(allbanned) + r')s?\b', re.I) if allbanned else None
     her_rx = re.compile(r'\b(she|her|hers|herself|Christine|Cici)\b', re.I)
 
     owners = page_scripts()
@@ -1863,8 +1985,6 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
             body.append(f'\n### {label}\n')
             body.append(f'`{where}` · {len(items)} rows' + (f' · {nweak} marked ?' if nweak else '')
                         + (f' · {nseen} seen' if ran else '') + '\n')
-            if rel in CALL_TALK:
-                body.append('\n' + SUGGESTION)
             body.append('')
             big = len(items) > 80
             last_sect = None
@@ -1877,8 +1997,6 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
                     flags.append('?')
                 if it.seen:
                     flags.append('seen')
-                if bad_rx:
-                    flags += sorted({'⚠' + m.group(1).lower() for m in bad_rx.finditer(it.text)})
                 flags += sorted({'⚠' + m.group(1).lower() for m in her_rx.finditer(it.text)})
                 lines = ', '.join(f'L{n}' for n in sorted(it.lines)[:12]) + (' …' if len(it.lines) > 12 else '')
                 body.append(f'- {it.id} · {lines} · {" ".join(flags) or "-"} · {it.text}')
@@ -1914,7 +2032,7 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
     body.append("""- Question and word banks written inside module files (trivia, word games, quiz mixes) ARE scanned
   as strings: a question reads like a sentence, so many appear in Part B. They are content - rewrite
   them only if you mean to.
-- The AAC talk board's words (`aac_*.js`) - the board's vocabulary is the person's voice, not site copy.
+- The AAC board's words (`aac_*.js`) - the board's vocabulary is the person's voice, not site copy.
 - Text a person typed or a server returns (names, notes, screen names, pack text, search results).
 - Text drawn into a canvas or an image, and emoji used as icons.
 - Sentences built from pieces with code between them (`'a ' + name + ' c'`, or a list `.join(', ')`): each
@@ -1923,8 +2041,7 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
 - The headless pass sees only what a page shows on arrival with an empty database: menus not opened,
   steps not taken and error states not reached show up only in the static export.""")
 
-    head = HEADER.format(date=date, commit=commit, dirty=', with uncommitted changes in web/' if dirty else '',
-                         banned=banned_md)
+    head = HEADER.format(date=date, commit=commit, dirty=', with uncommitted changes in web/' if dirty else '')
     tot = [f'{total["rows"]} rows across {len(files)} files · {total["weak"]} marked ? · '
            + (f'{total["seen"]} seen in the headless pass · {sum(len(v) for v in only.values())} runtime-only lines'
               if ran else 'headless pass not run'), '',
@@ -1949,7 +2066,17 @@ def main(argv):
     ap.add_argument('--export', metavar='MD', help='with --apply: the export the changes were made from '
                     '(only to say what a refused row reads like now)')
     ap.add_argument('--report', metavar='FILE', help='with --apply: write the full report here')
+    ap.add_argument('--apply-tsv', metavar='TSV', help='a second pass: `id<TAB>words in the code now<TAB>new words` '
+                    'rows (ids from the original export; --export is required to know each id\'s file)')
+    ap.add_argument('--skip-dir', action='append', default=[], metavar='PREFIX',
+                    help='with --apply-tsv: leave out rows in files under this folder (e.g. learn/)')
     a = ap.parse_args(argv)
+    if a.apply_tsv:
+        if not a.export:
+            ap.error('--apply-tsv needs --export (the export the ids came from)')
+        r = apply_tsv(a.apply_tsv, a.export, a.skip, a.skip_dir, a.dry_run, a.report)
+        print(r['report'] if not a.report else r['report'].split('\n')[0])
+        return 0
     if a.apply:
         r = apply_changes(a.apply, a.skip, a.dry_run, a.export, a.report)
         print(r['report'] if not a.report else r['report'].split('\n')[0])

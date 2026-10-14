@@ -646,7 +646,7 @@ export function startTalk({
               <button data-board="care" class="${cfg.boardId === 'care' ? 'on' : ''}">Care board (16 words)</button>
             </div></div>
           ${rowToggle('highContrast', 'High contrast', cfg.highContrast, 'Black on white, 21:1')}
-          ${rowToggle('followTheme', 'Colours', cfg.followTheme,
+          ${rowToggle('followTheme', 'Colors', cfg.followTheme,
             cfg.followTheme ? 'follows the screen’s theme, picked below' : 'the board’s own proven-safe palette')}
           ${cfg.followTheme ? `<div class="row"><div class="lab">Theme</div>
             <select data-theme-pick aria-label="Theme"></select></div>` : ''}
@@ -708,7 +708,7 @@ export function startTalk({
         </details>
 
         <details class="grp adv">
-          <summary>Keys, for a screen with a keyboard or a switch (one big button)<span>${KEYS.length}</span></summary>
+          <summary>Keys, for a screen with a keyboard or a switch<span>${KEYS.length}</span></summary>
           <ul class="keys">${KEYS.map(([k, what]) => `<li><kbd>${esc(k)}</kbd> ${esc(what)}</li>`).join('')}
             <li><kbd>space</kbd> choose what is lit</li><li><kbd>tab</kbd> move to the next card</li></ul>
         </details>
@@ -716,8 +716,10 @@ export function startTalk({
         <div class="grp">
           <div class="row"><div class="lab">Full screen<span class="note">hides the browser bars, so the cards are bigger</span></div>
             <button class="btn" data-fs>Go full screen</button></div>
+          <p class="why" data-not-nurse-call>Nimrod is not a nurse call or an emergency system.</p>
           <p class="why">Settings and the list of what was chosen stay on <b>this device</b>.
-            Nothing here is sent anywhere. This page never asks anyone to sign in.</p>
+            Nothing here is kept by the Nimrod site. This page never asks anyone to sign in.
+            <a href="/#what-we-keep" target="_blank" rel="noopener">What the site does keep</a>.</p>
         </div>
       </div>`;
     // Rebuilt into a fresh element every render (innerHTML above), so mountThemePicker's own

@@ -98,7 +98,7 @@ const SETTINGS = [
   // *** THE MODE ROW. *** What this panel actually is, before anything about how it looks.
   // Essential, same reasoning as `size`/`tz` above: a panel stuck in the wrong mode is a panel
   // nobody at the bedside can fix without this row.
-  { key: 'mode', label: 'What this part shows', kind: 'choice', default: 'clock',
+  { key: 'mode', label: 'What this panel shows', kind: 'choice', default: 'clock',
     level: 'essential',
     options: [
       { value: 'clock', label: 'Clock' },
@@ -612,7 +612,7 @@ registerModule(
         }
         if (shown(q('[data-cd]'))) {
           out.push({ id: 'timer', label: 'The timer', el: q('[data-cd]'), keys: ['mode', 'timerMs', 'pomodoroWorkMs', 'pomodoroBreakMs'],
-            help: 'What this part counts: a timer, a stopwatch or a Pomodoro, and for how long.' });
+            help: 'What this panel counts: a timer, a stopwatch or a Pomodoro, and for how long.' });
         }
         return out;
       },

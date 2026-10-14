@@ -469,7 +469,7 @@ export function mountBoardEditor(root, {
       <div class="be-card">
         <label class="be-field"><span>Word on the card</span>
           <input type="text" data-word value="${esc(c ? c.word : '')}"
-                 placeholder="Yes, Water, Mum…" autocomplete="off"></label>
+                 placeholder="Yes, Water, Mom…" autocomplete="off"></label>
         <label class="be-field"><span>Say instead <i>(optional)</i></span>
           <input type="text" data-say value="${esc(c && c.say ? c.say : '')}"
                  placeholder="what it reads out, if that differs" autocomplete="off"></label>

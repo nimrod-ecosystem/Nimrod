@@ -546,13 +546,13 @@ export async function videoPass(parts, { chat, transcript, answerTokens = 0, cei
   const usable = (parts || []).filter((p) => p && (str(p.summary) || (Array.isArray(p.lines) && p.lines.length)));
   const base = { ran: false, ok: false, items: [], parsed: [], rejected: [], reason: '', ms: 0, contextTokens: 0, fits: true };
   if (usable.length < 2) return { ...base, reason: 'There were not two parts with notes to connect.' };
-  if (signal?.aborted) return { ...base, cancelled: true, reason: 'Cancelled.' };
+  if (signal?.aborted) return { ...base, cancelled: true, reason: 'Canceled.' };
   try {
     const messages = buildVideoPrompt(usable, { quotesPerPart });
     const ctx = contextFor(messages, { answerTokens, floor, ceiling });
     const r = await chat(messages, { contextTokens: ctx.tokens, maxTokens: Number(answerTokens) > 0 ? answerTokens : 0 });
     const ran = { ...base, ran: true, ms: Number(r && r.ms) || 0, contextTokens: ctx.tokens, fits: ctx.fits };
-    if (r?.cancelled || signal?.aborted) return { ...ran, cancelled: true, reason: 'Cancelled.' };
+    if (r?.cancelled || signal?.aborted) return { ...ran, cancelled: true, reason: 'Canceled.' };
     if (!r || !r.ok) return { ...ran, reason: (r && r.reason) || 'The AI did not answer.' };
     const parsed = parseQuestions(r.text).map((q) => ({ ...q, scope: SCOPE.VIDEO }));
     if (!parsed.length) return { ...ran, reason: 'No questions about the whole video could be read from what the AI wrote.' };

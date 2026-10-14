@@ -80,10 +80,10 @@ section('what can I press right now');
   check('and it says so plainly rather than looking like a fault',
     byVerb.select.says === 'nothing on Photos', byVerb.select.says);
 
-  // site text rewrite 2026-10-09: "moves between panels" now reads "moves between parts".
+  // site text second pass 2026-10-13: "moves between panels" again.
   check('moving between panels always works, whatever is focused',
     byVerb['focus-next'].status === 'works'
-    && byVerb['focus-next'].says === 'moves between parts');
+    && byVerb['focus-next'].says === 'moves between panels');
 
   check('what works is listed FIRST', rows[0].status === 'works');
 }
@@ -118,9 +118,9 @@ check('an accepted press reads as an arrow to what it did',
   === 'Down → Next', say({ accepted: true, device: 'keyboard', control: 'key:arrowdown', actionId: 'verb/next' }));
 
 // Each of these is a DIFFERENT repair, which is the entire point.
-// site text rewrite 2026-10-09: "bound" became "has a job"; the gate is said as who may act right now.
+// site text second pass 2026-10-13: "bound" again ("is not bound to anything yet"); the gate is said as who may act right now.
 check('unbound → nobody has set it up',
-  /has no job yet/.test(say({ control: 'key:x', reason: 'unbound' })));
+  /is not bound to anything yet/.test(say({ control: 'key:x', reason: 'unbound' })));
 check('role-gated → the gate, not the switch',
   /whoever pressed it may not act right now/.test(say({ control: 'key:x', reason: 'role-gated' })));
 check('too-short → the hold threshold, and it names the number',
@@ -318,7 +318,7 @@ section('IS IT EVEN PLUGGED IN? — the question before "what is it bound to"');
   const all = deviceStatus({ bindings, devices: [], now: 1000 });
   check('WHEN NOTHING SHE IS BOUND TO IS CONNECTED, THAT IS THE HEADLINE — no amount of '
     + 'reading the binding list will help', all.verdict.tone === 'bad'
-    && all.verdict.text.includes('None of the controls that have a job'), all.verdict.text);   // site text rewrite 2026-10-09
+    && all.verdict.text.includes('None of the bound controls'), all.verdict.text);   // site text second pass 2026-10-13
 
   const some = deviceStatus({ bindings, devices: [{ device: 'gamepad:one' }], now: 1000 });
   check('with one of two present it says how many, rather than crying wolf',

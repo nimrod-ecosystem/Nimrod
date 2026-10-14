@@ -159,7 +159,7 @@ try {
     const rec = roomRecord(seedById('tally'), 'maths');
     const me = rec.modules.find((m) => m.type === PROFILE_TYPE);
     check('*** a room record points its own card at the character ***', J(me.state.subject) === J({ kind: 'ai', id: 'tally' }), J(me));
-    check('...is named for the character and the room', rec.name === 'Tally: Maths room' && rec.key === roomKey('tally', 'maths'));
+    check('...is named for the character and the room', rec.name === 'Tally: Math room' /* site text second pass 2026-10-13: American spelling */ && rec.key === roomKey('tally', 'maths'));
   }
 
   // ============================================================================================
@@ -229,7 +229,7 @@ try {
     check('...and names nobody', !NAMES_RE.test(sp));
     const list = profileEntries({ people: [{ id: 'p1', name: 'Sam' }, { id: 'p2', name: 'Lee' }], characters: allCharacters({}), viewerId: 'p1' });
     check('the picker: people first ("You" for the viewer), then the characters',
-      list[0].kind === 'person' && list[0].line === 'You' && list[1].line === 'On this login' && list[2].kind === 'ai' && list.length === 6);   // site text rewrite 2026-10-09: account -> login
+      list[0].kind === 'person' && list[0].line === 'You' && list[1].line === 'On this account' && list[2].kind === 'ai' && list.length === 6);   // site text second pass 2026-10-13: login -> account again
     check('a subject is read only when it is whole', J(readSubject({ kind: 'ai', id: 'x' })) === J({ kind: 'ai', id: 'x' }) && readSubject({ kind: 'robot', id: 'x' }) === null && readSubject(null) === null);
   }
 
@@ -259,7 +259,7 @@ try {
     const got = await maker.ensure(tally, 'maths');
     const scr = screens.screens.get(got.id);
     check('*** made: one dashboard, for the person, named for the room ***', got.created && screens.calls.create.length === 1
-      && screens.calls.create[0].name === 'Tally: Maths room' && screens.calls.create[0].personId === 'p1');
+      && screens.calls.create[0].name === 'Tally: Math room' /* site text second pass 2026-10-13 */ && screens.calls.create[0].personId === 'p1');
     check('*** with exactly the room\'s modules ***', J(scr.modules.map((m) => m.type)) === J(['profile', 'calculator', 'algebra', 'scoreboard']));
     const doc = bank.made[`${got.id}/settings`].data();
     check('arranged four up, in the room\'s order', doc.kiosk.layout.preset === 'quad' && J(doc.kiosk.layout.slots) === J(scr.modules.map((m) => m.id)), J(doc.kiosk));

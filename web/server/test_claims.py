@@ -14,6 +14,7 @@ FastAPI's TestClient against a throwaway database, played as Mike's own trial (D
 """
 import json
 import os
+import re
 import shutil
 import sqlite3
 import sys
@@ -172,8 +173,9 @@ check("*** a row they made that somebody took over is NOT this (Stop sharing giv
 check("*** only the holder: anybody else is the same 404 ***", claims.remove_card_refusal(row=cp, **{**rc, "actor": "mom"}) == "missing"
       and claims.remove_card_refusal(row=None, **rc) == "missing")
 words = " ".join(REFUSAL_TEXT.values())
-check("*** the words a person reads say no 'account', 'token' or 'grant' ***",
-      not any(w in words.lower() for w in ("account", "token", "grant")), words)
+# (A banned-word check here, no 'account', 'token' or 'grant', was retired 2026-10-13 with the banned-word lists;
+# the rule that copy names nobody stays.)
+check("*** the words a person reads name nobody ***", not re.search(r"her screen|christine|cici", words, re.I), words)
 
 # ---------------------------------------------------------------- HTTP
 section("*** the routes, end to end ***")

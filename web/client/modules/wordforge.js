@@ -533,7 +533,7 @@ const SETTINGS = [
   ...(WORD_PACKS.length ? [
     { key: 'contentSource', label: 'Where words come from', kind: 'choice', default: 'pack',
       level: 'standard',
-      options: [{ value: 'bank', label: 'Your own words, written in the Questions part' },
+      options: [{ value: 'bank', label: 'Your own words, written in the Questions module' },
                 { value: 'pack', label: 'A built-in pack' }],
       note: 'A pack is ready-made — nobody has to write a word list first.' },
     { key: 'packId', label: 'Which pack', kind: 'choice', default: WORD_PACKS[0].id,

@@ -69,7 +69,7 @@ export function handWords(hand) {
   const spec = specOf(hand);
   const c = normalizeColour(hand.colour);
   const i = COLOURS.indexOf(c);
-  return `${spec.title}${hand.rot ? `, turned ${hand.rot * 90}°` : ''}, ${i >= 0 ? `theme colour ${i + 1}` : `your own colour`}`;
+  return `${spec.title}${hand.rot ? `, turned ${hand.rot * 90}°` : ''}, ${i >= 0 ? `theme color ${i + 1}` : `your own color`}`;
 }
 
 /**
@@ -113,7 +113,7 @@ export function mountBuilderView(host, opts = {}) {
     + '<div class="bb-row" data-group="hand"><p class="bb-lab">In your hand: <span class="bb-hand" data-hand></span></p>'
     + `${btn('partPrev', '◀ Part')}${btn('partNext', 'Part ▶')}${btn('turn', '↻ Turn')}`
     + ['w', 'l', 'h'].map((r) => `${btn(`${r}-`, ROW_WORDS[r][0])}${btn(`${r}+`, ROW_WORDS[r][1])}`).join('') + '</div>'
-    + `<div class="bb-row" data-group="colour"><p class="bb-lab">Colour</p>${hide.has('colour') ? '' : COLOURS.map((c, i) => `<button type="button" class="bb-sw" data-act="colour" data-colour="${c}" aria-label="Theme colour ${i + 1}" style="--bk:${colourCss(c)}"></button>`).join('')}`
+    + `<div class="bb-row" data-group="colour"><p class="bb-lab">Color</p>${hide.has('colour') ? '' : COLOURS.map((c, i) => `<button type="button" class="bb-sw" data-act="colour" data-colour="${c}" aria-label="Theme color ${i + 1}" style="--bk:${colourCss(c)}"></button>`).join('')}`
     + `${hide.has('ownColour') ? '' : '<label class="bb-own">Your own <input type="color" data-own value="#c07a3e"></label>'}</div>`
     + `<div class="bb-row" data-group="history">${btn('undo', '↶ Undo')}${btn('redo', '↷ Redo')}`
     + `${btn('floor+', 'Bigger floor')}${btn('floor-', 'Smaller floor')}</div>`
@@ -186,7 +186,7 @@ export function mountBuilderView(host, opts = {}) {
       }
       case 'pickUp': ok = ed.pickUp(); tell(ok ? `In your hand: ${specOf(ed.hand()).title}. Put it down somewhere.` : 'Nothing here to pick up.'); break;
       case 'turnHere': ok = ed.turnHere(); tell(ok ? 'Turned.' : 'Nothing here to turn.'); break;
-      case 'paint': ok = ed.paint(); tell(ok ? 'Painted.' : (ed.here() ? 'It is that colour already.' : 'Nothing here to paint.')); break;
+      case 'paint': ok = ed.paint(); tell(ok ? 'Painted.' : (ed.here() ? 'It is that color already.' : 'Nothing here to paint.')); break;
       case 'remove': ok = ed.remove(); tell(ok ? 'Taken away.' : 'Nothing here to take away.'); break;
       case 'turn': ok = ed.turnHand(); break;
       case 'partPrev': ok = ed.cyclePart(-1); break;

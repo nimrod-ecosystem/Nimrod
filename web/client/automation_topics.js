@@ -54,9 +54,9 @@ const freeze = (e) => Object.freeze({ path: null, ...e, range: e.range ? Object.
 
 export const AUTOMATION_TOPICS = Object.freeze([
   freeze({ topic: AIM_TOPIC, path: 'x', range: [0, 1], label: 'Where the pointer is, left to right',
-    hint: 'a mouse, a touch, a head pointer or a colour marker: the left edge is lowest' }),
+    hint: 'a mouse, a touch, a head pointer or a color marker: the left edge is lowest' }),
   freeze({ topic: AIM_TOPIC, path: 'y', range: [0, 1], label: 'Where the pointer is, top to bottom',
-    hint: 'a mouse, a touch, a head pointer or a colour marker: the top edge is lowest' }),
+    hint: 'a mouse, a touch, a head pointer or a color marker: the top edge is lowest' }),
   freeze({ topic: EDGE_TOPIC, path: 'heldMs', range: AUTOMATION_TOPIC_RANGES.heldMs, label: 'How long a switch was held',
     hint: 'any switch, key, button or gamepad, each time it is let go (in thousandths of a second)' }),
   freeze({ topic: SCORE_TOPIC, range: AUTOMATION_TOPIC_RANGES.score, label: 'A game’s score',

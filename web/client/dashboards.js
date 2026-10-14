@@ -262,7 +262,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   }),
   basic: Object.freeze({
     key: 'basic', label: 'Basic', name: 'Basic', kind: 'static', title: 'Plain Nimrod',
-    blurb: 'The original Nimrod look: cream and green, solid backgrounds, photos and a clock.',
+    blurb: 'The original Nimrod look: cream and green, solid panels, photos and a clock.',
     modules: [
       { ref: 'photos', type: 'photos' },
       { ref: 'clock', type: 'clock' },
@@ -292,7 +292,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   }),
   classic: Object.freeze({
     key: 'classic', label: 'Classic 2D', name: 'Classic 2D', kind: 'live', title: 'Fall, moving',
-    blurb: 'See-through parts over a moving background: photos, videos, a word game and a clock.',
+    blurb: 'See-through panels over a moving background: photos, videos, a word game and a clock.',
     // STARTER_MODULES is [photos, youtube, wordforge, clock] -- the quad's TL, TR, BL, BR, as seeded.
     modules: STARTER_MODULES.map((type) => (type === 'youtube'
       ? { ref: type, type, state: { schedule: STARTER_SCHEDULE.map((d) => ({ ...d })) } }
@@ -337,7 +337,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   // is the default: every colour of the room is a theme token, so this one is cream and green.
   room3d: Object.freeze({
     key: 'room3d', label: '3D room', name: 'My 3D room', kind: 'room3d', title: 'A room in 3D',
-    blurb: 'A room drawn in 3D, in your colours. Your photos hang on its back wall and a clock on the side wall.',
+    blurb: 'A room drawn in 3D, in your colors. Your photos hang on its back wall and a clock on the side wall.',
     modules: [
       { ref: 'photos', type: 'photos' },
       { ref: 'clock', type: 'clock' },

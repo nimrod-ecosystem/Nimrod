@@ -398,7 +398,7 @@ try {
     await inst.init();
     const pr = inst.impl.__probe();
     check('*** on its own (no screen): the gallery as a PREVIEW, and it says so ***', pr.mode === 'preview' && pr.picker?.gallery === true
-      && /colours this part only/.test(mount.textContent), J({ mode: pr.mode }));   // site text rewrite 2026-10-09
+      && /colors this panel only/.test(mount.textContent), J({ mode: pr.mode }));   // site text second pass 2026-10-13
     mount.querySelector('[data-chp-pick="halloween"]').click();
     const pbox = mount.querySelector('[data-themes-preview]');
     check('...a choice colours the panel’s own box, nothing else', pbox.style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.halloween.vars['--bg'].toLowerCase()
@@ -445,8 +445,8 @@ try {
       pick({ detail: 'full', cores: 2, cpu: { slow: true } }).live === true && pick({ detail: 'full', reducedMotion: true }).live === false);
     check('*** the reasons that protect somebody come first: less motion wins over everything ***',
       pick({ reducedMotion: true, coarseOnly: true, cores: 2 }).because === 'reduced-motion');
-    check('*** every reason reads "Chosen because …", in plain words ***', Object.keys(BECAUSE_WORDS).every((k) => /^Chosen because .+\.$/.test(whyWords(k))
-      && !/\b(module|dashboard|panel|grant)s?\b/i.test(whyWords(k))), whyWords('touch'));
+    // (Its banned-word half was retired 2026-10-13 with the banned-word lists.)
+    check('*** every reason reads "Chosen because …" ***', Object.keys(BECAUSE_WORDS).every((k) => /^Chosen because .+\.$/.test(whyWords(k))), whyWords('touch'));
     // Read from a browser: a faked window.
     const fakeWin = ({ mm = {}, nav = {}, hidden = false } = {}) => ({
       matchMedia: (q) => ({ matches: !!mm[q] }), navigator: { hardwareConcurrency: 8, deviceMemory: 8, ...nav },

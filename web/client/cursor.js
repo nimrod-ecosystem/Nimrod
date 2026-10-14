@@ -132,7 +132,7 @@ export const SETTINGS = [
     min: SIZE_MIN, max: SIZE_MAX, step: SIZE_STEP, unit: 'px' },
   { key: 'style', label: 'Cursor shape', kind: 'choice', default: 'halo', level: 'standard',
     options: [
-      { value: 'halo', label: 'ring with a centre dot' },
+      { value: 'halo', label: 'ring with a center dot' },
       { value: 'ring', label: 'ring' },
       { value: 'dot', label: 'dot' },
       { value: 'crosshair', label: 'crosshair' },

@@ -124,13 +124,13 @@ const DRIFT = {
  *   spread  degrees between the three stops. Wider is a more visible gradient.
  */
 export const SCENES = [
-  { id: 'theme', label: 'Follows the screen’s colours', hue: null, sat: 0.34, base: 0.32, spread: 12 },
+  { id: 'theme', label: 'Follows the screen’s colors', hue: null, sat: 0.34, base: 0.32, spread: 12 },
   // Named for what they look like rather than for their hue, because "210°" means nothing to
   // anybody choosing one from a menu with a switch.
   { id: 'dusk',    label: 'Dusk — deep blue', hue: 224, sat: 0.42, base: 0.26, spread: 16 },
   { id: 'sea',     label: 'Sea — blue-green', hue: 186, sat: 0.38, base: 0.30, spread: 18 },
   { id: 'forest',  label: 'Forest — green',   hue: 132, sat: 0.30, base: 0.28, spread: 14 },
-  { id: 'sand',    label: 'Sand — warm grey', hue:  38, sat: 0.22, base: 0.34, spread: 10 },
+  { id: 'sand',    label: 'Sand — warm gray', hue:  38, sat: 0.22, base: 0.34, spread: 10 },
   // Deliberately the darkest, for a room at night. `base` is low enough that the drift spends
   // part of its cycle against the 0.06 floor in `ambientFrame`, which flattens the movement
   // further rather than clipping anything anybody would see.

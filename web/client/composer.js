@@ -83,7 +83,7 @@ export function mountComposer(root, {
       <div class="c-slot" style="${slotStyle(layout.preset, i)}" data-slot="${i}">
         <div class="c-slot-n">${i + 1}</div>
         <div class="c-slot-name">${mod ? esc(titleOf(mod.type)) : '<span class="c-empty">empty</span>'}</div>
-        <select class="c-pick" data-assign="${i}" aria-label="part for place ${i + 1}">${options}</select>
+        <select class="c-pick" data-assign="${i}" aria-label="module for place ${i + 1}">${options}</select>
       </div>`;
   }
 
@@ -121,7 +121,7 @@ export function mountComposer(root, {
       </div>
       <p class="c-note">${unplaced.length
         ? `Not on screen: ${unplaced.map((m) => esc(titleOf(m.type))).join(', ')} — still saved, just not shown.`
-        : 'Every part is placed.'}</p>
+        : 'Every module is placed.'}</p>
       ${freely.length ? `<p class="c-note" data-freely>Placed freely: ${freely.map((m) => esc(titleOf(m.type))).join(', ')}
         — moved with the edit windows, not in this grid.</p>` : ''}
       <div class="c-actions">
@@ -216,7 +216,7 @@ export function mountComposer(root, {
         dirty = true;
         queueSave();
       }
-      const what = isArranged(m.layout) ? 'Layout saved.' : 'Layout cleared. The screen shows one part at a time.';
+      const what = isArranged(m.layout) ? 'Layout saved.' : 'Layout cleared. The screen shows one module at a time.';
       if (m.lost.length) say(`${what} ${lostEditWords(m.lost, current.name || null)}`, true);
       else say(m.merged ? `${what} A change made on another device is kept too.` : what);
       render();
@@ -251,14 +251,14 @@ export function mountComposer(root, {
 
   root.innerHTML = embedded
     ? `<div class="composer c-embedded" data-composer>
-         <p class="c-lead">Pick how this screen is divided, then put a part in each place. Changes
+         <p class="c-lead">Pick how this screen is divided, then put a module in each place. Changes
            save as you make them.</p>
          <div class="c-msg" data-cmsg></div>
          <div data-cbody></div>
        </div>`
     : `<div class="composer" data-composer>
          <h1>Dashboard composer</h1>
-         <p class="c-lead">Choose a screen, pick how it's divided, and put a part in each place.
+         <p class="c-lead">Choose a screen, pick how it's divided, and put a module in each place.
            “Save & open” keeps this arrangement. “Preview” just tries it.</p>
          <div class="c-screens" data-screens></div>
          <div class="c-msg" data-cmsg></div>

@@ -198,7 +198,7 @@ export const DASHBOARD_TYPE = 'dashboard';
 export const DASHBOARD_ALIASES = Object.freeze(['view']);
 const DASHBOARD_MANIFEST = {
   type: DASHBOARD_TYPE, title: 'Dashboard',
-  description: 'A set of parts and where they sit. The whole set can be swapped as one thing.',
+  description: 'A set of modules and where they sit. The whole set can be swapped as one thing.',
   importance: 'normal', dependsOn: 'server', settings: [],
 };
 

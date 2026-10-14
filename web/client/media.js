@@ -244,7 +244,7 @@ export function mountMedia(root, {
           <summary><b>Type an address instead</b></summary>
           <p class="h-quiet"><b>Only if the pairing code will not do</b>. That is a media agent that
             cannot reach the internet to get a code, or one at a fixed address you already know.</p>
-          <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole login</b>.
+          <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole account</b>.
             <b>${DEFAULT_URL}</b> is a special case. It means “ask the media agent on whichever
             computer is showing the screen”. So one entry covers every screen that runs its own
             media agent. For one particular computer, give its address on the network instead.</p>
@@ -263,10 +263,10 @@ export function mountMedia(root, {
 
       <div class="h-card h-presets">
         <div class="h-card-head"><h2>Presets</h2></div>
-        <p class="h-quiet">Save a part’s settings under a name. Then more than one dashboard can use
-          them. For example, set up a YouTube playlist and schedule once and use it everywhere. You
-          do not have to enter it again on every screen. A dashboard that never picks a preset keeps
-          its own settings, unchanged.</p>
+        <p class="h-quiet">Save a module’s settings under a name. Then more than one dashboard can
+          use them. For example, set up a YouTube playlist and schedule once and use it everywhere.
+          You do not have to enter it again on every screen. A dashboard that never picks a preset
+          keeps its own settings, unchanged.</p>
         <div class="h-msg" data-preset-msg></div>
         <div class="h-list" data-preset-list><p class="h-loading">Loading…</p></div>
         <form class="h-new h-preset-form" data-preset-form>
@@ -701,7 +701,7 @@ export function mountMedia(root, {
       await refresh();
       say(`Added ${added.length} picture${added.length === 1 ? '' : 's'}`
         + `${skipped ? ` (${skipped} file${skipped === 1 ? ' wasn’t a picture' : 's weren’t pictures'})` : ''}. `
-        + 'A Photos part on this device can show them: “Added on this device”.');
+        + 'A Photos panel on this device can show them: “Added on this device”.');
     } catch (err) {
       console.error(err);
       say('Those pictures couldn’t be kept in this browser.', true);

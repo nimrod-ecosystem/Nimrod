@@ -90,7 +90,7 @@ export const TRAIN_PLAIN = Object.freeze({
   once: 'Python 3.13 and the packages the script names. Run this in the project’s web folder: it says what is missing '
     + 'and the lines to install it, and installs nothing itself.',
   after: 'It keeps about one recording in ten back and never trains on them. When it is done, compare the standard '
-    + 'recogniser and yours on those recordings, on the computer that runs the speech service:',
+    + 'recognizer and yours on those recordings, on the computer that runs the speech service:',
   keep: 'Keep yours only if it makes fewer mistakes. If it does not, leave “Use my own voice model” off.',
   whyNot: 'Why not the toolkit’s own training notebook: it runs on Google Colab, and used there it uploads your '
     + 'recordings to Google. The script follows the same method, on your own computer.',
@@ -124,7 +124,7 @@ export const VOICE_MODEL_FIELDS = [
     onLabel: 'On', offLabel: 'Off',
     note: 'A speech program trained on this person’s own voice. It runs on this computer. Only this person’s settings use it. Off: your '
         + 'speech goes to the standard speech program. It does not run on a Raspberry Pi (a small, low-cost computer). To make one, use '
-        + 'the Voice model part (in Modules, under AI).' },
+        + 'the Voice model panel (in Modules, under AI).' },
   // No folder row (2026-10-03): the folder belongs to the speech service, which looks in its own place.
   { key: 'voiceModelPort', label: 'My own voice model: its port', kind: 'number', default: VOICE_MODEL_PORT,
     min: 1024, max: 65535, step: 1, level: 'advanced',
@@ -276,7 +276,7 @@ export function parsePhrases(text, { max = PHRASE_MAX } = {}) {
 
 /** Why reading phrases cannot record right now, from the recorder's state; '' when nothing is in the way. Pure. */
 export function prompterBlocker(s) {
-  if (!s) return 'Recording happens on the screen you speak to. Open this part there.';
+  if (!s) return 'Recording happens on the screen you speak to. Open this panel there.';
   if (!s.on) return 'Turn on “Record this person’s voice for training” in this person’s settings (Devices, Voice) first.';
   if (s.held && s.held.length) return 'Paused while the intercom or a call is open.';
   if (s.paused === 'full') return 'This screen has kept as many recordings as it may. Export them, delete some, or raise the limit.';
@@ -484,7 +484,8 @@ export function mountVoiceModel(root, {
     <section class="vm-step">
       <h4>2. Export them</h4>
       <p>Export copies your recordings into a folder you choose, each with its phrase. Choose
-        <code data-vm-recordings></code>. Nothing is sent anywhere.</p>
+        <code data-vm-recordings></code>. Nothing goes to the Nimrod site.
+        <a href="/#what-we-keep" target="_blank" rel="noopener">What the site does keep</a>.</p>
       <div class="vm-row">
         <button type="button" data-export hidden>Export for training</button>
         <span data-export-msg class="vm-soft" role="status" aria-live="polite"></span>
@@ -504,7 +505,7 @@ export function mountVoiceModel(root, {
       <code data-cmd="train-check"></code>
       <p><b>Then train</b>, in the same folder:</p>
       <code data-cmd="train"></code>
-      <p class="vm-soft">It starts from <code>${esc(BASE_MODEL)}</code>, the recogniser the speech service already runs.
+      <p class="vm-soft">It starts from <code>${esc(BASE_MODEL)}</code>, the recognizer the speech service already runs.
         ${esc(TRAIN_PLAIN.after)}</p>
       <code data-cmd="score"></code>
       <p class="vm-soft">${esc(TRAIN_PLAIN.keep)}</p>
@@ -543,8 +544,8 @@ export function mountVoiceModel(root, {
         <code>speech_service/nimrod_folder.txt</code> and leave <code>--root</code> off.</p>
       <code data-cmd="serve"></code>
       <p class="vm-soft">It checks the folder when it starts and names any file that is missing. It runs beside the
-        standard recogniser (port 8797), which stays for everybody else. Its port is “My own voice model: its
-        port” in your settings; the two numbers must match.</p>
+        standard recognizer (port 8797), which stays for everybody else. Its port is “My own voice model: its port”
+        in your settings; the two numbers must match.</p>
       <p class="vm-soft" data-elsewhere>No Nimrod folder? Leave <code>--root</code> off: the service then looks in
         <code>${esc(MY_VOICE_PATH)}</code> inside the project, which is kept out of git, so your voice never ends
         up in the project’s history. A model kept anywhere else: add <code>--model "&lt;that folder&gt;"</code>

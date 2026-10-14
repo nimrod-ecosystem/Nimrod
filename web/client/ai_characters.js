@@ -128,7 +128,7 @@ export const ROOM_TEMPLATES = Object.freeze({
   guide: Object.freeze({ key: 'guide', name: 'Guide room', modules: [
     { ref: 'guide', type: 'nimrod' }, { ref: 'news', type: 'whats_new' }, { ref: 'devices', type: 'devices' }, { ref: 'library', type: 'library' },
   ], layout: { preset: 'quad', slots: ['guide', 'news', 'devices', 'library'] }, settings: SOLID }),
-  maths: Object.freeze({ key: 'maths', name: 'Maths room', modules: [
+  maths: Object.freeze({ key: 'maths', name: 'Math room', modules: [
     { ref: 'me', type: PROFILE_TYPE, self: true }, { ref: 'calculator', type: 'calculator' },
     { ref: 'maths', type: 'algebra' }, { ref: 'score', type: 'scoreboard' },
   ], layout: { preset: 'quad', slots: ['me', 'calculator', 'maths', 'score'] }, settings: SOLID }),
@@ -232,7 +232,7 @@ export const SEED_CHARACTERS = Object.freeze([
   }),
   seed({
     id: 'tally', name: 'Tally',
-    persona: 'You are a patient maths tutor. You explain one small step at a time, with everyday things like money, '
+    persona: 'You are a patient math tutor. You explain one small step at a time, with everyday things like money, '
       + 'cooking and clocks, and you check understanding with one gentle question at a time. You praise effort, '
       + 'never speed, and you never make anybody feel slow.',
     goodAt: 'Sums, fractions, money and time, one small step at a time.',
@@ -457,7 +457,7 @@ export function characterSystemPrompt(char, { actions = [] } = {}) {
 export function profileEntries({ people = [], characters = [], viewerId = null } = {}) {
   const persons = (Array.isArray(people) ? people : []).filter((p) => p && p.id).map((p) => ({
     kind: 'person', id: p.id, name: oneLine(p.name, NAME_MAX) || 'Somebody',
-    line: viewerId && p.id === viewerId ? 'You' : 'On this login',
+    line: viewerId && p.id === viewerId ? 'You' : 'On this account',
   }));
   const ais = (Array.isArray(characters) ? characters : []).map((c) => ({
     kind: 'ai', id: c.id, name: c.name, line: c.goodAt, seed: !!c.seed,

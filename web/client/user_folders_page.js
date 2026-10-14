@@ -110,12 +110,12 @@ export const KIND_WORDS = Object.freeze({
   data: Object.freeze({ title: 'Data', what: 'your own Nimrod data', noun: ['file', 'files'],
     none: 'Nothing kept in it yet.' }),
   // own board clips (2026-10-09): board_sounds.js.
-  boardSounds: Object.freeze({ title: 'Board sounds', what: 'the sounds of your own talk board cards', noun: ['sound', 'sounds'],
+  boardSounds: Object.freeze({ title: 'Board sounds', what: 'the sounds of your own AAC board cards', noun: ['sound', 'sounds'],
     none: 'No sounds in it yet. In the board editor, press a card, then “Record this word” or “Use a sound file”.' }),
   fonts: Object.freeze({ title: 'Fonts', what: 'fonts',
     none: 'No font files in it yet (.woff2, .woff, .ttf or .otf).' }),
-  luts: Object.freeze({ title: 'Colour looks (colour filter files, called look-up tables or LUTs)', what: 'colour looks',
-    none: 'No colour look files in it yet (.cube).' }),
+  luts: Object.freeze({ title: 'Color looks (color filter files, called look-up tables or LUTs)', what: 'color looks',
+    none: 'No color look files in it yet (.cube).' }),
   plugins: Object.freeze({ title: 'Audio plugins (Web Audio Modules)', what: 'audio plugins',
     none: 'No plugin folders in it yet (one folder per plugin).' }),
 });
@@ -238,7 +238,7 @@ export function deviceChoices({ storage, fontSet, lutFiles = null, fontsFailed =
   };
   const grade = readGrade(storage);
   const files = Array.isArray(lutFiles) ? lutFiles : [];
-  const options = [{ value: NO_LOOK, label: 'None', hint: 'colours as they are (the default)' },
+  const options = [{ value: NO_LOOK, label: 'None', hint: 'colors as they are (the default)' },
     ...files.map((f) => ({ value: f, label: f.replace(/\.cube$/i, ''), hint: f }))];
   let value = NO_LOOK;
   if (grade) {
@@ -260,7 +260,7 @@ export function choiceFields(c) {
       default: THEME_FONT, options: c.font.options }));
   }
   if (c.look.options.length > 1) {
-    out.push(normalizeField({ key: 'look', label: 'Colour look', kind: 'choice', level: 'essential',
+    out.push(normalizeField({ key: 'look', label: 'Color look', kind: 'choice', level: 'essential',
       default: NO_LOOK, options: c.look.options }));
   }
   if (c.look.grade) {
@@ -311,7 +311,7 @@ async function chooseLookValue(value, { storage, store, names, field = null, ste
   refreshGrade({ storage });
   if (!skipped.length) return '';
   return skipped.map((x) => `${x.name} could not be read (${x.why})${stepping ? ', so it was skipped' : ''}.`).join(' ')
-    + (stepping ? '' : ' The colour look is as it was.');
+    + (stepping ? '' : ' The color look is as it was.');
 }
 
 /**
@@ -365,7 +365,7 @@ export async function applyDeviceChoice(key, value, { storage, store = handleSto
 // ---------------------------------------------------------------------------------------------
 export const DEVICE_LOOK_PREFIX = 'uf:';
 export const FONT_ROW_LABEL = 'Font on this device';
-export const LOOK_ROW_LABEL = 'Colour look';
+export const LOOK_ROW_LABEL = 'Color look';
 
 /** Why there is no font to choose, for a folder reading (`createDeviceLookRows` `read()`). Pure. */
 export function fontReason(f) {
@@ -377,10 +377,10 @@ export function fontReason(f) {
 }
 /** Why there is no colour look to choose. Pure. */
 export function lookReason(l) {
-  if (!l || l.source === 'none') return 'no colour looks on this device yet: choose a looks folder in “Your own folders”';
-  if (l.permission !== 'granted') return 'no colour looks: the browser needs permission for the looks folder again (“Your own folders”)';
-  if (l.missing) return 'no colour looks: the looks folder is not in your Nimrod folder any more (“Your own folders”)';
-  return 'no colour looks in the looks folder yet (.cube files)';
+  if (!l || l.source === 'none') return 'no color looks on this device yet: choose a looks folder in “Your own folders”';
+  if (l.permission !== 'granted') return 'no color looks: the browser needs permission for the looks folder again (“Your own folders”)';
+  if (l.missing) return 'no color looks: the looks folder is not in your Nimrod folder any more (“Your own folders”)';
+  return 'no color looks in the looks folder yet (.cube files)';
 }
 
 /**
@@ -466,12 +466,12 @@ export const NIMROD_PLACEHOLDER = '<your Nimrod folder>';
 // What "Copy" says, per kind: a sentence somebody can paste into a note, a message or a Save dialog's help.
 export const SAVE_WORDS = Object.freeze({
   pictures: 'Save photos in', music: 'Save music in', videos: 'Save videos in',
-  fonts: 'Save font files (.woff2, .woff, .ttf, .otf) in', luts: 'Save colour look files (.cube) in',
+  fonts: 'Save font files (.woff2, .woff, .ttf, .otf) in', luts: 'Save color look files (.cube) in',
   plugins: 'Save audio plugins (one folder each) in', voice: 'Put the files of your converted voice model in',
   recordings: 'Save recordings and voice-training exports in',
   artwork: 'Save pictures you make for Nimrod (each kind in its own folder) in',
   data: 'Keep your own Nimrod data (play history, exports) in',
-  boardSounds: 'The sounds of your own talk board cards are kept in',     // own board clips (2026-10-09)
+  boardSounds: 'The sounds of your own AAC board cards are kept in',     // own board clips (2026-10-09)
 });
 // What "Connect it for ..." connects it for: the panels that read a media source of that kind. Artwork (2026-10-07):
 // connected, every picture chooser can browse it (a subfolder at a time) and the Photos panel can show it.
@@ -602,15 +602,15 @@ export function artResultHtml(r) {
 
 function artworkHtml(k, s) {
   const out = [];
-  out.push(say('Make your own artwork: pictures for Nimrod, made by hand or with your own AI (artificial intelligence). For each kind of picture, '
-    + 'the art kit says the size, the file type, whether the background is clear, the name and the folder. Give it to your AI with what you want.', 'data-uf-art-intro'));
+  out.push(say('Make your own artwork: pictures for Nimrod, made by hand or with your own AI. For each kind of picture, the art kit '
+    + 'says the size, the file type, whether the background is clear, the name and the folder. Give it to your AI with what you want.', 'data-uf-art-intro'));
   out.push(`<ul class="st-hint" style="display:block;margin:0 0 8px 1.2em;padding:0" data-uf-art-kinds>${ART_KINDS.map((a) => `<li data-art-kind="${esc(a.id)}">`
     + `<b>${esc(a.plural)}</b>: ${esc(`${a.width} × ${a.height}`)}, ${esc(shapeWords(a))}, ${esc(typesWords(a))}${a.clear === 'wanted' ? ' with a clear background' : ''}`
     + ` - in ${esc(ART_FOLDER)}/${esc(a.folder)}. For ${esc(a.use)}.</li>`).join('')}</ul>`);
-  out.push(say('Not read from files yet: room objects, posters and frames in a room, trophies and badges, theme scenes, icons for parts, game pieces. '
+  out.push(say('Not read from files yet: room objects, posters and frames in a room, trophies and badges, theme scenes, module icons, game pieces. '
     + 'Pictures of real people, or of other people’s characters or brands, are yours to answer for.', 'data-uf-art-notyet'));
   out.push(button('copy-kit', 'Copy the art kit', 'to paste into your AI; the README.txt in Artwork is the kit as it was when the folder was made'));
-  out.push(say('Check pictures before you use them. The check says what is wrong with each one, if anything. Nothing is sent anywhere. The files are read on this device. '
+  out.push(say('Check pictures before you use them. The check says what is wrong with each one, if anything. Nothing goes to the Nimrod site. The files are read on this device. '
     + '(When you choose a folder, your browser may say “upload”. Nothing leaves this computer.)', 'data-uf-art-checknote'));
   const sel = (s.artKind || '');
   out.push(`<p class="st-hint" style="display:block;margin:0 0 8px"><label>Check as <select data-uf-art-kind style="font:inherit;min-height:36px">`
@@ -876,7 +876,7 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
         } else {
           const label = k.source === 'own' ? k.name : `${k.sub || SUBFOLDERS[kind]} (your Nimrod folder)`;
           const src = await media.add(k.dir, label);
-          message = `Connected as “${(src && src.label) || label}”. Nothing was copied. Choose it in a part’s settings, where it asks which folder to use.`;
+          message = `Connected as “${(src && src.label) || label}”. Nothing was copied. Choose it in a panel’s settings, where it asks which folder to use.`;
         }
       } else if (name === 'allow-root') {
         const p = await allowAgain(last?.root?.handle, ROOT_MODE);

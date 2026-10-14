@@ -545,7 +545,7 @@ try {
     legPc.channels[0].onmessage?.({ data: JSON.stringify({ type: 'say', text: 'Hi from Gran' }) });
     await settle();
     check('*** a word from Gran\'s board (through her call) shows on the page, with whose board it is ***',
-      /Hi from Gran/.test(root.textContent) && /From Gran’s talk board/.test(root.textContent));   // site text rewrite 2026-10-09: "AAC board" now "talk board"
+      /Hi from Gran/.test(root.textContent) && /From Gran’s AAC board/.test(root.textContent));   // site text second pass 2026-10-13: "AAC board" again (Mike: "AAC board, not talk board")
     // Sam knocks.
     const lSam = S8.link('Sam');
     const gSam = createCallGroup(opts({ link: lSam, getTracks: () => [track('audio')] }));

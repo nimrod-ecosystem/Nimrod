@@ -564,7 +564,7 @@ const toTab = (m, id) => {
       kiosk.menu.select();
       const after = kiosk.menu.items().find((i) => i.id === 'set:fit');
       check('select steps the value and it reaches the real instance state',
-        after.hint === 'Fill the space', after.hint);   // site text rewrite 2026-10-09: was 'Fill the panel'
+        after.hint === 'Fill the panel', after.hint);   // site text second pass 2026-10-13: 'Fill the panel' again
       check('the cursor did not move out from under the hand', kiosk.menu.focusId() === 'set:fit');
       kiosk.menu.select();
       check('a second press steps on, from the NEW value rather than a stale snapshot',
@@ -4613,8 +4613,8 @@ const toTab = (m, id) => {
     check('*** nothing on this device: "Font on this device" is shown DIMMED, saying why ***',
       await settled(() => row('uf:font')?.disabled === true && /no fonts on this device yet/.test(row('uf:font')?.hint || ''), 4000),
       JSON.stringify(row('uf:font')));
-    check('*** ...and "Colour look" too ***', row('uf:look')?.disabled === true && /no colour looks/.test(row('uf:look')?.hint || '')
-      && row('uf:look')?.label === 'Colour look', JSON.stringify(row('uf:look')));
+    check('*** ...and "Color look" too ***', row('uf:look')?.disabled === true && /no color looks/.test(row('uf:look')?.hint || '')
+      && row('uf:look')?.label === 'Color look' /* site text second pass 2026-10-13: American spelling */, JSON.stringify(row('uf:look')));
     // A Nimrod folder with fonts and looks appears; the menu reads the folders again when it next opens.
     const lutTree = { 'Broken.cube': 'hello', 'Cool.cube': 'TITLE "Cool"\nLUT_1D_SIZE 2\n0 0 0.1\n0.9 1 1\n',
       'Warm.cube': 'TITLE "Warm evening"\nLUT_1D_SIZE 2\n0.1 0 0\n1 0.9 0.8\n' };

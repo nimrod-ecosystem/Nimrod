@@ -1662,8 +1662,9 @@ Shared Q | Shared A` });
     check('"Which pack" shows only for "A built-in pack" (and not for the new default)',
       which.appliesWhen({ contentSource: 'pack' }) === true && which.appliesWhen({ contentSource: 'all' }) === false
       && which.appliesWhen({}) === false && which.appliesWhen({ contentSource: 'bank' }) === false);
-    check('the words on the choice are plain', rows.find((f) => f.key === 'contentSource').options
-      .every((o) => !/module|dashboard|panel|widget|account|token|grant/i.test(o.label)));
+    // (A banned-word check on the choice's words was retired 2026-10-13 with the banned-word lists.)
+    check('the words on the choice name nobody', rows.find((f) => f.key === 'contentSource').options
+      .every((o) => o.label && !/her screen|christine|cici/i.test(o.label)));
   }
 
   // =====================================================================================

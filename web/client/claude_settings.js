@@ -64,7 +64,7 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
   async function refresh() {
     const r = await call('GET');
     if (r.ok) st = r.body;
-    else msg = r.status === 401 ? 'Sign in first. This page is for whoever owns this login.' : r.detail;
+    else msg = r.status === 401 ? 'Sign in first. This page is for the account owner.' : r.detail;
     render();
   }
 
@@ -89,9 +89,9 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
     const days = (st.days || []).filter((d) => d.requests > 0);
     el.innerHTML = `<div class="cs-card" data-cs-card>
       <h1>Claude, on your account</h1>
-      <p class="cs-muted">An optional AI (artificial intelligence) for the guide on your screens. You pay for it with
-        your own Claude key. The free choice is an AI program on your own computer (Ollama). Screens use the free choice
-        unless you change it. Each screen chooses in the guide’s “Set up your guide / AI”.</p>
+      <p class="cs-muted">An optional AI for the guide on your screens. You pay for it with your own Claude key. The
+        free choice is an AI program on your own computer (Ollama). Screens use the free choice unless you change it.
+        Each screen chooses in the guide’s “Set up your guide / AI”.</p>
       <p class="cs-status" data-cs-status role="status">${esc(claudeStatusLine(st))}</p>
       ${warn.map((w) => `<p class="cs-msg" data-cs-warn>${esc(w)}</p>`).join('')}
       ${msg ? `<p class="cs-msg" data-cs-msg role="status">${esc(msg)}</p>` : ''}
@@ -145,7 +145,7 @@ export function mountClaudeSettings(el, { fetchImpl = (...a) => fetch(...a), hea
     } else if (what === 'removekey') {
       act(async () => {
         const r = await call('DELETE', '/key');
-        if (r.ok) { st = r.body; msg = 'The key is removed. Claude will not answer on this login until a new one is saved.'; } else msg = r.detail;
+        if (r.ok) { st = r.body; msg = 'The key is removed. Claude will not answer on this account until a new one is saved.'; } else msg = r.detail;
       });
     } else if (what === 'check') {
       act(async () => {

@@ -59,8 +59,8 @@ import {
 // *** THE MAKE-YOUR-OWN PROMPTS — chat's draft (room-as-home notes §7.4), unchanged in substance. ***
 export const PROMPT_PHOTO = [
   'Make a friendly cartoon avatar of the person in this photo, for a family dashboard.',
-  'Style: flat 2D, soft shading, clean dark outlines, warm colours, no text, plain transparent',
-  'background. Keep what makes them recognisable (hair, glasses, beard, usual clothes) and',
+  'Style: flat 2D, soft shading, clean dark outlines, warm colors, no text, plain transparent',
+  'background. Keep what makes them recognizable (hair, glasses, beard, usual clothes) and',
   'nothing unflattering. Draw the same character, identical in every image, in these poses,',
   'one image each, square, full body, facing slightly toward the viewer:',
   'idle, talking (mouth open), waving, thinking (hand on chin), happy (big smile), sleeping',
@@ -69,7 +69,7 @@ export const PROMPT_PHOTO = [
 export const PROMPT_DESCRIBE = [
   'Write a single SVG file, viewBox="0 0 512 512", no width or height, no text, no external',
   'images, transparent background. Draw a friendly flat cartoon avatar of: <describe the',
-  'person: hair colour and style, glasses, skin tone, beard, favourite clothes, one thing',
+  'person: hair color and style, glasses, skin tone, beard, favorite clothes, one thing',
   'they are known for>. Use simple shapes and dark outlines so it reads at 64px. Put the eyes',
   'in a group with id="eyes" and the mouth in a group with id="mouth", so they can be',
   'animated (blinking, talking). Keep the whole figure inside the frame.',
@@ -78,12 +78,12 @@ export const PROMPT_DESCRIBE = [
 const SETTINGS = [
   { key: 'animate', label: 'Gentle movement', default: true, level: 'standard',
     onLabel: 'Blinks and breathes', offLabel: 'Still',
-    note: 'Off keeps the face still in this part, whatever the person chose. It is always still when this device is set to reduce motion.' },
-  { key: 'allowChange', label: 'Change the avatar from this part', default: true, level: 'standard',
+    note: 'Off keeps the face still on this panel, whatever the person chose. It is always still when this device is set to reduce motion.' },
+  { key: 'allowChange', label: 'Change the avatar from this panel', default: true, level: 'standard',
     onLabel: 'Allowed', offLabel: 'Only shows it' },
-  { key: 'warnBelow', label: 'Warn when a colour is this close to the background', kind: 'number',
+  { key: 'warnBelow', label: 'Warn when a color is this close to the background', kind: 'number',
     default: DEFAULT_WARN_BELOW, min: 1, max: 3, step: 0.1, unit: ':1', level: 'advanced',
-    note: 'A warning only. Any colour can still be saved.' },
+    note: 'A warning only. Any color can still be saved.' },
 ];
 export const DEFAULTS = Object.freeze(Object.fromEntries(SETTINGS.map((s) => [s.key, s.default])));
 
@@ -428,7 +428,7 @@ registerModule(
           return `<button type="button" class="av-opt" data-walk data-act="opt" data-part="${p.key}" data-value="${esc(x.id)}" aria-pressed="${on}">${swx}${esc(x.name)}</button>`;
         }).join('');
         const free = p.color
-          ? `<label class="av-free">Any colour <input type="color" data-free="${p.key}" value="${esc(normalizeHex(o.hex) || '')}"></label>` : '';
+          ? `<label class="av-free">Any color <input type="color" data-free="${p.key}" value="${esc(normalizeHex(o.hex) || '')}"></label>` : '';
         choices = `<div class="av-choices" role="group" aria-label="${esc(p.label)}">${opts}${free}<button type="button" class="av-btn av-done" data-act="done">Done</button></div>`;
       }
       return `<div class="av-part${open ? ' av-open' : ''}">
@@ -454,7 +454,7 @@ registerModule(
 
     function ownHtml() {
       return `<div class="av-own">
-        <p class="av-head">Make your own avatar with an AI (artificial intelligence) program</p>
+        <p class="av-head">Make your own avatar with an AI program</p>
         <p class="av-hint"><b>Only make an avatar of yourself, or of someone who has said yes.</b> A photo sent to an
           online image AI leaves your computer. If that is not all right, use the second prompt (a prompt is the
           words you give the AI). It needs a description, not a photo. Or use an AI that runs on your own computer.</p>

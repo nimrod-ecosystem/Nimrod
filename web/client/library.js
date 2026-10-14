@@ -144,7 +144,7 @@ export function categoriesFor(entry) {
 // ---------------------------------------------------------------------------------------------------
 const KIND_LABELS = Object.freeze({ module: 'Module', scene: 'Scene', furniture: 'Furniture', page: 'Settings page' });
 export const kindLabel = (k) => KIND_LABELS[k] || k;
-const FURNITURE_WHY_NOT = 'A piece of furniture goes in a room. It cannot take a part’s place. The rooms under Scenes come '
+const FURNITURE_WHY_NOT = 'A piece of furniture goes in a room. It cannot take a panel’s place. The rooms under Scenes come '
   + 'with furniture. Putting one piece into a room of your own is not built yet.';
 
 export function moduleItems({ catalog = CATALOG, manifests = listManifests() } = {}) {
@@ -186,7 +186,7 @@ export function sceneItems({ presets = ROOM_PRESETS, scenes = null, manifests = 
     for (const s of list) {
       out.push({ key: `scene:live:${s.value}`, kind: 'scene', id: `live:${s.value}`, type: 'scene', title: s.label,
         lead: 'A calm animated world that never asks for anything.',
-        why: 'A Live scene part showing this world. You can slow or stop its movement in that part’s settings.',
+        why: 'A Live scene panel showing this world. You can slow or stop its movement in that panel’s settings.',
         needs: 'Nothing.', note: '', use: 'watch', group: 'comfort', cats: ['scenes', 'visual'],
         settings: { scene: s.value }, placeable: true, whyNot: '', link: '', lockKey: 'module:scene' });
     }
@@ -222,12 +222,12 @@ export function furnitureItems({ furniture = FURNITURE, groups = FURNITURE_GROUP
 const MENU_TAB_WORDS = Object.freeze({ module: 'This panel', audio: 'Sound', display: 'Display', theme: 'Theme',
   devices: 'Devices', people: 'People', screen: 'This screen' });
 export const menuTabWord = (tab) => MENU_TAB_WORDS[tab] || String(tab || '');
-const PAGE_WHY_NOT ='This is a settings page, not a part. You open it. You do not put it on a dashboard.';
+const PAGE_WHY_NOT ='This is a settings page, not a panel. You open it. You do not put it on a dashboard.';
 export const AI_PAGES = Object.freeze([
   Object.freeze({ id: 'claude', title: 'Claude on this account', path: CLAUDE_PAGE, menuTab: null,
-    lead: 'Claude for one login: the key, which model talks, and the daily limit.',
-    why: 'For a login whose owner chose to pay for Claude. The key is kept on the site\'s server for that login only, never in a '
-      + 'screen’s browser. Everybody else keeps the free default: an AI (artificial intelligence) on their own computer.',
+    lead: 'Claude for one account: the key, which model talks, and the daily limit.',
+    why: 'For an account whose owner chose to pay for Claude. The key is kept on the site\'s server for that account '
+      + 'only, never in a screen’s browser. Everybody else keeps the free default: an AI on their own computer.',
     needs: 'A key from Anthropic (it is called an API key there), typed on a phone or computer.' }),
   Object.freeze({ id: 'wake', title: 'Wake phrases', path: '', menuTab: 'devices',
     lead: 'What you say first, so the screen knows a command is coming.',
@@ -380,7 +380,7 @@ export const LIBRARY_AI_ACTIONS = Object.freeze([
     },
     describe: (value, env) => {
       const p = parsePlaceArg(value); const v = p && placeValue(p.module, p.where, env);
-      return v ? `Put ${moduleTitle(v.type)} where ${v.panel.title || moduleTitle(v.panel.type)} is` : 'Put something else in a part’s place';
+      return v ? `Put ${moduleTitle(v.type)} where ${v.panel.title || moduleTitle(v.panel.type)} is` : 'Put a module in a panel’s place';
     },
     run: (value, env) => {
       const p = parsePlaceArg(value); const v = p && placeValue(p.module, p.where, env);
@@ -397,7 +397,7 @@ export const LIBRARY_AI_ACTIONS = Object.freeze([
     },
     describe: (value, env) => {
       const p = parseSwapArg(value); const v = p && placeValue(p.to, p.from, env);
-      return v ? `Switch ${v.panel.title || moduleTitle(v.panel.type)} to ${moduleTitle(v.type)}` : 'Show something else in a part';
+      return v ? `Switch ${v.panel.title || moduleTitle(v.panel.type)} to ${moduleTitle(v.type)}` : 'Switch a panel to another module';
     },
     run: (value, env) => {
       const p = parseSwapArg(value); const v = p && placeValue(p.to, p.from, env);
@@ -434,15 +434,15 @@ export const LIBRARY_SETTINGS = Object.freeze([
   { key: 'scan', label: 'Switch scanning', kind: 'choice', default: LIBRARY_DEFAULTS.scan, level: 'standard',
     options: [{ value: 'follow', label: 'As “How you choose things” says' }, { value: 'off', label: 'Off — one thing at a time' },
       { value: 'rows', label: 'Rows, then the things in a row' }],
-    help: 'For a switch (one big button). Move a row at a time, then go into the row you want. You do not have to go through every card in turn.' },
+    help: 'For a switch: move a row at a time, then go into the row you want. You do not have to go through every card in turn.' },
   { key: 'cardSize', label: 'Card size', kind: 'choice', default: LIBRARY_DEFAULTS.cardSize, level: 'standard',
     options: [{ value: 'small', label: 'Small' }, { value: 'medium', label: 'Medium' }, { value: 'large', label: 'Large' }],
     help: 'Bigger cards are easier to read and to hit; smaller ones fit more on the screen.' },
-  { key: 'idleMs', label: 'In another part’s place, put that part back after', kind: 'choice', default: LIBRARY_DEFAULTS.idleMs,
+  { key: 'idleMs', label: 'In another panel’s place, put that panel back after', kind: 'choice', default: LIBRARY_DEFAULTS.idleMs,
     level: 'standard',
     options: [{ value: 60000, label: '1 minute' }, { value: 120000, label: '2 minutes' }, { value: 300000, label: '5 minutes' },
       { value: 0, label: 'Never' }],
-    help: 'When Switch module opens the library in a part’s place and nobody touches it, the part comes back by itself.' },
+    help: 'When Switch module opens the library in a panel’s place and nobody touches it, the panel comes back by itself.' },
 ]);
 
 // ---------------------------------------------------------------------------------------------------
@@ -604,7 +604,7 @@ export function mountLibrary(root, {
       seen.add(type);
       out.push({ it, hint });
     };
-    if (target && target.base && target.base !== target.type) add(target.base, 'what this part was');
+    if (target && target.base && target.base !== target.type) add(target.base, 'what this panel was');
     for (const t of (u.recent || [])) { if (out.length >= RECENT_MAX) break; add(t, 'recent'); }
     return out;
   }
@@ -624,7 +624,7 @@ export function mountLibrary(root, {
     const badges = [];
     if (it.kind !== 'module') badges.push(kindLabel(it.kind));
     if (lock) badges.push('locked');
-    if (!it.placeable && mode !== 'browse') badges.push('cannot go here');
+    if (!it.placeable && mode !== 'browse') badges.push('not for a panel');
     return `<button type="button" class="lib-card${!it.placeable || lock ? ' is-off' : ''}" role="option" data-lib-key="${esc(it.key)}"
       aria-selected="${sel ? 'true' : 'false'}" data-help="${esc(it.lead)}" data-help-title="${esc(it.title)}">
       <span class="t">${esc(it.title)}</span><span class="l">${esc(it.lead)}</span>
@@ -647,7 +647,7 @@ export function mountLibrary(root, {
     const rEl = $('[data-lib-recent]');
     rEl.hidden = !rec.length;
     rEl.innerHTML = rec.length ? `<span class="lib-small lib-label">Recent</span>${rec.map(({ it, hint }) =>
-      `<button type="button" class="lib-chip sf-chip" data-lib-key="${esc(it.key)}" data-lib-recent-key="${esc(it.key)}" title="${esc(hint)}">${esc(it.title)}${hint === 'what this part was' ? ' (was)' : ''}</button>`).join('')}` : '';
+      `<button type="button" class="lib-chip sf-chip" data-lib-key="${esc(it.key)}" data-lib-recent-key="${esc(it.key)}" title="${esc(hint)}">${esc(it.title)}${hint === 'what this panel was' /* site text second pass 2026-10-13: must match the add() above */ ? ' (was)' : ''}</button>`).join('')}` : '';
     $('[data-lib-cats]').innerHTML = chipsHTML({ options: CATEGORIES, value: p.category, cls: 'lib-chip', attrOf: (c) => `data-lib-cat="${esc(c.id)}"` });
     const list = visible();
     $('[data-lib-grid]').innerHTML = list.length ? list.map((it) => cardHtml(it, detail && detail.key === it.key)).join('')
@@ -682,7 +682,7 @@ export function mountLibrary(root, {
     // to unlock first, as "Put it here" does.
     if (!lock && it.placeable && it.kind === 'module' && canOverlay()) {
       acts.push(`<button type="button" class="lib-btn" data-lib-act="overlay" ${busy ? 'disabled' : ''}
-        title="a small part floating in a corner, over what is there. A clock becomes the small corner clock">Over the dashboard</button>`);
+        title="a small panel floating in a corner, over what is there. A clock becomes the small corner clock">Over the dashboard</button>`);
     }
     // A SETTINGS PAGE (the AI set, pageItems): off a screen, the page in a new tab; on a screen, its address and a
     // code (below, in the words), and nothing opens. A page that is menu rows opens the menu on its tab.

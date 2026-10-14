@@ -247,13 +247,13 @@ export function mountReviewPage(el, { reviews, now = () => new Date(), copy = nu
     return `
       <section class="rv-card">
         <h1>Questions waiting for review</h1>
-        <p>These questions were written by an AI (artificial intelligence), some from its own memory. Each one
-          names its own source: a link, a reference book, or “common knowledge” with a reason. The source is shown
-          under the question while you check it. A source an AI names can still be wrong, or not say what it is
-          claimed to say. So open it when in doubt. <b>A person reading each question is the real check</b>. A
-          wrong “right answer” taught as fact is worse than no question.</p>
+        <p>These questions were written by an AI, some from its own memory. Each one names its own source: a link,
+          a reference book, or “common knowledge” with a reason. The source is shown under the question while you
+          check it. A source an AI names can still be wrong, or not say what it is claimed to say. So open it when
+          in doubt. <b>A person reading each question is the real check</b>. A wrong “right answer” taught as fact
+          is worse than no question.</p>
         <p class="rv-muted">There are 2 ways to check them: one at a time above, or by playing. To play them, open
-          the settings of a Trivia part and turn on <b>Include unreviewed questions (review as you play)</b>. Then
+          the settings of a Trivia module and turn on <b>Include unreviewed questions (review as you play)</b>. Then
           pick one of these packs under <b>Which pack</b>. A pack is a set of questions. A question you answer and
           move on from counts as right. If one is wrong, press <b>✗ wrong</b> (or W, or say “that one is wrong”). It
           is then not asked again until somebody fixes it. A check counts for everyone on this login. Turn the

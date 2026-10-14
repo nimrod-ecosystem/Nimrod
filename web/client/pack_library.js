@@ -20,7 +20,7 @@ export const PACK_LIBRARY = [
   // Root-relative, not `packs/...` — this is imported by modules mounted from pages at
   // different depths (kiosk.html, modules.html, a future page), and a relative URL resolves
   // against whichever one happened to load it.
-  { id: 'maths_basic', kind: 'trivia', label: 'Maths — basic arithmetic',
+  { id: 'maths_basic', kind: 'trivia', label: 'Math — basic arithmetic',
     url: '/packs/maths_basic.json' },
   { id: 'vocab_starter', kind: 'words', label: 'Vocabulary — starter set',
     url: '/packs/vocab_starter.json' },

@@ -115,7 +115,7 @@ export function pairMessage(state, { code = '', label = '', error = '',
   if (state === 'asking') return { title: 'Setting this screen up…', body: '', code: '' };
   if (state === 'waiting') {
     return {
-      title: 'Add this screen to your login',
+      title: 'Add this screen to your account',
       // The instruction names the whole task, because somebody who has never done it before
       // needs to know where they are going before they are given a number to remember.
       //

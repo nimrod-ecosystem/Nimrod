@@ -97,19 +97,19 @@ export function cardSettingsFields({ level = 'standard' } = {}) {
         { value: 'big', label: 'Big: one large number and suit, easy to read from across a room' },
       ],
       note: 'Picture cards and the corner of every card look the same either way.' },
-    { key: 'suitColours', label: 'Suit colours', kind: 'choice', default: CARD_DEFAULTS.suitColours, level,
+    { key: 'suitColours', label: 'Suit colors', kind: 'choice', default: CARD_DEFAULTS.suitColours, level,
       options: [
-        { value: 'four', label: 'Four colours: red hearts, blue diamonds, green clubs' },
-        { value: 'two', label: 'Two colours: red and black, as on most decks' },
+        { value: 'four', label: 'Four colors: red hearts, blue diamonds, green clubs' },
+        { value: 'two', label: 'Two colors: red and black, as on most decks' },
       ],
-      note: 'Every card also shows its suit as a shape, so colour is never the only way to tell.' },
+      note: 'Every card also shows its suit as a shape, so color is never the only way to tell.' },
     { key: 'cardScenery', label: 'Pictures behind the cards', kind: 'choice', default: CARD_DEFAULTS.cardScenery, level,
       options: [
         { value: 'auto', label: 'Where they are easy to read: on in some themes, off where the pictures make the numbers harder to see' },
         { value: 'on', label: 'On: each card shows a place in the theme\'s town, and the picture cards stand at home' },
         { value: 'off', label: 'Off: plain cards, the easiest to read' },
       ],
-      note: 'Over a picture, the numbers and suit marks keep a thin outline in the card\'s own colour.' },
+      note: 'Over a picture, the numbers and suit marks keep a thin outline in the card\'s own color.' },
   ];
 }
 

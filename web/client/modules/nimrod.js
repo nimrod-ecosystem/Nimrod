@@ -145,7 +145,7 @@ export const GUIDE_SETTINGS = Object.freeze([
     help: 'A list of everything Nimrod can show you. It opens at the place you are.' },
   { key: 'hover', label: 'Explain what the pointer is on', kind: 'toggle', default: true, level: 'standard',
     onLabel: 'Yes', offLabel: 'No',
-    help: 'Point at anything and Nimrod says what it does, in the box at the bottom of his part. It works with scanning too (the screen steps through the choices one at a time; press when yours is lit).' },
+    help: 'Point at anything and Nimrod says what it does, in the box at the bottom of his panel. It works with scanning too (the screen steps through the choices one at a time; press when yours is lit).' },
   { key: 'speak', label: 'Nimrod reads aloud', kind: 'toggle', default: true, level: 'standard',
     onLabel: 'Yes', offLabel: 'No — words only',
     help: 'The screen’s voice also says his words, if this screen speaks.' },
@@ -242,7 +242,7 @@ const STYLE = `
 
 registerModule(
   { type: GUIDE_TYPE, title: 'Nimrod', core: 'new', dependsOn: 'none', importance: 'normal',
-    description: 'Nimrod the guide tells you what everything does and what to try next, as choices you can step back through. Or talk it over with your own AI (artificial intelligence).',
+    description: 'Nimrod the guide tells you what everything does and what to try next, as choices you can step back through. Or talk it over with your own AI.',
     settings: GUIDE_SETTINGS },
   (ctx) => {
     const { mount } = ctx;
@@ -1372,7 +1372,7 @@ registerModule(
           <button type="button" class="ng-btn" data-ng-stop data-ng-do="notes"
             data-help="${esc(`Your notes: write one, see them all, copy them or save them as a file.${prefs.notesKey ? ' The N key opens them from anywhere.' : ''}`)}">Notes${notes.length ? ` (${notes.length})` : ''}</button>
           <button type="button" class="ng-btn" data-ng-stop data-ng-do="talk"
-            data-help="${esc(`Talk it over with ${aiP.name}, your AI (artificial intelligence), typed or spoken. It can go through the guide with you.`)}">Talk to ${esc(aiP.name)}</button>
+            data-help="${esc(`Talk it over with ${aiP.name}, your AI, typed or spoken. It can go through the guide with you.`)}">Talk to ${esc(aiP.name)}</button>
         </div>
         ${movedNote ? `<p class="ng-status" data-ng-moved>${esc(movedNote)}</p>` : ''}
         ${tree}`;
@@ -1437,7 +1437,7 @@ registerModule(
                 : `<a class="ng-btn ng-act" data-ng-stop data-ng-link data-ng-claude-page href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener"
                 data-help="Opens the Claude settings in a new tab: the account owner saves the key, picks the model and sees today’s spending there.">Claude settings: key, model, spending ↗</a>`}
               ${claudeCheck?.busy ? '' : btnHTML('checkclaude', claudeCheck ? 'Check again' : 'Check Claude on this account',
-                'Asks this website’s server whether this login has a Claude key saved, and today’s spending. Nothing is sent to Claude.')}
+                'Asks this website’s server whether this account has a Claude key saved, and today’s spending. Nothing is sent to Claude.')}
             </div>${res}</div>`;
         }
         const other = otherOpen ? `<label for="ng-f-furl">The AI’s address (OpenAI-style, ending in /v1)</label>
@@ -1489,7 +1489,7 @@ registerModule(
           <div class="ng-btns">${btnHTML('savenote', 'Save note', 'Keep this note in your notes.')}${btnHTML('dropnote', 'Discard', 'Throw this draft away.')}</div></div>`;
     }
     const WHERE_KEPT = {
-      person: 'Kept on your login. They follow you to every screen you sign in to.',
+      person: 'Kept on your account. They follow you to every screen you sign in to.',
       panel: 'Kept with this Nimrod panel on this dashboard (nobody is signed in as a person here).',
       memory: 'Kept only until this page closes: copy them or save them as a file.',
     };
@@ -1802,7 +1802,7 @@ registerModule(
       return `
         <div class="ng-head"><img src="${esc(catImageURL('talking'))}" alt="">
           <div><b>${esc(n)}</b><div class="ng-where">On the tour at “${esc(node.title)}”</div></div></div>
-        <div class="ng-btns">${btn('guide', '‹ Back to the guide', 'Back to the guide’s choices. The conversation is kept while this part is open.')}</div>
+        <div class="ng-btns">${btn('guide', '‹ Back to the guide', 'Back to the guide’s choices. The conversation is kept while this panel is open.')}</div>
         <div class="ng-card"><b>${esc(node.title)}:</b> ${esc(firstSentence(words))}</div>
         <p class="ng-status" data-ng-status role="status">${esc(statusText())}</p>
         ${noAI ? `<p class="ng-help" data-ng-help>${esc(connectHelp(n, ''))}</p>` : ''}
@@ -1865,9 +1865,9 @@ registerModule(
     function actHelp(a) {
       switch (a.kind) {
         case 'menu-tab': return `Opens the settings menu on its ${a.tab} tab.`;
-        case 'settings-page': return 'Shows that page in the Settings part.';
-        case 'switch': return 'Opens the list for changing what a part shows. Choose something else to take that part’s place.';
-        case 'host': return a.act === 'picker' ? 'Shows everything you can put on a screen.' : 'Shows the ready-made dashboards to start from.';
+        case 'settings-page': return 'Shows that page in the settings panel.';
+        case 'switch': return 'Opens the switch list. Choose another module to take a panel’s place.';
+        case 'host': return a.act === 'picker' ? 'Shows every module there is.' : 'Shows the ready-made dashboards to start from.';
         case 'tutorial': return 'Goes to the tutorial dashboard, where Nimrod and the settings always are.';
         case 'game-mode': return MODE_HELP[a.mode] || '';
         case 'guide': return a.do === 'notes' ? 'Opens your notes: write one, copy them all, or save them as a file.'

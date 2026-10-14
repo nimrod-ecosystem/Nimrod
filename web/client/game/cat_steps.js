@@ -90,8 +90,8 @@ export const CAT_STEPS = [
     brief: 'This is the bar.',
     say: 'This is the bar. Every screen has one, with the same buttons in the same places. On Home it '
        + 'also carries Modules, Save, Save as, History and Switch module.',
-    more: 'In full screen it tucks itself away after a few seconds. Touch the screen, press a key or press a switch '
-        + '(one big button) to bring it back.',
+    more: 'In full screen it tucks itself away after a few seconds. Touch the screen, press a key or '
+        + 'press a switch to bring it back.',
     note: 'The kiosk keeps the bar showing while he points at it (`holdBar`), placed bar included.' },
 
   { id: 'cat-modules', page: HOME_PAGE, target: HOST('picker'), action: 'none',
@@ -126,15 +126,15 @@ export const CAT_STEPS = [
     more: 'Things on the screen come along: going to a room hangs them on its wall.' },
 
   { id: 'cat-add', page: HOME_PAGE, action: 'none', target: [EDIT('add'), SHELL('settings')],
-    brief: 'Add puts a part on.',
-    say: 'Add puts a part on your Home: photos, a clock, a game, a picture frame or a name sign. That is '
+    brief: 'Add puts a module on.',
+    say: 'Add puts a module on your Home: photos, a clock, a game, a picture frame or a name sign. That is '
        + 'how it becomes yours.',
     more: 'Change, next to it, moves a thing, makes it bigger or smaller, or takes it off. Transform lets you type its place and '
         + 'size as numbers.' },
 
   { id: 'cat-switch', page: HOME_PAGE, action: 'none', target: [HOST('switch'), EDIT('change')],
     brief: 'Switch module swaps the outlined thing.',
-    say: 'Switch module, on the bar, swaps the outlined thing for another part in exactly the same place. '
+    say: 'Switch module, on the bar, swaps the outlined thing for another module in exactly the same place. '
        + 'Choose the new one, and it is done.',
     more: 'Undo puts the old one back, with its settings.' },
 

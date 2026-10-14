@@ -294,12 +294,12 @@ export const ROUTES = {
     phrases: ['next tab', 'the next tab', 'go to next tab'] },
   'menu-prev-tab': { action: 'menu/prev-tab', label: 'Settings menu: previous tab',
     phrases: ['previous tab', 'the previous tab', 'last tab', 'go back a tab'] },
-  'menu-tab-module': { action: 'menu/tab-module', label: 'Settings menu: the part you picked',
+  'menu-tab-module': { action: 'menu/tab-module', label: 'Settings menu: the panel you picked',
     phrases: ['panel settings', 'module settings', 'this panel settings'] },
   'menu-tab-audio': { action: 'menu/tab-audio', label: 'Settings menu: sound',
     phrases: ['sound settings', 'audio settings', 'volume settings'] },
   'menu-tab-display': { action: 'menu/tab-display', label: 'Settings menu: display',
-    phrases: ['display settings', 'video settings', 'colour settings', 'color settings'] },
+    phrases: ['display settings', 'video settings', 'color settings', 'color settings'] },
   'menu-tab-devices': { action: 'menu/tab-devices', label: 'Settings menu: devices',
     phrases: ['device settings', 'devices settings', 'switch settings', 'input settings'] },
   'menu-tab-people': { action: 'menu/tab-people', label: 'Settings menu: people',
@@ -314,7 +314,7 @@ export const ROUTES = {
   // that sentence over ~45 modules and every panel on the screen is hundreds of near-identical phrases, rebuilt
   // whenever a panel changes -- the shape a closed-grammar recogniser mis-hears worst. The AI reads free speech
   // and asks for `place` / `swap` (library.js LIBRARY_AI_ACTIONS); with no AI, "switch module" then a press.
-  'switch-module': { action: 'menu/switch-module', label: 'Show something else in the part you picked',
+  'switch-module': { action: 'menu/switch-module', label: 'Show another module in the panel you picked',
     phrases: ['switch module', 'switch the module', 'change module', 'change the module', 'swap module'] },
   // Home's edit bar (2026-10-02): the same action a switch binds (actions.js `shell/host/editbar`), which
   // opens the bar holding the scan. Each phrase names the bar or "my home", so none is a panel verb.
@@ -322,7 +322,7 @@ export const ROUTES = {
     phrases: ['edit bar', 'open the edit bar', 'show the edit bar', 'edit my home'] },
   // Edit the chosen panel in place (2026-10-02; actions.js `shell/edit-panel`, edit_mode.js). Said again, it
   // stops; "go back" with nothing else to cancel stops too (kiosk.js backUnhandled).
-  'edit-panel': { action: 'shell/edit-panel', label: 'Edit the chosen panel',
+  'edit-panel': { action: 'shell/edit-panel', label: 'Edit the panel you picked',
     phrases: ['edit this panel', 'edit the panel'] },
   // 2026-10-02 (eccafdd): hand the transport bar the switch (and say it again to give it back).
   'bar-scan': { action: 'shell/bar-scan', label: 'Walk the transport bar',
@@ -331,7 +331,7 @@ export const ROUTES = {
   // One level a time: the panel fills its dashboard, then the screen. "full screen" is here because that
   // is where "bigger" ends up, and nothing else claimed the words (the bar's full-screen key is F, and
   // `system/fullscreen` has no phrase). Not "bigger" alone: a word a room says about anything.
-  'promote': { action: 'shell/promote', label: 'Make the part you picked bigger',
+  'promote': { action: 'shell/promote', label: 'Make the panel you picked bigger',
     phrases: ['make it bigger', 'bigger please', 'full screen', 'fill the screen'] },
   'demote': { action: 'shell/demote', label: 'Make it smaller again',
     phrases: ['make it smaller', 'smaller please', 'exit full screen', 'leave full screen'] },

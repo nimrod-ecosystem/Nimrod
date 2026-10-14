@@ -175,7 +175,7 @@ function rig() {
       check('a watchdog release says nobody let go',
         /not by them/.test(describe({ data: { kind: 'edge_up', heldMs: 12000, requiredHoldMs: 0, auto: true } })));
       check('an unbound press is still described as a press somebody made',
-        /on something that has no job/.test(describe({ data: { kind: 'edge_down', bound: false } })));   // site text rewrite 2026-10-09: was "bound to nothing"
+        /bound to nothing/.test(describe({ data: { kind: 'edge_down', bound: false } })));   // site text second pass 2026-10-13: "bound to nothing" again
     }
 
     section('nothing yet');

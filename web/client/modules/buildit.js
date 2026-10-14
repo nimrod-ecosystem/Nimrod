@@ -60,7 +60,7 @@ const SETTINGS = [
       { value: 'build', label: 'Build it in the brick builder' },
     ] },
   ...autostartFields({ on: false }),
-  { key: 'colours', label: 'Colours must match', default: true, level: 'standard', onLabel: 'Yes', offLabel: 'No, only the shape' },
+  { key: 'colours', label: 'Colors must match', default: true, level: 'standard', onLabel: 'Yes', offLabel: 'No, only the shape' },
   { key: 'lightMs', label: 'The choices light in turn', kind: 'choice', default: 2000, level: 'standard',
     options: [{ value: 1000, label: 'Every second' }, { value: 2000, label: 'Every 2 seconds' }, { value: 3000, label: 'Every 3 seconds' },
       { value: 5000, label: 'Every 5 seconds' }, { value: 0, label: 'Only when pressed (next / previous)' }],

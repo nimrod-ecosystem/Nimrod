@@ -87,8 +87,9 @@ export async function mountDemoStrip(root, {
   bar.innerHTML = `
     <span class="d-text">
       <b>This is a live demo, and these are sample photos.</b>
-      <span class="d-sub">Choose a folder of your own and it shows those instead. Nothing is sent
-        anywhere. The pictures never leave this device.</span>
+      <span class="d-sub">Choose a folder of your own and it shows those instead. Nothing goes to
+        the Nimrod site. The pictures stay on this device.
+        <a href="/#what-we-keep" target="_blank" rel="noopener">What the site does keep</a>.</span>
     </span>
     ${supported ? '<button class="d-go" data-pick>Use my own photos</button>' : ''}
     <a class="d-in" href="${esc(loginHref)}">Sign in to keep this</a>

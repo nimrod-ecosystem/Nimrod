@@ -124,12 +124,12 @@ const SETTINGS = [
       { value: 0, label: 'Never' }],
     note: 'A miss never costs anything: the same brick is asked again.' },
   { key: 'mix', label: 'What else changes', kind: 'choice', default: 'one', level: 'standard',
-    options: [{ value: 'one', label: 'Nothing: only the colour, or only the size, changes' },
-      { value: 'both', label: 'Both: sizes mixed in with the colours, colours with the sizes. Harder' }],
+    options: [{ value: 'one', label: 'Nothing: only the color, or only the size, changes' },
+      { value: 'both', label: 'Both: sizes mixed in with the colors, colors with the sizes. Harder' }],
     note: 'Starts with the next tray.' },
   { key: 'afterTray', label: 'After a tray is sorted', kind: 'choice', default: 'same', level: 'standard',
     options: [{ value: 'same', label: 'A new tray at the same level' }, { value: 'up', label: 'A new tray one level up' }] },
-  { key: 'speak', label: 'Say the brick\'s colour aloud', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
+  { key: 'speak', label: 'Say the brick\'s color aloud', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
   { key: 'sayChoice', label: 'Say each place as it lights', default: true, level: 'standard',
     onLabel: 'Yes ("Teal?")', offLabel: 'No', note: 'Somebody using a switch needs it.' },
   { key: 'sounds', label: 'Sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
@@ -159,7 +159,7 @@ export function statusFor(g, { idle = false, news = '' } = {}) {
       if (news) return news;
       if (g.places.length === 1) return 'Press to put the brick in.';
       if (g.kind === 'slot') return 'Which slot does it fit?';
-      if (g.kind === 'colour') return 'Put it with its colour.';
+      if (g.kind === 'colour') return 'Put it with its color.';
       return 'Put it with its size.';
   }
 }
@@ -220,8 +220,8 @@ function ensureStyle(doc) {
 
 registerModule(
   { type: GAME, title: TITLE, core: 'new',
-    description: 'Put each Nimrod brick where it goes: first in the slot it fits, then with its colour, then with its size. '
-      + 'At the first level any press puts the brick in. The places light up in turn, so one switch (one big button) can play.',
+    description: 'Put each Nimrod brick where it goes: first in the slot it fits, then with its color, then with '
+      + 'its size. At the first level any press puts the brick in. The places light up in turn, so one switch can play.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;
@@ -271,7 +271,7 @@ registerModule(
       });
     }
     const namesNow = () => colourNames(themeColours(), BRICK_COLOURS);
-    const colourName = (c) => namesNow()[c] || `Colour ${c + 1}`;
+    const colourName = (c) => namesNow()[c] || `Color ${c + 1}`;
     function placeName(p) {
       if (!p) return '';
       if (g.kind === 'colour') return colourName(p.c);

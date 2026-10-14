@@ -116,7 +116,7 @@ export async function mountPhoneMic(root, {
     root.dataset.live = '0';
     root.dataset.view = 'setup';
     body().innerHTML = `<h1>Use this phone as a microphone</h1>
-      <p>Sign in on this phone first, with a login that is allowed to use the screen.</p>
+      <p>Sign in on this phone first, with an account that is allowed to use the screen.</p>
       <p><a class="pm-btn pm-primary" href="/auth/login">Sign in</a></p>`;
   }
 
@@ -145,7 +145,7 @@ export async function mountPhoneMic(root, {
       <button type="button" class="pm-btn pm-primary pm-big" data-start>Turn the microphone on</button>
       <details class="pm-help" data-help><summary>Keeping a phone on as a microphone</summary>${KEEP_ON_HELP}</details>
       <p class="pm-note" data-intercom-link>To talk to the room and hear it back, <a href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead, or <a data-call-link href="./call.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">place a call</a>.</p>`
-      : '<p>This login has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
+      : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
 
   // Built ONCE per start; later state changes only repaint its words, so a module shown in it is
@@ -250,7 +250,7 @@ export async function mountPhoneMic(root, {
     put(NAME_KEY, name); put(NEAR_KEY, near); put(PERSON_KEY, target.id); put(SHOW_KEY, show);
     ended = null;
     if (!(await allowed(target.id))) {
-      ended = 'This login is not allowed to use that screen. Its owner can share it from the Remote tab.';
+      ended = 'This account is not allowed to use that screen. Its owner can share it from the Remote tab.';
       renderSetup();
       return;
     }

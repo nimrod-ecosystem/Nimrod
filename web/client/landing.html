@@ -9,7 +9,7 @@
      message or pasted into a support group, and until now it arrived there as a bare gray
      URL: no title, no description, no picture. Everything in this block exists for the
      moment somebody shares it with a stranger who is having a bad week. -->
-<meta name="description" content="Free, private software that helps people with brain injury, stroke and other serious conditions use a screen. It shows photos, video, talk boards (communication boards) and games, and helps their families stay close. It runs on a device you already own.">
+<meta name="description" content="Free, private software that helps people with brain injury, stroke and other serious conditions use a screen. It shows photos, video, AAC boards (communication boards) and games, and helps their families stay close. It runs on a device you already own.">
 <link rel="canonical" href="https://nimrodecosystem.com/">
 <meta name="theme-color" content="#0A3323">
 
@@ -17,10 +17,10 @@
 <meta property="og:site_name" content="Nimrod">
 <meta property="og:url" content="https://nimrodecosystem.com/">
 <meta property="og:title" content="Nimrod — free, private technology for care and recovery">
-<meta property="og:description" content="Photos, video, talk boards (communication boards) and games for people with brain injury or stroke. It runs on a device you already own. Free and open source. Your files never leave your machine.">
+<meta property="og:description" content="Photos, video, AAC boards (communication boards) and games for people with brain injury or stroke. It runs on a device you already own. Free and open source. Your files never leave your machine.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Nimrod — free, private technology for care and recovery">
-<meta name="twitter:description" content="Photos, video, talk boards (communication boards) and games for people with brain injury or stroke. It runs on a device you already own.">
+<meta name="twitter:description" content="Photos, video, AAC boards (communication boards) and games for people with brain injury or stroke. It runs on a device you already own.">
 
 <!-- NO og:image YET, DELIBERATELY. A share card wants a real screenshot of the running
      product, and those come from the seeded demo account the walkthrough will use. A stock
@@ -216,7 +216,8 @@
   .val h3{margin:.1em 0 .35em;font-size:1.12rem}
   .val p{margin:0;color:var(--text-muted);font-size:.97rem}
   .val .ic{font-size:1.5rem;margin-bottom:10px}
-  .community{margin-top:30px;background:var(--surface-alt);border:1px solid var(--border);
+  .not-nurse-call{margin:24px 0 0;font-weight:650;color:var(--text)}
+.community{margin-top:30px;background:var(--surface-alt);border:1px solid var(--border);
     border-left:4px solid var(--accent);border-radius:12px;padding:22px 24px}
   .community p{margin:0;color:var(--text-soft);font-size:1.02rem;max-width:74ch}
 
@@ -371,7 +372,7 @@
            your own dashboards, your own devices setup, saved to this browser with no
            account. Primary color moved to the full site, since that is the one Mike wants
            people actually using. -->
-      <a href="/home.html" class="btn ondark">Try the full site — no login needed</a>
+      <a href="/home.html" class="btn ondark">Try the full site — no account needed</a>
       <a href="#demo" class="btn ondark ghost">See a quick sample</a>
       <a href="/auth/login" class="btn ondark ghost">Get started — it’s free</a>
       <!-- THE TOUR IS OFFERED, NEVER SPRUNG. It does not start on page load: it would be the
@@ -414,9 +415,9 @@
   <div class="wrap">
     <p class="eyebrow">Try it</p>
     <h2>This is the actual software. Press play.</h2>
-    <p class="demo-lede">No login. Nothing to install, and nothing to remove afterwards. This is the
-      same software a real screen runs. Only two things differ. These are sample photos. The
-      settings are kept in this browser, not on a login.</p>
+    <p class="demo-lede">No account. Nothing to install, and nothing to remove afterwards. This is
+      the same software a real screen runs. Only two things differ. These are sample photos. The
+      settings are kept in this browser, not in an account.</p>
 
     <div class="demo-frame">
       <button class="demo-poster" data-play aria-label="Start the live demo">
@@ -439,7 +440,7 @@
          a YouTube error. Until then that panel runs the curated starter playlist, and this
          copy says what is actually on screen. -->
     <p class="demo-note"><b>Nothing here asks for your camera.</b> On a real bedside screen, that
-      part can be a rear-view mirror of the room. For somebody who cannot turn their head, that is
+      panel can be a rear-view mirror of the room. For somebody who cannot turn their head, that is
       the whole point. The picture never leaves the device.</p>
   </div>
 </section>
@@ -479,6 +480,7 @@
           already own.</p>
       </div>
     </div>
+    <p class="not-nurse-call" data-not-nurse-call>Nimrod is not a nurse call or an emergency system.</p>
     <div class="community">
       <p>Although Nimrod is being built first for one person's recovery, it's designed to be useful
         for <b>everyone</b>. The more people who use it, the more who build modules for it — and a
@@ -539,26 +541,26 @@
 
     <div class="dash">
       <h3>The default dashboard — live today</h3>
-      <p>One calm, full screen page. Everything on it is a part you can move around.</p>
+      <p>One calm, full screen page. Everything on it is a module you can move around.</p>
       <div class="mods" id="mods-default">
         <div class="mod"><div class="mn">Loading the live list…</div></div>
       </div>
       <div class="device-note"><b>Runs on what you already have.</b> It runs in a web browser. Open
         it on a phone, a tablet, a computer, or an inexpensive Raspberry Pi (a small computer) and a
         monitor. No special equipment. Nothing you must buy from one company.</div>
-      <h3 style="margin-top:26px">Every part, today</h3>
-      <p>A screen is built from parts. This list is made as you read it, from the same list the site
+      <h3 style="margin-top:26px">Every module, today</h3>
+      <p>A screen is built from modules. This list is made as you read it, from the same list the site
         offers you when you build a screen. So it cannot name something the software does not have.</p>
       <div class="mgroups" id="mods-live">
         <p class="muted">Loading the live list…</p>
       </div>
 
-      <div class="milestone"><b>Every part named above is in the public code.</b> Nothing here is a
-        mockup. <b>This list is not written by hand.</b> It is made from
+      <div class="milestone"><b>Every module named above is in the public code.</b> Nothing here is
+        a mockup. <b>This list is not written by hand.</b> It is made from
         <code>modules_catalog.js</code>, the same file the site reads when you build a screen. So a
-        part cannot be listed here unless it exists. And a part cannot be taken out of the software
-        and still be listed here. This list used to be written by hand. For weeks it listed a
-        starting part that had been removed.</div>
+        module cannot be listed here unless it exists. And a module cannot be taken out of the
+        software and still be listed here. This list used to be written by hand. For weeks it listed
+        a starting module that had been removed.</div>
 
       <div class="val" style="margin-top:26px">
         <!-- WAS "If a person can press one button, they can use all of it". Mike, 2026-09-02,
@@ -574,33 +576,33 @@
              worth the space is the bedside screen: that is the surface built for one input, and
              the setup around it is not. -->
         <p class="eyebrow">The screen they use is built for one button. Setting it up is not.</p>
-        <h3>Whatever they can move, set to do whatever they need</h3>
-        <p>Most software expects a mouse. Some people can only press a switch (one big button). They
-          may press it with a hand, a cheek or a shoulder, and it may take them seconds. For them,
-          software that expects a mouse shuts them out. So the controls came first, and everything
-          else is built on them.</p>
+        <h3>Whatever they can move, bound to whatever they need to do</h3>
+        <p>Most software expects a mouse. Some people can only press a switch. They may press it
+          with a hand, a cheek or a shoulder, and it may take them seconds. For them, software that
+          expects a mouse shuts them out. So the controls came first, and everything else is built
+          on them.</p>
         <div class="mgroups">
           <div class="mgroup"><h4>It fits the person</h4><ul>
-            <li><b>Give any control any job.</b> A switch, an adaptive button, a game controller, a
+            <li><b>Bind anything to anything.</b> A switch, an adaptive button, a game controller, a
               dial or a keyboard. Each one does what you choose.</li>
             <li><b>Set to fit a body.</b> How long a press must be held. How long before it repeats.
               What to ignore as a tremor or a bounce.</li>
-            <li><b>One switch reaches the whole bedside screen.</b> Step from part to part, then
+            <li><b>One switch reaches the whole bedside screen.</b> Step between panels, then
               choose. Setting it up the first time takes a keyboard and a mouse.</li>
           </ul></div>
           <div class="mgroup"><h4>It follows the person</h4><ul>
             <li><b>The setup belongs to the person, not to one machine.</b> Set it once. It works on
               any screen they sit at.</li>
-            <li><b>Someone else can help from another screen.</b> A therapist or a relative gets the
+            <li><b>Someone else can help from another screen.</b> A clinician or a relative gets the
               same controls. The screen always says when this is happening.</li>
             <li><b>Choose who may press things</b> while you fix something, then change it back.</li>
           </ul></div>
           <div class="mgroup"><h4>It tells you why nothing happened</h4><ul>
             <li><b>“What can I press right now?”</b> — because the answer is different for every
               person, and there is no manual to check.</li>
-            <li><b>“Why did that do nothing?”</b> A dead switch. A control with the wrong job. A
-              hold time set too long. A part that has nothing to do with that press. These are 4
-              different repairs that look the same. Each one gets its own sentence.</li>
+            <li><b>“Why did that do nothing?”</b> A dead switch. A wrong binding. A hold time set
+              too long. A panel with nothing to say. These are 4 different repairs that look the
+              same. Each one gets its own sentence.</li>
             <li><b>Is it even plugged in?</b> This is checked first, so nobody tries to fix a switch
               that is in a drawer.</li>
           </ul></div>
@@ -617,8 +619,8 @@
           <li><b>Runs in any modern browser</b> — phone, tablet, PC, Mac, or Raspberry Pi</li>
           <li><b>Your own photos and videos</b>, read from your own machine. They keep playing if
             the connection to the site drops.</li>
-          <li><b>Logins and people</b> — sign in and every person gets their own screen</li>
-          <li><b>A setup that goes with you</b> — your layout is kept on your login, not on one machine</li>
+          <li><b>Accounts and people</b> — sign in and every person gets their own screen</li>
+          <li><b>A setup that goes with you</b> — your layout is kept in your account, not on one machine</li>
           <li><b>Any control, on any screen</b> — a switch, a button, a dial or a keyboard, bound
             once and working everywhere</li>
         </ul>
@@ -627,7 +629,7 @@
         <h3><span class="dot"></span>Tested with a real patient</h3>
         <p class="cap">Proven, not yet default</p>
         <ul class="feat">
-          <li><b>Private video calls &amp; silent check-in</b> — the camera stays on her device</li>
+          <li><b>Private video calls & silent check-in</b> — the camera stays on their device</li>
           <li><b>Hands-free control</b> — camera-based hand &amp; color tracking</li>
           <li><b>Communication &amp; play</b> — AAC board, word / match games, sing-along</li>
           <li><b>Vision Probe</b> — a caregiver-run visual-response check, in early testing</li>
@@ -668,7 +670,7 @@
           holds them and never locks them away.</p></div>
     </div>
 
-    <div class="val" style="margin-top:18px">
+    <div class="val" id="what-we-keep" style="margin-top:18px">
       <h3>Here is everything the site's server really holds</h3>
       <p>This is not a promise. It is <b>a live list</b>. The table below is made from the site's
         own records as it runs. So it cannot quietly go out of date as the project grows. If I add a
@@ -733,7 +735,7 @@
       computer built into a keyboard. It costs about the price of a night out. It also runs on any
       laptop or desktop you already have. The screen can be a monitor or a television.</p>
     <p><b>There is no single smallest computer it needs, and I am not going to make one up.</b> What
-      it needs depends on which parts you run. Photos and a clock need almost nothing. Video calls
+      it needs depends on which modules you run. Photos and a clock need almost nothing. Video calls
       and camera tracking need a good deal more. Start with what you have. If it is too slow you
       will know within a minute, and you will have spent nothing.</p>
     <p class="muted">How long does a first setup take? Where do people get stuck? I cannot answer
@@ -746,7 +748,7 @@
      installs are possible and are NOT advertised as a product — Mike, 2026-09-01. -->
 <section id="facilities">
   <div class="wrap">
-    <p class="eyebrow">For care facilities, doctors, nurses and therapists</p>
+    <p class="eyebrow">For care facilities and clinicians</p>
     <h2>It is free. There is nothing to procure.</h2>
     <p>No license to pay for, no contract, no purchase order and no supplier to sign up. If a
       resident’s family wants this, the whole answer is <b>send them the link</b>. It runs on a
@@ -765,8 +767,8 @@
     <p>A ready-made adaptive switch costs roughly <b>$75 wired</b> or <b>$145 wireless</b>. An
       arcade button, a microcontroller (a tiny computer on a chip) and a printed case come to about
       <b>$15</b>. Set the microcontroller up to act as a USB keyboard or game controller and it
-      <b>needs no driver (extra software) in any browser</b>. Plug it in and give it any job on the
-      screen.</p>
+      <b>needs no driver (extra software) in any browser</b>. Plug it in and bind it to anything on
+      the screen.</p>
     <p>Nimrod does not sell equipment and has none to sell. This is software that works with what
       you, or a maker near you, can build. It treats switches, buttons, dials and game controllers
       as ordinary devices. What each one does is set for each person, not for each device.</p>

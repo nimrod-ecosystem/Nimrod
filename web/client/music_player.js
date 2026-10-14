@@ -54,14 +54,14 @@ export const MESSAGES = Object.freeze({
   ...SPOTIFY_MESSAGES,
   ...EMBED_WORDS,
   ...ARCHIVE_MESSAGES,
-  'not-found': 'There is no favourite called “{name}”.',
+  'not-found': 'There is no favorite called “{name}”.',
   'did-you-mean': 'Did you mean “{name}”?',
-  'no-youtube': 'There is no YouTube part on this screen to play it in.',
+  'no-youtube': 'There is no YouTube panel on this screen to play it in.',
   // (row 2.55, Mike hit this with no way forward) Says where the switch is. The panel shows a "Turn Spotify on"
   // button beside it too.
-  'spotify-off': 'Spotify is turned off for this part. Turn it on in this part’s settings (the “Spotify” row), '
+  'spotify-off': 'Spotify is turned off for this panel. Turn it on in this panel’s settings (the “Spotify” row), '
     + 'or press “Turn Spotify on” here.',
-  'bad-source': 'That favourite does not say where its music is.',
+  'bad-source': 'That favorite does not say where its music is.',
 });
 export const messageFor = (reason, name = '', device = '') =>
   String(MESSAGES[reason] || MESSAGES.failed || '').replace(/\{name\}/g, name).replace(/\{device\}/g, device || 'another device');

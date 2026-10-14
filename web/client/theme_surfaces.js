@@ -17,14 +17,14 @@ export const themeSurfaces = [
   { id: 'halo', group: 'The look', label: 'Halo direction', need: 'required', where: 'GROUND_THEMES[key].halo', what: 'dark or light: which way text halos run over the scene when a panel is fully clear.' },
   /* the board */
   { id: 'tokens', group: 'AAC board', label: 'Board tokens', need: 'required', where: 'GROUND_THEMES[key].tokens', what: '--ab-bg, --ab-card, --ab-ink, --ab-line, --ab-lit, --ab-veil, and the six --ab-sym-* word colours.' },
-  { id: 'icons', group: 'AAC board', label: 'Symbol tint set', need: 'shared', where: 'assets/icons/<set>/, GROUND_THEMES[key].base', what: 'The 55 symbols tinted to match the word colours. A theme can borrow a set whose --ab-sym-* match its own.' },
+  { id: 'icons', group: 'AAC board', label: 'Symbol tint set', need: 'shared', where: 'assets/icons/<set>/, GROUND_THEMES[key].base', what: 'The 55 symbols tinted to match the word colors. A theme can borrow a set whose --ab-sym-* match its own.' },
   /* games */
-  { id: 'cards', group: 'Games', label: 'Playing cards', need: 'required', where: 'components/games/playingCards.js', what: 'Back (pattern, frame, medallion, emblem), face stock, edge, four suit colours, court frame.' },
-  { id: 'bricks', group: 'Games', label: 'Brick-breaker and rhythm tiles', need: 'required', where: 'oct-2-asks sheet (to move into a module)', what: 'Brick colours, paddle, ball with its contrasting ring, the four rhythm tile colours.' },
-  { id: 'letters', group: 'Games', label: 'Letter tiles and brain-game shapes', need: 'shared', where: 'oct-2-asks sheet', what: 'Tile face, edge and press ledge; the four shape colours.' },
-  { id: 'marks', group: 'Games', label: 'Right / wrong marks', need: 'required', where: 'oct-2-asks sheet, from --good / --bad', what: 'Circle-and-tick and diamond-and-cross in colours that pass on this theme.' },
+  { id: 'cards', group: 'Games', label: 'Playing cards', need: 'required', where: 'components/games/playingCards.js', what: 'Back (pattern, frame, medallion, emblem), face stock, edge, four suit colors, court frame.' },
+  { id: 'bricks', group: 'Games', label: 'Brick-breaker and rhythm tiles', need: 'required', where: 'oct-2-asks sheet (to move into a module)', what: 'Brick colors, paddle, ball with its contrasting ring, the four rhythm tile colors.' },
+  { id: 'letters', group: 'Games', label: 'Letter tiles and brain-game shapes', need: 'shared', where: 'oct-2-asks sheet', what: 'Tile face, edge and press ledge; the four shape colors.' },
+  { id: 'marks', group: 'Games', label: 'Right / wrong marks', need: 'required', where: 'oct-2-asks sheet, from --good / --bad', what: 'Circle-and-tick and diamond-and-cross in colors that pass on this theme.' },
   /* rooms and building */
-  { id: 'materials', group: 'Rooms and bricks', label: 'Brick materials', need: 'required', where: 'oct-2-asks sheet', what: 'wall, wood, soft, accent: base colour, seam colour, finish (matte, satin, glow).' },
+  { id: 'materials', group: 'Rooms and bricks', label: 'Brick materials', need: 'required', where: 'oct-2-asks sheet', what: 'wall, wood, soft, accent: base color, seam color, finish (matte, satin, glow).' },
   { id: 'window', group: 'Rooms and bricks', label: 'Window view', need: 'optional', where: 'RoomScene view: auto', what: 'Whether this scene can show through a room window, and at what crop.' },
   { id: 'signs', group: 'Rooms and bricks', label: 'Name sign and frame defaults', need: 'optional', where: 'NameSign / PictureFrame', what: 'Which sign style and frame a new item gets in this theme.' },
   /* when it shows */
@@ -81,7 +81,7 @@ export const siteThemes = {
  * `codeCoverage` lists, by Design id, who answers each today (read from Design's files by the suite, not trusted). */
 export const codeSurfaces = [
   { id: 'outfits', group: 'Games', label: 'Character outfits', need: 'required', where: 'character_kit.js OUTFITS, COURT_PICK',
-    what: 'Outfits of the theme\'s own in the wardrobe, and what King, Queen, Jack and Joker wear in it. Until then, the Royal robe in the deck\'s colours.' },
+    what: 'Outfits of the theme\'s own in the wardrobe, and what King, Queen, Jack and Joker wear in it. Until then, the Royal robe in the deck\'s colors.' },
   { id: 'town', group: 'Rooms and bricks', label: 'Town and homes', need: 'shared', where: 'town.js TOWN_DRESS, HOMES, PARK_SCENES',
     what: 'Walls, floor, light and view for the town\'s eight places, the characters\' own homes and the Park. Borrows Nimrod\'s town until it has its own.' },
   { id: 'kit', group: 'Rooms and bricks', label: 'World furniture', need: 'shared', where: 'theme_kits.js KIT',

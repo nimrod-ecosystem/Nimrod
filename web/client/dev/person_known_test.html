@@ -506,7 +506,7 @@ try {
       await sleep(120);
       const probe = () => inst.impl.__probe();
       check('SLOW: the music panel draws before the person is known, with its own (empty) list',
-        /No favourites yet/.test(h.textContent) && probe().personList === false, h.textContent.slice(0, 120));
+        /No favorites yet/.test(h.textContent) /* site text second pass 2026-10-13 */ && probe().personList === false, h.textContent.slice(0, 120));
       h.querySelector('[data-act="edit"]').click();
       await sleep(120);
       check('...and its folder list has NOT asked for the account\'s whole list meanwhile', registryAsks().length === 0, registryAsks().join(' '));

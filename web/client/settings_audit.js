@@ -326,7 +326,7 @@ export function auditValues(fields = [], values = {}, { type = '' } = {}) {
     // what anybody chose. Off-palette is fine - a fine-picked colour is a real choice.
     if (f.kind === 'color' && !normalizeHex(v)) {
       out.push(finding('warn', 'orphan-value',
-        `"${f.key}" holds ${JSON.stringify(v)}, which is not a colour; it is showing the default`,
+        `"${f.key}" holds ${JSON.stringify(v)}, which is not a color; it is showing the default`,
         at(f.key)));
     }
     if (f.kind === 'choice' && (f.options || []).length) {

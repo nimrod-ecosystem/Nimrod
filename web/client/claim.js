@@ -14,16 +14,14 @@
 // the server's (web/server/claims.py). This file is the words, the calls, the window that makes a link (opened over
 // Your people, modules/people.js) and the small window for "I call them". join.html / join_page.js is the other end.
 //
-// *** PLAIN WORDS. *** The people who read these are not building anything: none of Your people's banned words
-// (people_page.js BANNED_WORDS) and none of CLAIM_BANNED. `claimWordProblems` is the check, run by the suite over
-// everything this file and the join page can say.
+// (Its banned-word list, CLAIM_BANNED / claimWordProblems, was RETIRED 2026-10-13 with people_page.js's - Mike: "I
+// really don't like this banned word thing at all." The rule that these words name nobody stays, in the suite.)
 //
 // NOTHING IS MADE WITHOUT A PRESS. Opening the window reads whether a link is waiting; "Make the link" makes one.
 
 import { authHeaders } from './auth.js';
 import { qrSVG } from './qr.js';
 import { pageURL, themeQrColours } from './page_links.js';
-import { plainWordProblems } from './people_page.js';
 
 export const JOIN_PAGE = '/join.html';
 export const INVITE_PARAM = 'invite';
@@ -35,16 +33,6 @@ export const INVITE_PARAM = 'invite';
 export const STOP_CONFIRM_MS = 6000;
 // "I call them" is a name: the server's own limit for a person's name (app.py NAME_RE, 60 characters).
 export const CALL_NAME_MAX = 60;
-
-// Words the page may not use, beyond Your people's own (module, dashboard, panel, grant).
-export const CLAIM_BANNED = Object.freeze(['account', 'token', 'widget', 'identity', 'instance']);
-/** The banned words found in `text`. PURE. */
-export function claimWordProblems(text) {
-  const s = String(text == null ? '' : text);
-  const out = plainWordProblems(s);
-  for (const w of CLAIM_BANNED) if (new RegExp(`\\b${w}s?\\b`, 'i').test(s)) out.push(w);
-  return out;
-}
 
 const poss = (name) => (name ? `${name}’s` : 'their');
 

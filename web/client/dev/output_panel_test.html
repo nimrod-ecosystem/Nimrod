@@ -188,7 +188,7 @@ function rig({ seed = null, fresh = true, channels = null } = {}) {
       r.fire('alert');
       check('an urgent one reaches everything at once',
         r.chans.screen.got.length === 1 && r.chans.speech.got.length === 1 && r.chans.sound.got.length === 1);
-      check('with real words, not lorem ipsum', /chair/.test(r.chans.speech.got[0]));
+      check('with real words, not lorem ipsum', /Alerts will show here/.test(r.chans.speech.got[0]));   // site text second pass 2026-10-13: the samples are "Alerts will show here." and "Your notifications will show here."
       check('and the strip shows each arrival separately',
         (r.q('[data-log]').textContent.match(/arrived/g) || []).length === 3);
 

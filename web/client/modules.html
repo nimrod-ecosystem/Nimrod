@@ -682,7 +682,7 @@
          page's settings are a section of the one ⚙ menu. This strip shows only when there is no placed
          bar carrying them -- the module would not start, or its bar did not -- because that is exactly
          when somebody needs Modules to get away from it. Same `press`, so Save is still one thing. -->
-    <div class="stage-bar" id="stage-bar" role="toolbar" aria-label="What you are looking at" hidden>
+    <div class="stage-bar" id="stage-bar" role="toolbar" aria-label="The module you are looking at" hidden>
       <button type="button" class="hbtn" data-home="picker" aria-expanded="false">Modules: <span id="hb-name">…</span></button>
       <button type="button" class="hbtn" data-home="save">Save</button>
       <button type="button" class="hbtn" data-home="saveas">Save as…</button>
@@ -1142,7 +1142,7 @@ function stageNote(isLive, mode) {
         + '<a href="/home.html">My dashboards</a>. Only this one part is shown, not the rest of '
         + 'your screen.'
       : 'A demo, on your own device. It has the same bar and ⚙ settings menu as a real screen. '
-        + 'Nothing here is saved to a login.';
+        + 'Nothing here is saved to an account.';
   }
   return isLive
     ? 'This is live. Changes here are saved to your dashboard, the same as opening it '
@@ -1396,7 +1396,7 @@ function noteFor(t) {
         + `you press Save (it keeps a copy you can change). ${HOME.home ? 'Your own Home is one press away: My Home, on the bar.'
           : 'Make a Home of your own from the starting points above, or from My Home on the bar.'}`;
     }
-    return `Trying “${esc(rec?.title || t.key)}”. Nothing is made on your login until you press `
+    return `Trying “${esc(rec?.title || t.key)}”. Nothing is made on your account until you press `
       + 'Make this my Home (or Save on the bar below). The bar and its ⚙ menu work as they will on a real '
       + 'screen. Or choose anything else from Modules.';
   }
@@ -1691,7 +1691,7 @@ function trialMenuRows({ plain = false } = {}) {
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
   if (!HOME.trial) {
     return [item('trynew', 'Try it as someone new', { hint: plain ? 'a test person sees this page as a first visit. Nothing of yours changes'
-      : 'a test person on your login sees this page as a first visit. Nothing of yours changes' })];
+      : 'a test person on your account sees this page as a first visit. Nothing of yours changes' })];
   }
   return [
     { kind: 'heading', id: 'home-trial-head', label: TRYING_LABEL },
@@ -1770,7 +1770,7 @@ function homePress(act, p = null) {
     // only being tried there is nothing made to put it in yet, and it says so.
     case 'place': {
       if (!p || typeof p.type !== 'string') break;
-      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a part can go in its place.'); break; }
+      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a module can go in its place.'); break; }
       if (p.id && things().some((x) => x.id === p.id)) HOME.sel = p.id;
       gatedDo('switch', p.type);
       break;
@@ -1779,7 +1779,7 @@ function homePress(act, p = null) {
     // page as it does for 'place'): the same as Add with "Over the dashboard" chosen. `p.type`: the module.
     case 'overlay': {
       if (!p || typeof p.type !== 'string') break;
-      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a part can go over it.'); break; }
+      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a module can go over it.'); break; }
       if (gateCheck(p.type)?.locked) { HOME.tray = 'add'; HOME.addOver = true; gatedDo('add', p.type); break; }
       addThing(p.type, { over: true });
       break;
@@ -2498,7 +2498,7 @@ function sceneTo(id) {
     if (!r) return null;
     await writeHomeLayout(r.layout, cur);
     if (r.theme !== undefined && r.theme !== themeNow()) HOME.draft?.restore({ settings: { theme: r.theme } });
-    return `The scene is ${c.label} now.${r.theme !== undefined ? ' Its colours wait for Save.' : ''}`;
+    return `The scene is ${c.label} now.${r.theme !== undefined ? ' Its colors wait for Save.' : ''}`;
   });
 }
 
@@ -2877,7 +2877,7 @@ function paintTray(live, list, t) {
     const where = `<div class="grp">Put it</div><div class="hbtns">${
       ebtn('data-edit-addwhere="in"', 'In the dashboard', { pressed: !HOME.addOver, hint: 'in a free place' })}${
       ebtn('data-edit-addwhere="over"', 'Over the dashboard', { pressed: HOME.addOver,
-        hint: 'a small part floating in a corner, over what is there. A clock becomes the small corner clock' })}</div>`;
+        hint: 'a small panel floating in a corner, over what is there. A clock becomes the small corner clock' })}</div>`;
     setHTML(tray, trayHead('Add to your Home') + unlockPanel() + where + moduleButtons('data-edit-add'));
     return;
   }
@@ -2890,7 +2890,7 @@ function paintTray(live, list, t) {
       return;
     }
     setHTML(tray, trayHead(title) + (t
-      ? '<p class="stagenote">One press: the part you choose takes its place, exactly where it is. Undo puts it back.</p>'
+      ? '<p class="stagenote">One press: the module you choose takes its place, exactly where it is. Undo puts it back.</p>'
         + unlockPanel() + moduleButtons('data-edit-switch', { except: t.type })
       : `<div class="hbtns">${ebtn('data-edit-change="next"', 'Next thing ›', { disabled: !list.length })}</div>`));
     return;

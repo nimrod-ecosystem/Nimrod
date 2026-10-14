@@ -162,7 +162,7 @@ try {
   section('the levels: one slot first, then two slots, colours, sizes');
   {
     const L = LEVEL_IDS.map((i) => LEVELS[i]);
-    check('six levels, in this order', J(L.map((l) => l.label)) === J(['One slot', 'Two slots', 'Two colours', 'Three colours', 'Two sizes', 'Three sizes']));
+    check('six levels, in this order', J(L.map((l) => l.label)) === J(['One slot', 'Two slots', 'Two colors', 'Three colors', 'Two sizes', 'Three sizes']));   // site text second pass 2026-10-13: American spelling
     check('*** the first level is ONE slot: a shape sorter with nothing to choose ***', L[0].kind === 'slot' && L[0].places === 1);
     check('then slots, then colours, then sizes', J(L.map((l) => l.kind)) === J(['slot', 'slot', 'colour', 'colour', 'size', 'size']));
     check('never more than three places (what a person can hold in view)', L.every((l) => l.places >= 1 && l.places <= 3));
@@ -283,7 +283,7 @@ try {
     check('a colour of no theme takes the nearest brick colour\'s name', near[0] === 'Teal' && near[1] === 'Rose', J(near));
     const twins = colourNames(['#105666', '#105667', '#105668'], BRICK_COLOURS);
     check('*** two that come out alike are told apart, so no two places are said the same ***', new Set(twins).size === 3, J(twins));
-    check('a colour that cannot be read still has a name', colourNames(['nonsense'], BRICK_COLOURS)[0] === 'Colour 1');
+    check('a colour that cannot be read still has a name', colourNames(['nonsense'], BRICK_COLOURS)[0] === 'Color 1');   // site text second pass 2026-10-13: American spelling
   }
 
   section('the computer that plays the demo: it lights the right place, then puts the brick in');

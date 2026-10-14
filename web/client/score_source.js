@@ -198,9 +198,9 @@ export function ownScoreField({ label = 'Score', level = 'essential', note = nul
   return {
     key: OWN_SCORE_KEY, label, kind: 'choice', default: 'auto', level,
     options: [
-      { value: 'auto', label: 'On this part, unless a scoreboard shows it' },
-      { value: 'always', label: 'On this part, always' },
-      { value: 'off', label: 'Not on this part' },
+      { value: 'auto', label: 'On this panel, unless a scoreboard shows it' },
+      { value: 'always', label: 'On this panel, always' },
+      { value: 'off', label: 'Not on this panel' },
     ],
     note: note || 'A Scoreboard on the same screen can show it instead.',
   };

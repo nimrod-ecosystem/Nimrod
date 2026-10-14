@@ -1330,8 +1330,8 @@ class _Store:
     STORAGE_NOTES = {
         "profiles":        ("The screens you made, and what you called them.", False,
                             "when you make a screen"),
-        "profile_modules": ("Which parts are on each screen, and in what order.", False,
-                            "when you add a part to a screen"),
+        "profile_modules": ("Which modules are on each screen, and in what order.", False,
+                            "when you add a module to a screen"),
         # The weather town (MIKE_LIST_20260930, Weather item 6): the Weather panel keeps the
         # place in its own settings, here, so this row is where it is declared. Said in full
         # because a town IS a location, and NEVER_STORED below used to say "your location" flat.
@@ -1355,7 +1355,7 @@ class _Store:
                             "if you chose Claude - and never who made them; the folder you save into is "
                             "remembered in your browser, never here. Your page: the parts on it, what you wrote in "
                             "About me, who can see your page, which parts of it they are "
-                            "shown, its colours, and whether it shows older messages. And if "
+                            "shown, its colors, and whether it shows older messages. And if "
                             "you set a place for Weather: the town "
                             "you typed, the match you picked with its position rounded to "
                             "about 11 km, and the last forecast, so the panel knows where to "
@@ -1380,15 +1380,15 @@ class _Store:
                             "when you change a setting"),
         # Row 2.58 (2026-10-07): which photo, video or song played when is no longer kept here (see NEVER_STORED).
         "events":          ("An append-only log of what a module did: a game result, a card chosen on "
-                            "the talk board. It GROWS over time. When somebody checks a question "
+                            "the AAC board. It GROWS over time. When somebody checks a question "
                             "waiting for review: what they said about it (right, wrong, a note), "
                             "when, and the name of the person on your login they chose as who "
                             "was reviewing - and the points it earned, on that person's screen.", True,
-                            "when a part you added writes one"),
+                            "when a module you added writes one"),
         # 2026-10-07 (later): history kept with us is an OPT-IN, per person and per kind (storage_line.py rule 4).
         "history":         ("Only if you choose \"With us\" in \"Where your history is kept\" for a person. "
                             "Then: what played on their screens (which photo, video or song, and when), their game "
-                            "results (right or wrong, how long it took), or the words chosen on their talk board. "
+                            "results (right or wrong, how long it took), or the words chosen on their AAC board. "
                             "Each kind is kept only if you chose \"With us\" for that kind. At most "
                             f"{storage_line.HISTORY_MAX_ROWS:,} entries for each person, "
                             "all kinds together. Past that, the oldest are counted (see the next line) and "
@@ -1396,7 +1396,7 @@ class _Store:
                             "deletes them. Removing the person deletes them too.", True,
                             "when you choose \"With us\" for a person's history"),
         "history_totals":  ("Counts of a person's older history entries, made once they pass the limit in the "
-                            "line above. For each song, video, game topic or talk board word: how many times, how "
+                            "line above. For each song, video, game topic or AAC board word: how many times, how "
                             "many right, and the first and last time. Only for history you chose to keep with us. "
                             "Removed with it.", True,
                             "when history you chose to keep with us passes its limit"),
@@ -1420,7 +1420,7 @@ class _Store:
                             "in, and whether a picture removed on a screen is also moved out of it. It only "
                             "points at your own computer. Never the files themselves.", True,
                             "when you connect a folder"),
-        "drive_grants":    ("Which other logins you have allowed to control a screen, and "
+        "drive_grants":    ("Which other accounts you have allowed to control a screen, and "
                             "until when.", True,
                             "when you let somebody control a screen"),
         # 2026-10-09: the list of screens on My dashboards -> Devices shows the name, when it was added

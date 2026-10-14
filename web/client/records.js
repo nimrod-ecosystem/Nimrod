@@ -65,7 +65,7 @@ export function describe(row) {
         ? ` (${d.requiredHoldMs}ms was asked for)`
         : ' — no hold was asked for')
         + (d.auto ? ' · let go by the screen, not by them' : '');
-    case 'edge_down':   return d.bound ? 'a press' : 'a press on something that has no job';
+    case 'edge_down':   return d.bound ? 'a press' : 'a press that was bound to nothing';
     default:            return d.kind || row.kind;
   }
 }

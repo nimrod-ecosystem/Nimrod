@@ -275,7 +275,7 @@ export const ANIMALS = Object.freeze([
     { answer: 'bat', a: 'a bat', ask: 'Which animal sleeps hanging upside down?', hint: 'it flies at night', explain: 'A bat sleeps hanging upside down.', decoys: ['owl', 'monkey'] },
     { answer: 'panda', a: 'a panda', ask: 'Which black and white bear eats bamboo?', hint: 'it comes from China', explain: 'A panda eats bamboo.', decoys: ['zebra', 'penguin'] },
     { answer: 'octopus', a: 'an octopus', ask: 'Which sea animal has eight arms?', hint: 'it can squirt ink', explain: 'An octopus has eight arms.', decoys: ['turtle', 'penguin'] },
-    { answer: 'chameleon', a: 'a chameleon', ask: 'Which lizard can change its colour?', hint: 'its eyes can look two ways at once', explain: 'A chameleon can change colour.', decoys: ['snake', 'frog'] },
+    { answer: 'chameleon', a: 'a chameleon', ask: 'Which lizard can change its color?', hint: 'its eyes can look two ways at once', explain: 'A chameleon can change color.', decoys: ['snake', 'frog'] },
     { answer: 'beaver', a: 'a beaver', ask: 'Which animal builds dams across rivers?', hint: 'it has big front teeth and a flat tail', explain: 'A beaver builds dams.', decoys: ['rabbit', 'squirrel'] },
     { answer: 'squirrel', a: 'a squirrel', ask: 'Which animal has a bushy tail and buries nuts?', hint: 'it climbs the trees in the park', explain: 'A squirrel buries nuts.', decoys: ['rabbit', 'mouse'] },
     { answer: 'hedgehog', a: 'a hedgehog', ask: 'Which small animal is covered in spines?', hint: 'it rolls into a ball', explain: 'A hedgehog is covered in spines.', decoys: ['mouse', 'turtle'] },
@@ -286,7 +286,7 @@ export const ANIMALS = Object.freeze([
     { answer: 'platypus', a: 'a platypus', ask: 'Which furry animal has a bill like a bird and lays eggs?', hint: 'it swims in rivers in Australia', explain: 'A platypus has a bill and lays eggs.', decoys: ['beaver', 'duck'] },
     { answer: 'whale', a: 'a whale', ask: 'Which animal is the biggest that has ever lived?', hint: 'it lives in the sea and breathes air', explain: 'The blue whale is the biggest animal ever known.', decoys: ['elephant', 'octopus'] },
     { answer: 'sloth', a: 'a sloth', ask: 'Which very slow animal hangs from the trees of the rainforest?', hint: 'it comes down to the ground about once a week', explain: 'A sloth moves very slowly.', decoys: ['monkey', 'koala'] },
-    { answer: 'flamingo', a: 'a flamingo', ask: 'Which pink bird often stands on one leg?', hint: 'its colour comes from what it eats', explain: 'A flamingo is pink and stands on one leg.', decoys: ['ostrich', 'penguin'] },
+    { answer: 'flamingo', a: 'a flamingo', ask: 'Which pink bird often stands on one leg?', hint: 'its color comes from what it eats', explain: 'A flamingo is pink and stands on one leg.', decoys: ['ostrich', 'penguin'] },
     { answer: 'koala', a: 'a koala', ask: 'Which animal from Australia lives on eucalyptus leaves?', hint: 'it sleeps most of the day in a tree', explain: 'A koala eats eucalyptus leaves.', decoys: ['kangaroo', 'sloth'] },
     { answer: 'ostrich', a: 'an ostrich', ask: 'Which is the biggest bird, and cannot fly?', hint: 'it runs very fast on two long legs', explain: 'An ostrich is the biggest bird, and it cannot fly.', decoys: ['penguin', 'flamingo'] },
     { answer: 'hummingbird', a: 'a hummingbird', ask: 'Which tiny bird can fly backwards?', hint: 'it drinks nectar from flowers', explain: 'A hummingbird can fly backwards.', decoys: ['bee', 'bat'] },
@@ -955,9 +955,9 @@ function factory(ctx) {
 
 registerModule(
   { type: GAME, title: 'Name that', core: 'new',
-    description: 'Name that animal, state, or person. Name that person asks about well-known people and characters. It '
-      + 'can also play the family’s own recorded messages and ask who it is. Each player gets questions at their own '
-      + 'level. Answer with a switch (one big button), on the screen, or aloud.',
+    description: 'Name that animal, state, or person. Name that person asks about well-known people and characters. '
+      + 'It can also play the family’s own recorded messages and ask who it is. Each player gets questions '
+      + 'at their own level. Answer with a switch, on the screen, or aloud.',
     // `local`: the animals and states are built in; the person game's clips come from a media
     // source on the person's own machine, exactly like Personal videos.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },

@@ -48,8 +48,8 @@ const SIZE_SETS = Object.freeze({ 2: [1, 3], 3: [1, 2, 3], 4: [1, 2, 3, 4] });
 export const LEVELS = Object.freeze({
   1: Object.freeze({ label: 'One slot', kind: 'slot', places: 1 }),
   2: Object.freeze({ label: 'Two slots', kind: 'slot', places: 2 }),
-  3: Object.freeze({ label: 'Two colours', kind: 'colour', places: 2 }),
-  4: Object.freeze({ label: 'Three colours', kind: 'colour', places: 3 }),
+  3: Object.freeze({ label: 'Two colors', kind: 'colour', places: 2 }),
+  4: Object.freeze({ label: 'Three colors', kind: 'colour', places: 3 }),
   5: Object.freeze({ label: 'Two sizes', kind: 'size', places: 2 }),
   6: Object.freeze({ label: 'Three sizes', kind: 'size', places: 3 }),
 });
@@ -249,7 +249,7 @@ export function colourNames(colours, sets) {
     }
   }
   const names = rgbs.map((r, i) => {
-    if (!r || !all.length) return `Colour ${i + 1}`;
+    if (!r || !all.length) return `Color ${i + 1}`;
     let best = all[0];
     for (const a of all) if (dist(a.rgb, r) < dist(best.rgb, r)) best = a;
     return best.name;

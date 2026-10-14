@@ -68,7 +68,7 @@ export const WRAP_LISTS = Object.freeze([
   Object.freeze({ id: 'code', label: 'For Code',
     help: 'something broken, or a clear change to how the site works: a feature to add, fix or remove' }),
   Object.freeze({ id: 'design', label: 'For Design',
-    help: 'how things look and read: layout, colours, sizes, the words on the page, what is hard to find or see' }),
+    help: 'how things look and read: layout, colors, sizes, the words on the page, what is hard to find or see' }),
 ]);
 export const UNSORTED = 'unsorted';
 export const UNSORTED_LABEL = 'Not sorted yet';

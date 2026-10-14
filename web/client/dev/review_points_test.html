@@ -384,9 +384,9 @@ try {
     check('"Fixed — ask it again" is saved with the person, and says what happened',
       rows.at(-1).kind === 'unflag' && rows.at(-1).data.person === 'p-robin' && /Put back/.test(page.querySelector('[data-rv-fixed-said]')?.textContent || ''));
     const words = [...page.querySelectorAll('[data-rv-who], [data-rv-deal]')].map((n) => n.textContent).join(' ');
-    check('*** plain words: none of the house\'s banned ones in what the reviewer reads ***',
-      !/\b(module|dashboard|panel|widget|account|token|grant)s?\b/i.test(words), (words.match(/\b(module|dashboard|panel|widget|account|token|grant)s?\b/ig) || []).join(','));
-    check('...and never names the person the site was first built for', !/Christine|Cici|her screen/i.test(page.textContent));
+    // (A banned-word check here was retired 2026-10-13 with the banned-word lists.)
+    check('what the reviewer reads has words, and never names the person the site was first built for',
+      words.trim().length > 0 && !/Christine|Cici|her screen/i.test(page.textContent));
     pg.destroy();
     check('the page going away takes the points off the handle', reviews.points() === null);
   }

@@ -51,7 +51,7 @@ try {
   check('it is seeded with the last few days (at least three, ending 2026-10-02)', WHATS_NEW.length >= 3 && WHATS_NEW[0].date === '2026-10-02');
   check('every item says what changed AND where it is', WHATS_NEW.every((e) => e.items.every((i) => i.text && i.where)));
   check('no item says "her screen", Christine or Cici', !/\bher screen|christine|cici/i.test(J(WHATS_NEW)));
-  check('the guide and the landing Home are in it', /Nimrod is now a part you can add/.test(J(WHATS_NEW[0])) /* site text rewrite 2026-10-09 */ && /four up/.test(J(WHATS_NEW[0])));
+  check('the guide and the landing Home are in it', /Nimrod is a module now/.test(J(WHATS_NEW[0])) /* site text second pass 2026-10-13 */ && /four up/.test(J(WHATS_NEW[0])));
   const shuffled = [WHATS_NEW[2], WHATS_NEW[0], WHATS_NEW[1]];
   check('newestFirst sorts whatever order it is handed', J(newestFirst(shuffled).map((e) => e.date)) === J(WHATS_NEW.slice(0, 3).map((e) => e.date)));
   check('*** recentEntries(1): the newest day only; (0): everything ***', recentEntries(1).length === 1 && recentEntries(0).length === WHATS_NEW.length);

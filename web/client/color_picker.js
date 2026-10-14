@@ -63,7 +63,7 @@ export const DEFAULT_PALETTE = freeze([
   { id: 'purple', name: 'Purple', hex: '#9b4dbf' },
   { id: 'pink',   name: 'Pink',   hex: '#d81b60' },
   { id: 'brown',  name: 'Brown',  hex: '#8d6e63' },
-  { id: 'grey',   name: 'Grey',   hex: '#757575' },
+  { id: 'grey',   name: 'Gray',   hex: '#757575' },
   { id: 'black',  name: 'Black',  hex: '#000000' },
   { id: 'white',  name: 'White',  hex: '#ffffff' },
 ]);
@@ -164,7 +164,7 @@ export function describeColor(hex, palette = DEFAULT_PALETTE) {
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-export function swatchesHTML({ palette = DEFAULT_PALETTE, value = null, label = 'Colour', attrs = '' } = {}) {
+export function swatchesHTML({ palette = DEFAULT_PALETTE, value = null, label = 'Color', attrs = '' } = {}) {
   const cur = normalizeHex(value);
   const list = normalizePalette(palette);
   const buttons = list.map((c) => {
@@ -177,8 +177,8 @@ export function swatchesHTML({ palette = DEFAULT_PALETTE, value = null, label = 
   // it never opens on the browser's arbitrary black.
   const fineValue = cur || list[0]?.hex || '#000000';
   return `<div class="cp-swatches" role="group" aria-label="${esc(label)}">${buttons}
-    <label class="cp-fine"><span class="cp-fine-label">Other colour</span>
-      <input type="color" data-fine ${attrs} value="${esc(fineValue)}" aria-label="${esc(label)}: any colour"></label>
+    <label class="cp-fine"><span class="cp-fine-label">Other color</span>
+      <input type="color" data-fine ${attrs} value="${esc(fineValue)}" aria-label="${esc(label)}: any color"></label>
   </div>`;
 }
 
@@ -189,7 +189,7 @@ export function swatchesHTML({ palette = DEFAULT_PALETTE, value = null, label = 
 // (it is not on the list). Reports on `change`, not `input`: the native picker fires `input`
 // continuously while somebody drags, and every one of those would be a write.
 // ---------------------------------------------------------------------------------------
-export function mountColorPicker(el, { palette = DEFAULT_PALETTE, value = null, label = 'Colour', onPick = null } = {}) {
+export function mountColorPicker(el, { palette = DEFAULT_PALETTE, value = null, label = 'Color', onPick = null } = {}) {
   if (!el) throw new Error('mountColorPicker: an element is required');
   const list = normalizePalette(palette);
   let cur = normalizeHex(value);
