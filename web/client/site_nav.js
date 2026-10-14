@@ -16,8 +16,10 @@
 //   bar carries what a visitor needs -- What Nimrod is, a theme, Sign in -- none of which the sidebar has; a sidebar
 //   of seven tabs about dashboards they have not made is a wall of places for somebody deciding whether to sign in.
 //   Changing it is one condition in each page (`paintNav` on /modules, `signedIn` on /home).
-// WHILE A DASHBOARD FILLS THE WINDOW (Home's landing, `body.is-land`) it is not drawn: Mike, 2026-10-02 -- "the
-// dashboard should be the whole screen" -- and a sidebar beside it would make it a dashboard on a webpage again.
+// WHILE A DASHBOARD FILLS THE WINDOW (Home's landing, `body.is-land`) it is drawn beside it, by default (Mike, 2026-10-13:
+// "The home page doesn't have a sidebar, so you can't get to anywhere else on the site."). It was put away there under
+// 2026-10-02's "the dashboard should be the whole screen"; that is now the person's choice, the Home row "Filling the
+// window, keep the site's sidebar" (home_dashboard.js `landSide` argues it; `body.land-noside` when it says No).
 //
 // HARD-CODED, argued (Rule 1):
 //   212px wide        the width My dashboards has had since it was built; the widest label ("Make your profile ↗")

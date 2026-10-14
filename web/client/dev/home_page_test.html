@@ -178,6 +178,17 @@ try {
   {
     const LU = `${USER}-land`;
     const lp = createProfilesClient({ user: LU });
+    // *** 2026-10-13, DELIBERATELY CHANGED: THIS SECTION IS NOW THE "NO SIDEBAR" CHOICE. *** Mike: "The home page doesn't have
+    // a sidebar, so you can't get to anywhere else on the site." The dashboard filling the window now keeps the site's
+    // sidebar beside it by default (home_dashboard.js `landSide`), and dev/home_load_test.html checks that default -- the
+    // sidebar, every link in it, the dashboard filling the rest of the window. 2026-10-02's whole window, which every
+    // check below measures, is the person's row "Filling the window, keep the site's sidebar: No", so it is set here.
+    await startHere(LU);
+    {
+      const person = (await lp.people())[0];
+      const h = createState({ url: lp.personStateURL(person.id, 'home'), user: LU });
+      try { await h.load(); h.set({ landSide: false }); await h.flush(); } finally { h.destroy(); }
+    }
     // At a kiosk's 1280x720: the size where the bar, as a docked row, wrapped to two rows and took ~110px.
     await open(`user=${encodeURIComponent(LU)}`, { land: true, w: 1280, h: 720 });
     check('*** a plain arrival fills the window with the dashboard (body.is-land), its bar up ***',

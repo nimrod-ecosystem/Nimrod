@@ -8,10 +8,11 @@
  * hidden, `.shell` is a plain block and the page is exactly what it was. */
 
 .shell{display:grid;grid-template-columns:212px minmax(0,1fr);min-height:100vh}
-/* A page whose sidebar is not drawn (signed out; Home while a dashboard fills the window) is one column. */
-.shell:has(> [data-site-side][hidden]),body.is-land .shell{display:block;min-height:0}
+/* A page whose sidebar is not drawn (signed out; Home's dashboard filling the window when the person's row puts the
+   sidebar away, `body.land-noside`) is one column. 2026-10-13: the dashboard filling the window keeps it by default. */
+.shell:has(> [data-site-side][hidden]),body.is-land.land-noside .shell{display:block;min-height:0}
 [data-site-side]{display:contents}
-[data-site-side][hidden],body.is-land [data-site-side]{display:none}
+[data-site-side][hidden],body.is-land.land-noside [data-site-side]{display:none}
 
 /* STICKY, so the way to every other page stays on screen down a long page (Devices, the Modules library). New with the
    move: before, the sidebar grew with the page and its foot -- Sign out -- sat at the bottom of the whole page. */

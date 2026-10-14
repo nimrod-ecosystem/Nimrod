@@ -45,7 +45,8 @@
   .top nav a[aria-current="page"]{background:var(--surface);font-weight:800}
   .top nav a[hidden]{display:none!important}
   /* settings sidebar (2026-10-08; site_nav.js argues it): signed in, the site's sidebar replaces this strip -- every
-     link in it is in the sidebar. While the dashboard fills the window neither shows (`body.is-land`, below). */
+     link in it is in the sidebar. While the dashboard fills the window the strip never shows, and the sidebar does
+     unless the person's row puts it away (2026-10-13, `body.is-land`, below). */
   body.has-side .top{display:none}
   /* The info line along the bottom (hover_info.js, `body.has-infoline`) is fixed there: the sidebar stops above it, or
      its last link (Try as a guest) sat under the line (measured at 1920x1080). Wider than a phone only (below 720px
@@ -353,6 +354,17 @@
   body.is-land .detail{padding:0;border:0;background:none}
   body.is-land #stage{position:fixed;inset:0;width:auto;height:auto;min-height:0;margin:0;border:0;border-radius:0}
   body.is-land.has-infoline #stage{bottom:2.6em}
+  /* *** ...BESIDE THE SITE'S SIDEBAR (Mike, 2026-10-13: "The home page doesn't have a sidebar, so you can't get to
+     anywhere else on the site."). *** The person's row "Filling the window, keep the site's sidebar" (home_dashboard.js
+     `landSide` argues it): Yes, the default, keeps the sidebar (site_nav.css) and the dashboard fills the REST of the
+     window -- the page's column, a box exactly the window's height less the info line's strip; No
+     (`body.land-noside`) is the whole window above. Below 720px the sidebar is the site's strip along the top, and the
+     dashboard fills what is under it. No page scroll either way. */
+  body.is-land.has-side:not(.land-noside) .shell{height:100vh;height:100dvh;min-height:0}
+  body.is-land.has-side.has-infoline:not(.land-noside) .shell{height:calc(100vh - 2.6em);height:calc(100dvh - 2.6em)}
+  body.is-land.has-side:not(.land-noside) .s-page{position:relative;min-width:0;min-height:0}
+  body.is-land.has-side:not(.land-noside) #stage{position:absolute;inset:0}
+  @media (max-width:720px){ body.is-land.has-side:not(.land-noside) .shell{grid-template-rows:auto minmax(0,1fr)} }
   /* ...AND ITS BAR FLOATS OVER THE PANELS (`#stage[data-bar-over]`: the land view wider than a phone; the page's
      `barFloats` argues it, phone included). The bottom dock leaves the dashboard's rows, so the panels take the
      whole window -- four up is four quarters of it -- and the bar lies over their bottom edge and tucks itself
@@ -400,7 +412,105 @@
      that 20% took it to 2.69-3.88:1 at worst across the themes. `--text` holds it with room to spare. AGAINST: the
      heads lose a little of their quieter look in this one mode; they are still small capitals, set apart by size. */
   .trystage[data-chrome="veil"] .v-dock-left .st-head{color:var(--text)}
+
+  /* *** HOME'S FIRST PAINT: NOTHING BUT HOME (2026-10-13). *** Mike, on the live site: "It also cycles through a few
+     pages like modules before becoming the home page." Measured the same day (a real top-level load, every frame):
+     this file's own markup is the PARTS PAGE, and it was painted -- "Sign in" strip, "Every part, and who it is
+     actually for", the legend, then the list of parts -- for the whole time the page's ~290 script files loaded,
+     /api/me answered and Home booted (0.9-1.7 s on this machine, 1.1-2.0 s before the 401 on the live site signed
+     out, longer signed in), then the sidebar replaced the strip, then an empty window, then the dashboard. So the
+     page is VEILED from its first paint (`html.home-boot`, set by the small script below, before any of it is drawn):
+     the page under it is laid out but not painted (`visibility`, not `display`: the dashboard is measured while it
+     mounts), the theme's own background shows, and "Loading your Home…" only after 1 s, so a fast load shows
+     nothing at all (0.6 s was tried first: on this machine's ~1.1 s load the words flashed up for a moment and went,
+     which is its own small flicker; 1 s is about where a wait starts to feel like one). The sidebar is NOT veiled:
+     it is every page's, and it is the way out of a load that is slow.
+     The veil lifts when Home is ready, when Home truly cannot start (the parts page then, with a line saying so),
+     or for a visitor who is not signed in and not being sent on (offline: the parts page is still a working page).
+     A visitor sent on to /modules keeps the veil until they leave. `?all=1`, the audit, never has it. */
+  .home-boot-note > *{display:none}
+  html.home-boot .s-page, html.home-boot .nimrod-infoline{visibility:hidden}
+  html[data-boot="loading"] .hbw-wait, html[data-boot="away"] .hbw-wait{display:flex}
+  html[data-boot="slow"] .hbw-slow, html[data-boot="failed"] .hbw-failed{display:block}
+  .hbw-wait{position:fixed;inset:0;align-items:center;justify-content:center;margin:0;pointer-events:none;
+    color:var(--text-muted);font-weight:650;font-size:1.05rem;opacity:0;animation:hbw-in .25s ease-out 1s forwards}
+  @keyframes hbw-in{to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){ .hbw-wait{animation-duration:.01s} }
+  @media (min-width:721px){ body.has-side .hbw-wait{left:212px} }
+  /* SLOW: a card at the top that covers nothing it needs to (the sidebar stays usable beside it). FAILED: a line at the
+     top of the parts page, in the page's flow, so it pushes the page down rather than covering it. */
+  .hbw-slow,.hbw-failed{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);
+    padding:12px 16px;box-sizing:border-box}
+  .hbw-slow{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:2000;width:min(560px,calc(100% - 32px));
+    box-shadow:0 8px 30px color-mix(in srgb,var(--text-strong) 18%,transparent)}
+  @media (min-width:721px){ body.has-side .hbw-slow{left:calc(50% + 106px);width:min(560px,calc(100% - 212px - 32px))} }
+  .hbw-failed{margin:12px 16px}
+  .hbw-slow p,.hbw-failed p{margin:0 0 10px}
+  .hbw-why{display:block;color:var(--text-muted);font-size:.85rem;margin-top:4px;overflow-wrap:anywhere}
+  .hbw-links{margin-left:8px}
+  body.has-side .hbw-links{display:none}
 </style>
+<script>
+// *** HOME'S FIRST PAINT (2026-10-13; the CSS just above argues it). *** A classic script, not a module: it runs
+// before the body is drawn, and it is not waiting on the ~290 files the page's module loads -- so if those are what
+// hangs, the timer below still fires. The page's module calls `__homeBoot` when it knows how the load ended.
+//
+// THE SLOW LINE, AND ITS NUMBER, argued (Rule 1: a hard-coded number needs its argument):
+//   15 s, a constant here and not one of Home's settings -- because it decides what happens BEFORE Home's settings
+//   can be read: they are loaded by the very thing that is slow. The suites have measured a brand-new account's first
+//   Home at over 10 s on a loaded machine, and a returning one is 1-2 s; a line at 15 s does not cry wolf on a slow
+//   first visit, and nobody waits longer than that to be told and handed a way out. `?boot_wait=<ms>` sets it for one
+//   load (the suites' seam). Nothing waits on an answer to it: Home still appears by itself the moment it is ready.
+//   What shows meanwhile is what can be shown: Home's own view if it got that far, the sidebar, the line, Try again --
+//   and NOT the parts page, which is a different page and only stands in when Home definitely cannot start.
+(function () {
+  var root = document.documentElement;
+  var q = null;
+  try { q = new URLSearchParams(location.search); } catch (e) { q = null; }
+  if (q && q.get('all') === '1') return;   // the audit (`?all=1`) runs the parts page itself
+  var SLOW_MS = 15000;
+  var wantWait = q && q.get('boot_wait');
+  var wait = wantWait && /^\d{1,6}$/.test(wantWait) ? Math.min(+wantWait, 120000) : SLOW_MS;
+  var pageTitle = document.title;
+  root.classList.add('home-boot');
+  root.dataset.boot = 'loading';
+  document.title = 'Nimrod — Home';
+  function why(text) {
+    var el = document.getElementById('home-boot-why');
+    if (el) { el.textContent = text ? 'What went wrong: ' + text : ''; el.hidden = !text; }
+  }
+  var timer = setTimeout(function () {
+    if (root.dataset.boot !== 'loading' && root.dataset.boot !== 'away') return;
+    root.dataset.boot = 'slow';
+    // Home's own view is up (the dashboard or the editor, booting): show it. Before that the page under the veil is
+    // still the parts page, which stays hidden.
+    if (document.body && document.body.classList.contains('is-home')) root.classList.remove('home-boot');
+  }, wait);
+  function end(state) {
+    clearTimeout(timer);
+    root.classList.remove('home-boot');
+    root.dataset.boot = state;
+  }
+  window.__homeBoot = {
+    wait: wait,
+    /** Home is drawn: lift the veil (and take the slow line away, if it was showing). */
+    ready: function () { end('ready'); },
+    /** The parts page is what this load shows. `reason` given: Home could not start, and the line says so. */
+    parts: function (reason) {
+      document.title = pageTitle;
+      why(reason || '');
+      end(reason ? 'failed' : 'parts');
+    },
+    /** The visitor is being sent on (signed out, to /modules): the veil stays until they are gone. */
+    away: function () { if (root.dataset.boot === 'loading' || root.dataset.boot === 'slow') root.dataset.boot = 'away'; },
+  };
+  // Try again is plain markup with no module behind it, so it works even when the module never arrived.
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.closest && t.closest('[data-boot-retry]')) location.reload();
+  });
+})();
+</script>
 <!-- *** HOME ON A PHONE (MIKE_LIST_20260930 "a phone layout", 2026-10-02). ***
      Its own <style>, and EVERY rule in it sits inside the media query below: nothing here can reach a desktop
      or a Pi kiosk (1280x720, 1920x1080), and dev/home_phone_test.html checks exactly that, rule by rule.
@@ -505,6 +615,21 @@
   the page reconciles that copy against the LIVE REGISTRY, so a module somebody ships and
   nobody explains shows up here as undescribed rather than being quietly missed.
 -->
+<!-- HOME'S FIRST PAINT (2026-10-13; the <head>'s script and CSS argue it): what shows while Home loads, if it is slow,
+     and if it cannot start. Each part shows only in its own state (`html[data-boot]`). -->
+<div class="home-boot-note" id="home-boot" role="status" aria-live="polite">
+  <p class="hbw-wait">Loading your Home…</p>
+  <div class="hbw-slow">
+    <p>Your Home is taking longer than usual to load. It will appear here by itself when it is ready.</p>
+    <button type="button" class="hbtn" data-boot-retry>Try again</button>
+    <span class="hbw-links">Or go to <a href="/modules">Modules</a> or <a href="/home.html">My dashboards</a>.</span>
+  </div>
+  <div class="hbw-failed">
+    <p>Your Home could not start here, so this is the list of parts instead.
+      <small class="hbw-why" id="home-boot-why" hidden></small></p>
+    <button type="button" class="hbtn" data-boot-retry>Try again</button>
+  </div>
+</div>
 <!-- settings sidebar (2026-10-08): the sidebar's slot, drawn once somebody is signed in (site_nav.js). -->
 <div class="shell">
 <div data-site-side hidden></div>
@@ -1764,6 +1889,9 @@ window.addEventListener('popstate', (e) => {
 // ---- the page around the stage: the fallback bar, the welcome, the menu and bar background -----------
 function paintHome() {
   if (!HOME.on) return;
+  // The site's sidebar beside the dashboard filling the window, unless the person's row puts it away (2026-10-13,
+  // home_dashboard.js `landSide`; the CSS beside `body.is-land` above).
+  document.body.classList.toggle('land-noside', !!HOME.land && HOME.settings.landSide === false);
   const v = homeView();
   // The fallback bar: only while no bar in the stage carries this page's buttons (see the markup).
   const carried = !!document.querySelector('#stage .tb-bar .tb-host');
@@ -3422,7 +3550,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 function undoHome() {
   HOME.on = false;
   HOME.land = false;
-  document.body.classList.remove('is-home', 'pick-open', 'is-land');
+  document.body.classList.remove('is-home', 'pick-open', 'is-land', 'land-noside');
   delete document.body.dataset.homeProfile;
   $h('stage-bar').hidden = true;
   $h('examples').hidden = true;
@@ -3535,19 +3663,29 @@ Promise.allSettled([
   loadEmbedding().catch((err) => { console.error('modules: embedded kiosk unavailable', err); }),
   signedIn,
 ]).then(async () => {
+  // HOME'S FIRST PAINT (2026-10-13): the page is veiled until this says how the load ended (`__homeBoot`, in the
+  // <head>). Absent (the audit, `?all=1`), there is no veil to lift.
+  const boot = window.__homeBoot || { ready() {}, parts() {}, away() {} };
+  let failed = '';
   if (currentUser && embeddingReady && !auditMode) {
-    try { await bootHome(wanted); return; } catch (err) {
+    try { await bootHome(wanted); boot.ready(); return; } catch (err) {
       console.error('home: could not start; showing the parts page instead', err);
       // Said on the page too, so a suite (and anybody looking) can tell WHY Home is not there.
-      document.body.dataset.homeError = String(err?.message || err).slice(0, 200);
+      failed = String(err?.message || err).slice(0, 200);
+      document.body.dataset.homeError = failed;
       undoHome();
     }
+  } else if (currentUser && !auditMode) {
+    // Signed in, but the part of this page that draws a dashboard did not load (offline mid-load, a bad deploy).
+    failed = 'the part of this page that draws your dashboard did not load';
+    document.body.dataset.homeError = failed;
   }
   // 2026-10-07: NOT SIGNED IN, THE MODULES PAGE IS WHERE THIS LINK WAS GOING. A signed-out visitor here has always
   // got the list of parts and one to try -- which is the Modules page now (/modules, library.html), so they are
   // handed to it with the same `?m=`. Only on a definite 401: offline, the parts below are still a working page.
   // The audit (`?all=1`) stays here.
-  if (!currentUser && signedOutForSure && !auditMode) { location.replace(`/modules${location.search}`); return; }
+  if (!currentUser && signedOutForSure && !auditMode) { boot.away(); location.replace(`/modules${location.search}`); return; }
+  boot.parts(failed);
   if (ITEMS.length) select(ITEMS.some((m) => m.type === wanted) ? wanted : ITEMS[0].type);
 });
 

@@ -104,9 +104,21 @@ export const START_TITLE = 'Start here';
 //   tools every time -- so it is a row, and 'page' sticks once chosen. A link that asks for something
 //   particular (`?m=<type>`, `?example=`, `?edit=1`) always gets the editor: it asked for it.
 export const ARRIVE_CHOICES = Object.freeze(['dashboard', 'page']);
+// `landSide` (Mike, 2026-10-13, on the live site: "The home page doesn't have a sidebar, so you can't get to anywhere
+// else on the site."): the site's sidebar (site_nav.js) BESIDE the dashboard filling the window. Until now the land view
+// put it away with everything else, by the 2026-10-02 ruling above ("the dashboard should be the whole screen"), and so
+// Home -- the page a signed-in person arrives on -- was the one page with no way to the rest of the site but Edit.
+//   FOR shown, and it is the default: it is the newer word, and it agrees with 2026-10-08's "Every tab should have the
+//   sidebar"; this page is a person at a computer (a real screen runs kiosk.html, which never loads it), and a page
+//   you arrive on that leads nowhere is a dead end. AGAINST: the dashboard loses the sidebar's 212px (at 1280x720 the
+//   four quarters are 534 wide, not 640), which is the thing 10-02 asked for. So it is a row, not a rule ("Filling the
+//   window, keep the site's sidebar"): 'No' (false) is 10-02's whole window, and the bar's ⛶ Full screen is the whole
+//   SCREEN either way. 'No' strands nobody: the
+//   bar (and its ⚙ Settings, where this row is) comes back on any press, and Edit opens the editing page, which
+//   always has the sidebar.
 export const HOME_DEFAULTS = Object.freeze({
   openIn: 'edit', keepVersions: 20, warnOverwrite: true, chromeSurface: 'follow', welcomeDone: false,
-  barHideMs: 6000, homeId: null, hoverLine: true, openOn: 'landing', arriveIn: 'dashboard',
+  barHideMs: 6000, homeId: null, hoverLine: true, openOn: 'landing', arriveIn: 'dashboard', landSide: true,
 });
 // An id, not prose (layout.js OPENS_MAX's reasoning): long enough for any id the server makes.
 const HOME_ID_MAX = 200;
@@ -118,6 +130,9 @@ export const HOME_SETTINGS = Object.freeze([
     options: [['landing', 'Your people'], ['start', 'Start here'], ['home', 'My Home']] },
   { key: 'arriveIn', label: 'When I arrive, show',
     options: [['dashboard', 'The dashboard, filling the window'], ['page', 'The editing page']] },
+  // (In plain words, no "dashboard": the row is also on the plain ⚙ menu over Your people, people_page_test.)
+  { key: 'landSide', label: 'Filling the window, keep the site’s sidebar',
+    options: [[true, 'Yes, beside it'], [false, 'No, the whole window']] },
   { key: 'openIn', label: 'Open my Home in',
     options: [['edit', 'Edit view'], ['live', 'Live view']] },
   { key: 'keepVersions', label: 'Keep the last',
