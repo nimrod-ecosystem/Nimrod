@@ -316,7 +316,11 @@ def stamp_signal(msg: dict, user: str) -> dict:
 # A REFUSAL TELLS THE OTHERS TOO (2026-10-02). When the first response is a no (a decline, a busy), the
 # other screens are told `you: false` in the same turn - otherwise a second screen keeps ringing (up to
 # two minutes, for a call) for a caller who has already been told no, and then answers into nothing.
-ARBITRATED_PURPOSES = frozenset({"intercom", "call"})
+#
+# THE SILENT CHECK-IN (2026-10-14, client/checkin.js) is arbitrated exactly like the intercom: it claims BEFORE anything
+# happens in the room (before its notice, before the microphone or camera opens), so one screen of the person - not
+# every screen in the house - opens its microphone for one look.
+ARBITRATED_PURPOSES = frozenset({"intercom", "call", "checkin"})
 _SESSION_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 MAX_SESSION_LEN = 64            # an intercom session is "ic-" + 16 hex; 64 is room to spare, not a limit anyone meets
 

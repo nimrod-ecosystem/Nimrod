@@ -8,6 +8,8 @@
 //     anybody's calling can be switched off. An existing drive grant keeps calling by default, so nobody is cut off.
 //   * BRINGING OTHER PEOPLE INTO A CALL IS A PERMISSION (2026-10-13): "May bring others into a call".
 //   * THE INTERCOM is its own permission, separate from calls (2026-10-13): "May use the intercom".
+//   * THE QUIET CHECK-IN is its own permission too (2026-10-14, checkin.js): "May check in quietly" - the owner and the
+//     guardian set by default, nobody else until ticked. Its three settings are offered here, beside it.
 //   * "WHO MAY SEE THIS SCREEN" is its own tick, EMPTY TO START, with "ASK FIRST" ON by default.
 //   * THE GUARDIAN SET is a bundle of the separate permissions - see without asking, drop in, call, bring others in, the
 //     intercom, and drive - each still changeable per person. Drive is a real drive grant, made when the set is given.
@@ -19,6 +21,8 @@
 // writers' `noteWriters`) - only the person's owner can write that row, which is what lets the server and the screen
 // read it as a permission. A switch not set takes its default; the table is in screen_access.py and `permsFor` below
 // mirrors it (screen_permissions_test.html checks the two agree on every case the server's test names).
+
+import { CHECKIN_FIELDS, checkInOptionsFrom } from './checkin_options.js';
 
 export const LIST_FIELD = 'screenPeople';
 export const INTERCOM_LIST_FIELD = 'intercomAllowed';
@@ -49,7 +53,7 @@ export const DROP_IN_FIELD = 'dropInSeconds';
 export const DROP_IN_CHOICES = Object.freeze([0, 10, 20]);
 export const DROP_IN_DEFAULT_S = 10;
 
-const SWITCHES = ['guardian', 'see', 'seeAsk', 'dropIn', 'call', 'bringOthers', 'intercom'];
+const SWITCHES = ['guardian', 'see', 'seeAsk', 'dropIn', 'call', 'bringOthers', 'intercom', 'checkIn'];
 
 const clean = (s) => String(s == null ? '' : s).replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, MAX_NAME);
 const shortName = (account) => String(account || '').split('@')[0] || String(account || '');
@@ -76,13 +80,13 @@ const onIntercomList = (row, account) => Array.isArray(row && row[INTERCOM_LIST_
  */
 export function permsFor(row, account, owner = null, { reach = false } = {}) {
   const none = { guardian: false, see: false, askFirst: true, dropIn: false, call: false, bringOthers: false,
-                 intercom: false, listed: false };
+                 intercom: false, checkIn: false, listed: false };
   if (!account) return none;
   const ent = normalizePeople(row && row[LIST_FIELD]).find((x) => x.account === account);
   const isOwner = !!owner && account === owner;
   if (!ent) {
     if (isOwner) return { guardian: false, see: true, askFirst: false, dropIn: true, call: true, bringOthers: true,
-                          intercom: true, listed: false };
+                          intercom: true, checkIn: true, listed: false };
     return { ...none, call: !!reach, intercom: onIntercomList(row, account) };
   }
   const g = ent.guardian === true;
@@ -94,6 +98,9 @@ export function permsFor(row, account, owner = null, { reach = false } = {}) {
     call: 'call' in ent ? ent.call : (g || isOwner || !!reach),
     bringOthers: 'bringOthers' in ent ? ent.bringOthers : (g || isOwner),
     intercom: 'intercom' in ent ? ent.intercom : (g || isOwner || onIntercomList(row, account)),
+    // THE SILENT CHECK-IN (2026-10-14, checkin.js; screen_access.may_check_in argues it): the owner and the guardian set
+    // by default, nobody else until ticked.
+    checkIn: 'checkIn' in ent ? ent.checkIn : (g || isOwner),
     listed: true,
   };
 }
@@ -240,6 +247,18 @@ export function mountScreenPermissions(root, {
         esc(words(v))}</option>`).join('')}</select></label>`;
   }
 
+  // THE QUIET CHECK-IN'S SETTINGS (checkin.js CHECKIN_FIELDS, each argued there): what it carries, how long it lasts,
+  // and whether a press at the screen ends it. Here, beside who may do it, rather than in the screen's own menu.
+  function checkInRows(row) {
+    const o = checkInOptionsFrom(row);
+    const [media, maxMs, onPress] = CHECKIN_FIELDS;
+    const sel = (f, cur) => `<label class="sp-choice">${esc(f.label)}
+      <select data-checkin="${esc(f.key)}">${f.options.map((x) => `<option value="${esc(x.value)}"${x.value === cur ? ' selected' : ''}>${
+        esc(x.label)}</option>`).join('')}</select></label>`;
+    return `${sel(media, o.media)}${sel(maxMs, o.maxMs)}
+      <label class="sp-choice"><input type="checkbox" data-checkin="${esc(onPress.key)}"${o.endOnPress ? ' checked' : ''}> ${esc(onPress.label)}</label>`;
+  }
+
   const tick = (k, label, on, dis) => `<label><input type="checkbox" data-switch="${k}"${on ? ' checked' : ''}${dis}> ${label}</label>`;
 
   function render() {
@@ -255,9 +274,11 @@ export function mountScreenPermissions(root, {
           During a call, the screen can let the caller see it or control it, until the call ends unless it chooses a
           shorter time. “May see” lets them watch along with what the screen is playing, from their own device. With
           “Ask first”, the screen asks each time, and if nobody there answers, nothing is shared. While anyone sees it,
-          the screen says “Sharing your screen with” their name. The guardian set is everything at once (the intercom,
-          below, too), and each part can still be changed. Anyone you have added may call unless you untick it; apart
-          from that, nobody but you has any of these until you tick them.</p>
+          the screen says “Sharing your screen with” their name. “May check in quietly” lets them look in and listen
+          without the room hearing anything, to see if someone is asleep before they call; the screen shows who is
+          checking in the whole time. The guardian set is everything at once (the intercom, below, too), and each part
+          can still be changed. Anyone you have added may call unless you untick it; apart from that, nobody but you has
+          any of these until you tick them.</p>
         ${cands.length ? `<ul class="r-list sp-list">${cands.map((c) => {
           const p = permsFor(row, c.account, owner, { reach: c.reach });
           const ent = people.find((x) => x.account === c.account);
@@ -271,6 +292,7 @@ export function mountScreenPermissions(root, {
               ${tick('bringOthers', 'May bring others into a call', p.bringOthers, dis)}
               ${tick('see', 'May see this screen', p.see, dis)}
               <label><input type="checkbox" data-switch="seeAsk"${p.see && p.askFirst ? ' checked' : ''}${!p.see ? ' disabled' : dis}> Ask first</label>
+              ${tick('checkIn', 'May check in quietly', p.checkIn, dis)}
             </div>
             ${ent && !c.owner ? `<label class="sp-name">The screen shows them as
               <input type="text" data-name maxlength="60" value="${esc(ent.name)}"></label>` : ''}
@@ -290,6 +312,7 @@ export function mountScreenPermissions(root, {
           ${choiceRow(DROP_IN_FIELD, 'When someone who may drop in calls a screen with no Call panel, answer', DROP_IN_CHOICES, dropInSecondsOf(row),
             (v) => (v === 0 ? 'straight away' : `${v} seconds after ringing`))}
           ${choiceRow(LENGTH_FIELD, 'On a call, what the screen lets the caller see or control lasts', LENGTH_CHOICES, lendLengthOf(row), lengthWords)}
+          ${checkInRows(row)}
         </div>
         <p class="h-hint">“Always” is offered on the screen during a call only for someone with the guardian set. It ticks
           “May see” or adds a permission to control these screens, here, where you can take it back.</p>
@@ -325,6 +348,12 @@ export function mountScreenPermissions(root, {
 
   root.addEventListener('change', async (e) => {
     const t = e.target;
+    if (t.matches('[data-checkin]')) {
+      const key = t.dataset.checkin;
+      const v = t.type === 'checkbox' ? !!t.checked : (key === 'checkInMaxMs' ? Number(t.value) : t.value);
+      write({ [key]: v }, 'Saved.');
+      return;
+    }
     if (t.matches('[data-choice]')) {
       const key = t.dataset.choice;
       const v = t.value;
@@ -351,7 +380,7 @@ export function mountScreenPermissions(root, {
         try { await grantDrive(account); drove = true; await reloadGrants(); } catch (err) { console.error('screen permissions: drive', err); }
       }
       write({ [LIST_FIELD]: next }, drove
-        ? 'Guardian set given. They can call, drop in, bring others in, use the intercom, see without asking, and drive.'
+        ? 'Guardian set given. They can call, drop in, bring others in, use the intercom, check in quietly, see without asking, and drive.'
         : 'Guardian set given, except driving: their permission to drive could not be added. Add it under “Who may drive”.');
       return;
     }
@@ -365,6 +394,7 @@ export function mountScreenPermissions(root, {
       seeAsk: on ? 'The screen will ask first.' : 'They can see without the screen asking.',
       dropIn: on ? 'Their calls will answer by themselves.' : 'Their calls will wait to be answered.',
       bringOthers: on ? 'They may bring others into a call with these screens.' : 'They can no longer bring others into a call.',
+      checkIn: on ? 'They may check in quietly. The screen shows who is checking in.' : 'They can no longer check in quietly.',
     };
     write({ [LIST_FIELD]: next }, words[key] || 'Saved.');
   }, { signal: ac.signal });

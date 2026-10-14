@@ -292,6 +292,8 @@ export async function mountCallPage(root, {
       </label>
       <button type="button" class="cp-btn cp-primary cp-big" data-start="video">Video call</button>
       <button type="button" class="cp-btn cp-big" data-start="audio">Audio call <span class="cp-sub">(sound only, no camera)</span></button>
+      <a class="cp-btn cp-big" data-checkin-link hidden href="./checkin.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">Check in quietly
+        <span class="cp-sub">(see if they are asleep first; the room hears nothing, and the screen shows you are checking in)</span></a>
       <p class="cp-note" data-shown-as>The screen shows the call as from “${esc(shownAs)}”${myName ? '' : ' (you have not set the name your notes are signed with)'}.</p>
       <label class="cp-field"><span>Words chosen on the screen’s AAC board during the call</span>
         <select data-words-mode>
@@ -304,6 +306,27 @@ export async function mountCallPage(root, {
         ${MESH_MAX_OTHERS.audio} on an audio call. Everybody connects straight to everybody else.</p>
       ${relaySection()}`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
+    if (pick) showCheckIn(pick.id);
+  }
+
+  // "CHECK IN QUIETLY" (2026-10-14, checkin.js), next to the call buttons - shown ONLY for somebody who may ("May check
+  // in quietly": the owner and the guardian set by default). The site is asked once per person on this page; anything
+  // but a plain yes (no answer, an older site, a refusal) leaves it hidden. A convenience: the server checks the look.
+  const mayCheckIn = new Map();      // person id -> true | false
+  async function showCheckIn(personId) {
+    const paint = () => {
+      const a = q('[data-checkin-link]');
+      if (!a || q('[data-person]')?.value !== personId) return;
+      a.setAttribute('href', `./checkin.html?person=${encodeURIComponent(personId)}`);
+      a.hidden = mayCheckIn.get(personId) !== true;
+    };
+    if (!mayCheckIn.has(personId)) {
+      let ok = false;
+      try { const r = await getJSON(`/api/drive/may/${encodeURIComponent(personId)}`); ok = !!r && r.checkIn === true; }
+      catch { ok = false; }
+      mayCheckIn.set(personId, ok);
+    }
+    paint();
   }
 
   // ---- group calls: "a relay server for bigger calls" - the account's setting (server/call_relay.py) -------------
@@ -1073,6 +1096,9 @@ export async function mountCallPage(root, {
     if (!e.target.closest?.('[data-person]')) return;
     const a = q('[data-intercom-link]');
     if (a) a.setAttribute('href', `./intercom.html?person=${encodeURIComponent(e.target.value)}`);
+    const ck = q('[data-checkin-link]');
+    if (ck) ck.hidden = true;            // until the site says this person's screens may be checked in on
+    showCheckIn(e.target.value);
   });
   // THE PAGE GOING AWAY (closed, navigated, put in the back-forward cache) hangs up and lets go of the
   // camera and microphone. A tab merely in the background keeps the call: switching apps to check a

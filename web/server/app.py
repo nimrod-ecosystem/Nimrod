@@ -36,7 +36,7 @@ from play_relay import PlayRelay  # watching along (row 2.79): a screen's `play`
 from screen_access import SeeAccess, ask_seconds, lend_minutes, name_for, see_decision
 # a call is only a call; bringing others in; how long a lend lasts; "always" for guardians (Mike, 2026-10-13/14)
 from screen_access import (ALWAYS_LABEL, LIST_FIELD as SCREEN_LIST_FIELD, MAX_LEND_MIN, may_bring_others, may_call,
-                           may_intercom, perms_for, with_switches)
+                           may_check_in, may_intercom, perms_for, with_switches)
 from game_rooms import SWEEP_S as GAME_SWEEP_S, CallAsks, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
@@ -1388,6 +1388,14 @@ def _intercom_allowed(user: str, person_id: str) -> bool:
     return may_intercom(_person_row(owner, person_id), user, owner, reach=_may_reach(user, person_id))
 
 
+def _check_in_allowed(user: str, person_id: str) -> bool:
+    """The silent check-in's own permission (2026-10-14, "May check in quietly"; screen_access.may_check_in argues the
+    defaults: the owner and the guardian set, nobody else until ticked). Checked by the SERVER on every check-in offer,
+    read fresh, so unticking somebody stops their next look; the screen checks the server's stamp too."""
+    owner = _person_owner(person_id)
+    return may_check_in(_person_row(owner, person_id), user, owner, reach=_may_reach(user, person_id))
+
+
 class GrantCreate(BaseModel):
     subject_id: str
     subject_kind: str = "account"
@@ -1496,6 +1504,19 @@ def drive_ticket(person_id: str, user: str = Depends(current_user)):
     if not _may_reach(user, person_id):
         raise HTTPException(status_code=403, detail="not allowed to use this person's screens")
     return {"ticket": _tickets.issue(user, person_id), "expires_in": 30, "drive": _may_drive(user, person_id)}
+
+
+@app.get("/api/drive/may/{person_id}")
+def drive_may(person_id: str, user: str = Depends(current_user)):
+    """What this login may do on a person's screens, so a page shows only the buttons that will work (2026-10-14: the
+    call page's and the Remote page's "Check in quietly" appears only for somebody who may). A convenience, never the
+    check: the server checks each ring, look and press again when it happens. The SAME 403 as the ticket for "no such
+    person" and "not yours to reach", so this is no way to learn which person ids are real."""
+    _check(person_id, ID_RE, "person id")
+    if not _may_reach(user, person_id):
+        raise HTTPException(status_code=403, detail="not allowed to use this person's screens")
+    return {"drive": _may_drive(user, person_id), "call": _may_call(user, person_id),
+            "intercom": _intercom_allowed(user, person_id), "checkIn": _check_in_allowed(user, person_id)}
 
 
 async def _tell(conns, payload):
@@ -1968,6 +1989,9 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                         purpose = sig.get("purpose")
                         if purpose == "intercom":
                             ok, why = _intercom_allowed(user, person_id), "not-approved"
+                        elif purpose == "checkin":
+                            # the silent check-in (2026-10-14): "May check in quietly", its own permission.
+                            ok, why = _check_in_allowed(user, person_id), "not-allowed"
                         elif purpose == "phone-mic":
                             ok, why = can_drive, "not-allowed"
                         else:
@@ -1994,7 +2018,8 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     # caller is the account that owns these screens (drop-in by default for the owner), and - on an
                     # intercom offer - the name the room should show (the list's, else their display name).
                     stamped["signal"]["byOwner"] = user == room_key
-                    if sig.get("kind") == "offer" and sig.get("purpose") == "intercom":
+                    # (The silent check-in too, 2026-10-14: its notice names who is checking in by the SERVER's name.)
+                    if sig.get("kind") == "offer" and sig.get("purpose") in ("intercom", "checkin"):
                         stamped["signal"]["byName"] = _seer_name(_person_row(room_key, person_id), user) or ""
                     await _tell(room.screens, stamped)
             elif role == "driver":

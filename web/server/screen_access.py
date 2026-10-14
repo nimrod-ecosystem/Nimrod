@@ -35,7 +35,7 @@ list and the note writers already live in - notes.PERSON_ROW_KEY). Only the pers
 `owned_person` on person state), which is what makes it safe to read as a permission here. A permission is a SETTING,
 not content (storage_line.py): a few names and switches, nothing about a body.
 
-    screenPeople: [{ account, name, guardian?, see?, seeAsk?, dropIn?, call?, bringOthers?, intercom? }]
+    screenPeople: [{ account, name, guardian?, see?, seeAsk?, dropIn?, call?, bringOthers?, intercom?, checkIn? }]
 
 A switch that is not set (missing, or not a real true/false) takes its DEFAULT:
 
@@ -49,6 +49,8 @@ A switch that is not set (missing, or not a real true/false) takes its DEFAULT:
     may drive            a drive grant (grants.py), never this row - the guardian set's UI makes one; or lent on a call
     may use the intercom no (yes if on the      yes                       yes (2026-10-14, was no)
                          intercom's older list `intercomAllowed`) - its own permission, separate from calls
+    may check in quietly no                      yes                       yes
+                         (`checkIn`, 2026-10-14: the silent check-in, "like baby monitor mode" - may_check_in argues it)
 
 WHY THE OWNER SEES WITHOUT ASKING BY DEFAULT (argued; on Mike's list): the owner set the screen up and can already
 change every one of its settings, including this list - an ask they could switch off from the same page is a speed
@@ -165,17 +167,17 @@ def entries_from(row: dict | None) -> dict[str, dict]:
     return out
 
 
-SWITCHES = ("guardian", "see", "seeAsk", "dropIn", "call", "bringOthers", "intercom")
+SWITCHES = ("guardian", "see", "seeAsk", "dropIn", "call", "bringOthers", "intercom", "checkIn")
 
 
 def perms_for(row: dict | None, account: str, owner: str | None, *, reach: bool = False) -> dict:
     """What `account` may do on this person's screens, from the row alone (plus `reach`: they hold a live grant of any
     kind - app.py knows, this file does not read grants). PURE.
 
-    {guardian, see, ask_first, drop_in, call, bring_others, listed}. A person with no owner does not exist, and is
-    indistinguishable from one you may do nothing on (the same anti-oracle rule as grants.may_drive)."""
+    {guardian, see, ask_first, drop_in, call, bring_others, intercom, check_in, listed}. A person with no owner does not
+    exist, and is indistinguishable from one you may do nothing on (the same anti-oracle rule as grants.may_drive)."""
     none = {"guardian": False, "see": False, "ask_first": True, "drop_in": False, "call": False,
-            "bring_others": False, "intercom": False, "listed": False}
+            "bring_others": False, "intercom": False, "check_in": False, "listed": False}
     if not account or not owner:
         return none
     is_owner = account == owner
@@ -183,7 +185,7 @@ def perms_for(row: dict | None, account: str, owner: str | None, *, reach: bool 
     if ent is None:
         if is_owner:
             return {"guardian": False, "see": True, "ask_first": False, "drop_in": True, "call": True,
-                    "bring_others": True, "intercom": True, "listed": False}
+                    "bring_others": True, "intercom": True, "check_in": True, "listed": False}
         return {**none, "call": bool(reach), "intercom": _on_intercom_list(row, account)}
     g = ent.get("guardian") is True
     return {
@@ -194,6 +196,7 @@ def perms_for(row: dict | None, account: str, owner: str | None, *, reach: bool 
         "call": ent["call"] if "call" in ent else (g or is_owner or bool(reach)),
         "bring_others": ent["bringOthers"] if "bringOthers" in ent else (g or is_owner),
         "intercom": ent["intercom"] if "intercom" in ent else (g or is_owner or _on_intercom_list(row, account)),
+        "check_in": ent["checkIn"] if "checkIn" in ent else (g or is_owner),
         "listed": True,
     }
 
@@ -233,6 +236,29 @@ def may_call(row: dict | None, account: str, owner: str | None, *, reach: bool) 
     if account != owner and not reach:
         return False
     return perms_for(row, account, owner, reach=reach)["call"] is True
+
+
+def may_check_in(row: dict | None, account: str, owner: str | None, *, reach: bool) -> bool:
+    """MAY CHECK IN QUIETLY (Mike, 2026-10-13: "a silent check-in, 'like baby monitor mode', where by default the screen
+    still shows who is checking in"; client/checkin.js has the whole design). A one-way look and/or listen into the
+    room: nothing rings, nothing is heard in the room, and the screen shows who is checking in the whole time. PURE.
+    ITS OWN PERMISSION, like the intercom - being able to call gives no check-in, and a check-in gives no call. Who has it
+    by default, argued:
+      * THE OWNER - yes ("the account owner controls every screen on the account by default", 2026-10-14): the household
+        looking in on its own room. Who wants the opposite? An owner whose screens are in someone else's room (a
+        parent's, a grown child's) who would rather nobody could look in unannounced - they untick themselves.
+      * THE GUARDIAN SET - yes: the set is "every permission switched on", and a guardian may already drop in on a VIDEO
+        call (which opens the room's camera after a countdown with no press). A check-in is that, minus the ring and
+        minus anything the room hears. Who wants the opposite? A family where the guardian is the one to call, not the
+        one to watch - they untick it on that person's line.
+      * ANYBODY ELSE - NO until ticked. A silent look into somebody's room is the most private thing on this list; an
+        ordinary caller (a friend, a therapist with a call-only grant) does not get it by being able to call.
+    Like a call, it needs a socket: the owner, or a live grant of any kind. Fails closed (no owner, no account: no)."""
+    if not account or not owner:
+        return False
+    if account != owner and not reach:
+        return False
+    return perms_for(row, account, owner, reach=reach).get("check_in") is True
 
 
 def with_switches(row: dict | None, account: str, name: str = "", **switches) -> list:
