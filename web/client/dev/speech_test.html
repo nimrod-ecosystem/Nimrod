@@ -28,7 +28,7 @@ import {
   PHRASES, SPEECH_DEVICE, DEFAULT_BINDINGS, normalize, verbFor, duplicatePhrases,
   phraseControl, attachSpeech, SPEECH_DEFAULTS, CONFIRM_MODES, usableWakePhrases, splitWake,
   LISTENING_TOPIC, SPEECH_FIELDS, wakeFrom,
-  ROUTES, routeFor, spokenTable, SPEECH_ACTIONS, ROUTE_BINDINGS, SPEECH_BINDINGS, routeAction,
+  ROUTES, routeFor, wakeOnlyPhrase, spokenTable, SPEECH_ACTIONS, ROUTE_BINDINGS, SPEECH_BINDINGS, routeAction,
   SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC, ANSWERING_TOPIC, UNKNOWN_WORD, cleanDetail,
   browserRecognizer, commandGrammar, armedGrammar, answerGrammar, speechOptionsFrom,
   RECOGNITION_MODES,
@@ -331,6 +331,33 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     r.say('computer please play');
     check('...and saying the wake phrase anyway still works', r.pressed()[1] === 'phrase:play',
       JSON.stringify(r.pressed()));
+  }
+  {
+    // ROW 2.88 (2026-10-14): a dashboard's BARE name ("computer please pictures") is a `wakeOnly` phrase: taken only when
+    // said to the screen, even with the gate off - "pictures" in a sentence is talk.
+    const routes = { ...ROUTES, 'dashboard-go-p1': { topic: 'kiosk/go', payload: { id: 'p1' }, label: 'Go to Pictures',
+      phrases: ['go to pictures', 'open pictures', 'pictures'], wakeOnly: ['pictures'] } };
+    const r = rig({ requireWake: false, routes });
+    r.say('pictures');
+    check('*** gate off: a dashboard\'s bare name said alone does nothing (it was not said to the screen) ***',
+      r.pressed().length === 0, JSON.stringify(r.pressed()));
+    r.say('go to pictures');
+    check('...while "go to pictures" still works with the gate off, as before', JSON.stringify(r.pressed()) === '["phrase:dashboard-go-p1"]',
+      JSON.stringify(r.pressed()));
+    r.say('computer please pictures');
+    check('*** "computer please pictures": the bare name, said to the screen, goes there ***',
+      r.pressed().length === 2 && r.pressed()[1] === 'phrase:dashboard-go-p1', JSON.stringify(r.pressed()));
+    r.say('computer please');
+    r.advance(1000);
+    r.say('pictures');
+    check('...and said on its own inside the command window, too', r.pressed().length === 3, JSON.stringify(r.pressed()));
+    const g = rig({ routes });
+    g.say('pictures');
+    g.say('computer please pictures');
+    check('gate on: only with the wake phrase, like everything else', JSON.stringify(g.pressed()) === '["phrase:dashboard-go-p1"]',
+      JSON.stringify(g.pressed()));
+    check('wakeOnlyPhrase is the exact whole phrase, normalised', wakeOnlyPhrase(routes['dashboard-go-p1'], 'Pictures.')
+      && !wakeOnlyPhrase(routes['dashboard-go-p1'], 'go to pictures') && !wakeOnlyPhrase(ROUTES['play-opposites'], 'opposites'));
   }
   {
     const r = rig({ wake: ['okay'] });

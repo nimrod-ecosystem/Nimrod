@@ -718,8 +718,19 @@ const ACTION_SAFE = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9._-]/g
  * `taken`: every phrase already spoken for (default: input_speech's verbs and routes). Nothing made here
  * can duplicate one -- `duplicatePhrases` over the combined table stays empty.
  */
+//
+// *** THE BARE NAME (row 2.88, Mike 2026-10-14 via chat CA item 4): "computer please pictures". *** `bare` (on by
+// default) adds the dashboard's name ON ITS OWN, after the starters, marked `wakeOnly`: input_speech.js takes a
+// wakeOnly phrase only when it was SAID TO THE SCREEN (the wake phrase, or inside the command window), even on a
+// screen whose wake gate is off. FOR (chat's suggestion, taken): "pictures" or "youtube" said in a sentence is talk,
+// not a command, and a screen that changes dashboard mid-conversation is the failure every exact-match rule here
+// exists to stop. AGAINST: "go to kitchen" still works without the wake phrase on a gate-off screen and the bare
+// name does not - two rules for one dashboard. Kept: the bare word is the one far likelier to be said in passing.
+// A bare name already taken (a verb, a route like "opposites", another dashboard) is skipped with a reason, so the
+// existing commands keep their words; a dashboard's bare name is matched before any module's ("trivia" goes to a
+// dashboard called Trivia, not the Trivia module opened by voice), as chat suggested.
 export function dashboardSpeechRoutes(list, { starters = DEFAULT_GO_STARTERS, taken = spokenTable(PHRASES, ROUTES),
-                                              prebuilt = true, nav = true } = {}) {
+                                              prebuilt = true, nav = true, bare = true } = {}) {
   const used = new Map();
   for (const [id, phrases] of Object.entries(taken || {})) {
     for (const p of Array.isArray(phrases) ? phrases : []) { const k = normalize(p); if (k) used.set(k, `taken:${id}`); }
@@ -747,7 +758,16 @@ export function dashboardSpeechRoutes(list, { starters = DEFAULT_GO_STARTERS, ta
       used.set(p, rid);
       phrases.push(p);
     }
-    if (phrases.length) routes[rid] = { topic: DASHBOARD_GO_TOPIC, payload: { id: d.id, name: n }, label: `Go to ${n}`, phrases };
+    const wakeOnly = [];
+    if (bare) {
+      const owner = used.get(nn);
+      if (owner && owner !== rid) skipped.push({ name: n, phrase: nn, why: owner.startsWith('taken:') ? 'taken' : 'twice' });
+      else if (!owner) { used.set(nn, rid); phrases.push(nn); wakeOnly.push(nn); }
+    }
+    if (phrases.length) {
+      routes[rid] = { topic: DASHBOARD_GO_TOPIC, payload: { id: d.id, name: n }, label: `Go to ${n}`, phrases,
+        ...(wakeOnly.length ? { wakeOnly } : {}) };
+    }
   }
   const tables = [...(prebuilt ? [PREBUILT_ROUTES] : []), ...(nav ? [NAV_ROUTES] : [])];
   for (const table of tables) {

@@ -301,9 +301,20 @@ function backend(user) {
     {
       const list = [{ id: 'a1', name: 'Kitchen' }, { id: 'b2', name: 'Top 40' }, { id: 'c3', name: 'My room' }, { id: 'd4', name: 'Menu' }];
       const { routes, skipped } = dashboardSpeechRoutes(list);
-      check('*** a dashboard\'s name becomes "go to <name>" and "open <name>" ***',
-        J(routes['dashboard-go-a1']?.phrases) === J(['go to kitchen', 'open kitchen'])
+      // (row 2.88, 2026-10-14, DELIBERATELY changed: the bare name joined, marked wakeOnly - only said to the screen.)
+      check('*** a dashboard\'s name becomes "go to <name>", "open <name>" and, said to the screen, "<name>" ***',
+        J(routes['dashboard-go-a1']?.phrases) === J(['go to kitchen', 'open kitchen', 'kitchen'])
+        && J(routes['dashboard-go-a1'].wakeOnly) === J(['kitchen'])
         && routes['dashboard-go-a1'].topic === DASHBOARD_GO_TOPIC && routes['dashboard-go-a1'].payload.id === 'a1', J(routes['dashboard-go-a1']));
+      const bareOff = dashboardSpeechRoutes(list, { bare: false }).routes;
+      check('bare: false leaves the two starters only', J(bareOff['dashboard-go-a1']?.phrases) === J(['go to kitchen', 'open kitchen'])
+        && !bareOff['dashboard-go-a1'].wakeOnly);
+      const clash = dashboardSpeechRoutes([{ id: 'o1', name: 'Opposites' }, { id: 't1', name: 'Tutorial' }]);
+      check('*** a bare name already spoken for ("opposites", a game) is skipped with a reason: the game keeps its word ***',
+        !clash.routes['dashboard-go-o1'].phrases.includes('opposites') && clash.skipped.some((s) => s.phrase === 'opposites' && s.why === 'taken'),
+        J(clash));
+      check('the person\'s own "Tutorial" takes the bare word from the ready-made tutorial (their own wins, as with "my room")',
+        clash.routes['dashboard-go-t1'].phrases.includes('tutorial') && !(clash.routes['dashboard-tutorial']?.phrases || []).includes('tutorial'));
       check('a name with digits is skipped with a reason (the recogniser writes numbers as words)',
         skipped.some((s) => s.name === 'Top 40' && s.why === 'digits') && !routes['dashboard-go-b2'], J(skipped));
       check('*** the person\'s own "My room" wins "go to my room" over the ready-made room ***',
