@@ -123,6 +123,9 @@ export const ENGINE_DEFAULTS = Object.freeze({
   ears: 'both',
   // This screen's own microphone for speech: the usual one (the one calls use). See MIC_CHOICES.
   mic: 'default',
+  // When no chosen pass is this screen's own speech program, that program still listens as a stand-in
+  // ('local'), or nothing does ('off'). See `enginePlanFrom`'s `fallback`.
+  fallback: 'local',
 });
 
 // The segmenter's numbers: options with defaults, not settings - nobody in a room can judge them,
@@ -237,6 +240,16 @@ export const SPEECH_PASS_FIELDS = [
   // its own; "HD Camera" means the same webcam on any of them. Part of the name is enough; case does not matter.
   { key: 'speechMicName', label: 'That microphone: part of its name', kind: 'text', default: '', level: 'standard',
     note: 'For example: HD Camera. If no microphone has that name, the usual one is used, and the voice menu says so.' },
+  // WHEN THE CHOSEN COMPUTER IS NOT ANSWERING (2026-10-14, Mike at the bench: voice commands stopped while the
+  // desktop was restarting). See `enginePlanFrom`'s `fallback` for the argument. Advanced: the default is the one
+  // that keeps a screen hearing commands, and nobody has to find this row for that to be true.
+  { key: 'speechFallback', label: 'When the computers chosen above are not answering', kind: 'choice',
+    default: ENGINE_DEFAULTS.fallback, level: 'advanced',
+    options: [
+      { value: 'local', label: 'Listen with the speech program on this computer (the room’s sound stays here)' },
+      { value: 'off', label: 'Stop listening until one of them answers' },
+    ],
+    note: 'Only when none of the chosen ones is this computer’s own speech program. While a chosen computer answers, its words decide; this computer’s guess acts only if it does not answer in time.' },
 ];
 
 /** The microphone whose name contains `name` (case-insensitive), from [{ id, label }]. Chromium's two stand-ins for
@@ -415,7 +428,44 @@ export function enginePlanFrom(values = {}, { pageProtocol: protocol = pageProto
   }
   const wakeUrl = text(v.speechWakeUrl);
   const wake = /^wss?:\/\//i.test(wakeUrl) ? { url: wakeUrl } : null;
-  return { browser: false, passes, skipped, wake, ...common };
+  return { browser: false, passes, skipped, wake, fallback: fallbackFrom(v, passes, text), ...common };
+}
+
+// ---------------------------------------------------------------------------------------
+// *** A CHOSEN COMPUTER THAT IS NOT ANSWERING MUST NOT STOP THE SCREEN HEARING COMMANDS (2026-10-14). ***
+// ---------------------------------------------------------------------------------------
+// Found on the bench (read-only probe, 2026-10-14): its row said "What writes down what is said: Another computer"
+// (the desktop FIRST), "Then check with: Another computer" (the same one, dropped as a duplicate) and "use my own
+// voice model" (port 8796, which no Pi runs). So the plan was the desktop alone. The Pi's own speech program was up
+// on 127.0.0.1:8797 the whole time and nothing asked it; when the desktop restarted, nothing on the screen listened.
+// THE STAND-IN: when no pass is this screen's own stock speech program, that program (127.0.0.1 only - the room's
+// sound never leaves this computer, the same promise as the default) is connected as `fallback` and asked about
+// every utterance, ranked BELOW every chosen pass:
+//   * a chosen pass is not up (down, refused, or a connection still hanging): the stand-in is the only one asked,
+//     so its answer is the last word and acts at once - the normal time, not a wait;
+//   * a chosen pass is up: the stand-in's answer can never act as "sure" (the person chose the other computer to
+//     decide); it acts only if the chosen pass has not answered `waitMs` after it, or went away - the same rule an
+//     unsure first guess already has, so a desktop asleep with its socket still open cannot hold a command hostage.
+//   FOR asking it only while no chosen pass is up (less work for the screen): AGAINST, and it loses - a computer
+//   that went away with its connection still open (asleep, restarting) looks "up" for minutes, and every command in
+//   that time would be lost. The cost of asking it always is the screen's own recogniser running, which is what
+//   the default setting does anyway.
+//   WHO WANTS THE OPPOSITE: somebody whose screen's own recogniser is poor enough that a wrong command is worse than
+//   none. Legitimate - so it is a setting (`speechFallback`), on by default, 'off' for them.
+// Never for an address that is not this computer (`speechLocalUrl` pointed elsewhere): a stand-in that sends the
+// room's sound to another computer would be a choice nobody made.
+function fallbackFrom(v, passes, text) {
+  if (v.speechFallback === 'off') return null;
+  const url = text(v.speechLocalUrl) || LOCAL_URL;
+  if (!/^wss?:\/\//i.test(url) || addressHost(url) !== 'loopback') return null;
+  if (passes.some((p) => p.url === url)) return null;
+  return { slot: 'fallback', name: 'This screen', url, key: '', remote: false, fallback: true };
+}
+/** Words for the voice menu when the stand-in is what is listening: `names` are the chosen passes not answering. */
+export function fallbackSays(names = []) {
+  const list = (Array.isArray(names) ? names : []).filter(Boolean);
+  const who = list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)} aren’t` : `${list[0] || 'The chosen computer'} isn’t`;
+  return `${who} answering; using this screen’s own listening`;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -715,11 +765,15 @@ export function createRanker({
   // is not comparable, and there confidence still decides. An option with a default, not a person's setting: nobody
   // in a room can judge decibels.
   clearerDb = 6,
+  // STAND-INS (enginePlanFrom's `fallback`): slots whose answer never acts as "sure" while a chosen pass was asked
+  // about the same utterance - it waits `waitMs` for that pass like any unsure guess. Asked alone, it is the last word.
+  standIns = [],
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
   const rank = (slot) => { const i = passes.indexOf(slot); return i < 0 ? -1 : i; };
+  const standIn = (slot) => Array.isArray(standIns) && standIns.includes(slot);
   const ownMic = (ear) => /^room/.test(String(ear || ''));
   /** 1 when `a` heard it clearly more clearly than `b`, -1 the other way, 0 neither (or not two own microphones). */
   const clearer = (a, b) => {
@@ -940,7 +994,9 @@ export function createRanker({
       const mine = { ...e.results.get(r.slot), ear };
       let means = true;
       if (typeof actsOn === 'function') { try { means = !!actsOn(mine.text); } catch { means = true; } }
-      const sure = conf(mine) !== null && conf(mine) >= sureAt && mine.text.trim() && means;
+      // A stand-in is never "sure" while a chosen pass was asked too: the person chose that one to decide.
+      const deferred = standIn(r.slot) && [...e.asked].some((s) => !standIn(s));
+      const sure = conf(mine) !== null && conf(mine) >= sureAt && mine.text.trim() && means && !deferred;
       const lastPass = rank(r.slot) === passes.length - 1 || ![...e.asked].some((s) => rank(s) > rank(r.slot));
       if (sure) decide(g, mine, 'sure');
       else if (lastPass && e.endedAt !== null && g.ears.size === 1) decide(g, mine, 'last-pass');
@@ -1045,18 +1101,26 @@ export function rankedRecognizer({
   const firstEar = plan.ears === 'phone' ? 'phone1' : 'room';
   const voiceId = makeVoiceId({ conns, firstEar, fns: voiceFns });
 
-  const slots = () => plan.passes.map((p) => p.slot);
+  // Every engine asked about an utterance, lowest rank first: the stand-in (enginePlanFrom's `fallback`), when the
+  // plan has one, below every chosen pass.
+  const asks = () => [...(plan.fallback ? [plan.fallback] : []), ...plan.passes];
+  const slots = () => asks().map((p) => p.slot);
   const connsOf = (slot) => [...conns.entries()].filter(([k]) => k.startsWith(`${slot}|`)).map(([, c]) => c);
   const anyReady = () => [...conns.entries()].some(([k, c]) => !k.startsWith('wake|') && c.ready());
 
+  function engineStatus(p) {
+    const cs = connsOf(p.slot);
+    const ready = cs.some((c) => c.ready());
+    const primary = conns.get(`${p.slot}|${firstEar}`) || cs[0];
+    return { slot: p.slot, name: p.name, state: ready ? 'ready' : (primary ? primary.state() : 'closed'),
+             ...(p.caution ? { caution: p.caution } : {}) };
+  }
   function status() {
-    const es = plan.passes.map((p) => {
-      const cs = connsOf(p.slot);
-      const ready = cs.some((c) => c.ready());
-      const primary = conns.get(`${p.slot}|${firstEar}`) || cs[0];
-      return { slot: p.slot, name: p.name, state: ready ? 'ready' : (primary ? primary.state() : 'closed'),
-               ...(p.caution ? { caution: p.caution } : {}) };
-    });
+    const es = plan.passes.map(engineStatus);
+    // The stand-in, apart from the chosen passes (they are what the person picked; `engines` stays exactly that).
+    // `used`: it is answering and no chosen pass is - what the screen is listening with right now.
+    const fb = plan.fallback ? engineStatus(plan.fallback) : null;
+    const fallback = fb ? { name: fb.name, state: fb.state, used: fb.state === 'ready' && !es.some((e) => e.state === 'ready') } : null;
     let state = 'stopped';
     if (running) {
       if (micState === 'failed') state = 'no-mic';
@@ -1069,7 +1133,7 @@ export function rankedRecognizer({
     const w = plan.wake ? conns.get(`wake|${firstEar}`) : null;
     return { state, engines: es, skipped: (plan.skipped || []).map((s) => ({ slot: s.slot, name: s.name, why: s.why })),
              ears: [...ears.keys()], wake: plan.wake ? { state: w ? w.state() : 'closed' } : null,
-             mics: micInfo ? { ...micInfo } : null };
+             mics: micInfo ? { ...micInfo } : null, fallback };
   }
   let lastSig = '';
   function tellStatus() {
@@ -1100,9 +1164,9 @@ export function rankedRecognizer({
     for (const ev of e.seg.push(frame, t)) {
       const uid = `${ear}:${ev.id}`;
       if (ev.type === 'begin') {
-        // Asked: this ear's connection to each engine that is up right now. One still connecting is
-        // not waited for - it will be there for the next utterance.
-        const asked = plan.passes.map((p) => conns.get(`${p.slot}|${ear}`)).filter((c) => c && c.ready());
+        // Asked: this ear's connection to each engine that is up right now (the stand-in too). One still
+        // connecting is not waited for - it will be there for the next utterance.
+        const asked = asks().map((p) => conns.get(`${p.slot}|${ear}`)).filter((c) => c && c.ready());
         e.open = { uid, asked };
         ranker.begin(ear, uid, ev.t, asked.map((x) => x.slot), ev.onset);
         for (const en of asked) en.begin(uid);
@@ -1129,7 +1193,7 @@ export function rankedRecognizer({
   // ---- the connections ------------------------------------------------------------------
   function connectEar(ear) {
     if (!running) return;
-    for (const p of plan.passes) {
+    for (const p of asks()) {
       const key = `${p.slot}|${ear}`;
       if (conns.has(key)) continue;
       const c = connectEngine({ slot: p.slot, name: p.name, url: p.url, key: p.key, WebSocketImpl, retryMs,
@@ -1322,6 +1386,7 @@ export function rankedRecognizer({
       running = true;
       ranker = createRanker({
         passes: slots(), sureAt: plan.sureAt, waitMs: plan.waitMs, pairMs, now, setTimer, clearTimer, actsOn,
+        standIns: plan.fallback ? [plan.fallback.slot] : [],
         onCommand: (text, detail) => { try { onText?.(text, detail); } catch (err) { console.error('speech: onText', err); } },
         onCaption: (c) => emit(captionFns, c),
         onRevision: (r) => emit(revisionFns, r),

@@ -27,7 +27,7 @@ import {
   createSegmenter, createRanker, connectEngine, rankedRecognizer, enginePlanFrom, levelDb, sameWords,
   SPEECH_PASS_FIELDS, ENGINE_DEFAULTS, SEGMENT_DEFAULTS, LOCAL_URL, PASS_CHOICES, RETRY_MS,
   MIC_CHOICES, findMic, micStatusHint,
-  addressRefusal, addressHost, skippedSays, cautionSays, pageProtocol,
+  addressRefusal, addressHost, skippedSays, cautionSays, pageProtocol, fallbackSays,
 } from '../speech_engines.js';
 import { createDownsampler, CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
 import { attachSpeech, SPEECH_ON_FIELDS, speechSwitchFrom, phraseControl, meansSomething, LISTENING_TOPIC } from '../input_speech.js';
@@ -83,6 +83,8 @@ function makeServers() {
       this.url = url; this.readyState = 0; this.sent = []; this.bufferedAmount = 0;
       sockets.push(this);
       const srv = servers[url];
+      // A computer switched off mid-restart: the connection neither opens nor fails (a TCP connect with no answer).
+      if (srv && srv.blackhole) return;
       queueMicrotask(() => {
         if (!srv || srv.down) { this.readyState = 3; this.onclose?.({ code: 1006 }); return; }
         this.readyState = 1; srv.conns.add(this); this.onopen?.();
@@ -741,6 +743,146 @@ try {
     sp.destroy();
     check('*** stopped: every socket closed, nothing scheduled ***', !rec.running && c.pending() === 0 && rec.status().state === 'stopped');
     subs.destroy();
+  }
+
+  // ======================================================================================
+  section('a chosen computer that is not answering never stops commands (2026-10-14, the bench)');
+  {
+    // The plan. The bench's own row, read from its browser's cache (read-only, 2026-10-14): the desktop FIRST, the
+    // same desktop again as the check (a duplicate), and "use my own voice model" (port 8796, which a Pi never runs).
+    const HTTPS = { pageProtocol: 'https:' };
+    const DESK = 'wss://desk.example.ts.net/speech';
+    const bench = enginePlanFrom({ speechEngine: 'remote1', speechPass2: 'remote1', speechRemote1Url: DESK,
+      speechRemote1Name: 'Desktop', voiceModelOn: true }, HTTPS);
+    check('*** the bench’s row: the desktop alone was the plan - now this screen’s own program stands in (127.0.0.1) ***',
+      bench.passes.map((p) => p.slot).join() === 'remote1' && bench.fallback?.slot === 'fallback'
+      && bench.fallback.url === LOCAL_URL && bench.fallback.remote === false, JSON.stringify(bench));
+    const own = enginePlanFrom({ voiceModelOn: true }, HTTPS);
+    check('...and with "this screen" being the own voice model (8796), the stock program (8797) stands in for it',
+      own.passes[0].own === true && own.passes[0].url !== LOCAL_URL && own.fallback?.url === LOCAL_URL, JSON.stringify(own));
+    check('no stand-in when a pass already IS this screen’s program (the default, and "this screen, then the desktop")',
+      enginePlanFrom({}, HTTPS).fallback === null
+      && enginePlanFrom({ speechPass2: 'remote1', speechRemote1Url: DESK }, HTTPS).fallback === null);
+    check('...nor when the person turned it off ("Stop listening until one of them answers")',
+      enginePlanFrom({ speechEngine: 'remote1', speechRemote1Url: DESK, speechFallback: 'off' }, HTTPS).fallback === null);
+    check('*** never a stand-in that is not this computer (speechLocalUrl pointed elsewhere): the sound stays here ***',
+      enginePlanFrom({ speechEngine: 'remote1', speechRemote1Url: DESK, speechLocalUrl: 'ws://10.0.0.9:8797/speech' }, { pageProtocol: 'http:' }).fallback === null
+      && enginePlanFrom({ speechEngine: 'remote1', speechRemote1Url: DESK, speechLocalUrl: 'ws://127.0.0.1:9000/speech' }, HTTPS).fallback?.url === 'ws://127.0.0.1:9000/speech');
+    check('the browser’s own voice typing has no stand-in', !enginePlanFrom({ speechEngine: 'browser' }, HTTPS).fallback);
+    check('a first computer with no address yet still has the stand-in (listening, and the menu says why the other is not used)',
+      (() => { const p = enginePlanFrom({ speechEngine: 'remote1' }, HTTPS); return p.passes.length === 0 && p.skipped[0]?.why === 'no address' && !!p.fallback; })());
+    const ff = SPEECH_PASS_FIELDS.find((f) => f.key === 'speechFallback');
+    check('the setting: on by default ("local"), advanced, both choices say what they do',
+      ENGINE_DEFAULTS.fallback === 'local' && ff?.default === 'local' && ff.level === 'advanced'
+      && ff.options.map((o) => o.value).join() === 'local,off' && /stays here/.test(ff.options[0].label));
+    check('the words: "Desk isn’t answering; using this screen’s own listening"',
+      fallbackSays(['Desk']) === 'Desk isn’t answering; using this screen’s own listening'
+      && fallbackSays(['Desk', 'GPU box']) === 'Desk and GPU box aren’t answering; using this screen’s own listening');
+
+    const QUIET_N = 25, TAIL_N = 60;
+    const sayOn = (rec, c, ms) => { let t = c.now(); for (let i = 0; i < QUIET_N; i++) { rec.feed('room', frame(QUIET, i), t); t += 20; }
+      for (let i = 0; i < ms / 20; i++) { rec.feed('room', frame(LOUD, i), t); t += 20; }
+      for (let i = 0; i < TAIL_N; i++) { rec.feed('room', frame(QUIET, i), t); t += 20; } c.advance(t - c.now()); };
+    const quiet = async () => { await settle(); await settle(); await settle(); };
+    const mk = (m, c, row) => {
+      const rec = rankedRecognizer({ plan: enginePlanFrom(row), WebSocketImpl: m.FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer,
+        now: c.now, capture: false });
+      const presses = [];
+      const sp = attachSpeech({ down: (d, ctl) => presses.push(ctl), up() {} }, { recognizer: rec, confirm: 'off', nearMiss: false,
+        now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer });
+      sp.start();
+      return { rec, sp, presses };
+    };
+    const D = 'ws://desk:8797/speech';
+
+    // 1. "This screen, then the desktop" (the order the caller described) - the desktop configured but down, three ways.
+    for (const how of ['refused', 'hanging', 'silent']) {
+      const m = makeServers();
+      const c = fakeClock();
+      const srvL = m.server(LOCAL_URL, { engine: 'vosk:small', answer: () => ({ text: 'computer please pause', confidence: 0.95, words: [] }) });
+      if (how === 'hanging') m.server(D, {}).blackhole = true;
+      if (how === 'silent') m.server(D, { engine: 'whisper:small.en', hold: true, answer: () => ({ text: 'computer please pause', confidence: 0.9 }) });
+      const { rec, sp, presses } = mk(m, c, { speechPass2: 'remote1', speechRemote1Url: D, speechRemote1Name: 'Desk' });
+      await quiet();
+      check(`[desktop ${how}] this screen answers: listening`, rec.status().state === 'listening'
+        && rec.status().engines[0].state === 'ready' && (how === 'silent' ? true : rec.status().engines[1].state !== 'ready'), JSON.stringify(rec.status()));
+      sayOn(rec, c, 600);
+      await quiet();
+      check(`*** [desktop ${how}] a sure "pause" acts the moment the utterance ends - no wait for the desktop ***`,
+        presses.length === 1 && presses[0] === phraseControl('pause'), presses.join());
+      // An unsure guess: the normal wait at most (waitMs), never forever.
+      srvL.answer = () => ({ text: 'computer please play', confidence: 0.5, words: [] });
+      sayOn(rec, c, 600);
+      await quiet();
+      const early = presses.length;
+      c.advance(ENGINE_DEFAULTS.waitMs);
+      await quiet();
+      check(`[desktop ${how}] an unsure "play" acts ${how === 'silent' ? 'after the usual wait (waitMs), the desktop asked but silent' : 'at once (the desktop was not asked)'}`,
+        presses.length === 2 && presses[1] === phraseControl('play') && early === (how === 'silent' ? 1 : 2), `${early} ${presses.join()}`);
+      sp.destroy();
+    }
+
+    // 2. The bench's own shape: the desktop is the FIRST pass and is down.
+    {
+      const m = makeServers();
+      const c = fakeClock();
+      const srvL = m.server(LOCAL_URL, { engine: 'vosk:small', answer: () => ({ text: 'computer please pause', confidence: 0.6, words: [] }) });
+      const { rec, sp, presses } = mk(m, c, { speechEngine: 'remote1', speechRemote1Url: D, speechRemote1Name: 'Desk' });
+      await quiet();
+      const st = rec.status();
+      check('*** [desktop first, down] still listening: the stand-in answers, and the status says it is what listens ***',
+        st.state === 'listening' && st.engines.length === 1 && st.engines[0].name === 'Desk' && st.engines[0].state !== 'ready'
+        && st.fallback?.state === 'ready' && st.fallback.used === true, JSON.stringify(st));
+      sayOn(rec, c, 600);
+      await quiet();
+      check('*** [desktop first, down] "pause" acts at once, even unsure (0.6): the stand-in was the only one asked ***',
+        presses.length === 1 && presses[0] === phraseControl('pause'), presses.join());
+      // The desktop comes back: it decides again, and the stand-in's guess never acts first, however sure.
+      const srvD = m.server(D, { engine: 'whisper:small.en', hold: true, answer: () => ({ text: 'computer please pause', confidence: 0.9, words: [] }) });
+      c.advance(RETRY_MS.at(-1)); await quiet(); await quiet();
+      check('[desktop back] the desktop is up, the stand-in no longer "used"', rec.status().engines[0].state === 'ready'
+        && rec.status().fallback.used === false, JSON.stringify(rec.status()));
+      srvL.answer = () => ({ text: 'computer please play', confidence: 0.99, words: [] });
+      sayOn(rec, c, 600);
+      await quiet();
+      check('*** [desktop back] the stand-in’s SURE "play" does not act while the desktop was asked ***', presses.length === 1, presses.join());
+      srvD.flush(); await quiet();
+      check('*** ...the desktop’s "pause" decides (the person’s choice), once ***',
+        presses.length === 2 && presses[1] === phraseControl('pause'), presses.join());
+      // Asleep with its connection still open: the stand-in acts after the usual wait.
+      sayOn(rec, c, 600);
+      await quiet();
+      const before = presses.length;
+      c.advance(ENGINE_DEFAULTS.waitMs); await quiet();
+      check('*** [desktop asleep, socket open] the stand-in’s "play" acts after the usual wait, not never ***',
+        before === 2 && presses.length === 3 && presses[2] === phraseControl('play'), `${before} ${presses.join()}`);
+      // The desktop drops mid-utterance: what the stand-in heard acts as soon as the desktop is known gone.
+      srvL.answer = () => ({ text: 'computer please pause', confidence: 0.9, words: [] });
+      sayOn(rec, c, 600);
+      await quiet();
+      srvD.kill(); await quiet();
+      check('[desktop drops mid-utterance] the stand-in’s answer acts when the desktop goes, without the wait',
+        presses.length === 4 && presses[3] === phraseControl('pause'), presses.join());
+      sp.destroy();
+      check('stopped: every socket closed (the stand-in’s too), nothing scheduled', c.pending() === 0 && rec.status().state === 'stopped');
+    }
+
+    // 3. Turned off: the old behaviour, said honestly.
+    {
+      const m = makeServers();
+      const c = fakeClock();
+      m.server(LOCAL_URL, { engine: 'vosk:small', answer: () => ({ text: 'computer please pause', confidence: 0.9, words: [] }) });
+      let gum = 0;
+      const rec = rankedRecognizer({ plan: enginePlanFrom({ speechEngine: 'remote1', speechRemote1Url: D, speechFallback: 'off' }),
+        WebSocketImpl: m.FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now,
+        getUserMedia: () => { gum += 1; return Promise.reject(new Error('no')); } });
+      rec.start(() => {});
+      await quiet();
+      check('[stand-in off] the desktop down: waiting, no microphone, no stand-in in the status',
+        rec.status().state === 'waiting' && gum === 0 && rec.status().fallback === null
+        && !rec.connections().some((x) => x.slot === 'fallback'), JSON.stringify(rec.status()));
+      rec.stop();
+    }
   }
 
   // ======================================================================================

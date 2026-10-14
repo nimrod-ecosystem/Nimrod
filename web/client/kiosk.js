@@ -142,7 +142,7 @@ import {
   createSubtitleLearning, idbLearnedStore, memoryLearnedStore, SUBTITLE_LEARNING_FIELDS, SUBTITLE_LEARNING_ACTIONS,
   dataFolder,
 } from './subtitle_learning.js';
-import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS, micStatusHint, skippedSays, cautionSays } from './speech_engines.js';
+import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS, micStatusHint, skippedSays, cautionSays, fallbackSays } from './speech_engines.js';
 import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
 import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
 import {
@@ -1094,9 +1094,14 @@ export async function mountKiosk(root, {
       // The menu's status row also names which computers answer and which were left out (and why), so a change
       // there repaints it too, not only a change of state (2026-10-11: a desktop going away while this screen
       // keeps listening left "the room’s sound goes to: Desk" on the menu).
+      // ANSWERING OR NOT, not each step between (2026-10-14): a computer that is away flips 'connecting' -> 'down' on
+      // every retry (every 30 s for good), and the menu says the same words for both - so repainting on that flip
+      // redrew an open menu twice a minute for nothing. The stand-in (speech_engines.js `fallback`) counts too.
       let shownSig = '';
-      const sigOf = (st) => { try { return JSON.stringify([(st?.engines || []).map((e) => [e.slot, e.state]),
-        (st?.skipped || []).map((s) => [s.slot, s.why]), st?.mics || null]); } catch { return ''; } };
+      const up = (s) => (s === 'ready' ? 'ready' : 'away');
+      const sigOf = (st) => { try { return JSON.stringify([(st?.engines || []).map((e) => [e.slot, up(e.state)]),
+        (st?.skipped || []).map((s) => [s.slot, s.why]), st?.mics || null,
+        st?.fallback ? [up(st.fallback.state), !!st.fallback.used] : null]); } catch { return ''; } };
       speechOffs.push(rec.onStatus((st) => {
         if (speechRec !== rec) return;
         const next = fromRec(st);
@@ -4251,6 +4256,9 @@ export async function mountKiosk(root, {
     speechRemote2Url: (r) => passUses(r).includes('remote2'),
     speechRemote2Key: (r) => passUses(r).includes('remote2'),
     speechLocalUrl: (r) => passUses(r).includes('local'),
+    // The stand-in (speech_engines.js `fallback`) only exists while no pass is this computer's own speech program:
+    // another computer first, or this person's own voice model in its place.
+    speechFallback: (r) => !usesBrowser(r) && (!passUses(r).includes('local') || r.voiceModelOn === true),
     speechSureAt: (r) => !usesBrowser(r),
     speechWaitMs: (r) => !usesBrowser(r),
     speechEndMs: (r) => !usesBrowser(r),
@@ -4286,13 +4294,22 @@ export async function mountKiosk(root, {
     const left = browser ? '' : [...(st?.skipped || []).map((s) => skippedSays(s).unused),
                                  ...(st?.engines || []).map(cautionSays)].filter(Boolean).join('; ');
     const hints = (...xs) => xs.filter(Boolean).join('; ');
+    // A CHOSEN COMPUTER NOT ANSWERING WHILE THIS SCREEN STILL LISTENS (2026-10-14): said, not left quiet - with this
+    // screen's own speech program listening (a chosen "this screen" pass, or speech_engines.js's stand-in), "Desktop
+    // isn't answering; using this screen's own listening"; with another chosen computer listening, just who is away.
+    const notAnswering = (st?.engines || []).filter((e) => e.state !== 'ready').map((e) => e.name);
+    const ownListening = !!st?.fallback?.used || ready.some((e) => e.slot === 'local');
+    const awayNow = !notAnswering.length ? ''
+      : ownListening ? fallbackSays(notAnswering) : `${notAnswering.join(', ')} ${notAnswering.length > 1 ? 'aren’t' : 'isn’t'} answering`;
+    // The stand-in is not answering either: one more thing a person at a screen that hears nothing should know.
+    const standInDown = st?.fallback && st.fallback.state !== 'ready' ? 'no speech program is answering on this computer either' : '';
     if (speechStatus === 'no-local') {
       if (st && !(st.engines || []).length && (st.skipped || []).length) {
         const says = skippedSays(st.skipped[0]);
-        return row(`Not listening: ${says.line}`, hints(says.hint, st.skipped[0].why === 'not secure' ? 'the room’s sound is not sent anywhere' : ''));
+        return row(`Not listening: ${says.line}`, hints(says.hint, st.skipped[0].why === 'not secure' ? 'the room’s sound is not sent anywhere' : '', standInDown));
       }
       if (firstPass && firstPass.slot !== 'local') {
-        return row(`Not listening: ${firstPass.name} is not answering`, hints('nothing is recorded until it answers', cautionSays(firstPass)));
+        return row(`Not listening: ${firstPass.name} is not answering`, hints('nothing is recorded until it answers', cautionSays(firstPass), standInDown));
       }
       return row('Not listening: no speech program is running on this computer', hints('the room’s sound is not sent anywhere', online));
     }
@@ -4300,9 +4317,9 @@ export async function mountKiosk(root, {
     if (speechStatus === 'no-mic') return row('Not listening: the microphone could not be opened');
     if (speechStatus === 'blocked') return row('Not listening yet: the browser is holding sound until the screen is touched');
     if (speechStatus === 'listening') {
-      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`, hints(goes, online, mics, left));
+      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`, hints(awayNow, goes, online, mics, left));
     }
-    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(goes, online, mics, left));
+    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(awayNow, goes, online, mics, left));
     return null;
   }
   // *** NO SPEECH PROGRAM ON THIS COMPUTER: SAY HOW TO GET ONE, AND OFFER THE NO-INSTALL CHOICE (DECISIONS 2026-10-07

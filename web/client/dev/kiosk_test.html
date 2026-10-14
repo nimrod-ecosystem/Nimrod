@@ -3595,6 +3595,25 @@ const toTab = (m, id) => {
       check('...a ws:// local address that is not answering: "a wss:// address is surer"',
         await settled(() => /Desk is not answering: .*wss:\/\/ address is surer/.test(item('voice-status')?.hint || ''), 4000),
         JSON.stringify(item('voice-status')));
+      // 2026-10-14 (the bench): a chosen computer down while this screen still listens is SAID, not left quiet.
+      rk.setStatus({ state: 'listening', engines: [{ slot: 'local', name: 'This screen', state: 'ready' },
+        { slot: 'remote1', name: 'Desk', state: 'down' }], skipped: [], ears: ['room'], fallback: null });
+      check('*** this screen first, Desk down: "Desk isn’t answering; using this screen’s own listening" ***',
+        await settled(() => rk3.speechStatus() === 'listening'
+          && /^Desk isn’t answering; using this screen’s own listening/.test(item('voice-status')?.hint || ''), 4000),
+        JSON.stringify(item('voice-status')));
+      rk.setStatus({ state: 'listening', engines: [{ slot: 'remote1', name: 'Desk', state: 'connecting' }], skipped: [], ears: ['room'],
+        fallback: { name: 'This screen', state: 'ready', used: true } });
+      check('*** Desk FIRST and down, the stand-in listening: still "Listening for ...", and it says why ***',
+        await settled(() => rk3.speechStatus() === 'listening' && /^Listening for/.test(item('voice-status')?.label || '')
+          && /^Desk isn’t answering; using this screen’s own listening/.test(item('voice-status')?.hint || ''), 4000),
+        JSON.stringify(item('voice-status')));
+      rk.setStatus({ state: 'waiting', engines: [{ slot: 'remote1', name: 'Desk', state: 'down' }], skipped: [], ears: [],
+        fallback: { name: 'This screen', state: 'down', used: false } });
+      check('...and both away: "Not listening: Desk is not answering", and this computer’s program is not answering either',
+        await settled(() => rk3.speechStatus() === 'no-local' && item('voice-status')?.label === 'Not listening: Desk is not answering'
+          && /no speech program is answering on this computer either/.test(item('voice-status')?.hint || ''), 4000),
+        JSON.stringify(item('voice-status')));
       rk.setStatus({ state: 'waiting', engines: [], skipped: [{ slot: 'remote1', name: 'Desk', why: 'not secure' }], ears: [] });
       check('...and when it was the only one: "Not listening: Desk’s address needs to start with wss://"',
         await settled(() => rk3.speechStatus() === 'no-local'
