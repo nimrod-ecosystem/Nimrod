@@ -168,8 +168,18 @@ registerModule(
       hideT = setTimeout(() => {
         hideT = null;
         if (!root || !inFull() || held) return;
-        // The keyboard is in the bar: somebody is using it. Their next key brings the timer back.
-        if (root.contains(doc()?.activeElement)) return;
+        // The keyboard is in the bar: somebody is using it, so it waits (the timer starts again) until they move on.
+        // FOCUS LEFT THERE BY A CLICK IS NOT THAT (2026-10-14, Mike: in full screen on the Modules page "the transport
+        // bar is always up"): pressing ⛶ with a mouse leaves focus on ⛶, and the bar used to wait on it for good. A
+        // mouse's focus is let go and the bar tucks, as on a dashboard; `:focus-visible` is the browser's own word for
+        // "the keyboard put focus here".
+        const a = doc()?.activeElement;
+        if (a && root.contains(a)) {
+          let keyboard = false;
+          try { keyboard = !!a.matches?.(':focus-visible'); } catch { keyboard = false; }
+          if (keyboard) { reveal(); return; }
+          try { a.blur?.(); } catch { /* gone */ }
+        }
         setTucked(true);
       }, ms);
     }

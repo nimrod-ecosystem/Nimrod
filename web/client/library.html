@@ -63,6 +63,7 @@
      the kiosk inside sizes itself to this box (kiosk.css `.k-embed`) and its bar sits along the bottom. */
   .mp-stage{position:relative;flex:1 1 auto;min-height:320px;border:1px solid var(--border);border-radius:14px;
     background:var(--surface);overflow:hidden}
+  .mp-stage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0}   /* "⛶ Full screen" (2026-10-14) */
   .mp-note{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.9rem;color:var(--text-muted);min-height:44px}
   .mp-btn{min-height:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--link);background:var(--link);
     color:var(--on-link);font:650 .92rem var(--font);cursor:pointer}
@@ -172,6 +173,9 @@
       <div class="mp-stage mod-box" id="stage"></div>
       <div class="mp-note">
         <span id="stagenote" role="status" aria-live="polite"></span>
+        <!-- 2026-10-14 (Mike: "you can't go fullscreen on it"): the module full screen, as a dashboard - the bar tucks
+             away and comes back on a press or a move near it (kiosk.css :fullscreen, transport_bar.js). Esc leaves. -->
+        <button type="button" class="mp-btn" id="fs-btn">⛶ Full screen</button>
         <button type="button" class="mp-btn" id="add-btn" hidden>Add it to my screen</button>
       </div>
     </div>
@@ -460,6 +464,15 @@ async function show(item) {
   }
 }
 
+// FULL SCREEN (2026-10-14, Mike: "you can't go fullscreen on it ... The fullscreen module should behave like a
+// dashboard"): the stage, the browser's own full screen. In full screen the bar floats and tucks away like a
+// dashboard's (kiosk.css `:fullscreen`, transport_bar.js); Esc, or ⛶ on the bar, leaves.
+$('fs-btn').addEventListener('click', () => {
+  const st = $('stage');
+  try { st.requestFullscreen?.()?.catch?.(() => {}); } catch { /* the browser said no: the page stays as it is */ }
+  try { $('fs-btn').blur(); } catch { /* gone */ }
+});
+document.addEventListener('fullscreenchange', () => { $('fs-btn').hidden = !!document.fullscreenElement; });
 // "Add it to my screen": the one press on this page that changes a screen. The person's first screen, made for
 // them if they have none (as Home does on a first visit), then the module, then the scene's choice on it.
 $('add-btn').addEventListener('click', async () => {
