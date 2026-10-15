@@ -1547,7 +1547,14 @@ registerModule(
         // and cut short whatever is actually on screen. The poll keeps ticking but
         // `reportProgress` returns on `!active`, so a hidden provider cannot beat the
         // backstop on behalf of the one that is actually on screen.
-        bus.subscribe('youtube/deactivate', () => { active = false; clearStall(); sayGone(); stallReport.gone(); });
+        bus.subscribe('youtube/deactivate', () => {
+          active = false; clearStall(); sayGone(); stallReport.gone();
+          // *** HIDDEN IN A LINEUP MEANS SILENT (2026-10-14, seen on her screen: a skipped video went on playing,
+          // sound and all, behind the next turn). *** A Lineup's own child (`directed`) is PAUSED when its turn ends;
+          // its next turn loads the next video anyway (`youtube/next`). Only a directed one: the topic is bare, and a
+          // YouTube panel of its own elsewhere on the screen must not stop because a Lineup moved on.
+          if (cfg.directed) { try { player?.pause?.(); } catch (e) { console.error('youtube: pause when hidden', e); } }
+        });
 
         // The heartbeat's own clock. Started here rather than on first play so that it is
         // running before anything can need it, and self-rescheduling so it uses the same

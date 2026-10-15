@@ -63,12 +63,12 @@ function fakeTimers(){
 }
 // stub youtube player: records loaded ids; fireEnded() triggers the module's onEnded
 function makeStubPlayer(){
-  let handlers = {}; const loaded = [];
+  let handlers = {}; const loaded = []; const paused = [];
   return {
-    loaded,
+    loaded, paused,
     current: () => loaded[loaded.length - 1] ?? null,
     fireEnded: () => handlers.onEnded?.(),
-    factory(el, h){ handlers = h || {}; return { load: (id) => loaded.push(id), stop(){}, destroy(){} }; },
+    factory(el, h){ handlers = h || {}; return { load: (id) => loaded.push(id), pause: () => paused.push(loaded[loaded.length - 1] ?? null), stop(){}, destroy(){} }; },
   };
 }
 const PLAYLIST = [
@@ -158,6 +158,10 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     await sleep(40);
     const afterTimeout = curProv(host);
     check('segment/done(timeout) advances again (no immediate repeat)', afterTimeout && afterTimeout !== afterEnded, `${afterEnded} -> ${afterTimeout}`);
+
+    // 2026-10-14 (seen on her screen): a video whose turn ended went on PLAYING, sound and all, behind the next turn.
+    check('*** the video whose turn ended is PAUSED when the Lineup moves on (no sound behind the next turn) ***',
+      stub.paused.length >= 1, `paused=${JSON.stringify(stub.paused)}`);
 
     // the BIG skip button skips the whole segment
     host.querySelector('[data-skip]').click();
