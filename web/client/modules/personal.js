@@ -782,7 +782,11 @@ registerModule(
         // actually on screen. `heartbeat` returns on `!active` for the same reason — a
         // hidden provider quieting the backstop for the visible one is the same bug wearing
         // the opposite sign.
-        bus.subscribe('personal/deactivate', () => { active = false; clearStall(); stallReport.gone(); });
+        bus.subscribe('personal/deactivate', () => {
+      active = false; clearStall(); stallReport.gone();
+      // Hidden in a Lineup means silent (2026-10-14; youtube.js has the same, and why only a directed one).
+      if (cfg.directed) { try { currentVideo?.pause?.(); } catch (e) { console.error('personal: pause when hidden', e); } }
+    });
 
         // The window that rate-limits the published heartbeat, on the injected clock.
         pollTimer = setTimer(progressTick, progressMs);
