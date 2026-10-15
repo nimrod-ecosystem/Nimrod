@@ -17,8 +17,13 @@
 import { mountModule } from './module.js';
 import { createBus } from './bus.js';
 import './modules/youtube.js';   // registers 'youtube'
+import { LINEUP_TYPE, LINEUP_MODULES, OFTEN_LABELS, OFTEN_DEFAULT, DAY_LABELS, cleanEntries } from './lineup.js';
 
-export const PRESET_KEYS = Object.freeze({ youtube: Object.freeze(['playlist', 'playlistId', 'schedule', 'shuffle']) });
+export const PRESET_KEYS = Object.freeze({
+  youtube: Object.freeze(['playlist', 'playlistId', 'schedule', 'shuffle']),
+  // A Lineup (row 2.87, lineup.js): its entries, one per line.
+  lineup: Object.freeze(['entries']),
+});
 export const PRESET_EDITOR_TYPES = Object.freeze(Object.keys(PRESET_KEYS));
 
 /** Only what a preset of `type` holds, from a draft. Pure. */
@@ -37,9 +42,10 @@ const quietPlayer = () => ({ load() {}, stop() {}, destroy() {}, cueList() {}, p
  * Mount `type`'s own settings form in `host`, editing `settings` (a preset's, or {} for a new one).
  * Returns { values() -> the preset's settings now, destroy() }. `onChange(values)` after each edit.
  */
-export function mountPresetEditor(host, { type = 'youtube', settings = {}, onChange = null, user = null } = {}) {
+export function mountPresetEditor(host, { type = 'youtube', settings = {}, onChange = null, user = null, presets = [] } = {}) {
   if (!host) throw new Error('mountPresetEditor: a host element is required');
   if (!PRESET_KEYS[type]) throw new Error(`mountPresetEditor: no preset form for "${type}"`);
+  if (type === LINEUP_TYPE) return mountLineupForm(host, { settings, onChange, presets });
   // `directed` + no autoAdvance: the module waits to be told to play, and nobody tells it.
   let draft = { ...presetSettingsFrom(type, settings), directed: true, autoAdvance: false };
   const subs = new Set();
@@ -89,5 +95,109 @@ function ensureStyle(doc) {
   s.textContent = `.preset-editor .youtube{position:static;height:auto;min-height:0;background:none}
 .preset-editor .youtube > :not([data-settings]){display:none !important}
 .preset-editor .youtube [data-settings]{position:static;inset:auto;max-height:none;overflow:visible;margin:0;box-shadow:none}`;
+  doc.head.append(s);
+}
+
+// ---- THE LINEUP'S FORM (row 2.87, Stage 1; lineup.js) ----------------------------------------------------------------
+// Mike: "do an add module button, so you can add a module to the lineup ... if it's between these hours and a weekday
+// play this." One row per entry - which module, which of its presets, which days, from / to (time pickers), how often,
+// and for Pictures how long a turn lasts - and "Add module" under them. A row reads as the sentence it is
+// (lineup.js `entryWords`); its parts are AND, two rows for one module are OR. Plain controls, so a switch or a
+// keyboard reaches every one.
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pad = (n) => String(n).padStart(2, '0');
+const toTime = (h) => (h == null ? '' : `${pad(Math.floor(h))}:${pad(Math.round((h % 1) * 60))}`);
+const fromTime = (v) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '')); return m ? Number(m[1]) + Number(m[2]) / 60 : null; };
+export const TURN_CHOICES = Object.freeze([
+  { value: 0, label: 'the Lineup\'s own setting' }, { value: 60000, label: '1 minute' }, { value: 120000, label: '2 minutes' },
+  { value: 300000, label: '5 minutes' }, { value: 600000, label: '10 minutes' },
+]);
+
+function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } = {}) {
+  let entries = cleanEntries(settings && settings.entries);
+  let seq = entries.length;
+  const presetsFor = (moduleId) => {
+    const m = LINEUP_MODULES.find((x) => x.id === moduleId);
+    return m && m.presets ? (presets || []).filter((p) => p && p.type === m.presets) : [];
+  };
+  const changed = () => { try { onChange?.({ entries: cleanEntries(entries) }); } catch (err) { console.error('lineup form', err); } };
+  function rowHtml(e, i) {
+    const opts = presetsFor(e.module);
+    return `<fieldset class="lu-row" data-entry="${i}">
+      <legend>Turn ${i + 1}</legend>
+      <label>Module <select data-f="module">${LINEUP_MODULES.map((m) => `<option value="${m.id}"${m.id === e.module ? ' selected' : ''}>${esc(m.label)}</option>`).join('')}</select></label>
+      ${opts.length || e.presetId ? `<label>Using <select data-f="presetId"><option value="">its own settings</option>${opts.map((p) => `<option value="${esc(p.id)}"${p.id === e.presetId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>` : ''}
+      <span class="lu-days" role="group" aria-label="Days">${DAY_LABELS.map((d, n) => `<label class="lu-day"><input type="checkbox" data-day="${n}"${!e.days.length || e.days.includes(n) ? ' checked' : ''}> ${d}</label>`).join('')}</span>
+      <label>From <input type="time" data-f="from" value="${toTime(e.from)}"></label>
+      <label>To <input type="time" data-f="to" value="${toTime(e.to)}"></label>
+      <label>How often <select data-f="often">${Object.entries(OFTEN_LABELS).map(([k, l]) => `<option value="${k}"${k === e.often ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      ${e.module === 'pictures' ? `<label>Each turn <select data-f="turnMs">${TURN_CHOICES.map((c) => `<option value="${c.value}"${c.value === e.turnMs ? ' selected' : ''}>${c.label}</option>`).join('')}</select></label>` : ''}
+      <button type="button" class="h-btn" data-remove-entry>Remove</button>
+    </fieldset>`;
+  }
+  function draw() {
+    host.innerHTML = `<div class="lu-form">
+      ${entries.length ? entries.map(rowHtml).join('') : '<p class="h-quiet" data-lu-empty>No turns yet. Add a module, then say when it plays.</p>'}
+      <p class="h-quiet">Leave From and To empty for all day. A turn plays only on the days ticked, between those times. Turns whose times overlap share the time, by how often.</p>
+      <button type="button" class="h-btn" data-add-entry>Add module</button>
+    </div>`;
+  }
+  const at = (el) => Number(el.closest('[data-entry]')?.getAttribute('data-entry'));
+  const onInput = (ev) => {
+    const t = ev.target;
+    const i = at(t);
+    if (!Number.isInteger(i) || !entries[i]) return;
+    const e = { ...entries[i] };
+    if (t.matches('[data-day]')) {
+      const ticked = [...host.querySelectorAll(`[data-entry="${i}"] [data-day]`)].filter((b) => b.checked).map((b) => Number(b.getAttribute('data-day')));
+      e.days = ticked.length === 7 ? [] : ticked;
+    } else {
+      const f = t.getAttribute('data-f');
+      if (f === 'from' || f === 'to') {
+        const h = fromTime(t.value);
+        const other = f === 'from' ? fromTime(host.querySelector(`[data-entry="${i}"] [data-f="to"]`)?.value) : fromTime(host.querySelector(`[data-entry="${i}"] [data-f="from"]`)?.value);
+        if (h != null && other != null) { e.from = f === 'from' ? h : other; e.to = f === 'to' ? h : other; } else { delete e.from; delete e.to; }
+      } else if (f === 'turnMs') e.turnMs = Number(t.value) || 0;
+      else if (f) e[f] = t.value;
+      if (f === 'module') { e.presetId = ''; entries[i] = e; draw(); changed(); return; }
+    }
+    entries[i] = e;
+    changed();
+  };
+  const onClick = (ev) => {
+    const b = ev.target.closest('button');
+    if (!b || !host.contains(b)) return;
+    if (b.matches('[data-add-entry]')) {
+      seq += 1;
+      entries = [...entries, { id: `e${Date.now().toString(36)}${seq}`, module: 'youtube', presetId: '', days: [], often: OFTEN_DEFAULT, turnMs: 0 }];
+      draw(); changed();
+      host.querySelector(`[data-entry="${entries.length - 1}"] select`)?.focus?.();
+    } else if (b.matches('[data-remove-entry]')) {
+      const i = at(b);
+      entries = entries.filter((_, n) => n !== i);
+      draw(); changed();
+    }
+  };
+  host.classList.add('preset-editor');
+  draw();
+  host.addEventListener('change', onInput);
+  host.addEventListener('click', onClick);
+  ensureLineupStyle(host.ownerDocument || document);
+  return {
+    values: () => ({ entries: cleanEntries(entries) }),
+    destroy: () => { host.removeEventListener('change', onInput); host.removeEventListener('click', onClick); host.replaceChildren(); host.classList.remove('preset-editor'); },
+  };
+}
+
+function ensureLineupStyle(doc) {
+  const id = 'preset-editor-lineup-style';
+  if (!doc || doc.getElementById(id)) return;
+  const s = doc.createElement('style');
+  s.id = id;
+  s.textContent = `.lu-form{display:flex;flex-direction:column;gap:.6em}
+.lu-row{display:flex;flex-wrap:wrap;gap:.5em .9em;align-items:center;border:1px solid var(--border,#888);border-radius:10px;padding:.5em .8em;margin:0}
+.lu-row legend{font-weight:700;padding:0 .3em}
+.lu-row label{display:inline-flex;gap:.35em;align-items:center}
+.lu-days{display:inline-flex;flex-wrap:wrap;gap:.2em .6em}`;
   doc.head.append(s);
 }

@@ -630,6 +630,43 @@ section('presets — create, list, edit and delete end to end');
   presets.destroy();
 }
 
+section('*** presets — a Lineup: Add module, days, hours, how often (row 2.87, Stage 1) ***');
+{
+  const presets = createPresetLibrary({ makeState: () => fakePresetState() });
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0), presets });
+  await p.refresh();
+  const typeSel = host.querySelector('[data-preset-type]');
+  check('the module dropdown offers a Lineup', [...typeSel.options].some((o) => o.value === 'lineup'));
+  typeSel.value = 'lineup'; typeSel.dispatchEvent(new Event('change', { bubbles: true }));
+  await settle();
+  const ed = (sel) => host.querySelector(`[data-preset-editor] ${sel}`);
+  check('*** a Lineup gets its own form, with an "Add module" button ***', !!ed('[data-add-entry]') && !!ed('[data-lu-empty]'));
+  ed('[data-add-entry]').click();
+  ed('[data-add-entry]').click();
+  await settle();
+  check('two presses, two turns', host.querySelectorAll('[data-preset-editor] [data-entry]').length === 2);
+  const row = (i, sel) => host.querySelector(`[data-preset-editor] [data-entry="${i}"] ${sel}`);
+  const set = (el, v) => { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); };
+  set(row(1, '[data-f="module"]'), 'pictures');
+  await settle();
+  set(row(0, '[data-f="from"]'), '07:00');
+  set(row(0, '[data-f="to"]'), '11:00');
+  for (const d of [0, 6]) { const b = row(0, `[data-day="${d}"]`); b.checked = false; b.dispatchEvent(new Event('change', { bubbles: true })); }
+  set(row(0, '[data-f="often"]'), 'often');
+  set(row(1, '[data-f="turnMs"]'), '300000');
+  check('the add-module press did not save anything by itself', presets.listPresets().length === 0);
+  host.querySelector('[data-preset-name]').value = 'Weekday mornings';
+  host.querySelector('[data-preset-save]').click();
+  await settle();
+  const saved = presets.listPresets('lineup')[0];
+  const es = saved?.settings?.entries || [];
+  check('*** saved as a Lineup preset: YouTube weekdays 07:00-11:00 often, then Pictures with 5-minute turns ***',
+    saved && es.length === 2 && es[0].module === 'youtube' && JSON.stringify(es[0].days) === '[1,2,3,4,5]' && es[0].from === 7 && es[0].to === 11
+      && es[0].often === 'often' && es[1].module === 'pictures' && es[1].turnMs === 300000, JSON.stringify(saved));
+  check('...and its card reads as sentences', /YouTube, Mon Tue Wed Thu Fri, 07:00-11:00, often/.test(text(host.querySelector('[data-preset-list]'))),
+    text(host.querySelector('[data-preset-list]')));
+}
+
 section('presets — the module itself keeps behaving with an injected library present');
 {
   // Not a regression test for youtube.js (that lives in youtube_test.html) — just proof that

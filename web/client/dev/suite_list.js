@@ -218,6 +218,8 @@ export const SUITES = [
   'notes_page',
   // Row 2.89 (2026-10-14): changing dashboard is the dashboards page's own load; the trail carried across it.
   'screen_switch',
+  // Row 2.87 (2026-10-14): a Lineup with rules - days, hours, how often - as a preset.
+  'lineup',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.
