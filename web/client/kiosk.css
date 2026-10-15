@@ -342,6 +342,14 @@
   .view > .v-dock-top{grid-row:1;position:relative}
   .view > .v-dock-bottom{grid-row:3;position:relative;display:flex;justify-content:center;
     padding:0 1vmin 1vmin;z-index:var(--z-transport)}
+  /* IN FULL SCREEN, A MODULE IS A DASHBOARD (2026-10-14, Mike on the Modules page: "There is still a little bar all the
+     way across the bottom going up to the top of the transport bar ... The fullscreen module should behave like a
+     dashboard"). The bottom dock floats over the stage instead of keeping a row, so a tucked bar leaves no strip; its
+     empty box takes no presses, only the bar does (view.js's reason). The same three rules Home uses when it fills the
+     window (modules.html `data-bar-over`). */
+  :fullscreen .view > .v-dock-bottom{position:absolute;left:0;right:0;bottom:0;grid-row:auto;pointer-events:none}
+  :fullscreen .view > .v-dock-bottom > .v-chrome{pointer-events:none;height:auto}
+  :fullscreen .view > .v-dock-bottom > .v-chrome > .tb-bar{pointer-events:auto}
   .view > .v-dock-left,.view > .v-dock-right{position:absolute;top:0;bottom:0;width:min(420px,60%);
     z-index:var(--z-transport);pointer-events:none}
   .view > .v-dock-left{left:0}
