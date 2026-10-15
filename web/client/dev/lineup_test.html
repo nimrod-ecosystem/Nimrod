@@ -18,7 +18,8 @@ different modules/playlists overlapping in different ways."</i> The rules, pure,
 <div id="results"></div>
 <div id="summary">running…</div>
 <script type="module">
-import { cleanEntry, cleanEntries, entryMatches, eligible, pickEntry, entryWords, OFTEN, LINEUP_MODULES, MAX_ENTRIES } from '../lineup.js';
+import { cleanEntry, cleanEntries, entryMatches, eligible, pickEntry, entryWords, OFTEN, LINEUP_MODULES, MAX_ENTRIES,
+  freshnessWeights } from '../lineup.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -90,6 +91,26 @@ try {
     const rand = () => { r = (r * 9301 + 49297) % 233280; return r / 233280; };
     for (let i = 0; i < 3000; i += 1) { const x = pickEntry(L, { date: at(10, 30), rand }); tally[x.id] = (tally[x.id] || 0) + 1; }
     check('over many draws, rarely is about a third of sometimes', tally.weekday > 250 && tally.weekday < 600 && tally.morning > 1000, J(tally));
+  }
+
+  section('*** Stage 2: what has played less lately comes up more ***');
+  {
+    const now = at(12).getTime();
+    const row = (id, minsAgo) => ({ created_at: new Date(now - minsAgo * 60000).toISOString(), data: { id } });
+    // Today: YouTube had 3 turns, Pictures 1; a Learning turn two days ago (outside the 24-hour window).
+    const rows = [row('youtube', 10), row('youtube', 50), row('youtube', 90), row('pictures', 30), row('educational', 60 * 48)];
+    const w = freshnessWeights(rows, { now });
+    check('*** a little (the default): YouTube (3 of 4 turns) weighs less than Pictures (1 of 4) ***',
+      Math.abs(w({ module: 'youtube' }) - 1 / 1.75) < 1e-9 && Math.abs(w({ module: 'pictures' }) - 1 / 1.25) < 1e-9,
+      `${w({ module: 'youtube' })} ${w({ module: 'pictures' })}`);
+    check('...a module with no turns lately keeps its whole weight; outside the window does not count',
+      w({ module: 'personal' }) === 1 && w({ module: 'educational' }) === 1);
+    check('"a lot" pulls harder; "off" not at all', freshnessWeights(rows, { now, strength: 'lot' })({ module: 'youtube' }) < w({ module: 'youtube' })
+      && freshnessWeights(rows, { now, strength: 'off' })({ module: 'youtube' }) === 1);
+    check('nothing played: every module weighs the same', freshnessWeights([], { now })({ module: 'youtube' }) === 1);
+    check('*** it changes the draw: with YouTube played a lot, Pictures wins a draw it would have lost ***',
+      pickEntry([{ id: 'y', module: 'youtube' }, { id: 'p', module: 'pictures' }], { date: at(12), rand: () => 0.45 }).id === 'y'
+        && pickEntry([{ id: 'y', module: 'youtube' }, { id: 'p', module: 'pictures' }], { date: at(12), rand: () => 0.45, weightOf: w }).id === 'p');
   }
 
   section('as words');

@@ -97,6 +97,45 @@ export function pickEntry(entries, { date = new Date(), rand = Math.random, last
   return pool[pool.length - 1];
 }
 
+// ---- STAGE 2: WHAT HAS PLAYED LESS LATELY COMES UP MORE (Mike: "Start tracking module plays, like how often Spotify or
+// Youtube has played recently and use that as an additional weight") ----------------------------------------------
+// Each turn is logged as a play of its module (director.js, source 'lineup', on this device). A module's SHARE of the
+// turns in the window lowers its weight: weight = 1 / (1 + strength x share). A module with no turns lately keeps 1.
+//   STRENGTH, a setting (`lineupFresh`): off 0, "a little" 1 (the default: a module that had every turn lately comes
+//   up half as often as one that had none - noticeable, never a lock-out), "a lot" 3 (a quarter as often).
+//   THE WINDOW: 24 hours. Argued, not yet a setting (Rule 1, said here and on Mike's list): a day is one cycle of the
+//   hours rules, so yesterday's evening does not weigh on this morning twice. FOR shorter: the mix reacts faster.
+//   AGAINST: an hour's window forgets a module that filled the whole morning. A setting the day anyone asks.
+export const FRESH_WINDOW_MS = 24 * 3600 * 1000;
+export const FRESH_STRENGTH = Object.freeze({ off: 0, little: 1, lot: 3 });
+export const FRESH_DEFAULT = 'little';
+export const FRESH_FIELD = Object.freeze({
+  key: 'lineupFresh', label: 'Give what has played less lately more turns', kind: 'choice', default: FRESH_DEFAULT, level: 'standard',
+  options: [{ value: 'off', label: 'No' }, { value: 'little', label: 'A little' }, { value: 'lot', label: 'A lot' }],
+});
+/**
+ * `weightOf(entry)` for pickEntry, from play rows ({ created_at, data: { id: <module> } }). Pure.
+ * `strength`: a FRESH_STRENGTH key or a number.
+ */
+export function freshnessWeights(rows, { now = Date.now(), windowMs = FRESH_WINDOW_MS, strength = FRESH_DEFAULT } = {}) {
+  const k = typeof strength === 'number' ? strength : (FRESH_STRENGTH[strength] ?? FRESH_STRENGTH[FRESH_DEFAULT]);
+  const since = Number(now) - windowMs;
+  const counts = {};
+  let total = 0;
+  for (const r of Array.isArray(rows) ? rows : []) {
+    const t = Date.parse(r && r.created_at);
+    const id = r && r.data && r.data.id;
+    if (!id || !Number.isFinite(t) || t < since || t > Number(now) + 60000) continue;
+    counts[id] = (counts[id] || 0) + 1;
+    total += 1;
+  }
+  return (entry) => {
+    if (!(k > 0) || !total) return 1;
+    const share = (counts[entry && entry.module] || 0) / total;
+    return 1 / (1 + k * share);
+  };
+}
+
 /** "YouTube, Morning playlist, Mon-Fri, 07:00-11:00, often": an entry as the sentence it is. */
 export function entryWords(entry, { presetName = () => '' } = {}) {
   const e = cleanEntry(entry) || {};

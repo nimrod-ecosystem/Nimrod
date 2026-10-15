@@ -26,7 +26,7 @@
 import { registerModule, mountModule, getManifest, extendCtx } from '../module.js';
 import './photos.js';   // registers 'photos', the Pictures turn's module (row 2.87)
 // A Lineup with rules (row 2.87, Stage 1; lineup.js): a saved Lineup preset decides each turn.
-import { cleanEntries, pickEntry, LINEUP_TYPE } from '../lineup.js';
+import { cleanEntries, pickEntry, LINEUP_TYPE, freshnessWeights, FRESH_DEFAULT, FRESH_FIELD } from '../lineup.js';
 import { createPresetLibrary } from '../presets.js';
 import { followPerson } from '../person_known.js';
 import { panelPlays } from '../plays.js';
@@ -121,7 +121,8 @@ registerModule(
     // the schedule comes from the platform, so without it there is nothing to direct.
   { type: 'director', title: 'Lineup',
     dependsOn: 'server', description: 'Takes turns between videos, pictures, personal messages and learning by time of day, so the screen changes by itself',
-    settings: [LINEUP_PRESET_FIELD, PICTURES_TURN_FIELD] },
+    // (row 2.87 Stage 2) "Give what has played less lately more turns" only matters with a saved Lineup.
+    settings: [LINEUP_PRESET_FIELD, { ...FRESH_FIELD, appliesWhen: (v) => !!(v && v.lineupPresetId) }, PICTURES_TURN_FIELD] },
   (ctx) => {
     const { mount, bus, state, user, profileId } = ctx;
     const rootBus = ctx.rootBus || bus;                 // children mount here (re-scoped per child)
@@ -178,7 +179,12 @@ registerModule(
     }
     function drawOnce(entries) {
       const date = new Date(io.now ? io.now() : Date.now());
-      const e = pickEntry(entries, { date, rand: io.rand || Math.random, last: lastEntry });
+      // Stage 2: a module that has had fewer of this Lineup's turns lately comes up more (lineup.js freshnessWeights).
+      let weightOf = () => 1;
+      try {
+        weightOf = freshnessWeights(turnPlays.rows?.() || [], { now: date.getTime(), strength: (state.get?.() || {}).lineupFresh || FRESH_DEFAULT });
+      } catch { /* no plays to read: every module weighs the same */ }
+      const e = pickEntry(entries, { date, rand: io.rand || Math.random, last: lastEntry, weightOf });
       // Nothing holds now (a gap in the hours): the turn on screen carries on (the plan, question 1).
       if (!e) { if (current) showProvider(current); else rootBus.publish('youtube/activate'); return true; }
       lastEntry = e.id;
