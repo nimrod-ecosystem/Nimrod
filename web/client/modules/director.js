@@ -25,6 +25,11 @@
 
 import { registerModule, mountModule, getManifest, extendCtx } from '../module.js';
 import './photos.js';   // registers 'photos', the Pictures turn's module (row 2.87)
+// A Lineup with rules (row 2.87, Stage 1; lineup.js): a saved Lineup preset decides each turn.
+import { cleanEntries, pickEntry, LINEUP_TYPE } from '../lineup.js';
+import { createPresetLibrary } from '../presets.js';
+import { followPerson } from '../person_known.js';
+import { panelPlays } from '../plays.js';
 import { createMachine } from '../statemachine.js';
 import { createWatchdog } from '../watchdog.js';
 import { HELD_BEGIN, HELD_END } from '../held.js';
@@ -60,6 +65,20 @@ export const PICTURES_TURN_FIELD = Object.freeze({
 });
 // A pictures turn says it is alive this often, well inside the backstop's 3-minute silence (segmentSilenceMs).
 export const TURN_BEAT_MS = 30000;
+
+// *** A SAVED LINEUP (row 2.87, Stage 1; lineup.js and the plan). *** The panel's choice of one of the person's Lineup
+// presets (made on the Media page). Chosen: each turn is drawn from its entries - module, preset, days, hours, how often
+// - and the time-of-day rotation above stands aside. None (the default): exactly what this panel did before.
+/** The machine's config with every unguarded `segment/done` transition guarded by `noLineup` (row 2.87). Pure. */
+export function withLineupGuard(cfg) {
+  const on = { ...((cfg && cfg.on) || {}) };
+  if (Array.isArray(on['segment/done'])) on['segment/done'] = on['segment/done'].map((t) => (t && !t.when ? { ...t, when: 'noLineup' } : t));
+  return { ...cfg, on };
+}
+export const LINEUP_PRESET_FIELD = Object.freeze({
+  key: 'lineupPresetId', label: 'Use a saved Lineup', kind: 'choice', default: '', level: 'standard',
+  emptyLabel: 'No saved Lineup. Turns by time of day, as before',
+});
 
 // *** THE BAR NAMES WHAT IS ON SCREEN (row 2.87, Mike 2026-10-14 via chat CA item 3: the bar said "Lineup" on his
 // YouTube dashboard). *** A Lineup says what it is showing: `titleNow()` is "<what is showing> (Lineup)" - "YouTube
@@ -102,7 +121,7 @@ registerModule(
     // the schedule comes from the platform, so without it there is nothing to direct.
   { type: 'director', title: 'Lineup',
     dependsOn: 'server', description: 'Takes turns between videos, pictures, personal messages and learning by time of day, so the screen changes by itself',
-    settings: [PICTURES_TURN_FIELD] },
+    settings: [LINEUP_PRESET_FIELD, PICTURES_TURN_FIELD] },
   (ctx) => {
     const { mount, bus, state, user, profileId } = ctx;
     const rootBus = ctx.rootBus || bus;                 // children mount here (re-scoped per child)
@@ -123,6 +142,74 @@ registerModule(
     const slots = {};         // provider id -> slot element
     let phTimer = null;       // the active placeholder's auto-finish timer
     let torn = false;         // set first thing in destroy(); see the HELD_END handler
+
+    // ---- A SAVED LINEUP (row 2.87, Stage 1) -------------------------------------------------------------------------
+    // The person's presets (presets.js), followed as the screen learns who it is for (youtube.js does the same);
+    // `knownLineups` feeds the synchronous menu. With a Lineup chosen and holding entries, each turn is drawn by
+    // lineup.js `pickEntry` and the machine's own pick stands aside (its transitions are guarded by `noLineup`).
+    let lineupLib = null;
+    let knownLineups = [];
+    let lastEntry = null;         // the entry on now, so one just played is not drawn twice in a row
+    let offFollow = null;
+    // Each turn is logged as a play of its module (source 'lineup'), on this device: Stage 2's freshness reads it.
+    const turnPlays = panelPlays(ctx, 'lineup');
+    function lineupEntries() {
+      const id = (state.get?.() || {}).lineupPresetId;
+      if (!id || !lineupLib) return null;
+      const p = lineupLib.getPreset(id);
+      const list = p && p.type === LINEUP_TYPE ? cleanEntries(p.settings?.entries) : [];
+      return list.length ? list : null;
+    }
+    const lineupActive = () => !!lineupEntries();
+    /** The next turn from the saved Lineup. False when none is in use (the machine's rotation then runs). */
+    // A turn with nothing to show hands back AT ONCE (`segment/done` from inside its activate), so a Lineup whose every
+    // entry is empty would draw again and again in one breath. Past a few in a row, the next draw waits a moment.
+    let drawDepth = 0;
+    let drawWait = null;
+    function lineupNext() {
+      const entries = lineupEntries();
+      if (!entries || torn) return false;
+      if (drawDepth >= 4) {
+        if (drawWait == null) drawWait = setTimer(() => { drawWait = null; lineupNext(); }, 5000);
+        return true;
+      }
+      drawDepth += 1;
+      try { return drawOnce(entries); } finally { drawDepth -= 1; }
+    }
+    function drawOnce(entries) {
+      const date = new Date(io.now ? io.now() : Date.now());
+      const e = pickEntry(entries, { date, rand: io.rand || Math.random, last: lastEntry });
+      // Nothing holds now (a gap in the hours): the turn on screen carries on (the plan, question 1).
+      if (!e) { if (current) showProvider(current); else rootBus.publish('youtube/activate'); return true; }
+      lastEntry = e.id;
+      try {
+        const a = adapters[e.module];
+        const x = a?.inner?.();
+        // A YouTube entry plays from the preset it names ('' = this Lineup's own YouTube settings).
+        if (e.module === 'youtube' && x?.state && ((x.state.get() || {}).presetId || '') !== e.presetId) x.state.set({ presetId: e.presetId });
+        a?.setTurnMs?.(e.turnMs || 0);
+      } catch (err) { console.error('director: lineup entry', err); }
+      try { turnPlays.played(e.module); } catch { /* not load-bearing */ }
+      rootBus.publish(`${e.module}/activate`);
+      return true;
+    }
+    function useLineups(pid) {
+      if (torn) return;
+      try { lineupLib?.destroy(); } catch { /* gone */ }
+      knownLineups = [];
+      lineupLib = (pid && ctx.makePersonState)
+        ? createPresetLibrary({ makeState: (key, opts) => ctx.makePersonState(pid, key, opts) }) : null;
+      if (!lineupLib) return;
+      const lib = lineupLib;
+      const refresh = () => {
+        if (lib !== lineupLib || torn) return;
+        knownLineups = lib.listPresets(LINEUP_TYPE);
+        // A Lineup chosen before its presets had loaded: its first turn now, rather than after the current one ends.
+        if (lastEntry == null && lineupActive()) lineupNext();
+      };
+      lib.load().then(refresh).catch((err) => console.error('director: lineups load', err));
+      lib.subscribe(refresh);
+    }
 
     const stage = () => mount.querySelector('[data-stage]');
     function setLabel(id) {
@@ -199,7 +286,9 @@ registerModule(
         if (endTimer != null) { clearTimer(endTimer); endTimer = null; }
         if (beatTimer != null) { clearTimer(beatTimer); beatTimer = null; }
       };
+      let entryTurnMs = 0;          // a Lineup entry's own turn length (row 2.87), else the panel's setting
       const turnMs = () => {
+        if (entryTurnMs >= 10000) return entryTurnMs;
         const v = Number((state.get() || {}).picturesTurnMs);
         return Number.isFinite(v) && v >= 10000 ? v : PICTURES_TURN_MS;
       };
@@ -237,6 +326,7 @@ registerModule(
         },
         deactivate() { stopTimers(); rootBus.publish(addr('pause')); try { child?.onHide?.(); } catch { /* noop */ } },
         inner: () => (child && cState ? { type: p.inner, instance: child, state: cState } : null),
+        setTurnMs: (ms) => { entryTurnMs = Number(ms) || 0; },
         flush() { try { cState?.flush?.(); } catch { /* noop */ } },
         resize() { try { child?.onResize?.(); } catch { /* noop */ } },
         destroy() {
@@ -308,6 +398,9 @@ registerModule(
             // SOUNDS like, so it wants its own bench test rather than riding in on this one.
             output: ctx.output,
             get personId() { return ctx.personId; },
+            // (row 2.87) the person's own store, so a YouTube turn can play from a preset a Lineup entry names.
+            makePersonState: ctx.makePersonState,
+            personKnown: ctx.personKnown,
             plays: ctx.plays,
             playsPanel: `${instanceId}-${p.id}`,
           });
@@ -408,6 +501,8 @@ registerModule(
                         wallpaperMounted: !!wallpaper }),
       // What the screen calls this panel right now (row 2.87): "YouTube (Lineup)", or "Lineup" before the first turn.
       titleNow: () => lineupTitle(current),
+      // LIVE OPTIONS for "Use a saved Lineup": this person's Lineup presets (youtube.js's presetId pattern).
+      settingsChoices: () => ({ lineupPresetId: knownLineups.map((p) => ({ value: p.id, label: p.name })) }),
       // The module showing now, for the screen's menu to offer its own settings under the Lineup's (row 2.87, Mike:
       // YouTube's own boxes and time pickers are the ones he uses): `{ type, title, manifest, instance, state }`, or null
       // (a turn not built yet, or still mounting). Its settings are its own row, as when it is its own panel.
@@ -485,6 +580,12 @@ registerModule(
         bus.subscribe('segment/progress', () => segmentWatch?.beat());
         // A finished segment is not a stalled one; the next activate re-arms it.
         bus.subscribe('segment/done', () => segmentWatch?.disarm());
+        // (row 2.87) A saved Lineup draws the next turn (the machine's own pick is guarded off while it does).
+        bus.subscribe('segment/done', () => { if (lineupActive()) lineupNext(); });
+        offFollow = followPerson(ctx, (pid) => useLineups(pid));
+        // A Lineup chosen in the menu: its first turn now.
+        try { state.subscribe?.(() => { if (lineupActive() && lastEntry == null) lineupNext(); if (!lineupActive()) lastEntry = null; }); }
+        catch { /* a host without subscribe: the next turn picks it up */ }
 
         const cfg = saved.config || DIRECTOR_CONFIG;
 
@@ -581,8 +682,12 @@ registerModule(
           // And the machine is the third one. `destroy()` calls `machine?.stop()`; starting a
           // machine after that ran leaves its clock ticking against a screen that is gone.
           if (torn) { try { wallpaper?.destroy(); } catch { /* noop */ } wallpaper = null; return; }
-          machine = createMachine(cfg, { bus, setTimer, clearTimer, now: io.now, rand: io.rand });
+          // (row 2.87) While a saved Lineup is in use, the machine's own pick stands aside: every segment/done
+          // transition without a guard of its own gets `noLineup`, and lineupNext (below) draws the turn instead.
+          machine = createMachine(withLineupGuard(cfg), { bus, setTimer, clearTimer, now: io.now, rand: io.rand,
+            guards: { noLineup: () => !lineupActive() } });
           machine.start();               // enters 'youtube' -> youtube/activate -> showProvider('youtube')
+          if (lineupActive()) lineupNext();   // a Lineup already loaded: its own first turn
         })().catch((e) => console.error('director init', e));
       },
       onResize() { for (const id of Object.keys(adapters)) adapters[id].resize?.(); wallpaper?.onResize?.(); },
@@ -594,6 +699,10 @@ registerModule(
       destroy() {
         torn = true;                 // before anything else — see the HELD_END handler
         segmentWatch?.disarm();
+        try { offFollow?.(); } catch { /* gone */ }
+        if (drawWait != null) { clearTimer(drawWait); drawWait = null; }
+        try { lineupLib?.destroy(); } catch { /* gone */ } lineupLib = null;
+        try { turnPlays.destroy?.(); } catch { /* gone */ }
         try { machine?.stop(); } catch { /* noop */ }
         if (phTimer != null) { clearTimer(phTimer); phTimer = null; }
         for (const id of Object.keys(adapters)) { try { adapters[id].destroy?.(); } catch { /* noop */ } }

@@ -97,6 +97,7 @@ import { HELPER_PAGE, HELPER_DOWNLOADS } from './nimrod_helper.js';
 // the SAME module instance, not a second `registerModule('youtube', …)` call.
 // Row 2.22 (2026-10-14): a preset is edited with the module's own settings form, not typed lines.
 import { mountPresetEditor } from './preset_editor.js';
+import { entryWords } from './lineup.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -277,6 +278,7 @@ export function mountMedia(root, {
           <label class="h-preset-type" style="flex:1 1 100%;display:flex;align-items:center;gap:.5em">For
             <select data-preset-type aria-label="which module this preset is for">
               <option value="youtube">YouTube</option>
+              <option value="lineup">Lineup (turns between modules, by day and time)</option>
             </select>
           </label>
           <!-- Row 2.22 (Mike, 2026-10-14): "replace the one on the media page with the one from the Youtube settings".
@@ -474,6 +476,12 @@ export function mountMedia(root, {
 
   function summarizePreset(p) {
     const s = p.settings || {};
+    // (row 2.87) A Lineup: its turns, as the sentences they are.
+    if (p.type === 'lineup') {
+      const list = Array.isArray(s.entries) ? s.entries : [];
+      const name = (id) => presetLib?.getPreset(id)?.name || '';
+      return list.length ? list.map((e) => entryWords(e, { presetName: name })).join(' · ') : 'no turns yet';
+    }
     const n = Array.isArray(s.playlist) ? s.playlist.length : 0;
     const sched = Array.isArray(s.schedule) ? s.schedule.length : 0;
     const bits = [`${n} video${n === 1 ? '' : 's'}`];
@@ -523,7 +531,10 @@ export function mountMedia(root, {
     presetEditor = null;
     const host = el('[data-preset-editor]');
     if (!host) return;
-    try { presetEditor = mountPresetEditor(host, { type, settings }); }
+    // (row 2.87) A Lineup's rows offer each module's own presets: the person's saved ones, read now.
+    let presets = [];
+    try { presets = presetLib ? presetLib.listPresets() : []; } catch { presets = []; }
+    try { presetEditor = mountPresetEditor(host, { type, settings, presets }); }
     catch (err) { console.error('media: preset editor', err); host.textContent = 'The settings form could not be shown.'; }
   }
 

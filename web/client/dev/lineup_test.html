@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lineup — a Lineup with rules: which module takes the next turn</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>lineup — a Lineup with rules: which module takes the next turn</h1>
+<p>Row 2.87, Stage 1 (Mike, 2026-10-14): <i>"if it's between these hours and a weekday play this. Then you could have
+different modules/playlists overlapping in different ways."</i> The rules, pure, with his own example.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { cleanEntry, cleanEntries, entryMatches, eligible, pickEntry, entryWords, OFTEN, LINEUP_MODULES, MAX_ENTRIES } from '../lineup.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+// 2026-10-13 is a Tuesday.
+const at = (h, m = 0, day = 13) => new Date(2026, 9, day, h, m, 0);
+const seq = (...xs) => { let i = 0; return () => xs[i++ % xs.length]; };
+
+try {
+  section('an entry as kept');
+  check('an unknown module is no entry', cleanEntry({ module: 'spotify' }) === null && cleanEntry(null) === null);
+  const e = cleanEntry({ id: 'm', module: 'youtube', presetId: 'p1', days: [1, 2, 2, 9, 'x'], from: 7, to: 11, often: 'often' });
+  check('days cleaned (no repeats, nothing outside 0-6), hours kept, how often kept', J(e.days) === J([1, 2]) && e.from === 7 && e.to === 11 && e.often === 'often', J(e));
+  check('all seven days is "every day" (empty)', J(cleanEntry({ module: 'pictures', days: [0, 1, 2, 3, 4, 5, 6] }).days) === '[]');
+  check('one hour missing is "all day" (no half-set hours)', cleanEntry({ module: 'pictures', from: 7 }).from === undefined);
+  check('how often defaults to sometimes; a short turn length is the Lineup\'s own (0)',
+    cleanEntry({ module: 'pictures', often: 'loads', turnMs: 500 }).often === 'sometimes' && cleanEntry({ module: 'pictures', turnMs: 500 }).turnMs === 0);
+  check(`at most ${MAX_ENTRIES} entries, ids never repeat`, cleanEntries(Array.from({ length: 80 }, (_, i) => ({ module: 'pictures' }))).length === MAX_ENTRIES
+    && cleanEntries([{ id: 'a', module: 'youtube' }, { id: 'a', module: 'pictures' }]).length === 1);
+  check('the modules a turn can be today', J(LINEUP_MODULES.map((m) => m.id)) === J(['youtube', 'pictures', 'personal', 'educational']));
+
+  section('days and hours');
+  const weekday = { module: 'youtube', days: [1, 2, 3, 4, 5], from: 9, to: 17 };
+  check('*** a weekday 09:00-17:00 entry holds on Tuesday at 10:30 ***', entryMatches(weekday, at(10, 30)));
+  check('...not at 17:00 (the end is not included), not at 08:59', !entryMatches(weekday, at(17)) && !entryMatches(weekday, at(8, 59)));
+  check('...not on Sunday', !entryMatches(weekday, at(10, 30, 18)));
+  const night = { module: 'youtube', from: 23, to: 7 };
+  check('*** 23:00-07:00 runs past midnight ***', entryMatches(night, at(23, 30)) && entryMatches(night, at(3)) && !entryMatches(night, at(12)));
+  check('no hours: all day', entryMatches({ module: 'pictures' }, at(4)));
+
+  section('*** Mike\'s example: four time-of-day playlists, one overlapping on weekdays, learning 10-12 ***');
+  const L = [
+    { id: 'morning', module: 'youtube', presetId: 'Morning', from: 7, to: 11 },
+    { id: 'daytime', module: 'youtube', presetId: 'Daytime', from: 11, to: 18 },
+    { id: 'prime', module: 'youtube', presetId: 'Primetime', from: 18, to: 23 },
+    { id: 'sleepy', module: 'youtube', presetId: 'Sleepytime', from: 23, to: 7 },
+    { id: 'weekday', module: 'youtube', presetId: 'Extra', days: [1, 2, 3, 4, 5], from: 9, to: 17, often: 'rarely' },
+    { id: 'learn', module: 'educational', from: 10, to: 12 },
+  ];
+  check('Tuesday 10:30: Morning, the weekday extra and learning are in the draw', J(eligible(L, at(10, 30)).map((x) => x.id)) === J(['morning', 'weekday', 'learn']));
+  check('Tuesday 20:00: Primetime alone', J(eligible(L, at(20)).map((x) => x.id)) === J(['prime']));
+  check('Sunday 10:30: no weekday extra', J(eligible(L, at(10, 30, 18)).map((x) => x.id)) === J(['morning', 'learn']));
+  check('03:00: Sleepytime', J(eligible(L, at(3)).map((x) => x.id)) === J(['sleepy']));
+
+  section('the draw');
+  // Weights at 10:30 Tue: morning 3 (sometimes), weekday 1 (rarely), learn 3 -> total 7.
+  check('*** weighted by how often: the draw lands where the weights say ***',
+    pickEntry(L, { date: at(10, 30), rand: () => 0 }).id === 'morning'
+      && pickEntry(L, { date: at(10, 30), rand: () => 3.5 / 7 }).id === 'weekday'
+      && pickEntry(L, { date: at(10, 30), rand: () => 0.99 }).id === 'learn');
+  check('often is 9, sometimes 3, rarely 1', OFTEN.often === 9 && OFTEN.sometimes === 3 && OFTEN.rarely === 1);
+  check('*** the one just played is not drawn twice in a row when another holds ***',
+    pickEntry(L, { date: at(10, 30), rand: () => 0, last: 'morning' }).id !== 'morning');
+  check('...but when it is the only one, it plays again', pickEntry(L, { date: at(20), last: 'prime' }).id === 'prime');
+  check('*** nothing holds: null (the Lineup keeps its turn going) ***', pickEntry([{ module: 'youtube', from: 1, to: 2 }], { date: at(12) }) === null);
+  check('a weight of its own (Stage 2\'s freshness) counts', pickEntry(L, { date: at(10, 30), rand: () => 0,
+    weightOf: (x) => (x.id === 'morning' ? 0 : 1) }).id === 'weekday');
+  {
+    const tally = {};
+    let r = 0;
+    const rand = () => { r = (r * 9301 + 49297) % 233280; return r / 233280; };
+    for (let i = 0; i < 3000; i += 1) { const x = pickEntry(L, { date: at(10, 30), rand }); tally[x.id] = (tally[x.id] || 0) + 1; }
+    check('over many draws, rarely is about a third of sometimes', tally.weekday > 250 && tally.weekday < 600 && tally.morning > 1000, J(tally));
+  }
+
+  section('as words');
+  check('*** an entry reads as the sentence it is ***',
+    entryWords({ module: 'youtube', presetId: 'p', days: [1, 2, 3, 4, 5], from: 7, to: 11.5, often: 'often' }, { presetName: () => 'Morning playlist' })
+      === 'YouTube, Morning playlist, Mon Tue Wed Thu Fri, 07:00-11:30, often',
+    entryWords({ module: 'youtube', presetId: 'p', days: [1, 2, 3, 4, 5], from: 7, to: 11.5, often: 'often' }, { presetName: () => 'Morning playlist' }));
+  check('every day, all day', entryWords({ module: 'pictures' }) === 'Pictures, every day, all day, sometimes');
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

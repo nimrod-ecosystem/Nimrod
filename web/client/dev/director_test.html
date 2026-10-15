@@ -35,7 +35,7 @@ import { mulberry32 } from '../rng.js';
 import '../modules/youtube.js';      // registers 'youtube'
 import '../modules/personal.js';     // registers 'personal' (a real provider now)
 import '../modules/educational.js';  // registers 'educational' (a real provider now)
-import { PANEL_TITLE_TOPIC, lineupTitle, LINEUP_TITLE, PICTURES_TURN_FIELD, PICTURES_TURN_MS } from '../modules/director.js';     // registers 'director'
+import { PANEL_TITLE_TOPIC, lineupTitle, LINEUP_TITLE, PICTURES_TURN_FIELD, PICTURES_TURN_MS, withLineupGuard, LINEUP_PRESET_FIELD } from '../modules/director.js';     // registers 'director'
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'director-test-user';
@@ -79,7 +79,7 @@ const PLAYLIST = [
 const curProv = (host) => host.querySelector('.d-slot:not([hidden])')?.dataset.prov ?? null;
 const isPlaceholder = (host) => !!host.querySelector('.d-slot:not([hidden]) .d-ph');
 
-async function mountDirector({ host, hour, seed, timers, stub }){
+async function mountDirector({ host, hour, seed, timers, stub, extra = {}, preState = null }){
   const profiles = createProfilesClient({ user: USER });
   const profile = await profiles.create('TEST-director-' + hour + '-' + seed);
   const mod = await profiles.addModule(profile.id, 'director');
@@ -91,7 +91,9 @@ async function mountDirector({ host, hour, seed, timers, stub }){
   const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
   const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
   await state.load(); await events.load();
+  if (preState) { state.set(preState); await state.flush(); }
   const instance = mountModule('director', {
+    ...extra,
     mount: host, bus, state, events, user: USER, profileId: profile.id,
     rootBus: bus, instanceId: mod.id,
     makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
@@ -229,6 +231,37 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     check('morning: youtube still advances each cycle', stub2.loaded.length >= 2, `loads=${stub2.loaded.length}`);
     d2.instance.destroy();
     check('second instance destroys cleanly', true);
+
+    // ── ROW 2.87, STAGE 1: A SAVED LINEUP DECIDES EACH TURN ─────────────────────────────────────────────────
+    {
+      check('withLineupGuard: the machine\'s own pick is guarded by noLineup, a guard of its own is kept',
+        withLineupGuard({ on: { 'segment/done': [{ pick: { from: ['a'] } }, { when: 'x', to: 'b' }] } }).on['segment/done'][0].when === 'noLineup'
+          && withLineupGuard({ on: { 'segment/done': [{ when: 'x', to: 'b' }] } }).on['segment/done'][0].when === 'x');
+      check('the Lineup panel offers "Use a saved Lineup", empty by default', LINEUP_PRESET_FIELD.key === 'lineupPresetId' && LINEUP_PRESET_FIELD.default === '');
+      const doc = { presets: [{ id: 'L1', type: 'lineup', name: 'Pictures all day',
+        settings: { entries: [{ id: 'pics', module: 'pictures', often: 'often', turnMs: 60000 }] } }] };
+      const subs = new Set();
+      const handle = { get: () => doc, set() {}, load: async () => doc, subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+        flush: async () => {}, startPolling() {}, destroy() {} };
+      const host3 = document.createElement('div');
+      host3.style.cssText = 'width:320px;height:200px';
+      document.body.append(host3);
+      const T3 = fakeTimers();
+      const stub3 = makeStubPlayer();
+      const d3 = await mountDirector({ host: host3, hour: 12, seed: 7, timers: T3, stub: stub3,
+        extra: { personId: 'p1', makePersonState: (pid, key) => (pid === 'p1' && key === 'presets' ? handle : null) },
+        preState: { lineupPresetId: 'L1' } });
+      await sleep(80);
+      check('*** with a saved Lineup of "Pictures, all day", its first turn is Pictures ***', curProv(host3) === 'pictures', `now=${curProv(host3)}`);
+      const choices = (d3.instance.impl || d3.instance).settingsChoices?.();
+      check('...and the menu lists the person\'s Lineups', JSON.stringify(choices?.lineupPresetId) === JSON.stringify([{ value: 'L1', label: 'Pictures all day' }]), JSON.stringify(choices));
+      const seen = new Set([curProv(host3)]);
+      for (let i = 0; i < 6; i += 1) { T3.fireDue(); await sleep(20); seen.add(curProv(host3)); }
+      check('*** turn after turn, only what the Lineup holds: no YouTube, no time-of-day rotation ***',
+        seen.size === 1 && seen.has('pictures'), JSON.stringify([...seen]));
+      d3.instance.destroy();
+      host3.remove();
+    }
 
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
