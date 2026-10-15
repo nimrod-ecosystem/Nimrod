@@ -273,9 +273,12 @@ export function mountMedia(root, {
         <form class="h-new h-preset-form" data-preset-form>
           <input type="text" data-preset-name placeholder="Name this preset (for example Saturday cartoons)"
                  aria-label="preset name" required>
-          <select data-preset-type aria-label="preset type">
-            <option value="youtube">YouTube</option>
-          </select>
+          <!-- Its own line (Mike, 2026-10-14: "Move that down to it's own line"): which module the preset is for. -->
+          <label class="h-preset-type" style="flex:1 1 100%;display:flex;align-items:center;gap:.5em">For
+            <select data-preset-type aria-label="which module this preset is for">
+              <option value="youtube">YouTube</option>
+            </select>
+          </label>
           <!-- Row 2.22 (Mike, 2026-10-14): "replace the one on the media page with the one from the Youtube settings".
                The real YouTube settings form, editing this preset (preset_editor.js). -->
           <div data-preset-editor style="width:100%;flex:1 1 100%"></div>
@@ -602,6 +605,8 @@ export function mountMedia(root, {
     savePresetFromForm();
   });
   openPresetEditor('youtube', {});
+  // Another module picked: its own form (only YouTube's today; a Lineup preset is next, row 2.87).
+  el('[data-preset-type]').addEventListener('change', (e) => { if (!editingPresetId) openPresetEditor(e.target.value, {}); });
   el('[data-preset-cancel]').addEventListener('click', () => resetPresetForm());
   // Kept live: a preset saved or deleted from a DIFFERENT screen (or this same section on
   // another tab) should not need a manual reload to show up here — the same expectation
