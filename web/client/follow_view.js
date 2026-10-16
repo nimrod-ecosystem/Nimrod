@@ -181,8 +181,8 @@ export function mountFollowView(root, {
     <section class="fv r-grants" data-follow-view aria-labelledby="fv-h">
       <h2 class="r-h2" id="fv-h">Watch along</h2>
       <p class="h-hint">Play what ${esc(who)} is playing, here, at the same moment. It works for YouTube, and for
-        pictures that are in your own pictures here too (a shared Google Drive folder, say): the picture is shown from
-        your copy. You need to be on “Who may see this screen” for their screens. Usually the screen asks first, and it
+        pictures and personal videos that are in your own folders here too (a shared Google Drive folder, say): they
+        are shown from your copy. You need to be on “Who may see this screen” for their screens. Usually the screen asks first, and it
         starts only if somebody there says yes. Their screen shows “Sharing your screen with” your name while you
         follow.</p>
       <div class="fv-row" data-fv-idle>
@@ -223,13 +223,14 @@ export function mountFollowView(root, {
     }
     const L = follower.leader();
     const photo = L && L.kind === 'photo';
+    const found = L && (L.kind === 'photo' || L.kind === 'personal');   // found here by its id (row 2.79: personal too)
     if (st === 'lost') {
       return photo ? 'Their screen has stopped sending. The last picture stays here.'
         : 'Their screen has stopped sending. The video carries on here by itself.';
     }
     if (!L || L.item === null) return photo ? PHOTO_LINES.nothing : 'Their screen is not playing a video right now.';
     // photos in step: a picture is "the same picture" or the plain words about why it isn't shown (never a blank).
-    if (photo && composite && !composite.photoShownIsClip()) {
+    if (found && composite && !composite.photoShownIsClip()) {
       const words = composite.photoWords();
       if (words) return words;
       return L.playing ? 'Showing the same picture.' : 'Paused on the same picture.';
@@ -262,7 +263,7 @@ export function mountFollowView(root, {
     el('[data-fv-status]').textContent = statusWords();
     el('[data-fv-sound]').textContent = muted ? 'Sound on' : 'Sound off';
     // Sound is a video's: a picture has none, and a clip in a slideshow plays muted on the screen too.
-    const video = !!(composite && composite.hasVideo() && composite.shownKind() === 'youtube');
+    const video = !!(composite && ((composite.hasVideo() && composite.shownKind() === 'youtube') || composite.personalShown()));
     el('[data-fv-sound]').hidden = !video;
     const note = soundNote();
     el('[data-fv-soundnote]').textContent = note;
@@ -375,12 +376,13 @@ export function mountFollowView(root, {
       idx = { find: async (id, salt) => { const m = await made; return m && m.index ? m.index.find(id, salt) : { status: 'none' }; } };
       let off = null;
       const onHiddenChange = (fn) => { made.then((m) => { if (m && typeof m.onHiddenChange === 'function' && !torn) off = m.onHiddenChange(fn); }); return () => { try { off?.(); } catch { /* gone */ } }; };
-      ph = createPhotoStage(phStage(), { index: idx, onHiddenChange, onChange: () => { if (!torn) render(); } });
+      ph = createPhotoStage(phStage(), { index: idx, onHiddenChange, onChange: () => { if (!torn) render(); }, mutedNow: () => muted });
     }
     const cur = () => (shown === 'youtube' ? yt : shown === 'photo' ? ph : null);
     return {
       load(id, to, play, kind = 'youtube', leader = null) {
-        if (kind === 'photo') {
+        // A picture, or (row 2.79) a Personal videos clip: both are found in this page's own sources, by their id.
+        if (kind === 'photo' || kind === 'personal') {
           if (shown === 'youtube') { try { yt?.pause?.(); } catch { /* not ready */ } }
           ensurePhoto();
           show('photo');
@@ -405,7 +407,9 @@ export function mountFollowView(root, {
       },
       currentTime() { const p = cur(); return p ? p.currentTime() : null; },
       playing() { const p = cur(); return p ? !!p.playing() : false; },
-      setMuted(m) { try { yt?.setMuted?.(m); } catch { /* not ready */ } },
+      setMuted(m) { try { yt?.setMuted?.(m); } catch { /* not ready */ } try { ph?.setMuted?.(m); } catch { /* gone */ } },
+      // (row 2.79) a Personal videos clip is on the stage: it has sound, so the Sound button applies.
+      personalShown: () => !!(ph && shown === 'photo' && ph.kind() === 'personal' && ph.status() === 'found'),
       hasVideo: () => !!yt,
       shownKind: () => shown,
       photoWords: () => (ph ? ph.words() : ''),

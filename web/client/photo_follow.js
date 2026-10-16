@@ -28,6 +28,14 @@ export const PHOTO_LINES = Object.freeze({
   none: 'There are no pictures here to show it from. Pictures on another computer aren’t looked at from here.',
   nothing: 'Their screen isn’t showing a picture right now.',
 });
+// The same, for a Personal videos clip (row 2.79, 2026-10-17): found the same way, in the same sources here.
+export const PERSONAL_LINES = Object.freeze({
+  looking: 'Looking for this video in your videos here…',
+  missing: 'This video isn’t in your videos here.',
+  hidden: 'This video is hidden on this computer, so it isn’t shown here.',
+  none: 'There are no videos here to play it from. Videos on another computer aren’t looked at from here.',
+  nothing: 'Their screen isn’t playing a video right now.',
+});
 
 // *** LIST AGAIN ON A MISS, AT MOST ONCE A MINUTE. *** A picture the screen shows that this page has not got may simply
 // be new (the Drive copy here has not pulled yet), so a miss lists the sources again - but a screen whose pictures are
@@ -139,7 +147,9 @@ function ensureStageStyle(doc) {
  * `onHiddenChange(fn)` -> unsubscribe: told when this computer's hidden or removed lists change, so a picture hidden here
  * while it is up goes at once (and one brought back comes back).
  */
-export function createPhotoStage(el, { index, onHiddenChange = null, onChange = () => {} } = {}) {
+// `mutedNow()`: whether this page's sound is off (the page's Sound button). A slideshow's clip always plays muted, as it
+// does on the screen; a Personal videos clip (kind 'personal', row 2.79) is a message with a voice, so it follows the page.
+export function createPhotoStage(el, { index, onHiddenChange = null, onChange = () => {}, mutedNow = () => true } = {}) {
   const doc = el.ownerDocument || document;
   ensureStageStyle(doc);
   el.classList.add('fv-photo');
@@ -148,6 +158,7 @@ export function createPhotoStage(el, { index, onHiddenChange = null, onChange = 
   let shownItem = null;
   let media = null;                   // the <img> or <video> on the stage
   let playing = false;
+  let kind = 'photo';                 // 'photo' | 'personal' (row 2.79): which words, and whether a clip has sound
   let seq = 0;
   let destroyed = false;
 
@@ -164,7 +175,8 @@ export function createPhotoStage(el, { index, onHiddenChange = null, onChange = 
     el.innerHTML = '';
     if (item.kind === 'video') {
       const v = doc.createElement('video');
-      v.src = item.url; v.muted = true; v.playsInline = true; v.autoplay = !!play;
+      v.src = item.url; v.playsInline = true; v.autoplay = !!play;
+      v.muted = kind === 'personal' ? (() => { try { return mutedNow() !== false; } catch { return true; } })() : true;
       try { if (Number(pos) > 0) v.currentTime = Number(pos); } catch { /* not seekable yet */ }
       v.addEventListener('loadedmetadata', () => { try { if (Number(want?.pos) > 0 && v.currentTime < 0.1) v.currentTime = Number(want.pos); } catch { /* fine */ } }, { once: true });
       if (play) v.play?.()?.catch?.(() => {});
@@ -182,29 +194,32 @@ export function createPhotoStage(el, { index, onHiddenChange = null, onChange = 
     const my = ++seq;
     const w = want;
     if (!w) return;
-    if (w.id === null) { status = 'idle'; shownItem = null; say(PHOTO_LINES.nothing); onChange(); return; }
+    const L = kind === 'personal' ? PERSONAL_LINES : PHOTO_LINES;
+    if (w.id === null) { status = 'idle'; shownItem = null; say(L.nothing); onChange(); return; }
     let r;
     try { r = await index.find(w.id, w.salt); } catch { r = { status: 'missing' }; }
     if (destroyed || my !== seq) return;
     status = r.status;
     shownItem = r.status === 'found' ? r.item : null;
     if (r.status === 'found') showItem(r.item, w.pos, playing);
-    else say(PHOTO_LINES[r.status] || PHOTO_LINES.missing);
+    else say(L[r.status] || L.missing);
     onChange();
   }
 
   const offHidden = typeof onHiddenChange === 'function' ? onHiddenChange(() => { if (want && want.id) look(); }) : null;
 
   return {
-    load(id, pos = 0, play = true, kind = 'photo', leader = null) {
+    load(id, pos = 0, play = true, k = 'photo', leader = null) {
       if (destroyed) return;
+      kind = k === 'personal' ? 'personal' : 'photo';
       const salt = leader && typeof leader.salt === 'string' ? leader.salt : (want ? want.salt : null);
       want = { id: id || null, salt, pos: Number(pos) || 0 };
       playing = !!play;
       status = id ? 'looking' : 'idle';
       shownItem = null;
       // Never an empty box: the words while it looks (the last picture is not left up - it is not what they see now).
-      say(id ? PHOTO_LINES.looking : PHOTO_LINES.nothing);
+      const L = kind === 'personal' ? PERSONAL_LINES : PHOTO_LINES;
+      say(id ? L.looking : L.nothing);
       onChange();
       look();
     },
@@ -221,9 +236,15 @@ export function createPhotoStage(el, { index, onHiddenChange = null, onChange = 
       return null;
     },
     playing: () => playing,
+    // The page's Sound button, for a personal clip on the stage (a slideshow's clip stays muted).
+    setMuted(m) { if (kind === 'personal' && media && media.tagName === 'VIDEO') { try { media.muted = !!m; } catch { /* fine */ } } },
+    kind: () => kind,
     status: () => status,
     shown: () => shownItem,
-    words: () => (status === 'found' ? '' : status === 'idle' ? (want && want.id === null ? PHOTO_LINES.nothing : '') : (PHOTO_LINES[status] || '')),
+    words: () => {
+      const L = kind === 'personal' ? PERSONAL_LINES : PHOTO_LINES;
+      return status === 'found' ? '' : status === 'idle' ? (want && want.id === null ? L.nothing : '') : (L[status] || '');
+    },
     destroy() {
       destroyed = true;
       seq += 1;

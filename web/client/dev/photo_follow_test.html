@@ -32,7 +32,7 @@ import { sha256Hex } from '../sha256.js';
 import {
   photoPlayId, isPhotoId, createPlaySender, createFollower, PLAY_NOW_TOPIC, checkPlay, buildPlay,
 } from '../play_sync.js';
-import { createPhotoIndex, createPhotoStage, PHOTO_LINES, MISS_RELIST_MS } from '../photo_follow.js';
+import { createPhotoIndex, createPhotoStage, PHOTO_LINES, PERSONAL_LINES, MISS_RELIST_MS } from '../photo_follow.js';
 import { mountFollowView, TICK_MS } from '../follow_view.js';
 import { quietResolve } from '../media_sources.js';
 import { createBus } from '../bus.js';
@@ -234,6 +234,27 @@ if (GAP) {
     check('the screen showing nothing: the words, not an empty box', box.textContent === PHOTO_LINES.nothing);
     const copy = JSON.stringify(PHOTO_LINES);
     check('the words never say "her screen" or name anybody', !/\bher screen|taylor|cici/i.test(copy));
+    st.destroy(); box.remove();
+  }
+
+  section('*** personal videos in step (2026-10-17, row 2.79): the same stage plays a recorded message, WITH its sound ***');
+  {
+    const box = document.createElement('div'); document.getElementById('host').append(box);
+    let muted = false;
+    const idx = createPhotoIndex({ listSources: async () => [SOURCE], resolve: async () => ({ items: [{ id: 'Messages/hello.mp4', path: 'Messages/hello.mp4', kind: 'video', url: 'data:video/mp4,' }] }) });
+    const st = createPhotoStage(box, { index: idx, mutedNow: () => muted });
+    st.load(photoPlayId(SALT, 'Messages/hello.mp4'), 3, true, 'personal', { salt: SALT });
+    await until(() => st.status() === 'found');
+    check('*** found here: my copy plays, and with sound when this page\'s sound is on (a message is its voice) ***',
+      box.querySelector('video') && box.querySelector('video').muted === false && st.kind() === 'personal', box.innerHTML.slice(0, 120));
+    st.setMuted(true);
+    check('...the page\'s Sound button turns it off and on', box.querySelector('video').muted === true);
+    st.load(photoPlayId(SALT, 'Messages/not-here.mp4'), 0, true, 'personal', { salt: SALT });
+    await until(() => st.status() === 'missing');
+    check('*** not here: "This video isn\'t in your videos here." ***', box.textContent === PERSONAL_LINES.missing, box.textContent);
+    st.load(null, 0, false, 'personal', { salt: SALT });
+    check('nothing playing there: says so, in the box', box.textContent === PERSONAL_LINES.nothing);
+    check('the words never say "her screen" or name anybody', !/\bher screen|taylor|cici/i.test(JSON.stringify(PERSONAL_LINES)));
     st.destroy(); box.remove();
   }
 

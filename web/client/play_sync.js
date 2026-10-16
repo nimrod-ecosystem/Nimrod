@@ -34,7 +34,14 @@ export const PLAY_NOW_TOPIC = 'play/now';
 
 // Mirrored from play_relay.py (the server enforces the same; this end checks so a bad message fails HERE).
 // 'photo' (2026-10-12, photos in step): a picture (or a clip) in a Photos panel, by an OPAQUE id - see PHOTOS IN STEP.
-export const PLAY_KINDS = Object.freeze(['youtube', 'photo']);
+// 'personal' (2026-10-17, row 2.79 "the same pictures and videos"): a clip in a Personal videos panel - a recorded
+// message, with its sound - by the same OPAQUE id as a picture (its path inside its source, hashed with the session's
+// salt): a file name like "Mom hospital 2024.mp4" never leaves the screen. It behaves like a video (a position, play
+// and pause, a pause rather than a blank when nothing is on).
+export const PLAY_KINDS = Object.freeze(['youtube', 'photo', 'personal']);
+// The kinds sent by an opaque, salted id rather than a public one.
+export const OPAQUE_KINDS = Object.freeze(['photo', 'personal']);
+const opaque = (kind) => OPAQUE_KINDS.includes(kind);
 export const MAX_PLAY_BYTES = 1024;
 export const MAX_POS_S = 7 * 24 * 3600;
 export const MAX_SCREEN_NAME = 40;
@@ -122,7 +129,7 @@ function defaultByte() {
 // hash (above): fixed length, hex, and never printable text. A file name ("Mom hospital 2024.jpg") is neither.
 export function isPlayItem(kind, item) {
   if (kind === 'youtube') return typeof item === 'string' && YT_ID.test(item);
-  if (kind === 'photo') return isPhotoId(item);
+  if (opaque(kind)) return isPhotoId(item);
   return false;
 }
 
@@ -134,11 +141,11 @@ const bytes = (o) => { try { return new TextEncoder().encode(JSON.stringify(o)).
 export function buildPlay({ kind = 'youtube', item = null, pos = 0, playing = false, rate = 1, every = null, screen = '', salt = null } = {}) {
   if (!PLAY_KINDS.includes(kind)) return null;
   if (item !== null && !isPlayItem(kind, item)) return null;
-  if (kind === 'photo' ? (item !== null && !isSalt(salt)) || (salt !== null && !isSalt(salt)) : salt !== null) return null;
+  if (opaque(kind) ? (item !== null && !isSalt(salt)) || (salt !== null && !isSalt(salt)) : salt !== null) return null;
   const p = finite(pos) ? Math.max(0, Math.min(MAX_POS_S, pos)) : 0;
   const r = finite(rate) && rate >= 0.25 && rate <= 2 ? rate : 1;
   const msg = { type: 'play', kind, item, pos: Math.round(p * 1000) / 1000, playing: item !== null && playing === true, rate: r };
-  if (kind === 'photo' && salt !== null) msg.salt = salt;
+  if (opaque(kind) && salt !== null) msg.salt = salt;
   if (finite(every) && every >= 1 && every <= 60) msg.every = every;
   const name = String(screen || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, MAX_SCREEN_NAME);
   if (name) msg.screen = name;
@@ -151,12 +158,12 @@ export function checkPlay(m) {
   if (bytes(m) > MAX_PLAY_BYTES + 128) return null;     // the server's stamp adds ~40 bytes to a capped message
   if (!PLAY_KINDS.includes(m.kind)) return null;
   if (m.item !== null && !isPlayItem(m.kind, m.item)) return null;
-  if (m.kind === 'photo' && m.item !== null && !isSalt(m.salt)) return null;
+  if (opaque(m.kind) && m.item !== null && !isSalt(m.salt)) return null;
   if (!finite(m.pos) || m.pos < 0 || m.pos > MAX_POS_S || typeof m.playing !== 'boolean') return null;
   if (!finite(m.at) || typeof m.from !== 'string' || !FROM_ID.test(m.from)) return null;
   const rate = finite(m.rate) && m.rate >= 0.25 && m.rate <= 2 ? m.rate : 1;
   const out = { kind: m.kind, item: m.item, pos: m.pos, playing: m.item !== null && m.playing, rate, at: m.at, from: m.from };
-  if (m.kind === 'photo' && isSalt(m.salt)) out.salt = m.salt;
+  if (opaque(m.kind) && isSalt(m.salt)) out.salt = m.salt;
   if (finite(m.every)) out.every = m.every;
   if (typeof m.screen === 'string' && m.screen.trim()) out.screen = m.screen.trim().slice(0, MAX_SCREEN_NAME);
   return out;
@@ -465,7 +472,8 @@ export function createPlaySender({
     let pool = on;
     const mode = (() => { try { return main(); } catch { return FOLLOW_MAIN_DEFAULT; } })();
     if (mode === 'video') {
-      const vids = on.filter(([, b]) => b.kind === 'youtube' && (b.playing || now() - b.since < pausedHoldMs));
+      // A personal message is a video too: chosen on purpose, with sound (row 2.79).
+      const vids = on.filter(([, b]) => (b.kind === 'youtube' || b.kind === 'personal') && (b.playing || now() - b.since < pausedHoldMs));
       const pics = on.filter(([, b]) => b.kind === 'photo');
       if (vids.length) pool = vids; else if (pics.length) pool = pics;
     } else if (mode === 'photos') {
@@ -497,8 +505,8 @@ export function createPlaySender({
     const kind = base ? base.kind : lastKind;
     let item = base ? base.ident : null;
     let s = null;
-    if (kind === 'photo') {
-      // photos in step: the path becomes the session's opaque id HERE, and only here. No salt, or a path that will not
+    if (opaque(kind)) {
+      // photos (and personal videos) in step: the path becomes the session's opaque id HERE, and only here. No salt, or a path that will not
       // hash, is "nothing to follow" - never the path.
       if (!isSalt(salt)) salt = makeSalt();
       s = isSalt(salt) ? salt : null;
@@ -543,7 +551,7 @@ export function createPlaySender({
   // What a panel's report names. YouTube: a public id, or nothing. Photos (photos in step): `key`, the picture's path
   // inside its source's folder - kept here, hashed only on the way out. Anything else is "nothing".
   function identOf(kind, r) {
-    if (kind === 'photo') {
+    if (opaque(kind)) {
       const k = typeof r.key === 'string' ? photoKey(r.key) : '';
       return k && k.length <= 500 ? k : null;
     }

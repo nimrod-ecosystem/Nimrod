@@ -69,7 +69,8 @@ check("*** `at` and `from` a page writes are NOT kept (the server stamps its own
       parse_play({**GOOD, "at": 5, "from": "abcd1234"}).keys() == p.keys())
 check("nothing playing (item null) is a message too, and is never 'playing'",
       parse_play({**GOOD, "item": None, "playing": True}) == {**p, "item": None, "playing": False})
-check("the kinds are a closed list: YouTube and (since 2026-10-12) photos by an opaque id", PLAY_KINDS == {"youtube", "photo"})
+check("the kinds are a closed list: YouTube, and by an opaque id photos (2026-10-12) and Personal videos (2026-10-17)",
+      PLAY_KINDS == {"youtube", "photo", "personal"})
 check("*** an unknown kind is dropped ***", parse_play({**GOOD, "kind": "files"}) is None)
 check("*** an item that is not a YouTube id is dropped - a file name never crosses ***",
       all(parse_play({**GOOD, "item": bad}) is None
@@ -125,6 +126,16 @@ check("a YouTube id is not a photo id, nor the other way round",
       parse_play({**PHOTO, "kind": "youtube"}) is None and parse_play({**GOOD, "kind": "photo", "salt": SALT}) is None)
 psize = len(json.dumps({**PHOTO, "rate": 1, "every": 2, "screen": "x" * MAX_SCREEN_NAME}, separators=(",", ":")))
 check(f"a real photo message is about 200 bytes ({psize}), far inside the cap", psize < 240, str(psize))
+
+section("personal videos in step (2026-10-17, row 2.79): a recorded message by the same opaque id")
+PERSONAL = {**PHOTO, "kind": "personal"}
+pv = parse_play(PERSONAL)
+check("*** a Personal videos clip by its 32-hex id and salt is accepted, salt carried ***",
+      pv == {**pp, "kind": "personal"}, str(pv))
+check("*** ...and refused with a file name, or without its salt ***",
+      parse_play({**PERSONAL, "item": "Mom hospital 2024.mp4"}) is None
+      and parse_play({k: v for k, v in PERSONAL.items() if k != "salt"}) is None)
+check("nothing playing needs no salt", parse_play({**PERSONAL, "item": None, "salt": None})["kind"] == "personal")
 
 
 class _Unserialisable:

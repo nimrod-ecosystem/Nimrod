@@ -75,6 +75,7 @@ import { createHeldSignal } from '../held.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 import { stallFields, stallSettings, pauseNoticeMs, createStallReporter } from '../playback_stall.js';
 import { routeToSpeaker, PANEL_SPEAKER_KEY } from '../speakers.js';   // row 2.97: the panel's own speaker
+import { PLAY_NOW_TOPIC } from '../play_sync.js';   // row 2.79: watching along
 
 // `stallMs` matches youtube's for the same reason: long enough that a big clip loading off
 // a media agent over facility wifi is not cut off, short enough that nobody sits in front
@@ -336,7 +337,33 @@ registerModule(
       bus.publish('segment/progress', { provider: 'personal', id: currentId });
     }
 
+    // *** WATCHING ALONG (row 2.79, Mike 2026-10-12: "the same pictures and videos ... we both see and hear the same
+    // thing at the same time"; play_sync.js argues the shape). *** Say what is playing on this screen's own bus, as
+    // youtube.js and photos.js do: the clip's path inside its source (`key`), where it is, and whether it plays. The
+    // path never leaves the screen - the screen's sender hashes it with the sharing session's salt - and nothing leaves
+    // at all unless "Let people follow" is on and somebody is following. Said on a start, a pause, a seek, the end, and
+    // with each progress tick; a hidden or destroyed panel says "nothing".
+    let currentKey = null;
+    let saidKey = null;
+    function sayPlay() {
+      const v = currentVideo;
+      if (!currentKey && saidKey === null) return;
+      saidKey = currentKey;
+      let pos = null;
+      try { const n = Number(v?.currentTime); pos = Number.isFinite(n) ? n : null; } catch { pos = null; }
+      const playing = !!(v && currentKey && active && !v.paused && !v.ended);
+      try { bus.publish(PLAY_NOW_TOPIC, { kind: 'personal', panel: ctx.instanceId || 'personal', key: currentKey, pos, playing }); }
+      catch { /* not load-bearing */ }
+    }
+    function sayNone() {
+      if (saidKey === null) return;
+      saidKey = null;
+      try { bus.publish(PLAY_NOW_TOPIC, { kind: 'personal', panel: ctx.instanceId || 'personal', key: null, pos: 0, playing: false }); }
+      catch { /* not load-bearing */ }
+    }
+
     function progressTick() {
+      if (active && currentKey) sayPlay();
       beatWindow = true;
       pollTimer = destroyed ? null : setTimer(progressTick, progressMs);
     }
@@ -481,6 +508,12 @@ registerModule(
         el.load?.();                  // stop a big clip downloading in the background
       };
       currentVideo = el;
+      // (row 2.79) what a follower is told: the clip's place inside its source, as photos.js names a picture.
+      currentKey = String(item.path || item.id || '') || null;
+      el.addEventListener('playing', sayPlay);
+      el.addEventListener('pause', sayPlay);
+      el.addEventListener('seeked', sayPlay);
+      el.addEventListener('ended', sayPlay);
       st.append(el);
 
       if (el.autoplay) {
@@ -854,7 +887,7 @@ registerModule(
       },
       __probe: () => ({ folders: lastListing?.listing?.folders || null, ids: ids.slice(), label: mount.querySelector('[data-source-label]')?.textContent || '' }),
       onResize() {},
-      onHide() { active = false; clearStall(); stallReport.gone(); state.flush(); },
+      onHide() { active = false; clearStall(); stallReport.gone(); sayNone(); state.flush(); },
       destroy() {
         destroyed = true;
         stallReport.gone();
@@ -864,6 +897,7 @@ registerModule(
         clearTimer(pollTimer); pollTimer = null;
         clearFailWait();
         active = false; clearStall(); clearVideoEnd(); currentVideo = null;
+        currentKey = null; sayNone();                  // watching along: a follower is told nothing plays here now
         // Destroyed while held: publish the end on the way out — `held.js` rule 3.
         heldSignal.release();
       },
