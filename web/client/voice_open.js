@@ -284,6 +284,9 @@ export function createVoiceOpen({
   restLingerMs = REST_LINGER_MS,
   // A suite's seam: the quiet time in ms instead of the setting's (the shortest choice is 30 s). null = the setting.
   quietMs = null,
+  // (row 2.90, Mike 2026-10-15: "pick a duration when setting up the module in the preset") `quietFor(type)` -> ms or
+  // null: the module's own quiet time, from its default preset (kiosk.js). null: the screen's setting, as before.
+  quietFor = null,
   // A line said back this late describes something already on the screen: play_as.js SAY_TTL_MS, argued there.
   sayTtlMs = SAY_TTL_MS,
   setTimer = (fn, ms) => setTimeout(fn, ms),
@@ -293,7 +296,12 @@ export function createVoiceOpen({
   const ask = (fn, d) => { try { const v = fn(); return v == null ? d : v; } catch { return d; } };
   const opts = () => voiceOpenOptionsFrom(ask(values, {}));
   // The quiet time: the setting's, unless a suite handed its own (`quietMs`, milliseconds).
-  const quietNow = () => (Number.isFinite(quietMs) && quietMs > 0 ? quietMs : opts().quietMs);
+  const quietNow = () => {
+    if (Number.isFinite(quietMs) && quietMs > 0) return quietMs;
+    // The module's own time, set in its preset (row 2.90), before the screen's.
+    const own = Number(typeof quietFor === 'function' && view ? ask(() => quietFor(view.type), null) : null);
+    return Number.isFinite(own) && own > 0 ? own : opts().quietMs;
+  };
   let view = null;          // { id, type, name, place, box, rec, prevFocus, timer, playing, offs }
   let seq = 0;              // the newest open asked for; an older one still checking or mounting gives way to it
   let last = null;

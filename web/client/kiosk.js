@@ -24,6 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
+import { createPresetLibrary } from './presets.js';   // row 2.90: a voice-opened module's time, from its default preset
 import { mergeSettingsDoc, mergeLayoutSave, mergeKioskSave, lostEditWords } from './doc_merge.js';
 import { createEvents } from './events.js';
 import { createPackReviews, missingReviewBindings, REVIEW_KEY_BINDINGS } from './pack_reviews.js';
@@ -1633,8 +1634,32 @@ export async function mountKiosk(root, {
     try { s = voiceGate.check(moduleItem(type)); } catch { s = null; }
     return s && s.locked ? { ok: false, why: 'locked' } : { ok: true };
   }
+  // (row 2.90, 2026-10-15) A voice-opened module's own quiet time comes from that module's DEFAULT preset ("pick a
+  // duration when setting up the module in the preset" - Mike), else the screen's setting. The person's presets, made
+  // lazily for whoever the screen is for (and again if that changes). None on a local backend (a suite, a preview).
+  let voicePresets = null, voicePresetsFor = null;
+  function voicePresetLib() {
+    let pid = null;
+    try { pid = screenPersonNow() || null; } catch { pid = null; }
+    if (!pid || makeState || !profiles?.personStateURL || torn) return null;
+    if (voicePresets && voicePresetsFor === pid) return voicePresets;
+    try { voicePresets?.destroy(); } catch { /* gone */ }
+    voicePresetsFor = pid;
+    try {
+      voicePresets = createPresetLibrary({ makeState: (key) => createState({ url: profiles.personStateURL(pid, key), user,
+        cacheKey: `person:${user}:${pid}:${key}`, push }) });
+      voicePresets.load().catch(() => {});
+    } catch { voicePresets = null; }
+    return voicePresets;
+  }
+  const voiceQuietFor = (type) => {
+    const ms = Number(voicePresetLib()?.defaultFor?.(type)?.settings?.voiceOpenMs);
+    return Number.isFinite(ms) && ms > 0 ? ms : null;
+  };
+  setTimeout(() => { try { voicePresetLib(); } catch { /* the first voice open loads it */ } }, 3000);
   const voiceOpen = createVoiceOpen({
     bus,
+    quietFor: voiceQuietFor,
     ...(voiceOpenTimes && Number(voiceOpenTimes.quietMs) > 0 ? { quietMs: Number(voiceOpenTimes.quietMs) } : {}),
     ...(voiceOpenTimes && Number(voiceOpenTimes.restLingerMs) >= 0 && voiceOpenTimes.restLingerMs != null
       ? { restLingerMs: Number(voiceOpenTimes.restLingerMs) } : {}),
@@ -8778,6 +8803,7 @@ export async function mountKiosk(root, {
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
       try { voiceOpen.destroy(); } catch { /* already gone */ }   // voice open: its box, its module, its listeners
+      try { voicePresets?.destroy(); } catch { /* already gone */ } voicePresets = null;   // row 2.90
       try { voiceGate?.destroy?.(); } catch { /* already gone */ }
       try { playAs.destroy(); } catch { /* already gone */ }   // play as: its bus listeners
       try { deviceSettle?.cancel(); } catch { /* already done */ }   // "Best for this device": its one measurement

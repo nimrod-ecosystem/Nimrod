@@ -98,6 +98,7 @@ import { HELPER_PAGE, HELPER_DOWNLOADS } from './nimrod_helper.js';
 // Row 2.22 (2026-10-14): a preset is edited with the module's own settings form, not typed lines.
 import { mountPresetEditor } from './preset_editor.js';
 import { entryWords } from './lineup.js';
+import { VOICE_OPEN_QUIET_MS } from './voice_open.js';   // row 2.90: the same choices as the screen's own row
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -288,6 +289,15 @@ export function mountMedia(root, {
                otherwise it's plain". A panel of that module that has chosen nothing of its own uses it. -->
           <label class="chk" style="flex:1 1 100%"><input type="checkbox" data-preset-default> Use this for any panel of this
             module that has nothing of its own (one default per module)</label>
+          <!-- Row 2.90 (Mike, 2026-10-15: "pick a duration when setting up the module in the preset"): how long this module,
+               opened by voice ("computer please open youtube"), stays before going back by itself. Used from the
+               module's default preset; "the screen's own setting" leaves it to each screen. -->
+          <label style="flex:1 1 100%;display:flex;align-items:center;gap:.5em;flex-wrap:wrap">Opened by voice, it goes back
+            by itself after nothing is pressed for
+            <select data-preset-voice-ms>
+              <option value="0">the screen's own setting</option>
+              ${VOICE_OPEN_QUIET_MS.map((ms) => `<option value="${ms}">${ms < 60000 ? `${ms / 1000} seconds` : `${ms / 60000} minute${ms === 60000 ? '' : 's'}`}</option>`).join('')}
+            </select></label>
           <button type="submit" class="h-btn h-primary" data-preset-save>Save preset</button>
           <button type="button" class="h-btn" data-preset-cancel hidden>Cancel edit</button>
         </form>
@@ -559,6 +569,7 @@ export function mountMedia(root, {
     el('[data-preset-name]').value = p.name;
     el('[data-preset-type]').value = p.type;
     el('[data-preset-default]').checked = p.isDefault === true;
+    el('[data-preset-voice-ms]').value = String(Number(p.settings?.voiceOpenMs) || 0);
     // The preset's own settings in the module's own form: nothing on a screen changes until Save.
     openPresetEditor(p.type, p.settings || {});
     el('[data-preset-cancel]').hidden = false;
@@ -575,6 +586,9 @@ export function mountMedia(root, {
     if (!name) { presetSay('Give the preset a name.', true); return; }
     const type = el('[data-preset-type]').value;
     const settings = presetEditor ? presetEditor.values() : {};
+    // Row 2.90: how long it stays when opened by voice (0 = the screen's own setting, so nothing is kept).
+    const voiceMs = Number(el('[data-preset-voice-ms]')?.value) || 0;
+    if (voiceMs > 0) settings.voiceOpenMs = voiceMs;
     try {
       await presetLib.savePreset({ id: editingPresetId, type, name, settings, isDefault: !!el('[data-preset-default]')?.checked });
       const wasEdit = !!editingPresetId;
