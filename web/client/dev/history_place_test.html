@@ -27,6 +27,7 @@ import {
   folderSink, serverSink, createHistoryHost, scopeOf,
   markFor, folderMarkKey, kindOfKey, FOLDER_ID_FILE,   // history to the drive (2026-10-08)
   agentSink, nimrodFolder, localAgentBases, isLocalAgent, AGENT_HISTORY_DEFAULTS,   // agent history (2026-10-08)
+  deviceTag,   // row 2.91: plays across devices
 } from '../history_place.js';
 import { historyHtml, renderHistoryPage, HISTORY_ITEMS, HISTORY_PAGE } from '../history_page.js';
 import { memoryPlayStore, createPlays, panelPlays } from '../plays.js';
@@ -218,6 +219,36 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
         `${J(one.map((x) => x.data.id))} ${J(two.map((x) => x.data.id))} oct reads ${octReads}`);
     }
     check('another panel\'s file is not read as this one\'s', (await fs.read('plays', 'yt-2', 500)).length === 0);
+
+    {
+      // ROW 2.91 (Mike via chat CF 4, 2026-10-16: plays across devices through a Google Drive folder, option (a)).
+      const tagged = folderSink({ store: fstore, view: { showDirectoryPicker() {} }, device: 'dab12cd34' });
+      await tagged.append('plays', 'yt-1', [play('t1', T0 + 5000)]);
+      check('*** a screen\'s files carry its device tag, so two devices sharing a Drive folder never write one file ***',
+        hist._kids.has('plays-yt-1-dab12cd34-2026-10.jsonl'), [...hist._kids.keys()].join(','));
+      const both = await fs.read('plays', 'yt-1', 500);
+      check('...and a panel\'s plays read back from the tagged file and the older untagged ones alike',
+        both.some((x) => x.data.id === 't1') && both.some((x) => x.data.id === 'a'), J(both.map((x) => x.data.id)));
+      await fs.append('plays', 'pics-9', [{ kind: 'play', created_at: new Date(T0 + 6000).toISOString(), data: { source: 'photos', id: 'p1', panel: 'pics-9' } }]);
+      const other = await hist.getDirectoryHandle('from-cici1', { create: true });
+      const of = await other.getFileHandle('plays-her-yt-2026-10.jsonl', { create: true });
+      const ow = await of.createWritable();
+      await ow.write(`${JSON.stringify({ at: new Date(T0 + 7000).toISOString(), kind: 'play', data: { source: 'youtube', id: 'hers', panel: 'her-yt' } })}\n`);
+      await ow.close();
+      const all = await fs.readAll('plays');
+      const ids = all.map((x) => x.data.id);
+      check('*** readAll: every panel\'s plays, every device\'s, and a copy from another computer in a folder of its own ***',
+        ['a', 't1', 'p1', 'hers', 'nov'].every((i) => ids.includes(i)), J(ids));
+      check('...oldest first, and not the README or the folder id', all.every((x, i) => i === 0 || String(all[i - 1].created_at) <= String(x.created_at)) && all.every((x) => x.kind === 'play'));
+      const since = await fs.readAll('plays', { since: Date.parse('2026-11-01T00:00:00Z') });
+      check('...from a date on, only what is newer (older months are not opened)', J(since.map((x) => x.data.id)) === J(['nov']), J(since.map((x) => x.data.id)));
+      check('the newest N when asked for N', J((await fs.readAll('plays', { limit: 1 })).map((x) => x.data.id)) === J(['nov']));
+      check('another kind\'s files are not plays', (await fs.readAll('gameplay')).length === 0);
+      check('a browser with no localStorage writes untagged names (as before)', deviceTag(null) === '');
+      const mem = new Map();
+      const ls = { getItem: (k) => mem.get(k) || null, setItem: (k, v) => mem.set(k, v) };
+      check('this browser\'s tag is made once and kept', /^d[a-z0-9]{8}$/.test(deviceTag(ls)) && deviceTag(ls) === deviceTag(ls));
+    }
     root.perm = 'prompt';
     check('*** permission lapsed: "permission", and a write is refused without prompting ***',
       await fs.status() === 'permission' && (await fs.append('plays', 'yt-1', [play('x', T0)])).why === 'permission' && root.asked === 0);

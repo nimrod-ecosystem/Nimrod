@@ -205,8 +205,9 @@ const safeName = (s) => String(s || 'all').replace(/[^A-Za-z0-9_-]/g, '_').slice
 const monthOf = (iso) => (/^\d{4}-\d{2}/.test(String(iso || '')) ? String(iso).slice(0, 7) : 'undated');
 const byteLen = (s) => (typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(s).length : s.length);
 const HISTORY_README = 'Your history from Nimrod, kept on this computer because you chose your Nimrod '
-  + 'folder for it.\nThere is one file for each kind, for each panel or screen, for each '
-  + 'month: plays-..., gameplay-..., words-...\nEach line is one entry: when it happened ("at"), what '
+  + 'folder for it.\nThere is one file for each kind, for each panel or screen, for each device that writes here, for each '
+  + 'month: plays-..., gameplay-..., words-...\nCopies from another computer can go in a folder of their own in here; '
+  + 'charts read those too.\nEach line is one entry: when it happened ("at"), what '
   + 'kind it is, and its data.\nNothing here goes to '
   + `the Nimrod site. Nimrod does not delete these files.\nThey are yours. If you delete them here, they are gone.\n${FOLDER_ID_FILE} `
   + 'names this folder, so a device knows what it has already copied here.\nDeleting it only means that each device copies everything it still holds here again.\n';
@@ -215,6 +216,25 @@ const newFolderId = () => {
   return `f-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 };
 const ID_RE = /^[A-Za-z0-9-]{6,64}$/;
+
+// *** WHICH DEVICE WROTE A FILE (row 2.91, CF 4, 2026-10-16: plays across devices, through a Google Drive folder). ***
+// Two devices that show the same dashboard log under the same panel id, so they would write the SAME file name; in a
+// folder Google Drive keeps in step on both, that is two writers on one file, and Drive answers it with conflict
+// copies. A short random tag per browser (kept in localStorage) goes into the names a screen writes:
+// plays-<panel>-<device>-<YYYY-MM>.jsonl. Readers find files by their start (`<stream>-<panel>-`) and month (the end),
+// so a tagged name and an older untagged one are read alike. '' (no storage): untagged, as before.
+export const DEVICE_TAG_KEY = 'nimrod-history-device';
+export function deviceTag(storage = (typeof localStorage !== 'undefined' ? localStorage : null)) {
+  try {
+    if (!storage) return '';
+    let v = storage.getItem(DEVICE_TAG_KEY) || '';
+    if (!/^d[a-z0-9]{8}$/.test(v)) {
+      v = `d${Math.random().toString(36).slice(2, 10).padEnd(8, '0')}`;
+      storage.setItem(DEVICE_TAG_KEY, v);
+    }
+    return v;
+  } catch { return ''; }
+}
 
 function fileOrder(name) {
   const m = /-(\d{4}-\d{2}|undated)(?:\.part(\d+))?\.jsonl$/.exec(name);
@@ -230,7 +250,8 @@ function fileOrder(name) {
  *   allow()                    ask the browser again (A PRESS ONLY); resolves the permission
  */
 export function folderSink({ store = handleStore(), view = (typeof window !== 'undefined' ? window : null),
-  fileMax = HISTORY_DEFAULTS.fileMax } = {}) {
+  fileMax = HISTORY_DEFAULTS.fileMax, device = '' } = {}) {
+  const tag = /^[A-Za-z0-9]{1,16}$/.test(String(device || '')) ? String(device) : '';
   async function where() {
     const k = await kindFolder('data', { store });
     if (k.source === 'none') return { state: folderApi(view) ? 'none' : 'unavailable', k };
@@ -308,7 +329,7 @@ export function folderSink({ store = handleStore(), view = (typeof window !== 'u
           g.last = r.created_at;
         }
         for (const [m, g] of months) {
-          await appendLines(h, `${safeName(stream)}-${safeName(scope)}-${m}`, `${g.lines.join('\n')}\n`);
+          await appendLines(h, `${safeName(stream)}-${safeName(scope)}-${tag ? `${tag}-` : ''}${m}`, `${g.lines.join('\n')}\n`);
           upTo = g.last;
         }
         return { ok: true };
@@ -358,6 +379,54 @@ export function folderSink({ store = handleStore(), view = (typeof window !== 'u
       }
       rows.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
       return rows.slice(-want);
+    },
+    /**
+     * EVERY DEVICE'S `stream` FILES (row 2.91, CF 4: "her plays and his together on one chart"): every panel's, from
+     * Data/History and from one level of folders inside it (where a copy brought from another computer can be put,
+     * one folder per device, so nothing it copies ever lands on a file a screen here is writing). Only months from
+     * `since` on are opened; rows before `since` are left out; the newest `limit`, oldest first. [] when unreadable.
+     */
+    async readAll(stream, { since = null, limit = 20000 } = {}) {
+      let w;
+      try { w = await where(); } catch { return []; }
+      if (w.state !== 'ready') return [];
+      let h;
+      try { h = await w.dir.getDirectoryHandle(HISTORY_FOLDER); } catch { return []; }
+      const prefix = `${safeName(stream)}-`;
+      const fromMonth = since ? monthOf(new Date(since).toISOString()) : '';
+      const files = [];
+      const take = async (dir) => {
+        const subs = [];
+        for await (const [name, entry] of dir.entries()) {
+          if (entry.kind === 'directory') { subs.push(entry); continue; }
+          if (entry.kind !== 'file' || !name.startsWith(prefix) || !name.endsWith('.jsonl')) continue;
+          const m = fileOrder(name)[0];
+          if (fromMonth && m !== 'undated' && m < fromMonth) continue;
+          files.push(entry);
+        }
+        return subs;
+      };
+      try {
+        const subs = await take(h);
+        for (const d of subs) { try { await take(d); } catch { /* one unreadable folder: the rest still read */ } }
+      } catch { return []; }
+      const sinceIso = since ? new Date(since).toISOString() : '';
+      const rows = [];
+      for (const f of files) {
+        let text = '';
+        try { text = await (await f.getFile()).text(); } catch { continue; }
+        for (const line of text.split('\n')) {
+          if (!line.trim()) continue;
+          try {
+            const o = JSON.parse(line);
+            if (!o || !o.kind || !o.data || typeof o.data !== 'object') continue;
+            if (sinceIso && String(o.at || '') < sinceIso) continue;
+            rows.push({ kind: o.kind, created_at: o.at, data: o.data });
+          } catch { /* a line cut short: skipped */ }
+        }
+      }
+      rows.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+      return rows.slice(-Math.max(1, limit));
     },
     async allow() {
       try {
@@ -562,6 +631,14 @@ export function nimrodFolder({ agent = null, browser = null } = {}) {
         if ((await browserState()) !== 'ready' || (await browser.id()) !== (await agent.id())) return [];
       }
       return browser.read(stream, scope, limit);
+    },
+    // Every device's files (row 2.91): read through the browser's folder, under `read`'s rule for an agent's folder.
+    async readAll(stream, o = {}) {
+      if (!browser || typeof browser.readAll !== 'function') return [];
+      if (await agentState() === 'ready') {
+        if ((await browserState()) !== 'ready' || (await browser.id()) !== (await agent.id())) return [];
+      }
+      return browser.readAll(stream, o);
     },
     async allow() { return browser ? browser.allow() : 'unavailable'; },
   };

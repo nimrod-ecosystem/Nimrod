@@ -72,7 +72,7 @@ import {
 } from './media_sources.js';
 import { folderPermission, folderFileUrl } from './folder_source.js';
 import { agoWords } from './account_screens.js';
-import { nimrodFolder, folderSink, agentSink, localAgentBases } from './history_place.js';
+import { nimrodFolder, folderSink, agentSink, localAgentBases, deviceTag } from './history_place.js';
 import { createDriveNotes, notesDeviceStore, readerId, SAVE_STATES } from './storage_notes.js';
 
 export const STATUS_FILES = Object.freeze(['.nimrod-pull/last-pull.json', '.nimrod-pull/last-fallback.json']);
@@ -701,7 +701,7 @@ export function mountStorageView(root, {
  *  history, else the browser folder. `listSources` finds the agent among the sources on this computer. */
 export function defaultFolder(listSources) {
   return nimrodFolder({
-    browser: folderSink(),
+    browser: folderSink({ device: deviceTag() }),   // (row 2.91) this browser's own files, as the kiosk's are
     agent: agentSink({ candidates: async () => { try { return localAgentBases(await listSources()); } catch { return []; } } }),
   });
 }
