@@ -816,3 +816,13 @@ export const DASHBOARD_OFFERS_FIELD = Object.freeze({
   kind: 'toggle', level: 'advanced', default: true, onLabel: 'Yes', offLabel: 'No',
 });
 export const offersOn = (row) => !(row && row[DASHBOARD_OFFERS_KEY] === false);
+
+// ROW 2.88, A SETTING (Mike, 2026-10-15: "Yes to a setting on by default"): a dashboard's name on its own after the
+// wake phrase ("computer please pictures"). ON by default, as built (05d244a); OFF for a screen where a dashboard is
+// named after a word people say to the screen for something else. The screen's, as the offers row is.
+export const DASHBOARD_BARE_KEY = 'dashboardBareNames';
+export const DASHBOARD_BARE_FIELD = Object.freeze({
+  key: DASHBOARD_BARE_KEY, label: 'Open a dashboard by saying its name alone, after the wake phrase',
+  kind: 'toggle', level: 'standard', default: true, onLabel: 'Yes', offLabel: 'No',
+});
+export const bareNamesOn = (row) => !(row && row[DASHBOARD_BARE_KEY] === false);

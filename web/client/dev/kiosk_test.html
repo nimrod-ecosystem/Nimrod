@@ -524,8 +524,12 @@ const toTab = (m, id) => {
       // (beta.js argues it: shown in their own section by default; Mike: "a delineation between ... what we're pretty
       // confident in now vs. ... the new things we're still tweaking"). One more of the old rows: 48. The panel's lap is
       // unchanged.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 48) ***',
-        lapStops.length === 14 && oldStops.length === 48 && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
+      // (bare names, 2026-10-15, DELIBERATELY: "Open a dashboard by saying its name alone, after the wake phrase" on the
+      // This screen tab (dashboards.js; Mike: "Yes to a setting on by default"). One more of the old rows: 49. The
+      // panel's lap is unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 49) ***',
+        lapStops.length === 14 && oldStops.length === 49 && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
+        && oldStops.some((i) => i.id === 'set:dashboardBareNames') /* bare names */
         && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
         && oldStops.some((i) => i.id === 'set:voiceOpenWhere') && oldStops.some((i) => i.id === 'set:voiceOpenQuietMs') /* voice open */
         && oldStops.some((i) => i.id === 'set:callOtherSound') /* the hear half */
