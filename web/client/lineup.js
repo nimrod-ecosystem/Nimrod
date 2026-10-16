@@ -12,8 +12,10 @@
 //     presetId  that module's own preset to use ('' = its own settings on this Lineup panel)
 //     days      0-6 (Sunday 0, the JavaScript day); [] or absent = every day
 //     from, to  hours, 0-24 as decimals (7.5 = 07:30); both absent = all day; to < from runs past midnight
-//     often     'rarely' | 'sometimes' | 'often'
-//     turnMs    how long a turn of a module with no natural end lasts (Pictures); 0 = the Lineup's own setting
+//     often     'rarely' | 'sometimes' | 'often'      weight  (Advanced) a number of its own, instead of the word
+//     turnMs    how long a turn lasts. 0 = the module's own end: ONE video for videos (Mike, 2026-10-16: "one video for
+//               videos"), the Lineup's own setting for Pictures (2 minutes). Minutes on a video turn: videos play one
+//               after another until the time is up, then the turn ends at the end of the video playing.
 // ROWS, NOT SQL TEXT (argued in the plan): a row's parts are AND; two rows for the same module are OR.
 // Pure: the clock and the random draw are passed in.
 
@@ -47,6 +49,7 @@ export function cleanEntry(e, i = 0) {
   const days = Array.isArray(e.days) ? [...new Set(e.days.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort() : [];
   const from = hour(e.from), to = hour(e.to);
   const turnMs = Number(e.turnMs);
+  const weight = Number(e.weight);
   return {
     id: typeof e.id === 'string' && e.id ? e.id.slice(0, 40) : `e${i + 1}`,
     module: e.module,
@@ -54,6 +57,8 @@ export function cleanEntry(e, i = 0) {
     days: days.length === 7 ? [] : days,
     ...(from != null && to != null ? { from, to } : {}),
     often: OFTEN[e.often] ? e.often : OFTEN_DEFAULT,
+    // (2026-10-16, Mike: "words by default, a number under Advanced") a number of its own, when set, is the weight.
+    ...(Number.isFinite(weight) && weight > 0 ? { weight: Math.min(weight, 100) } : {}),
     turnMs: Number.isFinite(turnMs) && turnMs >= 10000 ? Math.min(turnMs, 3600000) : 0,
   };
 }
@@ -89,7 +94,7 @@ export function pickEntry(entries, { date = new Date(), rand = Math.random, last
   let pool = eligible(entries, date);
   if (pool.length > 1 && last) pool = pool.filter((e) => e.id !== last);
   if (!pool.length) return null;
-  const w = pool.map((e) => Math.max(0, OFTEN[e.often] * (Number(weightOf(e)) || 0)));
+  const w = pool.map((e) => Math.max(0, (e.weight > 0 ? e.weight : OFTEN[e.often]) * (Number(weightOf(e)) || 0)));
   const total = w.reduce((a, b) => a + b, 0);
   if (!(total > 0)) return pool[0];
   let r = Math.min(Math.max(Number(rand()) || 0, 0), 0.999999) * total;

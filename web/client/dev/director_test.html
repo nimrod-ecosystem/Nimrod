@@ -261,6 +261,30 @@ async function mountDirector({ host, hour, seed, timers, stub, extra = {}, preSt
         seen.size === 1 && seen.has('pictures'), JSON.stringify([...seen]));
       d3.instance.destroy();
       host3.remove();
+
+      // 2026-10-16 (Mike: turn length "one video for videos" by default, minutes as an option): a YouTube turn of
+      // 5 minutes plays video after video; the Lineup's clock here never moves, so the time is never up.
+      doc.presets = [{ id: 'L1', type: 'lineup', name: 'Videos for a while',
+        settings: { entries: [{ id: 'yt', module: 'youtube', turnMs: 300000, often: 'often' }, { id: 'pics', module: 'pictures', often: 'rarely' }] } }];
+      const host4 = document.createElement('div');
+      host4.style.cssText = 'width:320px;height:200px';
+      document.body.append(host4);
+      const T4 = fakeTimers();
+      const stub4 = makeStubPlayer();
+      const d4 = await mountDirector({ host: host4, hour: 12, seed: 3, timers: T4, stub: stub4,
+        extra: { personId: 'p1', makePersonState: (pid, key) => (pid === 'p1' && key === 'presets' ? handle : null) },
+        preState: { lineupPresetId: 'L1' } });
+      await sleep(80);
+      // Bring the YouTube turn up (the first draw may have been either).
+      for (let i = 0; i < 8 && curProv(host4) !== 'youtube'; i += 1) { T4.fireDue(); await sleep(20); }
+      check('(setup) a YouTube turn is on', curProv(host4) === 'youtube', curProv(host4));
+      const loads = stub4.loaded.length;
+      stub4.fireEnded();
+      await sleep(40);
+      check('*** a video ended with the turn\'s time not up: the NEXT video, still YouTube (not the next turn) ***',
+        curProv(host4) === 'youtube' && stub4.loaded.length > loads, `${curProv(host4)} loads ${loads} -> ${stub4.loaded.length}`);
+      d4.instance.destroy();
+      host4.remove();
     }
 
   } catch (e) {

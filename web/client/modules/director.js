@@ -151,6 +151,17 @@ registerModule(
     let lineupLib = null;
     let knownLineups = [];
     let lastEntry = null;         // the entry on now, so one just played is not drawn twice in a row
+    // The turn on now (2026-10-16, Mike: turn length "an option per module ... one video for videos, 2 minutes for
+    // pictures"): a VIDEO entry with minutes of its own plays video after video until they are up.
+    let turnEntry = null, turnStartedAt = 0;
+    const VIDEO_TURNS = new Set(['youtube', 'personal']);
+    /** A video ended inside a video turn that still has time left: the next video, same turn. */
+    function videoTurnGoesOn(p) {
+      const e = turnEntry;
+      if (!e || !(e.turnMs > 0) || !VIDEO_TURNS.has(e.module) || current !== e.module) return false;
+      if (!p || p.reason !== 'ended') return false;
+      return (io.now ? io.now() : Date.now()) - turnStartedAt < e.turnMs;
+    }
     let offFollow = null;
     // Each turn is logged as a play of its module (source 'lineup'), on this device: Stage 2's freshness reads it.
     const turnPlays = panelPlays(ctx, 'lineup');
@@ -189,6 +200,7 @@ registerModule(
       // Nothing holds now (a gap in the hours): the turn on screen carries on (the plan, question 1).
       if (!e) { if (current) showProvider(current); else rootBus.publish('youtube/activate'); return true; }
       lastEntry = e.id;
+      turnEntry = e; turnStartedAt = date.getTime();
       try {
         const a = adapters[e.module];
         const x = a?.inner?.();
@@ -588,7 +600,12 @@ registerModule(
         // A finished segment is not a stalled one; the next activate re-arms it.
         bus.subscribe('segment/done', () => segmentWatch?.disarm());
         // (row 2.87) A saved Lineup draws the next turn (the machine's own pick is guarded off while it does).
-        bus.subscribe('segment/done', () => { if (lineupActive()) lineupNext(); });
+        bus.subscribe('segment/done', (p) => {
+          if (!lineupActive()) return;
+          // A video turn with time left: the next video, the same turn (re-activating the provider plays its next).
+          if (videoTurnGoesOn(p)) { rootBus.publish(`${turnEntry.module}/activate`); return; }
+          lineupNext();
+        });
         offFollow = followPerson(ctx, (pid) => useLineups(pid));
         // A Lineup chosen in the menu: its first turn now.
         try { state.subscribe?.(() => { if (lineupActive() && lastEntry == null) lineupNext(); if (!lineupActive()) lastEntry = null; }); }
