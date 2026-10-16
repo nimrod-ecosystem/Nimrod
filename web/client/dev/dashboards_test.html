@@ -44,6 +44,7 @@ import {
   dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, PREBUILT_ROUTES, NAV_ROUTES, DASHBOARD_GO_TOPIC,
   PREBUILT_KEY, PREBUILT_DONE_KEY, PREBUILT_REFS_KEY, DASHBOARD_OFFERS_KEY, LOCKED_KEY, EXAMPLE_ORDER,
   inKindOrder, EDIT_PANEL_KEY, recordSettings, remapSettingsIds,
+  bareNamesOn, DASHBOARD_BARE_KEY, DASHBOARD_BARE_FIELD,
 } from '../dashboards.js';
 import { EDIT_PANEL_KEY as EDIT_MODE_PANEL_KEY } from '../edit_mode.js';
 // The builder's panels (registered by modules/view.js wherever a dashboard can mount; imported here too).
@@ -306,6 +307,9 @@ function backend(user) {
         J(routes['dashboard-go-a1']?.phrases) === J(['go to kitchen', 'open kitchen', 'kitchen'])
         && J(routes['dashboard-go-a1'].wakeOnly) === J(['kitchen'])
         && routes['dashboard-go-a1'].topic === DASHBOARD_GO_TOPIC && routes['dashboard-go-a1'].payload.id === 'a1', J(routes['dashboard-go-a1']));
+      // (2026-10-15, Mike: "Yes to a setting on by default") the screen's row, on unless set off.
+      check('the bare-name setting: on by default, off only when set off', bareNamesOn({}) && bareNamesOn(null)
+        && !bareNamesOn({ [DASHBOARD_BARE_KEY]: false }) && DASHBOARD_BARE_FIELD.default === true);
       const bareOff = dashboardSpeechRoutes(list, { bare: false }).routes;
       check('bare: false leaves the two starters only', J(bareOff['dashboard-go-a1']?.phrases) === J(['go to kitchen', 'open kitchen'])
         && !bareOff['dashboard-go-a1'].wakeOnly);

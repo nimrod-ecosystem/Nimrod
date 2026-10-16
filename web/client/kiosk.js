@@ -92,6 +92,7 @@ import {
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
   createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
+  DASHBOARD_BARE_FIELD, DASHBOARD_BARE_KEY, bareNamesOn,
   dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, dashboardsSignature, LOCKED_KEY,
 } from './dashboards.js';
 import { createDashboardPicker } from './dashboard_picker.js';
@@ -1254,7 +1255,8 @@ export async function mountKiosk(root, {
     lastDashList = Array.isArray(list) ? list : [];
     let made = {};
     try {
-      made = dashboardSpeechRoutes(list || [], { taken: spokenTable(PHRASES, { ...ROUTES, ...musicRoutes }) }).routes || {};
+      made = dashboardSpeechRoutes(list || [], { taken: spokenTable(PHRASES, { ...ROUTES, ...musicRoutes }),
+        bare: bareNamesOn(settings.get() || {}) }).routes || {};   // row 2.88: the screen's "by its name alone"
     } catch (err) { console.error('kiosk: dashboard routes', err); made = {}; }
     if (dashboardsSignature(made) === dashboardsSignature(dashRoutes) && offDashActions) return;
     dashRoutes = made;
@@ -1267,6 +1269,15 @@ export async function mountKiosk(root, {
     applyExtraSpeechBindings();
     if (personRow) syncSpeech(personRow);
   }
+  // Row 2.88: "by its name alone" switched on this screen: the spoken dashboards are made again (their phrases change).
+  let bareSeen = null;
+  try {
+    settings.subscribe?.((s) => {
+      const b = bareNamesOn(s || {});
+      if (bareSeen !== null && b !== bareSeen && !torn) applyDashboards(lastDashList);
+      bareSeen = b;
+    });
+  } catch { /* a host without subscribe: the next list drawn uses it */ }
   function watchMusic(personId) {
     if (musicFavs || torn || !personId) return;
     try {
@@ -4202,6 +4213,8 @@ export async function mountKiosk(root, {
       kind: 'toggle', level: 'advanced', default: !!dashboardDefault, onLabel: 'Yes', offLabel: 'No' }] : []),
     // ROW 2.34: whether Home's picker offers the ready-made dashboards (dashboards.js argues the default).
     ...(!embedded ? [{ ...DASHBOARD_OFFERS_FIELD }] : []),
+    // ROW 2.88 (2026-10-15): a dashboard by its bare name - a setting, on by default (dashboards.js).
+    ...(!embedded ? [{ ...DASHBOARD_BARE_FIELD }] : []),
     // ROW 2.38: how long the dashboards tray waits between presses, and how many levels of a dashboard
     // shown inside a dashboard move live. Both argued in dashboard_nest.js; both the SCREEN's (the
     // device pays for live levels; the tray belongs to this screen's bar).
