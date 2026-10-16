@@ -311,24 +311,14 @@
 .youtube .ybtn{min-width:34px;min-height:34px;border-radius:99px;cursor:pointer;
   border:1px solid rgba(255,255,255,.28);background:transparent;color:#cfe0d6;font-size:1rem}
 .youtube .ybtn:hover{background:rgba(255,255,255,.12)}
-/* z-index 6, ABOVE the settings sheet (5). The panel is `inset:8px` and was covering the gear
-   that opened it, so the one control somebody would reach for to get out was underneath the
-   thing they wanted to leave. */
-.youtube .gear{position:absolute;top:8px;right:8px;z-index:calc(var(--z-panel-contents) + 6);min-width:34px;min-height:34px;
-  border-radius:99px;cursor:pointer;border:1px solid rgba(255,255,255,.28);
-  background:rgba(7,18,13,.72);color:#cfe0d6}
-.youtube .gear:hover{background:rgba(7,18,13,.92)}
-/* The panel itself: a sheet over the video, scrolling inside its own box, because a playlist
-   is a list and a panel can be a quarter of a screen. */
+/* *** THE GEAR IS GONE (row 2.95, 2026-10-16). *** Everything the sheet below held is in the one
+   settings menu; the panel shows no gear and the sheet is never opened on a screen. The sheet's
+   rules stay for the one place it IS shown, the Media page's preset form (preset_editor.js, which
+   restyles it as a form). The comment above predates this: the arrows still stand. */
+/* The sheet: scrolling inside its own box, because a playlist is a list. */
 .youtube .settings{position:absolute;inset:8px;z-index:calc(var(--z-panel-contents) + 5);overflow:auto;padding:12px 14px;
   border-radius:12px;background:rgba(7,18,13,.96);color:#e7efe9;
   border:1px solid rgba(255,255,255,.16);font-size:.86rem}
-/* The way out, first thing in the panel and full width -- it is the control somebody wants when
-   they are lost, and hunting for it is the problem. */
-.youtube .yt-close{display:block;width:100%;margin:0 0 10px;min-height:40px;
-  border-radius:8px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
-  color:inherit;font:inherit;cursor:pointer}
-.youtube .yt-close:hover{background:rgba(255,255,255,.16)}
 .youtube .settings .chk{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .youtube .settings .addrow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
 .youtube .settings .addrow input{flex:1 1 140px;min-width:0;padding:7px 9px;border-radius:8px;

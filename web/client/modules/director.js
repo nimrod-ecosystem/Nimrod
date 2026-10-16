@@ -422,6 +422,8 @@ registerModule(
             personKnown: ctx.personKnown,
             plays: ctx.plays,
             playsPanel: `${instanceId}-${p.id}`,
+            // (row 2.95) a turn's own menu rows can ask the menu to repaint (YouTube's search answer landing).
+            menuChanged: ctx.menuChanged,
           });
           child.init();
           cState.startPolling(); cEvents.startPolling();

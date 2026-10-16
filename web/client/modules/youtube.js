@@ -137,6 +137,31 @@ const PROGRESS_MS = 5000;
 // settings_fields.js for why markup would not do. A CHOICE, NOT A NUMBER, for the reason
 // photos' interval is: with one switch you travel one way, one press at a time, so the number
 // of stops IS the cost.
+// Every half hour of the day, for the menu's time rows (a choice a switch can step), and how one reads: "07:30".
+const HALF_HOURS = Array.from({ length: 48 }, (_, i) => i / 2);
+function clockOf(h) {
+  const n = Math.max(0, Math.min(24, Number(h) || 0));
+  const hh = Math.floor(n);
+  const mm = Math.round((n - hh) * 60);
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+/**
+ * One time-of-day entry from what was filled in (the Media page's form or the menu's rows): `{ entry }`, or
+ * `{ problem }` in words. `from`/`to` are hours (7.5) or null; `to` null means "until the next one starts".
+ * `end` is OMITTED rather than set to null when there is none: `pickDaypart` decides which kind of entry this is by
+ * whether the key holds a finite number, and omitting it keeps the saved row identical in shape to every row saved
+ * before ends existed, which is what makes them impossible to tell apart later.
+ */
+export function scheduleEntry({ name = '', from = null, to = null, list = '' } = {}) {
+  const listId = parsePlaylistId(list);
+  if (from == null || !Number.isFinite(Number(from))) return { problem: 'Give the time it starts.' };
+  if (!listId) return { problem: 'That is not a playlist link or id.' };
+  const entry = { name: String(name || '').trim() || `from ${clockOf(from)}`, start: Number(from), playlistId: listId };
+  if (to != null && to !== '' && Number.isFinite(Number(to))) entry.end = Number(to);
+  return { entry };
+}
+
 export const SETTINGS = [
   // ADVANCED, which is exactly where Mike said to put things that would otherwise clutter. It
   // is also the honest level for it: a Google Cloud API key is not something a caregiver has
@@ -180,7 +205,7 @@ export const SETTINGS = [
   // *** ONE SETTINGS MENU (row 2.95, Mike 2026-10-16: "Everything should be in the universal settings menu. No module
   // should have a settings menu separate from that."). *** What this panel's own drawer (its ⚙) held, here instead.
   // Stage A: the two switches, adding a video, using a playlist, and the lists (menuItems, below). Stage B: searching and
-  // the time-of-day playlists, then the drawer goes.
+  // the time-of-day playlists; the panel's gear is gone (the drawer is now only the Media page's preset form).
   //   The switches are this panel's own settings, as the drawer's boxes were (they wrote the same keys).
   { key: 'autoAdvance', label: 'Play the next video when one ends', kind: 'toggle', default: DEFAULTS.autoAdvance,
     level: 'standard', onLabel: 'Yes', offLabel: 'No',
@@ -196,6 +221,26 @@ export const SETTINGS = [
     note: 'A link from YouTube’s Share button works, or the 11-letter id.' },
   { key: 'usePlaylist', label: 'Play a YouTube playlist (its link or id)', kind: 'text', default: '', level: 'standard',
     note: 'A playlist’s link has “list=PL…” in it. Its videos join this panel’s own.' },
+  // Stage B. SEARCHING: what is typed is searched (`settingsWrite`); what is found is listed under it with Add
+  // (menuItems). Standard, as the drawer's search box was: it is how most people find a video.
+  { key: 'findVideo', label: 'Search YouTube for a video', kind: 'text', default: '', level: 'standard',
+    note: 'What is found is listed below, each with Add. Searching needs a YouTube key (the advanced settings).' },
+  //   A PLAYLIST BY TIME OF DAY: the drawer's four boxes as four rows, then "Add this playlist by time of day"
+  // (menuItems). These four ARE kept, under `schedNew*`, as a draft: a repaint or a closed menu must not lose a half-made
+  // entry, and Add empties them. The times are CHOICES, every half hour, so a switch can step them (a typed "07:30"
+  // needs a keyboard; the half hour matches what the drawer's time boxes were used for). Advanced, as the list of them
+  // is: a schedule by time of day is not where somebody starts. Not while a preset is chosen: its schedule is the one in
+  // force (effectiveSchedule), and an entry added here would do nothing anybody could see.
+  { key: 'schedNewName', label: 'A new playlist by time of day: its name', kind: 'text', default: '', level: 'advanced',
+    note: 'Morning, Lunch, Evening… Left empty, it is named by when it starts.', appliesWhen: (v) => !v?.presetId },
+  { key: 'schedNewFrom', label: 'The new one starts at', kind: 'choice', default: '', level: 'advanced',
+    options: [{ value: '', label: 'not picked yet' }, ...HALF_HOURS.map((h) => ({ value: h, label: clockOf(h) }))],
+    appliesWhen: (v) => !v?.presetId },
+  { key: 'schedNewTo', label: 'The new one ends at', kind: 'choice', default: '', level: 'advanced',
+    options: [{ value: '', label: 'when the next one starts' }, ...HALF_HOURS.map((h) => ({ value: h + 0.5, label: clockOf(h + 0.5) }))],
+    appliesWhen: (v) => !v?.presetId },
+  { key: 'schedNewList', label: 'The new one’s YouTube playlist (its link or id)', kind: 'text', default: '',
+    level: 'advanced', appliesWhen: (v) => !v?.presetId },
   // *** VOLUME (row 2.28: "volume up, volume down ... mostly for Youtube right now"). ***
   //
   // *** THIS IS THE VIDEO'S OWN LEVEL, AND IT IS NO LONGER WHAT "LOUDER" MOVES. *** The first
@@ -1262,6 +1307,31 @@ registerModule(
       }
     }
 
+    // *** SEARCHING FROM THE ONE MENU (row 2.95, stage B). *** The menu's "Search YouTube for a video" row hands what
+    // was typed here (`settingsWrite`); what comes back is kept in memory only (never saved: a search is somebody's
+    // passing words) and listed by `menuItems` with Add. The menu is asked to repaint when the answer lands
+    // (`ctx.menuChanged`), since a search takes longer than a press. A newer search wins over a slower older one.
+    let found = null;          // { q, busy, items, words }
+    let searchSeq = 0;
+    function menuChanged() { try { ctx.menuChanged?.(); } catch (e) { console.error('youtube: menu repaint', e); } }
+    async function menuSearch(q) {
+      const mine = ++searchSeq;
+      found = { q, busy: true, items: [], words: '' };
+      menuChanged();
+      try {
+        if (String(cfg.apiKey || '').trim()) await adoptOldKey(cfg.apiKey);
+        const { items, error, message } = await search(q, { client: keyClient });
+        if (mine !== searchSeq || destroyed) return;
+        found = error
+          ? { q, items: [], words: (error === 'no-key' ? SEARCH_MSG['no-key'] : message) || SEARCH_MSG[error] || SEARCH_MSG.failed }
+          : { q, items: items || [], words: (items || []).length ? '' : 'Nothing found.' };
+      } catch {
+        if (mine !== searchSeq || destroyed) return;
+        found = { q, items: [], words: SEARCH_MSG.failed };
+      }
+      menuChanged();
+    }
+
     /** `"07:30"` -> `7.5`. Returns null for an empty or unparseable value. */
     function hoursFromTime(v) {
       const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
@@ -1274,18 +1344,10 @@ registerModule(
     function addSchedule() {
       const name = (mount.querySelector('[data-sch-name]')?.value || '').trim();
       const from = hoursFromTime(mount.querySelector('[data-sch-from]')?.value);
-      const toRaw = mount.querySelector('[data-sch-to]')?.value;
-      const to = hoursFromTime(toRaw);
-      const listId = parsePlaylistId(mount.querySelector('[data-sch-list]')?.value);
-      if (from == null) { setStatus('Give the time it starts.'); return; }
-      if (!listId) { setStatus('That is not a playlist link or id.'); return; }
-      // `end` is OMITTED rather than set to null when the field is blank. `pickDaypart` decides
-      // which kind of entry this is by whether the key holds a finite number, and a stored
-      // `end: null` reads the same as absent — but omitting it keeps the saved row identical in
-      // shape to every row saved before today, which is what makes them impossible to tell
-      // apart later.
-      const entry = { name: name || `from ${hhmm(from)}`, start: from, playlistId: listId };
-      if (to != null) entry.end = to;
+      const to = hoursFromTime(mount.querySelector('[data-sch-to]')?.value);
+      // The same entry the menu's rows make (`scheduleEntry`, which argues the omitted `end`).
+      const { entry, problem } = scheduleEntry({ name, from, to, list: mount.querySelector('[data-sch-list]')?.value });
+      if (problem) { setStatus(problem); return; }
       state.set({ schedule: [...(cfg.schedule || []), entry] });
       for (const sel of ['[data-sch-name]', '[data-sch-from]', '[data-sch-to]', '[data-sch-list]']) {
         const n = mount.querySelector(sel);
@@ -1433,17 +1495,13 @@ registerModule(
               <span class="yt-label" data-label></span>
               <button class="ybtn" data-next aria-label="next video">›</button>
             </div>
-            <button class="gear" data-gear aria-label="youtube settings">⚙</button>
+            <!-- *** NO GEAR ON THE PANEL ANY MORE (row 2.95, Mike 2026-10-16: "Everything should be in the
+                 universal settings menu. No module should have a settings menu separate from that."). ***
+                 Everything this drawer did is in the one menu now (SETTINGS and menuItems). The drawer
+                 itself stays for ONE user: the Media page's preset form (preset_editor.js), which
+                 mounts this module bound to a preset and shows only this, with its time boxes, as a
+                 form on a page. On a screen it is never shown. -->
             <div class="settings" data-settings hidden>
-              <!-- *** A PANEL YOU CANNOT LEAVE IS THE WORST THING ON A BEDSIDE SCREEN. ***
-                   Mike opened this, added a playlist, and could not get out: Escape did
-                   nothing, there was no close, and the panel is inset on all four sides so it
-                   covered the gear that opened it. He escaped by navigating to Photos and back.
-                   Three ways out now, because one is not enough for a control somebody
-                   may be using with a switch: this button, the Escape key, and the gear,
-                   which is lifted above the panel so the thing that opened it still
-                   closes it. -->
-              <button type="button" class="yt-close" data-close aria-label="close settings">Close ✕</button>
               <!-- Set from the universal settings menu (this module's own SETTINGS declares
                    presetId, with live options from settingsChoices below) — this is just the
                    explanation for what changed once one is picked. See presets.js/register #255.
@@ -1728,31 +1786,12 @@ registerModule(
           if (e.target instanceof Element && e.target.closest('[data-start]')) begin();
         });
 
-        mount.querySelector('[data-gear]').addEventListener('click', () => {
-          const s = mount.querySelector('[data-settings]');
-          s.hidden = !s.hidden;
-        });
         mount.querySelector('[data-set-list]').addEventListener('click', () => {
           const el = mount.querySelector('[data-list-url]');
           const id = parsePlaylistId(el.value);
           if (!id) { setStatus('That is not a playlist link. A playlist’s web address has "list=PL…" in it.'); return; }
           el.value = '';
           state.set({ playlistId: id });
-        });
-        // THE WAY OUT. `closePanel` rather than a toggle, because Escape and Close both mean
-        // "leave", never "come back".
-        const panelEl = () => mount.querySelector('[data-settings]');
-        const closePanel = () => { const el = panelEl(); if (el) el.hidden = true; };
-        mount.querySelector('[data-close]').addEventListener('click', closePanel);
-        // On the MODULE ROOT, not the document: two of these on one screen must not close each
-        // other, and a keydown listener on `window` from a panel is how that happens.
-        mount.addEventListener('keydown', (e) => {
-          if (e.key !== 'Escape') return;
-          const el = panelEl();
-          if (!el || el.hidden) return;
-          e.preventDefault();
-          e.stopPropagation();
-          closePanel();
         });
         mount.querySelector('[data-sch-add]').addEventListener('click', () => addSchedule());
         mount.querySelector('[data-find-go]').addEventListener('click', () => runSearch());
@@ -1849,6 +1888,23 @@ registerModule(
       menuItems: () => {
         const out = [];
         const preset = activePreset();
+        // (stage B) What the last search found, each with Add (the same entry the drawer's search wrote: the real title
+        // from YouTube, which is the gain over pasting a link). At the search row's level, so no `level`.
+        if (found) {
+          out.push({ kind: 'heading', id: 'yt-found', label: found.busy ? `Searching YouTube for “${found.q}”…` : `Found on YouTube for “${found.q}”` });
+          if (found.words) out.push({ kind: 'item', id: 'yt-found:words', label: found.words, disabled: true });
+          for (const it of found.items) {
+            const title = String(it.title || it.id);
+            const added = (cfg.playlist || []).some((x) => x && x.id === it.id);
+            out.push({ kind: 'item', id: `yt-found:${it.id}`, label: added ? `Added: ${title}` : `Add ${title}`,
+              hint: it.channel ? String(it.channel) : 'a video on YouTube', disabled: added,
+              run: () => {
+                if ((cfg.playlist || []).some((x) => x && x.id === it.id)) return;
+                state.set({ playlist: [...(cfg.playlist || []), { id: it.id, title: it.title || it.id, channel: it.channel || undefined }] });
+              } });
+          }
+          if (!found.busy) out.push({ kind: 'item', id: 'yt-found:clear', label: 'Clear the search results', run: () => { found = null; } });
+        }
         const vids = effectivePlaylist();
         out.push({ kind: 'heading', id: 'yt-videos', label: `Videos (${vids.length})${preset ? `, from the preset "${preset.name}"` : ''}`, level: 'advanced' });
         for (const v of vids) {
@@ -1859,6 +1915,19 @@ registerModule(
               level: 'advanced', run: () => { state.set({ playlist: (cfg.playlist || []).filter((x) => x.id !== v.id) }); } });
         }
         const parts = effectiveSchedule().filter((d) => d && d.playlistId);
+        // (stage B) The new entry the four `schedNew*` rows describe, added with one press; it says what is still
+        // missing rather than failing after the press. Not while a preset is chosen (the rows say why).
+        if (!cfg.presetId) {
+          const { entry, problem } = scheduleEntry({ name: cfg.schedNewName, from: cfg.schedNewFrom === '' ? null : cfg.schedNewFrom,
+            to: cfg.schedNewTo, list: cfg.schedNewList });
+          const when = entry ? (Number.isFinite(Number(entry.end)) ? `${hhmm(entry.start)}–${hhmm(entry.end)}` : `from ${hhmm(entry.start)}`) : '';
+          out.push({ kind: 'item', id: 'yt-sched:add', label: 'Add the new playlist by time of day', level: 'advanced',
+            hint: entry ? `${entry.name}, ${when}` : `first: ${problem.toLowerCase()} (the rows above)`, disabled: !entry,
+            run: () => {
+              if (!entry) return;
+              state.set({ schedule: [...(cfg.schedule || []), entry], schedNewName: '', schedNewFrom: '', schedNewTo: '', schedNewList: '' });
+            } });
+        }
         if (parts.length) {
           out.push({ kind: 'heading', id: 'yt-sched', label: 'Playlists by time of day', level: 'advanced' });
           for (const d of parts) {
@@ -1902,6 +1971,13 @@ registerModule(
           const listId = parsePlaylistId(value);
           if (!listId) { setStatus('That is not a playlist link. A playlist’s web address has "list=PL…" in it.'); return true; }
           state.set({ playlistId: listId });
+          return true;
+        }
+        // (stage B) A search: run, and its answer listed in `menuItems`. An empty box clears the results.
+        if (key === 'findVideo') {
+          const q = String(value == null ? '' : value).trim();
+          if (!q) { found = null; searchSeq++; return true; }
+          menuSearch(q);
           return true;
         }
         if (key !== 'apiKey') return false;
