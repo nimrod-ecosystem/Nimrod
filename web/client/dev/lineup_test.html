@@ -47,7 +47,7 @@ try {
     cleanEntry({ module: 'pictures', often: 'loads', turnMs: 500 }).often === 'sometimes' && cleanEntry({ module: 'pictures', turnMs: 500 }).turnMs === 0);
   check(`at most ${MAX_ENTRIES} entries, ids never repeat`, cleanEntries(Array.from({ length: 80 }, (_, i) => ({ module: 'pictures' }))).length === MAX_ENTRIES
     && cleanEntries([{ id: 'a', module: 'youtube' }, { id: 'a', module: 'pictures' }]).length === 1);
-  check('the modules a turn can be today', J(LINEUP_MODULES.map((m) => m.id)) === J(['youtube', 'pictures', 'personal', 'educational']));
+  check('the modules a turn can be today', J(LINEUP_MODULES.map((m) => m.id)) === J(['youtube', 'pictures', 'personal', 'educational', 'dashboard']));
 
   section('days and hours');
   const weekday = { module: 'youtube', days: [1, 2, 3, 4, 5], from: 9, to: 17 };
@@ -126,6 +126,17 @@ try {
       === 'YouTube, Morning playlist, Mon Tue Wed Thu Fri, 07:00-11:30, often',
     entryWords({ module: 'youtube', presetId: 'p', days: [1, 2, 3, 4, 5], from: 7, to: 11.5, often: 'often' }, { presetName: () => 'Morning playlist' }));
   check('every day, all day', entryWords({ module: 'pictures' }) === 'Pictures, every day, all day, sometimes');
+
+  section('a dashboard as a turn (Mike, 2026-10-16: "a dashboard as an entry: yes")');
+  check('"A dashboard" is a module a turn can be', LINEUP_MODULES.some((m) => m.id === 'dashboard' && m.shows));
+  check('*** a dashboard entry keeps which dashboard it shows ***', cleanEntry({ module: 'dashboard', show: ' dash1 ' }).show === 'dash1');
+  check('...and no other entry keeps one', cleanEntry({ module: 'pictures', show: 'dash1' }).show === undefined
+    && cleanEntry({ module: 'dashboard', show: '' }).show === undefined);
+  check('*** it reads with the dashboard\'s name ***',
+    entryWords({ module: 'dashboard', show: 'dash1', often: 'often' }, { showName: (id) => (id === 'dash1' ? 'Kitchen' : '') })
+      === 'A dashboard, Kitchen, every day, all day, often');
+  check('...or says when none is chosen, or when the one chosen is gone',
+    /none chosen yet/.test(entryWords({ module: 'dashboard' })) && /a dashboard that is gone/.test(entryWords({ module: 'dashboard', show: 'x' })));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

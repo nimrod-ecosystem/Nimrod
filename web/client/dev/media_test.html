@@ -667,6 +667,37 @@ section('*** presets — a Lineup: Add module, days, hours, how often (row 2.87,
     text(host.querySelector('[data-preset-list]')));
 }
 
+section('*** presets — a Lineup turn can be a whole dashboard (Mike, 2026-10-16: "a dashboard as an entry: yes") ***');
+{
+  const presets = createPresetLibrary({ makeState: () => fakePresetState() });
+  const pairs = { list: async () => [{ id: 'dash-kitchen', name: 'Kitchen' }, { id: 'dash-games', name: 'Game night' }] };
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0), presets, pairs });
+  await p.refresh();
+  const typeSel = host.querySelector('[data-preset-type]');
+  typeSel.value = 'lineup'; typeSel.dispatchEvent(new Event('change', { bubbles: true }));
+  await settle();
+  const ed = (sel) => host.querySelector(`[data-preset-editor] ${sel}`);
+  ed('[data-add-entry]').click();
+  await settle();
+  const set = (el, v) => { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); };
+  check('"A dashboard" is one of the modules a turn can be', [...ed('[data-entry="0"] [data-f="module"]').options].some((o) => o.value === 'dashboard'));
+  set(ed('[data-entry="0"] [data-f="module"]'), 'dashboard');
+  await settle();
+  const shows = ed('[data-entry="0"] [data-f="show"]');
+  check('*** a dashboard turn asks which dashboard, from the account\'s own ***',
+    shows && [...shows.options].map((o) => o.textContent).join('|') === 'pick a dashboard|Kitchen|Game night', shows && [...shows.options].map((o) => o.textContent).join('|'));
+  check('...and how long its turn is, 5 minutes by default', ed('[data-entry="0"] [data-f="turnMs"]')?.selectedOptions[0]?.textContent === '5 minutes');
+  set(shows, 'dash-games');
+  host.querySelector('[data-preset-name]').value = 'Evenings';
+  host.querySelector('[data-preset-save]').click();
+  await settle();
+  const es = presets.listPresets('lineup')[0]?.settings?.entries || [];
+  check('*** saved: the turn names its dashboard ***', es.length === 1 && es[0].module === 'dashboard' && es[0].show === 'dash-games', JSON.stringify(es));
+  check('...and the card says which, by name', /A dashboard, Game night, every day, all day/.test(text(host.querySelector('[data-preset-list]'))),
+    text(host.querySelector('[data-preset-list]')));
+  presets.destroy();
+}
+
 section('presets — the module itself keeps behaving with an injected library present');
 {
   // Not a regression test for youtube.js (that lives in youtube_test.html) — just proof that

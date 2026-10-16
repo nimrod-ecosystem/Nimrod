@@ -14,8 +14,11 @@
 //     from, to  hours, 0-24 as decimals (7.5 = 07:30); both absent = all day; to < from runs past midnight
 //     often     'rarely' | 'sometimes' | 'often'      weight  (Advanced) a number of its own, instead of the word
 //     turnMs    how long a turn lasts. 0 = the module's own end: ONE video for videos (Mike, 2026-10-16: "one video for
-//               videos"), the Lineup's own setting for Pictures (2 minutes). Minutes on a video turn: videos play one
-//               after another until the time is up, then the turn ends at the end of the video playing.
+//               videos"), the Lineup's own setting for Pictures (2 minutes), 5 minutes for a dashboard. Minutes on a
+//               video turn: videos play one after another until the time is up, then the turn ends at the end of the
+//               video playing.
+//     show      a 'dashboard' entry only: which dashboard takes the turn (Mike, 2026-10-16: "a dashboard as an entry:
+//               yes"). An entry naming none hands its turn straight back.
 // ROWS, NOT SQL TEXT (argued in the plan): a row's parts are AND; two rows for the same module are OR.
 // Pure: the clock and the random draw are passed in.
 
@@ -27,6 +30,8 @@ export const LINEUP_MODULES = Object.freeze([
   Object.freeze({ id: 'pictures', label: 'Pictures' }),
   Object.freeze({ id: 'personal', label: 'Personal videos' }),
   Object.freeze({ id: 'educational', label: 'Learning' }),
+  // A whole dashboard for its turn (modules/director.js `makeDashboardAdapter`): which one is the entry's `show`.
+  Object.freeze({ id: 'dashboard', label: 'A dashboard', shows: true }),
 ]);
 const MODULE_IDS = new Set(LINEUP_MODULES.map((m) => m.id));
 
@@ -54,6 +59,7 @@ export function cleanEntry(e, i = 0) {
     id: typeof e.id === 'string' && e.id ? e.id.slice(0, 40) : `e${i + 1}`,
     module: e.module,
     presetId: typeof e.presetId === 'string' ? e.presetId.slice(0, 80) : '',
+    ...(e.module === 'dashboard' && typeof e.show === 'string' && e.show.trim() ? { show: e.show.trim().slice(0, 80) } : {}),
     days: days.length === 7 ? [] : days,
     ...(from != null && to != null ? { from, to } : {}),
     often: OFTEN[e.often] ? e.often : OFTEN_DEFAULT,
@@ -142,13 +148,16 @@ export function freshnessWeights(rows, { now = Date.now(), windowMs = FRESH_WIND
 }
 
 /** "YouTube, Morning playlist, Mon-Fri, 07:00-11:00, often": an entry as the sentence it is. */
-export function entryWords(entry, { presetName = () => '' } = {}) {
+export function entryWords(entry, { presetName = () => '', showName = () => '' } = {}) {
   const e = cleanEntry(entry) || {};
   const m = LINEUP_MODULES.find((x) => x.id === e.module);
   const pad = (n) => String(n).padStart(2, '0');
   const hm = (h) => `${pad(Math.floor(h))}:${pad(Math.round((h % 1) * 60))}`;
   const days = !e.days || !e.days.length ? 'every day' : e.days.map((d) => DAY_LABELS[d]).join(' ');
   const hours = e.from == null ? 'all day' : `${hm(e.from)}-${hm(e.to)}`;
-  const using = e.presetId ? (presetName(e.presetId) || 'a preset that is gone') : '';
+  // A dashboard entry names its dashboard ("A dashboard, Kitchen, ..."), or says it names none yet.
+  const using = m && m.shows
+    ? (e.show ? (showName(e.show) || 'a dashboard that is gone') : 'none chosen yet')
+    : (e.presetId ? (presetName(e.presetId) || 'a preset that is gone') : '');
   return [m ? m.label : '?', using, days, hours, (OFTEN_LABELS[e.often] || '').toLowerCase()].filter(Boolean).join(', ');
 }

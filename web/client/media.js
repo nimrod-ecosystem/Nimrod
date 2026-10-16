@@ -494,7 +494,10 @@ export function mountMedia(root, {
     if (p.type === 'lineup') {
       const list = Array.isArray(s.entries) ? s.entries : [];
       const name = (id) => presetLib?.getPreset(id)?.name || '';
-      return list.length ? list.map((e) => entryWords(e, { presetName: name })).join(' · ') : 'no turns yet';
+      // A dashboard entry's name, once the account's dashboards are known ("a dashboard" until then, never "gone").
+      if (list.some((e) => e && e.module === 'dashboard')) askDashboards();
+      const board = (id) => (knownDashboards ? (knownDashboards.find((d) => d && d.id === id)?.name || '') : 'a dashboard');
+      return list.length ? list.map((e) => entryWords(e, { presetName: name, showName: board })).join(' · ') : 'no turns yet';
     }
     const n = Array.isArray(s.playlist) ? s.playlist.length : 0;
     const sched = Array.isArray(s.schedule) ? s.schedule.length : 0;
@@ -540,6 +543,19 @@ export function mountMedia(root, {
   let editingPresetId = null;
   // Row 2.22 (2026-10-14): the preset's form is the module's own (preset_editor.js), remade for each preset edited.
   let presetEditor = null;
+  // (row 2.87) A Lineup's dashboard entries pick from the account's dashboards: asked for once, when first needed;
+  // the form and the cards are drawn again when they arrive.
+  let knownDashboards = null;
+  let dashboardsAsked = false;
+  function askDashboards() {
+    if (dashboardsAsked) return;
+    dashboardsAsked = true;
+    Promise.resolve(pairClient.list?.()).then((list) => {
+      knownDashboards = (Array.isArray(list) ? list : []).map((d) => ({ id: d.id, name: d.name }));
+      try { presetEditor?.setDashboards?.(knownDashboards); } catch (err) { console.error('media: dashboards', err); }
+      try { renderPresets(); } catch { /* not drawn yet */ }
+    }).catch(() => { knownDashboards = []; });
+  }
   function openPresetEditor(type, settings = {}) {
     try { presetEditor?.destroy(); } catch { /* gone */ }
     presetEditor = null;
@@ -548,7 +564,8 @@ export function mountMedia(root, {
     // (row 2.87) A Lineup's rows offer each module's own presets: the person's saved ones, read now.
     let presets = [];
     try { presets = presetLib ? presetLib.listPresets() : []; } catch { presets = []; }
-    try { presetEditor = mountPresetEditor(host, { type, settings, presets }); }
+    if (type === 'lineup') askDashboards();
+    try { presetEditor = mountPresetEditor(host, { type, settings, presets, dashboards: knownDashboards || [] }); }
     catch (err) { console.error('media: preset editor', err); host.textContent = 'The settings form could not be shown.'; }
   }
 

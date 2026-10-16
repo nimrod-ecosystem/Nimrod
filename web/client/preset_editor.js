@@ -42,10 +42,12 @@ const quietPlayer = () => ({ load() {}, stop() {}, destroy() {}, cueList() {}, p
  * Mount `type`'s own settings form in `host`, editing `settings` (a preset's, or {} for a new one).
  * Returns { values() -> the preset's settings now, destroy() }. `onChange(values)` after each edit.
  */
-export function mountPresetEditor(host, { type = 'youtube', settings = {}, onChange = null, user = null, presets = [] } = {}) {
+// `dashboards` (a Lineup's form): the account's dashboards [{ id, name }], for a dashboard entry's "Shows". It may
+// arrive later (`setDashboards` on what this returns).
+export function mountPresetEditor(host, { type = 'youtube', settings = {}, onChange = null, user = null, presets = [], dashboards = [] } = {}) {
   if (!host) throw new Error('mountPresetEditor: a host element is required');
   if (!PRESET_KEYS[type]) throw new Error(`mountPresetEditor: no preset form for "${type}"`);
-  if (type === LINEUP_TYPE) return mountLineupForm(host, { settings, onChange, presets });
+  if (type === LINEUP_TYPE) return mountLineupForm(host, { settings, onChange, presets, dashboards });
   // `directed` + no autoAdvance: the module waits to be told to play, and nobody tells it.
   let draft = { ...presetSettingsFrom(type, settings), directed: true, autoAdvance: false };
   const subs = new Set();
@@ -118,10 +120,17 @@ const VIDEO_TURN_CHOICES = Object.freeze([
   { value: 0, label: 'one video' }, { value: 300000, label: '5 minutes' }, { value: 600000, label: '10 minutes' },
   { value: 1800000, label: '30 minutes' }, { value: 3600000, label: '1 hour' },
 ]);
-export const TURN_CHOICES_FOR = Object.freeze({ pictures: TURN_CHOICES, youtube: VIDEO_TURN_CHOICES, personal: VIDEO_TURN_CHOICES });
+// A dashboard: 5 minutes unless the entry says otherwise (modules/director.js DASHBOARD_TURN_MS argues it).
+const DASHBOARD_TURN_CHOICES = Object.freeze([
+  { value: 0, label: '5 minutes' }, { value: 120000, label: '2 minutes' }, { value: 600000, label: '10 minutes' },
+  { value: 1800000, label: '30 minutes' }, { value: 3600000, label: '1 hour' },
+]);
+export const TURN_CHOICES_FOR = Object.freeze({ pictures: TURN_CHOICES, youtube: VIDEO_TURN_CHOICES, personal: VIDEO_TURN_CHOICES,
+  dashboard: DASHBOARD_TURN_CHOICES });
 
-function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } = {}) {
+function mountLineupForm(host, { settings = {}, onChange = null, presets = [], dashboards = [] } = {}) {
   let entries = cleanEntries(settings && settings.entries);
+  let boards = Array.isArray(dashboards) ? dashboards : [];
   let seq = entries.length;
   const presetsFor = (moduleId) => {
     const m = LINEUP_MODULES.find((x) => x.id === moduleId);
@@ -133,6 +142,7 @@ function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } 
     return `<fieldset class="lu-row" data-entry="${i}">
       <legend>Turn ${i + 1}</legend>
       <label>Module <select data-f="module">${LINEUP_MODULES.map((m) => `<option value="${m.id}"${m.id === e.module ? ' selected' : ''}>${esc(m.label)}</option>`).join('')}</select></label>
+      ${LINEUP_MODULES.find((m) => m.id === e.module)?.shows ? `<label>Shows <select data-f="show"><option value="">pick a dashboard</option>${boards.filter((b) => b && b.id).map((b) => `<option value="${esc(b.id)}"${b.id === e.show ? ' selected' : ''}>${esc(b.name || 'a dashboard')}</option>`).join('')}${e.show && !boards.some((b) => b && b.id === e.show) ? `<option value="${esc(e.show)}" selected>${boards.length ? 'a dashboard that is gone' : 'the one chosen (loading the list…)'}</option>` : ''}</select></label>` : ''}
       ${opts.length || e.presetId ? `<label>Using <select data-f="presetId"><option value="">its own settings</option>${opts.map((p) => `<option value="${esc(p.id)}"${p.id === e.presetId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>` : ''}
       <span class="lu-days" role="group" aria-label="Days">${DAY_LABELS.map((d, n) => `<label class="lu-day"><input type="checkbox" data-day="${n}"${!e.days.length || e.days.includes(n) ? ' checked' : ''}> ${d}</label>`).join('')}</span>
       <label>From <input type="time" data-f="from" value="${toTime(e.from)}"></label>
@@ -171,7 +181,7 @@ function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } 
         if (h != null && other != null) { e.from = f === 'from' ? h : other; e.to = f === 'to' ? h : other; } else { delete e.from; delete e.to; }
       } else if (f === 'turnMs') e.turnMs = Number(t.value) || 0;
       else if (f) e[f] = t.value;
-      if (f === 'module') { e.presetId = ''; e.turnMs = 0; entries[i] = e; draw(); changed(); return; }
+      if (f === 'module') { e.presetId = ''; e.turnMs = 0; delete e.show; entries[i] = e; draw(); changed(); return; }
     }
     entries[i] = e;
     changed();
@@ -197,6 +207,8 @@ function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } 
   ensureLineupStyle(host.ownerDocument || document);
   return {
     values: () => ({ entries: cleanEntries(entries) }),
+    // The account's dashboards arrived (or changed): the "Shows" lists are drawn again, nothing chosen is lost.
+    setDashboards: (list) => { boards = Array.isArray(list) ? list : []; draw(); },
     destroy: () => { host.removeEventListener('change', onInput); host.removeEventListener('click', onClick); host.replaceChildren(); host.classList.remove('preset-editor'); },
   };
 }
