@@ -30,7 +30,7 @@ import {
   LEFT_OUT, WHAT_CHOICES, PLAY_LABELS_TOPIC,
 } from '../play_charts.js';
 import { PLAY_KIND, createPlays, memoryPlayStore, panelPlays, PLAY_LABELS_TOPIC as PLAYS_LABELS_TOPIC } from '../plays.js';
-import { VIEWS, nextView, barSvg, lineSvg, pieSvg, examplePlays, CHART_SETTINGS } from '../modules/charts.js';
+import { VIEWS, nextView, barSvg, lineSvg, pieSvg, examplePlays, CHART_SETTINGS, mergePlays } from '../modules/charts.js';
 import '../modules/youtube.js';
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
@@ -440,6 +440,40 @@ function mountChart(extra = {}) {
         check(`${THEMES[id].label}: bars in ${token}, ${c.toFixed(2)}:1 against the chart's surface`, /^--/.test(token) && c >= SHAPE_MIN, `${set} ${c}`);
         inst.destroy(); wrap.remove();
       }
+    }
+    // =================================================================================================
+    section('*** plays from the Nimrod folder: every device, every dashboard, chosen (row 2.91, Mike via chat CF 4, option (a)) ***');
+    {
+      check('"Plays from" is a setting, this dashboard on this device by default',
+        CHART_SETTINGS.some((f) => f.key === 'from' && f.default === 'screen' && f.options.map((o) => o.value).join() === 'screen,folder'));
+      const plays = await fixturePlays();
+      const own = plays.get().events;
+      const copied = own[own.length - 1];                       // a play from here, already copied to the folder
+      const hers = { kind: PLAY_KIND, created_at: new Date(NOW - 60000).toISOString(), data: { source: 'youtube', id: 'hersong', panel: 'her-yt', screen: 'her-screen' } };
+      check('mergePlays: a play copied from here is counted once', mergePlays(own, [copied, hers]).length === own.length + 1);
+      let reads = 0;
+      const folder = { status: async () => 'ready', readAll: async (stream) => { reads += 1; return stream === 'plays' ? [copied, hers] : []; } };
+      const c = mountChart({ plays, history: { folder }, state: fakeRow({ show: 'number', win: 'week' }) });
+      await tick(5);
+      const screenTotal = c.probe().model.total;
+      c.state.push({ show: 'number', win: 'week', from: 'folder' });
+      await tick(8);
+      const want = chartModel(mergePlays(own, [copied, hers]), { show: 'number', win: 'week' }, { screen: null, now: NOW }).total;
+      check('*** chosen, it counts this device\'s plays and the folder\'s - another device\'s and every dashboard\'s - each once ***',
+        c.probe().fromFolder === true && reads >= 1 && c.probe().model.total === want && want > screenTotal,
+        J({ total: c.probe().model.total, want, screenTotal, reads }));
+      check('...and says so on the panel', /Every device and dashboard in the Nimrod folder/.test(c.h.querySelector('[data-from]')?.textContent || ''));
+      c.done();
+      const locked = { status: async () => 'permission', readAll: async () => [hers] };
+      const c2 = mountChart({ plays, history: { folder: locked }, state: fakeRow({ from: 'folder' }) });
+      await tick(8);
+      check('*** a folder that needs "Allow it again" is said, never asked for, and the dashboard\'s own plays show meanwhile ***',
+        c2.probe().fromFolder === false && /Allow it again/.test(c2.h.querySelector('[data-from]')?.textContent || ''), c2.h.querySelector('[data-from]')?.textContent);
+      c2.done();
+      const c3 = mountChart({ plays, state: fakeRow({ from: 'folder' }) });
+      await tick(8);
+      check('no Nimrod folder on this device: said, and this dashboard\'s plays', c3.probe().fromFolder === false && /no Nimrod folder/.test(c3.probe().folderNote));
+      c3.done();
     }
   } catch (err) {
     check('unexpected error', false, String((err && err.stack) || err));

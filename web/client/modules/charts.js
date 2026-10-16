@@ -24,6 +24,14 @@
 //     screen's plays on that screen, not both together; a per-person total needs the person on the row (not there).
 // With no screen at all (a page trying the module out), it shows an EXAMPLE, labelled as one, never the device's plays.
 //
+// *** OR EVERYTHING IN THE NIMROD FOLDER, CHOSEN (row 2.91, Mike via chat CF 4, 2026-10-16: option (a), "her plays and
+// his together on one chart, wherever he looks", "as an option"; "the default stays the browser"). *** "Plays from":
+// this dashboard on this device (the default, unchanged), or every play in the person's Nimrod folder - every device
+// that copies its plays there, every dashboard - merged with this device's own (a play copied there from here is
+// counted once). The folder is the person's own place (history_place.js), and choosing it is the explicit choice the
+// argument above waits for; it is never the default. How the files of another computer reach the folder (Google Drive
+// on both, or a copy) is the folder's business; history_place.js `readAll` reads one level of folders too.
+//
 // SPOTIFY IS NOT COUNTED (play_charts.js header: its developer rules on listening statistics). No cover art, no
 // thumbnails: the two services' rules on showing them are unchecked (row 2.62), so nothing here draws a picture of a
 // song or a video.
@@ -68,6 +76,27 @@ export const REFRESH_MS = 60 * 1000;
 // The longest label drawn inside a bar chart; the full name is always in the table. [Plumbing.]
 export const LABEL_MAX = 42;
 
+// Where the plays come from (row 2.91, above). Kept beside the chart's own settings, not in them: it changes what is
+// read, not how it is counted.
+export const FROM_CHOICES = Object.freeze(['screen', 'folder']);
+// How far back the folder is read, at most (a year and a month: the longest window short of "all time"). [Plumbing.]
+export const FOLDER_SPAN_MS = 396 * 24 * 3600 * 1000;
+/** This device's plays and the folder's, each play once (one copied to the folder from here is the same play). Pure. */
+export function mergePlays(...lists) {
+  const seen = new Set();
+  const out = [];
+  for (const list of lists) {
+    for (const r of Array.isArray(list) ? list : []) {
+      if (!r || !r.data) continue;
+      const k = `${r.created_at}|${r.data.source}|${r.data.id}|${r.data.panel || ''}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(r);
+    }
+  }
+  return out.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+}
+
 const SETTINGS = [
   { key: 'show', label: 'Show as', kind: 'choice', default: CHART_DEFAULTS.show, level: 'standard',
     options: SHOW_AS.map((v) => ({ value: v, label: SHOW_WORDS[v] })) },
@@ -83,6 +112,11 @@ const SETTINGS = [
     options: [3, 5, 10, 20].map((n) => ({ value: n, label: String(n) })) },
   { key: 'sayTop', label: 'How many it says aloud', kind: 'choice', default: CHART_DEFAULTS.sayTop, level: 'advanced',
     options: [1, 3, 5].map((n) => ({ value: n, label: String(n) })) },
+  { key: 'from', label: 'Plays from', kind: 'choice', default: 'screen', level: 'standard',
+    note: 'The Nimrod folder holds the plays of every device that copies its plays there (People: where history is kept). '
+      + 'Another computer’s plays show here once its folder and this one are the same, for example through Google Drive.',
+    options: [{ value: 'screen', label: 'This dashboard, on this device' },
+      { value: 'folder', label: 'Everything in the Nimrod folder: every device, every dashboard' }] },
 ];
 export const CHART_SETTINGS = SETTINGS;
 
@@ -229,9 +263,46 @@ registerModule(
     let lastSaid = '';
     let colours = 3;
     let again = null;
+    let from = 'screen';               // row 2.91: 'screen' | 'folder'
+    let folderRows = null;             // the folder's plays, last read (null: not read, or not choosing it)
+    let folderNote = '';               // why the folder could not be read, in words
+    let folderAsk = 0;                 // which read is the newest
 
-    const events = () => (plays ? plays.get().events || [] : examplePlays(now()));
-    const model = (over = {}) => chartModel(events(), { ...cfg, ...over }, { screen, now: now(), labels });
+    const ownEvents = () => (plays ? plays.get().events || [] : examplePlays(now()));
+    const fromFolder = () => from === 'folder' && !!plays && Array.isArray(folderRows);
+    const events = () => (fromFolder() ? mergePlays(ownEvents(), folderRows) : ownEvents());
+    // From the folder: every dashboard's (no screen filter), since that is what was chosen.
+    const model = (over = {}) => chartModel(events(), { ...cfg, ...over }, { screen: fromFolder() ? null : screen, now: now(), labels });
+
+    /** Read the Nimrod folder's plays (row 2.91), when chosen. Never prompts: an unreadable folder is said, and the
+     *  chart shows this dashboard's plays meanwhile. */
+    async function readFolder() {
+      if (from !== 'folder' || !plays) { folderRows = null; folderNote = ''; return; }
+      const ask = ++folderAsk;
+      const folder = ctx.history?.folder;
+      if (!folder || typeof folder.readAll !== 'function') {
+        folderRows = null;
+        folderNote = 'This device has no Nimrod folder to read, so this shows this dashboard’s own plays.';
+        return;
+      }
+      let rows = [];
+      try {
+        const st = typeof folder.status === 'function' ? await folder.status() : 'ready';
+        if (st !== 'ready') {
+          if (ask !== folderAsk) return;
+          folderRows = null;
+          folderNote = st === 'permission'
+            ? 'The Nimrod folder needs “Allow it again” (People: where history is kept). Until then, this dashboard’s own plays.'
+            : 'The Nimrod folder can’t be read on this device right now, so this shows this dashboard’s own plays.';
+          return;
+        }
+        // 'plays': the folder's stream (history_place.js HISTORY_KINDS.plays), not the rows' kind.
+        rows = await folder.readAll('plays', { since: cfg.win === 'all' ? null : now() - FOLDER_SPAN_MS });
+      } catch { rows = []; }
+      if (ask !== folderAsk) return;
+      folderRows = Array.isArray(rows) ? rows.filter((r) => r && r.kind === PLAY_KIND) : [];
+      folderNote = '';
+    }
 
     function say(text) {
       lastSaid = text;
@@ -299,10 +370,13 @@ registerModule(
       const btn = (act, label, extra = '') => `<button type="button" class="pc-btn" data-walk data-act="${act}"${extra}>${esc(label)}</button>`;
       const more = m.more && (m.kind === 'bar' || m.kind === 'list') ? `<p class="pc-note">${m.more} more not shown.</p>` : '';
       const example = plays ? '' : '<p class="pc-note" data-example>An example, not real plays. On a screen, this shows that screen’s own plays.</p>';
+      const fromWords = from !== 'folder' || !plays ? ''
+        : `<p class="pc-note" data-from>${esc(fromFolder() ? 'Every device and dashboard in the Nimrod folder.' : folderNote)}</p>`;
       rootEl.innerHTML = `
         <div class="pc" data-charts data-kind="${esc(m.kind)}" data-list="${listShown ? '1' : '0'}">
           <p class="pc-title" data-title>${esc(m.title)}</p>
           ${example}
+          ${fromWords}
           ${listShown ? '' : `<div class="pc-body" data-body>${bodyHtml(m)}</div>`}
           ${tableHtml(m, { visible: listShown })}
           ${more}
@@ -356,15 +430,18 @@ registerModule(
       const snap = s || {};
       cfg = normalizeChart({ ...CHART_DEFAULTS, ...Object.fromEntries(SETTINGS.map((d) => [d.key, snap[d.key]]).filter(([, v]) => v !== undefined)) });
       asList = snap.asList === true;
+      const was = from;
+      from = FROM_CHOICES.includes(snap.from) ? snap.from : 'screen';
+      if (from !== was) { folderRows = null; folderNote = ''; if (from === 'folder') readFolder().then(() => { if (!dead) render(); }); }
     }
 
     function reload() {
       if (!plays || typeof plays.loadAll !== 'function') { render(); return; }
-      Promise.resolve(plays.loadAll()).catch(() => {}).then(() => render());
+      Promise.resolve(plays.loadAll()).catch(() => {}).then(() => readFolder()).catch(() => {}).then(() => { if (!dead) render(); });
     }
 
     return {
-      __probe: () => ({ cfg: { ...cfg }, asList, lit, screen, example: !plays, labels: Object.fromEntries(labels),
+      __probe: () => ({ cfg: { ...cfg }, asList, lit, screen, example: !plays, from, fromFolder: fromFolder(), folderNote, labels: Object.fromEntries(labels),
         said: lastSaid, colours, first: live[0] === me, model: model() }),
       init() {
         let cssHref = '';

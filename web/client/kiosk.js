@@ -178,7 +178,7 @@ import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE, createDeviceLook
 // Where a person's history is kept (row 2.58, 2026-10-07): the host every player and game reaches as `ctx.history`,
 // and its page on the People tab.
 import { createHistoryHost, folderSink, serverSink, deviceSweep,   // deviceSweep: history to the drive
-  agentSink, nimrodFolder, localAgentBases } from './history_place.js';   // agent history (2026-10-08)
+  agentSink, nimrodFolder, localAgentBases, deviceTag } from './history_place.js';   // agent history (2026-10-08)
 import { createMediaSourcesClient } from './media_sources.js';                   // agent history: finds the agent
 import { GAMEPLAY_STREAM } from './telemetry.js';
 import { historyPage, HISTORY_ITEMS, HISTORY_PAGE } from './history_page.js';
@@ -1717,7 +1717,8 @@ export async function mountKiosk(root, {
     // it (no browser folder permission to lapse after a restart), else by the browser as before. The agent is found
     // among this screen's media sources on this computer. None on a local backend (the suites): no registry there.
     folder: nimrodFolder({
-      browser: folderSink(),
+      // (row 2.91) this browser's tag in the files it writes, so two devices sharing a Drive folder never share a file.
+      browser: folderSink({ device: deviceTag() }),
       agent: makeState ? null : agentSink({ candidates: async () => localAgentBases(
         await createMediaSourcesClient({ user, cache: true, personId: screenPersonNow() || null }).list()) }),
     }),
