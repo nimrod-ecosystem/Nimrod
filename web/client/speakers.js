@@ -142,6 +142,41 @@ export function playOnChoices({ inherit = null, outputsList = outputs, spotify =
   return out;
 }
 
+// ---- A PANEL'S OWN SPEAKER (row 2.97) -----------------------------------------------------------------------
+// Mike, 2026-10-16: *"For both Pis, it should be using the device defaults, but you should be able to set different
+// speakers for different modules etc."* So: nothing chosen is the computer's own default (the out-of-the-box case,
+// unchanged), and a panel whose sound this page plays itself can be sent to another attached speaker. Music and
+// Amplify already had their own "Play on"; this row is for the other modules that play their own media elements
+// with sound - Personal videos today - which declare it with `routesSound: true` in their manifest. (Photos' clips
+// play muted, so it has nothing to route.) YouTube's and Spotify's frames cannot be routed (above), so they do not
+// declare it, and get no row that would change nothing. Games' sounds share the screen's one audio context; a
+// speaker per game would need one context each, and is not built.
+export const PANEL_SPEAKER_KEY = 'panelSpeaker';
+/**
+ * The Sound tab's "Its sound comes out of" row, or null when there is nothing to choose between (a browser that
+ * cannot route, or one speaker). The choices are this computer's speakers BY NAME, as Play on's are.
+ */
+export function panelSpeakerField({ outputsList = outputs, canRoute = canChooseSpeaker() } = {}) {
+  if (!canRoute || outputsList.length < 2) return null;
+  return {
+    key: PANEL_SPEAKER_KEY, label: 'Its sound comes out of', kind: 'choice', level: 'standard', default: '',
+    options: [{ value: '', label: 'This screen’s own speaker (whatever the computer uses)' },
+      ...outputsList.map((o) => ({ value: `${OUT_PREFIX}${o.label}`, label: o.label }))],
+    note: 'A speaker that is unplugged later is not an error: the sound goes to this screen’s own speaker until it is back.',
+  };
+}
+/**
+ * Send one media element's sound where a panel's row says: an attached speaker by name, else the computer's default
+ * (a value naming a speaker that is not plugged in now is the default too). False when the element cannot be routed.
+ */
+export function routeToSpeaker(el, value, list = outputs) {
+  if (!el || typeof el.setSinkId !== 'function') return false;
+  const p = parsePlayOn(value);
+  const id = p.kind === 'out' ? sinkIdFor(p.name, list) : '';
+  try { Promise.resolve(el.setSinkId(id)).catch(() => {}); } catch { /* the default speaker */ }
+  return true;
+}
+
 /** The screen's Speakers rows, for kiosk.js SCREEN_FIELDS, with their choices as known right now. */
 export function speakerFields() {
   return SPEAKER_KINDS.map((k) => ({

@@ -35,7 +35,7 @@ import {
 } from '../spotify_embed.js';
 import {
   parsePlayOn, playOnWords, playOnChoices, sinkIdFor, speakerFields, setOutputsForTest, rememberSpotifySpeakers,
-  knownSpotifySpeakers, SPEAKER_KINDS, speakerKey, PLAY_ON_HERE,
+  knownSpotifySpeakers, SPEAKER_KINDS, speakerKey, PLAY_ON_HERE, panelSpeakerField, routeToSpeaker, PANEL_SPEAKER_KEY,
 } from '../speakers.js';
 import { musicSpeechRoutes, watchFavourites, MUSIC_PLAY_ON_TOPIC, PLAY_ON_HERE_ROUTE_ID } from '../music_favourites.js';
 import { createMusicRouter, messageFor } from '../music_player.js';
@@ -413,6 +413,27 @@ try {
     await settle();
     check('an older panel with a typed Spotify speaker and nothing chosen keeps playing there', /Spotify: Old speaker/.test(q('[data-act="play-on"]')?.textContent || ''));
     m.destroy();
+  }
+
+  section('a panel\'s own speaker (row 2.97, Mike 2026-10-16: "you should be able to set different speakers for different modules")');
+  {
+    const two = [{ deviceId: 'd-hdmi', label: 'HDMI' }, { deviceId: 'd-usb', label: 'USB Composite Device' }];
+    check('*** with one speaker (or a browser that cannot route), no row: a choice that changes nothing is not offered ***',
+      panelSpeakerField({ outputsList: [two[0]], canRoute: true }) === null && panelSpeakerField({ outputsList: two, canRoute: false }) === null);
+    const f = panelSpeakerField({ outputsList: two, canRoute: true });
+    check('*** with two, "Its sound comes out of": the computer\'s own speaker first (the default), then each by name ***',
+      f && f.key === PANEL_SPEAKER_KEY && f.default === '' && J(f.options.map((o) => o.value)) === J(['', 'out:HDMI', 'out:USB Composite Device']), J(f));
+    const sinks = [];
+    const el = { setSinkId: (id) => { sinks.push(id); return Promise.resolve(); } };
+    routeToSpeaker(el, 'out:USB Composite Device', two);
+    routeToSpeaker(el, '', two);
+    routeToSpeaker(el, 'out:Unplugged speaker', two);
+    check('*** an element goes to the chosen speaker; nothing chosen, or one not plugged in, is the computer\'s default ***',
+      J(sinks) === J(['d-usb', '', '']), J(sinks));
+    check('an element that cannot be routed is said, not thrown', routeToSpeaker({}, 'out:HDMI', two) === false);
+    await import('../modules/personal.js');
+    check('Personal videos asks for the row (its clips have sound); YouTube does not (its frame cannot be routed)',
+      getManifest('personal')?.routesSound === true && !getManifest('youtube')?.routesSound);
   }
 } catch (err) {
   check('unexpected error', false, String(err?.stack || err));

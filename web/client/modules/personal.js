@@ -74,6 +74,7 @@ import { panelPlays } from '../plays.js';
 import { createHeldSignal } from '../held.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 import { stallFields, stallSettings, pauseNoticeMs, createStallReporter } from '../playback_stall.js';
+import { routeToSpeaker, PANEL_SPEAKER_KEY } from '../speakers.js';   // row 2.97: the panel's own speaker
 
 // `stallMs` matches youtube's for the same reason: long enough that a big clip loading off
 // a media agent over facility wifi is not cut off, short enough that nobody sits in front
@@ -143,6 +144,7 @@ registerModule(
     // being down and does not survive the drive being unmounted.
   { type: 'personal', title: 'Personal videos',
     dependsOn: 'local',
+    routesSound: true,           // row 2.97: the Sound tab offers "Its sound comes out of" (speakers.js)
     description: 'Recorded messages from their people. Plays from your machine — nothing is uploaded.',
     settings: SETTINGS },
   (ctx) => {
@@ -450,6 +452,8 @@ registerModule(
       el.autoplay = cfg.autoplay !== false;
       el.preload = el.autoplay ? 'auto' : 'none';   // don't buffer big clips when autoplay is off (tests)
       el.style.objectFit = cfg.fit;
+      // (row 2.97) the panel's "Its sound comes out of" row; nothing chosen is the computer's own speaker.
+      routeToSpeaker(el, cfg[PANEL_SPEAKER_KEY]);
 
       // EVERY WAY A VIDEO CAN STOP, not just the happy one. `ended` was the only listener
       // here; the other four are the ways a clip stops WITHOUT ending, and each of them
@@ -815,7 +819,10 @@ registerModule(
 
         state.subscribe((s) => {
           rawRow = s && typeof s === 'object' ? s : {};
+          const wasSpeaker = cfg[PANEL_SPEAKER_KEY];
           cfg = { ...DEFAULTS, ...s };
+          // (row 2.97) a different speaker chosen: the clip playing now moves to it, without starting again.
+          if (cfg[PANEL_SPEAKER_KEY] !== wasSpeaker && currentVideo) routeToSpeaker(currentVideo, cfg[PANEL_SPEAKER_KEY]);
           stallReport.refresh();        // playback_stall.js: an open stretch is re-said with the settings as they are
           // every folder inside: the two folder settings are part of what is listed, so a change lists again.
           const lo = listOptions(cfg, cfg.sourceId);

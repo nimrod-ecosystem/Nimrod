@@ -134,7 +134,7 @@ import { attachCursorDrive } from './cursor_drive.js';
 import {
   watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
 } from './music_favourites.js';
-import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS } from './speakers.js';   // play on (row 2.68)
+import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS, panelSpeakerField } from './speakers.js';   // play on (row 2.68)
 import { backupScreenField, listedSources, BACKUP_KEY } from './media_sources.js';   // backup source (2026-10-08)
 import { createStallSwitch, standInSource, probeFor, SWITCH_TARGETS } from './playback_stall.js';   // stalled playback
 import { createMissStore, MISS_FIELDS } from './speech_misses.js';
@@ -6298,6 +6298,8 @@ export async function mountKiosk(root, {
           // (2026-10-02: the default is the module's own -- hide_sound.js `whenHiddenDefault`; a call keeps playing.)
           normalizeField({ ...WHEN_HIDDEN_FIELD, default: whenHiddenDefault(rec.instance.manifest) }),
           normalizeField(ROOM_SOUND_FIELD),
+          // (row 2.97) which speaker, for a module that plays its own media and says so (speakers.js argues it).
+          ...(rec.instance.manifest?.routesSound && panelSpeakerField() ? [normalizeField(panelSpeakerField())] : []),
         ].filter(Boolean), fieldsOpts);
         items.push(...tagged([{ kind: 'heading', id: 'panel-sound-head', label: `${rec.title || rec.type}: its sound` },
           ...soundRows, ...nestedSoundRows(rec)], 'audio', 0));
