@@ -177,6 +177,25 @@ export const SETTINGS = [
   // #255) needs no new bus wiring here: this menu is already switch- and input-bus-operable.
   { key: 'presetId', label: 'Use a saved preset', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No preset. This instance’s own playlist, schedule and shuffle' },
+  // *** ONE SETTINGS MENU (row 2.95, Mike 2026-10-16: "Everything should be in the universal settings menu. No module
+  // should have a settings menu separate from that."). *** What this panel's own drawer (its ⚙) held, here instead.
+  // Stage A: the two switches, adding a video, using a playlist, and the lists (menuItems, below). Stage B: searching and
+  // the time-of-day playlists, then the drawer goes.
+  //   The switches are this panel's own settings, as the drawer's boxes were (they wrote the same keys).
+  { key: 'autoAdvance', label: 'Play the next video when one ends', kind: 'toggle', default: DEFAULTS.autoAdvance,
+    level: 'standard', onLabel: 'Yes', offLabel: 'No',
+    // A Lineup's own YouTube (directed) is moved on by the Lineup: this switch would fight it.
+    appliesWhen: (v) => !v?.directed },
+  { key: 'shuffle', label: 'Shuffle the playlist', kind: 'toggle', default: DEFAULTS.shuffle, level: 'standard',
+    onLabel: 'Shuffled', offLabel: 'In order',
+    // While a preset is in use its shuffle counts (youtube.js effectiveShuffle): the preset is edited on the Media page.
+    appliesWhen: (v) => !v?.presetId },
+  //   Typed rows: what is typed is handed to the panel (`settingsWrite`), which adds it; nothing is stored under these
+  //   keys. They need a keyboard, as the drawer's boxes did; the lists below work with a switch.
+  { key: 'addVideo', label: 'Add a video (a YouTube link or its id)', kind: 'text', default: '', level: 'standard',
+    note: 'A link from YouTube’s Share button works, or the 11-letter id.' },
+  { key: 'usePlaylist', label: 'Play a YouTube playlist (its link or id)', kind: 'text', default: '', level: 'standard',
+    note: 'A playlist’s link has “list=PL…” in it. Its videos join this panel’s own.' },
   // *** VOLUME (row 2.28: "volume up, volume down ... mostly for Youtube right now"). ***
   //
   // *** THIS IS THE VIDEO'S OWN LEVEL, AND IT IS NO LONGER WHAT "LOUDER" MOVES. *** The first
@@ -1823,6 +1842,36 @@ registerModule(
       // LIVE OPTIONS for the declared `presetId` field — this person's saved YouTube presets,
       // which are data and cannot be written into the manifest. Same pattern as photos.js's
       // `sourceId` / board.js's `boardId`.
+      // *** THE LISTS, IN THE ONE MENU (row 2.95). *** This panel's videos and time-of-day playlists, each with Remove,
+      // as the drawer showed them; a preset's are read-only here too (renderPlaylist argues why). `level: 'advanced'`
+      // (the menu's "Everything"): a playlist can be long, and a person stepping the menu with one switch should not walk
+      // fifty videos to reach the next row.
+      menuItems: () => {
+        const out = [];
+        const preset = activePreset();
+        const vids = effectivePlaylist();
+        out.push({ kind: 'heading', id: 'yt-videos', label: `Videos (${vids.length})${preset ? `, from the preset "${preset.name}"` : ''}`, level: 'advanced' });
+        for (const v of vids) {
+          const name = String(v.title || v.id);
+          out.push(preset
+            ? { kind: 'item', id: `yt-video:${v.id}`, label: name, hint: 'from the preset; change it on the Media page', disabled: true, level: 'advanced' }
+            : { kind: 'item', id: `yt-video:${v.id}`, label: `Remove ${name}`, hint: v.channel ? String(v.channel) : 'one of this panel’s videos',
+              level: 'advanced', run: () => { state.set({ playlist: (cfg.playlist || []).filter((x) => x.id !== v.id) }); } });
+        }
+        const parts = effectiveSchedule().filter((d) => d && d.playlistId);
+        if (parts.length) {
+          out.push({ kind: 'heading', id: 'yt-sched', label: 'Playlists by time of day', level: 'advanced' });
+          for (const d of parts) {
+            const when = Number.isFinite(Number(d.end)) ? `${hhmm(d.start)}–${hhmm(d.end)}` : `from ${hhmm(d.start)}`;
+            out.push(preset
+              ? { kind: 'item', id: `yt-sched:${d.name}:${d.start}`, label: `${d.name || 'unnamed'}, ${when}`, disabled: true, level: 'advanced' }
+              : { kind: 'item', id: `yt-sched:${d.name}:${d.start}`, label: `Remove ${d.name || 'unnamed'} (${when})`, level: 'advanced',
+                run: () => { state.set({ schedule: (cfg.schedule || []).filter((x) => x !== d) }); } });
+          }
+        }
+        return out;
+      },
+
       settingsChoices: () => ({
         presetId: knownPresets
           .filter((p) => p && p.type === 'youtube')
@@ -1841,6 +1890,20 @@ registerModule(
       // (kiosk.js) asks here before it stores a row's value; `true` means "taken, store nothing". An
       // empty box keeps what is there, as every secret row does.
       settingsWrite(key, value) {
+        // (row 2.95) The menu's typed rows: added to this panel's own playlist, as the drawer's boxes did; nothing kept
+        // under the row's key. `true`: taken.
+        if (key === 'addVideo') {
+          const id = parseVideoId(value);
+          if (!id) { setStatus('That is not a YouTube link or id.'); return true; }
+          if (!byId[id]) state.set({ playlist: [...(cfg.playlist || []), { id, title: id }] });
+          return true;
+        }
+        if (key === 'usePlaylist') {
+          const listId = parsePlaylistId(value);
+          if (!listId) { setStatus('That is not a playlist link. A playlist’s web address has "list=PL…" in it.'); return true; }
+          state.set({ playlistId: listId });
+          return true;
+        }
         if (key !== 'apiKey') return false;
         const typed = String(value == null ? '' : value).trim();
         if (!typed) return true;
