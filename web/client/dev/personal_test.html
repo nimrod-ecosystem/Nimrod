@@ -468,6 +468,19 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     const plays0 = suitePlays.plays().length;
     check('first clip logged a play event', plays0 >= 1, `plays=${plays0}`);
 
+    // 4b. (row 2.79, 2026-10-17) WATCHING ALONG: it says what plays on the screen's own bus, by its place in the source.
+    {
+      const said = [];
+      const off = bus.subscribe('play/now', (m) => said.push(m));
+      vid(host).dispatchEvent(new Event('playing'));
+      const m = said.at(-1);
+      check('*** a clip playing is said on the screen\'s own bus (play/now): kind personal, its place in the source ***',
+        m && m.kind === 'personal' && /message-0[12]\.mp4$/.test(m.key || '') && !/^https?:/.test(m.key || ''), JSON.stringify(m));
+      instance.impl.onHide?.();
+      check('...and hidden, it says nothing plays here', said.at(-1)?.key === null && said.at(-1)?.playing === false, JSON.stringify(said.at(-1)));
+      off?.();
+    }
+
     // 5. advancing covers BOTH clips (only 2 items -> the picker weights by recency)
     const seen = new Set([vidSrc(host)]);
     for (let i = 0; i < 8; i++) { bus.publish('personal/next'); await sleep(20); seen.add(vidSrc(host)); }

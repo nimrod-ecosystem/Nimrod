@@ -54,7 +54,10 @@ import re
 import secrets
 import time
 
-PLAY_KINDS = frozenset({"youtube", "photo"})
+PLAY_KINDS = frozenset({"youtube", "photo", "personal"})
+# The kinds carried by an opaque, salted id (rule 3). "personal" (2026-10-17, row 2.79): a Personal videos clip, by the
+# same kind of id as a picture, so a recorded message's file name never passes through here either.
+OPAQUE_KINDS = frozenset({"photo", "personal"})
 
 # A YouTube video id: exactly what youtube.js parseVideoId accepts. Public, not a person's anything.
 _YT_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
@@ -84,7 +87,8 @@ def is_salt(v) -> bool:
     return isinstance(v, str) and bool(_SALT.match(v)) and not hex_is_text(v)
 
 
-_ITEM_RULES = {"youtube": lambda v: isinstance(v, str) and bool(_YT_ID.match(v)), "photo": is_photo_id}
+_ITEM_RULES = {"youtube": lambda v: isinstance(v, str) and bool(_YT_ID.match(v)), "photo": is_photo_id,
+               "personal": is_photo_id}
 
 # *** THE SIZE CAP: 1 KB, measured on the message AS IT ARRIVED (compact JSON). *** A real one is about 150 bytes
 # (measured in the suite: kind, an 11-character id, two numbers, a flag and a 40-character screen name). The cap is
@@ -142,7 +146,7 @@ def parse_play(raw: dict) -> dict | None:
     if item is not None and not _ITEM_RULES[kind](item):
         return None                                  # only a public or opaque id, or None for "nothing playing"
     salt = raw.get("salt")
-    if kind == "photo":
+    if kind in OPAQUE_KINDS:
         if (item is not None or salt is not None) and not is_salt(salt):
             return None                              # a photo id is meaningless without its session's salt
     elif salt is not None:
@@ -155,7 +159,7 @@ def parse_play(raw: dict) -> dict | None:
         return None
     out = {"type": "play", "kind": kind, "item": item, "pos": round(float(pos), 3),
            "playing": playing if item is not None else False}
-    if kind == "photo" and salt is not None:
+    if kind in OPAQUE_KINDS and salt is not None:
         out["salt"] = salt
     rate = raw.get("rate", 1)
     if not _num(rate) or rate < MIN_RATE or rate > MAX_RATE:

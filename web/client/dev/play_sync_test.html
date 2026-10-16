@@ -143,7 +143,8 @@ if (GAP) {
     const m = buildPlay({ item: VID, pos: 12.3456, playing: true, every: 2, screen: 'Living room' });
     check('*** a well-formed message is built ***', m && m.type === 'play' && m.kind === 'youtube' && m.item === VID
       && m.pos === 12.346 && m.playing === true && m.rate === 1 && m.every === 2 && m.screen === 'Living room', JSON.stringify(m));
-    check('the kinds are YouTube and photos (a closed list, mirrored from play_relay.py)', PLAY_KINDS.length === 2 && PLAY_KINDS.join() === 'youtube,photo');
+    check('the kinds are YouTube, photos and (2026-10-17) Personal videos (a closed list, mirrored from play_relay.py)',
+      PLAY_KINDS.length === 3 && PLAY_KINDS.join() === 'youtube,photo,personal');
     check('*** an item that is not a public YouTube id is never built - a file name cannot leave the screen ***',
       ['Mom hospital 2024.jpg', 'photos/p1.jpg', 'short', VID + 'x', 7].every((x) => buildPlay({ item: x }) === null)
       && !isPlayItem('youtube', 'Mom hospital 2024.jpg') && isPlayItem('youtube', VID));
@@ -485,6 +486,35 @@ if (GAP) {
     ft.advance(MIN_GAP_MS);
     check('a path past the length any picture key may have is "nothing", never sent', last().item === null);
     check('every photo message that went had a 32-hex id or nothing', sent.filter((x) => x.kind === 'photo').every((x) => x.item === null || isPhotoId(x.item)));
+    s.destroy();
+  }
+
+  section('*** personal videos in step (2026-10-17, row 2.79): a recorded message by an opaque id, followed as a video ***');
+  {
+    const ft = fakeTime();
+    const sent = [];
+    const salt = 'a1b2c3d4e5f60718';
+    const s = createPlaySender({ send: (m) => { sent.push(m); return true; }, enabled: () => true, watchers: () => 1,
+      beatS: () => 2, main: () => 'video', now: ft.now, setTimer: ft.setTimer, clearTimer: ft.clearTimer, makeSalt: () => salt });
+    s.refresh();
+    s.report({ kind: 'photo', panel: 'ph-1', key: 'Family/2024/IMG_0001.jpg', pos: 0, playing: true });
+    ft.advance(MIN_GAP_MS);
+    s.report({ kind: 'personal', panel: 'pv-1', key: 'Messages/Mom hospital 2024.mp4', pos: 4, playing: true });
+    ft.advance(MIN_GAP_MS);
+    const last = sent.at(-1);
+    check('*** a Personal videos clip goes as its opaque id with the session\'s salt, and is "the video" over the pictures ***',
+      last.kind === 'personal' && last.item === photoPlayId(salt, 'Messages/Mom hospital 2024.mp4') && last.salt === salt && last.playing === true,
+      JSON.stringify(last));
+    check('*** its file name never leaves the screen ***', !JSON.stringify(sent).includes('hospital') && !JSON.stringify(sent).includes('Messages'));
+    s.report({ kind: 'personal', panel: 'pv-1', key: null, pos: 0, playing: false });
+    ft.advance(MIN_GAP_MS);
+    check('the clip over: the pictures again', sent.at(-1).kind === 'photo');
+    check('a personal id without its salt is never built', buildPlay({ kind: 'personal', item: photoPlayId(salt, 'a.mp4') }) === null
+      && buildPlay({ kind: 'personal', item: 'a.mp4', salt }) === null);
+    const st = { ...buildPlay({ kind: 'personal', item: photoPlayId(salt, 'a.mp4'), salt, pos: 1, playing: true }), at: 5, from: 'abcd1234' };
+    check('a received one is checked and copied, salt and all', checkPlay(st)?.kind === 'personal' && checkPlay(st)?.salt === salt);
+    check('*** with nothing playing, a follower PAUSES (as for a video), never blanks ***',
+      decide({ leader: { kind: 'personal', item: null, pos: 0, playing: false, rate: 1, at: 0 }, mine: { item: 'x', pos: 3, playing: true }, serverNow: 0 }).do === 'pause');
     s.destroy();
   }
 
