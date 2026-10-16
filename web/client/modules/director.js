@@ -156,8 +156,9 @@ registerModule(
     const turnPlays = panelPlays(ctx, 'lineup');
     function lineupEntries() {
       const id = (state.get?.() || {}).lineupPresetId;
-      if (!id || !lineupLib) return null;
-      const p = lineupLib.getPreset(id);
+      if (!lineupLib) return null;
+      // (row 2.93) Nothing chosen: the person's default Lineup, when one is marked; else the time-of-day rotation.
+      const p = id ? lineupLib.getPreset(id) : lineupLib.defaultFor?.(LINEUP_TYPE);
       const list = p && p.type === LINEUP_TYPE ? cleanEntries(p.settings?.entries) : [];
       return list.length ? list : null;
     }

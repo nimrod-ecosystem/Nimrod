@@ -22,7 +22,7 @@ for its own single-value reserved key.</p>
 
 <script type="module">
 import {
-  PRESETS_KEY, presetsFrom, presetById, createPresetLibrary,
+  PRESETS_KEY, presetsFrom, presetById, createPresetLibrary, defaultPresetOf,
 } from '../presets.js';
 
 const out = document.getElementById('results');
@@ -150,6 +150,21 @@ function fakeState(initial = {}) {
         .then(() => 'resolved').catch((e) => e.message);
       check('updating an id that does not exist is refused, not silently created',
         /no such preset/i.test(rejectedBadId), rejectedBadId);
+
+      // ROW 2.93 (Mike, 2026-10-15): "an option to make any preset for any module the default for that module".
+      {
+        const a = await lib.savePreset({ type: 'trivia', name: 'Default A', settings: {}, isDefault: true });
+        check('*** a preset can be made its module\'s default ***', lib.defaultFor('trivia')?.id === a.id && defaultPresetOf(lib.get(), 'trivia')?.id === a.id);
+        const b = await lib.savePreset({ type: 'trivia', name: 'Default B', settings: {}, isDefault: true });
+        check('*** one default per module: making another the default takes it from the first ***',
+          lib.defaultFor('trivia')?.id === b.id && lib.getPreset(a.id).isDefault !== true);
+        await lib.savePreset({ id: b.id, type: 'trivia', name: 'Default B (renamed)', settings: {} });
+        check('an edit that says nothing about it keeps the default', lib.defaultFor('trivia')?.id === b.id);
+        await lib.savePreset({ id: b.id, type: 'trivia', name: 'Default B', settings: {}, isDefault: false });
+        check('...and it can be cleared: no default, the module is plain', lib.defaultFor('trivia') === null);
+        check('a default of one module is not another\'s', lib.defaultFor('youtube') === null);
+        await lib.deletePreset(a.id); await lib.deletePreset(b.id);
+      }
 
       await lib.deletePreset(saved2.id);
       check('*** delete removes exactly that one ***',

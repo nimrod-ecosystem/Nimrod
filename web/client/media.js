@@ -284,6 +284,10 @@ export function mountMedia(root, {
           <!-- Row 2.22 (Mike, 2026-10-14): "replace the one on the media page with the one from the Youtube settings".
                The real YouTube settings form, editing this preset (preset_editor.js). -->
           <div data-preset-editor style="width:100%;flex:1 1 100%"></div>
+          <!-- Row 2.93 (Mike, 2026-10-15): "an option to make any preset for any module the default for that module,
+               otherwise it's plain". A panel of that module that has chosen nothing of its own uses it. -->
+          <label class="chk" style="flex:1 1 100%"><input type="checkbox" data-preset-default> Use this for any panel of this
+            module that has nothing of its own (one default per module)</label>
           <button type="submit" class="h-btn h-primary" data-preset-save>Save preset</button>
           <button type="button" class="h-btn" data-preset-cancel hidden>Cancel edit</button>
         </form>
@@ -495,7 +499,7 @@ export function mountMedia(root, {
     return `
       <div class="h-card">
         <div class="h-card-head">
-          <b>${esc(p.name)}</b>
+          <b>${esc(p.name)}</b>${p.isDefault ? ' <span class="h-quiet" data-default-badge>(the default)</span>' : ''}
           <span>
             <button class="h-btn" data-edit-preset="${esc(p.id)}">Edit</button>
             <button class="h-btn" data-remove-preset="${esc(p.id)}">Delete</button>
@@ -554,6 +558,7 @@ export function mountMedia(root, {
     editingPresetId = id;
     el('[data-preset-name]').value = p.name;
     el('[data-preset-type]').value = p.type;
+    el('[data-preset-default]').checked = p.isDefault === true;
     // The preset's own settings in the module's own form: nothing on a screen changes until Save.
     openPresetEditor(p.type, p.settings || {});
     el('[data-preset-cancel]').hidden = false;
@@ -571,7 +576,7 @@ export function mountMedia(root, {
     const type = el('[data-preset-type]').value;
     const settings = presetEditor ? presetEditor.values() : {};
     try {
-      await presetLib.savePreset({ id: editingPresetId, type, name, settings });
+      await presetLib.savePreset({ id: editingPresetId, type, name, settings, isDefault: !!el('[data-preset-default]')?.checked });
       const wasEdit = !!editingPresetId;
       resetPresetForm();
       renderPresets();
