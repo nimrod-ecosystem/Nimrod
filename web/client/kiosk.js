@@ -6242,7 +6242,8 @@ export async function mountKiosk(root, {
       try {
         const own = (rec.instance?.impl || rec.instance)?.menuItems?.();
         // (row 2.95) A panel's own row may carry a `level`, as a settings field does: shown from that level up.
-        if (Array.isArray(own)) items.push(...own.filter((it) => it && it.id && it.label && showsAtLevel(it, complexity())).map((it) => ({ ...it, ...MENU_TAB.module(0) })));
+        // `closesMenu`: a row that opens something over the panel (the Board's editor) puts the ⚙ menu away first.
+        if (Array.isArray(own)) items.push(...own.filter((it) => it && it.id && it.label && showsAtLevel(it, complexity())).map((it) => ({ ...it, ...MENU_TAB.module(0), ...closingRun(it) })));
       } catch (err) { console.error('kiosk: panel rows', err); }
       // *** A LINEUP'S CURRENT TURN, ITS OWN SETTINGS (row 2.87, 2026-10-14). *** Mike uses YouTube's own settings - its
       // boxes and time pickers - and inside a Lineup they were out of the menu's reach (only YouTube's small gear on the
@@ -6269,7 +6270,7 @@ export async function mountKiosk(root, {
             const kidOwn = (kid.instance?.impl || kid.instance)?.menuItems?.();
             if (Array.isArray(kidOwn)) {
               kidRows.push(...kidOwn.filter((it) => it && it.id && it.label && showsAtLevel(it, complexity()))
-                .map((it) => ({ ...it, id: `turn:${it.id}`, ...MENU_TAB.module(0) })));
+                .map((it) => ({ ...it, id: `turn:${it.id}`, ...MENU_TAB.module(0), ...closingRun(it) })));
             }
           } catch (err) { console.error('kiosk: lineup turn own rows', err); }
           if (kidRows.length) {
@@ -6769,6 +6770,11 @@ export async function mountKiosk(root, {
       if (torn) return;
       for (const e of [...menuViews]) { try { e.view.refresh(); } catch (err) { console.error('kiosk: settings panel', err); } }
     });
+  }
+  /** (row 2.95) A panel's own row marked `closesMenu`: its press puts the ⚙ menu away, then does its thing. */
+  function closingRun(it) {
+    if (!it || !it.closesMenu || typeof it.run !== 'function') return {};
+    return { run: () => { try { if (menu.isOpen()) menu.close(); } catch { /* already closed */ } it.run(); } };
   }
   /** A press in one panel: the ⚙ menu (if open) and every other panel show it. */
   function syncFrom() {

@@ -190,11 +190,11 @@ const DEFAULTS = {
   // The row shipped ON because switching was invisible, and that problem was real. The answer
   // was wrong: it put a caregiver's control inside the reach of the person the board is FOR,
   // on the one surface where an accidental press costs somebody their sentence. Switching now
-  // lives in the board's own settings panel, which is where the rest of the caregiver controls
-  // are, so the row is a convenience rather than the only route — and anybody who wants it can
-  // still turn it on.
+  // lives in the settings menu (the board's own panel, until row 2.95 folded it into the one menu),
+  // which is where the rest of the caregiver controls are, so the row is a convenience rather than
+  // the only route — and anybody who wants it can still turn it on.
   showBoards: false,
-  // Hides the row AND the gear. See the SETTINGS entry for the way back out, which is the only
+  // Hides the row (and, until row 2.95, the gear). See the SETTINGS entry for the way back out, which is the only
   // part of a lock worth arguing about.
   locked: false,
   // *** HOW LONG THE EDITOR STAYS OPEN WITH NOBODY USING IT. See the SETTINGS row. ***
@@ -362,23 +362,23 @@ export const SETTINGS = [
   { key: 'showBoards', label: 'Show the row for changing boards', kind: 'toggle', default: false,
     level: 'standard', onLabel: 'Yes — a row of boards above the cards', offLabel: 'No',
     note: 'The row sits above the cards, where a resting hand can reach it. You can change boards '
-      + 'in the board’s own settings either way.' },
+      + 'in this menu either way.' },
   // *** LOCK. AND THE ONLY QUESTION THAT MATTERS ABOUT A LOCK IS HOW YOU GET BACK OUT. ***
   //
   // `CLAUDE.md`: *"a caregiver locked out of their own lock is worse than no lock at all."*
   // So the way back is STRUCTURAL rather than a promise: `locked` is a DECLARED SETTING, which
   // means it is in the shell's settings menu for this panel, which is a caregiver surface the
-  // module cannot hide and the lock does not touch. Unlock there and the gear comes back.
+  // module cannot hide and the lock does not touch. Unlock there and the row comes back.
   //
-  // What it hides is the two caregiver controls that sit ON the communication surface: the
-  // board row and the gear. It does not hide, disable, slow or gate a single card. Somebody
+  // What it hides is the caregiver control that sits ON the communication surface: the board row
+  // (and the gear, until row 2.95 took the gear off the board). In the menu, "Edit this board" and
+  // "Make a new board" wait for an unlock (menuItems). It does not hide, disable, slow or gate a single card. Somebody
   // using a locked board can say everything they could say a moment ago, which is the whole
   // test of whether a safety control on this module is safe.
   { key: 'locked', label: 'Lock the board', kind: 'toggle', default: false, level: 'standard',
-    onLabel: 'Yes — hide the board row and the settings button',
-    offLabel: 'No — leave the settings button on the board',
-    note: 'The cards still work the same. Unlock from this menu. It is the way back '
-      + 'in, so it is here and not only on the board.' },
+    onLabel: 'Yes — hide the board row, and no editing until it is unlocked',
+    offLabel: 'No',
+    note: 'The cards still work the same. Unlock from this menu.' },
   // *** THE EDITOR PUTS ITSELF AWAY, AND WHETHER IT SHOULD DEPENDS ENTIRELY ON WHOSE SCREEN
   // THIS IS. *** Mike asked why it does this at all, which was the right question.
   //
@@ -1214,39 +1214,15 @@ registerModule(
     }
 
     // ------------------------------------------------------------------------------------
-    // THE SETTINGS PANEL
+    // THE SETTINGS PANEL IS GONE (row 2.95, Mike 2026-10-16: "Everything should be in the universal
+    // settings menu. No module should have a settings menu separate from that.")
     // ------------------------------------------------------------------------------------
+    //
+    // It held the board choice, the row and the lock (all declared settings, so already in the
+    // menu) and the two editor buttons, which are this panel's own menu rows now (`menuItems`).
 
-    const panelEl = () => mount.querySelector('[data-panel]');
-    const gearEl = () => mount.querySelector('[data-gear]');
-
-    function panelOpen(open) {
-      const pan = panelEl(); const g = gearEl();
-      if (!pan || !g) return;
-      pan.hidden = !open;
-      g.setAttribute('aria-expanded', String(!!open));
-      if (open) drawPanel();
-    }
-
-    /** Fill the panel from the CURRENT config every time it opens — never from what it said
-     *  last time. Two surfaces can write these (this panel and the shell's settings menu), and
-     *  a panel showing a stale checkbox is a caregiver toggling a setting to where it already
-     *  is and watching nothing happen. */
-    function drawPanel() {
-      const sel = mount.querySelector('[data-pboard]');
-      if (sel) {
-        sel.innerHTML = boardChoices()
-          .map((c) => `<option value="${escapeHtml(c.id)}"${c.id === board.id ? ' selected' : ''}`
-            + `>${escapeHtml(c.label)}</option>`).join('');
-      }
-      const show = mount.querySelector('[data-popt="showBoards"]');
-      if (show) show.checked = cfg.showBoards !== false;
-      const lock = mount.querySelector('[data-popt="locked"]');
-      if (lock) lock.checked = !!cfg.locked;
-    }
-
-    /** Write one setting to the SAME row the shell's menu writes. Two surfaces, one truth —
-     *  a panel with its own copy of a setting is a board that disagrees with its own menu. */
+    /** Write one setting to the SAME row the shell's menu writes (the editor's draft). One truth: a
+     *  board with its own copy of a setting is a board that disagrees with its own menu. */
     function saveSetting(key, value) {
       try { state?.set?.({ ...(state.get?.() || {}), [key]: value }); }
       catch (err) { console.error('board: could not save', key, err); }
@@ -1277,7 +1253,6 @@ registerModule(
     function openEditor(which) {
       const host = mount.querySelector('[data-editor]');
       if (!host) return;
-      panelOpen(false);
       closeEditor();
       const row = state?.get?.() || {};
       const base = which === 'new'
@@ -1338,11 +1313,9 @@ registerModule(
       board = boardFor(cfg.boardId);
       loadOwnSounds();                       // own board clips: the cards' own sounds, ready before a press
       drawBoards();
-      // The gear goes with the row when locked. It is the other caregiver control sitting on
-      // the communication surface, and hiding one while leaving the other is half a lock.
-      const g = gearEl();
-      if (g) g.hidden = !!cfg.locked;
-      if (cfg.locked) { panelOpen(false); closeEditor(); }
+      // A lock closes an open editor: a form left up over a locked board is a caregiver control on
+      // the communication surface, which is what the lock is for.
+      if (cfg.locked) closeEditor();
       // A choice card asks about the symbols setting AS IT WAS. Once that setting has changed —
       // from the card itself, the menu, or another device — the question is stale, and so is a
       // card on a board that has just been locked.
@@ -1358,7 +1331,6 @@ registerModule(
       applyAppearance();
       draw();
       startScan();
-      if (panelEl() && !panelEl().hidden) drawPanel();
     }
 
     return {
@@ -1383,9 +1355,8 @@ registerModule(
         // The switcher AS DRAWN, so a test asserts the chips rather than the setting.
         boards: [...mount.querySelectorAll('[data-board]')].map((b) => b.dataset.board),
         boardsShown: !mount.querySelector('[data-boards]')?.hidden,
-        gearShown: !!mount.querySelector('[data-gear]') && !mount.querySelector('[data-gear]').hidden,
-        panelOpen: !!mount.querySelector('[data-panel]') && !mount.querySelector('[data-panel]').hidden,
-        panelBoards: [...mount.querySelectorAll('[data-pboard] option')].map((o) => o.value),
+        // (row 2.95) no gear and no panel on the board: its settings are the one menu's.
+        gearShown: !!mount.querySelector('[data-gear]'),
         locked: !!cfg.locked,
         editing: !!editor,
         editorProbe: editor ? editor.__probe() : null,
@@ -1413,17 +1384,10 @@ registerModule(
       }),
 
       init() {
-        // *** THE PANEL, AND WHY THIS MODULE DID NOT HAVE ONE UNTIL NOW. ***
-        //
-        // Every caregiver control here used to live in the shell's settings menu, several
-        // screens away from the board — so the only control that was actually reachable was
-        // the switcher row, sitting on the communication surface itself, where the person the
-        // board is FOR can hit it. That is backwards: the caregiver's controls should be the
-        // ones behind a deliberate press, and the cards should be the ones under the hand.
-        //
-        // It is a PANEL, not a gate. It opens only from the gear, it closes on Escape, on a
-        // press outside it and on Done, and nothing on the board waits for it — the cards
-        // underneath keep working the moment it is closed. Opening it by accident costs a tap.
+        // *** NO PANEL OF ITS OWN ANY MORE (row 2.95). *** It had one (a gear, 2026-09-06) because the
+        // shell's menu was then several screens away from the board. The ⚙ menu now opens on this
+        // panel's own tab, so the caregiver's controls are still behind a deliberate press and the
+        // cards still keep the surface - and there is one menu, as Mike ruled.
         // *** A BOARD IS A SURFACE WITH CARDS OVER IT, NOT 36 SEALED BOXES. ***
         //
         // Mike's seam, 2026-09-07. The grid used to BE the board: every cell an opaque box,
@@ -1453,34 +1417,7 @@ registerModule(
             <div class="ab-boards" data-boards role="group" aria-label="which board" hidden></div>
             <div class="ab-grid" data-grid role="group" aria-label="AAC board"></div>
             <div class="ab-flight" data-flight aria-hidden="true"></div>
-            <button type="button" class="ab-gear" data-gear aria-expanded="false"
-                    aria-label="board settings">⚙</button>
             <div class="ab-editor" data-editor hidden role="dialog" aria-label="edit board"></div>
-            <div class="ab-panel" data-panel hidden role="dialog" aria-label="board settings">
-              <label class="ab-prow">
-                <span>Board</span>
-                <select data-pboard></select>
-              </label>
-              <div class="ab-prow ab-pbtns">
-                <button type="button" class="ab-pbtn" data-edit>Edit this board</button>
-                <button type="button" class="ab-pbtn" data-new>Make a new board…</button>
-              </div>
-              <label class="ab-prow ab-pcheck">
-                <input type="checkbox" data-popt="showBoards">
-                <span>Show the row of boards above the cards</span>
-              </label>
-              <p class="ab-pnote">The row is quick, and it is within reach of somebody who rests a
-                hand on the screen. You can change boards here either way.</p>
-              <label class="ab-prow ab-pcheck">
-                <input type="checkbox" data-popt="locked">
-                <span>Lock — hide the row and this button</span>
-              </label>
-              <p class="ab-pnote">The cards still work the same. To unlock, open this panel’s
-                settings from the screen it is on. That menu is the way back in.</p>
-              <div class="ab-prow ab-pbtns">
-                <button type="button" class="ab-pbtn ab-pdone" data-pclose>Done</button>
-              </div>
-            </div>
           </div>`;
 
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
@@ -1537,38 +1474,6 @@ registerModule(
           applyConfig();
         });
 
-        // The panel's own controls. Delegated, because `drawPanel` replaces the board list.
-        listen(mount, 'click', (e) => {
-          if (e.target.closest('[data-gear]')) {
-            panelOpen(panelEl()?.hidden !== false);
-            return;
-          }
-          if (e.target.closest('[data-pclose]')) { panelOpen(false); return; }
-          if (e.target.closest('[data-edit]')) { openEditor('edit'); return; }
-          if (e.target.closest('[data-new]')) { openEditor('new'); return; }
-          // The editor is a surface of its own. A press inside it is not a press on the board.
-          if (e.target.closest('[data-editor]')) return;
-          // A press anywhere outside the panel closes it — including on a card, which is the
-          // press somebody actually wanted. `pointerdown` on the cards has already stopped
-          // propagating, so this runs on the click that follows and does not eat the word.
-          if (panelEl() && !panelEl().hidden && !e.target.closest('[data-panel]')) {
-            panelOpen(false);
-          }
-        });
-        listen(mount, 'change', (e) => {
-          const sel = e.target.closest('[data-pboard]');
-          if (sel) { saveSetting('boardId', sel.value); return; }
-          const opt = e.target.closest('[data-popt]');
-          if (opt) saveSetting(opt.dataset.popt, !!opt.checked);
-        });
-        // Escape closes it. A panel over a communication surface that could only be closed by
-        // finding the right button would be the undismissable gate wearing a settings icon.
-        listen(mount, 'keydown', (e) => {
-          if (e.key === 'Escape' && panelEl() && !panelEl().hidden) {
-            e.stopPropagation(); panelOpen(false); gearEl()?.focus();
-          }
-        });
-
         state?.subscribe?.(() => {
           cfg = { ...DEFAULTS, ...(state.get() || {}) };
           applyConfig();
@@ -1614,6 +1519,25 @@ registerModule(
       // so without this the menu offers two boards while the panel offers three, and the one
       // missing is the person's own.
       settingsChoices: () => ({ boardId: boardChoices().map((c) => ({ value: c.id, label: c.label })) }),
+
+      // *** THE EDITOR, FROM THE ONE MENU (row 2.95). *** What the board's own panel offered. `closesMenu`: the
+      // editor opens over the board, so the menu gets out of its way (kiosk.js). A locked board offers them
+      // greyed, saying why: the lock is what keeps editing off this board, and the lock row above is the way back.
+      menuItems: () => {
+        const row = state?.get?.() || {};
+        const locked = !!cfg.locked;
+        const why = 'unlock the board first (Lock the board, above)';
+        const draftNew = !!(row.boardDraft && !row.boardDraft.__of);
+        const draftThis = !!(row.boardDraft && row.boardDraft.__of === board.id);
+        return [
+          { kind: 'item', id: 'board-edit', label: 'Edit this board', closesMenu: true, disabled: locked,
+            hint: locked ? why : (draftThis ? 'carries on from the changes left unsaved' : `“${board.name || board.label || 'this board'}”`),
+            run: () => { if (!cfg.locked) openEditor('edit'); } },
+          { kind: 'item', id: 'board-new', label: 'Make a new board…', closesMenu: true, disabled: locked,
+            hint: locked ? why : (draftNew ? 'carries on from the one left unfinished' : 'starts from an empty board'),
+            run: () => { if (!cfg.locked) openEditor('new'); } },
+        ];
+      },
 
       onResize() { setUnit(); },
       onHide() { stopScan(); },
