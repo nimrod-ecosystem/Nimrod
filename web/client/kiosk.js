@@ -1755,6 +1755,9 @@ export async function mountKiosk(root, {
     // settings module should be the same as the settings menu. There shouldn't be 2 different things." A promise
     // of the menu's handle drawn into `host` (`settingsMenuFor`): the same rows, tabs, levels and pages as ⚙.
     settingsMenu: (host, opts = {}) => menuReady.then(() => settingsMenuFor(host, opts || {})),
+    // (row 2.95) A panel whose own menu rows changed by themselves (YouTube's search answer landing, a while after
+    // the press) asks for a repaint: the open ⚙ menu and every Settings panel show it. Nothing when none is open.
+    menuChanged: () => { try { syncFrom(); } catch { /* the menu is not up yet */ } },
     // WHOSE SCREEN THIS IS. Resolved in the background below, so it is a FUNCTION rather
     // than a value - a module mounted before the lookup returns would otherwise capture
     // null forever. Bindings have been per-person since the input runtime landed; this is
@@ -6260,6 +6263,15 @@ export async function mountKiosk(root, {
               if (!taken) kid.state.set({ [key]: value });
             },
           }).map((it) => ({ ...it, ...MENU_TAB.module(0) }));
+          // (row 2.95) And its own rows (`menuItems`: YouTube's videos, search results, time-of-day playlists), as a
+          // panel's are above: its drawer is gone, so inside a Lineup this is the only way to them.
+          try {
+            const kidOwn = (kid.instance?.impl || kid.instance)?.menuItems?.();
+            if (Array.isArray(kidOwn)) {
+              kidRows.push(...kidOwn.filter((it) => it && it.id && it.label && showsAtLevel(it, complexity()))
+                .map((it) => ({ ...it, id: `turn:${it.id}`, ...MENU_TAB.module(0) })));
+            }
+          } catch (err) { console.error('kiosk: lineup turn own rows', err); }
           if (kidRows.length) {
             items.push({ kind: 'heading', id: 'turn-head', label: `${kid.title}: its own settings, while it is showing`, ...MENU_TAB.module(0) },
               ...kidRows);

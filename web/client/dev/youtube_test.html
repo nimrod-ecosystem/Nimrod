@@ -692,95 +692,25 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       inst5.destroy(); st5.destroy(); ev5.destroy(); host5.remove();
     }
 
-    // ── *** A PANEL SOMEBODY CANNOT LEAVE. THE SAFETY ONE. *** ─────────────
+    // ── G13 AND ROW 2.95: THE ARROWS STAY ON SCREEN; THE GEAR IS GONE ────────────────────────
     //
-    // Mike opened this panel on the deployed site, added a playlist, and COULD NOT GET OUT.
-    // Escape did nothing, there was no close button, and the sheet is inset on all four sides
-    // so it covered the gear that opened it. He escaped by navigating to Photos and back.
+    // G13 (Mike, off the live site): "there is no obvious way to choose a video from the panel." The previous/next
+    // arrows are the panel's own way to change video outside YouTube's iframe, so they stay, asserted as COMPUTED
+    // STYLE (the elements always existed; that is why nobody noticed when they were hidden).
     //
-    // On a bedside screen that is somebody stuck in a panel they cannot leave without help --
-    // and it is the undismissable-gate failure `CLAUDE.md` names, arriving through a settings
-    // sheet rather than a modal. It was reachable because I un-hid this panel the same day, so
-    // the check belongs next to the feature that caused it.
-    //
-    // THREE WAYS OUT, and three is not belt-and-braces: the close button is for a pointer, the
-    // gear is for somebody who remembers how they got in, and Escape is for a keyboard. A
-    // switch user has whichever of those is bound.
+    // Row 2.95 (Mike, 2026-10-16): "No module should have a settings menu separate from that." The gear and its
+    // drawer were where a video was added; that is all in the one menu now (the stage A/B blocks below). The checks
+    // that the drawer could be LEFT (Close, Escape, the gear above it) went with it: a sheet that never opens on a
+    // screen cannot trap anybody. The drawer's markup stays only as the Media page's preset form (media_test).
     {
-      const panel = () => host.querySelector('.youtube .settings');
-      const gear = host.querySelector('.youtube .gear');
-
-      gear.click();
-      check('the panel opens', panel().hidden === false);
-      const closeBtn = host.querySelector('.youtube [data-close]');
-      check('*** it has a visible way out ***', !!closeBtn && closeBtn.offsetParent !== null,
-        closeBtn ? 'present but not displayed' : 'no close button');
-      closeBtn.click();
-      check('...and pressing it leaves', panel().hidden === true);
-
-      // EACH WAY OUT IS TESTED FROM A KNOWN STATE, set directly rather than by pressing the
-      // previous control. Chained through clicks, a broken Escape left the panel open and the
-      // NEXT line's `gear.click()` closed it -- so the failure surfaced under the neighbour's
-      // name and "Escape leaves" passed. A check that reports somebody else's fault is worth
-      // less than no check.
-      panel().hidden = false;
-      host.querySelector('.youtube').dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      check('*** Escape leaves ***', panel().hidden === true);
-
-      panel().hidden = false;
-      // The gear must still be REACHABLE while the panel is open -- it was underneath it, which
-      // is why pressing the thing that opened it did not close it.
-      //
-      // Checked by STACKING ORDER rather than `elementFromPoint`: this suite's host sits outside
-      // the viewport, so hit-testing a coordinate returns null and reports "nothing at that
-      // point" -- a harness limit dressed up as a product failure, which is the fourth time
-      // today one of those has fooled me. z-index is the property that was actually wrong.
-      const gz = Number(getComputedStyle(gear).zIndex);
-      const pz = Number(getComputedStyle(panel()).zIndex);
-      check('*** the gear stacks ABOVE the panel it opened, so it is still pressable ***',
-        Number.isFinite(gz) && Number.isFinite(pz) && gz > pz, `gear ${gz} vs panel ${pz}`);
-      gear.click();
-      check('...so the control that opened it also closes it', panel().hidden === true);
-
-      // Escape with the panel already shut must not do anything surprising elsewhere.
-      host.querySelector('.youtube').dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      check('Escape with nothing open is harmless', panel().hidden === true);
-    }
-
-    // ── G13: THE ONLY WAY TO CHOOSE A VIDEO HAS TO BE ON SCREEN ────────────
-    //
-    // Mike, off the live site: "YouTube's overlay covers everything on hover and there is no
-    // obvious way to choose a video from the panel." There was no way at all: modules.css
-    // carried `.youtube .nav,.youtube .gear,.youtube .settings{display:none}` — right for
-    // photos and camera, whose every setting is declared in their manifest and therefore
-    // reachable from the universal menu, and wrong for this one, which declares ONE setting
-    // while adding a video, using a playlist, the schedule, shuffle and auto-advance all live
-    // in that hidden panel. Nothing else in the product edits a playlist.
-    //
-    // Asserted as COMPUTED STYLE, not as "the element exists". The elements always existed;
-    // that is exactly why nobody noticed, and why the audit page counted them as controls.
-    {
-      const gear = host.querySelector('.youtube .gear');
       const nav = host.querySelector('.youtube .nav');
-      check('*** the gear is on screen, not display:none ***',
-        gear && getComputedStyle(gear).display !== 'none',
-        gear ? getComputedStyle(gear).display : 'no gear');
-      check('*** and so are the previous/next arrows ***',
+      check('*** the previous/next arrows are on screen ***',
         nav && getComputedStyle(nav).display !== 'none',
         nav ? getComputedStyle(nav).display : 'no nav');
-      // Pressing it opens the panel that holds the playlist editor. A visible gear that opens
-      // nothing would pass the two checks above and fix nothing.
-      const panel = host.querySelector('.youtube .settings');
-      const wasHidden = panel.hidden;
-      gear.click();
-      check('*** pressing the gear opens the panel that adds a video ***',
-        wasHidden === true && panel.hidden === false
-          && !!panel.querySelector('[data-add-url]') && !!panel.querySelector('[data-add]'),
-        `hidden ${wasHidden} -> ${panel.hidden}`);
-      gear.click();
-      check('...and pressing it again puts it away', panel.hidden === true);
+      check('*** no gear on the panel: its settings are the one menu\'s (row 2.95) ***',
+        !host.querySelector('.youtube .gear') && !host.querySelector('.youtube [data-gear]'));
+      const sheet = host.querySelector('.youtube .settings');
+      check('...and the old drawer is never shown on a screen', !sheet || sheet.hidden === true);
     }
 
     // ── ONE SETTINGS MENU (row 2.95, Mike 2026-10-16), stage A: what the drawer held, in the menu ──────────────
@@ -821,6 +751,75 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       rm.run();
       check('...and Remove removes it', !(mst.get().playlist || []).some((v) => v.id === 'dQw4w9WgXcQ'));
       minst.destroy(); mst.destroy(); mev.destroy(); mhost.remove();
+    }
+
+    // ── ONE SETTINGS MENU, stage B: searching, and a playlist by time of day, from the menu ─────────────────────
+    {
+      const F = Object.fromEntries(SETTINGS.map((f) => [f.key, f]));
+      check('*** the menu has a search row (standard) and the four rows of a new time-of-day playlist (advanced) ***',
+        F.findVideo?.kind === 'text' && (F.findVideo.level || 'standard') === 'standard'
+          && ['schedNewName', 'schedNewFrom', 'schedNewTo', 'schedNewList'].every((k) => F[k] && F[k].level === 'advanced'));
+      check('...the times are choices a switch can step, every half hour; "ends" may be "when the next one starts"',
+        F.schedNewFrom.kind === 'choice' && F.schedNewFrom.options.length === 49 && F.schedNewFrom.options[15].label === '07:00'
+          && F.schedNewTo.options[0].label === 'when the next one starts' && F.schedNewTo.options[48].value === 24);
+      check('...and none of the four is offered while a preset decides the schedule',
+        F.schedNewFrom.appliesWhen({ presetId: 'p' }) === false && F.schedNewFrom.appliesWhen({}) === true);
+      const bp = await profiles.create('TEST-youtube-menu-b');
+      const bm = await profiles.addModule(bp.id, 'youtube');
+      const bst = createState({ url: profiles.stateURL(bp.id, bm.id), user: USER });
+      const bev = createEvents({ url: profiles.eventsURL(bp.id, bm.id), user: USER });
+      await bst.load(); await bev.load();
+      const bhost = document.createElement('div');
+      document.body.append(bhost);
+      let repaints = 0;
+      let answer = null;
+      const binst = mountModule('youtube', { mount: bhost, bus: createBus(), state: bst, events: bev, user: USER, profileId: bp.id,
+        playerFactory: makeStubPlayer().factory, menuChanged: () => { repaints++; },
+        searchVideos: (q) => new Promise((res) => { answer = () => res({ items: [{ id: 'zzz22222222', title: `A ${q} video`, channel: 'Ch' }], error: null }); }) });
+      binst.init();
+      await sleep(60);
+      const bi = binst.impl;
+      check('*** a search typed in the menu is taken (nothing kept under the row\'s key) ***',
+        bi.settingsWrite('findVideo', 'cats') === true && !('findVideo' in (bst.get() || {})));
+      await sleep(10);
+      check('...while it runs, the menu says so', bi.menuItems().some((r) => r.id === 'yt-found' && /Searching YouTube for “cats”/.test(r.label)) && repaints >= 1);
+      answer();
+      await sleep(30);
+      const fr = bi.menuItems().find((r) => r.id === 'yt-found:zzz22222222');
+      check('*** when the answer lands the menu is asked to repaint, and lists it with Add ***',
+        repaints >= 2 && fr && fr.label === 'Add A cats video' && fr.hint === 'Ch', JSON.stringify(bi.menuItems().map((r) => r.label)));
+      fr.run();
+      await sleep(20);
+      check('...Add adds it, with its real title', (bst.get().playlist || []).some((v) => v.id === 'zzz22222222' && v.title === 'A cats video'));
+      const fr2 = bi.menuItems().find((r) => r.id === 'yt-found:zzz22222222');
+      check('...and then it reads "Added", and cannot be added twice', fr2 && /^Added: /.test(fr2.label) && fr2.disabled === true);
+      bi.menuItems().find((r) => r.id === 'yt-found:clear').run();
+      check('"Clear the search results" clears them', !bi.menuItems().some((r) => String(r.id).startsWith('yt-found')));
+
+      const addRow = () => bi.menuItems().find((r) => r.id === 'yt-sched:add');
+      check('*** "Add the new playlist by time of day" says what is missing, and cannot be pressed yet ***',
+        addRow() && addRow().disabled === true && /time it starts/.test(addRow().hint), addRow() && addRow().hint);
+      bst.set({ schedNewName: 'Lunch', schedNewFrom: 12, schedNewTo: 13.5, schedNewList: 'https://www.youtube.com/playlist?list=PLlunch' });
+      await sleep(20);
+      check('...filled in, it shows the entry it will add', addRow().disabled === false && addRow().hint === 'Lunch, 12:00–13:30', addRow().hint);
+      addRow().run();
+      await sleep(20);
+      const sch = bst.get().schedule || [];
+      check('*** pressed, the entry joins the schedule, and the four rows are emptied for the next one ***',
+        sch.length === 1 && sch[0].name === 'Lunch' && sch[0].start === 12 && sch[0].end === 13.5 && sch[0].playlistId === 'PLlunch'
+          && bst.get().schedNewName === '' && bst.get().schedNewFrom === '' && bst.get().schedNewList === '', JSON.stringify(bst.get()));
+      bst.set({ schedNewFrom: 18, schedNewList: 'PLevening' });
+      await sleep(20);
+      addRow().run();
+      await sleep(20);
+      const ev = (bst.get().schedule || [])[1];
+      check('...with no end it runs until the next one starts (no `end` kept), and no name is named by its start',
+        ev && !('end' in ev) && ev.name === 'from 18:00', JSON.stringify(ev));
+      check('...and both are listed with Remove', bi.menuItems().filter((r) => String(r.id).startsWith('yt-sched:') && /^Remove /.test(r.label)).length === 2);
+      bst.set({ presetId: 'some-preset' });
+      await sleep(20);
+      check('while a preset is chosen, there is no Add for a schedule that would do nothing', !addRow());
+      binst.destroy(); bst.destroy(); bev.destroy(); bhost.remove();
     }
 
     // ── PRESETS (register #255): a named library an instance can point at ────────
@@ -886,7 +885,7 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
           .some((o) => o.value === preset.id && o.label === 'Preset playlist'),
         JSON.stringify(pinst.impl.settingsChoices()));
 
-      phost.querySelector('.youtube .gear').click();
+      // (row 2.95) The drawer is never opened on a screen now; it is still drawn (hidden), as the Media page's form.
       const shufBox = phost.querySelector('[data-opt="shuffle"]');
       check("the shuffle checkbox reflects the PRESET's value (false), not the instance's own default (true)",
         shufBox && shufBox.checked === false, shufBox && String(shufBox.checked));
