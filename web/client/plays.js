@@ -26,11 +26,12 @@
 // fills itself from there once. The page "Where your history is kept" (history_page.js) says which, plainly.
 //
 // ROW SHAPE (the same event-like shape the server rows had, so playsOf/tally/statsFromPlays are unchanged):
-//   { kind: 'play', created_at: <ISO, this device's clock>, data: { source, id, panel?, screen?, title?, by? } }
+//   { kind: 'play', created_at: <ISO, this device's clock>, data: { source, id, panel?, screen?, person?, title?, by? } }
 //     source   which player: 'youtube', 'spotify', 'photos', 'folder', ... (any id-shaped word; not a closed list)
 //     id       what played, in that source's own terms: a YouTube video id, a Spotify URI, a file's path
 //     panel    the module instance that played it - the picker reads only its own panel's plays
 //     screen   the screen (profile) the panel is on, so a per-screen or per-person table needs no second record
+//     person   whose screen it played on (their person id), once the screen knows (row 2.91: who played it)
 //     title    the item's name, and `by` its artist or channel - ONLY for a source in `keepText` (below)
 //   `created_at` is this device's clock: there is no server to stamp it any more. A clock set wrong makes "this week"
 //   wrong on this device only, and the picker's recency uses the same clock it is compared against.
@@ -103,6 +104,10 @@ export function normalizePlay(raw, { keepText = PLAYS_DEFAULTS.keepText, textMax
   if (panel) out.panel = panel;
   const screen = shortId(raw.screen);
   if (screen) out.screen = screen;
+  // (row 2.91, Mike via chat CF 4: "every play keeps who played it, so a per-person randomizer is possible") the person
+  // whose screen it played on, by their id; absent while the screen does not know yet.
+  const person = shortId(raw.person);
+  if (person) out.person = person;
   if ((keepText || []).includes(source)) {
     const title = text(raw.title, textMax);
     const by = text(raw.by, textMax);
@@ -447,8 +452,9 @@ export function panelPlays(ctx = {}, source) {
     panel,
     source,
     // `more`: { title, by } - kept only for a source in `keepText` (a folder's own file names; row 2.62 step 2).
+    // `person`: read when it plays (a screen learns its person after its panels mount; person_known.js).
     played: (id, more = null) => log.log({ ...(more && typeof more === 'object' ? { title: more.title, by: more.by } : {}),
-      source, id, panel, screen })
+      source, id, panel, screen, person: (() => { try { return ctx.personId || null; } catch { return null; } })() })
       .then((data) => { if (data && history && log.store) history.sync('plays', log.store, panel, { soon: true }); return data; })
       .catch((e) => { console.error(`${source}: play log`, e); return null; }),
     stats,

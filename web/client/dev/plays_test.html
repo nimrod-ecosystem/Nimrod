@@ -68,6 +68,9 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 
     section('one shape: { source, id, panel?, title?, by? }');
     check('a YouTube play keeps source and id', J(normalizePlay({ source: 'youtube', id: 'dQw4w9WgXcQ' })) === J({ source: 'youtube', id: 'dQw4w9WgXcQ' }));
+// Row 2.91 (Mike via chat CF 4): "every play keeps who played it".
+check('*** a play keeps whose screen it played on (the person id), when the screen knows ***',
+  normalizePlay({ source: 'youtube', id: 'v', person: 'p-123' }).person === 'p-123' && !('person' in normalizePlay({ source: 'youtube', id: 'v', person: null })));
     check('no source, or no id, is not a play', normalizePlay({ id: 'x' }) === null && normalizePlay({ source: 'youtube' }) === null
       && normalizePlay({ source: 'youtube', id: '   ' }) === null && normalizePlay(null) === null);
     check('a source must be one id-shaped word (not a sentence, not a URL)', normalizePlay({ source: 'my player', id: 'x' }) === null
