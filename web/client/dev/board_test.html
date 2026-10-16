@@ -640,43 +640,29 @@ try {
     // where an accidental press costs somebody their sentence.
     check('*** the board row is NOT on the talking surface by default ***',
       inst.impl.__probe().boardsShown === false);
-    check('...and the settings button is, because switching has to live somewhere',
-      inst.impl.__probe().gearShown === true);
+    // (row 2.95, Mike 2026-10-16: "No module should have a settings menu separate from that.") The gear that held
+    // switching went; switching lives in the one menu, which the cards never carry.
+    check('...and no gear on the board either: its settings are the one menu\u2019s (row 2.95)',
+      inst.impl.__probe().gearShown === false);
 
-    // *** SWITCHING STILL WORKS, FROM THE PANEL. *** Moving a control is only safe if the
-    // control still exists; this is the check that says the hazard fix did not remove the
-    // feature it was protecting.
-    host.querySelector('[data-gear]').click();
-    await sleep(20);
-    check('the gear opens the panel', inst.impl.__probe().panelOpen === true);
-    check('...and the panel offers every built-in board',
-      JSON.stringify(inst.impl.__probe().panelBoards) === '["yesno","core","care","library"]',
-      JSON.stringify(inst.impl.__probe().panelBoards));
-    const sel = host.querySelector('[data-pboard]');
-    sel.value = 'care';
-    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    // *** SWITCHING STILL WORKS, FROM THE ONE MENU. *** Moving a control is only safe if the control still
+    // exists; this is the check that says the hazard fix (and row 2.95) did not remove the feature it was protecting.
+    const offered = () => (inst.impl.settingsChoices?.().boardId || []);
+    check('the menu offers every built-in board',
+      JSON.stringify(offered().map((o) => o.value)) === '["yesno","core","care","library"]',
+      JSON.stringify(offered().map((o) => o.value)));
+    st.set({ ...st.get(), boardId: 'care' });
     await sleep(40);
-    check('*** choosing a board in the panel actually changes the board ***',
+    check('*** choosing a board in the menu actually changes the board ***',
       inst.impl.__probe().boardId === 'care', inst.impl.__probe().boardId);
-    check('...and it wrote the choice to the same row the menu writes',
-      st.get().boardId === 'care', JSON.stringify(st.get()));
-    // The example board is LABELLED as one, where somebody choosing actually reads it rather
-    // than only in the settings menu most people never open.
+    // The example board is LABELLED as one where somebody choosing actually reads it.
     check('...and the example board says so where it is chosen',
-      /example/i.test([...host.querySelectorAll('[data-pboard] option')]
-        .find((o) => o.value === 'care')?.textContent || ''));
-    // A PANEL, NOT A GATE. Escape closes it, and so does a press anywhere outside it.
-    host.querySelector('[data-panel]').dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await sleep(20);
-    check('*** Escape closes it — it is a panel, not a gate ***',
-      inst.impl.__probe().panelOpen === false);
-    host.querySelector('[data-gear]').click();
-    await sleep(20);
-    host.querySelector('[data-grid]').click();
-    await sleep(20);
-    check('...and so does a press on the board underneath',
-      inst.impl.__probe().panelOpen === false);
+      /example/i.test(offered().find((o) => o.value === 'care')?.label || ''));
+    const edRows = () => inst.impl.menuItems();
+    check('*** the menu has the editor\u2019s two rows, which put the menu away when pressed ***',
+      edRows().some((r) => r.id === 'board-edit' && r.closesMenu === true && !r.disabled)
+        && edRows().some((r) => r.id === 'board-new' && r.closesMenu === true && !r.disabled),
+      JSON.stringify(edRows()));
 
     // *** THE ROW IS STILL AVAILABLE TO ANYBODY WHO WANTS IT. *** Off by default is a default;
     // removing it would have been a decision about somebody else's screen.
@@ -696,8 +682,9 @@ try {
     await sleep(40);
     check('*** locked hides the row even though the row is turned ON ***',
       inst.impl.__probe().boardsShown === false);
-    check('*** ...and the gear with it — half a lock is not a lock ***',
-      inst.impl.__probe().gearShown === false);
+    check('*** ...and editing waits for an unlock: the menu\u2019s two editor rows are greyed, saying why ***',
+      inst.impl.menuItems().every((r) => r.disabled === true && /unlock/.test(r.hint)),
+      JSON.stringify(inst.impl.menuItems()));
     check('*** ...and does not touch a single card ***',
       inst.impl.__probe().cells === 3 && inst.impl.__probe().words.join('').length > 0,
       JSON.stringify(inst.impl.__probe().words));
@@ -718,29 +705,30 @@ try {
     const oh = document.createElement('div');
     oh.style.cssText = 'position:relative;width:420px;height:300px';
     document.body.append(oh);
-    // The dead instance is given a board the live one does not have, so its fingerprint is
-    // unmistakable: if `custom` appears in the replacement's list, a destroyed board wrote it.
+    // The dead instance is given its OWN settings row, so its fingerprint is unmistakable: if a press on the
+    // replacement's row of boards writes a choice into the dead one's row, a destroyed board answered it.
+    const orphanState = fakeState({ showBoards: true, board: { id: 'ghost', name: 'Ghost', tier: 2,
+                                    cells: [{ word: 'Boo' }, { word: 'Hoo' }] } });
     const orphan = mountModule('board', {
       mount: oh, bus: createBus(), events: fakeEvents(),
-      state: fakeState({ board: { id: 'ghost', name: 'Ghost', tier: 2,
-                                  cells: [{ word: 'Boo' }, { word: 'Hoo' }] } }),
+      state: orphanState,
       output: { say: () => {} },
     });
     orphan.init();
     await sleep(20);
     orphan.destroy();
+    const afterState = fakeState({ boardId: 'care', showBoards: true });
     const after = mountModule('board', {
       mount: oh, bus: createBus(), events: fakeEvents(),
-      state: fakeState({ boardId: 'care' }), output: { say: () => {} },
+      state: afterState, output: { say: () => {} },
     });
     after.init();
     await sleep(20);
-    oh.querySelector('[data-gear]').click();
+    oh.querySelector('[data-board="yesno"]')?.click();
     await sleep(20);
-    const pb = after.impl.__probe().panelBoards;
     check('*** a destroyed board does not answer clicks meant for its replacement ***',
-      !pb.includes('custom') && pb.length > 0,
-      `the dead instance filled the new board's list: ${JSON.stringify(pb)}`);
+      orphanState.get().boardId === undefined && afterState.get().boardId === 'yesno',
+      `dead row ${JSON.stringify(orphanState.get().boardId)}, live row ${JSON.stringify(afterState.get().boardId)}`);
     after.destroy();
     oh.remove();
 
@@ -776,12 +764,6 @@ try {
     await sleep(40);
     check('*** a board somebody built still wins over the new default ***',
       inst2.impl.__probe().boardId === 'mine', inst2.impl.__probe().boardId);
-    inst2.impl.__probe();
-    host.querySelector('[data-gear]').click();
-    await sleep(20);
-    check('...and it is offered alongside the built-ins where boards are chosen',
-      inst2.impl.__probe().panelBoards.includes('custom'),
-      JSON.stringify(inst2.impl.__probe().panelBoards));
     // AND IN THE SHELL'S MENU. The declared options are the built-ins -- all a menu can know
     // about a module that is not running -- so a board somebody BUILT reaches it only through
     // live options. Without them the menu offers two boards and the panel offers three, and
@@ -1083,10 +1065,10 @@ try {
     inst.init();
     await sleep(30);
 
-    host.querySelector('[data-gear]').click();
-    await sleep(20);
-    check('the panel offers a way to make a board', !!host.querySelector('[data-new]'));
-    host.querySelector('[data-new]').click();
+    // (row 2.95) From the one menu: the board's own rows.
+    const row = (id) => inst.impl.menuItems().find((r) => r.id === id);
+    check('the menu offers a way to make a board', !!row('board-new') && !row('board-new').disabled);
+    row('board-new').run();
     await sleep(30);
     check('*** and it opens the editor ***', inst.impl.__probe().editing === true);
     // It says which it is doing. "Make a new board" hands the editor a BLANK board rather than
@@ -1096,8 +1078,6 @@ try {
     check('...saying it is making one, not editing the board in use',
       /Make a board/.test(host.querySelector('.be-head').textContent),
       host.querySelector('.be-head').textContent);
-    check('...over the board, so the panel is out of the way',
-      inst.impl.__probe().panelOpen === false);
 
     // Name it, shape it, give it a word.
     const name = host.querySelector('[data-name]');
@@ -1142,9 +1122,7 @@ try {
     // *** THE ONE THAT MATTERS. *** A caregiver opens the editor and is called away. The
     // person the board is for cannot cancel a form. `CLAUDE.md`: a screen must never enter a
     // state that only an input can leave, when the person in front of it cannot give it.
-    host.querySelector('[data-gear]').click();
-    await sleep(20);
-    host.querySelector('[data-edit]').click();
+    row('board-edit').run();
     await sleep(30);
     check('the editor is open again', inst.impl.__probe().editing === true);
     check('...and this time it says it is editing', 
@@ -1166,20 +1144,19 @@ try {
       JSON.stringify(st.get().boardDraft && st.get().boardDraft.name));
 
     // And reopening picks the draft up rather than starting again.
-    host.querySelector('[data-gear]').click();
-    await sleep(20);
-    host.querySelector('[data-edit]').click();
+    check('...and the menu says so before it is pressed', /unsaved/.test(row('board-edit').hint), row('board-edit').hint);
+    row('board-edit').run();
     await sleep(30);
     check('...and reopening carries on from it',
       host.querySelector('[data-name]').value === 'Half a rename',
       host.querySelector('[data-name]').value);
 
-    // A LOCK CLOSES IT TOO. Locking a board while an editor is open over it would otherwise
-    // leave the form up with the gear gone -- a screen with no way back at all.
+    // A LOCK CLOSES IT TOO. Locking a board while an editor is open over it would otherwise leave a caregiver's
+    // form up over a locked board.
     st.set({ ...st.get(), locked: true });
     await sleep(40);
     check('*** locking the board closes the editor rather than trapping it open ***',
-      inst.impl.__probe().editing === false && inst.impl.__probe().gearShown === false);
+      inst.impl.__probe().editing === false && row('board-edit').disabled === true);
     check('...and the cards are there', inst.impl.__probe().words.join(' ').includes('Tea'));
 
     inst.destroy();
@@ -1324,9 +1301,14 @@ try {
       getComputedStyle(surface).pointerEvents === 'none', getComputedStyle(surface).pointerEvents);
 
     // Proven rather than asserted: what is actually under the middle of a card is the CARD.
+    // SCROLLED INTO VIEW FIRST: `elementFromPoint` answers null for a point outside the viewport, so this check
+    // used to pass only because an earlier check focused the board's gear, which scrolled the page down this far.
+    // The gear went (row 2.95) and the check read "nothing" - the harness, not the board.
+    host.querySelector('.ab-card').scrollIntoView({ block: 'center' });
+    const seen = host.querySelector('.ab-card').getBoundingClientRect();
     const mid = document.elementFromPoint(
-      Math.round(cardBox.left + cardBox.width / 2),
-      Math.round(cardBox.top + cardBox.height / 2));
+      Math.round(seen.left + seen.width / 2),
+      Math.round(seen.top + seen.height / 2));
     check('*** a press in the middle of a card still reaches the card ***',
       !!mid && !!mid.closest('.ab-card'), mid ? (mid.className || mid.tagName) : 'nothing');
 
