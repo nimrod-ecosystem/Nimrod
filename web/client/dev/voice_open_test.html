@@ -150,6 +150,8 @@ const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
     play: (type, place) => { playCalls.push({ type, place }); return playResult; },
     setTimer: (fn, ms) => { tid += 1; timers.push({ fn, ms, id: tid }); return tid; },
     clearTimer: (id) => { const i = timers.findIndex((t) => t.id === id); if (i >= 0) timers.splice(i, 1); },
+    // (row 2.90) the clock's default preset says 30 seconds; nothing else has one of its own.
+    quietFor: (type) => (type === 'clock' ? 30000 : null),
   });
   const box = () => kioskEl.querySelector('.k-voiceview');
 
@@ -190,6 +192,8 @@ const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
     host.current()?.place === 'tl' && said.at(-1) === 'Opening Clock in the top left corner.' && box()?.style.left === '0%'
     && box()?.style.width === '50%' && kioskEl.dataset.voiceOpen === 'region', J([host.current(), said.at(-1)]));
   check('*** a place: the dashboard is NOT hidden under it (it stays in view beside it) ***', !log.includes('hide:true'), J(log));
+  check('*** (row 2.90) the clock goes back after ITS OWN time, set in its preset (30 s), not the screen\'s 2 minutes ***',
+    live().length === 1 && live()[0].ms === 30000, J(live()));
   bus.publish(SPEECH_OPEN_TOPIC, { module: 'calculator', moduleHeard: 'calculator', place: 'right', verb: 'open' });
   await settle();
   check('a second one replaces the first (one at a time)', host.current()?.type === 'calculator' && host.current()?.place === 'right'
