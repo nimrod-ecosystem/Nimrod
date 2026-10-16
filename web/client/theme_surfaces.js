@@ -88,7 +88,10 @@ export const codeSurfaces = [
     what: 'The world\'s own pieces for the room and scene builders and the town. Any piece can go in any room.' },
 ];
 export const codeCoverage = {
-  outfits: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
+  // (2026-10-16) Design's lessons handoff gave every theme outfits (character_kit.js OUTFIT_THEMES; the suite checks
+  // the two agree).
+  outfits: ['nimrod', 'cozy', 'spring', 'summer', 'fall', 'winter', 'night', 'ocean', 'steampunk', 'cyberpunk', 'newYear',
+    'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'halloween', 'diwali', 'harvest', 'hanukkah', 'christmas'],
   town: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
   kit: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
 };

@@ -220,6 +220,8 @@ export const SUITES = [
   'screen_switch',
   // Row 2.87 (2026-10-14): a Lineup with rules - days, hours, how often - as a preset.
   'lineup',
+  // 2026-10-16: Design's lesson kit (item 41) - every part draws in every theme.
+  'lesson_kit',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

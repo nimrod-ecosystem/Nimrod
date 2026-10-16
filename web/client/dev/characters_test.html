@@ -97,7 +97,8 @@ try {
     // The SHA-256 of each .js.txt, line endings as LF. A change here means a shipped file is no longer Design's: take
     // a new handoff and update the line, rather than editing their file. (playing_cards.js: its own suite.)
     const PINS = {
-      'character_kit.js': '71dd5de1beeb2349ea39371ae0e9a77cf22598077e8e2e4c56ddd33724ad7852',
+      // (2026-10-16, DELIBERATELY: Design's lessons handoff (item 41) replaced character_kit.js - the 'listen' pose, and outfits for every theme.)
+      'character_kit.js': '4caa3e19d67cc5538010d361389f1e668b34727eb4c0d8acda9771a17a89fabe',
       'theme_kits.js': 'aa9d4f28c75383d2d328fef7810fb62240148ca31f62a24d45bdd333c8ff758f',
       'town.js': 'a4e5e6b594bd2ce59b7cd9e0754b5bce21176af9145e4159b2031307d0ca3194',
     };
@@ -127,12 +128,13 @@ try {
     }
     check(`all ${n} figures (${Object.keys(OUTFITS).length} outfits x 5 roles x ${POSES.length} poses) parse, with role="img", a label and a title`, bad.length === 0, bad.slice(0, 5).join(' | '));
     check('*** no figure carries a script, a handler or a reference outside itself ***', risky.length === 0, risky.slice(0, 5).join(' | '));
-    check(`six themes have outfits of their own (${OUTFIT_THEMES.join(', ')}), two or three each, and the Royal robe is for any`,
-      OUTFIT_THEMES.length === 6 && OUTFIT_THEMES.every((t) => Object.values(OUTFITS).filter((o) => o.theme === t).length >= 2) && OUTFITS.royal.theme === 'any');
+    // (2026-10-16, DELIBERATELY: the lessons handoff gives every theme outfits of its own - it was six.)
+    check(`every theme with outfits has two or more of its own (${OUTFIT_THEMES.length}: ${OUTFIT_THEMES.join(', ')}), and the Royal robe is for any`,
+      OUTFIT_THEMES.length >= 6 && OUTFIT_THEMES.every((t) => Object.values(OUTFITS).filter((o) => o.theme === t).length >= 2) && OUTFITS.royal.theme === 'any');
     check('the four default characters are four people with a name and a look of their own',
       Object.keys(DEFAULT_CHARACTERS).join() === 'king,queen,jack,joker' && Object.values(DEFAULT_CHARACTERS).every((c) => c.name && c.look && c.look.tone));
-    check('what the court wears in each of the six themes is a real outfit; any other theme falls back to the Royal robe',
-      OUTFIT_THEMES.every((t) => ['king', 'queen', 'jack', 'joker'].every((r) => OUTFITS[COURT_PICK[t][r]])) && courtOutfit('king', 'night') === 'royal' && courtOutfit('queen', 'nope') === 'royal');
+    check('what the court wears in each theme with outfits is a real outfit; a theme it does not know falls back to the Royal robe',
+      OUTFIT_THEMES.every((t) => ['king', 'queen', 'jack', 'joker'].every((r) => OUTFITS[COURT_PICK[t][r]])) && courtOutfit('queen', 'nope') === 'royal');
     check('an unknown outfit draws the Royal robe, not nothing', figureBody({}, { outfit: 'nope' }) === figureBody({}, { outfit: 'royal' }));
   }
 

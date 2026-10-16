@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lesson_kit — Design's lesson parts, drawn in every theme</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>lesson_kit — Design's lesson parts, drawn in every theme</h1>
+<p>Design's lessons handoff (item 41, Nimrod Design System17, 2026-10-15), shipped as it came. This proves every part
+draws in every theme: the type styles, the four chart kinds, the three layouts, the teacher poses (with the new
+"listen"), the motion notes, and the inventory. No lesson module uses it yet (row 2.92 waits for Mike).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { LESSON_THEMES, typeStyles, typeCss, chartSvg, teacherSvg, layoutSvg, MOTION, inventory, lessonTheme, contrast } from '../lesson_kit.js';
+import { POSES } from '../character_kit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const isSvg = (s) => typeof s === 'string' && /^\s*<svg[\s>]/.test(s) && /<\/svg>\s*$/.test(s);
+const parses = (s) => { try { const d = new DOMParser().parseFromString(s, 'image/svg+xml'); return !d.querySelector('parsererror'); } catch { return false; } };
+
+try {
+  const themes = Array.isArray(LESSON_THEMES) ? LESSON_THEMES : Object.keys(LESSON_THEMES || {});
+  section('the themes');
+  check('*** every one of the themes is a lesson theme (Design: "Every one of the 21 themes") ***', themes.length >= 21, String(themes.length));
+  check('the character kit has the new "listen" pose (and keeps every old one)', POSES.includes('listen')
+    && ['stand', 'wave', 'talk', 'think', 'happy', 'sleep', 'point'].every((p) => POSES.includes(p)), POSES.join());
+
+  const lesson = { title: 'Right to repair', teacher: 'queen', place: 'library', layout: 'slide',
+    parts: [{ type: 'text', body: 'You can fix many things yourself.' }, { type: 'keyword', word: 'repair', meaning: 'to fix' },
+      { type: 'quote', text: 'Fix it, don\'t ditch it.', who: 'A repair café' },
+      { type: 'chart', kind: 'bar', data: [{ label: 'Phones', value: 4 }, { label: 'Laptops', value: 2 }], caption: 'Repairs this week', citation: 's1' }] };
+  const data = [{ label: 'A', value: 3 }, { label: 'B', value: 5 }, { label: 'C', value: 2 }];
+  const bad = [];
+  for (const t of themes) {
+    const ts = typeStyles(t);
+    for (const role of ['title', 'body', 'caption', 'citation']) if (!ts || !ts[role]) bad.push(`${t}: type ${role}`);
+    // typeCss gives style properties for an HTML lesson (an object), e.g. fontFamily and fontSize.
+    try { const c = typeCss(ts?.title); if (!c || !c.fontFamily || !/px$/.test(c.fontSize)) bad.push(`${t}: typeCss`); } catch (e) { bad.push(`${t}: typeCss ${e.message}`); }
+    for (const kind of ['bar', 'line', 'pie', 'stack']) {
+      try { const r = chartSvg(kind, data, t); if (!r || !isSvg(r.svg) || !parses(r.svg)) bad.push(`${t}: chart ${kind}`); }
+      catch (e) { bad.push(`${t}: chart ${kind} threw ${e.message}`); }
+    }
+    for (const layout of ['slide', 'over', 'study']) {
+      // layoutSvg returns { svg, ... } (as chartSvg does).
+      try { const r = layoutSvg({ ...lesson, layout }, t, layout); const s = typeof r === 'string' ? r : r?.svg;
+        if (!isSvg(s) || !parses(s)) bad.push(`${t}: layout ${layout} (svg=${isSvg(s)} parses=${parses(String(s))})`); }
+      catch (e) { bad.push(`${t}: layout ${layout} threw ${e.message}`); }
+    }
+    for (const pose of ['stand', 'desk', 'point', 'listen']) {
+      try { const s = teacherSvg('queen', pose, t); if (!isSvg(s) || !parses(s)) bad.push(`${t}: teacher ${pose}`); }
+      catch (e) { bad.push(`${t}: teacher ${pose} threw ${e.message}`); }
+    }
+    if (!MOTION || !MOTION[t]) bad.push(`${t}: no motion notes`);
+    try { if (!inventory(t)) bad.push(`${t}: no inventory`); } catch (e) { bad.push(`${t}: inventory threw ${e.message}`); }
+  }
+  section('*** every part, every theme ***');
+  check('*** type styles, 4 chart kinds, 3 layouts, 4 teacher poses, motion notes and inventory, in every theme: all draw valid SVG ***',
+    bad.length === 0, bad.slice(0, 12).join(' | '));
+  section('contrast is a warning, never a block');
+  {
+    const lt = lessonTheme(themes[0]);
+    check('a lesson theme lists its contrast warnings (an array; Design\'s own measurements)', Array.isArray(lt?.warnings), JSON.stringify(Object.keys(lt || {})));
+    check('the contrast measure: black on white is 21:1', Math.abs(Number(contrast('#000000', '#ffffff')) - 21) < 0.05, String(contrast('#000000', '#ffffff')));
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>
