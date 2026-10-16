@@ -47,8 +47,12 @@ export const PROVIDERS = [
   { id: 'wordgame',    label: 'Word game',      real: false },
   { id: 'trivia',      label: 'Trivia',         real: false },
   { id: 'singalong',   label: 'Sing-along',     real: false },
+  // A WHOLE DASHBOARD (row 2.87, Mike 2026-10-16 via chat CE 2: "a dashboard as an entry: yes"), only from a saved
+  // Lineup (`lineupOnly`): which one is the entry's `show`, and the time-of-day rotation has none to name. See
+  // `makeDashboardAdapter`.
+  { id: 'dashboard',   label: 'Dashboard',      real: true, dashboard: true, lineupOnly: true },
 ];
-const ALL = PROVIDERS.map((p) => p.id);
+const ALL = PROVIDERS.filter((p) => !p.lineupOnly).map((p) => p.id);
 
 // HOW LONG A PICTURES TURN LASTS (row 2.87, Rule 1: a setting, not a fixed number). Default 2 minutes: at Photos' own
 // default of a new picture every 8 seconds that is about 15 pictures, long enough to be a turn of its own rather than a
@@ -65,6 +69,23 @@ export const PICTURES_TURN_FIELD = Object.freeze({
 });
 // A pictures turn says it is alive this often, well inside the backstop's 3-minute silence (segmentSilenceMs).
 export const TURN_BEAT_MS = 30000;
+// HOW LONG A DASHBOARD'S TURN LASTS when its entry names no length (Rule 1: the entry's own "Each turn" is the setting;
+// this is its default). 5 minutes: a dashboard is several things at once - a clock, pictures, a game - and it takes a
+// minute to see what is on one, so a pictures-length turn (2 minutes) would end as somebody started looking. FOR
+// longer: a dashboard can hold a whole activity. AGAINST: a Lineup is a mix, and the entry offers 10, 30 and 60.
+export const DASHBOARD_TURN_MS = 300000;
+const DASHBOARD_TYPE = 'dashboard';   // modules/view.js DASHBOARD_TYPE (loaded when a Lineup mounts; see the adapter)
+/** A row kept in memory (a dashboard turn's `shows`): what a nested dashboard reads from `ctx.state`, and nothing kept. */
+function memoryRow(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(patch) { v = { ...v, ...(patch || {}) }; for (const f of [...subs]) { try { f(v); } catch (err) { console.error('director: row', err); } } },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, startPolling() {}, destroy() { subs.clear(); },
+  };
+}
 
 // *** A SAVED LINEUP (row 2.87, Stage 1; lineup.js and the plan). *** The panel's choice of one of the person's Lineup
 // presets (made on the Media page). Chosen: each turn is drawn from its entries - module, preset, days, hours, how often
@@ -174,6 +195,11 @@ registerModule(
       return list.length ? list : null;
     }
     const lineupActive = () => !!lineupEntries();
+    // *** A `segment/done` FROM SOMETHING THAT IS NOT THE TURN ON SCREEN. *** The topic is bare: a dashboard turn's own
+    // YouTube ending a video says it, and so does a YouTube panel of its own elsewhere on the screen. Every provider
+    // names itself (`provider`), so one naming another while a turn is on is not this turn ending. A Skip (no
+    // provider) always counts.
+    const strayDone = (p) => !!(p && p.provider && current && p.provider !== current);
     /** The next turn from the saved Lineup. False when none is in use (the machine's rotation then runs). */
     // A turn with nothing to show hands back AT ONCE (`segment/done` from inside its activate), so a Lineup whose every
     // entry is empty would draw again and again in one breath. Past a few in a row, the next draw waits a moment.
@@ -207,6 +233,8 @@ registerModule(
         // A YouTube entry plays from the preset it names ('' = this Lineup's own YouTube settings).
         if (e.module === 'youtube' && x?.state && ((x.state.get() || {}).presetId || '') !== e.presetId) x.state.set({ presetId: e.presetId });
         a?.setTurnMs?.(e.turnMs || 0);
+        a?.setShow?.(e.show || '');          // a dashboard entry: which dashboard
+
       } catch (err) { console.error('director: lineup entry', err); }
       try { turnPlays.played(e.module); } catch { /* not load-bearing */ }
       rootBus.publish(`${e.module}/activate`);
@@ -358,6 +386,91 @@ registerModule(
           cState = null; cEvents = null;
         },
       };
+    }
+
+    // *** A DASHBOARD AS A TURN (row 2.87, Mike 2026-10-16 via chat CE 2: "a dashboard as an entry: yes"). ***
+    // A whole dashboard (modules/view.js, nested) takes the Lineup's window for its turn, then goes.
+    //   * MOUNTED FOR ITS TURN AND TAKEN DOWN AFTER, unlike the other turns (mounted once, hidden between turns). A
+    //     dashboard holds panels of its own, any of which may make sound, and nothing pauses all of them: one kept
+    //     mounted while hidden is the video playing behind the next turn (seen 2026-10-14) times every panel on it.
+    //     FOR: nothing of it runs off screen. AGAINST: each turn loads it again, a second or two of a turn of minutes.
+    //   * NESTED (`nestDepth`), as a dashboard placed on a dashboard is: the screen's "how deep stays live" applies,
+    //     so a Lineup naming the very dashboard it sits on draws a card at the limit rather than looping.
+    //   * Which dashboard is the entry's `show` (kept in a row in memory; `memoryRow`); how long, its `turnMs`, else
+    //     DASHBOARD_TURN_MS. An entry naming none hands the turn straight back.
+    //   * It says it is alive (segment/progress), so the backstop does not cut a long turn short. What the
+    //     dashboard's own panels say on the bus (a video of theirs ending) is not this turn ending (`strayDone`).
+    function makeDashboardAdapter(p) {
+      let host = null, child = null, row = null;
+      let endTimer = null, beatTimer = null, entryTurnMs = 0, shows = '';
+      let viewReady = null, turnSeq = 0;   // view.js loading; which activation is the current one
+      const innerId = `${instanceId}-${p.id}`;
+      const stopTimers = () => {
+        if (endTimer != null) { clearTimer(endTimer); endTimer = null; }
+        if (beatTimer != null) { clearTimer(beatTimer); beatTimer = null; }
+      };
+      const beat = () => {
+        rootBus.publish('segment/progress', { provider: p.id });
+        beatTimer = setTimer(beat, TURN_BEAT_MS);
+      };
+      const takeDown = () => {
+        try { child?.destroy(); } catch (err) { console.error('director: dashboard turn down', err); }
+        child = null; row = null;
+        try { host?.replaceChildren(); } catch { /* gone */ }
+      };
+      return {
+        async mount(el) {
+          host = el;
+          // view.js registers the type. Loaded here, not imported at the top: it brings the dashboard editor and the
+          // map with it, which a Lineup without a dashboard entry never needs. On a screen it is already loaded.
+          // NOT AWAITED: the Lineup's first turn waits for every adapter's mount, and this import is the slowest thing
+          // in it; a dashboard's own turn waits for it instead (`activate`).
+          viewReady = import('./view.js').then(() => true, (err) => { console.error('director: dashboard module', err); return false; });
+          if (current === p.id) this.activate();
+        },
+        activate() {
+          stopTimers();
+          takeDown();
+          if (!shows || !host) { rootBus.publish('segment/done', { provider: p.id, reason: 'empty' }); return; }
+          const turn = ++turnSeq;
+          Promise.resolve(viewReady).then((ok) => {
+            // Moved on (or torn down) while the module loaded: nothing to show.
+            if (turn !== turnSeq || current !== p.id || !host || torn) return;
+            if (!ok) { rootBus.publish('segment/done', { provider: p.id, reason: 'error' }); return; }
+            show();
+          });
+        },
+        deactivate() { turnSeq++; stopTimers(); takeDown(); },
+        inner: () => null,             // the menu's rows are the dashboard's panels', on that dashboard
+        setTurnMs: (ms) => { entryTurnMs = Number(ms) || 0; },
+        setShow: (id) => { shows = typeof id === 'string' ? id : ''; },
+        shows: () => (child ? shows : ''),
+        resize() { try { child?.onResize?.(); } catch { /* noop */ } },
+        destroy() { turnSeq++; stopTimers(); takeDown(); host = null; },
+      };
+      // The turn's dashboard, mounted once view.js is loaded (`activate`).
+      function show() {
+        const box = document.createElement('div');
+        box.className = 'd-dash mod-box';
+        box.style.cssText = 'position:absolute;inset:0';
+        host.append(box);
+        row = memoryRow({ shows });
+        const depth = Number.isInteger(ctx.nestDepth) && ctx.nestDepth > 0 ? ctx.nestDepth : 1;
+        try {
+          child = mountModule(DASHBOARD_TYPE, extendCtx(ctx, { mount: box, bus: rootBus, state: row, events: null, instanceId: innerId, nestDepth: depth }));
+          child.init();
+        } catch (err) {
+          console.error('director: dashboard turn', err);
+          takeDown();
+          rootBus.publish('segment/done', { provider: p.id, reason: 'error' });
+          return;
+        }
+        beat();
+        endTimer = setTimer(() => {
+          endTimer = null;
+          rootBus.publish('segment/done', { provider: p.id, reason: 'ended' });
+        }, entryTurnMs >= 10000 ? entryTurnMs : DASHBOARD_TURN_MS);
+      }
     }
 
     // A real provider mounted as a child module in its own slot (youtube, personal, …).
@@ -600,10 +713,11 @@ registerModule(
         // ok() would stop watching after the first one.
         bus.subscribe('segment/progress', () => segmentWatch?.beat());
         // A finished segment is not a stalled one; the next activate re-arms it.
-        bus.subscribe('segment/done', () => segmentWatch?.disarm());
+        bus.subscribe('segment/done', (p) => { if (!strayDone(p)) segmentWatch?.disarm(); });
         // (row 2.87) A saved Lineup draws the next turn (the machine's own pick is guarded off while it does).
         bus.subscribe('segment/done', (p) => {
           if (!lineupActive()) return;
+          if (strayDone(p)) return;
           // A video turn with time left: the next video, the same turn (re-activating the provider plays its next).
           if (videoTurnGoesOn(p)) { rootBus.publish(`${turnEntry.module}/activate`); return; }
           lineupNext();
@@ -674,7 +788,7 @@ registerModule(
             // Somebody tore this down mid-loop. Building the remaining providers would be
             // building them for nobody, and each one is a module with its own clocks.
             if (torn) return;
-            if (p.real) { const a = p.inner ? makeTurnAdapter(p) : makeChildAdapter(p); adapters[p.id] = a; await a.mount(slots[p.id]); }
+            if (p.real) { const a = p.dashboard ? makeDashboardAdapter(p) : p.inner ? makeTurnAdapter(p) : makeChildAdapter(p); adapters[p.id] = a; await a.mount(slots[p.id]); }
             else adapters[p.id] = placeholderAdapter(p, slots[p.id]);
           }
           if (torn) return;

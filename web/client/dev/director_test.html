@@ -35,7 +35,7 @@ import { mulberry32 } from '../rng.js';
 import '../modules/youtube.js';      // registers 'youtube'
 import '../modules/personal.js';     // registers 'personal' (a real provider now)
 import '../modules/educational.js';  // registers 'educational' (a real provider now)
-import { PANEL_TITLE_TOPIC, lineupTitle, LINEUP_TITLE, PICTURES_TURN_FIELD, PICTURES_TURN_MS, withLineupGuard, LINEUP_PRESET_FIELD } from '../modules/director.js';     // registers 'director'
+import { PANEL_TITLE_TOPIC, lineupTitle, LINEUP_TITLE, PICTURES_TURN_FIELD, PICTURES_TURN_MS, withLineupGuard, LINEUP_PRESET_FIELD, DASHBOARD_TURN_MS } from '../modules/director.js';     // registers 'director'
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'director-test-user';
@@ -285,6 +285,43 @@ async function mountDirector({ host, hour, seed, timers, stub, extra = {}, preSt
         curProv(host4) === 'youtube' && stub4.loaded.length > loads, `${curProv(host4)} loads ${loads} -> ${stub4.loaded.length}`);
       d4.instance.destroy();
       host4.remove();
+
+      // ── 2026-10-16 (Mike via chat CE 2: "a dashboard as an entry: yes"): A WHOLE DASHBOARD TAKES A TURN ──────────
+      check('a dashboard turn lasts 5 minutes unless its entry says (Rule 1: the entry\'s "Each turn" is the setting)', DASHBOARD_TURN_MS === 300000);
+      const profiles = createProfilesClient({ user: USER });
+      const target = await profiles.create('TEST-director-dash-target');
+      await profiles.addModule(target.id, 'educational');
+      doc.presets = [{ id: 'L1', type: 'lineup', name: 'A dashboard and pictures',
+        settings: { entries: [{ id: 'd', module: 'dashboard', show: target.id, often: 'often', turnMs: 600000 }, { id: 'pics', module: 'pictures', often: 'often' }] } }];
+      const host5 = document.createElement('div');
+      host5.style.cssText = 'position:relative;width:420px;height:260px';
+      document.body.append(host5);
+      const T5 = fakeTimers();
+      const d5 = await mountDirector({ host: host5, hour: 12, seed: 11, timers: T5, stub: makeStubPlayer(),
+        extra: { personId: 'p1', makePersonState: (pid, key) => (pid === 'p1' && key === 'presets' ? handle : null),
+          profiles, nestDepth: 1,
+          nestMakeState: (key, opts, pid) => createState({ url: profiles.stateURL(pid, key), user: USER }),
+          nestMakeEvents: (key, opts, pid) => createEvents({ url: profiles.eventsURL(pid, key), user: USER }) },
+        preState: { lineupPresetId: 'L1' } });
+      await sleep(80);
+      for (let i = 0; i < 8 && curProv(host5) !== 'dashboard'; i += 1) { T5.fireDue(); await sleep(30); }
+      await sleep(150);
+      const dslot = () => host5.querySelector('.d-slot[data-prov="dashboard"]');
+      const nestEl = () => dslot()?.querySelector('[data-nest]');
+      check('*** a dashboard turn shows that dashboard, nested, in the Lineup\'s window ***',
+        curProv(host5) === 'dashboard' && !!nestEl() && nestEl().dataset.nest !== 'empty',
+        `${curProv(host5)} nest=${nestEl()?.dataset.nest} ${dslot()?.innerHTML.slice(0, 160)}`);
+      check('...named "Dashboard (Lineup)" on the bar', (d5.instance.impl || d5.instance).titleNow() === 'Dashboard (Lineup)', (d5.instance.impl || d5.instance).titleNow());
+      d5.bus.publish('segment/done', { provider: 'youtube', reason: 'ended' });
+      await sleep(30);
+      check('*** a video of the dashboard\'s own ending (another provider\'s segment/done) does not end the dashboard\'s turn ***',
+        curProv(host5) === 'dashboard' && !!nestEl(), curProv(host5));
+      T5.fireDue();
+      await sleep(60);
+      check('*** when its time is up the Lineup moves on, and the dashboard is TAKEN DOWN (nothing of it plays hidden) ***',
+        curProv(host5) === 'pictures' && !dslot()?.querySelector('[data-nest]'), `${curProv(host5)} ${dslot()?.innerHTML.slice(0, 120)}`);
+      d5.instance.destroy();
+      host5.remove();
     }
 
   } catch (e) {
