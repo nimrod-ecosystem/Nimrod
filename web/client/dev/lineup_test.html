@@ -113,6 +113,13 @@ try {
         && pickEntry([{ id: 'y', module: 'youtube' }, { id: 'p', module: 'pictures' }], { date: at(12), rand: () => 0.45, weightOf: w }).id === 'p');
   }
 
+  section('how often as a number (Advanced; Mike: "words by default, a number under Advanced")');
+  check('*** a number of its own is the weight, instead of the word ***',
+    pickEntry([{ id: 'a', module: 'youtube', often: 'often' }, { id: 'b', module: 'pictures', often: 'rarely', weight: 27 }],
+      { date: at(12), rand: () => 0.5 }).id === 'b');
+  check('nonsense or 0 is no number (the word counts)', cleanEntry({ module: 'pictures', weight: 'x' }).weight === undefined
+    && cleanEntry({ module: 'pictures', weight: 0 }).weight === undefined && cleanEntry({ module: 'pictures', weight: 500 }).weight === 100);
+
   section('as words');
   check('*** an entry reads as the sentence it is ***',
     entryWords({ module: 'youtube', presetId: 'p', days: [1, 2, 3, 4, 5], from: 7, to: 11.5, often: 'often' }, { presetName: () => 'Morning playlist' })

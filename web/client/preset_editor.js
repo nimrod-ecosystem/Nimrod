@@ -17,7 +17,7 @@
 import { mountModule } from './module.js';
 import { createBus } from './bus.js';
 import './modules/youtube.js';   // registers 'youtube'
-import { LINEUP_TYPE, LINEUP_MODULES, OFTEN_LABELS, OFTEN_DEFAULT, DAY_LABELS, cleanEntries } from './lineup.js';
+import { LINEUP_TYPE, LINEUP_MODULES, OFTEN_LABELS, OFTEN_DEFAULT, DAY_LABELS, cleanEntries, OFTEN as OFTEN_NUMBERS } from './lineup.js';
 
 export const PRESET_KEYS = Object.freeze({
   youtube: Object.freeze(['playlist', 'playlistId', 'schedule', 'shuffle']),
@@ -112,6 +112,13 @@ export const TURN_CHOICES = Object.freeze([
   { value: 0, label: 'the Lineup\'s own setting' }, { value: 60000, label: '1 minute' }, { value: 120000, label: '2 minutes' },
   { value: 300000, label: '5 minutes' }, { value: 600000, label: '10 minutes' },
 ]);
+// (2026-10-16, Mike: turn length "an option per module with your defaults (one video for videos, 2 minutes for
+// pictures)") Videos: one video by default, or minutes of videos one after another. Learning keeps its own end.
+const VIDEO_TURN_CHOICES = Object.freeze([
+  { value: 0, label: 'one video' }, { value: 300000, label: '5 minutes' }, { value: 600000, label: '10 minutes' },
+  { value: 1800000, label: '30 minutes' }, { value: 3600000, label: '1 hour' },
+]);
+export const TURN_CHOICES_FOR = Object.freeze({ pictures: TURN_CHOICES, youtube: VIDEO_TURN_CHOICES, personal: VIDEO_TURN_CHOICES });
 
 function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } = {}) {
   let entries = cleanEntries(settings && settings.entries);
@@ -131,7 +138,12 @@ function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } 
       <label>From <input type="time" data-f="from" value="${toTime(e.from)}"></label>
       <label>To <input type="time" data-f="to" value="${toTime(e.to)}"></label>
       <label>How often <select data-f="often">${Object.entries(OFTEN_LABELS).map(([k, l]) => `<option value="${k}"${k === e.often ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
-      ${e.module === 'pictures' ? `<label>Each turn <select data-f="turnMs">${TURN_CHOICES.map((c) => `<option value="${c.value}"${c.value === e.turnMs ? ' selected' : ''}>${c.label}</option>`).join('')}</select></label>` : ''}
+      ${TURN_CHOICES_FOR[e.module] ? `<label>Each turn <select data-f="turnMs">${TURN_CHOICES_FOR[e.module].map((c) => `<option value="${c.value}"${c.value === e.turnMs ? ' selected' : ''}>${c.label}</option>`).join('')}</select></label>` : ''}
+      <details class="lu-adv"${e.weight ? ' open' : ''}><summary>Advanced</summary>
+        <label>How often, as a number <input type="number" min="0" max="100" step="0.5" data-f="weight" value="${e.weight || ''}"
+          placeholder="${OFTEN_NUMBERS[e.often] || 3}" style="width:6em"></label>
+        <span class="h-quiet">Rarely is 1, Sometimes 3, Often 9. Empty: the word above.</span>
+      </details>
       <button type="button" class="h-btn" data-remove-entry>Remove</button>
     </fieldset>`;
   }
@@ -159,7 +171,7 @@ function mountLineupForm(host, { settings = {}, onChange = null, presets = [] } 
         if (h != null && other != null) { e.from = f === 'from' ? h : other; e.to = f === 'to' ? h : other; } else { delete e.from; delete e.to; }
       } else if (f === 'turnMs') e.turnMs = Number(t.value) || 0;
       else if (f) e[f] = t.value;
-      if (f === 'module') { e.presetId = ''; entries[i] = e; draw(); changed(); return; }
+      if (f === 'module') { e.presetId = ''; e.turnMs = 0; entries[i] = e; draw(); changed(); return; }
     }
     entries[i] = e;
     changed();
