@@ -34,7 +34,7 @@ page, and the theme followed as it changes. The games that use it (solitaire, ca
 
 <script type="module">
 import { cardSvg, cardThemes, courtLook, SUITS as DSUITS, RANKS } from '../playing_cards.js';
-import { courtOutfit, DEFAULT_CHARACTERS } from '../character_kit.js';
+import { courtOutfit, DEFAULT_CHARACTERS, OUTFIT_THEMES } from '../character_kit.js';
 import { placeForCard, placeRecipe } from '../town.js';
 import {
   CARD_DEFAULTS, CARD_LAYOUTS, SUIT_COLOURS, CARD_SCENERY, SCENERY_DEFAULT_OFF, cardSettingsFields, cardOptions, deckFor,
@@ -121,11 +121,12 @@ try {
     check('*** every King, Queen and Jack in every deck is a character with a name ribbon (King Bram, Queen Rosa, Jack Theo) ***', named);
     check('the Joker has no ribbon (its corner already reads JOKER)', DECKS.every((d) => !cardSvg({ rank: 'joker' }, d).includes(`>${DEFAULT_CHARACTERS.joker.name}</text>`)));
     // (Nimrod's King keeps the Royal robe: that is Design's own pick, COURT_PICK.nimrod.king.)
-    const dressed = ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'].every((d) => ['king', 'queen', 'jack', 'joker']
-      .every((role) => courtLook(role, 'hearts', d).opts.outfit === courtOutfit(role, d))
-      && ['king', 'queen', 'jack', 'joker'].filter((role) => courtOutfit(role, d) !== 'royal').length >= 3);
-    check('the six themes with outfits dress their court in them; every other deck in the Royal robe (Design: "falls back")',
-      dressed && DECKS.filter((d) => !['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'].includes(d))
+    // (2026-10-16, DELIBERATELY: Design's lessons handoff gave every theme outfits - it was six. The list is the kit's own.)
+    const withOutfits = DECKS.filter((d) => OUTFIT_THEMES.includes(d));
+    const dressed = withOutfits.every((d) => ['king', 'queen', 'jack', 'joker']
+      .every((role) => courtLook(role, 'hearts', d).opts.outfit === courtOutfit(role, d)));
+    check(`the themes with outfits (${withOutfits.length}) dress their court in them; any other deck in the Royal robe (Design: "falls back")`,
+      withOutfits.length >= 6 && dressed && DECKS.filter((d) => !OUTFIT_THEMES.includes(d))
         .every((d) => courtLook('king', 'spades', d).opts.outfit === 'royal'));
     const scene = (svg) => /<svg x="4" y="4" width="242" height="342" viewBox="0 0 960 540"/.test(svg);
     check('*** with scenery (the default) every face shows its place edge to edge; with scenery: false none does ***',

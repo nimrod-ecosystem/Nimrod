@@ -123,9 +123,10 @@ const KNOWN_GAPS = {
   bricks: { ids: TODAY, why: 'brick colours are there for every theme (brick_colours.js); no theme sets the rhythm tiles (--floor-tile) yet. Design\'s sheet has them for three' },
   marks: { ids: TODAY, why: 'no theme defines --good / --bad yet; today\'s marks are answer_mark.js\'s placeholder in the text colour on the ok/bad washes, which theme_test.html measures in every theme' },
   materials: { ids: TODAY, why: 'no theme carries brick materials in the site\'s data yet; Design\'s sheet has them for five' },
-  // Design's characters handoff (2026-10-12): "Six themes so far ... Every other theme falls back to the Royal robe".
-  outfits: { ids: TODAY.filter((id) => !['default', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'].includes(id)),
-    why: 'Design has drawn outfits for six themes so far (Nimrod, Fall, Winter, Halloween, Christmas, Steampunk); every other court wears the Royal robe in its deck\'s colours, Design\'s own fallback' },
+  // Design's characters handoff (2026-10-12) had six; the lessons handoff (2026-10-16) drew the rest. What is left is any
+  // theme the kit does not name ('default' is Nimrod's own id).
+  outfits: { ids: TODAY.filter((id) => !(id === 'default' || OUTFIT_THEMES.includes(id))),
+    why: 'a theme Design has not drawn outfits for wears the Royal robe in its deck\'s colours, Design\'s own fallback' },
 };
 
 try {
