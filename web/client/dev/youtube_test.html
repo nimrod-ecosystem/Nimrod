@@ -48,7 +48,7 @@ import { createProfilesClient } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
 import { fieldsFor, displayValue } from '../settings_fields.js';
 import { pressControls, checkHiddenHides } from './press_controls.js';
-import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
+import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos, SETTINGS } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
 import { createPresetLibrary } from '../presets.js';
 import { PLAY_STATE_TOPIC } from '../game_start.js';
 
@@ -781,6 +781,46 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
         `hidden ${wasHidden} -> ${panel.hidden}`);
       gear.click();
       check('...and pressing it again puts it away', panel.hidden === true);
+    }
+
+    // ── ONE SETTINGS MENU (row 2.95, Mike 2026-10-16), stage A: what the drawer held, in the menu ──────────────
+    {
+      const F = Object.fromEntries(SETTINGS.map((f) => [f.key, f]));
+      check('*** the menu has the drawer\'s two switches and its two typed rows ***',
+        F.autoAdvance?.kind === 'toggle' && F.shuffle?.kind === 'toggle' && F.addVideo?.kind === 'text' && F.usePlaylist?.kind === 'text');
+      check('..."play the next video" is not offered on a Lineup\'s own YouTube (the Lineup moves it on); shuffle not while a preset decides',
+        F.autoAdvance.appliesWhen({ directed: true }) === false && F.autoAdvance.appliesWhen({}) === true
+          && F.shuffle.appliesWhen({ presetId: 'p' }) === false && F.shuffle.appliesWhen({}) === true);
+      const mp = await profiles.create('TEST-youtube-menu');
+      const mm = await profiles.addModule(mp.id, 'youtube');
+      const mst = createState({ url: profiles.stateURL(mp.id, mm.id), user: USER });
+      const mev = createEvents({ url: profiles.eventsURL(mp.id, mm.id), user: USER });
+      await mst.load(); await mev.load();
+      const mhost = document.createElement('div');
+      document.body.append(mhost);
+      const minst = mountModule('youtube', { mount: mhost, bus: createBus(), state: mst, events: mev, user: USER, profileId: mp.id,
+        playerFactory: makeStubPlayer().factory });
+      minst.init();
+      await sleep(60);
+      const impl = minst.impl;
+      check('*** "Add a video": a typed link is ADDED to the panel\'s videos, and nothing is kept under the row\'s key ***',
+        impl.settingsWrite('addVideo', 'https://youtu.be/dQw4w9WgXcQ') === true
+          && (mst.get().playlist || []).some((v) => v.id === 'dQw4w9WgXcQ') && !('addVideo' in mst.get()), JSON.stringify(mst.get()));
+      check('...the same one twice is not added twice', impl.settingsWrite('addVideo', 'dQw4w9WgXcQ') === true
+        && (mst.get().playlist || []).filter((v) => v.id === 'dQw4w9WgXcQ').length === 1);
+      check('...nonsense adds nothing (and is still taken: no stray setting)', impl.settingsWrite('addVideo', 'hello') === true
+        && (mst.get().playlist || []).length === 1);
+      check('*** "Play a YouTube playlist": its link becomes the panel\'s playlist id ***',
+        impl.settingsWrite('usePlaylist', 'https://www.youtube.com/playlist?list=PLR0lG5yo6NRE') === true && mst.get().playlistId === 'PLR0lG5yo6NRE');
+      check('another key is not taken here (the menu stores it as usual)', impl.settingsWrite('volume', 50) === false);
+      await sleep(40);
+      const rows = impl.menuItems();
+      const rm = rows.find((r) => r.id === 'yt-video:dQw4w9WgXcQ');
+      check('*** the menu lists the videos (at "Everything"), each with Remove ***',
+        rows.some((r) => r.kind === 'heading' && /^Videos \(1\)/.test(r.label)) && rm && /^Remove /.test(rm.label) && rm.level === 'advanced', JSON.stringify(rows.map((r) => [r.id, r.label])));
+      rm.run();
+      check('...and Remove removes it', !(mst.get().playlist || []).some((v) => v.id === 'dQw4w9WgXcQ'));
+      minst.destroy(); mst.destroy(); mev.destroy(); mhost.remove();
     }
 
     // ── PRESETS (register #255): a named library an instance can point at ────────

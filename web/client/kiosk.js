@@ -187,7 +187,7 @@ import { createPanelRing, PANEL_RING_FIELD } from './panel_ring.js';   // panel 
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
 import { LAYERS } from './layers.js';
-import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf } from './settings_fields.js';
+import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, showsAtLevel } from './settings_fields.js';
 // LIVE AND BETA (2026-10-14): the person's "Beta things" row, and a beta panel says so in its own settings.
 import { BETA_FIELD, BETA_KEY, BETA_WORDS, betaShowOf } from './beta.js';
 import { stageOf } from './modules_catalog.js';
@@ -6238,7 +6238,8 @@ export async function mountKiosk(root, {
       // without it, and a panel that throws adds nothing rather than taking the menu with it.
       try {
         const own = (rec.instance?.impl || rec.instance)?.menuItems?.();
-        if (Array.isArray(own)) items.push(...own.filter((it) => it && it.id && it.label).map((it) => ({ ...it, ...MENU_TAB.module(0) })));
+        // (row 2.95) A panel's own row may carry a `level`, as a settings field does: shown from that level up.
+        if (Array.isArray(own)) items.push(...own.filter((it) => it && it.id && it.label && showsAtLevel(it, complexity())).map((it) => ({ ...it, ...MENU_TAB.module(0) })));
       } catch (err) { console.error('kiosk: panel rows', err); }
       // *** A LINEUP'S CURRENT TURN, ITS OWN SETTINGS (row 2.87, 2026-10-14). *** Mike uses YouTube's own settings - its
       // boxes and time pickers - and inside a Lineup they were out of the menu's reach (only YouTube's small gear on the
