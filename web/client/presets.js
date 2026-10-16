@@ -81,6 +81,15 @@ export function presetsFrom(values, type = null) {
   return type ? all.filter((p) => p && p.type === type) : all.slice();
 }
 
+// *** A MODULE'S DEFAULT PRESET (row 2.93, Mike 2026-10-15: "an option to make any preset for any module the default
+// for that module, otherwise it's plain"). *** At most one preset of each type carries `isDefault`. A panel of that
+// module that has chosen nothing and has nothing of its own uses it (youtube.js `activePreset`); every other panel is
+// exactly as before. No default: a new panel is plain. Pure.
+export function defaultPresetOf(values, type) {
+  if (!type) return null;
+  return presetsFrom(values, type).find((p) => p && p.isDefault === true) || null;
+}
+
 export function presetById(values, id) {
   if (!id) return null;
   return presetsFrom(values).find((p) => p.id === id) || null;
@@ -110,6 +119,7 @@ export function createPresetLibrary({ makeState } = {}) {
       load: async () => {},
       startPolling: () => {},
       listPresets: () => [],
+      defaultFor: () => null,
       getPreset: () => null,
       savePreset: async () => { throw new Error('createPresetLibrary: no state available for this person'); },
       deletePreset: async () => {},
@@ -132,24 +142,30 @@ export function createPresetLibrary({ makeState } = {}) {
   // Create (no `id`) or update (`id` given) a preset. `settings` is stored VERBATIM — this
   // file has no opinion on what a YouTube (or any other) preset's settings look like; that is
   // the calling module's contract, exactly the way an instance's own saved state already is.
-  async function savePreset({ id = null, type, name, settings } = {}) {
+  // `isDefault` (row 2.93): true makes this THE default for its module type - any other of that type stops being it;
+  // false clears it; left out, unchanged.
+  async function savePreset({ id = null, type, name, settings, isDefault } = {}) {
     const t = String(type || '').trim();
     const nm = String(name || '').trim();
     if (!t) throw new Error('savePreset: type is required');
     if (!nm) throw new Error('savePreset: name is required');
     const now = Date.now();
-    const list = all();
+    let list = all();
     let saved;
+    const flag = (p) => (typeof isDefault === 'boolean' ? (isDefault ? { isDefault: true } : {}) : (p && p.isDefault === true ? { isDefault: true } : {}));
+    // One default per type: making this one it, takes it from the others.
+    if (isDefault === true) list = list.map((p) => (p && p.type === t && p.id !== id && p.isDefault ? (({ isDefault: _d, ...rest }) => rest)(p) : p));
     if (id) {
       const at = list.findIndex((p) => p.id === id);
       if (at < 0) throw new Error('savePreset: no such preset');
-      saved = { ...list[at], type: t, name: nm, settings: { ...(settings || {}) }, updatedAt: now };
+      const { isDefault: _old, ...was } = list[at];
+      saved = { ...was, type: t, name: nm, settings: { ...(settings || {}) }, updatedAt: now, ...flag(list[at]) };
       const next = list.slice();
       next[at] = saved;
       state.set({ presets: next });
     } else {
       saved = { id: newPresetId(), type: t, name: nm, settings: { ...(settings || {}) },
-                createdAt: now, updatedAt: now };
+                createdAt: now, updatedAt: now, ...flag(null) };
       state.set({ presets: [...list, saved] });
     }
     await state.flush?.();
@@ -167,6 +183,7 @@ export function createPresetLibrary({ makeState } = {}) {
     startPolling: () => state.startPolling?.(),
     listPresets,
     getPreset,
+    defaultFor: (type) => defaultPresetOf(state.get(), type),
     savePreset,
     deletePreset,
     subscribe: (fn) => state.subscribe(fn),

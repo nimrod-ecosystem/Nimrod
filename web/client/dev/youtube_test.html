@@ -881,6 +881,31 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
         shufBox2 && shufBox2.disabled === false);
 
       pinst.destroy(); pst.destroy(); pev.destroy(); phost.remove();
+
+      // ROW 2.93 (Mike, 2026-10-15): a preset made the module's default is used by a panel with NOTHING of its own;
+      // a panel with its own playlist keeps it ("otherwise it's plain").
+      await lib.savePreset({ id: preset.id, type: 'youtube', name: 'Preset playlist', settings: preset.settings, isDefault: true });
+      const dp = await profiles.create('TEST-youtube-default');
+      const dm = await profiles.addModule(dp.id, 'youtube');
+      const dst = createState({ url: profiles.stateURL(dp.id, dm.id), user: USER });
+      const dev = createEvents({ url: profiles.eventsURL(dp.id, dm.id), user: USER });
+      await dst.load(); await dev.load();
+      const dstub = makeStubPlayer();
+      const dhost = document.createElement('div');
+      document.body.append(dhost);
+      const dinst = mountModule('youtube', { mount: dhost, bus: createBus(), state: dst, events: dev, user: USER, profileId: dp.id,
+        playerFactory: dstub.factory, personId: person.id, makePersonState });
+      dinst.init();
+      await sleep(120);
+      check('*** a new, empty YouTube panel plays the person\'s DEFAULT preset ***',
+        ['presetV1', 'presetV2'].includes(dstub.current()), String(dstub.current()));
+      dst.set({ playlist: PLAYLIST.slice(0, 2) });
+      await sleep(80);
+      check('*** ...and once it has a playlist of its own, its own plays (the default only fills an empty panel) ***',
+        PLAYLIST.slice(0, 2).some((v) => v.id === dstub.current()) || ['presetV1', 'presetV2'].every((id) => id !== dstub.current()),
+        String(dstub.current()));
+      dinst.destroy(); dst.destroy(); dev.destroy(); dhost.remove();
+      await lib.savePreset({ id: preset.id, type: 'youtube', name: 'Preset playlist', settings: preset.settings, isDefault: false });
       lib.destroy();
     }
 

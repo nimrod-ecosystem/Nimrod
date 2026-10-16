@@ -31,7 +31,7 @@ import { MODE_KEY, DEFAULT_MODE, PROFILE_SETTINGS_KEY } from './lessons.js';
 import { DEVICE_THEME } from './theme_default.js';
 
 // A starter profile so a fresh account "just works": photos, the camera mirror, the
-// clock, and the Lineup director (rotates youtube / personal videos / educational).
+// clock, and YouTube (a plain panel since 2026-10-15, row 2.93; it was the Lineup director).
 // Shared by kiosk.html and modules.html's live editor -- both need "an account's default
 // screen" resolved the same way, and a second copy of this is exactly the kind of drift
 // module_try.js's own header warns about.
@@ -48,7 +48,9 @@ export async function ensureProfile(profiles, user, wantProfile = null, { person
     await profiles.addModule(p.id, 'photos');
     await profiles.addModule(p.id, 'camera');
     await profiles.addModule(p.id, 'clock');
-    await profiles.addModule(p.id, 'director');
+    // (row 2.93, Mike 2026-10-15: a new screen gets plain modules - "otherwise it's plain". It used to get a Lineup
+    // here, where people expect a YouTube panel; a Lineup is one choice away in Switch module or the library.)
+    await profiles.addModule(p.id, 'youtube');
     // A brand-new profile starts in SANDBOX (Mike, 2026-09-28, register 257.2: "Sandbox is
     // default for new profiles"). `lessons.js`'s own `modeFrom` already falls back to sandbox
     // for any profile that has never chosen one, so this write changes no behavior today — but

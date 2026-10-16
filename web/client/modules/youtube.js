@@ -938,7 +938,15 @@ registerModule(
     // different module elsewhere, or simply deleted, must fall back to "no preset" rather than
     // apply a stranger's settings shaped for something else.
     function activePreset() {
-      if (!cfg.presetId || !presetsLib) return null;
+      if (!presetsLib) return null;
+      // (row 2.93, 2026-10-15) A panel that has chosen nothing AND has nothing of its own - no videos, no playlist link,
+      // no schedule - uses the person's default YouTube preset, when one is marked. Anything of its own wins, so no
+      // panel that was set up changes. "Otherwise it's plain" (Mike).
+      if (!cfg.presetId) {
+        const own = (Array.isArray(cfg.playlist) && cfg.playlist.length) || cfg.playlistId || (Array.isArray(cfg.schedule) && cfg.schedule.length);
+        const d = own ? null : presetsLib.defaultFor?.('youtube');
+        return d && d.type === 'youtube' ? d : null;
+      }
       const p = presetsLib.getPreset(cfg.presetId);
       return (p && p.type === 'youtube') ? p : null;
     }
