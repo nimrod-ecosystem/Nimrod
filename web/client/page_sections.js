@@ -281,6 +281,11 @@ export const olderOf = (doc) => !(isObj0(doc) && doc[OLDER_KEY] === false);
 // unchanged: this page's own theme, shown to the people who can see it, by `pageColours` above.
 export const PAGE_LOOK_WORDS = Object.freeze({
   colours: 'Theme for my page',
+  // (row 2.100, Mike 2026-10-17) where a theme picked here goes; "Everywhere" first and chosen.
+  scopeLabel: 'Use it',
+  scopeEverywhere: 'Everywhere',
+  scopePage: 'This page only',
+  scopeEverywhereLine: 'Everywhere: your page, and every screen and dashboard of yours that has not picked a theme of its own.',
   coloursNone: 'The usual theme',
   coloursNoneHint: 'everyone sees your page in their own theme',
   coloursLine: 'People who can see your page see it in this theme, unless they use a theme for easier reading, like High contrast.',
