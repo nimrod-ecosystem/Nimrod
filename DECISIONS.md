@@ -2719,3 +2719,16 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
 - **Lineup weights, for later and the settings rework:** freshness at the module level from counts that last (a module
   with fewer plays comes up more often), and weights settable by account, person, device and module. Mike's direction,
   not yet a design. (2026-10-14)
+
+## One Lessons module, on the lesson-file system (Mike, 2026-10-17)
+
+- **"Lessons" is the name, and it is the new lesson-file player (row 2.92); the old topic-cards module is retired.**
+  Code raised that the site had two lesson modules ("Lessons", watch a topic's video to unlock its questions, and "A
+  lesson", the new player), and argued both sides: join them (one name, the old module's empty half filled) or keep
+  them apart (they did different jobs). Mike: *"I think lessons is the better name. Let's keep that for a name, but use
+  the new system we're working on. There was never anything built for the old system."* HOW, Code's, not ruled by
+  Mike: the player takes the type `lessons`, so an old Lessons panel opens as the new one; it takes over writing the
+  lessons' questions into Trivia and Word Forge (`questionsTo`, default "both", Mike's 2026-09-23 ruling for the old
+  one); finishing a lesson counts as watched in the same unlock log. The old module's code is PARKED, not deleted
+  (`modules/lesson_topics.js`), because its transcript quiz (row 2.24) is built work that may return as "write a lesson
+  from a video's transcript"; whether it does is open. Built in c6bc82b. (2026-10-17)
