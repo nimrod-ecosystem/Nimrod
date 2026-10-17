@@ -390,7 +390,8 @@ const toTab = (m, id) => {
       //    same rows), so Home is now 7 presses from where the menu opens instead of 25.
       await settled(() => kiosk.menu.items().some((i) => i.id === 'set:speechOn'), 6000);
       kiosk.menu.refresh();
-      const every = ['subject-pick', 'tabs', 'set:complexity', 'fullscreen', 'home', 'close'];
+      // (2026-10-17, row 2.94) "Search the settings" sits above the tabs too, beside the level row.
+    const every = ['subject-pick', 'tabs', 'set:complexity', 'set:menuSearch', 'fullscreen', 'home', 'close'];
       const all = kiosk.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
       const placed = new Map();
       const tabsNow = kiosk.menu.tabs();
@@ -527,8 +528,10 @@ const toTab = (m, id) => {
       // (bare names, 2026-10-15, DELIBERATELY: "Open a dashboard by saying its name alone, after the wake phrase" on the
       // This screen tab (dashboards.js; Mike: "Yes to a setting on by default"). One more of the old rows: 49. The
       // panel's lap is unchanged.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 49) ***',
-        lapStops.length === 14 && oldStops.length === 49 && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
+      // (settings search, 2026-10-17, row 2.94, DELIBERATELY: "Search the settings" above the tabs at "The usual" and up
+      // - one more stop on every tab's lap, and one more of the old rows: 50. Not at "Just the essentials": kiosk.js argues.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 50) ***',
+        lapStops.length === 15 && oldStops.length === 50 && lapStops.includes('set:menuSearch') && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
         && oldStops.some((i) => i.id === 'set:dashboardBareNames') /* bare names */
         && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
         && oldStops.some((i) => i.id === 'set:voiceOpenWhere') && oldStops.some((i) => i.id === 'set:voiceOpenQuietMs') /* voice open */
@@ -554,7 +557,7 @@ const toTab = (m, id) => {
         kiosk.menu.items().filter((i) => /^uf:/.test(i.id) || i.id === 'scan-lap').map((i) => i.id).join());
       kiosk.menu.close(); await press('Escape');
       const homeAt = (() => { for (let i = 0; i < 40; i += 1) { if (kiosk.menu.focusId() === 'home') return i; kiosk.menu.next(); } return -1; })();
-      check('...and Home is 12 presses from where the menu opens (was 25)', homeAt === 12, String(homeAt));
+      check('...and Home is 13 presses from where the menu opens (was 25; the search row is one of them)', homeAt === 13, String(homeAt));
       {
         // backup source (2026-10-08): the screen's one row for every panel's backup, beside "Your own folders".
         const all = kiosk.menu.items();

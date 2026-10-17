@@ -187,7 +187,7 @@ import { createPanelRing, PANEL_RING_FIELD } from './panel_ring.js';   // panel 
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
 import { LAYERS } from './layers.js';
-import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, showsAtLevel } from './settings_fields.js';
+import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, showsAtLevel, keepFields } from './settings_fields.js';
 // LIVE AND BETA (2026-10-14): the person's "Beta things" row, and a beta panel says so in its own settings.
 import { BETA_FIELD, BETA_KEY, BETA_WORDS, betaShowOf } from './beta.js';
 import { stageOf } from './modules_catalog.js';
@@ -2384,6 +2384,10 @@ export async function mountKiosk(root, {
     applyKioskTheme(id);
   }
   await settings.load().catch(() => {});
+  // (row 2.94) the settings somebody kept on this screen's menu after a search: shown at every level.
+  const syncKept = (s) => { try { keepFields(Array.isArray(s?.menuKept) ? s.menuKept : []); } catch { /* none kept */ } };
+  syncKept(settings.get());
+  try { settings.subscribe?.((s) => syncKept(s)); } catch { /* a host without subscribe: read at boot */ }
   // USER FOLDERS: this device's fonts from wherever its fonts folder is now (the Nimrod folder's fonts/,
   // or one chosen just for fonts), and a colour look whose .cube is gone goes back to None. NEVER
   // PROMPTS, and fire-and-forget: it must not delay or break the boot.
@@ -3633,7 +3637,12 @@ export async function mountKiosk(root, {
   // `essential`, the most permissive level, so it renders at EVERY level including the one
   // that hides everything else. No setting of it can hide it. Home, Close and every other way
   // out remain unconditional in `settings.js` and this filter never sees them.
-  const complexity = () => (settings.get() || {}).complexity || 'standard';
+  // (row 2.94, 2026-10-17) While the menu is searched (`menuQuery`, the "Search the settings" row), every row is built
+  // at "Everything" so a row the level hides can be found (settings.js "SEARCH"); `storedComplexity` is the level the
+  // person chose, which the search compares against and the level row shows.
+  let menuQuery = '';
+  const storedComplexity = () => (settings.get() || {}).complexity || 'standard';
+  const complexity = () => (menuQuery ? 'advanced' : storedComplexity());
   // *** THE MENU IS ABOUT THE SAME PANEL THE BAR AND THE RING ARE ABOUT. ***
   //
   // These three read `focusedRec()` now. They used to read `layout ? null : stageRec`, which is
@@ -4165,6 +4174,13 @@ export async function mountKiosk(root, {
         { value: 'standard', label: 'The usual' },
         { value: 'advanced', label: 'Everything' },
       ] },
+    // SEARCH THE SETTINGS (row 2.94, 2026-10-17; settings.js "SEARCH"). Above the tabs, beside the level row. Not kept:
+    // a search is this visit's. AT "THE USUAL" AND UP, NOT "JUST THE ESSENTIALS", argued: typing needs a keyboard, and
+    // "Just the essentials" is the level a person stepping with one switch is most likely to be on - there the row is
+    // a stop on every lap that does nothing for them. FOR showing it there too: it is the way to a hidden setting.
+    // AGAINST, and it decides it: from "Just the essentials" the level row above it is that way already (one press).
+    { key: 'menuSearch', label: 'Search the settings', kind: 'text', level: 'standard', default: '',
+      note: 'Type a word, like “volume” or “theme”. Every setting with it is listed, even ones this menu’s level hides.' },
     // BURN-IN PROTECTION (MIKE_CHANGE_LIST.md 2.18), off by default. Always-on dashboards
     // burn in on OLED — most tablets and phones, not the LCD this has mostly been tested on,
     // which is exactly why it was invisible so far. `standard`, not `essential`: unlike theme
@@ -6015,12 +6031,14 @@ export async function mountKiosk(root, {
         // Everywhere but a real screen's dashboard path that is this screen's own row, as it always was.)
         // (Row 2.34: "Panel backgrounds" likewise -- the showing dashboard's, `shownPanelSurface`.)
         values: () => ({ ...(settings.get() || {}), theme: shownTheme(), panelSurface: shownPanelSurface(settings.get()),
-          panelGap: shownPanelGap(settings.get()), [SMALL_CLOCK_KEY]: smallClockNow() }),
+          panelGap: shownPanelGap(settings.get()), [SMALL_CLOCK_KEY]: smallClockNow(), menuSearch: menuQuery }),
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
         // active level would change nothing today — but passing `advanced` here would be the
         // quiet way the escape hatch stops being one the first time somebody adds a row.
         level: complexity(),
         onStep: (key, value) => {
+          // (row 2.94) the search is this menu's, this visit: never written to the screen's row.
+          if (key === 'menuSearch') { menuQuery = String(value == null ? '' : value).trim(); return; }
           if (key === 'theme') themeDoc().set({ theme: value });
           else if (key === 'panelSurface') themeDoc().set({ panelSurface: value });
           else if (key === 'panelGap') themeDoc().set({ panelGap: value });
@@ -6149,7 +6167,19 @@ export async function mountKiosk(root, {
       catch { /* a host that throws costs its own tab, never the menu */ }
       return 'module';
     },
-    topIds: ['set:complexity'],
+    topIds: ['set:complexity', 'set:menuSearch'],
+    // (row 2.94) SEARCH: the query from the row above; clearing it; the level the person chose; and keeping a found
+    // setting at that level from then on (the screen's row, `menuKept`: settings_fields.js keepFields).
+    search: {
+      query: () => menuQuery,
+      clear: () => { menuQuery = ''; },
+      level: () => storedComplexity(),
+      keep: (key) => {
+        const kept = Array.isArray((settings.get() || {}).menuKept) ? settings.get().menuKept : [];
+        if (key && !kept.includes(key)) settings.set({ menuKept: [...kept, String(key)] });
+        keepFields([...kept, String(key)]);
+      },
+    },
     // (2026-10-02: the panels AND the levels -- `levelSubjects` argues the order.)
     subjects: () => levelSubjects(),
     // (2026-10-02: the selected STOP -- a piece of the room included, `focusedTargetNow`.)
@@ -6161,7 +6191,7 @@ export async function mountKiosk(root, {
     // back as it closes (settings.js); with the Modules library standing in a panel's place, the library
     // still holds the scan, so it is taken again here (this hook runs after that).
     // (2026-10-02: and the device's fonts and looks are read again next time -- a file added meanwhile shows.)
-    onClose: () => { offWhoAvatars(); layoutOpen = false; deviceLookRead = null; if (libOpen && !torn) holdLibraryScan(true);
+    onClose: () => { offWhoAvatars(); layoutOpen = false; deviceLookRead = null; menuQuery = '';   // row 2.94: the search ends with the menu if (libOpen && !torn) holdLibraryScan(true);
       // A call notice or a hosted call keeps the scan it had (the menu's close gives the router back).
       if (callScanHeld && !torn) holdCallScan(true); },
     // The menu's own Home row opens the same picker rather than navigating, so there are not

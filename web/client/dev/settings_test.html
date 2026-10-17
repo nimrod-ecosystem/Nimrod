@@ -32,7 +32,7 @@ tested end to end — so the resolver gets hammered alone and the wiring gets te
 <script type="module">
 import { createNav, buildItems, mountSettings, MENU_TOPIC } from '../settings.js';
 import { normalizeField, fieldValue, stepValue, displayValue, showsAtLevel,
-         fieldItems, fieldsFor, readWithLegacy, LEVELS, KINDS } from '../settings_fields.js';
+         fieldItems, fieldsFor, readWithLegacy, LEVELS, KINDS, keepFields } from '../settings_fields.js';
 import { DEFAULT_PALETTE } from '../color_picker.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
@@ -1448,6 +1448,51 @@ section('*** TABS (2026-10-02, Mike: "broken up into tabs ... the choice for wha
     !plain.items().some((i) => i.id === 'tabs' || i.id === 'subject-pick') && plain.tab() === null
     && plain.items().some((i) => i.id === 'set:a') && plain.visibleItems().length === plain.items().length);
   plain.destroy();
+}
+
+// =====================================================================
+section('*** SEARCH (row 2.94, Mike via chat CG 3: "one search that finds any setting, even one the menu preset hides, and offers to add it") ***');
+{
+  let q = '';
+  const kept = [];
+  const advField = normalizeField({ key: 'fadeMs', label: 'How slowly pictures fade', kind: 'choice', level: 'advanced', default: 1,
+    options: [{ value: 1, label: 'fast' }, { value: 2, label: 'slow' }] });
+  const m = mountSettings(makeHost(), {
+    subject: () => ({ type: 'x', title: 'Photos' }),
+    fields: () => [{ kind: 'item', id: 'set:loud', label: 'How loud the music is', tab: 'audio', key: 'loud' },
+      { kind: 'item', id: 'set:fadeMs', label: advField.label, tab: 'module', key: 'fadeMs', field: advField }],
+    screenItems: () => [{ kind: 'item', id: 'set:theme', label: 'Theme', hint: 'Warm', tab: 'display', key: 'theme' },
+      { kind: 'item', id: 'set:master', label: 'Volume', tab: 'audio', key: 'master' }],
+    tabs: () => [{ id: 'module', label: 'The panel' }, { id: 'audio', label: 'Sound' }, { id: 'display', label: 'Display' }],
+    startTab: () => 'module',
+    search: { query: () => q, clear: () => { q = ''; }, level: () => 'standard', keep: (k) => kept.push(k) },
+  });
+  m.open();
+  const vis = () => m.visibleItems().map((i) => i.id);
+  check('no query: the tabs, exactly as before', vis().includes('tabs') && !vis().includes('search-clear'));
+  q = 'loud'; m.refresh();
+  check('*** a query: rows from EVERY tab whose words have it, no tab row, then "Clear the search" ***',
+    vis().includes('set:loud') && !vis().includes('set:theme') && !vis().includes('tabs') && vis().includes('search-clear')
+      && vis().indexOf('search-clear') < vis().indexOf('close'), vis().join(','));
+  check('...and it says how many it found', /1 setting for “loud”/.test(m.visibleItems().find((i) => i.id === 'search-head')?.label || ''));
+  q = 'warm'; m.refresh();
+  check('what a row is set to counts as its words ("warm" finds Theme: Warm)', vis().includes('set:theme'));
+  q = 'pictures fade'; m.refresh();
+  const hid = m.visibleItems().find((i) => i.id === 'set:fadeMs');
+  check('*** a row the menu\'s level hides is found, and says so ***', !!hid && /shown because you searched/.test(hid.hint), JSON.stringify(hid));
+  const keepRow = m.visibleItems().find((i) => i.id === 'search-keep:set:fadeMs');
+  check('*** ...with "Keep ... in this menu" under it, which keeps that setting ***', !!keepRow && /Keep “How slowly pictures fade” in this menu/.test(keepRow.label));
+  m.focusRow('search-keep:set:fadeMs'); m.select();
+  check('...pressed, the host is asked to keep it, by its key', kept.join() === 'fadeMs');
+  q = 'zebra'; m.refresh();
+  check('nothing found: it says so, plainly', /No setting has “zebra” in it/.test(m.visibleItems().find((i) => i.id === 'search-head')?.label || ''));
+  m.focusRow('search-clear'); m.select();
+  check('*** "Clear the search": the tabs come back ***', q === '' && vis().includes('tabs') && !vis().includes('search-clear'), vis().join(','));
+  m.destroy();
+  keepFields(['fadeMs']);
+  check('*** a kept setting shows at every level from then on ***', showsAtLevel(advField, 'essential') === true);
+  keepFields([]);
+  check('...and not once it is no longer kept', showsAtLevel(advField, 'essential') === false);
 }
 
 // =====================================================================
