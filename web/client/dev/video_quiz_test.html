@@ -36,10 +36,13 @@ import {
   DEFAULT_TOPICS, LESSON_TOPIC, WATCHED_KIND,
   MODE_KEY, MODES, DEFAULT_MODE, modeFrom, ALL_UNLOCKED, createQuestMode, PROFILE_SETTINGS_KEY,
 } from '../lessons.js';
-import { videoHTML, packToTopics, questionsFromPack, DEFAULTS } from '../modules/lesson_topics.js';
+import { routedLessonQuestions } from '../lessons.js';
+import { BUILTIN_LESSONS } from '../lessons_builtin.js';
+import { videoHTML, packToTopics, questionsFromPack, DEFAULTS } from '../modules/video_quiz.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
 import { parseWords, buildDeck, DEFAULT_WORDS, DEFAULT_PAIRS } from '../modules/wordforge.js';
-import '../modules/lesson_topics.js';
+import '../modules/video_quiz.js';
+import '../modules/lesson_player.js';   // 'lessons': the other writer of the lesson-question rows (2026-10-17)
 import '../modules/wordforge.js';
 import '../modules/trivia.js';
 import { createPointsLedger } from '../points.js';
@@ -57,6 +60,11 @@ function check(name, cond, detail = '') {
   d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
   out.append(d);
 }
+// THE ROWS HOLD THE BUILT-IN LESSONS' QUESTIONS TOO (2026-10-17): both modules that write them write one whole set
+// (lessons.js routedLessonQuestions). This suite is about the transcript quiz's own, so it reads past those.
+const BUILTIN_TOPICS = new Set(BUILTIN_LESSONS.map((l) => l.id));
+const BUILTIN_Q = routedLessonQuestions('both').trivia.length;
+const own = (items) => (items || []).filter((i) => !BUILTIN_TOPICS.has(i.topic));
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const seeded = (s0) => { let x = s0 >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
@@ -207,7 +215,7 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
       await s.load(); s.set({ questMode: 'quest' }); await s.flush();
     })();
 
-    const lmod = await profiles.addModule(profile.id, 'lesson_topics');
+    const lmod = await profiles.addModule(profile.id, 'video_quiz');
     const lst = createState({ url: profiles.stateURL(profile.id, lmod.id), user: USER });
     await lst.load();
     // `contentSource: 'bank'` explicit — DEFAULTS.contentSource is 'pack' now (2026-09-22), and
@@ -217,7 +225,7 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     await lst.flush();
 
     const host = document.getElementById('host');
-    const linst = mountModule('lesson_topics', {
+    const linst = mountModule('video_quiz', {
       mount: host, bus, state: lst,
       events: createEvents({ url: profiles.eventsURL(profile.id, lmod.id), user: USER }),
       user: USER, profileId: profile.id, makeState, makeEvents,
@@ -320,9 +328,12 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     await sleep(900);
     check('after the second lesson every word is in play', deckSize() === 7 + DEFAULT_PAIRS.length,
       `deck=${deckSize()} (expected all 7 words + ${DEFAULT_PAIRS.length} pairs)`);
-    check('...and nothing is reported as held back',
-      wfHost.querySelector('[data-held]').textContent.trim() === '',
+    // (The built-in lessons' questions wait for THEIR lesson in quest mode, named by its title; this suite's topics do not.)
+    check('...and nothing of these topics is reported as held back',
+      !/roots|concision|punctuation|origins|fewer words|commas/i.test(wfHost.querySelector('[data-held]').textContent),
       wfHost.querySelector('[data-held]').textContent);
+    check('*** a built-in lesson still waiting is named by its title, not its id ***',
+      !/numbers-0-9/.test(wfHost.querySelector('[data-held]').textContent), wfHost.querySelector('[data-held]').textContent);
 
     les.destroy(); audit.destroy(); wf2.destroy(); linst.destroy();
 
@@ -638,13 +649,13 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
     {
       const packProfiles = createProfilesClient({ user: USER });
       const pp = await packProfiles.create('TEST-lessons-pack');
-      const pmod = await packProfiles.addModule(pp.id, 'lesson_topics');
+      const pmod = await packProfiles.addModule(pp.id, 'video_quiz');
       const pst = createState({ url: packProfiles.stateURL(pp.id, pmod.id), user: USER });
       await pst.load();
       await pst.set({ contentSource: 'pack', packId: 'lesson_starter' });
       const phost = document.createElement('div');
       document.body.append(phost);
-      const pinst = mountModule('lesson_topics', {
+      const pinst = mountModule('video_quiz', {
         mount: phost, bus: createBus(), state: pst,
         events: createEvents({ url: packProfiles.eventsURL(pp.id, pmod.id), user: USER }),
         user: USER, profileId: pp.id,
@@ -671,13 +682,13 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       // default topics, the same as an unreachable network resource anywhere else in this file.
       const badProfiles = createProfilesClient({ user: USER });
       const bp = await badProfiles.create('TEST-lessons-badpack');
-      const bmod = await badProfiles.addModule(bp.id, 'lesson_topics');
+      const bmod = await badProfiles.addModule(bp.id, 'video_quiz');
       const bst = createState({ url: badProfiles.stateURL(bp.id, bmod.id), user: USER });
       await bst.load();
       await bst.set({ contentSource: 'pack', packId: 'no-such-pack' });
       const bhost = document.createElement('div');
       document.body.append(bhost);
-      const binst = mountModule('lesson_topics', {
+      const binst = mountModule('video_quiz', {
         mount: bhost, bus: createBus(), state: bst,
         events: createEvents({ url: badProfiles.eventsURL(bp.id, bmod.id), user: USER }),
         user: USER, profileId: bp.id,
@@ -686,8 +697,10 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       });
       binst.init();
       await sleep(500);
-      check('*** an unresolvable pack id falls back to real topics rather than showing nothing ***',
-        bhost.querySelectorAll('.l-card').length >= 3,
+      // Since 2026-10-17 (Quiz from a video) there are no written seed topics to fall back to: the panel's own videos
+      // (none here), and it says how to add one, rather than a dead panel.
+      check('*** an unresolvable pack id falls back to the panel\'s own videos, and says how to add one ***',
+        bhost.querySelectorAll('.l-card').length === 0 && /No videos yet/.test(bhost.textContent),
         String(bhost.querySelectorAll('.l-card').length));
       binst.destroy();
       bhost.remove();
@@ -696,11 +709,12 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       // DEFAULT FLIPPED, 2026-09-22 — Mike: "There should be default packs, so people can play
       // the games without setting anything up." Matches trivia.js/wordforge.js's own flip, same
       // day, same reason.
-      check('*** DEFAULTS.contentSource is "pack" — a fresh instance needs nothing written ***',
-        DEFAULTS.contentSource === 'pack', String(DEFAULTS.contentSource));
-      const csRow = (getManifest('lesson_topics').settings || []).find((f) => f.key === 'contentSource');
-      check('...and the settings row agrees, not left pointing at "bank"',
-        csRow?.default === 'pack', String(csRow?.default));
+      // 'bank' since 2026-10-17: Quiz from a video starts with the person's own videos, none until one is named.
+      check('*** DEFAULTS.contentSource is "bank": a fresh panel starts with no topics, only the form ***',
+        DEFAULTS.contentSource === 'bank', String(DEFAULTS.contentSource));
+      const csRow = (getManifest('video_quiz').settings || []).find((f) => f.key === 'contentSource');
+      check('...and the settings row agrees, not left pointing at "pack"',
+        csRow?.default === 'bank', String(csRow?.default));
     }
     {
       // The flip must not run over somebody who EXPLICITLY chose "Written topics" in settings —
@@ -708,13 +722,13 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       // check ONLY for 'pack', so an explicit 'bank' silently fell through to DEFAULTS too).
       const bankProfiles = createProfilesClient({ user: USER });
       const bp2 = await bankProfiles.create('TEST-lessons-explicit-bank');
-      const bmod2 = await bankProfiles.addModule(bp2.id, 'lesson_topics');
+      const bmod2 = await bankProfiles.addModule(bp2.id, 'video_quiz');
       const bst2 = createState({ url: bankProfiles.stateURL(bp2.id, bmod2.id), user: USER });
       await bst2.load();
       await bst2.set({ contentSource: 'bank', topics: DEFAULT_TOPICS });
       const bhost2 = document.createElement('div');
       document.body.append(bhost2);
-      const binst2 = mountModule('lesson_topics', {
+      const binst2 = mountModule('video_quiz', {
         mount: bhost2, bus: createBus(), state: bst2,
         events: createEvents({ url: bankProfiles.eventsURL(bp2.id, bmod2.id), user: USER }),
         user: USER, profileId: bp2.id,
@@ -737,7 +751,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
     // fixed then; the missing panel was not, and `minWatchMs` has been live config no surface
     // could reach ever since.
     {
-      const keys = (getManifest('lesson_topics').settings || []).map((f) => f.key);
+      const keys = (getManifest('video_quiz').settings || []).map((f) => f.key);
       check('*** the module declares the setting it actually reads ***',
         keys.includes('minWatchMs'), JSON.stringify(keys));
       // AND NO FAKE ROW FOR THE VIDEOS. A topic's video lives per topic in state.topics[]; a
@@ -757,7 +771,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
     {
       const vp = createProfilesClient({ user: USER });
       const vprof = await vp.create('TEST-lessons-video-stable');
-      const vmod = await vp.addModule(vprof.id, 'lesson_topics');
+      const vmod = await vp.addModule(vprof.id, 'video_quiz');
       const vst = createState({ url: vp.stateURL(vprof.id, vmod.id), user: USER });
       await vst.load();
       vst.set({ contentSource: 'bank', minWatchMs: 2000,
@@ -765,7 +779,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       await vst.flush();
       const vhost = document.createElement('div'); document.body.append(vhost);
       const vMakeEvents = (k, o) => createEvents({ url: vp.eventsURL(vprof.id, k), user: USER, ...o });
-      const vinst = mountModule('lesson_topics', {
+      const vinst = mountModule('video_quiz', {
         mount: vhost, bus: createBus(), state: vst,
         events: createEvents({ url: vp.eventsURL(vprof.id, vmod.id), user: USER }),
         user: USER, profileId: vprof.id,
@@ -841,7 +855,7 @@ Knowing a root lets you guess a new word.`;
     const xprof = await xp.create('TEST-lessons-transcript');
     const xMakeState = (k, o) => createState({ url: xp.stateURL(xprof.id, k), user: USER, ...o });
     const xMakeEvents = (k, o) => createEvents({ url: xp.eventsURL(xprof.id, k), user: USER, ...o });
-    const xmod = await xp.addModule(xprof.id, 'lesson_topics');
+    const xmod = await xp.addModule(xprof.id, 'video_quiz');
     const xst = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
     await xst.load();
     // `factCheck: false` explicit: the fact check has its own section below, with a fake Wikipedia;
@@ -858,7 +872,7 @@ Knowing a root lets you guess a new word.`;
     const mountX = async (ai) => {
       const xs = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
       await xs.load();
-      const inst = mountModule('lesson_topics', {
+      const inst = mountModule('video_quiz', {
         mount: xhost, bus: createBus(), state: xs,
         events: createEvents({ url: xp.eventsURL(xprof.id, xmod.id), user: USER }),
         user: USER, profileId: xprof.id, makeState: xMakeState, makeEvents: xMakeEvents, rand: seeded(5), ai,
@@ -1012,7 +1026,7 @@ Knowing a root lets you guess a new word.`;
     const wfRow = xMakeState(WORDFORGE_LESSON_QUESTIONS);
     await trivRow.load(); await wfRow.load();
     check('*** before review, NONE of them has reached the games ***',
-      (trivRow.get().items || []).length === 0 && (wfRow.get().items || []).length === 0, JSON.stringify(trivRow.get()));
+      own(trivRow.get().items).length === 0 && own(wfRow.get().items).length === 0, JSON.stringify(trivRow.get()));
     const rqs = () => [...xhost.querySelectorAll('[data-rq]')];
     check('the three checked questions wait in the review list (the same ones regenerated are listed once)',
       rqs().filter((r) => r.querySelector('[data-rq-approve]')).length === 3, String(rqs().length));
@@ -1026,20 +1040,20 @@ Knowing a root lets you guess a new word.`;
     xhost.querySelector(`[data-rq="${pC}"] [data-rq-flag]`).click(); await sleep(400);
     xhost.querySelector(`[data-rq="${pC}"] [data-rq-approve]`)?.click(); await sleep(900);
     await trivRow.load(); await wfRow.load();
-    const tItems = trivRow.get().items || [];
+    const tItems = own(trivRow.get().items);
     check('*** approved questions reach Trivia\'s routed row; the flagged one does NOT, even once approved ***',
       tItems.length === 2 && tItems.every((i) => i.topic === 'roots'), JSON.stringify(tItems));
     check('...in exactly the pack-question shape, plus the source line',
       tItems.every((i) => i.question && i.answer && Array.isArray(i.wrong) && i.wrong.length === 3 && !i.wrong.includes(i.answer)
         && typeof i.source === 'string' && i.source.length > 10), JSON.stringify(tItems[0]));
-    check('...and Word Forge\'s too (questionsTo default "both")', (wfRow.get().items || []).length === 2);
+    check('...and Word Forge\'s too (questionsTo default "both")', own(wfRow.get().items).length === 2);
     await tlog.load();
     const byId = Object.fromEntries(reviewItems(tlog.get().events || []).map((i) => [i.id, i]));
     check('the flag records who raised it', byId[pC].flagged && byId[pC].flags[0].by === 'caregiver', JSON.stringify(byId[pC]));
     xhost.querySelector(`[data-rq="${pC}"] [data-rq-unflag]`).click(); await sleep(1000);
     await trivRow.load();
-    check('*** clearing the flag lets it join the pool ***', (trivRow.get().items || []).length === 3,
-      String((trivRow.get().items || []).length));
+    check('*** clearing the flag lets it join the pool ***', own(trivRow.get().items).length === 3,
+      String(own(trivRow.get().items).length));
 
     // The consuming half: Trivia really reads them.
     section('approved transcript questions play in Trivia like any routed lesson question');
@@ -1055,7 +1069,7 @@ Knowing a root lets you guess a new word.`;
       });
       tvX.init(); await sleep(1200);
       check('*** Trivia\'s bank = its own 1 + the 3 approved transcript questions ***',
-        tvX.impl.__probe().bank === 4, `bank=${tvX.impl.__probe().bank}`);
+        tvX.impl.__probe().bank === 4 + BUILTIN_Q, `bank=${tvX.impl.__probe().bank} (1 + 3 + ${BUILTIN_Q} from the built-in lessons)`);
       tvX.destroy(); th.remove();
     }
 
@@ -1066,13 +1080,13 @@ Knowing a root lets you guess a new word.`;
     await sleep(1500);
     await trivRow.load(); await wfRow.load();
     check('*** "Trivia only": Trivia keeps them, Word Forge\'s row is emptied ***',
-      (trivRow.get().items || []).length === 3 && (wfRow.get().items || []).length === 0,
-      `${(trivRow.get().items || []).length}/${(wfRow.get().items || []).length}`);
+      own(trivRow.get().items).length === 3 && own(wfRow.get().items).length === 0,
+      `${own(trivRow.get().items).length}/${own(wfRow.get().items).length}`);
     xst.set({ questionsTo: 'both' }); await xst.flush();
     await sleep(1200);
 
     section('auto-approve (ON by default since 2026-09-28) skips the queue for checked questions');
-    const autoField = (getManifest('lesson_topics').settings || []).find((f) => f.key === 'autoApprove');
+    const autoField = (getManifest('video_quiz').settings || []).find((f) => f.key === 'autoApprove');
     check('*** auto-approve is declared and ON by default (Mike: "Flip review.") — still a setting ***',
       autoField && autoField.default === true && DEFAULTS.autoApprove === true && autoField.kind === 'toggle', JSON.stringify(autoField));
     xst.set({ autoApprove: true }); await xst.flush();
@@ -1096,7 +1110,7 @@ Say it once and move on.`;
     await sleep(1500);
     await trivRow.load();
     check('*** with auto-approve on, a checked question joins the pool with no review ***',
-      (trivRow.get().items || []).some((i) => i.topic === 'concision'), JSON.stringify((trivRow.get().items || []).map((i) => i.topic)));
+      own(trivRow.get().items).some((i) => i.topic === 'concision'), JSON.stringify(own(trivRow.get().items).map((i) => i.topic)));
     check('...and the requirement is capped at what the model could give (1 question, not 3)',
       tqText('[data-tq-progress]') === '0 of 1 correct answers needed', tqText('[data-tq-progress]'));
     xst.set({ autoApprove: false }); await xst.flush();
@@ -1255,7 +1269,7 @@ Say it once and move on.`;
 
     section('settings declared for the feature');
     {
-      const f = Object.fromEntries((getManifest('lesson_topics').settings || []).map((x) => [x.key, x]));
+      const f = Object.fromEntries((getManifest('video_quiz').settings || []).map((x) => [x.key, x]));
       check('requirement mode: correct answers (default) or points', f.requireBy?.default === 'correct'
         && f.requireBy.options.map((o) => o.value).join(',') === 'correct,points', JSON.stringify(f.requireBy));
       check('*** the requirement is Mike\'s rule as four choices: first 5 min at 1 a minute, then 1 per 2.5, no floor ***',
@@ -1270,7 +1284,7 @@ Say it once and move on.`;
       check('subject is text, default General, advanced (algebra.js\'s pattern)',
         f.subject?.kind === 'text' && f.subject.default === 'General' && f.subject.level === 'advanced');
       check('the AI model is a live choice with no options baked in', f.aiModel?.kind === 'choice' && !(f.aiModel.options || []).length);
-      const live = fieldsFor(getManifest('lesson_topics'), xinst).find((x) => x.key === 'aiModel');
+      const live = fieldsFor(getManifest('video_quiz'), xinst).find((x) => x.key === 'aiModel');
       check('*** once the panel has asked the server, the menu offers its models — never an embedding one ***',
         live && live.options.some((o) => o.value === 'fake-7b') && !live.options.some((o) => /embed/.test(o.value))
           && live.options.some((o) => o.value === ''), JSON.stringify(live && live.options));
@@ -1349,7 +1363,7 @@ Say it once and move on.`;
         const prof = await pc.create(`TEST-lessons-factcheck-${name}`);
         const ms = (k, o) => createState({ url: pc.stateURL(prof.id, k), user: USER, ...o });
         const me = (k, o) => createEvents({ url: pc.eventsURL(prof.id, k), user: USER, ...o });
-        const mod = await pc.addModule(prof.id, 'lesson_topics');
+        const mod = await pc.addModule(prof.id, 'video_quiz');
         const st = createState({ url: pc.stateURL(prof.id, mod.id), user: USER });
         await st.load();
         // The check is OFF by default, so these scenarios turn it on -- the person's "separate yes".
@@ -1357,7 +1371,7 @@ Say it once and move on.`;
         await st.flush();
         const host = document.createElement('div'); document.body.append(host);
         const ai = factAI(qs);
-        const inst = mountModule('lesson_topics', {
+        const inst = mountModule('video_quiz', {
           mount: host, bus: createBus(), state: st,
           events: createEvents({ url: pc.eventsURL(prof.id, mod.id), user: USER }),
           user: USER, profileId: prof.id, makeState: ms, makeEvents: me, rand: seeded(11), ai,
@@ -1406,7 +1420,7 @@ Say it once and move on.`;
         A.ai.calls.fact === 3 && A.ai.calls.compare === 1, JSON.stringify(A.ai.calls));
       await sleep(900);
       const aRow = A.ms(TRIVIA_LESSON_QUESTIONS); await aRow.load();
-      const aRouted = (aRow.get().items || []).map((i) => i.answer).sort();
+      const aRouted = own(aRow.get().items).map((i) => i.answer).sort();
       check('*** auto-approve ON, yet the contradicted one stays OUT of the pool; the other two are in ***',
         aRouted.join(',') === 'life,to write', JSON.stringify(aRouted));
       check('the summary line counts what was found',
@@ -1499,8 +1513,8 @@ Say it once and move on.`;
       await sleep(1500);
       const eRow = E.ms(TRIVIA_LESSON_QUESTIONS); await eRow.load();
       check('*** DEFAULT: all three checked questions reach the games with no person approving them ***',
-        (eRow.get().items || []).map((i) => i.answer).sort().join(',') === 'life,to write,water',
-        JSON.stringify((eRow.get().items || []).map((i) => i.answer)));
+        own(eRow.get().items).map((i) => i.answer).sort().join(',') === 'life,to write,water',
+        JSON.stringify(own(eRow.get().items).map((i) => i.answer)));
       check('*** DEFAULT: not one request to Wikipedia ***', fE.urls.length === 0 && E.ai.calls.fact === 0, String(fE.urls.length));
       check('*** the quiz says once, briefly, "Not checked on Wikipedia" — with the same checkbox, unticked ***',
         /Not checked on Wikipedia/.test(E.text('[data-fc-off]'))
@@ -1525,12 +1539,12 @@ Say it once and move on.`;
       await sleep(1000);
       const fRow = F.ms(TRIVIA_LESSON_QUESTIONS); await fRow.load();
       check('*** with the check ON, a question does not join the games before its check lands ***',
-        (fRow.get().items || []).length === 0 && !!F.host.querySelector('[data-tq-q]'), JSON.stringify(fRow.get().items || []));
+        own(fRow.get().items).length === 0 && !!F.host.querySelector('[data-tq-q]'), JSON.stringify(own(fRow.get().items)));
       await sleep(5000);
       await fRow.load();
       check('*** ...then the ones it did not flag join with no person; the contradicted one waits ***',
-        (fRow.get().items || []).map((i) => i.answer).sort().join(',') === 'life,to write',
-        JSON.stringify((fRow.get().items || []).map((i) => i.answer)));
+        own(fRow.get().items).map((i) => i.answer).sort().join(',') === 'life,to write',
+        JSON.stringify(own(fRow.get().items).map((i) => i.answer)));
       const aquaF = [...F.host.querySelectorAll('[data-rq]')].find((r) => /aqua/.test(r.textContent));
       check('...and the waiting one is in the review list with a way to clear it',
         !!aquaF && !!aquaF.querySelector('[data-rq-unflag]'), aquaF ? aquaF.textContent.replace(/\s+/g, ' ').slice(0, 200) : 'no row');
@@ -1580,12 +1594,12 @@ Say it once and move on.`;
       const cprof = await cp.create('TEST-lessons-contest');
       const cMS = (k, o) => createState({ url: cp.stateURL(cprof.id, k), user: USER, ...o });
       const cME = (k, o) => createEvents({ url: cp.eventsURL(cprof.id, k), user: USER, ...o });
-      const cmod = await cp.addModule(cprof.id, 'lesson_topics');
+      const cmod = await cp.addModule(cprof.id, 'video_quiz');
       const cst = createState({ url: cp.stateURL(cprof.id, cmod.id), user: USER });
       await cst.load(); cst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS }); await cst.flush();
       const chost = document.createElement('div'); document.body.append(chost);
       const cbus = createBus();
-      const cinst = mountModule('lesson_topics', {
+      const cinst = mountModule('video_quiz', {
         mount: chost, bus: cbus, state: cst, events: cME(cmod.id),
         user: USER, profileId: cprof.id, makeState: cMS, makeEvents: cME, rand: seeded(5), ai: fakeAI(ROOTS_QS),
       });
@@ -1600,8 +1614,8 @@ Say it once and move on.`;
       await sleep(1200);
       const cRow = cMS(TRIVIA_LESSON_QUESTIONS);
       await cRow.load();
-      check('(auto-approve default: all three are in the games before anyone contests)', (cRow.get().items || []).length === 3,
-        String((cRow.get().items || []).length));
+      check('(auto-approve default: all three are in the games before anyone contests)', own(cRow.get().items).length === 3,
+        String(own(cRow.get().items).length));
 
       // Answer the first one RIGHT, then contest it.
       const q1 = ct('[data-tq-q]');
@@ -1630,8 +1644,8 @@ Say it once and move on.`;
       check('*** ...and the transcript question is FLAGGED through the existing mechanism (a contest flag) ***',
         it1.flagged && it1.flags.some((f) => f.contest && f.contestId === cRows[0].data.cid), JSON.stringify(it1.flags));
       await cRow.load();
-      check('*** held OUT of the games\' pool ***', !(cRow.get().items || []).some((i) => i.question === q1),
-        JSON.stringify((cRow.get().items || []).map((i) => i.question)));
+      check('*** held OUT of the games\' pool ***', !own(cRow.get().items).some((i) => i.question === q1),
+        JSON.stringify(own(cRow.get().items).map((i) => i.question)));
       const rv = () => [...chost.querySelectorAll('[data-rq]')].find((r) => r.querySelector('.l-rq-q')?.textContent === q1);
       check('*** the review list shows it as "Contested while playing", with Clear and Keep out ***',
         // site text rewrite 2026-10-09: "Contested while playing" now reads "A player said this question is wrong".
@@ -1642,8 +1656,8 @@ Say it once and move on.`;
       rv().querySelector('[data-rq-clear]').click();
       await sleep(1500);
       await cRow.load(); await cLog.load(); await tl.load();
-      check('*** Clear puts it back in the games ***', (cRow.get().items || []).some((i) => i.question === q1),
-        JSON.stringify((cRow.get().items || []).map((i) => i.question)));
+      check('*** Clear puts it back in the games ***', own(cRow.get().items).some((i) => i.question === q1),
+        JSON.stringify(own(cRow.get().items).map((i) => i.question)));
       check('...by clearing both the contest and the flag (so nothing re-flags it)',
         (cLog.get().events || []).some((e) => e.kind === 'clear' && e.data.key === cRows[0].data.key)
           && !reviewItems(tl.get().events || []).find((i) => i.question === q1).flagged);
@@ -1666,7 +1680,7 @@ Say it once and move on.`;
       await tl.load(); await cRow.load();
       check('*** a transcript question contested in TRIVIA is flagged here too, and leaves the pool ***',
         reviewItems(tl.get().events || []).find((i) => i.question === q2.question).flagged
-          && !(cRow.get().items || []).some((i) => i.question === q2.question), JSON.stringify((cRow.get().items || []).map((i) => i.question)));
+          && !own(cRow.get().items).some((i) => i.question === q2.question), JSON.stringify(own(cRow.get().items).map((i) => i.question)));
       const rv2 = [...chost.querySelectorAll('[data-rq]')].find((r) => r.querySelector('.l-rq-q')?.textContent === q2.question);
       check('...and is listed as contested while playing (in Trivia)', !!rv2 && /said\s+this\s+question\s+is\s+wrong/.test(rv2.textContent) && /Trivia/.test(rv2.textContent),
         rv2 ? rv2.textContent.replace(/\s+/g, ' ').slice(0, 300) : 'no row');
@@ -1682,6 +1696,75 @@ Say it once and move on.`;
       check('...and it leaves the waiting list', ![...chost.querySelectorAll('[data-contested-key]')]
         .some((r) => r.dataset.contestedKey === rv3.dataset.contestedKey && r.querySelector('[data-rq-keepout]')));
       cinst.destroy(); chost.remove(); cLedger.destroy(); cLog.destroy(); tl.destroy();
+    }
+
+    // =====================================================================================
+    section('*** Quiz from a video (2026-10-17, Mike: "We can keep that"): name a video, paste, answer; Lessons routes its questions ***');
+    {
+      check('it is "Quiz from a video"', getManifest('video_quiz')?.title === 'Quiz from a video');
+      const vqp = createProfilesClient({ user: USER });
+      const vqprof = await vqp.create('TEST-video-quiz');
+      const vMakeState = (k, o) => createState({ url: vqp.stateURL(vqprof.id, k), user: USER, ...o });
+      const vMakeEvents = (k, o) => createEvents({ url: vqp.eventsURL(vqprof.id, k), user: USER, ...o });
+      const vmod = await vqp.addModule(vqprof.id, 'video_quiz');
+      const vs = createState({ url: vqp.stateURL(vqprof.id, vmod.id), user: USER });
+      await vs.load();
+      const vhost = document.createElement('div'); document.body.append(vhost);
+      const vinst = mountModule('video_quiz', { mount: vhost, bus: createBus(), state: vs,
+        events: createEvents({ url: vqp.eventsURL(vqprof.id, vmod.id), user: USER }),
+        user: USER, profileId: vqprof.id, makeState: vMakeState, makeEvents: vMakeEvents, rand: seeded(11), ai: fakeAI(ROOTS_QS) });
+      vinst.init();
+      await sleep(600);
+      check('*** a fresh panel: no topic cards (no seed topics, no empty pack), the form, and how to begin ***',
+        vhost.querySelectorAll('.l-card').length === 0 && !!vhost.querySelector('[data-vq-name]') && /No videos yet/.test(vhost.textContent),
+        vhost.textContent.replace(/\s+/g, ' ').slice(0, 200));
+      vhost.querySelector('[data-vq-add]').click();
+      await sleep(50);
+      check('nothing named: nothing added', vhost.querySelectorAll('.l-card').length === 0);
+      vhost.querySelector('[data-vq-name]').value = 'Word roots, part 1';
+      vhost.querySelector('[data-vq-add]').click();
+      await sleep(300);
+      check('*** named: its card, and its transcript quiz open in it ***',
+        vhost.querySelectorAll('.l-card').length === 1 && /Word roots, part 1/.test(vhost.querySelector('.l-card').textContent)
+          && !!vhost.querySelector('.l-card [data-tq-text]'), vhost.textContent.replace(/\s+/g, ' ').slice(0, 200));
+      check('...kept on the panel\'s own row', (vs.get().topics || []).some((t) => t.id === 'word-roots-part-1' && t.label === 'Word roots, part 1'),
+        JSON.stringify(vs.get().topics));
+      vhost.querySelector('[data-vq-name]').value = 'Word roots, part 1';
+      vhost.querySelector('[data-vq-add]').click();
+      await sleep(200);
+      check('the same name again: the same card, not a second', vhost.querySelectorAll('.l-card').length === 1);
+      const vta = vhost.querySelector('[data-tq-text]');
+      vta.value = ROOTS_TRANSCRIPT; vta.dispatchEvent(new Event('input', { bubbles: true }));
+      await sleep(50);
+      vhost.querySelector('[data-tq-make]').click();
+      await sleep(1500);
+      check('(setup) questions were written', !!vhost.querySelector('[data-tq-q]'), vhost.textContent.replace(/\s+/g, ' ').slice(0, 300));
+      const vTriv = vMakeState('lesson-questions-trivia');
+      await vTriv.load();
+      check('*** its checked questions reach the games (auto-approve, the default), with the built-in lessons\' beside them ***',
+        own(vTriv.get().items).map((i) => i.answer).sort().join(',') === 'life,to write,water'
+          && (vTriv.get().items || []).filter((i) => BUILTIN_TOPICS.has(i.topic)).length === BUILTIN_Q,
+        JSON.stringify((vTriv.get().items || []).map((i) => i.answer)));
+      check('...named after the video, for a round of Quiz mix', own(vTriv.get().items).every((i) => i.topicLabel === 'Word roots, part 1'),
+        JSON.stringify(own(vTriv.get().items).map((i) => i.topicLabel)));
+      vinst.destroy(); vhost.remove();
+      // *** THE LESSONS MODULE WRITES THE SAME WHOLE SET: mounted after, it must not wipe the transcript questions. ***
+      const lhost = document.createElement('div'); document.body.append(lhost);
+      const lmod2 = await vqp.addModule(vqprof.id, 'lessons');
+      const ls2 = createState({ url: vqp.stateURL(vqprof.id, lmod2.id), user: USER });
+      await ls2.load();
+      const linst2 = mountModule('lessons', { mount: lhost, bus: createBus(), state: ls2, user: USER, profileId: vqprof.id,
+        instanceId: `lessons-${lmod2.id}`, personId: null, makeState: vMakeState, makeEvents: vMakeEvents,
+        setTimer: () => 0, clearTimer: () => {} });
+      linst2.init();
+      await sleep(1500);
+      const vTriv2 = vMakeState('lesson-questions-trivia');
+      await vTriv2.load();
+      check('*** Lessons, mounted after it, keeps the transcript questions in the games (one set, two writers) ***',
+        own(vTriv2.get().items).map((i) => i.answer).sort().join(',') === 'life,to write,water'
+          && (vTriv2.get().items || []).filter((i) => BUILTIN_TOPICS.has(i.topic)).length === BUILTIN_Q,
+        JSON.stringify((vTriv2.get().items || []).map((i) => i.answer)));
+      linst2.destroy(); lhost.remove();
     }
 
     document.getElementById('summary').textContent =

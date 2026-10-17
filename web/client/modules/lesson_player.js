@@ -32,7 +32,9 @@
 import { registerModule } from '../module.js';
 import { checkLesson, beatsOf, showFor, citeWords, LOOKS } from '../lesson_file.js';
 import { BUILTIN_LESSONS } from '../lessons_builtin.js';
-import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, createLessons } from '../lessons.js';
+import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, createLessons, routedLessonQuestions, transcriptPool,
+  QUESTIONS_TO } from '../lessons.js';
+import { TRANSCRIPT_STREAM } from '../transcript_quiz.js';
 
 export const LESSON_FORMS = Object.freeze(['watch', 'slides', 'read']);
 // How long a beat stays in Watch after its words, at the least (Rule 1: a setting; the words' own time is added).
@@ -60,28 +62,17 @@ const SETTINGS = [
     options: [{ value: 'both', label: 'Trivia and Word Forge' }, { value: 'trivia', label: 'Trivia only' },
       { value: 'wordforge', label: 'Word Forge only' }, { value: 'none', label: 'Neither' }] },
 ];
-export const QUESTIONS_TO = Object.freeze(['both', 'trivia', 'wordforge', 'none']);
+export { QUESTIONS_TO };
 
 // *** THE QUESTIONS GO TO THE GAMES (taken over from the old Lessons, 2026-10-17). *** Trivia and Word Forge each read
 // a profile row of lesson questions (lessons.js TRIVIA_LESSON_QUESTIONS / WORDFORGE_LESSON_QUESTIONS), held back by
 // topic until that topic's lesson was finished (lessons.js gate; quest mode; sandbox, the default, opens all). The rows
 // are written here, whole, from every built-in lesson's review questions, the topic being the lesson's id and its
-// title carried for the round's name. Finishing a lesson (reaching its end, in any form) is "watched" in the same log
+// title carried for the round's name, plus the approved transcript questions ("Quiz from a video"), computed in
+// lessons.js `routedLessonQuestions` so the two modules writing these rows write the same set. Finishing a lesson (reaching its end, in any form) is "watched" in the same log
 // the old module wrote, so in quest mode its questions open then. Written only when what the row holds differs.
-/** The rows' items for `to`: { trivia: [...], wordforge: [...] }. PURE. */
-export function routedQuestions(to = 'both', lessons = BUILTIN_LESSONS) {
-  const items = [];
-  for (const e of lessons || []) {
-    const r = checkLesson(e.lesson);
-    if (!r.lesson) continue;
-    for (const q of r.lesson.questions) {
-      items.push({ question: q.question, answer: q.answer, wrong: q.wrong.slice(), topic: e.id, topicLabel: r.lesson.about.title,
-        ...(q.why ? { explain: q.why } : {}) });
-    }
-  }
-  const t = QUESTIONS_TO.includes(to) ? to : 'both';
-  return { trivia: t === 'both' || t === 'trivia' ? items : [], wordforge: t === 'both' || t === 'wordforge' ? items : [] };
-}
+/** The rows' items for `to` (lessons.js `routedLessonQuestions`, without the transcript pool). PURE. */
+export const routedQuestions = (to = 'both', lessons = BUILTIN_LESSONS) => routedLessonQuestions(to, { lessons });
 export const LESSON_SETTINGS = SETTINGS;
 
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -247,6 +238,8 @@ function lessonsModule(ctx) {
     let finished = false;       // this lesson's end was reached (and told to the log) since it last started over
     let unlocks = null;         // lessons.js's log of finished lessons, made when first needed
     const rows = [];            // the two question rows, to let go of
+    let tlog = null;            // the transcript quiz's review log (its approved questions go to the games too)
+    let routedPool = null;      // the pool last routed, to route again only when it changes
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
@@ -294,12 +287,17 @@ function lessonsModule(ctx) {
     }
     function routeQuestions() {
       if (typeof ctx.makeState !== 'function') return;
-      const want = routedQuestions(setting('questionsTo', 'both'));
+      const pool = transcriptPool(tlog?.get?.()?.events || []);
+      routedPool = JSON.stringify(pool);
+      const want = routedLessonQuestions(setting('questionsTo', 'both'), { extra: pool });
       for (const [key, items] of [[TRIVIA_LESSON_QUESTIONS, want.trivia], [WORDFORGE_LESSON_QUESTIONS, want.wordforge]]) {
-        let row = null;
-        try { row = ctx.makeState(key); } catch { row = null; }
-        if (!row) continue;
-        rows.push(row);
+        let row = rows.find((r) => r.__key === key) || null;
+        if (!row) {
+          try { row = ctx.makeState(key); } catch { row = null; }
+          if (!row) continue;
+          row.__key = key;
+          rows.push(row);
+        }
         Promise.resolve(row.load?.()).catch(() => {}).then(() => {
           if (dead) return;
           const has = row.get?.()?.items;
@@ -430,7 +428,15 @@ function lessonsModule(ctx) {
         render();
         enter();
         if (at >= beats.length) finished = true;   // it opened at the end: told already, when it got there
-        routeQuestions();
+        // The transcript quiz's approved questions ride along (lessons.js routedLessonQuestions): read its review log,
+        // route once it is in, and again whenever its approved pool changes.
+        if (typeof ctx.makeEvents === 'function') {
+          try {
+            tlog = ctx.makeEvents(TRANSCRIPT_STREAM, { limit: 1000, pollMs: 15000 });
+            tlog.subscribe?.(() => { if (!dead && JSON.stringify(transcriptPool(tlog.get?.()?.events || [])) !== routedPool) routeQuestions(); });
+            Promise.resolve(tlog.load?.()).catch(() => {}).then(() => { if (!dead) { tlog.startPolling?.(); routeQuestions(); } });
+          } catch { tlog = null; routeQuestions(); }
+        } else routeQuestions();
       },
       onShow() { if (!timer) enter(); },
       onHide() { stopTimer(); try { state?.flush?.(); } catch { /* nothing to do */ } },
@@ -442,6 +448,7 @@ function lessonsModule(ctx) {
         try { ctx.output?.cancel?.(); } catch { /* gone */ }
         for (const r of rows) { try { r.destroy?.(); } catch { /* gone */ } }
         try { unlocks?.destroy?.(); } catch { /* gone */ }
+        try { tlog?.destroy?.(); } catch { /* gone */ }
       },
     };
 }

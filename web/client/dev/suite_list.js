@@ -23,7 +23,7 @@ export const SUITES = [
   'composer_reach', 'device_pick', 'director', 'drive',
   'educational', 'events', 'fs_sink', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
   'input_dwell', 'input_scan', 'longpress',
-  'kiosk', 'arrangement', 'placement', 'dashboard_stage4', 'dashboards', 'dashboard_nest', 'edit_mode', 'map_editor', 'lesson_topics', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
+  'kiosk', 'arrangement', 'placement', 'dashboard_stage4', 'dashboards', 'dashboard_nest', 'edit_mode', 'map_editor', 'video_quiz', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
   // corner on hover (2026-10-09): a panel's ⤢ / ✎ corner shows only where somebody is pointing (panel_corners.js).
   'panel_corners',
   'marker', 'mic_owner', 'modules_catalog', 'output',

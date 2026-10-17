@@ -16,6 +16,10 @@
 // Word-bank entries opt in by carrying `topic: '<id>'`. **Content with NO topic is always
 // available** — that is what keeps every bank written before this file existed playable.
 
+import { checkLesson } from './lesson_file.js';
+import { BUILTIN_LESSONS } from './lessons_builtin.js';
+import { reviewItems, poolFrom, toRoutedQuestion } from './transcript_quiz.js';
+
 export const LESSONS_STREAM = 'lessons';
 export const LESSON_TOPIC = 'lesson/unlocked';   // bus topic — live nudge
 export const WATCHED_KIND = 'watched';
@@ -35,6 +39,37 @@ export const RELOCKED_KIND = 'relocked';
 // new 'given' deck kind expects directly, unconverted.
 export const TRIVIA_LESSON_QUESTIONS = 'lesson-questions-trivia';
 export const WORDFORGE_LESSON_QUESTIONS = 'lesson-questions-wordforge';
+
+// *** WHAT THE TWO ROWS HOLD, COMPUTED IN ONE PLACE (2026-10-17). *** Since Lessons became the lesson-file player
+// (modules/lesson_player.js) and the transcript quiz came back as its own module ("Quiz from a video",
+// modules/video_quiz.js; Mike: "We can keep that"), two modules write these rows, and each write REPLACES the row
+// (an empty write must stay a real statement, above). Two writers each writing only their own questions would wipe
+// each other's. So both write THE SAME WHOLE SET, from here: every built-in lesson's review questions, plus every
+// approved transcript question (the profile's review log), plus whatever the writer adds (a lesson pack's own,
+// video_quiz.js only). Known edge, stated: each writer applies ITS OWN `questionsTo`, so two panels set differently
+// leave the row as the last one to write said.
+export const QUESTIONS_TO = Object.freeze(['both', 'trivia', 'wordforge', 'none']);
+/** Approved transcript questions from the review log's events, in the rows' shape, each named after its video. PURE. */
+export function transcriptPool(events) {
+  return poolFrom(reviewItems(events || [])).map((q) => ({ ...toRoutedQuestion(q, q.topic),
+    ...(q.topicLabel && q.topicLabel !== q.topic ? { topicLabel: q.topicLabel } : {}) }));
+}
+/** The two rows' items for `to`: { trivia, wordforge }. `lessons` the lesson files (the built-in ones by default),
+ *  `extra` more items in the rows' shape. PURE. */
+export function routedLessonQuestions(to = 'both', { lessons = BUILTIN_LESSONS, extra = [] } = {}) {
+  const items = [];
+  for (const e of lessons || []) {
+    const r = checkLesson(e.lesson);
+    if (!r.lesson) continue;
+    for (const q of r.lesson.questions) {
+      items.push({ question: q.question, answer: q.answer, wrong: q.wrong.slice(), topic: e.id, topicLabel: r.lesson.about.title,
+        ...(q.why ? { explain: q.why } : {}) });
+    }
+  }
+  for (const x of extra || []) if (x && x.question && x.answer) items.push(x);
+  const t = QUESTIONS_TO.includes(to) ? to : 'both';
+  return { trivia: t === 'both' || t === 'trivia' ? items : [], wordforge: t === 'both' || t === 'wordforge' ? items : [] };
+}
 
 // Seed topics. Videos are per-profile data; these carry no video until someone points them
 // at one, and a topic with no video unlocks on the honor button alone.
@@ -97,11 +132,13 @@ export function gate(items, unlocked, key = 'topic') {
 // waiting behind Word roots" instead of silently having a shorter deck.
 export function lockedTopics(items, unlocked, topics = [], key = 'topic') {
   const counts = new Map();
+  const named = new Map();     // the name an item carries for its topic (`topicLabel`: a lesson's title, a video's name)
   for (const it of gate(items, unlocked, key).locked) {
     counts.set(it[key], (counts.get(it[key]) || 0) + 1);
+    if (it.topicLabel && !named.has(it[key])) named.set(it[key], String(it.topicLabel));
   }
   return [...counts.entries()].map(([id, count]) => ({
-    id, count, label: (topics.find((t) => t.id === id) || {}).label || id,
+    id, count, label: (topics.find((t) => t.id === id) || {}).label || named.get(id) || id,
   })).sort((a, b) => b.count - a.count);
 }
 
