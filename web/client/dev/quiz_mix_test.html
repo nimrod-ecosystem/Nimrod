@@ -508,6 +508,33 @@ try {
     check('*** an open (unreviewed) one never does ***', asked.length > 0 && !asked.some((p) => p.startsWith('OPEN')), asked.join(' | '));
     check('its topic is the pack\'s name without the review tail', src.categories()[0]?.label === 'Moons', JSON.stringify(src.categories()));
     src.destroy();
+
+    // *** WHAT A LESSON UNLOCKED PLAYS HERE TOO (2026-10-17): the Lessons module's routed questions, gated as Trivia gates them.
+    const rowOf = (doc) => { let v = doc; const subs = new Set(); return { load: async () => v, get: () => v, set(x) { v = x; subs.forEach((f) => f(v)); },
+      subscribe: (f) => { subs.add(f); return () => subs.delete(f); }, startPolling() {}, destroy() {} }; };
+    const routed = rowOf({ items: [
+      { question: 'ROOTS: what does "bio" mean?', answer: 'life', wrong: ['water', 'stone', 'light'], topic: 'roots' },
+      { question: 'COMMAS: which joins two sentences wrongly?', answer: 'a comma splice', wrong: ['a full stop', 'a semicolon', 'a dash'], topic: 'punctuation' }] });
+    const settingsRow = rowOf({ questMode: 'quest' });
+    const watched = { events: [{ kind: 'watched', data: { topic: 'roots', label: 'Word roots & origins' }, created_at: '2026-10-17' }] };
+    const evs = { load: async () => watched, get: () => watched, subscribe: () => () => {}, startPolling() {}, append: async () => {}, destroy() {} };
+    const lhost = { ...host, ctx: { makePackReviews: () => null, makeEvents: () => evs,
+      makeState: (k) => (k === 'lesson-questions-trivia' ? routed : k === 'settings' ? settingsRow : rowOf(null)) },
+      cfg: () => ({ triviaFrom: 'none-such' }), rand: mulberry32(5) };
+    const ls = triviaSource(lhost);
+    await ls.ready();
+    await sleep(10);
+    const lcats = ls.categories();
+    check('*** a topic whose lesson was watched is a round, named as the lesson card names it ***', lcats.some((c) => c.label === 'Word roots & origins'), JSON.stringify(lcats));
+    check('*** a topic not yet watched stays out (quest mode), as in Trivia ***', !lcats.some((c) => /comma|punctuation/i.test(c.label)), JSON.stringify(lcats));
+    const rc = lcats.find((c) => c.label === 'Word roots & origins');
+    const ld = rc ? ls.dealFor({ id: 'player', name: '', index: 0 }, rc.id) : null;
+    check('its question is dealt, with its answers', ld?.item.prompt.startsWith('ROOTS') && ld.item.options.includes('life') && ld.item.answer === 'life', JSON.stringify(ld?.item));
+    settingsRow.set({ questMode: 'sandbox' });
+    check('*** sandbox: every routed question plays, at once (no remount) ***', ls.categories().some((c) => c.label === 'Commas that change meaning'), JSON.stringify(ls.categories()));
+    routed.set({ items: [] });
+    check('the Lessons module routing nothing now: they go', !ls.categories().some((c) => /roots|comma/i.test(c.label)), JSON.stringify(ls.categories()));
+    ls.destroy();
   }
 
   // =====================================================================================

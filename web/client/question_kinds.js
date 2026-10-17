@@ -46,6 +46,8 @@ import { pickQuestion, chanceOf } from './question_pick.js';
 import { packById } from './pack_library.js';
 import { topicName } from './pack_reviews.js';
 import { contestKey } from './contests.js';
+import { TRIVIA_LESSON_QUESTIONS, DEFAULT_TOPICS, createLessons, createQuestMode, gate, ALL_UNLOCKED, watchedEvents,
+  WATCHED_KIND } from './lessons.js';
 import { spelledOptions, spellPace } from './spell_aloud.js';
 import * as Brain from './modules/brain_games.js';
 import { BANKS as BRAIN_BANKS } from './brain_banks.js';
@@ -322,24 +324,67 @@ export function triviaSource(host) {
   const readUsual = () => { for (const pid of people()) { const h = handle(pid, PERSON_LADDER_KEY); try { h?.load?.()?.then?.(() => host.changed()); } catch { /* next time */ } } };
   readUsual();
 
+  // *** WHAT A LESSON HAS UNLOCKED PLAYS HERE TOO (2026-10-17). *** Trivia adds the questions the Lessons module
+  // routes to it (lessons.js TRIVIA_LESSON_QUESTIONS, a profile row the Lessons module owns and rewrites) to whichever
+  // source it plays, held back by topic until that topic's lesson is watched (gate(), quest mode; sandbox opens all).
+  // The mix dealt Trivia's packs without them, so a question somebody had earned in Lessons was in Trivia and never in
+  // Quiz mix's Trivia rounds. Now the same rows, the same gate: each unlocked topic is a category (its name as the
+  // lesson card showed it), on Trivia's ladder as any of Trivia's questions. Nothing routed, or no row to read (an
+  // older host): exactly as before.
+  let packRows = [];
+  let lessonQ = null, unlocks = null, mode = null;
+  try { lessonQ = typeof ctx.makeState === 'function' ? ctx.makeState(TRIVIA_LESSON_QUESTIONS) : null; } catch { lessonQ = null; }
+  try { unlocks = typeof ctx.makeEvents === 'function' ? createLessons({ makeEvents: ctx.makeEvents, bus: ctx.bus || null }) : null; } catch { unlocks = null; }
+  try { mode = typeof ctx.makeState === 'function' ? createQuestMode({ makeState: ctx.makeState }) : null; } catch { mode = null; }
+  const topicLabel = (topic) => {
+    let label = '';
+    try {
+      for (const e of watchedEvents(unlocks?.get?.()?.events || [])) if (e.kind === WATCHED_KIND && e.data.topic === topic && e.data.label) label = e.data.label;
+    } catch { /* the default below */ }
+    return label || DEFAULT_TOPICS.find((d) => d.id === topic)?.label || topicName(String(topic));
+  };
+  /** The routed questions open now: no topic, or a topic whose lesson was watched (everything, in sandbox). */
+  function lessonRows() {
+    const items = (lessonQ?.get?.()?.items || []).filter((it) => it && it.question && it.answer && Array.isArray(it.wrong));
+    if (!items.length) return [];
+    const sandbox = (() => { try { return !!mode?.isSandbox?.(); } catch { return false; } })();
+    const open = sandbox ? items : gate(items, unlocks ? unlocks.unlocked() : new Set()).open;
+    return open.map((it) => ({ question: it.question, answer: it.answer, wrong: it.wrong.slice(),
+      ...(it.level ? { level: it.level } : {}), ...(it.explain ? { explain: it.explain } : {}),
+      pool: `lesson:${it.topic || 'lessons'}`, lessonTopic: it.topic || null }));
+  }
+  const labelOf = (r) => (r.lessonTopic !== undefined ? (r.lessonTopic ? topicLabel(r.lessonTopic) : 'Lessons') : topicOf(r.pool, reviews));
+
+  function rebuild() {
+    const from = host.cfg().triviaFrom || 'all';
+    const keep = from === 'all' ? packRows : packRows.filter((r) => r.pool === from);
+    const seen = new Set();
+    rows = [...keep, ...lessonRows()].map((r) => ({ ...r, __id: Trivia.triviaId(r) }))
+      .filter((r) => (seen.has(r.__id) ? false : (seen.add(r.__id), true)));
+    byId.clear();
+    inCat.clear();
+    for (const r of rows) {
+      byId.set(r.__id, r);
+      const label = labelOf(r);
+      const id = catKey(label);
+      if (!inCat.has(id)) inCat.set(id, { label, rows: [] });
+      inCat.get(id).rows.push(r);
+    }
+    cats = [...inCat.entries()].map(([id, v]) => ({ id, label: v.label }));
+    ladderBank = rows.map((r) => ({ id: r.__id, level: Trivia.itemLevel(r) || Trivia.UNLEVELLED }));
+  }
+  const relesson = () => { if (dead) return; rebuild(); host.changed(); };
+  for (const h of [lessonQ, unlocks, mode]) {
+    try { h?.load?.()?.then?.(() => { if (!dead) { h.startPolling?.(); relesson(); } })?.catch?.(() => {}); } catch { /* next time */ }
+    try { h?.subscribe?.(() => relesson()); } catch { /* polled */ }
+  }
+
   function load() {
     loading = true;
-    const from = host.cfg().triviaFrom || 'all';
     return Trivia.triviaPackRows({ reviews, includeUnreviewed: false }).then((all) => {
       if (dead) return;
-      const keep = from === 'all' ? all : all.filter((r) => r.pool === from);
-      rows = keep.map((r) => ({ ...r, __id: Trivia.triviaId(r) }));
-      byId.clear();
-      inCat.clear();
-      for (const r of rows) {
-        byId.set(r.__id, r);
-        const label = topicOf(r.pool, reviews);
-        const id = catKey(label);
-        if (!inCat.has(id)) inCat.set(id, { label, rows: [] });
-        inCat.get(id).rows.push(r);
-      }
-      cats = [...inCat.entries()].map(([id, v]) => ({ id, label: v.label }));
-      ladderBank = rows.map((r) => ({ id: r.__id, level: Trivia.itemLevel(r) || Trivia.UNLEVELLED }));
+      packRows = all;
+      rebuild();
     }).catch((err) => { console.error('quiz mix: trivia questions', err); })
       .finally(() => { if (!dead) { loading = false; host.changed(); } });
   }
@@ -396,6 +441,7 @@ export function triviaSource(host) {
       session.destroy();
       try { store.destroy?.(); } catch { /* gone */ }
       try { reviews?.destroy?.(); } catch { /* gone */ }
+      for (const h of [lessonQ, unlocks, mode]) { try { h?.destroy?.(); } catch { /* gone */ } }
     },
   };
 }
