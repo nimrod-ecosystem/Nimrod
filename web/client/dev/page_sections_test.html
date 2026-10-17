@@ -33,6 +33,7 @@ import { wearColours, viewerThemeOf } from '../page_visit.js';
 import { OLDER_WORDS } from '../page_visit.js';
 import { PEOPLE_TYPE, PEOPLE_VERB_TOPICS } from '../people_page.js';
 import { ABOUT_SAVE_MS, PERSON_ROW_KEY } from '../modules/people.js';
+import { PAGE_PARTS } from '../modules/page_parts.js';
 import { INPUTS_KEY } from '../input_runtime.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
@@ -559,6 +560,31 @@ try {
     && J([...nbox.querySelectorAll('[data-pp-sec]')].map((w) => w.dataset.ppSecKind)) === J(BUILT_IN_KINDS));
   check('names nobody there too', !/her screen|christine|cici/i.test(nbox.querySelector('[data-pp-list]').textContent));
   ninst.destroy(); nbox.remove();
+
+  section('*** row 2.102 (Mike 2026-10-17): each part of the page is a module of its own ***');
+  check('the parts: You, Messages, Recommended, Your people, Connect - each registered, each a section the page knows',
+    J(PAGE_PARTS.map((p) => p.kind)) === J(['self', 'messages', 'recommended', 'people', 'connect'])
+      && PAGE_PARTS.every((p) => !!getManifest(p.type) && BUILT_IN_KINDS.includes(p.kind)));
+  for (const p of PAGE_PARTS.filter((x) => x.kind !== 'self')) {
+    const pbox = newBox();
+    const pinst = mountModule(p.type, makeCtx(pbox, { instanceId: `part-${p.kind}` }));
+    await pinst.init();
+    await until(() => pbox.querySelectorAll('[data-pp-sec]').length > 0, 4000);
+    const kinds = [...pbox.querySelectorAll('[data-pp-sec]')].map((w) => w.dataset.ppSecKind);
+    check(`*** "${p.title}" on its own: that part only, drawn by the page's own code ***`, J(kinds) === J([p.kind]), J(kinds));
+    pinst.destroy(); pbox.remove();
+  }
+  {
+    const ybox = newBox();
+    const yinst = mountModule('page_you', makeCtx(ybox, { instanceId: 'part-self' }));
+    await yinst.init();
+    await until(() => !!ybox.querySelector('[data-pp-card="self"] [data-pp-act="page-edit"]'), 4000);
+    const yEdit = ybox.querySelector('[data-pp-card="self"] [data-pp-act="page-edit"]');
+    check('*** "You" on its own: your card, with "Edit my page" dimmed - the page is edited on Home ***',
+      J([...ybox.querySelectorAll('[data-pp-sec]')].map((w) => w.dataset.ppSecKind)) === J(['self'])
+        && yEdit?.getAttribute('aria-disabled') === 'true' && yEdit.dataset.ppWhy === EDIT_WORDS.partWhy);
+    yinst.destroy(); ybox.remove();
+  }
 } catch (err) {
   failed++;
   out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));
