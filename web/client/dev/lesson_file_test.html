@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lesson_file - what a lesson file is, and the check every one passes</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>lesson_file - what a lesson file is, and the check every one passes (row 2.92)</h1>
+<p>The shape is chat's (lesson_shape_20261016.md, "mostly good" - Mike); the drafted prompt asks an AI for exactly this.
+A lesson holds meaning only: no colours, fonts, voices or animation code.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { checkLesson, checkQuestion, showFor, beatsOf, citeWords, SHOW_KINDS, MOVES, LOOKS, LIMITS } from '../lesson_file.js';
+import { NUMBERS_0_9, BUILTIN_LESSONS } from '../lessons_builtin.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+
+try {
+  section('the vocabulary');
+  check('the animations are the shared library\'s names the drafted prompt offers', J(MOVES) === J(['title-rise', 'slide-in-left', 'bars-grow', 'count-in', 'light-in-turn', 'fade']));
+  check('what can be shown', ['heading', 'numeral', 'count', 'word', 'quote', 'picture', 'chart', 'row'].every((k) => SHOW_KINDS.includes(k)));
+  check('two looks: grown-up and child', J(LOOKS) === J(['grownup', 'child']));
+
+  section('*** Numbers 0 to 9 (Mike: "Let\'s get two started"), as drafted ***');
+  const r = checkLesson(NUMBERS_0_9);
+  check('*** it passes the check with no problems at all ***', !!r.lesson && r.problems.length === 0, J(r.problems));
+  const L = r.lesson;
+  check('six classes, as drafted: 1 to 4, 5 to 9, Zero, Match, In order, Around you',
+    J(L.classes.map((c) => c.title)) === J(['Meet 1 to 4', 'Meet 5 to 9', 'Zero', 'Match', 'In order', 'Around you']));
+  const shows = beatsOf(L).map((b) => b.beat.show).filter(Boolean);
+  check('every number 0 to 9 is shown as a numeral', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].every((n) => shows.some((s) => s.kind === 'numeral' && s.n === n)));
+  check('...and counted, five-frames from 5 up (so 7 reads as five and two)', [1, 2, 3, 4, 5, 6, 7, 8, 9].every((n) => shows.some((s) => s.kind === 'count' && s.n === n))
+    && shows.filter((s) => s.kind === 'count' && s.n >= 5).every((s) => s.frame === 'five') && shows.filter((s) => s.kind === 'count' && s.n < 5).every((s) => !s.frame));
+  check('the Match class asks, in the trivia shape', L.classes[3].beats.every((b) => b.ask && b.ask.answer && b.ask.wrong.length >= 2));
+  check('no citations, and no sources: nothing in it is a fact needing one (Mike: "Only facts")', L.sources.length === 0 && beatsOf(L).every((b) => !b.beat.cite));
+  check('review questions for Quiz mix', L.questions.length === 3);
+  check('it is a built-in lesson', BUILTIN_LESSONS.some((b) => b.id === 'numbers-0-9' && b.lesson === NUMBERS_0_9));
+  const count3 = beatsOf(L).find((b) => b.beat.show?.kind === 'count' && b.beat.show.n === 3).beat.show;
+  const grownThings = ['cup', 'key', 'coin', 'chair'], childThings = ['duck', 'apple', 'ball', 'star'];
+  check('*** the look changes the things counted, never the lesson: grown-up things, or a child\'s, the same number ***',
+    grownThings.includes(showFor(count3, 'grownup').thing) && childThings.includes(showFor(count3, 'child').thing)
+      && showFor(count3, 'child').n === 3 && showFor(count3, 'grownup').n === 3 && !('looks' in showFor(count3, 'child')),
+    J([showFor(count3, 'grownup'), showFor(count3, 'child')]));
+
+  section('the check: a lesson from anywhere (an AI\'s answer) is checked before a screen plays it');
+  check('not an object: no lesson, said', checkLesson('hello').lesson === null && /not a lesson/.test(checkLesson('hello').problems[0]));
+  check('no title, or no classes: no lesson', checkLesson({ classes: [{ beats: [{ say: 'x' }] }] }).lesson === null
+    && checkLesson({ about: { title: 'T' }, classes: [] }).lesson === null);
+  const ai = checkLesson({
+    about: { title: 'Right to repair', for: 'age 13', colour: '#f00' },
+    sources: [{ id: 's1', title: 'A report', author: 'Someone', date: '2024' }, { id: 's1', title: 'Again' }, { title: 'No id' }],
+    classes: [{ title: 'One', minutes: 30, beats: [
+      { say: 'Hello.', show: { kind: 'heading', text: 'Right to repair' }, move: 'title-rise' },
+      { say: { text: 'A fact.', who: 'a' }, cite: ['s1', 's9'], move: 'spin-wildly' },
+      { show: { kind: 'chart', chart: 'c1' }, move: 'bars-grow' },
+      { show: { kind: 'chart', chart: 'nope' } },
+      { show: { kind: 'video', src: 'x.mp4' } },
+      { ask: { question: 'Q?', answer: 'Yes', wrong: ['No', 'Maybe'] } },
+      { ask: { question: 'Bad?', answer: 'Yes', wrong: ['yes'] } },
+      {},
+    ] }],
+    charts: [{ id: 'c1', kind: 'donut', rows: [{ label: 'A', value: 3, source: 's1' }, { label: 'B', value: 'x' }] }],
+    notes: ['[[repair]]', 'repair', 'warranty'],
+    questions: [{ question: 'Why?', answer: 'Because', wrong: ['No'] }, { question: '', answer: 'x', wrong: ['y'] }],
+  });
+  const p = ai.problems.join(' | ');
+  check('*** a lesson with problems it can survive is still played, and every problem is said, with where it is ***', !!ai.lesson && ai.problems.length >= 8, p);
+  check('a repeated source id, and a source with no id, are said', /Two sources are both called "s1"/.test(p) && /Source 3 has no id/.test(p));
+  check('*** an unknown animation is said and dropped - never run as code ***', /"spin-wildly" is not one of the animations/.test(p) && !J(ai.lesson).includes('spin-wildly'));
+  check('a citation of a source that is not there is said, and dropped from the beat', /cites "s9"/.test(p) && J(ai.lesson.classes[0].beats[1].cite) === J(['s1']));
+  check('a chart that is not there, and a show there is none of, are said', /chart "nope" is not in the charts/.test(p) && /no "video" to show/.test(p));
+  check('a chart kind there is none of is drawn as bars; a row without a number is left out', /drawn as bars/.test(p) && ai.lesson.charts[0].kind === 'bar' && ai.lesson.charts[0].rows.length === 1);
+  check('a question listing its right answer as wrong is said', /lists its right answer as wrong/.test(p));
+  check('an empty beat is said and left out', /beat 8 has nothing to show, say or ask/.test(p));
+  check('who says a line (the two-voice form) is kept', ai.lesson.classes[0].beats[1].say.who === 'a');
+  check('*** colours (or anything else the screen supplies) are not carried ***', !J(ai.lesson).includes('#f00'));
+  check('notes: [[topic]] names, each once', J(ai.lesson.notes) === J(['repair', 'warranty']));
+  check('the cited sources, in words, for the line under a beat', citeWords(ai.lesson, ['s1']) === 'Someone, 2024');
+  check('a question in the trivia shape', !!checkQuestion({ question: 'A?', answer: 'B', wrong: ['C', 'D', 'E', 'F'] }).q
+    && checkQuestion({ question: 'A?', answer: 'B', wrong: ['C', 'D', 'E', 'F'] }).q.wrong.length === 3);
+  check('a count past the limit is refused', /whole number from 0 to 20/.test(checkLesson({ about: { title: 'T' }, classes: [{ beats: [{ show: { kind: 'count', n: 99 } }] }] }).problems.join()));
+  check('bounds exist', LIMITS.beats >= 600 && LIMITS.classes >= 60);
+  const words = J(NUMBERS_0_9) + J(ai.problems);
+  check('names nobody', !/christine|cici|her screen/i.test(words));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>

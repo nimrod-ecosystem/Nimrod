@@ -836,6 +836,15 @@ export const CATALOG = [
     needs: 'Nothing.',
     why: 'Your own card, on its own. Your page itself is edited on Home.',
   },
+  // A LESSON (row 2.92, 2026-10-17; modules/lesson_player.js): a lesson file played as Watch, Slides or Read. Beta: the
+  // first player, with one lesson (Numbers 0 to 9); Right to repair comes from research. `touch`: Watch (the default)
+  // plays by itself and never waits; Slides is for somebody at the screen.
+  {
+    type: 'lesson_player', stage: 'beta', title: 'A lesson', group: 'practice', use: 'touch',
+    lead: 'A lesson to watch, step through as slides, or read. Numbers 0 to 9 to begin with.',
+    needs: 'Nothing. More lessons come from research by an AI you connect.',
+    why: 'Learn something in the way that suits you: watched, a slide at a time, or as a page. The same lesson in each.',
+  },
   // 2026-10-04: Nimrod at the bottom of a page, small, over it.
   {
     type: 'helper',

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lesson_player - "A lesson": Watch, Slides, Read</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{width:640px;height:420px;position:relative}
+</style>
+</head>
+<body>
+<h1>lesson_player - "A lesson": one lesson file, played as Watch, Slides or Read (row 2.92)</h1>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<script type="module">
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS } from '../modules/lesson_player.js';
+import { checkLesson, beatsOf } from '../lesson_file.js';
+import { NUMBERS_0_9 } from '../lessons_builtin.js';
+import { MODULE_VERBS } from '../actions.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+function fakeRow(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; [...subs].forEach((f) => f(v)); }, subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, startPolling() {}, destroy() {} };
+}
+function fakeTimers() {
+  let seq = 0; let armed = [];
+  return { setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, ms }); return id; }, clearTimer: (id) => { armed = armed.filter((t) => t.id !== id); },
+    fire() { const due = armed; armed = []; due.forEach((t) => t.fn()); }, pending: () => armed.length, last: () => armed[armed.length - 1] };
+}
+function mountLesson(state, extra = {}) {
+  const box = document.createElement('div'); box.className = 'box'; document.getElementById('host').append(box);
+  const said = [];
+  const timers = fakeTimers();
+  const bus = createBus();
+  const inst = mountModule('lesson_player', { mount: box, bus, state, user: 'u', instanceId: `lp-${Math.random().toString(36).slice(2)}`, personId: null,
+    output: { say: (t) => { said.push(t); return said.length; }, cancel() {} }, setTimer: timers.setTimer, clearTimer: timers.clearTimer, ...extra });
+  inst.init();
+  return { box, said, timers, bus, inst, probe: () => inst.impl.__probe(), q: (s) => box.querySelector(s), done() { inst.destroy(); box.remove(); } };
+}
+
+try {
+  section('registered, with its settings');
+  check('"A lesson" is a module', getManifest('lesson_player')?.title === 'A lesson');
+  check('three forms: Watch, Slides, Read', J(LESSON_FORMS) === J(['watch', 'slides', 'read']));
+  const F = Object.fromEntries(LESSON_SETTINGS.map((f) => [f.key, f]));
+  check('*** Watch is the default: a lesson left alone plays through, it never sits on its first slide ***', F.form.default === 'watch');
+  check('which lesson, the look, saying it aloud, and how long Watch holds each part (Rule 1: settings)',
+    F.lessonId && F.look.default === 'grownup' && F.speak.default === true && F.holdMs.default === WATCH_HOLD_MS);
+
+  section('drawn, not stored');
+  check('counts in words: "3 cups", "1 cup", "no cups"', countWords(3, 'cup') === '3 cups' && countWords(1, 'cup') === '1 cup' && countWords(0, 'cup') === 'no cups');
+  check('*** a five-frame: 7 is a row of five and two, with the rest of the row shown empty ***', (() => {
+    const d = document.createElement('div'); d.innerHTML = showHTML({ kind: 'count', n: 7, frame: 'five', thing: 'cup' });
+    return d.querySelectorAll('.lp-dots i:not(.lp-empty)').length === 7 && d.querySelectorAll('.lp-dots i.lp-empty').length === 3;
+  })());
+  check('a picture is shown as what it is of, in a frame (until Design\'s pictures exist) - never a wrong picture',
+    /A picture of<\/small>a clock face/.test(showHTML({ kind: 'picture', of: 'a clock face' })) && showWords({ kind: 'picture', of: 'a clock face' }) === 'A picture of a clock face');
+  const q = { question: 'How many are there?', answer: '3', wrong: ['2', '5'] };
+  check('a question\'s answers in a fixed shuffled order (the same each time, so a switch can learn it)', J(answersOf(q)) === J(answersOf(q)) && answersOf(q).length === 3 && answersOf(q).includes('3'));
+
+  section('*** WATCH: it plays by itself, and never waits on an answer ***');
+  {
+    const st = fakeRow({ form: 'watch' });
+    const w = mountLesson(st);
+    check('it opens on the first part, says it, and is counting to the next', w.probe().at === 0 && w.said[0] === 'Let’s meet some numbers.' && w.timers.pending() === 1, J(w.said));
+    check('the bar says which class, and how far through', /Meet 1 to 4/.test(w.q('.lp-top')?.textContent || '') && /1 of /.test(w.q('.lp-top').textContent));
+    w.timers.fire();
+    check('*** time passes: the next part, said, with no press ***', w.probe().at === 1 && w.said.at(-1) === 'One.' && !!w.q('[data-lp-numeral="1"]'));
+    check('where it got to is kept on the panel\'s row', st.get().at === 1);
+    check('the time allowed covers the words, plus the hold', w.timers.last().ms >= WATCH_HOLD_MS);
+    // Go to the first Match question.
+    const L = checkLesson(NUMBERS_0_9).lesson;
+    const firstAsk = beatsOf(L).findIndex((b) => b.beat.ask);
+    for (let i = 0; w.probe().at < firstAsk && i < 80; i += 1) w.timers.fire();
+    check('(setup) a question is on', w.probe().at === firstAsk, String(w.probe().at));
+    check('*** in Watch a question is ASKED, with its answers shown but not pressable ***', /How many are there\?/.test(w.said.at(-1)) && w.box.querySelectorAll('.lp-ask button[disabled]').length === 3);
+    w.timers.fire();
+    check('*** ...then ANSWERED by itself after a moment - nobody has to press anything ***', w.probe().picked === 'shown' && /It is 3/.test(w.said.at(-1)) && w.q('[data-lp-result="shown"]'));
+    w.timers.fire();
+    check('...and on to the next', w.probe().at === firstAsk + 1);
+    for (let i = 0; w.probe().at < w.probe().total && i < 120; i += 1) w.timers.fire();
+    check('*** it reaches the end and stays there, saying so; nothing more is armed ***', w.probe().at === w.probe().total && /end of Numbers 0 to 9/.test(w.said.at(-1)) && w.timers.pending() === 0);
+    check('"Start again" at the end', !!w.q('[data-lp-act="again"]'));
+    w.bus.publish('lesson/back');
+    check('the bar\'s Back (lesson/back) goes to the part before', w.probe().at === w.probe().total - 1);
+    w.bus.publish('lesson/next');
+    check('*** in Watch the bar\'s Next moves a part on (there are no buttons to walk) ***', w.probe().at === w.probe().total);
+    check('the verbs are registered for the bar and switches', J(MODULE_VERBS.lesson_player) === J({ next: 'lesson/next', prev: 'lesson/prev', select: 'lesson/select', back: 'lesson/back' }));
+    w.done();
+  }
+
+  section('SLIDES: a person moves it on');
+  {
+    const st = fakeRow({ form: 'slides', at: 0 });
+    const s = mountLesson(st);
+    check('nothing is armed: it waits for Next (this is the form for somebody at the screen)', s.timers.pending() === 0);
+    check('Back is off on the first slide', s.q('[data-lp-act="back"]')?.disabled === true);
+    s.q('[data-lp-act="next"]').click();
+    check('Next: the next part, said', s.probe().at === 1 && s.said.at(-1) === 'One.');
+    s.q('[data-lp-act="back"]').click();
+    check('Back: the one before', s.probe().at === 0);
+    const L = checkLesson(NUMBERS_0_9).lesson;
+    const firstAsk = beatsOf(L).findIndex((b) => b.beat.ask);
+    st.set({ form: 'slides', at: firstAsk }); s.inst.destroy();
+    const s2 = mountLesson(st);
+    check('(setup) it opens where it got to: the question', s2.probe().at === firstAsk);
+    const btns = [...s2.box.querySelectorAll('.lp-ask button')];
+    check('*** the answers are big buttons, pressable ***', btns.length === 3 && btns.every((b) => !b.disabled));
+    btns.find((b) => b.dataset.lpAnswer === '2').click();
+    check('*** a wrong answer: "Not quite: it is 3", with why ***', s2.probe().picked === '2' && /Not quite: it is 3/.test(s2.q('[data-lp-result="wrong"]')?.textContent || '') && /Count them/.test(s2.q('[data-lp-result]').textContent));
+    s2.q('[data-lp-act="next"]').click();
+    // The second question, answered right, by a SWITCH: next walks the buttons, select presses.
+    const before = s2.probe().at;
+    for (let i = 0; i < 6 && !(s2.box.querySelectorAll('.lp-ask button:not([disabled])').length); i += 1) s2.q('[data-lp-act="next"]').click();
+    const right = beatsOf(L)[s2.probe().at].beat.ask.answer;
+    const order = answersOf(beatsOf(L)[s2.probe().at].beat.ask);
+    for (let i = 0; i <= order.indexOf(right); i += 1) s2.bus.publish('lesson/next');
+    s2.bus.publish('lesson/select');
+    check('*** a switch walks the answers and presses one: right, "Yes" ***', s2.probe().picked === right && s2.q('[data-lp-result="right"]'), `${before} ${s2.probe().at} ${s2.probe().picked}`);
+    s2.done(); s.box.remove();
+  }
+
+  section('READ: all of it, as a page');
+  {
+    const r = mountLesson(fakeRow({ form: 'read' }));
+    const text = r.q('[data-lp-read]')?.textContent || '';
+    check('*** the whole lesson as a page: title, classes, what each part shows in words, the questions with answers ***',
+      /Numbers 0 to 9/.test(text) && /Meet 5 to 9/.test(text) && /\[3 cups\]/.test(text) && /How many are there\? 3/.test(text) && /Questions to try/.test(text), text.slice(0, 200));
+    check('nothing is said or armed in Read', r.said.length === 0 && r.timers.pending() === 0);
+    r.done();
+  }
+
+  section('the look: grown-up or child');
+  {
+    const st = fakeRow({ form: 'read', look: 'child' });
+    const r = mountLesson(st);
+    check('*** a child\'s look counts ducks where a grown-up\'s counts cups - the same lesson ***', /\[3 ducks\]/.test(r.q('[data-lp-read]').textContent) && !/\[3 cups\]/.test(r.q('[data-lp-read]').textContent));
+    st.set({ look: 'grownup' });
+    check('changed in the menu: redrawn at once', /\[3 cups\]/.test(r.q('[data-lp-read]').textContent));
+    r.done();
+  }
+
+  section('a lesson with problems: played if it can be, said if it cannot');
+  check('the Read form of a cited lesson lists its sources as numbered notes', (() => {
+    const L = checkLesson({ about: { title: 'T' }, sources: [{ id: 's1', title: 'A report', author: 'Repair group', date: '2024' }],
+      classes: [{ title: 'One', beats: [{ say: 'A fact.', cite: ['s1'] }] }] }).lesson;
+    const h = readHTML(L);
+    return /<sup class="lp-fn">1<\/sup>/.test(h) && /Repair group, 2024/.test(h);
+  })());
+  check('names nobody', !/christine|cici|her screen/i.test(document.getElementById('host').textContent));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>

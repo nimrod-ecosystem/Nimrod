@@ -222,6 +222,9 @@ export const SUITES = [
   'lineup',
   // 2026-10-16: Design's lesson kit (item 41) - every part draws in every theme.
   'lesson_kit',
+  // 2026-10-17, row 2.92: what a lesson file is (its check), and "A lesson", which plays one as Watch, Slides or Read.
+  'lesson_file',
+  'lesson_player',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

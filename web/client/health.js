@@ -171,6 +171,8 @@ export const HEALTH_EXPECT = {
   page_recommended:  { idle: true },
   page_people:       { idle: true },
   page_connect:      { idle: true },
+  // row 2.92 (2026-10-17): a lesson. Slides waits for Next on purpose; Watch reaches its end and stays there.
+  lesson_player:     { idle: true },
   helper:        { idle: true },
   card_sort:     { idle: true },
   ambient_drift: { idle: true },
