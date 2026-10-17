@@ -516,7 +516,7 @@ const CSS = `
 .lib-beta{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:10px 4px 2px;
   border-top:1px solid var(--border);margin-top:4px;font-size:.88rem;color:var(--text-muted)}
 .lib-beta b{color:var(--text);font-size:.95rem}
-.lib-beta a{color:var(--link, var(--text))}
+.lib-beta a{color:var(--link, var(--text));display:inline-flex;align-items:center;min-height:44px}
 .lib-badge.is-beta{font-weight:700;color:var(--text)}
 `;
 function ensureCss(doc) {
