@@ -55,7 +55,7 @@
 // steps one at a time with these helpers; `mountVoiceModel` below is its "All six steps on one page" view. The Voice
 // recordings panel's tab now points there.
 import { cleanPrompt, exportEuphonia, EUPHONIA_DATA, EUPHONIA_AUDIO, EUPHONIA_PHRASE } from './voice_recording.js';
-import { SUBFOLDERS, readRootPath, joinPath, kindFolder, handleStore } from './user_folders.js';
+import { SUBFOLDERS, readRootPath, joinPath, kindFolder, handleStore, startInFor, withStartIn } from './user_folders.js';
 
 export const EUPHONIA = Object.freeze({
   repo: 'https://github.com/google/project-euphonia-app',
@@ -250,7 +250,8 @@ export async function folderNames(dir) {
 const defaultPicker = () => {
   try {
     if (typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function') {
-      return () => window.showDirectoryPicker({ id: 'nimrod-voice-model', mode: 'read' });
+      // (row 2.49) it opens at the Nimrod folder's Voice model (startInFor: never prompts, skipped if slow).
+      return async () => window.showDirectoryPicker(withStartIn({ id: 'nimrod-voice-model', mode: 'read' }, await startInFor('voice')));
     }
   } catch { /* no picker */ }
   return null;

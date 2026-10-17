@@ -338,11 +338,40 @@ export async function allowAgain(handle, mode = KIND_MODE) {
   } catch { return 'denied'; }
 }
 
+// *** EVERY FOLDER PICKER OPENS IN THE TREE (row 2.49, Mike 2026-10-16: "I thought we started building it ... Let's not
+// let this fall off our radar."). *** A picker for pictures, videos, music, recordings or the voice model opens at that
+// kind's folder in the person's Nimrod folder - its own folder if they pointed the kind elsewhere, else the root's
+// subfolder - so choosing "the right folder" is pressing Select. Where the subfolder cannot be reached (no permission
+// on the root yet, or it was deleted) it opens at the root; with no Nimrod folder on this device, where it always did.
+// NEVER PROMPTS, and is capped at START_IN_MS: a picker must open inside the press that asked for it (the browser's
+// "user activation" lapses after a few seconds), so a slow lookup is skipped rather than waited for.
+export const START_IN_MS = 300;
+/** The folder a picker for `kind` should open in: a handle, or undefined. Never prompts, never throws. */
+export async function startInFor(kind, { store = handleStore(), names = SUBFOLDERS, timeoutMs = START_IN_MS } = {}) {
+  const look = (async () => {
+    try {
+      const k = await kindFolder(kind, { store, names });
+      return k.dir || k.holder || undefined;
+    } catch { return undefined; }
+  })();
+  let timer = null;
+  const late = new Promise((resolve) => { timer = setTimeout(() => resolve(undefined), Math.max(0, timeoutMs)); });
+  try { return await Promise.race([look, late]); } finally { clearTimeout(timer); }
+}
+/** `opts` for showDirectoryPicker with `startIn` added when there is a folder to start in. PURE. */
+export function withStartIn(opts, startIn) {
+  return startIn ? { ...opts, startIn } : { ...opts };
+}
+
 /** Ask for a folder for ONE kind (a real prompt: only from a press) and remember it for that kind. */
 export async function pickKindFolder(kind, { view = (typeof window !== 'undefined' ? window : null), store = handleStore() } = {}) {
   if (!FOLDER_KINDS.includes(kind)) throw new Error(`no such kind of folder: ${kind}`);
   if (!available(view)) throw new Error('This browser cannot open a folder you choose.');
-  const handle = await view.showDirectoryPicker({ id: `nimrod-${kind}`, mode: KIND_MODE });
+  // (row 2.49) at the root's own subfolder for this kind (a kind's own folder is what this replaces, so not that).
+  let startIn;
+  try { const root = await store.get(ROOT_KEY); startIn = (root && (await permissionOf(root, ROOT_MODE)) === 'granted' ? await subfolder(root, kind) : null) || root || undefined; }
+  catch { startIn = undefined; }
+  const handle = await view.showDirectoryPicker(withStartIn({ id: `nimrod-${kind}`, mode: KIND_MODE }, startIn));
   await store.put(kindKey(kind), handle);
   return { handle };
 }

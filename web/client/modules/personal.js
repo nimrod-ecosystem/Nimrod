@@ -714,7 +714,7 @@ registerModule(
             setStatus('Choosing…');
             try {
               const { pickFolder } = await import('../folder_source.js');
-              await pickFolder();
+              await pickFolder('', { kind: 'videos' });   // row 2.49: opens at the Nimrod folder's Videos
               reload();
             } catch (err2) {
               setStatus('No video source connected.', false,
