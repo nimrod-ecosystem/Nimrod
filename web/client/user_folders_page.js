@@ -66,6 +66,7 @@ import {
   FOLDER_KINDS, SUBFOLDERS, ROOT_KEY, ROOT_MODE, POINTER_KINDS, available, handleStore, permissionOf, allowAgain,
   pickRoot, setUpRoot, pickKindFolder, useRootFor, forgetRoot, kindFolder, listFiles, listFolders, checkDeviceLook,
   readRootPath, saveRootPath, joinPath, pathMatchesRoot, lastName,
+  treeEntries, TREE_ZIP_NAME,   // row 2.49: a copy of the tree to download
 } from './user_folders.js';
 import { kindOf, addFolderSource, findFolderSource } from './folder_source.js';
 import { checkModelFiles } from './voice_model.js';
@@ -658,6 +659,11 @@ export function userFoldersHtml(s) {
   }
   if (s.root.chosen && s.root.permission !== 'granted') parts.push(button('allow-root', 'Allow it again', 'the browser asks'));
   if (s.root.chosen) parts.push(button('forget-root', 'Stop using it on this device', 'the folder and its files stay where they are'));
+  // (row 2.49, the plan's step 3) A copy to download: for a browser that cannot make folders, and for setting up
+  // another computer (a Pi, the speech helper) by hand. Offered to everybody, first where the browser cannot.
+  parts.push(button('download-tree', 'Download your Nimrod folder (a zip)', s.available
+    ? 'the same folders and READMEs, to set up another computer by hand'
+    : 'unzip it anywhere, for example in a Google Drive folder, then use it from a browser that can open folders'));
   // Its full path: optional, this device only. A browser never tells a page where a folder really is.
   parts.push(say('A browser never tells a web page where a folder really is, so the places below read “<your Nimrod folder>/…”. '
     + 'Type its full path once to get full paths you can copy. The full path says where the folder is on this computer. In Windows, hold Shift and right-click the folder, then choose “Copy as '
@@ -855,6 +861,23 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
       return;
     }
     if (name === 'clear-check') { artCheck = null; await draw({ load: false }); return; }
+    if (name === 'download-tree') {
+      // A file the person asked for, from this press (row 2.49): the tree as a zip, made in the page.
+      try {
+        const { zipBlob } = await import('./zip_store.js');
+        const blob = zipBlob(treeEntries({ names }));
+        const doc = el.ownerDocument || document;
+        const a = doc.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = TREE_ZIP_NAME;
+        doc.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => { try { URL.revokeObjectURL(a.href); } catch { /* gone */ } }, 60000);
+        tell(`Downloaded “${TREE_ZIP_NAME}”: the folders with their READMEs. Unzip it where you want your Nimrod folder.`);
+      } catch { tell('The zip could not be made here.'); }
+      return;
+    }
     message = '';
     try {
       if (name === 'pick-root') {

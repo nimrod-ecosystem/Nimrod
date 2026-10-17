@@ -190,6 +190,28 @@ export async function ensureTree(root, { names = SUBFOLDERS, readme = README, le
 }
 
 /**
+ * *** A COPY OF THE TREE TO DOWNLOAD (row 2.49, the plan's step 3). *** The folders and READMEs `ensureTree` makes, as
+ * zip entries under one top folder ("Nimrod"): for a browser that cannot make folders (Firefox, Safari, a phone), and
+ * for a computer set up by hand (a Pi's media agent and the speech helper are told a path; this is what goes there).
+ * The page that can make the tree itself still does ("Set up my Nimrod folder"); this is the fallback, not instead.
+ * PURE: [{ name }] for a folder (ending '/'), [{ name, text }] for a README.
+ */
+export const TREE_ZIP_TOP = 'Nimrod';
+export const TREE_ZIP_NAME = 'Nimrod folder.zip';
+export const TREE_ZIP_README = 'This is your Nimrod folder. Move it wherever you like (a Google Drive folder works, so other '
+  + 'computers can share it),\nthen choose it in Nimrod: People, Your folders, "Set up my Nimrod folder" or "Choose the '
+  + 'folder".\nEach folder inside has a README.txt saying what goes in it.\n';
+export function treeEntries({ names = SUBFOLDERS, readme = README, inner = ART_INNER, top = TREE_ZIP_TOP } = {}) {
+  const out = [{ name: `${top}/` }, { name: `${top}/README.txt`, text: TREE_ZIP_README }];
+  for (const [kind, name] of Object.entries(names)) {
+    out.push({ name: `${top}/${name}/` });
+    for (const sub of (inner && inner[kind]) || []) out.push({ name: `${top}/${name}/${sub}/` });
+    if (readme[kind]) out.push({ name: `${top}/${name}/README.txt`, text: readme[kind] });
+  }
+  return out;
+}
+
+/**
  * Ask for the root. A REAL PROMPT — only from something somebody pressed. Remembers it on this
  * device and makes the tree. Resolves `{ handle, made }`.
  */
