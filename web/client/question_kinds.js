@@ -351,9 +351,13 @@ export function triviaSource(host) {
     const open = sandbox ? items : gate(items, unlocks ? unlocks.unlocked() : new Set()).open;
     return open.map((it) => ({ question: it.question, answer: it.answer, wrong: it.wrong.slice(),
       ...(it.level ? { level: it.level } : {}), ...(it.explain ? { explain: it.explain } : {}),
-      pool: `lesson:${it.topic || 'lessons'}`, lessonTopic: it.topic || null }));
+      pool: `lesson:${it.topic || 'lessons'}`, lessonTopic: it.topic || null,
+      ...(it.topicLabel ? { lessonLabel: String(it.topicLabel) } : {}) }));
   }
-  const labelOf = (r) => (r.lessonTopic !== undefined ? (r.lessonTopic ? topicLabel(r.lessonTopic) : 'Lessons') : topicOf(r.pool, reviews));
+  // The round's name: the lesson's title the Lessons module sends with each question (modules/lesson_player.js), else
+  // the name it was finished under, else the topic's id made readable.
+  const labelOf = (r) => (r.lessonTopic !== undefined
+    ? (r.lessonLabel || (r.lessonTopic ? topicLabel(r.lessonTopic) : 'Lessons')) : topicOf(r.pool, reviews));
 
   function rebuild() {
     const from = host.cfg().triviaFrom || 'all';

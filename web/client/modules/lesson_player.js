@@ -1,4 +1,11 @@
-// modules/lesson_player.js - "A LESSON": plays a lesson file (lesson_file.js) as Read, Slides or Watch. Row 2.92.
+// modules/lesson_player.js - "LESSONS": plays a lesson file (lesson_file.js) as Read, Slides or Watch. Row 2.92.
+//
+// THE NAME AND THE TYPE (Mike, 2026-10-17): *"I think lessons is the better name. Let's keep that for a name, but use the
+// new system we're working on. There was never anything built for the old system."* This registers as 'lessons', the
+// type the old topic-cards module had (now parked as modules/lesson_topics.js), so a screen's old Lessons panel opens
+// as this one; and as 'lesson_player', its type for its first day, so a panel placed then still opens. It also took
+// the old module's one job the games depend on: routing lessons' questions into Trivia and Word Forge (and so Quiz
+// mix), and saying when a lesson was finished (below, THE QUESTIONS GO TO THE GAMES).
 //
 // Mike, 2026-10-15/17: lessons in "whatever form you like" from one file - read it, slides, an AI teacher, two
 // voices, a room - "Let's get two started". This is the first player: the three forms that need no AI and no room
@@ -25,6 +32,7 @@
 import { registerModule } from '../module.js';
 import { checkLesson, beatsOf, showFor, citeWords, LOOKS } from '../lesson_file.js';
 import { BUILTIN_LESSONS } from '../lessons_builtin.js';
+import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, createLessons } from '../lessons.js';
 
 export const LESSON_FORMS = Object.freeze(['watch', 'slides', 'read']);
 // How long a beat stays in Watch after its words, at the least (Rule 1: a setting; the words' own time is added).
@@ -46,7 +54,34 @@ const SETTINGS = [
   { key: 'holdMs', label: 'In Watch, each part stays at least', kind: 'choice', default: WATCH_HOLD_MS, level: 'advanced',
     options: [{ value: 2000, label: '2 seconds' }, { value: 4000, label: '4 seconds' }, { value: 8000, label: '8 seconds' }, { value: 15000, label: '15 seconds' }],
     appliesWhen: (v) => (v?.form || 'watch') === 'watch' },
+  // Carried from the old Lessons (same key, so a screen that chose already keeps its choice); "both" by default, as
+  // Mike ruled for it on 2026-09-23. Quiz mix plays what Trivia gets.
+  { key: 'questionsTo', label: 'The lessons\u2019 questions also play in', kind: 'choice', default: 'both', level: 'advanced',
+    options: [{ value: 'both', label: 'Trivia and Word Forge' }, { value: 'trivia', label: 'Trivia only' },
+      { value: 'wordforge', label: 'Word Forge only' }, { value: 'none', label: 'Neither' }] },
 ];
+export const QUESTIONS_TO = Object.freeze(['both', 'trivia', 'wordforge', 'none']);
+
+// *** THE QUESTIONS GO TO THE GAMES (taken over from the old Lessons, 2026-10-17). *** Trivia and Word Forge each read
+// a profile row of lesson questions (lessons.js TRIVIA_LESSON_QUESTIONS / WORDFORGE_LESSON_QUESTIONS), held back by
+// topic until that topic's lesson was finished (lessons.js gate; quest mode; sandbox, the default, opens all). The rows
+// are written here, whole, from every built-in lesson's review questions, the topic being the lesson's id and its
+// title carried for the round's name. Finishing a lesson (reaching its end, in any form) is "watched" in the same log
+// the old module wrote, so in quest mode its questions open then. Written only when what the row holds differs.
+/** The rows' items for `to`: { trivia: [...], wordforge: [...] }. PURE. */
+export function routedQuestions(to = 'both', lessons = BUILTIN_LESSONS) {
+  const items = [];
+  for (const e of lessons || []) {
+    const r = checkLesson(e.lesson);
+    if (!r.lesson) continue;
+    for (const q of r.lesson.questions) {
+      items.push({ question: q.question, answer: q.answer, wrong: q.wrong.slice(), topic: e.id, topicLabel: r.lesson.about.title,
+        ...(q.why ? { explain: q.why } : {}) });
+    }
+  }
+  const t = QUESTIONS_TO.includes(to) ? to : 'both';
+  return { trivia: t === 'both' || t === 'trivia' ? items : [], wordforge: t === 'both' || t === 'wordforge' ? items : [] };
+}
 export const LESSON_SETTINGS = SETTINGS;
 
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -108,7 +143,7 @@ const CSS = `
 .lp-cite{font-size:.85rem;color:var(--text-muted,var(--text))}
 .lp-ask{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
 .lp-ask button,.lp-nav button{min-height:56px;min-width:88px;padding:8px 18px;border-radius:12px;border:2px solid var(--border,currentColor);background:var(--surface,transparent);color:var(--text);font:inherit;font-size:clamp(1.1rem,4cqw,1.8rem);cursor:pointer}
-.lp-ask button[data-lit],.lp-nav button[data-lit]{outline:4px solid var(--accent,currentColor);outline-offset:2px}
+.lp-ask button[data-lit],.lp-nav button[data-lit]{outline:4px solid var(--scan-ring,var(--focus,var(--accent,currentColor)));outline-offset:2px}
 .lp-ask button.lp-right{border-color:var(--accent,currentColor)}
 .lp-said{font-size:clamp(1rem,3cqw,1.4rem)}
 .lp-nav{display:flex;justify-content:center;gap:12px;padding:8px}
@@ -195,10 +230,7 @@ export function readHTML(lesson, look = 'grownup') {
   return `<article class="lp-read" data-lp-read>${parts.join('')}</article>`;
 }
 
-registerModule(
-  { type: 'lesson_player', title: 'A lesson', core: 'new', dependsOn: 'local', importance: 'optional',
-    description: 'A lesson to watch, step through as slides, or read: Numbers 0 to 9 to begin with.', settings: SETTINGS },
-  (ctx) => {
+function lessonsModule(ctx) {
     const { mount, bus, state } = ctx;
     const setTimer = ctx.setTimer || ((f, ms) => setTimeout(f, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
@@ -212,6 +244,9 @@ registerModule(
     let dead = false;
     let rootEl = null;
     let lastSaid = '';
+    let finished = false;       // this lesson's end was reached (and told to the log) since it last started over
+    let unlocks = null;         // lessons.js's log of finished lessons, made when first needed
+    const rows = [];            // the two question rows, to let go of
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
@@ -241,9 +276,37 @@ registerModule(
       stopTimer();
       at = Math.max(0, Math.min(beats.length, n));
       picked = null; lit = -1;
+      if (at === 0) finished = false;
       keepAt();
       render();
       enter();
+      if (at >= beats.length) markFinished();
+    }
+    // The end reached: "watched", in the log Trivia and Word Forge read (quest mode opens its questions then).
+    function markFinished() {
+      if (finished || !lesson || typeof ctx.makeEvents !== 'function') return;
+      finished = true;
+      try {
+        unlocks = unlocks || createLessons({ makeEvents: ctx.makeEvents, bus: bus || null });
+        Promise.resolve(unlocks.watch(setting('lessonId', BUILTIN_LESSONS[0].id), { label: lesson.about.title }))
+          .catch((e) => console.error('lessons: could not note the lesson finished', e));
+      } catch (e) { console.error('lessons: could not note the lesson finished', e); }
+    }
+    function routeQuestions() {
+      if (typeof ctx.makeState !== 'function') return;
+      const want = routedQuestions(setting('questionsTo', 'both'));
+      for (const [key, items] of [[TRIVIA_LESSON_QUESTIONS, want.trivia], [WORDFORGE_LESSON_QUESTIONS, want.wordforge]]) {
+        let row = null;
+        try { row = ctx.makeState(key); } catch { row = null; }
+        if (!row) continue;
+        rows.push(row);
+        Promise.resolve(row.load?.()).catch(() => {}).then(() => {
+          if (dead) return;
+          const has = row.get?.()?.items;
+          if (JSON.stringify(has || []) === JSON.stringify(items) && has) return;
+          try { row.set?.({ items }); row.flush?.(); } catch (e) { console.error('lessons: could not send questions to the games', e); }
+        });
+      }
     }
     // A beat arrives: said, and in Watch the clock to the next one (a question is asked, then answered, then on).
     function enter() {
@@ -343,6 +406,7 @@ registerModule(
     function apply(s) {
       const was = { ...cfg };
       cfg = { ...(s || {}) };
+      if (was.questionsTo !== cfg.questionsTo && was.questionsTo !== undefined) routeQuestions();
       if (was.lessonId !== cfg.lessonId && was.lessonId !== undefined) { load(); go(0); return; }
       if (was.form !== cfg.form || was.look !== cfg.look) { stopTimer(); render(); enter(); }
     }
@@ -365,6 +429,8 @@ registerModule(
         bus?.subscribe?.('lesson/back', () => go(at - 1));
         render();
         enter();
+        if (at >= beats.length) finished = true;   // it opened at the end: told already, when it got there
+        routeQuestions();
       },
       onShow() { if (!timer) enter(); },
       onHide() { stopTimer(); try { state?.flush?.(); } catch { /* nothing to do */ } },
@@ -374,7 +440,14 @@ registerModule(
         stopTimer();
         mount.removeEventListener('click', onClick);
         try { ctx.output?.cancel?.(); } catch { /* gone */ }
+        for (const r of rows) { try { r.destroy?.(); } catch { /* gone */ } }
+        try { unlocks?.destroy?.(); } catch { /* gone */ }
       },
     };
-  },
-);
+}
+
+const MANIFEST = { title: 'Lessons', core: 'new', dependsOn: 'local', importance: 'optional',
+  description: 'A lesson to watch, step through as slides, or read: Numbers 0 to 9 to begin with.', settings: SETTINGS };
+registerModule({ type: 'lessons', ...MANIFEST }, lessonsModule);
+// Its type for its first day (2026-10-17): kept so a panel placed then still opens. Unlisted (modules_catalog.js).
+registerModule({ type: 'lesson_player', ...MANIFEST }, lessonsModule);

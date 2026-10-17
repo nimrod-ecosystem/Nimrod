@@ -29,7 +29,7 @@ import './modules/progress.js';   // registers 'progress' (measurement <- gamepl
 import './modules/wordforge.js';  // registers 'wordforge' (a game -> BOTH streams)
 import './modules/trivia.js';    // registers 'trivia'
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
-import './modules/lessons.js';    // registers 'lessons' (watch to unlock topics)
+import './modules/lesson_player.js';   // registers 'lessons' (lesson files, row 2.92) and 'lesson_player'
 import './modules/algebra.js';    // registers 'algebra' (solve for x, with a calculator)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'

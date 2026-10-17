@@ -604,23 +604,6 @@ export const CATALOG = [
       + 'them they got it wrong.',
   },
   {
-    type: 'lessons',
-    stage: 'beta',
-    group: 'practice',
-    use: 'answer',
-    lead: 'Watch something short, then answer questions about it.',
-    // HONEST ABOUT THE HALF THAT IS NOT BUILT (G12). This said "Nothing to start - you can add
-    // your own later", which implies lessons are already there to watch. They are not: the
-    // three shipped topics carry no videos, and nothing on this site can attach one yet. The
-    // module is still real - unlocking a topic puts its questions into the game - so it is
-    // described as what it is rather than dropped from the page.
-    needs: 'Nothing. But no lesson videos are chosen yet, so today it unlocks topics and '
-      + 'does not play anything.',
-    why: 'Attention and memory, in the order they are used. First take something in, then '
-      + 'be asked about it. A topic’s questions are asked only after its lesson is '
-      + 'marked as watched.',
-  },
-  {
     type: 'algebra',
     stage: 'live',
     group: 'practice',
@@ -839,11 +822,14 @@ export const CATALOG = [
   // A LESSON (row 2.92, 2026-10-17; modules/lesson_player.js): a lesson file played as Watch, Slides or Read. Beta: the
   // first player, with one lesson (Numbers 0 to 9); Right to repair comes from research. `touch`: Watch (the default)
   // plays by itself and never waits; Slides is for somebody at the screen.
+  // 2026-10-17 (Mike): "I think lessons is the better name ... use the new system." The old topic cards are parked
+  // (modules/lesson_topics.js); this is the lesson-file player, under the old type, so an old panel opens as this.
   {
-    type: 'lesson_player', stage: 'beta', title: 'A lesson', group: 'practice', use: 'touch',
+    type: 'lessons', stage: 'beta', title: 'Lessons', group: 'practice', use: 'touch',
     lead: 'A lesson to watch, step through as slides, or read. Numbers 0 to 9 to begin with.',
     needs: 'Nothing. More lessons come from research by an AI you connect.',
-    why: 'Learn something in the way that suits you: watched, a slide at a time, or as a page. The same lesson in each.',
+    why: 'Learn something in the way that suits you: watched, a slide at a time, or as a page. The same lesson in each. '
+      + 'Its questions also turn up in Trivia, Word Forge and Quiz mix.',
   },
   // 2026-10-04: Nimrod at the bottom of a page, small, over it.
   {
@@ -1180,6 +1166,7 @@ export const NOT_FOR_CAREGIVERS = {
   keyboard: 'a device module, not a software one — see this file’s own note just above',
   simple_math: 'folded into Math (its Beginner level) — kept so old screens do not break',
   library_slot: 'the builder’s place for the Modules library',
+  lesson_player: 'renamed Lessons (2026-10-17) — kept so a panel placed on its first day does not break',
 };
 
 // THE STAGE OF A MODULE THIS PAGE DOES NOT DESCRIBE (live or beta, above). None of these is ever in a list, so the stage
@@ -1192,6 +1179,7 @@ export const UNLISTED_STAGES = Object.freeze({
   library_slot: 'live',    // the Modules library's place, and the library is live
   settings: 'live', settings_menu: 'live', transport_bar: 'live',   // the screen's own settings and bar
   ambient_drift: 'beta',
+  lesson_player: 'beta',   // Lessons, under its first day's type
 });
 // A type nobody has classified reads as beta: the same pessimistic default `coreReport` uses for an undeclared core.
 // (A module shipped without a catalog entry is already reported by `reconcile`; this only keeps it out of "live".)
