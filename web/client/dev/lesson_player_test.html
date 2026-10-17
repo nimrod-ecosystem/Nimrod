@@ -20,7 +20,8 @@
 <script type="module">
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
-import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS } from '../modules/lesson_player.js';
+import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS, routedQuestions } from '../modules/lesson_player.js';
+import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, unlockedFrom } from '../lessons.js';
 import { checkLesson, beatsOf } from '../lesson_file.js';
 import { NUMBERS_0_9 } from '../lessons_builtin.js';
 import { MODULE_VERBS } from '../actions.js';
@@ -52,7 +53,7 @@ function mountLesson(state, extra = {}) {
   const said = [];
   const timers = fakeTimers();
   const bus = createBus();
-  const inst = mountModule('lesson_player', { mount: box, bus, state, user: 'u', instanceId: `lp-${Math.random().toString(36).slice(2)}`, personId: null,
+  const inst = mountModule(extra.type || 'lessons', { mount: box, bus, state, user: 'u', instanceId: `lp-${Math.random().toString(36).slice(2)}`, personId: null,
     output: { say: (t) => { said.push(t); return said.length; }, cancel() {} }, setTimer: timers.setTimer, clearTimer: timers.clearTimer, ...extra });
   inst.init();
   return { box, said, timers, bus, inst, probe: () => inst.impl.__probe(), q: (s) => box.querySelector(s), done() { inst.destroy(); box.remove(); } };
@@ -60,7 +61,10 @@ function mountLesson(state, extra = {}) {
 
 try {
   section('registered, with its settings');
-  check('"A lesson" is a module', getManifest('lesson_player')?.title === 'A lesson');
+  check('*** it is "Lessons", under the type the old topic cards had, so an old Lessons panel opens as this (Mike, 2026-10-17) ***',
+    getManifest('lessons')?.title === 'Lessons' && getManifest('lessons')?.core === 'new');
+  check('...and still opens under its first day\'s type', getManifest('lesson_player')?.title === 'Lessons');
+  check('the old topic cards are not registered on this page (parked: modules/lesson_topics.js)', !getManifest('lesson_topics'));
   check('three forms: Watch, Slides, Read', J(LESSON_FORMS) === J(['watch', 'slides', 'read']));
   const F = Object.fromEntries(LESSON_SETTINGS.map((f) => [f.key, f]));
   check('*** Watch is the default: a lesson left alone plays through, it never sits on its first slide ***', F.form.default === 'watch');
@@ -167,6 +171,50 @@ try {
     const h = readHTML(L);
     return /<sup class="lp-fn">1<\/sup>/.test(h) && /Repair group, 2024/.test(h);
   })());
+  section('*** its questions go to the games (taken over from the old Lessons) ***');
+  {
+    const R = routedQuestions('both');
+    check('every built-in lesson\'s review questions, each with its lesson as the topic and the title for the round\'s name',
+      R.trivia.length === 3 && R.trivia.every((q) => q.topic === 'numbers-0-9' && q.topicLabel === 'Numbers 0 to 9' && q.answer && q.wrong.length >= 1), J(R.trivia[0]));
+    check('to Trivia and Word Forge by default (as Mike ruled for the old Lessons)', LESSON_SETTINGS.find((f) => f.key === 'questionsTo').default === 'both' && R.wordforge.length === 3);
+    check('"Trivia only", "Word Forge only", "Neither"', routedQuestions('trivia').wordforge.length === 0 && routedQuestions('wordforge').trivia.length === 0
+      && routedQuestions('none').trivia.length === 0 && routedQuestions('none').wordforge.length === 0);
+    const rowsBy = {};
+    const writes = [];
+    const makeState = (k) => { if (!rowsBy[k]) { const r = fakeRow({}); const set = r.set; r.set = (p) => { writes.push(k); set(p); }; rowsBy[k] = r; } return rowsBy[k]; };
+    const events = [];
+    const makeEvents = () => ({ append: async (kind, data) => { events.push({ kind, data, created_at: 'now' }); }, load: async () => ({ events }),
+      get: () => ({ events }), subscribe: () => () => {}, startPolling() {}, destroy() {} });
+    const st = fakeRow({ form: 'slides' });
+    const m = mountLesson(st, { makeState, makeEvents });
+    await new Promise((r) => setTimeout(r, 20));
+    check('*** mounted: Trivia\'s and Word Forge\'s rows hold the lessons\' questions ***',
+      rowsBy[TRIVIA_LESSON_QUESTIONS]?.get().items?.length === 3 && rowsBy[WORDFORGE_LESSON_QUESTIONS]?.get().items?.length === 3, J(Object.keys(rowsBy)));
+    m.done();
+    const before = writes.length;
+    const m2 = mountLesson(fakeRow({ form: 'slides' }), { makeState, makeEvents });
+    await new Promise((r) => setTimeout(r, 20));
+    check('mounted again with nothing changed: not written again', writes.length === before, String(writes.length - before));
+    check('nothing finished yet: nothing marked watched', events.length === 0);
+    for (let i = 0; i < 200 && m2.probe().at < m2.probe().total; i++) m2.q('[data-lp-act="next"]')?.click();
+    await new Promise((r) => setTimeout(r, 10));
+    check('*** the end reached: the lesson is "watched" in the log Trivia and Word Forge gate by, under its title ***',
+      events.length === 1 && events[0].kind === 'watched' && events[0].data.topic === 'numbers-0-9' && events[0].data.label === 'Numbers 0 to 9'
+      && unlockedFrom(events).has('numbers-0-9'), J(events));
+    m2.bus.publish('lesson/back');
+    m2.bus.publish('lesson/select');
+    await new Promise((r) => setTimeout(r, 10));
+    check('reaching the end again in the same go is not a second entry', events.length === 1, String(events.length));
+    m2.done();
+    const m3 = mountLesson(fakeRow({ form: 'slides', questionsTo: 'none' }), { makeState, makeEvents });
+    await new Promise((r) => setTimeout(r, 20));
+    check('"Neither": the rows are emptied (a choice to stop is as real as one to send)',
+      rowsBy[TRIVIA_LESSON_QUESTIONS].get().items.length === 0 && rowsBy[WORDFORGE_LESSON_QUESTIONS].get().items.length === 0);
+    m3.done();
+    const old = mountLesson(fakeRow({}), { type: 'lesson_player' });
+    check('a panel saved under "lesson_player" plays the same lesson', old.probe().title === 'Numbers 0 to 9');
+    old.done();
+  }
   check('names nobody', !/christine|cici|her screen/i.test(document.getElementById('host').textContent));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

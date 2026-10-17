@@ -1,4 +1,16 @@
-// lessons.js (module) — the LEVEL-UP screen: watch a lesson, unlock its questions.
+// lesson_topics.js (module) — PARKED 2026-10-17. Was modules/lessons.js, type 'lessons', "Lessons".
+//
+// Mike, 2026-10-17, on the site having two lesson modules: *"I think lessons is the better name. Let's keep that for a
+// name, but use the new system we're working on. There was never anything built for the old system."* So the name
+// and the type 'lessons' are the new player's (modules/lesson_player.js, lesson files, row 2.92), and so is routing a
+// lesson's questions into Trivia, Word Forge and Quiz mix. A screen's old Lessons panel opens as the new one.
+// THIS FILE IS KEPT, NOT DELETED, and no page imports it: its topic cards never had content (no videos were chosen;
+// the starter pack is five topic names), but its TRANSCRIPT QUIZ (row 2.24: a model writes questions from a pasted
+// transcript, checked against it, reviewed, fact-checked with Wikipedia) is real work, and the natural place for it
+// now is writing a lesson from a video's transcript. Its own suite (dev/lesson_topics_test.html) still runs. To
+// bring it back as it was: import it on the pages again (it registers 'lesson_topics').
+//
+// What follows is as it was: the LEVEL-UP screen: watch a lesson, unlock its questions.
 //
 // Each topic is a card. Locked ones say what's waiting behind them; watching the lesson
 // unlocks it, and from then on that topic's words are in the game's pool. The unlock is
@@ -364,7 +376,7 @@ registerModule(
     // `videoEl` above). So the platform being down leaves it useful and the INTERNET being down
     // leaves it a list of things it cannot play. That is exactly what `network` means, and
     // calling it `server` would have understated how well it survives a platform outage.
-  { type: 'lessons', title: 'Lessons',
+  { type: 'lesson_topics', title: 'Lesson topics (parked)',
     dependsOn: 'network', description: 'Watch a short lesson, then answer questions about it',
     settings: SETTINGS },
   (ctx) => {

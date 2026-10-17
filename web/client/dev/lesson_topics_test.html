@@ -36,10 +36,10 @@ import {
   DEFAULT_TOPICS, LESSON_TOPIC, WATCHED_KIND,
   MODE_KEY, MODES, DEFAULT_MODE, modeFrom, ALL_UNLOCKED, createQuestMode, PROFILE_SETTINGS_KEY,
 } from '../lessons.js';
-import { videoHTML, packToTopics, questionsFromPack, DEFAULTS } from '../modules/lessons.js';
+import { videoHTML, packToTopics, questionsFromPack, DEFAULTS } from '../modules/lesson_topics.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
 import { parseWords, buildDeck, DEFAULT_WORDS, DEFAULT_PAIRS } from '../modules/wordforge.js';
-import '../modules/lessons.js';
+import '../modules/lesson_topics.js';
 import '../modules/wordforge.js';
 import '../modules/trivia.js';
 import { createPointsLedger } from '../points.js';
@@ -207,7 +207,7 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
       await s.load(); s.set({ questMode: 'quest' }); await s.flush();
     })();
 
-    const lmod = await profiles.addModule(profile.id, 'lessons');
+    const lmod = await profiles.addModule(profile.id, 'lesson_topics');
     const lst = createState({ url: profiles.stateURL(profile.id, lmod.id), user: USER });
     await lst.load();
     // `contentSource: 'bank'` explicit — DEFAULTS.contentSource is 'pack' now (2026-09-22), and
@@ -217,7 +217,7 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     await lst.flush();
 
     const host = document.getElementById('host');
-    const linst = mountModule('lessons', {
+    const linst = mountModule('lesson_topics', {
       mount: host, bus, state: lst,
       events: createEvents({ url: profiles.eventsURL(profile.id, lmod.id), user: USER }),
       user: USER, profileId: profile.id, makeState, makeEvents,
@@ -638,13 +638,13 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
     {
       const packProfiles = createProfilesClient({ user: USER });
       const pp = await packProfiles.create('TEST-lessons-pack');
-      const pmod = await packProfiles.addModule(pp.id, 'lessons');
+      const pmod = await packProfiles.addModule(pp.id, 'lesson_topics');
       const pst = createState({ url: packProfiles.stateURL(pp.id, pmod.id), user: USER });
       await pst.load();
       await pst.set({ contentSource: 'pack', packId: 'lesson_starter' });
       const phost = document.createElement('div');
       document.body.append(phost);
-      const pinst = mountModule('lessons', {
+      const pinst = mountModule('lesson_topics', {
         mount: phost, bus: createBus(), state: pst,
         events: createEvents({ url: packProfiles.eventsURL(pp.id, pmod.id), user: USER }),
         user: USER, profileId: pp.id,
@@ -671,13 +671,13 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       // default topics, the same as an unreachable network resource anywhere else in this file.
       const badProfiles = createProfilesClient({ user: USER });
       const bp = await badProfiles.create('TEST-lessons-badpack');
-      const bmod = await badProfiles.addModule(bp.id, 'lessons');
+      const bmod = await badProfiles.addModule(bp.id, 'lesson_topics');
       const bst = createState({ url: badProfiles.stateURL(bp.id, bmod.id), user: USER });
       await bst.load();
       await bst.set({ contentSource: 'pack', packId: 'no-such-pack' });
       const bhost = document.createElement('div');
       document.body.append(bhost);
-      const binst = mountModule('lessons', {
+      const binst = mountModule('lesson_topics', {
         mount: bhost, bus: createBus(), state: bst,
         events: createEvents({ url: badProfiles.eventsURL(bp.id, bmod.id), user: USER }),
         user: USER, profileId: bp.id,
@@ -698,7 +698,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       // day, same reason.
       check('*** DEFAULTS.contentSource is "pack" — a fresh instance needs nothing written ***',
         DEFAULTS.contentSource === 'pack', String(DEFAULTS.contentSource));
-      const csRow = (getManifest('lessons').settings || []).find((f) => f.key === 'contentSource');
+      const csRow = (getManifest('lesson_topics').settings || []).find((f) => f.key === 'contentSource');
       check('...and the settings row agrees, not left pointing at "bank"',
         csRow?.default === 'pack', String(csRow?.default));
     }
@@ -708,13 +708,13 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       // check ONLY for 'pack', so an explicit 'bank' silently fell through to DEFAULTS too).
       const bankProfiles = createProfilesClient({ user: USER });
       const bp2 = await bankProfiles.create('TEST-lessons-explicit-bank');
-      const bmod2 = await bankProfiles.addModule(bp2.id, 'lessons');
+      const bmod2 = await bankProfiles.addModule(bp2.id, 'lesson_topics');
       const bst2 = createState({ url: bankProfiles.stateURL(bp2.id, bmod2.id), user: USER });
       await bst2.load();
       await bst2.set({ contentSource: 'bank', topics: DEFAULT_TOPICS });
       const bhost2 = document.createElement('div');
       document.body.append(bhost2);
-      const binst2 = mountModule('lessons', {
+      const binst2 = mountModule('lesson_topics', {
         mount: bhost2, bus: createBus(), state: bst2,
         events: createEvents({ url: bankProfiles.eventsURL(bp2.id, bmod2.id), user: USER }),
         user: USER, profileId: bp2.id,
@@ -737,7 +737,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
     // fixed then; the missing panel was not, and `minWatchMs` has been live config no surface
     // could reach ever since.
     {
-      const keys = (getManifest('lessons').settings || []).map((f) => f.key);
+      const keys = (getManifest('lesson_topics').settings || []).map((f) => f.key);
       check('*** the module declares the setting it actually reads ***',
         keys.includes('minWatchMs'), JSON.stringify(keys));
       // AND NO FAKE ROW FOR THE VIDEOS. A topic's video lives per topic in state.topics[]; a
@@ -757,7 +757,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
     {
       const vp = createProfilesClient({ user: USER });
       const vprof = await vp.create('TEST-lessons-video-stable');
-      const vmod = await vp.addModule(vprof.id, 'lessons');
+      const vmod = await vp.addModule(vprof.id, 'lesson_topics');
       const vst = createState({ url: vp.stateURL(vprof.id, vmod.id), user: USER });
       await vst.load();
       vst.set({ contentSource: 'bank', minWatchMs: 2000,
@@ -765,7 +765,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       await vst.flush();
       const vhost = document.createElement('div'); document.body.append(vhost);
       const vMakeEvents = (k, o) => createEvents({ url: vp.eventsURL(vprof.id, k), user: USER, ...o });
-      const vinst = mountModule('lessons', {
+      const vinst = mountModule('lesson_topics', {
         mount: vhost, bus: createBus(), state: vst,
         events: createEvents({ url: vp.eventsURL(vprof.id, vmod.id), user: USER }),
         user: USER, profileId: vprof.id,
@@ -841,7 +841,7 @@ Knowing a root lets you guess a new word.`;
     const xprof = await xp.create('TEST-lessons-transcript');
     const xMakeState = (k, o) => createState({ url: xp.stateURL(xprof.id, k), user: USER, ...o });
     const xMakeEvents = (k, o) => createEvents({ url: xp.eventsURL(xprof.id, k), user: USER, ...o });
-    const xmod = await xp.addModule(xprof.id, 'lessons');
+    const xmod = await xp.addModule(xprof.id, 'lesson_topics');
     const xst = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
     await xst.load();
     // `factCheck: false` explicit: the fact check has its own section below, with a fake Wikipedia;
@@ -858,7 +858,7 @@ Knowing a root lets you guess a new word.`;
     const mountX = async (ai) => {
       const xs = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
       await xs.load();
-      const inst = mountModule('lessons', {
+      const inst = mountModule('lesson_topics', {
         mount: xhost, bus: createBus(), state: xs,
         events: createEvents({ url: xp.eventsURL(xprof.id, xmod.id), user: USER }),
         user: USER, profileId: xprof.id, makeState: xMakeState, makeEvents: xMakeEvents, rand: seeded(5), ai,
@@ -1072,7 +1072,7 @@ Knowing a root lets you guess a new word.`;
     await sleep(1200);
 
     section('auto-approve (ON by default since 2026-09-28) skips the queue for checked questions');
-    const autoField = (getManifest('lessons').settings || []).find((f) => f.key === 'autoApprove');
+    const autoField = (getManifest('lesson_topics').settings || []).find((f) => f.key === 'autoApprove');
     check('*** auto-approve is declared and ON by default (Mike: "Flip review.") — still a setting ***',
       autoField && autoField.default === true && DEFAULTS.autoApprove === true && autoField.kind === 'toggle', JSON.stringify(autoField));
     xst.set({ autoApprove: true }); await xst.flush();
@@ -1255,7 +1255,7 @@ Say it once and move on.`;
 
     section('settings declared for the feature');
     {
-      const f = Object.fromEntries((getManifest('lessons').settings || []).map((x) => [x.key, x]));
+      const f = Object.fromEntries((getManifest('lesson_topics').settings || []).map((x) => [x.key, x]));
       check('requirement mode: correct answers (default) or points', f.requireBy?.default === 'correct'
         && f.requireBy.options.map((o) => o.value).join(',') === 'correct,points', JSON.stringify(f.requireBy));
       check('*** the requirement is Mike\'s rule as four choices: first 5 min at 1 a minute, then 1 per 2.5, no floor ***',
@@ -1270,7 +1270,7 @@ Say it once and move on.`;
       check('subject is text, default General, advanced (algebra.js\'s pattern)',
         f.subject?.kind === 'text' && f.subject.default === 'General' && f.subject.level === 'advanced');
       check('the AI model is a live choice with no options baked in', f.aiModel?.kind === 'choice' && !(f.aiModel.options || []).length);
-      const live = fieldsFor(getManifest('lessons'), xinst).find((x) => x.key === 'aiModel');
+      const live = fieldsFor(getManifest('lesson_topics'), xinst).find((x) => x.key === 'aiModel');
       check('*** once the panel has asked the server, the menu offers its models — never an embedding one ***',
         live && live.options.some((o) => o.value === 'fake-7b') && !live.options.some((o) => /embed/.test(o.value))
           && live.options.some((o) => o.value === ''), JSON.stringify(live && live.options));
@@ -1349,7 +1349,7 @@ Say it once and move on.`;
         const prof = await pc.create(`TEST-lessons-factcheck-${name}`);
         const ms = (k, o) => createState({ url: pc.stateURL(prof.id, k), user: USER, ...o });
         const me = (k, o) => createEvents({ url: pc.eventsURL(prof.id, k), user: USER, ...o });
-        const mod = await pc.addModule(prof.id, 'lessons');
+        const mod = await pc.addModule(prof.id, 'lesson_topics');
         const st = createState({ url: pc.stateURL(prof.id, mod.id), user: USER });
         await st.load();
         // The check is OFF by default, so these scenarios turn it on -- the person's "separate yes".
@@ -1357,7 +1357,7 @@ Say it once and move on.`;
         await st.flush();
         const host = document.createElement('div'); document.body.append(host);
         const ai = factAI(qs);
-        const inst = mountModule('lessons', {
+        const inst = mountModule('lesson_topics', {
           mount: host, bus: createBus(), state: st,
           events: createEvents({ url: pc.eventsURL(prof.id, mod.id), user: USER }),
           user: USER, profileId: prof.id, makeState: ms, makeEvents: me, rand: seeded(11), ai,
@@ -1580,12 +1580,12 @@ Say it once and move on.`;
       const cprof = await cp.create('TEST-lessons-contest');
       const cMS = (k, o) => createState({ url: cp.stateURL(cprof.id, k), user: USER, ...o });
       const cME = (k, o) => createEvents({ url: cp.eventsURL(cprof.id, k), user: USER, ...o });
-      const cmod = await cp.addModule(cprof.id, 'lessons');
+      const cmod = await cp.addModule(cprof.id, 'lesson_topics');
       const cst = createState({ url: cp.stateURL(cprof.id, cmod.id), user: USER });
       await cst.load(); cst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS }); await cst.flush();
       const chost = document.createElement('div'); document.body.append(chost);
       const cbus = createBus();
-      const cinst = mountModule('lessons', {
+      const cinst = mountModule('lesson_topics', {
         mount: chost, bus: cbus, state: cst, events: cME(cmod.id),
         user: USER, profileId: cprof.id, makeState: cMS, makeEvents: cME, rand: seeded(5), ai: fakeAI(ROOTS_QS),
       });
