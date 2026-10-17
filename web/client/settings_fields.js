@@ -713,7 +713,17 @@ export function displayValue(field, value) {
 // applied ONLY to module fields — Home, Close and every other way out are built in
 // `settings.js` and are not filtered by anything, at any level. When the level itself becomes
 // a field in the tree, its escape has to be built in the same commit, not after.
+// *** SETTINGS KEPT ON THE MENU WHATEVER ITS LEVEL (row 2.94, Mike via chat CG 3: "one search that finds any setting,
+// even one the menu preset hides, and offers to add it"). *** A setting somebody found by searching and chose to keep
+// (settings.js "SEARCH") shows at every level from then on. By KEY: the screen's host says which (`keepFields`), from
+// the screen's own row. A key two modules share (a "volume") is kept for both: what was asked for is "that setting",
+// and the two are the same words in the menu.
+let KEPT = new Set();
+/** The keys kept on the menu at every level (the host's, from its own row). */
+export function keepFields(keys = []) { KEPT = new Set((Array.isArray(keys) ? keys : []).map(String)); }
+export const keptFields = () => [...KEPT];
 export function showsAtLevel(field, level = 'standard') {
+  if (field && field.key != null && KEPT.has(String(field.key))) return true;
   const active = LEVELS.indexOf(LEVELS.includes(level) ? level : 'standard');
   const mine = LEVELS.indexOf(field?.level || 'standard');
   return mine <= active;

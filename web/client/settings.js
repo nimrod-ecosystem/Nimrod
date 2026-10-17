@@ -54,7 +54,17 @@ import { swatchesHTML } from './color_picker.js';
 import { mountPicturePicker } from './picture_picker.js';
 import { mountChoicePicker } from './choice_picker.js';
 import { mountPlayerPicker } from './player_picker.js';   // players (2026-10-06)
-import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER } from './settings_fields.js';
+import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER, showsAtLevel } from './settings_fields.js';
+
+// SEARCH's words (row 2.94; `tabbed`). Site copy: plain, no names.
+export const SEARCH_WORDS = Object.freeze({
+  found: (n, q) => `${n} ${n === 1 ? 'setting' : 'settings'} for “${q}”`,
+  none: (q) => `No setting has “${q}” in it. Try fewer words.`,
+  clear: 'Clear the search',
+  hidden: 'shown because you searched (it is in “Everything”)',
+  keep: (label) => `Keep “${label}” in this menu`,
+  keepHint: 'it then shows here without searching',
+});
 
 // ---------------------------------------------------------------------------------
 // *** LEVELS: EDIT A SETTING AT WHATEVER LEVEL YOU ARE EDITING (2026-10-02). ***
@@ -513,6 +523,9 @@ export function mountSettings(root, {
   playerHost = null,
   // More options than this and a choice row opens the picker (in 'point'). Argued at PICKER_OVER.
   pickerOver = PICKER_OVER,
+  // ---- SEARCH (row 2.94, 2026-10-17; see "SEARCH" in `tabbed`). `{ query(), clear(), level(), keep(key) }`, all read at
+  // every paint. Absent: no search mode, exactly as before. ----
+  search = null,
   documentRef = (typeof document !== 'undefined' ? document : null),
 } = {}) {
   if (!root) throw new Error('mountSettings: a root element is required');
@@ -651,6 +664,40 @@ export function mountSettings(root, {
       });
     }
     top.push(...allItems.filter((it) => it.tab === '*top'));
+    // *** SEARCH (row 2.94, Mike via chat CG 3: "one search that finds any setting, even one the menu preset hides,
+    // and offers to add it" - "Sounds like something we should have."). *** While the host's query is not empty the
+    // tabs step aside: the list is every row, on EVERY tab, whose words have every word searched for (its name and
+    // what it is set to), then "Clear the search". The host builds the rows at "Everything" while it searches
+    // (kiosk.js), so a row the menu's level hides is found too: it says so, and under it "Keep ... in this menu"
+    // keeps that setting at the person's level from then on (settings_fields.js `keepFields`). Rows found work
+    // exactly as they do on their tab. The ways out stay last. FOR one flat list over results grouped by tab: one
+    // switch walks it with no tab row to step; AGAINST: the tab a row lives on is not said - the row's own name is
+    // enough to act on, and clearing the search puts every row back on its tab.
+    const q = String(safeCall(search?.query, '') || '').trim();
+    if (q) {
+      const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+      // What a person can read on the row - its name and what it says - never its internal key: "fade" finding every
+      // "volume" row through a key named "fader" was the first thing the search did on Home (2026-10-17).
+      const hay = (it) => `${it.label || ''} ${it.hint || ''}`.toLowerCase();
+      const found = allItems.filter((it) => it.kind === 'item' && it.tab !== '*top' && it.tab !== '*end'
+        && !String(it.id || '').startsWith('search') && words.every((w) => hay(it).includes(w)));
+      const lvl = safeCall(search?.level, null);
+      const rows = [];
+      for (const it of found) {
+        const hidden = !!(it.field && lvl && !showsAtLevel(it.field, lvl));
+        rows.push(hidden ? { ...it, hint: [it.hint, SEARCH_WORDS.hidden].filter(Boolean).join(' · ') } : it);
+        if (hidden && typeof search?.keep === 'function') {
+          rows.push({ kind: 'item', id: `search-keep:${it.id}`, label: SEARCH_WORDS.keep(it.label), hint: SEARCH_WORDS.keepHint,
+            run: () => { try { search.keep(it.field.key); } catch (err) { console.warn('settings: keep threw', err); } } });
+        }
+      }
+      return [...top,
+        { kind: 'heading', id: 'search-head', label: found.length ? SEARCH_WORDS.found(found.length, q) : SEARCH_WORDS.none(q) },
+        ...rows,
+        { kind: 'item', id: 'search-clear', label: SEARCH_WORDS.clear,
+          run: () => { try { search?.clear?.(); } catch (err) { console.warn('settings: clear threw', err); } } },
+        ...allItems.filter((it) => it.tab === '*end')];
+    }
     if (tabList.length) {
       const at = tabList.findIndex((d) => d.id === tab);
       top.push({
