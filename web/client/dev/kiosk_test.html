@@ -2043,7 +2043,8 @@ const toTab = (m, id) => {
         (await ek.showModule('photos')) === true && eBox.querySelector('.k-stage .k-mod') === stageBefore);
       check('stage: showModule("youtube") is true, brings it forward, and lights its chip',
         (await ek.showModule('youtube')) === true && ek.primaryType() === 'youtube'
-        && eBox.querySelector('.k-mods .k-dot.on')?.textContent === 'youtube',
+        // (2026-10-17) the chip says the module's title, "YouTube", not its type.
+        && eBox.querySelector('.k-mods .k-dot.on')?.textContent === 'YouTube',
         `${ek.primaryType()} / ${eBox.querySelector('.k-mods .k-dot.on')?.textContent}`);
       check('stage: ...and it is the youtube module actually mounted', !!eBox.querySelector('.k-stage .youtube'));
       check('stage: showModule("camera") is false — a HUD is not a panel', (await ek.showModule('camera')) === false);
