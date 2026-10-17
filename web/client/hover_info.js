@@ -94,6 +94,9 @@ export function watchHover(root, { onInfo, enabled = () => true, chat = () => 's
 // `hidden()` — the host says when not to show it (the Nimrod module is on screen and saying it himself).
 // ---------------------------------------------------------------------------------------------------
 export const INFO_LINE_IDLE = 'Point at anything and Nimrod will tell you what it does.';
+// The strip the pages keep clear for the line, in the BODY's em (`body.has-infoline{padding-bottom:2.6em}` and the
+// heights beside it in modules.html). The line is made exactly this tall (row 2.101).
+export const INFO_LINE_RESERVE_EM = 2.6;
 
 export function mountInfoLine(doc = (typeof document !== 'undefined' ? document : null), {
   root = null, enabled = () => true, hidden = () => false, idle = INFO_LINE_IDLE, chat = () => 'some',
@@ -104,16 +107,32 @@ export function mountInfoLine(doc = (typeof document !== 'undefined' ? document 
   line.setAttribute('role', 'status');
   line.setAttribute('aria-live', 'polite');
   line.setAttribute('data-hover-ignore', '');
+  // *** IT FILLS THE WHOLE STRIP THE PAGE KEEPS FOR IT (row 2.101, Mike 2026-10-17: "There's a little gap (I can see
+  // the actual theme I have set for everywhere) at the bottom of the home page ... right above the part that explains
+  // whatever your cursor is over."). *** The pages keep INFO_LINE_RESERVE_EM of the BODY's font clear for it
+  // (`body.has-infoline`: 2.6em in modules.html and the rest), but the line was only as tall as its own smaller text
+  // (about 32 px against 44): the 12 px between showed the theme behind. Now its height IS the reserve, read from the
+  // body's font each time it is shown (a larger-text setting changes it), and its text sits in the middle.
   line.style.cssText = [
     'position:fixed', 'left:0', 'right:0', 'bottom:0', 'z-index:8000', 'pointer-events:none',
-    'padding:6px 16px', 'font-size:.9rem', 'line-height:1.35', 'white-space:nowrap', 'overflow:hidden',
-    'text-overflow:ellipsis', 'background:var(--surface)', 'color:var(--text)',
+    'box-sizing:border-box', 'display:flex', 'align-items:center',
+    'padding:0 16px', 'font-size:.9rem', 'line-height:1.35',
+    'background:var(--surface)', 'color:var(--text)',
     'border-top:1px solid var(--border)', 'opacity:.96',
   ].join(';');
+  const words = doc.createElement('div');
+  words.style.cssText = 'flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
   const title = doc.createElement('b');
   const text = doc.createElement('span');
-  line.append(title, text);
+  words.append(title, text);
+  line.append(words);
   doc.body.append(line);
+  const fitReserve = () => {
+    try {
+      const px = parseFloat(doc.defaultView.getComputedStyle(doc.body).fontSize) * INFO_LINE_RESERVE_EM;
+      if (Number.isFinite(px) && px > 0) line.style.height = `${Math.round(px * 100) / 100}px`;
+    } catch { /* the line's own height, as before */ }
+  };
 
   const show = (t, s) => { title.textContent = t ? `${t}: ` : ''; text.textContent = s || ''; };
   const idleText = () => { try { return (typeof idle === 'function' ? idle() : idle) || INFO_LINE_IDLE; } catch { return INFO_LINE_IDLE; } };
@@ -123,6 +142,7 @@ export function mountInfoLine(doc = (typeof document !== 'undefined' ? document 
     try { off = !enabled() || !!hidden(); } catch { off = true; }
     line.hidden = off;
     doc.body.classList.toggle('has-infoline', !off);
+    if (!off) fitReserve();
     if (!pointed) show('', idleText());
   };
   sync();
