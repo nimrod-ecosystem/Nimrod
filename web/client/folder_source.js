@@ -180,6 +180,23 @@ export async function addFolderSource(handle, label = '') {
   return toSource(row);
 }
 
+/**
+ * *** "CONNECT A FOLDER", THE NIMROD FOLDER FIRST (row 2.49, the plan's step 2). *** When this device's Nimrod folder
+ * (user_folders.js) has its Pictures / Videos / Music folder readable now, that folder IS the source: no picker at
+ * all, and the same row `addFolderSource` keeps (one already kept for it is used, never a second). Otherwise the
+ * picker, opening there (`pickFolder`'s `kind`). `uf` is a seam for a suite.
+ */
+export async function connectFolderFor(kind = 'pictures', label = '', { uf = null } = {}) {
+  let k = null;
+  try { const mod = uf || await import('./user_folders.js'); k = await mod.kindFolder(kind); } catch { k = null; }
+  if (k && k.dir) {
+    const have = await findFolderSource(k.dir);
+    if (have) return have;
+    return addFolderSource(k.dir, label || k.dir.name || '');
+  }
+  return pickFolder(label, { kind });
+}
+
 /** The folder source already kept for this very folder (`isSameEntry`), or null. Never throws. */
 export async function findFolderSource(handle) {
   if (!handle || typeof indexedDB === 'undefined') return null;

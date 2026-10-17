@@ -189,6 +189,22 @@ try {
     r.panel.destroy();
   }
 
+  section('*** row 2.49: no folder chosen, but a Nimrod folder: its Recordings, with no picker ***');
+  {
+    const r = rig({ hasFolder: false });
+    let asked = 0;
+    r.fs.treeFolder = async () => { asked += 1; return { name: 'Recordings' }; };
+    await r.panel.refresh();
+    check('*** Record is available at once: the Nimrod folder\'s Recordings is where it saves ***',
+      asked === 1 && el(r.host, '[data-rec]').disabled === false && /Recordings/.test(el(r.host, '[data-folder]').textContent), el(r.host, '[data-folder]').textContent);
+    r.panel.destroy();
+    const r2 = rig({ hasFolder: false });
+    r2.fs.treeFolder = async () => null;
+    await r2.panel.refresh();
+    check('...and with none to write to, the same "choose a folder" as before', el(r2.host, '[data-rec]').disabled === true);
+    r2.panel.destroy();
+  }
+
   section('a remembered folder whose permission lapsed asks, rather than failing silently');
   {
     const r = rig({ recallPermission: 'prompt' });

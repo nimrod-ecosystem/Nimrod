@@ -80,6 +80,20 @@ export function available(view = (typeof window !== 'undefined' ? window : null)
  * Ask for a folder. A REAL PROMPT, so it only ever happens from something somebody pressed —
  * never on mount, for the same reason the microphone permission is not requested on mount.
  */
+/**
+ * THE NIMROD FOLDER'S RECORDINGS, IF THIS DEVICE MAY WRITE THERE NOW (row 2.49, the plan's step 2): the root's
+ * Recordings folder when the root is remembered with read and write access already granted; null otherwise (no
+ * Nimrod folder, permission lapsed, or Recordings pointed at a folder of its own, which is read-only here). NEVER
+ * PROMPTS. A recording session uses it when no folder was chosen for recordings (record_panel.js).
+ */
+export async function treeFolder() {
+  try {
+    const uf = await import('./user_folders.js');
+    const k = await uf.kindFolder('recordings');
+    return k.source === 'root' && k.dir ? k.dir : null;
+  } catch { return null; }
+}
+
 // `kind` (row 2.49): it opens at the Nimrod folder's Recordings (user_folders.js startInFor; never prompts, skipped if
 // slow). user_folders.js imports this file, so it is loaded when asked, not at the top.
 export async function pickFolder({ view = (typeof window !== 'undefined' ? window : null), kind = 'recordings' } = {}) {
