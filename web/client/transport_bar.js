@@ -18,6 +18,7 @@
 // person's own setting, cat_guide.js) = NO BUTTON, not a button that does nothing.
 
 import { readCatPrefs } from './cat_guide.js';
+import { getManifest } from './module.js';
 import { mountCatHelp, selectionFrom } from './cat_help.js';
 import { panelVolumeFrom, toggleMutePatch } from './panel_sound.js';
 import { verbTopic, BAR_SCAN_TOPIC } from './actions.js';
@@ -483,7 +484,11 @@ export function drawChips(modsEl, m) {
   stageDefs.forEach((d, j) => {
     const b = document.createElement('button');
     b.className = 'k-dot' + (j === primary ? ' on' : '');
-    b.textContent = d.type;
+    // The module's own title ("YouTube", "Your people's cards"), as the classic path's chips use; its type, capitalised
+    // by the CSS, only for a module with no title (2026-10-17: a page part's chip read "Page_people").
+    const title = (() => { try { return getManifest(d.type)?.title || ''; } catch { return ''; } })();
+    b.textContent = title || d.type;
+    if (title) b.style.textTransform = 'none';
     b.dataset.i = j;
     b.addEventListener('click', () => showPrimary(j));
     modsEl.append(b);

@@ -339,7 +339,7 @@ const host = document.getElementById('host');
         && !!eStage.querySelector('.k-controls [data-act="settings"]'));
       const chips = [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent);
       check('*** exactly the picked module’s chip, and it is the lit one ***',
-        chips.length === 1 && chips[0] === 'trivia' && eStage.querySelector('.k-mods .k-dot.on')?.textContent === 'trivia',
+        chips.length === 1 && chips[0] === 'Trivia' && eStage.querySelector('.k-mods .k-dot.on')?.textContent === 'Trivia',
         JSON.stringify(chips));
       check('the picked module is what is actually mounted', e.kiosk.primaryType() === 'trivia' && !!eStage.querySelector('.k-stage .k-mod'));
       check('no camera or clock overlay, no other panels — the page never asked for them',
@@ -351,12 +351,12 @@ const host = document.getElementById('host');
         !!eStage.querySelector('.kiosk.k-embed > .k-dash .view .k-stage .k-mod')
         && !eStage.querySelector('.kiosk > .k-stage .k-mod'), eStage.querySelector('.kiosk')?.innerHTML.slice(0, 160));
       check('stage 3: ...and the bar still names it and lights it (the shell reads the dashboard’s arrangement)',
-        eStage.querySelector('.k-mods .k-dot.on')?.textContent === 'trivia');
+        eStage.querySelector('.k-mods .k-dot.on')?.textContent === 'Trivia');
       // STAGE 3b: on this page the bar and the menu are PLACED in the dashboard, and the kiosk's own
       // bar is the plain bar, out of the way while the placed one carries it.
       await settled(() => e.kiosk.dashboard?.()?.chrome?.().bar === 'carried', 3000);
       check('*** stage 3b: the modules page shows a PLACED transport bar, lit on the picked module ***',
-        eStage.querySelector('.k-dash .v-dock-bottom .tb-bar .tb-mods .k-dot.on')?.textContent === 'trivia');
+        eStage.querySelector('.k-dash .v-dock-bottom .tb-bar .tb-mods .k-dot.on')?.textContent === 'Trivia');
       check('*** ...and a placed settings menu (the one menu, docked in the dashboard) ***',
         e.kiosk.dashboard().chrome().menu === 'carried' && !!eStage.querySelector('.k-dash .v-dock-left [data-settings]'));
       check('...so the kiosk’s own bar is the plain bar, out of the way until it is needed',
@@ -372,7 +372,7 @@ const host = document.getElementById('host');
       check('showModule(same type) is true, and does not rebuild anything', (await e.showModule('trivia')) === true && !!e.kiosk);
       check('showModule of ANOTHER type on a demo rebuilds around it (a demo screen has one module)',
         (await e.showModule('photos')) === true && e.kiosk.primaryType() === 'photos'
-        && [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'photos');
+        && [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'Photos');
       check('isKioskPanel: photos and trivia yes, camera, clock and an ambient module no',
         isKioskPanel('photos') && isKioskPanel('trivia') && !isKioskPanel('camera') && !isKioskPanel('clock')
         && !isKioskPanel('comet_ambient') && !isKioskPanel(''));
@@ -446,7 +446,7 @@ const host = document.getElementById('host');
       check('the account’s existing YouTube instance is the one shown (same id the kiosk would read)',
         e.kiosk.primaryType() === 'youtube' && !!eStage.querySelector('.k-stage .youtube'));
       check('*** scoped: only the picked module’s chip — not the account’s photos, camera, clock, director ***',
-        [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'youtube',
+        [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'YouTube',
         [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join());
       check('*** ...so no camera overlay opens on a public page just because somebody picked YouTube ***',
         !e.kiosk.hasCamera() && !e.kiosk.hasClock() && e.kiosk.stageCount() === 1);
@@ -492,7 +492,7 @@ const host = document.getElementById('host');
       check('showModule(a missing type) is true and brings it forward',
         (await e.showModule('trivia')) === true && e.kiosk.primaryType() === 'trivia');
       check('*** ...it was added to the REAL screen, once ***', (await countType('trivia')) === 1);
-      check('...and the kiosk was rebuilt around it, scoped to it', [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'trivia');
+      check('...and the kiosk was rebuilt around it, scoped to it', [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'Trivia');
       await e.showModule('youtube'); await e.showModule('trivia');
       check('picking around again adds nothing more (idempotent)', (await countType('trivia')) === 1 && (await countType('youtube')) === 1);
       // The camera is now a PANEL here (placed in a one-slot preview layout), like everything else --
@@ -546,7 +546,7 @@ const host = document.getElementById('host');
       const q = (t) => doc.querySelector(`[data-pick="${t}"]`);
       q('trivia').click();
       check('picking Trivia swaps to it: one kiosk, Trivia’s chip, Photos gone',
-        await until(() => stageOf()?.querySelector('.k-mods .k-dot')?.textContent === 'trivia' && nkiosks() === 1
+        await until(() => stageOf()?.querySelector('.k-mods .k-dot')?.textContent === 'Trivia' && nkiosks() === 1
           && !stageOf().querySelector('.photos')), doc.querySelector('.k-mods')?.textContent);
 
       // the clock is drawn as an overlay on a real screen; here it is placed in a slot, so it gets the
@@ -561,7 +561,7 @@ const host = document.getElementById('host');
       // click down the list quickly: the newest wins and nothing stale is left running
       for (const t of ['photos', 'trivia', 'youtube', 'photos']) { q(t).click(); await sleep(60); }
       check('*** rapid picks leave exactly one kiosk, showing the last pick ***',
-        await until(() => nkiosks() === 1 && stageOf()?.querySelector('.k-mods .k-dot.on')?.textContent === 'photos'),
+        await until(() => nkiosks() === 1 && stageOf()?.querySelector('.k-mods .k-dot.on')?.textContent === 'Photos'),
         `kiosks=${nkiosks()} chip=${stageOf()?.querySelector('.k-mods .k-dot.on')?.textContent}`);
 
       // typing in the search box must not reach the kiosk's hotkeys
