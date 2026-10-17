@@ -32,7 +32,8 @@ import { THEMES, listThemes, applyTheme, paintedTheme } from '../theme.js';
 import { wearColours, viewerThemeOf } from '../page_visit.js';
 import { OLDER_WORDS } from '../page_visit.js';
 import { PEOPLE_TYPE, PEOPLE_VERB_TOPICS } from '../people_page.js';
-import { ABOUT_SAVE_MS } from '../modules/people.js';
+import { ABOUT_SAVE_MS, PERSON_ROW_KEY } from '../modules/people.js';
+import { INPUTS_KEY } from '../input_runtime.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
 import { createBus } from '../bus.js';
@@ -423,7 +424,15 @@ try {
     && tp().options === listThemes().length + 1 && tp().shown[0] === '' && listThemes().every((t) => tp().shown.includes(t.id))
     && !!q('[data-pp-sheet="theme"] [data-chp-search]') && !!q('[data-pp-sheet="theme"] [data-chp-sort]') && !!q('[data-pp-sheet="theme"] [data-chp-filter="kind"][data-chp-val="holiday"]')
     && tp().shown.includes('seasons') && tp().shown.includes('device'), J(tp()));
-  check('...saying who sees it', q('[data-pp-theme-line]')?.textContent === PAGE_LOOK_WORDS.coloursLine);
+  // (row 2.100, Mike 2026-10-17) "this page only, or everywhere?", with Everywhere chosen already.
+  const scopeBtn = (s) => q(`[data-pp-sheet="theme"] [data-pp-scope="${s}"]`);
+  check('*** the gallery asks where: "Everywhere" (chosen already) or "This page only" ***',
+    scopeBtn('everywhere')?.getAttribute('aria-pressed') === 'true' && scopeBtn('page')?.getAttribute('aria-pressed') === 'false'
+      && q('[data-pp-theme-line]')?.textContent === PAGE_LOOK_WORDS.scopeEverywhereLine);
+  check('the person row "Everywhere" writes is the input runtime\'s own (one row, one name)', PERSON_ROW_KEY === INPUTS_KEY);
+  scopeBtn('page').click();
+  check('..."This page only": the line says who sees the page', scopeBtn('page').getAttribute('aria-pressed') === 'true'
+    && q('[data-pp-theme-line]')?.textContent === PAGE_LOOK_WORDS.coloursLine);
   check('...names nobody in it', !/her screen|taylor|cici/i.test(q('[data-pp-sheet="theme"]').textContent), String(q('[data-pp-sheet="theme"]').textContent).slice(0, 200));
   q('[data-pp-sheet="theme"] [data-chp-pick="seasons"]').click();
   check('*** "With the seasons" for the page: saved, and worn (today’s look; it used to be offered and never worn) ***',
@@ -433,6 +442,7 @@ try {
   themeBtn().click();
   await until(() => tp()?.gallery === true, 3000);
   check('opened again: the page’s theme is the one marked', q('[data-pp-sheet="theme"] [data-chp-pick="seasons"]')?.getAttribute('aria-pressed') === 'true');
+  scopeBtn('page').click();
   q('[data-pp-sheet="theme"] [data-chp-pick="warm"]').click();
   check('*** Warm: saved in the page record, and the page wears it ***',
     await until(async () => (await serverPage()).data.theme === 'warm', 5000) && await until(() => q('.pp-root').dataset.pageColours === 'warm', 3000)
@@ -451,6 +461,27 @@ try {
   check('*** a switch walks the gallery by its rows: next lights a ROW ***', tp()?.litGroup != null && tp().lit.i === -1, J(tp()?.lit));
   tbus.publish(PEOPLE_VERB_TOPICS.back);
   check('...and back from the rows is Keep: the window closes, nothing changed', await until(() => !inst.impl.__probe().sheet, 2000) && look().theme === 'warm');
+  // EVERYWHERE (the default choice): the theme goes to the person's own row, the page follows (its own emptied).
+  {
+    const prow = makePS(a1.id, INPUTS_KEY);
+    await prow.load();
+    prow.set({ keepMe: 'a binding' }); await prow.flush();
+    themeBtn().click();
+    await until(() => tp()?.gallery === true, 3000);
+    q('[data-pp-sheet="theme"] [data-chp-pick="seasons"]')?.click();
+    const fresh = makePS(a1.id, INPUTS_KEY);
+    check('*** Everywhere: the theme is on the person\'s own row (every screen that has not picked follows it), the rest of the row kept ***',
+      await until(async () => { await fresh.load(); return fresh.get().theme === 'seasons'; }, 5000) && fresh.get().keepMe === 'a binding', J(fresh.get()));
+    check('*** ...and the page goes back to following (its own theme emptied) ***',
+      await until(async () => !(await serverPage()).data.theme, 5000) && !look().theme, J(look()));
+    // Back to Warm for this page only: the checks below are about a page that has a theme of its own.
+    await until(() => !inst.impl.__probe().sheet, 2000);
+    themeBtn().click();
+    await until(() => tp()?.gallery === true, 3000);
+    scopeBtn('page').click();
+    q('[data-pp-sheet="theme"] [data-chp-pick="warm"]').click();
+    await until(async () => (await serverPage()).data.theme === 'warm', 5000);
+  }
   editBtn().click();
   await until(() => !!q('[data-pp-card="edit"] [data-pp-act="page-theme"]'), 3000);
   check('*** while editing, the same button is on the edit card (and not twice) ***', !!q('[data-pp-card="edit"] [data-pp-act="page-theme"]')

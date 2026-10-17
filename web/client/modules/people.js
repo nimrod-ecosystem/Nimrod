@@ -123,6 +123,10 @@ import {
   mountPageVisit, mountOlderMessages, VISIT_WORDS, OLDER_WORDS, wearColours, viewerThemeOf, wantsMoreContrast, knownThemes,
 } from '../page_visit.js';
 import { listThemes } from '../theme.js';
+// row 2.100: the person's own row, the level "Everywhere" writes. input_runtime.js INPUTS_KEY, spelled here so the page
+// does not load the whole input stack for one word (page_sections_test checks the two agree).
+export const PERSON_ROW_KEY = 'input-bindings';
+const INPUTS_KEY = PERSON_ROW_KEY;
 // "Theme for my page" (2026-10-07): the same theme gallery as the Theme tab and the Themes panel.
 import { mountChoicePicker, previewOf } from '../choice_picker.js';
 
@@ -1245,8 +1249,29 @@ registerModule(
       const cur = themeOf(pageDoc);
       const host = openSheet('theme', W.colours);
       const own = colourState().viewerKeepsOwn && cur;
-      host.innerHTML = `<div class="pp-theme"><p class="pp-note" data-pp-theme-line>${esc(own ? W.coloursOwn : W.coloursLine)}</p>
+      // *** "THIS PAGE ONLY, OR EVERYWHERE?" (row 2.100, Mike 2026-10-17: "It should follow the theme you had set for
+      // everywhere. You should be able to decide if you just want to apply a theme to the homepage or everywhere";
+      // "Everywhere" first, chosen already: "That sounds good."). *** EVERYWHERE: the page goes back to following
+      // (its own theme emptied) and the theme is written at the PERSON level - the broadest level there is (kiosk.js
+      // levelLayers: no account row exists) - which every screen, dashboard and device of theirs follows unless it
+      // picked its own (DECISIONS 2026-09-30: nearest wins). THIS PAGE ONLY: the page's own theme, as before.
+      // Without a person here to write to, only "This page only" is offered.
+      const canEverywhere = !!selfId() && (typeof ctx.makePersonState === 'function' || typeof ctx.personHost?.state === 'function');
+      let scope = canEverywhere ? 'everywhere' : 'page';
+      host.innerHTML = `<div class="pp-theme">
+        ${canEverywhere ? `<div class="pp-btns" role="group" aria-label="${esc(W.scopeLabel)}" data-pp-theme-scope>
+          <button type="button" class="pp-btn" data-pp-scope="everywhere" aria-pressed="true">${esc(W.scopeEverywhere)}</button>
+          <button type="button" class="pp-btn" data-pp-scope="page" aria-pressed="false">${esc(W.scopePage)}</button></div>` : ''}
+        <p class="pp-note" data-pp-theme-line>${esc(canEverywhere ? W.scopeEverywhereLine : (own ? W.coloursOwn : W.coloursLine))}</p>
         <div data-pp-theme-list></div></div>`;
+      host.querySelector('[data-pp-theme-scope]')?.addEventListener('click', (e) => {
+        const b = e.target.closest?.('[data-pp-scope]');
+        if (!b) return;
+        scope = b.getAttribute('data-pp-scope') === 'page' ? 'page' : 'everywhere';
+        for (const x of host.querySelectorAll('[data-pp-scope]')) x.setAttribute('aria-pressed', String(x === b));
+        const line = host.querySelector('[data-pp-theme-line]');
+        if (line) line.textContent = scope === 'everywhere' ? W.scopeEverywhereLine : (own ? W.coloursOwn : W.coloursLine);
+      });
       let themes = [];
       try { themes = listThemes(); } catch { themes = []; }
       const options = [{ value: '', label: W.coloursNone, hint: W.coloursNoneHint }, ...themes.map((t) => ({ value: t.id, label: t.label }))];
@@ -1256,11 +1281,34 @@ registerModule(
       try {
         sheet.child = mountChoicePicker(host.querySelector('[data-pp-theme-list]'), {
           title: '', key: 'theme', preview: 'theme', value: cur, options, cancel: true,
-          onPick: (v) => { if (sheet !== mine) return; closeSheet({ quiet: true }); writeWho({ [THEME_KEY]: themeOf({ [THEME_KEY]: v }) }); },
+          onPick: (v) => {
+            if (sheet !== mine) return;
+            closeSheet({ quiet: true });
+            const id = themeOf({ [THEME_KEY]: v });
+            if (scope !== 'everywhere') { writeWho({ [THEME_KEY]: id }); return; }
+            // Everywhere: the person's level holds it ("The usual theme" there means none: each level decides again),
+            // and this page follows.
+            writeWho({ [THEME_KEY]: '' });
+            themeEverywhere(id).then((ok) => { if (ok) publish('screen/theme-picked', { theme: id, level: 'person' }); });
+          },
           onCancel: () => { if (sheet === mine) closeSheet(); },
         });
       } catch (err) { console.error('people: themes', err); host.textContent = 'The themes could not be shown here just now.'; }
       paintCursor();
+    }
+    // The person's own row (input_runtime.js INPUTS_KEY - the person level of every screen's chain, kiosk.js
+    // levelWriter) holds their bindings too: it is READ first and only `theme` is changed, so nothing else in it is
+    // overwritten. False when it could not be written (the page still follows, as chosen).
+    async function themeEverywhere(id) {
+      let h = null;
+      try { h = makePS(selfId(), INPUTS_KEY); } catch { h = null; }
+      if (!h) return false;
+      try {
+        await h.load?.();
+        h.set({ theme: id || null });
+        await h.flush?.();
+        return true;
+      } catch (err) { console.error('people: theme everywhere', err); return false; }
     }
     async function openNimrod() {
       const host = openSheet('nimrod', 'Nimrod');
