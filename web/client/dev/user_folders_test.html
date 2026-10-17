@@ -30,7 +30,9 @@ import { parseCube, compileLut, filterMarkup, applyGrade, readGrade, saveGrade, 
 import { resolvePath, referencesOf, rewriteSource, folderToUrls, loadWam } from '../wam_loader.js';
 import { createMixerFx } from '../mixer_fx.js';
 import { CHANNEL_IDS } from '../audio_bus.js';
-import { FOLDER_KINDS, kindKey, kindFolder, pickKindFolder, useRootFor, forgetRoot, allowAgain, permissionOf, KIND_MODE, startInFor, withStartIn } from '../user_folders.js';
+import { FOLDER_KINDS, kindKey, kindFolder, pickKindFolder, useRootFor, forgetRoot, allowAgain, permissionOf, KIND_MODE, startInFor, withStartIn,
+  treeEntries, README } from '../user_folders.js';
+import { crc32, zipBytes } from '../zip_store.js';
 import { scanFolder, readUserFolders, userFoldersHtml, renderUserFolders, userFoldersPage, USER_FOLDER_ITEMS,
   USER_FOLDERS_PAGE, permissionWords, createDeviceLookRows, applyDeviceChoice } from '../user_folders_page.js';
 // 2026-10-02, choosing: the device's font and colour look.
@@ -448,6 +450,29 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       check('stop using the root: kinds without their own folder have none; the files stay', (await kindFolder('luts', { store })).source === 'none'
         && (await kindFolder('fonts', { store })).source === 'own' && 'Fonts' in rootTree);
       check('...and a picker opens where it always did (no folder to start in)', (await startInFor('pictures', { store })) === undefined);
+    }
+
+    section('*** row 2.49, step 3: a copy of the tree to download (a zip made in the page) ***');
+    {
+      const ents = treeEntries();
+      const names = ents.map((e) => e.name);
+      check('*** every folder the tree makes, each with its README, under one "Nimrod" folder ***',
+        Object.values(SUBFOLDERS).every((n) => names.includes(`Nimrod/${n}/`) && names.includes(`Nimrod/${n}/README.txt`))
+          && names[0] === 'Nimrod/' && names.includes('Nimrod/README.txt'), J(names.slice(0, 8)));
+      check('...the artwork folders inside Artwork too', names.some((n) => /^Nimrod\/[^/]+\/[^/]+\/$/.test(n)));
+      check('the READMEs are the ones ensureTree writes', ents.find((e) => e.name === 'Nimrod/Pictures/README.txt')?.text === README.pictures);
+      check('*** the zip checksum is the standard one (CRC-32 of "123456789" is CBF43926) ***', crc32(new TextEncoder().encode('123456789')) === 0xcbf43926);
+      const z = zipBytes(ents, { date: new Date(2026, 9, 17, 9, 30, 0) });
+      const dv = new DataView(z.buffer);
+      const endAt = z.length - 22;
+      check('*** a real zip: starts "PK\\3\\4", ends with the end record naming every entry ***',
+        dv.getUint32(0, true) === 0x04034b50 && dv.getUint32(endAt, true) === 0x06054b50 && dv.getUint16(endAt + 10, true) === ents.length
+          && dv.getUint32(endAt + 16, true) + dv.getUint32(endAt + 12, true) === endAt, `${z.length} bytes`);
+      check(`...small (${z.length} bytes: a few folders and short READMEs)`, z.length < 40000);
+      check('names are UTF-8 (the "Colour looks" folder, and any accent, survive)', dv.getUint16(6, true) === 0x0800);
+      const pageHtml = userFoldersHtml(await readUserFolders({ view: {}, store: memStore() }));
+      check('*** the folders page offers "Download your Nimrod folder (a zip)" - to everybody, even a browser that cannot make folders ***',
+        /data-uf-act="download-tree"|download-tree/.test(pageHtml) && /Download your Nimrod folder/.test(pageHtml));
     }
 
     section('*** what the screen lists: names only, and a plugin is NEVER run ***');
