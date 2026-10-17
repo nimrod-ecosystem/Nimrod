@@ -2732,3 +2732,9 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   one); finishing a lesson counts as watched in the same unlock log. The old module's code is PARKED, not deleted
   (`modules/lesson_topics.js`), because its transcript quiz (row 2.24) is built work that may return as "write a lesson
   from a video's transcript"; whether it does is open. Built in c6bc82b. (2026-10-17)
+- **The transcript quiz stays: "Quiz from a video", its own module.** Code pointed out that the retired Lessons'
+  one built piece, "Quiz me from the transcript" (row 2.24), was real work. Mike: *"We can keep that."* HOW, Code's,
+  not ruled by Mike: it is its own module named for what it does, starting from "What is the video called?" rather
+  than the empty topic cards, and the lesson questions both it and Lessons send to the games are computed in one
+  place (lessons.js `routedLessonQuestions`) so neither wipes the other's. Whether it later becomes the first step of
+  writing a lesson from a video (row 2.92) is open. Built in c9e8552. (2026-10-17)
