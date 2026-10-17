@@ -28,6 +28,13 @@ DEFAULTS = {
     # The helper's own status page. 8790: free beside the ports already used here (8765 a receiver,
     # 8770-8773 media agents, 8791 corpus desk, 8796 own voice model, 8797 speech, 8798 the wake example).
     'statusPort': 8790,
+    # THE PERSON'S NIMROD FOLDER ON THIS COMPUTER (row 2.49, the folder tree's step 4): its full path, or '' (the
+    # default: nothing changes). Set, it is where the parts look first:
+    #   * speech: passed as --root, so it finds "Voice model" there (speech_service reads the same root);
+    #   * media, once turned on with no folder of its own: its "Pictures" is the folder served, and its "Data" is
+    #     where the agent keeps history (--data-dir) - the same place a screen's browser writes it.
+    # It never turns media on by itself: serving a folder stays a choice (the media block below).
+    'nimrodFolder': '',
     'speech': {
         # ON: speech is the reason this package exists today (inbox AZ item 1). It only listens to what a
         # page on this computer sends it; it opens no microphone of its own.

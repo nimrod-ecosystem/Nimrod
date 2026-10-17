@@ -151,6 +151,20 @@ def plan_tests(tmp: Path):
                  '--platform', 'https://nimrodecosystem.com',
                  '--origin', 'https://nimrodecosystem.com,https://nimrod.onrender.com', '--name', 'Den'], a6)
     check('plan: nothing on -> nothing runs', SV.plan(S.merged(S.DEFAULTS, {'speech': {'on': False}}), app, 'PY', data) == [])
+    # row 2.49 (the folder tree, step 4): the person's Nimrod folder, when the settings name one.
+    check('the Nimrod folder is empty by default: nothing changes for anybody who never sets it',
+          S.DEFAULTS['nimrodFolder'] == '' and '--root' not in SV.plan(S.DEFAULTS, app, 'PY', data)[0]['argv'])
+    sr = S.merged(S.DEFAULTS, {'nimrodFolder': 'D:/Nimrod', 'media': {'on': True}})
+    pr = SV.plan(sr, app, 'PY', data)
+    sargv = [x for x in pr if x['name'] == 'speech'][0]['argv']
+    margv = [x for x in pr if x['name'] == 'media'][0]['argv']
+    check('*** set: speech finds its Voice model there (--root) ***', sargv[sargv.index('--root') + 1] == 'D:/Nimrod', sargv)
+    check('*** media turned on with no folder of its own serves the Nimrod folder\'s Pictures, and keeps history in its Data ***',
+          margv[margv.index('--root') + 1] == str(Path('D:/Nimrod') / 'Pictures')
+          and margv[margv.index('--data-dir') + 1] == str(Path('D:/Nimrod') / 'Data'), margv)
+    check('...a media folder of its own still wins', SV.plan(S.merged(sr, {'media': {'folder': 'E:/Photos'}}), app, 'PY', data)[1]['argv'][3] == 'E:/Photos')
+    check('...and the Nimrod folder never turns media on by itself',
+          [x['name'] for x in SV.plan(S.merged(S.DEFAULTS, {'nimrodFolder': 'D:/Nimrod'}), app, 'PY', data)] == ['speech'])
     pyw = tmp / 'pythonw.exe'
     pyw.write_text('')
     (tmp / 'python.exe').write_text('')
