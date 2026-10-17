@@ -36,7 +36,7 @@ import {
   FORM_KINDS, GUIDE_DOS,
 } from '../nimrod_guide_data.js';
 import { selectionAt, explainAt } from '../cat_help.js';
-import { watchHover, mountInfoLine, INFO_LINE_IDLE } from '../hover_info.js';
+import { watchHover, mountInfoLine, INFO_LINE_IDLE, INFO_LINE_RESERVE_EM } from '../hover_info.js';
 import { SETTINGS_OPEN_TOPIC } from '../modules/settings.js';
 import { GUIDE_SETTINGS, guidePrefs, INFO_IDLE } from '../modules/nimrod.js';
 import { DEVICES_VERB_TOPICS } from '../modules/devices.js';
@@ -577,6 +577,14 @@ try {
     over(k.querySelector('.rs-obj'));
     check('it explains what the pointer is on', /lamp/i.test(line.el.textContent), line.el.textContent);
     check('...in theme tokens, never a hard colour', /var\(--surface\)/.test(line.el.style.background) && /var\(--text\)/.test(line.el.style.color));
+    // Row 2.101 (Mike 2026-10-17): a strip of the theme showed between the page and the line - the page keeps 2.6em of
+    // the body's font for it, and the line was only as tall as its own smaller text.
+    {
+      const want = INFO_LINE_RESERVE_EM * parseFloat(getComputedStyle(document.body).fontSize);
+      const got = line.el.getBoundingClientRect().height;
+      check(`*** the line is exactly as tall as the strip the page keeps for it (${want.toFixed(1)} px): no gap shows the theme behind ***`,
+        INFO_LINE_RESERVE_EM === 2.6 && Math.abs(got - want) < 0.6, `${got} vs ${want}`);
+    }
     hide = true; line.sync();
     check('*** hidden while Nimrod is on screen saying it himself ***', line.el.hidden === true && !document.body.classList.contains('has-infoline'));
     hide = false; lineOn = false; line.sync();
