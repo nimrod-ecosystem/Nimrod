@@ -160,12 +160,18 @@ const host = document.getElementById('host');
     section('ensure(type) — adds the module to the real screen, once');
     let ytModId;
     {
-      check('this account has no YouTube instance yet',
-        !live.profile.modules.some((m) => m.type === 'youtube'));
+      // (row 2.93, Mike 2026-10-15: a new screen gets plain modules, YouTube among them - profile.js ensureProfile.)
+      // So YouTube is ALREADY there, and ensure() must return that one, not add a second. A type the starter screen
+      // does not have (Clock is in it too; Charts is not) is what shows ensure() ADDING.
+      const starterYt = live.profile.modules.find((m) => m.type === 'youtube');
+      check('a new account\'s starter screen has its YouTube panel already (row 2.93)', !!starterYt);
+      const added = await live.ensure('charts');
+      check('ensure() adds a real instance of a type the screen lacks, and returns it', !!added?.id
+        && live.profile.modules.some((m) => m.id === added.id));
       const mod1 = await live.ensure('youtube');
       ytModId = mod1.id;
-      check('ensure() adds a real instance and returns it', !!mod1.id);
-      check('...and the in-memory profile now lists it too',
+      check('ensure() of a type already there returns THAT instance', !!mod1.id && mod1.id === starterYt.id);
+      check('...and the in-memory profile lists it',
         live.profile.modules.some((m) => m.id === ytModId));
 
       const mod2 = await live.ensure('youtube');
