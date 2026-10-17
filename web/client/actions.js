@@ -653,6 +653,10 @@ export const MODULE_VERBS = {
   // list, Next view), `select` presses the lit one - and the first `select` with nothing lit SAYS the chart, so the
   // one thing somebody who cannot read the screen wants costs one press. No `back`: there is nothing to leave.
   charts:        { next: 'charts/next', prev: 'charts/prev', select: 'charts/select' },
+  // A LESSON (row 2.92; modules/lesson_player.js). In Slides next/prev walk the buttons (the answers, Back, Next) and
+  // select presses the lit one; in Watch, where nothing waits to be pressed, next/prev move a part on or back. back:
+  // the part before, in either.
+  lesson_player: { next: 'lesson/next', prev: 'lesson/prev', select: 'lesson/select', back: 'lesson/back' },
   // WHAT PLAYED, AS OBJECTS (row 2.62 step 4; modules/play_objects.js). The whole object is one press: `select` says it
   // and shows it as a list (pressed again, the list goes); `back` puts the list away. Nothing to walk inside it.
   play_objects:  { select: 'play_objects/select', back: 'play_objects/back' },

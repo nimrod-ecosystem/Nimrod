@@ -72,6 +72,7 @@ import '../modules/card_sort.js';    // 2026-10-02: card sort (new core)
 import '../modules/profile.js';      // 2026-10-02: a person or an AI character, as a card (new core)
 import '../modules/people.js';       // 2026-10-04: "Your people", the landing (new core)
 import '../modules/page_parts.js';   // row 2.102: the page's parts, each a module
+import '../modules/lesson_player.js';   // row 2.92: a lesson file, played
 import '../modules/helper.js';       // 2026-10-04: Nimrod at the bottom, over a page (new core)
 import '../modules/edit_options.js'; // 2026-10-02: the panel editor's options (new core; described, so imported)
 import '../modules/themes.js';       // 2026-10-06: "Themes", the theme gallery as a panel (new core; described, so imported)
@@ -208,7 +209,7 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-10-10: `archive` (row 2.69: the Internet Archive) is built on the new core.
   // 2026-10-10: brick games -- `sortbricks` (Sort the bricks) is built on the new core.
   // 2026-10-10: `livecams` (row 2.69: live nature cams) is built on the new core.
-  const PORTED = ['adventure', 'archive', 'avatar', 'brain_games', 'brickbreaker', 'brickbuilder', 'brickdrop', 'brickmosaic', 'bricks', 'buildit', 'button', 'calculator', 'card_sort', 'charts', 'devices', 'dressup', 'helper', 'karaoke', 'library', 'livecams', 'name_that', 'nimrod', 'note',
+  const PORTED = ['adventure', 'archive', 'avatar', 'brain_games', 'brickbreaker', 'brickbuilder', 'brickdrop', 'brickmosaic', 'bricks', 'buildit', 'button', 'calculator', 'card_sort', 'charts', 'devices', 'dressup', 'helper', 'karaoke', 'lesson_player', 'library', 'livecams', 'name_that', 'nimrod', 'note',
     'options', 'page_connect', 'page_messages', 'page_people', 'page_recommended', 'page_you', 'people', 'play_objects', 'profile', 'quiz_mix', 'rhythm', 'room', 'scoreboard', 'simple_math', 'solitaire', 'sortbricks', 'spelling', 'stackline', 'story', 'themes', 'think_games', 'town', 'voice_model', 'voice_review', 'weather', 'whats_new',
     'whoswho', 'word_builder', 'word_games'];
   // 2026-10-12: `town` (Design's town, rearranged per person) and `story` (Story time) are built on the new core.
@@ -228,7 +229,8 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-09-30: row 2.37's `weather` is built on the new core.
   // 2026-09-30: row 2.44's `voice_review` (the voice recordings kept on this screen) is built on the new core.
   // 2026-10-17: row 2.102's page parts (`page_you`, `page_messages`, `page_recommended`, `page_people`, `page_connect`) are built on the new core.
-  check('exactly fifty-two modules in today’s real registry are on the new core: adventure, archive, avatar,brain_games, brickbreaker, brickbuilder, brickdrop, brickmosaic, bricks, buildit, button, calculator, card_sort, charts, devices, dressup, helper, karaoke, library, livecams, name_that, nimrod, note, options, the five page parts, people, play_objects, profile, quiz_mix, rhythm, room, scoreboard, simple_math, solitaire, sortbricks, spelling, stackline, story, themes, think_games, town, voice_model, voice_review, weather, whats_new, whoswho, word_builder and word_games',
+  // 2026-10-17: row 2.92's `lesson_player` ("A lesson") is built on the new core.
+  check('exactly fifty-three modules in today’s real registry are on the new core: adventure, archive, avatar,brain_games, brickbreaker, brickbuilder, brickdrop, brickmosaic, bricks, buildit, button, calculator, card_sort, charts, devices, dressup, helper, karaoke, lesson_player, library, livecams, name_that, nimrod, note, options, the five page parts, people, play_objects, profile, quiz_mix, rhythm, room, scoreboard, simple_math, solitaire, sortbricks, spelling, stackline, story, themes, think_games, town, voice_model, voice_review, weather, whats_new, whoswho, word_builder and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length

@@ -312,6 +312,7 @@ import './modules/card_sort.js';       // registers 'card_sort' (sort the card o
 import './modules/profile.js';         // registers 'profile' (a person or an AI character, as a card)
 import './modules/people.js';          // registers 'people' ("Your people": the landing, 2026-10-04)
 import './modules/page_parts.js';      // row 2.102: the page's parts, each a module
+import './modules/lesson_player.js';   // row 2.92: a lesson file, played (Watch, Slides, Read)
 import './modules/helper.js';          // registers 'helper' (Nimrod at the bottom, over the page)
 import './modules/edit_options.js';    // registers 'options' (the panel editor's; './modules/view.js' imports it too)
 // 'library_slot' (the builder's place for the library) comes in through './modules/view.js'.
