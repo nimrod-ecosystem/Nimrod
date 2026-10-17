@@ -824,6 +824,15 @@ export const CATALOG = [
   // plays by itself and never waits; Slides is for somebody at the screen.
   // 2026-10-17 (Mike): "I think lessons is the better name ... use the new system." The old topic cards are parked
   // (modules/lesson_topics.js); this is the lesson-file player, under the old type, so an old panel opens as this.
+  // 2026-10-17 (Mike: "We can keep that"): the old Lessons' transcript quiz (row 2.24), as its own module.
+  {
+    type: 'video_quiz', stage: 'beta', title: 'Quiz from a video', group: 'practice', use: 'answer',
+    lead: 'Paste the words of a video you watched, and answer questions written from them.',
+    needs: 'An AI program on this computer (such as Ollama) to write the questions. Nothing is sent anywhere else '
+      + 'unless you tick the Wikipedia check.',
+    why: 'Check what was taken in from a video. Every question is checked against the line of the transcript it '
+      + 'comes from, and a wrong answer shows that line. The questions also join Trivia, Word Forge and Quiz mix.',
+  },
   {
     type: 'lessons', stage: 'beta', title: 'Lessons', group: 'practice', use: 'touch',
     lead: 'A lesson to watch, step through as slides, or read. Numbers 0 to 9 to begin with.',

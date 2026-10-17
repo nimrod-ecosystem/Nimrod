@@ -1,14 +1,19 @@
-// lesson_topics.js (module) — PARKED 2026-10-17. Was modules/lessons.js, type 'lessons', "Lessons".
+// video_quiz.js (module) — "QUIZ FROM A VIDEO": paste a video's transcript, answer questions written from it.
 //
-// Mike, 2026-10-17, on the site having two lesson modules: *"I think lessons is the better name. Let's keep that for a
-// name, but use the new system we're working on. There was never anything built for the old system."* So the name
-// and the type 'lessons' are the new player's (modules/lesson_player.js, lesson files, row 2.92), and so is routing a
-// lesson's questions into Trivia, Word Forge and Quiz mix. A screen's old Lessons panel opens as the new one.
-// THIS FILE IS KEPT, NOT DELETED, and no page imports it: its topic cards never had content (no videos were chosen;
-// the starter pack is five topic names), but its TRANSCRIPT QUIZ (row 2.24: a model writes questions from a pasted
-// transcript, checked against it, reviewed, fact-checked with Wikipedia) is real work, and the natural place for it
-// now is writing a lesson from a video's transcript. Its own suite (dev/lesson_topics_test.html) still runs. To
-// bring it back as it was: import it on the pages again (it registers 'lesson_topics').
+// HISTORY, 2026-10-17. This was modules/lessons.js, "Lessons" (topic cards: watch a topic's video, press "I've
+// watched it", its questions unlock; and, inside an open card, "Quiz me from the transcript", row 2.24). Mike gave
+// the name "Lessons" to the lesson-file player (modules/lesson_player.js): *"use the new system ... There was never
+// anything built for the old system."* The topic cards were empty (no videos chosen; the starter pack is five topic
+// names), and this file was parked. Code pointed out the transcript quiz was real work; Mike: *"We can keep that."*
+// So it is back, under the name of what it does. WHAT CHANGED, and only this:
+//   * It starts with NO topics (the three written seed topics and the empty starter pack are gone from its default).
+//     A form at the top, "What is the video called?", adds the video as a card and opens its transcript quiz.
+//   * The card's own unlock button and countdown stay: in quest mode a video's questions still wait until somebody
+//     says it was watched (or the quiz is done; see `makeQuestions`). In sandbox, the default, they play at once.
+//   * Routing: the games' two lesson-question rows are written whole from lessons.js `routedLessonQuestions`, the same
+//     set the Lessons module writes, so neither wipes the other's.
+// Where it is going (Code's suggestion, open): writing a LESSON from a video's transcript (row 2.92's writer), with this
+// file's checking as that step's first source.
 //
 // What follows is as it was: the LEVEL-UP screen: watch a lesson, unlock its questions.
 //
@@ -46,7 +51,7 @@
 import { registerModule } from '../module.js';
 import { readWithLegacy } from '../settings_fields.js';
 import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC,
-         TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
+         TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, routedLessonQuestions, transcriptPool } from '../lessons.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createAI, isChatModel } from '../ai.js';
@@ -79,7 +84,8 @@ export const DEFAULTS = {
   // games without setting anything up." Kept consistent with the two modules this mechanism
   // was explicitly built to mirror rather than fork from — see trivia.js's own DEFAULTS
   // comment for the risk this was weighed against.
-  contentSource: 'pack',
+  // 'bank' since 2026-10-17 (Quiz from a video): a person's own videos, added from the form; no pack's topics.
+  contentSource: 'bank',
   packId: packsFor('lesson')[0]?.id || null,
   // *** RULED, 2026-09-23: "both" (not "neither"). *** `it.questions` (trivia-shaped, per the
   // schema) used to be deliberately unread — wiring a lesson's own questions into Trivia's or
@@ -206,7 +212,7 @@ const SETTINGS = [
     note: 'Unlocking a topic puts its questions into the game, whether or not a video was '
       + 'watched. So this wait is a reminder, not a lock.' },
   ...(LESSON_PACKS.length ? [
-    { key: 'contentSource', label: 'Where topics come from', kind: 'choice', default: 'pack',
+    { key: 'contentSource', label: 'Where topics come from', kind: 'choice', default: 'bank',
       level: 'standard',
       options: [{ value: 'bank', label: 'Written topics' },
                 { value: 'pack', label: 'A built-in pack' }],
@@ -376,8 +382,8 @@ registerModule(
     // `videoEl` above). So the platform being down leaves it useful and the INTERNET being down
     // leaves it a list of things it cannot play. That is exactly what `network` means, and
     // calling it `server` would have understated how well it survives a platform outage.
-  { type: 'lesson_topics', title: 'Lesson topics (parked)',
-    dependsOn: 'network', description: 'Watch a short lesson, then answer questions about it',
+  { type: 'video_quiz', title: 'Quiz from a video',
+    dependsOn: 'network', description: 'Paste a video\u2019s transcript, then answer questions written from it',
     settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
@@ -453,10 +459,11 @@ registerModule(
       lastPack = pack || null;
       routedOnce = true;
       poolSig = poolSignature();
-      const generated = poolFrom(generatedItems()).map((q) => toRoutedQuestion(q, q.topic));
-      const all = [...(pack ? questionsFromPack(pack) : []), ...generated];
-      const toTrivia = all.length && (cfg.questionsTo === 'both' || cfg.questionsTo === 'trivia') ? all : [];
-      const toWordforge = all.length && (cfg.questionsTo === 'both' || cfg.questionsTo === 'wordforge') ? all : [];
+      // The whole set, the same the Lessons module writes (lessons.js routedLessonQuestions), plus a pack's own.
+      const r = routedLessonQuestions(cfg.questionsTo, {
+        extra: [...(pack ? questionsFromPack(pack) : []), ...transcriptPool(tlog ? tlog.get().events || [] : [])] });
+      const toTrivia = r.trivia;
+      const toWordforge = r.wordforge;
       // No `.load()` first: `set()`+`flush()` PUTs against `base_version` (0 if never loaded),
       // and state.js's own 409 handler already rebases onto server truth and retries — the
       // same guarantee every other caller of `flush()` relies on, not a shortcut unique to this.
@@ -489,7 +496,8 @@ registerModule(
         }
       }
       if (gen !== topicsGen) return;
-      topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
+      // No written topics: none (2026-10-17). The videos are the ones added from the form.
+      topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : [];
       render();
       await tlogReady;
       if (gen !== topicsGen) return;
@@ -516,13 +524,12 @@ registerModule(
               ${t.blurb ? `<p class="l-blurb">${esc(t.blurb)}</p>` : ''}
             </div>
             <button class="l-btn${done ? '' : ' l-primary'}" data-open="${esc(t.id)}">
-              ${isOpen ? 'Close' : (done ? 'Watch again' : 'Start lesson')}
+              ${isOpen ? 'Close' : 'Open'}
             </button>
           </div>
           ${isOpen ? `
             <div class="l-body">
-              ${videoHTML(t.video) || `<p class="l-none">No video has been chosen for
-                <b>${esc(t.label)}</b> yet. Unlocking still puts its questions in the game.</p>`}
+              ${videoHTML(t.video)}
               <div class="l-actions">
                 <button class="l-btn l-primary" data-watched="${esc(t.id)}">
                   ${done ? 'Already unlocked' : 'I’ve watched it — unlock the questions'}
@@ -571,7 +578,8 @@ registerModule(
       // cards still do their real job — unlocking a topic puts its questions into the game
       // whether or not a video was watched, which is stated at the top of this file as a
       // deliberate design decision rather than a gap.
-      const noVideos = topics.length && topics.every((t) => !(t.video && t.video.value));
+      // Quiz from a video (2026-10-17): the note was about topics shipped with no videos; nothing ships now.
+      const noVideos = false;
       const note = el('[data-unfinished]');
       if (note) {
         note.hidden = !noVideos;
@@ -580,7 +588,7 @@ registerModule(
       }
       el('[data-count]').textContent = topics.length
         ? `${n} of ${topics.length} unlocked`
-        : 'No topics on this screen yet.';
+        : 'No videos yet. Name one above, then paste its transcript.';
 
       const html = topics.map(card).join('');
       if (html === lastListHtml) { placeTq(); applyCountdown(); return; }
@@ -1517,6 +1525,11 @@ registerModule(
       init() {
         mount.innerHTML = `
           <div class="lessons">
+            <form class="l-new" data-vq-new>
+              <label class="l-new-label">What is the video called?
+                <input type="text" class="l-new-name" data-vq-name maxlength="120" autocomplete="off"></label>
+              <button type="submit" class="l-btn l-primary" data-vq-add>Quiz me from its transcript</button>
+            </form>
             <div class="l-top"><span data-count></span></div>
             <p class="l-unfinished" data-unfinished hidden></p>
             <div class="l-list" data-list></div>
@@ -1542,6 +1555,25 @@ registerModule(
             bus.subscribe(CONTEST_TOPIC, () => { contests?.load().catch(() => {}); });
           } catch (err) { contests = null; console.error('lessons: no contests log', err); }
         }
+
+        // A NEW VIDEO (2026-10-17): named, added to this panel's own list (written topics), opened, and its
+        // transcript quiz opened in it. The same name again opens the card already there.
+        mount.querySelector('[data-vq-new]')?.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const input = mount.querySelector('[data-vq-name]');
+          const name = String(input?.value || '').trim().slice(0, 120);
+          if (!name) { input?.focus(); return; }
+          const id = slugify(name);
+          const own = Array.isArray(state.get?.()?.topics) ? state.get().topics : [];
+          const list = own.some((t) => t && t.id === id) ? own : [...own, { id, label: name }];
+          try { state.set({ contentSource: 'bank', topics: list }); state.flush?.(); } catch (err) { console.error('quiz from a video: save', err); }
+          topics = list;
+          openId = id;
+          openedAt = now();
+          if (input) input.value = '';
+          render();
+          openTq(id);
+        });
 
         // Another device unlocked something — reflect it.
         bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
