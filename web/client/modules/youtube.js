@@ -471,9 +471,51 @@ function loadIframeApi() {
 // WATCHING ALONG (row 2.79, play_sync.js): a follow page drives this same player to stay in step with a screen, so it
 // also takes a start position on `load`, a `seek`, and answers `item()` / `playing()`. Additive: nothing that already
 // used this player passes a start or calls them.
+// *** A CUED PLAYLIST MUST HAND OVER ITS IDS, AND MUST NOT START ITS OWN FIRST VIDEO (row 2.99, Mike 2026-10-16 on
+// cici2: "It always seems to start on the first video of a playlist instead of shuffling it."). *** The player is made
+// with `autoplay: 1`, and with it a cued playlist can go straight to PLAYING its own first video without ever reporting
+// CUED - and CUED was the only state that handed the list over. The module then never heard the ids, never picked,
+// and YouTube played the list in its own order: the first video, every time. So after a list is cued (`listWanted`),
+// EVERY state looks for the ids, and a video playing that this module did not ask for (nothing loaded since the cue)
+// is stopped before the list is handed over, so the picker's choice is what plays. A short poll covers a player that
+// reports nothing at all (LIST_POLL_MS x LIST_POLL_TRIES: about ten seconds).
+export const LIST_POLL_MS = 500;
+export const LIST_POLL_TRIES = 20;
 export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }, opts = {}) {
   let player = null, ready = false, pending = null, pendingList = null, pendingCue = false, destroyed = false;
   let pendingStart = 0, curId = null, ytState = -1;   // watching along: where a queued load starts, what is loaded, its state
+  let listWanted = false, listPoll = null, listTries = 0;   // row 2.99: a cued list whose ids have not been handed over
+  const stopListPoll = () => { if (listPoll != null) { clearTimeout(listPoll); listPoll = null; } };
+  // The cued list's ids, once the player has them: stop a first video the module did not ask for, then hand them over.
+  function takeList(state) {
+    if (!listWanted || !player) return false;
+    let l = null;
+    try { l = player.getPlaylist?.(); } catch { l = null; }
+    if (!l || !l.length) return false;
+    listWanted = false;
+    stopListPoll();
+    if (curId === null && (state === 1 || state === 3)) { try { player.stopVideo?.(); } catch { /* not ready */ } }
+    onPlaylist?.(l);
+    return true;
+  }
+  function pollList() {
+    stopListPoll();
+    if (!listWanted || destroyed) return;
+    listPoll = setTimeout(() => {
+      listPoll = null;
+      if (destroyed || !listWanted) return;
+      if (takeList(ytState)) return;
+      listTries += 1;
+      if (listTries < LIST_POLL_TRIES) pollList();
+      else listWanted = false;       // never came: the player's states are reported as they always were
+
+    }, LIST_POLL_MS);
+  }
+  function cueListNow(listId) {
+    listWanted = true; listTries = 0; curId = null;
+    player.cuePlaylist({ list: listId, listType: 'playlist' });
+    pollList();
+  }
   const loadNow = (id, start) => {
     if (start > 0) player.loadVideoById({ videoId: id, startSeconds: start }); else player.loadVideoById(id);
   };
@@ -495,11 +537,15 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
         onReady: () => {
           ready = true;
           applyMute();   // livecams
-          if (pendingList) { player.cuePlaylist({ list: pendingList, listType: 'playlist' }); pendingList = null; }
+          if (pendingList) { cueListNow(pendingList); pendingList = null; }
           else if (pending) { if (pendingCue) player.cueVideoById(pending); else loadNow(pending, pendingStart); pending = null; pendingCue = false; pendingStart = 0; }
         },
         onStateChange: (e) => {
           ytState = e.data;                                            // watching along: `playing()` reads it
+          // (row 2.99) A cued list hands over its ids on whichever state first has them; a first video YouTube started
+          // by itself is stopped there, and is not reported as this module's video playing or stopping.
+          if (listWanted && takeList(e.data)) return;
+          if (listWanted && curId === null && (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING)) return;
 
           if (e.data === YT.PlayerState.ENDED) onEnded?.();
           else if (e.data === YT.PlayerState.PLAYING) onPlaying?.();   // disarms the watchdog
@@ -511,7 +557,8 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
           // We only ever want the ids — the weighted picker chooses what actually plays, so
           // the playlist is a SOURCE of videos, not the running order.
           else if (e.data === YT.PlayerState.CUED) {
-            try { const l = player.getPlaylist?.(); if (l && l.length) onPlaylist?.(l); } catch { /* not a list */ }
+            // A list cued again later (a daypart change) is handed over again; `takeList` above covers the first.
+            try { const l = player.getPlaylist?.(); if (l && l.length && curId === null) onPlaylist?.(l); } catch { /* not a list */ }
           }
         },
         onError: (e) => onError?.(e?.data),
@@ -544,7 +591,7 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
     playing: () => ytState === 1 || ytState === 3,
     cueList(listId) {
       if (destroyed) return;
-      if (ready && player) player.cuePlaylist({ list: listId, listType: 'playlist' });
+      if (ready && player) cueListNow(listId);
       else { pendingList = listId; pending = null; }
     },
     // The cheap first move when a video has stopped on its own: ask it to carry on from
@@ -575,7 +622,7 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
     // livecams (row 2.69): sound off (true) or on (false); kept until the player is ready.
     setMuted(on) { if (destroyed) return; wantMuted = !!on; muteAsked = true; applyMute(); },
     stop() { pending = null; curId = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
-    destroy() { destroyed = true; pending = null; try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
+    destroy() { destroyed = true; pending = null; stopListPoll(); try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
   };
 }
 
