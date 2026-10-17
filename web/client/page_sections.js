@@ -95,6 +95,9 @@ export const addableEntries = () => SECTION_LIBRARY.filter((e) => e.kind !== FIX
 export const EDIT_WORDS = Object.freeze({
   edit: 'Edit my page',
   editShort: 'Add, remove or move parts',
+  // (row 2.102) one part of the page shown on its own, as a module: the whole page is where it is edited.
+  partWhy: 'This is one part of your page. Edit your page on Home.',
+  partShort: 'Edit it on Home',
   done: 'Done',
   doneShort: 'Stop editing',
   editing: 'Editing your page',

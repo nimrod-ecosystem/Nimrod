@@ -165,6 +165,12 @@ export const HEALTH_EXPECT = {
   profile:       { idle: true },
   // 2026-10-04: Your people (faces, names, buttons) and Nimrod at the bottom: left alone, each is a page, not a fault.
   people:        { idle: true },
+  // row 2.102 (2026-10-17): the page's parts, each a module (modules/page_parts.js) - the same page, so the same answer.
+  page_you:          { idle: true },
+  page_messages:     { idle: true },
+  page_recommended:  { idle: true },
+  page_people:       { idle: true },
+  page_connect:      { idle: true },
   helper:        { idle: true },
   card_sort:     { idle: true },
   ambient_drift: { idle: true },

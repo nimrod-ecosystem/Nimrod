@@ -803,6 +803,39 @@ export const CATALOG = [
       + 'somebody’s room it shows their people’s faces and the messages left for them; calls and messages are made '
       + 'from a phone or computer. Sharing a picture, a song or a video is coming.',
   },
+  // THE PAGE'S PARTS, EACH A MODULE (row 2.102, Mike 2026-10-17: "The different panels on the page like messages and
+  // your people should be modules."; modules/page_parts.js). The same parts as on "Your people", drawn by the same code,
+  // to place anywhere. Beta: new, and their names are a guess for Mike.
+  {
+    type: 'page_messages', stage: 'beta', title: 'Messages for you', group: 'comfort', use: 'touch',
+    lead: 'The newest messages left for you, the same as on your page.',
+    needs: 'Nothing. Messages are left for you by your people.',
+    why: 'Put your messages wherever you look most: beside the clock, or on a dashboard of their own.',
+  },
+  {
+    type: 'page_people', stage: 'beta', title: 'Your people’s cards', group: 'comfort', use: 'touch',
+    lead: 'A card for each of your people, with big buttons to call them or leave them a message.',
+    needs: 'Nothing. Calls and messages need the person to have a screen, and to have said yes to you.',
+    why: 'Your people’s faces and the ways to reach them, without the rest of your page.',
+  },
+  {
+    type: 'page_recommended', stage: 'beta', title: 'Recommended for you', group: 'comfort', use: 'touch',
+    lead: 'Songs and videos your people sent you, the same as on your page.',
+    needs: 'Nothing. Your people send these from their own page.',
+    why: 'What your people want you to hear or see, wherever you put it.',
+  },
+  {
+    type: 'page_connect', stage: 'beta', title: 'Connect with someone', group: 'comfort', use: 'touch',
+    lead: 'How to invite someone to use this with you.',
+    needs: 'Nothing.',
+    why: 'The way to bring someone in, placed where they will see it.',
+  },
+  {
+    type: 'page_you', stage: 'beta', title: 'You, on your page', group: 'comfort', use: 'touch',
+    lead: 'Your picture and your name, with the buttons to change them.',
+    needs: 'Nothing.',
+    why: 'Your own card, on its own. Your page itself is edited on Home.',
+  },
   // 2026-10-04: Nimrod at the bottom of a page, small, over it.
   {
     type: 'helper',

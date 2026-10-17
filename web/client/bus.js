@@ -147,6 +147,9 @@ export function createBus() {
       createSource,
       publish,          // (topic, payload, meta) - a scope does not rewrite who sent a thing
       instanceId,
+      // A module that mounts a module of its own (row 2.102: a page part mounts the page) scopes the child over the
+      // SAME bus; the child's subscriptions are its own and go with it (module.js disposes them), not with this scope.
+      scope,
       dispose: () => { while (offs.length) offs.pop()(); },
     };
   }

@@ -383,6 +383,8 @@ registerModule(
     // "Edit my page": live off a screen for a person with a page of their own; dimmed with why otherwise.
     const canEdit = () => !isScreen() && !!selfId() && !!pageState;
     function editButton() {
+      // (row 2.102) a part on its own edits nothing of the page: the whole page is where it is edited.
+      if (pagePart) return button({ act: 'page-edit', label: EDIT_WORDS.edit, enabled: false, reason: EDIT_WORDS.partWhy, short: EDIT_WORDS.partShort }, 'self');
       if (isScreen()) return button({ act: 'page-edit', label: EDIT_WORDS.edit, enabled: false, reason: EDIT_WORDS.screenWhy, short: EDIT_WORDS.screenShort }, 'self');
       if (!canEdit()) return button({ act: 'page-edit', label: EDIT_WORDS.edit, enabled: false, reason: EDIT_WORDS.signInWhy, short: EDIT_WORDS.signInShort }, 'self');
       return editing ? button({ act: 'page-done', label: EDIT_WORDS.done, short: EDIT_WORDS.doneShort, enabled: true }, 'self')
@@ -806,12 +808,24 @@ registerModule(
       }
     }
 
+    // *** ONE PART OF THE PAGE, AS A MODULE OF ITS OWN (row 2.102, Mike 2026-10-17: "The different panels on the page
+    // like messages and your people should be modules."). *** modules/page_parts.js mounts this same page with
+    // `ctx.pagePart` set to one section's kind ("messages", "people" ...): only that part is drawn, by this same code,
+    // so the part and the page can never disagree. It is drawn even when that part is not on the person's page (taken
+    // off in "Edit my page"): putting it on a dashboard is choosing it. A part's panel shows no editing of the page.
+    const pagePart = (() => { try { return typeof ctx.pagePart === 'string' && ctx.pagePart ? ctx.pagePart : null; } catch { return null; } })();
+    function shownSections() {
+      const all = viewSections(pageDoc, { isScreen: isScreen() });
+      if (!pagePart) return all;
+      const mine = all.filter((s) => s.kind === pagePart);
+      return mine.length ? mine.slice(0, 1) : [{ kind: pagePart, id: pagePart, options: {}, known: true, entry: libraryEntry(pagePart) }];
+    }
     function render() {
       if (!root || torn) return;
       const keepFocus = root.ownerDocument.activeElement;
       const focusAct = keepFocus && root.contains(keepFocus) ? `${keepFocus.dataset?.ppCardKey || ''}|${keepFocus.dataset?.ppAct || ''}` : null;
       const list = root.querySelector('[data-pp-list]');
-      const secs = viewSections(pageDoc, { isScreen: isScreen() });
+      const secs = shownSections();
       root.classList.toggle('pp-editing', editing);
       paintColours();
       // Sections gone from the page: their element, and anything mounted in it.
