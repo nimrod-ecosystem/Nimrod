@@ -80,6 +80,8 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
     program's pass phrase (settings.read_secret), handed to it in its environment only."""
     app = Path(app_dir)
     out = []
+    # (row 2.49) the person's Nimrod folder, when the settings name one (settings.py DEFAULTS argues it).
+    root = str(settings.get('nimrodFolder') or '').strip()
     sp = settings.get('speech') or {}
     if sp.get('on'):
         port = int(sp.get('port') or 8797)
@@ -103,6 +105,9 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
         hosts = [str(h).strip() for h in (sp.get('allowHosts') or []) if str(h).strip()]
         if hosts:
             argv += ['--allow-host', ','.join(hosts)]
+        # (row 2.49) its "Voice model" folder is found in the person's Nimrod folder.
+        if root:
+            argv += ['--root', root]
         env = {'PYTHONPATH': str(app), 'PYTHONUNBUFFERED': '1'}
         # THE PASS PHRASE goes in the child's environment, which speech_service reads as NIMROD_SPEECH_SECRET -
         # never in argv, which Part.start writes to the log (settings.py "WHERE IT LIVES").
@@ -124,6 +129,9 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
     if md.get('on'):
         port = int(md.get('port') or 8770)
         folder = str(md.get('folder') or '').strip()
+        # (row 2.49) no folder of its own: the Nimrod folder's Pictures, when the settings name a Nimrod folder.
+        if not folder and root:
+            folder = str(Path(root) / 'Pictures')
         if not folder:
             out.append({'name': 'media', 'label': 'Media agent', 'argv': None, 'cwd': str(app), 'port': port,
                         'env': {}, 'why': 'no folder chosen yet'})
@@ -134,6 +142,9 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
                     '--platform', str(settings.get('platform') or S.DEFAULTS['platform']),
                     '--origin', ','.join(allowed_sites(settings)),
                     '--name', str(md.get('name') or S.DEFAULTS['media']['name'])]
+            # (row 2.49) history kept in the Nimrod folder's Data, where a screen's browser keeps it too.
+            if root:
+                argv += ['--data-dir', str(Path(root) / 'Data')]
             out.append({'name': 'media', 'label': 'Media agent', 'argv': argv, 'cwd': str(app), 'port': port,
                         'env': {'PYTHONUNBUFFERED': '1'}, 'why': ''})
     return out
