@@ -48,7 +48,7 @@ import { createProfilesClient } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
 import { fieldsFor, displayValue } from '../settings_fields.js';
 import { pressControls, checkHiddenHides } from './press_controls.js';
-import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos, SETTINGS } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
+import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos, SETTINGS, createYtPlayer, LIST_POLL_MS } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
 import { createPresetLibrary } from '../presets.js';
 import { PLAY_STATE_TOPIC } from '../game_start.js';
 
@@ -1086,6 +1086,50 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
         check('...each failure still reaches the director as segment/done error', dones.filter((d) => d.reason === 'error').length >= loads.length - 1);
         ib.destroy(); stb.destroy(); evb.destroy(); hb.remove();
       }
+    }
+
+    // ── ROW 2.99 (Mike, 2026-10-16 on cici2): "It always seems to start on the first video of a playlist instead of
+    // shuffling it." The REAL player wrapper, against a fake YouTube API whose cued list goes straight to playing its own
+    // first video and never says CUED - which is what `autoplay: 1` allows.
+    {
+      const hadYT = window.YT;
+      const calls = [];
+      let listReady = false;
+      let inst = null;
+      window.YT = {
+        PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 },
+        Player: class {
+          constructor(host, o) { this.o = o; inst = this; setTimeout(() => o.events.onReady(), 0); }
+          cuePlaylist(o) { calls.push(['cue', o.list]); }
+          getPlaylist() { return listReady ? ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc'] : []; }
+          stopVideo() { calls.push(['stop']); }
+          loadVideoById(id) { calls.push(['load', typeof id === 'string' ? id : id.videoId]); }
+          destroy() {}
+        },
+      };
+      const got = { lists: [], playing: 0, idle: 0 };
+      const hostY = document.createElement('div'); document.body.append(hostY);
+      const p = createYtPlayer(hostY, { onPlaylist: (l) => got.lists.push(l), onPlaying: () => { got.playing += 1; }, onIdle: () => { got.idle += 1; } });
+      await sleep(20);
+      p.cueList('PLmorning');
+      inst.o.events.onStateChange({ data: 3 });      // YouTube buffers its own first video...
+      inst.o.events.onStateChange({ data: 1 });      // ...and plays it, with no CUED and no list yet
+      check('*** a first video YouTube started by itself is not reported as this panel\'s video playing ***', got.playing === 0 && got.idle === 0, JSON.stringify(got));
+      listReady = true;
+      inst.o.events.onStateChange({ data: 1 });
+      check('*** as soon as the list is there it is handed to the picker, on whatever state, and that first video is STOPPED ***',
+        got.lists.length === 1 && got.lists[0].length === 3 && calls.some((c) => c[0] === 'stop'), JSON.stringify({ got, calls }));
+      p.load('bbbbbbbbbbb');
+      inst.o.events.onStateChange({ data: 1 });
+      check('...then the picker\'s video plays and is reported as usual', got.playing === 1 && calls.at(-1)[1] === 'bbbbbbbbbbb');
+      // A player that reports no state at all: the short poll hands the list over.
+      listReady = false;
+      p.cueList('PLevening');
+      listReady = true;
+      await sleep(LIST_POLL_MS + 200);
+      check('*** a player that says nothing: the list is still handed over (a short poll) ***', got.lists.length === 2, JSON.stringify(got.lists.length));
+      p.destroy(); hostY.remove();
+      if (hadYT) window.YT = hadYT; else delete window.YT;
     }
 
   } catch (e) {
