@@ -1269,8 +1269,9 @@ registerModule(
             run: async () => {
               setStatus('Choosing…');
               try {
-                const { pickFolder } = await import('../folder_source.js');
-                await pickFolder();
+                // (row 2.49) the Nimrod folder's Pictures when this device has one (no picker); else the picker, there.
+                const { connectFolderFor } = await import('../folder_source.js');
+                await connectFolderFor('pictures');
                 reload();
               } catch (err2) {
                 // A cancelled picker throws too -- not an error worth alarming over, just

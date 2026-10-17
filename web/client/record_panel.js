@@ -184,6 +184,11 @@ export function mountRecordPanel(root, {
       const back = await fs.recallFolder().catch(() => ({ handle: null, permission: 'unknown' }));
       if (back.handle && back.permission === 'granted') folder = back.handle;
       else if (back.handle) needsPermission = true;
+      // (row 2.49, the plan's step 2) No folder chosen for recordings: the Nimrod folder's Recordings, when this device
+      // has one it may write to now (`fs.treeFolder`, never a prompt). "Choose folder" still picks another.
+      else if (typeof fs.treeFolder === 'function') {
+        try { const t = await fs.treeFolder(); if (t) folder = t; } catch { /* none: the Choose folder button, as before */ }
+      }
     }
     await refreshSessions();
     render();

@@ -713,8 +713,9 @@ registerModule(
           run: async () => {
             setStatus('Choosing…');
             try {
-              const { pickFolder } = await import('../folder_source.js');
-              await pickFolder('', { kind: 'videos' });   // row 2.49: opens at the Nimrod folder's Videos
+              // (row 2.49) the Nimrod folder's Videos when this device has one (no picker); else the picker, there.
+              const { connectFolderFor } = await import('../folder_source.js');
+              await connectFolderFor('videos');
               reload();
             } catch (err2) {
               setStatus('No video source connected.', false,
