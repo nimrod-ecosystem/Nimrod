@@ -760,7 +760,10 @@ export async function saveToFolder(text, { store, view, pick = false, ownName = 
   if (!pick) { try { dir = await store?.get?.(WALK_FOLDER_KEY); } catch { dir = null; } }
   if (!dir) {
     if (!view || typeof view.showDirectoryPicker !== 'function') return { ok: false, reason: 'This browser cannot save into a folder you choose. Save it in your downloads instead.' };
-    try { dir = await view.showDirectoryPicker({ id: 'nimrod-walkthroughs', mode: 'readwrite' }); }
+    // (row 2.49) it opens at the Nimrod folder's Data folder, where Nimrod's own files go (startInFor: never prompts).
+    let start;
+    try { const uf = await import('./user_folders.js'); start = await uf.startInFor('data', store ? { store } : {}); } catch { start = undefined; }
+    try { dir = await view.showDirectoryPicker({ id: 'nimrod-walkthroughs', mode: 'readwrite', ...(start ? { startIn: start } : {}) }); }
     catch (err) { return { ok: false, cancelled: err?.name === 'AbortError', reason: err?.name === 'AbortError' ? 'No folder was chosen.' : 'The folder could not be opened.' }; }
     picked = true;
     try { await store?.put?.(WALK_FOLDER_KEY, dir); } catch { /* remembered for this visit only */ }

@@ -80,9 +80,13 @@ export function available(view = (typeof window !== 'undefined' ? window : null)
  * Ask for a folder. A REAL PROMPT, so it only ever happens from something somebody pressed —
  * never on mount, for the same reason the microphone permission is not requested on mount.
  */
-export async function pickFolder({ view = (typeof window !== 'undefined' ? window : null) } = {}) {
+// `kind` (row 2.49): it opens at the Nimrod folder's Recordings (user_folders.js startInFor; never prompts, skipped if
+// slow). user_folders.js imports this file, so it is loaded when asked, not at the top.
+export async function pickFolder({ view = (typeof window !== 'undefined' ? window : null), kind = 'recordings' } = {}) {
   if (!available(view)) throw new Error('This browser cannot write to a folder you choose.');
-  return view.showDirectoryPicker({ id: 'nimrod-recordings', mode: 'readwrite' });
+  let opts = { id: 'nimrod-recordings', mode: 'readwrite' };
+  try { const uf = await import('./user_folders.js'); opts = uf.withStartIn(opts, await uf.startInFor(kind)); } catch { /* where it always opened */ }
+  return view.showDirectoryPicker(opts);
 }
 
 // ---------------------------------------------------------------------------------------

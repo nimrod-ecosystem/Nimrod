@@ -30,7 +30,7 @@ import { parseCube, compileLut, filterMarkup, applyGrade, readGrade, saveGrade, 
 import { resolvePath, referencesOf, rewriteSource, folderToUrls, loadWam } from '../wam_loader.js';
 import { createMixerFx } from '../mixer_fx.js';
 import { CHANNEL_IDS } from '../audio_bus.js';
-import { FOLDER_KINDS, kindKey, kindFolder, pickKindFolder, useRootFor, forgetRoot, allowAgain, permissionOf, KIND_MODE } from '../user_folders.js';
+import { FOLDER_KINDS, kindKey, kindFolder, pickKindFolder, useRootFor, forgetRoot, allowAgain, permissionOf, KIND_MODE, startInFor, withStartIn } from '../user_folders.js';
 import { scanFolder, readUserFolders, userFoldersHtml, renderUserFolders, userFoldersPage, USER_FOLDER_ITEMS,
   USER_FOLDERS_PAGE, permissionWords, createDeviceLookRows, applyDeviceChoice } from '../user_folders_page.js';
 // 2026-10-02, choosing: the device's font and colour look.
@@ -432,9 +432,22 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
         (await allowAgain(lapsed.holder, lapsed.mode)) === 'granted' && perm.requested.mode === 'read' && !!(await kindFolder('fonts', { store })).dir);
       check('permission of nothing is "none"; a handle that throws is "unknown"', (await permissionOf(null)) === 'none'
         && (await permissionOf({ queryPermission() { throw new Error('x'); } })) === 'unknown');
+      // ROW 2.49 (Mike 2026-10-16: "Let's not let this fall off our radar."): every picker opens in the tree.
+      const pics = await startInFor('pictures', { store });
+      check('*** a picker for pictures opens at the Nimrod folder\'s Pictures (the root\'s subfolder) ***', pics && pics.name === 'Pictures', pics && pics.name);
+      check('...a kind with its own folder opens there', (await startInFor('fonts', { store }))?.name === 'My fonts');
+      await pickKindFolder('videos', { view, store });
+      check('*** choosing a different folder for one kind opens at the root\'s own subfolder for it ***', view.opts.startIn?.name === 'Videos', J({ ...view.opts, startIn: view.opts.startIn?.name }));
+      await useRootFor('videos', { store });
+      const slow = { get: () => new Promise((r) => setTimeout(() => r(null), 2000)) };
+      const t0 = Date.now();
+      const late = await startInFor('pictures', { store: slow, timeoutMs: 50 });
+      check('*** a slow lookup is skipped, not waited for (the press that opened the picker must still count) ***', late === undefined && Date.now() - t0 < 500, `${Date.now() - t0} ms`);
+      check('withStartIn adds it only when there is one', J(withStartIn({ id: 'x' }, undefined)) === J({ id: 'x' }) && withStartIn({ id: 'x' }, pics).startIn === pics);
       await forgetRoot({ store });
       check('stop using the root: kinds without their own folder have none; the files stay', (await kindFolder('luts', { store })).source === 'none'
         && (await kindFolder('fonts', { store })).source === 'own' && 'Fonts' in rootTree);
+      check('...and a picker opens where it always did (no folder to start in)', (await startInFor('pictures', { store })) === undefined);
     }
 
     section('*** what the screen lists: names only, and a plugin is NEVER run ***');

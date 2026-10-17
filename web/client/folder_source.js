@@ -150,9 +150,14 @@ async function getRow(id) {
 
 // Prompt for a folder and remember it. MUST be called from a user gesture (a click) —
 // the browser refuses otherwise, and that refusal is the whole security model.
-export async function pickFolder(label = '') {
+// `kind` (row 2.49): which of the Nimrod folder's folders the picker opens in - 'pictures' (the default), 'videos' or
+// 'music' (user_folders.js startInFor; never prompts, skipped if slow). user_folders.js is loaded here, not at the top:
+// it imports fs_sink.js, which a page using only folder sources need not load.
+export async function pickFolder(label = '', { kind = 'pictures' } = {}) {
   if (!isFolderPickerSupported()) throw new Error('This browser cannot open a folder directly.');
-  const handle = await window.showDirectoryPicker({ id: 'nimrod-media', mode: 'read' });
+  let opts = { id: 'nimrod-media', mode: 'read' };
+  try { const uf = await import('./user_folders.js'); opts = uf.withStartIn(opts, await uf.startInFor(kind)); } catch { /* where it always opened */ }
+  const handle = await window.showDirectoryPicker(opts);
   return addFolderSource(handle, label);
 }
 
