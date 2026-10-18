@@ -30,7 +30,7 @@
 // WHERE IT GOT TO is kept on the panel's own row (`at`), so a lesson stopped part-way carries on there.
 
 import { registerModule } from '../module.js';
-import { checkLesson, beatsOf, showFor, citeWords, LOOKS } from '../lesson_file.js';
+import { checkLesson, beatsOf, showFor, citeWords, LOOKS, lessonHasLooks } from '../lesson_file.js';
 import { BUILTIN_LESSONS } from '../lessons_builtin.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, createLessons, routedLessonQuestions, transcriptPool,
   QUESTIONS_TO, MADE_LESSONS_KEY, madeLessonsFrom } from '../lessons.js';
@@ -55,7 +55,11 @@ const SETTINGS = [
   { key: 'form', label: 'How it is shown', kind: 'choice', default: 'watch', level: 'essential',
     options: [{ value: 'watch', label: 'Watch: it plays by itself' }, { value: 'slides', label: 'Slides: press Next to go on' },
       { value: 'read', label: 'Read: all of it, as a page' }] },
-  { key: 'look', label: 'Pictures for', kind: 'choice', default: 'grownup', level: 'standard',
+  // THE LOOK (Mike, 2026-10-17): *"Child is fine. I don't feel like most lessons would need you to choose. The difficulty
+  // of the lesson can usually determine the content."* So a child's look by default, and the row is offered only for a
+  // lesson that has looks at all (Numbers 0 to 9 today); a lesson written for its level just plays as written.
+  { key: 'look', label: 'Pictures for', kind: 'choice', default: 'child', level: 'standard',
+    appliesWhen: (v) => lessonHasLooks((BUILTIN_LESSONS.find((l) => l.id === (v?.lessonId || BUILTIN_LESSONS[0].id)) || {}).lesson),
     note: 'The same lesson; only the things shown change (cups and keys, or ducks and apples).',
     options: [{ value: 'grownup', label: 'A grown-up' }, { value: 'child', label: 'A child' }] },
   { key: 'speak', label: 'Say it aloud', kind: 'toggle', default: true, level: 'standard', onLabel: 'Yes', offLabel: 'No, captions only' },
@@ -211,7 +215,7 @@ export function showHTML(show, lesson) {
 }
 
 /** The whole lesson as a page (the Read form). PURE. */
-export function readHTML(lesson, look = 'grownup', { unchecked = false } = {}) {
+export function readHTML(lesson, look = 'child', { unchecked = false } = {}) {
   const notes = [];
   const fn = (cite) => {
     if (!cite || !cite.length) return '';
@@ -268,7 +272,7 @@ function lessonsModule(ctx) {
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
-    const look = () => (LOOKS.includes(cfg.look) ? cfg.look : 'grownup');
+    const look = () => (LOOKS.includes(cfg.look) ? cfg.look : 'child');
 
     const allLessons = () => [...BUILTIN_LESSONS, ...made];
     function load() {

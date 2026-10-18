@@ -69,7 +69,10 @@ try {
   const F = Object.fromEntries(LESSON_SETTINGS.map((f) => [f.key, f]));
   check('*** Watch is the default: a lesson left alone plays through, it never sits on its first slide ***', F.form.default === 'watch');
   check('which lesson, the look, saying it aloud, and how long Watch holds each part (Rule 1: settings)',
-    F.lessonId && F.look.default === 'grownup' && F.speak.default === true && F.holdMs.default === WATCH_HOLD_MS);
+    F.lessonId && F.speak.default === true && F.holdMs.default === WATCH_HOLD_MS);
+  check('*** the look: a child\'s by default (Mike, 2026-10-17: "Child is fine") ***', F.look.default === 'child');
+  check('*** "Pictures for" is offered only for a lesson that has looks (Mike: "most lessons would not need you to choose") ***',
+    F.look.appliesWhen({ lessonId: 'numbers-0-9' }) === true && F.look.appliesWhen({}) === true && F.look.appliesWhen({ lessonId: 'made-right-to-repair' }) === false);
 
   section('drawn, not stored');
   check('counts in words: "3 cups", "1 cup", "no cups"', countWords(3, 'cup') === '3 cups' && countWords(1, 'cup') === '1 cup' && countWords(0, 'cup') === 'no cups');
@@ -149,7 +152,7 @@ try {
     const r = mountLesson(fakeRow({ form: 'read' }));
     const text = r.q('[data-lp-read]')?.textContent || '';
     check('*** the whole lesson as a page: title, classes, what each part shows in words, the questions with answers ***',
-      /Numbers 0 to 9/.test(text) && /Meet 5 to 9/.test(text) && /\[3 cups\]/.test(text) && /How many are there\? 3/.test(text) && /Questions to try/.test(text), text.slice(0, 200));
+      /Numbers 0 to 9/.test(text) && /Meet 5 to 9/.test(text) && /\[3 ducks\]/.test(text) && !/\[3 cups\]/.test(text) && /How many are there\? 3/.test(text) && /Questions to try/.test(text), text.slice(0, 200));
     check('nothing is said or armed in Read', r.said.length === 0 && r.timers.pending() === 0);
     r.done();
   }
