@@ -220,7 +220,8 @@ registerModule(
       // Stage 2: a module that has had fewer of this Lineup's turns lately comes up more (lineup.js freshnessWeights).
       let weightOf = () => 1;
       try {
-        weightOf = freshnessWeights(turnPlays.rows?.() || [], { now: date.getTime(), strength: (state.get?.() || {}).lineupFresh || FRESH_DEFAULT });
+        // (2026-10-17, Mike: "All devices") the person's Lineup turns on every device, once the folder is read (plays.js).
+    weightOf = freshnessWeights(turnPlays.allRows?.() || turnPlays.rows?.() || [], { now: date.getTime(), strength: (state.get?.() || {}).lineupFresh || FRESH_DEFAULT });
       } catch { /* no plays to read: every module weighs the same */ }
       const e = pickEntry(entries, { date, rand: io.rand || Math.random, last: lastEntry, weightOf });
       // Nothing holds now (a gap in the hours): the turn on screen carries on (the plan, question 1).
