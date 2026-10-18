@@ -37,6 +37,11 @@ export const SHOW_KINDS = Object.freeze(['heading', 'numeral', 'count', 'word', 
 // offers an AI exactly these; a name outside them is reported, and the screen plays the beat with no move.
 export const MOVES = Object.freeze(['title-rise', 'slide-in-left', 'bars-grow', 'count-in', 'light-in-turn', 'fade']);
 export const LOOKS = Object.freeze(['grownup', 'child']);
+/** Does any part of this lesson change with the look? (Only then is "Pictures for" worth offering.) PURE. */
+export function lessonHasLooks(lesson) {
+  for (const c of lesson?.classes || []) for (const b of c?.beats || []) if (b?.show?.looks && Object.keys(b.show.looks).length) return true;
+  return false;
+}
 export const SAY_WHO = Object.freeze(['teacher', 'a', 'b']);
 export const CHART_KINDS = Object.freeze(['bar', 'line', 'pie', 'stacked']);
 // Bounds, so a runaway answer cannot fill a screen's memory. Argued, not settings: a "one hour" course is a few
@@ -213,7 +218,7 @@ function checkShow(s, at, { chartIds, problems }) {
 }
 
 /** A show with its look laid over it ("grownup" or "child"); the show itself when it has none for that look. PURE. */
-export function showFor(show, look = 'grownup') {
+export function showFor(show, look = 'child') {
   if (!show || !show.looks || !show.looks[look]) return show;
   const { looks, ...rest } = show;
   return { ...rest, ...looks[look] };
