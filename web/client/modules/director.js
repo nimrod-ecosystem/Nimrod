@@ -25,6 +25,7 @@
 
 import { registerModule, mountModule, getManifest, extendCtx } from '../module.js';
 import './photos.js';   // registers 'photos', the Pictures turn's module (row 2.87)
+import './lesson_player.js';   // registers 'lessons', the Lessons turn's module (row 2.108)
 // A Lineup with rules (row 2.87, Stage 1; lineup.js): a saved Lineup preset decides each turn.
 import { cleanEntries, pickEntry, LINEUP_TYPE, freshnessWeights, FRESH_DEFAULT, FRESH_FIELD } from '../lineup.js';
 import { createPresetLibrary } from '../presets.js';
@@ -40,7 +41,9 @@ import '../modules/wallpaper.js';   // registers the type this container raises 
 export const PROVIDERS = [
   { id: 'youtube',     label: 'Video',          real: true  },
   { id: 'personal',    label: 'Personal video', real: true  },
-  { id: 'educational', label: 'Educational',    real: true  },
+  // LESSONS, not Educational (row 2.108, Mike 2026-10-18): the real Lessons module, wrapped (`inner`) as Pictures is -
+  // `makeTurnAdapter`. It plays its lesson for the turn and keeps its place, so the next turn carries on.
+  { id: 'lessons',     label: 'Lesson',         real: true, inner: 'lessons' },
   // PICTURES (row 2.87 (2), Mike 2026-10-14: "rotate pictures, videos, songs, lessons and voice messages"): the real
   // Photos module, wrapped (`inner`) - see `makeTurnAdapter`. Photos keeps its own rules; the Lineup only gives it a turn.
   { id: 'pictures',    label: 'Pictures',       real: true, inner: 'photos' },
@@ -354,6 +357,9 @@ registerModule(
             mount: el, bus: rootBus, state: cState, events: cEvents, instanceId: innerId,
             // "remove this picture" is never answered by a slideshow that is not on screen (photos.js).
             answersOnlyWhenShown: true,
+            // A new-core module (Lessons, row 2.108) is refused without the key (module.js core:'new'); the screen's
+            // person when it has one, else null until it is known.
+            ...('personId' in ctx ? {} : { personId: null }),
           }));
           child.init();
           cState.startPolling(); cEvents.startPolling();

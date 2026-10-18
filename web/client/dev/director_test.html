@@ -182,7 +182,7 @@ async function mountDirector({ host, hour, seed, timers, stub, extra = {}, preSt
       seenDaytime.add(curProv(host));
     }
     check('daytime rotation uses several providers', seenDaytime.size >= 4, `seen=${[...seenDaytime].join(',')}`);
-    check('every shown provider is daytime-legal', [...seenDaytime].every((p) => p && ['youtube','personal','educational','pictures','wordgame','trivia','singalong'].includes(p)));
+    check('every shown provider is daytime-legal', [...seenDaytime].every((p) => p && ['youtube','personal','lessons','pictures','wordgame','trivia','singalong'].includes(p)));
     check('re-activating youtube ADVANCES it (director drives youtube/next)', stub.loaded.length > loadsBefore, `loads ${loadsBefore} -> ${stub.loaded.length}`);
 
     // ── ROW 2.87 (2): A TURN OF PICTURES - the real Photos module, given a turn, paused while hidden ──────────────

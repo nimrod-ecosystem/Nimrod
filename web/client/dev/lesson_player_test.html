@@ -218,6 +218,18 @@ try {
     check('a panel saved under "lesson_player" plays the same lesson', old.probe().title === 'Numbers 0 to 9');
     old.done();
   }
+  section('*** a Lineup\'s turn (row 2.108: Lessons replace Educational) ***');
+  {
+    const w = mountLesson(fakeRow({ form: 'watch' }));
+    check('(setup) playing in Watch, counting to the next part', w.timers.pending() === 1);
+    w.bus.publish('lessons/pause');
+    check('*** the Lineup pauses it when its turn ends: nothing counting, nothing said ***', w.timers.pending() === 0);
+    const at = w.probe().at;
+    w.bus.publish('lessons/play');
+    check('*** and plays it at its next turn, from where it was ***', w.timers.pending() === 1 && w.probe().at === at);
+    w.done();
+  }
+
   section('*** make a new lesson: the prompt drafted, the reply pasted or written here, checked, kept, played ***');
   {
     const GOOD = { about: { title: 'Right to repair', for: 'age 13' },

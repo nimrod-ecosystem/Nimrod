@@ -47,7 +47,8 @@ try {
     cleanEntry({ module: 'pictures', often: 'loads', turnMs: 500 }).often === 'sometimes' && cleanEntry({ module: 'pictures', turnMs: 500 }).turnMs === 0);
   check(`at most ${MAX_ENTRIES} entries, ids never repeat`, cleanEntries(Array.from({ length: 80 }, (_, i) => ({ module: 'pictures' }))).length === MAX_ENTRIES
     && cleanEntries([{ id: 'a', module: 'youtube' }, { id: 'a', module: 'pictures' }]).length === 1);
-  check('the modules a turn can be today', J(LINEUP_MODULES.map((m) => m.id)) === J(['youtube', 'pictures', 'personal', 'educational', 'dashboard']));
+  check('the modules a turn can be today (Lessons, not Educational: row 2.108)', J(LINEUP_MODULES.map((m) => m.id)) === J(['youtube', 'pictures', 'personal', 'lessons', 'dashboard']));
+  check('*** an entry saved as Educational reads as Lessons, so nobody loses a turn ***', cleanEntry({ module: 'educational', weight: 3 })?.module === 'lessons');
 
   section('days and hours');
   const weekday = { module: 'youtube', days: [1, 2, 3, 4, 5], from: 9, to: 17 };
