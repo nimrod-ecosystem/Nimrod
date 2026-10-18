@@ -2738,3 +2738,15 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   than the empty topic cards, and the lesson questions both it and Lessons send to the games are computed in one
   place (lessons.js `routedLessonQuestions`) so neither wipes the other's. Whether it later becomes the first step of
   writing a lesson from a video (row 2.92) is open. Built in c9e8552. (2026-10-17)
+
+## Mike's answers of 2026-10-17 (night): the randomizer, the lesson look
+
+- **The randomizer counts plays on every device.** Asked whether "the randomizer goes by the account" (row 2.91)
+  meant every panel on one device or every device once their plays meet in the Nimrod folder. Mike: *"All devices."*
+  HOW, Code's, not ruled by Mike: a panel's picker adds the same person's plays of the same kind from the folder,
+  only when that person keeps plays in their Nimrod folder (that choice is the opt-in; no separate row), never
+  prompting or waiting; one shared read per page, cached 10 minutes, 90 days back. Built in 837166e. (2026-10-17)
+- **A lesson's look defaults to a child's, and is offered only where a lesson has looks.** Mike: *"Child is fine. I
+  don't feel like most lessons would need you to choose. The difficulty of the lesson can usually determine the
+  content."* So the level a lesson is written for decides its content; "Pictures for" appears only for a lesson with
+  looks (Numbers 0 to 9). Built in ca269fd. (2026-10-17)
