@@ -40,6 +40,7 @@
 // THE SCORE is rows built this game, on the score contract (`../score_source.js`). EACH ROW BUILT PAYS
 // `rowPoints` Play points (1 by default, argued at DEFAULTS). Being played: game_start.js createPlayWatch.
 
+import { followPanelSpeaker } from '../speakers.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -221,7 +222,7 @@ function ensureStyle(doc) {
 }
 
 registerModule(
-  { type: GAME, title: TITLE, core: 'new',
+  { type: GAME, title: TITLE, core: 'new', routesSound: true,
     description: 'Stack Nimrod bricks into a wall. A full row is a row built. One switch can play. The brick '
       + 'glides by itself and a press drops it. The easy levels are slow, use small bricks and never end the game.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
@@ -255,7 +256,7 @@ registerModule(
     let rootEl = null, wellEl = null, floorEl = null, boardEl = null, sayEl = null, scoreEl = null, ctrlEl = null, overlayEl = null;
     let drawnV = -1, drawnKey = '', lastSay = '', lastScore = '', lastOverlay = null;
     let menuAsks = 0;
-    let score = null, ledger = null, tones = null, music = null;
+    let score = null, ledger = null, tones = null, music = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     let started = true, demo = false, demoMs = 0, demoRested = false, demoMemory = {}, demoActMs = 0, agent = null;
     let restTimer = null;
     const plays = createPlayWatch(bus, ctx);
@@ -647,6 +648,8 @@ registerModule(
         };
         applyCfg(state?.get?.());
         fresh();
+        // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
+        unSpeaker = followPanelSpeaker(state, () => [tones, music]);
         state?.subscribe?.((s) => {
           const wasLevel = cfg.level;
           applyCfg(s);
@@ -682,6 +685,7 @@ registerModule(
       },
       onShow() { hidden = false; syncAudio(); render(); ensureLoop(); },
       destroy() {
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
         clearRest(); stopLoop();
         mount.removeEventListener('pointerdown', onPointerDown);

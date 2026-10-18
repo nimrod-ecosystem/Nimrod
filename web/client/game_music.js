@@ -81,6 +81,7 @@ export function createGameMusic({
   let gain = 1;
   let playing = false;
   let blocked = false;            // autoplay refused; retry on the next gesture
+  let sinkId = '';                // a speaker chosen for this panel (speakers.js followPanelSpeaker); '' = the screen's
   let note = '';                  // why we are on ambient when a folder was asked for
 
   // ---- the folder path -------------------------------------------------------------
@@ -100,9 +101,15 @@ export function createGameMusic({
   function ambientStart() {
     if (ac) return true;
     try {
-      // The screen's chain first: its context, and its `media` channel as where the bed goes.
+      // The screen's chain first: its context, and its `media` channel as where the bed goes. A speaker chosen for this
+      // panel: its own context instead, sent there (the shared one goes to one speaker for everything on it).
       let dest = null;
-      const chain = effectsOf();
+      if (sinkId) {
+        ac = makeContext(); ownsContext = true;
+        if (!ac) return false;
+        try { Promise.resolve(ac.setSinkId?.(sinkId)).catch(() => {}); } catch { /* the default speaker */ }
+      }
+      const chain = ac ? null : effectsOf();
       let shared = null;
       try { shared = chain?.context?.() || null; } catch { shared = null; }
       if (shared) {
@@ -175,6 +182,7 @@ export function createGameMusic({
     current = track;
     el = makeAudio(track.url);
     if (!el) { fallback('this browser cannot play audio files'); return; }
+    if (sinkId) { try { Promise.resolve(el.setSinkId?.(sinkId)).catch(() => {}); } catch { /* the default speaker */ } }
     el.volume = vol * gain;
     el.addEventListener('ended', () => { if (playing) fileStart(); });
     // A single unplayable file must not end the music. Drop it and move on; if they are ALL
@@ -230,7 +238,18 @@ export function createGameMusic({
     });
   }
 
+  // Send the music to a speaker (a device id; '' = back to the screen's shared sound): a file playing moves at once; the
+  // synthesised bed is built again in the right context if it is playing.
+  function setSink(id) {
+    const next = String(id || '');
+    if (next === sinkId) return;
+    sinkId = next;
+    if (el) { try { Promise.resolve(el.setSinkId?.(next)).catch(() => {}); } catch { /* the default speaker */ } }
+    if (ac) { ambientStop(); if (playing && gain > 0 && !el) ambientStart(); }
+  }
+
   return {
+    setSink,
     // Point at a linked folder. Returns what it found, and falls back on its own if that is
     // nothing usable.
     async useFolder(sourceId, album = '') {

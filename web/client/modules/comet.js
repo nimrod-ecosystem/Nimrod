@@ -41,6 +41,7 @@
 //   * IT STOPS WHEN IT IS NOT VISIBLE. A canvas animating behind a hidden panel is battery and
 //     heat on a Pi that is on 24/7, for a picture nobody is looking at.
 
+import { followPanelSpeaker, routeContext } from '../speakers.js';
 import { registerModule, getManifest } from '../module.js';
 import { mountSettings } from '../settings.js';
 import { fieldItems, fieldsFor } from '../settings_fields.js';
@@ -126,7 +127,7 @@ const SETTINGS = [
 ];
 
 registerModule(
-  { type: 'comet', title: 'Comet',
+  { type: 'comet', title: 'Comet', routesSound: true,
     description: 'A comet that follows your movement through a night sky, with hearts to catch',
     // dependsOn NONE — canvas and synthesised audio, no server, no files. That makes it a
     // genuinely good fallback when everything else is unreachable.
@@ -157,6 +158,7 @@ registerModule(
     let trail = [], sparks = [], stars = [], hearts = [];
     let warm = null, observer = null;
     let ac = null, sfx = null, lastTone = 0;
+    let toneSink = '';   // row 2.97: the panel's own speaker
     // A `next` glide in progress: where we started, where we are going, and when.
     let steer = null;
     // *** THE SIMULATION CLOCK, AND IT IS DELIBERATELY NOT THE WALL CLOCK. *** Everything that
@@ -180,6 +182,7 @@ registerModule(
         const A = window.AudioContext || window.webkitAudioContext;
         if (!A) return;
         ac = new A();
+        if (toneSink) routeContext(ac, toneSink);
         sfx = ac.createGain();
         sfx.gain.value = 0.6;
         sfx.connect(ac.destination);
@@ -689,6 +692,8 @@ registerModule(
         // Everything here is appearance, sound and how the comet moves, and all of it is
         // safe to change live: nothing in this game is a deadline somebody is holding off
         // against, which is the one thing `pressgame` and `call` each had to protect.
+        // Row 2.97: "Its sound comes out of" sends the sound to that speaker.
+        offs.push(followPanelSpeaker(state, () => [{ setSink: (id) => { toneSink = id; if (ac) routeContext(ac, id); } }]));
         offs.push(state?.subscribe?.(() => {
           cfg = { ...DEFAULTS, ...(state.get() || {}) };
           paintScore();   // the score row is live too, not only on the next catch

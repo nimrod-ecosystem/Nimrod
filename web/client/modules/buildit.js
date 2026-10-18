@@ -21,6 +21,7 @@
 // default): FOR, every model is built by presses -- nothing builds itself. AGAINST: at level 1 it is two presses a
 // point. 0 turns it off. Being played: game_start.js createPlayWatch.
 
+import { followPanelSpeaker } from '../speakers.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -113,7 +114,7 @@ export function progressWords(m) {
 }
 
 registerModule(
-  { type: GAME, title: TITLE, core: 'new',
+  { type: GAME, title: TITLE, core: 'new', routesSound: true,
     description: 'See a finished model of Nimrod bricks and build the same. At the easy levels, choose the next part '
       + 'from two or three and it snaps into place (one switch can play); at the harder ones, build it yourself.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
@@ -138,7 +139,7 @@ registerModule(
     let view = null;           // build mode: the brick builder
     let lastMatch = null;
     let rootEl = null, targetEl = null, targetWords = null, workEl = null, sayEl = null, scoreEl = null, overlayEl = null;
-    let score = null, ledger = null, tones = null;
+    let score = null, ledger = null, tones = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     const offs = [];
 
     // ---- timers ----------------------------------------------------------------------------------------------
@@ -423,6 +424,8 @@ registerModule(
         if (first.ownScore !== undefined) cfg.ownScore = first.ownScore;
         level = cfg.level;
         loadTarget();
+        // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
+        unSpeaker = followPanelSpeaker(state, () => [tones]);
         try { const off = state?.subscribe?.((s) => applyCfg(s)); if (typeof off === 'function') offs.push(off); } catch { /* fine */ }
         const sub = (t, fn) => { try { const off = bus?.subscribe?.(t, fn); if (typeof off === 'function') offs.push(off); } catch { /* no bus */ } };
         sub(`${GAME}/next`, () => step(1));
@@ -442,6 +445,7 @@ registerModule(
       onHide() { hidden = true; stopLight(); tones?.setActive(false); if (started) plays.rest(); try { state?.flush?.(); } catch { /* fine */ } },
       onShow() { hidden = false; armLight(); render(); },
       destroy() {
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
         stopLight(); idleTimer = clear(idleTimer); restTimer = clear(restTimer);
         mount.removeEventListener('pointerdown', onPointerDown);

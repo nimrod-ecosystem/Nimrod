@@ -149,8 +149,14 @@ export function playOnChoices({ inherit = null, outputsList = outputs, spotify =
 // Amplify already had their own "Play on"; this row is for the other modules that play their own media elements
 // with sound - Personal videos today - which declare it with `routesSound: true` in their manifest. (Photos' clips
 // play muted, so it has nothing to route.) YouTube's and Spotify's frames cannot be routed (above), so they do not
-// declare it, and get no row that would change nothing. Games' sounds share the screen's one audio context; a
-// speaker per game would need one context each, and is not built.
+// declare it, and get no row that would change nothing.
+// GAMES (2026-10-17): their sounds share the screen's one audio context (mixer_fx.js), and a context goes to ONE
+// speaker (AudioContext.setSinkId moves all of it). So a game panel sent elsewhere plays through ITS OWN context,
+// routed there, made only when a speaker is chosen (game_tones.js / game_music.js `setSink`): nothing chosen costs
+// nothing and changes nothing. What a routed game gives up, said on the row: the mixer's reverb and plugins, which
+// live on the shared context. The other way (one context, the panel's node out through a hidden <audio> element)
+// keeps the effects but adds latency and a stream per panel; not built, the day somebody misses the reverb.
+// Followed with `followPanelSpeaker` below; games declare `routesSound: true` like Personal videos.
 export const PANEL_SPEAKER_KEY = 'panelSpeaker';
 /**
  * The Sound tab's "Its sound comes out of" row, or null when there is nothing to choose between (a browser that
@@ -162,7 +168,8 @@ export function panelSpeakerField({ outputsList = outputs, canRoute = canChooseS
     key: PANEL_SPEAKER_KEY, label: 'Its sound comes out of', kind: 'choice', level: 'standard', default: '',
     options: [{ value: '', label: 'This screen’s own speaker (whatever the computer uses)' },
       ...outputsList.map((o) => ({ value: `${OUT_PREFIX}${o.label}`, label: o.label }))],
-    note: 'A speaker that is unplugged later is not an error: the sound goes to this screen’s own speaker until it is back.',
+    note: 'A speaker that is unplugged later is not an error: the sound goes to this screen’s own speaker until it is back. '
+      + 'A game sent to another speaker plays without the mixer’s reverb and effects.',
   };
 }
 /**
@@ -175,6 +182,39 @@ export function routeToSpeaker(el, value, list = outputs) {
   const id = p.kind === 'out' ? sinkIdFor(p.name, list) : '';
   try { Promise.resolve(el.setSinkId(id)).catch(() => {}); } catch { /* the default speaker */ }
   return true;
+}
+
+/** The device id a panel's row means: an attached speaker by name, else '' (the computer's default). PURE. */
+export function speakerIdFor(value, list = outputs) {
+  const p = parsePlayOn(value);
+  return p.kind === 'out' ? sinkIdFor(p.name, list) : '';
+}
+/** Send a whole AudioContext to a device id ('' the default). Never throws; false when it cannot be routed. */
+export function routeContext(ac, id) {
+  if (!ac || typeof ac.setSinkId !== 'function') return false;
+  try { Promise.resolve(ac.setSinkId(id || '')).catch(() => {}); } catch { return false; }
+  return true;
+}
+/**
+ * Keep sound makers on a panel's speaker: `targets()` returns things with `setSink(deviceId)` (game_tones.js,
+ * game_music.js, or a module's own). Applied now, whenever the panel's row changes, and whenever the speakers
+ * plugged in change (a speaker named but unplugged plays on the default until it is back). Returns a stop function.
+ */
+export function followPanelSpeaker(state, targets) {
+  let last = null;
+  const apply = () => {
+    const id = speakerIdFor(state?.get?.()?.[PANEL_SPEAKER_KEY]);
+    if (id === last) return;
+    last = id;
+    for (const t of (typeof targets === 'function' ? targets() : targets) || []) {
+      try { t?.setSink?.(id); } catch (err) { console.error('speakers: setSink', err); }
+    }
+  };
+  apply();
+  let off = null;
+  try { off = state?.subscribe?.(() => apply()); } catch { off = null; }
+  const offList = watchOutputs(() => apply());
+  return () => { try { if (typeof off === 'function') off(); } catch { /* gone */ } offList(); };
 }
 
 /** The screen's Speakers rows, for kiosk.js SCREEN_FIELDS, with their choices as known right now. */

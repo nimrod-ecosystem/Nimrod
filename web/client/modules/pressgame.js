@@ -68,6 +68,7 @@
 // is a server table), and the document.head stylesheet (scoped to the instance so two can
 // coexist). The synthesised tones stay; they need no files.
 
+import { followPanelSpeaker, routeContext } from '../speakers.js';
 import { registerModule, getManifest } from '../module.js';
 import { mountSettings } from '../settings.js';
 import { fieldItems, fieldsFor } from '../settings_fields.js';
@@ -317,7 +318,7 @@ function readTheme(el) {
 }
 
 registerModule(
-  { type: 'pressgame', title: 'Wait and Go',
+  { type: 'pressgame', title: 'Wait and Go', routesSound: true,
     description: 'Wait while a charge builds, then press when the screen says Go',
     // `local` rather than `none`: the visuals and tones need nothing, but the trial records
     // want somewhere to go. It still RUNS with no server — it just stops being evidence.
@@ -350,6 +351,7 @@ registerModule(
     let W = 1, H = 1, DPR = 1;
     let theme = null, observer = null, visible = true;
     let ac = null, sfx = null;
+    let toneSink = '';   // row 2.97: the panel's own speaker, for the tones' own context
     let music = null;
     // "Music from" / "Music folder": the sources this screen may play music from (listed at mount and when whose
     // sources they are changes), and the folder row's choices from the music's own listings (media_sources.js).
@@ -583,6 +585,7 @@ registerModule(
         const A = window.AudioContext || window.webkitAudioContext;
         if (!A) return;
         ac = new A();
+        if (toneSink) routeContext(ac, toneSink);
         sfx = ac.createGain();
         sfx.gain.value = 0.18;
         sfx.connect(ac.destination);
@@ -1277,6 +1280,8 @@ registerModule(
         // under a learned reach, and worse here because she is actively counting. The new
         // length is picked up by the NEXT wait, which is a decision somebody made taking
         // effect at the next honest opportunity.
+        // Row 2.97: "Its sound comes out of" sends the tones and the music to that speaker.
+        offs.push(followPanelSpeaker(state, () => [music, { setSink: (id) => { toneSink = id; if (ac) routeContext(ac, id); } }]));
         offs.push(state?.subscribe?.(() => {
           const was = cfg;
           cfg = { ...DEFAULTS, ...(state.get() || {}) };
