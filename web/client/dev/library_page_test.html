@@ -130,6 +130,12 @@ try {
     check('*** at 1400 wide, signed in: the sidebar, then the library, the module beside it, its settings under it ***',
       D.right <= L.left && L.right <= S.left && T.top >= S.bottom - 2 && T.left >= L.right && S.width > 600,
       JSON.stringify({ D: [D.left, D.right], L: [L.left, L.right], S: [S.left, S.right, S.bottom], T: [T.left, T.top] }));
+    // Row 2.105 (2026-10-18): "no way to make the modules actually transparent on the modules page". The box around the
+    // module tried paints nothing of its own, so See-through and Fully clear show the page's theme, as on a dashboard.
+    const clear = (el) => { const c = el ? win.getComputedStyle(el).backgroundColor : ''; return c === 'transparent' || /rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(c); };
+    check('*** the box the module is tried in has no card of its own: the panel\'s own background setting is what shows ***',
+      clear($('.mp-stage')), $('.mp-stage') ? win.getComputedStyle($('.mp-stage')).backgroundColor : 'no stage');
+    check('...and the Modules module paints none of its own either (a Modules panel follows Panel backgrounds)', clear($('.lib')));
   }
 
   // ==========================================================================================

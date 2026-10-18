@@ -61,9 +61,14 @@
     border:1px solid var(--border);color:var(--text-soft);white-space:nowrap}
   /* The stage is a `mod-box`, so container queries inside a module resolve against it. No `overflow` here:
      the kiosk inside sizes itself to this box (kiosk.css `.k-embed`) and its bar sits along the bottom. */
+  /* NO CARD OF ITS OWN (row 2.105, 2026-10-18). Mike: "There doesn't seem to be any way to make the modules actually
+     transparent on the modules page." They were transparent: the panel inside follows "Panel backgrounds" / "This
+     panel's background" as on any dashboard, but this box painted var(--surface) behind it - the same colour as Solid -
+     so See-through and Fully clear looked like Solid. Now the page's own theme shows through, as a dashboard's does.
+     (Full screen: the page's scene is outside the full-screen box, so the theme's colour stands in for it.) */
   .mp-stage{position:relative;flex:1 1 auto;min-height:320px;border:1px solid var(--border);border-radius:14px;
-    background:var(--surface);overflow:hidden}
-  .mp-stage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0}   /* "⛶ Full screen" (2026-10-14) */
+    background:transparent;overflow:hidden}
+  .mp-stage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;background:var(--bg)}   /* "⛶ Full screen" (2026-10-14) */
   .mp-note{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.9rem;color:var(--text-muted);min-height:44px}
   .mp-btn{min-height:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--link);background:var(--link);
     color:var(--on-link);font:650 .92rem var(--font);cursor:pointer}

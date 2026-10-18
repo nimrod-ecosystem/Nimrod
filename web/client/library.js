@@ -474,7 +474,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const CSS_ID = 'library-css';
 const CSS = `
 .lib{box-sizing:border-box;height:100%;width:100%;display:flex;flex-direction:column;gap:6px;padding:10px;
-  color:var(--text);background:var(--surface);font:inherit;position:relative;overflow:hidden;min-height:0}
+  color:var(--text);background:transparent;font:inherit;position:relative;overflow:hidden;min-height:0}
 .lib *{box-sizing:border-box}
 .lib button,.lib select,.lib input{font:inherit;color:var(--text)}
 .lib-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
