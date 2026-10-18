@@ -225,6 +225,8 @@ export const SUITES = [
   // 2026-10-17, row 2.92: what a lesson file is (its check), and "A lesson", which plays one as Watch, Slides or Read.
   'lesson_file',
   'lesson_player',
+  // 2026-10-17: making a lesson - the prompt drafted for the person's AI, and its reply read back.
+  'lesson_prompt',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

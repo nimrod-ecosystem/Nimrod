@@ -51,7 +51,8 @@
 import { registerModule } from '../module.js';
 import { readWithLegacy } from '../settings_fields.js';
 import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC,
-         TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, routedLessonQuestions, transcriptPool } from '../lessons.js';
+         TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, routedLessonQuestions, transcriptPool,
+         MADE_LESSONS_KEY, madeLessonsFrom } from '../lessons.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createAI, isChatModel } from '../ai.js';
@@ -393,6 +394,8 @@ registerModule(
     // rather than one shared, filtered one.
     const triviaQ = ctx.makeState ? ctx.makeState(TRIVIA_LESSON_QUESTIONS) : null;
     const wordforgeQ = ctx.makeState ? ctx.makeState(WORDFORGE_LESSON_QUESTIONS) : null;
+    // The account's own lessons (Lessons, "Make a new lesson..."): their questions are in the one set this writes.
+    const madeQ = ctx.makeState ? ctx.makeState(MADE_LESSONS_KEY) : null;
 
     let lessons = null;
     let topics = DEFAULT_TOPICS;
@@ -460,7 +463,7 @@ registerModule(
       routedOnce = true;
       poolSig = poolSignature();
       // The whole set, the same the Lessons module writes (lessons.js routedLessonQuestions), plus a pack's own.
-      const r = routedLessonQuestions(cfg.questionsTo, {
+      const r = routedLessonQuestions(cfg.questionsTo, { made: madeLessonsFrom(madeQ?.get?.()),
         extra: [...(pack ? questionsFromPack(pack) : []), ...transcriptPool(tlog ? tlog.get().events || [] : [])] });
       const toTrivia = r.trivia;
       const toWordforge = r.wordforge;
@@ -1575,6 +1578,19 @@ registerModule(
           openTq(id);
         });
 
+        // A lesson made or removed (here or on another screen): route again, once this has routed at all.
+        if (madeQ) {
+          let madeSig = null;
+          const onMade = () => {
+            const sig = JSON.stringify(madeLessonsFrom(madeQ.get?.()).map((m) => m.id));
+            if (sig === madeSig) return;
+            madeSig = sig;
+            if (routedOnce) routeQuestions(lastPack);
+          };
+          madeQ.subscribe?.(onMade);
+          Promise.resolve(madeQ.load?.()).catch(() => {}).then(() => { madeQ.startPolling?.(); onMade(); });
+        }
+
         // Another device unlocked something — reflect it.
         bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
 
@@ -1650,6 +1666,7 @@ registerModule(
         if (tlog) { tlog.destroy(); tlog = null; }
         if (contests) { contests.destroy(); contests = null; }
         if (ledger) { ledger.destroy(); ledger = null; }
+        try { madeQ?.destroy?.(); } catch { /* gone */ }
       },
       // LIVE OPTIONS for `aiModel` — photos.js's `settingsChoices` pattern. Empty until somebody
       // opened the transcript panel (or pressed Check) and this device's model server answered;
