@@ -257,8 +257,9 @@ try {
     check('the slow default is the second-slowest of four speeds (there is a slower one)', BALL_SPEEDS['very-slow'] < BALL_SPEEDS.slow
       && BALL_SPEEDS.slow < BALL_SPEEDS.medium);
     const rows = m.settings;
+    check('*** row 2.107: the game\'s music is the shared rows, your Music folder by default ***', (() => { const R = Object.fromEntries((m?.settings || getManifest(GAME).settings).map((r) => [r.key, r])); return R.music?.default === 'mine' && R.music.options.map((o) => o.value).join() === 'mine,folder,ambient,off' && !!R.musicSourceId && !!R.musicAlbum; })());
     check('every setting row is labelled', rows.every((r) => r.key && r.label));
-    check('every choice a switch can reach is a short list', rows.filter((r) => r.kind === 'choice').every((r) => r.options.length >= 2 && r.options.length <= 6));
+    check('every choice a switch can reach is a short list', rows.filter((r) => r.kind === 'choice' && !r.emptyLabel).every((r) => r.options.length >= 2 && r.options.length <= 6));
   }
 
   section('at rest until somebody presses');

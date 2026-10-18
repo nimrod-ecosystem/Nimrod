@@ -46,6 +46,7 @@ import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '..
 import { createPointsLedger } from '../points.js';
 import { createGameTones } from '../game_tones.js';
 import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
 import { SYSTEM_TOPICS } from '../actions.js';
 import { SHELL_STATE } from '../shell_verbs.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
@@ -97,7 +98,9 @@ export const DEFAULTS = Object.freeze({
   colours: 'length',      // 'length': a brick's colour says how long it is | 'one': all one colour
   buttons: true,
   sounds: true,
-  music: 'ambient',
+  music: 'mine',   // row 2.107 (2026-10-18): your Music folder, else the quiet hum (game_music_host.js)
+  musicSourceId: '',
+  musicAlbum: '',
   musicVolume: 0.3,
   // *** A ROW BUILT PAYS 1 PLAY POINT BY DEFAULT. *** Both sides (brick breaker's wall pays 0, and says why):
   //   FOR paying: unlike a ball that comes back for ever, a row here is built by presses - in glide and scan no brick
@@ -147,10 +150,8 @@ const SETTINGS = [
   { key: 'pauseOpensMenu', label: 'Escape and the Pause command also open the settings', default: true,
     level: 'standard', onLabel: 'Yes', offLabel: 'No, they only pause' },
   { key: 'sounds', label: 'Sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
-  { key: 'music', label: 'Music', kind: 'choice', default: 'ambient', level: 'standard',
-    options: [{ value: 'ambient', label: 'Quiet background music' }, { value: 'off', label: 'No music' }] },
-  { key: 'musicVolume', label: 'How loud the music is', kind: 'choice', default: 0.3, level: 'advanced',
-    options: [{ value: 0.15, label: 'Very quiet' }, { value: 0.3, label: 'Quiet' }, { value: 0.5, label: 'Medium' }] },
+  // Row 2.107 (2026-10-18): the same music rows every game has (game_music_host.js): your Music folder by default.
+  ...gameMusicFields({ volumes: [{ value: 0.15, label: 'Very quiet' }, { value: 0.3, label: 'Quiet' }, { value: 0.5, label: 'Medium' }] }),
   { key: 'rowPoints', label: 'Play points for each row built', kind: 'number', default: 1, min: 0, max: 20, step: 1,
     level: 'advanced', note: '0 means rows pay nothing.' },
 ];
@@ -256,7 +257,7 @@ registerModule(
     let rootEl = null, wellEl = null, floorEl = null, boardEl = null, sayEl = null, scoreEl = null, ctrlEl = null, overlayEl = null;
     let drawnV = -1, drawnKey = '', lastSay = '', lastScore = '', lastOverlay = null;
     let menuAsks = 0;
-    let score = null, ledger = null, tones = null, music = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
+    let score = null, ledger = null, tones = null, music = null, musicHost = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     let started = true, demo = false, demoMs = 0, demoRested = false, demoMemory = {}, demoActMs = 0, agent = null;
     let restTimer = null;
     const plays = createPlayWatch(bus, ctx);
@@ -630,8 +631,9 @@ registerModule(
         const id = ctx.instanceId || 'bd';
         tones = createGameTones({ audio, audioId: `${GAME}:${id}`, volume: 0.5,
           ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) });
-        music = createGameMusic({ audio, audioId: `${GAME}-music:${id}`, volume: cfg.musicVolume,
-          ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) });
+        musicHost = createGameMusicHost(ctx, { audio, audioId: `${GAME}-music:${id}`, cfg: () => cfg,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+        music = musicHost.music;
 
         const applyCfg = (snap) => {
           const s = snap || {};
@@ -644,7 +646,7 @@ registerModule(
           cfg = next;
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
           if (g && next.colours !== was.colours) g.colours = next.colours;
-          try { music?.setVolume(next.musicVolume); if (next.music === 'off') music?.off(); else if (was.music === 'off' || !g) music?.useAmbient(); } catch { /* quiet */ }
+          try { musicHost?.apply(next, was); } catch { /* quiet */ }
         };
         applyCfg(state?.get?.());
         fresh();
@@ -684,6 +686,8 @@ registerModule(
         try { state?.flush?.(); } catch { /* nothing to do */ }
       },
       onShow() { hidden = false; syncAudio(); render(); ensureLoop(); },
+      // Row 2.107: the live "Music from" and "Music folder" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
@@ -693,7 +697,7 @@ registerModule(
         mount.removeEventListener('keydown', onKey);
         try { plays.destroy(); } catch { /* gone */ }
         try { tones?.destroy(); } catch { /* gone */ } tones = null;
-        try { music?.destroy(); } catch { /* gone */ } music = null;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null; music = null;
         try { score?.destroy(); } catch { /* gone */ } score = null;
         try { ledger?.destroy?.(); } catch { /* gone */ } ledger = null;
       },

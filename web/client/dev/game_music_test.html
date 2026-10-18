@@ -351,6 +351,52 @@ const RESOLVE = (items) => async () => ({ items, count: items.length });
       m4.destroy();
     }
 
+    section('*** row 2.107: every game\'s music, one way (game_music_host.js) ***');
+    {
+      const { createGameMusicHost, gameMusicFields, GAME_MUSIC_DEFAULT } = await import('../game_music_host.js');
+      const rows = Object.fromEntries(gameMusicFields().map((r) => [r.key, r]));
+      check('the rows: Music (your music first, the default), Music from, Music folder, how loud',
+        GAME_MUSIC_DEFAULT === 'mine' && rows.music.default === 'mine' && rows.music.options.map((o) => o.value).join() === 'mine,folder,ambient,off'
+          && !!rows.musicSourceId && !!rows.musicAlbum && !!rows.musicVolume);
+      check('Music from and Music folder are offered only for "a folder you choose"; how loud, unless off',
+        rows.musicSourceId.appliesWhen({ music: 'folder' }) === true && rows.musicSourceId.appliesWhen({}) === false
+          && rows.musicAlbum.appliesWhen({ music: 'mine' }) === false && rows.musicVolume.appliesWhen({ music: 'off' }) === false);
+      // A fake player that records what it was told.
+      const told = [];
+      const fakeMusic = () => ({ useAmbient() { told.push('ambient'); }, useFolder(id, album) { told.push(`folder:${id}:${album}`); return Promise.resolve({ tracks: 1 }); },
+        off() { told.push('off'); }, play() { told.push('play'); }, setVolume(v) { told.push(`vol:${v}`); }, destroy() { told.push('destroy'); } });
+      let looked = 0;
+      let cfg = {};
+      const h = createGameMusicHost({}, { cfg: () => cfg, make: fakeMusic, findMine: async () => { looked += 1; return 'src-music'; } });
+      await new Promise((r) => setTimeout(r, 0));
+      check('*** "your music", nobody playing yet: the hum, and the folder NOT looked for (a game nobody plays never touches it) ***',
+        told.join() === 'ambient' && looked === 0, told.join());
+      h.music.play();
+      await new Promise((r) => setTimeout(r, 0));
+      check('*** first played: the Nimrod folder\'s Music looked for once, and played ***', looked === 1 && told.includes('folder:src-music:'), told.join());
+      h.music.play();
+      await new Promise((r) => setTimeout(r, 0));
+      check('...not looked for again', looked === 1);
+      told.length = 0;
+      const was = cfg; cfg = { music: 'folder', musicSourceId: 's2', musicAlbum: 'Suno', musicVolume: 0.55 };
+      h.apply(cfg, was);
+      check('a folder you choose: that source and folder; the loudness at once', told.join() === 'vol:0.55,folder:s2:Suno', told.join());
+      told.length = 0;
+      h.apply({ ...cfg, music: 'off' }, cfg);
+      check('off: off', told.includes('off'));
+      told.length = 0;
+      h.apply({ ...cfg, musicVolume: 0.15 }, cfg);
+      check('only the loudness changed: nothing else redone', told.join() === 'vol:0.15', told.join());
+      h.destroy();
+      const t2 = [];
+      const none = createGameMusicHost({}, { cfg: () => ({}), make: () => ({ useAmbient() { t2.push('ambient'); }, useFolder() { t2.push('folder'); return Promise.resolve(); }, play() {}, off() {}, setVolume() {}, destroy() {} }),
+        findMine: async () => '' });
+      none.music.play();
+      await new Promise((r) => setTimeout(r, 0));
+      check('*** no Music folder to find: the quiet hum, never silence ***', !t2.includes('folder') && t2.filter((x) => x === 'ambient').length >= 1, t2.join());
+      none.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

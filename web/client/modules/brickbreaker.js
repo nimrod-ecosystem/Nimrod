@@ -85,6 +85,7 @@ import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '..
 import { createPointsLedger } from '../points.js';
 import { createGameTones } from '../game_tones.js';
 import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
 import { SYSTEM_TOPICS } from '../actions.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
 import { SHELL_STATE } from '../shell_verbs.js';
@@ -158,7 +159,9 @@ export const DEFAULTS = Object.freeze({
   // targets on a small panel. One setting away.
   look: 'nimrod',
   sounds: true,
-  music: 'ambient',       // Mike, 2026-08-29: "The games should still have music."
+  music: 'mine',   // row 2.107 (2026-10-18): your Music folder, else the quiet hum (game_music_host.js)       // Mike, 2026-08-29: "The games should still have music."
+  musicSourceId: '',
+  musicAlbum: '',
   musicVolume: 0.3,
   // *** A CLEARED WALL PAYS NOTHING BY DEFAULT. *** Both sides:
   //   FOR paying: a cleared wall is a real result, and comet and the press games pay Play points.
@@ -212,10 +215,8 @@ const SETTINGS = [
   { key: 'look', label: 'The bricks', kind: 'choice', default: 'nimrod', level: 'standard',
     options: [{ value: 'nimrod', label: 'Nimrod bricks, in the theme\'s colors' }, { value: 'plain', label: 'Plain bricks' }] },
   { key: 'sounds', label: 'Bounce sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
-  { key: 'music', label: 'Music', kind: 'choice', default: 'ambient', level: 'standard',
-    options: [{ value: 'ambient', label: 'Quiet background music' }, { value: 'off', label: 'No music' }] },
-  { key: 'musicVolume', label: 'How loud the music is', kind: 'choice', default: 0.3, level: 'advanced',
-    options: [{ value: 0.15, label: 'Very quiet' }, { value: 0.3, label: 'Quiet' }, { value: 0.5, label: 'Medium' }] },
+  // Row 2.107 (2026-10-18): the same music rows every game has (game_music_host.js): your Music folder by default.
+  ...gameMusicFields({ volumes: [{ value: 0.15, label: 'Very quiet' }, { value: 0.3, label: 'Quiet' }, { value: 0.5, label: 'Medium' }] }),
   { key: 'wallPoints', label: 'Play points for a wall knocked down', kind: 'number', default: 0, min: 0, max: 20, step: 1,
     level: 'advanced', note: '0 means walls pay nothing. With the ball coming back forever, any wall falls in the end.' },
 ];
@@ -285,7 +286,7 @@ registerModule(
     let brickEls = new Map();
     let drawnBricks = null;
     let lastSay = '', lastScore = '';
-    let score = null, ledger = null, tones = null, music = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
+    let score = null, ledger = null, tones = null, music = null, musicHost = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     // ---- waiting for Start, and the demo (game_start.js, game_agent.js) ----
     let started = true;           // false: the Start button is up and `g` is the demo's game
     let demo = false;             // the computer is playing (only while not started)
@@ -742,8 +743,9 @@ registerModule(
         const id = ctx.instanceId || 'bb';
         tones = createGameTones({ audio, audioId: `${GAME}:${id}`, volume: 0.5,
           ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) });
-        music = createGameMusic({ audio, audioId: `${GAME}-music:${id}`, volume: cfg.musicVolume,
-          ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) });
+        musicHost = createGameMusicHost(ctx, { audio, audioId: `${GAME}-music:${id}`, cfg: () => cfg,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+        music = musicHost.music;
 
         const applyCfg = (snap) => {
           const s = snap || {};
@@ -760,7 +762,7 @@ registerModule(
             const n = Number(next.lives) > 0 ? Math.round(Number(next.lives)) : null;
             g.startLives = n; g.livesLeft = n;
           }
-          try { music?.setVolume(next.musicVolume); if (next.music === 'off') music?.off(); else if (was.music === 'off' || !g) music?.useAmbient(); } catch { /* quiet */ }
+          try { musicHost?.apply(next, was); } catch { /* quiet */ }
         };
         applyCfg(state?.get?.());
         fresh();
@@ -810,6 +812,8 @@ registerModule(
         try { state?.flush?.(); } catch { /* nothing to do */ }
       },
       onShow() { hidden = false; syncAudio(); render(); ensureLoop(); },
+      // Row 2.107: the live "Music from" and "Music folder" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
@@ -821,7 +825,7 @@ registerModule(
         try { plays.destroy(); } catch { /* gone */ }
         try { tones?.destroy(); } catch { /* gone */ }
         tones = null;
-        try { music?.destroy(); } catch { /* gone */ }
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         music = null;
         try { score?.destroy(); } catch { /* gone */ }
         score = null;
