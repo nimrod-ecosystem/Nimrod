@@ -32,7 +32,7 @@ import { TYPE, DEFAULTS, SETTINGS, KEYS_BACK_MS } from '../modules/archive.js';
 import {
   parseArchiveId, parseItemList, itemListText, playableFiles, itemType, itemView, whatItHolds, fetchItem,
   forgetItemsForTest, summarizeItem, downloadUrl, embedUrl, metadataUrl, archiveAudioTracks, ARCHIVE_MESSAGES,
-  FILES_MAX_DEFAULT, ITEMS_MAX, CACHE_MAX,
+  FILES_MAX_DEFAULT, ITEMS_MAX, CACHE_MAX, searchUrl, searchArchive, searchKindWords,
 } from '../archive_org.js';
 import { parseSource, normalizeSource, describeSource, normalizeFavourites, SOURCE_KINDS } from '../music_favourites.js';
 import { createMusicRouter, messageFor } from '../music_player.js';
@@ -556,6 +556,49 @@ try {
     check('...and moves to the next at the end', els[1] && els[1].src === 'u2');
     check('an empty list is "no music"', (await lm.playTracks({ tracks: [] })).reason === 'no-audio');
     lm.destroy();
+  }
+
+  section('*** searching from the menu (2026-10-17: "Not built: search from the panel") ***');
+  {
+    const u = searchUrl('old time  radio');
+    check('the search asks for sound, films and books only, most downloaded first, ten of them',
+      u.startsWith('https://archive.org/advancedsearch.php?') && decodeURIComponent(u).includes('(old time radio) AND mediatype:(audio OR movies OR texts)')
+        && decodeURIComponent(u).includes('sort[]=downloads desc') && /rows=10/.test(u) && /output=json/.test(u), u);
+    const asked = [];
+    const answer = { response: { docs: [
+      { identifier: 'OTRR_Test_Radio', title: 'Test Radio', mediatype: 'audio', creator: ['A', 'B'] },
+      { identifier: 'OTRR_Test_Radio', title: 'again' },
+      { identifier: 'bad id here', title: 'x' },
+      { identifier: 'TestTVSeries1', title: 'A TV series', mediatype: 'movies' }] } };
+    const fake = (url, opts) => { asked.push({ url, opts }); return Promise.resolve({ ok: true, json: () => Promise.resolve(answer) }); };
+    const s1 = await searchArchive('radio', { fetchImpl: fake });
+    check('*** what was found: each item once, the broken left out, with its kind and maker ***',
+      s1.ok && J(s1.items.map((i) => i.id)) === J(['OTRR_Test_Radio', 'TestTVSeries1']) && s1.items[0].creator === 'A, B' && s1.items[1].kind === 'movies', J(s1));
+    check('no cookies and no referrer go with it', asked[0].opts.credentials === 'omit' && asked[0].opts.referrerPolicy === 'no-referrer');
+    check('an empty search asks nothing', (await searchArchive('  ', { fetchImpl: fake })).items.length === 0 && asked.length === 1);
+    check('no network: "can\'t be reached", never a throw', (await searchArchive('x', { fetchImpl: () => Promise.reject(new Error('down')) })).reason === 'archive-unreachable');
+    check('a slow answer gives up', (await searchArchive('x', { fetchImpl: () => new Promise(() => {}), timeoutMs: 30 })).reason === 'archive-unreachable');
+    check('the kinds in words', searchKindWords('texts') === 'a book' && searchKindWords('audio') === 'sound' && searchKindWords('?') === 'an item');
+
+    let repaints = 0;
+    const r = rig(TYPE, { saved: { items: 'OTRR_Test_Radio' }, extra: { speakersOffline: true, makeMedia: fakeMedia().factory,
+      menuChanged: () => { repaints += 1; },
+      archiveFetch: (url, opts) => (/advancedsearch/.test(url) ? fake(url, opts) : stubFetch(DB)(url, opts)) } });
+    await sleep(10);
+    check('the menu has the row: "Search the Internet Archive" (text, standard)', SETTINGS.some((f) => f.key === 'findItem' && f.kind === 'text' && f.level === 'standard'));
+    check('nothing searched: no results in the menu', J(r.inst.impl.menuItems()) === '[]');
+    check('*** typing a search is handled, never saved ***', r.inst.impl.settingsWrite('findItem', 'radio') === true && r.stored().findItem === undefined);
+    await sleep(10);
+    const items = r.inst.impl.menuItems();
+    check('*** what was found is listed with Add; the one already in this part says Added ***', repaints >= 2
+      && items.some((i) => i.id === 'ia-found:TestTVSeries1' && /^Add A TV series/.test(i.label) && /a film or video/.test(i.hint) && !i.disabled)
+      && items.some((i) => i.id === 'ia-found:OTRR_Test_Radio' && /^Added/.test(i.label) && i.disabled), J(items.map((i) => i.label)));
+    items.find((i) => i.id === 'ia-found:TestTVSeries1').run();
+    check('*** Add puts it on the end of this part\'s items ***', parseItemList(r.stored().items).join(',') === 'OTRR_Test_Radio,TestTVSeries1', r.stored().items);
+    r.inst.impl.menuItems().find((i) => i.id === 'ia-found:clear').run();
+    check('"Clear the search results": gone', J(r.inst.impl.menuItems()) === '[]');
+    check('another setting is not taken', r.inst.impl.settingsWrite('volume', 50) === false);
+    r.inst.destroy();
   }
   finish();
 } catch (err) {

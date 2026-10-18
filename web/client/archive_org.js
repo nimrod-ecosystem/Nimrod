@@ -355,6 +355,62 @@ export async function fetchItem(id, { fetchImpl = (typeof fetch === 'function' ?
   }
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// SEARCHING (2026-10-17: "Not built: search from the panel", 2026-10-10's note on row 2.69)
+// ---------------------------------------------------------------------------------------------------------------
+// The Archive's search API (https://archive.org/advancedsearch.php) is public, needs no key, and answers a page on any
+// site (measured 2026-10-17: a page on localhost read it directly). Only the words typed are sent, with no cookies and
+// no referrer, and only when somebody searches. Sound, films and books (`mediatype` audio, movies, texts): the kinds
+// this panel plays; collections are left out (one item from a collection is what can be added), and games and
+// programs too, whose player is off by default here. Most downloaded first, so the well-used copy comes before the
+// dozen re-uploads of it. [Ten found, and that order: guesses, argued here; a setting when anybody wants another.]
+export const SEARCH_ROWS = 10;
+export const SEARCH_KINDS = Object.freeze(['audio', 'movies', 'texts']);
+const KIND_WORDS = Object.freeze({ audio: 'sound', movies: 'a film or video', texts: 'a book' });
+export const searchKindWords = (kind) => KIND_WORDS[kind] || 'an item';
+/** The search address for what was typed. PURE. */
+export function searchUrl(q, { rows = SEARCH_ROWS } = {}) {
+  const words = String(q == null ? '' : q).replace(/\s+/g, ' ').trim().slice(0, 200);
+  const query = `(${words}) AND mediatype:(${SEARCH_KINDS.join(' OR ')})`;
+  const fl = ['identifier', 'title', 'mediatype', 'creator'].map((x) => `fl[]=${x}`).join('&');
+  return `${ARCHIVE_ORIGIN}/advancedsearch.php?q=${enc(query)}&${fl}&sort[]=${enc('downloads desc')}&rows=${Math.max(1, Math.min(50, Number(rows) || SEARCH_ROWS))}&output=json`;
+}
+/**
+ * SEARCH: `{ ok: true, items: [{ id, title, kind, creator }] }` or `{ ok: false, reason }` ('archive-unreachable').
+ * Never throws. An empty search finds nothing without asking. `fetchImpl` and `timeoutMs` are seams.
+ */
+export async function searchArchive(q, { fetchImpl = (typeof fetch === 'function' ? fetch : null), timeoutMs = FETCH_WAIT_MS,
+  rows = SEARCH_ROWS } = {}) {
+  if (!String(q == null ? '' : q).trim()) return { ok: true, items: [] };
+  if (typeof fetchImpl !== 'function') return { ok: false, reason: 'archive-unreachable' };
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  let timer = null;
+  try {
+    const wait = new Promise((_, reject) => {
+      if (Number(timeoutMs) > 0) timer = setTimeout(() => { try { ctl?.abort(); } catch { /* gone */ } reject(new Error('timeout')); }, Number(timeoutMs));
+    });
+    const res = await Promise.race([
+      fetchImpl(searchUrl(q, { rows }), { credentials: 'omit', referrerPolicy: 'no-referrer', ...(ctl ? { signal: ctl.signal } : {}) }),
+      wait,
+    ]);
+    if (!res || !res.ok) return { ok: false, reason: 'archive-unreachable' };
+    const raw = await Promise.race([res.json(), wait]);
+    const docs = Array.isArray(raw?.response?.docs) ? raw.response.docs : [];
+    const text = (v) => (Array.isArray(v) ? v.join(', ') : String(v == null ? '' : v)).replace(/\s+/g, ' ').trim();
+    const items = [];
+    for (const d of docs) {
+      const id = String(d?.identifier || '');
+      if (!isArchiveId(id) || items.some((x) => x.id === id)) continue;
+      items.push({ id, title: text(d.title).slice(0, 200) || id, kind: String(d.mediatype || ''), creator: text(d.creator).slice(0, 120) });
+    }
+    return { ok: true, items };
+  } catch {
+    return { ok: false, reason: 'archive-unreachable' };
+  } finally {
+    if (timer != null) clearTimeout(timer);
+  }
+}
+
 /**
  * AN ITEM'S SOUND, AS A MUSIC FAVOURITE PLAYS IT (music_player.js): `{ ok, tracks: [{ url, path, title }] }` or
  * `{ ok: false, reason }`. Sound files only - a favourite is music, and a video's own sound is the video panel's.
