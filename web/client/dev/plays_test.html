@@ -26,6 +26,7 @@ import {
   PLAYS_STREAM, PLAYS_TOPIC, PLAY_KIND, PLAYS_DEFAULTS, TALLY_BY,
   normalizePlay, playsOf, tally, tableReading, statsFromPlays, createPlays,
   memoryPlayStore, idbPlayStore, devicePlays, panelPlays, rowFromServer, PLAYS_DB,
+  folderPlays, acrossRows, mergePlays, ACROSS_REFRESH_MS,
 } from '../plays.js';
 import { pick } from '../rng.js';
 
@@ -307,6 +308,68 @@ check('*** a play keeps whose screen it played on (the person id), when the scre
       check('the move is kept in IndexedDB too, marked done', n === 1 && c.plays({ panel: 'ph-1' })[0].data.id === 'p0'
         && (await idbPlayStore({ name }).get('ph-1')).moved.photos === true);
       await new Promise((r) => { const q = indexedDB.deleteDatabase(name); q.onsuccess = q.onerror = q.onblocked = () => r(); });
+    }
+
+    section('*** the randomizer counts plays on every device (Mike, 2026-10-17: "All devices") ***');
+    {
+      const now = Date.now();
+      const iso = (msAgo) => new Date(now - msAgo).toISOString();
+      const row = (data, msAgo) => ({ kind: PLAY_KIND, created_at: iso(msAgo), data });
+      // The folder: her plays from another device (another panel), somebody else's, an old one with no person, other sources.
+      const FOLDER = [
+        row({ source: 'youtube', id: 'vidA', panel: 'yt-pi', person: 'p1' }, 3 * DAY),
+        row({ source: 'youtube', id: 'vidA', panel: 'yt-pi', person: 'p1' }, 2 * DAY),
+        row({ source: 'youtube', id: 'vidB', panel: 'yt-desk', person: 'p1' }, 60_000),
+        row({ source: 'youtube', id: 'vidC', panel: 'yt-pi', person: 'p2' }, DAY),
+        row({ source: 'youtube', id: 'vidD', panel: 'yt-pi' }, DAY),
+        row({ source: 'photos', id: 'img1', panel: 'ph-pi', person: 'p1' }, DAY),
+      ];
+      let reads = 0;
+      let status = 'ready';
+      let place = 'folder';
+      const folder = { status: async () => status, readAll: async (stream, { since }) => { reads += 1; return stream === 'plays' ? FOLDER.filter((r) => Date.parse(r.created_at) >= since) : []; } };
+      const host = { folder, placeOf: (k) => (k === 'plays' ? place : 'device'), sync() {}, restore: async () => false };
+
+      check('acrossRows: the same source, the same person only (nobody else\'s, none without a person)',
+        J(acrossRows(FOLDER, { source: 'youtube', person: 'p1' }).map((r) => r.data.id)) === J(['vidA', 'vidA', 'vidB'])
+          && acrossRows(FOLDER, { source: 'youtube', person: null }).length === 0);
+      const r1 = await folderPlays(host, { now });
+      const r2 = await folderPlays(host, { now: now + 1000 });
+      check('*** one read, shared: a second ask within the refresh time reads nothing again ***', reads === 1 && r1 === r2 && r1.length === FOLDER.length, String(reads));
+      await folderPlays(host, { now: now + ACROSS_REFRESH_MS + 1 });
+      check('...after it, read again', reads === 2);
+      place = 'device';
+      check('*** plays kept on this device only: nothing from the folder (that choice is the opt-out) ***', (await folderPlays({ ...host, folder: { ...folder } }, { now })) === null);
+      place = 'folder'; status = 'permission';
+      check('a folder that needs "Allow it again": nothing, and nothing asked', (await folderPlays({ ...host, folder: { ...folder } }, { now })) === null);
+      status = 'ready';
+      check('no folder at all: nothing', (await folderPlays({ placeOf: () => 'folder' }, { now })) === null);
+      check('a folder that throws: nothing, never a throw', (await folderPlays({ ...host, folder: { status: async () => 'ready', readAll: async () => { throw new Error('gone'); } } }, { now })) === null);
+
+      // A panel on THIS device, which has played vidB once itself.
+      const mine = createPlays({ store: memoryPlayStore() });
+      const host2 = { ...host, folder: { ...folder } };
+      const pp = panelPlays({ plays: mine, instanceId: 'yt-here', personId: 'p1', history: host2 }, 'youtube');
+      await pp.played('vidB');
+      const before = pp.stats();
+      let told = 0;
+      pp.subscribe(() => { told += 1; });
+      await pp.refreshAcross();
+      const s = pp.stats();
+      check('*** her plays on the other devices are counted beside this panel\'s own ***', pp.acrossCount() === 3
+        && s.vidA?.n === 2 && s.vidB?.n === 2 && !s.vidC && !s.vidD && !s.img1, J(s));
+      check('before the folder was read, this panel\'s own (as it always was)', before.vidB?.n === 1 && !before.vidA, J(before));
+      check('the picker is told when they land', told >= 2);
+      const order = [];
+      for (let i = 0; i < 40; i++) order.push(pick(['vidA', 'vidB', 'vidE'], s, { now, rand: () => i / 40 }));
+      check('*** so the picker favours what has not played anywhere (vidE) over what played on another device ***',
+        order.filter((x) => x === 'vidE').length > order.filter((x) => x === 'vidA').length, J(order));
+      const solo = panelPlays({ plays: createPlays({ store: memoryPlayStore() }), instanceId: 'yt-2', personId: null, history: { ...host, folder: { ...folder } } }, 'youtube');
+      await solo.refreshAcross();
+      check('a screen with nobody chosen merges nothing (whose plays would they be?)', solo.acrossCount() === 0);
+      pp.destroy(); solo.destroy();
+      check('mergePlays: a play copied to the folder and still on this device counts once',
+        mergePlays([row({ source: 'youtube', id: 'x', panel: 'p' }, 5)], [row({ source: 'youtube', id: 'x', panel: 'p' }, 5)]).length === 1);
     }
   } catch (err) {
     check('unexpected error', false, String((err && err.stack) || err));

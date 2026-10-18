@@ -45,7 +45,7 @@
 // settings. Names for YouTube ids come from the YouTube panel on the screen (PLAY_LABELS_TOPIC), held in memory only.
 
 import { registerModule } from '../module.js';
-import { devicePlays } from '../plays.js';
+import { devicePlays, mergePlays } from '../plays.js';
 import {
   chartModel, chartTable, spokenAnswer, normalizeChart, seriesColours, SERIES_TOKENS, CHART_DEFAULTS,
   WINDOWS, WINDOW_WORDS, SHOW_AS, SHOW_WORDS, WHAT_CHOICES, sourceWord, PLAY_LABELS_TOPIC, PLAY_KIND,
@@ -82,20 +82,8 @@ export const FROM_CHOICES = Object.freeze(['screen', 'folder']);
 // How far back the folder is read, at most (a year and a month: the longest window short of "all time"). [Plumbing.]
 export const FOLDER_SPAN_MS = 396 * 24 * 3600 * 1000;
 /** This device's plays and the folder's, each play once (one copied to the folder from here is the same play). Pure. */
-export function mergePlays(...lists) {
-  const seen = new Set();
-  const out = [];
-  for (const list of lists) {
-    for (const r of Array.isArray(list) ? list : []) {
-      if (!r || !r.data) continue;
-      const k = `${r.created_at}|${r.data.source}|${r.data.id}|${r.data.panel || ''}`;
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push(r);
-    }
-  }
-  return out.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
-}
+// mergePlays lives in plays.js since 2026-10-17 (the pickers merge the folder's plays too); exported here as before.
+export { mergePlays };
 
 const SETTINGS = [
   { key: 'show', label: 'Show as', kind: 'choice', default: CHART_DEFAULTS.show, level: 'standard',

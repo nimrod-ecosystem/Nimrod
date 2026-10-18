@@ -402,6 +402,77 @@ export function createPlays({ store = memoryPlayStore(), bus = null, keepText = 
   };
 }
 
+// ---------- plays from every device (Mike, 2026-10-17: "All devices") ----------
+// THE RANDOMIZER COUNTS THE ACCOUNT'S PLAYS ON EVERY DEVICE, not one panel's on one device. Asked (row 2.91, CF 4: "the
+// randomizer goes by the account by default"): every panel on this device, or every device once their plays meet in the
+// Nimrod folder? Mike: *"All devices."* So a panel's picker (panelPlays below; photos, YouTube, Personal videos,
+// Educational, Spotify through music_pick) counts, beside its own rows, the plays of THE SAME KIND OF THING (`source`) BY
+// THE SAME PERSON from the folder's Data/History, wherever they were played: her desktop, the other Pi, another
+// dashboard. Merged per play (mergePlays), so a play this device copied there is counted once.
+//   * ONLY WHEN THE PERSON KEEPS PLAYS IN THEIR NIMROD FOLDER (People: where history is kept, `plays: folder`) and the
+//     folder reads now. That choice IS the opt-in: other devices' plays exist nowhere else, and somebody who keeps
+//     plays on this device keeps this device's randomizer. [No separate "this device only" row: argued on Mike's list.]
+//   * NEVER PROMPTS, NEVER WAITS. Picking stays synchronous on this device's rows; the folder's are added when the read
+//     lands, and a folder needing "Allow it again", or none, is simply this device's plays, as before.
+//   * BY PERSON, NOT PANEL: two devices' panels have different ids unless they show one dashboard. A play with no
+//     person (from before row 2.91, or a screen with nobody chosen) is not merged; nor is anybody else's on a shared folder.
+//   * ONE READ PER PAGE, SHARED, at most every ACROSS_REFRESH_MS, of the last ACROSS_SPAN_MS: every panel asks the same
+//     cache, so a Pi reading a Drive folder pays for one listing, not one per panel. 90 days, because the picker's
+//     recency fades over two days and its freshness wants counts, not a lifetime; 10 minutes, because a play somewhere
+//     else changing the next pick here a few minutes late is fine. [Both guesses, argued here.]
+// Items are matched by id: a YouTube video or a Spotify track is the same id everywhere; a photo matches when both
+// devices list the same pictures folder.
+export const ACROSS_SPAN_MS = 90 * 24 * 60 * 60 * 1000;
+export const ACROSS_REFRESH_MS = 10 * 60 * 1000;
+const acrossCache = new WeakMap();      // folder handle -> { at, rows, pending }
+/** Every play row in any number of lists, each once (by time, source, id and panel), oldest first. PURE. */
+export function mergePlays(...lists) {
+  const seen = new Set();
+  const out = [];
+  for (const list of lists) {
+    for (const r of Array.isArray(list) ? list : []) {
+      if (!r || !r.data) continue;
+      const k = `${r.created_at}|${r.data.source}|${r.data.id}|${r.data.panel || ''}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(r);
+    }
+  }
+  return out.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+}
+/**
+ * The plays in the person's Nimrod folder (every device's), or null when there are none to read here: no folder, plays
+ * not kept there, or the folder not readable now. Cached per folder for ACROSS_REFRESH_MS; one read at a time.
+ * `force` reads again now. Never throws, never prompts.
+ */
+export async function folderPlays(history, { now = Date.now(), force = false, span = ACROSS_SPAN_MS } = {}) {
+  const folder = history?.folder;
+  if (!folder || typeof folder.readAll !== 'function') return null;
+  try { if (typeof history.placeOf === 'function' && history.placeOf('plays') !== 'folder') return null; } catch { return null; }
+  const c = acrossCache.get(folder);
+  if (c && c.pending) return c.pending;
+  if (c && !force && now - c.at < ACROSS_REFRESH_MS) return c.rows;
+  const pending = (async () => {
+    try {
+      const st = typeof folder.status === 'function' ? await folder.status() : 'ready';
+      if (st !== 'ready') return null;
+      const rows = await folder.readAll('plays', { since: now - span });
+      return Array.isArray(rows) ? rows.filter((r) => r && r.kind === PLAY_KIND && r.data) : [];
+    } catch { return null; }
+  })();
+  acrossCache.set(folder, { at: c?.at || 0, rows: c?.rows || null, pending });
+  const rows = await pending;
+  acrossCache.set(folder, { at: now, rows, pending: null });
+  return rows;
+}
+/** The folder's plays of one kind of thing by one person. PURE. */
+export function acrossRows(rows, { source, person }) {
+  if (!person) return [];
+  return (rows || []).filter((r) => r && r.data && r.data.source === source && r.data.person === person);
+}
+/** For the suites: forget every cached folder read. */
+export function forgetFolderPlaysForTest() { /* a WeakMap cannot be cleared; a fresh folder handle is a fresh read */ }
+
 // ---------- this device's one handle ----------
 let device = null;
 /** The device's plays: one handle per page, over IndexedDB (memory where the browser has none). */
@@ -429,12 +500,18 @@ export function panelPlays(ctx = {}, source) {
   const log = ctx.plays || (panel ? devicePlays() : createPlays({ store: memoryPlayStore() }));
   const screen = ctx.profileId ? String(ctx.profileId) : null;
   const filter = { source, panel: panel || null };
-  const stats = () => log.stats(filter);
+  // (2026-10-17, "All devices", above) the same person's plays of this source on every device, from the folder.
+  let fromAll = [];
+  const personNow = () => { try { return ctx.personId || null; } catch { return null; } };
+  const stats = () => (fromAll.length ? statsFromPlays(mergePlays(log.plays(filter), fromAll), { source }) : log.stats(filter));
   const subs = new Set();
-  const off = log.subscribe((p) => {
-    if (p != null && p !== panel) return;
+  const tell = () => {
     const s = stats();
     for (const f of [...subs]) { try { f(s); } catch (e) { console.error('plays: panel subscriber', e); } }
+  };
+  const off = log.subscribe((p) => {
+    if (p != null && p !== panel) return;
+    tell();
   });
   // WHERE THE HISTORY IS ALSO KEPT (2026-10-07, history_place.js): the device record is always the working copy
   // the picker reads; `ctx.history` (the screen's host, when it has one) copies it to the person's second place -
@@ -448,6 +525,24 @@ export function panelPlays(ctx = {}, source) {
     } catch (e) { console.error(`${source}: history`, e); }
   });
   const move = log.moveFromServer({ events: ctx.events || null, source, panel, screen });
+  // Read the folder's plays once this panel's own are in, and again every ACROSS_REFRESH_MS (the read is shared and
+  // cached, so this is cheap when several panels ask). Only for a panel with an identity and a screen's history host.
+  let acrossTimer = null;
+  let dead = false;
+  const allHistory = panel && ctx.history?.folder ? ctx.history : null;
+  async function readAcross() {
+    if (dead || !allHistory) return;
+    const rows = await folderPlays(allHistory, { now: Date.now() });
+    if (dead) return;
+    const next = rows ? acrossRows(rows, { source, person: personNow() }) : [];
+    if (next.length === fromAll.length && (!next.length || next[next.length - 1] === fromAll[fromAll.length - 1])) return;
+    fromAll = next;
+    tell();
+  }
+  if (allHistory) {
+    ready.then(readAcross).catch(() => {});
+    try { acrossTimer = setInterval(() => { readAcross().catch(() => {}); }, ACROSS_REFRESH_MS); } catch { acrossTimer = null; }
+  }
   return {
     panel,
     source,
@@ -462,6 +557,9 @@ export function panelPlays(ctx = {}, source) {
     subscribe(fn) { subs.add(fn); try { fn(stats()); } catch (e) { console.error(e); } return () => subs.delete(fn); },
     ready,
     moved: move.done,
-    destroy() { try { off(); } catch { /* gone */ } move.stop(); subs.clear(); },
+    // How many plays from other devices this panel's picker is counting now (the suites, and a status line).
+    acrossCount: () => fromAll.length,
+    refreshAcross: () => readAcross(),
+    destroy() { dead = true; if (acrossTimer != null) { try { clearInterval(acrossTimer); } catch { /* gone */ } } try { off(); } catch { /* gone */ } move.stop(); subs.clear(); },
   };
 }
