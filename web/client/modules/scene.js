@@ -15,6 +15,7 @@ import { registerModule } from '../module.js';
 import { mountScene, listScenes, listOverlays } from '../livescene.js';
 import { followWeather } from '../live_weather.js';
 import { flashLimit } from '../flash_limit.js';
+import { OVERLAY_FIELDS } from './overlays.js';
 
 const DEFAULTS = { scene: 'theme', motion: 'gentle', weather: 'none' };
 
@@ -29,21 +30,8 @@ export const SETTINGS = [
       { value: 'calm',   label: 'calm — slower' },
       { value: 'still',  label: 'still — no movement at all' },
     ] },
-  // WEATHER IS ONE CHOICE, not five toggles: two kinds of sky at once is not weather.
-  // `live` follows the forecast for the place saved on the profile (live_weather.js); with no place
-  // saved it is simply dry, never an error.
-  { key: 'weather', label: 'Weather', kind: 'choice', default: 'none', level: 'standard',
-    options: [
-      { value: 'none', label: 'None' },
-      { value: 'live', label: 'The real weather outside' },
-      ...listOverlays().filter((o) => o.group === 'weather').map((o) => ({ value: o.value, label: o.label })),
-    ] },
-  // The rest are toggles, one each, because a one-switch cursor walks toggles and settings_fields.js
-  // has no multi-select kind.
-  ...listOverlays().filter((o) => o.group !== 'weather').map((o) => ({
-    key: o.value, label: o.label, kind: 'toggle', default: false, level: 'standard',
-    onLabel: 'Yes', offLabel: 'No', note: o.note,
-  })),
+  // Weather and the inhabitants: the Overlays module's rows (modules/overlays.js, row 2.104), one copy for both.
+  ...OVERLAY_FIELDS,
 ];
 
 registerModule(

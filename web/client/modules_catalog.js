@@ -302,6 +302,14 @@ export const CATALOG = [
       + 'because a full-screen animation running unattended is where photosensitivity '
       + 'actually matters.',
   },
+  // 2026-10-18 (row 2.104): the scene's inhabitants and weather, over any dashboard or module, out of the AAC board.
+  {
+    type: 'overlays', stage: 'beta', title: 'Overlays', group: 'comfort', use: 'watch',
+    lead: 'A cat, fireflies, a balloon now and then, rain or snow, over any dashboard or module.',
+    needs: 'Nothing.',
+    why: 'Something small and calm that lives over everything else on the screen. It never gets in the way: every '
+      + 'press goes through it to what is underneath. Choose "Over the dashboard" to put it over the whole screen.',
+  },
   {
     type: 'scene',
     stage: 'live',

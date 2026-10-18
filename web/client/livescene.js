@@ -3226,6 +3226,11 @@ const OVERLAYS = {
 // Exported as SCENES / SCENE_OVERLAYS rather than the design system's GROUND_THEMES / OVERLAYS, so
 // the repo's names describe what they are here and cannot collide with the design system's own.
 export const SCENES = GROUND_THEMES;
+// NO WORLD (2026-10-18, row 2.104, modules/overlays.js): only the inhabitants and the weather, on a clear ground, for
+// laying over a dashboard or a module that has its own look. Not one of the scenes a person picks (listScenes).
+export const NO_WORLD = 'none';
+const BARE = Object.freeze({ ground: 'transparent', render: () => [], tokens: Object.freeze({}), halo: null });
+const sceneOf = (id) => (id === NO_WORLD ? BARE : (SCENES[id] || SCENES.nimrod));
 export const SCENE_OVERLAYS = OVERLAYS;
 // Renamed on export for the same reason: the design system exports its own `weatherOverlay`.
 export const overlayForWeatherCode = weatherOverlay;
@@ -3405,7 +3410,7 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
   };
 
   function render() {
-    const s = SCENES[cfg.scene] || SCENES.nimrod;
+    const s = sceneOf(cfg.scene);
     const m = motionOf(cfg.motion, systemReduced);
     root.style.background = s.ground;
     root.classList.toggle('ls-still', m === 'still');
@@ -3419,7 +3424,7 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
     const ng = __lsh('div', { className: 'ng' }, s.render({ date: dateNow(), time: cfg.sky?.time || null, weather: cfg.sky?.weather || null }));
     // The shared layer's weather overlays join the scene's own, once each (a theme already wearing
     // rain does not get a second rain).
-    const look = skyLook(cfg.scene, cfg.sky);
+    const look = cfg.scene === NO_WORLD ? { overlays: [], tints: [] } : skyLook(cfg.scene, cfg.sky);
     const asked = cfg.overlays.map((e) => overlaySpec(e).id);
     for (const entry of [...cfg.overlays, ...look.overlays.filter((id) => !asked.includes(id))]) {
       const { id, speed, every } = overlaySpec(entry);
@@ -3450,8 +3455,8 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
   render();
 
   return {
-    get tokens() { return { ...((SCENES[cfg.scene] || SCENES.nimrod).tokens) }; },
-    get halo() { return (SCENES[cfg.scene] || SCENES.nimrod).halo; },
+    get tokens() { return { ...(sceneOf(cfg.scene).tokens) }; },
+    get halo() { return sceneOf(cfg.scene).halo; },
     get sky() { return cfg.sky ? { ...cfg.sky } : null; },
     set(next = {}) {
       const { fade, ...rest } = next;

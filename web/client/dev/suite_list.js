@@ -227,6 +227,8 @@ export const SUITES = [
   'lesson_player',
   // 2026-10-17: making a lesson - the prompt drafted for the person's AI, and its reply read back.
   'lesson_prompt',
+  // 2026-10-18, row 2.104: the scene's inhabitants over any dashboard or module, out of the AAC board.
+  'overlays',
   // Row 2.56: who is talking - the person's settings, the speaker label, setting up and forgetting a voice.
   'voice_id',
   // subtitle learning (2026-10-09): "what I said was ...", "Fix a subtitle line", the words it learned, the engines.

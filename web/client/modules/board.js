@@ -477,17 +477,10 @@ export const SETTINGS = [
       ...listScenes(),
     ],
     note: 'Only visible when the card surface is see-through or clear.' },
-  { key: 'weather', label: 'Weather', kind: 'choice', default: 'none', level: 'standard',
-    options: [
-      { value: 'none', label: 'None' },
-      { value: 'live', label: 'The real weather outside' },
-      ...listOverlays().filter((o) => o.group === 'weather').map((o) => ({ value: o.value, label: o.label })),
-    ],
-    note: 'Only visible when a scene is behind the board.' },
-  ...listOverlays().filter((o) => o.group !== 'weather').map((o) => ({
-    key: o.value, label: o.label, kind: 'toggle', default: false, level: 'standard',
-    onLabel: 'Yes', offLabel: 'No', note: o.note,
-  })),
+  // WEATHER AND THE INHABITANTS (a cat, fireflies, ...) ARE NO LONGER ROWS HERE (row 2.104, Mike 2026-10-18: "The
+  // overlay options are all in the AAC boards menu for some reason. Overlays should probably be it's own module").
+  // They are the Overlays module's (modules/overlays.js), which goes over any dashboard or module, this board included.
+  // A board that already had some keeps drawing them: its saved values are still read below.
   // ADVANCED, and grouped with the other input questions rather than sitting at the top of
   // the list: almost nobody needs to turn touch off, and the person who does will be looking
   // for it deliberately.

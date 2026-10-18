@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>overlays - the scene's inhabitants over any dashboard or module (row 2.104)</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:480px;height:270px;border:1px solid #999;margin:8px 0}
+</style>
+</head>
+<body>
+<h1>overlays - a cat, fireflies, rain, over anything (row 2.104)</h1>
+<p>Mike: "Overlays should probably be it's own module that you can use to add overlays to any module/dashboard."</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<script type="module">
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { OVERLAY_FIELDS, overlaysFor, OVERLAYS_TYPE } from '../modules/overlays.js';
+import { mountScene, NO_WORLD, listOverlays, listScenes } from '../livescene.js';
+import { addAsOverlay, FULL_OVERLAY_TYPES } from '../layout.js';
+import '../modules/scene.js';
+import '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+function fakeRow(initial = {}) {
+  let v = { ...initial }; const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; [...subs].forEach((f) => f(v)); }, subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, startPolling() {}, destroy() {} };
+}
+
+try {
+  section('the module');
+  const m = getManifest(OVERLAYS_TYPE);
+  check('"Overlays" is a module', m?.title === 'Overlays');
+  check('*** it never catches a press (passesPresses), and the switch\'s walk skips it ***', m.passesPresses === true && m.overlayScan === 'skip');
+  const keys = m.settings.map((f) => f.key);
+  check('its rows: weather, one toggle per inhabitant, and movement',
+    keys[0] === 'weather' && listOverlays().filter((o) => o.group !== 'weather').every((o) => keys.includes(o.value)) && keys.includes('motion'));
+  check('weather is one choice, with the real weather outside', m.settings[0].options.some((o) => o.value === 'live'));
+  check('a new one starts with something to see (fireflies)', m.settings.find((f) => f.key === 'fireflies').default === true);
+  check('overlaysFor: the weather and the inhabitants switched on', J(overlaysFor({ weather: 'rain', cat: true, ufo: false })) === J(['rain', 'cat'])
+    && J(overlaysFor({ weather: 'live', moon: true }, 'snow')) === J(['snow', 'moon']) && J(overlaysFor({ weather: 'none' })) === '[]');
+
+  section('*** no world of its own: only the inhabitants, on a clear ground ***');
+  const box = document.createElement('div'); box.className = 'box'; document.getElementById('host').append(box);
+  const sc = mountScene(box, { scene: NO_WORLD, overlays: ['cat', 'fireflies'] });
+  const ls = box.querySelector('.ls');
+  check('the ground is clear (what is under it shows)', /transparent|rgba\(0, 0, 0, 0\)/.test(ls.style.background) || ls.style.background === 'transparent', ls.style.background);
+  check('the inhabitants are drawn', ls.querySelector('.ng').children.length > 0);
+  check('...and it takes no press', getComputedStyle(ls).pointerEvents === 'none');
+  check('NO_WORLD is not a scene anybody picks', !listScenes().some((s) => s.value === NO_WORLD));
+  sc.destroy(); box.remove();
+
+  section('mounted');
+  const host = document.createElement('div'); host.className = 'box'; document.getElementById('host').append(host);
+  const st = fakeRow({});
+  const inst = mountModule(OVERLAYS_TYPE, { mount: host, bus: createBus(), state: st, instanceId: 'ov-1', personId: null });
+  inst.init();
+  check('mounted: fireflies by default, no world, press-through', inst.impl.__probe().scene === NO_WORLD && J(inst.impl.__probe().overlays) === J(['fireflies'])
+    && host.style.pointerEvents === 'none');
+  st.set({ cat: true, weather: 'snow' });
+  check('changed in the menu: at once', J(inst.impl.__probe().overlays) === J(['snow', 'cat', 'fireflies']));
+  inst.destroy(); host.remove();
+
+  section('over a dashboard');
+  const r = addAsOverlay({ slots: ['a'], placed: [] }, 'ov', { type: OVERLAYS_TYPE });
+  check('*** "Over the dashboard": the whole dashboard, not a corner ***', FULL_OVERLAY_TYPES.includes('overlays')
+    && J({ x: r.entry.x, y: r.entry.y, w: r.entry.w, h: r.entry.h }) === J({ x: 50, y: 50, w: 100, h: 100 }) && r.entry.place === 'overlay' && r.entry.scan === false, J(r.entry));
+  const c = addAsOverlay({ slots: ['a'], placed: [] }, 'sb', { type: 'scoreboard' });
+  check('another module still goes into a corner', c.entry.w < 100);
+
+  section('*** out of the AAC board, into one place ***');
+  const boardKeys = getManifest('board').settings.map((f) => f.key);
+  check('*** the AAC board no longer offers weather or the inhabitants ***', !boardKeys.includes('weather') && !listOverlays().some((o) => boardKeys.includes(o.value)), boardKeys.join(','));
+  check('...it keeps its own card surface and the scene behind it', boardKeys.includes('surface') && boardKeys.includes('boardScene'));
+  const sceneSettings = getManifest('scene').settings;
+  check('the Live scene module uses the Overlays module\'s rows (one copy)', OVERLAY_FIELDS.every((f) => sceneSettings.includes(f)));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>
