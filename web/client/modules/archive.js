@@ -51,7 +51,7 @@ import { DOWN_AFTER_FAILURES, SOURCE_RECHECK_MS } from '../media_sources.js';
 import { stallFields, createStallReporter } from '../playback_stall.js';
 import {
   parseArchiveId, parseItemList, itemListText, fetchItem, playableFiles, itemView, whatItHolds, itemType,
-  embedUrl, tileUrl, itemAddress, ARCHIVE_MESSAGES, FILES_MAX_DEFAULT, FRAME_FOR, ITEMS_MAX,
+  embedUrl, tileUrl, itemAddress, ARCHIVE_MESSAGES, FILES_MAX_DEFAULT, FRAME_FOR, ITEMS_MAX, searchArchive, searchKindWords,
 } from '../archive_org.js';
 
 export const TYPE = 'archive';
@@ -81,6 +81,10 @@ export const SETTINGS = [
     note: 'Paste an address from archive.org, or type an item’s name (the part after /details/). Put a comma between '
       + 'several. “Change the list” on the panel does the same.' },
   ...autostartFields({ on: true }),
+  // (2026-10-17) SEARCHING FROM THE ONE MENU, as YouTube's is: what is typed is searched (`settingsWrite`, never saved),
+  // what is found is listed under it with Add (`menuItems`).
+  { key: 'findItem', label: 'Search the Internet Archive', kind: 'text', default: '', level: 'standard',
+    note: 'What is found is listed below, each with Add. Only the words you type are sent to archive.org.' },
   { key: 'autoNext', label: 'When one file ends', kind: 'toggle', default: true, level: 'standard',
     onLabel: 'Play the next one', offLabel: 'Stop' },
   { key: 'order', label: 'The files in an item play', kind: 'choice', default: 'inorder', level: 'standard',
@@ -218,6 +222,9 @@ registerModule(
     const titles = {};             // id -> title, this page's memory only
     let viewSig = '';
     let dead = false;
+    let found = null;              // the menu's search: { q, busy, items, words }, memory only
+    let searchSeq = 0;
+    const menuChanged = () => { try { ctx.menuChanged?.(); } catch (e) { console.error('archive: menu repaint', e); } };
     let stageEl = null;
     let headEl = null;
     let bodyEl = null;
@@ -768,6 +775,44 @@ registerModule(
         reportPlay(false);
         try { if (registered) { audio()?.setActive?.(AUDIO_ID, false); audio()?.unregister?.(AUDIO_ID); } } catch { /* gone */ }
         registered = false;
+      },
+      // (2026-10-17) "Search the Internet Archive": the typed words searched, never saved (a search is somebody's
+      // passing words); an empty box clears what was found. A newer search wins over a slower older one.
+      settingsWrite(key, value) {
+        if (key !== 'findItem') return false;
+        const q = String(value == null ? '' : value).trim();
+        const mine = ++searchSeq;
+        if (!q) { found = null; return true; }
+        found = { q, busy: true, items: [], words: '' };
+        menuChanged();
+        Promise.resolve(searchArchive(q, fetchOpts)).then((r) => {
+          if (mine !== searchSeq || dead) return;
+          found = r && r.ok
+            ? { q, items: r.items, words: r.items.length ? '' : 'Nothing found.' }
+            : { q, items: [], words: ARCHIVE_MESSAGES[r?.reason] || ARCHIVE_MESSAGES['archive-unreachable'] };
+          menuChanged();
+        });
+        return true;
+      },
+      // What the last search found, each with Add (onto the end of this part's items).
+      menuItems() {
+        if (!found) return [];
+        const out = [{ kind: 'heading', id: 'ia-found', label: found.busy ? `Searching the Internet Archive for \u201c${found.q}\u201d\u2026` : `Found on the Internet Archive for \u201c${found.q}\u201d` }];
+        if (found.words) out.push({ kind: 'item', id: 'ia-found:words', label: found.words, disabled: true });
+        const have = parseItemList(cfg.items);
+        for (const it of found.items) {
+          const added = have.includes(it.id);
+          out.push({ kind: 'item', id: `ia-found:${it.id}`, label: added ? `Added: ${it.title}` : `Add ${it.title}`, disabled: added,
+            hint: [searchKindWords(it.kind), it.creator].filter(Boolean).join(', '),
+            run: () => {
+              const now = parseItemList(cfg.items);
+              if (now.includes(it.id) || now.length >= ITEMS_MAX) return;
+              titles[it.id] = titles[it.id] || it.title;
+              try { state?.set?.({ items: itemListText([...now, it.id]) }); } catch { /* not saved */ }
+            } });
+        }
+        if (!found.busy) out.push({ kind: 'item', id: 'ia-found:clear', label: 'Clear the search results', run: () => { found = null; } });
+        return out;
       },
       // The Play on row's live choices (speakers.js): this screen and each attached speaker. No Spotify speakers - these
       // files are played here. And the items row's live line: what each name is, from this page's memory.
