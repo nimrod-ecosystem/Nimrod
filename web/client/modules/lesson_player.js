@@ -33,8 +33,10 @@ import { registerModule } from '../module.js';
 import { checkLesson, beatsOf, showFor, citeWords, LOOKS } from '../lesson_file.js';
 import { BUILTIN_LESSONS } from '../lessons_builtin.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, createLessons, routedLessonQuestions, transcriptPool,
-  QUESTIONS_TO } from '../lessons.js';
+  QUESTIONS_TO, MADE_LESSONS_KEY, madeLessonsFrom } from '../lessons.js';
 import { TRANSCRIPT_STREAM } from '../transcript_quiz.js';
+import { LESSON_PARTS, CLASS_MINUTES, draftLessonPrompt, lessonFromReply, madeLessonId, TOPIC_MAX, LEARNER_MAX } from '../lesson_prompt.js';
+import { createAI } from '../ai.js';
 
 export const LESSON_FORMS = Object.freeze(['watch', 'slides', 'read']);
 // How long a beat stays in Watch after its words, at the least (Rule 1: a setting; the words' own time is added).
@@ -42,6 +44,10 @@ export const WATCH_HOLD_MS = 4000;
 // About how long one spoken word takes, to give the voice time to finish before Watch moves on. Measured on the
 // site's own voices, not exactly: a little slower than conversation, which is the pace these voices are set to.
 export const MS_PER_WORD = 420;
+// How long the AI on this computer is given to write a lesson. The transcript quiz measured a 7B model on a CPU-only
+// desktop at 1-4 minutes for three questions; a whole lesson is far more, so the same 15 minutes it defaults to, with
+// Cancel on screen the whole time. [A guess, on Mike's list; a setting when anybody needs another.]
+export const MAKE_TIMEOUT_MS = 15 * 60 * 1000;
 
 const SETTINGS = [
   { key: 'lessonId', label: 'Which lesson', kind: 'choice', default: BUILTIN_LESSONS[0].id, level: 'essential',
@@ -153,6 +159,18 @@ const CSS = `
 .lp-m-count-in .lp-dots i{animation:lp-fade .4s ease-out both;animation-delay:calc(var(--i) * .7s)}
 .lp-m-bars-grow .lp-bar b{animation:lp-grow .9s ease-out both}
 .lp-m-light-in-turn .lp-row span{animation:lp-lit .9s ease-in-out both;animation-delay:calc(var(--i) * .9s)}
+.lp-make{overflow:auto}
+.lp-make-in{max-width:44rem;margin:0 auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;text-align:left}
+.lp-make-in h3,.lp-make-in h4{margin:.4em 0 .1em}
+.lp-make-f{display:flex;flex-direction:column;gap:4px;font-weight:600}
+.lp-make input[type=text],.lp-make select,.lp-make textarea{box-sizing:border-box;width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--border,currentColor);border-radius:8px;background:var(--surface,transparent);color:var(--text);font:inherit;font-weight:400}
+.lp-make textarea{resize:vertical;font-size:.85rem}
+.lp-make-parts{border:1px solid var(--border,currentColor);border-radius:8px;display:flex;flex-wrap:wrap;gap:6px 16px}
+.lp-make-parts label{display:flex;align-items:center;gap:6px;min-height:44px}
+.lp-make-row{display:flex;flex-wrap:wrap;gap:8px}
+.lp-make-row button{min-height:48px;padding:8px 16px;border-radius:10px;border:2px solid var(--border,currentColor);background:var(--surface,transparent);color:var(--text);font:inherit;cursor:pointer}
+.lp-make-row button:disabled{opacity:.55;cursor:default}
+.lp-make-problems{margin:0;padding-left:1.2em;font-size:.88rem}
 @media (prefers-reduced-motion: reduce){.lp *{animation:none !important}}
 `;
 function ensureCss(doc) {
@@ -193,7 +211,7 @@ export function showHTML(show, lesson) {
 }
 
 /** The whole lesson as a page (the Read form). PURE. */
-export function readHTML(lesson, look = 'grownup') {
+export function readHTML(lesson, look = 'grownup', { unchecked = false } = {}) {
   const notes = [];
   const fn = (cite) => {
     if (!cite || !cite.length) return '';
@@ -217,7 +235,9 @@ export function readHTML(lesson, look = 'grownup') {
     for (const q of lesson.questions) parts.push(`<li>${esc(q.question)} <i>${esc(q.answer)}</i></li>`);
     parts.push('</ol>');
   }
-  if (notes.length) parts.push(`<h3>Sources</h3><ol class="lp-fn">${notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ol>`);
+  // A made lesson's sources are as its AI gave them: nothing here checked them (lesson_prompt.js), and it says so.
+  if (notes.length) parts.push(`<h3 data-lp-sources>${unchecked ? 'Sources, as the AI gave them (not checked)' : 'Sources'}</h3>`
+    + `<ol class="lp-fn">${notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ol>`);
   return `<article class="lp-read" data-lp-read>${parts.join('')}</article>`;
 }
 
@@ -239,15 +259,22 @@ function lessonsModule(ctx) {
     let unlocks = null;         // lessons.js's log of finished lessons, made when first needed
     const rows = [];            // the two question rows, to let go of
     let tlog = null;            // the transcript quiz's review log (its approved questions go to the games too)
+    let madeRow = null;         // the account's own lessons (lessons.js MADE_LESSONS_KEY)
+    let made = [];              // ...read from it
+    let unchecked = false;      // the lesson playing is a made one: its sources are as its AI gave them
+    let maker = null;           // "Make a new lesson..." while it is open (below); null otherwise
+    let aiClient = null;
     let routedPool = null;      // the pool last routed, to route again only when it changes
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
     const look = () => (LOOKS.includes(cfg.look) ? cfg.look : 'grownup');
 
+    const allLessons = () => [...BUILTIN_LESSONS, ...made];
     function load() {
       const id = setting('lessonId', BUILTIN_LESSONS[0].id);
-      const entry = BUILTIN_LESSONS.find((l) => l.id === id) || BUILTIN_LESSONS[0];
+      const entry = allLessons().find((l) => l.id === id) || BUILTIN_LESSONS[0];
+      unchecked = !!(entry.made && entry.made.sourcesChecked !== true);
       const r = checkLesson(entry.lesson);
       lesson = r.lesson; problems = r.problems;
       beats = lesson ? beatsOf(lesson) : [];
@@ -289,7 +316,7 @@ function lessonsModule(ctx) {
       if (typeof ctx.makeState !== 'function') return;
       const pool = transcriptPool(tlog?.get?.()?.events || []);
       routedPool = JSON.stringify(pool);
-      const want = routedLessonQuestions(setting('questionsTo', 'both'), { extra: pool });
+      const want = routedLessonQuestions(setting('questionsTo', 'both'), { made, extra: pool });
       for (const [key, items] of [[TRIVIA_LESSON_QUESTIONS, want.trivia], [WORDFORGE_LESSON_QUESTIONS, want.wordforge]]) {
         let row = rows.find((r) => r.__key === key) || null;
         if (!row) {
@@ -308,7 +335,7 @@ function lessonsModule(ctx) {
     }
     // A beat arrives: said, and in Watch the clock to the next one (a question is asked, then answered, then on).
     function enter() {
-      if (dead || form() === 'read') return;
+      if (dead || maker || form() === 'read') return;
       const b = beats[at]?.beat;
       if (!b) { if (at >= beats.length) say(`That is the end of ${lesson?.about.title || 'the lesson'}.`); return; }
       const words = [b.say?.text, b.ask ? b.ask.question : ''].filter(Boolean).join(' ');
@@ -350,7 +377,7 @@ function lessonsModule(ctx) {
           ask = `<div class="lp-ask">${answers.map((a) => `<button type="button" disabled>${esc(a)}</button>`).join('')}</div>`;
         }
       }
-      const cite = b.cite ? `<p class="lp-cite">Source: ${esc(citeWords(lesson, b.cite))}</p>` : '';
+      const cite = b.cite ? `<p class="lp-cite">${unchecked ? 'Source, as the AI gave it (not checked)' : 'Source'}: ${esc(citeWords(lesson, b.cite))}</p>` : '';
       return `<div class="lp-stage${b.move ? ` lp-m-${b.move}` : ''}" data-lp-beat="${at}">
           ${show ? `<div class="lp-show" role="img" aria-label="${esc(showWords(show, lesson))}">${showHTML(show, lesson)}</div>` : ''}
           ${b.say ? `<p class="lp-say">${esc(b.say.text)}</p>` : ''}
@@ -361,11 +388,12 @@ function lessonsModule(ctx) {
 
     function render() {
       if (dead || !rootEl) return;
+      if (maker) { renderMaker(); return; }
       if (!lesson) {
         rootEl.innerHTML = `<div class="lp"><div class="lp-stage"><p>This lesson could not be played.</p><p class="lp-cite">${esc(problems[0] || '')}</p></div></div>`;
         return;
       }
-      if (form() === 'read') { rootEl.innerHTML = `<div class="lp" data-lp-form="read">${readHTML(lesson, look())}</div>`; return; }
+      if (form() === 'read') { rootEl.innerHTML = `<div class="lp" data-lp-form="read">${readHTML(lesson, look(), { unchecked })}</div>`; return; }
       const cur = beats[Math.min(at, beats.length - 1)];
       const top = at >= beats.length ? lesson.about.title : `${cur.klass.title}`;
       const count = at >= beats.length ? '' : `${at + 1} of ${beats.length}`;
@@ -390,6 +418,8 @@ function lessonsModule(ctx) {
       else if (name === 'again') go(0);
     }
     function onClick(e) {
+      const m = e.target instanceof Element ? e.target.closest('[data-lm-act]') : null;
+      if (m && mount.contains(m) && !m.disabled) { makerAct(m.dataset.lmAct); return; }
       const t = e.target instanceof Element ? e.target.closest('[data-lp-answer],[data-lp-act]') : null;
       if (!t || !mount.contains(t) || t.disabled) return;
       if (t.dataset.lpAnswer != null) answer(t.dataset.lpAnswer);
@@ -401,22 +431,205 @@ function lessonsModule(ctx) {
     function paintLit() { walk().forEach((b, i) => { if (i === lit) b.dataset.lit = ''; else delete b.dataset.lit; }); }
     function selectLit() { const b = walk()[lit]; if (b) b.click(); else if (form() === 'slides') act(at >= beats.length ? 'again' : 'next'); }
 
+    // =================================================================================================================
+    // *** MAKE A NEW LESSON (2026-10-17, row 2.92; lesson_prompt.js). *** Opened from the settings menu ("Make a new
+    // lesson..."), over the lesson, in this panel. What it is about, who it is for, how long each class is (or the AI
+    // decides), and what else to make; the prompt is drafted as they type. Then either copy it to any AI and paste the
+    // reply, or ask the AI on this computer. "Check it and keep it": the reply is read and checked (lesson_file.js); a
+    // lesson that can be played is kept on the account (lessons.js MADE_LESSONS_KEY) and starts playing here, with every
+    // problem the check found listed. Nothing waits on anybody: Close is on screen at every step, a job has Cancel, and
+    // the lesson underneath carries on where it was when it is closed.
+    // =================================================================================================================
+    const ai = () => aiClient || (aiClient = ctx.ai || createAI());
+    const draftOf = (m, onComputer = false) => draftLessonPrompt({ topic: m.topic, learner: m.learner, minutes: m.minutes,
+      parts: [...m.parts], onComputer });
+    function openMaker(mode = 'make') {
+      stopTimer();
+      try { ctx.output?.cancel?.(); } catch { /* nothing said */ }
+      maker = mode === 'remove' ? { mode: 'remove' }
+        : { mode: 'make', topic: '', learner: '', minutes: 0, parts: new Set(LESSON_PARTS.filter((p) => p.default).map((p) => p.id)),
+          reply: '', how: 'pasted', status: '', problems: [], working: false, controller: null, kept: null };
+      render();
+      mount.querySelector('[data-lm-field="topic"]')?.focus?.({ preventScroll: true });
+    }
+    function closeMaker() {
+      if (maker?.controller) { try { maker.controller.abort(); } catch { /* gone */ } }
+      maker = null;
+      render();
+      enter();
+    }
+    function renderMaker() {
+      if (maker.mode === 'remove') {
+        const cur = made.find((x) => x.id === setting('lessonId', ''));
+        rootEl.innerHTML = `<div class="lp lp-make" data-lp-maker="remove"><div class="lp-make-in">
+          <h3>Remove \u201c${esc(cur?.label || 'this lesson')}\u201d?</h3>
+          <p class="lp-cite">It goes from every screen of this account. Its questions leave Trivia, Word Forge and Quiz mix.</p>
+          <div class="lp-make-row"><button type="button" data-lm-act="remove-yes">Remove it</button>
+          <button type="button" data-lm-act="close">Keep it</button></div></div></div>`;
+        return;
+      }
+      if (maker.kept) {
+        const k = maker.kept;
+        rootEl.innerHTML = `<div class="lp lp-make" data-lp-maker="kept"><div class="lp-make-in">
+          <h3 data-lm-kept>Kept: \u201c${esc(k.label)}\u201d</h3>
+          <p class="lp-cite">It is in \u201cWhich lesson\u201d on every screen of this account. Its sources are as the AI gave them: nothing here checked them.</p>
+          ${k.problems.length ? `<p><b>The check found ${k.problems.length === 1 ? 'one thing' : `${k.problems.length} things`} it left out or changed:</b></p>
+            <ul class="lp-make-problems" data-lm-problems>${k.problems.slice(0, 30).map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : '<p data-lm-problems>The check found nothing wrong.</p>'}
+          <div class="lp-make-row"><button type="button" data-lm-act="close">Play it</button></div></div></div>`;
+        return;
+      }
+      const m = maker;
+      rootEl.innerHTML = `<div class="lp lp-make" data-lp-maker="make"><div class="lp-make-in">
+        <h3>Make a new lesson</h3>
+        <label class="lp-make-f">What is it about?
+          <input type="text" data-lm-field="topic" maxlength="${TOPIC_MAX}" value="${esc(m.topic)}" placeholder="for example: right to repair"></label>
+        <label class="lp-make-f">Who is it for?
+          <input type="text" data-lm-field="learner" maxlength="${LEARNER_MAX}" value="${esc(m.learner)}" placeholder="for example: age 13, or a grown-up"></label>
+        <label class="lp-make-f">How long is each class?
+          <select data-lm-field="minutes">${CLASS_MINUTES.map((n) => `<option value="${n}"${n === m.minutes ? ' selected' : ''}>${n ? `About ${n} minutes` : 'Let the AI decide'}</option>`).join('')}</select></label>
+        <fieldset class="lp-make-parts"><legend>Also make</legend>${LESSON_PARTS.map((p) =>
+          `<label><input type="checkbox" data-lm-part="${p.id}"${m.parts.has(p.id) ? ' checked' : ''}> ${esc(p.label)}</label>`).join('')}</fieldset>
+        <h4>1. Ask an AI</h4>
+        <p class="lp-cite">Copy this to an AI you use (such as claude.ai or ChatGPT), or ask the AI on this computer. The one on this computer cannot look things up, so it writes from what it knows.</p>
+        <textarea readonly rows="6" data-lm-prompt>${esc(draftOf(m))}</textarea>
+        <div class="lp-make-row"><button type="button" data-lm-act="copy">Copy the prompt</button>
+          <button type="button" data-lm-act="computer"${m.working ? ' disabled' : ''}>Ask the AI on this computer</button>
+          ${m.working ? '<button type="button" data-lm-act="cancel">Cancel</button>' : ''}</div>
+        <p class="lp-cite" data-lm-status role="status">${esc(m.status)}</p>
+        <h4>2. Paste what it wrote</h4>
+        <textarea rows="6" data-lm-reply placeholder="Paste the AI's answer here">${esc(m.reply)}</textarea>
+        ${m.problems.length ? `<ul class="lp-make-problems" data-lm-problems role="alert">${m.problems.slice(0, 12).map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+        <div class="lp-make-row"><button type="button" data-lm-act="keep"${m.working ? ' disabled' : ''}>Check it and keep it</button>
+          <button type="button" data-lm-act="close">Close</button></div></div></div>`;
+    }
+    // Typing changes the prompt in place (never a rebuild, so the field keeps its focus).
+    function onMakerInput(e) {
+      if (!maker || maker.mode !== 'make') return;
+      const t = e.target;
+      if (!(t instanceof Element) || !mount.contains(t)) return;
+      if (t.matches('[data-lm-field="topic"]')) maker.topic = t.value;
+      else if (t.matches('[data-lm-field="learner"]')) maker.learner = t.value;
+      else if (t.matches('[data-lm-field="minutes"]')) maker.minutes = Number(t.value) || 0;
+      else if (t.matches('[data-lm-part]')) { if (t.checked) maker.parts.add(t.dataset.lmPart); else maker.parts.delete(t.dataset.lmPart); }
+      else if (t.matches('[data-lm-reply]')) { maker.reply = t.value; maker.how = 'pasted'; return; }
+      else return;
+      const box = mount.querySelector('[data-lm-prompt]');
+      if (box) box.value = draftOf(maker);
+    }
+    function setStatus(text) {
+      if (!maker) return;
+      maker.status = text;
+      const s = mount.querySelector('[data-lm-status]');
+      if (s) s.textContent = text;
+    }
+    async function askComputer() {
+      const m = maker;
+      if (!m || m.working) return;
+      if (!String(m.topic).trim()) { setStatus('Say what the lesson is about first.'); mount.querySelector('[data-lm-field="topic"]')?.focus?.(); return; }
+      m.working = true;
+      m.controller = typeof AbortController === 'function' ? new AbortController() : null;
+      m.status = 'Writing the lesson with the AI on this computer\u2026 On a computer without a graphics card this can take several minutes.';
+      render();
+      let r;
+      try {
+        r = await ai().chat([{ role: 'user', content: draftOf(m, true) }],
+          { json: true, temperature: 0.3, timeoutMs: MAKE_TIMEOUT_MS, contextTokens: 8192, signal: m.controller?.signal });
+      } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
+      if (maker !== m) return;                 // closed while it worked
+      m.working = false; m.controller = null;
+      if (!r || !r.ok) { m.status = r?.cancelled ? 'Stopped.' : `The AI on this computer did not answer: ${r?.reason || 'no reason given'}`; render(); return; }
+      m.reply = r.text || ''; m.how = 'computer';
+      m.status = `Written${r.model ? ` by ${r.model}` : ''}. Checking it\u2026`;
+      render();
+      keepReply();
+    }
+    function keepReply() {
+      const m = maker;
+      if (!m || m.mode !== 'make') return;
+      const box = mount.querySelector('[data-lm-reply]');
+      if (box) m.reply = box.value;
+      const r = lessonFromReply(m.reply);
+      if (!r.lesson) { m.problems = r.problems.length ? r.problems : ['No lesson could be read.']; render(); return; }
+      const label = r.lesson.about.title;
+      const id = madeLessonId(label, allLessons().map((l) => l.id));
+      const item = { id, label, lesson: r.lesson, made: { how: m.how, at: new Date().toISOString(), sourcesChecked: false } };
+      made = [...made, item];
+      try { madeRow?.set?.({ items: made.map(({ id: i, label: l, lesson: ls, made: md }) => ({ id: i, label: l, lesson: ls, made: md })) }); madeRow?.flush?.(); }
+      catch (err) { console.error('lessons: could not keep the lesson', err); }
+      m.kept = { label, problems: r.problems };
+      try { state?.set?.({ lessonId: id, at: 0 }); } catch { /* memory only */ }
+      cfg = { ...cfg, lessonId: id };
+      load(); at = 0; picked = null; lit = -1; finished = false;
+      routeQuestions();
+      render();
+    }
+    function removeCurrent() {
+      const id = setting('lessonId', '');
+      made = made.filter((x) => x.id !== id);
+      try { madeRow?.set?.({ items: made }); madeRow?.flush?.(); } catch (err) { console.error('lessons: could not remove the lesson', err); }
+      try { state?.set?.({ lessonId: BUILTIN_LESSONS[0].id, at: 0 }); } catch { /* memory only */ }
+      cfg = { ...cfg, lessonId: BUILTIN_LESSONS[0].id };
+      load(); at = 0;
+      routeQuestions();
+      closeMaker();
+    }
+    function makerAct(name) {
+      if (name === 'close') closeMaker();
+      else if (name === 'keep') keepReply();
+      else if (name === 'computer') askComputer();
+      else if (name === 'cancel') { try { maker?.controller?.abort(); } catch { /* gone */ } }
+      else if (name === 'remove-yes') removeCurrent();
+      else if (name === 'copy') {
+        const text = draftOf(maker);
+        const box = mount.querySelector('[data-lm-prompt]');
+        const fallback = () => { try { box?.focus(); box?.select(); } catch { /* nothing to select */ } setStatus('Selected: press Ctrl+C (or \u2318C) to copy it.'); };
+        try {
+          const p = navigator.clipboard?.writeText?.(text);
+          if (p && typeof p.then === 'function') p.then(() => setStatus('Copied. Paste it into your AI, then paste its answer below.'), fallback);
+          else fallback();
+        } catch { fallback(); }
+      }
+    }
+    // A made lesson, read from the account's row; the lesson playing reloads if it was one and it changed.
+    function readMade() {
+      const next = madeLessonsFrom(madeRow?.get?.());
+      const changed = JSON.stringify(next.map((x) => x.id)) !== JSON.stringify(made.map((x) => x.id));
+      made = next;
+      if (!changed) return;
+      const id = setting('lessonId', BUILTIN_LESSONS[0].id);
+      if (!maker && (made.some((x) => x.id === id) || !allLessons().some((x) => x.id === id) || lesson?.about.title !== (allLessons().find((x) => x.id === id)?.lesson?.about?.title))) {
+        load(); render(); stopTimer(); enter();
+      }
+      routeQuestions();
+    }
+
     function apply(s) {
       const was = { ...cfg };
       cfg = { ...(s || {}) };
       if (was.questionsTo !== cfg.questionsTo && was.questionsTo !== undefined) routeQuestions();
-      if (was.lessonId !== cfg.lessonId && was.lessonId !== undefined) { load(); go(0); return; }
+      if (was.lessonId !== cfg.lessonId && was.lessonId !== undefined) { load(); if (maker) return; go(0); return; }
       if (was.form !== cfg.form || was.look !== cfg.look) { stopTimer(); render(); enter(); }
     }
 
     return {
-      __probe: () => ({ at, total: beats.length, form: form(), look: look(), picked, said: lastSaid, problems: problems.slice(), title: lesson?.about.title || '' }),
+      __probe: () => ({ at, total: beats.length, form: form(), look: look(), picked, said: lastSaid, problems: problems.slice(), title: lesson?.about.title || '',
+        unchecked, made: made.map((x) => x.id), maker: maker ? (maker.kept ? 'kept' : maker.mode) : null }),
       init() {
         ensureCss(mount.ownerDocument || document);
         mount.innerHTML = '<div class="lp-root mod-box" style="height:100%" data-lesson-player></div>';
         rootEl = mount.querySelector('[data-lesson-player]');
         mount.addEventListener('click', onClick);
+        mount.addEventListener('input', onMakerInput);
+        mount.addEventListener('change', onMakerInput);
         cfg = { ...(state?.get?.() || {}) };
+        if (typeof ctx.makeState === 'function') {
+          try {
+            madeRow = ctx.makeState(MADE_LESSONS_KEY);
+            made = madeLessonsFrom(madeRow?.get?.());
+            madeRow?.subscribe?.(() => { if (!dead) readMade(); });
+            Promise.resolve(madeRow?.load?.()).catch(() => {}).then(() => { if (!dead) { madeRow?.startPolling?.(); readMade(); } });
+          } catch { madeRow = null; }
+        }
         load();
         state?.subscribe?.((s) => { if (!dead) apply(s); });
         // The bar's and a switch's verbs (actions.js MODULE_VERBS lesson_player). In Watch nothing waits to be pressed,
@@ -439,12 +652,28 @@ function lessonsModule(ctx) {
         } else routeQuestions();
       },
       onShow() { if (!timer) enter(); },
+      // "Which lesson" offers the account's own lessons too (board.js's pattern: what only the mounted panel knows).
+      settingsChoices: () => ({ lessonId: allLessons().map((l) => ({ value: l.id, label: l.made ? `${l.label} (made)` : l.label })) }),
+      // The maker, from the one menu (row 2.95). `closesMenu`: it opens over the lesson.
+      menuItems: () => {
+        const cur = made.find((x) => x.id === setting('lessonId', ''));
+        return [
+          { kind: 'item', id: 'lesson-make', label: 'Make a new lesson…', closesMenu: true,
+            hint: 'drafts what to ask an AI, then keeps what it writes', run: () => openMaker('make') },
+          ...(cur ? [{ kind: 'item', id: 'lesson-remove', label: 'Remove this lesson…', closesMenu: true,
+            hint: `“${cur.label}”, made on this account`, run: () => openMaker('remove') }] : []),
+        ];
+      },
       onHide() { stopTimer(); try { state?.flush?.(); } catch { /* nothing to do */ } },
       onResize() {},
       destroy() {
         dead = true;
         stopTimer();
         mount.removeEventListener('click', onClick);
+        mount.removeEventListener('input', onMakerInput);
+        mount.removeEventListener('change', onMakerInput);
+        if (maker?.controller) { try { maker.controller.abort(); } catch { /* gone */ } }
+        try { madeRow?.destroy?.(); } catch { /* gone */ }
         try { ctx.output?.cancel?.(); } catch { /* gone */ }
         for (const r of rows) { try { r.destroy?.(); } catch { /* gone */ } }
         try { unlocks?.destroy?.(); } catch { /* gone */ }

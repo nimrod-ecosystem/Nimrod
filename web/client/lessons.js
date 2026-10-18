@@ -49,16 +49,33 @@ export const WORDFORGE_LESSON_QUESTIONS = 'lesson-questions-wordforge';
 // video_quiz.js only). Known edge, stated: each writer applies ITS OWN `questionsTo`, so two panels set differently
 // leave the row as the last one to write said.
 export const QUESTIONS_TO = Object.freeze(['both', 'trivia', 'wordforge', 'none']);
+// *** LESSONS SOMEBODY MADE (2026-10-17, "Make a new lesson..." in Lessons; lesson_prompt.js). *** One profile row, the
+// account's own lessons, each already checked (lesson_file.js checkLesson): { items: [ { id, label, lesson, made } ] }.
+// `made`: { how: 'pasted' | 'computer', at, sourcesChecked: false }. Read by both question writers, so a made lesson's
+// review questions are in the one set too.
+export const MADE_LESSONS_KEY = 'lessons-made';
+/** The made lessons in a row's document, the broken ones left out. PURE. */
+export function madeLessonsFrom(doc) {
+  const out = [];
+  const seen = new Set();
+  for (const it of Array.isArray(doc?.items) ? doc.items : []) {
+    if (!it || typeof it.id !== 'string' || !it.id || seen.has(it.id) || !it.lesson || typeof it.lesson !== 'object') continue;
+    seen.add(it.id);
+    out.push({ id: it.id, label: String(it.label || it.lesson?.about?.title || it.id).slice(0, 200), lesson: it.lesson,
+      made: it.made && typeof it.made === 'object' ? it.made : { sourcesChecked: false } });
+  }
+  return out;
+}
 /** Approved transcript questions from the review log's events, in the rows' shape, each named after its video. PURE. */
 export function transcriptPool(events) {
   return poolFrom(reviewItems(events || [])).map((q) => ({ ...toRoutedQuestion(q, q.topic),
     ...(q.topicLabel && q.topicLabel !== q.topic ? { topicLabel: q.topicLabel } : {}) }));
 }
 /** The two rows' items for `to`: { trivia, wordforge }. `lessons` the lesson files (the built-in ones by default),
- *  `extra` more items in the rows' shape. PURE. */
-export function routedLessonQuestions(to = 'both', { lessons = BUILTIN_LESSONS, extra = [] } = {}) {
+ *  `made` the account's own (madeLessonsFrom), `extra` more items in the rows' shape. PURE. */
+export function routedLessonQuestions(to = 'both', { lessons = BUILTIN_LESSONS, made = [], extra = [] } = {}) {
   const items = [];
-  for (const e of lessons || []) {
+  for (const e of [...(lessons || []), ...(made || [])]) {
     const r = checkLesson(e.lesson);
     if (!r.lesson) continue;
     for (const q of r.lesson.questions) {

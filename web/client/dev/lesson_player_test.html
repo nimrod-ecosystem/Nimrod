@@ -215,6 +215,93 @@ try {
     check('a panel saved under "lesson_player" plays the same lesson', old.probe().title === 'Numbers 0 to 9');
     old.done();
   }
+  section('*** make a new lesson: the prompt drafted, the reply pasted or written here, checked, kept, played ***');
+  {
+    const GOOD = { about: { title: 'Right to repair', for: 'age 13' },
+      sources: [{ id: 's1', title: 'A repair report', author: 'A group', date: '2024' }],
+      classes: [{ title: 'Fixing your own stuff', minutes: 30, beats: [
+        { say: 'Things break.', show: { kind: 'heading', text: 'Right to repair' } },
+        { say: 'A fact about phones.', cite: ['s1'] }] }],
+      questions: [{ question: 'What is right to repair?', answer: 'Fixing what you own', wrong: ['A shop', 'A phone'] }] };
+    const rowsBy = {};
+    const makeState = (k) => (rowsBy[k] || (rowsBy[k] = fakeRow({})));
+    const st = fakeRow({ form: 'slides' });
+    const m = mountLesson(st, { makeState });
+    await new Promise((r) => setTimeout(r, 20));
+    const items = m.inst.impl.menuItems();
+    const mk = items.find((i) => i.id === 'lesson-make');
+    check('the menu offers "Make a new lesson…", closing the menu (the maker opens over the lesson)', !!mk && mk.closesMenu === true && /Make a new lesson/.test(mk.label));
+    check('no "Remove this lesson" for a built-in one', !items.some((i) => i.id === 'lesson-remove'));
+    mk.run();
+    check('*** it opens in the panel, and nothing is said or timed under it ***', m.probe().maker === 'make' && !!m.q('[data-lm-field="topic"]') && m.timers.pending() === 0);
+    const topic = m.q('[data-lm-field="topic"]');
+    topic.value = 'Right to repair'; topic.dispatchEvent(new Event('input', { bubbles: true }));
+    const learner = m.q('[data-lm-field="learner"]');
+    learner.value = 'age 13'; learner.dispatchEvent(new Event('input', { bubbles: true }));
+    check('*** the prompt is drafted as they type (in place: the field keeps its place) ***',
+      /Topic: Right to repair\./.test(m.q('[data-lm-prompt]').value) && /Learner: age 13\./.test(m.q('[data-lm-prompt]').value) && m.q('[data-lm-field="topic"]') === topic);
+    const charts = m.q('[data-lm-part="charts"]');
+    charts.checked = true; charts.dispatchEvent(new Event('change', { bubbles: true }));
+    check('ticking Charts asks for charts', /Also return "charts"/.test(m.q('[data-lm-prompt]').value));
+    const reply = m.q('[data-lm-reply]');
+    reply.value = 'not a lesson at all'; reply.dispatchEvent(new Event('input', { bubbles: true }));
+    m.q('[data-lm-act="keep"]').click();
+    check('a reply with no lesson in it: said, nothing kept', /only the JSON/.test(m.q('[data-lm-problems]')?.textContent || '') && m.probe().made.length === 0);
+    m.q('[data-lm-reply]').value = 'Here you go:\n```json\n' + JSON.stringify(GOOD) + '\n```';
+    m.q('[data-lm-reply]').dispatchEvent(new Event('input', { bubbles: true }));
+    m.q('[data-lm-act="keep"]').click();
+    check('*** checked and kept: on the account, and playing here ***', m.probe().maker === 'kept' && m.probe().title === 'Right to repair'
+      && J(m.probe().made) === J(['made-right-to-repair']) && rowsBy['lessons-made'].get().items?.[0]?.label === 'Right to repair' && st.get().lessonId === 'made-right-to-repair', J(m.probe()));
+    check('*** kept as made, its sources NOT checked, and the screen says so ***', rowsBy['lessons-made'].get().items[0].made.sourcesChecked === false
+      && /nothing here checked them/.test(m.box.textContent) && m.probe().unchecked === true);
+    check('"Which lesson" offers it (marked made)', m.inst.impl.settingsChoices().lessonId.some((o) => o.value === 'made-right-to-repair' && /\(made\)/.test(o.label)));
+    await new Promise((r) => setTimeout(r, 20));
+    check('*** its review question is in the games\' rows, beside the built-in lessons\' ***',
+      (rowsBy['lesson-questions-trivia'].get().items || []).some((q) => q.topic === 'made-right-to-repair' && q.answer === 'Fixing what you own')
+        && (rowsBy['lesson-questions-trivia'].get().items || []).some((q) => q.topic === 'numbers-0-9'));
+    m.q('[data-lm-act="close"]').click();
+    check('"Play it": the lesson, from its start', m.probe().maker === null && m.probe().at === 0 && /Fixing your own stuff/.test(m.q('.lp-top')?.textContent || ''));
+    m.q('[data-lp-act="next"]').click();
+    check('*** a cited part says its source is as the AI gave it, not checked ***', /Source, as the AI gave it \(not checked\): A group, 2024/.test(m.q('.lp-cite')?.textContent || ''), m.q('.lp-cite')?.textContent);
+    check('...and so does the Read form\'s list', /Sources, as the AI gave them \(not checked\)/.test(readHTML(checkLesson(GOOD).lesson, 'grownup', { unchecked: true })));
+    const rm = m.inst.impl.menuItems().find((i) => i.id === 'lesson-remove');
+    check('a made lesson can be removed (the menu names it)', !!rm && /Right to repair/.test(rm.hint));
+    rm.run();
+    check('removing asks first', m.probe().maker === 'remove' && !!m.q('[data-lm-act="remove-yes"]'));
+    m.q('[data-lm-act="close"]').click();
+    check('"Keep it": kept', m.probe().made.length === 1 && m.probe().title === 'Right to repair');
+    m.inst.impl.menuItems().find((i) => i.id === 'lesson-remove').run();
+    m.q('[data-lm-act="remove-yes"]').click();
+    check('*** "Remove it": gone from the account, and the first lesson plays ***', m.probe().made.length === 0 && (rowsBy['lessons-made'].get().items || []).length === 0
+      && m.probe().title === 'Numbers 0 to 9');
+    m.done();
+
+    // The AI on this computer (a stand-in for ai.js).
+    const asked = [];
+    const fakeAI = { chat: (messages, opts) => { asked.push({ messages, opts }); return Promise.resolve({ ok: true, model: 'fake-7b', text: JSON.stringify(GOOD) }); } };
+    const c = mountLesson(fakeRow({ form: 'slides' }), { makeState: (k) => fakeRow({}), ai: fakeAI });
+    c.inst.impl.menuItems()[0].run();
+    c.q('[data-lm-act="computer"]').click();
+    check('asked with no topic: it says to say what it is about first, and asks nothing', asked.length === 0 && /what the lesson is about/.test(c.q('[data-lm-status]').textContent));
+    c.q('[data-lm-field="topic"]').value = 'Right to repair'; c.q('[data-lm-field="topic"]').dispatchEvent(new Event('input', { bubbles: true }));
+    c.q('[data-lm-act="computer"]').click();
+    await new Promise((r) => setTimeout(r, 20));
+    check('*** asked with the prompt for a computer that cannot look things up, as JSON ***', asked.length === 1 && asked[0].opts.json === true
+      && /you cannot look anything up/.test(asked[0].messages[0].content));
+    check('*** its answer is checked and kept like a pasted one ***', c.probe().maker === 'kept' && c.probe().title === 'Right to repair');
+    c.done();
+    let aborted = false;
+    const slowAI = { chat: (messages, opts) => new Promise((resolve) => { opts.signal?.addEventListener('abort', () => { aborted = true; resolve({ ok: false, cancelled: true }); }); }) };
+    const s = mountLesson(fakeRow({ form: 'slides' }), { makeState: (k) => fakeRow({}), ai: slowAI });
+    s.inst.impl.menuItems()[0].run();
+    s.q('[data-lm-field="topic"]').value = 'Bees'; s.q('[data-lm-field="topic"]').dispatchEvent(new Event('input', { bubbles: true }));
+    s.q('[data-lm-act="computer"]').click();
+    check('while it writes: Cancel is on screen, Close too (nothing waits on anybody)', !!s.q('[data-lm-act="cancel"]') && !!s.q('[data-lm-act="close"]'));
+    s.q('[data-lm-act="cancel"]').click();
+    await new Promise((r) => setTimeout(r, 10));
+    check('Cancel stops it, and says so', aborted && /Stopped/.test(s.q('[data-lm-status]').textContent));
+    s.done();
+  }
   check('names nobody', !/christine|cici|her screen/i.test(document.getElementById('host').textContent));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

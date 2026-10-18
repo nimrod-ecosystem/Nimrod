@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lesson_prompt - the prompt drafted for the person's AI, and its answer read back</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>lesson_prompt - making a lesson (row 2.92)</h1>
+<p>Mike: the person connects their AI, ticks what they want back, types a short topic, and the full prompt is drafted for them.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { LESSON_PARTS, CLASS_MINUTES, draftLessonPrompt, lessonFromReply, jsonPieces, madeLessonId } from '../lesson_prompt.js';
+import { MOVES } from '../lesson_file.js';
+import { routedLessonQuestions, madeLessonsFrom } from '../lessons.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+
+const GOOD = {
+  about: { title: 'Right to repair', for: 'age 13', length_note: 'Three classes cover it.' },
+  sources: [{ id: 's1', title: 'A repair report', author: 'A group', date: '2024', link: 'https://example.org/r' }],
+  classes: [{ title: 'Fixing your own stuff', minutes: 30, goal: 'Say what repair means.', beats: [
+    { say: 'Things break.', show: { kind: 'heading', text: 'Right to repair' }, move: 'title-rise' },
+    { say: 'A fact about phones.', cite: ['s1'], show: { kind: 'picture', of: 'a phone opened up' } },
+    { ask: { question: 'Which can you fix yourself?', answer: 'A bike chain', wrong: ['A sealed battery', 'A chip', 'A screen glued shut'] } },
+  ] }],
+  notes: ['[[repair]]'],
+  questions: [{ question: 'What is right to repair?', answer: 'Being able to fix what you own', wrong: ['A shop', 'A law about cars', 'A phone'], why: 'It is about owners.' }],
+};
+
+try {
+  section('the prompt');
+  const p = draftLessonPrompt({ topic: 'Right to repair', learner: 'age 13', minutes: 30, parts: ['questions', 'notes'] });
+  check('it asks for ONE JSON object and nothing else', /Return ONE JSON object/.test(p) && /nothing else/.test(p));
+  check('the topic, the learner, and the class length are in it', /Topic: Right to repair\./.test(p) && /Learner: age 13\./.test(p) && /about 30 minutes/.test(p));
+  check('every fact cited; narration and jokes need none (Mike: "Only facts")', /Every fact carries the ids of its sources/.test(p) && /Narration and jokes need no citation/.test(p));
+  check('the animations offered are exactly the shared library\'s names', MOVES.every((m) => p.includes(m)));
+  check('no colours, fonts, voices or animation code', /Do not include colours, fonts, voices/.test(p));
+  check('*** what was ticked is asked for; what was not, is not ***', /"questions"/.test(p) && /"notes"/.test(p) && /Do not return charts/.test(p) && !/"charts": \[\]/.test(p));
+  const ai = draftLessonPrompt({ topic: 'Bees', minutes: 0 });
+  check('"Let the AI decide" asks it to decide the classes and say why', /you decide how many classes/.test(ai) && /length_note/.test(ai));
+  check('no learner typed: "anyone"', /Learner: anyone\./.test(ai));
+  const pc = draftLessonPrompt({ topic: 'Bees', onComputer: true });
+  check('*** for the AI on this computer: it cannot look things up, so it is told never to invent a source ***',
+    /you cannot look anything up/.test(pc) && /leave a fact out rather than invent a source/.test(pc) && !/use current, reliable sources/.test(pc));
+  check('the parts offered are only what the player shows today (no two-voice or teacher box yet)',
+    J(LESSON_PARTS.map((x) => x.id)) === J(['questions', 'notes', 'charts']));
+  check('class lengths: the AI decides, or 10 to 45 minutes', CLASS_MINUTES[0] === 0 && CLASS_MINUTES.includes(30));
+  check('a very long topic is cut, and spaces tidied', draftLessonPrompt({ topic: 'x'.repeat(500) + '\n\n y' }).includes(`Topic: ${'x'.repeat(200)}.`));
+
+  section('the reply, read back and checked');
+  const r1 = lessonFromReply(JSON.stringify(GOOD));
+  check('*** a good reply is a lesson, with no problems ***', !!r1.lesson && r1.problems.length === 0 && r1.lesson.about.title === 'Right to repair', J(r1.problems));
+  const fenced = 'Sure! Here is your lesson:\n```json\n' + JSON.stringify(GOOD) + '\n```\nEnjoy.';
+  check('words around it, and a ```json fence, are read past', lessonFromReply(fenced).lesson?.about.title === 'Right to repair');
+  check('wrapped as { "lesson": { ... } }: read', lessonFromReply(JSON.stringify({ lesson: GOOD })).lesson?.about.title === 'Right to repair');
+  check('nothing pasted: said', lessonFromReply('  ').lesson === null && /Nothing was pasted/.test(lessonFromReply('').problems[0]));
+  check('not JSON: no lesson, and it says to ask for only the JSON', lessonFromReply('Here is a lesson about bees.').lesson === null
+    && /Ask the AI to return only the JSON/.test(lessonFromReply('no').problems[0]));
+  const bad = { ...GOOD, classes: [{ title: 'One', beats: [{ say: 'x', move: 'explode', cite: ['s9'] }] }] };
+  const r2 = lessonFromReply(JSON.stringify(bad));
+  check('*** problems it can survive: kept, and each said (an unknown animation, a missing source) ***', !!r2.lesson && r2.problems.some((x) => /explode/.test(x)) && r2.problems.some((x) => /s9/.test(x)), J(r2.problems));
+  check('jsonPieces: the whole, the fence, and first-{ to last-}', jsonPieces('a {"x":1} b').includes('{"x":1}'));
+
+  section('kept on the account, and in the games');
+  check('an id from the title, never one already used', madeLessonId('Right to repair!', []) === 'made-right-to-repair'
+    && madeLessonId('Right to repair', ['made-right-to-repair']) === 'made-right-to-repair-2');
+  const row = { items: [{ id: 'made-right-to-repair', label: 'Right to repair', lesson: r1.lesson, made: { how: 'pasted', sourcesChecked: false } },
+    { id: '', lesson: {} }, { id: 'made-right-to-repair', lesson: r1.lesson }, { id: 'x' }] };
+  const m = madeLessonsFrom(row);
+  check('the row read back: broken and repeated ones left out', m.length === 1 && m[0].made.sourcesChecked === false, J(m.map((x) => x.id)));
+  const R = routedLessonQuestions('both', { made: m });
+  check('*** a made lesson\'s review questions go to the games, named after it, beside the built-in ones ***',
+    R.trivia.some((q) => q.topic === 'made-right-to-repair' && q.topicLabel === 'Right to repair' && q.answer === 'Being able to fix what you own')
+      && R.trivia.some((q) => q.topic === 'numbers-0-9'), J(R.trivia.map((q) => q.topic)));
+  check('names nobody', !/christine|cici|her screen/i.test(p + pc + ai));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>
