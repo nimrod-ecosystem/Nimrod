@@ -79,6 +79,7 @@
 //     so a colour or hand tracker that reports an aim needs nothing written for this game. Argued, not
 //     a setting: it is the pointer rule, for a pointer the operating system cannot see.
 
+import { followPanelSpeaker } from '../speakers.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -246,7 +247,7 @@ export function statusFor(g, { control = 'sweep', idle = false, autoLaunch = 3 }
 }
 
 registerModule(
-  { type: GAME, title: 'Brick breaker', core: 'new',
+  { type: GAME, title: 'Brick breaker', core: 'new', routesSound: true,
     description: 'Knock down a wall of bricks with a ball and a paddle. One switch can play. The paddle glides '
       + 'by itself and a press stops it. The ball is slow by default, and a missed ball just comes back.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
@@ -284,7 +285,7 @@ registerModule(
     let brickEls = new Map();
     let drawnBricks = null;
     let lastSay = '', lastScore = '';
-    let score = null, ledger = null, tones = null, music = null;
+    let score = null, ledger = null, tones = null, music = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     // ---- waiting for Start, and the demo (game_start.js, game_agent.js) ----
     let started = true;           // false: the Start button is up and `g` is the demo's game
     let demo = false;             // the computer is playing (only while not started)
@@ -764,6 +765,8 @@ registerModule(
         applyCfg(state?.get?.());
         fresh();
         // A setting changed while it waits for Start: the demo follows "While nobody is playing" at once.
+        // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
+        unSpeaker = followPanelSpeaker(state, () => [tones, music]);
         state?.subscribe?.((s) => {
           applyCfg(s);
           if (!started && demoWanted() !== demo) { toStartScreen(); return; }
@@ -808,6 +811,7 @@ registerModule(
       },
       onShow() { hidden = false; syncAudio(); render(); ensureLoop(); },
       destroy() {
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
         clearRest();
         stopLoop();

@@ -55,6 +55,7 @@
 // PAUSE / PLAY (the bar's button, Space, "pause"): `rhythm/pause` stops the beat; `rhythm/play` starts it
 // (or starts the game). The verb map entries are actions.js's (lines handed to its owner).
 
+import { followPanelSpeaker } from '../speakers.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -176,7 +177,7 @@ export const VERDICT_WORDS = Object.freeze({ hit: '✓ On the beat!', early: '�
   wrong: '✗ That tile was not lit' });
 
 registerModule(
-  { type: GAME, title: 'Rhythm tiles', core: 'new',
+  { type: GAME, title: 'Rhythm tiles', core: 'new', routesSound: true,
     description: 'Tiles light up to a beat; press on the beat. One switch is all it takes. It '
       + 'is slow and forgiving by default. It keeps to the screen\'s flashing limit when one is set.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
@@ -217,7 +218,7 @@ registerModule(
     let status = '', statusAt = -1e9, statusWant = '';
     let markedK = null, lastMarkAt = -1e9;
     let rootEl = null, tilesEl = null, sayEl = null, scoreEl = null, tileEls = [];
-    let score = null, ledger = null, tones = null;
+    let score = null, ledger = null, tones = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     // ---- waiting for Start, and the demo (game_start.js, game_agent.js) ----
     let started = true;           // false: the Start button is up; a run, if any, is the demo's (`run.demo`)
     let demo = false;             // the computer is tapping along
@@ -603,6 +604,8 @@ registerModule(
             .some((k) => next[k] !== was[k]);
         };
         applyCfg(state?.get?.());
+        // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
+        unSpeaker = followPanelSpeaker(state, () => [tones]);
         state?.subscribe?.((s) => {
           if (applyCfg(s)) restart();
           // "While nobody is playing" changed while it waits for Start: the demo follows at once.
@@ -645,6 +648,7 @@ registerModule(
       // Back on screen, still waiting: the demo picks up again (unless it had already run its time).
       onShow() { hidden = false; if (!started && demo && !demoRested && !run) start({ demo: true }); render(); },
       destroy() {
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
         clearRest();
         stopLoop();

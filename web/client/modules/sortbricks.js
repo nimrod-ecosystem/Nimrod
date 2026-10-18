@@ -38,6 +38,7 @@
 // THE SCORE is bricks sorted this game, on the score contract (`../score_source.js`). EACH TRAY SORTED PAYS `trayPoints`
 // Play points (1 by default: a tray is sorted by presses, and a game nobody presses comes to rest).
 
+import { followPanelSpeaker } from '../speakers.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -219,7 +220,7 @@ function ensureStyle(doc) {
 }
 
 registerModule(
-  { type: GAME, title: TITLE, core: 'new',
+  { type: GAME, title: TITLE, core: 'new', routesSound: true,
     description: 'Put each Nimrod brick where it goes: first in the slot it fits, then with its color, then with '
       + 'its size. At the first level any press puts the brick in. The places light up in turn, so one switch can play.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
@@ -245,7 +246,7 @@ registerModule(
     let rootEl = null, upEl = null, placesEl = null, sayEl = null, scoreEl = null, overlayEl = null, sbEl = null;
     let lastSay = '', lastScore = '', lastOverlay = null, lastUp = '', lastPlaces = '';
     let menuAsks = 0;
-    let score = null, ledger = null, tones = null;
+    let score = null, ledger = null, tones = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     let started = true, demo = false, demoMs = 0, demoRested = false, demoMemory = {}, agent = null;
     let lightTimer = null, waitTimer = null, idleTimer = null, restTimer = null, demoTimer = null;
     let litSaid = null, litKey = '';
@@ -689,6 +690,8 @@ registerModule(
         };
         applyCfg(state?.get?.());
         fresh();
+        // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
+        unSpeaker = followPanelSpeaker(state, () => [tones]);
         state?.subscribe?.((s) => {
           const was = { ...cfg };
           applyCfg(s);
@@ -733,6 +736,7 @@ registerModule(
         if (!started && demo && !demoRested && demoTimer == null) demoTimer = setT(demoTick, DEMO_STEP_MS);
       },
       destroy() {
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
         clearRest(); stopTimers(); idleTimer = clear(idleTimer);
         mount.removeEventListener('pointerdown', onPointerDown);

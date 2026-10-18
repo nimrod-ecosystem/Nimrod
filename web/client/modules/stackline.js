@@ -27,6 +27,7 @@
 // THE SCORE is towers built to the line this game, on the score contract (`../score_source.js`). EACH LINE REACHED PAYS
 // `linePoints` Play points (1 by default: a tower is built by presses, and a game nobody presses comes to rest).
 
+import { followPanelSpeaker } from '../speakers.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -203,7 +204,7 @@ function ensureStyle(doc) {
 }
 
 registerModule(
-  { type: GAME, title: TITLE, core: 'new',
+  { type: GAME, title: TITLE, core: 'new', routesSound: true,
     description: 'A brick slides along above a tower. One press drops it, and what hangs over the edge is '
       + 'cut off. Build up to the line. One switch can play. The easy levels are slow, and a miss costs nothing.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
@@ -238,7 +239,7 @@ registerModule(
     let sayEl = null, scoreEl = null, ctrlEl = null, overlayEl = null;
     let drawnKey = '', drawnBoard = '', lastSay = '', lastScore = '', lastOverlay = null, drawnFalling = '';
     let menuAsks = 0;
-    let score = null, ledger = null, tones = null, music = null;
+    let score = null, ledger = null, tones = null, music = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
     let started = true, demo = false, demoMs = 0, demoRested = false, demoMemory = {}, agent = null;
     let restTimer = null;
     const plays = createPlayWatch(bus, ctx);
@@ -581,6 +582,8 @@ registerModule(
         };
         applyCfg(state?.get?.());
         fresh();
+        // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
+        unSpeaker = followPanelSpeaker(state, () => [tones, music]);
         state?.subscribe?.((s) => {
           const was = { ...cfg };
           applyCfg(s);
@@ -610,6 +613,7 @@ registerModule(
       },
       onShow() { hidden = false; syncAudio(); render(); ensureLoop(); },
       destroy() {
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
         clearRest(); stopLoop();
         mount.removeEventListener('pointerdown', onPointerDown);

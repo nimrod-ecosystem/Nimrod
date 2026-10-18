@@ -55,6 +55,7 @@ export function createGameTones({
   let ownsContext = false;
   let active = false;
   let dead = false;
+  let sinkId = '';              // a speaker chosen for this panel (speakers.js followPanelSpeaker); '' = the screen's
   const live = new Set();       // oscillators started and not yet ended
 
   const effectsOf = () => {
@@ -74,7 +75,13 @@ export function createGameTones({
     if (dead) return false;
     try {
       let dest = null;
-      const chain = effectsOf();
+      // A SPEAKER CHOSEN FOR THIS PANEL: its own context, sent there (the shared one goes to one speaker for all).
+      if (sinkId) {
+        ac = makeContext(); ownsContext = true;
+        if (!ac) return false;
+        try { Promise.resolve(ac.setSinkId?.(sinkId)).catch(() => {}); } catch { /* the default speaker */ }
+      }
+      const chain = ac ? null : effectsOf();
       let shared = null;
       try { shared = chain?.context?.() || null; } catch { shared = null; }
       if (shared) {
@@ -141,7 +148,18 @@ export function createGameTones({
 
     setVolume(v) { vol = clamp01(v); enact(); return vol; },
 
-    state: () => ({ volume: vol, gain, active, hasContext: !!ac, ownsContext, live: live.size, dead }),
+    /** Send these tones to a speaker (a device id; '' = back to the screen's shared sound). The next tone builds
+     *  the output again; one already sounding finishes where it was (or is cut, when its own context closes). */
+    setSink(id) {
+      const next = String(id || '');
+      if (next === sinkId || dead) return;
+      sinkId = next;
+      try { out?.disconnect?.(); } catch { /* not connected */ }
+      if (ownsContext) { try { ac?.close?.(); } catch { /* already closed */ } live.clear(); }
+      ac = null; out = null; ownsContext = false;
+    },
+
+    state: () => ({ volume: vol, gain, active, hasContext: !!ac, ownsContext, live: live.size, dead, sinkId }),
 
     destroy() {
       if (dead) return;

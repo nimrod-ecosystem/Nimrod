@@ -435,6 +435,67 @@ try {
     check('Personal videos asks for the row (its clips have sound); YouTube does not (its frame cannot be routed)',
       getManifest('personal')?.routesSound === true && !getManifest('youtube')?.routesSound);
   }
+
+  section('*** games too (2026-10-17): a game panel sent to a speaker plays through its own context, routed there ***');
+  {
+    const { createGameTones, createFakeAudioContext } = await import('../game_tones.js');
+    const { createGameMusic } = await import('../game_music.js');
+    const { speakerIdFor, followPanelSpeaker, routeContext } = await import('../speakers.js');
+    const two = [{ deviceId: 'd-hdmi', label: 'HDMI' }, { deviceId: 'd-usb', label: 'USB Composite Device' }];
+    setOutputsForTest(two);
+    check('the row\'s value as a device id: by name; nothing, or unplugged, is the default',
+      speakerIdFor('out:USB Composite Device') === 'd-usb' && speakerIdFor('') === '' && speakerIdFor('out:Gone') === '');
+    const routed = (ac) => { const sinks = []; ac.setSinkId = (id) => { sinks.push(id); return Promise.resolve(); }; ac.sinks = sinks; return ac; };
+    const shared = routed(createFakeAudioContext());
+    const made = [];
+    const fx = { context: () => shared, input: () => shared.createGain() };
+    const tones = createGameTones({ fx, makeContext: () => { const c = routed(createFakeAudioContext()); made.push(c); return c; } });
+    tones.tone(440, 40);
+    check('nothing chosen: the tones play on the screen\'s shared context (no context of their own, nothing routed)',
+      tones.state().hasContext && !tones.state().ownsContext && made.length === 0 && shared.sinks.length === 0);
+    tones.setSink('d-usb');
+    tones.tone(440, 40);
+    check('*** a speaker chosen: the next tone is on a context of its own, sent to that speaker; the shared one is NOT moved ***',
+      made.length === 1 && J(made[0].sinks) === J(['d-usb']) && tones.state().ownsContext && shared.sinks.length === 0, J({ made: made.length, s: shared.sinks }));
+    tones.setSink('');
+    check('back to nothing: its own context is closed', made[0].made.closed === true);
+    tones.tone(440, 40);
+    check('...and the tones are on the shared context again', !tones.state().ownsContext && made.length === 1);
+    tones.destroy();
+    check('the shared context is never closed by a game', shared.made.closed === false);
+
+    const mShared = routed(createFakeAudioContext());
+    const mMade = [];
+    const music = createGameMusic({ fx: { context: () => mShared, input: () => mShared.createGain() },
+      makeContext: () => { const c = routed(createFakeAudioContext()); mMade.push(c); return c; }, makeAudio: () => null });
+    music.play();
+    check('(setup) the music plays on the shared context first', mMade.length === 0);
+    music.setSink('d-hdmi');
+    check('*** the synthesised music, playing, is built again on its own context, sent to the speaker ***',
+      mMade.length === 1 && J(mMade[0].sinks) === J(['d-hdmi']) && mShared.sinks.length === 0, J({ made: mMade.length }));
+    music.destroy?.();
+
+    // followPanelSpeaker: the panel's row, as it changes
+    let row = {};
+    const subs = new Set();
+    const st = { get: () => row, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); } };
+    const got = [];
+    const stop = followPanelSpeaker(st, () => [{ setSink: (id) => got.push(id) }, null]);
+    row = { [PANEL_SPEAKER_KEY]: 'out:HDMI' }; subs.forEach((f) => f(row));
+    row = { [PANEL_SPEAKER_KEY]: 'out:HDMI', other: 1 }; subs.forEach((f) => f(row));
+    row = {}; subs.forEach((f) => f(row));
+    check('*** the panel\'s row followed: applied at once, on each change, and not again when nothing changed ***', J(got) === J(['', 'd-hdmi', '']), J(got));
+    stop();
+    row = { [PANEL_SPEAKER_KEY]: 'out:HDMI' }; subs.forEach((f) => f(row));
+    check('stopped: no more', got.length === 3 && subs.size === 0);
+    check('a context that cannot be routed is said, not thrown', routeContext({}, 'd-usb') === false && routeContext(null, '') === false);
+
+    for (const m of ['rhythm', 'sortbricks', 'buildit', 'brickdrop', 'brickbreaker', 'stackline', 'pressgame', 'comet']) await import(`../modules/${m}.js`);
+    const games = ['rhythm', 'sortbricks', 'buildit', 'brickdrop', 'brickbreaker', 'stackline', 'pressgame', 'comet'];
+    const missing = games.filter((g) => getManifest(g)?.routesSound !== true);
+    check('*** every game with sound asks for the row ***', missing.length === 0, missing.join(','));
+    setOutputsForTest([]);
+  }
 } catch (err) {
   check('unexpected error', false, String(err?.stack || err));
 }
