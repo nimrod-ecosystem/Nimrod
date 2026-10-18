@@ -41,6 +41,16 @@ export const THEMES_PANEL_VERBS = Object.freeze({
   next: 'themes/next', prev: 'themes/prev', select: 'themes/select', back: 'themes/back',
 });
 
+const CLEAR_CSS_ID = 'themes-panel-clear';
+function ensureClearCss(doc) {
+  if (!doc || doc.getElementById(CLEAR_CSS_ID)) return;
+  const s = doc.createElement('style');
+  s.id = CLEAR_CSS_ID;
+  s.textContent = '[data-themes-root] .st-scrim.st-aspanel .st-panel{background:transparent}'
+    + '[data-themes-root] [data-themes-preview]{background:transparent!important}';
+  doc.head.append(s);
+}
+
 registerModule(
   { type: THEMES_TYPE, title: THEMES_TITLE, core: 'new', dependsOn: 'server',
     description: 'every theme, each with a picture of how it looks. Choosing one changes the screen' },
@@ -81,6 +91,10 @@ registerModule(
         on(THEMES_PANEL_VERBS.prev, move('prev'));
         on(THEMES_PANEL_VERBS.select, move('select'));
         on(THEMES_PANEL_VERBS.back, move('back'));
+        // THE CHOSEN THEME IS THE BACKGROUND (row 2.103, Mike 2026-10-18: "Make it so the selected theme is the
+        // background. There is no need for the solid background it has."): the menu drawn here paints nothing of its
+        // own, so the theme a tile sets is what shows behind the tiles (each tile keeps its own card, for reading).
+        ensureClearCss(mount.ownerDocument || document);
         if (typeof ctx.settingsMenu === 'function') {
           try { view = await ctx.settingsMenu(host, { instanceId: ctx.instanceId || null }); }
           catch (err) { console.error('themes: the screen’s menu', err); view = null; }

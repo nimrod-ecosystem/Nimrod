@@ -105,7 +105,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   archive: ['visual', 'games'],   // (row 2.69) the Internet Archive: films, radio and books, and its old games when turned on
   livecams: ['visual'],           // (row 2.69) livecams: live nature cams from explore.org
   karaoke: ['visual', 'games'], director: ['visual'], camera: ['visual'], clock: ['visual', 'tools'],
-  board: ['people', 'tools'], wallpaper: ['visual'], scene: ['visual', 'scenes'], overlays: ['visual', 'scenes'], room: ['visual', 'scenes'],
+  board: ['people', 'tools'], overlays: ['visual', 'scenes'], room: ['visual', 'scenes'],
   note: ['people', 'visual'], avatar: ['people', 'visual'], weather: ['visual'], pond: ['visual', 'games'],
   call: ['people'], pressgame: ['games'], comet: ['games'], comet_ambient: ['visual', 'games'],
   button: ['visual', 'people'], bank: ['learning', 'tools'],
@@ -183,17 +183,9 @@ export function sceneItems({ presets = ROOM_PRESETS, scenes = null, manifests = 
         settings: { preset: id }, placeable: true, whyNot: '', link: '', lockKey: 'module:room', stage: stageOf('room') });
     }
   }
-  if (has('scene')) {
-    let list = scenes;
-    if (!Array.isArray(list)) { try { list = listScenes(); } catch { list = []; } }
-    for (const s of list) {
-      out.push({ key: `scene:live:${s.value}`, kind: 'scene', id: `live:${s.value}`, type: 'scene', title: s.label,
-        lead: 'A calm animated world that never asks for anything.',
-        why: 'A Live scene panel showing this world. You can slow or stop its movement in that panel’s settings.',
-        needs: 'Nothing.', note: '', use: 'watch', group: 'comfort', cats: ['scenes', 'visual'],
-        settings: { scene: s.value }, placeable: true, whyNot: '', link: '', lockKey: 'module:scene', stage: stageOf('scene') });
-    }
-  }
+  // EACH LIVE SCENE WAS LISTED HERE AS ITS OWN ITEM until 2026-10-18 (row 2.103, Mike: "Every theme doesn't need
+  // listed separately and the themes we have now are replacing the live wallpapers from before"). The scenes are the
+  // themes' now: the Themes module chooses one, and the Live scene module is folded into it (modules_catalog.js).
   return out;
 }
 

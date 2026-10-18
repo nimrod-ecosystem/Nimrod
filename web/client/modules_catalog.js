@@ -288,20 +288,6 @@ export const CATALOG = [
       + 'is included as an example of a board made to fit '
       + 'one person. It has no food or drink cards.',
   },
-  {
-    type: 'wallpaper',
-    stage: 'live',
-    group: 'comfort',
-    use: 'watch',
-    lead: 'Something calm on screen, instead of a frozen picture.',
-    needs: 'Nothing. A folder of your own pictures or video is optional.',
-    why: 'It is what shows while a video is paused, so a screen somebody stepped away from '
-      + 'looks like it is waiting rather than broken — a stopped picture of a face reads as a '
-      + 'fault, and this one sits in a room for hours. On its own it is a quiet background '
-      + 'that needs no files and no network. Movement is a setting with a still option, '
-      + 'because a full-screen animation running unattended is where photosensitivity '
-      + 'actually matters.',
-  },
   // 2026-10-18 (row 2.104): the scene's inhabitants and weather, over any dashboard or module, out of the AAC board.
   {
     type: 'overlays', stage: 'beta', title: 'Overlays', group: 'comfort', use: 'watch',
@@ -309,20 +295,6 @@ export const CATALOG = [
     needs: 'Nothing.',
     why: 'Something small and calm that lives over everything else on the screen. It never gets in the way: every '
       + 'press goes through it to what is underneath. Choose "Over the dashboard" to put it over the whole screen.',
-  },
-  {
-    type: 'scene',
-    stage: 'live',
-    group: 'comfort',
-    use: 'watch',
-    lead: 'A calm animated world — woods, an aquarium, a night sky.',
-    needs: 'Nothing.',
-    why: 'Something calm to look at that never asks for anything. Each scene is a '
-      + 'whole place with depth, not a pattern, and all of the movement is slow. It '
-      + 'can fill a screen on its own, or sit behind an AAC board with the cards '
-      + 'see-through.',
-    note: 'Movement can be slowed or stopped. It stops by itself if the device is set to '
-      + 'reduce motion.',
   },
   {
     // Rows 2.33/2.34/2.37: Claude Design's rooms, rendered by `room_scene.js`. `touch`: left alone
@@ -1174,6 +1146,11 @@ export const NOT_FOR_CAREGIVERS = {
   library_slot: 'the builder’s place for the Modules library',
   lesson_player: 'renamed Lessons (2026-10-17) — kept so a panel placed on its first day does not break',
   educational: 'replaced by Lessons (row 2.108, 2026-10-18) — kept so old screens do not break',
+  // Row 2.103 (2026-10-18, Mike): "Live scene is kind of what I was talking about for themes/live wallpapers. It can
+  // be folded into them." / "Wallpaper can go." The Themes module chooses the scene; both are kept registered so
+  // old screens do not break (and the Lineup raises Wallpaper over its stage, modules/director.js).
+  scene: 'folded into Themes (row 2.103) — kept so old screens do not break',
+  wallpaper: 'replaced by Themes (row 2.103) — kept so old screens and the Lineup do not break',
 };
 
 // THE STAGE OF A MODULE THIS PAGE DOES NOT DESCRIBE (live or beta, above). None of these is ever in a list, so the stage
@@ -1188,6 +1165,7 @@ export const UNLISTED_STAGES = Object.freeze({
   ambient_drift: 'beta',
   lesson_player: 'beta',   // Lessons, under its first day's type
   educational: 'beta',     // replaced by Lessons (row 2.108); not offered
+  scene: 'live', wallpaper: 'live',   // folded into Themes (row 2.103); not offered
 });
 // A type nobody has classified reads as beta: the same pessimistic default `coreReport` uses for an undeclared core.
 // (A module shipped without a catalog entry is already reported by `reconcile`; this only keeps it out of "live".)

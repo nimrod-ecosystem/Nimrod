@@ -137,6 +137,18 @@ try {
       clear($('.mp-stage')), $('.mp-stage') ? win.getComputedStyle($('.mp-stage')).backgroundColor : 'no stage');
     check('...and the Modules module paints none of its own either (a Modules panel follows Panel backgrounds)', clear($('.lib')));
   }
+  {
+    // Row 2.103 (2026-10-18): the Themes panel's gallery fills its box (an embed's 560px menu rule held it to part of
+    // it), and paints no background, so the chosen theme shows behind the tiles.
+    await open(`/modules?user=${USER}&m=themes`);
+    let root = null, panel = null;
+    for (let i = 0; i < 40 && !panel; i++) { await new Promise((r) => setTimeout(r, 150)); root = $('.mp-stage [data-themes-root]'); panel = root?.querySelector('.st-panel'); }
+    const wR = root ? Math.round(root.getBoundingClientRect().width) : 0, wP = panel ? Math.round(panel.getBoundingClientRect().width) : 0;
+    check('*** the Themes panel: its gallery fills the panel (no space left at the side) ***', !!panel && wP >= wR - 2, `${wP} of ${wR}`);
+    check('*** ...and paints no background: the chosen theme is what shows behind it ***', !!panel && /rgba\(\s*0,\s*0,\s*0,\s*0\s*\)|transparent/.test(win.getComputedStyle(panel).backgroundColor));
+    check('*** the live scenes are not listed one by one (they are the themes\'); Live scene and Wallpaper are not offered ***',
+      !$$('[data-lib-key^="scene:live:"]').length && !$('[data-lib-key="module:scene"]') && !$('[data-lib-key="module:wallpaper"]') && !!$('[data-lib-key="module:themes"]'));
+  }
 
   // ==========================================================================================
   section('the tabs');
