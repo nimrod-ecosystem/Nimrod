@@ -360,6 +360,8 @@ check('*** a play keeps whose screen it played on (the person id), when the scre
         && s.vidA?.n === 2 && s.vidB?.n === 2 && !s.vidC && !s.vidD && !s.img1, J(s));
       check('before the folder was read, this panel\'s own (as it always was)', before.vidB?.n === 1 && !before.vidA, J(before));
       check('the picker is told when they land', told >= 2);
+      check('allRows (the Lineup\'s weigher reads rows): this panel\'s and her other devices\', each once',
+        J(pp.allRows().map((r) => r.data.id).sort()) === J(['vidA', 'vidA', 'vidB', 'vidB']) && pp.rows().length === 1, J(pp.allRows().map((r) => r.data.id)));
       const order = [];
       for (let i = 0; i < 40; i++) order.push(pick(['vidA', 'vidB', 'vidE'], s, { now, rand: () => i / 40 }));
       check('*** so the picker favours what has not played anywhere (vidE) over what played on another device ***',

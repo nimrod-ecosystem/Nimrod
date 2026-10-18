@@ -557,6 +557,9 @@ export function panelPlays(ctx = {}, source) {
     subscribe(fn) { subs.add(fn); try { fn(stats()); } catch (e) { console.error(e); } return () => subs.delete(fn); },
     ready,
     moved: move.done,
+    // This panel's rows with the person's plays of this source from every device (above), for a weigher that reads
+    // rows rather than stats (the Lineup's turns, lineup.js freshnessWeights). Just this panel's until the folder is in.
+    allRows: () => (fromAll.length ? mergePlays(log.plays(filter), fromAll) : log.plays(filter)),
     // How many plays from other devices this panel's picker is counting now (the suites, and a status line).
     acrossCount: () => fromAll.length,
     refreshAcross: () => readAcross(),
