@@ -976,7 +976,9 @@ export function createArrangement({
     const g = placedGeometry(entry);
     const s = wrap.style;
     s.position = 'absolute';
-    s.pointerEvents = 'auto';
+    // A module whose manifest says `passesPresses` (the Overlays module, row 2.104) is over things without being in
+    // their way: its box takes no press, so the panels under it work as before.
+    s.pointerEvents = passes(wrap.dataset.kind) ? 'none' : 'auto';
     // Shown/Hidden (the Layers window): a hidden module is not drawn, and is still mounted.
     s.display = entry.shown === false ? 'none' : 'flex';
     s.zIndex = String(g.layer);
@@ -1012,6 +1014,7 @@ export function createArrangement({
 
   // A placed module's box, drawn where its entry says and recorded in `placedMeta`. (Its own function so a
   // panel FLOATED out of its slot -- `floatFromSlot` -- gets exactly the box a mounted one does.)
+  const passes = (type) => { try { return !!getManifest(type)?.passesPresses; } catch { return false; } };
   function placedWrap(def, entry) {
     const wrap = document.createElement('div');
     // `mod-box` so the module sizes itself against this box, as a slot's cell does.
@@ -1032,6 +1035,8 @@ export function createArrangement({
     const wrap = placedWrap(def, entry);
     const host = document.createElement('div'); host.className = 'k-mod';
     host.style.cssText = 'flex:1;min-width:0;min-height:0';
+    // (row 2.104) press-through and see-through, whatever Panel backgrounds says: it is laid over other things.
+    if (passes(def.type)) { host.style.pointerEvents = 'none'; host.style.background = 'transparent'; host.dataset.passesPresses = ''; }
     wrap.append(host);
     syncDoor(def.id);
     // The same rule as a slot: one module that will not start is one broken box, not a broken screen.

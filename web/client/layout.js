@@ -281,6 +281,9 @@ export function cornerOf(entry) {
  * the caller adds the module as it would any other. A module the layout already holds is left where it is.
  * `avoid`: corners in use by something that is not in `layout.placed` (the corner clock's, the mirror's).
  */
+// Modules that go over the WHOLE dashboard when added over it (row 2.104: Overlays, whose cat and fireflies are drawn
+// across the screen and take no press), rather than into a free corner.
+export const FULL_OVERLAY_TYPES = Object.freeze(['overlays']);
 export function addAsOverlay(layout, id, { type = null, avoid = [] } = {}) {
   if (type && HUD_TYPES.includes(type)) return { layout, hud: type, entry: null };
   if (!layout || !id) return { layout, hud: null, entry: null };
@@ -290,7 +293,9 @@ export function addAsOverlay(layout, id, { type = null, avoid = [] } = {}) {
   const overlays = (Array.isArray(L.placed) ? L.placed : []).filter((p) => p && p.place === 'overlay');
   const taken = new Set([...overlays.map(cornerOf), ...(Array.isArray(avoid) ? avoid : [])]);
   const corner = OVERLAY_CORNERS.find((c) => !taken.has(c)) || OVERLAY_CORNERS[overlays.length % OVERLAY_CORNERS.length];
-  const entry = { id, place: 'overlay', ...overlaySpot(corner), ...OVERLAY_SIZE, scan: false };
+  const entry = type && FULL_OVERLAY_TYPES.includes(type)
+    ? { id, place: 'overlay', x: 50, y: 50, w: 100, h: 100, scan: false }
+    : { id, place: 'overlay', ...overlaySpot(corner), ...OVERLAY_SIZE, scan: false };
   L.placed = [...(Array.isArray(L.placed) ? L.placed : []), entry];
   return { layout: L, hud: null, entry };
 }

@@ -145,6 +145,7 @@ export const HEALTH_EXPECT = {
   // Same as wallpaper, added the same day it shipped rather than left to be found the hard way:
   // draws constantly, publishes nothing, and nobody looking at it is not a fault.
   scene:       { idle: true },
+  overlays:    { idle: true },   // row 2.104: scenery, nothing to report
   // Both from earlier the same week, found missing while adding scene's own row above rather
   // than left for the next person to rediscover the hard way. Settings publishes nothing while
   // nobody is using it, which is nearly always; ambient_drift never occupies a slot at all
