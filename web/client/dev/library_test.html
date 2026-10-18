@@ -83,9 +83,11 @@ try {
     check('only REGISTERED modules: a catalog entry with no module behind it is not offered',
       !moduleItems({ manifests: [{ type: 'clock' }] }).some((i) => i.type !== 'clock'));
     const scenes = its.filter((i) => i.kind === 'scene');
-    check('*** scenes: every room and every live scene, each a module with one choice made ***',
-      scenes.length === Object.keys(ROOM_PRESETS).length + listScenes().length
-      && scenes.every((s) => (s.type === 'room' && s.settings.preset) || (s.type === 'scene' && s.settings.scene)), String(scenes.length));
+    // Row 2.103 (2026-10-18, Mike: "Every theme doesn't need listed separately"): the live scenes are the themes', chosen
+    // in the Themes module; only the rooms are listed, each a Room panel with one choice made.
+    check('*** scenes: every room, each a module with one choice made; the live scenes are not listed one by one ***',
+      scenes.length === Object.keys(ROOM_PRESETS).length
+      && scenes.every((s) => s.type === 'room' && s.settings.preset) && !scenes.some((s) => s.type === 'scene'), String(scenes.length));
     check('...and none without its module registered', sceneItems({ manifests: [] }).length === 0);
     const furn = furnitureItems();
     check('*** furniture: every piece the rooms are built from ***', furn.length === Object.keys(FURNITURE).length && furn.every((f) => f.cats.includes('furniture')));

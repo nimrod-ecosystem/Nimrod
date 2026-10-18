@@ -291,7 +291,10 @@
   .kiosk.k-embed{position:absolute;inset:0;overflow:hidden}
   .kiosk.k-embed.mirror-full .k-mirror{position:absolute}
   .kiosk.k-embed .st-scrim{position:absolute}
-  .kiosk.k-embed .st-scrim .st-panel{max-height:100%;width:min(560px,100%)}
+  /* `:not(.st-aspanel)` (row 2.103, 2026-10-18): a menu drawn AS A PANEL (the Themes and Settings panels) fills its
+     box, as settings.css says; this rule, more specific, held it to 560px inside an embed - the "only takes up part
+     of the module" Mike saw on the Modules page. */
+  .kiosk.k-embed .st-scrim:not(.st-aspanel) .st-panel{max-height:100%;width:min(560px,100%)}
   /* THE BAR IS A TOOLBAR UNDER THE STAGE HERE, NOT AN OVERLAY ON IT, AND IT DOES NOT HIDE. On a
      bedside screen the bar floats over the panels and puts itself away, because nobody is meant
      to be operating it. On a page a visitor is USING, an invisible bar is an undiscoverable

@@ -546,10 +546,11 @@ function unreachableChips() {
       !kiosk.menu.isOpen() && kiosk.switchOpen()?.id === photosId && !!slot());
     check('...and the menu closing did not give the scan back to the panels', kiosk.runtime.router.isPaused() === true);
     // A scene: a module with one choice made.
-    const sceneKey = [...slot().querySelectorAll('.lib-card')].map((c) => c.dataset.libKey).find((k) => /^scene:live:/.test(k));
+    // (A room since row 2.103: the live scenes are no longer listed one by one; they are the themes'.)
+    const sceneKey = [...slot().querySelectorAll('.lib-card')].map((c) => c.dataset.libKey).find((k) => /^scene:room:/.test(k));
     dbl(card(sceneKey));
     await sleep(700);
-    check('*** a scene is put there as its module (a Live scene panel) ***', kiosk.panels().find((x) => x.id === photosId)?.type === 'scene' && !slot(),
+    check('*** a scene is put there as its module (a Room panel) ***', kiosk.panels().find((x) => x.id === photosId)?.type === 'room' && !slot(),
       JSON.stringify([sceneKey, kiosk.panels()]));
     kiosk.closeLibrary();
     await kiosk.switchPanel(photosId, 'photos');
