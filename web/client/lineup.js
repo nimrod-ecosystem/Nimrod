@@ -29,7 +29,9 @@ export const LINEUP_MODULES = Object.freeze([
   Object.freeze({ id: 'youtube', label: 'YouTube', presets: 'youtube' }),
   Object.freeze({ id: 'pictures', label: 'Pictures' }),
   Object.freeze({ id: 'personal', label: 'Personal videos' }),
-  Object.freeze({ id: 'educational', label: 'Learning' }),
+  // LESSONS REPLACE EDUCATIONAL (row 2.108, Mike 2026-10-18: "Educational seems like it should just be replaced with the
+  // lessons."). A turn of the Lessons module (modules/lesson_player.js), which keeps its place between turns.
+  Object.freeze({ id: 'lessons', label: 'Lessons' }),
   // A whole dashboard for its turn (modules/director.js `makeDashboardAdapter`): which one is the entry's `show`.
   Object.freeze({ id: 'dashboard', label: 'A dashboard', shows: true }),
 ]);
@@ -49,7 +51,10 @@ const num = (v) => (v === '' || v == null ? NaN : Number(v));
 const hour = (v) => { const n = num(v); return Number.isFinite(n) && n >= 0 && n <= 24 ? n : null; };
 
 /** One entry as kept: unknown modules and broken parts dropped, defaults filled. Null when it names no module. */
+// A module a saved entry may still name, and what it reads as now (row 2.108: Educational's turn is Lessons').
+export const RENAMED_MODULES = Object.freeze({ educational: 'lessons' });
 export function cleanEntry(e, i = 0) {
+  if (e && typeof e === 'object' && RENAMED_MODULES[e.module]) e = { ...e, module: RENAMED_MODULES[e.module] };
   if (!e || typeof e !== 'object' || !MODULE_IDS.has(e.module)) return null;
   const days = Array.isArray(e.days) ? [...new Set(e.days.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort() : [];
   const from = hour(e.from), to = hour(e.to);

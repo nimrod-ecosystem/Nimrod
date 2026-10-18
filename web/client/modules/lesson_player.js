@@ -642,6 +642,10 @@ function lessonsModule(ctx) {
         bus?.subscribe?.('lesson/prev', () => { if (form() === 'watch') go(at - 1); else moveLit(-1); });
         bus?.subscribe?.('lesson/select', () => selectLit());
         bus?.subscribe?.('lesson/back', () => go(at - 1));
+        // A Lineup's turn (modules/director.js makeTurnAdapter, row 2.108): paused while it is not this module's turn,
+        // played when it is. Where it got to is kept, so the next turn carries on.
+        bus?.subscribe?.('lessons/pause', () => { stopTimer(); try { ctx.output?.cancel?.(); } catch { /* nothing said */ } });
+        bus?.subscribe?.('lessons/play', () => { if (!timer) enter(); });
         render();
         enter();
         if (at >= beats.length) finished = true;   // it opened at the end: told already, when it got there

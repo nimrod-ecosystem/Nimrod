@@ -550,17 +550,6 @@ export const CATALOG = [
 
   // ------------------------------------------------------------------ practice
   {
-    type: 'educational',
-    stage: 'live',
-    group: 'practice',
-    use: 'watch',
-    lead: 'Gentle alphabet, counting and vocabulary, spoken aloud.',
-    needs: 'Nothing.',
-    why: 'The easiest thing here, on purpose. It runs by itself. No answer is needed and nothing '
-      + 'is scored. It is for times when taking part is not possible yet but hearing '
-      + 'language still matters, such as early in a recovery.',
-  },
-  {
     type: 'bank',
     stage: 'live',
     title: 'Questions',
@@ -1176,6 +1165,7 @@ export const NOT_FOR_CAREGIVERS = {
   simple_math: 'folded into Math (its Beginner level) — kept so old screens do not break',
   library_slot: 'the builder’s place for the Modules library',
   lesson_player: 'renamed Lessons (2026-10-17) — kept so a panel placed on its first day does not break',
+  educational: 'replaced by Lessons (row 2.108, 2026-10-18) — kept so old screens do not break',
 };
 
 // THE STAGE OF A MODULE THIS PAGE DOES NOT DESCRIBE (live or beta, above). None of these is ever in a list, so the stage
@@ -1189,6 +1179,7 @@ export const UNLISTED_STAGES = Object.freeze({
   settings: 'live', settings_menu: 'live', transport_bar: 'live',   // the screen's own settings and bar
   ambient_drift: 'beta',
   lesson_player: 'beta',   // Lessons, under its first day's type
+  educational: 'beta',     // replaced by Lessons (row 2.108); not offered
 });
 // A type nobody has classified reads as beta: the same pessimistic default `coreReport` uses for an undeclared core.
 // (A module shipped without a catalog entry is already reported by `reconcile`; this only keeps it out of "live".)

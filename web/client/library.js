@@ -108,7 +108,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   board: ['people', 'tools'], wallpaper: ['visual'], scene: ['visual', 'scenes'], room: ['visual', 'scenes'],
   note: ['people', 'visual'], avatar: ['people', 'visual'], weather: ['visual'], pond: ['visual', 'games'],
   call: ['people'], pressgame: ['games'], comet: ['games'], comet_ambient: ['visual', 'games'],
-  button: ['visual', 'people'], educational: ['learning'], bank: ['learning', 'tools'],
+  button: ['visual', 'people'], bank: ['learning', 'tools'],
   trivia: ['games', 'learning'], wordforge: ['games', 'learning'], lessons: ['learning'], algebra: ['learning'],
   word_games: ['games', 'learning'], spelling: ['learning', 'games'], think_games: ['learning', 'games'], quiz_mix: ['games', 'learning'],
   word_builder: ['games', 'learning'], brain_games: ['games', 'learning'], name_that: ['games', 'learning', 'people'],

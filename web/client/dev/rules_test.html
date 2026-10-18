@@ -106,7 +106,7 @@ const sentences = (c) => describeConfig(c).map((r) => `${r.when} → ${r.then}`)
       check('turning it on adds one', hasCallRule(on) === true);
       check('*** and the original is untouched — a config a person wrote is theirs ***',
         hasCallRule(DIRECTOR_CONFIG) === false &&
-        JSON.stringify(DIRECTOR_CONFIG.on) === JSON.stringify({ 'segment/done': [{ pick: { from: ['youtube','personal','educational','wordgame','trivia','singalong'] } }] }),
+        JSON.stringify(DIRECTOR_CONFIG.on) === JSON.stringify({ 'segment/done': [{ pick: { from: ['youtube','personal','lessons','pictures','wordgame','trivia','singalong'] } }] }),
         JSON.stringify(DIRECTOR_CONFIG.on));
       check('the rotation rule survives the edit byte for byte',
         JSON.stringify(on.on['segment/done']) === JSON.stringify(DIRECTOR_CONFIG.on['segment/done']));
