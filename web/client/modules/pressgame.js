@@ -74,10 +74,8 @@ import { mountSettings } from '../settings.js';
 import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { EDGE_TOPIC } from '../input.js';
 import { createGameMusic } from '../game_music.js';
-import { createMediaSourcesClient } from '../media_sources.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
 // choosing the music folder (2026-10-10; media_sources.js "CHOOSING THE ALBUM" argues the row)
-import { albumField, createAlbumChooser, topFoldersLister } from '../media_sources.js';
-import { personSources } from '../person_known.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 import { createPlayWatch } from '../game_start.js';
 
@@ -98,9 +96,9 @@ const DEFAULTS = {
   adaptiveWait: true,   // challenge only: faster after a clean wait, slower after a press
   stopQuietMs: 3000,    // STOP ends after this long with no press
   sound: true,
-  // AMBIENT BY DEFAULT, so a game has music on a machine nobody has configured. Point it at
-  // a linked folder for real tracks; see game_music.js for why falling back is not failing.
-  music: 'ambient',     // 'ambient' | 'folder' | 'off'
+  // YOUR MUSIC BY DEFAULT since 2026-10-18 (row 2.107, game_music_host.js): the Music folder of the Nimrod folder, and
+  // the quiet hum when it has none, so a game still has music on a machine nobody has configured.
+  music: 'mine',        // 'mine' | 'folder' | 'ambient' | 'off'
   musicSourceId: '',
   musicAlbum: '',
   musicVolume: 0.3,
@@ -243,28 +241,9 @@ const SETTINGS = [
       { value: 'Good one', label: 'Good one' },
       { value: 'That’s it', label: 'That’s it' },
     ] },
-  { key: 'music', label: 'Music', kind: 'choice', default: 'ambient', level: 'essential',
-    options: [
-      { value: 'ambient', label: 'A quiet hum — needs nothing' },
-      { value: 'folder', label: 'From a folder of music' },
-      { value: 'off', label: 'No music' },
-    ] },
-  // "Music from": this account's media sources, live (`settingsChoices`). Until 2026-10-10 nothing supplied them, so
-  // the row was empty everywhere ("No source connected") and the folder music could only be set by hand in the data.
-  { key: 'musicSourceId', label: 'Music from', kind: 'choice', default: '', level: 'standard',
-    emptyLabel: 'No source connected' },
-  // "Music folder" IS A CHOICE SINCE 2026-10-10, as Photos' "Album" (media_sources.js "CHOOSING THE ALBUM"): "The whole
-  // source", then the source's own folders, from the listings the music already makes. It was text, read-only, saying
-  // "set in Media / Sources" - which has no folder chooser, so nobody could set it. Level 'standard', where it was.
-  // AGAINST: once the source has folders it is one more stop on a switch user's walk of this menu.
-  albumField({ key: 'musicAlbum', label: 'Music folder', level: 'standard' }),
-  { key: 'musicVolume', label: 'How loud the music is', kind: 'choice', default: 0.3,
-    level: 'standard',
-    options: [
-      { value: 0.15, label: 'Very quiet' },
-      { value: 0.3, label: 'Quiet' },
-      { value: 0.55, label: 'Louder' },
-    ] },
+  // Row 2.107 (2026-10-18): the rows every game with music has (game_music_host.js), lifted out of this file: "Music"
+  // (your Music folder first), "Music from" and "Music folder" (live, `settingsChoices`), and how loud.
+  ...gameMusicFields({ level: 'essential', volumes: [{ value: 0.15, label: 'Very quiet' }, { value: 0.3, label: 'Quiet' }, { value: 0.55, label: 'Louder' }] }),
   { key: 'calm', label: 'Motion', default: true, level: 'standard',
     onLabel: 'Calm — less movement', offLabel: 'Normal',
     note: 'Calm by default. Turn it off for the full sparks and celebration.' },
@@ -353,26 +332,8 @@ registerModule(
     let ac = null, sfx = null;
     let toneSink = '';   // row 2.97: the panel's own speaker, for the tones' own context
     let music = null;
-    // "Music from" / "Music folder": the sources this screen may play music from (listed at mount and when whose
-    // sources they are changes), and the folder row's choices from the music's own listings (media_sources.js).
-    let musicSources = null;
-    let knownSources = [];
-    const albumChooser = createAlbumChooser({ listTop: topFoldersLister({ resolve: ctx.resolveListing || null,
-      check: ctx.checkFromHere || null }) });
-    const refreshSources = () => {
-      if (!musicSources || typeof musicSources.list !== 'function') return;
-      Promise.resolve().then(() => musicSources.list())
-        .then((all) => { knownSources = Array.isArray(all) ? all.filter((s) => s && s.id) : []; }, () => {});
-    };
-    const settingsChoices = () => {
-      const opts = knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id }));
-      const want = cfg.musicSourceId;
-      // A chosen source that is not here stays on the list, last (photos.js, same reason: one press repairs it).
-      if (want && !opts.some((o) => o.value === want)) opts.push({ value: want, label: 'A source — not connected here' });
-      const folder = want ? albumChooser.row(want, cfg.musicAlbum)
-        : { options: [{ value: '', label: 'The whole source' }], note: 'choose where the music is from first' };
-      return { musicSourceId: opts, musicAlbum: folder };
-    };
+    let musicHost = null;   // row 2.107: where the music comes from, and its rows' live choices (game_music_host.js)
+    const settingsChoices = () => musicHost?.settingsChoices?.() || {};
     const offs = [];
     // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): from a press, out of the menu, until nobody has pressed
     // for GAME_IDLE_MS (longer than its longest wait, 40 s, so holding off through a wait is still playing). Never
@@ -1052,7 +1013,7 @@ registerModule(
         askingExit,
         goPaintedAt, machine: machine(),
         music: music ? music.state() : null,
-        knownSources: knownSources.map((s) => s.id),
+        knownSources: (musicHost?.sources?.() || []).map((s) => s.id),
       }),
       // LIVE OPTIONS for "Music from" and "Music folder" (settings_fields.js fieldsFor), synchronous from what is held.
       settingsChoices,
@@ -1212,40 +1173,12 @@ registerModule(
 
         // THE BED. Built even when set to 'off' so the setting can be changed without a
         // remount; `off()` simply keeps it quiet.
-        // WHOSE MUSIC FOLDERS: whoever the screen is for, once it knows (person_known.js, 2026-10-02) --
-        // read once here, a game mounted before the screen's person lookup landed looked its folder up in
-        // the wrong list for good. The game plays at once (ambient meanwhile); the folder follows.
-        const scopedMusic = (!ctx.sources && ctx.user) ? personSources(ctx,
-          (pid) => createMediaSourcesClient({ user: ctx.user, personId: pid }),
-          { onChange: () => {
-            refreshSources();
-            if (cfg.music === 'folder') music?.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
-          } }) : null;
-        if (scopedMusic) offs.push(() => scopedMusic.dispose());
-        musicSources = ctx.sources || scopedMusic;
-        refreshSources();
-        music = createGameMusic({
-          sources: musicSources,
-          ...(ctx.resolveListing ? { resolve: ctx.resolveListing } : {}),
-          // the "Music folder" row's choices, from each listing of the chosen source (an album it does not have: its top)
-          onListing: (source, album, listing, err) => {
-            if (listing) albumChooser.heard(source, album, listing);
-            else if (err && err.code === 'album') albumChooser.heard(source, album, null);
-          },
-          volume: cfg.musicVolume,
-          // THE ARBITER. Without it this bed plays over a spoken cue and alongside a video.
-          // The id carries the instance so two pressgames are two sources, and the newest
-          // one takes the music slot rather than both playing.
-          audio,
-          audioId: `pressgame-music:${ctx.instanceId || 'pg'}`,
-        });
-        if (cfg.music === 'off') music.off();
-        else if (cfg.music === 'folder') {
-          // Async, and deliberately not awaited: a game must not wait on a folder listing
-          // before it will draw. It falls back to ambient on its own if the folder is
-          // unreachable or has no music in it.
-          music.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
-        } else music.useAmbient();
+        // Where the music comes from (row 2.107, game_music_host.js; this file's own wiring, lifted out so every game has
+        // it): whoever the screen is for, once it knows; your Music folder, a chosen folder, the hum, or none. A game
+        // never waits on a folder listing before it will draw: the hum plays meanwhile, the folder follows.
+        musicHost = createGameMusicHost(ctx, { audio, audioId: `pressgame-music:${ctx.instanceId || 'pg'}`, cfg: () => cfg,
+          make: (o) => createGameMusic(o) });
+        music = musicHost.music;
 
         // Straight to play, or to the start screen. `startSession()` is the only path into
         // the wait, so the "somebody began a session" record cannot be skipped either way.
@@ -1285,17 +1218,7 @@ registerModule(
         offs.push(state?.subscribe?.(() => {
           const was = cfg;
           cfg = { ...DEFAULTS, ...(state.get() || {}) };
-          if (music) {
-            music.setVolume?.(cfg.musicVolume);
-            if (cfg.music !== was.music
-                || cfg.musicSourceId !== was.musicSourceId
-                || cfg.musicAlbum !== was.musicAlbum) {
-              if (cfg.music === 'off') music.off();
-              else if (cfg.music === 'folder') {
-                music.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
-              } else music.useAmbient();
-            }
-          }
+          if (musicHost) musicHost.apply(cfg, was);
           // The wait length, only when nothing is being timed against it. Outside a wait
           // there is nobody holding off, so there is nothing to move.
           if (phase !== 'wait' && phase !== 'go') curWaitMs = Math.max(floorMs(), cfg.waitMs);
@@ -1341,7 +1264,7 @@ registerModule(
         // empty summary on its way out — `endSession` returns early when there is nothing to
         // summarise, and there is exactly one place that decides what "nothing" means.
         endSession('destroy');
-        try { music?.destroy(); } catch { /* already gone */ }
+        try { musicHost?.destroy(); } catch { /* already gone */ } musicHost = null;
         music = null;
         observer?.disconnect(); observer = null;
         offs.forEach((off) => { try { off(); } catch { /* already gone */ } });
