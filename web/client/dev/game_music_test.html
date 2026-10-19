@@ -356,7 +356,7 @@ const RESOLVE = (items) => async () => ({ items, count: items.length });
       const { createGameMusicHost, gameMusicFields, GAME_MUSIC_DEFAULT } = await import('../game_music_host.js');
       const rows = Object.fromEntries(gameMusicFields().map((r) => [r.key, r]));
       check('the rows: Music (your music first, the default), Music from, Music folder, how loud',
-        GAME_MUSIC_DEFAULT === 'mine' && rows.music.default === 'mine' && rows.music.options.map((o) => o.value).join() === 'mine,folder,ambient,off'
+        GAME_MUSIC_DEFAULT === 'mine' && rows.music.default === 'mine' && rows.music.options.map((o) => o.value).join() === 'mine,folder,favourite,ambient,off'
           && !!rows.musicSourceId && !!rows.musicAlbum && !!rows.musicVolume);
       check('Music from and Music folder are offered only for "a folder you choose"; how loud, unless off',
         rows.musicSourceId.appliesWhen({ music: 'folder' }) === true && rows.musicSourceId.appliesWhen({}) === false
@@ -395,6 +395,48 @@ const RESOLVE = (items) => async () => ({ items, count: items.length });
       await new Promise((r) => setTimeout(r, 0));
       check('*** no Music folder to find: the quiet hum, never silence ***', !t2.includes('folder') && t2.filter((x) => x === 'ambient').length >= 1, t2.join());
       none.destroy();
+    }
+
+    section('*** row 2.107 step 2: a Music favourite (Spotify, YouTube, ...) played by the screen\'s Music panel ***');
+    {
+      const { createGameMusicHost, musicPanelHere } = await import('../game_music_host.js');
+      const { createBus } = await import('../bus.js');
+      const bus = createBus();
+      check('no Music panel on the screen: nobody answers', musicPanelHere(bus) === null);
+      // A stand-in for the Music panel's router (music_player.js): answers "who", records what it is asked.
+      const asked = [];
+      const offs = [
+        bus.subscribe('music/who', () => bus.publish('music/here', { names: ['Road trip', 'Suno samples'] })),
+        ...['music/play', 'music/pause', 'music/resume', 'music/stop'].map((tp) => bus.subscribe(tp, (p) => asked.push(p && p.name ? `${tp}:${p.name}` : tp))),
+      ];
+      check('with one: its favourites\' names', JSON.stringify(musicPanelHere(bus)?.names) === JSON.stringify(['Road trip', 'Suno samples']));
+      const own = [];
+      const mk = () => ({ useAmbient() { own.push('ambient'); }, useFolder() { own.push('folder'); return Promise.resolve(); }, off() { own.push('off'); },
+        play() { own.push('play'); }, pause() { own.push('pause'); }, setVolume() {}, destroy() { own.push('destroy'); } });
+      let cfg = { music: 'favourite', musicFavourite: 'Road trip' };
+      const h = createGameMusicHost({ bus }, { cfg: () => cfg, make: mk, findMine: async () => '' });
+      check('the live choices list the Music panel\'s favourites', h.settingsChoices().musicFavourite.map((o) => o.value).join() === 'Road trip,Suno samples');
+      own.length = 0;
+      h.music.play();
+      check('*** played: the Music panel is asked to play that favourite, and the game plays nothing of its own ***',
+        asked.join() === 'music/play:Road trip' && !own.includes('play') && h.state().borrowed, `${asked.join()} | ${own.join()}`);
+      h.music.pause();
+      h.music.play();
+      check('*** paused and played again with the game: the Music panel pauses and resumes (no restart) ***',
+        asked.join() === 'music/play:Road trip,music/pause,music/resume', asked.join());
+      const was = cfg; cfg = { ...cfg, musicFavourite: 'Suno samples' };
+      h.apply(cfg, was);
+      check('another favourite chosen while it plays: that one, at once', asked.at(-1) === 'music/play:Suno samples', asked.join());
+      h.destroy();
+      check('*** the game ends: the Music panel stops ***', asked.at(-1) === 'music/stop', asked.join());
+      offs.forEach((o) => o?.());
+      // No Music panel: your music instead.
+      asked.length = 0; own.length = 0;
+      const bare = createBus();
+      const h2 = createGameMusicHost({ bus: bare }, { cfg: () => ({ music: 'favourite', musicFavourite: 'Road trip' }), make: mk, findMine: async () => '' });
+      h2.music.play();
+      check('*** no Music panel on this screen: the game plays its own (your music, or the hum) ***', own.includes('play') && !h2.state().borrowed, own.join());
+      h2.destroy();
     }
 
     document.getElementById('summary').textContent =

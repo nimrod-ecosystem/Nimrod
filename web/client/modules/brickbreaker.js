@@ -162,6 +162,7 @@ export const DEFAULTS = Object.freeze({
   music: 'mine',   // row 2.107 (2026-10-18): your Music folder, else the quiet hum (game_music_host.js)       // Mike, 2026-08-29: "The games should still have music."
   musicSourceId: '',
   musicAlbum: '',
+  musicFavourite: '',   // row 2.107 step 2: a favourite of the screen's Music panel
   musicVolume: 0.3,
   // *** A CLEARED WALL PAYS NOTHING BY DEFAULT. *** Both sides:
   //   FOR paying: a cleared wall is a real result, and comet and the press games pay Play points.

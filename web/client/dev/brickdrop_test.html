@@ -252,7 +252,7 @@ try {
       ['turn', 'drop', 'left', 'right', 'start', 'pause', 'resume'].every((p) => p in table), JSON.stringify(table));
     check('defaults: very easy, glide, waits for Start, a row pays 1', DEFAULTS.level === 1 && DEFAULTS.control === 'glide'
       && DEFAULTS.autostart === false && DEFAULTS.rowPoints === 1 && DEFAULTS.levelUp === 0);
-    check('*** row 2.107: the game\'s music is the shared rows, your Music folder by default ***', (() => { const R = Object.fromEntries((m?.settings || getManifest(GAME).settings).map((r) => [r.key, r])); return R.music?.default === 'mine' && R.music.options.map((o) => o.value).join() === 'mine,folder,ambient,off' && !!R.musicSourceId && !!R.musicAlbum; })());
+    check('*** row 2.107: the game\'s music is the shared rows, your Music folder by default ***', (() => { const R = Object.fromEntries((m?.settings || getManifest(GAME).settings).map((r) => [r.key, r])); return R.music?.default === 'mine' && R.music.options.map((o) => o.value).join() === 'mine,folder,favourite,ambient,off' && !!R.musicFavourite && !!R.musicSourceId && !!R.musicAlbum; })());
     check('every setting row is labelled, and every choice is a short list', m.settings.every((r) => r.key && r.label)
       && m.settings.filter((r) => r.kind === 'choice' && !r.emptyLabel).every((r) => r.options.length >= 2 && r.options.length <= 6));
   }
