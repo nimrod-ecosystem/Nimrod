@@ -36,7 +36,7 @@
 import { createProfilesClient, resolveTheme } from '../profile.js';
 import { createState } from '../state.js';
 import { MODE_KEY, DEFAULT_MODE, modeFrom } from '../lessons.js';
-import { createTryHost, createLiveHost, mountEmbeddedKiosk, isKioskPanel } from '../module_try.js';
+import { createTryHost, createLiveHost, mountEmbeddedKiosk, isKioskPanel, withoutPanelSwitches } from '../module_try.js';
 import { mountKiosk } from '../kiosk.js';
 import { createBus } from '../bus.js';
 import { createLocalBackend } from '../local_store.js';
@@ -582,6 +582,45 @@ const host = document.getElementById('host');
     }
 
     live.destroy();
+
+    section('*** row 2.109: trying a module never changes what a dashboard shows (a remembered switch is not applied, nor saved) ***');
+    {
+      // The handle wrapper, alone.
+      let v = { theme: 'fall', panelSwitches: { p1: 'quiz_mix' } };
+      const sets = [];
+      const heard = [];
+      const raw = { get: () => v, set(p) { sets.push(p); v = { ...v, ...p }; }, subscribe(fn) { fn(v); return () => {}; }, load: async () => v, flush: async () => 'ok' };
+      const h = withoutPanelSwitches(raw);
+      check('read: the switches are not there; everything else is', !('panelSwitches' in h.get()) && h.get().theme === 'fall');
+      h.subscribe((x) => heard.push(x));
+      check('heard: the same', heard.length === 1 && !('panelSwitches' in heard[0]));
+      h.set({ panelSwitches: { p1: 'trivia' } });
+      check('*** a switch made here is not written ***', sets.length === 0 && v.panelSwitches.p1 === 'quiz_mix');
+      h.set({ panelSwitches: { p1: 'trivia' }, theme: 'winter' });
+      check('...the rest of the same write is', sets.length === 1 && JSON.stringify(sets[0]) === JSON.stringify({ theme: 'winter' }));
+      check('other methods pass through', (await h.flush()) === 'ok');
+
+      // For real: a screen whose Trivia panel was switched to YouTube once; the Modules page asked for Trivia.
+      const profiles = createProfilesClient({ user: USER });
+      const scr = await profiles.create('TEST-try-switch');
+      const clockMod = await profiles.addModule(scr.id, 'trivia');
+      const st = createState({ url: profiles.stateURL(scr.id, 'settings'), user: USER });
+      await st.load();
+      st.set({ panelSwitches: { [clockMod.id]: 'youtube' } });
+      await st.flush();
+      const sw = document.createElement('div');
+      sw.style.cssText = 'position:relative;width:640px;height:420px';
+      document.body.append(sw);
+      const e2 = await mountEmbeddedKiosk({ stage: sw, user: USER, type: 'trivia', profileId: scr.id });
+      await sleep(600);
+      const chips2 = [...sw.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent);
+      check('*** "Trivia" on the Modules page shows Trivia, though that panel was once switched to YouTube ***',
+        chips2.length === 1 && chips2[0] === 'Trivia', JSON.stringify(chips2));
+      try { e2?.destroy?.(); } catch { /* gone */ }
+      sw.remove();
+      await st.load();
+      check('...and the screen\'s own remembered switch is left as it was (the dashboard is the person\'s)', st.get().panelSwitches?.[clockMod.id] === 'youtube');
+    }
   } catch (err) {
     check('*** the run itself did not throw ***', false, String(err?.stack || err));
     console.error(err);
