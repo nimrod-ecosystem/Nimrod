@@ -598,6 +598,34 @@ function unreachableChips() {
     root.querySelector('.k-libslot [data-lib-act="cancel"]')?.click();
     await sleep(60);
     check('"Keep" puts the panel back', kiosk.switchOpen() === null && !root.querySelector('.k-libslot'));
+
+    // ---- QUICK SWAP (row 2.109, Mike 2026-10-18: "quick swap modules that can have a button or shortcut to quickly swap
+    // between two modules on a dashboard") ----
+    {
+      const { QUICK_SWAP_TOPIC, MENU_ACTIONS: MA } = await import('../actions.js');
+      const swapBtn = root.querySelector('[data-act="swap"]');
+      chips().find((c) => c.dataset.id === photosId)?.click(); await sleep(60);
+      const typeNow = () => kiosk.panels().find((x) => x.id === photosId)?.type;
+      const start = typeNow();
+      check('a panel with no quick swap: "⇄ Swap" dimmed, saying where to set one', !!swapBtn && swapBtn.disabled && /Quick swap with/.test(swapBtn.title), swapBtn?.title);
+      kiosk.setQuickSwap(photosId, 'clock');
+      await sleep(80);
+      check('*** "Quick swap with: Clock": kept on the dashboard, by panel; the button is live, saying with what ***',
+        kiosk.quickSwapFor(photosId) === 'clock' && !swapBtn.disabled && /with Clock/.test(swapBtn.title), swapBtn.title);
+      swapBtn.click();
+      await sleep(600);
+      check('*** pressed: the panel is the other module ***', typeNow() === 'clock', typeNow());
+      check('...a switch like any other: waiting to be saved', kiosk.unsavedSwitches().includes(photosId));
+      bus2.publish(QUICK_SWAP_TOPIC, {});
+      await sleep(600);
+      check('*** a bound switch or key (shell/quick-swap) swaps it back ***', typeNow() === start, typeNow());
+      check('...and back to what was saved is nothing to save', !kiosk.unsavedSwitches().includes(photosId));
+      check('the action is offered for binding (Devices), and "quick swap" is a phrase',
+        MA.some((a) => a.id === 'menu/quick-swap' && a.topic === QUICK_SWAP_TOPIC));
+      kiosk.setQuickSwap(photosId, '');
+      await sleep(60);
+      check('"Nothing": no quick swap again', kiosk.quickSwapFor(photosId) === '' && swapBtn.disabled);
+    }
     bus2.publish(SWITCH_MODULE_TOPIC, { type: 'trivia' });
     await sleep(400);
     check('*** a press that names a module (Nimrod’s "Replace the pictures") opens it in THAT panel’s place ***',

@@ -1780,6 +1780,8 @@ export function createArrangement({
     renderMods();
     return true;
   }
+  /** What panel `id` is SAVED as: its saved switch, else its own module (row 2.109; quick swap's home). */
+  const savedTypeOf = (id) => { const d = profile?.modules?.find((m) => m.id === id); return d ? (readSwitches()[id] || d.switchedFrom || d.type) : null; };
   /** The panels switched since the dashboard was last saved (row 2.109). */
   const unsavedSwitches = () => [...unsaved.keys()];
   /** "Save this dashboard": the switches made since, written to the dashboard's own settings (`panelSwitches`). */
@@ -2280,6 +2282,7 @@ export function createArrangement({
     unsavedSwitches,
     saveSwitches,
     revertSwitches,
+    savedTypeOf,
     replaceSlot,
     // ---- make a panel bigger (2026-10-02; the header above PROMOTE_CSS_ID) ----
     promote,

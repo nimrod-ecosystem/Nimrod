@@ -428,7 +428,9 @@ const logText = (r) => r.q('[data-log]').textContent;
         check('*** the settings menu’s tabs and "Switch module" are pickable ***',
           // (themes, 2026-10-06: ten - "Settings menu: theme", the new Theme tab.)
           // (players, 2026-10-06, deliberately: eleven - "Settings menu: players", the new Players tab.)
-          MENU_ACTIONS.length === 11 && MENU_ACTIONS.every((a) => vals(inGroup('The settings menu')).includes(a.id)));
+          // (quick swap, 2026-10-18, row 2.109, deliberately: twelve - "Quick swap", bindable to a switch or a key.)
+          MENU_ACTIONS.length === 12 && MENU_ACTIONS.every((a) => vals(inGroup('The settings menu')).includes(a.id))
+          && MENU_ACTIONS.some((a) => a.id === 'menu/quick-swap'));
         check('the groups come AFTER the everyday list, never before it',
           groups.length === 8 && groups.every((g) => g.previousElementSibling !== null));
         r.q('[data-new-action]').value = 'speech/near-miss-yes';
