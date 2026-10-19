@@ -311,6 +311,7 @@ import './modules/card_sort.js';       // registers 'card_sort' (sort the card o
 import './modules/profile.js';         // registers 'profile' (a person or an AI character, as a card)
 import './modules/people.js';          // registers 'people' ("Your people": the landing, 2026-10-04)
 import './modules/page_parts.js';      // row 2.102: the page's parts, each a module
+import { copyDashboard } from './dashboard_copy.js';   // row 2.109: Save as a new dashboard
 import './modules/lesson_player.js';   // row 2.92: a lesson file, played (Watch, Slides, Read)
 import './modules/video_quiz.js';      // 2026-10-17: Quiz from a video (the transcript quiz)
 import './modules/helper.js';          // registers 'helper' (Nimrod at the bottom, over the page)
@@ -4128,6 +4129,36 @@ export async function mountKiosk(root, {
     try { if (menu.isOpen()) menu.refresh(); } catch { /* the menu may be gone */ }
     return ok;
   }
+  // "Save as a new dashboard" (dashboard_copy.js): a copy of what shows now, switches included; this dashboard goes back to
+  // as it was saved, and the screen moves to the copy (on the dashboard path), so the person carries on with what they made.
+  // The copy is named "<name> copy": renamed on the Dashboards page. [A guess: no name box in a menu a switch walks.]
+  let savingAs = false;
+  async function saveAsDashboard() {
+    if (!canChangeLayout() || savingAs) return null;
+    savingAs = true;
+    try { if (menu.isOpen()) menu.refresh(); } catch { /* closed */ }
+    let res = null;
+    try {
+      const modules = (arr.profile()?.modules || []).map((m) => ({ id: m.id, type: m.type, ...(m.stateKey ? { stateKey: m.stateKey } : {}) }));
+      res = await copyDashboard({ profiles, fromId: profileId, modules, personId: screenPersonNow(),
+        makeSettings: (pid) => stateForProfile('settings', {}, pid),
+        makeInstanceState: (pid, key) => stateForProfile(key, {}, pid) });
+    } catch (err) { res = { ok: false, reason: String(err?.message || err) }; }
+    savingAs = false;
+    if (!res || !res.id) {
+      try { output?.notify?.('The copy could not be made.', { source: 'shell' }); } catch { /* said nothing */ }
+      try { if (menu.isOpen()) menu.refresh(); } catch { /* closed */ }
+      return res;
+    }
+    try { await arr.revertSwitches?.(); } catch { /* this one stays as it shows; nothing was saved to it */ }
+    paintSave();
+    try { output?.notify?.(`Saved as “${res.name}”.`, { source: 'shell' }); } catch { /* said nothing */ }
+    if (useDashboard && dash) {
+      try { menu.close(); } catch { /* closed */ }
+      try { await swapDashboard(res.id); } catch (err) { console.error('kiosk: open the copy', err); }
+    } else { try { if (menu.isOpen()) menu.refresh(); } catch { /* closed */ } }
+    return res;
+  }
   function saveRows() {
     const n = unsavedCount();
     const t = MENU_TAB.module(0);
@@ -4135,6 +4166,9 @@ export async function mountKiosk(root, {
       { kind: 'item', id: 'dash-save', label: 'Save this dashboard', ...t, disabled: !n,
         hint: n ? `${n === 1 ? 'a panel was' : `${n} panels were`} switched since it was saved` : 'nothing has changed since it was saved',
         run: () => { saveDashboard(); } },
+      { kind: 'item', id: 'dash-save-as', label: 'Save as a new dashboard', ...t, disabled: savingAs,
+        hint: savingAs ? 'making the copy…' : 'a copy of what is showing now; this one stays as it was saved',
+        run: () => { saveAsDashboard().catch((err) => console.error('kiosk: save as', err)); } },
       { kind: 'item', id: 'dash-revert', label: 'Put it back as it was', ...t, disabled: !n,
         hint: n ? 'the panels go back to what was saved' : 'nothing to put back',
         run: () => { Promise.resolve(arr.revertSwitches?.()).catch((err) => console.error('kiosk: put back', err))
@@ -8801,6 +8835,7 @@ export async function mountKiosk(root, {
     saveSwitches: () => { try { return !!arr.saveSwitches?.(); } catch { return false; } },
     revertSwitches: () => arr.revertSwitches?.(),
     saveDashboard: () => saveDashboard(),
+    saveAsDashboard: () => saveAsDashboard(),
     openLibrary: (id, opts = {}) => openLibraryAt(id, opts || {}),
     closeLibrary: () => closeLibrary('keep'),
     library: () => (libOpen ? { id: libOpen.id, slot: libOpen.slot, probe: libOpen.inst?.impl?.__probe?.() || null } : null),
