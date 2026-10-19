@@ -45,6 +45,9 @@ import { ARCHIVE_MESSAGES, archiveAudioTracks } from './archive_org.js';   // in
 export const MUSIC_TOPICS = Object.freeze({
   play: MUSIC_PLAY_TOPIC, stop: MUSIC_STOP_TOPIC, pause: 'music/pause', resume: 'music/resume',
   confirm: 'music/confirm', now: 'music/now', didYouMean: 'music/did-you-mean',
+  // (row 2.107, 2026-10-18) "is there a Music panel on this screen, and what can it play?" - asked by a game that plays
+  // a favourite while somebody plays (game_music_host.js); answered by the leader with the favourites' names.
+  who: 'music/who', here: 'music/here',
 });
 export const NEAR_MATCH_MODES = Object.freeze(['ask', 'play', 'off']);
 export const YOUTUBE_WHERE = Object.freeze(['panel', 'here']);
@@ -306,6 +309,12 @@ export function createMusicRouter({
     bus.subscribe(MUSIC_TOPICS.pause, guard(pause)),
     bus.subscribe(MUSIC_TOPICS.resume, guard(resume)),
     bus.subscribe(MUSIC_TOPICS.confirm, guard(confirm)),
+    bus.subscribe(MUSIC_TOPICS.who, () => {
+      if (!leader() || dead) return;
+      let names = [];
+      try { names = (favourites() || []).map((f) => f && f.name).filter(Boolean); } catch { names = []; }
+      try { bus.publish(MUSIC_TOPICS.here, { names }); } catch { /* fine */ }
+    }),
   ];
 
   return {

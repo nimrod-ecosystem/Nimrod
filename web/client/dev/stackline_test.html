@@ -277,7 +277,7 @@ try {
     const sizeRows = m.settings.filter((r) => ['speed', 'width', 'line', 'track'].includes(r.key));
     check('*** every speed and size row is there, "As the level says" by default ***', sizeRows.length === 4
       && sizeRows.every((r) => r.default === 0 && r.options[0].value === 0 && /level says/.test(r.options[0].label)), J(sizeRows.map((r) => r.key)));
-    check('*** row 2.107: the game\'s music is the shared rows, your Music folder by default ***', (() => { const R = Object.fromEntries((m?.settings || getManifest(GAME).settings).map((r) => [r.key, r])); return R.music?.default === 'mine' && R.music.options.map((o) => o.value).join() === 'mine,folder,ambient,off' && !!R.musicSourceId && !!R.musicAlbum; })());
+    check('*** row 2.107: the game\'s music is the shared rows, your Music folder by default ***', (() => { const R = Object.fromEntries((m?.settings || getManifest(GAME).settings).map((r) => [r.key, r])); return R.music?.default === 'mine' && R.music.options.map((o) => o.value).join() === 'mine,folder,favourite,ambient,off' && !!R.musicFavourite && !!R.musicSourceId && !!R.musicAlbum; })());
     check('every setting row is labelled, and every choice is a short list', m.settings.every((r) => r.key && r.label)
       && m.settings.filter((r) => r.kind === 'choice' && !r.emptyLabel).every((r) => r.options.length >= 2 && r.options.length <= 6));
   }

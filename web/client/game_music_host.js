@@ -19,14 +19,29 @@
 // DEFAULT 'mine', argued. FOR 'ambient' (as it was): needs nothing, never fails. AGAINST, and it decides it: Mike's
 // complaint IS that the default is not music, and 'mine' falls back to exactly the hum when there is no music to play,
 // so nobody is worse off. A saved choice stays what it was. [Guess, on Mike's list.]
-// NOT HERE YET: YouTube or Spotify playing out of sight (his second ask). That needs a player the game can run without
-// a panel; the Music module's own router drives its panel's player. [Step 2, said on Mike's list.]
+//   'favourite' A MUSIC FAVOURITE (step 2, 2026-10-18): one of the favourites of the screen's Music panel - a Spotify
+//              playlist, a YouTube video, a folder, an Internet Archive item - played by that panel (music_player.js, over
+//              the bus: music/play by name, then music/pause and music/resume with the game, music/stop at the end), so
+//              Spotify and YouTube play while somebody plays, with nothing of the game's own on top. Mike, on Code's
+//              "use the screen's Music panel": "Doesn't the music panel have Spotify?" It does; that is why. No Music
+//              panel on the screen (it answers music/who), or no favourite chosen: your music, as 'mine' does.
 
 import { createGameMusic } from './game_music.js';
 import { createMediaSourcesClient, albumField, createAlbumChooser, topFoldersLister } from './media_sources.js';
 import { personSources } from './person_known.js';
 
-export const GAME_MUSIC_MODES = Object.freeze(['mine', 'folder', 'ambient', 'off']);
+export const GAME_MUSIC_MODES = Object.freeze(['mine', 'folder', 'favourite', 'ambient', 'off']);
+export const MUSIC_WHO = 'music/who';
+export const MUSIC_HERE = 'music/here';
+/** The screen's Music panel, if one answers now: { names } (its favourites' names), else null. Synchronous: the
+ *  answer comes back on the same bus during the publish (music_player.js). */
+export function musicPanelHere(bus) {
+  if (!bus || typeof bus.publish !== 'function' || typeof bus.subscribe !== 'function') return null;
+  let got = null;
+  const off = bus.subscribe(MUSIC_HERE, (p) => { if (!got) got = { names: Array.isArray(p?.names) ? p.names.slice() : [] }; });
+  try { bus.publish(MUSIC_WHO); } catch { /* nobody */ } finally { try { off?.(); } catch { /* gone */ } }
+  return got;
+}
 export const GAME_MUSIC_DEFAULT = 'mine';
 
 /** The game's music rows. `level` for the Music row; the others follow it. `volumes`: the loudness choices. */
@@ -36,6 +51,7 @@ export function gameMusicFields({ level = 'standard', volumes = null, defaultVol
       options: [
         { value: 'mine', label: 'Your music (the Music folder in your Nimrod folder)' },
         { value: 'folder', label: 'From a folder of music you choose' },
+        { value: 'favourite', label: 'A Music favorite (Spotify, YouTube, ...), played by this screen’s Music panel' },
         { value: 'ambient', label: 'A quiet hum: needs nothing' },
         { value: 'off', label: 'No music' },
       ],
@@ -45,6 +61,10 @@ export function gameMusicFields({ level = 'standard', volumes = null, defaultVol
       emptyLabel: 'No source connected', appliesWhen: (v) => (v?.music || GAME_MUSIC_DEFAULT) === 'folder' },
     { ...albumField({ key: 'musicAlbum', label: 'Music folder', level: 'standard' }),
       appliesWhen: (v) => (v?.music || GAME_MUSIC_DEFAULT) === 'folder' },
+    // The favourites of the screen's Music panel, live (`settingsChoices`): its names, as it answers music/who.
+    { key: 'musicFavourite', label: 'Which favorite', kind: 'choice', default: '', level: 'standard',
+      emptyLabel: 'No Music panel on this screen', appliesWhen: (v) => (v?.music || GAME_MUSIC_DEFAULT) === 'favourite',
+      note: 'Played by this screen’s Music panel while the game is played. With no Music panel, your music plays instead.' },
     { key: 'musicVolume', label: 'How loud the music is', kind: 'choice', default: defaultVolume, level: 'standard',
       appliesWhen: (v) => (v?.music || GAME_MUSIC_DEFAULT) !== 'off',
       options: volumes || [{ value: 0.15, label: 'Very quiet' }, { value: 0.3, label: 'Quiet' }, { value: 0.55, label: 'Louder' }] },
@@ -104,12 +124,18 @@ export function createGameMusicHost(ctx = {}, { audio = null, audioId = 'game-mu
   const modeOf = (c) => (GAME_MUSIC_MODES.includes(c?.music) ? c.music : GAME_MUSIC_DEFAULT);
   let placing = 0;
   let played = false;          // the music has been asked to play at least once (a game somebody is playing)
+  let borrowed = false;        // 'favourite': the screen's Music panel is playing for this game now
+  const bus = ctx.bus || null;
+  const publish = (topic, p) => { try { bus?.publish?.(topic, p); } catch (err) { console.error('game music: the Music panel', err); } };
+  function giveBack() { if (borrowed) { borrowed = false; publish('music/stop', {}); } }
   async function place(c) {
     const mode = modeOf(c);
     const mine = ++placing;
+    if (mode !== 'favourite') giveBack();
     if (mode === 'off') { music.off?.(); return; }
     if (mode === 'ambient') { music.useAmbient?.(); return; }
     if (mode === 'folder') { music.useFolder?.(c.musicSourceId, c.musicAlbum)?.catch?.(() => {}); return; }
+    // 'favourite': nothing of the game's own while the Music panel plays; until then (and without one), 'mine'.
     // 'mine': the hum at once, the Nimrod folder's Music when it is found (a game never waits on a folder). The folder is
     // looked for only once the music is first asked to play: a game panel nobody plays never touches the folder (and a
     // page that comes and goes - a suite's frame, a dashboard switched past - never starts a lookup it then abandons).
@@ -122,15 +148,27 @@ export function createGameMusicHost(ctx = {}, { audio = null, audioId = 'game-mu
     if (mineId) { music.useFolder?.(mineId, '')?.catch?.(() => {}); refreshSources(); }
     else music.useAmbient?.();
   }
+  // 'favourite' asks the screen's Music panel to play; anything else (or no panel, or no favourite): the game's own player.
+  const wantFavourite = () => { const c = cfg(); return modeOf(c) === 'favourite' && c.musicFavourite ? String(c.musicFavourite) : ''; };
   const rawPlay = typeof music.play === 'function' ? music.play.bind(music) : null;
+  const rawPause = typeof music.pause === 'function' ? music.pause.bind(music) : null;
   if (rawPlay) {
     music.play = (...a) => {
       const first = !played;
       played = true;
+      const name = wantFavourite();
+      if (name) {
+        if (borrowed) { publish('music/resume', {}); return undefined; }
+        const here = musicPanelHere(bus);
+        if (here && here.names.includes(name)) { rawPause?.(); borrowed = true; publish('music/play', { name }); return undefined; }
+      }
       const r = rawPlay(...a);
-      if (first && modeOf(cfg()) === 'mine' && !mineId) place(cfg());
+      if (first && (modeOf(cfg()) === 'mine' || modeOf(cfg()) === 'favourite') && !mineId) place({ ...cfg(), music: 'mine' });
       return r;
     };
+  }
+  if (rawPause) {
+    music.pause = (...a) => { if (borrowed) publish('music/pause', {}); return rawPause(...a); };
   }
   place(cfg());
   return {
@@ -138,20 +176,25 @@ export function createGameMusicHost(ctx = {}, { audio = null, audioId = 'game-mu
     apply(c, was = {}) {
       music.setVolume?.(Number(c.musicVolume) || 0.3);
       if (modeOf(c) !== modeOf(was) || c.musicSourceId !== was.musicSourceId || c.musicAlbum !== was.musicAlbum) place(c);
+      // Another favourite chosen while the Music panel plays this game's: that one, at once.
+      else if (borrowed && c.musicFavourite && c.musicFavourite !== was.musicFavourite) publish('music/play', { name: String(c.musicFavourite) });
     },
     settingsChoices() {
       const c = cfg();
+      const here = musicPanelHere(bus);
+      const favs = here ? here.names.map((n) => ({ value: n, label: n })) : [];
+      if (c.musicFavourite && !favs.some((o) => o.value === c.musicFavourite)) favs.push({ value: c.musicFavourite, label: `${c.musicFavourite} (not on this screen’s Music panel)` });
       const opts = knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id }));
       const want = c.musicSourceId;
       // A chosen source that is not here stays on the list, last (photos.js, same reason: one press repairs it).
       if (want && !opts.some((o) => o.value === want)) opts.push({ value: want, label: 'A source — not connected here' });
       const folder = want ? albumChooser.row(want, c.musicAlbum)
         : { options: [{ value: '', label: 'The whole source' }], note: 'choose where the music is from first' };
-      return { musicSourceId: opts, musicAlbum: folder };
+      return { musicSourceId: opts, musicAlbum: folder, musicFavourite: favs };
     },
-    state: () => ({ mode: modeOf(cfg()), mineId }),
+    state: () => ({ mode: modeOf(cfg()), mineId, borrowed }),
     /** The sources "Music from" lists, as last read. */
     sources: () => knownSources.slice(),
-    destroy() { dead = true; for (const f of offs) { try { f(); } catch { /* gone */ } } try { music.destroy?.(); } catch { /* gone */ } },
+    destroy() { giveBack(); dead = true; for (const f of offs) { try { f(); } catch { /* gone */ } } try { music.destroy?.(); } catch { /* gone */ } },
   };
 }

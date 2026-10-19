@@ -101,6 +101,7 @@ export const DEFAULTS = Object.freeze({
   music: 'mine',   // row 2.107 (2026-10-18): your Music folder, else the quiet hum (game_music_host.js)
   musicSourceId: '',
   musicAlbum: '',
+  musicFavourite: '',   // row 2.107 step 2: a favourite of the screen's Music panel
   musicVolume: 0.3,
   // *** A ROW BUILT PAYS 1 PLAY POINT BY DEFAULT. *** Both sides (brick breaker's wall pays 0, and says why):
   //   FOR paying: unlike a ball that comes back for ever, a row here is built by presses - in glide and scan no brick
