@@ -520,8 +520,16 @@ function unreachableChips() {
     const sset = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
     await sleep(300);
     await sset.load().catch(() => {});
-    check('*** the switch is remembered on the dashboard (panelSwitches) ***', sset.get()?.panelSwitches?.[photosId] === 'calculator',
-      JSON.stringify(sset.get()?.panelSwitches));
+    // Row 2.109 (2026-10-18, Mike): "There should be an option to save/update the dashboard". A switch shows at once and
+    // is kept only when the dashboard is saved.
+    check('*** row 2.109: the switch is NOT written to the dashboard yet; it is waiting to be saved ***',
+      !sset.get()?.panelSwitches?.[photosId] && kiosk.unsavedSwitches().includes(photosId), JSON.stringify([sset.get()?.panelSwitches, kiosk.unsavedSwitches()]));
+    check('the bar\'s Save is dimmed in a preview (nothing there is saved to a dashboard)', root.querySelector('[data-act="save"]')?.disabled === true);
+    kiosk.saveSwitches();
+    await sleep(300);
+    await sset.load().catch(() => {});
+    check('*** saved: the switch is remembered on the dashboard (panelSwitches) ***', sset.get()?.panelSwitches?.[photosId] === 'calculator'
+      && kiosk.unsavedSwitches().length === 0, JSON.stringify(sset.get()?.panelSwitches));
     // (Kept on the person's row when the screen has one, else the screen's: read through the kiosk.)
     check('*** ...and how often, for "most used" (switchCounts), with the recent list ***', (kiosk.libraryUsage().counts.calculator || 0) >= 1
       && kiosk.libraryUsage().recent[0] === 'calculator', JSON.stringify(kiosk.libraryUsage()));
@@ -566,14 +574,15 @@ function unreachableChips() {
       kiosk.panels().find((x) => x.id === photosId)?.type === 'clock' && !slot(), JSON.stringify(kiosk.panels()));
     await kiosk.switchPanel(photosId, 'photos');
     await sleep(300);
-    // Remembered across a restart.
-    await kiosk.switchPanel(photosId, 'calculator');
+    // Remembered across a restart: what was SAVED (calculator, above); a switch made since and not saved is not.
+    await kiosk.switchPanel(photosId, 'clock');
     await sleep(300);
+    check('a switch since the save is waiting (unsaved)', kiosk.unsavedSwitches().includes(photosId));
     kiosk.destroy(); root.innerHTML = '';
     stashPreviewLayout(p.id, layout);
     kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus() });
     await sleep(500);
-    check('*** a restart comes back with the panel switched (the dashboard remembered it) ***',
+    check('*** a restart comes back with the panel as SAVED (calculator), not the unsaved switch (clock) ***',
       kiosk.panels().find((x) => x.id === photosId)?.type === 'calculator', JSON.stringify(kiosk.panels()));
     // The bus: a bound switch / "switch module" said aloud.
     kiosk.destroy(); root.innerHTML = '';

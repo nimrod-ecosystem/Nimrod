@@ -220,7 +220,9 @@ try {
       // 2026-10-02: what is selected when it may be a piece of the room (placement_test 4c, kiosk_test drive these).
       'focusedTarget', 'pieceTarget', 'roomTargetsPending',
       // 2026-10-04: a layout saved elsewhere, applied in place (kiosk_test's swapped-in doc sync drives it).
-      'applySaved'];
+      'applySaved',
+      // 2026-10-18 (row 2.109): a switch kept until the dashboard is saved.
+      'unsavedSwitches', 'saveSwitches', 'revertSwitches'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),
