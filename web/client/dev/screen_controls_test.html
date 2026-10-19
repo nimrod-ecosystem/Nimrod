@@ -612,7 +612,8 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       group.querySelector('[data-call="mic"]').click();
       check('...a press says CALL_CONTROL_TOPIC', sent.at(-1)?.mic === 'toggle');
       kiosk.menu.open(); kiosk.menu.showTab('module');
-      const first = kiosk.menu.visibleItems().filter((i) => i.kind === 'item' && !i.tabStrip && i.id !== 'subject-pick' && i.id !== 'set:complexity')[0];
+      // (2026-10-18: "Search the settings", 4b11a99, is the menu's own row like the two above, ahead of any tab's.)
+      const first = kiosk.menu.visibleItems().filter((i) => i.kind === 'item' && !i.tabStrip && i.id !== 'subject-pick' && i.id !== 'set:complexity' && i.id !== 'set:menuSearch')[0];
       check('*** ...and the menu\'s first tab starts with them, for a scan ***', first?.id === 'call-ctl:mic', J(first));
       kiosk.menu.close();
       bus.publish(CALL_CONTROLS_TOPIC, { live: false });

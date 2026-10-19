@@ -1709,15 +1709,28 @@ export function createArrangement({
   //   * NOT RECOVERY'S `swapPanel`, which stays exactly as it was: a temporary fallback that is never
   //     saved, and comes back by itself.
   // =================================================================================================
+  // *** KEPT UNTIL SAVED (row 2.109, Mike 2026-10-18). *** "Should a dashboard remember a switch at all?" Mike: "There
+  // should be an option to save/update the dashboard, as well as save as. Maybe buttons/dropdown on the transport bar."
+  // So a switch is no longer written the moment it is made: it is held here (`unsaved`: panel id -> the type it shows,
+  // '' = back to its own module), shown at once, and written to `panelSwitches` only by "Save this dashboard"
+  // (`saveSwitches`); "Put it back as it was" (`revertSwitches`) undoes them; a reload without saving shows the dashboard
+  // as last saved. The kiosk's bar says when there is something to save (kiosk.js `paintSave`).
+  const unsaved = new Map();
   const switchKey = (id, type) => `${id}--${type}`.slice(0, 64);
   function readSwitches() {
     let sw = null;
     try { sw = settings?.get?.()?.[PANEL_SWITCHES_KEY]; } catch { sw = null; }
     return sw && typeof sw === 'object' && !Array.isArray(sw) ? sw : {};
   }
+  // The saved switches with the unsaved ones over them: what the dashboard shows now.
+  function effectiveSwitches() {
+    const sw = { ...readSwitches() };
+    for (const [id, t] of unsaved) { if (t) sw[id] = t; else delete sw[id]; }
+    return sw;
+  }
   function withSwitches(p) {
     if (!p || !Array.isArray(p.modules)) return p;
-    const sw = readSwitches();
+    const sw = effectiveSwitches();
     if (!Object.keys(sw).length) return p;
     let changed = false;
     const modules = p.modules.map((m) => {
@@ -1759,15 +1772,36 @@ export function createArrangement({
     replaceRec(id, fresh);
     profile = { ...profile, modules: profile.modules.map((m) => (m.id === id ? next : m)) };
     stageDefs = stageDefs.map((d) => (d.id === id ? next : d));
-    try {
-      const nx = { ...readSwitches() };
-      if (toType === base) delete nx[id]; else nx[id] = toType;
-      settings?.set?.({ [PANEL_SWITCHES_KEY]: nx });
-    } catch (err) { console.error('arrangement: remembering a switch', err); }
+    // Held until saved (above): unsaved when it differs from what the dashboard has saved for this panel.
+    const savedType = readSwitches()[id] || base;
+    if (toType === savedType) unsaved.delete(id); else unsaved.set(id, toType === base ? '' : toType);
     const fid = ringFocusId();
     if (fid) paintFocus(fid);
     renderMods();
     return true;
+  }
+  /** The panels switched since the dashboard was last saved (row 2.109). */
+  const unsavedSwitches = () => [...unsaved.keys()];
+  /** "Save this dashboard": the switches made since, written to the dashboard's own settings (`panelSwitches`). */
+  function saveSwitches() {
+    if (!unsaved.size) return false;
+    try { settings?.set?.({ [PANEL_SWITCHES_KEY]: effectiveSwitches() }); } catch (err) { console.error('arrangement: saving the switches', err); return false; }
+    unsaved.clear();
+    renderMods();
+    return true;
+  }
+  /** "Put it back as it was": every panel switched since the last save goes back to what is saved for it. */
+  async function revertSwitches() {
+    const ids = [...unsaved.keys()];
+    const saved = readSwitches();
+    for (const id of ids) {
+      const def = profile?.modules?.find((m) => m.id === id);
+      if (!def) { unsaved.delete(id); continue; }
+      try { await switchPanel(id, saved[id] || def.switchedFrom || def.type); } catch (err) { console.error('arrangement: putting a switch back', err); }
+      unsaved.delete(id);
+    }
+    renderMods();
+    return ids.length;
   }
   /** What a panel was before it was switched (its original type), or its own type. */
   const baseTypeOf = (id) => { const d = profile?.modules?.find((m) => m.id === id); return d ? (d.switchedFrom || d.type) : null; };
@@ -2243,6 +2277,9 @@ export function createArrangement({
     // ---- "Switch module" and Home's replace (2026-10-02) ----
     switchPanel,
     baseTypeOf,
+    unsavedSwitches,
+    saveSwitches,
+    revertSwitches,
     replaceSlot,
     // ---- make a panel bigger (2026-10-02; the header above PROMOTE_CSS_ID) ----
     promote,

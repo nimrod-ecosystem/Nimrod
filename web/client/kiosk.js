@@ -591,6 +591,9 @@ export async function mountKiosk(root, {
           <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
           <!-- SWITCH MODULE (2026-10-02): the Modules library in the selected panel's place - see openLibraryAt. -->
           <button data-act="switch" title="show another module in the panel you picked">Switch module</button>
+          <!-- SAVE (row 2.109, 2026-10-18): a switch lasts until the dashboard is saved - see paintSave. Dimmed, never
+               hidden, when nothing has changed. Save as and Put it back are in the settings menu, on the dashboard. -->
+          <button data-act="save" title="nothing has changed on this dashboard" disabled>Save</button>
           <!-- BIGGER (2026-10-02 evening): the panel corner's press for the selected panel - see promotePanel. -->
           <button data-act="bigger" title="make the panel you picked bigger, one step at a time">⤢ Bigger</button>
           <!-- SMALLER (2026-10-03): the way back down, one level a press, dimmed while nothing is bigger - see demotePanel. -->
@@ -2651,6 +2654,7 @@ export async function mountKiosk(root, {
     // (2026-10-02: with the scan on a PIECE of the room, no panel's chip is lit -- the piece has one of its
     // own, lit, saying its name, and Back / Next dim. transport_bar.js does both, for both bars.)
     const piece = focusedPiece();
+    try { paintSave(); } catch { /* declared later; harmless before first render */ }
     drawChips(modsEl, barModel(arr, runtime, { audio }));
     try { paintPieceInert(controlsEl, piece); } catch { /* not drawn yet */ }
     // Switch module: dimmed with no panel to switch (D16: never hidden) -- and while a piece of the room is
@@ -3575,6 +3579,7 @@ export async function mountKiosk(root, {
   // Pause / Play (2026-10-02; `playPauseSelected` argues it): the selected panel's.
   controlsEl.querySelector('[data-act="playpause"]')?.addEventListener('click', () => { playPauseSelected(); });
   controlsEl.querySelector('[data-act="bigger"]')?.addEventListener('click', () => { promotePanel(); });
+  controlsEl.querySelector('[data-act="save"]')?.addEventListener('click', () => { saveDashboard(); });
   controlsEl.querySelector('[data-act="smaller"]')?.addEventListener('click', () => { demotePanel(); });
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
@@ -4008,7 +4013,7 @@ export async function mountKiosk(root, {
     return tag([
       { kind: 'heading', id: 'level-head', label: `${levelTitle(lv)}. Used when nothing more particular has made its own choice` },
       ...rows,
-      ...(layoutHere ? [layoutRow()] : []),
+      ...(layoutHere ? [layoutRow(), ...saveRows()] : []),
       ...(lv === 'device' ? deviceLookRows() : []),
     ]);
   }
@@ -4098,6 +4103,43 @@ export async function mountKiosk(root, {
   function currentPreset() {
     const l = arr.layout();
     return l ? (LAYOUT_PRESETS.find((p) => p.id === l.preset) || null) : null;
+  }
+  // *** SAVE THIS DASHBOARD (row 2.109, Mike 2026-10-18). *** "There should be an option to save/update the dashboard, as
+  // well as save as. Maybe buttons/dropdown on the transport bar." A switch made from the bar (Switch module, a quick swap)
+  // shows at once and lasts until the dashboard is saved (arrangement.js `unsaved`): Save on the bar, or here; "Put it
+  // back as it was" undoes them. Not in a preview or the Modules page's try box (`canChangeLayout`): nothing is saved there.
+  const unsavedCount = () => { try { return (arr.unsavedSwitches?.() || []).length; } catch { return 0; } };
+  function paintSave() {
+    const b = controlsEl?.querySelector?.('[data-act="save"]');
+    if (!b) return;
+    const n = canChangeLayout() ? unsavedCount() : 0;
+    b.disabled = !n;
+    b.textContent = n ? 'Save •' : 'Save';
+    b.title = !canChangeLayout() ? 'nothing here is saved to a dashboard'
+      : n ? `save this dashboard: ${n === 1 ? 'a panel was' : `${n} panels were`} switched since it was saved`
+        : 'nothing has changed on this dashboard';
+  }
+  function saveDashboard() {
+    if (!canChangeLayout() || !unsavedCount()) { paintSave(); return false; }
+    let ok = false;
+    try { ok = !!arr.saveSwitches?.(); } catch (err) { console.error('kiosk: save the dashboard', err); }
+    paintSave();
+    if (ok) { try { output?.notify?.('Saved.', { source: 'shell' }); } catch { /* said nothing */ } }
+    try { if (menu.isOpen()) menu.refresh(); } catch { /* the menu may be gone */ }
+    return ok;
+  }
+  function saveRows() {
+    const n = unsavedCount();
+    const t = MENU_TAB.module(0);
+    return [
+      { kind: 'item', id: 'dash-save', label: 'Save this dashboard', ...t, disabled: !n,
+        hint: n ? `${n === 1 ? 'a panel was' : `${n} panels were`} switched since it was saved` : 'nothing has changed since it was saved',
+        run: () => { saveDashboard(); } },
+      { kind: 'item', id: 'dash-revert', label: 'Put it back as it was', ...t, disabled: !n,
+        hint: n ? 'the panels go back to what was saved' : 'nothing to put back',
+        run: () => { Promise.resolve(arr.revertSwitches?.()).catch((err) => console.error('kiosk: put back', err))
+          .then(() => { paintSave(); try { menuView().refresh(); } catch { /* closed */ } }); } },
+    ];
   }
   function layoutRow() {
     const p = currentPreset();
@@ -8753,6 +8795,12 @@ export async function mountKiosk(root, {
     layoutStore: () => (dash?.impl?.layoutStore?.() || ownLayoutStore),
     openSwitch: (id) => openSwitch(id),
     switchPanel: (id, type) => doSwitch(id, type),
+    // row 2.109: switches kept until the dashboard is saved (arrangement.js), for the suites: which panels, save (the
+    // arrangement's own, whatever the Save button would say), put back, and the bar's Save press.
+    unsavedSwitches: () => { try { return arr.unsavedSwitches?.() || []; } catch { return []; } },
+    saveSwitches: () => { try { return !!arr.saveSwitches?.(); } catch { return false; } },
+    revertSwitches: () => arr.revertSwitches?.(),
+    saveDashboard: () => saveDashboard(),
     openLibrary: (id, opts = {}) => openLibraryAt(id, opts || {}),
     closeLibrary: () => closeLibrary('keep'),
     library: () => (libOpen ? { id: libOpen.id, slot: libOpen.slot, probe: libOpen.inst?.impl?.__probe?.() || null } : null),
