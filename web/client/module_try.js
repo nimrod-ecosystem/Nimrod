@@ -414,6 +414,35 @@ export function memoryStorage() {
 // `profileId` (2026-10-04): the screen to use, when the page already knows it (Home's `defaultId`). Omitted, the
 // account's default (`ensureProfile`), as before. Home passes it so a test person ("Try it as someone new",
 // try_new.js) looks at a module on THEIR screen, never on the owner's.
+/**
+ * A screen's settings handle with its remembered panel switches (arrangement.js PANEL_SWITCHES_KEY) left out: they are
+ * not read, not heard, and not written. Everything else passes through untouched. (Row 2.109; see `mountEmbeddedKiosk`.)
+ */
+export const PANEL_SWITCHES = 'panelSwitches';
+export function withoutPanelSwitches(h) {
+  if (!h || typeof h !== 'object') return h;
+  const strip = (v) => {
+    if (!v || typeof v !== 'object' || !(PANEL_SWITCHES in v)) return v;
+    const { [PANEL_SWITCHES]: _drop, ...rest } = v; void _drop;
+    return rest;
+  };
+  return new Proxy(h, {
+    get(t, k) {
+      if (k === 'get') return () => strip(t.get());
+      if (k === 'set') {
+        return (patch, ...more) => {
+          if (!patch || typeof patch !== 'object' || !(PANEL_SWITCHES in patch)) return t.set(patch, ...more);
+          const rest = strip(patch);
+          return Object.keys(rest).length ? t.set(rest, ...more) : undefined;
+        };
+      }
+      if (k === 'subscribe') return (fn, ...more) => t.subscribe((v, ...a) => fn(strip(v), ...a), ...more);
+      const v = t[k];
+      return typeof v === 'function' ? v.bind(t) : v;
+    },
+  });
+}
+
 export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState = null, host = null, profileId: givenProfile = null }) {
   // Dynamic, so the two hosts above (and every page that only wants THEM) do not drag in the
   // whole kiosk and, with it, every module registration -- `modules.html` deliberately does not
@@ -458,9 +487,18 @@ export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState =
           return { ...p, modules: (p.modules || []).filter((m) => m.type === pick) };
         },
       };
-      const wrapped = wrapState
-        ? { makeState: (key, opts = {}, pid = profileId) => wrapState(createState({ url: real.stateURL(pid, key), user, ...opts }), key) }
-        : {};
+      // TRYING A MODULE NEVER CHANGES WHAT A DASHBOARD SHOWS (row 2.109, 2026-10-18). Mike: "Choosing Music opens Quiz
+      // mix ... on the modules page. I just tried opening Music as a dashboard and that also went to quiz mix." Signed
+      // in, this box is the person's real screen with only `type`'s panels, and a panel switched to another module is
+      // remembered on that screen's settings (arrangement.js `panelSwitches`). One "Switch module" press in this box,
+      // once, had switched the Music panel to Quiz mix for good: every later "Music" here, and the dashboard itself,
+      // opened Quiz mix. So here the remembered switches are not applied (the box shows the module asked for), and a
+      // switch made here lasts only while the box is open (it is not saved to the screen).
+      const plainState = (key, opts = {}, pid = profileId) => {
+        const h = createState({ url: real.stateURL(pid, key), user, ...opts });
+        return key === 'settings' ? withoutPanelSwitches(h) : h;
+      };
+      const wrapped = { makeState: wrapState ? (key, opts = {}, pid = profileId) => wrapState(plainState(key, opts, pid), key) : plainState };
       kiosk = await mountKiosk(stage, { ...seams, user, profileId, profiles, embedLayout: placeFor(mod.id), ...wrapped });
     } else {
       const backend = createLocalBackend();
