@@ -356,6 +356,8 @@ export const CURSOR_ACTIONS = [
 // The tab ids are the kiosk's (kiosk.js MENU_TAB_DEFS); a host without one of them shows nothing for it.
 export const MENU_TAB_TOPIC = 'menu/tab';
 export const SWITCH_MODULE_TOPIC = 'shell/switch-module';
+// (row 2.109, 2026-10-18) the selected panel (or `id`) between its own module and its quick-swap partner (kiosk.js).
+export const QUICK_SWAP_TOPIC = 'shell/quick-swap';
 // THE MODULES LIBRARY'S TWO SCREEN TOPICS (2026-10-02, library.js). Not bindable actions: each carries
 // what no switch can supply.
 //   shell/panel-list     { reply(list) } -- the kiosk answers AT ONCE with the panels on the screen,
@@ -380,6 +382,9 @@ export const MENU_ACTIONS = [
   menuTab('players', 'Settings menu: players'),   // players (2026-10-06)
   menuTab('screen', 'Settings menu: this screen'),
   { id: 'menu/switch-module', label: 'Show another module in the panel you picked', topic: SWITCH_MODULE_TOPIC, group: 'Settings menu' },
+  // Mike, 2026-10-18: "set up modules as quick swap modules that can have a button or shortcut to quickly swap between
+  // two modules on a dashboard". The pair is the panel's "Quick swap with" (kiosk.js); this swaps it.
+  { id: 'menu/quick-swap', label: 'Quick swap: the panel you picked and its other module', topic: QUICK_SWAP_TOPIC, group: 'Settings menu' },
 ];
 
 // ---------------------------------------------------------------------------------------

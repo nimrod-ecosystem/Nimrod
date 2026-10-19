@@ -65,7 +65,7 @@ import {
   PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE,
 } from './shell_verbs.js';
 import {
-  SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
+  SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
   PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC, CALL_HANGUP_TOPIC,
 } from './actions.js';
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
@@ -190,7 +190,7 @@ import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, showsAtLevel, keepFields } from './settings_fields.js';
 // LIVE AND BETA (2026-10-14): the person's "Beta things" row, and a beta panel says so in its own settings.
 import { BETA_FIELD, BETA_KEY, BETA_WORDS, betaShowOf } from './beta.js';
-import { stageOf } from './modules_catalog.js';
+import { stageOf, CATALOG as MODULE_CATALOG } from './modules_catalog.js';
 // The person's usual starting level for question games, on the People tab (2026-10-06, adaptive_play.js openUsualStart).
 import { openUsualStart } from './adaptive_play.js';
 // players (2026-10-06): who is playing on this screen, its own tab in the ⚙ menu (player_picker.js).
@@ -595,6 +595,8 @@ export async function mountKiosk(root, {
           <!-- SAVE (row 2.109, 2026-10-18): a switch lasts until the dashboard is saved - see paintSave. Dimmed, never
                hidden, when nothing has changed. Save as and Put it back are in the settings menu, on the dashboard. -->
           <button data-act="save" title="nothing has changed on this dashboard" disabled>Save</button>
+          <!-- QUICK SWAP (row 2.109): the selected panel and its "Quick swap with" module - see quickSwap. Dimmed when it has none. -->
+          <button data-act="swap" title="the panel you picked has no quick swap (set it in its settings)" disabled>⇄ Swap</button>
           <!-- BIGGER (2026-10-02 evening): the panel corner's press for the selected panel - see promotePanel. -->
           <button data-act="bigger" title="make the panel you picked bigger, one step at a time">⤢ Bigger</button>
           <!-- SMALLER (2026-10-03): the way back down, one level a press, dimmed while nothing is bigger - see demotePanel. -->
@@ -2655,7 +2657,7 @@ export async function mountKiosk(root, {
     // (2026-10-02: with the scan on a PIECE of the room, no panel's chip is lit -- the piece has one of its
     // own, lit, saying its name, and Back / Next dim. transport_bar.js does both, for both bars.)
     const piece = focusedPiece();
-    try { paintSave(); } catch { /* declared later; harmless before first render */ }
+    try { paintSave(); paintSwap(); } catch { /* declared later; harmless before first render */ }
     drawChips(modsEl, barModel(arr, runtime, { audio }));
     try { paintPieceInert(controlsEl, piece); } catch { /* not drawn yet */ }
     // Switch module: dimmed with no panel to switch (D16: never hidden) -- and while a piece of the room is
@@ -3581,6 +3583,7 @@ export async function mountKiosk(root, {
   controlsEl.querySelector('[data-act="playpause"]')?.addEventListener('click', () => { playPauseSelected(); });
   controlsEl.querySelector('[data-act="bigger"]')?.addEventListener('click', () => { promotePanel(); });
   controlsEl.querySelector('[data-act="save"]')?.addEventListener('click', () => { saveDashboard(); });
+  controlsEl.querySelector('[data-act="swap"]')?.addEventListener('click', () => { quickSwap(); });
   controlsEl.querySelector('[data-act="smaller"]')?.addEventListener('click', () => { demotePanel(); });
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
@@ -4443,7 +4446,63 @@ export async function mountKiosk(root, {
   // into ONE flat menu by the settings shell, so the two would collide on the SAME item id
   // (`set:panelSurface`) and the screen-level row would become unreachable. Different key,
   // same reserved-namespace idea: still nothing a module ever declares or reads.
+  // *** QUICK SWAP (row 2.109, Mike 2026-10-18). *** "It would also be nice to set up modules as quick swap modules that
+  // can have a button or shortcut to quickly swap between two modules on a dashboard." A panel's "Quick swap with" names
+  // its other module; "⇄ Swap" on the bar, a bound switch or key (actions.js `menu/quick-swap`) or "quick swap" said aloud
+  // flips the panel between its own module and that one. The pair is kept on the DASHBOARD (`quickSwaps: { panelId:
+  // type }`), not the panel's row: a switched panel reads another row, and the pair must be the same either way. A swap
+  // is a switch like any other: shown at once, kept when the dashboard is saved (paintSave).
+  const QUICK_SWAP_KEY = 'quickSwaps';
+  const QUICK_SWAP_FIELD_KEY = 'quickSwapWith';
+  const quickSwapOptions = () => (MODULE_CATALOG || [])
+    .filter((c) => c && c.type && getManifest(c.type) && c.type !== 'library')
+    .map((c) => ({ value: c.type, label: c.title || getManifest(c.type)?.title || c.type }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  function quickSwaps() { try { const q = (layoutDoc().get?.() || {})[QUICK_SWAP_KEY]; return q && typeof q === 'object' && !Array.isArray(q) ? q : {}; } catch { return {}; } }
+  const quickSwapFor = (id) => (id && typeof quickSwaps()[id] === 'string' ? quickSwaps()[id] : '');
+  function setQuickSwap(id, type) {
+    if (!id) return;
+    const next = { ...quickSwaps() };
+    if (type) next[id] = String(type); else delete next[id];
+    try { layoutDoc().set?.({ [QUICK_SWAP_KEY]: next }); } catch (err) { console.error('kiosk: quick swap', err); }
+    try { paintSwap(); } catch { /* not drawn yet */ }
+  }
+  /** Swap panel `id` (else the selected one) between its own module and its quick-swap partner. */
+  async function quickSwap(id = null) {
+    let rec = null;
+    try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : focusedRec(); } catch { rec = null; }
+    if (!rec) return false;
+    const partner = quickSwapFor(rec.id);
+    if (!partner) { try { sayNote(`${rec.title || rec.type} has no quick swap. Choose one in its settings: Quick swap with.`); } catch { /* said nothing */ } return false; }
+    // Between what the panel is SAVED as (a saved switch, else its own module) and its partner.
+    const base = arr.baseTypeOf?.(rec.id) || rec.type;
+    const home = arr.savedTypeOf?.(rec.id) || base;
+    let to = rec.type === partner ? home : partner;
+    if (to === rec.type) to = base;
+    const ok = await doSwitch(rec.id, to);
+    try { paintSwap(); paintSave(); } catch { /* not drawn yet */ }
+    return ok;
+  }
+  function paintSwap() {
+    const b = controlsEl?.querySelector?.('[data-act="swap"]');
+    if (!b) return;
+    let rec = null;
+    try { rec = focusedRec(); } catch { rec = null; }
+    const partner = rec ? quickSwapFor(rec.id) : '';
+    b.disabled = !partner;
+    const name = (t) => getManifest(t)?.title || t;
+    b.title = !rec ? 'no panel is picked'
+      : !partner ? `${rec.title || rec.type} has no quick swap (set it in its settings: Quick swap with)`
+        : `swap ${rec.title || rec.type} with ${name(rec.type === partner ? (arr.savedTypeOf?.(rec.id) || arr.baseTypeOf?.(rec.id) || rec.type) : partner)}`;
+  }
   const PANEL_INSTANCE_FIELDS = () => [
+    // ADVANCED ("Everything"), argued: FOR standard, it is where Mike would look. AGAINST, and it decides it: every
+    // panel's tab is walked one stop at a time by a switch user, and this is chosen once, by whoever sets the dashboard
+    // up; "⇄ Swap" itself is on the bar at every level. [On Mike's list.]
+    { key: QUICK_SWAP_FIELD_KEY, label: 'Quick swap with', kind: 'choice', level: 'advanced', default: '',
+      options: [{ value: '', label: 'Nothing (no quick swap)' }, ...quickSwapOptions()],
+      note: '“⇄ Swap” on the bar (or a switch, a key, or “quick swap” said aloud) flips this panel between its own module '
+        + 'and this one. Save the dashboard to keep the one showing.' },
     { key: 'instancePanelSurface', label: 'This panel’s background', kind: 'choice', level: 'standard',
       default: 'default',
       options: [
@@ -6303,11 +6362,13 @@ export async function mountKiosk(root, {
         // A FUNCTION, not a snapshot: two presses without a repaint in between would
         // otherwise step from the same stale value twice, and the second press would look
         // dropped — which somebody debugs as a broken switch.
-        values: () => rec.state.get() || {},
+        values: () => ({ ...(rec.state.get() || {}), [QUICK_SWAP_FIELD_KEY]: quickSwapFor(rec.id) }),
         level: complexity(),
         // (row 2.57) A value the panel keeps somewhere else - a YouTube key, sealed on the server - is
         // handed to the panel (`settingsWrite` returns true) and never stored in its settings.
         onStep: (key, value) => {
+          // Quick swap's partner is the dashboard's, kept by panel (see QUICK_SWAP_KEY), not the panel's own row.
+          if (key === QUICK_SWAP_FIELD_KEY) { setQuickSwap(rec.id, value); return; }
           let taken = false;
           try { taken = (rec.instance?.impl || rec.instance)?.settingsWrite?.(key, value) === true; } catch (err) { console.error('kiosk: settingsWrite', err); }
           if (!taken) rec.state.set({ [key]: value });
@@ -8190,6 +8251,7 @@ export async function mountKiosk(root, {
   // "Switch module" (2026-10-02): the bar's button (both bars), a bound switch and "switch module" said
   // aloud all arrive here (shell_verbs.js SHELL_SWITCH_MODULE is the same topic). Every path.
   offsScreen.push(bus.subscribe(SWITCH_MODULE_TOPIC, (p) => { claimed(p); openSwitch(null, p); }));
+  offsScreen.push(bus.subscribe(QUICK_SWAP_TOPIC, (p) => { claimed(p); quickSwap(p && p.id ? p.id : null).catch?.((err) => console.error('kiosk: quick swap', err)); }));
   // THE AI'S place / swap (library.js LIBRARY_AI_ACTIONS): which panels are here, answered at once, and "that
   // panel becomes that module" -- through the library in its place, so the game's lock is asked as for a
   // press. A host page with its own switch (Home) is handed the request as `place`.
@@ -8836,6 +8898,9 @@ export async function mountKiosk(root, {
     revertSwitches: () => arr.revertSwitches?.(),
     saveDashboard: () => saveDashboard(),
     saveAsDashboard: () => saveAsDashboard(),
+    quickSwap: (id) => quickSwap(id || null),
+    setQuickSwap: (id, type) => setQuickSwap(id, type),
+    quickSwapFor: (id) => quickSwapFor(id),
     openLibrary: (id, opts = {}) => openLibraryAt(id, opts || {}),
     closeLibrary: () => closeLibrary('keep'),
     library: () => (libOpen ? { id: libOpen.id, slot: libOpen.slot, probe: libOpen.inst?.impl?.__probe?.() || null } : null),

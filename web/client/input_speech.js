@@ -316,6 +316,9 @@ export const ROUTES = {
   // and asks for `place` / `swap` (library.js LIBRARY_AI_ACTIONS); with no AI, "switch module" then a press.
   'switch-module': { action: 'menu/switch-module', label: 'Show another module in the panel you picked',
     phrases: ['switch module', 'switch the module', 'change module', 'change the module', 'swap module'] },
+  // Quick swap (row 2.109, 2026-10-18): the selected panel and its "Quick swap with" module, one each way.
+  'quick-swap': { action: 'menu/quick-swap', label: 'Quick swap: the panel you picked and its other module',
+    phrases: ['quick swap', 'swap them', 'swap back'] },
   // Home's edit bar (2026-10-02): the same action a switch binds (actions.js `shell/host/editbar`), which
   // opens the bar holding the scan. Each phrase names the bar or "my home", so none is a panel verb.
   'home-edit-bar': { action: 'shell/host/editbar', label: 'Home: the edit bar',
