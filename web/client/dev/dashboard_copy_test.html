@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dashboard_copy - Save as a new dashboard (row 2.109)</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>dashboard_copy - Save as a new dashboard (row 2.109)</h1>
+<p>Mike: "There should be an option to save/update the dashboard, as well as save as."</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { copyDashboard, remapIds, copyName } from '../dashboard_copy.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('copy-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+
+(async () => {
+  try {
+    section('pure');
+    check('remapIds: keys and values, whole strings only, nested',
+      J(remapIds({ a: 'x1', x1: { s: ['x1', 'x2', 'x1x'] } }, { x1: 'n1', x2: 'n2' })) === J({ a: 'n1', n1: { s: ['n1', 'n2', 'x1x'] } }));
+    check('copyName: "copy", then numbered, never twice; nothing the server refuses (no brackets)', copyName('Music', []) === 'Music copy'
+      && copyName('Music', ['Music copy']) === 'Music copy 2' && copyName('Music copy', ['Music copy']) === 'Music copy 2'
+      && /^[\w .,'\u2019-]{1,64}$/.test(copyName('Kids (TV) room!'.repeat(6), [])), copyName('Kids (TV) room!', []));
+    check('nothing to copy with: said, never thrown', (await copyDashboard({})).ok === false);
+
+    section('*** a real dashboard, copied as it shows now ***');
+    const profiles = createProfilesClient({ user: USER });
+    const src = await profiles.create('Music');
+    const m1 = await profiles.addModule(src.id, 'music');
+    const m2 = await profiles.addModule(src.id, 'photos');
+    const st = (pid, key) => createState({ url: profiles.stateURL(pid, key), user: USER });
+    const put = async (pid, key, v) => { const h = st(pid, key); await h.load(); h.set(v); await h.flush(); h.destroy(); };
+    const get = async (pid, key) => { const h = st(pid, key); await h.load(); const v = h.get(); h.destroy(); return v || {}; };
+    await put(src.id, m1.id, { volume: 40 });
+    await put(src.id, `${m1.id}--quiz_mix`, { rounds: 7 });       // the Music panel, switched to Quiz mix, has its own row there
+    await put(src.id, m2.id, { interval: 12000 });
+    await put(src.id, 'settings', { theme: 'fall', kiosk: { layout: { preset: 'two', slots: [m1.id, m2.id] } },
+      panelSwitches: { [m1.id]: 'quiz_mix' }, prebuilt: 'people', prebuiltRefs: { a: m1.id }, prebuiltDone: true });
+    // The panels as they show now: Music switched to Quiz mix (its row `<id>--quiz_mix`), Photos as it is.
+    const showing = [{ id: m1.id, type: 'quiz_mix', stateKey: `${m1.id}--quiz_mix` }, { id: m2.id, type: 'photos' }];
+    const res = await copyDashboard({ profiles, fromId: src.id, modules: showing,
+      makeSettings: (pid) => st(pid, 'settings'), makeInstanceState: (pid, key) => st(pid, key) });
+    check('made, named "Music copy"', res.ok && res.name === 'Music copy' && res.id && res.id !== src.id, J(res));
+    const copy = await profiles.get(res.id);
+    const types = (copy.modules || []).map((m) => m.type);
+    check('*** its panels are what showed: Quiz mix (the switched one) and Photos ***', J(types) === J(['quiz_mix', 'photos']), J(types));
+    const q = copy.modules.find((m) => m.type === 'quiz_mix'), p = copy.modules.find((m) => m.type === 'photos');
+    check('*** each with the settings it had where it showed (the switched type\'s own row) ***',
+      (await get(res.id, q.id)).rounds === 7 && (await get(res.id, p.id)).interval === 12000);
+    const doc = await get(res.id, 'settings');
+    check('*** the layout points at the copy\'s own panels ***', J(doc.kiosk?.layout?.slots) === J([q.id, p.id]) && doc.kiosk.layout.preset === 'two', J(doc.kiosk));
+    check('its look comes too', doc.theme === 'fall');
+    check('*** not the remembered switches (its panels already are what showed), nor a ready-made dashboard\'s stamp ***',
+      !('panelSwitches' in doc) && !('prebuilt' in doc) && !('prebuiltRefs' in doc) && !('prebuiltDone' in doc), J(Object.keys(doc)));
+    const orig = await get(src.id, 'settings');
+    check('*** the one it came from is untouched ***', orig.panelSwitches?.[m1.id] === 'quiz_mix' && (await profiles.get(src.id)).modules.length === 2);
+    const again = await copyDashboard({ profiles, fromId: src.id, modules: showing,
+      makeSettings: (pid) => st(pid, 'settings'), makeInstanceState: (pid, key) => st(pid, key) });
+    check('a second copy is "copy 2"', again.name === 'Music copy 2', again.name);
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+})();
+</script>
+</body>
+</html>
