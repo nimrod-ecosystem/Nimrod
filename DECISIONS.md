@@ -2750,3 +2750,15 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   don't feel like most lessons would need you to choose. The difficulty of the lesson can usually determine the
   content."* So the level a lesson is written for decides its content; "Pictures for" appears only for a lesson with
   looks (Numbers 0 to 9). Built in ca269fd. (2026-10-17)
+
+## A dashboard keeps a switch only when saved; Save as; quick swap (Mike, 2026-10-18)
+
+- **A switch lasts until the dashboard is saved; there is Save and Save as.** Asked whether a dashboard should remember a
+  switch (it did, at once, so one stray press on the Modules page had switched his Music panel for good), Mike: *"There
+  should be an option to save/update the dashboard, as well as save as. Maybe buttons/dropdown on the transport bar."*
+  This supersedes Code's 2026-10-02 choice (arrangement.js "IT IS REMEMBERED") that a switch was written the moment it
+  was made. HOW, Code's: Save on the bar (dimmed when nothing changed), and Save / Save as a new dashboard / Put it back
+  in the settings menu on the dashboard; a copy is named "<name> copy". Built in e6a922d, 364126f. (2026-10-18)
+- **Quick swap.** Mike: *"set up modules as quick swap modules that can have a button or shortcut to quickly swap
+  between two modules on a dashboard."* HOW, Code's: a panel's "Quick swap with", "⇄ Swap" on the bar, a bindable
+  action and "quick swap" said aloud; a swap is a switch, kept when saved. Built in fec9225. (2026-10-18)
