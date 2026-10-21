@@ -23,8 +23,10 @@ import { createBus } from '../bus.js';
 import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS, routedQuestions } from '../modules/lesson_player.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, unlockedFrom } from '../lessons.js';
 import { checkLesson, beatsOf } from '../lesson_file.js';
-import { NUMBERS_0_9 } from '../lessons_builtin.js';
+import { NUMBERS_0_9, BUILTIN_LESSONS } from '../lessons_builtin.js';
 import { MODULE_VERBS } from '../actions.js';
+import { readLessonFolder } from '../lessons_folder.js';
+import { SUBFOLDERS, README, FOLDER_KINDS } from '../user_folders.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -174,12 +176,62 @@ try {
     const h = readHTML(L);
     return /<sup class="lp-fn">1<\/sup>/.test(h) && /Repair group, 2024/.test(h);
   })());
+  section('*** the person\'s own lesson files: the Lessons folder (row 2.111, chat\'s note CJ item 3) ***');
+  {
+    const own = { about: { title: 'My street' }, sources: [{ id: 's1', title: 'The council', author: 'Town council', date: '2025' }],
+      classes: [{ title: 'One', beats: [{ say: 'Our street.', show: { kind: 'heading', text: 'My street' } },
+        { ask: { question: 'How old is the bridge?', answer: '100 years', wrong: ['10 years', '5 years'], why: 'It opened in 1925.' }, cite: ['s1'] }] }],
+      questions: [{ question: 'Who mends the bridge?', answer: 'The council', wrong: ['Nobody'] }] };
+    // The reader itself, on a fake folder: a lesson read, a broken file and a non-lesson skipped with why, nothing prompted.
+    const file = (text) => ({ kind: 'file', getFile: async () => ({ size: text.length, text: async () => text }) });
+    const dir = { entries: async function* entries() {
+      yield ['my_street.json', file(JSON.stringify(own))]; yield ['broken.json', file('{ not json')];
+      yield ['list.json', file('[1,2]')]; yield ['notes.txt', file('hello')]; yield ['huge.json', { kind: 'file', getFile: async () => ({ size: 9e9, text: async () => '' }) }];
+    } };
+    const read = await readLessonFolder({ find: async () => ({ dir, name: 'Nimrod/Lessons' }) });
+    check('*** the reader: .json lesson files read, each checked; a file that is no lesson skipped, saying why ***',
+      read.lessons.length === 1 && read.lessons[0].id === 'file:my_street.json' && read.lessons[0].label === 'My street' && read.lessons[0].sourcesChecked === false
+        && J(read.skipped.map((s) => s.file).sort()) === J(['broken.json', 'huge.json', 'list.json']) && read.where === 'Nimrod/Lessons', J(read));
+    check('...no Nimrod folder on this device (or its permission lapsed): no folder lessons, nothing asked', J((await readLessonFolder({ find: async () => ({ dir: null }) })).lessons) === '[]'
+      && J((await readLessonFolder({ find: async () => { throw new Error('no'); } })).lessons) === '[]');
+    check('the tree has a "Lessons" folder, with a README saying what goes there', SUBFOLDERS.lessons === 'Lessons' && /lesson files/.test(README.lessons) && FOLDER_KINDS.includes('lessons'));
+
+    let resolveFolder;
+    const folder = new Promise((r) => { resolveFolder = r; });
+    const rowsBy = {};
+    const makeState = (k) => (rowsBy[k] = rowsBy[k] || fakeRow({}));
+    const f = mountLesson(fakeRow({ form: 'slides', lessonId: 'file:my_street.json' }), { readLessonFolder: () => folder, makeState });
+    await new Promise((r) => setTimeout(r, 0));
+    check('*** a lesson chosen from the folder waits for it (Numbers 0 to 9 is never played meanwhile) ***', f.probe().total === 0 && /Lessons folder/.test(f.box.textContent) && f.said.length === 0);
+    resolveFolder(read);
+    await new Promise((r) => setTimeout(r, 0));
+    check('...then opens, its sources shown as not checked', f.probe().title === 'My street' && J(f.probe().files) === J(['file:my_street.json']) && f.probe().unchecked === true);
+    check('"Which lesson" offers it, saying where it is from', f.inst.impl.settingsChoices().lessonId.some((o) => o.value === 'file:my_street.json' && /your Lessons folder/.test(o.label)));
+    await new Promise((r) => setTimeout(r, 20));
+    check('its questions do not go to the games: a device without the folder would write them back out (lessons_folder.js argues it)',
+      !J(rowsBy[TRIVIA_LESSON_QUESTIONS]?.get() || {}).includes('Who mends the bridge'));
+    f.q('[data-lp-act="next"]').click();
+    check('*** an ask: Quiz mix\'s answer buttons; its source is not shown before the answer (a source can give it away) ***',
+      f.box.querySelectorAll('.lp-ask .wg-btn[data-lp-answer]').length === 3 && !/Town council/.test(f.box.textContent));
+    f.q('[data-lp-answer="100 years"]').click();
+    const parts = [...f.box.querySelectorAll('[data-lp-result="right"] .qz-after [data-part]')].map((e) => e.dataset.part);
+    check('*** ...answered: the after-answer screen every quiz draws (row 2.66): question, answer, why, source, in that order; no second Next ***',
+      J(parts) === J(['question', 'answer', 'explain', 'source']) && f.q('.qz-after[data-after="celebrate"]')
+        && /Town council, 2025/.test(f.q('[data-part="source"]').textContent) && /not checked/.test(f.q('[data-part="source"]').textContent)
+        && f.box.querySelectorAll('[data-lp-act="next"]').length === 1, J(parts));
+    f.done();
+  }
+
   section('*** its questions go to the games (taken over from the old Lessons) ***');
   {
     const R = routedQuestions('both');
+    // How many: every built-in lesson's review questions, as its check reads them (Right to repair joined in row 2.111).
+    const ALL = BUILTIN_LESSONS.reduce((n, b) => n + (checkLesson(b.lesson).lesson?.questions.length || 0), 0);
+    const labelOf = Object.fromEntries(BUILTIN_LESSONS.map((b) => [b.id, checkLesson(b.lesson).lesson.about.title]));
     check('every built-in lesson\'s review questions, each with its lesson as the topic and the title for the round\'s name',
-      R.trivia.length === 3 && R.trivia.every((q) => q.topic === 'numbers-0-9' && q.topicLabel === 'Numbers 0 to 9' && q.answer && q.wrong.length >= 1), J(R.trivia[0]));
-    check('to Trivia and Word Forge by default (as Mike ruled for the old Lessons)', LESSON_SETTINGS.find((f) => f.key === 'questionsTo').default === 'both' && R.wordforge.length === 3);
+      ALL > 3 && R.trivia.length === ALL && R.trivia.every((q) => labelOf[q.topic] === q.topicLabel && q.answer && q.wrong.length >= 1)
+        && R.trivia.filter((q) => q.topic === 'numbers-0-9').length === 3 && R.trivia.some((q) => q.topic === 'right-to-repair'), J([ALL, R.trivia.length, R.trivia[0]]));
+    check('to Trivia and Word Forge by default (as Mike ruled for the old Lessons)', LESSON_SETTINGS.find((f) => f.key === 'questionsTo').default === 'both' && R.wordforge.length === ALL);
     check('"Trivia only", "Word Forge only", "Neither"', routedQuestions('trivia').wordforge.length === 0 && routedQuestions('wordforge').trivia.length === 0
       && routedQuestions('none').trivia.length === 0 && routedQuestions('none').wordforge.length === 0);
     const rowsBy = {};
@@ -192,7 +244,7 @@ try {
     const m = mountLesson(st, { makeState, makeEvents });
     await new Promise((r) => setTimeout(r, 20));
     check('*** mounted: Trivia\'s and Word Forge\'s rows hold the lessons\' questions ***',
-      rowsBy[TRIVIA_LESSON_QUESTIONS]?.get().items?.length === 3 && rowsBy[WORDFORGE_LESSON_QUESTIONS]?.get().items?.length === 3, J(Object.keys(rowsBy)));
+      rowsBy[TRIVIA_LESSON_QUESTIONS]?.get().items?.length === ALL && rowsBy[WORDFORGE_LESSON_QUESTIONS]?.get().items?.length === ALL, J(Object.keys(rowsBy)));
     m.done();
     const before = writes.length;
     const m2 = mountLesson(fakeRow({ form: 'slides' }), { makeState, makeEvents });

@@ -113,6 +113,9 @@ export const KIND_WORDS = Object.freeze({
   // own board clips (2026-10-09): board_sounds.js.
   boardSounds: Object.freeze({ title: 'Board sounds', what: 'the sounds of your own AAC board cards', noun: ['sound', 'sounds'],
     none: 'No sounds in it yet. In the board editor, press a card, then “Record this word” or “Use a sound file”.' }),
+  // row 2.111 (2026-10-21): lessons_folder.js.
+  lessons: Object.freeze({ title: 'Lessons', what: 'your own lesson files', noun: ['lesson file', 'lesson files'],
+    none: 'No lesson files in it yet (.json). A Lessons panel offers each one under “Which lesson”.' }),
   fonts: Object.freeze({ title: 'Fonts', what: 'fonts',
     none: 'No font files in it yet (.woff2, .woff, .ttf or .otf).' }),
   luts: Object.freeze({ title: 'Color looks (color filter files, called look-up tables or LUTs)', what: 'color looks',
@@ -183,11 +186,12 @@ export async function scanFolder(kind, dir) {
       }, []) };
     }
     // own board clips (2026-10-09): Board sounds is counted the same way (its README is not a sound).
-    if (kind === 'recordings' || kind === 'data' || kind === 'boardSounds') {
+    if (kind === 'recordings' || kind === 'data' || kind === 'boardSounds' || kind === 'lessons') {
       let count = 0;
       let exported = false;
       for await (const [name] of dir.entries()) {
         if (name.startsWith('.') || name === 'README.txt') continue;
+        if (kind === 'lessons' && !/\.json$/i.test(name)) continue;   // only what the panel reads (row 2.111)
         if (name === 'nimrod-export.json') exported = true;
         count += 1;
       }
@@ -473,6 +477,7 @@ export const SAVE_WORDS = Object.freeze({
   artwork: 'Save pictures you make for Nimrod (each kind in its own folder) in',
   data: 'Keep your own Nimrod data (play history, exports) in',
   boardSounds: 'The sounds of your own AAC board cards are kept in',     // own board clips (2026-10-09)
+  lessons: 'Save your own lesson files (.json) in',                       // row 2.111 (2026-10-21)
 });
 // What "Connect it for ..." connects it for: the panels that read a media source of that kind. Artwork (2026-10-07):
 // connected, every picture chooser can browse it (a subfolder at a time) and the Photos panel can show it.

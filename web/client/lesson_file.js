@@ -70,9 +70,181 @@ export function checkQuestion(q) {
  * it can survive (an unknown move, a missing source id) is kept, without the broken part, and the problem is listed.
  * PURE.
  */
-export function checkLesson(raw) {
+// *** READ FORGIVINGLY (row 2.111, chat's note CJ, 2026-10-21). *** "Their field names differ a little (the AIs didn't
+// follow the shape exactly), so please read them forgivingly and say what you had to guess." Three Right to repair files
+// (docs/from_chat/lessons: Cici's, Claude's, a Sonnet batch) each bent the shape a different way. `forgiveLesson` maps
+// what they wrote onto the shape BEFORE the check, and says every guess it made (they are listed with the problems, so a
+// person sees what was read how). A file already in the shape comes through untouched, with no guesses. PURE.
+const lc = (s) => String(s == null ? '' : s).trim().toLowerCase();
+const firstOf = (o, keys) => { for (const k of keys) if (o && o[k] != null && o[k] !== '') return o[k]; return undefined; };
+function showFromText(text, charts, guess, at) {
+  const s = String(text || '').trim();
+  if (!s) return null;
+  const quoted = s.match(/['"\u2018\u201c]([^'"\u2019\u201d]{2,120})['"\u2019\u201d]/);
+  let m;
+  if (/^title\b/i.test(s) && quoted) { guess(`${at}: "${s.slice(0, 50)}" read as a heading, "${quoted[1]}".`); return { kind: 'heading', text: quoted[1] }; }
+  if ((m = s.match(/^(?:big number|key word|keyword|definition card|word)\s*:\s*([^.]+(?:\.\d+[^.]*)?)/i))) {
+    guess(`${at}: "${s.slice(0, 50)}" read as a key word, "${m[1].trim()}".`); return { kind: 'word', text: m[1].trim() };
+  }
+  if (/^chart\b/i.test(s) && charts.length) {
+    const words = new Set(lc(s).split(/[^a-z0-9]+/).filter((w) => w.length > 3));
+    let best = charts[0], score = -1;
+    for (const c of charts) {
+      const n = lc(`${c.title || ''} ${c.id || ''}`).split(/[^a-z0-9]+/).filter((w) => words.has(w)).length;
+      if (n > score) { score = n; best = c; }
+    }
+    guess(`${at}: "${s.slice(0, 50)}" read as the chart "${best.title || best.id}".`);
+    return { kind: 'chart', chart: best.id };
+  }
+  return { kind: 'picture', of: s.slice(0, 300) };
+}
+function showFromObject(o, guess, at) {
+  if (!isObj(o) || o.kind) return o;
+  const k = Object.keys(o)[0];
+  const v = o[k];
+  const text = Array.isArray(v) ? v.flat().join(', ') : String(v == null ? '' : v);
+  const map = { heading: 'heading', title: 'heading', key_word: 'word', keyword: 'word', word: 'word', big_number: 'word',
+    number: 'word', quote: 'quote', picture: 'picture', image: 'picture', map: 'picture', diagram: 'picture', chart: 'chart',
+    list: 'row', two_columns: 'picture' };
+  const kind = map[k];
+  if (!kind) return o;
+  if (k !== kind) guess(`${at}: "${k}" shown as ${kind === 'row' ? 'a row' : kind === 'picture' ? 'a picture' : `a ${kind}`}.`);
+  if (kind === 'chart') return { kind: 'chart', chart: String(v) };
+  if (kind === 'row') return { kind: 'row', items: (Array.isArray(v) ? v : [v]).map((x) => String(x)) };
+  if (kind === 'picture') return { kind: 'picture', of: k === 'two_columns' && Array.isArray(v) ? v.map((col) => (Array.isArray(col) ? col.join(': ') : col)).join('; ') : (k === 'map' ? `a map: ${text}` : text) };
+  return { kind, text };
+}
+export function forgiveLesson(raw) {
+  const guesses = [];
+  if (!isObj(raw)) return { raw, guesses };
+  const r = JSON.parse(JSON.stringify(raw));
+  const guess = (g) => { if (!guesses.includes(g)) guesses.push(g); };
+  // about: a topic where a title belongs.
+  if (isObj(r.about) && !r.about.title && r.about.topic) { r.about.title = String(r.about.topic); guess('The title was read from "about.topic".'); }
+  if (isObj(r.about) && !r.about.for && (r.about.learner || r.about.audience)) {
+    r.about.for = String(Array.isArray(r.about.audience) ? r.about.audience.join(', ') : (r.about.learner || r.about.audience));
+  }
+  // sources: ids given when missing (cited by number: 1 is the first), url / read_date / publisher read where the shape has others.
+  const srcIds = [];
+  if (Array.isArray(r.sources)) {
+    let numbered = false, urls = false, pubs = false;
+    r.sources = r.sources.map((s, i) => {
+      if (!isObj(s)) return s;
+      const o = { ...s };
+      if (!o.id) { o.id = `s${i + 1}`; numbered = true; }
+      if (!o.link && o.url) { o.link = o.url; urls = true; }
+      if (!o.read && o.read_date) o.read = o.read_date;
+      if (!o.author && o.publisher) { o.author = o.publisher; pubs = true; }
+      srcIds.push(String(o.id));
+      return o;
+    });
+    if (numbered) guess('Sources had no ids: they were numbered s1, s2, ... in order, and a citation by number (1) is that source.');
+    if (urls) guess('A source\'s "url" was read as its link.');
+    if (pubs) guess('A source\'s publisher was read as its author where it named none.');
+  }
+  const citeFix = (c) => {
+    const list = Array.isArray(c) ? c : c == null || c === '' ? [] : [c];
+    return list.map((x) => (typeof x === 'number' || /^\d+$/.test(String(x)) ? `s${Number(x)}` : String(x)));
+  };
+  // charts: kind from "type"; rows from "data" ([label, value, source?]); an id when missing.
+  if (Array.isArray(r.charts)) {
+    r.charts = r.charts.map((c, i) => {
+      if (!isObj(c)) return c;
+      const o = { ...c };
+      if (!o.id) { o.id = `c${i + 1}`; guess(`Chart ${i + 1} had no id: called "c${i + 1}".`); }
+      if (!o.kind && o.type) { o.kind = lc(o.type).replace(/s$/, ''); guess(`Chart "${o.id}": its "type" (${o.type}) read as its kind.`); }
+      if (!Array.isArray(o.rows) && Array.isArray(o.data)) {
+        const src = citeFix(o.source_id || o.source || [])[0];
+        o.rows = o.data.map((d) => (Array.isArray(d)
+          ? { label: String(d[0]), value: parseFloat(String(d[1]).replace(/[^0-9.\-]/g, '')), ...(src ? { source: src } : {}) }
+          : isObj(d) ? { label: firstOf(d, ['label', 'name', 'x']), value: Number(firstOf(d, ['value', 'y', 'count'])), source: d.source } : d));
+        guess(`Chart "${o.id}": its "data" read as rows (label, number${src ? ', the chart\'s source' : ''}).`);
+      }
+      return o;
+    });
+  }
+  const charts = Array.isArray(r.charts) ? r.charts.filter(isObj) : [];
+  // questions: right_answer / wrong_answers; looked up by id when a beat asks one.
+  const qFix = (q) => {
+    if (!isObj(q)) return q;
+    const o = { ...q };
+    if (!o.question && (o.q || o.text)) o.question = o.q || o.text;
+    if (!o.answer && (o.right_answer || o.right || o.correct)) o.answer = o.right_answer || o.right || o.correct;
+    if (!o.wrong && (o.wrong_answers || o.wrongs)) o.wrong = o.wrong_answers || o.wrongs;
+    return o;
+  };
+  const byId = new Map();
+  if (Array.isArray(r.questions)) {
+    const before = J2(r.questions);
+    r.questions = r.questions.map(qFix);
+    for (const q of r.questions) if (isObj(q) && q.id) byId.set(String(q.id), q);
+    if (J2(r.questions) !== before) guess('Questions\' "right_answer" / "wrong_answers" read as the answer and the wrong ones.');
+  }
+  // beats
+  if (Array.isArray(r.classes)) {
+    r.classes.forEach((c, ci) => {
+      if (!isObj(c) || !Array.isArray(c.beats)) return;
+      c.beats = c.beats.map((b, bi) => {
+        if (!isObj(b)) return b;
+        const at = `Class ${ci + 1}, beat ${bi + 1}`;
+        const o = { ...b };
+        // who says it, and what
+        const who = o.who_says_it || (isObj(o.say) ? o.say.who : null);
+        const whoKey = (w) => { const x = lc(w); return x === 'a' || x === 'voice a' ? 'a' : x === 'b' || x === 'voice b' ? 'b' : x ? 'teacher' : null; };
+        if (isObj(o.say) && o.say.who && !SAY_WHO.includes(o.say.who)) o.say = { ...o.say, who: whoKey(o.say.who) };
+        // show
+        if (typeof o.show === 'string') o.show = showFromText(o.show, charts, guess, at);
+        else if (isObj(o.show) && !o.show.kind) o.show = showFromObject(o.show, guess, at);
+        // ask: by id, {q,right,wrong}, or a plain question with no answers (said, not asked)
+        if (isObj(o.ask) && o.ask.question_id && byId.has(String(o.ask.question_id))) { o.ask = { ...byId.get(String(o.ask.question_id)) }; guess('A beat asking a question by its id was given that question.'); }
+        else if (isObj(o.ask) && o.ask.question_id && !o.ask.question) {
+          delete o.ask;
+          guess(`${at}: it asks question "${b.ask.question_id}", which is not in the file, so nothing is asked there.`);
+        }
+        else if (isObj(o.ask)) o.ask = qFix(o.ask);
+        else if (typeof o.ask === 'string' && o.ask.trim()) {
+          const q = o.ask.trim();
+          o.say = o.say || { text: q, ...(who ? { who: whoKey(who) } : {}) };
+          if (isObj(o.say) && o.say.text !== q) o.say = { ...o.say, text: `${o.say.text} ${q}` };
+          delete o.ask;
+          guess(`${at}: a question with no answers to choose from ("${q.slice(0, 40)}") is said, not asked.`);
+        }
+        if (!o.say && who && o.show && o.show.kind === 'picture') {
+          o.say = { text: o.show.of, who: whoKey(who) };
+          guess(`${at}: nothing to say, so what it shows is said.`);
+        }
+        if (o.cite != null) o.cite = citeFix(o.cite);
+        delete o.who_says_it; delete o.section;
+        return o;
+      });
+    });
+  }
+  // notes: [[topic]] names, from sentences, {topic, links}, or {id, title}
+  if (Array.isArray(r.notes)) {
+    const names = [];
+    let changed = false;
+    for (const n of r.notes) {
+      if (typeof n === 'string') { if (n.length <= 60) names.push(n); else changed = true; continue; }
+      if (isObj(n)) {
+        changed = true;
+        if (n.topic) names.push(String(n.topic));
+        if (n.title) names.push(String(n.title));
+        for (const l of Array.isArray(n.links) ? n.links : []) names.push(String(l));
+      }
+    }
+    if (changed) guess('Notes were read as topic names (a long sentence is not one, and was left out).');
+    r.notes = names;
+  }
+  return { raw: r, guesses };
+}
+const J2 = (v) => JSON.stringify(v);
+
+export function checkLesson(input) {
   const problems = [];
-  if (!isObj(raw)) return { lesson: null, problems: ['This is not a lesson file (it should be one JSON object).'] };
+  if (!isObj(input)) return { lesson: null, problems: ['This is not a lesson file (it should be one JSON object).'] };
+  // Read forgivingly first (above): what an AI wrote close to the shape, mapped onto it, every guess said.
+  const { raw, guesses } = forgiveLesson(input);
+  for (const g of guesses) problems.push(`Read as: ${g}`);
   const about = isObj(raw.about) ? raw.about : {};
   const title = str(about.title, 200);
   if (!title) problems.push('The lesson has no title (about.title).');

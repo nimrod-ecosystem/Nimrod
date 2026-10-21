@@ -1,0 +1,251 @@
+{
+ "about": {
+  "topic": "Right to Repair",
+  "length_note": "This topic is complex and involves legal and technological aspects. Given the age of the learner, we will focus on the basics and practical applications. Three half-hour classes should be sufficient to cover the key points."
+ },
+ "sources": [
+  {
+   "title": "Right to Repair Movement",
+   "author": "Various",
+   "date": "2023",
+   "link": "https://righttorepair.org/",
+   "read_date": "2023-04-01"
+  },
+  {
+   "title": "Consumer Reports",
+   "author": "Consumer Reports",
+   "date": "2022",
+   "link": "https://www.consumerreports.org/right-to-repair/",
+   "read_date": "2023-04-02"
+  },
+  {
+   "title": "United States Federal Trade Commission (FTC)",
+   "author": "FTC",
+   "date": "2021",
+   "link": "https://www.ftc.gov/news-events/press-releases/2021/06/ftc-takes-action-against-electronics-manufacturer-restricting",
+   "read_date": "2023-04-03"
+  }
+ ],
+ "classes": [
+  {
+   "title": "Introduction to Right to Repair",
+   "minutes": 30,
+   "goal": "Understand what right to repair is and why it matters.",
+   "beats": [
+    {
+     "who_says_it": "Teacher",
+     "show": "Title slide: 'Right to Repair'",
+     "cite": [
+      1
+     ],
+     "move": "title-rise",
+     "ask": "What do you think 'right to repair' means?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Definition of right to repair",
+     "cite": [
+      1
+     ],
+     "move": "fade",
+     "ask": "Can you explain in your own words what right to repair is?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Why it matters",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "count-in",
+     "ask": "Why do you think it's important for consumers?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Examples of right to repair",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "bars-grow",
+     "ask": "Can you give an example of a product that could benefit from right to repair?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Summary slide",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "light-in-turn",
+     "ask": "What are the key points we covered today?"
+    }
+   ]
+  },
+  {
+   "title": "Legal and Technological Aspects",
+   "minutes": 30,
+   "goal": "Understand the legal and technological challenges and solutions related to right to repair.",
+   "beats": [
+    {
+     "who_says_it": "Teacher",
+     "show": "Title slide: 'Legal and Technological Aspects'",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "title-rise",
+     "ask": "What are some legal and technological challenges in right to repair?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Legal challenges",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "slide-in-left",
+     "ask": "Can you give an example of a legal challenge?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Technological challenges",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "count-in",
+     "ask": "What are some technological challenges?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Solutions and progress",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "bars-grow",
+     "ask": "What solutions are being proposed or implemented?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Summary slide",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "light-in-turn",
+     "ask": "What are the key points we covered today?"
+    }
+   ]
+  },
+  {
+   "title": "Practical Applications and Future",
+   "minutes": 30,
+   "goal": "Understand how right to repair can be applied in real-world scenarios and its future implications.",
+   "beats": [
+    {
+     "who_says_it": "Teacher",
+     "show": "Title slide: 'Practical Applications and Future'",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "title-rise",
+     "ask": "How can right to repair be applied in real-world scenarios?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Case studies",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "slide-in-left",
+     "ask": "Can you give an example of a case study?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Future implications",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "count-in",
+     "ask": "What do you think the future of right to repair looks like?"
+    },
+    {
+     "who_says_it": "Teacher",
+     "show": "Summary slide",
+     "cite": [
+      1,
+      2
+     ],
+     "move": "light-in-turn",
+     "ask": "What are the key points we covered today?"
+    }
+   ]
+  }
+ ],
+ "charts": [
+  {
+   "title": "Right to Repair Support",
+   "data": [
+    [
+     "2021",
+     "40%",
+     "https://www.righttorepair.org/support/"
+    ],
+    [
+     "2022",
+     "50%",
+     "https://www.righttorepair.org/support/"
+    ],
+    [
+     "2023",
+     "60%",
+     "https://www.righttorepair.org/support/"
+    ]
+   ],
+   "source_id": [
+    1
+   ]
+  }
+ ],
+ "notes": [
+  "The right to repair is a movement that advocates for consumers' rights to repair their own products, including access to repair manuals, tools, and parts.",
+  "This topic involves understanding legal and technological aspects, as well as practical applications and future implications."
+ ],
+ "questions": [
+  {
+   "question": "What is right to repair?",
+   "right_answer": "The right to repair means consumers have the ability to repair their own products, including access to repair manuals, tools, and parts.",
+   "wrong_answers": [
+    "The right to repair means consumers can return products for free.",
+    "The right to repair means consumers can sell their old products.",
+    "The right to repair means consumers can get discounts on new products."
+   ],
+   "why": "Right to repair is about the ability to repair, not return or sell products."
+  },
+  {
+   "question": "Why is right to repair important?",
+   "right_answer": "Right to repair is important because it can reduce waste, save money, and give consumers control over their products.",
+   "wrong_answers": [
+    "Right to repair is important because it can increase the cost of products.",
+    "Right to repair is important because it can make products less reliable.",
+    "Right to repair is important because it can limit the use of products."
+   ],
+   "why": "Right to repair promotes sustainability and consumer choice."
+  },
+  {
+   "question": "What are some legal challenges in right to repair?",
+   "right_answer": "Some legal challenges in right to repair include patent law, trade secrets, and anti-tampering laws.",
+   "wrong_answers": [
+    "Some legal challenges in right to repair include tax laws and consumer protection laws.",
+    "Some legal challenges in right to repair include environmental laws and labor laws.",
+    "Some legal challenges in right to repair include data privacy laws and intellectual property laws."
+   ],
+   "why": "These are not specific to right to repair and do not address the technical and legal barriers."
+  }
+ ]
+}

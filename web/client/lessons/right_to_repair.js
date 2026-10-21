@@ -1,0 +1,1971 @@
+// lessons/right_to_repair.js - "Right to repair", for a 13-year-old: the first researched lesson (row 2.92 / 2.111).
+// Written by an AI with web search (a Sonnet batch, 2026-10-20, from chat's drafted prompt), as JSON close to the lesson
+// shape; read forgivingly by lesson_file.js `forgiveLesson`, which says each guess. Its 30 sources are as the AI gave
+// them: the player says "not checked" wherever they show. Kept as the AI wrote it (not hand-edited), so a regenerated
+// version can replace this file whole. A module, not a .json, because importing JSON needs a newer browser than a Pi's.
+export const RIGHT_TO_REPAIR = {
+ "about": {
+  "title": "Right to Repair: Who Gets to Fix Your Stuff?",
+  "topic": "Right to repair",
+  "learner": "Age 13. Plain words, short sentences. Hard words are explained in one line.",
+  "author": "Claude (AI model, Anthropic)",
+  "written": "2026-10-20",
+  "length_note": "I chose 3 classes. The subject falls into three parts that each fit about half an hour: (1) what repair rights are and why waste matters, (2) the new laws in Europe and the US states, (3) the hard cases: parts pairing, tractors, and what makers say. Putting all three in one class would be too much for a 13-year-old. Five or more classes would pad the material, because many of the laws are only weeks or months old. Class 3 runs 35 minutes because it has the most arguments to weigh.",
+  "shape_note": "The shape has no named place for the report sections or the two scripts, so I added two things. Every beat in classes[].beats carries a 'section' label, and those beats are the report. Every class also has a 'scripts' object with 'two_voices' and 'one_teacher' beat lists. Charts, notes and questions are top-level as requested.",
+  "how_i_read": "I read search-result excerpts of each source on 2026-10-20, not always the whole document. I did not open the EU directive text on EUR-Lex. I used the European Commission's own pages and Q&A instead. Law-firm and trade sites are marked 'secondary' in sources.",
+  "where_sources_disagree": [
+   {
+    "issue": "Which number state Texas is to pass a right-to-repair law for electronics (8th, 9th or 10th).",
+    "detail": "One guide says 8th (S25). A local news report says 9th (S23). A repair newsletter says 10th (S24). The difference probably comes from what each one counts. That is my guess, and none of them says so.",
+    "cites": [
+     "S23",
+     "S24",
+     "S25"
+    ]
+   },
+   {
+    "issue": "How many US states have electronics repair laws.",
+    "detail": "One guide lists eight states for electronics (S28). PIRG says one-third of Americans now live in a state with some kind of repair policy (S07). PIRG's wider count includes wheelchair and farm laws, so these numbers do not match.",
+    "cites": [
+     "S06",
+     "S07",
+     "S28"
+    ]
+   },
+   {
+    "issue": "How much e-waste will grow by 2030.",
+    "detail": "The UN press release gives 32% in its headline list and 33% in its text. Both mean about 82 million tonnes.",
+    "cites": [
+     "S12"
+    ]
+   },
+   {
+    "issue": "Are repair restrictions needed for safety and security?",
+    "detail": "Makers say restrictions protect ideas and prevent injury (S09). Apple said Oregon's parts-pairing ban could weaken security (S18). The FTC found scant evidence for the safety claims and no evidence about data risk (S10). This is a real disagreement. The lesson shows both sides.",
+    "cites": [
+     "S09",
+     "S10",
+     "S18"
+    ]
+   }
+  ],
+  "viewpoint_warning": "PIRG (S06, S07, S16, S27) is a group that campaigns for right to repair. Its facts are useful, but it is on one side. Techdirt (S08) is a blog with strong opinions. Deere's and Apple's own statements (S14, S15, S18, S20) are the makers' side.",
+  "safety_note": "Phones and laptops contain batteries that can catch fire if damaged. Right to repair does not mean 'open anything yourself'. Teacher narration tells learners to ask an adult. This is general safety advice, not from a source.",
+  "may_be_out_of_date": "Laws and court cases here change fast. Facts are as of 2026-10-20. Check the sources again before reusing this lesson."
+ },
+ "sources": [
+  {
+   "id": "S01",
+   "title": "Directive on repair of goods",
+   "publisher": "European Commission",
+   "author": "European Commission",
+   "date": "page undated; shows Directive (EU) 2024/1799 adopted 13 June 2024",
+   "url": "https://commission.europa.eu/law/law-topic/consumer-protection-law/directive-repair-goods_en",
+   "read": "2026-10-20",
+   "type": "primary (official)",
+   "link": "https://commission.europa.eu/law/law-topic/consumer-protection-law/directive-repair-goods_en",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.72)"
+  },
+  {
+   "id": "S02",
+   "title": "Questions & Answers: Right to repair",
+   "publisher": "European Commission",
+   "author": "European Commission",
+   "date": "2024-07-30",
+   "url": "https://commission.europa.eu/document/download/2d443b31-dc2a-4e54-a9ec-5fbb61c895e9_en?filename=2024_07_18_QA_Right2repair_FINAL.pdf",
+   "read": "2026-10-20",
+   "type": "primary (official)",
+   "link_note": "no link given by the model, and no confident title match in its search results"
+  },
+  {
+   "id": "S03",
+   "title": "Right to repair: Directive 2024/1799 now applies",
+   "publisher": "Spilma",
+   "author": "Spilma (legal news)",
+   "date": "about 2026-08",
+   "url": "https://www.spilma.com/en/actualites/right-to-repair-directive-transposition",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": "https://www.spilma.com/en/actualites/right-to-repair-directive-transposition",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S04",
+   "title": "EU Right to Repair: What Manufacturers Must Implement Since July 2026",
+   "publisher": "retouren-management.de",
+   "author": "retouren-management.de",
+   "date": "updated 2026-10-03",
+   "url": "https://www.retouren-management.de/blog/eu-right-to-repair-what-manufacturers-must-implement-by-31-july-2026/",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": "https://www.retouren-management.de/blog/eu-right-to-repair-what-manufacturers-must-implement-by-31-july-2026/",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S05",
+   "title": "EU Right to Repair Directive: The 31 July 2026 Deadline",
+   "publisher": "Regulatory Decoded",
+   "author": "Regulatory Decoded",
+   "date": "about 2026-07",
+   "url": "https://regulatorydecoded.com/eu-right-to-repair-manufacturers-directive-2024-1799/",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": "https://regulatorydecoded.com/eu-right-to-repair-manufacturers-directive-2024-1799/",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S06",
+   "title": "More than one-quarter of Americans covered by Right to Repair come Jan. 1",
+   "publisher": "U.S. PIRG",
+   "author": "U.S. PIRG",
+   "date": "about 2025-12",
+   "url": "https://pirg.org/articles/more-than-one-quarter-of-americans-covered-by-right-to-repair-come-jan-1/",
+   "read": "2026-10-20",
+   "type": "advocacy group",
+   "link": "https://pirg.org/articles/more-than-one-quarter-of-americans-covered-by-right-to-repair-come-jan-1/",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S07",
+   "title": "States press ahead on Right to Repair",
+   "publisher": "U.S. PIRG",
+   "author": "Nathan Proctor (U.S. PIRG)",
+   "date": "about 2026-02",
+   "url": "https://pirg.org/articles/states-press-ahead-on-right-to-repair/",
+   "read": "2026-10-20",
+   "type": "advocacy group",
+   "link": "https://pirg.org/articles/states-press-ahead-on-right-to-repair/",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S08",
+   "title": "'Right To Repair' State Laws Continue To Surge, But Enforcement Remains Nonexistent",
+   "publisher": "Techdirt",
+   "author": "Techdirt",
+   "date": "2026-08-28",
+   "url": "https://www.techdirt.com/2026/08/28/right-to-repair-state-laws-continue-to-surge-but-enforcement-remains-nonexistent/",
+   "read": "2026-10-20",
+   "type": "opinion blog",
+   "link": "https://www.techdirt.com/2026/08/28/right-to-repair-state-laws-continue-to-surge-but-enforcement-remains-nonexistent/",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.98)"
+  },
+  {
+   "id": "S09",
+   "title": "Nixing the Fix: An FTC Report to Congress on Repair Restrictions",
+   "publisher": "U.S. Federal Trade Commission",
+   "author": "Federal Trade Commission",
+   "date": "2021-05",
+   "url": "https://www.ftc.gov/system/files/documents/reports/nixing-fix-ftc-report-congress-repair-restrictions/nixing_the_fix_report_final_5521_630pm-508_002.pdf",
+   "read": "2026-10-20",
+   "type": "primary (government report)",
+   "link": "https://www.ftc.gov/system/files/documents/reports/nixing-fix-ftc-report-congress-repair-restrictions/nixing_the_fix_report_final_5521_630pm-508_002.pdf",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.93)"
+  },
+  {
+   "id": "S10",
+   "title": "FTC Testifies Before California State Senate on Right to Repair",
+   "publisher": "U.S. Federal Trade Commission",
+   "author": "Federal Trade Commission",
+   "date": "2023-04",
+   "url": "https://www.ftc.gov/news-events/news/press-releases/2023/04/ftc-testifies-california-state-senate-right-repair",
+   "read": "2026-10-20",
+   "type": "primary (government)",
+   "link": "https://www.ftc.gov/news-events/news/press-releases/2023/04/ftc-testifies-california-state-senate-right-repair",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S11",
+   "title": "FTC Adopts Policy Statement on Consumer Device Repairs and Announces That Enforcement Approach Will Be a Priority",
+   "publisher": "Wiley (law firm)",
+   "author": "Wiley",
+   "date": "2021-07",
+   "url": "https://www.wiley.law/alert-FTC-Adopts-Policy-Statement-on-Consumer-Device-Repairs-and-Announces-That-Enforcement-Approach-Will-Be-a-Priority",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": "https://www.wiley.law/alert-FTC-Adopts-Policy-Statement-on-Consumer-Device-Repairs-and-Announces-That-Enforcement-Approach-Will-Be-a-Priority",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.97)"
+  },
+  {
+   "id": "S12",
+   "title": "Global e-Waste Monitor 2024: Electronic Waste Rising Five Times Faster than Documented E-waste Recycling",
+   "publisher": "UNITAR and ITU (United Nations)",
+   "author": "UNITAR / ITU",
+   "date": "2024-03-20",
+   "url": "https://unitar.org/about/news-stories/press/global-e-waste-monitor-2024-electronic-waste-rising-five-times-faster-documented-e-waste-recycling",
+   "read": "2026-10-20",
+   "type": "primary (UN press release)",
+   "link": "https://unitar.org/about/news-stories/press/global-e-waste-monitor-2024-electronic-waste-rising-five-times-faster-documented-e-waste-recycling",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S13",
+   "title": "Global E-waste Statistics",
+   "publisher": "EMEW",
+   "author": "EMEW (metals technology company)",
+   "date": "about 2025-08",
+   "url": "https://emew.com/blog/global-e-waste-statistics",
+   "read": "2026-10-20",
+   "type": "secondary (repeats UN figures; used only for the 2010 value of 34 million tonnes)",
+   "link": "https://emew.com/blog/global-e-waste-statistics",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S14",
+   "title": "Apple announces Self Service Repair",
+   "publisher": "Apple Newsroom",
+   "author": "Apple",
+   "date": "2021-11-17",
+   "url": "https://www.apple.com/newsroom/2021/11/apple-announces-self-service-repair/",
+   "read": "2026-10-20",
+   "type": "primary (maker's statement)",
+   "link": "https://www.businesswire.com/news/home/20211117005434/en/Apple-Announces-Self-Service-Repair",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S15",
+   "title": "Apple launches Self Service Repair for iPad, expands repair programs",
+   "publisher": "Apple Newsroom",
+   "author": "Apple",
+   "date": "2025-05-28",
+   "url": "https://www.apple.com/newsroom/2025/05/apple-launches-self-service-repair-for-ipad-expands-repair-programs/",
+   "read": "2026-10-20",
+   "type": "primary (maker's statement)",
+   "link": "https://www.apple.com/newsroom/2025/05/apple-launches-self-service-repair-for-ipad-expands-repair-programs/",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.94)"
+  },
+  {
+   "id": "S16",
+   "title": "RELEASE: Oregon Legislature passes Right to Repair bill",
+   "publisher": "U.S. PIRG",
+   "author": "U.S. PIRG",
+   "date": "2024-03",
+   "url": "https://pirg.org/media-center/release-oregon-legislature-passes-right-to-repair-bill/",
+   "read": "2026-10-20",
+   "type": "advocacy group",
+   "link": "https://pirg.org/media-center/release-oregon-legislature-passes-right-to-repair-bill/",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S17",
+   "title": "Oregon Passes Right to Repair Law: First to Ban Parts Pairing",
+   "publisher": "Reinhart Boerner Van Deuren (law firm)",
+   "author": "Reinhart",
+   "date": "2024-03",
+   "url": "https://www.reinhartlaw.com/news-insights/oregon-passes-right-to-repair-law-first-to-ban-parts-pairing",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": null,
+   "link_note": "chat's title match pointed at a different page (checked by eye); left empty"
+  },
+  {
+   "id": "S18",
+   "title": "Right to repair bill targeting parts pairing passes Oregon House",
+   "publisher": "TechCrunch",
+   "author": "TechCrunch",
+   "date": "2024-03-05",
+   "url": "https://techcrunch.com/2024/03/05/right-to-repair-bill-targeting-parts-pairing-passes-oregon-house",
+   "read": "2026-10-20",
+   "type": "news (quotes Apple's testimony)",
+   "link": null,
+   "link_note": "chat's title match pointed at a different page (checked by eye); left empty"
+  },
+  {
+   "id": "S19",
+   "title": "FTC, States Secure Settlement with Deere & Company, Advancing Farmers' Right to Repair",
+   "publisher": "U.S. Federal Trade Commission",
+   "author": "Federal Trade Commission",
+   "date": "2026-07-08",
+   "url": "https://www.ftc.gov/news-events/news/press-releases/2026/07/ftc-states-secure-settlement-deere-company-advancing-farmers-right-repair",
+   "read": "2026-10-20",
+   "type": "primary (government)",
+   "link": "https://www.ftc.gov/news-events/news/press-releases/2026/07/ftc-states-secure-settlement-deere-company-advancing-farmers-right-repair",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.99)"
+  },
+  {
+   "id": "S20",
+   "title": "FTC, John Deere reach settlement on right-to-repair lawsuit",
+   "publisher": "Michigan Farm News",
+   "author": "Michigan Farm News",
+   "date": "about 2026-07",
+   "url": "https://www.michiganfarmnews.com/ftc-john-deere-reach-settlement-on-right-to-repair-lawsuit",
+   "read": "2026-10-20",
+   "type": "news (includes Deere statement)",
+   "link": "https://www.michiganfarmnews.com/ftc-john-deere-reach-settlement-on-right-to-repair-lawsuit",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.85)"
+  },
+  {
+   "id": "S21",
+   "title": "John Deere faces U.S. lawsuit over farmers' ability to repair tractors",
+   "publisher": "NPR",
+   "author": "NPR",
+   "date": "2025-01-15",
+   "url": "https://www.npr.org/2025/01/15/nx-s1-5260895/john-deere-ftc-lawsuit-right-to-repair-tractors",
+   "read": "2026-10-20",
+   "type": "news",
+   "link": "https://www.npr.org/2025/01/15/nx-s1-5260895/john-deere-ftc-lawsuit-right-to-repair-tractors",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S22",
+   "title": "Starting September 1, Texans have the right to repair their electronics",
+   "publisher": "Environment America",
+   "author": "Environment America",
+   "date": "about 2026-08-28",
+   "url": "https://environmentamerica.org/texas/media-center/starting-september-1-texans-have-the-right-to-repair-their-electronics/",
+   "read": "2026-10-20",
+   "type": "advocacy group",
+   "link": "https://environmentamerica.org/texas/media-center/starting-september-1-texans-have-the-right-to-repair-their-electronics/",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S23",
+   "title": "Texas laws taking effect Sept. 1: Solar sales, electronics repair and gold currency",
+   "publisher": "FOX 7 Austin",
+   "author": "FOX 7 Austin",
+   "date": "about 2026-08",
+   "url": "https://www.fox7austin.com/news/texas-laws-taking-effect-sept-1-solar-sales-electronics-repair-gold-currency",
+   "read": "2026-10-20",
+   "type": "news",
+   "link": "https://www.fox7austin.com/news/texas-laws-taking-effect-sept-1-solar-sales-electronics-repair-gold-currency",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S24",
+   "title": "Texas's Repair Law Goes Live While Massachusetts' Strikes Out - Again",
+   "publisher": "Fight to Repair (newsletter)",
+   "author": "Fight to Repair",
+   "date": "2026-08-31",
+   "url": "https://fighttorepair.substack.com/p/this-week-texas-electronics-right",
+   "read": "2026-10-20",
+   "type": "advocacy newsletter",
+   "link": "https://fighttorepair.substack.com/p/this-week-texas-electronics-right",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.97)"
+  },
+  {
+   "id": "S25",
+   "title": "Texas Right to Repair: HB2963 Compliance Guide",
+   "publisher": "H2 Compliance",
+   "author": "H2 Compliance",
+   "date": "about 2025-11",
+   "url": "https://h2compliance.com/texas-right-to-repair/",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": "https://h2compliance.com/texas-right-to-repair/",
+   "link_note": "filled in by chat from the batch's own search results (title match 0.88)"
+  },
+  {
+   "id": "S26",
+   "title": "Texas Right to Repair Law Takes Effect Sept. 1, 2026",
+   "publisher": "txlrs.org",
+   "author": "txlrs.org",
+   "date": "about 2026-08",
+   "url": "https://txlrs.org/blog-post/texas-right-to-repair-law-september-1-2026",
+   "read": "2026-10-20",
+   "type": "secondary (reads the statute)",
+   "link": "https://txlrs.org/blog-post/texas-right-to-repair-law-september-1-2026",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S27",
+   "title": "Right To Repair campaign page",
+   "publisher": "U.S. PIRG",
+   "author": "U.S. PIRG",
+   "date": "undated",
+   "url": "https://pirg.org/campaigns/right-to-repair/",
+   "read": "2026-10-20",
+   "type": "advocacy group",
+   "link": null,
+   "link_note": "chat's title match pointed at a different page (checked by eye); left empty"
+  },
+  {
+   "id": "S28",
+   "title": "US Right to Repair by State 2026: Who's Covered, What You Get",
+   "publisher": "Sundr",
+   "author": "Sundr",
+   "date": "about 2026-08",
+   "url": "https://sundr.ca/guides/us-right-to-repair-states",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": "https://sundr.ca/guides/us-right-to-repair-states",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  },
+  {
+   "id": "S29",
+   "title": "The amount of discarded EEE is growing worldwide: The Global E-Waste Monitor 2024",
+   "publisher": "Waste Management World",
+   "author": "Waste Management World",
+   "date": "about 2024-03",
+   "url": "https://waste-management-world.com/materials/the-global-e-waste-monitor/",
+   "read": "2026-10-20",
+   "type": "secondary (trade press on the UN report)",
+   "link_note": "no link given by the model, and no confident title match in its search results"
+  },
+  {
+   "id": "S30",
+   "title": "EU Right to Repair Directive: What It Means (2026)",
+   "publisher": "MakeInfluence",
+   "author": "MakeInfluence",
+   "date": "about 2026-08",
+   "url": "https://www.makeinfluence.com/en/academy/eu-right-to-repair-directive-what-it-means-for-influencer-marketing",
+   "read": "2026-10-20",
+   "type": "secondary",
+   "link": "https://www.makeinfluence.com/en/academy/eu-right-to-repair-directive-what-it-means-for-influencer-marketing",
+   "link_note": "filled in by chat from the batch's own search results (title match 1.00)"
+  }
+ ],
+ "classes": [
+  {
+   "title": "Class 1: Who gets to fix your stuff?",
+   "minutes": 30,
+   "goal": "Say what right to repair means, name the ways repair can be blocked, explain why e-waste is part of the story, and weigh what makers say against what the FTC found.",
+   "beats": [
+    {
+     "section": "Hook",
+     "say": {
+      "who": "Narrator",
+      "text": "Your phone screen cracks. Who gets to fix it? You? A shop on your street? Only the company that made it? That question is what 'right to repair' is about."
+     },
+     "show": "Title card: 'Right to Repair'. Below it, a cracked phone.",
+     "cite": [],
+     "move": "title-rise"
+    },
+    {
+     "section": "What it means",
+     "say": {
+      "who": "Narrator",
+      "text": "Right to repair is the idea that owners can fix what they own. Makers must sell parts, tools and manuals to owners and to independent repair shops. 'Independent' just means a shop the maker does not own or approve."
+     },
+     "show": "Three words appear one by one: Parts. Tools. Manuals.",
+     "cite": [
+      "S07"
+     ],
+     "move": "light-in-turn"
+    },
+    {
+     "section": "How repair gets blocked",
+     "say": {
+      "who": "Narrator",
+      "text": "A maker can block repair in different ways. It can refuse to sell spare parts. It can keep software tools or manuals to itself. Then the maker controls how much a repair costs. It can even decide whether repair is possible at all."
+     },
+     "show": "Three locked boxes: parts, software tools, manuals.",
+     "cite": [
+      "S07"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "section": "How repair gets blocked",
+     "say": {
+      "who": "Narrator",
+      "text": "There is a sneakier block too. A part can be fine, yet the device refuses to use it. We meet that trick in Class 3. It is called parts pairing."
+     },
+     "show": "A phone with a question mark over a new part.",
+     "cite": [],
+     "move": "fade"
+    },
+    {
+     "section": "Why waste matters",
+     "say": {
+      "who": "Narrator",
+      "text": "E-waste is anything thrown away that had a plug or a battery. Think old phones, toasters and chargers."
+     },
+     "show": "Definition card: e-waste.",
+     "cite": [
+      "S29"
+     ],
+     "move": "fade"
+    },
+    {
+     "section": "Why waste matters",
+     "say": {
+      "who": "Narrator",
+      "text": "In 2022 the world made a record 62 million tonnes of e-waste. A tonne is 1,000 kilograms. That is 82% more than in 2010. The UN says the 2030 total could reach about 82 million tonnes."
+     },
+     "show": "Chart: e-waste in million tonnes (2010, 2022, 2030 projected).",
+     "cite": [
+      "S12",
+      "S13"
+     ],
+     "move": "bars-grow"
+    },
+    {
+     "section": "Why waste matters",
+     "say": {
+      "who": "Narrator",
+      "text": "Only 22.3% of that e-waste was documented as properly collected and recycled. That left about 62 billion US dollars of useful materials unaccounted for."
+     },
+     "show": "Big number: 22.3%. A bar that is less than one quarter full.",
+     "cite": [
+      "S12"
+     ],
+     "move": "count-in"
+    },
+    {
+     "section": "Why waste matters",
+     "say": {
+      "who": "Narrator",
+      "text": "The UN lists 'limited repair options' as one reason the waste keeps growing. It is one reason among several. Repair alone will not fix the e-waste problem."
+     },
+     "show": "List of reasons, with 'limited repair options' highlighted.",
+     "cite": [
+      "S12"
+     ],
+     "move": "light-in-turn",
+     "ask": {
+      "question_id": "q3"
+     }
+    },
+    {
+     "section": "Two sides",
+     "say": {
+      "who": "Narrator",
+      "text": "Makers have reasons for restrictions. They say they want to protect their ideas, and to stop injuries and other harm from bad repairs."
+     },
+     "show": "Left side of a split screen: 'Makers say'.",
+     "cite": [
+      "S09"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "section": "Two sides",
+     "say": {
+      "who": "Narrator",
+      "text": "The FTC is the US government agency that polices unfair business. In 2021 it studied repair restrictions. It found 'scant' evidence, which means very little, that restrictions are needed to protect people from injury. It also found no evidence that independent shops are riskier for your data than approved shops."
+     },
+     "show": "Right side of split screen: 'FTC found'.",
+     "cite": [
+      "S10"
+     ],
+     "move": "slide-in-left",
+     "ask": {
+      "question_id": "q10"
+     }
+    },
+    {
+     "section": "Wrap-up",
+     "say": {
+      "who": "Narrator",
+      "text": "Both sides care about safety. The fight is about who decides. Remember: phone and laptop batteries can be dangerous. Ask an adult before you open anything."
+     },
+     "show": "Summary card: Owners, parts, tools, manuals. Ask an adult first.",
+     "cite": [],
+     "move": "fade",
+     "ask": {
+      "question_id": "q1"
+     }
+    }
+   ],
+   "scripts": {
+    "two_voices": [
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "Bo, my phone screen is cracked. The shop says only the maker can fix it."
+      },
+      "show": "Two speech bubbles.",
+      "cite": [],
+      "move": "title-rise"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "That is what right to repair is about. Owners should be able to buy parts, tools and manuals. So should independent shops."
+      },
+      "show": "Words: parts, tools, manuals.",
+      "cite": [
+       "S07"
+      ],
+      "move": "light-in-turn"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "But why would a maker say no?"
+      },
+      "show": "Question mark.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "They say it protects their ideas and prevents injuries from bad repairs."
+      },
+      "show": "Left side: 'Makers say'.",
+      "cite": [
+       "S09"
+      ],
+      "move": "slide-in-left"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "Is that true?"
+      },
+      "show": "Question mark.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "In 2021 the FTC found only scant evidence for the injury claim. 'Scant' means hardly any."
+      },
+      "show": "Right side: 'FTC found'.",
+      "cite": [
+       "S10"
+      ],
+      "move": "slide-in-left"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "And the waste? I heard phones get thrown away a lot."
+      },
+      "show": "Chart: e-waste.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "The world made 62 million tonnes of e-waste in 2022. Only 22.3% was documented as properly recycled. Limited repair is one of several reasons the pile grows."
+      },
+      "show": "Chart: e-waste and the 22.3% bar.",
+      "cite": [
+       "S12"
+      ],
+      "move": "bars-grow"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "So I should crack open my phone and fix it?"
+      },
+      "show": "Warning icon.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "No! Batteries can be dangerous. Ask an adult first. The right to repair is about having the choice, not about being reckless. And that is a joke about my own screwdriver collection: it is tiny."
+      },
+      "show": "Summary card.",
+      "cite": [],
+      "move": "fade"
+     }
+    ],
+    "one_teacher": [
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Who has had a broken phone, headphones or game controller? What happened to it? Keep that story in mind."
+      },
+      "show": "Title card.",
+      "cite": [],
+      "move": "title-rise"
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Right to repair means owners can get the parts, tools and manuals to fix what they own. Independent shops can too."
+      },
+      "show": "Words: parts, tools, manuals.",
+      "cite": [
+       "S07"
+      ],
+      "move": "light-in-turn",
+      "ask": {
+       "question_id": "q1",
+       "pause": "Pause. Let learners answer before showing the answer."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "E-waste is thrown-away things with a plug or a battery. The UN counted 62 million tonnes of it in 2022."
+      },
+      "show": "Chart: e-waste.",
+      "cite": [
+       "S12",
+       "S29"
+      ],
+      "move": "bars-grow",
+      "ask": {
+       "question_id": "q3",
+       "pause": "Pause. Ask for a guess first."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Only 22.3% of it was documented as properly collected and recycled."
+      },
+      "show": "Big number: 22.3%.",
+      "cite": [
+       "S12"
+      ],
+      "move": "count-in",
+      "ask": {
+       "question_id": "q4",
+       "pause": "Pause."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Makers say restrictions protect ideas and prevent injuries. The FTC studied that in 2021."
+      },
+      "show": "Split screen.",
+      "cite": [
+       "S09"
+      ],
+      "move": "slide-in-left"
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "What did the FTC find about the safety claims? It found scant evidence. Scant means very little."
+      },
+      "show": "Right side: 'FTC found'.",
+      "cite": [
+       "S10"
+      ],
+      "move": "fade",
+      "ask": {
+       "question_id": "q10",
+       "pause": "Pause."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Safety rule for our class: ask an adult before opening any device with a battery."
+      },
+      "show": "Warning card.",
+      "cite": [],
+      "move": "fade"
+     }
+    ]
+   }
+  },
+  {
+   "title": "Class 2: New laws in Europe and the US",
+   "minutes": 30,
+   "goal": "Describe what the EU repair law requires and when it started, explain how US states are acting one by one, and spot where sources disagree.",
+   "beats": [
+    {
+     "section": "Europe's rule",
+     "say": {
+      "who": "Narrator",
+      "text": "In June 2024 the EU adopted a law called Directive 2024/1799. A 'directive' is an EU law that each member country must turn into its own national law. The rules apply from 31 July 2026."
+     },
+     "show": "Timeline: 13 June 2024 adopted. 31 July 2026 applies.",
+     "cite": [
+      "S01"
+     ],
+     "move": "title-rise",
+     "ask": {
+      "question_id": "q5"
+     }
+    },
+    {
+     "section": "Europe's rule",
+     "say": {
+      "who": "Narrator",
+      "text": "The law aims to boost repair both inside and outside the legal guarantee. The legal guarantee is the time when a seller must fix or replace faulty goods."
+     },
+     "show": "Two zones: inside guarantee, outside guarantee.",
+     "cite": [
+      "S01"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "section": "Europe's rule",
+     "say": {
+      "who": "Narrator",
+      "text": "Inside the guarantee: if you choose repair instead of replacement, the guarantee is extended by 12 months."
+     },
+     "show": "Calendar: +12 months.",
+     "cite": [
+      "S02"
+     ],
+     "move": "count-in",
+     "ask": {
+      "question_id": "q6"
+     }
+    },
+    {
+     "section": "Europe's rule",
+     "say": {
+      "who": "Narrator",
+      "text": "Outside the guarantee: makers of listed goods must repair in a reasonable time and at a reasonable price. Spare parts must also have reasonable prices. Makers must also publish rough repair prices on a public website."
+     },
+     "show": "Three words: time, price, parts.",
+     "cite": [
+      "S02",
+      "S05"
+     ],
+     "move": "light-in-turn"
+    },
+    {
+     "section": "Europe's rule",
+     "say": {
+      "who": "Narrator",
+      "text": "Which goods? The list includes washing machines, fridges, dishwashers, TVs, vacuum cleaners, smartphones, tablets and servers. Toys, clothes and furniture are not on the list. The Commission can add more goods over time."
+     },
+     "show": "Icons for listed goods. A cross over toys, clothes, furniture.",
+     "cite": [
+      "S02",
+      "S30"
+     ],
+     "move": "light-in-turn",
+     "ask": {
+      "question_id": "q7"
+     }
+    },
+    {
+     "section": "Europe's rule",
+     "say": {
+      "who": "Narrator",
+      "text": "The roll-out is uneven. Germany's law has been in force since 23 July 2026. But some EU countries had not adopted their national rules when the deadline passed."
+     },
+     "show": "Map placeholder: some countries marked 'done', some 'not yet'.",
+     "cite": [
+      "S03",
+      "S04"
+     ],
+     "move": "fade"
+    },
+    {
+     "section": "US states",
+     "say": {
+      "who": "Narrator",
+      "text": "In the US, many repair laws come from states, one by one. One guide lists eight states with electronics repair laws: New York, California, Minnesota, Oregon, Colorado, Washington, Connecticut and Texas."
+     },
+     "show": "List of eight states in order of date.",
+     "cite": [
+      "S28"
+     ],
+     "move": "light-in-turn"
+    },
+    {
+     "section": "US states",
+     "say": {
+      "who": "Narrator",
+      "text": "PIRG, a group that campaigns for repair rights, said that on 1 January 2026 about 25.75% of Americans lived in a state with an enforceable repair law. It expected at least 35.5% by autumn 2026 once Connecticut and Texas started."
+     },
+     "show": "Chart: share of Americans covered.",
+     "cite": [
+      "S06"
+     ],
+     "move": "bars-grow"
+    },
+    {
+     "section": "US states",
+     "say": {
+      "who": "Narrator",
+      "text": "Careful: a later PIRG page says about one-third of Americans live in a state with some kind of repair policy. Counts differ because laws cover different things: phones, wheelchairs, farm gear. Sources do not match, so treat each number as rough."
+     },
+     "show": "Note card: 'Sources disagree'.",
+     "cite": [
+      "S07",
+      "S06"
+     ],
+     "move": "fade"
+    },
+    {
+     "section": "Texas example",
+     "say": {
+      "who": "Narrator",
+      "text": "Texas House Bill 2963 took effect on 1 September 2026. It makes makers of covered electronics give owners and independent shops the same parts, tools and manuals that approved shops get. It passed 130 to 0 in the House and 31 to 0 in the Senate."
+     },
+     "show": "Vote numbers: 130-0 and 31-0.",
+     "cite": [
+      "S22"
+     ],
+     "move": "count-in"
+    },
+    {
+     "section": "Texas example",
+     "say": {
+      "who": "Narrator",
+      "text": "There are limits. It applies only to equipment first sold in Texas on or after 1 September 2026. It leaves out medical devices, game consoles, home appliances, cars and farm equipment. Makers do not have to share trade secrets or source code."
+     },
+     "show": "Two lists: covered, left out.",
+     "cite": [
+      "S24",
+      "S23"
+     ],
+     "move": "slide-in-left",
+     "ask": {
+      "question_id": "q12"
+     }
+    },
+    {
+     "section": "Texas example",
+     "say": {
+      "who": "Narrator",
+      "text": "Texas and California both set how long makers must keep supplying repair materials. For goods costing $50 to $100, it is at least 3 years. For goods over $100, at least 7 years."
+     },
+     "show": "Chart: years of repair support by price band.",
+     "cite": [
+      "S27",
+      "S25"
+     ],
+     "move": "bars-grow"
+    },
+    {
+     "section": "Do laws get enforced?",
+     "say": {
+      "who": "Narrator",
+      "text": "Making a law and using it are different things. A blog called Techdirt said in August 2026 that it had not seen any state enforce a new repair law. In Texas, the statute says only the Attorney General can enforce it. Techdirt is an opinion blog, so treat that claim as a view, not a proven fact."
+     },
+     "show": "Two cards: 'Law passed' and 'Law enforced?'",
+     "cite": [
+      "S08",
+      "S26"
+     ],
+     "move": "fade"
+    }
+   ],
+   "scripts": {
+    "two_voices": [
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "Bo, is there a repair law in Europe?"
+      },
+      "show": "Title: Europe and the US.",
+      "cite": [],
+      "move": "title-rise"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Yes. An EU directive, which is an EU law each country must put into its own law, applies from 31 July 2026."
+      },
+      "show": "Timeline.",
+      "cite": [
+       "S01"
+      ],
+      "move": "slide-in-left"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "What does it do?"
+      },
+      "show": "Question mark.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "If you pick repair over replacement during the guarantee, you get 12 more months. After the guarantee, makers of listed goods must repair at a reasonable price."
+      },
+      "show": "Calendar +12 months.",
+      "cite": [
+       "S02"
+      ],
+      "move": "count-in"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "Does it cover my toy robot?"
+      },
+      "show": "Toy icon.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Probably not. Toys, clothes and furniture are not on the list. Smartphones, tablets, washing machines and TVs are."
+      },
+      "show": "List with a cross over toys.",
+      "cite": [
+       "S02",
+       "S30"
+      ],
+      "move": "light-in-turn"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "And in America?"
+      },
+      "show": "US map.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "State by state. PIRG says about 25.75% of Americans were covered on 1 January 2026. Texas started on 1 September 2026."
+      },
+      "show": "Chart: share covered.",
+      "cite": [
+       "S06",
+       "S22"
+      ],
+      "move": "bars-grow"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "So laws are everywhere now?"
+      },
+      "show": "Question mark.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Not so fast. Some EU countries were late, and one blog says it has not seen any state enforce its law. A law on paper is only step one."
+      },
+      "show": "Note: passed vs enforced.",
+      "cite": [
+       "S03",
+       "S08"
+      ],
+      "move": "fade"
+     }
+    ],
+    "one_teacher": [
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Last class we asked who gets to fix your stuff. Today we look at laws that try to answer it."
+      },
+      "show": "Title card.",
+      "cite": [],
+      "move": "title-rise"
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "The EU adopted a repair directive in 2024. A directive is an EU law that each country turns into its own law. When did it start to apply?"
+      },
+      "show": "Timeline.",
+      "cite": [
+       "S01"
+      ],
+      "move": "slide-in-left",
+      "ask": {
+       "question_id": "q5",
+       "pause": "Pause. Let learners guess."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "If you pick repair over replacement while the guarantee runs, what do you get?"
+      },
+      "show": "Calendar.",
+      "cite": [
+       "S02"
+      ],
+      "move": "count-in",
+      "ask": {
+       "question_id": "q6",
+       "pause": "Pause."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Makers of listed goods must repair them at a reasonable price and in a reasonable time. The list has phones, tablets, TVs and washing machines. It does not have toys or clothes."
+      },
+      "show": "List of listed goods.",
+      "cite": [
+       "S02",
+       "S30"
+      ],
+      "move": "light-in-turn",
+      "ask": {
+       "question_id": "q7",
+       "pause": "Pause."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "In the US, states act one at a time. Texas started on 1 September 2026, and it passed without one vote against."
+      },
+      "show": "Vote numbers.",
+      "cite": [
+       "S22"
+      ],
+      "move": "count-in"
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "The Texas law only covers equipment first sold there on or after that date. What does that mean for your old phone in a drawer?"
+      },
+      "show": "Covered / left out.",
+      "cite": [
+       "S24"
+      ],
+      "move": "fade",
+      "ask": {
+       "question_id": "q12",
+       "pause": "Pause. The answer is that it is probably not covered."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Different sources count the states differently. Texas has been called the 8th, 9th and 10th state. When sources disagree, we say so out loud."
+      },
+      "show": "Note card: 'Sources disagree'.",
+      "cite": [
+       "S23",
+       "S24",
+       "S25"
+      ],
+      "move": "fade"
+     }
+    ]
+   }
+  },
+  {
+   "title": "Class 3: Hard cases - locked parts, tractors, and what makers say",
+   "minutes": 35,
+   "goal": "Explain parts pairing, follow the Deere tractor case, see what Apple did and said, and judge the safety argument for yourself.",
+   "beats": [
+    {
+     "section": "Parts pairing",
+     "say": {
+      "who": "Narrator",
+      "text": "Parts pairing means software gives each part in a device its own ID, so the device 'recognizes' every part. If you swap in a part that the software does not know, the device may not work properly."
+     },
+     "show": "A phone, a screen, and an ID tag on each.",
+     "cite": [
+      "S17"
+     ],
+     "move": "title-rise",
+     "ask": {
+      "question_id": "q8"
+     }
+    },
+    {
+     "section": "Parts pairing",
+     "say": {
+      "who": "Narrator",
+      "text": "PIRG cites an iFixit test. Swap the screens of two identical iPhone 15s, and the front camera, Face ID and auto-brightness stop working. Remember that PIRG campaigns for repair rights."
+     },
+     "show": "Three features switch off, one by one.",
+     "cite": [
+      "S16"
+     ],
+     "move": "light-in-turn"
+    },
+    {
+     "section": "Parts pairing",
+     "say": {
+      "who": "Narrator",
+      "text": "Oregon was the first US state to ban anti-repair uses of parts pairing. The ban covers devices made after 1 January 2025. Colorado and Washington followed on 1 January 2026."
+     },
+     "show": "Timeline: Oregon, then Colorado and Washington.",
+     "cite": [
+      "S16",
+      "S17",
+      "S28"
+     ],
+     "move": "slide-in-left",
+     "ask": {
+      "question_id": "q9"
+     }
+    },
+    {
+     "section": "Parts pairing",
+     "say": {
+      "who": "Narrator",
+      "text": "Texas did not ban parts pairing, one compliance guide says. Laws differ from state to state."
+     },
+     "show": "Texas card: 'No parts-pairing ban'.",
+     "cite": [
+      "S25"
+     ],
+     "move": "fade"
+    },
+    {
+     "section": "The maker's view",
+     "say": {
+      "who": "Narrator",
+      "text": "Apple told Oregon lawmakers it agreed with most of the bill. Its big problem was the parts-pairing rule. Apple said it could be forced to let third-party fingerprint or face sensors work with no checks. That, Apple argued, could expose people's private data."
+     },
+     "show": "Quote card: Apple's concern about biometric sensors.",
+     "cite": [
+      "S18"
+     ],
+     "move": "slide-in-left",
+     "ask": {
+      "question_id": "q13"
+     }
+    },
+    {
+     "section": "The maker's view",
+     "say": {
+      "who": "Narrator",
+      "text": "Law-firm notes say makers praise parts pairing as a security tool. But for owners it can act as a soft barrier, because a part may only work fully if it was bought from and approved by the maker. Both views are real. You decide which worries you more."
+     },
+     "show": "Scale: security vs. owner choice.",
+     "cite": [
+      "S17"
+     ],
+     "move": "light-in-turn"
+    },
+    {
+     "section": "Tractors",
+     "say": {
+      "who": "Narrator",
+      "text": "Modern tractors are full of computers. In January 2025 the FTC and some states sued farm equipment maker Deere. They said Deere made the only software tools that could do every electronic repair, and gave them only to authorized dealers."
+     },
+     "show": "Tractor icon. A software key labeled 'dealers only'.",
+     "cite": [
+      "S19"
+     ],
+     "move": "title-rise"
+    },
+    {
+     "section": "Tractors",
+     "say": {
+      "who": "Narrator",
+      "text": "Farmers said dealers can cost more and take longer. That matters at planting and harvest time. Deere called the lawsuit 'meritless'."
+     },
+     "show": "Farmer waiting by a tractor. Calendar with a short harvest window.",
+     "cite": [
+      "S21"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "section": "Tractors",
+     "say": {
+      "who": "Narrator",
+      "text": "On 8 July 2026 the FTC and five states announced a settlement. For 10 years, Deere must give farmers and independent repair shops the same repair resources, including software, that its dealers get."
+     },
+     "show": "Big number: 10 years.",
+     "cite": [
+      "S19",
+      "S20"
+     ],
+     "move": "count-in",
+     "ask": {
+      "question_id": "q11"
+     }
+    },
+    {
+     "section": "Tractors",
+     "say": {
+      "who": "Narrator",
+      "text": "Deere's own statement said the deal reinforces its commitment to more access to diagnostic and repair tools. Sometimes both sides can claim the result."
+     },
+     "show": "Two statements side by side.",
+     "cite": [
+      "S20"
+     ],
+     "move": "fade"
+    },
+    {
+     "section": "Makers opening up",
+     "say": {
+      "who": "Narrator",
+      "text": "Some makers have also opened up on their own. In November 2021 Apple announced Self Service Repair, starting with iPhone 12 and 13 parts such as display, battery and camera. It launched in 2022 and offers manuals, genuine parts and tools used by Apple stores. iPad was added in May 2025."
+     },
+     "show": "Timeline: Nov 2021 announced. 2022 launched. May 2025 iPad added.",
+     "cite": [
+      "S14",
+      "S15"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "section": "Makers opening up",
+     "say": {
+      "who": "Narrator",
+      "text": "Apple said the program is for customers who are comfortable repairing things themselves. Whether such programs are enough is exactly what lawmakers and companies argue about."
+     },
+     "show": "Question card: 'Is that enough?'",
+     "cite": [
+      "S14"
+     ],
+     "move": "fade"
+    },
+    {
+     "section": "Your turn",
+     "say": {
+      "who": "Narrator",
+      "text": "Think it through. Should makers have to share parts, tools and manuals? Should that include software that checks parts? What safety or security limits would you set? There is no single right answer, but good answers use evidence."
+     },
+     "show": "Three discussion prompts.",
+     "cite": [],
+     "move": "light-in-turn"
+    }
+   ],
+   "scripts": {
+    "two_voices": [
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "Bo, I read about 'parts pairing'. Is that when a part has a partner?"
+      },
+      "show": "Title: parts pairing.",
+      "cite": [],
+      "move": "title-rise"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Sort of. Software gives each part an ID. If you swap in a part the device does not know, it may not work properly."
+      },
+      "show": "Phone with ID tags.",
+      "cite": [
+       "S17"
+      ],
+      "move": "light-in-turn"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "Why do makers do that?"
+      },
+      "show": "Question mark.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Apple told Oregon lawmakers it worries about security, such as fingerprint or face sensors that nobody has checked."
+      },
+      "show": "Quote card.",
+      "cite": [
+       "S18"
+      ],
+      "move": "slide-in-left"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "And the other side?"
+      },
+      "show": "Scale.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Repair fans say it works like a soft barrier to repair shops. Oregon banned anti-repair uses of it first, for devices made after 1 January 2025."
+      },
+      "show": "Oregon timeline.",
+      "cite": [
+       "S16",
+       "S17"
+      ],
+      "move": "slide-in-left"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "What about tractors? Do they have the same problem?"
+      },
+      "show": "Tractor icon.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Yes. The FTC said Deere kept its best software repair tools for dealers. On 8 July 2026 Deere settled and must share repair resources with farmers and independent shops for 10 years."
+      },
+      "show": "Big number: 10 years.",
+      "cite": [
+       "S19",
+       "S20"
+      ],
+      "move": "count-in"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Ari",
+       "text": "So who is right?"
+      },
+      "show": "Question mark.",
+      "cite": [],
+      "move": "fade"
+     },
+     {
+      "section": "Two voices",
+      "say": {
+       "who": "Bo",
+       "text": "Good question. The FTC found scant evidence for the injury claims, while Apple argues for security limits. Look at the evidence, then decide."
+      },
+      "show": "Two cards: FTC and Apple.",
+      "cite": [
+       "S10",
+       "S18"
+      ],
+      "move": "fade"
+     }
+    ],
+    "one_teacher": [
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Today we meet the hard cases. First: parts pairing. Software gives each part an ID. A part the software does not know may not work properly."
+      },
+      "show": "Phone with ID tags.",
+      "cite": [
+       "S17"
+      ],
+      "move": "title-rise",
+      "ask": {
+       "question_id": "q8",
+       "pause": "Pause. Ask learners to explain it in their own words."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Which state was the first to ban anti-repair uses of parts pairing?"
+      },
+      "show": "US map.",
+      "cite": [
+       "S16"
+      ],
+      "move": "slide-in-left",
+      "ask": {
+       "question_id": "q9",
+       "pause": "Pause."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Apple said it agreed with most of Oregon's bill but not this part. What was Apple's worry?"
+      },
+      "show": "Quote card.",
+      "cite": [
+       "S18"
+      ],
+      "move": "fade",
+      "ask": {
+       "question_id": "q13",
+       "pause": "Pause."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Now tractors. Deere kept its full software repair tools for dealers, the FTC said. Farmers said dealers cost more and take longer."
+      },
+      "show": "Tractor icon.",
+      "cite": [
+       "S19",
+       "S21"
+      ],
+      "move": "title-rise"
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "On 8 July 2026 the FTC and five states settled with Deere. What must Deere do?"
+      },
+      "show": "Big number: 10 years.",
+      "cite": [
+       "S19",
+       "S20"
+      ],
+      "move": "count-in",
+      "ask": {
+       "question_id": "q11",
+       "pause": "Pause."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "What did the FTC find in 2021 about safety claims for repair restrictions?"
+      },
+      "show": "Right side card.",
+      "cite": [
+       "S10"
+      ],
+      "move": "fade",
+      "ask": {
+       "question_id": "q10",
+       "pause": "Pause. This revisits Class 1."
+      }
+     },
+     {
+      "section": "Teacher",
+      "say": {
+       "who": "Teacher",
+       "text": "Final task. In two minutes, write one rule you would put in a repair law, and one limit for safety or security. Be ready to explain why."
+      },
+      "show": "Three discussion prompts.",
+      "cite": [],
+      "move": "light-in-turn"
+     }
+    ]
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "chart_ewaste",
+   "title": "World e-waste (million tonnes)",
+   "type": "bars",
+   "used_in": "Class 1",
+   "rows": [
+    {
+     "label": "2010",
+     "value": 34,
+     "unit": "million tonnes",
+     "kind": "reported",
+     "source": "S13"
+    },
+    {
+     "label": "2022",
+     "value": 62,
+     "unit": "million tonnes",
+     "kind": "reported",
+     "source": "S12"
+    },
+    {
+     "label": "2030 (UN projection)",
+     "value": 82,
+     "unit": "million tonnes",
+     "kind": "projected",
+     "source": "S12"
+    }
+   ],
+   "caption": "The 2010 value comes from a secondary site repeating UN data. The UN says 2022 was up 82% from 2010, which fits 34 to 62."
+  },
+  {
+   "id": "chart_recycling",
+   "title": "Share of e-waste documented as properly collected and recycled",
+   "type": "bars",
+   "used_in": "Class 1",
+   "rows": [
+    {
+     "label": "2022",
+     "value": 22.3,
+     "unit": "percent",
+     "kind": "reported",
+     "source": "S12"
+    },
+    {
+     "label": "2030 (UN projection)",
+     "value": 20,
+     "unit": "percent",
+     "kind": "projected",
+     "source": "S12"
+    }
+   ],
+   "caption": "The UN expects the share to fall because e-waste grows faster than recycling."
+  },
+  {
+   "id": "chart_us_coverage",
+   "title": "Share of Americans living in a state with an enforceable right-to-repair law (PIRG estimate)",
+   "type": "bars",
+   "used_in": "Class 2",
+   "rows": [
+    {
+     "label": "1 Jan 2026",
+     "value": 25.75,
+     "unit": "percent",
+     "kind": "reported (advocacy estimate)",
+     "source": "S06"
+    },
+    {
+     "label": "Autumn 2026 (at least)",
+     "value": 35.5,
+     "unit": "percent",
+     "kind": "projected (advocacy estimate)",
+     "source": "S06"
+    }
+   ],
+   "caption": "A later PIRG page says about one-third of Americans live in a state with some kind of repair policy (S07). Counts depend on what is included."
+  },
+  {
+   "id": "chart_repair_support_years",
+   "title": "Years makers must supply repair materials, by product price",
+   "type": "bars",
+   "used_in": "Class 2",
+   "rows": [
+    {
+     "label": "California: $50-$100 product",
+     "value": 3,
+     "unit": "years",
+     "kind": "reported",
+     "source": "S27"
+    },
+    {
+     "label": "California: over $100 product",
+     "value": 7,
+     "unit": "years",
+     "kind": "reported",
+     "source": "S27"
+    },
+    {
+     "label": "Texas: $50-$99.99 product (documentation)",
+     "value": 3,
+     "unit": "years",
+     "kind": "reported",
+     "source": "S25"
+    },
+    {
+     "label": "Texas: $100 and up (documentation)",
+     "value": 7,
+     "unit": "years",
+     "kind": "reported",
+     "source": "S25"
+    }
+   ],
+   "caption": "Texas figures describe repair documentation. California figures describe repair materials. They are not identical rules."
+  }
+ ],
+ "notes": [
+  {
+   "id": "right-to-repair",
+   "title": "Right to repair",
+   "body": "The idea that owners can fix what they own. Makers must sell [[parts-tools-manuals]] to owners and to [[independent-repair-shop]]s. Laws differ by place: see [[eu-repair-directive]] and [[us-state-laws]].",
+   "cite": [
+    "S07"
+   ]
+  },
+  {
+   "id": "parts-tools-manuals",
+   "title": "Parts, tools and manuals",
+   "body": "The three things repair needs. When a maker will not sell spare parts, or keeps software tools or manuals to itself, it can control repair prices and even whether repair is possible. A software trick called [[parts-pairing]] is one more way to block repair.",
+   "cite": [
+    "S07"
+   ]
+  },
+  {
+   "id": "independent-repair-shop",
+   "title": "Independent repair shop",
+   "body": "A repair shop that the maker does not own or approve. Laws such as the [[texas-hb-2963]] give these shops access to the same parts, tools and manuals that approved shops get.",
+   "cite": [
+    "S22"
+   ]
+  },
+  {
+   "id": "e-waste",
+   "title": "E-waste",
+   "body": "Thrown-away things that had a plug or a battery. In 2022 the world made 62 million tonnes of it, and only 22.3% was documented as properly collected and recycled. Limited repair options are one of several reasons it keeps growing. See [[right-to-repair]].",
+   "cite": [
+    "S12",
+    "S29"
+   ]
+  },
+  {
+   "id": "ftc-nixing-the-fix",
+   "title": "FTC report 'Nixing the Fix'",
+   "body": "A May 2021 report to the US Congress by the Federal Trade Commission. Makers told the FTC that restrictions protect ideas and prevent injury. The FTC later said it found scant evidence for the injury claims and no evidence that independent shops risk your data more than approved shops. Compare with [[makers-security-argument]].",
+   "cite": [
+    "S09",
+    "S10"
+   ]
+  },
+  {
+   "id": "eu-repair-directive",
+   "title": "EU Right to Repair Directive (2024/1799)",
+   "body": "An EU law adopted 13 June 2024 and applying from 31 July 2026. It gives 12 extra months of guarantee if you pick repair, and makes makers of listed goods repair at a reasonable price. See [[annex-ii-list]]. The roll-out is uneven across countries.",
+   "cite": [
+    "S01",
+    "S02",
+    "S03"
+   ]
+  },
+  {
+   "id": "annex-ii-list",
+   "title": "The EU list of covered goods (Annex II)",
+   "body": "Includes washing machines, fridges, dishwashers, TVs, vacuum cleaners, smartphones, tablets and servers. Toys, clothes and furniture are not on it. The list can grow. Part of [[eu-repair-directive]].",
+   "cite": [
+    "S02",
+    "S30"
+   ]
+  },
+  {
+   "id": "us-state-laws",
+   "title": "US state repair laws",
+   "body": "Many US repair laws come from states, one by one. One guide lists New York, California, Minnesota, Oregon, Colorado, Washington, Connecticut and Texas for electronics. Counts differ between sources, so treat numbers as rough. See [[texas-hb-2963]] and [[parts-pairing]].",
+   "cite": [
+    "S28",
+    "S07",
+    "S24"
+   ]
+  },
+  {
+   "id": "texas-hb-2963",
+   "title": "Texas House Bill 2963",
+   "body": "Took effect 1 September 2026. It covers equipment first sold in Texas on or after that date and leaves out medical devices, game consoles, home appliances, cars and farm equipment. Only the Attorney General can enforce it. See [[us-state-laws]].",
+   "cite": [
+    "S22",
+    "S24",
+    "S23",
+    "S26"
+   ]
+  },
+  {
+   "id": "parts-pairing",
+   "title": "Parts pairing",
+   "body": "Software gives each part an ID so the device recognizes it. A swapped part may not work fully. Oregon was first to ban anti-repair uses, for devices made after 1 January 2025. Apple objected. See [[makers-security-argument]].",
+   "cite": [
+    "S17",
+    "S16",
+    "S18"
+   ]
+  },
+  {
+   "id": "makers-security-argument",
+   "title": "The maker's security argument",
+   "body": "Apple told Oregon lawmakers a parts-pairing ban could force it to let unchecked third-party biometric sensors work, which it said could expose personal data. The FTC found no evidence that independent shops raise data risk. Both views are in the lesson. See [[ftc-nixing-the-fix]] and [[parts-pairing]].",
+   "cite": [
+    "S18",
+    "S10"
+   ]
+  },
+  {
+   "id": "deere-case",
+   "title": "The Deere tractor case",
+   "body": "In January 2025 the FTC and states sued Deere. They said only dealers had its full software repair tools. On 8 July 2026 a settlement made Deere share the same repair resources with farmers and independent shops for 10 years. See [[right-to-repair]].",
+   "cite": [
+    "S19",
+    "S20"
+   ]
+  },
+  {
+   "id": "self-service-repair",
+   "title": "Apple Self Service Repair",
+   "body": "Announced 17 November 2021, launched in 2022. It sells genuine parts, tools and manuals to owners who are comfortable doing their own repairs. iPad was added in May 2025. A maker-run program, not a law. See [[right-to-repair]].",
+   "cite": [
+    "S14",
+    "S15"
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "id": "q1",
+   "question": "What does 'right to repair' mean?",
+   "right_answer": "Owners and independent shops can get the parts, tools and manuals needed to fix products.",
+   "wrong_answers": [
+    "You can return any product to the store for free.",
+    "Only the company that made a product may fix it.",
+    "Kids can open any device at school."
+   ],
+   "why": "Right to repair is about access to parts, tools and manuals.",
+   "cite": [
+    "S07"
+   ]
+  },
+  {
+   "id": "q2",
+   "question": "What is e-waste?",
+   "right_answer": "Thrown-away products that had a plug or a battery.",
+   "wrong_answers": [
+    "Only broken phones.",
+    "Waste made by internet companies.",
+    "Food packaging from tech stores."
+   ],
+   "why": "E-waste covers any discarded product with a plug or battery.",
+   "cite": [
+    "S29"
+   ]
+  },
+  {
+   "id": "q3",
+   "question": "About how much e-waste did the world make in 2022?",
+   "right_answer": "62 million tonnes.",
+   "wrong_answers": [
+    "6.2 million tonnes.",
+    "20 million tonnes.",
+    "620 million tonnes."
+   ],
+   "why": "The UN Global E-waste Monitor 2024 reported a record 62 million tonnes.",
+   "cite": [
+    "S12"
+   ]
+  },
+  {
+   "id": "q4",
+   "question": "What share of 2022 e-waste was documented as properly collected and recycled?",
+   "right_answer": "22.3%.",
+   "wrong_answers": [
+    "2.3%.",
+    "52.3%.",
+    "92.3%."
+   ],
+   "why": "Less than a quarter was documented as properly collected and recycled.",
+   "cite": [
+    "S12"
+   ]
+  },
+  {
+   "id": "q5",
+   "question": "From what date did the EU repair directive apply?",
+   "right_answer": "31 July 2026.",
+   "wrong_answers": [
+    "1 January 2024.",
+    "13 June 2024.",
+    "1 September 2026."
+   ],
+   "why": "The directive was adopted on 13 June 2024 and applies from 31 July 2026. 1 September 2026 is Texas's date.",
+   "cite": [
+    "S01",
+    "S22"
+   ]
+  },
+  {
+   "id": "q6",
+   "question": "Under the EU rules, what happens if you choose repair instead of replacement within the legal guarantee?",
+   "right_answer": "The guarantee is extended by 12 months.",
+   "wrong_answers": [
+    "The guarantee ends at once.",
+    "You pay double.",
+    "The maker must replace it anyway."
+   ],
+   "why": "The directive adds a 12-month extension to encourage repair over replacement.",
+   "cite": [
+    "S02"
+   ]
+  },
+  {
+   "id": "q7",
+   "question": "Which of these is on the EU list of goods makers must repair?",
+   "right_answer": "Smartphones.",
+   "wrong_answers": [
+    "Toys.",
+    "Clothing.",
+    "Furniture."
+   ],
+   "why": "Smartphones and tablets are listed. Toys, clothing and furniture are not.",
+   "cite": [
+    "S02",
+    "S30"
+   ]
+  },
+  {
+   "id": "q8",
+   "question": "What is 'parts pairing'?",
+   "right_answer": "Software ties each part to its device, so a swapped part may not fully work.",
+   "wrong_answers": [
+    "Selling two spare parts for the price of one.",
+    "Putting parts in matching colours.",
+    "A rule that two people must repair together."
+   ],
+   "why": "The device 'recognizes' each part, and an unrecognized part can cause limits or warnings.",
+   "cite": [
+    "S17",
+    "S16"
+   ]
+  },
+  {
+   "id": "q9",
+   "question": "Which US state was first to ban anti-repair uses of parts pairing?",
+   "right_answer": "Oregon.",
+   "wrong_answers": [
+    "Texas.",
+    "Minnesota.",
+    "New York."
+   ],
+   "why": "Oregon's bill was the first to restrict anti-repair parts pairing.",
+   "cite": [
+    "S16"
+   ]
+  },
+  {
+   "id": "q10",
+   "question": "What did the FTC find about safety claims used to justify repair restrictions?",
+   "right_answer": "It found scant evidence that restrictions are needed to protect people from injury.",
+   "wrong_answers": [
+    "It proved every restriction saves lives.",
+    "It found independent shops always misuse data.",
+    "It did not study the question."
+   ],
+   "why": "The FTC also found no evidence that independent shops are riskier for data than approved shops.",
+   "cite": [
+    "S10"
+   ]
+  },
+  {
+   "id": "q11",
+   "question": "What did the July 2026 FTC settlement require of Deere?",
+   "right_answer": "For 10 years, give farmers and independent shops the same repair resources it gives its dealers.",
+   "wrong_answers": [
+    "Stop selling tractors in five states.",
+    "Give every farmer a free tractor.",
+    "Only sell parts through dealers."
+   ],
+   "why": "The settlement includes the software tools that were once dealer-only.",
+   "cite": [
+    "S19",
+    "S20"
+   ]
+  }
+ ],
+ "_note": "Salvaged by chat 2026-10-20: the batch hit its 32,000-token output cap (stop_reason max_tokens) partway through question q12; everything before it is as written. Links: the model gave none; chat matched 25 of 30 (3 matches rejected by eye as the wrong page) by title from its own search results."
+};

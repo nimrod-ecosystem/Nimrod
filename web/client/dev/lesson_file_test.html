@@ -83,7 +83,8 @@ try {
   });
   const p = ai.problems.join(' | ');
   check('*** a lesson with problems it can survive is still played, and every problem is said, with where it is ***', !!ai.lesson && ai.problems.length >= 8, p);
-  check('a repeated source id, and a source with no id, are said', /Two sources are both called "s1"/.test(p) && /Source 3 has no id/.test(p));
+  check('a repeated source id is said; a source with no id is numbered by its place, and that guess is said', /Two sources are both called "s1"/.test(p)
+    && /Read as: Sources had no ids: they were numbered/.test(p) && ai.lesson.sources.some((s) => s.id === 's3' && s.title === 'No id'));
   check('*** an unknown animation is said and dropped - never run as code ***', /"spin-wildly" is not one of the animations/.test(p) && !J(ai.lesson).includes('spin-wildly'));
   check('a citation of a source that is not there is said, and dropped from the beat', /cites "s9"/.test(p) && J(ai.lesson.classes[0].beats[1].cite) === J(['s1']));
   check('a chart that is not there, and a show there is none of, are said', /chart "nope" is not in the charts/.test(p) && /no "video" to show/.test(p));
@@ -100,6 +101,36 @@ try {
   check('bounds exist', LIMITS.beats >= 600 && LIMITS.classes >= 60);
   const words = J(NUMBERS_0_9) + J(ai.problems);
   check('names nobody', !/christine|cici|her screen/i.test(words));
+
+  section('*** read forgivingly (row 2.111, chat\'s note CJ): three Right to repair files, each bending the shape its own way ***');
+  const files = { local: 'right_to_repair_local_model.json', claude: 'right_to_repair_claude.json', sonnet: 'right_to_repair_sonnet.json' };
+  const got = {};
+  for (const [k, f] of Object.entries(files)) got[k] = checkLesson(await (await fetch(`./lessons/${f}`)).json());
+  const guessed = (r) => r.problems.filter((p) => p.startsWith('Read as: '));
+  const beats = (r) => (r.lesson ? beatsOf(r.lesson).length : 0);
+  check('*** all three play ***', Object.values(got).every((r) => !!r.lesson && beats(r) > 10), J(Object.fromEntries(Object.entries(got).map(([k, r]) => [k, beats(r)]))));
+  check('*** each says what it guessed ***', Object.values(got).every((r) => guessed(r).length > 0));
+  const S = got.sonnet.lesson;
+  check('Sonnet\'s: 37 beats, 30 sources, 4 charts, 11 questions; its asks by id are real questions', beats(got.sonnet) === 37 && S.sources.length === 30
+    && S.charts.length === 4 && S.questions.length === 11 && beatsOf(S).filter((b) => b.beat.ask).length === 9 && beatsOf(S).every((b) => !b.beat.ask || b.beat.ask.answer),
+    J({ beats: beats(got.sonnet), sources: S.sources.length, charts: S.charts.length, q: S.questions.length }));
+  check('...the two asks of questions it never wrote (q12, q13) are said and left out, not asked empty',
+    guessed(got.sonnet).some((g) => /"q12", which is not in the file/.test(g)) && guessed(got.sonnet).some((g) => /"q13"/.test(g))
+      && got.sonnet.problems.every((p) => !/has no words/.test(p)));
+  check('...its "Chart: ..." beats show its charts; "Title card" a heading; "Big number" a word', beatsOf(S).some((b) => b.beat.show?.kind === 'chart')
+    && beatsOf(S)[0].beat.show?.kind === 'heading' && beatsOf(S).some((b) => b.beat.show?.kind === 'word'));
+  const C = got.claude.lesson;
+  check('Claude\'s: {q, right, wrong} asks answerable; "key_word", "list", "big_number" shown', beatsOf(C).filter((b) => b.beat.ask).every((b) => b.beat.ask.answer && b.beat.ask.wrong.length)
+    && beatsOf(C).some((b) => b.beat.show?.kind === 'row') && beatsOf(C).some((b) => b.beat.show?.kind === 'word'));
+  const LM = got.local.lesson;
+  check('the local model\'s: sources numbered, its citations by number kept, its chart\'s "data" as rows',
+    LM.sources.length === 3 && LM.sources[0].id === 's1' && beatsOf(LM).some((b) => (b.beat.cite || []).includes('s1')) && LM.charts[0]?.rows.length === 3 && LM.charts[0].rows[0].value === 40,
+    J(LM.charts[0]));
+  check('...its questions with no answers are said, not asked (nothing waits on an answer that cannot be given)', beatsOf(LM).every((b) => !b.beat.ask));
+  check('the built-in "Right to repair" is the Sonnet lesson', BUILTIN_LESSONS.some((b) => b.id === 'right-to-repair' && b.sourcesChecked === false));
+  check('*** a lesson already in the shape is read with no guesses ***', checkLesson(NUMBERS_0_9).problems.length === 0);
+  console.log('GUESSES', J(Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]))));
+  window.__guesses = Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }
