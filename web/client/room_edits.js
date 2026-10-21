@@ -142,6 +142,19 @@ export function addOptions() {
   return out;
 }
 
+// *** "COPY AS THE DEFAULT" (row 2.110 step 2). *** Mike wants to "make the default versions how I want them": a room
+// rearranged on a dashboard, copied as the entry room_presets.js keeps for that starting room, so it can be put into the
+// site's own file and committed (the defaults are code, reviewed like code; the page cannot write the site's files).
+// Its starting room's name and label when it has one; a room with no preset is offered as a new one, `myRoom`.
+const ID_RE = /^[A-Za-z_$][\w$]*$/;
+/** The room as a room_presets.js entry: `<name>: { label, recipe },` with a line saying where it came from. PURE. */
+export function presetText(recipe, { preset = '', label = '', from = '', date = '' } = {}) {
+  const name = ID_RE.test(String(preset || '')) ? preset : 'myRoom';
+  const body = JSON.stringify(withIds(recipe), null, 2).split('\n').map((l, i) => (i ? `    ${l}` : l)).join('\n');
+  return `  // ${name}, rearranged${from ? ` on the dashboard "${String(from).replace(/[\r\n]+/g, ' ')}"` : ''}${date ? `, ${date}` : ''}.\n`
+    + `  ${name}: {\n    label: ${JSON.stringify(String(label || name))},\n    recipe: ${body},\n  },\n`;
+}
+
 /**
  * The recipe with a new `part` in the middle of its wall or floor, and its id: `{ recipe, id }`, or `{ recipe: null,
  * why }` (not a piece, or the room is full). Town's places for a new piece (town_edits.js `addPiece`).

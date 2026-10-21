@@ -484,6 +484,19 @@ try {
     check('*** Take it out: gone from the recipe and the room, and the room itself is chosen ***',
       await until(() => !!saved() && !savedCab() && !host.querySelector('.rs-item[data-id="cab"]'), 3000) && await until(() => sel()?.target?.id === 'room', 3000),
       J(saved()?.map((x) => x.id)));
+    // STEP 2 (row 2.110): "Copy as the default" -- the room as a room_presets.js entry, copied.
+    let copied = null;
+    // (An own property over the browser's: deleting it afterwards gives the real clipboard back.)
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { copied = t; } } });
+    await until(() => !!card()?.querySelector('[data-em-run="default"]'), 3000);
+    card().querySelector('[data-em-run="default"]').click();
+    await until(() => copied !== null, 3000);
+    let entry = null;
+    try { entry = new Function(`return ({${copied}})`)(); } catch { entry = null; }   // eslint-disable-line no-new-func
+    check('*** "Copy as the default": the room as a room_presets.js entry, under its starting room\'s name and label ***',
+      !!entry?.theRoom && entry.theRoom.label === 'The room (controls in the furniture)' && J(entry.theRoom.recipe.items.map((x) => x.id)) === J(saved().map((x) => x.id))
+        && /rearranged on the dashboard "Rearranged"/.test(copied), (copied || '').slice(0, 300));
+    delete navigator.clipboard;
     await until(() => !!card()?.querySelector('[data-em-run="undo"]'), 3000);
     card().querySelector('[data-em-run="undo"]').click();
     check('*** Undo puts it back, where it was ***', await until(() => savedCab()?.x === 57 && !!host.querySelector('.rs-item[data-id="cab"]'), 3000), J(savedCab()));
