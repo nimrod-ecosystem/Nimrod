@@ -45,6 +45,12 @@ export const SHELL_PLAY_PAUSE = 'shell/play-pause';
 export const SHELL_PROMOTE = 'shell/promote';
 export const SHELL_DEMOTE = 'shell/demote';
 
+// *** SAVE THIS DASHBOARD (row 2.109, Mike 2026-10-18: "an option to save/update the dashboard ... Maybe buttons/dropdown on
+// the transport bar"). *** A switch lasts until the dashboard is saved; a placed bar's Save says this and kiosk.js
+// `saveDashboard` keeps them. Its ⇄ Swap says actions.js QUICK_SWAP_TOPIC ('shell/quick-swap'), the same topic a bound
+// switch and "quick swap" said aloud say. SHELL_STATE carries `save: { n, title }` and `swap: { can, title }`.
+export const SHELL_SAVE = 'shell/save';
+
 // What the shell tells placed chrome after it acted, so a placed bar can show the same state the
 // plain bar shows (Hush lit while it is on). Payload: { hushed } and/or { help } (whether the Nimrod
 // button is offered: the person's "Cat help" setting, read by the shell) and/or { barHeld } (something

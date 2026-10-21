@@ -139,6 +139,25 @@ export function paintSmaller(btn, s = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------------
+// *** SAVE AND ⇄ SWAP, ON BOTH BARS (row 2.109). *** The shell's state says what they can do (kiosk.js `saveState`,
+// `swapState`): Save is dimmed until a panel was switched since the dashboard was saved, and then reads "Save •";
+// Swap is dimmed while the picked panel has no "Quick swap with". Painted here, once, so the plain bar and a placed bar
+// cannot disagree. Dimmed, never hidden (D16).
+export function paintSave(btn, s = {}) {
+  if (!btn) return;
+  const n = Math.max(0, Number(s && s.n) || 0);
+  btn.disabled = !n;
+  btn.textContent = n ? 'Save •' : 'Save';
+  btn.title = (s && s.title) || 'nothing has changed on this dashboard';
+}
+export function paintSwap(btn, s = {}) {
+  if (!btn) return;
+  btn.disabled = !(s && s.can);
+  btn.textContent = '⇄ Swap';
+  btn.title = (s && s.title) || 'the panel you picked has no quick swap (set it in its settings)';
+}
+
+// ---------------------------------------------------------------------------------------------------
 // *** A PRESS THAT WAKES THE BAR IS NOT ALSO A PRESS ON IT (2026-10-02, late), BOTH BARS. *** Measured: a
 // tap on the calculator's "=" where the hidden plain bar sat sent its click to `.k-controls`. Both bars come
 // back on a press's pointerdown, and the rest of that press is hit-tested AGAIN -- a touch's tap at its point

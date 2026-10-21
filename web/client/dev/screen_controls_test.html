@@ -1113,6 +1113,23 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** ...a real press on it: back down, and it dims ***', ps.click === psmall() && !kiosk.promoted().dashboard && psmall().disabled,
         `${ps.click?.className} ${J(kiosk.promoted())}`);
       kiosk.holdBar(false);
+      // SAVE AND ⇄ SWAP ON THE PLACED BAR (row 2.109, 2026-10-21): the plain bar has had them since 10-18.
+      const psave = () => root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="save"]');
+      const pswap = () => root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="swap"]');
+      check('*** the placed bar has Save (dimmed: nothing changed) and ⇄ Swap (dimmed: no quick swap) ***',
+        !!psave() && !psave().hidden && psave().disabled && !!pswap() && !pswap().hidden && pswap().disabled, `${psave()?.outerHTML} ${pswap()?.outerHTML}`);
+      for (const r of a.slotRecs) kiosk.setQuickSwap(r.id, 'clock');
+      await sleep(120);
+      check('...a quick swap set: its Swap is live, saying with what', !pswap().disabled && /with Clock/.test(pswap().title), pswap().title);
+      pswap().click();
+      await sleep(800);
+      check('*** pressed on the placed bar: the panel is the other module, and its Save reads "Save •" ***',
+        kiosk.unsavedSwitches().length === 1 && /Save •/.test(psave().textContent) && !psave().disabled,
+        `${J(kiosk.unsavedSwitches())} ${psave().textContent} ${J(kiosk.panels().map((x) => x.type))}`);
+      psave().click();
+      await sleep(300);
+      check('*** its Save keeps it: nothing waiting, and it dims again ***', kiosk.unsavedSwitches().length === 0 && psave().disabled && psave().textContent === 'Save',
+        `${J(kiosk.unsavedSwitches())} ${psave().textContent}`);
       kiosk.destroy(); root.innerHTML = '';
     }
 

@@ -46,6 +46,7 @@ import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+  paintSave as paintSaveBtn, paintSwap as paintSwapBtn,
   sitOutWakePress,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
 } from './transport_bar.js';
@@ -62,7 +63,7 @@ import {
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
-  PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE,
+  PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE,
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
@@ -4113,15 +4114,17 @@ export async function mountKiosk(root, {
   // shows at once and lasts until the dashboard is saved (arrangement.js `unsaved`): Save on the bar, or here; "Put it
   // back as it was" undoes them. Not in a preview or the Modules page's try box (`canChangeLayout`): nothing is saved there.
   const unsavedCount = () => { try { return (arr.unsavedSwitches?.() || []).length; } catch { return 0; } };
-  function paintSave() {
-    const b = controlsEl?.querySelector?.('[data-act="save"]');
-    if (!b) return;
+  // What Save can do now, for both bars (transport_bar.js `paintSave`; a placed bar hears it on SHELL_STATE `save`).
+  function saveState() {
     const n = canChangeLayout() ? unsavedCount() : 0;
-    b.disabled = !n;
-    b.textContent = n ? 'Save •' : 'Save';
-    b.title = !canChangeLayout() ? 'nothing here is saved to a dashboard'
+    return { n, title: !canChangeLayout() ? 'nothing here is saved to a dashboard'
       : n ? `save this dashboard: ${n === 1 ? 'a panel was' : `${n} panels were`} switched since it was saved`
-        : 'nothing has changed on this dashboard';
+        : 'nothing has changed on this dashboard' };
+  }
+  function paintSave() {
+    const s = saveState();
+    paintSaveBtn(controlsEl?.querySelector?.('[data-act="save"]'), s);
+    if (useDashboard) { try { bus.publish(SHELL_STATE, { save: s }); } catch { /* not load-bearing */ } }
   }
   function saveDashboard() {
     if (!canChangeLayout() || !unsavedCount()) { paintSave(); return false; }
@@ -4483,17 +4486,20 @@ export async function mountKiosk(root, {
     try { paintSwap(); paintSave(); } catch { /* not drawn yet */ }
     return ok;
   }
-  function paintSwap() {
-    const b = controlsEl?.querySelector?.('[data-act="swap"]');
-    if (!b) return;
+  // What ⇄ Swap can do now, for both bars (transport_bar.js `paintSwap`; a placed bar hears it on SHELL_STATE `swap`).
+  function swapState() {
     let rec = null;
     try { rec = focusedRec(); } catch { rec = null; }
     const partner = rec ? quickSwapFor(rec.id) : '';
-    b.disabled = !partner;
     const name = (t) => getManifest(t)?.title || t;
-    b.title = !rec ? 'no panel is picked'
+    return { can: !!partner, title: !rec ? 'no panel is picked'
       : !partner ? `${rec.title || rec.type} has no quick swap (set it in its settings: Quick swap with)`
-        : `swap ${rec.title || rec.type} with ${name(rec.type === partner ? (arr.savedTypeOf?.(rec.id) || arr.baseTypeOf?.(rec.id) || rec.type) : partner)}`;
+        : `swap ${rec.title || rec.type} with ${name(rec.type === partner ? (arr.savedTypeOf?.(rec.id) || arr.baseTypeOf?.(rec.id) || rec.type) : partner)}` };
+  }
+  function paintSwap() {
+    const s = swapState();
+    paintSwapBtn(controlsEl?.querySelector?.('[data-act="swap"]'), s);
+    if (useDashboard) { try { bus.publish(SHELL_STATE, { swap: s }); } catch { /* not load-bearing */ } }
   }
   const PANEL_INSTANCE_FIELDS = () => [
     // ADVANCED ("Everything"), argued: FOR standard, it is where Mike would look. AGAINST, and it decides it: every
@@ -8252,6 +8258,8 @@ export async function mountKiosk(root, {
   // aloud all arrive here (shell_verbs.js SHELL_SWITCH_MODULE is the same topic). Every path.
   offsScreen.push(bus.subscribe(SWITCH_MODULE_TOPIC, (p) => { claimed(p); openSwitch(null, p); }));
   offsScreen.push(bus.subscribe(QUICK_SWAP_TOPIC, (p) => { claimed(p); quickSwap(p && p.id ? p.id : null).catch?.((err) => console.error('kiosk: quick swap', err)); }));
+  // Save (row 2.109): a placed bar's button says this; the plain bar's calls saveDashboard itself.
+  offsScreen.push(bus.subscribe(SHELL_SAVE, (p) => { claimed(p); saveDashboard(); }));
   // THE AI'S place / swap (library.js LIBRARY_AI_ACTIONS): which panels are here, answered at once, and "that
   // panel becomes that module" -- through the library in its place, so the game's lock is asked as for a
   // press. A host page with its own switch (Home) is handed the request as `place`.
@@ -8591,6 +8599,8 @@ export async function mountKiosk(root, {
           // 2026-10-02: what the placed bar's Pause / Play and a live call's controls show at mount.
           playPause: () => playPauseState(), callControls: () => callState,
           bigger: () => biggerState(),
+          // row 2.109: what its Save and ⇄ Swap show at mount (then SHELL_STATE `save` / `swap`).
+          save: () => saveState(), swap: () => swapState(),
           fullscreenElement: () => {
             let f = null;
             try { f = fullscreenElement(); } catch { f = null; }
