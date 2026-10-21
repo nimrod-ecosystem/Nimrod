@@ -4146,6 +4146,11 @@ const toTab = (m, id) => {
     check('*** ...and that tab is the door\'s own options (Opens), not the photos panel\'s ***',
       await settled(() => rowsNow().includes('piece-head') && rowsNow().includes('set:opens') && !rowsNow().includes('switch-module'), 4000),
       JSON.stringify(rowsNow()));
+    // Row 2.110 (2026-10-21): the same piece's rearranging rows and buttons, reached by the switch too. The door is on
+    // a SIDE wall, so it is sized and turned, never moved (room_edits.js).
+    check('*** the switch\'s menu has the piece\'s Size, Facing, "Take it out" and "Undo" too; a side-wall door no "Left or right" ***',
+      await settled(() => ['set:size', 'set:facing', 'piece-act-remove', 'piece-act-undo'].every((k) => rowsNow().includes(k)) && !rowsNow().includes('set:x'), 4000),
+      JSON.stringify(rowsNow()));
     check('"Settings for" still steps to the panel', pk.menu.items().length > 0 && pk.menu.setSubject(bPhotos.id) === bPhotos.id
       && pk.menu.items().some((r) => r.id === 'switch-module'));
     pk.menu.close();

@@ -63,7 +63,7 @@ import { createScreenLinks } from './screen_links.js';
 import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_nest.js';
 // Row 2.38, the map editor: a change that only moves a room object's door is applied in place too
 // (room_doors.js argues where a door is saved and why that is not a rebuild).
-import { classifyLayoutChange, sceneDoorChanges, sceneDoors, withDoor, withLook, sceneLooks, tidyScene } from './room_doors.js';
+import { classifyLayoutChange, sceneDoorChanges, sceneDoors, withDoor, withLook, sceneLooks, tidyScene, sceneRecipe } from './room_doors.js';
 import { LOOK_FIELD, LOOK_DEFAULT, builtActions } from './brick_builds.js';
 export { classifyLayoutChange };
 import { SHELL_PROMOTE, SHELL_DEMOTE } from './shell_verbs.js';
@@ -256,6 +256,9 @@ export function createArrangement({
   // `wrapState`. Each object of this dashboard's room is registered through it while the room is mounted, so a rule can
   // drive its size, turn, colour and place. Absent (a preview, an embed with no engine): nothing is registered.
   driveRoom = null,
+  // ROW 2.110: `notify(text)`, a short spoken and shown notice (the shell's output.notify): "This room is full",
+  // "Nothing to undo". Absent: nothing is said, and the press simply does nothing.
+  notify = null,
 } = {}) {
   // THE ARRANGEMENT'S OWN STATE (see the header). Set by `setProfile` and `resolve`, read by every
   // caller through `arr.profile()` / `arr.layout()`.
@@ -1977,9 +1980,16 @@ export function createArrangement({
   //     Home writes them (`setRoomRow`). A row change IS a new room, so the room is drawn again and the
   //     modules in it are moved into the new one (re-parented, never remounted);
   //   * a module sitting in the room is not the room: a press on it reaches it (`passThrough`).
-  // Its colours, sizes and places are NOT rows (nothing anywhere sets them yet), so none is offered here.
+  // Its colours are NOT rows (nothing anywhere sets them yet), so none is offered here.
+  // *** ITS FURNITURE, REARRANGED (row 2.110 step 1, 2026-10-21; room_edits.js argues it). *** A piece of furniture, the
+  // cat or a brick build also has Left or right, Nearer or further (Higher or lower, on the wall), Size and Facing, and
+  // two buttons, Take it out and Undo; the room itself has "Add a piece". Every change is saved at once, as Town's
+  // Rearrange saves, and Undo steps back through this screen's changes (ROOM_UNDO_MAX). A 2D room only: a 3D room keeps
+  // its furniture in another list (room3d.js), not built yet.
   let roomRec = null;                      // { rec, scene }: rebuilt when the room is drawn again
   let roomRowsLib = null;                   // home_profile.js, loaded the first time the room is edited
+  let roomEditsLib = null;                  // room_edits.js, with it (row 2.110)
+  const roomUndo = [];                      // the room's scenes before each furniture change, newest last
   let roomRowsLoading = null;
   let dashChoices = null;                   // [{ id, name }] for "Opens", fetched the first time
   let dashLoading = null;
@@ -1992,13 +2002,18 @@ export function createArrangement({
     if (raw && raw.scene && layout && layout.scene && raw.scene.kind === layout.scene.kind) return clone(raw);
     return layout ? clone(layout) : null;
   }
-  const reselectRoom = () => {
+  // `keep`: the thing to choose again (row 2.110: what was chosen BEFORE the room was drawn again -- drawing it again
+  // re-enters edit mode on the room itself, so reading the choice afterwards would lose the piece being moved).
+  const reselectRoom = (keep) => {
     const a = editMode?.active();
-    if (a && a.id === ROOM_PANEL_ID) { try { editMode.select(a.target); } catch { /* gone */ } }
+    if (a && a.id === ROOM_PANEL_ID) { try { editMode.select(keep !== undefined ? keep : a.target); } catch { /* gone */ } }
   };
+  const chosenInRoom = () => { try { const a = editMode?.active(); return a && a.id === ROOM_PANEL_ID ? a.target : undefined; } catch { return undefined; } };
   function loadRoomRows() {
     if (roomRowsLib || roomRowsLoading) return;
-    roomRowsLoading = import('./home_profile.js').then((m) => { roomRowsLib = m; reselectRoom(); })
+    // (row 2.110: and the furniture's own rows, room_edits.js, with them.)
+    roomRowsLoading = Promise.all([import('./home_profile.js'), import('./room_edits.js')])
+      .then(([m, e]) => { roomRowsLib = m; roomEditsLib = e; reselectRoom(); })
       .catch((err) => { console.error('arrangement: room rows', err); })
       .finally(() => { roomRowsLoading = null; });
   }
@@ -2021,13 +2036,14 @@ export function createArrangement({
   async function writeRoomScene(scene) {
     const base = roomBase();
     if (!base || !scene) return false;
+    const was = chosenInRoom();
     const next = { ...base, scene };
     let r = null;
     try { r = await applyPlaced(next); } catch (err) { console.error('arrangement: room', err); r = null; }
     if (!r || !r.applied) await redrawRoom(next);
     // (The base too: the screen was waited on, and the doc may have changed meanwhile -- see `layoutStore`.)
     try { layoutStore?.save?.(next, base); } catch (err) { console.error('arrangement: saving the room', err); }
-    reselectRoom();
+    reselectRoom(was);
     return true;
   }
   /**
@@ -2127,20 +2143,35 @@ export function createArrangement({
     // A piece built from Nimrod bricks (brick_builds.js) also gets its Look and "Open its bricks" -- the rows the
     // room MODULE's own pieces have (modules/room.js builtTarget), in 2D and 3D alike. Here the Look is saved on
     // the piece's recipe item, like its door (room_doors.js withLook), since a dashboard's room has no row of its own.
+    const three = is3dScene(layout?.scene);
+    const lib = roomRowsLib;
+    const ed = three ? null : roomEditsLib;           // furniture rows: a 2D room only (above)
+    const recipeNow = () => { try { return sceneRecipe(roomBase()?.scene || null); } catch { return null; } };
     const out = objs.filter((o) => o && o.el).map((o) => {
       const built = !!o.build;
+      const piece = ed ? ed.pieceOf(recipeNow(), o.id) : null;
+      const arrange = !!piece && ed.isEditablePiece(piece);
       return {
         id: o.id, label: o.name, el: o.el, also: o.also || [],
-        help: built ? `${o.name}: how it is drawn, and which dashboard it opens when it is pressed, or nothing.`
-          : `${o.name}: which dashboard it opens when it is pressed, or nothing.`,
-        fields: [...(built ? [LOOK_FIELD] : []), opensField((sceneDoors(roomBase()?.scene || null) || {})[o.id] || '')],
+        help: arrange ? `${o.name}: where it stands, how big it is, which way it faces, ${built ? 'how it is drawn, ' : ''}and which dashboard it opens when it is pressed, or nothing.`
+          : built ? `${o.name}: how it is drawn, and which dashboard it opens when it is pressed, or nothing.`
+            : `${o.name}: which dashboard it opens when it is pressed, or nothing.`,
+        fields: [...(arrange ? ed.pieceFields(piece) : []), ...(built ? [LOOK_FIELD] : []),
+          opensField((sceneDoors(roomBase()?.scene || null) || {})[o.id] || '')],
         values: () => {
           const scene = roomBase()?.scene || null;
           const v = { opens: (sceneDoors(scene) || {})[o.id] || '' };
           if (built) v.look = (sceneLooks(scene) || {})[o.id] || LOOK_DEFAULT;
+          if (arrange) Object.assign(v, ed.pieceValues(ed.pieceOf(sceneRecipe(scene), o.id)));
           return v;
         },
-        ...(built ? { actions: builtActions(o.build) } : {}),
+        ...(built || arrange ? { actions: [
+          ...(arrange ? [
+            { id: 'remove', label: 'Take it out', note: 'Undo puts it back', run: () => { removePiece(o.id); } },
+            { id: 'undo', label: 'Undo', run: () => { undoRoom(); } },
+          ] : []),
+          ...(built ? builtActions(o.build) : []),
+        ] } : {}),
         set: (patch) => {
           if (!patch) return;
           const base = roomBase();
@@ -2148,31 +2179,73 @@ export function createArrangement({
           let s = base.scene;
           if ('opens' in patch) s = withDoor(s, o.id, patch.opens || null) || s;
           if (built && 'look' in patch) s = withLook(s, o.id, patch.look) || s;
-          if (s !== base.scene) writeRoomScene(tidyScene(s));
+          if (arrange && ['x', 'y', 'size', 'facing'].some((k) => k in patch)) {
+            const r = ed.withPieceEdit(sceneRecipe(s), o.id, patch);
+            if (r) s = { ...clone(s), recipe: r };
+          }
+          if (s !== base.scene) { keepUndo(base.scene); writeRoomScene(tidyScene(s)); }
         },
       };
     });
     // The walls and the floor: the room itself, last (it holds everything above).
     const root = roomScene.root || roomHost;
     const rows = () => { try { return roomRowsLib ? roomRowsLib.roomRows(roomBase()) : []; } catch { return []; } };
-    const three = is3dScene(layout?.scene);
-    const lib = roomRowsLib;
     const fieldRows = lib ? (three ? lib.ROOM3D_ROWS : lib.ROOM_ROWS) : [];
     out.push({
       id: 'room', label: 'The room', el: root, whole: true,
       help: three ? 'The room itself: whether the camera drifts, and how deep the room is.'
-        : 'The room itself: its shape, its walls and floor, its light, and what is out of the window.',
-      fields: fieldRows.map((row) => ({ key: row.key, label: row.label, kind: 'choice', level: 'essential',
+        : `The room itself: its shape, its walls and floor, its light, and what is out of the window${ed ? '; and a piece of furniture to add' : ''}.`,
+      fields: [...fieldRows.map((row) => ({ key: row.key, label: row.label, kind: 'choice', level: 'essential',
         default: row.options()[0]?.[0], options: row.options().map(([value, label]) => ({ value, label })) })),
-      values: () => Object.fromEntries(rows().map((x) => [x.key, x.value])),
+      // "Add a piece" (row 2.110): choosing one puts it in the middle of its wall or floor, and chooses it.
+      ...(ed ? [{ key: 'addPiece', label: 'Add a piece', kind: 'choice', level: 'essential', default: '', options: ed.addOptions(),
+        note: 'it goes in the middle of the wall or the floor, chosen, to move from there' }] : [])],
+      values: () => ({ ...Object.fromEntries(rows().map((x) => [x.key, x.value])), ...(ed ? { addPiece: '' } : {}) }),
+      ...(ed ? { actions: [{ id: 'undo', label: 'Undo', run: () => { undoRoom(); } }] } : {}),
       set: (patch) => {
-        if (!lib || !patch) return;
+        if (!patch) return;
+        if (ed && patch.addPiece) { addRoomPiece(patch.addPiece); return; }
+        if (!lib) return;
         let L = roomBase();
-        for (const [k, v] of Object.entries(patch)) { const n = L && lib.setRoomRow(L, k, v); if (n) L = n; }
+        for (const [k, v] of Object.entries(patch)) { if (k === 'addPiece') continue; const n = L && lib.setRoomRow(L, k, v); if (n) L = n; }
         if (L && L.scene) writeRoomScene(L.scene);
       },
     });
     return out;
+  }
+  // ---- the furniture's buttons (row 2.110) ----
+  // How many changes Undo can step back through: Town's Rearrange's 30 (modules/town.js `keep`), for the same reason -
+  // enough for a session of moving things about, and a few KB of recipes at most.
+  const ROOM_UNDO_MAX = 30;
+  const say = (text) => { try { notify?.(text); } catch { /* said nothing */ } };
+  function keepUndo(scene) {
+    if (!scene) return;
+    roomUndo.push(clone(scene));
+    if (roomUndo.length > ROOM_UNDO_MAX) roomUndo.shift();
+  }
+  async function undoRoom() {
+    const prev = roomUndo.pop();
+    if (!prev) { say('Nothing to undo.'); return false; }
+    return writeRoomScene(prev);
+  }
+  async function removePiece(id) {
+    const base = roomBase();
+    const r = base && roomEditsLib ? roomEditsLib.withoutPiece(sceneRecipe(base.scene), id) : null;
+    if (!r) return false;
+    keepUndo(base.scene);
+    await writeRoomScene({ ...clone(base.scene), recipe: r });
+    try { editMode?.select?.('room'); } catch { /* the room is chosen anyway */ }
+    return true;
+  }
+  async function addRoomPiece(part) {
+    const base = roomBase();
+    const got = base && roomEditsLib ? roomEditsLib.withNewPiece(sceneRecipe(base.scene), part) : null;
+    if (!got || !got.recipe) { say(got?.why || 'That piece cannot be added.'); return false; }
+    keepUndo(base.scene);
+    await writeRoomScene({ ...clone(base.scene), recipe: got.recipe });
+    // The new piece chosen, so its rows are the next thing shown.
+    try { if (editMode?.active?.()?.id === ROOM_PANEL_ID) editMode.select(got.id); } catch { /* not chosen; it is there */ }
+    return true;
   }
 
   const editMode = corners && typeof document !== 'undefined' ? createEditMode({

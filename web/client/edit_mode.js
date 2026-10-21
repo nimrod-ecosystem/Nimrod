@@ -176,9 +176,12 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
     fields,
     // A target's LINKS (2026-10-02, a brick-built piece's "Open its bricks"): `{ id, label, href, note? }`,
     // drawn under the rows as ordinary links that open in a new tab. Not settings: nothing is written.
+    // And its BUTTONS (row 2.110, 2026-10-21: a room piece's "Take it out" and "Undo"): `{ id, label, run, note? }`,
+    // a press that does one thing and is not a setting with a value to step through.
     actions: (Array.isArray(target?.actions) ? target.actions : [])
-      .filter((a) => a && a.id && a.label && typeof a.href === 'string' && /^(\/|https?:)/.test(a.href))
-      .map((a) => ({ id: String(a.id), label: String(a.label), href: a.href, note: a.note ? String(a.note) : '' })),
+      .filter((a) => a && a.id && a.label && (typeof a.run === 'function' || (typeof a.href === 'string' && /^(\/|https?:)/.test(a.href))))
+      .map((a) => ({ id: String(a.id), label: String(a.label),
+        ...(typeof a.run === 'function' ? { run: a.run } : { href: a.href }), note: a.note ? String(a.note) : '' })),
     values: () => { try { return read() || {}; } catch { return {}; } },
     set: (key, value) => { try { write({ [key]: value }); return true; } catch (err) { console.error('edit mode: set', err); return false; } },
   };
@@ -237,7 +240,9 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
                 ? `<button type="button" class="em-btn" data-em-pick="${esc(r.key)}" data-em-focus="${esc(r.key)}:p">Choose…</button>`
                 : `<small>${esc(r.why)}</small>`}</span></div>`).join('')
         : '<p class="em-none" data-em-none>Nothing to set on this one.</p>'}</div>${(sel.actions || []).map((a) => `<div class="em-act" data-em-act="${esc(a.id)}">
-          ${a.note ? `<span class="em-v">${esc(a.note)}</span>` : ''}<a class="em-btn" href="${esc(a.href)}" target="_blank" rel="noopener" data-em-focus="act:${esc(a.id)}">${esc(a.label)}</a></div>`).join('')}</div>`;
+          ${a.note ? `<span class="em-v">${esc(a.note)}</span>` : ''}${a.run
+            ? `<button type="button" class="em-btn" data-em-run="${esc(a.id)}" data-em-focus="act:${esc(a.id)}">${esc(a.label)}</button>`
+            : `<a class="em-btn" href="${esc(a.href)}" target="_blank" rel="noopener" data-em-focus="act:${esc(a.id)}">${esc(a.label)}</a>`}</div>`).join('')}</div>`;
     if (keepFocus) host.querySelector(`[data-em-focus="${keepFocus}"]`)?.focus();
   }
   const rowField = (key) => (sel.fields || []).find((f) => f.key === key) || null;
@@ -255,6 +260,12 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
       return;
     }
     if (ds.emKeep) { keepText(ds.emKeep); return; }
+    if (ds.emRun) {
+      const a = (sel.actions || []).find((x) => x.id === ds.emRun && typeof x.run === 'function');
+      try { a?.run(); } catch (err) { console.error('edit mode: action', err); }
+      if (!torn) draw();
+      return;
+    }
     if (ds.emShow) {
       // Show / Hide what is typed in a secret's box (row 2.83). Only the box's type changes: nothing is redrawn or saved.
       const box = host.querySelector(`[data-em-text="${CSS.escape ? CSS.escape(ds.emShow) : ds.emShow}"]`);

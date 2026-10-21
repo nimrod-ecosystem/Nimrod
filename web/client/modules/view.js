@@ -967,6 +967,8 @@ function dashboardFactory(ctx) {
           flashLimit: () => flashLimit(ctx),
           // Row 2.62 step 4: this dashboard's room objects, drivable by the host screen's automation rules.
           driveRoom: hostWrapTarget,
+          // Row 2.110: the room editor's short notices ("This room is full"), said the way the screen says them.
+          notify: (text) => { try { (ctx.output?.notify || ctx.output?.say)?.call(ctx.output, text, { source: 'room' }); } catch { /* said nothing */ } },
           // 2026-10-02: the "make it bigger" corner on each panel -- not on a NESTED one's panels: its
           // opener covers them, and going in is how they are reached (arrangement.js says why).
           corners: !nested,

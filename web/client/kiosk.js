@@ -2214,6 +2214,8 @@ export async function mountKiosk(root, {
     listDashboards: () => listDashboards(),
     // Row 2.62 step 4: the room's own objects, drivable by this screen's automation rules (room_drive.js).
     driveRoom: (id, handle, fields) => automation.wrapState(id, handle, { fields }),
+    // Row 2.110: the room editor's short notices ("This room is full", "Nothing to undo").
+    notify: (text) => { try { output?.notify?.(text, { source: 'room' }); } catch { /* said nothing */ } },
   });
   // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
   // `dashboardModule` on (embedded only), the panels are mounted by a dashboard MODULE, and the bar,
@@ -3838,6 +3840,15 @@ export async function mountKiosk(root, {
       pieceWaitFor = p.id;
       waiting.then(() => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } if (!torn) refreshViews(); });
     }
+    // Its buttons (row 2.110: "Take it out", "Undo"), the same ones edit mode draws under its rows. A link (a brick
+    // build's "Open its bricks") is edit mode's only: a menu walked by a switch does not open a new tab.
+    const acts = (tg && Array.isArray(tg.actions) ? tg.actions : []).filter((a) => a && a.id && a.label && typeof a.run === 'function')
+      .map((a) => ({ kind: 'item', id: `piece-act-${a.id}`, label: a.label, ...(a.note ? { hint: a.note } : {}), ...t,
+        run: () => {
+          Promise.resolve().then(() => a.run()).catch((err) => console.error('kiosk: a piece of the room', err))
+            .then(() => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } });
+        } }));
+    rows = [...rows, ...acts];
     if (!rows.length) {
       rows = [{ kind: 'item', id: 'piece-none', disabled: true, ...t,
         label: waiting ? 'Loading its settings…' : `Nothing to set for ${p.label}` }];
