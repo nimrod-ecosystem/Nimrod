@@ -20,7 +20,8 @@
 <script type="module">
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
-import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS, routedQuestions } from '../modules/lesson_player.js';
+import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS, routedQuestions,
+  voiceFor, SECOND_VOICE_STEP } from '../modules/lesson_player.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, unlockedFrom } from '../lessons.js';
 import { checkLesson, beatsOf } from '../lesson_file.js';
 import { NUMBERS_0_9, BUILTIN_LESSONS } from '../lessons_builtin.js';
@@ -219,6 +220,35 @@ try {
       J(parts) === J(['question', 'answer', 'explain', 'source']) && f.q('.qz-after[data-after="celebrate"]')
         && /Town council, 2025/.test(f.q('[data-part="source"]').textContent) && /not checked/.test(f.q('[data-part="source"]').textContent)
         && f.box.querySelectorAll('[data-lp-act="next"]').length === 1, J(parts));
+    f.done();
+  }
+
+  section('*** two voices (row 2.111): B\'s lines in the second voice, everything else in the person\'s own ***');
+  {
+    check('pure: A, the teacher and an unmarked line are the person\'s own voice (nothing passed)', voiceFor('a') === null && voiceFor('teacher') === null && voiceFor(null) === null);
+    check('*** pure: B is the person\'s own voice, higher by default; lower; or a chosen voice ***',
+      J(voiceFor('b', { uri: 'v1', pitch: 1, rate: 0.9 })) === J({ uri: 'v1', pitch: 1 + SECOND_VOICE_STEP, rate: 0.9 })
+        && voiceFor('b', { pitch: 1 }, 'lower').pitch === 1 - SECOND_VOICE_STEP && voiceFor('b', { pitch: 1.9 }).pitch === 2
+        && J(voiceFor('b', { uri: 'v1', pitch: 1 }, 'uri:v2')) === J({ uri: 'v2', pitch: 1 }));
+    const twoVoice = await (await fetch('./lessons/right_to_repair_claude.json')).json();
+    const said = [];
+    const rows = { settings: fakeRow({ voice: { uri: 'mine', pitch: 1.1 } }) };
+    const f = mountLesson(fakeRow({ form: 'slides', lessonId: 'file:two.json' }), {
+      readLessonFolder: async () => ({ lessons: [{ id: 'file:two.json', label: 'Two', lesson: twoVoice, file: 'two.json', sourcesChecked: false, problems: [] }] }),
+      makeState: (k) => (rows[k] = rows[k] || fakeRow({})),
+      output: { say: (text, opts) => { said.push({ text, voice: opts?.data?.voice || null }); return said.length; }, cancel() {} } });
+    await new Promise((r) => setTimeout(r, 20));
+    const L = checkLesson(twoVoice).lesson;
+    const order = beatsOf(L).map((b) => b.beat.say?.who || '');
+    const firstB = order.indexOf('b'), firstA = order.indexOf('a');
+    for (let i = 0; i < firstB; i += 1) f.q('[data-lp-act="next"]').click();
+    const atB = said.at(-1);
+    check('*** a B line: said in the person\'s voice, higher (their own voice id kept) ***', f.probe().at === firstB && atB?.voice?.uri === 'mine' && atB.voice.pitch === 1.5, J(atB));
+    check('...and its caption is marked as the second voice', !!f.q('.lp-say[data-who="b"]'));
+    while (f.probe().at > firstA) f.q('[data-lp-act="back"]').click();
+    check('an A line: the person\'s own voice, nothing passed', said.at(-1)?.voice === null, J(said.at(-1)));
+    check('"The second voice" offers higher and lower (and the browser\'s voices when it has them)',
+      f.inst.impl.settingsChoices().secondVoice.slice(0, 2).map((o) => o.value).join() === 'higher,lower');
     f.done();
   }
 
