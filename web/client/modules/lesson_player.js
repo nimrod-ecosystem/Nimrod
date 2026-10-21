@@ -50,6 +50,20 @@ export const MS_PER_WORD = 420;
 // desktop at 1-4 minutes for three questions; a whole lesson is far more, so the same 15 minutes it defaults to, with
 // Cancel on screen the whole time. [A guess, on Mike's list; a setting when anybody needs another.]
 export const MAKE_TIMEOUT_MS = 15 * 60 * 1000;
+// THE SECOND VOICE'S PITCH STEP, argued (Rule 1: the row above chooses higher, lower or another voice; this is how far
+// "higher" goes). 0.4 on the browser's 0-2 pitch scale: measured by ear on the desktop's voices, 0.2 is heard as the
+// same person, 0.4 as a second speaker, 0.6 starts to sound like a cartoon. A browser that ignores pitch reads both alike.
+export const SECOND_VOICE_STEP = 0.4;
+/** The voice a line is read in: null (the person's own, as everything else) for A or the teacher; for B, the second voice. PURE. */
+export function voiceFor(who, pref = {}, choice = 'higher') {
+  if (who !== 'b') return null;
+  const p = pref && typeof pref === 'object' ? pref : {};
+  const pitch = Number.isFinite(Number(p.pitch)) ? Number(p.pitch) : 1;
+  const c = String(choice || 'higher');
+  if (c.startsWith('uri:')) return { ...p, uri: c.slice(4) };
+  const step = c === 'lower' ? -SECOND_VOICE_STEP : SECOND_VOICE_STEP;
+  return { ...p, pitch: Math.round(Math.max(0, Math.min(2, pitch + step)) * 100) / 100 };
+}
 // An answer as the end of a sentence: one full stop, whether or not the lesson's answer brought its own (an AI's often do).
 const ended = (s) => `${String(s == null ? '' : s).replace(/[.!?\s]+$/, '')}.`;
 
@@ -67,6 +81,13 @@ const SETTINGS = [
     note: 'The same lesson; only the things shown change (cups and keys, or ducks and apples).',
     options: [{ value: 'grownup', label: 'A grown-up' }, { value: 'child', label: 'A child' }] },
   { key: 'speak', label: 'Say it aloud', kind: 'toggle', default: true, level: 'standard', onLabel: 'Yes', offLabel: 'No, captions only' },
+  // TWO VOICES (row 2.111, 2026-10-21; lesson_shape's "two voices" form): a lesson whose lines say who says them ("a",
+  // "b") is read by two voices. A's, and a teacher's, are the person's own voice, as every other line on the screen;
+  // B's is this row. Any voice the browser has is added to its choices when the panel is open (settingsChoices).
+  { key: 'secondVoice', label: 'The second voice', kind: 'choice', default: 'higher', level: 'standard',
+    appliesWhen: (v) => v?.speak !== false,
+    note: 'For a lesson written for two voices: who reads the second voice’s lines.',
+    options: [{ value: 'higher', label: 'Your voice, higher' }, { value: 'lower', label: 'Your voice, lower' }] },
   { key: 'holdMs', label: 'In Watch, each part stays at least', kind: 'choice', default: WATCH_HOLD_MS, level: 'advanced',
     options: [{ value: 2000, label: '2 seconds' }, { value: 4000, label: '4 seconds' }, { value: 8000, label: '8 seconds' }, { value: 15000, label: '15 seconds' }],
     appliesWhen: (v) => (v?.form || 'watch') === 'watch' },
@@ -151,6 +172,7 @@ const CSS = `
 .lp-ask button[data-lit],.lp-nav button[data-lit]{outline:4px solid var(--scan-ring,var(--focus,var(--accent,currentColor)));outline-offset:2px}
 .lp-ask button.lp-right{border-color:var(--accent,currentColor)}
 .lp-said{font-size:clamp(1rem,3cqw,1.4rem)}
+.lp-say[data-who="b"]{font-style:italic}
 .lp-nav{display:flex;justify-content:center;gap:12px;padding:8px}
 .lp-nav button{font-size:1rem;min-height:48px}
 .lp-read{overflow:auto;padding:14px 20px;max-width:46rem;margin:0 auto;line-height:1.5}
@@ -275,6 +297,7 @@ function lessonsModule(ctx) {
     let routedPool = null;      // the pool last routed, to route again only when it changes
     let fileLessons = [];       // the person's own lesson files on this device (lessons_folder.js; row 2.111)
     let folderRead = false;     // ...once looked for (a lesson chosen from the folder waits for it, not Numbers 0 to 9)
+    let prefRow = null;         // the profile's settings row: the person's own voice, for the second voice (row 2.111)
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
@@ -293,12 +316,15 @@ function lessonsModule(ctx) {
       at = Math.max(0, Math.min(beats.length, Number(state?.get?.()?.at) || 0));
     }
 
-    function say(text) {
+    // `who`: the line's voice (row 2.111, two voices): B's in the second voice (voiceFor), everything else in the person's own.
+    function say(text, who = null) {
       lastSaid = text || '';
       if (!text || cfg.speak === false) return;
+      let voice = null;
+      try { voice = voiceFor(who, prefRow?.get?.()?.voice || {}, setting('secondVoice', 'higher')); } catch { voice = null; }
       try {
-        if (ctx.output?.say) ctx.output.say(text, { source: 'lesson' });
-        else ctx.speak?.(text);
+        if (ctx.output?.say) ctx.output.say(text, { source: 'lesson', ...(voice ? { data: { voice } } : {}) });
+        else ctx.speak?.(text, voice || undefined);
       } catch (e) { console.error('lesson: say', e); }
     }
     const stopTimer = () => { if (timer != null) { clearTimer(timer); timer = null; } };
@@ -351,7 +377,7 @@ function lessonsModule(ctx) {
       const b = beats[at]?.beat;
       if (!b) { if (at >= beats.length) say(`That is the end of ${lesson?.about.title || 'the lesson'}.`); return; }
       const words = [b.say?.text, b.ask ? b.ask.question : ''].filter(Boolean).join(' ');
-      say(words);
+      say(words, b.say?.who || null);
       if (form() !== 'watch') return;
       const hold = Math.max(1000, Number(setting('holdMs', WATCH_HOLD_MS)) || WATCH_HOLD_MS);
       const wait = hold + words.split(/\s+/).filter(Boolean).length * MS_PER_WORD;
@@ -410,7 +436,7 @@ function lessonsModule(ctx) {
       const hideShow = answered || (!!b.ask && show?.kind === 'picture');
       return `<div class="lp-stage${b.move && !answered ? ` lp-m-${b.move}` : ''}" data-lp-beat="${at}">
           ${show && !hideShow ? `<div class="lp-show" role="img" aria-label="${esc(showWords(show, lesson))}">${showHTML(show, lesson)}</div>` : ''}
-          ${b.say && !answered ? `<p class="lp-say">${esc(b.say.text)}</p>` : ''}
+          ${b.say && !answered ? `<p class="lp-say"${b.say.who === 'b' ? ' data-who="b"' : ''}>${esc(b.say.text)}</p>` : ''}
           ${ask}${citeLine}
         </div><span hidden>${esc(klass.title)}</span>`;
     }
@@ -659,6 +685,8 @@ function lessonsModule(ctx) {
         mount.addEventListener('change', onMakerInput);
         cfg = { ...(state?.get?.() || {}) };
         if (typeof ctx.makeState === 'function') {
+          // The person's own voice (the profile's settings row, as sprint.js reads it), for the second voice.
+          try { prefRow = ctx.makeState('settings'); Promise.resolve(prefRow?.load?.()).catch(() => {}); } catch { prefRow = null; }
           try {
             madeRow = ctx.makeState(MADE_LESSONS_KEY);
             made = madeLessonsFrom(madeRow?.get?.());
@@ -702,7 +730,10 @@ function lessonsModule(ctx) {
       onShow() { if (!timer) enter(); },
       // "Which lesson" offers the account's own lessons too (board.js's pattern: what only the mounted panel knows).
       settingsChoices: () => ({ lessonId: allLessons().map((l) => ({ value: l.id,
-        label: l.made ? `${l.label} (made)` : l.file ? `${l.label} (your Lessons folder)` : l.label })) }),
+        label: l.made ? `${l.label} (made)` : l.file ? `${l.label} (your Lessons folder)` : l.label })),
+        // The second voice: higher, lower, or any voice this browser has (row 2.111).
+        secondVoice: [{ value: 'higher', label: 'Your voice, higher' }, { value: 'lower', label: 'Your voice, lower' },
+          ...(() => { try { return (globalThis.speechSynthesis?.getVoices?.() || []).map((v) => ({ value: `uri:${v.voiceURI}`, label: v.name })); } catch { return []; } })()] }),
       // The maker, from the one menu (row 2.95). `closesMenu`: it opens over the lesson.
       menuItems: () => {
         const cur = made.find((x) => x.id === setting('lessonId', ''));
@@ -723,6 +754,7 @@ function lessonsModule(ctx) {
         mount.removeEventListener('change', onMakerInput);
         if (maker?.controller) { try { maker.controller.abort(); } catch { /* gone */ } }
         try { madeRow?.destroy?.(); } catch { /* gone */ }
+        try { prefRow?.destroy?.(); } catch { /* gone */ }
         try { ctx.output?.cancel?.(); } catch { /* gone */ }
         for (const r of rows) { try { r.destroy?.(); } catch { /* gone */ } }
         try { unlocks?.destroy?.(); } catch { /* gone */ }
