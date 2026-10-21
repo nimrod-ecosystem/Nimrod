@@ -1,0 +1,543 @@
+{
+ "about": {
+  "title": "Right to repair",
+  "subject": "Consumer rights, technology, environment",
+  "audience": [
+   "age 13"
+  ],
+  "language": "en-US",
+  "asked": "half-hour classes",
+  "made_by": "Claude (chat), 2026-10-17, test run of the lesson shape",
+  "length_note": "Three classes. The subject splits naturally into: what repair is and why it got hard; the laws and the fights over them; and what happens to broken things and what you can do. A fourth class would mostly repeat state-by-state detail, which changes every year.",
+  "caveat": "Laws change often. Facts are as of the source dates shown; check them before teaching."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "FTC Report Supports Right To Repair Legislation (on the FTC's 'Nixing the Fix' report)",
+   "publisher": "Ratchet+Wrench",
+   "date": "2021-05-11",
+   "link": "https://ratchetandwrench.com/articles/11295-ftc-report-supports-right-to-repair-legislation",
+   "read": "2026-10-17",
+   "note": "Secondary source; the FTC report itself was not opened."
+  },
+  {
+   "id": "s2",
+   "title": "Digital Fair Repair Act",
+   "publisher": "Wikipedia",
+   "date": "read 2026-10-17",
+   "link": "https://en.wikipedia.org/wiki/Digital_Fair_Repair_Act",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s3",
+   "title": "Right to Repair Laws in the US: State-by-State Guide 2026",
+   "publisher": "PlainRegWatch",
+   "date": "2026-07-04",
+   "link": "https://plainregwatch.com/guides/right-to-repair/",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s4",
+   "title": "Right-to-repair bills make a comeback in 2026",
+   "author": "Megan Quinn",
+   "publisher": "Waste Dive",
+   "date": "2026-01-20",
+   "link": "https://www.wastedive.com/news/right-to-repair-bills-2026-electronics-automotbiles-wheelchairs/809993/",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s5",
+   "title": "Oregon Just Struck a Blow to Parts Pairing and Won a Decade of Repair Support",
+   "publisher": "The Repair Association",
+   "date": "2024",
+   "link": "https://rla.org/media/article/news-and-views/oregon-struck-blow-to-parts-pairing",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s6",
+   "title": "Deere reaches settlement with FTC in 'right-to-repair' antitrust lawsuit",
+   "publisher": "KCRG",
+   "date": "2026-07-08",
+   "link": "https://www.kcrg.com/2026/07/08/deere-reaches-settlement-with-ftc-right-to-repair-antitrust-lawsuit/",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s7",
+   "title": "Global E-waste Monitor 2024 (press release)",
+   "publisher": "UNITAR and ITU",
+   "date": "2024-03-20",
+   "link": "https://www.unitar.org/about/news-stories/press/global-e-waste-monitor-2024-electronic-waste-rising-five-times-faster-documented-e-waste-recycling",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s8",
+   "title": "The Right to Repair Directive",
+   "publisher": "Right to Repair Europe",
+   "date": "updated 2026-09-28",
+   "link": "https://repair.eu/news/the-right-to-repair-directive/",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s9",
+   "title": "Repair Café",
+   "publisher": "Wikipedia",
+   "date": "read 2026-10-17",
+   "link": "https://en.wikipedia.org/wiki/Repair_Caf%C3%A9",
+   "read": "2026-10-17"
+  },
+  {
+   "id": "s10",
+   "title": "Oregon signs right to repair into law",
+   "publisher": "TechCrunch",
+   "date": "2024-03-27",
+   "link": "https://techcrunch.com/2024/03/27/oregon-signs-right-to-repair-into-law",
+   "read": "2026-10-17"
+  }
+ ],
+ "disagreements": [
+  {
+   "about": "The day Oregon's law was signed",
+   "detail": "The Repair Association says March 27, 2024 (s5); TechCrunch, writing on March 27, says 'Tuesday', which was March 26 (s10). The lesson says 'March 2024'."
+  }
+ ],
+ "classes": [
+  {
+   "title": "What does it mean to fix your own stuff?",
+   "minutes": 30,
+   "goal": "Say what 'right to repair' means and give two reasons repair can be hard.",
+   "beats": [
+    {
+     "say": {
+      "who": "A",
+      "text": "Your phone screen cracks. Who gets to fix it: you, a shop down the street, or only the company that made it?"
+     },
+     "show": {
+      "heading": "Right to repair"
+     },
+     "move": "title-rise"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "'Right to repair' is the idea that when you own something, you or anyone you choose should be able to fix it."
+     },
+     "show": {
+      "key_word": "right to repair"
+     },
+     "move": "fade"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "To fix something you need four things: parts, tools, instructions, and sometimes software that lets the new part work."
+     },
+     "show": {
+      "list": [
+       "parts",
+       "tools",
+       "instructions",
+       "software"
+      ]
+     },
+     "move": "slide-in-left"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "Sometimes makers keep those to themselves. Then only their own repair shops can do the job, and they set the price."
+     },
+     "show": {
+      "picture": "a phone opened up, with a padlock over one part"
+     },
+     "move": "fade"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "In 2021 the Federal Trade Commission, the US agency that protects shoppers, studied this. It found makers made repairs harder and more expensive than they needed to be."
+     },
+     "show": {
+      "quote": "scant evidence to support manufacturer justifications for repair restriction"
+     },
+     "cite": [
+      "s1"
+     ],
+     "move": "fade"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "One trick is called parts pairing: the phone's software only accepts a part that the maker has linked to that exact phone, so a new part from anywhere else may not work."
+     },
+     "show": {
+      "key_word": "parts pairing"
+     },
+     "cite": [
+      "s3",
+      "s10"
+     ],
+     "move": "fade"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "Makers point to safety and security: a badly fitted part could hurt someone, and some locks protect your data. Repair supporters point to cost and waste. That argument is what the next class is about."
+     },
+     "show": {
+      "two_columns": [
+       [
+        "Makers point to",
+        "safety",
+        "security"
+       ],
+       [
+        "Repair supporters point to",
+        "cost",
+        "waste"
+       ]
+      ]
+     },
+     "cite": [
+      "s1",
+      "s2",
+      "s7"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "ask": {
+      "q": "Which of these is NOT one of the four things you need to fix something?",
+      "right": "A receipt",
+      "wrong": [
+       "Parts",
+       "Tools",
+       "Instructions"
+      ],
+      "why": "Parts, tools, instructions and sometimes software are what a repair needs."
+     }
+    }
+   ]
+  },
+  {
+   "title": "Who decides whether you can repair it?",
+   "minutes": 30,
+   "goal": "Name one US state law, the EU's law, and the farm-equipment case, and say what each changed.",
+   "beats": [
+    {
+     "say": {
+      "who": "A",
+      "text": "In December 2022, New York signed the Digital Fair Repair Act, the first US state law of its kind for electronics. It covers electronics sold in New York from July 2023."
+     },
+     "show": {
+      "heading": "New York, 2022"
+     },
+     "cite": [
+      "s2"
+     ],
+     "move": "title-rise"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "Industry pushed for changes before it was signed. Makers don't have to share ways around security locks, and they can sell whole sets of parts instead of single parts in some cases."
+     },
+     "show": {
+      "list": [
+       "no security bypass",
+       "sometimes whole assemblies, not single parts"
+      ]
+     },
+     "cite": [
+      "s2"
+     ],
+     "move": "fade"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "California's law, signed in 2023, says makers must keep parts available for seven years for products that cost over 100 dollars."
+     },
+     "show": {
+      "big_number": "7 years"
+     },
+     "cite": [
+      "s3"
+     ],
+     "move": "count-in"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "Oregon, in March 2024, went after parts pairing: it limits software that blocks replacement parts."
+     },
+     "show": {
+      "heading": "Oregon, 2024"
+     },
+     "cite": [
+      "s5",
+      "s10"
+     ],
+     "move": "fade"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "By January 2026, consumer electronics laws were in effect in Colorado and Washington, wheelchair repair laws in Nevada and Oregon, and Texas's electronics law was set for September 2026."
+     },
+     "show": {
+      "map": "US states with laws highlighted: NY, CA, OR, CO, WA, TX, NV, MN"
+     },
+     "cite": [
+      "s4",
+      "s3"
+     ],
+     "move": "light-in-turn"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "And in the first weeks of 2026, more than 33 new repair bills were introduced in 13 states."
+     },
+     "show": {
+      "big_number": "33+ bills, 13 states"
+     },
+     "cite": [
+      "s4"
+     ],
+     "move": "count-in"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "Farms too. In January 2025 the FTC sued Deere, the tractor maker. In July 2026 Deere settled: for ten years it must give farmers and independent shops the same repair software, manuals and parts-pairing tools its dealers get."
+     },
+     "show": {
+      "picture": "a tractor in a field, a laptop plugged into it"
+     },
+     "cite": [
+      "s6"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "Europe has its own law. EU countries had until July 31, 2026 to make the Right to Repair Directive their own law. It makes makers offer repair for things like phones, tablets, washing machines and fridges, and if you choose repair under warranty you get an extra year of guarantee."
+     },
+     "show": {
+      "list": [
+       "phones and tablets",
+       "washing machines",
+       "fridges",
+       "+1 year guarantee after repair"
+      ]
+     },
+     "cite": [
+      "s8"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "Not every country did it on time: in September 2026 the European Commission started legal steps against 18 countries that hadn't."
+     },
+     "show": {
+      "big_number": "18 countries late"
+     },
+     "cite": [
+      "s8"
+     ],
+     "move": "count-in"
+    },
+    {
+     "ask": {
+      "q": "Which state signed the first US electronics right-to-repair law?",
+      "right": "New York",
+      "wrong": [
+       "California",
+       "Texas",
+       "Ohio"
+      ],
+      "why": "New York's Digital Fair Repair Act was signed in December 2022."
+     }
+    },
+    {
+     "ask": {
+      "q": "For how long must Deere share repair tools under its 2026 settlement?",
+      "right": "10 years",
+      "wrong": [
+       "1 year",
+       "3 years",
+       "Forever"
+      ],
+      "why": "The settlement runs for the next ten years."
+     }
+    }
+   ]
+  },
+  {
+   "title": "Where broken things go, and what you can do",
+   "minutes": 25,
+   "goal": "Give the size of the e-waste problem and two things a 13-year-old can do.",
+   "beats": [
+    {
+     "say": {
+      "who": "A",
+      "text": "When things can't be fixed, they get thrown away. Broken and old electronics are called e-waste."
+     },
+     "show": {
+      "key_word": "e-waste"
+     },
+     "move": "title-rise"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "In 2022 the world made 62 million tonnes of e-waste. That would fill about 1.55 million big trucks, a line long enough to go around the equator."
+     },
+     "show": {
+      "chart": "c1"
+     },
+     "cite": [
+      "s7"
+     ],
+     "move": "bars-grow"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "Only 22.3 percent of it was properly collected and recycled. And it's growing about five times faster than recycling is."
+     },
+     "show": {
+      "chart": "c2"
+     },
+     "cite": [
+      "s7"
+     ],
+     "move": "bars-grow"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "The United Nations report expects about 82 million tonnes a year by 2030."
+     },
+     "show": {
+      "chart": "c1"
+     },
+     "cite": [
+      "s7"
+     ],
+     "move": "bars-grow"
+    },
+    {
+     "say": {
+      "who": "A",
+      "text": "Some people fix things together. The first Repair Café opened in Amsterdam on October 18, 2009, started by a journalist named Martine Postma. By October 2025 there were more than 3,800 of them."
+     },
+     "show": {
+      "picture": "people at long tables fixing a lamp, a toaster and a bike"
+     },
+     "cite": [
+      "s9"
+     ],
+     "move": "slide-in-left"
+    },
+    {
+     "say": {
+      "who": "B",
+      "text": "Things you can do: look up a repair guide before you replace something, ask whether a shop can fix it, visit a repair café, and recycle electronics properly when they really are done."
+     },
+     "show": {
+      "list": [
+       "look up a repair guide",
+       "ask a repair shop",
+       "visit a repair café",
+       "recycle it properly"
+      ]
+     },
+     "move": "slide-in-left"
+    },
+    {
+     "ask": {
+      "q": "About how much of the world's 2022 e-waste was properly collected and recycled?",
+      "right": "About a fifth (22.3%)",
+      "wrong": [
+       "Almost all of it",
+       "About half",
+       "None of it"
+      ],
+      "why": "The Global E-waste Monitor 2024 found 22.3%."
+     }
+    }
+   ]
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "World e-waste, million tonnes a year",
+   "rows": [
+    {
+     "label": "2022",
+     "value": 62,
+     "source": "s7"
+    },
+    {
+     "label": "2030 (expected)",
+     "value": 82,
+     "source": "s7"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "pie",
+   "title": "What happened to 2022's e-waste",
+   "rows": [
+    {
+     "label": "Properly collected and recycled",
+     "value": 22.3,
+     "source": "s7"
+    },
+    {
+     "label": "Not documented as recycled",
+     "value": 77.7,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "right to repair",
+   "links": [
+    "[[parts pairing]]",
+    "[[e-waste]]",
+    "[[repair café]]",
+    "[[Federal Trade Commission]]"
+   ]
+  },
+  {
+   "topic": "parts pairing",
+   "links": [
+    "[[right to repair]]",
+    "[[Oregon]]",
+    "[[Deere]]"
+   ]
+  },
+  {
+   "topic": "e-waste",
+   "links": [
+    "[[right to repair]]",
+    "[[recycling]]"
+   ]
+  }
+ ],
+ "voices": {
+  "two_voices": "Beats use speakers A and B.",
+  "one_teacher": "Read A and B as one teacher; stop at each ask."
+ }
+}

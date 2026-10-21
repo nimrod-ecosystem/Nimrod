@@ -37,6 +37,8 @@ import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, createLessons, rou
 import { TRANSCRIPT_STREAM } from '../transcript_quiz.js';
 import { LESSON_PARTS, CLASS_MINUTES, draftLessonPrompt, lessonFromReply, madeLessonId, TOPIC_MAX, LEARNER_MAX } from '../lesson_prompt.js';
 import { createAI } from '../ai.js';
+import { readLessonFolder, isFileLessonId } from '../lessons_folder.js';
+import { afterAnswerHtml, ensureQuizStyle } from '../quiz_view.js';
 
 export const LESSON_FORMS = Object.freeze(['watch', 'slides', 'read']);
 // How long a beat stays in Watch after its words, at the least (Rule 1: a setting; the words' own time is added).
@@ -48,6 +50,8 @@ export const MS_PER_WORD = 420;
 // desktop at 1-4 minutes for three questions; a whole lesson is far more, so the same 15 minutes it defaults to, with
 // Cancel on screen the whole time. [A guess, on Mike's list; a setting when anybody needs another.]
 export const MAKE_TIMEOUT_MS = 15 * 60 * 1000;
+// An answer as the end of a sentence: one full stop, whether or not the lesson's answer brought its own (an AI's often do).
+const ended = (s) => `${String(s == null ? '' : s).replace(/[.!?\s]+$/, '')}.`;
 
 const SETTINGS = [
   { key: 'lessonId', label: 'Which lesson', kind: 'choice', default: BUILTIN_LESSONS[0].id, level: 'essential',
@@ -122,8 +126,8 @@ export function answersOf(q) {
 const CSS = `
 .lp{position:relative;height:100%;display:flex;flex-direction:column;color:var(--text);background:var(--bg,transparent);font:inherit;overflow:hidden}
 .lp-top{display:flex;justify-content:space-between;gap:10px;padding:8px 14px;color:var(--text-muted,var(--text));font-size:.9rem}
-.lp-stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:10px 18px;text-align:center}
-.lp-show{display:flex;align-items:center;justify-content:center;min-height:0;max-width:100%}
+.lp-stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;gap:14px;padding:10px 18px;text-align:center;overflow-y:auto}
+.lp-show{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:100%}
 .lp-numeral{font-size:min(40cqh,40cqw);line-height:1;font-weight:700;color:var(--accent,var(--text))}
 .lp-heading{font-size:clamp(1.4rem,7cqw,3rem);font-weight:700}
 .lp-word{font-size:clamp(1.6rem,9cqw,4rem);font-weight:700}
@@ -269,16 +273,20 @@ function lessonsModule(ctx) {
     let maker = null;           // "Make a new lesson..." while it is open (below); null otherwise
     let aiClient = null;
     let routedPool = null;      // the pool last routed, to route again only when it changes
+    let fileLessons = [];       // the person's own lesson files on this device (lessons_folder.js; row 2.111)
+    let folderRead = false;     // ...once looked for (a lesson chosen from the folder waits for it, not Numbers 0 to 9)
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
     const look = () => (LOOKS.includes(cfg.look) ? cfg.look : 'child');
 
-    const allLessons = () => [...BUILTIN_LESSONS, ...made];
+    const allLessons = () => [...BUILTIN_LESSONS, ...made, ...fileLessons];
+    const waitingForFolder = () => !folderRead && isFileLessonId(setting('lessonId', ''));
     function load() {
       const id = setting('lessonId', BUILTIN_LESSONS[0].id);
+      if (waitingForFolder()) { lesson = null; problems = []; beats = []; return; }
       const entry = allLessons().find((l) => l.id === id) || BUILTIN_LESSONS[0];
-      unchecked = !!(entry.made && entry.made.sourcesChecked !== true);
+      unchecked = !!(entry.made && entry.made.sourcesChecked !== true) || entry.sourcesChecked === false;
       const r = checkLesson(entry.lesson);
       lesson = r.lesson; problems = r.problems;
       beats = lesson ? beatsOf(lesson) : [];
@@ -339,7 +347,7 @@ function lessonsModule(ctx) {
     }
     // A beat arrives: said, and in Watch the clock to the next one (a question is asked, then answered, then on).
     function enter() {
-      if (dead || maker || form() === 'read') return;
+      if (dead || maker || form() === 'read' || !lesson) return;
       const b = beats[at]?.beat;
       if (!b) { if (at >= beats.length) say(`That is the end of ${lesson?.about.title || 'the lesson'}.`); return; }
       const words = [b.say?.text, b.ask ? b.ask.question : ''].filter(Boolean).join(' ');
@@ -352,7 +360,7 @@ function lessonsModule(ctx) {
         if (dead) return;
         if (b.ask && picked == null) {
           // Watch never waits on an answer: it shows and says it, then moves on.
-          picked = 'shown'; render(); say(`It is ${b.ask.answer}.${b.ask.why ? ` ${b.ask.why}` : ''}`);
+          picked = 'shown'; render(); say(`It is ${ended(b.ask.answer)}${b.ask.why ? ` ${b.ask.why}` : ''}`);
           timer = setTimer(() => { timer = null; if (!dead) go(at + 1); }, hold);
           return;
         }
@@ -367,32 +375,50 @@ function lessonsModule(ctx) {
       }
       const { beat: b, klass } = beats[at];
       const show = showFor(b.show, look());
+      // *** AN ASK IS QUIZ MIX'S QUESTION SCREEN (row 2.111, chat's note CJ: "'ask' beats use Quiz mix's question
+      // screen"). *** Its answers are the quiz's buttons (`wg-btn`, as Quiz mix's choices are), and the answer is the
+      // after-answer screen every quiz draws (quiz_view.js `afterAnswerHtml`, row 2.66: the question, the answer, why,
+      // where it comes from - the same parts in the same order). NOT Quiz mix's whole game mounted inside the lesson,
+      // argued: that is rounds, players, scores and its own wait after an answer, and a lesson's question is one
+      // question and on; Watch must also answer it by itself, which the game's flow does not. So the look is shared and
+      // the flow stays the lesson's. A beat's source, on a question, shows only after the answer, as a quiz's does
+      // (2026-10-07: a source can give the answer away).
       let ask = '';
+      const cite = b.cite ? `${unchecked ? 'Source, as the AI gave it (not checked)' : 'Source'}: ${esc(citeWords(lesson, b.cite))}` : '';
       if (b.ask) {
         const answers = answersOf(b.ask);
-        if (picked == null && form() === 'slides') {
-          ask = `<div class="lp-ask" role="group" aria-label="${esc(b.ask.question)}">${answers.map((a, i) =>
-            `<button type="button" data-lp-answer="${esc(a)}"${i === lit ? ' data-lit' : ''}>${esc(a)}</button>`).join('')}</div>`;
-        } else if (picked != null) {
-          const right = picked === b.ask.answer;
-          const words = picked === 'shown' ? `It is ${b.ask.answer}.` : right ? `Yes, ${b.ask.answer}.` : `Not quite: it is ${b.ask.answer}.`;
-          ask = `<p class="lp-said" data-lp-result="${picked === 'shown' ? 'shown' : right ? 'right' : 'wrong'}">${esc(words)}${b.ask.why ? ` ${esc(b.ask.why)}` : ''}</p>`;
+        if (picked == null) {
+          const live = form() === 'slides';
+          ask = `<p class="lp-say"><b>${esc(b.ask.question)}</b></p><div class="lp-ask wg-btns" role="group" aria-label="${esc(b.ask.question)}">${answers.map((a, i) =>
+            `<button type="button" class="wg-btn"${live ? ` data-lp-answer="${esc(a)}"${i === lit ? ' data-lit' : ''}` : ' disabled'}>${esc(a)}</button>`).join('')}</div>`;
         } else {
-          ask = `<div class="lp-ask">${answers.map((a) => `<button type="button" disabled>${esc(a)}</button>`).join('')}</div>`;
+          const right = picked === b.ask.answer;
+          const result = picked === 'shown' ? 'shown' : right ? 'right' : 'wrong';
+          const words = result === 'shown' ? `It is ${ended(b.ask.answer)}` : right ? `Yes, ${ended(b.ask.answer)}` : `Not quite: it is ${ended(b.ask.answer)}`;
+          ask = `<div class="lp-result" data-lp-result="${result}"><p class="wg-say">${esc(words)}</p>${afterAnswerHtml({
+            phase: right ? 'celebrate' : 'answer', question: esc(b.ask.question),
+            answer: `<div class="wg-pair" data-pair>${esc(b.ask.answer)}</div>`, explain: esc(b.ask.why || ''),
+            source: cite ? `<span class="lp-cite">${cite}</span>` : '', next: '' })}</div>`;
         }
       }
-      const cite = b.cite ? `<p class="lp-cite">${unchecked ? 'Source, as the AI gave it (not checked)' : 'Source'}: ${esc(citeWords(lesson, b.cite))}</p>` : '';
-      return `<div class="lp-stage${b.move ? ` lp-m-${b.move}` : ''}" data-lp-beat="${at}">
-          ${show ? `<div class="lp-show" role="img" aria-label="${esc(showWords(show, lesson))}">${showHTML(show, lesson)}</div>` : ''}
-          ${b.say ? `<p class="lp-say">${esc(b.say.text)}</p>` : ''}
-          ${b.ask ? `<p class="lp-say"><b>${esc(b.ask.question)}</b></p>` : ''}
-          ${ask}${cite}
+      const citeLine = cite && !b.ask ? `<p class="lp-cite">${cite}</p>` : '';
+      // Answered, the after-answer screen has the stage to itself, as a quiz's does (it carries the question). Asking,
+      // a picture is left out (2026-10-21, seen on Right to repair in a 640x480 panel: the picture's card pushed the answers
+      // under the fold). A picture is a description in a frame until Design's pictures exist, and the beat's words are
+      // said; a count, a numeral or a chart stays, being what the question is about ("How many?").
+      const answered = !!b.ask && picked != null;
+      const hideShow = answered || (!!b.ask && show?.kind === 'picture');
+      return `<div class="lp-stage${b.move && !answered ? ` lp-m-${b.move}` : ''}" data-lp-beat="${at}">
+          ${show && !hideShow ? `<div class="lp-show" role="img" aria-label="${esc(showWords(show, lesson))}">${showHTML(show, lesson)}</div>` : ''}
+          ${b.say && !answered ? `<p class="lp-say">${esc(b.say.text)}</p>` : ''}
+          ${ask}${citeLine}
         </div><span hidden>${esc(klass.title)}</span>`;
     }
 
     function render() {
       if (dead || !rootEl) return;
       if (maker) { renderMaker(); return; }
+      if (!lesson && waitingForFolder()) { rootEl.innerHTML = '<div class="lp"><div class="lp-stage"><p>Opening the lesson from your Lessons folder…</p></div></div>'; return; }
       if (!lesson) {
         rootEl.innerHTML = `<div class="lp"><div class="lp-stage"><p>This lesson could not be played.</p><p class="lp-cite">${esc(problems[0] || '')}</p></div></div>`;
         return;
@@ -414,7 +440,7 @@ function lessonsModule(ctx) {
       picked = a;
       render();
       const right = a === b.ask.answer;
-      say(right ? `Yes, ${b.ask.answer}.` : `Not quite. It is ${b.ask.answer}.`);
+      say(right ? `Yes, ${ended(b.ask.answer)}` : `Not quite. It is ${ended(b.ask.answer)}`);
     }
     function act(name) {
       if (name === 'next') go(at + 1);
@@ -432,7 +458,12 @@ function lessonsModule(ctx) {
     // A switch: next/prev walk the buttons showing (answers, then Back and Next); select presses the lit one.
     const walk = () => [...mount.querySelectorAll('.lp-ask button:not([disabled]), .lp-nav button:not([disabled])')];
     function moveLit(d) { const n = walk().length; if (!n) return; lit = lit < 0 ? (d > 0 ? 0 : n - 1) : ((lit + d) % n + n) % n; paintLit(); }
-    function paintLit() { walk().forEach((b, i) => { if (i === lit) b.dataset.lit = ''; else delete b.dataset.lit; }); }
+    function paintLit() {
+      walk().forEach((b, i) => {
+        if (i === lit) { b.dataset.lit = ''; try { b.scrollIntoView?.({ block: 'nearest' }); } catch { /* nothing to scroll */ } }
+        else delete b.dataset.lit;
+      });
+    }
     function selectLit() { const b = walk()[lit]; if (b) b.click(); else if (form() === 'slides') act(at >= beats.length ? 'again' : 'next'); }
 
     // =================================================================================================================
@@ -617,9 +648,10 @@ function lessonsModule(ctx) {
 
     return {
       __probe: () => ({ at, total: beats.length, form: form(), look: look(), picked, said: lastSaid, problems: problems.slice(), title: lesson?.about.title || '',
-        unchecked, made: made.map((x) => x.id), maker: maker ? (maker.kept ? 'kept' : maker.mode) : null }),
+        unchecked, made: made.map((x) => x.id), files: fileLessons.map((x) => x.id), maker: maker ? (maker.kept ? 'kept' : maker.mode) : null }),
       init() {
         ensureCss(mount.ownerDocument || document);
+        ensureQuizStyle(mount.ownerDocument || document);   // the after-answer screen's own look (an ask, above)
         mount.innerHTML = '<div class="lp-root mod-box" style="height:100%" data-lesson-player></div>';
         rootEl = mount.querySelector('[data-lesson-player]');
         mount.addEventListener('click', onClick);
@@ -635,6 +667,14 @@ function lessonsModule(ctx) {
           } catch { madeRow = null; }
         }
         load();
+        // The person's own lesson files (lessons_folder.js): looked for once, never prompting; a lesson chosen from there
+        // opens when they are in. `ctx.readLessonFolder` lets a suite hand in its own folder.
+        Promise.resolve().then(() => (ctx.readLessonFolder || readLessonFolder)()).catch(() => null).then((r) => {
+          if (dead) return;
+          fileLessons = Array.isArray(r?.lessons) ? r.lessons : [];
+          folderRead = true;
+          if (isFileLessonId(setting('lessonId', '')) && !maker) { load(); stopTimer(); render(); enter(); }
+        });
         state?.subscribe?.((s) => { if (!dead) apply(s); });
         // The bar's and a switch's verbs (actions.js MODULE_VERBS lesson_player). In Watch nothing waits to be pressed,
         // so next / prev move a part on or back; in Slides they walk the buttons, and select presses the lit one.
@@ -661,7 +701,8 @@ function lessonsModule(ctx) {
       },
       onShow() { if (!timer) enter(); },
       // "Which lesson" offers the account's own lessons too (board.js's pattern: what only the mounted panel knows).
-      settingsChoices: () => ({ lessonId: allLessons().map((l) => ({ value: l.id, label: l.made ? `${l.label} (made)` : l.label })) }),
+      settingsChoices: () => ({ lessonId: allLessons().map((l) => ({ value: l.id,
+        label: l.made ? `${l.label} (made)` : l.file ? `${l.label} (your Lessons folder)` : l.label })) }),
       // The maker, from the one menu (row 2.95). `closesMenu`: it opens over the lesson.
       menuItems: () => {
         const cur = made.find((x) => x.id === setting('lessonId', ''));

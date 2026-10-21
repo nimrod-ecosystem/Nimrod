@@ -34,6 +34,8 @@ const match = (n, wrong, i) => ({
 });
 const around = (grown, child, say) => ({ say, show: { kind: 'picture', of: grown, looks: { grownup: { of: grown }, child: { of: child } } }, move: 'fade' });
 
+import { RIGHT_TO_REPAIR } from './lessons/right_to_repair.js';
+
 export const NUMBERS_0_9 = Object.freeze({
   about: { title: 'Numbers 0 to 9', subject: 'Numbers', for: 'anyone learning or relearning numbers',
     length: 'short classes; stop anywhere', language: 'en' },
@@ -79,4 +81,7 @@ export const NUMBERS_0_9 = Object.freeze({
 /** The built-in lessons, by id: what the Lesson module offers before anybody adds their own. */
 export const BUILTIN_LESSONS = Object.freeze([
   Object.freeze({ id: 'numbers-0-9', label: 'Numbers 0 to 9', lesson: NUMBERS_0_9 }),
+  // Row 2.111 (2026-10-21): the first researched lesson, bundled with the site; written by an AI with web search, so its
+  // sources are shown as not checked (`sourcesChecked: false`), as a lesson made here is.
+  Object.freeze({ id: 'right-to-repair', label: 'Right to repair', lesson: RIGHT_TO_REPAIR, sourcesChecked: false }),
 ]);

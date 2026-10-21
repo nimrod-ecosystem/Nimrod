@@ -93,6 +93,9 @@ export const SUBFOLDERS = Object.freeze({
   artwork: ART_FOLDER, data: 'Data',
   // own board clips (2026-10-09): see above.
   boardSounds: 'Board sounds',
+  // row 2.111 (2026-10-21, chat's note CJ: "a Lessons folder in the Nimrod folder tree seems natural"): a person's own
+  // lesson files (lesson_file.js), read by the Lessons module on this device (lessons_folder.js argues it).
+  lessons: 'Lessons',
 });
 // Folders made INSIDE a kind's folder (2026-10-07): one per kind of artwork, from the art kit's own table. Made by
 // `ensureTree` like the rest - only what is missing, nothing changed.
@@ -133,6 +136,11 @@ export const README = Object.freeze({
     + 'editor\n("Record this word", "Use a sound file"). Nimrod saves them here when you press Keep. Another device with this\nfolder '
     + 'can then play them too. A device without them uses its own voice for that card. Nothing here is sent to the Nimrod '
     + 'site.\nRemoving a sound in the editor leaves its file here. Delete it by hand if nothing uses it.\n',
+  // row 2.111 (2026-10-21)
+  lessons: 'Put lesson files here (.json), one lesson per file: what an AI writes when asked for a Nimrod lesson.\nThe '
+    + 'Lessons panel offers each one under "Which lesson" on this device. A file that is not quite in the lesson shape\nis '
+    + 'still read where it can be, and the panel says what it had to guess. Nothing here is sent to the Nimrod site.\n'
+    + 'A lesson\'s sources are shown as not checked unless the file says "sourcesChecked": true.\n',
 });
 
 export function available(view = (typeof window !== 'undefined' ? window : null)) {
