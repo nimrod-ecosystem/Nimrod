@@ -2201,7 +2201,9 @@ export function createArrangement({
       ...(ed ? [{ key: 'addPiece', label: 'Add a piece', kind: 'choice', level: 'essential', default: '', options: ed.addOptions(),
         note: 'it goes in the middle of the wall or the floor, chosen, to move from there' }] : [])],
       values: () => ({ ...Object.fromEntries(rows().map((x) => [x.key, x.value])), ...(ed ? { addPiece: '' } : {}) }),
-      ...(ed ? { actions: [{ id: 'undo', label: 'Undo', run: () => { undoRoom(); } }] } : {}),
+      ...(ed ? { actions: [{ id: 'undo', label: 'Undo', run: () => { undoRoom(); } },
+        // Step 2 (room_edits.js presetText): the room as a starting room, copied, to go into the site's own rooms.
+        { id: 'default', label: 'Copy as the default', note: 'this room, ready to become a starting room', run: () => { copyRoomDefault(); } }] } : {}),
       set: (patch) => {
         if (!patch) return;
         if (ed && patch.addPiece) { addRoomPiece(patch.addPiece); return; }
@@ -2236,6 +2238,25 @@ export function createArrangement({
     await writeRoomScene({ ...clone(base.scene), recipe: r });
     try { editMode?.select?.('room'); } catch { /* the room is chosen anyway */ }
     return true;
+  }
+  /** Copy the room as a room_presets.js entry (row 2.110 step 2). Resolves the text copied, or null. */
+  async function copyRoomDefault({ clipboard = (typeof navigator !== 'undefined' ? navigator.clipboard : null) } = {}) {
+    const scene = roomBase()?.scene || null;
+    const r = scene && roomEditsLib ? sceneRecipe(scene) : null;
+    if (!r) return null;
+    let label = '';
+    try { label = (await import('./room_presets.js')).ROOM_PRESETS?.[scene.preset]?.label || ''; } catch { label = ''; }
+    const text = roomEditsLib.presetText(r, { preset: scene.preset || '', label, from: profile?.name || '',
+      date: new Date().toISOString().slice(0, 10) });
+    try {
+      if (!clipboard?.writeText) throw new Error('no clipboard');
+      await clipboard.writeText(text);
+      say('Copied: this room, as a starting room for the site.');
+      return text;
+    } catch {
+      say('This browser would not copy it.');
+      return null;
+    }
   }
   async function addRoomPiece(part) {
     const base = roomBase();
