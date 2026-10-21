@@ -42,14 +42,14 @@
 import { registerModule } from '../module.js';
 import {
   barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
-  sitOutWakePress,
+  sitOutWakePress, paintSave, paintSwap,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
-  SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE,
+  SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE,
 } from '../shell_verbs.js';
-import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC } from '../actions.js';
+import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
 import { BAR_KEY_HIDDEN, onModuleControl } from '../bar_toggle.js';
 
@@ -74,6 +74,11 @@ const BUTTONS = [
   // never hidden, when there is no panel to switch (D16). Not drawn when the host page has its own
   // switch button (Home): ONE chooser, however it is reached.
   { act: 'switch', verb: SHELL_SWITCH_MODULE, label: 'Switch module', title: 'show another module in the panel you picked' },
+  // Save and ⇄ Swap (row 2.109, 2026-10-21): the plain bar has had them since 2026-10-18; a placed bar now does too. The
+  // shell says what they can do (SHELL_STATE `save` / `swap`), painted by transport_bar.js as on the plain bar. Save is
+  // not drawn when the host page has its own (Home): ONE Save, however it is reached, as with Switch module.
+  { act: 'save', verb: SHELL_SAVE, label: 'Save', title: 'nothing has changed on this dashboard' },
+  { act: 'swap', verb: QUICK_SWAP_TOPIC, label: '⇄ Swap', title: 'the panel you picked has no quick swap (set it in its settings)' },
   // Bigger / Smaller (2026-10-02 evening): the panel corner's press, for the selected panel (paintBigger).
   { act: 'bigger', verb: SHELL_PROMOTE, label: '⤢ Bigger', title: 'make the panel you picked bigger, one step at a time' },
   // Smaller (2026-10-03, "no way to demote it"): one level down, live while anything is bigger (paintSmaller).
@@ -106,6 +111,9 @@ registerModule(
     let playPause = (() => { try { return ctx.shell?.playPause?.() || null; } catch { return null; } })();
     // Bigger / Smaller (2026-10-02 evening): the same, for the selected panel's corner press.
     let bigger = (() => { try { return ctx.shell?.bigger?.() || null; } catch { return null; } })();
+    // Save and ⇄ Swap (row 2.109): the same.
+    let saveS = (() => { try { return ctx.shell?.save?.() || null; } catch { return null; } })();
+    let swapS = (() => { try { return ctx.shell?.swap?.() || null; } catch { return null; } })();
     // A live call's controls (actions.js CALL_CONTROLS_TOPIC), drawn while a call is live.
     let callState = (() => { try { const s = ctx.shell?.callControls?.(); return s && s.live ? { ...s } : null; } catch { return null; } })();
     let callEl = null;
@@ -134,7 +142,7 @@ registerModule(
     // HIDDEN, not dimmed, ARGUED against D16's "dimmed, never hidden": that rule is about a control that can act on
     // this screen and cannot right now; these never act on this page, and a row of grey panel words is exactly the
     // building vocabulary the page is meant to keep out of the way. Edit (the host's first button) brings all of it back.
-    const PLAIN_HIDES = Object.freeze(['back', 'playpause', 'next', 'panel', 'switch', 'bigger', 'smaller']);
+    const PLAIN_HIDES = Object.freeze(['back', 'playpause', 'next', 'panel', 'switch', 'save', 'swap', 'bigger', 'smaller']);
     const plainHost = () => { try { return typeof host?.plainBar === 'function' && !!host.plainBar(); } catch { return false; } };
 
     // THE HOST PAGE FLOATS THIS BAR OVER THE PANELS (Home's dashboard filling the window, 2026-10-02 late:
@@ -294,6 +302,15 @@ registerModule(
       paintPlayPause(root.querySelector('.tb-actions:not(.tb-host) [data-act="playpause"]'), playPause || {});
       paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
+      paintSave(shell?.querySelector('[data-act="save"]'), saveS || {});
+      paintSwap(shell?.querySelector('[data-act="swap"]'), swapS || {});
+      const sv = shell?.querySelector('[data-act="save"]');
+      if (sv) {
+        let hostSaves = false;
+        try { hostSaves = !!host && typeof host.barItems === 'function' && (host.barItems() || []).some((it) => it && it.act === 'save'); }
+        catch { hostSaves = false; }
+        sv.hidden = hostSaves;
+      }
       // call loadouts (2026-10-09): and Hang up, last (transport_bar.js HANG_CONFIRM_MS argues its one press).
       drawCallControls(callEl, callState, (payload) => say?.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'transport_bar' }),
         () => say?.publish(CALL_HANGUP_TOPIC, { from: 'transport_bar' }));
@@ -306,7 +323,7 @@ registerModule(
         const el = shell?.querySelector(`[data-act="${act}"]`);
         if (!el) continue;
         if (plain) el.hidden = true;
-        else if (act !== 'panel' && act !== 'switch') el.hidden = false;   // those two keep their own rule (above)
+        else if (act !== 'panel' && act !== 'switch' && act !== 'save') el.hidden = false;   // those three keep their own rule (above)
       }
       drawHost();
       wordShell();
@@ -362,7 +379,9 @@ registerModule(
           if ('help' in s) helpShown = !!s.help;
           if ('playPause' in s) playPause = s.playPause || null;
           if ('bigger' in s) bigger = s.bigger || null;
-          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s) draw();
+          if ('save' in s) saveS = s.save || null;
+          if ('swap' in s) swapS = s.swap || null;
+          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
           // bar toggle: the key put the bar away (tucked, whether or not in full screen) or brought it back.
           if (BAR_KEY_HIDDEN in s) {
