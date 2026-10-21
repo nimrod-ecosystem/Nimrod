@@ -284,15 +284,20 @@ try {
     corner?.click();
     check(`(${kind}) *** pressing it edits the ROOM (one more thing beside the panels) ***`, d.editingPanel()?.id === ROOM_PANEL_ID);
     const sel = () => arr().editSelection();
-    const want = kind === 'room3d' ? ['drift', 'depth'] : ['shell', 'wall', 'floor', 'light', 'view'];
+    // (row 2.110, 2026-10-21: a 2D room also offers "Add a piece", after Home's rows.)
+    const want = kind === 'room3d' ? ['drift', 'depth'] : ['shell', 'wall', 'floor', 'light', 'view', 'addPiece'];
+    // ...and a 2D room's furniture its place, size and facing first (room_edits.js), then what it opens.
+    const ARRANGE = ['x', 'y', 'size', 'facing'];
+    const pieceKeys = kind === 'room3d' ? ['opens'] : [...ARRANGE, 'opens'];
     check(`(${kind}) to begin with, the room itself is chosen: Home's Room rows`,
       await until(() => sel()?.target?.id === 'room' && J(sel().fields.map((f) => f.key)) === J(want), 3000), J(sel()?.fields?.map((f) => f.key)));
     const objEl = host.querySelector(objSel);
     objEl.click();
     check(`(${kind}) *** pressing a piece of furniture chooses it, and shows what it opens ***`,
-      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J(['opens']));
+      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J(pieceKeys), J(sel()?.fields?.map((f) => f.key)));
+    const opensOf = () => sel()?.fields?.find((f) => f.key === 'opens');
     check(`(${kind}) ...its choices are Nothing and the person’s OTHER dashboards`,
-      await until(() => J(sel()?.fields?.[0]?.options?.map((o) => o.value)) === J(['', 'P']), 3000), J(sel()?.fields?.[0]?.options));
+      await until(() => J(opensOf()?.options?.map((o) => o.value)) === J(['', 'P']), 3000), J(opensOf()?.options));
     const card = () => host.querySelector('.k-room .em-card');
     card().querySelector('[data-em-step="1"][data-em-key="opens"]').click();
     const savedScene = () => store.get('settings')?.kiosk?.layout?.scene;
@@ -361,13 +366,17 @@ try {
     const sel = () => arr().editSelection();
     check(`(${kind}) (setup) the brick-built piece is drawn as its bricks`, await until(() => !!isBricks(), 6000));
     d.editPanel(ROOM_PANEL_ID, true);
-    await until(() => sel()?.target?.id === 'room', 3000);
+    // (row 2.110: the room's rows, and the furniture's with them, load on first use: wait for them, so the piece's
+    // rows are read once they are in.)
+    await until(() => sel()?.target?.id === 'room' && (kind === 'room3d' || sel().fields.some((f) => f.key === 'addPiece')), 3000);
     host.querySelector(objSel).click();
     check(`(${kind}) *** choosing it shows Look first, then Opens ***`,
-      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J(['look', 'opens']), J(sel()?.fields?.map((f) => f.key)));
+      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J([...(kind === 'room' ? ['x', 'y', 'size', 'facing'] : []), 'look', 'opens']), J(sel()?.fields?.map((f) => f.key)));
     check(`(${kind}) Look reads Brick-built to begin with`, sel().values().look === 'bricks', J(sel().values()));
     check(`(${kind}) *** "Built from 32 Nimrod parts" and "Open its bricks" → the bricks page for desk_v1 ***`,
-      J(sel().actions) === J([{ id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' },
+      // (row 2.110: a 2D room's piece has Take it out and Undo first.)
+      J(sel().actions) === J([...(kind === 'room' ? [{ id: 'remove', label: 'Take it out', note: 'Undo puts it back' }, { id: 'undo', label: 'Undo', note: '' }] : []),
+        { id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' },
         // brick builder (2026-10-09): the way to build your own, second.
         { id: 'builder', label: 'Build your own in the brick builder', href: '/modules.html?m=brickbuilder', note: '' }]), J(sel().actions));
     const card = () => host.querySelector('.k-room .em-card');
@@ -386,7 +395,103 @@ try {
     check(`(${kind}) ...and it is drawn as its bricks again`, await until(() => !!isBricks(), 4000));
     const cab = kind === 'room3d' ? '.r3-box[data-object="cabinet"]' : '.rs-item[data-id="lamp"]';
     host.querySelector(cab).click();
-    check(`(${kind}) a piece with no build still offers only Opens`, J(sel()?.fields?.map((f) => f.key)) === J(['opens']) && !(sel()?.actions || []).length, J(sel()?.fields?.map((f) => f.key)));
+    check(`(${kind}) a piece with no build has no Look and no bricks link`, J(sel()?.fields?.map((f) => f.key)) === J(kind === 'room' ? ['x', 'y', 'size', 'facing', 'opens'] : ['opens'])
+      && !(sel()?.actions || []).some((a) => a.href), J(sel()?.fields?.map((f) => f.key)));
+    d.editPanel(ROOM_PANEL_ID, false);
+    view.destroy();
+    host.remove();
+  }
+
+  // ============================================================================================
+  // ROW 2.110 STEP 1 (2026-10-21; room_edits.js): a dashboard's room REARRANGED - its furniture moved, sized, turned
+  // round, taken out and added, saved on the room's recipe; Undo steps back; a door stays on its own piece.
+  section('*** a DASHBOARD’S room rearranged: move, size, turn round, take out, add, undo (row 2.110) ***');
+  {
+    const { pieceFields, withPieceEdit, withoutPiece, withNewPiece, withIds } = await import('../room_edits.js');
+    const { presetRecipe } = await import('../room_presets.js');
+    const base = presetRecipe('theRoom');
+    // Pure first.
+    const cab = (r) => r.items.find((x) => x.id === 'cab');
+    check('*** pure: "Left or right" and "Nearer or further" keep a floor thing on the floor ***',
+      cab(withPieceEdit(base, 'cab', { x: 200, y: 5 })).x === 97 && cab(withPieceEdit(base, 'cab', { x: 200, y: 5 })).y === 62);
+    const lamp = withPieceEdit(base, 'lamp', { y: 80 }).items.find((x) => x.id === 'lamp');
+    check('...a lamp standing on the cabinet moves its ground with it', lamp.y === 80 && lamp.ground === 91.6, J(lamp));
+    check('pure: Size 1 is no size at all; Turned round is a flip; As drawn takes it off',
+      !('scale' in cab(withPieceEdit(base, 'cab', { size: 1 }))) && cab(withPieceEdit(base, 'cab', { size: 9 })).scale === 1.6
+        && cab(withPieceEdit(base, 'cab', { facing: 'turned' })).flip === true && !('flip' in cab(withPieceEdit(withPieceEdit(base, 'cab', { facing: 'turned' }), 'cab', { facing: 'drawn' }))));
+    check('*** pure: a thing on a SIDE wall (the door) is sized and turned, not moved ***',
+      J(pieceFields(base.items.find((x) => x.id === 'door')).map((f) => f.key)) === J(['size', 'facing'])
+        && withPieceEdit(base, 'door', { x: 50 }).items.find((x) => x.id === 'door').x === 8);
+    check('pure: a panel\'s place (the clock) is not this editor\'s', withPieceEdit(base, 'clock', { x: 50 }) === null && withoutPiece(base, 'clock') === null);
+    const noIds = { ...base, items: base.items.map(({ id, ...rest }) => rest) };   // eslint-disable-line no-unused-vars
+    const doored = { ...noIds, items: noIds.items.map((x, i) => (i === 4 ? { ...x, opens: 'P' } : x)) };   // furniture4 = the cabinet
+    const taken = withoutPiece(doored, 'furniture2');
+    check('*** pure: taking a piece out never moves a door onto another piece (each keeps the id it was drawn with) ***',
+      !!taken && taken.items.find((x) => x.opens === 'P')?.id === 'furniture4' && taken.items.find((x) => x.opens === 'P')?.part === 'cabinet', J(taken?.items?.map((x) => [x.id, x.part])));
+    const added = withNewPiece(base, 'plant');
+    check('pure: a new piece has an id of its own, on the floor in the middle', added.id === 'plant-1' && added.recipe.items.at(-1).x === 50
+      && added.recipe.items.at(-1).y === 92 && withNewPiece(added.recipe, 'plant').id === 'plant-2');
+    check('pure: no such piece is said, never added', withNewPiece(base, 'nope').recipe === null && !!withNewPiece(base, 'nope').why);
+    check('pure: ids for all leaves a room with ids unchanged', J(withIds(base)) === J(base));
+
+    // On a real dashboard.
+    const scene0 = { kind: 'room', preset: 'theRoom' };
+    const store = new Map([['settings', { kiosk: { layout: { preset: 'full', slots: [null], scene: scene0,
+      placed: [{ id: 'rc', place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } }]]);
+    const subs = new Map();
+    const makeState = (key) => {
+      if (!subs.has(key)) subs.set(key, new Set());
+      return { load: () => Promise.resolve(), get: () => store.get(key) || {},
+        set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); for (const f of subs.get(key)) f(store.get(key)); return Promise.resolve(); },
+        subscribe: (f) => { subs.get(key).add(f); return () => subs.get(key).delete(f); }, startPolling() {}, flush: () => Promise.resolve(), destroy() {} };
+    };
+    const rbus = createBus();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: rbus, rootBus: rbus, viewId: 'RA', user: 'u', personId: null,
+      arrangement: { id: 'RA', name: 'Rearranged', modules: [{ id: 'rc', type: 'clock' }] },
+      profiles: { list: async () => [{ id: 'RA', name: 'Rearranged' }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} },
+      state: memState(), instanceId: 'dash-rearrange' });
+    await view.init();
+    const d = view.impl;
+    const arr = () => d.arrangement();
+    const sel = () => arr().editSelection();
+    const saved = () => store.get('settings')?.kiosk?.layout?.scene?.recipe?.items || null;
+    const savedCab = () => saved()?.find((x) => x.id === 'cab');
+    const card = () => host.querySelector('.k-room .em-card');
+    check('(setup) the room is drawn', await until(() => !!host.querySelector('.rs-item[data-id="cab"]'), 6000));
+    d.editPanel(ROOM_PANEL_ID, true);
+    await until(() => sel()?.target?.id === 'room' && sel().fields.some((f) => f.key === 'addPiece'), 3000);
+    host.querySelector('.rs-item[data-id="cab"]').click();
+    check('*** the cabinet chosen: its place, size and facing, then Opens; Take it out and Undo ***',
+      sel()?.target?.id === 'cab' && J(sel().fields.map((f) => f.key)) === J(['x', 'y', 'size', 'facing', 'opens'])
+        && J(sel().actions.map((a) => a.id)) === J(['remove', 'undo']), J([sel()?.fields?.map((f) => f.key), sel()?.actions]));
+    card().querySelector('[data-em-step="1"][data-em-key="x"]').click();
+    check('*** › on "Left or right": it moves right one step, saved on the room\'s recipe, and stays chosen ***',
+      await until(() => savedCab()?.x === 57, 3000) && await until(() => sel()?.target?.id === 'cab', 3000), J(savedCab()));
+    check('...and the room draws it there', await until(() => /57%/.test(host.querySelector('.rs-item[data-id="cab"]')?.style?.left || ''), 3000),
+      host.querySelector('.rs-item[data-id="cab"]')?.style?.left);
+    card().querySelector('[data-em-step="1"][data-em-key="size"]').click();
+    check('› on Size: a little bigger, saved', await until(() => savedCab()?.scale === 1.1, 3000), J(savedCab()));
+    card().querySelector('[data-em-step="1"][data-em-key="facing"]').click();
+    check('Facing: turned round, saved', await until(() => savedCab()?.flip === true, 3000), J(savedCab()));
+    card().querySelector('[data-em-run="undo"]').click();
+    check('*** Undo: the last change undone (facing as drawn), the others kept ***', await until(() => !savedCab()?.flip && savedCab()?.scale === 1.1, 3000), J(savedCab()));
+    await until(() => !!card()?.querySelector('[data-em-run="remove"]'), 3000);
+    card().querySelector('[data-em-run="remove"]').click();
+    check('*** Take it out: gone from the recipe and the room, and the room itself is chosen ***',
+      await until(() => !!saved() && !savedCab() && !host.querySelector('.rs-item[data-id="cab"]'), 3000) && await until(() => sel()?.target?.id === 'room', 3000),
+      J(saved()?.map((x) => x.id)));
+    await until(() => !!card()?.querySelector('[data-em-run="undo"]'), 3000);
+    card().querySelector('[data-em-run="undo"]').click();
+    check('*** Undo puts it back, where it was ***', await until(() => savedCab()?.x === 57 && !!host.querySelector('.rs-item[data-id="cab"]'), 3000), J(savedCab()));
+    sel().set('addPiece', 'plant');
+    check('*** "Add a piece": a plant in the middle of the floor, saved, and chosen to move from there ***',
+      await until(() => saved()?.some((x) => x.id === 'plant-1' && x.part === 'plant') && sel()?.target?.id === 'plant-1', 3000),
+      `${J(saved()?.map((x) => x.id))} ${sel()?.target?.id}`);
+    check('...and the room draws it', !!host.querySelector('.rs-item[data-id="plant-1"]'));
     d.editPanel(ROOM_PANEL_ID, false);
     view.destroy();
     host.remove();
