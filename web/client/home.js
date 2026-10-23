@@ -252,6 +252,38 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const m = mountMedia(host, { user, personId, makeUserState });
       await m.refresh();
 
+      // *** YOUR NIMROD FOLDER, HERE TOO (row 2.49, chat's note CM; Mike 2026-10-23: "I was expecting it to be on the
+      // media page"). *** The folders page itself (user_folders_page.js `renderUserFolders`, the ⚙ menu's "Your own
+      // folders"), inside a fold: ONE page reached two ways, so the two cannot disagree. Argued against a small card of
+      // its own with only "Set up your Nimrod folder": a second, smaller copy of a page that exists. Open by itself while
+      // this device has no Nimrod folder (that is what somebody here is looking for); folded once it has one, so the
+      // photos above stay the page. Drawn the first time it is opened; nothing is asked of the browser until a press.
+      const foldersHost = document.createElement('details');
+      foldersHost.className = 'h-card m-folders';
+      foldersHost.dataset.nimrodFolder = '';
+      foldersHost.innerHTML = '<summary><b>Your Nimrod folder</b> <span class="h-tag">pictures, music, videos and more, in one place</span></summary>'
+        + '<div data-folders-body></div>';
+      host.append(foldersHost);
+      let foldersRec = null;
+      const drawFolders = async () => {
+        if (foldersRec || !foldersHost.open) return;
+        const { renderUserFolders } = await import('./user_folders_page.js');
+        if (!foldersHost.isConnected) return;
+        // Its rows look as they do in the menu: settings.css, whose every rule is under its own `.st-` classes.
+        if (!document.querySelector('link[data-settings-css]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet'; link.href = new URL('./settings.css', import.meta.url).href; link.dataset.settingsCss = '';
+          document.head.append(link);
+        }
+        foldersRec = renderUserFolders(foldersHost.querySelector('[data-folders-body]'), {});
+      };
+      foldersHost.addEventListener('toggle', () => { drawFolders().catch((e) => console.error('home: your Nimrod folder', e)); });
+      try {
+        // Only "is there one on this device?" (the handle it remembers), not a scan of every folder.
+        const { handleStore, ROOT_KEY } = await import('./user_folders.js');
+        if (!(await handleStore().get(ROOT_KEY))) foldersHost.open = true;
+      } catch (e) { console.error('home: your Nimrod folder', e); }
+
       // "MAKE YOUR OWN PACK" NEEDED SOMEWHERE TO LAND BESIDES A GAME'S OWN MENU. Mike's own
       // ask: Media is where a caregiver already comes to add their own content (a folder of
       // photos) — a pack is the same idea, content someone brought rather than what shipped,
@@ -268,6 +300,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         async refresh() { await m.refresh(); return this; },
         destroy() {
           try { packRec?.destroy?.(); } catch (e) { console.error(e); }
+          try { foldersRec?.destroy?.(); } catch (e) { console.error(e); }
           try { m.destroy?.(); } catch (e) { console.error(e); }
         },
       };

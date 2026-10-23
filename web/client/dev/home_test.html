@@ -329,6 +329,26 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       shell.remove();
     }
 
+    // *** THE NIMROD FOLDER ON THE MEDIA PAGE (row 2.49, chat's note CM; Mike 2026-10-23: "I was expecting it to be on the
+    // media page"). *** The real Media tab: the folders page itself, in a fold, open while this device has no Nimrod
+    // folder, with "Set up your Nimrod folder" in it - the same page the menu's "Your own folders" shows.
+    section('*** Media: "Your Nimrod folder" is there too (note CM) ***');
+    {
+      const shell = document.createElement('div');
+      document.body.append(shell);
+      await mountHome(shell, { email: 'someone@example.com', profiles: createProfilesClient({ user: USER }), manifests: listManifests(),
+        user: USER, startTab: 'media' });
+      const fold = async () => { for (let i = 0; i < 100; i += 1) { const f = shell.querySelector('[data-nimrod-folder]'); if (f && (!f.open || f.querySelector('[data-act="pick-root"]'))) return f; await new Promise((r) => setTimeout(r, 50)); } return shell.querySelector('[data-nimrod-folder]'); };
+      const f = await fold();
+      check('*** the Media tab has "Your Nimrod folder" ***', !!f && /Your Nimrod folder/.test(f.querySelector('summary')?.textContent || ''));
+      check('*** ...open, with no Nimrod folder on this device, and in it the folders page\'s own "Set up your Nimrod folder" ***',
+        !!f && f.open && /Set up your Nimrod folder/.test(f.querySelector('[data-act="pick-root"]')?.textContent || ''), f?.outerHTML?.slice(0, 200));
+      check('...below the photos, above Content packs', !!f && !!shell.querySelector('[data-add-photos]')
+        && (shell.querySelector('[data-add-photos]').compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING)
+        && (f.compareDocumentPosition(shell.querySelector('.m-packs')) & Node.DOCUMENT_POSITION_FOLLOWING));
+      shell.remove();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
