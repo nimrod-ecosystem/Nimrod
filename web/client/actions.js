@@ -661,8 +661,12 @@ export const MODULE_VERBS = {
   // A LESSON (row 2.92; modules/lesson_player.js). In Slides next/prev walk the buttons (the answers, Back, Next) and
   // select presses the lit one; in Watch, where nothing waits to be pressed, next/prev move a part on or back. back:
   // the part before, in either.
-  lessons:       { next: 'lesson/next', prev: 'lesson/prev', select: 'lesson/select', back: 'lesson/back' },
-  lesson_player: { next: 'lesson/next', prev: 'lesson/prev', select: 'lesson/select', back: 'lesson/back' },   // its first day's type
+  // (2026-10-23, row 2.113, Mike: "The pause button on the transport bar isn't pausing the lesson." It had no pause or
+  // play here, so the bar had nothing to send: they are the Lineup's own pause / play topics, which already held a beat.)
+  lessons:       { next: 'lesson/next', prev: 'lesson/prev', select: 'lesson/select', back: 'lesson/back',
+                   pause: 'lessons/pause', play: 'lessons/play' },
+  lesson_player: { next: 'lesson/next', prev: 'lesson/prev', select: 'lesson/select', back: 'lesson/back',
+                   pause: 'lessons/pause', play: 'lessons/play' },   // its first day's type
   // WHAT PLAYED, AS OBJECTS (row 2.62 step 4; modules/play_objects.js). The whole object is one press: `select` says it
   // and shows it as a list (pressed again, the list goes); `back` puts the list away. Nothing to walk inside it.
   play_objects:  { select: 'play_objects/select', back: 'play_objects/back' },

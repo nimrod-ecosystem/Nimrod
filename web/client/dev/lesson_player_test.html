@@ -21,7 +21,7 @@
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
 import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS, routedQuestions,
-  voiceFor, SECOND_VOICE_STEP } from '../modules/lesson_player.js';
+  voiceFor, SECOND_VOICE_STEP, ASK_WAIT_MS } from '../modules/lesson_player.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, unlockedFrom } from '../lessons.js';
 import { checkLesson, beatsOf } from '../lesson_file.js';
 import { NUMBERS_0_9, BUILTIN_LESSONS } from '../lessons_builtin.js';
@@ -97,26 +97,72 @@ try {
     w.timers.fire();
     check('*** time passes: the next part, said, with no press ***', w.probe().at === 1 && w.said.at(-1) === 'One.' && !!w.q('[data-lp-numeral="1"]'));
     check('where it got to is kept on the panel\'s row', st.get().at === 1);
-    check('the time allowed covers the words, plus the hold', w.timers.last().ms >= WATCH_HOLD_MS);
+    check('the time allowed covers the words, plus the Pace pause', w.timers.last().ms >= WATCH_HOLD_MS);
+    check('*** Back, Repeat and Next are on screen in Watch too (row 2.113) ***', !!w.q('[data-lp-act="back"]') && !!w.q('[data-lp-act="repeat"]') && !!w.q('[data-lp-act="next"]'));
+    w.q('[data-lp-act="repeat"]').click();
+    check('Repeat: the same part, said again, and counting again', w.probe().at === 1 && w.said.at(-1) === 'One.' && w.said.at(-2) === 'One.' && w.timers.pending() === 1);
     // Go to the first Match question.
     const L = checkLesson(NUMBERS_0_9).lesson;
     const firstAsk = beatsOf(L).findIndex((b) => b.beat.ask);
     for (let i = 0; w.probe().at < firstAsk && i < 80; i += 1) w.timers.fire();
     check('(setup) a question is on', w.probe().at === firstAsk, String(w.probe().at));
-    check('*** in Watch a question is ASKED, with its answers shown but not pressable ***', /How many are there\?/.test(w.said.at(-1)) && w.box.querySelectorAll('.lp-ask button[disabled]').length === 3);
+    check('*** in Watch a question is ASKED, and its answers CAN be pressed (row 2.113: "time to answer") ***',
+      /How many are there\?/.test(w.said.at(-1)) && w.box.querySelectorAll('.lp-ask button[data-lp-answer]:not([disabled])').length === 3);
+    check('*** ...it waits for an answer: 30 seconds by default in Watch (ASK_WAIT_MS), from when it has been asked ***',
+      w.timers.pending() === 1 && w.timers.last().ms >= ASK_WAIT_MS, String(w.timers.last()?.ms));
     w.timers.fire();
-    check('*** ...then ANSWERED by itself after a moment - nobody has to press anything ***', w.probe().picked === 'shown' && /It is 3/.test(w.said.at(-1)) && w.q('[data-lp-result="shown"]'));
+    check('*** ...nobody answered: it is shown and said, with why - never a screen stuck on a question ***', w.probe().picked === 'shown' && /It is 3\. Count them/.test(w.said.at(-1)) && w.q('[data-lp-result="shown"]'));
     w.timers.fire();
-    check('...and on to the next', w.probe().at === firstAsk + 1);
-    for (let i = 0; w.probe().at < w.probe().total && i < 120; i += 1) w.timers.fire();
+    check('...and on to the next, once that has been said', w.probe().at === firstAsk + 1);
+    const nextAsk = beatsOf(L).findIndex((b, i) => i > firstAsk && b.beat.ask);
+    for (let i = 0; w.probe().at < nextAsk && i < 20; i += 1) w.timers.fire();
+    const rightAns = beatsOf(L)[nextAsk].beat.ask.answer;
+    w.q(`[data-lp-answer="${rightAns}"]`).click();
+    check('*** a press in Watch answers it: "Yes", said, with why ***', w.probe().picked === rightAns && /^Yes, 6\./.test(w.said.at(-1)) && w.q('[data-lp-result="right"]'), J(w.said.at(-1)));
+    w.timers.fire();
+    check('...then on', w.probe().at === nextAsk + 1);
+    for (let i = 0; w.probe().at < w.probe().total && i < 160; i += 1) w.timers.fire();
     check('*** it reaches the end and stays there, saying so; nothing more is armed ***', w.probe().at === w.probe().total && /end of Numbers 0 to 9/.test(w.said.at(-1)) && w.timers.pending() === 0);
     check('"Start again" at the end', !!w.q('[data-lp-act="again"]'));
     w.bus.publish('lesson/back');
     check('the bar\'s Back (lesson/back) goes to the part before', w.probe().at === w.probe().total - 1);
     w.bus.publish('lesson/next');
-    check('*** in Watch the bar\'s Next moves a part on (there are no buttons to walk) ***', w.probe().at === w.probe().total);
-    check('the verbs are registered for the bar and switches', J(MODULE_VERBS.lesson_player) === J({ next: 'lesson/next', prev: 'lesson/prev', select: 'lesson/select', back: 'lesson/back' }));
+    check('*** in Watch the bar\'s Next walks the buttons, as in Slides (there are buttons now) ***', !!w.q('.lp-nav [data-lit]'));
+    check('the verbs are registered for the bar and switches, Pause and Play with them', J(MODULE_VERBS.lesson_player) === J({ next: 'lesson/next', prev: 'lesson/prev',
+      select: 'lesson/select', back: 'lesson/back', pause: 'lessons/pause', play: 'lessons/play' }) && J(MODULE_VERBS.lessons) === J(MODULE_VERBS.lesson_player));
     w.done();
+  }
+
+  section('*** THE PACE (row 2.113): never on before the voice has finished; Pause holds the part ***');
+  {
+    // A voice that reports when it has finished (output.js onReport), as the real screen's does.
+    const lines = [];
+    const cancelled = [];
+    const output = { reports: true, getRouting: () => ({ say: ['speech'] }),
+      say: (text, opts) => { lines.push({ text, onReport: opts?.onReport || null }); return `o${lines.length}`; }, cancel: (id) => { cancelled.push(id); return true; } };
+    const w = mountLesson(fakeRow({ form: 'watch' }), { output });
+    check('(setup) the first part is being said', lines.length === 1 && w.probe().at === 0);
+    check('*** while the voice is still talking, the only clock is the backstop: words at a slow pace plus 10 s ***',
+      w.timers.pending() === 1 && w.timers.last().ms >= 10000, String(w.timers.last()?.ms));
+    lines[0].onReport({ channel: 'speech', delivered: true });
+    await new Promise((r) => setTimeout(r, 0));
+    check('*** the voice finished: now the Pace pause, then on ***', w.timers.pending() === 1 && w.timers.last().ms >= WATCH_HOLD_MS && w.timers.last().ms < 10000, String(w.timers.last()?.ms));
+    w.timers.fire();
+    check('...on to the next part', w.probe().at === 1 && lines.length === 2);
+    // PAUSE (Mike, 2026-10-23: "The pause button on the transport bar isn't pausing the lesson.")
+    w.bus.publish(MODULE_VERBS.lessons.pause);
+    check('*** Pause: the voice is stopped (by its id), nothing is counting, and it says Paused ***',
+      w.probe().paused && J(cancelled) === J(['o2']) && w.timers.pending() === 0 && /Paused/.test(w.q('.lp-top').textContent), J(cancelled));
+    w.inst.impl.onShow?.();
+    check('...shown again while paused: still paused, nothing said', w.probe().paused && lines.length === 2 && w.timers.pending() === 0);
+    w.bus.publish(MODULE_VERBS.lessons.play);
+    check('*** Play: the same part, said again, and carrying on from there ***', !w.probe().paused && w.probe().at === 1 && lines.length === 3 && lines[2].text === 'One.'
+      && w.timers.pending() === 1 && !/Paused/.test(w.q('.lp-top').textContent));
+    w.done();
+    // "A question waits": until it is answered, when a person chooses it.
+    const w2 = mountLesson(fakeRow({ form: 'watch', askWait: 'answer', at: beatsOf(checkLesson(NUMBERS_0_9).lesson).findIndex((b) => b.beat.ask) }));
+    check('*** "A question waits: until it is answered": in Watch, nothing counts while it waits ***', w2.timers.pending() === 0 && w2.probe().picked === null);
+    w2.done();
   }
 
   section('SLIDES: a person moves it on');
