@@ -1,0 +1,281 @@
+{
+ "about": {
+  "title": "More and fewer",
+  "course": "counting-and-adding",
+  "class_n": 4,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes. The class has three small ideas (more, fewer, same) and a few practice questions, so it fits the course's short-class plan. Pause after any question and take as long as you like."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we look at two groups of things and say which group has more and which has fewer. You already know how to count, so you have what you need."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "More and fewer"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We do this all the time without noticing. Are there enough chairs? Do I have a shoe for each sock? Today we say it out loud."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table with a row of 3 cups on the left and a row of 5 plates on the right."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the first idea. You can compare two groups without counting. Put one thing from the first group next to one thing from the second group. Then do it again, until one group runs out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Match one to one"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture 4 chairs and 3 people. Each person sits on one chair. Every person has a chair, but one chair is empty. So the chairs are the bigger group."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "4 chairs in a row. 3 people, each sitting on a chair. The last chair is empty."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "There are 4 chairs and 3 people. Each person sits on a chair. What is left over?",
+    "right": "One empty chair",
+    "wrong": [
+     "One person with no chair",
+     "Nothing is left over",
+     "Two empty chairs"
+    ],
+    "why": "4 chairs minus the 3 that are used leaves 1 empty chair. Everyone has a seat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now our first word. The group with extra things left over is the group with more. Here the chairs have more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "more"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The group that runs out first is the group with fewer. There were 3 people and 4 chairs, so the people are fewer. We use fewer for things we can count one by one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "fewer"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "There are 4 chairs and 3 people. Which group has fewer?",
+    "right": "The people",
+    "wrong": [
+     "The chairs",
+     "Both the same",
+     "You cannot tell"
+    ],
+    "why": "The people ran out first, with one chair left over. The group that runs out first has fewer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a second example. Put 5 socks on the floor. Put 4 shoes under them. Match each sock with a shoe. One sock has no shoe, so there are more socks than shoes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of 5 socks. Under it, a row of 4 shoes. The fifth sock has nothing under it."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now add one more shoe. Match them again. Every sock has a shoe and every shoe has a sock. Nothing is left over. This is our third word."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "same"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "There are 5 socks and 5 shoes. Every sock has a shoe. Which is true?",
+    "right": "There are the same number of socks and shoes",
+    "wrong": [
+     "There are more socks",
+     "There are more shoes",
+     "There are fewer shoes"
+    ],
+    "why": "When every sock matches a shoe and nothing is left over, the two groups are the same."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Matching works well, but sometimes the things are too far apart or too many to line up. Then we can count each group and compare the two numbers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Count both groups"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Say we count 6 spoons and 4 forks. Which number do we say later when we count? Six comes after four, so 6 is more. Four comes before six, so 4 is fewer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "6 spoons = more | 4 forks = fewer"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "There are 6 spoons and 4 forks. Which group has more?",
+    "right": "The spoons",
+    "wrong": [
+     "The forks",
+     "They are the same",
+     "You cannot tell"
+    ],
+    "why": "6 comes after 4 when we count, so 6 is more than 4. The spoons have more."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a tip. When you count up, the number you say later is the bigger one. So if you are not sure, say the numbers in order, 4, 5, 6, and see which comes last."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Count up: 1, 2, 3, 4, 5, 6 | The later number is more | The earlier number is fewer"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us try coins. One purse has 7 coins and another purse has 9 coins. Take your time. Touch each coin as you count it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Purse A: 7 coins | Purse B: 9 coins"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Purse A has 7 coins and Purse B has 9 coins. Which purse has fewer coins?",
+    "right": "Purse A",
+    "wrong": [
+     "Purse B",
+     "They have the same",
+     "You cannot tell"
+    ],
+    "why": "7 comes before 9 when we count, so 7 is fewer. Purse A has fewer coins."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more. A shelf has 8 books and a second shelf has 8 books. What can we say?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Shelf 1: 8 books | Shelf 2: 8 books"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Shelf 1 has 8 books and Shelf 2 has 8 books. Which is true?",
+    "right": "The shelves have the same number of books",
+    "wrong": [
+     "Shelf 1 has more",
+     "Shelf 2 has more",
+     "Shelf 2 has fewer"
+    ],
+    "why": "Both numbers are 8, so the groups are the same."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. If any of this felt hard, that is fine. Try it at home with real things. Put out some spoons and some forks, match them, and say which group has more."
+   },
+   "show": {
+    "kind": "list",
+    "text": "more = extra things left over | fewer = runs out first | same = nothing left over | Match, or count both groups"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time we practise one more and one fewer. See you then."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: One more, one fewer"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Matching one to one",
+   "links": [
+    "[[Counting things from 0 to 10]]",
+    "[[Counting out a number: setting a table]]"
+   ]
+  },
+  {
+   "topic": "More, fewer, same",
+   "links": [
+    "[[One more, one fewer]]"
+   ]
+  },
+  {
+   "topic": "Comparing by counting both groups",
+   "links": [
+    "[[Counting from 11 to 20]]",
+    "[[Putting groups together (totals to 5)]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

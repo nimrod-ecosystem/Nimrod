@@ -1,0 +1,202 @@
+{
+ "about": {
+  "title": "P, Q, R",
+  "course": "letters-a-z",
+  "class_n": 6,
+  "audience": [
+   "adult relearning reading",
+   "young child",
+   "anyone learning or relearning letters"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes: a quick look back at A to O, three letters of about two minutes each, then a short look at p, q, b and d. You can pause after any letter and come back. Taking 15 minutes is fine."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class six. Today we meet three letters: P, Q and R. Go at your own speed. You can stop and start the class whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "P, Q, R"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back. Say the letters with me, slowly: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O. If one slips away, that's fine. We will see them all again in the review."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A B C D E F G H I J K L M N O"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letter comes right after O?",
+    "right": "P",
+    "wrong": [
+     "N",
+     "Q",
+     "R"
+    ],
+    "why": "The alphabet goes N, O, P. So P comes right after O, and P is our first new letter today."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is P. The capital is P and the small one is p. The name of the letter is 'pee'. Its sound is a short puff, 'p'. Hold your hand in front of your mouth and say 'p'. Can you feel the puff of air? A familiar word is pen. Say it: p, p, pen. A grown-up word is paper."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "P p — pen (also: paper)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which word starts with the sound 'p'?",
+    "right": "pen",
+    "wrong": [
+     "sun",
+     "hat",
+     "dog"
+    ],
+    "why": "Pen starts with the puff sound 'p'. Sun starts with 's', hat with 'h' and dog with 'd'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is Q. The capital is Q and the small one is q. The name is 'kyoo', like the word 'cue'. In words, Q almost always comes with U, so you will see 'qu' together. Together they say 'kw'. A familiar word is queen. Say it: kw, kw, queen. A grown-up word is question."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Q q — queen (also: question). Q usually comes with U: qu"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In a word, which letter usually comes right after Q?",
+    "right": "U",
+    "wrong": [
+     "Z",
+     "M",
+     "T"
+    ],
+    "why": "Q and U travel as a pair: queen, question. When you see Q, look for U next to it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now R. The capital is R and the small one is r. The name is 'ar'. The sound is a soft growl, 'rrr'. Your lips are a little round and your tongue pulls back. A familiar word is rain. Say it: rrr, rrr, rain. Grown-up words are radio and road."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "R r — rain (also: radio, road)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which one is the small letter that matches the capital R?",
+    "right": "r",
+    "wrong": [
+     "p",
+     "q",
+     "b"
+    ],
+    "why": "The small r is a short stick with a little arm. It is the partner of R."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's match capital and small, side by side. P with p. Q with q. R with r. Some pairs look alike and some look quite different. Take your time with each one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "P — p | Q — q | R — r"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pair is a correct match?",
+    "right": "Q and q",
+    "wrong": [
+     "P and q",
+     "R and p",
+     "Q and r"
+    ],
+    "why": "Each capital has its own small partner: P with p, Q with q, R with r."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a tip about four small letters that look like mirror images: b, d, p and q. Each one has a stick and a round part. What changes is where they are. Look at p: the stick goes down, and the round part is on the right. Look at q: the stick goes down, and the round part is on the left. For b, the stick goes up and the round part is on the right. For d, the stick goes up and the round part is on the left."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Four small letters in a row. b: a tall stick with a round part on its right. d: a tall stick with a round part on its left. p: a stick going down with a round part on its right. q: a stick going down with a round part on its left."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which small letter has a stick going down and a round part on the right?",
+    "right": "p",
+    "wrong": [
+     "q",
+     "b",
+     "d"
+    ],
+    "why": "The stick goes down for p and q. The round part is on the right for p and on the left for q."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Today you met P for pen, Q for queen and R for rain. You also have a trick for telling p, q, b and d apart. It's normal for these four to take time. Next class we meet S, T and U."
+   },
+   "show": {
+    "kind": "list",
+    "text": "P p — pen | Q q — queen (qu) | R r — rain"
+   },
+   "cite": [],
+   "move": "count-in"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "P, p: name 'pee', sound 'p', word pen",
+   "links": [
+    "[[Letters A to Z: class 7, S T U]]"
+   ]
+  },
+  {
+   "topic": "Q, q: name 'kyoo', sound 'kw', word queen, usually with U",
+   "links": [
+    "[[Letters A to Z: class 7, S T U]]"
+   ]
+  },
+  {
+   "topic": "R, r: name 'ar', sound 'rrr', word rain",
+   "links": [
+    "[[Letters A to Z: class 7, S T U]]"
+   ]
+  },
+  {
+   "topic": "Telling b, d, p and q apart",
+   "links": [
+    "[[Letters A to Z: class 10, Review]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

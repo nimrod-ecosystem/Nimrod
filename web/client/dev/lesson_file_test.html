@@ -129,7 +129,76 @@ try {
   check('...its questions with no answers are said, not asked (nothing waits on an answer that cannot be given)', beatsOf(LM).every((b) => !b.beat.ask));
   check('the built-in "Right to repair" is the Sonnet lesson', BUILTIN_LESSONS.some((b) => b.id === 'right-to-repair' && b.sourcesChecked === false));
   check('*** a lesson already in the shape is read with no guesses ***', checkLesson(NUMBERS_0_9).problems.length === 0);
-  console.log('GUESSES', J(Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]))));
+  section('*** the courses (chat\'s note CK, rows 2.112 / 2.114): a class file, its shows, counted things, and its two parts of its own ***');
+  {
+    const { objectsFromText, closingBeats, OBJECT_NAMES } = await import('../lesson_file.js');
+    const one = checkLesson({ about: { title: 'One, two, three', audience: ['anyone'] }, sources: [{ id: 's1', title: 'T', publisher: 'P' }],
+      beats: [
+        { say: { who: 'A', text: 'Hello.' }, show: { kind: 'heading', text: 'One, two, three' } },
+        { say: { who: 'B', text: 'Point at each.' }, show: { kind: 'key_word', text: 'Point at each thing once' } },
+        { say: { who: 'A', text: 'Steps.' }, show: { kind: 'list', text: '1. One\n2. Two\n3. Three' }, move: 'light-in-turn' },
+        { say: { who: 'B', text: 'Pairs.' }, show: { kind: 'two_columns', text: 'Words → Expression\nyour score plus 50 → s + 50' } },
+        { say: { who: 'A', text: 'Then.' }, show: { kind: 'timeline', text: 'Jan 1: Big Bang  >  early Sept: Earth forms' } },
+        { say: { who: 'A', text: 'Big.' }, show: { kind: 'big_number', text: '4 + 3 · 7 = ?' } },
+        { say: { who: 'A', text: 'Three.' }, show: { kind: 'picture', text: 'Three coins in a row on a table. Beside them, for children, three blue balls in a row.' },
+          ask: { q: 'How many coins?', right: '3 (three)', wrong: ['2 (two)', '4 (four)'], why: 'Count them.' } },
+        { say: { who: 'B', text: 'A house.' }, show: { kind: 'picture', text: 'A house with a door and one window.' } },
+      ],
+      charts: [], notes: [{ topic: 'counting' }],
+      frame_of_reference: [{ when: '1929', elsewhere: 'Hubble found the universe expanding.', cite: ['s1'] }],
+      other_side: [{ claim: 'The universe is 13.8 billion years old.', other_view: 'The expansion rate is debated.', cite: ['s1', 's9'] }] });
+    const L1 = one.lesson;
+    const sh = (i) => L1.classes[0].beats[i].show;
+    check('*** a class file (beats at the top) is a lesson of one class, named for the class ***', !!L1 && L1.classes.length === 1 && L1.classes[0].title === 'One, two, three', J(one.problems));
+    check('...speakers "A" and "B" are the two voices; {q, right, wrong} is a question', L1.classes[0].beats[0].say.who === 'a' && L1.classes[0].beats[1].say.who === 'b'
+      && L1.classes[0].beats[6].ask.answer === '3 (three)');
+    check('*** key_word and big_number are words; list and timeline are lines; two_columns lines in pairs ***',
+      sh(1).kind === 'word' && sh(5).kind === 'word' && sh(2).kind === 'lines' && J(sh(2).items) === J(['1. One', '2. Two', '3. Three'])
+        && sh(4).kind === 'lines' && sh(4).items.length === 2 && sh(3).kind === 'lines' && J(sh(3).pairs[1]) === J(['your score plus 50', 's + 50']), J([sh(2), sh(3), sh(4)]));
+    check('*** "Three coins in a row ... for children, three blue balls" is 3 coins in a row, balls for a child - and says it guessed ***',
+      sh(6).kind === 'objects' && sh(6).object === 'coin' && sh(6).count === 3 && sh(6).layout === 'row' && sh(6).looks?.child?.object === 'ball'
+        && one.problems.some((p) => /read as 3 coins/.test(p)), J(sh(6)));
+    check('...a picture about more than a count stays a picture ("a house with a door and one window")', sh(7).kind === 'picture' && /house/.test(sh(7).of));
+    check('*** its two parts: what else was happening then, and where experts disagree; a citation not in the sources said ***',
+      J(L1.frames) === J([{ when: '1929', text: 'Hubble found the universe expanding.', cite: ['s1'] }]) && L1.otherSide[0].view === 'The expansion rate is debated.'
+        && J(L1.otherSide[0].cite) === J(['s1']) && one.problems.some((p) => /The other side 1 cites "s9"/.test(p)), J(one.problems));
+    check('*** the course shape is not a guess: no "Read as" for any of it but the counted picture ***',
+      one.problems.filter((p) => p.startsWith('Read as')).every((p) => /picture|Notes|publisher/.test(p)), J(one.problems));
+    const close = closingBeats(L1, { otherSide: true });
+    check('*** a class closes with "At the same time", then the other side: the claim, then the other view in the SECOND voice ***',
+      close.length === 3 && close[0].klass.title === 'At the same time' && /At the same time, 1929/.test(close[0].beat.say.text)
+        && close[2].klass.title === 'The other side' && close[2].beat.say.who === 'b' && close[2].beat.say.text === 'The expansion rate is debated.');
+    check('...the other side off: only "At the same time"', closingBeats(L1, { otherSide: false }).length === 1);
+    // Counted things, read carefully (a wrong number is the worst thing a counting lesson can show).
+    const O = (t) => objectsFromText(t);
+    check('*** objects: a clear count of one shared thing ***', O('Four red apples in a row.')?.count === 4 && O('Four red apples in a row.')?.object === 'apple'
+      && O('A full five-frame with 5 cups.')?.layout === 'five-frame' && O('Six house keys laid in a straight row')?.object === 'key');
+    check('*** ...but never a guess at a number: two counts, a change, a full frame and more, a quoted word, another thing ***',
+      O('A table with 8 cups: a row of 5 and a row of 3 below.') === null && O('Eight coins in a row. A ninth coin is added at the end.') === null
+        && O('A full five-frame of balls with exactly one ball underneath.') === null && O("A television on a stand. Beside it, the two capital letters 'TV'.") === null
+        && O('One red apple on a plate.') === null);
+    check('the shared objects are chat\'s list (objects.json)', OBJECT_NAMES.includes('teddy-bear') && OBJECT_NAMES.includes('tally-mark') && OBJECT_NAMES.length === 81, String(OBJECT_NAMES.length));
+    check('an "objects" show from a lesson file is checked: a count, a known name, a layout', (() => {
+      const r = checkLesson({ about: { title: 'T' }, classes: [{ beats: [{ show: { kind: 'objects', object: 'cup', count: 7, layout: 'five-frame' } },
+        { show: { kind: 'objects', object: 'unicorn', count: 2 } }, { show: { kind: 'objects', object: 'cup', count: 99 } }] }] });
+      const b = r.lesson.classes[0].beats;
+      return b.length === 2 && J(b[0].show) === J({ kind: 'objects', object: 'cup', count: 7, layout: 'five-frame' }) && b[1].show.layout === 'row'
+        && r.problems.some((p) => /"unicorn" is not one of the shared objects/.test(p)) && r.problems.some((p) => /whole number from 0 to 20/.test(p));
+    })());
+    // EVERY class bundled with the site (61 of chat's 63 on 2026-10-21; two wait for a re-make without a person's name):
+    // each one plays, with no problems but guesses.
+    const { COURSES } = await import('../lessons/courses_index.js');
+    let n = 0; const bad = [];
+    for (const c of COURSES) for (const k of c.classes) {
+      const r = checkLesson(await (await fetch(`../lessons/courses/${c.id}/${k.file}`)).json());
+      n += 1;
+      const p = r.problems.filter((x) => !x.startsWith('Read as'));
+      if (!r.lesson || p.length) bad.push(`${c.id}/${k.file}: ${p[0] || 'no lesson'}`);
+    }
+    check('*** all 61 classes of the seven courses play, with nothing wrong in them ***', n === 61 && COURSES.length === 7 && !bad.length, J({ n, bad: bad.slice(0, 5) }));
+  }
+
+  console.log('GUESSES',J(Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]))));
   window.__guesses = Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

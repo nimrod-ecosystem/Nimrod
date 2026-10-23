@@ -1,0 +1,155 @@
+{
+ "course_id": "first-words",
+ "title": "Reading and spelling first words",
+ "audience": [
+  "Adults relearning reading, for example after a brain injury",
+  "Young children"
+ ],
+ "length_note": "11 short classes of 8 to 10 minutes each. Short classes are easier to focus on and easy to repeat. The course starts with whole words that matter in daily life (yes, no, help), so the learner has early wins and a reason to read. It then teaches letter sounds and sounding out three-letter words, one vowel group at a time so nothing is rushed. Spelling by choosing letters comes after the learner can read those words. Common sight words come last, followed by a class that puts words into short sentences. Each class can be repeated before moving on.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "Three important words: yes, no, help",
+   "goal": "Recognise and say yes, no and help when seen on their own, and pick each one from a small choice of words.",
+   "minutes": 8,
+   "topics": [
+    "Why whole words matter in daily life",
+    "Looking at the shape and letters of yes, no, help",
+    "Matching a word to a picture or meaning",
+    "Pick the word you hear from 2 or 3 choices"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "Home words: water, home, TV",
+   "goal": "Recognise and say water, home and TV, and pick each one from a small choice of words.",
+   "minutes": 8,
+   "topics": [
+    "Reading water and home as whole words",
+    "TV as capital letters that stand for a word",
+    "Matching words to pictures",
+    "Mixed review with yes, no and help"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 3,
+   "title": "Letter sounds and joining them",
+   "goal": "Say the sound of common letters and blend two sounds into a short word such as at, up or in.",
+   "minutes": 10,
+   "topics": [
+    "Quick recap of letters from Letters A to Z",
+    "Letter sounds compared with letter names",
+    "Blending two sounds slowly, then faster",
+    "Reading at, in, up, on, am"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Sounding out three-letter words with A",
+   "goal": "Sound out and read simple three-letter words with the short A sound, such as cat, map, sad and hat.",
+   "minutes": 10,
+   "topics": [
+    "Three sounds, three taps: first, middle, last",
+    "Blending sound by sound into a word",
+    "Word families: cat, hat, mat, sat",
+    "Matching each word to a picture"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 5,
+   "title": "Sounding out words with I and O",
+   "goal": "Sound out and read three-letter words with short I and short O, such as sit, pin, dog and hot.",
+   "minutes": 10,
+   "topics": [
+    "The short I and short O sounds",
+    "Reading sit, pin, big, dog, hot, top",
+    "Telling A, I and O words apart",
+    "Review of A words"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 6,
+   "title": "Sounding out words with U and E",
+   "goal": "Sound out and read three-letter words with short U and short E, such as sun, cup, bed and pen.",
+   "minutes": 10,
+   "topics": [
+    "The short U and short E sounds",
+    "Reading sun, cup, bus, bed, pen, red",
+    "Mixed practice with all five vowels",
+    "Choosing the right word for a picture"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 7,
+   "title": "Spelling by choosing letters: everyday words",
+   "goal": "Spell yes, no, help and home by choosing letters in the right order from a set of letters.",
+   "minutes": 10,
+   "topics": [
+    "Spelling as choosing letters, not typing",
+    "Looking at a word, then choosing its letters in order",
+    "Fixing a wrong letter without worry",
+    "Spelling yes, no, help, home"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 8,
+   "title": "Spelling three-letter words by sound",
+   "goal": "Listen to a three-letter word, say its sounds, and choose the letters to spell it, for example cat, sit or sun.",
+   "minutes": 10,
+   "topics": [
+    "Say the word slowly and find each sound",
+    "Choosing the first, middle and last letter",
+    "Checking by sounding out what was spelled",
+    "Words with all five vowels"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 9,
+   "title": "Common sight words, set one",
+   "goal": "Recognise and read a first set of very common words at a glance, such as the, a, I, to, and, is.",
+   "minutes": 10,
+   "topics": [
+    "What sight words are and why they are worth knowing by sight",
+    "Reading the, a, I, to, and, is",
+    "Spotting them in short lines of text",
+    "Choosing their letters to spell them"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Common sight words, set two",
+   "goal": "Recognise and read a second set of common words at a glance, such as you, it, we, my, in, he and she.",
+   "minutes": 10,
+   "topics": [
+    "Reading you, it, we, my, in, he, she",
+    "Mixing set one and set two",
+    "Spotting them in short lines of text",
+    "Choosing their letters to spell some of them"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "Putting words together: short sentences",
+   "goal": "Read short sentences such as 'I see the cat' and 'Help me' using sounding out and sight words.",
+   "minutes": 10,
+   "topics": [
+    "Reading left to right, one word at a time",
+    "Using sight words and sounding out together",
+    "Reading everyday sentences with yes, no, help, water, home",
+    "Choosing the missing word to finish a sentence",
+    "What to practise next"
+   ],
+   "needs_research": false
+  }
+ ]
+}

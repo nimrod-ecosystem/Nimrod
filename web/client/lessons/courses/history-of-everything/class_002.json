@@ -1,0 +1,801 @@
+{
+ "about": {
+  "title": "The Big Bang and the First Minutes",
+  "course": "history-of-everything",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. That is roughly 2,000 spoken words plus six short questions. It runs a little full because it covers two debates: who discovered the expansion, and what came before the Big Bang. A teacher can stop after beat 14 (the recap) and use beats 15 to 19 as a second sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "29.4 The Cosmic Microwave Background (Astronomy 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/astronomy-2e/pages/29-4-the-cosmic-microwave-background",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "Big Bang and the Evolution of the Universe",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/astrophysics/programs/physics-of-the-cosmos/big-bang-and-the-evolution-of-the-universe/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "The Big Bang & the Standard Model of the Universe",
+   "publisher": "Australia Telescope National Facility (CSIRO)",
+   "date": "n.d.",
+   "link": "https://www.atnf.csiro.au/resources/education/senior-cosmicengine/cosmology/bigbang/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Fact sheet: Evidence for the Big Bang",
+   "publisher": "University of Western Australia",
+   "date": "n.d.",
+   "link": "https://www.uwa.edu.au/study/-/media/Faculties/Science/Docs/Evidence-for-the-Big-Bang.pdf",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "The Expanding Universe (Cosmology: Ideas)",
+   "publisher": "American Institute of Physics, History Center",
+   "date": "n.d.",
+   "link": "https://history.aip.org/exhibits/cosmology/ideas/expanding.htm",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Hubble's Law and the expanding universe",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2015-03-17",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1424299112",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Move over, Hubble: Discovery of expanding cosmos assigned to little-known Belgian astronomer-priest",
+   "publisher": "Science (AAAS)",
+   "date": "n.d.",
+   "link": "https://www.science.org/content/article/move-over-hubble-discovery-expanding-cosmos-assigned-little-known-belgian-astronomer",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Lemaitre's Limit (Journal of the Royal Astronomical Society of Canada commentary, on who discovered expansion)",
+   "publisher": "arXiv",
+   "date": "2012",
+   "link": "https://arxiv.org/pdf/1212.6566",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Cosmology: On the trail with Georges Lemaître, the father of Big Bang theory",
+   "publisher": "KU Leuven",
+   "date": "n.d.",
+   "link": "https://stories.kuleuven.be/en/stories/cosmology-on-the-trail-with-georges-lemaitre-the-father-of-big-bang-theory",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Big bang theory",
+   "publisher": "AccessScience (McGraw Hill)",
+   "date": "n.d.",
+   "link": "https://www.accessscience.com/content/article/a080900",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Nucleosynthesis",
+   "publisher": "The Physics Hypertextbook (physics.info)",
+   "date": "n.d.",
+   "link": "https://physics.info/nucleosynthesis/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "Big Bang Nucleosynthesis: Probing the First 20 Minutes (G. Steigman)",
+   "publisher": "The Ohio State University, via arXiv",
+   "date": "2003",
+   "link": "https://arxiv.org/pdf/astro-ph/0307244",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "A Conceptual Tour About the Standard Cosmological Model",
+   "publisher": "arXiv",
+   "date": "2004",
+   "link": "https://arxiv.org/pdf/astro-ph/0409280",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "Cosmos: The Big Bang",
+   "publisher": "Science for the Public",
+   "date": "n.d.",
+   "link": "https://www.scienceforthepublic.org/things-to-know/cosmos/cosmos-the-big-bang/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s15",
+   "title": "Planck science highlights",
+   "publisher": "European Space Agency",
+   "date": "n.d.",
+   "link": "https://www.esa.int/Science_Exploration/Space_Science/Planck/Planck_science_highlights",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s16",
+   "title": "Cosmic Microwave Background Discovered 50 Years Ago Today",
+   "publisher": "American Museum of Natural History",
+   "date": "2014",
+   "link": "https://www.amnh.org/explore/news-blogs/cmb-anniversary",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s17",
+   "title": "The Cosmic Microwave Background: The history of its experimental investigation and its significance for cosmology",
+   "publisher": "arXiv",
+   "date": "2015",
+   "link": "https://arxiv.org/pdf/1506.01907",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s18",
+   "title": "Big Bang (Cosmos encyclopedia)",
+   "publisher": "Swinburne University of Technology, Centre for Astrophysics and Supercomputing",
+   "date": "n.d.",
+   "link": "https://astronomy.swin.edu.au/cosmos/*/Big+Bang",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s19",
+   "title": "What is the Big Bang Theory?",
+   "publisher": "Space.com",
+   "date": "n.d.",
+   "link": "https://www.space.com/25126-big-bang-theory.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s20",
+   "title": "The Matter Bounce Alternative to Inflationary Cosmology",
+   "publisher": "arXiv",
+   "date": "2012",
+   "link": "https://arxiv.org/pdf/1206.4196",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s21",
+   "title": "Bang, Bounce or Something Else?",
+   "publisher": "Simons Foundation",
+   "date": "n.d.",
+   "link": "https://www.simonsfoundation.org/news/bang-bounce-or-something-else/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s22",
+   "title": "What came before the big bang?",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/what-came-before-the-big-bang-cosmology/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s23",
+   "title": "Bouncing Cosmologies: Progress and Problems",
+   "publisher": "arXiv",
+   "date": "2016",
+   "link": "https://arxiv.org/pdf/1603.05834",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s24",
+   "title": "The simplest origin of the big bounce and inflation (describes the 'A Cosmic Controversy' exchange)",
+   "publisher": "arXiv",
+   "date": "2018",
+   "link": "https://arxiv.org/pdf/1801.08076",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s25",
+   "title": "What Happened Before the Big Bang? Key Theories",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/what-happened-before-the-big-bang-key-theories/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s26",
+   "title": "What's in a Name: History and Meanings of the Term 'Big Bang'",
+   "publisher": "arXiv",
+   "date": "2013",
+   "link": "https://arxiv.org/pdf/1301.0219",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s27",
+   "title": "Big Bang: the etymology of a name",
+   "publisher": "Astronomy & Geophysics (Oxford University Press)",
+   "date": "2013",
+   "link": "https://academic.oup.com/astrogeo/article/54/2/2.28/302975",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s28",
+   "title": "How old is the universe?",
+   "publisher": "Space.com",
+   "date": "n.d.",
+   "link": "https://www.space.com/24054-how-old-is-the-universe.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s29",
+   "title": "1929 Archives",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/a-year-in-history/1929",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s30",
+   "title": "1929 Timeline and Events",
+   "publisher": "Historic Newspapers",
+   "date": "n.d.",
+   "link": "https://www.historic-newspapers.com/blogs/article/1929-timeline",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s31",
+   "title": "Trans-Atlantic Solo-Flying IS Jazz Age",
+   "publisher": "Cooper Hewitt, Smithsonian Design Museum",
+   "date": "2017-07-16",
+   "link": "https://www.cooperhewitt.org/2017/07/16/trans-atlantic-solo-flying-is-jazz-age/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s32",
+   "title": "Notable Events of 1964",
+   "publisher": "Pittsburgh Theological Seminary",
+   "date": "n.d.",
+   "link": "https://www.pts.edu/Notable-Events-of-1964",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s33",
+   "title": "Discovery of the Expansion of the Universe",
+   "publisher": "arXiv",
+   "date": "2011",
+   "link": "https://arxiv.org/pdf/1108.0709",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s34",
+   "title": "How did the first element form after the Big Bang?",
+   "publisher": "Astronomy magazine",
+   "date": "n.d.",
+   "link": "https://www.astronomy.com/science/how-did-the-first-element-form-after-the-big-bang/",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we talked about how we know things: reading evidence and telling time. Today we put that to work on the very first page of the story. By the end, you should be able to say in plain words what the Big Bang model claims. You should also be able to name the main clues behind it. We will go slowly, and it is fine to pause and replay any part."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Big Bang and the First Minutes"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a number to hold onto. Measurements from the European Space Agency's Planck telescope give the age of the universe as about 13.8 billion years. A fair warning: that is a best estimate, not a final one. Different missions give slightly different answers. They tend to land close together, and almost certainly under 14 billion years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 13.8 billion years"
+   },
+   "cite": [
+    "s15",
+    "s28"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what does the Big Bang model actually say? In one breath: the universe was once extremely hot and dense, and it has been expanding and cooling ever since. People often picture an explosion in the middle of an empty room. That picture is wrong. Think of dots drawn on a balloon. As the balloon inflates, every dot moves away from every other dot, and no dot is the center. The universe is not growing into some larger space. Space itself is what is stretching. And your body, the Earth and even whole galaxies do not stretch. Gravity holds them together."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: A common picture (wrong): an explosion in the middle of empty space. Right: The model: space itself stretches, so every distant galaxy moves away from every other. Galaxies, planets and people do not grow."
+   },
+   "cite": [
+    "s17",
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the Big Bang model, what is expanding?",
+    "right": "The space between distant galaxies",
+    "wrong": [
+     "Every star and galaxy is slowly growing bigger",
+     "Galaxies are flying outward into empty space beyond the universe",
+     "Only the Milky Way is expanding"
+    ],
+    "why": "Space between galaxies stretches, while galaxies themselves are held together by gravity. The universe is not expanding into anything."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Clue number one: galaxies are moving apart. In the early 1900s, astronomers studying faint spiral smudges found that their light was shifted toward the red end of the spectrum. Starting around 1912, many of these smudges showed big shifts. Think of it as light being stretched on its way to us. Then in 1929, Edwin Hubble published a short paper showing something simple and powerful. The farther away a galaxy is, the faster it is moving away from us. Hubble's distance measurements also showed that these smudges lie far beyond our own Milky Way. They are other galaxies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Clue 1: farther galaxies, faster retreat"
+   },
+   "cite": [
+    "s10",
+    "s3",
+    "s6",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how the discovery unfolded. In 1922, Russian mathematician Alexander Friedmann found that Einstein's equations allowed a universe that is not standing still. In 1924 and 1925, astronomers Wirtz and Lundmark noticed that fainter, probably more distant, spirals had larger redshifts. In 1927, Georges Lemaître worked out an expanding universe and compared it with the observations. In 1929, Hubble published his own result. In 1931, Hubble and his assistant Humason added many more galaxies, which put the pattern beyond reasonable doubt."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1922 Friedmann: equations allow expansion | 1924-25 Wirtz and Lundmark: farther spirals show larger redshifts | 1927 Lemaître: expansion worked out, published in French | 1929 Hubble: distance-speed relation | 1931 Hubble and Humason: more data"
+   },
+   "cite": [
+    "s5",
+    "s33",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who gets the credit? This is a real argument, so let's give both sides. Lemaître was a Belgian priest and astronomer. His 1927 paper appeared in French in a little-read Belgian journal, so almost nobody noticed it. Two years later Hubble used largely the same data and became famous for it. Because of that, the relation is usually called Hubble's law. In 2018, the International Astronomical Union moved to share the credit with Lemaître. Even so, not everyone agrees on how to tell the story. Some writers say Lemaître supplied the theory, while Hubble supplied the observational proof that convinced the field. Lemaître also went one step further. If space is expanding, he reasoned, then long ago everything must have been smaller and denser. That thought is the seed of the Big Bang."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Lemaître, 1927: theory plus first estimate of the rate, in an obscure journal. Hubble, 1929: clear observational evidence that convinced astronomers."
+   },
+   "cite": [
+    "s5",
+    "s7",
+    "s8",
+    "s9",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who first published the idea of an expanding universe, backed by galaxy data, in 1927?",
+    "right": "Georges Lemaître",
+    "wrong": [
+     "Edwin Hubble",
+     "Arno Penzias",
+     "Fred Hoyle"
+    ],
+    "why": "Lemaître published in 1927. Hubble's famous paper came in 1929 and used largely the same data. Historians still discuss how to share the credit."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Clue number two: a leftover glow. If the universe really began hot and dense, the radiation from that time should still be around us. It should come from every direction, like faint heat left in a room after a fire. In the late 1940s, Ralph Alpher, Robert Herman and George Gamow worked out that such a glow should exist. Almost nobody went looking for it at that time. In the 1960s, a group at Princeton University, who had been redoing those calculations, were getting ready to hunt for it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Clue 2: the leftover glow (the cosmic microwave background, or CMB)"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And then the glow was found by accident, a few miles from Princeton. At Bell Labs in Holmdel, New Jersey, Arno Penzias and Robert Wilson had a big horn-shaped antenna. They kept picking up a faint hiss, even when they pointed it at empty sky. They took the instrument apart and checked everything. They even cleaned out pigeons that had been roosting inside. The hiss stayed. They were radio astronomers, not cosmologists. When they talked about the puzzle, they were put in touch with the Princeton group. The Princeton group recognized it as the predicted afterglow of the early universe. Penzias and Wilson shared the Nobel Prize in Physics in 1978."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge white horn-shaped radio antenna on a hillside in New Jersey, pointing at the sky. Two men in jackets stand in front of it, and a few pigeons sit on the rim."
+   },
+   "cite": [
+    "s1",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Penzias and Wilson find in their antenna?",
+    "right": "A faint microwave hiss coming from every direction, which turned out to be the early universe's afterglow",
+    "wrong": [
+     "Droppings from pigeons, which were the whole source of the noise",
+     "Radio signals from a nearby city",
+     "A signal from one particular star"
+    ],
+    "why": "The pigeons were a distraction and were cleaned out, but the noise remained. It came from all directions, and it was the leftover radiation from the early universe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why is it called a microwave background, and why is it so cold? That light was released when the universe was about 380,000 years old. Since then, the expansion has stretched it into low-energy microwaves. Today it is a glow at about 2.7 kelvin, which is roughly minus 270 degrees Celsius. Later satellites, such as the COBE satellite in the early 1990s, measured its spectrum with great care. The spectrum matched a theoretical 'blackbody' curve so exactly that you cannot tell the data from the curve on a graph."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 2.7 kelvin (about minus 270 °C)"
+   },
+   "cite": [
+    "s2",
+    "s10",
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before the CMB was found, the Big Bang had a serious rival. It was called the Steady State theory. It said the universe has no beginning. It looks the same at all times and places, with new matter being created all the time to fill the gaps as space expands. Fred Hoyle, one of its authors, is the person who coined the phrase 'big bang', in a BBC radio talk on 28 March 1949. You will often hear that he meant it as a joke against the idea. Historians are not so sure. One study says that story is well known but not necessarily correct, and the name took over twenty years to catch on. Before 1964 the steady-state idea still had respectable supporters. The CMB was a game changer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Big Bang: the universe had a hot, dense beginning and has cooled as it expanded. Steady State: no beginning, always the same on large scales, matter continually created."
+   },
+   "cite": [
+    "s26",
+    "s27",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's look around at the rest of the world, as this course always does. In May 1927, while Lemaître's paper sat unread in Brussels, Charles Lindbergh flew solo and non-stop from New York to Paris. In 1929, the year of Hubble's paper, Martin Luther King Jr. was born in January and Anne Frank in June. In October, the Wall Street crash began the Great Depression. And in 1964, when the hiss was first heard, the U.S. Civil Rights Act was signed in July. The Beatles also played on the Ed Sullivan Show, and Tokyo hosted the Olympics. So the discovery of the universe's beginning happened in the same decades as those events."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1927: Lindbergh's solo Atlantic flight; Lemaître's paper | 1929: MLK born (Jan), Anne Frank born (June), Wall Street crash (Oct); Hubble's paper | 1964: Civil Rights Act (July), Beatles on Ed Sullivan, Tokyo Olympics; the hiss found"
+   },
+   "cite": [
+    "s31",
+    "s5",
+    "s29",
+    "s30",
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now back to the first few minutes. Protons and neutrons formed in the first second or so. As the universe cooled, they began joining. The main work was done within about three minutes, and it was all finished within roughly twenty. Think of a very brief cosmic kitchen that closed early. What came out was nuclei of hydrogen and helium, plus tiny traces of lithium and a heavy form of hydrogen called deuterium. Nothing heavier than lithium was made in this early kitchen."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "first second: protons and neutrons form | about 3 minutes: fusion makes helium nuclei, process mostly done | about 20 minutes: finished | result: hydrogen, helium, traces of lithium"
+   },
+   "cite": [
+    "s34",
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This gives us clue number three. The model predicts the mix that came out of that kitchen, which is about three parts hydrogen to one part helium by mass. When astronomers measure the oldest, least-changed gas, the mix matches. Stars alone could not have made so much helium, so it must come from earlier. Everything heavier, like the carbon in you and the iron in your blood, was made later inside stars. That is the story of the next class."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "What the first minutes made, by mass (rounded)"
+   },
+   "cite": [
+    "s11",
+    "s13",
+    "s10"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which elements did the Big Bang's first minutes mostly produce?",
+    "right": "Hydrogen and helium, with tiny traces of lithium",
+    "wrong": [
+     "Carbon and oxygen",
+     "Iron and nickel",
+     "Gold and silver"
+    ],
+    "why": "The first minutes made hydrogen, helium and a little lithium. Heavier elements came much later, from stars."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came a long wait. For about 380,000 years, the universe was a hot, glowing mist of charged particles, which was opaque. Light kept bouncing off the free electrons, a bit like sunlight in fog. At around 3,000 kelvin, the nuclei finally held on to electrons, and the first real atoms formed. Scientists call this recombination. With the electrons now locked into atoms, light could travel freely for the first time. That light is the cosmic microwave background we still detect today. It was still dark, because there were no stars. They arrived hundreds of millions of years later."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cartoon fog in the first panel, full of tiny sparks, and a bright cloudless sky in the second. Between the two panels, a label reads 380,000 years."
+   },
+   "cite": [
+    "s2",
+    "s14",
+    "s1",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why could light travel freely after about 380,000 years?",
+    "right": "Electrons joined nuclei to form atoms, so there were far fewer free electrons to scatter light",
+    "wrong": [
+     "The first stars lit up the sky",
+     "The universe suddenly became empty",
+     "All the helium disappeared"
+    ],
+    "why": "After recombination, the electrons were locked inside atoms and no longer scattered the light. The universe became transparent, and that light is the CMB."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's recap. There are four main lines of evidence for the Big Bang model. One: the universe is expanding. Two: the cosmic microwave background exists, and it has the right temperature and spectrum. Three: the amounts of hydrogen and helium match the model's predictions. Four: the oldest known stars are about as old as the model's age. Several different kinds of measurement point to the same story. That agreement is why most scientists accept it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The universe is expanding | 2. The cosmic microwave background | 3. Hydrogen and helium amounts | 4. Ages of the oldest stars"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now for what the model does not say. Those four clues describe how the universe has changed since it was hot and dense. They do not say what caused the hot, dense state, and they do not tell us what, if anything, came before it. The Big Bang model is still described as an incomplete picture, with some problems unsolved. For the earliest instants, we would need a theory that joins gravity and quantum physics, and no such working theory exists yet. So any answer about 'before' is an educated guess."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The edge of the map: what the model cannot say"
+   },
+   "cite": [
+    "s10",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One idea that tries to fill the gap is cosmic inflation. In 1980, physicist Alan Guth proposed that the universe went through a very brief burst of extremely fast expansion, early on. In one common version, space grew by a factor of about ten to the fifty. Inflation is not part of the original Big Bang model. It was added to answer questions about why the universe is so smooth and flat. Inflation also predicted a pattern of tiny ripples in the early universe, and precise CMB measurements confirmed that pattern. The CMB is one of the few ways we can test the inflation idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inflation: a brief, very fast stretch of space, proposed in 1980"
+   },
+   "cite": [
+    "s19",
+    "s18",
+    "s20",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But inflation has critics, and some of them helped build it. Most cosmologists agree that something must have set the stage, but they disagree on what. Paul Steinhardt, one of the creators of inflation, now argues against it. He backs a model in which our big bang is really a big bounce: a universe that was contracting, then turned around and expanded. A bounce needs no inflation, and some versions allow things from before the bounce to survive. Other ideas include a mirror universe on the other side of the bang. Critics of inflation also point out a problem: under standard assumptions, inflation itself would have to begin from a singularity. Bounce models answer that, but they need new physics of their own."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Inflation: a quick burst of stretching. Bounce: a contraction, then a turnaround. Both try to explain a smooth, flat universe. Neither is settled."
+   },
+   "cite": [
+    "s21",
+    "s22",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Is this a fringe fight? No, it is a real argument among serious physicists. A group of 33 well-known physicists, including four Nobel laureates, wrote a reply called A Cosmic Controversy. They said inflation can be tested and has been successful. The critics answered that inflation has become hard to test. At present, no observation clearly decides between a bang and a bounce. So when someone says that science has explained what came before the Big Bang, be careful. Right now it is an open question."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Defenders: inflation is testable and has passed tests | Critics: it can be bent to fit anything | Today: no observation settles bang versus bounce"
+   },
+   "cite": [
+    "s24",
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the fairest way to describe what came before the Big Bang?",
+    "right": "Scientists disagree, and no evidence yet settles it",
+    "wrong": [
+     "Science has proved that a bounce came first",
+     "Science has proved that nothing came before",
+     "Inflation has been disproved, so the question is closed"
+    ],
+    "why": "Inflation and bounce models are both being explored, and experts disagree. Nobody can yet say which, if either, is right."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To wrap up: about 13.8 billion years ago, the universe was hot and dense, and it has been expanding and cooling ever since. Galaxies moving apart, the leftover glow, the mix of hydrogen and helium, and the ages of old stars all agree with that picture. Where it gets uncertain is the very earliest moment and anything before it. You have done well today. Next class, the first stars switch on, and the universe begins making the elements that you and I are made of."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: First Stars, Galaxies and the Making of the Elements"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Mix of elements made in the first minutes (share of mass, rounded)",
+   "rows": [
+    {
+     "label": "Hydrogen (about 75%)",
+     "value": 75,
+     "source": "s11"
+    },
+    {
+     "label": "Helium (about 25%)",
+     "value": 25,
+     "source": "s11"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Hubble-Lemaître law (redshift and the expanding universe)",
+   "links": [
+    "[[How do we know]]",
+    "[[Redshift]]",
+    "[[Galaxies]]"
+   ]
+  },
+  {
+   "topic": "Cosmic microwave background",
+   "links": [
+    "[[Penzias and Wilson]]",
+    "[[Recombination]]",
+    "[[Big Bang]]"
+   ]
+  },
+  {
+   "topic": "Big Bang nucleosynthesis",
+   "links": [
+    "[[Stellar nucleosynthesis]]",
+    "[[First stars and galaxies]]"
+   ]
+  },
+  {
+   "topic": "Cosmic inflation and bounce models",
+   "links": [
+    "[[Big Bang]]",
+    "[[Steady State theory]]"
+   ]
+  },
+  {
+   "topic": "Steady State theory and the name 'Big Bang'",
+   "links": [
+    "[[Fred Hoyle]]",
+    "[[Big Bang]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "May 1927 (Lemaître's paper appears the same year)",
+   "elsewhere": "Charles Lindbergh flew the first solo non-stop flight from New York to Paris.",
+   "cite": [
+    "s31",
+    "s5"
+   ]
+  },
+  {
+   "when": "1929 (Hubble's paper)",
+   "elsewhere": "Martin Luther King Jr. was born on January 15 and Anne Frank on June 12. In October, the Wall Street crash began the Great Depression.",
+   "cite": [
+    "s6",
+    "s29",
+    "s30"
+   ]
+  },
+  {
+   "when": "1964 (Penzias and Wilson first hear the hiss)",
+   "elsewhere": "The Civil Rights Act was signed on July 2. The Beatles appeared on The Ed Sullivan Show. Tokyo hosted the Summer Olympics.",
+   "cite": [
+    "s16",
+    "s32"
+   ]
+  },
+  {
+   "when": "The first 380,000 years after the Big Bang",
+   "elsewhere": "There were no stars and no light to see by yet. Light could not travel freely until atoms formed.",
+   "cite": [
+    "s14",
+    "s10"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Hubble discovered the expansion of the universe.",
+   "other_view": "Lemaître published an expanding-universe model, with a first estimate of the rate, in 1927, two years before Hubble. The International Astronomical Union moved to share the credit with Lemaître. Some historians dispute details of how the two men's work was linked, including whether they met in 1928. Others say Lemaître supplied the theory and Hubble the observational proof.",
+   "cite": [
+    "s7",
+    "s8",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Hoyle coined the name 'Big Bang' as an insult.",
+   "other_view": "This is the popular story, but one historical study says it is not necessarily correct. The name took more than two decades to catch on. Hoyle himself later said he had not meant it as mockery.",
+   "cite": [
+    "s27",
+    "s26"
+   ]
+  },
+  {
+   "claim": "The Big Bang was followed by cosmic inflation, which explains our smooth, flat universe.",
+   "other_view": "Inflation is not part of the original Big Bang model. Defenders say CMB measurements confirmed its predictions. Critics, including one of its co-creators, argue that it still faces conceptual problems and propose bounce models with no inflation.",
+   "cite": [
+    "s18",
+    "s20",
+    "s21",
+    "s23",
+    "s24"
+   ]
+  },
+  {
+   "claim": "The universe is 13.8 billion years old.",
+   "other_view": "This is the best current estimate, but the exact figure is not settled. Different missions give slightly different numbers, mostly within their uncertainties.",
+   "cite": [
+    "s15",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Penzias and Wilson discovered the CMB in 1964.",
+   "other_view": "The American Museum of Natural History dates the discovery to May 1964. Some other sources give 1965, the year the papers announcing it appeared. Both are used.",
+   "cite": [
+    "s16",
+    "s10"
+   ]
+  }
+ ]
+}

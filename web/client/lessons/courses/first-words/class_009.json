@@ -1,0 +1,209 @@
+{
+ "about": {
+  "title": "Common sight words, set one",
+  "course": "first-words",
+  "class_n": 9,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits six small words, a few short lines to read, and some letter choosing. You can pause after any step and come back, so take longer if you want."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we meet six small words. You will see them again and again, so they are worth knowing at a glance."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Words you know at a glance"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A sight word is a word you learn to know straight away, the way you know a friend's face. You do not need to sound it out each time. Some of these words do not sound the way they look, so knowing them by sight helps."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sight word = a word you know at a glance"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are today's six words. We will take them two at a time. Go slowly. There is no rush."
+   },
+   "show": {
+    "kind": "list",
+    "text": "the  ·  a  ·  I  ·  to  ·  and  ·  is"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First pair: the, and a. 'The' has three letters: t, h, e. 'A' is just one letter, and it is also a whole word. Say them out loud: the. A."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "the | a"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second pair: I, and to. 'I' is one tall letter that is also a whole word. It is how we write about ourselves. 'To' has two letters: t, o. It sounds like 'too'. Say them: I. To."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "I | to"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last pair: and, and is. 'And' joins things together, like 'tea and toast'. 'Is' says what something is, like 'the sun is hot'. Say them: and. Is."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "and | is"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try one. Look at the short line and find the word 'is'.",
+    "note": "Read the line out loud first."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The dog is up."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word in 'The dog is up.' is the word 'is'?",
+    "right": "is",
+    "wrong": [
+     "The",
+     "dog",
+     "up"
+    ],
+    "why": "'Is' has two letters, i and s. It is the third word in the line."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a longer line. Many of our six words are hiding in it. Take your time and see how many you can spot: I, to, the, and, a, is."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "I go to the shop and I see a bus."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which word in the line joins 'go to the shop' with 'I see a bus'?",
+    "right": "and",
+    "wrong": [
+     "the",
+     "to",
+     "is"
+    ],
+    "why": "'And' joins the two halves of the line together."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we spell by choosing letters. There is no typing. Just pick the right ones, in order. Let's spell 'to'. First t, then o."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "to = t + o"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which letters, in order, spell 'to'?",
+    "right": "t, o",
+    "wrong": [
+     "o, t",
+     "t, u",
+     "d, o"
+    ],
+    "why": "'To' starts with t and ends with o. The sound is 'too', but the spelling is t, o."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more. Spell 'and'. It starts with a, then n, then d."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "and = a + n + d"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which letters, in order, spell 'and'?",
+    "right": "a, n, d",
+    "wrong": [
+     "a, d, n",
+     "n, a, d",
+     "d, a, n"
+    ],
+    "why": "'And' is a, then n, then d. Say it slowly and listen for each letter."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done, {name}. You met six words today: the, a, I, to, and, is. You will see them everywhere now. Next class we meet a second set. Rest if you need to, and come back whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "the · a · I · to · and · is"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Sight words, set one",
+   "links": [
+    "[[Letter sounds and joining them]]",
+    "[[Common sight words, set two]]",
+    "[[Putting words together: short sentences]]"
+   ]
+  },
+  {
+   "topic": "Spelling by choosing letters",
+   "links": [
+    "[[Spelling by choosing letters: everyday words]]",
+    "[[Spelling three-letter words by sound]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -21,7 +21,7 @@
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
 import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS, routedQuestions,
-  voiceFor, SECOND_VOICE_STEP, ASK_WAIT_MS } from '../modules/lesson_player.js';
+  voiceFor, SECOND_VOICE_STEP, ASK_WAIT_MS, named } from '../modules/lesson_player.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, unlockedFrom } from '../lessons.js';
 import { checkLesson, beatsOf } from '../lesson_file.js';
 import { NUMBERS_0_9, BUILTIN_LESSONS } from '../lessons_builtin.js';
@@ -267,6 +267,64 @@ try {
         && /Town council, 2025/.test(f.q('[data-part="source"]').textContent) && /not checked/.test(f.q('[data-part="source"]').textContent)
         && f.box.querySelectorAll('[data-lp-act="next"]').length === 1, J(parts));
     f.done();
+  }
+
+  section('*** THE COURSES (chat\'s note CK 3): chosen like a lesson, a class at a time, the next one offered at the end ***');
+  {
+    const { COURSES } = await import('../lessons/courses_index.js');
+    // (61 of chat's 63: two letters classes spell a person's name as their content, and wait for chat's neutral re-make.)
+    check('seven courses, 61 classes, bundled with the site; the other side off by default for a beginner\'s course only',
+      COURSES.length === 7 && COURSES.reduce((n, c) => n + c.classes.length, 0) === 61
+        && COURSES.find((c) => c.id === 'numbers-0-9').otherSide === false && COURSES.find((c) => c.id === 'history-of-everything').otherSide === true);
+    const st = fakeRow({ form: 'slides', lessonId: 'course:numbers-0-9' });
+    const c = mountLesson(st);
+    check('*** a course is offered under "Which lesson", saying it is a course ***', c.inst.impl.settingsChoices().lessonId.some((o) => o.value === 'course:numbers-0-9' && /a course: 9 classes/.test(o.label)));
+    check('...its class is fetched when it is played: "Opening class 1..." meanwhile', /Opening class 1 of/.test(c.box.textContent) || c.probe().total > 0);
+    const opened = async (fn, ms = 4000) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await new Promise((r) => setTimeout(r, 30)); } return false; };
+    check('*** class 1 opens and plays, its sources shown as not checked ***', await opened(() => c.probe().total > 10) && c.probe().title === 'One, two, three' && c.probe().unchecked === true,
+      J({ total: c.probe().total, title: c.probe().title, problems: c.probe().problems.slice(0, 2) }));
+    check('the bar names the class', /Class 1 ·/.test(c.q('.lp-top')?.textContent || ''));
+    check('"Which class" lists the course\'s classes', J(c.inst.impl.settingsChoices().classN.map((o) => o.value)) === J([1, 2, 3, 4, 5, 6, 7, 8, 9]));
+    let sawObjects = false;
+    for (let i = 0; i < 200 && c.probe().at < c.probe().total; i += 1) { if (c.q('.lp-objects')) sawObjects = true; c.q('[data-lp-act="next"]').click(); }
+    check('*** counted things are drawn as the course\'s objects (a dot with its name), not bare circles ***', sawObjects);
+    check('*** the end of a class offers the next class, by name ***', !!c.q('[data-lp-act="nextclass"]') && /Next: class 2/.test(c.box.textContent) && /Next is class 2/.test(c.said.at(-1)));
+    c.q('[data-lp-act="nextclass"]').click();
+    check('*** "Next class": class 2, from its start, kept on the panel\'s row ***', await opened(() => c.probe().total > 5 && c.probe().at === 0 && /Class 2 ·/.test(c.q('.lp-top')?.textContent || ''))
+      && st.get().classN === 2, J({ at: c.probe().at, classN: st.get().classN, top: c.q('.lp-top')?.textContent }));
+    c.done();
+    // The other side, on a history class: said in the second voice at the end, on by default there; off when chosen.
+    const hs = fakeRow({ form: 'slides', lessonId: 'course:history-of-everything' });
+    const h = mountLesson(hs);
+    await opened(() => h.probe().total > 10);
+    const total = h.probe().total;
+    h.inst.impl.onShow?.();
+    const lastBeats = [];
+    for (let i = 0; i < 300 && h.probe().at < h.probe().total; i += 1) { if (h.probe().at >= total - 12) lastBeats.push(h.q('.lp-top')?.textContent || ''); h.q('[data-lp-act="next"]').click(); }
+    check('*** a history class closes with "At the same time" and "The other side" (on by default for it) ***',
+      lastBeats.some((t) => /At the same time/.test(t)) && lastBeats.some((t) => /The other side/.test(t)), J(lastBeats.slice(-4)));
+    hs.set({ otherSide: 'off' });
+    check('...the other side off: fewer parts, none of them the other side', h.probe().total < total, `${h.probe().total} < ${total}`);
+    hs.set({ form: 'read', otherSide: 'on' });
+    check('*** the Read form has both parts as sections ***', !!h.q('[data-lp-frames]') && !!h.q('[data-lp-other]'));
+    h.done();
+    // THE LEARNER'S NAME: the courses carry {name}, never a person's name; the panel fills it, or leaves it out.
+    check('*** pure: "Hello {name}." is "Hello, Sam" with a name, and "Hello." without one ***',
+      named('Hello {name}.', 'Sam') === 'Hello Sam.' && named('Hello {name}.') === 'Hello.' && named('Well done, {name}.') === 'Well done.'
+        && named('Well done, {name}, and well done to everyone.', 'Sam') === 'Well done, Sam, and well done to everyone.'
+        && named('Welcome back, {name}, and welcome to anyone joining us.') === 'Welcome back, and welcome to anyone joining us.',
+      J([named('Hello {name}.'), named('Well done, {name}, and well done to everyone.')]));
+    const ns = fakeRow({ form: 'slides', lessonId: 'course:counting-and-adding', learnerName: 'Sam' });
+    const nm = mountLesson(ns);
+    await opened(() => nm.probe().total > 5);
+    check('*** a course greets the learner by the panel\'s name ***', /^Hello,? Sam\b/.test(nm.said[0] || ''), J(nm.said[0]));
+    ns.set({ learnerName: '' });
+    check('...with none, it greets nobody by name', !/\{name\}|Sam/.test(nm.said.at(-1) || '') && /^Hello\b/.test(nm.said.at(-1) || ''), J(nm.said.at(-1)));
+    nm.done();
+    // Nobody's name is in the site's own courses (CLAUDE.md: site copy never names the person it was first built for).
+    let named0 = 0;
+    for (const c of COURSES) for (const k of c.classes) if (/christine|cici/i.test(await (await fetch(`../lessons/courses/${c.id}/${k.file}`)).text())) named0 += 1;
+    check('*** no class bundled with the site names a person ***', named0 === 0 && !/christine|cici/i.test(J(COURSES)), String(named0));
   }
 
   section('*** two voices (row 2.111): B\'s lines in the second voice, everything else in the person\'s own ***');

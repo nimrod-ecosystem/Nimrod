@@ -1,0 +1,402 @@
+{
+ "about": {
+  "title": "More, fewer or the same",
+  "course": "numbers-0-9",
+  "class_n": 8,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits this class. It has one idea (compare two groups), three short words, and many small questions. You can stop after any question and pick up again later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class eight. Today we look at two groups and say which one has more, which has fewer, or whether they are the same."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "More, fewer or the same"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You already know the numbers 0 to 9. Now you will use them. Go at your own pace. You can stop at any question and come back."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today:\n- Line up two groups\n- Three words: more, fewer, same\n- Compare two digits\n- Zero is the smallest"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To compare two groups, put them side by side, one above the other. Here are two rows of cups. The top row has 3 cups. The bottom row has 5 cups. Put each top cup next to a bottom cup, one to one."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two rows of plain white cups on a table. Top row: 3 cups. Bottom row: 5 cups. The first 3 cups in each row are lined up in pairs. The last 2 cups in the bottom row have no partner."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at what is left over. Two cups in the bottom row have no partner. The row with cups left over has more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "MORE"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try it. Top row: 3 cups. Bottom row: 5 cups. Which row has more?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same two rows. Top row: 3 cups. Bottom row: 5 cups. Three big buttons: TOP ROW, BOTTOM ROW, THE SAME."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Top row: 3 cups. Bottom row: 5 cups. Which row has more?",
+    "right": "Bottom row",
+    "wrong": [
+     "Top row",
+     "The same"
+    ],
+    "why": "The bottom row has 2 cups left over with no partner, so it has more."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The next word is the other side of more. The group with fewer has not as many. It runs out first when you pair things up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "FEWER"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are ducks. On the left there are 4 ducks. On the right there are 2 ducks. Which group has fewer?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two groups of yellow ducks side by side. Left group: 4 ducks. Right group: 2 ducks. Three big buttons: LEFT, RIGHT, THE SAME."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Left: 4 ducks. Right: 2 ducks. Which group has fewer?",
+    "right": "Right",
+    "wrong": [
+     "Left",
+     "The same"
+    ],
+    "why": "The right group has only 2 ducks. It runs out first when you pair them up, so it has fewer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The third word is same. If every item has a partner and nothing is left over on either side, the two groups are the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "SAME"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are apples. 4 red apples on the left and 4 green apples on the right. The colours are different. Does that change how many?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Left: 4 red apples in a row. Right: 4 green apples in a row. Each red apple is paired with a green one. Nothing is left over. Three big buttons: LEFT HAS MORE, RIGHT HAS MORE, THE SAME."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "4 red apples and 4 green apples. Which is true?",
+    "right": "The same",
+    "wrong": [
+     "Left has more",
+     "Right has more"
+    ],
+    "why": "Every red apple has a green partner and nothing is left over. Colour does not change how many."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we compare digits, the written numbers. You can picture each digit as dots in a five-frame. Here is 7, a full row of 5 and 2 more. Next to it is 4, which is 4 dots and one empty space."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: 7 = a full row of 5 dots, and 2 dots in the next row.\nRight: 4 = 4 dots in a row of 5, with 1 empty space."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Which digit means more, 7 or 4?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7   or   4"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which digit means more: 7 or 4?",
+    "right": "7",
+    "wrong": [
+     "4",
+     "They are the same"
+    ],
+    "why": "7 is a full five-frame plus 2 more. 4 is one dot short of a full frame. So 7 has more."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a handy trick. Think of counting from 0 to 9. A number that comes later when you count means more. A number that comes earlier means fewer."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9\nEarlier = fewer.  Later = more."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it. Which is fewer, 6 or 9? Count in your head if you like: 6 comes before 9."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6   or   9"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which digit means fewer: 6 or 9?",
+    "right": "6",
+    "wrong": [
+     "9",
+     "They are the same"
+    ],
+    "why": "6 comes earlier when we count, so 6 is fewer than 9."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now zero. Zero means nothing there. It is the smallest amount. Every other number from 1 to 9 is more than zero."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Left: an empty hand, open, with nothing in it. Right: a hand holding 2 coins. Under the empty hand, a big 0."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One purse has no coins. Another purse has 2 coins. Which purse has fewer?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Left purse: open and empty, labelled 0. Right purse: open with 2 coins, labelled 2. Three big buttons: LEFT, RIGHT, THE SAME."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Left purse: 0 coins. Right purse: 2 coins. Which has fewer?",
+    "right": "Left purse",
+    "wrong": [
+     "Right purse",
+     "The same"
+    ],
+    "why": "0 means no coins at all. Nothing can be fewer than zero, so the left purse has fewer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Zero can also be the same as zero. Here are two empty cups. Nothing in either one."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two empty cups side by side on a table. Each has a 0 beneath it. Three big buttons: LEFT HAS MORE, RIGHT HAS MORE, THE SAME."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Two empty cups: 0 in each. Which is true?",
+    "right": "The same",
+    "wrong": [
+     "Left has more",
+     "Right has more"
+    ],
+    "why": "Both have nothing in them. 0 and 0 are the same."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A few more, mixed up. Keys this time. 8 keys on the hook, and 6 keys in the drawer. Which has more?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Left: a hook board with 8 keys, shown as a row of 5 and a row of 3. Right: a drawer with 6 keys, shown as a row of 5 and 1 more. Three big buttons: HOOK, DRAWER, THE SAME."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "8 keys on the hook, 6 keys in the drawer. Which has more?",
+    "right": "The hook",
+    "wrong": [
+     "The drawer",
+     "The same"
+    ],
+    "why": "8 comes later than 6 when we count, so 8 is more. The hook has 2 more keys."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Balls now. 1 ball in the blue box and 3 balls in the red box. Which box has fewer?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Left: a blue box with 1 ball. Right: a red box with 3 balls. Three big buttons: BLUE, RED, THE SAME."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "1 ball in the blue box, 3 balls in the red box. Which box has fewer?",
+    "right": "Blue box",
+    "wrong": [
+     "Red box",
+     "The same"
+    ],
+    "why": "1 is earlier than 3 when we count. The blue box has fewer balls."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last one. 5 coins in one pile and 5 coins in another pile. Which is true?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two piles of coins. Each pile is 5 coins in a neat row, a full five-frame. Three big buttons: LEFT HAS MORE, RIGHT HAS MORE, THE SAME."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "5 coins in the left pile, 5 coins in the right pile. Which is true?",
+    "right": "The same",
+    "wrong": [
+     "Left has more",
+     "Right has more"
+    ],
+    "why": "Both piles are a full five-frame. Each coin has a partner, so they are the same."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If you are ever unsure, there is no hurry. Line the two groups up, one to one, and look at what is left over. That always gives the answer."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Not sure? Line them up. See what is left over."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Let's gather today's ideas. You can compare two groups by lining them up. The one with extras has more. The one that runs out has fewer. If nothing is left over, they are the same. Zero is the smallest."
+   },
+   "show": {
+    "kind": "list",
+    "text": "- More: has extras left over\n- Fewer: runs out first\n- Same: nothing left over\n- Later in counting = more\n- Zero is the smallest"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the last class, we put everything together: counting, reading, writing and comparing. You did good work today. Stop here, or carry on when you are ready."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Putting it all together"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Comparing two groups by pairing",
+   "links": [
+    "[[one-to-one matching]]",
+    "[[five-frames]]"
+   ]
+  },
+  {
+   "topic": "More, fewer, same",
+   "links": [
+    "[[counting in order 0 to 9]]",
+    "[[zero]]"
+   ]
+  },
+  {
+   "topic": "Comparing two digits",
+   "links": [
+    "[[reading and writing the digits]]",
+    "[[counting in order 0 to 9]]"
+   ]
+  },
+  {
+   "topic": "Zero as the smallest amount",
+   "links": [
+    "[[zero: nothing there]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

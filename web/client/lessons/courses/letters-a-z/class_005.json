@@ -1,0 +1,209 @@
+{
+ "about": {
+  "title": "M, N, O",
+  "course": "letters-a-z",
+  "class_n": 5,
+  "audience": [
+   "adult relearning reading",
+   "young child",
+   "anyone learning or relearning letters"
+  ],
+  "minutes": 10,
+  "length_note": "Three letters plus a quick look back at A to L fits in about 10 minutes. Pause or stop after any letter. Each letter is its own short part."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class five. Today we meet three letters: M, N and O. There is no hurry. You can pause at any time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "M, N, O"
+   },
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back. Pick any letter from A to L. Say its name, then its sound. For example, A says 'a' as in apple. K says 'k' as in keys. If a letter feels hard, that is fine. We will see them all again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A: apple\nK: keys\nYour turn: pick any letter from A to L"
+   },
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which word starts with the sound for K?",
+    "right": "keys",
+    "wrong": [
+     "apple",
+     "ball",
+     "hat"
+    ],
+    "why": "Keys begins with the 'k' sound. Apple begins with the 'a' sound."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our first new letter is M. Its name is 'em'. Its sound is 'mmm', the sound you make when food tastes good. A familiar word is moon. A grown-up word is money."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "M m: moon"
+   },
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at the shapes. The big M has two peaks, like two mountains. The small m has two little humps. Trace them in the air with your finger. Say 'mmm' with your lips closed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big capital M with two pointed peaks, and beside it a small m with two rounded humps. A finger traces each one."
+   },
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which word starts with the 'mmm' sound?",
+    "right": "moon",
+    "wrong": [
+     "sun",
+     "tree",
+     "door"
+    ],
+    "why": "Moon starts with 'mmm'. Sun starts with 's', tree with 't', and door with 'd'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next is N. Its name is 'en'. Its sound is 'nnn', made with the tip of your tongue behind your top teeth. A familiar word is nose. A grown-up word is number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "N n: nose"
+   },
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The big N is two upright lines with a slanting line between them. The small n has just one hump. Notice that m has two humps and n has one. Trace both with your finger and say 'nnn'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "M m: two humps, sounds 'mmm'\nN n: one hump, sounds 'nnn'"
+   },
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which word starts with the 'nnn' sound?",
+    "right": "nose",
+    "wrong": [
+     "eye",
+     "hand",
+     "foot"
+    ],
+    "why": "Nose starts with 'nnn'. Eye, hand and foot start with other sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last for today is O. Its name is 'oh'. Its common sound is a short 'o', as in orange, where the mouth opens wide. A familiar word is orange. A grown-up word is office."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "O o: orange"
+   },
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "O is the easiest shape of all. It is a round circle. The big O is a tall circle, and the small o is a little circle. O can also say its own name, as in 'open'. For now, start with the short sound in orange."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big round capital O and a smaller round o, each drawn as a single smooth circle."
+   },
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which word starts with the short 'o' sound?",
+    "right": "orange",
+    "wrong": [
+     "lemon",
+     "grape",
+     "pear"
+    ],
+    "why": "Orange starts with the short 'o' sound. Lemon, grape and pear start with other sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's match big and small. M goes with m. N goes with n. O goes with o. Say each pair: name, then sound, then word."
+   },
+   "show": {
+    "kind": "list",
+    "text": "M m: 'em', mmm, moon\nN n: 'en', nnn, nose\nO o: 'oh', short o, orange"
+   },
+   "move": "count-in",
+   "ask": {
+    "q": "Which small letter is the partner of capital N?",
+    "right": "n",
+    "wrong": [
+     "m",
+     "o",
+     "h"
+    ],
+    "why": "Capital N pairs with small n. Small m has two humps, and small n has one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Today you met M, N and O. Look around you for something starting with each: moon, nose, orange, or perhaps a mug, a name or an object nearby. Next time we meet P, Q and R."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: P, Q, R"
+   },
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "M, m",
+   "links": [
+    "[[letter sounds]]",
+    "[[upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "N, n",
+   "links": [
+    "[[letter sounds]]",
+    "[[upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "O, o",
+   "links": [
+    "[[short and long vowel sounds]]",
+    "[[upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "Review of A to L",
+   "links": [
+    "[[A, B, C: Your First Letters]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

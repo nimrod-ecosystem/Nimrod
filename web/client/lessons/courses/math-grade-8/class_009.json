@@ -1,0 +1,494 @@
+{
+ "about": {
+  "title": "Proportional Relationships and Unit Rate",
+  "course": "math-grade-8",
+  "class_n": 9,
+  "audience": [
+   "Oscar",
+   "teenagers aged 13 to 15",
+   "anyone relearning this material, at their own pace"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has five topics, each with one worked example and one short check. The natural pause is after the beat on telling when a relationship is NOT proportional. You can stop there and come back for comparing, which is the second half."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Expressions & Equations (standard 8.EE.B.5)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "undated",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "Comparing Speeds in Graphs and Equations (8.EE.B.5 task)",
+   "publisher": "Illustrative Mathematics",
+   "date": "undated",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/EE/8/B/5/tasks/57",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8, Unit 3, Lesson 2 Preparation (Graphs of Proportional Relationships)",
+   "publisher": "Illustrative Mathematics",
+   "date": "undated",
+   "link": "https://curriculum.illustrativemathematics.org/MS/teachers/3/3/2/preparation.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Terms for constant rate of change (article)",
+   "publisher": "Khan Academy",
+   "date": "undated",
+   "link": "https://www.khanacademy.org/math/grade-7-math-tx/xa876d090ec748f45:proportional-reasoning-with-ratios-and-rates/xa876d090ec748f45:constant-of-proportionality-in-tables/a/terms-for-constant-rate-of-change",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Math, Grade 7, Proportional Relationships, Formula's Using The Constant Of Proportionality",
+   "publisher": "OER Commons",
+   "date": "undated",
+   "link": "https://oercommons.org/courseware/lesson/3094/overview",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Chapter 4: Analyze Proportional Relationships and Use Them to Solve Real-World and Mathematical Problems",
+   "publisher": "Utah Education Network (UEN)",
+   "date": "undated",
+   "link": "https://www.uen.org/emedia/resources/MSM/7Ch4Textbook.pdf",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "3 Ways to Determine if Proportional Relationships Exist",
+   "publisher": "MathBitsNotebook",
+   "date": "undated",
+   "link": "https://mathbitsnotebook.com/JuniorMath/RatioProportion/RPConstantProp.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Teaching Proportional Relationships (common misconceptions)",
+   "publisher": "Maneuvering the Middle",
+   "date": "undated",
+   "link": "https://www.maneuveringthemiddle.com/how-to-teach-proportional-relationships/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "The Story of Grade 8 Unit 3: Linear Relationships",
+   "publisher": "Illustrative Mathematics (IM Certified Blog)",
+   "date": "2022-09-06",
+   "link": "https://illustrativemathematics.blog/2022/09/06/the-story-of-grade-8-unit-3-linear-relationships/",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 9. Today is about one number that hides inside lots of everyday situations: the unit rate. Take it slowly. Every idea today gets one example and one quick check."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Proportional Relationships and Unit Rate"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you will be able to do two things. First, find the unit rate from a table, a graph or an equation. Second, compare two relationships even when one is a table and the other is a graph or an equation. This is the grade 8 standard 8.EE.B.5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Goal 1: Find the unit rate from a table, a graph or an equation\nGoal 2: Compare two proportional relationships shown in different ways"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Start with the big idea. Two quantities are in a proportional relationship when one divided by the other is always the same number. Call them x and y. Then y divided by x never changes, as long as x is not zero."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Proportional: y ÷ x is always the same number"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A reader reads 30 pages in 2 hours, 60 pages in 4 hours and 90 pages in 6 hours. What is the unit rate in pages per hour?",
+    "right": "15 pages per hour",
+    "wrong": [
+     "30 pages per hour",
+     "2 pages per hour",
+     "1/15 pages per hour"
+    ],
+    "why": "A unit rate is the amount for 1 unit, so divide pages by hours: 30 ÷ 2 = 15, 60 ÷ 4 = 15, 90 ÷ 6 = 15. It is the same every time, so the relationship is proportional. 30 is just the first number in the table. 1/15 would be hours per page, which answers a different question."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That fixed number has two names. It is the unit rate, and it is also called the constant of proportionality. Many books write it as the letter k, and the rule is y equals k times x. Same number, different names. Do not let the long name scare you."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "unit rate = constant of proportionality = k\ny = kx"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Worked example, from a table. Minutes on a bike: 5, 10, 15, 20. Kilometers: 2, 4, 6, 8. Divide each distance by its time. 2 over 5 is 0.4. 4 over 10 is 0.4. 6 over 15 is 0.4. Always 0.4, so the unit rate is 0.4 kilometers per minute. In 1 minute, the bike goes 0.4 km."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0.4 km per minute"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In the table, y is distance and x is time. Which calculation gives the unit rate?",
+    "right": "y ÷ x, because it gives distance for 1 minute",
+    "wrong": [
+     "x ÷ y, because the time is smaller",
+     "y + x, because you add the two columns",
+     "Just use the last row, 8"
+    ],
+    "why": "The unit rate is how much y you get for 1 of x, so divide y by x. Dividing x by y gives minutes per kilometer, which is a different number. Adding does not test for a constant ratio. One row alone cannot show that the pattern holds in every row."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A common slip is dividing the wrong way round, x over y instead of y over x. Before you divide, say the question out loud: how much y for one x? That tells you which number goes on top."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Say it first: how much y for 1 x?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "From an equation it is the easiest of all. If the equation looks like y equals 3x, the unit rate is the number multiplied by x. Here it is 3. If x is 1, then y is 3."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = 3x → unit rate 3"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The equation is y = 6.5x. What is the unit rate?",
+    "right": "6.5",
+    "wrong": [
+     "x",
+     "1/6.5",
+     "y"
+    ],
+    "why": "In y = kx, k is the number multiplied by x, so k = 6.5. When x = 1, y = 6.5 × 1 = 6.5, which is the amount for one unit. x and y are the changing quantities, not the rate. 1/6.5 is the rate flipped."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now graphs. The graph of a proportional relationship is a straight line that goes through the origin, the point (0, 0). That makes sense: zero of one thing needs zero of the other. Look at the jam graph. Zero jars need zero cups of sugar. And the point (1, ½) shows the unit rate: one jar needs half a cup."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Straight line through (0, 0). The point (1, ½) shows the unit rate.",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "On the jam graph, the line passes through (1, ½). What does that point tell you?",
+    "right": "1 jar needs ½ cup of sugar, so the unit rate is ½",
+    "wrong": [
+     "½ a jar needs 1 cup of sugar",
+     "The relationship is not proportional",
+     "1 cup of sugar makes ½ a jar"
+    ],
+    "why": "A point is written (x, y), and here x is jars and y is cups of sugar. So (1, ½) says 1 jar goes with ½ cup. Since x is 1, y is the unit rate. The line passes through (0, 0), so it is proportional. The other answers swap the two numbers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the link to the next class. In a proportional relationship, the unit rate is the same number as the slope of the line, which is rise over run. Example: a line goes through (0, 0) and (4, 10). Rise 10, run 4, so 10 divided by 4 is 2.5. The unit rate is 2.5. People often say unit rate when talking about the situation, and slope when talking about the graph."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "slope = rise ÷ run = unit rate\n10 ÷ 4 = 2.5"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A proportional line goes through (0, 0) and (2, 7). What is the unit rate?",
+    "right": "3.5",
+    "wrong": [
+     "2/7",
+     "9",
+     "14"
+    ],
+    "why": "Unit rate is y ÷ x at any point on the line: 7 ÷ 2 = 3.5. 2/7 divides the wrong way round. 9 adds the coordinates and 14 multiplies them, and neither one is a rate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful, though. Not every straight line is proportional. A line that does not pass through the origin is not proportional. In a table, check the ratio. Take x = 1, 2, 3 and y = 5, 7, 9. The ratios are 5, 3.5 and 3. They change, so it is not proportional. It is still a line, but it is a different kind."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Proportional: line through (0, 0), y ÷ x always the same\nNot proportional: line misses (0, 0), y ÷ x changes"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which one is a proportional relationship?",
+    "right": "A table with x = 1, 2, 3 and y = 4, 8, 12",
+    "wrong": [
+     "A table with x = 1, 2, 3 and y = 3, 5, 7",
+     "The equation y = 2x + 1",
+     "A straight line that crosses the y-axis at 4"
+    ],
+    "why": "For the right answer, y ÷ x is 4 every time, and the points lie on a line through the origin. In the other table the ratios are 3, 2.5 and 2.33, so they change. In y = 2x + 1, x = 0 gives y = 1, so the line misses the origin. A line crossing the y-axis at 4 also misses the origin. All three are lines, but a line is only proportional if it passes through (0, 0)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more detail. Every unit rate has a flip side. If you cycle 5 miles in 20 minutes, that is 0.25 miles per minute, or 4 minutes per mile. Both are correct. The question tells you which one to give, so read the words after the word per."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "5 miles in 20 minutes\nmiles per minute: 5 ÷ 20 = 0.25\nminutes per mile: 20 ÷ 5 = 4"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A printer prints 30 pages in 5 minutes. How many pages per minute is that?",
+    "right": "6 pages per minute",
+    "wrong": [
+     "1/6 pages per minute",
+     "150 pages per minute",
+     "35 pages per minute"
+    ],
+    "why": "Pages per minute means pages divided by minutes: 30 ÷ 5 = 6. 1/6 is the flip, which would be minutes per page. 150 multiplies and 35 adds, and neither one is a rate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take a breath. That was the first half. If you want a break, this is a good place to pause. Next is the second goal: comparing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Unit rate from a table: y ÷ x\nFrom an equation: the number in front of x\nFrom a graph: the point (1, r) or rise ÷ run\nProportional lines pass through (0, 0)"
+   },
+   "cite": [
+    "s6",
+    "s5",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To compare two relationships, find the unit rate for each one, whatever form it comes in, then compare the two numbers. The standard even gives an example: comparing a distance-time graph with a distance-time equation to see which object is faster. Our example: a scooter's graph passes through (0, 0) and (4, 10), with time in seconds and distance in meters. That is 10 ÷ 4 = 2.5 meters per second. A skateboard follows d = 3t. That is 3 meters per second. 3 is bigger than 2.5, so the skateboard is faster."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Scooter (graph): 10 ÷ 4 = 2.5 m/s\nSkateboard (equation d = 3t): 3 m/s\nBigger unit rate = faster"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Tap A: a table shows 18 liters in 3 minutes (also 36 in 6). Tap B: the equation is V = 5.5t, with V in liters and t in minutes. Which fills faster?",
+    "right": "Tap A, at 6 liters per minute, beats Tap B at 5.5",
+    "wrong": [
+     "Tap B, because 5.5 is a decimal",
+     "They fill at the same speed",
+     "You cannot tell without a graph"
+    ],
+    "why": "Tap A: 18 ÷ 3 = 6 liters per minute, and 36 ÷ 6 = 6 too. Tap B: the number in front of t is 5.5 liters per minute. Both are in the same units, so 6 > 5.5 and A is faster. Being a decimal does not make a number bigger. You do not need a graph, because the table and the equation each already give the unit rate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A warning about graphs. Two graphs can use different scales on their axes, so the line that looks steeper may not have the bigger unit rate. Do not trust how it looks. Read one clear point on each line and divide y by x. Numbers beat looks."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Compare with numbers, not with how steep it looks"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Two proportional graphs use different axis scales. What is the safest way to tell which has the bigger unit rate?",
+    "right": "Read a point on each line and calculate y ÷ x for each",
+    "wrong": [
+     "Choose the line that looks steeper",
+     "Choose the line that is longer on the page",
+     "Choose the line that sits higher on the page"
+    ],
+    "why": "Changing the scale on an axis changes how steep a line looks, but not the real numbers. Dividing y by x at a point on each line gives the true unit rates, and then you compare those. Steepness, length and height on the page can all be changed by the scale. If the two graphs share the same scale, the steeper line does have the bigger slope."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last practice, mixing forms. Mia earns money by the equation y = 8.5x, where x is hours and y is dollars. Leo's table says 3 hours earns $27, and 5 hours earns $45. Pause and work out both unit rates, then compare."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mia: y = 8.5x\nLeo: 3 hours → $27, 5 hours → $45"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who earns more per hour, Mia or Leo?",
+    "right": "Leo, at $9 per hour, beats Mia at $8.50",
+    "wrong": [
+     "Mia, because her equation has a decimal",
+     "They earn the same per hour",
+     "Mia, because 8.5 is bigger than 3"
+    ],
+    "why": "Mia's unit rate is the number in front of x, which is $8.50 per hour. Leo's is 27 ÷ 3 = 9, and 45 ÷ 5 = 9 too, so $9 per hour. Both are dollars per hour, so we can compare them, and 9 > 8.5. 3 is only a number of hours in Leo's table, not his rate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Quick recap. A proportional relationship has y divided by x always the same. That number is the unit rate, the constant of proportionality, k. In a graph it is the slope of a line through the origin. To compare two relationships, find each unit rate in the same units and compare. Next class we look at slope itself, for lines that do not have to start at the origin."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y ÷ x is always the same → proportional\nUnit rate = k = slope of the line through (0, 0)\nCompare: find each unit rate, same units, then compare\nNext: Slope"
+   },
+   "cite": [
+    "s6",
+    "s4",
+    "s9"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Jam: cups of sugar needed for different numbers of jars (y = ½x)",
+   "rows": [
+    {
+     "label": "0 jars",
+     "value": 0,
+     "source": "s7"
+    },
+    {
+     "label": "2 jars",
+     "value": 1,
+     "source": "s7"
+    },
+    {
+     "label": "4 jars",
+     "value": 2,
+     "source": "s7"
+    },
+    {
+     "label": "6 jars",
+     "value": 3,
+     "source": "s7"
+    },
+    {
+     "label": "8 jars",
+     "value": 4,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Unit rate and constant of proportionality",
+   "links": [
+    "[[Slope]]",
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Rational Numbers and Their Decimals]]"
+   ]
+  },
+  {
+   "topic": "Comparing proportional relationships in different forms",
+   "links": [
+    "[[Four Ways to Show a Function]]",
+    "[[Comparing Two Functions]]"
+   ]
+  },
+  {
+   "topic": "Proportional versus linear but not proportional",
+   "links": [
+    "[[Linear and Nonlinear Functions]]",
+    "[[Modeling with Linear Functions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "In a proportional relationship the unit rate, the constant of proportionality and the slope are all the same number.",
+   "other_view": "That is true for proportional relationships, but the names are not interchangeable everywhere. Khan Academy notes that a non-proportional linear relationship has a slope but no constant of proportionality. It also says people tend to say unit rate for the situation and slope for the graph. Illustrative Mathematics says grade 8 shifts the focus from the constant of proportionality to rate of change, so a different textbook may use a different word for the same number.",
+   "cite": [
+    "s4",
+    "s9"
+   ]
+  }
+ ]
+}

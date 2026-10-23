@@ -1,0 +1,252 @@
+{
+ "about": {
+  "title": "Putting words together: short sentences",
+  "course": "first-words",
+  "class_n": 11,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes: five short topics, each with one small question. Stop after any beat and come back later. The class works just as well in two sittings of five minutes."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back, {name}. This is the last class in the course. You have learned letters, sounds, and some words you see every day. Today we put words side by side to make sentences."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Short sentences"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A sentence is just words in a row that say one thing. We read them from the left to the right, one word at a time. Go slowly. There is no clock."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Left to right. One word at a time."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a very short sentence: Help me. Put a finger under the first word. Read Help. Slide your finger to the next word. Read me. Help me."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Word 1: Help | Word 2: me"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the sentence 'Help me', which word do you read first?",
+    "right": "Help",
+    "wrong": [
+     "me",
+     "The last word",
+     "Either one"
+    ],
+    "why": "We start at the left. Help is on the left, so we read it first, and then me."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now two tools together. Some words you just know by sight, like I, the and me. Other words you can sound out, like cat: c, a, t. Use whichever tool fits the word."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Know by sight: I, the, me | Sound out: c-a-t, cat"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us read: I see the cat. I is a sight word. See is a sight word. The is a sight word. Cat we sound out: c, a, t. Cat. Now all together, nice and slow: I see the cat."
+   },
+   "show": {
+    "kind": "list",
+    "text": "I | see | the | cat"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If you get stuck on a word, that is fine. Skip your finger back to the start of the word, sound out each letter, then join the sounds. Then go back to the start of the sentence and read it again with the word in place."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Stop and look. 2. Say each letter sound. 3. Join the sounds. 4. Read the whole sentence again."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now some everyday sentences with words you know. Yes, I am home. No, I do not want water. Help me. Read each one with your finger, one word at a time. Take as long as you need."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yes, I am home. | No water. | Help me. | I see the TV."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is another way to practise: finish the sentence. One word is missing. Read the words you can see, then choose the word that fits. I, blank, the cat."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "I ___ the cat."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word finishes the sentence: 'I ___ the cat'?",
+    "right": "see",
+    "wrong": [
+     "home",
+     "help",
+     "no"
+    ],
+    "why": "I see the cat makes sense. 'I home the cat' and the others do not sound like a real sentence."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more. Say you are thirsty. I want blank. What do you want?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "I want ___."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word finishes the sentence: 'I want ___'?",
+    "right": "water",
+    "wrong": [
+     "the",
+     "yes",
+     "see"
+    ],
+    "why": "Water is a thing you can want. The, yes and see do not finish this sentence."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And one to help you get home. Go, blank."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Go ___."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word finishes the sentence: 'Go ___'?",
+    "right": "home",
+    "wrong": [
+     "the",
+     "me",
+     "I"
+    ],
+    "why": "Go home is a short, complete sentence. The, me and I do not finish it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Reading a sentence is a big step. You used sounding out and sight words together, and that is real reading."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "You read sentences"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What to practise next. Pick two or three sentences a day and read them aloud with your finger underneath. Read the same ones again the next day. Look for short words on signs, packets and the TV. And rest when you are tired. A little, often, is better than a lot, once."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Read 2 or 3 sentences a day | Use your finger under each word | Read the same ones again tomorrow | Spot words on signs and packets | Rest when tired"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the end of the course, {name}. You can come back to any class whenever you like. Thank you for reading with us."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Look at you, reading."
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Reading left to right",
+   "links": [
+    "[[Sight words]]",
+    "[[Sounding out]]"
+   ]
+  },
+  {
+   "topic": "Sight words",
+   "links": [
+    "[[Common sight words, set one]]",
+    "[[Common sight words, set two]]"
+   ]
+  },
+  {
+   "topic": "Sounding out",
+   "links": [
+    "[[Letter sounds and joining them]]",
+    "[[Sounding out three-letter words with A]]"
+   ]
+  },
+  {
+   "topic": "Finishing a sentence with the missing word",
+   "links": [
+    "[[Short sentences]]",
+    "[[Home words: water, home, TV]]"
+   ]
+  },
+  {
+   "topic": "What to practise next",
+   "links": [
+    "[[Three important words: yes, no, help]]",
+    "[[Spelling by choosing letters: everyday words]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

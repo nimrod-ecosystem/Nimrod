@@ -1,0 +1,252 @@
+{
+ "about": {
+  "title": "J, K, L",
+  "course": "letters-a-z",
+  "class_n": 4,
+  "audience": [
+   "adult relearning reading",
+   "young child",
+   "anyone learning or relearning letters"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes: three letters, one look-alike to sort out, and a short recall of A to I. You can pause after any letter and come back later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back, {name}, and welcome to anyone joining us. Today we meet three letters: J, K and L. Go at your own pace. You can pause any time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "J, K, L"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a warm-up with the letters you already know, A to I. There's no pressure. If one feels fuzzy, that's fine. It comes back with practice."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A B C D E F G H I"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's a quick one. Which letter does the word apple start with?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "apple"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter does the word apple start with?",
+    "right": "A",
+    "wrong": [
+     "E",
+     "I",
+     "H"
+    ],
+    "why": "Apple starts with A, which says its short sound: a, a, apple."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our first new letter. This is J. Its name is jay. Say it with me: jay."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case: J | Lower case: j"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "J makes the sound juh, like at the start of jam. Juh, juh, jam. Look at the small j. It has a dot on top, and its tail curls down below the line. The big J curls the same way, but it has no dot."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "J, j: juh, as in jam"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word starts with the juh sound?",
+    "right": "jam",
+    "wrong": [
+     "map",
+     "sun",
+     "lamp"
+    ],
+    "why": "Jam starts with juh, the sound of J."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is K. Its name is kay. Say it: kay. The sound is kuh, like the start of keys. Kuh, kuh, keys."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case: K | Lower case: k"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a grown-up word too: kitchen. It also starts with K. Kuh, kuh, kitchen. Big K and little k have the same shape. The small one just sits a bit lower and is smaller. It's one straight line with two arms."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "K, k: kuh, as in keys and kitchen"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these starts with the kuh sound?",
+    "right": "kitchen",
+    "wrong": [
+     "lamp",
+     "jam",
+     "apple"
+    ],
+    "why": "Kitchen starts with K, which says kuh, just like keys."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our third letter is L. Its name is el. Say it: el. The sound is lll, with your tongue touching just behind your top teeth, like the start of lamp. Lll, lll, lamp."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case: L | Lower case: l"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A grown-up word for L is letter, like a letter in the post. Big L is a straight line with a foot, like a corner. Little l is only a tall straight line, with no foot."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "L, l: lll, as in lamp and letter"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter has a sound like lll, as in lamp?",
+    "right": "L",
+    "wrong": [
+     "J",
+     "K",
+     "I"
+    ],
+    "why": "L says lll. Lamp and letter both start with it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's a tricky bit, and it trips up many readers, so don't worry if it does. A little l is a tall straight line. A big I is also a tall straight line. In many kinds of print they look almost the same."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two plain tall straight lines side by side. One is labelled little l, the other big I. They look nearly identical."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are some ways to tell them apart. Look at the other letters around it. In lamp, the l sits inside a word with a, m and p. As a word on its own, a big I means me, as in I am here. And a little i, as opposed to an l, has a dot on top. Sometimes, in handwriting or in some fonts, a big I has little bars across the top and bottom."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Look at the letters around it. 2. A single I on its own means me. 3. Little i has a dot; little l does not. 4. Some fonts give big I little bars at top and bottom."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the word lamp, the first letter is a tall straight line. Which letter is it?",
+    "right": "little l",
+    "wrong": [
+     "big I",
+     "little i",
+     "big L"
+    ],
+    "why": "Lamp starts with the lll sound, so it is a little l. It does not have a dot, and it is not a big I, which would be a word on its own."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now match big to little. Big J goes with little j. Big K goes with little k. Big L goes with little l. Say each pair out loud: J, j, jam. K, k, keys. L, l, lamp."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "J – j: jam | K – k: keys | L – l: lamp"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which little letter matches the big K?",
+    "right": "k",
+    "wrong": [
+     "j",
+     "l",
+     "i"
+    ],
+    "why": "Big K and little k are partners. They have the same straight line and two arms."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. You met three letters today: J for jam, K for keys and kitchen, and L for lamp and letter. Next time we move on to M, N and O. Come back whenever you are ready, and repeat any part as often as you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "J, j: jam | K, k: keys, kitchen | L, l: lamp, letter"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Telling lower case l from upper case I",
+   "links": [
+    "[[Letters A to Z class 3: G, H, I]]",
+    "[[Upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "Sounds for J, K and L",
+   "links": [
+    "[[Letter names and letter sounds]]",
+    "[[Letters A to Z class 5: M, N, O]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

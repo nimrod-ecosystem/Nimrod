@@ -1,0 +1,890 @@
+{
+ "course_id": "history-of-everything",
+ "title": "The History of Everything: From the Big Bang to Today",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "63 classes of 30 minutes each, so about 31.5 hours in all. The length is fixed at 30 minutes because that was requested. It also suits learners who tire easily or are relearning, because each class covers one idea or one era. The count follows the story. Classes 1-13 cover the universe, Earth, life and early humans. Classes 14-20 cover farming, the first cities and the Bronze and Iron Ages. Classes 21-35 cover the classical and medieval worlds on every inhabited continent, so that Europe is not treated as the whole story. Classes 36-49 cover the early modern and 19th-century world. Classes 50-62 cover the 20th century to today. Class 63 looks ahead. Each class has a frame-of-reference segment (science, politics, art and notable people from the same time) and a segment on where experts disagree. The Holocaust gets its own class and a content note. Because the course is ongoing, it can be built a few classes at a time in order. Every class needs its facts researched and sourced before it is written.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "How Do We Know? Reading the Evidence and Telling Time",
+   "goal": "Explain how scientists and historians date things and why the course uses 'frames of reference'.",
+   "minutes": 30,
+   "topics": [
+    "Scales of time from billions of years to a single year",
+    "Dating methods: radiometric dating, tree rings, written records",
+    "Difference between evidence, interpretation and debate",
+    "How to use a same-time snapshot",
+    "Note on BCE/CE"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "The Big Bang and the First Minutes",
+   "goal": "Describe in plain words what the Big Bang model says and what evidence supports it.",
+   "minutes": 30,
+   "topics": [
+    "Expansion of the universe and the cosmic microwave background",
+    "First atoms",
+    "Debate: what, if anything, came before; inflation and alternative models",
+    "Frame of reference: how and when this was discovered, and who by"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "First Stars, Galaxies and the Making of the Elements",
+   "goal": "Explain how stars made the elements that later formed planets and people.",
+   "minutes": 30,
+   "topics": [
+    "Dark ages and first stars",
+    "Galaxy formation",
+    "Supernovae and heavy elements",
+    "Open questions: dark matter and dark energy",
+    "Frame of reference: telescopes and discoveries that revealed this"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Our Sun and Solar System",
+   "goal": "Say how the Sun and planets formed and roughly when.",
+   "minutes": 30,
+   "topics": [
+    "Collapse of a gas cloud",
+    "Planet formation",
+    "Rocky versus giant planets",
+    "Debate: migration of the giant planets",
+    "Frame of reference: age of the solar system compared with the age of the universe"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Early Earth and the Moon",
+   "goal": "Describe the young Earth and the leading explanation for the Moon's origin.",
+   "minutes": 30,
+   "topics": [
+    "Hadean and Archean Earth",
+    "Giant-impact hypothesis and its competitors",
+    "Oceans, atmosphere and plate tectonics",
+    "Debate: when plate tectonics began",
+    "Oldest rocks and zircons"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "The Origin of Life",
+   "goal": "Explain the main ideas for how life began and say why the question is still open.",
+   "minutes": 30,
+   "topics": [
+    "Earliest fossil and chemical evidence of life",
+    "Hypotheses: hydrothermal vents, warm pools, RNA world",
+    "Debate: panspermia and other views",
+    "What we do and don't know"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "Complex Cells, Oxygen and a Changing Planet",
+   "goal": "Describe how oxygen and complex cells changed Earth.",
+   "minutes": 30,
+   "topics": [
+    "Photosynthesis and the Great Oxidation Event",
+    "Eukaryotes and endosymbiosis",
+    "Snowball Earth",
+    "Debate: how severe the glaciations were",
+    "First multicellular life"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Animals Appear: The Cambrian to Life on Land",
+   "goal": "Trace how animals, plants and fungi came to fill the seas and then the land.",
+   "minutes": 30,
+   "topics": [
+    "Ediacaran organisms",
+    "The Cambrian explosion",
+    "Fish, then tetrapods",
+    "First forests and coal",
+    "Debate: how sudden the Cambrian explosion really was"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Extinctions, Dinosaurs and the Rise of Mammals",
+   "goal": "Name the major mass extinctions and explain what ended the age of dinosaurs.",
+   "minutes": 30,
+   "topics": [
+    "The Permian extinction",
+    "Dinosaurs and their bird descendants",
+    "The end-Cretaceous extinction",
+    "Debate: asteroid impact versus volcanism",
+    "Mammals diversify"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "From Primates to Early Hominins",
+   "goal": "Explain how the human line separated from other apes.",
+   "minutes": 30,
+   "topics": [
+    "Primate evolution",
+    "Divergence from chimpanzee ancestors",
+    "Walking upright",
+    "Famous fossils such as Lucy",
+    "Debate: where and why upright walking evolved"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "The Genus Homo: Neanderthals, Denisovans and Us",
+   "goal": "Describe our species and its close relatives, and how we know about them.",
+   "minutes": 30,
+   "topics": [
+    "Homo habilis, Homo erectus",
+    "Origins of Homo sapiens in Africa",
+    "Ancient DNA and interbreeding",
+    "Debate: 'Out of Africa' versus multiregional models",
+    "Debate: why Neanderthals disappeared"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 12,
+   "title": "Ice Age Minds: Fire, Tools, Language and Art",
+   "goal": "Describe what early humans made and the debates about when modern thinking began.",
+   "minutes": 30,
+   "topics": [
+    "Stone tools and control of fire",
+    "Language: when and how",
+    "Cave art and symbols",
+    "Debate: gradual versus sudden 'cognitive revolution'"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 13,
+   "title": "People Spread Across the Planet",
+   "goal": "Outline how people reached every continent except Antarctica.",
+   "minutes": 30,
+   "topics": [
+    "Out of Africa migrations",
+    "Reaching Australia and Sahul",
+    "Debate: when and how people reached the Americas",
+    "Megafauna extinctions and the debate over human causes",
+    "Climate and sea-level changes"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 14,
+   "title": "The Farming Revolution",
+   "goal": "Explain what farming changed and the theories about why it began.",
+   "minutes": 30,
+   "topics": [
+    "Ice Age end and the Holocene",
+    "Early crops and animals in several regions",
+    "Göbekli Tepe and monumental sites",
+    "Debate: why farming began and whether it improved life",
+    "Health and population effects"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 15,
+   "title": "The First Cities and the Invention of Writing",
+   "goal": "Say where and when the first cities and writing appeared and what they were used for.",
+   "minutes": 30,
+   "topics": [
+    "Mesopotamia and Uruk",
+    "Writing and record-keeping",
+    "Early states, kings and temples",
+    "Debate: how states formed",
+    "Frame of reference: other regions in the same centuries"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 16,
+   "title": "Egypt and the Indus Valley",
+   "goal": "Compare two early river civilizations.",
+   "minutes": 30,
+   "topics": [
+    "Pharaohs, pyramids and the Nile",
+    "Harappan cities and planning",
+    "Undeciphered Indus script and debate over its meaning",
+    "Debate: why the Indus cities declined",
+    "Trade links"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 17,
+   "title": "The Bronze Age World and Its Collapse",
+   "goal": "Describe the connected Bronze Age societies and the theories for their end.",
+   "minutes": 30,
+   "topics": [
+    "Minoans, Mycenaeans, Hittites, New Kingdom Egypt",
+    "Early China: Shang dynasty",
+    "Trade in tin and copper",
+    "Debate: causes of the Late Bronze Age collapse"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 18,
+   "title": "Other Early Worlds: Africa, the Americas and the Pacific",
+   "goal": "Show that complex societies were arising on every inhabited continent.",
+   "minutes": 30,
+   "topics": [
+    "Nubia and Kush",
+    "Bantu expansions: evidence and debate",
+    "Norte Chico and the Olmec",
+    "Austronesian voyaging and Polynesian settlement",
+    "Why written records are uneven"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 19,
+   "title": "Iron Age Empires: Assyria, Babylon and Persia",
+   "goal": "Explain how large empires were built and governed.",
+   "minutes": 30,
+   "topics": [
+    "Iron technology",
+    "Assyrian and Babylonian rule",
+    "Persian Empire and its administration",
+    "Phoenician and early Hebrew societies",
+    "Debate: how to use religious texts as historical evidence"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 20,
+   "title": "Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets",
+   "goal": "Describe major philosophies and religions of the first millennium BCE and the debate over a shared 'Axial Age'.",
+   "minutes": 30,
+   "topics": [
+    "Early Buddhism and Jainism",
+    "Confucius and Daoism",
+    "Hebrew prophets and Zoroastrianism",
+    "Greek philosophy",
+    "Debate: was there really an 'Axial Age'?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 21,
+   "title": "Classical Greece",
+   "goal": "Explain Greek city-states, democracy and Greek contributions to art and science.",
+   "minutes": 30,
+   "topics": [
+    "Polis, Athens and Sparta",
+    "Persian Wars and the Peloponnesian War",
+    "Theater, philosophy, medicine",
+    "Limits of Athenian democracy: who was excluded",
+    "Frame of reference: contemporaries elsewhere"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 22,
+   "title": "Alexander and the Hellenistic World",
+   "goal": "Describe Alexander's conquests and their long-term effects.",
+   "minutes": 30,
+   "topics": [
+    "Macedon and Alexander's campaigns",
+    "Successor kingdoms",
+    "Alexandria and learning",
+    "Debate: how to judge Alexander"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 23,
+   "title": "The Rise of Rome",
+   "goal": "Explain how Rome grew from a city to a Mediterranean power.",
+   "minutes": 30,
+   "topics": [
+    "Early Rome and the Republic",
+    "Punic Wars and Carthage",
+    "Social conflict and civil wars",
+    "Julius Caesar and the end of the Republic",
+    "Debate: why the Republic fell"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 24,
+   "title": "Mauryan India, Qin and Han China",
+   "goal": "Compare how India and China built their first large empires.",
+   "minutes": 30,
+   "topics": [
+    "Chandragupta and Ashoka",
+    "Qin unification and the First Emperor",
+    "Han dynasty, bureaucracy and invention of paper",
+    "Compare with Rome in the same centuries"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 25,
+   "title": "The Roman Empire, the Silk Roads and Early Christianity",
+   "goal": "Describe the connected Eurasian world around the year 1 CE.",
+   "minutes": 30,
+   "topics": [
+    "Augustus and the Pax Romana",
+    "Silk Road and Indian Ocean trade",
+    "Origins of Christianity",
+    "Parthia and Kushan Empire",
+    "Debate: how many people lived in the Roman Empire and how we estimate"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 26,
+   "title": "Late Antiquity: Changing Empires",
+   "goal": "Explain the competing explanations for Rome's western decline and what else was changing.",
+   "minutes": 30,
+   "topics": [
+    "Third-century crisis and Constantine",
+    "Debate: 'fall' versus 'transformation' of Rome",
+    "Gupta India, Sasanian Persia",
+    "Aksum and Teotihuacan, early Maya",
+    "Plague of Justinian"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 27,
+   "title": "The Rise of Islam and the Caliphates",
+   "goal": "Describe how Islam began and spread and what the early caliphates were like.",
+   "minutes": 30,
+   "topics": [
+    "Arabia and Muhammad",
+    "Rashidun, Umayyad and Abbasid caliphates",
+    "Sunni–Shia split",
+    "Debate: early Islamic sources and how historians use them",
+    "Trade and cities"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 28,
+   "title": "Byzantium, Early Medieval Europe and the Vikings",
+   "goal": "Describe the post-Roman West and the Byzantine East.",
+   "minutes": 30,
+   "topics": [
+    "Byzantine Empire and Justinian",
+    "Franks and Charlemagne",
+    "Viking voyages",
+    "Debate: were the 'Dark Ages' really dark?",
+    "Monasteries and learning"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 29,
+   "title": "Tang and Song China and the Islamic Golden Age",
+   "goal": "Describe two great centers of science, trade and invention.",
+   "minutes": 30,
+   "topics": [
+    "Tang and Song achievements",
+    "Printing, gunpowder, compass",
+    "House of Wisdom, algebra, medicine and optics",
+    "Debate: how much was 'Golden Age' and how much was borrowed or shared"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 30,
+   "title": "Japan, Korea, Southeast Asia and Medieval India",
+   "goal": "Place the societies of East, Southeast and South Asia on the map of the medieval world.",
+   "minutes": 30,
+   "topics": [
+    "Heian Japan and later samurai rule",
+    "Korean kingdoms",
+    "Khmer Empire and Angkor, Srivijaya",
+    "South Indian Chola dynasty",
+    "Delhi Sultanate"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 31,
+   "title": "Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast",
+   "goal": "Describe African kingdoms and trade networks in the Middle Ages.",
+   "minutes": 30,
+   "topics": [
+    "Trans-Saharan gold and salt trade",
+    "Mansa Musa and Mali",
+    "Great Zimbabwe",
+    "Swahili city-states",
+    "Ethiopia",
+    "Debate: how to interpret oral and archaeological evidence"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 32,
+   "title": "The Americas and Pacific Before 1492",
+   "goal": "Describe the major societies of the Americas and Pacific before European contact.",
+   "minutes": 30,
+   "topics": [
+    "Classic and post-Classic Maya",
+    "Aztec (Mexica) and Inca empires",
+    "Mississippian culture, Pueblo peoples",
+    "Polynesian navigation and settlement of Aotearoa/New Zealand",
+    "Debate: population estimates"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 33,
+   "title": "High Medieval Europe: Crusades, Castles and Universities",
+   "goal": "Explain feudal society, the Crusades and the growth of towns and learning.",
+   "minutes": 30,
+   "topics": [
+    "Feudalism: how useful is the term?",
+    "Crusades from several viewpoints",
+    "Cathedrals and universities",
+    "Magna Carta",
+    "Everyday life of peasants"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 34,
+   "title": "The Mongol Empire",
+   "goal": "Explain how the Mongols built the largest land empire and what it changed.",
+   "minutes": 30,
+   "topics": [
+    "Genghis Khan and his successors",
+    "Conquest and destruction",
+    "Pax Mongolica and exchange across Eurasia",
+    "Debate: destruction versus connection in the legacy"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 35,
+   "title": "The Black Death and the Crisis of the 1300s",
+   "goal": "Describe the plague and its effects on societies.",
+   "minutes": 30,
+   "topics": [
+    "Spread along trade routes",
+    "Death toll estimates and the debate over them",
+    "Social and economic changes",
+    "Climate shifts and famine",
+    "Other events in the 1300s"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 36,
+   "title": "The Renaissance",
+   "goal": "Describe what changed in art, ideas and technology in Europe from the 1300s to 1500s.",
+   "minutes": 30,
+   "topics": [
+    "Italian city-states and patrons",
+    "Art and artists",
+    "Printing press",
+    "Debate: was the Renaissance a break with the Middle Ages?",
+    "Contemporary developments outside Europe"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 37,
+   "title": "Ottomans, Ming China and the Age of Exploration",
+   "goal": "Explain why Europeans, Chinese and others made long sea voyages and what came of them.",
+   "minutes": 30,
+   "topics": [
+    "Fall of Constantinople, 1453",
+    "Zheng He's voyages",
+    "Portuguese routes along Africa and to Asia",
+    "Debate: why China stopped its treasure voyages"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 38,
+   "title": "Contact and the Columbian Exchange",
+   "goal": "Describe the effects of Europe–Americas contact on people, crops, animals and disease.",
+   "minutes": 30,
+   "topics": [
+    "Columbus's voyages, with Indigenous perspectives",
+    "Conquest of the Aztec and Inca empires",
+    "Disease and population collapse: size and causes debated",
+    "Spread of crops such as potatoes, maize and sugar",
+    "Silver and global trade"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 39,
+   "title": "The Reformation and the Wars of Religion",
+   "goal": "Explain how Christianity split in Western Europe and what followed.",
+   "minutes": 30,
+   "topics": [
+    "Luther and other reformers",
+    "Catholic Counter-Reformation",
+    "Thirty Years' War",
+    "Debate: religious versus political causes",
+    "Religious change elsewhere in the world"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 40,
+   "title": "The Scientific Revolution",
+   "goal": "Describe how new methods and discoveries changed thinking about nature.",
+   "minutes": 30,
+   "topics": [
+    "Copernicus, Galileo, Kepler, Newton",
+    "Experiment, microscopes and telescopes",
+    "Debate: was it a 'revolution'?",
+    "Contributions from other cultures",
+    "Science and religion"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 41,
+   "title": "The Atlantic Slave Trade",
+   "goal": "Explain how the trade worked, its scale and its lasting effects.",
+   "minutes": 30,
+   "topics": [
+    "African, European and American roles",
+    "Numbers and the Middle Passage",
+    "Plantation economies",
+    "Resistance and revolt",
+    "Debate: economic effects on Europe, the Americas and Africa",
+    "Content note: the subject is painful"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 42,
+   "title": "Mughal, Safavid, Qing and Tokugawa: Early Modern Asia",
+   "goal": "Compare the great Asian states of the 1500s–1700s.",
+   "minutes": 30,
+   "topics": [
+    "Mughal India and Akbar",
+    "Safavid Iran",
+    "Qing conquest of China",
+    "Tokugawa Japan",
+    "Debate: the 'gunpowder empires' idea"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 43,
+   "title": "Enlightenment and Absolute Monarchy",
+   "goal": "Describe the clash between royal power and new ideas about rights and reason.",
+   "minutes": 30,
+   "topics": [
+    "Louis XIV and absolutism",
+    "English Civil War and Glorious Revolution",
+    "Locke, Voltaire, Rousseau, and Enlightenment thinkers",
+    "Debate: limits of Enlightenment ideals on slavery, gender and empire",
+    "Music and art of the era"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 44,
+   "title": "The American and French Revolutions",
+   "goal": "Explain causes and results of two revolutions and how they spread ideas.",
+   "minutes": 30,
+   "topics": [
+    "Causes of the American Revolution",
+    "Declaration of Independence",
+    "French Revolution, the Terror",
+    "Debate: how revolutionary were they, and for whom?",
+    "Frame of reference: other world events 1776–1799"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 45,
+   "title": "Napoleon, Haiti and Latin American Independence",
+   "goal": "Describe how revolutions and wars remade the Atlantic world.",
+   "minutes": 30,
+   "topics": [
+    "Napoleon's rise and fall",
+    "Haitian Revolution",
+    "Bolívar, San Martín and independence movements",
+    "Congress of Vienna"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 46,
+   "title": "The Industrial Revolution",
+   "goal": "Explain what industrialization was and the theories for why it began in Britain.",
+   "minutes": 30,
+   "topics": [
+    "Steam, coal, factories and textiles",
+    "Urban life and working conditions",
+    "Debate: why Britain, and why then (the 'Great Divergence')",
+    "Environmental effects, early signs of climate change",
+    "Railways and telegraph"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 47,
+   "title": "Nations, Reform and Civil War in the 1800s",
+   "goal": "Describe the rise of nation-states and the movements for rights.",
+   "minutes": 30,
+   "topics": [
+    "Revolutions of 1848",
+    "Unification of Italy and Germany",
+    "Abolition of slavery",
+    "U.S. Civil War and Reconstruction",
+    "Early women's rights movements"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 48,
+   "title": "Imperialism: Africa, India, China and Japan",
+   "goal": "Explain how European and other powers expanded their control and how people responded.",
+   "minutes": 30,
+   "topics": [
+    "British rule in India and the 1857 rebellion",
+    "Opium Wars",
+    "Scramble for Africa",
+    "Meiji Japan",
+    "Debate: costs and benefits and how historians weigh them",
+    "Resistance movements"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 49,
+   "title": "Science and Ideas in the 1800s",
+   "goal": "Describe major discoveries and how they changed daily life and worldviews.",
+   "minutes": 30,
+   "topics": [
+    "Darwin and evolution",
+    "Germ theory and public health",
+    "Electricity and electromagnetism",
+    "Periodic table and energy",
+    "Debate: reception and misuse of Darwin's ideas",
+    "Romanticism, realism, Impressionism"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 50,
+   "title": "The Road to World War I",
+   "goal": "Explain the long- and short-term causes of the war.",
+   "minutes": 30,
+   "topics": [
+    "Alliances, arms race, nationalism",
+    "Assassination in Sarajevo, 1914",
+    "Debate: who or what was responsible",
+    "Europe's empires and other parts of the world in 1900–1914"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 51,
+   "title": "World War I",
+   "goal": "Describe the course, cost and consequences of the war.",
+   "minutes": 30,
+   "topics": [
+    "Western Front, Eastern Front and wider fronts",
+    "New weapons and trench life",
+    "Home fronts and colonial soldiers",
+    "Treaty of Versailles and its critics",
+    "Casualty figures and how they are estimated"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 52,
+   "title": "Revolution, Flu and the Roaring Twenties",
+   "goal": "Describe the turbulent years right after 1918.",
+   "minutes": 30,
+   "topics": [
+    "Russian Revolution and civil war",
+    "1918 influenza pandemic",
+    "Women's suffrage in many countries",
+    "Jazz, cinema, radio, modernism",
+    "Ottoman collapse and new states"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 53,
+   "title": "Depression, Dictators and the Slide to War",
+   "goal": "Explain how economic crisis and extremism changed politics in the 1930s.",
+   "minutes": 30,
+   "topics": [
+    "Great Depression",
+    "Fascism in Italy and Nazism in Germany",
+    "Stalin's USSR",
+    "Japan's expansion and the war in China",
+    "Debate: appeasement and whether war was avoidable"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 54,
+   "title": "World War II",
+   "goal": "Outline the main theaters of the war and how it ended.",
+   "minutes": 30,
+   "topics": [
+    "Europe, the Atlantic, the Soviet front",
+    "Pacific and Asia",
+    "Home fronts and resistance",
+    "Atomic bombs and the debate over their use",
+    "Total deaths and how they are counted"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 55,
+   "title": "The Holocaust and the Memory of Genocide",
+   "goal": "Explain what the Holocaust was, how it happened and how it is remembered.",
+   "minutes": 30,
+   "topics": [
+    "Content note: this class covers genocide, written with care",
+    "Nazi persecution and mass murder of Jews, and of Roma, disabled people and others",
+    "Victims' own voices, including diaries such as Anne Frank's",
+    "Rescue and resistance",
+    "Nuremberg and the idea of 'genocide' in law",
+    "Denial and how historians respond"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 56,
+   "title": "A New World Order: The UN, the Cold War and Decolonization",
+   "goal": "Describe the world that emerged after 1945.",
+   "minutes": 30,
+   "topics": [
+    "United Nations and Bretton Woods",
+    "Start of the Cold War",
+    "Partition of India and Pakistan",
+    "Chinese Revolution",
+    "Independence movements in Africa, Asia and the Middle East",
+    "Debate: who was responsible for the Cold War"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 57,
+   "title": "The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights",
+   "goal": "Describe the major events and movements of these years.",
+   "minutes": 30,
+   "topics": [
+    "Korea and the nuclear arms race",
+    "Sputnik and the Moon race",
+    "U.S. civil rights movement",
+    "Cuban Missile Crisis",
+    "Rock 'n' roll, television, new art"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 58,
+   "title": "The Late 1960s and 1970s: Protest, War and Oil",
+   "goal": "Describe turbulence and change in these years worldwide.",
+   "minutes": 30,
+   "topics": [
+    "Vietnam War",
+    "1968 protests",
+    "China's Cultural Revolution",
+    "Middle East wars, oil shock",
+    "Environmental and feminist movements",
+    "Debate: how to assess the Cultural Revolution's toll"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 59,
+   "title": "20th-Century Science and Technology",
+   "goal": "Explain the big ideas and inventions that changed the century.",
+   "minutes": 30,
+   "topics": [
+    "Relativity and quantum theory",
+    "Antibiotics and vaccines, DNA's structure",
+    "Computers and early networks",
+    "Green Revolution",
+    "Return to the Big Bang: how we learned the story from Class 2"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 60,
+   "title": "The End of the Cold War",
+   "goal": "Explain how and why the Cold War ended.",
+   "minutes": 30,
+   "topics": [
+    "Reagan, Gorbachev and reform",
+    "1989 revolutions and fall of the Berlin Wall",
+    "Dissolution of the USSR in 1991",
+    "Debate: what mattered most — pressure, reform or economics",
+    "South Africa and the end of apartheid"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 61,
+   "title": "Globalization, the Internet and a New Century",
+   "goal": "Describe the changes in the 1990s and 2000s.",
+   "minutes": 30,
+   "topics": [
+    "The World Wide Web and mobile phones",
+    "Rise of China and India's economy",
+    "September 11, 2001 and the wars that followed",
+    "European Union",
+    "Debate: winners and losers of globalization"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 62,
+   "title": "2008 to Today",
+   "goal": "Describe major recent events and say why recent history is hard to judge.",
+   "minutes": 30,
+   "topics": [
+    "2008 financial crisis",
+    "Smartphones and social media",
+    "Climate change: evidence and policy debates",
+    "COVID-19 pandemic",
+    "Artificial intelligence",
+    "Why historians are cautious about the very recent past"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 63,
+   "title": "Looking Ahead: The Future of Earth and the Universe",
+   "goal": "Summarize the whole story and describe what science says about possible futures.",
+   "minutes": 30,
+   "topics": [
+    "Review: the big turning points from Big Bang to now",
+    "Future of the Sun and Earth",
+    "Possible fates of the universe, and why they are debated",
+    "Choices and uncertainty in human futures",
+    "Where to keep learning"
+   ],
+   "needs_research": true
+  }
+ ]
+}

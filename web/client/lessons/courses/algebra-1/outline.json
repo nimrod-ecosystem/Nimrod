@@ -1,0 +1,665 @@
+{
+ "course_id": "algebra-1",
+ "title": "Algebra 1: From Expressions to Quadratics and Data",
+ "audience": [
+  "Oscar",
+  "teenagers aged 14 to 16 who have finished 8th-grade math"
+ ],
+ "length_note": "The course has 51 classes, about 28 hours in total. Each class teaches one main idea, so no one has to hold several new things in mind at once. Nothing in your list is skipped. The classes are grouped as expressions (3), equations and inequalities (6), functions (3), linear functions and models (9), systems (5), exponents and exponential models (6), polynomials and factoring (7), quadratics (6), function comparison (1), statistics (4) and a capstone (1). Most classes run 30 minutes, which matches the half-hour request. Thirteen run 40 minutes and the capstone runs 45. Those are topics with several steps or a modeling task, such as multi-step equations, factoring with a leading coefficient, completing the square, the quadratic formula and the statistics classes. Cutting them to 30 minutes would mean rushing. Each class builds on the one before it. Equations come before functions, and lines come before systems. Exponents come before polynomials, and factoring comes before quadratics. Statistics comes last because it uses lines, functions and models from earlier. Every class uses a real-world setting such as games, money or sports. The needs_research flag marks classes whose examples depend on real facts, rates or data sets that must be sourced before the lesson is written.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "Variables and Expressions",
+   "goal": "Say what a variable is and turn a short real-life situation into an expression, and the reverse.",
+   "minutes": 30,
+   "topics": [
+    "variables as unknown or changing amounts",
+    "terms, coefficients, constants",
+    "words to expressions (game scores, prices)"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "Order of Operations and Evaluating Expressions",
+   "goal": "Evaluate an expression correctly by substituting values and following the order of operations.",
+   "minutes": 30,
+   "topics": [
+    "order of operations",
+    "substitution",
+    "exponents and grouping symbols",
+    "checking with a calculator"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 3,
+   "title": "Properties and Simplifying Expressions",
+   "goal": "Simplify an expression using the distributive property and by combining like terms.",
+   "minutes": 30,
+   "topics": [
+    "commutative, associative, distributive properties",
+    "like terms",
+    "simplifying with negatives"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 4,
+   "title": "One-Step and Two-Step Equations",
+   "goal": "Solve one- and two-step equations with inverse operations and check the answer.",
+   "minutes": 30,
+   "topics": [
+    "equality as balance",
+    "inverse operations",
+    "checking solutions",
+    "money and score problems"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 5,
+   "title": "Multi-Step Equations and Variables on Both Sides",
+   "goal": "Solve equations that need distributing, combining like terms or moving variables across the equals sign, and recognize equations with no solution or infinitely many.",
+   "minutes": 40,
+   "topics": [
+    "distribute then combine",
+    "variables on both sides",
+    "no solution and identities",
+    "comparing two phone or gym plans"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 6,
+   "title": "Formulas and Literal Equations",
+   "goal": "Rearrange a formula to solve for a chosen variable.",
+   "minutes": 30,
+   "topics": [
+    "solving for a variable",
+    "common formulas (distance, area, perimeter, interest)",
+    "unit awareness"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 7,
+   "title": "Ratios, Rates, Proportions and Percent",
+   "goal": "Use ratios, unit rates and percent equations to solve problems about prices, discounts, tips and sports averages.",
+   "minutes": 30,
+   "topics": [
+    "unit rates",
+    "proportions",
+    "percent of, percent change",
+    "discount, tax and tip"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Solving and Graphing Inequalities",
+   "goal": "Solve a one-variable inequality, graph it on a number line, and explain what the solutions mean.",
+   "minutes": 30,
+   "topics": [
+    "inequality symbols",
+    "solving with addition, subtraction, multiplication, division",
+    "flipping the sign for negatives",
+    "budget and limit problems"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 9,
+   "title": "Compound Inequalities and Absolute Value",
+   "goal": "Solve and graph 'and'/'or' inequalities and solve basic absolute value equations and inequalities.",
+   "minutes": 40,
+   "topics": [
+    "and vs or",
+    "absolute value as distance",
+    "absolute value equations",
+    "absolute value inequalities",
+    "tolerance problems"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 10,
+   "title": "Relations and Functions",
+   "goal": "Decide whether a relation is a function and explain why, using tables, mappings and the vertical line test.",
+   "minutes": 30,
+   "topics": [
+    "inputs and outputs",
+    "relations vs functions",
+    "tables, mappings, graphs",
+    "vertical line test"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 11,
+   "title": "Function Notation",
+   "goal": "Read and use f(x) notation to evaluate functions and interpret the results.",
+   "minutes": 30,
+   "topics": [
+    "f(x) meaning",
+    "evaluating functions",
+    "finding x for a given f(x)",
+    "interpreting in context"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 12,
+   "title": "Graphs of Functions: Domain, Range and Behavior",
+   "goal": "Read a graph to find domain, range, intercepts, and where a function increases or decreases.",
+   "minutes": 30,
+   "topics": [
+    "domain and range",
+    "intercepts",
+    "increasing and decreasing",
+    "maximum and minimum",
+    "story graphs"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 13,
+   "title": "Slope and Rate of Change",
+   "goal": "Find slope from a graph, a table or two points and explain it as a rate of change.",
+   "minutes": 30,
+   "topics": [
+    "rise over run",
+    "slope formula",
+    "positive, negative, zero, undefined slope",
+    "rate of change in context"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 14,
+   "title": "Slope-Intercept Form and Graphing Lines",
+   "goal": "Graph a line from y = mx + b and explain what m and b mean in a situation.",
+   "minutes": 30,
+   "topics": [
+    "slope-intercept form",
+    "y-intercept as starting value",
+    "graphing from slope and intercept",
+    "linear function vs proportional relationship"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 15,
+   "title": "Point-Slope and Standard Form",
+   "goal": "Write a line in point-slope and standard form and convert between forms.",
+   "minutes": 30,
+   "topics": [
+    "point-slope form",
+    "standard form Ax + By = C",
+    "intercepts from standard form",
+    "choosing a form"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 16,
+   "title": "Writing Linear Equations from Information",
+   "goal": "Write a linear equation from a graph, a table, a point and slope, or two points.",
+   "minutes": 30,
+   "topics": [
+    "from two points",
+    "from a table",
+    "from a word problem",
+    "checking with a third point"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 17,
+   "title": "Parallel and Perpendicular Lines",
+   "goal": "Write the equation of a line parallel or perpendicular to a given line through a given point.",
+   "minutes": 30,
+   "topics": [
+    "equal slopes",
+    "negative reciprocal slopes",
+    "writing equations through a point"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 18,
+   "title": "Linear Inequalities in Two Variables",
+   "goal": "Graph a linear inequality and test points to decide which side to shade.",
+   "minutes": 30,
+   "topics": [
+    "boundary line solid vs dashed",
+    "test point",
+    "shading",
+    "constraints such as time and money limits"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 19,
+   "title": "Arithmetic Sequences as Linear Functions",
+   "goal": "Write a rule for an arithmetic sequence and connect it to a linear function.",
+   "minutes": 30,
+   "topics": [
+    "common difference",
+    "explicit and recursive rules",
+    "sequences as functions on whole numbers"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 20,
+   "title": "Piecewise and Absolute Value Functions, and Transformations",
+   "goal": "Graph piecewise and absolute value functions and describe shifts, stretches and reflections of a graph.",
+   "minutes": 40,
+   "topics": [
+    "piecewise rules (e.g. pricing tiers)",
+    "absolute value graph",
+    "translations",
+    "reflections and stretches"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 21,
+   "title": "Building Linear Models from Data",
+   "goal": "Draw and use a line of best fit on a scatter plot to make and judge predictions.",
+   "minutes": 40,
+   "topics": [
+    "scatter plots",
+    "informal line of fit",
+    "using a model to predict",
+    "interpolation vs extrapolation",
+    "slope and intercept meaning"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 22,
+   "title": "Systems of Equations by Graphing",
+   "goal": "Solve a system by graphing and say what the intersection point means.",
+   "minutes": 30,
+   "topics": [
+    "what a system is",
+    "intersection as solution",
+    "one, none or infinitely many solutions",
+    "comparing two options"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 23,
+   "title": "Systems by Substitution",
+   "goal": "Solve a system by substitution and check the answer.",
+   "minutes": 30,
+   "topics": [
+    "isolate a variable",
+    "substitute",
+    "special cases",
+    "checking in both equations"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 24,
+   "title": "Systems by Elimination",
+   "goal": "Solve a system by adding or subtracting equations, including after multiplying one or both.",
+   "minutes": 30,
+   "topics": [
+    "opposite coefficients",
+    "multiplying to match",
+    "special cases"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 25,
+   "title": "Choosing a Method and Solving Systems Word Problems",
+   "goal": "Pick the most efficient method for a system and solve real problems with it.",
+   "minutes": 40,
+   "topics": [
+    "graphing vs substitution vs elimination",
+    "defining variables",
+    "ticket, mixture and sports problems",
+    "interpreting the answer"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 26,
+   "title": "Systems of Linear Inequalities",
+   "goal": "Graph a system of inequalities and identify points that satisfy all the conditions.",
+   "minutes": 30,
+   "topics": [
+    "overlapping regions",
+    "feasible solutions",
+    "constraint problems"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 27,
+   "title": "Exponent Rules",
+   "goal": "Simplify expressions using the product, quotient and power rules.",
+   "minutes": 30,
+   "topics": [
+    "what an exponent means",
+    "product rule",
+    "quotient rule",
+    "power of a power and of a product"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 28,
+   "title": "Zero and Negative Exponents, and Scientific Notation",
+   "goal": "Evaluate zero and negative exponents and write and compute with numbers in scientific notation.",
+   "minutes": 30,
+   "topics": [
+    "zero exponent",
+    "negative exponents",
+    "scientific notation",
+    "very large and very small quantities"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 29,
+   "title": "Roots and Rational Exponents",
+   "goal": "Simplify square roots and cube roots and connect roots to fractional exponents.",
+   "minutes": 30,
+   "topics": [
+    "square and cube roots",
+    "simplifying radicals",
+    "rational and irrational numbers",
+    "fractional exponents"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 30,
+   "title": "Exponential Functions: Growth and Decay",
+   "goal": "Recognize and graph y = a·b^x and tell growth from decay.",
+   "minutes": 30,
+   "topics": [
+    "constant multiplier",
+    "growth factor vs decay factor",
+    "graph shape",
+    "initial value"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 31,
+   "title": "Exponential Models and Compound Interest",
+   "goal": "Write and use an exponential model for situations such as savings, loans or spreading content, and interpret the result.",
+   "minutes": 40,
+   "topics": [
+    "percent growth and decay rates",
+    "compound interest formula",
+    "modeling with a table and equation",
+    "reasonable predictions"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 32,
+   "title": "Geometric Sequences and Linear vs Exponential",
+   "goal": "Write a geometric sequence rule and decide from a table, graph or story whether growth is linear or exponential.",
+   "minutes": 30,
+   "topics": [
+    "common ratio",
+    "explicit rule",
+    "adding vs multiplying",
+    "comparing growth over time"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 33,
+   "title": "Adding and Subtracting Polynomials",
+   "goal": "Name polynomials by degree and terms and add or subtract them.",
+   "minutes": 30,
+   "topics": [
+    "monomial, binomial, trinomial",
+    "degree and standard form",
+    "combine like terms",
+    "subtracting with negatives"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 34,
+   "title": "Multiplying Polynomials",
+   "goal": "Multiply monomials, binomials and larger polynomials.",
+   "minutes": 30,
+   "topics": [
+    "distribute",
+    "FOIL and area model",
+    "multiplying a binomial by a trinomial"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 35,
+   "title": "Special Products",
+   "goal": "Expand squares of binomials and the product of a sum and difference by pattern.",
+   "minutes": 30,
+   "topics": [
+    "(a+b)²",
+    "(a−b)²",
+    "(a+b)(a−b)",
+    "spotting patterns"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 36,
+   "title": "Factoring Out the Greatest Common Factor and Grouping",
+   "goal": "Factor a polynomial by pulling out the GCF and by grouping, and check by multiplying.",
+   "minutes": 30,
+   "topics": [
+    "GCF of numbers and variables",
+    "factoring as reverse of distributing",
+    "grouping four terms"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 37,
+   "title": "Factoring x² + bx + c",
+   "goal": "Factor trinomials with a leading coefficient of 1.",
+   "minutes": 30,
+   "topics": [
+    "sum and product pattern",
+    "signs of the factors",
+    "checking by multiplying"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 38,
+   "title": "Factoring ax² + bx + c",
+   "goal": "Factor trinomials whose leading coefficient is not 1.",
+   "minutes": 40,
+   "topics": [
+    "the ac method",
+    "splitting the middle term",
+    "trial and check",
+    "when a trinomial won't factor"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 39,
+   "title": "Special Factoring and a Factoring Strategy",
+   "goal": "Factor differences of squares and perfect square trinomials and choose the right method for any polynomial.",
+   "minutes": 30,
+   "topics": [
+    "difference of squares",
+    "perfect square trinomials",
+    "step-by-step factoring checklist",
+    "factoring completely"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 40,
+   "title": "Quadratic Functions and Their Graphs",
+   "goal": "Graph a parabola and name its vertex, axis of symmetry, intercepts and direction.",
+   "minutes": 40,
+   "topics": [
+    "y = ax² + bx + c",
+    "parabola shape",
+    "vertex and axis of symmetry",
+    "intercepts",
+    "table of values"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 41,
+   "title": "Vertex Form and Transformations of Parabolas",
+   "goal": "Use vertex form to graph a parabola and describe how a, h and k change it.",
+   "minutes": 30,
+   "topics": [
+    "y = a(x − h)² + k",
+    "shifts, stretches, reflections",
+    "converting between forms"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 42,
+   "title": "Solving Quadratics by Factoring",
+   "goal": "Solve quadratic equations by factoring and the zero product property and link solutions to x-intercepts.",
+   "minutes": 30,
+   "topics": [
+    "zero product property",
+    "setting equal to zero",
+    "roots, zeros, x-intercepts"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 43,
+   "title": "Square Roots and Completing the Square",
+   "goal": "Solve quadratics by taking square roots and by completing the square.",
+   "minutes": 40,
+   "topics": [
+    "solving x² = k",
+    "perfect square form",
+    "completing the square",
+    "rewriting into vertex form"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 44,
+   "title": "The Quadratic Formula and the Discriminant",
+   "goal": "Solve any quadratic with the quadratic formula and use the discriminant to say how many real solutions it has.",
+   "minutes": 40,
+   "topics": [
+    "formula and where it comes from",
+    "substituting carefully",
+    "discriminant",
+    "choosing a solving method"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 45,
+   "title": "Quadratic Models",
+   "goal": "Model and solve problems about projectiles, area and profit with quadratics and interpret the vertex and intercepts.",
+   "minutes": 40,
+   "topics": [
+    "height of a thrown ball",
+    "maximum and minimum values",
+    "area problems",
+    "reasonable solutions in context"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 46,
+   "title": "Comparing Linear, Exponential and Quadratic Functions",
+   "goal": "Choose and justify the function type that best fits a table, graph or story.",
+   "minutes": 30,
+   "topics": [
+    "constant difference vs constant ratio vs second difference",
+    "graph shapes",
+    "long-term growth",
+    "choosing a model"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 47,
+   "title": "Describing Data: Displays, Center and Spread",
+   "goal": "Display one-variable data and describe it with mean, median, range and shape.",
+   "minutes": 30,
+   "topics": [
+    "dot plots, histograms",
+    "mean and median",
+    "range",
+    "skew and shape"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 48,
+   "title": "Box Plots, Standard Deviation and Outliers",
+   "goal": "Build and read box plots, interpret standard deviation, and compare two data sets.",
+   "minutes": 40,
+   "topics": [
+    "quartiles and interquartile range",
+    "outliers",
+    "standard deviation as typical spread",
+    "comparing teams or players"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 49,
+   "title": "Two-Way Tables and Categorical Data",
+   "goal": "Read two-way frequency tables and find joint, marginal and relative frequencies.",
+   "minutes": 30,
+   "topics": [
+    "joint and marginal frequencies",
+    "relative frequency",
+    "spotting associations in survey data"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 50,
+   "title": "Correlation, Residuals and Causation",
+   "goal": "Judge how well a line fits data using the correlation coefficient and residuals and explain why correlation is not causation.",
+   "minutes": 40,
+   "topics": [
+    "correlation coefficient",
+    "residuals and residual plots",
+    "reading a regression line",
+    "correlation vs causation"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 51,
+   "title": "Capstone: Solve a Real Problem with Algebra",
+   "goal": "Choose a real situation (game, money or sports), build and compare models, and explain the findings in plain words.",
+   "minutes": 45,
+   "topics": [
+    "choose a question",
+    "collect or pick data",
+    "build linear, exponential or quadratic models",
+    "explain and check results"
+   ],
+   "needs_research": true
+  }
+ ]
+}

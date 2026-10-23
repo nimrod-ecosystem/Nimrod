@@ -1,0 +1,419 @@
+{
+ "about": {
+  "title": "Variables and Expressions",
+  "course": "algebra-1",
+  "class_n": 1,
+  "audience": [
+   "ages 14 to 16",
+   "Oscar and teenagers like him"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This is the first class and it only has a few new ideas, so there is room to go slowly and practise. It splits into two halves. The first half is variables, terms and coefficients. The second half is words to expressions and back. You can stop and come back after the half-way recap."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.2 Evaluate, Simplify, and Translate Expressions (Prealgebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/2-2-evaluate-simplify-and-translate-expressions",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "1.2 Use the Language of Algebra (Elementary Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/1-2-use-the-language-of-algebra",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "High School: Algebra » Seeing Structure in Expressions",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/SSE/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Common Core State Standards for Mathematics (CCSSM), High School Algebra (Oregon Department of Education copy)",
+   "publisher": "Oregon Department of Education",
+   "date": "n.d.",
+   "link": "https://www.oregon.gov/ode/educator-resources/standards/mathematics/Documents/ccssma.pdf",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Earliest Uses of Symbols for Variables",
+   "publisher": "MacTutor History of Mathematics, University of St Andrews",
+   "date": "n.d.",
+   "link": "https://mathshistory.st-andrews.ac.uk/Miller/mathsym/variables/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Variable (mathematics)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Variable_(mathematics)",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "François Viète's revolution in algebra",
+   "publisher": "Research Outreach",
+   "date": "n.d.",
+   "link": "https://researchoutreach.org/articles/francois-viete-modern-algebra/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Evaluate, Simplify, and Translate Expressions (Prealgebra, OpenStax, Open Textbook BC copy)",
+   "publisher": "BCcampus Open Education",
+   "date": "n.d.",
+   "link": "https://opentextbc.ca/prealgebraopenstax/chapter/evaluate-simplify-and-translate-expressions/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "François Viète",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/francois-viete",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Interpret Expressions (HSA-SSE.A.1)",
+   "publisher": "Online Math Learning",
+   "date": "n.d.",
+   "link": "https://www.onlinemathlearning.com/interpret-expressions-hsa-sse1.html",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to Algebra 1, class one: Variables and Expressions. There is no rush. You can pause, replay any part, or take a break whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 1: Variables and Expressions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today we'll do three things. We'll say what a variable is. We'll turn a short real-life situation into a math expression. Then we'll do the reverse and turn an expression back into a situation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. What is a variable?\n2. Situation → expression\n3. Expression → situation"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A variable is a letter that stands in for a number. The number might change, or we might not know it yet. Think of your score in a game. It starts at 0 and goes up as you play, so we can just call it s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "variable = a letter that stands for a number that can change or is not known yet"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a good job for a variable?",
+    "right": "The number of coins you hold in a game, which goes up and down as you play",
+    "wrong": [
+     "The number of days in a week",
+     "The number of sides on a triangle",
+     "The number of players on the field for one soccer team at a time"
+    ],
+    "why": "A variable is for an amount that changes or that we don't know. The other three are fixed numbers: 7, 3 and 11."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Variables are used in two main ways. Sometimes the number is a mystery we want to find. Sometimes it really does change, like a score. Either way, the letter holds its place."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Unknown: you found 5 coins and now have 12. How many did you start with? Call it c.\nChanging: your score after each round. Call it s."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next word: expression. An expression is a math phrase made of numbers, letters and operations like plus and times. It has no equals sign. For example, s + 50 means your score plus 50 bonus points."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "expression = a math phrase with no equals sign. Example: s + 50"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Expressions are built from pieces called terms. In 3x + 7 there are two terms: 3x and 7. The number 7 has no letter, so it is a constant. A constant never changes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3x + 7\nTerm 1: 3x (has a variable)\nTerm 2: 7 (a constant)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The coefficient is the number in front of the variable. In 3x, the coefficient is 3. If you see just x, the coefficient is 1, because x means 1 times x. We just don't write the 1."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "coefficient = the number in front of the variable. In 3x it is 3. In x it is 1."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the expression 9b + a + 6, what is the coefficient of a?",
+    "right": "1",
+    "wrong": [
+     "0",
+     "a",
+     "6"
+    ],
+    "why": "When no number is written in front of a variable, the coefficient is 1, because a = 1 · a."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A constant counts as a term too, and its coefficient is just itself. In 4m + 9, the terms are 4m and 9. The constant is 9."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4m + 9\nTerms: 4m and 9\nCoefficient of 4m: 4\nConstant: 9"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the expression 5g + 20, which part is the constant?",
+    "right": "20",
+    "wrong": [
+     "5",
+     "g",
+     "5g"
+    ],
+    "why": "The constant is the term with no variable. Here that is 20. The 5 is the coefficient of g."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That's the first half. A variable is a letter for a number that changes or is unknown. An expression is a phrase with no equals sign. Terms are its pieces. A coefficient is the number in front of a variable. A constant is a number on its own. This is a good place to take a break if you want one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Variable: a letter for a number\nExpression: no equals sign\nTerm: a piece of the expression\nCoefficient: number in front of the variable\nConstant: a number on its own"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now for the second half: turning words into expressions. Start with game scores. 'Your score plus 50 bonus points' is s + 50. 'Three times your coins' is 3c. 'Twice your kills plus 4' is 2k + 4. Pick a letter, then turn each word into a symbol."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Words → Expression\nyour score plus 50 → s + 50\nthree times your coins → 3c\ntwice your kills, plus 4 → 2k + 4"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Be careful with '5 less than your score'. Order matters here. If your score is s, then 5 less than s is s − 5, not 5 − s. Try it with s = 40. You get 35, which is 5 less than 40."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "5 less than s → s − 5 (not 5 − s)"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Your score is s. Which expression means '7 less than your score'?",
+    "right": "s − 7",
+    "wrong": [
+     "7 − s",
+     "s + 7",
+     "7s"
+    ],
+    "why": "'Less than' means you take 7 away from your score, so the score goes first: s − 7."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now money. A movie ticket costs $8 and popcorn costs $5. If you buy t tickets and one popcorn, the cost is 8t + 5. The coefficient 8 is the price of each ticket, and the constant 5 is the one-time popcorn. For 3 tickets, put 3 in place of t: 8 × 3 + 5 = 29 dollars."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A ticket counter. Three tickets are marked $8 each, with one popcorn bucket marked $5. Below them is the expression 8t + 5, with t = 3 giving $29."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Songs cost $2 each and there is a one-time $3 fee. You buy n songs. Which expression gives the total cost?",
+    "right": "2n + 3",
+    "wrong": [
+     "2 + 3n",
+     "5n",
+     "n + 5"
+    ],
+    "why": "Each of the n songs costs $2, so that is 2n. The fee is paid once, so we add 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the reverse. Take 4p + 10. You could read it as '4 pizzas at p dollars each, plus $10 delivery.' The 4 is how many, p is the price of one, and 10 is the one-time extra. The same expression can fit many stories, but each part has to match."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "4p + 10\n4 = how many pizzas\np = price of one pizza\n10 = delivery fee"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which story matches 5x − 2?",
+    "right": "5 games at x dollars each, minus a $2 coupon",
+    "wrong": [
+     "5 games at $2 each, minus x dollars off",
+     "x games at $5 each, plus a $2 fee",
+     "5 more than x, then 2 less"
+    ],
+    "why": "5x means 5 items at x dollars each. The − 2 means $2 taken off once."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real expressions have meaning in their parts. The standards give an example. Write p + 0.05p. The p is the price, and 0.05p is a 5% tax added on top. Reading an expression piece by piece tells you what each piece does."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "p + 0.05p → price plus 5% tax on the price"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In p + 0.05p, what does the part 0.05p stand for?",
+    "right": "The 5% tax on the price",
+    "wrong": [
+     "The price itself",
+     "The total you pay",
+     "The number of items"
+    ],
+    "why": "p is the price. 0.05p is 5% of that price, which is the tax. Adding the two gives the total."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where did the letters come from? The Greek mathematician Diophantus used a letter for an unknown about 1,800 years ago. In 1591 François Viète used letters for both unknowns and known numbers. In 1637 René Descartes set the x, y, z habit we still use. Viète also brought in the word coefficient."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 250–275: Diophantus uses a letter for an unknown\n1591: Viète uses letters for unknowns and known numbers\n1637: Descartes uses x, y, z for unknowns"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today you learned that a variable is a letter for a number that changes or is unknown. You learned the parts of an expression: terms, coefficients and constants. And you went from words to expressions and back. Next class is Order of Operations and Evaluating Expressions, where we put numbers in for the letters. Well done."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Variable = letter for a number\nTerms, coefficients, constants\nWords → expression\nExpression → words"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Variable",
+   "links": [
+    "[[Order of Operations and Evaluating Expressions]]",
+    "[[One-Step and Two-Step Equations]]"
+   ]
+  },
+  {
+   "topic": "Terms, coefficients and constants",
+   "links": [
+    "[[Properties and Simplifying Expressions]]"
+   ]
+  },
+  {
+   "topic": "Words to expressions",
+   "links": [
+    "[[One-Step and Two-Step Equations]]",
+    "[[Ratios, Rates, Proportions and Percent]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "François Viète is often credited as the first person to use letters for unknowns and known numbers in algebra.",
+   "other_view": "Using letters for general numbers is older. The Greeks did it, and Diophantus used a letter for an unknown. Historian Jeffrey Oaks also argues that Viète's letters stood for geometric magnitudes such as lines and surfaces. So they did not work quite like our modern x, even though the notation can look familiar.",
+   "cite": [
+    "s5",
+    "s6",
+    "s7"
+   ]
+  }
+ ]
+}

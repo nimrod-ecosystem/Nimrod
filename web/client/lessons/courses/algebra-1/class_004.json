@@ -1,0 +1,416 @@
+{
+ "about": {
+  "title": "One-Step and Two-Step Equations",
+  "course": "algebra-1",
+  "class_n": 4,
+  "audience": [
+   "age 14 to 16",
+   "Oscar and teenagers like him",
+   "anyone who wants to learn equations step by step, at their own speed"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has two small skills (one-step, then two-step), plus checking and word problems. Each skill is short, and there are pause-and-try questions along the way. You can stop after any beat and come back."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.3 Solving Equations Using the Subtraction and Addition Properties of Equality (Prealgebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/2-3-solving-equations-using-the-subtraction-and-addition-properties-of-equality",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "8.2 Solve Equations Using the Division and Multiplication Properties of Equality (Prealgebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/8-2-solve-equations-using-the-division-and-multiplication-properties-of-equality",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "8.3 Solve Equations with Variables and Constants on Both Sides (Prealgebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/8-3-solve-equations-with-variables-and-constants-on-both-sides",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Chapter 9 Key Concepts: Use a Problem Solving Strategy (Prealgebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/9-key-concepts",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "High School: Algebra - Reasoning with Equations & Inequalities (HSA.REI.A.1)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/REI/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "CCSS.Math.Content.HSA-REI.A: Standard Explained, Lesson Ideas",
+   "publisher": "LessonMakerPro",
+   "date": "n.d.",
+   "link": "https://lessonmakerpro.com/standards/ccss-math/hsa-rei-a",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "8.1 Solve Equations Using the Subtraction and Addition Properties of Equality (Prealgebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/8-1-solve-equations-using-the-subtraction-and-addition-properties-of-equality",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 4. Today we solve equations: one-step first, then two-step. By the end you will be able to find a mystery number and prove your answer is right. No rush. You can pause anywhere."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "One-Step and Two-Step Equations",
+    "chart": ""
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An equation is a statement that two things are equal. Picture a balance scale, level, with the same weight on each side. Here is a tiny one. On the left is a closed envelope with a mystery number of counters, plus 4 loose counters. On the right are 5 counters. The scale is level, so x plus 4 equals 5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A level balance scale. Left pan: one closed envelope marked x, plus 4 counters. Right pan: 5 counters. Caption: x + 4 = 5",
+    "chart": ""
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On the balance, x + 4 = 5. If you take 4 counters off the left pan, what must you do to keep the scale level?",
+    "right": "Take 4 counters off the right pan too.",
+    "wrong": [
+     "Add 4 counters to the right pan.",
+     "Nothing. The scale stays level by itself.",
+     "Take 4 counters off the left pan only, and then 4 more off the left."
+    ],
+    "why": "Whatever you do to one side, you do to the other. Taking the same amount from both sides keeps the equation equal."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the big rule of the whole class. When you subtract the same amount from both sides of an equation, it is still equal. The same is true for adding, which you will see in a moment."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Do the same thing to both sides.",
+    "chart": ""
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our goal is to get the variable alone on one side. The word for that is isolate. The variable is the letter, like x. Once x stands alone, the other side tells us what it equals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Isolate the variable: get x by itself.",
+    "chart": ""
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do we get x alone? We use inverse operations. An inverse operation undoes another one. Adding and subtracting undo each other. Multiplying and dividing undo each other. If a number was added to x, we subtract it. If x was multiplied, we divide."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "If x has this done to it: + (added) | − (subtracted) | × (multiplied) | ÷ (divided). Undo it with this: − subtract | + add | ÷ divide | × multiply.",
+    "chart": ""
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try one. x plus 7 equals 12. Someone added 7 to x, so we subtract 7 from both sides. On the left, 7 minus 7 is zero, and x is alone. On the right, 12 minus 7 is 5. So x equals 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + 7 = 12 | Subtract 7 from both sides | x = 5",
+    "chart": ""
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve: x − 5 = 8.",
+    "right": "x = 13",
+    "wrong": [
+     "x = 3",
+     "x = −3",
+     "x = 40"
+    ],
+    "why": "5 was subtracted from x, so undo it by adding 5 to both sides. 8 + 5 = 13."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now multiplying. 4x means 4 times x. Here, 4x equals 28. The 4 is multiplying x, so we divide both sides by 4. That gives x equals 7. Division has one rule: you can never divide by zero."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x = 28 | Divide both sides by 4 | x = 7",
+    "chart": ""
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if x is being divided? Take x divided by 4 equals 3. Divide is undone by multiply. So multiply both sides by 4, and x equals 12."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x ÷ 4 = 3 | Multiply both sides by 4 | x = 12",
+    "chart": ""
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve: n ÷ 3 = 5.",
+    "right": "n = 15",
+    "wrong": [
+     "n = 2",
+     "n = 8",
+     "n = 5/3"
+    ],
+    "why": "n is divided by 3, so multiply both sides by 3. 5 × 3 = 15."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the habit that makes you reliable: checking. Put your answer back into the original equation. If both sides come out equal, it is a true statement and your answer is a solution. Let us check x equals 7 in 4x equals 28. 4 times 7 is 28. Yes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Check: put the answer into the ORIGINAL equation. 4x = 28, x = 7: 4 × 7 = 28 ✓ (true, so 7 is the solution)",
+    "chart": ""
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Someone says x = 6 solves x + 9 = 14. Is that right?",
+    "right": "No. 6 + 9 = 15, and 15 is not 14.",
+    "wrong": [
+     "Yes. 6 and 9 are close to 14.",
+     "Yes. 9 + 6 and 14 have the same digits.",
+     "Can't tell. You can't check an answer."
+    ],
+    "why": "To check, put the answer into the original equation. If you get a false statement, the answer is wrong. The right answer is x = 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two-step equations just have two things done to x. Take 2x plus 3 equals 11. The 3 is out of place on the variable side, so we remove it first by subtracting 3 from both sides. That leaves 2x equals 8, a one-step equation you already know. Then divide by 2. x equals 4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 3 = 11 | Subtract 3 from both sides: 2x = 8 | Divide both sides by 2: x = 4 | Check: 2 × 4 + 3 = 11 ✓",
+    "chart": ""
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The order is: first undo the adding or subtracting. Then undo the multiplying or dividing. It is like unwrapping a gift. The wrapping went on last, so it comes off first. Same idea with subtraction: in 5y minus 7 equals 18, undo the subtracting by adding 7 to both sides. 5y equals 25, so y equals 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Step 1: undo + or − | Step 2: undo × or ÷ | Step 3: check in the original",
+    "chart": ""
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve: 3x − 4 = 11.",
+    "right": "x = 5",
+    "wrong": [
+     "x = 7/3",
+     "x = 15",
+     "x = 3"
+    ],
+    "why": "Add 4 to both sides to get 3x = 15, then divide by 3. x = 5. Check: 3 × 5 − 4 = 11. x = 15 forgets the division. x = 3 fails the check, since 3 × 3 − 4 = 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now real life. A good plan for word problems has steps: read, name what you are looking for, choose a variable, write an equation, solve, check it makes sense, then answer in a sentence. Money first. A game costs 60 dollars. Oscar has 15 saved and earns 9 dollars a week from chores. After w weeks he has 9w plus 15. We want that to equal 60."
+   },
+   "show": {
+    "kind": "list",
+    "text": "9w + 15 = 60 | Subtract 15: 9w = 45 | Divide by 9: w = 5 | Check: 9 × 5 + 15 = 60 ✓ | Answer: 5 weeks",
+    "chart": ""
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A streaming plan has a $5 sign-up fee plus $4 each month. Your total so far is $29. Which equation fits, with m as the number of months?",
+    "right": "4m + 5 = 29",
+    "wrong": [
+     "5m + 4 = 29",
+     "4m − 5 = 29",
+     "9m = 29"
+    ],
+    "why": "The $4 repeats each month, so it multiplies m. The $5 fee is paid once, so it is added. Solving: 4m = 24, so m = 6."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a score problem. In a basketball game, Jordan scored 23 points. 5 of them were free throws, worth 1 point each. The rest came from 2-point baskets. Let b be the number of baskets. Then 2b plus 5 equals 23. Subtract 5 to get 2b equals 18, and divide by 2. b equals 9."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2b + 5 = 23 | 2b = 18 | b = 9 | Check: 2 × 9 + 5 = 23 ✓",
+    "chart": ""
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In a video game, each coin is worth 25 points. You also earn a 100-point bonus. Your total is 400 points. How many coins did you collect?",
+    "right": "12 coins",
+    "wrong": [
+     "16 coins",
+     "20 coins",
+     "300 coins"
+    ],
+    "why": "25c + 100 = 400. Subtract 100 to get 25c = 300, then divide by 25. c = 12. 16 forgets the bonus. 20 adds 100 instead of subtracting. 300 is the step 25c = 300, not the answer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Common slips are worth knowing, because they happen to everyone. One is doing a step to only one side. Another is cancelling things that are joined by addition. Both break the balance. If you keep both sides in step and check at the end, you will catch these."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slip 1: changing only one side | Slip 2: cancelling terms joined by addition | Fix: do it to both sides, then check",
+    "chart": ""
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does checking matter so much? Solving an equation starts from an assumption: that there is a solution. Each step is an equal statement that follows from the one before. Checking confirms the number really works in the original equation. It also catches arithmetic slips."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Each step follows from the previous one, starting from the assumption that a solution exists. (idea from the Common Core standard HSA.REI.A.1)",
+    "chart": ""
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To finish, here is today's toolkit. One: equality is balance, so do the same thing to both sides. Two: undo with inverse operations, adding and subtracting first, then multiplying and dividing. Three: check in the original equation. Four: for word problems, name your variable and answer in a sentence. Next class we meet equations with x on both sides. Well done today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Keep the balance | 2. Undo + or − first, then × or ÷ | 3. Check in the original | 4. Word problems: name the variable, answer in a sentence | Next: variables on both sides",
+    "chart": ""
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Inverse operations",
+   "links": [
+    "[[Properties and Simplifying Expressions]]",
+    "[[Multi-Step Equations and Variables on Both Sides]]"
+   ]
+  },
+  {
+   "topic": "Checking a solution by substitution",
+   "links": [
+    "[[Order of Operations and Evaluating Expressions]]",
+    "[[Systems by Substitution]]"
+   ]
+  },
+  {
+   "topic": "Word problems with money and scores",
+   "links": [
+    "[[Ratios, Rates, Proportions and Percent]]",
+    "[[Formulas and Literal Equations]]"
+   ]
+  },
+  {
+   "topic": "Equations compared with inequalities",
+   "links": [
+    "[[Solving and Graphing Inequalities]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,285 @@
+{
+ "about": {
+  "title": "Home words: water, home, TV",
+  "course": "first-words",
+  "class_n": 2,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. Three new words, a few matching games and a short review of yes, no and help fit comfortably. You can pause after any word and come back later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we learn three words you see at home: water, home and TV. Go at your own speed. You can stop and look for as long as you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Home words"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back. Last class we read three important words. Read them with me: yes. no. help."
+   },
+   "show": {
+    "kind": "list",
+    "text": "yes\nno\nhelp"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our first new word is water. Picture a clear glass of water on a table. Look at the word. It begins with a W, and it ends with an R. Say it with me: water."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall clear glass of water on a kitchen table. Beside it, the word 'water' in large letters."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's see if you can pick it out. Take your time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "water"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word says water?",
+    "right": "water",
+    "wrong": [
+     "home",
+     "no",
+     "help"
+    ],
+    "why": "Water starts with W and ends with R. It is the only word here that begins with W."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next is home. Picture a house with a door and a window. The word starts with H and has an E on the end. Say it: home."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small house with a front door and one window. Beside it, the word 'home' in large letters."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a tip. In home, the last letter, E, is silent. We see it but we do not say it. You say home, not home-eh."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "home"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word says home?",
+    "right": "home",
+    "wrong": [
+     "water",
+     "yes",
+     "help"
+    ],
+    "why": "Home starts with H and ends with a silent E. Help also starts with H, but it ends with P."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our third word looks different. TV is two capital letters: a T and a V. They stand for a longer word, television. We say the names of the letters: tee, vee. TV."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "TV"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So with TV, we do not sound it out. We know the letters T and V, and together they mean the TV in the room. Try it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A television on a stand. Beside it, the two capital letters 'TV'."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which one says TV?",
+    "right": "TV",
+    "wrong": [
+     "yes",
+     "home",
+     "water"
+    ],
+    "why": "TV is the only choice made of two capital letters, a T and a V."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we match words to pictures. Look at the picture on the left. Find the word on the right that goes with it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: a house, a glass of water, a television.\nRight: water, TV, home."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First picture: a house, with a door and a window. Which word goes with it?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A house with a door and one window."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word goes with the picture of the house?",
+    "right": "home",
+    "wrong": [
+     "water",
+     "TV",
+     "help"
+    ],
+    "why": "A house is where we live, and the word for it is home."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second picture: a glass of water on a table. Which word goes with it?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A glass of water on a table."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word goes with the picture of the glass?",
+    "right": "water",
+    "wrong": [
+     "home",
+     "TV",
+     "no"
+    ],
+    "why": "The glass holds water. The word water starts with W."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a mixed review, with our old words too. Someone asks, 'Would you like some water?' You would like some. Which word do you choose?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "yes\nno\nhelp\nwater\nhome\nTV"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Someone asks, 'Would you like some water?' You would. Which word says that?",
+    "right": "yes",
+    "wrong": [
+     "no",
+     "home",
+     "TV"
+    ],
+    "why": "Yes means you agree. No would mean you do not want any."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more. You need someone to come and be with you. Which word is the important one?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "help\nhome\nwater\nTV"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You need someone to come and be with you. Which word do you point to?",
+    "right": "help",
+    "wrong": [
+     "home",
+     "water",
+     "TV"
+    ],
+    "why": "Help is the word for asking someone to come and assist you. It is one of our three important words."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. Today you met water, home and TV, and you picked each one out. Next time we learn the sounds of letters and how to join them together."
+   },
+   "show": {
+    "kind": "list",
+    "text": "water\nhome\nTV\n(and yes, no, help)"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Whole-word reading",
+   "links": [
+    "[[Three important words: yes, no, help]]",
+    "[[Common sight words, set one]]"
+   ]
+  },
+  {
+   "topic": "Capital letters that stand for a word (TV)",
+   "links": [
+    "[[Letters A to Z]]",
+    "[[Putting words together: short sentences]]"
+   ]
+  },
+  {
+   "topic": "Matching words to pictures",
+   "links": [
+    "[[Spelling by choosing letters: everyday words]]"
+   ]
+  },
+  {
+   "topic": "Silent E at the end of a word (home)",
+   "links": [
+    "[[Letter sounds and joining them]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

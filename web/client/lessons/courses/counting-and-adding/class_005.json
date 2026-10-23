@@ -1,0 +1,217 @@
+{
+ "about": {
+  "title": "One more, one fewer",
+  "course": "counting-and-adding",
+  "class_n": 5,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. The idea is small and builds on counting, so it fits the usual short class. There are four short practice questions, and you can pause or repeat any part."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we learn about one more and one fewer. Take your time. There is no rush."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "One more, one fewer"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you can name the number that is one more, or one fewer, than a number from 1 to 10. If you have a few small things nearby, like spoons or coins, put them on the table. Real things help."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Goal: say the number that is one more or one fewer.\nHelpful: a few spoons, coins or buttons."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us start with three cups on a table. Count them with me. One. Two. Three. There are three cups."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three cups in a row on a table. A finger touches each one as the numbers 1, 2, 3 appear."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we put one more cup on the table. Count again from the start. One, two, three, four. Now there are four cups."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Four cups in a row. The new cup on the end is a different colour. The big number 4 appears."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You have 3 spoons. You put 1 more spoon with them. How many spoons now?",
+    "right": "4",
+    "wrong": [
+     "3",
+     "2",
+     "5"
+    ],
+    "why": "One more than 3 is 4. Count them again to check: 1, 2, 3, 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a helpful secret. One more is just the next number when we count up. When we count, one, two, three, four, the number after three is four. So one more than three is four."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 → 2 → 3 → 4 → 5\nOne more = the next number up."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the other way. Here are five plates. Count them. One, two, three, four, five. Now take one plate away. Count again. One, two, three, four. There are four plates."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Five plates in a row. One plate slides away. Four plates are left. The big number 4 appears."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You have 5 plates. You take 1 plate away. How many plates are left?",
+    "right": "4",
+    "wrong": [
+     "5",
+     "6",
+     "3"
+    ],
+    "why": "One fewer than 5 is 4. Count what is left: 1, 2, 3, 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One fewer is the number just before, when we count up. Before five comes four. So one fewer than five is four."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 → 2 → 3 → 4 → 5\nOne fewer = the number just before."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us see both together, using the number six. One fewer is five. The number is six. One more is seven."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "One fewer | One more\n5 (then 6) | 7"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What number is one more than 6?",
+    "right": "7",
+    "wrong": [
+     "5",
+     "6",
+     "8"
+    ],
+    "why": "Counting up, the number after 6 is 7. The number before 6 is 5, which is one fewer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us try one fewer with a bigger number. Count up to ten in your head, or out loud. One, two, three, four, five, six, seven, eight, nine, ten. What comes just before ten?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What number is one fewer than 10?",
+    "right": "9",
+    "wrong": [
+     "11",
+     "8",
+     "10"
+    ],
+    "why": "The number just before 10 is 9. If you take one thing away from 10 things, 9 are left."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more try. If you are not sure, count it out with real things. Put down eight coins. Add one more coin. Count them all."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Eight coins in a row. A ninth coin is added at the end."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You have 8 coins. You add 1 more coin. How many coins now?",
+    "right": "9",
+    "wrong": [
+     "8",
+     "7",
+     "10"
+    ],
+    "why": "One more than 8 is 9, the next number when counting up."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done, {name}. One more is the next number up. One fewer is the number just before. If you ever feel stuck, count with real things. That always works. See you in the next class."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One more = the next number up.\nOne fewer = the number just before.\nStuck? Count with real things."
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "One more and one fewer",
+   "links": [
+    "[[Counting from 11 to 20]]",
+    "[[More and fewer]]",
+    "[[Putting groups together (totals to 5)]]"
+   ]
+  },
+  {
+   "topic": "Counting order",
+   "links": [
+    "[[Counting things from 0 to 10]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,921 @@
+{
+ "about": {
+  "title": "First Stars, Galaxies and the Making of the Elements",
+  "course": "history-of-everything",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. It has 29 short beats and 6 quick checks. There is a natural break after the beat called 'Recycling', before the section on dark matter and dark energy. If you need a shorter sitting, stop there and do the 'dark side' section another day. The science of the elements and the open questions each need their own space, so I did not squeeze them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Early Universe (Webb mission page)",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/mission/webb/early-universe/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "What Were the First Stars Like?",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/mission/webb/science-overview/science-explainers/what-were-the-first-stars-like/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "DOE Explains...Nucleosynthesis",
+   "publisher": "U.S. Department of Energy, Office of Science",
+   "date": "undated",
+   "link": "https://www.energy.gov/science/doe-explainsnucleosynthesis",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Tracing gold's cosmic origin story",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "undated",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.2026110118",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "The Alchemy of Merging Neutron Stars",
+   "publisher": "Max Planck Institute for Astronomy",
+   "date": "2019-08 (from page address)",
+   "link": "https://www.mpia.de/news/science/2019-08-NeutronStars",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Origin of the heavy elements in binary neutron-star mergers from a gravitational-wave event (Kasen et al.)",
+   "publisher": "Nature, vol. 551 (abstract via NASA ADS)",
+   "date": "2017",
+   "link": "https://ui.adsabs.harvard.edu/abs/2017Natur.551...80K/abstract",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "The Universe's Building Blocks",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/universe/overview/building-blocks/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Vera C. Rubin: Pioneering American astronomer (1928–2016)",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "undated",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1701066114",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Cosmic combat: delving into the battle between dark matter and modified gravity",
+   "publisher": "Physics World",
+   "date": "undated",
+   "link": "https://physicsworld.com/a/cosmic-combat-delving-into-the-battle-between-dark-matter-and-modified-gravity/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Why did the dark matter hypothesis supersede modified gravity in the 1980s?",
+   "publisher": "arXiv (preprint 2507.11598)",
+   "date": "2025-07 (from preprint number)",
+   "link": "https://arxiv.org/pdf/2507.11598",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "DESI results strengthen hints that dark energy may evolve",
+   "publisher": "University of Utah (@theU)",
+   "date": "undated",
+   "link": "https://attheu.utah.edu/facultystaff/desi-results-strengthen-hints-that-dark-energy-may-evolve/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "The 2011 Nobel Prize in Physics - Press release",
+   "publisher": "NobelPrize.org (Royal Swedish Academy of Sciences)",
+   "date": "2011-10-04",
+   "link": "https://www.nobelprize.org/prizes/physics/2011/press-release/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "The Hubble Deep Fields",
+   "publisher": "ESA/Hubble",
+   "date": "undated",
+   "link": "https://esahubble.org/science/deep_fields/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "First Science Results from JWST",
+   "publisher": "Space Telescope Science Institute (STScI)",
+   "date": "2022",
+   "link": "https://www.stsci.edu/contents/events/stsci/2022/december/first-science-results-from-jwst",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s15",
+   "title": "Webb confirms one of the earliest galaxies ever discovered",
+   "publisher": "Earth.com",
+   "date": "2026-02-24",
+   "link": "https://www.earth.com/space/webb-confirms-one-of-the-earliest-galaxies-ever-discovered/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s16",
+   "title": "Earliest, most distant galaxy discovered with James Webb Space Telescope",
+   "publisher": "University of Cambridge",
+   "date": "2024 (announcement; exact date not shown)",
+   "link": "https://www.cam.ac.uk/research/news/earliest-most-distant-galaxy-discovered-with-james-webb-space-telescope",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s17",
+   "title": "Revealing the Universe's Mysterious Dark Age",
+   "publisher": "PBS NOVA",
+   "date": "undated",
+   "link": "https://www.pbs.org/wgbh/nova/article/cosmic-dark-age/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s18",
+   "title": "Ask Ethan: What were the 'dark ages' of the Universe?",
+   "publisher": "Big Think",
+   "date": "undated",
+   "link": "https://bigthink.com/starts-with-a-bang/what-were-dark-ages/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s19",
+   "title": "Populating the periodic table: Nucleosynthesis of the elements",
+   "publisher": "Science (AAAS)",
+   "date": "undated",
+   "link": "https://www.science.org/doi/10.1126/science.aau9540",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s20",
+   "title": "Hubble's deep field images of the early universe are postcards from billions of years ago",
+   "publisher": "The Conversation",
+   "date": "undated",
+   "link": "https://theconversation.com/hubbles-deep-field-images-of-the-early-universe-are-postcards-from-billions-of-years-ago-40519",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s22",
+   "title": "Vera Rubin: Opening doors to dark matter and women in STEM",
+   "publisher": "Carnegie Science",
+   "date": "undated",
+   "link": "https://carnegiescience.edu/vera-rubin-opening-doors-dark-matter-and-women-stem",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s23",
+   "title": "'Cosmic miracle!' James Webb Space Telescope discovers the earliest galaxy ever seen",
+   "publisher": "Space.com",
+   "date": "2025-05-30",
+   "link": "https://www.space.com/astronomy/cosmic-miracle-james-webb-space-telescope-discovers-the-earliest-galaxy-ever-seen",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we met the Big Bang and its first few minutes. By the end of those minutes the universe had made hydrogen and helium, and almost nothing else. So here is today's puzzle. Where did everything else come from? The oxygen you breathe, the calcium in your bones, the iron in your blood."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 3: Where did everything else come from?"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The short answer is stars. Scientists say we are made mostly of elements like oxygen, carbon, nitrogen, calcium and phosphorus. Most of those were made inside stars that have since died. The cosmologist Carl Sagan called us 'star-stuff'. By the end of this class you will know how that works."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Star-stuff"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture the universe about 400,000 years after the Big Bang. It is a cold, dark fog of hydrogen and helium atoms. There are no stars and no galaxies. Astronomers call this stretch the Dark Ages. 'Dark' here only means there was nothing shining yet. It was not a bad time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Dark Ages: before any stars"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Dark Ages ended when the first stars switched on. NASA describes the first stars as forming as early as about 100 million years after the Big Bang. The honest truth is that nobody knows exactly when. We will come back to that."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 100 million years after the Big Bang"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check before we go on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dark Ages = no stars yet"
+   },
+   "cite": [
+    "s2",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the story of the universe, what does 'the Dark Ages' mean?",
+    "right": "The time after the Big Bang's glow faded but before the first stars lit up.",
+    "wrong": [
+     "A time when early humans lived in caves.",
+     "The time when the Sun stopped shining.",
+     "The moment dark matter first appeared."
+    ],
+    "why": "The universe was a cold fog of hydrogen and helium with no stars until the first ones formed, so there was almost no new light."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How does a star get born? Gas gathers into a cloud. The cloud cools, and that lets it collapse under its own gravity. As it squeezes down, its centre gets hotter and the pressure climbs. At last the centre is hot enough for hydrogen atoms to fuse together and release energy as light. That moment is a star switching on. Dark matter, which we meet later, helped gather the gas together."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cloud of gas squeezing into a glowing ball. Light begins at its centre."
+   },
+   "cite": [
+    "s2",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Theory says the first stars were giants, perhaps 30 to 300 times as heavy as our Sun and millions of times as bright. They lived fast. They burned for only a few million years and then exploded as supernovae. Please note the word 'theory'. No one has yet seen one of these first stars directly. So far the evidence is the traces they left behind."
+   },
+   "show": {
+    "kind": "list",
+    "text": "First stars (as predicted)\n30 to 300 times the Sun's mass\nMillions of times brighter\nLived only a few million years\nMany ended in explosions"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Those giant stars also gave off strong ultraviolet light. That light broke the neutral hydrogen fog back into electrons and charged hydrogen. Astronomers call this reionization. It slowly made space clear and see-through, and it took roughly the first billion years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reionization: the fog clears"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another quick check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Short lives, big explosions"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Theory says the first stars were giants. What happened to many of them?",
+    "right": "They burned out within a few million years, and many ended in supernova explosions.",
+    "wrong": [
+     "They are still shining today as our Sun.",
+     "They slowly turned into planets.",
+     "They shrank into dark matter."
+    ],
+    "why": "Very heavy stars burn fuel very fast, so they live short lives and many end in explosions."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Over the next few hundred million years, stars began to group together into baby galaxies. Dark matter's pull helped guide the grouping. Galaxies merged and grew. Only after billions of years did some become giants like our Milky Way, with hundreds of billions of stars."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Small clumps of stars drifting together and merging into larger swirls."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our best telescope for this is the James Webb Space Telescope. It launched on Christmas Day 2021, and its first images came out in July 2022. The most distant galaxy confirmed in the reports I read is called MoM-z14. We see it as it was about 280 million years after the Big Bang. Records like this get broken every so often, so a newer one may exist by the time you read this."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "280 million years after the Big Bang"
+   },
+   "cite": [
+    "s14",
+    "s15",
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the timeline in one picture. These numbers are in millions of years after the Big Bang. Notice how tiny the first bar is. The fog of atoms comes at 380,000 years, which is less than half of one million. Then come the first stars, the earliest galaxies we have seen, and the end of reionization."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Early cosmic milestones, in millions of years after the Big Bang",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s15",
+    "s16"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check this idea. Light takes time to travel. When we see something very far away, we see it as it was long ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Far away = long ago"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "MoM-z14's light has travelled about 13.5 billion years to reach us. What are we seeing?",
+    "right": "The galaxy as it was about 280 million years after the Big Bang.",
+    "wrong": [
+     "The galaxy as it looks today.",
+     "The galaxy as it looked 13.5 billion years after the Big Bang.",
+     "A picture made up by computers with no real light."
+    ],
+    "why": "The light left the galaxy long ago. What arrives now shows the galaxy as it was then."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now back to the puzzle. Stars are element factories. In their hot centres, fusion builds heavier atoms from lighter ones. The well-established range runs from helium all the way up to iron. Big stars burn faster, build heavier atoms, and die more dramatically than small ones."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Big Bang: hydrogen and helium\nInside stars: helium up to iron\nBigger stars: faster, heavier, more violent ends"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But atoms made deep inside a star are no use to a planet or a person unless they get out. The way out is a supernova, the explosion of a massive star at the end of its life. It throws those new atoms into space. NASA says the dusty remains, with the metals made in the cores, became the building blocks of later stars."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A glowing shell of gas and dust flying outward from a burst star."
+   },
+   "cite": [
+    "s3",
+    "s2",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What about elements heavier than iron, such as gold, platinum and uranium? Fusion in a star's core does not build those. Scientists think they form when atoms catch free neutrons, and when it happens very fast it is called the r-process, 'r' for rapid. The question is where it happens."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The r-process: rapid neutron capture"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A leading answer is neutron-star mergers. A neutron star is the super-dense leftover of a dead massive star. When two of them spiral together and crash, they fling out matter that can assemble into gold and platinum. In 2017, astronomers detected a merger through gravitational waves. They also saw the glow, called a kilonova, that this process is predicted to cause. That was the first chance to study freshly made heavy elements."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two tiny dense stars circling closer, then colliding in a flash of light."
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check yourself on the main idea of the class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Made in stars that died"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where was most of the carbon and oxygen in your body made?",
+    "right": "Inside stars that later died and spread their atoms into space.",
+    "wrong": [
+     "In the first few minutes of the Big Bang.",
+     "In the Earth's core.",
+     "On the surface of the Moon."
+    ],
+    "why": "The Big Bang mostly made hydrogen and helium. Elements like carbon and oxygen came later from nuclear fusion in stars."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Recycling. Stars formed, died, and scattered their atoms. New clouds of gas, now seasoned with heavier elements, formed new stars. Over more than thirteen billion years this cycle repeated, and galaxies grew more complex. Eventually our Sun formed in an arm of a large spiral galaxy, with planets, moons and asteroids around it. That is next class. This is a good place for a break."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stars form\nStars make elements\nStars die and scatter them\nNew stars and planets form from the scattered material"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Welcome back. Now the open questions. Everything we have talked about, all the stars, galaxies, planets and people, is only about 5 percent of the universe. The other 95 percent is two things scientists named 'dark matter' and 'dark energy'. They are called dark because we cannot see them and we do not know what they are."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5%"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the shares. Dark energy is roughly 68 percent, dark matter about 27 percent, and normal matter about 5 percent."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "What the universe is made of (percent)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dark matter first. It has gravity, but it does not reflect, absorb or give off light, at least not enough for us to detect. Fritz Zwicky suggested something like it in 1933. The convincing evidence came in the 1970s from Vera Rubin and Kent Ford. They found that stars in the outer parts of galaxies orbit about as fast as stars near the centre. Visible matter alone cannot explain that, so galaxies must hold extra mass we cannot see."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A spiral galaxy inside a much larger invisible halo, drawn as a faint glow."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A check on that story."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Flat rotation curves"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Vera Rubin's measurements of galaxies show?",
+    "right": "Stars far from a galaxy's centre orbit about as fast as stars near it, which suggests extra unseen mass.",
+    "wrong": [
+     "Galaxies do not spin at all.",
+     "Stars in galaxies are all the same age.",
+     "Galaxies are made only of hydrogen."
+    ],
+    "why": "The speeds stay high far from the centre, so more mass than we can see must be pulling on those stars."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dark energy is a different mystery. In the 1990s two rival teams measured distant exploding stars, expecting to find the expansion of the universe slowing down. Instead they found it speeding up. Many scientists were surprised, including the winners of the 2011 Nobel Prize in Physics. Whatever causes this is called dark energy. We know a lot about its effects and almost nothing about what it is."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dark energy: the speeding up of expansion"
+   },
+   "cite": [
+    "s7",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more check, because these two names are easy to mix up."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dark matter: unseen mass that holds galaxies together | Dark energy: whatever is making the universe expand faster"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the biggest share of the universe, according to NASA's estimate?",
+    "right": "Dark energy, at roughly 68 percent.",
+    "wrong": [
+     "Normal matter, at about 68 percent.",
+     "Dark matter, at about 68 percent.",
+     "Stars, at about 68 percent."
+    ],
+    "why": "NASA estimates dark energy about 68 percent, dark matter about 27 percent, and normal matter about 5 percent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here scientists disagree, so let's hear both sides. Most scientists think dark matter is real. Some think gravity itself needs changing instead. A theory called MOND was devised in the early 1980s to explain galaxy motion without dark matter. Its supporters say it predicts galaxy rotation from the visible mass alone, which is a strong success. Most of the scientific community, though, still sees it as not workable, mainly because dark matter explains more things across more scales."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dark matter (most scientists): unseen mass | MOND (a minority): gravity changes in weak fields"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another open question is whether dark energy is constant. The simplest idea says it is a steady property of space. A big survey called DESI has hints that it may be weakening over time. On its own, DESI's data fit the standard model. Combined with other measurements, the hints strengthen but not past the 5-sigma level that physicists call a discovery. So this is a maybe, not a fact."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Constant or changing? Still a maybe"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the frame of reference, the telescopes and discoveries that revealed all this. It is a short trip through about a century of seeing farther."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Late 1920s: astronomers learn the universe is expanding\n1933: Zwicky suggests dark matter\n1970s: Rubin and Ford find flat rotation curves\nDec 1995: Hubble Deep Field\n1998: expansion found to be speeding up\n2017: neutron-star merger seen with gravitational waves\nDec 2021: Webb launches; July 2022: first images\n2024 to 2026: Webb finds galaxies 280 to 300 million years after the Big Bang"
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s13",
+    "s12",
+    "s6",
+    "s14",
+    "s15",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Hubble Deep Field is a favourite story. After a repair mission in 1993, Hubble could take much sharper pictures of faraway galaxies. In December 1995 astronomers pointed it at a patch of sky that looked empty, and they kept it there for ten days over Christmas. The result was 342 exposures, and about 3,000 galaxies. Here is a fun coincidence. Webb launched on Christmas Day in 2021."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A black square of sky packed with thousands of tiny galaxies of different shapes and colours."
+   },
+   "cite": [
+    "s13",
+    "s20",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Gas fog, then first stars, then galaxies. Stars make elements up to iron, supernovae scatter them, and neutron-star mergers help make the heaviest ones. All that is only 5 percent of the universe. Dark matter and dark energy remain open questions. You do not need to remember every number. Remember the big idea: we are made of star-stuff."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dark Ages, then first stars\nGalaxies grow\nStars make the elements\nSupernovae and mergers scatter them\nDark matter and dark energy: still mysteries"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we follow one cloud of star-stuff: the one that became our Sun and Solar System. Thank you for learning with us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Our Sun and Solar System"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Early cosmic milestones (millions of years after the Big Bang)",
+   "rows": [
+    {
+     "label": "Hydrogen and helium atoms form (380,000 years)",
+     "value": 0.38,
+     "source": "s1"
+    },
+    {
+     "label": "First stars, possibly as early as",
+     "value": 100,
+     "source": "s2"
+    },
+    {
+     "label": "Galaxy MoM-z14 as we see it",
+     "value": 280,
+     "source": "s15"
+    },
+    {
+     "label": "Galaxy JADES-GS-z14-0 as we see it",
+     "value": 300,
+     "source": "s16"
+    },
+    {
+     "label": "Reionization era ends, about",
+     "value": 1000,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "pie",
+   "title": "What the universe is made of (percent)",
+   "rows": [
+    {
+     "label": "Dark energy",
+     "value": 68,
+     "source": "s7"
+    },
+    {
+     "label": "Dark matter",
+     "value": 27,
+     "source": "s7"
+    },
+    {
+     "label": "Normal matter (stars, planets, people)",
+     "value": 5,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Nucleosynthesis",
+   "links": [
+    "[[Big Bang nucleosynthesis]]",
+    "[[Supernova]]",
+    "[[Neutron star]]",
+    "[[Periodic table]]"
+   ]
+  },
+  {
+   "topic": "Cosmic Dark Ages and reionization",
+   "links": [
+    "[[Cosmic microwave background]]",
+    "[[First stars]]",
+    "[[Redshift]]"
+   ]
+  },
+  {
+   "topic": "Telescopes",
+   "links": [
+    "[[Hubble Space Telescope]]",
+    "[[James Webb Space Telescope]]",
+    "[[Hubble Deep Field]]"
+   ]
+  },
+  {
+   "topic": "Dark matter and dark energy",
+   "links": [
+    "[[Vera Rubin]]",
+    "[[MOND]]",
+    "[[Expansion of the universe]]"
+   ]
+  },
+  {
+   "topic": "World events beside the telescope story",
+   "links": [
+    "[[Class 4: Our Sun and Solar System]]",
+    "[[Class 57: The 1950s and early 1960s]]",
+    "[[Class 61: Globalization, the Internet and a New Century]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "Late 1920s",
+   "elsewhere": "Astronomers came to understand that the universe is expanding. Vera Rubin, who later found evidence for dark matter, was born in 1928.",
+   "cite": [
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "when": "1933",
+   "elsewhere": "Fritz Zwicky suggested unseen matter, based on fast motions in clusters of galaxies.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "when": "Late 1960s to 1970",
+   "elsewhere": "Rubin and Kent Ford studied the Andromeda galaxy and published the first results in 1970. The curve was flat when they expected a steep drop.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "1978 to 1980",
+   "elsewhere": "Rubin and Ford showed the flat curves in many galaxies, twenty-one spirals in their 1980 paper. Around then, MOND was proposed in the early 1980s as an alternative.",
+   "cite": [
+    "s22",
+    "s9"
+   ]
+  },
+  {
+   "when": "1993 to December 1995",
+   "elsewhere": "A 1993 repair let Hubble take far sharper pictures, which led to the ten-day Hubble Deep Field over Christmas 1995.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "1998",
+   "elsewhere": "Two rival teams reported that the universe's expansion is speeding up. They shared the 2011 Nobel Prize in Physics.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "2017",
+   "elsewhere": "Gravitational waves and light were both detected from a merger of two neutron stars, which gave the first look at freshly made heavy elements.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "when": "December 2021 to July 2022",
+   "elsewhere": "The James Webb Space Telescope launched on 25 December 2021. Its first images were shown to the world on 12 July 2022.",
+   "cite": [
+    "s14"
+   ]
+  },
+  {
+   "when": "2024 to early 2026",
+   "elsewhere": "Webb found galaxies from only about 280 to 300 million years after the Big Bang. Some are brighter than many models expected.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The first stars were giants, 30 to 300 times the Sun's mass, and formed around 100 million years after the Big Bang.",
+   "other_view": "This comes from theory and simulations, not direct sight. NASA says no one knows exactly what the first stars were like. One science writer thinks simulations put the first protostars even earlier, at 50 to 100 million years, and that Webb may not be able to settle when the first stars formed.",
+   "cite": [
+    "s1",
+    "s2",
+    "s18"
+   ]
+  },
+  {
+   "claim": "Neutron-star mergers are the main source of the heaviest elements such as gold.",
+   "other_view": "After the 2017 merger, many scientists favoured mergers. Others now ask whether a rare kind of supernova may also contribute. One analysis says that if supernovae make these elements, only a small share, under 1 percent, do. The question is not settled.",
+   "cite": [
+    "s4",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Dark matter is real and is the best explanation for galaxy motions.",
+   "other_view": "A minority of scientists favour modified gravity (MOND) instead. They say it predicts galaxy rotation from visible matter alone. Most of the scientific community regards MOND as not viable, since dark matter explains more things across more scales.",
+   "cite": [
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Dark energy is a constant property of space.",
+   "other_view": "DESI data combined with other measurements hint that dark energy may be weakening over time. Those hints are between 2.8 and 4.2 sigma, short of the 5-sigma standard for a discovery. DESI's data alone are consistent with the standard constant model.",
+   "cite": [
+    "s11"
+   ]
+  }
+ ]
+}

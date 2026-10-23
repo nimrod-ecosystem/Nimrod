@@ -1,0 +1,215 @@
+{
+ "about": {
+  "title": "Adding with coins",
+  "course": "counting-and-adding",
+  "class_n": 9,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes is enough for the five topics. Each topic is one short step, and you can pause after any step and carry on later. The lesson names no currency because coins differ from country to country, so it uses whatever coins {name} has, with a worth-1 coin as the single unit."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we count and add with coins. There is no hurry and no test. You can pause at any point, and you can repeat any step as many times as you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Adding with coins"
+   },
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, get ready. Find up to ten coins of your own money that are each worth one. That is one unit, the smallest whole amount. If you have none, use play coins, buttons or paper circles with a 1 written on each. Put them on a table in front of you."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Get ready:\n- Up to 10 coins, each worth 1\n- Or buttons or paper circles marked 1\n- A clear table\n- A helper if you want one"
+   },
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: telling coins apart. Pick up a coin and look at it. Look at its colour, its size and its edge. Then turn it over and find the number or word written on it. That writing tells you what the coin is worth."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand holds one coin, front and back. An arrow points to the number on the coin."
+   },
+   "move": "fade",
+   "ask": {
+    "q": "Two coins look much alike. How can you be sure what each one is worth?",
+    "right": "Read the number or word written on each coin.",
+    "wrong": [
+     "Pick the bigger one.",
+     "Pick the shinier one.",
+     "Guess and hope."
+    ],
+    "why": "Size and colour can fool us. A bigger coin is not always worth more. The writing on the coin tells its value."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One word to keep: value. The value of a coin is how much it is worth. Today every coin you use has the same value, one. So each coin counts as one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "value = how much a coin is worth"
+   },
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: counting coins one by one. Put the coins in a pile. Touch one coin and say 'one', then slide it to the side. Touch the next and say 'two', and slide it over. Keep going. Moving each coin means you never count one twice."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1  2  3  4  5"
+   },
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last number you say is the total. If your last word was 'five', you have five coins. Try it with any number of coins up to ten."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Five coins slide one at a time from a pile on the left to a row on the right. Each coin lights up as its number is said."
+   },
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You touch the coins and say 1, 2, 3, 4, 5, 6. How many coins are there?",
+    "right": "6",
+    "wrong": [
+     "5",
+     "7",
+     "1"
+    ],
+    "why": "The last number you say is the total. You said 6 last, so there are 6 coins."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: adding two small amounts. Make one group of three coins. Make a second group of two coins. Now push the groups together and count them all, starting at one. You get five. Three and two make five."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Group 1: 3 coins\nGroup 2: 2 coins\nTogether: 5 coins"
+   },
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A quicker way is to start from the bigger group. Say 'three', then touch each coin of the small group and say 'four, five'. You do not have to count the first group again. Both ways are right, so use the one that feels easier."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 + 2 = 5"
+   },
+   "move": "count-in",
+   "ask": {
+    "q": "You have a group of 3 coins and a group of 4 coins. You push them together. How many coins now?",
+    "right": "7",
+    "wrong": [
+     "6",
+     "8",
+     "5"
+    ],
+    "why": "Start at 3 and count on 4, 5, 6, 7. Or count all the coins from one. Either way the total is 7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four: a pretend shop. Make three small things for sale, such as a cup, a spoon and a book. Give each a price in coins: the cup costs 3, the spoon costs 2, the book costs 6. Write the prices on paper if you like. You are the shopper, and a helper can be the shopkeeper, or you can be both."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pretend shop:\n- Cup: 3 coins\n- Spoon: 2 coins\n- Book: 6 coins"
+   },
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's buy the cup and the spoon. Count out three coins, then two more. Push them together and count: five coins to pay. Hand them over, and the shop is happy."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 + 2 = 5"
+   },
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now checking change. You want the book, which costs six coins, and you hand over nine coins. The shopkeeper owes you some back. To check, start at six and count up to nine: seven, eight, nine. That is three steps, so your change is three coins."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Book costs: 6\nYou hand over: 9\nCount up: 7, 8, 9\nChange: 3 coins"
+   },
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The spoon costs 2 coins. You hand over 5 coins. How much change should you get?",
+    "right": "3 coins",
+    "wrong": [
+     "2 coins",
+     "4 coins",
+     "7 coins"
+    ],
+    "why": "Start at 2 and count up to 5: 3, 4, 5. That is three steps, so the change is 3 coins."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. Today you told coins apart by their writing, counted them one by one, added two small groups, and checked change. Rest now, and try the shop again whenever you like. Next time we use a calendar to count and add days."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done! Next: counting and adding on a calendar"
+   },
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Coins and value",
+   "links": [
+    "[[Numbers 0 to 9]]",
+    "[[Counting things from 0 to 10]]"
+   ]
+  },
+  {
+   "topic": "Adding with objects up to 10",
+   "links": [
+    "[[Putting groups together (totals to 5)]]",
+    "[[Adding without objects]]"
+   ]
+  },
+  {
+   "topic": "Pretend shop and change",
+   "links": [
+    "[[More and fewer]]",
+    "[[One more, one fewer]]",
+    "[[Counting and adding on a calendar]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,702 @@
+{
+ "about": {
+  "title": "Irrational Numbers and Roots",
+  "course": "math-grade-8",
+  "class_n": 2,
+  "audience": [
+   "age 13 to 15",
+   "Oscar and teenagers like him",
+   "anyone relearning number types at a gentle pace"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes: four short topics, each with a worked example and a practice question. It fits a half-hour class, so nothing was cut or stretched. You can pause after any beat. The history beat is a bonus and can be skipped."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » The Number System (CCSS 8.NS.A.1 and 8.NS.A.2)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/NS/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "Grade 8 » Expressions & Equations » 8.EE.A.2",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/A/2/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "7.1 Rational and Irrational Numbers, Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/7-1-rational-and-irrational-numbers",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "1.8 The Real Numbers, Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/1-8-the-real-numbers",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "7.1: Rational and Irrational Numbers (Prealgebra 1e, OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_1e_(OpenStax)/07:_The_Properties_of_Real_Numbers/7.01:_Rational_and_Irrational_Numbers",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "How Many Decimals of Pi Do We Really Need?",
+   "publisher": "NASA/JPL Edu",
+   "date": "n.d.",
+   "link": "https://www.jpl.nasa.gov/edu/news/how-many-decimals-of-pi-do-we-really-need/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "10 Ways to Celebrate Pi Day with NASA on March 14",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/learning-resources/10-ways-to-celebrate-pi-day-with-nasa-on-march-14",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "How Many Decimals of Pi Do We Really Need? NASA Answers",
+   "publisher": "SciTechDaily (reprints the NASA/JPL answer)",
+   "date": "n.d.",
+   "link": "https://scitechdaily.com/how-many-decimals-of-pi-do-we-really-need-nasa-answers/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "The History of Pi",
+   "publisher": "Rutgers University Mathematics (course paper)",
+   "date": "2000",
+   "link": "https://sites.math.rutgers.edu/~cherlin/History/Papers2000/wilson.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Maths in a minute: The square root of 2 is irrational",
+   "publisher": "Plus Magazine, University of Cambridge",
+   "date": "n.d.",
+   "link": "https://plus.maths.org/content/maths-minute-square-root-2-irrational",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Square root of 2",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Square_root_of_2",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "8.NS.A.1: Rational and Irrational Numbers and Repeating Decimals",
+   "publisher": "SVHS lesson library",
+   "date": "n.d.",
+   "link": "https://svhs.co/lesson/8-ns-a-1/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "Common Core Standards: CCSS.Math.Content.8.EE.A.2",
+   "publisher": "Shmoop",
+   "date": "n.d.",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-8-ee-2.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "Square Root of 2 - Poem-Collage",
+   "publisher": "University of Connecticut, Department of Mathematics",
+   "date": "n.d.",
+   "link": "https://www2.math.uconn.edu/~glaz/Square_Root_of_2/index.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s15",
+   "title": "Common Core Videos for Grade 8, Mathematics 8.NS.1 (transcript)",
+   "publisher": "SEDL",
+   "date": "n.d.",
+   "link": "https://sedl.org/secc/common_core_videos/grade.php?action=view&id=760",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s16",
+   "title": "7.2: Rational and Irrational Numbers (Prealgebra 2e, OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_2e_(OpenStax)/07:_The_Properties_of_Real_Numbers/7.02:_Rational_and_Irrational_Numbers",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s17",
+   "title": "Proof that π is irrational",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Proof_that_%CF%80_is_irrational",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hi, and welcome to class two. Today's goal is simple. You will be able to say what makes a number irrational, and tell rational numbers from irrational ones. Go at your own speed. You can pause or replay any part."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Irrational Numbers and Roots"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll do four small steps. First, perfect squares and perfect cubes. Second, square roots of numbers that are not perfect squares. Third, why some decimals never end and never repeat. Fourth, sorting numbers into two piles: rational and irrational."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Perfect squares and perfect cubes\n2. Square roots of non-perfect squares\n3. Decimals that never end and never repeat\n4. Sorting: rational or irrational?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick refresher from last class. A rational number is a number you can write as a fraction of two integers. Every integer counts, because 5 is 5 over 1. Decimals that stop, like 5.9, are rational. So are decimals that repeat in a pattern. So 14 over 5 and 5.9 are both rational."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rational = a fraction of two integers"
+   },
+   "cite": [
+    "s15",
+    "s4",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a rational number?",
+    "right": "14/5, because it is a fraction of two integers",
+    "wrong": [
+     "√44",
+     "π",
+     "A decimal that never ends and never repeats"
+    ],
+    "why": "14/5 is a whole number over a whole number, and it equals 2.8, a decimal that stops. The other three are irrational: √44 and π are irrational numbers, and a decimal that never ends and never repeats cannot be written as a fraction of integers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one: perfect squares. A perfect square is a whole number you get by squaring another whole number. 6 times 6 is 36, so 36 is a perfect square. The reverse move is the square root. Because 10 squared is 100, we say 10 is a square root of 100."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Perfect squares: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144\n√36 = 6 because 6 × 6 = 36"
+   },
+   "cite": [
+    "s13",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cubes work the same way, with three copies. 3 times 3 times 3 is 27, so 27 is a perfect cube. Going backward is the cube root, written with a little 3 on the root sign. The cube root of 27 is 3. Both square roots and cube roots show up when you solve equations like x squared equals p, or x cubed equals p."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Perfect squares: 1, 4, 9, 16, 25, 36 …\nPerfect cubes: 1, 8, 27, 64, 125 …\nExample: 3 × 3 × 3 = 27, so ∛27 = 3"
+   },
+   "cite": [
+    "s13",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the cube root of 27, written ∛27?",
+    "right": "3",
+    "wrong": [
+     "9",
+     "81",
+     "13.5"
+    ],
+    "why": "The cube root asks: what number multiplied by itself three times gives 27? 3 × 3 × 3 = 27. The answer 9 comes from squaring 3, not cubing it, and 13.5 is just half of 27."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the key link to irrational numbers. The square root of a perfect square is always a whole number, so it is rational. √36 is 6. That's a rational number, even though it has a root sign. A root sign alone does not make a number irrational."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "√36 = 6 → rational"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which of these square roots is rational?",
+    "right": "√81",
+    "wrong": [
+     "√17",
+     "√44",
+     "√50"
+    ],
+    "why": "81 is a perfect square because 9 × 9 = 81, so √81 = 9, a whole number, which is rational. 17, 44 and 50 are not perfect squares, so their square roots are irrational."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: square roots of numbers that are not perfect squares. Take 44. 6 squared is 36 and 7 squared is 49. 44 sits between two perfect squares, so it isn't one. That means √44 is irrational. Its decimal never stops and never repeats."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from 6 to 7. Dots at 6 and 7 are labelled √36 and √49. A dot in between is labelled √44, with the note 'not a whole number'."
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We can still estimate it. Try 6.6 squared, which is 43.56. That's a bit too small. Try 6.7 squared, which is 44.89. That's too big. So √44 is between 6.6 and 6.7. Narrowing down like this is the same way the Common Core standard says to trap √2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6² = 36 (too small)\n6.6² = 43.56 (too small)\n6.7² = 44.89 (too big)\n7² = 49 (too big)\nSo 6.6 < √44 < 6.7"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "√30 lies between which two whole numbers?",
+    "right": "5 and 6",
+    "wrong": [
+     "4 and 5",
+     "6 and 7",
+     "15 and 16"
+    ],
+    "why": "5² = 25 and 6² = 36, and 30 is between 25 and 36, so √30 is between 5 and 6. 15 is half of 30, but a square root is not half the number."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meet the most famous irrational number, √2. The standard says to know that √2 is irrational. We can trap it. 1 squared is 1 and 2 squared is 4, so it's between 1 and 2. 1.4 squared is 1.96 and 1.5 squared is 2.25, so it's between 1.4 and 1.5. You can keep going for better approximations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "√2 is between 1.4 and 1.5, and it is irrational"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fun link for later classes. Draw a right triangle where both short sides are 1 unit long. The long side, the hypotenuse, has length √2. So this number is a real length you could measure on a ruler. We'll prove how that works in the Pythagorean theorem classes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A right triangle with both short sides labelled 1. The long slanted side is labelled √2."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is √5 as a decimal: 2.236067978 and then more digits. The digits keep going and never fall into a repeating pattern. Your calculator can only show so many digits, so it shows a copy that stops. The real number does not stop."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "√5 = 2.236067978…"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: why do some decimals never end and never repeat? First, every number can be written as a decimal. For fractions, you get the decimal by long division. Try 15 divided by 11. You get 1.3636 and the 36 repeats forever. So 15 over 11 is rational."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Long division of 15 by 11. Remainders written beside each step: 4, then 7, then 4, then 7 again. The quotient digits read 1 . 3 6 3 6 …"
+   },
+   "cite": [
+    "s15",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the reason it repeats. When you divide by 11, each leftover, called a remainder, can only be one of a few values: 0 to 10. So after a few steps a remainder must come back. Once a remainder comes back, the same digits start over. So every fraction of integers either stops or repeats."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Divide by 11 → only 11 possible remainders (0 to 10)\nA remainder must come back\nThen the digits repeat in a loop"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When you turn the fraction 15/11 into a decimal by long division, why must the decimal stop or repeat?",
+    "right": "There are only a limited number of possible remainders, so one has to come back and the digits loop",
+    "wrong": [
+     "Because 15 is bigger than 11",
+     "Because calculators round numbers",
+     "Because 11 is an odd number"
+    ],
+    "why": "Each remainder must be smaller than 11, so there are only 11 choices. After at most 11 steps a remainder repeats, and the same digits follow. The size of 15 and whether 11 is odd have nothing to do with it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now flip it around. If a number's decimal never stops and never repeats, it can't come from dividing two integers. So it can't be a fraction of integers. That is exactly what irrational means. Both conditions matter: it must not stop and it must not repeat."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "RATIONAL: decimal stops (0.475) or repeats (1.3636…)\nIRRATIONAL: decimal never stops AND never repeats (√5 = 2.236067978…)"
+   },
+   "cite": [
+    "s4",
+    "s5",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The decimal 0.333… goes on forever. Is it rational or irrational?",
+    "right": "Rational, because the 3s repeat in a pattern (it equals 1/3)",
+    "wrong": [
+     "Irrational, because it never ends",
+     "Irrational, because it is not a whole number",
+     "You cannot tell"
+    ],
+    "why": "Going on forever is not enough to be irrational. The decimal must also never repeat. Here the 3 repeats, so the number is rational, and it is the fraction 1/3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more type to practice. Look at 2.515115111 and imagine it continues. The run of 1s gets one longer each time: 5, 1, 5, 11, 5, 111. The pattern keeps changing, so no block ever repeats. It never ends and never repeats, so it would be irrational."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2.515115111… (the run of 1s keeps growing)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "If each decimal below continues the way it starts, which one is irrational?",
+    "right": "2.515115111… (a longer run of 1s each time)",
+    "wrong": [
+     "0.475",
+     "1.3636… (36 repeating)",
+     "2.8"
+    ],
+    "why": "In 2.515115111… the run of 1s keeps getting longer, so no block of digits repeats, and it never ends. 0.475 and 2.8 stop. 1.3636… repeats the block 36. All three of those are rational."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now π, pi. It's the ratio of any circle's circumference, the distance around, to its diameter, the distance across. That's always the same number, big circle or small. Its digits go on forever with no repeating pattern. The Swiss mathematician Johann Lambert proved in the 1760s, most sources say 1761, that π is irrational."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "π = 3.14159265… never ends, never repeats"
+   },
+   "cite": [
+    "s7",
+    "s9",
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what about 3.14, or 22 over 7? Those are handy copies, not the real π. 3.14 stops, so it's a fraction, 314 over 100, so it's rational. π is irrational. A rational number can never exactly equal an irrational one. 3.14 is just a close, easy stand-in."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "3.14 = 314/100 → rational (a stand-in)\nπ → irrational (the real one)"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is 3.14 exactly equal to π?",
+    "right": "No. 3.14 stops, so it is rational, but π is irrational",
+    "wrong": [
+     "Yes, 3.14 is the exact value of π",
+     "Yes, but only for small circles",
+     "Only when you round to the nearest whole number"
+    ],
+    "why": "3.14 is a decimal that stops, so it is a fraction of integers and rational. π is irrational, so the two can never be exactly equal. 3.14 is a rounded approximation. The size of the circle doesn't matter."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many digits of π do people really use? Everyday rounding is 3.14, two decimal places. NASA's JPL uses 15 decimal places for its highest accuracy work, which is interplanetary navigation. A NASA engineer worked out that to measure a circle as wide as the whole universe down to the width of one hydrogen atom, you'd need only 39 or 40."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Decimal places of π that people use",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7",
+    "s6",
+    "s8"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why does NASA use only 15 decimal places of π?",
+    "right": "More digits would not change the results in any way that matters, even for space travel",
+    "wrong": [
+     "Because π stops after 15 decimal places",
+     "Because π becomes rational after 15 digits",
+     "Because the other digits are secret"
+    ],
+    "why": "π really goes on forever, but 15 decimal places already gives answers that are accurate enough for interplanetary navigation. Using more would not change anything that matters in practice."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four: sorting. Here's a quick routine. Ask: is it a decimal that stops or repeats, or a fraction of integers? Then it's rational. Is it a square root? Check whether the number under the root is a perfect square. If yes, it's a whole number, so rational. If no, irrational. And π is irrational."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Stops or repeats, or a fraction of integers → rational\n2. √ of a perfect square → whole number → rational\n3. √ of a non-perfect square → irrational\n4. π → irrational"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's sort a real list: −7, 14 over 5, 8, √5, 5.9 and negative √64. −7 is an integer, so rational. 14 over 5 is a fraction. 8 is a whole number. 5.9 stops. Negative √64 is negative 8, because 64 is a perfect square, so it's rational. Only √5 is irrational, because 5 is not a perfect square."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rational: −7, 14/5, 8, 5.9, −√64 (= −8)\nIrrational: √5"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these numbers is irrational?",
+    "right": "√50",
+    "wrong": [
+     "√49",
+     "−√64",
+     "7.25"
+    ],
+    "why": "50 is between the perfect squares 49 and 64, so it isn't a perfect square, and √50 is irrational. √49 = 7 and −√64 = −8 are whole numbers, and 7.25 is a decimal that stops, so all three are rational."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Watch out for this trap. A friend says: it has a root sign, so it's irrational. Check √16. 16 is a perfect square, because 4 times 4 is 16, so √16 is 4. That is rational. Always look at the number under the root sign."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A root sign does not automatically mean irrational"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A friend says '√16 is irrational because it has a root sign.' What is the best reply?",
+    "right": "16 is a perfect square, so √16 = 4, a whole number, which is rational",
+    "wrong": [
+     "You're right, every root sign gives an irrational number",
+     "√16 is irrational because 16 is even",
+     "√16 is irrational because it is not a fraction"
+    ],
+    "why": "Check what is under the root. 4 × 4 = 16, so √16 = 4, which is rational. Every whole number can also be written as a fraction (4 = 4/1), so the last answer is wrong too."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A little history, just for fun. Stories say a Greek thinker named Hippasus, from the Pythagorean group, found around the 5th century BCE that √2 can't be written as a fraction of whole numbers. People still tell a dramatic legend about what happened to him. Historians say the evidence for that part is weak. The math part is the solid part."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "5th century BCE: Hippasus and the discovery that √2 is not a fraction\n1761: Lambert proves π is irrational"
+   },
+   "cite": [
+    "s14",
+    "s10",
+    "s11",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's finish with the core idea in the standard's own words."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Know that numbers that are not rational are called irrational.\" — Common Core standard 8.NS.A.1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What makes a number irrational?",
+    "right": "Its decimal never ends and never repeats, so it cannot be written as a fraction of two integers",
+    "wrong": [
+     "It has a very long decimal",
+     "It has a square root sign",
+     "It is a negative number"
+    ],
+    "why": "Irrational means 'not rational': it can't be written as a fraction of integers, and its decimal never stops and never repeats. A long decimal can still be rational if it repeats, and √16 = 4 is rational. Negatives like −7 are rational too."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Recap. Perfect squares and cubes have whole-number roots. Roots of non-perfect squares, like √44, √5 and √2, are irrational, as is π. Rational decimals stop or repeat. Irrational decimals do neither. Great work. Next class we'll estimate irrational numbers and put them in order on a number line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "• Roots of perfect squares → whole numbers → rational\n• Roots of non-perfect squares → irrational\n• π → irrational\n• Rational decimals stop or repeat\n• Irrational decimals never stop and never repeat"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Decimal places of π used (higher = more digits)",
+   "rows": [
+    {
+     "label": "Everyday rounding (3.14)",
+     "value": 2,
+     "source": "s7"
+    },
+    {
+     "label": "NASA/JPL highest accuracy (interplanetary navigation)",
+     "value": 15,
+     "source": "s6"
+    },
+    {
+     "label": "Circle the size of the universe, measured to an atom's width (39 or 40)",
+     "value": 39,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Perfect squares and perfect cubes",
+   "links": [
+    "[[Rational Numbers and Their Decimals]]",
+    "[[Solving with Squares and Cubes]]"
+   ]
+  },
+  {
+   "topic": "Square roots of non-perfect squares",
+   "links": [
+    "[[Estimating and Ordering Irrational Numbers]]"
+   ]
+  },
+  {
+   "topic": "Why some decimals never end and never repeat",
+   "links": [
+    "[[Rational Numbers and Their Decimals]]"
+   ]
+  },
+  {
+   "topic": "Sorting numbers into rational and irrational",
+   "links": [
+    "[[Estimating and Ordering Irrational Numbers]]",
+    "[[The Pythagorean Theorem: Why It Works]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Hippasus was killed for revealing that √2 is irrational.",
+   "other_view": "Many popular tellings repeat this legend. Plus Magazine calls the historical evidence murky, and Wikipedia says it has little if any substantial evidence by normal historical standards. The discovery is usually credited to Hippasus, but the murder story is better treated as a legend.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Grade 8 students should be able to prove that √2 is irrational.",
+   "other_view": "The 8th-grade standard only asks students to know that √2 is irrational. One lesson plan says the work stays informal and does not ask for the proof. Even so, a short, elegant proof by contradiction exists, and some teachers show it as enrichment.",
+   "cite": [
+    "s2",
+    "s12",
+    "s10"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,332 @@
+{
+ "about": {
+  "title": "S, T, U",
+  "course": "letters-a-z",
+  "class_n": 7,
+  "audience": [
+   "adult relearning reading",
+   "young child",
+   "anyone learning or relearning letters"
+  ],
+  "minutes": 10,
+  "length_note": "Three letters plus a short warm-up fit in about ten minutes. Pause or replay any part as often as you like, so it can run longer."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we meet three letters: S, T and U. For each one we will say its name, its sound, and a word we know."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "S, T, U"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a gentle warm-up. Here are some letters we already know. Look at them, say any you like out loud, and take your time. There is no hurry and no test."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A B C D E F G H I J K L M N O P Q R"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's remember a few of them with a word each. A is for apple. B is for ball. C is for cat. K is for keys. M is for moon."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A – apple\nB – ball\nC – cat\nK – keys\nM – moon"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which word goes with the letter K?",
+    "right": "keys",
+    "wrong": [
+     "apple",
+     "ball",
+     "moon"
+    ],
+    "why": "K is for keys. Keys start with the 'k' sound."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's find the next letter. We said P, Q, R. What comes right after R?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "P  Q  R  ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter comes right after R?",
+    "right": "S",
+    "wrong": [
+     "Q",
+     "T",
+     "P"
+    ],
+    "why": "The alphabet goes P, Q, R, S. S comes right after R."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is S. The big one is called capital S, or upper case. The small one is lower case. The name of the letter is 'ess'. Say it with me: ess."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "S  s"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The sound of S is a long, soft 'sss', like a snake hissing. Try it: sss. A familiar word is sun. Sss, sun. A grown-up word is street, or sink. Sss, street. Sss, sink."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bright yellow sun in a blue sky, with a big letter S beside it. Below it, the words: sun, street, sink."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word starts with the 'sss' sound?",
+    "right": "sun",
+    "wrong": [
+     "moon",
+     "ball",
+     "hat"
+    ],
+    "why": "Sun starts with 'sss'. Say it slowly and you can hear the S at the start."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The two shapes of S look alike. Both are curvy, like a snake. Capital S is tall. Lower case s is small. Look for the curve in both."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case: S (tall and curvy)\nLower case: s (small and curvy)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which one is the lower case of S?",
+    "right": "s",
+    "wrong": [
+     "t",
+     "u",
+     "b"
+    ],
+    "why": "Lower case s is the small curvy shape, the same shape as S but smaller."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is T. Its name is 'tee'. Say it: tee. The sound of T is a quick little tap, 'tuh'. Your tongue taps behind your top teeth. Try it: t, t, t."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "T  t"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A familiar word is table. T, table. A grown-up word is telephone, or tea. T, telephone. T, tea."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A wooden table with a cup of tea on it, and a big letter T beside it. Below it, the words: table, telephone, tea."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter says 'tuh', like table?",
+    "right": "T",
+    "wrong": [
+     "S",
+     "U",
+     "B"
+    ],
+    "why": "Table starts with the quick 'tuh' sound, which is the sound of T."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Capital T looks like a table with one leg: a line across the top and a line going down. Lower case t is smaller, with a short line across it, a bit like a little cross."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case: T (a line across the top, a line down)\nLower case: t (small, with a short cross line)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which one is the lower case of T?",
+    "right": "t",
+    "wrong": [
+     "f",
+     "l",
+     "s"
+    ],
+    "why": "Lower case t is a small line with a short cross line. It is the small partner of T."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last today is U. Its name is 'yoo', like the word you. Say it: yoo. The most common sound of U is short and soft: 'uh', as in up. Say it: uh, uh, up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "U  u"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A familiar word is umbrella. Uh, umbrella. Grown-up words are uncle, and under. Uh, uncle. Uh, under. Sometimes U says its own name, 'yoo', as in unicorn. For now, the 'uh' sound comes first."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A red umbrella open in the rain, with a big letter U beside it. Below it, the words: umbrella, uncle, under."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word starts with the short 'uh' sound of U?",
+    "right": "umbrella",
+    "wrong": [
+     "apple",
+     "table",
+     "sun"
+    ],
+    "why": "Umbrella starts with 'uh'. Apple starts with a different sound, and table and sun start with T and S."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Capital U looks like a cup, open at the top. Lower case u looks the same, only smaller, and with a little tail on the right side. Look for the cup shape."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case: U (a cup)\nLower case: u (a small cup, with a little tail)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which one is the lower case of U?",
+    "right": "u",
+    "wrong": [
+     "n",
+     "v",
+     "y"
+    ],
+    "why": "Lower case u is a small cup shape. The letter n looks like an upside-down cup, so it is different."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put all three together. Say each one: name, sound, word. S, sss, sun. T, tuh, table. U, uh, umbrella."
+   },
+   "show": {
+    "kind": "list",
+    "text": "S s – sss – sun\nT t – tuh – table\nU u – uh – umbrella"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last try. Listen for the first sound of this word: umbrella. Which letter does it start with?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "S    T    U"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter does 'umbrella' start with?",
+    "right": "U",
+    "wrong": [
+     "S",
+     "T",
+     "B"
+    ],
+    "why": "Umbrella starts with the short 'uh' sound, and that is the letter U."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. You met S, T and U today. Take a rest if you like, and come back to say them again whenever you want. Next time we meet V, W and X."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done! Next: V, W, X"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "S, s: name 'ess', sound 'sss', word sun",
+   "links": [
+    "[[upper and lower case]]",
+    "[[letter sounds]]"
+   ]
+  },
+  {
+   "topic": "T, t: name 'tee', sound 'tuh', word table",
+   "links": [
+    "[[upper and lower case]]",
+    "[[letter sounds]]"
+   ]
+  },
+  {
+   "topic": "U, u: name 'yoo', common sound 'uh', word umbrella",
+   "links": [
+    "[[upper and lower case]]",
+    "[[letter sounds]]"
+   ]
+  },
+  {
+   "topic": "Quick recall of A to R",
+   "links": [
+    "[[Letters A to Z: class 6, P, Q, R]]",
+    "[[Letters A to Z: class 8, V, W, X]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,277 @@
+{
+ "about": {
+  "title": "Counting things from 0 to 10",
+  "course": "counting-and-adding",
+  "class_n": 1,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. This class has one main skill (touch each thing once, say one number, and the last number tells how many). Short steps with pauses to try it keep it from feeling long, and you can stop after any step and come back."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}, and welcome. In this class we count things, from nothing up to ten. Take your time. There is no rush, and you can pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Counting things from 0 to 10"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look at the numbers you know. Say them with us, slowly: zero, one, two, three, four, five, six, seven, eight, nine."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0  1  2  3  4  5  6  7  8  9"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which number comes right after 6?",
+    "right": "7",
+    "wrong": [
+     "5",
+     "8",
+     "9"
+    ],
+    "why": "When we say the numbers in order, seven comes right after six. Five comes before six."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Zero is the number for nothing. If a plate has no biscuits on it, there are zero biscuits. Zero is a real number, and it is where counting starts."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A cup is empty. How many spoons are in it?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "2",
+     "10"
+    ],
+    "why": "Nothing is in the cup, and the number for nothing is zero."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we meet a new number: ten. It comes right after nine. It is written with two digits, a one and then a zero. Say it with us: ten."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which number comes right after 9?",
+    "right": "10",
+    "wrong": [
+     "8",
+     "0",
+     "11"
+    ],
+    "why": "Ten comes right after nine. Eight is before nine."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the big idea. When you count, touch each thing one time. Use a finger, a pencil or just point. One touch for each thing."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of five buttons on a table. One finger rests on the first button."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "With each touch, say one number word. Touch the first button and say one. Touch the next and say two. One touch, one word. Try it with five buttons: one, two, three, four, five."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One touch, one number word"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You touch 3 buttons, one at a time. How many number words do you say?",
+    "right": "3",
+    "wrong": [
+     "1",
+     "2",
+     "4"
+    ],
+    "why": "Each touch gets one number word. Three touches means three words: one, two, three."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a helpful trick. After you touch a thing, slide it to one side. Then you can see which ones are counted and which are waiting. You will not count any twice."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Six buttons. Three are in a tidy group on the left, already counted. Three are still on the right, waiting."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do we slide each thing aside after we touch it?",
+    "right": "So we do not count it twice",
+    "wrong": [
+     "So it gets warm",
+     "So we can count faster than the numbers",
+     "So we can skip one"
+    ],
+    "why": "Sliding things aside shows which ones are counted, so each one is counted once."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last number you say tells how many there are. Count four spoons: one, two, three, four. The last number is four, so there are four spoons. Say it: there are four spoons."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 spoons"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You count cups and the last number you say is 6. How many cups are there?",
+    "right": "6",
+    "wrong": [
+     "1",
+     "5",
+     "7"
+    ],
+    "why": "The last number said tells how many. It was six, so there are six cups."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Picture seven spoons in a row. Touch each one and count with us, slowly: one, two, three, four, five, six, seven. Seven spoons. Well done."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Seven spoons in a straight row, with a number from 1 to 7 lighting up above each spoon in turn."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Counting can feel different when things are not in a line. Cups in a bunch are harder. Try to move them into a row first. Then count: one, two, three, four, five, six, seven, eight. Eight cups."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Eight cups moved from a bunch into two neat rows of four."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is it easier to count cups after putting them in a row?",
+    "right": "It is easier to see which ones you have counted",
+    "wrong": [
+     "The cups become fewer",
+     "The cups become bigger",
+     "You do not need to say any numbers"
+    ],
+    "why": "A row gives order. You can see where you started and what is left, and the number of cups stays the same."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the biggest group for today: ten buttons. Two rows of five can help. Count along: one, two, three, four, five, six, seven, eight, nine, ten. Ten buttons."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Ten buttons in two rows of five. Numbers 1 to 10 light up one at a time."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You count buttons and finish on 10. How many buttons are there?",
+    "right": "10",
+    "wrong": [
+     "9",
+     "1",
+     "5"
+    ],
+    "why": "The last number said was ten, so there are ten buttons."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If you lose your place, that is fine. Everyone does sometimes. Stop, breathe, and start again from one. Starting again is a good way to count."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Slow is fine. Starting again is fine."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us remember the three steps. Touch each thing once. Say one number word for each touch. The last number you say tells how many. Before the next class, try counting three things near you, like spoons, cups or buttons."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Touch each thing once\n2. One number word for each touch\n3. The last number tells how many"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Numbers 0 to 10",
+   "links": [
+    "[[Counting from 11 to 20]]",
+    "[[Numbers 0 to 9]]"
+   ]
+  },
+  {
+   "topic": "One touch for each object",
+   "links": [
+    "[[Counting out a number: setting a table]]"
+   ]
+  },
+  {
+   "topic": "The last number tells how many",
+   "links": [
+    "[[More and fewer]]",
+    "[[Putting groups together (totals to 5)]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

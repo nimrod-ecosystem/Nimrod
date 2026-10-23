@@ -1,0 +1,145 @@
+{
+ "course_id": "letters-a-z",
+ "title": "Letters A to Z",
+ "audience": [
+  "adult relearning reading",
+  "young child"
+ ],
+ "length_note": "The alphabet has 26 letters. Each class covers about three letters, which is small enough to hold in mind and short enough to finish without getting tired. That gives eight classes of three letters (A to X), then a ninth class for the last two letters (Y and Z). A tenth class reviews the whole alphabet. Letters stay in alphabet order so the course matches the order learners will meet elsewhere. Each letter gets its upper and lower case shape, its sound, and a familiar picture word. Adults also get a grown-up word to connect with daily life. Classes run 8 to 12 minutes, with the review at 12 minutes. Each letter gets about 3 minutes, and the first class has a little extra time to explain how the lessons work.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "A, B, C: Your First Letters",
+   "goal": "Say the name, sound and a familiar word for A, B and C, and point to both the upper case and lower case of each.",
+   "minutes": 12,
+   "topics": [
+    "How each class works: see the letter, say its name, hear its sound, match a word",
+    "A, a: name, sound, apple (grown-up word: address)",
+    "B, b: name, sound, familiar word",
+    "C, c: name, sound, familiar word, with the common sound first",
+    "Upper case and lower case side by side"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "D, E, F",
+   "goal": "Say the name, sound and a familiar word for D, E and F, and match upper to lower case.",
+   "minutes": 10,
+   "topics": [
+    "D, d: name, sound, familiar word",
+    "E, e: name, sound, familiar word, with the common sound first",
+    "F, f: name, sound, familiar word",
+    "Quick recall of A to C"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "G, H, I",
+   "goal": "Say the name, sound and a familiar word for G, H and I, and match upper to lower case.",
+   "minutes": 10,
+   "topics": [
+    "G, g: name, sound, familiar word, with the common sound first",
+    "H, h: name, sound, familiar word",
+    "I, i: name, sound, familiar word, with the common sound first",
+    "Quick recall of A to F"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "J, K, L",
+   "goal": "Say the name, sound and a familiar word for J, K and L, and match upper to lower case.",
+   "minutes": 10,
+   "topics": [
+    "J, j: name, sound, familiar word",
+    "K, k: name, sound, keys (grown-up word: kitchen)",
+    "L, l: name, sound, familiar word",
+    "Telling a lower case l from an upper case I",
+    "Quick recall of A to I"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "M, N, O",
+   "goal": "Say the name, sound and a familiar word for M, N and O, and match upper to lower case.",
+   "minutes": 10,
+   "topics": [
+    "M, m: name, sound, familiar word",
+    "N, n: name, sound, familiar word",
+    "O, o: name, sound, familiar word, with the common sound first",
+    "Quick recall of A to L"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "P, Q, R",
+   "goal": "Say the name, sound and a familiar word for P, Q and R, and match upper to lower case.",
+   "minutes": 10,
+   "topics": [
+    "P, p: name, sound, familiar word",
+    "Q, q: name, sound, familiar word, and that Q usually comes with U",
+    "R, r: name, sound, familiar word",
+    "Telling lower case p, q and b, d apart",
+    "Quick recall of A to O"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "S, T, U",
+   "goal": "Say the name, sound and a familiar word for S, T and U, and match upper to lower case.",
+   "minutes": 10,
+   "topics": [
+    "S, s: name, sound, familiar word",
+    "T, t: name, sound, familiar word",
+    "U, u: name, sound, familiar word, with the common sound first",
+    "Quick recall of A to R"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "V, W, X",
+   "goal": "Say the name, sound and a familiar word for V, W and X, and match upper to lower case.",
+   "minutes": 10,
+   "topics": [
+    "V, v: name, sound, familiar word",
+    "W, w: name, sound, familiar word",
+    "X, x: name, sound, and a familiar word where X is heard (often at the end of a word)",
+    "Quick recall of A to U"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Y, Z and the Whole Alphabet in Order",
+   "goal": "Say the name, sound and a familiar word for Y and Z, and say the alphabet in order from A to Z.",
+   "minutes": 8,
+   "topics": [
+    "Y, y: name, sound, familiar word",
+    "Z, z: name, sound, familiar word",
+    "Saying A to Z in order, slowly and together",
+    "Quick recall of V to X"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Review: Find and Say Any Letter",
+   "goal": "Pick out any letter in upper or lower case, say its name and sound, and give a familiar word for it.",
+   "minutes": 12,
+   "topics": [
+    "Mixed upper and lower case practice across all 26 letters",
+    "Name, sound and word for letters chosen at random",
+    "Look-alike letters: b/d, p/q, I/l",
+    "Finding letters in real words, such as a name or an address",
+    "Marking which letters feel easy and which need another go"
+   ],
+   "needs_research": false
+  }
+ ]
+}

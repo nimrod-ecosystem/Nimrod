@@ -1,0 +1,374 @@
+{
+ "about": {
+  "title": "Formulas and Literal Equations: Make the Formula Work for You",
+  "course": "algebra-1",
+  "class_n": 6,
+  "audience": [
+   "Age 14 to 16",
+   "Oscar and teenagers like him",
+   "Follows 8th-grade math"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits this topic. It covers one skill (getting a letter alone) and applies it to three kinds of formula: distance, perimeter and area, and interest. There is also a short story about units. Each beat is about 2 minutes, so you can pause after any beat and pick up again. If you want to stop early, the first 7 beats stand on their own."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.6 Solve a Formula for a Specific Variable (Elementary Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/2-6-solve-a-formula-for-a-specific-variable",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "HSA-CED.A.4: Rearrange formulas to highlight a quantity of interest",
+   "publisher": "Illustrative Mathematics (Common Core State Standards for Mathematics)",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSA/CED/A/4",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "9.1 Simple Interest (Business Technical Math)",
+   "publisher": "BCcampus Open Education (opentextbc.ca)",
+   "date": "n.d.",
+   "link": "https://opentextbc.ca/businesstechnicalmath/chapter/9-1-simple-interest-2/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Mars Climate Orbiter Team Finds Likely Cause of Loss",
+   "publisher": "NASA Jet Propulsion Laboratory",
+   "date": "1999",
+   "link": "https://www.jpl.nasa.gov/news/mars-climate-orbiter-team-finds-likely-cause-of-loss/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Why the Mars Probe went off course",
+   "publisher": "IEEE Spectrum",
+   "date": "1999",
+   "link": "https://spectrum.ieee.org/why-the-mars-probe-went-off-course",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 6. Picture a racing game. The game tells you your speed and how long the lap took. You want to know how far the track is. Another day you know the distance and the time, and you want the speed. Today you learn to turn one formula into the version you need. You will not have to memorize a new formula each time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Formulas and Literal Equations: Make the Formula Work for You"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the words. A formula is a rule that connects quantities using letters. To solve a formula for a variable means to get that one letter alone on one side of the equals sign, with nothing multiplied on it. Every other letter and number goes on the other side. An equation made mostly of letters like this is called a literal equation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solve for a variable = get that letter alone on one side"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the good news. You already know the moves. Look at the left side. You solve 15t = 120 by dividing both sides by 15. Now look at the right side. In d = rt, d is distance, r is rate (rate is just another word for speed), and t is time. To get t alone, you divide both sides by r. It is the same idea, with a letter where the 15 used to be. The standard for this skill says the reasoning is the same as solving equations."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "With numbers: 15t = 120, so t = 120 ÷ 15 = 8.  |  With letters: d = rt, so t = d ÷ r."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Take d = rt and get r alone. Think about what r is being multiplied by, then undo it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "d = rt   →   r = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Solve d = rt for r.",
+    "right": "r = d ÷ t",
+    "wrong": [
+     "r = dt",
+     "r = t ÷ d",
+     "r = d − t"
+    ],
+    "why": "In d = rt, the r is multiplied by t. To undo multiplying by t, divide both sides by t. That gives r = d ÷ t. Speed is distance divided by time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a formula with two steps. The perimeter of a rectangle is P = 2L + 2W. That is the distance all the way around. Say you know the perimeter and the length, and you want the width. Step one: subtract 2L from both sides, which leaves P − 2L = 2W. Step two: divide both sides by 2. The 2 is multiplying the W, and dividing undoes it. Now W is alone: W = (P − 2L) ÷ 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Start: P = 2L + 2W|Subtract 2L from both sides: P − 2L = 2W|Divide both sides by 2: W = (P − 2L) ÷ 2"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A tip that catches mistakes: check with real numbers. Try a rectangle 10 feet long and 5 feet wide. Its perimeter is 2 times 10 plus 2 times 5, which is 30. Put P = 30 and L = 10 into the new formula: (30 − 20) ÷ 2 = 5. That is the width we started with, so the new formula works. If you ever get a different number, go back and look for the slip."
+   },
+   "show": {
+    "kind": "list",
+    "text": "L = 10, W = 5, so P = 30|W = (30 − 20) ÷ 2 = 5   ✓|The numbers match, so the formula is right."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve P = 2L + 2W for L, the length.",
+    "right": "L = (P − 2W) ÷ 2",
+    "wrong": [
+     "L = P − 2W",
+     "L = P ÷ 2 − 2W",
+     "L = 2(P − W)"
+    ],
+    "why": "First subtract 2W from both sides, so P − 2W = 2L. Then divide the whole side by 2. A common slip is dividing only one term. That is why the answer is (P − 2W) ÷ 2, or equivalently P ÷ 2 − W."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more shape. For this lesson we will use the area of a triangle as half the base times the height: A = ½bh. Say a skate ramp's side is a triangle. You know its area and its base, and you need the height. Multiply both sides by 2 to clear the half, so 2A = bh. Then divide both sides by b. You get h = 2A ÷ b. Two steps again, each one undoing what was done to h."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A = ½bh|Multiply both sides by 2: 2A = bh|Divide both sides by b: h = 2A ÷ b"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now money. Simple interest is the extra money you earn on savings, or pay on a loan. The formula is I = Prt. I is the interest. P is the principal, the amount you start with. r is the yearly rate written as a decimal. t is the time in years. They are all multiplied together."
+   },
+   "show": {
+    "kind": "list",
+    "text": "I = interest (the extra money)|P = principal (starting amount)|r = yearly rate, as a decimal|t = time, in years"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Suppose you saved 500 dollars at 4 percent simple interest, and you want to know how long it takes to earn 60 dollars. You need t alone. P, r and t are multiplied, so divide both sides by P and r. That gives t = I ÷ (Pr). Put in the numbers: 60 ÷ (500 × 0.04) is 60 ÷ 20, which is 3 years. The chart shows why this works. Each year adds the same 20 dollars, so 60 dollars takes 3 years."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Interest earned each year on 500 dollars at 4 percent simple interest",
+    "chart": "c1"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now unit awareness. This is the part that saves you from silly mistakes. The rate in this formula is a yearly rate, so the time has to be in years too. If the money sits for 3 months, you do not use 3. You use 3 twelfths of a year, which is 0.25. Also, the rate has to be a decimal, so 4 percent becomes 0.04."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0.25 years = 3 months (3 ÷ 12)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "You want to use I = Prt. The money stays in an account for 6 months. What value do you use for t?",
+    "right": "0.5, because 6 ÷ 12 = 0.5 years",
+    "wrong": [
+     "6",
+     "0.6",
+     "12"
+    ],
+    "why": "The yearly rate needs time in years. There are 12 months in a year, so 6 months is 6 ÷ 12 = 0.5 of a year."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a true story about why units matter. In 1999, NASA lost a spacecraft called the Mars Climate Orbiter. NASA's lab said one team used English units, like inches, feet and pounds. The other team used metric units. That information was needed for the moves that were meant to put the spacecraft into orbit around Mars. The loss was reported as a 125 million dollar debacle."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two stacks of paper side by side. One is marked English units (pounds) and the other metric units (newtons). A small spacecraft drifts toward a red planet, slightly too low."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The head of NASA science at the time said something kind and wise. He said people sometimes make errors. The real lesson was that the checking steps did not catch it. So do not feel bad when you slip. Build checks into your habit, like substituting numbers and writing units next to your answers."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "People sometimes make errors."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's practice that habit. A skater travels 90 kilometers in 30 minutes. You use r = d ÷ t. You want the speed in kilometers per hour. What should you do before dividing?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Match the units before you divide"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You use r = d ÷ t with d = 90 km and t = 30 minutes. You want kilometers per hour. What should you do first?",
+    "right": "Change 30 minutes to 0.5 hours, then divide: 90 ÷ 0.5 = 180 km per hour",
+    "wrong": [
+     "Divide 90 by 30 and call it 3 km per hour",
+     "Change 90 km into minutes",
+     "Multiply 90 by 30"
+    ],
+    "why": "Kilometers per hour needs the time in hours. 30 minutes is half an hour, so 90 ÷ 0.5 = 180. If you divide by 30 you get kilometers per minute mixed up with hours."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is your five-step routine to keep. One: write the formula. Two: circle the letter you want. Three: undo what is done to it, usually working backwards. Four: check with easy numbers. Five: check your units. That works for distance, perimeter, area, interest, and many formulas you will meet in science."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Write the formula|2. Circle the letter you want|3. Undo what was done to it, step by step|4. Check with easy numbers|5. Check your units"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is class 6. You learned that solving for a variable uses the same moves as any equation, and that units are part of the answer. Take a break if you want one. Next time, in class 7, we use these ideas for ratios, rates, proportions and percent."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Recap: get the letter alone, check with numbers, check your units"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Simple interest earned on 500 dollars at 4% per year (worked out from I = Prt)",
+   "rows": [
+    {
+     "label": "After 1 year",
+     "value": 20,
+     "source": "s3"
+    },
+    {
+     "label": "After 2 years",
+     "value": 40,
+     "source": "s3"
+    },
+    {
+     "label": "After 3 years",
+     "value": 60,
+     "source": "s3"
+    },
+    {
+     "label": "After 4 years",
+     "value": 80,
+     "source": "s3"
+    },
+    {
+     "label": "After 5 years",
+     "value": 100,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Solving for a variable uses equation moves",
+   "links": [
+    "[[One-Step and Two-Step Equations]]",
+    "[[Multi-Step Equations and Variables on Both Sides]]"
+   ]
+  },
+  {
+   "topic": "Simple interest and unit matching",
+   "links": [
+    "[[Ratios, Rates, Proportions and Percent]]",
+    "[[Exponential Models and Compound Interest]]"
+   ]
+  },
+  {
+   "topic": "Rate, distance and time",
+   "links": [
+    "[[Slope and Rate of Change]]"
+   ]
+  },
+  {
+   "topic": "Checking a rearranged formula by substituting numbers",
+   "links": [
+    "[[Order of Operations and Evaluating Expressions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The Mars Climate Orbiter was lost because of a mix-up between English and metric units.",
+   "other_view": "NASA's early statements pointed to different unit systems, and NASA officials said the bigger problem was that its checks failed to catch the error. An IEEE Spectrum investigation argued that far more was at fault than a simple units conversion mix-up. The units story is a useful lesson, but it may not be the whole explanation.",
+   "cite": [
+    "s4",
+    "s5"
+   ]
+  }
+ ]
+}

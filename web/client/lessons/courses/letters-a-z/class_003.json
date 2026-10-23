@@ -1,0 +1,251 @@
+{
+ "about": {
+  "title": "G, H, I",
+  "course": "letters-a-z",
+  "class_n": 3,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes. Three letters, each with a name, a sound and a word, plus a quick recall of A to F and a matching round. That fits a short class, and you can pause or repeat any beat."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back, {name}, and welcome to anyone joining us. Today we meet three letters: G, H and I. Go at your own pace. You can pause at any point and say things out loud as often as you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "G, H, I"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick warm-up. Here are the letters we already know: A, B, C, D, E, F. Say them with me, slowly. A, B, C, D, E, F. Well done."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A  B  C  D  E  F"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letter comes right after F?",
+    "right": "G",
+    "wrong": [
+     "E",
+     "H",
+     "B"
+    ],
+    "why": "The alphabet goes E, F, G. G is the next letter, and it is our first new one today."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is G. The big one, the capital, looks like a C with a little shelf on the inside. The small one, the lower case g, has a round body and a tail that hangs down below the line. The letter's name sounds like the word 'jee'. Say it: G."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big capital G, like a curved C with a short bar pointing inward. Beside it a small g, with a round circle and a tail hanging below the line."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The most common sound of G is a hard 'guh', from the back of your throat. Think of the word 'goat'. Guh, guh, goat. A grown-up word is 'garden'. Guh, garden. Say them with me: G, guh, goat. G, guh, garden."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "G g: guh. goat, garden"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word starts with the hard 'guh' sound of G?",
+    "right": "goat",
+    "wrong": [
+     "boat",
+     "coat",
+     "moat"
+    ],
+    "why": "Only 'goat' starts with 'guh'. The others start with different letters and sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "G has a second sound, and it is less common. Sometimes G says 'juh', like the letter's own name. You hear it in 'giant' and 'gym'. So if you see G, try 'guh' first. If that does not sound like a real word, try 'juh'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Common: guh (goat, garden) | Sometimes: juh (giant, gym)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is H. The capital H looks like a ladder lying on its side, or two posts with a bar between them. The lower case h has one tall post and a little arch, like a chair. Its name is 'aitch'. Say it: H."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A capital H made of two tall posts joined by a bar. Beside it a small h, with one tall post and a rounded arch on its right."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sound of H is just a puff of breath, 'huh'. Hold your hand in front of your mouth and feel the air. Huh, huh, hat. A grown-up word is 'home'. Huh, home. Say them with me: H, huh, hat. H, huh, home."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "H h: huh. hat, home"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What do you feel on your hand when you say the sound of H?",
+    "right": "A puff of breath",
+    "wrong": [
+     "Your lips pressed together",
+     "Your tongue tapping the roof of your mouth",
+     "Nothing, because H is silent"
+    ],
+    "why": "H is a soft puff of air: 'huh'. You can feel it on your hand."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now I. The capital I is a simple straight line, sometimes with little bars on the top and bottom. The lower case i is a short line with a dot floating above it. Its name sounds like the word 'eye'. Say it: I."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A capital I, a single straight upright line. Beside it a small i, a short line with a round dot above it."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The most common sound of I is short: 'ih', as in 'igloo' and 'in'. A grown-up word is 'ink'. Ih, igloo. Ih, ink. Say them with me: I, ih, igloo. I, ih, ink."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "I i: ih. igloo, ink"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word starts with the short 'ih' sound of I?",
+    "right": "ink",
+    "wrong": [
+     "ear",
+     "oak",
+     "up"
+    ],
+    "why": "'Ink' starts with 'ih'. The other words start with different vowel sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "I has a second sound too, and it is just its own name: 'eye'. You hear it in 'ice' and 'iron'. So I can say 'ih' or it can say 'eye'. Try 'ih' first, and if that does not sound like a real word, try 'eye'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Common: ih (igloo, ink) | Sometimes: eye (ice, iron)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's match big and small. Look at each pair: G and g, H and h, I and i. Some pairs look alike, and some look quite different. Say each pair out loud as you find it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "G — g | H — h | I — i"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which small letter matches the big letter H?",
+    "right": "h",
+    "wrong": [
+     "g",
+     "i",
+     "b"
+    ],
+    "why": "Capital H goes with small h, the one with a tall post and an arch."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's say all three together, one more time. G, guh, goat. H, huh, hat. I, ih, igloo. You can also use the grown-up words: garden, home, ink. You have learned three more letters today. That is lovely work. See you in the next class, with J, K and L."
+   },
+   "show": {
+    "kind": "list",
+    "text": "G g: guh, goat, garden | H h: huh, hat, home | I i: ih, igloo, ink"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letter makes the sound 'huh', like a puff of breath?",
+    "right": "H",
+    "wrong": [
+     "G",
+     "I",
+     "F"
+    ],
+    "why": "H says 'huh', as in hat and home. G says 'guh' and I says 'ih'."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "G: hard and soft sounds",
+   "links": [
+    "[[H: the breath sound]]",
+    "[[Short and long vowel sounds]]"
+   ]
+  },
+  {
+   "topic": "H: the breath sound",
+   "links": [
+    "[[G: hard and soft sounds]]"
+   ]
+  },
+  {
+   "topic": "Short and long vowel sounds",
+   "links": [
+    "[[G: hard and soft sounds]]",
+    "[[Matching upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "Matching upper and lower case",
+   "links": [
+    "[[Short and long vowel sounds]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

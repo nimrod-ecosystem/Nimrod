@@ -1,0 +1,386 @@
+{
+ "about": {
+  "title": "Six and seven",
+  "course": "numbers-0-9",
+  "class_n": 4,
+  "audience": [
+   "adult relearning numbers",
+   "young child",
+   "anyone learning or relearning numbers"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits the material: two new numbers, 6 and 7, each shown on the five-frame, then a short mixed round of 0 to 7. Every beat stands alone, so you can stop after any beat and carry on later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class four: six and seven. There is no hurry. You can stop at any point and come back later."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Six and seven"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a look at what we already know. This is a five-frame. It is a row of five boxes. When every box has one thing in it, we say the frame is full."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of five square boxes, each with one cup in it. The frame is completely full: 5 cups."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's count the cups together, touching each one: one, two, three, four, five. Five cups. The frame is full."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same row of five cups, lit one at a time from left to right with the words 1, 2, 3, 4, 5 under them."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Look at the full frame of cups. How many cups are there?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame with 5 cups."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many cups are in the full frame?",
+    "right": "5",
+    "wrong": [
+     "4",
+     "6"
+    ],
+    "why": "Every one of the five boxes has a cup, so the answer is 5. Counting one at a time gives the same answer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now something new. The five-frame is full, so we start a second row. We put one more cup just below the frame. Five and one more."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame of 5 cups. Underneath, on its own, one extra cup. Label: 5 and 1 more."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Five and one more is six. Say it with me: six."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the word and the digit together. Six is written with the digit 6. It has a curve that loops round at the bottom."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "six = 6"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's count six real things. For a grown-up: six keys on a table. For a child: six ducks on a pond. Touch each one and count: one, two, three, four, five, six."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Left: a five-frame full of keys with one more key underneath, 6 keys. Right: a five-frame full of ducks with one more duck underneath, 6 ducks."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try one on your own. Look at the coins."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame of coins with one extra coin below it."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many coins are there?",
+    "right": "6",
+    "wrong": [
+     "5",
+     "7"
+    ],
+    "why": "The frame holds 5 and there is 1 extra coin. Five and one more is 6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we put five and six side by side. Five fills the frame and stops. Six fills the frame and spills over by one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "FIVE: a full frame, nothing underneath. | SIX: a full frame, plus 1 underneath."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, seven. Start with the full frame of five. This time we add two more underneath. Five and two more."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame of 5 apples. Underneath, two extra apples side by side. Label: 5 and 2 more."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Five and two more is seven. Say it with me: seven."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The word is seven, and the digit is 7. It has a flat line across the top and a straight line coming down."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "seven = 7"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Count seven real things with me. A grown-up might have seven cups. A child might have seven apples. One, two, three, four, five, six, seven."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame of cups with two more cups underneath: 7 cups. Beside it, a full five-frame of apples with two more underneath: 7 apples."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. How many apples?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame of apples with two extra apples underneath."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many apples are there?",
+    "right": "7",
+    "wrong": [
+     "6",
+     "5"
+    ],
+    "why": "The frame holds 5, and 2 more are underneath. Five and two more is 7."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a quick way to tell them apart without counting every one. Five has nothing under the frame. Six has one under it. Seven has two under it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5: full frame, nothing under it | 6: full frame, 1 under it | 7: full frame, 2 under it"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's use that. Look under the frame."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame of balls with exactly one ball underneath."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many balls are there?",
+    "right": "6",
+    "wrong": [
+     "7",
+     "5"
+    ],
+    "why": "There is one ball under the full frame. Five and one more is 6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another one. This time, how many keys?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A full five-frame of keys with two keys underneath."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many keys are there?",
+    "right": "7",
+    "wrong": [
+     "5",
+     "6"
+    ],
+    "why": "Two keys sit under the full frame. Five and two more is 7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's mix in the numbers from earlier, including zero. Zero means nothing is there. Here is an empty frame."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A five-frame with all five boxes empty. Nothing under it."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many ducks are in the frame?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "5"
+    ],
+    "why": "No box has a duck in it, so there are none. Zero means nothing is there."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a frame that is not full. Count the things inside it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A five-frame with 3 coins in the first three boxes. The last two boxes are empty."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many coins are there?",
+    "right": "3",
+    "wrong": [
+     "5",
+     "4"
+    ],
+    "why": "Three boxes have a coin and two are empty, so there are 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One with no picture. Think of a full frame, then add two more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "5 and 2 more = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is five and two more?",
+    "right": "7",
+    "wrong": [
+     "6",
+     "5"
+    ],
+    "why": "Five and one more is 6, and one more again is 7. So five and two more is 7."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Today we met six, which is five and one more, and seven, which is five and two more. We saw the digits 6 and 7. We also practised telling 0 to 7 apart. Stop here, or have a break and come back."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6 = five and 1 more | 7 = five and 2 more | 0 = nothing there"
+   },
+   "cite": [],
+   "move": "count-in"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Five-frame",
+   "links": [
+    "[[Counting real things]]",
+    "[[Five and more]]"
+   ]
+  },
+  {
+   "topic": "Six",
+   "links": [
+    "[[Five-frame]]",
+    "[[Reading and writing the digits]]"
+   ]
+  },
+  {
+   "topic": "Seven",
+   "links": [
+    "[[Five-frame]]",
+    "[[Reading and writing the digits]]"
+   ]
+  },
+  {
+   "topic": "Zero",
+   "links": [
+    "[[Zero: nothing there]]",
+    "[[Counting in order, 0 to 9]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

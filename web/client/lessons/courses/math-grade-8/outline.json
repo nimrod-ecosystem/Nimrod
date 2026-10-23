@@ -1,0 +1,480 @@
+{
+ "course_id": "math-grade-8",
+ "title": "8th-Grade Math: From Numbers to Lines, Shapes and Data",
+ "audience": [
+  "Oscar",
+  "teenagers aged 13 to 15"
+ ],
+ "length_note": "The course has 36 classes and runs about 1,155 minutes, or roughly 19 hours. US 8th-grade math covers five big strands: the number system, exponents, linear relationships and functions, geometry, and data. I gave each a separate set of classes so nothing is skipped and no class is crowded. Most classes are 30 minutes, as requested. Classes that combine several steps, such as elimination, dilations, cones and spheres, and lines of fit, run 35 minutes. The final review runs 45 minutes. Each class has worked examples and practice questions that explain the reasoning in the 'why'. The order is: numbers, exponents, slope and linear equations, functions, systems, transformations and angles, Pythagorean theorem, volume, data. Each stage uses the one before it. Classes marked needs_research use real-world numbers or data sets that must be checked and sourced before the lesson is written.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "Rational Numbers and Their Decimals",
+   "goal": "Turn a fraction into a decimal, and a repeating decimal back into a fraction, and explain why the decimal either stops or repeats.",
+   "minutes": 30,
+   "topics": [
+    "What counts as a rational number",
+    "Long division to find decimal forms",
+    "Terminating and repeating decimals",
+    "Writing a repeating decimal as a fraction"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "Irrational Numbers and Roots",
+   "goal": "Say what makes a number irrational and tell rational from irrational numbers, including square roots of non-perfect squares and pi.",
+   "minutes": 30,
+   "topics": [
+    "Perfect squares and perfect cubes",
+    "Square roots of non-perfect squares",
+    "Why some decimals never end and never repeat",
+    "Sorting numbers into rational and irrational"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 3,
+   "title": "Estimating and Ordering Irrational Numbers",
+   "goal": "Estimate an irrational number such as √20 and place it on a number line next to other rational and irrational numbers.",
+   "minutes": 30,
+   "topics": [
+    "Bounding a root between two whole numbers",
+    "Refining an estimate to tenths and hundredths",
+    "Comparing and ordering mixed numbers",
+    "Placing values on a number line"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 4,
+   "title": "Exponent Rules for Whole Numbers",
+   "goal": "Simplify expressions using the product, quotient and power rules, and explain each rule by expanding the powers.",
+   "minutes": 30,
+   "topics": [
+    "What an exponent means",
+    "Product rule",
+    "Quotient rule",
+    "Power of a power"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 5,
+   "title": "Zero and Negative Exponents",
+   "goal": "Evaluate and simplify expressions with zero and negative exponents, and explain why they are defined the way they are.",
+   "minutes": 30,
+   "topics": [
+    "Why a number to the power 0 equals 1",
+    "Negative exponents as reciprocals",
+    "Extending the exponent rules to all integers",
+    "Common mistakes with negative signs"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 6,
+   "title": "Solving with Squares and Cubes",
+   "goal": "Solve equations like x² = 49 and x³ = 27, and state when there are two answers and when there is one.",
+   "minutes": 30,
+   "topics": [
+    "Square root and cube root as undoing a power",
+    "Positive and negative square roots",
+    "Equations of the form x² = p and x³ = p",
+    "Area and volume examples"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 7,
+   "title": "Scientific Notation: Reading and Writing",
+   "goal": "Write very large and very small numbers in scientific notation and convert back to standard form.",
+   "minutes": 30,
+   "topics": [
+    "Powers of 10",
+    "Moving the decimal point",
+    "Positive and negative powers for big and small numbers",
+    "Why the first factor is between 1 and 10"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 8,
+   "title": "Scientific Notation: Comparing and Calculating",
+   "goal": "Compare, multiply and divide numbers in scientific notation, and say how many times larger one quantity is than another.",
+   "minutes": 35,
+   "topics": [
+    "Comparing by the exponent first",
+    "Multiplying and dividing in scientific notation",
+    "Choosing sensible units",
+    "Real-world quantities such as distances, sizes and populations"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Proportional Relationships and Unit Rate",
+   "goal": "Find the unit rate in a proportional relationship and compare two proportional relationships shown in different ways.",
+   "minutes": 30,
+   "topics": [
+    "Constant ratio",
+    "Unit rate from a table, graph or equation",
+    "Graph through the origin",
+    "Comparing two relationships"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 10,
+   "title": "Slope",
+   "goal": "Find the slope of a line from a graph or two points, and explain slope as rise over run using similar triangles.",
+   "minutes": 30,
+   "topics": [
+    "Rise over run",
+    "Positive, negative, zero and undefined slope",
+    "Slope from two points",
+    "Why slope is the same anywhere on a line"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 11,
+   "title": "Lines: y = mx and y = mx + b",
+   "goal": "Write and graph the equation of a line from its slope and y-intercept, and read both from a graph.",
+   "minutes": 35,
+   "topics": [
+    "y = mx through the origin",
+    "The y-intercept as the starting value",
+    "Graphing from slope and intercept",
+    "Writing an equation from a graph"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 12,
+   "title": "Solving Linear Equations in One Variable",
+   "goal": "Solve multi-step equations, including ones with the distributive property and fractions, and check the answer.",
+   "minutes": 30,
+   "topics": [
+    "Inverse operations",
+    "Distributing and combining like terms",
+    "Equations with fractions and decimals",
+    "Checking by substitution"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 13,
+   "title": "Variables on Both Sides: One, None or Infinitely Many Solutions",
+   "goal": "Solve equations with variables on both sides and tell whether they have one solution, no solution or infinitely many.",
+   "minutes": 35,
+   "topics": [
+    "Collecting variable terms",
+    "Reading the result: x = number, false statement, true statement",
+    "Why no solution and infinite solutions happen",
+    "Writing an equation with a given number of solutions"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 14,
+   "title": "What Is a Function?",
+   "goal": "Say what a function is and decide whether a relation is a function by checking each input has exactly one output.",
+   "minutes": 30,
+   "topics": [
+    "Inputs and outputs",
+    "One output for each input",
+    "Function or not, from tables, mappings and graphs",
+    "The vertical line test"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 15,
+   "title": "Four Ways to Show a Function",
+   "goal": "Move between a function's words, table, graph and equation.",
+   "minutes": 30,
+   "topics": [
+    "Function rules in words and equations",
+    "Making tables and plotting points",
+    "Reading values off a graph",
+    "Choosing the best representation"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 16,
+   "title": "Linear and Nonlinear Functions",
+   "goal": "Tell linear from nonlinear functions using a table, graph or equation, and explain what a constant rate of change looks like.",
+   "minutes": 30,
+   "topics": [
+    "Constant rate of change",
+    "Straight-line graphs",
+    "y = mx + b as the linear form",
+    "Examples of nonlinear functions, such as area of a square"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 17,
+   "title": "Modeling with Linear Functions",
+   "goal": "Build a linear function from a situation, say what the rate of change and starting value mean, and describe a graph as a story.",
+   "minutes": 35,
+   "topics": [
+    "Finding slope and intercept from two data points",
+    "Meaning of rate of change and initial value in context",
+    "Sketching a graph from a description",
+    "Describing increasing, decreasing and constant sections"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 18,
+   "title": "Comparing Two Functions",
+   "goal": "Compare two functions given in different forms and say which has the greater rate of change or starting value.",
+   "minutes": 30,
+   "topics": [
+    "Comparing slopes and intercepts",
+    "Comparing a table with an equation",
+    "Comparing a graph with a description",
+    "Deciding with reasons in context"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 19,
+   "title": "Systems of Equations by Graphing",
+   "goal": "Explain that the solution of a system is where the lines cross, and say when there is one, none or infinitely many.",
+   "minutes": 30,
+   "topics": [
+    "Two equations, one pair of variables",
+    "Intersection point as the solution",
+    "Parallel lines and identical lines",
+    "Checking a solution in both equations"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 20,
+   "title": "Systems by Substitution",
+   "goal": "Solve a system by substituting one equation into the other, and check the result.",
+   "minutes": 30,
+   "topics": [
+    "Solving for one variable",
+    "Substituting into the other equation",
+    "Back-substituting to find the second variable",
+    "Spotting when substitution is easiest"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 21,
+   "title": "Systems by Elimination",
+   "goal": "Solve a system by adding or subtracting equations, multiplying first when needed, and choose between elimination and substitution.",
+   "minutes": 35,
+   "topics": [
+    "Adding equations to cancel a variable",
+    "Multiplying an equation to make matching coefficients",
+    "No-solution and infinite-solution outcomes",
+    "Choosing a method"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 22,
+   "title": "Systems in the Real World",
+   "goal": "Turn a word problem into a system, solve it, and say what the answer means in the situation.",
+   "minutes": 35,
+   "topics": [
+    "Defining variables",
+    "Writing two equations from a story",
+    "Solving and interpreting",
+    "Checking that the answer makes sense"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 23,
+   "title": "Rigid Motions: Translations, Reflections and Rotations",
+   "goal": "Describe and perform a translation, reflection or rotation and say what stays the same when a figure moves.",
+   "minutes": 35,
+   "topics": [
+    "Translation as a slide",
+    "Reflection over a line",
+    "Rotation around a point",
+    "Length and angle measures preserved"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 24,
+   "title": "Transformations on the Coordinate Plane",
+   "goal": "Find the new coordinates of a point or shape after a translation, reflection or rotation.",
+   "minutes": 30,
+   "topics": [
+    "Translation rules",
+    "Reflection over the x-axis and y-axis",
+    "Rotations of 90°, 180° and 270° about the origin",
+    "Writing a rule for what happened to the points"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 25,
+   "title": "Congruent Figures",
+   "goal": "Show two figures are congruent by describing a sequence of rigid motions that maps one onto the other.",
+   "minutes": 30,
+   "topics": [
+    "Meaning of congruent",
+    "Sequences of rigid motions",
+    "Matching corresponding sides and angles",
+    "Explaining why two figures are or are not congruent"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 26,
+   "title": "Dilations and Similar Figures",
+   "goal": "Enlarge or shrink a figure using a scale factor, and show two figures are similar using dilations and rigid motions.",
+   "minutes": 35,
+   "topics": [
+    "Dilation from a center",
+    "Scale factor above and below 1",
+    "Dilations on the coordinate plane",
+    "Similar figures: same shape, proportional sides, equal angles"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 27,
+   "title": "Angles in Triangles and with Parallel Lines",
+   "goal": "Use the triangle angle sum and the angle pairs formed by a transversal to find missing angles and give reasons.",
+   "minutes": 35,
+   "topics": [
+    "Triangle angle sum is 180°",
+    "Exterior angles",
+    "Corresponding, alternate interior and vertical angles",
+    "Angle-angle similarity"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 28,
+   "title": "The Pythagorean Theorem: Why It Works",
+   "goal": "State the theorem and explain it with squares on the sides of a right triangle.",
+   "minutes": 30,
+   "topics": [
+    "Legs and hypotenuse",
+    "a² + b² = c²",
+    "A visual proof with areas",
+    "Finding the hypotenuse"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 29,
+   "title": "Using the Pythagorean Theorem and Its Converse",
+   "goal": "Find a missing leg, and test whether a triangle with three given sides is a right triangle.",
+   "minutes": 35,
+   "topics": [
+    "Solving for a leg",
+    "Pythagorean triples",
+    "The converse of the theorem",
+    "Choosing the right form of the equation"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 30,
+   "title": "Distance and Real-World Right Triangles",
+   "goal": "Find the distance between two points on a coordinate plane and solve real problems such as ladders, diagonals and shortest paths.",
+   "minutes": 30,
+   "topics": [
+    "Drawing a right triangle between two points",
+    "Distance with the theorem",
+    "Ladder and diagonal problems",
+    "Rounding and units"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 31,
+   "title": "Volume of Cylinders",
+   "goal": "Find the volume of a cylinder and explain it as area of the base times height.",
+   "minutes": 30,
+   "topics": [
+    "Area of a circle",
+    "Base times height",
+    "Using radius or diameter",
+    "Working backward from volume to radius or height"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 32,
+   "title": "Volume of Cones and Spheres",
+   "goal": "Find the volume of cones and spheres and compare them with cylinders, including the one-third relationship.",
+   "minutes": 35,
+   "topics": [
+    "Cone as one-third of a cylinder with the same base and height",
+    "Sphere volume formula",
+    "Mixed solid problems",
+    "Leaving answers in terms of pi or rounding"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 33,
+   "title": "Scatter Plots and Patterns",
+   "goal": "Make a scatter plot and describe the pattern, including clusters, outliers, and positive, negative or no association.",
+   "minutes": 30,
+   "topics": [
+    "Plotting two-variable data",
+    "Positive, negative and no association",
+    "Linear and nonlinear patterns",
+    "Outliers and clusters",
+    "Association is not the same as cause"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 34,
+   "title": "Lines of Best Fit",
+   "goal": "Draw an informal line of fit, write its equation, and use it to make predictions.",
+   "minutes": 35,
+   "topics": [
+    "Drawing a line close to most points",
+    "Choosing two points to find the slope",
+    "Writing y = mx + b for the data",
+    "Predicting, and the limits of predicting"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 35,
+   "title": "Two-Way Tables",
+   "goal": "Read and build a two-way table and use relative frequencies to describe a link between two categories.",
+   "minutes": 30,
+   "topics": [
+    "Rows, columns and totals",
+    "Joint and marginal frequencies",
+    "Relative frequency",
+    "Deciding whether two categories seem related"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 36,
+   "title": "Course Review and Mixed Practice",
+   "goal": "Choose the right idea from the course for a mixed problem and explain the choice.",
+   "minutes": 45,
+   "topics": [
+    "Mixed problems across all strands",
+    "Spotting which tool a question needs",
+    "Checking answers for sense",
+    "Looking back at the toughest ideas"
+   ],
+   "needs_research": false
+  }
+ ]
+}

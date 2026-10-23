@@ -1,0 +1,198 @@
+{
+ "about": {
+  "title": "Spelling by choosing letters: everyday words",
+  "course": "first-words",
+  "class_n": 7,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes: four short words (yes, no, help, home), each with one small step and one question. You can stop after any word and come back."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we spell words. Spelling here does not mean typing. You look at a word, then you choose its letters, one at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Spelling by choosing letters"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is a row of letters on the screen. You pick the ones you need, in the right order. There is no timer and no hurry. Go as slowly as you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Look at the word\n2. Say it\n3. Choose the first letter\n4. Choose the next letter\n5. Keep going until the word is done"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's start with YES. First, look at it and say it out loud, or in your head. Yes. It has three letters: Y, then E, then S."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "YES"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now you try. Look at the word YES. Which letter do you choose first?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The word YES in large letters. Underneath, three empty boxes. Below those, a row of letters: S, Y, E, N."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You are spelling YES. Which letter do you choose first?",
+    "right": "Y",
+    "wrong": [
+     "S",
+     "E",
+     "N"
+    ],
+    "why": "YES begins with the Y sound. Y goes in the first box, then E, then S."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next is NO. It is short, just two letters: N, then O. Say it, then choose N, then O."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "NO"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which two letters spell NO, in order?",
+    "right": "N then O",
+    "wrong": [
+     "O then N",
+     "N then E",
+     "Y then O"
+    ],
+    "why": "NO starts with N and ends with O. N goes first, then O."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now something important. Sometimes you will choose the wrong letter. That is fine. It happens to everyone who spells, at every age. You just take that letter back out and choose another. Nothing bad happens."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A wrong letter is not a failure. Take it out and try again."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You chose a wrong letter. What do you do?",
+    "right": "Take it out and choose another letter",
+    "wrong": [
+     "Stop for the day",
+     "Start the whole class again",
+     "Feel bad about it"
+    ],
+    "why": "A wrong letter is a normal part of spelling. You take it out, choose another, and carry on."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a longer word: HELP. It has four letters. This is a very important word, so take your time. H, E, L, P."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "HELP"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letters spell HELP, in the right order?",
+    "right": "H, E, L, P",
+    "wrong": [
+     "H, L, E, P",
+     "P, L, E, H",
+     "E, H, L, P"
+    ],
+    "why": "HELP goes H, then E, then L, then P. Look at the word and match it one letter at a time."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last word: HOME. Four letters again: H, O, M, E. Did you notice? HELP and HOME both start with H. The first letter is the same, but the rest is different."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "HELP: H E L P\nHOME: H O M E"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which letter comes third in HOME?",
+    "right": "M",
+    "wrong": [
+     "H",
+     "O",
+     "E"
+    ],
+    "why": "HOME goes H, O, M, E. M is the third letter."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done, {name}. Today you spelled four everyday words by choosing letters: yes, no, help and home. Come back whenever you like and try them again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "YES: Y E S\nNO: N O\nHELP: H E L P\nHOME: H O M E"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Spelling by choosing letters",
+   "links": [
+    "[[Three important words: yes, no, help]]",
+    "[[Home words: water, home, TV]]"
+   ]
+  },
+  {
+   "topic": "Fixing a wrong letter",
+   "links": [
+    "[[Spelling three-letter words by sound]]"
+   ]
+  },
+  {
+   "topic": "Spelling yes, no, help, home",
+   "links": [
+    "[[Common sight words, set one]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -38,6 +38,11 @@ import { TRANSCRIPT_STREAM } from '../transcript_quiz.js';
 import { LESSON_PARTS, CLASS_MINUTES, draftLessonPrompt, lessonFromReply, madeLessonId, TOPIC_MAX, LEARNER_MAX } from '../lesson_prompt.js';
 import { createAI } from '../ai.js';
 import { readLessonFolder, isFileLessonId } from '../lessons_folder.js';
+import { COURSES } from '../lessons/courses_index.js';      // the courses that come with Nimrod (CK 3)
+import { closingBeats } from '../lesson_file.js';
+export const COURSE_PREFIX = 'course:';
+/** A course's class file, fetched when it is played (lessons/courses/<id>/class_NNN.json). */
+export const classURL = (courseId, file) => new URL(`../lessons/courses/${encodeURIComponent(courseId)}/${encodeURIComponent(file)}`, import.meta.url).href;
 import { afterAnswerHtml, ensureQuizStyle } from '../quiz_view.js';
 import { createSpeechWatch, createAfterWait } from '../quiz_flow.js';   // the pace (row 2.113): said to the end, then on
 
@@ -73,6 +78,18 @@ export function voiceFor(who, pref = {}, choice = 'higher') {
   const step = c === 'lower' ? -SECOND_VOICE_STEP : SECOND_VOICE_STEP;
   return { ...p, pitch: Math.round(Math.max(0, Math.min(2, pitch + step)) * 100) / 100 };
 }
+// THE LEARNER'S NAME (2026-10-23). A course may greet its learner ("Hello {name}.", "Well done, {name}."): the bundled
+// courses carry `{name}`, never a person's name (Code's copy script; site copy names nobody), and the panel's "The
+// learner's name" fills it. Empty, the greeting simply has no name: "Hello.", "Well done." PURE.
+export function named(text, name = '') {
+  const n = String(name || '').trim();
+  return String(text == null ? '' : text)
+    .replace(/(,\s*)?\{name\}/g, (m, comma) => (n ? `${comma ? ', ' : ''}${n}` : ''))
+    .replace(/ +([.,!?;:])/g, '$1').replace(/ {2,}/g, ' ').replace(/,([.!?])/g, '$1');
+}
+const namedDeep = (v, name) => (typeof v === 'string' ? (v.includes('{name}') ? named(v, name) : v)
+  : Array.isArray(v) ? v.map((x) => namedDeep(x, name))
+    : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, namedDeep(x, name)])) : v);
 // An answer as the end of a sentence: one full stop, whether or not the lesson's answer brought its own (an AI's often do).
 const ended = (s) => `${String(s == null ? '' : s).replace(/[.!?\s]+$/, '')}.`;
 
@@ -90,6 +107,20 @@ const SETTINGS = [
     note: 'The same lesson; only the things shown change (cups and keys, or ducks and apples).',
     options: [{ value: 'grownup', label: 'A grown-up' }, { value: 'child', label: 'A child' }] },
   { key: 'speak', label: 'Say it aloud', kind: 'toggle', default: true, level: 'standard', onLabel: 'Yes', offLabel: 'No, captions only' },
+  // THE COURSES (CK 3, row 2.112): a course is chosen under "Which lesson"; this is which of its classes. Its choices
+  // are the course's own classes (settingsChoices); these two are what shows before the panel says.
+  { key: 'classN', label: 'Which class', kind: 'choice', default: 1, level: 'essential',
+    appliesWhen: (v) => String(v?.lessonId || '').startsWith(COURSE_PREFIX),
+    options: [{ value: 1, label: 'Class 1' }, { value: 2, label: 'Class 2' }] },
+  // THE OTHER SIDE (CK 3, Mike: a contrary voice "on by default for history and teen courses, off for beginners, a setting
+  // either way"): where experts disagree, said by the second voice at the end of a class. "As the course suggests" is the
+  // course's own default (courses_index.js `otherSide`: off for a beginner's course).
+  { key: 'otherSide', label: 'The other side (where experts disagree)', kind: 'choice', default: 'auto', level: 'standard',
+    options: [{ value: 'auto', label: 'As the course suggests' }, { value: 'on', label: 'On' }, { value: 'off', label: 'Off' }] },
+  // THE LEARNER'S NAME (`named`, above): what a course calls its learner. Empty by default: a screen is not assumed to be
+  // anybody's, and nobody's name is in the site's own courses.
+  { key: 'learnerName', label: 'The learner’s name', kind: 'text', default: '', level: 'standard', maxLength: 40,
+    note: 'A course greets its learner by it (“Hello, Sam”). Left empty, it just says “Hello”.' },
   // TWO VOICES (row 2.111, 2026-10-21; lesson_shape's "two voices" form): a lesson whose lines say who says them ("a",
   // "b") is read by two voices. A's, and a teacher's, are the person's own voice, as every other line on the screen;
   // B's is this row. Any voice the browser has is added to its choices when the panel is open (settingsChoices).
@@ -146,6 +177,8 @@ export function showWords(show, lesson) {
   if (show.kind === 'count') return countWords(show.n, show.thing);
   if (show.kind === 'picture') return `A picture of ${show.of}`;
   if (show.kind === 'row') return show.items.join(', ');
+  if (show.kind === 'lines') return show.items.join('; ');
+  if (show.kind === 'objects') return `${countWords(show.count, String(show.object || '').replace(/-/g, ' '))}${show.layout && show.layout !== 'row' ? ` (${show.layout.replace('-', ' ')})` : ''}`;
   if (show.kind === 'chart') {
     const c = (lesson?.charts || []).find((x) => x.id === show.chart);
     return c ? `${c.title ? `${c.title}: ` : ''}${c.rows.map((r) => `${r.label} ${r.value}`).join(', ')}` : '';
@@ -180,6 +213,16 @@ const CSS = `
 .lp-picture small{display:block;font-size:.7em;color:var(--text-muted,var(--text));margin-bottom:6px}
 .lp-row{display:flex;flex-wrap:wrap;gap:min(2cqw,12px);justify-content:center}
 .lp-row span{min-width:1.6em;padding:6px 10px;border-radius:10px;border:2px solid var(--border,currentColor);font-size:clamp(1.3rem,6cqw,2.6rem);font-weight:700}
+.lp-lines{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;text-align:left;max-width:min(46rem,94%);font-size:clamp(1rem,3.6cqw,1.7rem)}
+.lp-lines li{padding:4px 12px;border-left:4px solid var(--accent,currentColor);border-radius:4px}
+.lp-lines li span+span{margin-left:.5em}
+.lp-objects{display:grid;grid-template-columns:repeat(var(--lp-cols,5),auto);gap:min(2.4cqw,14px);justify-content:center}
+.lp-objects[data-layout="group"]{gap:4px}
+.lp-obj{display:flex;flex-direction:column;align-items:center;gap:2px;transform:translate(var(--dx,0),var(--dy,0))}
+.lp-obj i{display:block;width:min(8cqw,8cqh,56px);height:min(8cqw,8cqh,56px);border-radius:50%;background:var(--accent,var(--text))}
+.lp-obj small{font-size:clamp(.7rem,2.2cqw,1rem)}
+.lp-obj.lp-empty i{background:transparent;border:2px dashed var(--border,currentColor)}
+.lp-objects[data-layout$="frame"] .lp-obj{border:2px solid var(--border,currentColor);border-radius:8px;padding:4px}
 .lp-bars{display:flex;flex-direction:column;gap:6px;width:min(36rem,90%);text-align:left}
 .lp-bar{display:grid;grid-template-columns:8em 1fr 3em;gap:8px;align-items:center}
 .lp-bar b{display:block;height:1.1em;background:var(--accent,var(--text));border-radius:4px;transform-origin:left}
@@ -192,8 +235,8 @@ const CSS = `
 .lp-said{font-size:clamp(1rem,3cqw,1.4rem)}
 .lp-say[data-who="b"]{font-style:italic}
 .lp-paused{font-weight:700;border:1px solid currentColor;border-radius:8px;padding:0 8px}
-.lp-nav{display:flex;justify-content:center;gap:12px;padding:8px}
-.lp-nav button{font-size:1rem;min-height:48px}
+.lp-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 12px;padding:8px}
+.lp-nav button{font-size:1rem;min-height:48px;min-width:72px}
 .lp-read{overflow:auto;padding:14px 20px;max-width:46rem;margin:0 auto;line-height:1.5}
 .lp-read h2{margin:.2em 0}.lp-read h3{margin:1em 0 .2em}
 .lp-read .lp-goal,.lp-read .lp-fn{color:var(--text-muted,var(--text));font-size:.9rem}
@@ -208,6 +251,8 @@ const CSS = `
 .lp-m-count-in .lp-dots i{animation:lp-fade .4s ease-out both;animation-delay:calc(var(--i) * .7s)}
 .lp-m-bars-grow .lp-bar b{animation:lp-grow .9s ease-out both}
 .lp-m-light-in-turn .lp-row span{animation:lp-lit .9s ease-in-out both;animation-delay:calc(var(--i) * .9s)}
+.lp-m-light-in-turn .lp-lines li{animation:lp-fade .5s ease-out both;animation-delay:calc(var(--i) * .9s)}
+.lp-m-count-in .lp-obj:not(.lp-empty) i{animation:lp-fade .4s ease-out both;animation-delay:calc(var(--i) * .7s)}
 .lp-make{overflow:auto}
 .lp-make-in{max-width:44rem;margin:0 auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;text-align:left}
 .lp-make-in h3,.lp-make-in h4{margin:.4em 0 .1em}
@@ -249,6 +294,26 @@ export function showHTML(show, lesson) {
   }
   if (k === 'picture') return `<div class="lp-picture" data-lp-picture><small>A picture of</small>${esc(show.of)}</div>`;
   if (k === 'row') return `<div class="lp-row">${show.items.map((x, i) => `<span style="--i:${i}">${esc(x)}</span>`).join('')}</div>`;
+  // A course's list, timeline or two columns (CK): lines lit one after another; a two-column line as its two halves.
+  if (k === 'lines') {
+    return `<ol class="lp-lines" data-lp-lines="${show.items.length}">${show.items.map((x, i) => {
+      const p = show.pairs?.[i];
+      return `<li style="--i:${i}">${p && p[1] ? `<span>${esc(p[0])}</span><span aria-hidden="true">→</span><span>${esc(p[1])}</span>` : esc(x)}</li>`;
+    }).join('')}</ol>`;
+  }
+  // COUNTED THINGS (row 2.114): one per thing, laid out as the lesson says. Each is a dot with the thing's NAME under it
+  // until Design's drawings of the shared objects exist (chat: "the object's name under each dot is better than a bare
+  // circle"); a five-frame or ten-frame shows its empty places too, so 7 reads as five and two.
+  if (k === 'objects') {
+    const name = String(show.object || '').replace(/-/g, ' ');
+    const per = show.layout === 'ten-frame' ? 10 : show.layout === 'five-frame' ? 5 : 0;
+    const places = per ? Math.max(per, Math.ceil(show.count / per) * per) : show.count;
+    const one = (i) => (i < show.count
+      ? `<span class="lp-obj" style="--i:${i}${show.layout === 'scattered' ? `;--dx:${((i * 37) % 11) - 5}px;--dy:${((i * 53) % 13) - 6}px` : ''}"><i></i><small>${esc(name)}</small></span>`
+      : '<span class="lp-obj lp-empty"><i></i><small>&nbsp;</small></span>');
+    return `<div class="lp-count"><div class="lp-objects" data-lp-objects="${show.count}" data-layout="${esc(show.layout)}" style="--lp-cols:${per ? 5 : Math.min(show.layout === 'group' ? 4 : 10, Math.max(1, show.count))}">`
+      + `${Array.from({ length: places }, (_, i) => one(i)).join('')}</div><div class="lp-thing">${esc(countWords(show.count, name))}</div></div>`;
+  }
   if (k === 'chart') {
     const c = (lesson?.charts || []).find((x) => x.id === show.chart);
     if (!c) return '';
@@ -260,7 +325,7 @@ export function showHTML(show, lesson) {
 }
 
 /** The whole lesson as a page (the Read form). PURE. */
-export function readHTML(lesson, look = 'child', { unchecked = false } = {}) {
+export function readHTML(lesson, look = 'child', { unchecked = false, otherSide = false } = {}) {
   const notes = [];
   const fn = (cite) => {
     if (!cite || !cite.length) return '';
@@ -278,6 +343,17 @@ export function readHTML(lesson, look = 'child', { unchecked = false } = {}) {
       if (words) parts.push(`<p>${esc(words)}${fn(b.cite)}</p>`);
       if (b.ask) parts.push(`<p><b>${esc(b.ask.question)}</b> ${esc(b.ask.answer)}${b.ask.why ? `. ${esc(b.ask.why)}` : ''}</p>`);
     }
+  }
+  // A course's two parts of its own (CK 3): what else was happening then, and (when it is on) where experts disagree.
+  if (lesson.frames?.length) {
+    parts.push('<h3 data-lp-frames>At the same time</h3><ul>');
+    for (const f of lesson.frames) parts.push(`<li><b>${esc(f.when)}:</b> ${esc(f.text)}${fn(f.cite)}</li>`);
+    parts.push('</ul>');
+  }
+  if (otherSide && lesson.otherSide?.length) {
+    parts.push('<h3 data-lp-other>The other side</h3><ul>');
+    for (const x of lesson.otherSide) parts.push(`<li>${esc(x.claim)}<br><i>${esc(x.view)}</i>${fn(x.cite)}</li>`);
+    parts.push('</ul>');
   }
   if (lesson.questions.length) {
     parts.push('<h3>Questions to try</h3><ol>');
@@ -322,17 +398,71 @@ function lessonsModule(ctx) {
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
     const look = () => (LOOKS.includes(cfg.look) ? cfg.look : 'child');
 
-    const allLessons = () => [...BUILTIN_LESSONS, ...made, ...fileLessons];
+    // The courses (CK 3): one entry per course; its classes are fetched as they are played, and kept while the panel is up.
+    const courseEntries = (ctx.courses || COURSES).filter((c) => c && c.id && Array.isArray(c.classes) && c.classes.length)
+      .map((c) => ({ id: `${COURSE_PREFIX}${c.id}`, label: c.title, course: c }));
+    const classCache = new Map();      // `${courseId}/${n}` -> the class file as it came (checked in load)
+    const classLoading = new Set();
+    const allLessons = () => [...BUILTIN_LESSONS, ...courseEntries, ...made, ...fileLessons];
     const waitingForFolder = () => !folderRead && isFileLessonId(setting('lessonId', ''));
+    const entryNow = () => allLessons().find((l) => l.id === setting('lessonId', BUILTIN_LESSONS[0].id)) || null;
+    /** The class of a course playing now: { course, n, cls: { n, title, file }, next } (the next class, or null). */
+    function classNow(entry = entryNow()) {
+      if (!entry?.course) return null;
+      const list = entry.course.classes;
+      const want = Number(setting('classN', 1)) || 1;
+      const cls = list.find((c) => c.n === want) || list[0];
+      const i = list.indexOf(cls);
+      return { course: entry.course, n: cls.n, cls, next: list[i + 1] || null };
+    }
+    const otherSideOn = () => { const v = setting('otherSide', 'auto'); return v === 'on' ? true : v === 'off' ? false : (entryNow()?.course ? entryNow().course.otherSide !== false : true); };
+    let waitingClass = null;           // the class being fetched, for "Opening class 3..."
+    function fetchClass(c) {
+      const key = `${c.course.id}/${c.n}`;
+      if (classCache.has(key) || classLoading.has(key)) return;
+      classLoading.add(key);
+      const get = ctx.fetchClass || ((courseId, file) => fetch(classURL(courseId, file)).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`)))));
+      Promise.resolve().then(() => get(c.course.id, c.cls.file)).then((raw) => { classCache.set(key, raw); }, (err) => {
+        console.error('lessons: could not fetch the class', err);
+        classCache.set(key, null);
+      }).finally(() => {
+        classLoading.delete(key);
+        const now = classNow();
+        if (dead || maker || !now || `${now.course.id}/${now.n}` !== key) return;
+        load(); stopTimer(); render(); enter();
+      });
+    }
     function load() {
       const id = setting('lessonId', BUILTIN_LESSONS[0].id);
+      waitingClass = null;
       if (waitingForFolder()) { lesson = null; problems = []; beats = []; return; }
       const entry = allLessons().find((l) => l.id === id) || BUILTIN_LESSONS[0];
-      unchecked = !!(entry.made && entry.made.sourcesChecked !== true) || entry.sourcesChecked === false;
-      const r = checkLesson(entry.lesson);
-      lesson = r.lesson; problems = r.problems;
-      beats = lesson ? beatsOf(lesson) : [];
+      let raw = entry.lesson;
+      if (entry.course) {
+        const c = classNow(entry);
+        const key = `${c.course.id}/${c.n}`;
+        if (!classCache.has(key)) { waitingClass = c; lesson = null; problems = []; beats = []; fetchClass(c); return; }
+        raw = classCache.get(key);
+        if (!raw) { lesson = null; problems = [`Class ${c.n} of ${c.course.title} could not be opened. Is this screen online?`]; beats = []; return; }
+      }
+      // A course's sources are as its AI found them (web search), like a made lesson's: shown as not checked.
+      unchecked = !!(entry.made && entry.made.sourcesChecked !== true) || entry.sourcesChecked === false || !!entry.course;
+      const r = checkLesson(raw);
+      lesson = r.lesson ? namedDeep(r.lesson, setting('learnerName', '')) : null; problems = r.problems;
+      // A class closes with "At the same time" and, when it is on, "The other side" (lesson_file.js closingBeats).
+      beats = lesson ? [...beatsOf(lesson), ...closingBeats(lesson, { otherSide: otherSideOn() })] : [];
       at = Math.max(0, Math.min(beats.length, Number(state?.get?.()?.at) || 0));
+    }
+    /** On to the course's next class, from its start. */
+    function nextClass() {
+      const c = classNow();
+      if (!c?.next) return;
+      // The panel's row hears it and opens the class (apply, below); with no row, it is opened here.
+      try { state?.set?.({ classN: c.next.n, at: 0 }); } catch { /* memory only */ }
+      if (Number(cfg.classN) === c.next.n) return;
+      cfg = { ...cfg, classN: c.next.n };
+      at = 0;
+      load(); go(0);
     }
 
     // *** THE PACE (row 2.113; the numbers argued at WATCH_HOLD_MS). ***
@@ -406,7 +536,9 @@ function lessonsModule(ctx) {
       finished = true;
       try {
         unlocks = unlocks || createLessons({ makeEvents: ctx.makeEvents, bus: bus || null });
-        Promise.resolve(unlocks.watch(setting('lessonId', BUILTIN_LESSONS[0].id), { label: lesson.about.title }))
+        // A course's class is its own topic (`<course>#<n>`), so finishing class 1 is not finishing the course.
+        const c = classNow();
+        Promise.resolve(unlocks.watch(c ? `${c.course.id}#${c.n}` : setting('lessonId', BUILTIN_LESSONS[0].id), { label: lesson.about.title }))
           .catch((e) => console.error('lessons: could not note the lesson finished', e));
       } catch (e) { console.error('lessons: could not note the lesson finished', e); }
     }
@@ -437,7 +569,13 @@ function lessonsModule(ctx) {
       if (dead || maker || form() === 'read' || !lesson || paused) return;
       stopTimer();
       const b = beats[at]?.beat;
-      if (!b) { if (at >= beats.length) say(`That is the end of ${lesson?.about.title || 'the lesson'}.`); return; }
+      if (!b) {
+        if (at >= beats.length) {
+          const nc = classNow()?.next;
+          say(`That is the end of ${lesson?.about.title || 'the lesson'}.${nc ? ` Next is class ${nc.n}: ${nc.title}.` : ''}`);
+        }
+        return;
+      }
       if (b.ask && picked != null) { sayResult(b); return; }
       const words = [b.say?.text, b.ask ? b.ask.question : ''].filter(Boolean).join(' ');
       const done = say(words, b.say?.who || null);
@@ -472,8 +610,9 @@ function lessonsModule(ctx) {
 
     function stageHTML() {
       if (at >= beats.length) {
+        const nc = classNow()?.next;
         return `<div class="lp-stage lp-m-title-rise"><div class="lp-show"><div class="lp-heading">The end</div></div>`
-          + `<div class="lp-say">${esc(lesson.about.title)}</div></div>`;
+          + `<div class="lp-say">${esc(lesson.about.title)}</div>${nc ? `<p class="lp-cite" data-lp-nextclass>Next: class ${nc.n}, ${esc(nc.title)}</p>` : ''}</div>`;
       }
       const { beat: b, klass } = beats[at];
       const show = showFor(b.show, look());
@@ -521,18 +660,25 @@ function lessonsModule(ctx) {
       if (dead || !rootEl) return;
       if (maker) { renderMaker(); return; }
       if (!lesson && waitingForFolder()) { rootEl.innerHTML = '<div class="lp"><div class="lp-stage"><p>Opening the lesson from your Lessons folder…</p></div></div>'; return; }
+      if (!lesson && waitingClass) {
+        rootEl.innerHTML = `<div class="lp" data-lp-opening><div class="lp-stage"><p>Opening class ${waitingClass.n} of ${esc(waitingClass.course.title)}…</p></div></div>`;
+        return;
+      }
       if (!lesson) {
         rootEl.innerHTML = `<div class="lp"><div class="lp-stage"><p>This lesson could not be played.</p><p class="lp-cite">${esc(problems[0] || '')}</p></div></div>`;
         return;
       }
-      if (form() === 'read') { rootEl.innerHTML = `<div class="lp" data-lp-form="read">${readHTML(lesson, look(), { unchecked })}</div>`; return; }
+      if (form() === 'read') { rootEl.innerHTML = `<div class="lp" data-lp-form="read">${readHTML(lesson, look(), { unchecked, otherSide: otherSideOn() })}</div>`; return; }
       const cur = beats[Math.min(at, beats.length - 1)];
-      const top = at >= beats.length ? lesson.about.title : `${cur.klass.title}`;
+      const cn = classNow();
+      const top = `${cn ? `Class ${cn.n} · ` : ''}${at >= beats.length ? lesson.about.title : cur.klass.title}`;
       const count = at >= beats.length ? '' : `${at + 1} of ${beats.length}`;
       // Back, Repeat and Next in both forms, always (row 2.113). Watch moves on by itself; these are there as well.
       const end = at >= beats.length;
+      const nc = end ? classNow()?.next : null;     // a course's next class, offered at the end of this one (CK 3)
       const nav = `<div class="lp-nav"><button type="button" data-lp-act="back"${at === 0 ? ' disabled' : ''}>Back</button>`
         + `<button type="button" data-lp-act="repeat"${end ? ' disabled' : ''}>Repeat</button>`
+        + (nc ? `<button type="button" data-lp-act="nextclass">Next class</button>` : '')
         + `<button type="button" data-lp-act="${end ? 'again' : 'next'}">${end ? 'Start again' : 'Next'}</button></div>`;
       rootEl.innerHTML = `<div class="lp" data-lp-form="${form()}"${paused ? ' data-lp-paused' : ''}><div class="lp-top"><span>${esc(top)}</span>`
         + `${paused ? '<span class="lp-paused">Paused</span>' : ''}<span>${esc(count)}</span></div>${stageHTML()}${nav}</div>`;
@@ -552,6 +698,7 @@ function lessonsModule(ctx) {
       else if (name === 'back') go(at - 1);
       else if (name === 'again') go(0);
       else if (name === 'repeat') { hush(); enter(); }
+      else if (name === 'nextclass') nextClass();
     }
     function onClick(e) {
       const m = e.target instanceof Element ? e.target.closest('[data-lm-act]') : null;
@@ -748,7 +895,18 @@ function lessonsModule(ctx) {
       const was = { ...cfg };
       cfg = { ...(s || {}) };
       if (was.questionsTo !== cfg.questionsTo && was.questionsTo !== undefined) routeQuestions();
-      if (was.lessonId !== cfg.lessonId && was.lessonId !== undefined) { load(); if (maker) return; go(0); return; }
+      if (was.lessonId !== cfg.lessonId && was.lessonId !== undefined) {
+        // Another course starts at its first class, not at the number the last one had reached.
+        if (String(cfg.lessonId || '').startsWith(COURSE_PREFIX) && cfg.classN != null && cfg.classN !== 1) {
+          cfg = { ...cfg, classN: 1 };
+          try { state?.set?.({ classN: 1 }); } catch { /* memory only */ }
+        }
+        load(); if (maker) return; go(0); return;
+      }
+      // Another class of the course (CK 3): from its start.
+      if (Number(was.classN || 1) !== Number(cfg.classN || 1)) { load(); if (maker) return; go(0); return; }
+      // The other side on or off, or the learner's name: the class's beats change; it carries on where it is.
+      if ((was.otherSide || 'auto') !== (cfg.otherSide || 'auto') || (was.learnerName || '') !== (cfg.learnerName || '')) { const keep = at; load(); at = Math.min(keep, beats.length); stopTimer(); render(); enter(); return; }
       if (was.form !== cfg.form || was.look !== cfg.look) { stopTimer(); render(); enter(); }
     }
 
@@ -812,7 +970,10 @@ function lessonsModule(ctx) {
       onShow() { if (!paused && timer == null && !after.pending()) enter(); },
       // "Which lesson" offers the account's own lessons too (board.js's pattern: what only the mounted panel knows).
       settingsChoices: () => ({ lessonId: allLessons().map((l) => ({ value: l.id,
-        label: l.made ? `${l.label} (made)` : l.file ? `${l.label} (your Lessons folder)` : l.label })),
+        label: l.made ? `${l.label} (made)` : l.file ? `${l.label} (your Lessons folder)`
+          : l.course ? `${l.label} (a course: ${l.course.classes.length}${l.course.total > l.course.classes.length ? ` of ${l.course.total}` : ''} classes)` : l.label })),
+        // The course's own classes (CK 3), when a course is chosen.
+        ...(entryNow()?.course ? { classN: entryNow().course.classes.map((c) => ({ value: c.n, label: `${c.n}. ${c.title}` })) } : {}),
         // The second voice: higher, lower, or any voice this browser has (row 2.111).
         secondVoice: [{ value: 'higher', label: 'Your voice, higher' }, { value: 'lower', label: 'Your voice, lower' },
           ...(() => { try { return (globalThis.speechSynthesis?.getVoices?.() || []).map((v) => ({ value: `uri:${v.voiceURI}`, label: v.name })); } catch { return []; } })()] }),

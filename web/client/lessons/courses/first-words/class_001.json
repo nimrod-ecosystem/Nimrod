@@ -1,0 +1,279 @@
+{
+ "about": {
+  "title": "Three important words: yes, no, help",
+  "course": "first-words",
+  "class_n": 1,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. There are only three words, so there is time to look at each one slowly and practise choosing between them. You can stop after any part and come back."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Welcome to your first reading class. Today we learn just three words: yes, no, and help. Take your time. There is no rush and no test to fail."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Three important words: yes, no, help"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why start with whole words? Because words come to us whole in daily life. We see them on a button, on a sign, or on a screen. When you can know a word at a glance, you do not have to work it out letter by letter."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Whole words are everywhere: on buttons / on signs / on screens / on a card someone shows you"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our first word is yes. Look at it. Three letters: y, e, s. The y has a tail that goes down below the line. Say it with me: yes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "yes"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our second word is no. This is the shortest word today, only two letters: n and o. The o is a round circle. Say it with me: no."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "no"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our third word is help. It is the longest, with four letters: h, e, l, p. The h and the l stand tall. The p has a tail going down, just like the y in yes. Say it with me: help."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "help"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these words has four letters?",
+    "right": "help",
+    "wrong": [
+     "no",
+     "yes"
+    ],
+    "why": "Count the letters: h, e, l, p is four. Yes has three letters and no has two."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are all three together. Notice that they look different. No is short. Yes is a little longer. Help is the longest. Even the length of a word can be a clue."
+   },
+   "show": {
+    "kind": "list",
+    "text": "no (2 letters) / yes (3 letters) / help (4 letters)"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let us match words to meanings. Picture a thumb pointing up, a nod of the head, a smile. That means agreeing. Which word fits?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand with the thumb pointing up, and a person nodding with a smile."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word matches the thumb up and the nod?",
+    "right": "yes",
+    "wrong": [
+     "no",
+     "help"
+    ],
+    "why": "A thumb up and a nod both mean agreeing, and the word for agreeing is yes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next picture: a hand held up flat, and a person shaking their head. That means not this, or I do not want that."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand held up flat, and a person gently shaking their head."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word matches the raised hand and the head shake?",
+    "right": "no",
+    "wrong": [
+     "yes",
+     "help"
+    ],
+    "why": "A raised hand and a head shake both say not this. The word is no."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more picture: a person waving an arm to get attention, and someone coming over to them. This is the word you want when something is wrong or you need a hand."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person waving an arm to get attention, with another person walking over."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word matches the waving arm?",
+    "right": "help",
+    "wrong": [
+     "yes",
+     "no"
+    ],
+    "why": "Waving to get someone to come over is asking for help."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we listen. I will say a word, and you pick it from the choices. Listen carefully: no."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "yes | no"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You heard the word 'no'. Which one is it?",
+    "right": "no",
+    "wrong": [
+     "yes"
+    ],
+    "why": "No is the short word with the round o. It sounds like 'noh'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us try with three choices. Listen: help."
+   },
+   "show": {
+    "kind": "list",
+    "text": "yes / no / help"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You heard the word 'help'. Which one is it?",
+    "right": "help",
+    "wrong": [
+     "yes",
+     "no"
+    ],
+    "why": "Help is the longest of the three, and it starts with the tall letter h."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A real-life moment. Someone asks, 'Would you like some tea?' You see two words on a card. You want tea. Which do you point to?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "yes | no"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You want tea. Which word do you point to?",
+    "right": "yes",
+    "wrong": [
+     "no"
+    ],
+    "why": "Yes means you do want it. Pointing to the word is a good way to answer, and it is just as good as saying it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more: you hear 'yes' and have to pick it from three words."
+   },
+   "show": {
+    "kind": "list",
+    "text": "help / yes / no"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You heard the word 'yes'. Which one is it?",
+    "right": "yes",
+    "wrong": [
+     "help",
+     "no"
+    ],
+    "why": "Yes has three letters and starts with the y that has a tail going down."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. Today you met yes, no, and help. You looked at their shapes, matched them to meanings, and picked them out by ear. If you want, look for these words around you today. Next time we learn home words: water, home, and TV."
+   },
+   "show": {
+    "kind": "list",
+    "text": "yes / no / help. Next class: water, home, TV"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Whole-word recognition",
+   "links": [
+    "[[Common sight words, set one]]",
+    "[[Home words: water, home, TV]]"
+   ]
+  },
+  {
+   "topic": "Matching words to meanings",
+   "links": [
+    "[[Putting words together: short sentences]]"
+   ]
+  },
+  {
+   "topic": "Picking a word by ear",
+   "links": [
+    "[[Spelling by choosing letters: everyday words]]",
+    "[[Letter sounds and joining them]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}
