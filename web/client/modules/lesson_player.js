@@ -39,13 +39,22 @@ import { LESSON_PARTS, CLASS_MINUTES, draftLessonPrompt, lessonFromReply, madeLe
 import { createAI } from '../ai.js';
 import { readLessonFolder, isFileLessonId } from '../lessons_folder.js';
 import { afterAnswerHtml, ensureQuizStyle } from '../quiz_view.js';
+import { createSpeechWatch, createAfterWait } from '../quiz_flow.js';   // the pace (row 2.113): said to the end, then on
 
 export const LESSON_FORMS = Object.freeze(['watch', 'slides', 'read']);
-// How long a beat stays in Watch after its words, at the least (Rule 1: a setting; the words' own time is added).
-export const WATCH_HOLD_MS = 4000;
-// About how long one spoken word takes, to give the voice time to finish before Watch moves on. Measured on the
-// site's own voices, not exactly: a little slower than conversation, which is the pace these voices are set to.
-export const MS_PER_WORD = 420;
+// THE PACE (row 2.113, Mike 2026-10-21 after taking lessons: "They just rush through things ... it didn't even finish
+// reading the slide before it went to the next one. It doesn't give you time to answer questions.")
+//   WATCH_HOLD_MS 3000   the pause after a part has been SAID (the voice's own "finished", below), before the next. Was 4 s
+//                        from the START of the part plus an estimate of the words, which a long part outran. 3 s after
+//                        the last word is a real breath; "Pace" sets it from 1 to 15 s. [A guess, on Mike's list.]
+//   ASK_WAIT_MS 30000    how long a question waits for an answer in Watch, by default, once it has been asked. Watch is
+//                        the form for a screen nobody may be pressing, so it must not wait for ever unless somebody chose
+//                        that (CLAUDE.md: "a screen must never enter a state that only an input can leave, when the person
+//                        in front of it cannot give that input"); 30 s is time to think and press. "A question waits" can
+//                        make it until answered, or 15 s to 2 minutes. In Slides a question waits until it is answered,
+//                        as it always did. [A guess, on Mike's list.]
+export const WATCH_HOLD_MS = 3000;
+export const ASK_WAIT_MS = 30000;
 // How long the AI on this computer is given to write a lesson. The transcript quiz measured a 7B model on a CPU-only
 // desktop at 1-4 minutes for three questions; a whole lesson is far more, so the same 15 minutes it defaults to, with
 // Cancel on screen the whole time. [A guess, on Mike's list; a setting when anybody needs another.]
@@ -88,9 +97,18 @@ const SETTINGS = [
     appliesWhen: (v) => v?.speak !== false,
     note: 'For a lesson written for two voices: who reads the second voice’s lines.',
     options: [{ value: 'higher', label: 'Your voice, higher' }, { value: 'lower', label: 'Your voice, lower' }] },
-  { key: 'holdMs', label: 'In Watch, each part stays at least', kind: 'choice', default: WATCH_HOLD_MS, level: 'advanced',
-    options: [{ value: 2000, label: '2 seconds' }, { value: 4000, label: '4 seconds' }, { value: 8000, label: '8 seconds' }, { value: 15000, label: '15 seconds' }],
+  // THE PACE (row 2.113, 2026-10-23): the pause AFTER a part has been said, before Watch moves on. (It was "each part
+  // stays at least", counted from the start of the part, so a long part's words ran past it and on into the next.)
+  // Standard, not advanced: Mike's first word on the lessons was that they rush.
+  { key: 'holdMs', label: 'Pace: after each part is said, a pause of', kind: 'choice', default: WATCH_HOLD_MS, level: 'standard',
+    options: [{ value: 1000, label: '1 second' }, { value: 2000, label: '2 seconds' }, { value: 3000, label: '3 seconds' },
+      { value: 5000, label: '5 seconds' }, { value: 8000, label: '8 seconds' }, { value: 15000, label: '15 seconds' }],
     appliesWhen: (v) => (v?.form || 'watch') === 'watch' },
+  // A QUESTION WAITS (row 2.113): Mike, "It doesn't give you time to answer questions." Argued at ASK_WAIT_MS.
+  { key: 'askWait', label: 'A question waits', kind: 'choice', default: 'auto', level: 'standard',
+    appliesWhen: (v) => (v?.form || 'watch') !== 'read',
+    options: [{ value: 'auto', label: 'Until it is answered in Slides; 30 seconds in Watch' }, { value: 'answer', label: 'Until it is answered' },
+      { value: 15000, label: '15 seconds' }, { value: 30000, label: '30 seconds' }, { value: 60000, label: '1 minute' }, { value: 120000, label: '2 minutes' }] },
   // Carried from the old Lessons (same key, so a screen that chose already keeps its choice); "both" by default, as
   // Mike ruled for it on 2026-09-23. Quiz mix plays what Trivia gets.
   { key: 'questionsTo', label: 'The lessons\u2019 questions also play in', kind: 'choice', default: 'both', level: 'advanced',
@@ -173,6 +191,7 @@ const CSS = `
 .lp-ask button.lp-right{border-color:var(--accent,currentColor)}
 .lp-said{font-size:clamp(1rem,3cqw,1.4rem)}
 .lp-say[data-who="b"]{font-style:italic}
+.lp-paused{font-weight:700;border:1px solid currentColor;border-radius:8px;padding:0 8px}
 .lp-nav{display:flex;justify-content:center;gap:12px;padding:8px}
 .lp-nav button{font-size:1rem;min-height:48px}
 .lp-read{overflow:auto;padding:14px 20px;max-width:46rem;margin:0 auto;line-height:1.5}
@@ -316,22 +335,63 @@ function lessonsModule(ctx) {
       at = Math.max(0, Math.min(beats.length, Number(state?.get?.()?.at) || 0));
     }
 
+    // *** THE PACE (row 2.113; the numbers argued at WATCH_HOLD_MS). ***
+    //   * Watch never moves on before the voice has FINISHED a part: the speech channel's own report (quiz_flow.js
+    //     createSpeechWatch, as every quiz waits for its answer to be said), then the Pace pause. Where the end cannot be
+    //     known (captions only, a voice that never reports), the reading time, with the quizzes' backstop
+    //     (createAfterWait).
+    //   * A question waits for an answer ("A question waits"), and its answers can be pressed in Watch too.
+    //   * Back, Repeat and Next are on screen in both forms.
+    //   * PAUSE (the bar's, a switch's, the Lineup's) stops the voice and holds the part; Play says it again and carries
+    //     on from there. (Mike, 2026-10-23: "The pause button on the transport bar isn't pausing the lesson." The bar had
+    //     no pause to send - actions.js - and the voice was "cancelled" with no id, which cancels nothing.)
+    const speech = createSpeechWatch({ output: () => ctx.output || null });
+    const after = createAfterWait({ setTimer, clearTimer });
+    let paused = false;
+    let speechId = null;          // the line being said, to stop it (output.js cancels by id)
     // `who`: the line's voice (row 2.111, two voices): B's in the second voice (voiceFor), everything else in the person's own.
+    // Returns a promise for the end of saying it, or null when that cannot be known.
     function say(text, who = null) {
       lastSaid = text || '';
-      if (!text || cfg.speak === false) return;
+      if (!text || cfg.speak === false || paused) return null;
       let voice = null;
       try { voice = voiceFor(who, prefRow?.get?.()?.voice || {}, setting('secondVoice', 'higher')); } catch { voice = null; }
       try {
-        if (ctx.output?.say) ctx.output.say(text, { source: 'lesson', ...(voice ? { data: { voice } } : {}) });
-        else ctx.speak?.(text, voice || undefined);
+        if (ctx.output?.say) {
+          const r = speech.say(text, { source: 'lesson', ...(voice ? { data: { voice } } : {}) });
+          speechId = r.id;
+          // Said to the end: nothing left to stop.
+          r.done?.then?.(() => { if (speechId === r.id) speechId = null; }, () => {});
+          return r.done;
+        }
+        ctx.speak?.(text, voice || undefined);
       } catch (e) { console.error('lesson: say', e); }
+      return null;
     }
-    const stopTimer = () => { if (timer != null) { clearTimer(timer); timer = null; } };
+    const stopTimer = () => { if (timer != null) { clearTimer(timer); timer = null; } after.stop(); };
+    function hush() {
+      if (speechId == null) return;
+      try { ctx.output?.cancel?.(speechId); } catch { /* already said */ }
+      speechId = null;
+    }
     function keepAt() { try { state?.set?.({ at }); } catch { /* memory only */ } }
+    const paceMs = () => Math.max(500, Number(setting('holdMs', WATCH_HOLD_MS)) || WATCH_HOLD_MS);
+    /** How long a question waits for its answer, or null: until it is answered. */
+    function askWaitMs() {
+      const v = setting('askWait', 'auto');
+      if (v === 'answer') return null;
+      if (v === 'auto') return form() === 'watch' ? ASK_WAIT_MS : null;
+      return Number(v) > 0 ? Number(v) : null;
+    }
+    // In Watch: on to the next part once `text` has been said (or read) and the Pace pause has passed.
+    function thenNext(text, done) {
+      if (form() !== 'watch' || paused || dead) return;
+      after.start({ cfg: { afterBeatMs: paceMs() }, text, spoken: done, onDone: () => { if (!dead && !paused) go(at + 1); } });
+    }
 
     function go(n) {
       stopTimer();
+      hush();
       at = Math.max(0, Math.min(beats.length, n));
       picked = null; lit = -1;
       if (at === 0) finished = false;
@@ -371,27 +431,43 @@ function lessonsModule(ctx) {
         });
       }
     }
-    // A beat arrives: said, and in Watch the clock to the next one (a question is asked, then answered, then on).
+    // A beat arrives (or is repeated, or played again after a pause): said; in Watch, on once it has been said; a question
+    // asked, then it waits for its answer ("A question waits"), then the answer is said, then on.
     function enter() {
-      if (dead || maker || form() === 'read' || !lesson) return;
+      if (dead || maker || form() === 'read' || !lesson || paused) return;
+      stopTimer();
       const b = beats[at]?.beat;
       if (!b) { if (at >= beats.length) say(`That is the end of ${lesson?.about.title || 'the lesson'}.`); return; }
+      if (b.ask && picked != null) { sayResult(b); return; }
       const words = [b.say?.text, b.ask ? b.ask.question : ''].filter(Boolean).join(' ');
-      say(words, b.say?.who || null);
-      if (form() !== 'watch') return;
-      const hold = Math.max(1000, Number(setting('holdMs', WATCH_HOLD_MS)) || WATCH_HOLD_MS);
-      const wait = hold + words.split(/\s+/).filter(Boolean).length * MS_PER_WORD;
-      timer = setTimer(() => {
-        timer = null;
-        if (dead) return;
-        if (b.ask && picked == null) {
-          // Watch never waits on an answer: it shows and says it, then moves on.
-          picked = 'shown'; render(); say(`It is ${ended(b.ask.answer)}${b.ask.why ? ` ${b.ask.why}` : ''}`);
-          timer = setTimer(() => { timer = null; if (!dead) go(at + 1); }, hold);
-          return;
-        }
-        go(at + 1);
-      }, wait);
+      const done = say(words, b.say?.who || null);
+      if (!b.ask) { thenNext(words, done); return; }
+      // The clock for an answer starts once the question has been said. Nobody answering in time: it is shown and said.
+      const ms = askWaitMs();
+      if (ms == null) return;
+      after.start({ cfg: { afterBeatMs: ms }, text: words, spoken: done, onDone: () => {
+        if (dead || paused || beats[at]?.beat !== b || picked != null) return;
+        picked = 'shown'; render(); sayResult(b);
+      } });
+    }
+    /** The answer to the question showing, said (with why), then in Watch on to the next. */
+    function sayResult(b) {
+      const right = picked === b.ask.answer;
+      const verdict = picked === 'shown' ? `It is ${ended(b.ask.answer)}` : right ? `Yes, ${ended(b.ask.answer)}` : `Not quite. It is ${ended(b.ask.answer)}`;
+      const words = `${verdict}${b.ask.why ? ` ${b.ask.why}` : ''}`;
+      thenNext(words, say(words));
+    }
+    function pauseLesson() {
+      paused = true;
+      stopTimer();
+      hush();
+      render();
+    }
+    function playLesson() {
+      if (!paused) { if (timer == null && !after.pending()) enter(); return; }
+      paused = false;
+      render();
+      enter();
     }
 
     function stageHTML() {
@@ -414,9 +490,9 @@ function lessonsModule(ctx) {
       if (b.ask) {
         const answers = answersOf(b.ask);
         if (picked == null) {
-          const live = form() === 'slides';
+          // Pressable in both forms (row 2.113: a question waits for its answer in Watch too, "A question waits").
           ask = `<p class="lp-say"><b>${esc(b.ask.question)}</b></p><div class="lp-ask wg-btns" role="group" aria-label="${esc(b.ask.question)}">${answers.map((a, i) =>
-            `<button type="button" class="wg-btn"${live ? ` data-lp-answer="${esc(a)}"${i === lit ? ' data-lit' : ''}` : ' disabled'}>${esc(a)}</button>`).join('')}</div>`;
+            `<button type="button" class="wg-btn" data-lp-answer="${esc(a)}"${i === lit ? ' data-lit' : ''}>${esc(a)}</button>`).join('')}</div>`;
         } else {
           const right = picked === b.ask.answer;
           const result = picked === 'shown' ? 'shown' : right ? 'right' : 'wrong';
@@ -453,25 +529,29 @@ function lessonsModule(ctx) {
       const cur = beats[Math.min(at, beats.length - 1)];
       const top = at >= beats.length ? lesson.about.title : `${cur.klass.title}`;
       const count = at >= beats.length ? '' : `${at + 1} of ${beats.length}`;
-      const nav = form() === 'slides'
-        ? `<div class="lp-nav"><button type="button" data-lp-act="back"${at === 0 ? ' disabled' : ''}>Back</button>`
-          + `<button type="button" data-lp-act="${at >= beats.length ? 'again' : 'next'}">${at >= beats.length ? 'Start again' : 'Next'}</button></div>`
-        : (at >= beats.length ? '<div class="lp-nav"><button type="button" data-lp-act="again">Start again</button></div>' : '');
-      rootEl.innerHTML = `<div class="lp" data-lp-form="${form()}"><div class="lp-top"><span>${esc(top)}</span><span>${esc(count)}</span></div>${stageHTML()}${nav}</div>`;
+      // Back, Repeat and Next in both forms, always (row 2.113). Watch moves on by itself; these are there as well.
+      const end = at >= beats.length;
+      const nav = `<div class="lp-nav"><button type="button" data-lp-act="back"${at === 0 ? ' disabled' : ''}>Back</button>`
+        + `<button type="button" data-lp-act="repeat"${end ? ' disabled' : ''}>Repeat</button>`
+        + `<button type="button" data-lp-act="${end ? 'again' : 'next'}">${end ? 'Start again' : 'Next'}</button></div>`;
+      rootEl.innerHTML = `<div class="lp" data-lp-form="${form()}"${paused ? ' data-lp-paused' : ''}><div class="lp-top"><span>${esc(top)}</span>`
+        + `${paused ? '<span class="lp-paused">Paused</span>' : ''}<span>${esc(count)}</span></div>${stageHTML()}${nav}</div>`;
     }
 
     function answer(a) {
       const b = beats[at]?.beat;
       if (!b?.ask || picked != null) return;
+      stopTimer();
+      hush();
       picked = a;
       render();
-      const right = a === b.ask.answer;
-      say(right ? `Yes, ${ended(b.ask.answer)}` : `Not quite. It is ${ended(b.ask.answer)}`);
+      sayResult(b);
     }
     function act(name) {
       if (name === 'next') go(at + 1);
       else if (name === 'back') go(at - 1);
       else if (name === 'again') go(0);
+      else if (name === 'repeat') { hush(); enter(); }
     }
     function onClick(e) {
       const m = e.target instanceof Element ? e.target.closest('[data-lm-act]') : null;
@@ -490,7 +570,7 @@ function lessonsModule(ctx) {
         else delete b.dataset.lit;
       });
     }
-    function selectLit() { const b = walk()[lit]; if (b) b.click(); else if (form() === 'slides') act(at >= beats.length ? 'again' : 'next'); }
+    function selectLit() { const b = walk()[lit]; if (b) b.click(); else act(at >= beats.length ? 'again' : 'next'); }
 
     // =================================================================================================================
     // *** MAKE A NEW LESSON (2026-10-17, row 2.92; lesson_prompt.js). *** Opened from the settings menu ("Make a new
@@ -673,7 +753,7 @@ function lessonsModule(ctx) {
     }
 
     return {
-      __probe: () => ({ at, total: beats.length, form: form(), look: look(), picked, said: lastSaid, problems: problems.slice(), title: lesson?.about.title || '',
+      __probe: () => ({ at, total: beats.length, form: form(), look: look(), picked, said: lastSaid, paused, waiting: after.pending(), problems: problems.slice(), title: lesson?.about.title || '',
         unchecked, made: made.map((x) => x.id), files: fileLessons.map((x) => x.id), maker: maker ? (maker.kept ? 'kept' : maker.mode) : null }),
       init() {
         ensureCss(mount.ownerDocument || document);
@@ -706,14 +786,16 @@ function lessonsModule(ctx) {
         state?.subscribe?.((s) => { if (!dead) apply(s); });
         // The bar's and a switch's verbs (actions.js MODULE_VERBS lesson_player). In Watch nothing waits to be pressed,
         // so next / prev move a part on or back; in Slides they walk the buttons, and select presses the lit one.
-        bus?.subscribe?.('lesson/next', () => { if (form() === 'watch') go(at + 1); else moveLit(1); });
-        bus?.subscribe?.('lesson/prev', () => { if (form() === 'watch') go(at - 1); else moveLit(-1); });
+        // (row 2.113: Watch has buttons now too - answers, Back, Repeat, Next - so next / prev walk them in both forms.)
+        bus?.subscribe?.('lesson/next', () => moveLit(1));
+        bus?.subscribe?.('lesson/prev', () => moveLit(-1));
         bus?.subscribe?.('lesson/select', () => selectLit());
         bus?.subscribe?.('lesson/back', () => go(at - 1));
         // A Lineup's turn (modules/director.js makeTurnAdapter, row 2.108): paused while it is not this module's turn,
         // played when it is. Where it got to is kept, so the next turn carries on.
-        bus?.subscribe?.('lessons/pause', () => { stopTimer(); try { ctx.output?.cancel?.(); } catch { /* nothing said */ } });
-        bus?.subscribe?.('lessons/play', () => { if (!timer) enter(); });
+        // And the transport bar's Pause / Play (actions.js MODULE_VERBS lessons pause / play, row 2.113).
+        bus?.subscribe?.('lessons/pause', () => pauseLesson());
+        bus?.subscribe?.('lessons/play', () => playLesson());
         render();
         enter();
         if (at >= beats.length) finished = true;   // it opened at the end: told already, when it got there
@@ -727,7 +809,7 @@ function lessonsModule(ctx) {
           } catch { tlog = null; routeQuestions(); }
         } else routeQuestions();
       },
-      onShow() { if (!timer) enter(); },
+      onShow() { if (!paused && timer == null && !after.pending()) enter(); },
       // "Which lesson" offers the account's own lessons too (board.js's pattern: what only the mounted panel knows).
       settingsChoices: () => ({ lessonId: allLessons().map((l) => ({ value: l.id,
         label: l.made ? `${l.label} (made)` : l.file ? `${l.label} (your Lessons folder)` : l.label })),
@@ -749,6 +831,7 @@ function lessonsModule(ctx) {
       destroy() {
         dead = true;
         stopTimer();
+        try { speech.destroy(); } catch { /* gone */ }
         mount.removeEventListener('click', onClick);
         mount.removeEventListener('input', onMakerInput);
         mount.removeEventListener('change', onMakerInput);
