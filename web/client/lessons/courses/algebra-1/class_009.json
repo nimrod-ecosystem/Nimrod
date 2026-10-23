@@ -1,0 +1,587 @@
+{
+ "about": {
+  "title": "Compound Inequalities and Absolute Value",
+  "course": "algebra-1",
+  "class_n": 9,
+  "audience": [
+   "age 14 to 16",
+   "Jamie and teenagers like him",
+   "learners of any ability, including adults relearning math"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. This class has two linked ideas: 'and'/'or' inequalities, then absolute value. Absolute value inequalities turn into 'and'/'or' inequalities, so they fit in one class. There are short pauses with questions throughout. You can stop after the 'or' beats and come back for the absolute value half if you need to."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.7 Solve Absolute Value Inequalities (Intermediate Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "2020-05-06",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/2-7-solve-absolute-value-inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "2.6 Solve Compound Inequalities (Intermediate Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "2020-05-06",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/2-6-solve-compound-inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "Compound Inequalities (Developmental Math, Unit 10)",
+   "publisher": "NROC Project",
+   "date": "n.d.",
+   "link": "http://content.nroc.org/DevelopmentalMath/U10L3T1_RESOURCE/text.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Section 3.3: Absolute Value Inequalities (MTH65: Algebra 2)",
+   "publisher": "LibreTexts / Clackamas Community College",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Courses/Clackamas_Community_College/MTH65:_Algebra_2/03:_Measuring_Magnitude/3.03:_Absolute_Value_Inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "0-03 Solve Absolute Value Equations and Inequalities",
+   "publisher": "Andrews University (R. Wright, Algebra 2 text)",
+   "date": "n.d.",
+   "link": "https://www.andrews.edu/~rwright/a2_book/text/a2_00-03.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "2.7 Linear Inequalities and Absolute Value Inequalities (Algebra and Trigonometry)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-and-trigonometry/pages/2-7-linear-inequalities-and-absolute-value-inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "High School: Algebra (Common Core State Standards for Mathematics)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "2.8: Solve Absolute Value Inequalities (Intermediate Algebra 1e, OpenStax)",
+   "publisher": "LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Intermediate_Algebra_1e_(OpenStax)/02:_Solving_Linear_Equations/2.08:_Solve_Absolute_Value_Inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "2.7: Solve Compound Inequalities (Intermediate Algebra 1e, OpenStax)",
+   "publisher": "LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Intermediate_Algebra_1e_(OpenStax)/02:_Solving_Linear_Equations/2.07:_Solve_Compound_Inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Compound Inequalities (Algebra 1)",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Algebra1/Inequalities/IQcompound.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Absolute Value Inequality: Definition, Rules & Examples",
+   "publisher": "Mathwords",
+   "date": "n.d.",
+   "link": "https://www.mathwords.com/a/absolute_value_inequality.htm",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 9. Today we learn to handle two conditions at once, like 'you must be at least 13 AND no older than 19'. Then we meet absolute value, which is just a fancy name for distance. Go at your own pace. You can pause anywhere, and wrong answers are how we learn."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Compound Inequalities and Absolute Value"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our plan. First, 'and' versus 'or'. Next, absolute value as distance. Then equations, then inequalities. We finish with tolerance problems, which is how factories decide whether a part is good enough. By the end you can solve and graph all of these."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. 'And' vs 'or'\n2. Absolute value = distance\n3. Absolute value equations\n4. Absolute value inequalities\n5. Tolerance problems"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A compound inequality is two inequalities joined by the word 'and' or the word 'or'. For example, x is greater than 1 AND x is less than 4. We solve each piece, then decide how the pieces combine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Compound inequality = two inequalities joined by 'and' or 'or'"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What makes an inequality 'compound'?",
+    "right": "It is two inequalities joined by 'and' or 'or'.",
+    "wrong": [
+     "It has a variable on both sides.",
+     "It has an absolute value in it.",
+     "It has three or more numbers in it."
+    ],
+    "why": "Compound means two inequalities connected by the word 'and' or the word 'or'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "'And' means both must be true at the same time. So we keep only the overlap. 'Or' means at least one must be true. So we combine everything from both graphs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "AND: both true at once. Keep the overlap (intersection).\nOR: either one is true. Combine both pieces (union)."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture a number line. For x greater than negative 3 AND x less than or equal to 2, we shade each inequality separately. Then we keep only the stretch where the shading overlaps. That is the part between negative 3 and 2."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from -5 to 5. An open circle at -3 with shading to the right. A closed circle at 2 with shading to the left. The overlap, the stretch between -3 and 2, is highlighted. The open circle at -3 means -3 is not included. The closed circle at 2 means 2 is included."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's solve one. 2x + 1 < 9 AND x − 3 ≥ −2. First piece: subtract 1, then divide by 2, so x < 4. Second piece: add 3, so x ≥ 1. Both must be true, so we keep the overlap: 1 ≤ x < 4. The method is to solve each inequality, graph each, then keep what both share."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 1 < 9  →  x < 4\nx − 3 ≥ −2  →  x ≥ 1\nAND  →  1 ≤ x < 4"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For '1 ≤ x < 4', which number is a solution?",
+    "right": "1",
+    "wrong": [
+     "0",
+     "4",
+     "5"
+    ],
+    "why": "1 is allowed because of the 'or equal to'. 0 is too small. 4 is not allowed because the inequality is strict. 5 is too big."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now 'or'. Take x + 2 < 0 OR 3x > 12. The first gives x < −2. The second gives x > 4. Either one is enough. On the number line you get two separate rays pointing away from each other, with a gap in the middle."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from -6 to 8. An open circle at -2 with shading going left forever. An open circle at 4 with shading going right forever. The middle stretch from -2 to 4 is not shaded."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "For 'x < −2 or x > 4', is 0 a solution?",
+    "right": "No. 0 is not less than −2 and not greater than 4, so it fails both parts.",
+    "wrong": [
+     "Yes, because 0 is between the two numbers.",
+     "Yes, because 0 is less than 4.",
+     "We can't tell without more information."
+    ],
+    "why": "With 'or', a number only needs to pass one part. 0 does pass 'less than 4' only if that were the rule, but the rule is 'greater than 4'. 0 fails both parts, so it is not a solution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes an 'and' has no overlap. x < 1 AND x > 5 asks for a number below 1 and above 5 at once. No number can do that. That answer is called 'no solution'. It is a real answer, not a mistake."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x < 1 AND x > 5  →  no solution"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the solution of 'x < 1 and x > 5'?",
+    "right": "No solution, because the two shaded regions never overlap.",
+    "wrong": [
+     "1 < x < 5",
+     "x < 1 or x > 5",
+     "x = 3"
+    ],
+    "why": "'And' keeps only the overlap. The part below 1 and the part above 5 share no numbers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A handy shortcut: when x sits between two numbers, we can write it as one chain, like −3 < 3x − 9 < 12. Whatever you do to the middle, do to all three parts. Add 9 to each part: 6 < 3x < 21. Divide each part by 3: 2 < x < 7. Remember, if you divide by a negative, flip the inequality signs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−3 < 3x − 9 < 12\n6 < 3x < 21\n2 < x < 7"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve: −4 ≤ 2x − 2 ≤ 6",
+    "right": "−1 ≤ x ≤ 4",
+    "wrong": [
+     "−3 ≤ x ≤ 2",
+     "−2 ≤ x ≤ 8",
+     "0 ≤ x ≤ 4"
+    ],
+    "why": "Add 2 to all three parts to get −2 ≤ 2x ≤ 8. Then divide all three by 2 to get −1 ≤ x ≤ 4. Forgetting the add step gives −3 ≤ x ≤ 2. Forgetting the divide step gives −2 ≤ x ≤ 8."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time for a stretch. You've done the 'and'/'or' half. The second half uses these same ideas, so it is worth being comfortable with them. Take a breath and come back when you're ready."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Halfway: take a breath"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Absolute value is a number's distance from zero on the number line. Distance is never negative. Both negative 5 and 5 are five steps from zero."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "|x| = distance from 0"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of a video game with a character standing at zero on a long hallway. A door is 5 steps to the right and another is 5 steps to the left. Both doors are 5 steps away. So |x| = 5 has two answers: x = 5 and x = −5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from -6 to 6 with a game character at 0. Arrows of length 5 point left to a door at -5 and right to a door at 5."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The rule for absolute value equations: if |u| = a, and a is positive, then u = a or u = −a. Now move the center. |x − 3| = 5 means 'x is 5 steps from 3'. Count 5 right to get 8. Count 5 left to get −2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "|u| = a  →  u = a  or  u = −a\n|x − 3| = 5  →  x = 8  or  x = −2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve: |x + 2| = 7",
+    "right": "x = 5 or x = −9",
+    "wrong": [
+     "x = 5 only",
+     "x = 9 or x = −5",
+     "x = 7 or x = −7"
+    ],
+    "why": "Split into x + 2 = 7 and x + 2 = −7. Subtract 2 from each to get x = 5 and x = −9."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two cautions. First, get the absolute value alone before you split it. For 2|x − 7| + 5 = 9, subtract 5, then divide by 2, to get |x − 7| = 2. Then x − 7 = 2 or x − 7 = −2, so x = 9 or x = 5. Second, an absolute value can't be negative, so |x| = −5 has no solution."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Isolate first: 2|x − 7| + 5 = 9 → |x − 7| = 2 → x = 9 or x = 5\nNever negative: |x| = −5 → no solution"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the solution of |x| = −5?",
+    "right": "No solution, because a distance can't be negative.",
+    "wrong": [
+     "x = 5",
+     "x = −5",
+     "x = 5 or x = −5"
+    ],
+    "why": "Absolute value is a distance, and a distance is never negative. So nothing can equal −5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now inequalities. |x| < 4 asks for numbers closer than 4 steps to zero. That is everything between −4 and 4. This is an 'and': x > −4 AND x < 4, which we write as −4 < x < 4. For an example with a shifted center: |x − 1| ≤ 3 means within 3 of the number 1. So −3 ≤ x − 1 ≤ 3, and adding 1 gives −2 ≤ x ≤ 4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "|u| < a  →  −a < u < a   ('and', stay close)\n|x − 1| ≤ 3  →  −3 ≤ x − 1 ≤ 3  →  −2 ≤ x ≤ 4"
+   },
+   "cite": [
+    "s8",
+    "s6",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which pair of numbers are BOTH solutions of |x| < 4?",
+    "right": "−3 and 3",
+    "wrong": [
+     "−4 and 4",
+     "−5 and 5",
+     "Only 0"
+    ],
+    "why": "−3 and 3 are each 3 steps from zero, which is less than 4. −4 and 4 are exactly 4 away, and the inequality is strict. −5 and 5 are too far. 0 works, but it isn't the only solution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "'Greater than' means far away from the center. |x| > 4 means more than 4 steps from zero. That is x < −4 OR x > 4. Two pieces, pointing outward. The memory trick: less-than gives 'and', greater-than gives 'or'. For a shifted example, |x − 1| ≥ 3 gives x − 1 ≤ −3 or x − 1 ≥ 3, so x ≤ −2 or x ≥ 4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "|u| > a  →  u < −a  or  u > a   ('or', far away)\n|x − 1| ≥ 3  →  x ≤ −2  or  x ≥ 4"
+   },
+   "cite": [
+    "s6",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve: |x − 2| > 3",
+    "right": "x < −1 or x > 5",
+    "wrong": [
+     "−1 < x < 5",
+     "x < −1 and x > 5",
+     "x < 1 or x > 5"
+    ],
+    "why": "Split into x − 2 < −3 and x − 2 > 3. Add 2 to each: x < −1 or x > 5. It's 'or' because 'greater than' means far away on either side."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A bigger one: |2x − 4| ≤ 10. Rewrite it as −10 ≤ 2x − 4 ≤ 10. Add 4 to every part: −6 ≤ 2x ≤ 14. Divide every part by 2: −3 ≤ x ≤ 7. Check a number from inside, like 0. |2(0) − 4| = 4, and 4 ≤ 10, so it works."
+   },
+   "show": {
+    "kind": "list",
+    "text": "|2x − 4| ≤ 10\n−10 ≤ 2x − 4 ≤ 10\n−6 ≤ 2x ≤ 14\n−3 ≤ x ≤ 7"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Solve: |x + 1| < 6",
+    "right": "−7 < x < 5",
+    "wrong": [
+     "−5 < x < 7",
+     "x < −7 or x > 5",
+     "−6 < x < 6"
+    ],
+    "why": "'Less than' gives an 'and': −6 < x + 1 < 6. Subtract 1 from every part to get −7 < x < 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the real-world payoff: tolerance. A factory can't make every part exactly right. So there is an ideal size and a tolerance, which is how far off a part may be. If a part is off by more than the tolerance, it is rejected. The math is one sentence: |actual − ideal| ≤ tolerance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "|actual − ideal| ≤ tolerance"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. A machine rod should be 60 mm wide, and its width may be off by 0.075 mm. Let x be the actual width. Then |x − 60| ≤ 0.075, so −0.075 ≤ x − 60 ≤ 0.075, which gives 59.925 ≤ x ≤ 60.075. Any rod from 59.925 mm to 60.075 mm is acceptable."
+   },
+   "show": {
+    "kind": "list",
+    "text": "|x − 60| ≤ 0.075\n59.925 ≤ x ≤ 60.075"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A rod's ideal diameter is 75 mm and its tolerance is 0.05 mm. What range of diameters is acceptable?",
+    "right": "74.95 mm to 75.05 mm",
+    "wrong": [
+     "74.5 mm to 75.5 mm",
+     "70 mm to 80 mm",
+     "75 mm to 75.05 mm"
+    ],
+    "why": "|x − 75| ≤ 0.05 means −0.05 ≤ x − 75 ≤ 0.05. Adding 75 gives 74.95 ≤ x ≤ 75.05. The tolerance goes both above and below the ideal size."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a famous one. A standard 2×2 LEGO brick is 15.8 mm wide, and the allowed error is only 0.002 mm. That's tiny, and it's why bricks from different years still click together. The inequality is |w − 15.8| ≤ 0.002, so the width must be between 15.798 mm and 15.802 mm."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15.8 mm ± 0.002 mm"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn with made-up numbers. A game store sells a game for about $40, and the price may differ from that by at most $5. That is |p − 40| ≤ 5. Solve it, then try the sports version. A sprinter's target time is 60 seconds, give or take 2 seconds."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Money: |p − 40| ≤ 5\nSports: |t − 60| ≤ 2"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What prices p satisfy |p − 40| ≤ 5?",
+    "right": "$35 to $45, so 35 ≤ p ≤ 45",
+    "wrong": [
+     "$40 to $45",
+     "p ≤ 35 or p ≥ 45",
+     "$5 to $40"
+    ],
+    "why": "'Less than or equal to' gives an 'and': −5 ≤ p − 40 ≤ 5. Add 40 to every part to get 35 ≤ p ≤ 45. The sprinter's version works the same way and gives 58 ≤ t ≤ 62 seconds."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does this matter? The Common Core standards say inequalities can be solved by reasoning about the properties of inequality. That is what we did today: the same steps as before, just applied to two pieces at once. Nice work."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Inequalities can be solved by reasoning about the properties of inequality.\" (Common Core, High School Algebra)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Recap. 'And' keeps the overlap. 'Or' combines both pieces. Absolute value is distance from zero. |u| = a splits into two answers. |u| < a means 'and', so stay close. |u| > a means 'or', so go far. Tolerance is |actual − ideal| ≤ tolerance. Next class we look at relations and functions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "AND = overlap; OR = combine\n|u| = a → u = a or u = −a\n|u| < a → −a < u < a\n|u| > a → u < −a or u > a\nTolerance: |actual − ideal| ≤ tolerance"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s6",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Compound inequalities (and / or)",
+   "links": [
+    "[[Solving and Graphing Inequalities]]",
+    "[[Systems of Linear Inequalities]]"
+   ]
+  },
+  {
+   "topic": "Absolute value as distance",
+   "links": [
+    "[[Piecewise and Absolute Value Functions, and Transformations]]",
+    "[[Slope and Rate of Change]]"
+   ]
+  },
+  {
+   "topic": "Tolerance and margin of error",
+   "links": [
+    "[[Describing Data: Displays, Center and Spread]]",
+    "[[Building Linear Models from Data]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "In math, 'or' includes the case where both parts are true.",
+   "other_view": "In everyday speech, 'or' often means one or the other but not both ('soup or salad'). In math, a number is a solution to an 'or' inequality if it satisfies at least one part, including when it satisfies both. Watch for this difference when you read word problems.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "claim": "Absolute value inequalities are best solved by rewriting them as compound inequalities.",
+   "other_view": "Rewriting as 'and'/'or' is the standard algebra method. Some courses instead teach the idea of distance first, then graph the solution set with a tool like Desmos to check it. Both reach the same answers, so use whichever makes sense to you.",
+   "cite": [
+    "s6",
+    "s4"
+   ]
+  }
+ ]
+}

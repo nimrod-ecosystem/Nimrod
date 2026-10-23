@@ -1,0 +1,432 @@
+{
+ "about": {
+  "title": "Rational Numbers and Their Decimals",
+  "course": "math-grade-8",
+  "class_n": 1,
+  "audience": [
+   "age 13 to 15",
+   "Jamie and teenagers like him"
+  ],
+  "minutes": 32,
+  "length_note": "This class teaches two skills (fraction to decimal, and repeating decimal back to fraction) and also explains why a decimal stops or repeats. That takes about 32 minutes, a little over half an hour. There is an easy place to pause after the 'why' section, before the beat called 'Going backwards'."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » The Number System (standard 8.NS.A.1)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/NS/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "Common Core Videos for Grade 8, Mathematics 8.NS.1 (transcript)",
+   "publisher": "SEDL (Southeast Comprehensive Center)",
+   "date": "n.d.",
+   "link": "https://sedl.org/secc/common_core_videos/grade.php?action=view&id=760",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "1.1 Real Numbers: Algebra Essentials, College Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/1-1-real-numbers-algebra-essentials",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "3.4 Rational Numbers, Contemporary Mathematics",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/3-4-rational-numbers",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Converting Repeating Decimals into Fractions, CK-12 Interactive Middle School Math 8 for CCSS",
+   "publisher": "CK-12 Foundation",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-interactive-middle-school-math-8-for-ccss/section/10.12/primary/lesson/converting-repeating-decimals-into-fractions-msm8-ccss/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Representing Rational Numbers with Decimals, CK-12 Interactive Middle School Math 8 for CCSS",
+   "publisher": "CK-12 Foundation",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-interactive-middle-school-math-8-for-ccss/section/10.11/primary/lesson/representing-rational-numbers-with-decimals-msm8-ccss/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Decimal Expansions of Fractions (Illustrative Math task)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/tasks/1542",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Repeating decimal",
+   "publisher": "Wikipedia",
+   "date": "n.d. (live page)",
+   "link": "https://en.wikipedia.org/wiki/Repeating_decimal",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Fractions and Decimals",
+   "publisher": "University of Surrey (Dr Ron Knott)",
+   "date": "n.d.",
+   "link": "https://r-knott.surrey.ac.uk/Fractions/fractions.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Recurring Decimals to Fractions - Steps and Examples",
+   "publisher": "Maths Angel",
+   "date": "n.d.",
+   "link": "https://maths-angel.com/lessons/recurring-decimals-to-fractions",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class one. Today is about numbers that can be written as fractions, and what their decimals look like. By the end you will be able to turn a fraction into a decimal, turn a repeating decimal back into a fraction, and explain why a decimal either stops or repeats."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Rational Numbers and Their Decimals"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A rational number is a number you can write as one whole number over another whole number, as long as the bottom is not zero. Negatives are allowed. So 3 over 4 is rational, and so is negative 5 over 2. Whole numbers count too: 6 is 6 over 1, and negative 4 is negative 4 over 1."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rational number: a whole number over a whole number (the bottom is never 0)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is a rational number?",
+    "right": "negative 4",
+    "wrong": [
+     "5 over 0",
+     "pi",
+     "the square root of 2"
+    ],
+    "why": "Negative 4 can be written as negative 4 over 1, a whole number over a whole number with a bottom that is not zero. 5 over 0 is not allowed because the bottom is zero. Pi and the square root of 2 are not rational. Their decimals never stop and never repeat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the big idea. Every rational number can be written as a decimal, and that decimal does one of two things. It stops, like 1 over 4, which is 0.25. Or it repeats in a pattern forever, like 1 over 11, which is 0.0909 and so on, with 09 repeating."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stops (terminating): 1/4 = 0.25 and 15/8 = 1.875. Repeats forever: 1/11 = 0.090909… and 4/11 = 0.363636…"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To find the decimal, divide the top by the bottom. Take 3 over 8, which means 3 divided by 8. 8 doesn't go into 3, so write 3.000 and put 0 point in the answer. 30 divided by 8 is 3, remainder 6. Bring down a zero: 60 divided by 8 is 7, remainder 4. Bring down a zero: 40 divided by 8 is 5, remainder 0. A remainder of zero means we are done. 3 over 8 is 0.375."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: the step. Right: the result. 30 ÷ 8 → digit 3, remainder 6. 60 ÷ 8 → digit 7, remainder 4. 40 ÷ 8 → digit 5, remainder 0, so stop. Answer: 0.375"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Use long division to write 1/8 as a decimal.",
+    "right": "0.125",
+    "wrong": [
+     "0.8",
+     "0.18",
+     "0.0125"
+    ],
+    "why": "1 divided by 8: 10 ÷ 8 = 1 remainder 2, so the first digit is 1. 20 ÷ 8 = 2 remainder 4, so the next digit is 2. 40 ÷ 8 = 5 remainder 0, so the next digit is 5 and we stop. That gives 0.125. The answer 0.8 comes from dividing 8 by 1 the wrong way round, and 0.0125 adds a zero that isn't there."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now 4 over 11. 40 divided by 11 is 3, remainder 7. Bring down a zero: 70 divided by 11 is 6, remainder 4. A remainder of 4 is exactly where we started, so the same steps will happen again, forever. The digits 3 and 6 repeat. We write 0.36 with a bar over the 36. That bar is called a vinculum, and it goes only over the digits that repeat."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: the step. Right: the result. 40 ÷ 11 → digit 3, remainder 7. 70 ÷ 11 → digit 6, remainder 4 (we have seen 4 before, so it loops). Answer: 4/11 = 0.363636… = 0.36 with a bar over 36"
+   },
+   "cite": [
+    "s3",
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is 2/3 as a decimal?",
+    "right": "0.666… with the 6 repeating forever, written 0.6 with a bar over the 6",
+    "wrong": [
+     "0.6, and it stops there",
+     "0.67, exactly",
+     "0.3 with a bar over the 3"
+    ],
+    "why": "20 ÷ 3 = 6 remainder 2. The remainder is 2 again, so the 6 repeats forever. 0.6 and 0.67 are only rounded copies, not the exact value. 0.3 repeating is 1/3, which is half the size."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some repeating blocks are short and some are longer. 4 over 9 repeats one digit, the 4. 4 over 11 repeats two digits. 1 over 7 repeats six digits: 142857. Notice the block is always shorter than the bottom number. Why is that? The next beat explains."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Digits in the repeating block",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6",
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is why a decimal must stop or repeat. In long division, every remainder is smaller than the number you divide by. Divide by 11 and the only possible remainders are 0 to 10. Eleven choices, and that's all. If you get 0, the decimal stops. If you never get 0, then after at most 10 steps some remainder must show up a second time. And once a remainder repeats, the steps repeat, so the digits repeat. It can't do anything else."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Remainders are always smaller than the divisor. 2. Remainder 0 means the decimal stops. 3. The same remainder twice means the digits loop."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is a shortcut for knowing which will happen, and it comes from the same idea. Put the fraction in lowest terms first. If the bottom number has only 2s and 5s as prime factors, the decimal stops. If any other prime shows up, like 3 or 7 or 11, it repeats. The reason is that our decimal system is built on 10, which is 2 times 5. A bottom made of 2s and 5s can be scaled up to a power of 10, and then the division ends with nothing left over. Simplify first: 6 over 15 looks like it has a 3, but it is 2 over 5, so it stops at 0.4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lowest terms first. Bottom has only 2s and 5s: stops. Any other prime: repeats."
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which fraction has a decimal that stops?",
+    "right": "7/20",
+    "wrong": [
+     "5/12",
+     "4/7",
+     "2/9"
+    ],
+    "why": "20 = 2 × 2 × 5, so only 2s and 5s, and 7/20 = 0.35. 12 has a factor of 3, 7 is a prime other than 2 or 5, and 9 = 3 × 3. So those three repeat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is a good place to pause if you need a break. Next we go backwards: from a decimal to a fraction. Terminating decimals are the easy case. Read the digits over a power of 10 with as many zeros as there are decimal places. 0.375 has three places, so it is 375 over 1000. Divide top and bottom by 125 and you get 3 over 8, the fraction we started with."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Going backwards: decimal to fraction"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Repeating decimals need an equation. Here is the method. Step one: let x equal the decimal. Step two: multiply both sides by a power of 10 that moves the decimal point just past one full repeat. Step three: subtract the first equation from the second. Step four: solve. Try x equals 0.777 repeating. Multiply by 10: 10x is 7.777 repeating. Subtract x: the endless 7s cancel and you get 9x equals 7. So x is 7 over 9."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: the step. Right: the equation. x = 0.777… | 10x = 7.777… | 10x − x: 9x = 7 | x = 7/9"
+   },
+   "cite": [
+    "s5",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When two digits repeat, multiply by 100 instead of 10, so the repeating digits line up. Let's close the loop on 4 over 11. Let x be 0.3636 repeating. Then 100x is 36.3636 repeating. Subtract: 99x equals 36. So x is 36 over 99. Divide top and bottom by 9 and you get 4 over 11. That is where we began, so the method and the long division agree."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: the step. Right: the equation. x = 0.3636… | 100x = 36.3636… | 99x = 36 | x = 36/99 = 4/11"
+   },
+   "cite": [
+    "s10",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You want to write x = 0.4545… (45 repeating) as a fraction. What do you multiply both sides by?",
+    "right": "100",
+    "wrong": [
+     "10",
+     "45",
+     "1000"
+    ],
+    "why": "Two digits repeat, so move the point two places: 100x = 45.4545… Subtracting x leaves 99x = 45, so x = 45/99 = 5/11. Multiplying by 10 would not line the repeating digits up, so they would not cancel."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch out for two traps. First, 0.333 that stops is not the same as 0.333 repeating. The stopping one is 333 over 1000. Only the repeating one is 1 over 3. Always check whether the decimal really goes on forever. Second, a fun result: let x be 0.999 repeating. Then 10x is 9.999 repeating, and 9x equals 9, so x equals 1. The method says 0.999 repeating is exactly 1."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0.333 (stops) = 333/1000. 0.333… (repeats) = 1/3. And x = 0.999… gives 9x = 9, so x = 1."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Write 0.1818… (18 repeating) as a fraction in lowest terms.",
+    "right": "2/11",
+    "wrong": [
+     "18/100, which is 9/50",
+     "1/9",
+     "18/9"
+    ],
+    "why": "Two digits repeat, so x = 0.1818…, 100x = 18.1818…, and 99x = 18. That gives x = 18/99, which simplifies by 9 to 2/11. The answer 18/100 is the fraction for 0.18 that stops, not the one that repeats."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What about decimals that never stop and never repeat? They can't be written as a whole number over a whole number, so they are not rational. Pi and the square root of 2 are examples. That is the next class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Never stops and never repeats = not rational"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is what to take with you. Rational means a whole number over a whole number. Divide top by bottom to get the decimal. It always stops or repeats, because the remainders have to either hit zero or come back. And to go backwards, use x, multiply by 10 or 100, subtract, solve. This is the first idea in the grade 8 number system standard."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Rational = whole number over whole number. 2. Divide to get the decimal. 3. Remainders stop or loop. 4. Repeating decimal to fraction: x, multiply, subtract, solve."
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s7",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why must the decimal for 5/13 either stop or repeat?",
+    "right": "Every remainder in the long division is between 0 and 12. Either it hits 0 and stops, or a remainder comes back and the digits loop.",
+    "wrong": [
+     "Because 13 is a prime number, so it always stops",
+     "Because the numerator is smaller than the denominator",
+     "Because calculators cut off long decimals"
+    ],
+    "why": "Dividing by 13 only allows remainders 0 to 12, so there are not enough different remainders to go on forever without a repeat. Being prime doesn't make the decimal stop, since 1/7 repeats and 7 is prime. The size of the numerator doesn't decide it either. A calculator cutting off digits is a display limit, not the reason."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Digits in the repeating block of each decimal",
+   "rows": [
+    {
+     "label": "4/9 = 0.444… (denominator 9)",
+     "value": 1,
+     "source": "s6"
+    },
+    {
+     "label": "4/11 = 0.3636… (denominator 11)",
+     "value": 2,
+     "source": "s3"
+    },
+    {
+     "label": "1/7 = 0.142857142857… (denominator 7)",
+     "value": 6,
+     "source": "s6"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Rational numbers",
+   "links": [
+    "[[Irrational Numbers and Roots]]",
+    "[[Estimating and Ordering Irrational Numbers]]"
+   ]
+  },
+  {
+   "topic": "Long division and remainders",
+   "links": [
+    "[[Terminating and repeating decimals]]"
+   ]
+  },
+  {
+   "topic": "Repeating decimal to fraction",
+   "links": [
+    "[[Solving Linear Equations in One Variable]]",
+    "[[Scientific Notation: Reading and Writing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A bar over the repeating digits is how to write a repeating decimal.",
+   "other_view": "The bar (vinculum) is the most common school notation, but it isn't the only one. Others are dots over the digits, parentheses, and an ellipsis (three dots). No single notation is accepted everywhere, so check which one your textbook or test uses. Some places say 'recurring' where the US says 'repeating'. They mean the same thing.",
+   "cite": [
+    "s8",
+    "s10"
+   ]
+  }
+ ]
+}

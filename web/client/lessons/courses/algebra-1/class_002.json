@@ -1,0 +1,661 @@
+{
+ "about": {
+  "title": "Order of Operations and Evaluating Expressions",
+  "course": "algebra-1",
+  "class_n": 2,
+  "audience": [
+   "age 14 to 16",
+   "Jamie and teenagers like him",
+   "anyone who wants to learn this at a steady pace"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, which is one half-hour class. The three ideas are the order rules, substitution, and checking with a calculator. They build on each other, so they stay together. There are 10 questions, and you can pause at each one."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Prealgebra, 2.2 Use the Language of Algebra (Part 2): Simplify Expressions Using the Order of Operations",
+   "publisher": "OpenStax (Prealgebra), hosted by LibreTexts",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_1e_(OpenStax)/02%3A_Introduction_to_the_Language_of_Algebra/2.02%3A_Use_the_Language_of_Algebra_(Part_2)",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "Prealgebra 2e, 2.2 Evaluate, Simplify, and Translate Expressions",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/2-2-evaluate-simplify-and-translate-expressions",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "Prealgebra, 2.3 Evaluate, Simplify, and Translate Expressions (Part 1)",
+   "publisher": "OpenStax (Prealgebra), hosted by LibreTexts",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_1e_(OpenStax)/02:_Introduction_to_the_Language_of_Algebra/2.03:_Evaluate_Simplify_and_Translate_Expressions_(Part_1)",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Evaluating Algebraic Expressions (Introductory Algebra)",
+   "publisher": "Lumen Learning (Utah Valley University course)",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/uvu-introductoryalgebra/chapter/3-2-6-evaluating-an-expression/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Simplify Expressions With the Order of Operations (Intermediate Algebra)",
+   "publisher": "Lumen Learning",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/intermediatealgebra/chapter/read-simplifying-expressions-with-real-numbers-2/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Contemporary Mathematics, 5.1 Algebraic Expressions",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/5-1-algebraic-expressions",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Section 1.2: Order of Operations (MTH 60: Algebra 1)",
+   "publisher": "Clackamas Community College, via LibreTexts",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Courses/Clackamas_Community_College/MTH_60:_Algebra_1/01:_Introducing_Unknowns/1.02:_Order_of_Operations",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "CCSS.Math.Content.6.EE.A.2c (Common Core standard: evaluate expressions at specific values of their variables)",
+   "publisher": "Smithsonian Learning Lab",
+   "date": "undated",
+   "link": "https://learninglab.si.edu/standards/CCSS.Math.Content.6.EE.A.2c/358",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "How to Evaluate Expressions by Substituting Values",
+   "publisher": "Mathnasium",
+   "date": "undated",
+   "link": "https://www.mathnasium.com/math-centers/4sranch/news/evaluating-expressions-substituting-values",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Evaluating Algebraic Expressions",
+   "publisher": "LearnMath.org",
+   "date": "undated",
+   "link": "https://learnmath.org/topics/pre-algebra/evaluating-expressions/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Order of Operations Interactive Calculator (FAQ on scientific and basic calculators)",
+   "publisher": "FIRGELLI",
+   "date": "undated",
+   "link": "https://www.firgelliauto.com/blogs/calculators/order-of-operations-calculator",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "Scientific Calculator: Free Online with History (FAQ)",
+   "publisher": "JustYourCalculator",
+   "date": "undated",
+   "link": "https://justyourcalculator.com/scientific-calculator",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "History and Background of the Order of Operations",
+   "publisher": "Utah State University, Department of Mathematics Education (course page)",
+   "date": "2013",
+   "link": "https://5010.mathed.usu.edu/Fall2013/PJensen/History.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "Order of Operations and RPN",
+   "publisher": "University of Nebraska-Lincoln, Digital Commons",
+   "date": "undated",
+   "link": "https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1045&context=mathmidexppap",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back, Jamie. Last class you met variables, the letters that stand for numbers. Today you put numbers into those letters and get an answer. There's one rule that makes everyone get the same answer."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Same Rules, Same Answer"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's the goal. By the end you can take an expression, swap in the numbers, follow the order of operations, and check your work with a calculator. We'll go one small step at a time, and you can pause whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Goal: 1) Know the order of operations. 2) Substitute values for letters. 3) Handle exponents and grouping symbols. 4) Check with a calculator."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try this one: 4 plus 3 times 7. Some people add 4 and 3 first, get 7, and multiply by 7 to make 49. Other people multiply 3 times 7 first, get 21, and add 4 to make 25. Both are careful arithmetic, but only one is right."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 + 3 · 7 = ?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 4 + 3 · 7 when you follow the order of operations?",
+    "right": "25",
+    "wrong": [
+     "49",
+     "21",
+     "28"
+    ],
+    "why": "Multiplication comes before addition. 3 · 7 = 21, then 4 + 21 = 25. Adding 4 + 3 first gives 49, which is the common wrong answer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the two answers side by side. One expression should never have two correct answers. That would be chaos in a game score, a bank balance or a stat sheet. So mathematicians agreed on one order."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "One expression, two answers, one right",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That agreement is called the order of operations. It says which parts of an expression you work out first. The point is simple: the same expression always gives the same result."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Order of operations"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's the order. First, parentheses and other grouping symbols, innermost first. Second, exponents. Third, multiplication and division. Fourth, addition and subtraction. A silly sentence helps: Please Excuse My Dear Aunt Sally."
+   },
+   "show": {
+    "kind": "list",
+    "text": "P – Parentheses and grouping symbols (innermost first) | E – Exponents | M and D – Multiplication and Division | A and S – Addition and Subtraction | Please Excuse My Dear Aunt Sally"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the part people miss. Multiplication and division share one level. So do addition and subtraction. They have equal priority, so you go left to right. You don't always do multiplication before division. You do whichever comes first from the left. For example, 12 divided by 3, times 2: divide first to get 4, then multiply to get 8."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same level? Go left to right."
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 20 − 6 + 2?",
+    "right": "16",
+    "wrong": [
+     "12",
+     "14",
+     "4"
+    ],
+    "why": "Subtraction and addition have equal priority, so go left to right. 20 − 6 = 14, then 14 + 2 = 16. Adding 6 + 2 first would give 12, which is wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now grouping symbols. These are parentheses, square brackets, curly braces, and even the fraction bar. Whatever is inside gets worked out first. If groups are nested, start with the innermost one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Grouping symbols: ( ) parentheses | [ ] brackets | { } braces | fraction bar. Do the inside first, innermost first."
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's watch one. 8 plus 12 divided by the group 5 minus 3. The group comes first: 5 minus 3 is 2. Then divide 12 by 2 to get 6. Then add 8 to get 14."
+   },
+   "show": {
+    "kind": "list",
+    "text": "8 + 12 ÷ (5 − 3) → 8 + 12 ÷ 2 → 8 + 6 → 14"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 8 + 12 ÷ (5 − 3)?",
+    "right": "14",
+    "wrong": [
+     "10",
+     "6",
+     "7"
+    ],
+    "why": "Do the parentheses first: 5 − 3 = 2. Then divide: 12 ÷ 2 = 6. Then add: 8 + 6 = 14. A result of 10 comes from adding 8 + 12 before dividing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, exponents. An exponent tells you how many times to multiply a number by itself. 3 squared is 3 times 3, which is 9. 2 to the fifth power is 2 times itself five times, which is 32. Exponents come before multiplication."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "3² = 3 · 3 = 9  |  2⁵ = 2 · 2 · 2 · 2 · 2 = 32"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 2 · 3²?",
+    "right": "18",
+    "wrong": [
+     "36",
+     "12",
+     "9"
+    ],
+    "why": "Exponent first: 3² = 9. Then multiply: 2 · 9 = 18. A result of 36 comes from multiplying 2 · 3 before squaring."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the second big idea, substitution. To evaluate an expression means to find its value when the letter is replaced by a given number. You replace the letter with the number, then simplify using the order of operations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evaluate = replace the letter with a number, then simplify"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try x plus 7. When x is 3, the answer is 10. When x is 12, the answer is 19. It's the same expression with different answers, because x changed. That's the point of a letter: it's a slot that can hold different numbers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x + 7 when x = 3 → 3 + 7 = 10  |  x + 7 when x = 12 → 12 + 7 = 19"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With two letters, you make two swaps. Take 3x plus 4y minus 6 when x is 10 and y is 2. Swap in the numbers to get 3 times 10, plus 4 times 2, minus 6. Multiply first: 30 plus 8 minus 6. Then go left to right to get 32."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3x + 4y − 6, x = 10, y = 2 → 3(10) + 4(2) − 6 → 30 + 8 − 6 → 32"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Evaluate 4y − 4 when y = 3.",
+    "right": "8",
+    "wrong": [
+     "12",
+     "0",
+     "5"
+    ],
+    "why": "Substitute 3 for y: 4(3) − 4. Multiply first: 12 − 4 = 8."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's a habit that saves you a lot of mistakes. When you swap in a number, put it in parentheses. This matters most for negatives. Take x squared when x is negative 3. Write it as negative 3, in parentheses, squared. That's 9. Without the parentheses, the square lands only on the 3, and you get negative 9."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x² when x = −3:  (−3)² = 9  |  −3² = −9 (a different thing!)"
+   },
+   "cite": [
+    "s9",
+    "s4",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is x² when x = −3?",
+    "right": "9",
+    "wrong": [
+     "−9",
+     "6",
+     "−6"
+    ],
+    "why": "Write the substituted number in parentheses: (−3)² = (−3)(−3) = 9. The exponent applies to the whole negative number."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more place to be careful. 2x squared means 2 times x times x. That's different from 2x in parentheses, squared, which means 2x times 2x. Only the x gets squared in the first one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2x² = 2 · x · x  |  (2x)² = 2x · 2x"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Evaluate 2x² when x = 3.",
+    "right": "18",
+    "wrong": [
+     "36",
+     "12",
+     "9"
+    ],
+    "why": "2x² means 2 · x · x. Substitute: 2 · 3² = 2 · 9 = 18. The answer 36 would be (2x)², where the 2 is squared too."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put it together. Evaluate 2x squared, plus 3x, plus 8, when x is 4. Substitute: 2 times 4 squared, plus 3 times 4, plus 8. Exponent first: 4 squared is 16. Then multiply: 32 and 12. Then add: 32 plus 12 plus 8 is 52."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x² + 3x + 8, x = 4 → 2(4)² + 3(4) + 8 → 2(16) + 12 + 8 → 32 + 12 + 8 → 52"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Evaluate 2x² + 3x + 8 when x = 4.",
+    "right": "52",
+    "wrong": [
+     "84",
+     "44",
+     "32"
+    ],
+    "why": "Exponent first: 4² = 16. Then multiply: 2 · 16 = 32 and 3 · 4 = 12. Then add: 32 + 12 + 8 = 52. The answer 84 comes from squaring 2 · 4 instead of just the 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why bother? Because real formulas work this way. In a game, say your score is 100 plus 25 per kill, minus 10 per death. With 8 kills and 3 deaths you get 100 plus 200 minus 30, which is 270. Basketball works the same way: 2 times two-pointers plus 3 times threes plus free throws. With 7, 3 and 4, that's 14 plus 9 plus 4, or 27 points."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Game: 100 + 25k − 10d, k = 8, d = 3 → 270 | Basketball: 2a + 3b + c, a = 7, b = 3, c = 4 → 27"
+   },
+   "cite": [
+    "s8",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Money works too. Say you start with 40 dollars, save 15 dollars a week, and spend 12 once. After w weeks you have 40 plus 15w minus 12. For 6 weeks, that's 40 plus 90 minus 12."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Savings: 40 + 15w − 12, w = 6 → 40 + 15(6) − 12 → 40 + 90 − 12 → 118"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Evaluate 40 + 15w − 12 when w = 6.",
+    "right": "118",
+    "wrong": [
+     "318",
+     "130",
+     "28"
+    ],
+    "why": "Multiply first: 15 · 6 = 90. Then go left to right: 40 + 90 = 130, and 130 − 12 = 118. The answer 318 comes from adding 40 + 15 before multiplying."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the calculator. It's a great way to check your work, but it only follows the order if it's built to. A scientific calculator lets you type the whole expression and gives the right answer. A basic calculator works in the order you press the keys."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Scientific calculator: type the whole expression  |  Basic calculator: works in the order you press keys"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You type 2 + 3 × 4 = and your calculator shows 20. What does that tell you?",
+    "right": "It works in the order you press the keys, so you need parentheses or must do the multiplying yourself.",
+    "wrong": [
+     "20 is the correct answer.",
+     "The order of operations doesn't apply to calculators.",
+     "The calculator is broken and must be thrown away."
+    ],
+    "why": "By the order of operations, 2 + 3 × 4 = 14. A calculator that shows 20 did 2 + 3 first, so it goes left to right as you press keys."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On a calculator that follows the rules, 2 plus 3 times 4 gives 14, and negative 2 squared, typed without parentheses, gives negative 4. Use parentheses to force the order you want. For example, 2 plus 3 in parentheses, times 4, is 20. So type your substituted numbers in parentheses, just like on paper."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2 + 3 × 4 → 14 | (2 + 3) × 4 → 20 | −2² → −4 | Type the numbers in parentheses, just like on paper."
+   },
+   "cite": [
+    "s12",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's a routine you can use every time. Write the expression. Swap in the numbers, with parentheses around each one. Then simplify by the order of operations, one step per line. Finally, check with a calculator. If the two answers differ, look for the line where they split apart."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1) Write the expression. 2) Replace each letter with its value, in parentheses. 3) Simplify by the order of operations, one step per line. 4) Check with a calculator."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A bit of history. Nobody invented these rules. They grew over several centuries and are still changing. The idea that multiplication beats addition came up naturally in the 1600s, when algebra's notation was being built."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "No single person invented the order of operations; the rules grew over centuries."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Time for the challenge. Evaluate 3 times the group x plus 2, squared, minus y, when x is 1 and y is 4. Take your time and go one line at a time."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3(x + 2)² − y, x = 1, y = 4"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Evaluate 3(x + 2)² − y when x = 1 and y = 4.",
+    "right": "23",
+    "wrong": [
+     "77",
+     "27",
+     "11"
+    ],
+    "why": "Substitute: 3(1 + 2)² − 4. Parentheses first: 3(3)² − 4. Exponent next: 3 · 9 − 4. Then multiply: 27 − 4 = 23. The answer 77 comes from squaring 3 · 3 as well."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's recap. The order is grouping symbols, exponents, multiplication and division left to right, then addition and subtraction left to right. To evaluate, replace each letter with a number in parentheses, then simplify. Use a calculator to check, not to think for you. Next class we'll use properties to simplify expressions even when we don't know the numbers yet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Grouping → Exponents → × ÷ (left to right) → + − (left to right) | Substitute in parentheses | Check with a calculator | Next: Properties and Simplifying Expressions"
+   },
+   "cite": [
+    "s1",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "4 + 3 · 7: two ways to work it, only one follows the rules",
+   "rows": [
+    {
+     "label": "Add first (not the rules)",
+     "value": 49,
+     "source": "s1"
+    },
+    {
+     "label": "Multiply first (the rules)",
+     "value": 25,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Order of operations (PEMDAS)",
+   "links": [
+    "[[variables and expressions]]",
+    "[[properties and simplifying expressions]]",
+    "[[exponent rules]]"
+   ]
+  },
+  {
+   "topic": "Evaluating an expression by substitution",
+   "links": [
+    "[[function notation]]",
+    "[[formulas and literal equations]]",
+    "[[one-step and two-step equations]]"
+   ]
+  },
+  {
+   "topic": "Checking work with a calculator",
+   "links": [
+    "[[zero and negative exponents, and scientific notation]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1600s, when algebra's symbols were being invented",
+   "elsewhere": "In 1631 the Englishman Thomas Harriot wrote about multiplying fractions in his own notation. At about the same time, William Oughtred pushed to use symbols in place of words in math. Authors then used many different symbol systems.",
+   "cite": [
+    "s14",
+    "s13"
+   ]
+  },
+  {
+   "when": "Late 1800s",
+   "elsewhere": "Mass-printed math textbooks and teacher training grew. Many historians suspect the term 'order of operations' and mnemonics like PEMDAS were fixed in this era.",
+   "cite": [
+    "s13"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "PEMDAS is one fixed law of math that every expression obeys.",
+   "other_view": "The order of operations is a convention that grew gradually over centuries, and it was not invented by one person. As late as the 1920s, the math historian Florian Cajori noted disagreement over whether multiplication should come before division or both share a level. The usual advice was to use parentheses to make your meaning clear, and that is still good advice. Today's textbooks treat multiplication and division as equal, going left to right, as taught in this class.",
+   "cite": [
+    "s13",
+    "s1"
+   ]
+  },
+  {
+   "claim": "A calculator will always check your answer correctly.",
+   "other_view": "Calculators differ. One source says scientific calculators follow the order of operations when you type a whole expression, while basic calculators work in the order you press the keys. Both sources here are calculator-maker pages, not textbooks. So test your own calculator with 2 + 3 × 4 (it should show 14) and use parentheses whenever you are unsure.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  }
+ ]
+}

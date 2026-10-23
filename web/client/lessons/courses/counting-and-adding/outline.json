@@ -1,0 +1,144 @@
+{
+ "course_id": "counting-and-adding",
+ "title": "Counting and Adding Small Numbers",
+ "audience": [
+  "adult relearning numbers",
+  "young child"
+ ],
+ "length_note": "Ten classes of 8 to 12 minutes each, about 100 minutes in total. Each class teaches one idea, so a learner can stop after any of them and pick up again without losing the thread. Counting to 20 takes three classes: 0 to 10 with objects (10 is new after Numbers 0 to 9), then 11 to 20, then counting out a requested number. More and fewer take two classes, because comparing groups and 'one more or one fewer' are different skills. Adding takes three classes, moving from objects to no objects, so nothing is skipped. Coins and the calendar each get their own short class so that every class stays short. Subtraction is not in the brief, so the course does not teach it. 'One fewer' is covered only as a counting idea.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "Counting things from 0 to 10",
+   "goal": "Count up to 10 objects by touching each one once, and say how many there are.",
+   "minutes": 8,
+   "topics": [
+    "Quick review of numbers 0 to 9",
+    "Meeting 10",
+    "One touch for each object, one number word for each touch",
+    "The last number said tells how many",
+    "Counting spoons, cups or buttons"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "Counting from 11 to 20",
+   "goal": "Say the numbers 11 to 20 in order and count up to 20 objects.",
+   "minutes": 10,
+   "topics": [
+    "Counting on from 10",
+    "Spotting patterns in the number words and written numbers 11 to 20",
+    "Counting in small groups to keep your place",
+    "Saying numbers aloud and tracing them in the air"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 3,
+   "title": "Counting out a number: setting a table",
+   "goal": "Count out the number of items asked for, up to 20, such as 6 forks for 6 people.",
+   "minutes": 10,
+   "topics": [
+    "Counting out versus counting what is already there",
+    "Setting a table: one plate, one fork, one cup per person",
+    "Checking by counting again",
+    "Stopping at the number asked for"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 4,
+   "title": "More and fewer",
+   "goal": "Look at two groups and say which has more and which has fewer.",
+   "minutes": 10,
+   "topics": [
+    "Matching items one to one to compare two groups",
+    "Words: more, fewer, same",
+    "Comparing by counting both groups",
+    "Everyday examples such as chairs and people, or socks and shoes"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 5,
+   "title": "One more, one fewer",
+   "goal": "Say the number that is one more or one fewer than a number from 1 to 10.",
+   "minutes": 8,
+   "topics": [
+    "Adding one object to a group and recounting",
+    "Taking one object away and recounting",
+    "Next number up and next number down in the counting order",
+    "Connecting one more to the number after"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 6,
+   "title": "Putting groups together (totals to 5)",
+   "goal": "Join two small groups of objects and say the total, up to 5.",
+   "minutes": 10,
+   "topics": [
+    "What adding means: putting together",
+    "Words: add, and, makes, total",
+    "Counting all the objects from 1",
+    "Saying '2 and 3 makes 5'"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 7,
+   "title": "Adding with objects up to 10",
+   "goal": "Add two groups of objects with a total up to 10 and say the number sentence aloud.",
+   "minutes": 10,
+   "topics": [
+    "Two groups, one total",
+    "Counting all, then counting on from the larger group",
+    "Using two colours of counters to see the parts",
+    "Pairs that make 10, such as 6 and 4"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 8,
+   "title": "Adding without objects",
+   "goal": "Work out sums within 10 using counting on, fingers or a number line, with nothing to hold.",
+   "minutes": 10,
+   "topics": [
+    "Starting from the bigger number and counting on",
+    "Fingers and a number line as helpers",
+    "Picturing the objects in your mind",
+    "Reading and saying simple sums, such as 4 + 3",
+    "Checking an answer with objects"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 9,
+   "title": "Adding with coins",
+   "goal": "Count and add small amounts with single-unit coins, with totals up to 10.",
+   "minutes": 10,
+   "topics": [
+    "Telling coins apart by look and by value",
+    "Counting single-unit coins one by one",
+    "Adding two small amounts of coins",
+    "Checking change in a simple pretend shop",
+    "Local coins are different in different countries, so the lesson must use the learner's own currency"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Counting and adding on a calendar",
+   "goal": "Use a calendar to count days up to 20 and add a few days to a date.",
+   "minutes": 10,
+   "topics": [
+    "Finding today's date and counting the days to an event",
+    "Counting on from a date, such as 3 days after the 5th",
+    "Reading the numbers 1 to 20 in a grid",
+    "Calendar layouts differ, such as which day the week starts on, so the lesson must match the learner's calendar"
+   ],
+   "needs_research": true
+  }
+ ]
+}

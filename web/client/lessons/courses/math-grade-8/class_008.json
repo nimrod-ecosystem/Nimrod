@@ -1,0 +1,555 @@
+{
+ "about": {
+  "title": "Scientific Notation: Comparing and Calculating",
+  "course": "math-grade-8",
+  "class_n": 8,
+  "audience": [
+   "Age 13 to 15",
+   "Jamie and teenagers like him"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes, a little over the usual half hour. This class covers two skills (comparing, then multiply and divide) and the 'how many times larger' idea. Each skill has its own practice question. There is a natural pause after beat 9 and another after beat 14, so you can split it into two sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Expressions & Equations (CCSS 8.EE.A.3)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "undated",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "Common Core Videos for Grade 8, Mathematics 8.EE.4 (transcript)",
+   "publisher": "SEDL",
+   "date": "undated",
+   "link": "https://sedl.org/secc/common_core_videos/grade.php?action=view&id=765",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "1.3: Exponents and Scientific Notation (College Algebra, OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/College_Algebra_1e_(OpenStax)/01:_Prerequisites/1.03:_Exponents_and_Scientific_Notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "3.9 Scientific Notation (Contemporary Mathematics)",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/3-9-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "U.S. Population Projected to Reach 341,145,670 at Midnight EST on January 1",
+   "publisher": "U.S. Census Bureau",
+   "date": "2024-12",
+   "link": "https://census.gov/library/stories/2024/12/new-year-population.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Module 4, Part 3, Lesson 1 (astronomical unit)",
+   "publisher": "NASA Glenn Research Center",
+   "date": "undated",
+   "link": "https://www.grc.nasa.gov/www/k-12/Aero2000/studweb/4-3-1i2.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "How Far Away Is the Moon?",
+   "publisher": "NASA Space Place",
+   "date": "undated",
+   "link": "https://spaceplace.nasa.gov/moon-distance/en/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Planet Sizes and Locations in Our Solar System",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/solar-system/planets/planet-sizes-and-locations-in-our-solar-system/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "How big is a Red Blood Cell?",
+   "publisher": "Scale of the Universe",
+   "date": "undated",
+   "link": "https://scaleofuniverse.com/en/universe/red-blood-cell",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Meter",
+   "publisher": "National Institute of Standards and Technology (NIST)",
+   "date": "undated",
+   "link": "https://www.nist.gov/si-redefinition/meter",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Facts About Earth",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/earth/facts/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "Fun Facts About the Moon",
+   "publisher": "NASA Jet Propulsion Laboratory (Night Sky Network)",
+   "date": "undated",
+   "link": "https://nightsky.jpl.nasa.gov/club/attachments/Fun_Facts_About_the_Moon.pdf",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "8.EE.A.4: Operations With Scientific Notation, Units and Calculator Displays",
+   "publisher": "SVHS lesson page",
+   "date": "undated",
+   "link": "https://svhs.co/lesson/8-ee-a-4/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "What is the world population right now?",
+   "publisher": "The World Counts",
+   "date": "2026 (page says revised July 2026 for its Census material)",
+   "link": "https://www.theworldcounts.com/humanity/populations/world-population",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 8. Today we compare giant and tiny numbers, multiply and divide them, and say how many times bigger one thing is than another. You can pause any time. Every part stands on its own."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Scientific Notation: Comparing and Calculating"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick reminder. Scientific notation is a front number from 1 up to, but not including, 10. It is multiplied by a power of 10. So 6,000,000 is 6 × 10^6. If the front number is 10 or more, or less than 1, it is not finished yet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Front number: 1 up to (not including) 10\nTimes 10 to a whole-number power\nExample: 6,000,000 = 6 × 10^6"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part one. Compare by the exponent first. The exponent tells you how many tens are hiding in the number. That is usually the fastest clue to which number is bigger."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 1: Compare by the exponent first"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two simple rules. If the exponents are different, the bigger exponent wins. Take 6.1 × 10^4 and 2.9 × 10^7. That is 61,000 against 29,000,000, and the 10^7 wins. If the exponents match, compare the front numbers. 8 × 10^5 beats 3 × 10^5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Different exponents: the bigger exponent wins. 2.9 × 10^7 is more than 6.1 × 10^4.\nSame exponent: the bigger front number wins. 8 × 10^5 is more than 3 × 10^5."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Take your time. Look at the exponents first."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "3.2 × 10^6\n9.9 × 10^5"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is larger: 3.2 × 10^6 or 9.9 × 10^5?",
+    "right": "3.2 × 10^6",
+    "wrong": [
+     "9.9 × 10^5, because 9.9 is bigger than 3.2",
+     "They are equal",
+     "You can't tell without a calculator"
+    ],
+    "why": "Look at the exponents first. 6 is bigger than 5, and one step up in the exponent means 10 times bigger. Both front numbers are between 1 and 10, so the exponent decides. 3.2 × 10^6 is 3,200,000 and 9.9 × 10^5 is 990,000."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Negative exponents are the tricky ones. Bigger still means closer to zero on the number line, and -3 is bigger than -5. So 4 × 10^-3 is 0.004. And 9 × 10^-5 is 0.00009. The first one is larger, even though 9 is more than 4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Negative exponents: closer to zero is bigger"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which is larger: 4 × 10^-3 or 9 × 10^-5?",
+    "right": "4 × 10^-3",
+    "wrong": [
+     "9 × 10^-5, because 5 is bigger than 3",
+     "9 × 10^-5, because 9 is bigger than 4",
+     "They are equal"
+    ],
+    "why": "Compare the exponents: -3 is bigger than -5. So 10^-3 (0.001) is bigger than 10^-5 (0.00001). That gives 0.004 against 0.00009. The exponent decides first, and the front number only matters when the exponents match."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a chart of three real distances, shown only by their exponents. The Moon is about 3.8 × 10^5 kilometers from Earth, so its exponent is 5. The Sun is about 1.5 × 10^8 kilometers from Earth, so its exponent is 8. Neptune is about 4.5 × 10^9 kilometers from the Sun, so its exponent is 9. Careful. The bars look close, but each step up is 10 times more. Neptune is about 30 times farther from the Sun than Earth is. That is one exponent step, and the front numbers, 4.5 and 1.5, add another factor of 3."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Exponent of 10 in each distance (in kilometers)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part two. How many times larger? To answer that, you divide. Here is the example from the U.S. standards. The U.S. has about 3 × 10^8 people and the world has about 7 × 10^9. Divide 7 by 3 to get about 2.3. Subtract the exponents: 9 minus 8 is 1. So the answer is about 2.3 × 10^1, which is about 23. The world population is more than 20 times larger."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(7 × 10^9) ÷ (3 × 10^8) ≈ 23, so more than 20 times"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now real numbers. The Census Bureau projected about 341 million people in the U.S. on January 1, 2025. It projected about 8.09 billion people in the world. In scientific notation that is about 3.4 × 10^8 and 8.1 × 10^9. Let's compare them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "U.S.: 341,145,670 ≈ 3.4 × 10^8\nWorld: 8,092,034,511 ≈ 8.1 × 10^9"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Using about 3.4 × 10^8 for the U.S. and 8.1 × 10^9 for the world, about how many times larger is the world's population?",
+    "right": "About 24 times",
+    "wrong": [
+     "About 2.4 times",
+     "About 240 times",
+     "About 0.04 times"
+    ],
+    "why": "Divide the front numbers: 8.1 ÷ 3.4 is about 2.4. Subtract the exponents: 9 - 8 = 1. That gives 2.4 × 10^1, which is about 24. The answer 2.4 forgets the 10^1. The answer 0.04 divides the wrong way round."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Great work. If you like, pause here and take a break. When you are back, we multiply and divide."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 3: Multiplying and dividing"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To multiply, do three things. Multiply the front numbers. Add the exponents. Then fix the front number if it is 10 or more. Example: 4 × 10^3 times 5 × 10^6. 4 times 5 is 20. 3 plus 6 is 9. That gives 20 × 10^9. But 20 is too big for a front number, so write it as 2 × 10^1. The answer is 2 × 10^10."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Multiply the front numbers\n2. Add the exponents\n3. Fix the front number if it is not between 1 and 10\nExample: (4 × 10^3)(5 × 10^6) = 20 × 10^9 = 2 × 10^10"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try one. Do the three steps in order."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(3 × 10^5)(4 × 10^4) = ?"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What is (3 × 10^5)(4 × 10^4) in scientific notation?",
+    "right": "1.2 × 10^10",
+    "wrong": [
+     "1.2 × 10^9",
+     "7 × 10^9",
+     "1.2 × 10^20"
+    ],
+    "why": "3 × 4 = 12, and 5 + 4 = 9, so you get 12 × 10^9. The front number 12 is too big. 12 = 1.2 × 10^1, so the answer is 1.2 × 10^10. If you stop at 1.2 × 10^9, you forgot to carry the extra 10. 7 × 10^9 adds the front numbers. 1.2 × 10^20 multiplies the exponents instead of adding them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dividing is the mirror image. Divide the front numbers. Subtract the exponents: top minus bottom. Then fix the front number if you need to. Example: 6 × 10^8 divided by 2 × 10^3. 6 divided by 2 is 3. 8 minus 3 is 5. The answer is 3 × 10^5. You can check by multiplying back: 3 × 10^5 times 2 × 10^3 is 6 × 10^8. A textbook example, 1.75 × 10^13 divided by 3.08 × 10^8, gives about 0.57 × 10^5. The front number is under 1, so shift it to get about 5.7 × 10^4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Divide the front numbers\n2. Subtract the exponents (top minus bottom)\n3. Fix the front number if needed\nExample: (6 × 10^8) ÷ (2 × 10^3) = 3 × 10^5"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (6 × 10^8) ÷ (2 × 10^3)?",
+    "right": "3 × 10^5",
+    "wrong": [
+     "3 × 10^11",
+     "4 × 10^5",
+     "3 × 10^-5"
+    ],
+    "why": "6 ÷ 2 = 3, and 8 - 3 = 5, so the answer is 3 × 10^5. Check by multiplying back: (3 × 10^5)(2 × 10^3) = 6 × 10^8. Adding the exponents gives 3 × 10^11, which is a multiplying rule. Subtracting the front numbers gives 4. Subtracting the exponents the wrong way round gives 10^-5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes the front number comes out under 1. When that happens, move the decimal point one place right. Then lower the exponent by 1. Let's practice that."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(1.5 × 10^3) ÷ (5 × 10^7) = ?"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What is (1.5 × 10^3) ÷ (5 × 10^7) in scientific notation?",
+    "right": "3 × 10^-5",
+    "wrong": [
+     "3 × 10^-4",
+     "3 × 10^10",
+     "3 × 10^4"
+    ],
+    "why": "1.5 ÷ 5 = 0.3, and 3 - 7 = -4, so you get 0.3 × 10^-4. The front number is under 1. Move the decimal one place right (0.3 becomes 3) and lower the exponent by 1: 3 × 10^-5. As plain numbers, 1,500 ÷ 50,000,000 = 0.00003. 3 × 10^-4 forgets to lower the exponent. 3 × 10^10 adds the exponents. 3 × 10^4 drops the minus sign."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Small things work the same way. A red blood cell is about 8 micrometers wide. A micrometer is a millionth of a meter, so 8 micrometers is 8 × 10^-6 meters. A human hair is 80 to 100 micrometers wide. Take 80, which is 8 × 10^-5 meters. Divide hair by cell: 8 divided by 8 is 1, and -5 minus -6 is 1. That gives 1 × 10^1, about 10 cells across a hair. The source says 11 to 13 because its ranges are 7 to 8 and 80 to 100. Same idea."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(8 × 10^-5) ÷ (8 × 10^-6) = 1 × 10^1 = 10"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Calculators and spreadsheets write scientific notation with an E. So 3.2E-5 means 3.2 × 10^-5. The E stands for 'times ten to the'. It is not the number e from other math classes, and it is not a typo."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3.2E-5 means 3.2 × 10^-5"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part four. Choose sensible units. The U.S. standards give an example: seafloor spreading is measured in millimeters per year, because kilometers per year would be a very small number. The Moon drifts away from Earth about 3.8 centimeters each year. Astronomers use the astronomical unit, about 1.496 × 10^8 kilometers, for planet distances. In AU, Neptune is about 30. In kilometers, it is 4.5 × 10^9."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pick a unit so the number is easy to read\nSeafloor spreading: millimeters per year\nMoon drift: about 3.8 centimeters per year\nPlanet distances: astronomical units (1 AU is about 1.496 × 10^8 km)"
+   },
+   "cite": [
+    "s2",
+    "s12",
+    "s6",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The Moon moves away from Earth by about 3.8 centimeters each year. Which unit makes this easiest to read?",
+    "right": "Centimeters per year: 3.8",
+    "wrong": [
+     "Kilometers per year: 0.000038",
+     "Nanometers per year: 38,000,000",
+     "Astronomical units per year, a unit built for planet distances"
+    ],
+    "why": "All of these describe the same drift. Centimeters per year gives a short, friendly number, 3.8. Kilometers gives a long run of zeros (3.8 × 10^-5). Nanometers gives a huge number (3.8 × 10^7). An astronomical unit is far too big for a drift this small. A good unit keeps the number close to the size of ordinary numbers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A real calculation. How long does sunlight take to reach us? The distance is about 1.496 × 10^8 kilometers. Our speed is in meters per second, so change kilometers to meters. That is times 1,000, so the exponent goes up by 3. The distance is 1.496 × 10^11 meters. Light moves at exactly 299,792,458 meters per second, about 3 × 10^8. Time equals distance divided by speed. Round the distance to 1.5 × 10^11 and try it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(1.5 × 10^11 m) ÷ (3 × 10^8 m/s) = ? seconds"
+   },
+   "cite": [
+    "s6",
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Sunlight travels about 1.5 × 10^11 meters. Light moves at about 3 × 10^8 meters per second. About how many seconds does the trip take?",
+    "right": "About 5 × 10^2 seconds (500 seconds)",
+    "wrong": [
+     "About 5 × 10^3 seconds",
+     "About 5 × 10^19 seconds",
+     "About 2 × 10^2 seconds"
+    ],
+    "why": "Time = distance ÷ speed. 1.5 ÷ 3 = 0.5, and 11 - 8 = 3, so you get 0.5 × 10^3. The front number is under 1, so shift it: 5 × 10^2 seconds. That is about 8.3 minutes, which matches NASA's 'about eight minutes'. 5 × 10^3 forgets the shift. 5 × 10^19 adds the exponents. 2 × 10^2 divides 3 by 1.5 the wrong way round. The units also work: meters ÷ (meters per second) leaves seconds."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "NASA says it takes about eight minutes for sunlight to reach us. Our 500 seconds is about 8.3 minutes, so the math agrees with the real measurement. Last problem: compare two distances."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Earth to Sun: about 1.497 × 10^8 km\nEarth to Moon: about 3.844 × 10^5 km"
+   },
+   "cite": [
+    "s11",
+    "s8",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "About how many times farther from Earth is the Sun than the Moon?",
+    "right": "About 390 times",
+    "wrong": [
+     "About 39 times",
+     "About 3,900 times",
+     "About 0.0026 times"
+    ],
+    "why": "Divide the front numbers: 1.497 ÷ 3.844 is about 0.39. Subtract the exponents: 8 - 5 = 3. That gives 0.39 × 10^3. The front number is under 1, so shift it: 3.9 × 10^2, about 390. 39 and 3,900 are off by one power of 10, which is why you fix the front number carefully. 0.0026 divides the wrong way round."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's finish with three ideas. To compare, look at the exponents first, then the front numbers. To find 'how many times larger', divide. To multiply, multiply the fronts and add the exponents. To divide, divide the fronts and subtract the exponents. Always fix the front number at the end. Well done today. Next class we move to proportional relationships and unit rate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Compare: exponent first, then front number\nMultiply: multiply fronts, add exponents\nDivide: divide fronts, subtract exponents\nAlways fix the front number to be from 1 up to 10"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Exponent of 10 in each distance (in kilometers)",
+   "rows": [
+    {
+     "label": "Earth to Moon (about 3.8 × 10^5 km)",
+     "value": 5,
+     "source": "s7"
+    },
+    {
+     "label": "Earth to Sun (about 1.5 × 10^8 km)",
+     "value": 8,
+     "source": "s8"
+    },
+    {
+     "label": "Neptune to Sun (about 4.5 × 10^9 km)",
+     "value": 9,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Scientific notation: comparing, multiplying and dividing",
+   "links": [
+    "[[Scientific Notation: Reading and Writing]]",
+    "[[Exponent Rules for Whole Numbers]]",
+    "[[Zero and Negative Exponents]]"
+   ]
+  },
+  {
+   "topic": "How many times larger (ratios of very large or very small quantities)",
+   "links": [
+    "[[Proportional Relationships and Unit Rate]]",
+    "[[Scientific Notation: Reading and Writing]]"
+   ]
+  },
+  {
+   "topic": "Choosing sensible units",
+   "links": [
+    "[[Proportional Relationships and Unit Rate]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The Earth is about 1.496 × 10^8 km from the Sun, and the Moon is about 3.844 × 10^5 km from Earth.",
+   "other_view": "These are average distances. NASA notes that the Moon's orbit is not a perfect circle, so its distance changes, and the Earth–Sun distance changes through the year too. The 'times farther' answers in this class are therefore approximate, and the way to compare them stays the same.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "claim": "The world's population is about 8.09 billion, as the U.S. Census Bureau projected for January 1, 2025.",
+   "other_view": "Different organizations get different totals. One page that summarizes UN and Census figures says the Census country totals come out about 1.3% lower than the UN's. For a 'how many times larger' estimate this barely changes the answer, which is why scientific notation uses rounded numbers.",
+   "cite": [
+    "s5",
+    "s14"
+   ]
+  }
+ ]
+}

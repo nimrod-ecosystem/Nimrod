@@ -1,0 +1,591 @@
+{
+ "about": {
+  "title": "Solving and Graphing Inequalities",
+  "course": "algebra-1",
+  "class_n": 8,
+  "audience": [
+   "ages 14 to 16",
+   "Jamie and teenagers like him",
+   "anyone relearning algebra who wants a slow, step-by-step pace"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, which fits this topic. The ideas build on class 4 and 5 equation skills, and there is one new rule: flip the sign when you multiply or divide by a negative. Every slide stands on its own, so you can pause after any slide and come back. The money and limit problems are the longest part, so take extra time there if you need it."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.7 Solve Linear Inequalities, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/2-7-solve-linear-inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "2.5 Solve Linear Inequalities, Intermediate Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/2-5-solve-linear-inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "5.3 Linear Inequalities in One Variable with Applications, Contemporary Mathematics",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/5-3-linear-inequalities-in-one-variable-with-applications",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "2.7 Linear Inequalities and Absolute Value Inequalities, College Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/2-7-linear-inequalities-and-absolute-value-inequalities",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Inequalities on a Number Line: Steps, Examples and Questions",
+   "publisher": "Third Space Learning",
+   "date": "not stated on page",
+   "link": "https://thirdspacelearning.com/us/math-resources/topic-guides/algebra/inequalities-on-a-number-line/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Earliest Uses of Symbols of Relation",
+   "publisher": "MacTutor History of Mathematics, University of St Andrews",
+   "date": "not stated on page",
+   "link": "https://mathshistory.st-andrews.ac.uk/Miller/mathsym/relation/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "High School: Algebra (Common Core State Standards for Mathematics)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "not stated on page",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Common Core State Standards, High School Algebra (9-12), standards tree",
+   "publisher": "TeacherEase",
+   "date": "not stated on page",
+   "link": "https://www.teacherease.com/app/standards/StandardTreeView?sid=5458&state=IL",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Inequality Symbols",
+   "publisher": "Helping with Math",
+   "date": "not stated on page",
+   "link": "https://helpingwithmath.com/inequality-symbols/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Table of mathematical symbols by introduction date",
+   "publisher": "Wikipedia",
+   "date": "continuously edited; no single date",
+   "link": "https://en.wikipedia.org/wiki/Table_of_mathematical_symbols_by_introduction_date",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Thomas Harriot",
+   "publisher": "Encyclopedia.com",
+   "date": "not stated on page",
+   "link": "https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/thomas-harriot-0",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "The History Of Equality Symbols In Math",
+   "publisher": "Sciencing",
+   "date": "not stated on page",
+   "link": "https://www.sciencing.com/history-equality-symbols-math-8143072/",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hi, and welcome to class 8. Today's goal is simple. You will solve an inequality, draw it on a number line, and say in plain words what the answer means. Go at your own pace. If you lose your place, go back one slide. That is allowed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 8: Solving and Graphing Inequalities"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what is an inequality? Think of a game rule like 'you need at least 500 points'. It does not say exactly 500. It says a whole group of numbers works. Inequalities are how algebra writes rules like that. Here is today's plan, in four steps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read the symbols\n2. Draw the answer on a number line\n3. Solve: add, subtract, multiply, divide (and one new rule)\n4. Use it on money and limit problems"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: the four symbols. Less than is the small-mouth sign pointing left. Greater than points the other way. Then there are two with a line underneath. Those mean 'or equal to'. The line is the equal part, so the number itself counts too."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "<  less than\n>  greater than\n≤  less than or equal to\n≥  greater than or equal to"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does x ≥ 10 mean?",
+    "right": "x is 10 or any number bigger than 10.",
+    "wrong": [
+     "x is any number smaller than 10.",
+     "x is bigger than 10, but 10 itself is not allowed.",
+     "x is exactly 10 and nothing else."
+    ],
+    "why": "The sign ≥ means greater than or equal to. The line under it means 10 itself counts, along with everything above 10."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real life uses words, not symbols. Two phrases trip people up: 'at least' and 'at most'. 'At least 12' means 12 or more, so 12 counts and everything above it. 'At most 12' means 12 or less, so 12 counts and everything below it. Many people think 'least' means below. Check the words against the situation."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "at least 12  →  x ≥ 12\nat most 12  →  x ≤ 12"
+   },
+   "cite": [
+    "s5",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Jamie needs at least 12 points to level up. Which inequality fits, with p as his points?",
+    "right": "p ≥ 12",
+    "wrong": [
+     "p ≤ 12",
+     "p > 12",
+     "p < 12"
+    ],
+    "why": "'At least 12' means 12 is enough, and so is anything higher. That is p ≥ 12, with the 'or equal to' line."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: the number line. Take x > 3. Every number bigger than 3 works, so we shade everything to the right of 3. The number 3 itself does not work, so we mark it with an open parenthesis. Now take x ≥ 3. Here 3 does work, so we use a square bracket instead. Some books and teachers draw an open circle and a closed circle for the same idea. Both mean the same thing, so use the one your class uses."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two number lines from -5 to 5. Top: a parenthesis at 3 and a line shaded to the right, labeled x > 3. Bottom: a square bracket at 3 and a line shaded to the right, labeled x ≥ 3."
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How do you graph x ≤ 1 with brackets and parentheses?",
+    "right": "Put a bracket at 1 and shade to the left.",
+    "wrong": [
+     "Put a parenthesis at 1 and shade to the left.",
+     "Put a bracket at 1 and shade to the right.",
+     "Put a parenthesis at 1 and shade to the right."
+    ],
+    "why": "The sign is 'less than or equal', so 1 counts and gets a bracket. 'Less than' means smaller numbers, which sit to the left."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the big idea about the shading. Each point in the shaded part is a solution. A solution is any number that makes the inequality true. Try 5 in x > 3. Is 5 greater than 3? Yes. So 5 is a solution. Try 2. Not greater than 3, so 2 is not. The shaded line is a picture of all the winners at once."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution = any number that makes the inequality true"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: solving. Good news. You already know most of it. With equations, you did the same thing to both sides. With inequalities, adding or subtracting the same number on both sides keeps the sign exactly as it is. Try x + 7 > 12. Subtract 7 from both sides. You get x > 5."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x + 7 > 12  →  x > 5"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Solve x − 4 ≤ 9.",
+    "right": "x ≤ 13",
+    "wrong": [
+     "x ≥ 13",
+     "x ≤ 5",
+     "x ≥ 5"
+    ],
+    "why": "Add 4 to both sides. The sign stays the same when you add, so you get x ≤ 13."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Multiplying or dividing by a positive number also keeps the sign. Try 3x < 18. Divide both sides by 3. You get x < 6. Nothing flips. So far, this is just equation-solving."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3x < 18  →  x < 6"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the one new rule. When you multiply or divide both sides by a negative number, the inequality sign reverses. Here is why, in a small example. 2 is less than 5. That is true. Now multiply both sides by negative 1. You get negative 2 and negative 5. On the number line, negative 2 is to the right of negative 5, so negative 2 is the bigger one. The sign had to turn around to stay true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Multiply or divide by a NEGATIVE → flip the sign"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's do a full example. Solve 5 minus x is greater than 10. First, subtract 5 from both sides. You get negative x is greater than 5. We want x, not negative x. So multiply both sides by negative 1, and flip the sign. The answer is x is less than negative 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5 − x > 10\n−x > 5   (subtract 5 from both sides)\nx < −5   (multiply by −1 and flip the sign)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve −4x < 20.",
+    "right": "x > −5",
+    "wrong": [
+     "x < −5",
+     "x > 5",
+     "x < 5"
+    ],
+    "why": "Divide both sides by −4. That is dividing by a negative, so the sign flips from < to >. 20 divided by −4 is −5, so x > −5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A very common mistake: flipping the sign any time you see a negative number. Don't. Flip only when you multiply or divide by a negative. In 2x < −4, you divide by positive 2, so there is no flip, and the answer is x < −2. The negative 4 does not cause a flip. Adding or subtracting a negative does not cause one either."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "NO flip: 2x < −4  →  x < −2\nFLIP: −2x < 4  →  x > −2"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which one needs the sign flipped when you solve it?",
+    "right": "−2x < 8",
+    "wrong": [
+     "2x < −8",
+     "x + 8 < −2",
+     "x − 3 > −9"
+    ],
+    "why": "Only −2x < 8 means dividing by a negative number (−2). In the others, you divide by a positive or you add or subtract, so the sign stays."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Longer problems use steps you know. Take 3x − 5 ≥ 10. Add 5 to both sides to get 3x ≥ 15. Divide by 3 to get x ≥ 5. For x on both sides, here is a tip. Collect the x terms on the side where the number in front is bigger. That keeps you from dividing by a negative. Take −2x + 5 < 3x. Add 2x to both sides to get 5 < 5x. Divide by 5 to get 1 < x."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3x − 5 ≥ 10  →  3x ≥ 15  →  x ≥ 5\n−2x + 5 < 3x  →  5 < 5x  →  1 < x"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One thing about '1 is less than x'. It is the same statement as 'x is greater than 1', just written backwards. Most people like the x on the left, so we rewrite it as x > 1. Then it is easy to graph: parenthesis at 1, shade to the right."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1 < x  means the same as  x > 1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement means the same as 4 ≥ x?",
+    "right": "x ≤ 4",
+    "wrong": [
+     "x ≥ 4",
+     "x < 4",
+     "x > 4"
+    ],
+    "why": "Reading it backwards, '4 is greater than or equal to x' means x is 4 or smaller. That is x ≤ 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four: real problems. Here is a budget one. Jamie has $45 to spend. A game pass costs $12, and each skin costs $5. How many skins can he buy? Let s be the number of skins. The pass plus the skins must be at most $45. So 12 + 5s ≤ 45."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12 + 5s ≤ 45"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Solve it. Subtract 12 from both sides to get 5s ≤ 33. Divide by 5 to get s ≤ 6.6. The graph is a bracket at 6.6 and shading to the left. But look at the story. You can't buy 6.6 skins, and you can't buy negative skins. A solution has to make sense in the problem as well as in the math. So the skins Jamie can really buy are 0, 1, 2, 3, 4, 5 and 6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "12 + 5s ≤ 45\n5s ≤ 33\ns ≤ 6.6\nIn the story: whole numbers from 0 to 6"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the most skins Jamie can buy?",
+    "right": "6 skins (12 + 30 = $42, which is under $45)",
+    "wrong": [
+     "7 skins",
+     "6.6 skins",
+     "5 skins"
+    ],
+    "why": "7 skins cost 12 + 35 = $47, which is over the limit. You can't buy part of a skin, so 6 is the most. (5 would be allowed, but it isn't the most.)"
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now an 'at least' problem. To unlock a badge, Jamie needs at least 500 points. He has 140. Each level gives 40 points. With n for levels, we write 140 + 40n ≥ 500. Subtract 140 to get 40n ≥ 360. Divide by 40 to get n ≥ 9. He needs 9 levels or more."
+   },
+   "show": {
+    "kind": "list",
+    "text": "140 + 40n ≥ 500\n40n ≥ 360\nn ≥ 9"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Does exactly 9 levels unlock the badge?",
+    "right": "Yes. 140 + 360 = 500, which is exactly enough.",
+    "wrong": [
+     "No, he needs more than 9 levels.",
+     "No, he needs at least 10 levels.",
+     "Yes, but only if the badge needs less than 500 points."
+    ],
+    "why": "The sign is ≥, so 9 counts. On the graph, that is a bracket at 9, not a parenthesis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last problem, where the flip shows up in real life. A bank account has $100 and loses $4 a day. Jamie wants it to stay at least $20. With d for days, 100 − 4d ≥ 20. Subtract 100 to get −4d ≥ −80. Now divide by negative 4 and flip: d ≤ 20. That means the account stays at $20 or more for up to 20 days. After day 20, it drops below the limit."
+   },
+   "show": {
+    "kind": "list",
+    "text": "100 − 4d ≥ 20\n−4d ≥ −80\nd ≤ 20   (divided by −4, so the sign flipped)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the account problem, what does d ≤ 20 mean?",
+    "right": "For up to 20 days, the balance is still at least $20.",
+    "wrong": [
+     "The balance must be exactly $20 after 20 days.",
+     "The account needs at least 20 days to reach $100.",
+     "After 20 days, the balance is bigger than $100."
+    ],
+    "why": "d is the number of days that pass. Any number of days from 0 to 20 keeps the balance at $20 or above. More than 20 days breaks the limit."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A short history break. The < and > signs first appear in a book by Thomas Harriot, printed in 1631, ten years after he died. The signs with the line underneath came later. Historians give slightly different dates, which you can see on the next slides."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1631: < and > appear in print in Harriot's book\n1670: John Wallis uses ≤ and ≥ style signs, with the bar ABOVE\n1731 or 1734: Pierre Bouguer uses the bar BELOW, like today"
+   },
+   "cite": [
+    "s3",
+    "s6",
+    "s10",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Time to recap. Here are the steps. Read the symbol. Solve like an equation. Flip the sign only when you multiply or divide by a negative. Graph with a bracket if the endpoint counts, and a parenthesis if it doesn't. Then say what the answer means in the story."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read the symbol and the words\n2. Solve like an equation\n3. Multiply or divide by a negative? Flip the sign\n4. Graph: bracket (counts) or parenthesis (doesn't), then shade\n5. Say what it means in the story"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A last check, then you are done. Solve −3x ≥ 12. Think before you pick. Did you divide by a negative? Then flip. Well done for sticking with it. Next class we put two inequalities together. See you there."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "−3x ≥ 12"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Solve −3x ≥ 12.",
+    "right": "x ≤ −4",
+    "wrong": [
+     "x ≥ −4",
+     "x ≤ 4",
+     "x ≥ 4"
+    ],
+    "why": "Divide both sides by −3. That is a negative number, so ≥ flips to ≤. 12 divided by −3 is −4, so x ≤ −4."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Solving inequalities uses the same steps as equations",
+   "links": [
+    "[[One-Step and Two-Step Equations]]",
+    "[[Multi-Step Equations and Variables on Both Sides]]"
+   ]
+  },
+  {
+   "topic": "Flip the sign only when multiplying or dividing by a negative",
+   "links": [
+    "[[Properties and Simplifying Expressions]]"
+   ]
+  },
+  {
+   "topic": "Reading words as symbols (at least, at most)",
+   "links": [
+    "[[Variables and Expressions]]"
+   ]
+  },
+  {
+   "topic": "Next: two inequalities at once, and absolute value",
+   "links": [
+    "[[Compound Inequalities and Absolute Value]]",
+    "[[Linear Inequalities in Two Variables]]"
+   ]
+  },
+  {
+   "topic": "Standards link: solving linear inequalities in one variable, and checking solutions in a modeling context",
+   "links": [
+    "[[Common Core HSA-REI.B.3]]",
+    "[[Common Core HSA-CED.A.3]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1631, when Harriot's book with < and > was printed",
+   "elsewhere": "In the same decade, algebra's notation was still being settled. A table of symbol dates lists Descartes using the letter x for an unknown in 1637, and Oughtred's proportion sign in 1628.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "1670 to 1734, when the 'or equal to' signs took shape",
+   "elsewhere": "Leibniz introduced the integral sign in 1675, so many of the symbols in later math classes were being invented in these same years.",
+   "cite": [
+    "s10"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Harriot invented the < and > signs.",
+   "other_view": "Encyclopedia.com credits Harriot with inventing the signs. OpenStax and Sciencing say Harriot used triangular symbols and the book's editor changed them to the shapes we use now. Either way, the signs first appeared in print in 1631.",
+   "cite": [
+    "s3",
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Pierre Bouguer introduced ≤ and ≥ in 1731.",
+   "other_view": "OpenStax gives 1731. Sciencing and a Wikipedia symbol table give 1734. Both also note that John Wallis used similar signs with the bar above, around 1670. The sources don't agree on the exact year.",
+   "cite": [
+    "s3",
+    "s10",
+    "s12"
+   ]
+  },
+  {
+   "claim": "On a number line, an endpoint that counts gets a bracket.",
+   "other_view": "The OpenStax books use brackets and parentheses. Another source uses closed and open circles for the same job. Both are correct, so use the style your teacher or test uses.",
+   "cite": [
+    "s1",
+    "s9"
+   ]
+  },
+  {
+   "claim": "You should always solve by flipping the sign when you divide by a negative.",
+   "other_view": "That works every time. OpenStax also suggests a tip: collect the variable terms on the side with the bigger coefficient, so you often avoid a negative and no flip is needed. Both methods give the same answer.",
+   "cite": [
+    "s2",
+    "s3"
+   ]
+  }
+ ]
+}

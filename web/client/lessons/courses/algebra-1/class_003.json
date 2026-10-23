@@ -1,0 +1,505 @@
+{
+ "about": {
+  "title": "Properties and Simplifying Expressions",
+  "course": "algebra-1",
+  "class_n": 3,
+  "audience": [
+   "age 14 to 16",
+   "Jamie and teenagers like him",
+   "follows 8th-grade math",
+   "learners who like short steps, repeats and breaks"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, the usual half-hour. The class has three small ideas: spread (distribute), sort, and combine. Each idea gets a short practice question. You can pause after any beat. If you need more time, stop after beat 9 and do the rest next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "1.9 Properties of Real Numbers, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/1-9-properties-of-real-numbers",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "7.2 Commutative and Associative Properties, Prealgebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/7-2-commutative-and-associative-properties",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "7.3: Commutative and Associative Properties (Prealgebra 2e, OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "undated on page",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_2e_(OpenStax)/07:_The_Properties_of_Real_Numbers/7.03:_Commutative_and_Associative_Properties",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "4.4: Combining Like Terms (PrePALS PreAlgebra)",
+   "publisher": "LibreTexts Mathematics, Western Technical College",
+   "date": "undated on page",
+   "link": "https://math.libretexts.org/Courses/Western_Technical_College/PrePALS_PreAlgebra/04:_Introduction_to_Algebra/4.04:_Combining_Like_Terms",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Simplify Expressions Using the Distributive Property: Mini-Lesson Review, Algebra 1",
+   "publisher": "OpenStax (Rice University)",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/algebra-1/pages/6-simplify-expressions-using-the-distributive-property-mini-lesson-review",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Combining Like Terms - Simplifying Algebraic Expressions",
+   "publisher": "Free Math Help",
+   "date": "undated on page",
+   "link": "https://www.freemathhelp.com/combining-like-terms/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "High School: Algebra » Seeing Structure in Expressions",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "undated on page",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/SSE/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "2.2: Simplifying Algebraic Expressions (Elementary Algebra)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "undated on page",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_(LibreTexts)/02:_Linear_Equations_and_Inequalities/2.02:_Simplifying_Algebraic_Expressions",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "7.8.2 Using the Distributive Property to Write Equivalent Expressions, Algebra 1",
+   "publisher": "OpenStax (Rice University)",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/algebra-1/pages/7-8-2-using-the-distributive-property-to-write-equivalent-expressions",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "7.3 Distributive Property, Prealgebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/prealgebra/pages/7-3-distributive-property",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "2.2 Simplifying Algebraic Expressions, Beginning Algebra",
+   "publisher": "Saylor Academy / Flat World Knowledge (2012 Book Archive)",
+   "date": "2012",
+   "link": "https://2012books.lardbucket.org/books/beginning-algebra/s05-02-simplifying-algebraic-expressi.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "3.4 Combining Like Terms",
+   "publisher": "Open educational resource, oermath (Arithmetic chapter 3)",
+   "date": "undated on page",
+   "link": "https://s3-us-west-2.amazonaws.com/oermath/ArithmeticCR/Ch3/3_4CombineLikeTerms.pdf",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 3. Today's goal is to take a messy expression and make it short and neat. We use two tools: the distributive property, and combining like terms. You can pause any time. Nothing here is a race."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Properties and Simplifying Expressions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our three-step routine. Step 1: Spread, which means multiply what is outside the parentheses by everything inside. Step 2: Sort, which means put matching pieces next to each other. Step 3: Combine, which means add or subtract the matching pieces. We will use it all class."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Spread (distribute)\n2. Sort (group like terms)\n3. Combine (add or subtract)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's start with money. Three friends go to the movies. Each one needs 9 dollars and 1 quarter, which is $9.25. How much do they need in total? You can think about the dollars and the quarters separately. Three times 9 dollars is 27 dollars. Three times one quarter is 75 cents. Together that is $27.75. Splitting the job like that is the distributive property."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dollars: 3 × 9 = 27\nQuarters: 3 × 0.25 = 0.75\nTotal: $27.75"
+   },
+   "cite": [
+    "s10",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In algebra we write it as a rule: a times (b plus c) equals a times b, plus a times c. The number outside multiplies each piece inside. We use this rule to remove parentheses. For example, 3 times (x plus 4) becomes 3x plus 12."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a(b + c) = ab + ac\n3(x + 4) = 3x + 12"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Simplify 5(y + 2).",
+    "right": "5y + 10",
+    "wrong": [
+     "5y + 2",
+     "y + 10",
+     "5y + 7"
+    ],
+    "why": "The 5 multiplies both pieces inside the parentheses. 5 times y is 5y, and 5 times 2 is 10. A common slip is to multiply only the first piece."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a picture. Draw a rectangle that is 4 tall and (x plus 2) wide. Cut it into two parts. One part is 4 by x, with area 4x. The other part is 4 by 2, with area 8. The whole area is 4x plus 8. So 4(x + 2) and 4x + 8 are equivalent, which means they are the same amount written two ways."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangle 4 units tall. Its width is split into a part labelled x and a part labelled 2. The left part is labelled 4x and the right part is labelled 8."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The big rule is to multiply every term inside the parentheses by the factor outside. This matters most when the outside number is negative. Watch the signs. Take negative 2 times (x minus 3). Negative 2 times x is negative 2x. Negative 2 times negative 3 is positive 6. So the answer is negative 2x plus 6."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "−2(x − 3) = −2x + 6"
+   },
+   "cite": [
+    "s8",
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Simplify −2(x − 3).",
+    "right": "−2x + 6",
+    "wrong": [
+     "−2x − 6",
+     "2x − 6",
+     "−2x − 3"
+    ],
+    "why": "Negative 2 times negative 3 is positive 6. Two negatives multiplied make a positive, so the last sign flips."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A minus sign in front of parentheses, with no number, works the same way. It means multiply by negative 1. Multiplying by negative 1 gives the opposite. So minus (y plus 5) becomes negative y minus 5. And minus (2a minus 7) becomes negative 2a plus 7."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "−(y + 5) = −y − 5\n−(2a − 7) = −2a + 7"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the second tool, which is the order of things. Adding is commutative: 5 plus 3 equals 3 plus 5. Multiplying is commutative too: 5 times 3 equals 3 times 5. Commutative means you can swap the order. That is not true for subtraction or division. 8 minus 3 is 5, but 3 minus 8 is negative 5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Swap OK: 5 + 3 = 3 + 5 and 5 × 3 = 3 × 5\nSwap NOT OK: 8 − 3 ≠ 3 − 8"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Swapping the order changes the answer for which one?",
+    "right": "8 − 3 and 3 − 8",
+    "wrong": [
+     "8 + 3 and 3 + 8",
+     "8 × 3 and 3 × 8",
+     "x + 5 and 5 + x"
+    ],
+    "why": "Adding and multiplying can be swapped. Subtracting cannot: 8 − 3 is 5, but 3 − 8 is −5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The associative property is about grouping. When you add or multiply three or more things, you can move the parentheses and get the same answer. This helps you make easy chunks. Try 48 plus 7 plus 3. Group the 7 and 3 first and you get 48 plus 10, which is 58. Grouping also simplifies 6 times (3x): that is the same as (6 times 3) times x, so it is 18x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "48 + (7 + 3) = 48 + 10 = 58\n6(3x) = (6 · 3)x = 18x"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big word of the day: like terms. Terms are the pieces added or subtracted in an expression. Like terms have the same variable part. That means the same letters, each with the same exponent. 7x and negative 2x are like terms. Plain numbers, called constants, are like terms with each other. But 3x and 4y are not like terms, and neither are 4x and 4x squared."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Like: 7x and −2x\nLike: 6 and 9 (numbers)\nNot like: 3x and 3y\nNot like: 4x and 4x²"
+   },
+   "cite": [
+    "s4",
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pair are like terms?",
+    "right": "7x and −2x",
+    "wrong": [
+     "3x and 3y",
+     "4x and 4x²",
+     "6x and 6"
+    ],
+    "why": "Like terms need the same letters with the same exponents. 7x and −2x are both just x. The other pairs differ in the letter, the exponent, or whether there is a letter at all."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why can we add like terms? Because of the distributive property again. 3y plus 7y equals (3 plus 7) times y, which is 10y. Think of it as 3 of something plus 7 of the same something. In game terms, 3 coin bags plus 7 coin bags is 10 coin bags. You only add the coefficients, the numbers in front. The letter and its exponent stay the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3y + 7y = (3 + 7)y = 10y"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three traps to watch for. First, a plain x has an invisible 1 in front, so x plus 3x is 4x. Second, exponents stay put: 3x squared plus 5x squared is 8x squared, not 8x to the fourth. Third, unlike terms cannot merge: 3x plus 4y stays 3x plus 4y. It never becomes 7xy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + 3x = 4x (x means 1x)\n3x² + 5x² = 8x² (exponent stays)\n3x + 4y stays 3x + 4y"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Simplify x + 3x.",
+    "right": "4x",
+    "wrong": [
+     "3x",
+     "4x²",
+     "3x²"
+    ],
+    "why": "A plain x means 1x, so 1x + 3x = 4x. You add the coefficients and keep the letter as it is."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Sort and Combine together. Take 18p plus 6q plus negative 15p plus 5q. Use the commutative property to put like terms side by side: 18p plus negative 15p, then 6q plus 5q. Combine them: 3p plus 11q. Think of a game with two kinds of points, p and q. You can only add each kind to its own kind."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "18p + 6q + (−15p) + 5q\n= 18p + (−15p) + 6q + 5q\n= 3p + 11q"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Simplify 18p + 6q + (−15p) + 5q.",
+    "right": "3p + 11q",
+    "wrong": [
+     "33p + 11q",
+     "3p + q",
+     "14pq"
+    ],
+    "why": "18p and −15p combine to 3p. 6q and 5q combine to 11q. The p's and q's never mix."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now all three steps together, with Spread first. Simplify 2 times (5 minus 3x), minus 4 times (x plus 3). Spread: 2 times 5 is 10, and 2 times negative 3x is negative 6x. Then negative 4 times x is negative 4x, and negative 4 times 3 is negative 12. Sort and Combine: negative 6x and negative 4x make negative 10x. 10 and negative 12 make negative 2. The answer is negative 10x minus 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2(5 − 3x) − 4(x + 3)\nSpread: 10 − 6x − 4x − 12\nSort: −6x − 4x + 10 − 12\nCombine: −10x − 2"
+   },
+   "cite": [
+    "s4",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Simplify 2(5 − 3x) − 4(x + 3).",
+    "right": "−10x − 2",
+    "wrong": [
+     "−10x + 22",
+     "−2x − 2",
+     "−10x − 22"
+    ],
+    "why": "After spreading you get 10 − 6x − 4x − 12. The x terms give −10x. The numbers give 10 − 12 = −2. If you got +22, the −4 did not multiply the 3 correctly."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A game example. Say each level gives you 2x coins plus 3 gems, and you play 4 levels. You also earn 5x bonus coins and pay 7 gems for a skin. That is 4 times (2x plus 3), plus 5x, minus 7. Spread: 8x plus 12. Then add 5x and take away 7. Combine: 13x plus 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4(2x + 3) + 5x − 7\n= 8x + 12 + 5x − 7\n= 13x + 5"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Simplify 4(2x + 3) + 5x − 7.",
+    "right": "13x + 5",
+    "wrong": [
+     "13x + 19",
+     "9x + 5",
+     "13x² + 5"
+    ],
+    "why": "Spread to get 8x + 12 + 5x − 7. Then 8x + 5x = 13x, and 12 − 7 = 5. The 7 is subtracted, so it is not added."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more to try before we finish, and it has a negative outside number. Simplify negative 5 times (2x minus 3), plus 7x. Spread first: negative 10x plus 15. Then combine negative 10x and 7x to get negative 3x. The answer is negative 3x plus 15. Take your time with the signs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "−5(2x − 3) + 7x = −3x + 15"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Simplify −5(2x − 3) + 7x.",
+    "right": "−3x + 15",
+    "wrong": [
+     "−3x − 15",
+     "−17x + 15",
+     "−3x + 8"
+    ],
+    "why": "−5 times 2x is −10x, and −5 times −3 is +15. Then −10x + 7x = −3x. The 15 stays positive."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why bother? To simplify means to write an expression in its shortest form, with the fewest symbols. Math also uses the words terms, factors and coefficients. Noticing those parts is how you read an expression, and that is a skill in the Common Core standards for high school algebra. Next class we use these skills to solve equations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Simplify = fewest symbols, same value"
+   },
+   "cite": [
+    "s12",
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Recap. Spread: the outside number multiplies every inside term, and watch the signs. Sort: only like terms go together. Combine: add the coefficients and keep the letters. You did good work today. If any step felt shaky, replay that beat. Practising small steps is how this sticks."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Spread: multiply every term inside\n2. Sort: like terms together\n3. Combine: add the coefficients\nWatch the signs!"
+   },
+   "cite": [
+    "s5",
+    "s4",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Order of operations (used when deciding what to do first in parentheses)",
+   "links": [
+    "[[Order of Operations and Evaluating Expressions]]"
+   ]
+  },
+  {
+   "topic": "Variables, terms and coefficients",
+   "links": [
+    "[[Variables and Expressions]]"
+   ]
+  },
+  {
+   "topic": "Simplifying before solving: the distributive property is used inside equations",
+   "links": [
+    "[[One-Step and Two-Step Equations]]",
+    "[[Multi-Step Equations and Variables on Both Sides]]"
+   ]
+  },
+  {
+   "topic": "The distributive property run backwards is factoring",
+   "links": [
+    "[[Factoring Out the Greatest Common Factor and Grouping]]",
+    "[[Multiplying Polynomials]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Simplifying means removing the parentheses and combining everything, so 4x + 12 is always better than 4(x + 3).",
+   "other_view": "One textbook defines simplify as writing an expression in its most compact form with the fewest symbols, and that usually means distributing and combining like terms. But the Common Core algebra standards also ask students to see parts of an expression as one unit and to rewrite expressions in useful ways. The factored form 4(x + 3) can show structure that the spread-out form hides. Which form is better depends on the goal. In this class, simplify means distribute and combine. Later you will meet times when you want the other form.",
+   "cite": [
+    "s12",
+    "s7"
+   ]
+  }
+ ]
+}

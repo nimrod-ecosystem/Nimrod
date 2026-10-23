@@ -1,0 +1,254 @@
+{
+ "about": {
+  "title": "Putting groups together (totals to 5)",
+  "course": "counting-and-adding",
+  "class_n": 6,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes. The totals stop at 5, so the class is short and slow. Each idea gets its own quiet step, and you can pause after any question and carry on later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello, {name}. Today we put two small groups together. There is no hurry. You can stop and start again whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Putting groups together"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last time we looked at more and fewer. Today we find out how many there are when two groups join."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Look at two small groups|Put them together|Count them all|Say the total"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture a table. On the left there are 2 cups. On the right there are 3 cups. These are two small groups."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table with two groups of cups. On the left, 2 blue cups. On the right, 3 white cups. A small gap sits between the groups."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we slide the groups close together, so they become one group. Putting groups together has a name. It is called adding."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "add = put together"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To find out how many, we count them all, starting from 1. Touch each cup as you say its number. 1, 2, 3, 4, 5."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1  2  3  4  5"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check. You have 2 cups and 3 cups, and you put them together. How many cups are there altogether?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One group of 5 cups: 2 blue and 3 white, sitting side by side."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "2 cups and 3 cups are put together. How many cups are there?",
+    "right": "5",
+    "wrong": [
+     "3",
+     "4",
+     "2"
+    ],
+    "why": "Touch each cup and count from 1: 1, 2, 3, 4, 5. There are 5 cups in all."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are three little words to learn. 'And' joins the groups. 'Makes' tells us what comes next. 'Total' means how many there are altogether."
+   },
+   "show": {
+    "kind": "list",
+    "text": "and = joins the groups|makes = leads to the answer|total = how many altogether"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we can say it in one sentence. Say it with me: 2 and 3 makes 5."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "2 and 3 makes 5."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try a smaller one. Take 1 spoon, and 1 more spoon. Put them together and count: 1, 2. We say: 1 and 1 makes 2."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One silver spoon on the left and one silver spoon on the right, then both together, 2 spoons."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "1 and 1 makes what?",
+    "right": "2",
+    "wrong": [
+     "1",
+     "3",
+     "0"
+    ],
+    "why": "One spoon and one more spoon, counted from 1, gives 1, 2. The total is 2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a bigger group. You have 4 coins in one hand and 1 coin in the other. Put them together. Count them all from 1: 1, 2, 3, 4, 5. So 4 and 1 makes 5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left hand: 4 coins|Right hand: 1 coin|Together: 5 coins"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "4 coins and 1 coin. What is the total?",
+    "right": "5",
+    "wrong": [
+     "4",
+     "3",
+     "6"
+    ],
+    "why": "Count all the coins from 1 and you reach 5. So 4 and 1 makes 5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a nice surprise. 3 and 2 also makes 5. If you swap the two groups, the total stays the same. You do not need to remember this. Counting them all will always work."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2 and 3 makes 5|3 and 2 makes 5"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now try it yourself with real things. Use spoons, buttons, or your fingers. Make one small group, then another. Put them together. Count them all and say the sentence out loud."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Make one small group|Make a second small group|Push them together|Count all from 1|Say: __ and __ makes __"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last question. You have 2 plates, and you add 2 more plates. Count them all from 1."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two white plates on the left, two white plates on the right, then all four pushed together."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "2 and 2 makes what?",
+    "right": "4",
+    "wrong": [
+     "2",
+     "3",
+     "5"
+    ],
+    "why": "Two plates and two more plates, counted from 1, gives 1, 2, 3, 4. The total is 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. Today you put two small groups together, counted them all, and said the total. Next time we will add with objects up to 10."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Adding means putting together|Count all from 1|Say: 2 and 3 makes 5"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "What adding means",
+   "links": [
+    "[[Counting things from 0 to 10]]",
+    "[[More and fewer]]"
+   ]
+  },
+  {
+   "topic": "Words: add, and, makes, total",
+   "links": [
+    "[[Adding with objects up to 10]]"
+   ]
+  },
+  {
+   "topic": "Counting all from 1",
+   "links": [
+    "[[Counting out a number: setting a table]]"
+   ]
+  },
+  {
+   "topic": "Saying a sum aloud: 2 and 3 makes 5",
+   "links": [
+    "[[Adding without objects]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

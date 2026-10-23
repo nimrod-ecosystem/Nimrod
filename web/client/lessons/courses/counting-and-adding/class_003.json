@@ -1,0 +1,288 @@
+{
+ "about": {
+  "title": "Counting out a number: setting a table",
+  "course": "counting-and-adding",
+  "class_n": 3,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes. The class is split into short steps, so you can pause after any step and come back later. Counting out up to 20 takes a little practice, so the last steps may be worth a second sitting."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome, {name}. Today we are setting a table. We will count out exactly the number of things we are asked for."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Counting out a number: setting a table"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You have already met the numbers 0 to 9. Now we put them to work. Take your time. There is no hurry, and you can stop and start again whenever you like."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table with four empty chairs around it, in warm morning light. On the table is a pile of forks, a stack of plates and a few cups."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are two different jobs with counting. The first is counting what is already there. The second is counting out, which means taking just the number you were asked for."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Counting what is there: How many forks are on the table?\nCounting out: Give me 4 forks."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Counting what is there, you count them all and the number you end on is your answer. Counting out, someone gives you the number first. You count until you reach it, and then you stop."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Count out"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Someone says: \"Please bring me 3 cups.\" Which job is this?",
+    "right": "Counting out: take just 3 cups",
+    "wrong": [
+     "Counting what is already there",
+     "Counting all the cups in the house",
+     "Counting the plates instead"
+    ],
+    "why": "The number 3 was given to us first. We count out 3 cups and then stop."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the table. Every person gets the same three things: one plate, one fork and one cup. One for each person."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 plate\n1 fork\n1 cup\nfor each person"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So if 4 people are coming to eat, we need 4 plates, 4 forks and 4 cups. The number of people tells us the number of each thing."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 people = 4 plates, 4 forks, 4 cups"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "There are 5 people. How many forks do we need?",
+    "right": "5",
+    "wrong": [
+     "4",
+     "6",
+     "1"
+    ],
+    "why": "One fork for each person. 5 people means 5 forks."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us count out 4 forks together. Put the forks in a pile. Pick up one fork and say \"one\" as you move it to the table. Pick up the next and say \"two\". Then \"three\". Then \"four\"."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand moving forks one at a time from a pile to the table. Beside each fork as it lands, a number appears: 1, 2, 3, 4."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Say one number for each fork, and move each fork as you say it. The moving matters, because it keeps the forks you have counted apart from the ones you have not."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One number, one fork"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the most important part. When you say the number you were asked for, you stop. If you were asked for 4 forks, the fork you move as you say \"four\" is the last one, even if there are more forks in the pile."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 asked for. Say 4. Stop."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You were asked for 6 plates. You have just moved a plate and said \"six\". What do you do next?",
+    "right": "Stop. You have 6 plates.",
+    "wrong": [
+     "Move one more plate and say \"seven\"",
+     "Put all the plates back",
+     "Count the whole pile again from one"
+    ],
+    "why": "Six is the number you were asked for. Once you say it, you stop."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, check. Counting again is a good habit, and everyone does it. Put the forks in a row. Touch each one and count: one, two, three, four. If you end on 4, you are right."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Four forks in a neat row. A finger touches each fork in turn while the numbers 1, 2, 3, 4 light up below."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If the check gives a different number, that is fine. It happens to everyone. If you have too many, put one back. If you have too few, add one. Then count again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Too many? Put one back.\nToo few? Add one.\nThen count again."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You counted out forks and the check gives 5, but you were asked for 4. What do you do?",
+    "right": "Put one fork back, then count again",
+    "wrong": [
+     "Leave it, because 5 is close enough",
+     "Add two more forks",
+     "Take all the forks away and give up"
+    ],
+    "why": "We want exactly 4. Taking one away leaves 4, and counting again confirms it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Bigger numbers work the same way, up to 20. If you are asked for 12 cups, count them out one at a time into a line. If you lose your place, there is nothing to worry about. Put them back and start again."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12 cups: count 1, 2, 3 ... up to 12. Stop."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For bigger numbers it helps to count into small rows, such as a row of five. Then check by touching each one in the rows, one at a time."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Twelve cups set out in rows: a row of five, a row of five, and a row of two. A finger touches each cup in turn."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us practise once more. There are 6 people coming to eat. Count out 6 plates, then 6 forks, then 6 cups. After each one, check by counting again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6 people\nCount out 6 plates. Check.\nCount out 6 forks. Check.\nCount out 6 cups. Check."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "There are 6 people. You have counted out 6 plates. How many cups do you count out?",
+    "right": "6",
+    "wrong": [
+     "5",
+     "7",
+     "1"
+    ],
+    "why": "One cup for each person, so 6 cups for 6 people."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Here is what we learned. Counting out means taking the number you were asked for. Move one thing for each number you say. Stop when you reach the number. Then check by counting again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Count out: take just the number asked for\nOne number for each thing you move\nStop at the number\nCheck by counting again"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time we look at more and fewer. You might try today's skill at home: count out spoons for lunch, or cups for a visit. Small steps count, and every one of them is progress."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "One number for each thing. Stop. Check."
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Counting out versus counting what is there",
+   "links": [
+    "[[Counting things from 0 to 10]]",
+    "[[More and fewer]]"
+   ]
+  },
+  {
+   "topic": "One-to-one matching: one plate, one fork, one cup per person",
+   "links": [
+    "[[Numbers 0 to 9]]"
+   ]
+  },
+  {
+   "topic": "Checking by counting again",
+   "links": [
+    "[[One more, one fewer]]"
+   ]
+  },
+  {
+   "topic": "Stopping at the number asked for",
+   "links": [
+    "[[Counting from 11 to 20]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

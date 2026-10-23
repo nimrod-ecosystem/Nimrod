@@ -1,0 +1,241 @@
+{
+ "about": {
+  "title": "Y, Z and the Whole Alphabet in Order",
+  "course": "letters-a-z",
+  "class_n": 9,
+  "audience": [
+   "adult relearning reading",
+   "young child",
+   "anyone learning or relearning letters"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes fits the plan: two new letters (Y and Z), a quick look back at V to X, and one slow run through the whole alphabet. Pause as often as you like. Taking 10 or 12 minutes is fine."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello, and welcome to class nine. Today we meet the last two letters, Y and Z. Then we say the whole alphabet, from A all the way to Z. Go at your own speed. There is no rush."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Y, Z and the Whole Alphabet"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back at three letters from last time. V, as in van. W, as in water. X, as in box. Say each one out loud with me. V. W. X."
+   },
+   "show": {
+    "kind": "list",
+    "text": "V v: van\nW w: water\nX x: box"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check. Which letter does the word water start with? Take your time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "water"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter does the word \"water\" start with?",
+    "right": "W",
+    "wrong": [
+     "V",
+     "X",
+     "Y"
+    ],
+    "why": "Water starts with the sound \"wuh\", and that is the letter W. V says \"vuh\", as in van. X is mostly heard at the end of words, like box."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our first new letter. This is Y. Big Y and little y. The name of the letter sounds like the word why. Say it with me: Y."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Y y"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sound Y makes is \"yuh\", like at the start of yes. A familiar word is yellow, like the sun or a banana. A grown-up word is yesterday. Say it: yuh, yuh, yellow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Y y\nName: why\nSound: yuh\nWord: yellow\nGrown-up word: yesterday"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which word starts with the sound \"yuh\"?",
+    "right": "yellow",
+    "wrong": [
+     "zebra",
+     "water",
+     "apple"
+    ],
+    "why": "Yellow starts with \"yuh\", the sound of Y. Zebra starts with Z, water with W, and apple with A."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our last new letter is Z. Big Z and little z. Some people say \"zee\" and some people say \"zed\". Both are right. Use the one you know."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Z z"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sound Z makes is \"zzz\", like a buzzing bee. A familiar word is zebra, the striped animal. A grown-up word is zero. Try the buzz with me: zzz, zzz, zebra."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Z z\nName: zee or zed\nSound: zzz\nWord: zebra\nGrown-up word: zero"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which letter makes the buzzing sound \"zzz\"?",
+    "right": "Z",
+    "wrong": [
+     "Y",
+     "V",
+     "W"
+    ],
+    "why": "Z makes the buzzing \"zzz\" sound, like a bee. Y says \"yuh\"."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You now know every letter. Let's see them all in order. We'll go in four short rows. Each letter lights up as we say it, so follow along."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A B C D E F G\nH I J K L M N\nO P Q R S T U\nV W X Y Z"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's say it slowly together. A, B, C, D, E, F, G. Pause and breathe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A B C D E F G"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "H, I, J, K, L, M, N. Nicely done. If it helps, sing it to the tune of the alphabet song. Lots of people find that makes the order easier to remember."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "H I J K L M N"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "O, P, Q, R, S, T, U. Nearly there."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "O P Q R S T U"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "V, W, X, Y, and Z. You said the whole alphabet. Well done."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "V W X Y Z"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letter comes right after X, just before the end of the alphabet?",
+    "right": "Y",
+    "wrong": [
+     "W",
+     "Z",
+     "V"
+    ],
+    "why": "The end of the alphabet goes X, Y, Z. W and V come before X. Z comes last."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today you learned Y for yellow and Z for zebra, and you said A to Z in order. If any part felt tricky, that's fine. Come back and say it again whenever you like. Next time is our last class, a review where we find and say any letter."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Y: why, yuh, yellow\nZ: zee or zed, zzz, zebra\nA to Z in order\nNext: review"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Letter Y",
+   "links": [
+    "[[Letter W]]",
+    "[[Letter Z]]",
+    "[[Sounds of letters]]"
+   ]
+  },
+  {
+   "topic": "Letter Z",
+   "links": [
+    "[[Letter Y]]",
+    "[[Zee and zed]]",
+    "[[Saying the alphabet in order]]"
+   ]
+  },
+  {
+   "topic": "Saying the alphabet in order",
+   "links": [
+    "[[Alphabet song]]",
+    "[[Review: find and say any letter]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

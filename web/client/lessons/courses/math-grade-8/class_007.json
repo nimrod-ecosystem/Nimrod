@@ -1,0 +1,521 @@
+{
+ "about": {
+  "title": "Scientific Notation: Reading and Writing",
+  "course": "math-grade-8",
+  "class_n": 7,
+  "audience": [
+   "Jamie",
+   "teenagers aged 13 to 15"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, a normal half-hour class. There are four parts: powers of 10, big numbers, small numbers, and why the rule exists. Each part is followed by short practice questions. If you want to split it in two, stop after the big-number practice and do small numbers next time. Go at your own speed and repeat any part you like."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "10.5 Integer Exponents and Scientific Notation, Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "2020-03-11",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/10-5-integer-exponents-and-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "6.7 Integer Exponents and Scientific Notation, Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/6-7-integer-exponents-and-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "Appendix C: Scientific Notation, Astronomy 2e",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/astronomy-2e/pages/c-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Grade 8, Expressions & Equations (CCSS.Math.Content.8.EE.A.3 and 8.EE.A.4)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "undated",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "SP 330, Section 2: The International System of Units",
+   "publisher": "NIST (National Institute of Standards and Technology)",
+   "date": "undated",
+   "link": "https://www.nist.gov/pml/special-publication-330/sp-330-section-2",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Numbers in Astronomy: Powers of Ten",
+   "publisher": "Maricopa Community Colleges Open Educational Resources (adapted from OpenStax Astronomy)",
+   "date": "undated",
+   "link": "https://open.maricopa.edu/mccasth5p/chapter/numbers-in-astronomy-powers-of-ten/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "3.9 Scientific Notation, Contemporary Mathematics",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/3-9-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Planet Sizes and Locations in Our Solar System",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/solar-system/planets/planet-sizes-and-locations-in-our-solar-system/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Scientific Notation & The Metric System",
+   "publisher": "University of California San Diego (Physics 7 course archive)",
+   "date": "undated",
+   "link": "https://casswww.ucsd.edu/archive/physics/ph7/Units.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Power of 10",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Power_of_10",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 7. Today we learn a short way to write numbers that are huge or tiny. By the end you can write them and turn them back into ordinary numbers. Take your time. You can pause or repeat any part."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Scientific Notation: Reading and Writing"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with a big one. On average, Earth is about 93 million miles from the Sun. Written out, that is 93,000,000. That is eight digits and a lot of zeros. It is easy to lose count, and one missing zero changes the answer a lot."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "93,000,000 miles"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our number system is built on tens. Ten is 10 to the 1st power. A hundred is 10 times 10, so 10 squared. A thousand is 10 cubed. A million is 10 to the 6th, and a billion is 10 to the 9th. The little raised number, the exponent, counts how many tens are multiplied together. Another way to see it: the exponent counts the zeros after the 1."
+   },
+   "show": {
+    "kind": "list",
+    "text": "10^1 = 10\n10^2 = 100\n10^3 = 1,000\n10^6 = 1,000,000 (a million)\n10^9 = 1,000,000,000 (a billion)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 10^6?",
+    "right": "1,000,000",
+    "wrong": [
+     "100,000",
+     "10,000,000",
+     "600"
+    ],
+    "why": "10^6 means six tens multiplied together, which is a 1 followed by six zeros: 1,000,000, a million. 100,000 is 10^5 and 10,000,000 is 10^7. 600 is 6 × 100. It is a common slip to multiply the base by the exponent, but the exponent counts how many tens are multiplied."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You met negative exponents in class 5, so this is a quick reminder. Going down one power divides by 10. 10 to the 2nd is 100, 10 to the 1st is 10, 10 to the 0 is 1, and 10 to the negative 1 is 0.1. Keep going: 10 to the negative 3 is 0.001. A negative exponent does not make a negative number. It makes a number between 0 and 1."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Positive powers (big)\n10^3 = 1,000\n4,000 = 4 × 10^3\n\nNegative powers (small)\n10^-3 = 0.001\n0.004 = 4 × 10^-3"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In 4 × 10^-3, what does the minus sign in the exponent tell us?",
+    "right": "The number is small, between 0 and 1. It is not negative.",
+    "wrong": [
+     "The number itself is negative.",
+     "We subtract 3 from the number 4.",
+     "There are three zeros right after the decimal point."
+    ],
+    "why": "A negative exponent means the number is between 0 and 1. 4 × 10^-3 is 0.004, which is positive. The 3 does not count zeros. 0.004 has two zeros after the decimal point and the 4 sits in the third place."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the definition. A number is in scientific notation when it looks like a times 10 to the n. The first factor, a, is at least 1 and less than 10. The exponent, n, is a whole number. It can be positive, negative, or zero."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a × 10^n, where 1 ≤ a < 10 and n is an integer"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Writing a big number takes three steps. One: move the decimal point so the first factor is between 1 and 10. Two: count how many places you moved it. Three: write times 10 to that count. For a number bigger than 1, the exponent is positive. Quick check with 965. Move the point two places left to get 9.65. So 965 is 9.65 × 10^2. And 9.65 × 100 really is 965."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Move the decimal point so the first factor is from 1 up to (but not including) 10.\n2. Count the places you moved it.\n3. Write × 10 to that power. Number bigger than 1: the exponent is positive.\n\nExample: 965 = 9.65 × 10^2"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Write 48,300 in scientific notation.",
+    "right": "4.83 × 10^4",
+    "wrong": [
+     "4.83 × 10^5",
+     "48.3 × 10^3",
+     "4.83 × 10^3"
+    ],
+    "why": "The decimal point of 48,300 sits at the far right. Move it left past four digits to get 4.83. That is 4 places, so the exponent is 4 and the answer is 4.83 × 10^4. 48.3 × 10^3 has the right value but its first factor is not less than 10. The two wrong exponents come from counting 5 places or 3 places instead of 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Earth-to-Sun distance. 93,000,000 has its decimal point at the far right. Move it left 7 places to land between the 9 and the 3. That gives 9.3. Seven places, so the exponent is 7. The distance is 9.3 × 10^7 miles."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "93,000,000 = 9.3 × 10^7"
+   },
+   "cite": [
+    "s1",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Write 93,000,000 in scientific notation.",
+    "right": "9.3 × 10^7",
+    "wrong": [
+     "9.3 × 10^8",
+     "93 × 10^6",
+     "9.3 × 10^6"
+    ],
+    "why": "Start at the far right and move the decimal point left until it sits just after the 9. That is 7 jumps, so the exponent is 7. 93 × 10^6 has the right value, but 93 is not less than 10. The other two are off by one jump."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Small numbers go the other way. Take 0.00347. To get a first factor between 1 and 10, move the decimal point three places to the right. That gives 3.47. You made the number bigger by moving right. So you must make up for it with a negative exponent. 0.00347 is 3.47 × 10^-3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0.00347\nMove the point 3 places right: 3.47\nNumber between 0 and 1, so the exponent is negative\n0.00347 = 3.47 × 10^-3"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Write 0.00347 in scientific notation.",
+    "right": "3.47 × 10^-3",
+    "wrong": [
+     "3.47 × 10^3",
+     "3.47 × 10^-2",
+     "347 × 10^-5"
+    ],
+    "why": "The decimal point moves 3 places right to make 3.47, and the number is between 0 and 1, so the exponent is -3. A positive 3 would be 3,470. The exponent -2 miscounts the places. 347 × 10^-5 has the right value but 347 is not less than 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real tiny numbers. Blue light has a wavelength of about 0.000000450 meters. Move the decimal point 7 places right to reach 4.50. So that is about 4.5 × 10^-7 meters. A proton is much smaller than a grain of sand. A university physics course gives its mass as 1.673 × 10^-24 grams. Written out, that is a decimal point, then 23 zeros, then 1673."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4.5 × 10^-7 meters (blue light)\n1.673 × 10^-24 grams (a proton)"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A proton's mass is 1.673 × 10^-24 grams. Which statement is true?",
+    "right": "It is a tiny number, much less than 1 gram.",
+    "wrong": [
+     "It is a huge number, over a trillion grams.",
+     "It is about 1.673 grams.",
+     "It is a negative mass."
+    ],
+    "why": "A negative exponent means the number is between 0 and 1, and -24 means it is extremely small: 24 places to the left. It is not about 1.673 grams, because that would need an exponent of 0. A negative exponent does not make a negative number."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the trip back, from scientific notation to ordinary form. Look at the exponent. If it is positive, move the decimal point that many places to the right. If it is negative, move it that many places to the left. Fill empty places with zeros. Example: 6.2 × 10^5. Move 5 places right and you get 620,000."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Positive exponent: move the point right\nNegative exponent: move the point left\nAdd zeros where you need them\n\n6.2 × 10^5 = 620,000"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Write 6.2 × 10^5 in standard form.",
+    "right": "620,000",
+    "wrong": [
+     "62,000",
+     "6,200,000",
+     "0.000062"
+    ],
+    "why": "The exponent is +5, so move the point 5 places right: 6.2 becomes 620,000. 62,000 is only 4 places, and 6,200,000 is 6 places. 0.000062 moves the wrong way, because a positive exponent makes a number bigger."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a small one going back. 8.1 × 10^-5. The exponent is negative 5, so move the decimal point 5 places left. Put in zeros as you go: 0.000081. A check helps. Is the answer a tiny number between 0 and 1? Yes, so a negative exponent fits."
+   },
+   "show": {
+    "kind": "list",
+    "text": "8.1 × 10^-5\nMove the point 5 places left\n= 0.000081"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Write 8.1 × 10^-5 in standard form.",
+    "right": "0.000081",
+    "wrong": [
+     "0.00081",
+     "0.0000081",
+     "810,000"
+    ],
+    "why": "Move the decimal point 5 places left: 0.81, 0.081, 0.0081, 0.00081, 0.000081. 0.00081 is only 4 places. 0.0000081 is 6 places. 810,000 moves the wrong way for a negative exponent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's use it on real planets. This chart shows the average distance from the Sun in millions of miles. Mercury is about 36 million, so 3.6 × 10^7 miles. Neptune is about 2.8 billion miles. That is 2,800 million, or 2.8 × 10^9. The 10^9 shows at a glance that Neptune's number is far bigger."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Average distance from the Sun, in millions of miles",
+    "chart": "c1"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Uranus is about 1.8 billion miles from the Sun. Which is that in scientific notation?",
+    "right": "1.8 × 10^9",
+    "wrong": [
+     "1.8 × 10^8",
+     "18 × 10^8",
+     "1.8 × 10^10"
+    ],
+    "why": "A billion is 10^9. 1.8 billion is 1.8 × 10^9, and 1.8 is already between 1 and 10, so nothing needs to move. 18 × 10^8 has the right value but its first factor is not less than 10. The other two have the wrong power of 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why must the first factor be between 1 and 10? Without that rule, one number has many names. 145.8141 × 10^8 and 14.58141 × 10^9 are the same number. When you move the point one place, the power of 10 changes by one. With the rule, each number has exactly one scientific-notation name. One of the OpenStax books also describes it this way: the messy digits go out front and the tidy power of ten carries the size."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same number, many names\n145.8141 × 10^8\n14.58141 × 10^9\n\nOne agreed form\n1.458141 × 10^10"
+   },
+   "cite": [
+    "s7",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rule also gives a payoff. Once every number is in the agreed form, the exponent tells you the size first. 10^8 is in the hundreds of millions, and 10^9 is in the billions. And the first factor must have exactly one non-zero digit before the decimal point. So 0.5 × 10^4 and 25 × 10^4 do not count, and neither does 10 × 10^3. Write 10 × 10^3 as 1 × 10^4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One non-zero digit before the decimal point: 1 ≤ a < 10"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is NOT written in scientific notation?",
+    "right": "25 × 10^4",
+    "wrong": [
+     "2.5 × 10^5",
+     "7 × 10^-2",
+     "9.9 × 10^-3"
+    ],
+    "why": "The first factor must be at least 1 and less than 10. 25 is not less than 10, so 25 × 10^4 breaks the rule. It equals 2.5 × 10^5. The other three each have a first factor between 1 and 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more big number: the speed of light. In a vacuum, NIST gives it as exactly 299,792,458 meters per second. The decimal point sits at the far right, and 8 places left puts it after the 2. That gives 2.99792458 × 10^8. Many people round it to about 3 × 10^8 for quick work."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "299,792,458 m/s = 2.99792458 × 10^8 m/s"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does a grade 8 class teach this? A national standard asks you to use a single digit times a power of 10 to estimate very large or very small quantities. Its example says the US population is about 3 × 10^8 and the world population is about 7 × 10^9. Then it says the world has more than 20 times as many people. We will compare and calculate with these numbers in the next class."
+   },
+   "show": {
+    "kind": "list",
+    "text": "US population ≈ 3 × 10^8\nWorld population ≈ 7 × 10^9\nNext class: comparing and calculating"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick recap. Powers of 10 count the tens. For a big number, move the decimal point left and use a positive exponent. For a small number, move it right and use a negative exponent. The first factor stays from 1 up to 10. To go back, a positive exponent moves the point right and a negative exponent moves it left. You did well today. Come back to any practice question you want to try again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Big number: point moves left, exponent positive\nSmall number: point moves right, exponent negative\nFirst factor: 1 ≤ a < 10\nBack to standard form: positive moves right, negative moves left"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Average distance from the Sun (millions of miles)",
+   "rows": [
+    {
+     "label": "Mercury",
+     "value": 36,
+     "source": "s8"
+    },
+    {
+     "label": "Earth",
+     "value": 93,
+     "source": "s8"
+    },
+    {
+     "label": "Jupiter",
+     "value": 483.7,
+     "source": "s8"
+    },
+    {
+     "label": "Saturn",
+     "value": 889.8,
+     "source": "s8"
+    },
+    {
+     "label": "Uranus",
+     "value": 1800,
+     "source": "s8"
+    },
+    {
+     "label": "Neptune",
+     "value": 2800,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Powers of 10 and negative exponents",
+   "links": [
+    "[[Zero and Negative Exponents]]",
+    "[[Exponent Rules for Whole Numbers]]"
+   ]
+  },
+  {
+   "topic": "Scientific notation: comparing and calculating",
+   "links": [
+    "[[Scientific Notation: Comparing and Calculating]]"
+   ]
+  },
+  {
+   "topic": "Decimals that stop or repeat",
+   "links": [
+    "[[Rational Numbers and Their Decimals]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Scientific notation is always written as a × 10^n, with a between 1 and 10.",
+   "other_view": "That is the form taught in school. Calculators, spreadsheets and programming languages often show the same number in E notation, such as 3E8 for 3 × 10^8. Wikipedia notes that E notation is used in programming, spreadsheets and databases, but not in scientific papers. Learn to read it. Your answers in class should still use the × 10^n form.",
+   "cite": [
+    "s10",
+    "s1"
+   ]
+  },
+  {
+   "claim": "The Common Core wording for 8.EE.A.3 says a single digit times a power of 10.",
+   "other_view": "The standard says single digit, because for estimating you usually round to one digit (3 × 10^8). The textbooks define scientific notation with a first factor of 1 up to 10, which allows decimals like 4.83 × 10^4. The two fit together: the single-digit form is a rounded version of the full form.",
+   "cite": [
+    "s4",
+    "s1"
+   ]
+  }
+ ]
+}

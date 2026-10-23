@@ -1,0 +1,261 @@
+{
+ "about": {
+  "title": "A, B, C: Your First Letters",
+  "course": "letters-a-z",
+  "class_n": 1,
+  "audience": [
+   "adult relearning reading",
+   "young child",
+   "anyone learning or relearning letters"
+  ],
+  "minutes": 12,
+  "length_note": "About 12 minutes: three letters, each with its name, sound, word and a quick check, plus a short opening and a side-by-side review. You can pause or replay any part, so take as long as you like."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to Letters A to Z. This is class 1 of 10. Today we meet three letters: A, B and C. Go at your own pace. You can pause or replay whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A, B, C: Your First Letters"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is no test and no hurry. A wrong answer is just practice. Every class works the same way, in four small steps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. See the letter\n2. Say its name\n3. Hear its sound\n4. Match a word"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our first letter. Look at the big one: it is an upper case A. It looks like a little tent, or a hill with a bar across the middle. Its name is 'ay'. Say it with me: A."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large capital A, like a tent with a bar across the middle, shown next to a small lower case a, which has a round belly and a short stick on the right."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The small one is lower case a. It has a round belly and a short stick on its right side. Same letter, same name: A. Now the sound. A says 'a', short and quick, like the start of apple. A, a, apple."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A a = apple"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There is also a grown-up word for A: address. Ad-dress. Listen for the A sound at the very start. A, a, address."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A a = address"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word starts with the sound that A makes?",
+    "right": "apple",
+    "wrong": [
+     "ball",
+     "cat",
+     "bed"
+    ],
+    "why": "Apple starts with the short 'a' sound. The other words start with different sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is B. Its name is 'bee'. Say it: B. Upper case B is a straight line with two bumps on the right side, one on top of the other."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large capital B: a tall straight line with two round bumps on its right side. Next to it, a small lower case b."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lower case b is a tall stick with one round belly on the right, like a bat standing next to a ball. B makes a quick sound with your lips: press them together, then pop them open. 'b'. B, b, ball."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "B b = ball"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A grown-up word for B is bread. Bread, bread. Feel your lips pop at the start. B, b, bread."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "B b = bread"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What do your lips do to make the B sound?",
+    "right": "Press together, then pop open",
+    "wrong": [
+     "Stay wide open and still",
+     "Touch your tongue to your teeth",
+     "Stretch into a big smile"
+    ],
+    "why": "B is made by pressing your lips together and letting them pop apart."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now C. Its name is 'see'. Say it: C. Upper case C is a round shape that is open on the right, like a mouth that is open. Lower case c is the very same shape, only smaller."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large capital C, a round curve open on the right, next to a small lower case c of the same shape."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "C has two sounds. We start with the common one: 'k', like the start of cat. C, c, cat. A grown-up word is coffee. Coffee, coffee. C, c, coffee."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "C c = cat (sound: k)\ngrown-up word: coffee"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes C says 's', like in city. You do not need that yet. We will meet it again later. For today, C says 'k'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Today: C says 'k', as in cat."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter says 'k' as in cat?",
+    "right": "C",
+    "wrong": [
+     "A",
+     "B",
+     "None of these"
+    ],
+    "why": "C says 'k' in cat. A says 'a' as in apple, and B says 'b' as in ball."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us put them side by side. Upper case on the left, lower case on the right. Look at each pair. A and a. B and b. C and c. Point to each one as I say it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case | Lower case\nA | a\nB | b\nC | c"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice that C and c look almost the same, only the size changes. A and B look different from their small partners. That is why we practise them in pairs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same shape, different size: C c\nDifferent shape: A a, B b"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which one is lower case b?",
+    "right": "b, the small one with a tall stick and a round belly on the right",
+    "wrong": [
+     "B, the big one with two bumps",
+     "a, the small one with a round belly and short stick",
+     "c, the small open curve"
+    ],
+    "why": "Lower case b is a tall stick with a round belly on its right side."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us say them all once more. A, a, apple. B, b, ball. C, c, cat. Well done. That is your first three letters."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A a: apple (address)\nB b: ball (bread)\nC c: cat (coffee)"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we meet D, E and F. You can come back to this class any time to practise."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: D, E, F"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Letter names and letter sounds",
+   "links": [
+    "[[Upper and lower case]]",
+    "[[Hard and soft C]]"
+   ]
+  },
+  {
+   "topic": "Upper and lower case",
+   "links": [
+    "[[Letter names and letter sounds]]"
+   ]
+  },
+  {
+   "topic": "Hard and soft C",
+   "links": [
+    "[[Letter names and letter sounds]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,460 @@
+{
+ "about": {
+  "title": "Slope: How Steep Is a Line?",
+  "course": "math-grade-8",
+  "class_n": 10,
+  "audience": [
+   "age 13 to 15",
+   "Jamie and teenagers like him",
+   "anyone relearning math, at any pace"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are four topics (rise over run, the four kinds of slope, slope from two points, and why slope is the same anywhere). Each has a short worked example and one practice question. You can pause at any question and come back later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8, Expressions & Equations, Standard 8.EE.B.6",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/B/6/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "11.4 Understand Slope of a Line - Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/11-4-understand-slope-of-a-line",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "11.4 Understand Slope of a Line - Prealgebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra/pages/11-4-understand-slope-of-a-line",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "3.2 Slope of a Line - Intermediate Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/3-2-slope-of-a-line",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "3.3: Slope of a Line - Mathematics LibreTexts (Intermediate Algebra 1e, OpenStax)",
+   "publisher": "LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Intermediate_Algebra_1e_(OpenStax)/03:_Graphs_and_Functions/3.03:_Slope_of_a_Line",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Illustrative Mathematics Grade 8, Unit 3, Lesson 10: Calculating Slope (Teachers)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://curriculum.illustrativemathematics.org/MS/teachers/3/3/10/index.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "The Story of Grade 8 Unit 3: Linear Relationships",
+   "publisher": "Illustrative Mathematics (IM Certified Blog)",
+   "date": "2022-09-06",
+   "link": "https://illustrativemathematics.blog/2022/09/06/the-story-of-grade-8-unit-3-linear-relationships/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Illustrative Mathematics Grade 8 Narrative (Units 2 and 3)",
+   "publisher": "Illustrative Mathematics / Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/MS/teachers/3/narrative.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "11.8: Understand Slope of a Line (Part 2) - Mathematics LibreTexts (Prealgebra, OpenStax)",
+   "publisher": "LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Pre-Algebra/Book:_Prealgebra_(OpenStax)/11:_Graphs/11.08:_Understand_Slope_of_a_Line_(Part_2)",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 10. Today we put a number on how steep a line is. That number is called slope. By the end you will be able to find slope from a graph and from two points. You will also be able to explain why slope is the same anywhere on a line. Go at your own pace. You can pause at any step."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Slope: How Steep Is a Line?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Slope is a ratio, and it is made of two changes. The rise is the vertical change, up or down. The run is the horizontal change, reading left to right. Slope is the rise divided by the run. We write slope with the letter m."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "slope m = rise / run"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture a grid with a line going up to the right. Start at a point on the left. Go straight up 4 squares, then straight right 5 squares, and you land on the line again. You have drawn a right triangle, and the line is its slanted side. The rise is 4 and the run is 5, so the slope is 4/5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A line rising to the right across a grid. A right triangle sits under it: a vertical side 4 units tall labelled rise, a horizontal side 5 units long labelled run, and the line as the slanted side. Label: slope = 4/5."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A line goes up 3 units while it goes right 6 units. What is its slope?",
+    "right": "3/6, which simplifies to 1/2",
+    "wrong": [
+     "6/3, which is 2",
+     "3 + 6 = 9",
+     "3/9"
+    ],
+    "why": "Slope is rise over run, so the vertical change goes on top: 3 over 6. Divide top and bottom by 3 to get 1/2. The answer 2 comes from flipping the fraction. Adding the numbers does not give a slope, because slope compares the two changes by division. A slope of 1/2 also makes sense for a gentle line, since it goes up only half as far as it goes across."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the steps for a graph. One: find two points that sit exactly on grid crossings. Two: draw a right triangle from the first point to the second. Three: count the rise. Four: count the run. Five: divide rise by run."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Pick two points exactly on grid crossings.\n2. Draw a right triangle between them.\n3. Count the rise.\n4. Count the run.\n5. Divide: m = rise / run."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a line that goes downhill as you read left to right. Start at the left point, go right 3, then down 2. Going down counts as a negative rise, so the rise is -2 and the run is 3. The slope is -2/3. That means y goes down 2 each time x goes up 3. If you count a rise of -6 and a run of 9, you get -6/9, which simplifies to the same -2/3."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A line falling from upper left to lower right. A right triangle: a horizontal side 3 units long labelled run = 3, and a vertical side going down 2 units labelled rise = -2. Label: slope = -2/3."
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A line goes down 4 units for every 2 units it goes right. What is its slope?",
+    "right": "-2",
+    "wrong": [
+     "2",
+     "-1/2",
+     "1/2"
+    ],
+    "why": "Going down is a negative rise, so the rise is -4 and the run is 2. Then -4 divided by 2 is -2. The answer 2 forgets the sign. A line that goes downhill from left to right must have a negative slope. The answers -1/2 and 1/2 come from putting the run on top."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Read a line like a sentence, from left to right. If it climbs, the slope is positive. If it falls, the slope is negative. If it is flat, the slope is zero. If it is a straight-up wall, the slope is undefined. The next two steps explain those last two."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left column: Positive = climbs. Negative = falls.\nRight column: Zero = flat. Undefined = vertical."
+   },
+   "cite": [
+    "s6",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take the flat line y = 4, and use the points (0, 4) and (3, 4). The height never changes, so the rise is 0. The run is 3. Zero divided by 3 is 0. Every horizontal line has slope 0, because the y-coordinates are the same and the rise is 0."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A perfectly flat horizontal line at height 4 on a grid. Two dots at (0, 4) and (3, 4). A bracket under it labelled run = 3 and a note: rise = 0, so slope = 0."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the slope of the horizontal line y = -2?",
+    "right": "0",
+    "wrong": [
+     "undefined",
+     "-2",
+     "2"
+    ],
+    "why": "Every point on y = -2 has the same height, so the rise is 0. The run is some number that is not 0, and 0 divided by that number is 0. The number -2 tells you where the line sits. It does not tell you how steep the line is."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the vertical line x = 3, with points (3, 0) and (3, 2). The rise is 2. The run is 0, because we never move sideways. That gives 2 over 0. We cannot divide by zero, so we say the slope of a vertical line is undefined. Notice that undefined is not the same as zero."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight vertical line at x = 3. Dots at (3, 0) and (3, 2). A note: rise = 2, run = 0, so slope = 2/0, which is undefined."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the slope of the vertical line x = 5?",
+    "right": "Undefined",
+    "wrong": [
+     "0",
+     "5",
+     "1"
+    ],
+    "why": "On a vertical line the run is 0, because x never changes. Slope is rise over run, and dividing by 0 is not allowed. So the slope is undefined. The answer 0 belongs to flat lines. The number 5 only says where the line crosses the x-axis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes you do not get a graph. You get two points, like (1, 5) and (5, 3). Then you do the same idea with subtraction. Subtract the y-values to get the rise. Subtract the x-values to get the run. Then divide."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "m = (y2 - y1) / (x2 - x1)"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try A = (1, 5) and B = (5, 3). The y-change is 3 minus 5, which is -2. The x-change is 5 minus 1, which is 4. So the slope is -2/4, or -1/2. That matches what a slope triangle gives, and the line goes down from left to right, so a negative answer is what we expect."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A = (1, 5), B = (5, 3)\ny-change: 3 - 5 = -2\nx-change: 5 - 1 = 4\nslope = -2/4 = -1/2"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more, with points (2, 1) and (6, 4). The y-change is 4 minus 1, which is 3. The x-change is 6 minus 2, which is 4. The slope is 3/4. One rule keeps you safe: use the same point first on top and on the bottom. If you start with (6, 4) on both, you get 1 minus 4 over 2 minus 6, which is -3 over -4. That is also 3/4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(2, 1) and (6, 4)\n(4 - 1) / (6 - 2) = 3/4\nSwapped, same order on both: (1 - 4) / (2 - 6) = -3/-4 = 3/4"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Take the points (1, 11) and (8, 2). Take your time, and do the top first, then the bottom."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(1, 11) and (8, 2)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the slope of the line through (1, 11) and (8, 2)?",
+    "right": "-9/7",
+    "wrong": [
+     "9/7",
+     "-7/9",
+     "7/9"
+    ],
+    "why": "The y-change is 2 - 11 = -9. The x-change is 8 - 1 = 7. So the slope is -9/7. The line goes down from left to right, so a negative slope makes sense. You get 9/7 if you subtract the y-values in one order and the x-values in the other. The answers -7/9 and 7/9 put the run on top."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is one with a negative number in it, and negatives are where most slips happen. Take the points (0, -1) and (4, 7). Write the subtraction with brackets so the minus signs don't get lost."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(0, -1) and (4, 7)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the slope of the line through (0, -1) and (4, 7)?",
+    "right": "2",
+    "wrong": [
+     "3/2",
+     "-2",
+     "1/2"
+    ],
+    "why": "The y-change is 7 - (-1) = 7 + 1 = 8. The x-change is 4 - 0 = 4. So 8/4 = 2. The answer 3/2 comes from doing 7 - 1 and forgetting that subtracting a negative adds. The answer -2 gets the sign wrong, because the line climbs. The answer 1/2 puts the run on top."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big question: why is slope the same anywhere on a line? Draw a line through (0, 0). Make a small triangle with corner points (0, 0), (4, 0) and (4, 3). Make a big triangle with corner points (0, 0), (12, 0) and (12, 9). Both triangles sit on the same line. These are called slope triangles. The small one has slope 3/4. The big one has slope 9/12, which is also 3/4."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One straight line rising from the origin. A small right triangle under it with legs 4 across and 3 up. A larger right triangle under the same line with legs 12 across and 9 up. Both are labelled slope = 3/4."
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the reason. In both triangles the bottom side is horizontal and the side on the right is vertical, so both have a right angle. The slanted side is the same line, so it leans at the same angle in both. Two pairs of equal angles make the triangles similar. Similar triangles have sides in the same ratio, so the rise divided by the run comes out the same. That is true for any two slope triangles on a non-vertical line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Both triangles have a right angle.\n2. The line leans at the same angle in both.\n3. Equal angles mean the triangles are similar.\n4. Similar means the sides are in the same ratio.\n5. So rise / run is the same."
+   },
+   "cite": [
+    "s7",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's use that. A small slope triangle on a line has rise 2 and run 3. A bigger slope triangle on the same line has run 12. What is its rise?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "small: rise 2, run 3\nbig: rise ?, run 12"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A small slope triangle has rise 2 and run 3. A bigger slope triangle on the same line has run 12. What is the rise of the bigger triangle?",
+    "right": "8",
+    "wrong": [
+     "10",
+     "6",
+     "18"
+    ],
+    "why": "The triangles are similar, so the run grew by a factor of 12 / 3 = 4. The rise must grow by the same factor: 2 x 4 = 8. Check: 8/12 = 2/3, the same slope. The answer 10 comes from adding 9 to both numbers, but similar triangles scale by multiplying. The answers 6 and 18 do not keep the ratio at 2/3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Steeper lines give bigger slope numbers, so slope is a good measure of steepness. Roofs are a real example. Say a roof rises 14 feet over a run of 24 feet. The slope is 14/24, which simplifies to 7/12."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The side view of a house roof: a right triangle with a horizontal base labelled run and a vertical side labelled rise, and the roof line as the slanted side."
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A roof rises 15 feet over a run of 36 feet. What is its slope, simplified?",
+    "right": "5/12",
+    "wrong": [
+     "12/5",
+     "5/36",
+     "21"
+    ],
+    "why": "Slope is rise over run, so it is 15/36. Divide top and bottom by 3 to get 5/12. The answer 12/5 is flipped. The answer 5/36 only divided the top. The answer 21 adds the two numbers, which is not a slope."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Slope is rise over run. A line that climbs has positive slope, one that falls has negative slope, a flat line has slope 0, and a vertical line has undefined slope. From two points, subtract y over subtract x, in the same order. And slope is the same anywhere on a line because slope triangles on the same line are similar. In the next class, class 11, we use slope to write the equations of lines, y = mx and y = mx + b."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slope = rise / run\nClimbs: positive. Falls: negative.\nFlat: 0. Vertical: undefined.\nTwo points: (y2 - y1) / (x2 - x1)\nSame slope anywhere: similar slope triangles."
+   },
+   "cite": [],
+   "move": "count-in"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Slope",
+   "links": [
+    "[[Proportional Relationships and Unit Rate]]",
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Dilations and Similar Figures]]"
+   ]
+  },
+  {
+   "topic": "Slope triangles and similarity",
+   "links": [
+    "[[Dilations and Similar Figures]]",
+    "[[Angles in Triangles and with Parallel Lines]]"
+   ]
+  },
+  {
+   "topic": "Horizontal and vertical lines",
+   "links": [
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Slope triangles on the same non-vertical line are similar, so the rise divided by the run is always the same.",
+   "other_view": "Curricula agree on the result but justify the similarity in two ways. One uses a sequence of rigid transformations and a dilation. The other notes that two pairs of angles are equal. Both are accepted, so use whichever makes sense to you.",
+   "cite": [
+    "s7"
+   ]
+  }
+ ]
+}

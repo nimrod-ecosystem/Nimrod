@@ -1,0 +1,226 @@
+{
+ "about": {
+  "title": "Letter sounds and joining them",
+  "course": "first-words",
+  "class_n": 3,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About ten minutes. There are only five small words, so this fits the usual short class. You can stop after any step and pick up again later. Taking it slowly is fine."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}, and welcome to class three. Today we learn the sounds that letters make, and how to join two sounds into a word. Go at your own speed. You can say the sounds out loud, whisper them, or just think them. All of those count."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Letter sounds and joining them"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back at Letters A to Z. Here are the letters we will use today: a, i, o, u, m, n, p and t. You have seen them all before. If one looks new, that is fine. We will meet each one again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "a   i   o   u   m   n   p   t"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Every letter has a name and a sound. The name is what we say when we recite the alphabet. The sound is what the letter does inside a word. The letter M has the name 'em', but its sound is 'mmm', like when you taste something nice."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "NAME: em  |  SOUND: mmm\nNAME: ay  |  SOUND: a, as in at\nNAME: tee  |  SOUND: t, a small tap"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try the four vowel sounds we need today. Say each one after me. A, as in 'at'. I, as in 'in'. O, as in 'on'. U, as in 'up'. Take your time with each one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "a  (at)\ni  (in)\no  (on)\nu  (up)"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other letters. M and N are sounds you can hold. Say 'mmmm' and 'nnnn' for as long as you like. T and P are short, like a small tap or a puff of air. Try to keep them quick and quiet: 't', not 'tuh'. 'p', not 'puh'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Hold it: mmm   nnn\nQuick tap: t   p"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the sound of the letter M?",
+    "right": "mmm",
+    "wrong": [
+     "em",
+     "tuh",
+     "ay"
+    ],
+    "why": "'Em' is the name of the letter. The sound it makes inside a word is 'mmm'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we join sounds together. This is called blending. We start slowly, with the sounds a little way apart. Look at the word 'at'. First sound: a. Second sound: t. Say them one after the other: a... t."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a ... t"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now bring them closer. a... t. a-t. at. When the sounds slide together, you get the word. At. You just read your first joined word. Well done."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a - t  →  at"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Blend the sounds a and t. Which word do you get?",
+    "right": "at",
+    "wrong": [
+     "up",
+     "in",
+     "on"
+    ],
+    "why": "The sound a followed by the sound t joins into 'at'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next word: 'in'. The sounds are i... n. Hold the 'nnn' at the end if it helps. i... n. in."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "i - n  →  in"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next: 'up'. The sounds are u... p. Say the u, then give a quick tap for the p. u... p. up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "u - p  →  up"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which two sounds make the word 'up'?",
+    "right": "u and p",
+    "wrong": [
+     "i and n",
+     "a and t",
+     "o and n"
+    ],
+    "why": "'Up' starts with the sound u and ends with the quick sound p."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two more. 'On': o... n. on. And 'am': a... m. Hold the 'mmm' at the end: a-mmm. am. This is the word we use in 'I am'. Good."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "o - n  →  on\na - m  →  am"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's see all five together. Read them slowly first, then try them a little faster. If a word feels hard, go back to its sounds and blend them again. There is no hurry."
+   },
+   "show": {
+    "kind": "list",
+    "text": "at\nin\nup\non\nam"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these words is 'on'?",
+    "right": "on",
+    "wrong": [
+     "in",
+     "am",
+     "up"
+    ],
+    "why": "'On' begins with the o sound and ends with n."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is the end of class three. You learned that letters have sounds as well as names, and that two sounds can join into a word. You read at, in, up, on and am. Next time we blend three sounds, starting with the letter A. Rest well, {name}."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "You read: at, in, up, on, am"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Letter names and letter sounds",
+   "links": [
+    "[[Letters A to Z]]",
+    "[[Sounding out three-letter words with A]]"
+   ]
+  },
+  {
+   "topic": "Blending two sounds",
+   "links": [
+    "[[Sounding out words with I and O]]",
+    "[[Sounding out words with U and E]]"
+   ]
+  },
+  {
+   "topic": "Short everyday words",
+   "links": [
+    "[[Three important words: yes, no, help]]",
+    "[[Home words: water, home, TV]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

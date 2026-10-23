@@ -1,0 +1,473 @@
+{
+ "about": {
+  "title": "Relations and Functions",
+  "course": "algebra-1",
+  "class_n": 10,
+  "audience": [
+   "age 14 to 16",
+   "Jamie and teenagers like him"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, which is the usual class length. There are three ways to look at a relation (table, mapping, graph), and each gets a short practice question. You can pause after the mapping beat and finish the graph part later, because the lesson splits cleanly there."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "3.1 Functions and Function Notation, Algebra and Trigonometry 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/3-1-functions-and-function-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "3.5 Relations and Functions, Intermediate Algebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra/pages/3-5-relations-and-functions",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "High School: Functions, Interpreting Functions, HSF-IF.A.1",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSF/IF/A/1/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "HS.F-IF.A.1 Interpreting Functions, Coherence Map (includes 8.F.A.1 and The Parking Lot task)",
+   "publisher": "Achieve the Core",
+   "date": "n.d.",
+   "link": "https://tools.achievethecore.org/coherence-map/HS/F/109/542/542",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Vertical Line Test",
+   "publisher": "Wolfram MathWorld",
+   "date": "n.d.",
+   "link": "https://mathworld.wolfram.com/VerticalLineTest.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Vertical Line Test",
+   "publisher": "GeeksforGeeks",
+   "date": "n.d.",
+   "link": "https://www.geeksforgeeks.org/maths/vertical-line-test/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Vertical line test",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Vertical_line_test",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "3.1 Functions and Function Notation, College Algebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra/pages/3-1-functions-and-function-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Vertical Line Test: Definition, Simple Steps",
+   "publisher": "Statistics How To",
+   "date": "n.d.",
+   "link": "https://www.statisticshowto.com/vertical-line-test/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "5.7 Functions, Contemporary Mathematics",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/5-7-functions",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Functions and Function Notation (OpenStax Algebra and Trigonometry, Atlantic OER edition)",
+   "publisher": "Atlantic OER, Pressbooks",
+   "date": "n.d.",
+   "link": "https://pressbooks.atlanticoer-relatlantique.ca/algebratrigonometryopenstax/chapter/functions-and-function-notation/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "Functions, Lesson 1, Defining Functions (F.IF.A.1)",
+   "publisher": "JMAP",
+   "date": "2018",
+   "link": "https://www.jmap.org/LessonPlans/F.IF.A.1.pdf",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "Functions and Function Notation (OpenStax Algebra and Trigonometry, BCcampus edition)",
+   "publisher": "BCcampus Open Textbooks",
+   "date": "n.d.",
+   "link": "https://opentextbc.ca/algebratrigonometryopenstax/chapter/functions-and-function-notation/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "Vertical Line Test: How to Tell if a Graph Is a Function",
+   "publisher": "Bhanzu",
+   "date": "n.d.",
+   "link": "https://bhanzu.com/math/algebra/vertical-line-test",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 10: Relations and Functions. Today's goal is simple. You'll look at a set of pairs, a table, a diagram or a graph, and decide whether it's a function. Then you'll explain why. Go at your own pace. You can pause or replay any part."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Relations and Functions: Is it a function? Say why."
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You've met this idea already. In 8th grade, a function was described as a rule that gives each input exactly one output. Today we make that idea sharper and learn three ways to check it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "8th grade: a function is a rule that assigns to each input exactly one output."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, two words. The input is what you put in. The output is what comes out. All the inputs together are called the domain. All the outputs together are called the range. Example: put in 1, 2, 3, 4, 5 and double each one. The domain is 1 to 5. The range is 2, 4, 6, 8, 10."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Inputs (domain): 1, 2, 3, 4, 5 | Outputs (range): 2, 4, 6, 8, 10"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A relation is just a set of ordered pairs. An ordered pair is like (3, 12). The input comes first and the output comes second, and we often call them x and y. A relation can pair things up any way it likes. Nothing is wrong with it yet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Relation = a set of ordered pairs (input, output)"
+   },
+   "cite": [
+    "s8",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the ordered pair (3, 12), which number is the input?",
+    "right": "3, because the input comes first.",
+    "wrong": [
+     "12, because it is bigger.",
+     "Both are inputs.",
+     "Neither. Ordered pairs only have outputs."
+    ],
+    "why": "In an ordered pair (x, y), x is the input and y is the output. Order matters, which is why they're called ordered pairs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big rule. A function is a relation where each possible input leads to exactly one output. Every function is a relation, but not every relation is a function. Think of a vending machine. Press B4 and you get the same snack every time. A function is a relation that behaves like that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Function = every input has exactly ONE output"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's test it with pairs. Take (1, 5), (2, 6), (3, 5). That's a function. Inputs 1 and 3 both give 5, and that's allowed, because each input still has only one output. Now take (1, 5), (2, 7), (3, 8), (1, 6). The input 1 gives both 5 and 6. That breaks the rule, so it's not a function."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "FUNCTION: (1,5) (2,6) (3,5) | NOT A FUNCTION: (1,5) (2,7) (3,8) (1,6)"
+   },
+   "cite": [
+    "s12",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is {(4, 2), (5, 2), (6, 9)} a function?",
+    "right": "Yes. Each input (4, 5 and 6) appears once, so each has exactly one output.",
+    "wrong": [
+     "No, because the output 2 shows up twice.",
+     "No, because 9 is not close to the other outputs.",
+     "It can't be told without a graph."
+    ],
+    "why": "Two different inputs can share an output. The rule only forbids one input having two different outputs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tables work the same way. Look at the input column. If any input shows up with two different outputs, it's not a function. Here's a made-up game. Level 1 gives 10 coins, level 2 gives 20, level 3 gives 20, level 4 gives 40. Each level appears once, so it's a function. Now add a row: level 2 gives 35 coins. Level 2 now has two outputs, so the table is no longer a function."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Level → Coins: 1→10, 2→20, 3→20, 4→40 (function). Add 2→35 and it's no longer a function."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A made-up table lists: Score 2 → Rank 5, Score 3 → Rank 7, Score 2 → Rank 9. Is it a function?",
+    "right": "No. The input 2 has two different outputs, 5 and 9.",
+    "wrong": [
+     "Yes, because all the ranks are different.",
+     "Yes, because there are only three rows.",
+     "No, because 7 is odd."
+    ],
+    "why": "The input 2 appears twice with different outputs, so it breaks the one-output rule."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A mapping is a picture of the same thing. Draw inputs in a left oval and outputs in a right oval, then draw an arrow from each input to its output. Check each left item. If any input has two arrows leaving it, it's not a function. A textbook example shows a diagram where February maps to two different outputs. That diagram can't be a function."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two ovals. Left: inputs. Right: outputs. Arrows go left to right. A function has exactly one arrow leaving every input. Two arrows from one input means it is not a function."
+   },
+   "cite": [
+    "s10",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In a made-up game, Warrior → Sword, Warrior → Axe, Mage → Staff. Is this mapping a function from class to weapon?",
+    "right": "No. Warrior has two arrows, to Sword and to Axe.",
+    "wrong": [
+     "Yes, because every class has a weapon.",
+     "Yes, because Mage only has one arrow.",
+     "No, because Staff is not a weapon."
+    ],
+    "why": "One input (Warrior) leads to two outputs, so the rule fails. Mage having one arrow doesn't fix that, because every input must have exactly one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Direction matters. Here's a parking-lot problem from a teaching task. In that lot, one fee covered any length of stay up to half an hour. So if you know the fee, you can't tell how long the person parked. That means the time is not a function of the fee, because one input matches many outputs. Always ask which quantity is the input."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask first: which one is the input?"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now graphs. The graph of a function is the set of all its ordered pairs, drawn as points. Checking every x by hand would take forever, so mathematicians use a shortcut called the vertical line test."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with a smooth curve, and a ruler standing straight up and down above one x-value."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the test. Imagine a vertical line, like a ruler held straight up and down. Slide it left to right across the graph. If it never touches the graph more than once, the graph is a function. If it ever touches the graph in two or more places, it isn't."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slide a vertical line across the graph. Touches once (or not at all) everywhere: FUNCTION. Touches two or more points anywhere: NOT a function."
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does it work? A vertical line sits at one x-value, so it grabs every point that has that input. If it hits the graph twice, that one input has two outputs, and the function rule breaks. The test is the same rule drawn as a picture."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A vertical line = ONE input. Two hits = two outputs."
+   },
+   "cite": [
+    "s13",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A vertical line crosses a graph at two points. What does that tell you?",
+    "right": "One input has two outputs, so the graph is not a function.",
+    "wrong": [
+     "The graph is a function with a big range.",
+     "The graph is a function because lines are allowed to cross it.",
+     "Nothing. You need a horizontal line instead."
+    ],
+    "why": "A vertical line marks a single input. Two crossings mean that input has two outputs, which a function can't have."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try some shapes. The parabola y equals x squared passes the test, because a vertical line crosses it once everywhere. A circle, x squared plus y squared equals 1, fails. In many places a vertical line crosses it twice. And a straight vertical line, like x equals 3, fails too, because that one input has endless outputs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "PASSES: y = x² (parabola) | FAILS: x² + y² = 1 (circle), x = 3 (vertical line)"
+   },
+   "cite": [
+    "s6",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The graph is the straight vertical line x = 3. Is it a function?",
+    "right": "No. The vertical line x = 3 crosses it at every point, so the input 3 has endless outputs.",
+    "wrong": [
+     "Yes, because it's a straight line.",
+     "Yes, because it touches the x-axis only once.",
+     "It depends on how long the line is drawn."
+    ],
+    "why": "Not every straight line is a function. A vertical line gives one input many outputs, so it fails the test."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch out for one trap. A line that just touches the circle at one point doesn't prove anything. You have to check every vertical line, and if even one crosses twice, the graph fails."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Test EVERY vertical line, not just one."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Equations count too. In algebra, functions are most often given as equations, and it's easiest to judge them when you solve for y first. Take y equals 2x plus 1. Each x gives one y, so it's a function. Later in the course you'll see equations where solving for y gives two answers, and those fail."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Solve for y. One y for each x? Function. Two y's for one x? Not a function."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's wrap up with a three-step check. Step 1: find the inputs. Step 2: find the outputs. Step 3: does any input lead to two or more outputs? If no, it's a function. If yes, it isn't. In a table, look for repeated inputs. In a mapping, look for double arrows. On a graph, use the vertical line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Find inputs. 2. Find outputs. 3. Any input with 2+ outputs? Yes: not a function. No: function. (Table: repeats. Mapping: double arrows. Graph: vertical line.)"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement is true?",
+    "right": "A relation is a function if each input has exactly one output.",
+    "wrong": [
+     "A relation is a function if each output has exactly one input.",
+     "A relation is a function if no two outputs are the same.",
+     "A relation is a function if its graph is a straight line."
+    ],
+    "why": "The rule is about inputs: each input needs exactly one output. Outputs can repeat, and some straight lines (vertical ones) are not functions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nice work today. To practise, make up your own relation about a game, sports or money, such as player to points or item to price. Write it as a table, then decide whether it's a function and say why. Next class is Function Notation, which gives us a short way to write all of this."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 input = 1 output"
+   },
+   "cite": [],
+   "move": "count-in"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Relations and Functions",
+   "links": [
+    "[[Function Notation]]",
+    "[[Graphs of Functions: Domain, Range and Behavior]]",
+    "[[Slope and Rate of Change]]"
+   ]
+  },
+  {
+   "topic": "Vertical line test",
+   "links": [
+    "[[Graphs of Functions: Domain, Range and Behavior]]",
+    "[[Quadratic Functions and Their Graphs]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A curve is the graph of a function only if every vertical line crosses it at most once.",
+   "other_view": "This is the modern school rule. One source notes that the idea of a function goes back to Leibniz in 1694, but treating the vertical line test as the dividing line is recent. Early calculus authors counted some graphs as functions that we would now reject. A curve that fails the test is sometimes called a multivalued function, where each crossing is one of the values.",
+   "cite": [
+    "s9",
+    "s7"
+   ]
+  }
+ ]
+}

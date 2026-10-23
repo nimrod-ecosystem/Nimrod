@@ -1,0 +1,215 @@
+{
+ "about": {
+  "title": "Spelling three-letter words by sound",
+  "course": "first-words",
+  "class_n": 8,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About ten minutes. The class has one small step at a time, and each step ends with a pause. You can stop after any step and pick it up later, so it can take longer if you need it to."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we spell. We do not type. We listen to a word, find its sounds, and choose the letters. Take your time. You can stop and rest at any point."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Spelling three-letter words by sound"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with the word sun. Say it slowly with me: sss, uuu, nnn. Each stretched sound is one small step. Sun has three sounds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "sun = sss + uuu + nnn"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many sounds can you hear in the word \"sun\"?",
+    "right": "Three",
+    "wrong": [
+     "One",
+     "Two",
+     "Five"
+    ],
+    "why": "We hear sss, then uuu, then nnn. That is three sounds, so we will need three letters."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, three empty boxes. The first box is for the first sound. Say sun slowly and stop after the first sound: sss. Which letter says sss? Look at the letters S, M and T. The S looks a bit like a snake, and a snake says sss."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three empty boxes in a row. Below them, three letter tiles to choose from: S, M, T. The first box is lit up."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which letter makes the first sound in \"sun\"?",
+    "right": "S",
+    "wrong": [
+     "M",
+     "T",
+     "B"
+    ],
+    "why": "The first sound in sun is sss, and the letter S makes that sound."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is the middle box. Say sun again, slowly: sss, uuu. The middle sound is uuu, like the start of the word up. The letters that make sounds like this are called vowels. The vowels are A, E, I, O and U."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three boxes. The first holds S. The middle box is lit up. Five vowel tiles to choose from: A, E, I, O, U."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letter makes the middle sound in \"sun\"?",
+    "right": "U",
+    "wrong": [
+     "A",
+     "O",
+     "I"
+    ],
+    "why": "The middle sound in sun is uuu, as in up. That is the letter U."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The last box. Say the word and listen to the end: sun, nnn. The last sound is nnn, and the letter N makes it. Now we have S, U, N. Three sounds, three letters. You spelled sun."
+   },
+   "show": {
+    "kind": "list",
+    "text": "First box: S|Middle box: U|Last box: N|Together: S - U - N"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A very good habit is to check. Point to each letter and say its sound: sss, uuu, nnn. Then say it fast: sun. If it sounds like the word, you are done. If it does not, change just one box. Let's try with the word sit. Say you built S, I, P. You sound it out: sss, iii, puh. That says sip, not sit. So which box needs to change?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Word we want: sit|Word we built: S - I - P, which says \"sip\""
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You want to spell \"sit\" but you built S-I-P. Which box do you change?",
+    "right": "The last box, to T",
+    "wrong": [
+     "The first box",
+     "The middle box",
+     "All three boxes"
+    ],
+    "why": "Sit and sip start the same and have the same middle sound. Only the last sound is different. It is t, so we change the last box to T."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One tricky one: cat. Say it slowly: kuh, aaa, tuh. The first sound is a k sound, but we spell it with the letter C. The letter C often makes that sound at the start of a word. So cat is C, A, T."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sounds: k - a - t|Letters: C - A - T"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter do we choose for the first sound in \"cat\"?",
+    "right": "C",
+    "wrong": [
+     "S",
+     "M",
+     "T"
+    ],
+    "why": "Cat starts with a k sound, and in this word we spell it with C. S makes sss, M makes mmm, and T is the last sound in cat."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Every word with three sounds has a vowel in the middle. Here is one word for each of the five vowels: cat has A, bed has E, sit has I, dog has O, and sun has U. Say each one slowly and hear how the middle sound changes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "cat - A|bed - E|sit - I|dog - O|sun - U"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which vowel is in the middle of \"bed\"?",
+    "right": "E",
+    "wrong": [
+     "A",
+     "I",
+     "U"
+    ],
+    "why": "Bed is b, eh, d. The middle sound eh is made by the letter E."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done, {name}. Here are some words to try when you feel ready: hat, pen, pig, hot and cup. Say a word slowly, find the first sound, then the middle, then the last. Choose each letter, then sound it out to check. One word is plenty for today. Next time we learn common sight words."
+   },
+   "show": {
+    "kind": "list",
+    "text": "hat|pen|pig|hot|cup"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Stretching a word into sounds",
+   "links": [
+    "[[Letter sounds and joining them]]",
+    "[[Sounding out three-letter words with A]]"
+   ]
+  },
+  {
+   "topic": "Choosing first, middle and last letters",
+   "links": [
+    "[[Spelling by choosing letters: everyday words]]"
+   ]
+  },
+  {
+   "topic": "Checking by sounding out",
+   "links": [
+    "[[Sounding out words with I and O]]",
+    "[[Sounding out words with U and E]]"
+   ]
+  },
+  {
+   "topic": "The five vowels in the middle of words",
+   "links": [
+    "[[Common sight words, set one]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

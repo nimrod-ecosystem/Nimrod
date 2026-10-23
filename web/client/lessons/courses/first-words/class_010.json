@@ -1,0 +1,264 @@
+{
+ "about": {
+  "title": "Common sight words, set two",
+  "course": "first-words",
+  "class_n": 10,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits this class. There are only seven new words, and each one gets a short turn. You can pause after any beat and carry on later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Welcome to class ten. Today we meet seven small words. You will see them again and again."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Common words, set two"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here they are. Take your time. We will say each one together: you, it, we, my, in, he, she."
+   },
+   "show": {
+    "kind": "list",
+    "text": "you\nit\nwe\nmy\nin\nhe\nshe"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First word: you. It means the person I am talking to. This word is a sight word. Do not sound it out. Just look and know it. You."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "you"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word says 'you'?",
+    "right": "you",
+    "wrong": [
+     "yes",
+     "we",
+     "my"
+    ],
+    "why": "The word 'you' starts with y and ends with ou. 'Yes' also starts with y, so look at the end of the word."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, two little words that you can sound out. 'It' is i, t. 'In' is i, n. Say them slowly, then say them fast."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "it  |  in\ni-t  |  i-n"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which word says 'in'?",
+    "right": "in",
+    "wrong": [
+     "it",
+     "is",
+     "on"
+    ],
+    "why": "'In' ends with the letter n. 'It' ends with t."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now 'we' and 'my'. 'We' sounds like 'wee'. 'My' sounds like 'my', and the y at the end says 'eye'. They are short, so you can learn them at a glance."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "we  |  my"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which word says 'my'?",
+    "right": "my",
+    "wrong": [
+     "me",
+     "we",
+     "by"
+    ],
+    "why": "'My' begins with m and ends with y. 'Me' ends with e, and 'by' begins with b."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last two: 'he' and 'she'. 'She' is 'he' with 's h' in front. The letters s and h together say 'shhh', like when we ask for quiet."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "he  |  she"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which word says 'she'?",
+    "right": "she",
+    "wrong": [
+     "he",
+     "the",
+     "see"
+    ],
+    "why": "'She' starts with the two letters s h. 'He' has no s in front."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Now we mix. Some of these words may be old friends from set one, like I, the, and, is. Others are new from today. If your set one was a bit different, use your own words here. Read along."
+   },
+   "show": {
+    "kind": "list",
+    "text": "I\nthe\nand\nis\nyou\nit\nwe\nmy"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a short line. Read it one word at a time with your finger or your eyes. It is my home."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "It is my home."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many set-two words are in 'It is in my home'? The set-two words are you, it, we, my, in, he, she.",
+    "right": "3",
+    "wrong": [
+     "1",
+     "2",
+     "4"
+    ],
+    "why": "The set-two words in this line are 'it', 'in' and 'my'. The words 'is' and 'home' are not in set two."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are more short lines. Find the words you know. Then read the whole line out loud, or in your head."
+   },
+   "show": {
+    "kind": "list",
+    "text": "He is in.\nShe is in.\nYou and I.\nWe are in my home."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which line says 'He is in'?",
+    "right": "He is in",
+    "wrong": [
+     "She is in",
+     "He is it",
+     "It is in"
+    ],
+    "why": "The line starts with 'he', which is the short word with no s, and ends with 'in'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now spelling. You do not need to type. You just choose letters from a row, in order. Let's spell 'we'. First sound is w, then e."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of big letter tiles: W, E, M, A. Two tiles are lit one after the other: W, then E."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letters, in order, spell 'we'?",
+    "right": "W, E",
+    "wrong": [
+     "E, W",
+     "W, A",
+     "M, E"
+    ],
+    "why": "The word starts with the w sound and then has e. So choose W first, then E."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more. Let's spell 'my'. M comes first. Then the letter y."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of big letter tiles: M, Y, N, I. M is lit, then Y."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which letters, in order, spell 'my'?",
+    "right": "M, Y",
+    "wrong": [
+     "M, I",
+     "N, Y",
+     "Y, M"
+    ],
+    "why": "'My' starts with m and ends with y. The y says 'eye' here."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You did it, {name}. Today you met you, it, we, my, in, he and she. Each time you see them, you will know them a little faster. Next time we put words together into short sentences."
+   },
+   "show": {
+    "kind": "list",
+    "text": "you\nit\nwe\nmy\nin\nhe\nshe"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Sight words set two",
+   "links": [
+    "[[Sight words set one]]",
+    "[[Short sentences]]"
+   ]
+  },
+  {
+   "topic": "Sounding out i-t and i-n",
+   "links": [
+    "[[Sounding out words with I and O]]"
+   ]
+  },
+  {
+   "topic": "Spelling by choosing letters",
+   "links": [
+    "[[Spelling by choosing letters: everyday words]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

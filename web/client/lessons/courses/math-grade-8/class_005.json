@@ -1,0 +1,508 @@
+{
+ "about": {
+  "title": "Zero and Negative Exponents",
+  "course": "math-grade-8",
+  "class_n": 5,
+  "audience": [
+   "age 13 to 15",
+   "Jamie and teenagers like him"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits. There are two new ideas (zero exponents, then negative exponents). Each is built from a pattern before the rule is stated, and there is time for practice and for the sign mistakes."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "10.5 Integer Exponents and Scientific Notation, Prealgebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/10-5-integer-exponents-and-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "5.2 Properties of Exponents and Scientific Notation, Intermediate Algebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra/pages/5-2-properties-of-exponents-and-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8, Expressions and Equations, Work with radicals and integer exponents, standard 1 (8.EE.A.1)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/A/1/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "6.7 Integer Exponents and Scientific Notation, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/6-7-integer-exponents-and-scientific-notation",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "What is 0 to the power of 0?",
+   "publisher": "Brilliant.org wiki",
+   "date": "n.d.",
+   "link": "https://brilliant.org/wiki/what-is-00/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "8.EE.A.1 Lesson: Integer Exponent Rules (Grade 8)",
+   "publisher": "svhs.co",
+   "date": "n.d.",
+   "link": "https://svhs.co/lesson/8-ee-a-1/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "5.1.3 Using Zero Exponent Property and Negative Exponents, Algebra 1",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/5-1-3-using-zero-exponent-property-and-negative-exponents",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "10.5 Integer Exponents and Scientific Notation, Prealgebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra/pages/10-5-integer-exponents-and-scientific-notation",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we learned the rules for exponents with whole numbers. Today we ask two odd questions. What could 2 to the power of 0 mean? And what could 2 to the power of negative 3 mean? You do not need to memorize anything strange. We will see that the answers are the only ones that keep the rules working."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Zero and Negative Exponents"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end of this half hour you will be able to do three things. Evaluate and simplify expressions with zero and negative exponents. Explain why they are defined the way they are. And spot the common sign mistakes before they catch you. Go at your own speed. You can pause on any step."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Why a^0 = 1\n2. Negative exponents are reciprocals\n3. The old rules still work\n4. Sign mistakes to avoid"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick reminder from last class. When you divide powers with the same base, you subtract the exponents. In integer form, a^m divided by a^n equals a^(m minus n), as long as a is not zero. Hold onto that rule. It is the key to everything today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a^m ÷ a^n = a^(m − n),  a ≠ 0"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start with a pattern. Powers of 2: 2 cubed is 8. 2 squared is 4. 2 to the 1 is 2. Each time the exponent goes down by 1, the answer is divided by 2. So what comes next, when the exponent reaches 0? Keep dividing by 2 and see. Look at the chart. The bars keep halving."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Powers of 2: each step down divides by 2",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In the pattern 8, 4, 2, ... the next number is 2^0. Each step divides by 2. What is 2^0?",
+    "right": "1",
+    "wrong": [
+     "0",
+     "2",
+     "-1"
+    ],
+    "why": "The pattern divides by 2 each time as the exponent drops by 1. 2 divided by 2 is 1, so 2^0 = 1. It is not 0, because we are dividing, not subtracting."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a second way to see it, and it uses the quotient rule. Take a^3 divided by a^3. Way one: anything that is not zero, divided by itself, is 1. Way two: subtract the exponents, 3 minus 3, which gives a^0. Both ways must give the same answer. So a^0 has to be 1."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Way 1: a^3 ÷ a^3 = 1 (same thing divided by itself) | Way 2: a^3 ÷ a^3 = a^(3−3) = a^0"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "If 9^2 ÷ 9^2 is written with the quotient rule as 9^0, what number is 9^0?",
+    "right": "1",
+    "wrong": [
+     "0",
+     "9",
+     "18"
+    ],
+    "why": "9^2 is 81, and 81 divided by 81 is 1. The quotient rule gives 9^(2−2) = 9^0. Both answers must match, so 9^0 = 1."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So here is the Zero Exponent Property. If a is not zero, then a to the power of 0 equals 1. Any non-zero number to the power of 0 is 1. That includes big numbers, tiny numbers and negative numbers. 9 to the 0 is 1. n to the 0 is 1, as long as n is not zero. One careful point: in negative 7, in brackets, to the 0, the bracket means the whole negative 7 is raised to the 0, so the answer is 1. Without brackets, negative 7 to the 0 means the opposite of 7 to the 0. The exponent only touches the 7, so you get negative 1."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a^0 = 1  (a ≠ 0)\n(−7)^0 = 1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is (−7)^0?",
+    "right": "1",
+    "wrong": [
+     "0",
+     "-7",
+     "-1"
+    ],
+    "why": "Any non-zero number to the power of 0 is 1, and −7 is not zero. The bracket puts the whole −7 under the exponent. Without brackets, −7^0 would be −(7^0), which is −1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now keep the pattern going past zero. 2 to the 1 is 2. 2 to the 0 is 1. Divide by 2 again and you get one half. That is 2 to the negative 1. Divide by 2 again: one quarter, which is 2 to the negative 2. Then one eighth, 2 to the negative 3. The numbers get smaller, but they never go below zero. A negative exponent does not make a negative number."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2^1 = 2\n2^0 = 1\n2^−1 = 1/2\n2^−2 = 1/4\n2^−3 = 1/8"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The quotient rule shows the same thing. Take x squared divided by x to the 5th. Cancel common factors: two x's on top cancel two on the bottom, and you are left with 1 over x cubed. Use the rule and you get x to the 2 minus 5, which is x to the negative 3. So x to the negative 3 has to equal 1 over x cubed. That is how the textbook leads into the definition of a negative exponent."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cancel factors: x^2/x^5 = 1/x^3 | Quotient rule: x^2/x^5 = x^(2−5) = x^−3"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the definition. If a is not zero and n is a positive integer, a to the negative n equals 1 over a to the n. In words, a negative exponent means take the reciprocal. For example, 4 to the negative 2 is 1 over 4 squared, which is 1 over 16."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a^−n = 1 / a^n  (a ≠ 0)\n4^−2 = 1/4^2 = 1/16"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 4^−2?",
+    "right": "1/16",
+    "wrong": [
+     "-16",
+     "-8",
+     "1/8"
+    ],
+    "why": "A negative exponent means reciprocal: 4^−2 = 1/4^2. 4^2 is 16, so the answer is 1/16. It is not −16, because the negative sign is in the exponent and does not make the answer negative. It is not 1/8, because 4 is squared, not multiplied by 2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Negative exponents are handy with powers of 10. 10 to the negative 3 is 1 over 10 cubed, which is 1 over 1000. As a decimal that is 0.001. 10 to the negative 2 is 1 over 100, or 0.01. You will use this a lot in scientific notation soon, in classes 7 and 8."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "10^−3 = 1/10^3 = 1/1000 = 0.001"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Write 10^−2 as a decimal.",
+    "right": "0.01",
+    "wrong": [
+     "0.1",
+     "0.001",
+     "-100"
+    ],
+    "why": "10^−2 = 1/10^2 = 1/100, and 1/100 is 0.01. The exponent counts the zeros: 2 gives two decimal places with the 1 in the second. It is not −100, because a negative exponent gives a reciprocal, not a negative number."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fractions work too. A negative exponent flips the fraction. A fraction to the negative n becomes the flipped fraction to the positive n. Also, 1 over a to the negative n equals a to the n. So one half to the negative 3 is 2 cubed, which is 8. And 1 over 3 to the negative 2 is 3 squared, which is 9."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(a/b)^−n = (b/a)^n\n1 / a^−n = a^n\n(1/2)^−3 = 2^3 = 8\n1 / 3^−2 = 3^2 = 9"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (2/3)^−2?",
+    "right": "9/4",
+    "wrong": [
+     "4/9",
+     "-4/9",
+     "-9/4"
+    ],
+    "why": "Flip the fraction and make the exponent positive: (2/3)^−2 = (3/2)^2 = 9/4. Squaring 3/2 gives 9/4. The answer 4/9 comes from forgetting to flip. The negative signs come from reading the negative exponent as a negative number."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now for the best part. All the exponent rules you know still work with negative and zero exponents. Once negative exponents are defined, the quotient rule needs only one form. The Common Core standard for this class has an example: 3 squared times 3 to the negative 5. Add the exponents to get 3 to the negative 3, which is 1 over 3 cubed, which is 1 over 27."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3^2 × 3^−5 = 3^−3 = 1/3^3 = 1/27"
+   },
+   "cite": [
+    "s3",
+    "s1",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Simplify 7^4 ÷ 7^6.",
+    "right": "1/49",
+    "wrong": [
+     "49",
+     "-49",
+     "1/14"
+    ],
+    "why": "Subtract the exponents: 7^(4−6) = 7^−2. A negative exponent means reciprocal, so 7^−2 = 1/7^2 = 1/49. The answer 49 forgets the negative sign in the exponent. The answer −49 treats the negative exponent as a negative number."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful with where the exponent lands. In 8 times 2 to the negative 2, the exponent belongs only to the 2. That gives 8 times one quarter, which is 2. But in 8 times 2, all in brackets, to the negative 2, the whole 16 gets the exponent. That is 1 over 16 squared, which is 1 over 256. Same digits, very different answers. The textbook puts these two side by side as a practice pair."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "8·2^−2 = 8·(1/4) = 2 | (8·2)^−2 = 16^−2 = 1/256"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is 8·2^−2?",
+    "right": "2",
+    "wrong": [
+     "1/32",
+     "-32",
+     "1/256"
+    ],
+    "why": "The exponent −2 applies only to the 2, so 2^−2 = 1/4. Then 8 · 1/4 = 2. The answer 1/256 comes from putting the exponent on the whole 8·2, which needs brackets. The answer −32 comes from reading −2 as a negative number."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the common mistakes, all in one place. One: thinking a negative exponent makes a negative answer. The textbook is clear that the negative in the exponent does not change the sign of the base. Two: thinking a to the 0 is 0. It is 1. Three: forgetting the exponent only touches what is right next to it. And four: not finishing. An answer with a negative exponent is not in simplest form, so rewrite it with positive exponents."
+   },
+   "show": {
+    "kind": "list",
+    "text": "✗ 2^−3 = −8  →  ✓ 1/8\n✗ 5^0 = 0  →  ✓ 1\n✗ 8·2^−2 = 1/256  →  ✓ 2\nRewrite so every exponent is positive"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (−2)^−3?",
+    "right": "-1/8",
+    "wrong": [
+     "1/8",
+     "8",
+     "-8"
+    ],
+    "why": "A negative exponent means reciprocal: (−2)^−3 = 1/(−2)^3. (−2)^3 = −8, so the answer is 1/(−8) = −1/8. This time the answer is negative because the base is negative, not because the exponent is. The reciprocal does not flip the sign of the base."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more careful point. All these rules say a is not zero. Zero to a negative power would mean 1 over zero, and we cannot divide by zero. So the definitions are for non-zero bases. Teachers and books disagree about zero to the power of zero. There is a short note on that at the end of the lesson. For now, stay with non-zero bases."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a ≠ 0\n0^−n would mean 1 ÷ 0"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together. Evaluate 3 to the 0, plus 3 to the negative 1. 3 to the 0 is 1. 3 to the negative 1 is one third. Add them: 1 plus one third is four thirds. Work through each piece on its own, then combine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3^0 + 3^−1 = 1 + 1/3 = 4/3"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 3^0 + 3^−1?",
+    "right": "4/3",
+    "wrong": [
+     "1/3",
+     "2",
+     "3/4"
+    ],
+    "why": "3^0 = 1 and 3^−1 = 1/3. Adding gives 1 + 1/3 = 4/3. The answer 1/3 forgets the 3^0. The answer 2 treats 3^−1 as 1 instead of 1/3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That's the class. Here is what to take with you. Anything that is not zero, to the power of 0, is 1. A negative exponent means the reciprocal. It does not make the answer negative. And the old rules keep working. These definitions are not random. They are the only choices that keep the rules working. This is exactly what the grade 8 standard asks for. Well done for sticking with it. Next class we solve equations with squares and cubes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "a^0 = 1 (a ≠ 0)\na^−n = 1/a^n\nAll exponent rules still work\nCheck the sign: the exponent is not the answer's sign"
+   },
+   "cite": [
+    "s3",
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Powers of 2: each step down divides by 2",
+   "rows": [
+    {
+     "label": "2^3",
+     "value": 8,
+     "source": "s1"
+    },
+    {
+     "label": "2^2",
+     "value": 4,
+     "source": "s1"
+    },
+    {
+     "label": "2^1",
+     "value": 2,
+     "source": "s1"
+    },
+    {
+     "label": "2^0",
+     "value": 1,
+     "source": "s2"
+    },
+    {
+     "label": "2^−1",
+     "value": 0.5,
+     "source": "s1"
+    },
+    {
+     "label": "2^−2",
+     "value": 0.25,
+     "source": "s1"
+    },
+    {
+     "label": "2^−3",
+     "value": 0.125,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Zero exponent",
+   "links": [
+    "[[Exponent rules for whole numbers]]",
+    "[[Division by zero]]"
+   ]
+  },
+  {
+   "topic": "Negative exponents and reciprocals",
+   "links": [
+    "[[Reciprocals]]",
+    "[[Rational numbers and fractions]]"
+   ]
+  },
+  {
+   "topic": "Powers of 10 as decimals",
+   "links": [
+    "[[Scientific notation: reading and writing]]",
+    "[[Place value]]"
+   ]
+  },
+  {
+   "topic": "Sign mistakes",
+   "links": [
+    "[[Order of operations]]",
+    "[[Integers and negative numbers]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "0^0 equals 1",
+   "other_view": "Many sources treat 0^0 as indeterminate or undefined. Other branches of mathematics define 0^0 as 1. One argument for leaving it undefined is that a^0 = 1 for every a that is not zero, while 0 to a positive power is 0, so the two patterns conflict. Many algebra courses before university leave it undefined. So follow what your teacher or test uses.",
+   "cite": [
+    "s5"
+   ]
+  }
+ ]
+}

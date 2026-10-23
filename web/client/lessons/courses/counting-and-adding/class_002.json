@@ -1,0 +1,262 @@
+{
+ "about": {
+  "title": "Counting from 11 to 20",
+  "course": "counting-and-adding",
+  "class_n": 2,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About ten minutes fits the material: ten numbers, a few patterns and some practice. You can pause the lesson whenever you like, and stopping after the first half is fine."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello, {name}. Today we count from 11 to 20. You already know 0 to 9 and 10, so you are not starting from nothing. Go at your own speed. Resting is part of learning."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Counting from 11 to 20"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We start at ten. Hold up all ten fingers, or look at ten objects. Ten is our starting spot. Every number today is ten and a little more."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You are holding up ten fingers. What number comes right after ten?",
+    "right": "Eleven (11)",
+    "wrong": [
+     "Nine (9)",
+     "Twelve (12)",
+     "Twenty (20)"
+    ],
+    "why": "Counting goes up by one each time. After ten comes eleven. Nine is the number before ten."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Say these out loud with me, slowly. Eleven. Twelve. Thirteen. Fourteen. Fifteen. If you like, tap the table once for each number."
+   },
+   "show": {
+    "kind": "list",
+    "text": "11 eleven\n12 twelve\n13 thirteen\n14 fourteen\n15 fifteen"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the next five. Sixteen. Seventeen. Eighteen. Nineteen. Twenty. Take a breath, then say all ten numbers from eleven to twenty once through."
+   },
+   "show": {
+    "kind": "list",
+    "text": "16 sixteen\n17 seventeen\n18 eighteen\n19 nineteen\n20 twenty"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a pattern that helps. Listen to the end of the words from thirteen to nineteen. They all finish with the sound teen. Eleven and twelve are different. They are just their own words, so learn those two by heart. Twenty is new too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "teen"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these number words ends in teen?",
+    "right": "Fourteen",
+    "wrong": [
+     "Eleven",
+     "Twelve",
+     "Twenty"
+    ],
+    "why": "Fourteen ends in teen. Eleven, twelve and twenty do not, so they are the ones to remember on their own."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The written numbers have a pattern too. Every number from 11 to 19 starts with a 1. That 1 stands for the ten. The second digit tells you how many more. So 13 is ten and three more. 17 is ten and seven more."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "13 = 1 ten and 3 more\n17 = 1 ten and 7 more\n19 = 1 ten and 9 more"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the first digit of every number from 11 to 19?",
+    "right": "1",
+    "wrong": [
+     "2",
+     "0",
+     "9"
+    ],
+    "why": "The first digit is 1 because each of these numbers has one ten. The second digit changes."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now counting real things. Picture fourteen buttons. Counting a big pile in one go makes it easy to lose your place. So count in small groups. Put five buttons in a row, then another five in a row under it. That is ten. Then put the last four to the side."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Fourteen buttons on a table: two rows of five, and a small group of four beside them."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Touch each button once as you say its number. You may know the first ten rows are ten, so you can start there. Say ten, then touch the next button and say eleven, then twelve, thirteen, fourteen. That is called counting on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Counting on"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You have a row of ten buttons and three more beside it. How many buttons are there?",
+    "right": "13",
+    "wrong": [
+     "3",
+     "10",
+     "14"
+    ],
+    "why": "Start at ten and count on three more: eleven, twelve, thirteen."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's use your hand. Hold up one finger and trace a big number in the air. Start with 1. Draw one straight line down. Then draw another 1 next to it, so you have 11. Say the word as you draw: eleven."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand drawing a large 1, then a second 1 beside it, in the air."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try a few more. Draw 1 and then 2 for twelve. Draw 1 and then 5 for fifteen. Draw the shapes as big as you like, and say each number out loud as you go. Slow and steady is better than fast."
+   },
+   "show": {
+    "kind": "list",
+    "text": "12 twelve\n15 fifteen\n18 eighteen"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is one thing to hold on to. When you count a group, the last number you say tells you how many there are. If you count spoons and the last number you say is fifteen, then there are fifteen spoons."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The last number tells how many"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You count some spoons: ... sixteen, seventeen, eighteen. How many spoons are there?",
+    "right": "18",
+    "wrong": [
+     "16",
+     "17",
+     "8"
+    ],
+    "why": "The last number you say, eighteen, tells you the total."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last step. Twenty is the end of this stretch. It is two tens. Nineteen is the number just before it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "20"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What number comes just before twenty?",
+    "right": "Nineteen (19)",
+    "wrong": [
+     "Eighteen (18)",
+     "Twenty-one (21)",
+     "Ten (10)"
+    ],
+    "why": "Nineteen is one fewer than twenty, so it comes right before."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done, {name}. Today you said eleven to twenty, spotted the teen pattern, counted in small groups and traced numbers in the air. Try it again tomorrow with things around you, like stairs, spoons or buttons. Next time we count out a set of things for a table."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Counting on from 10",
+   "links": [
+    "[[Numbers 0 to 9]]",
+    "[[One more, one fewer]]"
+   ]
+  },
+  {
+   "topic": "The teen pattern in number words",
+   "links": [
+    "[[Counting things from 0 to 10]]"
+   ]
+  },
+  {
+   "topic": "Counting in small groups to keep your place",
+   "links": [
+    "[[Counting out a number: setting a table]]"
+   ]
+  },
+  {
+   "topic": "Tracing numbers in the air",
+   "links": [
+    "[[Numbers 0 to 9]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

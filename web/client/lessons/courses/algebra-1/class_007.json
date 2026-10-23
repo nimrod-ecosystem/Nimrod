@@ -1,0 +1,577 @@
+{
+ "about": {
+  "title": "Ratios, Rates, Proportions and Percent",
+  "course": "algebra-1",
+  "class_n": 7,
+  "audience": [
+   "Teenagers aged 14 to 16",
+   "Jamie and teenagers like him"
+  ],
+  "minutes": 35,
+  "length_note": "This class has seven topics: unit rates, proportions, percent of, percent change, discount, tax and tip. It is a little over the usual half hour because it includes pause points for practice. You can split it into two sittings after the 'percent of' section, which is the halfway point."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.6 Ratios and Rate, Prealgebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2020-03-11 (book publication date)",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/5-6-ratios-and-rate",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "5.11: Ratios and Rate (Part 2), Prealgebra (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "not stated on page",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Book:_Prealgebra_(OpenStax)/05:_Decimals/5.11:_Ratios_and_Rate_(Part_2)",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "6.5: Solve Proportions and their Applications (Part 1), Prealgebra 1e (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "not stated on page",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_1e_(OpenStax)/06:_Percents/6.05:_Solve_Proportions_and_their_Applications_(Part_1)",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "6.2 Solve General Applications of Percent, Prealgebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/6-2-solve-general-applications-of-percent",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "6.3 Solve Sales Tax, Commission, and Discount Applications, Prealgebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/6-3-solve-sales-tax-commission-and-discount-applications",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "3.2: Solve Percent Applications, Elementary Algebra 1e (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "not stated on page",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/03:_Math_Models/3.02:_Solve_Percent_Applications",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "3.2 Solve Percent Applications, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/3-2-solve-percent-applications",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "3.2 Solve Percent Applications, Elementary Algebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/elementary-algebra/pages/3-2-solve-percent-applications",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Common Core State Standards for Mathematics, Grade 7",
+   "publisher": "Washington Office of Superintendent of Public Instruction (copy of the Common Core standards)",
+   "date": "not stated on page",
+   "link": "https://ospi.k12.wa.us/sites/default/files/2022-12/mathstandards_grade7.pdf",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Batting average (baseball)",
+   "publisher": "Wikipedia",
+   "date": "not stated on page",
+   "link": "https://en.wikipedia.org/wiki/Batting_average_(baseball)",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "At bat",
+   "publisher": "Wikipedia",
+   "date": "not stated on page",
+   "link": "https://en.wikipedia.org/wiki/At_bat",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "Percentage",
+   "publisher": "Wikipedia",
+   "date": "not stated on page",
+   "link": "https://en.wikipedia.org/wiki/Percentage",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "Slugging percentage",
+   "publisher": "Wikipedia",
+   "date": "not stated on page",
+   "link": "https://en.wikipedia.org/wiki/Slugging_percentage",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "6.5 Solve Proportions and their Applications, Prealgebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/6-5-solve-proportions-and-their-applications",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hi Jamie, and welcome. Today is about numbers you meet all the time: prices, discounts, tips and sports stats. We will go one idea at a time. You can pause whenever you like. The questions are for practice, not for grading, so a wrong answer is just information."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ratios, Rates, Proportions and Percent"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, two words that sound alike. A ratio compares two amounts measured in the same unit, like 3 wins to 2 losses. A rate compares two amounts in different units, like 120 miles in 2 hours. A rate is usually written as a fraction, and the units stay in the fraction."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Ratio: same units. Example: 3 wins to 2 losses. | Rate: different units. Example: 120 miles in 2 hours."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is a rate?",
+    "right": "$12 for 4 tickets",
+    "wrong": [
+     "5 girls to 7 boys",
+     "8 cm to 20 cm",
+     "3 wins to 1 loss"
+    ],
+    "why": "A rate compares different units, and here the units are dollars and tickets. The other three compare things measured in the same unit."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A unit rate is a rate with 1 on the bottom, like dollars per drink. A unit price is a unit rate for one item. To find it, divide the total price by the number of items. Say 5 sports drinks cost $7.50. Then $7.50 divided by 5 is $1.50 per drink."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "$7.50 ÷ 5 = $1.50 per drink"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Unit prices are how you compare different sized packs. Pack A is 12 snack bars for $9.00. That is 75 cents a bar. Pack B is 15 snack bars for $13.50. That is 90 cents a bar. Pack B has more bars, but each one costs more."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Pack A: $9.00 ÷ 12 = $0.75 each | Pack B: $13.50 ÷ 15 = $0.90 each"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pack is the better buy per bar?",
+    "right": "Pack A, at $0.75 each",
+    "wrong": [
+     "Pack B, because it has more bars",
+     "They cost the same per bar",
+     "You cannot tell without more information"
+    ],
+    "why": "The unit price is the fair comparison. Pack A costs 75 cents per bar and Pack B costs 90 cents per bar. A bigger pack is not always cheaper per item."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sports use unit rates too. Suppose a player scores 84 points in 6 games. Divide 84 by 6 and you get 14 points per game. Keep this idea of 'per one' in your pocket. It comes back when we study slope."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "84 points ÷ 6 games = 14 points per game"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A proportion is an equation that says two ratios or rates are equal. One useful fact is that the cross products of a true proportion are equal. Try it with a game. 3 levels earn 45 coins. How many coins for 8 levels, at the same pace? Write 45 over 3 equals x over 8. Cross multiply to get 3x equals 45 times 8. That is 360, so divide by 3 and x is 120."
+   },
+   "show": {
+    "kind": "list",
+    "text": "45/3 = x/8\n3x = 45 × 8\n3x = 360\nx = 120 coins"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve this proportion: 45/3 = x/8. What is x?",
+    "right": "120",
+    "wrong": [
+     "15",
+     "360",
+     "53"
+    ],
+    "why": "Cross multiplying gives 3x = 360, and dividing by 3 gives 120. The answer 15 is only the unit rate, 45 ÷ 3. The answer 360 forgets the last division."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now percent. Percent means 'out of 100'. In a percent problem, the word 'of' means multiply. First turn the percent into a decimal. So 45 percent of 80 is 0.45 times 80, which is 36. Everyone does this by habit, but it is worth saying out loud: percent times the whole gives the part."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "45% of 80 = 0.45 × 80 = 36"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 25% of 60?",
+    "right": "15",
+    "wrong": [
+     "240",
+     "35",
+     "2.4"
+    ],
+    "why": "25% is 0.25, and 0.25 × 60 = 15. Dividing by 0.25 gives 240. Subtracting gives 35. Dividing 60 by 25 gives 2.4. None of those match the rule 'percent times whole'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same idea can hide the unknown in different places. Sometimes the part is unknown. Sometimes the whole is unknown. Sometimes the percent is unknown. Say tax was $1.17 at a rate of 6.5 percent. Then 0.065 times n equals 1.17, and n is 18 dollars. Or ask '144 is what percent of 96?' The answer is 1.5, and as a percent that is 150 percent. If the question asks for a percent, finish in percent form."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Whole unknown: 0.065 × n = 1.17, so n = $18 | Percent unknown: 144 = p × 96, so p = 1.5 = 150%"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "144 is what percent of 96?",
+    "right": "150%",
+    "wrong": [
+     "66.7%",
+     "1.5",
+     "48%"
+    ],
+    "why": "Divide the part by the whole: 144 ÷ 96 = 1.5, which is 150%. 66.7% comes from flipping the division. 1.5 forgets to change to percent form. 48% is just the difference."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tips. The tip is the tip rate times the bill. A bill of $81.50 with an 18 percent tip gives 0.18 times 81.50, which is $14.67. Estimating first helps: 20 percent of 80 is 16, so the answer should be a little under 16. The total you pay is the bill plus the tip."
+   },
+   "show": {
+    "kind": "list",
+    "text": "tip = rate × bill\n0.18 × $81.50 = $14.67\nCheck: 20% of $80 = $16, so a bit under $16 makes sense"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A bill is $60 and you tip 15%. How much is the tip?",
+    "right": "$9",
+    "wrong": [
+     "$90",
+     "$4",
+     "$15"
+    ],
+    "why": "15% is 0.15, and 0.15 × 60 = 9. $90 moves the decimal the wrong way. $4 comes from dividing 60 by 15. $15 just reuses the percent number."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sales tax works the same way. Tax equals tax rate times the purchase price. Then add the tax to the price to get the total cost. Say a $40 game has 7 percent tax. 0.07 times 40 is $2.80, so the total is $42.80."
+   },
+   "show": {
+    "kind": "list",
+    "text": "tax = rate × price\ntotal = price + tax\n$40 game, 7% tax: tax $2.80, total $42.80"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A $50 headset has 8% sales tax. What is the total you pay?",
+    "right": "$54",
+    "wrong": [
+     "$4",
+     "$58",
+     "$50.80"
+    ],
+    "why": "Tax is 0.08 × 50 = $4, and the total is 50 + 4 = $54. $4 is only the tax. $58 adds 8 dollars by mistake. $50.80 adds 0.80 instead of 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Discounts. The amount of discount is the discount rate times the original price. The sale price is the original price minus the discount. The sale price must always be less than the original. OpenStax uses a $140 item with 35 percent off. The discount is 0.35 times 140, which is $49, so the sale price is $91. Here is a shortcut. If you take 35 percent off, you pay the other 65 percent, so 0.65 times 140 also gives $91."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Two steps: 0.35 × $140 = $49 off, then $140 − $49 = $91 | One step: pay 65%, so 0.65 × $140 = $91"
+   },
+   "cite": [
+    "s6",
+    "s5",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Shoes cost $80 and are 25% off. What is the sale price?",
+    "right": "$60",
+    "wrong": [
+     "$20",
+     "$105",
+     "$55"
+    ],
+    "why": "The discount is 0.25 × 80 = $20, and the sale price is 80 − 20 = $60. $20 is only the discount. $105 adds the percent number to the price. $55 subtracts the percent number from the price."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Percent change tells you how big a change is compared with where you started. Step one: find the change, which is new minus original. Step two: ask what percent that change is of the original. In 1995 the standard Chicago bus fare was $1.50. In 2008 it was $2.25. The change is 75 cents, and 0.75 divided by 1.50 is 0.50. That is a 50 percent increase."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Chicago standard bus fare, 1995 and 2008",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A fare goes from $1.50 to $2.25. What is the percent increase?",
+    "right": "50%",
+    "wrong": [
+     "75%",
+     "33%",
+     "150%"
+    ],
+    "why": "The increase is $0.75, and $0.75 ÷ $1.50 = 0.50, or 50%. 75% treats the 75 cents as a percent. 33% divides by the new price instead of the original. 150% is the new price as a percent of the old, which is not the change."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A percent decrease is the same idea with the subtraction flipped. The decrease is original minus new, then take that as a percent of the original. Watch out for one trap. A 25 percent rise from $100 gives $125. To get back to $100, the price must fall by 20 percent, not 25. The second percent is taken of a different, bigger amount."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "A 25% rise then a 20% drop",
+    "chart": "c2"
+   },
+   "cite": [
+    "s7",
+    "s12"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A $100 price goes up 50% to $150, then down 50%. Where does it end?",
+    "right": "No, it ends at $75",
+    "wrong": [
+     "Yes, it ends at $100",
+     "No, it ends at $50",
+     "No, it ends at $125"
+    ],
+    "why": "The second 50% is taken of $150, which is $75. So the price falls to $75, not back to $100. Percent changes are always measured against the amount you start from."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sports averages. In baseball, batting average is hits divided by at-bats. It is usually rounded to three decimals. A .300 hitter is said to be batting three hundred. Try 42 hits in 150 at-bats. 42 divided by 150 is 0.28, so the average is .280. That is also a percent in disguise, because it means a hit in 28 of every 100 at-bats. Official at-bats leave out walks, hit-by-pitch, and sacrifice bunts and flies. Baseball even calls .001 a point, so .235 is five points above .230."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "42 ÷ 150 = 0.280, so .280"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A player has 30 hits in 120 at-bats. What is the batting average?",
+    "right": ".250",
+    "wrong": [
+     ".300",
+     ".400",
+     "4.000"
+    ],
+    "why": "30 ÷ 120 = 0.25, which is written .250. Hits go on top and at-bats on the bottom. Flipping them gives 4, which is not a batting average."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real problems stack these steps, so use a routine. Read the problem. Work out what you are finding. Name it with a variable. Translate it into an equation. Solve. Then check that the answer makes sense. For example, take an $60 item that is 20 percent off, with 8 percent tax on the sale price. The discount is 0.20 times 60, which is $12, so the sale price is $48. The tax is 0.08 times 48, which is $3.84. The total is $51.84. The problem tells you the order, so read it carefully."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Read, find, name, translate, solve, check\n$60 − 20% = $48\n8% tax on $48 = $3.84\nTotal = $51.84"
+   },
+   "cite": [
+    "s7",
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A $40 hoodie is 25% off, then 5% tax is added to the sale price. What is the total?",
+    "right": "$31.50",
+    "wrong": [
+     "$30",
+     "$32",
+     "$42"
+    ],
+    "why": "The sale price is 40 × 0.75 = $30. The tax is 0.05 × 30 = $1.50, so the total is $31.50. $30 forgets the tax. $32 combines the percents wrongly. $42 adds tax to the original price and forgets the discount."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Great work. Here is the recap. A unit rate is a rate per one. A proportion says two ratios are equal. Percent of means percent times whole. Percent change compares the change with the original. Discount, tax and tip are all percent times a base amount. Standards for seventh grade already ask for these skills with discounts, taxes, tips and percent change. Today you used them with algebra, because you wrote an equation with a variable. Next class we move to solving and graphing inequalities."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Unit rate = per one\nProportion = two equal ratios\nPercent of = percent × whole\nPercent change = change ÷ original\nDiscount, tax, tip = rate × base"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Chicago standard bus fare (dollars)",
+   "rows": [
+    {
+     "label": "1995",
+     "value": 1.5,
+     "source": "s7"
+    },
+    {
+     "label": "2008",
+     "value": 2.25,
+     "source": "s7"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "A 25% rise needs a 20% drop to return (dollars)",
+   "rows": [
+    {
+     "label": "Start",
+     "value": 100,
+     "source": "s12"
+    },
+    {
+     "label": "After 25% increase",
+     "value": 125,
+     "source": "s12"
+    },
+    {
+     "label": "After 20% decrease",
+     "value": 100,
+     "source": "s12"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Unit rate",
+   "links": [
+    "[[Slope and Rate of Change]]",
+    "[[Formulas and Literal Equations]]"
+   ]
+  },
+  {
+   "topic": "Proportion",
+   "links": [
+    "[[One-Step and Two-Step Equations]]",
+    "[[Slope-Intercept Form and Graphing Lines]]"
+   ]
+  },
+  {
+   "topic": "Percent equations",
+   "links": [
+    "[[Multi-Step Equations and Variables on Both Sides]]",
+    "[[Exponential Models and Compound Interest]]"
+   ]
+  },
+  {
+   "topic": "Percent change",
+   "links": [
+    "[[Exponential Functions: Growth and Decay]]"
+   ]
+  },
+  {
+   "topic": "Batting average and sports statistics",
+   "links": [
+    "[[Describing Data: Displays, Center and Spread]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Batting average is a fair way to compare hitters, because it is a simple ratio of hits to at-bats.",
+   "other_view": "Many fans and analysts add other stats because batting average leaves out some things. Walks are not counted as at-bats, so a batter who walks a lot gets no credit for it. Slugging percentage gives extra weight to doubles and home runs compared with singles. Both views use ratios, and they answer different questions about a hitter.",
+   "cite": [
+    "s11",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Solve percent problems by translating to an equation, as this class does.",
+   "other_view": "Percent problems can also be set up as proportions, which is how many students first learn them. OpenStax also teaches writing percent equations as proportions. The Grade 7 standard describes this work as using proportional relationships. Both methods give the same answers, so use the one you find clearer.",
+   "cite": [
+    "s14",
+    "s9"
+   ]
+  }
+ ]
+}

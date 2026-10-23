@@ -1,0 +1,247 @@
+{
+ "about": {
+  "title": "Sounding out words with I and O",
+  "course": "first-words",
+  "class_n": 5,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits the material: two new vowel sounds, six words, and a short review of the A words from the last class. You can pause after any step and come back. Nothing here is timed."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Welcome to class 5. Last time we sounded out words with the letter A, like cat and map. Today we meet two more letters: I and O. Go at your own speed. You can stop and rest whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Words with I and O"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick warm-up with A. The letter A makes the sound 'a', like at the start of 'apple'. Let's sound out c, a, t. Cuh... a... t. Cat."
+   },
+   "show": {
+    "kind": "list",
+    "text": "c – a – t = cat\nm – a – p = map\nh – a – t = hat"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Which word has the A sound in the middle? Have a look, then choose."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A = 'a' as in apple"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word has the A sound in the middle?",
+    "right": "map",
+    "wrong": [
+     "sit",
+     "dog",
+     "top"
+    ],
+    "why": "Map is m-a-p. The middle letter is A, which says 'a'. Sit, dog and top have I or O in the middle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a new letter: I. Here it makes a short sound, 'i', like at the start of 'itch' or in the middle of 'sit'. Say it with me: i, i, i. Your mouth is only open a little."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "I = 'i' as in sit"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's join sounds to read 'sit'. s... i... t. Slide them together: sit. Now 'pin'. p... i... n. Pin. And 'big'. b... i... g. Big."
+   },
+   "show": {
+    "kind": "list",
+    "text": "s – i – t = sit\np – i – n = pin\nb – i – g = big"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Sound out the word on the screen, one letter at a time, then join it up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "p – i – n"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Sound out p – i – n. What is the word?",
+    "right": "pin",
+    "wrong": [
+     "pan",
+     "pit",
+     "bin"
+    ],
+    "why": "The sounds are p, i, n. Joined together they make 'pin'. The middle letter I says 'i'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next letter: O. It makes a short, round sound, 'o', like at the start of 'octopus' or in the middle of 'dog'. Your mouth opens wider and a little round. Say it: o, o, o. Some people say this sound a little differently depending on where they grew up. That is fine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "O = 'o' as in dog"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's read three O words. d... o... g. Dog. h... o... t. Hot. t... o... p. Top."
+   },
+   "show": {
+    "kind": "list",
+    "text": "d – o – g = dog\nh – o – t = hot\nt – o – p = top"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is one to try. Look at the letters, say each sound, then join them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "h – o – t"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Sound out h – o – t. What is the word?",
+    "right": "hot",
+    "wrong": [
+     "hat",
+     "hit",
+     "hop"
+    ],
+    "why": "The sounds are h, o, t. The middle letter O says 'o', so the word is 'hot'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the clever part: telling A, I and O words apart. Look at these three words. Only the middle letter changes: hat, hit, hot. The middle letter tells you which sound to say."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "hat – A says 'a'\nhit – I says 'i'\nhot – O says 'o'"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try another set: tap, tip, top. Look at the middle letter each time. Which word has the O?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "tap\ntip\ntop"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these words has the letter O in the middle?",
+    "right": "top",
+    "wrong": [
+     "tap",
+     "tip",
+     "pat"
+    ],
+    "why": "Top is t-o-p, with O in the middle. Tap has A and tip has I."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more check. Which word has the I sound in the middle? Think about the sound as well as the letter."
+   },
+   "show": {
+    "kind": "list",
+    "text": "sat\nsit\nsot"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word says 'sit', with the I sound in the middle?",
+    "right": "sit",
+    "wrong": [
+     "sat",
+     "sot",
+     "set"
+    ],
+    "why": "Sit is s-i-t. The letter I says 'i'. Sat has A in the middle, and 'sot' and 'set' are not the word you wanted."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lovely work, {name}. Today you learned that I says 'i' and O says 'o', and that the middle letter tells you which sound to say. You can read sit, pin, big, dog, hot and top. Next time we meet U and E. Rest well, and come back whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A – cat, map, hat\nI – sit, pin, big\nO – dog, hot, top"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Short I sound",
+   "links": [
+    "[[Sounding out three-letter words with A]]",
+    "[[Sounding out words with U and E]]"
+   ]
+  },
+  {
+   "topic": "Short O sound",
+   "links": [
+    "[[Sounding out three-letter words with A]]",
+    "[[Letter sounds and joining them]]"
+   ]
+  },
+  {
+   "topic": "Telling vowels apart by the middle letter",
+   "links": [
+    "[[Spelling three-letter words by sound]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

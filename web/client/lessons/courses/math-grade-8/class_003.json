@@ -1,0 +1,453 @@
+{
+ "about": {
+  "title": "Estimating and Ordering Irrational Numbers",
+  "course": "math-grade-8",
+  "class_n": 3,
+  "audience": [
+   "Jamie",
+   "teenagers aged 13 to 15",
+   "anyone relearning number sense who wants small steps and frequent recaps"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are four topics, and each one is short and ends with a question. The refining step (tenths, then hundredths) is the slowest part, so it has two beats. You can pause or replay any beat without losing the thread."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "8.NS.A.2: Approximating Irrational Numbers to Compare, Locate and Estimate",
+   "publisher": "svhs.co (lesson page on the Common Core standard)",
+   "date": "undated",
+   "link": "https://svhs.co/lesson/8-ns-a-2/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "5.7 Simplify and Use Square Roots - Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "2020-03-11",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/5-7-simplify-and-use-square-roots",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "5.7 Simplify and Use Square Roots - Prealgebra",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/prealgebra/pages/5-7-simplify-and-use-square-roots",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "9.1: Simplify and Use Square Roots - Elementary Algebra 1e (OpenStax)",
+   "publisher": "Mathematics LibreTexts",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/09:_Roots_and_Radicals/9.01:_Simplify_and_Use_Square_Roots",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "Square Root of 20 (√20)",
+   "publisher": "Calculatio",
+   "date": "undated",
+   "link": "https://calculat.io/en/number/square-root/20",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "Approximate Irrational Numbers (solutions, examples, videos, worksheets, games, activities)",
+   "publisher": "OnlineMathLearning.com",
+   "date": "undated",
+   "link": "https://www.onlinemathlearning.com/approximate-irrational-numbers-8ns2.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Introduction to Irrational Numbers - Math 8 CCSS",
+   "publisher": "CK-12 FlexBooks",
+   "date": "undated",
+   "link": "https://flexbooks.ck12.org/cbook/prep-for-high-school-math/section/5.4/primary/lesson/introduction-to-irrational-numbers-math-8-ccss-msm8-ccss-te/",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 3. Last time we met irrational numbers, like the square root of 2. Their decimals never end and never repeat. Today we make them easy to use. By the end you will be able to take a number like the square root of 20, work out about how big it is, and put it on a number line next to other numbers."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Estimating and Ordering Irrational Numbers"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the plan, in four small steps. One: trap a root between two whole numbers. Two: squeeze the trap tighter, to tenths and then hundredths. Three: compare mixed numbers and roots. Four: put them all on a number line. Pause or replay whenever you like. Nothing here is a race."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Trap it between two whole numbers\n2. Squeeze it to tenths, then hundredths\n3. Compare mixed numbers and roots\n4. Place everything on a number line"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a tool kit. Perfect squares are what you get when you multiply a whole number by itself: 1, 4, 9, 16, 25 and so on. Knowing the first fifteen is a big help, because they are the fence posts we trap roots between. The ones we need most today are 16 and 25."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225\n(These are 1² up to 15²)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The big idea is simple. If a number sits between two perfect squares, its square root sits between their square roots. For example, 5 is between 4 and 9, so the square root of 5 is between 2 and 3. Write it as 2 < √5 < 3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Numbers: 4 < 5 < 9 | Roots: 2 < √5 < 3"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which two whole numbers is √60 between?",
+    "right": "7 and 8",
+    "wrong": [
+     "6 and 7",
+     "8 and 9",
+     "30 and 31"
+    ],
+    "why": "60 sits between the perfect squares 49 and 64. 49 is 7 × 7 and 64 is 8 × 8, so √60 is between 7 and 8. Taking half of 60 to get 30 is a common slip. A square root is not half of a number."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now our star, the square root of 20. Which perfect squares is 20 between? 16 and 25. The square root of 16 is 4, and the square root of 25 is 5. So √20 is trapped between 4 and 5. That is already useful, because we know it is a bit more than 4. It is not 10, and it is not 20."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 < √20 < 5"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn to trap one. Take the square root of 38."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "36 < 38 < 49 | 6 < √38 < 7"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which two whole numbers is √38 between?",
+    "right": "6 and 7",
+    "wrong": [
+     "5 and 6",
+     "7 and 8",
+     "19 and 20"
+    ],
+    "why": "36 is the closest perfect square at or below 38, and 36 = 6 × 6. The next perfect square up is 49 = 7 × 7. Since 36 < 38 < 49, the root is between 6 and 7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: squeeze. Is √20 closer to 4 or to 5? Test the halfway point, 4.5. Multiply 4.5 by 4.5 and you get 20.25. That is more than 20, so √20 is a little less than 4.5. Now try 4.4. 4.4 times 4.4 is 19.36, which is less than 20. So √20 is between 4.4 and 4.5. Notice we only multiplied. We never needed a square root button."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4.5 × 4.5 = 20.25 (too big)\n4.4 × 4.4 = 19.36 (too small)\nSo 4.4 < √20 < 4.5"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "4.5 × 4.5 = 20.25. What does that tell us about √20?",
+    "right": "√20 is a little less than 4.5, because 4.5 squared is already more than 20.",
+    "wrong": [
+     "√20 is a little more than 4.5, because 20.25 is close to 20.",
+     "√20 is exactly 4.5, because 20.25 is nearly 20.",
+     "√20 is 10, because 20 ÷ 2 = 10."
+    ],
+    "why": "The square root of 20 is the number that multiplies by itself to give exactly 20. 4.5 gives 20.25, which overshoots. So the true root must be a bit smaller than 4.5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Squeeze again, to hundredths. Try 4.47: 4.47 times 4.47 is 19.9809, a hair under 20. Try 4.48: that gives 20.0704, a hair over. So √20 is between 4.47 and 4.48. Each new digit makes the box ten times narrower. You could keep going forever, and that is exactly what the never-ending decimal means."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "The box around √20 gets narrower",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check with a calculator. It shows about 4.472135955. Notice the wiggly equals sign, ≈, which means approximately. Textbooks use it because the calculator shows a limited number of digits. The real decimal goes on and on. Even a rounded value like 2.24 for √5 only gives a square close to 5, not exactly 5."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "√20 ≈ 4.472135955"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why do we write √20 ≈ 4.47 and not √20 = 4.47?",
+    "right": "The decimal for √20 never ends or repeats, so 4.47 is a close copy and not the exact number.",
+    "wrong": [
+     "Because calculators are sometimes wrong.",
+     "Because 20 is not a perfect square, so it has no square root.",
+     "Because ≈ is only used with fractions."
+    ],
+    "why": "20 does have a square root, but it is irrational. No decimal we can write down is exactly equal to it. Writing ≈ is honest about that. The calculator's answer is also an approximation to the digits it can display."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: mixed numbers. To compare a mixed number with a decimal or a root, turn it into a decimal. Keep the whole part and turn the fraction into a decimal by dividing. For 4 and 1/2, the fraction 1 divided by 2 is 0.5, so it is 4.5. For 4 and 1/3, 1 divided by 3 is 0.333 and so on, so it is about 4.33. For 4 and 1/8, it is 4.125."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4 1/2 = 4.5\n4 1/3 ≈ 4.33\n4 1/8 = 4.125\nWhole part stays. Fraction part: top ÷ bottom."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 4 1/4 as a decimal?",
+    "right": "4.25",
+    "wrong": [
+     "4.14",
+     "4.4",
+     "5.25"
+    ],
+    "why": "The whole part is 4. The fraction 1/4 means 1 ÷ 4 = 0.25. So the number is 4.25. Writing 4.14 just glues the digits together, which is a common slip."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we can compare a whole mixed bag. Take √17, 4 and 1/3, 4.4, √20 and 4 and 1/2. Trapping works for roots. 4.12 times 4.12 is about 16.97, and 4.13 times 4.13 is about 17.06, so √17 is about 4.12. √20 is about 4.47. Everything is now a decimal we can line up."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "√17 | about 4.12\n4 1/3 | about 4.33\n4.4 | 4.4\n√20 | about 4.47\n4 1/2 | 4.5"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a neat shortcut for comparing a root with a number. Square the number and compare it with what is under the root. 4 and 1/2 is 4.5, and 4.5 squared is 20.25. That is more than 20, so 4 and 1/2 is bigger than √20. Two roots are even easier: the one with the bigger number inside is bigger. So √20 is bigger than √17."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Square it, then compare"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is greater: √20 or 4 1/2?",
+    "right": "4 1/2",
+    "wrong": [
+     "√20",
+     "They are equal",
+     "You cannot tell without a calculator"
+    ],
+    "why": "4 1/2 = 4.5, and 4.5 × 4.5 = 20.25, which is more than 20. So 4.5 is bigger than the number that squares to 20. We found that with multiplication only."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four: the number line. Picture a line from 4 to 5, with ticks every tenth. Put √17 just after 4.1. Put 4 and 1/3 about a third of the way along. Put 4.4 at the fourth tick. Put √20 just after 4.47, so almost halfway. Finally put 4 and 1/2 right in the middle at 4.5. Reading left to right gives the order from least to greatest."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from 4 to 5 with ticks every 0.1. Dots, left to right: √17 (just past 4.1), 4 1/3, 4.4, √20 (just before the middle), and 4 1/2 at the middle tick, 4.5."
+   },
+   "cite": [
+    "s7",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which list is in order from least to greatest?",
+    "right": "√17, 4 1/3, 4.4, √20, 4 1/2",
+    "wrong": [
+     "4 1/3, √17, 4.4, √20, 4 1/2",
+     "√17, 4.4, 4 1/3, √20, 4 1/2",
+     "√17, 4 1/3, 4.4, 4 1/2, √20"
+    ],
+    "why": "As decimals the values are about 4.12, 4.33, 4.4, 4.47 and 4.5. That is the order the dots appear from left to right. The last wrong answer swaps √20 and 4 1/2, but 4.47 is less than 4.5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What about negatives? The square root sign means the positive root, so −√20 means the opposite of that number. It sits on the other side of zero, as a mirror image, at about −4.47. On the number line it lies between −5 and −4. Flipping signs flips the order too. −4.47 is less than −4 but greater than −5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from −5 to −4. A dot labelled −√20 sits at about −4.47, a little closer to −4 than to −5."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which two whole numbers is −√20 between?",
+    "right": "−5 and −4",
+    "wrong": [
+     "−4 and −3",
+     "4 and 5",
+     "−20 and −19"
+    ],
+    "why": "√20 is about 4.47, between 4 and 5. Its opposite, −√20, is about −4.47. That is less than −4 and greater than −5, so it is between −5 and −4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last slip to watch for. Cutting a decimal off is called truncating. Rounding looks at the next digit. √20 is about 4.472. Truncated to tenths it is 4.4, but rounded to tenths it is 4.5, because the next digit, 7, tells us to round up. Both are fine, as long as you say which one you used."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Truncate = cut off. Round = look at the next digit."
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Round √20 ≈ 4.472 to the nearest tenth.",
+    "right": "4.5",
+    "wrong": [
+     "4.4",
+     "4.47",
+     "5"
+    ],
+    "why": "The tenths digit is 4 and the next digit is 7. Since 7 is 5 or more, round up to 4.5. Cutting off would give 4.4. 4.47 is hundredths, not tenths, and 5 is a whole number."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's recap. First, a root between two perfect squares is between their roots. Second, test halfway points by multiplying, which gives tenths and then hundredths. Third, turn mixed numbers into decimals, or square the number, to compare. Fourth, put them on a number line from least to greatest. You did well today. Next time we start on exponents."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Trap between perfect squares: 4 < √20 < 5\n2. Squeeze by multiplying: 4.47 < √20 < 4.48\n3. Mixed numbers to decimals, then compare\n4. Place on a number line, least to greatest"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How wide is the box around √20? (smaller means closer)",
+   "rows": [
+    {
+     "label": "Whole numbers: 4 to 5",
+     "value": 1,
+     "source": "s5"
+    },
+    {
+     "label": "Tenths: 4.4 to 4.5",
+     "value": 0.1,
+     "source": "s5"
+    },
+    {
+     "label": "Hundredths: 4.47 to 4.48",
+     "value": 0.01,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Perfect squares 1 to 15 (fence posts for roots)",
+   "links": [
+    "[[Irrational Numbers and Roots]]",
+    "[[Solving with Squares and Cubes]]"
+   ]
+  },
+  {
+   "topic": "Mixed numbers to decimals",
+   "links": [
+    "[[Rational Numbers and Their Decimals]]"
+   ]
+  },
+  {
+   "topic": "Trapping a root, then squeezing to tenths and hundredths",
+   "links": [
+    "[[Irrational Numbers and Roots]]"
+   ]
+  },
+  {
+   "topic": "Number line placement of roots",
+   "links": [
+    "[[Distance and Real-World Right Triangles]]",
+    "[[The Pythagorean Theorem: Using It and Its Converse]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Truncating a decimal is the best way to approximate an irrational number.",
+   "other_view": "The Common Core example for √2 uses truncation, which cuts the decimal off to make a 'between' statement. Textbooks such as OpenStax often round to a stated number of decimal places instead. Both give valid rational approximations, so say which method you used.",
+   "cite": [
+    "s1",
+    "s4"
+   ]
+  }
+ ]
+}

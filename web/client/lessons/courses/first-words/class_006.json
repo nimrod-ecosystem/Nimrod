@@ -1,0 +1,238 @@
+{
+ "about": {
+  "title": "Sounding out words with U and E",
+  "course": "first-words",
+  "class_n": 6,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits this class: two new vowel sounds, a few words for each, then a short mixed practice. It is in two halves (U, then E), so you can stop for a rest after the U words and come back."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}, and welcome to class six. Today we sound out words with two vowels: U and E. Go slowly. There is no rush and no wrong speed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Sounding out words with U and E"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the short U sound. It says 'uh', like the start of 'up'. Say it with me: uh, uh, uh."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "U = uh"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the word sun. Three letters, three sounds. S says 'sss'. U says 'uh'. N says 'nnn'. Slide them together: sss-uh-nnn... sun."
+   },
+   "show": {
+    "kind": "list",
+    "text": "S = sss\nU = uh\nN = nnn\nsun"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try two more. C, U, P: cuh-uh-puh... cup. B, U, S: buh-uh-sss... bus. Take your time with each one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "cup\nbus\nsun"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check. Which of these words has the 'uh' sound in the middle?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "bus\nbed\npen\nred"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word has the 'uh' sound (short U) in the middle?",
+    "right": "bus",
+    "wrong": [
+     "bed",
+     "pen",
+     "red"
+    ],
+    "why": "Bus has the letter U in the middle, and U says 'uh'. Bed, pen and red all have E in the middle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Now the short E sound. It says 'eh', like the start of 'egg'. Say it with me: eh, eh, eh."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "E = eh"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are three E words. B, E, D: buh-eh-duh... bed. P, E, N: puh-eh-nnn... pen. R, E, D: rrr-eh-duh... red."
+   },
+   "show": {
+    "kind": "list",
+    "text": "bed\npen\nred"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture a pen lying on a table. Which word says pen? Sound out each one if it helps."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A blue pen lying on a wooden table."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word says 'pen'?",
+    "right": "pen",
+    "wrong": [
+     "pin",
+     "pan",
+     "pet"
+    ],
+    "why": "P-E-N gives puh-eh-nnn, which is pen. The middle letter E says 'eh'. The other words have different middle letters."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "U and E can feel close together. Keep them apart: U is 'uh' with a relaxed mouth. E is 'eh' with the mouth a little wider. Compare the words side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "U says 'uh': sun, cup, bus\nE says 'eh': bed, pen, red"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a mixed practice with all five vowels. Look at each middle letter, then say its sound. A is 'a' as in cat. I is 'ih' as in sit. O is 'o' as in dog. U is 'uh' as in sun. E is 'eh' as in bed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "cat (A)\nsit (I)\ndog (O)\nsun (U)\nbed (E)"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last job: choose the right word for a picture. Look at the picture, sound out the choices one at a time, and pick the one that matches."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bright yellow sun shining in a blue sky."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word matches the picture?",
+    "right": "sun",
+    "wrong": [
+     "sit",
+     "sat",
+     "set"
+    ],
+    "why": "S-U-N gives sss-uh-nnn, which is sun. The other words start with the same sound but have different middle letters."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more. A picture of a bed with a blanket. You can sleep in it. Which word is it?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bed with a soft blanket and a pillow."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word matches the picture of a bed?",
+    "right": "bed",
+    "wrong": [
+     "bad",
+     "bud",
+     "bid"
+    ],
+    "why": "B-E-D gives buh-eh-duh, which is bed. Check the middle letter: E says 'eh'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done, {name}. You read sun, cup, bus, bed, pen and red. Rest now if you like. Next class we begin spelling by choosing letters."
+   },
+   "show": {
+    "kind": "list",
+    "text": "sun  cup  bus\nbed  pen  red"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Short U sound",
+   "links": [
+    "[[Sounding out three-letter words]]",
+    "[[Short vowels]]"
+   ]
+  },
+  {
+   "topic": "Short E sound",
+   "links": [
+    "[[Sounding out three-letter words]]",
+    "[[Short vowels]]"
+   ]
+  },
+  {
+   "topic": "Choosing a word for a picture",
+   "links": [
+    "[[Sight words]]",
+    "[[Spelling by choosing letters]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

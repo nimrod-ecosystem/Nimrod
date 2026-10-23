@@ -1,0 +1,464 @@
+{
+ "about": {
+  "title": "Solving with Squares and Cubes",
+  "course": "math-grade-8",
+  "class_n": 6,
+  "audience": [
+   "Age 13 to 15",
+   "Jamie and teenagers like him"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, which is the usual half-hour. The lesson has 15 short beats and 7 practice questions. Each beat is small and stands on its own, so you can pause after any question and carry on later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8, Expressions and Equations, standard 8.EE.A.2",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/A/2/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "5.7 Simplify and Use Square Roots, Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/5-7-simplify-and-use-square-roots",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "5.7 Simplify and Use Square Roots, Prealgebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra/pages/5-7-simplify-and-use-square-roots",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "5.8: Simplify and Use Square Roots, Prealgebra 2e (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_2e_(OpenStax)/05:_Decimals/5.08:_Simplify_and_Use_Square_Roots",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "9.1: Simplify and Use Square Roots, Elementary Algebra 1e (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/09:_Roots_and_Radicals/9.01:_Simplify_and_Use_Square_Roots",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "8.3.1: Edge Lengths and Volumes (Illustrative Mathematics, Grade 8)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Pre-Algebra_II_(Illustrative_Mathematics_-_Grade_8)/08:_Pythagorean_Theorem_and_Irrational_Numbers/8.03:_New_Page/8.3.1:_Edge_Lengths_and_Volumes",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Appendix C: Geometric Formulas, Prealgebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra/pages/c-geometric-formulas",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Cube Roots and Nth Roots",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/wm-developmentalemporium/chapter/7-1-2-squares-cubes-and-beyond/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Cube root",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Cube_root",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Cube Root, Definition, Symbol and Examples (with Negatives)",
+   "publisher": "Mathwords",
+   "date": "n.d.",
+   "link": "https://www.mathwords.com/c/cube_root.htm",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "Grade 8 Mathematics, Unit 8, Family Materials",
+   "publisher": "Open Up Resources",
+   "date": "n.d.",
+   "link": "https://access.openupresources.org/curricula/our6-8math/en/grade-8/unit-8/family.html",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 6. Today we solve equations like x² = 49 and x³ = 27. By the end you will know when there are two answers and when there is only one. Go at your own speed. You can pause at any question."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Solving with Squares and Cubes"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start with an idea you already know. A square root undoes squaring, and a cube root undoes cubing. Squaring 5 gives 25. The square root of 25 takes you back to 5. Cubing 5 gives 125, and the cube root of 125 takes you back to 5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Squaring: 5² = 25  |  Undo it: √25 = 5\nCubing: 5³ = 125  |  Undo it: ∛125 = 5"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which operation undoes cubing a number?",
+    "right": "Taking the cube root",
+    "wrong": [
+     "Taking the square root",
+     "Multiplying by 3",
+     "Dividing by 3"
+    ],
+    "why": "Cubing multiplies a number by itself three times. The cube root asks which number was cubed to get the result, so it undoes cubing. The square root undoes squaring, not cubing. Multiplying or dividing by 3 does something different. For example, 2³ is 8, not 6."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a picture to hold on to. Picture a square with an area of 16 square units. Its side is 4 units long. So 4² = 16 and √16 = 4. The square root of an area is the side length."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A square made of 16 small tiles, 4 tiles across and 4 tiles down. Label: area 16, side 4."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a solid cube. Say it is made of 64 small blocks, and its edge is 4 blocks long. So 4³ = 64 and ∛64 = 4. The cube root of a volume is the edge length. The area of a square is s², and the volume of a cube is s³."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big cube built from 64 small blocks, 4 across, 4 deep and 4 high. Label: volume 64, edge 4. Formulas beside it: area of a square A = s², volume of a cube V = s³."
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cube has a volume of 125 cubic units. How long is each edge?",
+    "right": "5 units",
+    "wrong": [
+     "25 units",
+     "15 units",
+     "41⅔ units"
+    ],
+    "why": "The edge length is the cube root of the volume. 5 × 5 × 5 = 125, so the edge is 5. An edge of 25 would be a square-root type of mistake: 25² is 625, and 25³ is much bigger than 125. An edge of 15 comes from dividing 125 by 3 and rounding, and 41⅔ comes from dividing 125 by 3 exactly. The volume of a cube is s × s × s, not s × 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the surprise about squares. Try (−8)². A negative times a negative is positive, so (−8)² = 64. But 8² is also 64. So both 8 and −8 are square roots of 64. Every positive number has two square roots, one positive and one negative."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "8² = 64   and   (−8)² = 64"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which numbers can you square to get 81?",
+    "right": "9 and −9",
+    "wrong": [
+     "Only 9",
+     "Only −9",
+     "40.5 and −40.5"
+    ],
+    "why": "9 × 9 = 81. Also (−9) × (−9) = 81, because a negative times a negative is positive. So there are two numbers. Only 9 or only −9 each misses one. 40.5 is half of 81, which is a mix-up between squaring and halving."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A warning about the symbol. The radical sign √ means only the positive square root. So √100 = 10. If you want the negative one, put a minus sign in front: −√100 = −10. The √ symbol picks one answer. The equation can have two."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "√100 = 10  (the positive root)  |  −√100 = −10  (the negative root)"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we solve. Take x² = 49. Undo the square by taking the square root. There are two numbers that work, so we write x = √49 or x = −√49. That means x = 7 or x = −7. Check: 7² = 49, and (−7)² = 49. Both work. Many people write this short, as x = ±7. Read ± as 'plus or minus'."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² = 49\nx = √49  or  x = −√49\nx = 7  or  x = −7\nCheck: 7² = 49 and (−7)² = 49"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve x² = 121.",
+    "right": "x = 11 or x = −11",
+    "wrong": [
+     "x = 11 only",
+     "x = −11 only",
+     "x = 60.5 or x = −60.5"
+    ],
+    "why": "11² = 121, and (−11)² = 121 too, so both numbers solve the equation. Giving only 11 forgets the negative answer. The answer 60.5 is half of 121, which comes from halving instead of taking a square root."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if the number is not a perfect square? Take x² = 10. A square with area 10 has a side that is not 3, because 3² is 9, and not 4, because 4² is 16. We still have a neat exact answer: x = √10 or x = −√10. The symbol √10 means 'the side of a square with area 10'. Decimals are only approximations. For the exact answer, keep the root symbol. The standard also says √2 is irrational, and we met irrational numbers in class 2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² = 10  →  x = √10 or x = −√10"
+   },
+   "cite": [
+    "s11",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair of numbers is the exact solution of x² = 10?",
+    "right": "√10 and −√10",
+    "wrong": [
+     "5 and −5",
+     "10 and −10",
+     "√20 and −√20"
+    ],
+    "why": "The solutions of x² = p are √p and −√p, so for p = 10 they are √10 and −√10. 5² = 25, not 10. 10² = 100, not 10. (√20)² = 20, not 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now cubes. Take x³ = 27. Undo the cube with the cube root: x = ∛27 = 3. Check: 3 × 3 × 3 = 27. Is −3 an answer too? (−3) × (−3) × (−3) = −27. A negative number cubed stays negative. So −3 is not a solution. A cube equation like this has just one answer."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x³ = 27\nx = ∛27\nx = 3  (only one answer)\nCheck: 3³ = 27, but (−3)³ = −27"
+   },
+   "cite": [
+    "s1",
+    "s10",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve x³ = 64.",
+    "right": "x = 4",
+    "wrong": [
+     "x = 4 or x = −4",
+     "x = 8",
+     "x = 21⅓"
+    ],
+    "why": "4 × 4 × 4 = 64, so x = 4. The number −4 is not a solution, because (−4)³ = −64. Two answers belong to square equations, not cube equations. 8 would be the square root of 64, but 8³ is 512. 21⅓ comes from dividing 64 by 3, which is not how cubing works."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check of the pattern. Why does squaring give two answers and cubing give one? When you multiply two negatives you get a positive. That is why two different numbers can land on the same square. With three negatives multiplied, the answer is negative. A positive result can only come from a positive number. So one cube has one real cube root."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x² = p (p positive): TWO answers, √p and −√p  |  x³ = p: ONE answer, ∛p"
+   },
+   "cite": [
+    "s2",
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two special cases, for curious minds. The class standard only uses positive p, but these come up. First, zero. x² = 0 has only one answer, x = 0, because zero has only one square root. Second, negative numbers. A negative number can have a cube root: ∛(−8) = −2, because (−2) × (−2) × (−2) = −8. A negative number has no real square root. Nothing multiplied by itself gives a negative result."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² = 0  →  x = 0 (one answer)\nx³ = −8  →  x = −2\nx² = −9  →  no real solution"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s8",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many real-number solutions does x² = −16 have?",
+    "right": "None",
+    "wrong": [
+     "One: x = −4",
+     "Two: x = 4 and x = −4",
+     "One: x = 4"
+    ],
+    "why": "Any real number squared is zero or positive, so it can never equal −16. Check the tempting answers. (−4)² is +16, not −16, and 4² is also +16. So the equation has no real solution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a real-life setting. A square garden has an area of 144 square feet. How long is each side? Write the equation: s² = 144. Then s = 12 or s = −12. A length can't be negative, so we keep only s = 12 feet. When the answer is a real length, ask yourself if each solution makes sense."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A square garden. Inside: area 144 square feet. Each side is labelled s = ?"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A square patio has an area of 81 square feet. What is its side length?",
+    "right": "9 feet (we do not use −9, since a length cannot be negative)",
+    "wrong": [
+     "9 feet or −9 feet, both are lengths",
+     "40.5 feet",
+     "81 feet"
+    ],
+    "why": "s² = 81 has two solutions, 9 and −9. But a side length cannot be negative, so only 9 feet fits the story. 40.5 would be half of the area, not a square root. 81 feet would make the area 81 × 81, which is far too big."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Volume works the same way. A cube-shaped box has a volume of 216 cubic inches. The equation is s³ = 216, so s = ∛216 = 6 inches. Check: 6 × 6 × 6 = 216. Cubes have only one real answer, so there is no leftover negative to think about."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cube-shaped box. Label: volume 216 cubic inches, each edge s = ?"
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cube-shaped storage box has a volume of 27 cubic feet. How long is each edge?",
+    "right": "3 feet",
+    "wrong": [
+     "9 feet",
+     "13.5 feet",
+     "3 feet or −3 feet"
+    ],
+    "why": "The edge is the cube root of the volume. 3 × 3 × 3 = 27, so the edge is 3 feet. 9 feet comes from 27 ÷ 3, which is not how a cube's volume works: 9³ is 729. 13.5 feet is half of 27, which does not match either. And −3 is not a solution, since (−3)³ = −27."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more stretch. The number p can be a fraction too. Solve x² = 9/16. Take the square root of the top and the bottom. √9 = 3 and √16 = 4. So x = 3/4 or x = −3/4. Check: (3/4)² = 9/16, and (−3/4)² = 9/16."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x² = 9/16   →   x = 3/4 or x = −3/4"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Solve x³ = 8/27.",
+    "right": "x = 2/3",
+    "wrong": [
+     "x = 2/3 or x = −2/3",
+     "x = 8/3",
+     "x = 4/9"
+    ],
+    "why": "∛8 = 2 and ∛27 = 3, so x = 2/3. Check: (2/3)³ = 8/27. There is only one real answer to a cube equation, so −2/3 is out: (−2/3)³ = −8/27. 8/3 and 4/9 come from dividing or squaring instead of taking a cube root."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. To undo a square, take the square root. If p is positive, x² = p has two answers, √p and −√p. To undo a cube, take the cube root. x³ = p has one real answer, ∛p. For area and volume problems, check if a negative answer makes sense as a length. You did great today. Next time, class 7, we write very big and very small numbers with scientific notation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² = p (p positive): x = √p or x = −√p\nx³ = p: x = ∛p\nx² = 0: x = 0\nLengths cannot be negative"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Solving with Squares and Cubes",
+   "links": [
+    "[[Exponent Rules for Whole Numbers]]",
+    "[[Zero and Negative Exponents]]",
+    "[[Irrational Numbers and Roots]]",
+    "[[Estimating and Ordering Irrational Numbers]]",
+    "[[Scientific Notation: Reading and Writing]]",
+    "[[The Pythagorean Theorem: Why It Works]]",
+    "[[Volume of Cylinders]]",
+    "[[Volume of Cones and Spheres]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "x³ = 27 has only one solution, x = 3.",
+   "other_view": "That is true for real numbers, which is what 8th grade uses. In the larger system of complex numbers, every nonzero number has three cube roots, so x³ = 27 has two more solutions that are not real. They are not part of this course.",
+   "cite": [
+    "s9"
+   ]
+  },
+  {
+   "claim": "The square root of a negative number does not exist, so x² = −16 has no solution.",
+   "other_view": "Textbooks at this level say the square root of a negative number is not a real number. Later courses introduce imaginary numbers, which give such equations solutions. So 'no solution' means no real solution.",
+   "cite": [
+    "s5"
+   ]
+  }
+ ]
+}

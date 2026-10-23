@@ -1,0 +1,138 @@
+{
+ "course_id": "numbers-0-9",
+ "title": "Numbers 0 to 9",
+ "audience": [
+  "adult relearning numbers",
+  "young child"
+ ],
+ "length_note": "Nine classes of 6 to 12 minutes each. There are ten numbers, so they are taught in small groups of one to three at a time, with the amount, the spoken word and the written digit introduced together. Zero gets its own class because 'nothing there' is a different idea from counting. Five-frames are introduced at 5 and used for 6 to 9, so each of those numbers is seen as 'five and some more'. After the numbers come writing the digits, counting in order, comparing amounts, and a mixed review. Every class is short and stands alone, so a session can stop after any class. Adults count cups, keys and coins; children count ducks, apples and balls. The questions and the tone are the same for both: calm, respectful and never babyish.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "One, two, three",
+   "goal": "Count up to 3 real things, say the number, and pick the right digit from three big choices.",
+   "minutes": 8,
+   "topics": [
+    "Counting by touching or pointing at each thing once",
+    "Adults: 1 to 3 cups, keys, coins. Children: 1 to 3 ducks, apples, balls",
+    "Seeing small amounts at a glance",
+    "The digits 1, 2, 3 shown beside the spoken words",
+    "Gentle 'how many?' questions with three big answers"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "Four and five",
+   "goal": "Count up to 5 things and know that a full five-frame means 5.",
+   "minutes": 10,
+   "topics": [
+    "Counting 4 and 5 real things",
+    "Meeting the five-frame: a row of five boxes filled one at a time",
+    "Matching 4 and 5 to the frame, with one empty box for 4",
+    "The digits 4 and 5 with the spoken words",
+    "'How many?' with three big answers, mixing 1 to 5"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Zero: nothing there",
+   "goal": "Say 'zero' when there is nothing to count and know the digit 0.",
+   "minutes": 7,
+   "topics": [
+    "Zero as an empty plate, an empty cup or an empty basket",
+    "Adults: no keys in the hand. Children: no apples in the bowl",
+    "Taking things away one at a time until none are left",
+    "An empty five-frame means 0",
+    "The digit 0 shown beside the spoken word",
+    "'How many?' questions that include zero, with three big answers"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 4,
+   "title": "Six and seven",
+   "goal": "Show and recognise 6 and 7 as 'five and one more' and 'five and two more' on a five-frame.",
+   "minutes": 10,
+   "topics": [
+    "A full five-frame plus one extra for 6, plus two extra for 7",
+    "Counting real things placed in the frame",
+    "Telling 5, 6 and 7 apart by how they look in the frame",
+    "The digits 6 and 7 with the spoken words",
+    "'How many?' with three big answers, mixing 0 to 7"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Eight and nine",
+   "goal": "Show and recognise 8 and 9 on five-frames and say how many things are in a group of up to 9.",
+   "minutes": 10,
+   "topics": [
+    "A full five-frame plus three more for 8, plus four more for 9",
+    "Seeing 9 as 'one away from ten' with one empty box left over, using two frames side by side",
+    "Counting real things up to 9",
+    "The digits 8 and 9 with the spoken words",
+    "'How many?' with three big answers, mixing 0 to 9"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 6,
+   "title": "Reading and writing the digits",
+   "goal": "Recognise each digit from 0 to 9 and make each one by tracing, typing or pointing, in whichever way is comfortable.",
+   "minutes": 12,
+   "topics": [
+    "Telling look-alike digits apart, such as 6 and 9, or 1 and 7",
+    "Tracing each digit with a finger on the screen or on paper",
+    "Typing or tapping a digit when writing by hand is tiring or hard",
+    "Matching a digit to an amount, to a word and to a five-frame",
+    "No timers and no pressure; stop and rest at any point"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "Counting in order, 0 to 9",
+   "goal": "Say the numbers from 0 to 9 in order and say which number comes just before or just after another.",
+   "minutes": 10,
+   "topics": [
+    "A number line of ten big steps",
+    "Counting up from 0 and counting back down from 9",
+    "What comes next? What comes before?",
+    "Filling in one missing number in a short row",
+    "Using real things laid out in a line: keys, coins, ducks, apples"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 8,
+   "title": "More, fewer or the same",
+   "goal": "Look at two groups and say which has more, which has fewer, or whether they are the same.",
+   "minutes": 10,
+   "topics": [
+    "Lining up two groups side by side to compare them",
+    "Words: more, fewer, same",
+    "Comparing two digits from 0 to 9",
+    "Zero as the smallest amount",
+    "Three big answers: this one, that one, or the same"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 9,
+   "title": "Putting it all together",
+   "goal": "Answer mixed 'how many?' questions for any amount from 0 to 9, by choosing the amount, the digit or the word.",
+   "minutes": 12,
+   "topics": [
+    "Mixed questions with real things, five-frames and digits",
+    "Matching amounts to digits and to words",
+    "Adults: cups, keys and coins in everyday scenes. Children: ducks, apples and balls in simple pictures",
+    "Gentle review of the numbers that need more practice",
+    "Looking back on what has been learned"
+   ],
+   "needs_research": false
+  }
+ ]
+}

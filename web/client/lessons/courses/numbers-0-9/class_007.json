@@ -1,0 +1,250 @@
+{
+ "about": {
+  "title": "Counting in order, 0 to 9",
+  "course": "numbers-0-9",
+  "class_n": 7,
+  "audience": [
+   "adult relearning numbers",
+   "young child",
+   "anyone learning or relearning numbers"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes: one number line, counting up and down, and a few short 'what comes next?' questions. Every beat stands alone, so a session can stop after any one of them and pick up later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we put the numbers in order, from 0 to 9. There is no hurry. You can stop at any point and come back later."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Counting in order, 0 to 9"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a number line. It has ten big steps, one for each number. We start at 0 on the left and end at 9 on the right. Each number sits one step after the one before it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0  1  2  3  4  5  6  7  8  9"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's count up together, one step at a time. Say each number as it lights up: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9. Zero is where we start. It means nothing is there yet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we go back down, from 9 to 0. Counting back is harder, so go slowly: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0. If you lose your place, just look at the line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "9 → 8 → 7 → 6 → 5 → 4 → 3 → 2 → 1 → 0"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real things sit in a line too. Here are keys laid out on a table in one row. Touch each key as you count. One, two, three, four, five, six."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Six house keys laid in a straight row on a wooden table, spaced apart so each one can be touched and counted."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How many keys are in the row?",
+    "right": "6",
+    "wrong": [
+     "4",
+     "8"
+    ],
+    "why": "Touching each key once and counting 1, 2, 3, 4, 5, 6 gives 6 keys."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a question about order. What comes next? When you count up, the next number is the one just after. After 3 comes 4."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3  →  ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What number comes just after 3?",
+    "right": "4",
+    "wrong": [
+     "2",
+     "5"
+    ],
+    "why": "Counting up goes 2, 3, 4. The number just after 3 is 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other way. What comes before? It is the number you say just before, when counting up. Before 8 comes 7."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "?  →  8"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What number comes just before 8?",
+    "right": "7",
+    "wrong": [
+     "9",
+     "6"
+    ],
+    "why": "Counting up goes 6, 7, 8. The number just before 8 is 7."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are ducks in a five-frame. A full row of five, and some in the next row. Count the full row as 5, then add the rest."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A five-frame with two rows. The top row holds five yellow ducks, filling it. The bottom row holds two yellow ducks, with three empty spaces."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many ducks are in the frame?",
+    "right": "7",
+    "wrong": [
+     "5",
+     "9"
+    ],
+    "why": "The full top row is 5. Two more ducks make 7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes one number is missing from a short row. Say the numbers out loud and listen for the gap. Here is the row: 2, 3, blank, 5, 6."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2   3   ?   5   6"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which number is missing?",
+    "right": "4",
+    "wrong": [
+     "1",
+     "7"
+    ],
+    "why": "Counting up goes 2, 3, 4, 5, 6. The missing number is 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try with apples. Each apple has a number card under it, and one card is missing. Look at the apples and the cards: 6, 7, blank, 9."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of four red apples with number cards under them reading 6, 7, a blank space, and 9."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What number goes in the blank space?",
+    "right": "8",
+    "wrong": [
+     "5",
+     "10"
+    ],
+    "why": "Counting up goes 6, 7, 8, 9. The blank is 8."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more, and this one goes back to the start. Think about the number line. What is the number just before 1?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "?  →  1"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What number comes just before 1?",
+    "right": "0",
+    "wrong": [
+     "2",
+     "9"
+    ],
+    "why": "Zero is the first number on the line. It comes just before 1."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Today you counted up from 0 to 9 and back down again. You found the number just after and just before another. Next time we will look at more, fewer, and the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "0 1 2 3 4 5 6 7 8 9"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Counting in order, 0 to 9",
+   "links": [
+    "[[Zero: nothing there]]",
+    "[[Reading and writing the digits]]",
+    "[[More, fewer or the same]]"
+   ]
+  },
+  {
+   "topic": "Number line",
+   "links": [
+    "[[Counting in order, 0 to 9]]"
+   ]
+  },
+  {
+   "topic": "Just before and just after",
+   "links": [
+    "[[Counting in order, 0 to 9]]",
+    "[[Putting it all together]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

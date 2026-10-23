@@ -1,0 +1,266 @@
+{
+ "about": {
+  "title": "D, E, F",
+  "course": "letters-a-z",
+  "class_n": 2,
+  "audience": [
+   "adult relearning reading",
+   "young child",
+   "anyone learning or relearning letters"
+  ],
+  "minutes": 10,
+  "length_note": "Three letters, a quick look back at A to C and a short wrap-up fit in about 10 minutes. Take your time. You can pause after any letter and come back later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we meet three letters: D, E and F. There is no hurry. You can stop and rest whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "D, E, F"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back. Last time we met A, B and C. A says 'a' as in apple. B says 'b' as in ball. C says 'k' as in cat."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A a: apple\nB b: ball\nC c: cat"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try one. Which letter is the first letter of 'ball'?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "A a: apple\nB b: ball\nC c: cat"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter does the word 'ball' start with?",
+    "right": "B",
+    "wrong": [
+     "A",
+     "C",
+     "D"
+    ],
+    "why": "'Ball' starts with the 'b' sound, and that is the letter B."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our first new letter: D. The name of the letter is 'dee'. The big letter D is a straight line down, with a round belly on the right."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "D  d\nname: dee"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The small letter d is a round circle with a tall line on its right side. Be careful: the small b looks like it, but the line is on the left. For d, the round part comes first, then the tall line."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small round circle with a tall straight line standing on its right side, making the letter d. Beside it, the letter b with its line on the left, shown faded for comparison."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "D makes a short sound, 'd', like at the start of 'dog'. Put your tongue behind your top teeth and say 'd, d, dog'. A grown-up word is 'doctor'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "D d — dog\n(grown-up word: doctor)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which word starts with the 'd' sound?",
+    "right": "dog",
+    "wrong": [
+     "fish",
+     "egg",
+     "cat"
+    ],
+    "why": "'Dog' starts with 'd'. 'Fish' starts with F, 'egg' with E and 'cat' with C."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next: E. The name of the letter is 'ee'. The big letter E is one tall line with three short arms pointing to the right."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "E  e\nname: ee"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The small letter e is a little circle with a bar across the middle. It has an open mouth at the lower right."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small round letter e: a short straight bar across the middle of a circle, with a gap at the lower right."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "E has more than one sound. The most common one is short: 'eh', as in 'egg'. Say it with me: 'eh, eh, egg'. A grown-up word is 'envelope'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "E e — egg\nsound: eh\n(grown-up word: envelope)"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "E can also say its own name, 'ee', as in 'eat'. You will see both. Start with 'eh' as in egg, and learn the other one slowly."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Common sound: eh — egg\nSecond sound: ee — eat"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the most common sound for the letter E, as in 'egg'?",
+    "right": "eh",
+    "wrong": [
+     "dee",
+     "fff",
+     "kuh"
+    ],
+    "why": "The short sound 'eh', as in 'egg', is the one to learn first. 'Dee' is the name of D, 'fff' is the sound of F, and 'kuh' is a sound of C."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our last letter today: F. The name of the letter is 'eff'. The big letter F is a tall line with two arms to the right, one at the top and one in the middle. It looks like E with the bottom arm missing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "F  f\nname: eff"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The small letter f is a tall line with a hook at the top, like a walking stick, and a short bar across it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall small letter f: a straight line with a curved hook at the top, and a short cross bar through the middle."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "F makes a soft sound, 'fff', like blowing on hot soup. Your top teeth touch your bottom lip. Say 'fff, fff, fish'. A grown-up word is 'family'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "F f — fish\nsound: fff\n(grown-up word: family)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which word starts with the 'fff' sound?",
+    "right": "fish",
+    "wrong": [
+     "dog",
+     "egg",
+     "ball"
+    ],
+    "why": "'Fish' starts with 'fff'. The others start with D, E and B."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's match big and small letters. Each big letter has a small partner."
+   },
+   "show": {
+    "kind": "list",
+    "text": "D — d\nE — e\nF — f"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which small letter is the partner of the big letter D?",
+    "right": "d",
+    "wrong": [
+     "e",
+     "f",
+     "b"
+    ],
+    "why": "The big D partners with the small d. The small b looks similar, but its tall line is on the left."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Today you met D for dog, E for egg and F for fish. Next time we meet G, H and I. Rest now, and come back when you are ready."
+   },
+   "show": {
+    "kind": "list",
+    "text": "D d — dog\nE e — egg\nF f — fish"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Letters D, E and F",
+   "links": [
+    "[[Letters A, B and C]]",
+    "[[Letters G, H and I]]",
+    "[[Telling b and d apart]]"
+   ]
+  },
+  {
+   "topic": "Two sounds of E",
+   "links": [
+    "[[Short and long vowel sounds]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

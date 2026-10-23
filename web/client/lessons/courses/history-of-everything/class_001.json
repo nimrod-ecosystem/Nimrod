@@ -1,0 +1,697 @@
+{
+ "about": {
+  "title": "How Do We Know? Reading the Evidence and Telling Time",
+  "course": "history-of-everything",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "The material fits a half-hour class. It has 17 short beats of about 1 to 2 minutes each, and 6 pause-and-answer questions. Pause as long as you need, and replay any beat. The 'written records' topic rests on one source for now, because Class 15 covers early writing in depth."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Big Bang (Hubble)",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/mission/hubble/science/science-behind-the-discoveries/hubble-big-bang/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "How Old Are Galaxies?",
+   "publisher": "NASA Space Place",
+   "date": "n.d.",
+   "link": "https://spaceplace.nasa.gov/galaxies-age/en/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "Powell Expedition—Geologic Time. Then and Now.",
+   "publisher": "U.S. Geological Survey",
+   "date": "n.d.",
+   "link": "https://www.usgs.gov/news/powell-expedition-geologic-time-then-and-now",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Age of the Earth",
+   "publisher": "U.S. National Park Service, Geology",
+   "date": "n.d.",
+   "link": "https://www.nps.gov/subjects/geology/age-of-the-earth.htm",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "A 200-kilogram (440-pound) fragment of the Canyon Diablo meteorite that was found at Meteor Crater in Arizona",
+   "publisher": "U.S. Geological Survey",
+   "date": "n.d.",
+   "link": "https://www.usgs.gov/media/images/a-200-kilogram-440-pound-fragment-canyon-diablo-meteorite-was-found-meteor-crater",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "How Does Carbon Dating Work?",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/How-Does-Carbon-Dating-Work",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Radiocarbon Dating",
+   "publisher": "Fiveable",
+   "date": "n.d.",
+   "link": "https://fiveable.me/intro-chem/key-terms/radiocarbon-dating",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "About Tree Rings",
+   "publisher": "Laboratory of Tree-Ring Research, University of Arizona",
+   "date": "n.d.",
+   "link": "https://ltrr.arizona.edu/about/treerings",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s9",
+   "title": "Part 1 - What is Dendrochronology?",
+   "publisher": "Science Education Resource Center (SERC), Carleton College",
+   "date": "n.d.",
+   "link": "https://serc.carleton.edu/trex/students/labs/lab1_1.html",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s10",
+   "title": "Dendrochronology and Radiocarbon Dating",
+   "publisher": "Radiocarbon (Cambridge University Press), vol. 64",
+   "date": "2022",
+   "link": "https://www.cambridge.org/core/journals/radiocarbon/article/dendrochronology-and-radiocarbon-dating/E006638FA190E4709488EE20AE811199",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s11",
+   "title": "IntCal20 Tree Rings: An Archaeological SWOT Analysis",
+   "publisher": "Radiocarbon (Cambridge University Press)",
+   "date": "2020",
+   "link": "https://www.cambridge.org/core/journals/radiocarbon/article/intcal20-tree-rings-an-archaeological-swot-analysis/3B0B6B44E8ADDE2AF2AFD2D2935C45A8",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s12",
+   "title": "Annual radiocarbon record indicates 16th century BCE date for the Thera eruption",
+   "publisher": "Science Advances",
+   "date": "2018",
+   "link": "https://www.science.org/doi/10.1126/sciadv.aar8241",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s13",
+   "title": "Dating the Ancient Minoan Eruption of Thera Using Tree Rings",
+   "publisher": "University of Arizona News",
+   "date": "2018",
+   "link": "https://news.arizona.edu/news/dating-ancient-minoan-eruption-thera-using-tree-rings",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s14",
+   "title": "Olive shrub buried on Therasia supports a mid-16th century BCE date for the Thera eruption",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10147620/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s15",
+   "title": "Ask Ethan: How do we know the universe is 13.8 billion years old?",
+   "publisher": "Big Think",
+   "date": "n.d.",
+   "link": "https://bigthink.com/starts-with-a-bang/universe-13-8-billion-years/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s16",
+   "title": "International Collaboration Helps Pinpoint Universe's Expansion Rate",
+   "publisher": "NASA Science",
+   "date": "2026-04-13",
+   "link": "https://science.nasa.gov/blogs/science-news/2026/04/13/international-collaboration-helps-pinpoint-universes-expansion-rate/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s17",
+   "title": "How Serious Is the Universe's Expansion Problem?",
+   "publisher": "Gizmodo",
+   "date": "2026-06-15",
+   "link": "https://gizmodo.com/how-serious-is-the-universes-expansion-problem-2000770729",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s18",
+   "title": "The universe is expanding too fast to fit theories: Hubble tension in crisis",
+   "publisher": "ScienceDaily",
+   "date": "2025-01-17",
+   "link": "https://www.sciencedaily.com/releases/2025/01/250117161235.htm",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s19",
+   "title": "What is the Common Era?",
+   "publisher": "EarthSky",
+   "date": "n.d.",
+   "link": "https://earthsky.org/human-world/definition-common-era-bce-ce-bc-ad/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s20",
+   "title": "Year zero",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Year_zero",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s21",
+   "title": "Common Era",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Common_Era",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s22",
+   "title": "Anne Frank",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Anne_Frank",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s23",
+   "title": "Martin Luther King Jr.",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Martin_Luther_King_Jr.",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s24",
+   "title": "Barbara Walters",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Barbara_Walters",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello, and welcome to The History of Everything. This is class one of a long course. We will go from the Big Bang to today, one half-hour at a time. Before we tell any of the story, we need to ask a fair question: how do we know any of it? Nobody was there with a stopwatch when the universe began. So today is about clocks, evidence, and one simple trick we will use in every class. You can pause whenever you like, and you can replay any part."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How Do We Know? Reading the Evidence and Telling Time"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is today's plan, in four steps. One: how big is the span of time we are dealing with? Two: how do scientists and historians put dates on things? Three: what is the difference between evidence, interpretation and debate? Four: what is a same-time snapshot, and why will every class have one? We will finish with a short note on the letters BCE and CE. There are some quick questions along the way. They are not tests. They are a chance to check yourself."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The scale of time\n2. Clocks for the past\n3. Evidence, interpretation, debate\n4. The same-time snapshot\n+ A note on BCE and CE"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's begin with the biggest number in the course. Our best estimate is that the universe began about 13.8 billion years ago, with what we call the Big Bang. NASA describes it as a hot, dense, tiny starting point that rapidly surged outward. That number is not a wild guess. One astrophysicist writing for Big Think says scientists state it with an uncertainty of less than about one percent. Even so, we do not know everything about that first moment. NASA says we do not know what triggered the first rapid expansion. We will come back to that in Class 2.",
+    "ask": {
+     "q": "About how long ago did the universe begin, by today's best estimate?",
+     "right": "About 13.8 billion years ago",
+     "wrong": [
+      "About 13.8 million years ago",
+      "About 4.5 billion years ago",
+      "About 13,800 years ago"
+     ],
+     "why": "NASA gives about 13.8 billion years. The 4.5 billion figure is the age of the Sun and Earth, which came much later."
+    }
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "13.8 billion years"
+   },
+   "cite": [
+    "s1",
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's compare some ages. The chart shows the universe at 13.8 billion years. NASA's Space Place puts our Milky Way galaxy at about 13.6 billion years, and our Sun at about 4.5 billion. The U.S. Geological Survey gives Earth's age as 4.54 billion years. Look at the gap. Earth is much younger than the universe. By my arithmetic, the universe had already finished about two-thirds of its history before our planet existed. So the earliest chapters of this course happen far from home."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Ages in billions of years",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Numbers this big are hard to feel, so let's shrink them. Imagine all 13.8 billion years squeezed into one calendar year. The Big Bang is at midnight on January 1. On that scale, one day is about 38 million years. One second is about 440 years. Earth forms around the start of September. Everything in the Common Era, all 2,026 years so far, fits into the last four and a half seconds of December 31. This is simple arithmetic from the numbers we just met, and it is only a way to picture them. A 'year' on this calendar is not a real unit in the universe.",
+    "ask": {
+     "q": "On the one-year calendar of the universe, about how much real time is one second?",
+     "right": "About 440 years",
+     "wrong": [
+      "About 4 years",
+      "About 44,000 years",
+      "About 4.4 million years"
+     ],
+     "why": "13.8 billion years divided by the number of seconds in a year (about 31.5 million) comes to roughly 440 years per second."
+    }
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Jan 1: Big Bang  >  early Sept: Earth forms  >  last ~4.5 seconds of Dec 31: the whole Common Era"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So how do we put dates on things? The first family of clocks is called radiometric dating. It uses atoms that fall apart at a steady, known rate. The key idea is the half-life. The U.S. Geological Survey explains it as the time it takes for half of the original, or parent, atoms to change into stable daughter atoms. Every kind of radioactive atom has its own half-life. Some are short, and some last billions of years. Scientists measure how much parent and daughter material is left in a sample. Because they know the rate, they can work out how long the clock has been running."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Half-life: the time for half the parent atoms to change"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The most famous clock is carbon-14, also called radiocarbon. Living things take in a little carbon-14 while they are alive. When they die, they stop, and the carbon-14 slowly decays. Its half-life is about 5,730 years, give or take 40. So in two grams of carbon-14, about one gram is left after about 5,730 years. Two half-lives leave one quarter. Britannica gives an example. Charcoal with only 80 percent of the carbon-14 of a living tree points to a tree cut down about 1,845 years earlier. Notice the 'give or take'. Honest dating always comes with a margin of error.",
+    "ask": {
+     "q": "A bone has one quarter of the carbon-14 of a living animal. About how old is it?",
+     "right": "About 11,460 years, which is two half-lives",
+     "wrong": [
+      "About 5,730 years",
+      "About 1,430 years",
+      "About 22,920 years"
+     ],
+     "why": "Half is left after one half-life (5,730 years). A quarter is left after two half-lives, so 2 x 5,730 = 11,460 years."
+    }
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Time since death: 0 years > all the carbon-14 | 5,730 years > half | 11,460 years > a quarter"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Every clock has limits. Carbon-14 works on once-living things, like wood, bone and seeds. It works best up to around 50,000 years. After that, so little is left that it is too hard to measure. Careful lab work matters too, because newer carbon getting into a sample can make it look younger than it really is. For deep time, scientists use atoms with much longer half-lives. That is how we date rocks, and how we get the age of the Earth. So the lesson is to pick the right clock for the job."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Carbon-14: once-living things, up to about 50,000 years\nLonger-lived atoms: rocks and meteorites, millions to billions of years"
+   },
+   "cite": [
+    "s7",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a good story about the age of the Earth. Earth's own rocks are not a good clock for its birth, because they get melted and recycled over time. So scientists looked at meteorites. They formed around the same time as Earth, but have not been recycled. In 1956, the geochemist Clair Patterson measured lead atoms in a piece of the Canyon Diablo meteorite from Arizona. He got 4.55 billion years, give or take 70 million. That figure has stayed largely unchanged since. The National Park Service adds a careful note. The 'age of the Earth' is really the age of the meteorite-and-Earth system, when solid bodies first formed from the cloud around the young Sun.",
+    "ask": {
+     "q": "Why did scientists use meteorites to find the age of the Earth?",
+     "right": "Meteorites formed at the same time as Earth but have not been recycled like Earth's rocks",
+     "wrong": [
+      "Meteorites are the oldest things in the whole universe",
+      "Meteorites have a label showing their birth date",
+      "Earth's rocks are too young to measure at all"
+     ],
+     "why": "The USGS explains that meteorites formed with Earth but were not constantly recycled, so they keep a cleaner record."
+    }
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark, heavy iron meteorite fragment, pitted and rough, sitting on a museum stand"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The second family of clocks is tree rings. In many places, a tree adds one ring per year. Wide rings come from good growing years, and narrow rings come from hard years like droughts. Counting rings on one tree gives its age, but that is not enough. The University of Arizona's tree-ring lab says some trees grow false bands, so simple counting can go wrong. The fix is called crossdating. Scientists match the pattern of wide and narrow rings between many trees. A pattern seen across trees gives each ring its exact calendar year. Think of it as matching the same barcode on different trees.",
+    "ask": {
+     "q": "What is crossdating?",
+     "right": "Matching patterns of wide and narrow rings between trees to give each ring its exact year",
+     "wrong": [
+      "Counting the rings on one tree and adding a few",
+      "Measuring carbon-14 in each ring to guess its age",
+      "Asking old trees how many winters they remember"
+     ],
+     "why": "Crossdating matches ring patterns across cores and trees, so each ring gets exactly one calendar year."
+    }
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A slice of tree trunk with rings: some thick, some thin, with a few rings marked by tiny dots"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tree rings can reach far back. A chain of oak and pine from central Germany spans 12,460 years. A 2022 review in the journal Radiocarbon called it the world's longest calendar-dated tree-ring sequence. Here is where the two families of clocks help each other. Tree rings give exact years. Scientists can measure the carbon-14 in rings of known age, and use that to correct, or calibrate, radiocarbon dates. The standard calibration curve, called IntCal20, uses known-age tree rings back to about 10,359 BCE. Radiocarbon dates are reported as years 'before present', and 'present' is fixed as the year 1950. This is why one clock is so often checked against another."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12,460 years of tree rings in one German chain"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The third kind of clock is written records. Kings' lists, letters, tax receipts and diaries come with their own calendars. Historians line those calendars up with ours. But written records can be incomplete, and they can contain mistakes or boasts. So historians often check them against science. One example is Egypt. A study of Egypt's dynasties covering 1,700 years used 211 radiocarbon dates. It put the start of the New Kingdom between 1570 and 1544 BCE. Writing, radiocarbon and tree rings each give a different kind of date. When they agree, we feel confident. When they disagree, that is where the interesting work begins."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Three clocks: atoms, tree rings, written records"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a skill that will help you in every class: sorting evidence, interpretation and debate. Evidence is what we can measure or hold, like a ring pattern, a ratio of atoms, or a clay tablet. Interpretation is what we conclude from the evidence. Debate is what happens when careful people read the evidence differently, or when two clocks disagree. Debate does not mean nobody knows anything. It usually means people are testing each other's work. In this course, when experts disagree, I will tell you, and I will give the other side fairly.",
+    "ask": {
+     "q": "Which of these is an interpretation, not evidence?",
+     "right": "The charcoal is about 1,800 years old, so the tree was cut down then",
+     "wrong": [
+      "The sample has 80 percent of the carbon-14 of a living tree",
+      "The ring is narrow",
+      "The tablet is made of baked clay"
+     ],
+     "why": "The first three are things we can measure or see. Turning them into a date and an event is a conclusion drawn from the evidence."
+    }
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Evidence: what we can measure or hold | Interpretation: what we conclude from it | Debate: when careful people differ"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a live example. About 3,600 years ago, a huge volcano erupted on the Greek island of Thera, now called Santorini. When? Radiocarbon dates put it in the second half of the 17th century BCE. But some archaeological links between sites in the Aegean, Egypt and the Levant pointed to a later date. A University of Arizona team used radiocarbon from tree rings and landed between 1600 and 1525 BCE. That overlaps with the archaeological range of 1570 to 1500. They also found the older calibration curve was not quite right for that period. A later study of an olive shrub supports a mid-16th-century BCE date. The question is still being worked on, and no one is being silly. Different clocks, read carefully, did not match at first.",
+    "ask": {
+     "q": "Different methods first gave different dates for the Thera eruption. What does this show?",
+     "right": "Experts keep testing and refining the evidence, and the question is still being worked on",
+     "wrong": [
+      "Dating methods are useless",
+      "Whoever argues loudest wins",
+      "Everyone should just pick the date they like best"
+     ],
+     "why": "The studies refined each other. Tree-ring work, for example, showed that the older calibration curve needed correcting."
+    }
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "17th century BCE (radiocarbon, older view) ... 1600-1525 BCE (tree-ring radiocarbon) ... 1570-1500 BCE (archaeology)"
+   },
+   "cite": [
+    "s12",
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the 13.8 billion year figure lives with an open question. Astronomers measure how fast the universe is expanding in two main ways. One uses light from the very early universe. The other uses stars and galaxies closer to home. The two answers differ by about 9 percent, even though each is measured to about 1 percent. That gap is called the Hubble tension. NASA's April 2026 update says different approaches still give slightly different results. Scientists do not agree on whether it is a measurement problem or a sign of new physics. Meanwhile, the estimate of the age itself is still described as secure to about 1 percent. That is a good example of how a gap can be real without bringing everything down."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Still debated: how fast is the universe expanding?"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, the trick for this whole course: the same-time snapshot, or frame of reference. In each class, we pick a moment and look around. What else was going on in the world then? Take 1929. Martin Luther King Jr. was born on January 15 in Atlanta. Anne Frank was born on June 12 in Frankfurt. And Barbara Walters was born on September 25 in Boston. They feel like they belong to different eras. Frank wrote her diary in hiding in Amsterdam and died aged 15 in early 1945. King was assassinated in 1968 at 39. Walters died in 2022 at 93, after a career that ran from 1951 to 2015. And in that same year, 1929, Edwin Hubble found that the universe is expanding. Two eras that feel far apart can sit closer than we think. On our calendar of the universe, those 97 years since 1929 are about a fifth of a second.",
+    "ask": {
+     "q": "Which statement is true about 1929, our snapshot year?",
+     "right": "Anne Frank, Martin Luther King Jr. and Barbara Walters were all born that year",
+     "wrong": [
+      "Anne Frank was born in 1945",
+      "Martin Luther King Jr. was born in 1968",
+      "Barbara Walters was born in 1999"
+     ],
+     "why": "Frank was born on June 12, King on January 15, and Walters on September 25, all in 1929."
+    }
+   },
+   "show": {
+    "kind": "list",
+    "text": "1929\nJan 15: Martin Luther King Jr. born, Atlanta\nJun 12: Anne Frank born, Frankfurt\nSep 25: Barbara Walters born, Boston\nHubble: the universe is expanding"
+   },
+   "cite": [
+    "s22",
+    "s23",
+    "s24",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more thing: how years are labeled. In this course you will see BCE and CE, short for Before Common Era and Common Era. They are the same year numbers as BC and AD. The label is different, not the date. Either set is acceptable by the international standard for dates, and scientific writing leans towards BCE and CE. A monk named Dionysius invented the system around the year 525, and the English writer Bede later counted the years before year 1 backwards. There is no year zero. 1 BCE is followed straight by 1 CE. So from the start of 500 BCE to the start of 500 CE is 999 years, not 1,000. For very old events, we will say 'years ago', like 13.8 billion years ago.",
+    "ask": {
+     "q": "In the BCE/CE system, which year comes right after 1 BCE?",
+     "right": "1 CE",
+     "wrong": [
+      "0 CE",
+      "0 BCE",
+      "2 BCE"
+     ],
+     "why": "There is no year zero. 1 BCE is followed directly by 1 CE."
+    }
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "BC = BCE | AD = CE | No year zero: 2 BCE, 1 BCE, 1 CE, 2 CE"
+   },
+   "cite": [
+    "s19",
+    "s20",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it together. The universe is about 13.8 billion years old, and Earth is about 4.54 billion. We tell time with clocks of atoms, of tree rings, and of written records, and we check them against each other. Evidence is what we measure, interpretation is what we conclude, and debate is how careful people test it. When experts disagree, this course will tell you. And every class will give you a same-time snapshot, so the past feels connected. Well done. Next time is Class 2: the Big Bang and the first minutes. Take a break first, and have some water."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Universe: about 13.8 billion years\nEarth: about 4.54 billion years\nThree clocks: atoms, tree rings, written records\nEvidence > interpretation > debate\nEvery class: a same-time snapshot"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How old? Ages in billions of years",
+   "rows": [
+    {
+     "label": "Universe",
+     "value": 13.8,
+     "source": "s2"
+    },
+    {
+     "label": "Milky Way",
+     "value": 13.6,
+     "source": "s2"
+    },
+    {
+     "label": "Earth",
+     "value": 4.54,
+     "source": "s3"
+    },
+    {
+     "label": "Sun",
+     "value": 4.5,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Half-life and radiometric dating",
+   "links": [
+    "[[Class 5: Early Earth and the Moon]]",
+    "[[Class 8: Animals Appear: The Cambrian to Life on Land]]"
+   ]
+  },
+  {
+   "topic": "Tree rings and crossdating",
+   "links": [
+    "[[Class 14: The Farming Revolution]]",
+    "[[Class 17: The Bronze Age World and Its Collapse]]"
+   ]
+  },
+  {
+   "topic": "Written records as dating evidence (needs a dedicated source in Class 15)",
+   "links": [
+    "[[Class 15: The First Cities and the Invention of Writing]]",
+    "[[Class 16: Egypt and the Indus Valley]]"
+   ]
+  },
+  {
+   "topic": "The Hubble tension and the age of the universe",
+   "links": [
+    "[[Class 2: The Big Bang and the First Minutes]]",
+    "[[Class 63: Looking Ahead: The Future of Earth and the Universe]]"
+   ]
+  },
+  {
+   "topic": "The Thera eruption date debate",
+   "links": [
+    "[[Class 17: The Bronze Age World and Its Collapse]]"
+   ]
+  },
+  {
+   "topic": "BCE/CE, AD/BC and the missing year zero",
+   "links": [
+    "[[Class 25: The Roman Empire, the Silk Roads and Early Christianity]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1929",
+   "elsewhere": "Martin Luther King Jr. was born on January 15 in Atlanta. Anne Frank was born on June 12 in Frankfurt. Barbara Walters was born on September 25 in Boston. Astronomers date Edwin Hubble's discovery that the universe is expanding to this year.",
+   "cite": [
+    "s22",
+    "s23",
+    "s24",
+    "s18"
+   ]
+  },
+  {
+   "when": "1956",
+   "elsewhere": "Clair Patterson published his lead-isotope age of the Earth, 4.55 billion years, from a meteorite. Martin Luther King Jr. had been a prominent civil rights leader since 1955. Barbara Walters was already working in broadcasting, where her career ran from 1951 to 2015.",
+   "cite": [
+    "s5",
+    "s23",
+    "s24"
+   ]
+  },
+  {
+   "when": "2026",
+   "elsewhere": "Astronomers still disagree about how fast the universe is expanding, and NASA reports that different methods give slightly different answers. Anne Frank, King and Walters were all born in 1929, so in 2026 Frank would have been 97.",
+   "cite": [
+    "s16",
+    "s17",
+    "s22"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The universe is about 13.8 billion years old, with an uncertainty of about 1 percent.",
+   "other_view": "Astronomers agree space is expanding but disagree about how fast. Early-universe and nearby-universe measurements differ by about 9 percent (the Hubble tension). Scientists are split on whether this is a measurement problem or a clue to new physics. The age of 13.8 billion years is still described as secure to about 1 percent, but the debate is real and ongoing.",
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The Thera (Santorini) eruption happened in the second half of the 17th century BCE, according to radiocarbon dating.",
+   "other_view": "Archaeological links between sites in the Aegean, Egypt and the Levant pointed to a later date, around 1570 to 1500 BCE. A tree-ring radiocarbon study found 1600 to 1525 BCE, overlapping the archaeological range, and a later olive-shrub study supports the mid-16th century BCE. The exact date is still being refined.",
+   "cite": [
+    "s12",
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "The age of the Earth is about 4.54 billion years.",
+   "other_view": "The National Park Service explains that this is really the age of the meteorite-and-Earth system. It marks when solid bodies first formed from the cloud around the young Sun, not a single birthday for the planet. The figure is known to within about 1 percent, and it is consistent with meteorites, lunar samples and the oldest Earth rocks.",
+   "cite": [
+    "s4"
+   ]
+  },
+  {
+   "claim": "Years should be labeled BCE and CE.",
+   "other_view": "BC and AD are the older labels for the same year numbers. The international standard accepts either, so the choice is about wording and tradition, not about the dates themselves. Science and history writing tends to prefer BCE and CE, and many other writers still use BC and AD.",
+   "cite": [
+    "s19"
+   ]
+  }
+ ]
+}

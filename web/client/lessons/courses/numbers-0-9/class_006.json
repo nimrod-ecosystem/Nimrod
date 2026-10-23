@@ -1,0 +1,332 @@
+{
+ "about": {
+  "title": "Reading and writing the digits",
+  "course": "numbers-0-9",
+  "class_n": 6,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 12,
+  "length_note": "About 12 minutes, in small steps. There are ten digits, so the class is split into three short groups with a rest in the middle. You can stop after any step and pick up again later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we meet the digits: the marks we use to write numbers. There is no timer and no pressure. You can stop and rest at any point."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Reading and writing the digits"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You have three ways to show a digit. You can trace it with a finger, type or tap it, or just point to it. Choose whichever feels comfortable today. All three count."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Trace it with a finger on the screen or on paper\n2. Type or tap it\n3. Point to it"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's start with the first three digits: 0, 1 and 2. Zero is a round shape, like a ring or an empty cup seen from above. It means nothing is there. To trace it, start at the top and go round until you are back where you began."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One is the simplest digit: a straight line going down. Some people add a tiny flag at the top. Try tracing it now. Then look at 2, which has a curve at the top, a slide down to the left, and a flat line along the bottom."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "1 | one straight line down\n2 | curve on top, slide down, flat line at the bottom"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Here are three cups on a table. Which digit shows how many cups?",
+    "right": "3",
+    "wrong": [
+     "1",
+     "2"
+    ],
+    "why": "There are three cups, so the digit is 3. Take your time to count them one at a time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now match a digit to an amount. Look at the digit 2 and two keys lying side by side. The digit is a short way of writing the amount."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big digit 2 on the left. On the right, two keys lying on a table."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which digit goes with an empty plate, with nothing on it?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "2"
+    ],
+    "why": "Nothing is on the plate, so the amount is zero, written 0."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next group: 3, 4 and 5. Three has two bumps, one above the other, like a pair of curves facing right. Four is a slanting line down, a line across, and then a tall line that crosses it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "3 | two bumps, one above the other\n4 | slant down, line across, tall line down"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Five has a short line down on the left, then a round belly, and a flat hat on top. Many people add the hat last. Five is also where our five-frame is full: one row of five dots, all filled in."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The digit 5 beside a five-frame. The frame is a row of five boxes, and all five boxes have a dot in them."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "A five-frame has a full row of five dots. Which digit matches it?",
+    "right": "5",
+    "wrong": [
+     "3",
+     "4"
+    ],
+    "why": "A full row of five dots is five, written 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is a good moment for a rest. Stretch your hands, have a sip of water, or stop here and come back another day. Nothing will be lost."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Rest if you like"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. The last group is 6, 7, 8 and 9. For these we use the five-frame, with a full top row and extra dots on the bottom row. Six is one full row plus one more dot."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The digit 6 beside two rows of five boxes. The top row has five dots, and the bottom row has one dot."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Seven is a full row plus two. Eight is a full row plus three. Nine is a full row plus four, so just one box is empty. The five-frame lets you see each amount without counting every dot."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6 = 5 and 1 more\n7 = 5 and 2 more\n8 = 5 and 3 more\n9 = 5 and 4 more, one empty box"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A five-frame has a full top row and two dots on the bottom row. Which digit is it?",
+    "right": "7",
+    "wrong": [
+     "6",
+     "9"
+    ],
+    "why": "Five on top and two more on the bottom makes seven."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some digits look alike, so let's look closely. Six and nine are the same shape turned upside down. Six has its tail at the top and its round loop at the bottom. Nine has its loop at the top and its tail going down."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "6 | tail at the top, loop at the bottom\n9 | loop at the top, tail at the bottom"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which digit has its loop at the top and its tail going down?",
+    "right": "9",
+    "wrong": [
+     "6",
+     "8"
+    ],
+    "why": "Nine has the loop on top and the tail below. Six is the other way round, and eight has two loops."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One and seven can also be mixed up. One is just a line down, perhaps with a small flag. Seven has a flat line across the top and then a slide down."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "1 | a line down\n7 | a flat top, then a slide down"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which digit has a flat line across the top?",
+    "right": "7",
+    "wrong": [
+     "1",
+     "4"
+    ],
+    "why": "Seven starts with a flat line across the top. One has no such line."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Eight is like two loops stacked, one on top of the other. You can trace it like an S that closes up at the end. Take your time with it. It is a tricky one for everyone."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "8"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Digits also have words. We write 3 as the word 'three'. Matching a digit to its word helps when you see numbers in different places, such as on a sign or a recipe."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0 zero   1 one   2 two   3 three   4 four\n5 five   6 six   7 seven   8 eight   9 nine"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which digit goes with the word 'four'?",
+    "right": "4",
+    "wrong": [
+     "1",
+     "9"
+    ],
+    "why": "The word 'four' goes with the digit 4. Read the word slowly and say it out loud if you can."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If writing by hand is tiring or hard, you do not have to write. Typing or tapping a digit is just as good. You press the key that shows the digit you want. Try it with 5 now."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Type it, tap it, or trace it"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You want to show four apples. What can you do?",
+    "right": "Type, tap, trace or point to 4, whichever is easiest",
+    "wrong": [
+     "Write 4 by hand, and only by hand",
+     "Skip it, because it is too hard"
+    ],
+    "why": "Any comfortable way is fine. Typing, tapping, tracing and pointing all show that you know the digit."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last look at the matching. Here are four coins on a table. Count them one at a time, then find the digit, then find the word."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Four coins on a table. Under them are three big choices: the digit 4, the digit 6 and the digit 9."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many coins are on the table?",
+    "right": "4",
+    "wrong": [
+     "6",
+     "9"
+    ],
+    "why": "Count them one by one: one, two, three, four. The amount is four, written 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done for today. You looked at all ten digits, from 0 to 9. You can come back to any of them whenever you like. In the next class we will count in order, from 0 up to 9."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done. Rest, or carry on when you are ready."
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Telling look-alike digits apart",
+   "links": [
+    "[[six and nine]]",
+    "[[one and seven]]"
+   ]
+  },
+  {
+   "topic": "Tracing digits",
+   "links": [
+    "[[typing and tapping digits]]"
+   ]
+  },
+  {
+   "topic": "Typing or tapping digits",
+   "links": [
+    "[[tracing digits]]"
+   ]
+  },
+  {
+   "topic": "Matching digits to amounts, words and five-frames",
+   "links": [
+    "[[five-frames]]",
+    "[[zero: nothing there]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

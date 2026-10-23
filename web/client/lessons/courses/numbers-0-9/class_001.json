@@ -1,0 +1,273 @@
+{
+ "about": {
+  "title": "One, two, three",
+  "course": "numbers-0-9",
+  "class_n": 1,
+  "audience": [
+   "adult relearning numbers",
+   "young child",
+   "anyone learning or relearning numbers"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. The class covers only three numbers, so there is time for plenty of slow practice. It splits into small parts, so you can stop after any part and pick up again later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. In this class we will count up to three things, say the number, and find the right digit. There is no hurry and no test. You can stop at any point and come back later."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "One, two, three"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the one trick for counting. Touch or point at each thing, one time only, and say a number as you go. Grown-ups can use cups, keys or coins. Children can use ducks, apples or balls. Real things are best, so if you have any nearby, use them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Point at each thing once"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's begin with one. Picture a single cup on a table. For a child, picture a single yellow duck. Point at it and say: one."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A single white cup on a plain wooden table. Beside it, for children, a single yellow rubber duck."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is the digit for one. It is a straight line standing up. Say it with me: one."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Look at the picture: one cup on a table. How many cups are there?",
+    "right": "1 (one)",
+    "wrong": [
+     "2 (two)",
+     "3 (three)"
+    ],
+    "why": "There is one cup. You point at it once and say one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now two. Picture two keys lying side by side. For a child, picture two red apples. Point at the first and say one. Point at the second and say two. The last number you say tells you how many there are."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two silver keys lying side by side on a table. Beside them, for children, two red apples."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is the digit for two. Say it with me: two."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Look at the picture: two keys on a table. How many keys are there?",
+    "right": "2 (two)",
+    "wrong": [
+     "1 (one)",
+     "3 (three)"
+    ],
+    "why": "Point at the first key and say one, then the second and say two. The last number you say is two."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now three. Picture three coins in a row. For a child, picture three blue balls. Point at each one as you count: one, two, three. Take your time. It is fine to count again."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three coins in a row on a table. Beside them, for children, three blue balls in a row."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is the digit for three. Say it with me: three."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Look at the picture: three coins in a row. How many coins are there?",
+    "right": "3 (three)",
+    "wrong": [
+     "1 (one)",
+     "2 (two)"
+    ],
+    "why": "Point at each coin once: one, two, three. The last number you say is three."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are all three numbers side by side, with the words beside them. Say each one as it lights up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 – one\n2 – two\n3 – three"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "With very small amounts, you can often see how many without counting. One thing looks like one. Two things look like a pair. Three things look like a little group. Try it. Look first, and only count if you need to."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two ducks (or two cups) sitting close together, with a clear gap around them."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Look at the picture: two ducks, or two cups, close together. How many are there?",
+    "right": "2 (two)",
+    "wrong": [
+     "1 (one)",
+     "3 (three)"
+    ],
+    "why": "It is a pair. You may have seen two straight away, or you may have pointed and counted. Both ways are fine."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's match a digit to a word. Listen to the word, then choose the digit that goes with it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: the word 'three'. Right: three big digits to choose from: 1, 2, 3."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which digit says 'three'?",
+    "right": "3",
+    "wrong": [
+     "1",
+     "2"
+    ],
+    "why": "The digit 3 stands for three things. You can count three on your fingers to check."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more to try. This time the things are apples. If you like, point at each one on the screen, or in the air."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One red apple on a plate, with plenty of empty space around it."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Look at the picture: an apple on a plate. How many apples are there?",
+    "right": "1 (one)",
+    "wrong": [
+     "2 (two)",
+     "3 (three)"
+    ],
+    "why": "There is one apple. When there is only one thing, you can see it at a glance."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last picture. Point at each ball once and count them slowly."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three blue balls in a row, with a little space between each ball."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Look at the picture: balls in a row. How many balls are there?",
+    "right": "3 (three)",
+    "wrong": [
+     "2 (two)",
+     "1 (one)"
+    ],
+    "why": "Point at each ball once: one, two, three. The last number you say is how many there are."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. You touched or pointed at each thing once, said the number, and matched it to a digit: 1, 2 and 3. Next time we will count four and five. If you want to stop here, that is a good place to stop."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1 · 2 · 3"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Counting by pointing once at each thing",
+   "links": [
+    "[[One-to-one counting]]",
+    "[[The last number said tells how many]]"
+   ]
+  },
+  {
+   "topic": "Seeing small amounts at a glance",
+   "links": [
+    "[[Four and five]]",
+    "[[Five-frames]]"
+   ]
+  },
+  {
+   "topic": "The digits 1, 2 and 3",
+   "links": [
+    "[[Reading and writing the digits]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,441 @@
+{
+ "about": {
+  "title": "Multi-Step Equations and Variables on Both Sides",
+  "course": "algebra-1",
+  "class_n": 5,
+  "audience": [
+   "ages 14 to 16",
+   "Jamie and teenagers like him",
+   "students coming from 8th-grade math"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are four ideas: distribute then combine, variables on both sides, no solution, and infinitely many solutions. Each one has a worked example and a short check. There is a pause beat in the middle, and you can stop there and finish later. The no-solution and identity ideas are new, so they get their own time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.3 Solve Equations with Variables and Constants on Both Sides (Elementary Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/2-3-solve-equations-with-variables-and-constants-on-both-sides",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s2",
+   "title": "2.4 Use a General Strategy to Solve Linear Equations (Elementary Algebra)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/2-4-use-a-general-strategy-to-solve-linear-equations",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s3",
+   "title": "Solve Linear Equations: Mini-Lesson Review (Algebra 1)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/1-solve-linear-equations-mini-lesson-review",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s4",
+   "title": "Classify Equations: Mini-Lesson Review (Algebra 1)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/1-classify-equations-mini-lesson-review",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s5",
+   "title": "2.1 Use a General Strategy to Solve Linear Equations (Intermediate Algebra)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra/pages/2-1-use-a-general-strategy-to-solve-linear-equations",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s6",
+   "title": "High School: Algebra (Common Core State Standards for Mathematics)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s7",
+   "title": "Linear Equations - Math Steps, Examples & Questions",
+   "publisher": "Third Space Learning",
+   "date": "n.d.",
+   "link": "https://thirdspacelearning.com/us/math-resources/topic-guides/algebra/linear-equations/",
+   "read": "2026-10-21"
+  },
+  {
+   "id": "s8",
+   "title": "Conditional Equations vs. Identities - Definitions, Examples, and Key Differences",
+   "publisher": "AdaptiveBooks",
+   "date": "n.d.",
+   "link": "https://adaptivebooks.org/algebra-trigonometry/review-of-fundamentals/conditional-equations-versus-identical-equations",
+   "read": "2026-10-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 5. Picture two gym plans. One has a sign-up fee and a cheap monthly price. The other has no fee and a pricier month. Which one wins? Today you'll have the tool to find out exactly when they cost the same."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Multi-Step Equations and Variables on Both Sides"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the plan for about 40 minutes. First, distribute and combine like terms. Second, handle variables on both sides. Third, spot equations with no solution. Fourth, spot equations that work for every number. Go at your own speed, and pause whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Distribute, then combine\n2. Variables on both sides\n3. Gym and phone plans\n4. No solution\n5. Every number works"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The big idea is the same as in class 4. An equation is a balance. Whatever you do to one side, you do to the other. The standards for high school algebra ask you to solve linear equations like this, and also to think ahead about how many solutions an equation will have. You'll do both today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Keep the balance: do the same thing to both sides"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea one: distribute, then combine. Say 3 times (x plus 4), plus 2x, equals 27. First, distribute the 3. That gives 3x plus 12. Now the left side is 3x plus 12 plus 2x. Combine the x terms to get 5x plus 12 equals 27. Subtract 12 to get 5x equals 15. Divide by 5 to get x equals 3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "3(x + 4) + 2x = 27\n3x + 12 + 2x = 27\n5x + 12 = 27\n5x = 15\nx = 3"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does 3(x + 4) become after you distribute?",
+    "right": "3x + 12",
+    "wrong": [
+     "3x + 4",
+     "x + 12",
+     "3x + 7"
+    ],
+    "why": "The 3 multiplies every term inside the parentheses. 3 times x is 3x, and 3 times 4 is 12."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a handy routine. Step one: simplify each side as much as you can. Distribute and combine like terms. Step two: collect the variable terms on one side. Step three: collect the plain numbers on the other side. Step four: make the coefficient of the variable equal to 1, and state the answer. Step five: check by putting your answer back into the original equation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Simplify each side (distribute, combine)\n2. Variables to one side\n3. Numbers to the other side\n4. Coefficient becomes 1\n5. Check in the original"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which step is the last one in the routine?",
+    "right": "Check the answer in the original equation",
+    "wrong": [
+     "Distribute the parentheses",
+     "Collect the plain numbers on one side",
+     "Divide both sides by the coefficient"
+    ],
+    "why": "Checking comes last. If both sides come out equal when you plug your answer into the original equation, you can trust it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful with minus signs. Try 10 minus 2 times (x minus 3) equals 4. The minus 2 multiplies both x and minus 3. That gives minus 2x plus 6. So the left side becomes 10 minus 2x plus 6, which is 16 minus 2x. Then 16 minus 2x equals 4. Subtract 16 to get minus 2x equals minus 12. Divide by minus 2 to get x equals 6. Check it: 10 minus 2 times 3 is 4. It works."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "10 - 2(x - 3) = 4\n10 - 2x + 6 = 4\n16 - 2x = 4\n-2x = -12\nx = 6"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does -2(x - 3) become after distributing?",
+    "right": "-2x + 6",
+    "wrong": [
+     "-2x - 6",
+     "-2x - 3",
+     "2x + 6"
+    ],
+    "why": "A negative times a negative is positive. So -2 times -3 is +6, and the sign on the 2x stays negative."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's take a breath. You have one big skill so far. Clear the parentheses first, tidy up each side, then solve. If you want to stop here and come back later, this is a good place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pause point"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea two: variables on both sides. Our plan is to choose one side to hold the variable, and the other side to hold the plain numbers. Take 7x plus 5 equals 6x plus 2. Subtract 6x from both sides, and you get x plus 5 equals 2. Subtract 5 to get x equals minus 3. Check it: 7 times minus 3 plus 5 is minus 16, and 6 times minus 3 plus 2 is also minus 16."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "7x + 5 = 6x + 2\nx + 5 = 2\nx = -3\nCheck: -16 = -16"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Which side should hold the variable? Either one works, and you get the same answer. A friendly tip is to move the smaller variable term. Then the x term you keep stays positive. Try 5x plus 3 equals 9x minus 13. Subtract 5x from both sides to get 3 equals 4x minus 13. Add 13 to get 16 equals 4x. So x equals 4. Check: both sides come out to 23."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "5x + 3 = 9x - 13\n3 = 4x - 13\n16 = 4x\nx = 4\nCheck: 23 = 23"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For 4x + 9 = 2x + 21, what is a good first move?",
+    "right": "Subtract 2x from both sides",
+    "wrong": [
+     "Subtract 9 from the left side only",
+     "Add 4x to both sides",
+     "Divide only the 4x by 2"
+    ],
+    "why": "Subtracting 2x from both sides leaves 2x + 9 = 21. That keeps the balance and puts the variable on one side. The answer is x = 6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's use everything together. 2 times (3x minus 1), plus 4, equals 4x plus 12. Distribute: 6x minus 2 plus 4. Combine: 6x plus 2. So 6x plus 2 equals 4x plus 12. Subtract 4x, then subtract 2. You get 2x equals 10, so x equals 5. Check: both sides are 32."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2(3x - 1) + 4 = 4x + 12\n6x + 2 = 4x + 12\n2x = 10\nx = 5\nCheck: 32 = 32"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Time for the gym plans. These numbers are made up, but plans really do work like this. Plan A charges a 15 dollar sign-up fee and 5 dollars a month. Plan B has no fee and charges 8 dollars a month. After m months, Plan A costs 15 plus 5m. Plan B costs 8m. When are they equal? Set 15 plus 5m equal to 8m. Subtract 5m to get 15 equals 3m. So m equals 5. At 5 months, both cost 40 dollars."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plan A: 15 + 5m\nPlan B: 8m\n15 + 5m = 8m\n15 = 3m\nm = 5 months (both cost $40)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "In the gym plan problem, after how many months do the two plans cost the same?",
+    "right": "5 months",
+    "wrong": [
+     "3 months",
+     "15 months",
+     "40 months"
+    ],
+    "why": "15 = 3m gives m = 5. The 3 and the 15 are numbers from the equation, and 40 is the cost, not the number of months."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What does the answer mean? Try 1 month: A costs 20 dollars and B costs 8 dollars, so B is cheaper. Try 10 months: A costs 65 dollars and B costs 80 dollars, so A is cheaper. The equation found the tipping point. If you're staying less than 5 months, pick B. If you're staying longer, pick A."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fewer than 5 months: Plan B is cheaper\nExactly 5 months: same cost\nMore than 5 months: Plan A is cheaper"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea three: sometimes the variable vanishes. Say two phone plans both charge 4 dollars per gigabyte. Plan A has a 20 dollar fee and Plan B has a 25 dollar fee. Set them equal: 20 plus 4g equals 4g plus 25. Subtract 4g from both sides, and the g terms are gone. You are left with 20 equals 25. That's false, so no number of gigabytes makes the plans cost the same. We call this a contradiction, and it has no solution."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "20 + 4g = 4g + 25\n20 = 25  (false)\nNo solution"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You solve 3x + 4 = 3x + 9 and the x terms cancel, leaving 4 = 9. What does that tell you?",
+    "right": "There is no solution",
+    "wrong": [
+     "x = 0",
+     "x = 5",
+     "Every number is a solution"
+    ],
+    "why": "4 = 9 is false for every value of x, so the equation is a contradiction. The cancelling x does not mean x = 0."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea four: the variable vanishes, and the leftover is true. Take 2y plus 6 equals 2 times (y plus 3). Distribute on the right to get 2y plus 6. Both sides are the same. Subtract 2y from both sides and you get 6 equals 6. That is always true. So every number works, and we call this an identity. In the phone plan story, it is like one plan written two different ways."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2y + 6 = 2(y + 3)\n2y + 6 = 2y + 6\n6 = 6  (true)\nAll real numbers"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You solve an equation and end up with 0 = 0. What does that mean?",
+    "right": "Every number is a solution (an identity)",
+    "wrong": [
+     "x = 0 is the only solution",
+     "There is no solution",
+     "You must have made a mistake"
+    ],
+    "why": "0 = 0 is always true no matter what x is. So every real number works."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the three-way rule. If you end with x equals a number, there is one solution. If the variable cancels and you end with something true, like 6 equals 6, every number works. If the variable cancels and you end with something false, like 20 equals 25, there is no solution. Standard guidance describes these same three endings."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x = a number: one solution\nTrue statement (a = a): all real numbers\nFalse statement (a = b): no solution"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You solve 4(x + 1) = 4x + 4 and end with 4 = 4. What kind of equation is it?",
+    "right": "An identity: all real numbers",
+    "wrong": [
+     "A contradiction: no solution",
+     "A one-solution equation: x = 1",
+     "A one-solution equation: x = 4"
+    ],
+    "why": "Distributing gives 4x + 4 = 4x + 4. Both sides are always equal, so every number works."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A few slips to watch for. Forgetting to multiply every term inside the parentheses. Dropping a minus sign when you distribute a negative. Doing a step to only one side. And reading 0 equals 0 as x equals 0. Slow down and check. Putting your answer back in the original equation catches most of these."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Distribute to EVERY term\nWatch minus signs\nDo it to BOTH sides\nCheck in the original"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick recap. Distribute and combine first. Then collect variables on one side and numbers on the other. Check your answer. If the variable disappears, look at what is left. A true statement means every number works, and a false one means no solution. Next class, we use the same moves to rearrange formulas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Distribute, then combine\nVariables on one side, numbers on the other\nVariable vanishes? True = all numbers, false = none\nNext: Formulas and Literal Equations"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Distributive property",
+   "links": [
+    "[[Properties and Simplifying Expressions]]",
+    "[[Order of Operations and Evaluating Expressions]]"
+   ]
+  },
+  {
+   "topic": "Balance idea for equations",
+   "links": [
+    "[[One-Step and Two-Step Equations]]"
+   ]
+  },
+  {
+   "topic": "Gym and phone plan break-even points",
+   "links": [
+    "[[Systems of Equations by Graphing]]",
+    "[[Writing Linear Equations from Information]]"
+   ]
+  },
+  {
+   "topic": "No solution and identities",
+   "links": [
+    "[[Systems of Equations by Graphing]]",
+    "[[Formulas and Literal Equations]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Either side can hold the variable when you solve an equation with variables on both sides.",
+   "other_view": "Textbooks agree the answer comes out the same. Some examples move the smaller variable term so the coefficient stays positive. Other approaches always collect variables on the left. Both are valid, so pick the one that makes fewer negatives for you.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "An identity has infinitely many solutions.",
+   "other_view": "OpenStax says the solution of an identity is all real numbers. One reference notes that an identity is not usually described as having many solutions, and prefers to call it true for every permissible value. Both say that every number works.",
+   "cite": [
+    "s4",
+    "s8"
+   ]
+  }
+ ]
+}

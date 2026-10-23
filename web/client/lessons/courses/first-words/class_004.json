@@ -1,0 +1,255 @@
+{
+ "about": {
+  "title": "Sounding out three-letter words with A",
+  "course": "first-words",
+  "class_n": 4,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits the material: one sound (short A), one tapping method, and one word family, with a few practice words. There is a natural pause after the word family part, so this class can be split into two short sittings of about 5 minutes each. Replay any part as often as you like."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}, and welcome to class four. Today we read short words with the A sound, like cat, map, sad and hat. Go at your own pace. You can stop, replay, or take a break whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Reading short A words"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the sound. Today the letter A does not say its name. It says the short sound you hear at the start of the word 'apple'. Say it with me: a, a, a."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a  (as in cat)"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word has the short A sound in the middle?",
+    "right": "cat",
+    "wrong": [
+     "see",
+     "go",
+     "you"
+    ],
+    "why": "Cat has the short A sound: c-a-t. The other words have different middle sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the trick. Every word today has three sounds. Tap your finger or the table once for each sound. First sound, middle sound, last sound. For cat, that is c, a, t. Three sounds, three taps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. First sound: c\n2. Middle sound: a\n3. Last sound: t"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we join them. Say the sounds slowly, then slide them together. C... a... t. Closer: ca... t. Then the whole word: cat. If you get stuck, go back to the taps and try again. That is how everyone learns."
+   },
+   "show": {
+    "kind": "list",
+    "text": "c . . . a . . . t\nca . . . t\ncat"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Look at these three sounds: m, a, p. Tap them one at a time, then slide them together."
+   },
+   "show": {
+    "kind": "list",
+    "text": "m  –  a  –  p"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What word do the sounds m, a, p make?",
+    "right": "map",
+    "wrong": [
+     "mat",
+     "cap",
+     "man"
+    ],
+    "why": "M, a, p slides together into 'map'. The last sound is p, not t or n."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Now a helpful pattern. Some words are in a family, because they end the same way. These all end with 'at'. Only the first letter changes: cat, hat, mat, sat."
+   },
+   "show": {
+    "kind": "list",
+    "text": "cat\nhat\nmat\nsat"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Read the 'at' part first. It says 'at'. Then add the first sound in front. C-at, cat. H-at, hat. M-at, mat. S-at, sat. Once you know one word in the family, you can read all of them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First sound | Whole word\nc + at | cat\nh + at | hat\nm + at | mat\ns + at | sat"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Take the word 'hat'. Change the first letter h to m. What is the new word?",
+    "right": "mat",
+    "wrong": [
+     "cat",
+     "sat",
+     "map"
+    ],
+    "why": "Keep the 'at' ending and put m at the front: m-at, mat."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is a good place for a rest if you would like one. When you come back, we will try some more words with the same A sound but different endings."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A short rest helps the learning stay."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are more words with the short A sound. Tap the three sounds in each one, then slide them together: sad, bag, can, dad."
+   },
+   "show": {
+    "kind": "list",
+    "text": "sad\nbag\ncan\ndad"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let us match words to pictures. Picture one: a happy cat sitting on a soft mat. Which word names the animal?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A fluffy cat sitting on a small blue mat, with the words 'cat', 'hat' and 'map' written underneath."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word matches the animal in the picture?",
+    "right": "cat",
+    "wrong": [
+     "hat",
+     "map",
+     "bag"
+    ],
+    "why": "The animal is a cat: c-a-t. Hat is something you wear and map shows places."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture two: a person with a sad face, and a tear on the cheek. Sound it out: s, a, d."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple drawing of a face with turned-down eyes and a mouth, and a tear on the cheek. The words 'sad', 'sat' and 'can' are written underneath."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word goes with this picture?",
+    "right": "sad",
+    "wrong": [
+     "sat",
+     "can",
+     "dad"
+    ],
+    "why": "S-a-d makes 'sad'. Sat ends with t, which is a different last sound."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last try today. Read these words by yourself. Tap, say each sound, then slide. Take as long as you need. If a word is tricky, go back to the taps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "cat   hat   map\nsad   bag   can"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You read short A words by tapping three sounds and joining them. Next time, in class five, we will do the same with the sounds I and O. Thank you, {name}. See you then."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Three sounds, three taps\nSlide the sounds together\nWord families help: cat, hat, mat, sat\nNext: words with I and O"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Short A sound",
+   "links": [
+    "[[letter sounds]]",
+    "[[blending sounds]]"
+   ]
+  },
+  {
+   "topic": "Three sounds, three taps",
+   "links": [
+    "[[blending sounds]]",
+    "[[three-letter words]]"
+   ]
+  },
+  {
+   "topic": "Word families (-at)",
+   "links": [
+    "[[rhyming words]]",
+    "[[spelling three-letter words by sound]]"
+   ]
+  },
+  {
+   "topic": "Matching words to pictures",
+   "links": [
+    "[[common sight words]]",
+    "[[everyday words: yes, no, help]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,227 @@
+{
+ "about": {
+  "title": "Adding with objects up to 10",
+  "course": "counting-and-adding",
+  "class_n": 7,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes is enough for four small ideas, each with one try. You can stop after any step and come back. Going slowly is fine."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we put two small groups together and find out how many there are in all. That is adding. Take your time. There is no rush."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Adding with objects up to 10"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You need about ten small things that are the same. Buttons, coins, spoons or bits of paper all work. If you can, use two colours, five of one colour and five of another. If not, use two small piles."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ten small things|Two colours if you have them (for example, 5 red and 5 blue)|A flat table|Somewhere calm to sit"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Make one group of two red counters. Make a second group of three blue counters. Two groups. Now we ask one question: how many are there altogether? The answer is called the total."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table with a group of 2 red counters on the left and a group of 3 blue counters on the right, with a small gap between them."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First way: counting all. Push the two groups together. Touch each counter once and count: one, two, three, four, five. The last number you say is the total. Five."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You have 4 counters in one group and 2 in another. You push them together and count all. What is the total?",
+    "right": "6",
+    "wrong": [
+     "5",
+     "4",
+     "8"
+    ],
+    "why": "Count each counter once: 1, 2, 3, 4, 5, 6. The last number said is the total, 6."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we say it as a number sentence. Two plus three equals five. The plus sign means put together. The equals sign means is the same as. Say it with me, out loud if you can: two plus three equals five."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2 + 3 = 5"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second way: counting on. Start from the bigger group. You already know there are three blue, so do not count them again. Say three, then count the red ones on: four, five. The total is five. It is quicker and it is the same answer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Counting all: 1, 2, 3, 4, 5|Counting on: 3 ... 4, 5"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Make a group of 4 and a group of 3. Start from the 4. Say four, then touch the other counters: five, six, seven. Then say the whole sentence: four plus three equals seven."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 + 3 = 7"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You have a group of 2 and a group of 5. Which group is better to start counting on from?",
+    "right": "The group of 5",
+    "wrong": [
+     "The group of 2",
+     "Neither, you must always count all",
+     "It changes the answer"
+    ],
+    "why": "Starting from the bigger group means fewer counters to count on. The total is 7 either way."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two colours help you see the parts. Put 5 red and 2 blue in a row. You can see two parts, and together they make seven. The colours show what you put together, and the total shows what you got."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of 7 counters: 5 red then 2 blue, with a thin line between the colours. Below: 5 + 2 = 7."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a special total: ten. Lay out 10 counters in a row, 6 red and 4 blue. Six plus four equals ten. Slide one counter from red to blue and you get five plus five. Whatever you do, the total stays ten."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of 10 counters: 6 red and 4 blue. Below it, the sentence 6 + 4 = 10."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the pairs that make ten. Read them down the list. They also work backwards: nine plus one is ten too. You do not need to learn them all today. Just notice them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 + 9 = 10|2 + 8 = 10|3 + 7 = 10|4 + 6 = 10|5 + 5 = 10"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try one. Put 7 red counters on the table. How many blue ones do you need to add to make ten? Add them one at a time and count on: eight, nine, ten."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7 + ? = 10"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "7 red counters. How many blue counters make a total of 10?",
+    "right": "3",
+    "wrong": [
+     "2",
+     "4",
+     "7"
+    ],
+    "why": "Count on from 7: 8, 9, 10. That is 3 more, so 7 + 3 = 10."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try it in real life this week. Put out spoons for two people, then spoons for two more. Count on and say the sentence aloud: two plus two equals four. Any small, steady practice is good practice."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Two groups. One total. Say it out loud."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done, {name}. Today you put two groups together, counted all, counted on from the bigger group, and met the pairs that make ten. Next time we add without objects. If anything felt hard, repeat this class. That is a good way to learn."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Two groups make one total|Count all, or count on from the bigger group|Say the number sentence aloud|Pairs that make 10: 6 + 4, 7 + 3 and more"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Counting all and counting on",
+   "links": [
+    "[[Counting things from 0 to 10]]",
+    "[[Adding without objects]]"
+   ]
+  },
+  {
+   "topic": "Pairs that make 10",
+   "links": [
+    "[[Adding with coins]]",
+    "[[Putting groups together (totals to 5)]]"
+   ]
+  },
+  {
+   "topic": "Saying a number sentence aloud",
+   "links": [
+    "[[Adding without objects]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

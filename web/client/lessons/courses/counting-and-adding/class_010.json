@@ -1,0 +1,236 @@
+{
+ "about": {
+  "title": "Counting and adding on a calendar",
+  "course": "counting-and-adding",
+  "class_n": 10,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes. This is the last class and it uses only what the earlier classes taught, so the usual length fits. Stop after any step and come back later; the class works in parts."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. This is our last class. Today we use a calendar to count days and to add a few days to a date. Have a calendar beside you if you can. A paper one, a wall one or one on a phone will all do."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Counting and adding on a calendar"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A calendar is a grid of numbers. Each little box is one day. The numbers go in order, one after another, so a calendar is really a counting line folded into rows."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Calendar: one box = one day"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the numbers 1 to 20 in a grid. Read along with me, left to right. Row one: 1, 2, 3, 4, 5, 6, 7. Row two: 8, 9, 10, 11, 12, 13, 14. Row three: 15, 16, 17, 18, 19, 20. At the end of a row, we drop down to the start of the next row and carry on."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid of boxes in three rows. Row 1: 1 2 3 4 5 6 7. Row 2: 8 9 10 11 12 13 14. Row 3: 15 16 17 18 19 20."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which number comes right after 7, at the start of the next row?",
+    "right": "8",
+    "wrong": [
+     "6",
+     "9",
+     "14"
+    ],
+    "why": "Numbers go in order. When a row ends at 7, the next row starts with 8."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One thing before we go on. Calendars are not all the same. Some start each week on Sunday. Some start on Monday. So the day names across the top may be in a different order from another calendar. The numbers still go in order, one after another. Look at your own calendar now. Find the first day name on the left. Whichever it is, use your calendar for the rest of this class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Look at YOUR calendar. Find the first day on the left."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now find today's date. Take your time. Look for today's number in the grid. Many calendars mark today with a circle or a different colour. Put your finger on it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Find today. Put a finger on it."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we count days to an event. Say today is the 6th, and a visit is on the 10th. Put a finger on the 6th. Count each box you step onto: 7, 8, 9, 10. That is 4 steps. The visit is 4 days away. We do not count the box we start on."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today: the 6th\nStep: 7, 8, 9, 10\nVisit on the 10th = 4 days away"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Today is the 11th. A birthday is on the 15th. How many days away is it?",
+    "right": "4",
+    "wrong": [
+     "3",
+     "5",
+     "15"
+    ],
+    "why": "Start on the 11th and step: 12, 13, 14, 15. That is 4 steps. The box you start on is not counted."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now adding days to a date. What is 3 days after the 5th? Put a finger on the 5th. Step 3 times: 6, 7, 8. You land on the 8th. This is adding: 5 and 3 more makes 8."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5 + 3 = 8"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What date is 3 days after the 5th?",
+    "right": "The 8th",
+    "wrong": [
+     "The 7th",
+     "The 9th",
+     "The 3rd"
+    ],
+    "why": "Start on 5 and step 3 times: 6, 7, 8. You land on the 8th."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A common slip is to count the box you start on. If you say 5, 6, 7 you only moved 2 steps and land on the 7th. To avoid this, say nothing on your starting box. Only say a number when you move to a new box."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Wrong: say 5, 6, 7 (stops at 7)\nRight: start on 5, then say 6, 7, 8"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try a date where the count goes down to the next row. What is 2 days after the 14th? Start on 14. Step: 15, 16. The 15th is at the start of the next row, so your finger drops down and goes to the left. You land on the 16th."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "14 + 2 = 16"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What date is 2 days after the 14th?",
+    "right": "The 16th",
+    "wrong": [
+     "The 15th",
+     "The 12th",
+     "The 7th"
+    ],
+    "why": "Step 15, then 16. The count goes on to the next row. The numbers keep going in order."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn on your own calendar. Pick any date from 1 to 10. Put a finger on it. Add 3 days, stepping one box at a time. Say the number each time. Where did you land? Try again with another date if you like."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Your turn: pick a date. Add 3 days."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more, and it is a longer step. What is 3 days after the 17th? Step: 18, 19, 20. You land on the 20th, the last number we have counted to in this course."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "17 + 3 = 20"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Start on the 9th. Add 2 days. Which date do you land on?",
+    "right": "The 11th",
+    "wrong": [
+     "The 10th",
+     "The 12th",
+     "The 9th"
+    ],
+    "why": "Step 10, then 11. You land on the 11th."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. You can find today, count the days to an event, and add days to a date. This is how we plan a week. If you want to practise, each morning find today's date and count the days to something you are looking forward to. That was the last class of the course. Thank you for working so carefully."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Find today's date\nStep one box at a time\nDon't count the box you start on\nNumbers carry on to the next row"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Calendar grid and counting 1 to 20",
+   "links": [
+    "[[Counting from 11 to 20]]",
+    "[[Counting things from 0 to 10]]"
+   ]
+  },
+  {
+   "topic": "Counting on from a date",
+   "links": [
+    "[[Adding with objects up to 10]]",
+    "[[Adding without objects]]",
+    "[[One more, one fewer]]"
+   ]
+  },
+  {
+   "topic": "Calendar layouts differ (week starts Sunday or Monday)",
+   "links": [
+    "[[Calendar grid and counting 1 to 20]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

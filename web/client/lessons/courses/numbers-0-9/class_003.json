@@ -1,0 +1,309 @@
+{
+ "about": {
+  "title": "Zero: nothing there",
+  "course": "numbers-0-9",
+  "class_n": 3,
+  "audience": [
+   "adult relearning numbers",
+   "young child",
+   "anyone learning or relearning numbers"
+  ],
+  "minutes": 7,
+  "length_note": "About 7 minutes. Zero is one idea, so the class is short. It has several small 'how many?' questions, and you can stop after any of them and pick up again later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today is about one number: zero. Zero is the number we say when there is nothing there to count."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Zero: nothing there"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take your time. You can stop whenever you like and come back to this class later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "zero"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at an empty plate. Nothing on it. An empty cup. Nothing in it. An empty basket. Nothing inside. How many things are on the plate? Zero."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three big pictures side by side on a plain background: an empty white plate, an empty cup, and an empty basket. Nothing is in any of them."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For grown-ups: hold out your hand with no keys in it. How many keys? Zero. For children: look in the bowl with no apples. How many apples? Zero."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: an open hand with nothing in it, labelled 'keys: zero'. Right: an empty bowl, labelled 'apples: zero'."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a question. Look at the open hand. How many keys are in it?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One large open hand, palm up, completely empty."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many keys are in the hand?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "2"
+    ],
+    "why": "The hand is empty. When there is nothing to count, the number is zero."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's take things away, one at a time. Start with three cups on the table. Three. Take one away. Two. Take another away. One. Take the last one away. None left. Zero."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3 cups\n2 cups\n1 cup\n0 cups: the table is empty"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Children can do the same with ducks. Three ducks on the pond. One swims away. Two. Another swims away. One. The last one swims away. Zero ducks. The pond is quiet."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small blue pond. Ducks swim off the right edge one by one. The last picture shows the pond with no ducks."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try one. There are two coins on the table. You pick up both coins and put them in your pocket. How many coins are left on the table?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bare wooden table with a hand moving away holding two coins. No coins are left on the table."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many coins are left on the table?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "2"
+    ],
+    "why": "You took both coins, so none are left. Nothing left means zero."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Remember the five-frame from the earlier classes? It is a row of five boxes, and we put a dot in a box for each thing we count. If every box is empty, the frame shows zero."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A five-frame: a row of five empty square boxes with no dots in any of them."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at this frame. How many dots do you see?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A five-frame with all five boxes empty."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many dots are in the five-frame?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "5"
+    ],
+    "why": "All the boxes are empty. An empty five-frame means zero."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the digit. Here is the way we write zero: a round shape, like an egg or a ring. Zero. Say it with me: zero."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0  zero"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If you can, trace the shape in the air with your finger. Start at the top, go round and come back to the top. That is the digit 0."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's find it. Three digits are on the screen. One of them is zero."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1\n0\n3"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which one is the digit zero?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "3"
+    ],
+    "why": "Zero is the round shape with nothing in the middle. It matches the empty plate and the empty hand."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A few mixed ones now. Some have things to count and some have nothing. For the first, look at the ducks on this pond."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A pond with a big empty blue middle. There are no ducks, only a few lily pads."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many ducks are on the pond?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "3"
+    ],
+    "why": "There are lily pads but no ducks. Nothing to count means zero."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next one. Look at the table. Some cups are on it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table with three cups in a row. Nothing else is on the table."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many cups are on the table?",
+    "right": "3",
+    "wrong": [
+     "0",
+     "2"
+    ],
+    "why": "There are three cups. Zero is only for when there is nothing there."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last one. A basket sits on the floor. Some balls are beside it, but none are in it. Look inside the basket."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big basket seen from above and empty inside. Two balls sit on the floor outside it."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many balls are in the basket?",
+    "right": "0",
+    "wrong": [
+     "2",
+     "1"
+    ],
+    "why": "The two balls are beside the basket, not in it. Inside the basket there is nothing, so zero."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Zero means nothing there. We say 'zero', and we write it as the round shape 0. Next time we will count up to six and seven."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Zero means nothing there\nAn empty five-frame is 0\nThe digit is 0"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Zero as 'nothing there'",
+   "links": [
+    "[[Five-frames]]",
+    "[[Taking away one at a time]]"
+   ]
+  },
+  {
+   "topic": "The digit 0",
+   "links": [
+    "[[Reading and writing the digits]]"
+   ]
+  },
+  {
+   "topic": "Mixed how-many questions",
+   "links": [
+    "[[Counting in order, 0 to 9]]",
+    "[[More, fewer or the same]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

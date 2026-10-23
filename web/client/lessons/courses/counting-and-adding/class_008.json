@@ -1,0 +1,272 @@
+{
+ "about": {
+  "title": "Adding without objects",
+  "course": "counting-and-adding",
+  "class_n": 8,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes fits this class: five small ideas, each with one question. Every beat stands alone, so {name} can pause after any beat and carry on later without losing anything."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello {name}. Today we add numbers with nothing to hold. No cups, no coins. Just your fingers, a line of numbers, and your mind."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Adding without objects"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class you put groups together with real things. Today the same adding happens, but we keep the things in our heads or on our hands. Go slowly. There is no rush."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 + 3"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, how to read a sum. This one, 4 + 3, says 'four plus three'. The plus sign means 'and more'. You can also say 'four and three'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "plus (+) means: and more"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How do you say 4 + 3?",
+    "right": "Four plus three",
+    "wrong": [
+     "Four minus three",
+     "Forty-three",
+     "Four take three"
+    ],
+    "why": "The + sign is read 'plus' or 'and'. It means we put the two numbers together."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now counting on. For 4 + 3, say the first number, 'four'. Then count three more, one at a time: five, six, seven. The last number you say is the answer. Four plus three is seven."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4 + 3\nSay: four\nCount on 3: five, six, seven\nAnswer: 7"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Start at 5 and count on 2. What do you reach?",
+    "right": "7",
+    "wrong": [
+     "6",
+     "8",
+     "2"
+    ],
+    "why": "Five, then six, then seven. Two steps on from 5 lands on 7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a good trick. Start from the bigger number. For 2 + 6, you could start at 2 and count six steps. Or start at 6 and count only two: seven, eight. Same answer, fewer steps. Two plus six is eight."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Start at 2: three, four, five, six, seven, eight (6 steps)\nStart at 6: seven, eight (2 steps)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For 2 + 7, which start means the least counting?",
+    "right": "Start at 7 and count on 2",
+    "wrong": [
+     "Start at 2 and count on 7",
+     "Start at 1 and count up to 9",
+     "Start at 9 and count back 2"
+    ],
+    "why": "Starting at the bigger number, 7, leaves only two steps: eight, nine. So 2 + 7 = 9."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your fingers are good helpers. Say the bigger number out loud. Then raise one finger for each step you count on. For 6 + 3, say 'six', then raise a finger for each of seven, eight, nine. Three fingers are up, and you said nine last. So 6 + 3 is 9."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One hand held up. Three fingers raised one at a time, with the numbers seven, eight and nine said aloud."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Use your fingers: 6 + 3 = ?",
+    "right": "9",
+    "wrong": [
+     "8",
+     "3",
+     "10"
+    ],
+    "why": "Start at six. Count on three fingers: seven, eight, nine."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A number line works the same way. It is a row of numbers from 0 to 10. Put your finger on the bigger number. Hop one step for each number you add. For 7 + 3, start on 7 and hop three times: eight, nine, ten. You land on 10."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight line with the numbers 0 to 10 in a row. A finger rests on 7, then hops to 8, 9 and 10."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "On the number line, start at 5 and hop 4 steps. Where do you land?",
+    "right": "9",
+    "wrong": [
+     "8",
+     "10",
+     "4"
+    ],
+    "why": "Hop to six, seven, eight, nine. Four hops from 5 ends on 9."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You can also picture it in your mind. Close your eyes if you like. See a table with 3 spoons. Now see 2 more spoons put down beside them. Count them in your picture."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table with 3 spoons in a row. Two more spoons are placed beside them."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You picture 3 spoons and 2 more spoons. How many spoons in all?",
+    "right": "5",
+    "wrong": [
+     "4",
+     "6",
+     "1"
+    ],
+    "why": "Three, then four, five. Counting on 2 from 3 gives 5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If you lose your place, that is fine. It happens to everyone. Just start again from the first number. Going slowly is not a problem. It is how this is learned."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Lost your place? Start again. That is fine."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do you know an answer is right? Check with objects. Say you think 5 + 3 is 7. Put out 5 coins or spoons, and then 3 more. Count them all. You get eight. So the answer is 8, and now you know."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Work out the sum in your head\n2. Put out the first group\n3. Put out the second group\n4. Count them all\n5. Does it match?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You worked out 5 + 3 and got 7. What is a good next step?",
+    "right": "Put out 5 objects and 3 more, then count them all",
+    "wrong": [
+     "Keep 7 without checking",
+     "Add another 3",
+     "Stop and not try again"
+    ],
+    "why": "Checking with objects shows the true total, which is 8. You can then see where the counting went off."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us practise once more. Say 3 + 6 out loud. Start from the bigger number, 6. Count on three: seven, eight, nine. Use your fingers if you like."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 + 6"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "3 + 6 = ?",
+    "right": "9",
+    "wrong": [
+     "8",
+     "10",
+     "3"
+    ],
+    "why": "Start at six, then count on three: seven, eight, nine."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. Today you read sums, counted on from the bigger number, used fingers and a number line, pictured things in your mind, and checked with objects. Next time we add with coins."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Say the sum: 4 + 3\nStart from the bigger number\nCount on with fingers or a number line\nPicture it in your mind\nCheck with objects"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Counting on",
+   "links": [
+    "[[Adding with objects up to 10]]",
+    "[[One more, one fewer]]"
+   ]
+  },
+  {
+   "topic": "Starting from the bigger number",
+   "links": [
+    "[[Counting on]]",
+    "[[More and fewer]]"
+   ]
+  },
+  {
+   "topic": "Fingers and number line",
+   "links": [
+    "[[Counting things from 0 to 10]]"
+   ]
+  },
+  {
+   "topic": "Checking an answer with objects",
+   "links": [
+    "[[Adding with objects up to 10]]",
+    "[[Adding with coins]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

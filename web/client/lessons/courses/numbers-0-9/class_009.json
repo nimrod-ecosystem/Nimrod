@@ -1,0 +1,379 @@
+{
+ "about": {
+  "title": "Putting it all together",
+  "course": "numbers-0-9",
+  "class_n": 9,
+  "audience": [
+   "adult relearning numbers",
+   "young child"
+  ],
+  "minutes": 12,
+  "length_note": "About 12 minutes. This class mixes every number from 0 to 9 and three ways of showing each one (amount, digit, word), so it needs a little longer than the single-number classes. It is split into small steps, so you can stop after any step and come back later."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Today we use everything together. There are no new numbers. Just take your time, and stop whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Putting it all together"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at how far you have come. You have met the numbers one to nine, and zero, which means nothing there. You have read and written the digits, counted in order, and said which group has more, fewer or the same."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One to nine\nZero: nothing there\nReading and writing the digits\nCounting in order\nMore, fewer or the same"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Every amount can be shown three ways. You can see the amount, you can see the digit, or you can read the word. Here is three, all three ways."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Amount: ● ● ●\nDigit: 3\nWord: three"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, some everyday scenes for grown-ups. Children can do these too. Picture a kitchen table with cups on it. Count them slowly, touching each one if you like. How many cups?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A kitchen table with 4 cups in a row."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many cups are on the table?",
+    "right": "4",
+    "wrong": [
+     "3",
+     "5"
+    ],
+    "why": "Count one at a time: one, two, three, four. There are 4 cups."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, a board by the front door with keys on hooks. The keys are in a five-frame. The top row holds five. Then count the extras in the second row."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A key board shaped like a five-frame. Top row: 5 keys. Second row: 2 keys. The other spaces are empty."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many keys are on the board?",
+    "right": "7",
+    "wrong": [
+     "6",
+     "8"
+    ],
+    "why": "A full top row is 5. Two more make 7."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a small dish on a table, where you keep coins. Look carefully. Sometimes the answer is zero, and that is a real answer."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small dish on a table. The dish is empty."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "How many coins are in the dish?",
+    "right": "0",
+    "wrong": [
+     "1",
+     "2"
+    ],
+    "why": "There is nothing in the dish, so the answer is zero, written 0."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now some pictures for children. Grown-ups are welcome too. Here is a pond with ducks. Point to each duck as you count."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A blue pond with 3 yellow ducks swimming."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many ducks are on the pond?",
+    "right": "3",
+    "wrong": [
+     "2",
+     "4"
+    ],
+    "why": "One, two, three. There are 3 ducks."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are apples on a tray, set out like a five-frame. The top row is full. Then count the apples on the bottom row."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tray like a five-frame. Top row: 5 red apples. Bottom row: 3 red apples and 2 empty spaces."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many apples are on the tray?",
+    "right": "8",
+    "wrong": [
+     "7",
+     "9"
+    ],
+    "why": "Five on top and three on the bottom make 8. There are two empty spaces, so it is not 10 or 9."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now balls in a five-frame. Look at the empty space. It will help you."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A five-frame of balls. Top row: 5 balls. Bottom row: 4 balls and 1 empty space."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many balls are there?",
+    "right": "9",
+    "wrong": [
+     "8",
+     "6"
+    ],
+    "why": "Five on top and four on the bottom make 9. The one empty space tells you it is just one short of a full frame."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's match an amount to a digit. Count the dots, then choose the digit. Be careful, because two of these digits can look alike."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A five-frame of dots. Top row: 5 dots. Bottom row: 1 dot."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which digit shows this many dots?",
+    "right": "6",
+    "wrong": [
+     "9",
+     "4"
+    ],
+    "why": "Five and one more make 6. The 6 has its loop at the bottom, and the 9 has its loop at the top."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other way round. Here is a digit. Which group of dots matches it?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which group has 4 dots?",
+    "right": "● ● ● ●",
+    "wrong": [
+     "● ● ●",
+     "● ● ● ● ●"
+    ],
+    "why": "The digit 4 means four. Count each group: the first has four, the second has three, the third has five."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now words. Read this word slowly. Take your time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "seven"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which digit matches the word seven?",
+    "right": "7",
+    "wrong": [
+     "2",
+     "9"
+    ],
+    "why": "The word seven and the digit 7 both mean ●●●●●●● (seven)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a digit again. This time, choose the word that matches it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word matches the digit 2?",
+    "right": "two",
+    "wrong": [
+     "three",
+     "four"
+    ],
+    "why": "The digit 2 is spelled two. Three is 3 and four is 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more with a word. This one is a special one. Read it, then choose what it looks like."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "zero"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which picture shows zero?",
+    "right": "An empty dish with no coins",
+    "wrong": [
+     "A dish with 1 coin",
+     "A dish with 2 coins"
+    ],
+    "why": "Zero means nothing there, so an empty dish is zero."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a short review. Most people find some numbers harder than others, and that is very normal. Often the bigger numbers, six to nine, need a bit more practice. Pick the one that still feels wobbly."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pick one number that still feels wobbly.\nCount out that many things near you: cups, keys, spoons, apples or toys.\nSay the number, point to the digit, and read the word."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last question, about counting in order. Say the numbers quietly to yourself, starting from zero, and find the one that comes next."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0  1  2  3  4  5  6  7  8  ?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which number comes straight after 8?",
+    "right": "9",
+    "wrong": [
+     "7",
+     "0"
+    ],
+    "why": "Counting goes ...7, 8, 9. Seven comes before 8, and zero is where we start."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's look back. You can find an amount from 0 to 9. You can say it as an amount, a digit or a word. You can also match one to another."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "I can count things: from 0 to 9\nI can match: amount, digit and word"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}, and well done to everyone learning. Go slowly and come back whenever you like. You can use this course again as many times as you need."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Three ways to show an amount",
+   "links": [
+    "[[Reading and writing the digits]]",
+    "[[Counting in order, 0 to 9]]"
+   ]
+  },
+  {
+   "topic": "Five-frames for 5 to 9",
+   "links": [
+    "[[Six and seven]]",
+    "[[Eight and nine]]"
+   ]
+  },
+  {
+   "topic": "Zero as a real answer",
+   "links": [
+    "[[Zero: nothing there]]"
+   ]
+  },
+  {
+   "topic": "6 and 9 look alike",
+   "links": [
+    "[[Reading and writing the digits]]",
+    "[[Six and seven]]",
+    "[[Eight and nine]]"
+   ]
+  },
+  {
+   "topic": "Practising the wobbly numbers",
+   "links": [
+    "[[More, fewer or the same]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}
