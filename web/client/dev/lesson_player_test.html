@@ -269,6 +269,27 @@ try {
     f.done();
   }
 
+  section('*** "Which lesson" changed on a panel still on the default lesson: it changes (Mike, 2026-10-24) ***');
+  {
+    // Mike: "I changed lessons in the settings menu, but the lesson that is playing didn't change." A panel that never
+    // had a lesson chosen has no lessonId on its row; the first choice made for it used to be ignored.
+    const st = fakeRow({ form: 'slides' });
+    const p = mountLesson(st);
+    check('(setup) a new panel plays the default lesson, nothing chosen on its row', p.probe().title === 'Numbers 0 to 9' && st.get().lessonId === undefined);
+    p.q('[data-lp-act="next"]').click();
+    st.set({ lessonId: 'right-to-repair' });
+    check('*** the first choice of lesson takes effect at once, from its start ***', /Right to Repair/.test(p.probe().title) && p.probe().at === 0, J({ title: p.probe().title, at: p.probe().at }));
+    st.set({ lessonId: 'numbers-0-9' });
+    check('...and back to the default lesson, too', p.probe().title === 'Numbers 0 to 9' && p.probe().at === 0);
+    const cs = fakeRow({ form: 'slides' });
+    const c = mountLesson(cs);
+    cs.set({ lessonId: 'course:numbers-0-9' });
+    const end = Date.now() + 4000;
+    while (Date.now() < end && !(c.probe().total > 5)) await new Promise((r) => setTimeout(r, 30));
+    check('*** ...a course chosen from the default opens too ***', c.probe().title === 'One, two, three', c.probe().title);
+    p.done(); c.done();
+  }
+
   section('*** THE COURSES (chat\'s note CK 3): chosen like a lesson, a class at a time, the next one offered at the end ***');
   {
     const { COURSES } = await import('../lessons/courses_index.js');

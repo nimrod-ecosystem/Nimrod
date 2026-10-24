@@ -894,8 +894,13 @@ function lessonsModule(ctx) {
     function apply(s) {
       const was = { ...cfg };
       cfg = { ...(s || {}) };
-      if (was.questionsTo !== cfg.questionsTo && was.questionsTo !== undefined) routeQuestions();
-      if (was.lessonId !== cfg.lessonId && was.lessonId !== undefined) {
+      // Compared as what is IN FORCE, the default filled in (2026-10-24, Mike: "I changed lessons in the settings menu,
+      // but the lesson that is playing didn't change."). It used to compare the raw values and skip a change FROM
+      // nothing, so a panel still on the default lesson - nothing saved yet - ignored the first choice made for it, and
+      // a saved lesson arriving after the panel opened was never opened either.
+      const lessonOf = (v) => v.lessonId || BUILTIN_LESSONS[0].id;
+      if ((was.questionsTo || 'both') !== (cfg.questionsTo || 'both')) routeQuestions();
+      if (lessonOf(was) !== lessonOf(cfg)) {
         // Another course starts at its first class, not at the number the last one had reached.
         if (String(cfg.lessonId || '').startsWith(COURSE_PREFIX) && cfg.classN != null && cfg.classN !== 1) {
           cfg = { ...cfg, classN: 1 };
