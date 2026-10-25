@@ -94,7 +94,7 @@ export function pieceFields(it) {
 /** What those rows show now. */
 export function pieceValues(it) {
   if (!isEditablePiece(it)) return {};
-  return { x: Number(it.x) || 0, y: Number(it.y) || 0, size: Number(it.scale) || 1, rotate: Number(it.rot) || 0, facing: it.flip ? 'turned' : 'drawn' };
+  return { x: Number(it.x) || 0, y: Number(it.y) || 0, size: Number(it.scale) || 1, rotate: Number(it.rot ?? it.rotate) || 0, facing: it.flip ? 'turned' : 'drawn' };
 }
 
 /**
@@ -125,6 +125,7 @@ export function withPieceEdit(recipe, id, patch = {}) {
     let d = ((Math.round(Number(patch.rotate)) % 360) + 360) % 360;
     if (d > 180) d -= 360;
     if (d === 0) delete it.rot; else it.rot = d;
+    delete it.rotate;   // the first day's name for it (2549e18, deployed): moved onto `rot` at its next change
   }
   return r;
 }

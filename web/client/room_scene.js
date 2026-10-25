@@ -234,8 +234,9 @@ export function itemBox(it, shell = ROOM_SHELLS.room) {
     // village format exactly (village_kit.js `rotate(rot, x, y - h/2)`), so one editor means one thing everywhere. A
     // floor piece's origin is its foot, so it is lifted half its height, turned, and put back. Before a flip, so a
     // turned-round piece turns the same way on screen.
-    : `translate(-50%, ${floor ? '-100%' : '-50%'})${mk !== 1 ? ` scale(${mk})` : ''}${Number(it.rot)
-      ? (floor ? ` translateY(-50%) rotate(${Number(it.rot)}deg) translateY(50%)` : ` rotate(${Number(it.rot)}deg)`) : ''}${it.flip ? ' scaleX(-1)' : ''}`;
+    // (`rotate` is the same turn as first deployed on 2026-10-25 (2549e18), read so a room saved then still turns.)
+    : `translate(-50%, ${floor ? '-100%' : '-50%'})${mk !== 1 ? ` scale(${mk})` : ''}${Number(it.rot ?? it.rotate)
+      ? (floor ? ` translateY(-50%) rotate(${Number(it.rot ?? it.rotate)}deg) translateY(50%)` : ` rotate(${Number(it.rot ?? it.rotate)}deg)`) : ''}${it.flip ? ' scaleX(-1)' : ''}`;
   const vw = side ? w * side.sx * mk : w * mk;
   const vh = side ? h * side.sy * mk : h * mk;
   const cx = (it.x / 100) * W, cy = (it.y / 100) * H;
