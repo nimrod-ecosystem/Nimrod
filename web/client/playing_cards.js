@@ -75,6 +75,7 @@ const B = (a, b, frame, med, emb) => ({ a, b, frame, med, emb });
 export const cardThemes = {
   nimrod: T('#fbf9ef', '#0A3323', '#b03a2e', '#1f5fa8', '#2c6e49', '#12181c', B('#105666', '#0e4a58', '#F7F4D5', '#0A3323', '#F7F4D5'), 'lattice', '#F7F4D5'),
   fall: T('#fbf3e2', '#6b4a32', '#a8401e', '#2f5f8a', '#4d6730', '#2a1a10', B('#7a3a1e', '#8f4a24', '#e2b45a', '#4a2814', '#f2c46a'), 'chevron', '#f4e2c4'),
+  medieval: T('#f4ecd8', '#4a3424', '#a8302a', '#2f5a9a', '#4d6a32', '#241810', B('#6b2418', '#8a3424', '#e8b84a', '#3a1410', '#f2cf6a'), 'lattice', '#eadcbc'),
   steampunk: T('#f4ead2', '#5a3c24', '#9e3a2a', '#2a5a7a', '#3e5a2a', '#241810', B('#3a2a18', '#4e3820', '#c9a24a', '#2a1c10', '#e0b53c'), 'scales', '#ecdcb4'),
   cyberpunk: T('#12142b', '#2de2e6', '#ff5c93', '#57c7ff', '#7dff9a', '#e8eef8', B('#0b0a1c', '#1d1748', '#ff2e88', '#05060f', '#2de2e6'), 'grid', '#1c1f40'),
   winter: T('#f6f9fb', '#3b4a68', '#b0303e', '#2a5aa8', '#2f6e5a', '#1b2130', B('#3b4a68', '#4a5c80', '#e8eef4', '#23263a', '#e8eef4'), 'dots', '#e4ecf4'),

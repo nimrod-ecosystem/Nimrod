@@ -287,6 +287,7 @@ import './modules/sortbricks.js';      // registers 'sortbricks' (brick games, 2
 import './modules/whoswho.js';         // registers 'whoswho' (Design's game ideas, 2026-10-12: Who's who)
 import './modules/dressup.js';         // registers 'dressup' (Design's game ideas, 2026-10-12: Dress-up)
 import './modules/town.js';            // registers 'town' (2026-10-12: the theme's town, its places opened and rearranged)
+import './modules/village.js';         // registers 'village' (2026-10-25: Design's castle and village, item 45)
 import './modules/story.js';           // registers 'story' (2026-10-12: Story time, a picture story read aloud)
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
 import './modules/voice_review.js';    // registers 'voice_review' (row 2.44, the voice recordings kept here)

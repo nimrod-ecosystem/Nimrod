@@ -24,7 +24,7 @@ export const SUIT_PATH = {
 export const SKIN_TONES = ['#fbe0cc', '#f3c9a6', '#e8b48a', '#d9a07a', '#c98a5a', '#a8714a', '#8a5a3a', '#6f4a32', '#4e3424'];
 export const HAIR_COLOURS = ['#1b1410', '#3a2414', '#5a3a24', '#8a4a24', '#c96a21', '#d9b46a', '#e8dcc0', '#d8d4cc', '#9e5449', '#4a6ab0'];
 export const HAIR_STYLES = ['short', 'long', 'curly', 'bun', 'ponytail', 'bald'];
-export const POSES = ['stand', 'wave', 'talk', 'think', 'happy', 'sleep', 'point', 'listen'];
+export const POSES = ['stand', 'wave', 'talk', 'think', 'happy', 'sleep', 'point', 'listen', 'puzzled'];
 
 export function shade(hex, k) {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
@@ -82,8 +82,20 @@ export const OUTFITS = {
   harvestApron: {"theme":"harvest","label":"Baker’s apron","top":"waistcoat","bottom":"jeans","shoes":"boots","neck":"scarf","c":{"top":"#f4ede0","top2":"#8a3e1a","accent":"#c96a21","bottom":"#3e5f8a","shoes":"#4a2e1a","scarf":"#c96a21","metal":"#d99a3f"}},
   hanukkahJumper: {"theme":"hanukkah","label":"Blue and white jumper","top":"jumper","bottom":"trousers","shoes":"shoes","hat":"beanie","c":{"top":"#2a5aa8","top2":"#f4f6f8","band":"#c9cfd8","bottom":"#1e263c","shoes":"#3a2a20","hat":"#2a5aa8","hat2":"#f4f6f8","metal":"#c9cfd8"}},
   hanukkahCardigan: {"theme":"hanukkah","label":"Silver cardigan","top":"cardigan","bottom":"trousers","shoes":"shoes","neck":"scarf","c":{"top":"#1e3a6a","top2":"#c9cfd8","shirt":"#f4f6f8","bottom":"#2a2f3a","shoes":"#1e1e26","scarf":"#c9cfd8","metal":"#c9cfd8"}},
+  wizardRobe: { theme: 'village', label: 'Wizard robe', top: 'wizard', bottom: 'trousers', shoes: 'shoes', hat: 'wizard', c: { top: '#3f3a8a', top2: '#f2d24a', bottom: '#2a2650', shoes: '#4a2e1a', hat: '#3f3a8a', hat2: '#f2d24a', metal: '#c9a24a' } },
+  knightBlue: { theme: 'village', label: 'Knight, blue tabard', top: 'armour', bottom: 'trousers', shoes: 'boots', hat: 'helmet', c: { top: '#b8c0c8', top2: '#2f5a9a', bottom: '#5a6068', shoes: '#3a3f46', hat: '#c9cfd6', hat2: '#2f5a9a', metal: '#e2b45a' } },
+  knightRed: { theme: 'village', label: 'Knight, red tabard', top: 'armour', bottom: 'trousers', shoes: 'boots', hat: 'helmet', c: { top: '#b8c0c8', top2: '#a8362e', bottom: '#5a6068', shoes: '#3a3f46', hat: '#c9cfd6', hat2: '#f2c230', metal: '#f4f1e8' } },
+  princessDress: { theme: 'village', label: 'Princess dress', top: 'dress', bottom: 'tights', shoes: 'shoes', hat: 'tiara', c: { top: '#e88aa8', top2: '#f2d24a', bottom: '#f4ede0', shoes: '#b0306a', hat: '#f2c230', hat2: '#5ab0c8', metal: '#f2c230' } },
+  princeTunic: { theme: 'village', label: 'Prince tunic', top: 'tunic', bottom: 'trousers', shoes: 'boots', hat: 'circlet', c: { top: '#3a6ab0', top2: '#f2c230', bottom: '#5a4a3a', shoes: '#4a2e1a', hat: '#f2c230', hat2: '#b03a2e', metal: '#f2c230' } },
+  medievalTunic: {"theme":"medieval","label":"Belted tunic","top":"tunic","bottom":"tights","shoes":"boots","hat":"hood","c":{"top":"#5d7d44","top2":"#3e5a2a","bottom":"#6b4a32","shoes":"#4a2e1a","hat":"#8a6a4a","hat2":"#5a3a24","metal":"#c9a24a"}},
+  medievalKirtle: {"theme":"medieval","label":"Kirtle","top":"dress","bottom":"tights","shoes":"shoes","hat":"coif","c":{"top":"#2f5a9a","top2":"#e8d6a0","bottom":"#2f5a9a","shoes":"#4a2e1a","hat":"#f4f1e8","hat2":"#d8cfb8","metal":"#c9a24a"}},
+  bakerWhites: {"theme":"medieval","label":"Baker’s whites","top":"waistcoat","bottom":"trousers","shoes":"shoes","hat":"bakerHat","c":{"top":"#f4f1e8","top2":"#d8cfb8","accent":"#c8964a","bottom":"#8a7a64","shoes":"#4a2e1a","hat":"#fbf9ef","hat2":"#e8e2d2","metal":"#c8964a"}},
+  shopkeeperVest: {"theme":"medieval","label":"Shopkeeper’s vest","top":"vest","bottom":"trousers","shoes":"shoes","c":{"top":"#9e5449","shirt":"#efe2c8","bottom":"#4a4038","shoes":"#2a1a10","metal":"#e8b84a"}},
+  blacksmithApron: {"theme":"medieval","label":"Leather apron","top":"waistcoat","bottom":"trousers","shoes":"boots","c":{"top":"#6b4a32","top2":"#3a2614","accent":"#8a8f96","bottom":"#3a3530","shoes":"#2a1a10","metal":"#8a8f96"}},
+  farmerSmock: {"theme":"medieval","label":"Farmer’s smock","top":"tunic","bottom":"trousers","shoes":"boots","hat":"sunhat","c":{"top":"#c8b48a","top2":"#8a7450","bottom":"#5a6a3a","shoes":"#4a2e1a","hat":"#e2c46a","hat2":"#8a5a32","metal":"#a8794e"}},
+  librarianRobe: {"theme":"medieval","label":"Scholar’s robe","top":"coat","bottom":"trousers","shoes":"shoes","hat":"coif","c":{"top":"#4a3a6a","top2":"#2f2448","shirt":"#efe2c8","bottom":"#2f2448","shoes":"#2a1a10","hat":"#4a3a6a","hat2":"#c9a24a","metal":"#c9a24a"}},
 };
-export const OUTFIT_THEMES = ['nimrod', 'cozy', 'spring', 'summer', 'fall', 'winter', 'night', 'ocean', 'steampunk', 'cyberpunk', 'newYear', 'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'halloween', 'diwali', 'harvest', 'hanukkah', 'christmas'];
+export const OUTFIT_THEMES = ['medieval', 'nimrod', 'cozy', 'spring', 'summer', 'fall', 'winter', 'night', 'ocean', 'steampunk', 'cyberpunk', 'newYear', 'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'halloween', 'diwali', 'harvest', 'hanukkah', 'christmas'];
 
 /* ---------- pieces ---------- */
 const TORSO = 'M60 130Q60 120 74 118L126 118Q140 120 140 130L144 232L56 232Z';
@@ -102,6 +114,8 @@ function top(kind, c, r) {
     case 'pumpkin': return `<ellipse cx="100" cy="182" rx="60" ry="62" fill="${c.top}"/><path d="M76 124q-14 58 0 116M124 124q14 58 0 116M100 120V244" stroke="${shade(c.top, 0.72)}" stroke-width="4" fill="none"/><path d="M78 122Q100 140 122 122L110 116H90Z" fill="${c.top2}"/>`;
     case 'waistcoat': return T(c.top) + `<path d="M74 118L96 140V218L60 210L60 130Q60 120 74 118Z" fill="${c.top2}"/><path d="M126 118L104 140V218L140 210L140 130Q140 120 126 118Z" fill="${c.top2}"/>${[156, 176, 196].map((y) => `<circle cx="100" cy="${y}" r="3" fill="${c.metal}"/>`).join('')}<path d="M104 180q16 8 28 -4" stroke="${c.metal}" stroke-width="2.4" fill="none"/><circle cx="133" cy="175" r="5" fill="${c.metal}"/><path d="M90 120L100 140L110 120Z" fill="${c.accent}"/>`;
     case 'coat': return T(c.top, 'M58 130Q58 118 74 116L126 116Q142 118 142 130L150 282L50 282Z') + `<path d="M92 118L100 150L108 118V282H92Z" fill="${c.shirt}"/><path d="M74 116L92 150L88 118Z" fill="${c.top2}"/><path d="M126 116L108 150L112 118Z" fill="${c.top2}"/><rect x="50" y="200" width="100" height="8" fill="${c.top2}"/><rect x="94" y="198" width="12" height="12" rx="2" fill="${c.metal}"/>`;
+    case 'wizard': return T(c.top, 'M58 130Q58 118 74 116L126 116Q142 118 142 130L158 296L42 296Z') + `<path d="M100 118L92 296M100 118L108 296" stroke="${shade(c.top, 0.8)}" stroke-width="2" opacity=".6"/>${[[72, 170], [128, 200], [80, 250], [122, 268], [100, 222]].map(([x, y]) => `<path transform="translate(${x} ${y})" d="M0 -8L2.4 -2.4L8 0L2.4 2.4L0 8L-2.4 2.4L-8 0L-2.4 -2.4Z" fill="${c.top2}"/>`).join('')}<path d="M60 196Q100 206 140 196" stroke="${c.metal}" stroke-width="5" fill="none"/><path d="M120 200l6 26M126 200l-2 22" stroke="${c.metal}" stroke-width="4"/>`;
+    case 'armour': return T(c.top) + `<path d="M60 150H140M58 176H142M58 202H142" stroke="${shade(c.top, 0.72)}" stroke-width="3"/><path d="M80 120H120L116 238H84Z" fill="${c.top2}"/><path d="M100 142C92 142 88 148 88 156C88 168 100 176 100 176C100 176 112 168 112 156C112 148 108 142 100 142Z" fill="${c.metal}"/><ellipse cx="62" cy="128" rx="16" ry="11" fill="${shade(c.top, 1.12)}"/><ellipse cx="138" cy="128" rx="16" ry="11" fill="${shade(c.top, 1.12)}"/><rect x="58" y="214" width="84" height="10" fill="${shade(c.top, 0.6)}"/>`;
     case 'robe': default: {
       const m = r.main || '#b03a2e', tr = r.trim || '#e2b45a';
       return T(m, 'M58 130Q58 118 74 116L126 116Q142 118 142 130L152 292L48 292Z') + `<rect x="91" y="132" width="18" height="160" fill="${tr}"/><path d="M52 130C66 112 86 110 100 118C114 110 134 112 148 130C134 142 116 142 100 133C84 142 66 142 52 130Z" fill="#f4f1e8"/>${[[66, 131], [84, 136], [116, 136], [134, 131]].map(([x, y]) => `<path d="M${x} ${y - 4}l2.6 6h-5.2z" fill="#1b1d22"/>`).join('')}`;
@@ -165,6 +179,13 @@ function hat(kind, c) {
     case 'ears': return `<path d="M60 70C60 48 80 40 100 40C120 40 140 48 140 70" stroke="${c.hat}" stroke-width="7" fill="none"/><ellipse cx="80" cy="16" rx="11" ry="30" fill="${c.hat}" transform="rotate(-10 80 16)"/><ellipse cx="120" cy="16" rx="11" ry="30" fill="${c.hat}" transform="rotate(10 120 16)"/><ellipse cx="80" cy="18" rx="5" ry="20" fill="${c.hat2}" transform="rotate(-10 80 18)"/><ellipse cx="120" cy="18" rx="5" ry="20" fill="${c.hat2}" transform="rotate(10 120 18)"/>`;
     case 'garland': return [[58, 66], [68, 52], [84, 44], [100, 41], [116, 44], [132, 52], [142, 66]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="9" fill="${[c.hat, c.hat2, c.accent || c.hat][i % 3]}"/><circle cx="${x}" cy="${y}" r="3" fill="#fff4c8"/>`).join('');
     case 'headband': return `<path d="M56 66C58 42 78 34 100 34C122 34 142 42 144 66" stroke="${c.hat}" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M60 62C64 44 80 38 100 38C120 38 136 44 140 62" stroke="${c.hat2}" stroke-width="3" fill="none"/>`;
+    case 'wizard': return `<ellipse cx="100" cy="60" rx="58" ry="11" fill="${shade(c.hat, 0.8)}"/><path d="M60 60Q76 36 88 6Q96 -14 116 -22Q104 -4 110 18Q118 40 140 60Z" fill="${c.hat}"/>${[[96, 30], [112, 46], [104, 6]].map(([x, y]) => `<path transform="translate(${x} ${y})" d="M0 -6L1.8 -1.8L6 0L1.8 1.8L0 6L-1.8 1.8L-6 0L-1.8 -1.8Z" fill="${c.hat2}"/>`).join('')}`;
+    case 'helmet': return `<path d="M54 76C54 42 76 30 100 30C124 30 146 42 146 76Z" fill="${c.hat}"/><path d="M58 64C62 46 78 38 100 38" stroke="#fff" stroke-width="4" fill="none" opacity=".35"/><rect x="52" y="70" width="96" height="9" rx="4" fill="${shade(c.hat, 0.7)}"/><path d="M100 30Q94 2 120 -10Q108 12 106 30Z" fill="${c.hat2}"/>`;
+    case 'tiara': return `<path d="M70 56L78 38L88 52L100 30L112 52L122 38L130 56Z" fill="${c.hat}"/><circle cx="100" cy="44" r="4.5" fill="${c.hat2}"/><circle cx="78" cy="46" r="3" fill="${c.hat2}"/><circle cx="122" cy="46" r="3" fill="${c.hat2}"/>`;
+    case 'circlet': return `<path d="M60 62Q100 50 140 62" stroke="${c.hat}" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M92 54L100 40L108 54Z" fill="${c.hat}"/><circle cx="100" cy="52" r="4" fill="${c.hat2}"/>`;
+    case 'bakerHat': return `<path d="M66 64V44Q50 40 54 24Q60 8 78 14Q86 0 100 2Q114 0 122 14Q140 8 146 24Q150 40 134 44V64Z" fill="${c.hat}"/><rect x="66" y="52" width="68" height="12" fill="${c.hat2}"/>`;
+    case 'hood': return `<path d="M52 92C48 46 70 26 100 26C130 26 152 46 148 92C140 70 124 58 100 58C76 58 60 70 52 92Z" fill="${c.hat}"/><path d="M62 70C70 60 84 54 100 54C116 54 130 60 138 70" stroke="${c.hat2}" stroke-width="4" fill="none"/>`;
+    case 'coif': return `<path d="M58 80C56 44 76 30 100 30C124 30 144 44 142 80C134 66 120 60 100 60C80 60 66 66 58 80Z" fill="${c.hat}"/>`;
     case 'tophat': return `<rect x="70" y="2" width="60" height="56" rx="4" fill="${c.hat}"/><ellipse cx="100" cy="58" rx="52" ry="9" fill="${c.hat}"/><rect x="70" y="40" width="60" height="9" fill="${c.hat2}"/>` + (c.goggles ? goggles(c, 44) : '');
     case 'aviator': return `<path d="M56 78C54 40 78 30 100 30C122 30 146 40 144 78L146 102Q136 104 134 92L134 74Q100 62 66 74L66 92Q64 104 54 102Z" fill="${c.hat}"/>` + (c.goggles ? goggles(c, 54) : '');
     default: return '';
@@ -189,7 +210,15 @@ function held(role, suit, suitColor, metal, emblem, tone) {
 }
 
 /* ---------- the figure ---------- */
+/* Children (Princess Jess, Prince Vince): the same drawing, with a smaller body and a bigger head,
+   so they read as small children rather than small adults. */
+let KID = 0;
+function childBody(look, opts) {
+  const b = figureBody(look, { ...opts, child: false }), id = 'kid' + ++KID;
+  return `<defs><clipPath id="${id}h"><rect x="-80" y="-90" width="360" height="210"/></clipPath><clipPath id="${id}b"><rect x="-80" y="116" width="360" height="260"/></clipPath></defs><g transform="translate(100 320) scale(.62) translate(-100 -320)"><g clip-path="url(#${id}b)">${b}</g></g><g transform="translate(100 196) scale(.86) translate(-100 -118)"><g clip-path="url(#${id}h)">${b}</g></g>`;
+}
 export function figureBody(look = {}, opts = {}) {
+  if (opts.child) return childBody(look, opts);
   const L = { tone: '#e8b48a', hair: 'short', hairColor: '#3a2414', ...look };
   const o = OUTFITS[opts.outfit] || OUTFITS.royal, r = opts.royal || {};
   const c = { ...o.c, metal: o.c.metal || r.metal || '#e2b45a', top: o.c.top || r.main, top2: o.c.top2 || r.trim };
@@ -207,6 +236,7 @@ export function figureBody(look = {}, opts = {}) {
   else s.push(`<rect x="44" y="122" width="22" height="80" rx="11" fill="${sleeve}" transform="rotate(10 55 124)"/><circle cx="45" cy="206" r="10" fill="${handFill}"/>`);
   if (wave) s.push(`<rect x="134" y="124" width="22" height="80" rx="11" fill="${sleeve}" transform="rotate(-158 145 128)"/><circle cx="172" cy="52" r="10" fill="${handFill}"/>`);
   else if (pose === 'point') s.push(`<rect x="134" y="128" width="22" height="40" rx="11" fill="${sleeve}" transform="rotate(-90 145 128)"/><circle cx="184" cy="128" r="10" fill="${handFill}"/><rect x="186" y="124" width="13" height="7" rx="3.5" fill="${handFill}"/>`);
+  else if (pose === 'puzzled') s.push(`<rect x="140" y="124" width="22" height="62" rx="11" fill="${sleeve}" transform="rotate(168 151 126)"/>`);
   else if (pose === 'listen') s.push(`<rect x="140" y="124" width="22" height="40" rx="11" fill="${sleeve}" transform="rotate(196 151 126)"/>`);
   else if (pose === 'think') s.push(`<rect x="134" y="128" width="22" height="30" rx="11" fill="${sleeve}" transform="rotate(105 145 128)"/>`);
   else s.push(`<rect x="134" y="122" width="22" height="80" rx="11" fill="${sleeve}" transform="rotate(-10 145 124)"/>${role ? '' : `<circle cx="155" cy="206" r="10" fill="${handFill}"/>`}`);
@@ -224,7 +254,9 @@ export function figureBody(look = {}, opts = {}) {
   else if (pose === 'talk') s.push(`<ellipse cx="100" cy="108" rx="9" ry="7" fill="#7a2e2a"/><ellipse cx="100" cy="111" rx="5" ry="3" fill="#e07a8a"/>`);
   else if (pose === 'happy') s.push(`<path d="M86 104q14 16 28 0Z" fill="#7a2e2a"/><path d="M90 105h20" stroke="#fff" stroke-width="2.5"/>`);
   else if (pose === 'sleep') s.push(`<ellipse cx="100" cy="108" rx="4" ry="3" fill="#7a2e2a"/>`);
+  else if (pose === 'puzzled') s.push(`<rect x="140" y="124" width="22" height="62" rx="11" fill="${sleeve}" transform="rotate(168 151 126)"/>`);
   else if (pose === 'listen') s.push(`<rect x="140" y="124" width="22" height="40" rx="11" fill="${sleeve}" transform="rotate(196 151 126)"/>`);
+  else if (pose === 'puzzled') s.push(`<path d="M88 108q4-4 8 0t8 0t8 0" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
   else if (pose === 'think') s.push(`<path d="M92 108q8-3 16 1" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
   else s.push(`<path d="M90 106q10 8 20 0" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
   if (L.glasses) s.push(`<circle cx="84" cy="86" r="12" fill="none" stroke="#2a2d33" stroke-width="3"/><circle cx="116" cy="86" r="12" fill="none" stroke="#2a2d33" stroke-width="3"/><path d="M96 86h8" stroke="#2a2d33" stroke-width="3"/>`);
@@ -235,6 +267,8 @@ export function figureBody(look = {}, opts = {}) {
   /* the thinking hand sits on the chin, over the beard */
   if (pose === 'think') s.push(`<circle cx="116" cy="124" r="10" fill="${handFill}"/><circle cx="160" cy="40" r="5" fill="#c9cfd8"/><circle cx="172" cy="24" r="7" fill="#c9cfd8"/><circle cx="186" cy="6" r="9" fill="#c9cfd8"/>`);
   /* listening: a hand cupped at the ear, and three soft arcs coming in toward it */
+  /* puzzled: hand scratching the head, one eyebrow up, a question mark */
+  if (pose === 'puzzled') s.push(`<circle cx="146" cy="62" r="10" fill="${handFill}"/><path d="M74 70q10-6 20-2M108 64q10-2 18 4" stroke="#1b1d22" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M168 18q0-14 14-14t14 14q0 10-14 14v10" stroke="#839958" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="182" cy="56" r="4.5" fill="#839958"/>`);
   if (pose === 'listen') s.push(`<circle cx="158" cy="94" r="10" fill="${handFill}"/><path d="M176 78q8 16 0 32M186 70q12 24 0 48M196 62q16 32 0 64" stroke="#839958" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/>`);
   if (pose === 'sleep') s.push(`<path d="M154 40h14l-14 14h14M172 14h10l-10 10h10" stroke="#839958" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
   return s.join('');
@@ -245,10 +279,7 @@ export function figureSvg(look, opts = {}, label = 'Character') {
 
 /* ---------- the four default characters ----------
    Four people, one per role. Their look is theirs, not their suit's, and the avatar maker can
-   change any of it. THEIR NAMES ARE MIKE'S (2026-10-25, chat's note CN): "King = Kenny, Queen = Rose, Jack = Jack,
-   Joker = Robin" (Design's were King Bram, Queen Rosa, Jack Theo, Pip). Jack's name is his role, so he is just "Jack".
-   The rest of Mike's cast (Princess Jess, Prince Vince, Nimrod the cat, Merlin the wizard, the knights Michael and
-   Gladys) waits for Design's drawings (item 45). */
+   change any of it. */
 export const DEFAULT_CHARACTERS = {
   king: { name: 'King Kenny', look: { tone: '#c98a5a', hair: 'short', hairColor: '#d8d4cc', beard: true } },
   queen: { name: 'Queen Rose', look: { tone: '#f3c9a6', hair: 'bun', hairColor: '#8a4a24' } },
@@ -257,6 +288,7 @@ export const DEFAULT_CHARACTERS = {
 };
 /* What each court character wears in each theme. Themes without outfits yet wear the Royal robe. */
 export const COURT_PICK = {
+  medieval: { king: 'royal', queen: 'medievalKirtle', jack: 'medievalTunic', joker: 'medievalTunic' },
   nimrod: { king: 'royal', queen: 'nimrodCardigan', jack: 'nimrodTunic', joker: 'nimrodTunic' },
   fall: { king: 'fallSweater', queen: 'fallSweater', jack: 'fallFlannel', joker: 'fallFlannel' },
   winter: { king: 'winterParka', queen: 'winterSki', jack: 'winterSki', joker: 'winterParka' },

@@ -329,6 +329,19 @@ export const CATALOG = [
       + 'cards drawn from it change too. The places light up in turn, so one switch can choose; touch works, and so '
       + 'does saying "go to the bakery".',
   },
+  // village (2026-10-25, Design's item 45): the castle and the village, a scene of pieces. `watch`: a picture to look at;
+  // nothing waits on anybody.
+  {
+    type: 'village',
+    stage: 'beta',
+    title: 'Castle and village',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'The castle on its hill and the village below it, with the court, Merlin, the knights and the villagers.',
+    needs: 'Nothing. Four scenes are built in, drawn by Claude Design.',
+    why: 'A calm place to look at: market day, the village, the castle yard. It follows the clock into evening and '
+      + 'night, when the windows and lanterns light up. Paper-and-felt or a simple drawn look.',
+  },
   // story (2026-10-12): Story time. `watch`: it turns its own pages by default, so somebody who can only watch hears the
   // whole story; any press turns sooner.
   {

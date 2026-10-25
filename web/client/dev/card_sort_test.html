@@ -276,9 +276,11 @@ try {
     check('*** two colours: diamonds take the hearts\' red on the buttons, clubs the spades\' ink ***',
       toHex(tileInk('D')) === v['--suit-hearts'].toLowerCase() && toHex(tileInk('C')) === v['--suit-spades'].toLowerCase(),
       `${toHex(tileInk('D'))} ${toHex(tileInk('C'))}`);
-    r.setCfg({ cardLayout: 'big' });
+    // Scenery off by name: since the 2026-10-25 re-measure cyberpunk starts with its town on (card_deck.js
+    // SCENERY_DEFAULT_OFF), and this check is about the layout alone.
+    r.setCfg({ cardLayout: 'big', cardScenery: 'off' });
     const want = document.createElement('div');
-    want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'big', suitColours: 'two' });
+    want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'big', suitColours: 'two', cardScenery: 'off' });
     check('big faces: the card is redrawn in Design\'s big layout', want.firstElementChild.isEqualNode(art()));
     r.setCfg({ cardScenery: 'on' });
     want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'big', suitColours: 'two', cardScenery: 'on' });

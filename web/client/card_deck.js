@@ -83,8 +83,16 @@ export const CARD_DEFAULTS = Object.freeze({ cardLayout: 'pips', suitColours: 't
 //   diwali 3.58 / 2.91      nimrod 2.93 / 3.42     summer 3.70 / 2.95     july4 3.77 / 2.98   ocean 3.75 / 3.00
 // (The eight that pass: winter, night, cozy, harvest, hanukkah, newYear, valentines, stPatricks.)
 // `cardScenery: 'on'` chosen by a person turns the pictures on in these decks too.
-export const SCENERY_DEFAULT_OFF = Object.freeze(['nimrod', 'fall', 'steampunk', 'cyberpunk', 'ocean', 'spring', 'summer',
-  'halloween', 'christmas', 'easter', 'july4', 'lunarNewYear', 'diwali']);
+// RE-MEASURED 2026-10-25 over Design's new towns (Design System19 gave every theme a town of its own, medieval among them,
+// so what is behind the cards changed). Index / pips, min of the two decides:
+//   night 1.80 / 1.75 (was 4.19 / 3.34)   lunarNewYear 1.76 / 1.71   halloween 1.94 / 1.27   diwali 2.10 / 1.88
+//   newYear 2.72 / 2.03 (was 4.10)        july4 2.34 / 2.14          steampunk 2.37 / 2.40   hanukkah 2.67 / 2.27 (was 4.27)
+//   christmas 3.45 / 2.50                 spring 2.59 / 3.21         stPatricks 2.86 / 2.67 (was 3.82)
+//   fall 2.89 / 2.81                      harvest 2.90 / 2.93 (was 4.27)   nimrod 2.93 / 3.42   ocean 3.16 / 3.09
+// So night, harvest, hanukkah, newYear and stPatricks now START PLAIN; cyberpunk (5.91), summer (3.68) and easter (3.54)
+// come off the list; medieval (new, 3.11 / 3.00) passes. Reported to Design (the darker new towns behind the corner index).
+export const SCENERY_DEFAULT_OFF = Object.freeze(['nimrod', 'fall', 'steampunk', 'ocean', 'night', 'spring', 'halloween',
+  'harvest', 'christmas', 'hanukkah', 'newYear', 'stPatricks', 'july4', 'lunarNewYear', 'diwali']);
 
 const LEGACY_LAYOUT = Object.freeze({ classic: 'pips' });
 

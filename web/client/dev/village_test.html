@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>village - the castle and the village (Design's item 45)</title>
+<style>body{font:14px system-ui;margin:16px}.pass{color:#060}.fail{color:#b00;font-weight:600}#host .box{position:relative;width:640px;height:360px;container-type:size;border:1px solid #888}</style>
+</head>
+<body>
+<h1>village <span id="summary">running…</span></h1>
+<div id="out"></div>
+<div id="host"></div>
+<script type="module">
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { TYPE, SETTINGS, recipeFor, ASSET_BASE, LIGHT_CHECK_MS } from '../modules/village.js';
+import { VILLAGE_SCENES, PIECES } from '../village_kit.js';
+import { CAST } from '../cast.js';
+import { CATALOG } from '../modules_catalog.js';
+
+const out = document.getElementById('out');
+let passed = 0, failed = 0;
+function check(name, ok, detail = '') {
+  const p = document.createElement('div');
+  p.className = ok ? 'pass' : 'fail';
+  p.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `   ${detail}` : ''}`;
+  out.append(p);
+  if (ok) passed += 1; else failed += 1;
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+function fakeRow(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; [...subs].forEach((f) => f(v)); }, subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, startPolling() {}, destroy() {} };
+}
+function fakeTimers() {
+  let seq = 0; let armed = [];
+  return { setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, ms }); return id; }, clearTimer: (id) => { armed = armed.filter((t) => t.id !== id); },
+    fire() { const due = armed; armed = []; due.forEach((t) => t.fn()); }, pending: () => armed.length, last: () => armed[armed.length - 1] };
+}
+function mount(state, extra = {}) {
+  const box = document.createElement('div'); box.className = 'box'; document.getElementById('host').append(box);
+  const timers = fakeTimers();
+  const inst = mountModule(TYPE, { mount: box, bus: createBus(), state, user: 'u', instanceId: `v-${Math.random().toString(36).slice(2)}`, personId: null,
+    setTimer: timers.setTimer, clearTimer: timers.clearTimer, ...extra });
+  inst.init();
+  return { box, timers, inst, probe: () => inst.impl.__probe(), q: (s) => box.querySelector(s), done() { inst.destroy(); box.remove(); } };
+}
+
+try {
+  section('registered, with Design\'s scenes and cast');
+  check('*** "Castle and village" is a module (new core) ***', getManifest(TYPE)?.title === 'Castle and village' && getManifest(TYPE)?.core === 'new');
+  check('its scenes are Design\'s four starting scenes', J(SETTINGS.find((f) => f.key === 'scene').options.map((o) => o.value)) === J(Object.keys(VILLAGE_SCENES))
+    && Object.keys(VILLAGE_SCENES).includes('village') && Object.keys(VILLAGE_SCENES).includes('market'));
+  check('the cast has Mike\'s names and the new members', CAST.kenny && CAST.rose && CAST.jack && CAST.robin && CAST.jess && CAST.vince && CAST.merlin && CAST.michael && CAST.gladys && CAST.nimrod);
+  check('it is in the Modules catalog, beta', CATALOG.some((m) => m.type === TYPE && m.stage === 'beta'));
+
+  section('the recipe a panel shows (pure)');
+  const noon = new Date(2026, 9, 25, 12, 0), late = new Date(2026, 9, 25, 23, 0);
+  const r0 = recipeFor({}, noon);
+  check('*** by default: The village, crafted, with the card frame, by day at noon ***', J(r0.pieces) === J(VILLAGE_SCENES.village.recipe.pieces)
+    && r0.look === 'crafted' && r0.frame === true && r0.time === 'day', J({ look: r0.look, time: r0.time, frame: r0.frame }));
+  check('*** "Follow the clock": night at 11 pm; a fixed time stays ***', recipeFor({}, late).time === 'night' && recipeFor({ time: 'evening' }, late).time === 'evening');
+  check('toon, no frame, another scene', recipeFor({ look: 'toon', frame: false, scene: 'castle' }, noon).look === 'toon'
+    && recipeFor({ frame: false }, noon).frame === false && J(recipeFor({ scene: 'castle' }, noon).pieces) === J(VILLAGE_SCENES.castle.recipe.pieces));
+  const own = { pieces: [{ piece: Object.keys(PIECES)[0], x: 800, y: 700 }] };
+  check('a panel\'s own recipe (an edited scene, next step) is drawn instead', J(recipeFor({ recipe: own }, noon).pieces) === J(own.pieces));
+  check('an unknown scene falls back to the village, never nothing', J(recipeFor({ scene: 'nope' }, noon).pieces) === J(VILLAGE_SCENES.village.recipe.pieces));
+
+  section('*** drawn on a panel ***');
+  const st = fakeRow({ time: 'day' });
+  const v = mount(st);
+  const svg = () => v.q('[data-village] svg');
+  check('*** the scene is drawn: one SVG, the 1600x900 stage ***', !!svg() && svg().getAttribute('viewBox') === '0 0 1600 900', v.box.innerHTML.slice(0, 200));
+  check('...with the cast in it (the village has people)', /<svg[^>]*aria-label="[^"]*"/.test(v.box.innerHTML) && v.box.innerHTML.length > 5000);
+  check('the cat\'s pictures come from this site\'s design assets', ASSET_BASE === '/design-assets/' && (!/nimrod-cat/.test(v.box.innerHTML) || /\/design-assets\/nimrod-cat\//.test(v.box.innerHTML)));
+  const before = v.box.innerHTML;
+  st.set({ look: 'toon' });
+  check('*** changing the look draws it again, in that look ***', v.q('[data-village]').dataset.look === 'toon' && v.box.innerHTML !== before);
+  st.set({ time: 'night' });
+  check('night: drawn at night', v.q('[data-village]').dataset.time === 'night');
+  check('a fixed time needs no clock watching', v.timers.pending() === 0);
+  st.set({ time: 'auto' });
+  check('*** following the clock: it looks again every five minutes, and only redraws when the light changed ***', v.timers.pending() === 1 && v.timers.last().ms === LIGHT_CHECK_MS);
+  const same = v.box.innerHTML;
+  v.timers.fire();
+  check('...an hour with the same light is not redrawn (nothing for the Pi to do)', v.box.innerHTML === same && v.timers.pending() === 1);
+  v.done();
+  check('taken down: nothing left counting', v.timers.pending() === 0);
+  check('names nobody', !/taylor|cici|her screen/i.test(JSON.stringify(SETTINGS) + getManifest(TYPE).description));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>

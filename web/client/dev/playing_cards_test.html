@@ -19,7 +19,7 @@
 <body>
 <h1>playing cards (Claude Design, 2026-10-10; characters and the town, 2026-10-12)</h1>
 <p><code>playing_cards.js</code> is Design's file, shipped as it is: <code>cardSvg(card, theme, options)</code>
-draws any card in any of Design's 21 decks. Since the characters handoff it draws the court cards as Design's
+draws any card in any of Design's 22 decks. Since the characters handoff it draws the court cards as Design's
 four characters standing in their homes, and every card with its suit's place in the theme's town behind it
 (<code>character_kit.js</code> and <code>town.js</code>, also Design's, also as they are). This suite checks
 that file (unchanged, every card in every deck, the labels, the suit colours, the contrast of every corner index
@@ -59,7 +59,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const parses = (svg) => { const d = new DOMParser().parseFromString(svg, 'image/svg+xml'); return !d.querySelector('parsererror') && d.documentElement.localName === 'svg'; };
 const label = (svg) => (svg.match(/aria-label="([^"]*)"/) || [])[1];
 const both = (a, b) => Math.min(contrast(a, b), contrast(a, b, { deutan: true }));
-// Design's 21 decks, by Design's ids ('empty' is Design's alias for nimrod, not a deck of its own).
+// Design's 22 decks, by Design's ids ('empty' is Design's alias for nimrod, not a deck of its own).
 const DECKS = Object.keys(cardThemes).filter((k) => k !== 'empty');
 const PLAIN = { scenery: false };
 
@@ -68,19 +68,25 @@ try {
   section('Design\'s file, as it was handed over');
   {
     const text = (await (await fetch('../playing_cards.js', { cache: 'no-store' })).text()).replace(/\r\n/g, '\n');
-    const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
+    // Design's village handoff imports from the design system's own folders; the site points those two lines at its
+    // copies beside the file. Put Design's paths back before hashing, so everything else is still checked byte for byte.
+    const asDesign = text.replace("from './character_kit.js'", "from '../characters/characterKit.js'")
+      .replace("from './town.js'", "from '../rooms/town.js'");
+    const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(asDesign)))]
       .map((b) => b.toString(16).padStart(2, '0')).join('');
-    // The SHA-256 of Design's playing_cards.js.txt (Nimrod Design System16, handoff/characters, 2026-10-12), line
-    // endings as LF. It was 4a30f0a6... (the 2026-10-10 cards-and-theme-checklist handoff) until this one.
+    // The SHA-256 of Design's playing_cards.js.txt (Nimrod Design System19, handoff/village, 2026-10-25), line
+    // endings as LF. It was 566ff668... (Design System16, handoff/characters, 2026-10-12) and 4a30f0a6... (the
+    // 2026-10-10 cards-and-theme-checklist handoff) before it.
     // A change here means the shipped file is no longer Design's: take a new handoff and update this line, rather
     // than editing their file (card_deck.js is where the site's own changes go).
-    const DESIGN_SHA256 = '566ff668181a555cde98001a1849d3f1791017b6bb08812b3f18eb548157c067';
-    check('*** web/client/playing_cards.js is byte for byte Design\'s file (line endings aside) ***', hash === DESIGN_SHA256, hash);
+    const DESIGN_SHA256 = '136a1647d29f14efc8ead5cc1b6c4dfe92845767f8498c43e954447f0b9e9103';
+    check('*** web/client/playing_cards.js is byte for byte Design\'s file (line endings and the two import paths aside) ***', hash === DESIGN_SHA256, hash);
     // Design's header still says "no imports"; since the characters handoff it imports Design's own two files.
     const imports = [...text.matchAll(/^\s*import\b[^;]*from\s*'([^']+)'/gm)].map((m) => m[1]);
     check(`it imports only Design's own two files, beside it: ${imports.join(', ')}`,
       imports.join() === './character_kit.js,./town.js', imports.join());
-    check(`Design's 21 decks are all there: ${DECKS.join(', ')}`, DECKS.length === 21 && cardThemes.empty === cardThemes.nimrod);
+    check(`Design's 22 decks are all there (medieval since the village handoff): ${DECKS.join(', ')}`,
+      DECKS.length === 22 && DECKS.includes('medieval') && cardThemes.empty === cardThemes.nimrod);
   }
 
   section('*** every card in every deck draws, and says what it is (both layouts, scenery on and off) ***');
@@ -106,7 +112,7 @@ try {
       && label(cardSvg({ faceDown: true }, 'halloween')) === 'Card, face down' && label(cardSvg({ rank: 'joker' }, 'night')) === 'Joker');
     check('every back of a deck uses the one pattern id nc-<deck>, so many backs on a page share one pattern',
       DECKS.every((d) => cardSvg({ faceDown: true }, d).includes(`<pattern id="nc-${d}"`) && cardSvg({ faceDown: true }, d).includes(`url(#nc-${d})`)));
-    check('each deck\'s back is its own: 21 different backs', new Set(DECKS.map((d) => cardSvg({ faceDown: true }, d).replace(/nc-\w+/g, ''))).size === 21);
+    check(`each deck's back is its own: ${DECKS.length} different backs`, new Set(DECKS.map((d) => cardSvg({ faceDown: true }, d).replace(/nc-\w+/g, ''))).size === DECKS.length);
     check('an unknown deck draws the Nimrod one, not nothing (ids aside: Design numbers them from a counter)',
       stableIds(cardSvg({ rank: '5', suit: 'hearts' }, 'nope')) === stableIds(cardSvg({ rank: '5', suit: 'hearts' }, 'nimrod')));
   }
@@ -237,12 +243,14 @@ try {
     // when Design's town, veil, outline or palette change enough to matter.
     // Cards: A, 3, 8 and 10 of each suit in the pips layout (between them every pip position), the 7 in the big
     // layout, the J, Q and K of each suit, and the Joker.
-    // { deck: [corner index, pips and big rank] }: measured 2026-10-12 (headless Chrome, Windows), minus 0.10.
-    const SCENE_FLOORS = { nimrod: [2.82, 3.31], fall: [2.79, 2.71], steampunk: [2.27, 2.30], cyberpunk: [2.79, 2.33],
-      winter: [3.86, 4.12], ocean: [3.65, 2.89], night: [4.19, 3.34], cozy: [4.11, 3.30], spring: [3.44, 2.79], summer: [3.60, 2.84],
-      halloween: [1.83, 1.17], harvest: [4.27, 3.36], christmas: [3.35, 2.40], hanukkah: [4.27, 3.45], newYear: [4.10, 3.25],
-      valentines: [3.64, 2.93], stPatricks: [3.82, 3.10], easter: [3.48, 2.81], july4: [3.66, 2.88], lunarNewYear: [3.56, 2.76],
-      diwali: [3.48, 2.80] };
+    // { deck: [corner index, pips and big rank] }: measured 2026-10-25 (headless Chrome, Windows), minus 0.10 - over
+    // Design's new towns (Design System19: a town for every theme, medieval among them; first measured 2026-10-12).
+    const SCENE_FLOORS = { nimrod: [2.82, 3.31], fall: [2.79, 2.71], medieval: [3.01, 2.90], steampunk: [2.27, 2.30],
+      cyberpunk: [5.81, 5.83], winter: [3.86, 4.12], ocean: [3.05, 2.98], night: [1.70, 1.65], cozy: [3.88, 3.13],
+      spring: [2.48, 3.10], summer: [3.70, 3.57], halloween: [1.83, 1.17], harvest: [2.79, 2.82],
+      christmas: [3.35, 2.40], hanukkah: [2.57, 2.17], newYear: [2.62, 1.92], valentines: [3.48, 3.10],
+      stPatricks: [2.76, 2.56], easter: [3.44, 3.66], july4: [2.24, 2.03], lunarNewYear: [1.65, 1.61],
+      diwali: [1.99, 1.77] };
     const W = 110, H = Math.round(110 * 350 / 250);
     async function raster(svg) {
       const img = new Image();

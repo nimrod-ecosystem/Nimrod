@@ -96,6 +96,15 @@ export const QUALITIES = Object.freeze([
   { id: 'spring', ask: 'something for a spring day', is: 'for a spring day', fits: ['springDress', 'springCardigan', 'easterDress', 'easterBunny'] },
   { id: 'baking', ask: 'something for baking', is: 'for baking', fits: ['harvestApron'] },
   { id: 'neon', ask: 'something that glows', is: 'something that glows', fits: ['cyberJacket', 'cyberHoodie'] },
+  // (2026-10-25) Design's castle-and-village outfits (Design System19): the court's children, Merlin, the knights and the
+  // villagers. [Code's judgements, as the 2026-10-16 ones are.]
+  { id: 'castle', ask: 'something for the castle', is: 'for the castle', fits: ['princessDress', 'princeTunic', 'knightBlue', 'knightRed', 'royal'] },
+  { id: 'magic', ask: 'something for doing magic', is: 'for doing magic', fits: ['wizardRobe'] },
+  { id: 'knight', ask: 'something for a knight', is: 'for a knight', fits: ['knightBlue', 'knightRed'] },
+  { id: 'village', ask: 'something for working in the village', is: 'for working in the village',
+    fits: ['medievalTunic', 'medievalKirtle', 'shopkeeperVest', 'blacksmithApron', 'farmerSmock'] },
+  { id: 'bakery', ask: 'something for the bakery', is: 'for the bakery', fits: ['bakerWhites', 'harvestApron'] },
+  { id: 'books', ask: 'something for reading old books', is: 'for reading old books', fits: ['librarianRobe'] },
 ].map((q) => Object.freeze({ ...q, fits: Object.freeze(q.fits) })));
 export const qualityOf = (id) => QUALITIES.find((q) => q.id === id) || null;
 export const fits = (outfit, quality) => !!(qualityOf(quality)?.fits.includes(outfit));
@@ -147,6 +156,19 @@ export const SPOKEN = Object.freeze({
   harvestApron: ['bakers apron', 'apron'],
   hanukkahJumper: ['blue and white jumper'],
   hanukkahCardigan: ['silver cardigan'],
+  // (2026-10-25) Design's castle-and-village outfits, named as Design labelled them.
+  wizardRobe: ['wizard robe', 'wizard'],
+  knightBlue: ['blue knight armour', 'blue knight'],
+  knightRed: ['red knight armour', 'red knight'],
+  princessDress: ['princess dress', 'princess'],
+  princeTunic: ['prince tunic', 'prince'],
+  medievalTunic: ['belted tunic'],
+  medievalKirtle: ['kirtle'],
+  bakerWhites: ['baker whites', 'baker'],
+  shopkeeperVest: ['shopkeeper vest'],
+  blacksmithApron: ['leather apron'],
+  farmerSmock: ['farmer smock', 'smock'],
+  librarianRobe: ['scholar robe', 'scholar'],
 });
 export const WARDROBE = Object.freeze(Object.keys(OUTFITS).filter((id) => SPOKEN[id]));
 export const outfitName = (id) => (SPOKEN[id] ? SPOKEN[id][0] : String(OUTFITS[id]?.label || id).toLowerCase());

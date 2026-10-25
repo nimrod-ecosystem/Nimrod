@@ -140,7 +140,9 @@ try {
     check('eight places: four homes and a place for each suit', PLACE_IDS.length === 8
       && ['kingHall', 'queenParlour', 'jackWorkshop', 'jokerCaravan'].every((id) => PLACES[id].who)
       && ['bakery', 'shop', 'park', 'library'].every((id) => PLACES[id].suit));
-    check('six themes have a town of their own', J(TOWN_THEMES) === J(['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk']));
+    // (2026-10-25, Design System19: a town for every theme, medieval first among them - item 44 - and the six kept.)
+    check('every theme has a town of its own: the six, medieval, and the rest', ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk', 'medieval']
+      .every((t) => TOWN_THEMES.includes(t)) && TOWN_THEMES.length >= 20, J(TOWN_THEMES));
     for (const t of TOWN_THEMES) {
       const bad = PLACE_IDS.filter((id) => {
         const svg = placeSvg(id, t);
@@ -151,7 +153,7 @@ try {
       check(`${TOWN_DRESS[t].label}: all eight places draw, named, with a line about each`, bad.length === 0, bad.join(','));
     }
     check('the homes are different places in every world (the King\'s: Great Hall, Garden Hall, Harvest Hall, Ice Hall, Haunted Hall, Feast Hall, Engine Hall)',
-      new Set(TOWN_THEMES.map((t) => placeInfo('kingHall', t).label)).size === 6, TOWN_THEMES.map((t) => placeInfo('kingHall', t).label).join(','));
+      new Set(TOWN_THEMES.map((t) => placeInfo('kingHall', t).label)).size === TOWN_THEMES.length, TOWN_THEMES.map((t) => placeInfo('kingHall', t).label).join(','));
     const scene = sceneSvg({ place: 'kingHall', deck: 'halloween', cast: [{ role: 'king', pose: 'wave' }], title: 'x' });
     check('a place with its character standing at home is one drawing (the place, then King Kenny)', /data-scene="kingHall"/.test(scene)
       && /data-who="king"/.test(scene) && !/<script|on\w+=/i.test(scene));
