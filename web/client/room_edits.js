@@ -83,6 +83,10 @@ export function pieceFields(it) {
   }
   out.push({ key: 'size', label: 'Size', kind: 'number', min: SCALE_RANGE[0], max: SCALE_RANGE[1], step: SCALE_STEP, level: 'essential',
     default: 1, note: '1 is its usual size' });
+  // ROTATION (chat's note CO, 2026-10-25: "transform controls like position, rotation, scale"): the turn handle's number.
+  // A step of 15 degrees for ‹ and ›, the handle itself any whole degree. Not on a side wall (drawn through its slant).
+  if (isMovable(it)) out.push({ key: 'rotate', label: 'Rotation', kind: 'number', min: -180, max: 180, step: 15, level: 'essential',
+    default: 0, unit: '°', note: '‹ turns it left, › right; the round handle above a chosen piece turns it too' });
   out.push({ key: 'facing', label: 'Facing', kind: 'choice', level: 'essential', default: 'drawn',
     options: [{ value: 'drawn', label: 'As drawn' }, { value: 'turned', label: 'Turned round' }] });
   return out;
@@ -90,7 +94,7 @@ export function pieceFields(it) {
 /** What those rows show now. */
 export function pieceValues(it) {
   if (!isEditablePiece(it)) return {};
-  return { x: Number(it.x) || 0, y: Number(it.y) || 0, size: Number(it.scale) || 1, facing: it.flip ? 'turned' : 'drawn' };
+  return { x: Number(it.x) || 0, y: Number(it.y) || 0, size: Number(it.scale) || 1, rotate: Number(it.rotate) || 0, facing: it.flip ? 'turned' : 'drawn' };
 }
 
 /**
@@ -116,6 +120,11 @@ export function withPieceEdit(recipe, id, patch = {}) {
     if (s === 1) delete it.scale; else it.scale = s;
   }
   if ('facing' in patch) { if (patch.facing === 'turned') it.flip = true; else delete it.flip; }
+  if (isMovable(it) && 'rotate' in patch && Number.isFinite(Number(patch.rotate))) {
+    let d = ((Math.round(Number(patch.rotate)) % 360) + 360) % 360;
+    if (d > 180) d -= 360;
+    if (d === 0) delete it.rotate; else it.rotate = d;
+  }
   return r;
 }
 

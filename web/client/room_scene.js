@@ -230,7 +230,9 @@ export function itemBox(it, shell = ROOM_SHELLS.room) {
   const f = it.flip ? -1 : 1;
   const transform = side
     ? `translate(-50%, -50%) matrix(${side.sx * mk * f}, ${side.shear * side.sx * mk * f}, 0, ${side.sy * mk}, 0, 0)`
-    : `translate(-50%, ${floor ? '-100%' : '-50%'})${mk !== 1 ? ` scale(${mk})` : ''}${it.flip ? ' scaleX(-1)' : ''}`;
+    // `rotate` (row 2.110, the scene editor's turn handle): degrees, about the piece's anchor (its foot on the floor, its
+    // middle on a wall - the transform-origin below), before a flip so a turned-round piece turns the same way on screen.
+    : `translate(-50%, ${floor ? '-100%' : '-50%'})${mk !== 1 ? ` scale(${mk})` : ''}${Number(it.rotate) ? ` rotate(${Number(it.rotate)}deg)` : ''}${it.flip ? ' scaleX(-1)' : ''}`;
   const vw = side ? w * side.sx * mk : w * mk;
   const vh = side ? h * side.sy * mk : h * mk;
   const cx = (it.x / 100) * W, cy = (it.y / 100) * H;

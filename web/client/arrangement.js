@@ -2179,7 +2179,7 @@ export function createArrangement({
           let s = base.scene;
           if ('opens' in patch) s = withDoor(s, o.id, patch.opens || null) || s;
           if (built && 'look' in patch) s = withLook(s, o.id, patch.look) || s;
-          if (arrange && ['x', 'y', 'size', 'facing'].some((k) => k in patch)) {
+          if (arrange && ['x', 'y', 'size', 'rotate', 'facing'].some((k) => k in patch)) {
             const r = ed.withPieceEdit(sceneRecipe(s), o.id, patch);
             if (r) s = { ...clone(s), recipe: r };
           }
@@ -2269,12 +2269,51 @@ export function createArrangement({
     return true;
   }
 
+  // ---- HANDLES ON THE CHOSEN PIECE (row 2.110, chat's note CO; room_handles.js argues them) ----
+  // Mike: "You should be able to click on things to select them and maybe have handles to drag something selected." Edit
+  // mode's choice is the selection; while it is a piece this editor arranges, its handles are drawn over it, and a drag
+  // ends in ONE change, saved as the rows save it (one Undo step). The rows stay in the card as its numbers, and for a
+  // switch. Drawn again after the room is drawn again (the piece is a new element then).
+  let roomHandles = null;
+  let handlesLib = null;
+  function dropHandles() { try { roomHandles?.destroy(); } catch { /* gone */ } roomHandles = null; }
+  function syncRoomHandles() {
+    dropHandles();
+    const a = editMode?.active?.();
+    if (!a || a.id !== ROOM_PANEL_ID || !a.target || a.target === 'room' || !roomScene || !roomEditsLib || is3dScene(layout?.scene)) return;
+    const piece = roomEditsLib.pieceOf(sceneRecipe(roomBase()?.scene || null), a.target);
+    if (!piece || !roomEditsLib.isEditablePiece(piece)) return;
+    let obj = null;
+    try { obj = (roomScene.objectEls?.() || []).find((o) => o.id === a.target) || null; } catch { obj = null; }
+    if (!obj?.el) return;
+    const draw = (lib) => {
+      if (editMode?.active?.()?.target !== a.target) return;
+      const v = roomEditsLib.pieceValues(piece);
+      roomHandles = lib.attachHandles({ el: obj.el, host: roomHost, piece: { ...v, flip: !!piece.flip },
+        floor: roomEditsLib.standsOnFloor(piece), movable: roomEditsLib.isMovable(piece),
+        onCommit: (patch) => { if (patch) arrangePiece(a.target, patch); } });
+    };
+    if (handlesLib) draw(handlesLib);
+    else import('./room_handles.js').then((m) => { handlesLib = m; draw(m); }).catch((err) => console.error('arrangement: handles', err));
+  }
+  function arrangePiece(id, patch) {
+    const base = roomBase();
+    const r = base && roomEditsLib ? roomEditsLib.withPieceEdit(sceneRecipe(base.scene), id, patch) : null;
+    if (!r) return false;
+    keepUndo(base.scene);
+    writeRoomScene(tidyScene({ ...clone(base.scene), recipe: r }));
+    return true;
+  }
+
   const editMode = corners && typeof document !== 'undefined' ? createEditMode({
     bus, doc: document,
     recs: editPanels,
     boxOf: (id) => (id === ROOM_PANEL_ID ? roomHost : null) || promoteBox(id)?.box || recFor(id)?.el || null,
     settings: () => { try { return settings?.get?.() || {}; } catch { return {}; } },
-    onChange: () => { try { ensureCorners(); } catch { /* not load-bearing */ } },
+    onChange: () => {
+      try { ensureCorners(); } catch { /* not load-bearing */ }
+      try { syncRoomHandles(); } catch (err) { console.error('arrangement: handles', err); }
+    },
   }) : null;
   // `shell/edit-panel { id?, on? }`: a panel of THIS dashboard (another dashboard's id is not ours), or,
   // with no id, the focused one. `on` absent toggles.
@@ -2305,6 +2344,7 @@ export function createArrangement({
 
   // Every mounted record, and the links runner. The shell tears down everything else.
   function destroy() {
+    dropHandles();
     try { offEditVerb?.(); editMode?.destroy(); } catch { /* already gone */ }
     try { offPlaceVerb?.(); } catch { /* already gone */ }
     screenLinks?.destroy();

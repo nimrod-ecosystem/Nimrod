@@ -287,7 +287,7 @@ try {
     // (row 2.110, 2026-10-21: a 2D room also offers "Add a piece", after Home's rows.)
     const want = kind === 'room3d' ? ['drift', 'depth'] : ['shell', 'wall', 'floor', 'light', 'view', 'addPiece'];
     // ...and a 2D room's furniture its place, size and facing first (room_edits.js), then what it opens.
-    const ARRANGE = ['x', 'y', 'size', 'facing'];
+    const ARRANGE = ['x', 'y', 'size', 'rotate', 'facing'];   // (CO, 2026-10-25: + Rotation)
     const pieceKeys = kind === 'room3d' ? ['opens'] : [...ARRANGE, 'opens'];
     check(`(${kind}) to begin with, the room itself is chosen: Home's Room rows`,
       await until(() => sel()?.target?.id === 'room' && J(sel().fields.map((f) => f.key)) === J(want), 3000), J(sel()?.fields?.map((f) => f.key)));
@@ -371,7 +371,7 @@ try {
     await until(() => sel()?.target?.id === 'room' && (kind === 'room3d' || sel().fields.some((f) => f.key === 'addPiece')), 3000);
     host.querySelector(objSel).click();
     check(`(${kind}) *** choosing it shows Look first, then Opens ***`,
-      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J([...(kind === 'room' ? ['x', 'y', 'size', 'facing'] : []), 'look', 'opens']), J(sel()?.fields?.map((f) => f.key)));
+      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J([...(kind === 'room' ? ['x', 'y', 'size', 'rotate', 'facing'] : []), 'look', 'opens']), J(sel()?.fields?.map((f) => f.key)));
     check(`(${kind}) Look reads Brick-built to begin with`, sel().values().look === 'bricks', J(sel().values()));
     check(`(${kind}) *** "Built from 32 Nimrod parts" and "Open its bricks" → the bricks page for desk_v1 ***`,
       // (row 2.110: a 2D room's piece has Take it out and Undo first.)
@@ -395,7 +395,7 @@ try {
     check(`(${kind}) ...and it is drawn as its bricks again`, await until(() => !!isBricks(), 4000));
     const cab = kind === 'room3d' ? '.r3-box[data-object="cabinet"]' : '.rs-item[data-id="lamp"]';
     host.querySelector(cab).click();
-    check(`(${kind}) a piece with no build has no Look and no bricks link`, J(sel()?.fields?.map((f) => f.key)) === J(kind === 'room' ? ['x', 'y', 'size', 'facing', 'opens'] : ['opens'])
+    check(`(${kind}) a piece with no build has no Look and no bricks link`, J(sel()?.fields?.map((f) => f.key)) === J(kind === 'room' ? ['x', 'y', 'size', 'rotate', 'facing', 'opens'] : ['opens'])
       && !(sel()?.actions || []).some((a) => a.href), J(sel()?.fields?.map((f) => f.key)));
     d.editPanel(ROOM_PANEL_ID, false);
     view.destroy();
@@ -466,7 +466,7 @@ try {
     await until(() => sel()?.target?.id === 'room' && sel().fields.some((f) => f.key === 'addPiece'), 3000);
     host.querySelector('.rs-item[data-id="cab"]').click();
     check('*** the cabinet chosen: its place, size and facing, then Opens; Take it out and Undo ***',
-      sel()?.target?.id === 'cab' && J(sel().fields.map((f) => f.key)) === J(['x', 'y', 'size', 'facing', 'opens'])
+      sel()?.target?.id === 'cab' && J(sel().fields.map((f) => f.key)) === J(['x', 'y', 'size', 'rotate', 'facing', 'opens'])
         && J(sel().actions.map((a) => a.id)) === J(['remove', 'undo']), J([sel()?.fields?.map((f) => f.key), sel()?.actions]));
     card().querySelector('[data-em-step="1"][data-em-key="x"]').click();
     check('*** › on "Left or right": it moves right one step, saved on the room\'s recipe, and stays chosen ***',
@@ -508,6 +508,101 @@ try {
     d.editPanel(ROOM_PANEL_ID, false);
     view.destroy();
     host.remove();
+  }
+
+  // ============================================================================================
+  // CO (2026-10-25): HANDLES. Mike: "You should be able to click on things to select them and maybe have handles to drag
+  // something selected." The chosen piece gets handles: its body drags it, the corner scales it, the knob turns it; one
+  // change on release (one save, one Undo step). The rows stay beside them as the numbers, and for a switch.
+  section('*** a DASHBOARD’S room: handles on the chosen piece - drag, scale, turn (chat\'s note CO) ***');
+  {
+    const { movedPercent, scaleFactor, turnDegrees, normDeg, DRAG_SLOP_PX } = await import('../room_handles.js');
+    const { withPieceEdit } = await import('../room_edits.js');
+    const { itemBox } = await import('../room_scene.js');
+    check('pure: a drag in pixels is percent of the room', J(movedPercent(88, -50, { width: 880, height: 500 })) === J({ dx: 10, dy: -10 }));
+    check('pure: twice as far from the anchor is twice the size', scaleFactor({ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 20, y: 0 }) === 2);
+    check('pure: a quarter turn clockwise is 90 degrees; angles stay in -180..180', turnDegrees({ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 10 }) === 90
+      && normDeg(270) === -90 && normDeg(-190) === 170);
+    const { presetRecipe } = await import('../room_presets.js');
+    const base = presetRecipe('theRoom');
+    const cab = (r) => r.items.find((x) => x.id === 'cab');
+    check('*** pure: a turn is kept on the recipe in -180..180; 0 is no turn at all ***', cab(withPieceEdit(base, 'cab', { rotate: 200 })).rotate === -160
+      && !('rotate' in cab(withPieceEdit(base, 'cab', { rotate: 360 }))) && withPieceEdit(base, 'door', { rotate: 30 }).items.find((x) => x.id === 'door').rotate === undefined);
+    // (Furniture's size is in its drawn width and height, not a scale() in the transform.)
+    check('*** the room draws a turn about the piece\'s foot, before a flip ***', /translate\(-50%, -100%\) rotate\(30deg\) scaleX\(-1\)$/.test(itemBox({ kind: 'furniture', part: 'cabinet', x: 50, y: 80, scale: 1.2, rotate: 30, flip: true }).transform)
+      && itemBox({ kind: 'furniture', part: 'cabinet', x: 50, y: 80, rotate: 30 }).origin === '50% 100%'
+      && !/rotate/.test(itemBox({ kind: 'furniture', part: 'cabinet', x: 50, y: 80 }).transform));
+
+    const scene0 = { kind: 'room', preset: 'theRoom' };
+    const store = new Map([['settings', { kiosk: { layout: { preset: 'full', slots: [null], scene: scene0,
+      placed: [{ id: 'hc', place: 'scene', x: 80, y: 20, w: 12, h: 12 }] } } }]]);
+    const subs = new Map();
+    const makeState = (key) => {
+      if (!subs.has(key)) subs.set(key, new Set());
+      return { load: () => Promise.resolve(), get: () => store.get(key) || {},
+        set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); for (const f of subs.get(key)) f(store.get(key)); return Promise.resolve(); },
+        subscribe: (f) => { subs.get(key).add(f); return () => subs.get(key).delete(f); }, startPolling() {}, flush: () => Promise.resolve(), destroy() {} };
+    };
+    const rbus = createBus();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: rbus, rootBus: rbus, viewId: 'HD', user: 'u', personId: null,
+      arrangement: { id: 'HD', name: 'Handles', modules: [{ id: 'hc', type: 'clock' }] }, profiles: { list: async () => [{ id: 'HD', name: 'Handles' }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} }, state: memState(), instanceId: 'dash-handles' });
+    await view.init();
+    const d = view.impl;
+    const arr = () => d.arrangement();
+    const sel = () => arr().editSelection();
+    const saved = () => store.get('settings')?.kiosk?.layout?.scene?.recipe?.items || null;
+    const savedCab = () => saved()?.find((x) => x.id === 'cab');
+    check('(setup) the room is drawn', await until(() => !!host.querySelector('.rs-item[data-id="cab"]'), 6000));
+    d.editPanel(ROOM_PANEL_ID, true);
+    await until(() => sel()?.target?.id === 'room' && sel().fields.some((f) => f.key === 'addPiece'), 3000);
+    check('nothing chosen but the room: no handles', !host.querySelector('[data-room-handles]'));
+    host.querySelector('.rs-item[data-id="cab"]').click();
+    const hd = () => host.querySelector('[data-room-handles]');
+    check('*** a piece chosen by a click gets handles: drag, scale and turn ***', await until(() => !!hd()?.querySelector('[data-emh="move"]') && !!hd().querySelector('[data-emh="scale"]') && !!hd().querySelector('[data-emh="rotate"]'), 3000));
+    const drag = (part, dx, dy) => {
+      const elp = hd().querySelector(`[data-emh="${part}"]`);
+      const r = elp.getBoundingClientRect();
+      const x0 = r.left + r.width / 2, y0 = r.top + r.height / 2;
+      const ev = (type, x, y) => elp.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 7, button: 0 }));
+      ev('pointerdown', x0, y0); ev('pointermove', x0 + dx / 2, y0 + dy / 2); ev('pointermove', x0 + dx, y0 + dy); ev('pointerup', x0 + dx, y0 + dy);
+    };
+    const roomW = host.querySelector('.rs-item[data-id="cab"]').offsetParent.getBoundingClientRect().width;
+    const wantX = Math.round((53 + (88 / roomW) * 100) * 10) / 10;
+    drag('move', 88, 0);
+    check('*** dragging its body moves it right by what was dragged, in percent of the room, saved ***', await until(() => Math.abs((savedCab()?.x || 0) - wantX) <= 0.2, 3000), `${J(savedCab())} want ${wantX}`);
+    check('...the piece stays chosen, with its handles back on it', await until(() => sel()?.target?.id === 'cab' && !!hd(), 3000));
+    await until(() => !!hd()?.querySelector('[data-emh="rotate"]'), 3000);
+    const before = savedCab();
+    drag('scale', 30, 30);
+    check('*** dragging the corner away scales it up, saved ***', await until(() => (savedCab()?.scale || 1) > 1, 3000), J(savedCab()));
+    await until(() => !!hd()?.querySelector('[data-emh="rotate"]'), 3000);
+    drag('rotate', 60, 40);
+    check('*** dragging the knob turns it, saved as whole degrees, and the room draws the turn ***',
+      await until(() => Number.isInteger(savedCab()?.rotate) && savedCab().rotate !== 0 && /rotate\(/.test(host.querySelector('.rs-item[data-id="cab"]')?.style?.transform || ''), 3000),
+      J(savedCab()));
+    check('...and the Rotation row shows the same number', sel()?.values?.().rotate === savedCab().rotate, J(sel()?.values?.()));
+    const card = () => host.querySelector('.k-room .em-card');
+    await until(() => !!card()?.querySelector('[data-em-run="undo"]'), 3000);
+    card().querySelector('[data-em-run="undo"]').click();
+    check('*** one drag is one Undo step: the turn is undone, the scale kept ***', await until(() => !savedCab()?.rotate && (savedCab()?.scale || 1) > 1, 3000), J(savedCab()));
+    // A tap on the piece is a choice, not a move (DRAG_SLOP_PX).
+    await until(() => !!hd(), 3000);
+    const xNow = savedCab().x;
+    drag('move', DRAG_SLOP_PX - 2, 0);
+    await new Promise((r) => setTimeout(r, 200));
+    check('a press without a drag moves nothing', savedCab().x === xNow);
+    host.querySelector('.rs-item[data-id="door"]').click();
+    check('*** a thing on a side wall: scaled only (no turn knob, its body does not drag) ***',
+      await until(() => sel()?.target?.id === 'door' && !!hd()?.querySelector('[data-emh="scale"]') && !hd().querySelector('[data-emh="rotate"]') && hd().querySelector('[data-emh="move"]')?.hasAttribute('data-fixed'), 3000));
+    d.editPanel(ROOM_PANEL_ID, false);
+    check('leaving edit mode takes the handles away', await until(() => !host.querySelector('[data-room-handles]'), 2000));
+    view.destroy();
+    host.remove();
+    void before;
   }
 
   // ============================================================================================

@@ -417,7 +417,8 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     if (!active) return;
     const node = e.target instanceof Element ? e.target : null;
     // Its own controls, and the corners, work as themselves.
-    if (!node || node.closest('.em-card, .em-bar, .k-promote, .k-editc')) { armIdle(); return; }
+    // (row 2.110: and a room piece's handles, room_handles.js, which drag, scale and turn the chosen piece.)
+    if (!node || node.closest('.em-card, .em-bar, .k-promote, .k-editc, .em-handles')) { armIdle(); return; }
     // A panel nested in this one (a module in a room's slot) works as itself (`passThrough`, above).
     const pass = typeof active.rec?.passThrough === 'string' && active.rec.passThrough ? node.closest(active.rec.passThrough) : null;
     if (pass && pass !== active.box && active.box.contains(pass)) { armIdle(); return; }
