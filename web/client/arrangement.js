@@ -2156,7 +2156,7 @@ export function createArrangement({
         help: arrange ? `${o.name}: where it stands, how big it is, which way it faces, ${built ? 'how it is drawn, ' : ''}and which dashboard it opens when it is pressed, or nothing.`
           : built ? `${o.name}: how it is drawn, and which dashboard it opens when it is pressed, or nothing.`
             : `${o.name}: which dashboard it opens when it is pressed, or nothing.`,
-        fields: [...(arrange ? ed.pieceFields(piece) : []), ...(built ? [LOOK_FIELD] : []),
+        fields: [...(arrange ? ed.pieceFields(piece, ed.shellOf(recipeNow())) : []), ...(built ? [LOOK_FIELD] : []),
           opensField((sceneDoors(roomBase()?.scene || null) || {})[o.id] || '')],
         values: () => {
           const scene = roomBase()?.scene || null;
@@ -2179,7 +2179,7 @@ export function createArrangement({
           let s = base.scene;
           if ('opens' in patch) s = withDoor(s, o.id, patch.opens || null) || s;
           if (built && 'look' in patch) s = withLook(s, o.id, patch.look) || s;
-          if (arrange && ['x', 'y', 'size', 'rotate', 'facing'].some((k) => k in patch)) {
+          if (arrange && ['x', 'y', 'size', 'rotate', 'facing', 'wall'].some((k) => k in patch)) {
             const r = ed.withPieceEdit(sceneRecipe(s), o.id, patch);
             if (r) s = { ...clone(s), recipe: r };
           }
@@ -2287,6 +2287,7 @@ export function createArrangement({
     const draw = (lib) => {
       if (editMode?.active?.()?.target !== a.target || !h.el.isConnected) return;
       roomHandles = lib.attachHandles({ el: h.el, host, piece: h.piece || {}, floor: h.floor !== false, movable: h.movable !== false,
+        turnable: h.turnable ?? h.movable !== false,
         geometry: h.geometry === 'svg' ? lib.svgGeometry : lib.htmlGeometry,
         onCommit: (patch) => {
           if (!patch) return;
@@ -2312,7 +2313,7 @@ export function createArrangement({
       if (editMode?.active?.()?.target !== a.target) return;
       const v = roomEditsLib.pieceValues(piece);
       roomHandles = lib.attachHandles({ el: obj.el, host: roomHost, piece: { ...v, flip: !!piece.flip },
-        floor: roomEditsLib.standsOnFloor(piece), movable: roomEditsLib.isMovable(piece),
+        floor: roomEditsLib.standsOnFloor(piece), movable: roomEditsLib.isMovable(piece), turnable: roomEditsLib.isTurnable(piece),
         onCommit: (patch) => { if (patch) arrangePiece(a.target, patch); } });
     };
     if (handlesLib) draw(handlesLib);

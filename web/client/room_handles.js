@@ -118,11 +118,12 @@ export function svgGeometry({ el }) {
 
 /**
  * Handles over `el`, drawn in `host`. `piece`: its recipe values now, `{ x, y, size, rotate, flip }`; `floor`: anchored
- * at its foot (else its middle); `movable`: may be dragged and turned (false: a side-wall thing, scaled only).
+ * at its foot (else its middle); `movable`: may be dragged; `turnable`: has the turn knob (as `movable` unless said: a
+ * thing on a side wall moves along the walls but is not turned, room_edits.js isTurnable).
  * `geometry`: htmlGeometry (the default, a room piece placed by left/top in percent) or svgGeometry (a village piece, in
  * its stage's units). `onCommit({ x?, y?, size?, rotate? })` once per gesture. Returns `{ el: the overlay, place(), destroy() }`.
  */
-export function attachHandles({ el, host, piece = {}, floor = true, movable = true, geometry = htmlGeometry, onCommit = () => {} } = {}) {
+export function attachHandles({ el, host, piece = {}, floor = true, movable = true, turnable = movable, geometry = htmlGeometry, onCommit = () => {} } = {}) {
   if (!el || !host) return { el: null, place() {}, destroy() {} };
   const doc = host.ownerDocument || document;
   ensureCss(doc);
@@ -131,7 +132,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
   ov.dataset.roomHandles = '';
   ov.innerHTML = `<div class="emh-box"${movable ? '' : ' data-fixed'} data-emh="move" role="presentation"></div>`
     + `<div class="emh-scale" data-emh="scale" title="Drag to make it bigger or smaller"></div>`
-    + (movable ? '<div class="emh-stem"></div><div class="emh-rot" data-emh="rotate" title="Drag to turn it"></div>' : '');
+    + (turnable ? '<div class="emh-stem"></div><div class="emh-rot" data-emh="rotate" title="Drag to turn it"></div>' : '');
   host.append(ov);
   const geo = geometry({ el, host, floor });
   let drag = null;
@@ -157,7 +158,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
   }
   function onDown(e) {
     const kind = e.target instanceof Element ? e.target.closest('[data-emh]')?.dataset.emh : null;
-    if (!kind || (kind !== 'scale' && !movable)) return;
+    if (!kind || (kind === 'move' && !movable) || (kind === 'rotate' && !turnable)) return;
     e.preventDefault(); e.stopPropagation();
     try { e.target.setPointerCapture?.(e.pointerId); } catch { /* not capturable */ }
     drag = { kind, start: { x: e.clientX, y: e.clientY }, anchor: anchor(kind), geo: geo.start(), moved: false, d: { kind } };

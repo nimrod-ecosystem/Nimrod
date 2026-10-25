@@ -22,10 +22,14 @@
 //   3. A ROOM HAS MORE THAN TOWN CAN DRAW: doors, speakers, side walls. Town's `cleanRecipe` keeps only what its flat
 //      drawing knows, so it is never run here; nothing is taken out that the person did not take out.
 // WHAT IS EDITED: furniture, the cat, and brick builds. A panel's place in the room (a module, a frame, the clock, the
-// calendar, a sign) is the placement editor's, not this. A thing on a SIDE wall keeps its place (its x and y are
-// drawn through the side wall's slant, and moving it along there is not built): it can still be sized, turned round
-// or taken out.
-import { FURNITURE, FURNITURE_GROUPS, MOUNT_KINDS } from './room_parts.js';
+// calendar, a sign) is the placement editor's, not this.
+// WALLS (Design's room builder, System18 builders/, 2026-10-24: "Wall things hang on a chosen wall ... The inspector has a
+// 'Which wall' choice, and dragging past a corner moves a thing onto the next wall"): a wall thing's x and y are stage
+// percent on every wall, and the wall it hangs on is the one its x falls on (room_scene.js `wallAt`, the same rule as
+// `wallFor` here). So it moves like anything else, and its wall follows; "Which wall" puts it in the middle of the one
+// chosen. It is not TURNED on a side wall: it is drawn through the wall's slant, and a turn on top of that is a shape no
+// wall has.
+import { FURNITURE, FURNITURE_GROUPS, MOUNT_KINDS, ROOM_SHELLS } from './room_parts.js';
 import { recipeItemIds } from './room_doors.js';
 import { defaultsEntry } from './nimrod_defaults.js';
 import { WALL_Y, FLOOR_Y, X_RANGE, SCALE_RANGE, SCALE_STEP, RECIPE_MAX_ITEMS } from './town_edits.js';
@@ -47,8 +51,27 @@ export const standsOnFloor = (it) => (it.kind === 'furniture' ? FURNITURE[it.par
 /** Whether this editor edits it: furniture, the cat, a brick build. */
 export const isEditablePiece = (it) => !!it && typeof it === 'object' && ['furniture', 'cat', 'build'].includes(it.kind);
 const onSideWall = (it) => !standsOnFloor(it) && (it.wall === 'left' || it.wall === 'right');
-/** Whether it can be moved here (not on a side wall). */
-export const isMovable = (it) => isEditablePiece(it) && !onSideWall(it);
+/** Whether it can be moved here (anything this edits; a wall thing's wall follows it). */
+export const isMovable = (it) => isEditablePiece(it);
+/** Whether it can be turned (not on a side wall, which draws it through its own slant). */
+export const isTurnable = (it) => isEditablePiece(it) && !onSideWall(it);
+/** The room's shell (room_parts.js), the renderer's own fallback for an unknown one. */
+export const shellOf = (recipe) => ROOM_SHELLS[recipe?.shell] || ROOM_SHELLS.room;
+/** Which wall a stage x falls on (room_scene.js `wallAt`, the same rule; the suite checks they agree). PURE. */
+export function wallFor(shell, x) {
+  const b = shell.back;
+  if (shell.left && x < b.l) return 'left';
+  if (shell.right && x > b.r) return 'right';
+  return 'back';
+}
+/** The walls a shell has, as "Which wall" options. PURE. */
+export function wallOptions(shell) {
+  return [...(shell.left ? [{ value: 'left', label: 'The left wall' }] : []), { value: 'back', label: 'The back wall' },
+    ...(shell.right ? [{ value: 'right', label: 'The right wall' }] : [])];
+}
+/** The middle of a wall, as a stage x. PURE. */
+const wallMiddle = (shell, wall) => round1(wall === 'left' ? shell.back.l / 2 : wall === 'right' ? (shell.back.r + 100) / 2
+  : (shell.back.l + shell.back.r) / 2);
 
 /** The recipe with every item carrying the id it is drawn with, so nothing is renumbered by a change. */
 export function withIds(recipe) {
@@ -67,10 +90,16 @@ export function pieceOf(recipe, id) {
   return i >= 0 ? r.items[i] : null;
 }
 
-/** A piece's rows, as settings_fields.js fields (edit mode draws them; the switch menu walks them). */
-export function pieceFields(it) {
+/** A piece's rows, as settings_fields.js fields (edit mode draws them; the switch menu walks them). `shell`: the room's
+ * (shellOf), for a wall thing's "Which wall". */
+export function pieceFields(it, shell = ROOM_SHELLS.room) {
   if (!isEditablePiece(it)) return [];
   const out = [];
+  // "Which wall" (Design's room builder): only for a wall thing, only in a room with more than one wall.
+  if (!standsOnFloor(it) && wallOptions(shell).length > 1) {
+    out.push({ key: 'wall', label: 'Which wall', kind: 'choice', level: 'essential', default: 'back', options: wallOptions(shell),
+      note: 'it goes to the middle of that wall; moving it past a corner moves it onto the next wall too' });
+  }
   if (isMovable(it)) {
     const floor = standsOnFloor(it);
     const [lo, hi] = floor ? FLOOR_Y : WALL_Y;
@@ -86,7 +115,7 @@ export function pieceFields(it) {
     default: 1, note: '1 is its usual size' });
   // ROTATION (chat's note CO, 2026-10-25: "transform controls like position, rotation, scale"): the turn handle's number.
   // A step of 15 degrees for ‹ and ›, the handle itself any whole degree. Not on a side wall (drawn through its slant).
-  if (isMovable(it)) out.push({ key: 'rotate', label: 'Rotation', kind: 'number', min: -180, max: 180, step: 15, level: 'essential',
+  if (isTurnable(it)) out.push({ key: 'rotate', label: 'Rotation', kind: 'number', min: -180, max: 180, step: 15, level: 'essential',
     default: 0, unit: '°', note: '‹ turns it left, › right; the round handle above a chosen piece turns it too' });
   out.push({ key: 'facing', label: 'Facing', kind: 'choice', level: 'essential', default: 'drawn',
     options: [{ value: 'drawn', label: 'As drawn' }, { value: 'turned', label: 'Turned round' }] });
@@ -95,7 +124,8 @@ export function pieceFields(it) {
 /** What those rows show now. */
 export function pieceValues(it) {
   if (!isEditablePiece(it)) return {};
-  return { x: Number(it.x) || 0, y: Number(it.y) || 0, size: Number(it.scale) || 1, rotate: Number(it.rot ?? it.rotate) || 0, facing: it.flip ? 'turned' : 'drawn' };
+  return { x: Number(it.x) || 0, y: Number(it.y) || 0, size: Number(it.scale) || 1, rotate: Number(it.rot ?? it.rotate) || 0, facing: it.flip ? 'turned' : 'drawn',
+    ...(standsOnFloor(it) ? {} : { wall: it.wall === 'left' || it.wall === 'right' ? it.wall : 'back' }) };
 }
 
 /**
@@ -108,7 +138,19 @@ export function withPieceEdit(recipe, id, patch = {}) {
   const i = indexOf(r, id);
   const it = i >= 0 ? r.items[i] : null;
   if (!isEditablePiece(it) || !patch || typeof patch !== 'object') return null;
+  const shell = shellOf(r);
+  const wallThing = !standsOnFloor(it);
+  // "Which wall": the middle of the wall chosen (one the room has); the move below may then carry it on from there.
+  if (wallThing && 'wall' in patch && wallOptions(shell).some((o) => o.value === patch.wall) && !('x' in patch)) {
+    it.x = wallMiddle(shell, patch.wall);
+  }
   if (isMovable(it) && 'x' in patch && Number.isFinite(Number(patch.x))) it.x = round1(clamp(Number(patch.x), X_RANGE[0], X_RANGE[1]));
+  // A wall thing hangs on the wall its x falls on (Design: "dragging past a corner moves a thing onto the next wall").
+  if (wallThing && ('x' in patch || 'wall' in patch)) {
+    const w = wallFor(shell, Number(it.x) || 0);
+    if (w === 'back') delete it.wall; else it.wall = w;
+    if (w !== 'back') delete it.rot;   // not turned on a side wall (isTurnable)
+  }
   if (isMovable(it) && 'y' in patch && Number.isFinite(Number(patch.y))) {
     const [lo, hi] = standsOnFloor(it) ? FLOOR_Y : WALL_Y;
     const was = Number(it.y) || 0;
@@ -122,7 +164,7 @@ export function withPieceEdit(recipe, id, patch = {}) {
   }
   if ('facing' in patch) { if (patch.facing === 'turned') it.flip = true; else delete it.flip; }
   // Kept as `rot` (Design's village format: x, y = the foot, scale, rot, flip; README 2026-10-25), in -180..180.
-  if (isMovable(it) && 'rotate' in patch && Number.isFinite(Number(patch.rotate))) {
+  if (isTurnable(it) && 'rotate' in patch && Number.isFinite(Number(patch.rotate))) {
     let d = ((Math.round(Number(patch.rotate)) % 360) + 360) % 360;
     if (d > 180) d -= 360;
     if (d === 0) delete it.rot; else it.rot = d;

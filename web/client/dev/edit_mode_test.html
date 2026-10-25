@@ -419,9 +419,24 @@ try {
     check('pure: Size 1 is no size at all; Turned round is a flip; As drawn takes it off',
       !('scale' in cab(withPieceEdit(base, 'cab', { size: 1 }))) && cab(withPieceEdit(base, 'cab', { size: 9 })).scale === 1.6
         && cab(withPieceEdit(base, 'cab', { facing: 'turned' })).flip === true && !('flip' in cab(withPieceEdit(withPieceEdit(base, 'cab', { facing: 'turned' }), 'cab', { facing: 'drawn' }))));
-    check('*** pure: a thing on a SIDE wall (the door) is sized and turned, not moved ***',
-      J(pieceFields(base.items.find((x) => x.id === 'door')).map((f) => f.key)) === J(['size', 'facing'])
-        && withPieceEdit(base, 'door', { x: 50 }).items.find((x) => x.id === 'door').x === 8);
+    // WALLS (Design's room builder, 2026-10-24): "a 'Which wall' choice, and dragging past a corner moves a thing onto the
+    // next wall". The door hangs on the left wall of the three-wall room (back wall from 16% to 84%).
+    const { wallFor, shellOf, isTurnable } = await import('../room_edits.js');
+    const { wallAt } = await import('../room_scene.js');
+    const { ROOM_SHELLS } = await import('../room_parts.js');
+    const door = (r) => r.items.find((x) => x.id === 'door');
+    check('*** pure: a thing on a SIDE wall has "Which wall" and moves; it is not turned (drawn through the wall\'s slant) ***',
+      J(pieceFields(door(base), shellOf(base)).map((f) => f.key)) === J(['wall', 'x', 'y', 'size', 'facing']) && !isTurnable(door(base))
+        && withPieceEdit(base, 'door', { rotate: 30 }).items.find((x) => x.id === 'door').rot === undefined, J(pieceFields(door(base), shellOf(base)).map((f) => f.key)));
+    const across = door(withPieceEdit(base, 'door', { x: 50 }));
+    check('*** pure: moved past the corner it is on the back wall (its `wall` gone, as a back-wall thing has none) ***',
+      across.x === 50 && !('wall' in across), J(across));
+    const right = door(withPieceEdit(base, 'door', { wall: 'right' }));
+    check('*** pure: "Which wall: the right wall" puts it in the middle of the right wall ***', right.wall === 'right' && right.x === 92, J(right));
+    check('a one-wall room offers no "Which wall"; "Which wall" is not a floor thing\'s',
+      !pieceFields(door(base), ROOM_SHELLS.flat).some((f) => f.key === 'wall') && !pieceFields(cab(base), shellOf(base)).some((f) => f.key === 'wall'));
+    check('the editor\'s wall rule is the renderer\'s (room_scene.js wallAt), on every shell, all the way across',
+      Object.values(ROOM_SHELLS).every((sh) => Array.from({ length: 101 }, (_, x) => x).every((x) => wallFor(sh, x) === wallAt(sh, x))));
     check('pure: a panel\'s place (the clock) is not this editor\'s', withPieceEdit(base, 'clock', { x: 50 }) === null && withoutPiece(base, 'clock') === null);
     const noIds = { ...base, items: base.items.map(({ id, ...rest }) => rest) };   // eslint-disable-line no-unused-vars
     const doored = { ...noIds, items: noIds.items.map((x, i) => (i === 4 ? { ...x, opens: 'P' } : x)) };   // furniture4 = the cabinet
@@ -601,8 +616,13 @@ try {
     await new Promise((r) => setTimeout(r, 200));
     check('a press without a drag moves nothing', savedCab().x === xNow);
     host.querySelector('.rs-item[data-id="door"]').click();
-    check('*** a thing on a side wall: scaled only (no turn knob, its body does not drag) ***',
-      await until(() => sel()?.target?.id === 'door' && !!hd()?.querySelector('[data-emh="scale"]') && !hd().querySelector('[data-emh="rotate"]') && hd().querySelector('[data-emh="move"]')?.hasAttribute('data-fixed'), 3000));
+    check('*** a thing on a side wall: it drags and scales, with no turn knob ***',
+      await until(() => sel()?.target?.id === 'door' && !!hd()?.querySelector('[data-emh="scale"]') && !hd().querySelector('[data-emh="rotate"]')
+        && !hd().querySelector('[data-emh="move"]')?.hasAttribute('data-fixed'), 3000));
+    const savedDoor = () => saved()?.find((x) => x.id === 'door');
+    drag('move', 200, 0);
+    check('*** dragged past the corner, the door hangs on the back wall (Design: "dragging past a corner moves a thing onto the next wall") ***',
+      await until(() => (savedDoor()?.x || 0) > 16 && !('wall' in (savedDoor() || { wall: 1 })), 3000), J(savedDoor()));
     d.editPanel(ROOM_PANEL_ID, false);
     check('leaving edit mode takes the handles away', await until(() => !host.querySelector('[data-room-handles]'), 2000));
     view.destroy();
