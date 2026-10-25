@@ -33,8 +33,14 @@ export const SPOTIFY_PREFIX = 'spotify:';
 // actually be sent somewhere today. Music is the one: its files go to an attached speaker, and its Spotify
 // favourites to a Spotify speaker. Videos are not a row, because YouTube's frame cannot be routed (above); a row
 // that changes nothing is a stop on the switch walk for nothing. A kind is added here when its player can follow it.
+// CALLS (2026-10-25, row 2.128; Mike: "I want Taylor's Youtube, music, etc. coming out of a different speaker than her
+// calls"): a call's sound is our own page's (the call's <audio>/<video>), so it CAN be sent to a speaker of its own - the
+// way round that works, since YouTube's frame cannot be routed (above). No Spotify choices: Spotify cannot play a call.
 export const SPEAKER_KINDS = Object.freeze([
   { kind: 'music', key: 'speakerMusic', label: 'Music plays on' },
+  { kind: 'calls', key: 'speakerCalls', label: 'Calls play on', spotify: false,
+    note: 'Nothing to set up. A call can come out of a different speaker from videos and music, which use this '
+      + 'computer’s own speaker. A speaker unplugged later is not an error: the call uses this screen’s own speaker until it is back.' },
 ]);
 export const speakerKey = (kind) => SPEAKER_KINDS.find((k) => k.kind === kind)?.key || null;
 
@@ -224,9 +230,10 @@ export function speakerFields() {
     // Spotify choices only once a Music panel on this device has found Spotify speakers: a household with no Spotify
     // app is not offered a choice that cannot play.
     options: playOnChoices({ inherit: 'This screen’s own speaker (whatever the computer uses)',
-      spotifyOn: knownSpotifySpeakers().length > 0 }).filter((o) => o.value !== PLAY_ON_HERE),
-    note: 'Nothing to set up. On its first choice, sound goes wherever this computer already sends it. Spotify’s and '
+      spotifyOn: k.spotify !== false && knownSpotifySpeakers().length > 0 })
+      .filter((o) => o.value !== PLAY_ON_HERE && !(k.spotify === false && o.value.startsWith(SPOTIFY_PREFIX))),
+    note: k.note || ('Nothing to set up. On its first choice, sound goes wherever this computer already sends it. Spotify’s and '
       + 'YouTube’s own players always use that speaker. Music files can go to another. Spotify speakers appear here '
-      + 'after you press “Find speakers” in a Music panel.',
+      + 'after you press “Find speakers” in a Music panel.'),
   }));
 }

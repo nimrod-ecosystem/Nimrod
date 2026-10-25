@@ -530,8 +530,11 @@ const toTab = (m, id) => {
       // panel's lap is unchanged.)
       // (settings search, 2026-10-17, row 2.94, DELIBERATELY: "Search the settings" above the tabs at "The usual" and up
       // - one more stop on every tab's lap, and one more of the old rows: 50. Not at "Just the essentials": kiosk.js argues.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 50) ***',
-        lapStops.length === 15 && oldStops.length === 50 && lapStops.includes('set:menuSearch') && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
+      // (calls play on, 2026-10-25, row 2.128, DELIBERATELY: Devices -> Speakers "Calls play on", so a call can come out of
+      // a different speaker from videos and music. One more of the old rows: 51. The panel's lap is unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 51) ***',
+        lapStops.length === 15 && oldStops.length === 51 && oldStops.some((i) => i.id === 'set:speakerCalls') /* calls play on */
+        && lapStops.includes('set:menuSearch') && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
         && oldStops.some((i) => i.id === 'set:dashboardBareNames') /* bare names */
         && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
         && oldStops.some((i) => i.id === 'set:voiceOpenWhere') && oldStops.some((i) => i.id === 'set:voiceOpenQuietMs') /* voice open */

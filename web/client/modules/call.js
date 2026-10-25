@@ -86,6 +86,7 @@ import { createAvatarCache, avatarHtml } from '../avatar_display.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { PANEL_VOLUME_FIELD, PANEL_VOLUME_KEY, panelVolumeFrom } from '../panel_sound.js';
 import { permsFor, lendLengthOf, lengthWords, LENGTH_CHOICES } from '../screen_permissions.js';
+import { speakerIdFor, PANEL_SPEAKER_KEY, watchOutputs } from '../speakers.js';
 
 // ---------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute
@@ -216,6 +217,7 @@ registerModule(
     description: 'Shows whoever is calling, full screen, while the small picture in the corner keeps '
                + 'showing this room',
     importance: 'critical', dependsOn: 'network', settings: SETTINGS,
+    routesSound: true,            // row 2.128: the Sound tab offers "Its sound comes out of" (speakers.js)
     // Hidden, a call KEEPS PLAYING by default (hide_sound.js `whenHiddenDefault`): the panel may be set
     // to mute when hidden, but hiding it to look at something else must not silence the person on it.
     whenHidden: 'keep' },
@@ -539,7 +541,22 @@ registerModule(
       try { el.volume = v; } catch { /* a media element with no volume: it plays as it is */ }
       // group calls: every other person's tile plays at the same level.
       for (const t of root.querySelectorAll('.call-tile video')) { try { t.volume = v; } catch { /* no volume */ } }
+      applyCallSink();
       applyControls();
+    }
+    // WHICH SPEAKER (2026-10-25, row 2.128; Mike: "I want Taylor's Youtube, music, etc. coming out of a different
+    // speaker than her calls"): this panel's own "Its sound comes out of" row, else the screen's Devices -> Speakers
+    // "Calls play on" (ctx.speakerRoute), else the computer's default. Re-applied after every render (a new element
+    // starts on the default) and when speakers are plugged in or out; a named speaker that is not there plays on the
+    // default until it is back.
+    function applyCallSink() {
+      if (!root) return;
+      let id = '';
+      try { id = speakerIdFor((state?.get?.() || {})[PANEL_SPEAKER_KEY] || ctx.speakerRoute?.('calls') || ''); } catch { id = ''; }
+      for (const el of [root.querySelector('.call-remote'), ...root.querySelectorAll('.call-tile video')]) {
+        if (!el || typeof el.setSinkId !== 'function' || el.sinkId === id) continue;
+        try { Promise.resolve(el.setSinkId(id)).catch(() => {}); } catch { /* the default speaker */ }
+      }
     }
 
     // ---- THE LIVE CALL'S CONTROLS (see CALL_CONTROL_KEYS above) -------------------------------------
@@ -1184,6 +1201,7 @@ registerModule(
         offs.push(state?.subscribe?.(() => { if (phase === 'connected') publishControls(); }) || (() => {}));
         bindTransport();
         offs.push(bus.subscribe(CALL_TRANSPORT_READY, () => bindTransport()));
+        offs.push(watchOutputs(() => applyCallSink()));
       },
 
       onResize() {},

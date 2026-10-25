@@ -956,7 +956,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         hangup() {}, ring: (from) => inc?.(from),
       };
     };
-    const mountMixed = ({ audio, micTrack = null, saved = { declineSeconds: 0, demo: false } } = {}) => {
+    const mountMixed = ({ audio, micTrack = null, saved = { declineSeconds: 0, demo: false }, extra = {} } = {}) => {
       const log = [];
       const t = capT(log);
       const host = document.createElement('div');
@@ -974,6 +974,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         mayDropIn: () => true,          // answers straight through (declineSeconds 0) only for a drop-in caller
         state: { get: () => saved, set: () => Promise.resolve(), subscribe: (fn) => { sub = fn; return () => {}; },
                  load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+        ...extra,
       });
       inst.init();
       return { host, inst, impl: inst.impl || inst, t, log, rerender: () => sub?.(saved), remote: () => host.querySelector('.call-remote') };
@@ -1008,6 +1009,48 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       check('back up, it is back to full', el?.volume === 1, String(el?.volume));
       m.impl.__end('hangup');
       m.inst.destroy();
+    }
+    // Row 2.128 (Mike, 2026-10-25: "I want Taylor's Youtube, music, etc. coming out of a different speaker than her
+    // calls"): the call's own sound goes to the speaker chosen - this panel's row, else the screen's "Calls play on".
+    section('*** which speaker a call comes out of (row 2.128) ***');
+    {
+      const { setOutputsForTest, SPEAKER_KINDS, speakerFields, rememberSpotifySpeakers } = await import('../speakers.js');
+      setOutputsForTest([{ deviceId: 'dev-tv', label: 'TV speakers' }, { deviceId: 'dev-desk', label: 'Desk speaker' }]);
+      const sinks = [];
+      const proto = HTMLMediaElement.prototype;
+      const had = Object.getOwnPropertyDescriptor(proto, 'setSinkId');
+      Object.defineProperty(proto, 'setSinkId', { configurable: true, writable: true, value(id) { sinks.push([this.tagName, id]); return Promise.resolve(); } });
+      try {
+        const m = mountMixed({ audio: createAudioBus(), extra: { speakerRoute: (k) => (k === 'calls' ? 'out:Desk speaker' : '') } });
+        m.t.ring({ name: 'Mike' });
+        await sleep(30);
+        check('*** the screen says "Calls play on: Desk speaker": the call\'s sound goes there ***',
+          sinks.some(([tag, id]) => tag === 'AUDIO' && id === 'dev-desk'), JSON.stringify(sinks));
+        m.impl.__end('hangup'); m.inst.destroy();
+        sinks.length = 0;
+        const m2 = mountMixed({ audio: createAudioBus(), saved: { declineSeconds: 0, demo: false, panelSpeaker: 'out:TV speakers' },
+          extra: { speakerRoute: () => 'out:Desk speaker' } });
+        m2.t.ring({ name: 'Mike' });
+        await sleep(30);
+        check('*** the panel\'s own "Its sound comes out of" wins over the screen\'s row ***', sinks.some(([, id]) => id === 'dev-tv') && !sinks.some(([, id]) => id === 'dev-desk'),
+          JSON.stringify(sinks));
+        m2.impl.__end('hangup'); m2.inst.destroy();
+        sinks.length = 0;
+        const m3 = mountMixed({ audio: createAudioBus(), extra: { speakerRoute: () => 'out:Unplugged speaker' } });
+        m3.t.ring({ name: 'Mike' });
+        await sleep(30);
+        check('a speaker that is not plugged in: the computer\'s own speaker (\'\'), never silence', !sinks.some(([, id]) => id && id !== ''), JSON.stringify(sinks));
+        m3.impl.__end('hangup'); m3.inst.destroy();
+      } finally {
+        if (had) Object.defineProperty(proto, 'setSinkId', had); else delete proto.setSinkId;
+      }
+      rememberSpotifySpeakers(['Kitchen']);
+      const calls = speakerFields().find((f) => f.key === 'speakerCalls');
+      check('*** the screen\'s Devices -> Speakers has "Calls play on", with this computer\'s speakers and no Spotify (Spotify cannot play a call) ***',
+        SPEAKER_KINDS.some((k) => k.key === 'speakerCalls') && !!calls && calls.options.some((o) => o.value === 'out:Desk speaker')
+          && !calls.options.some((o) => String(o.value).startsWith('spotify:')), JSON.stringify(calls?.options));
+      check('...while "Music plays on" still offers the Spotify speaker', speakerFields().find((f) => f.key === 'speakerMusic').options.some((o) => String(o.value).startsWith('spotify:')));
+      setOutputsForTest([]);
     }
     {
       // A VIDEO call: the same, on the <video> the far end is shown in.
