@@ -15,5 +15,7 @@
   with opposite needs, sources as folders, scoring, and where the weights live.
 - [`face-tracking-hookup.md`](face-tracking-hookup.md) — face tracking is not bundled; this is
   how to wire a real face-landmark library into `input_facegesture.js`'s own tested seam.
+- [`home-assistant-plan.md`](home-assistant-plan.md) — the plan for Home Assistant control (not built yet): a bridge on
+  the screen's computer holds the token, things become verbs a switch can do, testing against a pretend hub.
 
 Keeping module docs current is part of "done" — a module without a doc is unfinished.
