@@ -4,14 +4,29 @@
 something we should really do."*
 
 **Provenance:** what the repo already has is checked against the code, with file names given. Facts about Home
-Assistant and Chromium are marked **[to verify]**: they come from memory of their documentation and are checked
-before the first line of the bridge is written.
+Assistant and Chromium were marked **[to verify]**, from memory of their documentation.
+- **Checked 2026-10-25 against Home Assistant's own documentation:** `Authorization: Bearer <token>`, `GET /api/`
+  returning `{"message": "API running."}`, `GET /api/states`, `POST /api/services/<domain>/<service>` with
+  `{"entity_id": ...}`, and the WebSocket at `/api/websocket` (auth messages, then `subscribe_events` with
+  `state_changed`).
+- Still marked: the CORS setting, the `demo` integration, and the per-domain service names beyond lights.
+
+**Built so far:**
+- **Step 1, the bridge** (`web/kiosk_installer/deploy/nimrod-ha-bridge.py`, public 2ba9973): tested against
+  `web/tools/pretend_home_assistant.py`, on Windows and the bench Pi.
+- **Setup is from a terminal first** (`--connect`, `--list`, `--tick`; over ssh), because the bridge is on the
+  screen's own 127.0.0.1 and a page on another computer cannot reach it. Setup from the page comes once a screen
+  has a pointer for it.
 
 ## What is already here
 
-- **The input side is done.** `web/client/actions.js` has a verb registry, so a new verb such as `ha/lamp-toggle` can be
-  bound to a switch, a key, a talk-board card or a spoken word with no new input plumbing. The same bus, bindings, role
-  gate (who may act) and diagnostics apply. Its own header names Home Assistant as the first thing this unlocks.
+- **The input side is mostly there.** `web/client/actions.js`'s action registry takes new actions at run time
+  (`register({ id, label, topic, payload, group })`). So a ticked lamp's "on" can be bound to a switch, a key, a
+  talk-board card or a spoken word with no new input plumbing: the same bus, bindings, role gate (who may act) and
+  diagnostics.
+  - **Corrected 2026-10-25:** this page first said "the input side is done". The custom-VERB functions
+    (`normalizeVerb` / `mergeVerbs`) exist and are tested, but nothing on a screen calls them yet. The registry is
+    what the client uses.
 - **The Connections page knows it.** `web/client/connections.js` has a `home-assistant` entry. It is hidden until
   connected, at the advanced level.
 - **The words are Home Assistant's.** `web/client/modules/view.js` already took "scene" in Home Assistant's sense and

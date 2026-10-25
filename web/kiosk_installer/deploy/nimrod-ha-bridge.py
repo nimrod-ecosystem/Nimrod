@@ -342,7 +342,91 @@ def make_server(port=PORT, origins=None):
     return httpd
 
 
+# ---- SETTING IT UP FROM A TERMINAL (over ssh). The bridge is on the screen's own 127.0.0.1, so a page on another
+# computer cannot reach it; the first version is set up here, and the page only reads and calls. ----
+CLI_HELP = """nimrod-ha-bridge.py                      run the bridge (what the user unit does)
+nimrod-ha-bridge.py --connect URL        connect to Home Assistant at URL; the token is read from NIMROD_HA_TOKEN,
+                                         else asked for (never on the command line, where it would be in the history)
+nimrod-ha-bridge.py --status             connected or not, the address, the token's ends, what is ticked
+nimrod-ha-bridge.py --list               the things there are to control, ticked ones marked *
+nimrod-ha-bridge.py --tick ENTITY [NAME...]   let this screen control it, under that name
+nimrod-ha-bridge.py --untick ENTITY
+nimrod-ha-bridge.py --allow-doors on|off "Allow doors and locks" (off)
+nimrod-ha-bridge.py --forget             forget the address, the token and the ticks"""
+
+
+def cli(argv, out=print, read_token=None):
+    """The terminal commands. Returns an exit status; `out` and `read_token` are for the tests."""
+    cmd, args = argv[0], argv[1:]
+    cfg = read_config()
+    try:
+        if cmd == '--connect':
+            url = clean_url(args[0] if args else '')
+            if not url:
+                out('an address, please: --connect http://homeassistant.local:8123')
+                return 2
+            token = os.environ.get('NIMROD_HA_TOKEN') or (read_token or (lambda: __import__('getpass').getpass('Long-lived access token: ')))()
+            token = str(token or '').strip()
+            got = ha(url, token, 'GET', '/api/')
+            if not (isinstance(got, dict) and got.get('message') == 'API running.'):
+                out('that address answered, but not as Home Assistant')
+                return 1
+            write_config({'url': url, 'token': token, 'chosen': cfg.get('chosen') if cfg.get('url') == url else {},
+                          'allowDoors': bool(cfg.get('allowDoors'))})
+            out(f'connected to {url} (token {token_hint(token)})')
+            return 0
+        if cmd == '--status':
+            out(f'connected: {"yes" if cfg.get("url") and cfg.get("token") else "no"}  address: {cfg.get("url") or "-"}  '
+                f'token: {token_hint(cfg.get("token")) or "-"}  doors and locks: {"on" if cfg.get("allowDoors") else "off"}')
+            for eid, v in (cfg.get('chosen') or {}).items():
+                out(f'  * {eid}  "{v.get("label", "")}"')
+            return 0
+        if cmd == '--forget':
+            try:
+                os.unlink(config_path())
+            except OSError:
+                pass
+            out('forgotten')
+            return 0
+        if cmd == '--allow-doors':
+            cfg['allowDoors'] = (args[:1] == ['on'])
+            write_config(cfg)
+            out(f'doors and locks: {"on" if cfg["allowDoors"] else "off"}')
+            return 0
+        if not (cfg.get('url') and cfg.get('token')):
+            out('not connected: --connect URL first')
+            return 1
+        if cmd == '--list':
+            for s in ha(cfg['url'], cfg['token'], 'GET', '/api/states') or []:
+                r = entity_row(s, cfg) if isinstance(s, dict) else None
+                if r and actions_for(r['domain'], True):
+                    out(f'{"*" if r["ticked"] else " "} {r["entity_id"]:<34} {r["name"]:<24} {r["state"]}'
+                        + ('' if r['actions'] else '   (needs --allow-doors on)'))
+            return 0
+        if cmd in ('--tick', '--untick'):
+            eid = args[0] if args else ''
+            if '.' not in eid or not actions_for(eid.split('.', 1)[0], True):
+                out('not a thing this screen can control (see --list)')
+                return 2
+            chosen = dict(cfg.get('chosen') or {})
+            if cmd == '--untick':
+                chosen.pop(eid, None)
+            else:
+                chosen[eid] = {'label': ' '.join(args[1:]).strip()[:60]}
+            cfg['chosen'] = chosen
+            write_config(cfg)
+            out(f'{"ticked" if cmd == "--tick" else "unticked"}: {eid}')
+            return 0
+    except HAError as e:
+        out(e.reason)
+        return 1
+    out(CLI_HELP)
+    return 2
+
+
 def main(argv):
+    if argv:
+        return cli(argv)
     httpd = make_server()
     if not httpd.origins:
         sys.stderr.write('ha bridge: no site origin (set NIMROD_KIOSK_URL or NIMROD_HA_ORIGINS); refusing every request\n')

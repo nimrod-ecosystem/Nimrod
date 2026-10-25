@@ -133,6 +133,29 @@ try:
     code, s, _ = ask('GET', '/ha/status')
     check('the setting is on only for a real true (anything else turns it off)', s['allowDoors'] is False)
 
+    # ---- set up from a terminal (over ssh): the same file, the same rules
+    said = []
+    out = said.append
+    check('cli: --connect with a wrong token says so and keeps the old setup', B.cli(['--connect', hub_url], out, lambda: 'nope-nope-nope') == 1
+          and 'token' in said[-1] and B.read_config().get('token') == 'pretend-token-123456', said)
+    os.environ['NIMROD_HA_TOKEN'] = 'pretend-token-123456'
+    check('*** cli: --connect reads the token from NIMROD_HA_TOKEN (never the command line), keeps the ticks for the same address ***',
+          B.cli(['--connect', hub_url], out) == 0 and 'pret…3456' in said[-1] and 'light.lamp' in B.read_config()['chosen'], said[-1])
+    del os.environ['NIMROD_HA_TOKEN']
+    said.clear()
+    B.cli(['--list'], out)
+    check('*** cli: --list shows the things, ticked ones marked, a lock flagged when doors are off ***',
+          any(l.startswith('* light.lamp') for l in said) and any('lock.front_door' in l and 'allow-doors' in l for l in said)
+          and not any('sensor.temperature' in l for l in said), said)
+    check('cli: --tick with a name, --untick', B.cli(['--tick', 'fan.ceiling_fan', 'the', 'fan'], out) == 0
+          and B.read_config()['chosen']['fan.ceiling_fan'] == {'label': 'the fan'} and B.cli(['--untick', 'fan.ceiling_fan'], out) == 0
+          and 'fan.ceiling_fan' not in B.read_config()['chosen'])
+    check('cli: a thing with nothing to do cannot be ticked', B.cli(['--tick', 'sensor.temperature'], out) == 2)
+    said.clear()
+    B.cli(['--status'], out)
+    check('cli: --status never prints the token', 'pretend-token-123456' not in ' '.join(said) and 'pret…3456' in said[0], said)
+    check('cli: an unknown command prints the help', B.cli(['--what'], out) == 2 and '--connect URL' in said[-1])
+
     # ---- the hub going away, and forgetting
     hub.shutdown()
     hub.server_close()
