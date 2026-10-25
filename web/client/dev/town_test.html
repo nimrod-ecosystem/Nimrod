@@ -153,7 +153,7 @@ try {
     check('the homes are different places in every world (the King\'s: Great Hall, Garden Hall, Harvest Hall, Ice Hall, Haunted Hall, Feast Hall, Engine Hall)',
       new Set(TOWN_THEMES.map((t) => placeInfo('kingHall', t).label)).size === 6, TOWN_THEMES.map((t) => placeInfo('kingHall', t).label).join(','));
     const scene = sceneSvg({ place: 'kingHall', deck: 'halloween', cast: [{ role: 'king', pose: 'wave' }], title: 'x' });
-    check('a place with its character standing at home is one drawing (the place, then King Bram)', /data-scene="kingHall"/.test(scene)
+    check('a place with its character standing at home is one drawing (the place, then King Kenny)', /data-scene="kingHall"/.test(scene)
       && /data-who="king"/.test(scene) && !/<script|on\w+=/i.test(scene));
   }
 
@@ -191,7 +191,7 @@ try {
     let full = r0;
     while (full.items.length < RECIPE_MAX_ITEMS) full = addPiece(full, 'plant').recipe;
     check(`a room is full at ${RECIPE_MAX_ITEMS} things`, addPiece(full, 'plant').index === -1);
-    check('names in words: a piece, a sign', itemName(r0.items[i]) === 'Throne' && itemName({ kind: 'sign', name: 'King Bram' }) === 'Name sign: King Bram');
+    check('names in words: a piece, a sign', itemName(r0.items[i]) === 'Throne' && itemName({ kind: 'sign', name: 'King Kenny' }) === 'Name sign: King Kenny');
     check('"Add a piece" lists the world\'s own pieces first, then every world\'s, then furniture',
       J(piecesFor('winter').map((g) => g[0])) === J(['Winter pieces', 'Pieces from every world', 'Furniture'])
       && piecesFor('winter')[0][1].includes('snowman') && piecesFor('winter')[1][1].includes('throne'));
@@ -324,7 +324,7 @@ try {
     t.click(t.host.querySelector('[data-place="kingHall"]'));
     const p = t.probe();
     check('a touch on a tile opens that place', p.view === 'place' && p.place === 'kingHall');
-    check('full size: the place, with King Bram standing at home', !!t.host.querySelector('.tw-pic svg[data-scene="kingHall"] [data-who="king"]'));
+    check('full size: the place, with King Kenny standing at home', !!t.host.querySelector('.tw-pic svg[data-scene="kingHall"] [data-who="king"]'));
     check('its name and one line about it are said', t.output.said.at(-1) === `${placeInfo('kingHall', 'nimrod').label}. ${placeInfo('kingHall', 'nimrod').blurb}`, t.output.said.at(-1));
     check('the cards drawn from it are shown (the King)', !!t.host.querySelector('.tw-card[aria-label="king of hearts"] svg'));
     check('Back to the town, Rearrange; no Talk button until the storyteller is set up', J(p.stops) === J(['town', 'edit']), J(p.stops));
@@ -375,9 +375,9 @@ try {
 
   section('*** voice: "go to the bakery" ***');
   {
-    check('the names: "go to the bakery", "the bakery", "King Bram", "Pip\'s caravan", a theme\'s own ("the Ice Hall")',
-      placeFromSpeech('go to the bakery') === 'bakery' && placeFromSpeech('The Bakery.') === 'bakery' && placeFromSpeech('King Bram') === 'kingHall'
-      && placeFromSpeech("Pip's Caravan") === 'jokerCaravan' && placeFromSpeech('take me to the ice hall', 'winter') === 'kingHall'
+    check('the names: "go to the bakery", "the bakery", "King Kenny", "Robin\'s caravan", a theme\'s own ("the Ice Hall")',
+      placeFromSpeech('go to the bakery') === 'bakery' && placeFromSpeech('The Bakery.') === 'bakery' && placeFromSpeech('King Kenny') === 'kingHall'
+      && placeFromSpeech("Robin's Caravan") === 'jokerCaravan' && placeFromSpeech('take me to the ice hall', 'winter') === 'kingHall'
       && placeFromSpeech('back to the town') === 'town' && placeFromSpeech('go to the moon') === null);
     check('the Nimrod name works in every world ("the great hall" in winter is still the King\'s)', placeFromSpeech('go to the great hall', 'winter') === 'kingHall');
     const bus = createBus();
@@ -386,11 +386,11 @@ try {
     const t = mount({ bus });
     const g0 = grammar.at(-1);
     check('*** shown, the town listens for place names (the speech layer\'s answer seam) ***', g0 && g0.open === true && g0.source === 'town'
-      && g0.words.includes('go to the bakery') && g0.words.includes('king bram') && g0.words.includes('[unk]'), J(g0 && g0.words.slice(0, 8)));
+      && g0.words.includes('go to the bakery') && g0.words.includes('king kenny') && g0.words.includes('[unk]'), J(g0 && g0.words.slice(0, 8)));
     bus.publish(SPEECH_ANSWER_TOPIC, { text: 'go to the bakery' });
     check('"go to the bakery" opens the Bakery', t.probe().view === 'place' && t.probe().place === 'bakery');
-    bus.publish(SPEECH_ANSWER_TOPIC, { text: 'Queen Rosa' });
-    check('"Queen Rosa" goes to her home, from a place too', t.probe().place === 'queenParlour');
+    bus.publish(SPEECH_ANSWER_TOPIC, { text: 'Queen Rose' });
+    check('"Queen Rose" goes to her home, from a place too', t.probe().place === 'queenParlour');
     bus.publish(SPEECH_ANSWER_TOPIC, { text: 'back to the town' });
     check('"back to the town"', t.probe().view === 'map');
     bus.publish(SPEECH_ANSWER_TOPIC, { text: 'what a lovely day' });
@@ -495,7 +495,7 @@ try {
     check('after destroy, no timer is left', t.timers.pending() === 0, String(t.timers.pending()));
   }
 
-  section('*** "Talk to King Bram": the seam for the AI storyteller ***');
+  section('*** "Talk to King Kenny": the seam for the AI storyteller ***');
   {
     const bus = createBus();
     const heard = [];
@@ -505,10 +505,10 @@ try {
     check('nothing set up: no Talk button (a scan never stops on a button that does nothing)', !townTalkReady() && !t.stopEl('talk'));
     const got = [];
     const off = registerTownTalk((req) => { got.push(req); return true; });
-    check('*** a storyteller registers: the button appears, with nothing pressed ***', townTalkReady() && t.stopEl('talk')?.textContent === 'Talk to King Bram');
+    check('*** a storyteller registers: the button appears, with nothing pressed ***', townTalkReady() && t.stopEl('talk')?.textContent === 'Talk to King Kenny');
     t.click(t.stopEl('talk'));
     await flush();
-    check('pressed: the storyteller is handed who, where and which theme', got.length === 1 && got[0].character === 'king' && got[0].name === 'King Bram'
+    check('pressed: the storyteller is handed who, where and which theme', got.length === 1 && got[0].character === 'king' && got[0].name === 'King Kenny'
       && got[0].place === 'kingHall' && got[0].theme === 'nimrod' && got[0].placeLabel === placeInfo('kingHall', 'nimrod').label, J(got[0]));
     check('...and the same request is on the bus as "town/talk"', heard.length === 1 && heard[0].character === 'king');
     off();
@@ -518,7 +518,7 @@ try {
     a.click(a.host.querySelector('[data-place="jokerCaravan"]'));
     a.click(a.stopEl('talk'));
     await flush();
-    check('"Always": shown anyway, and pressed it says plainly it is not set up', /Talking to Pip the Joker is not set up on this screen yet/.test(a.say()), a.say());
+    check('"Always": shown anyway, and pressed it says plainly it is not set up', /Talking to Robin the Joker is not set up on this screen yet/.test(a.say()), a.say());
     a.inst.destroy();
     const nv = mount({ saved: { talk: 'never' } });
     const off2 = registerTownTalk(() => true);

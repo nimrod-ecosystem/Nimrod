@@ -322,7 +322,7 @@ export const CATALOG = [
     group: 'comfort',
     use: 'touch',
     // Not the eight names: "the Shop" is a money word on the library's pages (library_test), and a list reads long.
-    lead: 'The theme\'s town: the King\'s, the Queen\'s, Jack\'s and Pip\'s homes, and a place in town for each suit.',
+    lead: 'The theme\'s town: the King\'s, the Queen\'s, Jack\'s and Robin\'s homes, and a place in town for each suit.',
     needs: 'Nothing. The town is drawn for each theme.',
     why: 'Open a place to see it full size, with its character at home, or rearrange it: move things, add a piece '
       + 'from the theme, take one out. A rearranged place is kept for the person, in that theme, and the playing '
@@ -340,7 +340,7 @@ export const CATALOG = [
     lead: 'A short picture story, read aloud page by page, with you as the hero.',
     needs: 'Nothing. Five stories are built in. A voice on the screen reads them; without one, the words are shown large.',
     why: 'Each page is a place in the theme\'s town, with your own character (from the avatar maker) and the King, the '
-      + 'Queen, Jack and Pip. The pages turn by themselves, or any press turns one, so one switch is all it needs. '
+      + 'Queen, Jack and Robin. The pages turn by themselves, or any press turns one, so one switch is all it needs. '
       + 'Gentle, everyday stories: a recipe found, a clock mended, a letter written.',
   },
   // whoswho (2026-10-12, Design's game ideas): which one is the Queen? `answer`: it asks and waits for the answer.

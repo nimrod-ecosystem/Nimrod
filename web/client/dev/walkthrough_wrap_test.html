@@ -294,12 +294,12 @@ try {
     const snap = J(notes);
     const ai = fakeAI({ fail: new Set([2]) });
     const prog = [];
-    const r = await W.wrapUp(notes, { ai, model: 'fake-model', aiName: 'Pip', onProgress: (p) => prog.push(p) });
+    const r = await W.wrapUp(notes, { ai, model: 'fake-model', aiName: 'Robin', onProgress: (p) => prog.push(p) });
     const rv = r.review;
     check('three parts asked, and nothing else (no call to join summaries)', ai.calls.length === 3 && ai.calls.every((c) => isSort(c.msgs)));
     check('JSON was asked for, with an answer size the server allows', ai.calls[0].opts.json === true && ai.calls[0].opts.maxTokens === W.ANSWER_TOKENS && W.ANSWER_TOKENS <= 1024);
     check('progress after each part', J(prog) === J([{ done: 1, total: 3 }, { done: 2, total: 3 }, { done: 3, total: 3 }]));
-    check('the lists are the AI’s (by: ai), with no summary', !rv.summary && rv.by === 'ai' && rv.aiName === 'Pip' && rv.sorted === true && rv.clean === null);
+    check('the lists are the AI’s (by: ai), with no summary', !rv.summary && rv.by === 'ai' && rv.aiName === 'Robin' && rv.sorted === true && rv.clean === null);
     const ids = new Set(notes.map((n) => n.id));
     check('*** every line points back to real notes, by id ***', rv.items.every((i) => i.notes.length && i.notes.every((id) => ids.has(id))));
     check('note numbers map to the right notes', rv.items.find((i) => i.text === 'Line for note 3').notes[0] === notes[2].id);
@@ -321,7 +321,7 @@ try {
   {
     const notes = mkNotes(5);
     const snap = J(notes);
-    let r = W.startReview(notes, { level: 7, who: 'local', aiName: 'Pip' });
+    let r = W.startReview(notes, { level: 7, who: 'local', aiName: 'Robin' });
     check('a new wrap-up starts with the clean up: every note waiting, at the level picked, by the local AI', r.v === 2 && r.clean.level === 7 && r.who === 'local'
       && r.clean.notes.length === 5 && r.clean.notes.every((e) => e.state === 'pending') && W.stageOf(r) === 'approve' && !r.sorted);
     check('an unreadable level is the default; an unknown “who” is none', W.startReview(notes, { level: 'x' }).clean.level === 3 && W.startReview(notes, { who: 'elsewhere' }).who === '');
@@ -423,7 +423,7 @@ try {
     check('by hand: no clean up, every note one line in its own words, “not sorted yet”, pointing at itself',
       !hand.clean && hand.by === 'hand' && hand.items.length === 4 && hand.items.every((i, k) => i.list === W.UNSORTED && i.notes[0] === notes[k].id && i.text === W.noteAsLine(notes[k])));
     // A wrap-up made by f72f6e5 (v1, with the AI's own summary) left half way on somebody's record.
-    const v1 = { v: 1, id: 'w-old', at: notes[0].at, by: 'ai', model: 'm', aiName: 'Pip', noteIds: notes.map((n) => n.id),
+    const v1 = { v: 1, id: 'w-old', at: notes[0].at, by: 'ai', model: 'm', aiName: 'Robin', noteIds: notes.map((n) => n.id),
       summary: { text: 'An old summary.', was: 'An old summary.', state: 'open' }, items: hand.items.map((i) => ({ ...i })), cursor: 0, problems: [], savedAs: '', savedAt: 0 };
     const old = W.cleanReview(JSON.parse(J(v1)));
     check('*** a wrap-up from before the correction still reads: its summary first, then its lines; nothing to approve ***', old && old.v === 2 && !old.clean && old.sorted
@@ -455,9 +455,9 @@ try {
     r = W.approve(W.approve(r, 'use'), 'use', 'Changed words for two.');
     r = W.withSorted(r, (await W.wrapUp(W.approvedNotes(r, notes), { ai: fakeAI(), model: 'fake-model' })).review);
     while (W.currentStep(r)) r = W.decide(r, 'keep');
-    const md = W.reviewToMarkdown(r, notes, { at: notes[2].at + 1000, aiLabel: 'Pip' });
-    check('a title with the date; the clean up and who did it; who sorted', md.startsWith(`# Walkthrough, ${stamp(r.at).slice(0, 10)}`) && /Cleaned up at level 3 of 10: Tidy, by Pip \(fake-model\)/.test(md)
-      && /1 as cleaned, 1 changed by you, 1 in your own words/.test(md) && /Sorted by Pip/.test(md));
+    const md = W.reviewToMarkdown(r, notes, { at: notes[2].at + 1000, aiLabel: 'Robin' });
+    check('a title with the date; the clean up and who did it; who sorted', md.startsWith(`# Walkthrough, ${stamp(r.at).slice(0, 10)}`) && /Cleaned up at level 3 of 10: Tidy, by Robin \(fake-model\)/.test(md)
+      && /1 as cleaned, 1 changed by you, 1 in your own words/.test(md) && /Sorted by Robin/.test(md));
     check('the three lists, each line with its note number', /## For chat/.test(md) && /## For Code/.test(md) && /## For Design/.test(md) && /\(note \d/.test(md));
     check('*** the summary: every note as approved, each marked how ***', /## Summary: the notes cleaned up \(level 3 of 10: Tidy\)/.test(md)
       && md.includes(fakeClean(3, notes[0].text)) && /_cleaned up, approved as it was\._/.test(md)
@@ -465,10 +465,10 @@ try {
       && md.includes(notes[2].text) && /_your own words: it could not be cleaned up\._/.test(md));
     check('*** by default the notes word for word are NOT in the file (less goes to chat) ***', !/## The notes, word for word/.test(md) && !md.includes(notes[0].text) && !md.includes(notes[1].text));
     check('what went wrong is said', /## What went wrong while cleaning up or sorting/.test(md) && /Note 3 could not be cleaned up/.test(md));
-    const withOrig = W.reviewToMarkdown({ ...r, originals: true }, notes, { aiLabel: 'Pip' });
+    const withOrig = W.reviewToMarkdown({ ...r, originals: true }, notes, { aiLabel: 'Robin' });
     check('*** on a press, every note word for word is added at the end ***', /## The notes, word for word/.test(withOrig) && notes.every((n) => withOrig.split('## The notes, word for word')[1].includes(n.text)));
     const { notes: hn, r: hr } = reviewed;
-    const hmd = W.reviewToMarkdown(hr, hn, { aiLabel: 'Pip' });
+    const hmd = W.reviewToMarkdown(hr, hn, { aiLabel: 'Robin' });
     check('nothing cleaned up: the notes word for word, as before, with where they were made', /## The notes, word for word/.test(hmd) && hn.every((n, i) => hmd.includes(`### Note ${i + 1}: ${stamp(n.at)}`) && hmd.includes(n.text))
       && /person: Ruth Example/.test(hmd) && !/## Summary/.test(hmd));
     check('what was moved and changed is said', /moved from For/.test(hmd) && /changed in the review/.test(hmd));

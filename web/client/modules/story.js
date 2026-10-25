@@ -182,7 +182,7 @@ function ensureStyle(doc) {
 
 registerModule(
   { type: TYPE, title: TITLE, core: 'new',
-    description: 'A short picture story read aloud, page by page. You are the hero, the King, the Queen, Jack and Pip are '
+    description: 'A short picture story read aloud, page by page. You are the hero, the King, the Queen, Jack and Robin are '
       + 'the cast, and it all happens in the theme\'s town. Any press turns the page, and it can turn by itself.',
     dependsOn: 'none', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {

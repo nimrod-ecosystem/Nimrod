@@ -9,7 +9,7 @@
 // characters: 'king', 'queen', 'jack', 'joker'; at most three, so each can be seen) and one or two sentences. A place
 // is written as a token, `{bakery}` or `{kingHall}`, because the places are different in every world: the King's home
 // is the Great Hall in the Nimrod town and the Ice Hall in winter. `pageText` fills each token with that theme's name
-// for the place ("the Ice Hall"). The court characters are Design's four (King Bram, Queen Rosa, Jack Theo, Pip the
+// for the place ("the Ice Hall"). The court characters are Design's four (King Kenny, Queen Rose, Jack, Robin the
 // Joker), written by name; they are characters, not people.
 //
 // *** THE HERO IS "YOU". *** The person's own avatar stands in every picture, and the words say "you", so no story
@@ -23,7 +23,7 @@
 import { PLACES, placeInfo } from './town.js';
 
 export const STORY_ROLES = Object.freeze(['hero', 'king', 'queen', 'jack', 'joker']);
-export const COURT_NAMES = Object.freeze({ king: 'King Bram', queen: 'Queen Rosa', jack: 'Jack Theo', joker: 'Pip' });
+export const COURT_NAMES = Object.freeze({ king: 'King Kenny', queen: 'Queen Rose', jack: 'Jack', joker: 'Robin' });
 export const MAX_CAST = 3;
 export const MAX_PAGE_CHARS = 400;
 
@@ -34,12 +34,12 @@ export const STORIES = Object.freeze([
     id: 'recipe',
     title: 'The recipe in the library',
     pages: Object.freeze([
-      P('bakery', ['hero', 'queen'], 'Early one morning, the smell of warm bread leads you to {bakery}. Queen Rosa is there, looking puzzled.'),
+      P('bakery', ['hero', 'queen'], 'Early one morning, the smell of warm bread leads you to {bakery}. Queen Rose is there, looking puzzled.'),
       P('bakery', ['hero', 'queen'], '“I want to bake my grandmother’s honey loaf for the whole town,” she says, “but I can’t remember how it goes.”'),
       P('library', ['hero', 'queen'], 'The two of you walk over to {library}. The shelves are tall, and the room is quiet and warm.'),
       P('library', ['hero', 'queen'], 'You take down an old book with a cracked spine. Tucked inside is a card in careful handwriting: the honey loaf.'),
-      P('bakery', ['hero', 'queen'], 'Back at {bakery}, you measure the flour while Queen Rosa warms the honey. Soon the whole street smells of it.'),
-      P('kingHall', ['hero', 'queen', 'king'], 'That evening the loaf is shared in {kingHall}. King Bram has two slices and asks who found the recipe. Queen Rosa smiles at you.'),
+      P('bakery', ['hero', 'queen'], 'Back at {bakery}, you measure the flour while Queen Rose warms the honey. Soon the whole street smells of it.'),
+      P('kingHall', ['hero', 'queen', 'king'], 'That evening the loaf is shared in {kingHall}. King Kenny has two slices and asks who found the recipe. Queen Rose smiles at you.'),
     ]),
   }),
   Object.freeze({
@@ -47,54 +47,54 @@ export const STORIES = Object.freeze([
     title: 'The clock that stopped',
     pages: Object.freeze([
       P('park', ['hero', 'jack'], 'In {park}, people keep glancing up at the town clock. It has stopped at ten past three.'),
-      P('jackWorkshop', ['hero', 'jack'], 'Jack Theo opens the clock on his bench in {jackWorkshop}. “One small gear is missing,” he says. “It can’t have gone far.”'),
-      P('shop', ['hero', 'jack'], 'You ask at {shop}. Nobody has bought a gear this week, but somebody saw Pip go by carrying something shiny.'),
-      P('jokerCaravan', ['hero', 'jack', 'joker'], 'In {jokerCaravan}, Pip has made a wind chime from buttons, spoons and one small gear. It sounds lovely.'),
-      P('jokerCaravan', ['hero', 'joker'], 'Pip laughs and hands the gear over. “I’ll find something else that sings,” Pip says.'),
-      P('park', ['hero', 'jack', 'joker'], 'By teatime the clock is going again. Pip’s new chime hangs by the bench, and people stop to listen.'),
+      P('jackWorkshop', ['hero', 'jack'], 'Jack opens the clock on his bench in {jackWorkshop}. “One small gear is missing,” he says. “It can’t have gone far.”'),
+      P('shop', ['hero', 'jack'], 'You ask at {shop}. Nobody has bought a gear this week, but somebody saw Robin go by carrying something shiny.'),
+      P('jokerCaravan', ['hero', 'jack', 'joker'], 'In {jokerCaravan}, Robin has made a wind chime from buttons, spoons and one small gear. It sounds lovely.'),
+      P('jokerCaravan', ['hero', 'joker'], 'Robin laughs and hands the gear over. “I’ll find something else that sings,” Robin says.'),
+      P('park', ['hero', 'jack', 'joker'], 'By teatime the clock is going again. Robin’s new chime hangs by the bench, and people stop to listen.'),
     ]),
   }),
   Object.freeze({
     id: 'letter',
     title: 'A letter to an old friend',
     pages: Object.freeze([
-      P('kingHall', ['hero', 'king'], 'King Bram has been writing a letter all morning in {kingHall}. He asks if you would help him finish it.'),
+      P('kingHall', ['hero', 'king'], 'King Kenny has been writing a letter all morning in {kingHall}. He asks if you would help him finish it.'),
       P('kingHall', ['hero', 'king'], '“It’s for a friend I haven’t seen in years,” he says. “I don’t know how to say that I miss him.”'),
-      P('shop', ['hero', 'king'], 'You walk together to {shop} for a stamp. King Bram chooses one with a little sailing boat on it.'),
+      P('shop', ['hero', 'king'], 'You walk together to {shop} for a stamp. King Kenny chooses one with a little sailing boat on it.'),
       P('park', ['hero', 'king'], 'On the way back you sit for a while in {park}. He tells you how he and his friend used to race paper boats.'),
-      P('queenParlour', ['hero', 'king', 'queen'], 'In {queenParlour}, Queen Rosa reads the letter and adds a line of her own at the bottom.'),
-      P('kingHall', ['hero', 'king'], 'The letter goes in the post that afternoon. King Bram says it was much easier to write with company.'),
+      P('queenParlour', ['hero', 'king', 'queen'], 'In {queenParlour}, Queen Rose reads the letter and adds a line of her own at the bottom.'),
+      P('kingHall', ['hero', 'king'], 'The letter goes in the post that afternoon. King Kenny says it was much easier to write with company.'),
     ]),
   }),
   Object.freeze({
     id: 'quiet',
-    title: 'Pip’s quiet day',
+    title: 'Robin’s quiet day',
     pages: Object.freeze([
-      P('jokerCaravan', ['hero', 'joker'], 'Pip is usually the first to make everybody laugh. Today Pip is sitting very still in {jokerCaravan}.'),
-      P('jokerCaravan', ['hero', 'joker'], '“I don’t feel like being funny today,” Pip says. You say that is perfectly all right.'),
+      P('jokerCaravan', ['hero', 'joker'], 'Robin is usually the first to make everybody laugh. Today Robin is sitting very still in {jokerCaravan}.'),
+      P('jokerCaravan', ['hero', 'joker'], '“I don’t feel like being funny today,” Robin says. You say that is perfectly all right.'),
       P('park', ['hero', 'joker'], 'You walk slowly to {park} and sit on the bench. Neither of you says much, and that is all right too.'),
-      P('park', ['hero', 'joker', 'queen'], 'Queen Rosa comes by with a flask of tea and sits down with you. She doesn’t ask any questions.'),
-      P('bakery', ['hero', 'joker'], 'On the way home you stop at {bakery}. Pip chooses the biggest bun, and very nearly smiles.'),
-      P('jokerCaravan', ['hero', 'joker'], '“Thank you for sitting with me,” Pip says at the door. “Tomorrow I might be funny again.”'),
+      P('park', ['hero', 'joker', 'queen'], 'Queen Rose comes by with a flask of tea and sits down with you. She doesn’t ask any questions.'),
+      P('bakery', ['hero', 'joker'], 'On the way home you stop at {bakery}. Robin chooses the biggest bun, and very nearly smiles.'),
+      P('jokerCaravan', ['hero', 'joker'], '“Thank you for sitting with me,” Robin says at the door. “Tomorrow I might be funny again.”'),
     ]),
   }),
   Object.freeze({
     id: 'bridge',
     title: 'A bridge over the stream',
     pages: Object.freeze([
-      P('library', ['hero', 'jack'], 'Rain taps on the windows, so you spend the afternoon in {library}. Jack Theo is already there, reading about bridges.'),
+      P('library', ['hero', 'jack'], 'Rain taps on the windows, so you spend the afternoon in {library}. Jack is already there, reading about bridges.'),
       P('library', ['hero', 'jack'], 'He shows you a drawing of a little bridge he would like to build over the stream in {park}.'),
       P('jackWorkshop', ['hero', 'jack'], 'In {jackWorkshop}, you help him make a model of it from offcuts and string. It holds a whole teacup.'),
-      P('kingHall', ['hero', 'jack', 'king'], 'King Bram studies the model for a long time, then asks whether it could carry the bakery’s cart. Jack Theo says it could.'),
+      P('kingHall', ['hero', 'jack', 'king'], 'King Kenny studies the model for a long time, then asks whether it could carry the bakery’s cart. Jack says it could.'),
       P('park', ['hero', 'jack'], 'When the rain stops, you walk down to {park} together to look at the stream and choose the spot.'),
-      P('park', ['hero', 'jack', 'king'], 'Jack Theo marks the place with a stick. The building starts in the spring, he says, and you are invited.'),
+      P('park', ['hero', 'jack', 'king'], 'Jack marks the place with a stick. The building starts in the spring, he says, and you are invited.'),
     ]),
   }),
 ]);
 export const STORY_IDS = Object.freeze(STORIES.map((s) => s.id));
 export const storyById = (id) => STORIES.find((s) => s.id === id) || null;
 
-/** A place's name in a theme, for the middle of a sentence: "the Ice Hall", "Pip's Caravan". */
+/** A place's name in a theme, for the middle of a sentence: "the Ice Hall", "Robin's Caravan". */
 export function placeName(id, deck = 'nimrod') {
   if (!PLACES[id]) return '';
   const label = placeInfo(id, deck).label || '';

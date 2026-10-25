@@ -291,7 +291,7 @@ export function inventory(theme = 'nimrod') {
   const homes = Object.entries(HOMES[theme] || {}).map(([, h]) => h.label);
   const outfits = Object.values(OUTFITS).filter((o) => o.theme === theme).map((o) => o.label);
   const pieces = Object.values(KIT).filter((p) => p.theme === theme).map((p) => p.label);
-  return { theme, label: (TOWN_DRESS[theme] || {}).label, liveScene: true, park: true, cards: !!cardThemes[theme], places: Object.keys(PLACES).length, homes, outfits, pieces, teachers: ['King Bram', 'Queen Rosa', 'Jack Theo', 'Pip'], palette: (TOWN_DRESS[theme] || {}).palette || [] };
+  return { theme, label: (TOWN_DRESS[theme] || {}).label, liveScene: true, park: true, cards: !!cardThemes[theme], places: Object.keys(PLACES).length, homes, outfits, pieces, teachers: ['King Kenny', 'Queen Rose', 'Jack', 'Robin'], palette: (TOWN_DRESS[theme] || {}).palette || [] };
 }
 
 export const LESSON_KIT = { LESSON_THEMES, TYPE_VOICE, MOTION, lessonTheme, typeStyles, typeCss, chartSvg, layoutSvg, teacherSvg, inventory, contrast };

@@ -62,7 +62,7 @@ export const VOICE = Object.freeze({ 'put it on': 'select', 'this one': 'select'
 
 export const PEOPLE = Object.freeze(['king', 'queen', 'jack', 'joker']);
 /** How each is called in a prompt: "Put Jack in something warm" (Design's own wording), "Put the King in ...". */
-export const WHO_NAME = Object.freeze({ king: 'the King', queen: 'the Queen', jack: 'Jack', joker: 'Pip' });
+export const WHO_NAME = Object.freeze({ king: 'the King', queen: 'the Queen', jack: 'Jack', joker: 'Robin' });
 
 /**
  * WHAT A PROMPT ASKS FOR, and which outfits fit it. `ask` finishes "Put Jack in ..."; `is` finishes "The parka is ...".
@@ -339,7 +339,7 @@ function ensureStyle(doc) {
 registerModule(
   { type: GAME, title: TITLE, core: 'new',
     description: 'Put Jack in something warm: choose from the wardrobe. Anything that fits is right, and nothing is ever '
-      + 'marked wrong. Or just dress the King, the Queen, Jack and Pip in anything. Touch it, say it, or use one switch.',
+      + 'marked wrong. Or just dress the King, the Queen, Jack and Robin in anything. Touch it, say it, or use one switch.',
     dependsOn: 'none', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;

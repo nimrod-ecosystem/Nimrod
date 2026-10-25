@@ -449,7 +449,7 @@ try {
     // What an earlier visit left under the shared id: Nimrod's notes on his panel, a name, and his walk.
     const o1 = note('n-browser-1', 'Made on the landing before anybody saved it.', Date.now() - 50000);
     const o2 = note('n-browser-2', 'And another one.', Date.now() - 40000);
-    { const h = backend.makeState('home-ex-guide', {}, PREVIEW_BASE); await h.load(); h.set({ ai: { notes: [o1, o2], name: 'Pip' }, walk: ['hello'] }); await h.flush(); h.destroy(); }
+    { const h = backend.makeState('home-ex-guide', {}, PREVIEW_BASE); await h.load(); h.set({ ai: { notes: [o1, o2], name: 'Robin' }, walk: ['hello'] }); await h.flush(); h.destroy(); }
     const src = browserNotesSource({ rows: localScopeRows, makeState: backend.makeState });
     const found = await src.find();
     check('browserNotesSource finds what the shared preview kept, and only there', found.length === 1 && found[0].key === 'home-ex-guide'
@@ -466,7 +466,7 @@ try {
     check('*** on the first load with a person known, the browser’s notes are on the person’s record ***', !!g() && movedIn, J({ guide: !!g(), n: (await ownerNotes()).map((x) => x.id) }));
     const sharedRow = (await localScopeRows(PREVIEW_BASE)).find((r) => r.key === 'home-ex-guide');
     check('*** ...and gone from this browser; the walk stays, and the name too (their record has its own) ***',
-      !sharedRow?.data?.ai?.notes && J(sharedRow?.data?.walk) === J(['hello']) && sharedRow?.data?.ai?.name === 'Pip' && (await readPerson(me, AI_STATE_KEY)).name === 'Robin', J(sharedRow));
+      !sharedRow?.data?.ai?.notes && J(sharedRow?.data?.walk) === J(['hello']) && sharedRow?.data?.ai?.name === 'Robin' && (await readPerson(me, AI_STATE_KEY)).name === 'Robin', J(sharedRow));
     check('*** one quiet line says so ***', await until(() => /Moved 2 notes from this browser to your record\./.test(g()?.textContent || '')), g()?.textContent?.slice(0, 200));
     // A note made now: the person's record, not the preview's panel row.
     g().querySelector('[data-ng-do="notes"]').click();

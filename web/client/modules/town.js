@@ -2,12 +2,12 @@
 //
 // Mike, 2026-10-12 (public DECISIONS.md, newest section): build all of Design's ideas, starting with the Town and Story
 // time. Claude Design's characters handoff (town.js, shipped as it is) gives every theme eight places: the four court
-// characters' homes (the King's hall, the Queen's parlour, Jack's workshop, Pip's caravan, each a different place in
+// characters' homes (the King's hall, the Queen's parlour, Jack's workshop, Robin's caravan, each a different place in
 // every world) and a place in town for each suit (the Bakery, the Shop, the Park, the Library). This panel shows them.
 //
 //   THE TOWN       the eight places as pictures, in the theme on screen (or a theme chosen in the settings).
 //   A PLACE        opened full size, with its character standing at home, its one-line description, and the cards
-//                  that are drawn from it. "Talk to King Bram" (see below), "Rearrange", "Put it back".
+//                  that are drawn from it. "Talk to King Kenny" (see below), "Rearrange", "Put it back".
 //   REARRANGE      the smallest room editor that does the job: pick a thing in the room (Next thing), move it, make it
 //                  bigger or smaller, flip it, take it out, add a piece from the world's kit, undo. Every change is kept
 //                  at once (town_edits.js: the person's own row, per theme and per place, as a room recipe), so leaving
@@ -25,7 +25,7 @@
 //     and the next press only wakes it (Sort the bricks' rule: a press is never spent on a choice nobody was watching).
 //   * TWO SWITCHES: next / previous move the light, select does it. Back goes back a level.
 //   * TOUCH: any place or button, directly.
-//   * VOICE: "go to the bakery", "King Bram", "the Ice Hall", "back to the town" - said without the wake phrase while
+//   * VOICE: "go to the bakery", "King Kenny", "the Ice Hall", "back to the town" - said without the wake phrase while
 //     the town is listening (`listenForPlaces`, for `townListenMs` after it is shown or pressed), through the speech
 //     layer's answer seam (input_speech.js `speech/grammar` / `speech/answer`, the voice games' own). With the wake
 //     phrase, "next place", "go in" and "go back" are the module's own phrases (manifest `voice`).
@@ -69,7 +69,7 @@ export const VOICE = Object.freeze({
 
 // Who lives where, for the resident standing at home and "Talk to".
 export const RESIDENT = Object.freeze({ kingHall: 'king', queenParlour: 'queen', jackWorkshop: 'jack', jokerCaravan: 'joker' });
-export const RESIDENT_NAME = Object.freeze({ king: 'King Bram', queen: 'Queen Rosa', jack: 'Jack Theo', joker: 'Pip the Joker' });
+export const RESIDENT_NAME = Object.freeze({ king: 'King Kenny', queen: 'Queen Rose', jack: 'Jack', joker: 'Robin the Joker' });
 // The card drawn from each place (klondike's { s, r }): the court card for a home, the Ace for a suit's place.
 const PLACE_CARD = { kingHall: { s: 'H', r: 13 }, queenParlour: { s: 'H', r: 12 }, jackWorkshop: { s: 'H', r: 11 },
   bakery: { s: 'H', r: 1 }, shop: { s: 'D', r: 1 }, park: { s: 'C', r: 1 }, library: { s: 'S', r: 1 } };
@@ -155,7 +155,7 @@ export function placeNames(deck = 'nimrod') {
     const who = RESIDENT[id];
     if (who) {
       add(RESIDENT_NAME[who], id);
-      add({ king: 'King Bram', queen: 'Queen Rosa', jack: 'Jack Theo', joker: 'Pip' }[who], id);
+      add({ king: 'King Kenny', queen: 'Queen Rose', jack: 'Jack', joker: 'Robin' }[who], id);
       add(`${{ king: 'the king', queen: 'the queen', jack: 'jack', joker: 'pip' }[who]}s home`, id);
     }
   }

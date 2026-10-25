@@ -1,4 +1,4 @@
-// town_talk.js — THE SEAM BETWEEN THE TOWN AND AN AI STORYTELLER: "Talk to King Bram".
+// town_talk.js — THE SEAM BETWEEN THE TOWN AND AN AI STORYTELLER: "Talk to King Kenny".
 //
 // Mike, 2026-10-12 (public DECISIONS.md, newest section): build Design's ideas, the Town and Story time first, with
 // conversations with the characters and free-form stories on the desktop model. The Town (modules/town.js) puts a
@@ -13,8 +13,8 @@
 //     anything but this file's topic name.
 //
 // THE REQUEST, plain data (nothing a person typed):
-//   { character: 'king' | 'queen' | 'jack' | 'joker', name: 'King Bram', place: 'kingHall',
-//     placeLabel: 'The Great Hall', blurb: "King Bram's home. ...", theme: 'nimrod' (the Design deck id),
+//   { character: 'king' | 'queen' | 'jack' | 'joker', name: 'King Kenny', place: 'kingHall',
+//     placeLabel: 'The Great Hall', blurb: "King Kenny's home. ...", theme: 'nimrod' (the Design deck id),
 //     instanceId, personId }
 //
 // WHETHER THE BUTTON SHOWS is the Town's "Talk to the characters" setting: by default only once something has

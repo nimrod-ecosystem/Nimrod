@@ -109,7 +109,7 @@ section('*** nothing is asked of the AI until somebody presses ***');
 let H;
 {
   const ai = stubAI([
-    turn('You stand in the Garden Hall. A golden key has gone missing!', ['Look under the throne', 'Ask King Bram', 'Check the plants'], 'A key went missing.'),
+    turn('You stand in the Garden Hall. A golden key has gone missing!', ['Look under the throne', 'Ask King Kenny', 'Check the plants'], 'A key went missing.'),
     turn('Under the throne you find a trail of soil.', ['Follow the soil', 'Call for help'], 'A key went missing; soil under the throne.'),
     turn('You peer into the well and see the key shining.', ['Climb down', 'Fetch a rope'], 'The key is in the well.'),
     { ok: false, timedOut: true, reason: 'The AI model took longer than 1 minute and was stopped.' },
@@ -142,14 +142,14 @@ let H;
   await tick();
   const g = H.grammar[H.grammar.length - 1];
   check('*** read: the window opens, for any words (dictation) and with the choices listed ***',
-    g.open && g.dictation === true && g.instanceId === 'advtest1' && g.words.includes('Ask King Bram') && g.words.includes('two'), JSON.stringify(g));
+    g.open && g.dictation === true && g.instanceId === 'advtest1' && g.words.includes('Ask King Kenny') && g.words.includes('two'), JSON.stringify(g));
   check('*** one switch: the light lands on the first choice by itself and says it ***',
     H.p().lit && H.p().lit.startsWith('1.') && H.said[H.said.length - 1].text === 'Look under the throne?', JSON.stringify(H.p().lit));
 
   section('*** a spoken choice, then free speech ***');
   H.bus.publish(SPEECH_ANSWER_TOPIC, { text: 'Two', dictation: true });
   await until(() => !H.p().thinking && ai.calls.length === 2);
-  check('*** "two" chooses the second choice ***', lastUser(ai) === 'I choose: Ask King Bram', lastUser(ai));
+  check('*** "two" chooses the second choice ***', lastUser(ai) === 'I choose: Ask King Kenny', lastUser(ai));
   await until(() => !H.p().thinking);
   H.delivered(); await tick();
   H.bus.publish(SPEECH_ANSWER_TOPIC, { text: 'I look down the old well', dictation: true });
@@ -201,7 +201,7 @@ section('the Nimrod folder: says so when there is none');
   const H2 = host({ ai: stubAI([turn('Hello there!', ['Hi', 'Bye'])]), id: 'advtest2', extra: { folderStore: { get: async () => null, put: async () => {}, del: async () => {} } } });
   H2.inst.impl.__press('talk', 'queen');
   await until(() => H2.p().view === 'story' && !H2.p().thinking);
-  check('*** talking with Queen Rosa: her figure is drawn, the conversation is hers ***', H2.p().kind === 'talk' && H2.p().character === 'queen'
+  check('*** talking with Queen Rose: her figure is drawn, the conversation is hers ***', H2.p().kind === 'talk' && H2.p().character === 'queen'
     && H2.mount.querySelector('.adv-face svg') && H2.p().choices.join('|') === 'Hi|Bye');
   H2.inst.impl.__press('folder');
   await until(() => /Nimrod folder/.test(H2.p().note));
@@ -242,16 +242,16 @@ section('*** no storyteller: it says how to set one up, instead of failing ***')
   const H6 = host({ ai: tAI, id: 'advtest6' });
   H6.bus.publish(ADVENTURE_TALK_TOPIC, { who: 'jack' });
   await until(() => !H6.p().thinking && H6.p().view === 'story');
-  check('*** the Town\'s "Talk to Jack Theo" opens a conversation with him here ***', H6.p().kind === 'talk' && H6.p().character === 'jack'
-    && tAI.calls[0].messages[0].content.includes('Jack Theo'));
+  check('*** the Town\'s "Talk to Jack" opens a conversation with him here ***', H6.p().kind === 'talk' && H6.p().character === 'jack'
+    && tAI.calls[0].messages[0].content.includes('Jack'));
   H6.bus.publish(ADVENTURE_TALK_TOPIC, { who: 'nobody' });
   await tick();
   check('...an unknown name opens nothing', tAI.calls.length === 1);
   H6.inst.impl.__press('home');
   check('*** while an Adventure panel is mounted, the Town\'s "Talk to" is ready ***', townTalkReady());
-  const took = await talkTo({ character: 'queen', name: 'Queen Rosa' });
+  const took = await talkTo({ character: 'queen', name: 'Queen Rose' });
   await until(() => !H6.p().thinking && H6.p().character === 'queen');
-  check('*** the Town\'s button, pressed: the conversation with Queen Rosa opens here ***', took === true && H6.p().kind === 'talk' && H6.p().character === 'queen');
+  check('*** the Town\'s button, pressed: the conversation with Queen Rose opens here ***', took === true && H6.p().kind === 'talk' && H6.p().character === 'queen');
   H6.inst.destroy(); H6.mount.remove();
   check('...and when the panel goes, the Town is told nothing answers any more', townTalkReady() === false);
 }

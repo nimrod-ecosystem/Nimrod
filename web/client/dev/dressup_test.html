@@ -139,7 +139,7 @@ try {
     r.clock.advance(10 * 60000);
     check('the demo rests after "The demo plays for" (10 minutes)', r.probe().demoRested && r.probe().timers === 0, JSON.stringify(r.probe().timers));
     r.publish(`${GAME}/select`);
-    check('any press starts a real game: the prompt is said', r.probe().started && /^Put (the King|the Queen|Jack|Pip) in something/.test(r.said[0]), r.said[0]);
+    check('any press starts a real game: the prompt is said', r.probe().started && /^Put (the King|the Queen|Jack|Robin) in something/.test(r.said[0]), r.said[0]);
     r.inst.destroy();
     const still = R({}, { fresh: true, reducedMotion: true });
     check('reduced motion: a still Start, no demo', !still.probe().demo && !!still.host.querySelector('[data-start]'));
@@ -160,7 +160,7 @@ try {
     });
     check('three outfits, each drawn ON the person (Design\'s drawing), each named', items(r).length === 3 && drawn
       && items(r).every((t) => t.textContent.toLowerCase().includes(outfitName(t.dataset.outfit))));
-    check('the person themselves, in what they wear, and named', !!r.host.querySelector('[data-who] svg[data-figure]') && /Jack Theo/.test(r.host.querySelector('[data-who]').textContent));
+    check('the person themselves, in what they wear, and named', !!r.host.querySelector('[data-who] svg[data-figure]') && /Jack/.test(r.host.querySelector('[data-who]').textContent));
     check('no colour is written into the markup outside Design\'s drawings', !COLOUR.test(outside(r.host)));
     const id = fitting(r);
     tapOutfit(r, id);
@@ -169,7 +169,7 @@ try {
     check('the score is published', r.scores.some((p) => p && p.value === 1), JSON.stringify(r.scores.at(-1)));
     r.clock.advance(5000);
     check('*** 5 s later, the next person and a new prompt, by themselves (then the lit outfit is named) ***', r.g().phase === 'dress'
-      && r.g().who === 'joker' && r.said.at(-2)?.startsWith('Put Pip in') && r.g().quality !== g.quality
+      && r.g().who === 'joker' && r.said.at(-2)?.startsWith('Put Robin in') && r.g().quality !== g.quality
       && r.last() === `${outfitName(r.g().rack[0])[0].toUpperCase()}${outfitName(r.g().rack[0]).slice(1)}?`, r.said.slice(-2).join(' | '));
     check('the prompt is never cut off by the lit outfit\'s name', !r.cancelled.some((c) => r.said[Number(String(c).slice(1)) - 1]?.startsWith('Put ')));
     r.publish(`${GAME}/select`);
@@ -262,13 +262,13 @@ try {
     tapCmd(r, 'more');
     check('Other clothes: a different rail', r.g().rack.some((x) => !rail.includes(x)) && !r.g().rack.includes(r.g().wearing));
     tapCmd(r, 'person');
-    check('Next person: Pip, in his own clothes', r.g().who === 'joker' && r.g().wearing === courtOutfit('joker', 'nimrod')
-      && r.said.includes('Dress Pip in anything you like.'));
+    check('Next person: Robin, in his own clothes', r.g().who === 'joker' && r.g().wearing === courtOutfit('joker', 'nimrod')
+      && r.said.includes('Dress Robin in anything you like.'));
     r.inst.destroy();
     const one = R({ dressWho: 'queen' });
     tapOutfit(one, fitting(one));
     one.clock.advance(5000);
-    check('"Who gets dressed: Queen Rosa": the Queen every time', one.g().who === 'queen');
+    check('"Who gets dressed: Queen Rose": the Queen every time', one.g().who === 'queen');
     one.inst.destroy();
   }
 

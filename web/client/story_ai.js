@@ -12,7 +12,7 @@
 // adds a backend.
 //
 // TWO KINDS OF STORY, ONE TURN SHAPE:
-//   'talk'       a CONVERSATION with one of the town's four characters (King Bram, Queen Rosa, Jack Theo, Pip the
+//   'talk'       a CONVERSATION with one of the town's four characters (King Kenny, Queen Rose, Jack, Robin the
 //                Joker). Each has a home in the current theme's town (town.js placeInfo) and a short persona.
 //   'adventure'  a FREE-FORM ADVENTURE, D&D-like: the model narrates in the second person ("you"), the person's
 //                avatar is the hero, the current theme's town is the setting, and every turn offers 2 to 4

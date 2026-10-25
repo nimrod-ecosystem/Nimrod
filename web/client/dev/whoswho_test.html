@@ -83,8 +83,8 @@ const COLOUR = /(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i;
 try {
   section('the characters, the levels and the words, pure');
   {
-    check('four characters, one per role, with Design\'s names: Bram, Rosa, Theo, Pip',
-      ROLES.map(firstName).join() === 'Bram,Rosa,Theo,Pip');
+    check('four characters, one per role, with Design\'s names: Kenny, Rose, Jack, Robin',
+      ROLES.map(firstName).join() === 'Kenny,Rose,Jack,Robin');
     check('each one\'s home is the town place that is theirs', HOME_OF.king === 'kingHall' && HOME_OF.queen === 'queenParlour'
       && HOME_OF.jack === 'jackWorkshop' && HOME_OF.joker === 'jokerCaravan');
     check('looks in words, read off Design\'s looks: gray beard, auburn bun, black curls, ginger',
@@ -104,13 +104,13 @@ try {
     check('with two: "the one on the right" is the second; "the middle one" and "three" are nobody',
       positionFrom('the one on the right', 2) === 1 && positionFrom('the middle one', 2) === null && positionFrom('three', 2) === null);
     check('nothing about a place: null (never a guess)', positionFrom('banana', 3) === null && positionFrom('the one', 3) === null);
-    check('names and roles: "Rosa", "the queen", "King Bram" (a name), "Jack" (a role), "Theo"',
-      nameFrom('Rosa')?.role === 'queen' && nameFrom('Rosa').by === 'name' && nameFrom('the queen')?.by === 'role'
-        && nameFrom('King Bram')?.by === 'name' && nameFrom('jack')?.role === 'jack' && nameFrom('jack').by === 'role'
-        && nameFrom('theo')?.role === 'jack' && nameFrom('pip')?.role === 'joker');
+    check('names and roles: "Rose", "the queen", "King Kenny" (a name), "Jack" (a role), "Jack"',
+      nameFrom('Rose')?.role === 'queen' && nameFrom('Rose').by === 'name' && nameFrom('the queen')?.by === 'role'
+        && nameFrom('King Kenny')?.by === 'name' && nameFrom('jack')?.role === 'jack'   // (Jack's name is his role, 2026-10-25: either)
+        && nameFrom('robin')?.role === 'joker' && nameFrom('robin').by === 'name' && nameFrom('the joker')?.by === 'role');
     check('two people named, or nobody: null', nameFrom('the king and the queen') === null && nameFrom('banana') === null);
-    check('*** a home asked by its name never says who lives there: "Pip\'s Caravan" is asked as "the Caravan" ***',
-      placeWords('joker', 'nimrod', { inQuestion: true }) === 'the Caravan' && placeWords('joker', 'nimrod') === "Pip's Caravan"
+    check('*** a home asked by its name never says who lives there: "Robin\'s Caravan" is asked as "the Caravan" ***',
+      placeWords('joker', 'nimrod', { inQuestion: true }) === 'the Caravan' && placeWords('joker', 'nimrod') === "Robin's Caravan"
         && placeWords('queen', 'halloween', { inQuestion: true }) === 'the Potion Parlour');
     const leaks = [];
     for (const deck of [...OUTFIT_THEMES, 'cyberpunk']) for (const r of ROLES) {
@@ -118,7 +118,7 @@ try {
       if (ROLES.some((x) => q.includes(firstName(x).toLowerCase()) || new RegExp(`\\b${x}\\b`).test(q))) leaks.push(`${deck}/${r}: ${q}`);
     }
     check('...in every theme, no home question names a character or a role', leaks.length === 0, leaks.join(' | '));
-    check('*** with the pieces off, the Halloween Queen and Pip (both witches, hats on) are too alike to ask between ***',
+    check('*** with the pieces off, the Halloween Queen and Robin (both witches, hats on) are too alike to ask between ***',
       lookAlike('queen', 'joker', 'halloween') && !lookAlike('queen', 'king', 'halloween') && !lookAlike('jack', 'joker', 'nimrod'));
     let bad = 0, fewer = 0;
     for (const deck of [...OUTFIT_THEMES, 'cyberpunk', 'ocean']) for (const role of ROLES) for (let i = 0; i < 25; i++) {
@@ -171,8 +171,8 @@ try {
 
   section('*** the levels: what is asked, and how they are drawn ***');
   {
-    const want = { 1: /^Which one is the (King|Queen|Jack|Joker)\?$/, 2: /^Which one is (Bram|Rosa|Theo|Pip)\?$/, 3: /^Who lives in the [A-Z]/,
-      4: /^Which one is (Bram|Rosa|Theo|Pip)\?$/, 5: /^Who lives in the [A-Z]/ };
+    const want = { 1: /^Which one is the (King|Queen|Jack|Joker)\?$/, 2: /^Which one is (Kenny|Rose|Jack|Robin)\?$/, 3: /^Who lives in the [A-Z]/,
+      4: /^Which one is (Kenny|Rose|Jack|Robin)\?$/, 5: /^Who lives in the [A-Z]/ };
     for (const L of [1, 2, 3, 4, 5]) {
       const r = R(at(L));
       const it = r.item();
@@ -304,7 +304,7 @@ try {
     const n = R(at(2));
     const ni = n.item();
     n.inst.impl.hear({ text: firstName(ni.role), confidence: 0.95 });
-    check('"Which one is Rosa?" - "Rosa": not judged either', n.phase() === 'asking' && n.probe().misses === 0, n.last());
+    check('"Which one is Rose?" - "Rose": not judged either', n.phase() === 'asking' && n.probe().misses === 0, n.last());
     n.inst.impl.hear({ text: `it's the ${ni.role}`, confidence: 0.95 });
     check('*** ...her ROLE is an answer: right ***', n.phase() === 'celebrate', n.phase());
     n.inst.destroy();
@@ -318,7 +318,7 @@ try {
     h.inst.destroy();
     const g = R(at(1));
     const words = (g.lastGrammar()?.words || []).map((w) => w.toLowerCase());
-    check('the listening carries the names, the roles and the places', ['rosa', 'queen', 'the one on the left', 'the one in the middle', 'pip'].every((w) => words.includes(w)));
+    check('the listening carries the names, the roles and the places', ['rose', 'queen', 'the one on the left', 'the one in the middle', 'robin'].every((w) => words.includes(w)));
     g.inst.destroy();
   }
 

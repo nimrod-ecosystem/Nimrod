@@ -4,7 +4,7 @@
 // ideas. Claude Design's note (characters handoff README, "Ideas for games and story time"): "Who's who: 'Which one is
 // the Queen?' Pick from three characters. It's answerable with yes/no switches."
 //
-// THE CHARACTERS are Design's four (character_kit.js DEFAULT_CHARACTERS: King Bram, Queen Rosa, Jack Theo and Pip the
+// THE CHARACTERS are Design's four (character_kit.js DEFAULT_CHARACTERS: King Kenny, Queen Rose, Jack and Robin the
 // Joker), dressed for the theme exactly as the cards and the town dress them (town_scene.js `courtParts`: the theme's
 // outfits from COURT_PICK, the royal robe in the deck's colours elsewhere). Nothing is redrawn here.
 //
@@ -16,7 +16,7 @@
 //
 // *** THE WAYS TO ANSWER. ***
 //   * TOUCH or click a character.
-//   * SAY IT: the character's name or role ("Rosa", "the Queen"), or where they stand ("the one on the left", "the
+//   * SAY IT: the character's name or role ("Rose", "the Queen"), or where they stand ("the one on the left", "the
 //     middle one", "number three"). Saying back the very word the question used ("Which one is the Queen?" - "the
 //     Queen") points at nobody, so it is never judged: it asks which one, by place or by name (`whichOneLine`).
 //   * ONE SWITCH: the light moves over the characters by itself (`lightMoves: 'auto'`, every `scanMs`, never faster
@@ -33,14 +33,14 @@
 // by where they live (town.js `placeInfo`, the theme's own name for each home), and at the top with the signature pieces
 // off, so the person is known by name and by look alone.
 //   1  "Which one is the Queen?"            signature pieces on
-//   2  "Which one is Rosa?"                 pieces on (knowing Rosa is the Queen finds her)
+//   2  "Which one is Rose?"                 pieces on (knowing Rose is the Queen finds her)
 //   3  "Who lives in the Potion Parlour?"   pieces on (knowing whose home it is)
-//   4  "Which one is Rosa?"                 pieces OFF: by look (auburn hair in a bun)
+//   4  "Which one is Rose?"                 pieces OFF: by look (auburn hair in a bun)
 //   5  "Who lives in the Potion Parlour?"   pieces OFF
-// Each answer says who it was and why ("Rosa is the Queen, with auburn hair in a bun, and lives in the Potion
+// Each answer says who it was and why ("Rose is the Queen, with auburn hair in a bun, and lives in the Potion
 // Parlour."), so the later levels are learned by playing the earlier ones.
 // *** NOBODY IS ASKED TO TELL APART TWO PEOPLE WHO LOOK THE SAME. *** With the pieces off, two characters can share a
-// theme's outfit and a hat that hides the hair (the Halloween Queen and Pip are both witches); `lookAlike` keeps such a
+// theme's outfit and a hat that hides the hair (the Halloween Queen and Robin are both witches); `lookAlike` keeps such a
 // pair out of the same question.
 //
 // *** NOTHING WAITS ON ANYBODY THAT CANNOT GIVE IT. *** It waits for Start, with the computer playing meanwhile (the demo
@@ -72,7 +72,7 @@ export const TITLE = "Who's who";
 
 export const ROLES = Object.freeze(['king', 'queen', 'jack', 'joker']);
 export const ROLE_WORD = Object.freeze({ king: 'King', queen: 'Queen', jack: 'Jack', joker: 'Joker' });
-/** "King Bram" -> "Bram", "Pip the Joker" -> "Pip": the person's own name, without the role. */
+/** "King Kenny" -> "Kenny", "Robin the Joker" -> "Robin": the person's own name, without the role. */
 export const firstName = (role) => String(DEFAULT_CHARACTERS[role]?.name || '')
   .replace(/^(King|Queen|Jack)\s+/, '').replace(/\s+the Joker$/, '').trim();
 /** Each character's home: the town place whose `who` they are (town.js PLACES). */
@@ -155,10 +155,19 @@ export function nameFrom(text) {
   return { role, by: byName.includes(role) ? 'name' : 'role' };
 }
 
-/** A home's name in a sentence. `inQuestion`: "Pip's Caravan" is asked as "the Caravan" (its name would say who). */
+/** A home's name in a sentence. `inQuestion`: "Robin's Caravan" is asked as "the Caravan" (its name would say who). */
 export function placeWords(role, deck = 'nimrod', { inQuestion = false } = {}) {
   let label = String(placeInfo(HOME_OF[role], deck).label || '');
-  if (inQuestion) label = label.replace(/^[A-Z][\w-]*'s\s+/, 'the ');
+  if (inQuestion) {
+    label = label.replace(/^[A-Z][\w-]*'s\s+/, 'the ');
+    // ...and a character's own name inside it (2026-10-25: the Queen became Rose, and her home is the Rose Parlour) is
+    // left out too: "the Rose Parlour" is asked as "the Parlour".
+    for (const r of ROLES) {
+      const n = firstName(r);
+      if (n && n.toLowerCase() !== r) label = label.replace(new RegExp(`\\b${n}\\b\\s*`, 'gi'), '');
+    }
+    label = label.replace(/\s{2,}/g, ' ').trim();
+  }
   return label.replace(/^The /, 'the ');
 }
 

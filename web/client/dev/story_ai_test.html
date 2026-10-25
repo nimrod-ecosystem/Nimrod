@@ -69,8 +69,8 @@ section('*** a CONVERSATION turn with a town character ***');
   check('the turn is read: what to say, and 2-4 things to say back', r.ok && r.say.startsWith('Hello, dear') && r.choices.length === 3, JSON.stringify(r));
   const sys = ai.calls[0].messages[0].content;
   const home = placeInfo('queenParlour', 'fall').label;
-  check(`*** the system prompt is Queen Rosa, at home in this theme's town (${home}) ***`,
-    sys.includes('Queen Rosa') && sys.includes(home) && sys.includes(PERSONAS.queen), sys.slice(0, 200));
+  check(`*** the system prompt is Queen Rose, at home in this theme's town (${home}) ***`,
+    sys.includes('Queen Rose') && sys.includes(home) && sys.includes(PERSONAS.queen), sys.slice(0, 200));
   check('...with the safety rules in it', sys.includes(SAFETY_RULES));
   check('...asking for one JSON object, and the call asks for JSON', /ONE JSON object/.test(sys) && ai.calls[0].opts.json === true);
   check('*** the timeout is the setting, passed to every call ***', ai.calls[0].opts.timeoutMs === 45000, JSON.stringify(ai.calls[0].opts));
@@ -91,7 +91,7 @@ section('*** a CONVERSATION turn with a town character ***');
 section('*** an ADVENTURE turn with choices, then FREE SPEECH chosen ***');
 {
   const ai = stubAI([
-    turn('You stand in the Harvest Hall. A pie has gone missing from the feast!', ['Look under the table', 'Ask King Bram', 'Follow the crumbs'], 'A pie went missing.'),
+    turn('You stand in the Harvest Hall. A pie has gone missing from the feast!', ['Look under the table', 'Ask King Kenny', 'Follow the crumbs'], 'A pie went missing.'),
     turn('Under the table you find a trail of crumbs.', ['Follow the crumbs', 'Call for help'], 'A pie went missing. Crumbs under the table.'),
     turn('You whistle, and a sleepy cat pokes its head out of a hay bale, pie on its whiskers.', ['Laugh', 'Pick up the cat', 'Tell the King'], 'The cat took the pie.'),
   ]);
@@ -101,7 +101,7 @@ section('*** an ADVENTURE turn with choices, then FREE SPEECH chosen ***');
   const sys = ai.calls[0].messages[0].content;
   check('*** the adventure is told in the second person, the avatar is the hero, the theme\'s town the setting ***',
     /second person/.test(sys) && sys.includes('round glasses') && sys.includes(placeInfo('kingHall', 'fall').label) && sys.includes('Fall'), sys.slice(0, 300));
-  check('the town\'s people are named in it', ['King Bram', 'Queen Rosa', 'Jack Theo', 'Pip the Joker'].every((n) => sys.includes(n)));
+  check('the town\'s people are named in it', ['King Kenny', 'Queen Rose', 'Jack', 'Robin the Joker'].every((n) => sys.includes(n)));
   const r1 = await s.choose(0);
   check('a choice goes to the storyteller as "I choose: <choice>"', lastUser(ai.calls[1]) === 'I choose: Look under the table', lastUser(ai.calls[1]));
   check('...and the new choices replace the old', r1.ok && r1.choices.join('|') === 'Follow the crumbs|Call for help');
@@ -231,7 +231,7 @@ section('a SHORT context for small models: a running summary and the last few tu
 // =====================================================================
 section('kept on THIS DEVICE (never the server)');
 {
-  const ai = stubAI([turn('Pip juggles three turnips.', ['Clap', 'Ask for a riddle'], 'Pip juggled.')]);
+  const ai = stubAI([turn('Robin juggles three turnips.', ['Clap', 'Ask for a riddle'], 'Robin juggled.')]);
   const s = createStory({ ai, kind: 'talk', character: 'joker', theme: 'halloween' });
   await s.start();
   const mem = memStore();
@@ -239,16 +239,16 @@ section('kept on THIS DEVICE (never the server)');
   const back = loadStoryLocal('panel-1', mem);
   check('...tagged with its format (so a server rule could refuse it by tag)', back && back.format === STORY_FORMAT && back.kind === 'talk');
   const s2 = createStory({ ai: stubAI([]), kind: 'talk', character: 'joker' });
-  check('*** restored: the page, the choices and the summary, with no model call ***', s2.restore(back) && s2.lastSay() === 'Pip juggles three turnips.'
-    && s2.choices().join('|') === 'Clap|Ask for a riddle' && s2.summary() === 'Pip juggled.');
+  check('*** restored: the page, the choices and the summary, with no model call ***', s2.restore(back) && s2.lastSay() === 'Robin juggles three turnips.'
+    && s2.choices().join('|') === 'Clap|Ask for a riddle' && s2.summary() === 'Robin juggled.');
   check('a saved conversation is not restored as an adventure', createStory({ kind: 'adventure' }).restore(back) === false);
   forgetStoryLocal('panel-1', mem);
   check('forgotten', loadStoryLocal('panel-1', mem) === null);
   const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); }, removeItem() { throw new Error('blocked'); } };
   check('blocked storage keeps nothing and never throws', saveStoryLocal('x', s, broken) === false && loadStoryLocal('x', broken) === null
     && (forgetStoryLocal('x', broken), true));
-  const txt = storyText(s.toJSON(), { title: 'Talking with Pip' });
-  check('as text for the Nimrod folder: the title and what was said', txt.startsWith('Talking with Pip') && txt.includes('Story: Pip juggles'));
+  const txt = storyText(s.toJSON(), { title: 'Talking with Robin' });
+  check('as text for the Nimrod folder: the title and what was said', txt.startsWith('Talking with Robin') && txt.includes('Story: Robin juggles'));
 }
 
 // =====================================================================

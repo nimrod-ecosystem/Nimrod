@@ -166,8 +166,8 @@ try {
       const left = STORIES.flatMap((s) => s.pages.map((p) => pageText(p.text, t))).filter((x) => /[{}]/.test(x));
       check(`${TOWN_DRESS[t].label}: every page's places filled with the theme's own names`, left.length === 0, left[0]);
     }
-    check('a place mid-sentence: "the Ice Hall" in winter, "the Great Hall"... and "Pip\'s Caravan" as it is',
-      placeName('kingHall', 'winter') === 'the Ice Hall' && placeName('jokerCaravan', 'nimrod') === "Pip's Caravan"
+    check('a place mid-sentence: "the Ice Hall" in winter, "the Great Hall"... and "Robin\'s Caravan" as it is',
+      placeName('kingHall', 'winter') === 'the Ice Hall' && placeName('jokerCaravan', 'nimrod') === "Robin's Caravan"
       && pageText('In {kingHall}, all is well.', 'halloween') === 'In the Haunted Hall, all is well.');
     check('a page from elsewhere is checked: a bad place, no words, markup, too long, a bad cast',
       checkPage({ place: 'moon', text: 'x' }) === null && checkPage({ place: 'park', text: '' }) === null
@@ -220,7 +220,7 @@ try {
     t.verb('select');
     check('*** a press turns to page 1, and it is read aloud ***', t.probe().at === 0 && t.words().textContent === textOf(s, 0)
       && t.output.said.at(-1) === textOf(s, 0));
-    check('the page: the place, and its cast standing in it (you and Queen Rosa)', t.pic().getAttribute('data-scene') === s.pages[0].place
+    check('the page: the place, and its cast standing in it (you and Queen Rose)', t.pic().getAttribute('data-scene') === s.pages[0].place
       && J([...t.pic().querySelectorAll('[data-who]')].map((e) => e.dataset.who)) === J(s.pages[0].cast));
     check('"Page 1 of 6"', t.host.querySelector('[data-count]').textContent === `Page 1 of ${s.pages.length}`);
     t.verb('next');
@@ -367,7 +367,7 @@ try {
     const def = heroParts(null, 'nimrod');
     check('without one, a default character is the hero', d.pic().querySelector('[data-who="hero"]').innerHTML === dom(figureBody(def.look, def.opts)));
     const q = courtParts('queen', 'nimrod');
-    check('the cast are Design\'s court characters, dressed for the theme (Queen Rosa in the Nimrod cardigan)',
+    check('the cast are Design\'s court characters, dressed for the theme (Queen Rose in the Nimrod cardigan)',
       d.pic().querySelector('[data-who="queen"]').innerHTML === dom(figureBody(q.look, q.opts)) && q.opts.outfit === 'nimrodCardigan');
     d.inst.destroy();
   }
@@ -387,7 +387,7 @@ try {
     check('a Halloween panel: the King\'s home is the Haunted Hall in the words and the picture', t.words().textContent === textOf(s, 0, 'halloween')
       && /the Haunted Hall/.test(t.words().textContent) && t.pic().getAttribute('aria-label').startsWith('The Haunted Hall'));
     const k = courtParts('king', 'halloween');
-    check('King Bram in his Halloween outfit', t.pic().querySelector('[data-who="king"]').innerHTML === dom(figureBody(k.look, k.opts)) && k.opts.outfit === 'halloweenVampire');
+    check('King Kenny in his Halloween outfit', t.pic().querySelector('[data-who="king"]').innerHTML === dom(figureBody(k.look, k.opts)) && k.opts.outfit === 'halloweenVampire');
     applyTheme(outer, 'christmas');
     await flush();
     check('*** Christmas now: the Feast Hall, redrawn with nothing pressed ***', t.pic().getAttribute('aria-label').startsWith('The Feast Hall'));
@@ -397,22 +397,22 @@ try {
   section('*** an AI-written story: the seam (story_ai.js nextPage), off until set up ***');
   {
     check('the picture is chosen from the words: the first place named, the people named',
-      J(aiPage({ ok: true, text: 'You walk into the Bakery with Queen Rosa. Jack waves.' }, 'nimrod')) === J({ place: 'bakery', cast: ['hero', 'queen', 'jack'], text: 'You walk into the Bakery with Queen Rosa. Jack waves.' }));
+      J(aiPage({ ok: true, text: 'You walk into the Bakery with Queen Rose. Jack waves.' }, 'nimrod')) === J({ place: 'bakery', cast: ['hero', 'queen', 'jack'], text: 'You walk into the Bakery with Queen Rose. Jack waves.' }));
     check('a theme\'s own name counts ("the Ice Hall" is the King\'s home in winter)', aiPage({ ok: true, text: 'Snow falls on the Ice Hall.' }, 'winter').place === 'kingHall');
     check('no place named: the last page\'s place, the hero alone', J(aiPage({ ok: true, text: 'It was quiet.' }, 'nimrod', 'shop')) === J({ place: 'shop', cast: ['hero'], text: 'It was quiet.' }));
     check('a page in Story time\'s own shape is checked as it is', J(aiPage({ place: 'park', cast: ['king'], text: 'Hi.' })) === J({ place: 'park', cast: ['hero', 'king'], text: 'Hi.' }));
     check('a refusal or "please tell somebody" ends the story there', aiPage({ ok: true, refused: true, text: 'Let us not.' }).end === true);
     check('no answer is no page', aiPage({ ok: false, fallback: true, text: '' }) === null && aiPage(null) === null);
     const calls = [];
-    const storyAi = { nextPage: async (c) => { calls.push(c); return { ok: true, text: calls.length === 1 ? 'You find King Bram in the Library.' : 'Pip arrives at the Park.', summary: 's' }; } };
+    const storyAi = { nextPage: async (c) => { calls.push(c); return { ok: true, text: calls.length === 1 ? 'You find King Kenny in the Library.' : 'Robin arrives at the Park.', summary: 's' }; } };
     const t = mount({ storyAi, output: fakeOutput({ mode: 'auto' }), saved: { storySource: 'ai' } });
     await flush(); await flush(); await flush();
     check('set to the AI: it is asked for the first page with the theme, the cast and the places', calls.length >= 1 && calls[0].theme === 'nimrod'
       && calls[0].pages.length === 0 && calls[0].places.length === 8 && calls[0].cast[0].role === 'hero' && 'ctx' in calls[0], J(Object.keys(calls[0] || {})));
     t.verb('select');
     await flush(); await flush();
-    check('*** its page shows: the Library, with King Bram, read aloud ***', t.probe().at === 0 && t.pic().getAttribute('data-scene') === 'library'
-      && !!t.pic().querySelector('[data-who="king"]') && t.output.said.at(-1) === 'You find King Bram in the Library.');
+    check('*** its page shows: the Library, with King Kenny, read aloud ***', t.probe().at === 0 && t.pic().getAttribute('data-scene') === 'library'
+      && !!t.pic().querySelector('[data-who="king"]') && t.output.said.at(-1) === 'You find King Kenny in the Library.');
     t.inst.destroy();
     const none = mount({ storyAi: { nextPage: async () => ({ ok: false, fallback: true, noAI: true, text: '' }) }, saved: { storySource: 'ai' } });
     await flush(); await flush(); await flush();

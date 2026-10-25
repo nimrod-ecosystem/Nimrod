@@ -25,7 +25,7 @@
 // furniture ids, positions, sizes and #rrggbb colours: layout data, the same kind of thing as a room panel's
 // arrangement, the avatar's figure record ("never a picture") and the board's layout, all already kept on rows. It
 // holds no picture, sound, recording or anything somebody said; the only words in it are the built-in name signs
-// ("King Bram", "Bakery"), and the editor offers no way to type new ones. Bounded: at most RECIPE_MAX_ITEMS things a
+// ("King Kenny", "Bakery"), and the editor offers no way to type new ones. Bounded: at most RECIPE_MAX_ITEMS things a
 // place (argued below) and RECIPE_MAX_BYTES a recipe, so every theme's every place edited is a few hundred KB at the
 // very most, well inside the server's 2 MiB a row (STATE_MAX_BYTES), which refuses anything bigger anyway.
 
@@ -76,7 +76,7 @@ export function pieceName(part) {
   return (FURNITURE[part] && FURNITURE[part].label) || (KIT[part] && KIT[part].label) || String(part || 'Piece');
 }
 
-/** A thing in a place, in words ("Throne", "Name sign: King Bram"). */
+/** A thing in a place, in words ("Throne", "Name sign: King Kenny"). */
 export function itemName(it) {
   if (!it || typeof it !== 'object') return '';
   if (it.kind === 'furniture') return pieceName(it.part);

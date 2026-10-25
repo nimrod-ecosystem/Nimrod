@@ -245,12 +245,15 @@ export function figureSvg(look, opts = {}, label = 'Character') {
 
 /* ---------- the four default characters ----------
    Four people, one per role. Their look is theirs, not their suit's, and the avatar maker can
-   change any of it. */
+   change any of it. THEIR NAMES ARE MIKE'S (2026-10-25, chat's note CN): "King = Kenny, Queen = Rose, Jack = Jack,
+   Joker = Robin" (Design's were King Bram, Queen Rosa, Jack Theo, Pip). Jack's name is his role, so he is just "Jack".
+   The rest of Mike's cast (Princess Jess, Prince Vince, Nimrod the cat, Merlin the wizard, the knights Michael and
+   Gladys) waits for Design's drawings (item 45). */
 export const DEFAULT_CHARACTERS = {
-  king: { name: 'King Bram', look: { tone: '#c98a5a', hair: 'short', hairColor: '#d8d4cc', beard: true } },
-  queen: { name: 'Queen Rosa', look: { tone: '#f3c9a6', hair: 'bun', hairColor: '#8a4a24' } },
-  jack: { name: 'Jack Theo', look: { tone: '#8a5a3a', hair: 'curly', hairColor: '#1b1410' } },
-  joker: { name: 'Pip the Joker', look: { tone: '#f6dcc4', hair: 'short', hairColor: '#c96a21' } },
+  king: { name: 'King Kenny', look: { tone: '#c98a5a', hair: 'short', hairColor: '#d8d4cc', beard: true } },
+  queen: { name: 'Queen Rose', look: { tone: '#f3c9a6', hair: 'bun', hairColor: '#8a4a24' } },
+  jack: { name: 'Jack', look: { tone: '#8a5a3a', hair: 'curly', hairColor: '#1b1410' } },
+  joker: { name: 'Robin the Joker', look: { tone: '#f6dcc4', hair: 'short', hairColor: '#c96a21' } },
 };
 /* What each court character wears in each theme. Themes without outfits yet wear the Royal robe. */
 export const COURT_PICK = {
