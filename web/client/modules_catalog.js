@@ -351,8 +351,7 @@ export const CATALOG = [
     use: 'touch',
     lead: 'The lights, the fan, the TV: big buttons for the things in your Home Assistant.',
     needs: 'Home Assistant, and the Nimrod bridge to it on the screen\'s computer, with the things this screen may use ticked.',
-    why: 'One press turns on a lamp or makes the TV quieter, with a switch, a touch or a pointer, and it says what it did. '
-      + 'It is a convenience, not a way to call for help.',
+    why: 'One press turns on a lamp or makes the TV quieter, with a switch, a touch or a pointer, and it says what it did.',
   },
   // story (2026-10-12): Story time. `watch`: it turns its own pages by default, so somebody who can only watch hears the
   // whole story; any press turns sooner.

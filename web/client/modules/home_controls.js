@@ -12,8 +12,7 @@
 // panel sends NOTHING and says, in words, that home controls are not set up on this screen - never a box asking
 // permission, never a button that does nothing.
 //
-// *** NOT A WAY TO CALL FOR HELP. *** A switch that turns on a lamp is a lamp switch (docs/home-assistant-plan.md, "The
-// boundary wording"). Nothing here reaches a person.
+// It switches things; nothing in it reaches a person. (No boundary paragraph on the site: Mike, 2026-10-25, row 2.130.)
 //
 // HOW OFTEN IT LOOKS (`every`, a setting): the states are asked of the bridge every few seconds while the panel is up,
 // so a lamp turned on by hand shows as on. The default, 5 seconds, is a loopback request to this computer's own bridge

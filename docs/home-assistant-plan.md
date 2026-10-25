@@ -1,6 +1,7 @@
 # Home Assistant control: the plan
 
-**Status:** a plan, not built yet (row 2.125). Written 2026-10-25, after Mike said: *"Home Assistant control - This is
+**Status:** the bridge, its terminal setup, the client and the Home controls panel are built (row 2.125; "Order of
+work" below). Not yet tried on a screen. Written 2026-10-25, after Mike said: *"Home Assistant control - This is
 something we should really do."*
 
 **Provenance:** what the repo already has is checked against the code, with file names given. Facts about Home
@@ -107,30 +108,38 @@ first version should be the one where a wrong press turns a lamp on.
   bridge, with polling as the fallback. A button whose thing is unavailable says so; it is never silently dead.
 - **The OUTPUT bus is where a light can TELL someone something.** output.js already names a `light` channel with no
   adapter yet. An adapter could blink a lamp for an `alert` the person has routed there. That comes later. It must obey
-  the photosensitivity setting (`flash_limit.js`) like any flash on the screen, and it is a way of being told, never a
-  way of calling for help (below).
+  the photosensitivity setting (`flash_limit.js`) like any flash on the screen. It is a way of being told.
 - **Remote drive:** the remote-drive wire allowlist stays frozen (actions.js says so). Home Assistant verbs are not
   driveable from another device unless a grant says so. "Someone else can switch my lights" is a choice the person makes,
   off to begin with.
 
 ## The boundary wording
 
-`docs/from_chat/aac_design.md` section 8 (private notes) has the revised wording:
-- environmental control is a convenience, not a safety system;
-- it depends on a network, a hub and devices, any of which can fail without warning;
-- the facility's call system or a telephone is what calls for help.
+**Settled 2026-10-25 (row 2.130): none on the site.** The longer environmental-control paragraph in the private design
+notes (`aac_design.md` section 8) was chat's wording, not Mike's and not a rule. It does not go on the site, the setup
+screen or the panel. The site's one "not a nurse call" sentence (DECISIONS.md, 2026-10-13) stays where it is. This page
+first recommended the paragraph on the setup screen; that is withdrawn.
 
-**Two rulings pull different ways.** Section 8 says that wording goes everywhere environmental control is described.
-Mike, 2026-10-13 (DECISIONS.md), made the "not a nurse call" line one sentence in three places: *"I feel like this is
-really being overemphasized."*
-- For section 8 in full on the site: once a switch can turn on a light, a reader may assume it can also reach a person.
-- Against: the same paragraph on every page is the overemphasis Mike ruled out.
-- **Recommendation:** the full wording goes on the Home Assistant setup screen and in this feature's documentation,
-  where control is described and set up, and nowhere else. The existing one-line sentence stays where it is. **Mike's
-  call** (his list).
+What the first version does, as a fact about it rather than a rule: Home Assistant actions are switched by a person's
+press. None is wired to the output bus's `alert` or `notify`.
 
-The product follows the wording too: no Home Assistant verb is ever wired to the output bus's `alert` or `notify` as
-a way to reach a person. A switch that turns on a lamp is a lamp switch.
+## Setting up Home Assistant itself (Mike doesn't run it yet, 2026-10-25)
+
+Home Assistant is its own program, and it needs a computer that stays on, on the same network as the things it
+switches. Three places it could run [from Home Assistant's install options as remembered; to verify before buying
+or installing]:
+
+| Where | For | Against |
+|---|---|---|
+| **Its own small box:** Home Assistant OS on a spare Pi 4 or 5, or Home Assistant's own "Green" box | The way most homes run it. It updates itself and isn't touched when a Nimrod screen is updated or swapped | One more device to buy and plug in |
+| **Beside the screen:** Home Assistant in a container on the screen's own Pi | Nothing to buy. The bridge and Home Assistant on one computer | The Pi 400 is already busy drawing the screen. A screen swap moves Home Assistant with it, and the live unit is not to be touched remotely |
+| **On the desktop** | Good for trying it out | The desktop is not always on, and its disk is nearly full |
+
+**Recommendation:** try it out with the pretend one first (below). For real use in a room, its own small box, so the
+screen and the house's switches can each be swapped or updated without the other.
+- At the facility it would also need the facility's network and their say-so for devices in the room. That is a
+  conversation for Mike, not a setting.
+- The bridge doesn't care which: it is given an address.
 
 ## Testing without a hub
 
@@ -149,8 +158,12 @@ a way to reach a person. A switch that turns on a lamp is a lamp switch.
 2. The client: connect, list, tick, name; verbs registered.
 3. The Home controls panel.
 4. Bindings: a switch, a talk-board card and a spoken word each turning the pretend lamp on, end to end.
-5. The setup screen's boundary wording (above), after Mike's call.
-6. Later: the output bus's light channel; the "Allow doors and locks" setting; the Windows helper's half.
+5. A run on the bench screen after a deploy: the pretend Home Assistant on the bench Pi, the bridge as a user unit,
+   the launcher's `NIMROD_HA_BRIDGE`.
+6. Later: the output bus's light channel; the Windows helper's half; setup from the page.
+
+**Done so far (2026-10-25):** 1 (public 2ba9973, the terminal setup b7597c1), 2 and 3 (9baf93b: the client and the
+Home controls panel; the "Allow doors and locks" setting is in the bridge).
 
 ## Settings this will add (each a setting, with a default)
 
