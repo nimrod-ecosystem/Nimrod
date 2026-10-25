@@ -1,0 +1,19 @@
+[Unit]
+Description=Nimrod Home Assistant bridge — the kiosk page's way to Home Assistant on this network (127.0.0.1 only)
+# A REFERENCE COPY, not installed by install-linux.sh yet (row 2.125, step 1 of docs/home-assistant-plan.md: the bridge
+# and its tests). To try it by hand: copy to ~/.config/systemd/user/, fill in the two CHANGE_ME lines, then
+# `systemctl --user daemon-reload && systemctl --user enable --now nimrod-ha-bridge`. It keeps the Home Assistant
+# address and token in ~/.config/nimrod/home-assistant.json (this user only), set from the page; nothing to set here.
+# Chromium must be allowed to reach this computer from the site, the same managed policy the lock helper uses.
+
+[Service]
+Type=simple
+Environment=NIMROD_KIOSK_URL=CHANGE_ME_TO_YOUR_DASHBOARD_URL
+# The site(s) allowed to ask, comma-separated. Empty: the origin of NIMROD_KIOSK_URL.
+Environment=NIMROD_HA_ORIGINS=
+ExecStart=/usr/bin/python3 CHANGE_ME_TO_HA_BRIDGE_PATH
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

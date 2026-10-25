@@ -77,6 +77,14 @@ installer adds the computer's half (on by default; `NIMROD_LOCK=0` installs exac
   stays until somebody answers it, so the launcher passes the page `lockHelper=off` and nothing above ever
   triggers. Tested by `test_lock_helper.py` (`python3 -m unittest test_lock_helper.py`).
 
+**Home Assistant, the computer's half (2026-10-25, not installed yet).** `nimrod-ha-bridge.py` (reference unit
+`nimrod-ha-bridge.service`) is the page's way to Home Assistant on the home network. The page is HTTPS, and most Home
+Assistant installs are plain http, which a browser won't call. It listens on 127.0.0.1:8766 only, answers only the
+kiosk site's origin, and keeps the address and token in `~/.config/nimrod/home-assistant.json` (this user only). The
+token is never sent back. Only things a person ticked can be controlled, only with the listed actions, and doors and
+locks only with that setting on. It needs the same Chromium policy as the lock helper. The plan and what comes next
+are in `docs/home-assistant-plan.md`. Tested by `test_ha_bridge.py`, against `web/tools/pretend_home_assistant.py`.
+
 **What this does NOT do:** get the Pi to a logged-in graphical session at boot in the first
 place. Console autologin + labwc launching already works on the machines this has been tested
 on; this installer only takes over from the moment `autostart` runs. If a fresh Pi doesn't
