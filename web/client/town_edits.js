@@ -33,6 +33,7 @@ import { PLACES, TOWN_DRESS, placeRecipe } from './town.js';
 import { KIT, KIT_WORLDS, kitByWorld } from './theme_kits.js';
 import { FURNITURE, MOUNT_KINDS } from './room_parts.js';
 import { cleanTown, deckFor } from './card_deck.js';
+import { NIMROD_DEFAULTS, defaultFor } from './nimrod_defaults.js';
 
 export const TOWN_KEY = 'town';
 export const TOWN_VERSION = 1;
@@ -162,7 +163,8 @@ export function editsFor(row, deck) {
 }
 
 /** The recipe a place draws for this person in this theme: their edit, else the theme's own. */
-export const recipeFor = (id, deck, edits = {}) => placeRecipe(id, deck, edits[id] || undefined);
+// (The theme's own: the designer's version when nimrod_defaults.js has one, Design's item 42.3; else town.js's.)
+export const recipeFor = (id, deck, edits = {}, defaults = NIMROD_DEFAULTS) => placeRecipe(id, deck, edits[id] || defaultFor('town', [deck, id], defaults) || undefined);
 
 /**
  * The store. `makePersonState(personId, key)` and `personId` (a value or a getter) as the host gives them;

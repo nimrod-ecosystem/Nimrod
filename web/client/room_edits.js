@@ -27,6 +27,7 @@
 // or taken out.
 import { FURNITURE, FURNITURE_GROUPS, MOUNT_KINDS } from './room_parts.js';
 import { recipeItemIds } from './room_doors.js';
+import { defaultsEntry } from './nimrod_defaults.js';
 import { WALL_Y, FLOOR_Y, X_RANGE, SCALE_RANGE, SCALE_STEP, RECIPE_MAX_ITEMS } from './town_edits.js';
 
 // One press of "Left or right" or "Nearer or further": Town's Rearrange's step (modules/town.js MOVE_STEP), so a
@@ -154,16 +155,17 @@ export function addOptions() {
 }
 
 // *** "COPY AS THE DEFAULT" (row 2.110 step 2). *** Mike wants to "make the default versions how I want them": a room
-// rearranged on a dashboard, copied as the entry room_presets.js keeps for that starting room, so it can be put into the
-// site's own file and committed (the defaults are code, reviewed like code; the page cannot write the site's files).
-// Its starting room's name and label when it has one; a room with no preset is offered as a new one, `myRoom`.
+// rearranged on a dashboard, copied as an entry for the site's defaults file, so it can be put in and committed (the
+// defaults are code, reviewed like code; the page cannot write the site's files). SINCE 2026-10-25 IN DESIGN'S SHAPE
+// (item 42.3: "one file, nimrod_defaults.json ... It matches what Code built on dashboards. Send that to the same file,
+// under the same keys"): `{ format: 'nimrod-defaults', version: 1, made, rooms: { <preset>: <recipe> } }`, merged into
+// nimrod_defaults.js. Its starting room's name when it has one; a room with no preset is offered as a new one, `myRoom`.
 const ID_RE = /^[A-Za-z_$][\w$]*$/;
-/** The room as a room_presets.js entry: `<name>: { label, recipe },` with a line saying where it came from. PURE. */
-export function presetText(recipe, { preset = '', label = '', from = '', date = '' } = {}) {
+/** The room as a nimrod_defaults entry (JSON text), saying in `made` when and from which dashboard. PURE. */
+export function presetText(recipe, { preset = '', from = '', date = '' } = {}) {
   const name = ID_RE.test(String(preset || '')) ? preset : 'myRoom';
-  const body = JSON.stringify(withIds(recipe), null, 2).split('\n').map((l, i) => (i ? `    ${l}` : l)).join('\n');
-  return `  // ${name}, rearranged${from ? ` on the dashboard "${String(from).replace(/[\r\n]+/g, ' ')}"` : ''}${date ? `, ${date}` : ''}.\n`
-    + `  ${name}: {\n    label: ${JSON.stringify(String(label || name))},\n    recipe: ${body},\n  },\n`;
+  const made = [date, from ? `rearranged on the dashboard "${String(from).replace(/[\r\n]+/g, ' ')}"` : ''].filter(Boolean).join(', ');
+  return defaultsEntry('rooms', [name], withIds(recipe), { made });
 }
 
 /**

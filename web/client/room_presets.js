@@ -30,6 +30,8 @@
 //      digit to no calculator is a press spent for nothing. room_scene.js supports the `keys` role;
 //      the suite exercises it with a recipe of its own.
 
+import { NIMROD_DEFAULTS, defaultFor } from './nimrod_defaults.js';   // the designer's own versions (item 42.3)
+
 const SAMPLE_1 = '/demo-media/files/morning-window.svg';
 const SAMPLE_2 = '/demo-media/files/garden.svg';
 
@@ -144,7 +146,10 @@ export const DEFAULT_PRESET = 'theRoom';
 export const listPresets = () => Object.entries(ROOM_PRESETS).map(([value, p]) => ({ value, label: p.label }));
 
 /** A deep copy of a preset's recipe (an unknown key gives the default), so nothing edits the table. */
-export function presetRecipe(key) {
+export function presetRecipe(key, defaults = NIMROD_DEFAULTS) {
+  // The designer's own version of this room, when nimrod_defaults.js has one (Design's item 42.3); else the built-in.
+  const own = ROOM_PRESETS[key] ? defaultFor('rooms', [key], defaults) : null;
+  if (own) return own;
   const p = ROOM_PRESETS[key] || ROOM_PRESETS[DEFAULT_PRESET];
   return JSON.parse(JSON.stringify(p.recipe));
 }

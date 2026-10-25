@@ -492,10 +492,15 @@ try {
     card().querySelector('[data-em-run="default"]').click();
     await until(() => copied !== null, 3000);
     let entry = null;
-    try { entry = new Function(`return ({${copied}})`)(); } catch { entry = null; }   // eslint-disable-line no-new-func
-    check('*** "Copy as the default": the room as a room_presets.js entry, under its starting room\'s name and label ***',
-      !!entry?.theRoom && entry.theRoom.label === 'The room (controls in the furniture)' && J(entry.theRoom.recipe.items.map((x) => x.id)) === J(saved().map((x) => x.id))
-        && /rearranged on the dashboard "Rearranged"/.test(copied), (copied || '').slice(0, 300));
+    try { entry = JSON.parse(copied); } catch { entry = null; }
+    // (Since 2026-10-25 in Design's shape for the one defaults file, item 42.3: { format, version, made, rooms: {...} }.)
+    check('*** "Copy as the default": the room as an entry for the site\'s defaults file, under its starting room\'s name ***',
+      entry?.format === 'nimrod-defaults' && entry.version === 1 && !!entry.rooms?.theRoom
+        && J(entry.rooms.theRoom.items.map((x) => x.id)) === J(saved().map((x) => x.id)) && /rearranged on the dashboard "Rearranged"/.test(entry.made), (copied || '').slice(0, 300));
+    const presetFrom = (await import('../room_presets.js')).presetRecipe;
+    check('*** ...and pasted into the defaults file, it IS the starting room from then on ***',
+      J(presetFrom('theRoom', entry).items.map((x) => x.id)) === J(entry.rooms.theRoom.items.map((x) => x.id))
+        && J(presetFrom('theRoom', { rooms: {} }).items.map((x) => x.id)) !== J(entry.rooms.theRoom.items.map((x) => x.id)));
     delete navigator.clipboard;
     await until(() => !!card()?.querySelector('[data-em-run="undo"]'), 3000);
     card().querySelector('[data-em-run="undo"]').click();

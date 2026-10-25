@@ -2239,14 +2239,12 @@ export function createArrangement({
     try { editMode?.select?.('room'); } catch { /* the room is chosen anyway */ }
     return true;
   }
-  /** Copy the room as a room_presets.js entry (row 2.110 step 2). Resolves the text copied, or null. */
+  /** Copy the room as an entry for the site's defaults file, nimrod_defaults.js (row 2.110 step 2, Design's item 42.3). */
   async function copyRoomDefault({ clipboard = (typeof navigator !== 'undefined' ? navigator.clipboard : null) } = {}) {
     const scene = roomBase()?.scene || null;
     const r = scene && roomEditsLib ? sceneRecipe(scene) : null;
     if (!r) return null;
-    let label = '';
-    try { label = (await import('./room_presets.js')).ROOM_PRESETS?.[scene.preset]?.label || ''; } catch { label = ''; }
-    const text = roomEditsLib.presetText(r, { preset: scene.preset || '', label, from: profile?.name || '',
+    const text = roomEditsLib.presetText(r, { preset: scene.preset || '', from: profile?.name || '',
       date: new Date().toISOString().slice(0, 10) });
     try {
       if (!clipboard?.writeText) throw new Error('no clipboard');
