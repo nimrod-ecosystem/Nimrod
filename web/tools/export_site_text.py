@@ -63,6 +63,11 @@ USAGE, from the repo root:
         [--export site_text.md] [--report apply_report.txt]
     py -3.13 web/tools/export_site_text.py --apply-tsv second_pass.tsv --export site_text.md
         [--skip-dir learn/] [--skip ids.txt ...] [--dry-run] [--report apply_report.txt]
+    py -3.13 web/tools/export_site_text.py --apply-page-edits wording.tsv [--dry-run] [--report report.txt]
+
+AND WORDS CHANGED IN PLACE (`--apply-page-edits`, 2026-10-25, row 2.123): web/client/wording_edit.js lets a person
+click any words on the site and retype them, then copies `page<TAB>words on the page<TAB>new words` lines. The page
+never knows the file, so each line is found by its words; see apply_page_edits() for what is matched and refused.
 
 AND A SECOND PASS (`--apply-tsv`, 2026-10-13): after a first --apply the export's ids no longer match the
 code (they hash the export's words). A second-pass file carries, per id, the words the code holds NOW and
@@ -1854,6 +1859,159 @@ def apply_changes(changes_path, skip_paths=(), dry_run=False, export_path=None, 
 
 
 # --------------------------------------------------------------------------------------------
+# --apply-page-edits: words changed IN PLACE on the site (web/client/wording_edit.js, row 2.123)
+# --------------------------------------------------------------------------------------------
+# Mike, 2026-10-25: "Is there some sort of edit mode for me where I can just change things on the site like wording?"
+# The page knows the words a person saw and what they typed, and which page they were on - never the file. So each
+# line here is found the way a person would find it: by its words. A line the scan has exactly once is changed; one
+# whose words were filled in by the code (`{name}` in the export) is matched with those parts as wildcards, and the
+# filled-in parts must still be in the new words, where they go back as `{name}`. Everything else is refused, never
+# guessed, with the reason: words in more than one file (narrowed by the page first), words with a link or bold inside
+# (the page cannot show where the tags go), and words the scan never saw (built at run time, or data: a name, a
+# lesson, a setting's value) - those are for a person to find by hand.
+
+PAGE_EDITS_HEAD = '# nimrod wording changes'
+_PH_RE = re.compile(r'\{[^{}]*\}')
+_TAG_RE = re.compile(r'</?[a-zA-Z][\w-]*>')
+
+
+def read_page_edits(path):
+    """`<page>\\t<words on the page>\\t<new words>` per line (wording_edit.js's "Copy changes"); `#` lines and blanks
+    skipped; `\\n` in the words is a line break. Returns ([(page, old, new, line number)], [unreadable line numbers])."""
+    rows, bad = [], []
+    for n, ln in enumerate(Path(path).read_text(encoding='utf-8-sig').splitlines(), 1):
+        if not ln.strip() or ln.startswith('#'):
+            continue
+        p = ln.split('\t')
+        if len(p) != 3 or not p[1].strip():
+            bad.append(n)
+            continue
+        unesc = lambda s: s.replace('\\n', '\n')
+        rows.append((p[0].strip(), norm_text(unesc(p[1])), norm_text(unesc(p[2])), n))
+    return rows, bad
+
+
+def seen_pattern(text):
+    """A regex for how the export's `text` looks ON A PAGE: `{name}` is whatever the code filled in (a group each),
+    an inline tag is nothing, spaces are any spaces. Returns (regex, [placeholders in order], has_tags)."""
+    parts, phs, pos = [], [], 0
+    for m in re.finditer(r'\{[^{}]*\}|</?[a-zA-Z][\w-]*>', text):
+        lit = text[pos:m.start()]
+        parts.append(r'\s*'.join(re.escape(w) for w in lit.split(' ')) if lit else '')
+        if m.group(0).startswith('{'):
+            parts.append(r'(.+?)')
+            phs.append(m.group(0))
+        else:
+            parts.append(r'\s*')
+        pos = m.end()
+    lit = text[pos:]
+    parts.append(r'\s*'.join(re.escape(w) for w in lit.split(' ')) if lit else '')
+    return re.compile(''.join(parts), re.S), phs, bool(_TAG_RE.search(text))
+
+
+def page_files(page, owners=None):
+    """The client files a page loads: the page itself, the scripts it names, and what those import (one level is
+    not enough for a dashboard, so it follows imports all the way). `page` is a path like `/home.html`."""
+    rel = page.split('?')[0].split('#')[0].lstrip('/') or 'index.html'
+    if not rel.endswith('.html'):
+        rel += '.html'
+    owners = owners if owners is not None else page_scripts()
+    got, todo = {rel}, [rel]
+    while todo:
+        cur = todo.pop()
+        for js, by in owners.items():
+            if js in got:
+                continue
+            if cur in by or (cur.endswith('.js') and f'(imported by {Path(cur).name})' in by):
+                got.add(js)
+                todo.append(js)
+    return got
+
+
+def apply_page_edits(path, dry_run=False, report_path=None):
+    rows, bad = read_page_edits(path)
+    col, srcs = raw_scan()
+    by_id = {it.id: it for it in col.order}
+    owners = page_scripts()
+    # Only rows with words of their own become patterns: a row that is all `{name}` would match anything at all.
+    pats = [(it, *seen_pattern(it.text)) for it in col.order
+            if ('{' in it.text or '<' in it.text) and len(re.findall(r'[A-Za-z]', _TAG_RE.sub('', _PH_RE.sub('', it.text)))) >= 3]
+    applied, refused, wanted, why_of = {}, [], {}, {}
+    for page, old, new, n in rows:
+        if old == new:
+            continue
+        exact = [it for it in col.order if it.text == old]
+        hits = [(it, None) for it in exact]
+        if not hits:
+            for it, rx, phs, tags in pats:
+                m = rx.fullmatch(old)
+                if m:
+                    hits.append((it, (m, phs, tags)))
+        if len(hits) > 1:
+            on_page = page_files(page, owners)
+            narrowed = [h for h in hits if h[0].file in on_page]
+            hits = narrowed or hits
+        if not hits:
+            refused.append((n, page, old, 'NOT FOUND: the code does not hold these words as they are. They are built '
+                            'while the page runs, or they are data (a name, a lesson, a setting\'s value): a person finds '
+                            'them by hand.'))
+            continue
+        if len(hits) > 1:
+            refused.append((n, page, old, 'IN MORE THAN ONE PLACE: ' + ', '.join(f'{h[0].id} {h[0].file}' for h in hits[:6])
+                            + ('...' if len(hits) > 6 else '') + '. Say which, by id.'))
+            continue
+        it, how = hits[0]
+        target = new
+        if how is not None:
+            m, phs, tags = how
+            if tags:
+                refused.append((n, page, old, f'HAS A LINK OR BOLD INSIDE ({it.id} {it.file}): the page cannot show where the '
+                                f'tags go. As exported: {it.text}'))
+                continue
+            vals = [m.group(k + 1) for k in range(len(phs))]
+            pos, out, ok = 0, '', True
+            for val, ph in zip(vals, phs):
+                at = target.find(val, pos)
+                if at < 0:
+                    refused.append((n, page, old, f'THE CODE FILLS IN {ph} (it showed "{val}") and the new words do not '
+                                    f'have it ({it.id} {it.file}). Keep that part, or say what it should be.'))
+                    ok = False
+                    break
+                out += target[pos:at] + ph
+                pos = at + len(val)
+            if not ok:
+                continue
+            target = out + target[pos:]
+        if it.id in wanted and wanted[it.id] != target:
+            refused.append((n, page, old, f'CHANGED TWICE, DIFFERENTLY ({it.id} {it.file}): the later one is not applied.'))
+            continue
+        wanted[it.id] = target
+        why_of[it.id] = (n, page)
+    per_file = {}
+    for i in wanted:
+        per_file.setdefault(by_id[i].file, []).append(by_id[i])
+    a, r, w = _write_files(per_file, wanted, srcs, by_id, dry_run)
+    applied.update(a)
+    for i, why in r.items():
+        n, page = why_of.get(i, (0, '?'))
+        refused.append((n, page, by_id[i].text if i in by_id else '?', f'{i}: {why}'))
+    lines = [f'{"DRY RUN - nothing written. " if dry_run else ""}{len(applied)} applied, {len(refused)} refused, '
+             f'{len(bad)} unreadable lines.']
+    for i, (rel, was, now) in sorted(applied.items(), key=lambda x: (x[1][0], x[0])):
+        lines.append(f'APPLIED  {i}  {rel}  (line {why_of[i][0]}, on {why_of[i][1]})\n    was: {was}\n    now: {now}')
+        for wn in w.get(i, []):
+            lines.append(f'    WARNING: {wn}')
+    for n, page, old, why in sorted(refused):
+        lines.append(f'REFUSED  line {n}, on {page}: "{old}"\n    {why}')
+    if bad:
+        lines.append('UNREADABLE lines (not page<TAB>words<TAB>new words): ' + ' '.join(map(str, bad)))
+    text = '\n'.join(lines) + '\n'
+    if report_path:
+        Path(report_path).write_text(text, encoding='utf-8')
+    return {'applied': applied, 'refused': refused, 'warnings': w, 'report': text}
+
+
+# --------------------------------------------------------------------------------------------
 # Output
 # --------------------------------------------------------------------------------------------
 HEADER = """# Site text, for the rewrite - exported {date}
@@ -2070,7 +2228,13 @@ def main(argv):
                     'rows (ids from the original export; --export is required to know each id\'s file)')
     ap.add_argument('--skip-dir', action='append', default=[], metavar='PREFIX',
                     help='with --apply-tsv: leave out rows in files under this folder (e.g. learn/)')
+    ap.add_argument('--apply-page-edits', metavar='TSV', help='words changed in place on the site (wording_edit.js\'s '
+                    '"Copy changes": `page<TAB>words on the page<TAB>new words`), found by their words; --dry-run, --report')
     a = ap.parse_args(argv)
+    if a.apply_page_edits:
+        r = apply_page_edits(a.apply_page_edits, a.dry_run, a.report)
+        print(r['report'] if not a.report else r['report'].split('\n')[0])
+        return 0
     if a.apply_tsv:
         if not a.export:
             ap.error('--apply-tsv needs --export (the export the ids came from)')

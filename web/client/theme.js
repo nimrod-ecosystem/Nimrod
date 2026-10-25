@@ -651,3 +651,15 @@ export function mountThemePicker(selectEl, { onChange = null } = {}) {
     onChange?.(id);
   });
 }
+
+// WORDING EDIT (row 2.123): `?wording=1` on any page that loads this file turns on changing the site's words in place
+// (wording_edit.js), and it stays on in that browser until Done or `?wording=0`. Loaded only then: a page nobody asked
+// it of never fetches the file.
+if (typeof window !== 'undefined' && window.location && typeof document !== 'undefined') {
+  let wordingOn = /[?&]wording(=|&|$)/.test(window.location.search || '');
+  if (!wordingOn) { try { wordingOn = window.localStorage?.getItem('nimrod.wording.on') === '1'; } catch { wordingOn = false; } }
+  if (wordingOn) {
+    const go = () => import('./wording_edit.js').then((m) => m.wordingFromPage(window)).catch((err) => console.error('theme: wording edit', err));
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true }); else go();
+  }
+}

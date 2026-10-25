@@ -345,5 +345,73 @@ finally:
     X.WEB, X.CLIENT, X.SERVER = saved
     shutil.rmtree(tmp, ignore_errors=True)
 
+# ---------------------------------------------------------------- --apply-page-edits: words changed in place (2026-10-25)
+# web/client/wording_edit.js copies `page<TAB>words on the page<TAB>new words`. No id, no file: each is found by its
+# words, the page narrowing words that are in more than one file; anything that would need a guess is refused.
+tmp = Path(tempfile.mkdtemp(prefix='nimrod_page_edits_test_'))
+saved = (X.WEB, X.CLIENT, X.SERVER)
+try:
+    X.WEB, X.CLIENT, X.SERVER = tmp, tmp / 'client', tmp / 'server'
+    for d in ('client', 'server'):
+        (tmp / d).mkdir()
+    (tmp / 'client' / 'home.html').write_text('<!doctype html><title>Home</title>\n<p>Welcome home</p>\n'
+                                              '<script type="module" src="./home.js"></script>\n', encoding='utf-8')
+    (tmp / 'client' / 'home.js').write_bytes((
+        "import './shared.js';\r\n"
+        "el.textContent = `You have ${n} new notes`;\r\n"
+        "setStatus('Done for now');\r\n"
+        "el.innerHTML = 'Read <a href=\"/guide\">the guide</a> first';\r\n").encode('utf-8'))
+    (tmp / 'client' / 'shared.js').write_text("setStatus('Shared words here');\n", encoding='utf-8')
+    (tmp / 'client' / 'other.js').write_text("setStatus('Done for now');\n", encoding='utf-8')
+    (tmp / 'client' / 'third.js').write_text("setStatus('Twice over');\n", encoding='utf-8')
+    (tmp / 'client' / 'fourth.js').write_text("setStatus('Twice over');\n", encoding='utf-8')
+    tsv = tmp / 'wording.tsv'
+    tsv.write_text('\n'.join([
+        '# nimrod wording changes, 2026-10-25',
+        '/home.html\tWelcome home\tWelcome back',
+        '/home.html\tYou have 3 new notes\tThere are 3 new notes for you',
+        '/home.html\tDone for now\tAll done',
+        '/home.html\tTwice over\tTwo times',
+        '/home.html\tRead the guide first\tRead the guide now',
+        '/home.html\tHello Sam\tHi Sam',
+        '/home.html\tShared words here\tShared words',
+        'not a row at all',
+    ]) + '\n', encoding='utf-8')
+    r = X.apply_page_edits(tsv, dry_run=True)
+    ap = {v[1]: v[2] for v in r['applied'].values()}
+    refused = {old: why for _, _, old, why in r['refused']}
+    check('page edits dry run: writes nothing', (tmp / 'client' / 'home.js').read_bytes().count(b'You have') == 1, r['report'])
+    check('*** page edits: words the code holds once are found by their words (HTML) ***', ap.get('Welcome home') == 'Welcome back', r['report'])
+    check('*** page edits: words the code filled in ({n}) are matched, and go back as {n} ***',
+          ap.get('You have {n} new notes') == 'There are {n} new notes for you', r['report'])
+    check('*** page edits: words in two files: the one the page loads is changed ***', ap.get('Done for now') == 'All done'
+          and sum(1 for v in r['applied'].values() if v[1] == 'Done for now') == 1, r['report'])
+    check('page edits: a file the page imports through another counts as on the page', ap.get('Shared words here') == 'Shared words', r['report'])
+    check('*** page edits: words in two files the page does not load are REFUSED with both ids, never guessed ***',
+          'Twice over' in refused and 'MORE THAN ONE PLACE' in refused['Twice over'] and refused['Twice over'].count(' t') >= 2, r['report'])
+    check('*** page edits: a line with a link inside is REFUSED (the page cannot show where the tags go) ***',
+          'Read the guide first' in refused and 'LINK OR BOLD' in refused['Read the guide first'], r['report'])
+    check('*** page edits: words the code never holds (built at run time, or data) are NOT FOUND, for a person ***',
+          'Hello Sam' in refused and 'NOT FOUND' in refused['Hello Sam'], r['report'])
+    check('page edits: an unreadable line is counted', '1 unreadable' in r['report'].split('\n')[0], r['report'].split('\n')[0])
+    tsv2 = tmp / 'wording2.tsv'
+    tsv2.write_text('/home.html\tYou have 3 new notes\tYou have new notes\n', encoding='utf-8')
+    r2 = X.apply_page_edits(tsv2, dry_run=True)
+    check('*** page edits: dropping the part the code fills in is REFUSED, saying what it showed ***',
+          not r2['applied'] and 'FILLS IN {n}' in r2['report'] and '"3"' in r2['report'], r2['report'])
+    r = X.apply_page_edits(tsv)
+    js = (tmp / 'client' / 'home.js').read_bytes().decode('utf-8')
+    check('page edits apply: written in place, the template keeps ${n}, CRLF kept, the link line untouched',
+          js == ("import './shared.js';\r\n"
+                 "el.textContent = `There are ${n} new notes for you`;\r\n"
+                 "setStatus('All done');\r\n"
+                 "el.innerHTML = 'Read <a href=\"/guide\">the guide</a> first';\r\n"), repr(js))
+    check('page edits apply: the other file\'s same words are left alone', (tmp / 'client' / 'other.js').read_text(encoding='utf-8') == "setStatus('Done for now');\n")
+    check('page edits apply: the HTML page and the imported file too', '<p>Welcome back</p>' in (tmp / 'client' / 'home.html').read_text(encoding='utf-8')
+          and (tmp / 'client' / 'shared.js').read_text(encoding='utf-8') == "setStatus('Shared words');\n")
+finally:
+    X.WEB, X.CLIENT, X.SERVER = saved
+    shutil.rmtree(tmp, ignore_errors=True)
+
 print(f'\n{passed} passed, {failed} failed')
 sys.exit(1 if failed else 0)

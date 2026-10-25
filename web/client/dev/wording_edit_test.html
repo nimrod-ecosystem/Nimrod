@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wording edit - change the site's words where they are (row 2.123)</title>
+<style>body{font:14px system-ui;margin:16px}.pass{color:#060}.fail{color:#b00;font-weight:600}</style>
+</head>
+<body>
+<h1>wording edit <span id="summary">running…</span></h1>
+<p>Mike, 2026-10-25: "Is there some sort of edit mode for me where I can just change things on the site like wording?"
+<code>?wording=1</code> on a page opens every click on words to be retyped in place; "Copy changes" copies
+<code>page / words / new words</code> lines for <code>export_site_text.py --apply-page-edits</code>.</p>
+<div id="fixture"><button id="b1" type="button">Save the screen</button><p id="p1">Read <a href="#x" id="a1">the guide</a> first</p>
+<div id="big"><span>x</span> stray <div>many words</div></div><input id="in1" value="typed"></div>
+<div id="out"></div>
+<script type="module">
+import { wordingParam, withChange, changesText, wordsElementAt, startWordingEdit, wordingFromPage, ON_KEY, CHANGES_KEY,
+  IDLE_OFF_MS, COPY_HEAD, LINE_MAX } from '../wording_edit.js';
+
+const out = document.getElementById('out');
+let passed = 0, failed = 0;
+function check(name, ok, detail = '') {
+  const p = document.createElement('div');
+  p.className = ok ? 'pass' : 'fail';
+  p.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `   ${detail}` : ''}`;
+  out.append(p);
+  if (ok) passed += 1; else failed += 1;
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const clean = () => { try { localStorage.removeItem(ON_KEY); localStorage.removeItem(CHANGES_KEY); } catch { /* none */ } };
+
+try {
+  clean();
+  section('pure');
+  check('*** ?wording=1 turns it on, ?wording=0 off, nothing says nothing ***', wordingParam('?wording=1') === true && wordingParam('?a=1&wording') === true
+    && wordingParam('?wording=0') === false && wordingParam('?wording=off') === false && wordingParam('?other=1') === null && wordingParam('?wordings=1') === null);
+  let L = withChange([], { page: '/home.html', old: 'Save  the screen ', now: 'Keep this screen' });
+  check('a change: the page, the words as seen (spaces tidied), the new words', J(L) === J([{ page: '/home.html', old: 'Save the screen', new: 'Keep this screen' }]));
+  L = withChange(L, { page: '/home.html', old: 'Keep this screen', now: 'Keep the screen' });
+  check('*** retyping words already changed edits that change, keeping the ORIGINAL words (what the code holds) ***',
+    L.length === 1 && L[0].old === 'Save the screen' && L[0].new === 'Keep the screen', J(L));
+  check('changing them back to the original drops the change', withChange(L, { page: '/home.html', old: 'Keep the screen', now: 'Save the screen' }).length === 0);
+  check('the same words on another page are another change', withChange(L, { page: '/kiosk.html', old: 'Save the screen', now: 'X' }).length === 2);
+  check('no change, no row', withChange([], { page: '/', old: 'Same', now: ' Same ' }).length === 0);
+  const T = changesText([{ page: '/home.html', old: 'A\tb', new: 'Two\nlines' }], '2026-10-25');
+  check('*** "Copy changes": a header, then page TAB words TAB new words, a line break as \\n ***',
+    T === `${COPY_HEAD}, 2026-10-25\n# page\twords on the page\tnew words\n/home.html\tA b\tTwo\\nlines\n`, J(T));
+  check('a click on a button\'s words means the button', wordsElementAt(document.getElementById('b1').firstChild) === document.getElementById('b1'));
+  check('a click on a link inside a sentence means the link\'s words (its own run)', wordsElementAt(document.getElementById('a1')) === document.getElementById('a1'));
+  check('...and on the sentence around it, the whole sentence', wordsElementAt(document.getElementById('p1').firstChild) === document.getElementById('p1'));
+  const big = document.getElementById('big'); big.lastElementChild.textContent = 'many words '.repeat(40);
+  check(`a container with a stray word and a long run inside (over ${LINE_MAX} characters) is not one line`, wordsElementAt(big.childNodes[1]) === null);
+  check('boxes people type in are left alone (their words are theirs, not the site\'s)', wordsElementAt(document.getElementById('in1')) === null);
+
+  section('*** on a page ***');
+  let timers = [];
+  const setTimer = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
+  const clearTimer = (h) => { if (timers[h - 1]) timers[h - 1].fn = null; };
+  const clip = { text: '', writeText: async (t) => { clip.text = t; } };
+  let pressed = 0;
+  const b1 = document.getElementById('b1');
+  b1.addEventListener('click', () => { pressed += 1; });
+  const w = startWordingEdit({ setTimer, clearTimer, clipboard: clip, now: () => new Date('2026-10-25T12:00:00Z') });
+  const bar = () => document.getElementById('wording-edit-bar');
+  check('*** turned on: its bar, saying what to do, with Copy changes and Done ***', !!bar() && /click any words/.test(bar().textContent)
+    && !!bar().querySelector('[data-we="copy"]') && !!bar().querySelector('[data-we="done"]'));
+  check('it is kept as on in this browser (so the next page has it too)', localStorage.getItem(ON_KEY) === '1');
+  b1.click();
+  check('*** a click on a button\'s words opens them to retype, and the button does NOT press ***', pressed === 0 && !!bar().querySelector('textarea')
+    && bar().querySelector('textarea').value === 'Save the screen');
+  bar().querySelector('textarea').value = 'Keep this screen';
+  bar().querySelector('[data-we="save"]').click();
+  check('*** saved: the page shows the new words at once, marked as changed ***', b1.textContent === 'Keep this screen' && b1.hasAttribute('data-wording-changed'));
+  check('...and the change is listed and kept', J(w.changes()) === J([{ page: location.pathname, old: 'Save the screen', new: 'Keep this screen' }])
+    && JSON.parse(localStorage.getItem(CHANGES_KEY)).length === 1 && /1 change/.test(bar().textContent));
+  document.getElementById('p1').firstChild.parentElement.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  bar().querySelector('textarea').value = 'Read the guide before you start';
+  bar().querySelector('[data-we="save"]').click();
+  check('a sentence with a link: the whole sentence is the change (the apply step says it is put in by hand)',
+    w.changes()[1]?.old === 'Read the guide first' && w.changes()[1]?.new === 'Read the guide before you start', J(w.changes()));
+  b1.click();
+  bar().querySelector('[data-we="cancel"]').click();
+  check('"Leave them" closes it with nothing changed', !bar().querySelector('textarea') && w.changes().length === 2);
+  bar().querySelector('[data-we="copy"]').click();
+  await new Promise((r) => setTimeout(r, 0));
+  check('*** "Copy changes" copies every change, ready for --apply-page-edits ***', clip.text.startsWith(COPY_HEAD)
+    && clip.text.includes(`${location.pathname}\tSave the screen\tKeep this screen`) && /Copied 2 changes/.test(bar().textContent), J(clip.text));
+  check(`it turns itself off after ${IDLE_OFF_MS / 60000} minutes with no change (not a gate)`, timers.some((t) => t.fn && t.ms === IDLE_OFF_MS));
+  timers.filter((t) => t.fn && t.ms === IDLE_OFF_MS).forEach((t) => t.fn());
+  check('*** ...and then: no bar, not on, the button presses again, the changes kept to copy later ***', !bar() && localStorage.getItem(ON_KEY) === null
+    && (b1.click(), pressed === 1) && JSON.parse(localStorage.getItem(CHANGES_KEY)).length === 2);
+  const w2 = startWordingEdit({ setTimer, clearTimer, clipboard: clip });
+  check('turned on again: the kept changes are still there', w2.changes().length === 2);
+  bar().querySelector('[data-we="done"]').click();
+  check('*** Done turns it off ***', !bar() && localStorage.getItem(ON_KEY) === null);
+  localStorage.setItem(ON_KEY, '1');
+  check('?wording=0 on a page turns it off without starting it', wordingFromPage({ location: { search: '?wording=0' }, document }) === null
+    && localStorage.getItem(ON_KEY) === null && !bar());
+  check('a page without it, and not left on: nothing happens', wordingFromPage({ location: { search: '' }, document }) === null && !bar());
+  check('names nobody', !/taylor|cici|her screen/i.test(await (await fetch('../wording_edit.js')).text()));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+} finally {
+  clean();
+  try { document.getElementById('wording-edit-bar')?.remove(); } catch { /* gone */ }
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>

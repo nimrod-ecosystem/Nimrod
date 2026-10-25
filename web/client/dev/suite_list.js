@@ -262,6 +262,10 @@ export const SUITES = [
   // 2026-10-12: talk with the town and a free-form adventure (story_ai.js, stubbed model; the Adventure module), and the
   // seam for a voice program on this computer (local_voice.js, a stub program).
   'story_ai', 'adventure', 'local_voice',
+  // 2026-10-25: Design's castle and village (item 45), edited with the room's handles (one editor, note CP).
+  'village',
+  // 2026-10-25 (row 2.123): change the site's words where they are, `?wording=1`; copied for --apply-page-edits.
+  'wording_edit',
   // 2026-10-04: "Try it as someone new" - a test person, fresh; Start over; Back to me; notes kept; Home in a frame.
   'try_new',
   // 2026-10-07 (row 2.54): wrap up a walkthrough - the notes cleaned up locally (Corpus Desk's ten-level dial, clean_up.js)
