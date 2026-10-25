@@ -526,11 +526,11 @@ try {
     const { presetRecipe } = await import('../room_presets.js');
     const base = presetRecipe('theRoom');
     const cab = (r) => r.items.find((x) => x.id === 'cab');
-    check('*** pure: a turn is kept on the recipe in -180..180; 0 is no turn at all ***', cab(withPieceEdit(base, 'cab', { rotate: 200 })).rotate === -160
-      && !('rotate' in cab(withPieceEdit(base, 'cab', { rotate: 360 }))) && withPieceEdit(base, 'door', { rotate: 30 }).items.find((x) => x.id === 'door').rotate === undefined);
+    check('*** pure: a turn is kept on the recipe as `rot` (Design\'s village format) in -180..180; 0 is no turn at all ***', cab(withPieceEdit(base, 'cab', { rotate: 200 })).rot === -160
+      && !('rot' in cab(withPieceEdit(base, 'cab', { rotate: 360 }))) && withPieceEdit(base, 'door', { rotate: 30 }).items.find((x) => x.id === 'door').rot === undefined);
     // (Furniture's size is in its drawn width and height, not a scale() in the transform.)
-    check('*** the room draws a turn about the piece\'s foot, before a flip ***', /translate\(-50%, -100%\) rotate\(30deg\) scaleX\(-1\)$/.test(itemBox({ kind: 'furniture', part: 'cabinet', x: 50, y: 80, scale: 1.2, rotate: 30, flip: true }).transform)
-      && itemBox({ kind: 'furniture', part: 'cabinet', x: 50, y: 80, rotate: 30 }).origin === '50% 100%'
+    check('*** the room draws a turn about the CENTRE of the piece (as village_kit.js does), before a flip ***', /translate\(-50%, -100%\) translateY\(-50%\) rotate\(30deg\) translateY\(50%\) scaleX\(-1\)$/.test(itemBox({ kind: 'furniture', part: 'cabinet', x: 50, y: 80, scale: 1.2, rot: 30, flip: true }).transform)
+      && /translate\(-50%, -50%\) rotate\(30deg\)$/.test(itemBox({ kind: 'furniture', part: 'window', x: 50, y: 30, rot: 30 }).transform)
       && !/rotate/.test(itemBox({ kind: 'furniture', part: 'cabinet', x: 50, y: 80 }).transform));
 
     const scene0 = { kind: 'room', preset: 'theRoom' };
@@ -582,13 +582,13 @@ try {
     await until(() => !!hd()?.querySelector('[data-emh="rotate"]'), 3000);
     drag('rotate', 60, 40);
     check('*** dragging the knob turns it, saved as whole degrees, and the room draws the turn ***',
-      await until(() => Number.isInteger(savedCab()?.rotate) && savedCab().rotate !== 0 && /rotate\(/.test(host.querySelector('.rs-item[data-id="cab"]')?.style?.transform || ''), 3000),
+      await until(() => Number.isInteger(savedCab()?.rot) && savedCab().rot !== 0 && /rotate\(/.test(host.querySelector('.rs-item[data-id="cab"]')?.style?.transform || ''), 3000),
       J(savedCab()));
-    check('...and the Rotation row shows the same number', sel()?.values?.().rotate === savedCab().rotate, J(sel()?.values?.()));
+    check('...and the Rotation row shows the same number', sel()?.values?.().rotate === savedCab().rot, J(sel()?.values?.()));
     const card = () => host.querySelector('.k-room .em-card');
     await until(() => !!card()?.querySelector('[data-em-run="undo"]'), 3000);
     card().querySelector('[data-em-run="undo"]').click();
-    check('*** one drag is one Undo step: the turn is undone, the scale kept ***', await until(() => !savedCab()?.rotate && (savedCab()?.scale || 1) > 1, 3000), J(savedCab()));
+    check('*** one drag is one Undo step: the turn is undone, the scale kept ***', await until(() => !savedCab()?.rot && (savedCab()?.scale || 1) > 1, 3000), J(savedCab()));
     // A tap on the piece is a choice, not a move (DRAG_SLOP_PX).
     await until(() => !!hd(), 3000);
     const xNow = savedCab().x;

@@ -230,9 +230,12 @@ export function itemBox(it, shell = ROOM_SHELLS.room) {
   const f = it.flip ? -1 : 1;
   const transform = side
     ? `translate(-50%, -50%) matrix(${side.sx * mk * f}, ${side.shear * side.sx * mk * f}, 0, ${side.sy * mk}, 0, 0)`
-    // `rotate` (row 2.110, the scene editor's turn handle): degrees, about the piece's anchor (its foot on the floor, its
-    // middle on a wall - the transform-origin below), before a flip so a turned-round piece turns the same way on screen.
-    : `translate(-50%, ${floor ? '-100%' : '-50%'})${mk !== 1 ? ` scale(${mk})` : ''}${Number(it.rotate) ? ` rotate(${Number(it.rotate)}deg)` : ''}${it.flip ? ' scaleX(-1)' : ''}`;
+    // `rot` (row 2.110, the scene editor's turn handle): degrees, clockwise, about the CENTRE of the piece's box - Design's
+    // village format exactly (village_kit.js `rotate(rot, x, y - h/2)`), so one editor means one thing everywhere. A
+    // floor piece's origin is its foot, so it is lifted half its height, turned, and put back. Before a flip, so a
+    // turned-round piece turns the same way on screen.
+    : `translate(-50%, ${floor ? '-100%' : '-50%'})${mk !== 1 ? ` scale(${mk})` : ''}${Number(it.rot)
+      ? (floor ? ` translateY(-50%) rotate(${Number(it.rot)}deg) translateY(50%)` : ` rotate(${Number(it.rot)}deg)`) : ''}${it.flip ? ' scaleX(-1)' : ''}`;
   const vw = side ? w * side.sx * mk : w * mk;
   const vh = side ? h * side.sy * mk : h * mk;
   const cx = (it.x / 100) * W, cy = (it.y / 100) * H;

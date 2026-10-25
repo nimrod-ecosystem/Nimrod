@@ -16,8 +16,9 @@
 //
 // HOW: while a handle is held, the piece is PREVIEWED (its left/top and an extra scale/rotate on its own transform, so
 // it moves under the finger with nothing saved); on release ONE change is handed to `onCommit` - one save, one Undo step.
-// The anchor is the piece's own (the foot of a thing on the floor, the middle of a thing on a wall: room_scene.js
-// itemBox's transform-origin), so scaling and turning keep it standing where it was. A thing on a side wall is drawn
+// THE DATA IS DESIGN'S VILLAGE FORMAT (README 2026-10-25: "editing the same four fields on the same data (x, y, scale,
+// rot, plus flip)"): x and y are the FOOT, so scaling keeps the foot where it is; `rot` turns about the CENTRE of the
+// piece's box, as village_kit.js draws it. A thing on a side wall is drawn
 // through the wall's slant and is not moved or turned here (room_edits.js), only scaled. PURE helpers are exported for
 // the suite; `attachHandles` needs a document.
 
@@ -89,14 +90,17 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
     ov.style.left = `${r.left - h.left}px`; ov.style.top = `${r.top - h.top}px`;
     ov.style.width = `${r.width}px`; ov.style.height = `${r.height}px`;
   }
-  function anchor() {
+  // Scaling keeps the foot where it is (x, y ARE the foot); turning is about the centre (Design's format, room_scene.js).
+  function anchor(kind) {
     const r = el.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: floor ? r.bottom : r.top + r.height / 2 };
+    const mid = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    return kind === 'rotate' || !floor ? mid : { x: mid.x, y: r.bottom };
   }
   function preview(d) {
     const x0 = Number(piece.x) || 0, y0 = Number(piece.y) || 0;
     if (d.kind === 'move') { el.style.left = `${x0 + d.dx}%`; el.style.top = `${y0 + d.dy}%`; }
-    const extra = d.kind === 'scale' ? ` scale(${d.k})` : d.kind === 'rotate' ? ` rotate(${piece.flip ? -d.deg : d.deg}deg)` : '';
+    const turn = (deg) => (floor ? ` translateY(-50%) rotate(${deg}deg) translateY(50%)` : ` rotate(${deg}deg)`);
+    const extra = d.kind === 'scale' ? ` scale(${d.k})` : d.kind === 'rotate' ? turn(piece.flip ? -d.deg : d.deg) : '';
     el.style.transform = `${baseTransform}${extra}`;
     place();
   }
@@ -105,7 +109,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
     if (!kind || (kind !== 'scale' && !movable)) return;
     e.preventDefault(); e.stopPropagation();
     try { e.target.setPointerCapture?.(e.pointerId); } catch { /* not capturable */ }
-    drag = { kind, start: { x: e.clientX, y: e.clientY }, anchor: anchor(), rect: (el.offsetParent || el.parentElement || host).getBoundingClientRect(), moved: false, d: { kind } };
+    drag = { kind, start: { x: e.clientX, y: e.clientY }, anchor: anchor(kind), rect: (el.offsetParent || el.parentElement || host).getBoundingClientRect(), moved: false, d: { kind } };
   }
   function onMove(e) {
     if (!drag) return;
