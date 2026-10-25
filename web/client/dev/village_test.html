@@ -13,7 +13,9 @@
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
 import { TYPE, SETTINGS, recipeFor, ASSET_BASE, LIGHT_CHECK_MS, STAGE, MOVE_STEP, TURN_STEP, SIZE_RANGE, PIECES_MAX,
-  pieceName, pieceFields, pieceValues, withPieceEdit, withoutPiece, withCopy, withNewPiece, addOptions, ownRecipe } from '../modules/village.js';
+  pieceName, pieceFields, pieceValues, withPieceEdit, withoutPiece, withCopy, withNewPiece, addOptions, ownRecipe, COUNT_THINGS } from '../modules/village.js';
+import { OBJECTS } from '../count_objects.js';
+const objectNames = Object.keys(OBJECTS);
 import { attachHandles, svgGeometry } from '../room_handles.js';
 import { createEditMode } from '../edit_mode.js';
 import { VILLAGE_SCENES, PIECES } from '../village_kit.js';
@@ -113,6 +115,20 @@ try {
   check('"Add a piece or a person" lists Design\'s pieces by group, then the people', addOptions().some((o) => o.value === 'cast:jess' && /Princess Jess/.test(o.label))
     && addOptions().some((o) => o.value.startsWith('piece:')) && addOptions()[0].value === '');
   check('a full scene takes no more', withNewPiece({ pieces: Array.from({ length: PIECES_MAX }, () => ({ cast: 'jess', x: 1, y: 1 })) }, 'cast:jess').recipe === null);
+  const ct = { piece: 'countTable', x: 800, y: 700 };
+  check('*** a lesson piece has its own settings too: a counting table\'s thing, how many, and what it sits on ***',
+    J(pieceFields(ct).map((f) => f.key)) === J(['x', 'y', 'size', 'rotate', 'facing', 'object', 'count', 'holder'])
+    && pieceValues(ct).object === 'loaf' && pieceValues(ct).count === 5 && pieceValues(ct).holder === 'table');
+  const ct2 = withPieceEdit({ pieces: [ct] }, 0, { object: 'duck', count: 14, holder: 'basket' }).pieces[0];
+  check('...changed inside what Design draws: ducks, at most ten, in a basket; a thing not on the list is ignored',
+    ct2.object === 'duck' && ct2.count === 10 && ct2.holder === 'basket' && withPieceEdit({ pieces: [ct2] }, 0, { object: 'tiger' }).pieces[0].object === 'duck');
+  const sg = withPieceEdit({ pieces: [{ piece: 'letterSign', x: 1, y: 1 }] }, 0, { text: 'big dog house' }).pieces[0];
+  check('a signboard\'s letters: capitals, a space is a gap (_), eight at most', sg.text === 'BIG_DOG_' && pieceFields(sg).some((f) => f.key === 'text' && f.maxLength === 8), sg.text);
+  check('the wall\'s rows, the candles and the scale\'s tilt, each in Design\'s range',
+    withPieceEdit({ pieces: [{ piece: 'wallBuild', x: 1, y: 1 }] }, 0, { rows: 9 }).pieces[0].rows === 6
+    && withPieceEdit({ pieces: [{ piece: 'candleStand', x: 1, y: 1 }] }, 0, { count: 0 }).pieces[0].count === 1
+    && withPieceEdit({ pieces: [{ piece: 'marketScale', x: 1, y: 1 }] }, 0, { tilt: '-1' }).pieces[0].tilt === -1
+    && COUNT_THINGS.every((o) => objectNames.includes(o)), J(COUNT_THINGS.filter((o) => !objectNames.includes(o))));
   check('the panel keeps pieces and label, not look/time/frame (those are its settings)', J(Object.keys(ownRecipe({ ...base, look: 'toon', time: 'night', frame: false })).sort()) === J(['label', 'pieces']));
 
   section('*** editing on a panel: edit mode\'s targets, saved as the panel\'s own scene ***');

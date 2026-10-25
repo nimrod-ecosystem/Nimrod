@@ -82,8 +82,32 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 export function pieceName(it = {}) {
   return (it.cast ? CAST[it.cast]?.name : PIECES[it.piece]?.label) || it.cast || it.piece || 'Piece';
 }
-/** A piece's rows, as settings_fields.js fields (the same rows as a room piece's, room_edits.js pieceFields). PURE. */
-export function pieceFields() {
+// A LESSON PIECE'S OWN SETTINGS (Design's village builder's, same names and ranges as village_kit.js reads them): what a
+// counting table holds and how many, a signboard's letters, how many rows of the castle wall are up, the candles, which
+// way the market scale tips. The things to count are the builder's list.
+export const COUNT_THINGS = Object.freeze(['loaf', 'apple', 'egg', 'coin', 'cup', 'candle', 'sack', 'key', 'duck', 'ball', 'star']);
+const HOLDERS = ['table', 'basket', 'crate'];
+const OWN = {
+  countTable: [
+    { key: 'object', label: 'What to count', kind: 'choice', level: 'essential', default: 'loaf', options: COUNT_THINGS.map((o) => ({ value: o, label: o[0].toUpperCase() + o.slice(1) })) },
+    { key: 'count', label: 'How many', kind: 'number', min: 0, max: 10, step: 1, level: 'essential', default: 5, note: 'in rows of five' },
+    { key: 'holder', label: 'On a', kind: 'choice', level: 'essential', default: 'table', options: HOLDERS.map((h) => ({ value: h, label: h[0].toUpperCase() + h.slice(1) })) },
+  ],
+  letterSign: [{ key: 'text', label: 'Letters', kind: 'text', editable: true, maxLength: 8, level: 'essential', default: 'CAT', note: 'up to 8; _ is a gap' }],
+  wallBuild: [{ key: 'rows', label: 'Rows built', kind: 'number', min: 0, max: 6, step: 1, level: 'essential', default: 3 }],
+  candleStand: [{ key: 'count', label: 'Candles', kind: 'number', min: 1, max: 7, step: 1, level: 'essential', default: 3 }],
+  marketScale: [{ key: 'tilt', label: 'Tips toward', kind: 'choice', level: 'essential', default: 0,
+    options: [{ value: -1, label: 'Left' }, { value: 0, label: 'Level' }, { value: 1, label: 'Right' }] }],
+};
+/** A piece's own settings beyond where it stands (a lesson piece's), as fields. PURE. */
+export function pieceOwnFields(it = {}) { return (it.piece && OWN[it.piece]) || []; }
+
+/** A piece's rows, as settings_fields.js fields (the same rows as a room piece's, room_edits.js pieceFields), then its
+ * own settings. PURE. */
+export function pieceFields(it = {}) {
+  return [...transformFields(), ...pieceOwnFields(it)];
+}
+function transformFields() {
   return [
     { key: 'x', label: 'Left or right', kind: 'number', min: 0, max: STAGE.w, step: MOVE_STEP, level: 'essential', default: 800,
       note: '‹ moves it left, › right' },
@@ -99,8 +123,16 @@ export function pieceFields() {
 }
 /** What those rows show now. PURE. */
 export function pieceValues(it = {}) {
+  const own = Object.fromEntries(pieceOwnFields(it).map((f) => [f.key, it[f.key] ?? f.default]));
   return { x: Math.round(Number(it.x) || 0), y: Math.round(Number(it.y) || 0), size: Number(it.scale ?? 1) || 1,
-    rotate: normDeg(it.rot), facing: it.flip ? 'turned' : 'drawn' };
+    rotate: normDeg(it.rot), facing: it.flip ? 'turned' : 'drawn', ...own };
+}
+/** One own setting kept inside what village_kit.js draws (its range, its options; letters as capitals). Null: not one. PURE. */
+function ownValue(f, v) {
+  if (f.kind === 'number') { const n = Math.round(Number(v)); return Number.isFinite(n) ? clamp(n, f.min, f.max) : null; }
+  if (f.kind === 'choice') { const o = f.options.find((x) => String(x.value) === String(v)); return o ? o.value : null; }
+  if (f.kind === 'text') return String(v ?? '').toUpperCase().replace(/\s+/g, '_').slice(0, f.maxLength);
+  return null;
 }
 /** The scene with piece `i` changed by `patch` ({ x?, y?, size?, rotate?, facing? }), kept on the stage. Null: no such piece. PURE. */
 export function withPieceEdit(recipe, i, patch = {}) {
@@ -112,6 +144,11 @@ export function withPieceEdit(recipe, i, patch = {}) {
   if (patch.size != null && Number.isFinite(Number(patch.size))) it.scale = Math.round(clamp(Number(patch.size), ...SIZE_RANGE) * 100) / 100;
   if (patch.rotate != null) { const d = normDeg(patch.rotate); if (d) it.rot = d; else delete it.rot; }
   if (patch.facing != null) { if (patch.facing === 'turned') it.flip = true; else delete it.flip; }
+  for (const f of pieceOwnFields(it)) {
+    if (!(f.key in patch)) continue;
+    const v = ownValue(f, patch[f.key]);
+    if (v !== null) it[f.key] = v;
+  }
   return r;
 }
 /** The scene without piece `i`. PURE. */
@@ -248,7 +285,7 @@ registerModule(
         out.push({
           id: `piece-${i}`, label: pieceName(it), el: g,
           help: `${pieceName(it)}. Drag it to move it, drag the corner square to change its size, or the round handle to turn it.`,
-          fields: pieceFields(), values: () => pieceValues(current?.pieces?.[i] || it),
+          fields: pieceFields(it), values: () => pieceValues(current?.pieces?.[i] || it),
           set: (patch) => { editPiece(i, patch); },
           actions: [
             { id: 'copy', label: 'Copy it', run: () => { const got = withCopy(current, i); if (got) keep(got.recipe); else say(`This scene is full (${PIECES_MAX} things).`); } },
