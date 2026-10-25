@@ -12,7 +12,10 @@
 <script type="module">
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
-import { TYPE, SETTINGS, recipeFor, ASSET_BASE, LIGHT_CHECK_MS } from '../modules/village.js';
+import { TYPE, SETTINGS, recipeFor, ASSET_BASE, LIGHT_CHECK_MS, STAGE, MOVE_STEP, TURN_STEP, SIZE_RANGE, PIECES_MAX,
+  pieceName, pieceFields, pieceValues, withPieceEdit, withoutPiece, withCopy, withNewPiece, addOptions, ownRecipe } from '../modules/village.js';
+import { attachHandles, svgGeometry } from '../room_handles.js';
+import { createEditMode } from '../edit_mode.js';
 import { VILLAGE_SCENES, PIECES } from '../village_kit.js';
 import { CAST } from '../cast.js';
 import { CATALOG } from '../modules_catalog.js';
@@ -89,6 +92,109 @@ try {
   v.done();
   check('taken down: nothing left counting', v.timers.pending() === 0);
   check('names nobody', !/taylor|cici|her screen/i.test(JSON.stringify(SETTINGS) + getManifest(TYPE).description));
+
+  section('editing, pure: the same rows as a room piece');
+  const base = { label: 'Test', pieces: [{ cast: 'jess', x: 400, y: 800, scale: 0.62 }, { piece: 'cloud', x: 300, y: 200 }] };
+  check('*** a piece\'s rows: left or right, nearer or further, size, rotation, facing (room_edits.js\'s names) ***',
+    J(pieceFields().map((f) => f.key)) === J(['x', 'y', 'size', 'rotate', 'facing']) && pieceFields().find((f) => f.key === 'rotate').step === TURN_STEP
+    && pieceFields().find((f) => f.key === 'x').step === MOVE_STEP);
+  check('what they show: Jess at 400, 800, size 0.62, not turned', J(pieceValues(base.pieces[0])) === J({ x: 400, y: 800, size: 0.62, rotate: 0, facing: 'drawn' }));
+  const e1 = withPieceEdit(base, 0, { x: 2000, y: -5, size: 9, rotate: 190, facing: 'turned' });
+  check('*** kept on the stage: x to 1600, y to 0, size to 4, a turn of 190 is -170, turned round ***',
+    e1.pieces[0].x === STAGE.w && e1.pieces[0].y === 0 && e1.pieces[0].scale === SIZE_RANGE[1] && e1.pieces[0].rot === -170 && e1.pieces[0].flip === true, J(e1.pieces[0]));
+  const e2 = withPieceEdit(e1, 0, { rotate: 0, facing: 'drawn' });
+  check('no turn and as drawn: the fields are gone, not zero (the format stays Design\'s)', !('rot' in e2.pieces[0]) && !('flip' in e2.pieces[0]));
+  check('the original is never changed', J(base.pieces[0]) === J({ cast: 'jess', x: 400, y: 800, scale: 0.62 }) && withPieceEdit(base, 9, { x: 1 }) === null);
+  check('take one out; copy one (a step to the right)', withoutPiece(base, 1).pieces.length === 1
+    && withCopy(base, 0).recipe.pieces.length === 3 && withCopy(base, 0).recipe.pieces[2].x === 460 && withCopy(base, 0).index === 2);
+  const add1 = withNewPiece(base, 'cast:merlin'), add2 = withNewPiece(base, 'piece:cloud'), add3 = withNewPiece(base, 'piece:nope');
+  check('*** add a person or a piece: in the middle; a sky piece in the sky; an unknown one is refused with words ***',
+    add1.recipe.pieces[2].cast === 'merlin' && add1.recipe.pieces[2].x === 800 && add2.recipe.pieces[2].y < 450 && add3.recipe === null && !!add3.why);
+  check('"Add a piece or a person" lists Design\'s pieces by group, then the people', addOptions().some((o) => o.value === 'cast:jess' && /Princess Jess/.test(o.label))
+    && addOptions().some((o) => o.value.startsWith('piece:')) && addOptions()[0].value === '');
+  check('a full scene takes no more', withNewPiece({ pieces: Array.from({ length: PIECES_MAX }, () => ({ cast: 'jess', x: 1, y: 1 })) }, 'cast:jess').recipe === null);
+  check('the panel keeps pieces and label, not look/time/frame (those are its settings)', J(Object.keys(ownRecipe({ ...base, look: 'toon', time: 'night', frame: false })).sort()) === J(['label', 'pieces']));
+
+  section('*** editing on a panel: edit mode\'s targets, saved as the panel\'s own scene ***');
+  const st2 = fakeRow({ time: 'day', scene: 'village' });
+  const clip = { text: '', writeText: async (t) => { clip.text = t; } };
+  const w = mount(st2, { clipboard: clip });
+  let targets = w.inst.impl.editTargets();
+  const pieceTs = targets.filter((t) => t.id.startsWith('piece-'));
+  const drawnPieces = VILLAGE_SCENES.village.recipe.pieces.filter((it) => (it.piece ? PIECES[it.piece] : true)).length;
+  check(`*** every piece and person is a target (${pieceTs.length}), then the scene itself, last and whole ***`,
+    pieceTs.length === drawnPieces && targets[targets.length - 1].id === 'scene' && targets[targets.length - 1].whole === true, `${pieceTs.length} of ${drawnPieces}`);
+  const jessI = VILLAGE_SCENES.village.recipe.pieces.findIndex((it) => it.cast);
+  const tJ = targets.find((t) => t.id === `piece-${jessI}`);
+  check('a person is named: the target\'s label is the cast name', !!tJ && tJ.label === pieceName(VILLAGE_SCENES.village.recipe.pieces[jessI]), tJ && tJ.label);
+  check('*** each piece carries the room\'s handles, on the SVG stage, around the group that carries its turn ***',
+    tJ.handles && tJ.handles.geometry === 'svg' && tJ.handles.el === tJ.el.parentNode && typeof tJ.handles.onCommit === 'function');
+  check('Design\'s grab cursor and its own handles are not drawn (the room\'s are the editor)', !/cursor:grab/.test(w.box.innerHTML) && !w.box.querySelector('[data-h]'));
+  const x0 = pieceValues(VILLAGE_SCENES.village.recipe.pieces[jessI]).x;
+  tJ.set({ x: x0 + 100 });
+  check('*** a row changed: the scene is now the panel\'s own, saved, and drawn moved ***', Array.isArray(st2.get().recipe?.pieces)
+    && st2.get().recipe.pieces[jessI].x === x0 + 100 && w.probe().recipe.pieces[jessI].x === x0 + 100 && !('look' in st2.get().recipe));
+  check('...Design\'s scene is untouched', VILLAGE_SCENES.village.recipe.pieces[jessI].x === x0);
+  targets = w.inst.impl.editTargets();
+  targets.find((t) => t.id === `piece-${jessI}`).handles.onCommit({ rotate: 30 });
+  check('a handle\'s commit is the same change (a turn of 30)', st2.get().recipe.pieces[jessI].rot === 30 && w.probe().undo === 2);
+  w.inst.impl.__edit.undoOnce();
+  check('*** Undo steps back one change ***', !('rot' in st2.get().recipe.pieces[jessI]) && st2.get().recipe.pieces[jessI].x === x0 + 100);
+  const sceneT = w.inst.impl.editTargets().find((t) => t.id === 'scene');
+  sceneT.set({ addPiece: 'cast:vince' });
+  check('*** the scene: add a person (Prince Vince), said in words ***', st2.get().recipe.pieces.some((it) => it.cast === 'vince')
+    && /Prince Vince/.test(w.q('[data-vg-said]').textContent));
+  await sceneT.actions.find((a) => a.id === 'default').run();
+  await new Promise((r) => setTimeout(r, 0));
+  let entry = null; try { entry = JSON.parse(clip.text); } catch { entry = null; }
+  check('*** "Copy as the default": the defaults file\'s shape, under village / this scene ***', entry?.format === 'nimrod-defaults'
+    && Array.isArray(entry?.village?.village?.pieces) && entry.village.village.pieces.some((it) => it.cast === 'vince'), clip.text.slice(0, 160));
+  sceneT.actions.find((a) => a.id === 'putBack').run();
+  check('*** "Put the scene back": as it comes, Design\'s (or the designer\'s) ***', !st2.get().recipe && J(w.probe().recipe.pieces) === J(VILLAGE_SCENES.village.recipe.pieces));
+  sceneT.set({ look: 'toon' });
+  check('the scene\'s settings are on it too (the look)', st2.get().look === 'toon' && w.q('[data-village]').dataset.look === 'toon');
+
+  section('*** the handles themselves, on the SVG stage (room_handles.js svgGeometry) ***');
+  // A building, not a person: Design's people breathe and sway (CSS), so a figure's box moves between two measurements.
+  const bI = VILLAGE_SCENES.village.recipe.pieces.findIndex((it) => it.piece && PIECES[it.piece]?.group === 'Village');
+  const tH = w.inst.impl.editTargets().find((t) => t.id === `piece-${bI}`);
+  const commits = [];
+  const hd = attachHandles({ el: tH.handles.el, host: w.box, piece: tH.handles.piece, geometry: svgGeometry, onCommit: (p) => commits.push(p) });
+  const boxEl = hd.el.querySelector('.emh-box');
+  const r0b = boxEl.getBoundingClientRect();
+  const ctm = w.q('svg').getScreenCTM();
+  const fire = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 1 }));
+  const cx = r0b.left + r0b.width / 2, cy = r0b.top + r0b.height / 2;
+  fire(boxEl, 'pointerdown', cx, cy); fire(boxEl, 'pointermove', cx + 40, cy); fire(boxEl, 'pointerup', cx + 40, cy);
+  const wantDx = 40 / ctm.a;
+  check(`*** dragging the body 40px moves it ${wantDx.toFixed(1)} stage units across, nothing down (one commit) ***`,
+    commits.length === 1 && Math.abs(commits[0].x - (tH.handles.piece.x + wantDx)) < 0.2 && Math.abs(commits[0].y - tH.handles.piece.y) < 0.2, J(commits));
+  check('...previewed by a transform in front of the piece\'s own, nothing saved by the handles themselves',
+    (tH.handles.el.getAttribute('transform') || '').startsWith('translate(') && !st2.get().recipe);
+  hd.destroy();
+  const hd2 = attachHandles({ el: tH.handles.el, host: w.box, piece: tH.handles.piece, geometry: svgGeometry, onCommit: (p) => commits.push(p) });
+  const knob = hd2.el.querySelector('.emh-rot');
+  const kr = knob.getBoundingClientRect(), kx = kr.left + kr.width / 2, ky = kr.top + kr.height / 2;
+  const br = hd2.el.getBoundingClientRect(), bcx = br.left + br.width / 2, bcy = br.top + br.height / 2;
+  const pr = tH.handles.el.getBoundingClientRect();
+  // Pressed BEFORE the next check line is written: each line goes above the panel and moves it down the page.
+  fire(knob, 'pointerdown', kx, ky); fire(knob, 'pointermove', bcx + (bcy - ky), bcy); fire(knob, 'pointerup', bcx + (bcy - ky), bcy);
+  check('the outline sits exactly on the piece (inside the panel\'s border), and the round handle is centred over it',
+    Math.abs(br.left - pr.left) < 0.6 && Math.abs(br.top - pr.top) < 0.6 && Math.abs(kx - bcx) < 0.6, J({ outline: [br.left, br.top], piece: [pr.left, pr.top], knob: kx, mid: bcx }));
+  check('*** the round handle turned a quarter: a rotation of 90 ***', commits.length === 2 && Math.abs(commits[1].rotate - 90) <= 2, J(commits));
+  hd2.destroy();
+  check('the handles are gone when taken down', !w.box.querySelector('.em-handles'));
+
+  section('edit mode hands the chosen piece\'s handles to the dashboard');
+  const rec = { id: 'vp', type: TYPE, instance: w.inst, el: w.box, state: st2 };
+  const em = createEditMode({ bus: createBus(), doc: document, recs: () => [rec], boxOf: () => w.box });
+  em.enter('vp');
+  em.select(`piece-${jessI}`);
+  check('*** chosenTarget() is the piece, with its handles ***', em.chosenTarget()?.id === `piece-${jessI}` && em.chosenTarget()?.handles?.geometry === 'svg');
+  em.select(null);
+  check('the scene chosen: no handles (it is the whole panel)', em.chosenTarget()?.id === 'scene' && !em.chosenTarget()?.handles);
+  em.destroy();
+  w.done();
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

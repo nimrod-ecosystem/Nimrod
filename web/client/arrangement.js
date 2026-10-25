@@ -2275,9 +2275,33 @@ export function createArrangement({
   let roomHandles = null;
   let handlesLib = null;
   function dropHandles() { try { roomHandles?.destroy(); } catch { /* gone */ } roomHandles = null; }
+  // The same handles on any panel's chosen thing that asks for them (edit_mode.js `handles`): the village's pieces, so
+  // there is one editor, not two (chat's note CP). The module saves the change; the handles are drawn again over the
+  // piece it redraws, once the save has drawn it.
+  function syncTargetHandles(a) {
+    let t = null;
+    try { t = editMode?.chosenTarget?.() || null; } catch { t = null; }
+    const h = t?.handles;
+    const host = promoteBox(a.id)?.box || recFor(a.id)?.el || null;
+    if (!h?.el || !host || typeof h.onCommit !== 'function') return;
+    const draw = (lib) => {
+      if (editMode?.active?.()?.target !== a.target || !h.el.isConnected) return;
+      roomHandles = lib.attachHandles({ el: h.el, host, piece: h.piece || {}, floor: h.floor !== false, movable: h.movable !== false,
+        geometry: h.geometry === 'svg' ? lib.svgGeometry : lib.htmlGeometry,
+        onCommit: (patch) => {
+          if (!patch) return;
+          try { h.onCommit(patch); } catch (err) { console.error('arrangement: handles', err); }
+          // Chosen again once the module has redrawn, so the rows show the new numbers and the handles sit on the new piece.
+          setTimeout(() => { try { if (editMode?.active?.()?.target === a.target) editMode.select(a.target); } catch { /* gone */ } }, 0);
+        } });
+    };
+    if (handlesLib) draw(handlesLib);
+    else import('./room_handles.js').then((m) => { handlesLib = m; draw(m); }).catch((err) => console.error('arrangement: handles', err));
+  }
   function syncRoomHandles() {
     dropHandles();
     const a = editMode?.active?.();
+    if (a && a.id !== ROOM_PANEL_ID && a.target) { syncTargetHandles(a); return; }
     if (!a || a.id !== ROOM_PANEL_ID || !a.target || a.target === 'room' || !roomScene || !roomEditsLib || is3dScene(layout?.scene)) return;
     const piece = roomEditsLib.pieceOf(sceneRecipe(roomBase()?.scene || null), a.target);
     if (!piece || !roomEditsLib.isEditablePiece(piece)) return;

@@ -54,6 +54,7 @@ function ensureCss(doc) {
   s.id = STYLE_ID;
   s.textContent = `
 .${HANDLES_CLASS}{position:absolute;z-index:40;pointer-events:none;box-sizing:border-box}
+.${HANDLES_CLASS} *{box-sizing:border-box}
 .${HANDLES_CLASS} .emh-box{position:absolute;inset:0;border:2px dashed var(--focus,var(--accent,#2b6cb0));border-radius:6px;pointer-events:auto;cursor:move;touch-action:none}
 .${HANDLES_CLASS} .emh-box[data-fixed]{cursor:default}
 .${HANDLES_CLASS} .emh-scale{position:absolute;right:-12px;bottom:-12px;width:24px;height:24px;border-radius:4px;background:var(--surface,#fff);border:3px solid var(--focus,var(--accent,#2b6cb0));pointer-events:auto;cursor:nwse-resize;touch-action:none}
@@ -62,13 +63,66 @@ function ensureCss(doc) {
   (doc.head || doc.documentElement).append(s);
 }
 
+// ---- GEOMETRY: how a drag in pixels becomes the piece's own numbers, and how it is previewed ----
+// ONE EDITOR, TWO KINDS OF DRAWING (chat's note CP, "one editor, not two"). A room piece is an HTML element placed by
+// left/top in percent; a village piece (village_kit.js) is an SVG group on a 1600x900 stage, in the stage's own units.
+// The handles, the gestures and the one commit per gesture are the same; only these three answers differ.
+//   start()          measured once when a handle is pressed
+//   delta(dx, dy, s) the move, in the piece's own units
+//   preview(d, piece) / reset()   the piece under the finger, nothing saved / put back as it was
+
+/** A room piece: an HTML element with style left/top in percent of its parent (room_scene.js). */
+export function htmlGeometry({ el, host, floor = true }) {
+  const baseTransform = el.style.transform || '';
+  const baseLeft = el.style.left, baseTop = el.style.top;
+  return {
+    start: () => ({ rect: (el.offsetParent || el.parentElement || host).getBoundingClientRect() }),
+    delta: (dx, dy, s) => movedPercent(dx, dy, s.rect),
+    preview(d, piece) {
+      const x0 = Number(piece.x) || 0, y0 = Number(piece.y) || 0;
+      if (d.kind === 'move') { el.style.left = `${x0 + d.dx}%`; el.style.top = `${y0 + d.dy}%`; }
+      const turn = (deg) => (floor ? ` translateY(-50%) rotate(${deg}deg) translateY(50%)` : ` rotate(${deg}deg)`);
+      const extra = d.kind === 'scale' ? ` scale(${d.k})` : d.kind === 'rotate' ? turn(piece.flip ? -d.deg : d.deg) : '';
+      el.style.transform = `${baseTransform}${extra}`;
+    },
+    reset() { el.style.left = baseLeft; el.style.top = baseTop; el.style.transform = baseTransform; },
+  };
+}
+
 /**
- * Handles over `el` (a positioned piece: style left/top in percent of its parent), drawn in `host`. `piece`: its
- * recipe values now, `{ x, y, size, rotate, flip }`; `floor`: anchored at its foot (else its middle); `movable`: may be
- * dragged and turned (false: a side-wall thing, scaled only). `onCommit({ x?, y?, size?, rotate? })` once per gesture.
- * Returns `{ el: the overlay, place(), destroy() }`.
+ * A village piece: an SVG element on a stage drawn through a viewBox (village_kit.js sceneSvg), moved in the stage's
+ * units. `el` is the group that carries the piece's turn (sceneSvg's outer `<g transform="rotate(...)">`): the preview is
+ * put IN FRONT of that transform, so it scales about the foot and turns about the centre of the piece's own box (the
+ * group's getBBox, before its turn), as village_kit.js draws them. Its flip is inside the turn, so a turn is not mirrored.
  */
-export function attachHandles({ el, host, piece = {}, floor = true, movable = true, onCommit = () => {} } = {}) {
+export function svgGeometry({ el }) {
+  const base = el.getAttribute('transform') || '';
+  const box = () => { try { const b = el.getBBox(); return { cx: b.x + b.width / 2, cy: b.y + b.height / 2, fy: b.y + b.height }; } catch { return null; } };
+  const put = (extra) => { const t = `${extra} ${base}`.trim(); if (t) el.setAttribute('transform', t); else el.removeAttribute('transform'); };
+  return {
+    start() {
+      let m = null;
+      try { m = el.ownerSVGElement?.getScreenCTM?.() || null; } catch { m = null; }
+      return { ux: Math.abs(m?.a) || 1, uy: Math.abs(m?.d) || 1, box: box() };
+    },
+    delta: (dx, dy, s) => ({ dx: round1(dx / s.ux), dy: round1(dy / s.uy) }),
+    preview(d, piece, s) {
+      const b = s?.box || { cx: Number(piece.x) || 0, cy: Number(piece.y) || 0, fy: Number(piece.y) || 0 };
+      if (d.kind === 'move') put(`translate(${d.dx} ${d.dy})`);
+      else if (d.kind === 'scale') put(`translate(${b.cx} ${b.fy}) scale(${d.k}) translate(${-b.cx} ${-b.fy})`);
+      else if (d.kind === 'rotate') put(`rotate(${d.deg} ${b.cx} ${b.cy})`);
+    },
+    reset() { put(''); },
+  };
+}
+
+/**
+ * Handles over `el`, drawn in `host`. `piece`: its recipe values now, `{ x, y, size, rotate, flip }`; `floor`: anchored
+ * at its foot (else its middle); `movable`: may be dragged and turned (false: a side-wall thing, scaled only).
+ * `geometry`: htmlGeometry (the default, a room piece placed by left/top in percent) or svgGeometry (a village piece, in
+ * its stage's units). `onCommit({ x?, y?, size?, rotate? })` once per gesture. Returns `{ el: the overlay, place(), destroy() }`.
+ */
+export function attachHandles({ el, host, piece = {}, floor = true, movable = true, geometry = htmlGeometry, onCommit = () => {} } = {}) {
   if (!el || !host) return { el: null, place() {}, destroy() {} };
   const doc = host.ownerDocument || document;
   ensureCss(doc);
@@ -79,15 +133,16 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
     + `<div class="emh-scale" data-emh="scale" title="Drag to make it bigger or smaller"></div>`
     + (movable ? '<div class="emh-stem"></div><div class="emh-rot" data-emh="rotate" title="Drag to turn it"></div>' : '');
   host.append(ov);
-  const baseTransform = el.style.transform || '';
-  const baseLeft = el.style.left, baseTop = el.style.top;
+  const geo = geometry({ el, host, floor });
   let drag = null;
   let torn = false;
 
   function place() {
     if (torn) return;
+    // Placed inside the host's border (absolute positions start there), and with its scroll.
     const h = host.getBoundingClientRect(), r = el.getBoundingClientRect();
-    ov.style.left = `${r.left - h.left}px`; ov.style.top = `${r.top - h.top}px`;
+    ov.style.left = `${r.left - h.left - (host.clientLeft || 0) + (host.scrollLeft || 0)}px`;
+    ov.style.top = `${r.top - h.top - (host.clientTop || 0) + (host.scrollTop || 0)}px`;
     ov.style.width = `${r.width}px`; ov.style.height = `${r.height}px`;
   }
   // Scaling keeps the foot where it is (x, y ARE the foot); turning is about the centre (Design's format, room_scene.js).
@@ -97,11 +152,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
     return kind === 'rotate' || !floor ? mid : { x: mid.x, y: r.bottom };
   }
   function preview(d) {
-    const x0 = Number(piece.x) || 0, y0 = Number(piece.y) || 0;
-    if (d.kind === 'move') { el.style.left = `${x0 + d.dx}%`; el.style.top = `${y0 + d.dy}%`; }
-    const turn = (deg) => (floor ? ` translateY(-50%) rotate(${deg}deg) translateY(50%)` : ` rotate(${deg}deg)`);
-    const extra = d.kind === 'scale' ? ` scale(${d.k})` : d.kind === 'rotate' ? turn(piece.flip ? -d.deg : d.deg) : '';
-    el.style.transform = `${baseTransform}${extra}`;
+    geo.preview(d, piece, drag?.geo);
     place();
   }
   function onDown(e) {
@@ -109,7 +160,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
     if (!kind || (kind !== 'scale' && !movable)) return;
     e.preventDefault(); e.stopPropagation();
     try { e.target.setPointerCapture?.(e.pointerId); } catch { /* not capturable */ }
-    drag = { kind, start: { x: e.clientX, y: e.clientY }, anchor: anchor(kind), rect: (el.offsetParent || el.parentElement || host).getBoundingClientRect(), moved: false, d: { kind } };
+    drag = { kind, start: { x: e.clientX, y: e.clientY }, anchor: anchor(kind), geo: geo.start(), moved: false, d: { kind } };
   }
   function onMove(e) {
     if (!drag) return;
@@ -117,7 +168,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
     if (!drag.moved && Math.hypot(now.x - drag.start.x, now.y - drag.start.y) < DRAG_SLOP_PX) return;
     drag.moved = true;
     e.preventDefault();
-    if (drag.kind === 'move') drag.d = { kind: 'move', ...movedPercent(now.x - drag.start.x, now.y - drag.start.y, drag.rect) };
+    if (drag.kind === 'move') drag.d = { kind: 'move', ...geo.delta(now.x - drag.start.x, now.y - drag.start.y, drag.geo) };
     else if (drag.kind === 'scale') drag.d = { kind: 'scale', k: scaleFactor(drag.anchor, drag.start, now) };
     else drag.d = { kind: 'rotate', deg: turnDegrees(drag.anchor, drag.start, now) };
     preview(drag.d);
@@ -138,7 +189,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
   ov.addEventListener('pointerdown', onDown);
   ov.addEventListener('pointermove', onMove);
   ov.addEventListener('pointerup', onUp);
-  ov.addEventListener('pointercancel', () => { if (drag) { drag = null; el.style.left = baseLeft; el.style.top = baseTop; el.style.transform = baseTransform; place(); } });
+  ov.addEventListener('pointercancel', () => { if (drag) { drag = null; geo.reset(); place(); } });
   ov.addEventListener('click', stopClick);
   place();
   return {

@@ -32,6 +32,9 @@
 //             picture, and the clear button over it that takes a press -- and either is "the desk")
 //     whole   this target IS the panel (a room's walls and floor): it is what is chosen to begin with,
 //             and what a press on nothing else chooses. List it LAST (it holds every other target).
+//     handles (2026-10-25) drag / scale / turn handles on it while chosen, room_handles.js, drawn by the
+//             dashboard (arrangement.js): `{ el, piece, floor?, movable?, geometry?: 'svg', onCommit(patch) }`.
+//             The village's pieces use them, so a room and a village are moved by the same editor.
 // A record may also say `passThrough` (a CSS selector): a press inside a matching element nested in the
 // panel is NOT taken -- a module sitting in a room's slot keeps working while the room is being edited.
 // A module that cannot be edited (yet) without changing its file can be DECLARED here instead
@@ -494,6 +497,8 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     enter, leave, select,
     toggle: (id) => (active && active.id === id ? leave('toggle') : enter(id)),
     active: () => (active ? { id: active.id, target: active.chosen } : null),
+    /** The chosen target itself, as its module listed it (a village piece's `handles`, below arrangement.js), or null. */
+    chosenTarget: () => (active && active.chosen ? active.targets.find((t) => t.id === active.chosen) || null : null),
     selection: () => active?.sel || null,
     /** The panel being edited was remounted, swapped or removed: follow it, or leave. */
     refresh() {

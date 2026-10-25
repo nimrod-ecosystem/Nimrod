@@ -610,6 +610,60 @@ try {
     void before;
   }
 
+  // CP (2026-10-25): ONE EDITOR, NOT TWO. The village's pieces carry the same handles (edit_mode.js `handles`), drawn by the
+  // dashboard over the chosen one, on the SVG stage (room_handles.js svgGeometry); the panel saves the change as its own scene.
+  section('*** a DASHBOARD’S village: the same handles on a chosen piece (chat\'s note CP) ***');
+  {
+    await import('../modules/village.js');
+    const { VILLAGE_SCENES, PIECES } = await import('../village_kit.js');
+    const store = new Map([['settings', { kiosk: { layout: { preset: 'full', slots: ['vg'] } } }]]);
+    const subs = new Map();
+    const makeState = (key) => {
+      if (!subs.has(key)) subs.set(key, new Set());
+      return { load: () => Promise.resolve(), get: () => store.get(key) || {},
+        set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); for (const f of subs.get(key)) f(store.get(key)); return Promise.resolve(); },
+        subscribe: (f) => { subs.get(key).add(f); return () => subs.get(key).delete(f); }, startPolling() {}, flush: () => Promise.resolve(), destroy() {} };
+    };
+    const vbus = createBus();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: vbus, rootBus: vbus, viewId: 'VD', user: 'u', personId: null,
+      arrangement: { id: 'VD', name: 'Village', modules: [{ id: 'vg', type: 'village', state: { time: 'day' } }] }, profiles: { list: async () => [{ id: 'VD', name: 'Village' }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} }, state: memState(), instanceId: 'dash-village' });
+    await view.init();
+    const d = view.impl;
+    const sel = () => d.arrangement().editSelection();
+    const bI = VILLAGE_SCENES.village.recipe.pieces.findIndex((it) => it.piece && PIECES[it.piece]?.group === 'Village');
+    const g = () => host.querySelector(`[data-village] [data-i="${bI}"]`);
+    const savedPieces = () => [...store.values()].find((v) => Array.isArray(v?.recipe?.pieces))?.recipe.pieces || null;
+    check('(setup) the village is drawn on the dashboard', await until(() => !!g(), 6000));
+    d.editPanel('vg', true);
+    await until(() => sel()?.target?.id === 'scene', 3000);
+    check('the scene chosen to begin with: its rows, no handles', sel()?.fields?.some((f) => f.key === 'addPiece') && !host.querySelector('[data-room-handles]'));
+    g().dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    const hd = () => host.querySelector('[data-room-handles]');
+    check('*** a piece chosen by a click gets the room\'s handles: drag, scale and turn ***',
+      await until(() => sel()?.target?.id === `piece-${bI}` && !!hd()?.querySelector('[data-emh="move"]') && !!hd().querySelector('[data-emh="rotate"]'), 3000),
+      J(sel()?.target));
+    check('...and its rows: left or right, nearer or further, size, rotation, facing', J(sel().fields.map((f) => f.key)) === J(['x', 'y', 'size', 'rotate', 'facing']));
+    const x0 = VILLAGE_SCENES.village.recipe.pieces[bI].x;
+    const ux = host.querySelector('[data-village] svg').getScreenCTM().a;
+    const elp = hd().querySelector('[data-emh="move"]');
+    const r = elp.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const ev = (type, x, y) => elp.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 8, button: 0 }));
+    ev('pointerdown', cx, cy); ev('pointermove', cx + 30, cy); ev('pointerup', cx + 30, cy);
+    const want = Math.round((x0 + 30 / ux) * 10) / 10;
+    check('*** dragging its body moves it across the stage by what was dragged, saved as the panel\'s own scene ***',
+      await until(() => Math.abs((savedPieces()?.[bI]?.x ?? -1) - want) <= 0.2, 3000), `${J(savedPieces()?.[bI])} want ${want}`);
+    check('...the piece stays chosen, with its handles back on the redrawn piece and the row showing the new number',
+      await until(() => sel()?.target?.id === `piece-${bI}` && !!hd() && Math.abs(sel().values().x - Math.round(want)) <= 1, 3000), J(sel()?.values?.()));
+    d.editPanel('vg', false);
+    check('leaving edit mode takes the handles away', await until(() => !host.querySelector('[data-room-handles]'), 2000));
+    view.destroy();
+    host.remove();
+  }
+
   // ============================================================================================
   section('nobody answers: it leaves by itself (never a gate)');
   {
