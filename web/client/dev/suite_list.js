@@ -266,6 +266,8 @@ export const SUITES = [
   'village',
   // 2026-10-25 (row 2.123): change the site's words where they are, `?wording=1`; copied for --apply-page-edits.
   'wording_edit',
+  // 2026-10-25 (row 2.125): Home controls, through the screen's Home Assistant bridge (sends nothing unless told where).
+  'home_controls',
   // 2026-10-04: "Try it as someone new" - a test person, fresh; Start over; Back to me; notes kept; Home in a frame.
   'try_new',
   // 2026-10-07 (row 2.54): wrap up a walkthrough - the notes cleaned up locally (Corpus Desk's ten-level dial, clean_up.js)

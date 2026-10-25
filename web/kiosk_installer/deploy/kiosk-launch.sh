@@ -65,6 +65,14 @@ if [ -n "${NIMROD_LOCAL_VOICE:-}" ]; then
   if [ "$NIMROD_LOCAL_VOICE" = "on" ] && [ -f "$POLICY_FILE" ]; then LV="on"; else LV="off"; fi
   case "$PAGE" in *\?*) PAGE="$PAGE&localVoice=$LV" ;; *) PAGE="$PAGE?localVoice=$LV" ;; esac
 fi
+# HOME ASSISTANT (2026-10-25, row 2.125, nimrod-ha-bridge.py). NIMROD_HA_BRIDGE=http://127.0.0.1:8766 in the unit adds
+# `haBridge=<that>`, which the page keeps - ONLY when Chromium's local-network policy is there, for the same reason as
+# the lock helper (no "Block / Allow" box left on the screen); without it, `haBridge=off`, and the Home controls panel
+# sends nothing and says it is not set up. Unset: nothing is added.
+if [ -n "${NIMROD_HA_BRIDGE:-}" ]; then
+  if [ -f "$POLICY_FILE" ]; then HB="$NIMROD_HA_BRIDGE"; else HB="off"; fi
+  case "$PAGE" in *\?*) PAGE="$PAGE&haBridge=$HB" ;; *) PAGE="$PAGE?haBridge=$HB" ;; esac
+fi
 # AFTER A RESTART (row 2.70, 2026-10-09): `boot=1` tells the page this is a restart -- the computer started, or Chromium
 # was relaunched after a crash -- so it opens the dashboard chosen under "After a restart, open" (restart.js). The page
 # takes the flag out of its address at once, so its own reloads (a new version, a refresh) are not restarts. Every

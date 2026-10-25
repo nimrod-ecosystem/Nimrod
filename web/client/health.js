@@ -111,6 +111,7 @@ export const HEALTH_EXPECT = {
   brickmosaic: { idle: true },
   sortbricks:  { idle: true },   // brick games (2026-10-10): Sort the bricks comes to rest when nobody presses
   town:        { idle: true },   // town (2026-10-12): left alone the town is a picture; it changes only when pressed
+  home_controls: { idle: true }, // home_controls (2026-10-25): it waits for a press, and looks for changes every few seconds
   village:     { idle: true },   // village (2026-10-25): a picture; it redraws only when its settings or the hour's light change
   story:       { idle: true },   // story (2026-10-12): rests between stories, and on "The end" when that is chosen
   whoswho:     { idle: true },   // Design's game ideas (2026-10-12): Who's who waits for an answer; its light rests

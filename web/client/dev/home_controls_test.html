@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>home controls - Home Assistant through the screen's bridge (row 2.125)</title>
+<style>body{font:14px system-ui;margin:16px}.pass{color:#060}.fail{color:#b00;font-weight:600}#host .box{position:relative;width:640px;height:360px;border:1px solid #888}</style>
+</head>
+<body>
+<h1>home controls <span id="summary">running…</span></h1>
+<p>The page's side of Home Assistant: <code>home_assistant.js</code> (the client for the bridge on the screen's own
+computer) and the Home controls panel. The bridge itself is tested by <code>kiosk_installer/deploy/test_ha_bridge.py</code>.</p>
+<div id="out"></div>
+<div id="host"></div>
+<script type="module">
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { haBridgeFrom, createHaClient, buttonsFor, stateWords, thingName, HA_BRIDGE_KEY, ACTION_WORDS } from '../home_assistant.js';
+import { TYPE, NOT_SET_UP } from '../modules/home_controls.js';
+import { CATALOG } from '../modules_catalog.js';
+import { expectFor } from '../health.js';
+
+const out = document.getElementById('out');
+let passed = 0, failed = 0;
+function check(name, ok, detail = '') {
+  const p = document.createElement('div');
+  p.className = ok ? 'pass' : 'fail';
+  p.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `   ${detail}` : ''}`;
+  out.append(p);
+  if (ok) passed += 1; else failed += 1;
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const tick = () => new Promise((r) => setTimeout(r, 0));
+function memStorage(init = {}) { const m = new Map(Object.entries(init)); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m }; }
+function fakeTimers() {
+  let seq = 0; let armed = [];
+  return { setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, ms }); return id; }, clearTimer: (id) => { armed = armed.filter((t) => t.id !== id); },
+    fire() { const due = armed; armed = []; due.forEach((t) => t.fn()); }, pending: () => armed.length, last: () => armed[armed.length - 1] };
+}
+function mount(client, state = { get: () => ({}), subscribe() {} }) {
+  const box = document.createElement('div'); box.className = 'box'; document.getElementById('host').append(box);
+  const timers = fakeTimers();
+  const inst = mountModule(TYPE, { mount: box, bus: createBus(), state, user: 'u', instanceId: `hc-${Math.random().toString(36).slice(2)}`, personId: null,
+    setTimer: timers.setTimer, clearTimer: timers.clearTimer, haClient: client });
+  inst.init();
+  return { box, timers, inst, probe: () => inst.impl.__probe(), q: (s) => box.querySelector(s), done() { inst.destroy(); box.remove(); } };
+}
+
+try {
+  section('where the bridge is: only where the launcher said');
+  const st = memStorage();
+  check('*** no `haBridge` and nothing kept: no address (nothing will be sent) ***', haBridgeFrom({ search: '', storage: st }) === null);
+  check('the launcher\'s address is used and kept', haBridgeFrom({ search: '?haBridge=http://127.0.0.1:8766/', storage: st }) === 'http://127.0.0.1:8766'
+    && haBridgeFrom({ search: '', storage: st }) === 'http://127.0.0.1:8766');
+  check('*** `haBridge=off` (no Chromium policy) forgets it ***', haBridgeFrom({ search: '?haBridge=off', storage: st }) === null && !st.m.has(HA_BRIDGE_KEY));
+  check('*** only this computer: another address is refused ***', haBridgeFrom({ search: '?haBridge=http://192.168.1.5:8766', storage: st }) === null
+    && haBridgeFrom({ search: '?haBridge=https://evil.example', storage: st }) === null);
+
+  section('the client');
+  let fetched = 0;
+  const spy = async () => { fetched += 1; return { ok: true, status: 200, json: async () => ({ ok: true }) }; };
+  const none = createHaClient({ base: null, fetchImpl: spy });
+  const r0 = await none.states();
+  check('*** with no address, every call answers "not set up here" and NOTHING is sent ***', !none.usable && r0.ok === false && r0.reason === 'not set up here' && fetched === 0);
+  check('a non-loopback address is not usable either', !createHaClient({ base: 'http://10.0.0.2:8766', fetchImpl: spy }).usable);
+  const asked = [];
+  const c = createHaClient({ base: 'http://127.0.0.1:8766', fetchImpl: async (url, init) => { asked.push([url, init.method, init.body]);
+    return { ok: true, status: 200, json: async () => ({ ok: true, states: [] }) }; } });
+  await c.call('light.lamp', 'toggle');
+  check('a call goes to the bridge as POST /ha/call { entity_id, action }', J(asked[0]) === J(['http://127.0.0.1:8766/ha/call', 'POST', '{"entity_id":"light.lamp","action":"toggle"}']));
+  const down = createHaClient({ base: 'http://127.0.0.1:8766', fetchImpl: async () => { throw new TypeError('Failed to fetch'); } });
+  check('*** the bridge not running: said in words, never thrown ***', (await down.states()).reason === 'the bridge on this computer is not answering');
+  const refused = createHaClient({ base: 'http://127.0.0.1:8766', fetchImpl: async () => ({ ok: false, status: 403, json: async () => ({ ok: false, reason: 'that thing is not ticked for this screen' }) }) });
+  check('the bridge\'s own reason is passed on', (await refused.call('light.x', 'on')).reason === 'that thing is not ticked for this screen');
+
+  section('words and buttons (pure)');
+  const lamp = { entity_id: 'light.lamp', domain: 'light', name: 'Lamp', label: 'the lamp by the bed', state: 'on', brightness: 128, actions: ['brighter', 'dimmer', 'off', 'on', 'toggle'] };
+  check('*** a light: "On or off", "Brighter", "Dimmer" (not five buttons) ***', J(buttonsFor(lamp).map((b) => b.label)) === J(['On or off', 'Brighter', 'Dimmer']));
+  check('a TV: on, off, louder, quieter, pause or play', J(buttonsFor({ domain: 'media_player', actions: ['on', 'off', 'louder', 'quieter', 'pause'] }).map((b) => b.action)) === J(['on', 'off', 'louder', 'quieter', 'pause']));
+  check('a lock the bridge offers no actions for (doors off): no buttons', buttonsFor({ domain: 'lock', actions: [] }).length === 0);
+  check('states in words: "On, 50%", "Off", "Not answering"; a scene has none', stateWords(lamp) === 'On, 50%' && stateWords({ domain: 'fan', state: 'off' }) === 'Off'
+    && stateWords({ domain: 'light', state: 'unavailable' }) === 'Not answering' && stateWords({ domain: 'scene', state: 'scening' }) === '');
+  check('the person\'s own name first, then Home Assistant\'s', thingName(lamp) === 'the lamp by the bed' && thingName({ name: 'Fan' }) === 'Fan');
+  check('every action has words', Object.values(ACTION_WORDS).every((w) => /^[A-Z][a-z ]+$/.test(w)));
+
+  section('*** the panel ***');
+  check('registered on the new core; in the catalog (beta); health knows it waits', getManifest(TYPE)?.core === 'new' && CATALOG.some((m) => m.type === TYPE && m.stage === 'beta')
+    && expectFor(TYPE).idle === true);
+  const p0 = mount(none);
+  check('*** not set up on this screen: it says so in words, sends nothing, and looks for nothing ***', p0.q('[data-hc="unset"]')?.textContent.trim() === NOT_SET_UP
+    && p0.timers.pending() === 0 && fetched === 0);
+  check('...and says nothing about a person or "her screen"', !/taylor|cici|her screen/i.test(NOT_SET_UP + getManifest(TYPE).description));
+  p0.done();
+
+  const devices = [{ ...lamp }, { entity_id: 'media_player.tv', domain: 'media_player', name: 'TV', label: '', state: 'off', actions: ['on', 'off', 'louder', 'quieter', 'pause'] }];
+  const calls = [];
+  const fake = { usable: true, states: async () => ({ ok: true, states: devices.map((d) => ({ ...d })) }),
+    call: async (eid, action) => { calls.push([eid, action]); if (eid === 'light.lamp' && action === 'toggle') devices[0].state = devices[0].state === 'on' ? 'off' : 'on'; return { ok: true }; } };
+  const p = mount(fake, { get: () => ({ every: 10 }), subscribe() {} });
+  await tick(); await tick();
+  check('*** the ticked things, by the person\'s names, with their state and buttons ***', !!p.q('[data-hc-thing="light.lamp"]') && /the lamp by the bed/.test(p.box.textContent)
+    && p.q('[data-hc-thing="light.lamp"] [data-hc-state]').textContent === 'On, 50%' && p.box.querySelectorAll('[data-hc-for="media_player.tv"]').length === 5, p.box.innerHTML.slice(0, 300));
+  check('the buttons are real buttons, big enough to hit (48px+)', [...p.box.querySelectorAll('.hc-btn')].every((b) => b.tagName === 'BUTTON' && b.getBoundingClientRect().height >= 47.5));
+  p.q('[data-hc-for="light.lamp"][data-hc-act="toggle"]').click();
+  await tick(); await tick(); await tick();
+  check('*** a press: one action on one thing, said in words, and the state looked at again ***', J(calls) === J([['light.lamp', 'toggle']])
+    && /the lamp by the bed: on or off\./.test(p.q('[data-hc-said]').textContent) && p.q('[data-hc-thing="light.lamp"] [data-hc-state]').textContent === 'Off', p.box.textContent);
+  check('it looks for changes on the panel\'s setting (10 seconds here)', p.timers.pending() === 1 && p.timers.last().ms === 10000);
+  devices[1].state = 'on';
+  p.timers.fire(); await tick(); await tick();
+  check('...a TV switched on by hand shows as on after the next look', p.q('[data-hc-thing="media_player.tv"] [data-hc-state]').textContent === 'On' && p.timers.pending() === 1);
+  p.done();
+  check('taken down: nothing left looking', p.timers.pending() === 0);
+
+  const sad = { usable: true, states: async () => ({ ok: false, reason: 'Home Assistant did not answer at that address' }), call: async () => ({ ok: false, reason: 'x' }) };
+  const p2 = mount(sad);
+  await tick(); await tick();
+  check('*** Home Assistant down: the panel says why, in words ***', /Home controls: Home Assistant did not answer at that address\./.test(p2.box.textContent), p2.box.textContent);
+  p2.done();
+  const empty = { usable: true, states: async () => ({ ok: true, states: [] }), call: async () => ({ ok: true }) };
+  const p3 = mount(empty);
+  await tick(); await tick();
+  check('nothing ticked yet: said so, not a blank panel', /Nothing is ticked for this screen yet\./.test(p3.box.textContent));
+  p3.done();
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>
