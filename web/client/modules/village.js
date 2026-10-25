@@ -17,8 +17,12 @@
 // Nothing here waits on anybody; nothing moves but what Design animates, and that only without "reduce motion".
 //
 // PI 400 (Design: "Crafted is heavier ... fine as a still image"). The scene is drawn ONCE per change of settings (or of
-// the hour's light), never per frame; Design's own moving parts are CSS inside its drawing. Measuring frame rates on the
-// bench is on Design's list back (README "What Design needs back" 1).
+// the hour's light), never per frame; Design's own moving parts are CSS inside its drawing. MEASURED on the bench Pi 400
+// (2026-10-25, 1920x1080, Chromium 148, the village and Market day): still, with Design's animations running, 60 fps in
+// both looks; first draw to the screen 0.13-0.33 s; redrawn every frame 5-11 fps (toon about 1.5x crafted, not 4x);
+// the whole SVG moved without a layer 13-19 fps, but ON ITS OWN LAYER (`will-change: transform`) 54 fps, as fast as a
+// canvas bitmap (55) - so a scene that pans or zooms promotes the SVG instead of drawing a bitmap by hand. Never redraw
+// per frame. (An <img> of the SVG moved: 10 fps - not that.)
 
 import { registerModule } from '../module.js';
 import { VILLAGE_SCENES, PIECES, PIECE_GROUPS, sceneSvg } from '../village_kit.js';
