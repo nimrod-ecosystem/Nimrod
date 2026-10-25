@@ -126,7 +126,9 @@ export const DEFAULTS = Object.freeze({
 const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Beats hit this round. A Scoreboard on the same screen can show it instead.' }),
   { key: 'tempo', label: 'Speed of the beat', kind: 'choice', default: 60, level: 'essential',
-    options: TEMPOS.map((b) => ({ value: b, label: `${b} a minute${b === 60 ? ' (one a second)' : ''}` })),
+    // A speed that flashes more than three times a second says so where it is chosen (row 2.124, 2026-10-25): told, not
+    // stopped - the photosensitivity setting is what limits it (Mike: not restricted by default).
+    options: TEMPOS.map((b) => ({ value: b, label: `${b} a minute${b === 60 ? ' (one a second)' : b > 180 ? ' (flashes more than three times a second)' : ''}` })),
     note: `Up to ${MAX_BPM} a minute. If the screen has a flashing `
       + `limit, the beat slows to fit. A limit of 3 a second allows ${maxBpmFor(3)} a minute. 2 a second allows ${maxBpmFor(2)}. 1 a second allows ${maxBpmFor(1)}.` },
   { key: 'window', label: 'How close to the beat counts', kind: 'choice', default: 'generous', level: 'essential',

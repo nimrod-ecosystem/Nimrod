@@ -963,8 +963,11 @@ export const CATALOG = [
     use: 'answer',
     lead: 'Tiles light up to a beat; press on the beat.',
     needs: 'Nothing. The beat is built in, or it can follow a tempo on the screen.',
-    why: 'One press is the whole game, so one switch plays it. Slow and forgiving by default, it never '
-      + 'flashes more than three times a second, and a hit shows as a mark and words, not only a color.',
+    // Mike, 2026-10-25 (row 2.124): the claim changes, not the game. "There is a photosensitivity setting, but we don't
+    // want to restrict the site on certain people's needs by default."
+    why: 'One press is the whole game, so one switch plays it. Slow and forgiving by default, one beat a second. '
+      + 'It can go faster, and the photosensitivity setting limits how fast it flashes. A hit shows as a mark and '
+      + 'words, not only a color.',
   },
   {
     type: 'sprint',

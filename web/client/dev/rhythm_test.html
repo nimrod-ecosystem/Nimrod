@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>rhythm — tiles that light to a beat, one switch, never more than three flashes a second — test</title>
+<title>rhythm — tiles that light to a beat, one switch, three flashes a second at most under the photosensitivity limit — test</title>
 <link rel="stylesheet" href="../modules.css">
 <link rel="stylesheet" href="../rhythm.css">
 <style>
@@ -19,7 +19,7 @@
 <p>Floor tiles light to a beat; a press on the beat is a hit. This suite checks the arithmetic
 (<code>rhythm_beat.js</code>), then the panel (<code>modules/rhythm.js</code>): a round played on one
 switch, a generous window that still refuses mashing, a press offset for a slow switch, the beat
-following a tempo on the screen, <b>no more than three flashes in any second (WCAG 2.3.1), counted
+following a tempo on the screen, <b>no more than three flashes in any second under the photosensitivity limit (WCAG 2.3.1), counted
 onset by onset</b>, hits shown with a shape and words, sound only through the speaker arbiter, and a
 teardown that leaves no timer and no sound. Time is stepped through an injected clock.</p>
 <div id="results"></div>
@@ -194,6 +194,15 @@ try {
     })());
     const cat = CATALOG.find((c) => c.type === GAME);
     check('catalog: absent (row pending) or listed as something to do', !cat || cat.group === 'practice');
+    // Row 2.124 (Mike, 2026-10-25): the claim says what is true - one beat a second by default, faster can be set, and
+    // the photosensitivity setting limits it. Not "never more than three a second", which holds only under that limit.
+    check('*** the catalog claims nothing the game does not do: one beat a second by default, the setting limits it ***',
+      !cat || (/one beat a second/.test(cat.why) && /photosensitivity setting/.test(cat.why) && !/never\s+flashes/.test(cat.why)), cat && cat.why);
+    const tempoRow = getManifest(GAME).settings.find((f) => f.key === 'tempo');
+    const flashWords = (o) => /more than three times a second/.test(o.label);
+    check('*** a speed that flashes more than three times a second says so where it is chosen (told, not stopped) ***',
+      tempoRow.options.every((o) => flashWords(o) === (Number(o.value) > 180)) && tempoRow.options.some(flashWords) && tempoRow.default === 60,
+      JSON.stringify(tempoRow.options.map((o) => o.label)));
     check('health: absent (row pending) or idle is fine', !(GAME in HEALTH_EXPECT) || expectFor(GAME).idle === true);
     const verbs = verbsFor(GAME);
     check('MODULE_VERBS: absent (row pending) or exactly next / prev / select / back', verbs.length === 0
