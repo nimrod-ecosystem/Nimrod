@@ -309,6 +309,12 @@ try {
     let sawObjects = false;
     for (let i = 0; i < 200 && c.probe().at < c.probe().total; i += 1) { if (c.q('.lp-objects')) sawObjects = true; c.q('[data-lp-act="next"]').click(); }
     check('*** counted things are drawn as the course\'s objects (a dot with its name), not bare circles ***', sawObjects);
+    // Design's counting pictures (count_objects.js, item 43): a drawn thing as its picture, one not drawn yet as a dot and its name.
+    const coins = document.createElement('div'); coins.innerHTML = showHTML({ kind: 'objects', object: 'coin', count: 3, layout: 'row' }, null);
+    const cats = document.createElement('div'); cats.innerHTML = showHTML({ kind: 'objects', object: 'cat', count: 2, layout: 'row' }, null);
+    check('*** a thing Design has drawn (a coin) is shown as Design\'s picture, three of them; one not drawn yet (a cat) as a dot with its name ***',
+      coins.querySelectorAll('.lp-obj.lp-pic svg').length === 3 && !coins.querySelector('.lp-obj small')
+        && cats.querySelectorAll('.lp-obj i').length === 2 && cats.querySelector('.lp-obj small')?.textContent === 'cat', coins.innerHTML.slice(0, 200));
     check('*** the end of a class offers the next class, by name ***', !!c.q('[data-lp-act="nextclass"]') && /Next: class 2/.test(c.box.textContent) && /Next is class 2/.test(c.said.at(-1)));
     c.q('[data-lp-act="nextclass"]').click();
     check('*** "Next class": class 2, from its start, kept on the panel\'s row ***', await opened(() => c.probe().total > 5 && c.probe().at === 0 && /Class 2 ·/.test(c.q('.lp-top')?.textContent || ''))

@@ -40,6 +40,7 @@ import { createAI } from '../ai.js';
 import { readLessonFolder, isFileLessonId } from '../lessons_folder.js';
 import { COURSES } from '../lessons/courses_index.js';      // the courses that come with Nimrod (CK 3)
 import { closingBeats } from '../lesson_file.js';
+import { OBJECTS as COUNT_OBJECTS, objectSvg } from '../count_objects.js';   // Design's counting pictures (item 43)
 export const COURSE_PREFIX = 'course:';
 /** A course's class file, fetched when it is played (lessons/courses/<id>/class_NNN.json). */
 export const classURL = (courseId, file) => new URL(`../lessons/courses/${encodeURIComponent(courseId)}/${encodeURIComponent(file)}`, import.meta.url).href;
@@ -222,6 +223,7 @@ const CSS = `
 .lp-obj i{display:block;width:min(8cqw,8cqh,56px);height:min(8cqw,8cqh,56px);border-radius:50%;background:var(--accent,var(--text))}
 .lp-obj small{font-size:clamp(.7rem,2.2cqw,1rem)}
 .lp-obj.lp-empty i{background:transparent;border:2px dashed var(--border,currentColor)}
+.lp-obj.lp-pic svg{display:block;width:min(10cqw,10cqh,72px);height:auto}
 .lp-objects[data-layout$="frame"] .lp-obj{border:2px solid var(--border,currentColor);border-radius:8px;padding:4px}
 .lp-bars{display:flex;flex-direction:column;gap:6px;width:min(36rem,90%);text-align:left}
 .lp-bar{display:grid;grid-template-columns:8em 1fr 3em;gap:8px;align-items:center}
@@ -308,9 +310,13 @@ export function showHTML(show, lesson) {
     const name = String(show.object || '').replace(/-/g, ' ');
     const per = show.layout === 'ten-frame' ? 10 : show.layout === 'five-frame' ? 5 : 0;
     const places = per ? Math.max(per, Math.ceil(show.count / per) * per) : show.count;
+    // DESIGN'S PICTURES (count_objects.js, item 43, Design System19): a thing Design has drawn is shown as its picture
+    // ("sticker" style, readable on every theme); one not drawn yet stays a dot with its name under it.
+    let pic = '';
+    try { pic = COUNT_OBJECTS[show.object] ? objectSvg(show.object, { size: 56, label: name }) : ''; } catch { pic = ''; }
     const one = (i) => (i < show.count
-      ? `<span class="lp-obj" style="--i:${i}${show.layout === 'scattered' ? `;--dx:${((i * 37) % 11) - 5}px;--dy:${((i * 53) % 13) - 6}px` : ''}"><i></i><small>${esc(name)}</small></span>`
-      : '<span class="lp-obj lp-empty"><i></i><small>&nbsp;</small></span>');
+      ? `<span class="lp-obj${pic ? ' lp-pic' : ''}" style="--i:${i}${show.layout === 'scattered' ? `;--dx:${((i * 37) % 11) - 5}px;--dy:${((i * 53) % 13) - 6}px` : ''}">${pic || `<i></i><small>${esc(name)}</small>`}</span>`
+      : `<span class="lp-obj lp-empty"><i></i>${pic ? '' : '<small>&nbsp;</small>'}</span>`);
     return `<div class="lp-count"><div class="lp-objects" data-lp-objects="${show.count}" data-layout="${esc(show.layout)}" style="--lp-cols:${per ? 5 : Math.min(show.layout === 'group' ? 4 : 10, Math.max(1, show.count))}">`
       + `${Array.from({ length: places }, (_, i) => one(i)).join('')}</div><div class="lp-thing">${esc(countWords(show.count, name))}</div></div>`;
   }
