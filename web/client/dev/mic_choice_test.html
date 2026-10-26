@@ -109,6 +109,76 @@ try {
     st().querySelector('[data-speaker-reset]').click();
     check('"Both on this computer\'s own speaker" puts both back, and closes', picks.slice(-2).every(([, v]) => v === '') && !st());
   }
+  section('*** a microphone that sends nothing at all (note CY) ***');
+  {
+    const { allZero, watchDeadMic, DEAD_MIC_MS, DEAD_MIC_TEXT } = await import('../mic_choice.js');
+    check('exact zeros are "nothing at all"; the faintest real noise is not; an empty buffer proves nothing',
+      allZero(new Float32Array(64)) && !allZero(Float32Array.from({ length: 64 }, (_, i) => (i === 40 ? 0.0003 : 0))) && !allZero(new Float32Array(0)));
+    // A fake clock and a fake audio graph whose samples the test sets.
+    let t0 = 0, q = [];
+    const io = { now: () => t0, setTimer: (f, ms) => { q.push({ f, at: t0 + ms }); return q.length; }, clearTimer: (h) => { if (q[h - 1]) q[h - 1].f = null; } };
+    const run = (ms) => { const end = t0 + ms; for (;;) { const due = q.filter((x) => x.f && x.at <= end).sort((a, b) => a.at - b.at)[0]; if (!due) break; t0 = due.at; const f = due.f; due.f = null; f(); } t0 = end; };
+    let level = 0;
+    class GraphAC {
+      constructor() { this.state = 'running'; GraphAC.made = (GraphAC.made || 0) + 1; }
+      resume() { return Promise.resolve(); }
+      createMediaStreamSource() { return { connect() {}, disconnect() {} }; }
+      createAnalyser() { return { fftSize: 0, getFloatTimeDomainData(b) { b.fill(0); if (level) b[7] = level; } }; }
+      close() { GraphAC.closed = (GraphAC.closed || 0) + 1; }
+    }
+    class S { constructor(t) { this.t = t; } }
+    const track = { enabled: true, readyState: 'live' };
+    let dead = 0;
+    const w = watchDeadMic({ track, onDead: () => { dead += 1; }, AudioContextImpl: GraphAC, Stream: S, ...io });
+    run(DEAD_MIC_MS - 500);
+    check('zeros for less than the limit: nothing said yet (a microphone still waking up)', dead === 0);
+    run(1000);
+    check(`*** exact zeros for ${DEAD_MIC_MS / 1000} s: said, once ***`, dead === 1);
+    run(DEAD_MIC_MS * 3);
+    check('...and only once, and the watch lets its audio go', dead === 1 && GraphAC.closed === 1);
+    void w;
+    dead = 0; level = 0.0004;
+    const wq = watchDeadMic({ track, onDead: () => { dead += 1; }, AudioContextImpl: GraphAC, Stream: S, ...io });
+    run(DEAD_MIC_MS * 3);
+    check('*** a quiet room on a working microphone (0.0004) is never called dead ***', dead === 0);
+    wq.stop();
+    dead = 0; level = 0;
+    const muted = { enabled: false, readyState: 'live' };
+    const wm = watchDeadMic({ track: muted, onDead: () => { dead += 1; }, AudioContextImpl: GraphAC, Stream: S, ...io });
+    run(DEAD_MIC_MS * 3);
+    check('*** muted on purpose (the track switched off): zeros, and nothing said ***', dead === 0);
+    wm.stop();
+    class Asleep extends GraphAC { constructor() { super(); this.state = 'suspended'; } }
+    watchDeadMic({ track, onDead: () => { dead += 1; }, AudioContextImpl: Asleep, Stream: S, ...io });
+    run(DEAD_MIC_MS * 3);
+    check('an audio context that will not run measures nothing, so says nothing (never a guess)', dead === 0);
+    const ws = watchDeadMic({ track, onDead: () => { dead += 1; }, AudioContextImpl: GraphAC, Stream: S, ...io });
+    run(1000); ws.stop(); run(DEAD_MIC_MS * 3);
+    check('stopped (the call ended): nothing said afterwards', dead === 0);
+    check('no microphone, or no Web Audio: an inert watch, no error', typeof watchDeadMic({ track: null }).stop === 'function'
+      && typeof watchDeadMic({ track, AudioContextImpl: null }).stop === 'function');
+    // The tester: a microphone whose samples are all exact zeros says so beside its (still) bar.
+    let tNow = 0;
+    const frames = [];
+    class FloatAC {
+      constructor() { this.state = 'running'; }
+      resume() {}
+      createMediaStreamSource() { return { connect() {} }; }
+      createAnalyser() { const id = FloatAC.n = (FloatAC.n || 0) + 1; return { fftSize: 0, getByteTimeDomainData(b) { b.fill(128); },
+        getFloatTimeDomainData(b) { b.fill(0); if (id === 1) b[3] = 0.002; } }; }
+      close() {}
+    }
+    openMicTester(document.body, { list: [{ id: 'usb1', label: 'USB Composite Device Mono' }, { id: 'cam1', label: 'HD Camera Mono' }],
+      open: async (id) => ({ id }), close() {}, AudioContextImpl: FloatAC, raf: (fn) => frames.push(fn), now: () => tNow });
+    await tick(); await tick();
+    const step = () => frames.splice(0).forEach((fn) => fn());
+    step(); tNow = DEAD_MIC_MS + 10; step();
+    const notes = [...document.querySelectorAll('[data-mic-tester] [data-mic-dead]')].map((n) => n.hidden);
+    check('*** "Test the microphones": the one sending exact zeros says "No sound at all from this one"; the working one does not ***',
+      JSON.stringify(notes) === '[true,false]', JSON.stringify(notes));
+    document.querySelector('[data-mic-tester] [data-mic-close]').click();
+    check('the words say what is wrong and where to look, and name nobody', /No sound is coming/.test(DEAD_MIC_TEXT) && /Test the microphones/.test(DEAD_MIC_TEXT));
+  }
   check('names nobody', !/taylor|cici|her screen/i.test(await (await fetch('../mic_choice.js')).text()));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

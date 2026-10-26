@@ -88,7 +88,7 @@ import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { PANEL_VOLUME_FIELD, PANEL_VOLUME_KEY, panelVolumeFrom } from '../panel_sound.js';
 import { permsFor, lendLengthOf, lengthWords, LENGTH_CHOICES } from '../screen_permissions.js';
 import { speakerIdFor, PANEL_SPEAKER_KEY, watchOutputs } from '../speakers.js';
-import { micIdFor } from '../mic_choice.js';   // 2026-10-26: the screen's chosen microphone
+import { micIdFor, watchDeadMic, DEAD_MIC_TEXT } from '../mic_choice.js';   // 2026-10-26: the screen's chosen microphone; one sending nothing
 
 // ---------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute
@@ -738,7 +738,27 @@ registerModule(
       }
     }
 
+    // *** A MICROPHONE THAT OPENED AND SENDS NOTHING (2026-10-26, chat's note CY; mic_choice.js DEAD_MIC_MS). *** The
+    // bench Pi's camera microphone opened, went to the call, and delivered exact zeros: the far end heard the board's
+    // clips and never a voice, and nothing here said why. The same alert as no microphone at all, for the same
+    // reason - somebody is talking to a screen that cannot hear them. It reports; it does not switch microphones.
+    let micWatch = null;
+    function watchMicSound(track) {
+      try { micWatch?.stop?.(); } catch { /* gone */ }
+      micWatch = null;
+      if (!track) return;
+      const watch = io.watchDeadMic || watchDeadMic;
+      try {
+        micWatch = watch({ track, onDead: () => {
+          console.warn('call: the microphone is sending only silence');
+          try { output?.alert?.(DEAD_MIC_TEXT, { source: 'call' }); } catch { /* an output bus is optional everywhere */ }
+        } });
+      } catch (err) { console.error('call: could not watch the microphone', err); micWatch = null; }
+    }
+
     function dropMic() {
+      try { micWatch?.stop?.(); } catch { /* gone */ }
+      micWatch = null;
       micStream = null;
       // ALWAYS release, even if the acquire failed — see camera_owner: a leaked ref pins the
       // device on, and on a microphone that is not merely wasteful.
@@ -884,6 +904,7 @@ registerModule(
       bindTransport();              // a ring can arrive by the bus before any "ready"; look once more
       try { await transport?.answer?.({ from: who, outgoing: track, remoteVideo: v, ...(micTrack ? { audio: micTrack } : {}) }); }
       catch (err) { console.error('call: transport failed to answer', err); end('failed'); }
+      if (phase === 'connected') watchMicSound(micTrack);
       // The bars and the menu learn the call is live, and what it can control.
       applyControls();
       publishControls();

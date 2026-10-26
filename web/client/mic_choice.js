@@ -72,6 +72,81 @@ export function levelOf(samples) {
   return Math.min(1, Math.sqrt(sum / samples.length) * 4);
 }
 
+// ---- A MICROPHONE THAT SENDS NOTHING AT ALL (2026-10-26, chat's note CY) ---------------------------------------
+// Mike, after a call to the bench Pi: "I still couldn't hear speaking from the pi. The AAC buttons did work over the
+// call though!" Measured on the bench that day, below the browser (pw-record, 3 s): the camera's microphone - the
+// computer's default - delivered 175,104 samples, EVERY ONE exactly 0, with its capture level at 100% and nothing
+// muted, and an audio-service restart did not bring it back. The call carried that silence faithfully; the board's
+// clips were mixed in on top of it (call_mix.js), which is why the words got through and the voice did not. The USB
+// microphone beside it, same room, same minute, never produced one all-zero stretch - not even through a call's
+// noise suppression (its quietest second still read 0.0003).
+//
+// A working microphone always hears SOMETHING: the room, or its own electrical noise. So a run of exact zeros is a
+// dead, unplugged-inside or hardware-muted microphone, never a quiet room - and nothing at either end of the call said so.
+// This says so. It does NOT switch to another microphone by itself: a hardware mute switch also sends zeros, and
+// quietly opening a different microphone would un-mute somebody who had just muted on purpose.
+//
+// How long a run of zeros before it is called dead: 5 s, argued. Long enough that a microphone still waking up (the
+// first few hundred ms of a USB device can be empty) is not reported; short enough that the room hears it while the
+// caller is still saying "hello? can you hear me?". Not a menu row: nobody could judge it from a menu.
+export const DEAD_MIC_MS = 5000;
+export const DEAD_MIC_TEXT = 'No sound is coming from this screen’s microphone, so they cannot hear you. '
+  + 'Settings, Devices, “Test the microphones” shows which one hears you.';
+
+/** True when every sample is exactly zero (float time-domain data). An empty buffer proves nothing: false. PURE. */
+export function allZero(samples) {
+  if (!samples || !samples.length) return false;
+  for (let i = 0; i < samples.length; i += 1) if (samples[i] !== 0) return false;
+  return true;
+}
+
+/**
+ * Watch a live microphone track; call `onDead()` ONCE if it sends only exact zeros for `ms` while it is enabled and
+ * the audio context is running. A muted (disabled) track, a stopped one, or a context that will not run counts for
+ * nothing either way - this only reports what it actually measured. Returns { stop() }.
+ */
+export function watchDeadMic({ track, onDead = () => {}, ms = DEAD_MIC_MS, every = 250,
+  AudioContextImpl = (typeof AudioContext !== 'undefined' ? AudioContext : null), Stream = (typeof MediaStream !== 'undefined' ? MediaStream : null),
+  setTimer = (f, t) => setTimeout(f, t), clearTimer = (h) => clearTimeout(h), now = () => Date.now() } = {}) {
+  let ctx = null, src = null, an = null, buf = null, timer = null, since = null, done = false;
+  const stop = () => {
+    if (done) return;
+    done = true;
+    if (timer != null) { try { clearTimer(timer); } catch { /* gone */ } }
+    try { src?.disconnect?.(); } catch { /* gone */ }
+    try { ctx?.close?.(); } catch { /* closed */ }
+  };
+  try {
+    if (!track || !AudioContextImpl || !Stream) return { stop };
+    ctx = new AudioContextImpl();
+    try { Promise.resolve(ctx.resume?.()).catch(() => {}); } catch { /* it runs or it does not */ }
+    src = ctx.createMediaStreamSource(new Stream([track]));
+    an = ctx.createAnalyser();
+    an.fftSize = 2048;
+    if (typeof an.getFloatTimeDomainData !== 'function') { stop(); return { stop }; }
+    buf = new Float32Array(an.fftSize);
+    src.connect(an);
+  } catch { stop(); return { stop }; }
+  const tick = () => {
+    timer = null;
+    if (done) return;
+    let counts = false;
+    try { counts = ctx.state === 'running' && track.enabled !== false && track.readyState !== 'ended'; } catch { counts = false; }
+    if (!counts) since = null;
+    else {
+      try { an.getFloatTimeDomainData(buf); } catch { buf.fill(1); }
+      if (!allZero(buf)) since = null;
+      else {
+        if (since == null) since = now();
+        if (now() - since >= ms) { stop(); try { onDead(); } catch { /* the caller's problem */ } return; }
+      }
+    }
+    timer = setTimer(tick, every);
+  };
+  timer = setTimer(tick, every);
+  return { stop };
+}
+
 /**
  * "Test the microphones": a box over `host` listing every microphone with a live level and "Use this one". `open(id)`
  * returns a MediaStream for a device (mic_owner.js acquire, or getUserMedia); `close(id, stream)` lets it go. `onPick(
@@ -80,7 +155,7 @@ export function levelOf(samples) {
 export function openMicTester(host, { list = knownMics(), current = '', open, close: release = () => {}, onPick = () => {},
   AudioContextImpl = (typeof AudioContext !== 'undefined' ? AudioContext : null), setTimer = (f, ms) => setTimeout(f, ms),
   clearTimer = (h) => clearTimeout(h), raf = (f) => (typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame(f) : setTimeout(f, 50)),
-  idleMs = TESTER_IDLE_MS } = {}) {
+  idleMs = TESTER_IDLE_MS, now = () => Date.now() } = {}) {
   const doc = host?.ownerDocument;
   if (!doc) return { el: null, close() {} };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -96,7 +171,7 @@ export function openMicTester(host, { list = knownMics(), current = '', open, cl
     + (named.length ? named.map((m) => {
       const v = `${IN_PREFIX}${m.label}`;
       return `<div data-mic-row="${esc(m.id)}" style="display:grid;grid-template-columns:1fr minmax(120px,30%) auto;gap:10px;align-items:center;margin:8px 0">`
-        + `<span>${esc(m.label)}${v === current ? ' <b>(in use)</b>' : ''}</span>`
+        + `<span>${esc(m.label)}${v === current ? ' <b>(in use)</b>' : ''}<span data-mic-dead hidden><br><b>No sound at all from this one</b> - it may be broken, muted, or need plugging in again.</span></span>`
         + `<span style="height:18px;border-radius:9px;background:var(--surface-alt,#eee);overflow:hidden"><span data-mic-level style="display:block;height:100%;width:0;background:var(--accent,#2b6cb0)"></span></span>`
         + `<button type="button" data-mic-use="${esc(v)}" style="min-height:48px;padding:6px 14px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer">Use this one</button></div>`;
     }).join('') : '<p>No microphones with names were found on this computer.</p>')
@@ -134,6 +209,18 @@ export function openMicTester(host, { list = knownMics(), current = '', open, cl
     for (const e of live) {
       if (!e.analyser || !e.bar) continue;
       try { e.analyser.getByteTimeDomainData(e.buf); e.bar.style.width = `${Math.round(levelOf(e.buf) * 100)}%`; } catch { /* stopped */ }
+      // A microphone sending exact zeros (see DEAD_MIC_MS): its bar would only sit still, which looks like a quiet room.
+      try {
+        if (typeof e.analyser.getFloatTimeDomainData === 'function' && ctx?.state !== 'suspended') {
+          e.fbuf = e.fbuf || new Float32Array(e.analyser.fftSize);
+          e.analyser.getFloatTimeDomainData(e.fbuf);
+          const t = now();
+          if (!allZero(e.fbuf)) e.zeroSince = null; else if (e.zeroSince == null) e.zeroSince = t;
+          const dead = e.zeroSince != null && t - e.zeroSince >= DEAD_MIC_MS;
+          const note = e.bar.closest('[data-mic-row]')?.querySelector('[data-mic-dead]');
+          if (note && note.hidden === dead) note.hidden = !dead;
+        }
+      } catch { /* stopped */ }
     }
     raf(paint);
   };

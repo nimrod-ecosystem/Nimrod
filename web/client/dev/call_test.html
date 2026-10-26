@@ -1073,6 +1073,29 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       n.impl.__end('hangup'); n.inst.destroy();
       setMicsForTest([]);
     }
+    // 2026-10-26 (note CY): the bench's camera microphone opened and sent exact zeros; nothing said so.
+    section('*** a microphone that sends nothing at all is said out loud (note CY) ***');
+    {
+      const watched = [], alerts = [];
+      let fire = null, stopped = 0;
+      const track = { kind: 'audio', id: 'cam', enabled: true };
+      const micOwner = { acquire: () => Promise.resolve({ getAudioTracks: () => [track] }), release() {}, status: () => ({ mismatch: [] }) };
+      const m = mountMixed({ audio: createAudioBus(), extra: {
+        micOwner, output: { alert: (t) => alerts.push(t), say() {}, notify() {}, status() {}, destroy() {} },
+        callIO: { ...fakeClock().io, watchDeadMic: ({ track: tr, onDead }) => { watched.push(tr); fire = onDead; return { stop: () => { stopped += 1; } }; } },
+      } });
+      m.t.ring({ name: 'Mike' });
+      await sleep(30);
+      check('*** the answered call watches the very microphone track it sent ***', watched.length === 1 && watched[0] === track && m.log[0]?.audio === track,
+        JSON.stringify({ n: watched.length, sent: m.log[0]?.audio?.id }));
+      check('nothing is said while the microphone hears something', alerts.length === 0, JSON.stringify(alerts));
+      fire?.();
+      check('*** only zeros: the room is told in words, and where to look ***', alerts.length === 1
+        && /No sound is coming from this screen.s microphone/.test(alerts[0]) && /Test the microphones/.test(alerts[0]), JSON.stringify(alerts));
+      m.impl.__end('hangup');
+      check('hang up: the watch stops', stopped >= 1, String(stopped));
+      m.inst.destroy();
+    }
     {
       // A VIDEO call: the same, on the <video> the far end is shown in.
       const audio = createAudioBus();
