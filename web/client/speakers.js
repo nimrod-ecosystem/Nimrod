@@ -33,7 +33,7 @@ export const SPOTIFY_PREFIX = 'spotify:';
 // actually be sent somewhere today. Music is the one: its files go to an attached speaker, and its Spotify
 // favourites to a Spotify speaker. Videos are not a row, because YouTube's frame cannot be routed (above); a row
 // that changes nothing is a stop on the switch walk for nothing. A kind is added here when its player can follow it.
-// CALLS (2026-10-25, row 2.128; Mike: "I want Taylor's Youtube, music, etc. coming out of a different speaker than her
+// CALLS (2026-10-25, row 2.128; Mike: "I want [her] Youtube, music, etc. coming out of a different speaker than her
 // calls"): a call's sound is our own page's (the call's <audio>/<video>), so it CAN be sent to a speaker of its own - the
 // way round that works, since YouTube's frame cannot be routed (above). No Spotify choices: Spotify cannot play a call.
 export const SPEAKER_KINDS = Object.freeze([

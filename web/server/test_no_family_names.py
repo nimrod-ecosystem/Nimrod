@@ -7,21 +7,36 @@ scrub was a one-time pass and nothing checked it afterwards. CLAUDE.md: "a rule 
 nothing checks is a suggestion." This is the check. Run: py -3.13 web/server/test_no_family_names.py
 
 What it does NOT do: rewrite history. Past commits still hold what was removed; that is Mike's call (note CY).
-Not yet guarded: the first person's own name, which is in many more files and is being swept separately.
+
+THE FIRST PERSON'S NAME TOO (same day, the second half of note CY). Swept out of fixtures, comments and DECISIONS.md;
+what remains is only the checks that look for it - a site-copy guard has to spell the name it refuses - and the
+Windows user folder in .claude/launch.json, which is this desktop's path, not a statement about anybody.
 """
 import os, re, subprocess, sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 KID = 'Os' + 'car'                       # spelled apart so this file does not match itself
+FIRST = 'Chris' + 'tine'
 FORBIDDEN = [
     ("a family member's first name", re.compile(r'\b' + KID + r'\b')),
+    ("the first person's name", re.compile(FIRST, re.I)),
     ('a medical records export', re.compile(r'My' + 'Chart', re.I)),
-    ('a medical records folder', re.compile(r'Taylor' + '_Medical', re.I)),
+    ('a medical records folder', re.compile(FIRST + '_Medical', re.I)),
 ]
 # The same word as trivia (the film award, Oscar Wilde, Oscar the Grouch) is not the person. Allowed only on lines
 # that say which one they mean.
 TRIVIA = re.compile(KID + r's\b|' + KID + r' (Wilde|the Grouch|statuette|for Best|nominations)|first ' + KID
                     + r'|Best \w+(?: \w+)? ' + KID + r'|trash can|"' + KID + r'"')
+# A line that CHECKS for the first name is not a line that names her: a regex alternation (`x|name|y`), a list of
+# names to refuse, a check's own description, or the desktop's user-folder path.
+CHECKS = re.compile(r'(?i)' + FIRST + r'(\\b)?\s*\||\|\s*(\\b)?' + FIRST + r"|NAMES = \[|Never name " + FIRST
+                    + r'|", ' + FIRST + r' or Cici|Users\\\\' + FIRST + r'\\\\')
+def allowed(label, line):
+    if label.startswith('a family'):
+        return bool(TRIVIA.search(line))
+    if label.startswith('the first'):
+        return bool(CHECKS.search(line))
+    return False
 
 passed = failed = 0
 def check(name, ok, detail=''):
@@ -46,7 +61,7 @@ for rel in filter(None, files):
         continue
     for n, line in enumerate(text.splitlines(), 1):
         for label, rx in FORBIDDEN:
-            if rx.search(line) and not (label.startswith('a family') and TRIVIA.search(line)):
+            if rx.search(line) and not allowed(label, line):
                 hits[label].append(f'{rel}:{n}: {line.strip()[:120]}')
 
 for label, found in hits.items():
@@ -55,6 +70,11 @@ check('the trivia uses of the same word are told apart (the film award, the play
       all(TRIVIA.search(s) for s in [f'Which film won Best Picture at the 1995 {KID}s?', f'"{KID} Wilde"', f'{KID} the Grouch',
                                      f'Who won the Best Actor {KID} for', f'"correct": "{KID}",'])
       and not TRIVIA.search(f'Welcome back, {KID}.'))
+check('a check that spells the first name is told apart from a line that names her',
+      all(allowed("the first person's name", s) for s in [f"!/cici|{FIRST.lower()}/i.test(x)", f"/\\bher screen|\\b{FIRST}\\b|\\bCici\\b/i",
+                                                          f"NAMES = ['{FIRST}', 'Cici']"])
+      and not allowed("the first person's name", f"// {FIRST} cannot reach for anything")
+      and not allowed("the first person's name", f"name.value = '{FIRST}’s board';"))
 
 print(('ALL PASS: ' if not failed else 'FAILED: ') + f'{passed} passed, {failed} failed')
 sys.exit(1 if failed else 0)

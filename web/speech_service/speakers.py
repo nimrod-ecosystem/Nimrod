@@ -59,18 +59,18 @@ SURE_NAMED = 0.8
 SURE_MAYBE = 0.4
 # WeSpeaker ResNet34, measured 2026-10-07 on this desktop with SAPI's two English voices (synthetic, NOT real
 # people - see the report): the same voice scored 0.73-0.95 against its own print, the other voice 0.15-0.26.
-# The old Cici pipeline (the same model, real room audio) kept an utterance as Taylor at >= 0.42 with a margin
-# of 0.06 over Mike, and Taylor-vs-Mike prints sat ~0.20 apart.
+# The old Cici pipeline (the same model, real room audio) kept an utterance as its first user at >= 0.42 with a margin
+# of 0.06 over Mike, and the two people's prints sat ~0.20 apart.
 #   SPEAKER_MATCH = 0.5: the raw score that maps to "named" (0.8). Above the old pipeline's 0.42 on purpose: a
 #     WRONG NAME on a caption is worse than "Unsure (maybe Alex)", and the words show either way. Against: real,
-#     noisy room audio scores lower than SAPI (the pipeline kept only 41% of Taylor's true clips at 0.42), so
+#     noisy room audio scores lower than SAPI (the pipeline kept only 41% of its first user's true clips at 0.42), so
 #     some true matches will read as "Unsure". Raise or lower with `--speaker-match` once real voices are measured.
 #   SPEAKER_MAYBE = 0.3: the raw score that maps to "maybe" (0.4). Halfway between the different-voice ceiling
 #     seen (0.26) and the match. Below it, nobody is suggested.
 SPEAKER_MATCH = 0.5
 SPEAKER_MAYBE = 0.3
 # Two voiceprints this close for one utterance is not an answer: who stays null and the closer one is a "maybe".
-# 0.06, the old pipeline's margin (it separated Taylor from Mike on real audio).
+# 0.06, the old pipeline's margin (it separated two people on real audio).
 SPEAKER_MARGIN = 0.06
 # Shorter than this, an utterance is not compared at all ("pause" is half a second): an embedding of half a
 # second of speech is mostly noise [training knowledge - speaker models are trained on 2-3 s crops], and a

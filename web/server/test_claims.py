@@ -443,7 +443,7 @@ check("*** each profile the parents look after says how many other logins hold i
 r = c.get(f"/api/people/{gary}/holders", headers=H(PAR))
 hl = r.json().get("holders", [])
 check("*** Gary's list: Taylor and Jamie, by their own names ***",
-      r.status_code == 200 and sorted(h["name"] for h in hl) == ["Taylor", "Jamie"], r.text)
+      r.status_code == 200 and sorted(h["name"] for h in hl) == ["Jamie", "Taylor"], r.text)
 check("*** ...never what they call him ('Dad', 'Grandpa' are theirs alone), and no login ids ***",
       "Dad" not in r.text and "Grandpa" not in r.text and CHR not in r.text and OSC not in r.text, r.text)
 check("*** only the parents can read it: a holder gets 'not the one who looks after it', a stranger the 404 ***",

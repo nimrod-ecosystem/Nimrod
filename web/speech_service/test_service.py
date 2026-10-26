@@ -272,12 +272,12 @@ async def hints_tests():
 
     await one(s, 'h0')
     check('no hints sent: the engine is opened with none', leans.hints[-1] is None, leans.hints)
-    await s.on_text(json.dumps({'type': 'hints', 'words': ['Taylor', 'Jamie', 'Lake Geneva']}))
+    await s.on_text(json.dumps({'type': 'hints', 'words': ['Taylor', 'Jamie', 'Lake Tahoe']}))
     await one(s, 'h1')
     check('*** the words a screen sends reach the next utterance, in order ***',
-          leans.hints[-1] == ['Taylor', 'Jamie', 'Lake Geneva'], leans.hints)
+          leans.hints[-1] == ['Taylor', 'Jamie', 'Lake Tahoe'], leans.hints)
     check('...as one comma-separated hotwords string for faster-whisper',
-          hint_text(leans.hints[-1]) == 'Taylor, Jamie, Lake Geneva')
+          hint_text(leans.hints[-1]) == 'Taylor, Jamie, Lake Tahoe')
     await s.on_text(json.dumps({'type': 'mode', 'mode': 'grammar', 'grammar': ['pause', 'play']}))
     await one(s, 'h2')
     check('*** a GRAMMAR wins: while the screen waits for a command, no names are leaned towards ***',

@@ -44,8 +44,8 @@
 //      is something to step through, the reason the old row named one screen. One row is also one stop on the
 //      switch walk where there were three, so the walk is shorter, not longer.
 //      THE DEFAULT, ARGUED: Home ('top'). A screen nobody set up behaves exactly as it did, and "Home" is a chosen
-//      one in Mike's sense -- the dashboard the screen is opened on, never "the last one used". What Taylor's
-//      bench screen should open (her pictures full screen) is that screen's content, chosen on it, not a code default.
+//      one in Mike's sense -- the dashboard the screen is opened on, never "the last one used". What the
+//      bedside screen should open (its pictures full screen) is that screen's content, chosen on it, not a code default.
 //   2. ONLY A RESTART. The chosen dashboard is opened on a COLD start (`isColdStart`): the browser started (the Pi
 //      launcher says so with `?boot=1`, kiosk-launch.sh), or this tab opened the page for the first time (nothing in
 //      sessionStorage yet). A reload -- a refresh, the recovery ladder's reload, a new version picked up -- is not a

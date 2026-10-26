@@ -1972,7 +1972,7 @@ Mike's rulings, second pass (change-list rows 2.37 and 2.39; `docs/from_chat/roo
 6. **Nimrod the cat is context help:** *"It tells you about whatever you selected when you click on
    him."*
 7. **Step 6 Stages 1-6 are all go** (note AM): Stage 4 changes every real *Nimrod* screen, not
-   Taylor's -- her Pi still runs the Cici dashboard (*"Her Pi is still on the old site. Not
+   the first person's -- her Pi still runs the Cici dashboard (*"Her Pi is still on the old site. Not
    Nimrod."*). The plan's own gates stand (the bench soak before Stage 4).
 
 
@@ -2292,7 +2292,7 @@ was Code's reading, and Mike corrected it.
    around the computer for logins or anything."* Switching dashboards and modules, the library and editing stay
    while locked. Leaving the browser goes, and so do sign-in and key pages, file pickers and links out.
 2. **"I call them" at two levels:** the whole account, or one person on it. *"Maybe there should be an option to
-   set I call them at account vs user levels."* Mike calls Taylor "Taylor", so her own screen's greeting
+   set I call them at account vs user levels."* Mike calls her by her own name, so her own screen's greeting
    isn't an issue for him. A label still never greets the person it labels on their own screen, as a safe default.
 3. **Lots of questions at pretty much every level,** for every age and ability in the first household. No automatic question writing
    exists yet: the nightly batch is still an open decision. Code writes packs by hand into packs_review/, with a
@@ -2329,7 +2329,7 @@ docs/for_chat/question_ranking_design_20261006.md, for Mike and chat to discuss 
 4. **The starting level is a starting point.** Each category or type adjusts from there with performance. A
    start set in a game's own settings affects that person in that game only; the global setting lives in the
    global settings.
-5. **Even easier questions for children and Taylor** (a "very easy" level), and a good starter set for
+5. **Even easier questions for children and for adults relearning** (a "very easy" level), and a good starter set for
    everything to use. More could be downloadable later if that's advisable.
 6. **Keep making questions for everything at every level.**
 7. **H shows and hides the transport bar.** Hiding it with H keeps it from popping up again for 30 s by default.
@@ -2537,7 +2537,7 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
   another option. Let's make the default for everyone."* Hides are undoable and kept on the device and in the
   Nimrod folder, never on the server. (2026-10-09)
 - **Voice commands must work in two steps: the wake phrase, then the command on its own.** Mike: *"I thought I said
-  that Taylor won't be able to say everything in one breath."* A sign or guide that says "in one breath" is wrong;
+  that [she] won't be able to say everything in one breath."* A sign or guide that says "in one breath" is wrong;
   measurements and the sign use the two-step. (2026-10-09)
 
 ## Following deletions is per drive or per direction -- 2026-10-10

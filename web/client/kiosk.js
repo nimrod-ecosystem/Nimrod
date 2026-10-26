@@ -4306,7 +4306,7 @@ export async function mountKiosk(root, {
     //
     // Deliberately two options, not three. A third, content-HIDING screensaver was considered
     // and left out on purpose — hiding everything is a state only an input can leave, and
-    // Taylor cannot give one. `dim` and `drift` both keep every pixel of content on screen
+    // the person it was first built for cannot give one. `dim` and `drift` both keep every pixel of content on screen
     // the whole time, so neither is a gate anybody could get stuck behind. See the DECIDE row
     // for whether a hide mode is ever wanted, for a screen where someone genuinely can dismiss
     // it themselves.

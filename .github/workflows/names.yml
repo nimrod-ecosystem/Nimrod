@@ -1,0 +1,22 @@
+# No family member's name and no medical-records path in this public repo (chat's note CY, 2026-10-26).
+#
+# The 2026-08-31 scrub was a one-time pass, and the same names came back within weeks because nothing checked. This
+# runs the check on every push, whatever it touched: DECISIONS.md lives at the repo root, outside web/, which is
+# exactly where the last ones were found. Standard library and git only; nothing to install.
+name: names
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  names:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: No family names or medical-records paths in tracked files
+        run: python web/server/test_no_family_names.py

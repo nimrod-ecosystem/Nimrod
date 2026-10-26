@@ -79,7 +79,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
 // Three minutes. Long enough to think about a word, short enough that somebody who walked away
 // mid-sentence gets their board back before it matters.
 //
-// *** AND THE EDGE CASE I UNDER-HUNTED, WHICH IS THE USUAL ONE: A USER WHO IS NOT TAYLOR. ***
+// *** AND THE EDGE CASE I UNDER-HUNTED, WHICH IS THE USUAL ONE: A USER WHO IS NOT THE PERSON THIS WAS FIRST BUILT FOR. ***
 //
 // Mike asked why this exists, and the answer above is only half of it. The rule is right for a
 // board mounted on the screen somebody LIVES WITH. On a laptop where a family member is building

@@ -291,7 +291,7 @@ def profile_name(row: dict | None, home_name: str | None) -> str:
 # WHAT IS SHOWN (`seen_name`): the person looking's own label, else the login's label, else the name on the card.
 # *** THE PERSON LOOKING IS NAMED BY THE NAME ON THEIR OWN CARD, NOT A LABEL (the default, argued). *** The page for
 # somebody (their own screen, or Home with them picked) names them as their card does - not by what the login, or
-# anybody on it, calls them. Mike, earlier: "I call her Taylor so it doesn't matter" - true for him. FOR showing
+# anybody on it, calls them. Mike, earlier: "I call her [by her name] so it doesn't matter" - true for him. FOR showing
 # the label there too: one name everywhere on the login. AGAINST, and it decides it: another login's label may be a
 # carer's shorthand or a pet name the person never chose, and a screen greeting its own person with it is the label
 # reaching the one person it was not written for. Not a setting yet (a GUESS, open to change: seen_name's first if).

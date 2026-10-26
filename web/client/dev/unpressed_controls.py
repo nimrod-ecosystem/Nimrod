@@ -5,8 +5,8 @@ WHY THIS EXISTS. On 2026-09-05 nine buttons across five modules did nothing when
 pressed - photos/youtube/personal/educational next+prev and interstitials' skip -
 because `bus.route()` dropped bare signals. Every one of those modules ALSO answers
 its bus topic directly, and every test drove the TOPIC. The topic worked perfectly.
-Nobody drove the BUTTON, so the suite stayed green while the arrow under Taylor's
-photos was dead.
+Nobody drove the BUTTON, so the suite stayed green while the arrow under the bedside
+screen's photos was dead.
 
 A test that exercises the layer UNDERNEATH the thing a person touches will stay green
 through exactly that. This lists the controls with nobody on top.

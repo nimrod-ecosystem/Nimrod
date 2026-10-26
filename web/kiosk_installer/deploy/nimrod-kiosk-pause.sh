@@ -9,8 +9,8 @@
 # insists on everywhere else ("a screen in a care facility ends up frozen... until somebody
 # visits"). Loosening it so a graceful Chromium exit (Alt+F4) does not restart would ALSO mean
 # an accidental close from anyone near the keyboard leaves the screen dark until a human
-# notices, which is a worse failure than the one being fixed here — Taylor cannot reach for
-# anything herself, but staff, visitors or a stray cable are all real ways a keyboard gets
+# notices, which is a worse failure than the one being fixed here — the person in the bed may not be able to reach
+# for anything themselves, but staff, visitors or a stray cable are all real ways a keyboard gets
 # brushed near a bedside screen.
 #
 # So the fix is not to weaken the automatic restart; it is to add a DELIBERATE action that

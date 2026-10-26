@@ -546,7 +546,7 @@ registerModule(
       applyCallSink();
       applyControls();
     }
-    // WHICH SPEAKER (2026-10-25, row 2.128; Mike: "I want Taylor's Youtube, music, etc. coming out of a different
+    // WHICH SPEAKER (2026-10-25, row 2.128; Mike: "I want [her] Youtube, music, etc. coming out of a different
     // speaker than her calls"): this panel's own "Its sound comes out of" row, else the screen's Devices -> Speakers
     // "Calls play on" (ctx.speakerRoute), else the computer's default. Re-applied after every render (a new element
     // starts on the default) and when speakers are plugged in or out; a named speaker that is not there plays on the
