@@ -135,7 +135,7 @@ import { attachCursorDrive } from './cursor_drive.js';
 import {
   watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
 } from './music_favourites.js';
-import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS, panelSpeakerField } from './speakers.js';   // play on (row 2.68)
+import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS, panelSpeakerField, openSpeakerTester, knownOutputs } from './speakers.js';   // play on (row 2.68)
 import { backupScreenField, listedSources, BACKUP_KEY } from './media_sources.js';   // backup source (2026-10-08)
 import { createStallSwitch, standInSource, probeFor, SWITCH_TARGETS } from './playback_stall.js';   // stalled playback
 import { createMissStore, MISS_FIELDS } from './speech_misses.js';
@@ -6208,6 +6208,9 @@ export async function mountKiosk(root, {
       { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
       { kind: 'heading', id: 'bar-key-head', label: 'The bar', ...MENU_TAB.devices(2) },   // bar toggle
       { kind: 'heading', id: 'speakers-head', label: 'Speakers', ...MENU_TAB.devices(4) },   // play on (row 2.68)
+      // 2026-10-26 (note CX, "Same for speakers"): every speaker with a sound to hear and Calls here / Music here.
+      { kind: 'item', id: 'speaker-test', label: 'Test the speakers…', hint: 'hear which one is which, and choose', ...MENU_TAB.devices(4),
+        run: () => { openSpeakerChooser(); } },
       // WHICH MICROPHONE (2026-10-26, notes CW/CX; mic_choice.js): the row, and a tester with a level per microphone.
       { kind: 'heading', id: 'mics-head', label: 'Microphone', ...MENU_TAB.devices(5) },
       { kind: 'item', id: 'mic-test', label: 'Test the microphones…', hint: 'see which one hears you, and use it', ...MENU_TAB.devices(5),
@@ -8403,6 +8406,15 @@ export async function mountKiosk(root, {
   let lockGuards = null, lockChip = null, lockReporter = null, lockSaidAt = 0;
   // "Test the microphones" (2026-10-26, notes CW/CX): every microphone with a live level; "Use this one" sets the row.
   let micTester = null;
+  let speakerTester = null;
+  async function openSpeakerChooser() {
+    try { speakerTester?.close(); } catch { /* gone */ }
+    try { await refreshOutputs(); } catch { /* the last list */ }
+    try { menuView()?.close?.(); } catch { /* no menu */ }
+    speakerTester = openSpeakerTester(document.body, { list: knownOutputs(), current: { ...(settings.get() || {}) },
+      onPick: (key, value) => { try { settings.set({ [key]: value }); } catch (err) { console.error('kiosk: speaker', err); } } });
+    return speakerTester;
+  }
   async function openMicChooser() {
     try { micTester?.close(); } catch { /* gone */ }
     try { await refreshMics({ list: typeof micOwner?.list === 'function' ? () => micOwner.list() : null }); } catch { /* the last list */ }

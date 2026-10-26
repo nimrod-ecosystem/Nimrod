@@ -105,6 +105,92 @@ export function watchOutputs(fn) { watchers.add(fn); return () => watchers.delet
 /** For the suites: put a list in place without a browser. */
 export function setOutputsForTest(list) { outputs = (list || []).map((o) => ({ deviceId: String(o.deviceId), label: String(o.label) })); }
 
+/**
+ * "TEST THE SPEAKERS" (2026-10-26, chat's note CX: "Same for speakers"; Mike: switching has to be "easy and intuitive").
+ * Every speaker this computer has, by name, with "Play a sound here" (a short, soft tone sent to that speaker alone),
+ * "Calls here" and "Music here" (Devices -> Speakers' two rows). Like the microphone tester (mic_choice.js): it
+ * closes by itself after a minute untouched, Close and Escape close it, and nothing waits on anybody. `onPick(key,
+ * value)` writes the row. Returns { el, close() }.
+ */
+export const SPEAKER_TESTER_IDLE_MS = 60 * 1000;
+export function openSpeakerTester(host, { list = knownOutputs(), current = {}, onPick = () => {},
+  AudioContextImpl = (typeof AudioContext !== 'undefined' ? AudioContext : null), setTimer = (f, ms) => setTimeout(f, ms),
+  clearTimer = (h) => clearTimeout(h), idleMs = SPEAKER_TESTER_IDLE_MS } = {}) {
+  const doc = host?.ownerDocument;
+  if (!doc) return { el: null, close() {} };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const callsKey = speakerKey('calls'), musicKey = speakerKey('music');
+  const btn = (attrs, label) => `<button type="button" ${attrs} style="min-height:48px;padding:6px 12px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer">${label}</button>`;
+  const el = doc.createElement('div');
+  el.dataset.speakerTester = '';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', 'Test the speakers');
+  el.style.cssText = 'position:fixed;inset:5vh 5vw;z-index:2147482000;overflow:auto;padding:16px 18px;border-radius:14px;'
+    + 'background:var(--surface,#fff);color:var(--text,#222);border:2px solid var(--accent,#2b6cb0);box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:1.05rem';
+  const inUse = (key, label) => String(current[key] || '') === `${OUT_PREFIX}${label}`;
+  el.innerHTML = '<h2 style="margin:0 0 6px">Which speaker is which?</h2>'
+    + '<p style="margin:0 0 12px">Press “Play a sound here” to hear a short tone from that speaker. Then choose it for calls, for music, or both.</p>'
+    + (list.length ? list.map((o) => `<div data-speaker-row="${esc(o.deviceId)}" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0">`
+      + `<span style="flex:1 1 200px">${esc(o.label)}${inUse(callsKey, o.label) ? ' <b>(calls)</b>' : ''}${inUse(musicKey, o.label) ? ' <b>(music)</b>' : ''}</span>`
+      + btn(`data-speaker-play="${esc(o.deviceId)}"`, 'Play a sound here')
+      + btn(`data-speaker-use="${esc(callsKey)}" data-speaker-value="${esc(`${OUT_PREFIX}${o.label}`)}"`, 'Calls here')
+      + btn(`data-speaker-use="${esc(musicKey)}" data-speaker-value="${esc(`${OUT_PREFIX}${o.label}`)}"`, 'Music here')
+      + '</div>').join('') : '<p>No speakers with names were found on this computer.</p>')
+    + `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px">${btn('data-speaker-reset', 'Both on this computer’s own speaker')}${btn('data-speaker-close', 'Close')}</div>`;
+  doc.body.append(el);
+  let done = false, timer = null;
+  const played = [];
+  function tone(deviceId) {
+    if (!AudioContextImpl) return false;
+    try {
+      const ctx = new AudioContextImpl();
+      played.push(ctx);
+      const go = () => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.frequency.value = 523.25;                       // a soft C, half a second, faded in and out
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+        o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.55);
+        setTimer(() => { try { ctx.close(); } catch { /* closed */ } }, 900);
+      };
+      const sink = typeof ctx.setSinkId === 'function' ? Promise.resolve(ctx.setSinkId(deviceId)).catch(() => {}) : Promise.resolve();
+      sink.then(() => { try { ctx.resume?.(); } catch { /* running */ } go(); });
+      return true;
+    } catch { return false; }
+  }
+  const arm = () => { if (timer != null) clearTimer(timer); timer = setTimer(() => close(), idleMs); };
+  function close() {
+    if (done) return;
+    done = true;
+    if (timer != null) clearTimer(timer);
+    doc.removeEventListener('keydown', onKey, true);
+    try { el.remove(); } catch { /* gone */ }
+  }
+  function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } else arm(); }
+  el.addEventListener('click', (e) => {
+    arm();
+    const t = e.target;
+    const play = t.closest?.('[data-speaker-play]');
+    if (play) { tone(play.getAttribute('data-speaker-play')); return; }
+    const use = t.closest?.('[data-speaker-use]');
+    if (use) {
+      try { onPick(use.getAttribute('data-speaker-use'), use.getAttribute('data-speaker-value') || ''); } catch { /* the row's problem */ }
+      use.textContent = 'Chosen';
+      return;
+    }
+    if (t.closest?.('[data-speaker-reset]')) {
+      try { onPick(callsKey, ''); onPick(musicKey, ''); } catch { /* the rows' problem */ }
+      close();
+      return;
+    }
+    if (t.closest?.('[data-speaker-close]')) close();
+  });
+  doc.addEventListener('keydown', onKey, true);
+  arm();
+  return { el, close, played: () => played.length };
+}
+
 /** The device id for a speaker's name: exact, then the first that contains it. '' when none (the default). */
 export function sinkIdFor(name, list = outputs) {
   const want = norm(name);

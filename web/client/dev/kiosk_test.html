@@ -536,8 +536,10 @@ const toTab = (m, id) => {
       // One more of the old rows: 52. The panel's lap is unchanged.)
       // (which microphone, 2026-10-26, notes CW/CX, DELIBERATELY: Devices -> "Microphone" heading and "Test the
       // microphones…". Two more of the old rows: 54. The row itself appears only with two or more named microphones.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 54) ***',
-        lapStops.length === 15 && oldStops.length === 54 && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
+      // (speakers, 2026-10-26, note CX "Same for speakers", DELIBERATELY: "Test the speakers…" under Speakers. 55.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 55) ***',
+        lapStops.length === 15 && oldStops.length === 55 && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
+        && oldStops.some((i) => i.id === 'speaker-test') /* which speaker */
         && oldStops.some((i) => i.id === 'set:speakerCalls') /* calls play on */
         && oldStops.some((i) => i.id === 'set:flashWarning') /* flash warning */
         && lapStops.includes('set:menuSearch') && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */

@@ -81,6 +81,34 @@ try {
   box().querySelector('[data-mic-use=""]').click();
   check('"Use this computer\'s own default" sets it back to the default', picked[picked.length - 1] === '' && !box());
   void t2; void t3;
+  section('*** "Test the speakers" (note CX: "Same for speakers") ***');
+  {
+    const { openSpeakerTester, speakerKey } = await import('../speakers.js');
+    const tones = [];
+    class ToneAC {
+      constructor() { this.currentTime = 0; this.destination = {}; }
+      setSinkId(id) { this.sink = id; return Promise.resolve(); }
+      createOscillator() { const me = this; return { frequency: {}, connect() {}, start() { tones.push(me.sink); }, stop() {} }; }
+      createGain() { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {} }, connect() {} }; }
+      resume() {}
+      close() {}
+    }
+    const picks = [];
+    const spk = [{ deviceId: 'tv1', label: 'TV speakers' }, { deviceId: 'usb1', label: 'USB Composite Device Analog Stereo' }];
+    openSpeakerTester(document.body, { list: spk, current: { [speakerKey('calls')]: 'out:TV speakers' }, onPick: (k, v) => picks.push([k, v]), AudioContextImpl: ToneAC });
+    const st = () => document.querySelector('[data-speaker-tester]');
+    check('*** every speaker by name, the one calls use marked, each with "Play a sound here", "Calls here" and "Music here" ***',
+      !!st() && st().querySelectorAll('[data-speaker-row]').length === 2 && /TV speakers \(calls\)/.test(st().textContent)
+      && st().querySelectorAll('[data-speaker-play]').length === 2 && st().querySelectorAll('[data-speaker-use]').length === 4);
+    st().querySelector('[data-speaker-play="usb1"]').click();
+    await tick(); await tick();
+    check('*** "Play a sound here" plays a short tone on THAT speaker alone ***', JSON.stringify(tones) === '["usb1"]', JSON.stringify(tones));
+    st().querySelector(`[data-speaker-use="${speakerKey('calls')}"][data-speaker-value="out:USB Composite Device Analog Stereo"]`).click();
+    check('*** "Calls here" writes Devices -> Speakers "Calls play on", and stays open to choose music too ***',
+      JSON.stringify(picks) === JSON.stringify([[speakerKey('calls'), 'out:USB Composite Device Analog Stereo']]) && !!st(), JSON.stringify(picks));
+    st().querySelector('[data-speaker-reset]').click();
+    check('"Both on this computer\'s own speaker" puts both back, and closes', picks.slice(-2).every(([, v]) => v === '') && !st());
+  }
   check('names nobody', !/taylor|cici|her screen/i.test(await (await fetch('../mic_choice.js')).text()));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
