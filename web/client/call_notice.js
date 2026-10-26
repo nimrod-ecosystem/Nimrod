@@ -36,6 +36,7 @@
 // Every number here is argued where it is declared; none of them is a person's setting except the mode.
 
 import { CALLER_GIVE_UP_MS } from './call_page.js';
+import { CALL_BLOCKED_SHORT } from './private_network.js';   // 2026-10-26 (note CV): what fixes it, in words
 import { CALL_ANSWER_TOPIC, CALL_DECLINE_TOPIC } from './actions.js';
 
 export const CALL_NOTICE_KEY = 'callNotice';
@@ -316,14 +317,14 @@ export function createCallNotice({
       hosted = false;
       if (ev.local) return;                            // hung up here: the person chose it, nothing to explain
       // The same words the Call panel shows for the same endings (call.js END_MESSAGES).
-      if (ev.reason === 'unconnected' || ev.reason === 'failed') showNote('The call could not connect.');
+      if (ev.reason === 'unconnected' || ev.reason === 'failed') showNote(CALL_BLOCKED_SHORT);
       else if (ev.reason === 'stalled') showNote('The connection was lost.');
       return;
     }
     if (ev.local) return;                              // this screen's own decline / ring-out: already done
     const name = nameOf(who);
     if (ev.reason === 'elsewhere') clear('Handled on another screen.');
-    else if (ev.reason === 'failed' || ev.reason === 'stalled' || ev.reason === 'unconnected') clear('The call could not connect.');
+    else if (ev.reason === 'failed' || ev.reason === 'stalled' || ev.reason === 'unconnected') clear(CALL_BLOCKED_SHORT);
     else clear(`Missed call from ${name}.`);           // the caller hung up or gave up
   }
 
@@ -364,7 +365,7 @@ export function createCallNotice({
       hosted = false;
       // Answered with nothing to host it: hang up rather than leave the caller "answered" by nobody.
       try { transport.hangup('failed'); } catch { /* already gone */ }
-      showNote('The call could not connect.');
+      showNote(CALL_BLOCKED_SHORT);
     }
     return ok;
   }

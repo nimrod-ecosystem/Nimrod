@@ -32,6 +32,8 @@
 import { connectDrive } from './drive.js';
 import { authHeaders, isAuthError, httpError } from './auth.js';
 import { createCallTransport, newCallSession } from './call_transport.js';
+// A call that cannot connect says what to do (chat's note CV; Mike's own-private-network ruling, 2026-09-08).
+import { CALL_BLOCKED_TEXT, CALL_UP_FRONT, PRIVATE_NETWORK_URL } from './private_network.js';
 import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_group.js';
 import { createWakeHold } from './phone_mic_show.js';
 import { createSpeechChannel } from './output_channels.js';
@@ -72,7 +74,7 @@ export const CALLER_END_TEXT = Object.freeze({
   busy: 'On another call right now. Try again in a little while.',
   unanswered: 'No answer.',
   'no-answer': 'No answer.',
-  failed: 'The call could not connect.',
+  failed: CALL_BLOCKED_TEXT,
   'connection-lost': 'The connection was lost.',
   hangup: 'The call ended.',
   ended: 'The call ended.',
@@ -136,7 +138,7 @@ export function endText(reason, why, { answered = false, connected = false } = {
   if (reason === 'unconnected') return CALLER_END_TEXT.failed;
   if (reason === 'stalled') {
     return connected ? 'The connection was lost.'
-      : 'The call could not connect. The two internet connections may not be able to reach each other directly.';
+      : CALL_BLOCKED_TEXT;
   }
   return CALLER_END_TEXT[reason] || 'The call ended.';
 }
@@ -234,6 +236,7 @@ export async function mountCallPage(root, {
   let transport = null;
   let local = null;                    // the camera/microphone stream this page opened
   let ended = null;
+  let endedHow = false;             // the last end was a call that could not connect directly: link the guide
   let note = null;                     // said during the call (the camera could not be opened...)
   let answered = false;
   let connected = false;
@@ -266,6 +269,21 @@ export async function mountCallPage(root, {
 
   const later = (fn, ms) => { const id = setTimer(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
   const clearAll = () => { for (const id of timers) { try { clearTimer(id); } catch { /* gone */ } } timers.clear(); };
+
+  // HOW OFTEN CALLS CANNOT CONNECT (2026-10-26, chat's note CV; Mike's ruling: no relay unless it is most calls, so
+  // measure). Once per call: "direct" when it connects, "failed" when it cannot. The site keeps two counts a day and
+  // nothing about who called whom (POST /api/call/outcome). Fire and forget: a report that fails changes nothing here.
+  let callSession = null;            // the session of the call this page placed (the transport forgets it as it ends)
+  function reportOutcome(outcome, t) {
+    let session = callSession;
+    try { session = session || t?.__probe?.().session || null; } catch { /* the remembered one */ }
+    if (!session) return;
+    try {
+      Promise.resolve(fetchImpl(`${base}/api/call/outcome`, { method: 'POST', credentials: 'same-origin',
+        headers: { ...authHeaders(user), 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome, session }) }))
+        .catch(() => {});
+    } catch { /* counted nowhere: nothing lost for the call */ }
+  }
 
   async function getJSON(path) {
     const res = await fetchImpl(`${base}${path}`, { headers: authHeaders(user), credentials: 'same-origin' });
@@ -300,10 +318,11 @@ export async function mountCallPage(root, {
     body().innerHTML = `
       <h1>Call</h1>
       <p class="cp-lead">A video or audio call to a screen. Every screen of that person rings (or only the one you
-        choose under Ring) and waits for whoever is there to answer or decline. If whoever looks after those screens lets you drop in, it answers
+        choose under Ring) and waits for whoever is there to answer or decline. ${esc(CALL_UP_FRONT)}
+        <a data-how-up-front href="${PRIVATE_NETWORK_URL}">How to set one up</a>. If whoever looks after those screens lets you drop in, it answers
         by itself after a short countdown. The camera and microphone open only when you press a call button.</p>
       <p class="cp-note" data-not-nurse-call>Nimrod is not a nurse call or an emergency system.</p>
-      ${ended ? `<p class="cp-ended" role="status" data-ended>${esc(ended)}</p>` : ''}
+      ${ended ? `<p class="cp-ended" role="status" data-ended>${esc(ended)}${endedHow ? ` <a data-how href="${PRIVATE_NETWORK_URL}">How to set one up</a>` : ''}</p>` : ''}
       ${knockOffer ? `<button type="button" class="cp-btn cp-primary cp-big" data-knock>Ask to join that call
         <span class="cp-sub">(somebody already in it lets you in)</span></button>` : ''}
       ${people.length ? `
@@ -674,7 +693,7 @@ export async function mountCallPage(root, {
     target = people.find((p) => p.id === want.personId) || null;
     if (!target) { renderSetup(); return; }
     mode = CALL_MODES.includes(want.mode) ? want.mode : 'video';
-    ended = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
+    ended = null; endedHow = false; callSession = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
     said = []; heldForWords = false; joinedByKnock = true; primaryGone = false;
     const my = ++run;
     phase = 'checking';
@@ -869,7 +888,7 @@ export async function mountCallPage(root, {
     if (!target) return;
     mode = CALL_MODES.includes(want) ? want : 'video';
     put(PERSON_KEY, target.id);
-    ended = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
+    ended = null; endedHow = false; callSession = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
     said = []; heldForWords = false;
     knockOffer = null; primaryGone = false; joinedByKnock = false;     // group calls
     const my = ++run;
@@ -938,7 +957,13 @@ export async function mountCallPage(root, {
       // ...and a screen already on a call: offer to ask to join that call instead (a knock), on a site that can.
       const knockable = info?.why === 'busy' && !!group;
       const want = { personId: target?.id, mode };
+      // Could not connect directly: counted (BEFORE the teardown, which forgets the call's session), then the way to fix
+      // it as a link under the words (private-network.html).
+      const blocked = reason === 'unconnected' || (reason === 'stalled' && !connected);
+      if (blocked) reportOutcome('failed', primaryT);
       finish(text);
+      endedHow = blocked;
+      if (endedHow) renderSetup();
       // Could not connect: what each end offered, in words, once the transport has read it (it reads while closing).
       if (reason === 'unconnected' || reason === 'stalled') {
         setTimer(() => {
@@ -953,7 +978,7 @@ export async function mountCallPage(root, {
     offs.push(transport.onAnswered?.(() => { if (my !== run) return; answered = true; if (phase === 'ringing') setPhase('answered'); }));
     offs.push(transport.onConnection?.((st) => {
       if (my !== run) return;
-      if (st === 'connected') { connected = true; answered = true; setPhase('in-call'); }
+      if (st === 'connected') { if (!connected) reportOutcome('direct', primaryT); connected = true; answered = true; setPhase('in-call'); }
       else if ((st === 'disconnected' || st === 'failed') && connected) setPhase('reconnecting');
     }));
     setPhase('ringing');
@@ -965,6 +990,7 @@ export async function mountCallPage(root, {
       const toScreen = ringPick && (ringLists.get(target.id) || []).some((x) => x.id === ringPick) ? ringPick : null;
       sent = await transport.call({ tracks, from: { name: myName || 'Someone', video: mode === 'video' }, remoteVideo: q('[data-remote]'),
         ...(s ? { session: s, group: s } : {}), ...(toScreen ? { toScreen } : {}) });
+      try { callSession = transport?.__probe?.().session || null; } catch { callSession = null; }
     } catch (err) { console.error('call: place', err); sent = false; }
     if (my !== run) return;
     if (!sent) { finish('The call could not be placed. Check the connection and try again.'); return; }

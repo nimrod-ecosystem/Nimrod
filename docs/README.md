@@ -15,9 +15,9 @@
   with opposite needs, sources as folders, scoring, and where the weights live.
 - [`face-tracking-hookup.md`](face-tracking-hookup.md) — face tracking is not bundled; this is
   how to wire a real face-landmark library into `input_facegesture.js`'s own tested seam.
-- [`call-relay-plan.md`](call-relay-plan.md) — the plan for calls that connect when the direct path fails (not built
-  yet): a project TURN relay on Cloudflare with short-lived credentials and a monthly cap, a household's own relay,
-  and counting how often direct fails.
+- [`call-relay-plan.md`](call-relay-plan.md) — WITHDRAWN 2026-10-26 (Mike's no-relay ruling stands): a project TURN
+  relay that was weighed and not taken. Calls that cannot connect point to a private network instead
+  (`web/client/private-network.html`).
 - [`home-assistant-plan.md`](home-assistant-plan.md) — the plan for Home Assistant control (not built yet): a bridge on
   the screen's computer holds the token, things become verbs a switch can do, testing against a pretend hub.
 

@@ -79,6 +79,7 @@
 // AND A CALL CAN LEND "SEE THIS SCREEN" TO THE CALLER until it ends (tech-support style, `ctx.lendScreen`).
 
 import { registerModule } from '../module.js';
+import { CALL_BLOCKED_SHORT } from '../private_network.js';   // 2026-10-26 (note CV): what fixes it, in words
 import { MUSIC_GROUP } from '../audio_bus.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
 import { CALL_TRANSPORT_READY } from '../call_transport.js';
@@ -924,7 +925,7 @@ registerModule(
     // somebody chose or expected - no message needed, the idle view already says "no call right
     // now". These two are the ones a person watching would otherwise have no way to explain.
     const END_MESSAGES = {
-      failed: 'The call could not connect.',
+      failed: CALL_BLOCKED_SHORT,
       unanswered: 'No answer.',
       // *** ADDED 2026-09-08. *** `call_transport.js`'s own `onEnded` was wired to always report
       // `'remote'` regardless of why it actually ended — so a connection that STALLED (its own

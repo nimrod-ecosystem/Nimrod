@@ -1395,6 +1395,11 @@ class _Store:
                             "removed. Choosing another place stops new entries. \"Remove what is kept with us\" "
                             "deletes them. Removing the person deletes them too.", True,
                             "when you choose \"With us\" for a person's history"),
+        # 2026-10-26 (chat's note CV): Mike's no-relay ruling says measure before spending; this is the measure.
+        "call_outcomes":   ("How many calls connected directly, and how many could not, each day: two numbers "
+                            "a day for the whole site. No names, no logins, no addresses, nothing about who "
+                            "called whom. It shows whether calls that cannot connect are rare or common.", False,
+                            "when a call connects or cannot connect"),
         "history_totals":  ("Counts of a person's older history entries, made once they pass the limit in the "
                             "line above. For each song, video, game topic or AAC board word: how many times, how "
                             "many right, and the first and last time. Only for history you chose to keep with us. "
@@ -2316,6 +2321,27 @@ class _Store:
                          for r in rows][::-1],
                 "total": total, "totals": totals}
 
+    # ---- calls that connected directly, and that could not (2026-10-26, chat's note CV) ----
+    CALL_OUTCOMES = ("direct", "failed")
+
+    def count_call_outcome(self, day: str, outcome: str) -> bool:
+        """One more call with this outcome on this day (YYYY-MM-DD). Counts only."""
+        if outcome not in self.CALL_OUTCOMES or not (isinstance(day, str) and len(day) == 10):
+            return False
+        with self._tx() as cur:
+            cur.execute(self._q("INSERT INTO call_outcomes(day, outcome, n) VALUES(?,?,1) "
+                                "ON CONFLICT(day, outcome) DO UPDATE SET n = call_outcomes.n + 1"), (day, outcome))
+        return True
+
+    def call_outcomes(self, since_day: str) -> list[dict]:
+        """Each day from `since_day` on: how many calls connected directly, and how many could not."""
+        days: dict[str, dict] = {}
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT day, outcome, n FROM call_outcomes WHERE day >= ? ORDER BY day"), (since_day,))
+            for day, outcome, n in cur.fetchall():
+                days.setdefault(day, {"day": day, "direct": 0, "failed": 0})[outcome] = int(n)
+        return list(days.values())
+
     def history_counts(self, user_id: str, person_id: str) -> dict:
         """Per stream: how many rows are kept, and how many older ones are counted in totals."""
         out: dict[str, dict] = {}
@@ -2556,6 +2582,10 @@ class SQLiteStore(_Store):
                     user_id TEXT NOT NULL, person_id TEXT NOT NULL, stream TEXT NOT NULL, grp TEXT NOT NULL,
                     n INTEGER NOT NULL, hits INTEGER NOT NULL DEFAULT 0, first_at TEXT, last_at TEXT,
                     PRIMARY KEY (user_id, person_id, stream, grp)
+                );
+                -- calls that connected directly, and that could not, per day (2026-10-26): counts only.
+                CREATE TABLE IF NOT EXISTS call_outcomes (
+                    day TEXT NOT NULL, outcome TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, outcome)
                 );
 
                 -- PROVENANCE COLUMNS (for_code.md 9f). Nullable, populated null, NEVER
@@ -2918,6 +2948,9 @@ class PostgresStore(_Store):
             "CREATE TABLE IF NOT EXISTS history_totals (user_id TEXT NOT NULL, person_id TEXT NOT NULL, "
             "stream TEXT NOT NULL, grp TEXT NOT NULL, n INTEGER NOT NULL, hits INTEGER NOT NULL DEFAULT 0, "
             "first_at TEXT, last_at TEXT, PRIMARY KEY (user_id, person_id, stream, grp))",
+            # calls that connected directly, and that could not, per day (2026-10-26): counts only.
+            "CREATE TABLE IF NOT EXISTS call_outcomes (day TEXT NOT NULL, outcome TEXT NOT NULL, "
+            "n INTEGER NOT NULL, PRIMARY KEY (day, outcome))",
 
             "CREATE TABLE IF NOT EXISTS events (id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL, "
             "profile_id TEXT NOT NULL, stream TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, "

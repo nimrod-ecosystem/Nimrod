@@ -2762,3 +2762,21 @@ Mike, answering the pictures questions (row 2.74) and the draft voice sign (row 
 - **Quick swap.** Mike: *"set up modules as quick swap modules that can have a button or shortcut to quickly swap
   between two modules on a dashboard."* HOW, Code's: a panel's "Quick swap with", "⇄ Swap" on the bar, a bindable
   action and "quick swap" said aloud; a swap is a switch, kept when saved. Built in fec9225. (2026-10-18)
+
+## Calls fall back to your own private network; Medieval is a theme (Mike, 2026-10-26)
+
+- **No relay server of the project's: a call that cannot connect directly says so and points to a private network
+  between your own devices.** Mike, 2026-09-08 (chat's notes, "RELAY - Mike's ruling"): *"No relay server. Nimrod does
+  not run infrastructure it cannot afford."* Revisit only if it affects most calls rather than a minority; measure
+  before spending. Mike, 2026-10-26, restating it after a call failed: *"I feel like what we decided for the call
+  fallback was people would have to use their own VPN. We should make it clear that that's the case, easy to set up,
+  and clear that that's what you need to do if a call fails because of it."* **This supersedes "Reach & hosting"
+  (2026-08-09) above, which says the host provides "a TURN relay" and that Tailscale is "never required":** there is no
+  relay, and for a call the direct path cannot make, a private network (Tailscale first) is what makes it. A relay
+  plan written 2026-10-26 (docs/call-relay-plan.md) is withdrawn by the same ruling and marked so. HOW, Code's: the
+  failure words say what to do with a link to a guide (private-network.html); the call page says it up front; a failed
+  call says what each end offered; failures are counted so "most calls" can be measured. (2026-10-26)
+- **Medieval is a site theme.** Mike: *"Medieval should become a theme."* It wears Design's medieval deck, town and
+  outfits; its colours are Design's medieval ones. (2026-10-26)
+- **Design turns every theme's backdrop into pieces, in any order** (Design's item 42.2). Mike: *"Design should just do
+  them all. The order doesn't matter."* (2026-10-26)

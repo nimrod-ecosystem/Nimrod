@@ -1638,6 +1638,40 @@ def drive_may(person_id: str, user: str = Depends(current_user)):
             "intercom": _intercom_allowed(user, person_id), "checkIn": _check_in_allowed(user, person_id)}
 
 
+# ---- calls that connected directly, and that could not (2026-10-26, chat's note CV) ----
+# Mike's ruling (2026-09-08): no relay; revisit only if calls that cannot connect are MOST calls, so measure first.
+# The caller's page reports once per call; only the two counts a day are kept (db.py call_outcomes). One report per
+# call session (remembered briefly, bounded), so a page sending twice is counted once.
+_outcome_seen: dict[str, float] = {}
+OUTCOME_SEEN_MAX = 5000
+
+
+@app.post("/api/call/outcome")
+def post_call_outcome(body: dict = Body(...), user: str = Depends(current_user)):
+    outcome, session = body.get("outcome"), body.get("session")
+    if outcome not in store.CALL_OUTCOMES or not (isinstance(session, str) and 0 < len(session) <= 64):
+        raise HTTPException(status_code=400, detail="an outcome (direct or failed) and the call's session")
+    key = f"{user}|{session}"
+    if key in _outcome_seen:
+        return {"ok": True, "counted": False}
+    _outcome_seen[key] = time.time()
+    while len(_outcome_seen) > OUTCOME_SEEN_MAX:
+        _outcome_seen.pop(next(iter(_outcome_seen)))
+    store.count_call_outcome(time.strftime("%Y-%m-%d", time.gmtime()), outcome)
+    return {"ok": True, "counted": True}
+
+
+@app.get("/api/call/outcomes")
+def get_call_outcomes(user: str = Depends(current_user)):
+    """The last 30 days, for the whole site: calls that connected directly, and that could not. Counts only."""
+    since = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 30 * 86400))
+    days = store.call_outcomes(since)
+    direct = sum(d["direct"] for d in days)
+    failed = sum(d["failed"] for d in days)
+    return {"days": days, "direct": direct, "failed": failed,
+            "failedShare": round(failed / (direct + failed), 3) if direct + failed else None}
+
+
 @app.get("/api/drive/screens/{person_id}")
 def drive_screens(person_id: str, user: str = Depends(current_user)):
     """Which of a person's screens are online now, by device name, for "Ring: every screen / one of them" on the call

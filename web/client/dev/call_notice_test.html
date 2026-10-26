@@ -35,6 +35,7 @@ import {
   NOTICE_RING_MS, NOTICE_NOTE_MS, NOTICE_STOPS,
 } from '../call_notice.js';
 import { CALLER_GIVE_UP_MS } from '../call_page.js';
+import { CALL_BLOCKED_SHORT } from '../private_network.js';
 import { LONGEST_RING_S, CALL_ENDED } from '../modules/call.js';
 import { createCallTransport, CALL_PURPOSE, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { mountModule } from '../module.js';
@@ -350,7 +351,7 @@ try {
     r.btn('answer').click();
     await sleep(20);
     check('*** nothing could host the call: it is hung up as failed, never left "answered" by nobody ***',
-      r.t.calls.join() === 'claim,open,hangup:failed' && r.n.note() === 'The call could not connect.', `${r.t.calls} ${r.n.note()}`);
+      r.t.calls.join() === 'claim,open,hangup:failed' && r.n.note() === CALL_BLOCKED_SHORT, `${r.t.calls} ${r.n.note()}`);
     r.done();
   }
 
@@ -537,8 +538,8 @@ try {
       check('*** ...the camera and the microphone are let go ***',
         after(x.camLog, 'acquireTrack') && after(x.micLog, 'acquire') && x.track.stopped === true, JSON.stringify([x.camLog, x.micLog]));
       check('*** ...the caller is told, once: "failed" ***', x.byes().length === 1 && x.byes()[0].reason === 'failed', JSON.stringify(x.byes()));
-      check('*** ...and the notice says "The call could not connect." where the view was ***',
-        x.n.note() === 'The call could not connect.', String(x.n.note()));
+      check('*** ...and the notice says the call could not connect, and what fixes it, where the view was ***',
+        x.n.note() === CALL_BLOCKED_SHORT, String(x.n.note()));
       x.clock.advance(NOTICE_NOTE_MS);
       check('...for a moment, as every other notice line', x.n.note() === null);
       x.done();

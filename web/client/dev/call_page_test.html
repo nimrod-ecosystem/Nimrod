@@ -31,6 +31,7 @@ import {
   mountCallPage, endText, CALLER_GIVE_UP_MS, CALLER_END_TEXT, CALL_MODES, CONNECT_MS, PRESENCE_MS,
   GAME_ASK_WAIT_MS, GAME_NOTE_MS, GAME_ASK_GAME, CALL_GAMES, iceWords,
 } from '../call_page.js';
+import { CALL_BLOCKED_TEXT, CALL_UP_FRONT, privateNetworkHTML, PRIVATE_NETWORK_URL } from '../private_network.js';
 import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { SIGNAL_KINDS, connectDrive } from '../drive.js';
 import { createProfilesClient } from '../profile.js';
@@ -336,6 +337,22 @@ try {
     check('"not here" reads as the screen not being on, and nothing rang', /not on right now/.test(endText('remote', 'not-here')));
   }
 
+  // 2026-10-26 (note CV; Mike's ruling 2026-09-08): no relay of ours, said up front, and an easy way to fix it.
+  section('*** a private network between your devices: said up front, and the guide ***');
+  {
+    const M = await mount({ search: '?person=p1' });
+    check('*** the call page says up front that some networks block calls, and links how to set one up ***',
+      text().includes(CALL_UP_FRONT) && !!root.querySelector(`[data-how-up-front][href="${PRIVATE_NETWORK_URL}"]`));
+    M.page.destroy();
+    const g = privateNetworkHTML();
+    check('*** the guide: why (no server of ours sees calls), Tailscale step by step for phone, computer and the screen ***',
+      /through no server of ours/.test(g) && /Tailscale/.test(g) && /Your phone/.test(g) && /A computer/.test(g) && /The screen/.test(g)
+      && /tailscale\.com\/install\.sh/.test(g));
+    check('...someone on another account is given just the screen (Share, an invite link), and the others are named',
+      /Someone on another account/.test(g) && /Share/.test(g) && /ZeroTier/.test(g) && /WireGuard/.test(g));
+    check('the guide names nobody and says "not affiliated"', !/taylor|cici|her screen/i.test(g) && /not affiliated/.test(g));
+  }
+
   // 2026-10-26 (note CT): a call that could not connect says what each end offered, so the next failure says why.
   section('*** why a call could not connect, in words ***');
   {
@@ -578,8 +595,12 @@ try {
     clk.advance(ANSWER_CONNECT_MS - 1); await sleep(5);
     check('still connecting just before the clock runs out', M.page.state() === 'answered' && M.media.allTracks().every((t) => !t.stopped));
     clk.advance(1); await sleep(5);
-    check('*** the clock runs out: the page ends the call and says "The call could not connect." ***',
-      M.page.state() === 'idle' && M.page.ended() === 'The call could not connect.' && /could not connect/.test(text()), M.page.ended());
+    check('*** the clock runs out: the page ends the call, says it could not connect directly and what fixes it ***',
+      M.page.state() === 'idle' && M.page.ended() === CALL_BLOCKED_TEXT && /could not connect/.test(text()), M.page.ended());
+    check('*** ...with a link to how to set up a private network, under the words ***',
+      !!root.querySelector('[data-ended] a[data-how][href="/private-network.html"]'), root.querySelector('[data-ended]')?.innerHTML);
+    check('*** ...and it is counted, once, as a call that could not connect (counts only, note CV) ***',
+      M.fetchImpl.calls.filter((c) => /\/api\/call\/outcome$/.test(c.url) && c.method === 'POST').length === 1, JSON.stringify(M.fetchImpl.calls.map((c) => c.url)));
     check('*** ...the camera and the microphone are let go ***', M.media.allTracks().length > 0 && M.media.allTracks().every((t) => t.stopped));
     const byes = M.connect.made[0].sent.filter((s) => s.kind === 'bye');
     check('*** ...and a bye goes out, once: "failed", naming the call ***',
@@ -606,9 +627,11 @@ try {
     check('*** connected in time: still in the call, nothing let go, no bye ***',
       M.page.state() === 'in-call' && M.media.allTracks().every((t) => !t.stopped)
       && !M.connect.made[0].sent.some((s) => s.kind === 'bye'), M.page.state());
+    check('...and it is counted, once, as a call that connected directly', M.fetchImpl.calls.filter((c) => /\/api\/call\/outcome$/.test(c.url)).length === 1);
     M.page.destroy(); S.t.destroy();
   }
-  check('the words for it: "The call could not connect."', endText('unconnected', null, { answered: true }) === 'The call could not connect.');
+  check('the words for it: could not connect directly, some networks block it, a private network fixes it',
+    endText('unconnected', null, { answered: true }) === CALL_BLOCKED_TEXT && /private network/.test(CALL_BLOCKED_TEXT));
 
   section('*** the page going away hangs up and lets go ***');
   {

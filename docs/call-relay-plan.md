@@ -1,7 +1,12 @@
 # Calls that connect anyway: the relay plan
 
-**Status:** a plan for Mike to decide on, not built (row 2.132, chat's note CU, 2026-10-26). Mike: *"Are other people
-going to have these issues trying to make a call? Is this something we can fix instead of working around it?"*
+**Status: WITHDRAWN (2026-10-26, chat's note CV).** Mike's ruling of 2026-09-08 stands: no relay server of the
+project's. A call that cannot connect directly says so and points to a private network between your own devices
+(private-network.html; DECISIONS.md, 2026-10-26). Kept as the record of what was weighed. If calls that fail directly
+turn out to be most calls rather than a minority (they are now counted), this is where to start again.
+
+*Originally:* a plan for Mike to decide on, not built (row 2.132, chat's note CU, 2026-10-26). Mike: *"Are other
+people going to have these issues trying to make a call? Is this something we can fix instead of working around it?"*
 
 **Provenance:** what the repo does is checked in the code, with file names. Cloudflare's credential API was checked
 against its documentation today; the price is chat's, verified on Cloudflare's pricing page. Numbers marked
