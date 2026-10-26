@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mic choice - which microphone, by name, with a level you can see (notes CW/CX)</title>
+<style>body{font:14px system-ui;margin:16px}.pass{color:#060}.fail{color:#b00;font-weight:600}</style>
+</head>
+<body>
+<h1>mic choice <span id="summary">running…</span></h1>
+<p>Mike, 2026-10-26: "Switching mics has to be something easy and intuitive for the end user." Devices → Microphone,
+by name; "Test the microphones" shows a live level beside each and "Use this one"; calls open the chosen one.</p>
+<div id="out"></div>
+<script type="module">
+import { MIC_KEY, IN_PREFIX, refreshMics, knownMics, setMicsForTest, micIdFor, micField, levelOf, openMicTester, TESTER_IDLE_MS } from '../mic_choice.js';
+
+const out = document.getElementById('out');
+let passed = 0, failed = 0;
+function check(name, ok, detail = '') {
+  const p = document.createElement('div');
+  p.className = ok ? 'pass' : 'fail';
+  p.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `   ${detail}` : ''}`;
+  out.append(p);
+  if (ok) passed += 1; else failed += 1;
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const MICS = [{ id: 'default', label: 'Default' }, { id: 'usb1', label: 'USB Composite Device Mono' }, { id: 'cam1', label: 'HD Camera Mono' }];
+
+try {
+  section('the list and the row');
+  await refreshMics({ list: async () => MICS });
+  check('*** the microphones, by name (the browser\'s "default" alias left out) ***', J(knownMics().map((m) => m.label)) === J(['USB Composite Device Mono', 'HD Camera Mono']));
+  const f = micField();
+  check('*** Devices -> Microphone: first "This computer\'s own default", then each by name ***',
+    f.key === MIC_KEY && f.default === '' && J(f.options.map((o) => o.label)) === J(['This computer’s own default', 'USB Composite Device Mono', 'HD Camera Mono']), J(f.options));
+  check('one microphone: nothing to choose, no row', micField([{ id: 'a', label: 'Only one' }]) === null);
+  check('*** a choice is kept by NAME, and means that microphone\'s device id now ***', micIdFor(`${IN_PREFIX}HD Camera Mono`) === 'cam1'
+    && micIdFor(`${IN_PREFIX}hd camera`) === 'cam1');
+  check('the default, or a microphone that is not plugged in: none (the computer\'s default is used, never silence)',
+    micIdFor('') === null && micIdFor(`${IN_PREFIX}Blue Yeti`) === null);
+  check('a level from samples: silence is 0, a loud signal fills the bar', levelOf(new Uint8Array(64).fill(128)) === 0
+    && levelOf(Uint8Array.from({ length: 64 }, (_, i) => (i % 2 ? 200 : 56))) === 1);
+
+  section('*** "Test the microphones" ***');
+  setMicsForTest(MICS.slice(1));
+  const opened = [], released = [], picked = [];
+  let timers = [];
+  const fakeStream = (id) => ({ id });
+  class FakeAC {
+    createMediaStreamSource(s) { return { connect() {}, s }; }
+    createAnalyser() { const a = { fftSize: 0, loud: false, getByteTimeDomainData(buf) { buf.fill(128); if (a.loud) for (let i = 0; i < buf.length; i += 2) buf[i] = 220; } }; this.last = a; (FakeAC.all = FakeAC.all || []).push(a); return a; }
+    close() { FakeAC.closed = true; }
+  }
+  const rafs = [];
+  const t = openMicTester(document.body, {
+    list: knownMics(), current: `${IN_PREFIX}USB Composite Device Mono`,
+    open: async (id) => { opened.push(id); return fakeStream(id); }, close: (id) => released.push(id),
+    onPick: (v) => picked.push(v), AudioContextImpl: FakeAC,
+    setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer: (h) => { if (timers[h - 1]) timers[h - 1].fn = null; },
+    raf: (fn) => rafs.push(fn),
+  });
+  await tick(); await tick();
+  const box = () => document.querySelector('[data-mic-tester]');
+  check('*** it lists every microphone by name, the one in use marked, each with a level bar and "Use this one" ***',
+    !!box() && box().querySelectorAll('[data-mic-row]').length === 2 && /USB Composite Device Mono \(in use\)/.test(box().textContent)
+    && box().querySelectorAll('[data-mic-level]').length === 2 && box().querySelectorAll('[data-mic-use]').length === 3);
+  check('each microphone is opened to hear it', J(opened) === J(['usb1', 'cam1']) && t.live() === 2, J(opened));
+  FakeAC.all[1].loud = true;
+  rafs.splice(0).forEach((fn) => fn());
+  const bars = [...box().querySelectorAll('[data-mic-level]')].map((b) => b.style.width);
+  check('*** say something: the bar of the microphone that hears it moves, the other does not ***', bars[0] === '0%' && bars[1] === '100%', J(bars));
+  check(`it closes by itself after ${TESTER_IDLE_MS / 1000} seconds untouched (never a gate)`, timers.some((x) => x.fn && x.ms === TESTER_IDLE_MS));
+  box().querySelector('[data-mic-use="in:HD Camera Mono"]').click();
+  check('*** "Use this one" chooses it (the row\'s value) and closes, letting every microphone go ***',
+    J(picked) === J(['in:HD Camera Mono']) && !box() && J(released.sort()) === J(['cam1', 'usb1']) && FakeAC.closed === true, J({ picked, released }));
+  const t2 = openMicTester(document.body, { list: knownMics(), open: async (id) => fakeStream(id), close() {}, AudioContextImpl: FakeAC, raf() {} });
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  check('Escape closes it', !box());
+  const t3 = openMicTester(document.body, { list: knownMics(), open: async (id) => fakeStream(id), close() {}, onPick: (v) => picked.push(v), AudioContextImpl: FakeAC, raf() {} });
+  box().querySelector('[data-mic-use=""]').click();
+  check('"Use this computer\'s own default" sets it back to the default', picked[picked.length - 1] === '' && !box());
+  void t2; void t3;
+  check('names nobody', !/taylor|cici|her screen/i.test(await (await fetch('../mic_choice.js')).text()));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>

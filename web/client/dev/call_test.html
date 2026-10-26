@@ -1052,6 +1052,27 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       check('...while "Music plays on" still offers the Spotify speaker', speakerFields().find((f) => f.key === 'speakerMusic').options.some((o) => String(o.value).startsWith('spotify:')));
       setOutputsForTest([]);
     }
+    // 2026-10-26 (notes CW/CX): a call opens the screen's chosen microphone, not always the computer's default.
+    section('*** which microphone a call hears with (notes CW/CX) ***');
+    {
+      const { setMicsForTest } = await import('../mic_choice.js');
+      setMicsForTest([{ id: 'usb1', label: 'USB Composite Device Mono' }, { id: 'cam1', label: 'HD Camera Mono' }]);
+      const asked = [];
+      const micOwner = { acquire: (id, want, deviceId) => { asked.push(deviceId); return Promise.resolve({ getAudioTracks: () => [{ kind: 'audio', id: 'm' }] }); },
+        release() {}, status: () => ({ mismatch: [] }) };
+      const m = mountMixed({ audio: createAudioBus(), extra: { micOwner, micRoute: () => 'in:HD Camera Mono' } });
+      m.t.ring({ name: 'Mike' });
+      await sleep(30);
+      check('*** the screen chose "HD Camera Mono": the call opens that microphone ***', asked.includes('cam1'), JSON.stringify(asked));
+      m.impl.__end('hangup'); m.inst.destroy();
+      asked.length = 0;
+      const n = mountMixed({ audio: createAudioBus(), extra: { micOwner, micRoute: () => '' } });
+      n.t.ring({ name: 'Mike' });
+      await sleep(30);
+      check('nothing chosen: the computer\'s default, as before (no device named)', asked.length > 0 && asked.every((d) => d == null), JSON.stringify(asked));
+      n.impl.__end('hangup'); n.inst.destroy();
+      setMicsForTest([]);
+    }
     {
       // A VIDEO call: the same, on the <video> the far end is shown in.
       const audio = createAudioBus();

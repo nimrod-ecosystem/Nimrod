@@ -88,6 +88,7 @@ import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { PANEL_VOLUME_FIELD, PANEL_VOLUME_KEY, panelVolumeFrom } from '../panel_sound.js';
 import { permsFor, lendLengthOf, lengthWords, LENGTH_CHOICES } from '../screen_permissions.js';
 import { speakerIdFor, PANEL_SPEAKER_KEY, watchOutputs } from '../speakers.js';
+import { micIdFor } from '../mic_choice.js';   // 2026-10-26: the screen's chosen microphone
 
 // ---------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute
@@ -718,7 +719,8 @@ registerModule(
     async function takeMic() {
       if (!micOwner || micStream) return null;
       try {
-        micStream = await micOwner.acquire(MIC_ID, MIC_PROFILE);
+        // The screen's chosen microphone (Devices -> Microphone, mic_choice.js), else the computer's default (2026-10-26).
+        micStream = await micOwner.acquire(MIC_ID, MIC_PROFILE, micIdFor(ctx.micRoute?.() || ''));
         const bad = micOwner.status?.().mismatch?.find((m) => m.id === MIC_ID);
         if (bad) {
           console.warn('call: microphone is not configured for a call', bad.missing.join(', '));

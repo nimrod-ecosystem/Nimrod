@@ -170,6 +170,7 @@ import { createDeviceStore } from './starting_defaults.js';
 import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
 import { FLASH_WARNING_FIELD, FLASH_WARNING_KEY, shouldWarn, flashSeen, markFlashSeen, showFlashWarning } from './flash_warning.js';   // row 2.124
 import { deviceId, deviceName } from './device_id.js';   // 2026-10-25: ring one screen
+import { MIC_KEY, micField, refreshMics, knownMics, openMicTester } from './mic_choice.js';   // 2026-10-26: which microphone
 // Hiding a panel can mute or pause it (ad7dc49): a per-panel setting, asked once when a person hides one.
 import { createHideSound, WHEN_HIDDEN_FIELD, HIDE_ASK_TIMEOUT_FIELD, makesSound, whenHiddenDefault } from './hide_sound.js';
 import { createChoiceMemory } from './choice_card.js';
@@ -1904,6 +1905,8 @@ export async function mountKiosk(root, {
     // play on (row 2.68): the screen's Devices -> Speakers choice for a kind of sound ('' = the computer's default).
     // Read when asked; `settings` is declared further down (nestLiveDepth's pattern).
     speakerRoute: (kind) => { try { return String((settings.get() || {})[speakerKey(kind)] || ''); } catch { return ''; } },
+    // which microphone (2026-10-26, mic_choice.js): the screen's Devices -> Microphone ('' = the computer's default).
+    micRoute: () => { try { return String((settings.get() || {})[MIC_KEY] || ''); } catch { return ''; } },
     // backup source (2026-10-08): the screen's "Backup folder for this screen" ('' = each panel's own default), read when
     // a panel's source fails; media_sources.js argues it. Read when asked, like `speakerRoute`.
     screenBackup: () => { try { return String((settings.get() || {})[BACKUP_KEY] || ''); } catch { return ''; } },
@@ -2443,6 +2446,8 @@ export async function mountKiosk(root, {
   catch (err) { console.error('kiosk: call sound', err); callSound = null; }
   // play on (row 2.68): this computer's speakers, listed once (and on a plug-in) for Devices -> Speakers. No prompt.
   try { refreshOutputs().catch(() => {}); } catch (err) { console.error('kiosk: speakers', err); }
+  // which microphone (2026-10-26): the names, read with the speakers' (mic_owner.js list).
+  try { refreshMics({ list: typeof micOwner?.list === 'function' ? () => micOwner.list() : null }).catch(() => {}); } catch (err) { console.error('kiosk: microphones', err); }
   // "BEST FOR THIS DEVICE" (2026-10-07, theme_default.js) asks this screen what the browser cannot know: its motion
   // settings and flash limit (the faces' own context, avatarContextNow) and its "3D detail" row. Not from an embed:
   // the hints are the page's, and an embed is a guest on somebody else's.
@@ -3800,6 +3805,8 @@ export async function mountKiosk(root, {
     [BAR_PLAY_FIELD.key]: ['devices', 2],   // bar while playing (row 2.65): under "The bar" with the other two
     // play on (row 2.68, Mike: "Speakers should be under devices"): under "Speakers", after the rest of Devices.
     ...Object.fromEntries(SPEAKER_KINDS.map((k) => [k.key, ['devices', 4]])),
+    // which microphone (2026-10-26, notes CW/CX): under "Microphone", after Speakers.
+    [MIC_KEY]: ['devices', 5],
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
   // THE SUBJECT: the panel the menu's panel rows are about. The focused one unless "Settings for" was
@@ -4359,6 +4366,8 @@ export async function mountKiosk(root, {
     // play on (row 2.68; speakers.js argues the rows): where this screen's music goes. Its first choice is the computer's
     // own default speaker, so nothing needs setting up; the choices are read fresh each time the menu draws.
     ...speakerFields(),
+    // which microphone (2026-10-26): offered once this computer has two or more named ones (mic_choice.js micField).
+    ...(micField() ? [micField()] : []),
     // Hide = mute (ad7dc49): how long the "hidden panel: keep playing / mute / pause?" card waits.
     HIDE_ASK_TIMEOUT_FIELD,
     // STEP 6 STAGE 4: which way a real screen is put together (`dashboardPathFor`). `advanced`: it is a
@@ -6199,6 +6208,10 @@ export async function mountKiosk(root, {
       { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
       { kind: 'heading', id: 'bar-key-head', label: 'The bar', ...MENU_TAB.devices(2) },   // bar toggle
       { kind: 'heading', id: 'speakers-head', label: 'Speakers', ...MENU_TAB.devices(4) },   // play on (row 2.68)
+      // WHICH MICROPHONE (2026-10-26, notes CW/CX; mic_choice.js): the row, and a tester with a level per microphone.
+      { kind: 'heading', id: 'mics-head', label: 'Microphone', ...MENU_TAB.devices(5) },
+      { kind: 'item', id: 'mic-test', label: 'Test the microphones…', hint: 'see which one hears you, and use it', ...MENU_TAB.devices(5),
+        run: () => { openMicChooser(); } },
       { kind: 'heading', id: 'hide-head', label: 'Hidden panels', ...MENU_TAB.audio(2) },
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
         // (Stage 4: Colours shows -- and sets -- the theme of the dashboard that is SHOWING, `themeDoc`.
@@ -8388,6 +8401,20 @@ export async function mountKiosk(root, {
   // ONE SENTENCE EVERY 10 SECONDS AT MOST (hard-coded): a refused key pressed twice, or held, says so once.
   const LOCK_SAY_EVERY_MS = 10 * 1000;
   let lockGuards = null, lockChip = null, lockReporter = null, lockSaidAt = 0;
+  // "Test the microphones" (2026-10-26, notes CW/CX): every microphone with a live level; "Use this one" sets the row.
+  let micTester = null;
+  async function openMicChooser() {
+    try { micTester?.close(); } catch { /* gone */ }
+    try { await refreshMics({ list: typeof micOwner?.list === 'function' ? () => micOwner.list() : null }); } catch { /* the last list */ }
+    try { menuView()?.close?.(); } catch { /* no menu */ }
+    micTester = openMicTester(document.body, {
+      list: knownMics(), current: String((settings.get() || {})[MIC_KEY] || ''),
+      open: (id) => micOwner.acquire(`mic-test-${id}`, null, id),
+      close: (id) => { try { micOwner.release(`mic-test-${id}`); } catch { /* gone */ } },
+      onPick: (value) => { try { settings.set({ [MIC_KEY]: value }); } catch (err) { console.error('kiosk: microphone', err); } },
+    });
+    return micTester;
+  }
   function toggleScreenLock() {
     if (!screenLock || torn) return;
     screenLock.toggle({ by: 'chord' })
