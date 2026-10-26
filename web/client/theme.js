@@ -255,6 +255,36 @@ export const THEMES = {
       '--accent-warm-deep': '#8c4a12',
     },
   },
+  // MEDIEVAL (Mike, 2026-10-26: "Medieval should become a theme"). Design drew its world before it had a site theme: a
+  // card deck (playing_cards.js `medieval`), a town (town.js: the Great Hall, the Solar, the Smithy, the Jester's Wagon),
+  // the belted tunic and the kirtle (character_kit.js), the castle and village (village_kit.js). This theme wears them
+  // all - deckFor, the town and the outfits key off its id. Its colours are Design's own medieval ones: the deck's
+  // parchment, ink and oxblood, the town's blue and gold. No moving scene yet: Design has been asked for every theme's
+  // backdrop as pieces (item 42.2, 2026-10-26), and the medieval one arrives with them. Every text role measured
+  // against the worst of --bg, --surface and --surface-alt before it was written (theme_test measures again):
+  // text 13.4, soft 9.0, muted 5.6, link 5.3, accent 7.3; border 3.2 (3:1, non-text).
+  medieval: {
+    label: 'Medieval — a castle and its village',
+    vars: {
+      ...BASE,
+      '--bg': '#f4ecd8',
+      '--text': '#241810',
+      '--text-soft': '#4a3424',
+      '--text-muted': '#6b5238',
+      '--border': '#927c56',
+      '--surface': '#fbf6e8',
+      '--surface-alt': '#ede2c4',
+      '--ok-surface': '#e3ead0',
+      '--bad-surface': '#f2d8cc',
+      '--text-strong': '#241810',
+      '--accent': '#7a2e20',
+      '--link': '#2f5a9a',
+      '--on-dark': '#f4ecd8',
+      '--accent-warm': '#9a2c26',
+      '--accent-warm-deep': '#6b2418',
+      '--wallpaper-hue': '30',
+    },
+  },
   ...liveThemes(BASE),
   // Spring, Summer and a look for each holiday (Design's seasons-holidays handoff, 2026-10-05). The holiday
   // ones carry `group: 'holiday'`; since 2026-10-06 listThemes offers them too (see there). THEMES has them all, so

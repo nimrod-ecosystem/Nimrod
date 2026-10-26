@@ -344,9 +344,10 @@ try {
       }
     }
     check(`*** every theme (${ids.length}) draws three characters in its deck's outfits, no colour outside the drawings ***`, fails.length === 0, fails.join(', '));
-    // (2026-10-25: Design's outfits now include medieval and the village's, which no SITE theme wears yet: a Medieval site
-    // theme is Mike's call, item 44. They are named here so a new one is seen, not missed.)
-    const NO_SITE_THEME_YET = ['medieval', 'village'];
+    // (2026-10-25: Design's outfits now include medieval and the village's, which no SITE theme wore yet. 2026-10-26: Mike,
+    // "Medieval should become a theme" - it is one now, so only the village's are left. Named so a new one is seen.)
+    const NO_SITE_THEME_YET = ['village'];
+    check('*** Medieval is a site theme, and wears Design\'s medieval deck (its outfits come with it) ***', !!THEMES.medieval && decks.has('medieval'));
     check(`...and every theme with outfits of its own is among them, but the ones no site theme wears yet (${NO_SITE_THEME_YET.join(', ')})`,
       OUTFIT_THEMES.every((d) => decks.has(d) || NO_SITE_THEME_YET.includes(d)), OUTFIT_THEMES.filter((d) => !decks.has(d)).join());
     applyTheme(outer, 'halloween');
