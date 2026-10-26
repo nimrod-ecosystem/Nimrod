@@ -51,7 +51,7 @@ import {
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
 } from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
-import { PRESETS as LAYOUT_PRESETS, withPreset, HUD_TYPES, addAsOverlay } from './layout.js';
+import { PRESETS as LAYOUT_PRESETS, withPreset, HUD_TYPES, addAsOverlay, isPagePreset, PAGE_HEIGHT_FIELD, PAGE_HEIGHT_KEY, pageHeightOf } from './layout.js';
 import { createLongPress, clampHoldMs } from './input_longpress.js';
 // bar toggle (2026-10-06): T shows or hides the bar (H until row 2.72); hidden that way, it stays hidden a while (bar_toggle.js).
 import {
@@ -2051,6 +2051,9 @@ export async function mountKiosk(root, {
       const v = s && s.instancePanelSurface;
       if (v === 'solid' || v === 'veil' || v === 'clear') host.dataset.panelSurface = v;
       else delete host.dataset.panelSurface;
+      // A PAGE THAT SCROLLS (row 2.127, layout.js): this part's "Height on the page", on its own cell. Only in a page.
+      const cell = host.parentElement;
+      if (cell && cell.parentElement && cell.parentElement.hasAttribute('data-page')) cell.style.height = `${pageHeightOf(s && s[PAGE_HEIGHT_KEY])}vh`;
     });
     // THIS PANEL'S OWN SOUND (panel_sound.js, 2026-10-02): its volume, "sound like it's in the room", and on
     // a TV the things on it - kept on the same row, applied to the bus here, cleared when it goes.
@@ -4543,6 +4546,9 @@ export async function mountKiosk(root, {
         { value: 'veil', label: 'See-through' },
         { value: 'clear', label: 'Fully clear' },
       ] },
+    // A page that scrolls (row 2.127): offered only while the dashboard is laid out as one - elsewhere it would change
+    // nothing, and a row that changes nothing is a stop on the switch walk for nothing.
+    ...(isPagePreset(arr?.layout?.()?.preset) ? [PAGE_HEIGHT_FIELD] : []),
   ];
 
   // *** THE VOICE, IN THE MENU (2026-09-30, second wiring pass). *** The PERSON's settings, so they sit

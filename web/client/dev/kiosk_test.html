@@ -5041,6 +5041,34 @@ const toTab = (m, id) => {
     check('the voice open section threw', false, String((e && e.stack) || e));
   }
 
+  // ---------------- A PAGE THAT SCROLLS (row 2.127, layout.js) ----------------
+  try {
+    const pProfiles = createProfilesClient({ user: USER });
+    const ps = await pProfiles.create('TEST-page-layout');
+    const a = await pProfiles.addModule(ps.id, 'clock');
+    const b = await pProfiles.addModule(ps.id, 'calculator');
+    const pst = createState({ url: pProfiles.stateURL(ps.id, 'settings'), user: USER });
+    await pst.load();
+    pst.set({ kiosk: { layout: { preset: 'page', slots: [a.id, null, b.id] } } });
+    await pst.flush();
+    const aState = createState({ url: pProfiles.stateURL(ps.id, a.id), user: USER });
+    await aState.load();
+    aState.set({ pageHeight: 100 });
+    await aState.flush();
+    const proot = document.createElement('div');
+    proot.style.cssText = 'position:relative;width:960px;height:540px';
+    document.body.append(proot);
+    const pk = await mountKiosk(proot, { user: USER, profileId: ps.id, profiles: pProfiles, bus: createBus() });
+    const cellOfType = (t) => proot.querySelector(`.k-grid[data-page] .k-cell[data-kind="${t}"]`);
+    check('*** a dashboard laid out as a page: its parts stacked, the clock as tall as the screen (its own row), the calculator half ***',
+      await settled(() => cellOfType('clock')?.style.height === '100vh' && cellOfType('calculator')?.style.height === '50vh', 8000),
+      `${cellOfType('clock')?.style.height} / ${cellOfType('calculator')?.style.height}`);
+    pk.destroy();
+    proot.remove();
+  } catch (e) {
+    check('the page layout section threw', false, String((e && e.stack) || e));
+  }
+
   // ---------------- "THIS GAME CAN FLASH" (row 2.124, flash_warning.js) ----------------
   try {
     const { forgetFlashSeenForTest } = await import('../flash_warning.js');

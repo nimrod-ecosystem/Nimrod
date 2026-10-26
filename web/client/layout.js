@@ -41,7 +41,28 @@ export const PRESETS = [
     areas: ['1 / 1 / 2 / 4', '2 / 1 / 3 / 2', '2 / 2 / 3 / 3', '2 / 3 / 3 / 4'] },
   { id: 'strip', label: 'Big + side strip', slots: 4, cols: '3fr 1fr', rows: '1fr 1fr 1fr',
     areas: ['1 / 1 / 4 / 2', '1 / 2 / 2 / 3', '2 / 2 / 3 / 3', '3 / 2 / 4 / 3'] },
+  // *** A PAGE THAT SCROLLS (row 2.127, Mike 2026-10-25: "A page is really just a dashboard with a scroll bar"). *** The
+  // parts stack in one column, each as tall as its own "Height on the page" (PAGE_HEIGHT_KEY, a panel setting), and
+  // the stage scrolls. An empty slot takes no room. EIGHT parts, argued: a home page's sections today are five or six
+  // (Messages, Your people, Recommended and the rest); eight leaves room without a page so long a switch walk through it
+  // becomes a chore. Step 1 of the shape in the notes: editing a page with the scene editor's handles comes next.
+  { id: 'page', label: 'A page that scrolls', slots: 8, cols: '1fr', rows: 'auto', page: true },
 ];
+
+// How tall a part of a page is, in percent of the screen's height: a quarter to all of it. Half by default - two parts
+// to a screen, so a page reads as a page and not as one panel at a time.
+export const PAGE_HEIGHT_KEY = 'pageHeight';
+export const PAGE_HEIGHTS = Object.freeze([25, 33, 50, 75, 100]);
+export const PAGE_HEIGHT_DEFAULT = 50;
+/** A height a page part may have (percent of the screen), the default for anything else. PURE. */
+export const pageHeightOf = (v) => (PAGE_HEIGHTS.includes(Number(v)) ? Number(v) : PAGE_HEIGHT_DEFAULT);
+export const isPagePreset = (id) => !!PRESETS.find((p) => p.id === id)?.page;
+export const PAGE_HEIGHT_FIELD = Object.freeze({
+  key: PAGE_HEIGHT_KEY, label: 'Height on the page', kind: 'choice', level: 'standard', default: PAGE_HEIGHT_DEFAULT,
+  options: [{ value: 25, label: 'A quarter of the screen' }, { value: 33, label: 'A third' }, { value: 50, label: 'Half' },
+    { value: 75, label: 'Three quarters' }, { value: 100, label: 'The whole screen' }],
+  note: 'On a dashboard laid out as a page that scrolls.',
+});
 
 export const DEFAULT_PRESET = 'full';
 
@@ -332,12 +353,19 @@ export function layoutChange(before, after) {
 // little preview and the real kiosk cannot drift apart.
 export function gridStyle(presetId) {
   const p = preset(presetId);
+  // A page: one column of parts as tall as each says (the cells carry their heights), and the stage scrolls.
+  if (p.page) return 'display:grid;grid-template-columns:1fr;grid-auto-rows:auto;align-content:start;overflow-y:auto;overflow-x:hidden;';
   return `display:grid;grid-template-columns:${p.cols};grid-template-rows:${p.rows};`;
 }
 
 export function slotStyle(presetId, i) {
   const p = preset(presetId);
   return p.areas && p.areas[i] ? `grid-area:${p.areas[i]};` : '';
+}
+
+/** A page part's cell: its height (percent of the screen); an empty slot takes no room. PURE. */
+export function pageCellStyle(height, empty = false) {
+  return empty ? 'display:none;' : `height:${pageHeightOf(height)}vh;`;
 }
 
 /**

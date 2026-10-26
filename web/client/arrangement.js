@@ -52,6 +52,7 @@
 
 import {
   normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle, placedGeometry, layoutChange, normalizePlacedEntry,
+  isPagePreset, pageCellStyle,
 } from './layout.js';
 
 // Re-exported so the shell (kiosk.js already imports this file) can classify a change without a new
@@ -422,11 +423,15 @@ export function createArrangement({
     failedSlots.length = 0;
     stageEl.classList.add('k-grid');
     stageEl.setAttribute('style', gridStyle(layout.preset));
+    // A PAGE THAT SCROLLS (row 2.127): parts stacked, each as tall as its own "Height on the page" (kiosk.js applies it
+    // from the panel's row); an empty slot takes no room.
+    const page = isPagePreset(layout.preset);
+    if (page) stageEl.dataset.page = ''; else delete stageEl.dataset.page;
     for (let i = 0; i < layout.slots.length; i++) {
       const cell = document.createElement('div');
       // `mod-box` lets the module size itself against this cell (see modules.css).
       cell.className = 'k-cell mod-box';
-      cell.setAttribute('style', slotStyle(layout.preset, i));
+      cell.setAttribute('style', page ? pageCellStyle(null, !layout.slots[i]) : slotStyle(layout.preset, i));
       // *** NAME THE CELL, so anything that needs to find one does not count children. ***
       // Added for the guided tour, which has a beat about the live-view corner and had no way
       // to say so: the only selector available was `.k-cell:nth-child(2)`, which points at a
