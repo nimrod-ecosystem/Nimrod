@@ -30,7 +30,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from db import SOURCE_ON_REMOVE  # remove this picture (2026-10-10): a source's 'keep' / 'remove'
-from drive import ROLES, Answerers, CallGroups, Rooms, Tickets, parse_message, stamp_signal
+from drive import ROLES, Answerers, CallGroups, Rooms, ScreenTargets, Tickets, parse_message, stamp_signal
 from play_relay import PlayRelay  # watching along (row 2.79): a screen's `play` to its following drivers, kept nowhere
 # who may see a screen, ask first, a temporary permission on a call (Mike, 2026-10-12): rules pure in screen_access.py
 from screen_access import SeeAccess, ask_seconds, lend_minutes, name_for, see_decision
@@ -1415,6 +1415,7 @@ def attest_event(pid: str, stream: str, event_id: int, body: AttestPost = Attest
 _tickets = Tickets()
 _rooms = Rooms()
 _answerers = Answerers()        # one answering screen per intercom or family-call offer (drive.py, row 2.44)
+_screen_targets = ScreenTargets()   # 2026-10-25: which device each screen is, and ringing just one (drive.py)
 _plays = PlayRelay()            # watching along (row 2.79, play_relay.py): who follows; in memory, nothing stored
 _see = SeeAccess()              # who may see a screen (2026-10-12, screen_access.py): asks, yeses, lends; in memory
 _see_timer = None               # the one timer for the next ask or lend coming due
@@ -1635,6 +1636,22 @@ def drive_may(person_id: str, user: str = Depends(current_user)):
         raise HTTPException(status_code=403, detail="not allowed to use this person's screens")
     return {"drive": _may_drive(user, person_id), "call": _may_call(user, person_id),
             "intercom": _intercom_allowed(user, person_id), "checkIn": _check_in_allowed(user, person_id)}
+
+
+@app.get("/api/drive/screens/{person_id}")
+def drive_screens(person_id: str, user: str = Depends(current_user)):
+    """Which of a person's screens are online now, by device name, for "Ring: every screen / one of them" on the call
+    page (2026-10-25, drive.py ScreenTargets). Only the ACCOUNT THAT OWNS the person is told - the screens are its;
+    anybody else who may reach them hears an empty list, and anybody who may not, the ticket's same 403. A plain
+    request, not the socket: the call page opens nothing until a call button is pressed."""
+    _check(person_id, ID_RE, "person id")
+    if not _may_reach(user, person_id):
+        raise HTTPException(status_code=403, detail="not allowed to use this person's screens")
+    owner = _person_owner(person_id) or user
+    if user != owner:
+        return {"screens": []}
+    room = _rooms.get(owner, person_id)
+    return {"screens": _screen_targets.listing(room.screens if room else [])}
 
 
 async def _tell(conns, payload):
@@ -1931,7 +1948,7 @@ async def _lend(ws, room, msg) -> None:
 
 @app.websocket("/api/drive/{person_id}")
 async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver", follow: str = "",
-                       idle: str = ""):
+                       idle: str = "", screenId: str = "", screenName: str = ""):
     if not ID_RE.match(person_id or "") or role not in ROLES:
         await ws.close(code=4400)
         return
@@ -1969,6 +1986,9 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         # row 2.83: connected but not pressing, decided before the first presence, so the screen never flashes "helping".
         _idle_drivers.add(id(ws))
     if role == "screen":
+        # 2026-10-25: which device this screen is (`screenId`, kept by the page; `screenName`, the launcher's), so a call can
+        # ring this one alone (drive.py ScreenTargets). A screen that says nothing still rings for every ordinary call.
+        _screen_targets.named(ws, screenId, screenName)
         # A screen that joins while somebody is waiting for a "yes" is shown the question too.
         for m in _see.pending_for((room_key, person_id)):
             await ws.send_json(m)
@@ -2139,7 +2159,17 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     # (The silent check-in too, 2026-10-14: its notice names who is checking in by the SERVER's name.)
                     if sig.get("kind") == "offer" and sig.get("purpose") in ("intercom", "checkin"):
                         stamped["signal"]["byName"] = _seer_name(_person_row(room_key, person_id), user) or ""
-                    await _tell(room.screens, stamped)
+                    # 2026-10-25: an offer naming one screen (`toScreen`) rings that screen alone, and the rest of its
+                    # call follows it there (drive.py ScreenTargets). Not online: nothing rings, and the caller is told.
+                    targets, targeted = _screen_targets.route(arb_key, sig, room.screens)
+                    if targeted and not targets and sig.get("kind") == "offer":
+                        no = {"kind": "bye", "reason": "not-here"}
+                        for k in ("purpose", "session"):
+                            if isinstance(sig.get(k), str):
+                                no[k] = sig[k]
+                        await ws.send_json({"type": "signal", "signal": no})
+                        continue
+                    await _tell(targets, stamped)
             elif role == "driver":
                 if id(ws) in _call_only and not _see.lent(arb_key, user, "drive"):
                     # 2026-10-14: a call-only login presses nothing - unless the screen lent it "drive" on a call.
@@ -2160,6 +2190,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         _call_asks.left(ws)                    # a game asked from a call: when it last asked - forgotten
         _idle_drivers.discard(id(ws))          # row 2.83: connected-not-pressing - forgotten with the socket
         _call_only.pop(id(ws), None)           # 2026-10-14: a call-only socket - forgotten with it
+        _screen_targets.left(ws)               # 2026-10-25: which device it was - forgotten with it
         # who may see (2026-10-12): an ask it was waiting on goes from the screens; a yes it rode on starts its grace.
         await _send_out(_see.withdraw(ws, _screens_of))
         _see.stopped(ws)

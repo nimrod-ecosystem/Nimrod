@@ -56,7 +56,7 @@ export const SIGNAL_KINDS = ['offer', 'answer', 'bye', 'ice'];
 // invitation or an ask for anything else is ignored.
 export const GAME_INVITE_GAMES = ['quiz_mix', 'word_builder'];
 
-const wsURL = (base, personId, ticket, role, follow = false, idle = false) => {
+const wsURL = (base, personId, ticket, role, follow = false, idle = false, device = '', deviceName = '') => {
   const origin = base
     || (typeof location !== 'undefined' ? `${location.protocol}//${location.host}` : '');
   const scheme = origin.startsWith('https') ? 'wss' : 'ws';
@@ -66,7 +66,9 @@ const wsURL = (base, personId, ticket, role, follow = false, idle = false) => {
     // watching along (row 2.79): counted as a follower from the first presence, so the screen never says "helping".
     + (follow && role === 'driver' ? '&follow=1' : '')
     // connected, not pressing (row 2.83): not counted as helping from the first presence either.
-    + (!follow && idle && role === 'driver' ? '&idle=1' : '');
+    + (!follow && idle && role === 'driver' ? '&idle=1' : '')
+    // which device this SCREEN is (2026-10-25, drive.py ScreenTargets), so a call can ring it alone.
+    + (role === 'screen' && device ? `&screenId=${encodeURIComponent(device)}${deviceName ? `&screenName=${encodeURIComponent(deviceName)}` : ''}` : '');
 };
 
 export function connectDrive({
@@ -88,6 +90,9 @@ export function connectDrive({
   // "Someone is helping" for a page that is only open. `setDriving(on)` changes it; a press marks it driving at the
   // server by itself (the server announces it before passing the press on). Kept across reconnects.
   idle = false,
+  // WHICH DEVICE (2026-10-25, a SCREEN only; device_id.js): its id and name, so a call can ring this screen alone.
+  device = '',
+  deviceName = '',
   // Seams, so the test needs no server and no real socket.
   fetchImpl = (typeof fetch !== 'undefined' ? fetch : null),
   SocketImpl = (typeof WebSocket !== 'undefined' ? WebSocket : null),
@@ -167,7 +172,7 @@ export function connectDrive({
     if (closed) return;
 
     try {
-      sock = new SocketImpl(wsURL(base, personId, ticket, role, follow, !driving));
+      sock = new SocketImpl(wsURL(base, personId, ticket, role, follow, !driving, device, deviceName));
     } catch {
       setState('offline');
       retry();

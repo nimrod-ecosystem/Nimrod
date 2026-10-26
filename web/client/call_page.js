@@ -79,6 +79,8 @@ export const CALLER_END_TEXT = Object.freeze({
   // A call is only a call (2026-10-14): "May call" is its own permission, and the SERVER refuses the ring (app.py) with
   // this reason when it is switched off for this account. Nothing rang.
   'not-allowed': 'This account may not call that screen. Whoever looks after it can allow it on the Remote page (“May call”).',
+  // Ring one screen (2026-10-25): the screen chosen under "Ring" is not connected now; the server rang nothing.
+  'not-here': 'That screen is not on right now, so nothing rang. Choose “Every screen” or another one.',
 });
 
 // "PLAY THIS GAME TOGETHER" (2026-10-12; game_rooms.py CallAsks). During a call, one press here asks the screen to open
@@ -279,8 +281,8 @@ export async function mountCallPage(root, {
     const shownAs = myName || 'Someone';
     body().innerHTML = `
       <h1>Call</h1>
-      <p class="cp-lead">A video or audio call to a screen. Every screen of that person rings and waits for
-        whoever is there to answer or decline. If whoever looks after those screens lets you drop in, it answers
+      <p class="cp-lead">A video or audio call to a screen. Every screen of that person rings (or only the one you
+        choose under Ring) and waits for whoever is there to answer or decline. If whoever looks after those screens lets you drop in, it answers
         by itself after a short countdown. The camera and microphone open only when you press a call button.</p>
       <p class="cp-note" data-not-nurse-call>Nimrod is not a nurse call or an emergency system.</p>
       ${ended ? `<p class="cp-ended" role="status" data-ended>${esc(ended)}</p>` : ''}
@@ -290,6 +292,7 @@ export async function mountCallPage(root, {
       <label class="cp-field"><span>Who to call</span>
         <select data-person>${people.map((p) => `<option value="${esc(p.id)}"${pick && pick.id === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
       </label>
+      <div data-ring-box hidden></div>
       <button type="button" class="cp-btn cp-primary cp-big" data-start="video">Video call</button>
       <button type="button" class="cp-btn cp-big" data-start="audio">Audio call <span class="cp-sub">(sound only, no camera)</span></button>
       <a class="cp-btn cp-big" data-checkin-link hidden href="./checkin.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">Check in quietly
@@ -306,7 +309,33 @@ export async function mountCallPage(root, {
         ${MESH_MAX_OTHERS.audio} on an audio call. Everybody connects straight to everybody else.</p>
       ${relaySection()}`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
-    if (pick) showCheckIn(pick.id);
+    if (pick) { showCheckIn(pick.id); loadRing(pick.id); }
+  }
+
+  // RING ONE SCREEN (2026-10-25, Mike: "I would be calling a different device on my account"). The account that owns
+  // the person is told which of its screens are on now (GET /api/drive/screens, by the name each device was given);
+  // "Ring" then offers every screen (the default, exactly as before) or only one. Anybody else hears an empty list and
+  // sees no choice. A plain request: nothing is opened on this page until a call button is pressed.
+  const ringLists = new Map();       // person id -> [{ id, name }]
+  let ringPick = '';                 // '' = every screen
+  async function loadRing(personId) {
+    if (!ringLists.has(personId)) {
+      let list = [];
+      try {
+        const r = await getJSON(`/api/drive/screens/${encodeURIComponent(personId)}`);
+        list = (Array.isArray(r?.screens) ? r.screens : []).filter((s) => s && typeof s.id === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(s.id))
+          .map((s) => ({ id: s.id, name: String(s.name || 'A screen').slice(0, 40) }));
+      } catch { list = []; }
+      ringLists.set(personId, list);
+    }
+    const box = q('[data-ring-box]');
+    if (!box || q('[data-person]')?.value !== personId) return;
+    const list = ringLists.get(personId) || [];
+    if (!list.some((s) => s.id === ringPick)) ringPick = '';
+    box.hidden = !list.length;
+    box.innerHTML = list.length ? `<label class="cp-field"><span>Ring</span><select data-ring>`
+      + `<option value="">Every screen</option>${list.map((s) => `<option value="${esc(s.id)}"${s.id === ringPick ? ' selected' : ''}>Only ${esc(s.name)}</option>`).join('')}`
+      + '</select></label>' : '';
   }
 
   // "CHECK IN QUIETLY" (2026-10-14, checkin.js), next to the call buttons - shown ONLY for somebody who may ("May check
@@ -908,8 +937,9 @@ export async function mountCallPage(root, {
     try {
       // group calls: tagged as a group (its id is this call's own), so more people can be added to it.
       const s = group ? newCallSession() : null;
+      const toScreen = ringPick && (ringLists.get(target.id) || []).some((x) => x.id === ringPick) ? ringPick : null;
       sent = await transport.call({ tracks, from: { name: myName || 'Someone', video: mode === 'video' }, remoteVideo: q('[data-remote]'),
-        ...(s ? { session: s, group: s } : {}) });
+        ...(s ? { session: s, group: s } : {}), ...(toScreen ? { toScreen } : {}) });
     } catch (err) { console.error('call: place', err); sent = false; }
     if (my !== run) return;
     if (!sent) { finish('The call could not be placed. Check the connection and try again.'); return; }
@@ -1093,7 +1123,10 @@ export async function mountCallPage(root, {
   }, { capture: true, signal: ac.signal });
   on(root, 'change', (e) => {
     if (e.target.closest?.('[data-words-mode]')) { setWordsMode(e.target.value); return; }
+    if (e.target.closest?.('[data-ring]')) { ringPick = e.target.value || ''; return; }
     if (!e.target.closest?.('[data-person]')) return;
+    ringPick = '';
+    loadRing(e.target.value);
     const a = q('[data-intercom-link]');
     if (a) a.setAttribute('href', `./intercom.html?person=${encodeURIComponent(e.target.value)}`);
     const ck = q('[data-checkin-link]');

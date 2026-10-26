@@ -91,6 +91,30 @@ section('the ticket — a token in a URL, not a secret in a URL');
   link.close();
 }
 {
+  // RING ONE SCREEN (2026-10-25): a SCREEN says which device it is - a random id this browser keeps (device_id.js) and
+  // a name - so a caller can ring it alone. Not a secret, and never the device KEY (the check above still holds).
+  sockets.length = 0;
+  const { deviceId, deviceName, cleanDeviceName, DEVICE_ID_KEY } = await import('../device_id.js');
+  const mem = new Map();
+  const st = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
+  const id1 = deviceId({ storage: st });
+  check('a device id is made once and kept (the same next time)', /^dv-[0-9a-f]{16}$/.test(id1) && deviceId({ storage: st }) === id1 && mem.get(DEVICE_ID_KEY) === id1, id1);
+  check('the launcher\'s name is used and kept; with none, a plain name with the id\'s last four', deviceName({ search: '?deviceName=Bench%20Pi', storage: st, id: id1 }) === 'Bench Pi'
+    && deviceName({ search: '', storage: st, id: id1 }) === 'Bench Pi' && deviceName({ search: '', storage: null, id: 'dv-abcd1234' }) === 'A screen (…1234)');
+  check('a name is printable and short, never markup', cleanDeviceName('  <b>Bench</b>\u0007 Pi ') === 'bBench/b Pi' && cleanDeviceName('x'.repeat(99)).length === 40);
+  const screen = connectDrive({ personId: 'p1', role: 'screen', device: id1, deviceName: 'Bench Pi', fetchImpl: fakeFetch('T2'), SocketImpl: FakeSocket });
+  await sleep(0);
+  check('*** a screen\'s address says which screen it is (screenId, screenName) ***',
+    sockets[0].url.includes(`screenId=${id1}`) && sockets[0].url.includes('screenName=Bench%20Pi'), sockets[0].url);
+  check('...and still carries no device key', !/device/i.test(sockets[0].url) && !/key=/i.test(sockets[0].url), sockets[0].url);
+  screen.close();
+  sockets.length = 0;
+  const drv = connectDrive({ personId: 'p1', role: 'driver', device: id1, deviceName: 'X', fetchImpl: fakeFetch('T3'), SocketImpl: FakeSocket });
+  await sleep(0);
+  check('a driver never says one (only a screen can be rung)', !/screenId|screenName/.test(sockets[0].url), sockets[0].url);
+  drv.close();
+}
+{
   sockets.length = 0;
   let states = [];
   const link = connectDrive({

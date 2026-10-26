@@ -73,6 +73,15 @@ if [ -n "${NIMROD_HA_BRIDGE:-}" ]; then
   if [ -f "$POLICY_FILE" ]; then HB="$NIMROD_HA_BRIDGE"; else HB="off"; fi
   case "$PAGE" in *\?*) PAGE="$PAGE&haBridge=$HB" ;; *) PAGE="$PAGE?haBridge=$HB" ;; esac
 fi
+# THIS DEVICE'S NAME (2026-10-25, device_id.js): NIMROD_DEVICE_NAME="Bench Pi" in the unit adds `deviceName=Bench%20Pi`,
+# which the page keeps; a caller then sees "Ring: Only Bench Pi" and can ring this screen alone. Letters, digits, spaces,
+# - and _ only (anything else is dropped), spaces sent as %20. Unset: nothing is added and the page keeps its own name.
+if [ -n "${NIMROD_DEVICE_NAME:-}" ]; then
+  DN=$(printf '%s' "$NIMROD_DEVICE_NAME" | tr -cd 'A-Za-z0-9 _-' | cut -c1-40 | sed 's/ /%20/g')
+  if [ -n "$DN" ]; then
+    case "$PAGE" in *\?*) PAGE="$PAGE&deviceName=$DN" ;; *) PAGE="$PAGE?deviceName=$DN" ;; esac
+  fi
+fi
 # AFTER A RESTART (row 2.70, 2026-10-09): `boot=1` tells the page this is a restart -- the computer started, or Chromium
 # was relaunched after a crash -- so it opens the dashboard chosen under "After a restart, open" (restart.js). The page
 # takes the flag out of its address at once, so its own reloads (a new version, a refresh) are not restarts. Every

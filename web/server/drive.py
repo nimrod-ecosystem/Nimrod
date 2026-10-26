@@ -583,6 +583,87 @@ def _parse_group(raw: dict) -> dict | None:
     return out
 
 
+# ------------------------------------------------------------------ ringing ONE screen (2026-10-25)
+# Mike, 2026-10-25: "In this case I would be calling a different device on my account." Until now a call rang EVERY
+# screen of the person, and a decline (or an automatic "busy") on any of them ended it on all - so a test call to the
+# bench rang the screen at the facility too. A screen socket may now say which DEVICE it is (`screenId`, a random id the
+# page keeps, and `screenName`, what the launcher calls it: "Bench Pi"), and an offer may carry `toScreen: <device id>`:
+# then that screen alone rings, and every later signal of that call (ice, bye) goes to it alone. AN OFFER WITH NO
+# `toScreen` IS EXACTLY AS BEFORE - every screen - so nothing about an ordinary call changes.
+# Which screens are online, by name, is told only to the ACCOUNT THAT OWNS the person (app.py GET
+# /api/drive/screens/<person>): the screens are its.
+_DEVICE_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
+MAX_DEVICE_ID = 40
+MAX_DEVICE_NAME = 40
+# A bound on remembered targeted sessions, oldest first (Tickets' and Answerers' reason).
+MAX_TARGETED = 2000
+
+
+def clean_device_id(v) -> str:
+    """A device id as the page sent it, or '' when it is not one (6-40 of letters, digits, - and _)."""
+    return v if isinstance(v, str) and 6 <= len(v) <= MAX_DEVICE_ID and all(c in _DEVICE_CHARS for c in v) else ""
+
+
+def clean_device_name(v) -> str:
+    """A device's name, printable and short, or ''. Never markup: control characters and <> are dropped."""
+    if not isinstance(v, str):
+        return ""
+    s = "".join(c for c in v if c.isprintable() and c not in "<>").strip()
+    return " ".join(s.split())[:MAX_DEVICE_NAME]
+
+
+class ScreenTargets:
+    """Which device each screen connection is, and which device a targeted call rings. No I/O (app.py sends)."""
+
+    def __init__(self, max_targeted: int = MAX_TARGETED):
+        self._who: dict[int, tuple[str, str]] = {}          # id(conn) -> (device id, name)
+        self._target: dict[tuple, str] = {}                  # (room, session) -> device id
+        self._max = max_targeted
+
+    def named(self, conn, device, name) -> bool:
+        d = clean_device_id(device)
+        if not d:
+            return False
+        self._who[id(conn)] = (d, clean_device_name(name))
+        return True
+
+    def left(self, conn) -> None:
+        self._who.pop(id(conn), None)
+
+    def listing(self, screens) -> list[dict]:
+        """The named screens online, one row per device (two tabs of one device are one screen), by name."""
+        out, seen = [], set()
+        for c in screens or ():
+            w = self._who.get(id(c))
+            if w and w[0] not in seen:
+                seen.add(w[0])
+                out.append({"id": w[0], "name": w[1] or "A screen"})
+        return out
+
+    def route(self, room, sig, screens) -> tuple[list, bool]:
+        """The screens a DRIVER's signal goes to, and whether it was targeted. An offer naming `toScreen` records the
+        target for its session; later signals of a targeted session follow it; a bye forgets it. Untargeted: every
+        screen, exactly as before."""
+        screens = list(screens or ())
+        session = sig.get("session") if isinstance(sig, dict) else None
+        key = (room, session) if _session_ok(session) else None
+        want = None
+        if isinstance(sig, dict) and sig.get("kind") == "offer" and key is not None:
+            d = clean_device_id(sig.get("toScreen"))
+            if d:
+                self._target[key] = d
+                if len(self._target) > self._max:
+                    self._target.pop(next(iter(self._target)))
+                want = d
+        if want is None and key is not None:
+            want = self._target.get(key)
+        if isinstance(sig, dict) and sig.get("kind") == "bye" and key is not None:
+            self._target.pop(key, None)
+        if want is None:
+            return screens, False
+        return [c for c in screens if self._who.get(id(c), ("",))[0] == want], True
+
+
 @dataclass
 class _Member:
     peer: str

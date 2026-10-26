@@ -169,6 +169,7 @@ import { EDGE_TOPIC } from './input.js';
 import { createDeviceStore } from './starting_defaults.js';
 import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
 import { FLASH_WARNING_FIELD, FLASH_WARNING_KEY, shouldWarn, flashSeen, markFlashSeen, showFlashWarning } from './flash_warning.js';   // row 2.124
+import { deviceId, deviceName } from './device_id.js';   // 2026-10-25: ring one screen
 // Hiding a panel can mute or pause it (ad7dc49): a per-panel setting, asked once when a person hides one.
 import { createHideSound, WHEN_HIDDEN_FIELD, HIDE_ASK_TIMEOUT_FIELD, makesSound, whenHiddenDefault } from './hide_sound.js';
 import { createChoiceMemory } from './choice_card.js';
@@ -7153,9 +7154,13 @@ export async function mountKiosk(root, {
       // only category of rule allowed to be absolute here. It is not a setting, it is not
       // hideable at any complexity level, and it does not bend for a nicer-looking screen.
       if (!makeState && !embedded && profiles.personStateURL) {
+        // WHICH DEVICE (2026-10-25, device_id.js): so a caller can ring this screen alone (drive.py ScreenTargets).
+        const thisDevice = deviceId({ storage });
         drive = attachDriveToBus(bus, {
           personId: p.person_id,
           user,
+          device: thisDevice,
+          deviceName: deviceName({ storage, id: thisDevice }),
           // THE PERSON'S OWN GATE, READ LIVE. This is the whole of Mike's ruling in one
           // argument: the restrictions a driver is subject to are the ones set in the
           // person's section, the same ones the switch in the room is subject to. Read

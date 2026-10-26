@@ -9,8 +9,8 @@ standing anything up.
 import sys
 
 from drive import (ANSWERER_IDLE_BY_PURPOSE, ANSWERER_IDLE_S, ARBITRATED_PURPOSES, CALL_RING_MAX_S,
-                   DRIVE_VERBS, MAX_SIGNAL_BYTES, ROLES, SIGNAL_KINDS, Answerers, Rooms, Tickets,
-                   parse_message, stamp_signal)
+                   DRIVE_VERBS, MAX_SIGNAL_BYTES, ROLES, SIGNAL_KINDS, Answerers, Rooms, ScreenTargets, Tickets,
+                   clean_device_id, clean_device_name, parse_message, stamp_signal)
 
 passed = failed = 0
 
@@ -354,6 +354,43 @@ small = Answerers(now=clk, max_records=10)
 for i in range(50):
     small.driver_signal(R, {**OFFER, "session": f"ic-{i}"})
 check("a flood of fresh offers cannot grow the records without bound", len(small) <= 10, str(len(small)))
+
+section("ringing ONE screen (2026-10-25, ScreenTargets)")
+st = ScreenTargets()
+S1, S2, S3 = object(), object(), object()
+check("a device id: 6-40 of letters, digits, - and _; anything else is none", clean_device_id("bench-pi_01") == "bench-pi_01"
+      and clean_device_id("abc") == "" and clean_device_id("a b c d e f") == "" and clean_device_id(None) == "")
+check("a device name: printable, no markup, short", clean_device_name("  Bench\u0000 <b>Pi</b>  ") == "Bench bPi/b"
+      and len(clean_device_name("x" * 99)) == 40)
+check("a screen names itself; a bad id is refused", st.named(S1, "bench-pi", "Bench Pi") and st.named(S2, "facility-1", "Room 12")
+      and not st.named(S3, "no", "x"))
+check("*** the listing: the named screens online, by name (an unnamed one is not listed) ***",
+      st.listing([S1, S2, S3]) == [{"id": "bench-pi", "name": "Bench Pi"}, {"id": "facility-1", "name": "Room 12"}], st.listing([S1, S2, S3]))
+two_tabs = object()
+st.named(two_tabs, "bench-pi", "Bench Pi")
+check("two tabs of one device are one screen in the list", len(st.listing([S1, two_tabs, S2])) == 2)
+R2 = ("acct", "robin")
+plain = {"kind": "offer", "purpose": "call", "session": "c-1"}
+got, targeted = st.route(R2, plain, [S1, S2, S3])
+check("*** an ordinary offer (no toScreen) rings EVERY screen, exactly as before ***", got == [S1, S2, S3] and not targeted)
+off = {"kind": "offer", "purpose": "call", "session": "c-2", "toScreen": "bench-pi"}
+got, targeted = st.route(R2, off, [S1, S2, S3])
+check("*** an offer to the bench rings the bench alone ***", got == [S1] and targeted)
+got, _ = st.route(R2, {"kind": "ice", "purpose": "call", "session": "c-2"}, [S1, S2, S3])
+check("...and the rest of that call (ice) follows it there, not to the other screens", got == [S1])
+got, _ = st.route(R2, {"kind": "bye", "purpose": "call", "session": "c-2"}, [S1, S2, S3])
+check("...the bye too; then the session is forgotten", got == [S1] and st.route(R2, {"kind": "ice", "session": "c-2"}, [S1, S2])[0] == [S1, S2])
+got, targeted = st.route(R2, {**off, "session": "c-3", "toScreen": "gone-device"}, [S1, S2])
+check("*** a target not online: nothing rings (the caller is told, app.py) ***", got == [] and targeted)
+got, _ = st.route(("other", "room"), {"kind": "ice", "session": "c-2"}, [S1])
+check("a session id is per room: another room's same session is not affected", got == [S1])
+st.left(S1)
+check("a screen gone: forgotten", st.listing([S1, S2]) == [{"id": "facility-1", "name": "Room 12"}])
+small_st = ScreenTargets(max_targeted=5)
+for i in range(30):
+    small_st.route(R2, {"kind": "offer", "session": f"s-{i}", "toScreen": "bench-pi"}, [])
+check("targeted sessions cannot grow without bound", len(small_st._target) <= 5)
+check("the list is asked over plain HTTP, not the socket: a socket 'screens' message is dropped", parse_message({"type": "screens"}) is None)
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

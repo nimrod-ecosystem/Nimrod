@@ -619,6 +619,24 @@ try {
         && !d.__probe().connecting && !d.__probe().stalling, JSON.stringify(ended));
       d.destroy();
     }
+    {
+      // RING ONE SCREEN (2026-10-25, drive.py ScreenTargets): the offer names the screen, and so does a re-offer.
+      const { d, dp, answer, dl } = mkD();
+      await d.call({ tracks: [{ kind: 'audio' }], from: { name: 'Ann' }, toScreen: 'bench-pi-01' });
+      const offers = () => dl.sent.filter((s) => s.kind === 'offer');
+      check('*** a call to one screen: the offer carries toScreen ***', offers().length === 1 && offers()[0].toScreen === 'bench-pi-01', JSON.stringify(offers()));
+      await answer();
+      dp.last().fire('connected');
+      dp.last().fire('failed');
+      await sleep(5);
+      check('*** ...a re-offer after a drop goes to the same screen ***', offers().length === 2 && offers()[1].toScreen === 'bench-pi-01', JSON.stringify(offers()));
+      d.destroy();
+      const e = mkD();
+      await e.d.call({ tracks: [], from: { name: 'Ann' }, toScreen: 'no' });
+      check('an ordinary call, or a toScreen that is not a device id, carries none (every screen rings)',
+        !('toScreen' in e.dl.sent.filter((s) => s.kind === 'offer')[0]));
+      e.d.destroy();
+    }
   }
 
   // =====================================================================================

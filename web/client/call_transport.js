@@ -680,20 +680,23 @@ export function createCallTransport({
 
   // group calls (2026-10-09): `groupId` - this call is rung INTO that group call (drive.py CallGroups): the server
   // makes the group on the first such offer, and the screen that answers joins it. Re-offers carry it too.
-  async function place({ tracks = [], from = null, session = null, remoteVideo, again = false, groupId = null } = {}) {
+  async function place({ tracks = [], from = null, session = null, remoteVideo, again = false, groupId = null, toScreen = null } = {}) {
     const s = okSession(session) ? session : newCallSession();
     if (remoteVideo !== undefined) attached = remoteVideo || null;
     const mine = makePc(tracks);
     currentSession = s;
     const g = okSession(groupId) ? groupId : null;
-    placed = { tracks: [...(tracks || [])], from, ...(g ? { groupId: g } : {}) };
+    // ONE SCREEN (2026-10-25): a device id rings that screen alone; a re-offer goes to the same one.
+    const to = typeof toScreen === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(toScreen) ? toScreen : null;
+    placed = { tracks: [...(tracks || [])], from, ...(g ? { groupId: g } : {}), ...(to ? { toScreen: to } : {}) };
     if (!again) answeredOnce = false;
     const o = await mine.createOffer();
     await mine.setLocalDescription(o);
     setLive(true);
     await gatheringDone(mine, { setTimer });
     if (destroyed || pc !== mine) return false;
-    return link.sendSignal({ kind: 'offer', sdp: mine.localDescription?.sdp, from, ...tagged(s), ...(g ? { group: g } : {}) });
+    return link.sendSignal({ kind: 'offer', sdp: mine.localDescription?.sdp, from, ...tagged(s), ...(g ? { group: g } : {}),
+      ...(to ? { toScreen: to } : {}) });
   }
 
   // ---- inbound -------------------------------------------------------------------------
@@ -945,11 +948,12 @@ export function createCallTransport({
      * (`purpose: 'call'`, a session) so the server can pick one answering screen; `session` reuses an
      * id (a caller re-offering the same call), otherwise a fresh one is made.
      */
-    async call({ tracks = [], from = null, session = null, remoteVideo, group: groupId = null } = {}) {
+    async call({ tracks = [], from = null, session = null, remoteVideo, group: groupId = null, toScreen = null } = {}) {
       if (destroyed || role !== 'driver') return false;
       // `remoteVideo`: the element the far end plays into (the caller page's <video>). Optional.
       // group calls: `group` - the group call id this call is rung into (see `place`).
-      return place({ tracks, from, session, remoteVideo, groupId });
+      // `toScreen` (2026-10-25): ring ONE screen of the person, by its device id (drive.py ScreenTargets); none = all.
+      return place({ tracks, from, session, remoteVideo, groupId, toScreen });
     },
 
     // ---- group calls (2026-10-09; call_group.js) -----------------------------------------------------------------
