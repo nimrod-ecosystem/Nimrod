@@ -168,6 +168,7 @@ import { aiActivity, onAIActivity } from './ai_activity.js';
 import { EDGE_TOPIC } from './input.js';
 import { createDeviceStore } from './starting_defaults.js';
 import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
+import { FLASH_WARNING_FIELD, FLASH_WARNING_KEY, shouldWarn, flashSeen, markFlashSeen, showFlashWarning } from './flash_warning.js';   // row 2.124
 // Hiding a panel can mute or pause it (ad7dc49): a per-panel setting, asked once when a person hides one.
 import { createHideSound, WHEN_HIDDEN_FIELD, HIDE_ASK_TIMEOUT_FIELD, makesSound, whenHiddenDefault } from './hide_sound.js';
 import { createChoiceMemory } from './choice_card.js';
@@ -2057,6 +2058,15 @@ export async function mountKiosk(root, {
     // rule (an overlay on the wrapped `state`), applied to this panel's box on top of wherever it was placed.
     const offDrive = watchPanelDrive(host, state);
     instance.init();
+    // A GAME THAT CAN FLASH says so over itself, once (row 2.124; flash_warning.js: a banner that goes by itself).
+    try {
+      const man = getManifest(mod.type);
+      const setting = String((settings.get() || {})[FLASH_WARNING_KEY] || FLASH_WARNING_FIELD.default);
+      if (!embedded && shouldWarn({ canFlash: !!man?.canFlash, setting, limit: flashLimitNow(), seen: flashSeen(mod.type) })) {
+        markFlashSeen(mod.type);
+        showFlashWarning(host, { title: man.title, onSetting: () => { try { bus.publish(SYSTEM_TOPICS.settings); } catch { /* no menu */ } } });
+      }
+    } catch (err) { console.error('kiosk: flash warning', err); }
     state.startPolling(); events.startPolling();
     // `title` is LIVE (row 2.87, 2026-10-14): a module that says what it is showing (`titleNow()` - a Lineup, "YouTube
     // (Lineup)") names the panel by it, everywhere the screen names a panel; any other keeps its registered title.
@@ -4419,7 +4429,9 @@ export async function mountKiosk(root, {
   //   * Faces moving (ba4d79d) sits with them: it is the same question, what moves on this screen.
   //   * Other people's own avatars (OTHERS_AVATAR_FIELDS, 2026-10-02) sit with faces moving: the screen's
   //     copy is the place's choice and WINS over the person's (avatar_display.js argues the precedence).
-  const MOTION_FIELDS = () => [ZOOM_FOCUS_FIELD, flashLimitFieldWith(startingLayer()), AVATAR_MOTION_FIELD,
+  //   * "Warn before games that can flash" (row 2.124, 2026-10-25) sits under the flash limit: the same question, and
+  //     the note is how somebody who never opened this tab learns the limit is there (flash_warning.js argues it).
+  const MOTION_FIELDS = () => [ZOOM_FOCUS_FIELD, flashLimitFieldWith(startingLayer()), FLASH_WARNING_FIELD, AVATAR_MOTION_FIELD,
     ...OTHERS_AVATAR_FIELDS];
 
   // THE ROOM ON THIS SCREEN, if any: the focused panel when it is a room, else the first room mounted.

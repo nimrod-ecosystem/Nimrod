@@ -532,8 +532,11 @@ const toTab = (m, id) => {
       // - one more stop on every tab's lap, and one more of the old rows: 50. Not at "Just the essentials": kiosk.js argues.)
       // (calls play on, 2026-10-25, row 2.128, DELIBERATELY: Devices -> Speakers "Calls play on", so a call can come out of
       // a different speaker from videos and music. One more of the old rows: 51. The panel's lap is unchanged.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 51) ***',
-        lapStops.length === 15 && oldStops.length === 51 && oldStops.some((i) => i.id === 'set:speakerCalls') /* calls play on */
+      // (flash warning, 2026-10-25, row 2.124, DELIBERATELY: "Warn before games that can flash" under the flash limit.
+      // One more of the old rows: 52. The panel's lap is unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 52) ***',
+        lapStops.length === 15 && oldStops.length === 52 && oldStops.some((i) => i.id === 'set:speakerCalls') /* calls play on */
+        && oldStops.some((i) => i.id === 'set:flashWarning') /* flash warning */
         && lapStops.includes('set:menuSearch') && oldStops.some((i) => i.id === 'set:showBeta') /* live and beta */
         && oldStops.some((i) => i.id === 'set:dashboardBareNames') /* bare names */
         && oldStops.some((i) => i.id === 'set:letFollow') /* watching along */
@@ -5036,6 +5039,38 @@ const toTab = (m, id) => {
     vroot.remove();
   } catch (e) {
     check('the voice open section threw', false, String((e && e.stack) || e));
+  }
+
+  // ---------------- "THIS GAME CAN FLASH" (row 2.124, flash_warning.js) ----------------
+  try {
+    const { forgetFlashSeenForTest } = await import('../flash_warning.js');
+    forgetFlashSeenForTest();
+    const fProfiles = createProfilesClient({ user: USER });
+    const fs = await fProfiles.create('TEST-flash-warning');
+    const rh = await fProfiles.addModule(fs.id, 'rhythm');
+    const ck = await fProfiles.addModule(fs.id, 'clock');
+    const fst = createState({ url: fProfiles.stateURL(fs.id, 'settings'), user: USER });
+    await fst.load();
+    fst.set({ kiosk: { layout: { preset: 'quad', slots: [rh.id, ck.id, null, null] } } });
+    await fst.flush();
+    const froot = document.createElement('div');
+    froot.style.cssText = 'position:relative;width:960px;height:540px';
+    document.body.append(froot);
+    let fk = await mountKiosk(froot, { user: USER, profileId: fs.id, profiles: fProfiles, bus: createBus() });
+    const notes = () => [...froot.querySelectorAll('[data-flash-warning]')];
+    check('*** a screen with Rhythm tiles: "can flash quickly" over that panel, once - and none over the clock ***',
+      await settled(() => notes().length === 1, 6000) && /Rhythm tiles can flash quickly/.test(notes()[0].textContent),
+      notes().map((n) => n.textContent).join(' | '));
+    fk.destroy();
+    froot.replaceChildren();
+    fk = await mountKiosk(froot, { user: USER, profileId: fs.id, profiles: fProfiles, bus: createBus() });
+    await sleep(800);
+    check('...the next time this screen starts, not again (the default is the first time)', notes().length === 0);
+    fk.destroy();
+    froot.remove();
+    forgetFlashSeenForTest();
+  } catch (e) {
+    check('the flash warning section threw', false, String((e && e.stack) || e));
   }
 
   const sum = document.getElementById('summary');

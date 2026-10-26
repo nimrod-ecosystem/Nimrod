@@ -298,6 +298,7 @@ function readTheme(el) {
 
 registerModule(
   { type: 'pressgame', title: 'Wait and Go', routesSound: true,
+    canFlash: true,   // row 2.124: its blooms burst faster than three a second with no limit set (flash_warning.js)
     description: 'Wait while a charge builds, then press when the screen says Go',
     // `local` rather than `none`: the visuals and tones need nothing, but the trial records
     // want somewhere to go. It still RUNS with no server — it just stops being evidence.

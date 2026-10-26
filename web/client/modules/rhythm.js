@@ -180,6 +180,7 @@ export const VERDICT_WORDS = Object.freeze({ hit: 'âœ“ On the beat!', early: 'â—
 
 registerModule(
   { type: GAME, title: 'Rhythm tiles', core: 'new', routesSound: true,
+    canFlash: true,   // row 2.124: up to five beats a second with no limit set (flash_warning.js shows a note, once)
     description: 'Tiles light up to a beat; press on the beat. One switch is all it takes. It '
       + 'is slow and forgiving by default. It keeps to the screen\'s flashing limit when one is set.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },

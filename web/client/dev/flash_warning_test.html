@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>flash warning - "this game can flash", told and never a gate (row 2.124)</title>
+<style>body{font:14px system-ui;margin:16px}.pass{color:#060}.fail{color:#b00;font-weight:600}#host .box{position:relative;width:640px;height:360px;border:1px solid #888}</style>
+</head>
+<body>
+<h1>flash warning <span id="summary">running…</span></h1>
+<div id="out"></div>
+<div id="host"></div>
+<script type="module">
+import { shouldWarn, showFlashWarning, flashSeen, markFlashSeen, forgetFlashSeenForTest, flashWords, FLASH_WARNING_FIELD,
+  FLASH_WARNING_MS } from '../flash_warning.js';
+import { getManifest } from '../module.js';
+import '../modules/rhythm.js';
+import '../modules/pressgame.js';
+import '../modules/clock.js';
+
+const out = document.getElementById('out');
+let passed = 0, failed = 0;
+function check(name, ok, detail = '') {
+  const p = document.createElement('div');
+  p.className = ok ? 'pass' : 'fail';
+  p.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `   ${detail}` : ''}`;
+  out.append(p);
+  if (ok) passed += 1; else failed += 1;
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+try {
+  forgetFlashSeenForTest();
+  section('when (pure)');
+  check('*** a game that can flash, first time, no limit: warned ***', shouldWarn({ canFlash: true, setting: 'first', limit: Infinity, seen: false }));
+  check('...the second time: not again (the default is once)', !shouldWarn({ canFlash: true, setting: 'first', seen: true }));
+  check('"Every time": again', shouldWarn({ canFlash: true, setting: 'always', seen: true }));
+  check('"Never": never', !shouldWarn({ canFlash: true, setting: 'never' }));
+  check('*** a flash limit of three a second or less is already on: no warning (the protection is there) ***',
+    !shouldWarn({ canFlash: true, limit: 3 }) && !shouldWarn({ canFlash: true, limit: 1 }) && shouldWarn({ canFlash: true, limit: 5 }));
+  check('a module that does not flash: never', !shouldWarn({ canFlash: false, setting: 'always' }));
+  check('*** Rhythm tiles and Wait and Go say they can flash; a clock does not ***', getManifest('rhythm')?.canFlash === true
+    && getManifest('pressgame')?.canFlash === true && !getManifest('clock')?.canFlash);
+  check('the setting: first time (default), every time, never', FLASH_WARNING_FIELD.default === 'first'
+    && FLASH_WARNING_FIELD.options.map((o) => o.value).join() === 'first,always,never');
+  check('seen is kept per game, in this browser', !flashSeen('rhythm') && (markFlashSeen('rhythm'), flashSeen('rhythm')) && !flashSeen('pressgame'));
+  forgetFlashSeenForTest();
+
+  section('*** the banner: told, never a gate ***');
+  const box = document.createElement('div'); box.className = 'box'; document.getElementById('host').append(box);
+  const game = document.createElement('button'); game.textContent = 'Start'; game.style.cssText = 'position:absolute;left:280px;top:200px';
+  let started = 0; game.addEventListener('click', () => { started += 1; });
+  box.append(game);
+  let timers = [];
+  let opened = 0;
+  const w = showFlashWarning(box, { title: 'Rhythm tiles', onSetting: () => { opened += 1; },
+    setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer: (h) => { if (timers[h - 1]) timers[h - 1].fn = null; } });
+  const b = () => box.querySelector('[data-flash-warning]');
+  check('*** shown over the game, in words, read out as a status (not an alert, not a dialog) ***', !!b() && b().textContent.includes(flashWords('Rhythm tiles'))
+    && b().getAttribute('role') === 'status');
+  check('*** it goes by itself after twelve seconds - nothing waits for "OK" ***', timers.some((t) => t.fn && t.ms === FLASH_WARNING_MS) && FLASH_WARNING_MS === 12000);
+  const gr = game.getBoundingClientRect(), br = b().getBoundingClientRect();
+  check('*** the game is not covered: its Start button is still pressable while the note shows ***',
+    br.bottom <= gr.top && document.elementFromPoint(gr.left + 5, gr.top + 5) === game && (game.click(), started === 1), JSON.stringify([br.bottom, gr.top]));
+  timers.filter((t) => t.fn).forEach((t) => t.fn());
+  check('...and after the time it is gone', !b());
+  const w2 = showFlashWarning(box, { title: 'Wait and Go', onSetting: () => { opened += 1; } });
+  [...b().querySelectorAll('button')].find((x) => x.textContent === 'Flash limit').click();
+  check('"Flash limit" opens the settings and closes the note', opened === 1 && !b());
+  showFlashWarning(box, { title: 'Wait and Go' });
+  const btns = [...b().querySelectorAll('button')];
+  check('the buttons are 44px or more; with nowhere to open settings, only "OK"', btns.length === 1 && btns[0].textContent === 'OK'
+    && btns.every((x) => x.getBoundingClientRect().height >= 43.5), JSON.stringify(btns.map((x) => [x.textContent, x.getBoundingClientRect().height])));
+  btns[0].click();
+  check('"OK" closes it', !b());
+  void w; void w2;
+  box.remove();
+  check('names nobody', !/taylor|cici|her screen/i.test(flashWords('X') + FLASH_WARNING_FIELD.note + FLASH_WARNING_FIELD.label));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS - ${passed} checks`;
+</script>
+</body>
+</html>
