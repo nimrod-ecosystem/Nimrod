@@ -29,7 +29,7 @@
 <script type="module">
 import {
   mountCallPage, endText, CALLER_GIVE_UP_MS, CALLER_END_TEXT, CALL_MODES, CONNECT_MS, PRESENCE_MS,
-  GAME_ASK_WAIT_MS, GAME_NOTE_MS, GAME_ASK_GAME, CALL_GAMES,
+  GAME_ASK_WAIT_MS, GAME_NOTE_MS, GAME_ASK_GAME, CALL_GAMES, iceWords,
 } from '../call_page.js';
 import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { SIGNAL_KINDS, connectDrive } from '../drive.js';
@@ -334,6 +334,20 @@ try {
       await settled(() => placed.length === 1) && placed[0].toScreen === 'bench-pi-01', JSON.stringify(placed.map((p) => p.toScreen)));
     M.page.destroy();
     check('"not here" reads as the screen not being on, and nothing rang', /not on right now/.test(endText('remote', 'not-here')));
+  }
+
+  // 2026-10-26 (note CT): a call that could not connect says what each end offered, so the next failure says why.
+  section('*** why a call could not connect, in words ***');
+  {
+    const side = (o = {}) => ({ host: 0, mdns: 0, srflx: 0, relay: 0, ...o });
+    const phoneOnData = iceWords({ local: side({ srflx: 1 }), remote: side({ host: 1, srflx: 1 }), pairs: 2, succeeded: 0, failed: 2 });
+    check('*** this device offered only an internet address: "probably not on the same Wi-Fi" ***',
+      /this device an internet address; the screen a home-network address, an internet address/.test(phoneOnData) && /not on the same Wi-Fi/.test(phoneOnData), phoneOnData);
+    const bothHome = iceWords({ local: side({ mdns: 1, srflx: 1 }), remote: side({ host: 1 }), pairs: 1, succeeded: 0, failed: 1 });
+    check('both offered home-network addresses and still failed: "check both are on the same Wi-Fi, not a guest network"',
+      /hidden home-network address/.test(bothHome) && /not a guest network/.test(bothHome), bothHome);
+    check('nothing read: nothing said', iceWords(null) === null);
+    check('names nobody, no jargon like ICE or STUN', !/taylor|cici|her screen|\bICE\b|STUN|TURN/i.test(phoneOnData + bothHome));
   }
 
   // =====================================================================================

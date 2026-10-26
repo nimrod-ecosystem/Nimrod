@@ -141,6 +141,24 @@ export function endText(reason, why, { answered = false, connected = false } = {
   return CALLER_END_TEXT[reason] || 'The call ended.';
 }
 
+/**
+ * WHY A CALL COULD NOT CONNECT, in plain words, from what each end offered (call_transport.js summarizeIce; 2026-10-26,
+ * chat's note CT). Shown under "The call could not connect", so the next failure says whether this device was on the
+ * same network as the screen. Null when there is nothing to say. PURE.
+ */
+export function iceWords(r) {
+  if (!r || !r.local || !r.remote) return null;
+  const kinds = (s) => [s.host ? 'a home-network address' : '', s.mdns ? 'a hidden home-network address' : '',
+    s.srflx ? 'an internet address' : '', s.relay ? 'a relay' : ''].filter(Boolean);
+  const list = (a) => (a.length ? a.join(', ') : 'nothing usable');
+  const lHome = r.local.host + r.local.mdns > 0, rHome = r.remote.host + r.remote.mdns > 0;
+  let hint = '';
+  if (!lHome && r.local.srflx) hint = 'This device offered only an internet address, so it is probably not on the same Wi-Fi as the screen (mobile data, or a guest network).';
+  else if (lHome && rHome && !r.succeeded) hint = 'Both offered home-network addresses but could not reach each other: check both are on the same Wi-Fi, not a guest network.';
+  else if (!r.local.relay && !r.remote.relay) hint = 'Calls between different networks may need a relay server, and none is set up yet.';
+  return `What each end offered: this device ${list(kinds(r.local))}; the screen ${list(kinds(r.remote))}. ${hint}`.trim();
+}
+
 const AUDIO_CONSTRAINTS = { echoCancellation: true, noiseSuppression: true };
 
 // ---- WORDS FROM THE SCREEN'S AAC BOARD ("board into call", 2026-10-08) -----------------------------
@@ -921,6 +939,13 @@ export async function mountCallPage(root, {
       const knockable = info?.why === 'busy' && !!group;
       const want = { personId: target?.id, mode };
       finish(text);
+      // Could not connect: what each end offered, in words, once the transport has read it (it reads while closing).
+      if (reason === 'unconnected' || reason === 'stalled') {
+        setTimer(() => {
+          const w = iceWords(primaryT.iceReport?.());
+          if (w && phase === 'idle' && ended === text) { ended = `${text} ${w}`; renderSetup(); }
+        }, 400);
+      }
       if (knockable && want.personId) { knockOffer = want; renderSetup(); }
     }));
     // board into call: a word chosen on the screen's AAC board during this call.

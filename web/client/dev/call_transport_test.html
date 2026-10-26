@@ -42,7 +42,7 @@ that already exists rather than opening a second one.</p>
 import {
   createCallTransport, iceServers, gatheringDone, hasRelay,
   DEFAULT_STUN, GATHER_TIMEOUT_MS, STALL_MS, MODES, CALL_PURPOSE, CALL_CLAIM_MS, newCallSession,
-  ANSWER_CONNECT_MS,
+  ANSWER_CONNECT_MS, summarizeIce,
 } from '../call_transport.js';
 import { SIGNAL_KINDS, DRIVE_VERBS, connectDrive } from '../drive.js';
 import { createProfilesClient } from '../profile.js';
@@ -617,6 +617,25 @@ try {
       clock.advance(ANSWER_CONNECT_MS * 3);
       check('...and connecting clears both clocks: the call recovered', d.isLive() && ended.length === 0
         && !d.__probe().connecting && !d.__probe().stalling, JSON.stringify(ended));
+      d.destroy();
+    }
+    {
+      // WHAT EACH END OFFERED (2026-10-26, note CT): read before the connection is closed when the call gives up.
+      const S = [{ type: 'local-candidate', candidateType: 'srflx', address: '203.0.113.9' }, { type: 'local-candidate', candidateType: 'host', address: 'abc.local' },
+        { type: 'remote-candidate', candidateType: 'host', address: '192.168.0.157' }, { type: 'remote-candidate', candidateType: 'srflx', address: '198.51.100.2' },
+        { type: 'candidate-pair', state: 'failed' }, { type: 'candidate-pair', state: 'in-progress' }, { type: 'outbound-rtp' }];
+      const sum = summarizeIce(S);
+      check('*** summarizeIce: each end\'s kinds of address (a hidden home one counted as hidden), and the pairs tried ***',
+        sum.local.srflx === 1 && sum.local.mdns === 1 && sum.local.host === 0 && sum.remote.host === 1 && sum.remote.srflx === 1
+        && sum.pairs === 2 && sum.failed === 1 && sum.succeeded === 0, JSON.stringify(sum));
+      const { d, dp, clock, answer } = mkD();
+      await d.call({ tracks: [{ kind: 'audio' }], from: { name: 'Ann' } });
+      await answer();
+      dp.last().getStats = async () => new Map(S.map((s, i) => [String(i), s]));
+      clock.advance(ANSWER_CONNECT_MS);
+      await sleep(5);
+      check('*** a call that never connected: the transport kept what each end offered, after it ended ***',
+        !d.isLive() && d.iceReport()?.remote.host === 1 && d.iceReport()?.local.srflx === 1, JSON.stringify(d.iceReport()));
       d.destroy();
     }
     {

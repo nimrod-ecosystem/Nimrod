@@ -296,6 +296,34 @@ export function iceServers({ mode = 'auto', stun = DEFAULT_STUN, turn = [] } = {
 export const hasRelay = (cfg = {}) => (cfg.turn || []).length > 0;
 
 /**
+ * WHAT EACH END OFFERED, when a call could not connect (2026-10-26, chat's note CT: Mike's first phone-to-bench call
+ * "could not connect" on what should have been one home Wi-Fi, and nothing on the page could say why). From the peer
+ * connection's own stats: the kinds of address each end offered - a home-network address (`host`; `mdns` when the
+ * browser hid it behind a made-up name), an internet address found by STUN (`srflx`), a relay (`relay`) - and how many
+ * pairs were tried and whether any worked. PURE: `stats` is the report's values (an array or any iterable).
+ */
+export function summarizeIce(stats) {
+  const side = () => ({ host: 0, mdns: 0, srflx: 0, relay: 0 });
+  const out = { local: side(), remote: side(), pairs: 0, succeeded: 0, failed: 0 };
+  for (const s of stats || []) {
+    if (!s || typeof s !== 'object') continue;
+    if (s.type === 'local-candidate' || s.type === 'remote-candidate') {
+      const t = out[s.type === 'local-candidate' ? 'local' : 'remote'];
+      const kind = s.candidateType;
+      const addr = String(s.address || s.ip || '');
+      if (kind === 'host') { if (/\.local$/i.test(addr)) t.mdns += 1; else t.host += 1; }
+      else if (kind === 'srflx' || kind === 'prflx') t.srflx += 1;
+      else if (kind === 'relay') t.relay += 1;
+    } else if (s.type === 'candidate-pair') {
+      out.pairs += 1;
+      if (s.state === 'succeeded') out.succeeded += 1;
+      if (s.state === 'failed') out.failed += 1;
+    }
+  }
+  return out;
+}
+
+/**
  * Wait for ICE gathering, or for the timeout, whichever comes first.
  *
  * Exported because "we sent the description before we had the candidates" and "the network
@@ -490,7 +518,7 @@ export function createCallTransport({
     clearStall();
     // A caller that vanished without a `bye` must not leave her looking at a dead call.
     // group calls: a screen whose caller's connection is gone for good while others are still in the call keeps them.
-    stallTimer = setTimer(() => { stallTimer = null; if (live) { if (othersStay()) legLeft(); else finish('stalled'); } }, STALL_MS);
+    stallTimer = setTimer(() => { stallTimer = null; if (live) { if (othersStay()) legLeft(); else { snapshotIce(); finish('stalled'); } } }, STALL_MS);
   }
 
   // The connect clock (ANSWER_CONNECT_MS). Armed when the screen starts answering, and again by a
@@ -500,8 +528,21 @@ export function createCallTransport({
     clearConnect();
     connectTimer = setTimer(() => { connectTimer = null; if (live || answering) noConnect(); }, connectMs);
   }
+  // WHAT EACH END OFFERED (summarizeIce): read when the connection fails, and when the call gives up on it - BEFORE the
+  // connection is closed (the request is made while it is open). Kept for the page to say why (`iceReport()`).
+  let iceSeen = null;
+  function snapshotIce(p = pc) {
+    if (!p || typeof p.getStats !== 'function') return;
+    try {
+      Promise.resolve(p.getStats()).then((r) => {
+        const list = r && typeof r.values === 'function' ? [...r.values()] : (Array.isArray(r) ? r : []);
+        iceSeen = summarizeIce(list);
+      }).catch(() => {});
+    } catch { /* no stats: nothing to say */ }
+  }
   function noConnect() {
     const had = everConnected;
+    snapshotIce();
     log(had ? 'the re-answer never connected' : 'the answer never connected');
     // The caller FIRST, then the teardown: `finish` forgets which call this was.
     try { link.sendSignal({ kind: 'bye', reason: had ? 'connection-lost' : 'failed', ...tagged(currentSession) }); }
@@ -650,7 +691,7 @@ export function createCallTransport({
       if (st === 'connected') { clearStall(); clearConnect(); everConnected = true; }
       // A drop is NOT the end. The caller re-offers on its own, so the panel stays up and
       // waits — with a stall timer, so a caller gone for good still releases the screen.
-      else if (st === 'failed') trouble();
+      else if (st === 'failed') { snapshotIce(pc); trouble(); }
     };
     pc.oniceconnectionstatechange = () => {
       if (pc === mine && pc?.iceConnectionState === 'failed') trouble();
@@ -689,7 +730,7 @@ export function createCallTransport({
     // ONE SCREEN (2026-10-25): a device id rings that screen alone; a re-offer goes to the same one.
     const to = typeof toScreen === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(toScreen) ? toScreen : null;
     placed = { tracks: [...(tracks || [])], from, ...(g ? { groupId: g } : {}), ...(to ? { toScreen: to } : {}) };
-    if (!again) answeredOnce = false;
+    if (!again) { answeredOnce = false; iceSeen = null; }
     const o = await mine.createOffer();
     await mine.setLocalDescription(o);
     setLive(true);
@@ -1027,6 +1068,8 @@ export function createCallTransport({
     onRemote(cb) { if (typeof cb !== 'function') return () => {}; remoteCbs.add(cb); return () => { remoteCbs.delete(cb); }; },
     /** Whether a board word's clip is going into the call right now (call_mix.js). */
     clipPlaying: () => !!(mixer && mixer.playing && mixer.playing()),
+    /** What each end offered the last time a call failed to connect (summarizeIce), or null. Kept after the call ends. */
+    iceReport: () => (iceSeen ? JSON.parse(JSON.stringify(iceSeen)) : null),
 
     // For the panel and for tests. `live` is the honest one: a peer connection can exist
     // and be connecting, which is not the same as a call.
