@@ -5,7 +5,7 @@
   "class_n": 2,
   "audience": [
    "age 14 to 16",
-   "Jamie and teenagers like him",
+   "teenagers",
    "anyone who wants to learn this at a steady pace"
   ],
   "minutes": 30,
@@ -129,7 +129,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Welcome back, Jamie. Last class you met variables, the letters that stand for numbers. Today you put numbers into those letters and get an answer. There's one rule that makes everyone get the same answer."
+    "text": "Welcome back, {name}. Last class you met variables, the letters that stand for numbers. Today you put numbers into those letters and get an answer. There's one rule that makes everyone get the same answer."
    },
    "show": {
     "kind": "heading",

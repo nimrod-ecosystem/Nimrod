@@ -8,7 +8,7 @@
 // theme (theme.js), never from this file.
 //
 // Mike, 2026-10-06: "For reviewing the questions it would be nice if it linked to the wiki page and opened in
-// another window." / "I'm thinking about maybe having Jamie review questions for his schoolwork. There should
+// another window." / "I'm thinking about maybe having [a teenager in the family] review questions for [their] schoolwork. There should
 // also be education points awarded for reviewing questions as well." So, since then:
 //   * CHECK A QUESTION, HERE. One open question at a time: answer it yourself first (or just show the answer),
 //     then "Where this comes from" — a link that opens in a new tab or window — then "Looks right" or "Something

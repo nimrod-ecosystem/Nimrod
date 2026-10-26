@@ -2,7 +2,6 @@
  "course_id": "algebra-1",
  "title": "Algebra 1: From Expressions to Quadratics and Data",
  "audience": [
-  "Jamie",
   "teenagers aged 14 to 16 who have finished 8th-grade math"
  ],
  "length_note": "The course has 51 classes, about 28 hours in total. Each class teaches one main idea, so no one has to hold several new things in mind at once. Nothing in your list is skipped. The classes are grouped as expressions (3), equations and inequalities (6), functions (3), linear functions and models (9), systems (5), exponents and exponential models (6), polynomials and factoring (7), quadratics (6), function comparison (1), statistics (4) and a capstone (1). Most classes run 30 minutes, which matches the half-hour request. Thirteen run 40 minutes and the capstone runs 45. Those are topics with several steps or a modeling task, such as multi-step equations, factoring with a leading coefficient, completing the square, the quadratic formula and the statistics classes. Cutting them to 30 minutes would mean rushing. Each class builds on the one before it. Equations come before functions, and lines come before systems. Exponents come before polynomials, and factoring comes before quadratics. Statistics comes last because it uses lines, functions and models from earlier. Every class uses a real-world setting such as games, money or sports. The needs_research flag marks classes whose examples depend on real facts, rates or data sets that must be sourced before the lesson is written.",

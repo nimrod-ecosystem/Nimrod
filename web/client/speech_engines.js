@@ -3,7 +3,7 @@
 // Mike, 2026-09-30: *"If a phone is in the mix, would that be a better brain than the pi? Or maybe
 // even a second brain. It has a mic and the pi will have a speakerphone. They could each say what
 // they think was said with their confidence score and reach consensus or show both."* And: *"Her
-// audio going here is fine"* (his desktop) - as an OPTION; Jamie's computer "when he's not using the
+// audio going here is fine"* (his desktop) - as an OPTION; a family member's computer "when [they're] not using the
 // GPU" is another. Both OFF by default. Recognisers work as a RANKED LIST: a fast guess first, then
 // the desktop, then the GPU box when it is free; later passes correct earlier ones in place.
 //

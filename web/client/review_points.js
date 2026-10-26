@@ -1,7 +1,7 @@
 // review_points.js — POINTS FOR REVIEWING QUESTIONS: what a review pays, who it pays, and the rules that keep it
 // from being farmed.
 //
-// Mike, 2026-10-06: *"I'm thinking about maybe having Jamie review questions for his schoolwork. There should
+// Mike, 2026-10-06: *"I'm thinking about maybe having [a teenager in the family] review questions for [their] schoolwork. There should
 // also be education points awarded for reviewing questions as well. That can be a feature for everyone to
 // incentivize reviewing their own questions. Maybe clicking on the wiki link gives points as well as the review."*
 //
@@ -26,7 +26,7 @@
 // 2. WHO IT PAYS: the points of the SCREEN the review was done for — the same ledger every game pays into
 //    (points.js: the ledger is per screen, and a screen belongs to one person). In Trivia that is the screen the
 //    panel is on, exactly as Trivia's own answers are paid. On /reviews.html it is the screen the page says
-//    ("Who is reviewing", then "Points are kept on"), so Jamie reviewing on the family login earns Jamie's.
+//    ("Who is reviewing", then "Points are kept on"), so a teenager reviewing on the family login earns their own.
 //
 // 3. *** THE SAME POINTS WHATEVER THE VERDICT. *** "Looks right", "Something is wrong" and "Fixed — ask it
 //    again" each pay the same, once. A points rule that paid more for a pass would pay people to pass wrong

@@ -63,9 +63,9 @@ clock of its own, and tested alone (test_claims.py). db.py stores; app.py is the
   later build. A holder the home is not connected with (somebody shared the profile with them before it was taken
   over) is "Someone, through Pat" - they never agreed to be named to the home. (A GUESS - Mike's list.)
   "STOP SHARING WITH JAMIE", from that list: Jamie's row for this one profile goes (kept as Jamie's own plain row
-  if he gave it a screen, as "Stop sharing" does), with the permissions that came with that row - and the
+  if they gave it a screen, as "Stop sharing" does), with the permissions that came with that row - and the
   connection stays. A row Jamie's login had made and somebody then took over (made_by 'claim') is Jamie's own
-  original: it is not removed, it goes back to being his own plain row, as "Stop sharing" treats it.
+  original: it is not removed, it goes back to being their own plain row, as "Stop sharing" treats it.
   "REMOVE JUST THIS CARD", on the holder's side: the holder's row for one profile goes, same permissions, the
   connection stays. Not on a row taken over by a claim: that is the holder's own original, with their screens and
   settings, and removing it would remove what they set up; Stop sharing gives it back to them instead.
@@ -283,11 +283,11 @@ def profile_name(row: dict | None, home_name: str | None) -> str:
 # --------------------------------------------------------------------------- "I call them", per person (2026-10-05)
 #
 # Mike, 2026-10-05: *"Maybe there should be an option to set I call them at account vs user levels."* A login can
-# hold several people (the parents' shared login with Mom and Dad on it; Mike's with Mike, Taylor and Jamie), and
+# hold several people (the parents' shared login with Mom and Dad on it; Mike's with Mike and two family members), and
 # until now a label was the LOGIN's: everybody using it saw it. So there are two levels:
 #   * the login's label (`people.call_name`, as before): "Everyone on this login" sees it;
 #   * a person's own label (`person_labels`, keyed by login, the person looking, and the card): only shown while the
-#     page is FOR that person - Dad's "Sweetie" for Taylor on the parents' login, Jamie's "Dad" on Mike's.
+#     page is FOR that person - Dad's "Sweetie" for his daughter on the parents' login, Jamie's "Dad" on Mike's.
 # WHAT IS SHOWN (`seen_name`): the person looking's own label, else the login's label, else the name on the card.
 # *** THE PERSON LOOKING IS NAMED BY THE NAME ON THEIR OWN CARD, NOT A LABEL (the default, argued). *** The page for
 # somebody (their own screen, or Home with them picked) names them as their card does - not by what the login, or

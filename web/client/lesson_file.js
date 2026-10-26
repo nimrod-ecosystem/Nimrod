@@ -1,6 +1,6 @@
 // lesson_file.js - WHAT A LESSON FILE IS, AND THE CHECK EVERY ONE PASSES BEFORE A SCREEN PLAYS IT. Row 2.92.
 //
-// Mike, 2026-10-15/17: lessons for Taylor, Jamie, himself "and anyone else", made by a person's own AI from a few
+// Mike, 2026-10-15/17: lessons for Taylor, a teenager in the family, himself "and anyone else", made by a person's own AI from a few
 // ticked boxes and a topic, "Citing everything of course" - then "Only facts" are cited - and played in whatever form
 // the learner likes: read it, slides, an AI teacher, two voices, a room; a rendered video is an option too. The shape
 // is chat's (Nimrod_Ecosystem docs/from_chat/lesson_shape_20261016.md, "mostly good" - Mike), and this file is its

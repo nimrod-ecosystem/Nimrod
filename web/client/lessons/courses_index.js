@@ -247,7 +247,6 @@ export const COURSES = [
   "id": "math-grade-8",
   "title": "8th-Grade Math: From Numbers to Lines, Shapes and Data",
   "audience": [
-   "Jamie",
    "teenagers aged 13 to 15"
   ],
   "total": 36,
@@ -309,7 +308,6 @@ export const COURSES = [
   "id": "algebra-1",
   "title": "Algebra 1: From Expressions to Quadratics and Data",
   "audience": [
-   "Jamie",
    "teenagers aged 14 to 16 who have finished 8th-grade math"
   ],
   "total": 51,

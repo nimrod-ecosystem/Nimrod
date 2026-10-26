@@ -44,7 +44,7 @@ def _mean(xs: Iterable[float]):
 
 
 # ---------------------------------------------------------------------------------------------
-# faster-whisper (the desktop now; Jamie's GPU box when it is free)
+# faster-whisper (the desktop now; another family computer's GPU when it is free)
 # ---------------------------------------------------------------------------------------------
 def default_threads() -> int:
     """Physical cores, guessed as half the logical ones.

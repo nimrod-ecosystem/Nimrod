@@ -5,7 +5,7 @@
   "class_n": 8,
   "audience": [
    "ages 14 to 16",
-   "Jamie and teenagers like him",
+   "teenagers",
    "anyone relearning algebra who wants a slow, step-by-step pace"
   ],
   "minutes": 30,
@@ -173,7 +173,7 @@
    ],
    "move": "slide-in-left",
    "ask": {
-    "q": "Jamie needs at least 12 points to level up. Which inequality fits, with p as his points?",
+    "q": "Sam needs at least 12 points to level up. Which inequality fits, with p as his points?",
     "right": "p ≥ 12",
     "wrong": [
      "p ≤ 12",
@@ -366,7 +366,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Step four: real problems. Here is a budget one. Jamie has $45 to spend. A game pass costs $12, and each skin costs $5. How many skins can he buy? Let s be the number of skins. The pass plus the skins must be at most $45. So 12 + 5s ≤ 45."
+    "text": "Step four: real problems. Here is a budget one. Sam has $45 to spend. A game pass costs $12, and each skin costs $5. How many skins can he buy? Let s be the number of skins. The pass plus the skins must be at most $45. So 12 + 5s ≤ 45."
    },
    "show": {
     "kind": "big_number",
@@ -378,7 +378,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Solve it. Subtract 12 from both sides to get 5s ≤ 33. Divide by 5 to get s ≤ 6.6. The graph is a bracket at 6.6 and shading to the left. But look at the story. You can't buy 6.6 skins, and you can't buy negative skins. A solution has to make sense in the problem as well as in the math. So the skins Jamie can really buy are 0, 1, 2, 3, 4, 5 and 6."
+    "text": "Solve it. Subtract 12 from both sides to get 5s ≤ 33. Divide by 5 to get s ≤ 6.6. The graph is a bracket at 6.6 and shading to the left. But look at the story. You can't buy 6.6 skins, and you can't buy negative skins. A solution has to make sense in the problem as well as in the math. So the skins Sam can really buy are 0, 1, 2, 3, 4, 5 and 6."
    },
    "show": {
     "kind": "list",
@@ -389,7 +389,7 @@
    ],
    "move": "light-in-turn",
    "ask": {
-    "q": "What is the most skins Jamie can buy?",
+    "q": "What is the most skins Sam can buy?",
     "right": "6 skins (12 + 30 = $42, which is under $45)",
     "wrong": [
      "7 skins",
@@ -402,7 +402,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Now an 'at least' problem. To unlock a badge, Jamie needs at least 500 points. He has 140. Each level gives 40 points. With n for levels, we write 140 + 40n ≥ 500. Subtract 140 to get 40n ≥ 360. Divide by 40 to get n ≥ 9. He needs 9 levels or more."
+    "text": "Now an 'at least' problem. To unlock a badge, Sam needs at least 500 points. He has 140. Each level gives 40 points. With n for levels, we write 140 + 40n ≥ 500. Subtract 140 to get 40n ≥ 360. Divide by 40 to get n ≥ 9. He needs 9 levels or more."
    },
    "show": {
     "kind": "list",
@@ -424,7 +424,7 @@
   {
    "say": {
     "who": "A",
-    "text": "One last problem, where the flip shows up in real life. A bank account has $100 and loses $4 a day. Jamie wants it to stay at least $20. With d for days, 100 − 4d ≥ 20. Subtract 100 to get −4d ≥ −80. Now divide by negative 4 and flip: d ≤ 20. That means the account stays at $20 or more for up to 20 days. After day 20, it drops below the limit."
+    "text": "One last problem, where the flip shows up in real life. A bank account has $100 and loses $4 a day. Sam wants it to stay at least $20. With d for days, 100 − 4d ≥ 20. Subtract 100 to get −4d ≥ −80. Now divide by negative 4 and flip: d ≤ 20. That means the account stays at $20 or more for up to 20 days. After day 20, it drops below the limit."
    },
    "show": {
     "kind": "list",

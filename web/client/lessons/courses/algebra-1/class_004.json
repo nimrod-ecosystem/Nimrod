@@ -5,7 +5,7 @@
   "class_n": 4,
   "audience": [
    "age 14 to 16",
-   "Jamie and teenagers like him",
+   "teenagers",
    "anyone who wants to learn equations step by step, at their own speed"
   ],
   "minutes": 30,
@@ -288,7 +288,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Now real life. A good plan for word problems has steps: read, name what you are looking for, choose a variable, write an equation, solve, check it makes sense, then answer in a sentence. Money first. A game costs 60 dollars. Jamie has 15 saved and earns 9 dollars a week from chores. After w weeks he has 9w plus 15. We want that to equal 60."
+    "text": "Now real life. A good plan for word problems has steps: read, name what you are looking for, choose a variable, write an equation, solve, check it makes sense, then answer in a sentence. Money first. A game costs 60 dollars. Sam has 15 saved and earns 9 dollars a week from chores. After w weeks he has 9w plus 15. We want that to equal 60."
    },
    "show": {
     "kind": "list",

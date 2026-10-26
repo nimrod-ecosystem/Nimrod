@@ -1711,24 +1711,24 @@ caught by eye, and no automated check can measure this); and whether 6×6 is the
 at all, given wider boards mean smaller, harder targets. Recorded in `aac_vocab.js` as open, not
 shipped as settled.
 
-## Taylor's transcripts are in scope for retrieval; her medical records archive is a separate, unresolved question — 2026-09-08
+## Transcripts of a person's own speech are in scope for retrieval; a medical records archive is a separate, unresolved question — 2026-09-08
 
-Chat's roadmap named "Taylor's transcripts" as a retrieval source without saying which of two
-very different things on disk that meant. The literal `Taylor_Medical/Cici/highlight_work/transcripts/`
-folder held the answer chat actually intended: **~222 Whisper transcripts of recordings OF HER,
-the output of the highlight-reel pipeline — her own speech, transcribed.** What sits one level up
-is a different thing entirely: her full medical records archive, 18 GB, real clinical notes with
-real staff names, lab results, raw patient-portal exports.
+*(Rewritten 2026-10-26 to take personal detail out of this public file, under Mike's rulings of 2026-08-31 and
+2026-09-02. The decision and its reasoning are unchanged; the original wording is kept in the private repo.)*
 
-**Taylor's own words are indexed. The medical archive is not, and that is a deliberate,
-separate hold, not an oversight.** The distinction was named plainly: her own speech is what would
-let an assistant help with aphasia patterns or recall what she said last month; the medical
-archive is a different question with real PHI in it, and it gets its own deliberate decision
-later rather than one that rides along on an ambiguous word from a roadmap message. Built:
-indexed the 70 `.labelled.txt` transcripts (the readable, speaker-labelled format; the raw
-`.json`/`.diar.json`/`.taylor.json` siblings for the same recordings were left out — machine
-output with no natural chunk boundaries, and indexing all four per recording would quadruple
-citations for one source with three of them unreadable if actually opened).
+"Transcripts", named as a retrieval source in chat's roadmap, could have meant two very different
+things on disk. It meant **transcripts of recordings of the person's own speech** (the
+highlight-reel pipeline's output). A medical records archive, with real clinical notes, is a
+different thing entirely.
+
+**The person's own words are indexed. A medical archive is not, and that is a deliberate,
+separate hold, not an oversight.** Their own speech is what would let an assistant help with
+aphasia patterns or recall what they said last month; a medical archive carries protected health
+information, and it gets its own deliberate decision later rather than one that rides along on an
+ambiguous word from a roadmap message. Built: indexed the readable, speaker-labelled transcripts
+only; the raw machine-output siblings for the same recordings were left out — no natural chunk
+boundaries, and indexing all four per recording would quadruple citations for one source with
+three of them unreadable if actually opened.
 
 ## Cici has a name; corpus desk's document reader generalises the file picker — 2026-09-08
 
@@ -2225,11 +2225,12 @@ Code's design to carry them out, recorded here so it can be argued with. Items 1
    be on their account. Their account would be the main instance of it."*
 2. **The person can change whatever they want on their own profile,** not just the picture. *"She should be able to
    change whatever she wants."*
-3. **"I call them": each account can have its own name for somebody.** *"Taylor's mom might want to use her real
-   name for her profile and then be called mom on Taylor's account and grandma on Jamie's."*
+3. **"I call them": each account can have its own name for somebody.** A grandmother might use her real name for
+   her profile, and be called "mom" on her daughter's account and "grandma" on her grandson's. *(Mike's example,
+   paraphrased 2026-10-26 to take family names out of this public file.)*
 4. **One profile can be on several accounts.** *"Her parents might just want to make one account and have both
-   their users on their account and on her account."* First trial: Mike, Taylor and Jamie. Mike sets up users
-   for them on his account, then sets up Taylor's own account, and links Jamie to both.
+   their users on their account and on her account."* First trial: Mike and two family members. Mike sets up users
+   for them on his account, then sets up one of them with their own account, and links the other to both.
 5. **Connecting works without setting anybody up first.** *"Most people will just want to be connected like
    friends on Facebook."* Setting a profile up for someone and handing it over is the second way in, not the only
    one.
@@ -2293,19 +2294,20 @@ was Code's reading, and Mike corrected it.
 2. **"I call them" at two levels:** the whole account, or one person on it. *"Maybe there should be an option to
    set I call them at account vs user levels."* Mike calls Taylor "Taylor", so her own screen's greeting
    isn't an issue for him. A label still never greets the person it labels on their own screen, as a safe default.
-3. **Lots of questions at pretty much every level,** for Taylor, Jamie and Mike. No automatic question writing
+3. **Lots of questions at pretty much every level,** for every age and ability in the first household. No automatic question writing
    exists yet: the nightly batch is still an open decision. Code writes packs by hand into packs_review/, with a
    source for each item and a fact-check pass, and Mike reviews by playing.
 4. **The bench Pi runs the new site** (Mike, 2026-10-05). So the Pi side of the lock is built on the bench, not
    left as a plan.
 
-## Questions from every pool; Jamie's age; the lock helper stays off -- 2026-10-06
+## Questions from every pool; teenage players; the lock helper stays off -- 2026-10-06
 
 Mike, live.
 
 1. **Trivia offers a choice to draw questions from all of the pools,** not just one pack at a time.
-2. **Jamie is 13.** The easy questions written on 2026-10-05 assumed school age. A 13-year-old needs easy questions
-   that read as teen-appropriate, and probably starts above level 1 (Code's reading, not Mike's ruling).
+2. **Teenage players.** The easy questions written on 2026-10-05 assumed young children. A teenager needs easy
+   questions that read as teen-appropriate, and probably starts above level 1 (Code's reading, not Mike's ruling).
+   *(A family member's name and age were taken out of this entry 2026-10-26; this file is public.)*
 3. **The bench's lock link to the Pi stays off.** *"Leave it off."* The Chromium local-network policy is not
    applied, and the page passes `lockHelper=off`. The site-side lock works, but closing the dashboard while
    unlocked still lets the kiosk service relaunch it.
@@ -2321,7 +2323,7 @@ docs/for_chat/question_ranking_design_20261006.md, for Mike and chat to discuss 
    difficulty of the questions it asks each user.
 2. **Reviewing links to the source page and opens it in another window.** Reviewing earns **education points**
    for the person reviewing, and opening the source can earn some too. *"That can be a feature for everyone to
-   incentivize reviewing their own questions."* Jamie may review questions for his schoolwork.
+   incentivize reviewing their own questions."* A teenager may review questions for their schoolwork.
 3. **A rank per category or subject, "kind of like a multi Elo system."** Different factors can account for a
    question's difficulty: category (math, language), type (multiple choice, yes/no) and others.
 4. **The starting level is a starting point.** Each category or type adjusts from there with performance. A
@@ -2333,7 +2335,7 @@ docs/for_chat/question_ranking_design_20261006.md, for Mike and chat to discuss 
 7. **H shows and hides the transport bar.** Hiding it with H keeps it from popping up again for 30 s by default.
    "Never pop up on its own" is an option for people who only want the key. The key can be rebound like any
    other.
-8. **Jamie is 13** (logged above): questions and starting levels take that into account.
+8. **Teenage players** (logged above): questions and starting levels take that into account.
 
 ## One way to pick players; Theme instead of Colours, with a still of each -- 2026-10-06 (evening)
 

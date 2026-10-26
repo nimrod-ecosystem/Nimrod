@@ -5,7 +5,7 @@ the screen is in. By default this binds 127.0.0.1, so the sound never leaves the
 heard on. Binding any other address (a Tailscale address, so a screen can send to a desktop or a
 GPU box) is an explicit flag in `__main__.py`, needs a shared secret, and is an OPTION the person
 whose room it is has to choose on the screen (Mike, 2026-09-30: her audio to his desktop "is fine
-for an option"; Jamie's computer when its GPU is free is another option; both OFF by default).
+for an option"; another family computer when its GPU is free is another option; both OFF by default).
 Only pages from the person's Nimrod (and pages on this computer) may connect: "WHICH WEB PAGES", below.
 
 ONE PROTOCOL, over one WebSocket at /speech. Text frames are JSON; binary frames are audio.

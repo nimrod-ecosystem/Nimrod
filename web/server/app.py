@@ -2917,7 +2917,7 @@ def list_holders(person_id: str, request: Request, user: str = Depends(current_u
 
 @app.delete("/api/people/{person_id}/holders/{holder_id}")
 def unshare_holder(person_id: str, holder_id: str, request: Request, user: str = Depends(current_user)):
-    """"Stop sharing with Jamie": Jamie's card for this one profile comes off his page, with the permissions that
+    """"Stop sharing with Jamie": Jamie's card for this one profile comes off their page, with the permissions that
     came with it. The connection stays (db.drop_held_row)."""
     _check(person_id, ID_RE, "person id")
     _check(holder_id, ID_RE, "card id")

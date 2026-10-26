@@ -38,7 +38,7 @@ WHO AND WHEN ARE THE SERVER'S, NEVER THE BROWSER'S: app.py stamps `by` (the acco
 signed-in device, or "a screen" for one signed in with a device key) and `at` (the server's clock). A
 browser can say WHERE ("place", e.g. which dashboard) - that is a fact it knows - but not who.
 
-WHICH PERSON ON THE LOGIN (Mike, 2026-10-06: "having Jamie review questions for his schoolwork"). The review
+WHICH PERSON ON THE LOGIN (Mike, 2026-10-06: "having [a teenager in the family] review questions for [their] schoolwork"). The review
 page asks "Who is reviewing" among the login's own people and sends that person's id as `person`. It is a
 CHOICE among the login's own people, not a claim about who signed in - the same kind of fact as `place` - so
 app.py checks the id is one of this login's people and stamps THAT person's name as `by` (the name as the

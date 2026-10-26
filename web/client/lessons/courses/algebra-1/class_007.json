@@ -5,7 +5,7 @@
   "class_n": 7,
   "audience": [
    "Teenagers aged 14 to 16",
-   "Jamie and teenagers like him"
+   "teenagers"
   ],
   "minutes": 35,
   "length_note": "This class has seven topics: unit rates, proportions, percent of, percent change, discount, tax and tip. It is a little over the usual half hour because it includes pause points for practice. You can split it into two sittings after the 'percent of' section, which is the halfway point."
@@ -128,7 +128,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Hi Jamie, and welcome. Today is about numbers you meet all the time: prices, discounts, tips and sports stats. We will go one idea at a time. You can pause whenever you like. The questions are for practice, not for grading, so a wrong answer is just information."
+    "text": "Hi, {name}, and welcome. Today is about numbers you meet all the time: prices, discounts, tips and sports stats. We will go one idea at a time. You can pause whenever you like. The questions are for practice, not for grading, so a wrong answer is just information."
    },
    "show": {
     "kind": "heading",

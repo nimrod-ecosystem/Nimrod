@@ -1545,7 +1545,7 @@ const pickChoice = (v, allowed, dflt) => (allowed.includes(v) ? v : dflt);
 // *** ROWS 2.46/2.47: 'local' NOW WORKS WHEN A SERVICE ANSWERS ON THIS MACHINE. *** speech_engines.js
 // connects to web/speech_service on 127.0.0.1 and opens no microphone until it says hello; nothing
 // answering, the kiosk still says "no recogniser on this screen". 'remote1' / 'remote2' are ANOTHER
-// COMPUTER as the first pass (Mike: her audio to his desktop "is fine for an option", Jamie's GPU box
+// COMPUTER as the first pass (Mike: her audio to his desktop "is fine for an option", a family member's GPU box
 // another) - labelled with where the sound goes, OFF unless chosen, and doing nothing until an address
 // is set. The later passes of the ranked list are speech_engines.js's SPEECH_PASS_FIELDS.
 export const SPEECH_ENGINES = ['local', 'remote1', 'remote2', 'browser'];

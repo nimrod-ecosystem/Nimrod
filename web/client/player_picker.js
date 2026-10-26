@@ -28,8 +28,8 @@
 // *** A CONNECTED PERSON'S LEVEL IS KEPT ON THIS LOGIN'S COPY OF THEM (the safe default, argued). ***
 // Somebody held through a connection has a row on this login (claims.py: every login that holds a profile keeps
 // its own row) and their real one at their home. Their game level could live in either:
-//   FOR THE HOME (read and written there): "So you can use someone's actual account for everything" - Jamie's level
-//     at Mike's screen would be the one he has on his own login, and his playing here would move it there too.
+//   FOR THE HOME (read and written there): "So you can use someone's actual account for everything" - a family
+//     member's level at Mike's screen would be the one they have on their own login, and playing here would move it there too.
 //   AGAINST, and it decides the default: it is a WRITE into another login's records by a screen that login does not
 //     run. claims.state_target is a security invariant - only the account holding a row reaches anything through it,
 //     and only the home writes the profile - and nothing in it lets a holder write anything at the home today. Game
