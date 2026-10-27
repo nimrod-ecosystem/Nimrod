@@ -29,7 +29,7 @@
 <script type="module">
 import { listManifests } from '../module.js';
 import { CATALOG, GROUPS, USE, NOT_FOR_CAREGIVERS, reconcile, groupItems, titleFor, coreReport,
-  STAGES, stageOf, isBeta, UNLISTED_STAGES, UNKNOWN_STAGE, STARTER_MODULES, PAGE_STAGES, pageStageOf }
+  STAGES, stageOf, isBeta, UNLISTED_STAGES, UNKNOWN_STAGE, STARTER_MODULES, PAGE_STAGES, pageStageOf, SIGNED_OFF }
   from '../modules_catalog.js';
 // The same imports modules.html makes — if this list and that list drift, the reconciliation
 // below is checking a different build from the one the page describes.
@@ -353,10 +353,13 @@ section('*** live and beta (2026-10-14): every module has a stage, on purpose **
   const internal = Object.keys(NOT_FOR_CAREGIVERS).filter((t) => !STAGES.includes(UNLISTED_STAGES[t]));
   check('every module left out of the lists still has its stage written down', internal.length === 0, internal.join(', '));
   check('a type nobody classified reads as beta (the pessimistic default)', stageOf('ghostmodule') === 'beta' && UNKNOWN_STAGE === 'beta');
-  const counts = { live: CATALOG.filter((c) => c.stage === 'live').length, beta: CATALOG.filter((c) => c.stage === 'beta').length };
-  check('both stages have something in them, or the line between them means nothing', counts.live >= 10 && counts.beta >= 1, JSON.stringify(counts));
-  check('*** the starter screen is all live: the landing calls it "live today" ***',
-    STARTER_MODULES.every((t) => stageOf(t) === 'live'), STARTER_MODULES.map((t) => `${t}=${stageOf(t)}`).join(','));
+  // Row 2.140 (Mike, 2026-10-27): "I haven't signed off on anything yet. We'll have to go through one by one." This
+  // replaces "both stages have something in them" and "the starter screen is all live" (2026-10-14's first proposal).
+  const liveNoSignOff = [...CATALOG.filter((c) => c.stage === 'live').map((c) => c.type),
+    ...Object.entries(UNLISTED_STAGES).filter(([, s]) => s === 'live').map(([t]) => t)].filter((t) => !SIGNED_OFF[t]);
+  check('*** a module is live ONLY with Mike\'s sign-off, and its date (row 2.140) ***', liveNoSignOff.length === 0, liveNoSignOff.join(', '));
+  const badSign = Object.entries(SIGNED_OFF).filter(([t, d]) => !/^\d{4}-\d{2}-\d{2}$/.test(String(d)) || stageOf(t) !== 'live').map(([t]) => t);
+  check('...and every sign-off has a date and really is live (a sign-off nobody acted on is a stale line)', badSign.length === 0, badSign.join(', '));
   check('moving one is one word: a copy of the catalog with one stage changed says the other stage',
     stageOf('town', CATALOG.map((c) => (c.type === 'town' ? { ...c, stage: c.stage === 'beta' ? 'live' : 'beta' } : c))) !== stageOf('town'));
   check('isBeta agrees with stageOf', CATALOG.every((c) => isBeta(c.type) === (c.stage === 'beta')));
@@ -384,7 +387,7 @@ section('*** the AI set (2026-10-04): the guide, the AI characters’ card, the 
   check('*** an "AI" group, with words saying what is in it ***', ai && ai.title === 'AI' && ai.blurb.length > 40, JSON.stringify(ai));
   const inAi = groupItems('ai', manifests).map((m) => m.type);
   check('*** Nimrod, the profile card and the Voice model are in it ***', ['nimrod', 'profile', 'voice_model'].every((t) => inAi.includes(t)), inAi.join());
-  check('the AI words never name the person it was first built for', !/taylor|cici|her screen/i.test(JSON.stringify(ai)
+  check('the AI words never name the person it was first built for', !/chri[s]tine|cici|her screen/i.test(JSON.stringify(ai)
     + JSON.stringify(CATALOG.find((c) => c.type === 'voice_model'))));
 }
 

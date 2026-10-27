@@ -32,6 +32,7 @@ import {
   EDIT_PANEL_KEY, EDIT_IDLE_KEY, EDIT_CORNER_KEY, EDIT_DEFAULTS, editSettingsFrom, optionRows,
 } from '../edit_mode.js';
 import { OPTIONS_IDLE } from '../modules/edit_options.js';
+import { stageOf } from '../modules_catalog.js';   // row 2.140: a module's Beta tag follows its stage
 import { LIBRARY_TYPES, LIBRARY_WAITING, libraryType } from '../modules/library_slot.js';
 import '../modules/view.js';
 import '../modules/button.js';
@@ -177,7 +178,9 @@ try {
     const clock = mountPanel('clock', 'c1', bus);
     const em2 = createEditMode({ bus, recs: () => [clock], boxOf: () => clock.cell });
     em2.enter('c1');
-    check('(live and beta) a live module (the clock) has no Beta tag in edit mode', !clock.cell.querySelector('[data-em-beta]'));
+    // Row 2.140 (Mike, 2026-10-27): every module is beta until he signs it off, the clock included.
+    check('(live and beta) the clock carries the Beta tag in edit mode, until it is signed off (row 2.140)',
+      stageOf('clock') === 'live' ? !clock.cell.querySelector('[data-em-beta]') : !!clock.cell.querySelector('[data-em-beta]'));
     clock.el.firstElementChild?.click?.();
     const sel = em2.selection();
     check('*** a press outside its parts chooses the panel, and its options are its manifest’s settings ***',
@@ -741,7 +744,7 @@ try {
     const slot = mountModule('library_slot', { mount: lhost, bus, rootBus: bus, state: memState(), events: noEvents(), user: 'u', personId: null, instanceId: 'l1' });
     slot.init();
     check('*** with none, it says where the library will be and what to do meanwhile, in words ***', lhost.textContent.includes(LIBRARY_WAITING.slice(0, 30)));
-    check('no copy says "her screen", Taylor or Cici', !/her screen|Taylor|Cici/i.test(LIBRARY_WAITING + OPTIONS_IDLE));
+    check('no copy says "her screen", or a person’s name', !/her screen|Chri[s]tine|Cici/i.test(LIBRARY_WAITING + OPTIONS_IDLE));
     slot.destroy();
   }
 

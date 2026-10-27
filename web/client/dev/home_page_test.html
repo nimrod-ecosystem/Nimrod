@@ -428,7 +428,9 @@ try {
     const head = tray().querySelector('[data-beta-group]');
     const town = tray().querySelector('[data-edit-add="town"]');
     check('*** Add: the beta modules after every live one, under "Beta: still being tweaked", each saying Beta ***',
-      !!head && !!town && /Beta/.test(town.textContent) && !/Beta/.test(tray().querySelector('[data-edit-add="clock"]').textContent)
+      // (row 2.140, 2026-10-27: every module is beta until signed off, so the clock says Beta exactly when its stage does)
+      !!head && !!town && /Beta/.test(town.textContent)
+      && /Beta/.test(tray().querySelector('[data-edit-add="clock"]').textContent) === ((await import('../modules_catalog.js')).stageOf('clock') === 'beta')
       && (head.compareDocumentPosition(town) & 4) && adds.filter((b) => /Beta/.test(b.textContent)).every((b) => head.compareDocumentPosition(b) & 4)
       && adds.filter((b) => !/Beta/.test(b.textContent)).every((b) => b.compareDocumentPosition(head) & 4), head?.textContent);
   }
@@ -844,8 +846,8 @@ try {
     send(verbTopic('menu'));
     check('*** the Menu verb opens the menu and takes the scan from the bar (the bar shows, no cursor on it) ***',
       await until(() => menuShown() && !held() && !cur() && barShown(), 3000), `menu=${menuShown()} held=${held()} cursor="${curText()}"`);
-    check('no label on the bar or its trays says "her screen", Taylor or Cici',
-      !/her screen|Taylor|Cici/i.test($('#home-edit').textContent + tray().textContent));
+    check('no label on the bar or its trays says "her screen", or a person’s name',
+      !/her screen|Chri[s]tine|Cici/i.test($('#home-edit').textContent + tray().textContent));
   }
   await ensureMenu();
 

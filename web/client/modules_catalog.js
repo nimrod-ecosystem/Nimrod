@@ -72,6 +72,14 @@ export const STARTER_MODULES = ['photos', 'youtube', 'wordforge', 'clock'];
 // (Nimrod_Ecosystem docs/for_chat/live_beta_proposal_20261014.md). `dev/modules_catalog_test.html` fails when an
 // entry has no stage, so a new module has to be put in one on purpose.
 export const STAGES = Object.freeze(['live', 'beta']);
+// *** EVERY MODULE IS BETA UNTIL MIKE SIGNS IT OFF (Mike, 2026-10-27, row 2.140). *** *"All the modules should really be
+// in the beta section for now. I haven't signed off on anything yet. We'll have to go through one by one."* So the first
+// classification above (Code's proposal) is withdrawn: every entry is 'beta', and an entry may say 'live' only when its
+// type is here, with the day Mike signed it off. dev/modules_catalog_test.html fails on a 'live' with no sign-off, so
+// moving one to live is two words, and one of them is his.
+export const SIGNED_OFF = Object.freeze({
+  // type: 'YYYY-MM-DD',
+});
 
 export const GROUPS = [
   {
@@ -125,7 +133,7 @@ export const CATALOG = [
   // ------------------------------------------------------------------ comfort
   {
     type: 'photos',
-    stage: 'live',
+    stage: 'beta',
     group: 'comfort',
     use: 'watch',
     lead: 'Their own photos, on a loop.',
@@ -138,7 +146,7 @@ export const CATALOG = [
   },
   {
     type: 'personal',
-    stage: 'live',
+    stage: 'beta',
     title: 'Personal videos',
     group: 'comfort',
     use: 'watch',
@@ -151,7 +159,7 @@ export const CATALOG = [
   },
   {
     type: 'youtube',
-    stage: 'live',
+    stage: 'beta',
     title: 'YouTube',
     group: 'comfort',
     use: 'watch',
@@ -164,7 +172,7 @@ export const CATALOG = [
   // Row 2.32: music by name, by voice, switch or touch - one list, every way in ends at `music/play`.
   {
     type: 'music',
-    stage: 'live',
+    stage: 'beta',
     title: 'Music',
     group: 'comfort',
     use: 'watch',
@@ -233,7 +241,7 @@ export const CATALOG = [
   },
   {
     type: 'camera',
-    stage: 'live',
+    stage: 'beta',
     group: 'comfort',
     use: 'watch',
     lead: 'A rearview mirror for the room.',
@@ -245,7 +253,7 @@ export const CATALOG = [
   },
   {
     type: 'clock',
-    stage: 'live',
+    stage: 'beta',
     group: 'comfort',
     use: 'watch',
     lead: 'The time, the day, and the date.',
@@ -256,7 +264,7 @@ export const CATALOG = [
   },
   {
     type: 'board',
-    stage: 'live',
+    stage: 'beta',
     // *** "AAC board", not "Talk". *** Mike, 2026-09-06: people searching for this know the
     // term AAC and nobody recognises "Talk" as the thing they need. The words `AAC` and
     // `communication board` are in the copy below for the same reason — this page's search
@@ -396,7 +404,7 @@ export const CATALOG = [
   // Row 2.37. `touch`: left alone it is a note on the wall, and nothing waits on anybody.
   {
     type: 'note',
-    stage: 'live',
+    stage: 'beta',
     title: 'Note from someone',
     group: 'comfort',
     use: 'touch',
@@ -422,7 +430,7 @@ export const CATALOG = [
   // Row 2.37 item 4 (the weather behind the room's window). `touch`: it updates by itself; a touch reads it aloud.
   {
     type: 'weather',
-    stage: 'live',
+    stage: 'beta',
     group: 'comfort',
     use: 'touch',
     lead: 'The weather now, the next few hours and the next few days, in big words and pictures.',
@@ -444,7 +452,7 @@ export const CATALOG = [
   },
   {
     type: 'call',
-    stage: 'live',
+    stage: 'beta',
     // NOT 'comfort'. A call needs answering, and that group promises the opposite.
     group: 'practice',
     use: 'answer',
@@ -460,7 +468,7 @@ export const CATALOG = [
   },
   {
     type: 'pressgame',
-    stage: 'live',
+    stage: 'beta',
     title: 'Wait and Go',
     // NOT 'comfort'. That group's promise on the page is that nothing in it needs pressing to
     // keep going, and in calm mode this waits on her press for as long as it takes - which is
@@ -482,7 +490,7 @@ export const CATALOG = [
     // viewing - `use: 'touch'` already said as much ("reacts if touched"), the group just
     // hadn't caught up to it.
     type: 'comet',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     use: 'touch',
     lead: 'A comet that follows your movement, with hearts to catch.',
@@ -517,7 +525,7 @@ export const CATALOG = [
 
   {
     type: 'button',
-    stage: 'live',
+    stage: 'beta',
     group: 'comfort',
     // `touch`: left alone it is a sign or a picture on the wall, and nothing waits on anybody.
     use: 'touch',
@@ -555,7 +563,7 @@ export const CATALOG = [
   // ------------------------------------------------------------------ practice
   {
     type: 'bank',
-    stage: 'live',
+    stage: 'beta',
     title: 'Questions',
     group: 'practice',
     // `touch`, not a new value. The catalog's `use` set is CLOSED and it caught `setup` the
@@ -573,7 +581,7 @@ export const CATALOG = [
   },
   {
     type: 'trivia',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     use: 'answer',
     lead: 'A quiz built from questions you write yourself.',
@@ -586,7 +594,7 @@ export const CATALOG = [
   },
   {
     type: 'wordforge',
-    stage: 'live',
+    stage: 'beta',
     title: 'Word Forge',
     group: 'practice',
     use: 'answer',
@@ -598,7 +606,7 @@ export const CATALOG = [
   },
   {
     type: 'algebra',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     use: 'answer',
     lead: 'Counting and small sums for beginners, then solve for x with a calculator on screen.',
@@ -609,7 +617,7 @@ export const CATALOG = [
   },
   {
     type: 'word_games',
-    stage: 'live',
+    stage: 'beta',
     title: 'Word games',
     group: 'practice',
     use: 'answer',
@@ -624,7 +632,7 @@ export const CATALOG = [
   // Row 2.45: three more answer games on the same miss flow as word games, and a sing-along.
   {
     type: 'spelling',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     use: 'answer',
     lead: 'A word is said out loud, with its picture where there is one, and the player spells it.',
@@ -637,7 +645,7 @@ export const CATALOG = [
   // these are the SLP's exercises, adaptive per player.
   {
     type: 'think_games',
-    stage: 'live',
+    stage: 'beta',
     title: 'Thinking games',
     group: 'practice',
     use: 'answer',
@@ -648,7 +656,7 @@ export const CATALOG = [
   },
   {
     type: 'word_builder',
-    stage: 'live',
+    stage: 'beta',
     title: 'Word builder',
     group: 'practice',
     use: 'answer',
@@ -659,7 +667,7 @@ export const CATALOG = [
   },
   {
     type: 'brain_games',
-    stage: 'live',
+    stage: 'beta',
     title: 'Brain games',
     group: 'practice',
     use: 'answer',
@@ -670,7 +678,7 @@ export const CATALOG = [
   // 2026-10-06 (Mike): every kind of question in one game, round by round.
   {
     type: 'quiz_mix',
-    stage: 'live',
+    stage: 'beta',
     title: 'Quiz mix',
     group: 'practice',
     use: 'answer',
@@ -695,7 +703,7 @@ export const CATALOG = [
   // 2026-10-02 (Mike's landing Home): the guide, the devices list, and What's new.
   {
     type: 'nimrod',
-    stage: 'live',
+    stage: 'beta',
     title: 'Nimrod',
     group: 'ai',      // 2026-10-04: the AI set (was 'practice')
     use: 'touch',
@@ -706,7 +714,7 @@ export const CATALOG = [
   },
   {
     type: 'devices',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     use: 'touch',
     lead: 'Every way of telling the screen what to do, and where each is set up.',
@@ -717,7 +725,7 @@ export const CATALOG = [
   // `touch`: left alone it is a grid to look at, and nothing waits on anybody.
   {
     type: 'library',
-    stage: 'live',
+    stage: 'beta',
     title: 'Modules',
     group: 'practice',
     use: 'touch',
@@ -733,7 +741,7 @@ export const CATALOG = [
   // `touch`: left alone it is a grid of pictures, and nothing waits on anybody.
   {
     type: 'themes',
-    stage: 'live',
+    stage: 'beta',
     title: 'Themes',
     group: 'comfort',
     use: 'touch',
@@ -769,7 +777,7 @@ export const CATALOG = [
   // left alone it is faces and names, and nothing waits on anybody. Words a visitor reads (the hover line uses them).
   {
     type: 'people',
-    stage: 'live',
+    stage: 'beta',
     title: 'Your people',
     group: 'comfort',
     use: 'touch',
@@ -856,7 +864,7 @@ export const CATALOG = [
   },
   {
     type: 'name_that',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     use: 'answer',
     lead: 'Name that animal, state, or person. Person plays the family’s own recorded messages and '
@@ -982,7 +990,7 @@ export const CATALOG = [
   },
   {
     type: 'sprint',
-    stage: 'live',
+    stage: 'beta',
     // NO `title` OVERRIDE HERE, and that is deliberate after `composer_reach` caught one.
     //
     // A catalog `title` is a DUPLICATE of the module's manifest title, carried so the landing
@@ -1004,7 +1012,7 @@ export const CATALOG = [
   },
   {
     type: 'quests',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     use: 'answer',
     lead: 'Points, tasks and rewards.',
@@ -1016,7 +1024,7 @@ export const CATALOG = [
   // ------------------------------------------------------------------ record
   {
     type: 'progress',
-    stage: 'live',
+    stage: 'beta',
     group: 'record',
     use: 'watch',
     lead: 'How they are doing over time.',
@@ -1027,7 +1035,7 @@ export const CATALOG = [
   },
   {
     type: 'calculator',
-    stage: 'live',
+    stage: 'beta',
     group: 'practice',
     // `touch`, not `answer`: it asks nothing and waits on nobody. Left alone it just shows 0, and
     // a screen that has one on it is not stalled by it, which is what the `touch` legend says.
@@ -1054,7 +1062,7 @@ export const CATALOG = [
   },
   {
     type: 'scoreboard',
-    stage: 'live',
+    stage: 'beta',
     group: 'record',
     // `touch`: it asks nothing and waits on nobody. A followed score moves by itself; a counter
     // only moves when somebody presses +1, and one that is never pressed is still just a number.
@@ -1186,13 +1194,13 @@ export const NOT_FOR_CAREGIVERS = {
 export const UNLISTED_STAGES = Object.freeze({
   counter: 'beta', presslog: 'beta', interstitials: 'beta',   // development panels, and the retired one
   keyboard: 'beta',        // the first device module, and the device modules' shape is still settling
-  simple_math: 'live',     // Math's Beginner level, which is live
-  library_slot: 'live',    // the Modules library's place, and the library is live
-  settings: 'live', settings_menu: 'live', transport_bar: 'live',   // the screen's own settings and bar
+  simple_math: 'beta',     // Math's Beginner level, as Math is
+  library_slot: 'beta',    // the Modules library's place, as the library is
+  settings: 'beta', settings_menu: 'beta', transport_bar: 'beta',   // the screen's own settings and bar
   ambient_drift: 'beta',
   lesson_player: 'beta',   // Lessons, under its first day's type
   educational: 'beta',     // replaced by Lessons (row 2.108); not offered
-  scene: 'live', wallpaper: 'live',   // folded into Themes (row 2.103); not offered
+  scene: 'beta', wallpaper: 'beta',   // folded into Themes (row 2.103); not offered
 });
 // A type nobody has classified reads as beta: the same pessimistic default `coreReport` uses for an undeclared core.
 // (A module shipped without a catalog entry is already reported by `reconcile`; this only keeps it out of "live".)
