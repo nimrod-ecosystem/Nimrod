@@ -60,7 +60,8 @@ who cannot dismiss it, with nothing else that will.** Everything else is a setti
 
 **Read `docs/architecture.md` before proposing anything structural.** It is the principles
 document — the client/server boundary, what may touch private data, and the rules that keep
-those apart. `DECISIONS.md` records choices already made *with their reasoning*.
+those apart. `DECISIONS.md` holds the project's core concepts, ranked; the full log of decisions is kept privately
+(until 2026-10-27 it was `DECISIONS.md` itself, in this repository's history).
 
 ---
 

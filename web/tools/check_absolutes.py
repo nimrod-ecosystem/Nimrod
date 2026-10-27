@@ -68,7 +68,10 @@ def section_for(line_no, secs):
 def main(argv):
     outside_only = '--outside-only' in argv
     if not TARGET.exists():
-        print(f'not found: {TARGET}', file=sys.stderr)
+        # 2026-10-27 (Mike, row 2.133): PRINCIPLES.md was folded into the project's private decisions log, and the public
+        # DECISIONS.md became the core concepts, which Mike set as a whole - so there is no draft text here to report on.
+        print('PRINCIPLES.md is no longer in this repository (folded into the private decisions log, 2026-10-27); '
+              'the public core concepts (DECISIONS.md) were set by Mike as a whole. Nothing to report.')
         return 0
     text = TARGET.read_text(encoding='utf-8')
     lines = text.splitlines()

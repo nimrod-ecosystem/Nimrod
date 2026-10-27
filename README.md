@@ -93,7 +93,7 @@ Then open <http://localhost:8000/>.
 
 - [`AGENTS.md`](AGENTS.md) — **start here if you are going to change something.** Where things
   live, how to run it, how to test it, and the conventions that are not obvious
-- [`DECISIONS.md`](DECISIONS.md) — the running log of locked decisions and why they were made
+- [`DECISIONS.md`](DECISIONS.md) — the core concepts everything is built on, ranked
 - [`docs/architecture.md`](docs/architecture.md) — the principles in full
 - [`docs/modules/`](docs/modules/) — one plain-language walkthrough per module
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to help

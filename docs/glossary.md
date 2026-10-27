@@ -1,6 +1,6 @@
 # Glossary — one name, one meaning
 
-**Opened 2026-08-30. Draft.** The rule this file exists to enforce, from `PRINCIPLES.md`:
+**Opened 2026-08-30. Draft.** The rule this file exists to enforce, from `PRINCIPLES.md` (now in the private decisions log):
 
 > **One name, one meaning; one meaning, one name.**
 
@@ -91,7 +91,7 @@ contexts that never touch is far less urgent than one inside a single call path.
    disagree about the same panel at the same moment — a module can publish plenty while its video
    is frozen — and `health.js` consumes `segment/progress`, so the watchdog's heartbeat is read as
    health's kind in that file. Nothing is wrong today; the words are.
-3. **`board`** — AAC board and leaderboard argue past each other four lines apart in `PRINCIPLES.md`.
+3. **`board`** — AAC board and leaderboard argue past each other four lines apart in `PRINCIPLES.md` (as it was, 2026-10).
 4. **`state`** — storage and machine-state meet in `kiosk.js` and `rules.js`.
 5. **`bank`** — **added 2026-08-31.** A noun in `bank.js`, `wordforge.js` and `trivia.js` (the
    content somebody wrote), and a verb in `algebra.js` (`bank(award)` — to bank points). They

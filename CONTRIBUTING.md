@@ -18,7 +18,7 @@ and open-source work, and more hands make it better for the next family.
    guarantee — check your commits.
 2. **Respect the privacy boundary.** Anything touching a patient's private data must run
    locally on open-source models. Only generic, non-sensitive features may use cloud
-   services. See `DECISIONS.md`.
+   services. See concept 6 in `DECISIONS.md`.
 3. **Keep it device-independent.** No machine-specific assumptions; per-user state lives
    with the account. See `docs/architecture.md`.
 4. **License.** By contributing you agree your contribution is released under the project's
