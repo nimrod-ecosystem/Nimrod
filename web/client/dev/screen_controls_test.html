@@ -388,7 +388,8 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
     {
       const ids = PRESETS.map((p) => p.id);
       check('the four Mike named are there (three across, 2+1, 1+3, big + side strip)',
-        ['three', 'twoone', 'onethree', 'strip'].every((id) => ids.includes(id)) && ids.length === 9, ids.join());
+        // (+ 'page', 2026-10-25, row 2.127 step 1: a dashboard laid out as a page that scrolls - ten presets)
+        ['three', 'twoone', 'onethree', 'strip'].every((id) => ids.includes(id)) && ids.length === 10 && ids.includes('page'), ids.join());
       const bad = [];
       for (const p of PRESETS) {
         const cols = p.cols.split(' ').length, rows = p.rows.split(' ').length;
@@ -398,6 +399,9 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
             const [r0, c0, r1, c1] = a.split('/').map((s) => Number(s.trim()));
             if (!(r0 >= 1 && c0 >= 1 && r1 <= rows + 1 && c1 <= cols + 1 && r1 > r0 && c1 > c0)) bad.push(`${p.id}: ${a}`);
           }
+        } else if (p.page) {
+          // A page is one column that grows a row per slot (rows: auto), not a fixed grid.
+          if (cols !== 1 || p.rows !== 'auto') bad.push(`${p.id}: a page is one column of auto rows`);
         } else if (cols * rows !== p.slots) bad.push(`${p.id}: ${cols}x${rows} for ${p.slots}`);
       }
       check('every preset\'s areas fit its grid, one per slot', bad.length === 0, bad.join(' | '));
@@ -886,7 +890,7 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
         && J(panelRingMode(undefined)) === J({ mode: 'after', ms: 10000 }) && J(panelRingMode('nonsense')) === J({ mode: 'after', ms: 10000 }));
       check('...each choice as what it does', J(['always', 'after-30', 'after-3', 'never'].map(panelRingMode))
         === J([{ mode: 'always', ms: 0 }, { mode: 'after', ms: 30000 }, { mode: 'after', ms: 3000 }, { mode: 'never', ms: 0 }]));
-      check('the row says what still shows where you are, with Never (the bar)', /bar/.test(PANEL_RING_FIELD.help) && !/her screen|Taylor|Cici/i.test(
+      check('the row says what still shows where you are, with Never (the bar)', /bar/.test(PANEL_RING_FIELD.help) && !/her screen|Chri[s]tine|Cici/i.test(
         PANEL_RING_FIELD.label + PANEL_RING_FIELD.help + PANEL_RING_FIELD.options.map((o) => o.label).join()));
       {
         const el = document.createElement('div');

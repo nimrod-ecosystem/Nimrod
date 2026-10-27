@@ -148,6 +148,9 @@ export const THEME_SETS = Object.freeze({
   newYear: 'winter',
   lunarNewYear: 'winter',
   july4: 'night',
+  // Medieval (0f18a49, 2026-10-26): a light parchment card, so by the rule above the light colour set; no medieval set
+  // drawn yet (row 2.141 asks Design for themed symbols). The suite holds it to 3:1 on medieval's own card.
+  medieval: 'cozy',
 });
 
 export function setForTheme(themeId) {

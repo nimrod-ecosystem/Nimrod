@@ -61,6 +61,11 @@ export const BRICK_COLOURS = Object.freeze({
   harvest: [c('Chestnut', '#6a3a12'), c('Barn red', '#b16155'), c('Hay', '#836511'), c('Denim', '#3e5a8a'), c('Bark', '#3a2414')],
   hanukkah: [c('Blue', '#89a9e0'), c('Gold', '#ffd36e'), c('Pewter', '#a1aab1'), c('Sky', '#bfe0ee'), c('Rose', '#e8bcc0')],
   christmas: [c('Red', '#df9189'), c('Pine', '#b2ddc0'), c('Gold', '#f2c94c'), c('Snow', '#e0e6ee'), c('Blue', '#8ab0e8')],
+  // Medieval (0f18a49, 2026-10-26): a light parchment page, so dark dyes - its own madder red and woad blue, then the
+  // ochre, soot and pewter of a market town - measured by the suite like every other set. (A dyer's green and purple
+  // were tried first: under red-green colour blindness the green sat 3.6 from the madder and the purple 8.5 from the
+  // woad, so the set spreads by lightness and along blue-yellow instead.)
+  medieval: [c('Madder', '#6e2418'), c('Woad', '#2f5a9a'), c('Ochre', '#7f5f05'), c('Soot', '#2b2420'), c('Pewter', '#646a72')],
 });
 
 /** The CSS variable for brick colour `i` (0-based): '--brick-1' .. '--brick-5'. */

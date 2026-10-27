@@ -62,6 +62,7 @@ export const TYPE_VOICE = {
   harvest: V(SERIF, { titleWeight: 700, key: 'underline' }),
   hanukkah: V(SERIF, { titleWeight: 700, key: 'box', rule: 'double' }),
   christmas: V(SERIF, { titleWeight: 700, key: 'underline', rule: 'dots' }),
+  medieval: V(SERIF, { titleWeight: 700, smallCaps: true, track: 0.02, key: 'underline', rule: 'double' }),   // 2026-10-26: the Medieval theme
 };
 
 export function lessonTheme(theme = 'nimrod') {
@@ -284,6 +285,7 @@ export const MOTION = {
   harvest: M('steady, homely', 'fade in', 'underline draws in', 'wheat sways', [520, 640], 'ease-out'),
   hanukkah: M('quiet, steady', 'fade in', 'box draws in', 'candle flames breathe', [560, 700], 'ease-out'),
   christmas: M('cosy, twinkly', 'fade in', 'dotted underline appears dot by dot', 'tree lights twinkle slowly (still when photosensitive)', [560, 700], 'ease-out'),
+  medieval: M('stately, unhurried', 'unroll from the top, like a scroll', 'underline inks in from the left', 'a banner stirs now and then', [560, 700], 'ease-out'),
 };
 
 /* ---------- inventory: what a theme already has that a lesson can use ---------- */
