@@ -4135,6 +4135,9 @@ const toTab = (m, id) => {
     const pk = await mountKiosk(proot, { user: USER, profileId: A.id, profiles, bus: createBus(), reloadPage: () => {} });
     await sleep(200);
     check('(setup) booted on the plain screen', pk.screenId() === A.id && !proot.querySelector('.rs-obj-wrap'));
+    pk.menu.open();
+    check('a screen with no room: no "Edit this room…" row', !pk.menu.items().some((r) => r.id === 'edit-room'));
+    pk.menu.close();
     await pk.showScreen(B.id);
     check('(setup) swapped to the room screen: its room is drawn', await settled(() => !!proot.querySelector('.rs-obj-wrap[data-id="door"]'), 6000));
     const doorId = 'scene:room/o:door';
@@ -4166,6 +4169,15 @@ const toTab = (m, id) => {
       JSON.stringify(rowsNow()));
     check('"Settings for" still steps to the panel', pk.menu.items().length > 0 && pk.menu.setSubject(bPhotos.id) === bPhotos.id
       && pk.menu.items().some((r) => r.id === 'switch-module'));
+    // 2026-10-27 (note DB 5, "where is the scene editor?"): a plain "Edit this room…" row while the backdrop is a room.
+    const editRoom = pk.menu.items().find((r) => r.id === 'edit-room');
+    check('*** a room screen\'s menu has "Edit this room…", in plain sight ***', !!editRoom && /Edit this room/.test(editRoom.label), JSON.stringify(editRoom));
+    editRoom?.run?.();
+    check('*** ...and it puts the ROOM into edit mode (its ✎ corner reads "Stop editing the room") ***',
+      await settled(() => proot.querySelector('.k-room > .k-editc')?.getAttribute('aria-pressed') === 'true', 3000),
+      proot.querySelector('.k-room > .k-editc')?.outerHTML?.slice(0, 200));
+    proot.querySelector('.k-room .em-bar .em-done')?.click();
+    pk.menu.open();
     pk.menu.close();
     // SAVED: the door's Opens, written through the same target edit mode and the menu write through.
     pk.runtime.router.setFocus(doorId);
@@ -4281,7 +4293,7 @@ const toTab = (m, id) => {
     check('...the screen shows it', await pollAsync(() => (sceneDoors(mounted()) || {}).bookshelf === theirs), JSON.stringify(sceneDoors(mounted())));
     check('*** ...and one quiet line says the change made here was not kept ***',
       await pollAsync(() => /not kept/.test(sk.note() || '') && /the room/.test(sk.note() || '') && /another device/.test(sk.note() || ''), 4000), String(sk.note()));
-    check('the line never names the person the project was first built for', !/her screen|taylor|cici/i.test(sk.note() || ''));
+    check('the line never names the person the project was first built for', !/her screen|chri[s]tine|cici/i.test(sk.note() || ''));
     check('...the rest of the room is untouched by the conflict (the look is still drawn)', (sceneLooks(mounted()) || {}).desk === 'drawn');
     sk.destroy();
     sroot.remove();

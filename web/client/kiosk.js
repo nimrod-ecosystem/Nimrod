@@ -6205,6 +6205,16 @@ export async function mountKiosk(root, {
       // (Tabs: "How it looks" heads the Display tab's first rows; "Switches" the hold row on Devices; "Hidden
       // panels" the hide question's wait on Sound. Each row's tab: SCREEN_FIELD_TABS, else This screen.)
       { kind: 'heading', id: 'look-head', label: 'How it looks', ...MENU_TAB.display(0) },
+      // THE SCENE EDITOR, FINDABLE (2026-10-27, chat's note DB 5: Mike asked where it is). It was the room's ✎ corner,
+      // shown only on hover, and "Edit the room" under a piece chosen in "Settings for": both real, neither something
+      // a person finds. Here while this dashboard's backdrop is a room; not at "Just the essentials" ("Edit the room"'s
+      // own rule, `pieceRows`).
+      ...(arr.roomScene?.() && complexity() !== 'essential' ? [{ kind: 'item', id: 'edit-room', label: 'Edit this room…',
+        hint: 'press a piece to choose it, then drag, turn or size it', ...MENU_TAB.display(0),
+        run: () => {
+          try { menu.close(); } catch { /* already closed */ }
+          bus.publish('shell/edit-panel', { id: ROOM_PANEL_ID, on: true, from: 'menu' });
+        } }] : []),
       { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
       { kind: 'heading', id: 'bar-key-head', label: 'The bar', ...MENU_TAB.devices(2) },   // bar toggle
       { kind: 'heading', id: 'speakers-head', label: 'Speakers', ...MENU_TAB.devices(4) },   // play on (row 2.68)
