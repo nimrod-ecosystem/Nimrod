@@ -379,6 +379,25 @@ try {
     check('*** with tracking off, a visible marker moves nothing on screen ***',
       seen.length === 0, JSON.stringify(seen));
 
+    // Row 2.139 item 5 (Mike, 2026-10-27: "Color tracking doesn't control the cursor and how far doesn't seem to do
+    // much."). This page has no cursor, so the panel shows where it WOULD go, and the gain visibly changes it.
+    check('*** the panel shows where the cursor would be, even with tracking off ***',
+      !!panel.where() && host.querySelector('[data-dot]')?.hidden === false, JSON.stringify(panel.where()));
+    check('...and says plainly that the cursor it moves is on the person\'s screens, not this page',
+      /not on this\s+page/.test(host.querySelector('[data-where-moves]')?.textContent || ''));
+    const before = stored;
+    const far = (gain) => {
+      stored = { ...before, gain, smooth: 1, center: { x: 0.5, y: 0.5 } };
+      tracker.step(withSock);
+      const w = panel.where();
+      return Math.hypot(w.x - 0.5, w.y - 0.5);
+    };
+    const near = far(1.5), wide = far(6.0);
+    check('*** "How far a small movement goes" visibly changes how far the dot travels ***', wide > near * 2,
+      JSON.stringify({ near, wide }));
+    stored = before;
+    check('...still with nothing moved on screen', seen.length === 0, JSON.stringify(seen));
+
     // The advice has to distinguish "a bit of it" from "none of it" — they want opposite
     // repairs, and merging them sends somebody re-sampling a color that was already right.
     tracker.step(frame({ rect: { x: 5, y: 5, w: 2, h: 2, color: GREEN } }));

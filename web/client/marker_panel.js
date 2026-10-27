@@ -41,7 +41,7 @@
 // are wrong, with nothing to tell you that except the cursor behaving oddly. If that turns out
 // to bite, the answer is a named calibration per setup rather than moving the storage.
 
-import { MARKER_DEVICE, MARKER_DEFAULTS, DET_W, DET_H } from './input_marker.js';
+import { MARKER_DEVICE, MARKER_DEFAULTS, DET_W, DET_H, markerAim } from './input_marker.js';
 
 export const MARKER_KEY = 'marker-tracking';
 
@@ -151,6 +151,14 @@ export function mountMarkerPanel(root, {
           </p>
           <button type="button" data-rest>Set this as the resting position</button>
           <p class="mk-note" data-restnote></p>
+          <!-- WHERE THE CURSOR WOULD BE (2026-10-27, row 2.139 item 5). This page has no cursor of its own, so the
+               box stands for a screen, and its dot is where the marker would put the cursor there, with "How far a
+               small movement goes" applied: change that and see the dot travel further. -->
+          <div class="mk-screen" data-screen aria-hidden="true"
+               style="position:relative;width:160px;height:90px;border:2px solid var(--border,#999);border-radius:6px;margin:6px 0">
+            <span data-dot hidden style="position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--accent,#2b6cb0)"></span>
+          </div>
+          <p class="mk-note" data-screennote>Where the cursor would be on a screen.</p>
         </div>
       </div>
 
@@ -158,8 +166,9 @@ export function mountMarkerPanel(root, {
         <input type="checkbox" data-opt="enabled">
         <span>Let this move the cursor</span>
       </label>
-      <p class="mk-note">Leave this off while you are setting up. The picture above keeps working
-        either way. One person can move while the other watches, and the cursor is not dragged
+      <p class="mk-note" data-where-moves>This moves the cursor on this person's screens (their dashboards), not on this
+        page. Here, the box beside the picture shows where it would go. Leave it off while you are setting up. The picture
+        above keeps working either way. One person can move while the other watches, and the cursor is not dragged
         around the screen they are using.</p>
 
       <div class="mk-rows" data-rows></div>
@@ -281,7 +290,25 @@ export function mountMarkerPanel(root, {
         v2d.strokeStyle = '#F7C948'; v2d.lineWidth = 2; v2d.stroke();
       }
     } catch { /* a preview must never break the panel */ }
+    showWhere(found);
     render();
+  }
+
+  // The dot in the box: the same sum the tracker makes (input_marker.js markerAim, with this panel's own gain and rest
+  // point), smoothed the same way, whether or not "Let this move the cursor" is on - so the gain can be seen working
+  // while the real cursor stays still.
+  let where = null;
+  function showWhere(found) {
+    const dot = el('[data-dot]');
+    if (!dot) return;
+    const c = cfg();
+    const t = found && found.count >= c.minPx && c.color ? markerAim(found, { center: c.center, gain: c.gain }) : null;
+    if (!t) { dot.hidden = true; where = null; return; }
+    const a = Math.min(1, Math.max(0.01, Number(c.smooth) || MARKER_DEFAULTS.smooth));
+    where = where ? { x: where.x + (t.x - where.x) * a, y: where.y + (t.y - where.y) * a } : t;
+    dot.hidden = false;
+    dot.style.left = `${(where.x * 100).toFixed(1)}%`;
+    dot.style.top = `${(where.y * 100).toFixed(1)}%`;
   }
 
   // *** APPLIED ON MOUNT, NOT ONLY WHEN THE TOGGLE CHANGES. ***
@@ -350,6 +377,7 @@ export function mountMarkerPanel(root, {
     // The tracker calls this every tick.
     draw,
     render,
+    where: () => (where ? { ...where } : null),
     advice: () => adviceFor({ color: cfg().color, count: tracker.found().count, minPx: cfg().minPx }),
     async refresh() { syncEnabled(); render(); return this; },
     destroy() {

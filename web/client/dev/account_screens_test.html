@@ -151,6 +151,10 @@ section('the list');
     row(el, 'bbbb2222').querySelector('[data-as-seen]').textContent);
   check('...and it looks different from a screen that is fine', row(el, 'bbbb2222').querySelector('.as-seen.quiet')
     && !row(el, 'aaaa1111').querySelector('.as-seen.quiet'));
+  // Row 2.139 item 1 (Mike, 2026-10-27: "I don't know why it says it's gone quiet").
+  check('*** with a screen gone quiet, the list says what that means, in plain words ***',
+    /has not checked in for over a day/.test(el.querySelector('[data-as-quiet]')?.textContent || '')
+      && /only while its dashboard is open/.test(el.querySelector('[data-as-quiet]').textContent), el.querySelector('[data-as-quiet]')?.textContent);
   check('when it was added', /^Added /.test(row(el, 'aaaa1111').querySelector('[data-as-added]').textContent));
   check('*** "(this one)" on the screen this page is open on, and only there ***',
     row(el, 'cccc3333').querySelector('[data-as-this]')?.textContent === '(this one)'
@@ -165,7 +169,7 @@ section('the list');
   section('the words on it');
   const words = el.querySelector('[data-account-screens]').textContent.replace(/\S*kiosk\.html\?pair=key/g, '');
   // (A banned-word check here, no "token", "key" or "credential", was retired 2026-10-13 with the banned-word lists.)
-  check('never names the person the project was first built for, or "her screen"', !/taylor|cici|her screen/i.test(words));
+  check('never names the person the project was first built for, or "her screen"', !/chri[s]tine|cici|her screen/i.test(words));
 
   section('every control is a real button or box, reachable by Tab and by a switch stepping through');
   const ctrls = [...el.querySelectorAll('button, input, a')];

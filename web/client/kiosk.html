@@ -59,6 +59,7 @@ import {
 import { pickFolder, listFolderSources, isFolderPickerSupported } from './folder_source.js';
 import { mountDemoStrip, mountWayOut } from './demo_strip.js';
 import { mountScreenPairing, shouldPair, KEY_RECHECK_MS } from './screen_pair.js';
+import { screenLabelGuess } from './device_id.js';   // 2026-10-27: a new screen asks with its device's name, not "This screen"
 import { searchAfterPairing } from './restart.js';
 
 const params = new URLSearchParams(location.search);
@@ -261,7 +262,7 @@ function offerCat(kiosk) {
       }, KEY_RECHECK_MS);
     }
     mountScreenPairing(root, {
-      label: 'This screen',
+      label: screenLabelGuess(),
       // (2026-10-05, screen_lock.js: the Pi launcher's `?lockHelper=` is kept through the reload, so a screen
       // paired for the first time still reports its lock to the helper on that computer.)
       // (2026-10-14, local_voice.js: `?localVoice=` too, so a screen paired for the first time keeps its voice; and

@@ -65,13 +65,17 @@ export function moveEntry(list, index, delta) {
 // ones that are here but unchosen. A panel that only listed what is present would make a phone
 // that has left the room vanish from the settings that mention it — so somebody would "fix" it
 // by removing the entry, and lose the fallback the moment it came back.
-export function buildRows(preferred, available) {
+// `names` (2026-10-27, row 2.139 item 3): the name each chosen device had when it was last seen. A browser names only
+// what is plugged in, so without it a device that has left showed as "A device that is not connected - not connected
+// now" (Mike: "Needs to change"). Now it keeps the name it was chosen by.
+export function buildRows(preferred, available, names = {}) {
   const want = (Array.isArray(preferred) ? preferred : []).filter(Boolean);
   const have = (Array.isArray(available) ? available : []).filter((d) => d && d.id);
   const byId = new Map(have.map((d) => [d.id, d]));
+  const known = names && typeof names === 'object' ? names : {};
   const rows = want.map((id, i) => ({
     id,
-    label: byId.get(id)?.label || '',
+    label: byId.get(id)?.label || (typeof known[id] === 'string' ? known[id] : '') || '',
     present: byId.has(id),
     rank: i,
     chosen: true,
@@ -96,9 +100,14 @@ export function mountDevicePanel(root, {
   if (!owner) throw new Error('mountDevicePanel: a device owner is required');
 
   const prefKey = `${kind}Preferred`;
+  const namesKey = `${kind}Names`;
   const preferred = () => {
     const v = (settings() || {})[prefKey];
     return Array.isArray(v) ? v.filter(Boolean) : [];
+  };
+  const names = () => {
+    const v = (settings() || {})[namesKey];
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
   };
 
   let available = [];
@@ -125,14 +134,14 @@ export function mountDevicePanel(root, {
 
   function render() {
     if (destroyed) return;
-    const { rows, extra } = buildRows(preferred(), available);
+    const { rows, extra } = buildRows(preferred(), available, names());
     el('[data-permission]').hidden = labeled || available.length === 0;
     el('[data-empty]').hidden = available.length > 0 || rows.length > 0;
 
     el('[data-list]').innerHTML = rows.map((r, i) => `
       <li class="dv-row${r.present ? '' : ' dv-missing'}" data-id="${esc(r.id)}">
-        <span class="dv-name">${esc(r.label || 'A device that is not connected')}</span>
-        <span class="dv-state">${r.present ? 'connected' : 'not connected now'}</span>
+        <span class="dv-name">${esc(r.label || `A ${kind} used here before`)}</span>
+        <span class="dv-state">${r.present ? 'plugged in' : 'not plugged in now'}</span>
         <span class="dv-move">
           <button type="button" data-up="${i}" aria-label="move up"${i === 0 ? ' disabled' : ''}>↑</button>
           <button type="button" data-down="${i}" aria-label="move down"${i === rows.length - 1 ? ' disabled' : ''}>↓</button>
@@ -163,11 +172,30 @@ export function mountDevicePanel(root, {
     available = await owner.list();
     labeled = await owner.labeled();
     await owner.choose?.();
+    // A chosen device seen plugged in with no name kept yet (a list saved before names were kept): keep it now, once,
+    // so the day it is unplugged the row still says what it is. Only real labels (a blank one before permission is not
+    // a name).
+    const was = names();
+    const add = {};
+    for (const id of preferred()) {
+      const seen = available.find((d) => d && d.id === id)?.label;
+      if (seen && was[id] !== seen) add[id] = seen;
+    }
+    if (labeled && Object.keys(add).length) {
+      try { await save({ [namesKey]: { ...was, ...add } }); } catch (err) { console.error('device: names', err); }
+    }
     render();
   }
 
   async function setOrder(next) {
-    await save({ [prefKey]: next });
+    // The names go with the order: each chosen device's name as seen now, else as remembered; none for one taken off.
+    const was = names();
+    const kept = {};
+    for (const id of next) {
+      const seen = available.find((d) => d && d.id === id)?.label;
+      if (seen || was[id]) kept[id] = seen || was[id];
+    }
+    await save({ [prefKey]: next, [namesKey]: kept });
     await owner.choose?.();
     render();
   }
@@ -196,7 +224,7 @@ export function mountDevicePanel(root, {
   return {
     refresh,
     render,
-    rows: () => buildRows(preferred(), available),
+    rows: () => buildRows(preferred(), available, names()),
     destroy() { destroyed = true; root.innerHTML = ''; },
   };
 }

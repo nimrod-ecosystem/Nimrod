@@ -457,8 +457,15 @@ export function mountStorageView(root, {
   hidden = () => (typeof document !== 'undefined' && document.hidden === true),
   mediaHref = '/home.html?tab=media',
   folder = undefined, notesStore = null, readBy = () => '',
+  // ADD A FOLDER, HERE (2026-10-27, row 2.139 item 2; Mike: "Storage on the device page should have a way to add a
+  // folder."). The same picker Media's "Add a folder" uses (folder_source.js pickFolder): a folder on THIS computer,
+  // kept in this browser - nothing is copied and nothing goes to the site. A drive on another computer still needs its
+  // agent, which is Media's; the line beside the button says so. Shown only where the browser can open a folder.
+  pickFolderImpl = null, canPickFolder = null,
 } = {}) {
   if (!root) throw new Error('mountStorageView: a root element is required');
+  const picker = pickFolderImpl || ((...a) => import('./folder_source.js').then((m) => m.pickFolder(...a)));
+  const canPick = canPickFolder ? canPickFolder() : (typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function');
   ensureStyle(root.ownerDocument);
   const listSourcesNow = listSources || (() => createMediaSourcesClient({ user, personId }).list());
   const listeners = new AbortController();
@@ -484,6 +491,7 @@ export function mountStorageView(root, {
       <div class="sv-place" data-sv-place></div>
       <div class="sv-bar">
         <button type="button" class="h-btn h-quiet" data-sv-again>Look again</button>
+        ${canPick ? '<button type="button" class="h-btn h-quiet" data-sv-addfolder>Add a folder…</button>' : ''}
         <details class="sv-timing" data-sv-timing>
           <summary>Settings</summary>
           <label>Look again by itself
@@ -498,6 +506,8 @@ export function mountStorageView(root, {
       </div>
       <div class="h-msg" data-sv-msg role="status" aria-live="polite"></div>
       <div data-sv-body><p class="h-none">Looking…</p></div>
+      <p class="sv-foot" data-sv-addwhere>${canPick ? 'Add a folder… adds a folder on this computer. ' : ''}A drive on
+        another computer is added in <a href="${esc(mediaHref)}">Media</a>, with the small program that shares it.</p>
       <p class="sv-foot" data-sv-where>${esc(SETTINGS_WHERE)}</p>
     </section>`;
   const el = (sel) => root.querySelector(sel);
@@ -581,7 +591,7 @@ export function mountStorageView(root, {
     const focusedCheck = root.ownerDocument?.activeElement?.dataset?.svCheck || null;
     body.innerHTML = (sources.length
       ? `<ul class="sv-list" data-sv-list>${sources.map(rowHTML).join('')}</ul>`
-      : `<p class="h-none" data-sv-empty>No picture sources yet. Add a folder or a drive in <a href="${esc(mediaHref)}">Media</a>.</p>`)
+      : `<p class="h-none" data-sv-empty>No picture sources yet.${canPick ? ' Add a folder above, or a drive' : ' Add a folder or a drive'} in <a href="${esc(mediaHref)}">Media</a>.</p>`)
       + elsewhereHTML();
     if (focusedCheck) {
       const back = root.querySelector(`[data-sv-id="${CSS.escape(focusedCheck)}"] button, [data-sv-id="${CSS.escape(focusedCheck)}"]`);
@@ -671,6 +681,20 @@ export function mountStorageView(root, {
     if (!b || !root.contains(b)) return;
     if (b.hasAttribute('data-sv-again')) { say(''); refresh().catch(() => {}); return; }
     if (b.hasAttribute('data-sv-allow')) { allowFolder(); return; }
+    if (b.hasAttribute('data-sv-addfolder')) {
+      // A press, so the browser's own folder window may open (it refuses without one).
+      Promise.resolve().then(() => picker('')).then((src) => {
+        if (destroyed) return;
+        say(src?.label ? `Added “${src.label}”.` : 'Added.');
+        refresh().catch(() => {});
+      }).catch((err) => {
+        if (destroyed) return;
+        // Closing the folder window is not an error, and says nothing.
+        if (err && err.name === 'AbortError') return;
+        say(`The folder was not added: ${err?.message || 'this browser could not open it'}.`);
+      });
+      return;
+    }
     if (b.dataset.svCheck) checkHere(b.dataset.svCheck);
   }, { signal: listeners.signal });
   root.addEventListener('change', (e) => {

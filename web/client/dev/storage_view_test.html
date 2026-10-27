@@ -350,12 +350,14 @@ const row = (el, id) => el.querySelector(`[data-sv-id="${id}"]`);
   check('*** NOTHING went to the site: every request was to an agent ***',
     w.ag.seen.every((u) => /^http:\/\/(localhost:877\d|192\.168\.1\.20:8770)\//.test(u)) && w.ag.seen.length > 0, w.ag.seen.filter((u) => !/877\d/.test(u)).join(' '));
   check('...and only GETs of /health, /list and /files', w.ag.seen.every((u) => /\/(health|list|files\/)/.test(new URL(u).pathname)));
-  check('no button or control writes anything: the only buttons are Look again and Check on this computer',
-    [...el.querySelectorAll('button')].every((b) => /^(Look again|Check on this computer)$/.test(b.textContent.trim())));
+  // (2026-10-27, row 2.139 item 2: plus "Add a folder…", which adds a picture source kept in this browser through the
+  // browser's own folder window. It writes nothing to any drive, and nothing to the site; checked below.)
+  check('no button or control writes to a drive: the only buttons are Look again, Check on this computer and Add a folder…',
+    [...el.querySelectorAll('button')].every((b) => /^(Look again|Check on this computer|Add a folder…)$/.test(b.textContent.trim())));
 
   section('the words on it');
   const words = el.querySelector('[data-storage-view]').textContent;
-  check('never names the person the project was first built for, or "her screen"', !/taylor|cici|her screen/i.test(words));
+  check('never names the person the project was first built for, or "her screen"', !/chri[s]tine|cici|her screen/i.test(words));
   check('no "agent", "token", "JSON", "status file" in what a person reads', !/\b(agent|token|json|status file|role:)\b/i.test(words), words.slice(0, 200));
 
   section('"Check on this computer" (the person asking)');
@@ -412,6 +414,39 @@ const row = (el, id) => el.querySelector(`[data-sv-id="${id}"]`);
   await p.refresh();
   check('no sources: says so, and where to add one', /No picture sources yet/.test(el.textContent) && el.querySelector('a[href*="tab=media"]'));
   p.destroy();
+  // Row 2.139 item 2 (Mike, 2026-10-27: "Storage on the device page should have a way to add a folder.")
+  let picked = 0;
+  let list = [];
+  const afW3 = makeWorld({ listSources: async () => list });
+  const afEL3 = document.createElement('div');
+  document.getElementById('host').append(afEL3);
+  const afP3 = mountStorageView(afEL3, { ...afW3.opts, canPickFolder: () => true,
+    pickFolderImpl: async () => { picked += 1; list = [{ id: 'f-new', label: 'Holiday pictures', kind: 'folder', local: true }]; return list[0]; } });
+  await afP3.refresh();
+  const addBtn = afEL3.querySelector('[data-sv-addfolder]');
+  check('*** Storage has "Add a folder…" (a folder on this computer), and says a drive elsewhere is added in Media ***',
+    !!addBtn && /Add a folder/.test(addBtn.textContent) && /another computer is added in/.test(afEL3.querySelector('[data-sv-addwhere]')?.textContent || ''));
+  addBtn.click();
+  await sleep(30);
+  check('*** pressing it opens the folder window, and the folder is listed at once, with a word to say so ***',
+    picked === 1 && !!afEL3.querySelector('[data-sv-id="f-new"]') && /Added “Holiday pictures”/.test(afEL3.textContent), afEL3.textContent.slice(0, 300));
+  afP3.destroy();
+  const afW4 = makeWorld({ listSources: async () => [] });
+  const afEL4 = document.createElement('div');
+  const afP4 = mountStorageView(afEL4, { ...afW4.opts, canPickFolder: () => false });
+  await afP4.refresh();
+  check('a browser that cannot open a folder: no button that cannot work (Media is still named)', !afEL4.querySelector('[data-sv-addfolder]')
+    && /Media/.test(afEL4.textContent));
+  afP4.destroy();
+  const afW5 = makeWorld({ listSources: async () => [] });
+  const afEL5 = document.createElement('div');
+  const afP5 = mountStorageView(afEL5, { ...afW5.opts, canPickFolder: () => true,
+    pickFolderImpl: async () => { const e = new Error('closed'); e.name = 'AbortError'; throw e; } });
+  await afP5.refresh();
+  afEL5.querySelector('[data-sv-addfolder]').click();
+  await sleep(20);
+  check('closing the folder window is not an error: nothing is said', !(afEL5.querySelector('[data-sv-msg]')?.textContent || ''));
+  afP5.destroy();
   const w2 = makeWorld({ listSources: async () => { throw new Error('offline'); } });
   const el2 = document.createElement('div');
   const p2 = mountStorageView(el2, w2.opts);
@@ -495,7 +530,7 @@ section('the words for a note, and for the place');
   check('*** no Nimrod folder: it says nothing is saved, and where to choose one ***',
     /Not saved anywhere/.test(PLACE_WORDS.none) && /This screen, then Your own folders/.test(PLACE_WORDS.none));
   check('the place words never name the person the project was built for, or "her screen"',
-    !Object.values(PLACE_WORDS).some((s) => /taylor|cici|her screen/i.test(s)));
+    !Object.values(PLACE_WORDS).some((s) => /chri[s]tine|cici|her screen/i.test(s)));
 }
 
 section('*** written when read: the section notes each drive it reached, in the stubbed Nimrod folder ***');
@@ -636,8 +671,8 @@ section('*** away from home: read back from the folder, labelled with where it c
     extra && /Pi folder/.test(extra.textContent) && /From your Nimrod folder, read 11 hours ago by “Bedside”/.test(extra.textContent), extra && extra.textContent);
   check('...including the backup folder this browser has no source for', !!el.querySelector('[data-sv-noted="src-fallback"]'));
   check('*** and nothing was written from here: nothing was reached ***', sharedFolder.appends.length === 3);
-  check('the words: never the name the project was built for, never "her screen"', !/taylor|cici|her screen/i.test(el.textContent),
-    (el.textContent.match(/.{0,40}(taylor|cici|her screen).{0,40}/i) || [''])[0]);
+  check('the words: never the name the project was built for, never "her screen"', !/chri[s]tine|cici|her screen/i.test(el.textContent),
+    (el.textContent.match(/.{0,40}(chri[s]tine|cici|her screen).{0,40}/i) || [''])[0]);
   p.destroy(); el.remove();
 
   // The browser that wrote them, its drives now unreachable: its own notes are shown ("by this browser").

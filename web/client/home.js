@@ -155,7 +155,30 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     });
     await panel.refresh();
 
-    host.append(recHost);
+    // *** MORE THAN ONE MICROPHONE AT ONCE: A CHOICE, NOT A SECTION (2026-10-27, row 2.139 item 4). *** Mike: "Not sure
+    // the record a session section makes sense. Maybe just an option to have it use a multi mic setup." Argued both
+    // ways: FOR the section always showing, it is the quickest test that two microphones work, which is why it was put
+    // here; AGAINST, and it wins, it is a speech-training tool (a near and a far microphone recorded together) that
+    // most people setting up a screen never need, and a whole section of it is clutter on the page they set up first.
+    // So one tick, off by default, and the two-microphone recording appears under it when it is on. Kept with the
+    // person's other device choices (MULTI_MIC_KEY in the same row), so it follows them.
+    const MULTI_MIC_KEY = 'multiMic';
+    const multi = document.createElement('label');
+    multi.className = 'mk-chk';
+    multi.innerHTML = '<input type="checkbox" data-multimic> <span>Use more than one microphone at once</span>';
+    const multiNote = document.createElement('p');
+    multiNote.className = 'mk-note';
+    multiNote.textContent = 'For recording a near and a far microphone together, to help a speech program learn how a '
+      + 'voice sounds across the room. Most screens need only one at a time, from the list above.';
+    const multiBox = multi.querySelector('input');
+    const showMulti = () => { const on = !!(state.get() || {})[MULTI_MIC_KEY]; multiBox.checked = on; recHost.hidden = !on; };
+    multiBox.addEventListener('change', async () => {
+      state.set({ [MULTI_MIC_KEY]: multiBox.checked });
+      showMulti();
+      try { await state.flush?.(); } catch (e) { console.error('home: more than one microphone', e); }
+    });
+    showMulti();
+    host.append(multi, multiNote, recHost);
     const [{ mountRecordPanel }, { createPairedRecorder, webAudioCapture }, fsSink] =
       await Promise.all([
         import('./record_panel.js'), import('./recorder.js'), import('./fs_sink.js'),
@@ -172,7 +195,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     await record.refresh();
 
     return {
-      async refresh() { await panel.refresh(); await record.refresh(); return this; },
+      async refresh() { await panel.refresh(); await record.refresh(); showMulti(); return this; },
       destroy() {
         try { record.destroy(); } catch (e) { console.error(e); }
         try { panel.destroy(); } catch (e) { console.error(e); }

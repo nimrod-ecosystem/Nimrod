@@ -39,6 +39,9 @@
 import { authHeaders, setDeviceKey } from './auth.js';
 
 export const QUIET_AFTER_MS = 24 * 3600 * 1000;
+export const QUIET_WORDS = '“Gone quiet” means a screen has not checked in for over a day. A screen checks in only while '
+  + 'its dashboard is open, so one that is switched off, asleep, closed or offline goes quiet. Nothing is wrong with it '
+  + 'for that, and it comes back by itself when its dashboard is open again. A screen you no longer use can be removed.';
 export const SCREEN_NAME_MAX = 60;
 
 const esc = (s) => String(s == null ? '' : s)
@@ -220,8 +223,11 @@ export function mountAccountScreens(root, {
         : '<p class="h-loading">Loading…</p>';
       return;
     }
+    // WHAT "GONE QUIET" MEANS, said under the list whenever a screen is (2026-10-27, row 2.139 item 1; Mike: "I don't
+    // know why it says it's gone quiet").
+    const anyQuiet = rows.some((r) => seenWords(r.last_seen, r.created_at, now(), { quietAfterMs }).quiet);
     body.innerHTML = rows.length
-      ? `<ul class="as-list" data-as-list>${rows.map(rowHTML).join('')}</ul>`
+      ? `<ul class="as-list" data-as-list>${rows.map(rowHTML).join('')}</ul>${anyQuiet ? `<p class="as-foot" data-as-quiet>${esc(QUIET_WORDS)}</p>` : ''}`
       : '<p class="h-none" data-as-empty>No screens on this account yet.</p>';
     if (focus) {
       const f = root.querySelector(focus);

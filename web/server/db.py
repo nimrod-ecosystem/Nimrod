@@ -1703,6 +1703,16 @@ class _Store:
             key = "nk_" + secrets.token_urlsafe(32)
             ts = _now()
             name = (label or "").strip() or r[0]
+            # NO TWO SCREENS ON AN ACCOUNT WITH ONE NAME (2026-10-27, row 2.139 item 1: Mike found two called "This
+            # screen" and could not tell which was which). A name already used on this account gets a number: the
+            # second "Raspberry Pi" is "Raspberry Pi 2". Kept within the 60-character screen name.
+            cur.execute(self._q("SELECT label FROM device_keys WHERE user_id=?"), (account_id,))
+            taken = {str(x[0]).strip().lower() for x in cur.fetchall() if x and x[0]}
+            if name.strip().lower() in taken:
+                n = 2
+                while f"{name[:56]} {n}".lower() in taken:
+                    n += 1
+                name = f"{name[:56]} {n}"
             # The account keeps only the fingerprint. The working key goes to the screen once, through
             # the pairing row below (gated by the poll token, swept within a day).
             cur.execute(self._q(

@@ -478,7 +478,14 @@ def main() -> None:
         check("no name when approving keeps the screen's own ('This screen')",
               c.status_code == 200 and any(r["label"] == "This screen" for r in rows), str(rows))
         c, _ = adopt({"label": "   "})
-        check("a name of only spaces is the same as no name", c.status_code == 200 and c.json().get("label") == "This screen", c.text)
+        # 2026-10-27 (row 2.139 item 1): a second screen asking with a name already on the account is numbered.
+        check("a name of only spaces is the same as no name - and, the name being taken, it is numbered",
+              c.status_code == 200 and c.json().get("label") == "This screen 2", c.text)
+        c, _ = adopt({"label": "Living room"})
+        check("*** no two screens on one account share a name: a second 'Living room' is 'Living room 2' ***",
+              c.status_code == 200 and c.json().get("label") == "Living room 2", c.text)
+        c, _ = adopt({"label": "living ROOM"})
+        check("...told apart without regard to capitals, and the next is 3", c.json().get("label") == "living ROOM 3", c.text)
         for bad in ("<script>", "a" * 61, "line\nbreak", "tab\there"):
             q = bare.post("/api/screen-pair/request", json={"label": "This screen"}).json()
             c = owner.post("/api/screen-pair/claim", json={"code": q["code"], "label": bad})

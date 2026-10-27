@@ -35,6 +35,38 @@ export function deviceId({ storage = defaultStorage() } = {}) {
 /** A name, printable and short. PURE. */
 export const cleanDeviceName = (v) => String(v ?? '').replace(/[\x00-\x1f\x7f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
 
+/**
+ * What a screen asks to be called when it is added with a code (2026-10-27, row 2.139 item 1). Mike found two screens
+ * on his account both called "This screen" - every kiosk asked with that - and could not tell which was which. Now:
+ * the launcher's `deviceName` or the one kept, else what kind of computer this is, in plain words ("Raspberry Pi",
+ * "Windows computer"). The server numbers a name already used on the account ("Raspberry Pi 2"), and the person adding
+ * it can still type any name. PURE given `nav`.
+ */
+export function screenLabelGuess({ search = (typeof location !== 'undefined' ? location.search : ''), storage = defaultStorage(),
+  nav = (typeof navigator !== 'undefined' ? navigator : null) } = {}) {
+  // Only what the server takes as a screen name (app.py NAME_RE: letters, digits, spaces and . , ' ’ -): a launcher name
+  // with brackets in it must not stop the screen from asking for a code at all.
+  const fit = (s) => String(s || '').replace(/[^\p{L}\p{N}_ .,'’-]/gu, '').replace(/\s+/g, ' ').trim();
+  let asked = null;
+  try { asked = new URLSearchParams(search || '').get(DEVICE_NAME_PARAM); } catch { asked = null; }
+  const a = fit(cleanDeviceName(asked));
+  if (a) return a;
+  let kept = '';
+  try { kept = fit(cleanDeviceName(storage?.getItem?.(DEVICE_NAME_KEY))); } catch { kept = ''; }
+  if (kept) return kept;
+  const plat = String(nav?.userAgentData?.platform || nav?.platform || '');
+  const ua = String(nav?.userAgent || '');
+  if (/iPad/.test(ua)) return 'iPad';
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/Android/i.test(ua)) return /Mobile/.test(ua) ? 'Android phone' : 'Android tablet';
+  if (/Win/i.test(plat) || /Windows/.test(ua)) return 'Windows computer';
+  if (/Mac/i.test(plat)) return 'Mac';
+  if (/arm|aarch/i.test(plat)) return 'Raspberry Pi';      // a Linux ARM computer running a screen: almost always a Pi
+  if (/CrOS|Chrome ?OS/i.test(ua + plat)) return 'Chromebook';
+  if (/Linux/i.test(plat)) return 'Linux computer';
+  return 'This screen';
+}
+
 /** This device's name: the launcher's `deviceName` (kept), else the kept one, else "A screen (…abcd)". */
 export function deviceName({ search = (typeof location !== 'undefined' ? location.search : ''), storage = defaultStorage(), id = '' } = {}) {
   let asked = null;

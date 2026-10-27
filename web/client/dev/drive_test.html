@@ -102,6 +102,19 @@ section('the ticket — a token in a URL, not a secret in a URL');
   check('the launcher\'s name is used and kept; with none, a plain name with the id\'s last four', deviceName({ search: '?deviceName=Bench%20Pi', storage: st, id: id1 }) === 'Bench Pi'
     && deviceName({ search: '', storage: st, id: id1 }) === 'Bench Pi' && deviceName({ search: '', storage: null, id: 'dv-abcd1234' }) === 'A screen (…1234)');
   check('a name is printable and short, never markup', cleanDeviceName('  <b>Bench</b>\u0007 Pi ') === 'bBench/b Pi' && cleanDeviceName('x'.repeat(99)).length === 40);
+  // Row 2.139 item 1 (2026-10-27): what a new screen asks to be called, instead of every one being "This screen".
+  const { screenLabelGuess } = await import('../device_id.js');
+  const guess = (platform, userAgent, search = '', storage = null) => screenLabelGuess({ search, storage, nav: { platform, userAgent } });
+  check('*** a new screen asks with its device\'s name: the launcher\'s, else what kind of computer it is ***',
+    guess('Linux aarch64', 'Mozilla/5.0 (X11; CrOS x86_64 14541.0.0)') === 'Raspberry Pi'
+      && guess('Win32', 'Mozilla/5.0 (Windows NT 10.0)') === 'Windows computer' && guess('MacIntel', '') === 'Mac'
+      && guess('Linux armv8l', 'Mozilla/5.0 (Linux; Android 14; Pixel 8) Mobile') === 'Android phone'
+      && guess('Linux x86_64', 'Mozilla/5.0 (X11; Linux x86_64)') === 'Linux computer'
+      && guess('', '') === 'This screen' && guess('Win32', '', '?deviceName=Bench%20Pi') === 'Bench Pi',
+    [guess('Linux aarch64', 'X11; CrOS'), guess('Win32', 'Windows'), guess('Linux armv8l', 'Android Mobile')].join(' / '));
+  check('...kept to what the server takes as a name (a bracket must not stop it asking for a code)',
+    guess('', '', '?deviceName=Bench%20(Pi)%20%231') === 'Bench Pi 1' && guess('', '', '?deviceName=%3C%3E') === 'This screen',
+    guess('', '', '?deviceName=Bench%20(Pi)%20%231'));
   const screen = connectDrive({ personId: 'p1', role: 'screen', device: id1, deviceName: 'Bench Pi', fetchImpl: fakeFetch('T2'), SocketImpl: FakeSocket });
   await sleep(0);
   check('*** a screen\'s address says which screen it is (screenId, screenName) ***',

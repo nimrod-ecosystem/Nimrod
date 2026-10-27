@@ -331,6 +331,28 @@ try {
     check('and removed again', stored.microphonePreferred.join(',') === `${USB.id},${STRANGER.id}`,
       JSON.stringify(stored.microphonePreferred));
 
+    // Row 2.139 item 3 (Mike, 2026-10-27, on "A device that is not connected not connected now": "Needs to change.")
+    check('*** each chosen device\'s name is kept with the list (and none for one taken off) ***',
+      stored.microphoneNames?.[USB.id] === USB.label && stored.microphoneNames?.[STRANGER.id] === STRANGER.label
+        && !(WEBCAM.id in (stored.microphoneNames || {})), JSON.stringify(stored.microphoneNames));
+    devices = [STRANGER];
+    await panel.refresh();
+    const gone = host.querySelector(`[data-id="${USB.id}"]`);
+    check('*** unplugged, it keeps its own name and says "not plugged in now" ***',
+      gone?.querySelector('.dv-name')?.textContent === USB.label && gone?.querySelector('.dv-state')?.textContent === 'not plugged in now',
+      gone?.textContent);
+    check('...and nowhere says "not connected not connected now"', !/not connected not connected|A device that is not connected/.test(host.textContent), host.textContent);
+    stored = { microphonePreferred: [WEBCAM.id] };
+    devices = [WEBCAM];
+    await panel.refresh();
+    check('a list saved before names were kept: a chosen device seen plugged in has its name kept, once',
+      stored.microphoneNames?.[WEBCAM.id] === WEBCAM.label, JSON.stringify(stored));
+    devices = [];
+    await panel.refresh();
+    check('...so the day it is unplugged it is still named', host.querySelector(`[data-id="${WEBCAM.id}"] .dv-name`)?.textContent === WEBCAM.label);
+    check('a device with no name ever seen: "A microphone used here before"', buildRows(['zz'], [], {}).rows[0].label === ''
+      && /A microphone used here before/.test((() => { stored = { microphonePreferred: ['zz'] }; panel.render(); return host.textContent; })()));
+
     panel.destroy();
     check('destroy puts the root back', host.innerHTML === '');
     host.remove();
