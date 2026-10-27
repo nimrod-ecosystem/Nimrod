@@ -179,7 +179,7 @@ try {
     document.querySelector('[data-mic-tester] [data-mic-close]').click();
     check('the words say what is wrong and where to look, and name nobody', /No sound is coming/.test(DEAD_MIC_TEXT) && /Test the microphones/.test(DEAD_MIC_TEXT));
   }
-  check('names nobody', !/taylor|cici|her screen/i.test(await (await fetch('../mic_choice.js')).text()));
+  check('names nobody', !/chri[s]tine|cici|her screen/i.test(await (await fetch('../mic_choice.js')).text()));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

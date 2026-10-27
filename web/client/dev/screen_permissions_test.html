@@ -253,7 +253,7 @@ try {
     check('*** your own line: drop in, call and bring others in ticked by default ***',
       box(OWN, 'dropIn').checked && box(OWN, 'call').checked && box(OWN, 'bringOthers').checked);
     check('Bea has the guardian set, so "May bring others into a call" is ticked for her', box('bea@x', 'bringOthers').checked);
-    check('site copy never says "her screen" or names anybody', !/\bher screen|taylor|cici/i.test(host.textContent));
+    check('site copy never says "her screen" or names anybody', !/\bher screen|chri[s]tine|cici/i.test(host.textContent));
     ed.destroy();
     host.remove();
     check('candidates from grants: an expired one is marked so', peopleCandidates({ grants, now: '2026-10-12' }).find((c) => c.account === 'ot@x')?.current === false);

@@ -2031,7 +2031,7 @@ its place (every place it appears in that file - repeats are listed once, with a
 
 **Rules for the new words.**
 1. Plain words. Short. Say what a thing does for the person using it, not how it is built.
-2. Never "her screen". Never name Taylor or Cici, or refer to the person the project was first built
+2. Never "her screen". Never name anybody, or refer to the person the project was first built
    for - a visitor has no idea who that is (Mike, 2026-09-11; checked by `web/tools/check_site_copy.py`).
 3. American English (color, favorite, gray, center). Mike's words, 2026-10-13: "module", "panel",
    "dashboard", "account", "Transport bar" and "bind" are the site's own words; "AAC board", not "talk
@@ -2075,7 +2075,7 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
                                capture_output=True, text=True).stdout.strip()
     except Exception:
         commit, dirty = '?', ''
-    her_rx = re.compile(r'\b(she|her|hers|herself|Taylor|Cici)\b', re.I)
+    her_rx = re.compile(r'\b(she|her|hers|herself|Chri[s]tine|Cici)\b', re.I)
 
     owners = page_scripts()
     mods = module_titles()

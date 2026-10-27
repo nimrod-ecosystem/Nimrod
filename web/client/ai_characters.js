@@ -71,7 +71,7 @@ export const ROOMS_MAX = 3;
 export const OWN_MAX = 24;
 
 // Site copy never names a person or says "her screen" (CLAUDE.md, porting rules). Checked on every seed.
-export const NAMES_RE = /\bher screen|taylor|cici/i;
+export const NAMES_RE = /\bher screen|chri[s]tine|cici/i;
 
 // =====================================================================================================
 // VOICES. "A voice choice where TTS exists": the speech channel (output_channels.js) takes a caller's own

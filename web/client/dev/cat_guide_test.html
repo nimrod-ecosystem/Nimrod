@@ -402,7 +402,7 @@ section('*** REDUCED MOTION USES THE STILL DRAWING ***');
       const r = await fetch(url);
       const t = r.ok ? await r.text() : '';
       if (!r.ok) { bad.push(`${url}: ${r.status}`); continue; }
-      if (/<script|\son[a-z]+\s*=|href\s*=|url\(\s*(?!#)|<text|<foreignObject|<image|Cici|Taylor/i.test(t)) bad.push(`${url}: content`);
+      if (/<script|\son[a-z]+\s*=|href\s*=|url\(\s*(?!#)|<text|<foreignObject|<image|Cici|Chri[s]tine/i.test(t)) bad.push(`${url}: content`);
     }
   }
   check(`all ${POSES.length * 2} pose files are served, and none has a script, handler, outside link or text`,
@@ -698,7 +698,7 @@ section('*** NO OPENING SLIDE; NOTHING SAID WHERE IT IS NOT TRUE ***');
   check('there is no hello slide', !WALK.some((s) => s.id === 'cat-hello'));
   check('no step lives on the game page any more', !WALK.some((s) => s.page === GAME_PAGE));
   const all = (s) => ['brief', 'say', 'more'].map((k) => s[k] || '').join(' ');
-  check('no step says "her screen", Taylor or Cici', !WALK.some((s) => /her screen|Taylor|Cici/i.test(all(s))));
+  check('no step says "her screen", or a person’s name', !WALK.some((s) => /her screen|Chri[s]tine|Cici/i.test(all(s))));
   check('no step tells you to press a game-page button (Make it, Hang it, Put it up, Open it)',
     !WALK.some((s) => /Make it|Hang it|Put it up|Open it/.test(all(s))));
   check('*** his goodbye says where to find him again: Show me how, in the ⚙ menu ***',

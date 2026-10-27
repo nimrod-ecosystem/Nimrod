@@ -105,7 +105,7 @@ try {
       (m.ports || []).length === ports.length);
     check('it declares no settings (nothing to change that is not already a key on the pad)', !m.settings);
     check('the description is plain words and names no person', typeof m.description === 'string'
-      && m.description.length > 10 && !/\bher\b|taylor/i.test(m.description));
+      && m.description.length > 10 && !/\bher\b|chri[s]tine/i.test(m.description));
   }
 
   section('the new-core contract is enforced at mount');

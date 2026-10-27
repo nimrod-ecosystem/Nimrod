@@ -254,7 +254,7 @@ try {
     const m = getManifest(TYPE);
     check('registered as "Town", on the new core, needs nothing', m && m.title === TITLE && m.core === 'new' && m.dependsOn === 'none');
     const words = `${m.title} ${m.description} ${J(m.settings)} ${J(CATALOG.find((c) => c.type === TYPE))}`;
-    check('the words never say "her screen" or name anybody', !/taylor|cici|her screen/i.test(words));
+    check('the words never say "her screen" or name anybody', !/chri[s]tine|cici|her screen/i.test(words));
     const cat = CATALOG.find((c) => c.type === TYPE);
     check('catalog: something to look at, responds to touch', cat && cat.group === 'comfort' && cat.use === 'touch', J(cat));
     check('library: To look at, and Scenes', J(MODULE_CATEGORIES[TYPE]) === J(['visual', 'scenes']));

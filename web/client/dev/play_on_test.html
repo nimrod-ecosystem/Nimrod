@@ -350,7 +350,7 @@ try {
       f('whenElsewhere').default === 'ask' && f('whenElsewhere').appliesWhen({ spotifyOn: true }) && !f('whenElsewhere').appliesWhen({ spotifyOn: false }));
     const words = MUSIC_SETTINGS.map((s) => [s.label, s.note, s.onLabel, s.offLabel, ...(s.options || []).map((o) => o.label)].filter(Boolean).join(' ')).join(' ')
       + Object.values(EMBED_WORDS).join(' ') + speakerFields().map((x) => `${x.label} ${x.note}`).join(' ');
-    check('no new words name anybody or say "her screen"', !/her screen|taylor|cici/i.test(words));
+    check('no new words name anybody or say "her screen"', !/her screen|chri[s]tine|cici/i.test(words));
 
     rememberSpotifySpeakers(['Kitchen']);
     const bus = createBus();

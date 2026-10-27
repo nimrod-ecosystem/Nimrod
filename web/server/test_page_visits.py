@@ -103,7 +103,7 @@ check("About me is cut to the page's own limit", len(visitor_options("about", {"
 words = " ".join(REFUSAL_TEXT.values())
 # (Its banned-word half was retired 2026-10-13 with the banned-word lists: Mike, "I really don't like this banned
 # word thing at all.")
-check("*** the refusals name nobody ***", not re.search(r"her screen|taylor|cici", words, re.I))
+check("*** the refusals name nobody ***", not re.search(r"her screen|chri[s]tine|cici", words, re.I))
 
 section("the page's own colours (2026-10-05)")
 check("*** a theme id is sent as it is; nothing set is '' ***", pv.visitor_theme({"theme": "warm"}) == "warm" and pv.visitor_theme({}) == ""

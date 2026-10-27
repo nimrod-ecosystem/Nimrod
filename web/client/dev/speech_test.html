@@ -155,8 +155,8 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     JSON.stringify(SPEECH_DEFAULTS.wake) === JSON.stringify(['computer please', 'nimrod please']),
     JSON.stringify(SPEECH_DEFAULTS.wake));
   check('*** and no person’s name is a site default (hers goes on her own profile) ***',
-    !SPEECH_DEFAULTS.wake.some((w) => /cici|taylor/i.test(w))
-      && !SPEECH_FIELDS.some((f) => /cici|taylor/i.test(String(f.default))),
+    !SPEECH_DEFAULTS.wake.some((w) => /cici|chri[s]tine/i.test(w))
+      && !SPEECH_FIELDS.some((f) => /cici|chri[s]tine/i.test(String(f.default))),
     JSON.stringify(SPEECH_FIELDS.map((f) => f.default)));
   check('the wake phrases are settings, one per phrase, defaulting to the shipped two',
     wakeFrom({}).join('|') === SPEECH_DEFAULTS.wake.join('|'), JSON.stringify(wakeFrom({})));

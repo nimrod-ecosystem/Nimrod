@@ -1,0 +1,3 @@
+#!/bin/sh
+# The commit message too: that is where the most public copies of a name ended up (chat's note CZ).
+exec sh "$(git rev-parse --show-toplevel)/web/tools/hooks/run_name_check.sh" --message "$1"

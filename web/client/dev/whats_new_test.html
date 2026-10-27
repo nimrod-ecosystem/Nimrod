@@ -50,7 +50,7 @@ try {
   check('*** whatsNewProblems finds nothing wrong with the shipped changelog ***', whatsNewProblems().length === 0, whatsNewProblems().join('; '));
   check('it is seeded with the last few days (at least three, ending 2026-10-02)', WHATS_NEW.length >= 3 && WHATS_NEW[0].date === '2026-10-02');
   check('every item says what changed AND where it is', WHATS_NEW.every((e) => e.items.every((i) => i.text && i.where)));
-  check('no item says "her screen", Taylor or Cici', !/\bher screen|taylor|cici/i.test(J(WHATS_NEW)));
+  check('no item says "her screen", or a person’s name', !/\bher screen|chri[s]tine|cici/i.test(J(WHATS_NEW)));
   check('the guide and the landing Home are in it', /Nimrod is a module now/.test(J(WHATS_NEW[0])) /* site text second pass 2026-10-13 */ && /four up/.test(J(WHATS_NEW[0])));
   const shuffled = [WHATS_NEW[2], WHATS_NEW[0], WHATS_NEW[1]];
   check('newestFirst sorts whatever order it is handed', J(newestFirst(shuffled).map((e) => e.date)) === J(WHATS_NEW.slice(0, 3).map((e) => e.date)));

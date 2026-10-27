@@ -299,7 +299,7 @@ try {
       && avatarMotion({ big: true }).flashLimit === Infinity);
     check('the screen\'s setting is offered as a menu row: follow (the default), large only, never', AVATAR_MOTION_FIELD.key === 'avatarMotion'
       && AVATAR_MOTION_FIELD.default === 'follow' && AVATAR_MOTION_FIELD.options.map((o) => o.value).join() === 'follow,big,still'
-      && !/Taylor|Cici|her screen/i.test(JSON.stringify(AVATAR_MOTION_FIELD)));
+      && !/Chri[s]tine|Cici|her screen/i.test(JSON.stringify(AVATAR_MOTION_FIELD)));
   }
 
   section('avatarMotionContext: what the host knows, read the way the flash limit is');
@@ -337,7 +337,7 @@ try {
     const ctx = (o) => avatarMotionContext({ deviceReduced: false, ...o });
     check('two rows, both on by default, offered for the screen and the person',
       OTHERS_AVATAR_FIELDS.map((f) => `${f.key}:${f.default}`).join() === 'othersAvatars:true,othersAvatarsMove:true'
-      && !/Taylor|Cici|her screen/i.test(JSON.stringify(OTHERS_AVATAR_FIELDS)));
+      && !/Chri[s]tine|Cici|her screen/i.test(JSON.stringify(OTHERS_AVATAR_FIELDS)));
     check('nothing set anywhere: show and move', ctx({}).othersShow === true && ctx({}).othersMove === true);
     check('the person\'s row decides when the screen chose nothing', ctx({ viewer: { othersAvatars: false } }).othersShow === false
       && ctx({ viewer: { othersAvatarsMove: false } }).othersMove === false);

@@ -123,7 +123,7 @@ try {
     const bad = auditFields(VOICE_RECORDING_FIELDS.map(normalizeField).filter(Boolean), { type: 'voice' }).filter((x) => x.severity === 'error');
     check('the settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
     const copy = JSON.stringify(VOICE_RECORDING_FIELDS);
-    check('site copy never names the person it was first built for, nor "her screen"', !/Taylor|Cici|her screen/i.test(copy));
+    check('site copy never names the person it was first built for, nor "her screen"', !/Chri[s]tine|Cici|her screen/i.test(copy));
   }
 
   // ======================================================================================

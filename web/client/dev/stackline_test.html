@@ -260,7 +260,7 @@ try {
     const m = getManifest(GAME);
     check('registered as "Stack to the line", on the new core, dependsOn local', m && m.title === TITLE && m.core === 'new' && m.dependsOn === 'local');
     check('the words never name another game', !/tetris|stack(er)?\s*(game)?\s*by|ketchapp|lego/i.test(`${m.title} ${m.description} ${J(m.settings)}`));
-    check('the words never say "her screen" or name anybody', !/taylor|cici|her screen/i.test(`${m.description} ${J(m.settings)}`));
+    check('the words never say "her screen" or name anybody', !/chri[s]tine|cici|her screen/i.test(`${m.description} ${J(m.settings)}`));
     const cat = CATALOG.find((c) => c.type === GAME);
     check('catalog: listed with the games, asks for an answer', cat && cat.group === 'practice' && cat.use === 'answer' && cat.title === TITLE, J(cat));
     check('library: under Games', J(MODULE_CATEGORIES[GAME]) === J(['games']));

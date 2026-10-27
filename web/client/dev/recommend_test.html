@@ -134,7 +134,7 @@ try {
   const words = Object.values(REC_WORDS).map((w) => (typeof w === 'function' ? w('Sam', 'Blue Moon') : w)).join(' ')
     + PEOPLE_SETTINGS.map((s) => `${s.label} ${s.help}`).join(' ');
   check('*** every word it can put on the page names nobody ***',
-    !/her screen|taylor|cici/i.test(words), String(words).slice(0, 200));
+    !/her screen|chri[s]tine|cici/i.test(words), String(words).slice(0, 200));
   check('the message limit is the note’s', MAX_MESSAGE === 280);
   {
     // Row 2.55: ONE Spotify-link reader, `spotifyRef`, under parseLink here and the music favourites.
@@ -206,7 +206,7 @@ try {
   answer = () => ({ status: 503 });
   await dlg.setLink(`https://youtu.be/${VID}`);
   check('the preview could not be had (offline): still a good link, Send works, untitled until sent', dlg.status() === 'ready');
-  check('names nobody in the window', !/her screen|taylor|cici/i.test(dbox.textContent));
+  check('names nobody in the window', !/her screen|chri[s]tine|cici/i.test(dbox.textContent));
   check('every target at least 44px', !small(dbox, 'input, textarea, button').length, small(dbox, 'input, textarea, button').join());
   dlg.destroy(); dbox.remove();
 
@@ -277,7 +277,7 @@ try {
   searchAnswer = () => ({ status: 500, body: null });
   await sdlg.search('blue moon');
   check('anything else: "you can still paste a link"', sq0('[data-rc-smsg]').textContent === REC_WORDS.searchFailed);
-  check('names nobody in the window with search', !/her screen|taylor|cici/i.test(sbox.textContent));
+  check('names nobody in the window with search', !/her screen|chri[s]tine|cici/i.test(sbox.textContent));
   check('every target at least 44px (a choice of where: its whole label is the target)', !small(sbox, 'input:not([type=radio]), textarea, button, .rc-where label').length,
     small(sbox, 'input:not([type=radio]), textarea, button, .rc-where label').join());
   check('no sideways scroll at 375', sbox.scrollWidth <= 376, `${sbox.scrollWidth}`);
@@ -353,7 +353,7 @@ try {
     && /YouTube key is removed/.test(kq('[data-sk-msg]').textContent));
   const kWords = JSON.stringify(SEARCH_KEYS_WORDS) + kbox.textContent;
   check('*** the keys page names nobody ***',
-    !/her screen|taylor|cici/i.test(kWords), String(kWords).slice(0, 200));
+    !/her screen|chri[s]tine|cici/i.test(kWords), String(kWords).slice(0, 200));
   check('every target at least 44px', !small(kbox, 'input, select, button').length, small(kbox, 'input, select, button').join());
   check('no sideways scroll at 375', kbox.scrollWidth <= 376, `${kbox.scrollWidth}`);
   kbox.remove();
@@ -396,7 +396,7 @@ try {
       && /main key again/.test(q2('[data-sk-msg]')?.textContent || ''), J(calls2));
     const w2 = JSON.stringify(SEARCH_KEYS_WORDS) + kb2.textContent;
     check('names nobody still',
-      !/her screen|taylor|cici/i.test(w2), String(w2).slice(0, 200));
+      !/her screen|chri[s]tine|cici/i.test(w2), String(w2).slice(0, 200));
     check('every new target at least 44px', !small(kb2, 'button').length, small(kb2, 'button').join());
     check('no sideways scroll at 375', kb2.scrollWidth <= 376, `${kb2.scrollWidth}`);
     kb2.remove();
@@ -435,7 +435,7 @@ try {
       await until(() => /There is no Client secret/.test(q3('[data-sk-status="spotify"]')?.textContent || ''), 3000) /* site text rewrite 2026-10-09 */
       && calls3.some((c) => c.method === 'PUT' && c.body?.client_id === '0123456789abcdef0123456789abcdef' && c.body.client_secret === ''), J(calls3));
     const w3 = JSON.stringify(SEARCH_KEYS_WORDS) + kb3.textContent;
-    check('names nobody still', !/her screen|taylor|cici/i.test(w3), String(w3).slice(0, 200));
+    check('names nobody still', !/her screen|chri[s]tine|cici/i.test(w3), String(w3).slice(0, 200));
     check('every target at least 44px', !small(kb3, 'input, button').length, small(kb3, 'input, button').join());
     check('no sideways scroll at 375', kb3.scrollWidth <= 376, `${kb3.scrollWidth}`);
     kb3.remove();
@@ -505,7 +505,7 @@ try {
   q('[data-pp-sheet] [data-rc-send]').click();
   check('*** sent through the real server (granted and ticked) ***', await until(() => /^Sent\./.test(q('[data-pp-sheet] [data-rc-msg]')?.textContent || ''), 12000),
     q('[data-pp-sheet] [data-rc-msg]')?.textContent);
-  check('names nobody in the window', !/her screen|taylor|cici/i.test(q('[data-pp-sheet]').textContent));
+  check('names nobody in the window', !/her screen|chri[s]tine|cici/i.test(q('[data-pp-sheet]').textContent));
   q('[data-pp-close]').click();
   // Lee has not said yes: the server refuses, whatever the page does.
   const refused = await fetch(recommendationsURL(c1.id), { method: 'POST', headers: { 'X-Dev-User': A, 'Content-Type': 'application/json' }, body: JSON.stringify({ link: `https://youtu.be/${VID}` }) });
@@ -557,7 +557,7 @@ try {
   check('*** buttons: Play (YouTube), Open in Spotify, and Remove on each ***',
     ytCard.querySelector('[data-pp-act="rec-play"]')?.textContent.startsWith('Play') && spCard.querySelector('[data-pp-act="rec-play"]')?.textContent.startsWith('Open in Spotify')
     && !!ytCard.querySelector('[data-pp-act="rec-remove"]') && !!spCard.querySelector('[data-pp-act="rec-remove"]'));
-  check('names nobody on the page', !/her screen|taylor|cici/i.test(bq('[data-pp-list]').textContent), String(bq('[data-pp-list]').textContent).slice(0, 200));
+  check('names nobody on the page', !/her screen|chri[s]tine|cici/i.test(bq('[data-pp-list]').textContent), String(bq('[data-pp-list]').textContent).slice(0, 200));
   check('every button at least 44px', bqa('[data-pp-stop]').every((b) => b.getBoundingClientRect().height >= 44));
   check('no sideways scroll at 375', bq('.pp-root').scrollWidth <= bq('.pp-root').clientWidth + 1, `${bq('.pp-root').scrollWidth}`);
   ytCard.querySelector('[data-pp-act="rec-play"]').click();
@@ -602,7 +602,7 @@ try {
   check('*** nothing is removed on a screen (no Remove) ***', !sq('[data-pp-act="rec-remove"]'));
   check('*** Spotify on a screen: the address and a code to scan, no button, nothing to open ***',
     !sSp.querySelector('[data-pp-act]') && /open\.spotify\.com\/album\//.test(sSp.querySelector('[data-rc-address]')?.textContent || '') && !!sSp.querySelector('[data-rc-elsewhere]'));
-  check('names nobody on the screen', !/her screen|taylor|cici/i.test(sq('[data-pp-list]').textContent));
+  check('names nobody on the screen', !/her screen|chri[s]tine|cici/i.test(sq('[data-pp-list]').textContent));
   sYt.querySelector('[data-pp-act="rec-play"]').click();
   check('*** ONE press plays the YouTube one, through the YouTube player ***', await until(() => sq('[data-pp-sheet="video"]') && stub2.loaded.includes(VID), 8000), J(stub2.loaded));
   stub2.end();

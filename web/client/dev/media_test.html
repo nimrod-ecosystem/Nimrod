@@ -236,7 +236,7 @@ section('photo sources first: the everyday ways first, the helper under advanced
         /download isn’t ready yet/.test(text(helper)));
   check('the hand set-up notes are linked too, for somebody with a terminal',
         /media_agent\/deploy\/README\.md$/.test(helper.querySelector('[data-agent-notes]')?.getAttribute('href') || ''));
-  check('the site copy never names a person or "her screen"', !/\bher screen|\bTaylor\b|\bCici\b/i.test(host.textContent));   // \b: "another screen" is fine
+  check('the site copy never names a person or "her screen"', !/\bher screen|\bChri[s]tine\b|\bCici\b/i.test(host.textContent));   // \b: "another screen" is fine
 }
 {
   const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0), helperReady: true });

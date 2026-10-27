@@ -289,7 +289,7 @@ try {
     check('three ways in: make one, a picture instead, make your own', t.q('[data-act="make"]') && t.q('[data-act="to-picture"]') && t.q('[data-act="to-own"]'));
     check('no "No avatar" button when there is none to remove', !t.q('[data-act="no-avatar"]'));
     const words = t.host.textContent;
-    check('the site copy never names the first person it was built for', !/Taylor|Cici|her screen/i.test(words));
+    check('the site copy never names the first person it was built for', !/Chri[s]tine|Cici|her screen/i.test(words));
     t.inst.destroy();
   }
 
@@ -506,7 +506,7 @@ try {
     check('both prompts are shown in full', t.q('[data-prompt="photo"]').textContent === PROMPT_PHOTO && t.q('[data-prompt="describe"]').textContent === PROMPT_DESCRIBE);
     check('...with the consent line and the photo-leaves-your-computer warning first',
       /Only make an avatar of yourself, or of someone who has said yes/.test(t.host.textContent) && /leaves your computer/.test(t.host.textContent));
-    check('...and no copy that names the first person it was built for', !/Taylor|Cici|her screen/i.test(t.host.textContent));
+    check('...and no copy that names the first person it was built for', !/Chri[s]tine|Cici|her screen/i.test(t.host.textContent));
     t.press('[data-act="copy"][data-which="photo"]');
     await tick();
     check('Copy puts the prompt on the clipboard and says so', copied[0] === PROMPT_PHOTO && /Copied/.test(t.host.textContent));

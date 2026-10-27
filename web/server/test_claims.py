@@ -175,7 +175,7 @@ check("*** only the holder: anybody else is the same 404 ***", claims.remove_car
 words = " ".join(REFUSAL_TEXT.values())
 # (A banned-word check here, no 'account', 'token' or 'grant', was retired 2026-10-13 with the banned-word lists;
 # the rule that copy names nobody stays.)
-check("*** the words a person reads name nobody ***", not re.search(r"her screen|taylor|cici", words, re.I), words)
+check("*** the words a person reads name nobody ***", not re.search(r"her screen|chri[s]tine|cici", words, re.I), words)
 
 # ---------------------------------------------------------------- HTTP
 section("*** the routes, end to end ***")

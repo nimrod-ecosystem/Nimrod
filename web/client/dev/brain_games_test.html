@@ -90,7 +90,7 @@ try {
       ORDER.filter((q) => q.level === 1).every((q) => q.seq.length === 2) && ORDER.filter((q) => q.level === 5).every((q) => q.seq.length === 5 && q.extra.length === 1)
         && ORDER.every((q) => new Set(q.picks).size === q.picks.length && !q.extra.some((x) => q.seq.includes(x))));
     const text = JSON.stringify(BANKS) + JSON.stringify(LINES);
-    check('no site copy names the person this was first built for', !/taylor|cici|her screen/i.test(text));
+    check('no site copy names the person this was first built for', !/chri[s]tine|cici|her screen/i.test(text));
     check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')));
   }
 

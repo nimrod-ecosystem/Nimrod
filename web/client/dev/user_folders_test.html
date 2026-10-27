@@ -993,7 +993,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       check('...and for a folder of its own', copyText('pictures', own) === 'Save photos in the folder “Family photos” (the one chosen for pictures on this device).', copyText('pictures', own));
       check('every kind has its words', FOLDER_KINDS.every((k) => SAVE_WORDS[k]));
       check('site copy never names the person it was first built for, nor "her screen"',
-        !/Taylor|Cici|her screen/i.test(JSON.stringify([SAVE_WORDS, Object.values(SUBFOLDERS)]) + Object.values((await import('../user_folders.js')).README).join(' ')));
+        !/Chri[s]tine|Cici|her screen/i.test(JSON.stringify([SAVE_WORDS, Object.values(SUBFOLDERS)]) + Object.values((await import('../user_folders.js')).README).join(' ')));
     }
 
     section('*** what the new kinds\' folders hold, by name only ***');
@@ -1119,7 +1119,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       check('*** a refused clipboard: the page shows the words to copy by hand ***', /Could not copy here/.test(host2.textContent) && /Voice model/.test(host2.querySelector('[data-uf-msg]').textContent));
       page2.destroy();
       check('no colour is written into the page (the theme\'s classes only)', !/#[0-9a-f]{3,6}\b|rgb\(|hsl\(/i.test(host.innerHTML));
-      check('site copy never names the person it was first built for, nor "her screen"', !/Taylor|Cici|her screen/i.test(host.textContent));
+      check('site copy never names the person it was first built for, nor "her screen"', !/Chri[s]tine|Cici|her screen/i.test(host.textContent));
       page.destroy();
       host.remove();
     }

@@ -111,7 +111,7 @@ try {
     const words = J(its) + J(CATEGORIES) + J(LIBRARY_SETTINGS);
     // (Its money-word half was retired 2026-10-13 with the banned-word lists: Mike, "I really don't like this banned
     // word thing at all.")
-    check('*** no site copy says "her screen", Taylor or Cici ***', !/\bher screen|taylor|cici/i.test(words));
+    check('*** no site copy says "her screen", or a person’s name ***', !/\bher screen|chri[s]tine|cici/i.test(words));
   }
 
   section('*** categories are tags: several per thing, from the catalog’s groups unless the table says ***');

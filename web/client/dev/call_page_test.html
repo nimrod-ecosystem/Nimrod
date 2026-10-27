@@ -279,7 +279,7 @@ try {
       && !M.fetchImpl.calls.some((c) => /ticket/.test(c.url)), JSON.stringify(M.fetchImpl.calls));
     check('it says the name the screen will show', /from “Ann”/.test(root.querySelector('[data-shown-as]')?.textContent || ''));
     check('the intercom is one link away, for the same person', /intercom\.html\?person=p1/.test(root.querySelector('[data-intercom-link]')?.getAttribute('href') || ''));
-    check('site copy never says "her screen", "Taylor" or "Cici"', !/her screen|Taylor|Cici/i.test(text()));
+    check('site copy never says "her screen", a person’s name', !/her screen|Chri[s]tine|Cici/i.test(text()));
     M.page.destroy();
   }
   {
@@ -350,7 +350,7 @@ try {
       && /tailscale\.com\/install\.sh/.test(g));
     check('...someone on another account is given just the screen (Share, an invite link), and the others are named',
       /Someone on another account/.test(g) && /Share/.test(g) && /ZeroTier/.test(g) && /WireGuard/.test(g));
-    check('the guide names nobody and says "not affiliated"', !/taylor|cici|her screen/i.test(g) && /not affiliated/.test(g));
+    check('the guide names nobody and says "not affiliated"', !/chri[s]tine|cici|her screen/i.test(g) && /not affiliated/.test(g));
   }
 
   // 2026-10-26 (note CT): a call that could not connect says what each end offered, so the next failure says why.
@@ -364,7 +364,7 @@ try {
     check('both offered home-network addresses and still failed: "check both are on the same Wi-Fi, not a guest network"',
       /hidden home-network address/.test(bothHome) && /not a guest network/.test(bothHome), bothHome);
     check('nothing read: nothing said', iceWords(null) === null);
-    check('names nobody, no jargon like ICE or STUN', !/taylor|cici|her screen|\bICE\b|STUN|TURN/i.test(phoneOnData + bothHome));
+    check('names nobody, no jargon like ICE or STUN', !/chri[s]tine|cici|her screen|\bICE\b|STUN|TURN/i.test(phoneOnData + bothHome));
   }
 
   // =====================================================================================
@@ -714,7 +714,7 @@ try {
     check(`*** nothing in ${GAME_ASK_WAIT_MS / 1000} s: it says the game did not open, and where it can ***`,
       /The game did not open on Alex’s screen\. It opens on a screen showing Quiz mix, or showing the call by itself\./.test(text()), text().slice(0, 300));
     // (Its banned-word half, socket/server/module/panel, was retired 2026-10-13 with the banned-word lists.)
-    check('*** no "her screen", no names of the people this was built for ***', !/her screen|taylor|cici/i.test(root.querySelector('[data-game]')?.textContent || ''));
+    check('*** no "her screen", no names of the people this was built for ***', !/her screen|chri[s]tine|cici/i.test(root.querySelector('[data-game]')?.textContent || ''));
     clock.advance(GAME_NOTE_MS); await sleep(5);
     check(`...gone by itself after ${GAME_NOTE_MS / 1000} s: the button is back`, !!root.querySelector('[data-game-ask]') && !root.querySelector('[data-game-note]'));
     // "Never mind": a late code is then an ordinary offer, not a game opened under them.

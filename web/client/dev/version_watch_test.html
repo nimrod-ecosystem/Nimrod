@@ -96,7 +96,7 @@ function makeWatch(over = {}) {
     check('a row that never chose follows the default (off); true is on; junk is the default',
       pickUpVersionsOf({}) === false && pickUpVersionsOf(null) === false && pickUpVersionsOf({ [PICK_UP_KEY]: true }) === true
       && pickUpVersionsOf({ [PICK_UP_KEY]: 'yes' }) === false);
-    check('the site copy never names a person', !/her screen|taylor|cici/i.test(JSON.stringify(PICK_UP_FIELD)));
+    check('the site copy never names a person', !/her screen|chri[s]tine|cici/i.test(JSON.stringify(PICK_UP_FIELD)));
     check('it polls every few minutes, not every few seconds', VERSION_POLL_MS >= 60 * 1000 && VERSION_POLL_MS <= 15 * 60 * 1000,
       String(VERSION_POLL_MS));
     check('a playing panel is a game unless it says it is a slideshow or a video',

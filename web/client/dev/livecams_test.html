@@ -160,7 +160,7 @@ try {
     const n = log.length;
     check('a bad id is refused before any request', (await lookupCam('bad id', { fetchImpl: f })).reason === 'cam-bad-address' && log.length === n);
     check('every message is a sentence; none names a person or says "her screen"', Object.values(CAM_MESSAGES).every((m) => /[.]$/.test(m)
-      && !/her screen|taylor|cici/i.test(m)));
+      && !/her screen|chri[s]tine|cici/i.test(m)));
     check('the cam’s name goes into the sentence', camWords('cam-off', 'Brown bears, Alaska') === 'Brown bears, Alaska is not on right now. It may be night there, or out of season.');
   }
 
@@ -203,7 +203,7 @@ try {
     const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: TYPE }).filter((x) => x.severity !== 'info');
     check('the settings audit finds nothing to warn about', errs.length === 0, J(errs));
     const words = J(m.settings) + m.description + J(CATALOG.find((c) => c.type === TYPE) || {});
-    check('no visible words say "her screen" or name a person', !/her screen|taylor|cici/i.test(words));
+    check('no visible words say "her screen" or name a person', !/her screen|chri[s]tine|cici/i.test(words));
     check('it has decided what its silence means (health)', !!HEALTH_EXPECT[TYPE]);
     check('the catalog describes it', CATALOG.some((c) => c.type === TYPE && c.title === m.title));
     check('the screen’s verbs reach it (next, prev, select, play, pause)', J(MODULE_VERBS[TYPE]) === J({ next: 'livecams/next', prev: 'livecams/prev',

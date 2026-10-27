@@ -631,7 +631,7 @@ export function treeProblems(nodes = GUIDE_NODES, { root = GUIDE_ROOT, knownType
     if (!n || n.id !== id) { out.push(`node ${id} is filed under the wrong id`); continue; }
     if (typeof n.title !== 'string' || !n.title.trim()) out.push(`${id}: no title`);
     if (typeof n.say !== 'string' || !n.say.trim()) out.push(`${id}: says nothing`);
-    if (/\bher screen|taylor|cici/i.test(`${n.title} ${n.say}`)) out.push(`${id}: site copy names a person or says "her screen"`);
+    if (/\bher screen|chri[s]tine|cici/i.test(`${n.title} ${n.say}`)) out.push(`${id}: site copy names a person or says "her screen"`);
     const ch = Array.isArray(n.choices) ? n.choices : [];
     if (!ch.length) out.push(`${id}: no choices (every choice gives information AND choices)`);
     const keys = new Set();

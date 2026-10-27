@@ -386,7 +386,7 @@ try {
     const words = [...page.querySelectorAll('[data-rv-who], [data-rv-deal]')].map((n) => n.textContent).join(' ');
     // (A banned-word check here was retired 2026-10-13 with the banned-word lists.)
     check('what the reviewer reads has words, and never names the person the site was first built for',
-      words.trim().length > 0 && !/Taylor|Cici|her screen/i.test(page.textContent));
+      words.trim().length > 0 && !/Chri[s]tine|Cici|her screen/i.test(page.textContent));
     pg.destroy();
     check('the page going away takes the points off the handle', reviews.points() === null);
   }

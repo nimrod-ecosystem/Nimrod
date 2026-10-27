@@ -120,7 +120,7 @@ try {
     check('*** ...the settings MENU opening by itself (it would take the switch scan) ***', bp.some((p) => /take the switch scan/.test(p)));
     check('...a settings page that does not exist', bp.some((p) => /sc-nope/.test(p)));
     check('...site copy saying "her screen"', bp.some((p) => /names a person/.test(p)));
-    check('no node anywhere says "her screen", Taylor or Cici', !/\bher screen|taylor|cici/i.test(J(GUIDE_NODES) + J(INTROS)));
+    check('no node anywhere says "her screen", or a person’s name', !/\bher screen|chri[s]tine|cici/i.test(J(GUIDE_NODES) + J(INTROS)));
   }
 
   // ============================================================================================

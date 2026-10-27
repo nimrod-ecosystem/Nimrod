@@ -257,7 +257,7 @@ const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.
         ERROR_EVENTS.every((ev) => lines0.find((l) => l.id === ev)?.value === 'None.') && lines0.find((l) => l.id === 'past').value === 'Not yet.'
         && lines0.find((l) => l.id === 'ready').tone !== 'good');
       const allWords = Object.values(SDK_WORDS).join(' ') + document.title;
-      check('no words name anybody or say "her screen"', !/her screen|taylor|cici/i.test(allWords));
+      check('no words name anybody or say "her screen"', !/her screen|chri[s]tine|cici/i.test(allWords));
 
       // Signed out: nothing navigates until Connect is pressed.
       const host = document.getElementById('host');

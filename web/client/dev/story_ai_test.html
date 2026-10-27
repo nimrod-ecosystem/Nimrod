@@ -348,7 +348,7 @@ section('the words');
 {
   const all = [talkSystem({ character: characterInfo('jack', 'steampunk'), theme: 'steampunk' }), adventureSystem({ theme: 'christmas' }), pageSystem({}),
     FALLBACK_LINE, REFUSE_LINE, CARE_LINE, NO_AI_LINE, ...OPENING_REPLIES, ...openingChoices('nimrod')].join('\n');
-  check('*** nothing names the person the site was first built for, or says "her screen" ***', !/taylor|cici|her screen/i.test(all));
+  check('*** nothing names the person the site was first built for, or says "her screen" ***', !/chri[s]tine|cici|her screen/i.test(all));
   // (2026-10-25: Design System19 gave every theme a town of its own, so only a theme it does not know falls back.)
   check('a site theme with no town of its own is Nimrod\'s town; every theme now has one', townTheme('no-such-theme') === 'nimrod'
     && townTheme('ocean') === 'ocean' && townTheme('halloween') === 'halloween');

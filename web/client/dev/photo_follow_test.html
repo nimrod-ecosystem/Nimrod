@@ -233,7 +233,7 @@ if (GAP) {
     st.load(null, 0, false, 'photo', { salt: SALT });
     check('the screen showing nothing: the words, not an empty box', box.textContent === PHOTO_LINES.nothing);
     const copy = JSON.stringify(PHOTO_LINES);
-    check('the words never say "her screen" or name anybody', !/\bher screen|taylor|cici/i.test(copy));
+    check('the words never say "her screen" or name anybody', !/\bher screen|chri[s]tine|cici/i.test(copy));
     st.destroy(); box.remove();
   }
 
@@ -254,7 +254,7 @@ if (GAP) {
     check('*** not here: "This video isn\'t in your videos here." ***', box.textContent === PERSONAL_LINES.missing, box.textContent);
     st.load(null, 0, false, 'personal', { salt: SALT });
     check('nothing playing there: says so, in the box', box.textContent === PERSONAL_LINES.nothing);
-    check('the words never say "her screen" or name anybody', !/\bher screen|taylor|cici/i.test(JSON.stringify(PERSONAL_LINES)));
+    check('the words never say "her screen" or name anybody', !/\bher screen|chri[s]tine|cici/i.test(JSON.stringify(PERSONAL_LINES)));
     st.destroy(); box.remove();
   }
 

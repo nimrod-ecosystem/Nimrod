@@ -6,6 +6,9 @@
 *.service text eol=lf
 *.timer text eol=lf
 web/kiosk_installer/deploy/*.conf text eol=lf
+# git hooks are shell scripts with no extension (pre-commit, commit-msg, pre-push): LF, or the shebang breaks.
+web/tools/hooks/* text eol=lf
+web/tools/hooks/README.md text
 
 # Markdown is documents, not scripts - let the platform decide locally.
 *.md text

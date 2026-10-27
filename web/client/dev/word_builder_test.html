@@ -78,7 +78,7 @@ try {
     check('the same every load (no random source), so ratings stay attached', PUZZLES[0].id === PUZZLES.slice()[0].id && /^wb-[a-z]+$/.test(PUZZLES[0].id));
     check('canMake uses each letter once: "bell" needs two Ls', canMake('bell', ['b', 'e', 'l', 'l']) && !canMake('bell', ['b', 'e', 'l']));
     const text = JSON.stringify(PUZZLES) + JSON.stringify(LINES);
-    check('no site copy names the person this was first built for', !/taylor|cici|her screen/i.test(text));
+    check('no site copy names the person this was first built for', !/chri[s]tine|cici|her screen/i.test(text));
     check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')));
   }
 

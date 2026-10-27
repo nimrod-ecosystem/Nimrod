@@ -571,7 +571,7 @@ function backend(user) {
       check('*** ...and a notice says why, and where the key is (Home: Change, then Unlock) ***',
         /locked on this dashboard/.test(k.lockNote() || '') && /Change, then Unlock/.test(k.lockNote() || '')
         && !!box.querySelector('[data-lock-note][role="status"]'), k.lockNote());
-      check('the notice has no words about whose screen it is', !/her screen|Taylor|Cici/i.test(k.lockNote() || ''));
+      check('the notice has no words about whose screen it is', !/her screen|Chri[s]tine|Cici/i.test(k.lockNote() || ''));
       bus.publish(SWITCH_MODULE_TOPIC, {});
       await sleep(80);
       check('a bound switch / "switch module" said aloud: refused the same way', k.switchOpen() === null);

@@ -391,7 +391,7 @@ try {
     check('every row has a stable id the cat and the suites can name', m.filter((i) => i.kind === 'item').every((i) => i.id === `home:${i.act}`));
     check('History is disabled on something not saved yet; the menu’s scan skips it',
       m.find((i) => i.act === 'history').disabled === true);
-    check('no row says "her screen", Taylor or Cici', !J(m).match(/her screen|Taylor|Cici/i));
+    check('no row says "her screen", or a person’s name', !J(m).match(/her screen|Chri[s]tine|Cici/i));
 
     // The full-screen delay: a setting, default Design's 6 s, with Never as a choice.
     check('*** in full screen the bar tucks away after 6 s by default (Design) ***', HOME_DEFAULTS.barHideMs === 6000

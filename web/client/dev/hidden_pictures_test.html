@@ -400,7 +400,7 @@ try {
     check('"When a picture is hidden": said when asked aloud (default), always, or only shown; advanced',
       hideSay && hideSay.default === 'voice' && J(hideSay.options.map((o) => o.value)) === J(['voice', 'always', 'never']) && hideSay.level === 'advanced');
     check('no row\'s words name a person the site was built for (site copy)',
-      !fields.some((f) => /\bher\b|Taylor|Cici/i.test(`${f.label} ${(f.options || []).map((o) => o.label).join(' ')}`)));
+      !fields.some((f) => /\bher\b|Chri[s]tine|Cici/i.test(`${f.label} ${(f.options || []).map((o) => o.label).join(' ')}`)));
   }
 
   // ------------------------------------------------------------------------------------------------

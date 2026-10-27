@@ -105,7 +105,7 @@ try {
   check('captions: off by default; "this computer only" and "and the other computers" are separate choices',
     CALL_CAPTIONS_DEFAULT === 'off' && CALL_CAPTION_MODES.join() === 'off,here,any' && callCaptionsOf({}) === 'off'
     && callCaptionsOf({ [CALL_CAPTIONS_KEY]: 'any' }) === 'any' && callCaptionsOf({ [CALL_CAPTIONS_KEY]: true }) === 'off');
-  check('site copy in the rows never says "her screen" or a name', !/her screen|Taylor|Cici/i.test(JSON.stringify([CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD])));
+  check('site copy in the rows never says "her screen" or a name', !/her screen|Chri[s]tine|Cici/i.test(JSON.stringify([CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD])));
   check('*** the board sits beside the call on a wide screen, under it on a tall one ***',
     boardPreset({ width: 1280, height: 720 }) === 'side' && boardPreset({ width: 390, height: 844 }) === 'stack' && boardPreset({ width: 500, height: 500 }) === 'side');
   const wide = callViewPlan({ [CALL_OPENS_KEY]: 'audio_board', [CALL_CAPTIONS_KEY]: 'here' }, { width: 1280, height: 720 });

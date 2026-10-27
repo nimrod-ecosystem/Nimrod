@@ -567,7 +567,7 @@ if (GAP) {
     check('the sharing note now says pictures too, and that a picture goes as a code, never its name',
       /picture/.test(FOLLOW_FIELD.note) && /never its name/.test(FOLLOW_FIELD.note));
     const copy = JSON.stringify([FOLLOW_FIELD, FOLLOW_BEAT_FIELD, FOLLOW_MAIN_FIELD, HELPING_WORDS, WATCHING_WORDS, BOTH_WORDS, STOP_AFTER_CHOICES]);
-    check('site copy never says "her screen" or names anybody', !/\bher screen|taylor|cici/i.test(copy));    check('*** nobody connected: no notice ***', noticeWords({ drivers: 0, followers: 0 }) === '');
+    check('site copy never says "her screen" or names anybody', !/\bher screen|chri[s]tine|cici/i.test(copy));    check('*** nobody connected: no notice ***', noticeWords({ drivers: 0, followers: 0 }) === '');
     check('a driver: "helping" (exactly the words the screen always showed)', noticeWords({ drivers: 1 }) === HELPING_WORDS
       && HELPING_WORDS === 'Someone is helping from another screen');
     check('*** a follower only: "watching along", not "helping" ***', noticeWords({ drivers: 1, followers: 1 }) === WATCHING_WORDS);

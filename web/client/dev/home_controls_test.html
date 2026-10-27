@@ -89,7 +89,7 @@ try {
   const p0 = mount(none);
   check('*** not set up on this screen: it says so in words, sends nothing, and looks for nothing ***', p0.q('[data-hc="unset"]')?.textContent.trim() === NOT_SET_UP
     && p0.timers.pending() === 0 && fetched === 0);
-  check('...and says nothing about a person or "her screen"', !/taylor|cici|her screen/i.test(NOT_SET_UP + getManifest(TYPE).description));
+  check('...and says nothing about a person or "her screen"', !/chri[s]tine|cici|her screen/i.test(NOT_SET_UP + getManifest(TYPE).description));
   p0.done();
 
   const devices = [{ ...lamp }, { entity_id: 'media_player.tv', domain: 'media_player', name: 'TV', label: '', state: 'off', actions: ['on', 'off', 'louder', 'quieter', 'pause'] }];

@@ -301,7 +301,7 @@ try {
     check('registered as "Sort the bricks", on the new core, dependsOn local', m && m.title === TITLE && m.core === 'new' && m.dependsOn === 'local');
     const words = `${m.title} ${m.description} ${J(m.settings)} ${J(CATALOG.find((c) => c.type === GAME))}`;
     check('the words never name a toy or another game', !/lego|duplo|mega ?bloks|tupperware|fisher|melissa|playskool|tetris/i.test(words));
-    check('the words never say "her screen" or name anybody', !/taylor|cici|her screen/i.test(words));
+    check('the words never say "her screen" or name anybody', !/chri[s]tine|cici|her screen/i.test(words));
     const cat = CATALOG.find((c) => c.type === GAME);
     check('catalog: listed with the games, asks for an answer', cat && cat.group === 'practice' && cat.use === 'answer' && cat.title === TITLE, J(cat));
     check('library: under Games', J(MODULE_CATEGORIES[GAME]) === J(['games']));

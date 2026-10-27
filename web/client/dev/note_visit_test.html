@@ -154,7 +154,7 @@ try {
     await v.ready;
     check('*** a 403 says plainly that the owner can allow it, and shows no note ***', v.status() === 'refused'
       && /cannot leave a note for Robin yet/.test(host.textContent) && !host.querySelector('[data-note]'), host.textContent);
-    check('no site copy names a particular person or "her screen"', !/her screen|Taylor|Cici/i.test(host.textContent));
+    check('no site copy names a particular person or "her screen"', !/her screen|Chri[s]tine|Cici/i.test(host.textContent));
     v.destroy();
   }
 

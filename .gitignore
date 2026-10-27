@@ -9,6 +9,9 @@
 # Chat-side output belongs in Nimrod_Ecosystem/docs/from_chat/, never here.
 Claude outputs/
 **/Claude outputs/
+# This computer's own launcher for Claude Code's preview: absolute paths that carry the Windows user folder, so a
+# person's name (2026-10-26, chat's note CZ). Machine-specific anyway; kept locally, never tracked.
+.claude/launch.json
 
 # Patient / personal media and data
 **/photos/

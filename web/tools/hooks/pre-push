@@ -1,0 +1,11 @@
+#!/bin/sh
+# Last stop before GitHub: every commit being pushed, its message and its files. Catches a commit made somewhere the
+# other two hooks did not run (another clone, a hook turned off, a commit made before they existed).
+z=0000000000000000000000000000000000000000
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$z" ] && continue                      # deleting a branch: nothing is sent
+  if [ "$remote_sha" = "$z" ]; then range="$local_sha --not --remotes"; else range="$remote_sha..$local_sha"; fi
+  sh "$(git rev-parse --show-toplevel)/web/tools/hooks/run_name_check.sh" --push "$range" || status=1
+done
+exit $status

@@ -282,7 +282,7 @@ try {
   }
 
   section('copy');
-  check('no copy says "her screen", Taylor or Cici', !/her screen|Taylor|Cici/i.test(J(BRICK_BUILDS) + builtFromWords(BRICK_BUILDS.desk) + J(LOOK_FIELD)));
+  check('no copy says "her screen", or a person’s name', !/her screen|Chri[s]tine|Cici/i.test(J(BRICK_BUILDS) + builtFromWords(BRICK_BUILDS.desk) + J(LOOK_FIELD)));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

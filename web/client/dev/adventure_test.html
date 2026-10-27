@@ -191,7 +191,7 @@ section('two switches: next / select; and back to the start, then Carry on');
   H.inst.impl.__press('carry');
   await tick();
   check('*** Carry on: the page and choices back, with no AI call ***', H.p().view === 'story' && /well/.test(H.p().say) && H.p().choices.length === 2 && H.p().story.turns() === before);
-  check('the module does not name the person it was first built for', !/taylor|cici|her screen/i.test(H.mount.textContent));
+  check('the module does not name the person it was first built for', !/chri[s]tine|cici|her screen/i.test(H.mount.textContent));
   void calls;
 }
 

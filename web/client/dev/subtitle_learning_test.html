@@ -449,7 +449,7 @@ try {
     const bad = auditFields(SUBTITLE_LEARNING_FIELDS.map(normalizeField).filter(Boolean), { type: 'subtitles' }).filter((f) => f.severity === 'error');
     check('the rows pass the settings audit', bad.length === 0, J(bad));
     check('every row is plain, and none says "her screen" or names anybody',
-      SUBTITLE_LEARNING_FIELDS.every((f) => !/her screen|taylor|cici/i.test(`${f.label} ${f.note || ''}`)));
+      SUBTITLE_LEARNING_FIELDS.every((f) => !/her screen|chri[s]tine|cici/i.test(`${f.label} ${f.note || ''}`)));
     check('one action, for a switch or a key: fix a line', SUBTITLE_LEARNING_ACTIONS.length === 1 && SUBTITLE_LEARNING_ACTIONS[0].topic === SUBTITLES_FIX_TOPIC);
   }
 } catch (e) {
