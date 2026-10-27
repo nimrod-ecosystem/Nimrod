@@ -32,6 +32,7 @@ SELF = 'web/server/test_no_family_names.py'
 # is added there and its hash here (`--hash WORD` prints it).
 NAMES_SALT = 'nimrod-names-v1:'
 BLOCKED_HASHES = frozenset({
+    '1c83fb4b42679f6758c4a9a8467f5ce5e568ec82e50bf0adb514c456f7fbaef3',
     '099207a15c6b6f8c6568e6d2cba93ab8445e84e3342a65e5484391d276d23504',
     '3c57f5fe2a8511ef76e5be54c41310cb23acd97a012fbb28e98099e24acc99cb',
     '8667996213bbaddd40f6a35d926313e0d81848293fb04a8070d8e796e80cd6e0',
