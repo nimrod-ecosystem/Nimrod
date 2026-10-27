@@ -195,7 +195,7 @@ try {
       !/for now/.test(m.settings.find((s) => s.key === 'style').label)
       && !/for now/.test(m.settings.find((s) => s.key === 'frame').label));
     check('the description is plain words and names no person', typeof m.description === 'string'
-      && m.description.length > 10 && !/\bher\b|chri[s]tine/i.test(m.description));
+      && m.description.length > 10 && !/\bher\b/i.test(m.description));
   }
 
   section('the select verb is registered, and is the ONLY verb');

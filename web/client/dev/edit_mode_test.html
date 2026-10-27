@@ -744,7 +744,7 @@ try {
     const slot = mountModule('library_slot', { mount: lhost, bus, rootBus: bus, state: memState(), events: noEvents(), user: 'u', personId: null, instanceId: 'l1' });
     slot.init();
     check('*** with none, it says where the library will be and what to do meanwhile, in words ***', lhost.textContent.includes(LIBRARY_WAITING.slice(0, 30)));
-    check('no copy says "her screen", or a person’s name', !/her screen|Chri[s]tine|Cici/i.test(LIBRARY_WAITING + OPTIONS_IDLE));
+    check('no copy says "her screen", or a person’s name', !/her screen|Cici/i.test(LIBRARY_WAITING + OPTIONS_IDLE));
     slot.destroy();
   }
 

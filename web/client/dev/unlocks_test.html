@@ -341,7 +341,7 @@ const flagsRow = (game, learning) => ({ [PROFILE_SETTINGS_KEY]: { [GAME_ON_KEY]:
       const copy = [...Object.values(FLAG_NOTES), ...Object.values(MODE_HELP), PANEL_CLOSED_NOTE, gameSettingsHTML(null),
         gameSettingsHTML({ flags: F(true, true), prefs: GAME_DEFAULTS, unlocked: new Set(), balances: {} }),
         lockWords(lockState('module:trivia', { flags: F(true, false) }), 'Trivia').why, ...GAME_MODE_FIELDS.map((f) => `${f.label} ${f.note} ${f.onLabel} ${f.offLabel}`)].join(' ');
-      check('site copy never says "her screen", or a person’s name', !/\bher screen|chri[s]tine|cici/i.test(copy));
+      check('site copy never says "her screen", or a person’s name', !/\bher screen|cici/i.test(copy));
       check('no node A text says the game is "still being built" any more',
         ['mode', 'mode-game', 'mode-learning', 'mode-sandbox'].every((id) => !/still being built/.test(GUIDE_NODES[id].say)));
     }

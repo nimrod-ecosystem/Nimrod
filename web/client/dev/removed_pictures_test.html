@@ -347,7 +347,7 @@ try {
     check('*** changing it saves it with the source, and the words say what will happen there ***',
       J(setCalls) === J([['ag', 'remove']]) && anote.includes(ON_REMOVE_WORDS.remove) && anote.includes(ON_REMOVE_WORDS.drive)
       && anote.includes('--removals'), anote);
-    check('no words here name a person the site was built for', !/\bher\b|Chri[s]tine|Cici/i.test(host.textContent));
+    check('no words here name a person the site was built for', !/\bher\b|Cici/i.test(host.textContent));
     m.destroy?.();
     host.innerHTML = '';
   }

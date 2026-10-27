@@ -243,7 +243,7 @@ try {
   {
     const m = getManifest(GAME);
     check('registered as "Brick mosaic", on the new core', m && m.title === TITLE && m.core === 'new');
-    check('the words never say "her screen" or name anybody', !/chri[s]tine|cici|her screen/i.test(`${m.description} ${J(m.settings)}`));
+    check('the words never say "her screen" or name anybody', !/cici|her screen/i.test(`${m.description} ${J(m.settings)}`));
     const cat = CATALOG.find((c) => c.type === GAME);
     check('catalog: something to look at, fine if never touched', cat && cat.group === 'comfort' && cat.use === 'touch' && cat.title === TITLE, J(cat));
     check('library: under Games, and something to look at', J(MODULE_CATEGORIES[GAME]) === J(['games', 'visual']));

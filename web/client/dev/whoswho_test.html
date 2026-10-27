@@ -147,7 +147,7 @@ try {
     const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: GAME }).filter((x) => x.severity !== 'info');
     check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
     check('no site copy names the person it was first built for, no she / her on the screen\'s person, nothing childish',
-      !/chri[s]tine|cici|her screen|\b(herself|hers)\b|kiddo|little one|yay/i.test(JSON.stringify(LINES) + m.description));
+      !/cici|her screen|\b(herself|hers)\b|kiddo|little one|yay/i.test(JSON.stringify(LINES) + m.description));
     check('"start" said aloud presses play; one game, listed', m.voice?.start === 'play' && GAMES.join() === GAME);
   }
 

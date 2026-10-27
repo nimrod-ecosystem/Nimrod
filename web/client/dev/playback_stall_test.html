@@ -181,7 +181,7 @@ async function mountYT(row = {}) {
         && rows.find((r) => r.key === 'heldNotifyMs').appliesWhen({ stallNotify: 'alerts' }) === true);
     check('"Show instead" hides when the switch is Never', rows.find((r) => r.key === 'stallSwitchTo').appliesWhen({ stallSwitchMs: 0 }) === false);
     check('no row says "let people know after", "her screen", or names anybody',
-      !JSON.stringify(rows).match(/let people know after|her screen|Chri[s]tine|Cici/i));
+      !JSON.stringify(rows).match(/let people know after|her screen|Cici/i));
     check('the switch-only set has no fix rows and no pause row',
       stallFields({ parts: ['notify', 'switch'], pause: false }).every((r) => !['stallFix', 'stallTries', 'stallMs', 'heldNotifyMs'].includes(r.key)));
     for (const type of ['youtube', 'personal', 'livecams', 'archive', 'karaoke']) {
@@ -352,7 +352,7 @@ async function mountYT(row = {}) {
       check('...even though the original said "gone" while it was being replaced', sw.switched('yt1'));
       check('...with a quiet line, and no alert (the default is a line only)',
         lines.length === 1 && /pictures are showing until it plays again/.test(lines[0]) && notices.length === 0, JSON.stringify(lines));
-      check('the line names the panel, not a person', !/her |Chri[s]tine|Cici/.test(lines[0]));
+      check('the line names the panel, not a person', !/her |Cici/.test(lines[0]));
 
       t.advance(MIN); await flush();
       check('a minute later it checks; still down, so the pictures stay',

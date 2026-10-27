@@ -890,7 +890,7 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
         && J(panelRingMode(undefined)) === J({ mode: 'after', ms: 10000 }) && J(panelRingMode('nonsense')) === J({ mode: 'after', ms: 10000 }));
       check('...each choice as what it does', J(['always', 'after-30', 'after-3', 'never'].map(panelRingMode))
         === J([{ mode: 'always', ms: 0 }, { mode: 'after', ms: 30000 }, { mode: 'after', ms: 3000 }, { mode: 'never', ms: 0 }]));
-      check('the row says what still shows where you are, with Never (the bar)', /bar/.test(PANEL_RING_FIELD.help) && !/her screen|Chri[s]tine|Cici/i.test(
+      check('the row says what still shows where you are, with Never (the bar)', /bar/.test(PANEL_RING_FIELD.help) && !/her screen|Cici/i.test(
         PANEL_RING_FIELD.label + PANEL_RING_FIELD.help + PANEL_RING_FIELD.options.map((o) => o.label).join()));
       {
         const el = document.createElement('div');

@@ -4293,7 +4293,7 @@ const toTab = (m, id) => {
     check('...the screen shows it', await pollAsync(() => (sceneDoors(mounted()) || {}).bookshelf === theirs), JSON.stringify(sceneDoors(mounted())));
     check('*** ...and one quiet line says the change made here was not kept ***',
       await pollAsync(() => /not kept/.test(sk.note() || '') && /the room/.test(sk.note() || '') && /another device/.test(sk.note() || ''), 4000), String(sk.note()));
-    check('the line never names the person the project was first built for', !/her screen|chri[s]tine|cici/i.test(sk.note() || ''));
+    check('the line never names the person the project was first built for', !/her screen|cici/i.test(sk.note() || ''));
     check('...the rest of the room is untouched by the conflict (the look is still drawn)', (sceneLooks(mounted()) || {}).desk === 'drawn');
     sk.destroy();
     sroot.remove();

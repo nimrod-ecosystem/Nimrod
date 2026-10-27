@@ -185,7 +185,7 @@ try {
       S({ total: 100, index: 3, nimrod: ready }).step === 6);
     check('a full path, when known, is the place it names', S({ picked: ready, place: 'D:\\Nimrod\\Voice model' }).text.includes('D:\\Nimrod\\Voice model'));
     check('site copy never names the person it was first built for, nor "her screen"',
-      !/Chri[s]tine|Cici|her screen/i.test(JSON.stringify([STEPS, S({}), S({ nimrod: ready }), S({ picked: ckpt })])));
+      !/Cici|her screen/i.test(JSON.stringify([STEPS, S({}), S({ nimrod: ready }), S({ picked: ckpt })])));
   }
 
   // ======================================================================================
@@ -246,7 +246,7 @@ try {
     check('its settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
     const on = VOICE_MODEL_FIELDS.find((f) => f.key === 'voiceModelOn');
     check('the switch defaults OFF and says it is not on a Raspberry Pi', on && on.default === false && /Raspberry Pi/.test(on.note));
-    check('site copy never names the person it was first built for, nor "her screen"', !/Chri[s]tine|Cici|her screen/i.test(JSON.stringify(VOICE_MODEL_FIELDS)));
+    check('site copy never names the person it was first built for, nor "her screen"', !/Cici|her screen/i.test(JSON.stringify(VOICE_MODEL_FIELDS)));
   }
 
   // ======================================================================================
@@ -508,7 +508,7 @@ try {
     check('*** Start shows "Phrase 1 of 2" and the phrase, big ***', /Phrase 1 of 2/.test(root.querySelector('[data-progress]').textContent)
       && root.querySelector('[data-phrase]').textContent === 'Good morning' && vr.state().prompt?.text === 'Good morning');
     check('export is offered only where folders can be written', root.querySelector('[data-export]').hidden === true);
-    check('site copy never names the person it was first built for, nor "her screen"', !/Chri[s]tine|Cici|her screen/i.test(root.textContent));
+    check('site copy never names the person it was first built for, nor "her screen"', !/Cici|her screen/i.test(root.textContent));
     page.destroy();
     check('*** leaving the page disarms the phrase (the recorder goes back to ordinary recording) ***', vr.state().prompt === null && root.innerHTML === '');
     vr.destroy();

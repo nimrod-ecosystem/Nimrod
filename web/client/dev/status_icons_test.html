@@ -93,7 +93,7 @@ try {
   check('every state has a placeholder glyph', STATUS_DEFS.every((d) => PLACEHOLDER_GLYPHS.includes(d.glyph)));
   check('no two states share a glyph (told apart by shape)', new Set(STATUS_DEFS.map((d) => d.glyph)).size === STATUS_DEFS.length);
   const allWords = JSON.stringify(STATUS_DEFS) + JSON.stringify(STATUS_ICON_FIELDS) + STATUS_ICONS_NOTE;
-  check('the site copy never says "her screen" or names anybody', !/\bher screen|chri[s]tine|\bcici\b/i.test(allWords));
+  check('the site copy never says "her screen" or names anybody', !/\bher screen|\bcici\b/i.test(allWords));
   check('the music topic is the music router\'s own', MUSIC_NOW_TOPIC === MUSIC_TOPICS.now);
 
   section('the settings');

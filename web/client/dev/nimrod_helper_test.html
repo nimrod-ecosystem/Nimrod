@@ -126,7 +126,7 @@ const text = (html) => { const d = document.createElement('div'); d.innerHTML = 
     check('page: a browser with no voice typing is told so, not offered it',
       /has no voice typing of its own/.test(text(helperPageHTML({ hasVoiceTyping: false }))) && !/it sends what it hears/.test(text(helperPageHTML({ hasVoiceTyping: false }))));
     check('*** page: site copy never says "her screen" or names the person the project was first built for ***',
-      !/her screen|Chri[s]tine|Cici/i.test(page + pub));
+      !/her screen|Cici/i.test(page + pub));
     check('page: the status shown matches the probes',
       /No speech program is answering/.test(text(hereHTML({ speech: { answering: false } })))
       && /A speech program is answering/.test(text(hereHTML({ speech: { answering: true } })))

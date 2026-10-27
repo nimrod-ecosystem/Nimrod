@@ -93,7 +93,7 @@ try {
   check('...an hour with the same light is not redrawn (nothing for the Pi to do)', v.box.innerHTML === same && v.timers.pending() === 1);
   v.done();
   check('taken down: nothing left counting', v.timers.pending() === 0);
-  check('names nobody', !/chri[s]tine|cici|her screen/i.test(JSON.stringify(SETTINGS) + getManifest(TYPE).description));
+  check('names nobody', !/cici|her screen/i.test(JSON.stringify(SETTINGS) + getManifest(TYPE).description));
 
   section('editing, pure: the same rows as a room piece');
   const base = { label: 'Test', pieces: [{ cast: 'jess', x: 400, y: 800, scale: 0.62 }, { piece: 'cloud', x: 300, y: 200 }] };

@@ -98,7 +98,7 @@ try {
   check('?wording=0 on a page turns it off without starting it', wordingFromPage({ location: { search: '?wording=0' }, document }) === null
     && localStorage.getItem(ON_KEY) === null && !bar());
   check('a page without it, and not left on: nothing happens', wordingFromPage({ location: { search: '' }, document }) === null && !bar());
-  check('names nobody', !/chri[s]tine|cici|her screen/i.test(await (await fetch('../wording_edit.js')).text()));
+  check('names nobody', !/cici|her screen/i.test(await (await fetch('../wording_edit.js')).text()));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 } finally {

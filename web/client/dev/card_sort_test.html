@@ -114,7 +114,7 @@ try {
     const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: GAME }).filter((x) => x.severity !== 'info');
     check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
     check('no site copy names the person it was first built for, no she / her',
-      !/chri[s]tine|cici|her screen|\b(she|her|hers|herself)\b/i.test(JSON.stringify(LINES) + m.description));
+      !/cici|her screen|\b(she|her|hers|herself)\b/i.test(JSON.stringify(LINES) + m.description));
     check('"play card sort" is a spoken route to it', routeFor('play card sort') === 'play-card-sort'
       && ROUTES['play-card-sort'].topic === `${GAME}/play` && GAMES.includes(ROUTES['play-card-sort'].payload.game));
     check('"start" said aloud presses play', m.voice?.start === 'play');

@@ -447,7 +447,7 @@ try {
     const errs = auditFields(rows.map(normalizeField).filter(Boolean), { type: 'cards' })
       .filter((x) => x.severity !== 'info' && x.code !== 'no-essential');
     check('the settings audit finds nothing to warn about in the three rows', errs.length === 0, JSON.stringify(errs));
-    check('no site copy in the rows names a particular person, no she / her', !/chri[s]tine|cici|her screen|\b(she|her|hers|herself)\b/i.test(JSON.stringify(rows)));
+    check('no site copy in the rows names a particular person, no she / her', !/cici|her screen|\b(she|her|hers|herself)\b/i.test(JSON.stringify(rows)));
     const v = cardVars('halloween', { suitColours: 'two' });
     check('the deck\'s colours as the card games\' CSS variables, two colours applied', v['--card-face'] === cardThemes.halloween.stock
       && v['--suit-diamonds'] === cardThemes.halloween.suits.hearts && v['--suit-clubs'] === cardThemes.halloween.suits.spades);

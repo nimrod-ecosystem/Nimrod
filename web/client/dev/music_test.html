@@ -915,7 +915,7 @@ const FAVS = normalizeFavourites([
       check('*** defaults: shuffled by the site\'s picker ON, the song-info card ON (Mike, 2026-10-08) ***', f('spotifyShuffle').default === true && f('songInfo').default === true);
       const words = MUSIC_SETTINGS.map((s) => [s.label, s.note, s.onLabel, s.offLabel].filter(Boolean).join(' ')).join(' ')
         + Object.values(SPOTIFY_MESSAGES).join(' ') + messageFor('spotify-off');
-      check('no new words name anybody', !/her screen|chri[s]tine|cici/i.test(words));
+      check('no new words name anybody', !/her screen|cici/i.test(words));
 
       const T3 = heldTimers();
       const c = fakeConnector();
@@ -1080,7 +1080,7 @@ const FAVS = normalizeFavourites([
         due.due && !due.ended && due.line === `Spotify sign-in ends around ${dayWords(ends)} — sign in again.`, J(due));
       check('after the end: "ended around", still a line, still sign in again', over.due && over.ended && /^Spotify sign-in ended around .+ — sign in again\.$/.test(over.line));
       check('a sign-in with no date (made before the date was kept) says nothing rather than guessing', signInReminder(null, { now: T0 }).line === '');
-      check('the words name nobody', !/her screen|chri[s]tine|cici/i.test(due.line + over.line + FEATURE_WORDS.screen));
+      check('the words name nobody', !/her screen|cici/i.test(due.line + over.line + FEATURE_WORDS.screen));
 
       // The date is kept at sign-in, and a refresh carries it across (Spotify: a refresh does not extend the six months).
       let clockNow = T0;
@@ -1150,13 +1150,13 @@ const FAVS = normalizeFavourites([
       check('...and says so when it cannot', (await copyText(cb, { clipboard: { writeText: async () => { throw new Error('no'); } }, input: null })) === false);
       const words = Object.values(CONNECT_WORDS).join(' ') + Object.values(FEATURE_WORDS).join(' ') + SPOTIFY_MESSAGES['needs-permission']
         + SPOTIFY_MESSAGES['no-client-id'] + SPOTIFY_MESSAGES['signed-out'];
-      check('no new words name anybody or say "her screen"', !/her screen|chri[s]tine|cici/i.test(words));
+      check('no new words name anybody or say "her screen"', !/her screen|cici/i.test(words));
       // Spotify Jam (2026-10-12). Sources in music_spotify.js: a Jam starts in Spotify's apps, Premium to start, it plays on
       // the host's speaker; no Web API endpoint; nothing says a browser device can be a Jam's speaker. So: no promises.
       check('*** Spotify Jam words: started in the Spotify app, Premium to start, and nothing promised about this screen ***',
         /Spotify app on a phone or computer/.test(SPOTIFY_JAM_WORDS) && /Premium/.test(SPOTIFY_JAM_WORDS)
         && /not from this site/.test(SPOTIFY_JAM_WORDS) && /try it and see/.test(SPOTIFY_JAM_WORDS)
-        && !/\b(will|always|never|guarantee)/i.test(SPOTIFY_JAM_WORDS) && !/her screen|chri[s]tine|cici/i.test(SPOTIFY_JAM_WORDS), SPOTIFY_JAM_WORDS);
+        && !/\b(will|always|never|guarantee)/i.test(SPOTIFY_JAM_WORDS) && !/her screen|cici/i.test(SPOTIFY_JAM_WORDS), SPOTIFY_JAM_WORDS);
       check('...and the Spotify row in the settings carries the same line, where Spotify is turned on',
         getManifest('music')?.settings?.find((r) => r.key === 'spotifyOn')?.note === SPOTIFY_JAM_WORDS);
 

@@ -65,7 +65,7 @@ const J = (x) => JSON.stringify(x);
     && PA.playAsOptionsFrom({ playAsNobody: 'everyone', playAsTooMany: 'stop', playAsReadBack: 'no' }).nobody === 'self'
     && PA.playAsOptionsFrom({ playAsTooMany: 'stop' }).tooMany === 'stop' && PA.playAsOptionsFrom({ playAsReadBack: false }).readBack === false);
   const copy = J([PA.PLAY_AS_LINES, PA.PLAY_AS_FIELDS]);
-  check('*** site copy: never "her screen", never anybody in particular ***', !/her screen|chri[s]tine|cici/i.test(copy));
+  check('*** site copy: never "her screen", never anybody in particular ***', !/her screen|cici/i.test(copy));
   check('spoken names: "Siobhan = shiv; Brick Drop = bricks"; a part with no "=" is skipped',
     J(PA.spokenNamesFrom('Siobhan = shiv; Brick Drop = bricks; nonsense')) === J([{ name: 'siobhan', said: 'shiv' }, { name: 'brick drop', said: 'bricks' }]));
 

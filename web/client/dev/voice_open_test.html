@@ -70,7 +70,7 @@ const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
   check('two rows at "The usual" (where, and when it goes back), two at "Everything"',
     VO.VOICE_OPEN_FIELDS.filter((f) => f.level === 'standard').length === 2 && VO.VOICE_OPEN_FIELDS.filter((f) => f.level === 'advanced').length === 2);
   check('nothing on a settings row says "her screen" or names anybody',
-    !/her screen|chri[s]tine|cici/i.test(J(VO.VOICE_OPEN_FIELDS)) && !/her screen|chri[s]tine|cici/i.test(J(VO.VOICE_OPEN_LINES)));
+    !/her screen|cici/i.test(J(VO.VOICE_OPEN_FIELDS)) && !/her screen|cici/i.test(J(VO.VOICE_OPEN_LINES)));
   check('a row with junk in it reads as the defaults', J(VO.voiceOpenOptionsFrom({ voiceOpenWhere: 'sideways', voiceOpenCorner: 'mid',
     voiceOpenQuietMs: 5, voiceOpenSayBack: 'yes' })) === J({ where: 'full', corner: 'br', quietMs: 120000, sayBack: true }));
   check('...and a row with choices in it reads them', J(VO.voiceOpenOptionsFrom({ voiceOpenWhere: 'corner', voiceOpenCorner: 'tl',

@@ -105,7 +105,7 @@ try {
     check('*** says what is NOT read from files yet (trophies, room objects ...), and who answers for real people and brands ***',
       /NOT YET/.test(t) && /trophies/.test(t) && /Room objects/.test(t) && /brands/.test(t) && /gets close, not exact/.test(t));
     check('*** site words never name the person the project was first built for, nor "her screen" ***',
-      !/Chri[s]tine|Cici|her screen/i.test(t + J(ART_KINDS) + ART_LOOK));
+      !/Cici|her screen/i.test(t + J(ART_KINDS) + ART_LOOK));
   }
 
   // =====================================================================================================
@@ -296,7 +296,7 @@ try {
         J(r2.made) === J(['Artwork/Buttons']) && isDir(tree.Artwork.Buttons) && tree.Artwork.Avatars['avatar-me.png'] instanceof Blob, J(r2.made));
       const r3 = await ensureTree(root);
       check('a third time: nothing', r3.made.length === 0);
-      check('no word naming the first user in the new READMEs', !/Chri[s]tine|Cici|her screen/i.test(README.artwork + README.data));
+      check('no word naming the first user in the new READMEs', !/Cici|her screen/i.test(README.artwork + README.data));
     }
 
     // =====================================================================================================

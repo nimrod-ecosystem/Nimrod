@@ -64,7 +64,7 @@ try {
   const words = ['Saving…', 'Kept when you close the settings', 'What you change here is kept', 'Saved.',
     'That did not save — check your connection. Your change is still here, and Save keeps it.'];
   // (Its banned-word half, pageWordProblems, was retired 2026-10-13 with the banned-word lists; nobody named stays.)
-  check('*** nobody named ***', !/her screen|chri[s]tine|cici/i.test(words.join(' ')), words.join(' | ').slice(0, 200));
+  check('*** nobody named ***', !/her screen|cici/i.test(words.join(' ')), words.join(' | ').slice(0, 200));
 
   section('*** the draft keeps a change made WHILE it is being written ***');
   {

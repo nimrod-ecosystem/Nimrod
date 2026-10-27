@@ -81,7 +81,7 @@ try {
           const body = raw.replace(/<metadata>[\s\S]*?<\/metadata>/g, '');
           for (const [re, what] of UNSAFE) if (re.test(body)) bad.push(`${s.id}/${name}: ${what}`);
           // Every name the product was built around, anywhere in the file, even in metadata.
-          if (/cici|chri[s]tine/i.test(raw)) bad.push(`${s.id}/${name}: names a person`);
+          if (/cici/i.test(raw)) bad.push(`${s.id}/${name}: names a person`);
           if (!/viewBox="0 0 100 100"/.test(body)) shape.push(`${s.id}/${name}`);
           const cols = [];
           for (const m of body.matchAll(COLOUR)) {

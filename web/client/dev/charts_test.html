@@ -239,7 +239,7 @@ function mountChart(extra = {}) {
       check('a switch reaches it: next / prev / select', ['next', 'prev', 'select'].every((v) => verbsFor('charts').includes(v)));
       check('every setting is a short choice (cheap to walk with one switch)', CHART_SETTINGS.every((s) => s.kind === 'choice' && s.options.length <= 5));
       const words = J(CATALOG.find((c) => c.type === 'charts')) + J(m) + J(CHART_SETTINGS) + J(VIEWS);
-      check('*** site copy names nobody: no "her screen", no person’s name ***', !/her screen|chri[s]tine|cici/i.test(words));
+      check('*** site copy names nobody: no "her screen", no person’s name ***', !/her screen|cici/i.test(words));
     }
 
     section('a panel on a screen: the default card, the hidden table, the buttons');

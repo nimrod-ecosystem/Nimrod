@@ -90,7 +90,7 @@ try {
   check('*** a made lesson\'s review questions go to the games, named after it, beside the built-in ones ***',
     R.trivia.some((q) => q.topic === 'made-right-to-repair' && q.topicLabel === 'Right to repair' && q.answer === 'Being able to fix what you own')
       && R.trivia.some((q) => q.topic === 'numbers-0-9'), J(R.trivia.map((q) => q.topic)));
-  check('names nobody', !/chri[s]tine|cici|her screen/i.test(p + pc + ai));
+  check('names nobody', !/cici|her screen/i.test(p + pc + ai));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

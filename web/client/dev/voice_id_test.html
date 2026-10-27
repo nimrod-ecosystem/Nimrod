@@ -145,7 +145,7 @@ async function speak(rec, c) {
     const copy = J(VOICE_ID_FIELDS) + J(ENROL_SENTENCES) + J(['reading', 'saving', 'done', 'failed', 'cancelled', 'unavailable']
       .map((state) => enrolmentText({ state, index: 0, total: 5, sentence: 'x', error: 'e' })));
     check('site copy never says "her screen" and names nobody the project was built for',
-      !/her screen|chri[s]tine|cici/i.test(copy), copy.match(/her screen|chri[s]tine|cici/i)?.[0]);
+      !/her screen|cici/i.test(copy), copy.match(/her screen|cici/i)?.[0]);
     check('the copy says it never unlocks anything', /never unlocks/i.test(on.note));
     check('voiceIdOptionsFrom: defaults', J(voiceIdOptionsFrom({})) === J({ on: true, sureAt: 0.8 }));
     check('...a person\'s choices', J(voiceIdOptionsFrom({ voiceIdOn: false, voiceIdSureAt: 0.9 })) === J({ on: false, sureAt: 0.9 }));

@@ -116,7 +116,7 @@ try {
   check('messages for you: newest first, one per screen, empty ones left out', J(inc.map((m) => m.text)) === J(['new', 'old']) && incomingFrom(inc, { limit: 0 }).length === 0);
   const allWords = [...Object.values(ACTION_LABELS), ...Object.values(WHY).map((w) => (typeof w === 'function' ? w('Sam') : w)),
     ...PEOPLE_SETTINGS.map((s) => `${s.label} ${s.help}`), HELPER_ELSEWHERE].join(' ');
-  check('names nobody', !/her screen|chri[s]tine|cici/i.test(allWords));
+  check('names nobody', !/her screen|cici/i.test(allWords));
   const olderRow = PEOPLE_SETTINGS.find((s) => s.key === 'olderHere');
   check('*** "Offer older messages here": a yes/no row of this page’s own (stored per screen), yes by default (Mike, 2026-10-05) ***',
     olderRow && olderRow.kind === 'toggle' && olderRow.default === true && olderRow.level === 'standard' && /older messages/i.test(olderRow.label), J(olderRow));
@@ -224,7 +224,7 @@ try {
     && /Invite them to use this/.test(q('[data-pp-connect]').textContent) && /share it with you/.test(q('[data-pp-connect]').textContent));
   check('More and Ask Nimrod are on the page', !!q('[data-pp-act="more"]') && !!q('[data-pp-act="nimrod"]'));
   const words = box.querySelector('[data-pp-list]').textContent;
-  check('*** the page names nobody ***', !/her screen|chri[s]tine|cici/i.test(words));
+  check('*** the page names nobody ***', !/her screen|cici/i.test(words));
   const tall = qa('[data-pp-stop]').map((b) => b.getBoundingClientRect().height);
   check('*** every button is at least 44px tall at 375 wide ***', tall.length > 10 && tall.every((h) => h >= 44), J(tall.map(Math.round)));
   const root = q('.pp-root');
@@ -239,7 +239,7 @@ try {
   check('*** the message window says a screen that shows no notes yet does not -- without the word "panel" ***',
     await until(() => /Den does not show notes yet/.test(q('[data-pp-sheet] [data-nv-nopanel]')?.textContent || ''), 4000), q('[data-pp-sheet]')?.textContent.slice(0, 200));
   const sheetWords = q('[data-pp-sheet="message"]')?.textContent || '';
-  check('*** the message window has its words, and names nobody ***', sheetWords.length > 50 && !/her screen|chri[s]tine|cici/i.test(sheetWords), sheetWords.slice(0, 200));
+  check('*** the message window has its words, and names nobody ***', sheetWords.length > 50 && !/her screen|cici/i.test(sheetWords), sheetWords.slice(0, 200));
   q('[data-pp-close]').click();
   check('...and Back closes it', !q('[data-pp-sheet]'));
   // More: on Home, the page's own press.
@@ -310,7 +310,7 @@ try {
   check('More on a screen goes to the ready-made Start here (a press, like "go to my room")', ssaid.some((p) => p.prebuilt === 'start'));
   sq('[data-pp-act="nimrod"]').click();
   check('Ask Nimrod opens him over the page there too', await until(() => sq('[data-pp-sheet="nimrod"]'), 4000));
-  check('names nobody on the screen too', !/her screen|chri[s]tine|cici/i.test(sbox.querySelector('[data-pp-list]').textContent));
+  check('names nobody on the screen too', !/her screen|cici/i.test(sbox.querySelector('[data-pp-list]').textContent));
   sinst.destroy(); sbox.remove();
 
   // ============================================================================================
@@ -350,7 +350,7 @@ try {
   const ovl = $('#stage .k-placed-overlay [data-helper]');
   check('*** Nimrod is over it, at the bottom: the helper overlay ***', !!ovl && ovl.getBoundingClientRect().top > win.innerHeight / 2);
   const stageText = $('#stage [data-pp-list]')?.textContent || '';
-  check('*** the landing names nobody (the page and Nimrod at the bottom) ***', !/her screen|chri[s]tine|cici/i.test(stageText + (ovl?.textContent || '')));
+  check('*** the landing names nobody (the page and Nimrod at the bottom) ***', !/her screen|cici/i.test(stageText + (ovl?.textContent || '')));
   const pstops = $$('#stage [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
   check('*** targets at least 44px at 375 ***', pstops.length >= 3 && pstops.every((x) => x >= 44), J(pstops.map(Math.round)));
   check('*** no sideways scroll at 375 (the page or Your people) ***', doc.documentElement.scrollWidth <= doc.documentElement.clientWidth + 1

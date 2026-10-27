@@ -175,7 +175,7 @@ async function loadsAsImage(url) {
       sf.key === 'backupSource' && sf.label === 'Backup folder for this screen' && sf.level === 'standard' && sf.default === ''
         && sf.options[0].value === '' && sf.options.at(-2).value === 'any' && sf.options.at(-1).value === 'none', JSON.stringify(sf.options));
     check('*** site words: never "her screen", never a name ***',
-      !/her screen|chri[s]tine|cici/i.test(JSON.stringify([pf, pc, sf])));
+      !/her screen|cici/i.test(JSON.stringify([pf, pc, sf])));
     // What the screen row can offer: what the panels here listed, for this person, never another resident's.
     M.forgetListedForTest();
     M.noteListed('p1', [S.here, S.next, S.family]);

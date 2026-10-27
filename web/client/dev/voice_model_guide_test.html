@@ -464,7 +464,7 @@ try {
     check('step 5 on a screen: no folder picker, but its own Nimrod folder can still be looked in', act(root, 'check').hidden && !act(root, 'look').hidden);
     act(root, 'settings').click();
     check('the one-page view is for a desk: not offered on a screen', act(root, 'onepage').hidden);
-    check('site copy never names the person it was first built for, nor "her screen"', !/chri[s]tine|cici|her screen/i.test(root.textContent));
+    check('site copy never names the person it was first built for, nor "her screen"', !/cici|her screen/i.test(root.textContent));
     page.destroy();
   }
 
@@ -528,7 +528,7 @@ try {
     check('the Claude page is the one page_links knows; wake phrases are the menu\'s Devices tab', AI_PAGES[0].path === CLAUDE_PAGE && AI_PAGES[1].menuTab === 'devices');
     check('search finds them', filterItems(pageItems(), { query: 'wake' }).length === 1 && filterItems(pageItems(), { query: 'claude key' }).length === 1);
     // (Its money-word half was retired 2026-10-13 with the banned-word lists.)
-    check('no names', !/chri[s]tine|cici|her screen/i.test(J(pages)));
+    check('no names', !/cici|her screen/i.test(J(pages)));
 
     // The details of a settings page, off a screen and on one.
     const host = document.createElement('div');

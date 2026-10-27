@@ -262,7 +262,7 @@ try {
       INTERCOM_CONSTRAINTS.video === false && INTERCOM_CONSTRAINTS.audio.echoCancellation === true);
     check('sessions are distinct and marked', newSession() !== newSession() && /^ic-[0-9a-f]{16}$/.test(newSession()));
     const copy = JSON.stringify([INTERCOM_FIELDS, END_REASONS]);
-    check('site copy never names the person it was first built for, nor "her screen"', !/Chri[s]tine|Cici|her screen/i.test(copy));
+    check('site copy never names the person it was first built for, nor "her screen"', !/Cici|her screen/i.test(copy));
   }
 
   // ======================================================================================
@@ -774,7 +774,7 @@ try {
     await flush();
     check('*** unticking removes them ***', row.intercomAllowed.length === 0
       && !root.querySelector('[data-account="bea@x"] [data-allow]').checked);
-    check('site copy never says "her screen"', !/her screen|Chri[s]tine|Cici/i.test(root.textContent));
+    check('site copy never says "her screen"', !/her screen|Cici/i.test(root.textContent));
     panel.destroy();
   }
 

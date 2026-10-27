@@ -357,7 +357,7 @@ const row = (el, id) => el.querySelector(`[data-sv-id="${id}"]`);
 
   section('the words on it');
   const words = el.querySelector('[data-storage-view]').textContent;
-  check('never names the person the project was first built for, or "her screen"', !/chri[s]tine|cici|her screen/i.test(words));
+  check('never names the person the project was first built for, or "her screen"', !/cici|her screen/i.test(words));
   check('no "agent", "token", "JSON", "status file" in what a person reads', !/\b(agent|token|json|status file|role:)\b/i.test(words), words.slice(0, 200));
 
   section('"Check on this computer" (the person asking)');
@@ -530,7 +530,7 @@ section('the words for a note, and for the place');
   check('*** no Nimrod folder: it says nothing is saved, and where to choose one ***',
     /Not saved anywhere/.test(PLACE_WORDS.none) && /This screen, then Your own folders/.test(PLACE_WORDS.none));
   check('the place words never name the person the project was built for, or "her screen"',
-    !Object.values(PLACE_WORDS).some((s) => /chri[s]tine|cici|her screen/i.test(s)));
+    !Object.values(PLACE_WORDS).some((s) => /cici|her screen/i.test(s)));
 }
 
 section('*** written when read: the section notes each drive it reached, in the stubbed Nimrod folder ***');
@@ -671,8 +671,8 @@ section('*** away from home: read back from the folder, labelled with where it c
     extra && /Pi folder/.test(extra.textContent) && /From your Nimrod folder, read 11 hours ago by “Bedside”/.test(extra.textContent), extra && extra.textContent);
   check('...including the backup folder this browser has no source for', !!el.querySelector('[data-sv-noted="src-fallback"]'));
   check('*** and nothing was written from here: nothing was reached ***', sharedFolder.appends.length === 3);
-  check('the words: never the name the project was built for, never "her screen"', !/chri[s]tine|cici|her screen/i.test(el.textContent),
-    (el.textContent.match(/.{0,40}(chri[s]tine|cici|her screen).{0,40}/i) || [''])[0]);
+  check('the words: never the name the project was built for, never "her screen"', !/cici|her screen/i.test(el.textContent),
+    (el.textContent.match(/.{0,40}(cici|her screen).{0,40}/i) || [''])[0]);
   p.destroy(); el.remove();
 
   // The browser that wrote them, its drives now unreachable: its own notes are shown ("by this browser").

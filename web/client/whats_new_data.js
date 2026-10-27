@@ -99,7 +99,7 @@ export function whatsNewProblems(entries = WHATS_NEW) {
     for (const it of e.items || []) {
       if (!it || typeof it.text !== 'string' || !it.text.trim()) out.push(`${e.date}: an item with no text`);
       if (!it || typeof it.where !== 'string' || !it.where.trim()) out.push(`${e.date}: “${it?.text}” does not say where it is`);
-      if (/\bher screen|chri[s]tine|cici/i.test(`${it?.text} ${it?.where}`)) out.push(`${e.date}: site copy names a person or says "her screen"`);
+      if (/\bher screen|cici/i.test(`${it?.text} ${it?.where}`)) out.push(`${e.date}: site copy names a person or says "her screen"`);
       if (/\b(row \d|[a-z_]+\.js|commit)\b/i.test(`${it?.text} ${it?.where}`)) out.push(`${e.date}: “${it?.text}” uses engineering words`);
     }
   }

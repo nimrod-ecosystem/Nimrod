@@ -100,7 +100,7 @@ try {
   check('a count past the limit is refused', /whole number from 0 to 20/.test(checkLesson({ about: { title: 'T' }, classes: [{ beats: [{ show: { kind: 'count', n: 99 } }] }] }).problems.join()));
   check('bounds exist', LIMITS.beats >= 600 && LIMITS.classes >= 60);
   const words = J(NUMBERS_0_9) + J(ai.problems);
-  check('names nobody', !/chri[s]tine|cici|her screen/i.test(words));
+  check('names nobody', !/cici|her screen/i.test(words));
 
   section('*** read forgivingly (row 2.111, chat\'s note CJ): three Right to repair files, each bending the shape its own way ***');
   const files = { local: 'right_to_repair_local_model.json', claude: 'right_to_repair_claude.json', sonnet: 'right_to_repair_sonnet.json' };

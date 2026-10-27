@@ -1664,7 +1664,7 @@ Shared Q | Shared A` });
       && which.appliesWhen({}) === false && which.appliesWhen({ contentSource: 'bank' }) === false);
     // (A banned-word check on the choice's words was retired 2026-10-13 with the banned-word lists.)
     check('the words on the choice name nobody', rows.find((f) => f.key === 'contentSource').options
-      .every((o) => o.label && !/her screen|chri[s]tine|cici/i.test(o.label)));
+      .every((o) => o.label && !/her screen|cici/i.test(o.label)));
   }
 
   // =====================================================================================

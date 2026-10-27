@@ -87,7 +87,7 @@ const VID = 'dQw4w9WgXcQ';
       && callUnderOf({ [CALL_UNDER_KEY]: 99 }) === 0.3 && callUnderOf({}) === 0.3);
     check('a real choice is read', callSoundOf({ [CALL_SOUND_KEY]: 'duck' }) === 'duck' && callUnderOf({ [CALL_UNDER_KEY]: '15' }) === 0.15);
     const copy = JSON.stringify(CALL_SOUND_FIELDS);
-    check('site copy never says "her screen", a person’s name', !/her screen|Chri[s]tine|Cici/i.test(copy));
+    check('site copy never says "her screen", a person’s name', !/her screen|Cici/i.test(copy));
     check('"never louder than the call" is said on the row', /never louder than it/.test(CALL_SOUND_FIELD.note));
 
     // =================================================================================== ducking during a followed call
@@ -152,7 +152,7 @@ const VID = 'dQw4w9WgXcQ';
     check('the Sound button\'s choice wins over all of them', followMuted({ mode: 'auto', inCall: true, override: false }) === false
       && followMuted({ mode: 'on', override: true }) === true);
     check('nonsense is the default', soundModeOf('loud') === 'auto' && followMuted({ mode: 'loud', inCall: true }) === true);
-    check('the choices never say "her screen"', !/her screen|Chri[s]tine|Cici/i.test(JSON.stringify(FOLLOW_SOUND_CHOICES)));
+    check('the choices never say "her screen"', !/her screen|Cici/i.test(JSON.stringify(FOLLOW_SOUND_CHOICES)));
 
     // =================================================================================== this computer's calls, across tabs
     section('*** a call in another tab of this browser reaches the follow page (BroadcastChannel; nothing leaves the computer) ***');
@@ -260,7 +260,7 @@ const VID = 'dQw4w9WgXcQ';
       calling = false;
       ft.advance(TICK_MS);
       check('...and its end', view.muted() === false);
-      check('the copy never says "her screen"', !/\bher screen|Chri[s]tine|Cici/i.test(host.textContent));
+      check('the copy never says "her screen"', !/\bher screen|Cici/i.test(host.textContent));
       view.destroy(); host.remove();
     }
     {

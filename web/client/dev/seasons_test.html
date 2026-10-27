@@ -173,7 +173,7 @@ try {
       && holidayPrefs({ diwali: true }).christmas === true);
     check('*** one row per holiday: eleven toggles, default the starter set, plain labels ***',
       HOLIDAY_FIELDS.length === 11 && HOLIDAY_FIELDS.every((f) => f.kind === 'toggle' && f.default === !!HOLIDAYS[f.holiday].starter && /look$/.test(f.label))
-      && new Set(HOLIDAY_FIELDS.map((f) => f.key)).size === 11 && !/her screen|chri[s]tine|cici/i.test(J(HOLIDAY_FIELDS)));
+      && new Set(HOLIDAY_FIELDS.map((f) => f.key)).size === 11 && !/her screen|cici/i.test(J(HOLIDAY_FIELDS)));
     check('the keys: holidayHalloween, holidayLunarNewYear, ...', holidayKey('halloween') === 'holidayHalloween' && holidayKey('lunarNewYear') === 'holidayLunarNewYear');
     check('holidaysFrom a row: the ticks; the old single "Holiday looks: Off" means every holiday not ticked is off',
       J(holidaysFrom({ holidayHalloween: false, holidayDiwali: true })) === J({ halloween: false, diwali: true })
@@ -544,7 +544,7 @@ try {
   section('the follower: a screen, its settings, the clock, the calm moment');
   {
     check('the sky row: one choice, plain words, default as argued', SKY_FIELD.default === 'both' && SKY_FIELD.kind === 'choice' && SKY_FIELD.options.length === 4
-      && !/her screen|chri[s]tine|cici/i.test(J(SKY_FIELD)));
+      && !/her screen|cici/i.test(J(SKY_FIELD)));
     const T = Date.parse('2026-10-05T16:00:00Z');
     const rain = { code: 63, icon: 'rain', isDay: true, lat: 40.7, lon: -74.0, at: T };
     check('*** "both": the weather and the time of day ***', J(skyFrom(rain, { now: T })) === J({ time: 'day', weather: 'rain', lat: 40.7, lon: -74 }));

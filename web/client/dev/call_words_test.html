@@ -403,7 +403,7 @@ try {
     const n = spoken.length;
     screen.sendWords('tea'); await ticks();
     check('*** ...the word is shown and NOT read out, and the microphone is not held ***', q('[data-words-now]').textContent === 'tea' && spoken.length === n && mic.enabled === true);
-    check('site copy never says "her screen", a person’s name', !/her screen|Chri[s]tine|Cici/i.test(root.textContent));
+    check('site copy never says "her screen", a person’s name', !/her screen|Cici/i.test(root.textContent));
     page.hangup();
     check('the call ended: the words go with it', page.words().length === 0);
     check('the setup screen remembers "only show"', q('[data-words-mode]')?.value === 'show');

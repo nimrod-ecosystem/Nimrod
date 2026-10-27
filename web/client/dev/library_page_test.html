@@ -188,7 +188,7 @@ try {
     // The PAGE's own words (the hero, the tabs, the notes, the columns' headings) -- not what a module draws.
     const own = [...doc.querySelectorAll('.top, header.hero, #legend, #try-head, .mp-note, .mp-set > h2, .mp-set > p, .gaps, footer')]
       .map((e) => e.textContent).join(' ');
-    const hit = own.match(/.{0,40}(\bher screen\b|chri[s]tine|cici).{0,40}/i);
+    const hit = own.match(/.{0,40}(\bher screen\b|cici).{0,40}/i);
     check('no "her screen" and no name in the page’s words', !hit, hit?.[0]);
   }
 

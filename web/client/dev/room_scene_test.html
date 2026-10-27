@@ -206,7 +206,7 @@ try {
     check('five presets: the room with controls plus Design’s four', keys.join() === 'theRoom,living,bedroom,study,fireside', keys.join());
     check('the default preset is the room with controls', DEFAULT_PRESET === 'theRoom');
     const words = Object.values(ROOM_PRESETS).flatMap((p) => p.recipe.items.filter((i) => i.kind === 'sign').map((i) => i.name)).join(' ');
-    check('no preset sign carries a real person’s name', !/\b(Cici|Chri[s]tine|Mike|Rosemary)\b/i.test(words), words);
+    check('no preset sign carries a real person’s name', !/\b(Cici|Mike|Rosemary)\b/i.test(words), words);
     const srcs = new Set();
     for (const key of keys) {
       const host = makeHost();
@@ -604,7 +604,7 @@ try {
       const r = await fetch(`../design-assets/nimrod-cat/${f}`);
       const t = r.ok ? await r.text() : '';
       if (!r.ok) { bad.push(`${f}: ${r.status}`); continue; }
-      if (/<script|\son[a-z]+\s*=|href\s*=|url\(\s*(?!#)|<text|<foreignObject|<image|Cici|Chri[s]tine/i.test(t)) bad.push(`${f}: content`);
+      if (/<script|\son[a-z]+\s*=|href\s*=|url\(\s*(?!#)|<text|<foreignObject|<image|Cici/i.test(t)) bad.push(`${f}: content`);
     }
     check('the sleeping pose is served, with no script, handler, outside link or text', bad.length === 0, bad.join('; '));
   }

@@ -847,7 +847,7 @@ try {
     check('*** the Menu verb opens the menu and takes the scan from the bar (the bar shows, no cursor on it) ***',
       await until(() => menuShown() && !held() && !cur() && barShown(), 3000), `menu=${menuShown()} held=${held()} cursor="${curText()}"`);
     check('no label on the bar or its trays says "her screen", or a person’s name',
-      !/her screen|Chri[s]tine|Cici/i.test($('#home-edit').textContent + tray().textContent));
+      !/her screen|Cici/i.test($('#home-edit').textContent + tray().textContent));
   }
   await ensureMenu();
 

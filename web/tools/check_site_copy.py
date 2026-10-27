@@ -41,7 +41,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CLIENT = REPO_ROOT / 'web' / 'client'
 SKIP_DIRS = {'dev', 'vendor', 'node_modules'}
 
-NAMES = ['Chris' + 'tine', 'Cici']
+NAMES = ['Cici']   # the first person's name: web/server/test_no_family_names.py
 WORDS = re.compile(r'\b(she|her|hers|herself|' + '|'.join(NAMES) + r')\b', re.I)
 
 # JS: strip comments while leaving strings intact, then pull out string literals. A small scanner

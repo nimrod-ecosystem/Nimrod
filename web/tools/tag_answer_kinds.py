@@ -97,7 +97,7 @@ ONLY_WHEN = {
     "Wilma": r"\bFlintstones?\b",
     "Augustus": r"\bemperor\b",
     "Hamlet": r"\bprince\b|\bcharacter\b",
-    "Shrek": r"\bogre\b",           # also a film ("Which film won the first Oscar for Best Animated Feature?")
+    "Shrek": r"\bogre\b",           # also a film ("Which film won the first Academy Award for Best Animated Feature?")
     "Hercules": r"\bhero\b|\bmyth",
     "Merlin": r"\bwizard\b|\bArthur",
 }

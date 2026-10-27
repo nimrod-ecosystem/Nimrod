@@ -387,7 +387,7 @@ section('*** the AI set (2026-10-04): the guide, the AI characters’ card, the 
   check('*** an "AI" group, with words saying what is in it ***', ai && ai.title === 'AI' && ai.blurb.length > 40, JSON.stringify(ai));
   const inAi = groupItems('ai', manifests).map((m) => m.type);
   check('*** Nimrod, the profile card and the Voice model are in it ***', ['nimrod', 'profile', 'voice_model'].every((t) => inAi.includes(t)), inAi.join());
-  check('the AI words never name the person it was first built for', !/chri[s]tine|cici|her screen/i.test(JSON.stringify(ai)
+  check('the AI words never name the person it was first built for', !/cici|her screen/i.test(JSON.stringify(ai)
     + JSON.stringify(CATALOG.find((c) => c.type === 'voice_model'))));
 }
 

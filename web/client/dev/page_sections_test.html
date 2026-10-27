@@ -149,7 +149,7 @@ try {
   const ruleWords = [...SECTION_LIBRARY.flatMap((e) => [e.name, e.line]), ...Object.values(EDIT_WORDS).map((w) => (typeof w === 'function' ? w('Clock') : w))].join(' ');
   // (The page's banned-word check, PAGE_EXTRA_BANNED / pageWordProblems, was retired 2026-10-13: Mike, "I really don't
   // like this banned word thing at all." The name checks below are the rule that stays.)
-  check('names nobody', !/her screen|chri[s]tine|cici/i.test(ruleWords), String(ruleWords).slice(0, 200));
+  check('names nobody', !/her screen|cici/i.test(ruleWords), String(ruleWords).slice(0, 200));
 
   section('*** the page’s own look, pure (Mike, 2026-10-05) ***');
   const known = listThemes().map((t) => t.id);
@@ -166,7 +166,7 @@ try {
   check('*** older messages: on unless turned off (only an explicit off) ***', olderOf({}) === true && olderOf(null) === true && olderOf({ olderMessages: false }) === false
     && olderOf({ olderMessages: 0 }) === true);
   const lookWords = Object.values(PAGE_LOOK_WORDS).join(' ');
-  check('*** names nobody ***', !/her screen|chri[s]tine|cici/i.test(lookWords), String(lookWords).slice(0, 200));
+  check('*** names nobody ***', !/her screen|cici/i.test(lookWords), String(lookWords).slice(0, 200));
   const wbox = document.createElement('div'); wbox.style.cssText = 'padding:3px'; document.body.append(wbox);
   check('*** wearing: the theme’s colours on the element, with its background; off again, exactly as it was ***',
     wearColours(wbox, 'warm') === 'warm' && wbox.style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.warm.vars['--bg'].toLowerCase()
@@ -219,7 +219,7 @@ try {
   check('*** "Edit my page", live, beside "Edit my picture" ***', editBtn()?.textContent.trim() === EDIT_WORDS.edit && editBtn().getAttribute('aria-disabled') !== 'true'
     && editBtn().previousElementSibling?.dataset.ppAct === 'picture-edit' && probe().canEdit);
   const viewWords = q('[data-pp-list]').textContent;
-  check('*** names nobody in view mode ***', !/her screen|chri[s]tine|cici/i.test(viewWords), String(viewWords).slice(0, 200));
+  check('*** names nobody in view mode ***', !/her screen|cici/i.test(viewWords), String(viewWords).slice(0, 200));
 
   // ============================================================================================
   section('*** Edit my page ***');
@@ -234,7 +234,7 @@ try {
     barBtn('messages', 'sec-up').getAttribute('aria-disabled') === 'true' && /Already at the top/.test(barBtn('messages', 'sec-up').textContent)
     && barBtn('nimrod', 'sec-down').getAttribute('aria-disabled') === 'true' && barBtn('people', 'sec-up').getAttribute('aria-disabled') !== 'true');
   const editWords = q('[data-pp-list]').textContent;
-  check('*** names nobody in edit mode ***', !/her screen|chri[s]tine|cici/i.test(editWords), String(editWords).slice(0, 200));
+  check('*** names nobody in edit mode ***', !/her screen|cici/i.test(editWords), String(editWords).slice(0, 200));
   const tall = qa('[data-pp-list] [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
   check('*** every button at least 44px tall in edit mode, at 375 wide ***', tall.length > 15 && tall.every((h) => h >= 44), J(tall.map(Math.round)));
   const root = q('.pp-root');
@@ -280,7 +280,7 @@ try {
     libAdd('people').getAttribute('aria-disabled') === 'true' && /Already on your page/.test(libAdd('people').textContent) && libAdd('nimrod').getAttribute('aria-disabled') !== 'true'
     && libAdd('clock').getAttribute('aria-disabled') !== 'true');
   const libWords = q('[data-pp-sheet="library"]').textContent;
-  check('*** names nobody in the library ***', !/her screen|chri[s]tine|cici/i.test(libWords), String(libWords).slice(0, 200));
+  check('*** names nobody in the library ***', !/her screen|cici/i.test(libWords), String(libWords).slice(0, 200));
   check('library buttons at least 44px', qa('[data-pp-lib-add]').every((b) => b.getBoundingClientRect().height >= 44));
   libAdd('about').click();
   check('*** About me: added at the bottom, the window closed, the card says where ***', await until(() => qa('[data-pp-sec]').at(-1)?.dataset.ppSecKind === 'about' && !q('[data-pp-sheet]'), 3000)
@@ -335,7 +335,7 @@ try {
   secOf('video').querySelector('[data-pp-act="video-stop"]').click();
   check('Stop takes it down again', await until(() => !secOf('video').querySelector('[data-pp-box] .youtube') && !!secOf('video').querySelector('[data-pp-act="video-play"]'), 3000));
   const fullEditWords = q('[data-pp-list]').textContent;
-  check('*** names nobody over the whole page in edit mode, the boxes and what is in them too ***', !/her screen|chri[s]tine|cici/i.test(fullEditWords), String(fullEditWords).slice(0, 200));
+  check('*** names nobody over the whole page in edit mode, the boxes and what is in them too ***', !/her screen|cici/i.test(fullEditWords), String(fullEditWords).slice(0, 200));
   check('no sideways scroll with the boxes on', root.scrollWidth <= root.clientWidth + 1, `${root.scrollWidth} > ${root.clientWidth}`);
   const clockHost = secOf('clock').querySelector('[data-pp-box]').firstElementChild;
   barBtn(secOf('photos').dataset.ppSec, 'sec-up').click();
@@ -347,7 +347,7 @@ try {
   check('*** Done: the edit bars go, the boxes stay ***', await until(() => !probe().editing && !q('[data-pp-edit-for]') && !q('[data-pp-card="edit"]'), 3000)
     && probe().boxes.filter((b) => b.mounted).length === 2 && editBtn()?.dataset.ppAct === 'page-edit');
   const doneWords = q('[data-pp-list]').textContent;
-  check('*** names nobody in view mode with the boxes on ***', !/her screen|chri[s]tine|cici/i.test(doneWords), String(doneWords).slice(0, 200));
+  check('*** names nobody in view mode with the boxes on ***', !/her screen|cici/i.test(doneWords), String(doneWords).slice(0, 200));
   const before = probe().sections.map((s) => s.kind);
   await inst.impl.__probe().flushPage();
   inst.destroy(); box.remove();
@@ -434,7 +434,7 @@ try {
   scopeBtn('page').click();
   check('..."This page only": the line says who sees the page', scopeBtn('page').getAttribute('aria-pressed') === 'true'
     && q('[data-pp-theme-line]')?.textContent === PAGE_LOOK_WORDS.coloursLine);
-  check('...names nobody in it', !/her screen|chri[s]tine|cici/i.test(q('[data-pp-sheet="theme"]').textContent), String(q('[data-pp-sheet="theme"]').textContent).slice(0, 200));
+  check('...names nobody in it', !/her screen|cici/i.test(q('[data-pp-sheet="theme"]').textContent), String(q('[data-pp-sheet="theme"]').textContent).slice(0, 200));
   q('[data-pp-sheet="theme"] [data-chp-pick="seasons"]').click();
   check('*** "With the seasons" for the page: saved, and worn (today’s look; it used to be offered and never worn) ***',
     await until(async () => (await serverPage()).data.theme === 'seasons', 5000) && await until(() => q('.pp-root').dataset.pageColours === 'seasons', 3000)
@@ -498,7 +498,7 @@ try {
   olderBtn().click();
   check('pressed: it says why on its card, and nothing opens', await until(() => q('[data-pp-card="older"] .pp-why')?.textContent === PAGE_LOOK_WORDS.olderOffPage, 2000)
     && !inst.impl.__probe().sheet);
-  check('*** names nobody with both set ***', !/her screen|chri[s]tine|cici/i.test(q('[data-pp-list]').textContent), String(q('[data-pp-list]').textContent).slice(0, 200));
+  check('*** names nobody with both set ***', !/her screen|cici/i.test(q('[data-pp-list]').textContent), String(q('[data-pp-list]').textContent).slice(0, 200));
   editBtn().click();
   await until(() => !!q('[data-pp-older]'), 3000);
   oldSel().value = '1'; oldSel().dispatchEvent(new Event('change', { bubbles: true }));
@@ -548,7 +548,7 @@ try {
   check('*** the page says Warm, but a screen in a room keeps its own colours ***', sinst.impl.__probe().look.theme === 'warm'
     && !sq('.pp-root').dataset.pageColours && sinst.impl.__probe().look.colours === '');
   const sWords = sq('[data-pp-list]').textContent;
-  check('*** names nobody on the screen ***', !/her screen|chri[s]tine|cici/i.test(sWords), String(sWords).slice(0, 200));
+  check('*** names nobody on the screen ***', !/her screen|cici/i.test(sWords), String(sWords).slice(0, 200));
   sinst.destroy(); sbox.remove();
 
   section('*** nobody signed in here (no page to change): Edit my page dimmed, saying why; the default page drawn ***');
@@ -558,7 +558,7 @@ try {
   const nEdit = nbox.querySelector('[data-pp-card="self"] [data-pp-act="page-edit"]');
   check('*** dimmed, "Sign in first", and the default page ***', nEdit?.getAttribute('aria-disabled') === 'true' && nEdit.dataset.ppWhy === EDIT_WORDS.signInWhy
     && J([...nbox.querySelectorAll('[data-pp-sec]')].map((w) => w.dataset.ppSecKind)) === J(BUILT_IN_KINDS));
-  check('names nobody there too', !/her screen|chri[s]tine|cici/i.test(nbox.querySelector('[data-pp-list]').textContent));
+  check('names nobody there too', !/her screen|cici/i.test(nbox.querySelector('[data-pp-list]').textContent));
   ninst.destroy(); nbox.remove();
 
   section('*** row 2.102 (Mike 2026-10-17): each part of the page is a module of its own ***');

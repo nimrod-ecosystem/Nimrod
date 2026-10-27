@@ -298,7 +298,7 @@ try {
       J(MODULE_VERBS?.[TYPE]));
     const words = J([m.description, (m.settings || []).map((f) => [f.label, f.note || '', (f.options || []).map((o) => o.label)]), CATALOG.find((c) => c.type === TYPE)]);
     // (A banned-word check here was retired 2026-10-13 with the banned-word lists.)
-    check('never "her screen", or a person’s name', !/her screen|chri[s]tine|cici/i.test(words));
+    check('never "her screen", or a person’s name', !/her screen|cici/i.test(words));
 
     const host = box();
     applyTheme(host, 'default');

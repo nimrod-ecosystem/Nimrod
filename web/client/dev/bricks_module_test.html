@@ -161,7 +161,7 @@ try {
       && el.style.getPropertyValue('--brick-5').trim() === BRICK_COLOURS.dusk[4].hex);
     applyTheme(el, 'default');
     check('...and switching theme overwrites them', el.style.getPropertyValue('--brick-1').trim() === BRICK_COLOURS.default[0].hex);
-    check('the set never names the person it was first built for', !/her screen|chri[s]tine|cici/i.test(J(BRICK_COLOURS)));
+    check('the set never names the person it was first built for', !/her screen|cici/i.test(J(BRICK_COLOURS)));
   }
 
   // ===============================================================================================================
@@ -205,7 +205,7 @@ try {
       + J(CATALOG.find((c) => c.type === BRICKS_TYPE));
     // (A banned-word check here was retired 2026-10-13 with the banned-word lists: Mike, "I really don't like this
     // banned word thing at all.")
-    check('never "her screen", or a person’s name in its rows or its catalog words', !/her screen|chri[s]tine|cici/i.test(words));
+    check('never "her screen", or a person’s name in its rows or its catalog words', !/her screen|cici/i.test(words));
     check('garbage reads as the defaults', J(bricksOptions({ part: 'sofa', width: 'x', thickness: 7, colour: 'pink', ownColour: 'red' }))
       === J({ ...BRICKS_DEFAULTS }));
     const o = bricksOptions({ part: 'baseplate', width: '120', length: 310, thickness: '10', colour: 'own', ownColour: '#ABCDEF' });

@@ -350,8 +350,8 @@ try {
     nm.done();
     // Nobody's name is in the site's own courses (CLAUDE.md: site copy never names the person it was first built for).
     let named0 = 0;
-    for (const c of COURSES) for (const k of c.classes) if (/chri[s]tine|cici/i.test(await (await fetch(`../lessons/courses/${c.id}/${k.file}`)).text())) named0 += 1;
-    check('*** no class bundled with the site names a person ***', named0 === 0 && !/chri[s]tine|cici/i.test(J(COURSES)), String(named0));
+    for (const c of COURSES) for (const k of c.classes) if (/cici/i.test(await (await fetch(`../lessons/courses/${c.id}/${k.file}`)).text())) named0 += 1;
+    check('*** no class bundled with the site names a person ***', named0 === 0 && !/cici/i.test(J(COURSES)), String(named0));
   }
 
   section('*** two voices (row 2.111): B\'s lines in the second voice, everything else in the person\'s own ***');
@@ -530,7 +530,7 @@ try {
     check('Cancel stops it, and says so', aborted && /Stopped/.test(s.q('[data-lm-status]').textContent));
     s.done();
   }
-  check('names nobody', !/chri[s]tine|cici|her screen/i.test(document.getElementById('host').textContent));
+  check('names nobody', !/cici|her screen/i.test(document.getElementById('host').textContent));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

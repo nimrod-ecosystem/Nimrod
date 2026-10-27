@@ -2075,7 +2075,7 @@ def write_md(path, col, content_counts, packs, learn_json, only, ran):
                                capture_output=True, text=True).stdout.strip()
     except Exception:
         commit, dirty = '?', ''
-    her_rx = re.compile(r'\b(she|her|hers|herself|Chri[s]tine|Cici)\b', re.I)
+    her_rx = re.compile(r'\b(she|her|hers|herself|Cici)\b', re.I)
 
     owners = page_scripts()
     mods = module_titles()

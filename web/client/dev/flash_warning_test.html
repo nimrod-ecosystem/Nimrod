@@ -74,7 +74,7 @@ try {
   check('"OK" closes it', !b());
   void w; void w2;
   box.remove();
-  check('names nobody', !/chri[s]tine|cici|her screen/i.test(flashWords('X') + FLASH_WARNING_FIELD.note + FLASH_WARNING_FIELD.label));
+  check('names nobody', !/cici|her screen/i.test(flashWords('X') + FLASH_WARNING_FIELD.note + FLASH_WARNING_FIELD.label));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

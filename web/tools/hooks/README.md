@@ -19,8 +19,11 @@ when it is already public; these run before.
 **Turn them off:** `git config --unset core.hooksPath`.
 
 If a commit is refused: take the name out (a stand-in name in a test, or the design fact it stood for in a comment)
-and commit again. A guard that has to refuse the name spells it without containing it: `chri[s]tine` in a regex,
-`'Chris' + 'tine'` in code.
+and commit again.
+
+**The list is not in this repo** (Mike, 2026-10-27). The hooks read it from `.git/info/nimrod-blocked-names` in the
+clone, untracked; GitHub's run compares words by hash (`test_no_family_names.py`). A suite's own guard against naming
+somebody leaves the name to this central check rather than spelling it.
 
 The hooks need Python (`py -3`, `python3` or `python`). Without it they refuse rather than let anything through
 unchecked.

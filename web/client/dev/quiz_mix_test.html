@@ -203,7 +203,7 @@ try {
     const words = JSON.stringify(m.settings.filter((s) => mine.has(s.key)).map((s) => [s.label, s.note, s.onLabel, s.offLabel,
       (s.options || []).map((o) => o.label)])) + JSON.stringify(LINES) + m.description;
     // (A banned-word check here was retired 2026-10-13 with the banned-word lists.)
-    check('no copy names the person this was first built for', !/chri[s]tine|cici|her screen/i.test(words));
+    check('no copy names the person this was first built for', !/cici|her screen/i.test(words));
   }
 
   // =====================================================================================
