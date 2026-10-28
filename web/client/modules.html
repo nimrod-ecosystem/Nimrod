@@ -178,8 +178,11 @@
      rule is one class too, and it comes LATER in the cascade, so an `overflow:hidden` written
      here silently wins and clips. Measured on this very page while writing it: the stage
      computed `overflow-y: hidden` with `mod-host` present and correct. */
+  /* `--bg`, not `--surface` (row 2.105, 2026-10-28): behind a see-through or clear panel a real screen shows the
+     theme's page colour (kiosk.css, `data-panel-surface="clear"`) or its moving scene, which the embed draws inside
+     itself. A white box here made "clear" look like nothing changed on every theme without a scene. */
   .trystage{position:relative;height:min(70vh,760px);min-height:440px;display:flex;
-    border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+    border:1px solid var(--border);border-radius:14px;background:var(--bg)}
   .trystage > *{flex:1;min-width:0}
   .stagenote{margin:8px 0 0;font-size:.85rem;color:var(--text-muted)}
   .measured{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:var(--text-muted);
