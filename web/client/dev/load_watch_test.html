@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>load_watch - when something the page needs could not load, it says so (row 2.148)</title>
+<style>body{font:14px system-ui;margin:16px}.pass{color:#060}.fail{color:#b00;font-weight:600}</style>
+<script src="../load_watch.js"></script>
+</head>
+<body>
+<h1>load_watch <span id="summary">running…</span></h1>
+<p>Mike, 2026-10-28: "ad blockers have broken Nimrod before". A blocked file stops a page's module code from running at
+all; an outside script that is blocked leaves its panel empty. The page says so, in plain words, as a line it can close.</p>
+<div id="out"></div>
+<script>
+(async function () {
+  const out = document.getElementById('out');
+  let passed = 0, failed = 0;
+  function check(name, ok, detail) {
+    const p = document.createElement('div');
+    p.className = ok ? 'pass' : 'fail';
+    p.textContent = (ok ? 'PASS  ' : 'FAIL  ') + name + (!ok && detail ? '   ' + detail : '');
+    out.append(p);
+    if (ok) passed += 1; else failed += 1;
+  }
+  const W = window.__nimrodLoadWatch;
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const bar = () => document.querySelector('[data-load-watch]');
+  try {
+    check('it is there before anything else, and quiet while nothing has failed', !!W && W.words() === '' && !bar());
+
+    // A page's own module code with one file a blocker refused: the import of a file that cannot be had.
+    const m = document.createElement('script');
+    m.type = 'module';
+    m.textContent = "import './__a_file_that_is_not_there_load_watch.js'; window.__ranAnyway = true;";
+    document.body.append(m);
+    for (let i = 0; i < 40 && !W.own; i++) await wait(50);
+    check('*** a module whose import could not load: none of its code ran (the failure this exists for) ***', !window.__ranAnyway);
+    check('*** ...and the page SAYS so, in plain words, naming ad blockers ***',
+      W.own && !!bar() && /Part of this page could not load/.test(bar().textContent) && /blocks ads/.test(bar().textContent), bar() && bar().textContent);
+    check('it is a line with a Close, not a gate: nothing covers the page', !!bar().querySelector('[data-load-watch-close]')
+      && getComputedStyle(bar()).position === 'fixed');
+    bar().querySelector('[data-load-watch-close]').click();
+    check('Close takes it away', !bar());
+
+    // An outside script that could not load (a blocked host): it says which, and what that stops.
+    W.own = false;
+    const s = document.createElement('script');
+    s.src = 'http://127.0.0.1:9/iframe_api.js';
+    document.body.append(s);
+    for (let i = 0; i < 60 && !Object.keys(W.outside).length; i++) await wait(50);
+    check('*** an outside script that could not load: the line names its host ***',
+      !!bar() && /127\.0\.0\.1:9/.test(bar().textContent) && /may fix it/.test(bar().textContent), bar() && bar().textContent);
+    W.outside = { 'www.youtube.com': true };
+    check('a known host says what stops working: "YouTube videos could not load here"', /^YouTube videos could not load here/.test(W.words()), W.words());
+    check('its words name nobody (site copy)', !/her screen|cici/i.test(await (await fetch('../load_watch.js?x=' + Date.now())).text()));
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = failed ? failed + ' FAILED / ' + passed + ' passed' : 'ALL PASS - ' + passed + ' checks';
+})();
+</script>
+</body>
+</html>

@@ -272,6 +272,8 @@ export const SUITES = [
   'flash_warning',
   // 2026-10-26 (notes CW/CX): which microphone, by name, and "Test the microphones" with a live level.
   'mic_choice',
+  // 2026-10-28 (row 2.148): a file or an outside script that could not load (an ad blocker) is said, not a dead page.
+  'load_watch',
   // 2026-10-04: "Try it as someone new" - a test person, fresh; Start over; Back to me; notes kept; Home in a frame.
   'try_new',
   // 2026-10-07 (row 2.54): wrap up a walkthrough - the notes cleaned up locally (Corpus Desk's ten-level dial, clean_up.js)

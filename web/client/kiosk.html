@@ -35,6 +35,7 @@
      still booting after 30 s, it says so plainly, then tries a fresh load every 2 minutes, so a
      screen nobody can touch recovers on its own once the cause clears. Every successful boot path
      removes #boot, which stands it down. -->
+<script src="load_watch.js"></script>
 <script>
 (function () {
   var SAY_AFTER_MS = 30000, RETRY_EVERY_MS = 120000;
