@@ -45,11 +45,14 @@
   <li>Tap <b>Old way</b> four or five times, a couple of seconds apart. Listen.</li>
   <li><b>Reload this page.</b></li>
   <li>Tap <b>New way</b> four or five times. Listen.</li>
+  <li><b>Reload</b>, then tap <b>On the press</b> four or five times. It speaks the moment your finger goes down, the
+    way the talking board did until 2026-10-28.</li>
   <li>Tap <b>Copy results</b> and paste them to Claude (or take a screenshot).</li>
 </ol>
 <div class="row">
   <button type="button" data-way="old">Old way</button>
   <button type="button" data-way="new" class="primary">New way</button>
+  <button type="button" data-way-press="press">On the press</button>
 </div>
 <div id="state">Engine: …</div>
 <ol id="log"></ol>
@@ -100,6 +103,10 @@ function say(way) {
 }
 
 document.querySelectorAll('[data-way]').forEach((b) => b.addEventListener('click', () => say(b.dataset.way)));
+// Row 2.150 (2026-10-28): the new way, but on pointerdown rather than click. A finger's pointerdown is not
+// a gesture the browser lets make sound (a mouse's is), so if this one goes quiet on a phone while
+// "New way" keeps talking, that was the board's bug.
+document.querySelectorAll('[data-way-press]').forEach((b) => b.addEventListener('pointerdown', () => say(b.dataset.wayPress)));
 document.getElementById('copy').addEventListener('click', async () => {
   const text = [navigator.userAgent, engineState(),
     ...rows.map((r, i) => `${i + 1}. ${r.way} "${r.word}" busy=${r.busy} start=${r.start ?? (r.gaveUp ? 'NEVER' : '?')} end=${r.end ?? '-'} error=${r.error || '-'}`)].join('\n');

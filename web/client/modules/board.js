@@ -572,6 +572,7 @@ registerModule(
     let scan = null;
     let boardScene = null;   // the live scene mounted in .ab-surface, when the card surface asks for one
     let cardEls = [];
+    let fingerOn = null;     // { id, i }: a finger down on a card, chosen when it lifts (see draw)
     let lit = 0;
     // *** WHEN THE CURRENTLY-LIT CELL BECAME LIT, VIA THE SCANNER'S OWN STEP. ***
     //
@@ -758,6 +759,7 @@ registerModule(
       releaseImages();
       g.innerHTML = '';
       cardEls = [];
+      fingerOn = null;
       // Which set, if any, and — only when one is in force — what the cards look like, so a
       // drawing can be measured against the card it is about to sit on. With the board's own
       // drawings (the default) nothing here runs and the cards are drawn exactly as before.
@@ -800,10 +802,30 @@ registerModule(
           // `stopPropagation` runs even when `tapSelects` is off, and that is deliberate: with
           // touch selection turned off a tap must be a NO-OP, not a fall-through that some
           // other listener turns into a select. Off means off.
+          //
+          // *** A FINGER CHOOSES WHEN IT LIFTS; A MOUSE WHEN IT PRESSES. *** (Row 2.150, 2026-10-28,
+          // after 2.27.) Mike: on an Android phone the board spoke the first word and no more; the same
+          // board speaks on his desktop. A browser lets a page make sound only inside something the
+          // person did, and the HTML standard counts a mouse's pointerdown as that but NOT a finger's:
+          // for touch it is the pointerup [the spec's "activation triggering input event", training
+          // knowledge, not measured on a phone]. Choosing on a finger's pointerdown asked for speech
+          // outside the tap - the one difference between the phone and the desktop, and one the
+          // 2026-09-29 speech probe could not see, because its buttons speak on `click`. So a finger
+          // chooses on its pointerup; a pointercancel (the browser took the touch for a scroll or a
+          // long press) chooses too, exactly as the old pointerdown did, so no press is ever lost.
           b.addEventListener('pointerdown', (e) => {
             e.stopPropagation();
-            if (cfg.tapSelects !== false) choose(i);
+            if (cfg.tapSelects === false) return;
+            if (!e.pointerType || e.pointerType === 'mouse') { choose(i); return; }
+            fingerOn = { id: e.pointerId, i };
           });
+          const lift = (e) => {
+            if (!fingerOn || fingerOn.id !== e.pointerId || fingerOn.i !== i) return;
+            fingerOn = null;
+            if (cfg.tapSelects !== false) choose(i);
+          };
+          b.addEventListener('pointerup', lift);
+          b.addEventListener('pointercancel', lift);
         }
         g.append(b);
         cardEls.push(b);

@@ -422,6 +422,31 @@ try {
     check('*** and NOTHING on screen tells her how she did ***',
       !/\d+\s*(ms|sec|second|lap|score|%)/i.test(host.textContent), JSON.stringify(host.textContent));
 
+    // Row 2.150 (2026-10-28): a FINGER chooses when it lifts, inside the tap a phone lets make sound.
+    const card = (i) => host.querySelectorAll('.ab-card')[i];
+    const finger = (i, type, id = 7) => card(i).dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'touch', pointerId: id }));
+    said.length = 0;
+    finger(0, 'pointerdown');
+    await sleep(10);
+    check('*** a finger going down on a card does not speak yet (Android only allows sound on the lift) ***', said.length === 0, JSON.stringify(said));
+    finger(0, 'pointerup');
+    await sleep(10);
+    check('*** ...and lifting it speaks that card, once ***', said.join() === 'Yes', JSON.stringify(said));
+    finger(0, 'pointerup');
+    await sleep(10);
+    check('a second lift with no press is nothing', said.length === 1, JSON.stringify(said));
+    finger(2, 'pointerdown', 8);
+    finger(2, 'pointercancel', 8);
+    await sleep(10);
+    check('*** a touch the browser took for a scroll still chooses (no press is ever lost) ***', said.join() === 'Yes,Other', JSON.stringify(said));
+    finger(1, 'pointerdown', 9);
+    finger(1, 'pointerup', 10);
+    await sleep(10);
+    check('another finger lifting does not choose the first finger’s card', said.length === 2, JSON.stringify(said));
+    card(1).dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }));
+    await sleep(10);
+    check('a mouse still chooses as it presses, as it always did', said.join() === 'Yes,Other,No', JSON.stringify(said));
+
     inst.destroy();
     check('destroy leaves nothing behind', host.innerHTML === '');
   }
