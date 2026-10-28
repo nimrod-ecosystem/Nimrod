@@ -77,7 +77,7 @@ import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS }
 import { dropInFor, dropInSecondsOf, lendLengthOf, checkInTicked } from './screen_permissions.js';
 import { mountSeeAsk } from './see_ask.js';
 // call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
-import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD } from './call_loadouts.js';
+import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_FIELD } from './call_loadouts.js';
 import { createCallCaptions } from './call_captions.js';
 import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
 // 2026-10-04: the screen picks up a new version of the site by itself, at a quiet moment (version_watch.js).
@@ -4395,7 +4395,9 @@ export async function mountKiosk(root, {
     // either with a talk board - and captions of the person on it. The SCREEN's, beside the row above, for its
     // reason: a bedside screen with a board and a hallway screen without one are different rooms.
     ...(!embedded ? [{ ...CALL_OPENS_FIELD, options: CALL_OPENS_FIELD.options.map((o) => ({ ...o })) },
-      { ...CALL_CAPTIONS_FIELD, options: CALL_CAPTIONS_FIELD.options.map((o) => ({ ...o })) }] : []),
+      { ...CALL_CAPTIONS_FIELD, options: CALL_CAPTIONS_FIELD.options.map((o) => ({ ...o })) },
+      // row 2.144 (2026-10-28): subtitles a caller made of their own voice - theirs by default (Mike's rule).
+      { ...CALL_THEIR_CAPTIONS_FIELD, options: CALL_THEIR_CAPTIONS_FIELD.options.map((o) => ({ ...o })) }] : []),
     // 2026-10-04 (version_watch.js argues the default, OFF: a live screen is never changed remotely, so following
     // deploys is chosen per screen - the bench turns it on): this screen restarts itself once for a new version
     // of the site, only when nothing is going on. The SCREEN's: it is about this device and its room. Not on an
@@ -5966,6 +5968,7 @@ export async function mountKiosk(root, {
     // either is logged and the call goes on without it.
     if (cv.boardSlot) mountCallBoard(cv).catch((err) => console.error('kiosk: call board', err));
     if (plan.captions !== 'off') startCallCaptions(cv, from);
+    if (plan.theirCaptions !== 'none') listenTheirCaptions(cv, from);
     let took = false;
     try { took = await cv.inst.impl.takeCall(from, { ringStartedAt, camera: plan.camera, theirVideo: plan.theirVideo }); }
     catch (err) { console.error('kiosk: answering in the call view', err); took = false; }
@@ -5990,17 +5993,43 @@ export async function mountKiosk(root, {
   }
   // call loadouts (2026-10-09; call_captions.js): captions of the person on the call, in the call's half. Their
   // own caption box (subtitles.js), on for the call whatever this screen's subtitles mode is, and gone with it.
+  function callSubsFor(cv) {
+    if (cv.subs) return cv.subs;
+    const row = personRow || settings.get() || {};
+    cv.subs = createSubtitles(cv.area, {
+      settings: { ...row, subtitlesOn: true, subtitlesScreen: false },
+      flashLimit: flashLimitNow,
+    });
+    cv.subs.setOn(true);
+    // Inside the call's half, not across the whole screen (subtitles.css places a box against the window).
+    const box = cv.area.querySelector('.subs');
+    if (box) { box.style.position = 'absolute'; box.style.width = '92%'; box.style.zIndex = '2'; }
+    return cv.subs;
+  }
+  // row 2.144 (2026-10-28; call_outgoing_captions.js): subtitles the CALLER made of their own voice, on the call's words
+  // channel. Mike's rule: made at whoever's end turned them on, and when both ends did, the speaker's own by default
+  // ('theirs': this screen's own captions of the caller stop at the first of theirs, so the words are not written twice).
+  // 'ours' keeps this screen's own while they are actually running. The caption box is made on the first one.
+  function listenTheirCaptions(cv, from) {
+    try {
+      const off = callTransportNow()?.onCaptions?.((c) => {
+        if (callView !== cv || !c || !c.text) return;
+        const oursRunning = !!cv.captions && !['no-recogniser', 'stopped'].includes(cv.captions.status?.()?.state);
+        if (cv.plan.theirCaptions === 'ours' && oursRunning) return;
+        if (cv.captions && cv.plan.theirCaptions === 'theirs') { try { cv.captions.stop(); } catch { /* gone */ } cv.captions = null; }
+        const name = (from && typeof from.name === 'string' && from.name.trim()) || 'On the call';
+        try {
+          callSubsFor(cv).caption({ id: `their-${c.id}`, text: c.text, ear: 'call', source: 'call', others: [],
+            speaker: { name, confidence: 1 } });
+        } catch (err) { console.error('kiosk: their captions', err); }
+      });
+      if (off) cv.offs.push(off);
+    } catch (err) { console.error('kiosk: their captions', err); }
+  }
   function startCallCaptions(cv, from) {
     try {
       const row = personRow || settings.get() || {};
-      cv.subs = createSubtitles(cv.area, {
-        settings: { ...row, subtitlesOn: true, subtitlesScreen: false },
-        flashLimit: flashLimitNow,
-      });
-      cv.subs.setOn(true);
-      // Inside the call's half, not across the whole screen (subtitles.css places a box against the window).
-      const box = cv.area.querySelector('.subs');
-      if (box) { box.style.position = 'absolute'; box.style.width = '92%'; box.style.zIndex = '2'; }
+      callSubsFor(cv);
       cv.captions = createCallCaptions({ row, mode: cv.plan.captions, sink: cv.subs,
         who: () => (from && typeof from.name === 'string' && from.name.trim()) || 'On the call' });
       const t = callTransportNow();

@@ -537,8 +537,11 @@ const toTab = (m, id) => {
       // (which microphone, 2026-10-26, notes CW/CX, DELIBERATELY: Devices -> "Microphone" heading and "Test the
       // microphones…". Two more of the old rows: 54. The row itself appears only with two or more named microphones.)
       // (speakers, 2026-10-26, note CX "Same for speakers", DELIBERATELY: "Test the speakers…" under Speakers. 55.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 55) ***',
-        lapStops.length === 15 && oldStops.length === 55 && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
+      // (subtitles on calls, 2026-10-28, row 2.144, DELIBERATELY: "Subtitles a caller sends of their own voice" on
+      // This screen, beside "Captions on calls". 56. The panel's lap is unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 56) ***',
+        lapStops.length === 15 && oldStops.length === 56 && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
+        && oldStops.some((i) => i.id === 'set:callTheirCaptions') /* subtitles a caller sends */
         && oldStops.some((i) => i.id === 'speaker-test') /* which speaker */
         && oldStops.some((i) => i.id === 'set:speakerCalls') /* calls play on */
         && oldStops.some((i) => i.id === 'set:flashWarning') /* flash warning */

@@ -38,6 +38,8 @@ import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_gro
 import { createWakeHold } from './phone_mic_show.js';
 import { createSpeechChannel } from './output_channels.js';
 import { createCallAnnouncer } from './follow_sound.js';   // the hear half: a follow page in this browser hears of the call
+import { createOutgoingCaptions, captionsOutChoice, captionsOutSupported, CAPTIONS_OUT_KEY, CAPTIONS_OUT_LABEL,
+  CAPTIONS_OUT_NOTE, CAPTIONS_OUT_SAYS } from './call_outgoing_captions.js';   // row 2.144: subtitles of what I say
 import { playPath } from './game_together.js';   // the join page's address for a game's room (Quiz mix's as it always was)
 
 const esc = (s) => String(s == null ? '' : s)
@@ -221,6 +223,9 @@ export async function mountCallPage(root, {
   // the hear half (follow_sound.js createCallAnnouncer): tells this browser's follow page which screens this call is
   // with. A seam for the suites; null makes the real one.
   announceCall = null,
+  // row 2.144: what turns this device's own voice into subtitles for the other end (call_outgoing_captions.js). A seam
+  // for the suites.
+  makeOutgoingCaptions = (o) => createOutgoingCaptions(o),
 } = {}) {
   if (!root) throw new Error('mountCallPage: a root element is required');
   const callNews = announceCall || (() => { try { return createCallAnnouncer({ setTimer, clearTimer }); } catch { return null; } })();
@@ -245,6 +250,9 @@ export async function mountCallPage(root, {
   let cams = [];                       // videoinput device ids, for switching
   let said = [];                       // words from the screen's board this call, newest last (WORDS_SHOWN)
   let heldForWords = false;            // the microphone is held while a word is read out (WORDS_HOLD_MAX_MS)
+  let outCaps = null;                  // row 2.144: subtitles of what I say, while they are running (syncCaptions)
+  let mine = '';                       // ...the latest of them, shown to me
+  let capsState = 'off';
   let readTok = 0;
   let run = 0;
   // group calls (see the header): this page's group, the other screens it rang into the call (call id -> leg), the
@@ -341,6 +349,8 @@ export async function mountCallPage(root, {
           <option value="show"${wordsMode() === 'show' ? ' selected' : ''}>Only show them</option>
         </select>
       </label>
+      <label class="cp-check"><input type="checkbox" data-captions-out${captionsOutOn() ? ' checked' : ''}${captionsOutSupported(win) ? '' : ' disabled'}> ${esc(CAPTIONS_OUT_LABEL)}</label>
+      <p class="cp-note" data-captions-out-note>${esc(captionsOutSupported(win) ? CAPTIONS_OUT_NOTE : CAPTIONS_OUT_SAYS.unsupported)}</p>
       <p class="cp-note">To talk without video and hear the room, <a data-intercom-link href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>
       <p class="cp-note">During a call you can add more people: up to ${MESH_MAX_OTHERS.video} others on a video call,
         ${MESH_MAX_OTHERS.audio} on an audio call. Everybody connects straight to everybody else.</p>
@@ -459,6 +469,8 @@ export async function mountCallPage(root, {
           <p class="cp-words-before" data-words-before></p>
           <button type="button" class="cp-btn cp-ctl cp-words-aloud" data-words-aloud aria-pressed="true">Read out loud</button>
         </section>
+        <p class="cp-note cp-mine" data-mine hidden></p>
+        <p class="cp-note" data-mine-note hidden></p>
         <div class="cp-stage">
           <video class="cp-remote" data-remote autoplay playsinline></video>
           <div class="cp-card" data-card><div class="cp-initial" aria-hidden="true" data-initial></div><div class="cp-card-name" data-card-name></div></div>
@@ -473,6 +485,7 @@ export async function mountCallPage(root, {
           <button type="button" class="cp-btn cp-ctl" data-cam aria-pressed="false" hidden>Camera off</button>
           <button type="button" class="cp-btn cp-ctl" data-flip hidden>Switch camera</button>
           <button type="button" class="cp-btn cp-ctl" data-add hidden>Add someone</button>
+          <button type="button" class="cp-btn cp-ctl" data-captions-out-btn aria-pressed="false"${captionsOutSupported(win) ? '' : ' hidden'}>Subtitles of me</button>
           <button type="button" class="cp-btn cp-hang" data-hangup>Hang up</button>
         </div>
       </div>`;
@@ -758,7 +771,44 @@ export async function mountCallPage(root, {
     if (n) { n.textContent = note || ''; n.hidden = !note; }
     if (group || legs.size) paintGroup();       // group calls: tiles, knocks, Add someone
     paintGame();                                // "Play Quiz mix together" once the call is going
+    syncCaptions();
   }
+
+  // ---- SUBTITLES OF WHAT I SAY (row 2.144, call_outgoing_captions.js) ----------------------------------------
+  // Remembered on this device, off by default (the file argues why). They run only while the call is going AND this
+  // device's microphone is on: the browser's recogniser listens to the microphone itself, not to the call, so muting
+  // the call must stop them too, or "Mute" would still send what was said, as text. Likewise while a board word is
+  // read out here (heldForWords): that is this device's own voice, not the caller's. To the first screen only for now;
+  // a group call's other screens get none yet (row 2.144 step 4).
+  function captionsOutOn() { return captionsOutChoice(get(CAPTIONS_OUT_KEY, '')) === 'on'; }
+  function syncCaptions() {
+    const should = captionsOutOn() && phase === 'in-call' && micOn && !heldForWords && !!transport && !!local;
+    if (should && !outCaps) {
+      const t = transport;
+      try {
+        outCaps = makeOutgoingCaptions({ view: win, setTimer, clearTimer,
+          send: (c) => t?.sendCaption?.(c) || false,
+          onMine: (c) => { mine = c.text; paintMine(); },
+          onState: (s) => { capsState = s; paintMine(); } });
+        outCaps?.start?.();
+      } catch (err) { console.error('call: subtitles of me', err); outCaps = null; }
+    } else if (!should && outCaps) {
+      const o = outCaps; outCaps = null;
+      try { o.stop?.(); } catch { /* gone */ }
+      mine = '';
+    }
+    paintMine();
+  }
+  function paintMine() {
+    const el = q('[data-mine]');
+    if (el) { el.textContent = mine ? `You: ${mine}` : ''; el.hidden = !(outCaps && mine); }
+    const says = outCaps ? (CAPTIONS_OUT_SAYS[capsState] || '') : '';
+    const n = q('[data-mine-note]');
+    if (n) { n.textContent = says; n.hidden = !says; }
+    const b = q('[data-captions-out-btn]');
+    if (b) { const on = captionsOutOn(); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Subtitles of me: on' : 'Subtitles of me: off'; }
+  }
+  function setCaptionsOut(on) { put(CAPTIONS_OUT_KEY, on ? 'on' : 'off'); syncCaptions(); }
 
   // ---- words from the screen's AAC board (WORDS_KEY above) -------------------------------------------
   function wordsMode() { const m = get(WORDS_KEY, 'speak'); return WORDS_MODES.includes(m) ? m : 'speak'; }
@@ -799,7 +849,7 @@ export async function mountCallPage(root, {
     };
   }
   // The microphone sends only when the caller has not muted it AND no word is being read out.
-  function applyMic() { for (const t of tracksOf('audio')) { try { t.enabled = micOn && !heldForWords; } catch { /* stopped */ } } }
+  function applyMic() { for (const t of tracksOf('audio')) { try { t.enabled = micOn && !heldForWords; } catch { /* stopped */ } } syncCaptions(); }
   function readAloud(text) {
     const tok = ++readTok;
     const release = () => { if (tok !== readTok) return; heldForWords = false; applyMic(); };
@@ -1101,6 +1151,8 @@ export async function mountCallPage(root, {
     cams = [];
     said = []; heldForWords = false; readTok++;
     phase = 'idle';
+    syncCaptions();                     // row 2.144: subtitles of me go with the call
+    capsState = 'off';
     ended = message;
     tellCall();
     renderSetup();
@@ -1154,6 +1206,7 @@ export async function mountCallPage(root, {
     if (e.target.closest?.('[data-cam]')) { toggleCam(); return; }
     if (e.target.closest?.('[data-flip]')) { flip(); return; }
     if (e.target.closest?.('[data-words-aloud]')) { setWordsMode(wordsMode() === 'speak' ? 'show' : 'speak'); return; }
+    if (e.target.closest?.('[data-captions-out-btn]')) { setCaptionsOut(!captionsOutOn()); return; }
     if (e.target.closest?.('[data-game-join]')) { if (game) { game.playing = true; paintGame(); } return; }
     if (e.target.closest?.('[data-game-ask]')) { askForGame(e.target.closest('[data-game-ask]').dataset.gameAsk || GAME_ASK_GAME); return; }
     if (e.target.closest?.('[data-game-close]')) { closeGame(); return; }
@@ -1174,6 +1227,7 @@ export async function mountCallPage(root, {
   }, { capture: true, signal: ac.signal });
   on(root, 'change', (e) => {
     if (e.target.closest?.('[data-words-mode]')) { setWordsMode(e.target.value); return; }
+    if (e.target.closest?.('[data-captions-out]')) { setCaptionsOut(!!e.target.checked); return; }
     if (e.target.closest?.('[data-ring]')) { ringPick = e.target.value || ''; return; }
     if (!e.target.closest?.('[data-person]')) return;
     ringPick = '';
@@ -1210,6 +1264,7 @@ export async function mountCallPage(root, {
     askGame: (which) => askForGame(which || GAME_ASK_GAME),
     words: () => [...said],
     wordsMode: () => wordsMode(),
+    captionsOut: () => ({ on: captionsOutOn(), running: !!outCaps, state: capsState, mine }),
     micHeld: () => heldForWords,
     call: (want = 'video') => start(want),
     hangup: () => finish('The call ended.'),

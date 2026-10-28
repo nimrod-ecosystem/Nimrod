@@ -258,6 +258,29 @@ export function parseWords(data) {
   return { text, source, ...(m.audio === true ? { audio: true } : {}) };
 }
 
+// ---- SUBTITLES OF WHAT THE OTHER END SAYS (row 2.144, 2026-10-28) ---------------------------------------
+// Mike, 2026-10-27: "You could choose to have subtitles on your outgoing and/or incoming calls", and his rule:
+// "computed at whoever's end has them turned on. If they both have them on, have it default to outgoing in case
+// someone had their AI learn their voice." So a speaker's own page may turn its own voice into words
+// (call_outgoing_captions.js) and send them here: the same channel as board words, end to end, never the server.
+// Its own message type, so a page that does not know it ignores it (parseWords refuses anything not 'say') and a
+// caption is never read out loud as if it were a board word. `id` names the utterance: the fast guess and every
+// correction of it carry the same id, so the far end replaces that line in place (subtitles.js `caption`).
+// NOT QUEUED: a caption is about now; one that could not go while the channel was closed is stale by the time it
+// opens, so it is dropped (unlike a board word, which somebody chose on purpose).
+export const CAPTION_TYPE = 'caption';
+
+/** A caption from the channel, as `{ id, text, final }`, or null when it is not one. Pure. */
+export function parseCaption(data) {
+  if (typeof data !== 'string' || data.length > WORDS_MAX_CHARS * 8) return null;
+  let m = null;
+  try { m = JSON.parse(data); } catch { return null; }
+  if (!m || typeof m !== 'object' || m.type !== CAPTION_TYPE) return null;
+  const id = typeof m.id === 'string' ? m.id.replace(/[^\w:.-]/g, '').slice(0, 40) : '';
+  if (!id) return null;
+  return { id, text: cleanWords(m.text), final: m.final === true };
+}
+
 /** A fresh call id: "call-" + 16 hex, inside drive.py's session rules. */
 export function newCallSession(rand = null) {
   let s = '';
@@ -431,6 +454,7 @@ export function createCallTransport({
   let words = null;
   const wordsQueue = [];
   const wordsCbs = new Set();
+  const captionCbs = new Set();      // row 2.144: subtitles the other end made of its own voice
   // call loadouts (2026-10-09): a word WITH a clip waits for the clip to start (call_mix.js CLIP_WAIT_MS at most)
   // so its message can say whether its sound is in the call; words after it wait in line behind it, so the
   // order they were chosen in is the order they arrive. `callSeq` changes at every ending, so nothing still
@@ -457,7 +481,9 @@ export function createCallTransport({
     ch.onmessage = (e) => {
       if (words !== ch || destroyed) return;
       const w = parseWords(e?.data);
-      if (w) emit(wordsCbs, w);
+      if (w) { emit(wordsCbs, w); return; }
+      const c = parseCaption(e?.data);
+      if (c) emit(captionCbs, c);
     };
     ch.onclose = () => { if (words === ch) words = null; };
     if (ch.readyState === 'open') flushWords();
@@ -1062,6 +1088,20 @@ export function createCallTransport({
     },
     /** `cb({ text, source, audio? })` for each word the other end of the call sent. Returns an unsubscribe. */
     onWords(cb) { if (typeof cb !== 'function') return () => {}; wordsCbs.add(cb); return () => { wordsCbs.delete(cb); }; },
+    /**
+     * SUBTITLES OF MY OWN VOICE (row 2.144, CAPTION_TYPE above): `{ id, text, final }` to the other end, now or
+     * never. False - nothing sent, nothing kept - outside a live call, before the channel is open, or with no words.
+     */
+    sendCaption({ id, text, final = false } = {}) {
+      if (destroyed || !live || !words || words.readyState !== 'open') return false;
+      const cid = typeof id === 'string' ? id.replace(/[^\w:.-]/g, '').slice(0, 40) : '';
+      const t = cleanWords(text);
+      if (!cid || !t) return false;
+      try { words.send(JSON.stringify({ type: CAPTION_TYPE, id: cid, text: t, final: final === true })); return true; }
+      catch (e) { log('caption: send failed', e); return false; }
+    },
+    /** `cb({ id, text, final })` for each subtitle the other end sent of its own voice. Returns an unsubscribe. */
+    onCaptions(cb) { if (typeof cb !== 'function') return () => {}; captionCbs.add(cb); return () => { captionCbs.delete(cb); }; },
     // call loadouts (2026-10-09): the far end's stream, for captions (call_captions.js). `remote()` is the one now
     // (null outside a call); `onRemote(cb)` hears it each time a track arrives, and null when the call ends.
     remote: () => remoteStream,
@@ -1090,6 +1130,7 @@ export function createCallTransport({
       if (mixer && clipMixer === undefined) { try { mixer.destroy?.(); } catch { /* gone */ } }
       mixer = null;
       remoteCbs.clear();
+      captionCbs.clear();
       // group calls: the transport lets go of the group's changes (the screen destroys the group itself).
       try { offGroup?.(); } catch { /* gone */ }
       legCbs.clear();

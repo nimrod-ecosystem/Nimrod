@@ -32,6 +32,8 @@ export const SUITES = [
   'audio_bus', 'automation', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'music', 'pressgame', 'records', 'rules',
   // board into call (2026-10-08): an AAC board word chosen during a live call reaches the caller, as text.
   'call_words',
+  // row 2.144: subtitles on calls - what I say, made here and sent (the screen's side is in call_loadouts).
+  'call_subtitles',
   // call loadouts (2026-10-09): a board word's recorded clip mixed into the call's sound (call_mix.js); and what a
   // screen with no Call panel answers into - video / audio / either with a talk board, captions, Hang up on the bar.
   // call_loadouts mounts a real kiosk and real sockets (needs the server). call_mix's last section needs the page's

@@ -114,6 +114,38 @@ export const CALL_CAPTIONS_FIELD = Object.freeze({
       + 'running on this computer. Nothing is kept. The words go when the call ends.',
 });
 
+// SUBTITLES THE CALLER MADE OF THEIR OWN VOICE (row 2.144, 2026-10-28; call_outgoing_captions.js). A caller's page may
+// send them; this is what the screen does with them.
+//   theirs  show them; and when this screen was making its own captions of the caller too, stop and use theirs.
+//           THE DEFAULT, Mike's rule (2026-10-27): "If they both have them on, have it default to outgoing in case
+//           someone had their AI learn their voice" - the end where the voice is knows it best.
+//   ours    keep this screen's own while they run (Captions on calls, above); theirs show only when ours are off.
+//           For a screen whose own recogniser is better than a phone's.
+//   none    never show subtitles a caller sends. For a screen where moving text is unwanted.
+// The case for 'none' as the default: nothing new appears without the screen's owner choosing it. Against, and it
+// wins: a caller who turned them on did so to be understood here, and the words are only shown, never kept.
+export const CALL_THEIR_CAPTIONS_KEY = 'callTheirCaptions';
+export const CALL_THEIR_CAPTION_MODES = Object.freeze(['theirs', 'ours', 'none']);
+export const CALL_THEIR_CAPTIONS_DEFAULT = 'theirs';
+export const CALL_THEIR_CAPTIONS_FIELD = Object.freeze({
+  key: CALL_THEIR_CAPTIONS_KEY,
+  label: 'Subtitles a caller sends of their own voice',
+  kind: 'choice',
+  level: 'standard',
+  default: CALL_THEIR_CAPTIONS_DEFAULT,
+  options: [
+    { value: 'theirs', label: 'Show them (and use them instead of this screen’s own)' },
+    { value: 'ours', label: 'Show them only when this screen is not making its own' },
+    { value: 'none', label: 'Do not show them' },
+  ],
+  note: 'A caller can choose to send subtitles of what they say. Nothing is kept. The words go when the call ends.',
+});
+/** 'theirs' | 'ours' | 'none' from a screen's row. Pure. */
+export function callTheirCaptionsOf(row) {
+  const v = row && row[CALL_THEIR_CAPTIONS_KEY];
+  return CALL_THEIR_CAPTION_MODES.includes(v) ? v : CALL_THEIR_CAPTIONS_DEFAULT;
+}
+
 /** The loadout a screen's row asks for (anything unknown is the default). Pure. */
 export function callLoadoutOf(row) {
   const k = row && typeof row[CALL_OPENS_KEY] === 'string' ? row[CALL_OPENS_KEY] : '';
@@ -140,7 +172,7 @@ export function boardPreset({ width = 0, height = 0 } = {}) {
 
 /**
  * Everything the call view needs to open a call, from the screen's row and its size. Pure.
- *   { key, label, camera, theirVideo, board, captions, preset, slots: ['call', 'board'?], grid }
+ *   { key, label, camera, theirVideo, board, captions, theirCaptions, preset, slots: ['call', 'board'?], grid }
  * `grid` is layout.js's own CSS for the preset, so the call view and a dashboard cannot draw it differently.
  */
 export function callViewPlan(row, { width = 0, height = 0, boardAvailable = true } = {}) {
@@ -151,6 +183,7 @@ export function callViewPlan(row, { width = 0, height = 0, boardAvailable = true
   return {
     key: lo.key, label: lo.label, camera: lo.camera, theirVideo: lo.theirVideo, board,
     captions: callCaptionsOf(row),
+    theirCaptions: callTheirCaptionsOf(row),
     preset, slots: !board ? ['call'] : preset === 'side' ? ['board', 'call'] : ['call', 'board'],
     grid: { cols: p.cols, rows: p.rows },
   };

@@ -38,6 +38,7 @@
 import {
   CALL_LOADOUTS, CALL_LOADOUT_ORDER, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_OPENS_KEY, CALL_CAPTIONS_KEY,
   CALL_OPENS_DEFAULT, CALL_CAPTIONS_DEFAULT, CALL_CAPTION_MODES, callLoadoutOf, callCaptionsOf, boardPreset, callViewPlan,
+  CALL_THEIR_CAPTIONS_KEY, CALL_THEIR_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_DEFAULT, CALL_THEIR_CAPTION_MODES, callTheirCaptionsOf,
 } from '../call_loadouts.js';
 import { callCaptionPlan, createCallCaptions } from '../call_captions.js';
 import { PRESETS, normalizeLayout } from '../layout.js';
@@ -105,7 +106,13 @@ try {
   check('captions: off by default; "this computer only" and "and the other computers" are separate choices',
     CALL_CAPTIONS_DEFAULT === 'off' && CALL_CAPTION_MODES.join() === 'off,here,any' && callCaptionsOf({}) === 'off'
     && callCaptionsOf({ [CALL_CAPTIONS_KEY]: 'any' }) === 'any' && callCaptionsOf({ [CALL_CAPTIONS_KEY]: true }) === 'off');
-  check('site copy in the rows never says "her screen" or a name', !/her screen|Cici/i.test(JSON.stringify([CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD])));
+  check('site copy in the rows never says "her screen" or a name', !/her screen|Cici/i.test(JSON.stringify([CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_FIELD])));
+  // row 2.144 (2026-10-28): Mike's rule - when both ends have subtitles on, the speaker's own ("theirs") by default.
+  check('*** subtitles a caller sends: "theirs" by default (Mike\'s rule), "ours" and "none" are choices ***',
+    CALL_THEIR_CAPTIONS_DEFAULT === 'theirs' && CALL_THEIR_CAPTIONS_FIELD.default === 'theirs' && CALL_THEIR_CAPTION_MODES.join() === 'theirs,ours,none'
+    && CALL_THEIR_CAPTIONS_FIELD.options.map((o) => o.value).join() === 'theirs,ours,none'
+    && callTheirCaptionsOf({}) === 'theirs' && callTheirCaptionsOf({ [CALL_THEIR_CAPTIONS_KEY]: 'none' }) === 'none' && callTheirCaptionsOf({ [CALL_THEIR_CAPTIONS_KEY]: 'x' }) === 'theirs');
+  check('...and the plan carries it', callViewPlan({}).theirCaptions === 'theirs' && callViewPlan({ [CALL_THEIR_CAPTIONS_KEY]: 'ours' }).theirCaptions === 'ours');
   check('*** the board sits beside the call on a wide screen, under it on a tall one ***',
     boardPreset({ width: 1280, height: 720 }) === 'side' && boardPreset({ width: 390, height: 844 }) === 'stack' && boardPreset({ width: 500, height: 500 }) === 'side');
   const wide = callViewPlan({ [CALL_OPENS_KEY]: 'audio_board', [CALL_CAPTIONS_KEY]: 'here' }, { width: 1280, height: 720 });
@@ -250,7 +257,8 @@ try {
     k.menu.open();
     try { k.menu.showTab?.('screen'); } catch { /* no tabs */ }
     const row = (key) => k.menu.items().find((i) => i.id === `set:${key}`);
-    check('*** both rows are on This screen, beside "Calls when there\'s no Call panel" ***', !!row(CALL_OPENS_KEY) && !!row(CALL_CAPTIONS_KEY) && !!row('callNotice'),
+    check('*** both rows are on This screen, beside "Calls when there\'s no Call panel" ***', !!row(CALL_OPENS_KEY) && !!row(CALL_CAPTIONS_KEY) && !!row('callNotice')
+      && !!row(CALL_THEIR_CAPTIONS_KEY) /* row 2.144 */,
       JSON.stringify(k.menu.items().filter((i) => i.tab === 'screen').map((i) => i.id)));
     // Set outright, as the menu's choice picker does (`commit`): stepping reads the row's value, which the
     // menu only refreshes when it draws.
@@ -295,6 +303,15 @@ try {
     card?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     check('*** LIVE: a card pressed on the call view\'s board reaches the caller ***', await settled(() => words.length > 0, 8000), JSON.stringify(words));
     check('...as the board says it, from the board', words[0]?.source === 'board' && said.toLowerCase().includes((words[0]?.text || '#').toLowerCase()), `${JSON.stringify(words[0])} / ${said}`);
+    // row 2.144 (2026-10-28): subtitles the caller made of their own voice show under the call ("theirs", the default),
+    // in a caption box the call view makes on the first one ("Captions on calls" is off on this screen).
+    const subsText = () => view()?.querySelector('.subs')?.textContent || '';
+    check('*** LIVE: subtitles the caller made of their own voice show in the call view ***',
+      d.sendCaption({ id: 'me1-0', text: 'hello there' }) === true && await settled(() => /hello there/.test(subsText()), 4000), subsText());
+    d.sendCaption({ id: 'me1-0', text: 'hello there friend', final: true });
+    check('*** LIVE: ...corrected in place: still one line, now the better words ***',
+      await settled(() => /hello there friend/.test(subsText()), 4000) && (subsText().match(/hello there/g) || []).length === 1, subsText());
+    check('LIVE: ...and they were not taken for a board word (nothing read out, nothing came back as words)', words.length === 1, JSON.stringify(words));
     // A switch in the call view drives THIS board, not one under it.
     let mine = 0, bare = 0;
     const offA = kbus.subscribe('board/select#call:board', () => { mine += 1; });

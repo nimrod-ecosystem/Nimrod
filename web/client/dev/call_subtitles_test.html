@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>subtitles on calls — what I say, made here and shown at the other end — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #page{position:absolute;left:-9999px;top:0;width:400px;height:400px}
+</style>
+</head>
+<body>
+<h1>subtitles on calls (row 2.144, 2026-10-28)</h1>
+<div class="note">
+  Mike: "You could choose to have subtitles on your outgoing and/or incoming calls", made "at whoever's end has them
+  turned on", the speaker's own by default when both do. Checked here: a subtitle is its own message on the call's
+  words channel (never taken for a board word, never queued, never outside a live call, never through the server);
+  the outgoing recogniser sends each guess and its corrections under one id and says plainly when it cannot listen;
+  the call page has it off by default with a plain note of where the voice goes, and runs it only while the call is
+  going and its microphone is on - Mute stops the subtitles too, and so does a board word being read out. The
+  screen's side is in dev/call_loadouts_test.html (LIVE). The browser's recogniser and the connections are fakes.
+</div>
+<div id="page"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createCallTransport, parseCaption, parseWords, CAPTION_TYPE } from '../call_transport.js';
+import { mountCallPage } from '../call_page.js';
+import {
+  createOutgoingCaptions, captionsOutChoice, captionsOutSupported, CAPTIONS_OUT_KEY, CAPTIONS_OUT_DEFAULT,
+  CAPTIONS_OUT_NOTE, CAPTIONS_OUT_SAYS, CAPTIONS_OUT_RESTART_MS,
+} from '../call_outgoing_captions.js';
+import { SIGNAL_KINDS } from '../drive.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 2000) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(10); } return !!fn(); };
+const ticks = async (n = 5) => { for (let i = 0; i < n; i++) await Promise.resolve(); await sleep(0); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// ---- a data channel and a peer connection without a network (as dev/call_words_test.html) -----------------------
+class FakeChannel {
+  constructor(label, opts = {}) { this.label = label; this.opts = opts; this.readyState = 'connecting'; this.sent = []; this.peer = null; }
+  send(d) {
+    if (this.readyState !== 'open') { const e = new Error('not open'); e.name = 'InvalidStateError'; throw e; }
+    this.sent.push(d);
+    const p = this.peer;
+    if (p) queueMicrotask(() => { if (p.readyState === 'open') p.onmessage?.({ data: d }); });
+  }
+  open() { this.readyState = 'open'; this.onopen?.(); }
+  close() {
+    if (this.readyState === 'closed') return;
+    this.readyState = 'closed'; this.onclose?.();
+    const p = this.peer; if (p && p.readyState !== 'closed') { p.readyState = 'closed'; p.onclose?.(); }
+  }
+}
+function fakePeer() {
+  const made = [];
+  class PC {
+    constructor(cfg) { this.cfg = cfg; this.senders = []; this.closed = false; this.channels = []; this.log = []; this.iceGatheringState = 'complete'; this.connectionState = 'new'; made.push(this); }
+    addTrack(t, stream) { const s = { track: t, stream, async replaceTrack(n) { this.track = n; } }; this.senders.push(s); return s; }
+    getSenders() { return this.senders; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; }
+    async createAnswer() { return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+    async createOffer() { this.log.push('offer'); return { type: 'offer', sdp: 'OFFER-SDP' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    createDataChannel(label, opts) { const c = new FakeChannel(label, opts); this.channels.push(c); return c; }
+    close() { this.closed = true; for (const c of this.channels) c.close(); }
+    fire(state) { this.connectionState = state; this.onconnectionstatechange?.(); }
+  }
+  return { PC, made, last: () => made[made.length - 1] };
+}
+function meet(callerPc, screenPc) {
+  for (const ch of callerPc.channels) {
+    if (ch.readyState === 'closed') continue;
+    const far = new FakeChannel(ch.label, ch.opts);
+    ch.peer = far; far.peer = ch;
+    screenPc.channels.push(far);
+    screenPc.ondatachannel?.({ channel: far });
+    ch.open(); far.open();
+  }
+  callerPc.fire('connected'); screenPc.fire('connected');
+}
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { if (!this.tracks.includes(t)) this.tracks.push(t); }
+  removeTrack(t) { this.tracks = this.tracks.filter((x) => x !== t); }
+  getTracks() { return [...this.tracks]; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+function linkPair() {
+  const mk = () => ({ subs: new Set(), sent: [], onSignal(cb) { this.subs.add(cb); return () => this.subs.delete(cb); } });
+  const a = mk(), b = mk();
+  const wire = (from, to) => { from.sendSignal = (s) => { if (!SIGNAL_KINDS.includes(s.kind)) return false; from.sent.push(s); const c = JSON.parse(JSON.stringify(s)); queueMicrotask(() => { for (const f of [...to.subs]) f(c); }); return true; }; };
+  wire(a, b); wire(b, a);
+  return [a, b];
+}
+
+// ---- the browser's recogniser, faked: the suite says what it "heard" ----------------------------------------
+function fakeRecognition() {
+  const made = [];
+  class Rec {
+    constructor() { this.started = false; this.aborted = false; made.push(this); }
+    start() { if (Rec.refuseStart) throw new Error('not allowed'); this.started = true; }
+    stop() { this.started = false; this.onend?.(); }
+    abort() { this.aborted = true; this.started = false; }
+    // results: [[text, isFinal], ...] - the browser's SpeechRecognitionEvent shape
+    hear(results, resultIndex = 0) {
+      const rs = results.map(([t, fin]) => Object.assign([{ transcript: t }], { isFinal: fin }));
+      this.onresult?.({ resultIndex, results: rs });
+    }
+    fail(error) { this.onerror?.({ error }); this.started = false; this.onend?.(); }
+  }
+  Rec.refuseStart = false;
+  return { Rec, made, last: () => made[made.length - 1] };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the message: its own type, never a board word');
+  const msg = JSON.stringify({ type: CAPTION_TYPE, id: 'me1-0', text: '  hello   there ', final: true });
+  check('a subtitle is read back: id, cleaned words, final', JSON.stringify(parseCaption(msg)) === '{"id":"me1-0","text":"hello there","final":true}', JSON.stringify(parseCaption(msg)));
+  check('*** ...and it is NOT a board word (so it is never read out loud as one) ***', parseWords(msg) === null);
+  check('a board word is not a subtitle', parseCaption(JSON.stringify({ type: 'say', text: 'water' })) === null);
+  check('no id, not JSON, not a string: not a subtitle', parseCaption(JSON.stringify({ type: CAPTION_TYPE, text: 'x' })) === null
+    && parseCaption('hello') === null && parseCaption(42) === null);
+  check('an id is cleaned to letters, digits and :.-', parseCaption(JSON.stringify({ type: CAPTION_TYPE, id: 'a<b>"c', text: 'x' }))?.id === 'abc');
+
+  // =====================================================================================
+  section('*** the transport: sent only in a live call, on the call\'s own channel, never queued ***');
+  {
+    const clk = fakeClock();
+    const P = fakePeer();
+    const [dl, sl] = linkPair();
+    const o = { PeerConnection: P.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer };
+    const caller = createCallTransport({ link: dl, role: 'driver', ...o });
+    const screen = createCallTransport({ link: sl, role: 'screen', ...o });
+    const caps = [], words = [];
+    screen.onCaptions((c) => caps.push(c));
+    screen.onWords((w) => words.push(w));
+    check('*** no call: nothing is sent ***', caller.sendCaption({ id: 'me1-0', text: 'hi' }) === false);
+    await caller.call({ tracks: [] }); await ticks();
+    await screen.answer({}); await ticks();
+    check('*** the channel is not open yet: dropped, not queued (a late subtitle is a wrong one) ***',
+      caller.sendCaption({ id: 'me1-0', text: 'early' }) === false && caller.__probe().wordsWaiting === 0);
+    meet(P.made[0], P.last()); await ticks();
+    check('nothing said before the channel opened arrives later', caps.length === 0);
+    check('a subtitle in the call is sent', caller.sendCaption({ id: 'me1-0', text: 'hello' }) === true);
+    await ticks();
+    caller.sendCaption({ id: 'me1-0', text: 'hello there', final: true });
+    await ticks();
+    check('*** ...and arrives at the other end, the guess and then its correction under the same id ***',
+      caps.length === 2 && caps[0].id === 'me1-0' && caps[0].text === 'hello' && caps[0].final === false
+      && caps[1].id === 'me1-0' && caps[1].text === 'hello there' && caps[1].final === true, JSON.stringify(caps));
+    check('*** none of it came through as a board word ***', words.length === 0);
+    check('*** none of it went through the site\'s server ***', !/hello/.test(JSON.stringify(dl.sent) + JSON.stringify(sl.sent)));
+    check('empty words or no id: nothing sent', caller.sendCaption({ id: 'me1-1', text: '   ' }) === false && caller.sendCaption({ text: 'x' }) === false);
+    caller.hangup(); await ticks();
+    check('*** the call ended: nothing more is sent ***', caller.sendCaption({ id: 'me2-0', text: 'after' }) === false);
+    caller.destroy(); screen.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the outgoing recogniser: each guess sent, corrected in place, and says when it cannot listen ***');
+  {
+    check('off by default, remembered per device', CAPTIONS_OUT_DEFAULT === 'off' && captionsOutChoice(null) === 'off'
+      && captionsOutChoice('on') === 'on' && captionsOutChoice('yes') === 'off');
+    check('*** the note says plainly where the voice goes ***', /Google/.test(CAPTIONS_OUT_NOTE) && /Nothing is kept/.test(CAPTIONS_OUT_NOTE));
+    check('the restart pause is sane', CAPTIONS_OUT_RESTART_MS >= 100 && CAPTIONS_OUT_RESTART_MS <= 2000);
+    check('a browser with no recogniser is told apart', captionsOutSupported({}) === false && captionsOutSupported({ webkitSpeechRecognition: function () {} }) === true);
+    const clk = fakeClock();
+    const R = fakeRecognition();
+    const sent = [], mine = [], states = [];
+    const oc = createOutgoingCaptions({ Recognition: R.Rec, lang: 'en-US', setTimer: clk.setTimer, clearTimer: clk.clearTimer,
+      send: (c) => { sent.push(c); return true; }, onMine: (c) => mine.push(c), onState: (s) => states.push(s) });
+    check('nothing listens until it is started', R.made.length === 0 && oc.state() === 'off');
+    oc.start();
+    const r1 = R.last();
+    check('started: continuous, with the fast guesses on, in the page\'s language', r1.started && r1.continuous === true && r1.interimResults === true && r1.lang === 'en-US' && oc.state() === 'listening');
+    r1.hear([['hel', false]]);
+    r1.hear([['hello there', true]]);
+    check('*** the guess and its correction go out under ONE id, the last one final ***',
+      sent.length === 2 && sent[0].id === sent[1].id && sent[0].final === false && sent[1].final === true && sent[1].text === 'hello there', JSON.stringify(sent));
+    check('...and the speaker sees the same', mine.length === 2 && mine[1].text === 'hello there');
+    r1.hear([['hello there', true], ['how are', false]], 1);
+    check('the next sentence is a new line (a new id)', sent.length === 3 && sent[2].id !== sent[0].id && sent[2].text === 'how are');
+    // The recogniser stops by itself (silence, a minute gone): it is started again, and its ids do not collide.
+    r1.onend?.();
+    clk.advance(CAPTIONS_OUT_RESTART_MS);
+    const r2 = R.last();
+    check('*** it stops by itself: started again after the pause ***', r2 !== r1 && r2.started);
+    r2.hear([['again', true]]);
+    check('...and its first line does not reuse an earlier id', !sent.slice(0, 3).some((c) => c.id === sent[3].id), JSON.stringify(sent.map((c) => c.id)));
+    // The microphone taken (Android, with a call holding it): said, and it stops trying.
+    r2.fail('audio-capture');
+    clk.advance(CAPTIONS_OUT_RESTART_MS * 3);
+    check('*** the microphone could not be had: it says so in words and stops trying ***',
+      oc.state() === 'no-mic' && R.last() === r2 && /could not use the microphone/.test(CAPTIONS_OUT_SAYS['no-mic']));
+    oc.stop();
+    check('stop: off', oc.state() === 'off');
+    oc.start();
+    R.last().fail('not-allowed');
+    check('not allowed: said, and stopped', oc.state() === 'refused');
+    oc.stop();
+    const none = createOutgoingCaptions({ Recognition: null, onState: (s) => states.push(s) });
+    none.start();
+    check('*** no recogniser in this browser: said, nothing thrown ***', none.state() === 'unsupported' && /cannot turn speech into words/.test(CAPTIONS_OUT_SAYS.unsupported));
+    oc.start(); const r3 = R.last(); oc.stop();
+    check('stop aborts the recogniser and starts no other', r3.aborted && R.last() === r3);
+  }
+
+  // =====================================================================================
+  section('*** the call page: off by default; on, it runs only while the call is going and the microphone is on ***');
+  {
+    const clk = fakeClock();
+    const P = fakePeer();
+    const R = fakeRecognition();
+    const [dl, sl] = linkPair();
+    const screen = createCallTransport({ link: sl, role: 'screen', PeerConnection: P.PC, Stream: FakeStream });
+    const rings = []; screen.onIncoming((f) => rings.push(f));
+    const caps = []; screen.onCaptions((c) => caps.push(c));
+    const connect = ({ onState, onPresence } = {}) => {
+      dl.state = () => 'connected'; dl.close = () => {}; dl.claim = () => false;
+      queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens: 1, drivers: 1 }); });
+      return dl;
+    };
+    const fetchImpl = async (url) => {
+      const ok = (b, s = 200) => ({ ok: s < 400, status: s, json: async () => b });
+      if (/ticket/.test(url)) return ok({ ticket: 'T' });
+      if (/\/api\/people$/.test(url)) return ok({ people: [{ id: 'p1', name: 'Alex' }] });
+      if (/\/api\/drive\/shared$/.test(url)) return ok({ people: [] });
+      if (/\/api\/me$/.test(url)) return ok({ display_name: 'Ann' });
+      return ok({}, 404);
+    };
+    let seq = 0;
+    const tracks = [];
+    const getUserMedia = async (c) => { const ts = []; if (c.audio) ts.push({ id: `a${++seq}`, kind: 'audio', enabled: true, stop() { this.stopped = true; } }); tracks.push(...ts); return new FakeStream(ts); };
+    const store = {}; const storage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+    let utter = null;
+    const speakWords = (t, done) => { utter = { fire: () => done() }; return () => {}; };
+    const win = { addEventListener: () => {}, SpeechRecognition: R.Rec };
+    const root = document.getElementById('page');
+    const mountIt = () => mountCallPage(root, {
+      fetchImpl, connect, getUserMedia, storage, search: '?person=p1', nav: {}, attach: () => {}, win,
+      enumerateDevices: async () => [], speakWords, setTimer: clk.setTimer, clearTimer: clk.clearTimer,
+      makeTransport: (x) => createCallTransport({ ...x, PeerConnection: P.PC, Stream: FakeStream }),
+      makeOutgoingCaptions: (o) => createOutgoingCaptions({ ...o, Recognition: R.Rec, lang: 'en-US' }),
+    });
+    let page = await mountIt();
+    const q = (s) => root.querySelector(s);
+    check('*** the setup screen has the tick, OFF by default, with where the voice goes ***',
+      !!q('[data-captions-out]') && q('[data-captions-out]').checked === false && /Google/.test(q('[data-captions-out-note]')?.textContent || ''));
+    // Default off: a whole call, and nothing listens.
+    const callUp = async () => {
+      root.querySelector('[data-start="audio"]').click();
+      await settled(() => rings.length > 0);
+      rings.length = 0;
+      await screen.answer({}); await ticks();
+      meet(P.made.filter((p) => p.log.includes('offer')).at(-1), P.last()); await ticks();
+    };
+    await callUp();
+    check('in a call', page.state() === 'in-call');
+    check('*** off: nothing listens for subtitles during the call ***', R.made.length === 0 && page.captionsOut().running === false);
+    page.hangup(); await ticks();
+    // Turned on at setup, remembered on this device.
+    q('[data-captions-out]').checked = true;
+    q('[data-captions-out]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('ticked: remembered on this device', store[CAPTIONS_OUT_KEY] === 'on');
+    check('*** ...and still nothing listens before a call is going ***', R.made.length === 0);
+    await callUp();
+    check('*** in the call: it listens ***', page.captionsOut().running === true && R.last()?.started === true);
+    const rec = R.last();
+    rec.hear([['good morning', false]]); await ticks();
+    rec.hear([['good morning Alex', true]]); await ticks();
+    check('*** what was said reaches the screen as subtitles, corrected in place ***',
+      caps.length === 2 && caps[0].id === caps[1].id && caps[1].text === 'good morning Alex' && caps[1].final === true, JSON.stringify(caps));
+    check('...and the speaker sees their own line', q('[data-mine]')?.hidden === false && q('[data-mine]').textContent === 'You: good morning Alex');
+    check('the button says it is on', q('[data-captions-out-btn]')?.getAttribute('aria-pressed') === 'true' && /on/.test(q('[data-captions-out-btn]').textContent));
+    // *** MUTE STOPS THEM. *** The recogniser hears the microphone itself, not the call's track.
+    root.querySelector('[data-mute]').click();
+    check('*** Mute: the subtitles stop too (or muted words would still be sent, as text) ***', page.captionsOut().running === false && rec.aborted === true);
+    root.querySelector('[data-mute]').click();
+    check('unmute: they start again', page.captionsOut().running === true && R.last() !== rec && R.last().started);
+    // A board word read out here is this device's own voice, not the caller's.
+    screen.sendWords('water', { source: 'board' }); await ticks();
+    check('*** while a board word is read out here, they pause ***', page.micHeld() === true && page.captionsOut().running === false);
+    utter.fire();
+    check('...and come back when it is read', page.captionsOut().running === true);
+    // Turned off in the call.
+    root.querySelector('[data-captions-out-btn]').click();
+    check('*** "Subtitles of me" off in the call: they stop, and it is remembered ***', page.captionsOut().running === false && store[CAPTIONS_OUT_KEY] === 'off'
+      && q('[data-captions-out-btn]').getAttribute('aria-pressed') === 'false');
+    root.querySelector('[data-captions-out-btn]').click();
+    check('...and on again', page.captionsOut().running === true && store[CAPTIONS_OUT_KEY] === 'on');
+    // The microphone could not be had for them: said beside the call, and the call goes on.
+    R.last().fail('audio-capture');
+    check('*** the browser could not listen: it says so, and the call goes on ***',
+      q('[data-mine-note]')?.hidden === false && /could not use the microphone/.test(q('[data-mine-note]').textContent) && page.state() === 'in-call');
+    const n = R.made.length;
+    page.hangup(); await ticks();
+    check('*** hang up: nothing listens any more ***', page.captionsOut().running === false && R.made.length === n);
+    check('the setup screen remembers it on', q('[data-captions-out]')?.checked === true);
+    check('site copy never says "her screen", a person’s name', !/her screen|Cici/i.test(root.textContent));
+    page.destroy?.();
+    // A browser with no recogniser: the tick is shown off, with why.
+    const winNo = { addEventListener: () => {} };
+    page = await mountCallPage(root, { fetchImpl, connect, getUserMedia, storage, search: '?person=p1', nav: {}, attach: () => {}, win: winNo,
+      enumerateDevices: async () => [], setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    check('*** no recogniser in this browser: the tick cannot be ticked, and it says why ***',
+      q('[data-captions-out]')?.disabled === true && /cannot turn speech into words/.test(q('[data-captions-out-note]')?.textContent || ''));
+    page.destroy?.();
+    screen.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
