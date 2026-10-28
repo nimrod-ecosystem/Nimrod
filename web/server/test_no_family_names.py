@@ -14,7 +14,11 @@ web/tools/hooks run it BEFORE anything leaves this computer.
 *** THE LIST IS NOT IN THIS FILE (Mike, 2026-10-27: keep the list itself out of the public repo). *** Two sources:
   * THIS COMPUTER: the words and their allowances, in an untracked file inside the clone's own git folder,
     `.git/info/nimrod-blocked-names` (or the file named by NIMROD_BLOCKED_NAMES). One per line:
-        block: <word>          refused anywhere, any capitals, as a whole word or inside one
+        block: <word>          refused anywhere, any capitals, as a whole word or inside one - in every commit
+        block-new: <word>      refused in what is committed or pushed from now on and in the newest commit's files,
+                               but not in the history before `history-until` (Mike, 2026-10-28, chat note DF: his own
+                               surname "is fine on Git", to be kept off the site; the rewritten history keeps it)
+        history-until: <sha>   the last commit of the rewritten history: it and every commit before it are history
         allow: <regex>         a line matching this is allowed for the word on it (the trivia uses of a word)
     The hooks use it; a copy lives in the private repo.
   * EVERYWHERE ELSE (GitHub's run, a fresh clone): BLOCKED_HASHES below - each word as a one-way hash, compared word
@@ -37,6 +41,10 @@ BLOCKED_HASHES = frozenset({
     '3c57f5fe2a8511ef76e5be54c41310cb23acd97a012fbb28e98099e24acc99cb',
     '8667996213bbaddd40f6a35d926313e0d81848293fb04a8070d8e796e80cd6e0',
 })
+# Of those, the ones that are `block-new` (see above): checked on the newest files, not in a pushed commit's history.
+NEW_ONLY_HASHES = frozenset({
+    '1c83fb4b42679f6758c4a9a8467f5ce5e568ec82e50bf0adb514c456f7fbaef3',
+})
 HASH_SKIP_PATHS = ('web/client/packs_review/',)
 WORD = re.compile(r'[A-Za-z]+')
 
@@ -50,7 +58,7 @@ def git(*args):
 
 
 def private_list():
-    """(blocked words, allow regexes) from this computer's own list, or None when there is none."""
+    """{'always': [...], 'new': [...], 'allows': [...], 'until': sha or ''} from this computer's own list, or None."""
     path = os.environ.get('NIMROD_BLOCKED_NAMES')
     if not path:
         try:
@@ -60,38 +68,60 @@ def private_list():
             path = ''
     if not path or not os.path.exists(path):
         return None
-    words, allows = [], []
+    out = {'always': [], 'new': [], 'allows': [], 'until': ''}
     with open(path, encoding='utf-8') as fh:
         for line in fh:
             line = line.strip()
-            if line.startswith('block:') and line[6:].strip():
-                words.append(line[6:].strip())
-            elif line.startswith('allow:') and line[6:].strip():
-                allows.append(re.compile(line[6:].strip()))
-    return words, allows
+            key, _, val = line.partition(':')
+            val = val.strip()
+            if not val:
+                continue
+            if key == 'block':
+                out['always'].append(val)
+            elif key == 'block-new':
+                out['new'].append(val)
+            elif key == 'allow':
+                out['allows'].append(re.compile(val))
+            elif key == 'history-until':
+                out['until'] = val
+    return out
 
 
-def make_finder():
-    """A function line, where -> a reason or None. The private list when this computer has one, else the hashes."""
+def make_finders():
+    """(find_full, find_history, source, history): `find_full(line, where)` checks every word, for what is new;
+    `find_history` leaves out the `block-new` words, for a pushed commit that is part of the rewritten history;
+    `history` is the set of those commits' ids (empty with no `history-until`). The private list when this computer has
+    one, else the hashes."""
     pl = private_list()
     if pl:
-        words, allows = pl
-        rx = re.compile('|'.join(re.escape(w) for w in words), re.I) if words else None
+        def finder(words):
+            rx = re.compile('|'.join(re.escape(w) for w in words), re.I) if words else None
 
+            def find(line, where):
+                if rx and rx.search(line) and not any(a.search(line) for a in pl['allows']):
+                    return 'a blocked name or medical-records word (this computer\'s list)'
+                return None
+            return find
+        history = set()
+        if pl['until']:
+            try:
+                history = set(git('rev-list', pl['until']).decode().split())
+            except subprocess.CalledProcessError:
+                history = set()
+        return finder(pl['always'] + pl['new']), finder(pl['always']), 'this computer\'s private list', history
+
+    def hash_finder(hashes):
         def find(line, where):
-            if rx and rx.search(line) and not any(a.search(line) for a in allows):
-                return 'a blocked name or medical-records word (this computer\'s list)'
+            if any(where.startswith(p) for p in HASH_SKIP_PATHS):
+                return None
+            for w in WORD.findall(line):
+                if hashed(w) in hashes:
+                    return 'a blocked name or medical-records word (matched by hash)'
             return None
-        return find, 'this computer\'s private list'
-
-    def find(line, where):
-        if any(where.startswith(p) for p in HASH_SKIP_PATHS):
-            return None
-        for w in WORD.findall(line):
-            if hashed(w) in BLOCKED_HASHES:
-                return 'a blocked name or medical-records word (matched by hash)'
-        return None
-    return find, 'the hashed list'
+        return find
+    # With no list here, the history's boundary is unknown: every pushed commit is checked without the new-only words,
+    # and the newest commit's files with all of them.
+    return hash_finder(BLOCKED_HASHES), hash_finder(BLOCKED_HASHES - NEW_ONLY_HASHES), 'the hashed list', None
 
 
 def scan_text(where, text, find, hits):
@@ -129,7 +159,7 @@ def main(argv):
         for w in argv[argv.index('--hash') + 1:]:
             print(hashed(w))
         return 0
-    find, source = make_finder()
+    find, find_history, source, history = make_finders()
     hits = []
     mode = 'tracked files'
     if '--staged' in argv:
@@ -145,10 +175,19 @@ def main(argv):
     elif '--push' in argv:
         rng = argv[argv.index('--push') + 1]
         mode = f'the commits being pushed ({rng})'
-        for sha in filter(None, git('rev-list', *rng.split()).decode().split()):
-            scan_text(f'message of {sha[:7]}', git('log', '-1', '--format=%B', sha).decode('utf-8', errors='replace'), find, hits)
+        shas = [s for s in git('rev-list', *rng.split()).decode().split() if s]
+        for sha in shas:
+            # A commit of the rewritten history is held to the always-words; one made since, to all of them. With no
+            # list here (the hashed list) the boundary is unknown, so every commit is treated as history.
+            f = find_history if (history is None or sha in history) else find
+            scan_text(f'message of {sha[:7]}', git('log', '-1', '--format=%B', sha).decode('utf-8', errors='replace'), f, hits)
             names = git('diff-tree', '--no-commit-id', '--name-only', '-r', '--diff-filter=ACMR', '-z', sha).decode('utf-8').split('\0')
-            scan_paths(names, lambda rel, s=sha: git('show', f'{s}:{rel}'), find, hits)
+            scan_paths(names, lambda rel, s=sha: git('show', f'{s}:{rel}'), f, hits)
+        if shas:
+            # ...and the newest commit's files, whole, against every word: what the site will serve.
+            tip = shas[0]
+            names = git('ls-tree', '-r', '--name-only', '-z', tip).decode('utf-8').split('\0')
+            scan_paths(names, lambda rel: git('show', f'{tip}:{rel}'), find, hits)
     else:
         scan_paths(git('ls-files', '-z').decode('utf-8').split('\0'), from_disk, find, hits)
 
@@ -168,7 +207,8 @@ def main(argv):
         here = open(os.path.abspath(__file__), encoding='utf-8').read()
         pl = private_list()
         check('this file names nobody: no word of the private list is in it',
-              not pl or not any(re.search(re.escape(w), here, re.I) for w in pl[0]))
+              not pl or not any(re.search(re.escape(w), here, re.I) for w in pl['always'] + pl['new']))
+        check('the new-only hashes are among the blocked ones', NEW_ONLY_HASHES <= BLOCKED_HASHES)
         check('the hashed list is filled (not the placeholder)', all(not h.startswith('b85a6c2cb3c3') for h in BLOCKED_HASHES)
               and len(BLOCKED_HASHES) >= 2)
         check('a word is matched by hash without capitals mattering', hashed('Example') == hashed('example'))
