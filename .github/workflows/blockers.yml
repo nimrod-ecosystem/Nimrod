@@ -1,0 +1,29 @@
+# Ad blockers must not break Nimrod (Mike, 2026-10-28, row 2.148; chat's note DG).
+#
+# web/tools/check_blocked_names.py fails when a site file is named something a common ad blocker refuses (the bench
+# once sat on "Starting Nimrod..." because a file was called hitbox.js). It was a gate nothing ran. This runs it on
+# every push that touches the client, fetching the filter lists fresh (a runner is online; offline with no cache the
+# script exits 2, "unknown is not a pass"), and the outside-address report beside it.
+name: blockers
+
+on:
+  push:
+    paths: ['web/client/**', 'web/tools/check_blocked_*.py', '.github/workflows/blockers.yml']
+  pull_request:
+    paths: ['web/client/**', 'web/tools/check_blocked_*.py', '.github/workflows/blockers.yml']
+  schedule:
+    - cron: '17 6 * * 1'     # weekly too: the lists change even when the site does not
+  workflow_dispatch:
+
+jobs:
+  blockers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: No site file named something an ad blocker refuses
+        run: python web/tools/check_blocked_names.py --refresh
+      - name: Outside addresses the site needs, against the common DNS block lists
+        run: python web/tools/check_blocked_hosts.py --refresh
