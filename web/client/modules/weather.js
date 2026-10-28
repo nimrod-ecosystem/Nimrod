@@ -481,7 +481,9 @@ registerModule(
         case 'pick': return `<div class="wx-msg" data-weather-msg="pick"><p class="wx-msg-title">Which “${q}”?</p>
           <div class="wx-picks">${matches.map((m, i) => `<button type="button" class="wx-btn" data-walk data-act="pick" data-i="${i}">${esc(m.name)}</button>`).join('')}</div></div>`;
         case 'loading': return messageHtml(`Getting the weather for ${esc(place().name || q)}…`, '');
-        case 'failed': return messageHtml('Could not reach the weather service.', `It will try again in ${mins} minutes.`,
+        // Row 2.148 (2026-10-28): the browser asks Open-Meteo itself, so a blocker on this browser or network can stop it.
+        case 'failed': return messageHtml('Could not reach the weather service.', `It will try again in ${mins} minutes. `
+          + 'An ad blocker on this browser or network can also stop it.',
           '<button type="button" class="wx-btn" data-walk data-act="retry">Try again now</button>');
         default: return messageHtml('No place set for the weather yet.',
           'Open this panel’s settings. In Place, type a town, or a latitude and longitude (the two numbers that mark a spot on a map). '

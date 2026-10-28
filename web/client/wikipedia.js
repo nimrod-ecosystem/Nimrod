@@ -159,7 +159,8 @@ export function pickEvidence(articles, terms, { budget = EVIDENCE_CHARS } = {}) 
 // ---------------------------------------------------------------------------------------------
 
 export const REASONS = Object.freeze({
-  offline: 'Could not reach Wikipedia, so this was not checked.',
+  // Row 2.148 (2026-10-28): the browser asks Wikipedia itself, so a blocker on this browser or network can stop it too.
+  offline: 'Could not reach Wikipedia, so this was not checked. The connection may be down, or an ad blocker may be stopping it.',
   timeout: 'Wikipedia took too long to answer, so this was not checked.',
   cancelled: 'Stopped before it was checked.',
   unreadable: 'Wikipedia answered, but the answer could not be read, so this was not checked.',

@@ -264,7 +264,9 @@ export function whatItHolds(item, files) {
 export const ARCHIVE_MESSAGES = Object.freeze({
   'archive-bad-id': 'That is not an Internet Archive address. Paste an address like archive.org/details/… or type the item’s name.',
   'archive-not-found': 'The Internet Archive has no public item at that address.',
-  'archive-unreachable': 'The Internet Archive could not be reached. Check the internet connection.',
+  // Row 2.148 (2026-10-28): the browser asks archive.org itself, so a blocker on this browser or network can stop it too.
+  'archive-unreachable': 'The Internet Archive could not be reached. Check the internet connection. An ad blocker on '
+    + 'this browser or network can also stop it.',
   'archive-no-audio': 'That Internet Archive item has no sound files this screen can play.',
   'archive-nothing': 'Nothing in this item can be played here.',
   'archive-collection': 'That address is a collection of many items. Add one item from it instead.',
