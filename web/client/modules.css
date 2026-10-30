@@ -638,7 +638,7 @@
  * (`hyphens:auto` needs a language: every page that mounts a module carries `<html lang="en">`.
  * Without one it is inert and this degrades to `break-word`, which is still better than
  * `anywhere`.) */
-/* `max-width:100%` (row 2.151, 2026-10-30): the card centres its contents, so without it the word's box took the
+/* `max-width:100%` (row 2.152, 2026-10-30): the card centres its contents, so without it the word's box took the
  * whole word's width and spilled past the card ("Keyboard", 186px in a 165px card, cut at both edges) - and a box that
  * never runs out of line never hyphenates. board.js `fitWords` first brings a word that will not fit down to a size
  * that does; this keeps one that still cannot inside the card. */

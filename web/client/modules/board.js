@@ -104,7 +104,7 @@ export const CHOICES_KEY = 'choices';
 // than technically non-overlapping.
 const TIGHT_PX = 72;
 
-// *** A WORD IS NEVER CUT OFF, AND NEVER BROKEN MID-WORD WHILE A SMALLER SIZE WOULD FIT IT. *** (Row 2.151,
+// *** A WORD IS NEVER CUT OFF, AND NEVER BROKEN MID-WORD WHILE A SMALLER SIZE WOULD FIT IT. *** (Row 2.152,
 // 2026-10-30.) Mike, on a Galaxy Z Fold unfolded: "the AAC boards don't render correctly." Measured here: the word's
 // size follows the card's SHORT side (`--u`), not its length, so on a card about as wide as it is tall a long word
 // is wider than the card - "Keyboard" was 186px in a 165px card, cut off at both edges, folded as well as unfolded
@@ -764,7 +764,7 @@ registerModule(
       drawBoards();
     }
 
-    // Row 2.151 (FIT_FLOOR_PX above): each card's words at the size that fits the card's width.
+    // Row 2.152 (FIT_FLOOR_PX above): each card's words at the size that fits the card's width.
     let measurer = null;
     function fitWords() {
       if (!measurer) {
@@ -1506,7 +1506,7 @@ registerModule(
           ro = new ResizeObserver(() => setUnit());
           ro.observe(grid());
         }
-        // Row 2.151: a theme's own font can arrive after the first draw; the words are fitted again in it.
+        // Row 2.152: a theme's own font can arrive after the first draw; the words are fitted again in it.
         try { document.fonts?.ready?.then(() => { if (!destroyed) fitWords(); }); } catch { /* no font API */ }
 
         // The switcher's own clicks. Delegated from the mount because `drawBoards` replaces
