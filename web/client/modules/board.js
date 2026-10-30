@@ -104,6 +104,19 @@ export const CHOICES_KEY = 'choices';
 // than technically non-overlapping.
 const TIGHT_PX = 72;
 
+// *** A WORD IS NEVER CUT OFF, AND NEVER BROKEN MID-WORD WHILE A SMALLER SIZE WOULD FIT IT. *** (Row 2.151,
+// 2026-10-30.) Mike, on a Galaxy Z Fold unfolded: "the AAC boards don't render correctly." Measured here: the word's
+// size follows the card's SHORT side (`--u`), not its length, so on a card about as wide as it is tall a long word
+// is wider than the card - "Keyboard" was 186px in a 165px card, cut off at both edges, folded as well as unfolded
+// (the unfolded screen's square-ish cards only make it worse). `fitWords` measures each word on a card in the card's
+// own font and, only when the widest one does not fit, brings the size down until it does - no further than the
+// CSS floor, below which the word wraps inside the card (modules.css) instead of being cut. Re-run on every resize
+// (`setUnit`), so unfolding the phone fits the words again. FIT_FLOOR_PX is the CSS clamp's own floor; FIT_SPARE is
+// the share of the card's width the widest word may take (a hair of room, so a rounding pixel cannot clip a letter).
+// Neither is a person's setting: they make the word fit the card the person already chose, and change nothing else.
+const FIT_FLOOR_PX = 11;
+const FIT_SPARE = 0.96;
+
 // *** BELOW THIS, THE SWITCHER GOES AND THE CARDS KEEP THE ROOM. ***
 //
 // A board can be one quadrant of a screen, and the switcher is a caregiver's control on a
@@ -744,10 +757,36 @@ registerModule(
       // dashboard stays readable; one that shrank the word to keep a picture would be neither
       // readable nor recognizable. The threshold is the card's short side in px.
       g.classList.toggle('ab-tight', Math.min(w / t.cols, h / t.rows) < TIGHT_PX);
+      fitWords();
       // A resize can cross SWITCHER_MIN_H in either direction, and the switcher is the thing
       // that has to give way. Called from here rather than only from `applyConfig` because a
       // resize does not change the config and would otherwise never re-ask.
       drawBoards();
+    }
+
+    // Row 2.151 (FIT_FLOOR_PX above): each card's words at the size that fits the card's width.
+    let measurer = null;
+    function fitWords() {
+      if (!measurer) {
+        try { measurer = document.createElement('canvas').getContext('2d'); } catch { measurer = null; }
+        if (!measurer) return;
+      }
+      for (const b of cardEls) {
+        const el = b?.querySelector?.('.ab-word');
+        if (!el) continue;
+        el.style.removeProperty('font-size');
+        const bs = getComputedStyle(b);
+        const room = (b.clientWidth - (parseFloat(bs.paddingLeft) || 0) - (parseFloat(bs.paddingRight) || 0)) * FIT_SPARE;
+        if (!(room > 0)) continue;                 // not laid out yet: the next resize comes back
+        const cs = getComputedStyle(el);
+        const size = parseFloat(cs.fontSize) || 0;
+        if (!size) continue;
+        measurer.font = `${cs.fontStyle} ${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+        try { measurer.letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing; } catch { /* older canvas */ }
+        const widest = String(el.textContent || '').split(/\s+/).filter(Boolean)
+          .reduce((m, x) => Math.max(m, measurer.measureText(x).width), 0);
+        if (widest > room) el.style.fontSize = `${Math.max(FIT_FLOOR_PX, Math.floor(size * room / widest))}px`;
+      }
     }
 
     function draw() {
@@ -1467,6 +1506,8 @@ registerModule(
           ro = new ResizeObserver(() => setUnit());
           ro.observe(grid());
         }
+        // Row 2.151: a theme's own font can arrive after the first draw; the words are fitted again in it.
+        try { document.fonts?.ready?.then(() => { if (!destroyed) fitWords(); }); } catch { /* no font API */ }
 
         // The switcher's own clicks. Delegated from the mount because `drawBoards` replaces
         // the chips whenever the board changes, and a listener on a chip would go with it.

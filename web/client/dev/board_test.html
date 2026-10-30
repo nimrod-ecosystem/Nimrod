@@ -452,6 +452,35 @@ try {
   }
 
   // =====================================================================================
+  section('*** a long word fits its card: never cut off, folded or unfolded (row 2.151) ***');
+  {
+    // Mike, 2026-10-30, a Galaxy Z Fold unfolded: "the AAC boards don't render correctly". "Keyboard" was wider
+    // than its card and cut at both edges, because the word's size follows the card's short side, not the word.
+    const host = document.getElementById('host');
+    const was = host.getAttribute('style') || '';
+    const sized = (w, h) => { host.style.width = `${w}px`; host.style.height = `${h}px`; };
+    const inst = mountModule('board', { mount: host, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ boardId: 'care' }), output: { say: () => {} } });
+    const card = (word) => [...host.querySelectorAll('.ab-card')].find((c) => c.getAttribute('aria-label') === word);
+    const inside = (c) => { const w = c?.querySelector('.ab-word'); if (!w) return false; const cb = c.getBoundingClientRect(), wb = w.getBoundingClientRect(); return wb.left >= cb.left - 0.5 && wb.right <= cb.right + 0.5; };
+    const oneLine = (c) => { const w = c.querySelector('.ab-word'); return w.getBoundingClientRect().height < parseFloat(getComputedStyle(w).lineHeight) * 1.5; };
+    const fontOf = (c) => parseFloat(getComputedStyle(c.querySelector('.ab-word')).fontSize);
+    for (const [label, w, h] of [['folded (412 x 900)', 412, 900], ['unfolded (720 x 830)', 720, 830], ['unfolded, sideways (830 x 720)', 830, 720]]) {
+      sized(w, h);
+      if (label.startsWith('folded')) { inst.init(); await sleep(40); } else { inst.impl.onResize(); await sleep(20); }
+      const kb = card('Keyboard');
+      check(`*** ${label}: "Keyboard" stays inside its card ***`, !!kb && inside(kb), kb && `${kb.querySelector('.ab-word').getBoundingClientRect().width.toFixed(0)} in ${kb.clientWidth}`);
+      check(`...${label}: whole, on one line (not "Keyboa / rd")`, !!kb && oneLine(kb));
+      check(`...${label}: only that card got smaller; a short word keeps the board's size`, !!kb && fontOf(kb) < fontOf(card('Yes')) && fontOf(card('Yes')) > 15,
+        kb && `${fontOf(kb)} / ${fontOf(card('Yes'))}`);
+      const spill = [...host.querySelectorAll('.ab-card')].filter((c) => c.querySelector('.ab-word') && !inside(c)).map((c) => c.getAttribute('aria-label'));
+      check(`...${label}: no card's words spill`, spill.length === 0, spill.join());
+    }
+    inst.destroy();
+    host.setAttribute('style', was);
+  }
+
+  // =====================================================================================
   section('*** scanning it with one switch ***');
   {
     const host = document.getElementById('host');
