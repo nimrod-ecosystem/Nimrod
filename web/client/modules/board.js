@@ -475,10 +475,17 @@ export const SETTINGS = [
       { value: 60000, label: '1 minute' },
     ],
     note: 'Nothing changes if a suggestion is left to go away by itself.' },
-  // From Claude Design's live-themes handoff, 2026-09-22. `solid` (today's board) stays the
-  // default -- these are two NEW surfaces a caregiver opts into, not a replacement.
-  { key: 'surface', label: 'Card surface', kind: 'choice', default: 'solid', level: 'essential',
+  // From Claude Design's live-themes handoff, 2026-09-22: `veil` and `clear` beside the solid board.
+  // *** (row 2.105, Mike 2026-10-30) THE DEFAULT FOLLOWS THE PANEL'S BACKGROUND. *** Asked whether the board
+  // should keep its own solid ground when the panel around it is see-through: "Yes. If having issues with see
+  // through things is a problem for someone. They probably won't have everything set to see through. They can
+  // always change the settings for the board if they want." So "This panel's background" (and the screen's
+  // "Panel backgrounds" behind it) answers for the board too; a board somebody set to solid, see-through or
+  // clear keeps exactly that. Outside a screen (the care board, a page of its own) there is no panel to follow
+  // and the board is solid, as it always was. High contrast still wins over all of it (applyAppearance).
+  { key: 'surface', label: 'Card surface', kind: 'choice', default: 'panel', level: 'essential',
     options: [
+      { value: 'panel', label: 'Follows this panel’s background' },
       { value: 'solid', label: 'Solid — the board’s own cards' },
       { value: 'veil',  label: 'See-through — the scene shows behind the cards' },
       { value: 'clear', label: 'Clear — words and pictures straight on the scene' },
@@ -626,6 +633,8 @@ registerModule(
     // symbols can follow it. `null` until `init`; a page with no theme applied reads as 'default'.
     let themeId = null;
     let themeWatch = null;                   // the MutationObserver on the root's style
+    let panelWatch = null;                   // ...and on the panel's background and the theme's scene (row 2.105)
+    let surfaceNow = null;                   // the surface applyAppearance last drew (row 2.105)
     let unsubPicked = null;
     let choiceMemory = null;                 // remembered choice-card answers, per profile
     let choiceStore = null;
@@ -733,6 +742,9 @@ registerModule(
     }
 
     function setUnit() {
+      // Row 2.105: a board is drawn before its host puts it in the panel, when there is no panel background to find
+      // yet. Its first resize is after, so the surface is looked at again here (only redrawn when it changed).
+      if (shownSurface() !== surfaceNow) applyAppearance();
       const g = grid();
       const t = effectiveTier();
       if (!g || !t) return;
@@ -1095,13 +1107,15 @@ registerModule(
 
       // From Claude Design's live-themes handoff, 2026-09-22: the see-through/clear surfaces,
       // and the scene that shows through them.
-      el.classList.toggle('ab-veil', cfg.surface === 'veil');
-      el.classList.toggle('ab-clear', cfg.surface === 'clear');
+      const surface = shownSurface();
+      surfaceNow = surface;
+      el.classList.toggle('ab-veil', surface === 'veil');
+      el.classList.toggle('ab-clear', surface === 'clear');
 
       // The scene lives in the board's own .ab-surface layer, which already exists for exactly
       // this, UNDER the grid, aria-hidden, pointer-events:none.
       const surf = mount.querySelector('[data-surface]');
-      const want = cfg.surface !== 'solid' && !cfg.highContrast && cfg.boardScene !== 'none';
+      const want = surface !== 'solid' && cfg.boardScene !== 'none';
       const sceneId = cfg.boardScene === 'theme'
         ? (document.documentElement.getAttribute('data-live-scene') || null)
         : cfg.boardScene;
@@ -1120,6 +1134,24 @@ registerModule(
           );
         }
       } else if (boardScene) { boardScene.destroy(); boardScene = null; }
+      // A CLEAR BOARD WITH NO SCENE BEHIND IT sits on the theme's own page colour, like every clear panel round
+      // it. The clear mode's colours were made for a moving scene (light words, dark halo), which on a light still
+      // theme is light words on a light page. So here the board wears the theme's words, edges and halo instead,
+      // the same ones the panels beside it use (modules.css `.ab-onpage`).
+      el.classList.toggle('ab-onpage', surface === 'clear' && !boardScene
+        && !document.documentElement.hasAttribute('data-live-scene'));
+    }
+
+    // WHICH SURFACE THE BOARD SHOWS (row 2.105). High contrast first: it is somebody saying they need to read it,
+    // and it wins over every look (modules.css re-asserts it too; here it also keeps the scene from mounting at
+    // all behind a board nobody can see it through). Then the board's own Card surface, when somebody set one. Otherwise the panel's background: the nearest
+    // `data-panel-surface` up the page, which is this panel's own when it has one (kiosk.js puts it on the panel)
+    // and the screen's otherwise. No panel round it (the care board, a page of its own): solid.
+    function shownSurface() {
+      if (cfg.highContrast) return 'solid';
+      if (['solid', 'veil', 'clear'].includes(cfg.surface)) return cfg.surface;
+      const p = mount.closest?.('[data-panel-surface]')?.dataset.panelSurface;
+      return p === 'veil' || p === 'clear' ? p : 'solid';
     }
 
     // ------------------------------------------------------------------------------------
@@ -1488,6 +1520,11 @@ registerModule(
         if (typeof MutationObserver !== 'undefined' && docRoot()) {
           themeWatch = new MutationObserver(() => onTheme(readTheme(), false));
           themeWatch.observe(docRoot(), { attributes: true, attributeFilter: ['style'] });
+          // Row 2.105: a board following its panel's background follows it when it changes, and when the theme
+          // gains or loses a moving scene (which decides whether a clear board sits on a scene or on the page).
+          panelWatch = new MutationObserver(() => { if (!destroyed) applyAppearance(); });
+          panelWatch.observe(docRoot(), { attributes: true, subtree: true,
+            attributeFilter: ['data-panel-surface', 'data-live-scene'] });
         }
         const unsub = bus?.subscribe?.(THEME_PICKED_TOPIC, () => onTheme(readTheme(), true));
         unsubPicked = typeof unsub === 'function' ? unsub : null;
@@ -1613,6 +1650,7 @@ registerModule(
         boardScene?.destroy(); boardScene = null;
         try { card?.close?.('gone'); } catch { /* already gone */ } card = null;
         try { themeWatch?.disconnect(); } catch { /* already gone */ } themeWatch = null;
+        try { panelWatch?.disconnect(); } catch { /* already gone */ } panelWatch = null;
         try { unsubPicked?.(); } catch { /* already gone */ } unsubPicked = null;
         try { choiceStore?.destroy?.(); } catch { /* already gone */ } choiceStore = null;
         gone.abort();                       // every listener this module put on the mount

@@ -481,6 +481,69 @@ try {
   }
 
   // =====================================================================================
+  section('*** the board follows its panel’s background unless somebody set its card surface (row 2.105) ***');
+  {
+    // Mike, 2026-10-30: "Yes. If having issues with see through things is a problem for someone. They probably won't
+    // have everything set to see through. They can always change the settings for the board if they want."
+    const host = document.getElementById('host');
+    const root = document.documentElement;
+    const tick = () => sleep(10);   // the panel's background is watched with a MutationObserver (a microtask)
+    const cls = () => host.querySelector('.aboard')?.className || '';
+    const has = (c) => cls().split(/\s+/).includes(c);
+
+    let st = fakeState({ boardId: 'core' });
+    let inst = mountModule('board', { mount: host, bus: createBus(), events: fakeEvents(), state: st, output: { say: () => {} } });
+    inst.init(); await tick();
+    check('*** no panel round it (the care board, a page of its own): solid, as it always was ***',
+      !has('ab-veil') && !has('ab-clear'), cls());
+
+    host.dataset.panelSurface = 'clear'; await tick();
+    check('*** its panel is clear: the board is clear ***', has('ab-clear'), cls());
+    check('...and with no moving scene behind it, it wears the page’s colours (ab-onpage)', has('ab-onpage'), cls());
+    host.style.setProperty('--text-strong', 'rgb(1, 2, 3)');
+    const help = [...host.querySelectorAll('.ab-card')].find((c) => c.getAttribute('aria-label') === 'Help');
+    check('...so a coloured word (Help) is in the theme’s ink, not the dark board’s amber',
+      !!help && getComputedStyle(help.querySelector('.ab-word')).color === 'rgb(1, 2, 3)',
+      help && getComputedStyle(help.querySelector('.ab-word')).color);
+    host.style.removeProperty('--text-strong');
+
+    root.setAttribute('data-live-scene', 'ocean'); await tick();
+    check('*** on a moving scene a clear board keeps the scene’s own clear colours ***', has('ab-clear') && !has('ab-onpage'), cls());
+    root.removeAttribute('data-live-scene'); await tick();
+    check('...and back on the page when the scene goes', has('ab-onpage'), cls());
+
+    host.dataset.panelSurface = 'veil'; await tick();
+    check('*** the panel changes to see-through: so does the board, with nothing redrawn by hand ***',
+      has('ab-veil') && !has('ab-clear') && !has('ab-onpage'), cls());
+    host.dataset.panelSurface = 'solid'; await tick();
+    check('...and to solid', !has('ab-veil') && !has('ab-clear'), cls());
+
+    host.dataset.panelSurface = 'clear';
+    st.set({ surface: 'solid' }); await tick();
+    check('*** a board somebody set to solid stays solid on a clear panel ***', !has('ab-veil') && !has('ab-clear'), cls());
+    st.set({ surface: 'veil' }); await tick();
+    check('...one set to see-through stays see-through', has('ab-veil') && !has('ab-clear'), cls());
+    st.set({ surface: 'panel', highContrast: true }); await tick();
+    check('*** high contrast wins over the panel ***', has('ab-hc') && !has('ab-clear') && !has('ab-veil'), cls());
+    inst.destroy();
+
+    // A host builds the board before it puts it in the panel; its first resize comes after.
+    const loose = document.createElement('div');
+    loose.style.cssText = 'position:relative;width:400px;height:300px';
+    inst = mountModule('board', { mount: loose, bus: createBus(), events: fakeEvents(), state: fakeState({ boardId: 'core' }), output: { say: () => {} } });
+    inst.init(); await tick();
+    check('mounted outside any panel: solid', !loose.querySelector('.aboard').classList.contains('ab-clear'));
+    host.appendChild(loose);
+    inst.impl.onResize(); await tick();
+    check('*** put into a clear panel afterwards: clear by its first resize ***', loose.querySelector('.aboard').classList.contains('ab-clear'),
+      loose.querySelector('.aboard').className);
+    inst.destroy();
+    loose.remove();
+    delete host.dataset.panelSurface;
+    host.innerHTML = '';
+  }
+
+  // =====================================================================================
   section('*** scanning it with one switch ***');
   {
     const host = document.getElementById('host');

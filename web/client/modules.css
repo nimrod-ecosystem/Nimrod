@@ -1581,6 +1581,16 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .aboard:is(.ab-veil,.ab-clear) .ab-cold .ab-word{color:var(--board-sym-cold,#7fc6d8)}
 .aboard:is(.ab-veil,.ab-clear) .ab-love .ab-word{color:var(--board-sym-love,#cf6f86)}
 
+/* A CLEAR BOARD ON THE PAGE, NOT ON A SCENE (row 2.105, board.js `ab-onpage`). With no moving scene behind it a
+   clear board sits on the theme's own page colour, like the clear panels round it, so it takes their words, edges
+   and halo (theme.js `panelHalo`) rather than the clear mode's, which were made for light words over a scene. */
+.aboard.ab-onpage{--ab-ink:var(--text-strong,var(--text,#0A3323));--ab-line:var(--border,#7d939d);
+  --ab-lit:var(--focus,var(--accent,#8fae63))}
+.aboard.ab-onpage .ab-word{text-shadow:var(--panel-halo,var(--board-halo))}
+/* The coloured words (Help, Stop, Yes...) take the theme's ink here: their colours were made for a dark board, and
+   on a light page (Nimrod's cream) Help measured 1.73:1, and 12.48:1 in the theme's ink. The symbol above each keeps its colour, and the word is the word. */
+.aboard.ab-onpage .ab-card .ab-word{color:var(--ab-ink)}
+
 /* *** HIGH CONTRAST STILL WINS. *** Re-asserted after the modes above because they set
    `background` and several --ab-* keys at the same specificity. Somebody who asked for maximum
    legibility gets the solid black-on-white board whatever surface was chosen, and the scene in
