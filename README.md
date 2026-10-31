@@ -9,7 +9,7 @@ modular, and made to run on equipment you probably already own.
 Its primary goal will always be helping one patient recover and live better. It is being built so that
 it can help everyone.
 
-**Website:** https://nimrodecosystem.com · **License:** [MIT](LICENSE)
+**Website:** https://nimrodecosystem.com · **License:** [MIT](LICENSE) · **Version:** 26.10.1beta
 
 ---
 

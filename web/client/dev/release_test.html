@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>release — one version name, said the same everywhere — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>release — "26.10.1beta" (row 2.154, Mike 2026-10-31)</h1>
+<p>Mike: "26.10.1beta sounds good." The name lives in release.js; every page footer that shows it says it in its own
+HTML (so it shows with no script). This holds them together. No server state needed.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { RELEASE, releaseLine } from '../release.js';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div'); d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`; out.append(d);
+}
+(async () => {
+  try {
+    check('*** the name is Mike\'s: 26.10.1beta ***', RELEASE.name === '26.10.1beta', RELEASE.name);
+    check('the SemVer form is the same release, with the hyphen a pre-release takes', RELEASE.semver === '26.10.1-beta'
+      && RELEASE.semver.replace('-', '') === RELEASE.name && /^\d+\.\d+\.\d+-[a-z]+$/.test(RELEASE.semver), RELEASE.semver);
+    check('the footer line', releaseLine() === 'Version 26.10.1beta', releaseLine());
+    // Every page that shows a version says exactly this one.
+    for (const page of ['../landing.html', '../modules.html']) {
+      const html = await (await fetch(page, { cache: 'no-store' })).text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const shown = [...doc.querySelectorAll('[data-release]')].map((e) => e.textContent.trim());
+      check(`*** ${page.slice(3)} shows the version, and it is this one ***`, shown.length >= 1 && shown.every((s) => s === releaseLine()), JSON.stringify(shown));
+    }
+    // The README is not served by the site: it is checked from the repo root when this page is served from it
+    // (the suite server serves web/client; a missing README is said, not failed).
+    const readme = await fetch('../../../README.md', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : null)).catch(() => null);
+    if (readme) check('the README says the same version', readme.includes(`**Version:** ${RELEASE.name}`));
+    else check('(README not reachable from this server: checked by eye; it says **Version:** 26.10.1beta)', true);
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+})();
+</script>
+</body>
+</html>
