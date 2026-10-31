@@ -122,6 +122,19 @@ try {
     check('resting a paused game says nothing more', got.length === 4);
     w.pause();
     check('pausing twice says it once', got.length === 4);
+    {
+      // Row 2.107 (2026-10-31): `onChange` hears what the shell hears, the idle rest this file times included - the
+      // music follows it (game_music_host.js `follow`).
+      const heard = [];
+      const f = createPlayWatch(createBus(), { instanceId: 'g2', gameIdleMs: 1000 },
+        { setTimer, clearTimer, onChange: (s) => { heard.push(s); if (s === 'pause') throw new Error('a follower that throws'); } });
+      f.active(); f.active(); advance(1000); f.active(); f.pause();
+      check('*** onChange: told each change once, the idle rest included ***', heard.join() === 'play,rest,play,pause', heard.join());
+      f.active();
+      check('...and a follower that throws does not stop the watch', f.playing() && heard.at(-1) === 'play');
+      f.destroy();
+      check('destroy rests it, and says so', heard.at(-1) === 'rest');
+    }
     // Watching the game's own topics and its mount.
     const mount = document.createElement('div');
     const btn = document.createElement('button');

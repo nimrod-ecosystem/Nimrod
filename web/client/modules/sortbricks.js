@@ -33,6 +33,13 @@
 //     `attractAfterMs`. The next press picks it up.
 //   * No sound before the first press, and no music: this is a game that talks, and music under a voice saying colour
 //     names competes with it. [Argued; Mike's list.]
+//     *** MUSIC IS NOW A SETTING, STILL OFF BY DEFAULT (row 2.107, 2026-10-31). *** Mike: "What happened to adding music
+//     to the games?" The same rows as every game with music (game_music_host.js), played only while it is being played.
+//     The default stays 'off', argued (Rule 1): FOR 'mine' (your music), as Build it and the other brick games: it is a
+//     building game, and the bed is ducked under the voice. AGAINST, and it decides it: the argument above still holds -
+//     with one switch the voice naming each lit place ("Teal?") IS how the game is played (`sayChoice`), and every new
+//     brick is said by colour; a bed under that costs clarity for exactly the person scanning by ear. The answer games
+//     made the same call (quiz_flow.js). Somebody who plays by sight turns it on in one row. [Guess, on Mike's list.]
 //   * Reduced motion: a brick goes straight into its place, nothing shakes, and there is no demo (the still Start).
 //
 // THE SCORE is bricks sorted this game, on the score contract (`../score_source.js`). EACH TRAY SORTED PAYS `trayPoints`
@@ -43,6 +50,8 @@ import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
 import { createGameTones } from '../game_tones.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
 import { SYSTEM_TOPICS } from '../actions.js';
 import { SHELL_STATE } from '../shell_verbs.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
@@ -100,7 +109,10 @@ export const DEFAULTS = Object.freeze({
   sayChoice: true,
   sounds: true,
   trayPoints: 1,
+  // Row 2.107: the music rows, off by default here (the header argues why).
+  music: 'off', musicSourceId: '', musicAlbum: '', musicFavourite: '', musicVolume: 0.3,
 });
+export const MUSIC_DEFAULT = 'off';
 
 // "One level up" after a tray is OFF by default, argued as in Brick Drop: in therapy the level is somebody's choice,
 // and a game that gets harder under a person who was managing is a setback nobody asked for.
@@ -134,6 +146,7 @@ const SETTINGS = [
   { key: 'sayChoice', label: 'Say each place as it lights', default: true, level: 'standard',
     onLabel: 'Yes ("Teal?")', offLabel: 'No', note: 'Somebody using a switch needs it.' },
   { key: 'sounds', label: 'Sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
+  ...gameMusicFields({ defaultMode: MUSIC_DEFAULT }),   // row 2.107: the same music rows every game has, off here
   { key: 'pauseOpensMenu', label: 'Escape and the Pause command also open the settings', default: true,
     level: 'standard', onLabel: 'Yes', offLabel: 'No, they only pause' },
   { key: 'trayPoints', label: 'Play points for each tray sorted', kind: 'number', default: 1, min: 0, max: 20, step: 1,
@@ -247,6 +260,7 @@ registerModule(
     let lastSay = '', lastScore = '', lastOverlay = null, lastUp = '', lastPlaces = '';
     let menuAsks = 0;
     let score = null, ledger = null, tones = null, unSpeaker = null;   // the panel's own speaker (speakers.js followPanelSpeaker)
+    let musicHost = null;   // row 2.107: the music (game_music_host.js), on exactly when the game sounds are (syncAudio)
     let started = true, demo = false, demoMs = 0, demoRested = false, demoMemory = {}, agent = null;
     let lightTimer = null, waitTimer = null, idleTimer = null, restTimer = null, demoTimer = null;
     let litSaid = null, litKey = '';
@@ -322,8 +336,14 @@ registerModule(
       if (t) tones.tone(t[0], t[1], { type: t[2], level: 0.7 });
     }
     function syncAudio() {
-      if (!started) { tones?.setActive(!dead && !hidden && armed && demo && !demoRested && cfg.attractSound === true && !!cfg.sounds); return; }
-      tones?.setActive(!dead && !hidden && armed && g && g.phase !== 'paused' && !idle && !!cfg.sounds);
+      // The music: only while somebody is playing - never under the demo, while paused, idle or hidden (row 2.107).
+      if (!started) {
+        musicHost?.follow(false);
+        tones?.setActive(!dead && !hidden && armed && demo && !demoRested && cfg.attractSound === true && !!cfg.sounds); return;
+      }
+      const playing = !dead && !hidden && armed && !!g && g.phase !== 'paused' && !idle;
+      musicHost?.follow(playing);
+      tones?.setActive(playing && !!cfg.sounds);
     }
     function save() { try { state?.set?.({ stats }); } catch (err) { console.error('sortbricks: save', err); } }
 
@@ -436,6 +456,7 @@ registerModule(
       if (started) idleTimer = setT(goIdle, IDLE_MS);
       if (!armed) { armed = true; tones?.resume(); }
       plays.active();
+      syncAudio();   // row 2.107: a press is what starts the music (and wakes it from idle)
     }
     function goIdle() {
       idleTimer = null;
@@ -678,20 +699,26 @@ registerModule(
         score = createScoreSource(bus, { source: GAME, label: SCORE_LABEL, instance: ctx.instanceId || null, onShownChange: () => render() });
         tones = createGameTones({ audio, audioId: `${GAME}:${ctx.instanceId || 'sb'}`, volume: 0.5,
           ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) });
+        // Row 2.107: the music, on the speaker arbiter (media tier, music group), as every game's.
+        musicHost = createGameMusicHost(ctx, { audio, audioId: `${GAME}-music:${ctx.instanceId || 'sb'}`, cfg: () => cfg,
+          defaultMode: MUSIC_DEFAULT,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
 
         const applyCfg = (snap) => {
           const s = snap || {};
+          const was = cfg;
           const next = { ...DEFAULTS };
           for (const k of Object.keys(DEFAULTS)) if (s[k] !== undefined) next[k] = s[k];
           next.level = levelOf(next.level);
           if (s.ownScore !== undefined) next.ownScore = s.ownScore;
           cfg = next;
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
+          try { musicHost?.apply(next, was); } catch { /* quiet */ }
         };
         applyCfg(state?.get?.());
         fresh();
         // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
-        unSpeaker = followPanelSpeaker(state, () => [tones]);
+        unSpeaker = followPanelSpeaker(state, () => [tones, musicHost?.music]);
         state?.subscribe?.((s) => {
           const was = { ...cfg };
           applyCfg(s);
@@ -735,9 +762,12 @@ registerModule(
         hidden = false; syncAudio(); render();
         if (!started && demo && !demoRested && demoTimer == null) demoTimer = setT(demoTick, DEMO_STEP_MS);
       },
+      // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         clearRest(); stopTimers(); idleTimer = clear(idleTimer);
         mount.removeEventListener('pointerdown', onPointerDown);
         mount.removeEventListener('keydown', onKey);

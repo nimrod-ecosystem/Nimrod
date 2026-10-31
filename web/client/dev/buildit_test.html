@@ -36,6 +36,7 @@ import { MODULE_VERBS } from '../actions.js';
 import { PLAY_STATE_TOPIC } from '../game_start.js';
 import { applyTheme } from '../theme.js';
 import { GAME, IDLE_MS, REST_MS, progressWords } from '../modules/buildit.js';
+import { musicRowChecks, musicPlayChecks } from './game_music_checks.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -259,6 +260,23 @@ try {
     state.set({ level: 1, how: 'build' });
     check('"How you build: build it" at level 1 builds it', p().mode === 'build' && p().target === 'target-tower');
     inst.destroy();
+  }
+
+  // ===============================================================================================================
+  section('*** row 2.107: music - the shared rows, your Music folder by default, only while it is being played ***');
+  {
+    musicRowChecks({ check, manifest: getManifest(GAME), name: 'Build it' });
+    await musicPlayChecks({ check, name: 'Build it', src: `${GAME}-music:gm1`, open: async ({ audio, makeAudioContext, instanceId, saved }) => {
+      const host = box();
+      const bus = createBus();
+      const clock = manualClock();
+      const state = memState(saved);
+      const inst = mountModule(GAME, { mount: host, bus, state, personId: null, instanceId, rand: seeded(11), audio, makeAudioContext,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer, gameIdleMs: 3600000 });
+      await inst.init();
+      return { press: () => bus.publish(`${GAME}/select`, {}), pause: () => bus.publish(`${GAME}/pause`, {}),
+        hide: () => inst.impl.onHide(), show: () => inst.impl.onShow(), set: (p) => state.set(p), destroy: () => inst.destroy() };
+    } });
   }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

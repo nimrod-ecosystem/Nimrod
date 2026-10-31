@@ -43,6 +43,7 @@ import {
   BETTER_PROMPT, BETTER_KEY_TEXT, itemKey, meaningLine, othersSaid,
 } from '../modules/wordforge.js';
 import { contestKey } from '../contests.js';
+import { musicRowChecks, musicPlayChecks } from './game_music_checks.js';
 import '../modules/quests.js';
 import '../modules/progress.js';
 
@@ -1147,6 +1148,30 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
           JSON.stringify({ shown: meanings(), want: expected(qq) }));
       }
       ri.destroy(); rhost.remove();
+    }
+
+    section('*** row 2.107: music - the shared rows, your Music folder by default, only while it is being played ***');
+    {
+      musicRowChecks({ check, manifest: getManifest('wordforge'), name: 'Word Forge' });
+      check('it asks for the panel\'s speaker row, as every game with sound does', getManifest('wordforge').routesSound === true);
+      // In-memory rows: the music is not about the server, and every handle answering keeps it quick.
+      const row = (init = {}) => { let v = { ...init }; const subs = new Set();
+        return { get: () => v, set(p) { v = { ...v, ...p }; for (const f of [...subs]) f(v); },
+          subscribe(f) { subs.add(f); f(v); return () => subs.delete(f); }, load: async () => v, flush: async () => {},
+          startPolling() {}, destroy() {} }; };
+      const stream = () => ({ append: async () => {}, load: async () => {}, flush: async () => {}, get: () => ({ events: [] }),
+        subscribe: () => () => {}, startPolling() {}, destroy() {} });
+      await musicPlayChecks({ check, name: 'Word Forge', src: 'wordforge-music:gm1', open: async ({ audio, makeAudioContext, instanceId, saved }) => {
+        const host = document.createElement('div'); document.body.append(host);
+        const bus = createBus();
+        const st = row(saved);
+        const inst = mountModule('wordforge', { mount: host, bus, state: st, events: stream(), user: USER, profileId: null,
+          makeState: () => row(), makeEvents: () => stream(), rand: fixedRand, audio, makeAudioContext, instanceId });
+        inst.init();
+        await sleep(30);
+        return { press: () => bus.publish('wordforge/next'), hide: () => inst.impl.onHide(), set: (p) => st.set(p),
+          destroy: () => { inst.destroy(); host.remove(); } };
+      } });
     }
 
     document.getElementById('summary').textContent =

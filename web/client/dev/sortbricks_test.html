@@ -55,6 +55,7 @@ import {
   left, trayOf, colourNames, sortComputer, shuffled,
 } from '../sort_bricks.js';
 import { GAME, TITLE, DEFAULTS, IDLE_MS, DEMO_STEP_MS, VOICE, LINES, statusFor } from '../modules/sortbricks.js';
+import { musicRowChecks, musicPlayChecks } from './game_music_checks.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -319,8 +320,10 @@ try {
     const keys = m.settings.map((r) => r.key);
     check('*** every timing and count is a setting: the light, the tray, the misses, the points, the demo ***',
       ['scanMs', 'trayBricks', 'showAfter', 'trayPoints', 'attractForMs', 'attractAfterMs', 'level', 'lightMoves'].every((k) => keys.includes(k)), keys.join(','));
+    // (Row 2.107: the music's "Music from", "Music folder" and "Which favorite" are filled live by a mounted panel -
+    // no options declared, or one stand-in marked `liveChoices` - so they are not lists declared here.)
     check('every setting row is labelled, and every choice is a short list', m.settings.every((r) => r.key && r.label)
-      && m.settings.filter((r) => r.kind === 'choice').every((r) => r.options.length >= 2 && r.options.length <= 6));
+      && m.settings.filter((r) => r.kind === 'choice' && Array.isArray(r.options) && !r.liveChoices).every((r) => r.options.length >= 2 && r.options.length <= 6));
     check('durations are stored in ms', m.settings.filter((r) => /Ms$/.test(r.key)).every((r) => r.options.every((o) => o.value === 0 || o.value >= 1000)));
     const audit = auditManifests([m, getManifest('brickdrop'), getManifest('stackline')], { level: 'advanced' });
     const errs = audit.findings.filter((f) => f.severity === 'error');
@@ -594,6 +597,31 @@ try {
     t.verb('select');
     t.inst.destroy();
     check('*** after destroy, no timer of the game is left ***', t.timers.pending() === 0, String(t.timers.pending()));
+  }
+
+  section('*** row 2.107: music - the shared rows, OFF by default here (a game that talks), only while it is being played ***');
+  {
+    musicRowChecks({ check, manifest: getManifest(GAME), name: 'Sort the bricks', defaultMode: 'off' });
+    check('DEFAULTS agree: off', DEFAULTS.music === 'off');
+    {
+      // Off by default: played, and silent.
+      const audio = createAudioBus();
+      const t = mount({ audio, saved: { level: 3 } });
+      t.verb('select');
+      check('*** off by default: played, and no music ***', !audio.state()[`${GAME}-music:${t.id}`]?.active);
+      t.inst.destroy();
+    }
+    await musicPlayChecks({ check, name: 'Sort the bricks', src: `${GAME}-music:gm1`, open: ({ audio, makeAudioContext, instanceId, saved }) => {
+      const bus = createBus();
+      const timers = fakeTimers();
+      const state = fakeState({ level: 3, autostart: true, ...saved });
+      const inst = mountModule(GAME, { mount: scratch(), bus, state, events: null, user: 'u', profileId: 'p', personId: null,
+        instanceId, rand: seeded(), audio, output: fakeOutput(), setTimer: timers.set, clearTimer: timers.clear, makeAudioContext,
+        makeEvents: () => fakeStream() });
+      inst.init();
+      return { press: () => bus.publish(verbTarget(GAME, 'next').topic), pause: () => bus.publish(`${GAME}/pause`, null, { from: 'transport' }),
+        hide: () => inst.impl.onHide(), show: () => inst.impl.onShow(), set: (p) => state.set(p), destroy: () => inst.destroy() };
+    } });
   }
 } catch (err) {
   check('the suite ran to the end without throwing', false, String(err && err.stack || err));

@@ -302,7 +302,14 @@ export function beginnerSettings({ when = null, levelDefault = 'fixed', withScor
     // made Beginner 13. Little is lost by it: Math follows the person's usual starting level (People tab)
     // unless it is given one of its own here. [On Mike's list.]
     ...adaptiveSettings({ appliesWhen: adaptive, startLevels: MATH_LEVELS.length, personStartLevel: 'advanced' }),
-    ...flowSettings({ lines: LINES, labels: LINE_LABELS }).map((row) => w(row)),
+    // A shared row's OWN condition is kept under the beginner gate (row 2.107, 2026-10-31): the music rows ("Music
+    // from" only for a folder, "How loud" not when off) and the wait rows ("wait" not when it waits for Next) each say
+    // when they apply, and `w` used to replace that with the gate alone, so all of them showed at once.
+    // "Music" ADVANCED here (standard in the other answer games), for the same 12-press budget as `answerBy` above:
+    // standard, it made Beginner 16. Little is lost by it: it is off by default (quiz_flow.js argues why), and the
+    // other rows of the music follow it, so turned off they do not show at all. [On Mike's list.]
+    ...flowSettings({ lines: LINES, labels: LINE_LABELS }).map((row) => w(row.key === 'music' ? { ...row, level: 'advanced' } : row,
+      row.appliesWhen ? (v) => on(v) && row.appliesWhen(v) !== false : on)),
   ];
 }
 

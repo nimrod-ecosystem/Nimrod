@@ -4,7 +4,9 @@
 // real bus, so what is checked is what the module really publishes.
 
 import { createBus } from '../bus.js';
-import { mountModule } from '../module.js';
+import { mountModule, getManifest } from '../module.js';
+import { createAudioBus, DUCK_TO } from '../audio_bus.js';
+import { createFakeAudioContext } from '../game_tones.js';
 
 export function harness() {
   const out = document.getElementById('results');
@@ -354,6 +356,74 @@ export async function personLadderChecks({ check, mount, name, game, saved = {} 
     const back = sessionOf(r).players().map((p) => p.id).join();
     check(`${name}: play as ended: the game's own row again (Ann, a guest)`, back === 'name:ann', back);
     r.inst.destroy();
+  }
+}
+
+/**
+ * *** THE MUSIC, THE SAME FOR EVERY GAME ON THE QUIZ ENGINE (row 2.107, 2026-10-31). *** quiz_flow.js adds the rows and
+ * quiz_view.js plays them, once, so each game's suite proves its own wiring with these:
+ *   the rows are the shared ones, OFF by default (argued in quiz_flow.js), with only the Music row showing then;
+ *   off: nothing plays even while the game is played;
+ *   on ('ambient', which needs no folder): registered on the speaker arbiter in the music group on the media tier,
+ *   silent before anybody plays (and under the demo), playing once played, ducked under a voice, quiet while paused
+ *   and while hidden, back on going on, and unregistered with every context it made closed on destroy.
+ */
+export function quizMusicChecks({ check, type, name = type, saved = {}, extra = {}, rigOpts = {} }) {
+  const rows = Object.fromEntries((getManifest(type)?.settings || []).map((r) => [r.key, r]));
+  check(`${name}: *** row 2.107: the shared music rows, OFF by default here ***`, rows.music?.default === 'off'
+    && (rows.music.options || []).map((o) => o.value).join() === 'mine,folder,favourite,ambient,off'
+    && !!rows.musicSourceId && !!rows.musicAlbum && !!rows.musicFavourite && rows.musicVolume?.default === 0.3,
+  JSON.stringify(rows.music?.default));
+  check(`${name}: with the default, only the Music row shows (no "How loud", no "Music from")`,
+    rows.musicVolume?.appliesWhen?.({}) === false && rows.musicSourceId?.appliesWhen?.({}) === false
+    && rows.musicVolume?.appliesWhen?.({ music: 'ambient' }) === true);
+  const open = (more = {}) => {
+    const audio = createAudioBus();
+    const contexts = [];
+    const r = rig(type, { ...rigOpts, saved: { ...saved, ...more }, extra: { ...extra, audio,
+      makeAudioContext: () => { const c = createFakeAudioContext(); contexts.push(c); return c; } } });
+    const src = `${type}-music:${type}-1`;
+    return { r, audio, contexts, src, on: () => !!audio.state()[src]?.active };
+  };
+  // Off, the default.
+  {
+    const t = open();
+    t.r.publish(`${type}/next`);
+    t.r.publish(`${type}/next`);
+    check(`${name}: *** off by default: played, and no music ***`, !t.on() && t.contexts.every((c) => c.made.oscillators.length === 0),
+      JSON.stringify(t.audio.state()[t.src]));
+    t.r.inst.destroy();
+  }
+  // On.
+  {
+    const t = open({ music: 'ambient' });
+    const st = t.audio.state()[t.src];
+    check(`${name}: turned on: on the speaker arbiter, music group, media tier (so speech ducks it)`,
+      st?.group === 'music' && st?.tier === 'media', JSON.stringify(st));
+    check(`${name}: *** nothing plays before anybody plays (the start screen and its demo are not playing) ***`, !t.on());
+    t.r.publish(`${type}/next`);
+    if (!t.on()) t.r.publish(`${type}/next`);   // a game with no Start: its first press is playing
+    check(`${name}: *** being played: the music plays ***`, t.on() && t.contexts.some((c) => c.made.oscillators.length > 0),
+      JSON.stringify(t.audio.state()[t.src]));
+    t.audio.register('suite-voice', { tier: 'voice' });
+    t.audio.setActive('suite-voice', true);
+    check(`${name}: a voice ducks it`, t.audio.state()[t.src]?.level === DUCK_TO, JSON.stringify(t.audio.state()[t.src]));
+    t.audio.setActive('suite-voice', false);
+    t.r.publish(`${type}/pause`);
+    check(`${name}: *** paused: the music stops ***`, !t.on());
+    t.r.publish(`${type}/resume`);
+    check(`${name}: going on: it plays again`, t.on());
+    t.r.inst.impl.onHide?.();
+    check(`${name}: hidden: it stops`, !t.on());
+    t.r.inst.impl.onShow?.();
+    t.r.setCfg({ music: 'off' });
+    t.r.publish(`${type}/next`);
+    check(`${name}: turned off while played: silent`, !t.on());
+    t.r.setCfg({ music: 'ambient' });
+    check(`${name}: and on again while played: it plays`, t.on());
+    t.r.inst.destroy();
+    check(`${name}: *** destroyed: unregistered, every context it made closed ***`, !(t.src in t.audio.state())
+      && t.contexts.every((c) => c.made.closed), JSON.stringify(t.contexts.map((c) => c.made.closed)));
   }
 }
 

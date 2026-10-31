@@ -45,6 +45,9 @@ import {
 } from '../game_start.js';
 import { SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC, UNKNOWN_WORD, normalize } from '../input_speech.js';
 import { watchTheme, deckFor } from '../card_deck.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
+import { followPanelSpeaker } from '../speakers.js';
 import { figureBody, OUTFITS, DEFAULT_CHARACTERS, courtOutfit } from '../character_kit.js';
 import { courtParts } from '../town_scene.js';
 
@@ -259,7 +262,16 @@ export const DEFAULTS = Object.freeze({
   autostart: false,
   autostartAlone: 'same',
   ...ATTRACT_DEFAULTS,
+  // *** MUSIC (row 2.107, 2026-10-31): THE SHARED ROWS, OFF BY DEFAULT HERE. *** Mike: "What happened to adding music to
+  // the games?" The same rows as every game with music (game_music_host.js), played only while somebody is playing
+  // (the play watch: from a press until a pause, the start screen, the panel hiding, or nobody pressing). Argued
+  // (Rule 1): FOR 'mine' (your music), as the card and building games: dressing them is play, not a test. AGAINST,
+  // and it decides it: this game SAYS what to put on ("Put Jack in something warm"), names each outfit as it lights
+  // ("Parka?", how one switch plays it) and LISTENS for the outfit said - the answer games' and Sort the bricks' case
+  // (quiz_flow.js): a bed under a spoken prompt costs clarity for the person playing by ear. One row turns it on.
+  music: 'off', musicSourceId: '', musicAlbum: '', musicFavourite: '', musicVolume: 0.3,
 });
+const MUSIC_DEFAULT = 'off';
 
 const isPrompt = (v) => !v || v.dressMode !== 'free';
 const SETTINGS = [
@@ -293,6 +305,7 @@ const SETTINGS = [
   { key: 'speak', label: 'Say what to put on aloud', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
   { key: 'sayChoice', label: 'Say each outfit as it lights', default: true, level: 'standard',
     onLabel: 'Yes ("Parka?")', offLabel: 'No', note: 'Somebody using a switch needs it.' },
+  ...gameMusicFields({ defaultMode: MUSIC_DEFAULT }),   // row 2.107: the same music rows every game has, off here
 ];
 
 const esc = (s) => String(s == null ? '' : s)
@@ -359,7 +372,7 @@ function ensureStyle(doc) {
 }
 
 registerModule(
-  { type: GAME, title: TITLE, core: 'new',
+  { type: GAME, title: TITLE, core: 'new', routesSound: true,   // its music (row 2.107) follows the panel's speaker
     description: 'Put Jack in something warm: choose from the wardrobe. Anything that fits is right, and nothing is ever '
       + 'marked wrong. Or just dress the King, the Queen, Jack and Robin in anything. Touch it, say it, or use one switch.',
     dependsOn: 'none', importance: 'optional', settings: SETTINGS, voice: VOICE },
@@ -386,7 +399,9 @@ registerModule(
     let score = null, themeWatch = null;
     let litKey = '', lastSaid = null, litSaid = null;
     const said = [];
-    const plays = createPlayWatch(bus, ctx);
+    // Row 2.107: the music follows the play watch exactly (being played: on; paused, rested, the start screen: off).
+    let musicHost = null, unSpeaker = null;
+    const plays = createPlayWatch(bus, ctx, { onChange: (s) => { musicHost?.follow(s === 'play' && !hidden && !dead); } });
 
     const deckNow = () => deckFor(themeWatch ? themeWatch.id() : 'default');
     const free = () => cfg.dressMode === 'free';
@@ -781,12 +796,19 @@ registerModule(
         score = createScoreSource(bus, { source: GAME, label: SCORE_LABEL, instance: ctx.instanceId || null, onShownChange: () => render() });
         themeWatch = watchTheme(mount, () => { lastWho = ''; lastRack = ''; render(); });
 
+        // Row 2.107: the music, on the speaker arbiter (media tier, music group), as every game's.
+        musicHost = createGameMusicHost(ctx, { audio: ctx.audio || null, audioId: `${GAME}-music:${ctx.instanceId || 'du'}`,
+          cfg: () => cfg, defaultMode: MUSIC_DEFAULT,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+        unSpeaker = followPanelSpeaker(state, () => [musicHost?.music]);
         const applyCfg = (snap) => {
           const s = snap || {};
+          const was = cfg;
           const next = { ...DEFAULTS };
           for (const k of Object.keys(DEFAULTS)) if (s[k] !== undefined && s[k] !== null) next[k] = s[k];
           if (s.ownScore !== undefined) next.ownScore = s.ownScore;
           cfg = next;
+          try { musicHost?.apply(next, was); } catch { /* quiet */ }
         };
         applyCfg(state?.get?.());
         state?.subscribe?.((s) => {
@@ -823,6 +845,7 @@ registerModule(
       onResize() { render(); },
       onHide() {
         hidden = true;
+        musicHost?.follow(false);
         if (started && g && g.phase !== 'paused') pauseGame();
         stopTimers(); announce(); render();
         try { state?.flush?.(); } catch { /* nothing to do */ }
@@ -831,8 +854,12 @@ registerModule(
         hidden = false; render(); announce();
         if (!started && demo && !demoRested && demoTimer == null) demoTimer = setT(demoTick, DEMO_STEP_MS);
       },
+      // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         dead = true;
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         stopTimers(); idleTimer = clear(idleTimer); attractTimer = clear(attractTimer);
         if (listening) { listening = false; try { bus.publish(SPEECH_GRAMMAR_TOPIC, { source: GAME, instanceId: ctx.instanceId || null, open: false, words: [] }); } catch { /* gone */ } }
         mount.removeEventListener('pointerdown', onPointerDown);

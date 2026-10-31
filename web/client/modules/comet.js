@@ -35,6 +35,15 @@
 //     the speaker arbiter. There is no drive, no `meditation.json` and no audio bus here, and
 //     a module that fetches a missing manifest on every mount is a module that logs errors
 //     forever. The SYNTHESISED tones stay — they are Web Audio, they need no files.
+//     *** AND THE MUSIC IS BACK, THE SHARED WAY (row 2.107, 2026-10-31). *** Mike: "What happened to
+//     adding music to the games?" The same rows as every game with music (game_music_host.js): your
+//     Music folder, a folder you choose, a Music favourite, a quiet hum, or none, on the speaker
+//     arbiter (ducked under speech, quiet under a video), playing only while the comet is being played
+//     (game_start.js's play watch: from a press or an aim on the sky, until a rest). DEFAULT 'mine',
+//     argued (Rule 1): FOR 'off', this panel is also the calm "did I do that?" sky, and its chimes are
+//     the reward. AGAINST, and it wins: nothing in it is spoken or listened for, a bed is quiet by
+//     design (game_music.js), and with no music in the folder it is the hum - the same default as
+//     the other action games, so nobody has to learn which games have music. The chimes stay its own.
 //   * COLORS COME FROM THE THEME where the sky allows it. The night sky itself stays dark by
 //     construction (a comet needs somewhere dark to be bright), but the warm palette reads
 //     `--on-dark`, `--accent-warm`, `--accent` so it follows Dusk with everything else.
@@ -49,6 +58,8 @@ import { AIM_TOPIC, aimIn } from '../aim.js';
 import { hitCircle, nearest } from '../pressable.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPlayWatch } from '../game_start.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
 
 const DEFAULTS = {
   hearts: 4,        // how many balloons are up at once
@@ -77,6 +88,11 @@ const DEFAULTS = {
   // Open to a start screen rather than mid-flight. See pressgame.js for the same setting and
   // the same argument; a bedside panel that is meant to be already running turns it off.
   openToMenu: true,
+  music: 'mine',   // row 2.107 (2026-10-31): your Music folder, else the quiet hum (the header argues it)
+  musicSourceId: '',
+  musicAlbum: '',
+  musicFavourite: '',
+  musicVolume: 0.3,
 };
 
 const MAX_SPARKS = 320;
@@ -112,6 +128,8 @@ const SETTINGS = [
     onLabel: 'Calm — less movement', offLabel: 'Normal' },
   { key: 'sound', label: 'Sound', default: true, level: 'essential',
     onLabel: 'Chimes on', offLabel: 'Silent' },
+  // Row 2.107 (2026-10-31): the same music rows every game has (game_music_host.js), your Music folder by default.
+  ...gameMusicFields(),
   { key: 'pointer', label: 'A pointer moves the comet', default: true, level: 'standard' },
   // FIVE STOPS, NOT A SLIDER — same argument as the pond's ripple interval. A range is right
   // for a real continuum and wrong for a short list of good answers, and on a fifteen-second
@@ -171,6 +189,10 @@ registerModule(
     // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): from a press, or an aim on its sky, while it is started,
     // until nobody has done either for GAME_IDLE_MS. Never merely for being open.
     let plays = null;
+    // Row 2.107: the music (game_music_host.js), following the play watch. "Sound: Silent" is silent - music too: a
+    // row that says Silent over a game playing music would be a row that lies.
+    let musicHost = null;
+    const syncMusic = () => { musicHost?.follow(!!plays?.playing() && cfg.sound !== false); };
 
     const nowMs = () => performance.now();
     const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -547,6 +569,7 @@ registerModule(
         cx, cy, running, steering: !!steer, simT,
         hearts: hearts.length, sparks: sparks.length, trail: trail.length,
         calm: calm(), cfg: { ...cfg }, caught, started,
+        music: musicHost?.music?.state?.() || null, playing: !!plays?.playing(),
       }),
       init() {
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
@@ -693,10 +716,18 @@ registerModule(
         // safe to change live: nothing in this game is a deadline somebody is holding off
         // against, which is the one thing `pressgame` and `call` each had to protect.
         // Row 2.97: "Its sound comes out of" sends the sound to that speaker.
-        offs.push(followPanelSpeaker(state, () => [{ setSink: (id) => { toneSink = id; if (ac) routeContext(ac, id); } }]));
+        // Row 2.107: the music, on the speaker arbiter like every game's (`ctx.makeAudioContext`: the suite's seam).
+        musicHost = createGameMusicHost(ctx, { audio: ctx.audio || null, audioId: `comet-music:${ctx.instanceId || 'cm'}`,
+          cfg: () => cfg,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+        offs.push(() => { try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null; });
+        offs.push(followPanelSpeaker(state, () => [{ setSink: (id) => { toneSink = id; if (ac) routeContext(ac, id); } }, musicHost?.music]));
         offs.push(state?.subscribe?.(() => {
+          const was = cfg;
           cfg = { ...DEFAULTS, ...(state.get() || {}) };
           paintScore();   // the score row is live too, not only on the next catch
+          try { musicHost?.apply(cfg, was); } catch { /* quiet */ }
+          syncMusic();
         }) || (() => {}));
         // The score contract (row 2.40). Released in destroy() through `offs`, which also says the
         // source is gone so a Scoreboard following Comet stops calling it live.
@@ -737,7 +768,7 @@ registerModule(
         // now because leaving a game should not wait on that.
         offs.push(bus.subscribe('comet/exit', () => { if (started) enterMenu(); }));
         // Being played: its presses (after its own handlers, so the press that starts it counts).
-        plays = createPlayWatch(bus, ctx);
+        plays = createPlayWatch(bus, ctx, { onChange: () => syncMusic() });   // and the music follows it (row 2.107)
         plays.watch({ topics: ['comet/spark', 'comet/seek'], mount, when: () => started });
         offs.push(() => { plays?.destroy(); plays = null; });
 
@@ -753,6 +784,8 @@ registerModule(
       },
       onResize() { resize(); },
       onHide() { stop(); plays?.rest(); },
+      // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         stop();
         observer?.disconnect();

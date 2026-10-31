@@ -211,6 +211,11 @@ section('auditFields — the faults are planted, so the checker can go red');
   check('a duration-shaped key without Ms is a warning',
     found.some((f) => f.code === 'duration-key'), c);
   check('a single-option choice is a warning', found.some((f) => f.code === 'single-choice'), c);
+  // Row 2.107 (2026-10-31): an album / music folder row declares one stand-in option and is filled live.
+  const live = auditFields([nf({ key: 'album', label: 'Album', kind: 'choice', level: 'essential', liveChoices: true,
+    options: [{ value: '', label: 'The whole source' }] })], { type: 'live' });
+  check('...but not one that says its one option stands in for live ones (liveChoices)', !live.some((f) => f.code === 'single-choice'),
+    JSON.stringify(live));
   check('a missing label is info, not an error',
     found.some((f) => f.code === 'unlabeled' && f.severity === 'info'), c);
   check('A DECLARATION THAT normalizeField SILENTLY DROPPED IS REPORTED — this is the only '

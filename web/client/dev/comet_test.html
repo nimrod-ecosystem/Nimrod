@@ -35,6 +35,8 @@ import { verbTarget, verbsFor } from '../actions.js';
 import { expectFor } from '../health.js';
 import { CATALOG } from '../modules_catalog.js';
 import { SCORE_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
+import { createAudioBus, DUCK_TO } from '../audio_bus.js';
+import { createFakeAudioContext } from '../game_tones.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -53,10 +55,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // them on a start screen would mean prefixing them all with a press none of them is testing.
 // A caller that passes `openToMenu:true` gets the real default back; the start screen has its
 // own section, which is where that behaviour is asserted.
-function mount(host, { bus = createBus(), state = null } = {}) {
-  const saved = { openToMenu: false, ...(state?.get?.() || {}) };
-  const st = { get: () => saved, destroy() {} };
-  const inst = mountModule('comet', { mount: host, bus, state: st, events: null, user: 'u', profileId: 'p' });
+function mount(host, { bus = createBus(), state = null, extra = {} } = {}) {
+  let saved = { openToMenu: false, ...(state?.get?.() || {}) };
+  // A live row (row 2.107): `set` tells its subscribers, as state.js does, so a setting changed mid-game reaches it.
+  const subs = new Set();
+  const st = { get: () => saved, destroy() {}, set: (p) => { saved = { ...saved, ...p }; for (const f of [...subs]) f(saved); },
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); } };
+  const inst = mountModule('comet', { mount: host, bus, state: st, events: null, user: 'u', profileId: 'p', ...extra });
+  inst.__state = st;
   inst.init();
   return inst;
 }
@@ -322,6 +328,57 @@ section('settings actually reach the behavior');
   await sleep(20);
   check('silent is a real setting', probe(inst).cfg.sound === false);
   inst.destroy(); host.remove();
+}
+
+// =====================================================================
+section('*** row 2.107: music - the shared rows, your Music folder by default, only while it is being played ***');
+{
+  const R = Object.fromEntries((getManifest('comet').settings || []).map((r) => [r.key, r]));
+  check('*** the music rows are the shared ones, "your music" by default ***', R.music?.default === 'mine'
+    && R.music.options.map((o) => o.value).join() === 'mine,folder,favourite,ambient,off' && !!R.musicSourceId && !!R.musicAlbum
+    && !!R.musicFavourite && R.musicVolume?.default === 0.3, JSON.stringify(R.music?.default));
+  const audio = createAudioBus();
+  const contexts = [];
+  const extra = { audio, instanceId: 'c1', makeAudioContext: () => { const c = createFakeAudioContext(); contexts.push(c); return c; } };
+  const src = 'comet-music:c1';
+  const on = () => !!audio.state()[src]?.active;
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, extra, state: { get: () => ({ music: 'ambient', openToMenu: true, steerMs: 32 }) } });
+  await sleep(20);
+  const st = audio.state()[src];
+  check('on the speaker arbiter: the music group, the media tier (a voice ducks it, a video outranks it)',
+    st?.group === 'music' && st?.tier === 'media', JSON.stringify(st));
+  check('*** silent on the start screen: nobody is playing yet ***', !on());
+  bus.publish('comet/seek');                       // starts it (and, being a press on a started game, is playing)
+  bus.publish('comet/seek');
+  check('*** being played: the music plays ***', on() && contexts.some((c) => c.made.oscillators.length > 0), JSON.stringify(audio.state()[src]));
+  audio.register('suite-voice', { tier: 'voice' });
+  audio.setActive('suite-voice', true);
+  check('a voice ducks it', audio.state()[src]?.level === DUCK_TO, JSON.stringify(audio.state()[src]));
+  audio.setActive('suite-voice', false);
+  check('...and the chimes are still its own (not on the arbiter as music)', !Object.keys(audio.state()).some((k) => k !== src && /^comet/.test(k)));
+  bus.publish('comet/exit');
+  check('*** back on its start screen: the music stops ***', !on());
+  bus.publish('comet/seek'); bus.publish('comet/seek');
+  check('played again: it plays again', on());
+  inst.onHide();
+  check('*** hidden: it stops ***', !on());
+  inst.onShow?.();
+  bus.publish('comet/seek');
+  check('a press after showing: it plays', on());
+  inst.__state.set({ sound: false });
+  check('*** "Sound: Silent" is silent - the music too ***', !on());
+  inst.__state.set({ sound: true });
+  check('...and sound on again while it is played: back', on());
+  inst.__state.set({ music: 'off' });
+  check('Music: no music - none', !on());
+  inst.__state.set({ music: 'ambient' });
+  check('...and on again, while played: it plays', on());
+  inst.destroy();
+  check('*** destroyed: off the arbiter, every context it made closed ***', !(src in audio.state()) && contexts.every((c) => c.made.closed),
+    JSON.stringify(contexts.map((c) => c.made.closed)));
+  host.remove();
 }
 
 // =====================================================================

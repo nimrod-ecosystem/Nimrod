@@ -397,6 +397,47 @@ const RESOLVE = (items) => async () => ({ items, count: items.length });
       none.destroy();
     }
 
+    section('*** row 2.107 (2026-10-31): a game\'s own default, and following "being played" ***');
+    {
+      const { createGameMusicHost, gameMusicFields } = await import('../game_music_host.js');
+      const off = Object.fromEntries(gameMusicFields({ defaultMode: 'off' }).map((r) => [r.key, r]));
+      check('a game whose default is off: the Music row says so', off.music.default === 'off');
+      check('*** ...and an unset Music reads as THAT default: no "How loud", no "Music from" ***',
+        off.musicVolume.appliesWhen({}) === false && off.musicSourceId.appliesWhen({}) === false && off.musicVolume.appliesWhen({ music: 'ambient' }) === true);
+      check('the usual default still reads an unset Music as your music', gameMusicFields()[0].default === 'mine'
+        && gameMusicFields().find((r) => r.key === 'musicVolume').appliesWhen({}) === true);
+      const told = [];
+      const st = { blocked: false };
+      const mk = () => ({ useAmbient() {}, useFolder() { return Promise.resolve(); }, off() { told.push('off'); },
+        play() { told.push('play'); }, pause() { told.push('pause'); }, setVolume() {}, destroy() { told.push('destroy'); }, state: () => st });
+      let cfg = { music: 'ambient' };
+      const h = createGameMusicHost({}, { cfg: () => cfg, make: mk, findMine: async () => '', defaultMode: 'off' });
+      check('a host with default off reads an unset Music as off', (() => { const was = cfg; cfg = {}; const m = h.state().mode; cfg = was; return m; })() === 'off');
+      told.length = 0;
+      h.follow(true); h.follow(true); h.follow(true);
+      check('*** follow(true) three times: played ONCE (a folder\'s play() starts a new track, so a redraw must not restart it) ***',
+        told.join() === 'play', told.join());
+      st.blocked = true;
+      h.follow(true);
+      check('...but a play the browser refused is tried again on the next call', told.join() === 'play,play', told.join());
+      st.blocked = false;
+      told.length = 0;
+      h.follow(false); h.follow(false);
+      check('follow(false): paused once', told.join() === 'pause', told.join());
+      h.follow(true);
+      told.length = 0;
+      let was = cfg; cfg = { music: 'off' }; h.apply(cfg, was);
+      check('*** Music turned off while being played: it stops ***', told.includes('off') && !h.state().sounding, told.join());
+      told.length = 0;
+      was = cfg; cfg = { music: 'ambient' }; h.apply(cfg, was);
+      check('*** ...and on again while still being played: it plays, without another press ***', told.includes('play') && h.state().sounding, told.join());
+      h.follow(false);
+      told.length = 0;
+      was = cfg; cfg = { music: 'folder', musicSourceId: 'x' }; h.apply(cfg, was);
+      check('a change while NOT being played starts nothing', !told.includes('play'), told.join());
+      h.destroy();
+    }
+
     section('*** row 2.107 step 2: a Music favourite (Spotify, YouTube, ...) played by the screen\'s Music panel ***');
     {
       const { createGameMusicHost, musicPanelHere } = await import('../game_music_host.js');

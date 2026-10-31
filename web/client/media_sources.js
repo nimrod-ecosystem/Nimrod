@@ -479,7 +479,9 @@ export const ALBUM_CHOICES_MAX = 200;
  * its "Music from"), which said "set in Media / Sources" for the same reason Photos' did (found 2026-10-10).
  */
 export function albumField({ level = 'standard', appliesWhen = null, key = ALBUM_KEY, label = 'Album' } = {}) {
-  return { key, label, kind: 'choice', default: '', level, emptyLabel: ALBUM_WHOLE_LABEL,
+  // `liveChoices` (row 2.107, 2026-10-31): says the one declared option stands in for the live list, so the settings
+  // audit does not call it a one-option row that renders disabled - which it is only on a panel that is not mounted.
+  return { key, label, kind: 'choice', default: '', level, emptyLabel: ALBUM_WHOLE_LABEL, liveChoices: true,
     options: [{ value: '', label: ALBUM_WHOLE_LABEL }], ...(appliesWhen ? { appliesWhen } : {}) };
 }
 

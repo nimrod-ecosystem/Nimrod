@@ -59,6 +59,9 @@ import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { answerMarkHtml } from '../answer_mark.js';
 import { createPlayWatch } from '../game_start.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
+import { followPanelSpeaker } from '../speakers.js';
 
 export const GAME = 'wordforge';
 
@@ -229,6 +232,14 @@ export const DEFAULT_PAIRS = [
 // "I don't know" in either mode — giving up honestly is not a guess to iterate on, so it is
 // never routed through the ladder.
 export const DEFAULTS = {
+  // *** MUSIC (row 2.107, 2026-10-31). *** Mike: "What happened to adding music to the games?" The same rows as every
+  // game with music (game_music_host.js), played only while somebody is playing (the play watch: from a press until
+  // nobody has pressed for the idle time, or the panel hides). DEFAULT 'mine' (your Music folder, else a quiet hum),
+  // argued (Rule 1): FOR 'off', as the answer games that read their questions aloud (quiz_flow.js): it is a word game.
+  // AGAINST, and it decides it: this panel says nothing aloud and listens for nothing - the question is READ, on the
+  // screen - so the reason those games are quiet does not reach it, and it is the action and card games' default.
+  // One row turns it off. [Guess, on Mike's list.]
+  music: 'mine', musicSourceId: '', musicAlbum: '', musicFavourite: '', musicVolume: 0.3,
   // A READY-MADE PACK, DEFAULT SINCE 2026-09-22 — same additive shape Trivia's own
   // `contentSource` ships (2026-09-08 MIKE_CHANGE_LIST §3), flipped the same day and for the
   // same reason: Mike, "There should be default packs, so people can play the games without
@@ -600,10 +611,13 @@ const SETTINGS = [
   // always shown: one is where you are, the other is something the person needs to be told.
   ownScoreField({ level: 'standard',
     note: 'Points this round and the streak. A Scoreboard on the same screen can show them instead.' }),
+  ...gameMusicFields(),   // row 2.107: the same music rows every game has (DEFAULTS argues the default)
 ];
+const MUSIC_KEYS = ['music', 'musicSourceId', 'musicAlbum', 'musicFavourite', 'musicVolume'];
 
 registerModule(
   { type: 'wordforge', title: 'Word Forge', description: 'A word game. A wrong answer explains itself and still counts for something.',
+    routesSound: true,   // its music (row 2.107) follows the panel's speaker
     // `dependsOn` and `importance` are deliberately still absent. Both feed the recovery
     // ladder's fallback RANKING, so guessing at them would change which module a broken screen
     // swaps to — a behaviour change wearing a metadata costume. Absent `dependsOn` is already
@@ -671,6 +685,8 @@ registerModule(
     // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): no Start button, so from a press on it until nobody
     // has pressed for GAME_IDLE_MS. Never merely for being open (that would hold every new version for ever).
     let plays = null;
+    let musicHost = null;      // row 2.107: the music, on exactly while `plays` says being played
+    let unSpeaker = null;
 
     const el = (sel) => mount.querySelector(sel);
 
@@ -1098,9 +1114,15 @@ registerModule(
         // Skipping outright still has a home, so the old behaviour is not lost — it is just no
         // longer the only thing a switch can do.
         bus.subscribe('wordforge/skip', () => advance());
-        plays = createPlayWatch(bus, ctx);
+        plays = createPlayWatch(bus, ctx, { onChange: (s) => { musicHost?.follow(s === 'play' && !dead); } });
         plays.watch({ topics: ['wordforge/answer', 'wordforge/next', 'wordforge/prev', 'wordforge/select', 'wordforge/skip'],
           mount, when: () => !dead });
+        // Row 2.107: the music, on the speaker arbiter (media tier, music group), as every game's. Made before the
+        // settings are read (`applyState`, below), which hands it each change.
+        musicHost = createGameMusicHost(ctx, { audio: ctx.audio || null, audioId: `wordforge-music:${ctx.instanceId || 'wf'}`,
+          cfg: () => cfg,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+        unSpeaker = followPanelSpeaker(state, () => [musicHost?.music]);
 
         // NAMED rather than inline, so a change to the SHARED bank row can re-run exactly the
         // same interpretation. Two code paths that both decide what a bank means is how they
@@ -1163,6 +1185,7 @@ registerModule(
           const p = Array.isArray(snap.pairs) ? snap.pairs : (snap.pairsText ? parsePairs(snap.pairsText) : null);
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           pairs = (p && p.length) ? p : DEFAULT_PAIRS;
+          const wasCfg = cfg;
           cfg = {
             // *** A LATENT BUG THE OLD DEFAULT (`bank`) HID. *** This used to read
             // `snap.contentSource === 'pack' ? 'pack' : DEFAULTS.contentSource` — which does not
@@ -1186,7 +1209,10 @@ registerModule(
             dailyCap: Number(snap.dailyCap) >= 0 ? Number(snap.dailyCap) : DEFAULTS.dailyCap,
             subject: typeof snap.subject === 'string' && snap.subject ? snap.subject : DEFAULTS.subject,
             ownScore: ownScoreMode(snap),
+            // Row 2.107: the music rows, as saved (game_music_host.js reads anything it does not know as the default).
+            ...Object.fromEntries(MUSIC_KEYS.map((k) => [k, snap[k] !== undefined ? snap[k] : DEFAULTS[k]])),
           };
+          try { musicHost?.apply(cfg, wasCfg); } catch { /* quiet */ }
           // The score row is live, not only on the next answer. Only with a question up: before the
           // first round is dealt, render() would draw the end-of-round screen.
           if (q) render();
@@ -1199,10 +1225,14 @@ registerModule(
       },
 
       onResize() {},
-      onHide() { plays?.rest(); state.flush(); },
+      onHide() { plays?.rest(); musicHost?.follow(false); state.flush(); },
+      // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         dead = true;
         if (plays) { plays.destroy(); plays = null; }
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }
         if (ledger) { ledger.destroy(); ledger = null; }

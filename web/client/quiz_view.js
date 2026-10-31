@@ -34,12 +34,15 @@ import { createPointsLedger } from './points.js';
 import { createScoreSource, ownScoreMode, showOwnScore } from './score_source.js';
 import {
   createQuizEngine, createScanBoard, createSpeechWatch, ANSWER_TOPIC, GRAMMAR_TOPIC, FLOW_DEFAULTS,
-  esc, fill, fillHtml, defaultChime, STARS, CAT_URL,
+  esc, fill, fillHtml, defaultChime, STARS, CAT_URL, QUIZ_MUSIC_DEFAULT,
 } from './quiz_flow.js';
 import {
   shouldAutostart, panelAlone, createPlayWatch, demoLimitMs, ensureStartStyle, startOverlayHtml,
 } from './game_start.js';
 import { gameAgentFor, askAgent } from './game_agent.js';
+import { createGameMusic } from './game_music.js';
+import { createGameMusicHost } from './game_music_host.js';
+import { followPanelSpeaker } from './speakers.js';
 
 // How often the computer makes a move in a quiz demo: long enough to read the answer it has lit, quick
 // enough that the panel looks alive. Argued, not a setting (nobody's play changes with it).
@@ -238,7 +241,20 @@ export function quizModule(spec) {
     // A game with Start says so from Start (as before) and while it is pressed; a game without one (Spelling, Name
     // that, Math) from its first press. Either way nobody pressing for a while ends it, so an open game - started
     // and left, or never touched - neither keeps the bar away nor holds a new version for ever.
-    const plays = createPlayWatch(bus, ctx);
+    // *** AND THE MUSIC FOLLOWS IT (row 2.107, 2026-10-31). *** The rows are quiz_flow.js's (off by default, argued
+    // there); when somebody turns them on, the music plays exactly while this says "being played" - from Start or the
+    // first press, until a pause, the end of the sitting, the panel hiding, or nobody pressing for the idle time - and
+    // never under the demo (the demo is not playing). Also quiet while a view holds its speech for a clip (Name that's
+    // recorded message): the clip is the question, and a bed under it is the bed under a question twice over.
+    let musicHost = null;
+    let unSpeaker = null;
+    const plays = createPlayWatch(bus, ctx, { onChange: () => syncMusic() });
+    function syncMusic() {
+      if (!musicHost) return;
+      let clip = false;
+      try { clip = !!view.speechGate?.(); } catch { clip = false; }
+      musicHost.follow(plays.playing() && !hidden && !dead && !paused && !clip);
+    }
     const reducedMotion = () => {
       if (typeof ctx.reducedMotion === 'boolean') return ctx.reducedMotion;
       try { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; }
@@ -654,6 +670,7 @@ export function quizModule(spec) {
       extraEl.innerHTML = extra;
       paintOverlay(root);
       paintSheet(root, s);
+      syncMusic();       // a clip starting or ending changes nothing else the play watch sees
     }
 
     function explainHtml(s) {
@@ -692,6 +709,14 @@ export function quizModule(spec) {
         catch (err) { ledger = null; console.error(`${type}: no points ledger`, err); }
         score = createScoreSource(bus, { source: type, label: scoreLabel, instance: ctx.instanceId || null,
           onShownChange: () => render() });
+        // Row 2.107: the music (game_music_host.js), on the speaker arbiter as every game's is: media tier, so it ducks
+        // under speech; the music group, so a video outranks it. `ctx.makeAudioContext`: the suites' seam.
+        try {
+          musicHost = createGameMusicHost(ctx, { audio: ctx.audio || null, audioId: `${type}-music:${ctx.instanceId || type}`,
+            cfg: () => cfg, defaultMode: QUIZ_MUSIC_DEFAULT,
+            make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+        } catch (err) { musicHost = null; console.error(`${type}: no music`, err); }
+        unSpeaker = followPanelSpeaker(state, () => [musicHost?.music]);
         const onSkip = () => { if (viewMove('skip')) return; if (gateInput()) return; engine.skip(); };
         bus.subscribe(`${type}/next`, onNext);
         bus.subscribe(`${type}/prev`, onPrev);
@@ -750,6 +775,7 @@ export function quizModule(spec) {
           const prevCfg = cfg;
           cfg = { ...FLOW_DEFAULTS, ...defaults, ...(snap || {}) };
           try { view.onConfig?.(cfg, prevCfg, api); } catch (err) { console.error(`${type}: config`, err); }
+          try { musicHost?.apply(cfg, prevCfg); } catch (err) { console.error(`${type}: music`, err); }
           if (!configured) return;                 // the first settings: whether it starts is decided below
           const g = gameOf(cfg);
           // Still waiting for Start: the demo follows the game picked and "While nobody is playing".
@@ -778,10 +804,13 @@ export function quizModule(spec) {
         if (!begun && !demoRested) startDemo();
         reannounce(); try { view.onShow?.(api); } catch { /* noop */ }
       },
-      settingsChoices: () => (view.settingsChoices ? view.settingsChoices() : {}),
+      // The view's own live choices, and the music's ("Music from", "Music folder", "Which favorite").
+      settingsChoices: () => ({ ...(musicHost?.settingsChoices?.() || {}), ...(view.settingsChoices ? view.settingsChoices() : {}) }),
       destroy() {
         dead = true;
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         plays.destroy();
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         stopDemo();
         reannounce();
         engine.destroy();

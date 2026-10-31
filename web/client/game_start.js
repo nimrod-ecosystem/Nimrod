@@ -218,7 +218,10 @@ export function gameIdleMsOf(ctx) {
  *   playing()  for a suite
  *   destroy()  rests, stops the timer and the watching
  */
-export function createPlayWatch(bus, ctx, { idleMs = null, setTimer = null, clearTimer = null } = {}) {
+export function createPlayWatch(bus, ctx, { idleMs = null, setTimer = null, clearTimer = null, onChange = null } = {}) {
+  // `onChange(state)` (row 2.107, 2026-10-31): told 'play' | 'pause' | 'rest' each time the shell is, so a game's music
+  // can follow "being played" exactly (game_music_host.js `follow`) - including the idle rest this file times on its own,
+  // which a game cannot otherwise see. A throw from it is dropped: the shell's bookkeeping does not depend on it.
   const ms = Number.isFinite(idleMs) && idleMs > 0 ? idleMs : gameIdleMsOf(ctx);
   // The wall clock, NOT the game's own `ctx.setTimer`: this is the shell's bookkeeping, not part of the game, and a
   // suite that drives a game's clock by hand (or checks "nothing is timed") must not find it there. A suite of this
@@ -234,6 +237,7 @@ export function createPlayWatch(bus, ctx, { idleMs = null, setTimer = null, clea
     try {
       bus?.publish?.(PLAY_STATE_TOPIC, { id: ctx?.instanceId || null, playing: s === 'play', ...(s === 'rest' ? { rest: true } : {}) });
     } catch (err) { console.error('game: play state', err); }
+    if (typeof onChange === 'function') { try { onChange(s); } catch (err) { console.error('game: play state follower', err); } }
   };
   const disarm = () => { if (timer != null) { try { clearT(timer); } catch { /* gone */ } timer = null; } };
   const api = {

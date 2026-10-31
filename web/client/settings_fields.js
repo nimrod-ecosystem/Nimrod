@@ -472,6 +472,9 @@ export function normalizeField(raw = {}) {
     // the SAME colour — the menu never says "Black" over white words. A function that throws or
     // returns nothing falls back to `default`: the menu must survive a broken module.
     defaultFrom: typeof raw.defaultFrom === 'function' ? raw.defaultFrom : null,
+    // A CHOICE WHOSE DECLARED OPTIONS ARE A STAND-IN (row 2.107, 2026-10-31): a mounted panel lists the real ones
+    // (`settingsChoices`; media_sources.js albumField). Read only by the settings audit.
+    liveChoices: raw.liveChoices === true,
     // A SETTING THAT ONLY MATTERS SOMETIMES (added 2026-09-29, Mike: "hide it"). `appliesWhen(values)`
     // gets the stored row; false means the row would change nothing on the screen right now (the
     // button's background colour under a designed sign with no frame — the sign brings its own

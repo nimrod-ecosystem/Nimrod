@@ -45,6 +45,9 @@ import {
   encodeTurn, replay, AUTO_MODES,
 } from '../klondike.js';
 import { createPlayWatch } from '../game_start.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
+import { followPanelSpeaker } from '../speakers.js';
 import { CARD_DEFAULTS, cardSettingsFields, cardArt, watchTheme, cardOptions, deckFor } from '../card_deck.js';
 // court solitaire (2026-10-12): the King who cheers is Design's character, in the theme's outfit.
 import { courtLook } from '../playing_cards.js';
@@ -81,6 +84,13 @@ export const DEFAULTS = Object.freeze({
   // THE COURT CHEERS (below). 'on' | 'quiet' | 'off', and how many seconds the King stays.
   courtCheer: 'on',
   cheerSeconds: 4,
+  // *** MUSIC (row 2.107, 2026-10-31). *** Mike: "What happened to adding music to the games?" The same rows as every
+  // game with music (game_music_host.js), played only while somebody is playing (the play watch below: from a press
+  // until a win, the panel hiding, or nobody pressing for the idle time). DEFAULT 'mine' (your Music folder, else a
+  // quiet hum), argued (Rule 1): FOR 'off': a card game is thinking, and some people think better in quiet. AGAINST,
+  // and it decides it: solitaire says nothing aloud by default (`sayAloud` off) and listens for nothing, so a bed costs
+  // no word anybody needs - the case for the action, card and building games' default; one row turns it off.
+  music: 'mine', musicSourceId: '', musicAlbum: '', musicFavourite: '', musicVolume: 0.3,
 });
 
 // ---------------------------------------------------------------------------------------
@@ -160,6 +170,7 @@ const SETTINGS = [
       { value: 'off', label: 'No' },
     ],
     note: 'He waves for a few seconds beside the home piles and goes by himself. He never covers a card and never waits for a press.' },
+  ...gameMusicFields(),   // row 2.107: the same music rows every game has
   { key: 'cheerSeconds', label: 'How long the King stays', kind: 'number', default: 4, min: 2, max: 10, step: 1,
     level: 'advanced', note: 'Seconds. Never quicker than the screen\'s flashing limit allows.',
     appliesWhen: (v) => !v || v.courtCheer !== 'off' },
@@ -211,7 +222,7 @@ const fmtTime = (ms) => {
 // ---------------------------------------------------------------------------------------
 
 registerModule(
-  { type: GAME, title: 'Solitaire', core: 'new',
+  { type: GAME, title: 'Solitaire', core: 'new', routesSound: true,   // its music (row 2.107) follows the panel's speaker
     description: 'Klondike, with big cards in four suit colors: pick a card, then pick where it goes. '
       + 'One switch can play; nothing needs a drag.',
     // `local`: the deck and the rules are in this build; nothing is fetched.
@@ -252,6 +263,8 @@ registerModule(
     // next / prev / select / back / undo, a click on the table) until nobody has pressed for GAME_IDLE_MS, or the deal
     // is won. Never merely for being open: a table left out must not keep the bar away, or hold a new version, for ever.
     let plays = null;
+    let musicHost = null;      // row 2.107: the music, on exactly while `plays` says being played
+    let unSpeaker = null;
     // THE THEME ON SCREEN (card_deck.js watchTheme): the deck the cards wear, redrawn when it changes.
     let themeWatch = null;
     let townWatch = null;   // town (2026-10-12): the person's edited places, per theme (town_edits.js)
@@ -658,9 +671,15 @@ registerModule(
         catch (err) { ledger = null; console.error('solitaire: no points ledger', err); }
         score = createScoreSource(bus, { source: GAME, label: SCORE_LABEL, instance: ctx.instanceId || null,
           onShownChange: () => render() });
+        // Row 2.107: the music, on the speaker arbiter (media tier, music group), as every game's.
+        musicHost = createGameMusicHost(ctx, { audio: ctx.audio || null, audioId: `${GAME}-music:${ctx.instanceId || 'sol'}`,
+          cfg: () => cfg,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+        unSpeaker = followPanelSpeaker(state, () => [musicHost?.music]);
 
         const applyCfg = (snap) => {
           const s = snap || {};
+          const was = cfg;
           const next = { ...DEFAULTS };
           for (const k of Object.keys(DEFAULTS)) if (s[k] !== undefined) next[k] = s[k];
           if (!AUTO_MODES.includes(next.autoMove)) next.autoMove = DEFAULTS.autoMove;
@@ -668,6 +687,7 @@ registerModule(
           if (next.courtCheer === 'off') endCheer();   // turned off while a King is out: he goes now
           if (s.ownScore !== undefined) next.ownScore = s.ownScore;
           cfg = next;
+          try { musicHost?.apply(next, was); } catch { /* quiet */ }
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
           // A saved game arriving after mount (state loads in the background) is adopted only if
           // nobody has played here yet — a late load must never undo what somebody just did.
@@ -687,7 +707,7 @@ registerModule(
         bus.subscribe(`${GAME}/deal`, (p) => newGame(Number.isFinite(p?.seed) ? p.seed : null, p?.draw ?? null));
         // Being played: its presses, watched after its own handlers, so the press that wins is seen won and the
         // "New game" press after a win counts. Not `deal`: that is a program handing it a deal, not somebody playing.
-        plays = createPlayWatch(bus, ctx);
+        plays = createPlayWatch(bus, ctx, { onChange: (s) => { musicHost?.follow(s === 'play' && !dead); } });
         plays.watch({ topics: [`${GAME}/next`, `${GAME}/prev`, `${GAME}/select`, `${GAME}/back`, `${GAME}/undo`],
           mount, when: () => !dead && !isWon(game()) });
 
@@ -701,10 +721,14 @@ registerModule(
         }, 1000);
       },
       onResize() {},
-      onHide() { plays?.rest(); try { state?.flush?.(); } catch { /* nothing to do */ } },
+      onHide() { plays?.rest(); musicHost?.follow(false); try { state?.flush?.(); } catch { /* nothing to do */ } },
+      // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         dead = true;
         if (plays) { plays.destroy(); plays = null; }
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         themeWatch?.stop();
         townWatch?.stop();   // town (2026-10-12)
         townWatch = null;

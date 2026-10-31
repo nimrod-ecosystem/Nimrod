@@ -215,7 +215,8 @@ export function auditFields(fields = [], { type = '', declared = null } = {}) {
         `"${f.key}" has no options declared — fine if a mounted instance supplies them through `
         + 'settingsChoices(), a dead row if not', at(f.key)));
     }
-    if (f.kind === 'choice' && (f.options || []).length === 1) {
+    // Not a row that says its one option stands in for live ones (`liveChoices`: an album / music folder row).
+    if (f.kind === 'choice' && (f.options || []).length === 1 && !f.liveChoices) {
       out.push(finding('warn', 'single-choice',
         `"${f.key}" declares exactly one option, so it renders disabled`, at(f.key)));
     }

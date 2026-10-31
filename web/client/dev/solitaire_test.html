@@ -41,6 +41,7 @@ import {
 } from '../klondike.js';
 import { GAME, DEFAULTS, whereKey, placeWords, cardWords, cheerLine, suitsFinished, CHEER_MODES } from '../modules/solitaire.js';
 import { minFlashPeriodMs } from '../flash_limit.js';
+import { musicRowChecks, musicPlayChecks } from './game_music_checks.js';
 import { THEMES, applyTheme, worstContrast, contrast as hexContrast } from '../theme.js';
 import { cardArt, deckFor, cardSettingsFields } from '../card_deck.js';
 import { cardThemes } from '../playing_cards.js';
@@ -943,6 +944,16 @@ try {
     check('the draw count is a setting (not hard-coded), and applies from the next deal', rows.some((r) => r.key === 'draw' && /next new game/.test(r.note)));
     check('auto-move has off / safe / every card', rows.find((r) => r.key === 'autoMove').options.map((o) => o.value).sort().join() === 'all,off,safe');
     check('win points is bounded (a switch can reach every value)', (() => { const r = rows.find((x) => x.key === 'winPoints'); return r.min === 0 && r.max === 20 && r.step === 1; })());
+  }
+
+  section('*** row 2.107: music - the shared rows, your Music folder by default, only while it is being played ***');
+  {
+    musicRowChecks({ check, manifest: getManifest(GAME), name: 'Solitaire' });
+    check('it asks for the panel\'s speaker row, as every game with sound does', getManifest(GAME).routesSound === true);
+    await musicPlayChecks({ check, name: 'Solitaire', src: `${GAME}-music:gm1`, open: ({ audio, makeAudioContext, instanceId, saved }) => {
+      const t = mount({ saved, extra: { audio, makeAudioContext, instanceId } });
+      return { press: () => t.pub('next'), hide: () => t.inst.impl.onHide(), set: (p) => t.state.set(p), destroy: () => t.inst.destroy() };
+    } });
   }
 } catch (err) {
   check('the suite ran to the end without throwing', false, String(err && err.stack || err));

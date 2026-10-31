@@ -35,6 +35,8 @@ import { normalizeField } from '../settings_fields.js';
 import { OUTFITS, OUTFIT_THEMES, courtOutfit } from '../character_kit.js';
 import { deckFor } from '../card_deck.js';
 import { applyTheme, THEMES } from '../theme.js';
+import { createAudioBus } from '../audio_bus.js';
+import { musicRowChecks, musicPlayChecks } from './game_music_checks.js';
 
 const { check, section, finish } = harness();
 function clock() {
@@ -335,6 +337,25 @@ try {
     check('the theme changes and the person is redrawn', r.host.querySelector('[data-who] svg').outerHTML !== before || r.probe().deck === 'nimrod');
     r.inst.destroy();
     applyTheme(outer, 'default');
+  }
+
+  section('*** row 2.107: music - the shared rows, OFF by default here (a game that speaks and listens), only while it is being played ***');
+  {
+    musicRowChecks({ check, manifest: getManifest(GAME), name: 'Dress-up', defaultMode: 'off' });
+    check('it asks for the panel\'s speaker row, as every game with sound does', getManifest(GAME).routesSound === true);
+    {
+      const audio = createAudioBus();
+      const r = R({}, { extra: { audio } });
+      r.publish(`${GAME}/next`);
+      check('*** off by default: played, and no music ***', !audio.state()[`${GAME}-music:${GAME}-1`]?.active);
+      r.inst.destroy();
+    }
+    await musicPlayChecks({ check, name: 'Dress-up', src: `${GAME}-music:gm1`, open: ({ audio, makeAudioContext, instanceId, saved }) => {
+      // Waiting for Start (`fresh`): set to start by itself, a game is being played from the moment it starts.
+      const r = R(saved, { fresh: true, extra: { audio, makeAudioContext, instanceId } });
+      return { press: () => r.publish(`${GAME}/next`), pause: () => r.publish(`${GAME}/pause`), hide: () => r.inst.impl.onHide(),
+        show: () => r.inst.impl.onShow(), set: (p) => r.setCfg(p), destroy: () => r.inst.destroy() };
+    } });
   }
 
   finish();

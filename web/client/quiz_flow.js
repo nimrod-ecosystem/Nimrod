@@ -107,6 +107,7 @@
 // stop") is still an answer, the same guard as the stop phrases.
 
 import { YES_WORDS, NO_WORDS } from './word_games_words.js';
+import { gameMusicFields } from './game_music_host.js';
 
 export const ANSWER_TOPIC = 'speech/answer';
 export const GRAMMAR_TOPIC = 'speech/grammar';
@@ -201,8 +202,31 @@ export const FLOW_DEFAULTS = Object.freeze({
   twoSwitch: 'scan',
   answerBy: 'yesno',
   ownScore: 'auto',
+  // *** MUSIC, FOR EVERY ANSWER GAME ON THIS ENGINE AT ONCE (row 2.107, 2026-10-31). *** Mike: "What happened to adding
+  // music to the games?" The same rows as Wait and Go, Brick drop, Brick breaker and Stack line (game_music_host.js),
+  // added HERE so Spelling, Name that, Brain games, Thinking games, Who's who, Word builder, Card sort, Quiz mix and
+  // Math have them from one place, played while the game is being played (quiz_view.js).
+  // DEFAULT 'off' HERE, 'mine' (your music) in the action, card and building games. Argued (Rule 1):
+  //   FOR 'mine', as the other games: one default everywhere is simpler to explain, and the bed is ducked under speech
+  //     and silenced while the screen listens (audio_bus.js), so it never covers a word outright.
+  //   AGAINST, and it decides it: in these games the SPOKEN QUESTION IS THE GAME - every one of them says its question
+  //     aloud by default (`speak: true`) and takes a spoken answer - and a bed under a question, even ducked to half,
+  //     costs clarity for exactly the listeners who most need it (slow processing, hearing loss, a busy room). Somebody
+  //     who wants music turns it on in one row.
+  //   CONSIDERED AND NOT DONE: a default that follows "Say the questions aloud" (music on when it is off). FOR: nobody
+  //     has to change two rows, and the menu could show it (settings_fields.js `defaultFrom`). AGAINST, and it wins:
+  //     a row that changes by itself when another one is changed is a surprise, and the game still LISTENS for a
+  //     spoken answer with the voice off. Every game here reads aloud by default, so a fixed 'off' is what the
+  //     following default would give everybody who has not changed anything anyway. [Guess, on Mike's list.]
+  music: 'off',
+  musicSourceId: '',
+  musicAlbum: '',
+  musicFavourite: '',
+  musicVolume: 0.3,
   ...FLOW_LINES,
 });
+/** The answer games' Music default (FLOW_DEFAULTS above argues it). */
+export const QUIZ_MUSIC_DEFAULT = 'off';
 
 /**
  * The "how a switch answers" row, for every game that offers the choice. `on` is the game's default;
@@ -266,6 +290,8 @@ export function flowSettings({ lines = {}, labels = {}, sayChoice = true } = {})
     { key: 'twoSwitch', label: 'Switches', kind: 'choice', default: 'scan', level: 'standard',
       options: [{ value: 'scan', label: 'Next moves, Select chooses' },
                 { value: 'yesno', label: 'Select is Yes, Next is No' }] },
+    // Row 2.107 (2026-10-31): the same music rows every game has, off by default here (FLOW_DEFAULTS argues it).
+    ...gameMusicFields({ defaultMode: QUIZ_MUSIC_DEFAULT }),
     { key: 'missesBeforeOffer', label: 'Misses before offering the answer', kind: 'choice',
       default: 2, level: 'advanced',
       options: [{ value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }] },

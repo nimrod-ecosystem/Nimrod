@@ -23,7 +23,7 @@ aloud. Person's miss flow is gentle by default and a setting.</p>
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig, sleep, answerByChecks, personLadderChecks } from './quiz_test_rig.js';
+import { harness, rig, sleep, answerByChecks, personLadderChecks, quizMusicChecks } from './quiz_test_rig.js';
 import { getManifest } from '../module.js';
 import '../modules/name_that.js';
 import { GAME, GAMES, STATES, ANIMALS, LINES, DEFAULTS, personFromFileName, ANIMAL_BANK, STATE_BANK, STATE_CAPITALS,
@@ -429,6 +429,9 @@ try {
       mount: ({ saved, store, extra }) => rig('name_that', { saved: { answerBy: 'yesno', ...saved },
         extra: { makeState: (k) => (k === 'ratings' ? store : null), ...extra } }) });
   }
+
+  section('*** row 2.107: music, from the quiz engine (off by default; played only while the game is played) ***');
+  quizMusicChecks({ check, type: 'name_that', name: 'Name that' });
 
   finish();
 } catch (err) { finish(err); }

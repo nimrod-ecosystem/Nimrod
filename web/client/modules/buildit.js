@@ -20,12 +20,19 @@
 // THE SCORE is models built this game (score_source.js). EACH MODEL BUILT PAYS `buildPoints` Play points (1 by
 // default): FOR, every model is built by presses -- nothing builds itself. AGAINST: at level 1 it is two presses a
 // point. 0 turns it off. Being played: game_start.js createPlayWatch.
+//
+// MUSIC (row 2.107, 2026-10-31; Mike: "What happened to adding music to the games?"): the same rows as every game with
+// music (game_music_host.js), YOUR MUSIC by default like the other building and action games - nothing here is said
+// aloud or listened for, and with no music in the Nimrod Music folder it is the quiet hum. It plays exactly while the
+// game is being played (the play watch: from a press until a pause, a rest, the panel hiding or IDLE_MS with none).
 
 import { followPanelSpeaker } from '../speakers.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
 import { createGameTones } from '../game_tones.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 import {
   autostartFields, shouldAutostart, panelAlone, createPlayWatch, START_VOICE, ensureStartStyle, startOverlayHtml, START_LINES,
@@ -48,6 +55,8 @@ export const VOICE = Object.freeze({ ...START_VOICE });
 
 export const DEFAULTS = Object.freeze({
   autostart: false, autostartAlone: 'same', level: 1, how: 'level', colours: true, lightMs: 2000, sounds: true, buildPoints: 1,
+  // Row 2.107: your Music folder, else the quiet hum (game_music_host.js; the header argues the default).
+  music: 'mine', musicSourceId: '', musicAlbum: '', musicFavourite: '', musicVolume: 0.3,
 });
 const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Models built this game. A Scoreboard on the same screen can show it instead.' }),
@@ -67,6 +76,7 @@ const SETTINGS = [
       { value: 5000, label: 'Every 5 seconds' }, { value: 0, label: 'Only when pressed (next / previous)' }],
     note: 'Never faster than the screen\'s flashing limit.' },
   { key: 'sounds', label: 'Sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
+  ...gameMusicFields(),   // row 2.107: the same music rows every game has
   { key: 'buildPoints', label: 'Play points for each model built', kind: 'number', default: 1, min: 0, max: 20, step: 1,
     level: 'advanced', note: '0 means models pay nothing.' },
 ];
@@ -125,10 +135,11 @@ registerModule(
     const setT = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
     const clearT = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (h) => clearTimeout(h);
     const doc = mount.ownerDocument || (typeof document !== 'undefined' ? document : null);
-    const plays = createPlayWatch(bus, ctx);
-
+    // Row 2.107: the music follows the play watch exactly (being played: on; paused, rested, hidden: off).
+    let musicHost = null;
     let cfg = { ...DEFAULTS };
     let started = false, dead = false, hidden = false, idle = true, armed = false;
+    const plays = createPlayWatch(bus, ctx, { onChange: (s) => { musicHost?.follow(s === 'play' && !hidden && !dead); } });
     let level = 1, targets = [], ti = 0, target = null, mode = 'choose';
     let attempt = [];          // choose mode: the parts put so far
     let choices = [], lit = -1;
@@ -388,6 +399,7 @@ registerModule(
       if (v.ownScore !== undefined) next.ownScore = v.ownScore;
       const was = cfg;
       cfg = next;
+      try { musicHost?.apply(next, was); } catch { /* quiet */ }
       const changedGame = was.level !== next.level || was.how !== next.how || was.colours !== next.colours;
       if (changedGame) { level = next.level; ti = 0; loadTarget(); }
       else if (was.lightMs !== next.lightMs) { if (mode === 'choose') { lit = lightStep() > 0 ? Math.max(0, lit) : lit; armLight(); } render(); }
@@ -423,9 +435,12 @@ registerModule(
         cfg.level = levelOf(cfg.level);
         if (first.ownScore !== undefined) cfg.ownScore = first.ownScore;
         level = cfg.level;
+        // Row 2.107: the music, on the speaker arbiter (media tier, music group), as every game's.
+        musicHost = createGameMusicHost(ctx, { audio, audioId: `${GAME}-music:${ctx.instanceId || 'bi'}`, cfg: () => cfg,
+          make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
         loadTarget();
         // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
-        unSpeaker = followPanelSpeaker(state, () => [tones]);
+        unSpeaker = followPanelSpeaker(state, () => [tones, musicHost?.music]);
         try { const off = state?.subscribe?.((s) => applyCfg(s)); if (typeof off === 'function') offs.push(off); } catch { /* fine */ }
         const sub = (t, fn) => { try { const off = bus?.subscribe?.(t, fn); if (typeof off === 'function') offs.push(off); } catch { /* no bus */ } };
         sub(`${GAME}/next`, () => step(1));
@@ -442,11 +457,14 @@ registerModule(
         else { plays.pause(); render(); }
       },
       onResize() { render(); },
-      onHide() { hidden = true; stopLight(); tones?.setActive(false); if (started) plays.rest(); try { state?.flush?.(); } catch { /* fine */ } },
+      onHide() { hidden = true; stopLight(); tones?.setActive(false); musicHost?.follow(false); if (started) plays.rest(); try { state?.flush?.(); } catch { /* fine */ } },
       onShow() { hidden = false; armLight(); render(); },
+      // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+      settingsChoices: () => musicHost?.settingsChoices?.() || {},
       destroy() {
         try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         dead = true;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         stopLight(); idleTimer = clear(idleTimer); restTimer = clear(restTimer);
         mount.removeEventListener('pointerdown', onPointerDown);
         mount.removeEventListener('keydown', onKey);
