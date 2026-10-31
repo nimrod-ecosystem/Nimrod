@@ -457,6 +457,9 @@
   body.has-side .hbw-links{display:none}
 </style>
 <script src="load_watch.js"></script>
+<!-- (row 2.164, 2026-10-31) The look this page last settled on, on this device, painted before the body is drawn
+     (theme_boot.js argues it). The veil below shows the theme's own background, so this is what the first frame is. -->
+<script src="theme_boot.js" data-theme-page="home"></script>
 <script>
 // *** HOME'S FIRST PAINT (2026-10-13; the CSS just above argues it). *** A classic script, not a module: it runs
 // before the body is drawn, and it is not waiting on the ~290 files the page's module loads -- so if those are what
@@ -862,7 +865,7 @@ import { mountInfoLine } from './hover_info.js';
 // earlier this session; both stay registered and placeable from home.html's composer.
 import { authHeaders } from './auth.js';
 import { createProfilesClient, ensureProfile } from './profile.js';
-import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker, holdPageTheme } from './theme.js';
 import { mountSiteSide } from './site_nav.js';   // settings sidebar (2026-10-08)
 // HOME (rows 2.29 / 2.30): what this page is for a signed-in visitor. See the HOME block below.
 import { createState } from './state.js';
@@ -988,12 +991,24 @@ function defaultScreen(profiles) {
   return defaultScreenP;
 }
 
+// *** ONE THEME A LOAD (row 2.164, 2026-10-31). *** Mike: "The site always loads through all of your previous themes
+// before landing on the current one when loading a page." Measured here that day (dev/theme_boot_test.html): a
+// signed-in Home painted this browser's stored theme (the line below), then the screen's row (the step below), the
+// same row again (`bootHome`), then the showing dashboard's own (the embedded kiosk) -- Nimrod light, Warm, Warm,
+// Halloween within 0.2 s. Each of those still decides what it decides; what changed is that the page's <html> is
+// HELD from here until the load has ended (Home drawn, the parts page shown, or the visitor sent on), and only the
+// last theme asked for is painted, once (theme.js `holdPageTheme` argues the hold, the saved look shown meanwhile, and
+// what happens if the end never comes).
+const releaseTheme = holdPageTheme();
 const themePick = document.getElementById('theme-pick');
 mountThemePicker(themePick);
 (async () => {
-  applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));   // correct immediately, never unthemed
+  // (row 2.164) This step's own hold, inside the page's: the page's end does not paint while this is still reading.
+  const stepDone = holdPageTheme();
+  // Painted at once only when nothing is on the page yet (no saved look: theme.js `holdPageTheme`), so never unthemed.
+  applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
   await signedIn;
-  if (!currentUser) return;
+  if (!currentUser) { stepDone(); return; }
   // A signed-in visitor's theme lives on their profile (DECISIONS.md), not this browser --
   // the anonymous picker has nothing left to do once that's the source of truth.
   if (themePick) themePick.style.display = 'none';
@@ -1007,6 +1022,7 @@ mountThemePicker(themePick);
     try { await s.load(); const theme = (s.get() || {}).theme || null; if (theme) applyTheme(document.documentElement, theme); }
     finally { s.destroy(); }
   } catch { /* offline or blocked -- the explicit default above already stands */ }
+  stepDone();
 })();
 
 const esc = (s) => String(s == null ? '' : s)
@@ -3718,7 +3734,8 @@ Promise.allSettled([
   const boot = window.__homeBoot || { ready() {}, parts() {}, away() {} };
   let failed = '';
   if (currentUser && embeddingReady && !auditMode) {
-    try { await bootHome(wanted); boot.ready(); return; } catch (err) {
+    // (row 2.164) Home is drawn: its theme -- the showing dashboard's, else the screen's -- is painted now, once.
+    try { await bootHome(wanted); releaseTheme(); boot.ready(); return; } catch (err) {
       console.error('home: could not start; showing the parts page instead', err);
       // Said on the page too, so a suite (and anybody looking) can tell WHY Home is not there.
       failed = String(err?.message || err).slice(0, 200);
@@ -3734,7 +3751,10 @@ Promise.allSettled([
   // got the list of parts and one to try -- which is the Modules page now (/modules, library.html), so they are
   // handed to it with the same `?m=`. Only on a definite 401: offline, the parts below are still a working page.
   // The audit (`?all=1`) stays here.
-  if (!currentUser && signedOutForSure && !auditMode) { boot.away(); location.replace(`/modules${location.search}`); return; }
+  if (!currentUser && signedOutForSure && !auditMode) { releaseTheme(); boot.away(); location.replace(`/modules${location.search}`); return; }
+  // (row 2.164) The parts page is what this load shows. If the theme step above is still reading the screen's row
+  // (signed in, Home not started), its own hold keeps the paint until that answer is in: still one paint.
+  releaseTheme();
   boot.parts(failed);
   if (ITEMS.length) select(ITEMS.some((m) => m.type === wanted) ? wanted : ITEMS[0].type);
 });

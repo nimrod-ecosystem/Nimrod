@@ -76,6 +76,21 @@ ifr.addEventListener('load', () => {
 const openHome = (q = '&edit=1') => new Promise((res) => { ifr.addEventListener('load', res, { once: true }); ifr.src = `../modules.html?user=${OWNER}${q}`; });
 const who = () => { try { return ifr.contentWindow.__home?.person?.() || null; } catch { return null; } };
 const themeVar = () => ifr.contentDocument?.documentElement?.style?.getPropertyValue(VAR)?.trim() || '';
+// *** WHAT HOME WEARS (row 2.164, 2026-10-31). *** The showing dashboard's own theme when it has one (the embedded kiosk
+// has the last word: modules.html `bootHome`), else the picked person's screen's. These checks used to wait for the
+// screen's theme to appear, and it did -- for a moment, on every load, before the dashboard's replaced it: the very
+// "loads through all of your previous themes" of row 2.164. Only the last one is painted now, so the check asks for
+// that one: the person's screen's theme where the showing dashboard has none, the dashboard's where it has one. Read
+// with the frame's own theme.js, so "Best for this device" is what the frame's device makes of it.
+async function wearsHomeTheme(screenTheme) {
+  try {
+    const dash = ifr.contentWindow.__home?.kiosk?.shownTheme?.();
+    const T = await new ifr.contentWindow.Function('return import("/theme.js")')();
+    const want = T.paintedTheme(dash ?? screenTheme).vars[VAR];
+    return !!want && themeVar() === String(want).trim();
+  } catch { return false; }
+}
+const homeThemeWhy = () => { let d; try { d = ifr.contentWindow.__home?.kiosk?.shownTheme?.(); } catch { d = '?'; } return `page ${themeVar()}, showing dashboard's ${d ?? '(none)'}`; };
 const why = () => J({ who: who(), homeError: ifr.contentDocument?.body?.dataset?.homeError || '', errors: pageErrors.slice(0, 3) });
 
 try {
@@ -100,7 +115,7 @@ try {
   await openHome();
   check('*** Home is A’s ***', await until(() => who()?.personId === A), why());
   check('*** its default screen is A’s own ***', who()?.defaultId === screenA, why());
-  check('*** A’s theme is on the page ***', await until(() => themeVar() === THEMES[THEME_A].vars[VAR]), `${themeVar()} ${why()}`);
+  check('*** A’s Home wears its theme (the showing dashboard’s, else A’s screen’s) ***', await until(() => wearsHomeTheme(THEME_A)), `${homeThemeWhy()} ${why()}`);
   check('A’s Home and landing', who()?.homeId === homeA && who()?.landingId === landingA, why());
 
   // ============================================================================================
@@ -124,25 +139,25 @@ try {
   await openHome();
   check('*** B again: their own screen (not a second one), their theme, their Home ***', await until(() => who()?.personId === B)
     && who()?.defaultId === madeB && who()?.homeId === homeB && (await api.list(B)).filter((s) => s.name === 'Bedside').length === 1, why());
-  check('*** B’s theme is on the page ***', await until(() => themeVar() === THEMES[THEME_B].vars[VAR]), themeVar());
+  check('*** B’s Home wears its theme (the showing dashboard’s, else B’s screen’s) ***', await until(() => wearsHomeTheme(THEME_B)), homeThemeWhy());
 
   // ============================================================================================
   section('*** switching on the people bar (another tab) switches Home ***');
   localStorage.setItem(LAST_PERSON_KEY, A);
   await openHome();
   await until(() => who()?.personId === A);
-  await until(() => themeVar() === THEMES[THEME_A].vars[VAR]);
+  await until(() => wearsHomeTheme(THEME_A));
   const before = loads;
   // The people bar on My dashboards writes this browser's remembered person (people.js writeLastPerson); written
   // here, in another window of the same origin, the frame hears it as a tab would.
   localStorage.setItem(LAST_PERSON_KEY, B);
   check('*** the page loads again by itself ***', await until(() => loads > before, 10000), `loads ${before} -> ${loads}`);
   check('*** ...and is B’s: screen, theme, Home ***', await until(() => who()?.personId === B && who()?.defaultId === madeB && who()?.homeId === homeB)
-    && await until(() => themeVar() === THEMES[THEME_B].vars[VAR]), why());
+    && await until(() => wearsHomeTheme(THEME_B)), `${homeThemeWhy()} ${why()}`);
   const before2 = loads;
   localStorage.setItem(LAST_PERSON_KEY, A);
   check('*** and back to A ***', await until(() => loads > before2, 10000) && await until(() => who()?.personId === A && who()?.defaultId === screenA)
-    && await until(() => themeVar() === THEMES[THEME_A].vars[VAR]), why());
+    && await until(() => wearsHomeTheme(THEME_A)), `${homeThemeWhy()} ${why()}`);
   check('no screen was made by switching', J(await screensOf(A)) === aScreens && (await api.list(B)).length === 2);
 
   // ============================================================================================

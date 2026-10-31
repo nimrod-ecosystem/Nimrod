@@ -90,6 +90,14 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   let lastServerOkAt = 0;
   const createdAt = Date.now();
   const subscribers = new Set();
+  // (row 2.164, 2026-10-31) HAS THE SERVER ANSWERED THE FIRST LOAD YET? `load()` from the cache returns at once and
+  // corrects in the background, so a caller painting from this row cannot tell "the server's answer" from "this
+  // device's last copy" -- which on a screen was one of the three themes painted on every load (the screen's row as
+  // this device last saw it, then the server's). `answered()` resolves true when the first load has the server's
+  // answer (applied, or its read was held for a local change), false when that read failed (the cache stands).
+  let answer = null;
+  let answeredOk = null;   // null: not yet; true / false once known
+  const answeredP = new Promise((res) => { answer = (ok) => { if (answeredOk === null) { answeredOk = !!ok; res(answeredOk); } }; });
 
   const snapshot = () => structuredClone(data);
 
@@ -136,8 +144,8 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
         // (2026-10-04: NOT over a local change made since -- that used to replace the mirror the
         // change was in, so the next write sent the server's copy without it. The handle keeps
         // the cache's version, so that write is refused and rebased like any other stale one.)
-        fetchServer().then((s) => { if (dirty || writing) lastServerOkAt = Date.now(); else applyServer(s); })
-          .catch(() => { /* stays on the cache */ });
+        fetchServer().then((s) => { if (dirty || writing) lastServerOkAt = Date.now(); else applyServer(s); answer(true); })
+          .catch(() => { answer(false); /* stays on the cache */ });
         return snapshot();
       }
     }
@@ -146,8 +154,10 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     try {
       const server = await fetchServer();
       applyServer(server, { forceNotify: true });
+      answer(true);
       return snapshot();
     } catch (err) {
+      answer(false);
       if (cacheKey) {
         const c = cacheGet(`state:${cacheKey}`);
         if (c) { data = c.data || {}; serverData = data; version = c.version || 0; loaded = true; notify(); return snapshot(); }
@@ -346,5 +356,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   }
 
   return { load, get: snapshot, set, subscribe, flush, startPolling, destroy,
-           getVersion: () => version, stale, staleSinceMs };
+           getVersion: () => version, stale, staleSinceMs,
+           // (row 2.164) see `answered` above. Never rejects; a handle never loaded never resolves (nothing asked).
+           answered: () => answeredP };
 }

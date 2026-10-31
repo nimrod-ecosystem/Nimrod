@@ -336,6 +336,8 @@
     .h-actions .h-primary{grid-column:1 / -1}
   }
 </style>
+<!-- (row 2.164, 2026-10-31) the look this page last settled on, painted before it is drawn (theme_boot.js) -->
+<script src="theme_boot.js" data-theme-page="profile"></script>
 </head>
 <body>
 <div id="banner"></div>
@@ -348,7 +350,7 @@
 import { mountVersionChip } from './version_watch.js';
 mountVersionChip();
 import { createProfilesClient, resolveTheme } from './profile.js';
-import { applyTheme, DEFAULT_THEME } from './theme.js';
+import { applyTheme, DEFAULT_THEME, holdPageTheme } from './theme.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createPush } from './push.js';
@@ -484,6 +486,9 @@ function localBanner() {
 // different theme on each one — this picks the same "default screen" `resolveTheme`/
 // `ensureProfile` already use elsewhere, a reasonable single answer for the shell chrome
 // itself, not a claim that one screen's theme is more correct than another's.
+// (row 2.164, 2026-10-31) Held until that real one is known, then painted once (theme.js `holdPageTheme`): the default
+// is painted at once only on a page with no saved look, so a returning visitor never sees default-then-theirs.
+const releaseTheme = holdPageTheme();
 applyTheme(document.documentElement, DEFAULT_THEME);
 
 (async () => {
@@ -515,6 +520,7 @@ applyTheme(document.documentElement, DEFAULT_THEME);
     else if (!r.ok) throw new Error(`/api/me -> ${r.status}`);
     else { me = await r.json(); signedIn = true; }
   } catch (e) {
+    releaseTheme();
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
       'Could not reach the site. It will try again when the connection is back.</p>';
     setTimeout(() => location.reload(), 6000);
@@ -531,8 +537,9 @@ applyTheme(document.documentElement, DEFAULT_THEME);
     if (signedIn) {
       resolveTheme(profiles, me.user)
         .then((theme) => { if (theme) applyTheme(document.documentElement, theme); })
-        .catch(() => { /* offline or blocked -- the explicit default already stands */ });
-    }
+        .catch(() => { /* offline or blocked -- the explicit default already stands */ })
+        .finally(releaseTheme);
+    } else releaseTheme();
     // ONE shared push connection for every handle home.html opens — see kiosk.js's
     // identical setup and push.js's own header. Signed out there is no server session to
     // hold a stream open to (same reason `backend` exists at all), so it stays null and

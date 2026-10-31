@@ -124,6 +124,8 @@
     .mp-set{grid-column:auto;height:80vh;height:80svh}
   }
 </style>
+<!-- (row 2.164, 2026-10-31) the look this page last settled on, painted before it is drawn (theme_boot.js) -->
+<script src="theme_boot.js" data-theme-page="library"></script>
 </head>
 <body>
 <!--
@@ -301,7 +303,7 @@ import { authHeaders } from './auth.js';
 import { createProfilesClient, ensureProfile } from './profile.js';
 import { createState } from './state.js';
 import { pickCurrent, readLastPerson } from './people.js';
-import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker, holdPageTheme } from './theme.js';
 import { mountSiteSide } from './site_nav.js';
 // LIVE AND BETA (2026-10-14, beta.js): the person's "Beta things" (signed in), else this browser's.
 import { stageOf } from './modules_catalog.js';
@@ -346,6 +348,9 @@ async function readScreen() {
 // ---- the tabs and the theme -------------------------------------------------------------------------
 const themePick = $('theme-pick');
 mountThemePicker(themePick);
+// (row 2.164, 2026-10-31) This browser's choice, then (signed in) the screen's row, then the first module's kiosk: held,
+// and only the last painted, once, at the end of the load below (theme.js `holdPageTheme`).
+const releaseTheme = holdPageTheme();
 applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
 function paintNav() {
   const nav = (k) => document.querySelector(`[data-nav="${k}"]`);
@@ -585,7 +590,9 @@ if (user) {
   }
 }
 libRec?.impl?.refresh?.();   // this browser's own choice, for a visitor
-if (firstType) await show(itemFor(firstType));
+// (row 2.164) The first module shown is a kiosk on this page (its own theme reaches the page too): the page's theme is
+// painted once, after it.
+try { if (firstType) await show(itemFor(firstType)); } finally { releaseTheme(); }
 document.body.dataset.ready = 'true';
 </script>
 </body>

@@ -544,38 +544,145 @@ export const ACCENT_VARS = ['--accent', '--link', '--accent-warm-deep'];
 // (2026-10-05) A follow choice ("With the seasons") paints today's theme for it (`paintedTheme`), and the
 // id RETURNED is that painted theme's, so every caller's `THEMES[applyTheme(...)]` is still a real theme.
 // `now`/`lat`/`holidays` pass through to paintedTheme, for a suite.
-export function applyTheme(rootEl, id, { flashLimit, now, lat, holidays, device } = {}) {
+export function applyTheme(rootEl, id, opts = {}) {
+  const { flashLimit, now, lat, holidays, device } = opts || {};
   const theme = paintedTheme(id, { now, lat, holidays, device });
   const resolved = theme.id;
+  // (row 2.164, 2026-10-31) THE PAGE'S OWN <html>, WHILE THE PAGE IS STILL FINDING OUT ITS THEME: asked for, not
+  // painted (see `holdPageTheme` below). The id returned is the one that WILL be painted, so callers are unchanged.
+  if (holdTakes(rootEl, id, opts)) return resolved;
   const vars = theme.vars;
-  for (const [k, v] of Object.entries(vars)) rootEl.style.setProperty(k, v);
-  rootEl.style.setProperty('--font', userFontStack(vars['--font']));
+  // Every property written, kept so the page's <html> can be painted with exactly this before its scripts load
+  // next time (`savePageLook`, theme_boot.js). Only the page's own <html> is saved; a panel's box is not a page.
+  const props = {};
+  const set = (k, v) => { rootEl.style.setProperty(k, v); props[k] = v; };
+  for (const [k, v] of Object.entries(vars)) set(k, v);
+  set('--font', userFontStack(vars['--font']));
   rememberThemeFont(rootEl, vars['--font']);
   // Derived AFTER the theme's own values, and from them, so a theme that overrides an accent
   // gets matching text with no extra bookkeeping.
   for (const accent of ACCENT_VARS) {
     const value = vars[accent];
-    if (value) rootEl.style.setProperty(`--on${accent.slice(1)}`, onColor(value));
+    if (value) set(`--on${accent.slice(1)}`, onColor(value));
   }
   // The focus ring, derived the same way (see focusColor). Set on EVERY apply, so switching themes
   // always overwrites it - the "every theme defines every key" guarantee, kept by computing it.
-  rootEl.style.setProperty('--focus', focusColor(vars));
+  set('--focus', focusColor(vars));
   // The switch-scan ring (see scanRingColor), the same way and for the same reason.
-  rootEl.style.setProperty('--scan-ring', scanRingColor(vars));
+  set('--scan-ring', scanRingColor(vars));
   // The halo behind words on a FULLY CLEAR panel (kiosk.css `panelSurface: clear`, the default since 2026-10-07).
-  rootEl.style.setProperty('--panel-halo', panelHalo(theme));
+  set('--panel-halo', panelHalo(theme));
   // *** `color-scheme`, NOT JUST OUR OWN CSS VARS. *** This is the one thing a theme controls
   // that our own stylesheet cannot override: the browser's OWN chrome for native form controls
   // (`<input type="time">`'s spinner and clock icon, scrollbars, and everything else this
   // codebase does not draw itself). Without it, every one of those renders in the browser's
   // light-mode default regardless of which theme is active -- which on Dusk looked exactly like
   // a broken control sitting inside a dark box, because that is what it was.
-  rootEl.style.setProperty('color-scheme', theme.dark ? 'dark' : 'light');
+  set('color-scheme', theme.dark ? 'dark' : 'light');
+  savePageLook(rootEl, resolved, props);
   // A live theme's animated world, behind whatever `rootEl` is -- <html> for the whole page, or
   // any element carrying `data-scene-host` for a single panel wearing its own theme. Safe on
   // every other call site: `syncScene` itself checks for that marker and no-ops otherwise.
   syncScene(rootEl, theme, flashLimit !== undefined ? { flashLimit } : {});
   return resolved;
+}
+
+// ---------------------------------------------------------------------------------------------
+// *** ONE THEME A PAGE LOAD (row 2.164, 2026-10-31). *** Mike: "The site always loads through all of your previous
+// themes before landing on the current one when loading a page." theme_boot.js's header has the measurement. Two
+// halves, and this is the second:
+//
+//   1. THE LAST LOOK, FIRST (theme_boot.js + `savePageLook`). Every paint of a page's own <html> is saved on this
+//      device under the page's `data-theme-page` name; the next load paints it before the body is drawn.
+//   2. NOTHING NEW UNTIL THE PAGE KNOWS (`holdPageTheme`). A page whose theme is decided by several answers arriving
+//      one after another (this browser's choice, the screen's row, the person's, the showing dashboard's) holds its
+//      <html> while they arrive: each `applyTheme(document.documentElement, ...)` in that time is RECORDED, not
+//      painted, and when the page says it knows (`release()`), the last one asked for is painted, once.
+//
+// WHY A HOLD, AND NOT EACH PAGE WORKING OUT ITS FINAL THEME BEFORE IT CALLS `applyTheme` ONCE (argued):
+//   FOR working it out first: no call is made that is not the answer. AGAINST, and it decides it: on Home the last
+//   word is the showing dashboard's own theme, which only the kiosk embedded in the page knows (kiosk.js `shownTheme`,
+//   the levels chain) -- working it out in the page is a second copy of that chain, and two places deciding the same
+//   thing drift. The hold keeps every decision where it is and makes only the PAINT happen once. Every intermediate
+//   theme is still never painted: not hidden behind something, not faded, not drawn at all.
+//
+// WHAT SHOWS WHILE A PAGE HOLDS, argued (the choice the row asked for):
+//   KEEP THE CACHED LOOK until the answers are in -- FOR: on a device somebody uses, the theme rarely changes between
+//   loads, so the look saved last time IS the answer nearly every time, and the page then changes NOTHING from its
+//   first frame to its last. AGAINST: when the theme was changed elsewhere (on a phone, by a caregiver), the screen
+//   shows the old look until the answers are in, and then changes once.
+//   A NEUTRAL PAGE until the answers are in -- FOR: never shows a theme that is not this person's, even for a moment.
+//   AGAINST, and it decides it: neutral-then-theme is a change on EVERY load, the very thing being fixed, and on a
+//   dark theme it is a light page going dark each time.
+//   So: the cached look. With NO cached look (the first load of any page on this device), the FIRST theme asked for is
+//   painted at once -- a page is never left unthemed while it waits -- and the answer replaces it once if it differs.
+//
+// WHAT IF NOBODY ANSWERS (CLAUDE.md's question for any gate): the hold never blocks anything -- the page is drawn and
+// usable under the look it has. A release that never comes (a page that throws mid-boot, a server that never answers)
+// is ended by the hold's own wait (`PAGE_THEME_WAIT_MS`), which paints whatever was last asked for.
+// ---------------------------------------------------------------------------------------------
+/** Where a page's last look is kept (theme_boot.js reads the same prefix: dev/theme_boot_test.html checks it). */
+export const PAINT_KEY = 'nimrod:paint:';
+/**
+ * How long a page holds its theme at most before painting what it has (Rule 1: a hard-coded number, argued).
+ * 10 s, the same wait the screen gives "whose screen is this" (person_known.js PERSON_WAIT_MS), and for the same
+ * reason: the answer it waits on arrives in well under a second on a working connection (measured 0.2-0.4 s on this
+ * machine), so the wait only matters when something is broken, and then a theme arriving late is the least of it.
+ * Not a setting: it runs before any settings row can be read. Under it the page is drawn and usable; nothing waits.
+ */
+export const PAGE_THEME_WAIT_MS = 10000;
+const pageRoot = () => (typeof document !== 'undefined' ? document.documentElement : null);
+
+/** Did theme_boot.js paint a saved look on this page's <html> ("page" / "site"), or nothing (null)? */
+export function pageLookPainted(root = pageRoot()) {
+  try { return root?.getAttribute?.('data-theme-boot') || null; } catch { return null; }
+}
+
+function savePageLook(rootEl, id, props, storage = (typeof localStorage !== 'undefined' ? localStorage : null)) {
+  if (!rootEl || rootEl !== pageRoot()) return;
+  const page = rootEl.getAttribute?.('data-theme-page');
+  if (!page || !storage) return;
+  try {
+    const rec = JSON.stringify({ v: 1, id, props });
+    storage.setItem(PAINT_KEY + page, rec);
+    storage.setItem(PAINT_KEY + '*', rec);
+  } catch { /* private mode / quota: the next load paints the stylesheet's defaults first, as before */ }
+}
+
+const HOLD = { open: 0, want: null, timer: null, painted: false };
+// Called by applyTheme: true when this apply is recorded instead of painted.
+function holdTakes(rootEl, id, opts) {
+  if (!HOLD.open || !rootEl || rootEl !== pageRoot()) return false;
+  // Nothing on the page yet (no saved look): the first theme asked for is painted now, so it is never unthemed.
+  if (!HOLD.painted && !pageLookPainted(rootEl)) { HOLD.painted = true; return false; }
+  HOLD.want = [id, opts];  return true;
+}
+function endHold() {
+  clearTimeout(HOLD.timer);
+  HOLD.open = 0; HOLD.timer = null; HOLD.painted = false;
+  const want = HOLD.want;
+  HOLD.want = null;
+  const root = pageRoot();
+  if (want && root) applyTheme(root, want[0], want[1]);
+}
+
+/**
+ * Hold this page's <html> theme while the page finds out what it is (see the block above). Returns `release()`;
+ * holds nest, and the theme is painted when the LAST one is released (or after `waitMs`, whichever comes first).
+ * Releasing twice is harmless.
+ */
+export function holdPageTheme({ waitMs = PAGE_THEME_WAIT_MS } = {}) {
+  if (!pageRoot()) return () => {};
+  HOLD.open++;
+  clearTimeout(HOLD.timer);
+  HOLD.timer = setTimeout(endHold, Math.max(0, Number(waitMs) || 0));
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    if (HOLD.open > 0) HOLD.open--;
+    if (!HOLD.open) endHold();
+  };
 }
 
 // ---------------------------------------------------------------------------------------------

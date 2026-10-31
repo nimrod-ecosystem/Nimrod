@@ -14,6 +14,8 @@
   .cs-foot{max-width:40rem;margin:16px auto 0;font-size:.9rem;color:var(--text-muted)}
   .cs-foot a{color:var(--link)}
 </style>
+<!-- (row 2.164, 2026-10-31) the look this page last settled on, painted before it is drawn (theme_boot.js) -->
+<script src="theme_boot.js" data-theme-page="profile"></script>
 </head>
 <body>
 <!--
@@ -27,9 +29,11 @@
 <script type="module">
   import { mountClaudeSettings, CLAUDE_STYLE } from './claude_settings.js';
   import { createProfilesClient, resolveTheme } from './profile.js';
-  import { applyTheme, DEFAULT_THEME } from './theme.js';
+  import { applyTheme, DEFAULT_THEME, holdPageTheme } from './theme.js';
   import { authHeaders } from './auth.js';
 
+  // (row 2.164) Held until the signed-in theme is known, then painted once (theme.js `holdPageTheme`).
+  const releaseTheme = holdPageTheme();
   applyTheme(document.documentElement, DEFAULT_THEME);
   document.getElementById('cs-style').textContent = CLAUDE_STYLE;
   (async () => {
@@ -39,6 +43,7 @@
       const theme = await resolveTheme(createProfilesClient({ user: me.user }), me.user);
       if (theme) applyTheme(document.documentElement, theme);
     } catch { /* offline or signed out -- the default theme already stands */ }
+    finally { releaseTheme(); }
   })();
   mountClaudeSettings(document.getElementById('root'), { headers: () => authHeaders() });
 </script>

@@ -168,7 +168,7 @@ import { createStatusIcons, mountStatusStrip, STATUS_ICON_FIELDS, STATUS_ICONS_N
 import { aiActivity, onAIActivity } from './ai_activity.js';
 import { EDGE_TOPIC, switchWalks } from './input.js';
 import { createDeviceStore } from './starting_defaults.js';
-import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
+import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith, minFlashPeriodMs } from './flash_limit.js';
 import { FLASH_WARNING_FIELD, FLASH_WARNING_KEY, shouldWarn, flashSeen, markFlashSeen, showFlashWarning } from './flash_warning.js';   // row 2.124
 import { deviceId, deviceName } from './device_id.js';   // 2026-10-25: ring one screen
 import { MIC_KEY, micField, refreshMics, knownMics, openMicTester } from './mic_choice.js';   // 2026-10-26: which microphone
@@ -234,7 +234,7 @@ import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
          RESTART_HEADING, restartField, restartValue, restartPatch, RESTART_KEY,
          isColdStart, hasBootParam, withoutBootParam, markTab, markKeepPlace, takeKeepPlace } from './restart.js';
 import { takePreviewLayout } from './preview.js';
-import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
+import { applyTheme, listThemes, DEFAULT_THEME, THEMES, pageLookPainted, PAGE_THEME_WAIT_MS } from './theme.js';
 import { syncScene } from './livescene.js';
 // Seasons and the sky outside (2026-10-05): "With the seasons" and a wallpaper that follows the weather.
 import { paintedTheme, isFollowTheme, followsSeasons, DEVICE_THEME, isDeviceTheme } from './theme.js';
@@ -521,6 +521,9 @@ export async function mountKiosk(root, {
   // How long the screen waits to learn whose it is before its panels carry on without the answer
   // (person_known.js argues the 10 s; 0 = wait however long). A seam for the suites.
   personWaitMs = PERSON_WAIT_MS,
+  // (row 2.164, 2026-10-31) How long the screen's first theme waits for the rows that decide it (the theme gate,
+  // at `applyKioskTheme`) before painting what it has. theme.js PAGE_THEME_WAIT_MS argues the 10 s. A seam for the suites.
+  themeWaitMs = PAGE_THEME_WAIT_MS,
   // "Font on this device" and "Colour look" as menu rows (2026-10-02; user_folders_page.js
   // `createDeviceLookRows`): where the folders, the choices and the fonts are. Absent: this browser's own
   // (its remembered folders, its storage, `document.fonts`). A seam for the suites.
@@ -667,12 +670,60 @@ export async function mountKiosk(root, {
   // effect to save one redundant (and cheap — CSS-driven, not a second detection loop) animated
   // background is not a trade worth making under time pressure without checking every caller.
   kioskEl.setAttribute('data-scene-host', '');
+  // *** ONE THEME A LOAD, AND NEVER FASTER THAN THE FLASH LIMIT (row 2.164, 2026-10-31). *** Mike: "The site always
+  // loads through all of your previous themes before landing on the current one." Measured on this screen the same
+  // day (dev/theme_boot_test.html): with nothing on the screen's row and High contrast on the person's, a load painted
+  // Warm (the screen's row as this device last kept it -- state.js's last-known-good copy, a theme since removed),
+  // then Halloween (the server's answer: nobody picked, so "Best for this device"), then High contrast (the person's
+  // row, 0.3 s later). Light, dark, light: three flashes, on the screen the photosensitivity setting is for.
+  //   THE GATE. On a real screen whose page already shows a saved look (theme_boot.js), nothing new is painted until
+  //   the rows that decide the theme are in: the screen's row as the SERVER has it (`answered()`, state.js), and the
+  //   person's row (or the answer that there is none). Then `shownTheme()` is painted once. The saved look is nearly
+  //   always that answer already, so the screen changes nothing at all. A screen with no saved look (the first load
+  //   on this device, or the first since this shipped) must never draw its panels unthemed, so its FIRST theme is
+  //   painted at once and the gate holds the rest: at most one change, that one time. Nobody answering (a server
+  //   that hangs) cannot hold it either: after `themeWaitMs` whatever is known is painted, and the screen was drawn
+  //   and usable the whole time.
+  //   NOT ON AN EMBED: it is a guest on somebody's page, which holds its own (theme.js `holdPageTheme`, modules.html).
+  //   THE FLASH LIMIT. After that, a CHANGE of theme (a different one, not the same one again) is never painted
+  //   sooner after the last change than the screen's flash limit allows (flash_limit.js `minFlashPeriodMs`: 339 ms
+  //   at 3 a second); one asked for sooner waits for the gap and the latest one asked for is painted. A theme change
+  //   is a change of the whole screen, the largest flash there is. No limit set: no wait (Mike's ruling, flash_limit.js).
+  //   A change is a step, never animated: no transition is put on the theme's colours anywhere (checked: kiosk.css,
+  //   kiosk.html), so there is nothing to slow under data-photosafe; a scene's own fade (livescene FADE_MS) is the
+  //   date changing the look, and it is a fade, not a flash.
+  let themeGate = null;          // { waits: Set, free, timer } while the deciding rows are still arriving
+  let paintedThemeId;            // the choice painted last (undefined: only theme_boot.js's saved look, or nothing)
+  let paintedThemeAt = 0;
+  let spacedThemeT = null;       // a change waiting out the flash limit's gap
+  function openThemeGate() {
+    if (!themeGate) return;
+    clearTimeout(themeGate.timer);
+    themeGate = null;
+    if (!torn) applyKioskTheme(shownTheme());
+  }
+  function themeLayerIn(name) {
+    if (!themeGate) return;
+    themeGate.waits.delete(name);
+    if (!themeGate.waits.size) openThemeGate();
+  }
   // (seasons, 2026-10-05) `fade`: the date changed the look by itself (sky.js) - the scene fades (livescene FADE_MS).
   function applyKioskTheme(id, { fade = false } = {}) {
     // An embed lives on somebody's page, which already has a theme (its own picker, or the
     // signed-in profile's). A screen that has never picked one must not reset that to default.
     lastShownTheme = id;                     // Stage 4: what `syncShownTheme` compares against
     if (embedded && !id) return null;
+    // Painted once, as `shownTheme()`, when the gate opens -- except the very first theme on a page with no saved look.
+    if (themeGate) { if (!themeGate.free) return null; themeGate.free = false; }
+    const gap = id !== paintedThemeId && paintedThemeId !== undefined ? minFlashPeriodMs(flashLimitNow()) : 0;
+    const since = Date.now() - paintedThemeAt;
+    if (gap > 0 && since < gap) {
+      clearTimeout(spacedThemeT);
+      spacedThemeT = setTimeout(() => { spacedThemeT = null; if (!torn) applyKioskTheme(lastShownTheme, { fade }); }, gap - since);
+      return null;
+    }
+    clearTimeout(spacedThemeT); spacedThemeT = null;
+    if (id !== paintedThemeId) { paintedThemeId = id; paintedThemeAt = Date.now(); }
     const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow });
     // Subtitles follow the theme's subtitle style (theme.js `--subtitles-style`). In a try: `subtitles`
     // is a later `let`, and the first theme is applied before it exists.
@@ -2460,6 +2511,17 @@ export async function mountKiosk(root, {
       setDeviceHints({ motion: () => avatarContextNow(),
         detail: () => (settings.get() || {})[DETAIL_FIELD.key] || deviceRow?.get?.()?.[DETAIL_FIELD.key] || 'auto' });
     } catch (err) { console.error('kiosk: device hints', err); }
+  }
+  // THE THEME GATE (row 2.164; argued at `applyKioskTheme`): on a real screen. With no saved look on the page, the
+  // first theme goes through (`free`), so the panels never draw unthemed; the gate then holds every later one.
+  if (!embedded) {
+    themeGate = { waits: new Set(['screen', 'person']), free: !pageLookPainted(),
+      timer: setTimeout(openThemeGate, Math.max(0, Number(themeWaitMs) || 0)) };
+    // The screen's row as the server has it. A host whose rows cannot say (the local backend) has given its answer.
+    let screenAnswered = null;
+    try { screenAnswered = settings.answered?.() || null; } catch { screenAnswered = null; }
+    if (screenAnswered) screenAnswered.then(() => themeLayerIn('screen'), () => themeLayerIn('screen'));
+    else themeLayerIn('screen');
   }
   applyKioskTheme(shownTheme());
   // ...and the one measurement after the first look (theme_default.js `settleStartingTheme`): the battery, and the
@@ -7284,7 +7346,10 @@ export async function mountKiosk(root, {
       // as "…", i.e. as "still loading". A screen that has never been handed to anybody then
       // looked like a screen whose lookup had hung. `false` is the finished answer, and the
       // who row offers to fix it.
-      if (!p?.person_id) { whoState = false; menu.refresh(); if (!torn) personKnown.settle(null, 'none'); return; }
+      if (!p?.person_id) {
+        themeLayerIn('person');   // (row 2.164) nobody's screen: no person row will decide its theme
+        whoState = false; menu.refresh(); if (!torn) personKnown.settle(null, 'none'); return;
+      }
       personId = p.person_id;
       // The live answer (usually the same one the screen's row gave at boot, which changes nothing).
       if (!torn) personKnown.settle(p.person_id, 'found');
@@ -7467,8 +7532,7 @@ export async function mountKiosk(root, {
           catch (err) { console.error('kiosk: game asks', err); }
         }
       }
-      if (makeState || embedded || !profiles.personStateURL) return;
-      if (torn) return;
+      if (makeState || embedded || !profiles.personStateURL || torn) { themeLayerIn('person'); return; }   // (row 2.164)
       personInputs = createState({
         url: profiles.personStateURL(p.person_id, INPUTS_KEY),
         user,
@@ -7490,11 +7554,18 @@ export async function mountKiosk(root, {
       // subtitles and amplify, each re-attached only when one of its own settings changed.
       offListenPerson = personInputs.subscribe?.((s) => applyPerson(s || {})) || null;
       if (!offListenPerson) applyPerson(personInputs.get?.() || {});
+      // (row 2.164) The theme gate's second answer: the person's row as the server has it (it too loads from this
+      // device's last copy first). `applyPerson` has run with it by the time this resolves (state.js notifies first).
+      try {
+        const a = personInputs.answered?.();
+        if (a) a.then(() => themeLayerIn('person'), () => themeLayerIn('person')); else themeLayerIn('person');
+      } catch { themeLayerIn('person'); }
       // The person's music favourites become spoken "play <name>" routes (music_favourites.js).
       watchMusic(p.person_id);
       await startMarkerTracking(p.person_id);
       await startDevicePreference(p.person_id);
     } catch {
+      themeLayerIn('person');   // (row 2.164) no person row is coming: the theme gate stops waiting for one
       /* offline or signed out: the shipped defaults still drive the screen */
       // ...but the who heading must stop saying "…". A lookup that FAILED is not a lookup
       // still running, and leaving it mid-sentence is the exact defect this section was
@@ -9169,6 +9240,8 @@ export async function mountKiosk(root, {
     deviceRow: () => deviceRow,
     typeDefaults: (type) => ({ ...(typeDefaults(type) || {}) }),
     shownTheme: () => shownTheme(),
+    // (row 2.164) for a suite: what the theme gate still waits for (['screen', 'person']), [] never, null once open.
+    themeGate: () => (themeGate ? [...themeGate.waits] : null),
     pickLayout: (id) => applyLayoutPreset(id),
     // Every panel on the screen as { id, type, title, stateKey } (what the menu's "Settings for" steps through).
     panels: () => menuPanelRecs().map((r) => ({ id: r.id, type: r.type, title: r.title, stateKey: r.stateKey || null })),
@@ -9257,6 +9330,8 @@ export async function mountKiosk(root, {
       try { playAs.destroy(); } catch { /* already gone */ }   // play as: its bus listeners
       try { deviceSettle?.cancel(); } catch { /* already done */ }   // "Best for this device": its one measurement
       try { personKnown.destroy(); } catch { /* already gone */ }   // its timer, and its listeners
+      // (row 2.164) the theme gate's wait and a change waiting out the flash limit
+      clearTimeout(themeGate?.timer); themeGate = null; clearTimeout(spacedThemeT); spacedThemeT = null;
       // The Settings panels' views of the menu go with the panels (their `destroy`); any left are let go here.
       for (const e of [...menuViews]) { try { e.view.destroy(); } catch { /* already gone */ } }
       menuViews.clear();

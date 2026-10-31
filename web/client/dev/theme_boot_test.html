@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>theme boot (one theme a page load) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>theme boot (one theme a page load) — test</h1>
+<p>Row 2.164 (Mike, 2026-10-31): "The site always loads through all of your previous themes before landing on the
+current one when loading a page." Every page load must paint ONE theme: the look saved last time first
+(theme_boot.js), then nothing new until the page knows (theme.js <code>holdPageTheme</code>, kiosk.js's theme gate), then
+the answer once. A change after that must never come sooner than the flash limit allows. The last sections load the
+real kiosk.html and modules.html in a frame and watch the page's own &lt;html&gt; from its first byte: every theme
+painted is counted. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { applyTheme, holdPageTheme, pageLookPainted, paintedTheme, PAINT_KEY, PAGE_THEME_WAIT_MS, DEVICE_THEME } from '../theme.js';
+import { createState } from '../state.js';
+import { cacheSet } from '../cache.js';
+import { createProfilesClient, ensureProfile } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { createBus } from '../bus.js';
+import { memoryStorage } from '../module_try.js';
+import { minFlashPeriodMs, worstInAnySecond } from '../flash_limit.js';
+import { INPUTS_KEY } from '../input_runtime.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+const J = (x) => JSON.stringify(x);
+
+// A theme's fingerprint: four of its colours as the page has them.
+const KEYS = ['--bg', '--surface', '--text', '--accent'];
+const sigOf = (style) => KEYS.map((k) => String(style.getPropertyValue(k) || '').trim().toLowerCase()).join('|');
+const sigTheme = (id, opts) => { const v = paintedTheme(id, opts).vars; return KEYS.map((k) => String(v[k] || '').trim().toLowerCase()).join('|'); };
+const nameOf = (sig) => { for (const id of ['default', 'dusk', 'contrast', 'warm', 'forge']) if (sigTheme(id) === sig) return id; return sig.slice(0, 22); };
+
+// EVERY PAINT OF A WINDOW'S OWN <html>: `applyTheme` writes `--panel-halo` once a paint, and theme_boot.js writes it
+// once with the saved look (marked `boot`). Hooked on the window's own prototype, so it sees every writer.
+function recordPaints(w) {
+  const paints = [];
+  const proto = w.CSSStyleDeclaration.prototype;
+  const orig = proto.setProperty;
+  proto.setProperty = function (k, v, p) {
+    const r = orig.call(this, k, v, p);
+    try {
+      if (k === '--panel-halo' && this === w.document.documentElement.style) {
+        paints.push({ t: performance.now(), sig: sigOf(this), boot: /theme_boot\.js/.test(new Error().stack || '') });
+      }
+    } catch { /* never break the page being watched */ }
+    return r;
+  };
+  return { paints, stop() { proto.setProperty = orig; } };
+}
+const names = (paints) => paints.map((p) => (p.boot ? 'saved:' : '') + nameOf(p.sig));
+const distinct = (paints) => [...new Set(paints.map((p) => p.sig))];
+
+const root = document.documentElement;
+const clearRoot = () => { root.removeAttribute('style'); root.removeAttribute('data-theme-boot'); root.removeAttribute('data-theme-page'); };
+
+try {
+  // -----------------------------------------------------------------------------------------------------------------
+  section('the two halves agree');
+  {
+    const src = await (await fetch('../theme_boot.js')).text();
+    check('theme_boot.js reads the same key prefix theme.js saves under (PAINT_KEY)', src.includes(`'${PAINT_KEY}'`) && PAINT_KEY === 'nimrod:paint:', PAINT_KEY);
+    check('theme_boot.js is a classic script (no import/export: it must run before the body is drawn)', !/^\s*(import|export)\s/m.test(src));
+    check('the hold has a wait, so a release that never comes cannot keep a theme off for ever', Number.isFinite(PAGE_THEME_WAIT_MS) && PAGE_THEME_WAIT_MS > 0, PAGE_THEME_WAIT_MS);
+    // Every page that paints its own <html> from a stored or signed-in theme carries the early script.
+    const PAGES = ['landing', 'wallpapers', 'bricks', 'talk', 'call', 'checkin', 'intercom', 'join', 'notes', 'phone_mic', 'play',
+      'claude', 'helper', 'private-network', 'search_keys', 'pair', 'reviews', 'home', 'library', 'modules', 'kiosk'];
+    const missing = [];
+    for (const p of PAGES) {
+      const html = await (await fetch(`../${p}.html`)).text();
+      const head = html.slice(0, html.indexOf('</head>'));
+      if (!/<script src="theme_boot\.js" data-theme-page="[^"]+"/.test(head)) missing.push(p);
+    }
+    check('*** every themed page loads theme_boot.js in its <head> ***', !missing.length, missing.join(', '));
+  }
+
+  // -----------------------------------------------------------------------------------------------------------------
+  section('holdPageTheme: asked for, not painted, until the page knows');
+  {
+    clearRoot();
+    let rec = recordPaints(window);
+    let release = holdPageTheme({ waitMs: 5000 });
+    applyTheme(root, 'dusk');
+    const back = applyTheme(root, 'warm');
+    applyTheme(root, 'contrast');
+    check('no saved look: the FIRST theme asked for is painted at once (never unthemed)', rec.paints.length === 1 && nameOf(rec.paints[0].sig) === 'dusk', J(names(rec.paints)));
+    check('...and the ones after it are not painted while held', rec.paints.length === 1);
+    check('a held apply still returns the theme it will paint', back === 'warm', back);
+    release();
+    check('*** released: the LAST one asked for is painted, once ***', rec.paints.length === 2 && nameOf(rec.paints[1].sig) === 'contrast', J(names(rec.paints)));
+    check('the page shows it', sigOf(root.style) === sigTheme('contrast'));
+    rec.stop();
+
+    clearRoot();
+    root.setAttribute('data-theme-boot', 'page');   // as theme_boot.js leaves it when it painted a saved look
+    rec = recordPaints(window);
+    release = holdPageTheme({ waitMs: 5000 });
+    applyTheme(root, 'dusk'); applyTheme(root, 'forge'); applyTheme(root, 'warm');
+    check('*** over a saved look, NOTHING is painted while held ***', rec.paints.length === 0, J(names(rec.paints)));
+    release();
+    check('*** released: one paint, the last asked for ***', rec.paints.length === 1 && nameOf(rec.paints[0].sig) === 'warm', J(names(rec.paints)));
+    release();
+    check('releasing twice paints nothing more', rec.paints.length === 1);
+    rec.stop();
+
+    clearRoot();
+    root.setAttribute('data-theme-boot', 'page');
+    rec = recordPaints(window);
+    const r1 = holdPageTheme({ waitMs: 5000 }), r2 = holdPageTheme({ waitMs: 5000 });
+    applyTheme(root, 'forge');
+    r1();
+    check('holds nest: one released, the other still holds', rec.paints.length === 0);
+    r2();
+    check('...the last released paints', rec.paints.length === 1 && nameOf(rec.paints[0].sig) === 'forge', J(names(rec.paints)));
+    rec.stop();
+
+    clearRoot();
+    root.setAttribute('data-theme-boot', 'page');
+    rec = recordPaints(window);
+    const r3 = holdPageTheme({ waitMs: 60 });
+    applyTheme(root, 'dusk');
+    await sleep(200);
+    check('*** nobody releases: the wait ends it and paints what was asked for (nothing is stranded) ***', rec.paints.length === 1 && nameOf(rec.paints[0].sig) === 'dusk', J(names(rec.paints)));
+    r3();
+    check('a late release afterwards paints nothing more', rec.paints.length === 1);
+    applyTheme(root, 'warm');
+    check('after the hold, a theme paints at once', rec.paints.length === 2);
+    rec.stop();
+
+    clearRoot();
+    root.setAttribute('data-theme-boot', 'page');
+    rec = recordPaints(window);
+    holdPageTheme({ waitMs: 5000 })();
+    check('a hold released with nothing asked paints nothing', rec.paints.length === 0);
+    const box = document.createElement('div');
+    document.body.append(box);
+    const r4 = holdPageTheme({ waitMs: 5000 });
+    applyTheme(box, 'dusk');
+    check('a panel\'s own box is never held (only the page\'s <html> is)', box.style.getPropertyValue('--bg').trim().toLowerCase() === sigTheme('dusk').split('|')[0]);
+    r4();
+    box.remove();
+    rec.stop();
+  }
+
+  // -----------------------------------------------------------------------------------------------------------------
+  section('the saved look: written by every paint of the page\'s <html>, read by theme_boot.js');
+  {
+    const page = 'suite-' + Math.floor(Math.random() * 1e6);
+    const before = localStorage.getItem(PAINT_KEY + '*');
+    clearRoot();
+    root.setAttribute('data-theme-page', page);
+    applyTheme(root, 'dusk');
+    let rec = null; try { rec = JSON.parse(localStorage.getItem(PAINT_KEY + page)); } catch { rec = null; }
+    check('*** a paint of the page\'s <html> saves its look under the page\'s name ***', rec?.v === 1 && rec.id === 'dusk'
+      && rec.props?.['--bg'] === paintedTheme('dusk').vars['--bg'] && !!rec.props['--focus'] && !!rec.props['color-scheme'], J(rec && { id: rec.id, n: Object.keys(rec.props || {}).length }));
+    check('...and as this device\'s last look on any page ("*")', JSON.parse(localStorage.getItem(PAINT_KEY + '*') || '{}').id === 'dusk');
+    const box = document.createElement('div'); document.body.append(box);
+    localStorage.setItem(PAINT_KEY + page, 'SENTINEL');
+    applyTheme(box, 'warm');
+    check('a panel\'s box is not a page: nothing saved', localStorage.getItem(PAINT_KEY + page) === 'SENTINEL');
+    box.remove();
+    clearRoot();
+    applyTheme(root, 'forge');
+    check('a page without a name saves nothing', localStorage.getItem(PAINT_KEY + page) === 'SENTINEL');
+    // theme_boot.js, run in a frame exactly as a page runs it (parser-inserted, in the <head>).
+    localStorage.setItem(PAINT_KEY + page, JSON.stringify({ v: 1, id: 'warm', props: { ...paintedTheme('warm').vars, '--panel-halo': 'x', 'color-scheme': 'light', 'background': 'red' } }));
+    localStorage.setItem(PAINT_KEY + page + '?profile=p1', JSON.stringify({ v: 1, id: 'dusk', props: { ...paintedTheme('dusk').vars } }));
+    const frameWith = async (search, attrs) => {
+      const f = document.createElement('iframe');
+      f.style.cssText = 'position:fixed;left:-9999px;width:400px;height:300px';
+      document.body.append(f);
+      await new Promise((res) => { f.onload = res; f.src = '../theme_boot.js'; });
+      const d = f.contentDocument;
+      d.open();
+      // document.open() gives the frame this page's address; the address the script reads is put back here.
+      f.contentWindow.history.replaceState(null, '', `/theme_boot.js${search}`);
+      d.write(`<!DOCTYPE html><html><head><script src="/theme_boot.js" ${attrs}><\/script></head><body>x</body></html>`); d.close();
+      await until(() => f.contentDocument.readyState === 'complete' && f.contentDocument.body, 3000);
+      await sleep(30);
+      return f;
+    };
+    let f = await frameWith('', `data-theme-page="${page}"`);
+    let fr = f.contentDocument.documentElement;
+    check('*** theme_boot.js paints the saved look before the body ***', sigOf(fr.style) === sigTheme('warm') && fr.getAttribute('data-theme-boot') === 'page', sigOf(fr.style));
+    check('...only theme properties (a stray "background" in the record is not written)', !fr.style.getPropertyValue('background') && fr.style.getPropertyValue('color-scheme') === 'light');
+    f.remove();
+    f = await frameWith('?profile=p1', `data-theme-page="${page}" data-theme-by="demo profile"`);
+    fr = f.contentDocument.documentElement;
+    check('data-theme-by: the address\'s own words pick a different look (two screens on one device)', sigOf(fr.style) === sigTheme('dusk') && fr.getAttribute('data-theme-page') === page + '?profile=p1', fr.getAttribute('data-theme-page'));
+    f.remove();
+    localStorage.setItem(PAINT_KEY + '*', JSON.stringify({ v: 1, id: 'forge', props: { ...paintedTheme('forge').vars } }));
+    f = await frameWith('', `data-theme-page="never-${page}"`);
+    fr = f.contentDocument.documentElement;
+    check('a page never shown here gets the device\'s last look ("site")', sigOf(fr.style) === sigTheme('forge') && fr.getAttribute('data-theme-boot') === 'site');
+    f.remove();
+    localStorage.setItem(PAINT_KEY + page, '{not json');
+    localStorage.removeItem(PAINT_KEY + '*');
+    f = await frameWith('', `data-theme-page="${page}"`);
+    fr = f.contentDocument.documentElement;
+    check('a damaged record paints nothing and throws nothing (the stylesheet stands)', !fr.getAttribute('style') && !fr.hasAttribute('data-theme-boot'));
+    f.remove();
+    for (const k of [page, page + '?profile=p1']) localStorage.removeItem(PAINT_KEY + k);
+    if (before !== null) localStorage.setItem(PAINT_KEY + '*', before);
+    clearRoot();
+  }
+
+  // -----------------------------------------------------------------------------------------------------------------
+  section('state.js answered(): the server\'s answer, not this device\'s last copy');
+  const USER = 'theme-boot-' + Math.floor(Math.random() * 1e6);
+  const profiles = createProfilesClient({ user: USER });
+  const pid = await ensureProfile(profiles, USER);
+  const personId = (await profiles.get(pid)).person_id;
+  const setRow = async (url, patch) => { const h = createState({ url, user: USER }); try { await h.load(); h.set(patch); await h.flush(); } finally { h.destroy(); } };
+  {
+    const url = profiles.stateURL(pid, 'theme-boot-probe');
+    await setRow(url, { theme: 'dusk' });
+    const ck = `theme-boot:${USER}:${Math.random()}`;
+    cacheSet(`state:${ck}`, { data: { theme: 'warm' }, version: 0 });
+    const h = createState({ url, user: USER, cacheKey: ck });
+    const first = await h.load();
+    check('a cached handle loads this device\'s last copy at once', first.theme === 'warm', J(first));
+    const ok = await h.answered();
+    check('*** answered() resolves true once the server\'s answer is in, and it is applied by then ***', ok === true && h.get().theme === 'dusk', J(h.get()));
+    h.destroy();
+    const plain = createState({ url, user: USER });
+    await plain.load();
+    check('an uncached handle has its answer when load returns', (await plain.answered()) === true);
+    plain.destroy();
+    const bad = createState({ url: '/api/no-such-thing-' + Math.random(), user: USER });
+    try { await bad.load(); } catch { /* expected */ }
+    check('a failed read answers false (never rejects)', (await bad.answered()) === false);
+    bad.destroy();
+  }
+
+  // -----------------------------------------------------------------------------------------------------------------
+  section('the kiosk\'s theme gate (a real screen, mounted on this page)');
+  const kroot = document.createElement('div');
+  kroot.style.cssText = 'position:fixed;left:-9999px;top:0;width:1280px;height:720px';
+  document.body.append(kroot);
+  // Raced with a long timer, so a kiosk that never comes up fails a check instead of leaving the suite silent.
+  const mount = (opts = {}) => Promise.race([
+    mountKiosk(kroot, { user: USER, profileId: pid, profiles, bus: createBus(), storage: memoryStorage(), ...opts }),
+    sleep(20000).then(() => { throw new Error('the kiosk did not come up within 20 s'); }),
+  ]);
+  {
+    // The screen's row: no theme. The person's row: High contrast. So the answer is High contrast -- and before the
+    // fix the screen painted "Best for this device" first, then High contrast when the person's row came in.
+    await setRow(profiles.stateURL(pid, 'settings'), { theme: null });
+    await setRow(profiles.personStateURL(personId, INPUTS_KEY), { theme: 'contrast' });
+    clearRoot();
+    root.setAttribute('data-theme-boot', 'page');            // a saved look is on the page...
+    applyTheme(root, 'warm');                                // ...an old one (changed on another device since)
+    const rec = recordPaints(window);
+    const k = await mount();
+    check('the gate is shut while the rows that decide the theme are still arriving', Array.isArray(k.themeGate()), J(k.themeGate()));
+    check('...and the screen is up meanwhile (the gate blocks nothing)', !!kroot.querySelector('.kiosk'));
+    const opened = await until(() => k.themeGate() === null, 8000);
+    await sleep(600);
+    check('the gate opened when the rows answered', opened);
+    // (The same theme painted again -- the screen's row notifying, which re-applies it so a changed flash limit
+    // reaches the scene -- changes nothing on the screen; what is counted is every theme that was painted.)
+    check('*** the whole load paints ONE theme, and it is the answer (High contrast) ***',
+      rec.paints.length >= 1 && distinct(rec.paints).length === 1 && nameOf(rec.paints[0].sig) === 'contrast', J(names(rec.paints)));
+    check('*** "Best for this device" (the screen\'s own answer before the person\'s came) was never painted ***',
+      !rec.paints.some((p) => p.sig === sigTheme(DEVICE_THEME)) || sigTheme(DEVICE_THEME) === sigTheme('contrast'), J(names(rec.paints)));
+    rec.stop();
+    k.destroy();
+  }
+  {
+    clearRoot();                                             // no saved look: the first load on a device
+    const rec = recordPaints(window);
+    const k = await mount();
+    check('no saved look: the first theme is painted at once, so no panel draws unthemed', rec.paints.length >= 1);
+    await until(() => k.themeGate() === null, 8000);
+    await sleep(600);
+    const d = distinct(rec.paints);
+    check('*** ...and at most ONE change after it, to the answer ***', d.length <= 2 && rec.paints.length <= 2 && d[d.length - 1] === sigTheme('contrast'), J(names(rec.paints)));
+    rec.stop();
+    k.destroy();
+  }
+  {
+    // NOBODY ANSWERS: a screen whose person lookup never comes back is not held for ever.
+    clearRoot();
+    root.setAttribute('data-theme-boot', 'page');
+    applyTheme(root, 'warm');
+    const rec = recordPaints(window);
+    // Whose screen it is never comes back (the people list hangs), so the person's row is never asked for.
+    const hung = { ...profiles, people: () => new Promise(() => {}) };
+    const t0 = performance.now();
+    const k = await mount({ profiles: hung, themeWaitMs: 400 });
+    check('the screen came up with the person lookup hanging', !!kroot.querySelector('.kiosk'));
+    const painted = await until(() => rec.paints.length > 0, 4000);
+    check('*** nobody answering: the gate\'s wait paints what is known, once (not stranded) ***',
+      painted && rec.paints.length === 1 && rec.paints[0].t - t0 >= 300, J({ n: rec.paints.length, at: Math.round((rec.paints[0]?.t || 0) - t0) }));
+    rec.stop();
+    k.destroy();
+  }
+
+  // -----------------------------------------------------------------------------------------------------------------
+  section('the photosensitivity setting: a theme change never comes sooner than the flash limit allows');
+  {
+    await setRow(profiles.personStateURL(personId, INPUTS_KEY), { theme: null });
+    for (const [limit, label] of [[3, '3 a second'], ['none', 'no limit']]) {
+      await setRow(profiles.stateURL(pid, 'settings'), { theme: null, flashLimitPerSecond: limit });
+      clearRoot();
+      root.setAttribute('data-theme-boot', 'page');
+      const k = await mount();
+      await until(() => k.themeGate() === null, 8000);
+      await sleep(300);
+      const rec = recordPaints(window);
+      const dev = k.deviceRow();
+      // Three different themes asked for within ~60 ms (somebody stepping through the list, or a remote change).
+      dev.set({ theme: 'dusk' }); await sleep(30); dev.set({ theme: 'warm' }); await sleep(30); dev.set({ theme: 'contrast' });
+      await sleep(1500);
+      const changes = rec.paints.filter((p, i) => i === 0 || p.sig !== rec.paints[i - 1].sig);
+      const gaps = changes.slice(1).map((p, i) => p.t - changes[i].t);
+      const last = rec.paints[rec.paints.length - 1];
+      if (limit === 3) {
+        const need = minFlashPeriodMs(3);
+        check(`*** ${label}: every change of theme waits out the limit's gap (${Math.round(need)} ms) ***`,
+          changes.length >= 1 && gaps.every((g) => g >= need - 20), J(gaps.map(Math.round)));
+        check(`${label}: never more than 3 changes in any second`, worstInAnySecond(changes.map((p) => p.t)) <= 3);
+        check(`${label}: the last one asked for is what ends on the screen`, last && nameOf(last.sig) === 'contrast', J(names(rec.paints)));
+      } else {
+        check(`${label}: each change is painted at once (no wait nobody asked for)`, changes.length === 3 && gaps.every((g) => g < 200), J(gaps.map(Math.round)));
+      }
+      rec.stop();
+      k.destroy();
+    }
+    await setRow(profiles.stateURL(pid, 'settings'), { flashLimitPerSecond: null });
+  }
+  kroot.remove();
+  clearRoot();
+
+  // -----------------------------------------------------------------------------------------------------------------
+  section('the real pages, watched from their first byte');
+  // A frame on the page; its <html> is hooked the moment its document exists (before any of its module code runs:
+  // that needs dozens of files fetched). theme_boot.js may run before or after the hook; either way its saved look is
+  // counted (the hook's first look at the page, or its own paint).
+  async function load(path, { wait = 2500, done = null } = {}) {
+    const f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;left:-9999px;top:0;width:1280px;height:720px;border:0';
+    document.body.append(f);
+    const blank = f.contentDocument;
+    let rec = null, first = '';
+    const ch = new MessageChannel();
+    let hooked = false;
+    ch.port1.onmessage = () => {
+      if (hooked) return;
+      try {
+        const d = f.contentDocument;
+        if (d && d !== blank && d.documentElement) {
+          hooked = true;
+          first = sigOf(d.documentElement.style);
+          rec = recordPaints(f.contentWindow);
+          return;
+        }
+      } catch { /* not yet */ }
+      ch.port2.postMessage(0);
+    };
+    ch.port2.postMessage(0);
+    f.src = path;
+    await new Promise((res) => { f.onload = res; });
+    if (done) await until(() => done(f.contentWindow, f.contentDocument), 15000);
+    await sleep(wait);
+    const paints = [...(rec?.paints || [])];
+    const shown = [...(first && first !== '|||' ? [{ sig: first, boot: true, t: 0 }] : []), ...paints];
+    const final = sigOf(f.contentDocument.documentElement.style);
+    const bootMark = f.contentDocument.documentElement.getAttribute('data-theme-boot');
+    rec?.stop();
+    f.remove();
+    return { shown, applies: paints.filter((p) => !p.boot), final, bootMark };
+  }
+  const U2 = 'theme-boot-page-' + Math.floor(Math.random() * 1e6);
+  const p2 = createProfilesClient({ user: U2 });
+  const sid2 = await ensureProfile(p2, U2);
+  const person2 = (await p2.get(sid2)).person_id;
+  const set2 = async (url, patch) => { const h = createState({ url, user: U2 }); try { await h.load(); h.set(patch); await h.flush(); } finally { h.destroy(); } };
+  const kioskUp = (w, d) => !!d.querySelector('.kiosk') && !d.getElementById('boot');
+  for (const k of Object.keys(localStorage)) if (k.startsWith(PAINT_KEY)) localStorage.removeItem(k);
+  {
+    await set2(p2.stateURL(sid2, 'settings'), { theme: 'warm' });
+    const a = await load(`../kiosk.html?user=${U2}`, { done: kioskUp });
+    check('kiosk.html, first load on this device: it ends on the screen\'s theme (Warm)', a.final === sigTheme('warm'), nameOf(a.final));
+    const b = await load(`../kiosk.html?user=${U2}`, { done: kioskUp });
+    check('*** kiosk.html, again: the saved look is painted before the page\'s code runs ***', b.bootMark === 'page' && b.shown[0]?.sig === sigTheme('warm'), J({ mark: b.bootMark, shown: names(b.shown) }));
+    check('*** kiosk.html, again: ONLY Warm is ever painted, from the first byte to the end ***', distinct(b.shown).length === 1 && b.final === sigTheme('warm'), J(names(b.shown)));
+    check('kiosk.html, again: one apply for the whole load (the gate\'s)', b.applies.length === 1, J(names(b.applies)));
+
+    // THE REPORTED CASE: the theme was changed elsewhere. The screen's row now has none, the person's has High
+    // contrast. This device's copy of the screen's row still says Warm. Before: Warm, then "Best for this device",
+    // then High contrast. Now: the saved Warm, then High contrast, once.
+    await set2(p2.stateURL(sid2, 'settings'), { theme: null });
+    await set2(p2.personStateURL(person2, INPUTS_KEY), { theme: 'contrast' });
+    const c = await load(`../kiosk.html?user=${U2}`, { done: kioskUp, wait: 3000 });
+    check('*** changed elsewhere: ONE change, straight from the saved look to the answer ***',
+      c.applies.length === 1 && nameOf(c.applies[0].sig) === 'contrast' && c.shown.every((p) => p.sig === sigTheme('warm') || p.sig === sigTheme('contrast')),
+      J(names(c.shown)));
+    check('changed elsewhere: "Best for this device" (the server\'s screen row, before the person\'s came) never painted',
+      !c.shown.some((p) => p.sig === sigTheme(DEVICE_THEME)) || sigTheme(DEVICE_THEME) === sigTheme('contrast'), J(names(c.shown)));
+    const d = await load(`../kiosk.html?user=${U2}`, { done: kioskUp });
+    check('...and the load after it paints only High contrast', distinct(d.shown).length === 1 && d.final === sigTheme('contrast'), J(names(d.shown)));
+
+    // With the photosensitivity setting's limit on the screen: the same one look.
+    await set2(p2.stateURL(sid2, 'settings'), { flashLimitPerSecond: 3 });
+    const e = await load(`../kiosk.html?user=${U2}`, { done: kioskUp });
+    check('*** with a flash limit set: still one look, nothing flashes on load ***', distinct(e.shown).length === 1 && e.applies.length <= 1, J(names(e.shown)));
+    await set2(p2.stateURL(sid2, 'settings'), { flashLimitPerSecond: null });
+  }
+  {
+    // Home: this browser's stored theme, the screen's row (Dusk), the same row again, then the showing dashboard's own.
+    await set2(p2.stateURL(sid2, 'settings'), { theme: 'dusk' });
+    const homeUp = (w, d) => d.documentElement.dataset.boot && d.documentElement.dataset.boot !== 'loading';
+    const a = await load(`../modules.html?user=${U2}`, { done: homeUp });
+    check('modules.html (Home) came up', !!a.final, J(names(a.shown)));
+    const b = await load(`../modules.html?user=${U2}`, { done: homeUp });
+    check('*** Home, again: ONLY its final theme is ever painted ***', distinct(b.shown).length === 1 && b.shown[0].sig === b.final, J(names(b.shown)));
+    check('*** Home, again: one apply for the whole load ***', b.applies.length === 1, J(names(b.applies)));
+    if (b.final !== sigTheme('dusk')) {
+      check('Home: the screen\'s row (Dusk), which the showing dashboard overrides, is never painted', !b.shown.some((p) => p.sig === sigTheme('dusk')), J(names(b.shown)));
+    }
+    check('Home, first load: no more than one change (the stored theme, then the answer)', distinct(a.shown).length <= 2 && a.applies.length <= 2, J(names(a.shown)));
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+  console.error(err);
+}
+clearRoot();
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

@@ -14,6 +14,8 @@
   .rv-foot{max-width:46rem;margin:16px auto 0;font-size:.9rem;color:var(--text-muted)}
   .rv-foot a{color:var(--link)}
 </style>
+<!-- (row 2.164, 2026-10-31) the look this page last settled on, painted before it is drawn (theme_boot.js) -->
+<script src="theme_boot.js" data-theme-page="profile"></script>
 </head>
 <body>
 <!--
@@ -29,13 +31,15 @@
   import { mountReviewPage, REVIEW_PAGE_STYLE } from './review_page.js';
   import { createPackReviews } from './pack_reviews.js';
   import { createProfilesClient, resolveTheme } from './profile.js';
-  import { applyTheme, DEFAULT_THEME } from './theme.js';
+  import { applyTheme, DEFAULT_THEME, holdPageTheme } from './theme.js';
   import { authHeaders } from './auth.js';
   import { createEvents } from './events.js';
   import { createState } from './state.js';
   import { createPointsLedger } from './points.js';
   import { PROFILE_SETTINGS_KEY } from './lessons.js';
 
+  // (row 2.164) Held until the signed-in theme is known, then painted once (theme.js `holdPageTheme`).
+  const releaseTheme = holdPageTheme();
   applyTheme(document.documentElement, DEFAULT_THEME);
   document.getElementById('rv-style').textContent = REVIEW_PAGE_STYLE;
   const reviews = createPackReviews({});
@@ -44,7 +48,7 @@
   (async () => {
     let me = null;
     try { me = await fetch('/api/me', { headers: authHeaders() }).then((r) => (r.ok ? r.json() : null)); } catch { me = null; }
-    if (!me) return;   // signed out: the page still reviews; it cannot say who, and pays nobody
+    if (!me) { releaseTheme(); return; }   // signed out: the page still reviews; it cannot say who, and pays nobody
     const profiles = createProfilesClient({ user: me.user });
     // WHO IS REVIEWING (review_page.js): this login's own people ("you" and the people made here), not the
     // cards of people whose profile lives on another login. Their points go on one of their screens.
@@ -60,6 +64,7 @@
       const theme = await resolveTheme(profiles, me.user);
       if (theme) applyTheme(document.documentElement, theme);
     } catch { /* offline -- the default theme already stands */ }
+    releaseTheme();
   })();
 </script>
 <!-- live and beta (2026-10-14): a small banner along the top while this page is beta (modules_catalog.js PAGE_STAGES). -->

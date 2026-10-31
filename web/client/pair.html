@@ -48,6 +48,8 @@
   .pc-foot{margin-top:16px;font-size:.82rem;color:var(--text-muted);text-align:center}
   .pc-foot a{color:var(--link)}
 </style>
+<!-- (row 2.164, 2026-10-31) the look this page last settled on, painted before it is drawn (theme_boot.js) -->
+<script src="theme_boot.js" data-theme-page="profile"></script>
 </head>
 <body>
 <!--
@@ -67,7 +69,7 @@
 <script type="module">
   import { mountPairClaim } from './pair.js';
   import { createProfilesClient, resolveTheme } from './profile.js';
-  import { applyTheme, DEFAULT_THEME } from './theme.js';
+  import { applyTheme, DEFAULT_THEME, holdPageTheme } from './theme.js';
   import { authHeaders } from './auth.js';
 
   // This page's own `:root{}` above is the DEFAULT theme's values, applied as a real default
@@ -75,6 +77,8 @@
   // signed in (`pair.js` itself checks `/api/me`; this is the "enter the code on your own
   // phone" side of pairing, not the unpaired screen showing one). So their own theme applies
   // too, once resolved, the same fix as `home.html`/`modules.html`.
+  // (row 2.164) Held until that is known, then painted once (theme.js `holdPageTheme`).
+  const releaseTheme = holdPageTheme();
   applyTheme(document.documentElement, DEFAULT_THEME);
   (async () => {
     try {
@@ -83,6 +87,7 @@
       const theme = await resolveTheme(createProfilesClient({ user: me.user }), me.user);
       if (theme) applyTheme(document.documentElement, theme);
     } catch { /* offline or signed out -- the explicit default already stands */ }
+    finally { releaseTheme(); }
   })();
 
   mountPairClaim(document.getElementById('root'), {
