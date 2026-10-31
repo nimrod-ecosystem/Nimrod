@@ -5564,12 +5564,14 @@ export async function mountKiosk(root, {
   // press already under way would take its release or its tap, and the press meant for the panel is lost.
   // corner on hover (Mike, 2026-10-09: "should only show when you have the cursor in the area"): no longer
   // EVERY panel's corner after ANY click -- the panel under the mouse (with a short grace), the one a finger
-  // tapped. panel_corners.js has the whole rule and its numbers.
+  // tapped. panel_corners.js has the whole rule and its numbers. (Row 2.155, Mike 2026-10-31: and for a mouse only
+  // near the bottom right, not anywhere over the panel; the corners' `:hover` rule is gone, the watcher marks them.)
   const cornerWatch = watchCorners(root, { tapMs: BAR_HIDE_MS, onChange: () => { if (!torn) liftCorners(); } });
   // A FINGER IS NOT A HOVER. Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
   // the corner's hover rule woke a hidden corner just in time to take a tap meant for the panel under it
   // (measured, real touch input). The hover rules (arrangement.js, edit_mode.js) stand down while the last
   // press was a finger or a pen; a mouse's press brings them back. Capture, so it is set before the tap.
+  // (Row 2.155: the corners no longer have a hover rule; `data-press` stays for anything else that reads it.)
   const onPressKind = (e) => {
     try { document.documentElement.dataset.press = e.pointerType === 'touch' || e.pointerType === 'pen' ? 'touch' : 'mouse'; }
     catch { /* no document */ }

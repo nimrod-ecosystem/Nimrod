@@ -98,7 +98,9 @@ async function realPress(x, y, pointerType = 'mouse') {
 const pressAt = (el, type) => { el.scrollIntoView({ block: 'nearest' }); const [x, y] = centre(el); return realPress(x, y, type); };
 // corner on hover (2026-10-09): a mouse ARRIVING over an element, and leaving it -- what a real pointer does
 // before it presses (realPress does not: it is also the press that arrives with no hover, a finger's).
-const hoverOn = (el) => el.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, composed: true, pointerType: 'mouse', isPrimary: true, pointerId: 1 }));
+// (Row 2.155: a mouse's corner shows only near the corner, so a hover says WHERE: `at` = [x, y], or the element's centre.)
+const hoverOn = (el, at) => { const r = el.getBoundingClientRect(); const [x, y] = at || [r.left + r.width / 2, r.top + r.height / 2];
+  el.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, composed: true, pointerType: 'mouse', isPrimary: true, pointerId: 1, clientX: x, clientY: y })); };
 const hoverOff = (el, to = null) => el.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, composed: true, pointerType: 'mouse', isPrimary: true, pointerId: 1, relatedTarget: to }));
 // *** A PRESS ON THE PANEL ITSELF, NOT ON ONE OF ITS CONTROLS (2026-10-06). *** "A tap on a panel lands on the
 // panel" failed about one run in three, detail `tv-opt`: the centre of the Trivia panel is wherever this
@@ -651,13 +653,13 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('a tap on a panel lands on the panel', !!mid.down && cells[1].contains(mid.down) && kiosk.promoted().dashboard === null,
         `${mid.down?.className} ${J(kiosk.promoted())}`);
       check('...the bar comes up with it', !root.querySelector('.k-controls').classList.contains('hidden'));
-      // A finger is not a hover: Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
-      // the hover rule must stand down after a touch, or a hidden corner wakes in time to take the tap.
+      // A finger is not a hover: Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so a
+      // corner hover rule would wake a hidden corner in time to take the tap. Row 2.155 removed those rules
+      // altogether (a mouse's corner is the watcher's mark, near the corner only), so there is none to wake.
       const hoverRules = [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules]; } catch { return []; } })
         .filter((r) => /:hover\s*>\s*\.k-(promote|editc)/.test(r.selectorText || ''));
-      check('*** a touch press marks the page, and every corner hover rule stands down for it ***',
-        document.documentElement.dataset.press === 'touch' && hoverRules.length >= 2
-        && hoverRules.every((r) => r.selectorText.split(',').filter((s) => /:hover/.test(s)).every((s) => /:root:not\(\[data-press="touch"\]\)/.test(s))),
+      check('*** a touch press marks the page, and no corner hover rule exists to wake under it ***',
+        document.documentElement.dataset.press === 'touch' && hoverRules.length === 0,
         `${document.documentElement.dataset.press} ${hoverRules.map((r) => r.selectorText).join(' | ')}`);
       await sleep(300);                 // (their fade is .15s)
       // corner on hover (Mike, 2026-10-09: "should only show when you have the cursor in the area"; DELIBERATELY
@@ -689,8 +691,12 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       root.scrollIntoView({ block: 'nearest' });
       hoverOn(cells[0].querySelector('.k-mod'));
       await sleep(300);
+      check('*** the mouse over the middle of the panel does not (row 2.155: only at the bottom right) ***', !cells[0].dataset.cornerShow && down(0),
+        `${cells[0].dataset.cornerShow} ${getComputedStyle(corner(0)).opacity}`);
+      hoverOn(cells[0].querySelector('.k-mod'), centre(corner(0)));
+      await sleep(300);
       const [px, py] = centre(corner(0));
-      check('*** ...the mouse over the panel brings it back, and nothing is over it ***',
+      check('*** ...the mouse at its corner brings it back, and nothing is over it ***',
         cells[0].dataset.cornerShow === 'near' && up(0) && document.elementFromPoint(px, py) === corner(0),
         `${cells[0].dataset.cornerShow} ${getComputedStyle(corner(0)).opacity} at=${document.elementFromPoint(px, py)?.className}`);
       const m = await pressAt(corner(0), 'mouse');
@@ -717,7 +723,7 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
         `${s2.click?.className} ${J(kiosk.promoted())}`);
       // ESCAPE, with nothing focused (a key after a mouse press on a panel lands on the body).
       // (corner on hover, 2026-10-09: the touches above put the mouse's corner away; it comes back over the panel.)
-      hoverOn(cells[0].querySelector('.k-mod'));
+      hoverOn(cells[0].querySelector('.k-mod'), centre(corner(0)));
       await sleep(200);
       await pressAt(corner(0), 'mouse');
       check('(setup) the mouse over the panel, a press on its corner: it fills the dashboard', kiosk.promoted().dashboard === ids[0], J(kiosk.promoted()));
@@ -1149,10 +1155,11 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       const cells = [...root.querySelectorAll('.view .k-stage > .k-cell')];
       check('(setup) an embedded 2x2 on the dashboard path', kiosk.dashboardPath() && cells.length === 4, String(cells.length));
       root.scrollIntoView({ block: 'nearest' });
-      hoverOn(cells[0].querySelector('.k-mod'));          // corner on hover (2026-10-09): a mouse arrives before it presses
+      const c0 = () => cells[0].querySelector(':scope > .k-promote');
+      // corner on hover (2026-10-09): a mouse arrives before it presses -- at the corner (row 2.155)
+      hoverOn(cells[0].querySelector('.k-mod'), centre(c0()));
       await pressAt(cells[0].querySelector('.k-mod'), 'mouse');
       await sleep(300);
-      const c0 = () => cells[0].querySelector(':scope > .k-promote');
       const r = await pressAt(c0(), 'mouse');
       check('(setup) a real press on the corner: it fills the dashboard', r.click === c0() && !!kiosk.promoted().dashboard, J(kiosk.promoted()));
       // Measured on Home (real CDP keys, 2026-10-03): after a press on a panel nothing is focused, the key lands on

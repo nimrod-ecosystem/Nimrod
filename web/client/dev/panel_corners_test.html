@@ -10,7 +10,7 @@
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   #host{display:flex;gap:8px}
-  .k-cell{position:relative;width:200px;height:140px;border:1px solid #ccc}
+  .k-cell{position:relative;width:360px;height:240px;border:1px solid #ccc}   /* big enough that its middle is not its corner (row 2.155) */
   .k-mod{position:absolute;inset:0}
   /* The ⤢ corner's own base, as arrangement.js draws it (hidden until shown). */
   .k-promote{position:absolute;right:6px;bottom:6px;width:44px;height:44px;opacity:0;pointer-events:none;transition:opacity .15s}
@@ -19,7 +19,8 @@
 <body>
 <h1>panel corners — corner on hover (Mike, 2026-10-09)</h1>
 <p>"The edit and promote buttons at the bottom right of every module should only show when you have the cursor in the
-area." A panel's ⤢ / ✎ corner shows while a mouse is over that panel (and a short grace after), for a while after a
+area." And (row 2.155, 2026-10-31) "It should only happen at the bottom right." A panel's ⤢ / ✎ corner shows while a
+mouse is near that corner (and a short grace after), for a while after a
 finger taps that panel, and while keyboard focus is inside it -- never every panel's at once, never on a screen nobody
 points at. No server needed; the real kiosk's presses are in screen_controls_test.</p>
 <div id="host"></div>
@@ -27,7 +28,7 @@ points at. No server needed; the real kiosk's presses are in screen_controls_tes
 <div id="summary">running…</div>
 
 <script type="module">
-import { watchCorners, cornerShowCss, cornerBoxesAt, CORNER_ATTR, CORNER_GRACE_MS, CORNER_TAP_MS } from '../panel_corners.js';
+import { watchCorners, cornerShowCss, cornerBoxesAt, nearCorner, CORNER_ATTR, CORNER_GRACE_MS, CORNER_TAP_MS, CORNER_ZONE_PX } from '../panel_corners.js';
 import { ensureEditCss } from '../edit_mode.js';
 import { BAR_HIDE_MS } from '../dashboard_nest.js';
 
@@ -45,7 +46,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const P = (type, el, extra = {}) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, composed: true, isPrimary: true,
   pointerId: extra.pointerType === 'mouse' || !extra.pointerType ? 1 : 7, pointerType: 'mouse', ...extra }));
-const over = (el) => P('pointerover', el, { pointerType: 'mouse' });
+// A mouse arriving at (x, y) over `el` -- its centre unless said (row 2.155: WHERE on the panel now matters).
+const mid = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const over = (el, at = mid(el), type = 'pointerover') => P(type, el, { pointerType: 'mouse', clientX: at[0], clientY: at[1] });
 const outTo = (el, to) => P('pointerout', el, { pointerType: 'mouse', relatedTarget: to || null });
 async function tap(el, detail = 1) {
   P('pointerdown', el, { pointerType: 'touch' });
@@ -92,8 +95,8 @@ async function tap(el, detail = 1) {
     check('*** nothing shows a corner for a mouse click\'s leftover focus (no :focus-within rule) ***', rules.length > 0 && !rules.some((t) => /focus-within/.test(t)), rules.join(' | '));
     check('*** nothing shows EVERY panel\'s corner at once (no .kiosk[data-corners] rule) ***', !rules.some((t) => /data-corners/.test(t)), rules.join(' | '));
     check('*** a panel made bigger does not keep its ⤡ up on its own ***', !rules.some((t) => /data-promoted|data-down/.test(t)), rules.join(' | '));
-    check('every :hover rule stands down after a touch', rules.flatMap((t) => t.split(',')).filter((t) => /:hover/.test(t))
-      .every((t) => /:root:not\(\[data-press="touch"\]\)/.test(t)));
+    check('*** no :hover rule shows a corner: a hover is the whole panel (row 2.155) ***', !rules.some((t) => /:hover/.test(t)), rules.join(' | '));
+    check('the corner zone is the argued one (48 px round the buttons)', CORNER_ZONE_PX === 48, String(CORNER_ZONE_PX));
     check('a nested dashboard\'s cell (no corner of its own) is not a corner box; its holder is',
       cornerBoxesAt(innerMod, host).length === 1 && cornerBoxesAt(innerMod, host)[0] === C.c);
 
@@ -102,29 +105,51 @@ async function tap(el, detail = 1) {
     check('*** nobody pointing: every corner hidden, taking no press ***', [A, B, C].every(hidden) && [A, B, C].every((b) => opac(b) === '0/0'),
       [A, B, C].map(opac).join(' '));
 
-    section('a mouse');
+    section('a mouse: only at the bottom right (row 2.155)');
+    // Mike, 2026-10-31: "The edit and promote buttons show up whenever the cursor is over a module. It should only
+    // happen at the bottom right."
+    const corner = (b) => mid(b.pr);   // where the ⤢ sits (hidden, it still has its place)
     over(A.btn);
     await sleep(250);
-    check('*** the mouse comes onto A: A\'s corner shows (⤢ and ✎), only A\'s ***', shown(A) && hidden(B) && hidden(C)
+    check('*** the mouse over the middle of A: no corner ***', hidden(A) && hidden(B) && hidden(C) && !A.c.hasAttribute(CORNER_ATTR), opac(A));
+    const r = A.c.getBoundingClientRect();
+    over(A.m, [r.left + 8, r.bottom - 8]);
+    await sleep(40);
+    check('...nor at its bottom LEFT', hidden(A));
+    check('nearCorner: a point 40 px out from the buttons is near; 60 px is not',
+      nearCorner(A.c, A.pr.getBoundingClientRect().right + 40, corner(A)[1]) && !nearCorner(A.c, A.pr.getBoundingClientRect().right + 60, corner(A)[1]));
+    over(A.m, corner(A), 'pointermove');
+    await sleep(250);                  // the fade in (.15 s)
+    check('*** the mouse moves to A\'s bottom right: A\'s corner shows (⤢ and ✎), only A\'s ***', shown(A) && hidden(B) && hidden(C)
       && A.c.getAttribute(CORNER_ATTR) === 'near' && opac(A) === '1/1', `${opac(A)} ${opac(B)}`);
     check('...and the bar is told (kiosk.js lifts a corner the bar would cover)', changes > 0, String(changes));
     over(A.ed);                        // moving onto the buttons themselves
     await sleep(GRACE + 100);
     check('*** moving onto the buttons keeps them ***', shown(A) && A.c.getAttribute(CORNER_ATTR) === 'near');
-    outTo(A.ed, B.btn); over(B.btn);   // across to B
+    over(A.m, mid(A.m), 'pointermove');
+    await sleep(40);
+    check('*** back to the middle of A: the corner stays for the grace... ***', shown(A));
+    await sleep(GRACE + 100);
+    check('*** ...then goes, with the mouse still over A ***', hidden(A) && !A.c.hasAttribute(CORNER_ATTR), opac(A));
+    over(A.m, corner(A), 'pointermove');
+    await sleep(20);
+    outTo(A.m, B.m); over(B.m, corner(B));   // across to B's corner
     await sleep(40);
     check('*** leaving A for B: A\'s corner stays for the grace (and B\'s shows) ***', shown(A) && shown(B));
     await sleep(GRACE + 100);
     check('*** ...then A\'s goes, B\'s stays ***', hidden(A) && shown(B) && !A.c.hasAttribute(CORNER_ATTR), `${opac(A)} ${A.c.getAttribute(CORNER_ATTR)}`);
-    outTo(B.btn, B.btn); over(B.btn);  // a move inside B: nothing changes
-    outTo(B.btn, null);                // off the page
+    outTo(B.m, B.m); over(B.m, corner(B));   // a move inside B: nothing changes
+    outTo(B.m, null);                  // off the page
     await sleep(40);
     check('the mouse leaves the page: B\'s stays for the grace', shown(B));
     await sleep(GRACE + 100);
     check('*** ...then it goes: hidden after pointerleave + grace ***', hidden(B) && !host.querySelector(`[${CORNER_ATTR}]`));
     over(innerMod);
     await sleep(40);
-    check('the mouse over a nested dashboard\'s panel: the corner of the panel holding it', shown(C) && hidden(A) && hidden(B));
+    check('the mouse over a nested dashboard\'s panel, away from the corner: nothing', hidden(C) && hidden(A) && hidden(B));
+    over(innerMod, corner(C), 'pointermove');
+    await sleep(40);
+    check('...at the corner of the panel holding it: that panel\'s corner', shown(C) && hidden(A) && hidden(B));
     outTo(innerMod, null);
     await sleep(GRACE + 100);
     P('pointerover', A.btn, { pointerType: 'touch' });
@@ -150,7 +175,8 @@ async function tap(el, detail = 1) {
     await sleep(10);
     check('a pen tap is a tap', shown(C) && C.c.getAttribute(CORNER_ATTR) === 'tap');
     w.hideAll();
-    over(A.btn); await sleep(20);
+    over(A.m, corner(A)); await sleep(20);
+    check('(setup) the mouse at A\'s corner shows it', shown(A));
     P('pointerdown', B.btn, { pointerType: 'touch' });
     await sleep(20);
     check('a finger pressing puts the mouse\'s corner away (as the hover rule does)', hidden(A) && !A.c.hasAttribute(CORNER_ATTR));
@@ -185,8 +211,8 @@ async function tap(el, detail = 1) {
     check('the panel being edited keeps its ✎ up ("Stop editing") with nobody pointing', getComputedStyle(B.ed).pointerEvents === 'auto' && hidden(A));
     B.c.removeAttribute('data-editing');
     B.ed.remove();                     // `editCorner: false`: arrangement.js removes the button
-    over(B.btn); await sleep(20);
-    check('with ✎ turned off, the mouse over B shows only ⤢ (there is no ✎ to show)', getComputedStyle(B.pr).pointerEvents === 'auto' && !B.c.querySelector('.k-editc'));
+    over(B.m, corner(B)); await sleep(20);
+    check('with ✎ turned off, the mouse at B\'s corner shows only ⤢ (there is no ✎ to show)', getComputedStyle(B.pr).pointerEvents === 'auto' && !B.c.querySelector('.k-editc'));
     outTo(B.btn, null);
 
     section('prefers-reduced-motion');
@@ -197,7 +223,7 @@ async function tap(el, detail = 1) {
     check('arrangement.js draws ⤢ through the same rule (cornerShowCss)', /\$\{cornerShowCss\('\.k-promote'\)\}/.test(arrSrc));
 
     section('stop');
-    over(A.btn); await sleep(20);
+    over(A.m, corner(A)); await sleep(20);
     w.stop();
     check('stop(): marks cleared, nothing listens', !host.querySelector(`[${CORNER_ATTR}]`));
     await tap(A.btn);

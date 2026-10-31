@@ -17,10 +17,15 @@
 //   * always, on a panel made bigger (the ⤡). On a screen with no mouse that is a button left on the photos
 //     for as long as they are big.
 //
+// *** AND ONLY AT THE BOTTOM RIGHT (row 2.155, Mike 2026-10-31). *** "The edit and promote buttons show up whenever
+// the cursor is over a module. It should only happen at the bottom right." So a mouse anywhere else on the panel
+// shows nothing: the corner is for the cursor that goes to the corner. The CSS no longer has a `:hover` rule at all
+// (a hover is the whole panel, and CSS cannot ask "near which corner"); the watcher marks the box instead.
+//
 // THE RULE NOW, by how somebody is pointing:
-//   MOUSE     shown while the pointer is over the panel, and for CORNER_GRACE_MS after it leaves (so a
-//             hand that overshoots the corner by a few pixels, or crosses a gap, does not lose it). Only
-//             that panel's corner: the one under the cursor.
+//   MOUSE     shown while the pointer is within CORNER_ZONE_PX of the corner's buttons (the box round the ⤢ and ✎
+//             where they sit, lifted clear of the bar or not), and for CORNER_GRACE_MS after it leaves that zone
+//             (so a hand that overshoots by a few pixels does not lose it). Only that panel's corner.
 //   TOUCH/PEN a tap anywhere in a panel shows THAT panel's corner for the bar's own time (the same tap
 //             brings the bar up; both go together), so a finger can always reach edit and bigger. A tap
 //             on another panel moves it there. Set AFTER the click, never on pointerdown: a corner
@@ -40,6 +45,11 @@
 //                         little more because the target is at the panel's very edge). AGAINST longer: the
 //                         corner of the panel you just left is still up while you are on the next one -- at 600
 //                         ms that is a fade, not two corners to choose between.
+//   CORNER_ZONE_PX 48     (row 2.155) how far round the buttons a mouse wakes them. FOR: a 44px button's own width
+//                         again, so a cursor heading for the corner finds it there before it arrives, and the
+//                         zone stays a corner (about 150 x 100 on a panel of any size). AGAINST smaller: the
+//                         buttons are invisible until woken, so the zone is the only thing a hand aims at. AGAINST
+//                         larger: it starts to be "over the module" again, which is what Mike asked to stop.
 //   tapMs = BAR_HIDE_MS   (3 s, dashboard_nest.js) FOR: one tap, one time -- the bar and the corner come and go
 //                         together, and the next tap renews both. AGAINST: 3 s is not long for somebody slow to
 //                         find a 44px button; they tap again. A separate setting is the way if that bites.
@@ -49,6 +59,7 @@
 export const CORNER_BOXES = Object.freeze(['.k-cell', '.k-pcell', '.k-stage', '.k-room']);
 export const CORNER_BUTTONS = '.k-promote, .k-editc';
 export const CORNER_GRACE_MS = 600;
+export const CORNER_ZONE_PX = 48;           // row 2.155: how near the corner's buttons a mouse has to be
 export const CORNER_TAP_MS = 3000;          // the bar's own time (dashboard_nest.js BAR_HIDE_MS); kiosk.js passes that
 // The mark on a BOX whose corner is up: 'near' (a mouse is over it, or just left) or 'tap' (a finger tapped it).
 export const CORNER_ATTR = 'data-corner-show';
@@ -57,9 +68,21 @@ const BOX_SEL = CORNER_BOXES.join(', ');
 /** The CSS that SHOWS one corner button class (`.k-promote` or `.k-editc`). Two rules: a browser with no
  *  `:has()` drops only the keyboard one, never the whole show rule. */
 export function cornerShowCss(btn) {
-  const hover = CORNER_BOXES.map((b) => `:root:not([data-press="touch"]) ${b}:hover>${btn}`).join(',');
+  // No `:hover` rule (row 2.155): a mouse's corner is the watcher's mark, set only near the corner.
   const keys = CORNER_BOXES.map((b) => `${b}:has(:focus-visible)>${btn}`).join(',');
-  return `${hover},[${CORNER_ATTR}]>${btn},${btn}:focus-visible{opacity:1;pointer-events:auto}\n${keys}{opacity:1;pointer-events:auto}`;
+  return `[${CORNER_ATTR}]>${btn},${btn}:focus-visible{opacity:1;pointer-events:auto}\n${keys}{opacity:1;pointer-events:auto}`;
+}
+
+/** Whether the point (x, y) is within `pad` px of `box`'s corner buttons, where they sit now (row 2.155). */
+export function nearCorner(box, x, y, pad = CORNER_ZONE_PX) {
+  let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+  for (const btn of box.querySelectorAll(':scope > .k-promote, :scope > .k-editc')) {
+    const q = btn.getBoundingClientRect();
+    if (!q.width && !q.height) continue;
+    l = Math.min(l, q.left); t = Math.min(t, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom);
+  }
+  if (l === Infinity || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+  return x >= l - pad && x <= r + pad && y >= t - pad && y <= b + pad;
 }
 
 /** The boxes, from `el` outwards to `stop` (exclusive), that hold a corner of their own. */
@@ -75,9 +98,11 @@ export function cornerBoxesAt(el, stop = null) {
  * Watch `rootEl` and mark the box whose corner should be up. Returns { stop, shown, hideAll }.
  *   graceMs  how long a mouse's corner stays after the pointer leaves the panel
  *   tapMs    how long a tap's corner stays (a function is read at each tap)
+ *   zonePx   how near the corner's buttons a mouse wakes them (row 2.155)
  *   onChange called after a corner comes up or goes (kiosk.js lifts corners clear of the bar)
  */
-export function watchCorners(rootEl, { graceMs = CORNER_GRACE_MS, tapMs = CORNER_TAP_MS, onChange = () => {} } = {}) {
+export function watchCorners(rootEl, { graceMs = CORNER_GRACE_MS, tapMs = CORNER_TAP_MS, zonePx = CORNER_ZONE_PX,
+  onChange = () => {} } = {}) {
   if (!rootEl || typeof rootEl.addEventListener !== 'function') return { stop() {}, shown: () => [], hideAll() {} };
   const timers = new Map();                 // box -> its hide timer
   let near = new Set();                     // the boxes under the mouse now
@@ -98,9 +123,11 @@ export function watchCorners(rootEl, { graceMs = CORNER_GRACE_MS, tapMs = CORNER
   }
   const marked = () => [...rootEl.querySelectorAll(`[${CORNER_ATTR}]`)];
 
+  // Arriving (pointerover) and moving within an element (pointermove): the corner is about WHERE on the panel the
+  // mouse is, so a move that stays on one element can bring it up or put it away (row 2.155).
   const onOver = (e) => {
     if (e.pointerType !== 'mouse') return;
-    const now = new Set(cornerBoxesAt(e.target, rootEl));
+    const now = new Set(cornerBoxesAt(e.target, rootEl).filter((b) => nearCorner(b, e.clientX, e.clientY, zonePx)));
     for (const b of near) if (!now.has(b)) hideLater(b, graceMs);
     for (const b of now) show(b, 'near');
     near = now;
@@ -136,6 +163,7 @@ export function watchCorners(rootEl, { graceMs = CORNER_GRACE_MS, tapMs = CORNER
     }, 0);
   };
   rootEl.addEventListener('pointerover', onOver, { capture: true, passive: true });
+  rootEl.addEventListener('pointermove', onOver, { capture: true, passive: true });
   rootEl.addEventListener('pointerout', onOut, { capture: true, passive: true });
   rootEl.addEventListener('pointerdown', onDown, { capture: true, passive: true });
   rootEl.addEventListener('click', onClick, { capture: true, passive: true });
@@ -145,6 +173,7 @@ export function watchCorners(rootEl, { graceMs = CORNER_GRACE_MS, tapMs = CORNER
     stop() {
       stopped = true;
       rootEl.removeEventListener('pointerover', onOver, true);
+      rootEl.removeEventListener('pointermove', onOver, true);
       rootEl.removeEventListener('pointerout', onOut, true);
       rootEl.removeEventListener('pointerdown', onDown, true);
       rootEl.removeEventListener('click', onClick, true);
