@@ -15,6 +15,17 @@ EVERY FILE IS CHECKED ON THE WAY IN, AND A FAILURE STOPS THE COPY:
     into its sample signs, and the public site must never carry it.
 The C2PA content credential in each file's <metadata> is kept, as it was for the signs.
 
+(row 2.141, Design item 48, 2026-10-31) A TENTH SET, `halloween`, and SIX NEW WORDS IN EVERY SET. Design's
+delivery of 2026-10-26 (`nimrod_design_system_20261031/assets/icons`) re-tints the 55 core symbols for
+Halloween (same shapes; a theme never changes a core symbol's shape, only its tint) and draws six words
+of the theme's own - pumpkin, ghost, bat, candy, witchHat, treatPail - in every set, the unthemed root
+folder included. The 55 files of the nine earlier sets in that delivery are byte-identical to the ones
+already copied (hashed 2026-10-31), so re-running this over it changes only the new files. The root
+folder is still the board's own drawings and is still not copied: its six new drawings went into
+`aac_symbols.js`, their markup taken from the files rather than retyped.
+Where the handoff folder (`handoff/board-themes/icons/`) has a copy too, `assets/icons/` is the one used:
+the drawings are the same and only the embedded content credentials differ.
+
 USAGE (from the repo root):
     py -3.13 web/tools/build_aac_sets.py <path to the delivered icons folder>
 
@@ -31,7 +42,8 @@ OUT_DIR = os.path.join(REPO, 'web', 'client', 'design-assets', 'aac')
 DATA_JS = os.path.join(REPO, 'web', 'client', 'aac_sets_data.js')
 
 # Design's folder name -> the id the board uses. The same today; the map is where a rename lands.
-SETS = ['color', 'mono', 'fall', 'steampunk', 'cyberpunk', 'cozy', 'winter', 'ocean', 'night']
+SETS = ['color', 'mono', 'fall', 'steampunk', 'cyberpunk', 'cozy', 'winter', 'ocean', 'night',
+        'halloween']   # (row 2.141, Design item 48, 2026-10-31)
 
 UNSAFE = [
     (re.compile(r'<script', re.I), 'a <script> element'),

@@ -31,6 +31,24 @@
 //     way in the board's own drawings on a white card today; five (bedpan, change, suction,
 //     tired, wait) are words the board draws in its ink and Design drew in the amber accent.
 //
+// (row 2.141, Design item 48, 2026-10-31) A TENTH SET, `halloween`: Design's first set drawn for a
+// HOLIDAY rather than borrowed for one. The 55 core words keep their shapes and change only their tint
+// (people and questions lilac #c9a8f0, actions and objects pumpkin #f2a03c, meaning colours the dark
+// board's own word tints), so a person who knows a word by its picture meets the same picture. It is a
+// light-ink set for dark cards like the six above: worst 7.41 on the board's own pinned card and 7.86
+// on Halloween's card (`all_done`, lilac), and like them it fails on white (1.39, `cold`).
+//
+// Design also drew SIX WORDS OF HALLOWEEN'S OWN (pumpkin, ghost, bat, candy, witchHat, treatPail) in
+// every set, and unthemed in `aac_symbols.js`. They are drawn differently from the 55: a filled shape
+// with a near-black outline (#141418 / #16121f) in EVERY set, the light-card ones included, so the
+// fill stands off a dark card and the outline off a light one. `drawingContrast` judges a drawing by
+// its weakest colour against the card, and so scores every one of them, in every set, at most 1.33 on
+// the board's own dark card (1.10 for Halloween's own) — it cannot see that the outline is there to be
+// the edge, or that the ghost's dark eyes sit on its white body rather than on the card. Telling those apart needs to know what lies under each part of a
+// drawing, which the colour list does not record (`OUTLINED_WORDS`, below, and the report of
+// 2026-10-31). So, as the rule above already says: following the theme, those six use the board's own
+// drawing of the word (it reads: the card's ink); a set somebody PINNED shows Design's drawing as drawn.
+//
 // The board's card only follows the theme when `followTheme` is on. By default it is pinned dark,
 // whatever the theme — so a board that follows the theme's SYMBOLS on a light theme would be
 // putting dark drawings on a dark card. Nobody chose that combination; it falls out of two
@@ -74,7 +92,15 @@ export const SYMBOL_SETS = Object.freeze([
   { id: 'winter',    label: 'Winter',     card: 'dark' },
   { id: 'ocean',     label: 'Aquarium',   card: 'dark' },
   { id: 'night',     label: 'Night',      card: 'dark' },
+  // (row 2.141, Design item 48, 2026-10-31) the first holiday's own set; dark-card, measured (header).
+  { id: 'halloween', label: 'Halloween',  card: 'dark' },
 ].filter((s) => SET_WORDS[s.id]));
+
+// The six words Design drew as an outlined filled shape (header, "SIX WORDS OF HALLOWEEN'S OWN"), whose
+// measured contrast says nothing about whether they read. Named so the suite can measure the 55 core
+// words as it always has and hold these six to what they are: every set draws them, and following the
+// theme they give way to the board's own drawing. Not read by the board itself.
+export const OUTLINED_WORDS = Object.freeze(['pumpkin', 'ghost', 'bat', 'candy', 'witchHat', 'treatPail']);
 
 const BY_ID = Object.fromEntries(SYMBOL_SETS.map((s) => [s.id, s]));
 
@@ -117,6 +143,15 @@ export function symbolSet(id) { return BY_ID[id] || null; }
 //   (Seasons named as north of the equator. South of it Christmas falls in summer, but its card is
 //   dark and summer's cozy reads 1.28 there, so the nearest that reads is still winter.)
 //
+// (row 2.141, Design item 48, 2026-10-31) HALLOWEEN NOW HAS ITS OWN SET, and wears it rather than Fall's.
+// FOR: Design drew it for this theme, Mike's report was that the symbols "still aren't changing with the
+// themes", and the rule above existed only because no holiday had a set; it reads better on Halloween's
+// card than Fall's did (7.86 against 6.83). AGAINST: the rule's own reason, that the pictures somebody
+// relies on should not change for a week. Answered by how Design drew it - the 55 shapes are the same,
+// only their tint changes - and by the setting's own choices (the board's own drawings, or one set
+// pinned) for a board whose person should see no change at all. Design's `plainBase` for Halloween is
+// `night`; on this site the plain board is "The board's own drawings", which every theme offers.
+//
 // AGAINST the rule: lunarNewYear's red lanterns and newYear's fireworks would suit a warm set
 // (steampunk, 8.18 / 8.05) or night (9.52 / 9.37) better as a picture. Not taken, because a board's
 // words matter more than matching the scene; change any single line here and the suite still holds
@@ -141,7 +176,7 @@ export const THEME_SETS = Object.freeze({
   stPatricks: 'cozy',
   easter: 'cozy',
   harvest: 'cozy',
-  halloween: 'fall',
+  halloween: 'halloween',   // its own (row 2.141, Design item 48, 2026-10-31); was 'fall'
   diwali: 'fall',
   christmas: 'winter',
   hanukkah: 'winter',

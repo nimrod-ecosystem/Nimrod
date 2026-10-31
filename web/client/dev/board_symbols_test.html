@@ -200,6 +200,63 @@ try {
     b.inst.destroy();
   }
 
+  // (row 2.141, Design item 48, 2026-10-31) Mike: "The symbols on the AAC boards still aren't changing with the
+  // themes." Halloween borrowed Fall's set until Design drew it one; it now wears its own, and adds six words.
+  section('*** Halloween: its own set, and six words of its own (row 2.141, Design item 48) ***');
+  {
+    const b = await mountBoard({ boardId: 'care', symbols: 'theme' });
+    await theme('fall');
+    check('fall theme: the fall set', allFrom(b.p(), 'set:fall'));
+    await theme('halloween');
+    let p = b.p();
+    check('*** the Halloween theme: every card of the care board changes to Design’s Halloween set ***',
+      p.symbolSet === 'halloween' && allFrom(p, 'set:halloween'), JSON.stringify(p.symbolFrom));
+    check('...from Design’s files, each card its own word', CARE.cells.every((c, i) => !c
+      || p.symbolSrc[i] === `/design-assets/aac/halloween/${c.symbol}.svg`), p.symbolSrc.join());
+    await sleep(400);
+    const img = document.querySelector('#host .ab-sym img');
+    check('the Halloween drawings actually load', img && img.complete && img.naturalWidth > 0,
+      img ? `${img.src} ${img.naturalWidth}` : 'no img');
+    b.state.set({ followTheme: true });
+    await tick();
+    check('...and on Halloween’s own card (the board following the theme’s colours)', allFrom(b.p(), 'set:halloween'),
+      JSON.stringify(b.p().symbolFrom));
+    b.inst.destroy();
+    await theme('default');
+
+    // A board somebody built with the six new words. They are on no built-in board (aac_vocab.js: positions are
+    // fixed), so this is the only way they reach a card.
+    const SIX = ['pumpkin', 'ghost', 'bat', 'candy', 'witchHat', 'treatPail'];
+    const mine = { cells: [{ word: 'Yes', symbol: 'yes', kind: 'yes' },
+      ...SIX.map((s) => ({ word: s, symbol: s, kind: 'plain' }))] };
+    check('*** the six are symbols a built board can name (normalizeBoard keeps them) ***',
+      normalizeBoard(mine).cells.every((c) => c && c.symbol), JSON.stringify(normalizeBoard(mine).cells.map((c) => c && c.symbol)));
+    check('...and NOT on any built-in board', Object.values(BUILTIN_BOARDS).every((bd) =>
+      !symbolsOf(normalizeBoard(bd)).some((s) => SIX.includes(s))));
+    // Design's "plain symbols" process line (theme_surfaces.js plainSetting): every theme with its own symbols must still
+    // show the plain board. Here that is the setting's first choice, "The board's own drawings", on every theme.
+    await theme('halloween');
+    const own = await mountBoard({ board: mine, symbols: 'own' });
+    check('*** the plain board on Halloween: the board’s own drawings, all seven drawn, from aac_symbols.js ***',
+      own.p().theme === 'halloween' && allFrom(own.p(), 'own')
+      && own.p().cardHTML.slice(0, 7).every((h) => /<svg/.test(h)), JSON.stringify(own.p().symbolFrom));
+    own.inst.destroy();
+    const follow = await mountBoard({ board: mine, symbols: 'theme' });
+    await theme('halloween');
+    p = follow.p();
+    // The six are an outlined filled shape; measured one colour at a time (aac_sets.js OUTLINED_WORDS) their
+    // near-black outline scores about 1.1 on a dark card, so following the theme they give way, word by word.
+    check('*** following the theme: Yes in Halloween’s set; the six give way to the board’s own drawing (the guard) ***',
+      p.symbolFrom[0] === 'set:halloween' && p.symbolFrom.slice(1, 7).every((x) => x === 'own'), JSON.stringify(p.symbolFrom));
+    follow.inst.destroy();
+    const pinned = await mountBoard({ board: mine, symbols: 'halloween' });
+    check('*** Halloween set pinned: all seven in Design’s drawings, as drawn ***', allFrom(pinned.p(), 'set:halloween')
+      && pinned.p().symbolSrc.slice(1, 7).every((s, i) => s === `/design-assets/aac/halloween/${SIX[i]}.svg`),
+      JSON.stringify(pinned.p().symbolFrom));
+    pinned.inst.destroy();
+    await theme('default');
+  }
+
   section('*** "Lock to one set": pinned, whatever the theme ***');
   {
     const b = await mountBoard({ boardId: 'care', symbols: 'winter' });

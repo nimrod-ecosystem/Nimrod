@@ -18,6 +18,10 @@ export const themeSurfaces = [
   /* the board */
   { id: 'tokens', group: 'AAC board', label: 'Board tokens', need: 'required', where: 'GROUND_THEMES[key].tokens', what: '--ab-bg, --ab-card, --ab-ink, --ab-line, --ab-lit, --ab-veil, and the six --ab-sym-* word colours.' },
   { id: 'icons', group: 'AAC board', label: 'Symbol tint set', need: 'shared', where: 'assets/icons/<set>/, GROUND_THEMES[key].base', what: 'The 55 symbols tinted to match the word colors. A theme can borrow a set whose --ab-sym-* match its own.' },
+  { id: 'symbolShapes', group: 'AAC board', label: 'Themed symbols', need: 'optional', where: 'assets/icons/<theme>/, GROUND_THEMES[key].base and .plainBase', what: 'Holidays should have them; seasons and styles may borrow. The 55 core symbols keep their SHAPES in every theme: a theme only re-tints them, so a person who relies on a symbol never meets a new picture for the same word. What a theme adds is its own WORDS (Halloween: pumpkin, ghost, bat, candy, witch hat, treat pail), drawn to the AAC rules (100×100, ~7px round strokes, one friendly silhouette, nothing scary). Readability check: each one read at 48px on the theme board, and against its plain version.' },
+  { id: 'boardFont', group: 'AAC board', label: 'Board font', need: 'shared', where: "GROUND_THEMES[key].tokens['--ab-font']", what: 'The face of the words on the cards. Borrowing the house font is a complete answer. A theme font must be a heavy, open, everyday face that reads at a glance: rounded or plain, never display, script or distressed lettering. No webfont needed. Halloween uses a heavy rounded system face.' },
+  { id: 'boardMotif', group: 'AAC board', label: 'Card corner motif', need: 'optional', where: "GROUND_THEMES[key].tokens['--ab-motif']", what: 'A small picture in the corner padding of each card (Halloween: a pumpkin). Decoration only: it never overlaps the symbol or the word and means nothing.' },
+  { id: 'plainSetting', group: 'AAC board', label: 'Plain symbols setting', need: 'process', where: 'AacBoard plain + GROUND_THEMES[key].plainBase', what: 'Every theme with its own symbols, font or motif must still offer the plain board: check that switching "plain symbols" on gives the house font, no motif and the plainBase icon set.' },
   /* games */
   { id: 'cards', group: 'Games', label: 'Playing cards', need: 'required', where: 'components/games/playingCards.js', what: 'Back (pattern, frame, medallion, emblem), face stock, edge, four suit colors, court frame.' },
   { id: 'bricks', group: 'Games', label: 'Brick-breaker and rhythm tiles', need: 'required', where: 'oct-2-asks sheet (to move into a module)', what: 'Brick colors, paddle, ball with its contrasting ring, the four rhythm tile colors.' },
@@ -39,13 +43,20 @@ export const themeSurfaces = [
 /* Where the data lives today, for the rows the coverage card can check. */
 export const knownCoverage = {
   siteOriginals: ['nimrod', 'fall', 'steampunk', 'cyberpunk', 'cozy', 'winter', 'ocean', 'night'],
-  iconSets: ['color', 'cozy', 'cyberpunk', 'fall', 'night', 'ocean', 'steampunk', 'winter', 'mono'],
+  iconSets: ['color', 'cozy', 'cyberpunk', 'fall', 'night', 'ocean', 'steampunk', 'winter', 'mono', 'halloween'],
+  symbolShapes: ['halloween'],
   bricks: ['nimrod', 'steampunk', 'cyberpunk'],
   materials: ['nimrod', 'fall', 'steampunk', 'cyberpunk', 'cozy'],
   marks: ['nimrod'],
 };
 
 /* ---- Added by Code, 2026-10-10. Everything above this line is Design's file as handed over (2026-10-10). ----
+ *
+ * (row 2.141, Design item 48, 2026-10-31) EXCEPT four AAC board lines (symbolShapes, boardFont, boardMotif,
+ * plainSetting) and the `halloween` icon set and `symbolShapes` coverage, copied in from Design's file of 2026-10-26
+ * (`nimrod_design_system_20261031/guidelines/themeSurfaces.js`). That file also regroups the outfits, town and kit lines
+ * that Code's own list below already carries; that part is not taken here. Design's coverage also names Halloween for
+ * `boardFonts` and `motifs`; the site does not draw either yet (the report of 2026-10-31), so they are not listed.
  *
  * WHY THIS FILE IS IN web/client AND NOT docs/: the thing that proves the list is a suite
  * (dev/theme_surfaces_test.html), and the suites run in a browser against the site's own server, which

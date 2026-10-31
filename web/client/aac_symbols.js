@@ -304,7 +304,51 @@ export const SYMBOLS = {
     there: svg('<circle cx="74" cy="56" r="16" stroke="currentColor" ' + S + '/>' +
       '<circle cx="74" cy="56" r="6" fill="currentColor"/>' +
       '<path d="M6 56 H44" stroke="currentColor" ' + S + '/>' +
-      '<path d="M36 44 L50 56 L36 68" stroke="currentColor" ' + S + '/>')
+      '<path d="M36 44 L50 56 L36 68" stroke="currentColor" ' + S + '/>'),
+
+    // -------------------------------------------------------------------------------------
+    // SIX HALLOWEEN WORDS (row 2.141, Design item 48, 2026-10-31) — Claude Design's, credited in
+    // ATTRIBUTIONS.md, and the first drawings here that a THEME brought rather than a board.
+    // -------------------------------------------------------------------------------------
+    //
+    // Design's rule for a theme: it never changes a core symbol's shape, only its tint, and what it
+    // adds is words of its own. These are Halloween's, drawn to this file's rules (100×100, round
+    // strokes, one friendly silhouette; the ghost says "oo" and the pumpkin smiles). Design drew
+    // each in every designed set as well (`design-assets/aac/<set>/`), and this is its unthemed
+    // style, `currentColor` throughout — the markup is taken from Design's files, not retyped, the
+    // same as the rest of this file. Three elements in it have no colour (the bat's eyes, the
+    // candy's stripes, the hat's band): Design's unthemed style drops the colour that drew them,
+    // so they draw nothing here and are kept so the markup stays Design's; the shapes read without
+    // them, and the coloured sets have them.
+    //
+    // *** NAMES ONLY, ON NO BUILT-IN BOARD. *** The handoff asks for them in "the vocabulary" too.
+    // Not done: a built-in board's positions are fixed (`aac_vocab.js`), so a new word on one needs
+    // a place somebody chose, which is a board decision, not a drawing. Here they are names a board
+    // somebody builds can use, and the word games picture any of these words they already use
+    // (`word_games_words.js` `hasPicture`: "bat" in the rhymes).
+    pumpkin: d('<path d="M50 26c-24 0-38 14-38 34s16 30 38 30 38-10 38-30-14-34-38-34z" fill="none" stroke="currentColor" stroke-width="6"></path>' +
+      '<path d="M50 28c-10 6-14 18-14 32s4 24 14 30M50 28c10 6 14 18 14 32s-4 24-14 30" stroke="currentColor" stroke-width="4"></path>' +
+      '<path d="M50 26c0-8 4-14 12-16" stroke="currentColor" stroke-width="7"></path>' +
+      '<path d="M32 54l7-9 7 9zM54 54l7-9 7 9z" fill="currentColor" stroke="currentColor" stroke-width="3"></path>' +
+      '<path d="M34 66q16 12 32 0" stroke="currentColor" stroke-width="5"></path>'),
+    ghost: d('<path d="M24 86V46c0-18 12-32 26-32s26 14 26 32v40l-9-7-8 7-9-7-9 7-8-7z" fill="none" stroke="currentColor" stroke-width="6"></path>' +
+      '<ellipse cx="40" cy="44" rx="5" ry="7" fill="currentColor"></ellipse>' +
+      '<ellipse cx="60" cy="44" rx="5" ry="7" fill="currentColor"></ellipse>' +
+      '<ellipse cx="50" cy="62" rx="6" ry="7" fill="currentColor"></ellipse>'),
+    bat: d('<path d="M50 40c-6-12-20-16-40-10 8 6 10 14 6 22 8-4 14-2 18 6 4-8 10-12 16-12s12 4 16 12c4-8 10-10 18-6-4-8-2-16 6-22-20-6-34-2-40 10z" fill="none" stroke="currentColor" stroke-width="5"></path>' +
+      '<path d="M42 34l-4-10 8 6M58 34l4-10-8 6" fill="none" stroke="currentColor" stroke-width="4"></path>' +
+      '<circle cx="45" cy="44" r="3.5" fill="none"></circle>' +
+      '<circle cx="55" cy="44" r="3.5" fill="none"></circle>'),
+    candy: d('<path d="M30 50l-18-14v28zM70 50l18-14v28z" fill="none" stroke="currentColor" stroke-width="5"></path>' +
+      '<ellipse cx="50" cy="50" rx="24" ry="18" fill="none" stroke="currentColor" stroke-width="6"></ellipse>' +
+      '<path d="M38 40l-6 20M50 34l-4 32M62 40l-6 20" stroke="none" stroke-width="4" opacity=".8"></path>'),
+    witchHat: d('<path d="M14 80q36-14 72 0" stroke="currentColor" stroke-width="7" fill="none"></path>' +
+      '<path d="M28 76L48 16q4-6 8 0l10 30 4-6-4 34z" fill="none" stroke="currentColor" stroke-width="6"></path>' +
+      '<path d="M30 64q20 6 38 0" stroke="none" stroke-width="8"></path>'),
+    treatPail: d('<path d="M26 34q24-26 48 0" stroke="currentColor" stroke-width="6"></path>' +
+      '<path d="M20 40h60l-6 46H26z" fill="none" stroke="currentColor" stroke-width="6"></path>' +
+      '<path d="M34 54l6-7 6 7zM54 54l6-7 6 7z" fill="currentColor"></path>' +
+      '<path d="M36 68q14 10 28 0" stroke="currentColor" stroke-width="5"></path>'),
 };
 
 /** Every symbol name, for a picker and for the vocabulary validator. */

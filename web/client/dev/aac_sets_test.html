@@ -23,7 +23,7 @@ card from those colours. Then the theme-to-set map, and the contrast of every se
 import { SET_WORDS } from '../aac_sets_data.js';
 import { SYMBOL_SETS, THEME_SETS, setForTheme, setHas, symbolUrl, setColours, ownColours,
          drawingContrast, pickSymbol, themeIdFromRoot, parseColour, SYMBOL_MIN_CONTRAST,
-         AAC_ASSETS } from '../aac_sets.js';
+         AAC_ASSETS, OUTLINED_WORDS } from '../aac_sets.js';
 import { SYMBOLS, SYMBOL_NAMES } from '../aac_symbols.js';
 import { THEMES, applyTheme, contrast } from '../theme.js';
 
@@ -48,9 +48,13 @@ try {
   section('the sets and their words');
   {
     const ids = SYMBOL_SETS.map((s) => s.id);
-    check('nine sets, as delivered (the tenth is the board’s own drawings, not a new set)',
-      ids.length === 9 && ids.join() === 'color,mono,fall,steampunk,cyberpunk,cozy,winter,ocean,night',
+    // (row 2.141, Design item 48, 2026-10-31) a tenth, Halloween's own.
+    check('ten sets: the nine of 2026-09-28 (whose tenth style is the board’s own drawings, not a new set) and Halloween',
+      ids.length === 10 && ids.join() === 'color,mono,fall,steampunk,cyberpunk,cozy,winter,ocean,night,halloween',
       ids.join());
+    check('*** the six Halloween words are the board’s own symbols too, so no set can leave a card without a picture ***',
+      OUTLINED_WORDS.length === 6 && OUTLINED_WORDS.every((w) => SYMBOLS[w] && SYMBOL_NAMES.includes(w)),
+      OUTLINED_WORDS.filter((w) => !SYMBOLS[w]).join());
     for (const id of ids) {
       const words = Object.keys(SET_WORDS[id]).sort();
       check(`${id}: draws every one of the board’s ${SYMBOL_NAMES.length} symbol names, and nothing else`,
@@ -72,6 +76,7 @@ try {
     ];
     const bad = [], mismatch = [], missing = [], shape = [];
     const jobs = [];
+    const drawn = {};   // `${set}/${word}` -> the drawing with its colours taken out, for the shape check below
     for (const s of SYMBOL_SETS) {
       for (const name of Object.keys(SET_WORDS[s.id])) {
         jobs.push((async () => {
@@ -83,6 +88,7 @@ try {
           // Every name the product was built around, anywhere in the file, even in metadata.
           if (/cici/i.test(raw)) bad.push(`${s.id}/${name}: names a person`);
           if (!/viewBox="0 0 100 100"/.test(body)) shape.push(`${s.id}/${name}`);
+          drawn[`${s.id}/${name}`] = body.replace(/(stroke|fill)="#[0-9a-fA-F]{3,8}"/g, '$1="C"');
           const cols = [];
           for (const m of body.matchAll(COLOUR)) {
             const c = m[1].toLowerCase() === 'currentcolor' ? 'currentColor' : m[1].toLowerCase();
@@ -95,8 +101,15 @@ try {
       }
     }
     await Promise.all(jobs);
-    check(`all ${jobs.length} files are served from ${AAC_ASSETS}`, jobs.length === 495 && missing.length === 0,
+    // 495 until 2026-10-31 (nine sets of 55); now ten sets of 61 (row 2.141, Design item 48).
+    check(`all ${jobs.length} files are served from ${AAC_ASSETS}`, jobs.length === 610 && missing.length === 0,
       `${jobs.length} files; ${missing.slice(0, 5).join('; ')}`);
+    // *** DESIGN'S RULE, HELD BY A CHECK: a theme never changes a symbol's SHAPE, only its tint (handoff item 48),
+    // so a person who knows a word by its picture meets the same picture in Halloween. Compared with the fall set:
+    // the files must be the same once their colours are taken out. ***
+    const reshaped = Object.keys(SET_WORDS.halloween).filter((n) => drawn[`halloween/${n}`] !== drawn[`fall/${n}`]);
+    check('*** every Halloween drawing is the same shape as the same word in the fall set; only the colours differ ***',
+      Object.keys(SET_WORDS.halloween).length === 61 && reshaped.length === 0, reshaped.join());
     check('*** no script, handler, external reference, or drawn text in any of them ***',
       bad.length === 0, bad.slice(0, 8).join('; '));
     check('every one is drawn on the board’s 100×100 grid', shape.length === 0, shape.slice(0, 5).join());
@@ -127,13 +140,18 @@ try {
     // failed from then on, as it was written to. Decided in aac_sets.js (best guess, on Mike's list):
     // keep the season's set through its holidays where it reads, else the nearest that reads. Pinned
     // here so a change to any of them is deliberate, as the four borrowed lines above are.
-    check('the seasons and holidays: light ones -> cozy; halloween, diwali -> fall; christmas, hanukkah, newYear, lunarNewYear -> winter; july4 -> night',
+    // (row 2.141, Design item 48, 2026-10-31) halloween left this rule for a set of its own (the check after this one).
+    check('the seasons and holidays: light ones -> cozy; diwali -> fall; christmas, hanukkah, newYear, lunarNewYear -> winter; july4 -> night',
       ['spring', 'summer', 'valentines', 'stPatricks', 'easter', 'harvest'].every((t) => setForTheme(t) === 'cozy')
-        && ['halloween', 'diwali'].every((t) => setForTheme(t) === 'fall')
+        && ['diwali'].every((t) => setForTheme(t) === 'fall')
         && ['christmas', 'hanukkah', 'newYear', 'lunarNewYear'].every((t) => setForTheme(t) === 'winter')
         && setForTheme('july4') === 'night',
       ['spring', 'summer', 'valentines', 'stPatricks', 'easter', 'harvest', 'halloween', 'diwali', 'christmas',
         'hanukkah', 'newYear', 'lunarNewYear', 'july4'].map((t) => `${t}:${setForTheme(t)}`).join(' '));
+    check('*** the Halloween theme gets Design’s Halloween set, not Fall’s (row 2.141, Design item 48) ***',
+      setForTheme('halloween') === 'halloween', setForTheme('halloween'));
+    check('...and only Halloween: no other theme borrows it', Object.entries(THEME_SETS)
+      .filter(([, v]) => v === 'halloween').map(([k]) => k).join() === 'halloween');
     check('an unknown theme follows to nothing (the board’s own), never a guess',
       setForTheme('no-such-theme') === null);
     check('no theme at all reads as the default theme', setForTheme(null) === 'color');
@@ -171,7 +189,11 @@ try {
     // also `--board-card`, the veil's tint).
     const cards = { pinned: PINNED_CARD, highContrast: HC_CARD };
     for (const [id, t] of Object.entries(THEMES)) cards[`theme:${id}`] = t.vars['--surface'];
-    const worst = (setId, bg) => Math.min(...Object.keys(SET_WORDS[setId])
+    // (row 2.141, Design item 48, 2026-10-31) THE 55 CORE WORDS. The six Halloween words are an outlined filled
+    // shape that the one-colour-at-a-time measure scores about 1.1 everywhere (aac_sets.js OUTLINED_WORDS); they
+    // are held to what they are in the next section, and every figure here stays the figure it was.
+    const core = (setId) => Object.keys(SET_WORDS[setId]).filter((n) => !OUTLINED_WORDS.includes(n));
+    const worst = (setId, bg) => Math.min(...core(setId)
       .map((n) => drawingContrast(setColours(setId, n), bg, null)));
     const table = {};
     for (const s of SYMBOL_SETS) {
@@ -181,11 +203,22 @@ try {
       const passes = Object.entries(table[s.id]).filter(([, v]) => v >= SYMBOL_MIN_CONTRAST).map(([k]) => k);
       info(`  ${s.id.padEnd(10)} clears ${SYMBOL_MIN_CONTRAST}:1 on: ${passes.join(', ') || 'NO card'}`);
     }
-    const DARK = ['fall', 'steampunk', 'cyberpunk', 'winter', 'ocean', 'night'];
-    check('*** the six dark-card sets all clear 3:1 on the board’s own pinned card ***',
+    const DARK = ['fall', 'steampunk', 'cyberpunk', 'winter', 'ocean', 'night', 'halloween'];
+    check('every set marked for dark cards is in that list', SYMBOL_SETS.filter((s) => s.card === 'dark')
+      .map((s) => s.id).sort().join() === [...DARK].sort().join());
+    check('*** the seven dark-card sets all clear 3:1 on the board’s own pinned card ***',
       DARK.every((id) => table[id].pinned >= 3), JSON.stringify(DARK.map((id) => table[id].pinned)));
     check('...and every dark theme’s card', DARK.every((id) => ['dusk', 'fall', 'steampunk', 'cyberpunk',
-      'winter', 'ocean', 'night'].every((th) => table[id][`theme:${th}`] >= 3)));
+      'winter', 'ocean', 'night', 'halloween'].every((th) => table[id][`theme:${th}`] >= 3)));
+    // Measured 2026-10-31 (item 48's readability check 2): Design's estimate was about 8:1 on Halloween's card.
+    // The worst word on both cards is `all_done`, in lilac.
+    info(`  halloween (55 core words): pinned ${table.halloween.pinned}, Halloween’s card ${table.halloween['theme:halloween']}, `
+      + `white ${table.halloween.highContrast}`);
+    check('*** Halloween’s set on Halloween’s card: worst 7.86 (all_done), well over 3:1 ***',
+      table.halloween['theme:halloween'] >= 7.8 && table.halloween.pinned >= 7.4,
+      JSON.stringify(table.halloween));
+    check('...and Halloween’s board card (--board-card, what the see-through veil is a tint of) is that same card',
+      THEMES.halloween.vars['--board-card'].toLowerCase() === THEMES.halloween.vars['--surface'].toLowerCase());
     check('cozy and mono clear it on every light card', ['cozy', 'mono'].every((id) => ['default',
       'contrast', 'warm', 'forge', 'cozy'].every((th) => table[id][`theme:${th}`] >= 3)
       && table[id].highContrast >= 3));
@@ -202,9 +235,9 @@ try {
     const failing = own.filter(([, v]) => v < 3).map(([th, v]) => `${th}:${v}`);
     check('*** every theme’s set reads on that theme’s own card — EXCEPT default/color, which is known ***',
       failing.length === 1 && failing[0].startsWith('default:'), failing.join(', '));
-    const colorDark = Object.keys(SET_WORDS.color).filter((n) =>
+    const colorDark = core('color').filter((n) =>
       drawingContrast(setColours('color', n), PINNED_CARD, null) < 3);
-    const colorLight = Object.keys(SET_WORDS.color).filter((n) =>
+    const colorLight = core('color').filter((n) =>
       drawingContrast(setColours('color', n), '#ffffff', null) < 3);
     info(`  color fails on the pinned card (${colorDark.length}): ${colorDark.join(', ')}`);
     info(`  color fails on white (${colorLight.length}): ${colorLight.join(', ')}`);
@@ -225,6 +258,43 @@ try {
         ink: '#0a3323' }).from === 'own')
       && alsoOwn.every((n) => pickSymbol({ name: n, setId: 'color', guard: true, bg: '#ffffff',
         ink: '#0a3323' }).from === 'set'), `worse: ${worse.join()} same: ${alsoOwn.join()}`);
+  }
+
+  // (row 2.141, Design item 48, 2026-10-31)
+  section('*** the six Halloween words: drawn in every set, outlined, and what the guard does with them ***');
+  {
+    const core = (setId) => Object.keys(SET_WORDS[setId]).filter((n) => !OUTLINED_WORDS.includes(n));
+    const missingIn = SYMBOL_SETS.filter((s) => !OUTLINED_WORDS.every((w) => setHas(s.id, w))).map((s) => s.id);
+    check('every set draws all six (so a pinned set never drops to a different style for them)', missingIn.length === 0,
+      missingIn.join());
+    // What makes them "outlined": a near-black edge in every set, light-card ones included, under a filled shape.
+    const NEAR_BLACK = ['#141418', '#16121f', '#2a1a24', '#2f3a33', '#000000'];
+    const edgeless = SYMBOL_SETS.flatMap((s) => OUTLINED_WORDS.filter((w) =>
+      !setColours(s.id, w).some((c) => NEAR_BLACK.includes(c))).map((w) => `${s.id}/${w}`));
+    check('KNOWN, recorded: each is drawn with a near-black outline in every set', edgeless.length === 0, edgeless.join());
+    const onDark = SYMBOL_SETS.flatMap((s) => OUTLINED_WORDS.map((w) => drawingContrast(setColours(s.id, w), PINNED_CARD, null)));
+    const lightOk = SYMBOL_SETS.flatMap((s) => OUTLINED_WORDS.filter((w) =>
+      drawingContrast(setColours(s.id, w), '#ffffff', null) >= SYMBOL_MIN_CONTRAST).map((w) => `${s.id}/${w}`));
+    info(`  the six, measured one colour at a time: best on the pinned card ${Math.max(...onDark).toFixed(2)}; `
+      + `clearing 3:1 on white: ${lightOk.join(', ') || 'none'}`);
+    check('KNOWN, recorded: so on a dark card the measure scores every one of them, in every set, under 3:1',
+      onDark.every((v) => v < SYMBOL_MIN_CONTRAST), Math.max(...onDark).toFixed(2));
+    const hw = THEMES.halloween.vars;
+    const follow = (setId, bg, ink) => OUTLINED_WORDS.map((w) => pickSymbol({ name: w, setId, guard: true, bg, ink }).from);
+    check('*** following the theme they give way to the board’s own drawing, on the pinned card and on Halloween’s ***',
+      follow('halloween', PINNED_CARD, PINNED_INK).every((f) => f === 'own')
+        && follow('halloween', hw['--surface'], hw['--text-strong']).every((f) => f === 'own'),
+      JSON.stringify([follow('halloween', PINNED_CARD, PINNED_INK), follow('halloween', hw['--surface'], hw['--text-strong'])]));
+    check('...and that drawing reads there: the board’s ink, 13:1 or better',
+      OUTLINED_WORDS.every((w) => ownColours(w).join() === 'currentColor'
+        && drawingContrast(ownColours(w), PINNED_CARD, PINNED_INK) >= 13
+        && drawingContrast(ownColours(w), hw['--surface'], hw['--text-strong']) >= 13));
+    check('*** a set somebody PINNED shows Design’s drawing of them, as drawn ***',
+      OUTLINED_WORDS.every((w) => pickSymbol({ name: w, setId: 'halloween', guard: false, bg: PINNED_CARD,
+        ink: PINNED_INK }).from === 'set'));
+    check('...while Halloween’s 55 core words, following the theme, are all Halloween’s own drawings on its card',
+      core('halloween').every((n) => pickSymbol({ name: n, setId: 'halloween', guard: true, bg: hw['--surface'],
+        ink: hw['--text-strong'] }).from === 'set'));
   }
 
   section('*** pickSymbol — which drawing goes on a card ***');

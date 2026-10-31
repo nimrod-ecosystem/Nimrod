@@ -463,8 +463,8 @@ export const SETTINGS = [
   // "should change when you change themes", the lock being the option. FOR: his words, twice. AGAINST: the board's own
   // drawings are the measured ones; answered by `pickSymbol`'s guard, which keeps the board's own drawing of any word
   // the theme's would read worse than, on the card it actually sits on. A board somebody set keeps its setting.
-  // Themes with no set of their own borrow the nearest (aac_sets.js THEME_SETS: Halloween wears Fall's); symbols
-  // DRAWN for a theme (bats for Halloween) are Design's item 48.
+  // Themes with no set of their own borrow the nearest (aac_sets.js THEME_SETS: Diwali wears Fall's). Halloween has
+  // its own since Design's item 48 (row 2.141, 2026-10-31): the same 55 shapes in its colours, and six words of its own.
   { key: 'symbols', label: 'Symbols', kind: 'choice', default: 'theme', level: 'standard',
     options: [
       { value: 'own',   label: 'The board’s own drawings' },
