@@ -48,7 +48,7 @@
 //
 // Timers and the clock are injectable so the whole file is testable against a fake clock.
 
-import { ROLE_CYCLE_ACTION, ROLE_CYCLE_TOPIC } from './actions.js';
+import { ROLE_CYCLE_ACTION, ROLE_CYCLE_TOPIC, verbTopic, BAR_SCAN_TOPIC } from './actions.js';
 import { gatePermits, senderMeta, ROLES, GATES } from './sender.js';
 
 // IMPORTED, then re-exported. `sender.js` owns these because the pure gate rule needs them
@@ -115,6 +115,63 @@ const DEVICE_CLASSES = ['gamepad', 'keyboard', 'switch', 'hid', 'serial', 'bluet
 export function deviceClass(device) {
   const head = String(device || '').split(':')[0].toLowerCase();
   return DEVICE_CLASSES.includes(head) ? head : 'other';
+}
+
+// ---------------------------------------------------------------------------------------
+// *** IS A SWITCH SET UP HERE? (row 2.159 step 2, 2026-10-31) *** The settings menu's "How you choose
+// things" follows the answer while nobody has chosen (settings_fields.js `chooseModeFrom`). Two questions,
+// both pure, both read off the person's bindings record (input_runtime.js `record()`):
+//
+// WHICH DEVICES ARE A SWITCH. Everything here except the machine's own keyboard, mouse and touchscreen and
+// the things that are not presses of a hand:
+//   a switch    gamepad:* (the Xbox Adaptive Controller and every jack switch through it - input_gamepad.js),
+//               switch:* / hid:* / serial:* / bluetooth:*, facegesture (a gesture AS a switch -
+//               input_facegesture.js), and a keyboard:<name> or pointer:<name> somebody ADDED on the Devices
+//               page ("A switch the computer sees as a keyboard key" - inputs.js ADDABLE_CLASSES)
+//   not one     keyboard, pointer:mouse, pointer:touch (the machine's own), speech, dwell (pointing by
+//               resting), marker:* (pointing by a colour), command (cursor_drive.js), remote (drive.js)
+// AGAINST, and the hole it leaves: a switch box that TYPES a key arrives as the plain `keyboard` and cannot
+// be told from one (the browser exposes no difference - inputs.js says so at the add flow). Counting the
+// machine's keyboard would put every desktop visitor into Step through, so it does not count; somebody with
+// a typing switch box gets Point and click until they choose, the one press it has always cost them.
+//
+// WHICH BINDINGS COUNT - argued, because "a switch bound only for one game" is a real setup:
+//   FOR every binding on a switch: the simplest rule, and it never misses a switch user.
+//   AGAINST it: an ordinary player who plugged in a game controller and bound its stick to a game's left /
+//     right would open the menu in Step through - the "smaller product" failure, a rule right for one
+//     person stated for everybody.
+//   FOR only the bindings that WALK THE SCREEN - next, prev, select, the panel step (focus-next / -prev) and
+//     the bar's scan: those are the presses that also walk this menu (settings.js `attachBus`), so a switch on
+//     one of them IS somebody who chooses by stepping. A single switch is always bound to one of them (it
+//     has to be, to reach anything), so no switch user is missed.
+//   AGAINST that: a player who bound the controller's A button to Primary select counts. Answered by what a
+//     wrong guess costs: the row says why it is set ("because a switch is set up") and one choice ends it.
+// The rule: a switch bound to a walking action. Back and Menu alone do not count (a controller's Start
+// button on Menu is a gamer's setup as often as a scanner's).
+// ---------------------------------------------------------------------------------------
+const SWITCH_CLASSES = ['gamepad', 'switch', 'hid', 'serial', 'bluetooth'];
+// The machine's own pointers (input_pointer.js POINTER_DEVICE / TOUCH_DEVICE, written out: that file imports this one).
+const OWN_POINTERS = ['pointer:mouse', 'pointer:touch'];
+/** Is `device` a switch (above), rather than the machine's own keyboard / mouse / touch or a non-press source? */
+export function isSwitchDevice(device) {
+  const d = String(device || '').toLowerCase();
+  if (!d) return false;
+  const head = d.split(':')[0];
+  if (SWITCH_CLASSES.includes(head)) return true;
+  if (head === 'facegesture') return true;
+  // keyboard:<name> / pointer:<name>: a switch somebody added and named; the bare classes are the machine's.
+  if (head === 'keyboard') return d !== 'keyboard' && d.length > 'keyboard:'.length;
+  if (head === 'pointer') return d.length > 'pointer:'.length && !OWN_POINTERS.includes(d);
+  return false;
+}
+/** The actions a press walks the screen with (above): a switch on one of these is a switch user's. */
+export const SWITCH_WALK_ACTIONS = Object.freeze([
+  ...['next', 'prev', 'select', 'focus-next', 'focus-prev'].map(verbTopic), BAR_SCAN_TOPIC,
+]);
+/** Is a switch set up to walk the screen, in this list of bindings (a record's `bindings`)? Pure. */
+export function switchWalks(bindings = []) {
+  return (Array.isArray(bindings) ? bindings : [])
+    .some((b) => b && isSwitchDevice(b.device) && SWITCH_WALK_ACTIONS.includes(b.actionId));
 }
 
 const ck = (device, control) => `${device} ${control}`;

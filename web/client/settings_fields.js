@@ -313,13 +313,43 @@ export const CHOOSE_MODE_FIELD = Object.freeze({
   key: CHOOSE_MODE_KEY, label: 'How you choose things', kind: 'choice', level: 'essential',
   default: DEFAULT_CHOOSE_MODE,
   options: Object.freeze([
-    Object.freeze({ value: 'point', label: 'Point and click: long lists open as a list' }),
+    // (row 2.159, 2026-10-31: was "long lists open as a list", out of date once each row drew its own controls)
+    Object.freeze({ value: 'point', label: 'Point and click: each setting has its own buttons, list or slider' }),
     Object.freeze({ value: 'step', label: 'Step through (for a switch): each press moves to the next' }),
   ]),
 });
 /** A stored value (or a host's answer) as one of CHOOSE_MODES; anything else is the default. */
 export function chooseModeOf(v) {
   return CHOOSE_MODES.includes(v) ? v : DEFAULT_CHOOSE_MODE;
+}
+
+// ---------------------------------------------------------------------------------------
+// *** THE MODE FOLLOWS THE INPUT SETUP; A PICK STANDS (row 2.159 step 2, 2026-10-31). ***
+// Step through used to have to be found and set by hand, by exactly the person least able to reach it. Now,
+// while NOBODY HAS CHOSEN (no stored `chooseMode`), the mode follows the person's setup: a switch set up to walk
+// the screen (input.js `switchWalks`, where which switches and which bindings count is argued) starts in Step
+// through, anything else in Point and click. ONCE SOMEBODY CHOOSES - either value, by any route - that stands,
+// whatever is later bound or unbound.
+//
+// THE ONE FUNCTION. Every reader of the mode (the kiosk's `chooseModeNow`, which the menu, the folder page, the
+// bar's scan, the automation window and every module's `ctx.chooseMode` all read) goes through this, so no
+// surface can disagree with another about which mode is in force.
+//
+// THE ROW SAYS WHY, only when the setup chose (`why`). FOR "because a switch is set up": it names the cause in
+// the reader's words, and a caregiver who wonders why the menu steps sees the answer where the setting is.
+// AGAINST the proposal's "...set up here": the bindings are the PERSON's and follow them to every screen, so
+// "here" would be wrong on the next screen they use. "Choose one to keep it" says what makes it stand, which
+// otherwise nobody could know until a switch was unplugged and the mode moved under them.
+// Point and click by default says nothing extra: it is what every screen does, and a reason on every
+// ordinary visitor's row would be noise.
+// ---------------------------------------------------------------------------------------
+export const CHOOSE_MODE_WHY = Object.freeze({ switch: 'because a switch is set up · choose one to keep it' });
+/** The mode in force: `{ mode, picked, why }`. `stored` is the row's `chooseMode` (anything not a mode = not
+ *  chosen); `switchSetUp` whether a switch walks the screen (input.js `switchWalks`). Pure. */
+export function chooseModeFrom(stored, { switchSetUp = false } = {}) {
+  if (CHOOSE_MODES.includes(stored)) return { mode: stored, picked: true, why: null };
+  if (switchSetUp) return { mode: 'step', picked: false, why: CHOOSE_MODE_WHY.switch };
+  return { mode: DEFAULT_CHOOSE_MODE, picked: false, why: null };
 }
 /** Does a press on this field open the choice picker (true) or step it (false)? Pure. */
 export function opensPicker(field, { mode = DEFAULT_CHOOSE_MODE, over = PICKER_OVER } = {}) {

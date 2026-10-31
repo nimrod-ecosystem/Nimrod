@@ -33,7 +33,10 @@ tested end to end — so the resolver gets hammered alone and the wiring gets te
 import { createNav, buildItems, mountSettings, MENU_TOPIC } from '../settings.js';
 import { normalizeField, fieldValue, stepValue, displayValue, showsAtLevel,
          fieldItems, fieldsFor, readWithLegacy, LEVELS, KINDS, keepFields,
-         pointerControl, segmentUnits, SEGMENTED_MAX, SEG_FIT_NARROW, SEG_FIT_WIDE } from '../settings_fields.js';
+         pointerControl, segmentUnits, SEGMENTED_MAX, SEG_FIT_NARROW, SEG_FIT_WIDE,
+         chooseModeFrom, CHOOSE_MODE_WHY } from '../settings_fields.js';
+import { isSwitchDevice, switchWalks, SWITCH_WALK_ACTIONS } from '../input.js';
+import { DEFAULT_BINDINGS } from '../input_keyboard.js';
 import { DEFAULT_PALETTE } from '../color_picker.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
@@ -1859,6 +1862,250 @@ const J = (x) => JSON.stringify(x);
   const last = btns.at(-1).getBoundingClientRect();
   const row = ctl().getBoundingClientRect();
   check('...and they sit inside the row (nothing runs off it)', last.right <= row.right + 1, `${Math.round(last.right)} vs ${Math.round(row.right)}`);
+  m.destroy();
+}
+
+// =====================================================================
+// Row 2.159 step 2 (2026-10-31): while nobody has chosen, "How you choose things" follows the input setup - a switch
+// bound to walk the screen starts in Step through - and a pick stands. The rule is pure (input.js, settings_fields.js);
+// the kiosk's wiring of it (the row's words, a pick standing) is in kiosk_test.
+section('*** the mode follows the input setup while nobody has chosen; a pick stands (row 2.159 step 2) ***');
+{
+  const sw = (device, actionId, control = 'button:0') => ({ id: `t/${device}/${actionId}`, device, control, actionId });
+  check('a switch: a gamepad (the adaptive controller), a hid / serial / bluetooth one, a face gesture, a keyboard- or mouse-class switch somebody added',
+    ['gamepad:045e0b0a', 'hid:0x1234', 'serial:0', 'bluetooth:x', 'switch:1', 'facegesture', 'keyboard:big-red-ab12', 'pointer:jelly-bean-x1']
+      .every(isSwitchDevice));
+  check('NOT a switch: the machine\'s own keyboard, mouse and touchscreen, a voice, dwell, a colour marker, the cursor by command',
+    !['keyboard', 'pointer:mouse', 'pointer:touch', 'speech', 'dwell', 'marker:color', 'command', 'remote', '', null].some(isSwitchDevice));
+  check('the walking actions: next, prev, select, the panel step and the bar\'s scan (not back, not menu)',
+    ['verb/next', 'verb/prev', 'verb/select', 'verb/focus-next', 'verb/focus-prev', 'shell/bar-scan'].every((a) => SWITCH_WALK_ACTIONS.includes(a))
+    && !SWITCH_WALK_ACTIONS.includes('verb/back') && !SWITCH_WALK_ACTIONS.includes('verb/menu'));
+  check('*** the shipped keyboard defaults: no switch set up (every desktop visitor points and clicks) ***', switchWalks(DEFAULT_BINDINGS) === false);
+  check('*** a switch on Next (or Select, or the panel step): a switch is set up ***',
+    switchWalks([...DEFAULT_BINDINGS, sw('gamepad:045e0b0a', 'verb/next')]) && switchWalks([sw('facegesture', 'verb/select')])
+    && switchWalks([sw('keyboard:big-red-ab12', 'verb/focus-next', 'key:1')]));
+  check('*** a game controller bound only to a game\'s left / right, or its Start to Menu: NOT a switch user ***',
+    !switchWalks([sw('gamepad:045e0b0a', 'verb/left'), sw('gamepad:045e0b0a', 'verb/right', 'button:1'), sw('gamepad:045e0b0a', 'verb/menu', 'button:9')]));
+  check('the machine\'s keyboard on Next by another key is still the keyboard (a typing switch box cannot be told from it)',
+    !switchWalks([{ id: 'k', device: 'keyboard', control: 'key:1', actionId: 'verb/next' }]));
+  check('garbage in: no switch, no throw', switchWalks(null) === false && switchWalks([null, {}, { device: 'gamepad:1' }]) === false);
+  const J2 = (x) => JSON.stringify(x);
+  check('*** nothing chosen + a switch: Step through, not a pick, and it says why ***',
+    J2(chooseModeFrom(undefined, { switchSetUp: true })) === J2({ mode: 'step', picked: false, why: CHOOSE_MODE_WHY.switch })
+    && /because a switch is set up/.test(CHOOSE_MODE_WHY.switch) && /choose one to keep it/.test(CHOOSE_MODE_WHY.switch));
+  check('nothing chosen, no switch: Point and click, with no reason added (the ordinary default says nothing)',
+    J2(chooseModeFrom(undefined)) === J2({ mode: 'point', picked: false, why: null }) && chooseModeFrom(null, { switchSetUp: false }).why === null);
+  check('*** a pick stands: Point and click chosen stays, a switch or not; Step through chosen stays without one ***',
+    J2(chooseModeFrom('point', { switchSetUp: true })) === J2({ mode: 'point', picked: true, why: null })
+    && J2(chooseModeFrom('step', { switchSetUp: false })) === J2({ mode: 'step', picked: true, why: null }));
+  check('a stored value that is not a mode is not a pick', chooseModeFrom('scan', { switchSetUp: true }).picked === false
+    && chooseModeFrom('scan', { switchSetUp: true }).mode === 'step');
+  check('site copy: no "her", no "screen" person words in the reason', !/\bher\b|\bhis\b/i.test(CHOOSE_MODE_WHY.switch));
+}
+
+// =====================================================================
+// Row 2.159 step 3 (2026-10-31): the keyboard in Point and click. On the row the keyboard is on, ← / → change the value
+// (stopping at the ends), Enter opens a dropdown row's dropdown, Space flips a toggle; in Step through every key goes on
+// to the bus exactly as before, and no key somebody bound to something of their own is taken.
+section('*** the keyboard on a row, in Point and click: ← → change it, Enter opens the dropdown, Space flips (row 2.159 step 3) ***');
+{
+  const F = [
+    { key: 'size', label: 'Size', kind: 'choice', default: 's', options: [
+      { value: 's', label: 'Small' }, { value: 'm', label: 'Medium' }, { value: 'l', label: 'Large' }] },
+    { key: 'shade', label: 'Shade', kind: 'choice', default: 'a',
+      options: 'abcdefg'.split('').map((c) => ({ value: c, label: `Shade ${c.toUpperCase()}` })) },
+    { key: 'five', label: 'Five', kind: 'choice', default: 'v', options: ['v', 'w', 'x', 'y', 'z'].map((c) => ({ value: c, label: `Letter ${c}` })) },
+    { key: 'wait', label: 'Wait', kind: 'number', default: 8, min: 4, max: 40, step: 4, unit: 'seconds', unitOne: 'second' },
+    { key: 'calm', label: 'Calm', default: false },
+    { key: 'tint', label: 'Tint', kind: 'color' },
+    { key: 'name', label: 'Name', kind: 'text' },
+  ].map(normalizeField);
+  let live = {};
+  const writes = [];
+  let keyMap = {};   // what the "screen's bindings" do with a key (keyActions); empty: the shipped defaults
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'x', title: 'Keys' }),
+    fields: () => fieldItems(F, { values: () => live, onStep: (k, v) => { writes.push([k, v]); live = { ...live, [k]: v }; } }),
+    keyActions: (control) => (control in keyMap ? keyMap[control] : null),
+  });
+  m.open();
+  const panel = h.querySelector('[data-panel]');
+  let leaked = 0;
+  const spy = () => { leaked += 1; };
+  window.addEventListener('keydown', spy);
+  const key = (k, target = panel, extra = {}) => {
+    const before = leaked;
+    const ev = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...extra });
+    target.dispatchEvent(ev);
+    return { took: leaked === before, prevented: ev.defaultPrevented };
+  };
+  const hint = (id) => m.items().find((i) => i.id === id)?.hint;
+  const rowBtn = (id) => h.querySelector(`.st-item[data-id="${id}"]`);
+  check('(setup) the menu has the keyboard and is in Point and click', document.activeElement === panel && m.chooseMode() === 'point');
+
+  // --- a choice: ← / →, stopping at the ends ---
+  m.focusRow('set:size');
+  let r = key('ArrowRight');
+  check('*** → on a choice row takes the next option, through the row\'s write path ***', live.size === 'm' && hint('set:size') === 'Medium' && J(writes.at(-1)) === J(['size', 'm']));
+  check('...and the key is the menu\'s: stopped there (the bus never sees it) and its default prevented', r.took && r.prevented);
+  key('ArrowRight');
+  const w1 = writes.length;
+  r = key('ArrowRight');
+  check('*** at the last option → STOPS (no wrap, a slider\'s way), writing nothing ***', live.size === 'l' && writes.length === w1 && r.took);
+  key('ArrowLeft');
+  check('← takes the previous option', live.size === 'm');
+  check('the cursor stayed on the row and the menu stayed open', m.focusId() === 'set:size' && m.isOpen() && m.page() === null);
+
+  // --- a number: by its step, stopping at the bounds ---
+  m.focusRow('set:wait');
+  key('ArrowRight');
+  check('*** → on a number goes up one step ***', live.wait === 12 && hint('set:wait') === '12 seconds', J(live));
+  key('ArrowLeft'); key('ArrowLeft');
+  const w2 = writes.length;
+  r = key('ArrowLeft');
+  check('*** at the bottom ← stops (no wrap to 40) and writes nothing ***', live.wait === 4 && writes.length === w2 && r.took, J(live));
+
+  // --- a toggle: → on, ← off, Space flips ---
+  m.focusRow('set:calm');
+  key('ArrowRight');
+  check('*** → turns a toggle ON (the switch\'s knob goes right) ***', live.calm === true && hint('set:calm') === 'On');
+  const w3 = writes.length;
+  key('ArrowRight');
+  check('...and a second → leaves it on (it does not flip back)', live.calm === true && writes.length === w3);
+  key('ArrowLeft');
+  check('← turns it off', live.calm === false);
+  r = key(' ');
+  check('*** Space flips a toggle, and is the menu\'s there (no Pause / Play behind it) ***', live.calm === true && r.took);
+
+  // --- a colour: along its swatches ---
+  m.focusRow('set:tint');
+  const tint0 = m.items().find((i) => i.id === 'set:tint').value;
+  const pal = F[5].options.map((o) => o.value);
+  key('ArrowRight');
+  check('→ on a colour row takes the next swatch', live.tint === pal[pal.indexOf(tint0) + 1], J([tint0, live.tint]));
+  live.tint = pal[0]; m.refresh();
+  const w4 = writes.length;
+  key('ArrowLeft');
+  check('...and ← at the first swatch stops', live.tint === pal[0] && writes.length === w4);
+
+  // --- Space and arrows where they are not the row's: left to the bus ---
+  m.focusRow('set:size');
+  r = key(' ');
+  check('*** Space on a row that is not a toggle is NOT taken: it stays Pause / Play (Mike\'s ruling) ***', !r.took && live.size === 'm');
+  m.focusRow('set:name');
+  r = key('ArrowRight');
+  check('← / → on a text row are not taken (nothing to nudge)', !r.took);
+  m.focusRow('set:size');
+  r = key('ArrowRight', panel, { shiftKey: true });
+  check('with a modifier (Shift+→): not taken', !r.took && live.size === 'm');
+
+  // --- Enter: the dropdown on a dropdown row, Select everywhere else ---
+  m.focusRow('set:shade');
+  r = key('Enter');
+  const ddList = () => h.querySelector('[data-dd-list]');
+  check('*** Enter on a 7-option row opens its DROPDOWN (not the full-page list), and is the menu\'s ***',
+    m.dropdown() === 'set:shade' && !!ddList() && m.page() === null && r.took);
+  check('...the list has the keyboard, on the option in force', document.activeElement === ddList() && ddList().querySelector('.st-dd-opt.active')?.textContent.trim() === 'Shade A');
+  key('ArrowDown', ddList()); key('ArrowDown', ddList()); key('Enter', ddList());
+  check('*** ↓ ↓ Enter in it takes the option two below, and it closes ***', live.shade === 'c' && m.dropdown() === null, J(live));
+  check('*** ...and the keyboard goes back to the ROW, not the dropdown\'s button (so ↓ next walks on) ***', document.activeElement === rowBtn('set:shade'), document.activeElement?.className);
+  m.focusRow('set:five');
+  key('Enter');
+  check('*** a 5-option row (which Enter used to step) opens its dropdown too: it is the control drawn beside it ***', m.dropdown() === 'set:five' && live.five === undefined);
+  key('Escape', ddList());
+  check('Escape closes it, writes nothing, keeps the menu, and the keyboard is back on the row',
+    m.dropdown() === null && m.isOpen() && live.five === undefined && document.activeElement === rowBtn('set:five'));
+  m.focusRow('set:size');
+  r = key('Enter');
+  check('*** Enter on a choice of buttons (every option already showing) is NOT taken: it is Select, as before ***', !r.took && m.dropdown() === null);
+  m.focusRow('set:calm');
+  r = key('Enter');
+  check('Enter on a toggle is not taken either (Select flips it, as before)', !r.took);
+  m.focusRow('set:wait');
+  r = key('Enter');
+  check('...nor on a number', !r.took && m.dropdown() === null);
+
+  // --- the row with the focus is the row the keys are for ---
+  m.focusRow('set:size');
+  const waitWas = live.wait;
+  rowBtn('set:wait').focus();
+  key('ArrowRight', rowBtn('set:wait'));
+  check('*** a row button that has the keyboard (Tab put it there) is the row → changes, and the cursor goes with it ***',
+    live.wait === waitWas + 4 && m.focusId() === 'set:wait', J([waitWas, live.wait, m.focusId()]));
+  panel.focus();
+
+  // --- a pointer control keeps its own keys ---
+  const segBtn = h.querySelector('[data-seg]');
+  segBtn.focus();
+  const sizeWas = live.size;
+  r = key('ArrowRight', segBtn);
+  check('a key on a pointer control (a button beside the row) is not the row\'s', !r.took && live.size === sizeWas);
+  panel.focus();
+
+  // --- a key somebody bound themselves is theirs ---
+  keyMap = { 'key:arrowright': ['verb/next'] };
+  m.focusRow('set:size');
+  const sz = live.size;
+  r = key('ArrowRight');
+  check('*** → bound to Next by the person (a switch box that types →): NOT taken - their Next keeps it ***', !r.took && live.size === sz);
+  keyMap = { 'key: ': ['verb/next'] };
+  m.focusRow('set:shade');
+  r = key('Enter');
+  check('*** Space bound to Next (a two-switch box: Space Next, Enter Select): Enter does not open a list Space would pick in ***', !r.took && m.dropdown() === null);
+  m.focusRow('set:calm');
+  const calmWas = live.calm;
+  r = key(' ');
+  check('...and Space on a toggle is theirs too', !r.took && live.calm === calmWas);
+  keyMap = { 'key:arrowright': [], 'key:enter': ['verb/select'] };
+  m.focusRow('set:size');
+  key('ArrowRight');
+  check('a key bound to nothing, or to its shipped meaning, is free', sz === 'm' && live.size === 'l', J([sz, live.size]));
+  keyMap = {};
+
+  // --- Step through: nothing here runs ---
+  m.setChooseMode('step');
+  const snap = J(live);
+  m.focusRow('set:size'); const a = key('ArrowRight');
+  m.focusRow('set:shade'); const b = key('Enter');
+  m.focusRow('set:calm'); const c = key(' ');
+  check('*** in Step through ←, Enter and Space all go on to the bus, and nothing changes or opens ***',
+    !a.took && !b.took && !c.took && J(live) === snap && m.dropdown() === null && m.page() === null);
+  m.setChooseMode(null);
+
+  // --- a text box being typed in keeps its keys ---
+  m.focusRow('set:name'); m.select();
+  const box = h.querySelector('[data-edit-input]');
+  r = key('ArrowRight', box);
+  check('while a text box is open its arrows are typing (not taken here)', !!box && m.editing() === 'set:name' && !r.took);
+  m.back();
+  window.removeEventListener('keydown', spy);
+  m.destroy();
+}
+{
+  // ← / → on the TAB ROW and on "Settings for": the previous / next tab or subject (they wrap - places, not amounts).
+  const subjects = [{ id: 'p1', label: 'Photos' }, { id: 'p2', label: 'Clock' }];
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'x', title: 'X' }),
+    fields: () => [{ kind: 'item', id: 'set:a', label: 'A', tab: 'module' }, { kind: 'item', id: 'set:loud', label: 'Loudness', tab: 'audio' }],
+    tabs: () => [{ id: 'module', label: 'The panel' }, { id: 'audio', label: 'Sound' }],
+    startTab: () => 'module', subjects: () => subjects, defaultSubject: () => 'p1', onHome: () => {},
+  });
+  m.open();
+  const panel = h.querySelector('[data-panel]');
+  const key = (k) => panel.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+  m.focusRow('tabs');
+  key('ArrowRight');
+  check('*** → on the tab row: the next tab, the cursor staying on the row ***', m.tab() === 'audio' && m.focusId() === 'tabs', String(m.tab()));
+  key('ArrowLeft');
+  check('← : the previous tab', m.tab() === 'module');
+  m.focusRow('subject-pick');
+  key('ArrowRight');
+  check('→ on "Settings for": the next subject', m.subjectId() === 'p2');
+  m.setChooseMode('step');
+  m.focusRow('tabs'); key('ArrowRight');
+  check('in Step through the tab row does not move on ←/→ (as before)', m.tab() === 'module');
   m.destroy();
 }
 

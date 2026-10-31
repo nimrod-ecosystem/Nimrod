@@ -774,6 +774,45 @@ const toTab = (m, id) => {
         const cm = () => kiosk.menu.items().find((r) => r.id === 'set:chooseMode');
         check('*** the "How you choose things" row is there, on the Devices tab ***', !!cm() && cm().tab === 'devices', JSON.stringify(cm()));
         check('...point and click by default: Colours opens a list', kiosk.menu.chooseMode() === 'point' && kiosk.menu.opensList('set:theme') === true);
+        // (row 2.159 step 2, 2026-10-31) NOBODY HAS CHOSEN YET, SO THE MODE FOLLOWS THE INPUT SETUP: a switch bound to
+        // walk the screen starts in Step through, the row says why, and a pick stands. Bindings added straight to the
+        // input bus in force (what `chooseModeNow` reads), and taken off again.
+        {
+          const inp = kiosk.runtime.input;
+          const addSw = (actionId, control = 'button:0') => inp.addBinding({ id: `test/switch-${actionId}-${control}`, actionId, device: 'gamepad:045e0b0a', control });
+          let sw = addSw('verb/next');
+          kiosk.menu.refresh();
+          check('*** a switch bound to Next, nothing chosen: Step through - the menu steps Colours, and the row says why ***',
+            kiosk.menu.chooseMode() === 'step' && kiosk.menu.opensList('set:theme') === false
+            && /Step through/.test(cm()?.hint || '') && /because a switch is set up/.test(cm()?.hint || ''), JSON.stringify([kiosk.menu.chooseMode(), cm()?.hint]));
+          inp.removeBinding(sw);
+          kiosk.menu.refresh();
+          check('switch unbound, still nothing chosen: Point and click again, and no reason on the row',
+            kiosk.menu.chooseMode() === 'point' && !/because/.test(cm()?.hint || ''), cm()?.hint);
+          sw = addSw('verb/left');
+          kiosk.menu.refresh();
+          check('*** a game controller on a game\'s Left only: still Point and click (not a switch user) ***', kiosk.menu.chooseMode() === 'point');
+          inp.removeBinding(sw);
+          // CHOOSING THE INFERRED MODE IS A PICK: it is written, and stands when the switch goes.
+          sw = addSw('verb/select');
+          kiosk.menu.refresh();
+          const took = cm()?.commit?.('step');
+          await sleep(50);
+          kiosk.menu.refresh();
+          check('*** choosing Step through while it was only inferred writes it: the reason goes, the pick is the row\'s ***',
+            took === true && kiosk.menu.chooseMode() === 'step' && !/because/.test(cm()?.hint || ''), JSON.stringify([took, cm()?.hint]));
+          inp.removeBinding(sw);
+          kiosk.menu.refresh();
+          check('*** ...and it STANDS with the switch gone ***', kiosk.menu.chooseMode() === 'step');
+          kiosk.menu.showTab('devices'); kiosk.menu.focusRow('set:chooseMode'); kiosk.menu.select();
+          await sleep(50);
+          sw = addSw('verb/next');
+          kiosk.menu.refresh();
+          check('*** Point and click chosen (one press, from Step through) stands with a switch bound again ***',
+            kiosk.menu.chooseMode() === 'point' && !/because/.test(cm()?.hint || ''), JSON.stringify([kiosk.menu.chooseMode(), cm()?.hint]));
+          inp.removeBinding(sw);
+          kiosk.menu.refresh();
+        }
         kiosk.menu.showTab('devices'); kiosk.menu.focusRow('set:chooseMode'); kiosk.menu.select();
         await sleep(50);
         check('*** flipping the row: step through, and the theme row now STEPS instead of opening a list ***',

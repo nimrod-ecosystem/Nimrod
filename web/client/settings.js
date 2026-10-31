@@ -49,12 +49,12 @@
 // WHY THAT MATTERED: a screen handed to nobody rendered "Setting up for …" forever, and the
 // SCREEN section held nothing but "Close menu". Two universal headings, no universal content.
 
-import { VERBS, verbTopic, MENU_TAB_TOPIC } from './actions.js';
+import { VERBS, verbTopic, MENU_TAB_TOPIC, PLAY_PAUSE_TOPIC } from './actions.js';
 import { swatchesHTML } from './color_picker.js';
 import { mountPicturePicker } from './picture_picker.js';
 import { mountChoicePicker } from './choice_picker.js';
 import { mountPlayerPicker } from './player_picker.js';   // players (2026-10-06)
-import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER, showsAtLevel, pointerControl } from './settings_fields.js';
+import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER, showsAtLevel, pointerControl, stepValue } from './settings_fields.js';
 
 // SEARCH's words (row 2.94; `tabbed`). Site copy: plain, no names.
 export const SEARCH_WORDS = Object.freeze({
@@ -521,6 +521,10 @@ export function mountSettings(root, {
   // function returning one, read at every press - the host answers from the PERSON's row, where "How
   // you choose things" lives. Absent: 'point', so nobody steps through twelve themes unless they asked.
   chooseMode = 'point',
+  // (row 2.159 step 3, 2026-10-31) WHAT THE SCREEN'S BINDINGS DO WITH A KEY, read at the press: `keyActions('key:enter')`
+  // -> the action ids bound to it (`[]` unbound). The menu takes ← → Enter Space on a row in Point and click only while
+  // each is at its ordinary meaning (see "THE KEYBOARD ON A ROW"). Absent: the shipped defaults are assumed.
+  keyActions = null,
   // players (2026-10-06): WHO THE PLAYER PICKER LISTS, read when a players row is pressed: a function returning
   // `{ people, self, screenSeats, guests }` (player_picker.js mountPlayerPicker). Absent: guests only.
   playerHost = null,
@@ -993,7 +997,7 @@ export function mountSettings(root, {
     render();
     return wrote;
   }
-  function openDd(n) {
+  function openDd(n, { fromRow = false } = {}) {
     const it = items[n];
     const opts = choiceOpts(it);
     if (!it || !opts.length) return false;
@@ -1001,7 +1005,9 @@ export function mountSettings(root, {
     if (dd && dd.id === it.id) { closeDd({ focus: true }); return false; }
     editing = null;
     const at = opts.findIndex((o) => same(o.value, it.value));
-    dd = { id: it.id, active: at >= 0 ? at : 0 };
+    // `fromRow` (row 2.159 step 3): opened by Enter on the ROW, so when it closes the keyboard goes back to the row, not
+    // to the dropdown's button - whose own keys (Down / Up open it) would catch the next ↓ meant for the next row.
+    dd = { id: it.id, active: at >= 0 ? at : 0, fromRow: !!fromRow, n };
     paint();
     const list = listEl.querySelector('[data-dd-list]');
     try { list?.focus?.({ preventScroll: true }); } catch { /* no focus here */ }
@@ -1014,15 +1020,17 @@ export function mountSettings(root, {
    *  the way to another row still lands on that row (a repaint would replace the row under the press). */
   function closeDd({ focus = false } = {}) {
     if (!dd) return false;
+    const fromRow = dd.fromRow;
     dd = null;
     const list = listEl.querySelector('[data-dd-list]');
     const n = list ? list.dataset.ddList : null;
     list?.remove();
     const btn = n != null ? listEl.querySelector(`[data-dd-btn="${cssq(n)}"]`) : null;
     if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.removeAttribute('aria-controls'); }
-    if (focus) { try { btn?.focus?.({ preventScroll: true }); } catch { /* gone */ } }
+    if (focus) { try { (fromRow ? rowEl(n) || btn : btn)?.focus?.({ preventScroll: true }); } catch { /* gone */ } }
     return true;
   }
+  const rowEl = (n) => (n == null ? null : listEl.querySelector(`.st-item[data-n="${cssq(n)}"]`));
   function moveDd(to) {
     const list = listEl.querySelector('[data-dd-list]');
     if (!dd || !list) return;
@@ -1036,7 +1044,11 @@ export function mountSettings(root, {
   function pickDd(n, i) {
     const o = choiceOpts(items[n])[i];
     if (!o) { closeDd({ focus: true }); return false; }
-    return setOutright(n, o.value);
+    const fromRow = !!dd?.fromRow;
+    const wrote = setOutright(n, o.value);
+    // Opened from the row (step 3): the keyboard goes back to the row, as Escape sends it (see openDd).
+    if (fromRow) { try { rowEl(n)?.focus?.({ preventScroll: true }); } catch { /* gone */ } }
+    return wrote;
   }
 
   // ---------------------------------------------------------------------------------
@@ -1590,12 +1602,138 @@ export function mountSettings(root, {
     if (e.target.closest('[data-page-back]')) closePage();
   }, sig);
 
+  // ---------------------------------------------------------------------------------
+  // *** THE KEYBOARD ON A ROW, IN POINT AND CLICK (row 2.159 step 3, 2026-10-31). *** The menu's keys were a switch's:
+  // ↓ / ↑ walk (verb/next, verb/prev), Enter steps the row (verb/select). Now, in Point and click, on the row the
+  // keyboard is on (the cursor's row; a row button that has the focus, if Tab put it on another one):
+  //   ← / →   change the value, the slider's way: a choice to the previous / next option, a number by its step, a
+  //           colour along its swatches, a toggle off / on; the tab row to the previous / next tab, "Settings for"
+  //           to the previous / next subject (those two wrap, as a tab strip's arrows do: they are places, not
+  //           amounts). A VALUE STOPS AT ITS ENDS (no wrap). FOR: it is what a slider and an
+  //           ordinary list box do, a held key cannot spin round past where it was aimed, and both directions
+  //           exist, so nothing needs the wrap a one-way switch needs. AGAINST: Select still wraps - kept, it is
+  //           the switch's contract (settings_fields.js stepValue).
+  //           A TOGGLE: ← off, → on, rather than "flips". FOR: the switch drawn beside the row has its knob left for
+  //           Off and right for On, so the key moves it the way it looks; and a second → does not undo the first.
+  //           AGAINST: a flip needs no learning of which side is On - Space and Enter flip, for that.
+  //   Enter   opens the DROPDOWN, on a choice row whose pointer control is one (the one step 1 draws beside it) -
+  //           not the full-page list a press of the row opens, because the keyboard is the pointer's companion
+  //           here and should open what the pointer sees. On every other row Enter is Select, as before (a
+  //           choice of 2-4 buttons steps: all its options are already on the screen, ← / → take any of them).
+  //   Space   flips a toggle. Everywhere else Space stays Pause / Play (Mike, 2026-10-02: "space should be universal
+  //           for play/pause") - a toggle is the one place in a form where Space has always meant "flip this".
+  //
+  // ← AND → WERE "the previous / next panel" (input_keyboard.js DEFAULT_BINDINGS, verb/focus-prev / -next). While
+  // the menu is open those changed nothing: the router is paused (attachBus) and the menu never listened for them.
+  // So in the menu they are free, and taking them costs no existing behaviour.
+  //
+  // NOTHING CHANGES FOR A SWITCH: in Step through none of this runs, and every key goes to the bus as before.
+  // AND NOTHING TAKES A KEY SOMEBODY BOUND THEMSELVES: each key is taken only while what the screen binds to it
+  // (`keyActions`) is its shipped meaning or nothing. A switch box that types → for Next keeps Next. And Enter opens
+  // a dropdown only while the dropdown's own keys (↓ ↑ Enter Space) are ordinary too: a two-switch box typing Space
+  // for Next and Enter for Select would otherwise open a list its Next cannot move in (Space would pick in it).
+  // ONE PATH PER PRESS: a key taken here is stopped here (the bus never sees it); a key not taken goes on to the bus.
+  // NEVER A TRAP: the dropdown is step 1's - Escape, Back, any move, a click elsewhere, Enter on it all close it.
+  // ---------------------------------------------------------------------------------
+  const KEY_DEFAULTS = Object.freeze({
+    'key:arrowleft': [verbTopic('focus-prev')], 'key:arrowright': [verbTopic('focus-next')],
+    'key:arrowdown': [verbTopic('next')], 'key:arrowup': [verbTopic('prev')],
+    'key:enter': [verbTopic('select')], 'key: ': [PLAY_PAUSE_TOPIC],
+  });
+  /** Is this key at its ordinary meaning here (bound to its shipped action, or to nothing)? */
+  function keyFree(control) {
+    if (typeof keyActions !== 'function') return true;
+    let acts;
+    try { acts = keyActions(control); } catch (err) { console.warn('settings: keyActions threw', err); return false; }
+    if (acts == null) return true;
+    const ok = KEY_DEFAULTS[control] || [];
+    return (Array.isArray(acts) ? acts : [acts]).every((a) => ok.includes(a));
+  }
+  const typingIn = (t) => !!t && (['INPUT', 'TEXTAREA', 'SELECT'].includes(String(t.tagName || '').toUpperCase()) || t.isContentEditable === true);
+  /** Move row `n`'s value one place along (`dir` -1 / +1), stopping at the ends. True when the key was the row's. */
+  function nudgeRow(n, dir) {
+    const it = items[n];
+    if (!it) return false;
+    if (it.tabStrip) { nav.setIndex(n); stepTab(dir); return true; }
+    if (it.subjectPick) { nav.setIndex(n); if (stepSubject(dir)) render(); return true; }
+    const f = it.field;
+    if (!f || f.readOnly || !f.cycleable || typeof it.commit !== 'function' || it.edit) return false;
+    if (f.kind === 'toggle') { if (!!it.value !== dir > 0) setOutright(n, dir > 0); else { nav.setIndex(n); paint(); } return true; }
+    if (f.kind === 'number') {
+      const cur = Number(it.value);
+      const want = Number.isFinite(cur) ? cur + dir * (f.step || 1) : f.min;
+      if (Number.isFinite(cur) && (want > f.max ? cur >= f.max : want < f.min ? cur <= f.min : false)) { nav.setIndex(n); paint(); return true; }
+      setOutright(n, want);
+      return true;
+    }
+    if (f.kind === 'choice' || f.kind === 'color') {
+      const opts = f.kind === 'color' ? (f.options || []) : choiceOpts(it);
+      if (!opts.length) return false;
+      let at = opts.findIndex((o) => same(o.value, it.value));
+      // Off the list (a dead id; a colour from the fine picker): where a Select would land - stepValue's repair, and
+      // for a colour the swatch the row names ("Close to Blue") - then on from there.
+      let want;
+      if (at < 0) want = stepValue(f, it.value, dir);
+      else {
+        const to = Math.max(0, Math.min(opts.length - 1, at + dir));
+        if (to === at) { nav.setIndex(n); paint(); return true; }   // at the end: it stops
+        want = opts[to].value;
+      }
+      setOutright(n, want);
+      return true;
+    }
+    return false;
+  }
+  /** Is row `n`'s dropdown the control showing beside it (a dropdown, or a 'wide' row on a narrow list)? */
+  function ddShowing(n) {
+    const it = items[n];
+    const pc = it && it.choice && it.field ? pointerControl(it.field, { mode: modeNow() }) : null;
+    if (!pc) return false;
+    if (pc.kind === 'dropdown') return true;
+    if (pc.fit !== 'wide') return false;
+    // Both are drawn for a 'wide' row and a container query shows one (settings.css): asked of the style, not measured.
+    const wrap = listEl.querySelector(`[data-dd-btn="${cssq(n)}"]`)?.closest('.st-dd');
+    try { return !!wrap && doc?.defaultView?.getComputedStyle?.(wrap).display !== 'none'; } catch { return false; }
+  }
+  panel.addEventListener('keydown', (e) => {
+    if (!open || page || picker || editing || dd) return;
+    if (modeNow() !== 'point') return;                     // Step through: every key goes on, as before
+    if (e.defaultPrevented || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+    const t = e.target;
+    if (typingIn(t)) return;
+    // Only a key on the menu itself or on a row: a pointer control, a swatch, a tab button keep their own keys.
+    const rowBtn = t && typeof t.closest === 'function' ? t.closest('.st-item') : null;
+    if (!(t === panel || t === listEl || (rowBtn && listEl.contains(rowBtn)))) return;
+    const key = e.key === ' ' || e.key === 'Spacebar' ? ' ' : String(e.key || '').toLowerCase();
+    const control = `key:${key}`;
+    if (!['key:arrowleft', 'key:arrowright', 'key:enter', 'key: '].includes(control)) return;
+    if (!keyFree(control)) return;
+    const n = rowBtn ? Number(rowBtn.dataset.n) : nav.index();
+    const it = items[n];
+    if (!it || it.kind !== 'item' || it.disabled) return;
+    let took = false;
+    if (key === 'arrowleft' || key === 'arrowright') took = nudgeRow(n, key === 'arrowright' ? 1 : -1);
+    else if (e.repeat) took = false;                       // a held Enter / Space is one press, as on the bus
+    else if (key === 'enter') {
+      if (ddShowing(n) && ['key:arrowdown', 'key:arrowup', 'key: '].every(keyFree)) {
+        nav.setIndex(n);
+        took = openDd(n, { fromRow: true }) || !!dd;
+      }
+    } else if (key === ' ') {
+      const f = it.field;
+      if (f && f.kind === 'toggle' && f.cycleable && !f.readOnly && typeof it.commit === 'function') { setOutright(n, !it.value); took = true; }
+    }
+    if (took) { e.preventDefault(); e.stopPropagation(); }
+  }, sig);
+
   // --- keyboard. ONLY the keys nothing else owns. ---
   //
   // Arrows and Enter are deliberately NOT handled here. Where an input bus exists they are
   // already bound to verb/next, verb/prev and verb/select, and handling them here too
   // would move the cursor twice per press. The kiosk, which has no bus, calls next()/
   // prev()/select() from its own key handler instead. Two paths, never both at once.
+  // (row 2.159 step 3: ← → Enter Space on a row in Point and click are the exception above, and each is stopped
+  // where it is taken, so it is still one path per press.)
   panel.addEventListener('keydown', (e) => {
     // A menu in a panel is not a dialog: Escape is the screen's (its menu verb), and Tab walks on out of it.
     if (!open || asPanel) return;

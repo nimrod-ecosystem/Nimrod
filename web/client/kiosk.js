@@ -166,7 +166,7 @@ import { createCheckInReceiver, mountCheckInNotice, checkInOptionsFrom, CHECKIN_
 // Status icons (2026-10-14): one small strip saying what sees, hears, sends or controls, the whole time it does.
 import { createStatusIcons, mountStatusStrip, STATUS_ICON_FIELDS, STATUS_ICONS_NOTE, MUSIC_NOW_TOPIC } from './status_icons.js';
 import { aiActivity, onAIActivity } from './ai_activity.js';
-import { EDGE_TOPIC } from './input.js';
+import { EDGE_TOPIC, switchWalks } from './input.js';
 import { createDeviceStore } from './starting_defaults.js';
 import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
 import { FLASH_WARNING_FIELD, FLASH_WARNING_KEY, shouldWarn, flashSeen, markFlashSeen, showFlashWarning } from './flash_warning.js';   // row 2.124
@@ -192,7 +192,7 @@ import { createPanelRing, PANEL_RING_FIELD } from './panel_ring.js';   // panel 
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
 import { LAYERS } from './layers.js';
-import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, showsAtLevel, keepFields } from './settings_fields.js';
+import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, chooseModeFrom, showsAtLevel, keepFields } from './settings_fields.js';
 // LIVE AND BETA (2026-10-14): the person's "Beta things" row, and a beta panel says so in its own settings.
 import { BETA_FIELD, BETA_KEY, BETA_WORDS, betaShowOf } from './beta.js';
 import { stageOf, CATALOG as MODULE_CATALOG } from './modules_catalog.js';
@@ -220,7 +220,7 @@ import { listManifests } from './module.js';
 import { mountInputRuntime, INPUTS_KEY, RECORD_VERSION } from './input_runtime.js';
 import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
-import { DEFAULT_BINDINGS, isTyping, keyControl } from './input_keyboard.js';
+import { DEFAULT_BINDINGS, isTyping, keyControl, KEYBOARD_DEVICE } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
 // watching along (row 2.79): what this screen plays, to the people following it - only when its owner turns it on.
 import {
@@ -6224,17 +6224,41 @@ export async function mountKiosk(root, {
   // lists open as a list) or step through (for a switch). The person's row when the screen has one (it is
   // how THEY choose, and follows them), else the screen's. On the Devices tab, after the voice rows.
   const choiceRow = () => (personInputs && personRow && !embedded ? personInputs : settings);
-  const chooseModeNow = () => chooseModeOf((choiceRow().get?.() || {})[CHOOSE_MODE_KEY]);
+  // (row 2.159 step 2, 2026-10-31) WHILE NOBODY HAS CHOSEN, THE MODE FOLLOWS THE INPUT SETUP: a switch bound to walk
+  // the screen starts in Step through (settings_fields.js `chooseModeFrom`, input.js `switchWalks` - the rule and its
+  // argument). Read from the bindings IN FORCE (the person's, else the shipped defaults), at every read, so binding a
+  // switch on home.html moves an unchosen mode here within a poll and a stored pick is never touched. EVERY reader of
+  // the mode in this file goes through `chooseModeNow` - the menu, the folder page, the bar's scan, ctx.chooseMode -
+  // so there is one answer, not copies.
+  const switchSetUpNow = () => { try { return switchWalks(runtime?.input?.listBindings?.() || []); } catch { return false; } };
+  const chooseModeInForce = () => chooseModeFrom((choiceRow().get?.() || {})[CHOOSE_MODE_KEY], { switchSetUp: switchSetUpNow() });
+  const chooseModeNow = () => chooseModeOf(chooseModeInForce().mode);
   function chooseModeItems() {
     // (2026-10-02: and how a switch walks the transport bar, which follows it by default -- transport_bar.js.)
-    return fieldItems([normalizeField(CHOOSE_MODE_FIELD), normalizeField(BAR_SCAN_FIELD)], {
-      values: () => choiceRow().get?.() || {},
+    // (row 2.159 step 2) The row shows the mode IN FORCE - the inferred one too, never a "Point and click" the menu is
+    // not obeying - and says why when the setup chose it.
+    const rows = fieldItems([normalizeField(CHOOSE_MODE_FIELD), normalizeField(BAR_SCAN_FIELD)], {
+      values: () => ({ ...(choiceRow().get?.() || {}), [CHOOSE_MODE_KEY]: chooseModeInForce().mode }),
       level: complexity(),
       onStep: (k, v) => {
         try { choiceRow().set?.({ [k]: v }); }
         catch (err) { console.error('kiosk: choose mode', err); }
       },
     }).map((it) => ({ ...it, ...MENU_TAB.devices(0) }));
+    return rows.map((it) => {
+      if (it.key !== CHOOSE_MODE_KEY) return it;
+      const now = chooseModeInForce();
+      if (now.picked) return it;
+      // CHOOSING THE MODE ALREADY IN FORCE IS STILL A CHOICE. `commit` skips a value equal to the one in force (no
+      // write for a change nobody made) - but here somebody did make one: they took the inferred mode as theirs, and
+      // it must now stand when the switch is unbound. So while unchosen, that value is written too.
+      const commit = (raw) => {
+        if (chooseModeInForce().picked || raw !== chooseModeInForce().mode) return it.commit(raw);
+        try { choiceRow().set?.({ [CHOOSE_MODE_KEY]: raw }); return true; }
+        catch (err) { console.error('kiosk: choose mode', err); return false; }
+      };
+      return { ...it, commit, hint: now.why ? `${it.hint} · ${now.why}` : it.hint };
+    });
   }
   // LIVE AND BETA (2026-10-14, beta.js BETA_FIELD): "Beta things", on the same row as "How you choose things" (the
   // person's, else the screen's), on the This screen tab. Not in a kiosk embedded in a page: the page keeps it.
@@ -6254,6 +6278,12 @@ export async function mountKiosk(root, {
   // is no second list anywhere; a row added here is in both.
   const menuOptions = {
     chooseMode: chooseModeNow,
+    // (row 2.159 step 3) What the bindings in force do with a key, so the menu's ← → Enter Space in Point and click never
+    // take a key somebody bound to something of their own (settings.js "THE KEYBOARD ON A ROW").
+    keyActions: (control) => {
+      try { return (runtime?.input?.listBindings?.() || []).filter((b) => b.device === KEYBOARD_DEVICE && b.control === control).map((b) => b.actionId); }
+      catch { return null; }
+    },
     playerHost: () => playerHostNow(),   // players: who the player picker lists
     person: () => whoState,
     // The row under the who heading. It says what is true and, where the account has people
