@@ -122,10 +122,10 @@
     "right": "see",
     "wrong": [
      "home",
-     "help",
+     "yes",
      "no"
     ],
-    "why": "I see the cat makes sense. 'I home the cat' and the others do not sound like a real sentence."
+    "why": "'I see the cat' makes sense. 'I home the cat', 'I yes the cat' and 'I no the cat' do not sound like a real sentence."
    }
   },
   {

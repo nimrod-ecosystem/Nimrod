@@ -162,17 +162,7 @@
    "cite": [
     "s1"
    ],
-   "move": "count-in",
-   "ask": {
-    "q": "What is 4 + 3 · 7 when you follow the order of operations?",
-    "right": "25",
-    "wrong": [
-     "49",
-     "21",
-     "28"
-    ],
-    "why": "Multiplication comes before addition. 3 · 7 = 21, then 4 + 21 = 25. Adding 4 + 3 first gives 49, which is the common wrong answer."
-   }
+   "move": "count-in"
   },
   {
    "say": {
@@ -215,7 +205,17 @@
    "cite": [
     "s1"
    ],
-   "move": "light-in-turn"
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is 4 + 3 · 7 when you follow the order of operations?",
+    "right": "25",
+    "wrong": [
+     "49",
+     "21",
+     "28"
+    ],
+    "why": "Multiplication comes before addition. 3 · 7 = 21, then 4 + 21 = 25. Adding 4 + 3 first gives 49, which is the common wrong answer."
+   }
   },
   {
    "say": {

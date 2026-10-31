@@ -58,16 +58,7 @@
     "text": "1 | one straight line down\n2 | curve on top, slide down, flat line at the bottom"
    },
    "cite": [],
-   "move": "slide-in-left",
-   "ask": {
-    "q": "Here are three cups on a table. Which digit shows how many cups?",
-    "right": "3",
-    "wrong": [
-     "1",
-     "2"
-    ],
-    "why": "There are three cups, so the digit is 3. Take your time to count them one at a time."
-   }
+   "move": "slide-in-left"
   },
   {
    "say": {
@@ -100,7 +91,16 @@
     "text": "3 | two bumps, one above the other\n4 | slant down, line across, tall line down"
    },
    "cite": [],
-   "move": "slide-in-left"
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Here are three cups on a table. Which digit shows how many cups?",
+    "right": "3",
+    "wrong": [
+     "1",
+     "2"
+    ],
+    "why": "There are three cups, so the digit is 3. Take your time to count them one at a time."
+   }
   },
   {
    "say": {

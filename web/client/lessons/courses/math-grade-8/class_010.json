@@ -377,11 +377,11 @@
     "q": "A small slope triangle has rise 2 and run 3. A bigger slope triangle on the same line has run 12. What is the rise of the bigger triangle?",
     "right": "8",
     "wrong": [
-     "10",
+     "11",
      "6",
      "18"
     ],
-    "why": "The triangles are similar, so the run grew by a factor of 12 / 3 = 4. The rise must grow by the same factor: 2 x 4 = 8. Check: 8/12 = 2/3, the same slope. The answer 10 comes from adding 9 to both numbers, but similar triangles scale by multiplying. The answers 6 and 18 do not keep the ratio at 2/3."
+    "why": "The triangles are similar, so the run grew by a factor of 12 / 3 = 4. The rise must grow by the same factor: 2 x 4 = 8. Check: 8/12 = 2/3, the same slope. The answer 11 comes from adding 9 to the rise because the run grew by 9, but similar triangles scale by multiplying. The answers 6 and 18 do not keep the ratio at 2/3."
    }
   },
   {

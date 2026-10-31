@@ -123,17 +123,7 @@
    "cite": [
     "s6"
    ],
-   "move": "fade",
-   "ask": {
-    "q": "A reader reads 30 pages in 2 hours, 60 pages in 4 hours and 90 pages in 6 hours. What is the unit rate in pages per hour?",
-    "right": "15 pages per hour",
-    "wrong": [
-     "30 pages per hour",
-     "2 pages per hour",
-     "1/15 pages per hour"
-    ],
-    "why": "A unit rate is the amount for 1 unit, so divide pages by hours: 30 ÷ 2 = 15, 60 ÷ 4 = 15, 90 ÷ 6 = 15. It is the same every time, so the relationship is proportional. 30 is just the first number in the table. 1/15 would be hours per page, which answers a different question."
-   }
+   "move": "fade"
   },
   {
    "say": {
@@ -148,7 +138,17 @@
     "s6",
     "s5"
    ],
-   "move": "light-in-turn"
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A reader reads 30 pages in 2 hours, 60 pages in 4 hours and 90 pages in 6 hours. What is the unit rate in pages per hour?",
+    "right": "15 pages per hour",
+    "wrong": [
+     "30 pages per hour",
+     "2 pages per hour",
+     "1/15 pages per hour"
+    ],
+    "why": "A unit rate is the amount for 1 unit, so divide pages by hours: 30 ÷ 2 = 15, 60 ÷ 4 = 15, 90 ÷ 6 = 15. It is the same every time, so the relationship is proportional. 30 is just the first number in the table. 1/15 would be hours per page, which answers a different question."
+   }
   },
   {
    "say": {

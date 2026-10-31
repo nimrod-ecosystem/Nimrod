@@ -165,7 +165,7 @@
      "0.18",
      "0.0125"
     ],
-    "why": "1 divided by 8: 10 ÷ 8 = 1 remainder 2, so the first digit is 1. 20 ÷ 8 = 2 remainder 4, so the next digit is 2. 40 ÷ 8 = 5 remainder 0, so the next digit is 5 and we stop. That gives 0.125. The answer 0.8 comes from dividing 8 by 1 the wrong way round, and 0.0125 adds a zero that isn't there."
+    "why": "1 divided by 8: 10 ÷ 8 = 1 remainder 2, so the first digit is 1. 20 ÷ 8 = 2 remainder 4, so the next digit is 2. 40 ÷ 8 = 5 remainder 0, so the next digit is 5 and we stop. That gives 0.125. The answer 0.8 just puts the 8 after the decimal point, but 0.8 is 8 tenths, not 1 eighth. 0.0125 adds a zero that isn't there."
    }
   },
   {

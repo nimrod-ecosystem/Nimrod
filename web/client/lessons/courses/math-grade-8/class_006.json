@@ -173,7 +173,7 @@
      "15 units",
      "41⅔ units"
     ],
-    "why": "The edge length is the cube root of the volume. 5 × 5 × 5 = 125, so the edge is 5. An edge of 25 would be a square-root type of mistake: 25² is 625, and 25³ is much bigger than 125. An edge of 15 comes from dividing 125 by 3 and rounding, and 41⅔ comes from dividing 125 by 3 exactly. The volume of a cube is s × s × s, not s × 3."
+    "why": "The edge length is the cube root of the volume. 5 × 5 × 5 = 125, so the edge is 5. 25 is too big, since 25³ is far more than 125. 15 is also too big, since 15³ is 3375. 41⅔ comes from dividing 125 by 3, which is not how a cube's volume works: the volume is s × s × s, not s × 3."
    }
   },
   {

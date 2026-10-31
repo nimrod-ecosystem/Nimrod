@@ -269,7 +269,7 @@
      "−2 ≤ x ≤ 8",
      "0 ≤ x ≤ 4"
     ],
-    "why": "Add 2 to all three parts to get −2 ≤ 2x ≤ 8. Then divide all three by 2 to get −1 ≤ x ≤ 4. Forgetting the add step gives −3 ≤ x ≤ 2. Forgetting the divide step gives −2 ≤ x ≤ 8."
+    "why": "Add 2 to all three parts to get −2 ≤ 2x ≤ 8. Then divide all three by 2 to get −1 ≤ x ≤ 4. Subtracting 2 instead of adding it gives −6 ≤ 2x ≤ 4, and then −3 ≤ x ≤ 2. Forgetting the divide step gives −2 ≤ x ≤ 8."
    }
   },
   {

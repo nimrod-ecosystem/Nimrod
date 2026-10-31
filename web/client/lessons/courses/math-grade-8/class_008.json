@@ -318,7 +318,7 @@
      "7 × 10^9",
      "1.2 × 10^20"
     ],
-    "why": "3 × 4 = 12, and 5 + 4 = 9, so you get 12 × 10^9. The front number 12 is too big. 12 = 1.2 × 10^1, so the answer is 1.2 × 10^10. If you stop at 1.2 × 10^9, you forgot to carry the extra 10. 7 × 10^9 adds the front numbers. 1.2 × 10^20 multiplies the exponents instead of adding them."
+    "why": "3 × 4 = 12, and 5 + 4 = 9, so you get 12 × 10^9. The front number 12 is too big. 12 = 1.2 × 10^1, so the answer is 1.2 × 10^10. If you stop at 1.2 × 10^9, you forgot to carry the extra 10. 7 × 10^9 adds the front numbers. 1.2 × 10^20 multiplies the exponents (5 × 4 = 20) instead of adding them, and forgets the carry too."
    }
   },
   {
@@ -442,10 +442,10 @@
     "right": "About 5 × 10^2 seconds (500 seconds)",
     "wrong": [
      "About 5 × 10^3 seconds",
-     "About 5 × 10^19 seconds",
-     "About 2 × 10^2 seconds"
+     "About 4.5 × 10^19 seconds",
+     "About 2 × 10^-3 seconds"
     ],
-    "why": "Time = distance ÷ speed. 1.5 ÷ 3 = 0.5, and 11 - 8 = 3, so you get 0.5 × 10^3. The front number is under 1, so shift it: 5 × 10^2 seconds. That is about 8.3 minutes, which matches NASA's 'about eight minutes'. 5 × 10^3 forgets the shift. 5 × 10^19 adds the exponents. 2 × 10^2 divides 3 by 1.5 the wrong way round. The units also work: meters ÷ (meters per second) leaves seconds."
+    "why": "Time = distance ÷ speed. 1.5 ÷ 3 = 0.5, and 11 - 8 = 3, so you get 0.5 × 10^3. The front number is under 1, so shift it: 5 × 10^2 seconds. That is about 8.3 minutes, which matches NASA's 'about eight minutes'. 5 × 10^3 moves the decimal point but forgets to lower the exponent. 4.5 × 10^19 multiplies the two numbers instead of dividing them. 2 × 10^-3 divides the speed by the distance, the wrong way round. The units also work: meters ÷ (meters per second) leaves seconds."
    }
   },
   {
