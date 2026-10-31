@@ -90,8 +90,8 @@ export const CAT_STEPS = [
     brief: 'This is the bar.',
     say: 'This is the bar. Every screen has one, with the same buttons in the same places. On Home it '
        + 'also carries Modules, Save, Save as, History and Switch module.',
-    more: 'In full screen it tucks itself away after a few seconds. Touch the screen, press a key or '
-        + 'press a switch to bring it back.',
+    more: 'In full screen it tucks itself away after a few seconds. To bring it back, swipe up from the bottom '
+        + 'of the screen, press a key or press a switch.',
     note: 'The kiosk keeps the bar showing while he points at it (`holdBar`), placed bar included.' },
 
   { id: 'cat-modules', page: HOME_PAGE, target: HOST('picker'), action: 'none',

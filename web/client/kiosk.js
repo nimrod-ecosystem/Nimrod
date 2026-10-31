@@ -56,7 +56,7 @@ import { createLongPress, clampHoldMs } from './input_longpress.js';
 // bar toggle (2026-10-06): T shows or hides the bar (H until row 2.72); hidden that way, it stays hidden a while (bar_toggle.js).
 import {
   BAR_TOGGLE_TOPIC, BAR_TOGGLE_KEY_BINDINGS, missingBarToggleBindings, isBarToggleControl, createBarQuiet,
-  BAR_QUIET_FIELD, BAR_SELF_FIELD, BAR_KEY_HIDDEN, BAR_HOLD_SLOP_PX,
+  BAR_QUIET_FIELD, BAR_SELF_FIELD, BAR_KEY_HIDDEN, BAR_HOLD_SLOP_PX, isBarSwipe,
   BAR_PLAY_FIELD, onModuleControl,   // bar while playing (row 2.65)
   moveOldBarToggleKey,   // T for the bar (row 2.72)
 } from './bar_toggle.js';
@@ -7978,6 +7978,33 @@ export async function mountKiosk(root, {
     endBarHold();
     root.removeEventListener('pointermove', moveBarHold);
     for (const ev of ['pointerup', 'pointercancel']) root.removeEventListener(ev, endBarHold);
+  });
+
+  // A SWIPE UP FROM THE BOTTOM BRINGS THE BAR, ALWAYS (Mike, 2026-10-31; bar_toggle.js `isBarSwipe` has the numbers).
+  // TOUCH events, not pointer events: on a page that scrolls the browser takes a moving finger for the scroll and
+  // cancels its pointer events, but the touch still ends with where it ended. "The bottom" is the bottom of what is
+  // seen of this screen (the window's, or the kiosk's own when it sits higher up a page). One finger only.
+  let swipeFrom = null;
+  const swipeBottom = () => Math.min(root.getBoundingClientRect().bottom, window.innerHeight || Infinity);
+  const onSwipeStart = (e) => {
+    const t = e.touches?.length === 1 ? e.touches[0] : null;
+    swipeFrom = t ? { x: t.clientX, y: t.clientY, t: Date.now() } : null;
+  };
+  const onSwipeEnd = (e) => {
+    const from = swipeFrom; swipeFrom = null;
+    const t = e.changedTouches?.[0];
+    if (torn || !from || !t || e.touches?.length) return;
+    if (!isBarSwipe(from, { x: t.clientX, y: t.clientY, t: Date.now() }, swipeBottom())) return;
+    endBarHold();
+    showBarByKey();
+  };
+  root.addEventListener('touchstart', onSwipeStart, { passive: true });
+  root.addEventListener('touchend', onSwipeEnd, { passive: true });
+  root.addEventListener('touchcancel', onSwipeEnd, { passive: true });
+  offsScreen.push(() => {
+    root.removeEventListener('touchstart', onSwipeStart);
+    root.removeEventListener('touchend', onSwipeEnd);
+    root.removeEventListener('touchcancel', onSwipeEnd);
   });
 
   // *** MOUSEMOVE ONLY REVEALS THE BAR NEAR WHERE IT ACTUALLY LIVES. *** Mike, 2026-09-20:

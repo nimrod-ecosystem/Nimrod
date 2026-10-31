@@ -42,6 +42,7 @@ import {
 // bar while playing (row 2.65)
 import { BAR_PLAY_FIELD, BAR_PLAY_AWAY, barPlayFrom, onModuleControl } from '../bar_toggle.js';
 import { moveOldBarToggleKey } from '../bar_toggle.js';   // T for the bar (row 2.72)
+import { isBarSwipe, BAR_SWIPE_MS } from '../bar_toggle.js';   // the swipe up from the bottom (2026-10-31)
 import { PLAY_STATE_TOPIC } from '../game_start.js';
 import { CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
@@ -124,6 +125,16 @@ const mouseNearBar = async (bar) => {
 (async () => {
   // =====================================================================================
   section('the pure parts: the quiet period, the settings, the binding');
+  {
+    // The swipe up from the bottom (Mike, 2026-10-31), on an 800 px tall screen: the edge is its bottom 80 px.
+    const S = (x, y, t) => ({ x, y, t });
+    check('*** isBarSwipe: up 80 px from the bottom 40 px in 0.2 s is a swipe ***', isBarSwipe(S(300, 760, 0), S(305, 680, 200), 800));
+    check('...not from the middle of the screen', !isBarSwipe(S(300, 400, 0), S(300, 300, 200), 800));
+    check('...not down, not 20 px, not more sideways than up', !isBarSwipe(S(300, 700, 0), S(300, 790, 200), 800)
+      && !isBarSwipe(S(300, 780, 0), S(300, 760, 200), 800) && !isBarSwipe(S(300, 780, 0), S(420, 700, 200), 800));
+    check('...not slower than the swipe time', !isBarSwipe(S(300, 780, 0), S(300, 700, BAR_SWIPE_MS + 1), 800));
+    check('a short screen still has a 48 px edge (10% of 300 is 30)', isBarSwipe(S(10, 300 - 45, 0), S(10, 190, 100), 300));
+  }
   {
     let t = 1000;
     let row = {};
@@ -301,6 +312,29 @@ const mouseNearBar = async (bar) => {
     up();
     down(); await sleep(100); up(); await sleep(1600);
     check('a tap is a tap: no bar', !shown());
+
+    // A SWIPE UP FROM THE BOTTOM (Mike, 2026-10-31): the touch way, whatever the setting says. Touch events, as a
+    // finger on a page that scrolls gives them (the browser cancels a moving finger's pointer events).
+    const swipe = async (x, y0, y1, ms = 150) => {
+      const target = root.firstElementChild || root;
+      const t0 = new Touch({ identifier: 1, target, clientX: x, clientY: y0 });
+      target.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [t0], targetTouches: [t0], changedTouches: [t0] }));
+      await sleep(ms);
+      const t1 = new Touch({ identifier: 1, target, clientX: x + (y0 - y1 > 0 ? 6 : 0), clientY: y1 });
+      target.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], targetTouches: [], changedTouches: [t1] }));
+      await sleep(60);
+    };
+    const bottom = Math.min(root.getBoundingClientRect().bottom, innerHeight);
+    const cx = root.getBoundingClientRect().left + 200;
+    check('(setup) only when I ask, bar away', k.barToggle().self === 'asked' && !shown(), J(k.barToggle()));
+    await swipe(cx, bottom - 40, bottom - 100, 900);
+    check('a slow drag up from the bottom (0.9 s) is not a swipe: no bar', !shown());
+    await swipe(cx, bottom - 300, bottom - 400);
+    check('a swipe up that starts mid-screen: no bar', !shown());
+    await swipe(cx, bottom - 40, bottom - 60);
+    check('a short flick (20 px): no bar', !shown());
+    await swipe(cx, bottom - 40, bottom - 120);
+    check('*** a swipe up from the bottom brings the bar, even on "only when I ask" (Mike, 2026-10-31) ***', shown(), J(k.barToggle()));
 
     // Asking for it still works in "only when I ask".
     bus.publish(SYSTEM_TOPICS.modules, {});

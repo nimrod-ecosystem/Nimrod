@@ -39,6 +39,7 @@
 // *** NOBODY IS STRANDED (the project's rule: a screen must never enter a state that only an input can leave,
 // when the person in front of it cannot give that input). *** A hidden bar stops nothing -- every panel keeps
 // playing -- but it is the way to ⚙ and Home, so a person with no keyboard must still be able to reach it:
+//   * a SWIPE UP FROM THE BOTTOM of the screen brings it at any time (row DK 2, Mike 2026-10-31; `isBarSwipe` below);
 //   * a quiet period of 10 s to 5 min ends by itself, and then a touch brings the bar back as it always did;
 //   * while touch is held back for longer ("until I show it", or "only when I ask"), HOLDING STILL ON THE SCREEN
 //     for the plain bar's hold time (1.5 s by default, the screen's own setting) brings it, with the same ring and
@@ -71,6 +72,29 @@ export const BAR_QUIET_CHOICES = Object.freeze([10 * 1000, 30 * 1000, 60 * 1000,
 export const BAR_SELF_YES = 'yes';
 export const BAR_SELF_ASKED = 'asked';
 export const BAR_HOLD_SLOP_PX = 12;
+
+// *** A SWIPE UP FROM THE BOTTOM BRINGS THE BAR, ALWAYS (Mike, 2026-10-31, his ruling). *** "A swipe from the bottom
+// seems to work for the transport bar. That is what it probably should be." It seemed to because any touch brought the
+// bar; a swipe did nothing when the bar was set to stay away or began on a game's button. Now it is its own gesture,
+// the way phones bring their own bars, and it brings the bar whatever the quiet period or "bar while playing" say -- a
+// swipe is never an accident on a module's button. The numbers (Rule 1), measured from the bottom of the screen's
+// visible area:
+//   start  in the bottom 10% (at least 48 px). FOR: a thumb's reach from the edge, and clear of the very edge, where a
+//          phone's own home gesture takes the touch. AGAINST taller: a game's bottom row would start swipes.
+//   rise   48 px up, more up than sideways. FOR: a deliberate flick; a tap wanders under 12 px (the hold's slop).
+//   time   within 0.8 s. FOR: a swipe, not a slow drag of something on the panel.
+export const BAR_SWIPE_EDGE_FRACTION = 0.1;
+export const BAR_SWIPE_EDGE_MIN_PX = 48;
+export const BAR_SWIPE_RISE_PX = 48;
+export const BAR_SWIPE_MS = 800;
+/** Was this touch, from `start` to `end` ({ x, y, t }), a swipe up from the bottom of an area whose bottom is `bottom`? */
+export function isBarSwipe(start, end, bottom) {
+  if (!start || !end || !(bottom > 0)) return false;
+  const edge = Math.max(BAR_SWIPE_EDGE_MIN_PX, bottom * BAR_SWIPE_EDGE_FRACTION);
+  const rise = start.y - end.y;
+  return start.y >= bottom - edge && rise >= BAR_SWIPE_RISE_PX && Math.abs(end.x - start.x) < rise
+    && end.t - start.t <= BAR_SWIPE_MS;
+}
 
 export const BAR_TOGGLE_KEY_BINDINGS = Object.freeze([Object.freeze({
   id: 'default/bar-toggle', actionId: BAR_TOGGLE_ACTION, device: 'keyboard', control: BAR_TOGGLE_CONTROL,
