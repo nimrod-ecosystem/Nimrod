@@ -739,6 +739,43 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
         i.destroy(); h.remove();
         return v;
       };
+      // BACK RESTARTS THE VIDEO after its first 3 seconds (row 2.157).
+      const backOn = async (row) => {
+        const h = document.createElement('div'); document.body.append(h);
+        let d = { playlist: PLAYLIST.slice(0, 3), shuffle: false, ...row };
+        const s = { load: async () => d, get: () => d, set: () => Promise.resolve(), subscribe: (f) => { f(d); return () => {}; },
+          flush: () => Promise.resolve(), startPolling() {}, destroy() {} };
+        const r = { at: 10, loads: [], seeks: [] };
+        const bus = createBus();
+        const i = mountModule('youtube', { mount: h, bus, state: s, events: sev, user: USER, instanceId: 'yt-back',
+          playerFactory: () => ({ ...quiet(), load: (id) => r.loads.push(id), currentTime: () => r.at, seek: (t) => r.seeks.push(t) }) });
+        i.init(); await sleep(30);
+        r.back = async () => { bus.publish('youtube/prev'); await sleep(10); };
+        r.next = async () => { bus.publish('youtube/next'); await sleep(10); };
+        r.done = () => { i.destroy(); h.remove(); };
+        return r;
+      };
+      {
+        const r = await backOn({});
+        await r.next();
+        const second = r.loads.at(-1), n = r.loads.length;
+        r.at = 10; await r.back();
+        check('*** Back, 10 s into a video: it starts again from the beginning (row 2.157) ***', r.seeks.join() === '0' && r.loads.length === n,
+          JSON.stringify(r));
+        r.at = 1.5; await r.back();
+        check('*** Back within its first 3 s: the video before ***', r.loads.length === n + 1 && r.loads.at(-1) !== second, JSON.stringify(r.loads));
+        r.at = 1; await r.back();
+        check('Back at the first video, with nothing before it: it starts again', r.seeks.length === 2 && r.loads.length === n + 1, JSON.stringify(r));
+        r.done();
+        const never = await backOn({ backRestartSec: 0 });
+        await never.next();
+        const m = never.loads.length;
+        never.at = 30; await never.back();
+        check('"Never": Back always goes to the video before, however far in', never.seeks.length === 0 && never.loads.length === m + 1, JSON.stringify(never));
+        never.done();
+        check('a setting, 3 s by default', SETTINGS.find((f) => f.key === 'backRestartSec')?.default === 3);
+      }
+
       check('*** YouTube’s own controls are asked for OFF by default (row 2.156) ***', (await asked({})) === false);
       check('...and ON when "YouTube’s own controls on the video" is on', (await asked({ ytControls: true })) === true);
       check('...a setting, advanced, off', SETTINGS.find((f) => f.key === 'ytControls')?.default === false

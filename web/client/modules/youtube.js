@@ -74,6 +74,7 @@ const DEFAULTS = {
   // developer policies forbid obscuring YouTube's attribution or links or blocking any part of the player, so nothing
   // here covers, crops or disables the player to hide them.
   ytControls: false,
+  backRestartSec: 3,       // row 2.157: Back after this long restarts the video (see `prev`); 0 = never
   directed: false,
   stallMs: 20000,
   // *** SOMEBODY PRESSED PAUSE. DO WE EVER RESTART IT BY OURSELVES? ***
@@ -227,6 +228,14 @@ export const SETTINGS = [
     appliesWhen: (v) => !v?.directed },
   { key: 'showNav', label: 'Previous, next and the title on the panel', kind: 'toggle', default: DEFAULTS.showNav,
     level: 'advanced', onLabel: 'Shown', offLabel: 'Hidden (the bar’s Back and Next do it)' },
+  { key: 'backRestartSec', label: 'Back restarts the video once it has played', kind: 'choice', default: DEFAULTS.backRestartSec,
+    level: 'advanced',
+    options: [
+      { value: 3, label: '3 seconds (the usual)' },
+      { value: 5, label: '5 seconds' },
+      { value: 10, label: '10 seconds' },
+      { value: 0, label: 'Never: Back always goes to the video before' },
+    ] },
   { key: 'ytControls', label: 'YouTube’s own controls on the video', kind: 'toggle', default: DEFAULTS.ytControls,
     level: 'advanced', onLabel: 'Shown', offLabel: 'Hidden (the bar does it)',
     note: 'Its timeline and buttons. YouTube still shows the title when a video is paused or the mouse is over it. Takes effect the next time this panel loads.' },
@@ -1240,7 +1249,16 @@ registerModule(
       if (id) show(id, true);
     }
 
+    // BACK RESTARTS THE VIDEO AFTER ITS FIRST FEW SECONDS (row 2.157, Mike 2026-10-31: "Back on the transport bar for
+    // youtube should take you to the beginning of the video after the first few seconds of the video has played.
+    // There's probably already a standard for that."). The usual one in music and video players is about three
+    // seconds: Back after that restarts what is playing, Back within it goes to the one before. A setting (Rule 1),
+    // `backRestartSec`, 3 by default; "Never" keeps Back as it was. At the first video there is nothing before it, so
+    // Back restarts it whenever it is pressed.
     function prev() {
+      const limit = Number(cfg.backRestartSec);
+      const t = limit > 0 ? player?.currentTime?.() : null;
+      if (t != null && (t > limit || histPos <= 0)) { player?.seek?.(0); return; }
       if (histPos > 0) { histPos -= 1; show(history[histPos], false); }
     }
 
