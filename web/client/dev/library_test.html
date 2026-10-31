@@ -456,7 +456,9 @@ try {
     const p = () => lib.__probe();
     const shown = p().shown;
     const firstBeta = shown.findIndex((k) => its.find((i) => i.key === k)?.stage === 'beta');
-    check('*** by default every item shows, live ones first, then the beta ones ***', shown.length === its.length && firstBeta > 0
+    // (Row 2.158: with "Wake phrases" out of the list there may be no live item at all - everything is beta - so the
+    // beta part may start at 0; what is checked is that nothing live comes after it.)
+    check('*** by default every item shows, live ones first, then the beta ones ***', shown.length === its.length && firstBeta >= 0
       && shown.slice(firstBeta).every((k) => its.find((i) => i.key === k)?.stage === 'beta'), J({ firstBeta, n: shown.length }));
     check('...each part still in the chosen order (by name)', J(shown) === J([
       ...sortItems(its.filter((i) => i.stage !== 'beta'), 'name', {}), ...sortItems(its.filter((i) => i.stage === 'beta'), 'name', {}),

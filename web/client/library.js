@@ -241,9 +241,17 @@ export function pageItems({ pages = AI_PAGES } = {}) {
   }));
 }
 
+// *** ONLY WHAT YOU CAN OPEN (row 2.158, Mike 2026-10-31). *** "Things like wake phrases shouldn't be in the list of
+// modules or they should be modules you can open. There is no sense having modules listed that you cant open. Unless
+// they are usable in other ways I'm unaware of." The "Wake phrases" settings page is menu rows, not a page: it leaves
+// the list, and the settings menu's Devices tab is its home. "Claude on this account" stays: it is a page, and it opens.
+// THE FURNITURE IS THE OPEN QUESTION, NOT DECIDED HERE: it is listed because Mike named it (2026-10-02, "categories like
+// games, learning, visual, furniture, 3d"), as something to add, but nothing here can add a piece to a room yet. Either
+// it gets a "Put it in a room" or it leaves too; that is his call (MIKE_CHANGE_LIST row 2.158).
+export const openable = (it) => !!it && (it.kind !== 'page' || !!it.path);
 export function libraryItems(opts = {}) {
   // bricks module (row 2.76): no card per published part any more -- the Bricks module (a module item) is all of them.
-  return [...moduleItems(opts), ...sceneItems(opts), ...pageItems(opts), ...furnitureItems(opts)];
+  return [...moduleItems(opts), ...sceneItems(opts), ...pageItems(opts), ...furnitureItems(opts)].filter(openable);
 }
 
 // ---------------------------------------------------------------------------------------------------

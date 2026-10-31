@@ -521,7 +521,10 @@ try {
       && categoriesFor({ type: 'profile' }).includes('ai') && categoriesFor({ type: 'profile' }).includes('people') && categoriesFor({ type: 'voice_model' }).includes('ai'));
     const its = filterItems(libraryItems({ manifests: ALL, bricks: null }), { category: 'ai' });
     const keys = its.map((i) => i.key);
-    check('*** under AI: the three modules and the two settings pages ***', ['module:nimrod', 'module:profile', 'module:voice_model', 'page:claude', 'page:wake'].every((k) => keys.includes(k)), keys.join());
+    check('*** under AI: the three modules and the Claude page ***', ['module:nimrod', 'module:profile', 'module:voice_model', 'page:claude'].every((k) => keys.includes(k)), keys.join());
+    // Row 2.158 (Mike, 2026-10-31): "There is no sense having modules listed that you cant open." Wake phrases are
+    // settings-menu rows, not a page: not in the list. (The page item itself is kept; its details still work below.)
+    check('*** ...and not "Wake phrases", which cannot be opened (row 2.158) ***', !keys.includes('page:wake'), keys.join());
     const pages = pageItems();
     check('*** "Claude on this account" and "Wake phrases" are settings pages, not panels (said, not hidden) ***',
       pages.length === 2 && pages.every((p) => p.kind === 'page' && p.placeable === false && /settings page/i.test(p.whyNot) && p.cats.includes('ai')));
