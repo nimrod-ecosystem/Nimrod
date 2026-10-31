@@ -792,10 +792,24 @@ export function mountThemePicker(selectEl, { onChange = null } = {}) {
 // WORDING EDIT (row 2.123): `?wording=1` on any page that loads this file turns on changing the site's words in place
 // (wording_edit.js), and it stays on in that browser until Done or `?wording=0`. Loaded only then: a page nobody asked
 // it of never fetches the file.
+// (row 2.145 step 3, 2026-10-31) EXCEPT ON A PAGE THAT SAYS IT IS A DASHBOARD (`<meta name="nimrod-wording"
+// content="editor">`, kiosk.html): there `?wording=1` opens the one editor with its Words shown (kiosk.js), and the bar
+// is never started here -- not by the address, and NOT BY A STORED "on". That stored "on" was a bug on a bedside screen:
+// the kiosk reloads itself (a new version, the recovery ladder), and every reload brought the bar back over it, taking
+// presses on words for up to twenty minutes with nobody there who had asked for it.
+/** Whether this page load starts the wording bar (wording_edit.js). PURE (row 2.145 step 3).
+ *   search      the page's location.search
+ *   stored      what is kept as "it is on" in this browser ('1': on)
+ *   editorPage  the page says it is a dashboard (the meta above): the editor's Words, never the bar */
+export function wordingBarWanted({ search = '', stored = null, editorPage = false } = {}) {
+  if (editorPage) return false;
+  return /[?&]wording(=|&|$)/.test(String(search || '')) || stored === '1';
+}
 if (typeof window !== 'undefined' && window.location && typeof document !== 'undefined') {
-  let wordingOn = /[?&]wording(=|&|$)/.test(window.location.search || '');
-  if (!wordingOn) { try { wordingOn = window.localStorage?.getItem('nimrod.wording.on') === '1'; } catch { wordingOn = false; } }
-  if (wordingOn) {
+  let stored = null;
+  try { stored = window.localStorage?.getItem('nimrod.wording.on') ?? null; } catch { stored = null; }
+  const editorPage = document.querySelector?.('meta[name="nimrod-wording"]')?.getAttribute('content') === 'editor';
+  if (wordingBarWanted({ search: window.location.search || '', stored, editorPage })) {
     const go = () => import('./wording_edit.js').then((m) => m.wordingFromPage(window)).catch((err) => console.error('theme: wording edit', err));
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true }); else go();
   }

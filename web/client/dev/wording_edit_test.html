@@ -15,7 +15,7 @@
 <div id="out"></div>
 <script type="module">
 import { wordingParam, withChange, changesText, wordsElementAt, startWordingEdit, wordingFromPage, ON_KEY, CHANGES_KEY,
-  IDLE_OFF_MS, COPY_HEAD, LINE_MAX } from '../wording_edit.js';
+  IDLE_OFF_MS, COPY_HEAD, LINE_MAX, norm, readChanges, recordChange, showWordsInPlace, withoutWordingParam, forgetWordingOn } from '../wording_edit.js';
 
 const out = document.getElementById('out');
 let passed = 0, failed = 0;
@@ -53,6 +53,31 @@ try {
   check(`a container with a stray word and a long run inside (over ${LINE_MAX} characters) is not one line`, wordsElementAt(big.childNodes[1]) === null);
   check('boxes people type in are left alone (their words are theirs, not the site\'s)', wordsElementAt(document.getElementById('in1')) === null);
 
+  section('*** the pieces the one editor shares (row 2.145 step 3) ***');
+  check('norm: one line, spaces tidied', norm('  Two\n lines\t here ') === 'Two lines here');
+  check('readChanges: nothing kept is an empty list', J(readChanges()) === '[]');
+  check('*** recordChange: by withChange\'s rule, into the one key ***',
+    J(recordChange({ page: '/a.html', old: 'Old', now: 'New' })) === J([{ page: '/a.html', old: 'Old', new: 'New' }])
+    && J(readChanges()) === J([{ page: '/a.html', old: 'Old', new: 'New' }]));
+  check('...and a change back to the original drops it', recordChange({ page: '/a.html', old: 'Old', now: 'Old' }).length === 0 && readChanges().length === 0);
+  localStorage.setItem(CHANGES_KEY, '{not json');
+  check('a list that will not read is an empty list (never throws)', J(readChanges()) === '[]');
+  localStorage.removeItem(CHANGES_KEY);
+  {
+    const p = document.createElement('p'); p.textContent = 'Plain words'; document.body.append(p);
+    const undo = showWordsInPlace(p, 'New words');
+    check('*** showWordsInPlace: shown and marked; its way back puts the element as it was, unmarked ***', p.textContent === 'New words' && p.hasAttribute('data-wording-changed')
+      && (undo(), p.textContent === 'Plain words' && !p.hasAttribute('data-wording-changed')));
+    p.innerHTML = 'Read <a href="#y">this</a> first';
+    const undo2 = showWordsInPlace(p, 'Read it all');
+    check('...words around a link: the first run changes, and comes back exactly', p.firstChild.nodeValue === ' Read it all ' && (undo2(), p.innerHTML === 'Read <a href="#y">this</a> first'));
+    p.remove();
+  }
+  check('withoutWordingParam takes it out and keeps the rest', withoutWordingParam('/kiosk.html?wording=1&key=k') === '/kiosk.html?key=k' && withoutWordingParam('/home.html') === '/home.html');
+  localStorage.setItem(ON_KEY, '1');
+  forgetWordingOn();
+  check('forgetWordingOn forgets "it is on", starting nothing', localStorage.getItem(ON_KEY) === null && !document.getElementById('wording-edit-bar'));
+
   section('*** on a page ***');
   let timers = [];
   const setTimer = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
@@ -66,6 +91,8 @@ try {
   check('*** turned on: its bar, saying what to do, with Copy changes and Done ***', !!bar() && /click any words/.test(bar().textContent)
     && !!bar().querySelector('[data-we="copy"]') && !!bar().querySelector('[data-we="done"]'));
   check('it is kept as on in this browser (so the next page has it too)', localStorage.getItem(ON_KEY) === '1');
+  check('(row 2.145 step 3) the bar says that on a dashboard this opens the editor with Words shown',
+    /On a dashboard, this opens the editor with Words shown\./.test(bar().textContent));
   b1.click();
   check('*** a click on a button\'s words opens them to retype, and the button does NOT press ***', pressed === 0 && !!bar().querySelector('textarea')
     && bar().querySelector('textarea').value === 'Save the screen');

@@ -141,6 +141,18 @@ try {
   box.value = 'Ada Lovelace';
   card().querySelector('[data-em-keep="label"]').click();
   check('the words themselves: typed, kept with ✓', sign.state.get().label === 'Ada Lovelace', J(sign.state.get()));
+  // (row 2.145 step 3, 2026-10-31) Escape in the words box used to leave edit mode and lose what was typed.
+  {
+    const tb = () => card().querySelector('[data-em-text="label"]');
+    tb().value = 'Typed, not kept';
+    tb().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    check('*** Escape in a words box with typing not kept: the box back as it was, edit mode stays, nothing written ***',
+      em.active()?.id === 'b1' && tb()?.value === 'Ada Lovelace' && sign.state.get().label === 'Ada Lovelace' && !card().hidden,
+      `${J(em.active())} ${tb()?.value}`);
+    tb().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    check('...Escape in the box with nothing new in it leaves, as Escape does anywhere in edit mode', em.active() === null);
+    em.enter('b1');
+  }
   sign.el.querySelector('[data-face]').click();
   check('pressing the button around the words chooses the whole button (its look and what pressing it does)',
     selected.at(-1)?.target?.id === 'face' && !!card().querySelector('[data-em-row="whenPressed"]'));

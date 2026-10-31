@@ -32,12 +32,24 @@
 //   anything else       none: a panel in a grid cell is placed by its cell; a room has no place of its own.
 // (row 2.145 step 2, 2026-10-31) ALL OF THEM SHOWN ONE WAY: `presentTransform` below -- the same order, size as a
 // percent, where it stands as a percent of the stage -- whatever units each owner keeps them in.
+//
+// *** WORDS (row 2.145 step 3, 2026-10-31). *** Only while the editor's Words are shown (`buildTree(arr, { words })`,
+// editor_words.js `wordsSource`; absent, the tree is exactly steps 1 and 2's):
+//       panel:<id>/<target>          a thing holding the panel's OWN words (a sign's words) is kind 'words', not 'part'
+//                                    -- the same row, the same id, its label its words ("Words: “Ada”")
+//       words:<id>:<words>[#n]       the SITE's words shown in that panel ('sitewords'), after its things
+//     words:screen                   "Words on this screen" ('wordsgroup'), last: words pressed outside the panels, and
+//       words:screen:<words>[#n]     this page's other changes in the draft list ('sitewords')
+// A 'sitewords' node belongs to no panel's settings (`panelId` null, its panel in `owner`): fields() is null, set() does
+// nothing -- its words are changed through the draft list, in the inspector (editor.js). The id is the ORIGINAL words,
+// so it stays the same while a change is shown in place and after a reload (a change is not shown again at load).
 import { targetsOf, selectionFor } from './edit_mode.js';
 import { normalizeField } from './settings_fields.js';
 import { preset } from './layout.js';
 import { PLACES, SURFACES, PLACE_LABELS, SURFACE_LABELS, EDIT_DEFAULTS as MODEL_DEFAULTS } from './edit_model.js';
 import { getManifest } from './module.js';
 import { ROOM_PANEL_ID } from './arrangement.js';
+import { WORDS_GROUP_ID } from './editor_words.js';
 
 export const ROOT_ID = 'dash';
 /** A panel's node id, or one of its things'. */
@@ -188,13 +200,14 @@ export function splitSelection(sel) {
 // THE TREE.
 // =====================================================================================================
 /**
- * buildTree(arr, { placedModel }) -> { root, nodes: Map<id, node>, list: [node] (depth first, the order drawn) }
+ * buildTree(arr, { placedModel, words }) -> { root, nodes: Map<id, node>, list: [node] (depth first, the order drawn) }
  *   arr          the arrangement (its `editRecs`, `layout`, `placed`, `profile`, `stageRec`)
  *   placedModel  the edit model of the placed panels (dashboard_editor.js), for their Transform; absent: none shown
+ *   words        (row 2.145 step 3) editor_words.js `wordsSource(...)` while the editor's Words are shown; absent: no words
  * Each node: { id, parent, label, kind, depth, panelId, targetId, wholeId, place, transform(), fields(), set(k, v),
  *   children() }. Never throws: a panel whose module will not list its things is a row with nothing under it.
  */
-export function buildTree(arr, { placedModel = null } = {}) {
+export function buildTree(arr, { placedModel = null, words = null } = {}) {
   const nodes = new Map();
   const list = [];
   const kids = new Map();
@@ -228,8 +241,16 @@ export function buildTree(arr, { placedModel = null } = {}) {
       // (step 2: a thing with a Transform of its own -- a village's or Town's piece -- is a 'piece' like a room's; a
       // sign's words are a 'part'.)
       const piece = room || (Array.isArray(t.transformKeys) && t.transformKeys.length > 0);
-      add({ id: nodeIdFor(rec.id, t.id), parent: nodeIdFor(rec.id), depth: depth + 1, label: String(t.label || t.id),
-        kind: piece ? 'piece' : 'part', panelId: rec.id, targetId: t.id });
+      // (step 3) A part holding the panel's own words is 'words', labelled by them -- only while Words are shown.
+      const own = !piece && words ? safe(() => words.ownLabel(rec, t), null) : null;
+      add({ id: nodeIdFor(rec.id, t.id), parent: nodeIdFor(rec.id), depth: depth + 1, label: own || String(t.label || t.id),
+        kind: piece ? 'piece' : own ? 'words' : 'part', panelId: rec.id, targetId: t.id });
+    }
+    // (step 3) The site's words shown in it, after its things.
+    if (words) {
+      for (const w of safe(() => words.panel(rec, { title: titleOf(rec) }), []) || []) {
+        add({ id: w.id, parent: nodeIdFor(rec.id), depth: depth + 1, label: w.label, kind: 'sitewords', owner: rec.id, words: w.words });
+      }
     }
   }
   function transformOf(node) {
@@ -275,6 +296,14 @@ export function buildTree(arr, { placedModel = null } = {}) {
   }
   const roomRec = recById.get(ROOM_PANEL_ID);
   if (roomRec) addPanel(roomRec, ROOT_ID, 1);
+  // (step 3) "Words on this screen", last, only when it has something in it.
+  if (words) {
+    const here = safe(() => words.screen(), []) || [];
+    if (here.length) {
+      add({ id: WORDS_GROUP_ID, parent: ROOT_ID, depth: 1, kind: 'wordsgroup', label: 'Words on this screen' });
+      for (const w of here) add({ id: w.id, parent: WORDS_GROUP_ID, depth: 2, label: w.label, kind: 'sitewords', owner: null, words: w.words });
+    }
+  }
   return { root: nodes.get(ROOT_ID), nodes, list };
 }
 

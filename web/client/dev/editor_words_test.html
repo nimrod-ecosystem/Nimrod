@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the one editor's words (row 2.145 step 3) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:fixed;left:0;top:0;width:900px;height:600px;visibility:hidden;pointer-events:none}
+  .kiosk{position:relative;width:900px;height:600px}
+</style>
+</head>
+<body>
+<h1>the one editor's words (row 2.145 step 3) — words as text nodes; <code>?wording=1</code> is the editor, Words shown</h1>
+<p>The proposal's step 3: a panel's own words are its row, tagged; the site's words in each panel are leaves under it,
+changed through wording edit's own draft list (a suggestion, copied for the site's next update). Words are off unless a
+person turns them on. Driven through a REAL arrangement with real modules (a sign, a clock) and a test panel of fixed
+words. No server needed.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+// ---- OFF BY DEFAULT: importing the editor and its words drew nothing (checked before anything is opened) ----
+import { openSceneEditor, EDITOR_WORDS, copiedWords } from '../editor.js';
+import { WORDS_GROUP_ID, wordsNodeId, siteWordsIn, shortWords, createWordsScanner } from '../editor_words.js';
+const drewAtImport = !!document.querySelector('[data-scene-editor]') || !!document.getElementById('se-css');
+import { createArrangement } from '../arrangement.js';
+import { createBus } from '../bus.js';
+import { mountModule, getManifest, registerModule } from '../module.js';
+import { mergeLayoutSave } from '../doc_merge.js';
+import { buildTree, nodeIdFor, ROOT_ID } from '../editor_targets.js';
+import { CHANGES_KEY, ON_KEY, withChange, changesText, readChanges, withoutWordingParam } from '../wording_edit.js';
+import '../modules/button.js';
+import '../modules/clock.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const clean = () => { try { localStorage.removeItem(CHANGES_KEY); localStorage.removeItem(ON_KEY); } catch { /* none */ } };
+
+// A test panel of fixed words: what the site's words look like in a module, and each thing that is NOT the site's.
+let demoPresses = 0;
+registerModule({ type: 'wordsdemo', title: 'Words demo', description: 'test only',
+  settings: [{ key: 'greeting', label: 'Greeting', kind: 'text', default: 'Hello there', level: 'essential' }] }, (ctx) => ({
+  init() {
+    const g = (ctx.state?.get?.() || {}).greeting || 'Hello there';
+    ctx.mount.innerHTML = `<div class="wd">
+      <h3 data-h>Today's plan</h3>
+      <button type="button" data-go>Start the game</button>
+      <p data-p>Read <a href="#x" data-a>the guide</a> first</p>
+      <p data-t1>Again</p><p data-t2>Again</p>
+      <span aria-live="polite" data-live>Live status words</span>
+      <span data-live-words>Built while it runs</span>
+      <input value="typed words">
+      <p data-n>12:30</p>
+      <p hidden>Hidden words</p>
+      <p data-title>Words demo</p>
+      <p data-dash>Test dashboard</p>
+      <p data-greet>${g}</p>
+      <svg width="10" height="10"><text x="0" y="9">Drawn words</text></svg>
+    </div>`;
+    ctx.mount.querySelector('[data-go]').addEventListener('click', () => { demoPresses += 1; });
+  },
+  destroy() {},
+}));
+
+function memState(seed = {}) {
+  let data = { ...seed };
+  const subs = new Set();
+  return { load: () => Promise.resolve(data), get: () => data,
+    set: (p) => { data = { ...data, ...p }; subs.forEach((f) => f(data)); return Promise.resolve(); },
+    subscribe: (f) => { subs.add(f); return () => subs.delete(f); }, flush: () => Promise.resolve(),
+    startPolling() {}, destroy() {} };
+}
+const noEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }), append: () => Promise.resolve(),
+  subscribe: () => () => {}, startPolling() {}, destroy() {} });
+
+const LAYOUT = () => ({ preset: 'side', slots: ['b1', 'w1'], placed: [{ id: 'k2', place: 'overlay', x: 30, y: 30, w: 20, h: 20 }] });
+const MODULES = [{ id: 'b1', type: 'button' }, { id: 'w1', type: 'wordsdemo' }, { id: 'k2', type: 'clock' }];
+const SEEDS = { b1: { label: 'Ada', style: 'plate' } };
+
+async function make() {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const el = (cls, parent = host) => { const e = document.createElement('div'); e.className = cls; parent.append(e); return e; };
+  const kioskEl = el('kiosk');
+  // Words outside every panel (a breadcrumb), for "Words on this screen".
+  const nav = document.createElement('nav');
+  nav.innerHTML = '<a href="#home" data-chrome>Back home</a>';
+  kioskEl.append(nav);
+  const stageEl = el('k-stage', kioskEl), mirrorEl = el('k-mirror', kioskEl), clockEl = el('k-clock', kioskEl), ambientEl = el('k-ambient', kioskEl);
+  mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
+  const bus = createBus();
+  const t = { doc: { kiosk: { layout: LAYOUT() } }, notes: [], bus, kioskEl, nav };
+  const store = new Map();
+  const router = { focused: () => null, setFocus() {}, focusNext() {}, reachable: () => [] };
+  t.arr = createArrangement({
+    bus, user: 'u', settings: { get: () => ({ editIdleMs: 0 }), set() {} },
+    storage: { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) },
+    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+    mountInstance: async (def, h) => {
+      const state = memState(SEEDS[def.id] || {});
+      const instance = mountModule(def.type, { mount: h, bus, rootBus: bus, state, events: noEvents(), user: 'u', personId: null,
+        instanceId: def.id, profileId: 'scr-A', output: { say() {}, notify() {} }, sources: { list: async () => [] } });
+      instance.init();
+      return { id: def.id, type: def.type, title: getManifest(def.type)?.title, el: h, instance, state, events: { destroy() {} } };
+    },
+    destroyRec: (rec) => { try { rec?.instance?.destroy(); } catch { /* gone */ } },
+    runtime: () => ({ router }), health: () => null, profileId: () => 'scr-A',
+    layoutStore: { get: () => t.doc.kiosk.layout, save: (next, base) => { t.doc.kiosk.layout = mergeLayoutSave(base, next, t.doc.kiosk.layout, { prefer: 'theirs' }).layout; } },
+    notify: (text) => t.notes.push(text),
+  });
+  t.arr.setProfile({ id: 'scr-A', name: 'Test dashboard', modules: MODULES });
+  t.arr.resolve(t.doc.kiosk.layout); t.arr.partition(); await t.arr.mountOverlays(); await t.arr.mountLayout();
+  t.clip = { text: '', writeText: async (x) => { t.clip.text = x; } };
+  t.closed = [];
+  t.open = (extra = {}) => openSceneEditor({ arr: t.arr, bus, mountIn: kioskEl, dashOpts: { baseLayout: () => t.doc.kiosk.layout, save: () => null },
+    level: 'advanced', notify: (x) => t.notes.push(x), onClose: (why) => t.closed.push(why), clipboard: t.clip,
+    now: () => new Date('2026-10-31T12:00:00Z'), ...extra });
+  t.w = (sel) => t.arr.recFor('w1').el.querySelector(sel);
+  return t;
+}
+const row = (ed, id) => ed.el.querySelector(`[data-se-node="${CSS.escape(id)}"]`);
+const bar = (ed, id) => ed.el.querySelector(`[data-se="${id}"]`);
+const sec = (ed, s) => ed.el.querySelector(`[data-se-sec="${s}"]`);
+const key = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const leavesUnder = (ed, parent) => ed.tree().list.filter((n) => n.parent === parent && n.kind === 'sitewords');
+const textsUnder = (ed, parent) => leavesUnder(ed, parent).map((n) => n.words.original);
+
+try {
+  clean();
+  // ============================================================================================
+  section('off by default');
+  check('*** importing the editor and its words drew nothing ***', !drewAtImport);
+  const t = await make();
+  check('(setup) a real arrangement: the sign and the words panel in the cells, the clock placed',
+    !!t.arr.recFor('b1') && !!t.arr.recFor('w1') && !!t.arr.recFor('k2') && !!t.w('[data-go]'));
+  const ed = t.open();
+  check('*** opened: the words toggle is there and OFF, beside the list\'s own ***', bar(ed, 'words')?.getAttribute('aria-pressed') === 'false'
+    && bar(ed, 'words').textContent === EDITOR_WORDS.showWords && bar(ed, 'words').nextElementSibling?.dataset.se === 'list' && ed.words() === false);
+  check('...no words in the list: the sign\'s words are its part, as in step 1; no site words, no screen group',
+    ed.tree().nodes.get('panel:b1/words')?.kind === 'part' && !ed.tree().list.some((n) => n.kind === 'sitewords' || n.kind === 'wordsgroup'));
+  check('Done is still the first button', ed.el.querySelector('button')?.dataset.se === 'done');
+  demoPresses = 0;
+  t.w('[data-go]').click();
+  check('*** words hidden: a press on words in the view presses as always ***', demoPresses === 1 && ed.selected() === ROOT_ID);
+
+  // ============================================================================================
+  section('*** the words shown: a panel\'s own words tagged, the site\'s words as leaves ***');
+  bar(ed, 'words').click();
+  check('the toggle: on, "Hide the words", and the status line says a press on words presses nothing',
+    ed.words() === true && bar(ed, 'words').getAttribute('aria-pressed') === 'true' && bar(ed, 'words').textContent === EDITOR_WORDS.hideWords
+    && (ed.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.wordsShown);
+  const own = ed.tree().nodes.get('panel:b1/words');
+  check('*** the sign\'s words: the same row (same id), kind "words", labelled by them ***', own?.kind === 'words' && own.label === 'Words: “Ada”', J(own && { k: own.kind, l: own.label }));
+  check('...and not listed twice: "Ada" is no site-words leaf anywhere', !ed.tree().list.some((n) => n.kind === 'sitewords' && n.words.original === 'Ada'));
+  const w1 = textsUnder(ed, 'panel:w1');
+  check('*** the words panel\'s site words, in the order drawn ***',
+    J(w1) === J(["Today's plan", 'Start the game', 'Read the guide first', 'the guide', 'Again', 'Again']), J(w1));
+  check('*** NOT listed: live words (aria-live, data-live-words), a box\'s words, digits only, hidden, drawn, its title, the dashboard\'s name, its own text setting ***',
+    !['Live status words', 'Built while it runs', 'typed words', '12:30', 'Hidden words', 'Drawn words', 'Words demo', 'Test dashboard', 'Hello there']
+      .some((x) => w1.includes(x)), J(w1));
+  const again = leavesUnder(ed, 'panel:w1').filter((n) => n.words.original === 'Again').map((n) => n.id);
+  check('a repeat in the same panel: "#2"', J(again) === J([wordsNodeId('w1', 'Again'), wordsNodeId('w1', 'Again', 2)]), J(again));
+  check('*** the clock: its time and date are not words of the site (nothing listed under it) ***', leavesUnder(ed, 'panel:k2').length === 0,
+    J(textsUnder(ed, 'panel:k2')));
+  check('each leaf is no panel\'s settings: fields() null, set() does nothing', leavesUnder(ed, 'panel:w1').every((n) => n.fields() === null && n.set('x', 1) === false && n.panelId === null && n.owner === 'w1'));
+  check('no "Words on this screen" yet (nothing pressed outside, no other change kept)', !ed.tree().nodes.has(WORDS_GROUP_ID));
+  const ids0 = ed.tree().list.map((n) => n.id);
+  ed.refresh();
+  check('*** the ids are the same when drawn again ***', J(ed.tree().list.map((n) => n.id)) === J(ids0));
+  {
+    const plainTree = buildTree(t.arr);
+    check('buildTree with no words: the same rows less the words, the sign\'s words a "part" as in steps 1 and 2',
+      J(plainTree.list.map((n) => n.id)) === J(ids0.filter((id) => !id.startsWith('words:'))) && plainTree.nodes.get('panel:b1/words')?.kind === 'part'
+      && !plainTree.list.some((n) => n.kind === 'sitewords' || n.kind === 'words'));
+  }
+
+  // ============================================================================================
+  section('*** a site-words leaf: the inspector, "Use these words", the one draft list ***');
+  const startId = wordsNodeId('w1', 'Start the game');
+  row(ed, startId).click();
+  check('chosen here, not in edit mode; its row marked', ed.selected() === startId && !t.arr.editing() && row(ed, startId).getAttribute('aria-selected') === 'true');
+  check('the inspector: "Site words", Transform says words have no place of their own, the original, a box, three buttons',
+    ed.el.querySelector('[data-se-title]')?.textContent === EDITOR_WORDS.siteWordsTitle
+    && (sec(ed, 't')?.textContent || '').includes(EDITOR_WORDS.wordsTransform)
+    && sec(ed, 'w')?.querySelector('[data-se-original]')?.textContent === 'Start the game'
+    && sec(ed, 'w')?.querySelector('textarea[data-se-words]')?.value === 'Start the game'
+    && ['use', 'back', 'copy'].every((k) => !!sec(ed, 'w')?.querySelector(`[data-se-w="${k}"]`)));
+  check('the help says a switch cannot type here, and that it is a suggestion', /switch cannot type/.test(sec(ed, 'w')?.textContent || '')
+    && /suggestion/.test(ed.el.querySelector('[data-se-help]')?.textContent || ''));
+  check('every tool says the words are changed in the inspector', ['undo', 'redo', 'add', 'duplicate', 'delete'].every((k) => bar(ed, k).disabled && bar(ed, k).title === EDITOR_WORDS.wordsTools));
+  sec(ed, 'w').querySelector('[data-se-words]').value = 'Begin  the game';
+  sec(ed, 'w').querySelector('[data-se-w="use"]').click();
+  const want = withChange([], { page: location.pathname, old: 'Start the game', now: 'Begin the game' });
+  check('*** "Use these words": the change is in wording edit\'s own key, by its own rule (spaces tidied) ***',
+    J(JSON.parse(localStorage.getItem(CHANGES_KEY) || '[]')) === J(want), localStorage.getItem(CHANGES_KEY));
+  check('*** ...shown in place at once, marked as changed ***', t.w('[data-go]').textContent === 'Begin the game' && t.w('[data-go]').hasAttribute('data-wording-changed'));
+  check('...the mark shows only while the words are shown (a ring on the page\'s root)', document.documentElement.hasAttribute('data-se-words-shown')
+    && /html\[data-se-words-shown\] \[data-wording-changed\]/.test(document.getElementById('se-css')?.textContent || ''));
+  check('*** the row keeps its id (its ORIGINAL words), still chosen, labelled with the new words ***',
+    ed.selected() === startId && /Begin the game/.test(row(ed, startId)?.textContent || '') && /changed/.test(row(ed, startId)?.textContent || ''));
+  check('...every other id is the same after the change', J(ed.tree().list.map((n) => n.id)) === J(ids0));
+  check('the inspector now shows the suggestion, the box holding it', /Begin the game/.test(sec(ed, 'w')?.querySelector('[data-se-draft]')?.textContent || '')
+    && sec(ed, 'w').querySelector('[data-se-words]').value === 'Begin the game');
+  check('"Copy changes (1)"', sec(ed, 'w').querySelector('[data-se-w="copy"]').textContent === 'Copy changes (1)');
+  sec(ed, 'w').querySelector('[data-se-w="copy"]').click();
+  await sleep(0);
+  check('*** "Copy changes" copies exactly what the wording bar copies (changesText), and says so ***',
+    t.clip.text === changesText(readChanges(), '2026-10-31') && t.clip.text.includes(`${location.pathname}\tStart the game\tBegin the game`)
+    && (ed.el.querySelector('[data-se-status]')?.textContent || '') === copiedWords(1), J(t.clip.text));
+
+  // ============================================================================================
+  section('*** Escape in the words box: the box back, the editor stays ***');
+  const box = () => sec(ed, 'w')?.querySelector('[data-se-words]');
+  box().value = 'Something else';
+  key(box(), 'Escape');
+  check('*** typing not kept + Escape: the box back as it was, the words still chosen, the editor open, nothing kept ***',
+    box()?.value === 'Begin the game' && ed.isOpen() && ed.selected() === startId && readChanges()[0]?.new === 'Begin the game');
+  box().value = 'Typed again';
+  key(box(), 'Enter');
+  check('Enter keeps the words (one line: no new line typed)', readChanges()[0]?.new === 'Typed again' && t.w('[data-go]').textContent === 'Typed again');
+  ed.useWords('Begin the game');
+  key(box(), 'Escape');
+  check('*** Escape in a box with nothing new: out of the chosen words to the dashboard\'s row, the editor still open ***',
+    ed.isOpen() && ed.selected() === ROOT_ID);
+
+  // ============================================================================================
+  section('*** the switch walk: the box is not a stop; "Put back" is ***');
+  row(ed, startId).click();
+  ed.scan.reset();
+  ed.scan.next();
+  check('the first stop is Done', ed.scan.current()?.dataset?.se === 'done');
+  check('no stop is a text box', ed.scan.stops().every((b) => b.tagName !== 'TEXTAREA' && b.tagName !== 'INPUT'));
+  let guard = 0;
+  while (ed.scan.current()?.dataset?.seW !== 'back' && guard++ < 300) ed.scan.next();
+  check('*** a switch reaches "Put back the site\'s words" ***', ed.scan.current()?.dataset?.seW === 'back');
+  ed.scan.select();
+  check('*** ...and select puts them back: the change dropped, the element as it was, unmarked ***',
+    readChanges().length === 0 && t.w('[data-go]').textContent === 'Start the game' && !t.w('[data-go]').hasAttribute('data-wording-changed'));
+  check('back from chosen words: the dashboard\'s row, the editor stays (true)', ed.scan.back() === true && ed.selected() === ROOT_ID && ed.isOpen());
+  ed.scan.reset();
+
+  // ============================================================================================
+  section('*** a press on words in the view, with the words shown ***');
+  demoPresses = 0;
+  const pd = new PointerEvent('pointerdown', { bubbles: true, cancelable: true });
+  t.w('[data-go]').dispatchEvent(pd);
+  check('the pointer-down on words is taken (nothing under it sees it)', pd.defaultPrevented);
+  t.w('[data-go]').click();
+  check('*** a click on words chooses their row, and the button does NOT press ***', demoPresses === 0 && ed.selected() === startId, `${demoPresses} ${ed.selected()}`);
+  t.arr.recFor('b1').el.querySelector('.ab-word').click();
+  check('*** a click on the sign\'s own words chooses its words row, through edit mode ***',
+    ed.selected() === 'panel:b1/words' && J(t.arr.editing()) === J({ id: 'b1', target: 'words' }), `${ed.selected()} ${J(t.arr.editing())}`);
+  check('...its inspector: its own Words row, and a line saying they are the panel\'s own setting',
+    !!sec(ed, 's')?.querySelector('[data-em-text="label"]') && (sec(ed, 'w')?.textContent || '').includes(EDITOR_WORDS.ownWords));
+  // The em-text Escape fix, in the editor.
+  const lbl = () => sec(ed, 's')?.querySelector('[data-em-text="label"]');
+  lbl().value = 'Not kept';
+  key(lbl(), 'Escape');
+  check('*** Escape in its Words box with typing in it: the box back, edit mode and the editor stay, nothing written ***',
+    lbl()?.value === 'Ada' && J(t.arr.editing()) === J({ id: 'b1', target: 'words' }) && ed.isOpen() && t.arr.recFor('b1').state.get().label === 'Ada',
+    `${lbl()?.value} ${J(t.arr.editing())}`);
+  let chromePressed = 0;
+  t.nav.querySelector('[data-chrome]').addEventListener('click', () => { chromePressed += 1; });
+  t.nav.querySelector('[data-chrome]').click();
+  const chromeId = wordsNodeId('screen', 'Back home');
+  check('*** words outside every panel, pressed: "Words on this screen" appears with them, chosen; the link does not act ***',
+    ed.tree().nodes.get(WORDS_GROUP_ID)?.kind === 'wordsgroup' && ed.tree().nodes.get(chromeId)?.parent === WORDS_GROUP_ID
+    && ed.selected() === chromeId && chromePressed === 0 && !t.arr.editing(), `${ed.selected()} ${chromePressed}`);
+  // A change kept for this page that no panel shows now (another visit's): listed there too.
+  localStorage.setItem(CHANGES_KEY, JSON.stringify([{ page: location.pathname, old: 'Gone words', new: 'New gone words' }]));
+  ed.refresh();
+  check('*** a change kept for this page and not on the screen now: under "Words on this screen", labelled changed ***',
+    ed.tree().nodes.get(wordsNodeId('screen', 'Gone words'))?.parent === WORDS_GROUP_ID && /changed/.test(ed.tree().nodes.get(wordsNodeId('screen', 'Gone words')).label));
+  row(ed, wordsNodeId('screen', 'Gone words')).click();
+  check('...its inspector says it is not on the screen now', /not on the screen now/.test(sec(ed, 'w')?.textContent || ''));
+  ed.putBackWords();
+  check('...and "Put back" drops it (its row goes)', readChanges().length === 0 && !ed.tree().nodes.has(wordsNodeId('screen', 'Gone words')));
+
+  // ============================================================================================
+  section('words hidden again: steps 1 and 2 exactly');
+  row(ed, startId).click();
+  bar(ed, 'words').click();
+  check('the toggle off: no words in the list, the chosen words left for the dashboard, the page\'s mark gone',
+    !ed.words() && !ed.tree().list.some((n) => n.kind === 'sitewords' || n.kind === 'wordsgroup') && ed.selected() === ROOT_ID
+    && !document.documentElement.hasAttribute('data-se-words-shown') && ed.tree().nodes.get('panel:b1/words')?.kind === 'part');
+  demoPresses = 0;
+  t.w('[data-go]').click();
+  check('*** ...and a press on words presses again ***', demoPresses === 1);
+  ed.close();
+
+  // ============================================================================================
+  section('opened with the words shown (`?wording=1`, kiosk.js); closing stops the watch');
+  const ed2 = t.open({ words: true });
+  check('*** words: true opens with them shown ***', ed2.words() === true && leavesUnder(ed2, 'panel:w1').length > 0 && bar(ed2, 'words').getAttribute('aria-pressed') === 'true');
+  check('...and Done is still its first stop', (ed2.scan.reset(), ed2.scan.next(), ed2.scan.current()?.dataset?.se === 'done'));
+  ed2.close();
+  demoPresses = 0;
+  t.w('[data-go]').click();
+  check('*** closed: the window no longer takes presses on words ***', demoPresses === 1 && !document.documentElement.hasAttribute('data-se-words-shown'));
+
+  // ============================================================================================
+  section('the pure parts');
+  check('shortWords cuts at 40 with …', shortWords('x'.repeat(50)).length === 40 && shortWords('x'.repeat(50)).endsWith('…') && shortWords(' a  b ') === 'a b');
+  check('withoutWordingParam: taken out, the rest kept; nothing to take out, the same string',
+    withoutWordingParam('/kiosk.html?key=a&wording=1&x=2') === '/kiosk.html?key=a&x=2'
+    && withoutWordingParam('https://h.test/kiosk.html?wording') === 'https://h.test/kiosk.html'
+    && withoutWordingParam('/kiosk.html?key=a%2Bb') === '/kiosk.html?key=a%2Bb');
+  {
+    const d = document.createElement('div');
+    d.innerHTML = '<p>One</p><p>Two</p><p>Three</p>';
+    document.getElementById('host').append(d);
+    check('siteWordsIn keeps to its cap', siteWordsIn(d, { max: 2 }).length === 2);
+    const sc = createWordsScanner();
+    const a = sc.scan(d, {});
+    check('the scanner keeps what it found while nothing changed', sc.scan(d, {}) === a);
+    d.querySelector('p').textContent = 'Uno';
+    await sleep(0);
+    check('...and finds it again once something in it changed', sc.scan(d, {}) !== a && sc.scan(d, {})[0].shown === 'Uno');
+    sc.destroy();
+    d.remove();
+  }
+  check('names nobody: its file, and every word the editor says', !/cici|her screen/i.test(await (await fetch('../editor_words.js')).text() + J(EDITOR_WORDS)));
+  t.arr.destroy();
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+} finally {
+  clean();
+}
+const sum = document.getElementById('summary');
+sum.textContent = `${passed} passed, ${failed} failed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

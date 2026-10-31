@@ -35,7 +35,7 @@ persistence of a theme setting through the live server's overwrite-state store
 import { applyTheme, resolveThemeId, listThemes, THEMES, DEFAULT_THEME,
          onColor, contrast, ACCENT_VARS, getStoredTheme, setStoredTheme,
          mountThemePicker, luminance, focusColor, worstContrast, FOCUS_MIN,
-         TEXT_MIN, scanRingColor } from '../theme.js';
+         TEXT_MIN, scanRingColor, wordingBarWanted } from '../theme.js';
 import { ANSWER_MARKS, answerMarkHtml } from '../answer_mark.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
@@ -929,6 +929,21 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     console.log('livescene worst flashes/s (ufo speed 3):', worstRows.join(' '), 'old:', oldWorst);
   } catch (e) {
     check('live scene flash-limit checks ran', false, String(e && e.stack || e));
+  }
+
+  // (row 2.145 step 3, 2026-10-31) The wording bar is not started on a dashboard page: there `?wording=1` opens the one
+  // editor with its words shown (kiosk.js), and a kept "on" is never honoured (it brought the bar back over a bedside
+  // screen after every reload).
+  try {
+    check('wordingBarWanted: ?wording=1, ?wording=0, a kept "on" start it on an ordinary page; nothing does not',
+      wordingBarWanted({ search: '?wording=1' }) && wordingBarWanted({ search: '?wording=0' }) && wordingBarWanted({ stored: '1' })
+      && !wordingBarWanted({ search: '?other=1' }) && !wordingBarWanted({}));
+    check('*** ...and on a dashboard page (its nimrod-wording meta), NOTHING starts it: not the address, not a kept "on" ***',
+      !wordingBarWanted({ search: '?wording=1', stored: '1', editorPage: true }) && !wordingBarWanted({ stored: '1', editorPage: true }));
+    const kioskHead = (await (await fetch('../kiosk.html')).text()).split('</head>')[0];
+    check('*** kiosk.html says it is a dashboard page (the meta theme.js reads) ***', /<meta name="nimrod-wording" content="editor">/.test(kioskHead));
+  } catch (e) {
+    check('the wording bar checks ran', false, String(e && e.stack || e));
   }
 
   const sum = document.getElementById('summary');

@@ -108,6 +108,8 @@ import { watchCorners } from './panel_corners.js';
 // Row 2.38, the map editor: the edit view on a screen the kiosk mounts itself, and the map window.
 import { openDashboardEditor } from './dashboard_editor.js';
 import { openSceneEditor, SCENE_EDITOR_KIND } from './editor.js';   // row 2.145 step 1: the one editor (openEditView('scene'))
+// row 2.145 step 3: `?wording=1` opens it with its words shown (below the first mount); the bar where it cannot.
+import { wordingParam, withoutWordingParam, forgetWordingOn, startWordingEdit } from './wording_edit.js';
 import { mountMapWindow } from './edit_windows.js';
 import { mapLoader } from './dashboard_map.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
@@ -3443,12 +3445,16 @@ export async function mountKiosk(root, {
     if (kEditorDoc) { try { kEditorDoc.flush?.()?.finally?.(() => {}); } catch { /* gone */ } try { kEditorDoc.destroy?.(); } catch { /* gone */ } kEditorDoc = null; }
     syncEditScan();
   }
-  /** `kind`: 'windows' (the edit windows, as always) or 'scene' (the one editor, row 2.145). */
-  function openEditView(kind = 'windows') {
+  /** `kind`: 'windows' (the edit windows, as always) or 'scene' (the one editor, row 2.145).
+   *  `words` (row 2.145 step 3): the one editor with its words shown (`?wording=1`, below). */
+  function openEditView(kind = 'windows', { words = false } = {}) {
     if (torn) return null;
     const want = kind === SCENE_EDITOR_KIND && !dash?.impl?.edit ? SCENE_EDITOR_KIND : 'windows';
     const have = editorNow();
-    if (have && (have.kind === SCENE_EDITOR_KIND ? SCENE_EDITOR_KIND : 'windows') === want) { syncEditScan(); armEditIdle(); return have; }
+    if (have && (have.kind === SCENE_EDITOR_KIND ? SCENE_EDITOR_KIND : 'windows') === want) {
+      if (words && want === SCENE_EDITOR_KIND) { try { have.showWords?.(true); } catch { /* the editor as it is */ } }
+      syncEditScan(); armEditIdle(); return have;
+    }
     if (have) closeEditView();                   // the other one is open: one editor at a time
     try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
     if (screensOpen) toggleScreens(false);
@@ -3458,6 +3464,7 @@ export async function mountKiosk(root, {
       if (want === SCENE_EDITOR_KIND) {
         ed = kEditor = openSceneEditor({
           arr, bus, mountIn: kioskEl, dashOpts: ownEditorOpts(),
+          words: !!words,
           level: () => complexity(),
           notify: (text) => { try { output?.notify?.(text, { source: 'shell' }); } catch { /* the line still says it */ } },
           onClose: () => ownEditorClosed(),
@@ -9027,6 +9034,29 @@ export async function mountKiosk(root, {
   // place, with Home behind it on the trail. One that has gone since (or will not load) leaves Home showing.
   if (keepPlace && keepPlace.boot === bootProfileId && keepPlace.id && keepPlace.id !== profileId && !plan.redirectTo) {
     try { await showScreen(keepPlace.id); } catch (err) { console.error('kiosk: back to where it was', err); }
+  }
+  // *** `?wording=1` ON A DASHBOARD: THE ONE EDITOR, ITS WORDS SHOWN (row 2.145 step 3, 2026-10-31). *** The proposal's
+  // step 3 ("`?wording=1` becomes 'the editor, Words shown'"). kiosk.html tells theme.js not to start the wording bar here
+  // (its `nimrod-wording` meta); this opens the editor instead, once the dashboard is up.
+  //   * ONLY WHEN THE ADDRESS ASKS. A wording "on" kept in this browser is NEVER honoured here: a bedside screen reloads
+  //     itself (a new version, the recovery ladder), and the kept "on" used to bring the wording bar back over it after
+  //     every reload, taking presses on words for up to twenty minutes with nobody there who asked. Nothing opens unless
+  //     a person opens it.
+  //   * THE PARAMETER IS TAKEN OUT OF THE ADDRESS AT ONCE (as `boot=1` is, above), so this page's own reloads do not
+  //     open the editor again. `?wording=0` is taken out too, and forgets a kept "on" (for the other pages).
+  //   * Not on an embed (a page holding a preview has its own address, and the bar, theme.js). And on a dashboard
+  //     whose own module edits it (`dash.impl.edit`: the edit windows, not the one editor -- step 1), the wording bar
+  //     is started here instead, as the address asked: what that path had before this step.
+  if (!embedded && !torn) {
+    const asked = wordingParam(launchSearch);
+    if (asked !== null) {
+      if (!launch) {
+        try { const next = withoutWordingParam(location.href); if (next !== location.href) history.replaceState(history.state, '', next); } catch { /* the reload opens it once more; Done closes it */ }
+      }
+      if (asked === false) forgetWordingOn();
+      else if (dash?.impl?.edit) startWordingEdit({ doc: document });
+      else openEditView(SCENE_EDITOR_KIND, { words: true });
+    }
   }
   // The row's list of dashboards, read once now (the tray keeps it current after). Not on an embed (no other screens).
   if (!embedded && !torn && typeof profiles?.list === 'function') {

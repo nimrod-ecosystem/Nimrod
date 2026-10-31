@@ -4623,6 +4623,29 @@ const toTab = (m, id) => {
         await settled(() => !ed2.isOpen() && !k.editView() && !k.editScanHeld() && !k.runtime.router.isPaused(), 2000));
       k.destroy();
       root.remove();
+
+      // ---- 1d. ROW 2.145 STEP 3 (2026-10-31): `?wording=1` IS THE ONE EDITOR, ITS WORDS SHOWN; a kept "on" is not ----
+      const wroot = box();
+      const wk = await mountKiosk(wroot, { user: USER, profileId: S.id, profiles, bus: createBus(),
+        launch: { search: '?wording=1', navType: 'reload' } });
+      const wed = wk.sceneEditor();
+      check('*** opened with ?wording=1: the one editor is open, its words shown, and it holds the scan ***',
+        !!wed && wed.words() === true && wk.editScanHeld() && !document.getElementById('wording-edit-bar'), String(wed && wed.words()));
+      check('...Done is its first stop', (wed.scan.reset(), wed.scan.next(), wed.scan.current()?.dataset?.se === 'done'));
+      wk.closeEditView();
+      wk.destroy();
+      wroot.remove();
+      let keptOn = null;
+      try { keptOn = localStorage.getItem('nimrod.wording.on'); localStorage.setItem('nimrod.wording.on', '1'); } catch { /* no store */ }
+      const sroot = box();
+      const sk = await mountKiosk(sroot, { user: USER, profileId: S.id, profiles, bus: createBus(),
+        launch: { search: '', navType: 'reload' } });
+      await sleep(300);
+      check('*** a wording "on" kept in this browser opens NOTHING on a dashboard: no editor, no wording bar ***',
+        !sk.editView() && !document.getElementById('wording-edit-bar'));
+      sk.destroy();
+      sroot.remove();
+      try { if (keptOn === null) localStorage.removeItem('nimrod.wording.on'); else localStorage.setItem('nimrod.wording.on', keptOn); } catch { /* no store */ }
     }
 
     // ---- 2. "SHOW A SMALL CLOCK" (a clock is added first: the wait), on both paths ----

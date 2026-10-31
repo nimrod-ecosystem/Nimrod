@@ -495,11 +495,13 @@ registerModule(
 
     return {
       init() {
+        // (row 2.145 step 3, 2026-10-31) `data-live-words` on the time, the AM/PM and the date: words built while it runs,
+        // not words in the code, so the one editor's Words never list them as the site's (editor_words.js).
         mount.innerHTML = `
           <div class="clock" data-size="m" data-mode="clock" data-alerted="0">
-            <div class="time" data-time>—</div>
-            <div class="when" data-when></div>
-            <div class="date" data-date></div>
+            <div class="time" data-time data-live-words>—</div>
+            <div class="when" data-when data-live-words></div>
+            <div class="date" data-date data-live-words></div>
             <div class="cd" data-cd hidden>
               <div class="cd-label" data-cd-label></div>
               <div class="cd-value" data-cd-value>—</div>

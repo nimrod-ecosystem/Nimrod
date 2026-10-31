@@ -24,6 +24,13 @@
 //
 // KEPT: the changes and "it is on" in this browser's storage (a draft in progress, per viewer - never shared, never on
 // the server), so moving between pages keeps both. Storage that refuses (a private window) only means it is not kept.
+//
+// *** ONE DRAFT LIST, TWO WAYS IN (row 2.145 step 3, 2026-10-31). *** On a dashboard, `?wording=1` opens THE ONE EDITOR
+// with its Words shown instead of this bar (editor.js, editor_words.js; kiosk.js reads the address, kiosk.html's
+// `<meta name="nimrod-wording" content="editor">` tells theme.js not to start the bar there). Both write the SAME list
+// in the same key through the same rule (`recordChange` -> `withChange`), and both copy it the same way
+// (`changesText`), so a change made in one is in the other's "Copy changes". The pieces the editor shares are exported
+// below (`norm`, `readChanges`, `recordChange`, `showWordsInPlace`); importing them starts nothing.
 
 export const ON_KEY = 'nimrod.wording.on';
 export const CHANGES_KEY = 'nimrod.wording.changes.v1';
@@ -42,13 +49,67 @@ const store = {
   set(k, v) { try { globalThis.localStorage?.setItem(k, v); } catch { /* not kept */ } },
   del(k) { try { globalThis.localStorage?.removeItem(k); } catch { /* nothing kept */ } },
 };
-const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
+/** Words as the copied lines and the apply tool hold them: every run of spaces and line breaks one space. PURE.
+ * (row 2.145 step 3: exported, so the editor's Words keep the same one line.) */
+export const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
 
 /** Whether `search` (a location.search) turns it on (true), off (false), or says nothing (null). PURE. */
 export function wordingParam(search = '') {
   const m = /[?&]wording(?:=([^&]*))?(?:&|$)/.exec(String(search));
   if (!m) return null;
   return !['0', 'off', 'false', 'no'].includes(String(m[1] ?? '1').toLowerCase());
+}
+
+/** `href` with `wording` taken out of it (row 2.145 step 3: the kiosk takes it out once read, so the screen's own
+ * reloads do not open the editor again). PURE. The same shape as restart.js `withoutBootParam`. */
+export function withoutWordingParam(href = '') {
+  try {
+    const u = new URL(href, 'http://x.invalid');
+    if (!u.searchParams.has('wording')) return href;
+    u.searchParams.delete('wording');
+    return String(href).startsWith('http') ? u.href : `${u.pathname}${u.search}${u.hash}`;
+  } catch { return href; }
+}
+
+/** Forget "it is on" in this browser (`?wording=0`), without starting anything. */
+export function forgetWordingOn() { store.del(ON_KEY); }
+
+/** The changes kept in this browser (the one draft list). Never throws: a refusing store is an empty list. */
+export function readChanges() {
+  let list = [];
+  try { list = JSON.parse(store.get(CHANGES_KEY) || '[]'); } catch { list = []; }
+  return Array.isArray(list) ? list.filter((c) => c && typeof c.old === 'string' && typeof c.new === 'string') : [];
+}
+
+/** One change made and kept, by `withChange`'s rule (a change back to the original drops it). Returns the list. */
+export function recordChange({ page, old, now }) {
+  const list = withChange(readChanges(), { page, old, now });
+  store.set(CHANGES_KEY, JSON.stringify(list));
+  return list;
+}
+
+/**
+ * Show `words` in place in `el` (to see how they read there) and mark it changed. Returns a function that puts the
+ * element back exactly as it was. One run of words: set it; words around other elements: only the first run changes,
+ * the rest is left (the copied line still carries the whole sentence).
+ */
+export function showWordsInPlace(el, words) {
+  if (!el || !el.childNodes) return () => {};
+  const runs = [...el.childNodes].filter((c) => c.nodeType === 3 && norm(c.nodeValue));
+  const wasMarked = el.hasAttribute?.('data-wording-changed');
+  let undo = () => {};
+  if (runs.length === 1 && el.children.length === 0) {
+    const was = el.textContent;
+    el.textContent = words;
+    undo = () => { el.textContent = was; };
+  } else if (runs.length) {
+    const run = runs[0];
+    const was = run.nodeValue;
+    run.nodeValue = ` ${words} `;
+    undo = () => { run.nodeValue = was; };
+  }
+  el.setAttribute?.('data-wording-changed', '');
+  return () => { undo(); if (!wasMarked) el.removeAttribute?.('data-wording-changed'); };
 }
 
 /** The changes, with one change to the same words on the same page replacing the last (and a change back to the
@@ -116,9 +177,7 @@ export function startWordingEdit({ doc = globalThis.document, setTimer = (f, ms)
   store.set(ON_KEY, '1');
   ensureCss(doc);
   const page = () => doc.defaultView?.location?.pathname || '/';
-  let list = [];
-  try { list = JSON.parse(store.get(CHANGES_KEY) || '[]'); } catch { list = []; }
-  if (!Array.isArray(list)) list = [];
+  let list = readChanges();
   let idle = null, hovered = null, editing = null;
 
   const bar = doc.createElement('div');
@@ -130,12 +189,12 @@ export function startWordingEdit({ doc = globalThis.document, setTimer = (f, ms)
     + '<details><summary>What this can change</summary>Click any words to retype them; the page shows the new words at once '
     + 'and nothing is saved to the site. "Copy changes" copies them to send. Words with a link inside, words built while the '
     + 'page runs (a name, a lesson), and hover titles or box hints are put in by hand. While this is on, a click on words '
-    + 'does not press anything. It turns itself off after twenty minutes with no change.</details>';
+    + 'does not press anything. It turns itself off after twenty minutes with no change. On a dashboard, this opens the '
+    + 'editor with Words shown.</details>';
   doc.body.append(bar);
   const say = (t) => { const s = bar.querySelector('.we-say'); if (s) s.textContent = t; };
   const count = () => list.length;
   const tell = () => say(`Changing the words: click any words to change them. ${count() === 1 ? '1 change' : `${count()} changes`} so far.`);
-  const keep = () => store.set(CHANGES_KEY, JSON.stringify(list));
   const armIdle = () => { if (idle != null) clearTimer(idle); idle = setTimer(() => { idle = null; stop('idle'); }, IDLE_OFF_MS); };
   const ours = (n) => !!(n && n.closest?.(`#${BAR_ID}`));
 
@@ -158,18 +217,16 @@ export function startWordingEdit({ doc = globalThis.document, setTimer = (f, ms)
     const nw = norm(box.querySelector('textarea').value);
     closeEditor();
     if (!nw || nw === old) { tell(); return; }
-    list = withChange(list, { page: page(), old, now: nw });
-    keep();
-    // Shown in place. One run of words: set it; words around other elements: only the first run changes, the rest is
-    // left (the copied line still carries the whole sentence).
-    const runs = [...el.childNodes].filter((c) => c.nodeType === 3 && norm(c.nodeValue));
-    if (runs.length === 1 && el.children.length === 0) el.textContent = nw;
-    else if (runs.length) runs[0].nodeValue = ` ${nw} `;
-    el.setAttribute('data-wording-changed', '');
+    // (row 2.145 step 3) Read again before writing: the editor's Words keep the same list, and this bar's copy from when
+    // it started must not write over a change made there since.
+    list = recordChange({ page: page(), old, now: nw });
+    // Shown in place (showWordsInPlace, above: shared with the editor).
+    showWordsInPlace(el, nw);
     armIdle();
     tell();
   }
   async function copy() {
+    list = readChanges();     // (row 2.145 step 3) the one list as it is now, whoever changed it last
     const text = changesText(list, now().toISOString().slice(0, 10));
     try {
       if (!clipboard?.writeText) throw new Error('no clipboard');

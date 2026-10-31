@@ -20,6 +20,14 @@
 // their numbers can be TYPED between ‹ and › (edit_mode.js renderOptions `typed`; Enter keeps, Escape puts it back).
 // And Town is in the list: an open place's things are its pieces (modules/town.js editTargets), "Open a place" on the
 // Town's own row moves between its places.
+// *** STEP 3 (2026-10-31): WORDS, AS TEXT NODES. *** A toolbar toggle, "Show the words" (off unless a person turns it
+// on, or the page was opened with `?wording=1` -- kiosk.js), puts the words on the dashboard in the list
+// (editor_words.js, editor_targets.js): a panel's OWN words (a sign's) are its row, tagged 'words', changed in its own
+// Words row as before; the SITE's words in each panel are leaves under it, changed in a Words section here through
+// wording edit's own draft list (wording_edit.js: a suggestion kept in this browser and copied for the site's next
+// update -- "Use these words", "Put back the site's words", "Copy changes"). While they are shown, a press on words in
+// the view CHOOSES them and presses nothing (a capture on the window, ahead of edit mode's); words outside the panels
+// join "Words on this screen" when pressed. Not step 5: nothing is re-applied at load, nothing written to the site.
 //
 // *** HOW IT SITS ON WHAT IS THERE (nothing underneath it changes). ***
 //   * The selection IS edit mode's. A row chosen here is `arr.editPanel(id, true)` then `arr.editSelect(target)`; a
@@ -39,9 +47,14 @@
 // own wait with no press (kiosk.js `editIdleMs`). Every change is saved as it is made: closing loses nothing.
 
 import { openDashboardEditor } from './dashboard_editor.js';
-import { renderOptions, ensureEditCss, targetsOf, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC } from './edit_mode.js';
-import { buildTree, nodeForEditing, splitSelection, ROOT_ID } from './editor_targets.js';
+import { renderOptions, ensureEditCss, targetsOf, targetAt, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC } from './edit_mode.js';
+import { buildTree, nodeForEditing, nodeIdFor, splitSelection, ROOT_ID } from './editor_targets.js';
 import { preset } from './layout.js';
+// (row 2.145 step 3) The words. wording_edit.js is imported for its shared pieces only (nothing starts on import).
+// FOR importing it here, at load: one draft list and one rule, not a copy. AGAINST: the kiosk now fetches that small file
+// on every load (it is pure functions; the bar itself still starts only on a page that asks for it, theme.js).
+import { wordsElementAt, norm, readChanges, recordChange, showWordsInPlace, changesText, LINE_MAX } from './wording_edit.js';
+import { createWordsScanner, wordsSource, WORDS_KINDS } from './editor_words.js';
 
 export const SCENE_EDITOR_KIND = 'scene';
 
@@ -70,7 +83,27 @@ export const EDITOR_WORDS = Object.freeze({
   cellHelp: 'Choose the panel in it to see its options.',
   emptyCell: 'Nothing is in this cell.',
   groupHelp: 'Panels placed freely. Choose one to move it with numbers.',
+  // (row 2.145 step 3, 2026-10-31) The words.
+  showWords: 'Show the words',
+  hideWords: 'Hide the words',
+  wordsShown: 'Words shown. A press on words chooses them, and does not press anything while the words are shown.',
+  wordsTools: 'Words are changed in the inspector: "Use these words" or "Put back the site\'s words".',
+  wordsTransform: 'Words have no place of their own.',
+  siteWordsTitle: 'Site words',
+  siteWordsHelp: 'Words the site shows here. A change is a suggestion: it shows here at once, is kept in this browser, and is copied for the site\'s next update. Nothing is saved to the site.',
+  wordsKeys: 'One line, up to 300 letters. Enter keeps them; Escape puts the box back. A switch cannot type here (there is no on-screen keyboard for this yet); "Put back the site\'s words" and "Copy changes" work with one.',
+  wordsEmpty: 'Type the new words first. To go back to the site\'s words, press "Put back the site\'s words".',
+  wordsKept: 'Kept as a suggestion, and shown here. "Copy changes" copies it for the site\'s next update.',
+  wordsKeptNotShown: 'Kept as a suggestion. These words are not on the screen now, so nothing here changed.',
+  wordsSame: 'These are the site\'s words; no change is kept for them.',
+  wordsBack: 'The site\'s words are back, and the suggestion is dropped.',
+  wordsAlready: 'These are the site\'s words already.',
+  noCopy: 'This browser would not copy them.',
+  screenWordsHelp: 'Words outside the panels: with the words shown, press words on the screen to list them here. Changes already kept for this page that are not on the screen now are here too.',
+  ownWords: 'These words are this panel\'s own setting, kept with it (its Words row). They are not the site\'s words.',
 });
+/** "Copied 2 changes. Send them to Code." -- the wording bar's own sentence (wording_edit.js), so the two say one thing. */
+export const copiedWords = (n) => `Copied ${n === 1 ? '1 change' : `${n} changes`}. Send them to Code.`;
 
 /**
  * Why a chosen thing has no Transform section, in words (row 2.145 step 2). PURE.
@@ -90,6 +123,11 @@ const LEVELS = ['essential', 'standard', 'advanced'];
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const safe = (fn, fallback = null) => { try { const v = fn(); return v === undefined ? fallback : v; } catch { return fallback; } };
 const GROUPISH = new Set(['dashboard', 'cell', 'group']);
+// (step 3) The site's words and "Words on this screen": chosen HERE, like a group (edit mode is left), since they are no
+// panel's settings. A panel's own words ('words') are edit mode's part, chosen through it as before.
+const WORDS_LOCAL = new Set([WORDS_KINDS.site, WORDS_KINDS.group]);
+const VIEW_PRESSES = ['click', 'pointerdown', 'mousedown', 'touchstart'];
+const HAS_LETTER = /\p{L}/u;
 const TOOLS = ['undo', 'redo', 'add', 'duplicate', 'delete'];
 const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', duplicate: 'Duplicate', delete: 'Delete' });
 
@@ -104,9 +142,12 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
  *   notify(t)   a short spoken and shown notice (a refused Delete); absent: the status line alone
  *   onClose()   after it closed, any way
  *   onActivity() somebody chose something (a press in the view counts): the host's "nobody answering" wait restarts
+ *   words       (row 2.145 step 3) open with the words shown (`?wording=1`, kiosk.js). Default false: a person turns them on.
+ *   clipboard   where "Copy changes" writes (default the browser's); `now()` dates the copied lines. For the suite.
  */
 export function openSceneEditor(opts = {}) {
-  const { arr, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null } = opts;
+  const { arr, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
+    words: wordsAtOpen = false, clipboard = globalThis.navigator?.clipboard, now = () => new Date() } = opts;
   if (!arr) throw new Error('openSceneEditor: an arrangement is required');
   const doc = mountIn?.ownerDocument || (typeof document !== 'undefined' ? document : null);
   if (!doc) throw new Error('openSceneEditor: there is no page to draw on');
@@ -122,6 +163,15 @@ export function openSceneEditor(opts = {}) {
   let scanKey = null;
   let scanIdx = -1;
   const offs = [];
+  // (step 3) The words: shown or not, the scanner that finds them (only while shown), words pressed outside the panels,
+  // each changed element's way back (`showWordsInPlace`), and which row each listed element is (for a press in the view).
+  let wordsOn = false;
+  let scanner = null;
+  const clicked = [];
+  const undoInPlace = new WeakMap();
+  let leafByEl = new Map();
+  const win = doc.defaultView || globalThis;
+  const page = () => win.location?.pathname || '/';
 
   // ---- the placed panels' edit model: the edit windows' own, with no window open ----
   let placed = null;
@@ -152,6 +202,7 @@ export function openSceneEditor(opts = {}) {
   box.innerHTML = `<div class="se-bar" role="toolbar" aria-label="Editor tools" data-se-bar>
       <button type="button" class="se-btn em-btn em-done" data-se="done">Done</button>
       ${TOOLS.map((t) => `<button type="button" class="se-btn em-btn" data-se="${t}">${TOOL_LABELS[t]}</button>`).join('')}
+      <button type="button" class="se-btn em-btn" data-se="words" aria-pressed="false">${EDITOR_WORDS.showWords}</button>
       <button type="button" class="se-btn em-btn" data-se="list" aria-expanded="true">Hide the list</button>
       <span class="se-status" role="status" aria-live="polite" data-se-status></span>
       <span class="se-why" data-se-why></span>
@@ -191,6 +242,11 @@ export function openSceneEditor(opts = {}) {
     return safe(() => targetsOf(rec).find((t) => t.whole && Array.isArray(t.fields) && t.fields.some((f) => f && f.key === 'addPiece')), null);
   }
   function toolsFor(node, editing) {
+    // (step 3) Words chosen: the inspector's own buttons change them; every tool says so.
+    if (node && WORDS_LOCAL.has(node.kind)) {
+      const w = off(EDITOR_WORDS.wordsTools);
+      return { undo: w, redo: w, add: w, duplicate: w, delete: w };
+    }
     const sel = editing ? safe(() => arr.editSelection(), null) : null;
     const act = (id) => (sel?.actions || []).find((a) => a.id === id && typeof a.run === 'function') || null;
     const m = model();
@@ -256,7 +312,7 @@ export function openSceneEditor(opts = {}) {
     const n = tree.nodes.get(nodeId);
     if (!n) return false;
     note('');
-    if (GROUPISH.has(n.kind)) {
+    if (GROUPISH.has(n.kind) || WORDS_LOCAL.has(n.kind)) {
       chosenLocal = n.id;
       if (editingNow()) leaveEditMode();    // edit mode's `edit/ended` draws it again
       render();
@@ -275,10 +331,24 @@ export function openSceneEditor(opts = {}) {
   // DRAWING. Each draw is from what is there NOW (the tree is built again): a room drawn again, a piece taken out, a
   // panel placed or removed all show without anybody telling this.
   // =====================================================================================================
+  /** The tree as it is now: with the words while they are shown (step 3), else exactly steps 1 and 2's. */
+  function buildNow() {
+    const words = wordsOn ? wordsSource({
+      recs: safe(() => arr.editRecs?.() || [], []) || [], profileName: safe(() => arr.profile()?.name, '') || '',
+      scanner, page: page(), drafts: readChanges(), clicked,
+    }) : null;
+    return safe(() => buildTree(arr, { placedModel: model(), words }), null);
+  }
+  /** Keep a built tree, and which row each listed element is (a press on words in the view finds its row by it). */
+  function keepTree(next) {
+    tree = next || { root: null, nodes: new Map(), list: [] };
+    leafByEl = new Map();
+    for (const n of tree.list) if (n.kind === WORDS_KINDS.site && n.words?.el) leafByEl.set(n.words.el, n.id);
+  }
   function render() {
     if (closed || !box) return;
     const focusKey = doc.activeElement && box.contains(doc.activeElement) ? keyOf(doc.activeElement) : null;
-    tree = safe(() => buildTree(arr, { placedModel: model() }), null) || { root: null, nodes: new Map(), list: [] };
+    keepTree(buildNow());
     const editing = editingNow();
     let id = editing ? nodeForEditing(tree, editing) : null;
     if (!id) id = tree.nodes.has(chosenLocal) ? chosenLocal : ROOT_ID;
@@ -340,6 +410,7 @@ export function openSceneEditor(opts = {}) {
     const head = doc.createElement('div');
     head.className = 'se-head em-opts';
     insEl.append(head);
+    if (node && WORDS_LOCAL.has(node.kind)) { drawWords(node, head); return; }
     if (!node || !editing || GROUPISH.has(node.kind)) {
       // The dashboard, a cell, a group: what it is, in words. Nothing to set on them in step 1.
       let help = EDITOR_WORDS.rootHelp;
@@ -364,6 +435,176 @@ export function openSceneEditor(opts = {}) {
     else plain('t', 'Transform', transformWhy(node, sel, { hasLayout: !!safe(() => arr.layout(), null) }));
     // ...then its own settings (and its buttons: Take it out, Copy as the default...).
     if (split.settings && (split.settings.fields.length || (split.settings.actions || []).length)) section('s', split.settings);
+    // (step 3) A panel's own words: the same rows (its Words row is above), and what they are, in words.
+    if (node.kind === WORDS_KINDS.own) plain('w', 'Words', EDITOR_WORDS.ownWords);
+  }
+
+  // =====================================================================================================
+  // THE SITE'S WORDS IN THE INSPECTOR (row 2.145 step 3). Transform: none (words have no place of their own). Words: the
+  // site's words as they are in the code (read-only), a box with the new words, and three buttons:
+  //   Use these words        the change, into wording edit's draft list (wording_edit.js recordChange), and shown in
+  //                          place at once (`showWordsInPlace`, marked while the words are shown)
+  //   Put back the site's words   the change dropped, the element as it was
+  //   Copy changes (N)       the whole list, as the wording bar copies it (`changesText`), for the site's next update
+  // ONE LINE (wording_edit.js `norm`: the copied lines and the apply tool hold words on one line), so Enter keeps them and
+  // there is no Shift+Enter. Up to LINE_MAX letters, as the original. Escape in the box with typing in it puts the box
+  // back and is used up there (the editor stays); in a box with nothing new, it is Escape as anywhere in the editor.
+  // A SWITCH: the box is not a stop (a switch cannot type, and there is no on-screen keyboard for it in the client yet --
+  // the help line says so); the three buttons are, so a switch can read the words, put them back and copy the list.
+  // =====================================================================================================
+  function draftFor(original) {
+    return readChanges().find((c) => c.page === page() && c.old === original) || null;
+  }
+  function drawWords(node, head) {
+    if (node.kind === WORDS_KINDS.group) {
+      head.innerHTML = `<strong class="em-title" data-se-title>${esc(node.label)}</strong><p class="em-help" data-se-help>${esc(EDITOR_WORDS.screenWordsHelp)}</p>`;
+      return;
+    }
+    const w = node.words || {};
+    const draft = draftFor(w.original);
+    const count = readChanges().length;
+    head.innerHTML = `<strong class="em-title" data-se-title>${esc(EDITOR_WORDS.siteWordsTitle)}</strong><p class="em-help" data-se-help>${esc(EDITOR_WORDS.siteWordsHelp)}</p>`;
+    plain('t', 'Transform', EDITOR_WORDS.wordsTransform);
+    const wrap = doc.createElement('section');
+    wrap.className = 'se-sec';
+    wrap.dataset.seSec = 'w';
+    const notShown = draft && !(w.el && w.changed);
+    wrap.innerHTML = `<div class="em-opts" role="group" aria-label="Words">
+      <strong class="em-title">Words</strong>
+      <p class="em-help">The site's words: <q data-se-original>${esc(w.original)}</q></p>
+      ${draft ? `<p class="em-help" data-se-draft>Suggested: <q>${esc(draft.new)}</q>${notShown ? ' (not on the screen now)' : ''}</p>` : ''}
+      <label class="se-wl">New words<textarea class="se-words" data-se-words data-em-focus="box" rows="3" maxlength="${LINE_MAX}" autocomplete="off">${esc(draft ? draft.new : w.original)}</textarea></label>
+      <div class="em-act">
+        <button type="button" class="em-btn" data-se-w="use" data-em-focus="use">Use these words</button>
+        <button type="button" class="em-btn" data-se-w="back" data-em-focus="back">Put back the site's words</button>
+        <button type="button" class="em-btn" data-se-w="copy" data-em-focus="copy">Copy changes (${count})</button>
+      </div>
+      <p class="em-help" data-se-words-help>${esc(EDITOR_WORDS.wordsKeys)}</p></div>`;
+    insEl.append(wrap);
+  }
+  /** The chosen site words, or null. */
+  const chosenWords = () => { const n = tree?.nodes.get(selectedId); return n && n.kind === WORDS_KINDS.site ? n : null; };
+  function useWords(node = chosenWords(), text = null) {
+    if (closed || !node) return false;
+    const w = node.words || {};
+    const ta = insEl.querySelector('[data-se-words]');
+    const nw = norm(text != null ? text : ta ? ta.value : '');
+    if (!nw) { note(EDITOR_WORDS.wordsEmpty); return false; }
+    recordChange({ page: page(), old: w.original, now: nw.slice(0, LINE_MAX) });
+    let shown = false;
+    if (w.el && w.el.isConnected) {
+      // One way back per element: the element is put back first, so its way back is always to the site's own words.
+      const prev = undoInPlace.get(w.el);
+      if (prev) { prev(); undoInPlace.delete(w.el); }
+      if (nw !== w.original) { undoInPlace.set(w.el, showWordsInPlace(w.el, nw)); shown = true; }
+    }
+    scanner?.forget();
+    note(nw === w.original ? EDITOR_WORDS.wordsSame : shown ? EDITOR_WORDS.wordsKept : EDITOR_WORDS.wordsKeptNotShown);
+    render();
+    return true;
+  }
+  function putBackWords(node = chosenWords()) {
+    if (closed || !node) return false;
+    const w = node.words || {};
+    const had = !!draftFor(w.original);
+    if (had) recordChange({ page: page(), old: w.original, now: w.original });   // withChange: back to the original drops it
+    const undo = w.el ? undoInPlace.get(w.el) : null;
+    if (undo) { undo(); undoInPlace.delete(w.el); }
+    scanner?.forget();
+    note(had || undo ? EDITOR_WORDS.wordsBack : EDITOR_WORDS.wordsAlready);
+    render();
+    return had || !!undo;
+  }
+  async function copyWords() {
+    const list = readChanges();
+    const text = changesText(list, now().toISOString().slice(0, 10));
+    try {
+      if (!clipboard?.writeText) throw new Error('no clipboard');
+      await clipboard.writeText(text);
+      note(copiedWords(list.length));
+    } catch { note(EDITOR_WORDS.noCopy); }
+    return text;
+  }
+
+  // =====================================================================================================
+  // WORDS SHOWN, AND A PRESS ON WORDS IN THE VIEW (row 2.145 step 3).
+  // While the words are shown, a press on words anywhere outside the editor's box CHOOSES them and presses nothing: a
+  // capture listener on the WINDOW (it runs before edit mode's, which is on the panel's box) takes the press, the
+  // pointer-down that comes before it and the mouse-down, as the wording bar does. Which words: the wording bar's own
+  // rule (wording_edit.js `wordsElementAt`). Then:
+  //   * words listed under a panel: that row;
+  //   * a panel's own words (a sign's): its row, through edit mode, as a press in edit mode would choose it;
+  //   * words inside a panel that are not listed (a clock's time, words over the cap, words the panel built since the
+  //     list was drawn): the list is drawn again and looked at once more; still not there, the press is the panel's;
+  //   * words outside every panel: they join "Words on this screen" and are chosen.
+  // A touch is not cancelled (that would cancel the click a touch makes), only kept from the page.
+  // Words hidden: nothing is listened to; steps 1 and 2 exactly.
+  // =====================================================================================================
+  function panelAt(t) {
+    const recs = safe(() => arr.editRecs?.() || [], []) || [];
+    const holding = recs.filter((r) => r && r.el && typeof r.el.contains === 'function' && r.el.contains(t));
+    return holding.find((r) => holding.every((o) => o === r || !r.el.contains(o.el))) || null;
+  }
+  function ownWordsAt(t, rec) {
+    if (!rec) return null;
+    const tg = safe(() => targetAt(targetsOf(rec), t), null);
+    const id = tg ? nodeIdFor(rec.id, tg.id) : null;
+    return id && tree?.nodes.get(id)?.kind === WORDS_KINDS.own ? id : null;
+  }
+  function wordsHit(t) {
+    const el = wordsElementAt(t);
+    if (!el || box.contains(el) || el.closest?.('#wording-edit-bar')) return null;
+    const rec = panelAt(t);
+    const find = () => leafByEl.get(el) || ownWordsAt(t, rec);
+    let id = find();
+    if (id) return { id };
+    if (rec) { render(); id = find(); return id ? { id } : null; }
+    const shown = norm(el.textContent);
+    if (!shown || shown.length > LINE_MAX || !HAS_LETTER.test(shown) || el.closest?.('[data-live-words], [role="timer"], [aria-live], [hidden]')) return null;
+    return { add: el };
+  }
+  function onViewPress(e) {
+    if (closed || !wordsOn) return;
+    const n = e.target;
+    const t = n && n.nodeType === 1 ? n : n?.parentElement || null;
+    if (!t || !t.isConnected || box.contains(t)) return;
+    const hit = wordsHit(t);
+    if (!hit) return;
+    if (e.type !== 'touchstart') e.preventDefault();
+    e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+    if (e.type !== 'click') return;
+    activity();
+    if (hit.add) {
+      if (!clicked.includes(hit.add)) clicked.push(hit.add);
+      render();
+      const id = leafByEl.get(hit.add);
+      if (id) choose(id);
+      return;
+    }
+    choose(hit.id);
+  }
+  function setWords(on) {
+    const want = !!on;
+    if (closed || want === wordsOn) return wordsOn;
+    wordsOn = want;
+    if (want) {
+      scanner = createWordsScanner({ win });
+      for (const ev of VIEW_PRESSES) win.addEventListener(ev, onViewPress, true);
+      // Changed words are marked only while the words are shown (a ring left on a dashboard after would be noise).
+      try { doc.documentElement.dataset.seWordsShown = ''; } catch { /* no page */ }
+    } else {
+      for (const ev of VIEW_PRESSES) win.removeEventListener(ev, onViewPress, true);
+      try { scanner?.destroy(); } catch { /* gone */ }
+      scanner = null;
+      try { delete doc.documentElement.dataset.seWordsShown; } catch { /* no page */ }
+      if (WORDS_LOCAL.has(tree?.nodes.get(selectedId)?.kind)) chosenLocal = ROOT_ID;
+    }
+    const b = barEl.querySelector('[data-se="words"]');
+    if (b) { b.setAttribute('aria-pressed', String(want)); b.textContent = want ? EDITOR_WORDS.hideWords : EDITOR_WORDS.showWords; }
+    note(want ? EDITOR_WORDS.wordsShown : '');
+    render();
+    return wordsOn;
   }
 
   // =====================================================================================================
@@ -381,7 +622,7 @@ export function openSceneEditor(opts = {}) {
   }
   function stops(withInputs = false) {
     if (!box) return [];
-    const sel = withInputs ? 'button, a[href], input' : 'button, a[href]';
+    const sel = withInputs ? 'button, a[href], input, textarea' : 'button, a[href]';
     return [...box.querySelectorAll(sel)].filter((b) => !b.disabled && !b.hidden && !b.closest('[hidden]') && keyOf(b));
   }
   function current() {
@@ -432,6 +673,8 @@ export function openSceneEditor(opts = {}) {
     back() {
       if (closed) return false;
       if (editingNow()) { leaveEditMode(); render(); return true; }
+      // (step 3) Out of chosen words to the dashboard's row, as out of edit mode's choice.
+      if (WORDS_LOCAL.has(tree?.nodes.get(selectedId)?.kind)) { chosenLocal = ROOT_ID; render(); return true; }
       return false;
     },
     holds: () => false,
@@ -446,6 +689,7 @@ export function openSceneEditor(opts = {}) {
     if (!b || b.disabled || !barEl.contains(b)) return;
     const id = b.dataset.se;
     if (id === 'done') { close('done'); return; }
+    if (id === 'words') { setWords(!wordsOn); activity(); return; }
     if (id === 'list') {
       const show = treeEl.hidden;
       treeEl.hidden = !show;
@@ -474,6 +718,24 @@ export function openSceneEditor(opts = {}) {
   box.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-em-num]') && insEl.contains(e.target)) laterFollow();
   }, true);
+  // (step 3) The Words section's buttons, and its box: Enter keeps the words; Escape with typing in it puts the box back
+  // and is used up here (the editor's own Escape below ignores a key already used).
+  insEl.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('[data-se-w]') : null;
+    if (!b || !insEl.contains(b)) return;
+    const node = chosenWords();
+    if (!node) return;
+    activity();
+    if (b.dataset.seW === 'use') useWords(node);
+    else if (b.dataset.seW === 'back') putBackWords(node);
+    else if (b.dataset.seW === 'copy') copyWords();
+  });
+  insEl.addEventListener('keydown', (e) => {
+    const ta = e.target instanceof Element && e.target.matches('[data-se-words]') ? e.target : null;
+    if (!ta) return;
+    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); useWords(); return; }
+    if (e.key === 'Escape' && ta.value !== ta.defaultValue) { e.preventDefault(); e.stopPropagation(); ta.value = ta.defaultValue; }
+  });
   // (row 2.145 step 2) AFTER A CHANGE MADE IN THE INSPECTOR, THE LIST FOLLOWS. A press there can change what is in the
   // list, not only a value: a piece taken out or copied ("Take it out", "Copy it"), a Town place opened ("Open a place"
   // puts its things in the list), a piece added. So once the press is done the tree is built again, and if it differs
@@ -491,11 +753,11 @@ export function openSceneEditor(opts = {}) {
     followTimer = win.setTimeout(() => {
       followTimer = null;
       if (closed) return;
-      const next = safe(() => buildTree(arr, { placedModel: model() }), null);
+      const next = buildNow();
       const editing = editingNow();
       const id = next && editing ? nodeForEditing(next, editing) : null;
       if (!next || sigOf(next) !== sigOf(tree) || (editing && id !== selectedId)) { render(); return; }
-      tree = next;
+      keepTree(next);
       drawBar(tree.nodes.get(selectedId) || null, editing);
       paint();
     }, 0);
@@ -508,6 +770,8 @@ export function openSceneEditor(opts = {}) {
     e.preventDefault();
     e.stopPropagation();
     if (editingNow()) { leaveEditMode(); render(); return; }
+    // (step 3) Chosen words are left first too, the same way: the dashboard's row, the editor still open.
+    if (WORDS_LOCAL.has(tree?.nodes.get(selectedId)?.kind)) { chosenLocal = ROOT_ID; render(); return; }
     close('escape');
   }
   doc.addEventListener('keydown', onKey);
@@ -528,6 +792,12 @@ export function openSceneEditor(opts = {}) {
     if (closed) return;
     closed = true;
     doc.removeEventListener('keydown', onKey);
+    // (step 3) The words' watch and the window's listeners go with it. Words changed in place stay as they are shown (the
+    // change is kept to copy), as the wording bar leaves them; their mark goes with the words being shown.
+    for (const ev of VIEW_PRESSES) win.removeEventListener(ev, onViewPress, true);
+    try { scanner?.destroy(); } catch { /* gone */ }
+    scanner = null;
+    try { delete doc.documentElement.dataset.seWordsShown; } catch { /* no page */ }
     for (const off of offs.splice(0)) { try { off?.(); } catch { /* gone */ } }
     // Edit mode's choice ends with the editor (its in-panel card would otherwise come back on a panel nobody chose).
     leaveEditMode();
@@ -541,7 +811,8 @@ export function openSceneEditor(opts = {}) {
   // Already something chosen when it opened: chosen again, so this claims it (the in-panel card goes) and shows it.
   const was = editingNow();
   if (was) { try { arr.editSelect(was.target); } catch { /* gone */ } }
-  render();
+  // (step 3) Opened with the words shown (`?wording=1`): only when the opener asked. It draws (setWords renders).
+  if (wordsAtOpen) setWords(true); else render();
 
   return {
     kind: SCENE_EDITOR_KIND,
@@ -555,6 +826,12 @@ export function openSceneEditor(opts = {}) {
     placedModel: () => model(),
     choose,
     tools: () => toolsFor(tree?.nodes.get(selectedId) || null, editingNow()),
+    // (step 3) The words: shown or not, shown or hidden, and the Words section's three buttons (for a host and the suite).
+    words: () => wordsOn,
+    showWords: (on = true) => setWords(on),
+    useWords: (text = null) => useWords(chosenWords(), text),
+    putBackWords: () => putBackWords(chosenWords()),
+    copyWords,
   };
 }
 
@@ -575,6 +852,13 @@ export function openSceneEditor(opts = {}) {
 //   indent 16px   a level of the tree. FOR: four levels (dashboard, cell, panel, its part) stay inside 240px with room
 //                 for the name; AGAINST: a deeper tree (Town's places, step 2) will want less -- a token then, not now.
 //   rows 44px     the touch size every button here already has (edit_mode.js .em-btn), so a row is pressable too.
+//   (row 2.145 step 3, 2026-10-31) THE WORDS:
+//   words box 3 rows  FOR: a 300-letter line wraps to about four lines at the inspector's width, so three show most of a
+//                 long one and all of a short one; AGAINST: a very long one scrolls inside it (it can be made taller).
+//   site words in italics, "Words on this screen" soft like the other groups: told apart from panels by SHAPE, not
+//                 colour (the theme's tokens are the only colours here).
+//   changed words: a double ring in the theme's --focus while the words are shown (`html[data-se-words-shown]`), so a
+//                 dashboard is not left ringed after; told from edit mode's rings (dashed, dotted, solid) by shape.
 // No ResizeObserver or animation frame: the layout is the browser's, from CSS alone.
 // =====================================================================================================
 const CSS_ID = 'se-css';
@@ -605,6 +889,14 @@ export function ensureSceneCss(doc = (typeof document !== 'undefined' ? document
 .se .se-scan{outline:3px solid var(--focus,var(--accent));outline-offset:2px;box-shadow:0 0 0 2px var(--surface)}
 .se-head{padding-bottom:0}
 .se-sec{border-top:1px solid var(--border)}
+.se-row[data-se-kind="wordsgroup"]{color:var(--text-soft,var(--text))}
+.se-row[data-se-kind="sitewords"]{font-style:italic}
+.se-btn[aria-pressed="true"]{border-color:var(--focus,var(--accent));box-shadow:inset 0 0 0 2px var(--focus,var(--accent))}
+.se-wl{display:grid;gap:4px;margin:6px 0;font-weight:650}
+.se-words{width:100%;min-height:72px;box-sizing:border-box;padding:6px 8px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);color:var(--text);font:400 15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;resize:vertical}
+.se-words:focus-visible{outline:3px solid var(--focus,var(--accent));outline-offset:2px}
+html[data-se-words-shown] [data-wording-changed]{outline:3px double var(--focus,var(--accent));outline-offset:2px}
 @media (max-width:700px){
   .se-main{flex-direction:column}
   .se-tree{width:auto;max-height:30%}

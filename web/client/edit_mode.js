@@ -236,6 +236,23 @@ export function optionRows(sel, { level = EDIT_DEFAULTS.level } = {}) {
 //     nothing and puts it back: a box never shows a number that is not in force.
 //   * NEVER A SWITCH STOP: a switch cannot type. The ‹ and › either side of it are the stops, exactly as before.
 // =====================================================================================================
+// =====================================================================================================
+// ESCAPE IN A WORDS BOX (row 2.145 step 3, 2026-10-31; a bug the step-3 plan found). A text row's box (`data-em-text`)
+// sat inside edit mode, whose Escape left the panel -- so a person who had typed new words and pressed Escape lost them
+// with the card, and edit mode with them. Now Escape in a box WITH TYPING NOT YET KEPT puts the box back (as it was drawn:
+// the value in force) and is used up there; edit mode and the editor stay.
+//   FOR "only when something was typed" (not always, as a number's box is): a box with nothing new in it is not holding
+//   anything to lose, so Escape there does what it did before (leaves) -- a keyboard user is never kept in edit mode by
+//   the box the focus happens to be in. AGAINST: the number boxes (step 2) use up every Escape; the two differ when the
+//   box is unchanged. Left as it is there: a number's box is put back on leaving anyway, and step 2 is tested as it is.
+// "Typed" is the box's value against its drawn value (`defaultValue`, the `value` attribute renderOptions writes), so
+// nothing has to be remembered: a secret's box is drawn empty, so anything in it is typing.
+// =====================================================================================================
+/** Whether `el` is a words box (`data-em-text`) with typing in it that was not kept. */
+export function textTyped(el) {
+  return !!el && typeof el.matches === 'function' && el.matches('[data-em-text]') && el.value !== el.defaultValue;
+}
+
 const isNumLike = (v) => typeof v === 'number' && Number.isFinite(v);
 const roundTo = (v, d) => { const p = 10 ** Math.max(0, Math.min(6, Number(d) || 0)); return Math.round(v * p) / p; };
 /** A stored number as the row shows it (its own units, its own decimals), without the unit. PURE. */
@@ -390,6 +407,12 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
   function onKey(e) {
     if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-em-text]')) {
       e.preventDefault(); e.stopPropagation(); keepText(e.target.dataset.emText);
+      return;
+    }
+    // (row 2.145 step 3) Escape in a words box with typing not yet kept: the box back as it was drawn, used up here.
+    if (e.key === 'Escape' && textTyped(e.target)) {
+      e.preventDefault(); e.stopPropagation();
+      e.target.value = e.target.defaultValue;
       return;
     }
     if (e.target instanceof Element && e.target.matches('[data-em-num]')) {
@@ -557,6 +580,10 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     if (!active || e.key !== 'Escape') return;
     // (row 2.145 step 2) Escape in a typed number's box puts the box back (renderOptions, above); it does not leave.
     if (e.target instanceof Element && e.target.closest('[data-em-num]')) return;
+    // (row 2.145 step 3, 2026-10-31) A WORDS BOX WITH TYPING NOT YET KEPT: Escape puts the box back (renderOptions
+    // `textTyped`), and does not leave -- it used to leave, and the typing went with the card. A box with nothing new in
+    // it leaves as before.
+    if (textTyped(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
     leave('escape');
