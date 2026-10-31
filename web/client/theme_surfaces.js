@@ -91,9 +91,15 @@ export const codeCoverage = {
   // (2026-10-16) Design's lessons handoff gave every theme outfits (character_kit.js OUTFIT_THEMES; the suite checks
   // the two agree).
   outfits: ['nimrod', 'cozy', 'spring', 'summer', 'fall', 'winter', 'night', 'ocean', 'steampunk', 'cyberpunk', 'newYear',
-    'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'halloween', 'diwali', 'harvest', 'hanukkah', 'christmas'],
-  town: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
-  kit: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk'],
+    'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'halloween', 'diwali', 'harvest', 'hanukkah', 'christmas',
+    // (2026-10-31) Design's village handoff (System19) added medieval's tunic and kirtle, and its court's picks.
+    'medieval'],
+  // (2026-10-31) Design's builders and village handoffs (System18, System19) dress every theme's town, medieval among
+  // them, and give the fifteen newer worlds pieces of their own (medieval's town uses the other worlds' pieces).
+  town: ['medieval', 'nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk', 'cozy', 'spring', 'summer', 'night',
+    'ocean', 'cyberpunk', 'newYear', 'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'diwali', 'harvest', 'hanukkah'],
+  kit: ['nimrod', 'fall', 'winter', 'halloween', 'christmas', 'steampunk', 'cozy', 'spring', 'summer', 'night', 'ocean',
+    'cyberpunk', 'newYear', 'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'diwali', 'harvest', 'hanukkah'],
 };
 /** Design's lines and Code's, the whole checklist. */
 export const allSurfaces = [...themeSurfaces, ...codeSurfaces];

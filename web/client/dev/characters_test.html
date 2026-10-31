@@ -98,9 +98,16 @@ try {
     // a new handoff and update the line, rather than editing their file. (playing_cards.js: its own suite.)
     const PINS = {
       // (2026-10-16, DELIBERATELY: Design's lessons handoff (item 41) replaced character_kit.js - the 'listen' pose, and outfits for every theme.)
-      'character_kit.js': '4caa3e19d67cc5538010d361389f1e668b34727eb4c0d8acda9771a17a89fabe',
-      'theme_kits.js': 'aa9d4f28c75383d2d328fef7810fb62240148ca31f62a24d45bdd333c8ff758f',
-      'town.js': 'a4e5e6b594bd2ce59b7cd9e0754b5bce21176af9145e4159b2031307d0ca3194',
+      // (2026-10-31, DELIBERATELY: Design's village handoff (System19, item 45, shipped in 6f92410) replaced it - new
+      // outfits and hats, child proportions, the "puzzled" pose. Byte for byte Design's.)
+      'character_kit.js': '0b336af877250faa37fea7711b9a422c3943744534e5da613383e72e69adf861',
+      // (2026-10-31, DELIBERATELY: Design's builders handoff (System18, 2026-10-24) - 31 pieces for the fifteen newer
+      // worlds, which System19's town.js furnishes its homes with. Marked "ships as it is"; missed until now.)
+      'theme_kits.js': '4d5cd05a89914183de2adee802aae1e9f5b84efe7787ece6af5c2ef82a706022',
+      // (2026-10-31, DELIBERATELY: Design's village handoff (System19) - a town for every theme, medieval among them -
+      // with Mike's court names put in (Bram, Rosa, Theo, Pip -> Kenny, Rose, Jack, Robin; 57338e8, 6f92410). Design's
+      // own file is 41d23a55...; that rename and nothing else gives this one.)
+      'town.js': '01ad9db46a0e21b6410df5c119207fa345bc44323a31222c9f5e1e8c857e6876',
     };
     const IMPORTS = { 'character_kit.js': '', 'theme_kits.js': '', 'town.js': './theme_kits.js' };
     for (const [f, pin] of Object.entries(PINS)) {
@@ -173,8 +180,10 @@ try {
       && ['K', 'Q', 'J', 'joker', 'hearts', 'diamonds', 'clubs', 'spades'].every((k) => places.includes(PLACE_FOR[k])));
     check('every place in every theme has a name and a one-line description, ready for stories',
       themes.every((th) => places.every((id) => { const p = placeInfo(id, th); return p.label && p.blurb && p.blurb.length > 10; })));
-    check(`six towns are dressed (${Object.keys(TOWN_DRESS).join(', ')}) and build their own homes; any other theme borrows Nimrod's`,
-      Object.keys(TOWN_DRESS).length === 6 && Object.keys(TOWN_DRESS).every((t) => HOMES[t]) && placeSvg('kingHall', 'night').includes('Nimrod'));
+    // (2026-10-31, DELIBERATELY: it was six. Design's System18 and System19 dress every theme, medieval among them.)
+    check(`${Object.keys(TOWN_DRESS).length} towns are dressed (${Object.keys(TOWN_DRESS).join(', ')}), every theme's and medieval, and build their own homes; any other theme borrows Nimrod's`,
+      Object.keys(TOWN_DRESS).length === 22 && TOWN_DRESS.medieval && Object.keys(cardThemes).every((t) => t === 'empty' || TOWN_DRESS[t])
+      && Object.keys(TOWN_DRESS).every((t) => HOMES[t]) && placeSvg('kingHall', 'nope').includes('Nimrod'));
     // Every piece a home or a place uses is one the town can draw: its own built-ins or a world's kit piece.
     const known = new Set([...Object.keys(KIT), 'sofa', 'armchair', 'bed', 'bookshelf', 'desk', 'sideTable', 'cabinet', 'tableLamp', 'floorLamp', 'plant', 'rug', 'fireplace', 'window', 'wallShelf']);
     const recipes = [...Object.values(PLACES).filter((p) => p.recipe).map((p) => p.recipe), ...Object.values(HOMES).flatMap((h) => Object.values(h).map((x) => x.recipe))];
