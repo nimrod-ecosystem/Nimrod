@@ -60,6 +60,39 @@ import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '..
 import { createPlayWatch } from '../game_start.js';
 import { createGameMusic } from '../game_music.js';
 import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
+import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
+
+// *** CHALLENGE (row 2.165, 2026-10-31). *** Mike: "Motion for the comet game should have a challenge mode where they
+// keep getting faster." What gets faster is the HEARTS, rising: the comet itself never moves on its own - it sits
+// exactly on the aim, which is this module's whole point (the header) - so the hearts are the only thing whose speed
+// is the game's to choose. OFF BY DEFAULT: some of the people this serves respond slowly, and a game that speeds up
+// under them is a setback nobody asked for (Sort the bricks' "one level up" made the same call).
+//
+// THE RAMP: each heart caught makes them rise CHALLENGE_STEP (a tenth) of their usual speed faster. Argued (Rule 1):
+//   FOR a clock ("every 20 seconds"): it is literally "keeps getting faster", whoever is playing.
+//   AGAINST, and it decides it: a clock speeds up for the player who is NOT catching too - the slower they are, the
+//     harder it gets, and the harder it gets, the fewer they catch. By catches, the game gets faster only as fast as the
+//     player keeps up, and a player who stops catching stays at a speed they were managing.
+//   A tenth, not a setting: ten catches from the usual speed to twice it - a minute or two for a quick player, longer for
+//     a slow one - and a step small enough not to notice as a jump. The CAP is the setting (below), because how fast is
+//     too fast is what differs between players. [A fixed number: on Mike's list, Rule 1.]
+// THE CAP (`challengeTop`): twice the usual speed by default, one and a half or three a choice away. The usual rise
+//   crosses the sky in about 12 to 25 seconds; at twice, 6 to 12 - still slow beside most games, and a heart stays in
+//   view long enough for a slow reach. Three times (4 to 8 s) is there for whoever wants it.
+// STARTS OVER AT THE USUAL SPEED with each new game (and on the start screen between games).
+// CALM MOTION, OR THE SCREEN ASKING FOR REDUCED MOTION, KEEPS ONE SPEED: both ask for less movement, and a challenge
+//   is more of it. The machine's request wins over the panel's row, as it does for `calm` (see `reducedMotion` below).
+// NO FLASHING IS ADDED: the speed-up itself shows nothing (no flash, no banner), and a catch's bloom - the one bright
+//   burst here, which faster hearts could make come more often - is spaced to the screen's flash limit when it has one
+//   (flash_limit.js; none by default, so nothing changes there). The catch still counts and still chimes.
+export const CHALLENGE_STEP = 0.1;
+export const CHALLENGE_TOPS = Object.freeze([1.5, 2, 3]);
+/** How much faster than usual the hearts rise after `catches` this game, up to `top`. Pure. */
+export function challengeSpeed(catches, top = 2) {
+  const cap = CHALLENGE_TOPS.includes(Number(top)) ? Number(top) : 2;
+  const n = Math.max(0, Math.floor(Number(catches) || 0));
+  return Math.min(cap, 1 + CHALLENGE_STEP * n);
+}
 
 const DEFAULTS = {
   hearts: 4,        // how many balloons are up at once
@@ -93,6 +126,8 @@ const DEFAULTS = {
   musicAlbum: '',
   musicFavourite: '',
   musicVolume: 0.3,
+  challenge: false,   // row 2.165: off by default (CHALLENGE, above)
+  challengeTop: 2,
 };
 
 const MAX_SPARKS = 320;
@@ -126,6 +161,15 @@ const SETTINGS = [
     ] },
   { key: 'calm', label: 'Motion', default: false, level: 'essential',
     onLabel: 'Calm — less movement', offLabel: 'Normal' },
+  // Row 2.165: the challenge, beside Motion; only where Motion is Normal (Calm keeps one speed).
+  { key: 'challenge', label: 'Challenge', default: false, level: 'standard',
+    onLabel: 'The hearts rise a little faster with each one caught', offLabel: 'Off: the hearts keep one speed',
+    appliesWhen: (v) => !v || v.calm !== true,
+    note: 'Each new game starts at the usual speed. A screen set to reduce motion keeps one speed.' },
+  { key: 'challengeTop', label: 'Fastest the hearts get', kind: 'choice', default: 2, level: 'advanced',
+    options: [{ value: 1.5, label: 'One and a half times as fast' }, { value: 2, label: 'Twice as fast' },
+      { value: 3, label: 'Three times as fast' }],
+    appliesWhen: (v) => !!v && v.challenge === true && v.calm !== true },
   { key: 'sound', label: 'Sound', default: true, level: 'essential',
     onLabel: 'Chimes on', offLabel: 'Silent' },
   // Row 2.107 (2026-10-31): the same music rows every game has (game_music_host.js), your Music folder by default.
@@ -161,6 +205,20 @@ registerModule(
     // asked for; the comet obeys either.
     let reducedMotion = false;
     const calm = () => cfg.calm || reducedMotion;
+    // Row 2.165: hearts caught this game WITH the challenge on (what the speed is counted from), and when the last
+    // catch's bloom was (on the simulation clock: it only runs slower than the wall, so a spacing kept on it is kept).
+    let challengeCatches = 0;
+    let lastBloomAt = -Infinity;
+    const challengeOn = () => cfg.challenge === true && !calm();
+    const heartSpeed = () => (challengeOn() ? challengeSpeed(challengeCatches, cfg.challengeTop) : 1);
+    // A bright burst, spaced to the screen's flash limit when it has one (none by default: every one blooms).
+    function bloomAllowed() {
+      let gap = 0;
+      try { gap = minFlashPeriodMs(flashLimit(ctx)); } catch { gap = 0; }
+      if (gap > 0 && simT - lastBloomAt < gap) return false;
+      lastBloomAt = simT;
+      return true;
+    }
 
     let root = null, canvas = null, c2d = null, scoreEl = null, menuEl = null;
     let menu = null;          // the universal settings menu, mounted inside this panel
@@ -326,6 +384,7 @@ registerModule(
 
     function enterMenu() {
       started = false;
+      challengeCatches = 0;   // row 2.165: between games, the usual speed
       plays?.rest();      // back on its own start screen: nobody is playing it
       // The container carries the darkened sky; the menu inside it carries the rows. Both,
       // because the scrim's own backdrop is scoped to the panel and the gradient behind it is
@@ -341,6 +400,7 @@ registerModule(
       if (started) return false;
       started = true;
       caught = 0;
+      challengeCatches = 0;   // row 2.165: every new game starts at the usual speed
       // Close it first, then hide the container. The menu holds a focus trap and key
       // listeners while it is open, and hiding the box around it would leave those live over
       // a game somebody is now playing.
@@ -354,7 +414,7 @@ registerModule(
       const minD = Math.min(W, H);
       for (let i = 0; i < hearts.length; i++) {
         const h = hearts[i];
-        h.y -= h.vy * dt * (calm() ? 0.6 : 1);
+        h.y -= h.vy * dt * (calm() ? 0.6 : 1) * heartSpeed();   // row 2.165: faster only with the challenge on
         if (h.y < -0.25) { hearts[i] = spawnHeart(false); continue; }
         // Hearts DRIFT on the start screen but cannot be CAUGHT there. Without this an aim
         // that happened to be over the panel would score before anybody had started, which is
@@ -366,9 +426,10 @@ registerModule(
         // this be pressed" reuses it instead of re-deriving it (Mike, 2026-09-26, asking how
         // buttons and Godot's own Area2D handle exactly this question).
         if (hitCircle(cx, cy, { x: hx, y: hy, r })) {
-          bloom(hx, hy, '#ff7a96');
+          if (bloomAllowed()) bloom(hx, hy, '#ff7a96');
           chime();
           caught++;
+          if (challengeOn()) challengeCatches++;   // row 2.165: each catch a little faster, up to the cap
           paintScore();
           hearts[i] = spawnHeart(false);
         }
@@ -487,15 +548,23 @@ registerModule(
       // answers the shared question — the exact same "go to the closest live target" this
       // function has always answered, just through the shared primitive.
       const candidates = hearts
-        .map((h) => ({ x: heartX(h, t), y: h.y * H }))
+        .map((h) => ({ x: heartX(h, t), y: h.y * H, h }))
         .filter((p) => p.y >= -0.1 * H);
       const best = nearest(from.x, from.y, candidates);
       if (!best) return;
-      steer = { fx: from.x, fy: from.y, tx: best.x, ty: best.y, t0: simT };
+      steer = { fx: from.x, fy: from.y, tx: best.x, ty: best.y, t0: simT, heart: best.h };
       if (cx < 0) { cx = from.x; cy = from.y; }
     }
     function stepSteer() {
       if (!steer) return;
+      // *** THE GLIDE FOLLOWS ITS HEART (row 2.165, 2026-10-31). *** It used to fly to where the heart WAS when next was
+      // pressed. At the usual speed a heart moves a few percent of the sky in a glide and is still there; with the
+      // challenge at three times, it moves further than its own size, and a switch user's "go and get a heart" would
+      // arrive at empty sky - the challenge would have taken the one verb they have. So the glide aims at the heart as
+      // it is now, each step, until it is caught (or gone). FOR keeping the old aim: a switch player gets a timing
+      // challenge too. AGAINST, and it decides it: their press is not timed - the glide is - so missing would be the
+      // glide's failure, not theirs. Same glide time, same ease.
+      if (steer.heart && hearts.includes(steer.heart)) { steer.tx = heartX(steer.heart, nowMs()); steer.ty = steer.heart.y * H; }
       const k = clamp((simT - steer.t0) / Math.max(1, cfg.steerMs), 0, 1);
       // ease-out: fast away, gentle arrival, so the head settles onto the heart
       const e = 1 - (1 - k) ** 3;
@@ -570,7 +639,18 @@ registerModule(
         hearts: hearts.length, sparks: sparks.length, trail: trail.length,
         calm: calm(), cfg: { ...cfg }, caught, started,
         music: musicHost?.music?.state?.() || null, playing: !!plays?.playing(),
+        speed: heartSpeed(), challengeCatches,   // row 2.165
+        heartsAt: hearts.map((h) => h.y),
       }),
+      // Row 2.165: a heart placed exactly, for a suite: normalized x / y, its rise per ms, and no sway.
+      __placeHeart: (i, { x, y, vy } = {}) => {
+        const h = hearts[i];
+        if (!h) return;
+        if (x != null) h.x = x;
+        if (y != null) h.y = y;
+        if (vy != null) h.vy = vy;
+        h.swayAmp = 0;
+      },
       init() {
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
 
@@ -675,9 +755,12 @@ registerModule(
         c2d = canvas.getContext('2d');
         warm = readTheme(mount);
 
+        // The host's answer when it gives one (`ctx.reducedMotion`, as the other games read it; row 2.165 needed the
+        // suite to be able to ask), else the browser's, followed live.
         const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-        reducedMotion = !!mq?.matches;
-        const onMq = (e) => { reducedMotion = e.matches; };
+        const given = typeof ctx.reducedMotion === 'boolean';
+        reducedMotion = given ? ctx.reducedMotion : !!mq?.matches;
+        const onMq = (e) => { if (!given) reducedMotion = e.matches; };
         mq?.addEventListener?.('change', onMq);
         offs.push(() => mq?.removeEventListener?.('change', onMq));
 
@@ -749,7 +832,7 @@ registerModule(
           audioInit();
           if (startGame()) return;
           if (cx < 0) { cx = W / 2; cy = H / 2; }
-          bloom(cx, cy);
+          if (bloomAllowed()) bloom(cx, cy);   // row 2.165: spaced to the flash limit, as a catch's is
           chime();
         }));
         offs.push(bus.subscribe('comet/seek', () => {

@@ -28,6 +28,7 @@ had to add <b>verbs</b>, and <code>next</code> goes and gets a heart.</p>
 
 <script type="module">
 import '../modules/comet.js';
+import { challengeSpeed, CHALLENGE_STEP } from '../modules/comet.js';
 import { mountModule, getManifest } from '../module.js';
 import { fieldsFor } from '../settings_fields.js';
 import { createBus } from '../bus.js';
@@ -379,6 +380,130 @@ section('*** row 2.107: music - the shared rows, your Music folder by default, o
   check('*** destroyed: off the arbiter, every context it made closed ***', !(src in audio.state()) && contexts.every((c) => c.made.closed),
     JSON.stringify(contexts.map((c) => c.made.closed)));
   host.remove();
+}
+
+// =====================================================================
+section('*** row 2.165: challenge - the hearts rise faster with each catch, up to a cap, off by default ***');
+{
+  const R = Object.fromEntries((getManifest('comet').settings || []).map((r) => [r.key, r]));
+  check('*** the Challenge row is OFF by default ***', R.challenge?.default === false && !!R.challenge.onLabel);
+  check('the cap is a choice - one and a half, twice (the default), three times', R.challengeTop?.default === 2
+    && R.challengeTop.options.map((o) => o.value).join() === '1.5,2,3');
+  check('Calm motion hides both (it keeps one speed); the cap shows only with the challenge on',
+    R.challenge.appliesWhen({ calm: true }) === false && R.challenge.appliesWhen({}) === true
+    && R.challengeTop.appliesWhen({}) === false && R.challengeTop.appliesWhen({ challenge: true }) === true
+    && R.challengeTop.appliesWhen({ challenge: true, calm: true }) === false);
+  check('the ramp (pure): a tenth faster a catch, never past the cap',
+    challengeSpeed(0) === 1 && Math.abs(challengeSpeed(5) - 1.5) < 1e-9 && challengeSpeed(10) === 2 && challengeSpeed(40) === 2
+    && challengeSpeed(40, 3) === 3 && challengeSpeed(8, 1.5) === 1.5 && challengeSpeed(40, 9) === 2 && CHALLENGE_STEP === 0.1);
+
+  // Catch one heart with the switch: next glides to it. The one heart is put up on the sky first, alternately left and
+  // right, so the comet has somewhere to go and the next heart (born below the sky) is never caught where it is born.
+  let side = 0;
+  const catchOne = (inst, bus) => {
+    const c = probe(inst).caught;
+    side = 1 - side;
+    inst.impl.__placeHeart(0, { x: side ? 0.2 : 0.8, y: 0.4 });
+    bus.publish('comet/seek'); steps(inst, 14);
+    return probe(inst).caught === c + 1;
+  };
+  // How far a heart rises in one 16 ms frame, as a multiple of its usual rise: placed away from the comet so it is not caught.
+  const riseFactor = (inst) => {
+    const p = probe(inst);
+    const x = p.cx >= 0 && p.cx < 200 ? 0.9 : 0.1;
+    inst.impl.__placeHeart(0, { x, y: 0.5, vy: 0.0001 });
+    inst.impl.__step(16);
+    return (0.5 - probe(inst).heartsAt[0]) / (0.0001 * 16);
+  };
+
+  {
+    const host = scratch();
+    const bus = createBus();
+    const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1 }) } });
+    await sleep(20);
+    let all = true;
+    for (let i = 0; i < 12; i++) all = catchOne(inst, bus) && all;
+    check('*** off (the default): twelve catches, and the hearts rise at the usual speed ***', all && probe(inst).speed === 1
+      && Math.abs(riseFactor(inst) - 1) < 0.01, `${probe(inst).caught} caught, speed ${probe(inst).speed}`);
+    inst.destroy(); host.remove();
+  }
+  {
+    const host = scratch();
+    const bus = createBus();
+    const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1, challenge: true }) } });
+    await sleep(20);
+    check('on: a game starts at the usual speed', probe(inst).speed === 1 && Math.abs(riseFactor(inst) - 1) < 0.01);
+    const speeds = [];
+    let all = true;
+    for (let i = 0; i < 14; i++) { all = catchOne(inst, bus) && all; speeds.push(Math.round(probe(inst).speed * 100) / 100); }
+    check('*** on: every catch a little faster - 1.1, 1.2, ... ***', all && speeds.slice(0, 10).every((s, i) => s === Math.round((1 + 0.1 * (i + 1)) * 100) / 100),
+      speeds.join(','));
+    check('*** ...and it stops at the cap (twice the usual speed): four more catches, still 2 ***', speeds.slice(9).every((s) => s === 2), speeds.join(','));
+    check('*** the hearts really do rise twice as fast (not only a number) ***', Math.abs(riseFactor(inst) - 2) < 0.01, String(riseFactor(inst)));
+    check('*** a switch\'s glide still reaches its heart at the top speed (it follows the heart) ***', catchOne(inst, bus));
+    bus.publish('comet/exit');
+    check('*** back to the start screen: the usual speed again ***', probe(inst).speed === 1 && probe(inst).challengeCatches === 0);
+    bus.publish('comet/seek');
+    check('*** a new game starts over at the usual speed ***', probe(inst).started && probe(inst).speed === 1 && Math.abs(riseFactor(inst) - 1) < 0.01);
+    inst.destroy(); host.remove();
+  }
+  {
+    const host = scratch();
+    const bus = createBus();
+    const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1, challenge: true, challengeTop: 3 }) } });
+    await sleep(20);
+    for (let i = 0; i < 25; i++) catchOne(inst, bus);
+    check('the cap set to three times: it climbs to 3 and stops there', probe(inst).speed === 3 && Math.abs(riseFactor(inst) - 3) < 0.01, String(probe(inst).speed));
+    inst.destroy(); host.remove();
+  }
+  {
+    const host = scratch();
+    const bus = createBus();
+    const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1, challenge: true, calm: true }) } });
+    await sleep(20);
+    for (let i = 0; i < 6; i++) catchOne(inst, bus);
+    check('*** Calm motion: the challenge keeps one speed (calm\'s own, slower one) ***', probe(inst).speed === 1 && probe(inst).caught === 6
+      && Math.abs(riseFactor(inst) - 0.6) < 0.01, `${probe(inst).speed} ${riseFactor(inst)}`);
+    inst.destroy(); host.remove();
+  }
+  {
+    const host = scratch();
+    const bus = createBus();
+    const inst = mount(host, { bus, extra: { reducedMotion: true }, state: { get: () => ({ steerMs: 32, hearts: 1, challenge: true }) } });
+    await sleep(20);
+    for (let i = 0; i < 6; i++) catchOne(inst, bus);
+    check('*** a screen asking for reduced motion: one speed too, whatever the row says ***', probe(inst).calm === true && probe(inst).speed === 1
+      && probe(inst).cfg.challenge === true, `${probe(inst).speed}`);
+    inst.destroy(); host.remove();
+  }
+  {
+    // THE FLASH LIMIT: seven hearts caught in one frame at once. With no limit (the default) seven blooms; with the
+    // photosensitivity box's 3 a second, none inside the period after the last - and every catch still counts.
+    const burst = async (extra) => {
+      const host = scratch();
+      const bus = createBus();
+      const inst = mount(host, { bus, extra, state: { get: () => ({ hearts: 7, challenge: true }) } });
+      await sleep(20);
+      for (let i = 0; i < 7; i++) inst.impl.__placeHeart(i, { x: 0.5, y: 0.5 });
+      bus.publish('comet/spark');                 // the comet to the middle, and one bloom of its own
+      const before = probe(inst).sparks;
+      inst.impl.__step(16);
+      const r = { added: probe(inst).sparks - before, caught: probe(inst).caught, speed: probe(inst).speed };
+      steps(inst, 25);                            // 400 ms: past the period
+      const mid = probe(inst).sparks;
+      bus.publish('comet/spark');
+      r.after = probe(inst).sparks - mid;
+      inst.destroy(); host.remove();
+      return r;
+    };
+    const free = await burst({});
+    const safe = await burst({ flashLimitPerSecond: 3 });
+    check('no flash limit (the default): seven catches, seven blooms', free.caught === 7 && free.added >= 7 * 50, JSON.stringify(free));
+    check('*** with a flash limit of 3 a second: seven catches in one frame add NO bloom inside the period ***',
+      safe.caught === 7 && safe.added <= 0, JSON.stringify(safe));
+    check('...each catch still counted toward the challenge (1.7)', Math.abs(safe.speed - 1.7) < 1e-9, String(safe.speed));
+    check('...and once the period has passed, a bloom again', safe.after > 0, JSON.stringify(safe));
+  }
 }
 
 // =====================================================================
