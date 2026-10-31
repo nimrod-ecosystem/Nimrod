@@ -60,6 +60,11 @@ const DEFAULTS = {
   graceMin: 10,            // a nearly-finished video may run this long past a daypart boundary
   shuffle: true,           // weighted-random pick (the default); off = straight playlist order
   autoAdvance: true,
+  // ROW 2.156 (Mike, 2026-10-31): "Youtube has a rewind, title?, fast forward UI that's always at the top left. That
+  // should go. We have the transport bar for that." That strip (‹ title ›) is this module's own, not YouTube's, and the
+  // bar's Back and Next already send the same `youtube/prev` / `youtube/next`. Off by default; a setting rather than
+  // deleted (Rule 1) for a panel shown where there is no bar, or somebody who wants the title on the panel.
+  showNav: false,
   directed: false,
   stallMs: 20000,
   // *** SOMEBODY PRESSED PAUSE. DO WE EVER RESTART IT BY OURSELVES? ***
@@ -211,6 +216,8 @@ export const SETTINGS = [
     level: 'standard', onLabel: 'Yes', offLabel: 'No',
     // A Lineup's own YouTube (directed) is moved on by the Lineup: this switch would fight it.
     appliesWhen: (v) => !v?.directed },
+  { key: 'showNav', label: 'Previous, next and the title on the panel', kind: 'toggle', default: DEFAULTS.showNav,
+    level: 'advanced', onLabel: 'Shown', offLabel: 'Hidden (the bar’s Back and Next do it)' },
   { key: 'shuffle', label: 'Shuffle the playlist', kind: 'toggle', default: DEFAULTS.shuffle, level: 'standard',
     onLabel: 'Shuffled', offLabel: 'In order',
     // While a preset is in use its shuffle counts (youtube.js effectiveShuffle): the preset is edited on the Media page.
@@ -1537,7 +1544,7 @@ registerModule(
             <div class="yt-start" data-start-host hidden></div>
             <div class="held" data-held hidden>Paused</div>
             <div class="status" data-status hidden></div>
-            <div class="nav">
+            <div class="nav" data-nav hidden>
               <button class="ybtn" data-prev aria-label="previous video">‹</button>
               <span class="yt-label" data-label></span>
               <button class="ybtn" data-next aria-label="next video">›</button>
@@ -1862,6 +1869,9 @@ registerModule(
         state.subscribe((s) => {
           rawRow = s && typeof s === 'object' ? s : {};
           cfg = { ...DEFAULTS, ...s };
+          const navEl = mount.querySelector('[data-nav]');
+          if (navEl) navEl.hidden = !cfg.showNav;   // row 2.156: the bar is the control
+
           stallReport.refresh();       // a stretch of being stuck is re-said with the settings as they are now
           // (row 2.57) A key an older panel kept here goes to the server once, then leaves.
           if (String(cfg.apiKey || '').trim()) adoptOldKey(cfg.apiKey);

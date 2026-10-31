@@ -378,6 +378,9 @@ function unreachableChips() {
     await sleep(300);
 
     const nav = root.querySelector('.youtube .nav');
+    // Row 2.156: the strip is hidden by default now (the bar does it). It is measured as it is when somebody turns
+    // "Previous, next and the title on the panel" on, which is the only time the two can meet.
+    if (nav) nav.hidden = false;
     const controls = root.querySelector('[data-controls]');
     check('the panel has its own nav and the bar is both on screen',
       !!nav && !!controls, `nav=${!!nav} controls=${!!controls}`);

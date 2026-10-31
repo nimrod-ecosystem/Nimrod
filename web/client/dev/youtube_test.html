@@ -115,7 +115,7 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
   await pressControls('youtube',
     [{ sel: '[data-next]', topic: 'youtube/next', label: 'the next arrow' },
      { sel: '[data-prev]', topic: 'youtube/prev', label: 'the prev arrow' }],
-    check);
+    check, { settings: { showNav: true } });   // row 2.156: the arrows are off by default; turned on, they still work
   // `.youtube .status` sets `display:flex`, which outranks the browser's own
   // `[hidden]{display:none}`. Without this check, hiding the sheet is a no-op on
   // screen while the code that hides it looks correct.
@@ -702,11 +702,29 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
     // drawer were where a video was added; that is all in the one menu now (the stage A/B blocks below). The checks
     // that the drawer could be LEFT (Close, Escape, the gear above it) went with it: a sheet that never opens on a
     // screen cannot trap anybody. The drawer's markup stays only as the Media page's preset form (media_test).
+    //
+    // *** ROW 2.156 REVERSES G13 (Mike, 2026-10-31): "Youtube has a rewind, title?, fast forward UI that's always at
+    // the top left. That should go. We have the transport bar for that." *** The strip is hidden by default; the bar's
+    // Back and Next send the same topics (kiosk.js nextInPrimary). "Previous, next and the title on the panel" brings
+    // it back, asserted as COMPUTED STYLE both ways for G13's reason.
     {
       const nav = host.querySelector('.youtube .nav');
-      check('*** the previous/next arrows are on screen ***',
-        nav && getComputedStyle(nav).display !== 'none',
+      check('*** the previous/next strip is hidden by default: the bar does it (row 2.156) ***',
+        nav && getComputedStyle(nav).display === 'none',
         nav ? getComputedStyle(nav).display : 'no nav');
+      check('...and it is a setting, off unless somebody turns it on',
+        SETTINGS.find((f) => f.key === 'showNav')?.kind === 'toggle' && SETTINGS.find((f) => f.key === 'showNav')?.default === false);
+      const sh = document.createElement('div'); document.body.append(sh);
+      let sd = { playlist: PLAYLIST.slice(0, 2), showNav: true };
+      const sst = { load: async () => sd, get: () => sd, set: (p) => { sd = { ...sd, ...p }; return Promise.resolve(); },
+        subscribe: (f) => { f(sd); return () => {}; }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} };
+      const sev = { load: async () => {}, get: () => ({ events: [], total: 0 }), append: async () => {}, subscribe: () => () => {}, startPolling() {}, destroy() {} };
+      const quiet = () => ({ load() {}, cue() {}, cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} });
+      const shown = mountModule('youtube', { mount: sh, bus: createBus(), state: sst, events: sev, user: USER, instanceId: 'yt-nav', playerFactory: quiet });
+      shown.init(); await sleep(50);
+      const nav2 = sh.querySelector('.youtube .nav');
+      check('*** turned on, the strip is on screen ***', nav2 && getComputedStyle(nav2).display !== 'none', nav2 ? getComputedStyle(nav2).display : 'no nav');
+      shown.destroy(); sh.remove();
       check('*** no gear on the panel: its settings are the one menu\'s (row 2.95) ***',
         !host.querySelector('.youtube .gear') && !host.querySelector('.youtube [data-gear]'));
       const sheet = host.querySelector('.youtube .settings');
