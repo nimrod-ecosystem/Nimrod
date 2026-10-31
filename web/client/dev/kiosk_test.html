@@ -414,6 +414,8 @@ const toTab = (m, id) => {
         'set:avatarMotion', 'set:masterVolume', 'edit-view', 'fullscreen', 'home', 'close'];
       const gone = BEFORE_4EDEEAE.filter((id) => !all.includes(id));
       check('*** tabs: every row the menu had before tabs (4edeeae, "The usual") is still in it ***', gone.length === 0, gone.join(','));
+      // (row 2.145 step 1, 2026-10-31: the one editor's row is offered at "Everything" only -- kiosk.js argues it.)
+      check('"Editor (new)…" is not a stop on the menu at "The usual"', !all.includes('scene-editor'));
       // (themes, 2026-10-06, deliberately: a Theme tab beside Display - the Theme row, and the seasons rows when they
       // show, moved there from Display. Mike: "its own themes module that is also a tab on the settings menu".)
       // (players, 2026-10-06, deliberately: a Players tab after People - who is playing on this screen, the shared player
@@ -4549,6 +4551,37 @@ const toTab = (m, id) => {
         String(k.note()));
       check(`...(${c.tag}) and the screen never reloaded`, reloads === 0, `reloads=${reloads}`);
       try { k.closeEditView(); } catch { /* gone */ }
+      k.destroy();
+      root.remove();
+    }
+
+    // ---- 1c. ROW 2.145 STEP 1 (2026-10-31): THE ONE EDITOR in the edit view's slot -- held, saved, put away ----
+    {
+      const S = await profiles.create('TEST-scene-editor');
+      const a = await profiles.addModule(S.id, 'clock');
+      await remote(S.id, () => ({ kiosk: { layout: { preset: 'full', slots: [null], placed: [
+        { id: a.id, place: 'screen', x: 30, y: 50, w: 20, h: 20 }] } } }));
+      const root = box();
+      const kbus = createBus();
+      const k = await mountKiosk(root, { user: USER, profileId: S.id, profiles, bus: kbus });
+      check('(setup, scene editor) the clock is placed', await settled(() => !!placedOf(k.slotLayout())[a.id], 8000), JSON.stringify(k.slotLayout()));
+      const ed = k.openEditView('scene');
+      check('*** openEditView("scene") opens the one editor in the edit view\'s slot, and it holds the scan ***',
+        !!ed && ed.kind === 'scene' && k.sceneEditor() === ed && k.editView() === ed && k.editScanHeld() && k.runtime.router.isPaused());
+      check('...the windows are not also open (one editor at a time), and Done is its first stop',
+        !document.querySelector('.v-edit') && (ed.scan.reset(), ed.scan.next(), ed.scan.current()?.dataset?.se === 'done'));
+      ed.choose(`panel:${a.id}`);
+      ed.el.querySelector(`[data-se-sec="t"] [data-em-step="1"][data-em-key="x"]`)?.click();
+      check('*** a › in its Transform moves the clock, saved through the kiosk\'s own merge-save ***',
+        await pollAsync(async () => placedOf((await readOf(S.id)).kiosk?.layout)[a.id]?.x === 31), JSON.stringify(placedOf((await readOf(S.id)).kiosk?.layout)));
+      k.openEditView();
+      check('the windows asked for while it is open: it goes, the windows come (one editor at a time)',
+        !ed.isOpen() && !!k.editView() && !k.sceneEditor());
+      k.closeEditView();
+      const ed2 = k.openEditView('scene');
+      kbus.publish(verbTopic('back'));
+      check('*** back with nothing chosen closes it, and the scan is the panels\' again ***',
+        await settled(() => !ed2.isOpen() && !k.editView() && !k.editScanHeld() && !k.runtime.router.isPaused(), 2000));
       k.destroy();
       root.remove();
     }

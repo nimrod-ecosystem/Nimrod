@@ -107,6 +107,7 @@ import {
 import { watchCorners } from './panel_corners.js';
 // Row 2.38, the map editor: the edit view on a screen the kiosk mounts itself, and the map window.
 import { openDashboardEditor } from './dashboard_editor.js';
+import { openSceneEditor, SCENE_EDITOR_KIND } from './editor.js';   // row 2.145 step 1: the one editor (openEditView('scene'))
 import { mountMapWindow } from './edit_windows.js';
 import { mapLoader } from './dashboard_map.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
@@ -3328,61 +3329,81 @@ export async function mountKiosk(root, {
     makeRow: (pid, key) => stateForProfile(key, { cacheKey: null }, pid),
     title: (t) => getManifest(t)?.title || t,
   })();
-  function openEditView() {
+  // *** ROW 2.145 STEP 1 (2026-10-31): THE ONE EDITOR, BESIDE THE EDIT WINDOWS. *** `openEditView('scene')` opens the
+  // scene tree and inspector (editor.js) in the edit view's slot -- the same `kEditor`, so everything below that holds
+  // the scan, closes it after the wait, hands it next / prev / select / back and puts it away when the menu opens works
+  // on it unchanged. Its placed panels go through the windows' own edit model with the SAME options as the windows
+  // (`ownEditorOpts`), so there is one merge-save. Today's path only (a dashboard module's own `edit()` is the windows),
+  // and only from the menu at "Everything" (the row is argued there); `system/edit` still opens the windows.
+  /** The options the kiosk's own editor saves and moves things through (and the doc it saves into, when not the boot one). */
+  function ownEditorOpts() {
+    const own = profileId === bootProfileId;
+    const edId = profileId;
+    // (2026-10-04, later: a swapped-in screen's OWN doc, `swapDoc`, when it is open -- the doc that screen polls and
+    // applies, so the save and the screen read one copy. A fresh handle only when there is none.)
+    const swapRec = !own && swapDoc && swapDoc.id === profileId ? swapDoc : null;
+    const doc = own ? settings : (swapRec ? swapRec.doc : stateForProfile('settings', { cacheKey: null }, profileId));
+    if (!own && !swapRec) { kEditorDoc = doc; doc.load?.().catch?.(() => {}); }
+    const savable = !embedded && !previewLayout;
+    return {
+      arr, mountIn: kioskEl,
+      baseLayout: () => ((doc.get?.() || {}).kiosk || {}).layout || arr.layout(),
+      // *** MERGED ONTO THE DOC AS IT IS NOW (2026-10-04, later; the gap d40424f left). *** The windows hand the
+      // base they last matched (dashboard_editor.js); a move made elsewhere while they were open is merged in, not
+      // laid over (doc_merge.js `mergeLayoutSave`, CONFLICT_PREFER, the same quiet line). The watch on the doc is
+      // told the merged layout first -- the 09-12 watch on the boot doc (`expectLayoutSig`), a swapped-in doc's
+      // `shown` -- and the merge is handed back, so the windows move the screen to it in place. Never a reload.
+      save: savable ? (next, base) => {
+        if (!own && swapRec && swapDoc !== swapRec) return undefined;     // swapped away: that doc is closed
+        const cur = (doc.get?.() || {}).kiosk || {};
+        const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: CONFLICT_PREFER });
+        if (own) { if (JSON.stringify(m.layout ?? null) !== JSON.stringify(cur.layout ?? null)) expectLayoutSig = JSON.stringify(m.layout ?? null); }
+        else if (swapRec) swapRec.shown = m.layout ?? null;
+        doc.set({ kiosk: { ...cur, layout: m.layout } });
+        if (m.lost.length) sayLostEdit(edId, m.lost);
+        return { layout: m.layout };
+      } : null,
+      listDashboards: async () => (await listDashboards()) || [],
+      createDashboard: !embedded && typeof profiles?.create === 'function'
+        ? (name) => profiles.create(name, personId || arr.profile()?.person_id || '') : null,
+      currentId: () => profileId,
+      loadMap: !embedded && typeof profiles?.list === 'function' ? mapLoad : null,
+      onGo: (id) => { closeEditView(); switchScreen(id).catch(() => {}); },
+      hidePolicy: { personHid: (id) => { try { hideSound?.personHid?.(id); } catch { /* not load-bearing */ } } },
+      onChange: () => { renderMods(); },
+      automation,
+      // 2026-10-04: how a switch walks the Automation window follows the person's "How you choose things".
+      chooseMode: () => { try { return chooseModeNow(); } catch { return chooseModeOf(null); } },
+    };
+  }
+  function ownEditorClosed() {
+    kEditor = null;
+    if (kEditorDoc) { try { kEditorDoc.flush?.()?.finally?.(() => {}); } catch { /* gone */ } try { kEditorDoc.destroy?.(); } catch { /* gone */ } kEditorDoc = null; }
+    syncEditScan();
+  }
+  /** `kind`: 'windows' (the edit windows, as always) or 'scene' (the one editor, row 2.145). */
+  function openEditView(kind = 'windows') {
     if (torn) return null;
+    const want = kind === SCENE_EDITOR_KIND && !dash?.impl?.edit ? SCENE_EDITOR_KIND : 'windows';
     const have = editorNow();
-    if (have) { syncEditScan(); armEditIdle(); return have; }
+    if (have && (have.kind === SCENE_EDITOR_KIND ? SCENE_EDITOR_KIND : 'windows') === want) { syncEditScan(); armEditIdle(); return have; }
+    if (have) closeEditView();                   // the other one is open: one editor at a time
     try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
     if (screensOpen) toggleScreens(false);
     closeMap();
     let ed = null;
     try {
-      if (dash?.impl?.edit) ed = dash.impl.edit();
-      else {
-        const own = profileId === bootProfileId;
-        const edId = profileId;
-        // (2026-10-04, later: a swapped-in screen's OWN doc, `swapDoc`, when it is open -- the doc that screen polls and
-        // applies, so the save and the screen read one copy. A fresh handle only when there is none.)
-        const swapRec = !own && swapDoc && swapDoc.id === profileId ? swapDoc : null;
-        const doc = own ? settings : (swapRec ? swapRec.doc : stateForProfile('settings', { cacheKey: null }, profileId));
-        if (!own && !swapRec) { kEditorDoc = doc; doc.load?.().catch?.(() => {}); }
-        const savable = !embedded && !previewLayout;
-        ed = kEditor = openDashboardEditor({
-          arr, mountIn: kioskEl,
-          baseLayout: () => ((doc.get?.() || {}).kiosk || {}).layout || arr.layout(),
-          // *** MERGED ONTO THE DOC AS IT IS NOW (2026-10-04, later; the gap d40424f left). *** The windows hand the
-          // base they last matched (dashboard_editor.js); a move made elsewhere while they were open is merged in, not
-          // laid over (doc_merge.js `mergeLayoutSave`, CONFLICT_PREFER, the same quiet line). The watch on the doc is
-          // told the merged layout first -- the 09-12 watch on the boot doc (`expectLayoutSig`), a swapped-in doc's
-          // `shown` -- and the merge is handed back, so the windows move the screen to it in place. Never a reload.
-          save: savable ? (next, base) => {
-            if (!own && swapRec && swapDoc !== swapRec) return undefined;     // swapped away: that doc is closed
-            const cur = (doc.get?.() || {}).kiosk || {};
-            const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: CONFLICT_PREFER });
-            if (own) { if (JSON.stringify(m.layout ?? null) !== JSON.stringify(cur.layout ?? null)) expectLayoutSig = JSON.stringify(m.layout ?? null); }
-            else if (swapRec) swapRec.shown = m.layout ?? null;
-            doc.set({ kiosk: { ...cur, layout: m.layout } });
-            if (m.lost.length) sayLostEdit(edId, m.lost);
-            return { layout: m.layout };
-          } : null,
-          listDashboards: async () => (await listDashboards()) || [],
-          createDashboard: !embedded && typeof profiles?.create === 'function'
-            ? (name) => profiles.create(name, personId || arr.profile()?.person_id || '') : null,
-          currentId: () => profileId,
-          loadMap: !embedded && typeof profiles?.list === 'function' ? mapLoad : null,
-          onGo: (id) => { closeEditView(); switchScreen(id).catch(() => {}); },
-          hidePolicy: { personHid: (id) => { try { hideSound?.personHid?.(id); } catch { /* not load-bearing */ } } },
-          onClose: () => {
-            kEditor = null;
-            if (kEditorDoc) { try { kEditorDoc.flush?.()?.finally?.(() => {}); } catch { /* gone */ } try { kEditorDoc.destroy?.(); } catch { /* gone */ } kEditorDoc = null; }
-            syncEditScan();
-          },
-          onChange: () => { renderMods(); },
-          automation,
-          // 2026-10-04: how a switch walks the Automation window follows the person's "How you choose things".
-          chooseMode: () => { try { return chooseModeNow(); } catch { return chooseModeOf(null); } },
+      if (want === SCENE_EDITOR_KIND) {
+        ed = kEditor = openSceneEditor({
+          arr, bus, mountIn: kioskEl, dashOpts: ownEditorOpts(),
+          level: () => complexity(),
+          notify: (text) => { try { output?.notify?.(text, { source: 'shell' }); } catch { /* the line still says it */ } },
+          onClose: () => ownEditorClosed(),
+          // A thing chosen in the view (a press there, not in the editor's own box) is somebody using it too.
+          onActivity: () => { if (kEditor === ed) armEditIdle(); },
         });
-      }
+      } else if (dash?.impl?.edit) ed = dash.impl.edit();
+      else ed = kEditor = openDashboardEditor({ ...ownEditorOpts(), onClose: () => ownEditorClosed() });
     } catch (err) {
       console.error('kiosk: the edit view', err);
       ed = null;
@@ -6373,6 +6394,17 @@ export async function mountKiosk(root, {
         { kind: 'item', id: 'edit-view', label: 'Edit this dashboard…', ...MENU_TAB.screen(1),
           hint: 'move things, choose what each one opens or shows, and what else changes its settings', run: () => openEditView() },
       ] : []),
+      // ROW 2.145 STEP 1 (2026-10-31): THE ONE EDITOR -- a list of everything on this dashboard, and its options beside it
+      // (editor.js). Beside "Edit this dashboard…", not instead of it, while it is new. Argued:
+      //   ONLY AT "EVERYTHING": every row here is a stop on the switch walk ahead of Home (above); a second way into editing
+      //     is one more stop for everybody at "The usual", and it is new, so it is offered where people go to set things.
+      //     AGAINST: somebody at "The usual" who would like it has to know to change the level -- one row, and the
+      //     editor's look is still to come from Design (item 49), when it can take the windows' place.
+      //   NOT ON A DASHBOARD MODULE'S PATH (its own `edit()` is the windows), and not on an embed (Home has its own edit bar).
+      ...(complexity() === 'advanced' && !embedded && !dash?.impl?.edit ? [
+        { kind: 'item', id: 'scene-editor', label: 'Editor (new)…', ...MENU_TAB.screen(1),
+          hint: 'a list of everything on this dashboard, and the options of what you choose in it', run: () => openEditView(SCENE_EDITOR_KIND) },
+      ] : []),
       ...(complexity() === 'advanced' && !embedded ? [{ kind: 'item', id: 'dashboard-map', label: 'Map of your dashboards…',
         ...MENU_TAB.screen(1), hint: 'every dashboard, and what opens or shows which', run: () => openMap() }] : []),
       // *** AN AMBIENT MODULE'S OWN SETTINGS, FOUND MISSING ENTIRELY 2026-09-27. ***
@@ -6980,7 +7012,7 @@ export async function mountKiosk(root, {
   const PLAIN_PART = 'This panel';
   const PLAIN_MENU_DROPS = new Set(['switch-module', 'edit-panel', 'promote', 'demote', 'play-pause', 'scan-lap', 'piece-edit',
     'set:instancePanelSurface', 'set:panelSurface', `set:${PANEL_GAP_FIELD.key}`, `set:${ZOOM_FOCUS_FIELD.key}`,
-    `set:${SMALL_CLOCK_KEY}`, `set:${HIDE_ASK_TIMEOUT_FIELD.key}`, 'edit-view', 'dashboard-map',
+    `set:${SMALL_CLOCK_KEY}`, `set:${HIDE_ASK_TIMEOUT_FIELD.key}`, 'edit-view', 'dashboard-map', 'scene-editor',
     `set:${PANEL_RING_FIELD.key}`]);   // panel ring: acts only on the panels, like Grow the panel the cursor is on
   const PLAIN_MENU_WORDS = {
     // site text second pass 2026-10-13: the hint (page_links.js ELSEWHERE_PAGES) says "the account’s key" again
@@ -8951,6 +8983,8 @@ export async function mountKiosk(root, {
     // own), the map window, and whether either holds the scan -- for the suites and a diagnostic page.
     editView: () => editorNow(),
     openEditView,
+    // Row 2.145 step 1: the one editor, when it is the edit view that is open (else null) -- for the suites.
+    sceneEditor: () => { const e = editorNow(); return e && e.kind === SCENE_EDITOR_KIND ? e : null; },
     closeEditView,
     mapWindow: () => mapWin,
     openMap,

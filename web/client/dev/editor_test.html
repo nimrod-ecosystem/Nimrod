@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the one editor — a scene tree and an inspector — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:fixed;left:0;top:0;width:900px;height:600px;visibility:hidden;pointer-events:none}
+  .kiosk{position:relative;width:900px;height:600px}
+</style>
+</head>
+<body>
+<h1>the one editor (row 2.145 step 1) — a scene tree and an inspector over what edit mode edits</h1>
+<p>Mike: "There should just be one thing built for this. It should feel like editing a scene in Godot or Blender." Step 1:
+the target interface, the tree and the inspector over a dashboard's panels and its room, driven through a REAL
+arrangement (arrangement.js) with real modules (a sign, a village, a clock) and a real room. No server needed.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createArrangement, ROOM_PANEL_ID } from '../arrangement.js';
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { mergeLayoutSave } from '../doc_merge.js';
+import { targetsOf } from '../edit_mode.js';
+import { sceneRecipe } from '../room_doors.js';
+import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS } from '../editor.js';
+import { buildTree, nodeIdFor, ROOT_ID, splitSelection, PLACED_TRANSFORM_FIELDS } from '../editor_targets.js';
+import '../modules/button.js';
+import '../modules/clock.js';
+import '../modules/village.js';
+import '../modules/edit_options.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 4000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(20); } return false; };
+
+// ---- OFF BY DEFAULT: importing the editor drew nothing (checked before anything is opened) ----
+const drewAtImport = !!document.querySelector('[data-scene-editor]') || !!document.getElementById('se-css');
+
+function memState(seed = {}) {
+  let data = { ...seed };
+  const subs = new Set();
+  return { load: () => Promise.resolve(data), get: () => data,
+    set: (p) => { data = { ...data, ...p }; subs.forEach((f) => f(data)); return Promise.resolve(); },
+    subscribe: (f) => { subs.add(f); return () => subs.delete(f); }, flush: () => Promise.resolve(),
+    startPolling() {}, destroy() {} };
+}
+const noEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }), append: () => Promise.resolve(),
+  subscribe: () => () => {}, startPolling() {}, destroy() {} });
+
+// A sign and a village in the two cells, a clock placed as an overlay, a room behind them.
+const LAYOUT = () => ({ preset: 'side', slots: ['b1', 'v1'], scene: { kind: 'room', preset: 'theRoom' },
+  placed: [{ id: 'k2', place: 'overlay', x: 30, y: 30, w: 20, h: 20 }] });
+const MODULES = [{ id: 'b1', type: 'button' }, { id: 'v1', type: 'village' }, { id: 'k2', type: 'clock' }];
+const SEEDS = { b1: { label: 'Ada', style: 'plate' } };
+
+/** A real arrangement, mounted, saving into one doc the way the kiosk does (doc_merge.js mergeLayoutSave, both writers). */
+async function make() {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const el = (cls, parent = host) => { const e = document.createElement('div'); e.className = cls; parent.append(e); return e; };
+  const kioskEl = el('kiosk');
+  const stageEl = el('k-stage', kioskEl), mirrorEl = el('k-mirror', kioskEl), clockEl = el('k-clock', kioskEl), ambientEl = el('k-ambient', kioskEl);
+  mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
+  const bus = createBus();
+  const t = { doc: { kiosk: { layout: LAYOUT() } }, saves: [], notes: [], bus, kioskEl };
+  const mergeInto = (who) => (next, base) => {
+    const m = mergeLayoutSave(base, next, t.doc.kiosk.layout ?? null, { prefer: 'theirs' });
+    t.doc = { ...t.doc, kiosk: { ...t.doc.kiosk, layout: m.layout } };
+    t.saves.push(who);
+    return { layout: m.layout };
+  };
+  const store = new Map();
+  const router = { focused: () => null, setFocus() {}, focusNext() {}, reachable: () => [] };
+  t.arr = createArrangement({
+    bus, user: 'u', settings: { get: () => ({ editIdleMs: 0 }), set() {} },
+    storage: { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) },
+    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+    mountInstance: async (def, h) => {
+      const state = memState(SEEDS[def.id] || {});
+      const instance = mountModule(def.type, { mount: h, bus, rootBus: bus, state, events: noEvents(), user: 'u', personId: null,
+        instanceId: def.id, profileId: 'scr-A', output: { say() {}, notify() {} }, sources: { list: async () => [] } });
+      instance.init();
+      return { id: def.id, type: def.type, title: getManifest(def.type)?.title, el: h, instance, state, events: { destroy() {} } };
+    },
+    destroyRec: (rec) => { try { rec?.instance?.destroy(); } catch { /* gone */ } },
+    runtime: () => ({ router }), health: () => null, profileId: () => 'scr-A',
+    layoutStore: { get: () => t.doc.kiosk.layout, save: (next, base) => { mergeInto('room')(next, base); } },
+    notify: (text) => t.notes.push(text),
+  });
+  t.arr.setProfile({ id: 'scr-A', name: 'Test dashboard', modules: MODULES });
+  t.arr.resolve(t.doc.kiosk.layout); t.arr.partition(); await t.arr.mountOverlays(); await t.arr.mountLayout();
+  t.dashOpts = { baseLayout: () => t.doc.kiosk.layout, save: mergeInto('placed') };
+  t.closed = [];
+  t.open = (extra = {}) => openSceneEditor({ arr: t.arr, bus, mountIn: kioskEl, dashOpts: t.dashOpts, level: 'advanced',
+    notify: (x) => t.notes.push(x), onClose: (why) => t.closed.push(why), ...extra });
+  t.roomRec = () => t.arr.editRecs().find((r) => r.id === ROOM_PANEL_ID);
+  // The room's furniture rows load once, the first time the room's things are asked for (arrangement.js loadRoomRows).
+  t.roomReady = () => until(() => targetsOf(t.roomRec()).some((x) => Array.isArray(x.transformKeys) && x.transformKeys.length));
+  t.card = () => t.kioskEl.querySelector('[data-editing] .em-card');
+  return t;
+}
+const row = (ed, id) => ed.el.querySelector(`[data-se-node="${CSS.escape(id)}"]`);
+const bar = (ed, id) => ed.el.querySelector(`[data-se="${id}"]`);
+const sec = (ed, s) => ed.el.querySelector(`[data-se-sec="${s}"]`);
+const esc = () => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+const savedPiece = (t, id) => (sceneRecipe(t.doc.kiosk.layout.scene)?.items || []).find((it) => it.id === id) || null;
+const savedPlaced = (t, id) => (t.doc.kiosk.layout.placed || []).find((e) => e.id === id) || null;
+
+try {
+  // ============================================================================================
+  section('off by default');
+  check('*** importing the editor drew nothing: no editor box, no style, until somebody opens one ***', !drewAtImport);
+  const t = await make();
+  check('(setup) a real arrangement: the sign and the village in the cells, the clock placed, the room behind',
+    !!t.arr.recFor('b1') && !!t.arr.recFor('v1') && !!t.arr.recFor('k2') && !!t.arr.roomScene() && !!t.roomRec(),
+    J(t.arr.editRecs().map((r) => r.id)));
+  check('...and mounting it opened no editor either', !document.querySelector('[data-scene-editor]'));
+  check('the arrangement now lists what edit mode can edit (editRecs): the panels, then the room',
+    J(t.arr.editRecs().map((r) => r.id)) === J(['b1', 'v1', 'k2', ROOM_PANEL_ID]), J(t.arr.editRecs().map((r) => r.id)));
+
+  // ============================================================================================
+  section('*** the tree: the dashboard, its cells and their panels, the placed panels, the room and its pieces ***');
+  await t.roomReady();
+  const tree = buildTree(t.arr);
+  const n = (id) => tree.nodes.get(id);
+  check('the root is the dashboard, named', tree.root?.id === ROOT_ID && tree.root.kind === 'dashboard' && tree.root.label === 'Test dashboard');
+  check('one row per cell of the layout preset, in order, each under the dashboard',
+    n('cell:0')?.kind === 'cell' && n('cell:0').parent === ROOT_ID && n('cell:1')?.parent === ROOT_ID && !n('cell:2'));
+  check('the sign is under its cell; its words, picture or face under it, as edit mode lists them ("part")',
+    n('panel:b1')?.parent === 'cell:0' && n('panel:b1').kind === 'panel' && n('panel:b1/words')?.parent === 'panel:b1'
+    && n('panel:b1/words').kind === 'part', J(tree.list.filter((x) => x.panelId === 'b1').map((x) => x.id)));
+  const vParts = tree.list.filter((x) => x.parent === 'panel:v1');
+  check('the village is under the second cell, its pieces under it; its whole scene is NOT a row of its own (the panel row is it)',
+    n('panel:v1')?.parent === 'cell:1' && vParts.length > 0 && vParts.every((x) => /^panel:v1\/piece-\d+$/.test(x.id))
+    && !n('panel:v1/scene') && n('panel:v1').wholeId === 'scene', J(vParts.map((x) => x.id)));
+  check('the placed clock is under its place ("Overlay"), marked as placed',
+    n('place:overlay')?.kind === 'group' && n('place:overlay').label === 'Overlay' && n('panel:k2')?.parent === 'place:overlay'
+    && n('panel:k2').place === 'overlay');
+  const pieces = tree.list.filter((x) => x.parent === nodeIdFor(ROOM_PANEL_ID));
+  check('the room is a row of its own under the dashboard; its furniture under it ("piece"), by recipe id; its walls and floor are the room row',
+    n(nodeIdFor(ROOM_PANEL_ID))?.kind === 'room' && n(nodeIdFor(ROOM_PANEL_ID)).parent === ROOT_ID && pieces.length > 0
+    && pieces.every((x) => x.kind === 'piece') && !n(nodeIdFor(ROOM_PANEL_ID, 'room')) && n(nodeIdFor(ROOM_PANEL_ID)).wholeId === 'room',
+    J(pieces.map((x) => x.id)));
+  check('every node answers the one interface: id, parent, label, kind, transform(), fields(), set(), children()',
+    tree.list.every((x) => typeof x.id === 'string' && 'parent' in x && typeof x.label === 'string' && typeof x.kind === 'string'
+      && typeof x.transform === 'function' && typeof x.fields === 'function' && typeof x.set === 'function' && typeof x.children === 'function'));
+  check('children() is the tree read the other way', J(n('panel:b1').children().map((x) => x.id)) === J(tree.list.filter((x) => x.parent === 'panel:b1').map((x) => x.id)));
+  check('*** a panel in a grid cell has no transform (its cell places it); the room has none either ***',
+    n('panel:b1').transform() === null && n(nodeIdFor(ROOM_PANEL_ID)).transform() === null);
+  check('a panel row\'s fields() are edit mode\'s own selection for it (the manifest rows, written to its state)',
+    n('panel:b1').fields()?.panelId === 'b1' && n('panel:b1').fields().fields.some((f) => f.key === 'label'));
+  const armed = pieces.find((x) => (x.fields()?.transformKeys || []).length);
+  check('*** a room piece\'s transform is its own rows named by `transformKeys` (x, y, size, turn) ***',
+    !!armed && J(armed.transform()?.fields.map((f) => f.key).filter((k) => ['x', 'y', 'size'].includes(k))) === J(['x', 'y', 'size']),
+    J(armed?.fields()?.transformKeys));
+  check('...and the village\'s pieces name the same four', (vParts[0]?.fields()?.transformKeys || []).join() === 'x,y,size,rotate', J(vParts[0]?.fields()?.transformKeys));
+  check('splitSelection: Transform takes only the named rows, Settings the rest (Facing stays a setting)',
+    (() => { const s = splitSelection(armed.fields()); return s.transform.fields.every((f) => armed.fields().transformKeys.includes(f.key))
+      && s.settings.fields.some((f) => f.key === 'facing') && !s.settings.fields.some((f) => f.key === 'x'); })());
+
+  // ============================================================================================
+  section('*** opening it: the tree, the inspector and the toolbar, Done first ***');
+  const ed = t.open();
+  check('it opens: one box in the dashboard, kind "scene", holding the same shape the kiosk holds the edit windows by',
+    ed.kind === SCENE_EDITOR_KIND && ed.isOpen() && t.kioskEl.querySelectorAll('[data-scene-editor]').length === 1
+    && ed.el.isConnected && typeof ed.scan?.next === 'function' && typeof ed.close === 'function');
+  check('the toolbar\'s first button is Done, and it is never dimmed', ed.el.querySelector('button')?.dataset.se === 'done' && !bar(ed, 'done').disabled);
+  check('the tree draws one row per node, the dashboard chosen to begin with',
+    ed.el.querySelectorAll('[data-se-node]').length === ed.tree().list.length && row(ed, ROOT_ID)?.getAttribute('aria-selected') === 'true');
+  check('the inspector says what the dashboard is laid out as', /Side by side/.test(ed.el.querySelector('[data-se-title]')?.parentNode?.textContent || ''));
+  check('*** opening it changed nothing: edit mode untouched, nothing saved ***', !t.arr.editing() && t.saves.length === 0);
+  check('only theme tokens in its look (no literal colours)', !/#[0-9a-f]{3,6}\b|rgba?\(/i.test(document.getElementById('se-css')?.textContent || 'x'));
+  check('the narrow screen: the inspector becomes a sheet along the bottom (a CSS rule, nothing measured)',
+    /@media \(max-width:700px\)/.test(document.getElementById('se-css')?.textContent || ''));
+
+  // ============================================================================================
+  section('*** a row chosen chooses it in the view; a thing chosen in the view marks its row ***');
+  row(ed, 'panel:b1/words').click();
+  check('*** the sign\'s words row: edit mode is on the sign with the words chosen ***',
+    J(t.arr.editing()) === J({ id: 'b1', target: 'words' }), J(t.arr.editing()));
+  check('...the row is marked chosen, and the inspector shows the words\' options',
+    row(ed, 'panel:b1/words').getAttribute('aria-selected') === 'true' && /The words/.test(ed.el.querySelector('[data-se-title]')?.textContent || '')
+    && !!sec(ed, 's')?.querySelector('[data-em-row="font"]'));
+  check('*** the editor CLAIMED it: the little in-panel card is hidden (one set of rows on screen, not two) ***', t.card()?.hidden === true);
+  t.arr.editSelect('face');
+  check('edit mode choosing the face (a press in the view, the verb) marks the face\'s row', ed.selected() === 'panel:b1/face'
+    && row(ed, 'panel:b1/face')?.getAttribute('aria-selected') === 'true');
+  t.arr.editSelect('words');
+  check('...and arr.editSelect("words") marks the words again', ed.selected() === 'panel:b1/words');
+  const word = t.arr.recFor('b1').el.querySelector('.ab-word');
+  t.arr.editSelect('face');
+  word?.click();
+  check('*** a real press on the words in the view chooses them, and the tree follows ***', ed.selected() === 'panel:b1/words');
+  row(ed, 'panel:b1').click();
+  check('the panel\'s own row chooses the whole sign (edit mode\'s "nothing named")', J(t.arr.editing()) === J({ id: 'b1', target: null })
+    && ed.selected() === 'panel:b1');
+
+  // ============================================================================================
+  section('the inspector: the same rows as edit mode, written the same way');
+  row(ed, 'panel:b1/words').click();
+  const fontBefore = t.arr.recFor('b1').state.get().font;
+  sec(ed, 's').querySelector('[data-em-step="1"][data-em-key="font"]').click();
+  check('*** › on Font writes the next font to the sign\'s own settings ***',
+    !!t.arr.recFor('b1').state.get().font && t.arr.recFor('b1').state.get().font !== fontBefore, J(t.arr.recFor('b1').state.get()));
+  check('a part of a panel says it has no transform of its own (it moves with its panel)',
+    (sec(ed, 't')?.textContent || '').includes(EDITOR_WORDS.partTransform));
+  check('a sign in a cell: Delete and Duplicate say why they do nothing here, on the button and in the line',
+    bar(ed, 'delete').disabled && bar(ed, 'duplicate').disabled && bar(ed, 'duplicate').title === EDITOR_WORDS.cannotCopy
+    && (ed.el.querySelector('[data-se-why]')?.textContent || '').includes('Duplicate:'));
+  row(ed, 'panel:b1').click();
+  check('...the whole sign: Delete says a cell\'s panel is not taken out here; Duplicate that copying a module is not built',
+    bar(ed, 'delete').title === EDITOR_WORDS.slotDelete && bar(ed, 'duplicate').title === EDITOR_WORDS.copyModule
+    && bar(ed, 'undo').disabled && bar(ed, 'undo').title === EDITOR_WORDS.noHistory);
+  check('...and its Transform says its cell places it', (sec(ed, 't')?.textContent || '').includes(EDITOR_WORDS.slotTransform));
+
+  // ============================================================================================
+  section('*** a room piece: Transform as numbers, saved; Undo; Delete then Undo ***');
+  const pieceNode = armed.id;
+  const pieceId = armed.targetId;
+  row(ed, pieceNode).click();
+  check('(setup) the piece is chosen in the room', J(t.arr.editing()) === J({ id: ROOM_PANEL_ID, target: pieceId }), J(t.arr.editing()));
+  const tRows = [...(sec(ed, 't')?.querySelectorAll('[data-em-row]') || [])].map((r) => r.dataset.emRow);
+  check('*** its Transform rows are where it stands, its size and its turn; Facing and Opens are under its settings ***',
+    ['x', 'y', 'size'].every((k) => tRows.includes(k)) && tRows.every((k) => ['x', 'y', 'size', 'rotate'].includes(k))
+    && !!sec(ed, 's')?.querySelector('[data-em-row="facing"]') && !sec(ed, 's')?.querySelector('[data-em-row="x"]'), J(tRows));
+  const x0 = t.arr.editSelection().values().x;
+  sec(ed, 't').querySelector('[data-em-step="1"][data-em-key="x"]').click();
+  check('*** › on Left or right moves the piece, and the SAVED recipe has the new place ***',
+    await until(() => savedPiece(t, pieceId)?.x !== undefined && savedPiece(t, pieceId).x !== x0), J({ x0, saved: savedPiece(t, pieceId) }));
+  const x1 = savedPiece(t, pieceId)?.x;
+  check('...the inspector reads the new place, the piece still chosen', await until(() => t.arr.editSelection()?.values()?.x === x1 && ed.selected() === pieceNode),
+    J({ x1, now: t.arr.editSelection()?.values()?.x }));
+  check('the toolbar\'s Undo is the room\'s own Undo here; Redo says it is not built for this', !bar(ed, 'undo').disabled && bar(ed, 'redo').disabled
+    && bar(ed, 'redo').title === EDITOR_WORDS.noRedo);
+  bar(ed, 'undo').click();
+  check('*** Undo puts it back where it was ***', await until(() => t.arr.editSelection()?.values()?.x === x0), J(t.arr.editSelection()?.values()));
+  check('Duplicate says copying furniture is not built', bar(ed, 'duplicate').disabled && bar(ed, 'duplicate').title === EDITOR_WORDS.copyPiece);
+  bar(ed, 'delete').click();
+  check('*** Delete takes the piece out: its row goes, the room is chosen ***',
+    await until(() => !ed.tree().nodes.has(pieceNode) && ed.selected() === nodeIdFor(ROOM_PANEL_ID)), ed.selected());
+  bar(ed, 'undo').click();
+  check('*** ...and Undo puts it back: its row is there again ***', await until(() => ed.tree().nodes.has(pieceNode)));
+  row(ed, nodeIdFor(ROOM_PANEL_ID)).click();
+  check('the room\'s own row: its rows (shape, walls...) and "Add a piece" under its settings; no transform of its own',
+    !!sec(ed, 's')?.querySelector('[data-em-row="addPiece"]') && (sec(ed, 't')?.textContent || '').includes(EDITOR_WORDS.roomTransform));
+  row(ed, pieceNode).click();
+  // (The keyboard's focus goes there too, but this page draws in a hidden box, where nothing can take focus: the switch's
+  // cursor is what is checked.)
+  ed.scan.reset(); ed.scan.next();
+  bar(ed, 'add').click();
+  check('*** Add, with a piece of the room chosen: the room is chosen and the switch cursor is on its "Add a piece" › ***',
+    ed.selected() === nodeIdFor(ROOM_PANEL_ID) && ed.scan.current()?.dataset?.emFocus === 'addPiece:1', `${ed.selected()} ${ed.scan.current()?.outerHTML?.slice(0, 80)}`);
+  ed.scan.reset();
+
+  // ============================================================================================
+  section('*** a placed panel: x, y, size, turn, layer, place -- through the edit windows\' own model and save ***');
+  row(ed, 'panel:k2').click();
+  check('(setup) the placed clock is chosen', t.arr.editing()?.id === 'k2');
+  const kRows = [...(sec(ed, 't')?.querySelectorAll('[data-em-row]') || [])].map((r) => r.dataset.emRow);
+  check('its Transform rows: left or right, up or down, size, turn, layer, where it sits (which wall only in the scene)',
+    J(kRows) === J(['x', 'y', 'scale', 'rot', 'layer', 'place']), J(kRows));
+  check('every number in it can be stepped (‹ and ›, for one switch)',
+    PLACED_TRANSFORM_FIELDS.filter((f) => f.kind === 'number').every((f) => !!sec(ed, 't').querySelector(`[data-em-step="1"][data-em-key="${f.key}"]`)
+      && !!sec(ed, 't').querySelector(`[data-em-step="-1"][data-em-key="${f.key}"]`)));
+  check('...and its own settings (the clock\'s) under them', !!sec(ed, 's')?.querySelector('[data-em-row]'));
+  const roomBefore = J(t.doc.kiosk.layout.scene);
+  sec(ed, 't').querySelector('[data-em-step="1"][data-em-key="x"]').click();
+  check('*** › on Left or right moves the clock: on the screen and in the saved layout ***',
+    await until(() => t.arr.placed().find((e) => e.id === 'k2')?.x === 31 && savedPlaced(t, 'k2')?.x === 31),
+    J({ shown: t.arr.placed().find((e) => e.id === 'k2'), saved: savedPlaced(t, 'k2') }));
+  check('...saved through the placed model\'s save (the host\'s merge-save)', t.saves.includes('placed'));
+  check('*** both writers on one doc: the room\'s earlier edits are still in it after the placed save (the three-way merge) ***',
+    J(t.doc.kiosk.layout.scene) === roomBefore, `${roomBefore.slice(0, 80)} / ${J(t.doc.kiosk.layout.scene).slice(0, 80)}`);
+  const undoWas = { disabled: bar(ed, 'undo').disabled, title: bar(ed, 'undo').title, sel: ed.selected(), can: ed.placedModel()?.canUndo(), saves: t.saves.length };
+  bar(ed, 'undo').click();
+  check('*** Undo puts the clock back, on the screen and saved ***',
+    await until(() => t.arr.placed().find((e) => e.id === 'k2')?.x === 30 && savedPlaced(t, 'k2')?.x === 30),
+    J({ saved: savedPlaced(t, 'k2'), shown: t.arr.placed().find((e) => e.id === 'k2'), model: ed.placedModel()?.item('k2')?.x, undoWas, saves: t.saves.length }));
+  check('...and Redo is the model\'s own', !bar(ed, 'redo').disabled);
+  bar(ed, 'redo').click();
+  check('Redo moves it again', await until(() => savedPlaced(t, 'k2')?.x === 31));
+  bar(ed, 'undo').click();
+  await until(() => savedPlaced(t, 'k2')?.x === 30);
+
+  // A room edit and a placed edit, one after the other, both kept.
+  row(ed, pieceNode).click();
+  const rx0 = t.arr.editSelection().values().x;
+  sec(ed, 't').querySelector('[data-em-step="1"][data-em-key="x"]').click();
+  await until(() => savedPiece(t, pieceId)?.x !== undefined && savedPiece(t, pieceId).x !== rx0);
+  const rx1 = savedPiece(t, pieceId)?.x;
+  row(ed, 'panel:k2').click();
+  sec(ed, 't').querySelector('[data-em-step="1"][data-em-key="y"]').click();
+  check('*** a room piece moved, then the clock moved: the saved layout keeps BOTH ***',
+    await until(() => savedPlaced(t, 'k2')?.y === 31 && savedPiece(t, pieceId)?.x === rx1), J({ k2: savedPlaced(t, 'k2'), piece: savedPiece(t, pieceId) }));
+
+  // ============================================================================================
+  section('*** Escape: the first leaves edit mode\'s choice and keeps the editor; the second closes it ***');
+  check('(setup) the clock is being edited', t.arr.editing()?.id === 'k2');
+  esc();
+  check('*** the first Escape: edit mode left, the editor still open, the dashboard chosen ***',
+    !t.arr.editing() && ed.isOpen() && ed.selected() === ROOT_ID);
+  esc();
+  check('*** the second Escape closes the editor: its box is gone ***', !ed.isOpen() && !document.querySelector('[data-scene-editor]') && t.closed.at(-1) === 'escape');
+
+  // ============================================================================================
+  section('Done: first, always there; closing ends edit mode\'s choice and the in-panel card comes back');
+  const ed2 = t.open();
+  row(ed2, 'panel:b1').click();
+  check('(setup) the sign is chosen, claimed', t.arr.editing()?.id === 'b1' && t.card()?.hidden === true);
+  bar(ed2, 'done').click();
+  check('*** Done: the box is gone, edit mode left, the host told ***', !ed2.isOpen() && !ed2.el.isConnected && !t.arr.editing() && t.closed.at(-1) === 'done');
+  t.arr.editPanel('b1', true);
+  check('*** ...and the next choice is nobody\'s: the in-panel card shows again ***', t.card() && t.card().hidden === false);
+  t.arr.editPanel('b1', false);
+
+  // ============================================================================================
+  section('*** the switch walk: Done first, every stop a button, select chooses, back comes out ***');
+  const ed3 = t.open();
+  ed3.scan.reset();
+  check('nothing is under the cursor until the switch moves it', ed3.scan.current() === null);
+  ed3.scan.next();
+  check('*** the first stop is Done ***', ed3.scan.current()?.dataset?.se === 'done' && ed3.scan.current().classList.contains('se-scan'));
+  check('no stop is a text box or a dimmed button', ed3.scan.stops().every((b) => b.tagName !== 'INPUT' && !b.disabled));
+  ed3.scan.prev();
+  check('prev from Done goes round to the last stop', ed3.scan.current() === ed3.scan.stops().at(-1));
+  ed3.scan.reset();
+  let guard = 0;
+  while (ed3.scan.current()?.dataset?.seNode !== 'panel:k2' && guard++ < 200) ed3.scan.next();
+  check('(setup) next walks to the clock\'s row', ed3.scan.current()?.dataset?.seNode === 'panel:k2');
+  ed3.scan.select();
+  check('*** select on a row chooses it, and the cursor stays on that row ***', t.arr.editing()?.id === 'k2' && ed3.scan.current()?.dataset?.seNode === 'panel:k2');
+  guard = 0;
+  while (ed3.scan.current()?.dataset?.emFocus !== 'x:1' && guard++ < 200) ed3.scan.next();
+  ed3.scan.select();
+  check('*** a switch alone moves the clock: › on Left or right, by select ***', await until(() => savedPlaced(t, 'k2')?.x === 31), J(savedPlaced(t, 'k2')));
+  check('back, with something chosen: comes out of it (true), the editor stays', ed3.scan.back() === true && !t.arr.editing() && ed3.isOpen());
+  check('*** back with nothing chosen: false -- the host closes the editor ***', ed3.scan.back() === false && ed3.isOpen());
+  ed3.scan.reset(); ed3.scan.next(); ed3.scan.select();
+  check('select on Done closes it', !ed3.isOpen());
+
+  // ============================================================================================
+  section('open, then close, writes nothing');
+  {
+    const before = J(t.doc);
+    const n0 = t.saves.length;
+    const e = t.open();
+    e.close();
+    check('*** opened and closed with nothing pressed: no save, the doc as it was ***', t.saves.length === n0 && J(t.doc) === before);
+  }
+
+  // ============================================================================================
+  section('it sits beside the Options panel (both may show a choice)');
+  {
+    const mount = document.createElement('div');
+    document.getElementById('host').append(mount);
+    const opts = mountModule('options', { mount, bus: t.bus, rootBus: t.bus, state: memState(), events: noEvents(), user: 'u', personId: null,
+      instanceId: 'o1', profileId: 'scr-A', output: { say() {} }, sources: { list: async () => [] } });
+    opts.init();
+    const e = t.open();
+    row(e, 'panel:b1/words').click();
+    check('*** the Options panel shows the words too, and the editor\'s inspector shows them; the card stays away ***',
+      mount.querySelector('[data-em-title]')?.textContent === 'Button: The words' && /The words/.test(e.el.querySelector('[data-se-title]')?.textContent || '')
+      && t.card()?.hidden === true, mount.textContent.slice(0, 80));
+    e.close();
+    check('...and closing the editor leaves the Options panel saying nothing is chosen', !!mount.querySelector('[data-options-idle]'));
+    opts.destroy();
+  }
+
+  // ============================================================================================
+  section('the village: its pieces\' own Copy and Take out are the toolbar\'s Duplicate and Delete');
+  {
+    const e = t.open();
+    const vp = e.tree().list.find((x) => x.parent === 'panel:v1');
+    row(e, vp.id).click();
+    check('(setup) a village piece is chosen', t.arr.editing()?.id === 'v1' && t.arr.editing()?.target === vp.targetId);
+    check('*** its Transform is x, y, size, turn; Duplicate and Delete are on (its own Copy it / Take it out) ***',
+      J([...(sec(e, 't')?.querySelectorAll('[data-em-row]') || [])].map((r) => r.dataset.emRow)) === J(['x', 'y', 'size', 'rotate'])
+      && !bar(e, 'duplicate').disabled && !bar(e, 'delete').disabled && !bar(e, 'add').disabled);
+    const count = () => e.tree().list.filter((x) => x.parent === 'panel:v1').length;
+    const c0 = count();
+    bar(e, 'duplicate').click();
+    check('Duplicate copies the piece (one more row under the village)', await until(() => count() === c0 + 1), `${c0} -> ${count()}`);
+    e.close();
+  }
+
+  t.arr.destroy();
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+const sum = document.getElementById('summary');
+sum.textContent = `${passed} passed, ${failed} failed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

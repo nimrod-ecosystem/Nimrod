@@ -222,7 +222,9 @@ try {
       // 2026-10-04: a layout saved elsewhere, applied in place (kiosk_test's swapped-in doc sync drives it).
       'applySaved',
       // 2026-10-18 (row 2.109): a switch kept until the dashboard is saved.
-      'unsavedSwitches', 'saveSwitches', 'revertSwitches', 'savedTypeOf'];
+      'unsavedSwitches', 'saveSwitches', 'revertSwitches', 'savedTypeOf',
+      // 2026-10-31 (row 2.145 step 1, deliberately): the records edit mode can edit, for the one editor's tree (editor_test drives it).
+      'editRecs'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),

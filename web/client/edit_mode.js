@@ -35,6 +35,10 @@
 //     handles (2026-10-25) drag / scale / turn handles on it while chosen, room_handles.js, drawn by the
 //             dashboard (arrangement.js): `{ el, piece, floor?, movable?, geometry?: 'svg', onCommit(patch) }`.
 //             The village's pieces use them, so a room and a village are moved by the same editor.
+//     transformKeys (row 2.145 step 1, 2026-10-31) which of its `fields` are its TRANSFORM -- where it stands, its size,
+//             its turn (['x', 'y', 'size', 'rotate'] for a room or village piece). The one editor (editor.js) shows
+//             those first, under "Transform", and the rest under its settings. Absent: it has no transform of its own.
+//             Carried onto the selection as `transformKeys` ([] when absent); nothing else reads it.
 // A record may also say `passThrough` (a CSS selector): a press inside a matching element nested in the
 // panel is NOT taken -- a module sitting in a room's slot keeps working while the room is being edited.
 // A module that cannot be edited (yet) without changing its file can be DECLARED here instead
@@ -177,6 +181,9 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
     label: target ? `${title}: ${target.label}` : title,
     help: help || '',
     fields,
+    // (row 2.145 step 1: which fields are its Transform -- the contract above. Only keys it really has.)
+    transformKeys: Array.isArray(target?.transformKeys)
+      ? target.transformKeys.map(String).filter((k) => fields.some((f) => f.key === k)) : [],
     // A target's LINKS (2026-10-02, a brick-built piece's "Open its bricks"): `{ id, label, href, note? }`,
     // drawn under the rows as ordinary links that open in a new tab. Not settings: nothing is written.
     // And its BUTTONS (row 2.110, 2026-10-21: a room piece's "Take it out" and "Undo"): `{ id, label, run, note? }`,

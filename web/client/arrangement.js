@@ -2158,6 +2158,10 @@ export function createArrangement({
       const arrange = !!piece && ed.isEditablePiece(piece);
       return {
         id: o.id, label: o.name, el: o.el, also: o.also || [],
+        // THE ONE EDITOR'S TRANSFORM SECTION (row 2.145 step 1, 2026-10-31; editor.js): which of the rows below are where
+        // it stands, how big it is and which way it is turned, so the editor's inspector shows them first, under
+        // "Transform", and the rest under the piece's own settings. Only a piece this file arranges has them.
+        ...(arrange ? { transformKeys: ['x', 'y', 'size', 'rotate'] } : {}),
         help: arrange ? `${o.name}: where it stands, how big it is, which way it faces, ${built ? 'how it is drawn, ' : ''}and which dashboard it opens when it is pressed, or nothing.`
           : built ? `${o.name}: how it is drawn, and which dashboard it opens when it is pressed, or nothing.`
             : `${o.name}: which dashboard it opens when it is pressed, or nothing.`,
@@ -2456,6 +2460,9 @@ export function createArrangement({
     editing: () => editMode?.active() || null,
     editSelect: (targetId = null) => editMode?.select(targetId) || null,
     editSelection: () => editMode?.selection() || null,
+    // The records edit mode can edit -- the panels, then the room (row 2.145 step 1, 2026-10-31: the one editor's scene
+    // tree, editor_targets.js, is built from exactly these, so a row in it is always one `editPanel` accepts).
+    editRecs: () => editPanels(),
     // The room's slots (room_scene.js `slots()`), while the scene is a mounted room; an empty Map otherwise.
     roomSlots: () => { try { return roomScene?.slots?.() || new Map(); } catch { return new Map(); } },
     // ---- the mirror/clock corners ----
